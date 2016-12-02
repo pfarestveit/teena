@@ -1,0 +1,30 @@
+webdriver: firefox
+
+timeouts:
+  short: 8
+  medium: 30
+  long: 120
+
+suite_c:
+  base_url: https://calcentral-col-qa-01.ist.berkeley.edu
+  lti_key: secret
+  lti_secret: secret
+  asset_library_xml: /lti/assetlibrary.xml
+  engagement_index_xml: /lti/engagementindex.xml
+  whiteboards_xml: /lti/whiteboards.xml
+  poller_retries: 20
+
+canvas:
+  base_url: https://ucberkeley.test.instructure.com
+  sub_account: secret
+
+calcentral:
+  base_url: https://calcentral-qa.berkeley.edu
+  basic_auth_password: secret
+
+users:
+  super_admin_username: secret
+  super_admin_password: secret
+  ets_qa_username: secret
+  ets_qa_password: secret
+  test_user_password: secret
