@@ -50,13 +50,13 @@ class Utils
 
   # TEST DATA, UPLOADS, AND DOWNLOADS
 
-  # Load file containing test course data for Canvas tests
+  # Loads file containing test course data for Canvas tests
   def self.load_canvas_courses
     test_data_file = File.join(ENV['HOME'], '/.webdriver-config/canvasCourses.json')
     JSON.parse(File.read(test_data_file))['courses']
   end
 
-  # Create CSV for data generated during Canvas test runs
+  # Creates CSV for data generated during Canvas test runs
   # @param spec [RSpec::ExampleGroups]
   # @param column_headers [Array]
   # @return [File]
@@ -70,11 +70,17 @@ class Utils
     test_output
   end
 
-  # Add a row of data to Canvas CSV
+  # Adds a row of data to Canvas CSV
   # @param file [File]
   # @param values [String]
   def self.add_csv_row(file, values)
     CSV.open(file, 'a+') { |row| row << values }
+  end
+
+  # Loads file containing test user data for SuiteC tests
+  def self.load_suite_c_test_users
+    test_users = File.join(ENV['HOME'], '/.webdriver-config/suiteCUsers.json')
+    (JSON.parse File.read(test_users))['users']
   end
 
   # The file path for SuiteC asset upload files
@@ -88,7 +94,7 @@ class Utils
     File.join(ENV['HOME'], '/tmp/downloads')
   end
 
-  # Prepare a directory to receive files downloaded during test runs
+  # Prepares a directory to receive files downloaded during test runs
   # @param dir [File]
   def self.prepare_download_dir(dir)
     FileUtils::mkdir_p dir
