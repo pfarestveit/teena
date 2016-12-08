@@ -5,6 +5,9 @@ timeouts:
   medium: 30
   long: 120
 
+cal_net:
+  base_url: https://auth-test.berkeley.edu
+
 suite_c:
   base_url: https://calcentral-col-qa-01.ist.berkeley.edu
   lti_key: secret
@@ -21,6 +24,7 @@ canvas:
 calcentral:
   base_url: https://calcentral-qa.berkeley.edu
   basic_auth_password: secret
+  admin_uid: secret
 
 users:
   super_admin_username: secret
