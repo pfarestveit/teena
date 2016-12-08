@@ -33,6 +33,19 @@ class Utils
     end
   end
 
+  def self.quit_browser(driver)
+    logger.info 'Quitting the browser'
+    # If the browser did not start successfully, the quit method will fail.
+    driver.quit rescue NoMethodError
+    # Pause after quitting the browser to make sure it shuts down completely before the next test relaunches it
+    sleep 2
+  end
+
+  # Base URL of CalNet authentication service test instance
+  def self.cal_net_url
+    @config['cal_net']['base_url']
+  end
+
   # Short timeout intended for things like page DOM updates
   def self.short_wait
     @config['timeouts']['short']
@@ -50,10 +63,16 @@ class Utils
 
   # TEST DATA, UPLOADS, AND DOWNLOADS
 
-  # Loads file containing test course data for Canvas tests
-  def self.load_canvas_courses
-    test_data_file = File.join(ENV['HOME'], '/.webdriver-config/canvasCourses.json')
+  # Loads file containing test date for course-driven tests
+  def self.load_test_courses
+    test_data_file = File.join(ENV['HOME'], '/.webdriver-config/testCourses.json')
     JSON.parse(File.read(test_data_file))['courses']
+  end
+
+  # Loads file containing test data for user-driven tests
+  def self.load_test_users
+    test_users = File.join(ENV['HOME'], '/.webdriver-config/testUsers.json')
+    (JSON.parse File.read(test_users))['users']
   end
 
   # Creates CSV for data generated during Canvas test runs
@@ -61,7 +80,7 @@ class Utils
   # @param column_headers [Array]
   # @return [File]
   def self.initialize_canvas_test_output(spec, column_headers)
-    output_dir = File.join(ENV['HOME'], '/tmp/test_output')
+    output_dir = File.join(ENV['HOME'], '/tmp/test-output')
     FileUtils.mkdir_p(output_dir) unless File.exists?(output_dir)
     output_file = "#{spec.inspect.sub('RSpec::ExampleGroups::', '')}.csv"
     logger.info "Initializing test output CSV named #{output_file}"
@@ -75,12 +94,6 @@ class Utils
   # @param values [String]
   def self.add_csv_row(file, values)
     CSV.open(file, 'a+') { |row| row << values }
-  end
-
-  # Loads file containing test user data for SuiteC tests
-  def self.load_suite_c_test_users
-    test_users = File.join(ENV['HOME'], '/.webdriver-config/suiteCUsers.json')
-    (JSON.parse File.read(test_users))['users']
   end
 
   # The file path for SuiteC asset upload files
@@ -160,6 +173,37 @@ class Utils
   # Basic auth password for CalCentral test environments
   def self.calcentral_basic_auth_password
     @config['calcentral']['basic_auth_password']
+  end
+
+  # Authenticates in CalCentral as an admin and expires all cache
+  def self.clear_cache(driver, splash_page, my_dashboard_page)
+    splash_page.load_page
+    splash_page.basic_auth @config['calcentral']['admin_uid']
+    driver.get "#{calcentral_base_url}/api/cache/clear"
+    my_dashboard_page.load_page
+    my_dashboard_page.click_log_out_link
+  end
+
+  # TEST ACCOUNTS
+
+  def self.super_admin_username
+    @config['users']['super_admin_username']
+  end
+
+  def self.super_admin_password
+    @config['users']['super_admin_password']
+  end
+
+  def self.ets_qa_username
+    @config['users']['ets_qa_username']
+  end
+
+  def self.ets_qa_password
+    @config['users']['ets_qa_password']
+  end
+
+  def self.test_user_password
+    @config['users']['test_user_password']
   end
 
 end
