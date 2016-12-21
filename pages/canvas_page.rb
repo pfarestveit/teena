@@ -33,24 +33,6 @@ module Page
       cal_net.log_in(username, password)
     end
 
-    # Handles prompts that can appear when loading a course site
-    # @param course [Course]
-    def accept_login_messages(course)
-      wait_until(Utils.medium_wait) { current_url.include? "#{course.site_id}" }
-      if updated_terms_heading?
-        logger.info 'Accepting terms and conditions'
-        terms_cbx_element.when_visible Utils.short_wait
-        check_terms_cbx
-        submit_button
-      end
-      recent_activity_heading_element.when_visible Utils.medium_wait
-      if accept_course_invite?
-        logger.info 'Accepting course invite'
-        accept_course_invite
-        accept_course_invite_element.when_not_visible Utils.medium_wait
-      end
-    end
-
     # Shifts to default content, logs out, and waits for CalNet logout confirmation
     # @param driver [Selenium::WebDriver]
     # @param cal_net [Page::CalNetPage]
@@ -59,7 +41,7 @@ module Page
       wait_for_page_update_and_click profile_link_element
       wait_for_page_update_and_click profile_form_element
       wait_for_page_update_and_click logout_link_element if logout_link_element.exists?
-      cal_net.logout_conf_heading_element.when_visible Utils.medium_wait
+      cal_net.logout_conf_heading_element.when_visible
     end
 
     # Masquerades as a user and then loads a course site
@@ -69,7 +51,7 @@ module Page
       logger.info "Masquerading as #{user.role} #{user.username}"
       navigate_to "#{Utils.canvas_base_url}/users/#{user.canvas_id.to_s}/masquerade"
       wait_for_page_load_and_click masquerade_link_element
-      stop_masquerading_link_element.when_visible Utils.medium_wait
+      stop_masquerading_link_element.when_visible
       load_course_site course
     end
 
@@ -109,7 +91,6 @@ module Page
     button(:search_course_button, xpath: '//input[@id="course_name"]/following-sibling::button')
     li(:add_course_success, xpath: '//li[contains(.,"successfully added!")]')
 
-    link(:people_link, text: 'People')
     link(:add_people_button, id: 'addUsers')
     text_area(:user_list, id: 'user_list_textarea')
     select_list(:user_role, id: 'role_id')
@@ -137,43 +118,23 @@ module Page
       switch_to_canvas_iframe driver
     end
 
-    # Loads the 'create a site' tool directly
-    # @param driver [Selenium::WebDriver]
-    # @param canvas_id [String]
-    # @param tool_id [String]
-    def load_create_site_tool(driver, canvas_id, tool_id)
-      navigate_to "#{Utils.canvas_base_url}/users/#{canvas_id}/external_tools/#{tool_id}"
-      switch_to_canvas_iframe driver
-    end
-
-    # Loads a course site
+    # Loads a course site and handles prompts that can appear
     # @param course [Course]
     def load_course_site(course)
       navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}"
-      accept_login_messages course
-    end
-
-    # Loads the users page of a course site
-    # @param course [Course]
-    def load_users_page(course)
-      navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/users"
-    end
-
-    # Creates a course site using the standard Canvas workflow
-    # @param course [Course]
-    # @param test_id [String]
-    def create_site(course, test_id)
-      logger.info "Creating a course site named #{course.code} in #{course.term} semester"
-      load_sub_account
-      wait_for_page_update_and_click add_new_course_button_element
-      course_name_input_element.when_visible Utils.short_wait
-      course.title = "QA Test - #{test_id}" if course.title.nil?
-      course.code = "QA #{test_id} LEC001" if course.code.nil?
-      self.course_name_input = "#{course.title}"
-      self.ref_code_input = "#{course.code}"
-      wait_for_element_and_select(term_element, course.term) unless course.term.nil?
-      click_element_js create_course_button_element
-      add_course_success_element.when_visible Utils.medium_wait
+      wait_until { current_url.include? "#{course.site_id}" }
+      if updated_terms_heading?
+        logger.info 'Accepting terms and conditions'
+        terms_cbx_element.when_visible Utils.short_wait
+        check_terms_cbx
+        submit_button
+      end
+      recent_activity_heading_element.when_visible
+      if accept_course_invite?
+        logger.info 'Accepting course invite'
+        accept_course_invite
+        accept_course_invite_element.when_not_visible Utils.medium_wait
+      end
     end
 
     # Searches for a course site using a unique identifier
@@ -181,7 +142,7 @@ module Page
     # @return [String]
     def search_for_course(test_id)
       tries ||= 3
-      logger.info('Searching for course site')
+      logger.info 'Searching for course site'
       load_sub_account
       search_course_input_element.when_visible timeout=Utils.short_wait
       self.search_course_input = "#{test_id}"
@@ -193,26 +154,13 @@ module Page
       retry unless (tries -= 1).zero?
     end
 
-    # Publishes a course site
-    # @return [String]
-    def publish_course
-      logger.info 'Publishing the course'
-      publish_div_element.when_visible Utils.short_wait
-      unless published_button?
-        wait_for_page_update_and_click publish_button_element
-        published_button_element.when_visible Utils.medium_wait
-      end
-      logger.info "Course site URL is #{current_url}"
-      current_url.sub("#{Utils.canvas_base_url}/courses/", '')
-    end
-
     # Uses a hash to add users of defined roles to a course site. The hash is often derived from an external test data file
     # @param course [Course]
     # @param test_users [Hash]
     def add_users(course, test_users)
       ['Teacher', 'Designer', 'Lead TA', 'TA', 'Observer', 'Reader', 'Student'].each do |user_role|
         users = ''
-        test_users.each { |user| users << "#{user['uid'].to_s}, " if user['role'] == user_role }
+        test_users.each { |user| users << "#{user.uid}, " if user.role == user_role }
         if users.empty?
           logger.warn "No test users with role #{user_role}"
         else
@@ -220,7 +168,7 @@ module Page
             # Canvas add-user function is often flaky in test envs, so retry if it fails
             tries ||= 3
             logger.info "Adding users with role #{user_role}"
-            load_users_page course
+            navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/users"
             wait_for_page_load_and_click add_people_button_element
             user_list_element.when_visible Utils.short_wait
             self.user_list = users
@@ -237,24 +185,68 @@ module Page
       end
     end
 
+    # Changes users' Canvas email addresses to the email defined for each in test data. This enables SuiteC email testing.
+    # @param course [Course]
+    # @param test_users [Array<User>]
+    def reset_user_email(course, test_users)
+      test_users.each do |user|
+        navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/users/#{user.canvas_id}"
+        default_email_element.when_visible Utils.short_wait
+        if default_email == user.email
+          logger.debug "Test user '#{user.full_name}' already has an updated default email"
+        else
+          logger.debug "Resetting test user #{user.full_name}'s email to #{user.email}"
+          wait_for_page_load_and_click edit_user_link_element
+          wait_for_element_and_type(user_email_element, user.email)
+          wait_for_page_update_and_click update_details_button_element
+          default_email_element.when_visible Utils.short_wait
+        end
+      end
+    end
+
     # Creates standard Canvas course site, publishes it, and adds test users.
     # @param course [Course]
-    # @param test_users [Hash]
+    # @param test_users [Array<User>]
     # @param test_id [String]
-    # @return [String]
     def create_generic_course_site(course, test_users, test_id)
       if course.site_id.nil?
-        create_site(course, test_id)
+        logger.info "Creating a course site named #{course.code} in #{course.term} semester"
+        load_sub_account
+        wait_for_page_update_and_click add_new_course_button_element
+        course_name_input_element.when_visible Utils.short_wait
+        course.title = "QA Test - #{test_id}" if course.title.nil?
+        course.code = "QA #{test_id} LEC001" if course.code.nil?
+        self.course_name_input = "#{course.title}"
+        self.ref_code_input = "#{course.code}"
+        wait_for_element_and_select(term_element, course.term) unless course.term.nil?
+        add_course_success_element.when_visible Utils.medium_wait
         course.site_id = search_for_course test_id
       else
         load_course_site course
       end
+      logger.info 'Publishing the course'
+      publish_div_element.when_visible Utils.short_wait
+      wait_for_page_update_and_click publish_button_element unless published_button?
+      published_button_element.when_visible Utils.medium_wait
+      logger.info "Course site URL is #{current_url}"
+      current_url.sub("#{Utils.canvas_base_url}/courses/", '')
       logger.info "Course ID is #{course.site_id}"
-      publish_course
       add_users(course, test_users)
       load_course_site course
+    end
+
+    # Creates standard course site and then customizes it for SuiteC testing by setting test user emails and adding
+    # SuiteC tools required for the test
+    # @param course [Course]
+    # @param test_users [Array<User>]
+    # @param test_id [String]
+    # @param tools [Array<SuiteCTools>]
+    def get_suite_c_test_course(course, test_users, test_id, tools)
+      course.title = "QA SuiteC Test #{test_id}" if course.site_id.nil?
+      create_generic_course_site(course, test_users, test_id)
+      reset_user_email(course, test_users)
+      tools.each { |tool| add_suite_c_tool(course, tool) unless tool_nav_link(tool).exists? }
       load_course_site course
-      course.site_id
     end
 
     button(:delete_course_button, xpath: '//button[text()="Delete Course"]')
@@ -269,8 +261,82 @@ module Page
       logger.info "Course id #{course.site_id} has been deleted"
     end
 
+    # SUITEC LTI TOOLS
+
+    link(:apps_link, text: 'Apps')
+    link(:navigation_link, text: 'Navigation')
+    link(:view_apps_link, text: 'View App Configurations')
+    link(:add_app_link, class: 'add_tool_link')
+    select_list(:config_type, id: 'configuration_type_selector')
+    text_area(:app_name_input, xpath: '//input[@placeholder="Name"]')
+    text_area(:key_input, xpath: '//input[@placeholder="Consumer key"]')
+    text_area(:secret_input, xpath: '//input[@placeholder="Shared Secret"]')
+    text_area(:url_input, xpath: '//input[@placeholder="Config URL"]')
+    button(:save_app_nav_button, xpath: '//button[text()="Save"]')
+
+    # Returns the link element for the configured LTI tool on the course site sidebar
+    # @param tool [SuiteCTools]
+    # @return [PageObject::Elements::Link]
+    def tool_nav_link(tool)
+      link_element(text: "#{tool.name}")
+    end
+
+    # Loads the LTI tool configuration page for a course site
+    # @param course [Course]
+    def load_tools_config_page(course)
+      navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/settings/configurations"
+    end
+
+    # Adds a SuiteC LTI tool to a course site
+    # @param course [Course]
+    # @param tool [SuiteCTools]
+    def add_suite_c_tool(course, tool)
+      logger.info "Adding #{tool.name}"
+
+      # Load the new tool configuration UI
+      load_tools_config_page course
+      wait_for_page_update_and_click apps_link_element
+      wait_for_page_update_and_click add_app_link_element
+      wait_for_element_and_select(config_type_element, 'By URL')
+      # Use JS to select the option too since the WebDriver method is not working consistently
+      execute_script('document.getElementById("configuration_type_selector").value = "url";')
+      sleep 1
+
+      # Enter the tool config
+      wait_for_page_update_and_click app_name_input_element
+      self.app_name_input = "#{tool.name}"
+      self.key_input = Utils.lti_key
+      self.secret_input = Utils.lti_secret
+      self.url_input = "#{Utils.suite_c_base_url}#{tool.xml}"
+      submit_button
+      link_element(xpath: "//td[@title='#{tool.name}']").when_present
+
+      # Move the tool from disabled to enabled
+      load_tools_config_page course
+      wait_for_page_update_and_click navigation_link_element
+      hide_footer
+      wait_for_page_update_and_click link_element(xpath: "//ul[@id='nav_disabled_list']/li[contains(.,'#{tool.name}')]//a")
+      wait_for_page_update_and_click link_element(xpath: "//ul[@id='nav_disabled_list']/li[contains(.,'#{tool.name}')]//a[@title='Enable this item']")
+      list_item_element(xpath: "//ul[@id='nav_enabled_list']/li[contains(.,'#{tool.name}')]").when_visible Utils.short_wait
+      save_app_nav_button
+      tool_nav_link(tool).when_visible Utils.medium_wait
+    end
+
+    # Clicks the navigation link for a tool and returns the tool's URL
+    # @param driver [Selenium::WebDriver]
+    # @param tool [SuiteCTools]
+    # @return [String]
+    def click_tool_link(driver, tool)
+      driver.switch_to.default_content
+      hide_footer
+      scroll_to_bottom
+      wait_for_page_update_and_click tool_nav_link(tool)
+      logger.info "#{tool.name} URL is #{current_url}"
+      current_url.delete '#'
+    end
+
     # ANNOUNCEMENTS
-    
+
     link(:html_editor_link, xpath: '//a[contains(.,"HTML Editor")]')
     text_area(:announcement_msg, name: 'message')
     button(:save_announcement_button, xpath: '//h1[contains(text(),"New Discussion")]/following-sibling::div/button[contains(text(),"Save")]')
@@ -345,7 +411,7 @@ module Page
         primary_post_reply_button
       else
         logger.info "Replying to a discussion entry at index #{index} with body '#{reply_body}'"
-        wait_until(Utils.medium_wait) { secondary_reply_link_elements.any? }
+        wait_until { secondary_reply_link_elements.any? }
         wait_for_page_load_and_click secondary_reply_link_elements[index]
         secondary_html_editor_link_elements[index].click if secondary_html_editor_link_elements[index].visible?
         wait_until(Utils.short_wait) { secondary_reply_input_elements.any? }
@@ -397,5 +463,28 @@ module Page
       assignment.url = current_url
     end
 
+    # Upload's a user's asset as an assignment submission
+    # @param assignment [Assignment]
+    # @param user [User]
+    # @submission [Asset]
+    def submit_assignment(assignment, user, submission)
+      logger.info "Submitting #{submission.title} for #{user.full_name}"
+      navigate_to assignment.url
+      wait_for_page_load_and_click submit_assignment_link_element
+      case submission.type
+        when 'File'
+          file_upload_input_element.when_visible Utils.short_wait
+          self.file_upload_input_element.send_keys Utils.test_data_file_path(submission.file_name)
+          wait_for_page_update_and_click file_upload_submit_button_element
+        when 'Link'
+          wait_for_page_update_and_click assignment_site_url_tab_element
+          url_upload_input_element.when_visible Utils.short_wait
+          self.url_upload_input = submission.url
+          wait_for_page_update_and_click url_upload_submit_button_element
+        else
+          logger.error 'Unsupported submission type in test data'
+      end
+      assignment_submission_conf_element.when_visible Utils.long_wait
+    end
   end
 end

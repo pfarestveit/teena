@@ -1,13 +1,13 @@
-require_relative '../util/spec_helper'
+require_relative '../../util/spec_helper'
 
 describe 'My Dashboard', order: :defined do
 
   include Logging
 
-  test_id = "#{Time.now.to_i}"
+  test_id = Utils.get_test_id
   timeout = Utils.medium_wait
 
-  course_test_data = { code: "QA #{test_id} LEC001", title: "QA CalCentral Dashboard Test - #{test_id}" }
+  course_test_data = {code: "QA #{test_id} LEC001", title: "QA CalCentral Dashboard Test - #{test_id}"}
   user_test_data = Utils.load_test_users.select { |user| user['tests']['canvasIntegration'] }
 
   before(:all) { @driver = Utils.launch_browser }
@@ -288,6 +288,7 @@ describe 'My Dashboard', order: :defined do
       @canvas.log_in(@cal_net, Utils.ets_qa_username, Utils.ets_qa_password)
       @canvas.delete_course @course
     end
+
   end
 
   after(:all) { Utils.quit_browser @driver }
