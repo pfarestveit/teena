@@ -1,4 +1,4 @@
-require_relative '../util/spec_helper'
+require_relative '../../util/spec_helper'
 
 describe 'bCourses course site creation' do
 

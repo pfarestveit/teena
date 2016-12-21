@@ -12,9 +12,6 @@ suite_c:
   base_url: https://calcentral-col-qa-01.ist.berkeley.edu
   lti_key: secret
   lti_secret: secret
-  asset_library_xml: /lti/assetlibrary.xml
-  engagement_index_xml: /lti/engagementindex.xml
-  whiteboards_xml: /lti/whiteboards.xml
   poller_retries: 20
 
 canvas:

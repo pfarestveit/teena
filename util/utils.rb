@@ -20,7 +20,7 @@ class Utils
       profile['browser.download.manager.showWhenStarting'] = false
       profile['browser.download.dir'] = Utils.download_dir
       profile['browser.helperApps.neverAsk.saveToDisk'] = 'application/msword, application/vnd.ms-excel, application/vnd.ms-powerpointtd>, application/pdf, application/zip, audio/mpeg, image/png, image/bmp, image/jpeg, image/gif, image/sgi, image/svg+xml, image/webp, text/csv, video/mp4, video/quicktime'
-      driver = Selenium::WebDriver.for :firefox, :profile => profile
+      driver = Selenium::WebDriver.for :firefox, profile: profile
       driver.manage.window.maximize
       driver
     elsif driver == 'chrome'
@@ -33,6 +33,7 @@ class Utils
     end
   end
 
+  # @param driver [Selenium::WebDriver]
   def self.quit_browser(driver)
     logger.info 'Quitting the browser'
     # If the browser did not start successfully, the quit method will fail.
@@ -62,6 +63,11 @@ class Utils
   end
 
   # TEST DATA, UPLOADS, AND DOWNLOADS
+
+  # Returns the current datetime for use as a unique test identifier
+  def self.get_test_id
+    "#{Time.now.strftime('%Y-%m-%d %H:%M')}"
+  end
 
   # Loads file containing test date for course-driven tests
   def self.load_test_courses
@@ -109,9 +115,9 @@ class Utils
 
   # Prepares a directory to receive files downloaded during test runs
   # @param dir [File]
-  def self.prepare_download_dir(dir)
-    FileUtils::mkdir_p dir
-    FileUtils.rm_rf(dir, secure: true)
+  def self.prepare_download_dir
+    FileUtils::mkdir_p download_dir
+    FileUtils.rm_rf(download_dir, secure: true)
   end
 
   # SUITE C
@@ -129,21 +135,6 @@ class Utils
   # LTI tool secret for SuiteC test environment
   def self.lti_secret
     @config['suite_c']['lti_secret']
-  end
-
-  # Cartridge XML path for Asset Library LTI tool
-  def self.asset_library_xml
-    @config['suite_c']['asset_library_xml']
-  end
-
-  # Cartridge XML path for Engagement Index LTI tool
-  def self.engagement_index_xml
-    @config['suite_c']['engagement_index_xml']
-  end
-
-  # Cartridge XML path for Whiteboards LTI tool
-  def self.whiteboards_xml
-    @config['suite_c']['whiteboards_xml']
   end
 
   # The number of times to check if the SuiteC poller has synced Canvas course site data and SuiteC data

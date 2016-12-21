@@ -8,7 +8,7 @@ module Page
   # Switches browser focus into the Canvas LTI tool iframe
   # @param driver [Selenium::WebDriver]
   def switch_to_canvas_iframe(driver)
-    wait_until(Utils.medium_wait) { driver.find_element(id: 'tool_content') }
+    wait_until { driver.find_element(id: 'tool_content') }
     driver.switch_to.frame driver.find_element(id: 'tool_content')
   end
 
@@ -88,7 +88,7 @@ module Page
       link.click
       if driver.window_handles.length > 1
         driver.switch_to.window driver.window_handles.last
-        wait_until(Utils.medium_wait) { driver.find_element(xpath: "//title[contains(.,'#{expected_page_title}')]") }
+        wait_until { driver.find_element(xpath: "//title[contains(.,'#{expected_page_title}')]") }
         true
       else
         logger.error('Link did not open in a new window')
