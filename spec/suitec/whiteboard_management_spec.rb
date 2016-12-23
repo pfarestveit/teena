@@ -105,6 +105,58 @@ describe 'Whiteboard', order: :defined do
     end
   end
 
+  describe 'deleting' do
+
+    before(:all) do
+      deleting_test_id = "#{Time.now.to_i}"
+
+      # Student creates two whiteboards
+      @canvas.masquerade_as(@student_1, @course)
+      @whiteboards.load_page(@driver, @whiteboards_url)
+      @whiteboard_delete_1 = Whiteboard.new({owner: @student_1, title: "Whiteboard Delete 1 #{deleting_test_id}", collaborators: [@student_2]})
+      @whiteboards.create_whiteboard @whiteboard_delete_1
+      @whiteboard_delete_2 = Whiteboard.new({owner: @student_1, title: "Whiteboard Delete 2 #{deleting_test_id}", collaborators: []})
+      @whiteboards.create_whiteboard @whiteboard_delete_2
+    end
+
+    it 'can be done by a student who is a collaborator on the whiteboard' do
+      # Student collaborator deletes board
+      @canvas.masquerade_as(@student_2, @course)
+      @whiteboards.load_page(@driver, @whiteboards_url)
+      @whiteboards.open_whiteboard(@driver, @whiteboard_delete_1)
+      @whiteboards.delete_whiteboard @driver
+      # Deleted board should close and be gone from list view
+      expect(@driver.window_handles.length).to be 1
+      expect(@whiteboards.visible_whiteboard_titles).not_to include(@whiteboard_delete_1.title)
+    end
+
+    it 'can be done by an instructor who is not a collaborator on the whiteboard' do
+      # Teacher deletes other board
+      @canvas.masquerade_as(@teacher, @course)
+      @whiteboards.load_page(@driver, @whiteboards_url)
+      @whiteboards.open_whiteboard(@driver, @whiteboard_delete_2)
+      @whiteboards.delete_whiteboard @driver
+      # Deleted board should close but remain in list view in deleted state
+      expect(@driver.window_handles.length).to be 1
+      expect(@whiteboards.visible_whiteboard_titles).not_to include(@whiteboard_delete_2.title)
+    end
+
+    it 'can be reversed by an instructor' do
+      # Teacher restores board
+      @whiteboards.advanced_search(@whiteboard_delete_2.title, @student_1, true)
+      @whiteboards.open_whiteboard(@driver, @whiteboard_delete_2)
+      @whiteboards.restore_whiteboard
+      @whiteboards.close_whiteboard @driver
+      @whiteboards.advanced_search(@whiteboard_delete_2.title, @student_1, false)
+      @whiteboards.wait_until(timeout) { @whiteboards.visible_whiteboard_titles == [@whiteboard_delete_2.title] }
+      # Student can now see board again
+      @canvas.masquerade_as(@student_1, @course)
+      @whiteboards.load_page(@driver, @whiteboards_url)
+      @whiteboards.wait_until(timeout) { @whiteboards.visible_whiteboard_titles.include? @whiteboard_delete_2.title }
+    end
+
+  end
+
   describe 'search' do
 
     before(:all) do
