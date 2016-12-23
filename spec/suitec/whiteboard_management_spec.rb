@@ -38,7 +38,7 @@ describe 'Whiteboard', order: :defined do
   describe 'creation' do
 
     before(:all) do
-      @whiteboard = Whiteboard.new({ owner: @student_1, title: "Whiteboard Creation #{test_id}", collaborators: [] })
+      @whiteboard = Whiteboard.new({owner: @student_1, title: "Whiteboard Creation #{test_id}", collaborators: []})
       @canvas.masquerade_as(@student_1, @course)
       @whiteboards.load_page(@driver, @whiteboards_url)
     end
@@ -86,7 +86,7 @@ describe 'Whiteboard', order: :defined do
 
     before(:all) do
       editing_test_id = "#{Time.now.to_i}"
-      @whiteboard = Whiteboard.new({ owner: @student_1, title: "Whiteboard Editing #{editing_test_id}", collaborators: [] })
+      @whiteboard = Whiteboard.new({owner: @student_1, title: "Whiteboard Editing #{editing_test_id}", collaborators: []})
       @whiteboards.close_whiteboard @driver
       @whiteboards.load_page(@driver, @whiteboards_url)
     end
@@ -105,13 +105,65 @@ describe 'Whiteboard', order: :defined do
     end
   end
 
+  describe 'deleting' do
+
+    before(:all) do
+      deleting_test_id = "#{Time.now.to_i}"
+
+      # Student creates two whiteboards
+      @canvas.masquerade_as(@student_1, @course)
+      @whiteboards.load_page(@driver, @whiteboards_url)
+      @whiteboard_delete_1 = Whiteboard.new({owner: @student_1, title: "Whiteboard Delete 1 #{deleting_test_id}", collaborators: [@student_2]})
+      @whiteboards.create_whiteboard @whiteboard_delete_1
+      @whiteboard_delete_2 = Whiteboard.new({owner: @student_1, title: "Whiteboard Delete 2 #{deleting_test_id}", collaborators: []})
+      @whiteboards.create_whiteboard @whiteboard_delete_2
+    end
+
+    it 'can be done by a student who is a collaborator on the whiteboard' do
+      # Student collaborator deletes board
+      @canvas.masquerade_as(@student_2, @course)
+      @whiteboards.load_page(@driver, @whiteboards_url)
+      @whiteboards.open_whiteboard(@driver, @whiteboard_delete_1)
+      @whiteboards.delete_whiteboard @driver
+      # Deleted board should close and be gone from list view
+      expect(@driver.window_handles.length).to be 1
+      expect(@whiteboards.visible_whiteboard_titles).not_to include(@whiteboard_delete_1.title)
+    end
+
+    it 'can be done by an instructor who is not a collaborator on the whiteboard' do
+      # Teacher deletes other board
+      @canvas.masquerade_as(@teacher, @course)
+      @whiteboards.load_page(@driver, @whiteboards_url)
+      @whiteboards.open_whiteboard(@driver, @whiteboard_delete_2)
+      @whiteboards.delete_whiteboard @driver
+      # Deleted board should close but remain in list view in deleted state
+      expect(@driver.window_handles.length).to be 1
+      expect(@whiteboards.visible_whiteboard_titles).not_to include(@whiteboard_delete_2.title)
+    end
+
+    it 'can be reversed by an instructor' do
+      # Teacher restores board
+      @whiteboards.advanced_search(@whiteboard_delete_2.title, @student_1, true)
+      @whiteboards.open_whiteboard(@driver, @whiteboard_delete_2)
+      @whiteboards.restore_whiteboard
+      @whiteboards.close_whiteboard @driver
+      @whiteboards.advanced_search(@whiteboard_delete_2.title, @student_1, false)
+      @whiteboards.wait_until(timeout) { @whiteboards.visible_whiteboard_titles == [@whiteboard_delete_2.title] }
+      # Student can now see board again
+      @canvas.masquerade_as(@student_1, @course)
+      @whiteboards.load_page(@driver, @whiteboards_url)
+      @whiteboards.wait_until(timeout) { @whiteboards.visible_whiteboard_titles.include? @whiteboard_delete_2.title }
+    end
+
+  end
+
   describe 'search' do
 
     before(:all) do
       @search_test_id = "#{Time.now.to_i}"
-      @whiteboard_1 = Whiteboard.new({ owner: @student_1, title: "Whiteboard Search #{@search_test_id} Unique Title", collaborators: [] })
-      @whiteboard_2 = Whiteboard.new({ owner: @student_1, title: "Whiteboard Search #{@search_test_id} Non-unique Title", collaborators: [@teacher] })
-      @whiteboard_3 = Whiteboard.new({ owner: @student_1, title: "Whiteboard Search #{@search_test_id} Non-unique Title", collaborators: [@teacher, @student_2] })
+      @whiteboard_1 = Whiteboard.new({owner: @student_1, title: "Whiteboard Search #{@search_test_id} Unique Title", collaborators: []})
+      @whiteboard_2 = Whiteboard.new({owner: @student_1, title: "Whiteboard Search #{@search_test_id} Non-unique Title", collaborators: [@teacher]})
+      @whiteboard_3 = Whiteboard.new({owner: @student_1, title: "Whiteboard Search #{@search_test_id} Non-unique Title", collaborators: [@teacher, @student_2]})
 
       @whiteboards.close_whiteboard @driver
       @whiteboards.load_page(@driver, @whiteboards_url)
@@ -184,7 +236,7 @@ describe 'Whiteboard', order: :defined do
 
     before(:all) do
       export_test_id = "#{Time.now.to_i}"
-      @whiteboard = Whiteboard.new({ owner: @student_1, title: "Whiteboard Export #{export_test_id}", collaborators: [] })
+      @whiteboard = Whiteboard.new({owner: @student_1, title: "Whiteboard Export #{export_test_id}", collaborators: []})
 
       # Upload assets to be used on whiteboard
       @canvas.masquerade_as(@student_1, @course)
@@ -194,12 +246,8 @@ describe 'Whiteboard', order: :defined do
       user_asset_data.each do |data|
         asset = Asset.new data
         (data['type'] == 'File') ? @asset_library.upload_file_to_library(asset) : @asset_library.add_site(asset)
-        @asset_library.wait_until do
-          @asset_library.list_view_asset_title_elements.any?
-          @asset_library.list_view_asset_title_elements[0].text == asset.title
-          asset.id = @asset_library.list_view_asset_ids.first
-          @assets << asset
-        end
+        @asset_library.verify_first_asset(@student_1, asset)
+        @assets << asset
       end
 
       # Get current score
@@ -231,13 +279,12 @@ describe 'Whiteboard', order: :defined do
     end
 
     it 'as a new asset is possible if the whiteboard has assets' do
-      whiteboard_as_asset = Asset.new({title: "#{@whiteboard.title}"})
       @whiteboards.add_existing_assets @assets
       @whiteboards.open_original_asset_link_element.when_visible Utils.long_wait
-      @whiteboards.export_to_asset_library @whiteboard
+      whiteboard_asset = @whiteboards.export_to_asset_library @whiteboard
       @whiteboards.wait_until { @whiteboards.export_confirm_msg? }
       @asset_library.load_page(@driver, @asset_library_url)
-      @asset_library.verify_first_asset(@student_1, whiteboard_as_asset)
+      @asset_library.verify_first_asset(@student_1, whiteboard_asset)
     end
 
     it 'as a new asset earns "Export a whiteboard to the Asset Library" points' do
@@ -266,6 +313,62 @@ describe 'Whiteboard', order: :defined do
       @engagement_index.load_page(@driver, @engagement_index_url)
       @engagement_index.search_for_user @student_1
       expect(@engagement_index.user_score @student_1).to eql("#{@score_with_export_whiteboard}")
+    end
+  end
+
+  describe 'asset detail' do
+
+    before(:all) do
+      asset_detail_test_id = "#{Time.now.to_i}"
+      @canvas.masquerade_as(@teacher, @course)
+      @asset = Asset.new(@teacher.assets.find { |asset| asset['type'] == 'File' })
+      @asset_library.load_page(@driver, @asset_library_url)
+      @asset_library.upload_file_to_library @asset
+
+      # Create three whiteboards and add the same asset to each
+      boards = []
+      boards << (@whiteboard_exported = Whiteboard.new({owner: @teacher, title: "Whiteboard Asset Detail #{asset_detail_test_id} Exported", collaborators: []}))
+      boards << (@whiteboard_deleted = Whiteboard.new({owner: @teacher, title: "Whiteboard Asset Detail #{asset_detail_test_id} Exported Deleted", collaborators: []}))
+      boards << (@whiteboard_non_exported = Whiteboard.new({owner: @teacher, title: "Whiteboard Asset Detail #{asset_detail_test_id} Not Exported", collaborators: []}))
+      boards.each do |board|
+        @whiteboards.load_page(@driver, @whiteboards_url)
+        @whiteboards.create_and_open_whiteboard(@driver, board)
+        @whiteboards.add_existing_assets [@asset]
+        @whiteboards.close_whiteboard @driver
+      end
+
+      # Export two of the boards
+      [boards[0], boards[1]].each do |export|
+        @whiteboards.load_page(@driver, @whiteboards_url)
+        @whiteboards.open_whiteboard(@driver, export)
+        @whiteboards.export_to_asset_library export
+        @whiteboards.close_whiteboard @driver
+      end
+
+      # Delete the resulting asset for one of the boards
+      @asset_library.load_page(@driver, @asset_library_url)
+      @asset_library.wait_for_page_load_and_click @asset_library.list_view_asset_link_elements.first
+      @asset_library.delete_asset
+
+      # Load the asset's detail
+      @asset_library.load_asset_detail(@driver, @asset_library_url, @asset)
+    end
+
+    it 'lists whiteboard assets that use the asset' do
+      expect(@asset_library.detail_view_whiteboards_list).to include(@whiteboard_exported.title)
+    end
+
+    it 'does not list whiteboards that use the asset but have not been exported to the asset library' do
+      expect(@asset_library.detail_view_whiteboards_list).not_to include(@whiteboard_non_exported.title)
+    end
+
+    it 'does not list whiteboard assets that use the asset but have since been deleted' do
+      expect(@asset_library.detail_view_whiteboards_list).not_to include(@whiteboard_deleted.title)
+    end
+
+    it 'links to the whiteboard asset detail' do
+      @asset_library.detail_view_used_in_elements.first.click
+      @asset_library.wait_until(timeout) { @asset_library.detail_view_asset_title == @whiteboard_exported.title }
     end
   end
 end

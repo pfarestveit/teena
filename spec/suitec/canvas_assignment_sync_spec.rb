@@ -88,7 +88,6 @@ describe 'Canvas assignment sync', order: :defined do
       @asset_library.load_page(@driver, @asset_library_url)
       @asset_library.advanced_search(nil, @assignment_1.title, @student, nil)
       @asset_library.wait_until(Utils.short_wait) { @asset_library.list_view_asset_ids.length == 1 }
-      @asset_1.id = @asset_library.list_view_asset_ids.first
       @asset_library.verify_first_asset(@student, @asset_1)
     end
 
@@ -133,7 +132,6 @@ describe 'Canvas assignment sync', order: :defined do
       @asset_library.advanced_search(nil, @assignment_2.title, @student, nil)
       @asset_library.wait_until(Utils.short_wait) { @asset_library.list_view_asset_ids.length == 1 }
       @asset_library.verify_first_asset(@student, @asset_2)
-      @asset_2.id = @asset_library.list_view_asset_ids.first
       expect(@asset_1.id).to_not eql(@asset_2.id)
     end
   end

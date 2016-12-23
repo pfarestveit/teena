@@ -32,7 +32,7 @@ module Page
       elements(:list_view_asset_comments_count, :span, xpath: '//span[@data-ng-bind="asset.comment_count | number"]')
 
       h2(:detail_view_asset_title, xpath: '//h2')
-      elements(:detail_view_asset_owner_link, :link, xpath: '//a[contains(@href,"/assetlibrary?user=")]')
+      elements(:detail_view_asset_owner_link, :link, xpath: '//li[contains(@data-ng-repeat,"user in asset.users")]//a[contains(@href,"/assetlibrary?user=")]')
       button(:detail_view_asset_like_button, xpath: '//div[@class="assetlibrary-item-metadata"]//button[@data-ng-click="like(asset)"]')
       span(:detail_view_asset_likes_count, xpath: '//div[@class="assetlibrary-item-metadata"]//span[@data-ng-bind="asset.likes | number"]')
       div(:detail_view_asset_desc, xpath: '//div[text()="Description"]/following-sibling::div/div')
@@ -40,8 +40,16 @@ module Page
       div(:detail_view_asset_no_category, xpath: '//div[text()="No category"]')
       link(:detail_view_asset_url_source, xpath: '//div[text()="Source"]/following-sibling::div//a')
       div(:detail_view_asset_no_source, xpath: '//div[text()="No source"]')
+      elements(:detail_view_used_in, :link, xpath: '//div[text()="Used in"]/following-sibling::div//a')
 
       link(:back_to_library_link, text: 'Back to Asset Library')
+
+      # Returns an array of list view asset titles
+      # @return [Array<String>]
+      def list_view_asset_titles
+        wait_until { list_view_asset_title_elements.any? }
+        list_view_asset_title_elements.map &:text
+      end
 
       # Returns an array of list view asset IDs extracted from the href attributes of the asset links
       # @return [Array<String>]
@@ -109,6 +117,12 @@ module Page
       def get_canvas_submission_title(asset)
         # For Canvas submissions, the file name or the URL are used as the asset title
         asset.type == 'File' ? asset.title = asset.file_name.sub(/\..*/, '') : asset.title = asset.url
+      end
+
+      # Returns the titles of whiteboard assets in which the asset has been used
+      # @return [Array<String>]
+      def detail_view_whiteboards_list
+        (detail_view_used_in_elements.map &:text).to_a
       end
 
       # Verifies that the metadata of the first list view asset matches the expected metadata and sets the asset object's
@@ -402,6 +416,45 @@ module Page
         assignment_sync_cbx(assignment).checked? ?
             assignment_sync_cbx(assignment).uncheck :
             logger.debug('Assignment sync is already disabled, moving on')
+      end
+
+      # Asset Migration
+
+      select_list(:migrate_assets_select, id: 'assetlibrary-manageassets-migrate-coursesite')
+      button(:migrate_assets_button, xpath: '//button[text()="Migrate assets"]')
+      div(:migration_started_msg, xpath: '//div[contains(.,"Your migration has started. Copied assets will appear in the Asset Library of the destination course.")]')
+      div(:no_courses_msg, xpath: '//h3["Migrate Assets"]/following-sibling::div/div[contains(.,"You are not an instructor in any other course sites using the Asset Library.")]')
+
+      # Kicks off asynchronous asset migration from one asset library to another
+      # @param driver [Selenium::WebDriver]
+      # @param url [String]
+      # @param destination_course [Course]
+      def migrate_assets(driver, url, destination_course)
+        logger.info "Migrating assets to '#{destination_course.title}', ID '#{destination_course.site_id}'"
+        load_page(driver, url)
+        click_manage_assets_link
+        wait_for_element_and_select(migrate_assets_select_element, destination_course.title)
+        wait_for_page_update_and_click migrate_assets_button_element
+        migration_started_msg_element.when_present Utils.medium_wait
+      end
+
+      # Makes a number of attempts to find an asset in an asset library following asynchronous asset migration
+      # @param driver [Selenium::WebDriver]
+      # @param url [String]
+      # @param asset [Asset]
+      # @param user [User]
+      # @return [boolean]
+      def asset_migrated?(driver, url, asset, user)
+        tries ||= 10
+        load_page(driver, url)
+        advanced_search(asset.title, nil, user, asset.type)
+        verify_first_asset(user, asset)
+        true
+      rescue
+        logger.debug "The migrated asset has not yet appeared, will retry in #{Utils.short_wait} seconds"
+        sleep Utils.short_wait
+        retry unless (tries -= 1).zero?
+        false
       end
 
       # EDIT ASSET DETAILS

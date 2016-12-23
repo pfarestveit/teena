@@ -16,7 +16,7 @@ module Page
       # @param url [String]
       def load_page(driver, url)
         navigate_to url
-        wait_until { title == 'Whiteboards' }
+        wait_until { title == "#{SuiteCTools::WHITEBOARDS.name}" }
         switch_to_canvas_iframe driver
       end
 
@@ -83,7 +83,6 @@ module Page
         enter_whiteboard_collaborators whiteboard.collaborators
         click_create_whiteboard
         verify_first_whiteboard whiteboard
-        whiteboard.id = get_first_whiteboard_id
       end
 
       # Combines methods to create a new whiteboard and then open it
@@ -121,6 +120,7 @@ module Page
           logger.debug "The browser window count is #{driver.window_handles.length}, and the current window is a whiteboard. Closing it."
           driver.close
           driver.switch_to.window driver.window_handles.first
+          switch_to_canvas_iframe driver
         else
           logger.debug "The browser window count is #{driver.window_handles.length}, and the current window is not a whiteboard. Leaving it open."
         end
@@ -144,7 +144,6 @@ module Page
       elements(:remove_collaborator_button, :button, xpath: '//label[text()="Collaborators"]/following-sibling::div//li/button')
       button(:cancel_edit, xpath: '//button[text()="Cancel"]')
       button(:save_edit, xpath: '//button[text()="Save settings"]')
-      button(:delete_button, xpath: '//button[text()="Delete whiteboard"]')
 
       # Clicks the settings button on a whiteboard
       def click_settings_button
@@ -182,6 +181,29 @@ module Page
         confirm(true) { wait_for_page_update_and_click save_edit_element } rescue Selenium::WebDriver::Error::NoAlertPresentError
       end
 
+      # DELETE/RESTORE WHITEBOARD
+
+      button(:delete_button, xpath: '//button[text()="Delete whiteboard"]')
+      button(:restore_button, xpath: '//button[@title="Restore"]')
+      span(:restored_msg, xpath: '//span[contains(.,"The whiteboard has been restored")]')
+
+      def delete_whiteboard(driver)
+        logger.info 'Deleting whiteboard'
+        click_settings_button
+        wait_for_page_update_and_click delete_button_element
+        driver.switch_to.alert.accept
+        # Two alerts will appear if the user is an admin
+        driver.switch_to.alert.accept rescue Selenium::WebDriver::Error::StaleElementReferenceError
+        driver.switch_to.window driver.window_handles.first
+        switch_to_canvas_iframe driver
+      end
+
+      def restore_whiteboard
+        logger.info 'Restoring whiteboard'
+        wait_for_page_update_and_click restore_button_element
+        restored_msg_element.when_present Utils.short_wait
+      end
+
       # WHITEBOARDS LIST VIEW
 
       elements(:list_view_whiteboard, :list_item, xpath: '//li[@data-ng-repeat="whiteboard in whiteboards"]')
@@ -210,6 +232,7 @@ module Page
         sleep 1
         logger.debug "Verifying list view whiteboard title includes '#{whiteboard.title}'"
         wait_until(Utils.short_wait) { list_view_whiteboard_title_elements[0].text.include? whiteboard.title }
+        whiteboard.id = get_first_whiteboard_id
       end
 
       # Finds a whiteboard link by its ID and then clicks to open it
@@ -227,6 +250,7 @@ module Page
       button(:open_advanced_search_button, xpath: '//button[@title="Advanced search"]')
       text_area(:advanced_search_keyword_input, id: 'whiteboards-search-keywords')
       select_list(:advanced_search_user_select, id: 'whiteboards-search-user')
+      checkbox(:include_deleted_cbx, id: 'whiteboards-search-include-deleted')
       link(:cancel_search_link, text: 'Cancel')
       button(:advanced_search_button, xpath: '//button[text()="Search"]')
       span(:no_results_msg, xpath: '//span[contains(text(),"No matching whiteboards were found.")]')
@@ -244,7 +268,8 @@ module Page
       # Performs an advanced whiteboard search
       # @param string [String]
       # @param user [User]
-      def advanced_search(string, user)
+      # @param inc_deleted [boolean] defaults to nil
+      def advanced_search(string, user, inc_deleted = nil)
         logger.info 'Performing advanced search'
         open_advanced_search_button unless advanced_search_keyword_input_element.visible?
         logger.debug "Search keyword is '#{string}'"
@@ -259,6 +284,7 @@ module Page
           self.advanced_search_user_select = user.full_name
           sleep 1
         end
+        inc_deleted ? check_include_deleted_cbx : uncheck_include_deleted_cbx
         click_element_js advanced_search_button_element
       end
 
@@ -279,12 +305,14 @@ module Page
 
       # Exports a whiteboard as a new asset library asset
       # @param whiteboard [Whiteboard]
+      # @return [Asset]
       def export_to_asset_library(whiteboard)
         click_export_button
         logger.debug 'Exporting whiteboard to asset library'
         wait_for_page_update_and_click export_to_library_button_element
         wait_until(Utils.short_wait) { export_title_input == whiteboard.title }
         wait_for_page_update_and_click export_confirm_button_element
+        Asset.new({ type: 'Whiteboard', title: whiteboard.title, preview: 'image' })
       end
 
       # Cleans the configured download directory and clicks the 'download as image' button on an open whiteboard

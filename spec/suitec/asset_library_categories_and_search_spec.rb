@@ -200,9 +200,9 @@ describe 'Asset Library', order: :defined do
       @whiteboards.open_whiteboard(@driver, @whiteboard)
       @whiteboards.add_existing_assets [student_2_upload]
       @whiteboards.wait_until(timeout) { @whiteboards.open_original_asset_link_element.attribute('href').include? student_2_upload.id }
-      @whiteboards.export_to_asset_library @whiteboard
+      @whiteboard_asset = @whiteboards.export_to_asset_library @whiteboard
       @asset_library.load_page(@driver, @asset_library_url)
-      @whiteboard_asset_id = @asset_library.list_view_asset_ids.first
+      @whiteboard_asset.id = @asset_library.list_view_asset_ids.first
 
       # Add a comment to an asset
 
@@ -251,12 +251,12 @@ describe 'Asset Library', order: :defined do
 
     it 'lets a user perform an advanced search by uploader' do
       @asset_library.advanced_search(nil, nil, student_3, nil)
-      @asset_library.wait_until(timeout) { @asset_library.list_view_asset_ids.include?(@whiteboard_asset_id && student_3_link.id) }
+      @asset_library.wait_until(timeout) { @asset_library.list_view_asset_ids.include?(@whiteboard_asset.id && student_3_link.id) }
     end
 
     it 'lets a user perform an advanced search by type' do
       @asset_library.advanced_search(nil, nil, nil, 'Whiteboard')
-      @asset_library.wait_until(timeout) { @asset_library.list_view_asset_ids.include? @whiteboard_asset_id }
+      @asset_library.wait_until(timeout) { @asset_library.list_view_asset_ids.include? @whiteboard_asset.id }
     end
 
     it 'lets a user perform an advanced search by keyword and category' do
@@ -286,7 +286,7 @@ describe 'Asset Library', order: :defined do
 
     it 'lets a user perform an advanced search by uploader and type' do
       @asset_library.advanced_search(nil, nil, student_2, 'Whiteboard')
-      @asset_library.wait_until(timeout) { @asset_library.list_view_asset_ids.include? @whiteboard_asset_id }
+      @asset_library.wait_until(timeout) { @asset_library.list_view_asset_ids.include? @whiteboard_asset.id }
     end
 
     it 'lets a user perform an advanced search by keyword, category, and uploader' do
@@ -317,7 +317,7 @@ describe 'Asset Library', order: :defined do
     it 'lets a user click a commenter name to view the asset gallery filtered by the commenter\'s submissions' do
       @asset_library.load_asset_detail(@driver, @asset_library_url, student_2_upload)
       @asset_library.wait_for_page_update_and_click @asset_library.commenter_link(0)
-      @asset_library.wait_until(timeout) { @asset_library.list_view_asset_ids.first.include? @whiteboard_asset_id }
+      @asset_library.wait_until(timeout) { @asset_library.list_view_asset_ids.first.include? @whiteboard_asset.id }
       expect(@asset_library.keyword_search_input).to be_empty
       expect(@asset_library.category_select).to eql('Category')
       expect(@asset_library.uploader_select).to eql(student_3.full_name)

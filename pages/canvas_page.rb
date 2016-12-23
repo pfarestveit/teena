@@ -154,9 +154,9 @@ module Page
       retry unless (tries -= 1).zero?
     end
 
-    # Uses a hash to add users of defined roles to a course site. The hash is often derived from an external test data file
+    # Adds a collection of users to a course site with the role associated with the user
     # @param course [Course]
-    # @param test_users [Hash]
+    # @param test_users [Array<User>]
     def add_users(course, test_users)
       ['Teacher', 'Designer', 'Lead TA', 'TA', 'Observer', 'Reader', 'Student'].each do |user_role|
         users = ''
@@ -210,15 +210,16 @@ module Page
     # @param test_id [String]
     def create_generic_course_site(course, test_users, test_id)
       if course.site_id.nil?
-        logger.info "Creating a course site named #{course.code} in #{course.term} semester"
         load_sub_account
-        wait_for_page_update_and_click add_new_course_button_element
+        wait_for_page_load_and_click add_new_course_button_element
         course_name_input_element.when_visible Utils.short_wait
         course.title = "QA Test - #{test_id}" if course.title.nil?
         course.code = "QA #{test_id} LEC001" if course.code.nil?
         self.course_name_input = "#{course.title}"
         self.ref_code_input = "#{course.code}"
         wait_for_element_and_select(term_element, course.term) unless course.term.nil?
+        logger.info "Creating a course site named #{course.title} in #{course.term} semester"
+        wait_for_page_update_and_click create_course_button_element
         add_course_success_element.when_visible Utils.medium_wait
         course.site_id = search_for_course test_id
       else

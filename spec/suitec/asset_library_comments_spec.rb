@@ -43,7 +43,6 @@ describe 'An asset comment', order: :defined do
     @canvas.masquerade_as(@asset_uploader, @course)
     @asset_library.load_page(@driver, @asset_library_url)
     @asset_library.add_site @asset
-    @asset.id = @asset_library.list_view_asset_ids.first
 
     # Get the users' initial scores
     @canvas.masquerade_as(@teacher, @course)

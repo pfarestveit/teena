@@ -17,7 +17,7 @@ module Page
     # Loads CAS
     def load_page
       navigate_to Utils.cal_net_url
-      page_heading_element.when_visible
+      page_heading_element.when_visible Utils.medium_wait
     end
 
     # Logs in to CAS. If no real credentials available in a Settings override, then waits for manual login using a real
@@ -42,7 +42,7 @@ module Page
     # Hits the CAS logout URL directly
     def log_out
       navigate_to "#{Utils.cal_net_url}/cas/logout"
-      logout_conf_heading_element.when_visible
+      logout_conf_heading_element.when_visible Utils.medium_wait
       sleep 1
     end
 
