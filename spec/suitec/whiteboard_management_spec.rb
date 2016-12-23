@@ -315,4 +315,60 @@ describe 'Whiteboard', order: :defined do
       expect(@engagement_index.user_score @student_1).to eql("#{@score_with_export_whiteboard}")
     end
   end
+
+  describe 'asset detail' do
+
+    before(:all) do
+      asset_detail_test_id = "#{Time.now.to_i}"
+      @canvas.masquerade_as(@teacher, @course)
+      @asset = Asset.new(@teacher.assets.find { |asset| asset['type'] == 'File' })
+      @asset_library.load_page(@driver, @asset_library_url)
+      @asset_library.upload_file_to_library @asset
+
+      # Create three whiteboards and add the same asset to each
+      boards = []
+      boards << (@whiteboard_exported = Whiteboard.new({owner: @teacher, title: "Whiteboard Asset Detail #{asset_detail_test_id} Exported", collaborators: []}))
+      boards << (@whiteboard_deleted = Whiteboard.new({owner: @teacher, title: "Whiteboard Asset Detail #{asset_detail_test_id} Exported Deleted", collaborators: []}))
+      boards << (@whiteboard_non_exported = Whiteboard.new({owner: @teacher, title: "Whiteboard Asset Detail #{asset_detail_test_id} Not Exported", collaborators: []}))
+      boards.each do |board|
+        @whiteboards.load_page(@driver, @whiteboards_url)
+        @whiteboards.create_and_open_whiteboard(@driver, board)
+        @whiteboards.add_existing_assets [@asset]
+        @whiteboards.close_whiteboard @driver
+      end
+
+      # Export two of the boards
+      [boards[0], boards[1]].each do |export|
+        @whiteboards.load_page(@driver, @whiteboards_url)
+        @whiteboards.open_whiteboard(@driver, export)
+        @whiteboards.export_to_asset_library export
+        @whiteboards.close_whiteboard @driver
+      end
+
+      # Delete the resulting asset for one of the boards
+      @asset_library.load_page(@driver, @asset_library_url)
+      @asset_library.wait_for_page_load_and_click @asset_library.list_view_asset_link_elements.first
+      @asset_library.delete_asset
+
+      # Load the asset's detail
+      @asset_library.load_asset_detail(@driver, @asset_library_url, @asset)
+    end
+
+    it 'lists whiteboard assets that use the asset' do
+      expect(@asset_library.detail_view_whiteboards_list).to include(@whiteboard_exported.title)
+    end
+
+    it 'does not list whiteboards that use the asset but have not been exported to the asset library' do
+      expect(@asset_library.detail_view_whiteboards_list).not_to include(@whiteboard_non_exported.title)
+    end
+
+    it 'does not list whiteboard assets that use the asset but have since been deleted' do
+      expect(@asset_library.detail_view_whiteboards_list).not_to include(@whiteboard_deleted.title)
+    end
+
+    it 'links to the whiteboard asset detail' do
+      @asset_library.detail_view_used_in_elements.first.click
+      @asset_library.wait_until(timeout) { @asset_library.detail_view_asset_title == @whiteboard_exported.title }
+    end
+  end
 end

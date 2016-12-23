@@ -40,6 +40,7 @@ module Page
       div(:detail_view_asset_no_category, xpath: '//div[text()="No category"]')
       link(:detail_view_asset_url_source, xpath: '//div[text()="Source"]/following-sibling::div//a')
       div(:detail_view_asset_no_source, xpath: '//div[text()="No source"]')
+      elements(:detail_view_used_in, :link, xpath: '//div[text()="Used in"]/following-sibling::div//a')
 
       link(:back_to_library_link, text: 'Back to Asset Library')
 
@@ -116,6 +117,12 @@ module Page
       def get_canvas_submission_title(asset)
         # For Canvas submissions, the file name or the URL are used as the asset title
         asset.type == 'File' ? asset.title = asset.file_name.sub(/\..*/, '') : asset.title = asset.url
+      end
+
+      # Returns the titles of whiteboard assets in which the asset has been used
+      # @return [Array<String>]
+      def detail_view_whiteboards_list
+        (detail_view_used_in_elements.map &:text).to_a
       end
 
       # Verifies that the metadata of the first list view asset matches the expected metadata and sets the asset object's
