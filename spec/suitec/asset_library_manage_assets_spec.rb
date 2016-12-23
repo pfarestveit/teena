@@ -27,7 +27,6 @@ describe 'Asset', order: :defined do
     # Obtain course site and add two new asset categories
     @canvas.log_in(@cal_net, Utils.super_admin_username, Utils.super_admin_password)
     @canvas.get_suite_c_test_course(@course, [@teacher, @student_uploader, @student_viewer], test_id, [SuiteCTools::ASSET_LIBRARY, SuiteCTools::ENGAGEMENT_INDEX, SuiteCTools::WHITEBOARDS])
-    @canvas.load_course_site @course
     @whiteboards_url = @canvas.click_tool_link(@driver, SuiteCTools::WHITEBOARDS)
     @engagement_index_url = @canvas.click_tool_link(@driver, SuiteCTools::ENGAGEMENT_INDEX)
     @asset_library_url = @canvas.click_tool_link(@driver, SuiteCTools::ASSET_LIBRARY)
@@ -45,7 +44,6 @@ describe 'Asset', order: :defined do
       @asset.title = "#{Time.now.to_i}"
       @asset.category = @category_1
       @asset_library.add_site @asset
-      @asset.id = @asset_library.list_view_asset_ids.first
       logger.debug "Asset ID #{@asset.id} has title '#{@asset.title}'"
 
       @asset_library.load_asset_detail(@driver, @asset_library_url, @asset)
@@ -88,170 +86,167 @@ describe 'Asset', order: :defined do
 
   describe 'deleting' do
 
-      context 'when the asset has no comments or likes and has not been used on a whiteboard' do
+    context 'when the asset has no comments or likes and has not been used on a whiteboard' do
 
-        before(:each) do
-          # Upload a new asset for the test
-          @asset.title = "#{Time.now.to_i}"
-          @canvas.masquerade_as(@student_uploader, @course)
-          @asset_library.load_page(@driver, @asset_library_url)
-          @asset_library.add_site @asset
-          @asset.id = @asset_library.list_view_asset_ids.first
-          logger.debug "Asset ID #{@asset.id} has title '#{@asset.title}'"
+      before(:each) do
+        # Upload a new asset for the test
+        @asset.title = "#{Time.now.to_i}"
+        @canvas.masquerade_as(@student_uploader, @course)
+        @asset_library.load_page(@driver, @asset_library_url)
+        @asset_library.add_site @asset
+        logger.debug "Asset ID #{@asset.id} has title '#{@asset.title}'"
 
-          # Get the students' initial scores
-          @canvas.stop_masquerading
-          @engagement_index.load_page(@driver, @engagement_index_url)
-          @uploader_score = @engagement_index.user_score @student_uploader
-        end
-
-        it 'can be done by a teacher with no effect on points already earned' do
-          # Delete asset
-          @canvas.masquerade_as(@teacher, @course)
-          @asset_library.load_asset_detail(@driver, @asset_library_url, @asset)
-          @asset_library.delete_asset
-          @asset_library.advanced_search(test_id, nil, @student_uploader, nil)
-          @asset_library.no_search_results_element.when_present Utils.short_wait
-
-          # Check points
-          @canvas.stop_masquerading
-          @engagement_index.load_page(@driver, @engagement_index_url)
-          expect(@engagement_index.user_score @student_uploader).to eql(@uploader_score)
-          scores = @engagement_index.download_csv(@driver, @course, @engagement_index_url)
-          expect(scores).to include("#{@student_uploader.full_name}, add_asset, #{Activities::ADD_ASSET_TO_LIBRARY.points}, #{@uploader_score}")
-        end
-
-        it 'can be done by the student who created the asset with no effect on points already earned' do
-          # Delete asset
-          @canvas.masquerade_as(@student_uploader, @course)
-          @asset_library.load_asset_detail(@driver, @asset_library_url, @asset)
-          @asset_library.delete_asset
-          @asset_library.advanced_search(test_id, nil, @student_uploader, nil)
-          @asset_library.no_search_results_element.when_present Utils.short_wait
-
-          # Check points
-          @canvas.stop_masquerading
-          @engagement_index.load_page(@driver, @engagement_index_url)
-          expect(@engagement_index.user_score @student_uploader).to eql(@uploader_score)
-        end
-
-        it 'cannot be done by a student who did not create the asset' do
-          @canvas.masquerade_as(@student_viewer, @course)
-          @asset_library.load_asset_detail(@driver, @asset_library_url, @asset)
-          expect(@asset_library.delete_asset_button?).to be false
-        end
-
+        # Get the students' initial scores
+        @canvas.stop_masquerading
+        @engagement_index.load_page(@driver, @engagement_index_url)
+        @uploader_score = @engagement_index.user_score @student_uploader
       end
 
-      context 'when there are comments on the asset' do
+      it 'can be done by a teacher with no effect on points already earned' do
+        # Delete asset
+        @canvas.masquerade_as(@teacher, @course)
+        @asset_library.load_asset_detail(@driver, @asset_library_url, @asset)
+        @asset_library.delete_asset
+        @asset_library.advanced_search(test_id, nil, @student_uploader, nil)
+        @asset_library.no_search_results_element.when_present Utils.short_wait
 
-        before(:each) do
-          # Upload a new asset for the test
-          @asset.title = "#{Time.now.to_i}"
-          @canvas.masquerade_as(@student_uploader, @course)
-          @asset_library.load_page(@driver, @asset_library_url)
-          @asset_library.add_site @asset
-          @asset.id = @asset_library.list_view_asset_ids.first
-          logger.debug "Asset ID #{@asset.id} has title '#{@asset.title}'"
-
-          # Add a comment
-          @canvas.masquerade_as(@student_viewer, @course)
-          @asset_library.load_asset_detail(@driver, @asset_library_url, @asset)
-          @asset_library.add_comment 'An asset comment'
-
-          # Get the students' initial scores
-          @canvas.stop_masquerading
-          @engagement_index.load_page(@driver, @engagement_index_url)
-          @uploader_score = @engagement_index.user_score @student_uploader
-          @viewer_score = @engagement_index.user_score @student_viewer
-        end
-
-        it 'can be done by a teacher with no effect on points already earned' do
-          # Delete asset
-          @canvas.masquerade_as(@teacher, @course)
-          @asset_library.load_asset_detail(@driver, @asset_library_url, @asset)
-          @asset_library.delete_asset
-          @asset_library.advanced_search(test_id, nil, @student_uploader, nil)
-          @asset_library.no_search_results_element.when_present Utils.short_wait
-
-          # Check points
-          @canvas.stop_masquerading
-          @engagement_index.load_page(@driver, @engagement_index_url)
-          expect(@engagement_index.user_score @student_uploader).to eql(@uploader_score)
-          expect(@engagement_index.user_score @student_viewer).to eql(@viewer_score)
-          scores = @engagement_index.download_csv(@driver, @course, @engagement_index_url)
-          expect(scores).to include("#{@student_uploader.full_name}, get_asset_comment, #{Activities::GET_COMMENT.points}, #{@uploader_score}")
-          expect(scores).to include("#{@student_viewer.full_name}, asset_comment, #{Activities::COMMENT.points}, #{@viewer_score}")
-        end
-
-        it 'cannot be done by the student who created the asset' do
-          @canvas.masquerade_as(@student_uploader, @course)
-          @asset_library.load_asset_detail(@driver, @asset_library_url, @asset)
-          expect(@asset_library.delete_asset_button?).to be false
-        end
-
-        it 'cannot be done by a student who did not create the asset' do
-          @canvas.masquerade_as(@student_viewer, @course)
-          @asset_library.load_asset_detail(@driver, @asset_library_url, @asset)
-          expect(@asset_library.delete_asset_button?).to be false
-        end
-
+        # Check points
+        @canvas.stop_masquerading
+        @engagement_index.load_page(@driver, @engagement_index_url)
+        expect(@engagement_index.user_score @student_uploader).to eql(@uploader_score)
+        scores = @engagement_index.download_csv(@driver, @course, @engagement_index_url)
+        expect(scores).to include("#{@student_uploader.full_name}, add_asset, #{Activities::ADD_ASSET_TO_LIBRARY.points}, #{@uploader_score}")
       end
 
-      context 'when there are likes on the asset' do
+      it 'can be done by the student who created the asset with no effect on points already earned' do
+        # Delete asset
+        @canvas.masquerade_as(@student_uploader, @course)
+        @asset_library.load_asset_detail(@driver, @asset_library_url, @asset)
+        @asset_library.delete_asset
+        @asset_library.advanced_search(test_id, nil, @student_uploader, nil)
+        @asset_library.no_search_results_element.when_present Utils.short_wait
 
-        before(:each) do
-          # Upload a new asset for the test
-          @asset.title = "#{Time.now.to_i}"
-          @canvas.masquerade_as(@student_uploader, @course)
-          @asset_library.load_page(@driver, @asset_library_url)
-          @asset_library.add_site @asset
-          @asset.id = @asset_library.list_view_asset_ids.first
-          logger.debug "Asset ID #{@asset.id} has title '#{@asset.title}'"
-
-          # Add a like
-          @canvas.masquerade_as(@student_viewer, @course)
-          @asset_library.load_asset_detail(@driver, @asset_library_url, @asset)
-          @asset_library.toggle_detail_view_item_like
-
-          # Get the students' initial scores
-          @canvas.stop_masquerading
-          @engagement_index.load_page(@driver, @engagement_index_url)
-          @uploader_score = @engagement_index.user_score @student_uploader
-          @viewer_score = @engagement_index.user_score @student_viewer
-        end
-
-        it 'can be done by a teacher with no effect on points already earned' do
-          # Delete asset
-          @canvas.masquerade_as(@teacher, @course)
-          @asset_library.load_asset_detail(@driver, @asset_library_url, @asset)
-          @asset_library.delete_asset
-          @asset_library.advanced_search(test_id, nil, @student_uploader, nil)
-          @asset_library.no_search_results_element.when_present Utils.short_wait
-
-          # Check points
-          @canvas.stop_masquerading
-          @engagement_index.load_page(@driver, @engagement_index_url)
-          expect(@engagement_index.user_score @student_uploader).to eql(@uploader_score)
-          expect(@engagement_index.user_score @student_viewer).to eql(@viewer_score)
-          scores = @engagement_index.download_csv(@driver, @course, @engagement_index_url)
-          expect(scores).to include("#{@student_uploader.full_name}, get_like, #{Activities::GET_LIKE.points}, #{@uploader_score}")
-          expect(scores).to include("#{@student_viewer.full_name}, like, #{Activities::LIKE.points}, #{@viewer_score}")
-        end
-
-        it 'cannot be done by the student who created the asset' do
-          @canvas.masquerade_as(@student_uploader, @course)
-          @asset_library.load_asset_detail(@driver, @asset_library_url, @asset)
-          expect(@asset_library.delete_asset_button?).to be false
-        end
-
-        it 'cannot be done by a student who did not create the asset' do
-          @canvas.masquerade_as(@student_viewer, @course)
-          @asset_library.load_asset_detail(@driver, @asset_library_url, @asset)
-          expect(@asset_library.delete_asset_button?).to be false
-        end
-
+        # Check points
+        @canvas.stop_masquerading
+        @engagement_index.load_page(@driver, @engagement_index_url)
+        expect(@engagement_index.user_score @student_uploader).to eql(@uploader_score)
       end
+
+      it 'cannot be done by a student who did not create the asset' do
+        @canvas.masquerade_as(@student_viewer, @course)
+        @asset_library.load_asset_detail(@driver, @asset_library_url, @asset)
+        expect(@asset_library.delete_asset_button?).to be false
+      end
+
+    end
+
+    context 'when there are comments on the asset' do
+
+      before(:each) do
+        # Upload a new asset for the test
+        @asset.title = "#{Time.now.to_i}"
+        @canvas.masquerade_as(@student_uploader, @course)
+        @asset_library.load_page(@driver, @asset_library_url)
+        @asset_library.add_site @asset
+        logger.debug "Asset ID #{@asset.id} has title '#{@asset.title}'"
+
+        # Add a comment
+        @canvas.masquerade_as(@student_viewer, @course)
+        @asset_library.load_asset_detail(@driver, @asset_library_url, @asset)
+        @asset_library.add_comment 'An asset comment'
+
+        # Get the students' initial scores
+        @canvas.stop_masquerading
+        @engagement_index.load_page(@driver, @engagement_index_url)
+        @uploader_score = @engagement_index.user_score @student_uploader
+        @viewer_score = @engagement_index.user_score @student_viewer
+      end
+
+      it 'can be done by a teacher with no effect on points already earned' do
+        # Delete asset
+        @canvas.masquerade_as(@teacher, @course)
+        @asset_library.load_asset_detail(@driver, @asset_library_url, @asset)
+        @asset_library.delete_asset
+        @asset_library.advanced_search(test_id, nil, @student_uploader, nil)
+        @asset_library.no_search_results_element.when_present Utils.short_wait
+
+        # Check points
+        @canvas.stop_masquerading
+        @engagement_index.load_page(@driver, @engagement_index_url)
+        expect(@engagement_index.user_score @student_uploader).to eql(@uploader_score)
+        expect(@engagement_index.user_score @student_viewer).to eql(@viewer_score)
+        scores = @engagement_index.download_csv(@driver, @course, @engagement_index_url)
+        expect(scores).to include("#{@student_uploader.full_name}, get_asset_comment, #{Activities::GET_COMMENT.points}, #{@uploader_score}")
+        expect(scores).to include("#{@student_viewer.full_name}, asset_comment, #{Activities::COMMENT.points}, #{@viewer_score}")
+      end
+
+      it 'cannot be done by the student who created the asset' do
+        @canvas.masquerade_as(@student_uploader, @course)
+        @asset_library.load_asset_detail(@driver, @asset_library_url, @asset)
+        expect(@asset_library.delete_asset_button?).to be false
+      end
+
+      it 'cannot be done by a student who did not create the asset' do
+        @canvas.masquerade_as(@student_viewer, @course)
+        @asset_library.load_asset_detail(@driver, @asset_library_url, @asset)
+        expect(@asset_library.delete_asset_button?).to be false
+      end
+
+    end
+
+    context 'when there are likes on the asset' do
+
+      before(:each) do
+        # Upload a new asset for the test
+        @asset.title = "#{Time.now.to_i}"
+        @canvas.masquerade_as(@student_uploader, @course)
+        @asset_library.load_page(@driver, @asset_library_url)
+        @asset_library.add_site @asset
+        logger.debug "Asset ID #{@asset.id} has title '#{@asset.title}'"
+
+        # Add a like
+        @canvas.masquerade_as(@student_viewer, @course)
+        @asset_library.load_asset_detail(@driver, @asset_library_url, @asset)
+        @asset_library.toggle_detail_view_item_like
+
+        # Get the students' initial scores
+        @canvas.stop_masquerading
+        @engagement_index.load_page(@driver, @engagement_index_url)
+        @uploader_score = @engagement_index.user_score @student_uploader
+        @viewer_score = @engagement_index.user_score @student_viewer
+      end
+
+      it 'can be done by a teacher with no effect on points already earned' do
+        # Delete asset
+        @canvas.masquerade_as(@teacher, @course)
+        @asset_library.load_asset_detail(@driver, @asset_library_url, @asset)
+        @asset_library.delete_asset
+        @asset_library.advanced_search(test_id, nil, @student_uploader, nil)
+        @asset_library.no_search_results_element.when_present Utils.short_wait
+
+        # Check points
+        @canvas.stop_masquerading
+        @engagement_index.load_page(@driver, @engagement_index_url)
+        expect(@engagement_index.user_score @student_uploader).to eql(@uploader_score)
+        expect(@engagement_index.user_score @student_viewer).to eql(@viewer_score)
+        scores = @engagement_index.download_csv(@driver, @course, @engagement_index_url)
+        expect(scores).to include("#{@student_uploader.full_name}, get_like, #{Activities::GET_LIKE.points}, #{@uploader_score}")
+        expect(scores).to include("#{@student_viewer.full_name}, like, #{Activities::LIKE.points}, #{@viewer_score}")
+      end
+
+      it 'cannot be done by the student who created the asset' do
+        @canvas.masquerade_as(@student_uploader, @course)
+        @asset_library.load_asset_detail(@driver, @asset_library_url, @asset)
+        expect(@asset_library.delete_asset_button?).to be false
+      end
+
+      it 'cannot be done by a student who did not create the asset' do
+        @canvas.masquerade_as(@student_viewer, @course)
+        @asset_library.load_asset_detail(@driver, @asset_library_url, @asset)
+        expect(@asset_library.delete_asset_button?).to be false
+      end
+
+    end
 
     context 'when the asset has been used on a whiteboard' do
 
@@ -261,11 +256,10 @@ describe 'Asset', order: :defined do
         @canvas.masquerade_as(@student_uploader, @course)
         @asset_library.load_page(@driver, @asset_library_url)
         @asset_library.add_site @asset
-        @asset.id = @asset_library.list_view_asset_ids.first
         logger.debug "Asset ID #{@asset.id} has title '#{@asset.title}'"
 
         # Add to a whiteboard
-        @whiteboard = Whiteboard.new({ owner: @student_viewer, title: 'Test Whiteboard', collaborators: [@student_uploader] })
+        @whiteboard = Whiteboard.new({owner: @student_viewer, title: 'Test Whiteboard', collaborators: [@student_uploader]})
         @canvas.masquerade_as(@student_viewer, @course)
         @whiteboards.load_page(@driver, @whiteboards_url)
         @whiteboards.create_whiteboard @whiteboard
@@ -312,5 +306,56 @@ describe 'Asset', order: :defined do
       end
 
     end
+  end
+
+  describe 'migration' do
+
+    before(:all) do
+      @canvas.stop_masquerading
+
+      # Create a destination course site with an asset library for asset migration
+      destination_test_id = Utils.get_test_id
+      @destination_course = Course.new({})
+      @canvas.get_suite_c_test_course(@destination_course, [@teacher], destination_test_id, [SuiteCTools::ASSET_LIBRARY])
+      @destination_library = Page::SuiteCPages::AssetLibraryPage.new @driver
+      @destination_library_url = @canvas.click_tool_link(@driver, SuiteCTools::ASSET_LIBRARY)
+
+      # Teacher logs in to new asset library so that enrollment is synced immediately
+      @canvas.masquerade_as(@teacher, @destination_course)
+      @destination_library.load_page(@driver, @destination_library_url)
+
+      # Teacher creates an asset of each type in origin course site plus one extra that is deleted
+      @asset_library.load_page(@driver, @asset_library_url)
+      @non_migrated_delete = Asset.new({type: 'File', file_name: 'image-jpegSmall2.jpg', title: "#{destination_test_id} - Deleted File"})
+      @asset_library.upload_file_to_library @non_migrated_delete
+      @asset_library.load_asset_detail(@driver, @asset_library_url, @non_migrated_delete)
+      @asset_library.delete_asset
+
+      @migrated_link = Asset.new({type: 'Link', url: 'https://news.google.com', title: "#{destination_test_id} - Migrated Link", description: 'Migrated link description'})
+      @asset_library.add_site @migrated_link
+
+      @migrated_file = Asset.new({type: 'File', file_name: 'image-jpegSmall1.jpg', title: "#{destination_test_id} - Migrated File", category: @category_1})
+      @asset_library.upload_file_to_library @migrated_file
+
+      @non_migrated_whiteboard = Whiteboard.new({owner: @teacher, title: "#{destination_test_id} - Migrated Whiteboard", collaborators: []})
+      @whiteboards.load_page(@driver, @whiteboards_url)
+      @whiteboards.create_whiteboard @non_migrated_whiteboard
+      @whiteboards.open_whiteboard(@driver, @non_migrated_whiteboard)
+      begin
+        @whiteboards.add_existing_assets [@migrated_link]
+        @migrated_whiteboard = @whiteboards.export_to_asset_library @non_migrated_whiteboard
+      ensure
+        @whiteboards.close_whiteboard @driver
+      end
+
+      # Migrate assets
+      @asset_library.migrate_assets(@driver, @asset_library_url, @destination_course)
+    end
+
+    it('copies File type assets') { expect(@destination_library.asset_migrated?(@driver, @destination_library_url, @migrated_file, @teacher)).to be true }
+    it('copies Link type assets') { expect(@destination_library.asset_migrated?(@driver, @destination_library_url, @migrated_link, @teacher)).to be true }
+    it('does not copy Whiteboard type assets') { expect(@destination_library.asset_migrated?(@driver, @destination_library_url, @migrated_whiteboard, @teacher)).to be false }
+    it('does not copy deleted assets') { expect(@destination_library.asset_migrated?(@driver, @destination_library_url, @non_migrated_delete, @teacher)).to be false }
+
   end
 end

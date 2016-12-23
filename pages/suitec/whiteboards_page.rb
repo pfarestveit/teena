@@ -16,7 +16,7 @@ module Page
       # @param url [String]
       def load_page(driver, url)
         navigate_to url
-        wait_until { title == 'Whiteboards' }
+        wait_until { title == "#{SuiteCTools::WHITEBOARDS.name}" }
         switch_to_canvas_iframe driver
       end
 
@@ -83,7 +83,6 @@ module Page
         enter_whiteboard_collaborators whiteboard.collaborators
         click_create_whiteboard
         verify_first_whiteboard whiteboard
-        whiteboard.id = get_first_whiteboard_id
       end
 
       # Combines methods to create a new whiteboard and then open it
@@ -210,6 +209,7 @@ module Page
         sleep 1
         logger.debug "Verifying list view whiteboard title includes '#{whiteboard.title}'"
         wait_until(Utils.short_wait) { list_view_whiteboard_title_elements[0].text.include? whiteboard.title }
+        whiteboard.id = get_first_whiteboard_id
       end
 
       # Finds a whiteboard link by its ID and then clicks to open it
@@ -279,12 +279,14 @@ module Page
 
       # Exports a whiteboard as a new asset library asset
       # @param whiteboard [Whiteboard]
+      # @return [Asset]
       def export_to_asset_library(whiteboard)
         click_export_button
         logger.debug 'Exporting whiteboard to asset library'
         wait_for_page_update_and_click export_to_library_button_element
         wait_until(Utils.short_wait) { export_title_input == whiteboard.title }
         wait_for_page_update_and_click export_confirm_button_element
+        Asset.new({ type: 'Whiteboard', title: whiteboard.title, preview: 'image' })
       end
 
       # Cleans the configured download directory and clicks the 'download as image' button on an open whiteboard

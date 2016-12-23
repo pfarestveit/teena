@@ -34,7 +34,6 @@ describe 'Asset', order: :defined do
     @canvas.load_course_site @course
     @asset_library.load_page(@driver, @asset_library_url)
     @asset_library.add_site @asset
-    @asset.id = @asset_library.list_view_asset_ids.first
 
     # Get the users' initial scores
     @engagement_index.load_scores(@driver, @engagement_index_url)
@@ -154,6 +153,9 @@ describe 'Asset', order: :defined do
   end
 
   describe 'views' do
+
+    # View count update can be slow to happen
+    before { sleep Utils.medium_wait }
 
     it 'are only incremented when viewed by users other than the asset creator' do
       @asset_library.load_list_view_asset(@driver, @asset_library_url, @asset)

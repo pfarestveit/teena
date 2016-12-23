@@ -38,7 +38,7 @@ describe 'Whiteboard', order: :defined do
   describe 'creation' do
 
     before(:all) do
-      @whiteboard = Whiteboard.new({ owner: @student_1, title: "Whiteboard Creation #{test_id}", collaborators: [] })
+      @whiteboard = Whiteboard.new({owner: @student_1, title: "Whiteboard Creation #{test_id}", collaborators: []})
       @canvas.masquerade_as(@student_1, @course)
       @whiteboards.load_page(@driver, @whiteboards_url)
     end
@@ -86,7 +86,7 @@ describe 'Whiteboard', order: :defined do
 
     before(:all) do
       editing_test_id = "#{Time.now.to_i}"
-      @whiteboard = Whiteboard.new({ owner: @student_1, title: "Whiteboard Editing #{editing_test_id}", collaborators: [] })
+      @whiteboard = Whiteboard.new({owner: @student_1, title: "Whiteboard Editing #{editing_test_id}", collaborators: []})
       @whiteboards.close_whiteboard @driver
       @whiteboards.load_page(@driver, @whiteboards_url)
     end
@@ -109,9 +109,9 @@ describe 'Whiteboard', order: :defined do
 
     before(:all) do
       @search_test_id = "#{Time.now.to_i}"
-      @whiteboard_1 = Whiteboard.new({ owner: @student_1, title: "Whiteboard Search #{@search_test_id} Unique Title", collaborators: [] })
-      @whiteboard_2 = Whiteboard.new({ owner: @student_1, title: "Whiteboard Search #{@search_test_id} Non-unique Title", collaborators: [@teacher] })
-      @whiteboard_3 = Whiteboard.new({ owner: @student_1, title: "Whiteboard Search #{@search_test_id} Non-unique Title", collaborators: [@teacher, @student_2] })
+      @whiteboard_1 = Whiteboard.new({owner: @student_1, title: "Whiteboard Search #{@search_test_id} Unique Title", collaborators: []})
+      @whiteboard_2 = Whiteboard.new({owner: @student_1, title: "Whiteboard Search #{@search_test_id} Non-unique Title", collaborators: [@teacher]})
+      @whiteboard_3 = Whiteboard.new({owner: @student_1, title: "Whiteboard Search #{@search_test_id} Non-unique Title", collaborators: [@teacher, @student_2]})
 
       @whiteboards.close_whiteboard @driver
       @whiteboards.load_page(@driver, @whiteboards_url)
@@ -184,7 +184,7 @@ describe 'Whiteboard', order: :defined do
 
     before(:all) do
       export_test_id = "#{Time.now.to_i}"
-      @whiteboard = Whiteboard.new({ owner: @student_1, title: "Whiteboard Export #{export_test_id}", collaborators: [] })
+      @whiteboard = Whiteboard.new({owner: @student_1, title: "Whiteboard Export #{export_test_id}", collaborators: []})
 
       # Upload assets to be used on whiteboard
       @canvas.masquerade_as(@student_1, @course)
@@ -194,12 +194,8 @@ describe 'Whiteboard', order: :defined do
       user_asset_data.each do |data|
         asset = Asset.new data
         (data['type'] == 'File') ? @asset_library.upload_file_to_library(asset) : @asset_library.add_site(asset)
-        @asset_library.wait_until do
-          @asset_library.list_view_asset_title_elements.any?
-          @asset_library.list_view_asset_title_elements[0].text == asset.title
-          asset.id = @asset_library.list_view_asset_ids.first
-          @assets << asset
-        end
+        @asset_library.verify_first_asset(@student_1, asset)
+        @assets << asset
       end
 
       # Get current score
@@ -231,13 +227,12 @@ describe 'Whiteboard', order: :defined do
     end
 
     it 'as a new asset is possible if the whiteboard has assets' do
-      whiteboard_as_asset = Asset.new({title: "#{@whiteboard.title}"})
       @whiteboards.add_existing_assets @assets
       @whiteboards.open_original_asset_link_element.when_visible Utils.long_wait
-      @whiteboards.export_to_asset_library @whiteboard
+      whiteboard_asset = @whiteboards.export_to_asset_library @whiteboard
       @whiteboards.wait_until { @whiteboards.export_confirm_msg? }
       @asset_library.load_page(@driver, @asset_library_url)
-      @asset_library.verify_first_asset(@student_1, whiteboard_as_asset)
+      @asset_library.verify_first_asset(@student_1, whiteboard_asset)
     end
 
     it 'as a new asset earns "Export a whiteboard to the Asset Library" points' do
