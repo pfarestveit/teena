@@ -39,6 +39,7 @@ describe 'New asset uploads', order: :defined do
 
             @asset = Asset.new asset
             asset_title = @asset.title
+            asset_preview_type = @asset.preview
             @asset.description = nil
             @asset.category = nil
             @asset_size = File.size(Utils.test_data_file_path(@asset.file_name)).to_f / 1024000
@@ -69,7 +70,7 @@ describe 'New asset uploads', order: :defined do
                   asset_downloadable = @asset_library.verify_block { @asset_library.download_asset @asset }
 
                   it("appear in the Asset Library for #{user_full_name} uploading #{asset_title}") { expect(file_uploaded).to be true }
-                  it("generate the right asset preview for #{user_full_name} uploading #{asset_file_name}") { expect(preview_generated).to be true }
+                  it("generate a preview of type #{asset_preview_type} for #{user_full_name} uploading #{asset_file_name}") { expect(preview_generated).to be true }
                   it("can be downloaded by #{user_full_name} from the #{asset_title} asset detail page") { expect(asset_downloadable).to be true }
 
                 end
@@ -84,7 +85,7 @@ describe 'New asset uploads', order: :defined do
                 has_download_button = @asset_library.download_asset_link?
 
                 it("appear in the Asset Library for #{user_full_name} uploading #{asset_title}") { expect(url_uploaded).to be true }
-                it("generate the right asset preview for #{user_full_name} adding link #{asset_url}") { expect(preview_generated).to be true }
+                it("generate a preview of type #{asset_preview_type} for #{user_full_name} adding link #{asset_url}") { expect(preview_generated).to be true }
                 it("cannot be downloaded by #{user_full_name} from the #{asset_title} detail page") { expect(has_download_button).to be false }
 
               else

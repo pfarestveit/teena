@@ -26,7 +26,8 @@ describe 'Asset library file uploads', order: :defined do
     @canvas.load_course_site @course
     @asset_library_url = @canvas.click_tool_link(@driver, SuiteCTools::ASSET_LIBRARY)
 
-    @asset_library.add_custom_categories(@driver, @asset_library_url, [(@category_1="Category 1 - #{test_id}"), (@category_2="Category 2 - #{test_id}")])
+    category_id = "#{Time.now.to_i}"
+    @asset_library.add_custom_categories(@driver, @asset_library_url, [(@category_1="Category 1 - #{category_id}"), (@category_2="Category 2 - #{category_id}")])
     @asset_library.delete_custom_category @category_2
     @canvas.log_out(@driver, @cal_net)
 

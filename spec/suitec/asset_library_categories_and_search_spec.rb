@@ -3,6 +3,7 @@ require_relative '../../util/spec_helper'
 describe 'Asset Library', order: :defined do
 
   test_id = Utils.get_test_id
+  category_id = "#{Time.now.to_i}"
   timeout = Utils.short_wait
 
   # Get test users
@@ -32,7 +33,7 @@ describe 'Asset Library', order: :defined do
     @canvas.get_suite_c_test_course(@course, users, test_id, [SuiteCTools::ASSET_LIBRARY, SuiteCTools::WHITEBOARDS])
     @asset_library_url = @canvas.click_tool_link(@driver, SuiteCTools::ASSET_LIBRARY)
     @whiteboards_url = @canvas.click_tool_link(@driver, SuiteCTools::WHITEBOARDS)
-    @category_1 = "Category 1 #{test_id}"
+    @category_1 = "Category 1 #{category_id}"
 
     @canvas.masquerade_as(student_1, @course)
     @canvas.load_course_site @course
@@ -172,7 +173,7 @@ describe 'Asset Library', order: :defined do
 
     before(:all) do
 
-      @asset_library.add_custom_categories(@driver, @asset_library_url, [(@category_2 = "Category 2 #{test_id}")])
+      @asset_library.add_custom_categories(@driver, @asset_library_url, [(@category_2 = "Category 2 #{category_id}")])
 
       # Upload a file asset
       student_2_upload.title = "Student 2 upload - #{test_id}"

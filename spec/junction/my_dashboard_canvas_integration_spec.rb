@@ -32,8 +32,8 @@ describe 'My Dashboard', order: :defined do
       @notifications.notifications_heading_element.when_visible timeout
       @course.term = @classes_api.current_term @driver
       @my_dashboard.log_out @splash_page
-      @canvas.log_in(@cal_net, Utils.ets_qa_username, Utils.ets_qa_password)
-      @canvas.create_generic_course_site(@course, user_test_data, test_id)
+      @canvas.log_in(@cal_net, Utils.super_admin_username, Utils.super_admin_password)
+      @canvas.create_generic_course_site(@course, [@teacher, @student], test_id)
       @canvas.log_out(@driver, @cal_net)
 
       # Student accepts course invite so that the site will be included in the user's data
@@ -94,13 +94,10 @@ describe 'My Dashboard', order: :defined do
 
       it 'show the course site name in My Classes' do
         @my_classes.other_sites_div_element.when_visible Utils.medium_wait
-        expect(@my_classes.other_course_site_codes).to include(@course.code)
+        expect(@my_classes.other_course_site_names).to include(@course.code)
       end
       it('show the course site description in My Classes') do
-        expect(@my_classes.other_course_site_titles).to include(@course.title)
-      end
-      it('show a link to the course site in My Classes') do
-        expect(@my_classes.other_site_link(@course.title)).to be_truthy
+        expect(@my_classes.other_course_site_descrips).to include(@course.title)
       end
 
       # Notifications - announcement, discussion
@@ -181,13 +178,10 @@ describe 'My Dashboard', order: :defined do
       # My Classes
       it 'show the course name in My Classes' do
         @my_classes.other_sites_div_element.when_visible timeout
-        expect(@my_classes.other_course_site_codes).to include(@course.code)
+        expect(@my_classes.other_course_site_names).to include(@course.code)
       end
       it 'show the course description in My Classes' do
-        expect(@my_classes.other_course_site_titles).to include(@course.title)
-      end
-      it 'show a link to the course site in My Classes' do
-        expect(@my_classes.other_site_link(site_descrip)).to be_truthy
+        expect(@my_classes.other_course_site_descrips).to include(@course.title)
       end
 
       # Notifications - assignments, announcement, discussion

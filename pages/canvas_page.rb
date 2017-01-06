@@ -81,7 +81,7 @@ module Page
     link(:create_site_link, xpath: '//a[contains(text(),"Create a Site")]')
 
     link(:add_new_course_button, xpath: '//a[contains(.,"Add a New Course")]')
-    select_list(:term, id: 'enrollment_term_id')
+    select_list(:term, id: 'course_enrollment_term_id')
     text_area(:course_name_input, xpath: '//label[@for="course_name"]/../following-sibling::td/input')
     text_area(:ref_code_input, id: 'course_course_code')
     span(:create_course_button, xpath: '//span[contains(.,"Add Course")]')
@@ -91,6 +91,7 @@ module Page
     button(:search_course_button, xpath: '//input[@id="course_name"]/following-sibling::button')
     li(:add_course_success, xpath: '//li[contains(.,"successfully added!")]')
 
+    select_list(:enrollment_roles, name: 'enrollment_role_id')
     link(:add_people_button, id: 'addUsers')
     text_area(:user_list, id: 'user_list_textarea')
     select_list(:user_role, id: 'role_id')
@@ -108,6 +109,8 @@ module Page
     button(:save_and_publish_button, class: 'save_and_publish')
     button(:published_button, class: 'btn-published')
     button(:submit_button, xpath: '//button[contains(.,"Submit")]')
+    button(:update_course_button, xpath: '//button[contains(.,"Update Course Details")]')
+    li(:update_course_success, xpath: '//li[contains(.,"successfully updated")]')
     form(:profile_form, class: 'ic-NavMenu-profile-header-logout-form')
     button(:logout_link, xpath: '//button[text()="Logout"]')
 
@@ -135,6 +138,12 @@ module Page
         accept_course_invite
         accept_course_invite_element.when_not_visible Utils.medium_wait
       end
+    end
+
+    # Loads the course users page
+    # @param course [Course]
+    def load_users_page(course)
+      navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/users"
     end
 
     # Searches for a course site using a unique identifier
@@ -168,7 +177,7 @@ module Page
             # Canvas add-user function is often flaky in test envs, so retry if it fails
             tries ||= 3
             logger.info "Adding users with role #{user_role}"
-            navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/users"
+            load_users_page course
             wait_for_page_load_and_click add_people_button_element
             user_list_element.when_visible Utils.short_wait
             self.user_list = users
@@ -183,6 +192,19 @@ module Page
           end
         end
       end
+    end
+
+    # Returns the number of users in a course site with a given role
+    # @param course [Course]
+    # @param role [String]
+    # @return Integer
+    def enrollment_count_by_role(course, role)
+      load_users_page course
+      wait_for_page_load_and_click enrollment_roles_element
+      role_option = enrollment_roles_options.find { |option| option.include? role }
+      count = role_option.delete("#{role} ()").to_i
+      logger.debug "The count of #{role} users is currently #{count}"
+      count
     end
 
     # Changes users' Canvas email addresses to the email defined for each in test data. This enables SuiteC email testing.
@@ -217,15 +239,19 @@ module Page
         course.code = "QA #{test_id} LEC001" if course.code.nil?
         self.course_name_input = "#{course.title}"
         self.ref_code_input = "#{course.code}"
-        wait_for_element_and_select(term_element, course.term) unless course.term.nil?
         logger.info "Creating a course site named #{course.title} in #{course.term} semester"
         wait_for_page_update_and_click create_course_button_element
         add_course_success_element.when_visible Utils.medium_wait
         course.site_id = search_for_course test_id
-      else
-        load_course_site course
+        unless course.term.nil?
+          navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/settings"
+          wait_for_element_and_select(term_element, course.term)
+          wait_for_page_update_and_click update_course_button_element
+          update_course_success_element.when_visible Utils.medium_wait
+        end
       end
       logger.info 'Publishing the course'
+      load_course_site course
       publish_div_element.when_visible Utils.short_wait
       wait_for_page_update_and_click publish_button_element unless published_button?
       published_button_element.when_visible Utils.medium_wait
@@ -318,7 +344,7 @@ module Page
       hide_footer
       wait_for_page_update_and_click link_element(xpath: "//ul[@id='nav_disabled_list']/li[contains(.,'#{tool.name}')]//a")
       wait_for_page_update_and_click link_element(xpath: "//ul[@id='nav_disabled_list']/li[contains(.,'#{tool.name}')]//a[@title='Enable this item']")
-      list_item_element(xpath: "//ul[@id='nav_enabled_list']/li[contains(.,'#{tool.name}')]").when_visible Utils.short_wait
+      list_item_element(xpath: "//ul[@id='nav_enabled_list']/li[contains(.,'#{tool.name}')]").when_visible Utils.medium_wait
       save_app_nav_button
       tool_nav_link(tool).when_visible Utils.medium_wait
     end
