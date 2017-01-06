@@ -6,7 +6,7 @@ describe 'bCourses course site creation' do
 
   begin
     @driver = Utils.launch_browser
-    test_output = Utils.initialize_canvas_test_output(self, ['Term', 'Course Code', 'Instructor', 'Site ID'])
+    test_output = Utils.initialize_canvas_test_output(self, ['Term', 'Course Code', 'Instructor', 'Site ID', 'Students', 'Waitlist Students', 'Teachers', 'TAs'])
 
     @splash_page = Page::CalCentralPages::SplashPage.new @driver
     @cal_net_page = Page::CalNetPage.new @driver
@@ -90,11 +90,27 @@ describe 'bCourses course site creation' do
         @course.site_id = @canvas_page.current_url.delete "#{Utils.canvas_base_url}/courses/"
         logger.info "Canvas course site ID is #{@course.site_id}"
 
+        # Wait for enrollment to finish updating for each user role type and then store the count for each type
+        enrollment_counts = []
+        ['Student', 'Waitlist Student', 'Teacher', 'TA'].each do |role|
+
+          starting_count = 0
+          ending_count = @canvas_page.enrollment_count_by_role(@course, role)
+
+          begin
+            starting_count = ending_count
+            sleep Utils.medium_wait
+            ending_count = @canvas_page.enrollment_count_by_role(@course, role)
+          end while ending_count > starting_count
+
+          enrollment_counts << ending_count
+        end
+
       rescue => e
         it("encountered an error for #{@course.code}") { fail }
         logger.error "#{e.message}#{"\n"}#{e.backtrace.join("\n")}"
       ensure
-        Utils.add_csv_row(test_output, [@course.term, @course.code, @teacher.uid, @course.site_id])
+        Utils.add_csv_row(test_output, [@course.term, @course.code, @teacher.uid, @course.site_id, enrollment_counts[0], enrollment_counts[1], enrollment_counts[2], enrollment_counts[3]])
       end
     end
   rescue => e

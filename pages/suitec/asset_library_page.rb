@@ -85,7 +85,10 @@ module Page
       # Waits for an asset's detail view to load
       # @param asset [Asset]
       def wait_for_asset_detail(asset)
-        wait_until(Utils.short_wait) { detail_view_asset_title.include? "#{asset.title}" }
+        wait_until(Utils.short_wait) do
+          logger.debug "Visible asset title should include '#{asset.title}' and is currently '#{detail_view_asset_title}'"
+          detail_view_asset_title.include? "#{asset.title}"
+        end
       end
 
       # Combines methods to load the asset library, find a given asset, and load its detail view
@@ -141,7 +144,7 @@ module Page
         logger.debug "Verifying detail view asset title is '#{asset.title}'"
         wait_until(timeout) { detail_view_asset_title.include? asset.title }
         logger.debug "Verifying detail view asset owner is '#{user.full_name}'"
-        wait_until(timeout) { detail_view_asset_owner_link_elements[0].text == user.full_name }
+        wait_until(timeout) { detail_view_asset_owner_link_elements[0].text == user.full_name } rescue Selenium::WebDriver::Error::StaleElementReferenceError
         logger.debug 'Verifying asset description'
         asset.description.nil? ?
             wait_until(timeout) { detail_view_asset_desc == 'No description' } :

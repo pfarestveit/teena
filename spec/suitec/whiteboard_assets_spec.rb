@@ -293,6 +293,7 @@ describe 'Whiteboard Add Asset', order: :defined do
     it 'allows the user to edit its metadata via the whiteboard' do
       @student_1_asset_file.title = 'Edited asset title'
       @asset_library.edit_asset_details @student_1_asset_file
+      sleep 1
       @asset_library.wait_until(timeout) { @asset_library.detail_view_asset_title == 'Edited asset title' }
     end
 

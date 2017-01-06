@@ -491,6 +491,7 @@ module Page
       def verify_chat_msg(sender, body)
         logger.debug "Waiting for chat message from #{sender.full_name} with body '#{body}'"
         wait_until(timeout=Utils.short_wait) { chat_msg_body_elements.any? }
+        sleep 1
         wait_until(timeout) { chat_msg_body_elements.last.text == body }
         wait_until(timeout) { chat_msg_sender_elements.last.text.include? sender.full_name }
       end

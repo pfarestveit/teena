@@ -47,7 +47,7 @@ module Page
       # Clicks the button for the test course's term. Uses JavaScript rather than WebDriver
       # @param course [Course]
       def choose_term(course)
-        button_element(xpath: "//label[contains(.,'#{course.term}')]/preceding-sibling::input").when_visible Utils.short_wait
+        button_element(xpath: "//label[contains(.,'#{course.term}')]/preceding-sibling::input").when_visible Utils.medium_wait
         click_element_js button_element(xpath: "//label[contains(.,'#{course.term}')]/preceding-sibling::input")
       end
 
