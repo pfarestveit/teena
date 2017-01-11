@@ -154,6 +154,11 @@ class Utils
     @config['canvas']['sub_account']
   end
 
+  # Canvas ID of course captures tool
+  def self.canvas_course_captures_tool
+    @config['canvas']['course_captures_tool']
+  end
+
   # CALCENTRAL
 
   # Base URL of CalCentral test environment

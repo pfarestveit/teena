@@ -6,65 +6,90 @@ describe 'My Academics course captures card' do
 
   begin
 
-    @driver = Utils.launch_browser
+    # The test data file should contain data variations such as cross-listings and courses with multiple primary sections
+    test_users = Utils.load_test_users.select { |user| user['tests']['courseCapture'] }
 
+    @driver = Utils.launch_browser
     @splash_page = Page::CalCentralPages::SplashPage.new @driver
     @my_academics = Page::CalCentralPages::MyAcademicsCourseCapturesCard.new @driver
 
-    test_users = Utils.load_test_users.select { |user| user['tests']['courseCapture'] }
-
     test_users.each do |user|
-      uid = user['uid']
-      logger.info "UID is #{uid}"
-
-      capture = user['tests']['courseCapture']
-      video_you_tube_id = capture['video']
 
       begin
-        @splash_page.load_page
-        @splash_page.basic_auth uid
-        @my_academics.load_page capture['classPagePath']
-        @my_academics.course_capture_heading_element.when_visible timeout=Utils.medium_wait
 
-        has_video_tab = @my_academics.verify_block { @my_academics.video_table_element.when_visible timeout }
-        has_audio_tab = @my_academics.audio_tab?
-        has_no_course_capture_message = @my_academics.no_course_capture_msg?
+        # Get the Course Capture data expected to appear in CalCentral for each test user
+        uid = user['uid']
+        calcentral_content = user['tests']['courseCapture']['calCentral']
+        class_page = calcentral_content['classPagePath']
+        expected_sections = calcentral_content['sections']
 
-        if video_you_tube_id
+        if calcentral_content
 
-          it("shows no 'no recordings' message for UID #{uid}") { expect(has_no_course_capture_message).to be false }
-          it("shows the video tab for UID #{uid}") { expect(has_video_tab).to be true }
-          it("shows no audio tab for UID #{uid}") { expect(has_audio_tab).to be false }
+          @splash_page.load_page
+          @splash_page.basic_auth uid
+          @my_academics.load_page class_page
+          @my_academics.course_capture_heading_element.when_visible timeout=Utils.medium_wait
 
-          @my_academics.show_all_recordings
-          all_visible_video_lectures = @my_academics.you_tube_recording_elements.length
-          it("shows all the available lecture videos for UID #{uid}") { expect(all_visible_video_lectures).to eql(capture['lectures']) }
+          if expected_sections
+            logger.debug "Expected section count is #{expected_sections.length}"
 
-          you_tube_link = @my_academics.you_tube_link video_you_tube_id
-          it("shows links to the recordings at YouTube for UID #{uid}") { expect(you_tube_link.exists?).to be true }
+            # Verify that recordings load
+            recordings_exist = @my_academics.verify_block { @my_academics.wait_until(Utils.medium_wait) { @my_academics.section_content_elements.any? } }
+            it("shows UID #{uid} recordings on '#{class_page}'") { expect(recordings_exist).to be true }
 
-          has_you_tube_alert = @my_academics.you_tube_alert?
-          it("shows an explanation for viewing the recordings at You Tube for UID #{uid}") { expect(has_you_tube_alert).to be true }
+            if recordings_exist
 
-          has_help_page_link = @my_academics.verify_external_link(@driver, @my_academics.help_page_link_element, 'Service at UC Berkeley')
-          it("shows a 'help page' link for UID #{uid}") { expect(has_help_page_link).to be true }
+              expected_sections.each do |section|
 
-          has_report_problem_link = @my_academics.verify_external_link(@driver, @my_academics.report_problem_link_element, 'Request Support or Give Feedback | Educational Technology Services')
-          it("offers a 'Report a Problem' link for UID #{uid}") { expect(has_report_problem_link).to be true }
+                index = @my_academics.section_recordings_index section['code']
 
-        else
+                # Verify that the section information and the number of recordings match expectations in the test data
+                @my_academics.show_all_recordings index
+                expected_section_code = section['code']
+                expected_video_count = section['videoCount']
+                expected_video_id = section['videoId']
+                visible_video_count = @my_academics.you_tube_recording_elements(@driver, index).length
+                visible_section_code = @my_academics.section_course_code index
 
-          it("shows a 'no recordings' message for UID #{uid}") { expect(has_no_course_capture_message).to be true }
-          it("shows no video tab for UID #{uid}") { expect(has_video_tab).to be false }
-          it("shows no audio tab for UID #{uid}") { expect(has_audio_tab).to be false }
+                if expected_sections.length > 1
+                  it("shows UID #{uid} all the available lecture videos for one of #{expected_sections.length} primary sections on '#{class_page}'") { expect(visible_video_count).to eql(expected_video_count) }
+                  it("shows UID #{uid} the section code '#{expected_section_code}' on '#{class_page}'") { expect(visible_section_code).to eql(expected_section_code) }
+                else
+                  it("shows UID #{uid} all the available lecture videos for the one primary section on '#{class_page}'") { expect(visible_video_count).to eql(expected_video_count) }
+                  it("shows UID #{uid} no section code on '#{class_page}'") { expect(visible_section_code).to be nil }
+                end
 
+                # Verify that the alert message, help page link, and the sample YouTube video ID are present
+                has_you_tube_alert = @my_academics.you_tube_alert_elements[index]
+                has_help_page_link = @my_academics.verify_external_link(@driver, @my_academics.help_page_link(index), 'Service at UC Berkeley')
+                has_you_tube_link = @my_academics.verify_external_link(@driver, @my_academics.you_tube_link(expected_video_id), 'YouTube')
+
+                it("shows UID #{uid} a 'help page' link on '#{class_page}'") { expect(has_help_page_link).to be true }
+                it("shows UID #{uid} an explanation for viewing the recordings at You Tube on '#{class_page}'") { expect(has_you_tube_alert).to be_truthy }
+                it("shows UID #{uid} a valid link to YouTube video ID #{expected_video_id} on '#{class_page}'") { expect(has_you_tube_link).to be true }
+
+              end
+
+              # Verify that the 'report a problem' link works
+              has_report_problem_link = @my_academics.verify_external_link(@driver, @my_academics.report_problem_element, 'Request Support or Give Feedback | Educational Technology Services')
+
+              it("offers UID #{uid} a 'Report a Problem' link on '#{class_page}'") { expect(has_report_problem_link).to be true }
+
+            end
+          else
+
+            # Verify that a user with no captures sees messaging instead
+            has_no_course_capture_message = @my_academics.verify_block { @my_academics.no_course_capture_msg_element.when_visible Utils.medium_wait }
+            it("shows UID #{uid} a 'no recordings' message on '#{class_page}'") { expect(has_no_course_capture_message).to be true }
+
+          end
         end
-
       rescue => e
         it("encountered an error with UID #{uid}") { fail }
         logger.error "#{e.message}#{"\n"}#{e.backtrace.join("\n")}"
       end
     end
+
   rescue => e
     it('encountered an error') { fail }
     logger.error "#{e.message}#{"\n"}#{e.backtrace.join("\n")}"

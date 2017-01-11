@@ -48,7 +48,7 @@ module Page
     # @param user [User]
     # @param course [Course]
     def masquerade_as(user, course)
-      logger.info "Masquerading as #{user.role} #{user.username}"
+      logger.info "Masquerading as UID #{user.uid} #{user.role} #{user.username}"
       navigate_to "#{Utils.canvas_base_url}/users/#{user.canvas_id.to_s}/masquerade"
       wait_for_page_load_and_click masquerade_link_element
       stop_masquerading_link_element.when_visible
@@ -132,7 +132,7 @@ module Page
         check_terms_cbx
         submit_button
       end
-      recent_activity_heading_element.when_visible
+      div_element(id: 'content').when_visible Utils.medium_wait
       if accept_course_invite?
         logger.info 'Accepting course invite'
         accept_course_invite
