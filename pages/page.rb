@@ -91,7 +91,8 @@ module Page
         wait_until { driver.find_element(xpath: "//title[contains(.,'#{expected_page_title}')]") }
         true
       else
-        logger.error('Link did not open in a new window')
+        logger.error 'Link did not open in a new window'
+        logger.debug "Expecting page title #{expected_page_title}, but visible page title is #{driver.title}"
         false
       end
     rescue
@@ -111,7 +112,7 @@ module Page
   # Uses JavaScript to scroll to the bottom of a page. This is a workaround for a WebDriver bug where certain elements
   # are not scrolled into focus prior to an interaction.
   def scroll_to_bottom
-    execute_script('window.scrollTo(0, document.body.scrollHeight);')
+    execute_script 'window.scrollTo(0, document.body.scrollHeight);'
   end
 
 end
