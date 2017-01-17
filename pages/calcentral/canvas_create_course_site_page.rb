@@ -38,10 +38,19 @@ module Page
       button(:create_site_button, xpath: '//button[text()="Create Course Site"]')
       button(:go_back_button, xpath: '//button[text()="Go Back"]')
 
-      # Loads the create a course site page
-      def load_page
-        navigate_to "#{Utils.calcentral_base_url}/canvas/embedded/create_course_site"
-        page_heading_element.when_visible Utils.medium_wait
+      # Loads the LTI tool in the context of a Canvas course site
+      # @param driver [Selenium::WebDriver]
+      # @param user [User]
+      def load_embedded_tool(driver, user)
+        logger.info 'Loading embedded version of Create Course Site tool'
+        navigate_to "#{Utils.canvas_base_url}/users/#{user.canvas_id}/external_tools/#{Utils.canvas_create_course_site_tool}"
+        switch_to_canvas_iframe driver
+      end
+
+      # Loads the LTI tool in the CalCentral context
+      def load_standalone_tool
+        logger.info 'Loading standalone version of Create Course Site tool'
+        navigate_to "#{Utils.calcentral_base_url}/canvas/create_course_site"
       end
 
       # Clicks the button for the test course's term. Uses JavaScript rather than WebDriver
@@ -199,6 +208,21 @@ module Page
       # Clicks the final create site button
       def click_create_site
         wait_for_page_update_and_click create_site_button_element
+      end
+
+      # Combines methods to search for a course, select sections, and create a new site
+      # @param course [Course]
+      # @param user [User]
+      # @param sections [Array<Section>]
+      def provision_course_site(course, user, sections)
+        search_for_course(course, user, sections)
+        toggle_course_sections course
+        select_sections sections
+        click_next
+        click_create_site
+        wait_until(Utils.long_wait) { current_url.include? "#{Utils.canvas_base_url}/courses" }
+        course.site_id = current_url.delete "#{Utils.canvas_base_url}/courses/"
+        logger.info "Course site ID is #{course.site_id}"
       end
 
     end
