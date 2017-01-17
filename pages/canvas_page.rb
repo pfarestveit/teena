@@ -47,12 +47,12 @@ module Page
     # Masquerades as a user and then loads a course site
     # @param user [User]
     # @param course [Course]
-    def masquerade_as(user, course)
+    def masquerade_as(user, course = nil)
       logger.info "Masquerading as UID #{user.uid} #{user.role} #{user.username}"
       navigate_to "#{Utils.canvas_base_url}/users/#{user.canvas_id.to_s}/masquerade"
       wait_for_page_load_and_click masquerade_link_element
       stop_masquerading_link_element.when_visible
-      load_course_site course
+      load_course_site course unless course.nil?
     end
 
     # Quits masquerading as another user
@@ -93,6 +93,7 @@ module Page
 
     select_list(:enrollment_roles, name: 'enrollment_role_id')
     link(:add_people_button, id: 'addUsers')
+    link(:find_person_to_add_link, xpath: '//a[contains(.,"Find a Person to Add")]')
     text_area(:user_list, id: 'user_list_textarea')
     select_list(:user_role, id: 'role_id')
     button(:next_button, id: 'next-step')
@@ -103,6 +104,8 @@ module Page
     link(:edit_user_link, xpath: '//a[@class="edit_user_link"]')
     text_area(:user_email, id: 'user_email')
     button(:update_details_button, xpath: '//button[text()="Update Details"]')
+
+    text_area(:search_user_input, xpath: '//input[@placeholder="Search people"]')
 
     div(:publish_div, id: 'course_status_actions')
     button(:publish_button, class: 'btn-publish')
@@ -194,6 +197,62 @@ module Page
       end
     end
 
+    # Searches for a user by Canvas user ID
+    # @param user [User]
+    def search_user_by_canvas_id(user)
+      wait_for_element_and_type(search_user_input_element, user.canvas_id)
+      sleep 1
+    end
+
+    # Returns the UID displayed for a user on a course site roster
+    # @param canvas_id [Integer]
+    # @return [String]
+    def roster_user_uid(canvas_id)
+      cell_element(xpath: "//tr[contains(@id,'#{canvas_id}')]/td[3]").text
+    end
+
+    # Returns the text in the table cell containing a user's enrolled section codes
+    # @param canvas_id [Integer]
+    # @return [String]
+    def roster_user_sections(canvas_id)
+      cell_element(xpath: "//tr[contains(@id,'#{canvas_id}')]/td[5]").text
+    end
+
+    # Returns the text in the table cell containing a user's roles
+    # @param canvas_id [Integer]
+    # @return [String]
+    def roster_user_roles(canvas_id)
+      cell_element(xpath: "//tr[contains(@id,'#{canvas_id}')]/td[6]").text
+    end
+
+    # Clicks the Canvas Add People button followed by the Find a Person to Add button and switches to the LTI tool
+    # @param driver [Selenium::WebDriver]
+    def click_find_person_to_add(driver)
+      logger.debug 'Clicking Find a Person to Add button'
+      wait_for_page_load_and_click add_people_button_element
+      wait_for_page_load_and_click find_person_to_add_link_element
+      switch_to_canvas_iframe driver
+    end
+
+    # Waits for a course site's enrollment to finish updating for a given set of user roles and then returns the final count for each role
+    # @param course [Course]
+    # @param roles [Array<String>]
+    # @return [Array<Integer>]
+    def wait_for_enrollment_import(course, roles)
+      enrollment_counts = []
+      roles.each do |role|
+        starting_count = 0
+        ending_count = enrollment_count_by_role(course, role)
+        begin
+          starting_count = ending_count
+          sleep Utils.medium_wait
+          ending_count = enrollment_count_by_role(course, role)
+        end while ending_count > starting_count
+        enrollment_counts << ending_count
+      end
+      enrollment_counts
+    end
+
     # Returns the number of users in a course site with a given role
     # @param course [Course]
     # @param role [String]
@@ -226,6 +285,16 @@ module Page
       end
     end
 
+    # Publishes a course site
+    # @param course [Course]
+    def publish_course_site(course)
+      logger.info 'Publishing the course'
+      load_course_site course
+      publish_div_element.when_visible Utils.short_wait
+      wait_for_page_update_and_click publish_button_element unless published_button?
+      published_button_element.when_visible Utils.medium_wait
+    end
+
     # Creates standard Canvas course site, publishes it, and adds test users.
     # @param course [Course]
     # @param test_users [Array<User>]
@@ -250,11 +319,7 @@ module Page
           update_course_success_element.when_visible Utils.medium_wait
         end
       end
-      logger.info 'Publishing the course'
-      load_course_site course
-      publish_div_element.when_visible Utils.short_wait
-      wait_for_page_update_and_click publish_button_element unless published_button?
-      published_button_element.when_visible Utils.medium_wait
+      publish_course_site course
       logger.info "Course site URL is #{current_url}"
       current_url.sub("#{Utils.canvas_base_url}/courses/", '')
       logger.info "Course ID is #{course.site_id}"

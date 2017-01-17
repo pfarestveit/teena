@@ -19,7 +19,7 @@ describe 'bCourses course site creation' do
 
     @canvas_page.log_in(@cal_net_page, Utils.super_admin_username, Utils.super_admin_password)
 
-    test_courses = Utils.load_test_courses
+    test_courses = Utils.load_test_courses.select { |course| course['tests']['create_course_site'] }
     test_courses.each do |course|
 
       begin
@@ -28,6 +28,7 @@ describe 'bCourses course site creation' do
         sections = @course.sections.map { |section_data| Section.new section_data }
         sections_for_site = sections.select { |section| section.include_in_site }
         site_abbreviation = nil
+        enrollment_counts = []
 
         logger.info "Creating a course site for #{@course.code} in #{@course.term} using the '#{@course.create_site_workflow}' workflow"
 
@@ -87,23 +88,15 @@ describe 'bCourses course site creation' do
         end
         it ("redirects to the #{@course.term} #{@course.code} course site in Canvas when finished") { expect(site_created).to be true }
 
-        @course.site_id = @canvas_page.current_url.delete "#{Utils.canvas_base_url}/courses/"
-        logger.info "Canvas course site ID is #{@course.site_id}"
+        # If site creation failed, don't check the site's enrollment
+        if site_created
+          @course.site_id = @canvas_page.current_url.delete "#{Utils.canvas_base_url}/courses/"
+          logger.info "Canvas course site ID is #{@course.site_id}"
 
-        # Wait for enrollment to finish updating for each user role type and then store the count for each type
-        enrollment_counts = []
-        ['Student', 'Waitlist Student', 'Teacher', 'TA'].each do |role|
-
-          starting_count = 0
-          ending_count = @canvas_page.enrollment_count_by_role(@course, role)
-
-          begin
-            starting_count = ending_count
-            sleep Utils.medium_wait
-            ending_count = @canvas_page.enrollment_count_by_role(@course, role)
-          end while ending_count > starting_count
-
-          enrollment_counts << ending_count
+          # Wait for enrollment to finish updating for each user role type and then store the count for each type
+          enrollment_counts = @canvas_page.wait_for_enrollment_import(@course, ['Student', 'Waitlist Student', 'Teacher', 'TA'])
+        else
+          logger.error "Timed out before the #{@course.term} #{@course.code} course site was created, or another error occurred"
         end
 
       rescue => e

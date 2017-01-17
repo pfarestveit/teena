@@ -17,6 +17,8 @@ suite_c:
 canvas:
   base_url: https://ucberkeley.test.instructure.com
   sub_account: secret
+  create_course_site_tool: secret
+  course_add_user_tool: secret
   course_captures_tool: secret
 
 calcentral:

@@ -154,6 +154,16 @@ class Utils
     @config['canvas']['sub_account']
   end
 
+  # Canvas ID of create course site tool
+  def self.canvas_create_course_site_tool
+    @config['canvas']['create_course_site_tool']
+  end
+
+  # Canvas ID of course add user tool
+  def self.canvas_course_add_user_tool
+    @config['canvas']['course_add_user_tool']
+  end
+
   # Canvas ID of course captures tool
   def self.canvas_course_captures_tool
     @config['canvas']['course_captures_tool']
