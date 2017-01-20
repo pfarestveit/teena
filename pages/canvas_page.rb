@@ -18,6 +18,8 @@ module Page
     link(:stop_masquerading_link, class: 'stop_masquerading')
     h2(:recent_activity_heading, xpath: '//h2[contains(text(),"Recent Activity")]')
 
+    h2(:unauthorized_msg, xpath: '//h2[contains(text(),"Unauthorized")]')
+
     # Loads the Canvas homepage
     def load_homepage
       logger.info "Loading Canvas homepage at #{Utils.canvas_base_url}"
