@@ -169,6 +169,11 @@ class Utils
     @config['canvas']['course_captures_tool']
   end
 
+  # Canvas ID of roster photos tool
+  def self.canvas_rosters_tool
+    @config['canvas']['rosters_tool']
+  end
+
   # CALCENTRAL
 
   # Base URL of CalCentral test environment

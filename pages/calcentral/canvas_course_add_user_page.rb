@@ -128,6 +128,7 @@ module Page
         logger.info "Adding UID #{user.uid} with role '#{user.role}' to section '#{section.code}'"
         user_checkbox(user).when_present Utils.medium_wait
         user_checkbox(user).check
+        course_section_element.when_visible Utils.short_wait
         self.course_section = section.code
         self.user_role = user.role
         wait_for_page_update_and_click add_user_button_element
