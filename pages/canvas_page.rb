@@ -51,6 +51,7 @@ module Page
     # @param course [Course]
     def masquerade_as(user, course = nil)
       logger.info "Masquerading as UID #{user.uid} #{user.role} #{user.username}"
+      stop_masquerading if stop_masquerading_link?
       navigate_to "#{Utils.canvas_base_url}/users/#{user.canvas_id.to_s}/masquerade"
       wait_for_page_load_and_click masquerade_link_element
       stop_masquerading_link_element.when_visible

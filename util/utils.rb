@@ -205,6 +205,10 @@ class Utils
     @config['users']['super_admin_password']
   end
 
+  def self.super_admin_uid
+    @config['users']['super_admin_uid']
+  end
+
   def self.ets_qa_username
     @config['users']['ets_qa_username']
   end

@@ -30,6 +30,7 @@ calcentral:
 users:
   super_admin_username: secret
   super_admin_password: secret
+  super_admin_uid: secret
   ets_qa_username: secret
   ets_qa_password: secret
   test_user_password: secret

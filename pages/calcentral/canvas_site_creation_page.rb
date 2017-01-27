@@ -40,20 +40,6 @@ module Page
         wait_for_page_update_and_click create_project_site_link_element
       end
 
-      # Masquerades as a user if necessary and navigates from the Canvas homepage to the create a course site page
-      # @param driver [Selenium::WebDriver]
-      # @param course [Course]
-      # @param instructor [User]
-      # @param canvas [Page::CanvasPage]
-      # @param create_course_site [Page::CalCentralPages::CanvasCreateCourseSitePage]
-      def choose_course_site(driver, course, instructor, canvas, create_course_site)
-        canvas.stop_masquerading if canvas.stop_masquerading_link?
-        canvas.masquerade_as(instructor, course) if course.create_site_workflow == 'masquerade'
-        canvas.load_homepage
-        canvas.click_create_site driver
-        click_create_course_site create_course_site
-      end
-
     end
   end
 end

@@ -4,6 +4,8 @@ describe 'bCourses Course Captures tool' do
 
   include Logging
 
+  masquerade = ENV['masquerade']
+
   begin
 
     # The test data file should contain data variations such as cross-listings and courses with multiple primary sections
@@ -12,7 +14,7 @@ describe 'bCourses Course Captures tool' do
     @driver = Utils.launch_browser
     @course_captures_page = Page::CalCentralPages::CanvasCourseCapturesPage.new @driver
 
-    if ENV['masquerade']
+    if masquerade
       @cal_net = Page::CalNetPage.new @driver
       @canvas = Page::CanvasPage.new @driver
       @canvas.log_in(@cal_net, Utils.super_admin_username, Utils.super_admin_password)
@@ -34,13 +36,13 @@ describe 'bCourses Course Captures tool' do
           canvas_content.each do |course_site|
             course = Course.new({site_id: "#{course_site['siteId']}"})
 
-            if ENV['masquerade']
+            if masquerade
               @canvas.masquerade_as(user, course)
               @course_captures_page.load_embedded_tool(@driver, course)
             else
               @splash_page.load_page
               @splash_page.basic_auth user.uid
-              @course_captures_page.load_standalone_tool(@driver, course)
+              @course_captures_page.load_standalone_tool course
             end
 
             expected_sections = course_site['sections']
