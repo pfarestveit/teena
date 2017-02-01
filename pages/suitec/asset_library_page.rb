@@ -24,6 +24,8 @@ module Page
       div(:resume_sync_success, xpath: '//div[contains(.,"Syncing has been resumed for this course. There may be a short delay before SuiteC tools are updated.")]')
 
       # Checks if Canvas sync is disabled. If so, adds an asset to create new activity and resumes sync.
+      # @param driver [Selenium::WebDriver]
+      # @param url [String]
       def ensure_canvas_sync(driver, url)
         load_page(driver, url)
         add_site_link_element.when_visible Utils.short_wait
