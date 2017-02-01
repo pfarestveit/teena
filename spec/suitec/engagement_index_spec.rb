@@ -4,18 +4,18 @@ describe 'The Engagement Index', order: :defined do
 
   include Logging
 
+  # Load test data
+  test_user_data = Utils.load_test_users.select { |data| data['tests']['engagementIndexSorting'] }
+  teacher = User.new test_user_data.find { |user| user['role'] == 'Teacher' }
+  student_data = test_user_data.select { |user| user['role'] == 'Student' }
+  student_1 = User.new student_data[0]
+  student_2 = User.new student_data[1]
+  student_3 = User.new student_data[2]
+  student_4 = User.new student_data[3]
+  asset = Asset.new(student_3.assets.find { |asset| asset['type'] == 'File' })
+
   before(:all) do
     @course = Course.new({})
-
-    # Load test data
-    test_user_data = Utils.load_test_users.select { |data| data['tests']['engagementIndexSorting'] }
-    @teacher = User.new test_user_data.find { |user| user['role'] == 'Teacher' }
-    student_data = test_user_data.select { |user| user['role'] == 'Student' }
-    @student_1 = User.new student_data[0]
-    @student_2 = User.new student_data[1]
-    @student_3 = User.new student_data[2]
-    @student_4 = User.new student_data[3]
-    @asset = Asset.new(@student_3.assets.find { |asset| asset['type'] == 'File' })
 
     @driver = Utils.launch_browser
     @canvas = Page::CanvasPage.new @driver
@@ -24,38 +24,38 @@ describe 'The Engagement Index', order: :defined do
     @engagement_index = Page::SuiteCPages::EngagementIndexPage.new @driver
 
     @canvas.log_in(@cal_net, Utils.super_admin_username, Utils.super_admin_password)
-    @canvas.get_suite_c_test_course(@course, [@teacher, @student_1, @student_2, @student_3, @student_4], Utils.get_test_id, [SuiteCTools::ASSET_LIBRARY, SuiteCTools::ENGAGEMENT_INDEX])
+    @canvas.get_suite_c_test_course(@course, [teacher, student_1, student_2, student_3, student_4], Utils.get_test_id, [SuiteCTools::ASSET_LIBRARY, SuiteCTools::ENGAGEMENT_INDEX])
 
     @canvas.load_course_site @course
     @asset_library_url = @canvas.click_tool_link(@driver, SuiteCTools::ASSET_LIBRARY)
     @engagement_index_url = @canvas.click_tool_link(@driver, SuiteCTools::ENGAGEMENT_INDEX)
 
     # Add asset to library
-    @canvas.masquerade_as(@student_3, @course)
+    @canvas.masquerade_as(student_3, @course)
     @engagement_index.load_page(@driver, @engagement_index_url)
     @engagement_index.share_score
     @asset_library.load_page(@driver, @asset_library_url)
-    @asset_library.upload_file_to_library @asset
+    @asset_library.upload_file_to_library asset
 
     # Comment on the asset
-    @canvas.masquerade_as(@student_1, @course)
+    @canvas.masquerade_as(student_1, @course)
     @engagement_index.load_page(@driver, @engagement_index_url)
     @engagement_index.un_share_score
-    @asset_library.load_asset_detail(@driver, @asset_library_url, @asset)
+    @asset_library.load_asset_detail(@driver, @asset_library_url, asset)
     @asset_library.add_comment 'Testing Testing'
 
     # Like the asset
-    @canvas.masquerade_as(@student_2, @course)
+    @canvas.masquerade_as(student_2, @course)
     @engagement_index.load_page(@driver, @engagement_index_url)
     @engagement_index.un_share_score
-    @asset_library.load_asset_detail(@driver, @asset_library_url, @asset)
+    @asset_library.load_asset_detail(@driver, @asset_library_url, asset)
     @asset_library.toggle_detail_view_item_like
 
-    @canvas.masquerade_as(@student_4, @course)
+    @canvas.masquerade_as(student_4, @course)
     @engagement_index.load_page(@driver, @engagement_index_url)
     @engagement_index.share_score
 
-    @canvas.masquerade_as(@teacher, @course)
+    @canvas.masquerade_as(teacher, @course)
     @engagement_index.load_scores(@driver, @engagement_index_url)
   end
 
@@ -131,31 +131,31 @@ describe 'The Engagement Index', order: :defined do
   # TEACHERS
 
   it 'allows teachers to see all users\' scores regardless of sharing preferences' do
-    expect(@engagement_index.visible_names.sort).to eql([@teacher.full_name, @student_1.full_name, @student_2.full_name, @student_3.full_name, @student_4.full_name].sort)
+    expect(@engagement_index.visible_names.sort).to eql([teacher.full_name, student_1.full_name, student_2.full_name, student_3.full_name, student_4.full_name].sort)
   end
 
   it 'allows teachers to share their scores with students' do
     @engagement_index.share_score
-    @engagement_index.wait_until(Utils.short_wait) { @engagement_index.sharing_preference(@teacher) == 'Yes' }
-    @canvas.masquerade_as(@student_4, @course)
+    @engagement_index.wait_until(Utils.short_wait) { @engagement_index.sharing_preference(teacher) == 'Yes' }
+    @canvas.masquerade_as(student_4, @course)
     @engagement_index.load_scores(@driver, @engagement_index_url)
-    expect(@engagement_index.visible_names).to include(@teacher.full_name)
+    expect(@engagement_index.visible_names).to include(teacher.full_name)
   end
 
   it 'allows teachers to hide their scores from students' do
-    @canvas.masquerade_as(@teacher, @course)
+    @canvas.masquerade_as(teacher, @course)
     @engagement_index.load_scores(@driver, @engagement_index_url)
     @engagement_index.un_share_score
-    @engagement_index.wait_until(Utils.short_wait) { @engagement_index.sharing_preference(@teacher) == 'No' }
-    @canvas.masquerade_as(@student_4, @course)
+    @engagement_index.wait_until(Utils.short_wait) { @engagement_index.sharing_preference(teacher) == 'No' }
+    @canvas.masquerade_as(student_4, @course)
     @engagement_index.load_scores(@driver, @engagement_index_url)
-    expect(@engagement_index.visible_names).not_to include(@teacher.full_name)
+    expect(@engagement_index.visible_names).not_to include(teacher.full_name)
   end
 
   # STUDENTS
 
   it 'allows students to share their scores with other students' do
-    @canvas.masquerade_as(@student_1, @course)
+    @canvas.masquerade_as(student_1, @course)
     @engagement_index.load_page(@driver, @engagement_index_url)
     @engagement_index.share_score
     @engagement_index.users_table_element.when_visible Utils.short_wait
@@ -168,7 +168,7 @@ describe 'The Engagement Index', order: :defined do
   end
 
   it 'only shows students who have shared their scores the scores of other users who have also shared' do
-    expect(@engagement_index.visible_names.sort).to eql([@student_1.full_name, @student_3.full_name, @student_4.full_name])
+    expect(@engagement_index.visible_names.sort).to eql([student_1.full_name, student_3.full_name, student_4.full_name])
   end
 
   it 'shows students the "Rank" column' do
@@ -206,4 +206,30 @@ describe 'The Engagement Index', order: :defined do
     expect(@engagement_index.user_info_boxplot?).to be true
   end
 
+  # TEACHERS AND STUDENTS
+
+  describe 'Canvas syncing' do
+
+    before(:all) do
+      @canvas.stop_masquerading
+      [teacher, student_4].each { |user| @canvas.remove_user_from_course(@course, user) }
+    end
+
+    [teacher, student_4].each do |user|
+
+      it "removes #{user.role} UID #{user.uid} from the Engagement Index if the user has been removed from the course site" do
+        @engagement_index.wait_until(Utils.long_wait) do
+          @engagement_index.load_page(@driver, @engagement_index_url)
+          !@engagement_index.visible_names.include? user.full_name
+        end
+      end
+
+      it "prevents #{user.role} UID #{user.uid} from reaching the Engagement Index if the user has been removed from the course site" do
+        @canvas.masquerade_as(user, @course)
+        @engagement_index.navigate_to @engagement_index_url
+        @canvas.unauthorized_msg_element.when_visible Utils.short_wait
+      end
+    end
+
+  end
 end

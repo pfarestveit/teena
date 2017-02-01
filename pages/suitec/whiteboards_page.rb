@@ -48,7 +48,7 @@ module Page
       # @param user [User]
       # @return [PageObject::Elements::Element]
       def collaborator_option_link(user)
-        link_element(xpath: "//li[contains(@class,'select-dropdown-optgroup-option')][contains(text(),'#{user.full_name}')]")
+        button_element(xpath: "//li[contains(@class,'select-dropdown-optgroup-option')][contains(text(),'#{user.full_name}')]")
       end
 
       # Returns the element indicating that a user is an existing whiteboard collaborator
@@ -108,8 +108,10 @@ module Page
       # Opens a whiteboard directly via URL
       # @param course [Course]
       # @param whiteboard [Whiteboard]
-      def hit_whiteboard_url(course, whiteboard)
-        navigate_to "#{Utils.suite_c_base_url}/whiteboards/#{whiteboard.id}?api_domain=#{Utils.canvas_base_url[8..38]}/courses/#{course.site_id}"
+      def hit_whiteboard_url(course, whiteboards_url, whiteboard)
+        url = "#{Utils.suite_c_base_url}/whiteboards/#{whiteboard.id}?api_domain=#{Utils.canvas_base_url[8..-1]}&course_id=#{course.site_id}&tool_url=#{whiteboards_url}"
+        logger.debug "Hitting URL '#{url}'"
+        navigate_to url
       end
 
       # Closes a browser window if it contains a whiteboard and if more than one window is open
