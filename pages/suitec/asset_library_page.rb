@@ -20,6 +20,26 @@ module Page
         switch_to_canvas_iframe driver
       end
 
+      button(:resume_sync_button, xpath: '//button[contains(.,"Resume syncing")]')
+      div(:resume_sync_success, xpath: '//div[contains(.,"Syncing has been resumed for this course. There may be a short delay before SuiteC tools are updated.")]')
+
+      # Checks if Canvas sync is disabled. If so, adds an asset to create new activity and resumes sync.
+      # @param driver [Selenium::WebDriver]
+      # @param url [String]
+      def ensure_canvas_sync(driver, url)
+        load_page(driver, url)
+        add_site_link_element.when_visible Utils.short_wait
+        if resume_sync_button?
+          add_site Asset.new({ url: 'www.google.com', title: 'resume sync asset' })
+          logger.info 'Syncing is disabled for this course site, re-enabling'
+          wait_for_page_update_and_click resume_sync_button_element
+          resume_sync_success_element.when_visible Utils.short_wait
+          sleep Utils.medium_wait
+        else
+          logger.info 'Syncing is still enabled for this course site'
+        end
+      end
+
       # ASSETS
 
       elements(:list_view_asset, :list_item, class: 'assetlibrary-list-item')
@@ -85,10 +105,7 @@ module Page
       # Waits for an asset's detail view to load
       # @param asset [Asset]
       def wait_for_asset_detail(asset)
-        wait_until(Utils.short_wait) do
-          logger.debug "Visible asset title should include '#{asset.title}' and is currently '#{detail_view_asset_title}'"
-          detail_view_asset_title.include? "#{asset.title}"
-        end
+        wait_until(Utils.short_wait) { detail_view_asset_title.include? "#{asset.title}" }
       end
 
       # Combines methods to load the asset library, find a given asset, and load its detail view
@@ -169,7 +186,8 @@ module Page
       # @param asset [Asset]
       # @return [boolean]
       def preview_generated?(driver, url, asset)
-        logger.info "Verifying a preview of type '#{asset.preview}' is generated for the asset"
+        timeout = Utils.medium_wait
+        logger.info "Verifying a preview of type '#{asset.preview}' is generated for the asset within #{timeout} seconds"
         preview_element = case asset.preview
                             when 'image'
                               image_element(xpath: '//div[@id="assetlibrary-item-preview"]//div[@data-ng-if="asset.type === \'file\' && asset.image_url !== null"]/img')
@@ -187,9 +205,11 @@ module Page
                               paragraph_element(xpath: '//p[contains(.,"No preview available")]')
                           end
         load_asset_detail(driver, url, asset)
-        preparing_preview_element.when_not_present(Utils.medium_wait) if preparing_preview?
-        sleep 1
-        preview_element.exists?
+        verify_block do
+          preparing_preview_element.when_not_present(timeout) if preparing_preview?
+          sleep 1
+          preview_element.when_present Utils.short_wait
+        end
       end
 
       # SEARCH / FILTER

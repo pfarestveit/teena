@@ -4,11 +4,12 @@ include Logging
 
 describe 'Canvas assignment sync', order: :defined do
 
+  course_id = ENV['course_id']
   test_id = Utils.get_test_id
 
   before(:all) do
     @course = Course.new({})
-    @course.site_id = ENV['course_id']
+    @course.site_id = course_id
     @driver = Utils.launch_browser
     @canvas = Page::CanvasPage.new @driver
     @cal_net = Page::CalNetPage.new @driver
@@ -22,11 +23,12 @@ describe 'Canvas assignment sync', order: :defined do
     @assignment_1 = Assignment.new("Submission Assignment 1 #{test_id}", nil)
     @assignment_2 = Assignment.new("Submission Assignment 2 #{test_id}", nil)
 
-    # Create course site if necessary
+    # Create course site if necessary. If an existing site, ensure Canvas sync is enabled.
     @canvas.log_in(@cal_net, Utils.super_admin_username, Utils.super_admin_password)
     @canvas.get_suite_c_test_course(@course, [@teacher, @student], test_id, [SuiteCTools::ASSET_LIBRARY, SuiteCTools::ENGAGEMENT_INDEX])
     @asset_library_url = @canvas.click_tool_link(@driver, SuiteCTools::ASSET_LIBRARY)
     @engagement_index_url = @canvas.click_tool_link(@driver, SuiteCTools::ENGAGEMENT_INDEX)
+    @asset_library.ensure_canvas_sync(@driver, @asset_library_url) unless course_id.nil?
 
     @asset_1 = Asset.new @student.assets[0]
     @asset_1.title = @asset_library.get_canvas_submission_title @asset_1

@@ -50,8 +50,8 @@ module Page
     # @param user [User]
     # @param course [Course]
     def masquerade_as(user, course = nil)
-      logger.info "Masquerading as UID #{user.uid} #{user.role} #{user.username}"
       stop_masquerading if stop_masquerading_link?
+      logger.info "Masquerading as #{user.role} UID #{user.uid}"
       navigate_to "#{Utils.canvas_base_url}/users/#{user.canvas_id.to_s}/masquerade"
       wait_for_page_load_and_click masquerade_link_element
       stop_masquerading_link_element.when_visible
@@ -74,9 +74,12 @@ module Page
     # Hides the footer element in order to interact with elements hidden beneath it. Clicks once to set focus on the footer
     # and once again to hide it.
     def hide_footer
-      footer_element.click
-      sleep 1
-      footer_element.click
+      footer_element.when_present Utils.short_wait
+      if footer_element.visible?
+        footer_element.click
+        sleep 1
+        footer_element.click
+      end
     end
 
     # COURSE SITE SETUP
@@ -102,6 +105,7 @@ module Page
     button(:next_button, id: 'next-step')
     button(:add_button, id: 'createUsersAddButton')
     paragraph(:add_users_success, xpath: '//p[contains(.,"The following users have been enrolled")]')
+    li(:remove_user_success, xpath: '//li[contains(.,"User successfully removed")]')
     button(:done_button, xpath: '//button[contains(.,"Done")]')
     td(:default_email, xpath: '//th[text()="Default Email:"]/following-sibling::td')
     link(:edit_user_link, xpath: '//a[@class="edit_user_link"]')
@@ -198,6 +202,26 @@ module Page
           end
         end
       end
+    end
+
+    # Removes a user from a course site
+    # @param course [Course]
+    # @param user [User]
+    def remove_user_from_course(course, user)
+      logger.info "Removing #{user.role} UID #{user.uid} from course site ID #{course.site_id}"
+      load_users_page course
+      hide_footer
+      # Scroll down a few times until the user appears on the page
+      begin
+        tries ||= 5
+        scroll_to_bottom
+        (link = link_element(xpath: "//tr[@id='user_#{user.canvas_id}']//a[contains(@class,'al-trigger')]")).when_present 1
+      rescue
+        retry unless (tries -=1).zero?
+      end
+      wait_for_page_update_and_click link
+      confirm(true) { wait_for_page_update_and_click link_element(xpath: "//tr[@id='user_#{user.canvas_id}']//a[@data-event='removeFromCourse']") }
+      remove_user_success_element.when_visible Utils.short_wait
     end
 
     # Searches for a user by Canvas user ID
@@ -581,5 +605,18 @@ module Page
       end
       assignment_submission_conf_element.when_visible Utils.long_wait
     end
+
+    # Verifies that the asset file directory on a course site is set to 'hidden' but visible to the right user roles
+    # @param course [Course]
+    # @param user [User]
+    # @return [boolean]
+    def suitec_files_hidden?(course, user)
+      navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/files"
+      div_element(class: 'ef-folder-list').when_visible Utils.medium_wait
+      ['Teacher', 'Lead TA', 'TA', 'Designer', 'Reader'].include?(user.role) ?
+          verify_block { button_element(xpath: '//a[contains(.,"_suitec")]/../following-sibling::div[5]/button[@title="Hidden. Available with a link"]').when_visible Utils.short_wait } :
+          verify_block { div_element(xpath: '//div[contains(.,"This folder is empty")]').when_visible Utils.short_wait }
+    end
+
   end
 end

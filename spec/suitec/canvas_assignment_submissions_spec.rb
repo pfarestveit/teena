@@ -6,9 +6,10 @@ describe 'Canvas assignment submission', order: :defined do
 
   begin
 
+    course_id = ENV['course_id']
     test_id = Utils.get_test_id
     @course = Course.new({})
-    @course.site_id = ENV['course_id']
+    @course.site_id = course_id
 
     # Load test data
     user_test_data = Utils.load_test_users.select { |data| data['tests']['canvasAssignmentSubmissions'] }
@@ -22,16 +23,17 @@ describe 'Canvas assignment submission', order: :defined do
     @asset_library = Page::SuiteCPages::AssetLibraryPage.new @driver
     @engagement_index = Page::SuiteCPages::EngagementIndexPage.new @driver
 
-    # Create course site if necessary
+    # Create course site if necessary. If an existing site, then ensure Canvas sync is enabled.
     @canvas.log_in(@cal_net, Utils.super_admin_username, Utils.super_admin_password)
     @canvas.get_suite_c_test_course(@course, users, test_id, [SuiteCTools::ASSET_LIBRARY, SuiteCTools::ENGAGEMENT_INDEX])
+    @asset_library_url = @canvas.click_tool_link(@driver, SuiteCTools::ASSET_LIBRARY)
+    @engagement_index_url = @canvas.click_tool_link(@driver, SuiteCTools::ENGAGEMENT_INDEX)
+    @asset_library.ensure_canvas_sync(@driver, @asset_library_url) unless course_id.nil?
 
     # Create assignment
     @assignment = Assignment.new("Submission Assignment #{test_id}", nil)
     @canvas.masquerade_as(@teacher, @course)
     @canvas.create_assignment(@course, @assignment)
-    @asset_library_url = @canvas.click_tool_link(@driver, SuiteCTools::ASSET_LIBRARY)
-    @engagement_index_url = @canvas.click_tool_link(@driver, SuiteCTools::ENGAGEMENT_INDEX)
 
     # Enable Canvas assignment sync
     @asset_library.wait_for_canvas_category(@driver, @asset_library_url, @assignment)
@@ -97,7 +99,7 @@ describe 'Canvas assignment submission', order: :defined do
         @asset_library.wait_until(Utils.short_wait) { @asset_library.list_view_asset_elements.length == 1 }
 
         file_uploaded = @asset_library.verify_block { @asset_library.verify_first_asset(student, asset) }
-        preview_generated = @asset_library.preview_generated?(@driver, @asset_library_url, @asset)
+        preview_generated = @asset_library.preview_generated?(@driver, @asset_library_url, asset)
 
         it("appears in the Asset Library for #{student_full_name}") { expect(file_uploaded).to be true }
         it("generate the expected asset preview for #{student_full_name} uploading #{asset_title}") { expect(preview_generated).to be true }

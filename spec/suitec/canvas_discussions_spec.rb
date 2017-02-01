@@ -2,12 +2,13 @@ require_relative '../../util/spec_helper'
 
 describe 'A Canvas discussion', order: :defined do
 
+  course_id = ENV['course_id']
   test_id = Utils.get_test_id
   test_user_data = Utils.load_test_users.select { |data| data['tests']['canvasDiscussions'] }
 
   before(:all) do
     @course = Course.new({})
-    @course.site_id = ENV['course_id']
+    @course.site_id = course_id
     @user_1 = User.new test_user_data[0]
     @user_2 = User.new test_user_data[1]
 
@@ -16,10 +17,17 @@ describe 'A Canvas discussion', order: :defined do
     @cal_net= Page::CalNetPage.new @driver
     @engagement_index = Page::SuiteCPages::EngagementIndexPage.new @driver
 
-    # Create test course site
+    # Create test course site. If using an existing site, include the Asset Library and ensure Canvas sync is enabled.
+    tools = [SuiteCTools::ENGAGEMENT_INDEX]
+    tools << SuiteCTools::ASSET_LIBRARY unless course_id.nil?
     @canvas.log_in(@cal_net, Utils.ets_qa_username, Utils.ets_qa_password)
-    @canvas.get_suite_c_test_course(@course, [@user_1, @user_2], test_id, [SuiteCTools::ENGAGEMENT_INDEX])
+    @canvas.get_suite_c_test_course(@course, [@user_1, @user_2], test_id, tools)
     @engagement_index_url = @canvas.click_tool_link(@driver, SuiteCTools::ENGAGEMENT_INDEX)
+    unless course_id.nil?
+      @asset_library = Page::SuiteCPages::AssetLibraryPage.new @driver
+      @asset_library_url = @canvas.click_tool_link(@driver, SuiteCTools::ASSET_LIBRARY)
+      @asset_library.ensure_canvas_sync(@driver, @asset_library_url)
+    end
 
     # Determine expected scores
     @engagement_index.load_scores(@driver, @engagement_index_url)

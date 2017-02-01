@@ -4,11 +4,12 @@ describe 'Whiteboard', order: :defined do
 
   include Logging
 
+  course_id = ENV['course_id']
   test_id = Utils.get_test_id
   timeout = Utils.short_wait
 
   course = Course.new({})
-  course.site_id = ENV['course_id']
+  course.site_id = course_id
 
   # Load test users
   user_test_data = Utils.load_test_users.select { |data| data['tests']['whiteboardCollaboration'] }
@@ -33,17 +34,24 @@ describe 'Whiteboard', order: :defined do
     @cal_net_driver_1 = Page::CalNetPage.new @driver_1
     @whiteboards_driver_1 = Page::SuiteCPages::WhiteboardsPage.new @driver_1
 
-    # Create course site if necessary
+    # Create course site if necessary. If using an existing site, include the Asset Library and make sure Canvas sync is enabled.
+    tools = [SuiteCTools::ENGAGEMENT_INDEX, SuiteCTools::WHITEBOARDS]
+    tools << SuiteCTools::ASSET_LIBRARY unless course_id.nil?
     @canvas_driver_1.log_in(@cal_net_driver_1, Utils.super_admin_username, Utils.super_admin_password)
-    @canvas_driver_1.get_suite_c_test_course(course, users, test_id, [SuiteCTools::ENGAGEMENT_INDEX, SuiteCTools::WHITEBOARDS])
-
+    @canvas_driver_1.get_suite_c_test_course(course, users, test_id, tools)
     @whiteboards_url = @canvas_driver_1.click_tool_link(@driver_1, SuiteCTools::WHITEBOARDS)
+    @engagement_index_url = @canvas_driver_1.click_tool_link(@driver_1, SuiteCTools::ENGAGEMENT_INDEX)
+    unless course_id.nil?
+      @asset_library = Page::SuiteCPages::AssetLibraryPage.new @driver_1
+      @asset_library_url = @canvas_driver_1.click_tool_link(@driver_1, SuiteCTools::ASSET_LIBRARY)
+      @asset_library.ensure_canvas_sync(@driver_1, @asset_library_url)
+    end
 
     # Create three whiteboards
     @whiteboards = []
-    @whiteboards << (@whiteboard_1 = Whiteboard.new({ owner: student_1, title: "Whiteboard Collaboration #{test_id} - board 1", collaborators: [student_2, student_3] }))
-    @whiteboards << (@whiteboard_2 = Whiteboard.new({ owner: student_2, title: "Whiteboard Collaboration #{test_id} - board 2", collaborators: [teacher, student_1] }))
-    @whiteboards << (@whiteboard_3 = Whiteboard.new({ owner: student_3, title: "Whiteboard Collaboration #{test_id} - board 3", collaborators: [] }))
+    @whiteboards << (@whiteboard_1 = Whiteboard.new({owner: student_1, title: "Whiteboard Collaboration #{test_id} - board 1", collaborators: [student_2, student_3]}))
+    @whiteboards << (@whiteboard_2 = Whiteboard.new({owner: student_2, title: "Whiteboard Collaboration #{test_id} - board 2", collaborators: [teacher, student_1]}))
+    @whiteboards << (@whiteboard_3 = Whiteboard.new({owner: student_3, title: "Whiteboard Collaboration #{test_id} - board 3", collaborators: []}))
 
     @whiteboards.each do |board|
       @canvas_driver_1.masquerade_as(board.owner, course)
@@ -87,7 +95,7 @@ describe 'Whiteboard', order: :defined do
           end
         else
           @whiteboards.each do |board|
-            @whiteboards_driver_1.hit_whiteboard_url(course, board)
+            @whiteboards_driver_1.hit_whiteboard_url(course, @whiteboards_url, board)
             has_access = @whiteboards_driver_1.verify_block { @whiteboards_driver_1.settings_button_element.when_visible timeout }
             expect(has_access).to be false
           end
@@ -108,7 +116,7 @@ describe 'Whiteboard', order: :defined do
           end
         else
           @whiteboards.each do |board|
-            @whiteboards_driver_1.hit_whiteboard_url(course, board)
+            @whiteboards_driver_1.hit_whiteboard_url(course, @whiteboards_url, board)
             has_access = @whiteboards_driver_1.verify_block { @whiteboards_driver_1.settings_button_element.when_visible timeout }
             expect(has_access).to be false
           end
@@ -132,7 +140,7 @@ describe 'Whiteboard', order: :defined do
           @whiteboards_driver_1.list_view_whiteboard_title_elements.length == 2 ||
           @whiteboards_driver_1.list_view_whiteboard_title_elements[2].text != @whiteboard_3.title
         end
-        @whiteboards_driver_1.hit_whiteboard_url(course, @whiteboard_3)
+        @whiteboards_driver_1.hit_whiteboard_url(course, @whiteboards_url, @whiteboard_3)
         has_access = @whiteboards_driver_1.verify_block { @whiteboards_driver_1.settings_button_element.when_visible timeout }
         expect(has_access).to be false
       end
@@ -214,7 +222,6 @@ describe 'Whiteboard', order: :defined do
         @engagement_index_driver_2 = Page::SuiteCPages::EngagementIndexPage.new @driver_2
         @canvas_driver_2.load_course_site course
         # Make sure chat activity is configured with a non-zero point value
-        @engagement_index_url = @canvas_driver_2.click_tool_link(@driver_2, SuiteCTools::ENGAGEMENT_INDEX)
         @engagement_index_driver_2.load_page(@driver_2, @engagement_index_url)
         @new_chat_point_value = Activities::LEAVE_CHAT_MESSAGE.points + 1
         @engagement_index_driver_2.click_points_config
@@ -294,9 +301,56 @@ describe 'Whiteboard', order: :defined do
     it "allows #{student_1.full_name} to delete its own membership" do
       @whiteboards_driver_1.remove_collaborator student_1
       @driver_1.switch_to.window @driver_1.window_handles.first
-      @whiteboards_driver_1.hit_whiteboard_url(course, @whiteboard_1)
+      @whiteboards_driver_1.hit_whiteboard_url(course, @whiteboards_url, @whiteboard_1)
       has_access = @whiteboards_driver_1.verify_block { @whiteboards_driver_1.settings_button_element.when_visible timeout }
       expect(has_access).to be false
+    end
+  end
+
+  describe 'Canvas syncing' do
+
+    before(:all) do
+      @canvas_driver_1.stop_masquerading
+      [teacher, student_1].each { |user| @canvas_driver_1.remove_user_from_course(course, user) }
+      # Access to whiteboards is based on session cookie, so launch another browser to check cookie-less access
+      @driver_3 = Utils.launch_browser
+      @canvas_driver_3 = Page::CanvasPage.new @driver_3
+      @cal_net_driver_3 = Page::CalNetPage.new @driver_3
+      @whiteboards_driver_3 = Page::SuiteCPages::WhiteboardsPage.new @driver_3
+      @canvas_driver_3.log_in(@cal_net_driver_3, Utils.super_admin_username, Utils.super_admin_password)
+      @engagement_index_url = @canvas_driver_1.click_tool_link(@driver_1, SuiteCTools::ENGAGEMENT_INDEX)
+      @engagement_index_driver_1 = Page::SuiteCPages::EngagementIndexPage.new @driver_1
+    end
+
+    after(:all) { @driver_3.quit }
+
+    [teacher, student_1].each do |user|
+
+      it "removes #{user.role} UID #{user.uid} from all whiteboards if the user has been removed from the course site" do
+        @canvas_driver_1.load_course_site course
+        @canvas_driver_1.stop_masquerading if @canvas_driver_1.stop_masquerading_link?
+        # Wait until the user has been dropped from the Engagement Index before checking whiteboards
+        # @engagement_index_driver_1.wait_until(Utils.long_wait) do
+        #   @engagement_index_driver_1.load_page(@driver_1, @engagement_index_url)
+        #   !@engagement_index_driver_1.visible_names.include? user.full_name
+        # end
+        [@whiteboard_1, @whiteboard_2, @whiteboard_3].each do |whiteboard|
+          @whiteboards_driver_1.wait_until(Utils.long_wait) do
+            @whiteboards_driver_1.hit_whiteboard_url(course, @whiteboards_url, whiteboard)
+            @whiteboards_driver_1.click_settings_button
+            !@whiteboards_driver_1.collaborator_name(user).exists?
+          end
+        end
+      end
+
+      it "prevents #{user.role} UID #{user.uid} from reaching any whiteboards if the user has been removed from the course site" do
+        @canvas_driver_3.masquerade_as(user, course)
+        [@whiteboard_1, @whiteboard_2, @whiteboard_3].each do |whiteboard|
+          @whiteboards_driver_3.hit_whiteboard_url(course, @whiteboards_url, whiteboard)
+          has_access = @whiteboards_driver_3.verify_block { @whiteboards_driver_3.settings_button_element.when_visible timeout }
+          expect(has_access).to be false
+        end
+      end
     end
   end
 end
