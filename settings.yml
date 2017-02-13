@@ -21,6 +21,7 @@ canvas:
   course_add_user_tool: secret
   course_captures_tool: secret
   rosters_tool: secret
+  official_sections_tool: secret
 
 calcentral:
   base_url: https://calcentral-qa.berkeley.edu

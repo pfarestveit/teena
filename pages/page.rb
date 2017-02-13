@@ -82,7 +82,8 @@ module Page
   # @param driver [Selenium::WebDriver]
   # @param link [PageObject::Elements::Element]
   # @param expected_page_title [String]
-  def verify_external_link(driver, link, expected_page_title)
+  # @return [boolean]
+  def external_link_valid?(driver, link, expected_page_title)
     begin
       original_window = driver.window_handle
       link.click

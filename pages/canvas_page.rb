@@ -100,11 +100,11 @@ module Page
     select_list(:enrollment_roles, name: 'enrollment_role_id')
     link(:add_people_button, id: 'addUsers')
     link(:find_person_to_add_link, xpath: '//a[contains(.,"Find a Person to Add")]')
-    text_area(:user_list, id: 'user_list_textarea')
-    select_list(:user_role, id: 'role_id')
-    button(:next_button, id: 'next-step')
-    button(:add_button, id: 'createUsersAddButton')
-    paragraph(:add_users_success, xpath: '//p[contains(.,"The following users have been enrolled")]')
+    checkbox(:add_user_by_uid, xpath: '//input[@id="peoplesearch_radio_unique_id"]/following-sibling::span')
+    text_area(:user_list, xpath: '//span[contains(text(),"Enter the login IDs of the users you would like to add, separated by commas")]/../following-sibling::textarea')
+    select_list(:user_role, id: 'peoplesearch_select_role')
+    button(:next_button, id: 'addpeople_next')
+    div(:users_ready_to_add_msg, xpath: '//div[contains(text(),"The following users are ready to be added to the course.")]')
     li(:remove_user_success, xpath: '//li[contains(.,"User successfully removed")]')
     button(:done_button, xpath: '//button[contains(.,"Done")]')
     td(:default_email, xpath: '//th[text()="Default Email:"]/following-sibling::td')
@@ -179,7 +179,8 @@ module Page
     def add_users(course, test_users)
       ['Teacher', 'Designer', 'Lead TA', 'TA', 'Observer', 'Reader', 'Student'].each do |user_role|
         users = ''
-        test_users.each { |user| users << "#{user.uid}, " if user.role == user_role }
+        users_with_role = test_users.select { |user| user.role == user_role }
+        users_with_role.each { |user| users << "#{user.uid}, " }
         if users.empty?
           logger.warn "No test users with role #{user_role}"
         else
@@ -189,13 +190,17 @@ module Page
             logger.info "Adding users with role #{user_role}"
             load_users_page course
             wait_for_page_load_and_click add_people_button_element
-            user_list_element.when_visible Utils.short_wait
+            add_user_by_uid_element.when_visible Utils.short_wait
+            sleep 1
+            check_add_user_by_uid
             self.user_list = users
             self.user_role = user_role
             next_button
-            wait_for_page_load_and_click add_button_element
-            add_users_success_element.when_visible Utils.medium_wait
-            done_button
+            users_ready_to_add_msg_element.when_visible Utils.medium_wait
+            hide_footer
+            wait_for_page_update_and_click next_button_element
+            5.times { scroll_to_bottom }
+            users_with_role.each { |user| cell_element(xpath: "//tr[contains(@id,'#{user.canvas_id}')]").when_present Utils.short_wait }
           rescue
             logger.warn 'Add User failed, retrying'
             retry unless (tries -=1).zero?
@@ -272,7 +277,7 @@ module Page
         ending_count = enrollment_count_by_role(course, role)
         begin
           starting_count = ending_count
-          sleep Utils.medium_wait
+          sleep Utils.short_wait
           ending_count = enrollment_count_by_role(course, role)
         end while ending_count > starting_count
         enrollment_counts << ending_count

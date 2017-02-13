@@ -60,7 +60,7 @@ module Page
       # @param section [Section]
       def filter_by_section(section)
         wait_for_page_update_and_click section_select_element
-        self.section_select = section.code
+        self.section_select = "#{section.course} #{section.label}"
         sleep 1
       end
 

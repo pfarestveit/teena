@@ -115,7 +115,7 @@ describe 'bCourses Roster Photos' do
     end
 
     it "shows UID #{teacher_1.uid} all sections by default on #{course.code} course site ID #{course.site_id}" do
-      expected_section_codes = (sections_for_site.map { |section| section.code }) << 'All Sections'
+      expected_section_codes = (sections_for_site.map { |section| "#{section.course} #{section.label}" }) << 'All Sections'
       actual_section_codes = @roster_photos_page.section_select_options
       expect(actual_section_codes.sort).to eql(expected_section_codes.sort)
     end
@@ -132,9 +132,9 @@ describe 'bCourses Roster Photos' do
     end
 
     sections_for_site.each do |section|
-      it "allows UID #{teacher_1.uid} to filter by section #{section.code} on #{course.code} course site ID #{course.site_id}" do
+      it "allows UID #{teacher_1.uid} to filter by section #{section.label} on #{course.code} course site ID #{course.site_id}" do
         section_students = @roster_api.section_students(section.code)
-        logger.debug "Expecting #{section_students.length} students in section #{section.code}"
+        logger.debug "Expecting #{section_students.length} students in section #{section.label}"
         @roster_photos_page.filter_by_string ''
         @roster_photos_page.filter_by_section section
         @roster_photos_page.wait_until(Utils.short_wait) { @roster_photos_page.all_sids.sort == @roster_api.student_ids(section_students).sort }
