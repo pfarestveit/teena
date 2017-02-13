@@ -12,9 +12,8 @@ describe 'bCourses Official Sections tool' do
     # Load courses test data
     test_course_data = Utils.load_test_courses.select { |course| course['tests']['official_sections'] }
     user_permissions_tested = false
-    test_output = Utils.initialize_canvas_test_output(self, ['Term', 'Course Code', 'Instructor', 'Site ID', 'Sections',
-                                                             'User Count - Initial', 'User Count - Sections Added',
-                                                             'User Count - Sections Deleted'])
+    test_output = Utils.initialize_canvas_test_output(self, ['UID', 'Semester', 'Course', 'Section Label', 'Section CCN',
+                                                             'Section Schedules', 'Section Locations', 'Section Instructors'])
 
     @driver = Utils.launch_browser
     @cal_net = Page::CalNetPage.new @driver
