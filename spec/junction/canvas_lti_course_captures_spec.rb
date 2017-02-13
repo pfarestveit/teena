@@ -78,9 +78,9 @@ describe 'bCourses Course Captures tool' do
 
                   # Verify that the alert message, help page link, and the sample YouTube video ID are present
                   has_you_tube_alert = @course_captures_page.you_tube_alert_elements[index]
-                  has_help_page_link = @course_captures_page.verify_external_link(@driver, @course_captures_page.help_page_link(index), 'Service at UC Berkeley')
+                  has_help_page_link = @course_captures_page.external_link_valid?(@driver, @course_captures_page.help_page_link(index), 'Service at UC Berkeley')
                   @course_captures_page.switch_to_canvas_iframe @driver if ENV['masquerade']
-                  has_you_tube_link = @course_captures_page.verify_external_link(@driver, @course_captures_page.you_tube_link(expected_video_id), 'YouTube')
+                  has_you_tube_link = @course_captures_page.external_link_valid?(@driver, @course_captures_page.you_tube_link(expected_video_id), 'YouTube')
                   @course_captures_page.switch_to_canvas_iframe @driver if ENV['masquerade']
 
                   it("shows UID #{user.uid} an explanation for viewing the recordings at You Tube on site ID #{course.site_id}") { expect(has_you_tube_alert).to be_truthy }
@@ -90,7 +90,7 @@ describe 'bCourses Course Captures tool' do
                 end
 
                 # Verify that the 'report a problem' link works
-                has_report_problem_link = @course_captures_page.verify_external_link(@driver, @course_captures_page.report_problem_element, 'Request Support or Give Feedback | Educational Technology Services')
+                has_report_problem_link = @course_captures_page.external_link_valid?(@driver, @course_captures_page.report_problem_element, 'Request Support or Give Feedback | Educational Technology Services')
                 @course_captures_page.switch_to_canvas_iframe @driver if ENV['masquerade']
 
                 it("offers UID #{user.uid} a 'Report a Problem' link on on site ID #{course.site_id}") { expect(has_report_problem_link).to be true }

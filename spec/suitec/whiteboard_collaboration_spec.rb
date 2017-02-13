@@ -254,7 +254,7 @@ describe 'Whiteboard', order: :defined do
       it "allows #{student_1.full_name} to send messages with links that open in a new window" do
         @whiteboards_driver_1.send_chat_msg 'check out www.google.com'
         @whiteboards_driver_1.wait_until(timeout) { @whiteboards_driver_1.chat_msg_body_elements.last.text.include? 'check out' }
-        @whiteboards_driver_1.verify_external_link(@driver_1, @whiteboards_driver_1.chat_msg_link('last()', 'www.google.com'), 'Google')
+        @whiteboards_driver_1.external_link_valid?(@driver_1, @whiteboards_driver_1.chat_msg_link('last()', 'www.google.com'), 'Google')
       end
 
       it "allows #{student_1.full_name} to close the chat pane" do
@@ -330,10 +330,10 @@ describe 'Whiteboard', order: :defined do
         @canvas_driver_1.load_course_site course
         @canvas_driver_1.stop_masquerading if @canvas_driver_1.stop_masquerading_link?
         # Wait until the user has been dropped from the Engagement Index before checking whiteboards
-        # @engagement_index_driver_1.wait_until(Utils.long_wait) do
-        #   @engagement_index_driver_1.load_page(@driver_1, @engagement_index_url)
-        #   !@engagement_index_driver_1.visible_names.include? user.full_name
-        # end
+        @engagement_index_driver_1.wait_until(Utils.long_wait) do
+          @engagement_index_driver_1.load_page(@driver_1, @engagement_index_url)
+          !@engagement_index_driver_1.visible_names.include? user.full_name
+        end
         [@whiteboard_1, @whiteboard_2, @whiteboard_3].each do |whiteboard|
           @whiteboards_driver_1.wait_until(Utils.long_wait) do
             @whiteboards_driver_1.hit_whiteboard_url(course, @whiteboards_url, whiteboard)

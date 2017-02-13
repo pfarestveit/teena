@@ -65,7 +65,7 @@ describe 'bCourses course site creation' do
           long_maintenance_notice = @create_course_site_page.maintenance_notice
           it ('shows an expanded maintenance notice') { expect(long_maintenance_notice).to include('bCourses performs scheduled maintenance every day between 8-9AM') }
 
-          bcourses_link_works = @create_course_site_page.verify_external_link(@driver, @create_course_site_page.bcourses_service_element, 'bCourses | Educational Technology Services')
+          bcourses_link_works = @create_course_site_page.external_link_valid?(@driver, @create_course_site_page.bcourses_service_element, 'bCourses | Educational Technology Services')
           it ('shows a link to the bCourses service page') { expect(bcourses_link_works).to be true }
 
           @canvas_page.switch_to_canvas_iframe(@driver) if masquerade
@@ -126,7 +126,7 @@ describe 'bCourses course site creation' do
             @roster_photos_page.load_standalone_tool @course
           end
           @roster_photos_page.section_select_element.when_visible Utils.medium_wait
-          expected_sections_on_site = (sections_for_site.map { |section| section.code })
+          expected_sections_on_site = (sections_for_site.map { |section| "#{@course.code} #{section.label}" })
           actual_sections_on_site = @roster_photos_page.section_select_options.delete 'All Sections'
           it("shows the right section list on the Roster Photos tool for #{@course.term} #{@course.code} site ID #{@course.site_id}") { expect(actual_sections_on_site).to eql(expected_sections_on_site) }
 

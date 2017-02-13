@@ -181,7 +181,7 @@ describe 'An asset comment', order: :defined do
       @asset_library.load_asset_detail(@driver, @asset_library_url, @asset)
       @asset_library.add_comment comment_3_by_viewer
       @asset_library.wait_until(timeout) { @asset_library.comment_elements.count == 6 }
-      @asset_library.verify_external_link(@driver, @asset_library.comment_body_link(0, 'google'), 'Google')
+      @asset_library.external_link_valid?(@driver, @asset_library.comment_body_link(0, 'google'), 'Google')
     end
 
     it 'cannot be added as a reply to a reply' do

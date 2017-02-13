@@ -61,8 +61,8 @@ describe 'My Academics course captures card' do
 
                 # Verify that the alert message, help page link, and the sample YouTube video ID are present
                 has_you_tube_alert = @my_academics.you_tube_alert_elements[index]
-                has_help_page_link = @my_academics.verify_external_link(@driver, @my_academics.help_page_link(index), 'Service at UC Berkeley')
-                has_you_tube_link = @my_academics.verify_external_link(@driver, @my_academics.you_tube_link(expected_video_id), 'YouTube')
+                has_help_page_link = @my_academics.external_link_valid?(@driver, @my_academics.help_page_link(index), 'Service at UC Berkeley')
+                has_you_tube_link = @my_academics.external_link_valid?(@driver, @my_academics.you_tube_link(expected_video_id), 'YouTube')
 
                 it("shows UID #{uid} a 'help page' link on '#{class_page}'") { expect(has_help_page_link).to be true }
                 it("shows UID #{uid} an explanation for viewing the recordings at You Tube on '#{class_page}'") { expect(has_you_tube_alert).to be_truthy }
@@ -71,7 +71,7 @@ describe 'My Academics course captures card' do
               end
 
               # Verify that the 'report a problem' link works
-              has_report_problem_link = @my_academics.verify_external_link(@driver, @my_academics.report_problem_element, 'Request Support or Give Feedback | Educational Technology Services')
+              has_report_problem_link = @my_academics.external_link_valid?(@driver, @my_academics.report_problem_element, 'Request Support or Give Feedback | Educational Technology Services')
 
               it("offers UID #{uid} a 'Report a Problem' link on '#{class_page}'") { expect(has_report_problem_link).to be true }
 

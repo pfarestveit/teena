@@ -83,7 +83,7 @@ describe 'bCourses Find a Person to Add', order: :defined do
     end
 
     it 'shows a bCourses service page link in the expanded maintenance notice' do
-      expect(@course_add_user_page.verify_external_link(@driver, @course_add_user_page.bcourses_service_link_element, 'bCourses | Educational Technology Services')).to be true
+      expect(@course_add_user_page.external_link_valid?(@driver, @course_add_user_page.bcourses_service_link_element, 'bCourses | Educational Technology Services')).to be true
     end
 
     it 'allows the user to collapse the maintenance notice' do
@@ -101,7 +101,7 @@ describe 'bCourses Find a Person to Add', order: :defined do
     end
 
     it 'shows a CalNet Directory link in the expanded maintenance notice' do
-      expect(@course_add_user_page.verify_external_link(@driver, @course_add_user_page.cal_net_dir_link_element, 'Campus Directory | University of California, Berkeley')).to be true
+      expect(@course_add_user_page.external_link_valid?(@driver, @course_add_user_page.cal_net_dir_link_element, 'Campus Directory | University of California, Berkeley')).to be true
     end
 
     it 'shows a CalNet Guest Account link in the expanded maintenance notice' do
@@ -109,7 +109,7 @@ describe 'bCourses Find a Person to Add', order: :defined do
     end
 
     it 'shows a bCourses help page link in the expanded maintenance notice' do
-      expect(@course_add_user_page.verify_external_link(@driver, @course_add_user_page.bcourses_help_link_element, 'Service at UC Berkeley')).to be true
+      expect(@course_add_user_page.external_link_valid?(@driver, @course_add_user_page.bcourses_help_link_element, 'Service at UC Berkeley')).to be true
     end
   end
 
@@ -180,7 +180,7 @@ describe 'bCourses Find a Person to Add', order: :defined do
   describe 'import users to course site' do
 
     before(:all) do
-      @section_to_test = sections_for_site.find { |section| section.code }
+      @section_to_test = sections_for_site.first
       @canvas.masquerade_as(teacher_1, course) if masquerade
     end
 
@@ -203,7 +203,7 @@ describe 'bCourses Find a Person to Add', order: :defined do
           @canvas.load_users_page course
           @canvas.search_user_by_canvas_id user
           @canvas.wait_until(Utils.short_wait) { @canvas.roster_user_uid user.canvas_id }
-          expect(@canvas.roster_user_sections(user.canvas_id)).to include(@section_to_test.code) unless user.role == 'Observer'
+          expect(@canvas.roster_user_sections(user.canvas_id)).to include("#{@section_to_test.course} #{@section_to_test.label}") unless user.role == 'Observer'
           (user.role == 'Observer') ?
               (expect(@canvas.roster_user_roles(user.canvas_id)).to include('Observing: nobody')) :
               (expect(@canvas.roster_user_roles(user.canvas_id)).to include(user.role))

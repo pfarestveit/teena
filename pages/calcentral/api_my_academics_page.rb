@@ -44,6 +44,16 @@ class ApiMyAcademicsPage
     semester['classes']
   end
 
+  def course_code(course)
+    course['course_code']
+  end
+
+  def course_listing_course_codes(course)
+    codes = []
+    course['listings'].each { |listing| codes << listing['course_code'] }
+    codes
+  end
+
   def course_title(course)
     course['title'].nil? ? '' : (course['title'].gsub(/\s+/, ' ')).strip
   end
@@ -58,12 +68,69 @@ class ApiMyAcademicsPage
 
   # SECTIONS
 
-  def course_primary_sections(course)
-    course['sections'].map { |section| section if section['is_primary_section'] }
+  def section_course_code(section)
+    section['courseCode']
   end
 
   def section_url(section)
     section['url']
+  end
+
+  def section_schedules_recurring(section)
+    section['schedules'] && section['schedules']['recurring']
+  end
+
+  def course_sections(course)
+    course['sections']
+  end
+
+  def course_primary_sections(course)
+    course['sections'].map { |section| section if section['is_primary_section'] }
+  end
+
+  def course_sections_by_listing(course)
+    sections = []
+    course_sections(course).each { |section| sections << section if section_course_code(section) == course_code(course) }
+    sections
+  end
+
+  def course_section_course_codes(sections)
+    sections.map { |section| section_course_code(section) }
+  end
+
+  def course_section_labels(sections)
+    sections.map { |section| section['section_label'] }
+  end
+
+  def course_ccns(sections)
+    sections.map { |section| section['ccn'] }
+  end
+
+  def course_section_schedules(sections)
+    course_schedules = sections.map do |section|
+      section_schedules = section_schedules_recurring(section).map { |recurring| "#{recurring['schedule']}".gsub(/\s+/, ' ').strip }
+      section_schedules.join("\n")
+    end
+    course_schedules.flatten
+  end
+
+  def course_section_locations(sections)
+    course_locations = sections.map do |section|
+      section_locations = section_schedules_recurring(section).map do |recurring|
+        location = "#{recurring['buildingName']} #{recurring['roomNumber']}"
+        location.gsub(/\s+/, ' ').strip
+      end
+      section_locations.join("\n")
+    end
+    course_locations.flatten
+  end
+
+  def course_section_instructors(sections)
+    course_instructors = sections.map do |section|
+      instructors = section['instructors'].map { |instructor| "#{instructor['name']}".gsub(/\s+/, ' ').strip }
+      instructors.join("\n")
+    end
+    course_instructors.flatten
   end
 
   # COURSE SITES

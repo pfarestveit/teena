@@ -125,11 +125,11 @@ module Page
       # @param user [User]
       # @param section [Section]
       def add_user_by_uid(user, section)
-        logger.info "Adding UID #{user.uid} with role '#{user.role}' to section '#{section.code}'"
+        logger.info "Adding UID #{user.uid} with role '#{user.role}' to section '#{section.course} #{section.label}'"
         user_checkbox(user).when_present Utils.medium_wait
         user_checkbox(user).check
         course_section_element.when_visible Utils.short_wait
-        self.course_section = section.code
+        self.course_section = "#{section.course} #{section.label}"
         self.user_role = user.role
         wait_for_page_update_and_click add_user_button_element
         success_msg_element.when_visible Utils.medium_wait

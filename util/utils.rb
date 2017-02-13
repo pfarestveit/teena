@@ -174,6 +174,11 @@ class Utils
     @config['canvas']['rosters_tool']
   end
 
+  # Canvas ID of course official sections tool
+  def self.canvas_official_sections_tool
+    @config['canvas']['official_sections_tool']
+  end
+
   # CALCENTRAL
 
   # Base URL of CalCentral test environment
