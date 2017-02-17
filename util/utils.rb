@@ -226,4 +226,12 @@ class Utils
     @config['users']['test_user_password']
   end
 
+  # SCREENSHOTS
+
+  def self.save_screenshot(driver, unique_id, uid)
+    output_dir = File.join(ENV['HOME'], '/tmp/screenshots')
+    FileUtils.mkdir_p(output_dir) unless File.exists?(output_dir)
+    driver.save_screenshot File.join(output_dir, "#{unique_id}-UID#{uid}.png")
+  end
+
 end

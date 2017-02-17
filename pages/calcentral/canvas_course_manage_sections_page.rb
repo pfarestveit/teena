@@ -172,6 +172,11 @@ module Page
         button_element(xpath: "//button[contains(@class,'sections-form-course-button')][contains(.,'#{course_code}')]")
       end
 
+      def available_sections_course_title(course_code)
+        span_element(xpath: "//button[contains(@class,'sections-form-course-button')][contains(.,'#{course_code}')]//span[contains(.,'course.title')]").when_visible Utils.short_wait
+        span_element(xpath: "//button[contains(@class,'sections-form-course-button')][contains(.,'#{course_code}')]//span[contains(.,'course.title')]").text
+      end
+
       # Returns the table element containing a given course's sections available to add to a course site
       # @param course_code [String]
       # @return [PageObject::Elements::Table]
@@ -182,7 +187,9 @@ module Page
       # Expands the table of available sections in a course
       # @param course_code [String]
       def expand_available_sections(course_code)
-        unless available_sections_table(course_code).visible?
+        if available_sections_table(course_code).visible?
+          logger.debug "The sections table is already expanded for #{course_code}"
+        else
           wait_for_page_update_and_click available_sections_form_button(course_code)
           available_sections_table(course_code).when_visible Utils.short_wait
         end
@@ -194,6 +201,8 @@ module Page
         if available_sections_table(course_code).visible?
           wait_for_page_update_and_click available_sections_form_button(course_code)
           available_sections_table(course_code).when_not_visible Utils.short_wait
+        else
+          logger.debug "The sections table is already collapsed for #{course_code}"
         end
       end
 

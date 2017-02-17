@@ -88,12 +88,6 @@ class ApiMyAcademicsPage
     course['sections'].map { |section| section if section['is_primary_section'] }
   end
 
-  def course_sections_by_listing(course)
-    sections = []
-    course_sections(course).each { |section| sections << section if section_course_code(section) == course_code(course) }
-    sections
-  end
-
   def course_section_course_codes(sections)
     sections.map { |section| section_course_code(section) }
   end

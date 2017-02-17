@@ -55,61 +55,30 @@ describe 'bCourses Find a Person to Add', order: :defined do
 
   after(:all) { Utils.quit_browser @driver }
 
-  describe 'links and instructions' do
+  describe 'customizations in Add People' do
 
     before(:all) do
       if masquerade
         @canvas.masquerade_as(teacher_1, course)
         @canvas.load_users_page course
-        @canvas.click_find_person_to_add @driver
-      else
-        @splash_page.load_page
-        @splash_page.basic_auth teacher_1.uid
-        @course_add_user_page.load_standalone_tool course
       end
     end
 
-    before(:each) { @course_add_user_page.switch_to_canvas_iframe @driver unless @course_add_user_page.page_heading? }
+    if masquerade
+      it 'include a link to a help page on the Everyone tab' do
+        @canvas.help_finding_users_link_element.when_visible Utils.short_wait
+        expect(@canvas.external_link_valid?(@driver, @canvas.help_finding_users_link_element, 'Service at UC Berkeley')).to be true
+      end
 
-    it 'shows a collapsed maintenance notice' do
-      @course_add_user_page.maintenance_notice_element.when_visible Utils.medium_wait
-      expect(@course_add_user_page.maintenance_notice).to include('From 8 - 9 AM, you may experience delays of up to 10 minutes before your user is added.')
-      expect(@course_add_user_page.maintenance_detail_element.visible?).to be false
-    end
+      it 'include a search by Email Address option' do
+        @canvas.wait_for_page_load_and_click @canvas.add_people_button_element
+        @canvas.find_person_to_add_link_element.when_visible Utils.short_wait
+        expect(@canvas.add_user_by_email?).to be true
+      end
 
-    it 'allows the user to expand the maintenance notice' do
-      @course_add_user_page.expand_maintenance_notice
-      expect(@course_add_user_page.maintenance_detail).to include('bCourses performs scheduled maintenance every day between 8-9AM, during which time bCourses user and enrollment information is synchronized with other campus systems. This process may cause delays of up to 10 minutes before your request is completed.')
-    end
+      it('include a search by Berkeley UID option') { expect(@canvas.add_user_by_uid?).to be true }
 
-    it 'shows a bCourses service page link in the expanded maintenance notice' do
-      expect(@course_add_user_page.external_link_valid?(@driver, @course_add_user_page.bcourses_service_link_element, 'bCourses | Educational Technology Services')).to be true
-    end
-
-    it 'allows the user to collapse the maintenance notice' do
-      expect(@course_add_user_page.hide_maintenance_notice).to be_truthy
-    end
-
-    it 'shows a collapsed help notice' do
-      @course_add_user_page.need_help_button_element.when_visible Utils.short_wait
-      expect(@course_add_user_page.help_notice_element.visible?).to be false
-    end
-
-    it 'allows the user to expand the help notice' do
-      @course_add_user_page.expand_help_notice
-      expect(@course_add_user_page.help_notice).to include('UC Berkeley Faculty, Staff and Students')
-    end
-
-    it 'shows a CalNet Directory link in the expanded maintenance notice' do
-      expect(@course_add_user_page.external_link_valid?(@driver, @course_add_user_page.cal_net_dir_link_element, 'Campus Directory | University of California, Berkeley')).to be true
-    end
-
-    it 'shows a CalNet Guest Account link in the expanded maintenance notice' do
-      expect(@course_add_user_page.cal_net_guest_acct_link?).to be true
-    end
-
-    it 'shows a bCourses help page link in the expanded maintenance notice' do
-      expect(@course_add_user_page.external_link_valid?(@driver, @course_add_user_page.bcourses_help_link_element, 'Service at UC Berkeley')).to be true
+      it('include a search by Student ID option') { expect(@canvas.add_user_by_sid?).to be true }
     end
   end
 

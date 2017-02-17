@@ -5,6 +5,7 @@ describe 'bCourses course site creation' do
   include Logging
 
   masquerade = ENV['masquerade']
+  test_id = "#{Time.now.to_i}"
   links_tested = false
 
   begin
@@ -56,7 +57,7 @@ describe 'bCourses course site creation' do
         # Verify page content and external links for one of the courses
         unless links_tested
 
-          @create_course_site_page.maintenance_button_element.when_visible Utils.short_wait
+          @create_course_site_page.maintenance_button_element.when_visible Utils.medium_wait
           short_maintenance_notice = @create_course_site_page.maintenance_button_element.text
           it ('shows a collapsed maintenance notice') { expect(short_maintenance_notice).to include('From 8 - 9 AM, you may experience delays of up to 10 minutes') }
 
@@ -116,7 +117,7 @@ describe 'bCourses course site creation' do
           enrollment_counts = @canvas_page.wait_for_enrollment_import(@course, ['Student', 'Waitlist Student', 'Teacher', 'TA']) if masquerade
 
           # Check roster photos tool and verify it shows the right sections
-          if masquerade
+          if masquerade && !@teacher.uid.empty?
             has_roster_photos_link = @roster_photos_page.roster_photos_link?
             it ("shows a Roster Photos tool link in course site navigation for #{@course.term} #{@course.code} site ID #{@course.site_id}") { expect(has_roster_photos_link).to be true }
 
@@ -125,22 +126,18 @@ describe 'bCourses course site creation' do
           else
             @roster_photos_page.load_standalone_tool @course
           end
-          @roster_photos_page.section_select_element.when_visible Utils.medium_wait
-          expected_sections_on_site = (sections_for_site.map { |section| "#{@course.code} #{section.label}" })
-          actual_sections_on_site = @roster_photos_page.section_select_options.delete 'All Sections'
+          @roster_photos_page.wait_for_page_load_and_click @roster_photos_page.section_select_element
+          expected_sections_on_site = (sections_for_site.map { |section| "#{section.course} #{section.label}" })
+          actual_sections_on_site = @roster_photos_page.section_select_options
+          actual_sections_on_site.delete 'All Sections'
           it("shows the right section list on the Roster Photos tool for #{@course.term} #{@course.code} site ID #{@course.site_id}") { expect(actual_sections_on_site).to eql(expected_sections_on_site) }
 
-          # Check course capture tool and verify it shows a 'no captures' message
+          # Verify course capture tool is not added automatically
           if masquerade
+            @canvas_page.load_course_site @course
             has_course_captures_link = @course_captures_page.course_captures_link?
             it ("shows no Course Captures tool link in course site navigation for #{@course.term} #{@course.code} site ID #{@course.site_id}") { expect(has_course_captures_link).to be false }
-
-            @course_captures_page.load_embedded_tool(@driver, @course)
-          else
-            @course_captures_page.load_standalone_tool @course
           end
-          no_captures = @course_captures_page.no_course_capture_msg.when_visible Utils.medium_wait
-          it ("shows a 'no videos' message for #{@course.term} #{@course.code} site ID #{@course.site_id}") { expect(no_captures).to be_truthy }
 
         else
           logger.error "Timed out before the #{@course.term} #{@course.code} course site was created, or another error occurred"
@@ -149,6 +146,8 @@ describe 'bCourses course site creation' do
       rescue => e
         it("encountered an error for #{@course.code}") { fail }
         logger.error "#{e.message}#{"\n"}#{e.backtrace.join("\n")}"
+        Utils.save_screenshot(@driver, test_id, @teacher.uid)
+        @canvas_page.delete_course(@driver, @course) if masquerade && @course.site_id
       ensure
         Utils.add_csv_row(test_output, [@course.term, @course.code, @teacher.uid, @course.site_id, enrollment_counts[0], enrollment_counts[1], enrollment_counts[2], enrollment_counts[3]])
       end

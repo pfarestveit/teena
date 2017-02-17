@@ -280,7 +280,7 @@ describe 'My Dashboard', order: :defined do
     after(:all) do
       @my_dashboard.log_out @splash_page if @notifications.notifications_heading?
       @canvas.log_in(@cal_net, Utils.ets_qa_username, Utils.ets_qa_password)
-      @canvas.delete_course @course
+      @canvas.delete_course(@driver, @course)
     end
 
   end
