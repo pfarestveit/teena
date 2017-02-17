@@ -6,12 +6,12 @@ describe 'bCourses Official Sections tool' do
 
   masquerade = ENV['masquerade']
   course_id = ENV['course_id']
+  test_id = "#{Time.now.to_i}"
 
   begin
 
     # Load courses test data
     test_course_data = Utils.load_test_courses.select { |course| course['tests']['official_sections'] }
-    user_permissions_tested = false
     test_output = Utils.initialize_canvas_test_output(self, ['UID', 'Semester', 'Course', 'Section Label', 'Section CCN',
                                                              'Section Schedules', 'Section Locations', 'Section Instructors'])
 
@@ -177,7 +177,8 @@ describe 'bCourses Official Sections tool' do
 
         semester_courses.each do |course_data|
           api_course_code = @academics_api.course_code course_data
-          api_sections = @academics_api.course_sections_by_listing course_data
+          api_course_title = @academics_api.course_title course_data
+          api_sections = @academics_api.course_sections course_data
           api_section_labels = @academics_api.course_section_labels(api_sections).sort
           api_section_ccns = @academics_api.course_ccns(api_sections).sort
           api_section_schedules = @academics_api.course_section_schedules(api_sections).sort
@@ -186,6 +187,7 @@ describe 'bCourses Official Sections tool' do
 
           logger.info "Checking the info displayed for the #{api_sections.length} sections in #{api_course_code}"
           ui_sections_expanded = @official_sections_page.expand_available_sections api_course_code
+          ui_course_title = @official_sections_page.available_sections_course_title api_course_code
           ui_section_labels = @official_sections_page.visible_section_labels(@driver, api_course_code).sort
           ui_section_ccns = @official_sections_page.visible_section_ids(@driver, api_course_code).sort
           ui_section_schedules = @official_sections_page.visible_section_schedules(@driver, api_course_code).sort
@@ -193,14 +195,15 @@ describe 'bCourses Official Sections tool' do
           ui_section_instructors = @official_sections_page.visible_section_instructors(@driver, api_course_code).sort
           ui_sections_collapsed = @official_sections_page.collapse_available_sections api_course_code
 
-          it("allows the user to expand the available sections for #{api_course_code}") { expect(ui_sections_expanded).to be_truthy }
+          it("shows the right course title for #{api_course_code}") { expect(ui_course_title).to eql(api_course_title) }
+          it("shows no blank course title for #{api_course_code}") { expect(ui_course_title.empty?).to be false }
+          it("allows to expand the available sections for #{api_course_code}") { expect(ui_sections_expanded).to be_truthy }
           it("allows the user to collapse the available sections for #{api_course_code}") { expect(ui_sections_collapsed).to be_truthy }
           it("shows the right section IDs for #{api_course_code}") { expect(ui_section_ccns).to eql(api_section_ccns) }
           it("shows no blank section IDs for #{api_course_code}") { expect(ui_section_ccns.all? &:empty?).to be false }
           it("shows the right section labels for #{api_course_code}") { expect(ui_section_labels).to eql(api_section_labels) }
           it("shows no blank section labels for #{api_course_code}") { expect(ui_section_labels.all? &:empty?).to be false }
           it("shows the right section schedules for #{api_course_code}") { expect(ui_section_schedules).to eql(api_section_schedules) }
-          it("shows no blank section schedules for #{api_course_code}") { expect(ui_section_schedules.all? &:empty?).to be false }
           it("shows the right section locations for #{api_course_code}") { expect(ui_section_locations).to eql(api_section_locations) }
           it("shows the right section instructors for #{api_course_code}") { expect(ui_section_instructors).to eql(api_section_instructors) }
 
@@ -318,7 +321,7 @@ describe 'bCourses Official Sections tool' do
 
         # CHECK USER ROLE ACCESS TO THE TOOL FOR ONE COURSE
 
-        unless user_permissions_tested
+        if test_data == test_course_data.last
 
           # Load test user data and add each to the site
           test_user_data = Utils.load_test_users.select { |user| user['tests']['official_sections'] }
@@ -359,17 +362,15 @@ describe 'bCourses Official Sections tool' do
               end
             end
 
-            @canvas.stop_masquerading if masquerade
             it("allows #{user.role} #{user.uid} access to the tool if permitted") { expect(has_right_perms).to be true }
           end
-
-          user_permissions_tested = true
-
         end
 
       rescue => e
         it("encountered an error for #{@course.code}") { fail }
         logger.error "#{e.message}#{"\n"}#{e.backtrace.join("\n")}"
+        Utils.save_screenshot(@driver, test_id, @teacher.uid)
+        @canvas.delete_course(@driver, @course) if masquerade && @course.site_id
       end
     end
   rescue => e

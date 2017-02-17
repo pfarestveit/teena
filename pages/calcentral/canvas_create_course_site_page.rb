@@ -199,7 +199,7 @@ module Page
       # @param course [Course]
       # @return [String]
       def enter_site_titles(course)
-        site_abbreviation = "bCourses #{Utils.get_test_id}"
+        site_abbreviation = "QA bCourses Test #{Utils.get_test_id}"
         wait_for_element_and_type(site_name_input_element, "#{site_abbreviation} - #{course.code}")
         wait_for_element_and_type(site_abbreviation_element, site_abbreviation)
         site_abbreviation
@@ -219,6 +219,7 @@ module Page
         toggle_course_sections course
         select_sections sections
         click_next
+        enter_site_titles course
         click_create_site
         wait_until(Utils.long_wait) { current_url.include? "#{Utils.canvas_base_url}/courses" }
         course.site_id = current_url.delete "#{Utils.canvas_base_url}/courses/"

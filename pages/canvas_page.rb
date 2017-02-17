@@ -50,6 +50,7 @@ module Page
     # @param user [User]
     # @param course [Course]
     def masquerade_as(user, course = nil)
+      load_homepage
       stop_masquerading if stop_masquerading_link?
       logger.info "Masquerading as #{user.role} UID #{user.uid}"
       navigate_to "#{Utils.canvas_base_url}/users/#{user.canvas_id.to_s}/masquerade"
@@ -99,8 +100,11 @@ module Page
 
     select_list(:enrollment_roles, name: 'enrollment_role_id')
     link(:add_people_button, id: 'addUsers')
+    link(:help_finding_users_link, id: 'add-people-help')
     link(:find_person_to_add_link, xpath: '//a[contains(.,"Find a Person to Add")]')
-    checkbox(:add_user_by_uid, xpath: '//input[@id="peoplesearch_radio_unique_id"]/following-sibling::span')
+    checkbox(:add_user_by_email, xpath: '//span[contains(text(),"Email Address")]/..')
+    checkbox(:add_user_by_uid, xpath: '//span[contains(text(),"Berkeley UID")]/..')
+    checkbox(:add_user_by_sid, xpath: '//span[contains(text(),"Student ID")]/..')
     text_area(:user_list, xpath: '//span[contains(text(),"Enter the login IDs of the users you would like to add, separated by commas")]/../following-sibling::textarea')
     select_list(:user_role, id: 'peoplesearch_select_role')
     button(:next_button, id: 'addpeople_next')
@@ -277,7 +281,7 @@ module Page
         ending_count = enrollment_count_by_role(course, role)
         begin
           starting_count = ending_count
-          sleep Utils.short_wait
+          sleep Utils.medium_wait
           ending_count = enrollment_count_by_role(course, role)
         end while ending_count > starting_count
         enrollment_counts << ending_count
@@ -378,7 +382,9 @@ module Page
 
     # Deletes a course site
     # @param course [Course]
-    def delete_course(course)
+    def delete_course(driver, course)
+      driver.switch_to.default_content
+      stop_masquerading if stop_masquerading_link?
       navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/confirm_action?event=delete"
       wait_for_page_load_and_click delete_course_button_element
       delete_course_success_element.when_visible Utils.medium_wait
