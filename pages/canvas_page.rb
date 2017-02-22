@@ -105,7 +105,7 @@ module Page
     checkbox(:add_user_by_email, xpath: '//span[contains(text(),"Email Address")]/..')
     checkbox(:add_user_by_uid, xpath: '//span[contains(text(),"Berkeley UID")]/..')
     checkbox(:add_user_by_sid, xpath: '//span[contains(text(),"Student ID")]/..')
-    text_area(:user_list, xpath: '//span[contains(text(),"Enter the login IDs of the users you would like to add, separated by commas")]/../following-sibling::textarea')
+    text_area(:user_list, xpath: '//textarea')
     select_list(:user_role, id: 'peoplesearch_select_role')
     button(:next_button, id: 'addpeople_next')
     div(:users_ready_to_add_msg, xpath: '//div[contains(text(),"The following users are ready to be added to the course.")]')
@@ -164,7 +164,7 @@ module Page
     # @param test_id [String]
     # @return [String]
     def search_for_course(test_id)
-      tries ||= 3
+      tries ||= 6
       logger.info 'Searching for course site'
       load_sub_account
       search_course_input_element.when_visible timeout=Utils.short_wait
@@ -197,7 +197,7 @@ module Page
             add_user_by_uid_element.when_visible Utils.short_wait
             sleep 1
             check_add_user_by_uid
-            self.user_list = users
+            wait_for_element_and_type(user_list_element, users)
             self.user_role = user_role
             next_button
             users_ready_to_add_msg_element.when_visible Utils.medium_wait
@@ -205,7 +205,8 @@ module Page
             wait_for_page_update_and_click next_button_element
             5.times { scroll_to_bottom }
             users_with_role.each { |user| cell_element(xpath: "//tr[contains(@id,'#{user.canvas_id}')]").when_present Utils.short_wait }
-          rescue
+          rescue => e
+            logger.error "#{e.message}\n#{e.backtrace}"
             logger.warn 'Add User failed, retrying'
             retry unless (tries -=1).zero?
           end
@@ -498,10 +499,10 @@ module Page
     link(:primary_html_editor_link, xpath: '//article[@id="discussion_topic"]//a[contains(.,"HTML Editor")]')
     text_area(:primary_reply_input, xpath: '//article[@id="discussion_topic"]//textarea[@class="reply-textarea"]')
     button(:primary_post_reply_button, xpath: '//article[@id="discussion_topic"]//button[contains(.,"Post Reply")]')
-    elements(:secondary_reply_link, :link, xpath: '//li[@class="entry"]//a[@data-event="addReply"]')
-    elements(:secondary_html_editor_link, :link, xpath: '//li[@class="entry"]//a[contains(.,"HTML Editor")]')
-    elements(:secondary_reply_input, :text_area, xpath: '//li[@class="entry"]//textarea[@class="reply-textarea"]')
-    elements(:secondary_post_reply_button, :button, xpath: '//li[@class="entry"]//button[contains(.,"Post Reply")]')
+    elements(:secondary_reply_link, :link, xpath: '//li[contains(@class,"entry")]//span[text()="Reply"]/..')
+    elements(:secondary_html_editor_link, :link, xpath: '//li[contains(@class,"entry")]//a[contains(.,"HTML Editor")]')
+    elements(:secondary_reply_input, :text_area, xpath: '//li[contains(@class,"entry")]//textarea[@class="reply-textarea"]')
+    elements(:secondary_post_reply_button, :button, xpath: '//li[contains(@class,"entry")]//button[contains(.,"Post Reply")]')
 
     # Clicks the 'save and publish' button using JavaScript rather than WebDriver
     def click_save_and_publish

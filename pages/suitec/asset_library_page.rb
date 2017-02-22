@@ -44,7 +44,7 @@ module Page
 
       elements(:list_view_asset, :list_item, class: 'assetlibrary-list-item')
       elements(:list_view_asset_link, :link, xpath: '//li[@data-ng-repeat="asset in assets | unique:\'id\'"]//a')
-      elements(:list_view_asset_title, :span, xpath: '//li[@data-ng-repeat="asset in assets | unique:\'id\'"]//span')
+      elements(:list_view_asset_title, :span, xpath: '//li[@data-ng-repeat="asset in assets | unique:\'id\'"]//div[@class="col-list-item-metadata"]/div[1]')
       elements(:list_view_asset_owner_name, :element, xpath: '//li[@data-ng-repeat="asset in assets | unique:\'id\'"]//small')
       elements(:list_view_asset_likes_count, :span, xpath: '//span[@data-ng-bind="asset.likes | number"]')
       elements(:list_view_asset_like_button, :button, xpath: '//button[@data-ng-click="like(asset)"]')
@@ -155,7 +155,8 @@ module Page
         logger.debug "Verifying list view asset title includes '#{asset.title}'"
         wait_until(timeout=Utils.short_wait) { list_view_asset_title_elements[0].text.include? asset.title }
         logger.debug "Verifying list view asset owner is '#{user.full_name}'"
-        wait_until(timeout) { list_view_asset_owner_name_elements[0].text.include? user.full_name }
+        # Subtract the 'by ' prefix
+        wait_until(timeout) { list_view_asset_owner_name_elements[0].text[3..-1] == user.full_name }
         asset.id = list_view_asset_ids.first
         wait_for_page_load_and_click list_view_asset_link_elements.first
         logger.debug "Verifying detail view asset title is '#{asset.title}'"
