@@ -152,7 +152,7 @@ describe 'Asset Library', order: :defined do
 
       it 'no longer appear in the list of categories' do
         @asset_library.delete_custom_category @category_1
-        @asset_library.wait_until(timeout) { !@asset_library.custom_category_titles.include? @category_1 }
+        @asset_library.wait_until(timeout) { !@asset_library.custom_category_titles.include?(@category_1) }
       end
 
       it 'no longer appear in search options' do

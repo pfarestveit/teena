@@ -218,6 +218,8 @@ describe 'The Engagement Index', order: :defined do
     [teacher, student_4].each do |user|
 
       it "removes #{user.role} UID #{user.uid} from the Engagement Index if the user has been removed from the course site" do
+        @canvas.load_homepage
+        @canvas.stop_masquerading if @canvas.stop_masquerading_link?
         @engagement_index.wait_until(Utils.long_wait) do
           @engagement_index.load_page(@driver, @engagement_index_url)
           !@engagement_index.visible_names.include? user.full_name
