@@ -22,7 +22,7 @@ begin
   end
 
   def log_in
-    puts "#{Time.now} - Logging in to Blue"
+    puts "#{Time.now} - Logging in to Blue at #{@base_url}"
     @driver.get "#{@base_url}"
     click_element_id(@driver, 'username')
     @long_wait.until { @driver.find_element(id: 'BlueAppControl_admin-link-btn') }
@@ -31,7 +31,7 @@ begin
   def find_and_edit_source(data_source)
     # Load homepage, click Admin button, and click Data Sources
     puts "#{Time.now} - Processing '#{data_source}'"
-    @driver.get "#{@base_url}"
+    @driver.get @base_url
     click_element_id(@driver, 'BlueAppControl_admin-link-btn')
     click_element_id(@driver, 'AdminUC_menu_item_data_sources')
     # Search for the data source type
