@@ -1,12 +1,17 @@
 require_relative 'spec_helper'
+require 'hash_deep_merge'
 
 class Utils
 
   include Logging
 
-  default_settings = YAML.load_file File.path('settings.yml')
-  override_settings = YAML.load_file File.join(ENV['HOME'], '/.webdriver-config/settings.yml')
-  @config = default_settings.merge! override_settings
+  # Initiate hash (before YAML load) to leverage 'hash_deep_merge' gem. The deep_merge support allows the YAML file in
+  # your HOME directory to override a child property (e.g., 'timeouts.short') and yet hold on to sibling properties
+  # (e.g., 'timeouts.long') in the default YAML. A standard Hash.merge would cause us to lose the entire parent
+  # structure ('timeouts') in the default YAML.
+  @config = {}
+  @config.merge! YAML.load_file File.path('settings.yml')
+  @config.deep_merge! YAML.load_file File.join(ENV['HOME'], '/.webdriver-config/settings.yml')
 
   # BROWSER CONFIGS
 
