@@ -5,15 +5,14 @@ begin
   puts "#{Time.now} - Beginning OEC data source update script"
   args = ARGV.to_s
   campus_data_sources = %w(Campus_Courses Campus_Supervisors Campus_Instructors Campus_Students Campus_Course_Supervisors Campus_Course_Instructors Campus_Course_Students)
-  extension_data_sources = Dir[File.join(ENV['HOME'], 'selenium-files/*.csv')]
-
+  extension_data_sources = Dir[File.join(ENV['HOME'], 'selenium-files/*.csv')] + Dir[File.join(ENV['HOME'], 'selenium-files/*.CSV')]
   @base_url = args.include?('qa') ? 'https://course-evaluations-qa.berkeley.edu' : 'https://course-evaluations.berkeley.edu'
 
   # Set timeouts and launch browser
   @brief_wait = Selenium::WebDriver::Wait.new(timeout: 30)
   @medium_wait = Selenium::WebDriver::Wait.new(timeout: 120)
   @long_wait = Selenium::WebDriver::Wait.new(timeout: 900)
-  @driver = Selenium::WebDriver.for :firefox
+  @driver = Selenium::WebDriver.for :chrome
   @driver.manage.window.maximize
 
   def click_element_id(driver, id)
@@ -56,13 +55,16 @@ begin
     puts "#{Time.now} - Uploading file '#{file}'"
     @brief_wait.until { @driver.find_element(id: 'AdminUC_Data_ucAdminDS_Entities_File1') }
     @driver.find_element(id: 'AdminUC_Data_ucAdminDS_Entities_File1').send_keys file
+    sleep 2
     @driver.find_element(id: 'AdminUC_Data_ucAdminDS_Entities_btnUpload').click
+    sleep 5
     @long_wait.until { @driver.find_element(id: 'AdminUC_Data_ucAdminDS_Entities_cbAll') }
   end
 
   def connect_source
     puts "#{Time.now} - Connecting data source"
     click_element_id(@driver, 'AdminUC_Data_ucAdminDS_Entities_btnUpload')
+    sleep 2
     @brief_wait.until { @driver.find_element(id: 'AdminUC_Data_ucAdminDS_Entities_cbAll') }
   end
 
@@ -84,6 +86,7 @@ begin
     click_element_id(@driver, 'AdminUC_Data_AdminDS_Import_btnConfirm')
     @long_wait.until { @driver.find_element(xpath: '//span[contains(.,"Data Import Approved and Successful")]') }
     @brief_wait.until { @driver.find_element(id: 'AdminUC_Data_btnSave') }
+    sleep 2
     puts "#{Time.now} - Import succeeded"
   end
 
