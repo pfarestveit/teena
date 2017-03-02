@@ -32,7 +32,7 @@ module Page
         if resume_sync_button?
           add_site Asset.new({ url: 'www.google.com', title: 'resume sync asset' })
           logger.info 'Syncing is disabled for this course site, re-enabling'
-          wait_for_page_update_and_click resume_sync_button_element
+          wait_for_update_and_click_js resume_sync_button_element
           resume_sync_success_element.when_visible Utils.short_wait
           sleep Utils.medium_wait
         else
@@ -99,7 +99,7 @@ module Page
       def click_asset_link_by_id(asset)
         logger.info "Clicking thumbnail for asset ID #{asset.id}"
         wait_until { list_view_asset_link_elements.any? }
-        wait_for_page_update_and_click (list_view_asset_link_elements.find { |link| link.attribute('href').include?("#{asset.id}") })
+        wait_for_update_and_click_js (list_view_asset_link_elements.find { |link| link.attribute('href').include?("#{asset.id}") })
       end
 
       # Waits for an asset's detail view to load
@@ -122,12 +122,12 @@ module Page
       # @param category_link_index [Integer]
       def click_asset_category(category_link_index)
         wait_until(Utils.short_wait) { detail_view_asset_category_elements.any? }
-        wait_for_page_update_and_click detail_view_asset_category_elements[category_link_index]
+        wait_for_update_and_click_js detail_view_asset_category_elements[category_link_index]
       end
 
       # Clicks the 'back to asset library' link and waits for list view to load
       def go_back_to_asset_library
-        wait_for_page_update_and_click back_to_library_link_element
+        wait_for_update_and_click_js back_to_library_link_element
         wait_until(Utils.short_wait) { list_view_asset_elements.any? }
       end
 
@@ -158,7 +158,8 @@ module Page
         # Subtract the 'by ' prefix
         wait_until(timeout) { list_view_asset_owner_name_elements[0].text[3..-1] == user.full_name }
         asset.id = list_view_asset_ids.first
-        wait_for_page_load_and_click list_view_asset_link_elements.first
+        logger.debug "Asset ID is #{asset.id}"
+        wait_for_load_and_click_js list_view_asset_link_elements.first
         logger.debug "Verifying detail view asset title is '#{asset.title}'"
         wait_until(timeout) { detail_view_asset_title.include? asset.title }
         logger.debug "Verifying detail view asset owner is '#{user.full_name}'"
@@ -232,11 +233,10 @@ module Page
       # @param keyword [String]
       def simple_search(keyword)
         logger.info "Performing simple search of asset library by keyword '#{keyword}'"
-        cancel_advanced_search if cancel_advanced_search?
-        keyword.nil? ?
-            wait_for_element_and_type(search_input_element, '') :
-            wait_for_element_and_type(search_input_element, keyword)
-        wait_for_page_update_and_click search_button_element
+        wait_for_update_and_click_js(cancel_advanced_search_element) if cancel_advanced_search?
+        search_input_element.clear
+        search_input_element.send_keys(keyword) unless keyword.nil?
+        wait_for_update_and_click_js search_button_element
       end
 
       # Performs an advanced search of the asset library
@@ -246,20 +246,20 @@ module Page
       # @param asset_type [String]
       def advanced_search(keyword, category, uploader, asset_type)
         logger.info "Performing advanced search of asset library by keyword '#{keyword}', category '#{category}', uploader '#{uploader && uploader.full_name}', and asset type '#{asset_type}'."
-        wait_for_page_load_and_click advanced_search_button_element unless keyword_search_input_element.visible?
+        wait_for_load_and_click_js advanced_search_button_element unless keyword_search_input_element.visible?
         keyword.nil? ?
-            wait_for_element_and_type(keyword_search_input_element, '') :
-            wait_for_element_and_type(keyword_search_input_element, keyword)
+            wait_for_element_and_type_js(keyword_search_input_element, '') :
+            wait_for_element_and_type_js(keyword_search_input_element, keyword)
         category.nil? ?
-            wait_for_element_and_select(category_select_element, 'Category') :
-            self.category_select = category
+            wait_for_element_and_select_js(category_select_element, 'Category') :
+            wait_for_element_and_select_js(category_select_element, category)
         uploader.nil? ?
-            wait_for_element_and_select(uploader_select_element, 'Uploader') :
-            wait_for_element_and_select(uploader_select_element, uploader.full_name)
+            wait_for_element_and_select_js(uploader_select_element, 'Uploader') :
+            wait_for_element_and_select_js(uploader_select_element, uploader.full_name)
         asset_type.nil? ?
-            wait_for_element_and_select(asset_type_select_element, 'Asset type') :
-            wait_for_element_and_select(asset_type_select_element, asset_type)
-        click_element_js advanced_search_submit_element
+            wait_for_element_and_select_js(asset_type_select_element, 'Asset type') :
+            wait_for_element_and_select_js(asset_type_select_element, asset_type)
+        wait_for_update_and_click_js advanced_search_submit_element
       end
 
       # ADD SITE
@@ -269,7 +269,7 @@ module Page
       # Clicks the 'add site' button
       def click_add_site_link
         go_back_to_asset_library if back_to_library_link?
-        wait_for_page_load_and_click add_site_link_element
+        wait_for_load_and_click add_site_link_element
         add_url_heading_element.when_visible Utils.short_wait
       end
 
@@ -289,7 +289,7 @@ module Page
       # Clicks the 'upload file' button
       def click_upload_file_link
         go_back_to_asset_library if back_to_library_link?
-        wait_for_page_load_and_click upload_link_element
+        wait_for_load_and_click upload_link_element
         upload_file_heading_element.when_visible Utils.short_wait
       end
 
@@ -309,14 +309,14 @@ module Page
 
       # Clicks the 'manage assets' link in the admin view
       def click_manage_assets_link
-        wait_for_page_load_and_click manage_assets_link_element
+        wait_for_load_and_click manage_assets_link_element
         manage_assets_heading_element.when_visible Utils.short_wait
       end
 
       text_area(:custom_category_input, id: 'assetlibrary-manageassets-create-name')
       button(:add_custom_category_button, xpath: '//button[text()="Add"]')
       unordered_list(:custom_categories_list, xpath: '//h3[text()="Custom Categories"]/following-sibling::ul')
-      elements(:custom_category, :list_item, xpath:'//h3[text()="Custom Categories"]/following-sibling::ul/li')
+      elements(:custom_category, :list_item, xpath: '//h3[text()="Custom Categories"]/following-sibling::ul/li')
       elements(:custom_category_title, :span, xpath: '//h3[text()="Custom Categories"]/following-sibling::ul/li//span[@data-ng-bind="category.title"]')
       elements(:edit_category_form, :form, class: 'assetlibrary-manageassets-edit-form')
       div(:category_title_error_msg, xpath: '//div[contains(.,"Please enter a category")]')
@@ -332,8 +332,8 @@ module Page
         click_manage_assets_link
         category_titles.each do |category_title|
           logger.info "Adding category called #{category_title}"
-          wait_for_element_and_type(custom_category_input_element, category_title)
-          wait_for_page_update_and_click add_custom_category_button_element
+          wait_for_element_and_type_js(custom_category_input_element, category_title)
+          wait_for_update_and_click_js add_custom_category_button_element
         end
       end
 
@@ -349,6 +349,7 @@ module Page
       # @param category_title [String]
       # @return [Integer]
       def custom_category_index(category_title)
+        wait_until(Utils.short_wait) { custom_category_title_elements.any? }
         custom_category_titles.index category_title
       end
 
@@ -362,7 +363,7 @@ module Page
       # Clicks the edit button for a custom category at a given index
       # @param index [Integer]
       def click_edit_custom_category(index)
-        wait_for_page_update_and_click button_element(xpath: "//h3[text()='Custom Categories']/following-sibling::ul/li[#{index + 1}]//button[@title='Edit this category']")
+        wait_for_update_and_click_js button_element(xpath: "//h3[text()='Custom Categories']/following-sibling::ul/li[#{index + 1}]//button[@title='Edit this category']")
       end
 
       # Enters a category title while editing a custom category at a given index
@@ -370,19 +371,19 @@ module Page
       # @param new_title [String]
       def enter_edited_category_title(index, new_title)
         logger.debug "Entering new title '#{new_title}' for category at index #{index}"
-        wait_for_element_and_type(text_area_element(xpath: "//h3[text()='Custom Categories']/following-sibling::ul/li[#{index + 1}]//input[@id='assetlibrary-manageassets-edit-name']"), new_title)
+        wait_for_element_and_type_js(text_area_element(xpath: "//h3[text()='Custom Categories']/following-sibling::ul/li[#{index + 1}]//input[@id='assetlibrary-manageassets-edit-name']"), new_title)
       end
 
       # Clicks the 'cancel' button when editing a custom category at a given index
       # @param index [Integer]
       def click_cancel_custom_category_edit(index)
-        wait_for_page_update_and_click button_element(xpath: "//h3[text()='Custom Categories']/following-sibling::ul/li[#{index + 1}]//button[text()='Cancel']")
+        wait_for_update_and_click_js button_element(xpath: "//h3[text()='Custom Categories']/following-sibling::ul/li[#{index + 1}]//button[text()='Cancel']")
       end
 
       # Clicks the 'save' button when editing a custom category at a given index
       # @param index [Integer]
       def click_save_custom_category_edit(index)
-        wait_for_page_update_and_click button_element(xpath: "//h3[text()='Custom Categories']/following-sibling::ul/li[#{index + 1}]//button[text()='Save Changes']")
+        wait_for_update_and_click_js button_element(xpath: "//h3[text()='Custom Categories']/following-sibling::ul/li[#{index + 1}]//button[text()='Save Changes']")
       end
 
       # Deletes a custom category with a given title
@@ -390,7 +391,8 @@ module Page
       def delete_custom_category(category_title)
         logger.info "Deleting category called #{category_title}"
         wait_until(Utils.short_wait) { custom_category_titles.include? category_title }
-        confirm(true) { wait_for_page_update_and_click button_element(xpath: "//h3[text()='Custom Categories']/following-sibling::ul/li[#{custom_category_index(category_title) + 1}]//button[@title='Delete this category']") }
+        delete_button = button_element(xpath: "//h3[text()='Custom Categories']/following-sibling::ul/li[#{custom_category_index(category_title) + 1}]//button[@title='Delete this category']")
+        confirm(true) { wait_for_update_and_click_js delete_button }
       end
 
       # Canvas categories
@@ -457,8 +459,8 @@ module Page
         logger.info "Migrating assets to '#{destination_course.title}', ID '#{destination_course.site_id}'"
         load_page(driver, url)
         click_manage_assets_link
-        wait_for_element_and_select(migrate_assets_select_element, destination_course.title)
-        wait_for_page_update_and_click migrate_assets_button_element
+        wait_for_element_and_select_js(migrate_assets_select_element, destination_course.title)
+        wait_for_update_and_click_js migrate_assets_button_element
         migration_started_msg_element.when_present Utils.medium_wait
       end
 
@@ -493,13 +495,13 @@ module Page
       # @param asset [Asset]
       def edit_asset_details(asset)
         logger.info "Entering title '#{asset.title}, category '#{asset.category}', and description '#{asset.description}'"
-        wait_for_page_load_and_click edit_details_link_element
-        wait_for_element_and_type(title_edit_input_element, asset.title)
+        wait_for_load_and_click_js edit_details_link_element
+        wait_for_element_and_type_js(title_edit_input_element, asset.title)
         asset.category.nil? ?
             self.category_edit_select = 'Which assignment or topic is this related to' :
             self.category_edit_select = asset.category
-        wait_for_element_and_type(description_edit_input_element, asset.description)
-        wait_for_page_update_and_click save_changes_element
+        wait_for_element_and_type_js(description_edit_input_element, asset.description)
+        wait_for_update_and_click_js save_changes_element
       end
 
       # DOWNLOAD
@@ -512,7 +514,7 @@ module Page
       def download_asset(asset)
         logger.info 'Downloading original asset'
         Utils.prepare_download_dir
-        wait_for_page_load_and_click download_asset_link_element
+        wait_for_load_and_click_js download_asset_link_element
         download_file_path = "#{Utils.download_dir}/*#{asset.file_name}"
         wait_until(Utils.long_wait) { Dir[download_file_path].any? }
       end
@@ -524,7 +526,7 @@ module Page
       # Deletes an asset
       def delete_asset
         logger.info 'Deleting asset'
-        confirm(true) { wait_for_page_update_and_click delete_asset_button_element }
+        confirm(true) { wait_for_update_and_click_js delete_asset_button_element }
         delete_asset_button_element.when_not_visible Utils.short_wait rescue Selenium::WebDriver::Error::StaleElementReferenceError
       end
 
@@ -539,7 +541,7 @@ module Page
       # Toggles the 'like' button on an asset's detail view
       def toggle_detail_view_item_like
         logger.info 'Clicking the like button'
-        wait_for_page_update_and_click detail_view_asset_like_button_element
+        wait_for_update_and_click_js detail_view_asset_like_button_element
       end
 
       # COMMENTS
@@ -553,9 +555,10 @@ module Page
       # @param comment_body [String]
       def add_comment(comment_body)
         logger.info "Adding the comment '#{comment_body}'"
-        wait_for_element_and_type(comment_input_element, comment_body)
+        scroll_to_bottom
+        wait_for_element_and_type_js(comment_input_element, comment_body)
         wait_until(Utils.short_wait) { comment_add_button_element.enabled? }
-        wait_for_page_update_and_click comment_add_button_element
+        wait_for_update_and_click_js comment_add_button_element
       end
 
       # Returns the number of an asset's comments on list view
@@ -606,7 +609,7 @@ module Page
       # Clicks the reply button at a given index in the list of comments
       # @param index [Integer]
       def click_reply_button(index)
-        wait_for_page_load_and_click reply_button_element(index)
+        wait_for_load_and_click_js reply_button_element(index)
       end
 
       # Returns the textarea element of a reply at a given index in the list of comments
@@ -631,7 +634,7 @@ module Page
         click_reply_button(index)
         reply_input_element(index).when_visible Utils.short_wait
         reply_input_element(index).send_keys reply_body
-        wait_for_page_update_and_click reply_add_button_element(index)
+        wait_for_update_and_click_js reply_add_button_element(index)
       end
 
       # Returns the reply edit button at a given index in the list of comments or nil if no button exists
@@ -646,7 +649,7 @@ module Page
       # Clicks the edit button at a given index in the list of comments
       # @param index [Integer]
       def click_edit_button(index)
-        wait_for_page_load_and_click edit_button_element(index)
+        wait_for_load_and_click_js edit_button_element(index)
       end
 
       # Returns the textarea element of a comment edit at a given index in the list of comments
@@ -669,8 +672,8 @@ module Page
       def edit_comment(index, edited_body)
         logger.info "Editing comment at index #{index}. New comment is '#{edited_body}'"
         click_edit_button(index)
-        wait_for_element_and_type(edit_input_element(index), edited_body)
-        wait_for_page_update_and_click edit_save_button_element(index)
+        wait_for_element_and_type_js(edit_input_element(index), edited_body)
+        wait_for_update_and_click_js edit_save_button_element(index)
       end
 
       # Returns the 'cancel' comment edit button at a given index in the list of comments
@@ -693,7 +696,7 @@ module Page
       # @param index [Integer]
       def delete_comment(index)
         logger.info "Deleting comment at index #{index}"
-        confirm(true) { wait_for_page_load_and_click delete_button_element(index) }
+        confirm(true) { wait_for_load_and_click_js delete_button_element(index) }
       end
 
     end

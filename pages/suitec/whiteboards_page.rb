@@ -35,13 +35,13 @@ module Page
 
       # Clicks the 'add whiteboard' link
       def click_add_whiteboard
-        wait_for_page_load_and_click add_whiteboard_link_element
+        wait_for_update_and_click add_whiteboard_link_element
       end
 
       # Enters text in the whiteboard title input
       # @param title [String]
       def enter_whiteboard_title(title)
-        wait_for_element_and_type(new_title_input_element, title)
+        wait_for_element_and_type_js(new_title_input_element, title)
       end
 
       # Returns the element that allows selection of a user as a whiteboard collaborator
@@ -62,16 +62,16 @@ module Page
       # @param users [Array<User>]
       def enter_whiteboard_collaborators(users)
         users.each do |user|
-          wait_for_element_and_type(new_collaborator_input_element, user.full_name)
+          wait_for_element_and_type_js(new_collaborator_input_element, user.full_name)
           wait_until(timeout=Utils.short_wait) { list_item_element(xpath: "//li[contains(@class,'select-dropdown-optgroup-option')][contains(text(),'#{user.full_name}')]") }
-          wait_for_page_update_and_click collaborator_option_link(user)
+          wait_for_update_and_click collaborator_option_link(user)
           wait_until(timeout) { collaborator_name user }
         end
       end
 
       # Clicks the create button to complete creation of a whiteboard
       def click_create_whiteboard
-        wait_for_page_update_and_click create_whiteboard_button_element
+        wait_for_update_and_click_js create_whiteboard_button_element
       end
 
       # Combines methods to create a new whiteboard and obtain its ID
@@ -101,8 +101,9 @@ module Page
       def open_whiteboard(driver, whiteboard)
         logger.info "Opening whiteboard ID #{whiteboard.id}"
         click_whiteboard_link whiteboard
+        wait_until(Utils.short_wait) { driver.window_handles.length > 1 }
         driver.switch_to.window driver.window_handles.last
-        wait_until { title.include? whiteboard.title }
+        wait_until(Utils.medium_wait) { title.include? whiteboard.title }
       end
 
       # Opens a whiteboard directly via URL
@@ -149,26 +150,26 @@ module Page
 
       # Clicks the settings button on a whiteboard
       def click_settings_button
-        wait_for_page_update_and_click settings_button_element
+        wait_for_update_and_click settings_button_element
       end
 
       # Changes the title of a whiteboard to the whiteboard object's current title
       # @param whiteboard [Whiteboard]
       def edit_whiteboard_title(whiteboard)
         click_settings_button
-        wait_for_element_and_type(edit_title_input_element, whiteboard.title)
-        wait_for_page_update_and_click save_edit_element
+        wait_for_element_and_type_js(edit_title_input_element, whiteboard.title)
+        wait_for_update_and_click_js save_edit_element
       end
 
       # Adds a new collaborator to an existing whiteboard
       # @param user [User]
       def add_collaborator(user)
         click_settings_button
-        wait_for_page_update_and_click collaborator_list_element
-        wait_for_page_update_and_click collaborator_option_link(user)
+        wait_for_update_and_click_js collaborator_list_element
+        wait_for_update_and_click_js collaborator_option_link(user)
         wait_until(Utils.short_wait) { collaborator_name user }
-        wait_for_page_update_and_click edit_title_input_element
-        wait_for_page_update_and_click save_edit_element
+        wait_for_update_and_click edit_title_input_element
+        wait_for_update_and_click save_edit_element
         save_edit_element.when_not_present Utils.short_wait
       end
 
@@ -177,10 +178,10 @@ module Page
       def remove_collaborator(user)
         click_settings_button
         logger.debug "Clicking the remove button for #{user.full_name}"
-        wait_for_page_update_and_click button_element(xpath: "//span[text()='#{user.full_name}']/following-sibling::button")
+        wait_for_update_and_click button_element(xpath: "//span[text()='#{user.full_name}']/following-sibling::button")
         collaborator_name(user).when_not_visible Utils.short_wait
         # An alert can appear, but only if the user removes itself
-        confirm(true) { wait_for_page_update_and_click save_edit_element } rescue Selenium::WebDriver::Error::NoAlertPresentError
+        confirm(true) { wait_for_update_and_click save_edit_element } rescue Selenium::WebDriver::Error::NoAlertPresentError
       end
 
       # DELETE/RESTORE WHITEBOARD
@@ -192,7 +193,7 @@ module Page
       def delete_whiteboard(driver)
         logger.info 'Deleting whiteboard'
         click_settings_button
-        wait_for_page_update_and_click delete_button_element
+        wait_for_update_and_click_js delete_button_element
         driver.switch_to.alert.accept
         # Two alerts will appear if the user is an admin
         driver.switch_to.alert.accept rescue Selenium::WebDriver::Error::StaleElementReferenceError
@@ -202,7 +203,7 @@ module Page
 
       def restore_whiteboard
         logger.info 'Restoring whiteboard'
-        wait_for_page_update_and_click restore_button_element
+        wait_for_update_and_click_js restore_button_element
         restored_msg_element.when_present Utils.short_wait
       end
 
@@ -241,8 +242,7 @@ module Page
       # @param whiteboard [Whiteboard]
       def click_whiteboard_link(whiteboard)
         wait_until { list_view_whiteboard_link_elements.any? }
-        whiteboard_link = list_view_whiteboard_link_elements.find { |link| link.attribute('href').include?("/whiteboards/#{whiteboard.id}?") }
-        whiteboard_link.click
+        wait_for_update_and_click_js (list_view_whiteboard_link_elements.find { |link| link.attribute('href').include?("/whiteboards/#{whiteboard.id}?") })
       end
 
       # SEARCH
@@ -262,9 +262,9 @@ module Page
       def simple_search(string)
         logger.info "Performing simple search for '#{string}'"
         cancel_search_link if cancel_search_link_element.visible?
-        wait_for_element_and_type(simple_search_input_element, string)
+        wait_for_element_and_type_js(simple_search_input_element, string)
         sleep 1
-        click_element_js simple_search_button_element
+        wait_for_update_and_click_js simple_search_button_element
       end
 
       # Performs an advanced whiteboard search
@@ -276,8 +276,8 @@ module Page
         open_advanced_search_button unless advanced_search_keyword_input_element.visible?
         logger.debug "Search keyword is '#{string}'"
         string.nil? ?
-            wait_for_element_and_type(advanced_search_keyword_input_element, '') :
-            wait_for_element_and_type(advanced_search_keyword_input_element, string)
+            wait_for_element_and_type_js(advanced_search_keyword_input_element, '') :
+            wait_for_element_and_type_js(advanced_search_keyword_input_element, string)
         sleep 1
         if user.nil?
           self.advanced_search_user_select = 'Collaborator'
@@ -287,7 +287,7 @@ module Page
           sleep 1
         end
         inc_deleted ? check_include_deleted_cbx : uncheck_include_deleted_cbx
-        click_element_js advanced_search_button_element
+        wait_for_update_and_click_js advanced_search_button_element
       end
 
       # WHITEBOARD EXPORT
@@ -302,7 +302,7 @@ module Page
       # Clicks the 'export' button on an open whiteboard
       def click_export_button
         logger.debug 'Clicking whiteboard export button'
-        wait_for_page_update_and_click export_button_element
+        wait_for_load_and_click export_button_element
       end
 
       # Exports a whiteboard as a new asset library asset
@@ -311,9 +311,9 @@ module Page
       def export_to_asset_library(whiteboard)
         click_export_button
         logger.debug 'Exporting whiteboard to asset library'
-        wait_for_page_update_and_click export_to_library_button_element
+        wait_for_update_and_click export_to_library_button_element
         wait_until(Utils.short_wait) { export_title_input == whiteboard.title }
-        wait_for_page_update_and_click export_confirm_button_element
+        wait_for_update_and_click_js export_confirm_button_element
         Asset.new({ type: 'Whiteboard', title: whiteboard.title, preview: 'image' })
       end
 
@@ -322,7 +322,7 @@ module Page
         Utils.prepare_download_dir
         click_export_button
         logger.debug 'Downloading whiteboard as an image'
-        wait_for_page_update_and_click download_as_image_button_element
+        wait_for_update_and_click_js download_as_image_button_element
       end
 
       # Waits for a downloaded whiteboard PNG file to appear in the configured download directory
@@ -354,16 +354,16 @@ module Page
 
       # Clicks the button to add an existing asset to an open whiteboard
       def click_add_existing_asset
-        wait_for_page_update_and_click add_asset_button_element unless use_existing_button?
-        wait_for_page_update_and_click use_existing_button_element
+        wait_for_update_and_click_js add_asset_button_element unless use_existing_button_element.visible?
+        wait_for_update_and_click_js use_existing_button_element
       end
 
       # Adds a given set of existing assets to an open whiteboard
       # @param assets [Array<Asset>]
       def add_existing_assets(assets)
         click_add_existing_asset
-        assets.each { |asset| wait_for_page_update_and_click text_area_element(xpath: "//input[@value = '#{asset.id}']") }
-        wait_for_page_update_and_click add_selected_button_element
+        assets.each { |asset| wait_for_update_and_click text_area_element(xpath: "//input[@value = '#{asset.id}']") }
+        wait_for_update_and_click_js add_selected_button_element
         add_selected_button_element.when_not_visible Utils.short_wait
       end
 
@@ -373,11 +373,11 @@ module Page
         click_close_modal_button if close_modal_button?
         click_cancel_button if cancel_asset_button?
         if asset.type == 'File'
-          wait_for_page_update_and_click add_asset_button_element unless upload_new_button?
-          wait_for_page_update_and_click upload_new_button_element
+          wait_for_update_and_click_js add_asset_button_element unless upload_new_button?
+          wait_for_update_and_click_js upload_new_button_element
         else
-          wait_for_page_update_and_click add_asset_button_element unless add_link_button?
-          wait_for_page_update_and_click add_link_button_element
+          wait_for_update_and_click_js add_asset_button_element unless add_link_button?
+          wait_for_update_and_click_js add_link_button_element
         end
       end
 
@@ -409,7 +409,7 @@ module Page
       # @param asset_library [Page::SuiteCPages::AssetLibraryPage]
       # @param asset [Asset]
       def open_original_asset(driver, asset_library, asset)
-        wait_for_page_update_and_click open_original_asset_link_element
+        wait_for_update_and_click open_original_asset_link_element
         driver.switch_to.window driver.window_handles.last
         wait_until { asset_library.detail_view_asset_title == asset.title }
       end
@@ -417,7 +417,7 @@ module Page
       # Closes the browser window containing an asset opened from a whiteboard window using open_original_asset
       # @param driver [Selenium::WebDriver]
       def close_original_asset(driver)
-        wait_for_page_update_and_click close_original_asset_button_element
+        wait_for_update_and_click_js close_original_asset_button_element
         # Three windows should be open, but check how many just in case
         driver.window_handles.length == 2 ? driver.switch_to.window(driver.window_handles[1]) : driver.switch_to.window(driver.window_handles.first)
       end
@@ -437,12 +437,12 @@ module Page
 
       # Opens the collaborators pane unless it is already open
       def show_collaborators_pane
-        wait_for_page_update_and_click collaborators_button_element unless collaborators_button_element.attribute('class').include?('active')
+        wait_for_update_and_click_js collaborators_button_element unless collaborators_button_element.attribute('class').include?('active')
       end
 
       # Hides the collaborators pane
       def hide_collaborators_pane
-        wait_for_page_update_and_click collaborators_button_element
+        wait_for_update_and_click_js collaborators_button_element
         collaborators_button if collaborators_pane_element.visible?
       end
 
@@ -462,12 +462,12 @@ module Page
 
       # Opens the chat pane unless it is already open
       def show_chat_pane
-        wait_for_page_update_and_click chat_button_element unless chat_button_element.attribute('class').include?('active')
+        wait_for_update_and_click_js chat_button_element unless chat_button_element.attribute('class').include?('active')
       end
 
       # Hides the chat pane
       def hide_chat_pane
-        wait_for_page_update_and_click chat_button_element
+        wait_for_update_and_click_js chat_button_element
         chat_button if chat_pane_element.visible?
       end
 
@@ -475,7 +475,7 @@ module Page
       # @param body [String]
       def send_chat_msg(body)
         logger.debug "Sending chat message with body '#{body}'"
-        wait_for_element_and_type(chat_msg_input_element, body)
+        wait_for_element_and_type_js(chat_msg_input_element, body)
         chat_msg_input_element.send_keys :enter
       end
 

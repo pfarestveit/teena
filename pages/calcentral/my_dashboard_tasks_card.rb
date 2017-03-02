@@ -49,7 +49,7 @@ module Page
 
       # Clicks the scheduled tasks tab and waits for overdue tasks to appear
       def wait_for_overdue_tasks
-        wait_for_page_update_and_click scheduled_tasks_tab_element
+        wait_for_update_and_click_js scheduled_tasks_tab_element
         wait_until(Utils.short_wait) { overdue_task_elements.any? }
       end
 
@@ -61,7 +61,7 @@ module Page
 
       # Clicks the scheduled tasks tab and waits for today tasks to appear
       def wait_for_today_tasks
-        wait_for_page_update_and_click scheduled_tasks_tab_element
+        wait_for_update_and_click_js scheduled_tasks_tab_element
         wait_until(Utils.short_wait) { today_task_elements.any? }
       end
 
@@ -73,7 +73,7 @@ module Page
 
       # Clicks the scheduled tasks tab and waits for future tasks to appear
       def wait_for_future_tasks
-        wait_for_page_update_and_click scheduled_tasks_tab_element
+        wait_for_update_and_click_js scheduled_tasks_tab_element
         wait_until(Utils.short_wait) { future_task_elements.any? }
       end
 
@@ -85,7 +85,7 @@ module Page
 
       # Clicks the completed tasks tab and waits for completed tasks to appear
       def wait_for_completed_tasks
-        wait_for_page_update_and_click completed_tasks_tab_element
+        wait_for_update_and_click_js completed_tasks_tab_element
         wait_until(Utils.short_wait) { completed_task_elements.any? }
       end
 

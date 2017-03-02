@@ -37,7 +37,7 @@ describe 'bCourses Course Captures tool' do
             course = Course.new({site_id: "#{course_site['siteId']}"})
 
             if masquerade
-              @canvas.masquerade_as(user, course)
+              @canvas.masquerade_as(@driver, user, course)
               @course_captures_page.load_embedded_tool(@driver, course)
             else
               @splash_page.load_page
@@ -79,9 +79,9 @@ describe 'bCourses Course Captures tool' do
                   # Verify that the alert message, help page link, and the sample YouTube video ID are present
                   has_you_tube_alert = @course_captures_page.you_tube_alert_elements[index]
                   has_help_page_link = @course_captures_page.external_link_valid?(@driver, @course_captures_page.help_page_link(index), 'Service at UC Berkeley')
-                  @course_captures_page.switch_to_canvas_iframe @driver if ENV['masquerade']
+                  @course_captures_page.switch_to_canvas_iframe @driver if masquerade
                   has_you_tube_link = @course_captures_page.external_link_valid?(@driver, @course_captures_page.you_tube_link(expected_video_id), 'YouTube')
-                  @course_captures_page.switch_to_canvas_iframe @driver if ENV['masquerade']
+                  @course_captures_page.switch_to_canvas_iframe @driver if masquerade
 
                   it("shows UID #{user.uid} an explanation for viewing the recordings at You Tube on site ID #{course.site_id}") { expect(has_you_tube_alert).to be_truthy }
                   it("shows UID #{user.uid} a 'help page' link on site ID #{course.site_id}") { expect(has_help_page_link).to be true }
@@ -91,7 +91,7 @@ describe 'bCourses Course Captures tool' do
 
                 # Verify that the 'report a problem' link works
                 has_report_problem_link = @course_captures_page.external_link_valid?(@driver, @course_captures_page.report_problem_element, 'Request Support or Give Feedback | Educational Technology Services')
-                @course_captures_page.switch_to_canvas_iframe @driver if ENV['masquerade']
+                @course_captures_page.switch_to_canvas_iframe @driver if masquerade
 
                 it("offers UID #{user.uid} a 'Report a Problem' link on on site ID #{course.site_id}") { expect(has_report_problem_link).to be true }
 

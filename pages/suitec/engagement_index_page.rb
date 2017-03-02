@@ -121,70 +121,70 @@ module Page
       # Sorts the leaderboard by rank ascending
       def sort_by_rank_asc
         logger.info 'Sorting by "Rank" ascending'
-        wait_for_page_update_and_click sort_by_rank_element
+        wait_for_update_and_click_js sort_by_rank_element
         sort_by_rank unless sort_asc?
       end
 
       # Sorts the leaderboard by rank descending
       def sort_by_rank_desc
         logger.info 'Sorting by "Rank" descending'
-        wait_for_page_update_and_click sort_by_rank_element
+        wait_for_update_and_click_js sort_by_rank_element
         sort_by_rank if sort_asc?
       end
 
       # Sorts the leaderboard by name ascending
       def sort_by_name_asc
         logger.info 'Sorting by "Name" ascending'
-        wait_for_page_update_and_click sort_by_name_element
+        wait_for_update_and_click_js sort_by_name_element
         sort_by_name unless sort_asc?
       end
 
       # Sorts the leaderboard by name descending
       def sort_by_name_desc
         logger.info 'Sorting by "Name" descending'
-        wait_for_page_update_and_click sort_by_name_element
+        wait_for_update_and_click_js sort_by_name_element
         sort_by_name if sort_asc?
       end
 
       # Sorts the leaderboard by sharing preference ascending
       def sort_by_share_asc
         logger.info 'Sorting by "Share" ascending'
-        wait_for_page_update_and_click sort_by_share_element
+        wait_for_update_and_click_js sort_by_share_element
         sort_by_share unless sort_asc?
       end
 
       # Sorts the leaderboard by sharing preference descending
       def sort_by_share_desc
         logger.info 'Sorting by "Share" descending'
-        wait_for_page_update_and_click sort_by_share_element
+        wait_for_update_and_click_js sort_by_share_element
         sort_by_share if sort_asc?
       end
 
       # Sorts the leaderboard by point totals ascending
       def sort_by_points_asc
         logger.info 'Sorting by "Points" ascending'
-        wait_for_page_update_and_click sort_by_points_element
+        wait_for_update_and_click_js sort_by_points_element
         sort_by_points unless sort_asc?
       end
 
       # Sorts the leaderboard by point totals descending
       def sort_by_points_desc
         logger.info 'Sorting by "Points" descending'
-        wait_for_page_update_and_click sort_by_points_element
+        wait_for_update_and_click_js sort_by_points_element
         sort_by_points if sort_asc?
       end
 
       # Sorts the leaderboard by last activity dates ascending
       def sort_by_activity_asc
         logger.info 'Sorting by "Last Activity" ascending'
-        wait_for_page_update_and_click sort_by_activity_element
+        wait_for_update_and_click_js sort_by_activity_element
         sort_by_activity unless sort_asc?
       end
 
       # Sorts the leaderboard by last activity dates descending
       def sort_by_activity_desc
         logger.info 'Sorting by "Last Activity" descending'
-        wait_for_page_update_and_click sort_by_activity_element
+        wait_for_update_and_click_js sort_by_activity_element
         sort_by_activity if sort_asc?
       end
 
@@ -229,9 +229,12 @@ module Page
       # @return [Array<String>]
       def download_csv(driver, course, url)
         logger.info 'Downloading activities CSV'
+        sleep 1
         Utils.prepare_download_dir
         load_scores(driver, url)
-        wait_for_page_load_and_click download_csv_link_element
+        window = driver.window_handle
+        window_count = driver.window_handles.length
+        wait_for_load_and_click_js download_csv_link_element
         date = Time.now.strftime('%Y_%m_%d')
         # Hour and minute in the file name are globbed to avoid test failures due to clock sync issues
         csv_file_path = "#{Utils.download_dir}/engagement_index_activities_#{course.site_id}_#{date}_*.csv"
@@ -241,6 +244,12 @@ module Page
         CSV.foreach(csv, { headers: true }) do |column|
           # user_name, action, score, running_total
           activities << "#{column[1]}, #{column[2]}, #{column[4]}, #{column[5]}"
+        end
+        new_window_count = driver.window_handles.length
+        if new_window_count > window_count
+          driver.switch_to.window driver.window_handles.last
+          driver.close
+          driver.switch_to.window window
         end
         activities
       end
@@ -260,7 +269,7 @@ module Page
 
       # Clicks the points configuration button
       def click_points_config
-        wait_for_page_update_and_click points_config_link_element
+        wait_for_update_and_click points_config_link_element
         wait_until(Utils.short_wait) { enabled_activity_title_elements.any? }
         sleep 2
       end
@@ -286,32 +295,31 @@ module Page
 
       # Clicks the 'edit' button on the points configuration page
       def click_edit_points_config
-        wait_for_page_update_and_click edit_points_config_button_element
+        wait_for_update_and_click_js edit_points_config_button_element
         wait_until(Utils.short_wait) { activity_edit_elements.any? }
       end
 
       # Clicks the button to disable a given activity
       # @param activity [Activity]
       def click_disable_activity(activity)
-        button_element(xpath: "//td[text()='#{activity.title}']/following-sibling::td[2]/button[text()='Disable']").click
+        wait_for_update_and_click_js button_element(xpath: "//td[text()='#{activity.title}']/following-sibling::td[2]/button[text()='Disable']")
         wait_until(Utils.short_wait) { cell_element(xpath: "//div[@data-ng-show='hasDisabledActivities()']//tr[contains(.,'#{activity.title}')]") }
       end
 
       # Clicks the button to enable a given activity
       # @param activity [Activity]
       def click_enable_activity(activity)
-        wait_until(Utils.short_wait) { button_element(xpath: "//h3[text()='Disabled Activities']/following-sibling::table//td[text()='#{activity.title}']/following-sibling::td[2]/button[text()='Enable']").visible? }
-        button_element(xpath: "//h3[text()='Disabled Activities']/following-sibling::table//td[text()='#{activity.title}']/following-sibling::td[2]/button[text()='Enable']").click
+        wait_for_update_and_click_js button_element(xpath: "//h3[text()='Disabled Activities']/following-sibling::table//td[text()='#{activity.title}']/following-sibling::td[2]/button[text()='Enable']")
       end
 
       # Clicks the 'cancel' button on the points config edit page
       def click_cancel_config_edit
-        wait_for_page_update_and_click cancel_button_element
+        wait_for_update_and_click_js cancel_button_element
       end
 
       # Clicks the 'save' button on the points config edit page
       def click_save_config_edit
-        wait_for_page_update_and_click save_button_element
+        wait_for_update_and_click_js save_button_element
       end
 
       # Disables a given activity
@@ -338,13 +346,13 @@ module Page
       def change_activity_points(activity, new_points)
         click_edit_points_config if edit_points_config_button?
         input = text_area_element(xpath: "//td[text()='#{activity.title}']/following-sibling::td//input")
-        wait_for_element_and_type(input, new_points)
+        wait_for_element_and_type_js(input, new_points)
         click_save_config_edit
       end
 
       # Clicks the 'back to engagement index' link
       def click_back_to_index
-        wait_for_page_update_and_click back_to_engagement_index_element
+        wait_for_update_and_click_js back_to_engagement_index_element
       end
 
     end

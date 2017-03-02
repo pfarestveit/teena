@@ -25,9 +25,9 @@ module Page
         logger.info "Logging in as #{uid} using basic auth"
         load_page
         scroll_to_bottom
-        wait_for_page_load_and_click toggle_footer_link_element
-        wait_for_element_and_type(basic_auth_uid_input_element, uid)
-        wait_for_element_and_type(basic_auth_password_input_element, Utils.calcentral_basic_auth_password)
+        wait_for_update_and_click toggle_footer_link_element
+        wait_for_element_and_type_js(basic_auth_uid_input_element, uid)
+        wait_for_element_and_type_js(basic_auth_password_input_element, Utils.calcentral_basic_auth_password)
         # The log in button element will disappear and reappear
         button = basic_auth_log_in_button_element
         button.click
@@ -38,7 +38,7 @@ module Page
 
       # Clicks the sign in button on the splash page
       def click_sign_in_button
-        wait_for_page_load_and_click sign_in_element
+        wait_for_load_and_click sign_in_element
       end
 
       # Loads the splash page, clicks the sign in button, authenticates in CalNet, and arrives on My Dashboard

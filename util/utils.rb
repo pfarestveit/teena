@@ -15,23 +15,29 @@ class Utils
 
   # BROWSER CONFIGS
 
-  # Instantiates the browser. In the case of Firefox, also modifies the default profile to handle downloads
+  # Instantiates the browser and alters default browser settings.
   def self.launch_browser
     driver = @config['webdriver']
     logger.info "Launching #{driver.capitalize}"
-    if driver == 'firefox'
-      profile = Selenium::WebDriver::Firefox::Profile.new
-      profile['browser.download.folderList'] = 2
-      profile['browser.download.manager.showWhenStarting'] = false
-      profile['browser.download.dir'] = Utils.download_dir
-      profile['browser.helperApps.neverAsk.saveToDisk'] = 'application/msword, application/vnd.ms-excel, application/vnd.ms-powerpointtd>, application/pdf, application/zip, audio/mpeg, image/png, image/bmp, image/jpeg, image/gif, image/sgi, image/svg+xml, image/webp, text/csv, video/mp4, video/quicktime'
-      driver = Selenium::WebDriver.for :firefox, profile: profile
+    if %w(firefox chrome safari).include? driver
+      if driver == 'firefox'
+        profile = Selenium::WebDriver::Firefox::Profile.new
+        profile['browser.download.folderList'] = 2
+        profile['browser.download.manager.showWhenStarting'] = false
+        profile['browser.download.dir'] = Utils.download_dir
+        profile['browser.helperApps.neverAsk.saveToDisk'] = 'application/msword, application/vnd.ms-excel, application/vnd.ms-powerpointtd>, application/pdf, application/zip, audio/mpeg, image/png, image/bmp, image/jpeg, image/gif, image/sgi, image/svg+xml, image/webp, text/csv, video/mp4, video/quicktime'
+        driver = Selenium::WebDriver.for :firefox, profile: profile
+      elsif driver == 'chrome'
+        profile = Selenium::WebDriver::Chrome::Profile.new
+        profile['download.prompt_for_download'] = false
+        profile['download.default_directory'] = Utils.download_dir
+        profile['profile.password_manager_enabled'] = false
+        driver = Selenium::WebDriver.for :chrome, profile: profile
+      else
+        driver = Selenium::WebDriver.for :safari
+      end
       driver.manage.window.maximize
       driver
-    elsif driver == 'chrome'
-      Selenium::WebDriver.for :chrome
-    elsif driver == 'safari'
-      Selenium::WebDriver.for :safari
     else
       logger.error 'Designated WebDriver is not supported'
       nil

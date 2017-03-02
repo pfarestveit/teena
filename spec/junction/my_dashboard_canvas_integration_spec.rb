@@ -33,21 +33,21 @@ describe 'My Dashboard', order: :defined do
       @course.term = @classes_api.current_term @driver
       @my_dashboard.log_out @splash_page
       @canvas.log_in(@cal_net, Utils.super_admin_username, Utils.super_admin_password)
-      @canvas.create_generic_course_site(@course, [@teacher, @student], test_id)
+      @canvas.create_generic_course_site(@driver, @course, [@teacher, @student], test_id)
       @canvas.log_out(@driver, @cal_net)
 
       # Student accepts course invite so that the site will be included in the user's data
       @canvas.log_in(@cal_net, @student.username, Utils.test_user_password)
-      @canvas.load_course_site @course
+      @canvas.load_course_site(@driver, @course)
       @canvas.log_out(@driver, @cal_net)
 
       # Teacher creates a discussion, an announcement, and past/present/future assignments
       @canvas.log_in(@cal_net, @teacher.username, Utils.test_user_password)
-      @canvas.load_course_site @course
+      @canvas.load_course_site(@driver, @course)
       @today = Date.today
 
       @discussion =(Discussion.new "Discussion title in #{@course.code}", @today)
-      @canvas.create_discussion(@course, @discussion)
+      @canvas.create_discussion(@driver, @course, @discussion)
 
       @announcement = Announcement.new("Announcement title in #{@course.code}", "This is the body of an announcement about #{@course.code}", @today)
       @canvas.create_announcement(@course, @announcement)

@@ -21,7 +21,7 @@ describe 'A Canvas discussion', order: :defined do
     tools = [SuiteCTools::ENGAGEMENT_INDEX]
     tools << SuiteCTools::ASSET_LIBRARY unless course_id.nil?
     @canvas.log_in(@cal_net, Utils.ets_qa_username, Utils.ets_qa_password)
-    @canvas.get_suite_c_test_course(@course, [@user_1, @user_2], test_id, tools)
+    @canvas.get_suite_c_test_course(@driver, @course, [@user_1, @user_2], test_id, tools)
     @engagement_index_url = @canvas.click_tool_link(@driver, SuiteCTools::ENGAGEMENT_INDEX)
     unless course_id.nil?
       @asset_library = Page::SuiteCPages::AssetLibraryPage.new @driver
@@ -38,7 +38,7 @@ describe 'A Canvas discussion', order: :defined do
     @discussion = Discussion.new("Discussion Topic #{test_id}", nil)
     @canvas.log_out(@driver, @cal_net)
     @canvas.log_in(@cal_net, @user_1.username, Utils.test_user_password)
-    @canvas.create_discussion(@course, @discussion)
+    @canvas.create_discussion(@driver, @course, @discussion)
   end
 
   after(:all) { @driver.quit }
@@ -67,7 +67,7 @@ describe 'A Canvas discussion', order: :defined do
       # User 2 creates an entry on the topic
       @canvas.log_out(@driver, @cal_net)
       @canvas.log_in(@cal_net, @user_2.username, Utils.test_user_password)
-      @canvas.load_course_site @course
+      @canvas.load_course_site(@driver, @course)
       @canvas.add_reply(@discussion, nil, 'Discussion entry by somebody other than the discussion topic creator')
     end
 

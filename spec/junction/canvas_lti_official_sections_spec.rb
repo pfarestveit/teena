@@ -54,7 +54,7 @@ describe 'bCourses Official Sections tool' do
 
         if masquerade
           @splash_page.log_out @splash_page
-          @canvas.masquerade_as @teacher
+          @canvas.masquerade_as(@driver, @teacher)
         end
 
         # Create test course site if necessary
@@ -67,7 +67,7 @@ describe 'bCourses Official Sections tool' do
             @create_course_site_page.load_standalone_tool
           end
           @create_course_site_page.provision_course_site(@course, @teacher, sections_for_site)
-          @canvas.publish_course_site(@course) if masquerade
+          @canvas.publish_course_site(@driver, @course) if masquerade
         end
 
         # Get enrollment totals on site
@@ -205,7 +205,11 @@ describe 'bCourses Official Sections tool' do
           it("shows no blank section labels for #{api_course_code}") { expect(ui_section_labels.all? &:empty?).to be false }
           it("shows the right section schedules for #{api_course_code}") { expect(ui_section_schedules).to eql(api_section_schedules) }
           it("shows the right section locations for #{api_course_code}") { expect(ui_section_locations).to eql(api_section_locations) }
-          it("shows the right section instructors for #{api_course_code}") { expect(ui_section_instructors).to eql(api_section_instructors) }
+
+          # The maximized Chrome viewport is narrow enough for the responsive design to hide the section instructors
+          ("#{@driver.browser}" == 'chrome') ?
+              (it ("hides the section instructors for #{api_course_code}") { expect(ui_section_instructors.empty?).to be true }) :
+              (it("shows the right section instructors for #{api_course_code}") { expect(ui_section_instructors).to eql(api_section_instructors) })
 
           api_sections.each do |section|
             i = api_sections.index section
@@ -344,7 +348,7 @@ describe 'bCourses Official Sections tool' do
           # Check each user role's access to the tool
           [lead_ta, ta, designer, reader, observer, student, waitlist].each do |user|
             if masquerade
-              @canvas.masquerade_as(user, @course)
+              @canvas.masquerade_as(@driver, user, @course)
               @official_sections_page.load_embedded_tool(@driver, @course)
             else
               @splash_page.basic_auth user.uid

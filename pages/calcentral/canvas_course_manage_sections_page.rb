@@ -46,27 +46,27 @@ module Page
       # @param driver [Selenium::WebDriver]
       def click_official_sections_link(driver)
         logger.info 'Clicking Official Sections link'
-        wait_for_page_load_and_click official_sections_link_element
+        wait_for_load_and_click_js official_sections_link_element
         switch_to_canvas_iframe driver
       end
 
       # Clicks the Edit Sections button and waits for the available sections table to appear
       def click_edit_sections
         logger.debug 'Clicking edit sections button'
-        wait_for_page_load_and_click edit_sections_button_element
+        wait_for_load_and_click_js edit_sections_button_element
         save_changes_button_element.when_visible Utils.short_wait
       end
 
       # Clicks the Save Changes button on the editing interface
       def click_save_changes
         logger.debug 'Clicking save changes button'
-        wait_for_page_update_and_click save_changes_button_element
+        wait_for_update_and_click_js save_changes_button_element
       end
 
       # Closes the 'success' message after sections are updated
       def close_section_update_success
         logger.debug 'Closing the section update success message'
-        wait_for_page_update_and_click update_msg_close_button_element
+        wait_for_update_and_click_js update_msg_close_button_element
       end
 
       # CURRENT SECTIONS
@@ -137,7 +137,7 @@ module Page
       # @param section [Section]
       def click_delete_section(section)
         logger.debug "Clicking delete button for section #{section.id}"
-        wait_for_page_update_and_click section_delete_button(section)
+        wait_for_update_and_click_js section_delete_button(section)
         sleep 1
       end
 
@@ -159,7 +159,7 @@ module Page
       # @param section [Section]
       def click_undo_add_section(section)
         logger.debug "Clicking undo add button for section #{section.id}"
-        wait_for_page_update_and_click section_undo_add_button(section)
+        wait_for_update_and_click_js section_undo_add_button(section)
         sleep 1
       end
 
@@ -173,8 +173,10 @@ module Page
       end
 
       def available_sections_course_title(course_code)
-        span_element(xpath: "//button[contains(@class,'sections-form-course-button')][contains(.,'#{course_code}')]//span[contains(.,'course.title')]").when_visible Utils.short_wait
-        span_element(xpath: "//button[contains(@class,'sections-form-course-button')][contains(.,'#{course_code}')]//span[contains(.,'course.title')]").text
+        logger.debug "Looking for the course title for course code #{course_code}"
+        span_element(xpath: "//span[contains(.,'#{course_code}')]/following-sibling::span[contains(@data-ng-if, 'course.title')]").when_visible Utils.short_wait
+        title = span_element(xpath: "//span[contains(.,'#{course_code}')]/following-sibling::span[contains(@data-ng-if, 'course.title')]").text
+        title && title[2..-1]
       end
 
       # Returns the table element containing a given course's sections available to add to a course site
@@ -190,7 +192,7 @@ module Page
         if available_sections_table(course_code).visible?
           logger.debug "The sections table is already expanded for #{course_code}"
         else
-          wait_for_page_update_and_click available_sections_form_button(course_code)
+          wait_for_update_and_click_js available_sections_form_button(course_code)
           available_sections_table(course_code).when_visible Utils.short_wait
         end
       end
@@ -199,7 +201,7 @@ module Page
       # @param course_code [String]
       def collapse_available_sections(course_code)
         if available_sections_table(course_code).visible?
-          wait_for_page_update_and_click available_sections_form_button(course_code)
+          wait_for_update_and_click_js available_sections_form_button(course_code)
           available_sections_table(course_code).when_not_visible Utils.short_wait
         else
           logger.debug "The sections table is already collapsed for #{course_code}"
@@ -328,7 +330,7 @@ module Page
       # @param section [Section]
       def click_add_section(course, section)
         logger.debug "Clicking add button for section #{section.id}"
-        wait_for_page_update_and_click section_add_button(course, section)
+        wait_for_update_and_click_js section_add_button(course, section)
         sleep 1
       end
 
@@ -361,7 +363,7 @@ module Page
       # @param section [Section]
       def click_undo_delete_section(course, section)
         logger.debug "Clicking undo delete button section #{section.id}"
-        wait_for_page_update_and_click section_undo_delete_button(course, section)
+        wait_for_update_and_click_js section_undo_delete_button(course, section)
         sleep 1
       end
 

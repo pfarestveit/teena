@@ -20,9 +20,9 @@ describe 'New asset uploads', order: :defined do
     @engagement_index = Page::SuiteCPages::EngagementIndexPage.new @driver
 
     @canvas.log_in(@cal_net, Utils.super_admin_username, Utils.super_admin_password)
-    @canvas.get_suite_c_test_course(@course, users, Utils.get_test_id, [SuiteCTools::ASSET_LIBRARY, SuiteCTools::ENGAGEMENT_INDEX])
+    @canvas.get_suite_c_test_course(@driver, @course, users, Utils.get_test_id, [SuiteCTools::ASSET_LIBRARY, SuiteCTools::ENGAGEMENT_INDEX])
 
-    @canvas.load_course_site @course
+    @canvas.load_course_site(@driver, @course)
     @asset_library_url = @canvas.click_tool_link(@driver, SuiteCTools::ASSET_LIBRARY)
     @engagement_index_url = @canvas.click_tool_link(@driver, SuiteCTools::ENGAGEMENT_INDEX)
 
@@ -44,7 +44,7 @@ describe 'New asset uploads', order: :defined do
             @asset.category = nil
             @asset_size = File.size(Utils.test_data_file_path(@asset.file_name)).to_f / 1024000
 
-            @canvas.masquerade_as(user, @course)
+            @canvas.masquerade_as(@driver, user, @course)
 
             begin
               @asset_library.load_page(@driver, @asset_library_url)
@@ -97,7 +97,7 @@ describe 'New asset uploads', order: :defined do
               logger.error "#{e.message + "\n"} #{e.backtrace.join("\n ")}"
               it("caused an error with #{user_full_name}'s asset '#{asset_title}'") { fail }
             ensure
-              @canvas.stop_masquerading
+              @canvas.stop_masquerading @driver
             end
 
             unless @asset.type == 'File' && @asset_size > 12

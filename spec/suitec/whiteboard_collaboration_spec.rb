@@ -38,7 +38,7 @@ describe 'Whiteboard', order: :defined do
     tools = [SuiteCTools::ENGAGEMENT_INDEX, SuiteCTools::WHITEBOARDS]
     tools << SuiteCTools::ASSET_LIBRARY unless course_id.nil?
     @canvas_driver_1.log_in(@cal_net_driver_1, Utils.super_admin_username, Utils.super_admin_password)
-    @canvas_driver_1.get_suite_c_test_course(course, users, test_id, tools)
+    @canvas_driver_1.get_suite_c_test_course(@driver_1, course, users, test_id, tools)
     @whiteboards_url = @canvas_driver_1.click_tool_link(@driver_1, SuiteCTools::WHITEBOARDS)
     @engagement_index_url = @canvas_driver_1.click_tool_link(@driver_1, SuiteCTools::ENGAGEMENT_INDEX)
     unless course_id.nil?
@@ -54,7 +54,7 @@ describe 'Whiteboard', order: :defined do
     @whiteboards << (@whiteboard_3 = Whiteboard.new({owner: student_3, title: "Whiteboard Collaboration #{test_id} - board 3", collaborators: []}))
 
     @whiteboards.each do |board|
-      @canvas_driver_1.masquerade_as(board.owner, course)
+      @canvas_driver_1.masquerade_as(@driver_1, board.owner, course)
       @whiteboards_driver_1.load_page(@driver_1, @whiteboards_url)
       @whiteboards_driver_1.create_whiteboard board
     end
@@ -69,7 +69,7 @@ describe 'Whiteboard', order: :defined do
     [teacher, lead_ta, ta, designer, observer, reader].each do |user|
 
       it "allows a course #{user.role} to search for whiteboards if the user has permission to do so" do
-        @canvas_driver_1.masquerade_as(user, course)
+        @canvas_driver_1.masquerade_as(@driver_1, user, course)
         @whiteboards_driver_1.load_page(@driver_1, @whiteboards_url)
         if ['Teacher', 'Lead TA', 'TA', 'Designer', 'Reader'].include? user.role
           logger.info "Verifying #{user.role} #{user.full_name} has access to whiteboard search"
@@ -84,7 +84,7 @@ describe 'Whiteboard', order: :defined do
       end
 
       it "allows a course #{user.role} to view every whiteboard and its membership if the user has permission to do so" do
-        @canvas_driver_1.masquerade_as(user, course)
+        @canvas_driver_1.masquerade_as(@driver_1, user, course)
         if ['Teacher', 'Lead TA', 'TA', 'Designer', 'Reader'].include? user.role
           @whiteboards.each do |board|
             logger.info "Verifying #{user.role} #{user.full_name} has access to '#{board.title}' and its membership"
@@ -103,7 +103,7 @@ describe 'Whiteboard', order: :defined do
       end
 
       it "allows a course #{user.role} to delete any whiteboard if the user has permission to do so" do
-        @canvas_driver_1.masquerade_as(user, course)
+        @canvas_driver_1.masquerade_as(@driver_1, user, course)
         if ['Teacher', 'Lead TA', 'TA', 'Designer', 'Reader'].include? user.role
           @whiteboards.each do |board|
             logger.info "Verifying #{user.role} #{user.full_name} has a delete button for '#{board.title}'"
@@ -129,16 +129,19 @@ describe 'Whiteboard', order: :defined do
       after(:each) { @whiteboards_driver_1.close_whiteboard @driver_1 }
 
       it 'the user can see its whiteboards' do
-        @canvas_driver_1.masquerade_as(student_1, course)
+        @canvas_driver_1.masquerade_as(@driver_1, student_1, course)
         @whiteboards_driver_1.load_page(@driver_1, @whiteboards_url)
-        @whiteboards_driver_1.wait_until(timeout) { @whiteboards_driver_1.list_view_whiteboard_title_elements[0].text == @whiteboard_2.title }
+        @whiteboards_driver_1.wait_until(timeout) do
+          @whiteboards_driver_1.list_view_whiteboard_title_elements.any?
+          @whiteboards_driver_1.list_view_whiteboard_title_elements[0].text == @whiteboard_2.title
+        end
         @whiteboards_driver_1.wait_until(timeout) { @whiteboards_driver_1.list_view_whiteboard_title_elements[1].text == @whiteboard_1.title }
       end
 
       it 'the user cannot see or reach other whiteboards' do
         @whiteboards_driver_1.wait_until(timeout) do
           @whiteboards_driver_1.list_view_whiteboard_title_elements.length == 2 ||
-          @whiteboards_driver_1.list_view_whiteboard_title_elements[2].text != @whiteboard_3.title
+              @whiteboards_driver_1.list_view_whiteboard_title_elements[2].text != @whiteboard_3.title
         end
         @whiteboards_driver_1.hit_whiteboard_url(course, @whiteboards_url, @whiteboard_3)
         has_access = @whiteboards_driver_1.verify_block { @whiteboards_driver_1.settings_button_element.when_visible timeout }
@@ -162,7 +165,7 @@ describe 'Whiteboard', order: :defined do
     describe 'members pane' do
 
       before(:all) do
-        @canvas_driver_2.masquerade_as(student_3, course)
+        @canvas_driver_2.masquerade_as(@driver_2, student_3, course)
         @whiteboards_driver_2.load_page(@driver_2, @whiteboards_url)
       end
 
@@ -197,7 +200,7 @@ describe 'Whiteboard', order: :defined do
       end
 
       it "does not allow #{student_1.full_name} to see if a non-member teacher has just come online" do
-        @canvas_driver_2.masquerade_as(teacher, course)
+        @canvas_driver_2.masquerade_as(@driver_2, teacher, course)
         @whiteboards_driver_2.load_page(@driver_2, @whiteboards_url)
         @whiteboards_driver_2.open_whiteboard(@driver_2, @whiteboard_1)
         teacher_visible = @whiteboards_driver_1.verify_block { @whiteboards_driver_1.collaborator(teacher).when_present timeout }
@@ -220,7 +223,7 @@ describe 'Whiteboard', order: :defined do
 
       before(:all) do
         @engagement_index_driver_2 = Page::SuiteCPages::EngagementIndexPage.new @driver_2
-        @canvas_driver_2.load_course_site course
+        @canvas_driver_2.load_course_site(@driver_2, course)
         # Make sure chat activity is configured with a non-zero point value
         @engagement_index_driver_2.load_page(@driver_2, @engagement_index_url)
         @new_chat_point_value = Activities::LEAVE_CHAT_MESSAGE.points + 1
@@ -295,7 +298,9 @@ describe 'Whiteboard', order: :defined do
     it "allows #{student_1.full_name} to delete a member" do
       @whiteboards_driver_1.remove_collaborator student_3
       @whiteboards_driver_1.show_collaborators_pane
-      @whiteboards_driver_1.collaborator(student_3).when_not_visible timeout
+      ("#{@driver_1.browser}" == 'chrome') ?
+          @whiteboards_driver_1.collaborator(student_3).when_not_present(timeout) :
+          @whiteboards_driver_1.collaborator(student_3).when_not_visible(timeout)
     end
 
     it "allows #{student_1.full_name} to delete its own membership" do
@@ -310,7 +315,7 @@ describe 'Whiteboard', order: :defined do
   describe 'Canvas syncing' do
 
     before(:all) do
-      @canvas_driver_1.stop_masquerading
+      @canvas_driver_1.stop_masquerading @driver_1
       [teacher, student_1].each { |user| @canvas_driver_1.remove_user_from_course(course, user) }
       # Access to whiteboards is based on session cookie, so launch another browser to check cookie-less access
       @driver_3 = Utils.launch_browser
@@ -327,8 +332,8 @@ describe 'Whiteboard', order: :defined do
     [teacher, student_1].each do |user|
 
       it "removes #{user.role} UID #{user.uid} from all whiteboards if the user has been removed from the course site" do
-        @canvas_driver_1.load_course_site course
-        @canvas_driver_1.stop_masquerading if @canvas_driver_1.stop_masquerading_link?
+        @canvas_driver_1.load_course_site(@driver_1, course)
+        @canvas_driver_1.stop_masquerading(@driver_1) if @canvas_driver_1.stop_masquerading_link?
         # Wait until the user has been dropped from the Engagement Index before checking whiteboards
         @engagement_index_driver_1.wait_until(Utils.long_wait) do
           @engagement_index_driver_1.load_page(@driver_1, @engagement_index_url)
@@ -344,7 +349,7 @@ describe 'Whiteboard', order: :defined do
       end
 
       it "prevents #{user.role} UID #{user.uid} from reaching any whiteboards if the user has been removed from the course site" do
-        @canvas_driver_3.masquerade_as(user, course)
+        @canvas_driver_3.masquerade_as(@driver_3, user, course)
         [@whiteboard_1, @whiteboard_2, @whiteboard_3].each do |whiteboard|
           @whiteboards_driver_3.hit_whiteboard_url(course, @whiteboards_url, whiteboard)
           has_access = @whiteboards_driver_3.verify_block { @whiteboards_driver_3.settings_button_element.when_visible timeout }

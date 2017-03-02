@@ -60,25 +60,25 @@ module Page
 
       # Expands the maintenance notice and confirms its visibility
       def expand_maintenance_notice
-        wait_for_page_load_and_click maintenance_button_element
+        wait_for_load_and_click_js maintenance_button_element
         maintenance_detail_element.when_visible Utils.short_wait
       end
 
       # Hides the maintenance notice and confirms it invisibility
       def hide_maintenance_notice
-        wait_for_page_load_and_click maintenance_button_element
+        wait_for_load_and_click_js maintenance_button_element
         maintenance_detail_element.when_not_visible Utils.short_wait
       end
 
       # Expands the help notice and confirms its visibility
       def expand_help_notice
-        wait_for_page_load_and_click need_help_button_element
+        wait_for_load_and_click_js need_help_button_element
         help_notice_element.when_visible Utils.short_wait
       end
 
       # Hides the help notice and confirms its invisibility
       def hide_help_notice
-        wait_for_page_load_and_click need_help_button_element
+        wait_for_load_and_click_js need_help_button_element
         help_notice_element.when_not_visible Utils.short_wait
       end
 
@@ -89,8 +89,8 @@ module Page
         logger.info "Searching for string '#{text}' by #{option}"
         search_type_element.when_visible Utils.short_wait
         self.search_type = option
-        wait_for_element_and_type(search_term_element, text)
-        wait_for_page_update_and_click search_button_element
+        wait_for_element_and_type_js(search_term_element, text)
+        wait_for_update_and_click_js search_button_element
       end
 
       # Returns all user names displayed in search results
@@ -118,7 +118,7 @@ module Page
       # @param user [User]
       # @return [PageObject::Elements::Checkbox]
       def user_checkbox(user)
-        checkbox_element(xpath: "//span[contains(text(),#{user.uid})]/ancestor::tr//input[@name='selectedUser']")
+        checkbox_element(xpath: "//span[contains(.,'#{user.uid}')]/ancestor::tr//input[@name='selectedUser']")
       end
 
       # Selects a user, a course section, and a user role; clicks the add button; and waits for the success message
@@ -131,7 +131,7 @@ module Page
         course_section_element.when_visible Utils.short_wait
         self.course_section = "#{section.course} #{section.label}"
         self.user_role = user.role
-        wait_for_page_update_and_click add_user_button_element
+        wait_for_update_and_click_js add_user_button_element
         success_msg_element.when_visible Utils.medium_wait
       end
 

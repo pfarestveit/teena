@@ -24,38 +24,38 @@ describe 'The Engagement Index', order: :defined do
     @engagement_index = Page::SuiteCPages::EngagementIndexPage.new @driver
 
     @canvas.log_in(@cal_net, Utils.super_admin_username, Utils.super_admin_password)
-    @canvas.get_suite_c_test_course(@course, [teacher, student_1, student_2, student_3, student_4], Utils.get_test_id, [SuiteCTools::ASSET_LIBRARY, SuiteCTools::ENGAGEMENT_INDEX])
+    @canvas.get_suite_c_test_course(@driver, @course, [teacher, student_1, student_2, student_3, student_4], Utils.get_test_id, [SuiteCTools::ASSET_LIBRARY, SuiteCTools::ENGAGEMENT_INDEX])
 
-    @canvas.load_course_site @course
+    @canvas.load_course_site(@driver, @course)
     @asset_library_url = @canvas.click_tool_link(@driver, SuiteCTools::ASSET_LIBRARY)
     @engagement_index_url = @canvas.click_tool_link(@driver, SuiteCTools::ENGAGEMENT_INDEX)
 
     # Add asset to library
-    @canvas.masquerade_as(student_3, @course)
+    @canvas.masquerade_as(@driver, student_3, @course)
     @engagement_index.load_page(@driver, @engagement_index_url)
     @engagement_index.share_score
     @asset_library.load_page(@driver, @asset_library_url)
     @asset_library.upload_file_to_library asset
 
     # Comment on the asset
-    @canvas.masquerade_as(student_1, @course)
+    @canvas.masquerade_as(@driver, student_1, @course)
     @engagement_index.load_page(@driver, @engagement_index_url)
     @engagement_index.un_share_score
     @asset_library.load_asset_detail(@driver, @asset_library_url, asset)
     @asset_library.add_comment 'Testing Testing'
 
     # Like the asset
-    @canvas.masquerade_as(student_2, @course)
+    @canvas.masquerade_as(@driver, student_2, @course)
     @engagement_index.load_page(@driver, @engagement_index_url)
     @engagement_index.un_share_score
     @asset_library.load_asset_detail(@driver, @asset_library_url, asset)
     @asset_library.toggle_detail_view_item_like
 
-    @canvas.masquerade_as(student_4, @course)
+    @canvas.masquerade_as(@driver, student_4, @course)
     @engagement_index.load_page(@driver, @engagement_index_url)
     @engagement_index.share_score
 
-    @canvas.masquerade_as(teacher, @course)
+    @canvas.masquerade_as(@driver, teacher, @course)
     @engagement_index.load_scores(@driver, @engagement_index_url)
   end
 
@@ -137,17 +137,17 @@ describe 'The Engagement Index', order: :defined do
   it 'allows teachers to share their scores with students' do
     @engagement_index.share_score
     @engagement_index.wait_until(Utils.short_wait) { @engagement_index.sharing_preference(teacher) == 'Yes' }
-    @canvas.masquerade_as(student_4, @course)
+    @canvas.masquerade_as(@driver, student_4, @course)
     @engagement_index.load_scores(@driver, @engagement_index_url)
     expect(@engagement_index.visible_names).to include(teacher.full_name)
   end
 
   it 'allows teachers to hide their scores from students' do
-    @canvas.masquerade_as(teacher, @course)
+    @canvas.masquerade_as(@driver, teacher, @course)
     @engagement_index.load_scores(@driver, @engagement_index_url)
     @engagement_index.un_share_score
     @engagement_index.wait_until(Utils.short_wait) { @engagement_index.sharing_preference(teacher) == 'No' }
-    @canvas.masquerade_as(student_4, @course)
+    @canvas.masquerade_as(@driver, student_4, @course)
     @engagement_index.load_scores(@driver, @engagement_index_url)
     expect(@engagement_index.visible_names).not_to include(teacher.full_name)
   end
@@ -155,7 +155,7 @@ describe 'The Engagement Index', order: :defined do
   # STUDENTS
 
   it 'allows students to share their scores with other students' do
-    @canvas.masquerade_as(student_1, @course)
+    @canvas.masquerade_as(@driver, student_1, @course)
     @engagement_index.load_page(@driver, @engagement_index_url)
     @engagement_index.share_score
     @engagement_index.users_table_element.when_visible Utils.short_wait
@@ -211,7 +211,7 @@ describe 'The Engagement Index', order: :defined do
   describe 'Canvas syncing' do
 
     before(:all) do
-      @canvas.stop_masquerading
+      @canvas.stop_masquerading @driver
       [teacher, student_4].each { |user| @canvas.remove_user_from_course(@course, user) }
     end
 
@@ -219,7 +219,7 @@ describe 'The Engagement Index', order: :defined do
 
       it "removes #{user.role} UID #{user.uid} from the Engagement Index if the user has been removed from the course site" do
         @canvas.load_homepage
-        @canvas.stop_masquerading if @canvas.stop_masquerading_link?
+        @canvas.stop_masquerading(@driver) if @canvas.stop_masquerading_link?
         @engagement_index.wait_until(Utils.long_wait) do
           @engagement_index.load_page(@driver, @engagement_index_url)
           !@engagement_index.visible_names.include? user.full_name
@@ -227,7 +227,7 @@ describe 'The Engagement Index', order: :defined do
       end
 
       it "prevents #{user.role} UID #{user.uid} from reaching the Engagement Index if the user has been removed from the course site" do
-        @canvas.masquerade_as(user, @course)
+        @canvas.masquerade_as(@driver, user, @course)
         @engagement_index.navigate_to @engagement_index_url
         @canvas.unauthorized_msg_element.when_visible Utils.short_wait
       end

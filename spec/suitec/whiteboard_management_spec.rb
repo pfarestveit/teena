@@ -26,7 +26,7 @@ describe 'Whiteboard', order: :defined do
 
     # Create course site if necessary
     @canvas.log_in(@cal_net, Utils.super_admin_username, Utils.super_admin_password)
-    @canvas.get_suite_c_test_course(@course, [@teacher, @student_1, @student_2, @student_3], test_id, [SuiteCTools::ASSET_LIBRARY, SuiteCTools::ENGAGEMENT_INDEX, SuiteCTools::WHITEBOARDS])
+    @canvas.get_suite_c_test_course(@driver, @course, [@teacher, @student_1, @student_2, @student_3], test_id, [SuiteCTools::ASSET_LIBRARY, SuiteCTools::ENGAGEMENT_INDEX, SuiteCTools::WHITEBOARDS])
 
     @asset_library_url = @canvas.click_tool_link(@driver, SuiteCTools::ASSET_LIBRARY)
     @engagement_index_url = @canvas.click_tool_link(@driver, SuiteCTools::ENGAGEMENT_INDEX)
@@ -39,7 +39,7 @@ describe 'Whiteboard', order: :defined do
 
     before(:all) do
       @whiteboard = Whiteboard.new({owner: @student_1, title: "Whiteboard Creation #{test_id}", collaborators: []})
-      @canvas.masquerade_as(@student_1, @course)
+      @canvas.masquerade_as(@driver, @student_1, @course)
       @whiteboards.load_page(@driver, @whiteboards_url)
     end
 
@@ -111,7 +111,7 @@ describe 'Whiteboard', order: :defined do
       deleting_test_id = "#{Time.now.to_i}"
 
       # Student creates two whiteboards
-      @canvas.masquerade_as(@student_1, @course)
+      @canvas.masquerade_as(@driver, @student_1, @course)
       @whiteboards.load_page(@driver, @whiteboards_url)
       @whiteboard_delete_1 = Whiteboard.new({owner: @student_1, title: "Whiteboard Delete 1 #{deleting_test_id}", collaborators: [@student_2]})
       @whiteboards.create_whiteboard @whiteboard_delete_1
@@ -121,7 +121,7 @@ describe 'Whiteboard', order: :defined do
 
     it 'can be done by a student who is a collaborator on the whiteboard' do
       # Student collaborator deletes board
-      @canvas.masquerade_as(@student_2, @course)
+      @canvas.masquerade_as(@driver, @student_2, @course)
       @whiteboards.load_page(@driver, @whiteboards_url)
       @whiteboards.open_whiteboard(@driver, @whiteboard_delete_1)
       @whiteboards.delete_whiteboard @driver
@@ -132,7 +132,7 @@ describe 'Whiteboard', order: :defined do
 
     it 'can be done by an instructor who is not a collaborator on the whiteboard' do
       # Teacher deletes other board
-      @canvas.masquerade_as(@teacher, @course)
+      @canvas.masquerade_as(@driver, @teacher, @course)
       @whiteboards.load_page(@driver, @whiteboards_url)
       @whiteboards.open_whiteboard(@driver, @whiteboard_delete_2)
       @whiteboards.delete_whiteboard @driver
@@ -150,7 +150,7 @@ describe 'Whiteboard', order: :defined do
       @whiteboards.advanced_search(@whiteboard_delete_2.title, @student_1, false)
       @whiteboards.wait_until(timeout) { @whiteboards.visible_whiteboard_titles == [@whiteboard_delete_2.title] }
       # Student can now see board again
-      @canvas.masquerade_as(@student_1, @course)
+      @canvas.masquerade_as(@driver, @student_1, @course)
       @whiteboards.load_page(@driver, @whiteboards_url)
       @whiteboards.wait_until(timeout) { @whiteboards.visible_whiteboard_titles.include? @whiteboard_delete_2.title }
     end
@@ -173,7 +173,7 @@ describe 'Whiteboard', order: :defined do
     it ('is not available to a student') { expect(@whiteboards.simple_search_input?).to be false }
 
     it 'is available to a teacher' do
-      @canvas.masquerade_as(@teacher, @course)
+      @canvas.masquerade_as(@driver, @teacher, @course)
       @whiteboards.load_page(@driver, @whiteboards_url)
       @whiteboards.simple_search_input_element.when_visible timeout
     end
@@ -239,7 +239,7 @@ describe 'Whiteboard', order: :defined do
       @whiteboard = Whiteboard.new({owner: @student_1, title: "Whiteboard Export #{export_test_id}", collaborators: []})
 
       # Upload assets to be used on whiteboard
-      @canvas.masquerade_as(@student_1, @course)
+      @canvas.masquerade_as(@driver, @student_1, @course)
       @asset_library.load_page(@driver, @asset_library_url)
       user_asset_data = @student_1.assets
       @assets = []
@@ -251,7 +251,7 @@ describe 'Whiteboard', order: :defined do
       end
 
       # Get current score
-      @canvas.masquerade_as(@teacher, @course)
+      @canvas.masquerade_as(@driver, @teacher, @course)
       @engagement_index.load_page(@driver, @engagement_index_url)
       @engagement_index.search_for_user @student_1
       @initial_score = @engagement_index.user_score @student_1
@@ -266,7 +266,7 @@ describe 'Whiteboard', order: :defined do
       @score_with_export_whiteboard = @score_with_add_asset + @export_board_points.to_i
 
       # Create a whiteboard for tests
-      @canvas.masquerade_as(@student_1, @course)
+      @canvas.masquerade_as(@driver, @student_1, @course)
       @whiteboards.load_page(@driver, @whiteboards_url)
       @whiteboards.create_and_open_whiteboard(@driver, @whiteboard)
     end
@@ -288,7 +288,7 @@ describe 'Whiteboard', order: :defined do
     end
 
     it 'as a new asset earns "Export a whiteboard to the Asset Library" points' do
-      @canvas.masquerade_as(@teacher, @course)
+      @canvas.masquerade_as(@driver, @teacher, @course)
       @engagement_index.load_page(@driver, @engagement_index_url)
       @engagement_index.search_for_user @student_1
       expect(@engagement_index.user_score @student_1).to eql("#{@score_with_export_whiteboard}")
@@ -301,7 +301,7 @@ describe 'Whiteboard', order: :defined do
     end
 
     it 'as a PNG download is possible if the whiteboard has assets' do
-      @canvas.masquerade_as(@student_1, @course)
+      @canvas.masquerade_as(@driver, @student_1, @course)
       @whiteboards.load_page(@driver, @whiteboards_url)
       @whiteboards.open_whiteboard(@driver, @whiteboard)
       @whiteboards.download_as_image
@@ -309,7 +309,7 @@ describe 'Whiteboard', order: :defined do
     end
 
     it 'as a PNG download earns no "Export a whiteboard to the Asset Library" points' do
-      @canvas.masquerade_as(@teacher, @course)
+      @canvas.masquerade_as(@driver, @teacher, @course)
       @engagement_index.load_page(@driver, @engagement_index_url)
       @engagement_index.search_for_user @student_1
       expect(@engagement_index.user_score @student_1).to eql("#{@score_with_export_whiteboard}")
@@ -320,7 +320,7 @@ describe 'Whiteboard', order: :defined do
 
     before(:all) do
       asset_detail_test_id = "#{Time.now.to_i}"
-      @canvas.masquerade_as(@teacher, @course)
+      @canvas.masquerade_as(@driver, @teacher, @course)
       @asset = Asset.new(@teacher.assets.find { |asset| asset['type'] == 'File' })
       @asset_library.load_page(@driver, @asset_library_url)
       @asset_library.upload_file_to_library @asset
@@ -347,7 +347,8 @@ describe 'Whiteboard', order: :defined do
 
       # Delete the resulting asset for one of the boards
       @asset_library.load_page(@driver, @asset_library_url)
-      @asset_library.wait_for_page_load_and_click @asset_library.list_view_asset_link_elements.first
+      @asset_library.wait_until(Utils.medium_wait) { @asset_library.list_view_asset_link_elements.any? }
+      @asset_library.wait_for_load_and_click_js @asset_library.list_view_asset_link_elements.first
       @asset_library.delete_asset
 
       # Load the asset's detail
@@ -367,7 +368,7 @@ describe 'Whiteboard', order: :defined do
     end
 
     it 'links to the whiteboard asset detail' do
-      @asset_library.detail_view_used_in_elements.first.click
+      @asset_library.wait_for_update_and_click_js @asset_library.detail_view_used_in_elements.first
       @asset_library.wait_until(timeout) { @asset_library.detail_view_asset_title == @whiteboard_exported.title }
     end
   end

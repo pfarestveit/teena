@@ -31,13 +31,13 @@ module Page
       # Clicks the create course site button and waits for the page to load
       # @param course_site_page [Page::CalCentralPages::CanvasCreateCourseSitePage]
       def click_create_course_site(course_site_page)
-        wait_for_page_update_and_click create_course_site_link_element
+        wait_for_load_and_click create_course_site_link_element
         course_site_page.page_heading_element.when_visible Utils.medium_wait
       end
 
       # Clicks the create project site button
       def click_create_project_site
-        wait_for_page_update_and_click create_project_site_link_element
+        wait_for_update_and_click_js create_project_site_link_element
       end
 
     end

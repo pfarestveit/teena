@@ -45,21 +45,21 @@ module Page
       # @param driver [Selenium::WebDriver]
       def click_roster_photos_link(driver)
         logger.info 'Clicking Roster Photos link'
-        wait_for_page_load_and_click roster_photos_link_element
+        wait_for_load_and_click_js roster_photos_link_element
         switch_to_canvas_iframe driver
       end
 
       # Enters a string in the search input and pauses for DOM update
       # @param string [String]
       def filter_by_string(string)
-        wait_for_element_and_type(search_input_element, string)
+        wait_for_element_and_type_js(search_input_element, string)
         sleep 1
       end
 
       # Selects a section and pauses for DOM update
       # @param section [Section]
       def filter_by_section(section)
-        wait_for_page_update_and_click section_select_element
+        wait_for_update_and_click_js section_select_element
         self.section_select = "#{section.course} #{section.label}"
         sleep 1
       end
@@ -70,7 +70,7 @@ module Page
       def export_roster(course)
         logger.info "Downloading roster CSV for course ID #{course.site_id}"
         Utils.prepare_download_dir
-        wait_for_page_update_and_click export_roster_link_element
+        wait_for_update_and_click_js export_roster_link_element
         export_roster_link
         csv_file_path = "#{Utils.download_dir}/course_#{course.site_id}_rosters.csv"
         wait_until { Dir[csv_file_path].any? }

@@ -21,8 +21,8 @@ module Page
     # Opens the Profile popover and clicks the log out link
     def click_log_out_link
       logger.info 'Logging out of CalCentral'
-      wait_for_page_load_and_click profile_icon_element unless log_out_link_element.visible?
-      wait_for_page_update_and_click log_out_link_element
+      wait_for_load_and_click_js profile_icon_element unless log_out_link_element.visible?
+      wait_for_update_and_click_js log_out_link_element
     end
 
     # Logs the user out if the user is logged in
