@@ -57,7 +57,7 @@ module Page
       # @param course [Course]
       def choose_term(course)
         button_element(xpath: "//label[contains(.,'#{course.term}')]/preceding-sibling::input").when_visible Utils.medium_wait
-        click_element_js button_element(xpath: "//label[contains(.,'#{course.term}')]/preceding-sibling::input")
+        wait_for_update_and_click_js button_element(xpath: "//label[contains(.,'#{course.term}')]/preceding-sibling::input")
       end
 
       # Searches for a course by instructor UID, by section ID list, or by neither depending on the workflow associated
@@ -71,8 +71,8 @@ module Page
           uid = instructor.uid
           logger.debug "Searching by instructor UID #{uid}"
           switch_mode unless switch_to_ccn?
-          wait_for_element_and_type(instructor_uid_element, uid)
-          wait_for_page_update_and_click as_instructor_button_element
+          wait_for_element_and_type_js(instructor_uid_element, uid)
+          wait_for_update_and_click_js as_instructor_button_element
           choose_term course
         elsif course.create_site_workflow == 'ccn'
           logger.debug 'Searching by CCN list'
@@ -81,8 +81,8 @@ module Page
           sleep 1
           ccn_list = sections.map { |section| section.id }
           logger.debug "CCN list is '#{ccn_list}'"
-          wait_for_element_and_type(ccn_list_element, ccn_list.join(', '))
-          click_element_js review_ccns_button_element
+          wait_for_element_and_type_js(ccn_list_element, ccn_list.join(', '))
+          wait_for_update_and_click_js review_ccns_button_element
         else
           logger.debug 'Searching as the instructor'
           choose_term course
@@ -98,7 +98,7 @@ module Page
       # @param course [Course]
       def toggle_course_sections(course)
         button = button_element(xpath: "//button[contains(@aria-label,'#{course.title}')]")
-        wait_for_page_update_and_click button
+        wait_for_update_and_click_js button
       end
 
       # Given a section ID, returns a hash of section data displayed on that row
@@ -128,7 +128,7 @@ module Page
       def select_sections(sections)
         sections.each do |section|
           logger.debug "Selecting section ID #{section.id}"
-          section_checkbox(section.id).check
+          wait_for_update_and_click_js section_checkbox(section.id) unless section_checkbox(section.id).checked?
         end
       end
 
@@ -191,7 +191,7 @@ module Page
       # Clicks the 'next' button once it is enabled
       def click_next
         wait_until(Utils.short_wait) { !next_button_element.attribute('disabled') }
-        next_button
+        wait_for_update_and_click_js next_button_element
         site_name_input_element.when_visible Utils.medium_wait
       end
 
@@ -200,14 +200,14 @@ module Page
       # @return [String]
       def enter_site_titles(course)
         site_abbreviation = "QA bCourses Test #{Utils.get_test_id}"
-        wait_for_element_and_type(site_name_input_element, "#{site_abbreviation} - #{course.code}")
-        wait_for_element_and_type(site_abbreviation_element, site_abbreviation)
+        wait_for_element_and_type_js(site_name_input_element, "#{site_abbreviation} - #{course.code}")
+        wait_for_element_and_type_js(site_abbreviation_element, site_abbreviation)
         site_abbreviation
       end
 
       # Clicks the final create site button
       def click_create_site
-        wait_for_page_update_and_click create_site_button_element
+        wait_for_update_and_click_js create_site_button_element
       end
 
       # Combines methods to search for a course, select sections, and create a new site

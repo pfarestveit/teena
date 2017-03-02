@@ -34,18 +34,18 @@ describe 'An asset comment', order: :defined do
     @engagement_index = Page::SuiteCPages::EngagementIndexPage.new @driver
 
     @canvas.log_in(@cal_net, Utils.super_admin_username, Utils.super_admin_password)
-    @canvas.get_suite_c_test_course(@course, [@teacher, @asset_uploader, @asset_admirer], test_id, [SuiteCTools::ASSET_LIBRARY, SuiteCTools::ENGAGEMENT_INDEX])
+    @canvas.get_suite_c_test_course(@driver, @course, [@teacher, @asset_uploader, @asset_admirer], test_id, [SuiteCTools::ASSET_LIBRARY, SuiteCTools::ENGAGEMENT_INDEX])
 
     @asset_library_url = @canvas.click_tool_link(@driver, SuiteCTools::ASSET_LIBRARY)
     @engagement_index_url = @canvas.click_tool_link(@driver, SuiteCTools::ENGAGEMENT_INDEX)
 
     # Upload a new asset for the test
-    @canvas.masquerade_as(@asset_uploader, @course)
+    @canvas.masquerade_as(@driver, @asset_uploader, @course)
     @asset_library.load_page(@driver, @asset_library_url)
     @asset_library.add_site @asset
 
     # Get the users' initial scores
-    @canvas.masquerade_as(@teacher, @course)
+    @canvas.masquerade_as(@driver, @teacher, @course)
     @engagement_index.load_scores(@driver, @engagement_index_url)
     @uploader_score = @engagement_index.user_score @asset_uploader
     @admirer_score = @engagement_index.user_score @asset_admirer
@@ -56,7 +56,7 @@ describe 'An asset comment', order: :defined do
   context 'by the asset uploader' do
 
     it 'can be added on the detail view' do
-      @canvas.masquerade_as(@asset_uploader, @course)
+      @canvas.masquerade_as(@driver, @asset_uploader, @course)
       @asset_library.load_asset_detail(@driver, @asset_library_url, @asset)
       @asset_library.add_comment comment_1_by_uploader
       @asset_library.wait_until(timeout) { @asset_library.comment_elements.length == 1 }
@@ -81,7 +81,7 @@ describe 'An asset comment', order: :defined do
     end
 
     it 'does not earn commenting points on the engagement index' do
-      @canvas.masquerade_as(@teacher, @course)
+      @canvas.masquerade_as(@driver, @teacher, @course)
       @engagement_index.load_page(@driver, @engagement_index_url)
       @engagement_index.search_for_user @asset_uploader
       expect(@engagement_index.user_score @asset_uploader).to eql(@uploader_score)
@@ -91,7 +91,7 @@ describe 'An asset comment', order: :defined do
   context 'by a user who is not the asset creator' do
 
     before(:all) do
-      @canvas.masquerade_as(@asset_admirer, @course)
+      @canvas.masquerade_as(@driver, @asset_admirer, @course)
     end
 
     it 'can be added on the detail view' do
@@ -146,7 +146,7 @@ describe 'An asset comment', order: :defined do
     end
 
     it 'earns "Comment" points on the engagement index for the user adding a comment or reply' do
-      @canvas.masquerade_as(@teacher, @course)
+      @canvas.masquerade_as(@driver, @teacher, @course)
       @engagement_index.load_page(@driver, @engagement_index_url)
       @engagement_index.search_for_user @asset_admirer
       expect(@engagement_index.user_score @asset_admirer).to eql((@admirer_score.to_i + (Activities::COMMENT.points * 3)).to_s)
@@ -177,7 +177,7 @@ describe 'An asset comment', order: :defined do
   context 'by any user' do
 
     it 'can include a link that opens in a new browser window' do
-      @canvas.masquerade_as(@asset_admirer, @course)
+      @canvas.masquerade_as(@driver, @asset_admirer, @course)
       @asset_library.load_asset_detail(@driver, @asset_library_url, @asset)
       @asset_library.add_comment comment_3_by_viewer
       @asset_library.wait_until(timeout) { @asset_library.comment_elements.count == 6 }
@@ -195,7 +195,7 @@ describe 'An asset comment', order: :defined do
       @asset_library.load_asset_detail(@driver, @asset_library_url, @asset)
       @asset_library.click_reply_button 0
       @asset_library.reply_input_element(0).when_visible timeout
-      @asset_library.cancel_button_element(0).click
+      @asset_library.wait_for_update_and_click_js @asset_library.cancel_button_element(0)
       @asset_library.reply_input_element(0).when_not_visible timeout
     end
   end
@@ -224,7 +224,7 @@ describe 'An asset comment', order: :defined do
     end
 
     it 'can be done to any comment when the user is a teacher' do
-      @canvas.masquerade_as(@teacher, @course)
+      @canvas.masquerade_as(@driver, @teacher, @course)
       @asset_library.load_asset_detail(@driver, @asset_library_url, @asset)
       expect(@asset_library.edit_button_element(0).exists?).to be true
       expect(@asset_library.edit_button_element(1).exists?).to be true
@@ -238,7 +238,7 @@ describe 'An asset comment', order: :defined do
       @asset_library.load_asset_detail(@driver, @asset_library_url, @asset)
       @asset_library.click_edit_button 1
       @asset_library.edit_input_element(1).when_visible timeout
-      @asset_library.cancel_button_element(1).click
+      @asset_library.wait_for_update_and_click_js @asset_library.cancel_button_element(1)
       @asset_library.edit_input_element(1).when_not_visible timeout
     end
 
@@ -254,7 +254,7 @@ describe 'An asset comment', order: :defined do
   describe 'deletion' do
 
     it 'can be done by a student who created the comment' do
-      @canvas.masquerade_as(@asset_admirer, @course)
+      @canvas.masquerade_as(@driver, @asset_admirer, @course)
       @asset_library.load_asset_detail(@driver, @asset_library_url, @asset)
       @asset_library.delete_comment 0
       @asset_library.wait_until(timeout) { @asset_library.comment_elements.count == 5 }
@@ -275,7 +275,7 @@ describe 'An asset comment', order: :defined do
     end
 
     it 'can be done when the user is a teacher unless the comment has replies' do
-      @canvas.masquerade_as(@teacher, @course)
+      @canvas.masquerade_as(@driver, @teacher, @course)
       @asset_library.load_asset_detail(@driver, @asset_library_url, @asset)
       @asset_library.wait_until(timeout) { @asset_library.comment_elements.count == 5 }
       expect(@asset_library.delete_button_element(0).exists?).to be false

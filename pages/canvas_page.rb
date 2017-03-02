@@ -40,31 +40,35 @@ module Page
     # @param cal_net [Page::CalNetPage]
     def log_out(driver, cal_net)
       driver.switch_to.default_content
-      wait_for_page_update_and_click profile_link_element
-      wait_for_page_update_and_click profile_form_element
-      wait_for_page_update_and_click logout_link_element if logout_link_element.exists?
+      wait_for_update_and_click_js profile_link_element
+      wait_for_update_and_click_js profile_form_element
+      wait_for_update_and_click_js logout_link_element if logout_link_element.exists?
       cal_net.logout_conf_heading_element.when_visible
     end
 
     # Masquerades as a user and then loads a course site
+    # @param driver [Selenium::WebDriver]
     # @param user [User]
     # @param course [Course]
-    def masquerade_as(user, course = nil)
+    def masquerade_as(driver, user, course = nil)
       load_homepage
-      stop_masquerading if stop_masquerading_link?
+      stop_masquerading(driver) if stop_masquerading_link?
       logger.info "Masquerading as #{user.role} UID #{user.uid}"
       navigate_to "#{Utils.canvas_base_url}/users/#{user.canvas_id.to_s}/masquerade"
-      wait_for_page_load_and_click masquerade_link_element
+      wait_for_load_and_click_js masquerade_link_element
       stop_masquerading_link_element.when_visible
-      load_course_site course unless course.nil?
+      load_course_site(driver, course) unless course.nil?
     end
 
     # Quits masquerading as another user
-    def stop_masquerading
+    # @param driver [Selenium::WebDriver]
+    def stop_masquerading(driver)
       logger.debug 'Ending masquerade'
       load_homepage
-      wait_for_page_load_and_click stop_masquerading_link_element
-      stop_masquerading_link_element.when_not_visible Utils.medium_wait
+      wait_for_load_and_click_js stop_masquerading_link_element
+      ("#{driver.browser}" == 'chrome') ?
+          stop_masquerading_link_element.when_not_visible(Utils.medium_wait) :
+          stop_masquerading_link_element.when_not_present(Utils.medium_wait)
     end
 
     # Loads the QA sub-account page
@@ -131,13 +135,14 @@ module Page
     # Clicks the 'create a site' button for the Junction LTI tool
     # @param driver [Selenium::WebDriver]
     def click_create_site(driver)
-      wait_for_page_load_and_click create_site_link_element
+      wait_for_load_and_click create_site_link_element
       switch_to_canvas_iframe driver
     end
 
     # Loads a course site and handles prompts that can appear
+    # @param driver [Selenium::WebDriver]
     # @param course [Course]
-    def load_course_site(course)
+    def load_course_site(driver, course)
       navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}"
       wait_until { current_url.include? "#{course.site_id}" }
       if updated_terms_heading?
@@ -146,11 +151,13 @@ module Page
         check_terms_cbx
         submit_button
       end
-      div_element(id: 'content').when_visible Utils.medium_wait
+      div_element(id: 'content').when_present Utils.medium_wait
       if accept_course_invite?
         logger.info 'Accepting course invite'
         accept_course_invite
-        accept_course_invite_element.when_not_visible Utils.medium_wait
+        ("#{driver.browser}" == 'chrome') ?
+            accept_course_invite_element.when_not_visible(Utils.medium_wait) :
+            accept_course_invite_element.when_not_present(Utils.medium_wait)
       end
     end
 
@@ -193,17 +200,18 @@ module Page
             tries ||= 3
             logger.info "Adding users with role #{user_role}"
             load_users_page course
-            wait_for_page_load_and_click add_people_button_element
+            wait_for_load_and_click add_people_button_element
             add_user_by_uid_element.when_visible Utils.short_wait
             sleep 1
             check_add_user_by_uid
-            wait_for_element_and_type(user_list_element, users)
+            wait_for_element_and_type_js(user_list_element, users)
             self.user_role = user_role
-            next_button
+            wait_for_update_and_click_js next_button_element
             users_ready_to_add_msg_element.when_visible Utils.medium_wait
             hide_footer
-            wait_for_page_update_and_click next_button_element
-            5.times { scroll_to_bottom }
+            wait_for_update_and_click_js next_button_element
+            # Scroll down so that all users load on the page
+            5.times { scroll_to_bottom; sleep 1 }
             users_with_role.each { |user| cell_element(xpath: "//tr[contains(@id,'#{user.canvas_id}')]").when_present Utils.short_wait }
           rescue => e
             logger.error "#{e.message}\n#{e.backtrace}"
@@ -229,15 +237,15 @@ module Page
       rescue
         retry unless (tries -=1).zero?
       end
-      wait_for_page_update_and_click link
-      confirm(true) { wait_for_page_update_and_click link_element(xpath: "//tr[@id='user_#{user.canvas_id}']//a[@data-event='removeFromCourse']") }
+      wait_for_update_and_click link
+      confirm(true) { wait_for_update_and_click link_element(xpath: "//tr[@id='user_#{user.canvas_id}']//a[@data-event='removeFromCourse']") }
       remove_user_success_element.when_visible Utils.short_wait
     end
 
     # Searches for a user by Canvas user ID
     # @param user [User]
     def search_user_by_canvas_id(user)
-      wait_for_element_and_type(search_user_input_element, user.canvas_id)
+      wait_for_element_and_type_js(search_user_input_element, user.canvas_id)
       sleep 1
     end
 
@@ -266,8 +274,8 @@ module Page
     # @param driver [Selenium::WebDriver]
     def click_find_person_to_add(driver)
       logger.debug 'Clicking Find a Person to Add button'
-      wait_for_page_load_and_click add_people_button_element
-      wait_for_page_load_and_click find_person_to_add_link_element
+      wait_for_load_and_click_js add_people_button_element
+      wait_for_load_and_click_js find_person_to_add_link_element
       switch_to_canvas_iframe driver
     end
 
@@ -296,7 +304,7 @@ module Page
     # @return Integer
     def enrollment_count_by_role(course, role)
       load_users_page course
-      wait_for_page_load_and_click enrollment_roles_element
+      wait_for_load_and_click_js enrollment_roles_element
       role_option = enrollment_roles_options.find { |option| option.include? role }
       count = role_option.delete("#{role} ()").to_i
       logger.debug "The count of #{role} users is currently #{count}"
@@ -309,85 +317,89 @@ module Page
     def reset_user_email(course, test_users)
       test_users.each do |user|
         navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/users/#{user.canvas_id}"
-        default_email_element.when_visible Utils.short_wait
+        default_email_element.when_present Utils.short_wait
         if default_email == user.email
           logger.debug "Test user '#{user.full_name}' already has an updated default email"
         else
           logger.debug "Resetting test user #{user.full_name}'s email to #{user.email}"
-          wait_for_page_load_and_click edit_user_link_element
-          wait_for_element_and_type(user_email_element, user.email)
-          wait_for_page_update_and_click update_details_button_element
-          default_email_element.when_visible Utils.short_wait
+          wait_for_load_and_click_js edit_user_link_element
+          wait_for_element_and_type_js(user_email_element, user.email)
+          wait_for_update_and_click_js update_details_button_element
+          default_email_element.when_present Utils.short_wait
         end
       end
     end
 
     # Publishes a course site
+    # @param driver [Selenium::WebDriver]
     # @param course [Course]
-    def publish_course_site(course)
+    def publish_course_site(driver, course)
       logger.info 'Publishing the course'
-      load_course_site course
-      publish_div_element.when_visible Utils.short_wait
-      wait_for_page_update_and_click publish_button_element unless published_button?
-      published_button_element.when_visible Utils.medium_wait
+      load_course_site(driver, course)
+      publish_div_element.when_present Utils.short_wait
+      wait_for_update_and_click_js publish_button_element unless published_button?
+      published_button_element.when_present Utils.medium_wait
     end
 
     # Creates standard Canvas course site, publishes it, and adds test users.
+    # @param driver [Selenium::WebDriver]
     # @param course [Course]
     # @param test_users [Array<User>]
     # @param test_id [String]
-    def create_generic_course_site(course, test_users, test_id)
+    def create_generic_course_site(driver, course, test_users, test_id)
       if course.site_id.nil?
         load_sub_account
-        wait_for_page_load_and_click add_new_course_button_element
+        wait_for_load_and_click_js add_new_course_button_element
         course_name_input_element.when_visible Utils.short_wait
         course.title = "QA Test - #{test_id}" if course.title.nil?
         course.code = "QA #{test_id} LEC001" if course.code.nil?
         self.course_name_input = "#{course.title}"
         self.ref_code_input = "#{course.code}"
         logger.info "Creating a course site named #{course.title} in #{course.term} semester"
-        wait_for_page_update_and_click create_course_button_element
+        wait_for_update_and_click_js create_course_button_element
         add_course_success_element.when_visible Utils.medium_wait
         course.site_id = search_for_course test_id
         unless course.term.nil?
           navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/settings"
-          wait_for_element_and_select(term_element, course.term)
-          wait_for_page_update_and_click update_course_button_element
+          wait_for_element_and_select_js(term_element, course.term)
+          wait_for_update_and_click_js update_course_button_element
           update_course_success_element.when_visible Utils.medium_wait
         end
       end
-      publish_course_site course
+      publish_course_site(driver, course)
       logger.info "Course site URL is #{current_url}"
       current_url.sub("#{Utils.canvas_base_url}/courses/", '')
       logger.info "Course ID is #{course.site_id}"
       add_users(course, test_users)
-      load_course_site course
+      load_course_site(driver, course)
     end
 
     # Creates standard course site and then customizes it for SuiteC testing by setting test user emails and adding
     # SuiteC tools required for the test
+    # @param driver [Selenium::WebDriver]
     # @param course [Course]
     # @param test_users [Array<User>]
     # @param test_id [String]
     # @param tools [Array<SuiteCTools>]
-    def get_suite_c_test_course(course, test_users, test_id, tools)
+    def get_suite_c_test_course(driver, course, test_users, test_id, tools)
       course.title = "QA SuiteC Test #{test_id}" if course.site_id.nil?
-      create_generic_course_site(course, test_users, test_id)
+      create_generic_course_site(driver, course, test_users, test_id)
       reset_user_email(course, test_users)
       tools.each { |tool| add_suite_c_tool(course, tool) unless tool_nav_link(tool).exists? }
-      load_course_site course
+      load_course_site(driver, course)
     end
 
     button(:delete_course_button, xpath: '//button[text()="Delete Course"]')
     li(:delete_course_success, xpath: '//li[contains(.,"successfully deleted")]')
 
     # Deletes a course site
+    # @param driver [Selenium::WebDriver]
     # @param course [Course]
     def delete_course(driver, course)
       driver.switch_to.default_content
-      stop_masquerading if stop_masquerading_link?
+      stop_masquerading(driver) if stop_masquerading_link?
       navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/confirm_action?event=delete"
-      wait_for_page_load_and_click delete_course_button_element
+      wait_for_load_and_click_js delete_course_button_element
       delete_course_success_element.when_visible Utils.medium_wait
       logger.info "Course id #{course.site_id} has been deleted"
     end
@@ -426,15 +438,15 @@ module Page
 
       # Load the new tool configuration UI
       load_tools_config_page course
-      wait_for_page_update_and_click apps_link_element
-      wait_for_page_update_and_click add_app_link_element
-      wait_for_element_and_select(config_type_element, 'By URL')
+      wait_for_update_and_click apps_link_element
+      wait_for_update_and_click add_app_link_element
+      wait_for_element_and_select_js(config_type_element, 'By URL')
       # Use JS to select the option too since the WebDriver method is not working consistently
       execute_script('document.getElementById("configuration_type_selector").value = "url";')
       sleep 1
 
       # Enter the tool config
-      wait_for_page_update_and_click app_name_input_element
+      wait_for_update_and_click_js app_name_input_element
       self.app_name_input = "#{tool.name}"
       self.key_input = Utils.lti_key
       self.secret_input = Utils.lti_secret
@@ -444,10 +456,10 @@ module Page
 
       # Move the tool from disabled to enabled
       load_tools_config_page course
-      wait_for_page_update_and_click navigation_link_element
+      wait_for_update_and_click navigation_link_element
       hide_footer
-      wait_for_page_update_and_click link_element(xpath: "//ul[@id='nav_disabled_list']/li[contains(.,'#{tool.name}')]//a")
-      wait_for_page_update_and_click link_element(xpath: "//ul[@id='nav_disabled_list']/li[contains(.,'#{tool.name}')]//a[@title='Enable this item']")
+      wait_for_update_and_click_js link_element(xpath: "//ul[@id='nav_disabled_list']/li[contains(.,'#{tool.name}')]//a")
+      wait_for_update_and_click_js link_element(xpath: "//ul[@id='nav_disabled_list']/li[contains(.,'#{tool.name}')]//a[@title='Enable this item']")
       list_item_element(xpath: "//ul[@id='nav_enabled_list']/li[contains(.,'#{tool.name}')]").when_visible Utils.medium_wait
       save_app_nav_button
       tool_nav_link(tool).when_visible Utils.medium_wait
@@ -460,8 +472,8 @@ module Page
     def click_tool_link(driver, tool)
       driver.switch_to.default_content
       hide_footer
-      scroll_to_bottom
-      wait_for_page_update_and_click tool_nav_link(tool)
+      wait_for_update_and_click_js tool_nav_link(tool)
+      wait_until(Utils.medium_wait) { title == "#{tool.name}" }
       logger.info "#{tool.name} URL is #{current_url}"
       current_url.delete '#'
     end
@@ -479,10 +491,11 @@ module Page
     def create_announcement(course, announcement)
       logger.info "Creating announcement: #{announcement.title}"
       navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/discussion_topics/new?is_announcement=true"
-      wait_for_element_and_type(discussion_title_element, announcement.title)
+      discussion_title_element.when_present Utils.short_wait
+      discussion_title_element.send_keys announcement.title
       html_editor_link if html_editor_link_element.visible?
-      wait_for_element_and_type(announcement_msg_element, announcement.body)
-      wait_for_page_update_and_click save_announcement_button_element
+      wait_for_element_and_type_js(announcement_msg_element, announcement.body)
+      wait_for_update_and_click_js save_announcement_button_element
       announcement_title_heading_element.when_visible Utils.medium_wait
       logger.info "Announcement URL is #{current_url}"
       announcement.url = current_url.gsub!('discussion_topics', 'announcements')
@@ -507,18 +520,20 @@ module Page
     # Clicks the 'save and publish' button using JavaScript rather than WebDriver
     def click_save_and_publish
       scroll_to_bottom
-      click_element_js save_and_publish_button_element
+      wait_for_update_and_click_js save_and_publish_button_element
     end
 
     # Creates a discussion on a course site
+    # @param driver [Selenium::WebDriver]
     # @param course [Course]
     # @param discussion [Discussion]
-    def create_discussion(course, discussion)
+    def create_discussion(driver, course, discussion)
       logger.info "Creating discussion topic named '#{discussion.title}'"
-      load_course_site course
+      load_course_site(driver, course)
       navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/discussion_topics"
-      wait_for_page_load_and_click new_discussion_link_element
-      wait_for_element_and_type(discussion_title_element, discussion.title)
+      wait_for_load_and_click new_discussion_link_element
+      discussion_title_element.when_present Utils.short_wait
+      discussion_title_element.send_keys discussion.title
       check_threaded_discussion_cbx
       click_save_and_publish
       published_button_element.when_visible Utils.medium_wait
@@ -535,21 +550,21 @@ module Page
       navigate_to discussion.url
       if index.nil?
         logger.info "Creating new discussion entry with body '#{reply_body}'"
-        wait_for_page_load_and_click primary_reply_link_element
+        wait_for_load_and_click primary_reply_link_element
         primary_html_editor_link if primary_html_editor_link_element.visible?
-        wait_for_element_and_type(primary_reply_input_element, reply_body)
+        wait_for_element_and_type_js(primary_reply_input_element, reply_body)
         replies = discussion_reply_elements.length
         primary_post_reply_button
       else
         logger.info "Replying to a discussion entry at index #{index} with body '#{reply_body}'"
         wait_until { secondary_reply_link_elements.any? }
-        wait_for_page_load_and_click secondary_reply_link_elements[index]
-        secondary_html_editor_link_elements[index].click if secondary_html_editor_link_elements[index].visible?
+        wait_for_load_and_click_js secondary_reply_link_elements[index]
+        wait_for_update_and_click_js(secondary_html_editor_link_elements[index]) if secondary_html_editor_link_elements[index].visible?
         wait_until(Utils.short_wait) { secondary_reply_input_elements.any? }
-        wait_for_element_and_type(secondary_reply_input_elements[index], reply_body)
+        wait_for_element_and_type_js(secondary_reply_input_elements[index], reply_body)
         replies = discussion_reply_elements.length
         hide_footer
-        secondary_post_reply_button_elements[index].click
+        wait_for_update_and_click_js secondary_post_reply_button_elements[index]
       end
       wait_until(Utils.short_wait) { discussion_reply_elements.length == replies + 1 }
     end
@@ -581,10 +596,12 @@ module Page
     def create_assignment(course, assignment)
       logger.info "Creating submission assignment named '#{assignment.title}'"
       navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/assignments/new"
-      wait_for_element_and_type(assignment_name_element, assignment.title)
-      wait_for_element_and_type(assignment_due_date_element, assignment.due_date.strftime("%b %-d %Y")) unless assignment.due_date.nil?
+      assignment_name_element.when_visible Utils.medium_wait
+      assignment_name_element.send_keys assignment.title
+      wait_for_element_and_type_js(assignment_due_date_element, assignment.due_date.strftime("%b %-d %Y")) unless assignment.due_date.nil?
       assignment_type_element.when_visible Utils.medium_wait
-      self.assignment_type = 'Online'
+      scroll_to_bottom
+      wait_for_element_and_select_js(assignment_type_element, 'Online')
       online_url_cbx_element.when_visible Utils.short_wait
       check_online_url_cbx
       check_online_upload_cbx
@@ -601,17 +618,17 @@ module Page
     def submit_assignment(assignment, user, submission)
       logger.info "Submitting #{submission.title} for #{user.full_name}"
       navigate_to assignment.url
-      wait_for_page_load_and_click submit_assignment_link_element
+      wait_for_load_and_click_js submit_assignment_link_element
       case submission.type
         when 'File'
           file_upload_input_element.when_visible Utils.short_wait
           self.file_upload_input_element.send_keys Utils.test_data_file_path(submission.file_name)
-          wait_for_page_update_and_click file_upload_submit_button_element
+          wait_for_update_and_click_js file_upload_submit_button_element
         when 'Link'
-          wait_for_page_update_and_click assignment_site_url_tab_element
+          wait_for_update_and_click_js assignment_site_url_tab_element
           url_upload_input_element.when_visible Utils.short_wait
           self.url_upload_input = submission.url
-          wait_for_page_update_and_click url_upload_submit_button_element
+          wait_for_update_and_click_js url_upload_submit_button_element
         else
           logger.error 'Unsupported submission type in test data'
       end

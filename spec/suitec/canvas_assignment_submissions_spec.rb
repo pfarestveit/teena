@@ -25,21 +25,21 @@ describe 'Canvas assignment submission', order: :defined do
 
     # Create course site if necessary. If an existing site, then ensure Canvas sync is enabled.
     @canvas.log_in(@cal_net, Utils.super_admin_username, Utils.super_admin_password)
-    @canvas.get_suite_c_test_course(@course, users, test_id, [SuiteCTools::ASSET_LIBRARY, SuiteCTools::ENGAGEMENT_INDEX])
+    @canvas.get_suite_c_test_course(@driver, @course, users, test_id, [SuiteCTools::ASSET_LIBRARY, SuiteCTools::ENGAGEMENT_INDEX])
     @asset_library_url = @canvas.click_tool_link(@driver, SuiteCTools::ASSET_LIBRARY)
     @engagement_index_url = @canvas.click_tool_link(@driver, SuiteCTools::ENGAGEMENT_INDEX)
     @asset_library.ensure_canvas_sync(@driver, @asset_library_url) unless course_id.nil?
 
     # Create assignment
     @assignment = Assignment.new("Submission Assignment #{test_id}", nil)
-    @canvas.masquerade_as(@teacher, @course)
+    @canvas.masquerade_as(@driver, @teacher, @course)
     @canvas.create_assignment(@course, @assignment)
 
     # Enable Canvas assignment sync
     @asset_library.wait_for_canvas_category(@driver, @asset_library_url, @assignment)
     @asset_library.enable_assignment_sync @assignment
     @asset_library.pause_for_poller
-    @canvas.stop_masquerading
+    @canvas.stop_masquerading @driver
 
     # Submit assignment
     submissions = []
@@ -54,9 +54,9 @@ describe 'Canvas assignment submission', order: :defined do
         logger.debug "The initial score for #{student.full_name} is #{@initial_score}"
 
         # Submit assignment
-        @canvas.masquerade_as(student, @course)
+        @canvas.masquerade_as(@driver, student, @course)
         @canvas.submit_assignment(@assignment, student, @asset)
-        @canvas.stop_masquerading
+        @canvas.stop_masquerading @driver
 
         @asset.title = @asset_library.get_canvas_submission_title @asset
         asset_title = @asset.title

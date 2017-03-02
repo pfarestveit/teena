@@ -20,7 +20,7 @@ module Page
     element.when_visible timeout
   end
 
-  # Waits for an element to appear then clicks it
+  # Awaits an element for a given timeout then clicks it using WebDriver click method.
   # @param element [PageObject::Elements::Element]
   # @param timeout [Fixnum]
   def click_element(element, timeout)
@@ -28,44 +28,67 @@ module Page
     element.click
   end
 
-  # Awaits an element for a short time then clicks it. Intended for DOM updates rather than page loads.
+  # Awaits an element for a given timeout then clicks it using JavaScript.
   # @param element [PageObject::Elements::Element]
-  def wait_for_page_update_and_click(element)
+  # @param timeout [Fixnum]
+  def click_element_js(element, timeout)
+    wait_for_element(element, timeout)
+    execute_script('arguments[0].click();', element)
+    sleep 1
+  end
+
+  # Awaits an element for a short time then clicks it using WebDriver. Intended for DOM updates rather than page loads.
+  # @param element [PageObject::Elements::Element]
+  def wait_for_update_and_click(element)
     click_element(element, Utils.short_wait)
   end
 
-  # Awaits an element for a moderate time then clicks it. Intended for page loads rather than DOM updates.
+  # Awaits an element for a short time then clicks it using JavaScript. Intended for DOM updates rather than page loads.
   # @param element [PageObject::Elements::Element]
-  def wait_for_page_load_and_click(element)
+  def wait_for_update_and_click_js(element)
+    click_element_js(element, Utils.short_wait)
+  end
+
+  # Awaits an element for a moderate time then clicks it using WebDriver. Intended for page loads rather than DOM updates.
+  # @param element [PageObject::Elements::Element]
+  def wait_for_load_and_click(element)
     click_element(element, Utils.medium_wait)
   end
 
-  # Awaits an element for a short time then clicks it using JavaScript rather than WebDriver. This is a workaround for a
-  # WebDriver bug impacting certain buttons.
+  # Awaits an element for a moderate time then clicks it using JavaScript. Intended for page loads rather than DOM updates.
   # @param element [PageObject::Elements::Element]
-  def click_element_js(element)
-    wait_for_element(element, Utils.short_wait)
-    execute_script('arguments[0].click();', element)
+  def wait_for_load_and_click_js(element)
+    click_element_js(element, Utils.medium_wait)
   end
 
-  # Awaits an element for a short time, clicks it, removes existing text, and sends new text. Intended for placing text
+  # Awaits an element for a short time, clicks it using WebDriver, removes existing text, and sends new text. Intended for placing text
   # in input or textarea elements.
   # @param element [PageObject::Elements::Element]
   # @param text [String]
   def wait_for_element_and_type(element, text)
-    wait_for_page_update_and_click element
+    wait_for_update_and_click element
     element.clear
     element.send_keys text
   end
 
-  # Awaits a select element for a short time, clicks it, waits for a certain option to appear, and selects that option.
+  # Awaits an element for a short time, clicks it using JavaScript, removes existing text, and sends new text. Intended for placing text
+  # in input or textarea elements.
+  # @param element [PageObject::Elements::Element]
+  # @param text [String]
+  def wait_for_element_and_type_js(element, text)
+    wait_for_update_and_click_js element
+    element.clear
+    element.send_keys text
+  end
+
+  # Awaits a select element for a short time, clicks it using JavaScript, waits for a certain option to appear, and selects that option.
   # @param select_element [PageObject::Elements::SelectList]
   # @param option [String]
-  def wait_for_element_and_select(select_element, option)
-    wait_for_element(select_element, Utils.medium_wait)
-    wait = Selenium::WebDriver::Wait.new timeout: Utils.short_wait
-    wait.until { select_element.include? option }
-    select_element.select option
+  def wait_for_element_and_select_js(select_element, option)
+    wait_for_update_and_click_js select_element
+    wait_until(Utils.short_wait) { (select_element.options.map { |o| o.text.strip }).include? option }
+    option_to_select = (select_element.options.find { |o| o.text.strip == option })
+    option_to_select.click
   end
 
   # Returns true if a code block completes without error.
@@ -86,10 +109,12 @@ module Page
   def external_link_valid?(driver, link, expected_page_title)
     begin
       original_window = driver.window_handle
-      link.click
+      wait_for_update_and_click_js link
+      sleep 2
       if driver.window_handles.length > 1
         driver.switch_to.window driver.window_handles.last
         wait_until { driver.find_element(xpath: "//title[contains(.,'#{expected_page_title}')]") }
+        logger.debug "Found new window with title '#{expected_page_title}'"
         true
       else
         logger.error 'Link did not open in a new window'

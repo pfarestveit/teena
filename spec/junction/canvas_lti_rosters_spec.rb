@@ -41,7 +41,7 @@ describe 'bCourses Roster Photos' do
     @splash_page.basic_auth teacher_1.uid
     if masquerade
       @canvas.log_in(@cal_net, Utils.super_admin_username, Utils.super_admin_password)
-      @canvas.masquerade_as teacher_1
+      @canvas.masquerade_as(@driver, teacher_1)
     else
       @canvas.log_in(@cal_net, Utils.ets_qa_username, Utils.ets_qa_password)
     end
@@ -56,7 +56,7 @@ describe 'bCourses Roster Photos' do
         @create_course_site_page.load_standalone_tool
       end
       @create_course_site_page.provision_course_site(course, teacher_1, sections_for_site)
-      @canvas.publish_course_site course if masquerade
+      @canvas.publish_course_site(@driver, course) if masquerade
     end
 
     # Get enrollment totals on site
@@ -94,7 +94,7 @@ describe 'bCourses Roster Photos' do
 
     before(:all) do
       if masquerade
-        @canvas.load_course_site course
+        @canvas.load_course_site(@driver, course)
         @roster_photos_page.click_roster_photos_link @driver
       else
         @roster_photos_page.load_standalone_tool course
@@ -117,7 +117,7 @@ describe 'bCourses Roster Photos' do
     it "shows UID #{teacher_1.uid} all sections by default on #{course.code} course site ID #{course.site_id}" do
       expected_section_codes = (sections_for_site.map { |section| "#{section.course} #{section.label}" }) << 'All Sections'
       actual_section_codes = @roster_photos_page.section_select_options
-      expect(actual_section_codes.sort).to eql(expected_section_codes.sort)
+      expect(actual_section_codes).to eql(expected_section_codes.sort)
     end
 
     it "allows UID #{teacher_1.uid} to filter by string on #{course.code} course site ID #{course.site_id}" do
@@ -161,7 +161,7 @@ describe 'bCourses Roster Photos' do
 
       it "allows a course #{user.role} with UID #{user.uid} to access the tool on #{course.code} course site ID #{course.site_id} if permitted to do so" do
         if masquerade
-          @canvas.masquerade_as(user, course)
+          @canvas.masquerade_as(@driver, user, course)
           @canvas.navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/external_tools/#{Utils.canvas_rosters_tool}"
         else
           @splash_page.basic_auth user.uid

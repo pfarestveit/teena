@@ -41,7 +41,9 @@ describe 'bCourses course site creation' do
 
         # Navigate to Create a Course Site page
         if masquerade
-          @canvas_page.masquerade_as @teacher unless %w(uid ccn).include?(@course.create_site_workflow)
+          @driver.switch_to.default_content
+          @canvas_page.stop_masquerading @driver if @canvas_page.stop_masquerading_link?
+          @canvas_page.masquerade_as(@driver, @teacher) unless %w(uid ccn).include?(@course.create_site_workflow)
           @canvas_page.load_homepage
           @canvas_page.click_create_site @driver
         else
@@ -121,20 +123,20 @@ describe 'bCourses course site creation' do
             has_roster_photos_link = @roster_photos_page.roster_photos_link?
             it ("shows a Roster Photos tool link in course site navigation for #{@course.term} #{@course.code} site ID #{@course.site_id}") { expect(has_roster_photos_link).to be true }
 
-            @canvas_page.masquerade_as(@teacher, @course)
+            @canvas_page.masquerade_as(@driver, @teacher, @course)
             @roster_photos_page.load_embedded_tool(@driver, @course)
           else
             @roster_photos_page.load_standalone_tool @course
           end
-          @roster_photos_page.wait_for_page_load_and_click @roster_photos_page.section_select_element
+          @roster_photos_page.wait_for_load_and_click_js @roster_photos_page.section_select_element
           expected_sections_on_site = (sections_for_site.map { |section| "#{section.course} #{section.label}" })
           actual_sections_on_site = @roster_photos_page.section_select_options
           actual_sections_on_site.delete 'All Sections'
-          it("shows the right section list on the Roster Photos tool for #{@course.term} #{@course.code} site ID #{@course.site_id}") { expect(actual_sections_on_site).to eql(expected_sections_on_site) }
+          it("shows the right section list on the Roster Photos tool for #{@course.term} #{@course.code} site ID #{@course.site_id}") { expect(actual_sections_on_site).to eql(expected_sections_on_site.sort) }
 
           # Verify course capture tool is not added automatically
           if masquerade
-            @canvas_page.load_course_site @course
+            @canvas_page.load_course_site(@driver, @course)
             has_course_captures_link = @course_captures_page.course_captures_link?
             it ("shows no Course Captures tool link in course site navigation for #{@course.term} #{@course.code} site ID #{@course.site_id}") { expect(has_course_captures_link).to be false }
           end

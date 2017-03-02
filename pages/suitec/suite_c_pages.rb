@@ -49,17 +49,16 @@ module Page
     # @param asset [Asset]
     def enter_file_metadata(asset)
       logger.info "Entering title '#{asset.title}', category '#{asset.category}', and description '#{asset.description}'"
-      wait_for_element_and_type(upload_file_title_input_elements[0], asset.title)
-      unless  asset.category.nil?
-        self.upload_file_category_select = asset.category
-      end
-      wait_for_element_and_type(upload_file_description_input_elements[0], asset.description) unless asset.description.nil?
+      wait_until(Utils.short_wait) { upload_file_title_input_elements.any? }
+      wait_for_element_and_type_js(upload_file_title_input_elements[0], asset.title)
+      wait_for_element_and_select_js(upload_file_category_select_element, asset.category) unless asset.category.nil?
+      wait_for_element_and_type_js(upload_file_description_input_elements[0], asset.description) unless asset.description.nil?
     end
 
     # Clicks the 'upload file' button to complete a file upload
     def click_add_files_button
       logger.info 'Confirming new file uploads'
-      wait_for_page_update_and_click upload_file_button_element
+      wait_for_update_and_click_js upload_file_button_element
     end
 
     # Combines methods to upload a new file type asset
@@ -73,7 +72,7 @@ module Page
     # Enters asset metadata while adding a link type asset
     # @param asset [Asset]
     def enter_url_metadata(asset)
-      wait_for_page_update_and_click url_input_element
+      wait_for_update_and_click_js url_input_element
       self.url_input = asset.url unless asset.url.nil?
       self.url_title_input = asset.title unless asset.title.nil?
       self.url_description = asset.description unless asset.description.nil?
@@ -82,7 +81,7 @@ module Page
 
     # Clicks the 'add URL' button to finish adding a link
     def click_add_url_button
-      wait_for_page_update_and_click add_url_button_element
+      wait_for_update_and_click_js add_url_button_element
     end
 
     # Combines methods to add a new link type asset
@@ -94,12 +93,12 @@ module Page
 
     # Clicks the 'cancel' button for either a file or a link type asset
     def click_cancel_button
-      wait_for_page_update_and_click cancel_asset_button_element
+      wait_for_update_and_click_js cancel_asset_button_element
     end
 
     # Closes the modal opened during either a file or a link type asset upload
     def click_close_modal_button
-      wait_for_page_update_and_click close_modal_button_element
+      wait_for_update_and_click_js close_modal_button_element
     end
 
     # Pauses to allow the Canvas poller to complete any active cycle

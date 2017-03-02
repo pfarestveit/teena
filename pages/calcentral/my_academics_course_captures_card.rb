@@ -54,7 +54,7 @@ module Page
       # Clicks the 'show more' button at a given index until the button disappears
       # @param index [Integer]
       def show_all_recordings(index)
-        show_more_button(index).click while show_more_button(index).exists?
+        wait_for_update_and_click_js show_more_button(index) while show_more_button(index).exists?
       end
 
       # Returns the link element whose href attribute includes a given YouTube video ID

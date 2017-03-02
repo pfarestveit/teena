@@ -23,7 +23,7 @@ describe 'Asset', order: :defined do
     @engagement_index = Page::SuiteCPages::EngagementIndexPage.new @driver
 
     @canvas.log_in(@cal_net, Utils.ets_qa_username, Utils.ets_qa_password)
-    @canvas.get_suite_c_test_course(@course, [@asset_uploader, @asset_admirer], test_id, [SuiteCTools::ASSET_LIBRARY, SuiteCTools::ENGAGEMENT_INDEX])
+    @canvas.get_suite_c_test_course(@driver, @course, [@asset_uploader, @asset_admirer], test_id, [SuiteCTools::ASSET_LIBRARY, SuiteCTools::ENGAGEMENT_INDEX])
 
     @asset_library_url = @canvas.click_tool_link(@driver, SuiteCTools::ASSET_LIBRARY)
     @engagement_index_url = @canvas.click_tool_link(@driver, SuiteCTools::ENGAGEMENT_INDEX)
@@ -31,7 +31,7 @@ describe 'Asset', order: :defined do
     # Upload a new asset for the test
     @canvas.log_out(@driver, @cal_net)
     @canvas.log_in(@cal_net, @asset_uploader.username, Utils.test_user_password)
-    @canvas.load_course_site @course
+    @canvas.load_course_site(@driver, @course)
     @asset_library.load_page(@driver, @asset_library_url)
     @asset_library.add_site @asset
 
@@ -67,7 +67,7 @@ describe 'Asset', order: :defined do
       before(:all) do
         @canvas.log_out(@driver, @cal_net)
         @canvas.log_in(@cal_net, @asset_admirer.username, Utils.test_user_password)
-        @canvas.load_course_site @course
+        @canvas.load_course_site(@driver, @course)
         @asset_library.load_list_view_asset(@driver, @asset_library_url, @asset)
       end
 

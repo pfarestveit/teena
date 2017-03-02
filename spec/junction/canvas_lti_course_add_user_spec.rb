@@ -39,7 +39,7 @@ describe 'bCourses Find a Person to Add', order: :defined do
 
     if masquerade
       @canvas.log_in(@cal_net, Utils.super_admin_username, Utils.super_admin_password)
-      @canvas.masquerade_as teacher_1
+      @canvas.masquerade_as(@driver, teacher_1)
       @create_course_site_page.load_embedded_tool(@driver, teacher_1)
       @site_creation_page.click_create_course_site @create_course_site_page
     else
@@ -59,7 +59,7 @@ describe 'bCourses Find a Person to Add', order: :defined do
 
     before(:all) do
       if masquerade
-        @canvas.masquerade_as(teacher_1, course)
+        @canvas.masquerade_as(@driver, teacher_1, course)
         @canvas.load_users_page course
       end
     end
@@ -71,7 +71,7 @@ describe 'bCourses Find a Person to Add', order: :defined do
       end
 
       it 'include a search by Email Address option' do
-        @canvas.wait_for_page_load_and_click @canvas.add_people_button_element
+        @canvas.wait_for_load_and_click_js @canvas.add_people_button_element
         @canvas.find_person_to_add_link_element.when_visible Utils.short_wait
         expect(@canvas.add_user_by_email?).to be true
       end
@@ -86,7 +86,7 @@ describe 'bCourses Find a Person to Add', order: :defined do
 
     before(:all) do
       if masquerade
-        @canvas.masquerade_as(teacher_1, course)
+        @canvas.masquerade_as(@driver, teacher_1, course)
         @canvas.load_users_page course
         @canvas.click_find_person_to_add @driver
       else
@@ -150,7 +150,7 @@ describe 'bCourses Find a Person to Add', order: :defined do
 
     before(:all) do
       @section_to_test = sections_for_site.first
-      @canvas.masquerade_as(teacher_1, course) if masquerade
+      @canvas.masquerade_as(@driver, teacher_1, course) if masquerade
     end
 
     before(:each) do
@@ -185,8 +185,8 @@ describe 'bCourses Find a Person to Add', order: :defined do
 
     before(:all) do
       if masquerade
-        @canvas.masquerade_as(teacher_1, course)
-        @canvas.publish_course_site course
+        @canvas.masquerade_as(@driver, teacher_1, course)
+        @canvas.publish_course_site(@driver, course)
       end
     end
 
@@ -194,7 +194,7 @@ describe 'bCourses Find a Person to Add', order: :defined do
 
       it "allows a course #{user.role} to access the tool and add a subset of roles to a course site if permitted to do so" do
         if masquerade
-          @canvas.masquerade_as(user, course)
+          @canvas.masquerade_as(@driver, user, course)
           @canvas.load_users_page course
         else
           @splash_page.basic_auth user.uid

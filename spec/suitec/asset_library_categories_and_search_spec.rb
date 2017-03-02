@@ -30,13 +30,13 @@ describe 'Asset Library', order: :defined do
 
     # Create course site if necessary
     @canvas.log_in(@cal_net, Utils.super_admin_username, Utils.super_admin_password)
-    @canvas.get_suite_c_test_course(@course, users, test_id, [SuiteCTools::ASSET_LIBRARY, SuiteCTools::WHITEBOARDS])
+    @canvas.get_suite_c_test_course(@driver, @course, users, test_id, [SuiteCTools::ASSET_LIBRARY, SuiteCTools::WHITEBOARDS])
     @asset_library_url = @canvas.click_tool_link(@driver, SuiteCTools::ASSET_LIBRARY)
     @whiteboards_url = @canvas.click_tool_link(@driver, SuiteCTools::WHITEBOARDS)
     @category_1 = "Category 1 #{category_id}"
 
-    @canvas.masquerade_as(student_1, @course)
-    @canvas.load_course_site @course
+    @canvas.masquerade_as(@driver, student_1, @course)
+    @canvas.load_course_site(@driver, @course)
     @asset_library.load_page(@driver, @asset_library_url)
     @asset_library.upload_file_to_library student_1_upload
     student_1_upload.id = @asset_library.list_view_asset_ids.first
@@ -48,7 +48,7 @@ describe 'Asset Library', order: :defined do
 
     users.each do |user|
       it "can be managed by a course #{user.role} if the user has permission to do so" do
-        @canvas.masquerade_as(user, @course)
+        @canvas.masquerade_as(@driver, user, @course)
         @asset_library.load_page(@driver, @asset_library_url)
         @asset_library.search_input_element.when_visible timeout
         (['Teacher', 'Lead TA', 'TA', 'Designer', 'Reader'].include? user.role) ?
@@ -60,20 +60,20 @@ describe 'Asset Library', order: :defined do
     context 'when created' do
 
       before(:all ) do
-        @canvas.masquerade_as(teacher, @course)
+        @canvas.masquerade_as(@driver, teacher, @course)
       end
 
       it 'require a title' do
         @asset_library.load_page(@driver, @asset_library_url)
         @asset_library.click_manage_assets_link
-        @asset_library.wait_for_page_update_and_click @asset_library.custom_category_input_element
+        @asset_library.wait_for_update_and_click_js @asset_library.custom_category_input_element
         expect(@asset_library.add_custom_category_button_element.attribute('disabled')).to eql('true')
       end
 
       it 'required a title under 256 characters' do
         @asset_library.load_page(@driver, @asset_library_url)
         @asset_library.click_manage_assets_link
-        @asset_library.wait_for_element_and_type(@asset_library.custom_category_input_element , "#{'A loooooong title' * 15}?")
+        @asset_library.wait_for_element_and_type_js(@asset_library.custom_category_input_element , "#{'A loooooong title' * 15}?")
         expect(@asset_library.add_custom_category_button_element.attribute('disabled')).to eql('true')
       end
 
@@ -157,7 +157,7 @@ describe 'Asset Library', order: :defined do
 
       it 'no longer appear in search options' do
         @asset_library.go_back_to_asset_library
-        @asset_library.wait_for_page_update_and_click @asset_library.advanced_search_button_element
+        @asset_library.wait_for_update_and_click_js @asset_library.advanced_search_button_element
         @asset_library.category_select_element.when_visible timeout
         expect(@asset_library.category_select_options).not_to include(@category_1)
       end
@@ -179,8 +179,8 @@ describe 'Asset Library', order: :defined do
       student_2_upload.title = "Student 2 upload - #{test_id}"
       student_2_upload.category = @category_2
       student_2_upload.description = "Description for uploaded file #{test_id}"
-      @canvas.masquerade_as(student_2, @course)
-      @canvas.load_course_site @course
+      @canvas.masquerade_as(@driver, student_2, @course)
+      @canvas.load_course_site(@driver, @course)
       @asset_library.load_page(@driver, @asset_library_url)
       @asset_library.upload_file_to_library student_2_upload
 
@@ -188,8 +188,8 @@ describe 'Asset Library', order: :defined do
       student_3_link.title = "Student 3 link - #{test_id}"
       student_3_link.category = @category_2
       student_3_link.description = "#BetterTogether#{test_id}"
-      @canvas.masquerade_as(student_3, @course)
-      @canvas.load_course_site @course
+      @canvas.masquerade_as(@driver, student_3, @course)
+      @canvas.load_course_site(@driver, @course)
       @asset_library.load_page(@driver, @asset_library_url)
       @asset_library.add_site student_3_link
 
@@ -270,6 +270,11 @@ describe 'Asset Library', order: :defined do
       @asset_library.wait_until(timeout) { @asset_library.list_view_asset_ids.include? student_3_link.id }
     end
 
+    it 'lets a user perform an advanced search by keyword, category, and uploader' do
+      @asset_library.advanced_search('#BetterTogether', @category_2, student_3, nil)
+      @asset_library.wait_until(timeout) { @asset_library.list_view_asset_ids == [student_3_link.id] }
+    end
+
     it 'lets a user perform an advanced search by keyword and type' do
       @asset_library.advanced_search("#{test_id}", nil, nil, 'File')
       @asset_library.wait_until(timeout) { @asset_library.list_view_asset_ids == [student_2_upload.id] }
@@ -280,19 +285,19 @@ describe 'Asset Library', order: :defined do
       @asset_library.wait_until(timeout) { @asset_library.list_view_asset_ids == [student_3_link.id] }
     end
 
-    it 'lets a user perform an advanced search by category and type' do
-      @asset_library.advanced_search(nil, @category_2, nil, 'File')
-      @asset_library.wait_until(timeout) { @asset_library.list_view_asset_ids == [student_2_upload.id] }
-    end
-
     it 'lets a user perform an advanced search by uploader and type' do
       @asset_library.advanced_search(nil, nil, student_2, 'Whiteboard')
       @asset_library.wait_until(timeout) { @asset_library.list_view_asset_ids.include? @whiteboard_asset.id }
     end
 
-    it 'lets a user perform an advanced search by keyword, category, and uploader' do
-      @asset_library.advanced_search('#BetterTogether', @category_2, student_3, nil)
-      @asset_library.wait_until(timeout) { @asset_library.list_view_asset_ids == [student_3_link.id] }
+    it 'lets a user perform an advanced search by category and type' do
+      @asset_library.advanced_search(nil, @category_2, nil, 'File')
+      @asset_library.wait_until(timeout) { @asset_library.list_view_asset_ids == [student_2_upload.id] }
+    end
+
+    it 'returns a no results message for an advanced search by a hashtag in a comment' do
+      @asset_library.advanced_search('#BadHombre', nil, nil, nil)
+      @asset_library.wait_until(timeout) { @asset_library.no_search_results? }
     end
 
     it 'lets a user perform an advanced search by keyword, category, and type' do
@@ -310,14 +315,9 @@ describe 'Asset Library', order: :defined do
       @asset_library.wait_until(timeout) { @asset_library.list_view_asset_ids == [student_2_upload.id] }
     end
 
-    it 'returns a no results message for an advanced search by a hashtag in a comment' do
-      @asset_library.advanced_search('#BadHombre', nil, nil, nil)
-      @asset_library.wait_until(timeout) { @asset_library.no_search_results? }
-    end
-
     it 'lets a user click a commenter name to view the asset gallery filtered by the commenter\'s submissions' do
       @asset_library.load_asset_detail(@driver, @asset_library_url, student_2_upload)
-      @asset_library.wait_for_page_update_and_click @asset_library.commenter_link(0)
+      @asset_library.wait_for_update_and_click_js @asset_library.commenter_link(0)
       @asset_library.wait_until(timeout) { @asset_library.list_view_asset_ids.first.include? @whiteboard_asset.id }
       expect(@asset_library.keyword_search_input).to be_empty
       expect(@asset_library.category_select).to eql('Category')

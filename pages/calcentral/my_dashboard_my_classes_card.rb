@@ -35,7 +35,7 @@ module Page
       # Clicks a link element with an href attribute matching a given URL
       # @param url [String]
       def click_class_link_by_url(url)
-        wait_for_page_load_and_click link_element(xpath: "//a[@href='#{url}']")
+        wait_for_update_and_click link_element(xpath: "//a[@href='#{url}']")
       end
 
       # Returns a collection of course site names displayed in the student section
@@ -47,7 +47,7 @@ module Page
       # Returns a collection of course site descriptions displayed in the student section
       # @return [Array<String>]
       def enrolled_course_site_descrips
-        enrolled_course_site_desc_elements.map { |descrip| descrip.text unless descrip.text == '' }
+        (enrolled_course_site_desc_elements.map { |descrip| descrip.text unless descrip.text == '' }).compact
       end
 
       # Returns a collection of course site names displayed in the teaching section
@@ -59,7 +59,7 @@ module Page
       # Returns a collection of course site descriptions displayed in the teaching section
       # @return [Array<String>]
       def teaching_course_site_descrips
-        teaching_course_site_desc_elements.map &:text
+        (teaching_course_site_desc_elements.map &:text).compact
       end
 
       # Returns a collection of course site names displayed in the other section
@@ -71,7 +71,7 @@ module Page
       # Returns a collection of course site descriptions displayed in the other section
       # @return [Array<String>]
       def other_course_site_descrips
-        other_course_site_desc_elements.map &:text
+        (other_course_site_desc_elements.map &:text).compact
       end
 
     end

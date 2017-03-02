@@ -25,7 +25,7 @@ describe 'Canvas assignment sync', order: :defined do
 
     # Create course site if necessary. If an existing site, ensure Canvas sync is enabled.
     @canvas.log_in(@cal_net, Utils.super_admin_username, Utils.super_admin_password)
-    @canvas.get_suite_c_test_course(@course, [@teacher, @student], test_id, [SuiteCTools::ASSET_LIBRARY, SuiteCTools::ENGAGEMENT_INDEX])
+    @canvas.get_suite_c_test_course(@driver, @course, [@teacher, @student], test_id, [SuiteCTools::ASSET_LIBRARY, SuiteCTools::ENGAGEMENT_INDEX])
     @asset_library_url = @canvas.click_tool_link(@driver, SuiteCTools::ASSET_LIBRARY)
     @engagement_index_url = @canvas.click_tool_link(@driver, SuiteCTools::ENGAGEMENT_INDEX)
     @asset_library.ensure_canvas_sync(@driver, @asset_library_url) unless course_id.nil?
@@ -42,8 +42,8 @@ describe 'Canvas assignment sync', order: :defined do
     @initial_score = @engagement_index.user_score @student
 
     # Teacher creates two assignments and waits for them to appear in the Asset Library categories list
-    @canvas.masquerade_as(@teacher, @course)
-    @canvas.load_course_site @course
+    @canvas.masquerade_as(@driver, @teacher, @course)
+    @canvas.load_course_site(@driver, @course)
     @canvas.create_assignment(@course, @assignment_1)
     @canvas.create_assignment(@course, @assignment_2)
     @asset_library.wait_for_canvas_category(@driver, @asset_library_url, @assignment_1)
@@ -61,17 +61,17 @@ describe 'Canvas assignment sync', order: :defined do
 
     before(:all) do
       # Teacher enables sync for assignment 1 but not assignment 2
-      @canvas.masquerade_as(@teacher, @course)
+      @canvas.masquerade_as(@driver, @teacher, @course)
       @asset_library.load_page(@driver, @asset_library_url)
       @asset_library.click_manage_assets_link
       @asset_library.enable_assignment_sync @assignment_1
       @asset_library.pause_for_poller
 
       # Student submits both assignments
-      @canvas.masquerade_as(@student, @course)
+      @canvas.masquerade_as(@driver, @student, @course)
       @canvas.submit_assignment(@assignment_1, @student, @asset_1)
       @canvas.submit_assignment(@assignment_2, @student, @asset_2)
-      @canvas.stop_masquerading
+      @canvas.stop_masquerading @driver
     end
 
     it 'adds assignment submission points to the Engagement Index score for both submissions' do
@@ -95,7 +95,7 @@ describe 'Canvas assignment sync', order: :defined do
 
     it 'hides the Assignment 2 submission in the Asset Library' do
       @asset_library.load_page(@driver, @asset_library_url)
-      @asset_library.wait_for_page_load_and_click @asset_library.advanced_search_button_element
+      @asset_library.wait_for_load_and_click_js @asset_library.advanced_search_button_element
       expect(@asset_library.category_select_options).to_not include(@assignment_2.title)
     end
   end
@@ -104,7 +104,7 @@ describe 'Canvas assignment sync', order: :defined do
 
     before(:all) do
       # Teacher disables sync for assignment 1 and enables it for assignment 2
-      @canvas.masquerade_as(@teacher, @course)
+      @canvas.masquerade_as(@driver, @teacher, @course)
       @asset_library.load_page(@driver, @asset_library_url)
       @asset_library.click_manage_assets_link
       @asset_library.disable_assignment_sync @assignment_1
@@ -125,7 +125,7 @@ describe 'Canvas assignment sync', order: :defined do
 
     it 'hides the Assignment 1 submission in the Asset Library' do
       @asset_library.load_page(@driver, @asset_library_url)
-      @asset_library.wait_for_page_load_and_click @asset_library.advanced_search_button_element
+      @asset_library.wait_for_load_and_click_js @asset_library.advanced_search_button_element
       expect(@asset_library.category_select_options).to_not include(@assignment_1.title)
     end
 

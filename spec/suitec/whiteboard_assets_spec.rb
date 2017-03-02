@@ -36,8 +36,8 @@ describe 'Whiteboard Add Asset', order: :defined do
 
     # Create test course
     @canvas.log_in(@cal_net, Utils.super_admin_username, Utils.super_admin_password)
-    @canvas.get_suite_c_test_course(@course, [@student_1, @student_2, @student_3], test_id, [SuiteCTools::ASSET_LIBRARY, SuiteCTools::ENGAGEMENT_INDEX, SuiteCTools::WHITEBOARDS])
-    @canvas.load_course_site @course
+    @canvas.get_suite_c_test_course(@driver, @course, [@student_1, @student_2, @student_3], test_id, [SuiteCTools::ASSET_LIBRARY, SuiteCTools::ENGAGEMENT_INDEX, SuiteCTools::WHITEBOARDS])
+    @canvas.load_course_site(@driver, @course)
     @asset_library_url = @canvas.click_tool_link(@driver, SuiteCTools::ASSET_LIBRARY)
     @engagement_index_url = @canvas.click_tool_link(@driver, SuiteCTools::ENGAGEMENT_INDEX)
     @whiteboards_url = @canvas.click_tool_link(@driver, SuiteCTools::WHITEBOARDS)
@@ -49,26 +49,26 @@ describe 'Whiteboard Add Asset', order: :defined do
     @engagement_index.change_activity_points(Activities::ADD_ASSET_TO_WHITEBOARD, '1')
 
     # Student 1 add file to asset library
-    @canvas.masquerade_as(@student_1, @course)
+    @canvas.masquerade_as(@driver, @student_1, @course)
     @asset_library.load_page(@driver, @asset_library_url)
     @asset_library.upload_file_to_library @student_1_asset_file
 
     # Student 2 add URL to asset library
-    @canvas.masquerade_as(@student_2, @course)
+    @canvas.masquerade_as(@driver, @student_2, @course)
     @asset_library.load_page(@driver, @asset_library_url)
     @asset_library.add_site @student_2_asset_url
 
     # Student 3 add file to asset library
-    @canvas.masquerade_as(@student_3, @course)
+    @canvas.masquerade_as(@driver, @student_3, @course)
     @asset_library.load_page(@driver, @asset_library_url)
     @asset_library.upload_file_to_library @student_3_asset_file
 
     # Student 1 create whiteboard, invite Student 2
     @whiteboard = Whiteboard.new({ owner: @student_1, title: "Whiteboard #{test_id}", collaborators: [@student_2] })
-    @canvas.masquerade_as(@student_1, @course)
+    @canvas.masquerade_as(@driver, @student_1, @course)
     @whiteboards.load_page(@driver, @whiteboards_url)
     @whiteboards.create_whiteboard @whiteboard
-    @canvas.stop_masquerading
+    @canvas.stop_masquerading @driver
   end
 
   after(:all) { @driver.quit }
@@ -78,7 +78,7 @@ describe 'Whiteboard Add Asset', order: :defined do
     before(:all) do
       @engagement_index.load_scores(@driver, @engagement_index_url)
       @initial_score = @engagement_index.user_score @student_1
-      @canvas.masquerade_as(@student_1, @course)
+      @canvas.masquerade_as(@driver, @student_1, @course)
       @whiteboards.load_page(@driver, @whiteboards_url)
       @whiteboards.open_whiteboard(@driver, @whiteboard)
     end
@@ -115,7 +115,7 @@ describe 'Whiteboard Add Asset', order: :defined do
 
     it 'earns "Add an asset to a whiteboard" but not "Add a new asset to the Asset Library" points on the Engagement Index for each asset used' do
       @whiteboards.close_whiteboard @driver
-      @canvas.stop_masquerading
+      @canvas.stop_masquerading @driver
       @engagement_index.load_scores(@driver, @engagement_index_url)
       expect(@engagement_index.user_score @student_1).to eql("#{@initial_score.to_i + 6}")
     end
@@ -136,7 +136,7 @@ describe 'Whiteboard Add Asset', order: :defined do
     before(:all) do
       @engagement_index.load_scores(@driver, @engagement_index_url)
       @initial_score = @engagement_index.user_score @student_1
-      @canvas.masquerade_as(@student_1, @course)
+      @canvas.masquerade_as(@driver, @student_1, @course)
       @whiteboards.load_page(@driver, @whiteboards_url)
       @whiteboards.open_whiteboard(@driver, @whiteboard)
     end
@@ -189,7 +189,7 @@ describe 'Whiteboard Add Asset', order: :defined do
     end
 
     it 'earns "Add an asset to a whiteboard" and "Add a new asset to the Asset Library" points on the Engagement Index' do
-      @canvas.stop_masquerading
+      @canvas.stop_masquerading @driver
       @engagement_index.load_scores(@driver, @engagement_index_url)
       expect(@engagement_index.user_score @student_1).to eql("#{@initial_score.to_i + 3 + (Activities::ADD_ASSET_TO_LIBRARY.points * 2)}")
     end
@@ -210,7 +210,7 @@ describe 'Whiteboard Add Asset', order: :defined do
     before(:all) do
       @engagement_index.load_scores(@driver, @engagement_index_url)
       @initial_score = @engagement_index.user_score @student_2
-      @canvas.masquerade_as(@student_2, @course)
+      @canvas.masquerade_as(@driver, @student_2, @course)
       @whiteboards.load_page(@driver, @whiteboards_url)
       @whiteboards.open_whiteboard(@driver, @whiteboard)
     end
@@ -256,7 +256,7 @@ describe 'Whiteboard Add Asset', order: :defined do
     end
 
     it 'earns "Add an asset to a whiteboard" and "Add a new asset to the Asset Library" points on the Engagement Index' do
-      @canvas.stop_masquerading
+      @canvas.stop_masquerading @driver
       @engagement_index.load_scores(@driver, @engagement_index_url)
       expect(@engagement_index.user_score @student_2).to eql("#{@initial_score.to_i + 3 + (Activities::ADD_ASSET_TO_LIBRARY.points * 2)}")
     end
@@ -275,7 +275,7 @@ describe 'Whiteboard Add Asset', order: :defined do
   context 'when the asset is hidden from the asset library' do
 
     before(:all) do
-      @canvas.masquerade_as(@student_1, @course)
+      @canvas.masquerade_as(@driver, @student_1, @course)
       @whiteboards.load_page(@driver, @whiteboards_url)
       @whiteboards.open_whiteboard(@driver, @whiteboard)
       @whiteboards.add_asset_exclude_from_library @student_1_asset_file

@@ -24,9 +24,9 @@ describe 'Asset Library URLs', order: :defined do
 
     # Create test course site
     @canvas.log_in(@cal_net, Utils.ets_qa_username, Utils.ets_qa_password)
-    @canvas.get_suite_c_test_course(@course, [@user], test_id, [SuiteCTools::ASSET_LIBRARY])
+    @canvas.get_suite_c_test_course(@driver, @course, [@user], test_id, [SuiteCTools::ASSET_LIBRARY])
 
-    @canvas.load_course_site @course
+    @canvas.load_course_site(@driver, @course)
     @asset_library_url = @canvas.click_tool_link(@driver, SuiteCTools::ASSET_LIBRARY)
 
     category_id = "#{Time.now.to_i}"
@@ -35,7 +35,7 @@ describe 'Asset Library URLs', order: :defined do
     @canvas.log_out(@driver, @cal_net)
 
     @canvas.log_in(@cal_net, @user.username, Utils.test_user_password)
-    @canvas.load_course_site @course
+    @canvas.load_course_site(@driver, @course)
     @asset_library.load_page(@driver, @asset_library_url)
   end
 
