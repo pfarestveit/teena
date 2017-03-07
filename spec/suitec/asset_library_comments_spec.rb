@@ -34,7 +34,8 @@ describe 'An asset comment', order: :defined do
     @engagement_index = Page::SuiteCPages::EngagementIndexPage.new @driver
 
     @canvas.log_in(@cal_net, Utils.super_admin_username, Utils.super_admin_password)
-    @canvas.get_suite_c_test_course(@driver, @course, [@teacher, @asset_uploader, @asset_admirer], test_id, [SuiteCTools::ASSET_LIBRARY, SuiteCTools::ENGAGEMENT_INDEX])
+    @canvas.create_generic_course_site(@driver, Utils.canvas_qa_sub_account, @course, [@teacher, @asset_uploader, @asset_admirer],
+                                       test_id, [SuiteCTools::ASSET_LIBRARY, SuiteCTools::ENGAGEMENT_INDEX])
 
     @asset_library_url = @canvas.click_tool_link(@driver, SuiteCTools::ASSET_LIBRARY)
     @engagement_index_url = @canvas.click_tool_link(@driver, SuiteCTools::ENGAGEMENT_INDEX)
@@ -64,7 +65,7 @@ describe 'An asset comment', order: :defined do
       @asset_library.wait_until(timeout) { @asset_library.commenter_name(0).include?(@asset_uploader.full_name) }
       expect(@asset_library.comment_body(0)).to eql(comment_1_by_uploader)
       @asset_library.go_back_to_asset_library
-      expect(@asset_library.asset_comment_count(0)).to eql('1')
+      @asset_library.wait_until(timeout) { @asset_library.asset_comment_count(0) == '1' }
     end
 
     it 'can be added as a reply to an existing comment' do
@@ -77,7 +78,7 @@ describe 'An asset comment', order: :defined do
       expect(@asset_library.commenter_name(1)).to include(@asset_uploader.full_name)
       expect(@asset_library.comment_body(1)).to eql(comment_1_reply_by_uploader)
       @asset_library.go_back_to_asset_library
-      expect(@asset_library.asset_comment_count(0)).to eql('2')
+      @asset_library.wait_until(timeout) { @asset_library.asset_comment_count(0) == '2' }
     end
 
     it 'does not earn commenting points on the engagement index' do
@@ -106,7 +107,7 @@ describe 'An asset comment', order: :defined do
       expect(@asset_library.commenter_name(2)).to include(@asset_uploader.full_name)
       expect(@asset_library.comment_body(2)).to eql(comment_1_reply_by_uploader)
       @asset_library.go_back_to_asset_library
-      expect(@asset_library.asset_comment_count(0)).to eql('3')
+      @asset_library.wait_until(timeout) { @asset_library.asset_comment_count(0) == '3' }
     end
 
     it 'can be added as a reply to the user\'s own comment' do
@@ -123,7 +124,7 @@ describe 'An asset comment', order: :defined do
       expect(@asset_library.commenter_name(3)).to include(@asset_uploader.full_name)
       expect(@asset_library.comment_body(3)).to eql(comment_1_reply_by_uploader)
       @asset_library.go_back_to_asset_library
-      expect(@asset_library.asset_comment_count(0)).to eql('4')
+      @asset_library.wait_until(timeout) { @asset_library.asset_comment_count(0) == '4' }
     end
 
     it 'can be added as a reply to another user\'s comment' do
@@ -142,7 +143,7 @@ describe 'An asset comment', order: :defined do
       expect(@asset_library.commenter_name(4)).to include(@asset_uploader.full_name)
       expect(@asset_library.comment_body(4)).to eql(comment_1_reply_by_uploader)
       @asset_library.go_back_to_asset_library
-      expect(@asset_library.asset_comment_count(0)).to eql('5')
+      @asset_library.wait_until(timeout) { @asset_library.asset_comment_count(0) == '5' }
     end
 
     it 'earns "Comment" points on the engagement index for the user adding a comment or reply' do

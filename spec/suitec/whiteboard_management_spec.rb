@@ -26,7 +26,8 @@ describe 'Whiteboard', order: :defined do
 
     # Create course site if necessary
     @canvas.log_in(@cal_net, Utils.super_admin_username, Utils.super_admin_password)
-    @canvas.get_suite_c_test_course(@driver, @course, [@teacher, @student_1, @student_2, @student_3], test_id, [SuiteCTools::ASSET_LIBRARY, SuiteCTools::ENGAGEMENT_INDEX, SuiteCTools::WHITEBOARDS])
+    @canvas.create_generic_course_site(@driver, Utils.canvas_qa_sub_account, @course, [@teacher, @student_1, @student_2, @student_3],
+                                       test_id, [SuiteCTools::ASSET_LIBRARY, SuiteCTools::ENGAGEMENT_INDEX, SuiteCTools::WHITEBOARDS])
 
     @asset_library_url = @canvas.click_tool_link(@driver, SuiteCTools::ASSET_LIBRARY)
     @engagement_index_url = @canvas.click_tool_link(@driver, SuiteCTools::ENGAGEMENT_INDEX)

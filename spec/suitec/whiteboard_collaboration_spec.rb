@@ -38,7 +38,7 @@ describe 'Whiteboard', order: :defined do
     tools = [SuiteCTools::ENGAGEMENT_INDEX, SuiteCTools::WHITEBOARDS]
     tools << SuiteCTools::ASSET_LIBRARY unless course_id.nil?
     @canvas_driver_1.log_in(@cal_net_driver_1, Utils.super_admin_username, Utils.super_admin_password)
-    @canvas_driver_1.get_suite_c_test_course(@driver_1, course, users, test_id, tools)
+    @canvas_driver_1.create_generic_course_site(@driver_1, Utils.canvas_qa_sub_account, course, users, test_id, tools)
     @whiteboards_url = @canvas_driver_1.click_tool_link(@driver_1, SuiteCTools::WHITEBOARDS)
     @engagement_index_url = @canvas_driver_1.click_tool_link(@driver_1, SuiteCTools::ENGAGEMENT_INDEX)
     unless course_id.nil?

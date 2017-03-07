@@ -30,7 +30,7 @@ describe 'Asset Library', order: :defined do
 
     # Create course site if necessary
     @canvas.log_in(@cal_net, Utils.super_admin_username, Utils.super_admin_password)
-    @canvas.get_suite_c_test_course(@driver, @course, users, test_id, [SuiteCTools::ASSET_LIBRARY, SuiteCTools::WHITEBOARDS])
+    @canvas.create_generic_course_site(@driver, Utils.canvas_qa_sub_account, @course, users, test_id, [SuiteCTools::ASSET_LIBRARY, SuiteCTools::WHITEBOARDS])
     @asset_library_url = @canvas.click_tool_link(@driver, SuiteCTools::ASSET_LIBRARY)
     @whiteboards_url = @canvas.click_tool_link(@driver, SuiteCTools::WHITEBOARDS)
     @category_1 = "Category 1 #{category_id}"

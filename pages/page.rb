@@ -26,6 +26,7 @@ module Page
   def click_element(element, timeout)
     wait_for_element(element, timeout)
     element.click
+    sleep 1
   end
 
   # Awaits an element for a given timeout then clicks it using JavaScript.

@@ -16,12 +16,16 @@ suite_c:
 
 canvas:
   base_url: https://ucberkeley.test.instructure.com
-  sub_account: secret
+  admin_sub_account: secret
+  official_courses_sub_account: secret
+  qa_sub_account: secret
   create_course_site_tool: secret
   course_add_user_tool: secret
   course_captures_tool: secret
   rosters_tool: secret
   official_sections_tool: secret
+  mailing_lists_tool: secret
+  mailing_list_tool: secret
 
 calcentral:
   base_url: https://calcentral-qa.berkeley.edu

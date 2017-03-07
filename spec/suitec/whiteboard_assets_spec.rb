@@ -36,7 +36,7 @@ describe 'Whiteboard Add Asset', order: :defined do
 
     # Create test course
     @canvas.log_in(@cal_net, Utils.super_admin_username, Utils.super_admin_password)
-    @canvas.get_suite_c_test_course(@driver, @course, [@student_1, @student_2, @student_3], test_id, [SuiteCTools::ASSET_LIBRARY, SuiteCTools::ENGAGEMENT_INDEX, SuiteCTools::WHITEBOARDS])
+    @canvas.create_generic_course_site(@driver, Utils.canvas_qa_sub_account, @course, [@student_1, @student_2, @student_3], test_id, [SuiteCTools::ASSET_LIBRARY, SuiteCTools::ENGAGEMENT_INDEX, SuiteCTools::WHITEBOARDS])
     @canvas.load_course_site(@driver, @course)
     @asset_library_url = @canvas.click_tool_link(@driver, SuiteCTools::ASSET_LIBRARY)
     @engagement_index_url = @canvas.click_tool_link(@driver, SuiteCTools::ENGAGEMENT_INDEX)

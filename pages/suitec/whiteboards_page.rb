@@ -314,6 +314,7 @@ module Page
         wait_for_update_and_click export_to_library_button_element
         wait_until(Utils.short_wait) { export_title_input == whiteboard.title }
         wait_for_update_and_click_js export_confirm_button_element
+        sleep Utils.short_wait
         Asset.new({ type: 'Whiteboard', title: whiteboard.title, preview: 'image' })
       end
 

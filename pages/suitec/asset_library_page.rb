@@ -127,7 +127,7 @@ module Page
 
       # Clicks the 'back to asset library' link and waits for list view to load
       def go_back_to_asset_library
-        wait_for_update_and_click_js back_to_library_link_element
+        wait_for_update_and_click back_to_library_link_element
         wait_until(Utils.short_wait) { list_view_asset_elements.any? }
       end
 
@@ -192,17 +192,19 @@ module Page
         logger.info "Verifying a preview of type '#{asset.preview}' is generated for the asset within #{timeout} seconds"
         preview_element = case asset.preview
                             when 'image'
-                              image_element(xpath: '//div[@id="assetlibrary-item-preview"]//div[@data-ng-if="asset.type === \'file\' && asset.image_url !== null"]/img')
+                              image_element(class: 'preview-image')
                             when 'pdf_document'
-                              div_element(xpath: '//div[@id="assetlibrary-item-preview"]//div[@data-ng-if="asset.type === \'file\' && asset.pdf_url !== null"]//iframe')
+                              div_element(xpath: '//iframe[@class="preview-document"]')
                             when 'embeddable_link'
-                              div_element(xpath: '//div[@id="assetlibrary-item-preview"]//div[@data-ng-if="asset.type === \'link\' && asset.isEmbeddable"]/iframe')
+                              div_element(xpath: "//iframe[contains(@src,'#{asset.url.sub(/https?\:(\/\/)(www.)?/,'')}')]")
                             when 'non_embeddable_link'
-                              div_element(xpath: '//div[@id="assetlibrary-item-preview"]//div[@data-ng-if="asset.type === \'link\' && !asset.isEmbeddable && asset.image_url"]/img')
+                              image_element(class: 'preview-image')
                             when 'embeddable_youtube'
-                              div_element(xpath: '//div[@id="assetlibrary-item-preview"]//div[@data-ng-if="asset.type === \'link\' && asset.preview_metadata.youtubeId !== undefined"]//iframe')
+                              div_element(xpath: '//iframe[contains(@src,"www.youtube.com/embed")]')
                             when 'embeddable_vimeo'
-                              div_element(xpath: '//div[@id="assetlibrary-item-preview"]//div[@data-ng-if="asset.type === \'link\' && asset.isEmbeddable"]/iframe[contains(@src,"player.vimeo.com")]')
+                              div_element(xpath: '//iframe[contains(@src,"player.vimeo.com")]')
+                            when 'embeddable_video'
+                              video_element(xpath: '//video')
                             else
                               paragraph_element(xpath: '//p[contains(.,"No preview available")]')
                           end
@@ -248,17 +250,17 @@ module Page
         logger.info "Performing advanced search of asset library by keyword '#{keyword}', category '#{category}', uploader '#{uploader && uploader.full_name}', and asset type '#{asset_type}'."
         wait_for_load_and_click_js advanced_search_button_element unless keyword_search_input_element.visible?
         keyword.nil? ?
-            wait_for_element_and_type_js(keyword_search_input_element, '') :
-            wait_for_element_and_type_js(keyword_search_input_element, keyword)
+            wait_for_element_and_type(keyword_search_input_element, '') :
+            wait_for_element_and_type(keyword_search_input_element, keyword)
         category.nil? ?
-            wait_for_element_and_select_js(category_select_element, 'Category') :
-            wait_for_element_and_select_js(category_select_element, category)
+            (self.category_select = 'Category') :
+            (self.category_select = category)
         uploader.nil? ?
-            wait_for_element_and_select_js(uploader_select_element, 'Uploader') :
-            wait_for_element_and_select_js(uploader_select_element, uploader.full_name)
+            (self.uploader_select = 'Uploader') :
+            (self.uploader_select = uploader.full_name)
         asset_type.nil? ?
-            wait_for_element_and_select_js(asset_type_select_element, 'Asset type') :
-            wait_for_element_and_select_js(asset_type_select_element, asset_type)
+            (self.asset_type_select = 'Asset type') :
+            (self.asset_type_select = asset_type)
         wait_for_update_and_click_js advanced_search_submit_element
       end
 
@@ -431,7 +433,7 @@ module Page
         assignment_sync_cbx(assignment).when_visible Utils.short_wait
         assignment_sync_cbx(assignment).checked? ?
             logger.debug('Assignment sync is already enabled, moving on') :
-            assignment_sync_cbx(assignment).check
+            wait_for_update_and_click_js(assignment_sync_cbx assignment)
       end
 
       # Disables syncing for a given assignment
@@ -440,7 +442,7 @@ module Page
         logger.info "Disabling Canvas assignment sync for #{assignment.title}"
         assignment_sync_cbx(assignment).when_visible Utils.short_wait
         assignment_sync_cbx(assignment).checked? ?
-            assignment_sync_cbx(assignment).uncheck :
+            wait_for_update_and_click_js(assignment_sync_cbx assignment) :
             logger.debug('Assignment sync is already disabled, moving on')
       end
 
