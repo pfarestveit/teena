@@ -2,7 +2,7 @@ require_relative '../../util/spec_helper'
 
 module Page
 
-  module CalCentralPages
+  module JunctionPages
 
     include PageObject
     include Logging
@@ -20,16 +20,16 @@ module Page
 
     # Opens the Profile popover and clicks the log out link
     def click_log_out_link
-      logger.info 'Logging out of CalCentral'
+      logger.info 'Logging out of Junction'
       wait_for_load_and_click profile_icon_element unless log_out_link_element.visible?
       wait_for_update_and_click log_out_link_element
     end
 
     # Logs the user out if the user is logged in
     def log_out(splash_page)
-      navigate_to Utils.calcentral_base_url
+      navigate_to Utils.junction_base_url
       toggle_footer_link_element.when_visible Utils.medium_wait
-      click_log_out_link if title.include? 'Dashboard'
+      click_log_out_link if title.include? 'Toolbox'
       splash_page.sign_in_element.when_visible Utils.medium_wait
     end
 

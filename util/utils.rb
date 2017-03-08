@@ -210,29 +210,29 @@ class Utils
     @config['canvas']['mailing_list_tool']
   end
 
-  # CALCENTRAL
+  # JUNCTION
 
-  # Base URL of CalCentral test environment
-  def self.calcentral_base_url
-    @config['calcentral']['base_url']
+  # Base URL of Junction test environment
+  def self.junction_base_url
+    @config['junction']['base_url']
   end
 
   # Basic auth password for CalCentral test environments
-  def self.calcentral_basic_auth_password
-    @config['calcentral']['basic_auth_password']
+  def self.junction_basic_auth_password
+    @config['junction']['basic_auth_password']
   end
 
-  # Authenticates in CalCentral as an admin and expires a specific cache key or all cache
+  # Authenticates in Junction as an admin and expires a specific cache key or all cache
   # @param driver [Selenium::WebDriver]
-  # @param splash_page [Page::CalCentralPages::SplashPage]
-  # @param my_dashboard_page [Page::CalCentralPages::MyDashboardPage]
+  # @param splash_page [Page::JunctionPages::SplashPage]
+  # @param my_dashboard_page [Page::JunctionPages::MyToolboxPage]
   # @param cache_key [String]
   def self.clear_cache(driver, splash_page, my_dashboard_page, cache_key = nil)
     splash_page.load_page
-    splash_page.basic_auth @config['calcentral']['admin_uid']
+    splash_page.basic_auth @config['junction']['admin_uid']
     cache_key.nil? ?
-        driver.get("#{calcentral_base_url}/api/cache/clear") :
-        driver.get("#{calcentral_base_url}/api/cache/delete?key=#{cache_key}")
+        driver.get("#{junction_base_url}/api/cache/clear") :
+        driver.get("#{junction_base_url}/api/cache/delete?key=#{cache_key}")
     sleep 3
     my_dashboard_page.load_page
     my_dashboard_page.click_log_out_link

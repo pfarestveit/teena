@@ -19,13 +19,13 @@ describe 'bCourses Official Sections tool' do
     @cal_net = Page::CalNetPage.new @driver
     @canvas = Page::CanvasPage.new @driver
     @roster_api = Page::ApiAcademicsRosterPage.new @driver
-    @academics_api = ApiMyAcademicsPage.new @driver
-    @splash_page = Page::CalCentralPages::SplashPage.new @driver
-    @site_creation_page = Page::CalCentralPages::CanvasSiteCreationPage.new @driver
-    @create_course_site_page = Page::CalCentralPages::CanvasCreateCourseSitePage.new @driver
-    @course_add_user_page = Page::CalCentralPages::CanvasCourseAddUserPage.new @driver
-    @official_sections_page = Page::CalCentralPages::CanvasCourseManageSectionsPage.new @driver
-    @roster_photos_page = Page::CalCentralPages::CanvasRostersPage.new @driver
+    @academics_api = ApiAcademicsCourseProvisionPage.new @driver
+    @splash_page = Page::JunctionPages::SplashPage.new @driver
+    @site_creation_page = Page::JunctionPages::CanvasSiteCreationPage.new @driver
+    @create_course_site_page = Page::JunctionPages::CanvasCreateCourseSitePage.new @driver
+    @course_add_user_page = Page::JunctionPages::CanvasCourseAddUserPage.new @driver
+    @official_sections_page = Page::JunctionPages::CanvasCourseManageSectionsPage.new @driver
+    @roster_photos_page = Page::JunctionPages::CanvasRostersPage.new @driver
 
     # Authenticate in Canvas
     masquerade ?

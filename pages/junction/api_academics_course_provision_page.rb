@@ -1,22 +1,18 @@
 require_relative '../../util/spec_helper'
 
-class ApiMyAcademicsPage
+class ApiAcademicsCourseProvisionPage
 
   include PageObject
   include Logging
 
   def get_feed(driver)
-    logger.info 'Parsing data from /api/my/academics'
-    navigate_to "#{Utils.calcentral_base_url}/api/my/academics"
+    logger.info 'Parsing data from /api/academics/canvas/course_provision'
+    navigate_to "#{Utils.junction_base_url}/api/academics/canvas/course_provision"
     wait_until(Utils.long_wait) { driver.find_element(xpath: '//pre') }
     @parsed = JSON.parse driver.find_element(xpath: '//pre').text
   end
 
   # SEMESTERS
-
-  def all_student_semesters
-    @parsed['semesters']
-  end
 
   def all_teaching_semesters
     @parsed['teachingSemesters']

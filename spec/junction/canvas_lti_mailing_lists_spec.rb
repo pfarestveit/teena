@@ -23,10 +23,10 @@ describe 'bCourses Mailgun mailing lists', order: :defined do
     @driver = Utils.launch_browser
     @canvas_page = Page::CanvasPage.new @driver
     @cal_net_page = Page::CalNetPage.new @driver
-    @splash_page = Page::CalCentralPages::SplashPage.new @driver
-    @dashboard_page = Page::CalCentralPages::MyDashboardPage.new @driver
-    @mailing_list_page = Page::CalCentralPages::CanvasMailingListPage.new @driver
-    @mailing_lists_page = Page::CalCentralPages::CanvasMailingListsPage.new @driver
+    @splash_page = Page::JunctionPages::SplashPage.new @driver
+    @toolbox_page = Page::JunctionPages::MyToolboxPage.new @driver
+    @mailing_list_page = Page::JunctionPages::CanvasMailingListPage.new @driver
+    @mailing_lists_page = Page::JunctionPages::CanvasMailingListsPage.new @driver
 
     # Create three course sites in the Official Courses sub-account
     @canvas_page.log_in(@cal_net_page, Utils.super_admin_username, Utils.super_admin_password)
@@ -154,7 +154,7 @@ describe 'bCourses Mailgun mailing lists', order: :defined do
 
       it 'deletes mailing list memberships for users who have been removed from the site' do
         @canvas_page.remove_user_from_course(course_site_1, students[0])
-        @mailing_lists_page.clear_membership_cache(@driver, @splash_page, @dashboard_page, course_site_1, Utils.super_admin_uid)
+        @mailing_lists_page.clear_membership_cache(@driver, @splash_page, @toolbox_page, course_site_1, Utils.super_admin_uid)
         @mailing_lists_page.load_embedded_tool @driver
         @mailing_lists_page.search_for_list course_site_1.site_id
         @mailing_lists_page.click_update_memberships
@@ -163,7 +163,7 @@ describe 'bCourses Mailgun mailing lists', order: :defined do
 
       it 'creates mailing list memberships for users who have been restored to the site' do
         @canvas_page.add_users(course_site_1, [students[0]])
-        @mailing_lists_page.clear_membership_cache(@driver, @splash_page, @dashboard_page, course_site_1, Utils.super_admin_uid)
+        @mailing_lists_page.clear_membership_cache(@driver, @splash_page, @toolbox_page, course_site_1, Utils.super_admin_uid)
         @mailing_lists_page.load_embedded_tool @driver
         @mailing_lists_page.search_for_list course_site_1.site_id
         @mailing_lists_page.click_update_memberships
@@ -173,7 +173,7 @@ describe 'bCourses Mailgun mailing lists', order: :defined do
       it 'does not create mailing list memberships for site members with the same email addresses as existing mailing list members' do
         students[0].email = students[1].email
         @canvas_page.reset_user_email(course_site_1, [students[0]])
-        @mailing_lists_page.clear_membership_cache(@driver, @splash_page, @dashboard_page, course_site_1, Utils.super_admin_uid)
+        @mailing_lists_page.clear_membership_cache(@driver, @splash_page, @toolbox_page, course_site_1, Utils.super_admin_uid)
         @mailing_lists_page.load_embedded_tool @driver
         @mailing_lists_page.search_for_list course_site_1.site_id
         @mailing_lists_page.click_update_memberships

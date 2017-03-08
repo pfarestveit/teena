@@ -2,14 +2,14 @@ require_relative '../../util/spec_helper'
 
 module Page
 
-  module CalCentralPages
+  module JunctionPages
 
     class CanvasCourseAddUserPage
 
       include PageObject
       include Logging
       include Page
-      include CalCentralPages
+      include JunctionPages
 
       button(:maintenance_button, class: 'bc-template-canvas-maintenance-notice-button')
       span(:maintenance_notice, class: 'bc-template-canvas-maintenance-notice-text')
@@ -51,11 +51,11 @@ module Page
         switch_to_canvas_iframe driver
       end
 
-      # Loads the LTI tool in the CalCentral context
+      # Loads the LTI tool in the Junction context
       # @param course [Course]
       def load_standalone_tool(course)
         logger.info 'Loading standalone version of Find a Person to Add tool'
-        navigate_to "#{Utils.calcentral_base_url}/canvas/course_add_user/#{course.site_id}"
+        navigate_to "#{Utils.junction_base_url}/canvas/course_add_user/#{course.site_id}"
       end
 
       # Expands the maintenance notice and confirms its visibility
