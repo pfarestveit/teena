@@ -12,14 +12,14 @@ describe 'bCourses Course Captures tool' do
     test_user_data = Utils.load_test_users.select { |user| user['tests']['courseCapture'] }
 
     @driver = Utils.launch_browser
-    @course_captures_page = Page::CalCentralPages::CanvasCourseCapturesPage.new @driver
+    @course_captures_page = Page::JunctionPages::CanvasCourseCapturesPage.new @driver
 
     if masquerade
       @cal_net = Page::CalNetPage.new @driver
       @canvas = Page::CanvasPage.new @driver
       @canvas.log_in(@cal_net, Utils.super_admin_username, Utils.super_admin_password)
     else
-      @splash_page = Page::CalCentralPages::SplashPage.new @driver
+      @splash_page = Page::JunctionPages::SplashPage.new @driver
     end
 
     test_user_data.each do |data|

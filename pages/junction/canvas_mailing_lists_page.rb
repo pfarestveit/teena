@@ -1,13 +1,13 @@
 require_relative '../../util/spec_helper'
 
 module Page
-  module CalCentralPages
+  module JunctionPages
     class CanvasMailingListsPage
 
       include PageObject
       include Logging
       include Page
-      include CalCentralPages
+      include JunctionPages
 
       # Search
       text_area(:site_id_input, id: 'bc-page-site-mailing-list-site-id')
@@ -53,7 +53,7 @@ module Page
       # Loads the standalone version of the admin Mailing Lists tool
       def load_standalone_tool
         logger.info 'Loading standalone admin Mailing Lists tool'
-        navigate_to "#{Utils.calcentral_base_url}/canvas/site_mailing_lists"
+        navigate_to "#{Utils.junction_base_url}/canvas/site_mailing_lists"
       end
 
       # Searches for a mailing list
@@ -95,14 +95,14 @@ module Page
 
       # Clears the cached course site membership so that a membership change will be found immediately
       # @param driver [Selenium::WebDriver]
-      # @param splash_page [Page::CalCentralPages::SplashPage]
-      # @param dashboard_page [Page::CalCentralPages::MyDashboardPage]
+      # @param splash_page [Page::JunctionPages::SplashPage]
+      # @param toolbox_page [Page::JunctionPages::MyToolboxPage]
       # @param course [Course]
       # @param uid [Integer]
-      def clear_membership_cache(driver, splash_page, dashboard_page, course, uid)
+      def clear_membership_cache(driver, splash_page, toolbox_page, course, uid)
         logger.info 'Updating mailing list memberships'
         key = "Canvas::CourseUsers/#{course.site_id}/#{uid}"
-        Utils.clear_cache(driver, splash_page, dashboard_page, key)
+        Utils.clear_cache(driver, splash_page, toolbox_page, key)
       end
 
       # Clicks the 'cancel' button

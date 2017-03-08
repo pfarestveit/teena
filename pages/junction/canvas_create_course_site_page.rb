@@ -2,14 +2,14 @@ require_relative '../../util/spec_helper'
 
 module Page
 
-  module CalCentralPages
+  module JunctionPages
 
     class CanvasCreateCourseSitePage
 
       include PageObject
       include Logging
       include Page
-      include CalCentralPages
+      include JunctionPages
 
       h1(:page_heading, xpath: '//h1[text()="Create a Course Site"]')
 
@@ -47,10 +47,10 @@ module Page
         switch_to_canvas_iframe driver
       end
 
-      # Loads the LTI tool in the CalCentral context
+      # Loads the LTI tool in the Junction context
       def load_standalone_tool
         logger.info 'Loading standalone version of Create Course Site tool'
-        navigate_to "#{Utils.calcentral_base_url}/canvas/create_course_site"
+        navigate_to "#{Utils.junction_base_url}/canvas/create_course_site"
       end
 
       # Clicks the button for the test course's term. Uses JavaScript rather than WebDriver

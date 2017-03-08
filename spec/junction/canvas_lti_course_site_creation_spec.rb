@@ -12,14 +12,14 @@ describe 'bCourses course site creation' do
     @driver = Utils.launch_browser
     test_output = Utils.initialize_canvas_test_output(self, ['Term', 'Course Code', 'Instructor', 'Site ID', 'Students', 'Waitlist Students', 'Teachers', 'TAs'])
 
-    @splash_page = Page::CalCentralPages::SplashPage.new @driver
+    @splash_page = Page::JunctionPages::SplashPage.new @driver
     @cal_net_page = Page::CalNetPage.new @driver
-    @academics_api = ApiMyAcademicsPage.new @driver
-    @site_creation_page = Page::CalCentralPages::CanvasSiteCreationPage.new @driver
-    @create_course_site_page = Page::CalCentralPages::CanvasCreateCourseSitePage.new @driver
+    @academics_api = ApiAcademicsCourseProvisionPage.new @driver
+    @site_creation_page = Page::JunctionPages::CanvasSiteCreationPage.new @driver
+    @create_course_site_page = Page::JunctionPages::CanvasCreateCourseSitePage.new @driver
     @canvas_page = Page::CanvasPage.new @driver
-    @roster_photos_page = Page::CalCentralPages::CanvasRostersPage.new @driver
-    @course_captures_page = Page::CalCentralPages::CanvasCourseCapturesPage.new @driver
+    @roster_photos_page = Page::JunctionPages::CanvasRostersPage.new @driver
+    @course_captures_page = Page::JunctionPages::CanvasCourseCapturesPage.new @driver
 
     # Authenticate in Canvas
     masquerade ?

@@ -1,13 +1,13 @@
 require_relative '../../util/spec_helper'
 
 module Page
-  module CalCentralPages
+  module JunctionPages
     class CanvasMailingListPage
 
       include PageObject
       include Logging
       include Page
-      include CalCentralPages
+      include JunctionPages
 
       link(:mailing_list_link, text: 'Mailing List')
       div(:no_list_msg, xpath: '//div[contains(.,"No Mailing List has yet been created for this site.")]')
@@ -30,7 +30,7 @@ module Page
       # @param course [Course]
       def load_standalone_tool(course)
         logger.info "Loading standalone instructor Mailing List tool for course ID #{course.site_id}"
-        navigate_to "#{Utils.calcentral_base_url}/canvas/site_mailing_list/#{course.site_id}"
+        navigate_to "#{Utils.junction_base_url}/canvas/site_mailing_list/#{course.site_id}"
       end
 
       # Clicks the 'create list' button

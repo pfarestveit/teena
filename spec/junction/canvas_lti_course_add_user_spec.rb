@@ -32,10 +32,10 @@ describe 'bCourses Find a Person to Add', order: :defined do
     @driver = Utils.launch_browser
     @cal_net = Page::CalNetPage.new @driver
     @canvas = Page::CanvasPage.new @driver
-    @splash_page = Page::CalCentralPages::SplashPage.new @driver
-    @site_creation_page = Page::CalCentralPages::CanvasSiteCreationPage.new @driver
-    @create_course_site_page = Page::CalCentralPages::CanvasCreateCourseSitePage.new @driver
-    @course_add_user_page = Page::CalCentralPages::CanvasCourseAddUserPage.new @driver
+    @splash_page = Page::JunctionPages::SplashPage.new @driver
+    @site_creation_page = Page::JunctionPages::CanvasSiteCreationPage.new @driver
+    @create_course_site_page = Page::JunctionPages::CanvasCreateCourseSitePage.new @driver
+    @course_add_user_page = Page::JunctionPages::CanvasCourseAddUserPage.new @driver
 
     if masquerade
       @canvas.log_in(@cal_net, Utils.super_admin_username, Utils.super_admin_password)

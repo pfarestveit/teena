@@ -2,14 +2,14 @@ require_relative '../../util/spec_helper'
 
 module Page
 
-  module CalCentralPages
+  module JunctionPages
 
     class CanvasCourseManageSectionsPage
 
       include PageObject
       include Logging
       include Page
-      include CalCentralPages
+      include JunctionPages
 
       link(:official_sections_link, text: 'Official Sections')
       button(:edit_sections_button, xpath: '//button[contains(text(),"Edit Sections")]')
@@ -39,7 +39,7 @@ module Page
       # Loads the standalone version of the Official Sections tool
       # @param course [Course]
       def load_standalone_tool(course)
-        navigate_to "#{Utils.calcentral_base_url}/canvas/course_manage_official_sections/#{course.site_id}"
+        navigate_to "#{Utils.junction_base_url}/canvas/course_manage_official_sections/#{course.site_id}"
       end
 
       # Clicks the sidebar Official Sections link and shifts focus to the tool

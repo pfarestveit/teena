@@ -2,14 +2,14 @@ require_relative '../../util/spec_helper'
 
 module Page
 
-  module CalCentralPages
+  module JunctionPages
 
     class CanvasRostersPage
 
       include PageObject
       include Logging
       include Page
-      include CalCentralPages
+      include JunctionPages
 
       link(:roster_photos_link, text: 'Roster Photos')
 
@@ -34,11 +34,11 @@ module Page
         switch_to_canvas_iframe driver
       end
 
-      # Loads the LTI tool in the CalCentral context
+      # Loads the LTI tool in the Junction context
       # @param course [Course]
       def load_standalone_tool(course)
         logger.info 'Loading standalone version of Roster Photos tool'
-        navigate_to "#{Utils.calcentral_base_url}/canvas/rosters/#{course.site_id}"
+        navigate_to "#{Utils.junction_base_url}/canvas/rosters/#{course.site_id}"
       end
 
       # Clicks the sidebar Roster Photos link and shifts focus to the tool

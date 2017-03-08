@@ -2,23 +2,36 @@ require_relative '../../util/spec_helper'
 
 module Page
 
-  module CalCentralPages
+  module JunctionPages
 
-    class MyAcademicsCourseCapturesCard < MyAcademicsClassPage
+    class CanvasCourseCapturesPage
 
       include PageObject
       include Logging
       include Page
-      include CalCentralPages
+      include JunctionPages
 
-      h2(:course_capture_heading, xpath: '//h2[text()="Course Captures"]')
-      div(:no_course_capture_msg, xpath: '//div[contains(text(),"There are no recordings available.")]')
-      div(:no_video_msg, xpath: '//div[contains(.,"No video content available.")]')
+      link(:course_captures_link, text: 'Course Captures')
       elements(:section_content, :div, class: 'cc-webcast-table')
       elements(:section_code, :h3, xpath: '//h3[@data-ng-if="media.length > 1"]')
-      elements(:video_table, :table, xpath: '//table[@data-ng-if="section.videos.length"]')
       elements(:you_tube_alert, :div, xpath: '//div[contains(.,"Log in to YouTube with your bConnected account to watch the videos below.")]')
       link(:report_problem, xpath: '//a[contains(text(),"Report a problem")]')
+
+      # Loads the course capture LTI tool within a course site
+      # @param driver [Selenium::WebDriver]
+      # @param course [Course]
+      def load_embedded_tool(driver, course)
+        logger.info "Loading course capture tool on site ID #{course.site_id}"
+        navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/external_tools/#{Utils.canvas_course_captures_tool}"
+        switch_to_canvas_iframe driver
+      end
+
+      # Loads the standalone version of the course capture tool
+      # @param course [Course]
+      def load_standalone_tool(course)
+        logger.info "Loading standalone course capture tool for site ID #{course.site_id}"
+        navigate_to "#{Utils.junction_base_url}/canvas/course_mediacasts/#{course.site_id}"
+      end
 
       # Returns the course plus section code at a given index, which is shown when more than one set of recordings is present
       # @param index [Integer]

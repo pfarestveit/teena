@@ -27,8 +27,8 @@ canvas:
   mailing_lists_tool: secret
   mailing_list_tool: secret
 
-calcentral:
-  base_url: https://calcentral-qa.berkeley.edu
+junction:
+  base_url: https://junction-qa.berkeley.edu
   basic_auth_password: secret
   admin_uid: secret
 

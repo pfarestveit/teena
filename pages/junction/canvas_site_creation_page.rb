@@ -2,14 +2,14 @@ require_relative '../../util/spec_helper'
 
 module Page
 
-  module CalCentralPages
+  module JunctionPages
 
     class CanvasSiteCreationPage
 
       include PageObject
       include Logging
       include Page
-      include CalCentralPages
+      include JunctionPages
 
       h2(:page_heading, xpath: '//h2[text()="Create a Site"]')
 
@@ -24,12 +24,12 @@ module Page
 
       # Loads site creation page
       def load_page
-        navigate_to "#{Utils.calcentral_base_url}/canvas/embedded/site_creation"
+        navigate_to "#{Utils.junction_base_url}/canvas/embedded/site_creation"
         page_heading_element.when_visible Utils.medium_wait
       end
 
       # Clicks the create course site button and waits for the page to load
-      # @param course_site_page [Page::CalCentralPages::CanvasCreateCourseSitePage]
+      # @param course_site_page [Page::JunctionPages::CanvasCreateCourseSitePage]
       def click_create_course_site(course_site_page)
         wait_for_load_and_click create_course_site_link_element
         course_site_page.page_heading_element.when_visible Utils.medium_wait
