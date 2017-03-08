@@ -19,7 +19,8 @@ describe 'Engagement Index points configuration', order: :defined do
     @engagement_index = Page::SuiteCPages::EngagementIndexPage.new @driver
 
     @canvas.log_in(@cal_net, Utils.super_admin_username, Utils.super_admin_username)
-    @canvas.get_suite_c_test_course(@driver, @course, [@teacher, @student], Utils.get_test_id, [SuiteCTools::ASSET_LIBRARY, SuiteCTools::ENGAGEMENT_INDEX])
+    @canvas.create_generic_course_site(@driver, Utils.canvas_qa_sub_account, @course, [@teacher, @student],
+                                       Utils.get_test_id, [SuiteCTools::ASSET_LIBRARY, SuiteCTools::ENGAGEMENT_INDEX])
 
     @canvas.load_course_site(@driver, @course)
     @asset_library_url = @canvas.click_tool_link(@driver, SuiteCTools::ASSET_LIBRARY)

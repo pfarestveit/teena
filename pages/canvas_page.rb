@@ -18,6 +18,7 @@ module Page
     link(:stop_masquerading_link, class: 'stop_masquerading')
     h2(:recent_activity_heading, xpath: '//h2[contains(text(),"Recent Activity")]')
 
+    h1(:unexpected_error_msg, xpath: '//h1[contains(text(),"Unexpected Error")]')
     h2(:unauthorized_msg, xpath: '//h2[contains(text(),"Unauthorized")]')
 
     # Loads the Canvas homepage
@@ -71,9 +72,10 @@ module Page
           stop_masquerading_link_element.when_not_present(Utils.medium_wait)
     end
 
-    # Loads the QA sub-account page
-    def load_sub_account
-      navigate_to "#{Utils.canvas_base_url}/accounts/#{Utils.canvas_sub_account}"
+    # Loads a given sub-account page
+    def load_sub_account(sub_account)
+      logger.debug "Loading sub-account #{sub_account}"
+      navigate_to "#{Utils.canvas_base_url}/accounts/#{sub_account}"
     end
 
     # Hides the footer element in order to interact with elements hidden beneath it. Clicks once to set focus on the footer
@@ -167,21 +169,31 @@ module Page
       navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/users"
     end
 
-    # Searches for a course site using a unique identifier
-    # @param test_id [String]
+    # Searches a sub-account for a course site using a unique identifier
+    # @param course [Course]
+    # @param sub_account [String]
     # @return [String]
-    def search_for_course(test_id)
+    def search_for_course(course, sub_account)
       tries ||= 6
-      logger.info 'Searching for course site'
-      load_sub_account
-      search_course_input_element.when_visible timeout=Utils.short_wait
-      self.search_course_input = "#{test_id}"
-      search_course_button
-      wait_until(timeout) { course_site_heading.include? "#{test_id}" }
+      logger.info "Searching for '#{course.code}'"
+      load_sub_account sub_account
+      wait_for_element_and_type(search_course_input_element, "#{course.code}")
+      wait_for_update_and_click search_course_button_element
+      wait_until(Utils.short_wait) { course_site_heading.include? "#{course.code}" }
       current_url.sub("#{Utils.canvas_base_url}/courses/", '')
-    rescue => e
+    rescue
       logger.error('Course site not found, retrying')
       retry unless (tries -= 1).zero?
+    end
+
+    # Scrolls down the users table until a given user appears in the table
+    # @param user [User]
+    def wait_for_user(user)
+      wait_until(Utils.medium_wait) do
+        scroll_to_bottom
+        sleep 1
+        cell_element(xpath: "//tr[contains(@id,'#{user.canvas_id}')]").when_present Utils.short_wait
+      end
     end
 
     # Adds a collection of users to a course site with the role associated with the user
@@ -210,9 +222,7 @@ module Page
             users_ready_to_add_msg_element.when_visible Utils.medium_wait
             hide_footer
             wait_for_update_and_click_js next_button_element
-            # Scroll down so that all users load on the page
-            5.times { scroll_to_bottom; sleep 1 }
-            users_with_role.each { |user| cell_element(xpath: "//tr[contains(@id,'#{user.canvas_id}')]").when_present Utils.short_wait }
+            users_with_role.each { |user| wait_for_user user }
           rescue => e
             logger.error "#{e.message}\n#{e.backtrace}"
             logger.warn 'Add User failed, retrying'
@@ -229,15 +239,8 @@ module Page
       logger.info "Removing #{user.role} UID #{user.uid} from course site ID #{course.site_id}"
       load_users_page course
       hide_footer
-      # Scroll down a few times until the user appears on the page
-      begin
-        tries ||= 5
-        scroll_to_bottom
-        (link = link_element(xpath: "//tr[@id='user_#{user.canvas_id}']//a[contains(@class,'al-trigger')]")).when_present 1
-      rescue
-        retry unless (tries -=1).zero?
-      end
-      wait_for_update_and_click link
+      wait_for_user user
+      wait_for_update_and_click link_element(xpath: "//tr[@id='user_#{user.canvas_id}']//a[contains(@class,'al-trigger')]")
       confirm(true) { wait_for_update_and_click link_element(xpath: "//tr[@id='user_#{user.canvas_id}']//a[@data-event='removeFromCourse']") }
       remove_user_success_element.when_visible Utils.short_wait
     end
@@ -341,14 +344,16 @@ module Page
       published_button_element.when_present Utils.medium_wait
     end
 
-    # Creates standard Canvas course site, publishes it, and adds test users.
+    # Creates standard Canvas course site in a given sub-account, publishes it, and adds test users.
     # @param driver [Selenium::WebDriver]
+    # @param sub_account [String]
     # @param course [Course]
     # @param test_users [Array<User>]
     # @param test_id [String]
-    def create_generic_course_site(driver, course, test_users, test_id)
+    # @param tools [Array<SuiteCTools>]
+    def create_generic_course_site(driver, sub_account, course, test_users, test_id, tools = nil)
       if course.site_id.nil?
-        load_sub_account
+        load_sub_account sub_account
         wait_for_load_and_click_js add_new_course_button_element
         course_name_input_element.when_visible Utils.short_wait
         course.title = "QA Test - #{test_id}" if course.title.nil?
@@ -358,7 +363,7 @@ module Page
         logger.info "Creating a course site named #{course.title} in #{course.term} semester"
         wait_for_update_and_click_js create_course_button_element
         add_course_success_element.when_visible Utils.medium_wait
-        course.site_id = search_for_course test_id
+        course.site_id = search_for_course(course, sub_account)
         unless course.term.nil?
           navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/settings"
           wait_for_element_and_select_js(term_element, course.term)
@@ -372,21 +377,8 @@ module Page
       logger.info "Course ID is #{course.site_id}"
       add_users(course, test_users)
       load_course_site(driver, course)
-    end
-
-    # Creates standard course site and then customizes it for SuiteC testing by setting test user emails and adding
-    # SuiteC tools required for the test
-    # @param driver [Selenium::WebDriver]
-    # @param course [Course]
-    # @param test_users [Array<User>]
-    # @param test_id [String]
-    # @param tools [Array<SuiteCTools>]
-    def get_suite_c_test_course(driver, course, test_users, test_id, tools)
-      course.title = "QA SuiteC Test #{test_id}" if course.site_id.nil?
-      create_generic_course_site(driver, course, test_users, test_id)
       reset_user_email(course, test_users)
-      tools.each { |tool| add_suite_c_tool(course, tool) unless tool_nav_link(tool).exists? }
-      load_course_site(driver, course)
+      tools.each { |tool| add_suite_c_tool(course, tool) unless tool_nav_link(tool).exists? } if tools
     end
 
     button(:delete_course_button, xpath: '//button[text()="Delete Course"]')
@@ -448,11 +440,11 @@ module Page
       # Enter the tool config
       wait_for_update_and_click_js app_name_input_element
       self.app_name_input = "#{tool.name}"
-      self.key_input = Utils.lti_key
-      self.secret_input = Utils.lti_secret
+      self.key_input = Utils.suitec_lti_key
+      self.secret_input = Utils.suitec_lti_secret
       self.url_input = "#{Utils.suite_c_base_url}#{tool.xml}"
       submit_button
-      link_element(xpath: "//td[@title='#{tool.name}']").when_present
+      link_element(xpath: "//td[@title='#{tool.name}']").when_present Utils.medium_wait
 
       # Move the tool from disabled to enabled
       load_tools_config_page course

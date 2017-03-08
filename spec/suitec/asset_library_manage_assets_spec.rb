@@ -28,7 +28,7 @@ describe 'Asset', order: :defined do
 
     # Obtain course site and add two new asset categories
     @canvas.log_in(@cal_net, Utils.super_admin_username, Utils.super_admin_password)
-    @canvas.get_suite_c_test_course(@driver, @course, users, test_id, [SuiteCTools::ASSET_LIBRARY, SuiteCTools::ENGAGEMENT_INDEX, SuiteCTools::WHITEBOARDS])
+    @canvas.create_generic_course_site(@driver, Utils.canvas_qa_sub_account, @course, users, test_id, [SuiteCTools::ASSET_LIBRARY, SuiteCTools::ENGAGEMENT_INDEX, SuiteCTools::WHITEBOARDS])
     @whiteboards_url = @canvas.click_tool_link(@driver, SuiteCTools::WHITEBOARDS)
     @engagement_index_url = @canvas.click_tool_link(@driver, SuiteCTools::ENGAGEMENT_INDEX)
     @asset_library_url = @canvas.click_tool_link(@driver, SuiteCTools::ASSET_LIBRARY)
@@ -328,7 +328,7 @@ describe 'Asset', order: :defined do
       # Create a destination course site with an asset library for asset migration
       destination_test_id = Utils.get_test_id
       @destination_course = Course.new({})
-      @canvas.get_suite_c_test_course(@driver, @destination_course, [teacher], destination_test_id, [SuiteCTools::ASSET_LIBRARY])
+      @canvas.create_generic_course_site(@driver, Utils.canvas_qa_sub_account, @destination_course, [teacher], destination_test_id, [SuiteCTools::ASSET_LIBRARY])
       @destination_library = Page::SuiteCPages::AssetLibraryPage.new @driver
       @destination_library_url = @canvas.click_tool_link(@driver, SuiteCTools::ASSET_LIBRARY)
 

@@ -21,7 +21,7 @@ describe 'A Canvas discussion', order: :defined do
     tools = [SuiteCTools::ENGAGEMENT_INDEX]
     tools << SuiteCTools::ASSET_LIBRARY unless course_id.nil?
     @canvas.log_in(@cal_net, Utils.ets_qa_username, Utils.ets_qa_password)
-    @canvas.get_suite_c_test_course(@driver, @course, [@user_1, @user_2], test_id, tools)
+    @canvas.create_generic_course_site(@driver, Utils.canvas_qa_sub_account, @course, [@user_1, @user_2], test_id, tools)
     @engagement_index_url = @canvas.click_tool_link(@driver, SuiteCTools::ENGAGEMENT_INDEX)
     unless course_id.nil?
       @asset_library = Page::SuiteCPages::AssetLibraryPage.new @driver

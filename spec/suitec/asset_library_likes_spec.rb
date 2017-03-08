@@ -23,7 +23,8 @@ describe 'Asset', order: :defined do
     @engagement_index = Page::SuiteCPages::EngagementIndexPage.new @driver
 
     @canvas.log_in(@cal_net, Utils.ets_qa_username, Utils.ets_qa_password)
-    @canvas.get_suite_c_test_course(@driver, @course, [@asset_uploader, @asset_admirer], test_id, [SuiteCTools::ASSET_LIBRARY, SuiteCTools::ENGAGEMENT_INDEX])
+    @canvas.create_generic_course_site(@driver, Utils.canvas_qa_sub_account, @course, [@asset_uploader, @asset_admirer],
+                                       test_id, [SuiteCTools::ASSET_LIBRARY, SuiteCTools::ENGAGEMENT_INDEX])
 
     @asset_library_url = @canvas.click_tool_link(@driver, SuiteCTools::ASSET_LIBRARY)
     @engagement_index_url = @canvas.click_tool_link(@driver, SuiteCTools::ENGAGEMENT_INDEX)

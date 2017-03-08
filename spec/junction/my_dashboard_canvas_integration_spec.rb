@@ -33,7 +33,7 @@ describe 'My Dashboard', order: :defined do
       @course.term = @classes_api.current_term @driver
       @my_dashboard.log_out @splash_page
       @canvas.log_in(@cal_net, Utils.super_admin_username, Utils.super_admin_password)
-      @canvas.create_generic_course_site(@driver, @course, [@teacher, @student], test_id)
+      @canvas.create_generic_course_site(@driver, Utils.canvas_qa_sub_account, @course, [@teacher, @student], test_id)
       @canvas.log_out(@driver, @cal_net)
 
       # Student accepts course invite so that the site will be included in the user's data

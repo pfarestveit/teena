@@ -1,5 +1,5 @@
-require_relative 'spec_helper'
 require 'hash_deep_merge'
+require_relative 'spec_helper'
 
 class Utils
 
@@ -139,12 +139,12 @@ class Utils
   end
 
   # LTI tool key for SuiteC test environment
-  def self.lti_key
+  def self.suitec_lti_key
     @config['suite_c']['lti_key']
   end
 
   # LTI tool secret for SuiteC test environment
-  def self.lti_secret
+  def self.suitec_lti_secret
     @config['suite_c']['lti_secret']
   end
 
@@ -160,9 +160,19 @@ class Utils
     @config['canvas']['base_url']
   end
 
+  # Canvas 'Admin' sub-account ID
+  def self.canvas_admin_sub_account
+    @config['canvas']['admin_sub_account']
+  end
+
+  # Canvas 'Official Courses' sub-account ID
+  def self.canvas_official_courses_sub_account
+    @config['canvas']['official_courses_sub_account']
+  end
+
   # Canvas 'QA' sub-account ID
-  def self.canvas_sub_account
-    @config['canvas']['sub_account']
+  def self.canvas_qa_sub_account
+    @config['canvas']['qa_sub_account']
   end
 
   # Canvas ID of create course site tool
@@ -190,6 +200,16 @@ class Utils
     @config['canvas']['official_sections_tool']
   end
 
+  # Canvas ID of admin mailing lists tool
+  def self.canvas_mailing_lists_tool
+    @config['canvas']['mailing_lists_tool']
+  end
+
+  # Canvas ID of instructor mailing list tool
+  def self.canvas_mailing_list_tool
+    @config['canvas']['mailing_list_tool']
+  end
+
   # CALCENTRAL
 
   # Base URL of CalCentral test environment
@@ -202,11 +222,18 @@ class Utils
     @config['calcentral']['basic_auth_password']
   end
 
-  # Authenticates in CalCentral as an admin and expires all cache
-  def self.clear_cache(driver, splash_page, my_dashboard_page)
+  # Authenticates in CalCentral as an admin and expires a specific cache key or all cache
+  # @param driver [Selenium::WebDriver]
+  # @param splash_page [Page::CalCentralPages::SplashPage]
+  # @param my_dashboard_page [Page::CalCentralPages::MyDashboardPage]
+  # @param cache_key [String]
+  def self.clear_cache(driver, splash_page, my_dashboard_page, cache_key = nil)
     splash_page.load_page
     splash_page.basic_auth @config['calcentral']['admin_uid']
-    driver.get "#{calcentral_base_url}/api/cache/clear"
+    cache_key.nil? ?
+        driver.get("#{calcentral_base_url}/api/cache/clear") :
+        driver.get("#{calcentral_base_url}/api/cache/delete?key=#{cache_key}")
+    sleep 3
     my_dashboard_page.load_page
     my_dashboard_page.click_log_out_link
   end
