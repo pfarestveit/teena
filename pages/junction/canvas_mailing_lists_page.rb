@@ -93,18 +93,6 @@ module Page
         wait_for_update_and_click update_membership_button_element
       end
 
-      # Clears the cached course site membership so that a membership change will be found immediately
-      # @param driver [Selenium::WebDriver]
-      # @param splash_page [Page::JunctionPages::SplashPage]
-      # @param toolbox_page [Page::JunctionPages::MyToolboxPage]
-      # @param course [Course]
-      # @param uid [Integer]
-      def clear_membership_cache(driver, splash_page, toolbox_page, course, uid)
-        logger.info 'Updating mailing list memberships'
-        key = "Canvas::CourseUsers/#{course.site_id}/#{uid}"
-        Utils.clear_cache(driver, splash_page, toolbox_page, key)
-      end
-
       # Clicks the 'cancel' button
       def click_cancel
         logger.debug 'Clicking cancel'

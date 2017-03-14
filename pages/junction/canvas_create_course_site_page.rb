@@ -4,7 +4,7 @@ module Page
 
   module JunctionPages
 
-    class CanvasCreateCourseSitePage
+    class CanvasCreateCourseSitePage < CanvasSiteCreationPage
 
       include PageObject
       include Logging
@@ -38,15 +38,6 @@ module Page
       button(:create_site_button, xpath: '//button[text()="Create Course Site"]')
       button(:go_back_button, xpath: '//button[text()="Go Back"]')
 
-      # Loads the LTI tool in the context of a Canvas course site
-      # @param driver [Selenium::WebDriver]
-      # @param user [User]
-      def load_embedded_tool(driver, user)
-        logger.info 'Loading embedded version of Create Course Site tool'
-        navigate_to "#{Utils.canvas_base_url}/users/#{user.canvas_id}/external_tools/#{Utils.canvas_create_course_site_tool}"
-        switch_to_canvas_iframe driver
-      end
-
       # Loads the LTI tool in the Junction context
       def load_standalone_tool
         logger.info 'Loading standalone version of Create Course Site tool'
@@ -56,7 +47,7 @@ module Page
       # Clicks the button for the test course's term. Uses JavaScript rather than WebDriver
       # @param course [Course]
       def choose_term(course)
-        button_element(xpath: "//label[contains(.,'#{course.term}')]/preceding-sibling::input").when_visible Utils.medium_wait
+        button_element(xpath: "//label[contains(.,'#{course.term}')]/preceding-sibling::input").when_visible Utils.long_wait
         wait_for_update_and_click_js button_element(xpath: "//label[contains(.,'#{course.term}')]/preceding-sibling::input")
       end
 
