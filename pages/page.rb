@@ -12,6 +12,16 @@ module Page
     driver.switch_to.frame driver.find_element(id: 'tool_content')
   end
 
+  # Hides the Canvas footer element in order to interact with elements hidden beneath it. Clicks once to set focus on the footer
+  # and once again to hide it.
+  def hide_canvas_footer
+    if (footer = div_element(id: 'element_toggler_0')).exists? && footer.visible?
+      footer.click
+      sleep 1
+      footer.click
+    end
+  end
+
   # Waits for an element to exist and to become visible
   # @param element [PageObject::Elements::Element]
   # @param timeout [Fixnum]
@@ -25,6 +35,7 @@ module Page
   # @param timeout [Fixnum]
   def click_element(element, timeout)
     wait_for_element(element, timeout)
+    hide_canvas_footer
     element.click
     sleep 1
   end

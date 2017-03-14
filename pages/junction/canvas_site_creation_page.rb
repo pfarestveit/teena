@@ -12,6 +12,7 @@ module Page
       include JunctionPages
 
       h2(:page_heading, xpath: '//h2[text()="Create a Site"]')
+      paragraph(:access_denied, xpath: '//p[contains(.,"This feature is only available to faculty and staff.")]')
 
       link(:create_course_site_link, text: 'Create a Course Site')
       paragraph(:course_sites_text, xpath: '//p[contains(text(),"Set up course sites to communicate with and manage the work of students enrolled in your classes.")]')
@@ -19,13 +20,20 @@ module Page
       link(:bcourses_support_link, xpath: '//a[contains(text(),"bCourses support")]')
 
       link(:create_project_site_link, text: 'Create a Project Site')
-      paragraph(:projects_sites_text, xpath: '//p[contains(text(),"Share files and collaborate with your project or teaching team. Projects are best suited for instructors and GSIs who already use bCourses for their courses.")]')
-      link(:projects_learn_more_link, xpath: '//a[contains(text(), "Learn more about your online collaboration options.")]')
+      link(:projects_learn_more_link, xpath: '//a[contains(., "more about collaboration tools available at UC Berkeley.")]')
 
-      # Loads site creation page
-      def load_page
+      # Loads the LTI tool in the context of a Canvas course site
+      # @param driver [Selenium::WebDriver]
+      # @param user [User]
+      def load_embedded_tool(driver, user)
+        logger.info 'Loading embedded version of Create Course Site tool'
+        navigate_to "#{Utils.canvas_base_url}/users/#{user.canvas_id}/external_tools/#{Utils.canvas_create_site_tool}"
+        switch_to_canvas_iframe driver
+      end
+
+      # Loads standalone site creation page
+      def load_standalone_tool
         navigate_to "#{Utils.junction_base_url}/canvas/embedded/site_creation"
-        page_heading_element.when_visible Utils.medium_wait
       end
 
       # Clicks the create course site button and waits for the page to load
@@ -37,7 +45,7 @@ module Page
 
       # Clicks the create project site button
       def click_create_project_site
-        wait_for_update_and_click_js create_project_site_link_element
+        wait_for_update_and_click create_project_site_link_element
       end
 
     end

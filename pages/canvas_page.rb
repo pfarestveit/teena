@@ -9,7 +9,6 @@ module Page
     include Page
 
     link(:profile_link, id: 'global_nav_profile_link')
-    div(:footer, id: 'element_toggler_0')
 
     h2(:updated_terms_heading, xpath: '//h2[contains(text(),"Updated Terms of Use")]')
     checkbox(:terms_cbx, name: 'user[terms_of_use]')
@@ -23,7 +22,6 @@ module Page
 
     # Loads the Canvas homepage
     def load_homepage
-      logger.info "Loading Canvas homepage at #{Utils.canvas_base_url}"
       navigate_to "#{Utils.canvas_base_url}"
     end
 
@@ -53,10 +51,11 @@ module Page
     # @param course [Course]
     def masquerade_as(driver, user, course = nil)
       load_homepage
+      sleep 2
       stop_masquerading(driver) if stop_masquerading_link?
       logger.info "Masquerading as #{user.role} UID #{user.uid}"
       navigate_to "#{Utils.canvas_base_url}/users/#{user.canvas_id.to_s}/masquerade"
-      wait_for_load_and_click_js masquerade_link_element
+      wait_for_load_and_click masquerade_link_element
       stop_masquerading_link_element.when_visible
       load_course_site(driver, course) unless course.nil?
     end
@@ -66,7 +65,7 @@ module Page
     def stop_masquerading(driver)
       logger.debug 'Ending masquerade'
       load_homepage
-      wait_for_load_and_click_js stop_masquerading_link_element
+      wait_for_load_and_click stop_masquerading_link_element
       ("#{driver.browser}" == 'chrome') ?
           stop_masquerading_link_element.when_not_visible(Utils.medium_wait) :
           stop_masquerading_link_element.when_not_present(Utils.medium_wait)
@@ -76,17 +75,6 @@ module Page
     def load_sub_account(sub_account)
       logger.debug "Loading sub-account #{sub_account}"
       navigate_to "#{Utils.canvas_base_url}/accounts/#{sub_account}"
-    end
-
-    # Hides the footer element in order to interact with elements hidden beneath it. Clicks once to set focus on the footer
-    # and once again to hide it.
-    def hide_footer
-      footer_element.when_present Utils.short_wait
-      if footer_element.visible?
-        footer_element.click
-        sleep 1
-        footer_element.click
-      end
     end
 
     # COURSE SITE SETUP
@@ -220,7 +208,7 @@ module Page
             self.user_role = user_role
             wait_for_update_and_click_js next_button_element
             users_ready_to_add_msg_element.when_visible Utils.medium_wait
-            hide_footer
+            hide_canvas_footer
             wait_for_update_and_click_js next_button_element
             users_with_role.each { |user| wait_for_user user }
           rescue => e
@@ -238,7 +226,7 @@ module Page
     def remove_user_from_course(course, user)
       logger.info "Removing #{user.role} UID #{user.uid} from course site ID #{course.site_id}"
       load_users_page course
-      hide_footer
+      hide_canvas_footer
       wait_for_user user
       wait_for_update_and_click link_element(xpath: "//tr[@id='user_#{user.canvas_id}']//a[contains(@class,'al-trigger')]")
       confirm(true) { wait_for_update_and_click link_element(xpath: "//tr[@id='user_#{user.canvas_id}']//a[@data-event='removeFromCourse']") }
@@ -248,7 +236,7 @@ module Page
     # Searches for a user by Canvas user ID
     # @param user [User]
     def search_user_by_canvas_id(user)
-      wait_for_element_and_type_js(search_user_input_element, user.canvas_id)
+      wait_for_element_and_type(search_user_input_element, user.canvas_id)
       sleep 1
     end
 
@@ -277,8 +265,8 @@ module Page
     # @param driver [Selenium::WebDriver]
     def click_find_person_to_add(driver)
       logger.debug 'Clicking Find a Person to Add button'
-      wait_for_load_and_click_js add_people_button_element
-      wait_for_load_and_click_js find_person_to_add_link_element
+      wait_for_load_and_click add_people_button_element
+      wait_for_load_and_click find_person_to_add_link_element
       switch_to_canvas_iframe driver
     end
 
@@ -307,7 +295,7 @@ module Page
     # @return Integer
     def enrollment_count_by_role(course, role)
       load_users_page course
-      wait_for_load_and_click_js enrollment_roles_element
+      wait_for_load_and_click enrollment_roles_element
       role_option = enrollment_roles_options.find { |option| option.include? role }
       count = role_option.delete("#{role} ()").to_i
       logger.debug "The count of #{role} users is currently #{count}"
@@ -449,7 +437,7 @@ module Page
       # Move the tool from disabled to enabled
       load_tools_config_page course
       wait_for_update_and_click navigation_link_element
-      hide_footer
+      hide_canvas_footer
       wait_for_update_and_click_js link_element(xpath: "//ul[@id='nav_disabled_list']/li[contains(.,'#{tool.name}')]//a")
       wait_for_update_and_click_js link_element(xpath: "//ul[@id='nav_disabled_list']/li[contains(.,'#{tool.name}')]//a[@title='Enable this item']")
       list_item_element(xpath: "//ul[@id='nav_enabled_list']/li[contains(.,'#{tool.name}')]").when_visible Utils.medium_wait
@@ -463,7 +451,7 @@ module Page
     # @return [String]
     def click_tool_link(driver, tool)
       driver.switch_to.default_content
-      hide_footer
+      hide_canvas_footer
       wait_for_update_and_click_js tool_nav_link(tool)
       wait_until(Utils.medium_wait) { title == "#{tool.name}" }
       logger.info "#{tool.name} URL is #{current_url}"
@@ -555,7 +543,7 @@ module Page
         wait_until(Utils.short_wait) { secondary_reply_input_elements.any? }
         wait_for_element_and_type_js(secondary_reply_input_elements[index], reply_body)
         replies = discussion_reply_elements.length
-        hide_footer
+        hide_canvas_footer
         wait_for_update_and_click_js secondary_post_reply_button_elements[index]
       end
       wait_until(Utils.short_wait) { discussion_reply_elements.length == replies + 1 }

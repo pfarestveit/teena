@@ -16,7 +16,9 @@ begin
   @driver.manage.window.maximize
 
   def click_element_id(driver, id)
+    puts "#{Time.now} - Waiting for an element with ID '#{id}' to appear"
     @brief_wait.until { driver.find_element(id: id) }
+    puts "#{Time.now} - Found the element, clicking it"
     driver.find_element(id: id).click
   end
 

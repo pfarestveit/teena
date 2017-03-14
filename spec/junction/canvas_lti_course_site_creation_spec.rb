@@ -51,7 +51,7 @@ describe 'bCourses course site creation' do
           (%w(uid ccn).include?(@course.create_site_workflow)) ?
               @splash_page.basic_auth(Utils.super_admin_uid) :
               @splash_page.basic_auth(@teacher.uid)
-          @site_creation_page.load_page
+          @site_creation_page.load_standalone_tool
         end
         @site_creation_page.click_create_course_site @create_course_site_page
         @create_course_site_page.search_for_course(@course, @teacher, sections_for_site)
@@ -94,7 +94,7 @@ describe 'bCourses course site creation' do
         @create_course_site_page.click_next
 
         default_name = @create_course_site_page.site_name_input
-        expected_name = @course.title
+        expected_name = "#{@course.title} (#{@course.term})"
         it ("shows the default site name #{@course.title}") { expect(default_name).to eql(expected_name) }
 
         default_abbreviation = @create_course_site_page.site_abbreviation
@@ -119,20 +119,23 @@ describe 'bCourses course site creation' do
           enrollment_counts = @canvas_page.wait_for_enrollment_import(@course, ['Student', 'Waitlist Student', 'Teacher', 'TA']) if masquerade
 
           # Check roster photos tool and verify it shows the right sections
-          if masquerade && !@teacher.uid.empty?
-            has_roster_photos_link = @roster_photos_page.roster_photos_link?
-            it ("shows a Roster Photos tool link in course site navigation for #{@course.term} #{@course.code} site ID #{@course.site_id}") { expect(has_roster_photos_link).to be true }
+          unless @teacher.uid.empty?
+            if masquerade
+              has_roster_photos_link = @roster_photos_page.roster_photos_link?
+              it ("shows a Roster Photos tool link in course site navigation for #{@course.term} #{@course.code} site ID #{@course.site_id}") { expect(has_roster_photos_link).to be true }
 
-            @canvas_page.masquerade_as(@driver, @teacher, @course)
-            @roster_photos_page.load_embedded_tool(@driver, @course)
-          else
-            @roster_photos_page.load_standalone_tool @course
+              @canvas_page.masquerade_as(@driver, @teacher, @course)
+              @roster_photos_page.load_embedded_tool(@driver, @course)
+            else
+              @splash_page.basic_auth @teacher.uid
+              @roster_photos_page.load_standalone_tool @course
+            end
+            @roster_photos_page.wait_for_load_and_click_js @roster_photos_page.section_select_element
+            expected_sections_on_site = (sections_for_site.map { |section| "#{section.course} #{section.label}" })
+            actual_sections_on_site = @roster_photos_page.section_select_options
+            actual_sections_on_site.delete 'All Sections'
+            it("shows the right section list on the Roster Photos tool for #{@course.term} #{@course.code} site ID #{@course.site_id}") { expect(actual_sections_on_site).to eql(expected_sections_on_site.sort) }
           end
-          @roster_photos_page.wait_for_load_and_click_js @roster_photos_page.section_select_element
-          expected_sections_on_site = (sections_for_site.map { |section| "#{section.course} #{section.label}" })
-          actual_sections_on_site = @roster_photos_page.section_select_options
-          actual_sections_on_site.delete 'All Sections'
-          it("shows the right section list on the Roster Photos tool for #{@course.term} #{@course.code} site ID #{@course.site_id}") { expect(actual_sections_on_site).to eql(expected_sections_on_site.sort) }
 
           # Verify course capture tool is not added automatically
           if masquerade

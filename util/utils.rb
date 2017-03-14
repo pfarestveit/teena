@@ -176,8 +176,8 @@ class Utils
   end
 
   # Canvas ID of create course site tool
-  def self.canvas_create_course_site_tool
-    @config['canvas']['create_course_site_tool']
+  def self.canvas_create_site_tool
+    @config['canvas']['create_site_tool']
   end
 
   # Canvas ID of course add user tool
@@ -222,20 +222,17 @@ class Utils
     @config['junction']['basic_auth_password']
   end
 
-  # Authenticates in Junction as an admin and expires a specific cache key or all cache
+  # Authenticates in Junction as an admin and expires all cache
   # @param driver [Selenium::WebDriver]
   # @param splash_page [Page::JunctionPages::SplashPage]
-  # @param my_dashboard_page [Page::JunctionPages::MyToolboxPage]
-  # @param cache_key [String]
-  def self.clear_cache(driver, splash_page, my_dashboard_page, cache_key = nil)
+  # @param my_toolbox_page [Page::JunctionPages::MyToolboxPage]
+  def self.clear_cache(driver, splash_page, my_toolbox_page)
     splash_page.load_page
     splash_page.basic_auth @config['junction']['admin_uid']
-    cache_key.nil? ?
-        driver.get("#{junction_base_url}/api/cache/clear") :
-        driver.get("#{junction_base_url}/api/cache/delete?key=#{cache_key}")
+    driver.get("#{junction_base_url}/api/cache/clear")
     sleep 3
-    my_dashboard_page.load_page
-    my_dashboard_page.click_log_out_link
+    my_toolbox_page.load_page
+    my_toolbox_page.click_log_out_link
   end
 
   # TEST ACCOUNTS

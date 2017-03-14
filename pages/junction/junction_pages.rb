@@ -9,8 +9,7 @@ module Page
     include Page
 
     # Header
-    button(:profile_icon, xpath: '//button[@title="Settings"]')
-    button(:log_out_link, xpath: '//button[contains(text(),"Log out")]')
+    link(:log_out_link, text: 'Log out')
 
     # Footer
     div(:toggle_footer_link, xpath: '//div[@class="cc-footer-berkeley"]/div')
@@ -21,11 +20,11 @@ module Page
     # Opens the Profile popover and clicks the log out link
     def click_log_out_link
       logger.info 'Logging out of Junction'
-      wait_for_load_and_click profile_icon_element unless log_out_link_element.visible?
       wait_for_update_and_click log_out_link_element
     end
 
     # Logs the user out if the user is logged in
+    # @param splash_page [Page::JunctionPages::SplashPage]
     def log_out(splash_page)
       navigate_to Utils.junction_base_url
       toggle_footer_link_element.when_visible Utils.medium_wait

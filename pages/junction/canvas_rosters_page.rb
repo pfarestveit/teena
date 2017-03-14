@@ -21,9 +21,9 @@ module Page
       paragraph(:no_access_msg, xpath: '//p[contains(.,"You must be a teacher in this bCourses course to view official student rosters.")]')
       paragraph(:no_students_msg, xpath: '//p[contains(.,"Students have not yet signed up for this class.")]')
 
-      elements(:roster_photo, :image, xpath: '//ul[@class="cc-page-roster-list"]/li//img')
-      elements(:roster_photo_placeholder, :span, xpath: '//ul[@class="cc-page-roster-list"]/li//span[text()="No Official Photo is Available"]')
-      elements(:roster_sid, :span, xpath: '//ul[@class="cc-page-roster-list"]/li//span[@data-ng-bind="student.student_id"]')
+      elements(:roster_photo, :image, xpath: '//ul[@class="cc-page-roster-photos-list"]/li//img')
+      elements(:roster_photo_placeholder, :span, xpath: '//ul[@class="cc-page-roster-photos-list"]/li//span[text()="No Official Photo is Available"]')
+      elements(:roster_sid, :span, xpath: '//ul[@class="cc-page-roster-photos-list"]/li//span[@data-ng-bind="student.student_id"]')
 
       # Loads the LTI tool in the context of a Canvas course site
       # @param driver [Selenium::WebDriver]
