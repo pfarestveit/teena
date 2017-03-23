@@ -110,6 +110,7 @@ describe 'Canvas assignment sync', order: :defined do
       @asset_library.click_manage_assets_link
       @asset_library.disable_assignment_sync @assignment_1
       @asset_library.enable_assignment_sync @assignment_2
+      @asset_library.pause_for_poller
     end
 
     it 'does not alter existing assignment submission points on the Engagement Index score' do

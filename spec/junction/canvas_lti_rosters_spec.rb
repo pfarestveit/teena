@@ -108,6 +108,7 @@ describe 'bCourses Roster Photos' do
 
     it "shows UID #{teacher_1.uid} actual photos for enrolled students on #{course.code} course site ID #{course.site_id}" do
       @roster_photos_page.wait_until(Utils.medium_wait) { @roster_photos_page.roster_photo_elements.length <= @student_count }
+      expect(@roster_photos_page.roster_photo_elements.any?).to be true
     end
 
     it "shows UID #{teacher_1.uid} placeholder photos for waitlisted students on #{course.code} course site ID #{course.site_id}" do

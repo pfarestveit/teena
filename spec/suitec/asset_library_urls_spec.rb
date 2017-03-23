@@ -21,17 +21,23 @@ describe 'Asset Library URLs', order: :defined do
     @canvas = Page::CanvasPage.new @driver
     @cal_net= Page::CalNetPage.new @driver
     @asset_library = Page::SuiteCPages::AssetLibraryPage.new @driver
+    @engagement_index = Page::SuiteCPages::EngagementIndexPage.new @driver
 
     # Create test course site
     @canvas.log_in(@cal_net, Utils.ets_qa_username, Utils.ets_qa_password)
-    @canvas.create_generic_course_site(@driver, Utils.canvas_qa_sub_account, @course, [@user], test_id, [SuiteCTools::ASSET_LIBRARY])
+    @canvas.create_generic_course_site(@driver, Utils.canvas_qa_sub_account, @course, [@user], test_id, [SuiteCTools::ASSET_LIBRARY, SuiteCTools::ENGAGEMENT_INDEX])
 
     @canvas.load_course_site(@driver, @course)
     @asset_library_url = @canvas.click_tool_link(@driver, SuiteCTools::ASSET_LIBRARY)
+    @engagement_index_url = @canvas.click_tool_link(@driver, SuiteCTools::ENGAGEMENT_INDEX)
 
     category_id = "#{Time.now.to_i}"
     @asset_library.add_custom_categories(@driver, @asset_library_url, [(@category_1="Category 1 - #{category_id}"), (@category_2="Category 2 - #{category_id}")])
     @asset_library.delete_custom_category @category_2
+
+    @engagement_index.load_scores(@driver, @engagement_index_url)
+    @engagement_index.search_for_user @user
+    @initial_score = @engagement_index.user_score(@user).to_i
     @canvas.log_out(@driver, @cal_net)
 
     @canvas.log_in(@cal_net, @user.username, Utils.test_user_password)
@@ -52,10 +58,23 @@ describe 'Asset Library URLs', order: :defined do
     @asset_library.verify_first_asset(@user, @asset)
   end
 
+  it 'earn "Add a new asset to the Asset Library" points on the Engagement Index' do
+    @engagement_index.load_scores(@driver, @engagement_index_url)
+    @engagement_index.search_for_user @user
+    current_score = @engagement_index.user_score @user
+    expect(current_score).to eql("#{@initial_score + Activities::ADD_ASSET_TO_LIBRARY.points}")
+  end
+
+  it 'add "add_asset" activity to the CSV export' do
+    scores = @engagement_index.download_csv(@driver, @course, @engagement_index_url)
+    expect(scores).to include("#{@user.full_name}, add_asset, #{Activities::ADD_ASSET_TO_LIBRARY.points}, #{@initial_score + Activities::ADD_ASSET_TO_LIBRARY.points}")
+  end
+
   it 'can be added with title and category only' do
     @asset.title = "#{@title} 2"
     @asset.description = nil
     @asset.category = @category_1
+    @asset_library.load_page(@driver, @asset_library_url)
     @asset_library.add_site @asset
     @asset_library.wait_until(timeout) { @asset_library.list_view_asset_elements.any? }
     @asset_library.verify_first_asset(@user, @asset)

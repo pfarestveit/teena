@@ -28,7 +28,7 @@ module Page
       # If no credentials are available, then wait for manual login
       if username == 'secret' || password == 'secret'
         logger.debug 'Waiting for manual login'
-        wait_for_element_and_type_js(username_element, 'PLEASE LOG IN MANUALLY')
+        wait_for_element_and_type(username_element, 'PLEASE LOG IN MANUALLY')
         username_element.flash
         sign_in_button_element.when_not_present Utils.long_wait
       else

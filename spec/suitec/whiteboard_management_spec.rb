@@ -272,6 +272,8 @@ describe 'Whiteboard', order: :defined do
       @whiteboards.create_and_open_whiteboard(@driver, @whiteboard)
     end
 
+    after(:each) { @whiteboards.close_whiteboard @driver }
+
     it 'is not possible if the whiteboard has no assets' do
       @whiteboards.click_export_button
       @whiteboards.export_to_library_button_element.when_visible timeout
@@ -283,7 +285,7 @@ describe 'Whiteboard', order: :defined do
       @whiteboards.add_existing_assets @assets
       @whiteboards.open_original_asset_link_element.when_visible Utils.long_wait
       whiteboard_asset = @whiteboards.export_to_asset_library @whiteboard
-      @whiteboards.wait_until { @whiteboards.export_confirm_msg? }
+      @whiteboards.export_confirm_msg_element.when_present Utils.medium_wait
       @asset_library.load_page(@driver, @asset_library_url)
       @asset_library.verify_first_asset(@student_1, whiteboard_asset)
     end
