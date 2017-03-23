@@ -89,7 +89,7 @@ module Page
       # @param course [Course]
       def toggle_course_sections(course)
         button = button_element(xpath: "//button[contains(@aria-label,'#{course.title}')]")
-        wait_for_update_and_click_js button
+        wait_for_update_and_click button
       end
 
       # Given a section ID, returns a hash of section data displayed on that row

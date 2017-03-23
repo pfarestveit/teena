@@ -78,13 +78,17 @@ module Page
         list_view_asset_link_elements.map { |link| link.attribute('href').sub("#{Utils.suite_c_base_url}/assetlibrary/", '') }
       end
 
-      # Loads the list view and waits for a given asset to appear
+      # Loads the list view and scrolls down until a given asset appears
       # @param driver [Selenium::WebDriver]
       # @param url [String]
       # @param asset [Asset]
       def load_list_view_asset(driver, url, asset)
         load_page(driver, url)
-        link_element(xpath: "//a[contains(@href,'/assetlibrary/#{asset.id}')]").when_present Utils.medium_wait
+        wait_until(Utils.medium_wait) do
+          scroll_to_bottom
+          sleep 1
+          link_element(xpath: "//a[contains(@href,'/assetlibrary/#{asset.id}')]").exists?
+        end
       end
 
       # Given the index of an asset in list view, returns the asset's view count
@@ -508,7 +512,7 @@ module Page
 
       # DOWNLOAD
 
-      link(:download_asset_link, xpath: '//a[contains(.,"Download asset")]')
+      link(:download_asset_link, xpath: '//a[contains(.,"Download")]')
 
       # Prepares the download directory, clicks an asset's download button, and waits for the expected file to appear in the
       # directory
@@ -516,7 +520,7 @@ module Page
       def download_asset(asset)
         logger.info 'Downloading original asset'
         Utils.prepare_download_dir
-        wait_for_load_and_click_js download_asset_link_element
+        wait_for_load_and_click download_asset_link_element
         download_file_path = "#{Utils.download_dir}/*#{asset.file_name}"
         wait_until(Utils.long_wait) { Dir[download_file_path].any? }
       end

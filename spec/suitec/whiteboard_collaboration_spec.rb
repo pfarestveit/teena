@@ -298,9 +298,7 @@ describe 'Whiteboard', order: :defined do
     it "allows #{student_1.full_name} to delete a member" do
       @whiteboards_driver_1.remove_collaborator student_3
       @whiteboards_driver_1.show_collaborators_pane
-      ("#{@driver_1.browser}" == 'chrome') ?
-          @whiteboards_driver_1.collaborator(student_3).when_not_present(timeout) :
-          @whiteboards_driver_1.collaborator(student_3).when_not_visible(timeout)
+      @whiteboards_driver_1.collaborator(student_3).when_not_visible timeout
     end
 
     it "allows #{student_1.full_name} to delete its own membership" do

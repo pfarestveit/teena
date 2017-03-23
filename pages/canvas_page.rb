@@ -180,7 +180,7 @@ module Page
       wait_until(Utils.medium_wait) do
         scroll_to_bottom
         sleep 1
-        cell_element(xpath: "//tr[contains(@id,'#{user.canvas_id}')]").when_present Utils.short_wait
+        cell_element(xpath: "//tr[contains(@id,'#{user.canvas_id}')]").exists?
       end
     end
 
@@ -342,7 +342,7 @@ module Page
     def create_generic_course_site(driver, sub_account, course, test_users, test_id, tools = nil)
       if course.site_id.nil?
         load_sub_account sub_account
-        wait_for_load_and_click_js add_new_course_button_element
+        wait_for_load_and_click add_new_course_button_element
         course_name_input_element.when_visible Utils.short_wait
         course.title = "QA Test - #{test_id}" if course.title.nil?
         course.code = "QA #{test_id} LEC001" if course.code.nil?

@@ -165,8 +165,8 @@ module Page
       # @param user [User]
       def add_collaborator(user)
         click_settings_button
-        wait_for_update_and_click_js collaborator_list_element
-        wait_for_update_and_click_js collaborator_option_link(user)
+        wait_for_update_and_click collaborator_list_element
+        wait_for_update_and_click collaborator_option_link(user)
         wait_until(Utils.short_wait) { collaborator_name user }
         wait_for_update_and_click edit_title_input_element
         wait_for_update_and_click save_edit_element
