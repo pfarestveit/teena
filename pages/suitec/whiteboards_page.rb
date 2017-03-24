@@ -101,9 +101,7 @@ module Page
       def open_whiteboard(driver, whiteboard)
         logger.info "Opening whiteboard ID #{whiteboard.id}"
         click_whiteboard_link whiteboard
-        wait_until(Utils.short_wait) { driver.window_handles.length > 1 }
-        driver.switch_to.window driver.window_handles.last
-        wait_until(Utils.medium_wait) { title.include? whiteboard.title }
+        shift_to_whiteboard_window(driver, whiteboard)
       end
 
       # Opens a whiteboard directly via URL
@@ -296,7 +294,6 @@ module Page
       button(:export_to_library_button, xpath: '//button[contains(.,"Export to Asset Library")]')
       text_area(:export_title_input, id: 'whiteboards-exportasasset-title')
       button(:export_confirm_button, xpath: '//span[text()="Export to Asset Library"]/..')
-      span(:export_confirm_msg, xpath: '//span[contains(.,"This board has been successfully added")]')
       button(:download_as_image_button, xpath: '//a[contains(.,"Download as image")]')
 
       # Clicks the 'export' button on an open whiteboard
@@ -355,8 +352,8 @@ module Page
 
       # Clicks the button to add an existing asset to an open whiteboard
       def click_add_existing_asset
-        wait_for_update_and_click_js add_asset_button_element unless use_existing_button_element.visible?
-        wait_for_update_and_click_js use_existing_button_element
+        wait_for_update_and_click add_asset_button_element unless use_existing_button_element.visible?
+        wait_for_update_and_click use_existing_button_element
       end
 
       # Adds a given set of existing assets to an open whiteboard

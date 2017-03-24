@@ -6,6 +6,7 @@ describe 'Canvas assignment sync', order: :defined do
 
   course_id = ENV['course_id']
   test_id = Utils.get_test_id
+  asset_1_canvas_file_name = nil
 
   before(:all) do
     @course = Course.new({})
@@ -31,10 +32,12 @@ describe 'Canvas assignment sync', order: :defined do
     @engagement_index_url = @canvas.click_tool_link(@driver, SuiteCTools::ENGAGEMENT_INDEX)
     @asset_library.ensure_canvas_sync(@driver, @asset_library_url) unless course_id.nil?
 
-    @asset_1 = Asset.new @student.assets[0]
+    # Get two file assets for the user
+    file_assets = @student.assets.select { |a| a['type'] == 'File' }
+    @asset_1 = Asset.new file_assets[0]
     @asset_1.title = @asset_library.get_canvas_submission_title @asset_1
     @asset_1.category = @assignment_1.title
-    @asset_2 = Asset.new @student.assets[1]
+    @asset_2 = Asset.new file_assets[1]
     @asset_2.title = @asset_library.get_canvas_submission_title @asset_2
     @asset_2.category = @assignment_2.title
 
@@ -62,7 +65,6 @@ describe 'Canvas assignment sync', order: :defined do
 
     before(:all) do
       # Teacher enables sync for assignment 1 but not assignment 2
-      @canvas.masquerade_as(@driver, @teacher, @course)
       @asset_library.load_page(@driver, @asset_library_url)
       @asset_library.click_manage_assets_link
       @asset_library.enable_assignment_sync @assignment_1
@@ -72,7 +74,7 @@ describe 'Canvas assignment sync', order: :defined do
       @canvas.masquerade_as(@driver, @student, @course)
       @canvas.submit_assignment(@assignment_1, @student, @asset_1)
       @canvas.submit_assignment(@assignment_2, @student, @asset_2)
-      @canvas.stop_masquerading @driver
+      @canvas.masquerade_as(@driver, @teacher, @course)
     end
 
     it 'adds assignment submission points to the Engagement Index score for both submissions' do
@@ -94,7 +96,14 @@ describe 'Canvas assignment sync', order: :defined do
       @asset_library.verify_first_asset(@student, @asset_1)
     end
 
-    it 'hides the Assignment 2 submission in the Asset Library' do
+    it 'imports the Assignment 1 submission files to the Files system' do
+      @asset_library.load_asset_detail(@driver, @asset_library_url, @asset_1)
+      asset_1_canvas_file_name = @asset_library.download_asset[0..24]
+      @canvas.search_for_file(@course, asset_1_canvas_file_name)
+      @canvas.link_element(xpath: "//a[contains(.,'#{asset_1_canvas_file_name}')]").when_present Utils.medium_wait
+    end
+
+    it 'does not show the Assignment 2 submission in the Asset Library' do
       @asset_library.load_page(@driver, @asset_library_url)
       @asset_library.wait_for_load_and_click_js @asset_library.advanced_search_button_element
       expect(@asset_library.category_select_options).to_not include(@assignment_2.title)
@@ -105,7 +114,6 @@ describe 'Canvas assignment sync', order: :defined do
 
     before(:all) do
       # Teacher disables sync for assignment 1 and enables it for assignment 2
-      @canvas.masquerade_as(@driver, @teacher, @course)
       @asset_library.load_page(@driver, @asset_library_url)
       @asset_library.click_manage_assets_link
       @asset_library.disable_assignment_sync @assignment_1
@@ -137,6 +145,18 @@ describe 'Canvas assignment sync', order: :defined do
       @asset_library.wait_until(Utils.short_wait) { @asset_library.list_view_asset_ids.length == 1 }
       @asset_library.verify_first_asset(@student, @asset_2)
       expect(@asset_1.id).to_not eql(@asset_2.id)
+    end
+
+    it 'imports the Assignment 2 submission files to the Files system' do
+      @asset_library.load_asset_detail(@driver, @asset_library_url, @asset_2)
+      asset_2_canvas_file_name = @asset_library.download_asset[0..24]
+      @canvas.search_for_file(@course, asset_2_canvas_file_name)
+      @canvas.link_element(xpath: "//a[contains(.,'#{asset_2_canvas_file_name}')]").when_present Utils.medium_wait
+    end
+
+    it 'deletes the Assignment 1 submission files from the Files system' do
+      @canvas.search_for_file(@course, asset_1_canvas_file_name)
+      @canvas.paragraph_element(xpath: '//p[contains(.,"did not match any files")]').when_present Utils.medium_wait
     end
   end
 end

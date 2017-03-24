@@ -4,6 +4,7 @@ describe 'Whiteboard', order: :defined do
 
   test_id = Utils.get_test_id
   timeout = Utils.short_wait
+  whiteboard_asset = nil
 
   before(:all) do
     @course = Course.new({})
@@ -282,12 +283,21 @@ describe 'Whiteboard', order: :defined do
     end
 
     it 'as a new asset is possible if the whiteboard has assets' do
+      @whiteboards.open_whiteboard(@driver, @whiteboard)
       @whiteboards.add_existing_assets @assets
       @whiteboards.open_original_asset_link_element.when_visible Utils.long_wait
       whiteboard_asset = @whiteboards.export_to_asset_library @whiteboard
-      @whiteboards.export_confirm_msg_element.when_present Utils.medium_wait
+      @whiteboards.export_title_input_element.when_not_visible Utils.medium_wait rescue Selenium::WebDriver::Error::StaleElementReferenceError
       @asset_library.load_page(@driver, @asset_library_url)
       @asset_library.verify_first_asset(@student_1, whiteboard_asset)
+    end
+
+    it 'as a new asset allows a user to remix the whiteboard' do
+      @asset_library.load_asset_detail(@driver, @asset_library_url, whiteboard_asset)
+      remix = @asset_library.click_remix
+      expect(remix.title).to eql(@whiteboard.title)
+      @asset_library.open_remixed_board(@driver, remix)
+      @whiteboards.verify_collaborators [@student_1]
     end
 
     it 'as a new asset earns "Export a whiteboard to the Asset Library" points' do

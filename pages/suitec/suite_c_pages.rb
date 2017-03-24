@@ -107,5 +107,24 @@ module Page
       sleep 120
     end
 
+    # Extracts a whiteboard ID from a link to the whiteboard
+    # @param link_element [PageObject::Elements::Link]
+    # @return [String]
+    def get_whiteboard_id(link_element)
+      link_element.when_present Utils.short_wait
+      href = link_element.attribute('href')
+      partial_url = href.split('?').first
+      partial_url.sub("#{Utils.suite_c_base_url}/whiteboards/", '')
+    end
+
+    # Shifts driver focus to a newly opened whiteboard
+    # @param driver [Selenium::WebDriver]
+    # @param whiteboard [Whiteboard]
+    def shift_to_whiteboard_window(driver, whiteboard)
+      wait_until(Utils.short_wait) { driver.window_handles.length > 1 }
+      driver.switch_to.window driver.window_handles.last
+      wait_until(Utils.medium_wait) { title.include? whiteboard.title }
+    end
+
   end
 end
