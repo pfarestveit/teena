@@ -615,16 +615,36 @@ module Page
       assignment_submission_conf_element.when_visible Utils.long_wait
     end
 
+    # FILES
+
+    div(:file_search_no_results, xpath: '//div[contains(.,"This folder is empty")]')
+
+    # Loads the Files page for a given course
+    # @param course [Course]
+    def load_files(course)
+      navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/files"
+    end
+
+    # Searches for a file in a course site
+    # @param course [Course]
+    # @param file_name [String]
+    def search_for_file(course, file_name)
+      logger.info "Searching the course Files system for a file named '#{file_name}'"
+      load_files course
+      wait_for_element_and_type(text_area_element(xpath: '//input[@placeholder="Search for files"]'), file_name)
+      wait_for_update_and_click div_element(xpath: '//button[@type="submit"]')
+    end
+
     # Verifies that the asset file directory on a course site is set to 'hidden' but visible to the right user roles
     # @param course [Course]
     # @param user [User]
     # @return [boolean]
     def suitec_files_hidden?(course, user)
-      navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/files"
+      load_files course
       div_element(class: 'ef-folder-list').when_visible Utils.medium_wait
       ['Teacher', 'Lead TA', 'TA', 'Designer', 'Reader'].include?(user.role) ?
           verify_block { button_element(xpath: '//a[contains(.,"_suitec")]/../following-sibling::div[5]/button[@title="Hidden. Available with a link"]').when_visible Utils.short_wait } :
-          verify_block { div_element(xpath: '//div[contains(.,"This folder is empty")]').when_visible Utils.short_wait }
+          verify_block { file_search_no_results_element.when_visible Utils.short_wait }
     end
 
   end

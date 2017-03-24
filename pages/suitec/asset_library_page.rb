@@ -180,6 +180,10 @@ module Page
         (asset.type == 'Link') ?
             wait_until(timeout) { detail_view_asset_url_source_element.text == asset.url } :
             wait_until(timeout) { detail_view_asset_no_source? }
+        logger.debug 'Checking presence of Remix button'
+        (%w(File Link).include? asset.type) ?
+            remix_button_element.when_not_visible(timeout) :
+            remix_button_element.when_visible(timeout)
       end
 
       # PREVIEW SERVICE
@@ -510,19 +514,49 @@ module Page
         wait_for_update_and_click_js save_changes_element
       end
 
+      # REMIX
+
+      button(:remix_button, xpath: '//button[contains(.,"Remix")]')
+      link(:remixed_board_link, xpath: '//span[contains(.,"A new board")]/a')
+
+      # Clicks the 'Remix' button for a whiteboard asset and returns a new whiteboard object
+      # @return [Whiteboard]
+      def click_remix
+        wait_for_update_and_click remix_button_element
+        id = get_whiteboard_id remixed_board_link_element
+        title = remixed_board_link_element.text.delete('\"')
+        Whiteboard.new({id: id, title: title})
+      end
+
+      # Clicks the link to a newly created remix whiteboard and shifts focus to the whiteboard
+      # @param driver [Selenium::WebDriver]
+      # @param whiteboard [Whiteboard]
+      def open_remixed_board(driver, whiteboard)
+        wait_for_update_and_click remixed_board_link_element
+        shift_to_whiteboard_window(driver, whiteboard)
+      end
+
       # DOWNLOAD
 
       link(:download_asset_link, xpath: '//a[contains(.,"Download")]')
 
-      # Prepares the download directory, clicks an asset's download button, and waits for the expected file to appear in the
-      # directory
-      # @param asset [Asset]
-      def download_asset(asset)
+      # Prepares the download directory, clicks an asset's download button, waits for a file to appear in the
+      # directory, and returns the resulting file name
+      # @return [String]
+      def download_asset
         logger.info 'Downloading original asset'
         Utils.prepare_download_dir
-        wait_for_load_and_click download_asset_link_element
-        download_file_path = "#{Utils.download_dir}/*#{asset.file_name}"
-        wait_until(Utils.long_wait) { Dir[download_file_path].any? }
+        wait_for_load_and_click_js download_asset_link_element
+        sleep 2
+        wait_until(Utils.medium_wait) do
+          Dir.entries("#{Utils.download_dir}").length == 3
+          sleep 2
+          wait_until(15) do
+            logger.debug 'Download started, waiting for download to complete'
+            !(Dir.entries("#{Utils.download_dir}")[2]).include? '.crdownload'
+          end
+          Dir.entries("#{Utils.download_dir}")[2]
+        end
       end
 
       # DELETING
