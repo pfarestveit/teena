@@ -11,8 +11,6 @@ module Page
       include Page
       include JunctionPages
 
-      h1(:page_heading, xpath: '//h1[text()="Create a Course Site"]')
-
       button(:maintenance_button, class: 'bc-template-canvas-maintenance-notice-button')
       div(:maintenance_notice, class: 'bc-template-canvas-maintenance-notice-details')
       link(:bcourses_service, xpath: '//a[contains(text(),"bCourses service page")]')
@@ -85,13 +83,6 @@ module Page
         button_element(xpath: '//button[contains(.,"Need help deciding which official sections to select")]').click
       end
 
-      # Expands or collapses the sections list for a course
-      # @param course [Course]
-      def toggle_course_sections(course)
-        button = button_element(xpath: "//button[contains(@aria-label,'#{course.title}')]")
-        wait_for_update_and_click button
-      end
-
       # Given a section ID, returns a hash of section data displayed on that row
       # @param driver [Selenium::WebDriver]
       # @param section_id [String]
@@ -105,13 +96,6 @@ module Page
           locations: section_locations(driver, section_id),
           instructors: section_instructors(driver, section_id)
         }
-      end
-
-      # Given a course, returns an array of hashes containing all the section data displayed for that course
-      # @param driver [Selenium::WebDriver]
-      # @param course [Course]
-      def course_data(driver, course)
-        course_section_ids(driver, course.code).map { |section_id| section_data(driver, section_id) }
       end
 
       # Given an array of sections, selects the corresponding rows
@@ -168,7 +152,7 @@ module Page
       # @return [Array<String>]
       def section_instructors(driver, section_id)
         instructor_elements = driver.find_elements(xpath: "//input[contains(@id,'#{section_id}')]/../ancestor::tbody//td[contains(@class, 'section-instructors')]/div")
-        instructor_elements.map &:text
+        instructor_elements.map(&:text).reject(&:empty?)
       end
 
       # Returns the section IDs displayed under a course
@@ -202,12 +186,16 @@ module Page
       end
 
       # Combines methods to search for a course, select sections, and create a new site
+      # @param driver [Selenium::WebDriver]
       # @param course [Course]
       # @param user [User]
       # @param sections [Array<Section>]
-      def provision_course_site(course, user, sections)
+      def provision_course_site(driver, course, user, sections)
+        load_embedded_tool(driver, user)
+        click_create_course_site
+        course.create_site_workflow = nil
         search_for_course(course, user, sections)
-        toggle_course_sections course
+        expand_available_sections course.code
         select_sections sections
         click_next
         enter_site_titles course

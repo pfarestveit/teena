@@ -15,7 +15,6 @@ module Page
 
       # Loads the Junction splash page
       def load_page
-        logger.info 'Loading splash page'
         navigate_to Utils.junction_base_url
       end
 

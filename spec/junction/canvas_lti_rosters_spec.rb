@@ -4,8 +4,7 @@ describe 'bCourses Roster Photos' do
 
   include Logging
 
-  masquerade = ENV['masquerade']
-  course_id = ENV['course_id']
+  course_id = ENV['COURSE_ID']
 
   # Load test course data
   test_course_data = Utils.load_test_courses.find { |course| course['tests']['roster_photos'] }
@@ -29,9 +28,8 @@ describe 'bCourses Roster Photos' do
     @driver = Utils.launch_browser
     @cal_net = Page::CalNetPage.new @driver
     @canvas = Page::CanvasPage.new @driver
-    @roster_api = Page::ApiAcademicsRosterPage.new @driver
+    @roster_api = ApiAcademicsRosterPage.new @driver
     @splash_page = Page::JunctionPages::SplashPage.new @driver
-    @site_creation_page = Page::JunctionPages::CanvasSiteCreationPage.new @driver
     @create_course_site_page = Page::JunctionPages::CanvasCreateCourseSitePage.new @driver
     @course_add_user_page = Page::JunctionPages::CanvasCourseAddUserPage.new @driver
     @roster_photos_page = Page::JunctionPages::CanvasRostersPage.new @driver
@@ -39,44 +37,28 @@ describe 'bCourses Roster Photos' do
     # Authenticate
     @splash_page.load_page
     @splash_page.basic_auth teacher_1.uid
-    if masquerade
-      @canvas.log_in(@cal_net, Utils.super_admin_username, Utils.super_admin_password)
-      @canvas.masquerade_as(@driver, teacher_1)
-    else
-      @canvas.log_in(@cal_net, Utils.ets_qa_username, Utils.ets_qa_password)
-    end
+    @canvas.log_in(@cal_net, Utils.super_admin_username, Utils.super_admin_password)
+    @canvas.masquerade_as(@driver, teacher_1)
 
     # Create test course site if necessary
     if course.site_id.nil?
-      course.create_site_workflow = nil
-      if masquerade
-        @create_course_site_page.load_embedded_tool(@driver, teacher_1)
-        @site_creation_page.click_create_course_site @create_course_site_page
-      else
-        @create_course_site_page.load_standalone_tool
-      end
-      @create_course_site_page.provision_course_site(course, teacher_1, sections_for_site)
-      @canvas.publish_course_site(@driver, course) if masquerade
+      @create_course_site_page.provision_course_site(@driver, course, teacher_1, sections_for_site)
+      @canvas.publish_course_site(@driver, course)
     end
 
     # Get enrollment totals on site
     @roster_api.get_feed(@driver, course)
-    if masquerade
-      if course_id.nil?
-        user_counts = @canvas.wait_for_enrollment_import(course, ['Student', 'Waitlist Student'])
-        @student_count = user_counts[0]
-        @waitlist_count = user_counts[1]
-      else
-        @student_count = @canvas.enrollment_count_by_role(course, 'Student')
-        @waitlist_count = @canvas.enrollment_count_by_role(course, 'Waitlist Student')
-      end
-      @canvas.load_users_page course
-      @canvas.click_find_person_to_add @driver
+    if course_id.nil?
+      user_counts = @canvas.wait_for_enrollment_import(course, ['Student', 'Waitlist Student'])
+      @student_count = user_counts[0]
+      @waitlist_count = user_counts[1]
     else
-      @student_count = @roster_api.enrolled_students.length
-      @waitlist_count = @roster_api.waitlisted_students.length
-      @course_add_user_page.load_standalone_tool course
+      @student_count = @canvas.enrollment_count_by_role(course, 'Student')
+      @waitlist_count = @canvas.enrollment_count_by_role(course, 'Waitlist Student')
     end
+    @canvas.load_users_page course
+    @canvas.click_find_person_to_add @driver
+
     @total_users = @student_count + @waitlist_count
     logger.info "There are #{@student_count} enrolled students and #{@waitlist_count} waitlisted students, for a total of #{@total_users}"
     logger.warn 'There are no students on this site' if @total_users.zero?
@@ -93,12 +75,8 @@ describe 'bCourses Roster Photos' do
   context 'when a Teacher' do
 
     before(:all) do
-      if masquerade
-        @canvas.load_course_site(@driver, course)
-        @roster_photos_page.click_roster_photos_link @driver
-      else
-        @roster_photos_page.load_standalone_tool course
-      end
+      @canvas.load_course_site(@driver, course)
+      @roster_photos_page.click_roster_photos_link @driver
     end
 
     it "shows UID #{teacher_1.uid} all students and waitlisted students on #{course.code} course site ID #{course.site_id}" do
@@ -161,31 +139,21 @@ describe 'bCourses Roster Photos' do
     [lead_ta, ta, designer, reader, student, waitlist, observer].each do |user|
 
       it "allows a course #{user.role} with UID #{user.uid} to access the tool on #{course.code} course site ID #{course.site_id} if permitted to do so" do
-        if masquerade
-          @canvas.masquerade_as(@driver, user, course)
-          @canvas.navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/external_tools/#{Utils.canvas_rosters_tool}"
-        else
-          @splash_page.basic_auth user.uid
-          @roster_photos_page.load_standalone_tool course
-        end
+        @canvas.masquerade_as(@driver, user, course)
+        @canvas.navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/external_tools/#{Utils.canvas_rosters_tool}"
 
         if ['Lead TA', 'TA'].include? user.role
-          @roster_photos_page.switch_to_canvas_iframe @driver if masquerade
+          @roster_photos_page.switch_to_canvas_iframe @driver
           @total_users.zero? ?
               @roster_photos_page.no_students_msg_element.when_visible(Utils.short_wait) :
               @roster_photos_page.wait_until(Utils.short_wait) { @roster_photos_page.roster_sid_elements.any? }
 
         elsif %w(Designer Reader Observer).include? user.role
-          @roster_photos_page.switch_to_canvas_iframe @driver if masquerade
+          @roster_photos_page.switch_to_canvas_iframe @driver
           @roster_photos_page.no_access_msg_element.when_visible Utils.short_wait
 
         else
-          if masquerade
-            @canvas.unauthorized_msg_element.when_visible Utils.short_wait
-          else
-            @roster_photos_page.no_access_msg_element.when_visible Utils.short_wait
-          end
-
+          @canvas.unauthorized_msg_element.when_visible Utils.short_wait
         end
       end
     end

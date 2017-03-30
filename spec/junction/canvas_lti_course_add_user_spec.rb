@@ -4,8 +4,7 @@ describe 'bCourses Find a Person to Add', order: :defined do
 
   include Logging
 
-  masquerade = ENV['masquerade']
-  course_id = ENV['course_id']
+  course_id = ENV['COURSE_ID']
 
   # Load test data
 
@@ -33,24 +32,14 @@ describe 'bCourses Find a Person to Add', order: :defined do
     @cal_net = Page::CalNetPage.new @driver
     @canvas = Page::CanvasPage.new @driver
     @splash_page = Page::JunctionPages::SplashPage.new @driver
-    @site_creation_page = Page::JunctionPages::CanvasSiteCreationPage.new @driver
     @create_course_site_page = Page::JunctionPages::CanvasCreateCourseSitePage.new @driver
     @course_add_user_page = Page::JunctionPages::CanvasCourseAddUserPage.new @driver
 
-    if masquerade
-      @canvas.log_in(@cal_net, Utils.super_admin_username, Utils.super_admin_password)
-      @canvas.masquerade_as(@driver, teacher_1)
-      @create_course_site_page.load_embedded_tool(@driver, teacher_1)
-      @site_creation_page.click_create_course_site @create_course_site_page
-    else
-      @canvas.log_in(@cal_net, Utils.ets_qa_username, Utils.ets_qa_password)
-      @splash_page.load_page
-      @splash_page.basic_auth teacher_1.uid
-      @create_course_site_page.load_standalone_tool
-    end
+    @canvas.log_in(@cal_net, Utils.super_admin_username, Utils.super_admin_password)
+    @canvas.masquerade_as(@driver, teacher_1)
 
     course.site_id = course_id
-    @create_course_site_page.provision_course_site(course, teacher_1, sections_for_site) if course.site_id.nil?
+    @create_course_site_page.provision_course_site(@driver, course, teacher_1, sections_for_site) if course.site_id.nil?
   end
 
   after(:all) { Utils.quit_browser @driver }
@@ -58,41 +47,31 @@ describe 'bCourses Find a Person to Add', order: :defined do
   describe 'customizations in Add People' do
 
     before(:all) do
-      if masquerade
-        @canvas.masquerade_as(@driver, teacher_1, course)
-        @canvas.load_users_page course
-      end
+      @canvas.masquerade_as(@driver, teacher_1, course)
+      @canvas.load_users_page course
     end
 
-    if masquerade
-      it 'include a link to a help page on the Everyone tab' do
-        @canvas.help_finding_users_link_element.when_visible Utils.short_wait
-        expect(@canvas.external_link_valid?(@driver, @canvas.help_finding_users_link_element, 'Service at UC Berkeley')).to be true
-      end
-
-      it 'include a search by Email Address option' do
-        @canvas.wait_for_load_and_click_js @canvas.add_people_button_element
-        @canvas.find_person_to_add_link_element.when_visible Utils.short_wait
-        expect(@canvas.add_user_by_email?).to be true
-      end
-
-      it('include a search by Berkeley UID option') { expect(@canvas.add_user_by_uid?).to be true }
-
-      it('include a search by Student ID option') { expect(@canvas.add_user_by_sid?).to be true }
+    it 'include a link to a help page on the Everyone tab' do
+      @canvas.help_finding_users_link_element.when_visible Utils.short_wait
+      expect(@canvas.external_link_valid?(@driver, @canvas.help_finding_users_link_element, 'Service at UC Berkeley')).to be true
     end
+
+    it 'include a search by Email Address option' do
+      @canvas.wait_for_load_and_click_js @canvas.add_people_button_element
+      @canvas.find_person_to_add_link_element.when_visible Utils.short_wait
+      expect(@canvas.add_user_by_email?).to be true
+    end
+
+    it('include a search by Berkeley UID option') { expect(@canvas.add_user_by_uid?).to be true }
+    it('include a search by Student ID option') { expect(@canvas.add_user_by_sid?).to be true }
   end
 
   describe 'search' do
 
     before(:all) do
-      if masquerade
-        @canvas.masquerade_as(@driver, teacher_1, course)
-        @canvas.load_users_page course
-        @canvas.click_find_person_to_add @driver
-      else
-        @splash_page.basic_auth teacher_1.uid
-        @course_add_user_page.load_standalone_tool course
-      end
+      @canvas.masquerade_as(@driver, teacher_1, course)
+      @canvas.load_users_page course
+      @canvas.click_find_person_to_add @driver
     end
 
     before(:each) { @course_add_user_page.switch_to_canvas_iframe @driver unless @course_add_user_page.page_heading? }
@@ -150,17 +129,12 @@ describe 'bCourses Find a Person to Add', order: :defined do
 
     before(:all) do
       @section_to_test = sections_for_site.first
-      @canvas.masquerade_as(@driver, teacher_1, course) if masquerade
+      @canvas.masquerade_as(@driver, teacher_1, course)
     end
 
     before(:each) do
-      if masquerade
-        @canvas.load_users_page course
-        @canvas.click_find_person_to_add @driver
-      else
-        @splash_page.basic_auth teacher_1.uid
-        @course_add_user_page.load_standalone_tool course
-      end
+      @canvas.load_users_page course
+      @canvas.click_find_person_to_add @driver
     end
 
     [teacher_2, lead_ta, ta, designer, reader, student, waitlist, observer].each do |user|
@@ -168,15 +142,13 @@ describe 'bCourses Find a Person to Add', order: :defined do
       it "allows a course Teacher to add a #{user.role} to a course site with any type of role" do
         @course_add_user_page.search(user.uid, 'CalNet UID')
         @course_add_user_page.add_user_by_uid(user, @section_to_test)
-        if masquerade
-          @canvas.load_users_page course
-          @canvas.search_user_by_canvas_id user
-          @canvas.wait_until(Utils.short_wait) { @canvas.roster_user_uid user.canvas_id }
-          expect(@canvas.roster_user_sections(user.canvas_id)).to include("#{@section_to_test.course} #{@section_to_test.label}") unless user.role == 'Observer'
-          (user.role == 'Observer') ?
-              (expect(@canvas.roster_user_roles(user.canvas_id)).to include('Observing: nobody')) :
-              (expect(@canvas.roster_user_roles(user.canvas_id)).to include(user.role))
-        end
+        @canvas.load_users_page course
+        @canvas.search_user_by_canvas_id user
+        @canvas.wait_until(Utils.short_wait) { @canvas.roster_user_uid user.canvas_id }
+        expect(@canvas.roster_user_sections(user.canvas_id)).to include("#{@section_to_test.course} #{@section_to_test.label}") unless user.role == 'Observer'
+        (user.role == 'Observer') ?
+            (expect(@canvas.roster_user_roles(user.canvas_id)).to include('Observing: nobody')) :
+            (expect(@canvas.roster_user_roles(user.canvas_id)).to include(user.role))
       end
     end
   end
@@ -184,35 +156,27 @@ describe 'bCourses Find a Person to Add', order: :defined do
   describe 'user role restrictions' do
 
     before(:all) do
-      if masquerade
-        @canvas.masquerade_as(@driver, teacher_1, course)
-        @canvas.publish_course_site(@driver, course)
-      end
+      @canvas.masquerade_as(@driver, teacher_1, course)
+      @canvas.publish_course_site(@driver, course)
     end
 
     [lead_ta, ta, designer, reader, student, waitlist, observer].each do |user|
 
       it "allows a course #{user.role} to access the tool and add a subset of roles to a course site if permitted to do so" do
-        if masquerade
           @canvas.masquerade_as(@driver, user, course)
           @canvas.load_users_page course
-        else
-          @splash_page.basic_auth user.uid
-          @course_add_user_page.load_standalone_tool course
-        end
-
         if ['Lead TA', 'TA'].include? user.role
-          @canvas.click_find_person_to_add @driver if masquerade
+          @canvas.click_find_person_to_add @driver
           @course_add_user_page.search('Oski', 'Last Name, First Name')
           @course_add_user_page.wait_until(Utils.medium_wait) { @course_add_user_page.user_role_options == ['Student', 'Waitlist Student', 'Observer'] }
         elsif user.role == 'Designer'
-          @canvas.click_find_person_to_add @driver if masquerade
+          @canvas.click_find_person_to_add @driver
           @course_add_user_page.no_access_msg_element.when_visible Utils.medium_wait
         elsif user.role == 'Reader'
-          @course_add_user_page.load_embedded_tool(@driver, course) if masquerade
+          @course_add_user_page.load_embedded_tool(@driver, course)
           @course_add_user_page.no_sections_msg_element.when_visible Utils.medium_wait
         elsif ['Student', 'Waitlist Student', 'Observer'].include? user.role
-          @course_add_user_page.load_embedded_tool(@driver, course) if masquerade
+          @course_add_user_page.load_embedded_tool(@driver, course)
           @course_add_user_page.no_access_msg_element.when_visible Utils.medium_wait
         end
       end

@@ -4,7 +4,7 @@ module Page
 
   module JunctionPages
 
-    class CanvasSiteCreationPage
+    class CanvasSiteCreationPage < CanvasCourseSectionsPage
 
       include PageObject
       include Logging
@@ -37,10 +37,9 @@ module Page
       end
 
       # Clicks the create course site button and waits for the page to load
-      # @param course_site_page [Page::JunctionPages::CanvasCreateCourseSitePage]
-      def click_create_course_site(course_site_page)
+      def click_create_course_site
         wait_for_load_and_click create_course_site_link_element
-        course_site_page.page_heading_element.when_visible Utils.medium_wait
+        h1_element(xpath: '//h1[text()="Create a Course Site"]').when_visible Utils.medium_wait
       end
 
       # Clicks the create project site button

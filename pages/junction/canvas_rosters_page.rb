@@ -49,6 +49,13 @@ module Page
         switch_to_canvas_iframe driver
       end
 
+      # Returns an array of options in the section select
+      # @return [Array<String>]
+      def section_options
+        options = section_select_options
+        options.delete 'All Sections'
+      end
+
       # Enters a string in the search input and pauses for DOM update
       # @param string [String]
       def filter_by_string(string)

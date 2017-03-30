@@ -4,7 +4,7 @@ describe 'bCourses Course Captures tool' do
 
   include Logging
 
-  masquerade = ENV['masquerade']
+  masquerade = ENV['MASQUERADE']
 
   begin
 
