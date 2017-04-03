@@ -54,18 +54,18 @@ class ApiAcademicsCourseProvisionPage
     course['title'].nil? ? '' : (course['title'].gsub(/\s+/, ' ')).strip
   end
 
-  def course_url(course)
-    course['url']
-  end
-
-  def multiple_primaries?(course)
-    course['multiplePrimaries']
-  end
-
   # SECTIONS
 
   def section_course_code(section)
     section['courseCode']
+  end
+
+  def section_label(section)
+    section['section_label']
+  end
+
+  def section_ccn(section)
+    section['ccn']
   end
 
   def section_url(section)
@@ -76,51 +76,55 @@ class ApiAcademicsCourseProvisionPage
     section['schedules'] && section['schedules']['recurring']
   end
 
+  def section_recurring_schedule(section)
+    section_schedules = section_schedules_recurring(section).map { |recurring| "#{recurring['schedule']}".gsub(/\s+/, ' ').strip }
+    section_schedules.join("\n")
+  end
+
+  def section_locations(section)
+    section_locations = section_schedules_recurring(section).map do |recurring|
+      location = "#{recurring['buildingName']} #{recurring['roomNumber']}"
+      location.gsub(/\s+/, ' ').strip
+    end
+    section_locations.join("\n")
+  end
+
+  def section_instructors(section)
+    instructors = section['instructors'].map { |instructor| "#{instructor['name']}".gsub(/\s+/, ' ').strip }
+    instructors.join("\n")
+  end
+
+  def section_data(section)
+    {
+      code: section_course_code(section),
+      label: section_label(section),
+      id: section_ccn(section),
+      schedules: section_recurring_schedule(section),
+      locations: section_locations(section),
+      instructors: section_instructors(section)
+    }
+  end
+
   def course_sections(course)
     course['sections']
   end
 
-  def course_primary_sections(course)
-    course['sections'].map { |section| section if section['is_primary_section'] }
-  end
-
-  def course_section_course_codes(sections)
-    sections.map { |section| section_course_code(section) }
-  end
-
-  def course_section_labels(sections)
-    sections.map { |section| section['section_label'] }
-  end
-
-  def course_ccns(sections)
-    sections.map { |section| section['ccn'] }
-  end
-
-  def course_section_schedules(sections)
-    course_schedules = sections.map do |section|
-      section_schedules = section_schedules_recurring(section).map { |recurring| "#{recurring['schedule']}".gsub(/\s+/, ' ').strip }
-      section_schedules.join("\n")
-    end
-    course_schedules.flatten
-  end
-
-  def course_section_locations(sections)
-    course_locations = sections.map do |section|
-      section_locations = section_schedules_recurring(section).map do |recurring|
-        location = "#{recurring['buildingName']} #{recurring['roomNumber']}"
-        location.gsub(/\s+/, ' ').strip
-      end
-      section_locations.join("\n")
-    end
-    course_locations.flatten
-  end
-
-  def course_section_instructors(sections)
+  def course_section_teachers(sections)
+    includes_primary_sections = (sections.select { |s| s['is_primary_section'] }).any?
     course_instructors = sections.map do |section|
-      instructors = section['instructors'].map { |instructor| "#{instructor['name']}".gsub(/\s+/, ' ').strip }
-      instructors.join("\n")
+      includes_primary_sections ?
+          section['instructors'].select { |instructor| %w(PI ICNT APRX).include?(instructor['role']) && instructor['gradeRosterAccess'] != ' ' } :
+          section['instructors']
     end
-    course_instructors.flatten
+    course_instructors.flatten.uniq
+  end
+
+  def course_section_tas(sections)
+    includes_primary_sections = (sections.select { |s| s['is_primary_section'] }).any?
+    course_instructors = sections.map do |section|
+      section['instructors'].select { |instructor| instructor['role'] == 'TNIC' if includes_primary_sections }
+    end
+    course_instructors.flatten.uniq
   end
 
   # COURSE SITES

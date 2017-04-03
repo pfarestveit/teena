@@ -4,7 +4,7 @@ module Page
 
   module JunctionPages
 
-    class CanvasCourseManageSectionsPage
+    class CanvasCourseManageSectionsPage < CanvasCourseSectionsPage
 
       include PageObject
       include Logging
@@ -40,14 +40,6 @@ module Page
       # @param course [Course]
       def load_standalone_tool(course)
         navigate_to "#{Utils.junction_base_url}/canvas/course_manage_official_sections/#{course.site_id}"
-      end
-
-      # Clicks the sidebar Official Sections link and shifts focus to the tool
-      # @param driver [Selenium::WebDriver]
-      def click_official_sections_link(driver)
-        logger.info 'Clicking Official Sections link'
-        wait_for_load_and_click_js official_sections_link_element
-        switch_to_canvas_iframe driver
       end
 
       # Clicks the Edit Sections button and waits for the available sections table to appear
@@ -105,27 +97,6 @@ module Page
         cell_element(xpath: "//h3[contains(text(),'Sections in this Course Site')]/../../following-sibling::div//table//td[contains(.,'#{section.id}')]/preceding-sibling::td[contains(@class,'section-label')]").text
       end
 
-      # Returns the schedules displayed for a given section in the 'Sections in this Course Site' table
-      # @param section [Section]
-      # @return [String]
-      def current_section_schedules(section)
-        cell_element(xpath: "//h3[contains(text(),'Sections in this Course Site')]/../../following-sibling::div//table//td[contains(.,'#{section.id}')]/following-sibling::td[contains(@class,'section-timestamps')]").text
-      end
-
-      # Returns the locations displayed for a given section in the 'Sections in this Course Site' table
-      # @param section [Section]
-      # @return [String]
-      def current_section_locations(section)
-        cell_element(xpath: "//h3[contains(text(),'Sections in this Course Site')]/../../following-sibling::div//table//td[contains(.,'#{section.id}')]/following-sibling::td[contains(@class,'section-locations')]").text
-      end
-
-      # Returns the instructors displayed for a given section in the 'Sections in this Course Site' table
-      # @param section [Section]
-      # @return [String]
-      def current_section_instructors(section)
-        cell_element(xpath: "//h3[contains(text(),'Sections in this Course Site')]/../../following-sibling::div//table//td[contains(.,'#{section.id}')]/following-sibling::td[contains(@class,'section-instructors')]").text
-      end
-
       # Returns the Delete button element for a given section in the 'Sections in this Course Site' table
       # @param section [Section]
       # @return [PageObject::Elements::Button]
@@ -165,49 +136,6 @@ module Page
 
       # AVAILABLE SECTIONS
 
-      # Returns the button element to expand or collapse the table of available sections in a course
-      # @param course_code [String]
-      # @return [PageObject::Elements::Button]
-      def available_sections_form_button(course_code)
-        button_element(xpath: "//button[contains(@class,'sections-form-course-button')][contains(.,'#{course_code}')]")
-      end
-
-      def available_sections_course_title(course_code)
-        logger.debug "Looking for the course title for course code #{course_code}"
-        span_element(xpath: "//span[contains(.,'#{course_code}')]/following-sibling::span[contains(@data-ng-if, 'course.title')]").when_visible Utils.short_wait
-        title = span_element(xpath: "//span[contains(.,'#{course_code}')]/following-sibling::span[contains(@data-ng-if, 'course.title')]").text
-        title && title[2..-1]
-      end
-
-      # Returns the table element containing a given course's sections available to add to a course site
-      # @param course_code [String]
-      # @return [PageObject::Elements::Table]
-      def available_sections_table(course_code)
-        table_element(xpath: "//button[contains(@class,'sections-form-course-button')][contains(.,'#{course_code}')]//following-sibling::div//table")
-      end
-
-      # Expands the table of available sections in a course
-      # @param course_code [String]
-      def expand_available_sections(course_code)
-        if available_sections_table(course_code).visible?
-          logger.debug "The sections table is already expanded for #{course_code}"
-        else
-          wait_for_update_and_click_js available_sections_form_button(course_code)
-          available_sections_table(course_code).when_visible Utils.short_wait
-        end
-      end
-
-      # Collapses the table of available sections in a course
-      # @param course_code [String]
-      def collapse_available_sections(course_code)
-        if available_sections_table(course_code).visible?
-          wait_for_update_and_click_js available_sections_form_button(course_code)
-          available_sections_table(course_code).when_not_visible Utils.short_wait
-        else
-          logger.debug "The sections table is already collapsed for #{course_code}"
-        end
-      end
-
       # Returns the number of a given course's sections available to add to a course site by counting the table rows minus the heading row
       # @param driver [Selenium::WebDriver]
       # @param course [Course]
@@ -216,105 +144,65 @@ module Page
         driver.find_elements(xpath: "//button[contains(@class,'sections-form-course-button')][contains(.,'#{course.code}')]//following-sibling::div//table/tbody").length
       end
 
+      # Returns a hash of data displayed for a given section ID in a course's available sections table
+      # @param course_code [String]
+      # @param section_id [String]
+      # @return [Hash]
+      def available_section_data(course_code, section_id)
+        {
+          code: available_section_course(course_code, section_id),
+          label: available_section_label(course_code, section_id),
+          schedules: available_section_schedules(course_code, section_id),
+          locations: available_section_locations(course_code, section_id),
+          instructors: available_section_instructors(course_code, section_id)
+        }
+      end
+
       # Returns the 'Sections in this Course Site' table cell element containing a given section ID
-      # @param section [Section]
+      # @param section_id [String]
       # @return [PageObject::Elements::TableCell]
-      def available_section_id_element(course, section)
-        cell_element(xpath: "//button[contains(@class,'sections-form-course-button')][contains(.,'#{course.code}')]//following-sibling::div//table//td[contains(.,'#{section.id}')]")
+      def available_section_id_element(course_code, section_id)
+        cell_element(xpath: "//button[contains(@class,'sections-form-course-button')][contains(.,'#{course_code}')]//following-sibling::div//table//td[contains(.,'#{section_id}')]")
       end
 
       # Returns the course code displayed for a given section in a course's available sections
-      # @param course [Course]
-      # @param section [Section]
+      # @param course_code [String]
+      # @param section_id [String]
       # @return [String]
-      def available_section_course(course, section)
-        cell_element(xpath: "//button[contains(@class,'sections-form-course-button')][contains(.,'#{course.code}')]//following-sibling::div//table//td[contains(.,'#{section.id}')]/preceding-sibling::td[contains(@class,'course-code')]").text
+      def available_section_course(course_code, section_id)
+        cell_element(xpath: "//button[contains(@class,'sections-form-course-button')][contains(.,'#{course_code}')]//following-sibling::div//table//td[contains(.,'#{section_id}')]/preceding-sibling::td[contains(@class,'course-code')]").text
       end
 
       # Returns the label displayed for a given section in a course's available sections
-      # @param course [Course]
-      # @param section [Section]
+      # @param course_code [String]
+      # @param section_id [String]
       # @return [String]
-      def available_section_label(course, section)
-        cell_element(xpath: "//button[contains(@class,'sections-form-course-button')][contains(.,'#{course.code}')]//following-sibling::div//table//td[contains(.,'#{section.id}')]/preceding-sibling::td[contains(@class,'section-label')]").text
+      def available_section_label(course_code, section_id)
+        cell_element(xpath: "//button[contains(@class,'sections-form-course-button')][contains(.,'#{course_code}')]//following-sibling::div//table//td[contains(.,'#{section_id}')]/preceding-sibling::td[contains(@class,'section-label')]").text
       end
 
       # Returns the schedules displayed for a given section in a course's available sections
-      # @param course [Course]
-      # @param section [Section]
+      # @param course_code [String]
+      # @param section_id [String]
       # @return [String]
-      def available_section_schedules(course, section)
-        cell_element(xpath: "//button[contains(@class,'sections-form-course-button')][contains(.,'#{course.code}')]//following-sibling::div//table//td[contains(.,'#{section.id}')]/following-sibling::td[contains(@class,'section-timestamps')]").text
+      def available_section_schedules(course_code, section_id)
+        cell_element(xpath: "//button[contains(@class,'sections-form-course-button')][contains(.,'#{course_code}')]//following-sibling::div//table//td[contains(.,'#{section_id}')]/following-sibling::td[contains(@class,'section-timestamps')]").text
       end
 
       # Returns the locations displayed for a given section in a course's available sections
-      # @param course [Course]
-      # @param section [Section]
+      # @param course_code [String]
+      # @param section_id [String]
       # @return [String]
-      def available_section_locations(course, section)
-        cell_element(xpath: "//button[contains(@class,'sections-form-course-button')][contains(.,'#{course.code}')]//following-sibling::div//table//td[contains(.,'#{section.id}')]/following-sibling::td[contains(@class,'section-locations')]").text
+      def available_section_locations(course_code, section_id)
+        cell_element(xpath: "//button[contains(@class,'sections-form-course-button')][contains(.,'#{course_code}')]//following-sibling::div//table//td[contains(.,'#{section_id}')]/following-sibling::td[contains(@class,'section-locations')]").text
       end
 
       # Returns the instructors displayed for a given section in a course's available sections
-      # @param course [Course]
-      # @param section [Section]
+      # @param course_code [String]
+      # @param section_id [String]
       # @return [String]
-      def available_section_instructors(course, section)
-        cell_element(xpath: "//button[contains(@class,'sections-form-course-button')][contains(.,'#{course.code}')]//following-sibling::div//table//td[contains(.,'#{section.id}')]/following-sibling::td[contains(@class,'section-instructors')]").text
-      end
-
-      # Returns all the section IDs displayed in a course's available sections table
-      # @param driver [Selenium::WebDriver]
-      # @param course_code [String]
-      # @return [Array<String>]
-      def visible_section_ids(driver, course_code)
-        elements = driver.find_elements(xpath: "//button[contains(.,'#{course_code}')]//following-sibling::div//table//td[contains(@class,'section-ccn')]")
-        elements.map &:text
-      end
-
-      # Returns all the course codes displayed in a course's available sections table
-      # @param driver [Selenium::WebDriver]
-      # @param course_code [String]
-      # @return [Array<String>]
-      def visible_course_codes(driver, course_code)
-        elements = driver.find_elements(xpath: "//button[contains(@class,'sections-form-course-button')][contains(.,'#{course_code}')]//following-sibling::div//table//td[contains(@class,'course-code')]")
-        elements.map &:text
-      end
-
-      # Returns all the section labels displayed in a course's available sections table
-      # @param driver [Selenium::WebDriver]
-      # @param course_code [String]
-      # @return [Array<String>]
-      def visible_section_labels(driver, course_code)
-        elements = driver.find_elements(xpath: "//button[contains(@class,'sections-form-course-button')][contains(.,'#{course_code}')]//following-sibling::div//table//td[contains(@class,'section-label')]")
-        elements.map &:text
-      end
-
-      # Returns all the section schedules displayed in a course's available sections table
-      # @param driver [Selenium::WebDriver]
-      # @param course_code [String]
-      # @return [Array<String>]
-      def visible_section_schedules(driver, course_code)
-        elements = driver.find_elements(xpath: "//button[contains(@class,'sections-form-course-button')][contains(.,'#{course_code}')]//following-sibling::div//table//td[contains(@class,'section-timestamps')]")
-        elements.map &:text
-      end
-
-      # Returns all the section locations displayed in a course's available sections table
-      # @param driver [Selenium::WebDriver]
-      # @param course_code [String]
-      # @return [Array<String>]
-      def visible_section_locations(driver, course_code)
-        elements = driver.find_elements(xpath: "//button[contains(@class,'sections-form-course-button')][contains(.,'#{course_code}')]//following-sibling::div//table//td[contains(@class,'section-locations')]")
-        elements.map &:text
-      end
-
-      # Returns all the section instructors displayed in a course's available sections table
-      # @param driver [Selenium::WebDriver]
-      # @param course_code [String]
-      # @return [Array<String>]
-      def visible_section_instructors(driver, course_code)
-        elements = driver.find_elements(xpath: "//button[contains(@class,'sections-form-course-button')][contains(.,'#{course_code}')]//following-sibling::div//table//td[contains(@class,'section-instructors')]")
-        elements.map &:text
+      def available_section_instructors(course_code, section_id)
+        cell_element(xpath: "//button[contains(@class,'sections-form-course-button')][contains(.,'#{course_code}')]//following-sibling::div//table//td[contains(.,'#{section_id}')]/following-sibling::td[contains(@class,'section-instructors')]").text
       end
 
       # Returns the Add button for a given section in a course's available sections table

@@ -281,7 +281,7 @@ module Page
         ending_count = enrollment_count_by_role(course, role)
         begin
           starting_count = ending_count
-          sleep Utils.medium_wait
+          sleep 20
           ending_count = enrollment_count_by_role(course, role)
         end while ending_count > starting_count
         enrollment_counts << ending_count
@@ -376,7 +376,7 @@ module Page
     # @param driver [Selenium::WebDriver]
     # @param course [Course]
     def delete_course(driver, course)
-      driver.switch_to.default_content
+      load_homepage
       stop_masquerading(driver) if stop_masquerading_link?
       navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/confirm_action?event=delete"
       wait_for_load_and_click_js delete_course_button_element

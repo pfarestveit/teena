@@ -4,8 +4,6 @@ describe 'bCourses project site', order: :defined do
 
   include Logging
 
-  masquerade = ENV['MASQUERADE']
-
   # Load test data
 
   test_user_data = Utils.load_test_users.select { |u| u['tests']['create_project_site'] }
@@ -26,13 +24,8 @@ describe 'bCourses project site', order: :defined do
     @roster_photos_page = Page::JunctionPages::CanvasRostersPage.new @driver
     @official_sections_page = Page::JunctionPages::CanvasCourseManageSectionsPage.new @driver
 
-    if masquerade
-      @canvas.log_in(@cal_net, Utils.super_admin_username, Utils.super_admin_password)
-      @canvas.masquerade_as(@driver, teacher)
-    else
-      @canvas.log_in(@cal_net, Utils.ets_qa_username, Utils.ets_qa_password)
-      @splash_page.basic_auth teacher.uid
-    end
+    @canvas.log_in(@cal_net, Utils.super_admin_username, Utils.super_admin_password)
+    @canvas.masquerade_as(@driver, teacher)
   end
 
   after(:all) { Utils.quit_browser @driver }
@@ -40,9 +33,7 @@ describe 'bCourses project site', order: :defined do
   describe 'information' do
 
     before(:all) do
-      masquerade ?
-          @site_creation_page.load_embedded_tool(@driver, teacher) :
-          @site_creation_page.load_standalone_tool
+      @site_creation_page.load_embedded_tool(@driver, teacher)
     end
 
     it('shows a link to project site help') { expect(@site_creation_page.external_link_valid?(@driver, @site_creation_page.projects_learn_more_link_element, 'Service at UC Berkeley')).to be true }
@@ -52,12 +43,8 @@ describe 'bCourses project site', order: :defined do
   describe 'creation' do
 
     before(:each) do
-      if masquerade
-        @site_creation_page.load_embedded_tool(@driver, teacher)
-        @site_creation_page.click_create_project_site
-      else
-        @create_project_site_page.load_standalone_tool
-      end
+      @site_creation_page.load_embedded_tool(@driver, teacher)
+      @site_creation_page.click_create_project_site
     end
 
     it 'requires that a site name be no more than 255 characters' do
@@ -81,24 +68,18 @@ describe 'bCourses project site', order: :defined do
   describe 'user roles' do
 
     it 'include Owner, Maintainer, and Member in the Add People tool' do
-      if masquerade
-        @canvas.load_users_page project
-        @canvas.wait_for_load_and_click @canvas.add_people_button_element
-        @canvas.user_role_element.when_visible Utils.short_wait
-        logger.debug "Available user roles are '#{@canvas.user_role_element.options.map &:text}'"
-        expect((@canvas.user_role_element.options.map(&:text) & %w(Owner Maintainer Member)).length == 3).to be true
-      else
-        logger.warn 'Skipping a test that requires masquerading'
-      end
+      @canvas.load_users_page project
+      @canvas.wait_for_load_and_click @canvas.add_people_button_element
+      @canvas.user_role_element.when_visible Utils.short_wait
+      logger.debug "Available user roles are '#{@canvas.user_role_element.options.map &:text}'"
+      expect((@canvas.user_role_element.options.map(&:text) & %w(Owner Maintainer Member)).length == 3).to be true
     end
 
     %w(Owner Maintainer Member).each do |user_role|
 
       it "include '#{user_role}' in the Find a Person to Add tool" do
         user = User.new({uid: '61889', role: user_role})
-        masquerade ?
-            @find_person_to_add_page.load_embedded_tool(@driver, project) :
-            @find_person_to_add_page.load_standalone_tool(project)
+        @find_person_to_add_page.load_embedded_tool(@driver, project)
         @find_person_to_add_page.search('61889', 'CalNet UID')
         @find_person_to_add_page.add_user_by_uid user
         @find_person_to_add_page.success_msg_element.when_visible Utils.short_wait
@@ -111,26 +92,17 @@ describe 'bCourses project site', order: :defined do
     [ta, staff, student].each do |user|
 
       it "allows #{user.role} UID #{user.uid} to see a Create a Site button if permitted to do so" do
-        if masquerade
-          @canvas.masquerade_as(@driver, user)
-          @canvas.load_homepage
-          has_create_site_button = @canvas.verify_block { @canvas.create_site_link_element.when_visible(Utils.short_wait) }
-          (%w(TA Staff).include? user.role) ?
-              (expect(has_create_site_button).to be true) :
-              (expect(has_create_site_button).to be false)
-        else
-          logger.warn 'Skipping a test that requires masquerading'
-        end
+        @canvas.masquerade_as(@driver, user)
+        @canvas.load_homepage
+        has_create_site_button = @canvas.verify_block { @canvas.create_site_link_element.when_visible(Utils.short_wait) }
+        (%w(TA Staff).include? user.role) ?
+            (expect(has_create_site_button).to be true) :
+            (expect(has_create_site_button).to be false)
       end
 
       it "allows #{user.role} UID #{user.uid} to navigate to the tool if permitted to do so" do
-        if masquerade
-          @canvas.masquerade_as(@driver, user)
-          @site_creation_page.load_embedded_tool(@driver, user)
-        else
-          @splash_page.basic_auth user.uid
-          @site_creation_page.load_standalone_tool
-        end
+        @canvas.masquerade_as(@driver, user)
+        @site_creation_page.load_embedded_tool(@driver, user)
 
         case user.role
           when 'TA'
@@ -150,17 +122,6 @@ describe 'bCourses project site', order: :defined do
             expect(@site_creation_page.access_denied_element.when_present Utils.medium_wait).to be_truthy
             expect(@site_creation_page.create_course_site_link?).to be false
             expect(@site_creation_page.create_project_site_link?).to be false
-        end
-      end
-
-      it "allows #{user.role} UID #{user.uid} to hit the tool directly if permitted to do so" do
-        unless masquerade
-          @splash_page.basic_auth user.uid
-          @create_project_site_page.load_standalone_tool
-          has_project_name_input = @create_project_site_page.verify_block { @create_project_site_page.site_name_input_element.when_visible Utils.short_wait }
-          (%w(TA Staff).include? user.role) ?
-              (expect(has_project_name_input).to be true) :
-              (expect(has_project_name_input).to be false)
         end
       end
     end
