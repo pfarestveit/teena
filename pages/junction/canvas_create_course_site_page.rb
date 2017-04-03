@@ -133,8 +133,8 @@ module Page
       # @param section_id [String]
       # @return [Array<String>]
       def section_schedules(driver, section_id)
-        schedule_elements = driver.find_elements(xpath: "//input[contains(@id,'#{section_id}')]/../ancestor::tbody//td[contains(@class, 'section-timestamps')]/div")
-        schedule_elements.map &:text
+        (e = div_element(xpath: "//input[contains(@id,'#{section_id}')]/../ancestor::tbody//td[contains(@class, 'section-timestamps')]/div")).exists? ?
+            e.text : ''
       end
 
       # Returns the locations for a section
@@ -142,8 +142,8 @@ module Page
       # @param section_id [String]
       # @return [Array<String>]
       def section_locations(driver, section_id)
-        location_elements = driver.find_elements(xpath: "//input[contains(@id,'#{section_id}')]/../ancestor::tbody//td[contains(@class, 'section-locations')]/div")
-        location_elements.map &:text
+        (e = div_element(xpath: "//input[contains(@id,'#{section_id}')]/../ancestor::tbody//td[contains(@class, 'section-locations')]/div")).exists? ?
+            e.text : ''
       end
 
       # Returns the instructor names for a section
@@ -151,8 +151,8 @@ module Page
       # @param section_id [String]
       # @return [Array<String>]
       def section_instructors(driver, section_id)
-        instructor_elements = driver.find_elements(xpath: "//input[contains(@id,'#{section_id}')]/../ancestor::tbody//td[contains(@class, 'section-instructors')]/div")
-        instructor_elements.map(&:text).reject(&:empty?)
+        (e = div_element(xpath: "//input[contains(@id,'#{section_id}')]/../ancestor::tbody//td[contains(@class, 'section-instructors')]/div")).exists? ?
+            e.text : ''
       end
 
       # Returns the section IDs displayed under a course

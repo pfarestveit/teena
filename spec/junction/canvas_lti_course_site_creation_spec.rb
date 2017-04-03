@@ -209,7 +209,7 @@ describe 'bCourses course site creation' do
           @roster_photos_page.wait_for_load_and_click_js @roster_photos_page.section_select_element
 
           expected_sections_on_site = (sections.map { |section| "#{section.course} #{section.label}" })
-          actual_sections_on_site = @roster_photos_page.section_options.length
+          actual_sections_on_site = @roster_photos_page.section_options
           it("shows the right section list on the Roster Photos tool for #{course.term} #{course.code} site ID #{course.site_id}") { expect(actual_sections_on_site).to eql(expected_sections_on_site.sort) }
 
           # COURSE CAPTURE - check that course captures tool is not added automatically

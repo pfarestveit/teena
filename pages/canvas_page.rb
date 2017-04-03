@@ -281,7 +281,7 @@ module Page
         ending_count = enrollment_count_by_role(course, role)
         begin
           starting_count = ending_count
-          sleep Utils.short_wait
+          sleep 20
           ending_count = enrollment_count_by_role(course, role)
         end while ending_count > starting_count
         enrollment_counts << ending_count

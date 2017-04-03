@@ -145,17 +145,16 @@ module Page
       end
 
       # Returns a hash of data displayed for a given section ID in a course's available sections table
-      # @param driver [Selenium::WebDriver]
       # @param course_code [String]
       # @param section_id [String]
       # @return [Hash]
-      def available_section_data(driver, course_code, section_id)
+      def available_section_data(course_code, section_id)
         {
           code: available_section_course(course_code, section_id),
           label: available_section_label(course_code, section_id),
-          schedules: available_section_schedules(driver, course_code, section_id),
-          locations: available_section_locations(driver, course_code, section_id),
-          instructors: available_section_instructors(driver, course_code, section_id)
+          schedules: available_section_schedules(course_code, section_id),
+          locations: available_section_locations(course_code, section_id),
+          instructors: available_section_instructors(course_code, section_id)
         }
       end
 
@@ -183,33 +182,27 @@ module Page
       end
 
       # Returns the schedules displayed for a given section in a course's available sections
-      # @param driver [Selenium::WebDriver]
       # @param course_code [String]
       # @param section_id [String]
       # @return [String]
-      def available_section_schedules(driver, course_code, section_id)
-        elements = driver.find_elements(xpath: "//button[contains(@class,'sections-form-course-button')][contains(.,'#{course_code}')]//following-sibling::div//table//td[contains(.,'#{section_id}')]/following-sibling::td[contains(@class,'section-timestamps')]")
-        elements.map &:text
+      def available_section_schedules(course_code, section_id)
+        cell_element(xpath: "//button[contains(@class,'sections-form-course-button')][contains(.,'#{course_code}')]//following-sibling::div//table//td[contains(.,'#{section_id}')]/following-sibling::td[contains(@class,'section-timestamps')]").text
       end
 
       # Returns the locations displayed for a given section in a course's available sections
-      # @param driver [Selenium::WebDriver]
       # @param course_code [String]
       # @param section_id [String]
       # @return [String]
-      def available_section_locations(driver, course_code, section_id)
-        elements = driver.find_elements(xpath: "//button[contains(@class,'sections-form-course-button')][contains(.,'#{course_code}')]//following-sibling::div//table//td[contains(.,'#{section_id}')]/following-sibling::td[contains(@class,'section-locations')]")
-        elements.map &:text
+      def available_section_locations(course_code, section_id)
+        cell_element(xpath: "//button[contains(@class,'sections-form-course-button')][contains(.,'#{course_code}')]//following-sibling::div//table//td[contains(.,'#{section_id}')]/following-sibling::td[contains(@class,'section-locations')]").text
       end
 
       # Returns the instructors displayed for a given section in a course's available sections
-      # @param driver [Selenium::WebDriver]
       # @param course_code [String]
       # @param section_id [String]
       # @return [String]
-      def available_section_instructors(driver, course_code, section_id)
-        elements = driver.find_elements(xpath: "//button[contains(@class,'sections-form-course-button')][contains(.,'#{course_code}')]//following-sibling::div//table//td[contains(.,'#{section_id}')]/following-sibling::td[contains(@class,'section-instructors')]")
-        elements.map(&:text).reject(&:empty?)
+      def available_section_instructors(course_code, section_id)
+        cell_element(xpath: "//button[contains(@class,'sections-form-course-button')][contains(.,'#{course_code}')]//following-sibling::div//table//td[contains(.,'#{section_id}')]/following-sibling::td[contains(@class,'section-instructors')]").text
       end
 
       # Returns the Add button for a given section in a course's available sections table

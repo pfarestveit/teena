@@ -52,8 +52,7 @@ module Page
       # Returns an array of options in the section select
       # @return [Array<String>]
       def section_options
-        options = section_select_options
-        options.delete 'All Sections'
+        section_select_options.reject { |o| o == 'All Sections' }
       end
 
       # Enters a string in the search input and pauses for DOM update

@@ -149,7 +149,7 @@ describe 'bCourses Official Sections tool' do
           @academics_api.course_sections(course_data).each do |section_data|
             api_section_data = @academics_api.section_data section_data
             logger.debug "Checking data for section ID #{api_section_data[:id]}"
-            ui_section_data = @official_sections_page.available_section_data(@driver, api_course_code, api_section_data[:id])
+            ui_section_data = @official_sections_page.available_section_data(api_course_code, api_section_data[:id])
 
             it("shows the right course code for #{api_course_code} section #{api_section_data[:id]}") { expect(ui_section_data[:code]).to eql(api_section_data[:code]) }
             it("shows no blank course code for #{api_course_code} section #{api_section_data[:id]}") { expect(ui_section_data[:code].empty?).to be false }
@@ -159,7 +159,7 @@ describe 'bCourses Official Sections tool' do
             it("shows the right section locations for #{api_course_code} section #{api_section_data[:id]}") { expect(ui_section_data[:locations]).to eql(api_section_data[:locations]) }
 
             test_output_row = [@teacher.uid, @course.term, api_section_data[:code], api_section_data[:label], api_section_data[:id],
-                               api_section_data[:schedules].join(', '), api_section_data[:locations].join(', '), api_section_data[:instructors].join(', ')]
+                               api_section_data[:schedules], api_section_data[:locations], api_section_data[:instructors]]
             Utils.add_csv_row(test_output, test_output_row)
           end
 

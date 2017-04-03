@@ -84,7 +84,7 @@ begin
     # Import data source
     click_element_id(@driver, 'AdminUC_Data_Import/Export')
     click_element_id(@driver, 'AdminUC_Data_AdminDS_Import_btnImport')
-    @long_wait.until { @driver.find_element(xpath: '//span[contains(.,"Data Import Successful")]') }
+    @long_wait.until { @driver.find_element(id: 'AdminUC_Data_AdminDS_Import_btnConfirm') }
     click_element_id(@driver, 'AdminUC_Data_AdminDS_Import_btnConfirm')
     @long_wait.until { @driver.find_element(xpath: '//span[contains(.,"Data Import Approved and Successful")]') }
     @brief_wait.until { @driver.find_element(id: 'AdminUC_Data_btnSave') }

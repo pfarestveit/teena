@@ -77,16 +77,21 @@ class ApiAcademicsCourseProvisionPage
   end
 
   def section_recurring_schedule(section)
-    section_schedules_recurring(section).map { |recurring| "#{recurring['schedule']}".gsub(/\s+/, ' ').strip } if section_schedules_recurring(section)
+    section_schedules = section_schedules_recurring(section).map { |recurring| "#{recurring['schedule']}".gsub(/\s+/, ' ').strip }
+    section_schedules.join("\n")
   end
 
   def section_locations(section)
-    section_schedules_recurring(section).map { |recurring| ("#{recurring['buildingName']} #{recurring['roomNumber']}").gsub(/\s+/, ' ').strip } if section_schedules_recurring(section)
+    section_locations = section_schedules_recurring(section).map do |recurring|
+      location = "#{recurring['buildingName']} #{recurring['roomNumber']}"
+      location.gsub(/\s+/, ' ').strip
+    end
+    section_locations.join("\n")
   end
 
   def section_instructors(section)
     instructors = section['instructors'].map { |instructor| "#{instructor['name']}".gsub(/\s+/, ' ').strip }
-    # instructors.join("\n")
+    instructors.join("\n")
   end
 
   def section_data(section)
