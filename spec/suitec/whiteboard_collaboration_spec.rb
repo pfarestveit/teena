@@ -4,7 +4,7 @@ describe 'Whiteboard', order: :defined do
 
   include Logging
 
-  course_id = ENV['course_id']
+  course_id = ENV['COURSE_ID']
   test_id = Utils.get_test_id
   timeout = Utils.short_wait
 

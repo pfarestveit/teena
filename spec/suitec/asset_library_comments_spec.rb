@@ -17,7 +17,7 @@ describe 'An asset comment', order: :defined do
 
   before(:all) do
     @course = Course.new({})
-    @course.site_id = ENV['course_id']
+    @course.site_id = ENV['COURSE_ID']
 
     test_users = Utils.load_test_users.select { |user| user['tests']['assetLibraryComments'] }
     students = test_users.select { |user| user['role'] == 'Student' }

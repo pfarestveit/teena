@@ -63,9 +63,8 @@ module Page
       def enter_whiteboard_collaborators(users)
         users.each do |user|
           wait_for_element_and_type_js(new_collaborator_input_element, user.full_name)
-          wait_until(timeout=Utils.short_wait) { list_item_element(xpath: "//li[contains(@class,'select-dropdown-optgroup-option')][contains(text(),'#{user.full_name}')]") }
           wait_for_update_and_click collaborator_option_link(user)
-          wait_until(timeout) { collaborator_name user }
+          wait_until(Utils.short_wait) { collaborator_name user }
         end
       end
 
@@ -168,7 +167,7 @@ module Page
         wait_until(Utils.short_wait) { collaborator_name user }
         wait_for_update_and_click edit_title_input_element
         wait_for_update_and_click save_edit_element
-        save_edit_element.when_not_present Utils.short_wait
+        save_edit_element.when_not_visible Utils.short_wait
       end
 
       # Removes a given collaborator from a whiteboard

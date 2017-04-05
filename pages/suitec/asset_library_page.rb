@@ -102,8 +102,8 @@ module Page
       # @param asset [Asset]
       def click_asset_link_by_id(asset)
         logger.info "Clicking thumbnail for asset ID #{asset.id}"
-        wait_until { list_view_asset_link_elements.any? }
-        wait_for_update_and_click_js (list_view_asset_link_elements.find { |link| link.attribute('href').include?("#{asset.id}") })
+        (link = link_element(xpath: "//a[contains(@href,'/assetlibrary/#{asset.id}')]")).when_present Utils.short_wait
+        execute_script('arguments[0].click();', link)
       end
 
       # Waits for an asset's detail view to load
@@ -243,10 +243,10 @@ module Page
       # @param keyword [String]
       def simple_search(keyword)
         logger.info "Performing simple search of asset library by keyword '#{keyword}'"
-        wait_for_update_and_click_js(cancel_advanced_search_element) if cancel_advanced_search?
+        wait_for_update_and_click(cancel_advanced_search_element) if cancel_advanced_search?
         search_input_element.clear
         search_input_element.send_keys(keyword) unless keyword.nil?
-        wait_for_update_and_click_js search_button_element
+        wait_for_update_and_click search_button_element
       end
 
       # Performs an advanced search of the asset library
@@ -256,7 +256,7 @@ module Page
       # @param asset_type [String]
       def advanced_search(keyword, category, uploader, asset_type)
         logger.info "Performing advanced search of asset library by keyword '#{keyword}', category '#{category}', uploader '#{uploader && uploader.full_name}', and asset type '#{asset_type}'."
-        wait_for_load_and_click_js advanced_search_button_element unless keyword_search_input_element.visible?
+        wait_for_load_and_click advanced_search_button_element unless keyword_search_input_element.visible?
         keyword.nil? ?
             wait_for_element_and_type(keyword_search_input_element, '') :
             wait_for_element_and_type(keyword_search_input_element, keyword)
@@ -269,7 +269,7 @@ module Page
         asset_type.nil? ?
             (self.asset_type_select = 'Asset type') :
             (self.asset_type_select = asset_type)
-        wait_for_update_and_click_js advanced_search_submit_element
+        wait_for_update_and_click advanced_search_submit_element
       end
 
       # ADD SITE

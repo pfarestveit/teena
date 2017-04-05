@@ -9,7 +9,7 @@ describe 'Asset', order: :defined do
 
   before(:all) do
     @course = Course.new({})
-    @course.site_id = ENV['course_id']
+    @course.site_id = ENV['COURSE_ID']
 
     @asset_uploader = User.new test_users[0]
     @asset_admirer = User.new test_users[1]

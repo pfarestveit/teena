@@ -56,7 +56,7 @@ module Page
       # Returns the score of a given user on the leaderboard
       # @param user [User]
       def user_score(user)
-        score = ''
+        score = '0'
         users_table_element.when_present Utils.short_wait
         search_for_user user
         sleep 1
