@@ -2,7 +2,7 @@ require_relative '../../util/spec_helper'
 
 describe 'A Canvas discussion', order: :defined do
 
-  course_id = ENV['course_id']
+  course_id = ENV['COURSE_ID']
   test_id = Utils.get_test_id
   test_user_data = Utils.load_test_users.select { |data| data['tests']['canvasDiscussions'] }
 

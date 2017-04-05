@@ -392,7 +392,7 @@ module Page
     link(:add_app_link, class: 'add_tool_link')
     select_list(:config_type, id: 'configuration_type_selector')
     text_area(:app_name_input, xpath: '//input[@placeholder="Name"]')
-    text_area(:key_input, xpath: '//input[@placeholder="Consumer key"]')
+    text_area(:key_input, xpath: '//input[@placeholder="Consumer Key"]')
     text_area(:secret_input, xpath: '//input[@placeholder="Shared Secret"]')
     text_area(:url_input, xpath: '//input[@placeholder="Config URL"]')
     button(:save_app_nav_button, xpath: '//button[text()="Save"]')

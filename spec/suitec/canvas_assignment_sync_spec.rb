@@ -4,7 +4,7 @@ include Logging
 
 describe 'Canvas assignment sync', order: :defined do
 
-  course_id = ENV['course_id']
+  course_id = ENV['COURSE_ID']
   test_id = Utils.get_test_id
   asset_1_canvas_file_name = nil
 

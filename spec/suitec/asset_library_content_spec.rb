@@ -9,7 +9,7 @@ describe 'New asset uploads', order: :defined do
     timeout = Utils.short_wait
 
     @course = Course.new({})
-    @course.site_id = ENV['course_id']
+    @course.site_id = ENV['COURSE_ID']
     user_test_data = Utils.load_test_users.select { |data| data['tests']['assetLibraryContent'] }
     users = user_test_data.map { |user_data| User.new(user_data) }
 
@@ -58,7 +58,7 @@ describe 'New asset uploads', order: :defined do
                 @asset_library.wait_until(Utils.long_wait) { @asset_library.list_view_asset_elements.any? }
                 file_uploaded = @asset_library.verify_block { @asset_library.verify_first_asset(user, @asset) }
                 preview_generated = @asset_library.preview_generated?(@driver, @asset_library_url, @asset)
-                asset_downloadable = @asset_library.verify_block { @asset_library.download_asset @asset }
+                asset_downloadable = @asset_library.verify_block { @asset_library.download_asset }
 
                 it("appear in the Asset Library for #{user_full_name} uploading #{asset_title}") { expect(file_uploaded).to be true }
                 it("generate a preview of type #{asset_preview_type} for #{user_full_name} uploading #{asset_file_name}") { expect(preview_generated).to be true }

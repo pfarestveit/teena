@@ -6,7 +6,7 @@ describe 'Canvas assignment submission', order: :defined do
 
   begin
 
-    course_id = ENV['course_id']
+    course_id = ENV['COURSE_ID']
     test_id = Utils.get_test_id
     @course = Course.new({})
     @course.site_id = course_id
@@ -105,7 +105,7 @@ describe 'Canvas assignment submission', order: :defined do
         it("generate the expected asset preview for #{student_full_name} uploading #{asset_title}") { expect(preview_generated).to be true }
 
         if asset.type == 'File'
-          asset_downloadable = @asset_library.verify_block { @asset_library.download_asset @asset }
+          asset_downloadable = @asset_library.verify_block { @asset_library.download_asset }
           it("can be downloaded by #{student_full_name} from the #{asset_title} asset detail page") { expect(asset_downloadable).to be true }
         else
           has_download_button = @asset_library.download_asset_link?

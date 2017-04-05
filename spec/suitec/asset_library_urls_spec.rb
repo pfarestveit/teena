@@ -7,7 +7,7 @@ describe 'Asset Library URLs', order: :defined do
 
   before(:all) do
     @course = Course.new({})
-    @course.site_id = ENV['course_id']
+    @course.site_id = ENV['COURSE_ID']
 
     # Get test user and asset
     test_user_data = Utils.load_test_users.find { |data| data['tests']['assetLibraryUrls'] }

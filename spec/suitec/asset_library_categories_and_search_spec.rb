@@ -20,7 +20,7 @@ describe 'Asset Library', order: :defined do
 
   before(:all) do
     @course = Course.new({})
-    @course.site_id = ENV['course_id']
+    @course.site_id = ENV['COURSE_ID']
 
     @driver = Utils.launch_browser
     @canvas = Page::CanvasPage.new @driver

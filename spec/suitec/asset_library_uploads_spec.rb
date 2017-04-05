@@ -7,7 +7,7 @@ describe 'Asset library file uploads', order: :defined do
 
   before(:all) do
     @course = Course.new({})
-    @course.site_id = ENV['course_id']
+    @course.site_id = ENV['COURSE_ID']
     test_user_data = Utils.load_test_users.find { |data| data['tests']['assetLibraryUploads'] }
     @user = User.new test_user_data
     @asset = Asset.new @user.assets.find { |asset| asset['type'] == 'File' }

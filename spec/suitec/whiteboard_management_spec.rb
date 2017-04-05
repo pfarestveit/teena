@@ -8,7 +8,7 @@ describe 'Whiteboard', order: :defined do
 
   before(:all) do
     @course = Course.new({})
-    @course.site_id = ENV['course_id']
+    @course.site_id = ENV['COURSE_ID']
 
     # Load test data
     user_test_data = Utils.load_test_users.select { |data| data['tests']['whiteboardManagement'] }
