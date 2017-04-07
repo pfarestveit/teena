@@ -647,5 +647,58 @@ module Page
           verify_block { file_search_no_results_element.when_visible Utils.short_wait }
     end
 
+    # GRADES
+
+    checkbox(:set_grading_scheme_cbx, id: 'course_grading_standard_enabled')
+    link(:assignment_heading_link, xpath: '//a[@class="gradebook-header-drop assignment_header_drop"]')
+    link(:toggle_muting_link, xpath: '//a[@data-action="toggleMuting"]')
+    button(:mute_assignment_button, xpath: '//button[contains(.,"Mute Assignment")]')
+    link(:e_grades_export_link, xpath: '//a[contains(.,"E-Grades")]')
+
+    # Loads the Canvas Gradebook
+    # @param course [Course]
+    def load_gradebook(course)
+      navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/gradebook"
+    end
+
+    # Ensures that no grading scheme is set on a course site
+    # @param course [Course]
+    def disable_grading_scheme(course)
+      logger.info "Making sure grading scheme is disabled for course ID #{course.site_id}"
+      navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/settings"
+      set_grading_scheme_cbx_element.when_present Utils.medium_wait
+      wait_for_update_and_click_js set_grading_scheme_cbx_element if set_grading_scheme_cbx_checked?
+      wait_for_update_and_click_js update_course_button_element
+      update_course_success_element.when_visible Utils.medium_wait
+    end
+
+    # Clicks the first assignment heading to reveal whether or not the assignment is muted
+    def click_first_assignment_heading
+      link_element(xpath: '//a[@class="gradebook-header-drop assignment_header_drop"]').when_present Utils.medium_wait
+      link_element(xpath: '//a[@class="gradebook-header-drop assignment_header_drop"]').click
+    end
+
+    # Ensures that an assignment is muted on a course site
+    # @param course [Course]
+    def mute_assignment(course)
+      logger.info "Muting an assignment for course ID #{course.site_id}"
+      load_gradebook course
+      click_first_assignment_heading
+      toggle_muting_link_element.when_visible Utils.short_wait
+      if toggle_muting_link_element.text == 'Mute Assignment'
+        toggle_muting_link_element.click
+        wait_for_update_and_click mute_assignment_button_element
+        paragraph_element(xpath: '//p[contains(.,"Are you sure you want to mute this assignment?")]').when_not_visible(Utils.medium_wait) rescue Selenium::WebDriver::Error::StaleElementReferenceError
+      else
+        logger.debug 'An assignment is already muted'
+      end
+    end
+
+    # Clicks the E-Grades export button
+    def click_e_grades_export_button
+      logger.info 'Clicking E-Grades Export button'
+      wait_for_load_and_click e_grades_export_link_element
+    end
+
   end
 end

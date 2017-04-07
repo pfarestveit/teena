@@ -210,6 +210,11 @@ class Utils
     @config['canvas']['mailing_list_tool']
   end
 
+  # Canvas ID of e-grades export tool
+  def self.canvas_e_grades_export_tool
+    @config['canvas']['e_grades_export_tool']
+  end
+
   # JUNCTION
 
   # Base URL of Junction test environment
