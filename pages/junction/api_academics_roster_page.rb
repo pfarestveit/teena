@@ -12,6 +12,14 @@ class ApiAcademicsRosterPage
     @parsed = JSON.parse driver.find_element(xpath: '//pre').text
   end
 
+  def sections
+    @parsed['sections']
+  end
+
+  def section_names
+    sections.map { |section| section['name'] }
+  end
+
   def students
     @parsed['students']
   end
@@ -29,6 +37,11 @@ class ApiAcademicsRosterPage
       student_section_names = student['sections'].map { |section| section['name'] }
       student_section_names.include? section_name
     end
+  end
+
+  def student_last_names(students)
+    names = students.map { |student| student['last_name'] }
+    names.sort
   end
 
   def student_ids(students)

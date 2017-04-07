@@ -26,6 +26,7 @@ canvas:
   official_sections_tool: secret
   mailing_lists_tool: secret
   mailing_list_tool: secret
+  e_grades_export_tool: secret
 
 junction:
   base_url: https://junction-qa.berkeley.edu
