@@ -17,6 +17,7 @@ module Page
       def load_page(driver, url)
         navigate_to url
         wait_until { title == "#{SuiteCTools::ASSET_LIBRARY.name}" }
+        hide_canvas_footer
         switch_to_canvas_iframe driver
       end
 
@@ -237,8 +238,6 @@ module Page
       button(:advanced_search_submit, xpath: '//button[text()="Search"]')
       link(:cancel_advanced_search, text: 'Cancel')
 
-      div(:no_search_results, class: 'assetlibrary-list-noresults')
-
       # Performs a simple search of the asset library
       # @param keyword [String]
       def simple_search(keyword)
@@ -270,46 +269,6 @@ module Page
             (self.asset_type_select = 'Asset type') :
             (self.asset_type_select = asset_type)
         wait_for_update_and_click advanced_search_submit_element
-      end
-
-      # ADD SITE
-
-      link(:add_site_link, xpath: '//a[contains(.,"Add Link")]')
-
-      # Clicks the 'add site' button
-      def click_add_site_link
-        go_back_to_asset_library if back_to_library_link?
-        wait_for_load_and_click add_site_link_element
-        add_url_heading_element.when_visible Utils.short_wait
-      end
-
-      # Combines methods to add a new site to the asset library, and sets the asset object's ID
-      # @param asset [Asset]
-      # @return [String]
-      def add_site(asset)
-        click_add_site_link
-        enter_and_submit_url asset
-        asset.id = list_view_asset_ids.first
-      end
-
-      # FILE UPLOADS
-
-      link(:upload_link, xpath: '//a[contains(.,"Upload")]')
-
-      # Clicks the 'upload file' button
-      def click_upload_file_link
-        go_back_to_asset_library if back_to_library_link?
-        wait_for_load_and_click upload_link_element
-        upload_file_heading_element.when_visible Utils.short_wait
-      end
-
-      # Combines methods to upload a new file to the asset library, and sets the asset object's ID
-      # @param asset [Asset]
-      # @return [String]
-      def upload_file_to_library(asset)
-        click_upload_file_link
-        enter_and_upload_file asset
-        asset.id = list_view_asset_ids.first
       end
 
       # MANAGE ASSETS

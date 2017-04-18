@@ -17,6 +17,7 @@ module Page
       def load_page(driver, url)
         navigate_to url
         wait_until { title == "#{SuiteCTools::WHITEBOARDS.name}" }
+        hide_canvas_footer
         switch_to_canvas_iframe driver
       end
 

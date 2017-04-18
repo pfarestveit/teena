@@ -32,6 +32,8 @@ class Utils
         profile['download.prompt_for_download'] = false
         profile['download.default_directory'] = Utils.download_dir
         profile['profile.password_manager_enabled'] = false
+        profile['credentials_enable_service'] = false
+        profile['password_manager_enabled'] = false
         driver = Selenium::WebDriver.for :chrome, profile: profile
       else
         driver = Selenium::WebDriver.for :safari

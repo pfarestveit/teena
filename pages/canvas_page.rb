@@ -401,7 +401,7 @@ module Page
     # @param tool [SuiteCTools]
     # @return [PageObject::Elements::Link]
     def tool_nav_link(tool)
-      link_element(text: "#{tool.name}")
+      link_element(xpath: "//ul[@id='section-tabs']//a[text()='#{tool.name}']")
     end
 
     # Loads the LTI tool configuration page for a course site
@@ -410,39 +410,82 @@ module Page
       navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/settings/configurations"
     end
 
-    # Adds a SuiteC LTI tool to a course site
+    # Loads the site navigation page
     # @param course [Course]
-    # @param tool [SuiteCTools]
-    def add_suite_c_tool(course, tool)
-      logger.info "Adding #{tool.name}"
-
-      # Load the new tool configuration UI
-      load_tools_config_page course
-      wait_for_update_and_click apps_link_element
-      wait_for_update_and_click add_app_link_element
-      wait_for_element_and_select_js(config_type_element, 'By URL')
-      # Use JS to select the option too since the WebDriver method is not working consistently
-      execute_script('document.getElementById("configuration_type_selector").value = "url";')
-      sleep 1
-
-      # Enter the tool config
-      wait_for_update_and_click_js app_name_input_element
-      self.app_name_input = "#{tool.name}"
-      self.key_input = Utils.suitec_lti_key
-      self.secret_input = Utils.suitec_lti_secret
-      self.url_input = "#{Utils.suite_c_base_url}#{tool.xml}"
-      submit_button
-      link_element(xpath: "//td[@title='#{tool.name}']").when_present Utils.medium_wait
-
-      # Move the tool from disabled to enabled
+    def load_navigation_page(course)
       load_tools_config_page course
       wait_for_update_and_click navigation_link_element
       hide_canvas_footer
+    end
+
+    # Enables an LTI tool that is already installed
+    # @param course [Course]
+    # @param tool [SuiteCTools]
+    def enable_tool(course, tool)
+      load_navigation_page course
       wait_for_update_and_click_js link_element(xpath: "//ul[@id='nav_disabled_list']/li[contains(.,'#{tool.name}')]//a")
       wait_for_update_and_click_js link_element(xpath: "//ul[@id='nav_disabled_list']/li[contains(.,'#{tool.name}')]//a[@title='Enable this item']")
       list_item_element(xpath: "//ul[@id='nav_enabled_list']/li[contains(.,'#{tool.name}')]").when_visible Utils.medium_wait
       save_app_nav_button
       tool_nav_link(tool).when_visible Utils.medium_wait
+    end
+
+    # Disables an LTI tool that is already installed
+    # @param course [Course]
+    # @param tool [SuiteCTools]
+    def disable_tool(course, tool)
+      logger.info "Disabling #{tool.name}"
+      load_navigation_page course
+      if verify_block { link_element(xpath: "//ul[@id='nav_disabled_list']/li[contains(.,'#{tool.name}')]//a").when_present 2 }
+        logger.debug "#{tool.name} is already installed but disabled, skipping"
+      else
+        if link_element(xpath: "//ul[@id='nav_enabled_list']/li[contains(.,'#{tool.name}')]//a").exists?
+          logger.debug "#{tool.name} is installed and enabled, disabling"
+          wait_for_update_and_click_js link_element(xpath: "//ul[@id='nav_enabled_list']/li[contains(.,'#{tool.name}')]//a")
+          wait_for_update_and_click_js link_element(xpath: "//ul[@id='nav_enabled_list']/li[contains(.,'#{tool.name}')]//a[@title='Disable this item']")
+          list_item_element(xpath: "//ul[@id='nav_disabled_list']/li[contains(.,'#{tool.name}')]").when_visible Utils.medium_wait
+          save_app_nav_button
+          tool_nav_link(tool).when_not_visible Utils.medium_wait
+        else
+          logger.debug "#{tool.name} is not installed, skipping"
+        end
+      end
+    end
+
+    # Adds a SuiteC LTI tool to a course site
+    # @param course [Course]
+    # @param tool [SuiteCTools]
+    def add_suite_c_tool(course, tool)
+      logger.info "Adding and/or enabling #{tool.name}"
+      load_tools_config_page course
+      wait_for_update_and_click navigation_link_element
+      hide_canvas_footer
+      if verify_block { link_element(xpath: "//ul[@id='nav_enabled_list']/li[contains(.,'#{tool.name}')]//a").when_present 2 }
+        logger.debug "#{tool.name} is already installed and enabled, skipping"
+      else
+        if link_element(xpath: "//ul[@id='nav_disabled_list']/li[contains(.,'#{tool.name}')]//a").exists?
+          logger.debug "#{tool.name} is already installed but disabled, enabling"
+          enable_tool(course, tool)
+        else
+          logger.debug "#{tool.name} is not installed, installing and enabling"
+          wait_for_update_and_click apps_link_element
+          wait_for_update_and_click add_app_link_element
+
+          # Enter the tool config
+          wait_for_element_and_select_js(config_type_element, 'By URL')
+          # Use JS to select the option too since the WebDriver method is not working consistently
+          execute_script('document.getElementById("configuration_type_selector").value = "url";')
+          sleep 1
+          wait_for_update_and_click_js app_name_input_element
+          self.app_name_input = "#{tool.name}"
+          self.key_input = Utils.suitec_lti_key
+          self.secret_input = Utils.suitec_lti_secret
+          self.url_input = "#{Utils.suite_c_base_url}#{tool.xml}"
+          submit_button
+          link_element(xpath: "//td[@title='#{tool.name}']").when_present Utils.medium_wait
+          enable_tool(course, tool)
+        end
+      end
     end
 
     # Clicks the navigation link for a tool and returns the tool's URL
