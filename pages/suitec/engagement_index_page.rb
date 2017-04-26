@@ -65,6 +65,8 @@ module Page
           link_element(xpath: "//a[contains(.,'#{user.full_name}')]").exists?
         end
         link_element(xpath: "//a[contains(.,'#{user.full_name}')]").click
+        wait_until { title == "#{SuiteCTools::IMPACT_STUDIO.name}" }
+        hide_canvas_footer
         switch_to_canvas_iframe driver
       end
 

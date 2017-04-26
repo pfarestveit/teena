@@ -11,6 +11,7 @@ module Page
     # Assets UI shared across tools
 
     elements(:list_view_asset, :list_item, xpath: '//li[@data-ng-repeat="asset in assets | unique:\'id\'"]')
+    elements(:list_view_asset_link, :link, xpath: '//li[@data-ng-repeat="asset in assets | unique:\'id\'"]//a')
     div(:no_search_results, class: 'assetlibrary-list-noresults')
 
     link(:upload_link, xpath: '//a[contains(.,"Upload")]')
@@ -37,6 +38,32 @@ module Page
     div(:bad_url_error, xpath: '//div[text()="Please enter a valid URL"]')
     button(:close_modal_button, xpath: '//button[@data-ng-click="closeModal()"]')
     button(:cancel_asset_button, xpath: '//button[text()="Cancel"]')
+
+    link(:bookmarklet_link, xpath: '//a[contains(.,"Add assets more easily")]')
+    link(:back_to_impact_studio_link, text: 'Back to Dashboard')
+    link(:back_to_library_link, text: 'Back to Asset Library')
+
+    # Returns an array of list view asset IDs extracted from the href attributes of the asset links
+    # @return [Array<String>]
+    def list_view_asset_ids
+      wait_until { list_view_asset_link_elements.any? }
+      list_view_asset_link_elements.map { |link| link.attribute('href').sub("#{Utils.suite_c_base_url}/assetlibrary/", '') }
+    end
+
+    # Clicks the 'back to asset library' link and waits for list view to load
+    def go_back_to_asset_library
+      wait_for_update_and_click back_to_library_link_element
+      wait_until(Utils.short_wait) { list_view_asset_elements.any? }
+    end
+
+    # Clicks the 'back to impact studio' link and shifts focus to the iframe
+    # @param driver [Selenium::WebDriver]
+    def go_back_to_impact_studio(driver)
+      wait_for_load_and_click back_to_impact_studio_link_element
+      wait_until(Utils.medium_wait) { title == SuiteCTools::IMPACT_STUDIO.name }
+      hide_canvas_footer
+      switch_to_canvas_iframe driver
+    end
 
     # FILE UPLOADS
 

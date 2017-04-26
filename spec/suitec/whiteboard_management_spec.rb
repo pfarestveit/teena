@@ -287,7 +287,6 @@ describe 'Whiteboard', order: :defined do
       @whiteboards.add_existing_assets @assets
       @whiteboards.open_original_asset_link_element.when_visible Utils.long_wait
       whiteboard_asset = @whiteboards.export_to_asset_library @whiteboard
-      @whiteboards.export_title_input_element.when_not_visible Utils.medium_wait rescue Selenium::WebDriver::Error::StaleElementReferenceError
       @asset_library.load_page(@driver, @asset_library_url)
       @asset_library.verify_first_asset(@student_1, whiteboard_asset)
     end

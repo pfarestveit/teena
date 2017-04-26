@@ -16,6 +16,7 @@ require_relative '../models/suitec/activities'
 require_relative '../models/suitec/asset'
 require_relative '../models/suitec/whiteboard'
 require_relative '../models/suitec/suite_c_tools'
+require_relative '../models/suitec/impacts'
 
 require_relative '../logging'
 require_relative 'utils'

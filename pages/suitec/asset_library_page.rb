@@ -44,7 +44,6 @@ module Page
       # ASSETS
 
       elements(:list_view_asset, :list_item, class: 'assetlibrary-list-item')
-      elements(:list_view_asset_link, :link, xpath: '//li[@data-ng-repeat="asset in assets | unique:\'id\'"]//a')
       elements(:list_view_asset_title, :span, xpath: '//li[@data-ng-repeat="asset in assets | unique:\'id\'"]//div[@class="col-list-item-metadata"]/div[1]')
       elements(:list_view_asset_owner_name, :element, xpath: '//li[@data-ng-repeat="asset in assets | unique:\'id\'"]//small')
       elements(:list_view_asset_likes_count, :span, xpath: '//span[@data-ng-bind="asset.likes | number"]')
@@ -63,20 +62,11 @@ module Page
       div(:detail_view_asset_no_source, xpath: '//div[text()="No source"]')
       elements(:detail_view_used_in, :link, xpath: '//div[text()="Used in"]/following-sibling::div//a')
 
-      link(:back_to_library_link, text: 'Back to Asset Library')
-
       # Returns an array of list view asset titles
       # @return [Array<String>]
       def list_view_asset_titles
         wait_until { list_view_asset_title_elements.any? }
         list_view_asset_title_elements.map &:text
-      end
-
-      # Returns an array of list view asset IDs extracted from the href attributes of the asset links
-      # @return [Array<String>]
-      def list_view_asset_ids
-        wait_until { list_view_asset_link_elements.any? }
-        list_view_asset_link_elements.map { |link| link.attribute('href').sub("#{Utils.suite_c_base_url}/assetlibrary/", '') }
       end
 
       # Loads the list view and scrolls down until a given asset appears
@@ -103,8 +93,7 @@ module Page
       # @param asset [Asset]
       def click_asset_link_by_id(asset)
         logger.info "Clicking thumbnail for asset ID #{asset.id}"
-        (link = link_element(xpath: "//a[contains(@href,'/assetlibrary/#{asset.id}')]")).when_present Utils.short_wait
-        execute_script('arguments[0].click();', link)
+        wait_for_update_and_click_js link_element(xpath: "//a[contains(@href,'/assetlibrary/#{asset.id}')]")
       end
 
       # Waits for an asset's detail view to load
@@ -128,12 +117,6 @@ module Page
       def click_asset_category(category_link_index)
         wait_until(Utils.short_wait) { detail_view_asset_category_elements.any? }
         wait_for_update_and_click_js detail_view_asset_category_elements[category_link_index]
-      end
-
-      # Clicks the 'back to asset library' link and waits for list view to load
-      def go_back_to_asset_library
-        wait_for_update_and_click back_to_library_link_element
-        wait_until(Utils.short_wait) { list_view_asset_elements.any? }
       end
 
       # Returns the expected asset title for an asset derived from a Canvas assignment submission

@@ -312,6 +312,7 @@ module Page
         wait_until(Utils.short_wait) { export_title_input == whiteboard.title }
         wait_for_update_and_click_js export_confirm_button_element
         sleep Utils.short_wait
+        export_title_input_element.when_not_visible Utils.medium_wait rescue Selenium::WebDriver::Error::StaleElementReferenceError
         Asset.new({ type: 'Whiteboard', title: whiteboard.title, preview: 'image' })
       end
 

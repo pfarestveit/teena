@@ -155,6 +155,7 @@ describe 'bCourses Mailgun mailing lists', order: :defined do
       it 'deletes mailing list memberships for users who have been removed from the site' do
         @canvas_page.remove_user_from_course(course_site_1, students[0])
         Utils.clear_cache(@driver, @splash_page, @toolbox_page)
+        @canvas_page.log_in(@cal_net_page, Utils.super_admin_username, Utils.super_admin_password)
         @mailing_lists_page.load_embedded_tool @driver
         @mailing_lists_page.search_for_list course_site_1.site_id
         @mailing_lists_page.click_update_memberships
@@ -164,6 +165,7 @@ describe 'bCourses Mailgun mailing lists', order: :defined do
       it 'creates mailing list memberships for users who have been restored to the site' do
         @canvas_page.add_users(course_site_1, [students[0]])
         Utils.clear_cache(@driver, @splash_page, @toolbox_page)
+        @canvas_page.log_in(@cal_net_page, Utils.super_admin_username, Utils.super_admin_password)
         @mailing_lists_page.load_embedded_tool @driver
         @mailing_lists_page.search_for_list course_site_1.site_id
         @mailing_lists_page.click_update_memberships
@@ -174,6 +176,7 @@ describe 'bCourses Mailgun mailing lists', order: :defined do
         students[0].email = students[1].email
         @canvas_page.reset_user_email(course_site_1, [students[0]])
         Utils.clear_cache(@driver, @splash_page, @toolbox_page)
+        @canvas_page.log_in(@cal_net_page, Utils.super_admin_username, Utils.super_admin_password)
         @mailing_lists_page.load_embedded_tool @driver
         @mailing_lists_page.search_for_list course_site_1.site_id
         @mailing_lists_page.click_update_memberships
