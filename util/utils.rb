@@ -274,4 +274,10 @@ class Utils
     driver.save_screenshot File.join(output_dir, "#{unique_id}-UID#{uid}.png")
   end
 
+  # LRS
+
+  def self.script_loops
+    @config['lrs']['script_loops']
+  end
+
 end
