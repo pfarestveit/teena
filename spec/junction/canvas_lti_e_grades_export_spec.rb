@@ -26,7 +26,7 @@ describe 'bCourses E-Grades Export', order: :defined do
   before(:all) do
     @driver = Utils.launch_browser
     @cal_net = Page::CalNetPage.new @driver
-    @canvas = Page::CanvasPage.new @driver
+    @canvas = Page::CanvasActivitiesPage.new @driver
     @splash_page = Page::JunctionPages::SplashPage.new @driver
     @e_grades_export_page = Page::JunctionPages::CanvasEGradesExportPage.new @driver
     @course_add_user_page = Page::JunctionPages::CanvasCourseAddUserPage.new @driver

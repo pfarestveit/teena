@@ -13,8 +13,8 @@ describe 'A Canvas discussion', order: :defined do
     @user_2 = User.new test_user_data[1]
 
     @driver = Utils.launch_browser
-    @canvas = Page::CanvasPage.new @driver
-    @cal_net= Page::CalNetPage.new @driver
+    @canvas = Page::CanvasActivitiesPage.new @driver
+    @cal_net = Page::CalNetPage.new @driver
     @engagement_index = Page::SuiteCPages::EngagementIndexPage.new @driver
 
     # Create test course site. If using an existing site, include the Asset Library and ensure Canvas sync is enabled.

@@ -6,8 +6,8 @@ begin
 
   @driver = Utils.launch_browser
 
-  @canvas = Page::CanvasPage.new @driver
-  @cal_net= Page::CalNetPage.new @driver
+  @canvas = Page::CanvasActivitiesPage.new @driver
+  @cal_net = Page::CalNetPage.new @driver
 
   @test_user_data = Utils.load_test_users.select { |data| data['tests']['canvasDiscussions'] }
   @admin_user = User.new(username: Utils.ets_qa_username)

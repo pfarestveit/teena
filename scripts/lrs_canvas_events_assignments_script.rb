@@ -6,7 +6,7 @@ begin
 
   @driver = Utils.launch_browser
 
-  @canvas = Page::CanvasPage.new @driver
+  @canvas = Page::CanvasActivitiesPage.new @driver
   @cal_net= Page::CalNetPage.new @driver
 
   user_test_data = Utils.load_test_users.select { |data| data['tests']['canvasAssignmentSubmissions'] }
