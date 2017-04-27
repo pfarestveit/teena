@@ -11,7 +11,10 @@ module Page
     # Assets UI shared across tools
 
     elements(:list_view_asset, :list_item, xpath: '//li[@data-ng-repeat="asset in assets | unique:\'id\'"]')
+    elements(:list_view_asset_link, :link, xpath: '//li[@data-ng-repeat="asset in assets | unique:\'id\'"]//a')
+    div(:no_search_results, class: 'assetlibrary-list-noresults')
 
+    link(:upload_link, xpath: '//a[contains(.,"Upload")]')
     h2(:upload_file_heading, xpath: '//h2[text()="Upload a file"]')
     file_field(:upload_file_path_input, xpath: '//body/input[@type="file"]')
     elements(:upload_file_title_input, :text_area, id: 'assetlibrary-upload-title')
@@ -21,6 +24,7 @@ module Page
     button(:upload_file_button, xpath: '//button[text()="Upload files"]')
     div(:upload_error, class: 'alert-danger')
 
+    link(:add_site_link, xpath: '//a[contains(.,"Add Link")]')
     h2(:add_url_heading, xpath: '//h2[text()="Add a link"]')
     text_area(:url_input, id: 'assetlibrary-addlink-url')
     text_area(:url_title_input, id: 'assetlibrary-addlink-title')
@@ -34,6 +38,50 @@ module Page
     div(:bad_url_error, xpath: '//div[text()="Please enter a valid URL"]')
     button(:close_modal_button, xpath: '//button[@data-ng-click="closeModal()"]')
     button(:cancel_asset_button, xpath: '//button[text()="Cancel"]')
+
+    link(:bookmarklet_link, xpath: '//a[contains(.,"Add assets more easily")]')
+    link(:back_to_impact_studio_link, text: 'Back to Dashboard')
+    link(:back_to_library_link, text: 'Back to Asset Library')
+
+    # Returns an array of list view asset IDs extracted from the href attributes of the asset links
+    # @return [Array<String>]
+    def list_view_asset_ids
+      wait_until { list_view_asset_link_elements.any? }
+      list_view_asset_link_elements.map { |link| link.attribute('href').sub("#{Utils.suite_c_base_url}/assetlibrary/", '') }
+    end
+
+    # Clicks the 'back to asset library' link and waits for list view to load
+    def go_back_to_asset_library
+      wait_for_update_and_click back_to_library_link_element
+      wait_until(Utils.short_wait) { list_view_asset_elements.any? }
+    end
+
+    # Clicks the 'back to impact studio' link and shifts focus to the iframe
+    # @param driver [Selenium::WebDriver]
+    def go_back_to_impact_studio(driver)
+      wait_for_load_and_click back_to_impact_studio_link_element
+      wait_until(Utils.medium_wait) { title == SuiteCTools::IMPACT_STUDIO.name }
+      hide_canvas_footer
+      switch_to_canvas_iframe driver
+    end
+
+    # FILE UPLOADS
+
+    # Clicks the 'upload file' button
+    def click_upload_file_link
+      go_back_to_asset_library if back_to_library_link?
+      wait_for_load_and_click upload_link_element
+      upload_file_heading_element.when_visible Utils.short_wait
+    end
+
+    # Combines methods to upload a new file to the asset library, and sets the asset object's ID
+    # @param asset [Asset]
+    # @return [String]
+    def upload_file_to_library(asset)
+      click_upload_file_link
+      enter_and_upload_file asset
+      asset.id = list_view_asset_ids.first
+    end
 
     # Uses JavaScript to make the file upload input visible, then enters the file to be uploaded
     # @param file_name [String]
@@ -67,6 +115,24 @@ module Page
       enter_file_path_for_upload asset.file_name
       enter_file_metadata(asset)
       click_add_files_button
+    end
+
+    # ADD SITE
+
+    # Clicks the 'add site' button
+    def click_add_site_link
+      go_back_to_asset_library if back_to_library_link?
+      wait_for_load_and_click add_site_link_element
+      add_url_heading_element.when_visible Utils.short_wait
+    end
+
+    # Combines methods to add a new site to the asset library, and sets the asset object's ID
+    # @param asset [Asset]
+    # @return [String]
+    def add_site(asset)
+      click_add_site_link
+      enter_and_submit_url asset
+      asset.id = list_view_asset_ids.first
     end
 
     # Enters asset metadata while adding a link type asset

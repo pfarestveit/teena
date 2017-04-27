@@ -17,6 +17,7 @@ module Page
       def load_page(driver, url)
         navigate_to url
         wait_until { title == "#{SuiteCTools::ENGAGEMENT_INDEX.name}" }
+        hide_canvas_footer
         switch_to_canvas_iframe driver
       end
 
@@ -51,6 +52,22 @@ module Page
       # @param user [User]
       def search_for_user(user)
         wait_for_element_and_type(text_area_element(class: 'leaderboard-list-search'), user.full_name)
+      end
+
+      # Clicks the user name link to open the Impact Studio page
+      # @param driver [Selenium::WebDriver]
+      # @param user [User]
+      def click_user_dashboard_link(driver, user)
+        logger.info "Clicking the Impact Studio link for UID #{user.uid}"
+        wait_until(Utils.medium_wait) do
+          scroll_to_bottom
+          sleep 1
+          link_element(xpath: "//a[contains(.,'#{user.full_name}')]").exists?
+        end
+        link_element(xpath: "//a[contains(.,'#{user.full_name}')]").click
+        wait_until { title == "#{SuiteCTools::IMPACT_STUDIO.name}" }
+        hide_canvas_footer
+        switch_to_canvas_iframe driver
       end
 
       # Returns the score of a given user on the leaderboard
@@ -196,16 +213,22 @@ module Page
 
       # Opts to share a user's score on the leaderboard
       def share_score
+        scroll_to_bottom
         share_score_cbx_element.when_visible Utils.short_wait
+        logger.info 'Sharing score'
         share_score_cbx_checked? ? logger.warn('Score is already shared') : check_share_score_cbx
         continue_button if continue_button?
+        users_table_element.when_visible Utils.short_wait
       end
 
       # Opts not to share a user's score on the leaderboard
       def un_share_score
+        scroll_to_bottom
         share_score_cbx_element.when_visible Utils.short_wait
+        logger.info 'Un-sharing score'
         share_score_cbx_checked? ? uncheck_share_score_cbx : logger.warn('Score is already un-shared')
         continue_button if continue_button?
+        users_table_element.when_not_visible Utils.short_wait rescue Selenium::WebDriver::Error::StaleElementReferenceError
       end
 
       # Returns the current sharing preference of a user
