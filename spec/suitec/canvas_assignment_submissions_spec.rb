@@ -18,7 +18,7 @@ describe 'Canvas assignment submission', order: :defined do
     @teacher = users.find { |user| user.role == 'Teacher' }
 
     @driver = Utils.launch_browser
-    @canvas = Page::CanvasPage.new @driver
+    @canvas = Page::CanvasActivitiesPage.new @driver
     @cal_net = Page::CalNetPage.new @driver
     @asset_library = Page::SuiteCPages::AssetLibraryPage.new @driver
     @engagement_index = Page::SuiteCPages::EngagementIndexPage.new @driver
