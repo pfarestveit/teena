@@ -13,7 +13,7 @@ module Page
     h2(:updated_terms_heading, xpath: '//h2[contains(text(),"Updated Terms of Use")]')
     checkbox(:terms_cbx, name: 'user[terms_of_use]')
     button(:accept_course_invite, name: 'accept')
-    link(:masquerade_link, class: 'masquerade_button')
+    link(:masquerade_link, xpath: '//a[contains(.,"Act as User")]')
     link(:stop_masquerading_link, class: 'stop_masquerading')
     h2(:recent_activity_heading, xpath: '//h2[contains(text(),"Recent Activity")]')
 

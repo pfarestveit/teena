@@ -40,3 +40,6 @@ users:
   ets_qa_username: secret
   ets_qa_password: secret
   test_user_password: secret
+
+lrs:
+  script_loops: 10
