@@ -8,6 +8,20 @@ module Page
     include Logging
     include Page
 
+    link(:settings_link, class: 'announcement_cog')
+    link(:delete_link, class: 'delete_discussion')
+
+    # Deletes an announcement or a discussion
+    # @param title [String]
+    # @param url [String]
+    def delete_activity(title, url)
+      logger.info "Deleting '#{title}'"
+      navigate_to url
+      wait_for_load_and_click settings_link_element
+      confirm(true) { wait_for_update_and_click delete_link_element }
+      list_item_element(xpath: "//li[contains(.,'#{title} deleted successfully')]").when_present Utils.short_wait
+    end
+
     # ANNOUNCEMENTS
 
     link(:html_editor_link, xpath: '//a[contains(.,"HTML Editor")]')
@@ -18,17 +32,29 @@ module Page
     # Creates an announcement on a course site
     # @param course [Course]
     # @param announcement [Announcement]
-    def create_announcement(course, announcement)
+    def create_course_announcement(course, announcement)
       logger.info "Creating announcement: #{announcement.title}"
       navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/discussion_topics/new?is_announcement=true"
+      enter_and_save_announcement announcement
+    end
+
+    # Creates an announcement in a group within a course site
+    # @param group [Group]
+    # @param announcement [Announcement]
+    def create_group_announcement(group, announcement)
+      logger.info "Creating group announcement: #{announcement.title}"
+      navigate_to "#{Utils.canvas_base_url}/groups/#{group.site_id}/discussion_topics/new?is_announcement=true"
+      enter_and_save_announcement announcement
+    end
+
+    def enter_and_save_announcement(announcement)
       discussion_title_element.when_present Utils.short_wait
       discussion_title_element.send_keys announcement.title
       html_editor_link if html_editor_link_element.visible?
       wait_for_element_and_type_js(announcement_msg_element, announcement.body)
       wait_for_update_and_click_js save_announcement_button_element
       announcement_title_heading_element.when_visible Utils.medium_wait
-      logger.info "Announcement URL is #{current_url}"
-      announcement.url = current_url.gsub!('discussion_topics', 'announcements')
+      logger.info "Announcement URL is #{announcement.url = current_url}"
     end
 
     # DISCUSSIONS
@@ -57,14 +83,29 @@ module Page
     # @param driver [Selenium::WebDriver]
     # @param course [Course]
     # @param discussion [Discussion]
-    def create_discussion(driver, course, discussion)
+    def create_course_discussion(driver, course, discussion)
       logger.info "Creating discussion topic named '#{discussion.title}'"
       load_course_site(driver, course)
       navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/discussion_topics"
+      enter_and_save_discussion discussion
+    end
+
+    # Creates a discussion on a group site
+    # @param group [Group]
+    # @param discussion [Discussion]
+    def create_group_discussion(group, discussion)
+      logger.info "Creating group discussion topic named '#{discussion.title}'"
+      navigate_to "#{Utils.canvas_base_url}/groups/#{group.site_id}/discussion_topics"
+      enter_and_save_discussion discussion
+    end
+
+    # Enters and saves a discussion topic
+    # @param discussion [Discussion]
+    def enter_and_save_discussion(discussion)
       wait_for_load_and_click new_discussion_link_element
       discussion_title_element.when_present Utils.short_wait
       discussion_title_element.send_keys discussion.title
-      check_threaded_discussion_cbx
+      js_click threaded_discussion_cbx_element
       click_save_and_publish
       published_button_element.when_visible Utils.medium_wait
       logger.info "Discussion URL is #{current_url}"
@@ -248,6 +289,126 @@ module Page
     def click_e_grades_export_button
       logger.info 'Clicking E-Grades Export button'
       wait_for_load_and_click e_grades_export_link_element
+    end
+
+    # GROUPS
+
+    link(:groups_link, text: 'Groups')
+    link(:student_groups_link, text: 'Student Groups')
+    text_area(:add_group_name_input, id: 'groupName')
+    link(:edit_group_link, id: 'edit_group')
+    text_area(:edit_group_name_input, id: 'group_name')
+    button(:save_button, xpath: '//button[contains(.,"Save")]')
+
+    # Loads the groups page on a course site
+    # @param course [Course]
+    def load_course_grps(course)
+      navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/groups"
+    end
+
+    # Creates a new group as a student and populates its members
+    # @param course [Course]
+    # @param group [Group]
+    def student_create_grp(course, group)
+      load_course_grps course
+      logger.info "Student is creating a student group called '#{group.title}' with #{group.members.length} additional members"
+      wait_for_update_and_click button_element(class: 'add_group_link')
+      wait_for_element_and_type(add_group_name_input_element, group.title)
+      group.members.each do |member|
+        scroll_to_bottom
+        (checkbox = checkbox_element(xpath: "//span[text()='#{member.full_name}']/preceding-sibling::input")).when_present Utils.short_wait
+        checkbox.check
+      end
+      wait_for_update_and_click submit_button_element
+      (link = student_visit_grp_link(group)).when_present Utils.short_wait
+      logger.info "Group ID is '#{group.site_id = link.attribute('href').split('/').last}'"
+    end
+
+    # Returns the 'visit' link for an existing group
+    # @param group [Group]
+    # @return [PageObject::Elements::Link]
+    def student_visit_grp_link(group)
+      link_element(xpath: "//a[contains(@aria-label,'Visit group #{group.title}')]")
+    end
+
+    # Visits a group on a course site as a student
+    # @param course [Course]
+    # @param group [Group]
+    def student_visit_grp(course, group)
+      load_course_grps course
+      logger.info "Visiting group '#{group.title}'"
+      wait_for_update_and_click student_visit_grp_link(group)
+      wait_until(Utils.short_wait) { recent_activity_heading.include? group.title }
+    end
+
+    # Joins a group on a course site
+    # @param course [Course]
+    # @param group [Group]
+    def student_join_grp(course, group)
+      load_course_grps course
+      logger.info "Joining group '#{group.title}'"
+      wait_for_update_and_click link_element(xpath: "//a[contains(@aria-label,'Join group #{group.title}')]")
+      list_item_element(xpath: '//li[contains(.,"Joined Group")]').when_present Utils.short_wait
+    end
+
+    # Leaves a group on a course site
+    # @param course [Course]
+    # @param group [Group]
+    def student_leave_grp(course, group)
+      load_course_grps course
+      logger.info "Leaving group '#{group.title}'"
+      wait_for_update_and_click link_element(xpath: "//a[contains(@aria-label,'Leave group #{group.title}')]")
+      list_item_element(xpath: '//li[contains(.,"Left Group")]').when_present Utils.short_wait
+    end
+
+    # Edits the name of a group on a course site
+    # @param course [Course]
+    # @param group [Group]
+    # @param new_name [String]
+    def student_edit_grp_name(course, group, new_name)
+      student_visit_grp(course, group)
+      logger.debug "Changing group title to '#{group.title = new_name}'"
+      wait_for_update_and_click edit_group_link_element
+      wait_for_element_and_type(edit_group_name_input_element, group.title)
+      wait_for_update_and_click save_button_element
+      wait_until(Utils.short_wait) { recent_activity_heading.include? group.title }
+    end
+
+    # As an instructor, creates a new group set and a group
+    # @param course [Course]
+    # @param group [Group]
+    def instructor_create_grp(course, group)
+      load_course_grps course
+
+      # Create new group set
+      logger.info "Creating new group set called '#{group.group_set}'"
+      (button = button_element(xpath: '//button[@id="add-group-set"]')).when_present Utils.short_wait
+      js_click button
+      wait_for_element_and_type(text_area_element(id: 'new_category_name'), group.group_set)
+      checkbox_element(id: 'enable_self_signup').check
+      button_element(id: 'newGroupSubmitButton').click
+      link_element(xpath: "//a[@title='#{group.group_set}']").when_present Utils.short_wait
+
+      # Create new group within the group set
+      logger.info "Creating new group called '#{group.title}'"
+      js_click button_element(class: 'add-group')
+      wait_for_element_and_type(edit_group_name_input_element, group.title)
+      button_element(id: 'groupEditSaveButton').click
+      link_element(xpath: "//a[contains(.,'#{group.title}')]").when_present Utils.short_wait
+      (link = link_element(xpath: "//a[contains(.,'#{group.title}')]/../following-sibling::div[contains(@class,'group-actions')]//a")).when_present Utils.short_wait
+      logger.info "Group ID is '#{group.site_id = link.attribute('id').split('-')[1]}'"
+    end
+
+    # Deletes a group set
+    # @param course [Course]
+    # @param group [Group]
+    def instructor_delete_grp_set(course, group)
+      load_course_grps course
+      logger.info "Deleting teacher group set '#{group.group_set}'"
+      wait_for_load_and_click link_element(xpath: "//a[@title='#{group.group_set}']")
+      wait_for_update_and_click link_element(xpath: '//button[@title="Add Group"]/following-sibling::span/a')
+      confirm(true) { wait_for_update_and_click link_element(class: 'delete-category') }
+      list_item_element(xpath: '//li[contains(.,"Group set successfully removed")]').when_present Utils.short_wait
     end
 
   end

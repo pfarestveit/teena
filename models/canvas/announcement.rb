@@ -1,11 +1,10 @@
 class Announcement
 
-  attr_accessor :title, :body, :date, :url
+  attr_accessor :title, :body, :url
 
-  def initialize(title, body, date, url = nil)
+  def initialize(title, body, url = nil)
     @title = title
     @body = body
-    @date = date
     @url = url
   end
 

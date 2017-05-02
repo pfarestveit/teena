@@ -1,6 +1,7 @@
 webdriver: firefox
 
 timeouts:
+  click_wait: 0
   short: 8
   medium: 30
   long: 120
