@@ -55,9 +55,18 @@ class Utils
     sleep 2
   end
 
+  def self.log_error(e)
+    logger.error "#{e.message + "\n"} #{e.backtrace.join("\n ")}"
+  end
+
   # Base URL of CalNet authentication service test instance
   def self.cal_net_url
     @config['cal_net']['base_url']
+  end
+
+  # How long to wait before clicking an element. Used to slow down or speed up test execution.
+  def self.click_wait
+    @config['timeouts']['click_wait']
   end
 
   # Short timeout intended for things like page DOM updates

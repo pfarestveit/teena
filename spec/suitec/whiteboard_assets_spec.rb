@@ -275,24 +275,24 @@ describe 'Whiteboard Add Asset', order: :defined do
   context 'when the asset is hidden from the asset library' do
 
     before(:all) do
-      @canvas.masquerade_as(@driver, @student_1, @course)
+      @canvas.masquerade_as(@driver, @student_2, @course)
       @whiteboards.load_page(@driver, @whiteboards_url)
       @whiteboards.open_whiteboard(@driver, @whiteboard)
-      @whiteboards.add_asset_exclude_from_library @student_1_asset_file
-      @whiteboards.open_original_asset(@driver, @asset_library, @student_1_asset_file)
+      @whiteboards.add_asset_exclude_from_library @student_2_asset_url
+      @whiteboards.open_original_asset(@driver, @asset_library, @student_2_asset_url)
     end
 
     it 'allows the user to comment on it via the whiteboard' do
       @asset_library.add_comment 'Comment on a hidden asset'
       @asset_library.wait_until(timeout) { @asset_library.comment_elements.length == 1 }
       @asset_library.wait_until(timeout) { @asset_library.asset_detail_comment_count == '1' }
-      @asset_library.wait_until(timeout) { @asset_library.commenter_name(0).include?(@student_1.full_name) }
+      @asset_library.wait_until(timeout) { @asset_library.commenter_name(0).include?(@student_2.full_name) }
       expect(@asset_library.comment_body(0)).to eql('Comment on a hidden asset')
     end
 
     it 'allows the user to edit its metadata via the whiteboard' do
-      @student_1_asset_file.title = 'Edited asset title'
-      @asset_library.edit_asset_details @student_1_asset_file
+      @student_2_asset_url.title = 'Edited asset title'
+      @asset_library.edit_asset_details @student_2_asset_url
       sleep 1
       @asset_library.wait_until(timeout) { @asset_library.detail_view_asset_title == 'Edited asset title' }
     end

@@ -35,10 +35,10 @@ describe 'A Canvas discussion', order: :defined do
     @user_1_expected_score = (@user_1_score.to_i + Activities::ADD_DISCUSSION_TOPIC.points).to_s
 
     # User 1 creates a discussion topic
-    @discussion = Discussion.new("Discussion Topic #{test_id}", nil)
+    @discussion = Discussion.new "Discussion Topic #{test_id}"
     @canvas.log_out(@driver, @cal_net)
     @canvas.log_in(@cal_net, @user_1.username, Utils.test_user_password)
-    @canvas.create_discussion(@driver, @course, @discussion)
+    @canvas.create_course_discussion(@driver, @course, @discussion)
   end
 
   after(:all) { @driver.quit }

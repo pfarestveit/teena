@@ -1,10 +1,9 @@
 class Discussion
 
-  attr_accessor :title, :date, :url
+  attr_accessor :title, :url
 
-  def initialize(title, date, url = nil)
+  def initialize(title, url = nil)
     @title = title
-    @date = date
     @url = url
   end
 

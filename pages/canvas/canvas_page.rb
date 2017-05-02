@@ -1,4 +1,4 @@
-require_relative '../util/spec_helper'
+require_relative '../../util/spec_helper'
 
 module Page
 
@@ -8,14 +8,24 @@ module Page
     include Logging
     include Page
 
-    link(:profile_link, id: 'global_nav_profile_link')
-
     h2(:updated_terms_heading, xpath: '//h2[contains(text(),"Updated Terms of Use")]')
     checkbox(:terms_cbx, name: 'user[terms_of_use]')
     button(:accept_course_invite, name: 'accept')
-    link(:masquerade_link, xpath: '//a[contains(.,"Act as User")]')
+    link(:masquerade_link, class: 'masquerade_button')
     link(:stop_masquerading_link, class: 'stop_masquerading')
     h2(:recent_activity_heading, xpath: '//h2[contains(text(),"Recent Activity")]')
+
+    div(:publish_div, id: 'course_status_actions')
+    button(:publish_button, class: 'btn-publish')
+    button(:save_and_publish_button, class: 'save_and_publish')
+    button(:published_button, class: 'btn-published')
+    button(:submit_button, xpath: '//button[contains(.,"Submit")]')
+    button(:save_button, xpath: '//button[text()="Save"]')
+    button(:update_course_button, xpath: '//button[contains(.,"Update Course Details")]')
+    li(:update_course_success, xpath: '//li[contains(.,"successfully updated")]')
+    form(:profile_form, class: 'ic-NavMenu-profile-header-logout-form')
+    link(:profile_link, id: 'global_nav_profile_link')
+    button(:logout_link, xpath: '//button[text()="Logout"]')
 
     h1(:unexpected_error_msg, xpath: '//h1[contains(text(),"Unexpected Error")]')
     h2(:unauthorized_msg, xpath: '//h2[contains(text(),"Unauthorized")]')
@@ -111,16 +121,6 @@ module Page
     button(:update_details_button, xpath: '//button[text()="Update Details"]')
 
     text_area(:search_user_input, xpath: '//input[@placeholder="Search people"]')
-
-    div(:publish_div, id: 'course_status_actions')
-    button(:publish_button, class: 'btn-publish')
-    button(:save_and_publish_button, class: 'save_and_publish')
-    button(:published_button, class: 'btn-published')
-    button(:submit_button, xpath: '//button[contains(.,"Submit")]')
-    button(:update_course_button, xpath: '//button[contains(.,"Update Course Details")]')
-    li(:update_course_success, xpath: '//li[contains(.,"successfully updated")]')
-    form(:profile_form, class: 'ic-NavMenu-profile-header-logout-form')
-    button(:logout_link, xpath: '//button[text()="Logout"]')
 
     # Clicks the 'create a site' button for the Junction LTI tool
     # @param driver [Selenium::WebDriver]
@@ -395,7 +395,6 @@ module Page
     text_area(:key_input, xpath: '//input[@placeholder="Consumer Key"]')
     text_area(:secret_input, xpath: '//input[@placeholder="Shared Secret"]')
     text_area(:url_input, xpath: '//input[@placeholder="Config URL"]')
-    button(:save_app_nav_button, xpath: '//button[text()="Save"]')
 
     # Returns the link element for the configured LTI tool on the course site sidebar
     # @param tool [SuiteCTools]
@@ -426,7 +425,7 @@ module Page
       wait_for_update_and_click_js link_element(xpath: "//ul[@id='nav_disabled_list']/li[contains(.,'#{tool.name}')]//a")
       wait_for_update_and_click_js link_element(xpath: "//ul[@id='nav_disabled_list']/li[contains(.,'#{tool.name}')]//a[@title='Enable this item']")
       list_item_element(xpath: "//ul[@id='nav_enabled_list']/li[contains(.,'#{tool.name}')]").when_visible Utils.medium_wait
-      save_app_nav_button
+      save_button
       tool_nav_link(tool).when_visible Utils.medium_wait
     end
 
@@ -444,7 +443,7 @@ module Page
           wait_for_update_and_click_js link_element(xpath: "//ul[@id='nav_enabled_list']/li[contains(.,'#{tool.name}')]//a")
           wait_for_update_and_click_js link_element(xpath: "//ul[@id='nav_enabled_list']/li[contains(.,'#{tool.name}')]//a[@title='Disable this item']")
           list_item_element(xpath: "//ul[@id='nav_disabled_list']/li[contains(.,'#{tool.name}')]").when_visible Utils.medium_wait
-          save_app_nav_button
+          save_button
           tool_nav_link(tool).when_not_visible Utils.medium_wait
         else
           logger.debug "#{tool.name} is not installed, skipping"
@@ -472,7 +471,8 @@ module Page
           wait_for_update_and_click add_app_link_element
 
           # Enter the tool config
-          wait_for_element_and_select_js(config_type_element, 'By URL')
+          config_type_element.when_visible Utils.short_wait
+          self.config_type = 'By URL'
           # Use JS to select the option too since the WebDriver method is not working consistently
           execute_script('document.getElementById("configuration_type_selector").value = "url";')
           sleep 1

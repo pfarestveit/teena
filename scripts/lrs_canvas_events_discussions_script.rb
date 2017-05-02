@@ -22,6 +22,7 @@ begin
 
       @test_course_identifier = Utils.get_test_id
       @course = Course.new({})
+      @course.title = "LRS Discussions Test #{@test_course_identifier}"
 
       @canvas.load_homepage
       sleep Utils.short_wait
@@ -38,10 +39,10 @@ begin
           @test_discuss_identifier = Utils.get_test_id
 
           # User 1 creates a discussion topic
-          @discussion = Discussion.new("Discussion Topic #{@test_discuss_identifier}", nil)
+          @discussion = Discussion.new("Discussion Topic #{@test_discuss_identifier}")
           @canvas.log_out(@driver, @cal_net)
           @canvas.log_in(@cal_net, @user_1.username, Utils.test_user_password)
-          @canvas.create_discussion(@driver, @course, @discussion)
+          @canvas.create_course_discussion(@driver, @course, @discussion)
 
           # User 1 creates an entry on the topic
           @canvas.add_reply(@discussion, nil, 'Discussion entry by the discussion topic creator')
