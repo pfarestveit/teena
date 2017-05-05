@@ -156,6 +156,13 @@ module Page
   # are not scrolled into focus prior to an interaction.
   def scroll_to_bottom
     execute_script 'window.scrollTo(0, document.body.scrollHeight);'
+    sleep 1
+  end
+
+  # Pauses to allow the Canvas poller to complete any active cycle
+  def pause_for_poller
+    logger.info "Waiting for the Canvas poller for #{wait = 120} seconds"
+    sleep wait
   end
 
 end

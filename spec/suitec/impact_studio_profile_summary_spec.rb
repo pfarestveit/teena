@@ -7,13 +7,13 @@ describe 'Impact Studio' do
   test_id = Utils.get_test_id
 
   # Get test users
-  user_test_data = Utils.load_test_users.select { |data| data['tests']['assetLibraryCategorySearch'] }
+  user_test_data = Utils.load_test_users.select { |data| data['tests']['impact_studio_profile'] }
   users = user_test_data.map { |data| User.new(data) if ['Teacher', 'Designer', 'Lead TA', 'TA', 'Observer', 'Reader', 'Student'].include? data['role'] }
 
-  teachers = users.select { |user| user.role == 'Teacher' }
+  teachers = users.select { |user| %w(Teacher TA).include? user.role }
   teacher_viewer = teachers[0]
   teacher_share = teachers[1]
-  teacher_no_share = users.find { |user| user.role = 'TA' }
+  teacher_no_share = teachers[2]
 
   students = users.select { |user| user.role == 'Student' }
   student_viewer = students[0]
@@ -34,6 +34,7 @@ describe 'Impact Studio' do
     # Create course site if necessary
     @canvas.log_in(@cal_net, Utils.super_admin_username, Utils.super_admin_password)
     @canvas.create_generic_course_site(@driver, Utils.canvas_qa_sub_account, @course, users, test_id, [SuiteCTools::ASSET_LIBRARY, SuiteCTools::IMPACT_STUDIO])
+    @course.sections = [Section.new({label: @course.title})]
     @asset_library_url = @canvas.click_tool_link(@driver, SuiteCTools::ASSET_LIBRARY)
     @impact_studio_url = @canvas.click_tool_link(@driver, SuiteCTools::IMPACT_STUDIO)
 
@@ -48,16 +49,16 @@ describe 'Impact Studio' do
     it('shows the user name') { expect(@impact_studio.name).to eql(student_viewer.full_name) }
     it('shows the user avatar') { expect(@impact_studio.avatar?).to be true }
     it('shows an Edit Profile link') { expect(@impact_studio.edit_profile_link?).to be true }
+    it('allows a user to view the profile of any user in the course') { users.each { |user| @impact_studio.search_for_user user } }
 
-    describe 'location' do
+    it 'shows no sections section when there is no section' do
+      @impact_studio.search_for_user teacher_no_share
+      expect(@impact_studio.sections).to be_empty
+    end
 
-      context 'when the user has no location' do
-        it('shows no location')
-      end
-
-      context 'when the user has a location' do
-        it('shows the location')
-      end
+    it 'shows the sections when there are sections' do
+      @impact_studio.search_for_user student_no_share
+      expect(@impact_studio.sections).to eql(@course.sections.map &:label)
     end
 
     describe 'last activity' do
@@ -123,8 +124,6 @@ describe 'Impact Studio' do
     end
   end
 
-  describe 'search'
-
   describe 'Engagement Index card' do
 
     context 'when the Engagement Index is not present' do
@@ -153,17 +152,13 @@ describe 'Impact Studio' do
         end
 
         context 'views a student\'s Impact Studio profile' do
+          before(:all) { @impact_studio.search_for_user student_viewer }
 
-          before(:all) do
-            # TODO - search for user in Impact Studio, load profile
-            sleep 3
-          end
-
-        it('shows no Engagement Index link') { expect(@impact_studio.engagement_index_link?).to be false }
-        it('shows no score') { expect(@impact_studio.engagement_index_score?).to be false }
-        it('shows no rank') { expect(@impact_studio.engagement_index_rank?).to be false }
-        it('shows no rank total') { expect(@impact_studio.engagement_index_rank_ttl?).to be false }
-        it('shows no "turn on" sharing link') { expect(@impact_studio.turn_on_sharing_link?).to be false }
+          it('shows no Engagement Index link') { expect(@impact_studio.engagement_index_link?).to be false }
+          it('shows no score') { expect(@impact_studio.engagement_index_score?).to be false }
+          it('shows no rank') { expect(@impact_studio.engagement_index_rank?).to be false }
+          it('shows no rank total') { expect(@impact_studio.engagement_index_rank_ttl?).to be false }
+          it('shows no "turn on" sharing link') { expect(@impact_studio.turn_on_sharing_link?).to be false }
         end
       end
 
@@ -186,17 +181,13 @@ describe 'Impact Studio' do
         end
 
         context 'views another student\'s Impact Studio profile' do
+          before(:all) { @impact_studio.search_for_user student_share }
 
-          before(:all) do
-            # TODO - search for user in Impact Studio, load profile
-            sleep 3
-          end
-
-        it('shows no Engagement Index link') { expect(@impact_studio.engagement_index_link?).to be false }
-        it('shows no score') { expect(@impact_studio.engagement_index_score?).to be false }
-        it('shows no rank') { expect(@impact_studio.engagement_index_rank?).to be false }
-        it('shows no rank total') { expect(@impact_studio.engagement_index_rank_ttl?).to be false }
-        it('shows no "turn on" sharing link') { expect(@impact_studio.turn_on_sharing_link?).to be false }
+          it('shows no Engagement Index link') { expect(@impact_studio.engagement_index_link?).to be false }
+          it('shows no score') { expect(@impact_studio.engagement_index_score?).to be false }
+          it('shows no rank') { expect(@impact_studio.engagement_index_rank?).to be false }
+          it('shows no rank total') { expect(@impact_studio.engagement_index_rank_ttl?).to be false }
+          it('shows no "turn on" sharing link') { expect(@impact_studio.turn_on_sharing_link?).to be false }
         end
       end
     end
@@ -261,7 +252,7 @@ describe 'Impact Studio' do
           it('shows a score') { @impact_studio.engagement_index_score_element.when_visible 1 }
           it('shows a rank') { @impact_studio.engagement_index_rank_element.when_visible 1 }
           it('shows a rank total') { @impact_studio.engagement_index_rank_ttl_element.when_visible 1 }
-          it('shows no "turn on" sharing link') { expect(@impact_studio.turn_on_sharing_link?).to be false }
+          it('shows no "turn on" sharing link') { expect(@impact_studio.turn_on_sharing_link_element.visible?).to be false }
         end
 
         context 'views the Impact Studio profile of an instructor who has shared its score' do
@@ -390,12 +381,9 @@ describe 'Impact Studio' do
         end
 
         context 'views the Impact Studio profile of an instructor who has not shared its score' do
-          before(:all) do
-            # TODO - search for user in Impact Studio, load profile
-            sleep 3
-          end
+          before(:all) { @impact_studio.search_for_user teacher_no_share }
 
-          it('shows an Engagement Index link') { @impact_studio.engagement_index_link_element.when_visible 3 }
+          it('shows no Engagement Index link') { @impact_studio.engagement_index_link_element.when_not_visible 3 }
           it('shows no score') { expect(@impact_studio.engagement_index_score?).to be false }
           it('shows no "turn on" sharing link') { expect(@impact_studio.turn_on_sharing_link?).to be false }
           it('shows no rank') { expect(@impact_studio.engagement_index_rank?).to be false }
@@ -403,12 +391,9 @@ describe 'Impact Studio' do
         end
 
         context 'views the Impact Studio profile of an instructor who has shared its score' do
-          before(:all) do
-            # TODO - search for user in Impact Studio, load profile
-            sleep 3
-          end
+          before(:all) { @impact_studio.search_for_user teacher_share }
 
-          it('shows an Engagement Index link') { @impact_studio.engagement_index_link_element.when_visible 3 }
+          it('shows no Engagement Index link') { @impact_studio.engagement_index_link_element.when_not_visible 3 }
           it('shows no score') { expect(@impact_studio.engagement_index_score?).to be false }
           it('shows no "turn on" sharing link') { expect(@impact_studio.turn_on_sharing_link?).to be false }
           it('shows no rank') { expect(@impact_studio.engagement_index_rank?).to be false }
@@ -416,12 +401,9 @@ describe 'Impact Studio' do
         end
 
         context 'views the Impact Studio profile of a student who has not shared its score' do
-          before(:all) do
-            # TODO - search for user in Impact Studio, load profile
-            sleep 3
-          end
+          before(:all) { @impact_studio.search_for_user student_no_share }
 
-          it('shows an Engagement Index link') { @impact_studio.engagement_index_link_element.when_visible 3 }
+          it('shows no Engagement Index link') { @impact_studio.engagement_index_link_element.when_not_visible 3 }
           it('shows no score') { expect(@impact_studio.engagement_index_score?).to be false }
           it('shows no "turn on" sharing link') { expect(@impact_studio.turn_on_sharing_link?).to be false }
           it('shows no rank') { expect(@impact_studio.engagement_index_rank?).to be false }
@@ -429,12 +411,9 @@ describe 'Impact Studio' do
         end
 
         context 'views the Impact Studio profile of a student who has shared its score' do
-          before(:all) do
-            # TODO - search for user in Impact Studio, load profile
-            sleep 3
-          end
+          before(:all) { @impact_studio.search_for_user student_share }
 
-          it('shows an Engagement Index link') { @impact_studio.engagement_index_link_element.when_visible 3 }
+          it('shows no Engagement Index link') { @impact_studio.engagement_index_link_element.when_not_visible 3 }
           it('shows no score') { expect(@impact_studio.engagement_index_score?).to be false }
           it('shows no "turn on" sharing link') { expect(@impact_studio.turn_on_sharing_link?).to be false }
           it('shows no rank') { expect(@impact_studio.engagement_index_rank?).to be false }
@@ -460,12 +439,9 @@ describe 'Impact Studio' do
         end
 
         context 'views the Impact Studio profile of an instructor who has not shared its score' do
-          before(:all) do
-            # TODO - search for user in Impact Studio, load profile
-            sleep 3
-          end
+          before(:all) { @impact_studio.search_for_user teacher_no_share }
 
-          it('shows an Engagement Index link') { @impact_studio.engagement_index_link_element.when_visible 3 }
+          it('shows no Engagement Index link') { @impact_studio.engagement_index_link_element.when_not_visible 3 }
           it('shows no score') { expect(@impact_studio.engagement_index_score?).to be false }
           it('shows no "turn on" sharing link') { expect(@impact_studio.turn_on_sharing_link?).to be false }
           it('shows no rank') { expect(@impact_studio.engagement_index_rank?).to be false }
@@ -473,10 +449,7 @@ describe 'Impact Studio' do
         end
 
         context 'views the Impact Studio profile of an instructor who has shared its score' do
-          before(:all) do
-            @engagement_index.load_page(@driver, @engagement_index_url)
-            @engagement_index.click_user_dashboard_link(@driver, teacher_share)
-          end
+          before(:all) { @impact_studio.search_for_user teacher_share }
 
           it('shows an Engagement Index link') { @impact_studio.engagement_index_link_element.when_visible 3 }
           it('shows a score') { @impact_studio.engagement_index_score_element.when_visible 1 }
@@ -486,12 +459,9 @@ describe 'Impact Studio' do
         end
 
         context 'views the Impact Studio profile of a student who has not shared its score' do
-          before(:all) do
-            # TODO - search for user in Impact Studio, load profile
-            sleep 3
-          end
+          before(:all) { @impact_studio.search_for_user student_no_share }
 
-          it('shows an Engagement Index link') { @impact_studio.engagement_index_link_element.when_visible 3 }
+          it('shows no Engagement Index link') { @impact_studio.engagement_index_link_element.when_not_visible 3 }
           it('shows no score') { expect(@impact_studio.engagement_index_score?).to be false }
           it('shows no "turn on" sharing link') { expect(@impact_studio.turn_on_sharing_link?).to be false }
           it('shows no rank') { expect(@impact_studio.engagement_index_rank?).to be false }
@@ -499,10 +469,7 @@ describe 'Impact Studio' do
         end
 
         context 'views the Impact Studio profile of a student who has shared its score' do
-          before(:all) do
-            @engagement_index.load_page(@driver, @engagement_index_url)
-            @engagement_index.click_user_dashboard_link(@driver, student_share)
-          end
+          before(:all) { @impact_studio.search_for_user student_share }
 
           it('shows an Engagement Index link') { @impact_studio.engagement_index_link_element.when_visible 3 }
           it('shows a score') { @impact_studio.engagement_index_score_element.when_visible 1 }

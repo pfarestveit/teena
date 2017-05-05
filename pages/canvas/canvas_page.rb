@@ -77,7 +77,7 @@ module Page
       load_homepage
       wait_for_load_and_click stop_masquerading_link_element
       ("#{driver.browser}" == 'chrome') ?
-          stop_masquerading_link_element.when_not_visible(Utils.medium_wait) :
+          (stop_masquerading_link_element.when_not_visible(Utils.medium_wait) rescue Selenium::WebDriver::Error::StaleElementReferenceError) :
           stop_masquerading_link_element.when_not_present(Utils.medium_wait)
     end
 
@@ -101,6 +101,10 @@ module Page
     text_area(:search_course_input, id: 'course_name')
     button(:search_course_button, xpath: '//input[@id="course_name"]/following-sibling::button')
     li(:add_course_success, xpath: '//li[contains(.,"successfully added!")]')
+
+    link(:course_details_link, text: 'Course Details')
+    text_area(:course_title, id: 'course_name')
+    text_area(:course_code, id: 'course_course_code')
 
     select_list(:enrollment_roles, name: 'enrollment_role_id')
     link(:add_people_button, id: 'addUsers')
@@ -179,7 +183,6 @@ module Page
     def wait_for_user(user)
       wait_until(Utils.medium_wait) do
         scroll_to_bottom
-        sleep 1
         cell_element(xpath: "//tr[contains(@id,'#{user.canvas_id}')]").exists?
       end
     end
@@ -358,6 +361,11 @@ module Page
           wait_for_update_and_click_js update_course_button_element
           update_course_success_element.when_visible Utils.medium_wait
         end
+      else
+        navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/settings"
+        course_details_link if course_details_link?
+        course.title = course_title
+        course.code = course_code
       end
       publish_course_site(driver, course)
       logger.info "Course site URL is #{current_url}"
@@ -445,6 +453,7 @@ module Page
           list_item_element(xpath: "//ul[@id='nav_disabled_list']/li[contains(.,'#{tool.name}')]").when_visible Utils.medium_wait
           save_button
           tool_nav_link(tool).when_not_visible Utils.medium_wait
+          pause_for_poller
         else
           logger.debug "#{tool.name} is not installed, skipping"
         end
@@ -465,6 +474,7 @@ module Page
         if link_element(xpath: "//ul[@id='nav_disabled_list']/li[contains(.,'#{tool.name}')]//a").exists?
           logger.debug "#{tool.name} is already installed but disabled, enabling"
           enable_tool(course, tool)
+          pause_for_poller
         else
           logger.debug "#{tool.name} is not installed, installing and enabling"
           wait_for_update_and_click apps_link_element

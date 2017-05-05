@@ -167,12 +167,6 @@ module Page
       wait_for_update_and_click_js close_modal_button_element
     end
 
-    # Pauses to allow the Canvas poller to complete any active cycle
-    def pause_for_poller
-      logger.info 'Waiting for the Canvas poller'
-      sleep 120
-    end
-
     # Extracts a whiteboard ID from a link to the whiteboard
     # @param link_element [PageObject::Elements::Link]
     # @return [String]

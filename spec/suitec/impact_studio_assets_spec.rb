@@ -20,7 +20,7 @@ describe 'The Impact Studio', order: :defined do
   all_assets << (asset_2 = Asset.new((student_1.assets.select { |a| a['type'] == 'File' })[0]))
   all_assets << (asset_3 = Asset.new((student_1.assets.select { |a| a['type'] == 'File' })[1]))
   all_assets << (asset_4 = Asset.new({}))
-  all_assets << (asset_5 = Asset.new(teacher.assets.find { |a| a['type'] == 'Link' }))
+  all_assets << (asset_5 = Asset.new(teacher.assets.find { |a| a['type'] == 'File' }))
   all_assets << (asset_6 = Asset.new(student_2.assets.find { |a| a['type'] == 'File' }))
   all_assets << (asset_7 = Asset.new(student_2.assets.find { |a| a['type'] == 'Link' }))
   whiteboard = Whiteboard.new({owner: student_1, title: "Whiteboard #{test_id}", collaborators: [student_2]})
@@ -104,32 +104,37 @@ describe 'The Impact Studio', order: :defined do
       @whiteboards.create_and_open_whiteboard(@driver, whiteboard)
       @whiteboards.add_asset_exclude_from_library asset_2
       @whiteboards.open_original_asset_link_element.when_visible Utils.long_wait
-      asset_2.id = nil
+      logger.debug "Asset 2 ID is #{asset_2.id = @whiteboards.added_asset_id}"
+      asset_2.visible = false
 
       # Student 1 add asset 3 to a whiteboard and include it in the asset library
       @whiteboards.add_asset_include_in_library asset_3
       @whiteboards.open_original_asset_link_element.when_visible Utils.long_wait
+      @whiteboards.close_whiteboard @driver
       @asset_library.load_page(@driver, @asset_library_url)
       logger.debug "Asset 3 ID is #{asset_3.id = @asset_library.list_view_asset_ids.first}"
       logger.debug "Asset 3 impact score is #{asset_3.impact_score}"
 
       # Student 1 export whiteboard to create asset 4
+      @whiteboards.load_page(@driver, @whiteboards_url)
+      @whiteboards.open_whiteboard(@driver, whiteboard)
       @whiteboards.export_to_asset_library whiteboard
+      @whiteboards.close_whiteboard @driver
       @asset_library.load_page(@driver, @asset_library_url)
       logger.debug "Asset 4 ID is #{asset_4.id = @asset_library.list_view_asset_ids.first}"
       asset_4.type = 'Whiteboard'
       asset_4.title = whiteboard.title
 
-      # Teacher add asset 5 via asset library
+      # Teacher add asset 5 via impact studio
       @canvas.masquerade_as(@driver, teacher, @course)
-      @asset_library.load_page(@driver, @asset_library_url)
-      @asset_library.add_site asset_5
+      @impact_studio.load_page(@driver, @impact_studio_url)
+      @impact_studio.add_file(@driver, asset_5)
       logger.debug "Asset 5 ID is #{asset_5.id = @asset_library.list_view_asset_ids.first}"
 
-      # Student 2 add asset 6 via impact studio
+      # Student 2 add asset 6 via asset library
       @canvas.masquerade_as(@driver, student_2, @course)
-      @impact_studio.load_page(@driver, @impact_studio_url)
-      @impact_studio.add_file(@driver, asset_6)
+      @asset_library.load_page(@driver, @asset_library_url)
+      @asset_library.upload_file_to_library asset_6
       logger.debug "Asset 6 ID is #{asset_6.id}"
 
       # Student 2 add asset 7 via asset library and then delete it
@@ -137,8 +142,9 @@ describe 'The Impact Studio', order: :defined do
       logger.debug "Asset 7 ID is #{asset_7.id}"
       @asset_library.load_asset_detail(@driver, @asset_library_url, asset_7)
       @asset_library.delete_asset
-      # forget the asset ID so the test will consider the asset hidden
-      asset_7.id = nil
+      asset_7.visible = false
+
+      logger.info "Expected asset scores: #{@impact_studio.asset_scores all_assets}"
     end
 
     context 'and a user views its own profile' do
@@ -180,16 +186,18 @@ describe 'The Impact Studio', order: :defined do
 
   context 'when a course has assets with impact' do
 
-    context 'with "Peer uses my Asset in a Whiteboard" impact' do
+    context '"add asset to whiteboard"' do
 
       before(:all) do
         # One student uses the other's asset on the shared whiteboard
         @canvas.masquerade_as(@driver, student_2, @course)
+        @whiteboards.load_page(@driver, @whiteboards_url)
         @whiteboards.open_whiteboard(@driver, whiteboard)
         @whiteboards.add_existing_assets [asset_1]
         @whiteboards.open_original_asset_link_element.when_visible Utils.medium_wait
         @whiteboards.close_whiteboard @driver
-        logger.debug "Asset 1 (ID #{asset_1.id}) should have #{asset_1.impact_score += Impacts::GET_WHITEBOARD_USE.points}"
+        asset_1.impact_score += Activities::ADD_ASSET_TO_WHITEBOARD.impact_points
+        logger.info "Expected asset scores: #{@impact_studio.asset_scores all_assets}"
       end
 
       context 'and the asset owner views its own profile' do
@@ -216,13 +224,14 @@ describe 'The Impact Studio', order: :defined do
       end
     end
 
-    context 'with "Peer views my Asset" impact' do
+    context 'with "view asset" impact' do
 
       before(:all) do
         # Teacher views the student's asset
         @canvas.masquerade_as(@driver, teacher, @course)
         @asset_library.load_asset_detail(@driver, @asset_library_url, asset_3)
-        logger.debug "Asset 3 (ID #{asset_3.id}) should have #{asset_3.impact_score += Impacts::GET_VIEW.points}"
+        asset_3.impact_score += Activities::VIEW_ASSET.impact_points
+        logger.info "Expected asset scores: #{@impact_studio.asset_scores all_assets}"
       end
 
       context 'and the asset owner views its own profile' do
@@ -239,19 +248,20 @@ describe 'The Impact Studio', order: :defined do
       end
     end
 
-    context 'with "Peer Comments on my Asset" impact' do
+    context 'with "comment" impact' do
 
       before(:all) do
         # Teacher comments twice on the student's asset
         @canvas.masquerade_as(@driver, teacher, @course)
         @asset_library.load_asset_detail(@driver, @asset_library_url, asset_6)
-        asset_6.impact_score += Impacts::GET_VIEW
+        asset_6.impact_score += Activities::VIEW_ASSET.impact_points
         @asset_library.add_comment 'This is a comment from Teacher to Student 2'
         @asset_library.wait_until(Utils.short_wait) { @asset_library.asset_detail_comment_count == '1' }
-        asset_6.impact_score += Impacts::GET_COMMENT.points
-        @asset_library.add_comment 'This is another comment from Teacher to Student 2'
+        asset_6.impact_score += Activities::COMMENT.impact_points
+        @asset_library.reply_to_comment(0, 'This is another comment from Teacher to Student 2')
         @asset_library.wait_until(Utils.short_wait) { @asset_library.asset_detail_comment_count == '2' }
-        logger.debug "Asset 6 (ID #{asset_6.id}) should have #{asset_6.impact_score += Impacts::GET_COMMENT.points}"
+        asset_6.impact_score += Activities::COMMENT.impact_points
+        logger.info "Expected asset scores: #{@impact_studio.asset_scores all_assets}"
       end
 
       context 'and the asset owner views its own profile' do
@@ -268,16 +278,17 @@ describe 'The Impact Studio', order: :defined do
       end
     end
 
-    context 'with "Peer likes my Asset" impact' do
+    context 'with "like" impact' do
 
       before(:all) do
         # One student likes the teacher's asset
         @canvas.masquerade_as(@driver, student_1, @course)
         @asset_library.load_asset_detail(@driver, @asset_library_url, asset_5)
-        asset_5.impact_score += Impacts::GET_VIEW
+        asset_5.impact_score += Activities::VIEW_ASSET.impact_points
         @asset_library.toggle_detail_view_item_like
         @asset_library.wait_until { @asset_library.detail_view_asset_likes_count == '1' }
-        logger.debug "Asset 5 (ID #{asset_5.id}) should have #{asset_5.impact_score += Impacts::GET_LIKE.points}"
+        asset_5.impact_score += Activities::LIKE.impact_points
+        logger.info "Expected asset scores: #{@impact_studio.asset_scores all_assets}"
       end
 
       context 'and the asset owner views its own profile' do
@@ -294,21 +305,22 @@ describe 'The Impact Studio', order: :defined do
       end
     end
 
-    context 'with "Peer Remixes my Whiteboard" impact' do
+    context 'with "remix whiteboard" impact' do
 
       before(:all) do
         # Teacher remixes the students' whiteboard
         @canvas.masquerade_as(@driver, teacher, @course)
         @asset_library.load_asset_detail(@driver, @asset_library_url, asset_4)
-        asset_4.impact_score += Impacts::GET_VIEW.points
+        asset_4.impact_score += Activities::VIEW_ASSET.impact_points
         @asset_library.click_remix
-        logger.debug "Asset 4 (ID #{asset_4.id}) should have #{asset_4.impact_score += Impacts::GET_WHITEBOARD_REMIX.points}"
+        asset_4.impact_score += Activities::REMIX_WHITEBOARD.impact_points
+        logger.info "Expected asset scores: #{@impact_studio.asset_scores all_assets}"
       end
 
       context 'and one whiteboard asset owner views its own profile' do
 
         before(:all) do
-          @canvas.masquerade_as(@driver,student_1, @course)
+          @canvas.masquerade_as(@driver, student_1, @course)
           @impact_studio.load_page(@driver, @impact_studio_url)
         end
 
@@ -321,7 +333,7 @@ describe 'The Impact Studio', order: :defined do
       context 'and another whiteboard asset owner views its own profile' do
 
         before(:all) do
-          @canvas.masquerade_as(@driver,student_2, @course)
+          @canvas.masquerade_as(@driver, student_2, @course)
           @impact_studio.load_page(@driver, @impact_studio_url)
         end
 
@@ -335,7 +347,6 @@ describe 'The Impact Studio', order: :defined do
     # TODO context 'with "Peer Mentions Me" impact'
     # TODO context 'with "Peer Cites my Asset" impact'
     # TODO context 'with "Peer Pins my Asset impact"'
-    # TODO context 'with "Peer Replies to My Comment" impact'
 
   end
 
@@ -367,6 +378,11 @@ describe 'The Impact Studio', order: :defined do
     it 'removes liking impact' do
       # un-like
     end
+
+    # TODO it 'removes mentioning impact'
+    # TODO it 'removes citation impact'
+    # TODO it 'removes pinning impact'
+
   end
 
   context 'when assets are deleted' do
