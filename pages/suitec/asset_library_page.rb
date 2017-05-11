@@ -450,8 +450,8 @@ module Page
         wait_for_load_and_click_js edit_details_link_element
         wait_for_element_and_type(title_edit_input_element, asset.title)
         asset.category.nil? ?
-            self.category_edit_select = 'Which assignment or topic is this related to' :
-            self.category_edit_select = asset.category
+            wait_for_element_and_select_js(category_edit_select_element, 'Which assignment or topic is this related to') :
+            wait_for_element_and_select_js(category_edit_select_element, asset.category)
         wait_for_element_and_type(description_edit_input_element, asset.description)
         wait_for_update_and_click_js save_changes_element
       end
