@@ -96,22 +96,22 @@ describe 'Asset', order: :defined do
       it 'earn Engagement Index "like" points for the liker' do
         @engagement_index.load_scores(@driver, @engagement_index_url)
         @engagement_index.search_for_user @asset_admirer
-        expect(@engagement_index.user_score @asset_admirer).to eql((@admirer_score.to_i + Activities::LIKE.points).to_s)
+        expect(@engagement_index.user_score @asset_admirer).to eql((@admirer_score.to_i + Activity::LIKE.points).to_s)
       end
 
       it 'earn Engagement Index "get_like" points for the asset creator' do
         @engagement_index.search_for_user @asset_uploader
-        expect(@engagement_index.user_score @asset_uploader).to eql((@uploader_score.to_i + Activities::GET_LIKE.points).to_s)
+        expect(@engagement_index.user_score @asset_uploader).to eql((@uploader_score.to_i + Activity::GET_LIKE.points).to_s)
       end
 
       it 'add the liker\'s "like" activity to the activities csv' do
         scores = @engagement_index.download_csv(@driver, @course, @engagement_index_url)
-        expect(scores).to include("#{@asset_admirer.full_name}, like, #{Activities::LIKE.points}, #{@admirer_score.to_i + Activities::LIKE.points}")
+        expect(scores).to include("#{@asset_admirer.full_name}, like, #{Activity::LIKE.points}, #{@admirer_score.to_i + Activity::LIKE.points}")
       end
 
       it 'add the asset creator\'s "get_like" activity to the activities csv' do
         scores = @engagement_index.download_csv(@driver, @course, @engagement_index_url)
-        expect(scores).to include("#{@asset_uploader.full_name}, get_like, #{Activities::GET_LIKE.points}, #{@uploader_score.to_i + Activities::GET_LIKE.points}")
+        expect(scores).to include("#{@asset_uploader.full_name}, get_like, #{Activity::GET_LIKE.points}, #{@uploader_score.to_i + Activity::GET_LIKE.points}")
       end
 
     end
@@ -142,12 +142,12 @@ describe 'Asset', order: :defined do
 
       it 'remove the un-liker\'s "like" activity from the activities csv' do
         scores = @engagement_index.download_csv(@driver, @course, @engagement_index_url)
-        expect(scores).not_to include("#{@asset_admirer.full_name}, like, #{Activities::LIKE.points}, #{@admirer_score.to_i + Activities::LIKE.points}")
+        expect(scores).not_to include("#{@asset_admirer.full_name}, like, #{Activity::LIKE.points}, #{@admirer_score.to_i + Activity::LIKE.points}")
       end
 
       it 'remove the asset creator\'s "get_like" activity from the activities csv' do
         scores = @engagement_index.download_csv(@driver, @course, @engagement_index_url)
-        expect(scores).not_to include("#{@asset_uploader.full_name}, get_like, #{Activities::GET_LIKE.points}, #{@uploader_score.to_i + Activities::GET_LIKE.points}")
+        expect(scores).not_to include("#{@asset_uploader.full_name}, get_like, #{Activity::GET_LIKE.points}, #{@uploader_score.to_i + Activity::GET_LIKE.points}")
       end
 
     end

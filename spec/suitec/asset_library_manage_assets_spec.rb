@@ -20,7 +20,7 @@ describe 'Asset', order: :defined do
     @course.site_id = ENV['COURSE_ID']
 
     @driver = Utils.launch_browser
-    @canvas = Page::CanvasPage.new @driver
+    @canvas = Page::CanvasActivitiesPage.new @driver
     @cal_net = Page::CalNetPage.new @driver
     @asset_library = Page::SuiteCPages::AssetLibraryPage.new @driver
     @engagement_index = Page::SuiteCPages::EngagementIndexPage.new @driver
@@ -117,7 +117,7 @@ describe 'Asset', order: :defined do
         @engagement_index.load_page(@driver, @engagement_index_url)
         expect(@engagement_index.user_score student_uploader).to eql(@uploader_score)
         scores = @engagement_index.download_csv(@driver, @course, @engagement_index_url)
-        expect(scores).to include("#{student_uploader.full_name}, add_asset, #{Activities::ADD_ASSET_TO_LIBRARY.points}, #{@uploader_score}")
+        expect(scores).to include("#{student_uploader.full_name}, add_asset, #{Activity::ADD_ASSET_TO_LIBRARY.points}, #{@uploader_score}")
       end
 
       it 'can be done by the student who created the asset with no effect on points already earned' do
@@ -178,8 +178,8 @@ describe 'Asset', order: :defined do
         expect(@engagement_index.user_score student_uploader).to eql(@uploader_score)
         expect(@engagement_index.user_score student_viewer).to eql(@viewer_score)
         scores = @engagement_index.download_csv(@driver, @course, @engagement_index_url)
-        expect(scores).to include("#{student_uploader.full_name}, get_asset_comment, #{Activities::GET_COMMENT.points}, #{@uploader_score}")
-        expect(scores).to include("#{student_viewer.full_name}, asset_comment, #{Activities::COMMENT.points}, #{@viewer_score}")
+        expect(scores).to include("#{student_uploader.full_name}, get_asset_comment, #{Activity::GET_COMMENT.points}, #{@uploader_score}")
+        expect(scores).to include("#{student_viewer.full_name}, asset_comment, #{Activity::COMMENT.points}, #{@viewer_score}")
       end
 
       it 'cannot be done by the student who created the asset' do
@@ -232,8 +232,8 @@ describe 'Asset', order: :defined do
         expect(@engagement_index.user_score student_uploader).to eql(@uploader_score)
         expect(@engagement_index.user_score student_viewer).to eql(@viewer_score)
         scores = @engagement_index.download_csv(@driver, @course, @engagement_index_url)
-        expect(scores).to include("#{student_uploader.full_name}, get_like, #{Activities::GET_LIKE.points}, #{@uploader_score}")
-        expect(scores).to include("#{student_viewer.full_name}, like, #{Activities::LIKE.points}, #{@viewer_score}")
+        expect(scores).to include("#{student_uploader.full_name}, get_like, #{Activity::GET_LIKE.points}, #{@uploader_score}")
+        expect(scores).to include("#{student_viewer.full_name}, like, #{Activity::LIKE.points}, #{@viewer_score}")
       end
 
       it 'cannot be done by the student who created the asset' do

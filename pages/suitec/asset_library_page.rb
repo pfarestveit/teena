@@ -93,7 +93,7 @@ module Page
       # @param asset [Asset]
       def click_asset_link_by_id(asset)
         logger.info "Clicking thumbnail for asset ID #{asset.id}"
-        wait_for_update_and_click_js link_element(xpath: "//a[contains(@href,'/assetlibrary/#{asset.id}')]")
+        wait_for_update_and_click link_element(xpath: "//a[contains(@href,'/assetlibrary/#{asset.id}')]")
       end
 
       # Waits for an asset's detail view to load
@@ -243,8 +243,8 @@ module Page
             wait_for_element_and_type(keyword_search_input_element, '') :
             wait_for_element_and_type(keyword_search_input_element, keyword)
         category.nil? ?
-            (self.category_select = 'Category') :
-            (self.category_select = category)
+            (wait_for_element_and_select_js(category_select_element, 'Category')) :
+            (wait_for_element_and_select_js(category_select_element, category))
         uploader.nil? ?
             (self.uploader_select = 'Uploader') :
             (self.uploader_select = uploader.full_name)
@@ -448,11 +448,11 @@ module Page
       def edit_asset_details(asset)
         logger.info "Entering title '#{asset.title}, category '#{asset.category}', and description '#{asset.description}'"
         wait_for_load_and_click_js edit_details_link_element
-        wait_for_element_and_type_js(title_edit_input_element, asset.title)
+        wait_for_element_and_type(title_edit_input_element, asset.title)
         asset.category.nil? ?
-            self.category_edit_select = 'Which assignment or topic is this related to' :
-            self.category_edit_select = asset.category
-        wait_for_element_and_type_js(description_edit_input_element, asset.description)
+            wait_for_element_and_select_js(category_edit_select_element, 'Which assignment or topic is this related to') :
+            wait_for_element_and_select_js(category_edit_select_element, asset.category)
+        wait_for_element_and_type(description_edit_input_element, asset.description)
         wait_for_update_and_click_js save_changes_element
       end
 

@@ -46,7 +46,7 @@ describe 'Whiteboard Add Asset', order: :defined do
     # Set "whiteboard add asset" points to non-zero value
     @engagement_index.load_page(@driver, @engagement_index_url)
     @engagement_index.click_points_config
-    @engagement_index.change_activity_points(Activities::ADD_ASSET_TO_WHITEBOARD, '1')
+    @engagement_index.change_activity_points(Activity::ADD_ASSET_TO_WHITEBOARD, '1')
 
     # Student 1 add file to asset library
     @canvas.masquerade_as(@driver, @student_1, @course)
@@ -122,12 +122,12 @@ describe 'Whiteboard Add Asset', order: :defined do
 
     it 'shows "add_asset_to_whiteboard" but not "add_asset" activity on the CSV export for each asset used' do
       scores = @engagement_index.download_csv(@driver, @course, @engagement_index_url)
-      expect(scores).to include("#{@student_1.full_name}, #{Activities::ADD_ASSET_TO_WHITEBOARD.type}, 1, #{@initial_score.to_i + 1}")
-      expect(scores).to include("#{@student_1.full_name}, #{Activities::ADD_ASSET_TO_WHITEBOARD.type}, 1, #{@initial_score.to_i + 2}")
-      expect(scores).to include("#{@student_1.full_name}, #{Activities::ADD_ASSET_TO_WHITEBOARD.type}, 1, #{@initial_score.to_i + 3}")
-      expect(scores).to include("#{@student_1.full_name}, #{Activities::ADD_ASSET_TO_WHITEBOARD.type}, 1, #{@initial_score.to_i + 4}")
-      expect(scores).to include("#{@student_1.full_name}, #{Activities::ADD_ASSET_TO_WHITEBOARD.type}, 1, #{@initial_score.to_i + 5}")
-      expect(scores).to include("#{@student_1.full_name}, #{Activities::ADD_ASSET_TO_WHITEBOARD.type}, 1, #{@initial_score.to_i + 6}")
+      expect(scores).to include("#{@student_1.full_name}, #{Activity::ADD_ASSET_TO_WHITEBOARD.type}, 1, #{@initial_score.to_i + 1}")
+      expect(scores).to include("#{@student_1.full_name}, #{Activity::ADD_ASSET_TO_WHITEBOARD.type}, 1, #{@initial_score.to_i + 2}")
+      expect(scores).to include("#{@student_1.full_name}, #{Activity::ADD_ASSET_TO_WHITEBOARD.type}, 1, #{@initial_score.to_i + 3}")
+      expect(scores).to include("#{@student_1.full_name}, #{Activity::ADD_ASSET_TO_WHITEBOARD.type}, 1, #{@initial_score.to_i + 4}")
+      expect(scores).to include("#{@student_1.full_name}, #{Activity::ADD_ASSET_TO_WHITEBOARD.type}, 1, #{@initial_score.to_i + 5}")
+      expect(scores).to include("#{@student_1.full_name}, #{Activity::ADD_ASSET_TO_WHITEBOARD.type}, 1, #{@initial_score.to_i + 6}")
     end
   end
 
@@ -191,17 +191,17 @@ describe 'Whiteboard Add Asset', order: :defined do
     it 'earns "Add an asset to a whiteboard" and "Add a new asset to the Asset Library" points on the Engagement Index' do
       @canvas.stop_masquerading @driver
       @engagement_index.load_scores(@driver, @engagement_index_url)
-      expect(@engagement_index.user_score @student_1).to eql("#{@initial_score.to_i + 3 + (Activities::ADD_ASSET_TO_LIBRARY.points * 2)}")
+      expect(@engagement_index.user_score @student_1).to eql("#{@initial_score.to_i + 3 + (Activity::ADD_ASSET_TO_LIBRARY.points * 2)}")
     end
 
     it 'shows "add_asset_to_whiteboard" and "add_asset" activity on the CSV export' do
       scores = @engagement_index.download_csv(@driver, @course, @engagement_index_url)
-      expect(scores).to include("#{@student_1.full_name}, #{Activities::ADD_ASSET_TO_LIBRARY.type}, #{Activities::ADD_ASSET_TO_LIBRARY.points}, #{@initial_score.to_i + Activities::ADD_ASSET_TO_LIBRARY.points}")
-      expect(scores).to include("#{@student_1.full_name}, #{Activities::ADD_ASSET_TO_WHITEBOARD.type}, 1, #{@initial_score.to_i + Activities::ADD_ASSET_TO_LIBRARY.points + 1}")
-      expect(scores).to include("#{@student_1.full_name}, #{Activities::ADD_ASSET_TO_LIBRARY.type}, #{Activities::ADD_ASSET_TO_LIBRARY.points}, #{@initial_score.to_i + (Activities::ADD_ASSET_TO_LIBRARY.points * 2) + 1}")
-      expect(scores).to include("#{@student_1.full_name}, #{Activities::ADD_ASSET_TO_WHITEBOARD.type}, 1, #{@initial_score.to_i + (Activities::ADD_ASSET_TO_LIBRARY.points * 2) + 2}")
-      expect(scores).to_not include("#{@student_1.full_name}, #{Activities::ADD_ASSET_TO_LIBRARY.type}, #{Activities::ADD_ASSET_TO_LIBRARY.points}, #{@initial_score.to_i + (Activities::ADD_ASSET_TO_LIBRARY.points * 3) + 2}")
-      expect(scores).to include("#{@student_1.full_name}, #{Activities::ADD_ASSET_TO_WHITEBOARD.type}, 1, #{@initial_score.to_i + (Activities::ADD_ASSET_TO_LIBRARY.points * 2) + 3}")
+      expect(scores).to include("#{@student_1.full_name}, #{Activity::ADD_ASSET_TO_LIBRARY.type}, #{Activity::ADD_ASSET_TO_LIBRARY.points}, #{@initial_score.to_i + Activity::ADD_ASSET_TO_LIBRARY.points}")
+      expect(scores).to include("#{@student_1.full_name}, #{Activity::ADD_ASSET_TO_WHITEBOARD.type}, 1, #{@initial_score.to_i + Activity::ADD_ASSET_TO_LIBRARY.points + 1}")
+      expect(scores).to include("#{@student_1.full_name}, #{Activity::ADD_ASSET_TO_LIBRARY.type}, #{Activity::ADD_ASSET_TO_LIBRARY.points}, #{@initial_score.to_i + (Activity::ADD_ASSET_TO_LIBRARY.points * 2) + 1}")
+      expect(scores).to include("#{@student_1.full_name}, #{Activity::ADD_ASSET_TO_WHITEBOARD.type}, 1, #{@initial_score.to_i + (Activity::ADD_ASSET_TO_LIBRARY.points * 2) + 2}")
+      expect(scores).to_not include("#{@student_1.full_name}, #{Activity::ADD_ASSET_TO_LIBRARY.type}, #{Activity::ADD_ASSET_TO_LIBRARY.points}, #{@initial_score.to_i + (Activity::ADD_ASSET_TO_LIBRARY.points * 3) + 2}")
+      expect(scores).to include("#{@student_1.full_name}, #{Activity::ADD_ASSET_TO_WHITEBOARD.type}, 1, #{@initial_score.to_i + (Activity::ADD_ASSET_TO_LIBRARY.points * 2) + 3}")
     end
   end
 
@@ -258,17 +258,17 @@ describe 'Whiteboard Add Asset', order: :defined do
     it 'earns "Add an asset to a whiteboard" and "Add a new asset to the Asset Library" points on the Engagement Index' do
       @canvas.stop_masquerading @driver
       @engagement_index.load_scores(@driver, @engagement_index_url)
-      expect(@engagement_index.user_score @student_2).to eql("#{@initial_score.to_i + 3 + (Activities::ADD_ASSET_TO_LIBRARY.points * 2)}")
+      expect(@engagement_index.user_score @student_2).to eql("#{@initial_score.to_i + 3 + (Activity::ADD_ASSET_TO_LIBRARY.points * 2)}")
     end
 
     it 'shows "add_asset_to_whiteboard" and "add_asset" activity on the CSV export' do
       scores = @engagement_index.download_csv(@driver, @course, @engagement_index_url)
-      expect(scores).to include("#{@student_2.full_name}, #{Activities::ADD_ASSET_TO_LIBRARY.type}, #{Activities::ADD_ASSET_TO_LIBRARY.points}, #{@initial_score.to_i + Activities::ADD_ASSET_TO_LIBRARY.points}")
-      expect(scores).to include("#{@student_2.full_name}, #{Activities::ADD_ASSET_TO_WHITEBOARD.type}, 1, #{@initial_score.to_i + Activities::ADD_ASSET_TO_LIBRARY.points + 1}")
-      expect(scores).to include("#{@student_2.full_name}, #{Activities::ADD_ASSET_TO_LIBRARY.type}, #{Activities::ADD_ASSET_TO_LIBRARY.points}, #{@initial_score.to_i + (Activities::ADD_ASSET_TO_LIBRARY.points * 2) + 1}")
-      expect(scores).to include("#{@student_2.full_name}, #{Activities::ADD_ASSET_TO_WHITEBOARD.type}, 1, #{@initial_score.to_i + (Activities::ADD_ASSET_TO_LIBRARY.points * 2) + 2}")
-      expect(scores).to_not include("#{@student_2.full_name}, #{Activities::ADD_ASSET_TO_LIBRARY.type}, #{Activities::ADD_ASSET_TO_LIBRARY.points}, #{@initial_score.to_i + (Activities::ADD_ASSET_TO_LIBRARY.points * 3) + 2}")
-      expect(scores).to include("#{@student_2.full_name}, #{Activities::ADD_ASSET_TO_WHITEBOARD.type}, 1, #{@initial_score.to_i + (Activities::ADD_ASSET_TO_LIBRARY.points * 2) + 3}")
+      expect(scores).to include("#{@student_2.full_name}, #{Activity::ADD_ASSET_TO_LIBRARY.type}, #{Activity::ADD_ASSET_TO_LIBRARY.points}, #{@initial_score.to_i + Activity::ADD_ASSET_TO_LIBRARY.points}")
+      expect(scores).to include("#{@student_2.full_name}, #{Activity::ADD_ASSET_TO_WHITEBOARD.type}, 1, #{@initial_score.to_i + Activity::ADD_ASSET_TO_LIBRARY.points + 1}")
+      expect(scores).to include("#{@student_2.full_name}, #{Activity::ADD_ASSET_TO_LIBRARY.type}, #{Activity::ADD_ASSET_TO_LIBRARY.points}, #{@initial_score.to_i + (Activity::ADD_ASSET_TO_LIBRARY.points * 2) + 1}")
+      expect(scores).to include("#{@student_2.full_name}, #{Activity::ADD_ASSET_TO_WHITEBOARD.type}, 1, #{@initial_score.to_i + (Activity::ADD_ASSET_TO_LIBRARY.points * 2) + 2}")
+      expect(scores).to_not include("#{@student_2.full_name}, #{Activity::ADD_ASSET_TO_LIBRARY.type}, #{Activity::ADD_ASSET_TO_LIBRARY.points}, #{@initial_score.to_i + (Activity::ADD_ASSET_TO_LIBRARY.points * 3) + 2}")
+      expect(scores).to include("#{@student_2.full_name}, #{Activity::ADD_ASSET_TO_WHITEBOARD.type}, 1, #{@initial_score.to_i + (Activity::ADD_ASSET_TO_LIBRARY.points * 2) + 3}")
     end
   end
 

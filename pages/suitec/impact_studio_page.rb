@@ -27,12 +27,18 @@ module Page
       image(:avatar, class: 'profile-summary-avatar')
       h1(:name, xpath: '//h1[@data-ng-bind="user.canvas_full_name"]')
       link(:edit_profile_link, text: 'Edit Profile')
+      elements(:section, xpath: '//span[@data-ng-repeat="section in user.canvasCourseSections"]')
       span(:last_activity, xpath: '//div[contains(.,"Last activity:")]/span')
-      link(:engagement_index_link, xpath: '//a[contains(.,"Engagement Index")]')
+      link(:engagement_index_link, xpath: '//div[contains(@class,"profile-summary")]//a[contains(.,"Engagement Index")]')
       link(:turn_on_sharing_link, text: 'Turn on?')
       div(:engagement_index_score, class: 'profile-engagement-score')
       span(:engagement_index_rank, xpath: '//span[@data-ng-bind="userRank"]')
       span(:engagement_index_rank_ttl, xpath: '//span[@data-ng-bind="courseUserCount"]')
+
+      # Returns the visible sections
+      def sections
+        section_elements.map &:text
+      end
 
       # Clicks the Edit link for user profile
       def click_edit_profile
@@ -47,6 +53,18 @@ module Page
       # Clicks the "Turn on?" link
       def click_turn_on
         wait_for_update_and_click turn_on_sharing_link_element
+      end
+
+      # SEARCH
+
+      # Searches for a given user and loads its Impact Studio profile page
+      # @param user [User]
+      def search_for_user(user)
+        logger.info "Searching for #{user.full_name} UID #{user.uid}"
+        wait_for_load_and_click div_element(class: 'select-search')
+        (option = list_item_element(xpath: "//div[@class='select-dropdown']//li[contains(.,'#{user.full_name}')]")).when_present Utils.short_wait
+        option.click
+        wait_until(Utils.medium_wait) { name == user.full_name }
       end
 
       # ACTIVITY EVENT DROPS
@@ -84,7 +102,7 @@ module Page
       # @param assets [Array<Asset>]
       # @return [Array<String>]
       def recent_asset_ids(assets)
-        asset_ids = assets.map { |asset| asset.id }
+        asset_ids = assets.map { |asset| asset.id if asset.visible }
         sorted_asset_ids = asset_ids.compact.sort.reverse
         (sorted_asset_ids.length > 4) ? sorted_asset_ids[0..3] : sorted_asset_ids
       end
@@ -93,7 +111,8 @@ module Page
       # @param assets [Array<Asset>]
       # @return [Array<String>]
       def impactful_asset_ids(assets)
-        assets_with_impact = assets.select { |asset| !asset.impact_score.zero? }
+        visible_assets = assets.select { |asset| asset.visible }
+        assets_with_impact = visible_assets.select { |asset| !asset.impact_score.zero? }
         sorted_assets = (assets_with_impact.sort_by { |asset| [asset.impact_score, asset.id] }).reverse
         sorted_asset_ids = sorted_assets.map { |asset| asset.id }
         (sorted_asset_ids.length > 4) ? sorted_asset_ids[0..3] : sorted_asset_ids
@@ -156,6 +175,8 @@ module Page
       def verify_my_recent_assets(assets)
         logger.debug "Expecting My Recent list to include asset IDs '#{recent_asset_ids assets}'"
         click_my_recent if my_recent_link?
+        sleep 2
+        logger.debug "My Recent list currently includes asset IDs '#{swim_lane_asset_ids my_asset_link_elements}'"
         wait_until(Utils.short_wait) { swim_lane_asset_ids(my_asset_link_elements) == recent_asset_ids(assets) }
         no_my_assets_msg_element.when_visible 1 if recent_asset_ids(assets).empty?
       end
@@ -165,6 +186,8 @@ module Page
       def verify_my_impactful_assets(assets)
         logger.debug "Expecting My Impactful list to include asset IDs '#{impactful_asset_ids assets}'"
         click_my_most_impactful if my_impactful_link?
+        sleep 2
+        logger.debug "My Impactful list currently includes asset IDs '#{swim_lane_asset_ids my_asset_link_elements}'"
         wait_until(Utils.short_wait) { swim_lane_asset_ids(my_asset_link_elements) == impactful_asset_ids(assets) }
         no_my_assets_msg_element.when_visible 1 if impactful_asset_ids(assets).empty?
       end
@@ -192,6 +215,8 @@ module Page
       def verify_your_recent_assets(assets)
         logger.debug "Expecting the other user's Recent list to include asset IDs '#{recent_asset_ids assets}"
         click_your_recent if recent_link?
+        sleep 2
+        logger.debug "The other user's Recent list currently includes asset IDs '#{swim_lane_asset_ids asset_link_elements}"
         wait_until(Utils.short_wait) { swim_lane_asset_ids(asset_link_elements) == recent_asset_ids(assets) }
         no_assets_msg_element.when_visible 1 if recent_asset_ids(assets).empty?
       end
@@ -201,6 +226,8 @@ module Page
       def verify_your_impactful_assets(assets)
         logger.debug "Expecting the other user's Impactful list to include asset IDs '#{impactful_asset_ids assets}"
         click_your_impactful if impactful_link?
+        sleep 2
+        logger.debug "The other user's Impactful list currently includes asset Ids '#{swim_lane_asset_ids asset_link_elements}"
         wait_until(Utils.short_wait) { swim_lane_asset_ids(asset_link_elements) == impactful_asset_ids(assets) }
         no_assets_msg_element.when_visible 1 if impactful_asset_ids(assets).empty?
       end
@@ -238,6 +265,8 @@ module Page
         # TODO - insert a pause prior to loading the trending assets so that "trending" can be recalculated
         logger.debug "Expecting Everyone's Trending list to include asset IDs '#{impactful_asset_ids assets}"
         click_all_trending if trending_link?
+        sleep 2
+        logger.debug "Everyone's Trending list currently includes asset IDs '#{swim_lane_asset_ids everyone_asset_link_elements}"
         wait_until(Utils.short_wait) { swim_lane_asset_ids(everyone_asset_link_elements) == impactful_asset_ids(assets) }
         no_everyone_assets_msg_element.when_visible 1 if impactful_asset_ids(assets).empty?
       end
@@ -247,6 +276,8 @@ module Page
       def verify_all_impactful_assets(assets)
         logger.debug "Expecting Everyone's Impactful list to include asset IDs '#{impactful_asset_ids assets}'"
         click_all_impactful if everyone_impactful_link?
+        sleep 2
+        logger.debug "Everyone's Impactful list currently includes asset IDs '#{swim_lane_asset_ids everyone_asset_link_elements}"
         wait_until(Utils.short_wait) { swim_lane_asset_ids(everyone_asset_link_elements) == impactful_asset_ids(assets) }
         no_everyone_assets_msg_element.when_visible 1 if impactful_asset_ids(assets).empty?
       end

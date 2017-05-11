@@ -80,7 +80,7 @@ describe 'Canvas assignment submission', order: :defined do
 
         # Check for updated Engagement Index score once submission is processed
         initial_score = submission[2]
-        expected_score = initial_score.to_i + Activities::SUBMIT_ASSIGNMENT.points
+        expected_score = initial_score.to_i + Activity::SUBMIT_ASSIGNMENT.points
         logger.debug "Checking submission for #{student_full_name} who uploaded #{asset_title} and should now have a score of #{expected_score}"
 
         score_updated = @engagement_index.user_score_updated?(@driver, @engagement_index_url, student, "#{expected_score}")
@@ -89,7 +89,7 @@ describe 'Canvas assignment submission', order: :defined do
 
         # Check that activity is included in CSV download
         scores = @engagement_index.download_csv(@driver, @course, @engagement_index_url)
-        expected_row = "#{student_full_name}, submit_assignment, #{Activities::SUBMIT_ASSIGNMENT.points}, #{expected_score}"
+        expected_row = "#{student_full_name}, submit_assignment, #{Activity::SUBMIT_ASSIGNMENT.points}, #{expected_score}"
 
         it("shows 'submit_assignment' activity on the CSV export for #{student_full_name}") { expect(scores).to include(expected_row) }
 

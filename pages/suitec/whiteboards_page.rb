@@ -168,7 +168,7 @@ module Page
         wait_until(Utils.short_wait) { collaborator_name user }
         wait_for_update_and_click edit_title_input_element
         wait_for_update_and_click save_edit_element
-        save_edit_element.when_not_visible Utils.short_wait
+        save_edit_element.when_not_visible Utils.short_wait rescue Selenium::WebDriver::Error::NoAlertPresentError
       end
 
       # Removes a given collaborator from a whiteboard
@@ -292,8 +292,13 @@ module Page
 
       button(:export_button, xpath: '//button[@title="Export"]')
       button(:export_to_library_button, xpath: '//button[contains(.,"Export to Asset Library")]')
+      h2(:export_heading, xpath: '//h2[contains(.,"Export Whiteboard to Asset Library")]')
+      div(:export_not_ready_msg, xpath: '//div[contains(.,"The whiteboard could not be exported because one or more assets are still processing. Try again once processing is complete.")]')
+      div(:export_not_possible_msg, xpath: '//div[contains(.,"The whiteboard could not be exported because one or more assets had a processing error. Remove blank assets to try again.")]')
       text_area(:export_title_input, id: 'whiteboards-exportasasset-title')
       button(:export_confirm_button, xpath: '//span[text()="Export to Asset Library"]/..')
+      button(:export_cancel_button, xpath: '//button[contains(.,"Cancel")]')
+      span(:export_success_msg, xpath: '//span[contains(.,"This board has been added successfully")]')
       button(:download_as_image_button, xpath: '//a[contains(.,"Download as image")]')
 
       # Clicks the 'export' button on an open whiteboard
@@ -401,6 +406,12 @@ module Page
           check_add_link_to_library_cbx
           click_add_url_button
         end
+      end
+
+      # Returns the ID of the currently highlighted asset on a whiteboard
+      # @return [String]
+      def added_asset_id
+        open_original_asset_link_element.attribute('href').split('?').first.split('/').last
       end
 
       # Clicks the link to open a whiteboard asset in the asset library

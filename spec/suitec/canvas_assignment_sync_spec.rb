@@ -78,14 +78,14 @@ describe 'Canvas assignment sync', order: :defined do
     end
 
     it 'adds assignment submission points to the Engagement Index score for both submissions' do
-      user_score_updated = @engagement_index.user_score_updated?(@driver, @engagement_index_url, @student, (@initial_score.to_i + (Activities::SUBMIT_ASSIGNMENT.points * 2)).to_s)
+      user_score_updated = @engagement_index.user_score_updated?(@driver, @engagement_index_url, @student, (@initial_score.to_i + (Activity::SUBMIT_ASSIGNMENT.points * 2)).to_s)
       expect(user_score_updated).to be true
     end
 
     it 'adds assignment submission activity to the CSV export for both submissions' do
       rows = @engagement_index.download_csv(@driver, @course, @engagement_index_url)
-      expected_row_1 = "#{@student.full_name}, #{Activities::SUBMIT_ASSIGNMENT.type}, #{Activities::SUBMIT_ASSIGNMENT.points}, #{@initial_score.to_i + Activities::SUBMIT_ASSIGNMENT.points}"
-      expected_row_2 = "#{@student.full_name}, #{Activities::SUBMIT_ASSIGNMENT.type}, #{Activities::SUBMIT_ASSIGNMENT.points}, #{@initial_score.to_i + (Activities::SUBMIT_ASSIGNMENT.points * 2)}"
+      expected_row_1 = "#{@student.full_name}, #{Activity::SUBMIT_ASSIGNMENT.type}, #{Activity::SUBMIT_ASSIGNMENT.points}, #{@initial_score.to_i + Activity::SUBMIT_ASSIGNMENT.points}"
+      expected_row_2 = "#{@student.full_name}, #{Activity::SUBMIT_ASSIGNMENT.type}, #{Activity::SUBMIT_ASSIGNMENT.points}, #{@initial_score.to_i + (Activity::SUBMIT_ASSIGNMENT.points * 2)}"
       expect(rows & [expected_row_1, expected_row_2]).to eql([expected_row_1, expected_row_2])
     end
 
@@ -123,13 +123,13 @@ describe 'Canvas assignment sync', order: :defined do
 
     it 'does not alter existing assignment submission points on the Engagement Index score' do
       @engagement_index.load_scores(@driver, @engagement_index_url)
-      expect(@engagement_index.user_score @student).to eql((@initial_score.to_i + (Activities::SUBMIT_ASSIGNMENT.points * 2)).to_s)
+      expect(@engagement_index.user_score @student).to eql((@initial_score.to_i + (Activity::SUBMIT_ASSIGNMENT.points * 2)).to_s)
     end
 
     it 'does not alter existing assignment submission activity on the CSV export' do
       rows = @engagement_index.download_csv(@driver, @course, @engagement_index_url)
-      expected_row_1 = "#{@student.full_name}, #{Activities::SUBMIT_ASSIGNMENT.type}, #{Activities::SUBMIT_ASSIGNMENT.points}, #{@initial_score.to_i + Activities::SUBMIT_ASSIGNMENT.points}"
-      expected_row_2 = "#{@student.full_name}, #{Activities::SUBMIT_ASSIGNMENT.type}, #{Activities::SUBMIT_ASSIGNMENT.points}, #{@initial_score.to_i + (Activities::SUBMIT_ASSIGNMENT.points * 2)}"
+      expected_row_1 = "#{@student.full_name}, #{Activity::SUBMIT_ASSIGNMENT.type}, #{Activity::SUBMIT_ASSIGNMENT.points}, #{@initial_score.to_i + Activity::SUBMIT_ASSIGNMENT.points}"
+      expected_row_2 = "#{@student.full_name}, #{Activity::SUBMIT_ASSIGNMENT.type}, #{Activity::SUBMIT_ASSIGNMENT.points}, #{@initial_score.to_i + (Activity::SUBMIT_ASSIGNMENT.points * 2)}"
       expect(rows & [expected_row_1, expected_row_2]).to eql([expected_row_1, expected_row_2])
     end
 

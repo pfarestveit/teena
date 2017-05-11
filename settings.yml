@@ -5,6 +5,7 @@ timeouts:
   short: 8
   medium: 30
   long: 120
+  canvas_poller: 120
 
 cal_net:
   base_url: https://auth-test.berkeley.edu
@@ -13,6 +14,11 @@ suite_c:
   base_url: https://calcentral-col-qa-01.ist.berkeley.edu
   lti_key: secret
   lti_secret: secret
+  db_host: secret
+  db_port: secret
+  db_name: secret
+  db_user: secret
+  db_password: secret
   poller_retries: 20
 
 canvas:

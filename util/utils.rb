@@ -84,6 +84,11 @@ class Utils
     @config['timeouts']['long']
   end
 
+  # Timeout intended to wait for a Canvas poller cycle to complete
+  def self.canvas_poller_wait
+    @config['timeouts']['canvas_poller']
+  end
+
   # TEST DATA, UPLOADS, AND DOWNLOADS
 
   # Returns the current datetime for use as a unique test identifier
@@ -162,6 +167,26 @@ class Utils
   # The number of times to check if the SuiteC poller has synced Canvas course site data and SuiteC data
   def self.poller_retries
     @config['suite_c']['poller_retries']
+  end
+
+  def self.db_name
+    @config['suite_c']['db_name']
+  end
+
+  def self.db_host
+    @config['suite_c']['db_host']
+  end
+
+  def self.db_port
+    @config['suite_c']['db_port']
+  end
+
+  def self.db_user
+    @config['suite_c']['db_user']
+  end
+
+  def self.db_password
+    @config['suite_c']['db_password']
   end
 
   # CANVAS

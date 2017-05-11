@@ -3,7 +3,6 @@ require_relative '../../util/spec_helper'
 describe 'The Impact Studio', order: :defined do
 
   include Logging
-  course_id = ENV['COURSE_ID']
   test_id = Utils.get_test_id
 
   # Get test users
@@ -20,7 +19,7 @@ describe 'The Impact Studio', order: :defined do
   all_assets << (asset_2 = Asset.new((student_1.assets.select { |a| a['type'] == 'File' })[0]))
   all_assets << (asset_3 = Asset.new((student_1.assets.select { |a| a['type'] == 'File' })[1]))
   all_assets << (asset_4 = Asset.new({}))
-  all_assets << (asset_5 = Asset.new(teacher.assets.find { |a| a['type'] == 'Link' }))
+  all_assets << (asset_5 = Asset.new(teacher.assets.find { |a| a['type'] == 'File' }))
   all_assets << (asset_6 = Asset.new(student_2.assets.find { |a| a['type'] == 'File' }))
   all_assets << (asset_7 = Asset.new(student_2.assets.find { |a| a['type'] == 'Link' }))
   whiteboard = Whiteboard.new({owner: student_1, title: "Whiteboard #{test_id}", collaborators: [student_2]})
@@ -29,9 +28,11 @@ describe 'The Impact Studio', order: :defined do
   student_2_assets = [asset_7, asset_6, asset_4]
   teacher_assets = [asset_5]
 
+  # Store actual scores to use as baselines for expected scores
+  asset_1_actual_score, asset_2_actual_score, asset_3_actual_score, asset_4_actual_score, asset_5_actual_score, asset_6_actual_score, asset_7_actual_score = 0
+
   before(:all) do
-    @course = Course.new({})
-    @course.site_id = course_id
+    @course = Course.new({title: "Impact Studio Assets #{test_id}", code: "Impact Studio Assets #{test_id}"})
 
     @driver = Utils.launch_browser
     @canvas = Page::CanvasPage.new @driver
@@ -59,7 +60,7 @@ describe 'The Impact Studio', order: :defined do
 
   after(:all) { Utils.quit_browser @driver }
 
-  context 'when a course has no assets' do
+  context 'when no assets exist' do
 
     context 'and a user views its own profile' do
 
@@ -90,7 +91,7 @@ describe 'The Impact Studio', order: :defined do
     end
   end
 
-  context 'when a course has assets with no impact' do
+  context 'when assets have no impact' do
 
     before(:all) do
       # Student 1 add asset 1 via impact studio
@@ -104,32 +105,36 @@ describe 'The Impact Studio', order: :defined do
       @whiteboards.create_and_open_whiteboard(@driver, whiteboard)
       @whiteboards.add_asset_exclude_from_library asset_2
       @whiteboards.open_original_asset_link_element.when_visible Utils.long_wait
-      asset_2.id = nil
+      logger.debug "Asset 2 ID is #{asset_2.id = @whiteboards.added_asset_id}"
+      asset_2.visible = false
 
       # Student 1 add asset 3 to a whiteboard and include it in the asset library
       @whiteboards.add_asset_include_in_library asset_3
       @whiteboards.open_original_asset_link_element.when_visible Utils.long_wait
+      @whiteboards.close_whiteboard @driver
       @asset_library.load_page(@driver, @asset_library_url)
       logger.debug "Asset 3 ID is #{asset_3.id = @asset_library.list_view_asset_ids.first}"
-      logger.debug "Asset 3 impact score is #{asset_3.impact_score}"
 
       # Student 1 export whiteboard to create asset 4
+      @whiteboards.load_page(@driver, @whiteboards_url)
+      @whiteboards.open_whiteboard(@driver, whiteboard)
       @whiteboards.export_to_asset_library whiteboard
+      @whiteboards.close_whiteboard @driver
       @asset_library.load_page(@driver, @asset_library_url)
       logger.debug "Asset 4 ID is #{asset_4.id = @asset_library.list_view_asset_ids.first}"
       asset_4.type = 'Whiteboard'
       asset_4.title = whiteboard.title
 
-      # Teacher add asset 5 via asset library
+      # Teacher add asset 5 via impact studio
       @canvas.masquerade_as(@driver, teacher, @course)
-      @asset_library.load_page(@driver, @asset_library_url)
-      @asset_library.add_site asset_5
+      @impact_studio.load_page(@driver, @impact_studio_url)
+      @impact_studio.add_file(@driver, asset_5)
       logger.debug "Asset 5 ID is #{asset_5.id = @asset_library.list_view_asset_ids.first}"
 
-      # Student 2 add asset 6 via impact studio
+      # Student 2 add asset 6 via asset library
       @canvas.masquerade_as(@driver, student_2, @course)
-      @impact_studio.load_page(@driver, @impact_studio_url)
-      @impact_studio.add_file(@driver, asset_6)
+      @asset_library.load_page(@driver, @asset_library_url)
+      @asset_library.upload_file_to_library asset_6
       logger.debug "Asset 6 ID is #{asset_6.id}"
 
       # Student 2 add asset 7 via asset library and then delete it
@@ -137,9 +142,26 @@ describe 'The Impact Studio', order: :defined do
       logger.debug "Asset 7 ID is #{asset_7.id}"
       @asset_library.load_asset_detail(@driver, @asset_library_url, asset_7)
       @asset_library.delete_asset
-      # forget the asset ID so the test will consider the asset hidden
-      asset_7.id = nil
+      asset_7.visible = false
     end
+
+    after(:all) do
+      logger.debug "Asset 1 impact score is actually #{asset_1.impact_score = asset_1_actual_score}"
+      logger.debug "Asset 2 impact score is actually #{asset_2.impact_score = asset_2_actual_score}"
+      logger.debug "Asset 3 impact score is actually #{asset_3.impact_score = asset_3_actual_score}"
+      logger.debug "Asset 4 impact score is actually #{asset_4.impact_score = asset_4_actual_score}"
+      logger.debug "Asset 5 impact score is actually #{asset_5.impact_score = asset_5_actual_score}"
+      logger.debug "Asset 6 impact score is actually #{asset_6.impact_score = asset_6_actual_score}"
+      logger.debug "Asset 7 impact score is actually #{asset_7.impact_score = asset_7_actual_score}"
+    end
+
+    it('stores a zero impact score for an asset uploaded via the Impact Studio') { expect(asset_1_actual_score = DBUtils.get_asset_impact_score(asset_1)).to eql(asset_1.impact_score) }
+    it('stores a zero impact score for an asset added to a whiteboard but excluded from the asset library') { expect(asset_2_actual_score = DBUtils.get_asset_impact_score(asset_2)).to eql(asset_2.impact_score) }
+    it('stores a zero impact score for an asset added to a whiteboard and included in the asset library') { expect(asset_3_actual_score = DBUtils.get_asset_impact_score(asset_3)).to eql(asset_3.impact_score) }
+    it('stores a zero impact score for an asset created from a whiteboard') { expect(asset_4_actual_score = DBUtils.get_asset_impact_score(asset_4)).to eql(asset_4.impact_score) }
+    it('stores a zero impact score for an asset uploaded via the Impact Studio') { expect(asset_5_actual_score = DBUtils.get_asset_impact_score(asset_5)).to eql(asset_5.impact_score) }
+    it('stores a zero impact score for an asset uploaded via the Asset Library') { expect(asset_6_actual_score = DBUtils.get_asset_impact_score(asset_6)).to eql(asset_6.impact_score) }
+    it('stores a zero impact score for an asset uploaded via the Asset Library but deleted') { expect(asset_7_actual_score = DBUtils.get_asset_impact_score(asset_7)).to eql(asset_7.impact_score) }
 
     context 'and a user views its own profile' do
 
@@ -160,7 +182,7 @@ describe 'The Impact Studio', order: :defined do
         @impact_studio.verify_my_recent_assets student_1_assets
       end
 
-      it('does not show the user\'s assets under My Assets > Most Impactful') { @impact_studio.verify_my_impactful_assets student_1_assets }
+      it('does not show any assets under My Assets > Most Impactful') { @impact_studio.verify_my_impactful_assets student_1_assets }
       it('does not show any assets under Community Assets > Trending') { @impact_studio.verify_all_trending_assets all_assets }
       it('does not show any assets under Community Assets > Most Impactful') { @impact_studio.verify_all_impactful_assets all_assets }
     end
@@ -178,19 +200,24 @@ describe 'The Impact Studio', order: :defined do
     end
   end
 
-  context 'when a course has assets with impact' do
+  context 'when assets have impact' do
 
-    context 'with "Peer uses my Asset in a Whiteboard" impact' do
+    context '"add asset to whiteboard"' do
 
       before(:all) do
         # One student uses the other's asset on the shared whiteboard
         @canvas.masquerade_as(@driver, student_2, @course)
+        @whiteboards.load_page(@driver, @whiteboards_url)
         @whiteboards.open_whiteboard(@driver, whiteboard)
         @whiteboards.add_existing_assets [asset_1]
         @whiteboards.open_original_asset_link_element.when_visible Utils.medium_wait
         @whiteboards.close_whiteboard @driver
-        logger.debug "Asset 1 (ID #{asset_1.id}) should have #{asset_1.impact_score += Impacts::GET_WHITEBOARD_USE.points}"
+        logger.debug "Asset 1 impact score should be #{asset_1.impact_score += Activity::ADD_ASSET_TO_WHITEBOARD.impact_points}"
       end
+
+      after(:all) { logger.debug "Asset 1 impact score is actually #{asset_1.impact_score = asset_1_actual_score}" }
+
+      it('stores the impact score for the asset added to a whiteboard') { expect(asset_1_actual_score = DBUtils.get_asset_impact_score(asset_1)).to eql(asset_1.impact_score) }
 
       context 'and the asset owner views its own profile' do
 
@@ -216,14 +243,18 @@ describe 'The Impact Studio', order: :defined do
       end
     end
 
-    context 'with "Peer views my Asset" impact' do
+    context 'with "view asset" impact' do
 
       before(:all) do
         # Teacher views the student's asset
         @canvas.masquerade_as(@driver, teacher, @course)
         @asset_library.load_asset_detail(@driver, @asset_library_url, asset_3)
-        logger.debug "Asset 3 (ID #{asset_3.id}) should have #{asset_3.impact_score += Impacts::GET_VIEW.points}"
+        logger.debug "Asset 3 impact score should be #{asset_3.impact_score += Activity::VIEW_ASSET.impact_points}"
       end
+
+      after(:all) { logger.debug "Asset 3 impact score is actually #{asset_3.impact_score = asset_3_actual_score}" }
+
+      it('stores the right impact score for the viewed asset') { expect(asset_3_actual_score = DBUtils.get_asset_impact_score(asset_3)).to eql(asset_3.impact_score) }
 
       context 'and the asset owner views its own profile' do
 
@@ -239,20 +270,24 @@ describe 'The Impact Studio', order: :defined do
       end
     end
 
-    context 'with "Peer Comments on my Asset" impact' do
+    context 'with "comment" impact' do
 
       before(:all) do
         # Teacher comments twice on the student's asset
         @canvas.masquerade_as(@driver, teacher, @course)
         @asset_library.load_asset_detail(@driver, @asset_library_url, asset_6)
-        asset_6.impact_score += Impacts::GET_VIEW
+        asset_6.impact_score += Activity::VIEW_ASSET.impact_points
         @asset_library.add_comment 'This is a comment from Teacher to Student 2'
         @asset_library.wait_until(Utils.short_wait) { @asset_library.asset_detail_comment_count == '1' }
-        asset_6.impact_score += Impacts::GET_COMMENT.points
-        @asset_library.add_comment 'This is another comment from Teacher to Student 2'
+        asset_6.impact_score += Activity::COMMENT.impact_points
+        @asset_library.reply_to_comment(0, 'This is another comment from Teacher to Student 2')
         @asset_library.wait_until(Utils.short_wait) { @asset_library.asset_detail_comment_count == '2' }
-        logger.debug "Asset 6 (ID #{asset_6.id}) should have #{asset_6.impact_score += Impacts::GET_COMMENT.points}"
+        logger.debug "Asset 6 impact score should be #{asset_6.impact_score += Activity::COMMENT.impact_points}"
       end
+
+      after(:all) { logger.debug "Asset 6 impact score is actually #{asset_6.impact_score = asset_6_actual_score}" }
+
+      it('stores the right impact score for the commented-on asset') { expect(asset_6_actual_score = DBUtils.get_asset_impact_score(asset_6)).to eql(asset_6.impact_score) }
 
       context 'and the asset owner views its own profile' do
 
@@ -268,17 +303,21 @@ describe 'The Impact Studio', order: :defined do
       end
     end
 
-    context 'with "Peer likes my Asset" impact' do
+    context 'with "like" impact' do
 
       before(:all) do
         # One student likes the teacher's asset
         @canvas.masquerade_as(@driver, student_1, @course)
         @asset_library.load_asset_detail(@driver, @asset_library_url, asset_5)
-        asset_5.impact_score += Impacts::GET_VIEW
+        asset_5.impact_score += Activity::VIEW_ASSET.impact_points
         @asset_library.toggle_detail_view_item_like
         @asset_library.wait_until { @asset_library.detail_view_asset_likes_count == '1' }
-        logger.debug "Asset 5 (ID #{asset_5.id}) should have #{asset_5.impact_score += Impacts::GET_LIKE.points}"
+        logger.debug "Asset 5 impact score should be #{asset_5.impact_score += Activity::LIKE.impact_points}"
       end
+
+      after(:all) { logger.debug "Asset 5 impact score is actually #{asset_5.impact_score = asset_5_actual_score}" }
+
+      it('stores the right impact score for the liked asset') { expect(asset_5_actual_score = DBUtils.get_asset_impact_score(asset_5)).to eql(asset_5.impact_score) }
 
       context 'and the asset owner views its own profile' do
 
@@ -294,21 +333,25 @@ describe 'The Impact Studio', order: :defined do
       end
     end
 
-    context 'with "Peer Remixes my Whiteboard" impact' do
+    context 'with "remix whiteboard" impact' do
 
       before(:all) do
         # Teacher remixes the students' whiteboard
         @canvas.masquerade_as(@driver, teacher, @course)
         @asset_library.load_asset_detail(@driver, @asset_library_url, asset_4)
-        asset_4.impact_score += Impacts::GET_VIEW.points
+        asset_4.impact_score += Activity::VIEW_ASSET.impact_points
         @asset_library.click_remix
-        logger.debug "Asset 4 (ID #{asset_4.id}) should have #{asset_4.impact_score += Impacts::GET_WHITEBOARD_REMIX.points}"
+        logger.debug "Asset 4 impact score should be #{asset_4.impact_score += Activity::REMIX_WHITEBOARD.impact_points}"
       end
+
+      after(:all) { logger.debug "Asset 4 impact score is actually #{asset_4.impact_score = asset_4_actual_score}" }
+
+      it('stores the right impact score for the remixed whiteboard asset') { expect(asset_4_actual_score = DBUtils.get_asset_impact_score(asset_4)).to eql(asset_4.impact_score) }
 
       context 'and one whiteboard asset owner views its own profile' do
 
         before(:all) do
-          @canvas.masquerade_as(@driver,student_1, @course)
+          @canvas.masquerade_as(@driver, student_1, @course)
           @impact_studio.load_page(@driver, @impact_studio_url)
         end
 
@@ -321,7 +364,7 @@ describe 'The Impact Studio', order: :defined do
       context 'and another whiteboard asset owner views its own profile' do
 
         before(:all) do
-          @canvas.masquerade_as(@driver,student_2, @course)
+          @canvas.masquerade_as(@driver, student_2, @course)
           @impact_studio.load_page(@driver, @impact_studio_url)
         end
 
@@ -332,41 +375,110 @@ describe 'The Impact Studio', order: :defined do
       end
     end
 
-    # TODO context 'with "Peer Mentions Me" impact'
     # TODO context 'with "Peer Cites my Asset" impact'
     # TODO context 'with "Peer Pins my Asset impact"'
-    # TODO context 'with "Peer Replies to My Comment" impact'
 
   end
 
   context 'when assets impact their owners' do
 
-    # TODO - users perform impactful actions on themselves, which are therefore not impactful
+    before(:all) { @canvas.masquerade_as(@driver, student_1, @course) }
 
-    it 'does not show viewing impact' do
-      # view own asset
+    context 'with "view" impact' do
+
+      before(:all) do
+        @asset_library.load_asset_detail(@driver, @asset_library_url, asset_4)
+        @impact_studio.load_page(@driver, @impact_studio_url)
+        logger.debug "Asset 4 impact score should be #{asset_4.impact_score}"
+      end
+
+      after(:all) { logger.debug "Asset 4 impact score is actually #{asset_4.impact_score = asset_4_actual_score}" }
+
+      it('shows the right assets in My Assets > Most Impactful') { @impact_studio.verify_my_impactful_assets student_1_assets }
+      it('shows the right assets in Community Assets > Most Impactful') { @impact_studio.verify_all_impactful_assets all_assets }
+      it('does not add "view" impact') { expect(asset_4_actual_score = DBUtils.get_asset_impact_score(asset_4)).to eql(asset_4.impact_score) }
     end
 
-    it 'does not show commenting impact' do
-      # comment on own asset
+    context 'with "comment" impact' do
+
+      before(:all) do
+        @asset_library.load_asset_detail(@driver, @asset_library_url, asset_4)
+        @asset_library.add_comment 'Impact-free comment'
+        @impact_studio.load_page(@driver, @impact_studio_url)
+        logger.debug "Asset 4 impact score should be #{asset_4.impact_score}"
+      end
+
+      after(:all) { logger.debug "Asset 4 impact score is actually #{asset_4.impact_score = asset_4_actual_score}" }
+
+      it('shows the right assets in My Assets > Most Impactful') { @impact_studio.verify_my_impactful_assets student_1_assets }
+      it('shows the right assets in Community Assets > Most Impactful') { @impact_studio.verify_all_impactful_assets all_assets }
+      it('does not add "comment" impact') { expect(asset_4_actual_score = DBUtils.get_asset_impact_score(asset_4)).to eql(asset_4.impact_score) }
     end
 
-    it 'does not show remixing impact' do
-      # remix own whiteboard asset
+    context 'with "remix" impact' do
+
+      before(:all) do
+        @asset_library.load_asset_detail(@driver, @asset_library_url, asset_4)
+        @asset_library.click_remix
+        @impact_studio.load_page(@driver, @impact_studio_url)
+        logger.debug "Asset 4 impact score should be #{asset_4.impact_score}"
+      end
+
+      after(:all) { logger.debug "Asset 4 impact score is actually #{asset_4.impact_score = asset_4_actual_score}" }
+
+      it('shows the right assets in My Assets > Most Impactful') { @impact_studio.verify_my_impactful_assets student_1_assets }
+      it('shows the right assets in Community Assets > Most Impactful') { @impact_studio.verify_all_impactful_assets all_assets }
+      it('does not add "remix" impact') { expect(asset_4_actual_score = DBUtils.get_asset_impact_score(asset_4)).to eql(asset_4.impact_score) }
     end
   end
 
-  context 'when impacts are reversed' do
+  context 'when assets lose impact' do
 
-    # TODO - users remove their impactful actions, which are therefore no longer impactful
+    context '"comment"' do
 
-    it 'removes commenting impact' do
-      # remove comment
+      before(:all) do
+        @canvas.masquerade_as(@driver, teacher, @course)
+        @asset_library.load_asset_detail(@driver, @asset_library_url, asset_6)
+        asset_6.impact_score += Activity::VIEW_ASSET.impact_points
+        @asset_library.delete_comment 1
+        @impact_studio.load_page(@driver, @impact_studio_url)
+        logger.debug "Asset 6 impact score should be #{asset_6.impact_score -= Activity::COMMENT.impact_points}"
+      end
+
+      after(:all) { logger.debug "Asset 6 impact score is actually #{asset_6.impact_score = asset_6_actual_score}" }
+
+      it('shows the right assets in Community Assets > Most Impactful') { @impact_studio.verify_all_impactful_assets all_assets }
+      it 'shows the right assets in Assets > Most Impactful' do
+        @impact_studio.search_for_user student_2
+        @impact_studio.verify_your_impactful_assets student_2_assets
+      end
+      it('removes "comment" impact') { expect(asset_6_actual_score = DBUtils.get_asset_impact_score(asset_6)).to eql(asset_6.impact_score) }
     end
 
-    it 'removes liking impact' do
-      # un-like
+    context '"like"' do
+
+      before(:all) do
+        @canvas.masquerade_as(@driver, student_1, @course)
+        @asset_library.load_asset_detail(@driver, @asset_library_url, asset_5)
+        asset_5.impact_score += Activity::VIEW_ASSET.impact_points
+        @asset_library.toggle_detail_view_item_like
+        @impact_studio.load_page(@driver, @impact_studio_url)
+        logger.debug "Asset 5 impact score should be #{asset_5.impact_score -= Activity::LIKE.impact_points}"
+      end
+
+      after(:all) { logger.debug "Asset 5 impact score is actually #{asset_5.impact_score = asset_5_actual_score}" }
+
+      it('shows the right assets under Community Assets > Most Impactful') { @impact_studio.verify_all_impactful_assets all_assets }
+      it 'shows the right assets under the user\'s Assets > Most Impactful' do
+        @impact_studio.search_for_user teacher
+        @impact_studio.verify_your_impactful_assets teacher_assets
+      end
+      it('reduces the asset impact score') { expect(asset_5_actual_score = DBUtils.get_asset_impact_score(asset_5)).to eql(asset_5.impact_score) }
     end
+
+    # TODO it 'removes citation impact'
+    # TODO it 'removes pinning impact'
+
   end
 
   context 'when assets are deleted' do
