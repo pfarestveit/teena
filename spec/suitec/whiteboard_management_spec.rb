@@ -260,8 +260,8 @@ describe 'Whiteboard', order: :defined do
 
       # Get configured points per activity
       @engagement_index.click_points_config
-      @add_asset_to_board_points = "#{@engagement_index.activity_points Activities::ADD_ASSET_TO_WHITEBOARD}"
-      @export_board_points = "#{@engagement_index.activity_points Activities::EXPORT_WHITEBOARD}"
+      @add_asset_to_board_points = "#{@engagement_index.activity_points Activity::ADD_ASSET_TO_WHITEBOARD}"
+      @export_board_points = "#{@engagement_index.activity_points Activity::EXPORT_WHITEBOARD}"
 
       # Determine expected scores after activities
       @score_with_add_asset = @initial_score.to_i + (@add_asset_to_board_points.to_i * @assets.length)
@@ -308,8 +308,8 @@ describe 'Whiteboard', order: :defined do
 
     it 'as a new asset shows "export_whiteboard" activity on the CSV export' do
       scores = @engagement_index.download_csv(@driver, @course, @engagement_index_url)
-      expect(scores).to include("#{@student_1.full_name}, #{Activities::ADD_ASSET_TO_WHITEBOARD.type}, #{@add_asset_to_board_points}, #{@score_with_add_asset}")
-      expect(scores).to include("#{@student_1.full_name}, #{Activities::EXPORT_WHITEBOARD.type}, #{@export_board_points}, #{@score_with_export_whiteboard}")
+      expect(scores).to include("#{@student_1.full_name}, #{Activity::ADD_ASSET_TO_WHITEBOARD.type}, #{@add_asset_to_board_points}, #{@score_with_add_asset}")
+      expect(scores).to include("#{@student_1.full_name}, #{Activity::EXPORT_WHITEBOARD.type}, #{@export_board_points}, #{@score_with_export_whiteboard}")
     end
 
     it 'as a PNG download is possible if the whiteboard has assets' do

@@ -243,8 +243,8 @@ module Page
             wait_for_element_and_type(keyword_search_input_element, '') :
             wait_for_element_and_type(keyword_search_input_element, keyword)
         category.nil? ?
-            (self.category_select = 'Category') :
-            (self.category_select = category)
+            (wait_for_element_and_select_js(category_select_element, 'Category')) :
+            (wait_for_element_and_select_js(category_select_element, category))
         uploader.nil? ?
             (self.uploader_select = 'Uploader') :
             (self.uploader_select = uploader.full_name)

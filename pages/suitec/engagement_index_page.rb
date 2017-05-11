@@ -54,6 +54,13 @@ module Page
         wait_for_element_and_type(text_area_element(class: 'leaderboard-list-search'), user.full_name)
       end
 
+      # Returns the Impact Studio link for a given user
+      # @param user [User]
+      # @return [PageObject::Elements::Link]
+      def user_profile_link(user)
+        link_element(xpath: "//a[contains(.,'#{user.full_name}')]")
+      end
+
       # Clicks the user name link to open the Impact Studio page
       # @param driver [Selenium::WebDriver]
       # @param user [User]
@@ -62,9 +69,9 @@ module Page
         wait_until(Utils.medium_wait) do
           scroll_to_bottom
           sleep 1
-          link_element(xpath: "//a[contains(.,'#{user.full_name}')]").exists?
+          user_profile_link(user).exists?
         end
-        link_element(xpath: "//a[contains(.,'#{user.full_name}')]").click
+        user_profile_link(user).click
         wait_until { title == "#{SuiteCTools::IMPACT_STUDIO.name}" }
         hide_canvas_footer
         switch_to_canvas_iframe driver
@@ -216,7 +223,7 @@ module Page
         scroll_to_bottom
         share_score_cbx_element.when_visible Utils.short_wait
         logger.info 'Sharing score'
-        share_score_cbx_checked? ? logger.warn('Score is already shared') : check_share_score_cbx
+        share_score_cbx_checked? ? logger.warn('Score is already shared') : js_click(share_score_cbx_element)
         continue_button if continue_button?
         users_table_element.when_visible Utils.short_wait
       end
@@ -226,7 +233,7 @@ module Page
         scroll_to_bottom
         share_score_cbx_element.when_visible Utils.short_wait
         logger.info 'Un-sharing score'
-        share_score_cbx_checked? ? uncheck_share_score_cbx : logger.warn('Score is already un-shared')
+        share_score_cbx_checked? ? js_click(share_score_cbx_element) : logger.warn('Score is already un-shared')
         continue_button if continue_button?
         users_table_element.when_not_visible Utils.short_wait rescue Selenium::WebDriver::Error::StaleElementReferenceError
       end
@@ -313,7 +320,7 @@ module Page
       # @param activity [String]
       # @return [Integer]
       def activity_points(activity)
-        cell_element(xpath: "//td[text()='#{activity.title}']/following-sibling::td").text.to_i
+        cell_element(xpath: "//td[text()=\"#{activity.title}\"]/following-sibling::td").text.to_i
       end
 
       # Clicks the 'edit' button on the points configuration page

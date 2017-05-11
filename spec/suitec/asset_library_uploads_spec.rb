@@ -59,12 +59,12 @@ describe 'Asset library file uploads', order: :defined do
     @engagement_index.load_scores(@driver, @engagement_index_url)
     @engagement_index.search_for_user @user
     current_score = @engagement_index.user_score @user
-    expect(current_score).to eql("#{@initial_score + Activities::ADD_ASSET_TO_LIBRARY.points}")
+    expect(current_score).to eql("#{@initial_score + Activity::ADD_ASSET_TO_LIBRARY.points}")
   end
 
   it 'add "add_asset" activity to the CSV export' do
     scores = @engagement_index.download_csv(@driver, @course, @engagement_index_url)
-    expect(scores).to include("#{@user.full_name}, add_asset, #{Activities::ADD_ASSET_TO_LIBRARY.points}, #{@initial_score + Activities::ADD_ASSET_TO_LIBRARY.points}")
+    expect(scores).to include("#{@user.full_name}, add_asset, #{Activity::ADD_ASSET_TO_LIBRARY.points}, #{@initial_score + Activity::ADD_ASSET_TO_LIBRARY.points}")
   end
 
   it 'can be added with title and category only' do

@@ -32,7 +32,7 @@ describe 'A Canvas discussion', order: :defined do
     # Determine expected scores
     @engagement_index.load_scores(@driver, @engagement_index_url)
     @user_1_score = @engagement_index.user_score @user_1
-    @user_1_expected_score = (@user_1_score.to_i + Activities::ADD_DISCUSSION_TOPIC.points).to_s
+    @user_1_expected_score = (@user_1_score.to_i + Activity::ADD_DISCUSSION_TOPIC.points).to_s
 
     # User 1 creates a discussion topic
     @discussion = Discussion.new "Discussion Topic #{test_id}"
@@ -43,13 +43,13 @@ describe 'A Canvas discussion', order: :defined do
 
   after(:all) { @driver.quit }
 
-  it "earns '#{Activities::ADD_DISCUSSION_TOPIC.title}' Engagement Index points for the discussion creator" do
+  it "earns '#{Activity::ADD_DISCUSSION_TOPIC.title}' Engagement Index points for the discussion creator" do
     expect(@engagement_index.user_score_updated?(@driver, @engagement_index_url, @user_1, @user_1_expected_score)).to be true
   end
 
-  it "adds '#{Activities::ADD_DISCUSSION_TOPIC.type}' activity to the CSV export for the discussion creator" do
+  it "adds '#{Activity::ADD_DISCUSSION_TOPIC.type}' activity to the CSV export for the discussion creator" do
     scores = @engagement_index.download_csv(@driver, @course, @engagement_index_url)
-    expect(scores).to include("#{@user_1.full_name}, #{Activities::ADD_DISCUSSION_TOPIC.type}, #{Activities::ADD_DISCUSSION_TOPIC.points}, #{@user_1_expected_score}")
+    expect(scores).to include("#{@user_1.full_name}, #{Activity::ADD_DISCUSSION_TOPIC.type}, #{Activity::ADD_DISCUSSION_TOPIC.points}, #{@user_1_expected_score}")
   end
 
   describe 'entry' do
@@ -59,7 +59,7 @@ describe 'A Canvas discussion', order: :defined do
       @engagement_index.load_page(@driver, @engagement_index_url)
       @user_1_score = @engagement_index.user_score @user_1
       @user_2_score = @engagement_index.user_score @user_2
-      @user_2_expected_score = (@user_2_score.to_i + Activities::ADD_DISCUSSION_ENTRY.points).to_s
+      @user_2_expected_score = (@user_2_score.to_i + Activity::ADD_DISCUSSION_ENTRY.points).to_s
 
       # User 1 creates an entry on the topic
       @canvas.add_reply(@discussion, nil, 'Discussion entry by the discussion topic creator')
@@ -73,7 +73,7 @@ describe 'A Canvas discussion', order: :defined do
 
     context 'when added by someone other than the discussion topic creator' do
 
-      it "earns '#{Activities::ADD_DISCUSSION_ENTRY.title}' Engagement Index points for the user adding the entry" do
+      it "earns '#{Activity::ADD_DISCUSSION_ENTRY.title}' Engagement Index points for the user adding the entry" do
         expect(@engagement_index.user_score_updated?(@driver, @engagement_index_url, @user_2, @user_2_expected_score)).to be true
       end
 
@@ -81,19 +81,19 @@ describe 'A Canvas discussion', order: :defined do
 
       it 'adds "discussion_entry" activity to the CSV export for the user adding the entry' do
         scores = @engagement_index.download_csv(@driver, @course, @engagement_index_url)
-        expect(scores).to include("#{@user_2.full_name}, #{Activities::ADD_DISCUSSION_ENTRY.type}, #{Activities::ADD_DISCUSSION_ENTRY.points}, #{@user_2_expected_score}")
+        expect(scores).to include("#{@user_2.full_name}, #{Activity::ADD_DISCUSSION_ENTRY.type}, #{Activity::ADD_DISCUSSION_ENTRY.points}, #{@user_2_expected_score}")
       end
     end
 
     context 'when added by the discussion topic creator' do
 
-      it "earns no '#{Activities::ADD_DISCUSSION_ENTRY.title}' Engagement Index points for the user adding the entry" do
+      it "earns no '#{Activity::ADD_DISCUSSION_ENTRY.title}' Engagement Index points for the user adding the entry" do
         expect(@engagement_index.user_score @user_1).to eql(@user_1_score)
       end
 
-      it "adds no '#{Activities::ADD_DISCUSSION_ENTRY.type}' activity to the CSV export for the discussion creator" do
+      it "adds no '#{Activity::ADD_DISCUSSION_ENTRY.type}' activity to the CSV export for the discussion creator" do
         scores = @engagement_index.download_csv(@driver, @course, @engagement_index_url)
-        expect(scores).not_to include("#{@user_1.full_name}, #{Activities::ADD_DISCUSSION_ENTRY.type}, #{Activities::ADD_DISCUSSION_ENTRY.points}, #{@user_1_score}")
+        expect(scores).not_to include("#{@user_1.full_name}, #{Activity::ADD_DISCUSSION_ENTRY.type}, #{Activity::ADD_DISCUSSION_ENTRY.points}, #{@user_1_score}")
       end
     end
 
@@ -104,13 +104,13 @@ describe 'A Canvas discussion', order: :defined do
         @engagement_index.load_page(@driver, @engagement_index_url)
         @user_1_score = @engagement_index.user_score @user_1
         @user_2_score = @engagement_index.user_score @user_2
-        @user_2_expected_score = (@user_2_expected_score.to_i + Activities::ADD_DISCUSSION_ENTRY.points).to_s
+        @user_2_expected_score = (@user_2_expected_score.to_i + Activity::ADD_DISCUSSION_ENTRY.points).to_s
 
         # User 2 replies to the topic again
         @canvas.add_reply(@discussion, nil, 'Discussion entry by somebody other than the discussion topic creator')
       end
 
-      it "earns '#{Activities::ADD_DISCUSSION_ENTRY.title}' Engagement Index points for the user adding the entry" do
+      it "earns '#{Activity::ADD_DISCUSSION_ENTRY.title}' Engagement Index points for the user adding the entry" do
         expect(@engagement_index.user_score_updated?(@driver, @engagement_index_url, @user_2, @user_2_expected_score)).to be true
       end
 
@@ -118,7 +118,7 @@ describe 'A Canvas discussion', order: :defined do
 
       it 'adds "discussion_entry" activity to the CSV export for the user adding the entry' do
         scores = @engagement_index.download_csv(@driver, @course, @engagement_index_url)
-        expect(scores).to include("#{@user_2.full_name}, #{Activities::ADD_DISCUSSION_ENTRY.type}, #{Activities::ADD_DISCUSSION_ENTRY.points}, #{@user_2_expected_score}")
+        expect(scores).to include("#{@user_2.full_name}, #{Activity::ADD_DISCUSSION_ENTRY.type}, #{Activity::ADD_DISCUSSION_ENTRY.points}, #{@user_2_expected_score}")
       end
     end
   end
@@ -132,8 +132,8 @@ describe 'A Canvas discussion', order: :defined do
         @engagement_index.load_page(@driver, @engagement_index_url)
         @user_1_score = @engagement_index.user_score @user_1
         @user_2_score = @engagement_index.user_score @user_2
-        @user_1_expected_score = (@user_1_score.to_i + Activities::ADD_DISCUSSION_ENTRY.points).to_s
-        @user_2_expected_score = (@user_2_score.to_i + Activities::GET_DISCUSSION_REPLY.points).to_s
+        @user_1_expected_score = (@user_1_score.to_i + Activity::ADD_DISCUSSION_ENTRY.points).to_s
+        @user_2_expected_score = (@user_2_score.to_i + Activity::GET_DISCUSSION_REPLY.points).to_s
 
         # User 1 replies to User 2's first entry
         @canvas.log_out(@driver, @cal_net)
@@ -141,18 +141,18 @@ describe 'A Canvas discussion', order: :defined do
         @canvas.add_reply(@discussion, 1, 'Reply by the discussion topic creator but not the discussion entry creator')
       end
 
-      it "earns '#{Activities::ADD_DISCUSSION_ENTRY.title}' Engagement Index points for the user who added the discussion entry reply" do
+      it "earns '#{Activity::ADD_DISCUSSION_ENTRY.title}' Engagement Index points for the user who added the discussion entry reply" do
         expect(@engagement_index.user_score_updated?(@driver, @engagement_index_url, @user_1, @user_1_expected_score)).to be true
       end
 
-      it "earns '#{Activities::GET_DISCUSSION_REPLY.title}' Engagement Index points for the user who received the discussion entry reply" do
+      it "earns '#{Activity::GET_DISCUSSION_REPLY.title}' Engagement Index points for the user who received the discussion entry reply" do
         expect(@engagement_index.user_score_updated?(@driver, @engagement_index_url, @user_2, @user_2_expected_score)).to be true
       end
 
-      it "adds '#{Activities::ADD_DISCUSSION_ENTRY.title}' and '#{Activities::GET_DISCUSSION_REPLY.type}' activity to the CSV export for the users" do
+      it "adds '#{Activity::ADD_DISCUSSION_ENTRY.title}' and '#{Activity::GET_DISCUSSION_REPLY.type}' activity to the CSV export for the users" do
         scores = @engagement_index.download_csv(@driver, @course, @engagement_index_url)
-        expect(scores).to include("#{@user_1.full_name}, #{Activities::ADD_DISCUSSION_ENTRY.type}, #{Activities::ADD_DISCUSSION_ENTRY.points}, #{@user_1_expected_score}")
-        expect(scores).to include("#{@user_2.full_name}, #{Activities::GET_DISCUSSION_REPLY.type}, #{Activities::GET_DISCUSSION_REPLY.points}, #{@user_2_expected_score}")
+        expect(scores).to include("#{@user_1.full_name}, #{Activity::ADD_DISCUSSION_ENTRY.type}, #{Activity::ADD_DISCUSSION_ENTRY.points}, #{@user_1_expected_score}")
+        expect(scores).to include("#{@user_2.full_name}, #{Activity::GET_DISCUSSION_REPLY.type}, #{Activity::GET_DISCUSSION_REPLY.points}, #{@user_2_expected_score}")
       end
     end
 
@@ -163,8 +163,8 @@ describe 'A Canvas discussion', order: :defined do
         @engagement_index.load_page(@driver, @engagement_index_url)
         @user_1_score = @engagement_index.user_score @user_1
         @user_2_score = @engagement_index.user_score @user_2
-        @user_1_expected_score = (@user_1_score.to_i + Activities::GET_DISCUSSION_REPLY.points).to_s
-        @user_2_expected_score = (@user_2_score.to_i + Activities::ADD_DISCUSSION_ENTRY.points).to_s
+        @user_1_expected_score = (@user_1_score.to_i + Activity::GET_DISCUSSION_REPLY.points).to_s
+        @user_2_expected_score = (@user_2_score.to_i + Activity::ADD_DISCUSSION_ENTRY.points).to_s
 
         # User 2 replies to User 1's entry
         @canvas.log_out(@driver, @cal_net)
@@ -172,18 +172,18 @@ describe 'A Canvas discussion', order: :defined do
         @canvas.add_reply(@discussion, 0, 'Reply by somebody other than the discussion topic creator and other than the discussion entry creator')
       end
 
-      it "earns '#{Activities::GET_DISCUSSION_REPLY.title}' Engagement Index points for the user who received the discussion entry reply" do
+      it "earns '#{Activity::GET_DISCUSSION_REPLY.title}' Engagement Index points for the user who received the discussion entry reply" do
         expect(@engagement_index.user_score_updated?(@driver, @engagement_index_url, @user_1, @user_1_expected_score)).to be true
       end
 
-      it "earns '#{Activities::ADD_DISCUSSION_ENTRY.title}' Engagement Index points for the user who added the discussion entry reply" do
+      it "earns '#{Activity::ADD_DISCUSSION_ENTRY.title}' Engagement Index points for the user who added the discussion entry reply" do
         expect(@engagement_index.user_score_updated?(@driver, @engagement_index_url, @user_2, @user_2_expected_score)).to be true
       end
 
-      it "adds '#{Activities::ADD_DISCUSSION_ENTRY.title}' and '#{Activities::GET_DISCUSSION_REPLY.type}' activity to the CSV export for the users" do
+      it "adds '#{Activity::ADD_DISCUSSION_ENTRY.title}' and '#{Activity::GET_DISCUSSION_REPLY.type}' activity to the CSV export for the users" do
         scores = @engagement_index.download_csv(@driver, @course, @engagement_index_url)
-        expect(scores).to include("#{@user_1.full_name}, #{Activities::GET_DISCUSSION_REPLY.type}, #{Activities::GET_DISCUSSION_REPLY.points}, #{@user_1_expected_score}")
-        expect(scores).to include("#{@user_2.full_name}, #{Activities::ADD_DISCUSSION_ENTRY.type}, #{Activities::ADD_DISCUSSION_ENTRY.points}, #{@user_2_expected_score}")
+        expect(scores).to include("#{@user_1.full_name}, #{Activity::GET_DISCUSSION_REPLY.type}, #{Activity::GET_DISCUSSION_REPLY.points}, #{@user_1_expected_score}")
+        expect(scores).to include("#{@user_2.full_name}, #{Activity::ADD_DISCUSSION_ENTRY.type}, #{Activity::ADD_DISCUSSION_ENTRY.points}, #{@user_2_expected_score}")
       end
     end
 
@@ -236,8 +236,8 @@ describe 'A Canvas discussion', order: :defined do
         @engagement_index.load_page(@driver, @engagement_index_url)
         @user_1_score = @engagement_index.user_score @user_1
         @user_2_score = @engagement_index.user_score @user_2
-        @user_1_expected_score = (@user_1_score.to_i + Activities::GET_DISCUSSION_REPLY.points).to_s
-        @user_2_expected_score = (@user_2_score.to_i + Activities::ADD_DISCUSSION_ENTRY.points).to_s
+        @user_1_expected_score = (@user_1_score.to_i + Activity::GET_DISCUSSION_REPLY.points).to_s
+        @user_2_expected_score = (@user_2_score.to_i + Activity::ADD_DISCUSSION_ENTRY.points).to_s
 
         # User 2 replies again to User 1's reply
         @canvas.log_out(@driver, @cal_net)
@@ -246,18 +246,18 @@ describe 'A Canvas discussion', order: :defined do
         @engagement_index.load_page(@driver, @engagement_index_url)
       end
 
-      it "earns '#{Activities::GET_DISCUSSION_REPLY.title}' Engagement Index points for the user who received the discussion entry reply" do
+      it "earns '#{Activity::GET_DISCUSSION_REPLY.title}' Engagement Index points for the user who received the discussion entry reply" do
         expect(@engagement_index.user_score_updated?(@driver, @engagement_index_url, @user_1, @user_1_expected_score)).to be true
       end
 
-      it "earns '#{Activities::ADD_DISCUSSION_ENTRY.title}' Engagement Index points for the user who added the discussion entry reply" do
+      it "earns '#{Activity::ADD_DISCUSSION_ENTRY.title}' Engagement Index points for the user who added the discussion entry reply" do
         expect(@engagement_index.user_score_updated?(@driver, @engagement_index_url, @user_2, @user_2_expected_score)).to be true
       end
 
-      it "adds '#{Activities::ADD_DISCUSSION_ENTRY.title}' and '#{Activities::GET_DISCUSSION_REPLY.type}' activity to the CSV export for the users" do
+      it "adds '#{Activity::ADD_DISCUSSION_ENTRY.title}' and '#{Activity::GET_DISCUSSION_REPLY.type}' activity to the CSV export for the users" do
         scores = @engagement_index.download_csv(@driver, @course, @engagement_index_url)
-        expect(scores).to include("#{@user_1.full_name}, #{Activities::GET_DISCUSSION_REPLY.type}, #{Activities::GET_DISCUSSION_REPLY.points}, #{@user_1_expected_score}")
-        expect(scores).to include("#{@user_2.full_name}, #{Activities::ADD_DISCUSSION_ENTRY.type}, #{Activities::ADD_DISCUSSION_ENTRY.points}, #{@user_2_expected_score}")
+        expect(scores).to include("#{@user_1.full_name}, #{Activity::GET_DISCUSSION_REPLY.type}, #{Activity::GET_DISCUSSION_REPLY.points}, #{@user_1_expected_score}")
+        expect(scores).to include("#{@user_2.full_name}, #{Activity::ADD_DISCUSSION_ENTRY.type}, #{Activity::ADD_DISCUSSION_ENTRY.points}, #{@user_2_expected_score}")
       end
     end
   end
@@ -271,8 +271,8 @@ describe 'A Canvas discussion', order: :defined do
         @engagement_index.load_page(@driver, @engagement_index_url)
         @user_1_score = @engagement_index.user_score @user_1
         @user_2_score = @engagement_index.user_score @user_2
-        @user_1_expected_score = (@user_1_score.to_i + Activities::ADD_DISCUSSION_ENTRY.points).to_s
-        @user_2_expected_score = (@user_2_score.to_i + Activities::GET_DISCUSSION_REPLY.points).to_s
+        @user_1_expected_score = (@user_1_score.to_i + Activity::ADD_DISCUSSION_ENTRY.points).to_s
+        @user_2_expected_score = (@user_2_score.to_i + Activity::GET_DISCUSSION_REPLY.points).to_s
 
         # User 1 replies to User 2's first reply to User 1's entry
         @canvas.log_out(@driver, @cal_net)
@@ -280,18 +280,18 @@ describe 'A Canvas discussion', order: :defined do
         @canvas.add_reply(@discussion, 1, 'Reply-to-reply by somebody who created the topic and the entry but not the reply')
       end
 
-      it "earns '#{Activities::ADD_DISCUSSION_ENTRY.title}' Engagement Index points for the user who added the reply to reply" do
+      it "earns '#{Activity::ADD_DISCUSSION_ENTRY.title}' Engagement Index points for the user who added the reply to reply" do
         expect(@engagement_index.user_score_updated?(@driver, @engagement_index_url, @user_1, @user_1_expected_score)).to be true
       end
 
-      it "earns '#{Activities::GET_DISCUSSION_REPLY.title}' Engagement Index points for the user who received the reply to reply" do
+      it "earns '#{Activity::GET_DISCUSSION_REPLY.title}' Engagement Index points for the user who received the reply to reply" do
         expect(@engagement_index.user_score_updated?(@driver, @engagement_index_url, @user_2, @user_2_expected_score)).to be true
       end
 
-      it "adds '#{Activities::ADD_DISCUSSION_ENTRY.title}' and '#{Activities::GET_DISCUSSION_REPLY.type}' activity to the CSV export for the users" do
+      it "adds '#{Activity::ADD_DISCUSSION_ENTRY.title}' and '#{Activity::GET_DISCUSSION_REPLY.type}' activity to the CSV export for the users" do
         scores = @engagement_index.download_csv(@driver, @course, @engagement_index_url)
-        expect(scores).to include("#{@user_1.full_name}, #{Activities::ADD_DISCUSSION_ENTRY.type}, #{Activities::ADD_DISCUSSION_ENTRY.points}, #{@user_1_expected_score}")
-        expect(scores).to include("#{@user_2.full_name}, #{Activities::GET_DISCUSSION_REPLY.type}, #{Activities::GET_DISCUSSION_REPLY.points}, #{@user_2_expected_score}")
+        expect(scores).to include("#{@user_1.full_name}, #{Activity::ADD_DISCUSSION_ENTRY.type}, #{Activity::ADD_DISCUSSION_ENTRY.points}, #{@user_1_expected_score}")
+        expect(scores).to include("#{@user_2.full_name}, #{Activity::GET_DISCUSSION_REPLY.type}, #{Activity::GET_DISCUSSION_REPLY.points}, #{@user_2_expected_score}")
       end
     end
 

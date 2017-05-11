@@ -90,13 +90,6 @@ module Page
 
       # ASSETS
 
-      # For logging purposes, returns an array of strings describing the IDs and expected impact scores of a given set of assets
-      # @param assets [Array<Asset>]
-      # @return [Array<String>]
-      def asset_scores(assets)
-        assets.map { |a| "Asset ID #{a.id} = #{a.impact_score}" }
-      end
-
       # Given an array of list view asset link elements in a swim lane, returns the corresponding asset IDs
       # @param link_elements [Array<PageObject::Element::Link>]
       # @return [Array<String>]

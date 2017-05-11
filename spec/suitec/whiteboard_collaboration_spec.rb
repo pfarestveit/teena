@@ -226,9 +226,9 @@ describe 'Whiteboard', order: :defined do
         @canvas_driver_2.load_course_site(@driver_2, course)
         # Make sure chat activity is configured with a non-zero point value
         @engagement_index_driver_2.load_page(@driver_2, @engagement_index_url)
-        @new_chat_point_value = Activities::LEAVE_CHAT_MESSAGE.points + 1
+        @new_chat_point_value = Activity::LEAVE_CHAT_MESSAGE.points + 1
         @engagement_index_driver_2.click_points_config
-        @engagement_index_driver_2.change_activity_points(Activities::LEAVE_CHAT_MESSAGE, @new_chat_point_value)
+        @engagement_index_driver_2.change_activity_points(Activity::LEAVE_CHAT_MESSAGE, @new_chat_point_value)
         @engagement_index_driver_2.click_back_to_index
         @initial_score = @engagement_index_driver_2.user_score student_1
       end
@@ -271,7 +271,7 @@ describe 'Whiteboard', order: :defined do
         @whiteboards_driver_1.wait_until(timeout) { @whiteboards_driver_1.chat_msg_elements.last.visible? }
       end
 
-      it "earns '#{Activities::LEAVE_CHAT_MESSAGE.title}' points on the Engagement Index for #{student_1.full_name}" do
+      it "earns '#{Activity::LEAVE_CHAT_MESSAGE.title}' points on the Engagement Index for #{student_1.full_name}" do
         @whiteboards_driver_2.close_whiteboard @driver_2
         @engagement_index_driver_2.load_page(@driver_2, @engagement_index_url)
         expected_score = @initial_score.to_i + (@new_chat_point_value * 2)
@@ -279,10 +279,10 @@ describe 'Whiteboard', order: :defined do
         expect(actual_score).to eql(expected_score)
       end
 
-      it "adds '#{Activities::LEAVE_CHAT_MESSAGE.type}' activity to the CSV export for #{student_1.full_name}" do
+      it "adds '#{Activity::LEAVE_CHAT_MESSAGE.type}' activity to the CSV export for #{student_1.full_name}" do
         scores = @engagement_index_driver_2.download_csv(@driver_2, course, @engagement_index_url)
-        expect(scores).to include("#{student_1.full_name}, #{Activities::LEAVE_CHAT_MESSAGE.type}, #{@new_chat_point_value}, #{@initial_score.to_i + @new_chat_point_value}")
-        expect(scores).to include("#{student_1.full_name}, #{Activities::LEAVE_CHAT_MESSAGE.type}, #{@new_chat_point_value}, #{@initial_score.to_i + (@new_chat_point_value * 2)}")
+        expect(scores).to include("#{student_1.full_name}, #{Activity::LEAVE_CHAT_MESSAGE.type}, #{@new_chat_point_value}, #{@initial_score.to_i + @new_chat_point_value}")
+        expect(scores).to include("#{student_1.full_name}, #{Activity::LEAVE_CHAT_MESSAGE.type}, #{@new_chat_point_value}, #{@initial_score.to_i + (@new_chat_point_value * 2)}")
       end
     end
   end

@@ -31,6 +31,9 @@ describe 'The Engagement Index', order: :defined do
     @asset_library_url = @canvas.click_tool_link(@driver, SuiteCTools::ASSET_LIBRARY)
     @engagement_index_url = @canvas.click_tool_link(@driver, SuiteCTools::ENGAGEMENT_INDEX)
 
+    # Make sure the Impact Studio is not enabled on the course site
+    @canvas.disable_tool(@course, SuiteCTools::IMPACT_STUDIO)
+
     # Add asset to library
     @canvas.masquerade_as(@driver, student_3, @course)
     @engagement_index.load_page(@driver, @engagement_index_url)
@@ -61,6 +64,12 @@ describe 'The Engagement Index', order: :defined do
   end
 
   after(:all) { @driver.quit }
+
+  # IMPACT STUDIO AWARENESS
+
+  [teacher, student_1, student_2, student_3, student_4].each do |user|
+    it("offers no #{user.full_name} Impact Studio link for a course site with no Impact Studio") { expect(@engagement_index.user_profile_link(user).exists?).to be false }
+  end
 
   # SORTING
 

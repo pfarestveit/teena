@@ -161,7 +161,7 @@ module Page
 
   # Pauses to allow the Canvas poller to complete any active cycle
   def pause_for_poller
-    logger.info "Waiting for the Canvas poller for #{wait = 120} seconds"
+    logger.info "Waiting for the Canvas poller for #{wait = Utils.canvas_poller_wait} seconds"
     sleep wait
   end
 

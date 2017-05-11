@@ -150,28 +150,28 @@ describe 'An asset comment', order: :defined do
       @canvas.masquerade_as(@driver, @teacher, @course)
       @engagement_index.load_page(@driver, @engagement_index_url)
       @engagement_index.search_for_user @asset_admirer
-      expect(@engagement_index.user_score @asset_admirer).to eql((@admirer_score.to_i + (Activities::COMMENT.points * 3)).to_s)
+      expect(@engagement_index.user_score @asset_admirer).to eql((@admirer_score.to_i + (Activity::COMMENT.points * 3)).to_s)
     end
 
     it 'earns "Receive a Comment" points on the engagement index for the user receiving the comment or reply' do
       @engagement_index.load_page(@driver, @engagement_index_url)
       @engagement_index.search_for_user @asset_uploader
-      expect(@engagement_index.user_score @asset_uploader).to eql((@uploader_score.to_i + (Activities::GET_COMMENT.points * 3) + Activities::GET_COMMENT_REPLY.points).to_s)
+      expect(@engagement_index.user_score @asset_uploader).to eql((@uploader_score.to_i + (Activity::GET_COMMENT.points * 3) + Activity::GET_COMMENT_REPLY.points).to_s)
     end
 
     it 'shows "Comment" activity on the CSV export for the user adding the comment or reply' do
       scores = @engagement_index.download_csv(@driver, @course, @engagement_index_url)
-      expect(scores).to include("#{@asset_admirer.full_name}, asset_comment, #{Activities::COMMENT.points}, #{@admirer_score.to_i + Activities::COMMENT.points}")
-      expect(scores).to include("#{@asset_admirer.full_name}, asset_comment, #{Activities::COMMENT.points}, #{@admirer_score.to_i + (Activities::COMMENT.points * 2)}")
-      expect(scores).to include("#{@asset_admirer.full_name}, asset_comment, #{Activities::COMMENT.points}, #{@admirer_score.to_i + (Activities::COMMENT.points * 3)}")
+      expect(scores).to include("#{@asset_admirer.full_name}, asset_comment, #{Activity::COMMENT.points}, #{@admirer_score.to_i + Activity::COMMENT.points}")
+      expect(scores).to include("#{@asset_admirer.full_name}, asset_comment, #{Activity::COMMENT.points}, #{@admirer_score.to_i + (Activity::COMMENT.points * 2)}")
+      expect(scores).to include("#{@asset_admirer.full_name}, asset_comment, #{Activity::COMMENT.points}, #{@admirer_score.to_i + (Activity::COMMENT.points * 3)}")
     end
 
     it 'shows "Receive a Comment" activity on the CSV export for the user receiving the comment or reply' do
       scores = @engagement_index.download_csv(@driver, @course, @engagement_index_url)
-      expect(scores).to include("#{@asset_uploader.full_name}, get_asset_comment, #{Activities::GET_COMMENT.points}, #{@uploader_score.to_i + Activities::GET_COMMENT.points}")
-      expect(scores).to include("#{@asset_uploader.full_name}, get_asset_comment, #{Activities::GET_COMMENT.points}, #{@uploader_score.to_i + (Activities::GET_COMMENT.points * 2)}")
-      expect(scores).to include("#{@asset_uploader.full_name}, get_asset_comment, #{Activities::GET_COMMENT.points}, #{@uploader_score.to_i + (Activities::GET_COMMENT.points * 3)}")
-      expect(scores).to include("#{@asset_uploader.full_name}, get_asset_comment_reply, #{Activities::GET_COMMENT_REPLY.points}, #{@uploader_score.to_i + (Activities::GET_COMMENT.points * 3) + Activities::GET_COMMENT_REPLY.points}")
+      expect(scores).to include("#{@asset_uploader.full_name}, get_asset_comment, #{Activity::GET_COMMENT.points}, #{@uploader_score.to_i + Activity::GET_COMMENT.points}")
+      expect(scores).to include("#{@asset_uploader.full_name}, get_asset_comment, #{Activity::GET_COMMENT.points}, #{@uploader_score.to_i + (Activity::GET_COMMENT.points * 2)}")
+      expect(scores).to include("#{@asset_uploader.full_name}, get_asset_comment, #{Activity::GET_COMMENT.points}, #{@uploader_score.to_i + (Activity::GET_COMMENT.points * 3)}")
+      expect(scores).to include("#{@asset_uploader.full_name}, get_asset_comment_reply, #{Activity::GET_COMMENT_REPLY.points}, #{@uploader_score.to_i + (Activity::GET_COMMENT.points * 3) + Activity::GET_COMMENT_REPLY.points}")
     end
   end
 
@@ -246,9 +246,9 @@ describe 'An asset comment', order: :defined do
     it 'does not alter existing engagement scores' do
       @engagement_index.load_page(@driver, @engagement_index_url)
       @engagement_index.search_for_user @asset_uploader
-      expect(@engagement_index.user_score @asset_uploader).to eql((@uploader_score.to_i + (Activities::GET_COMMENT.points * 4) + Activities::GET_COMMENT_REPLY.points).to_s)
+      expect(@engagement_index.user_score @asset_uploader).to eql((@uploader_score.to_i + (Activity::GET_COMMENT.points * 4) + Activity::GET_COMMENT_REPLY.points).to_s)
       @engagement_index.search_for_user @asset_admirer
-      expect(@engagement_index.user_score @asset_admirer).to eql((@admirer_score.to_i + (Activities::COMMENT.points * 4)).to_s)
+      expect(@engagement_index.user_score @asset_admirer).to eql((@admirer_score.to_i + (Activity::COMMENT.points * 4)).to_s)
     end
   end
 
@@ -289,9 +289,9 @@ describe 'An asset comment', order: :defined do
     it 'removes engagement index points earned for the comment' do
       @engagement_index.load_page(@driver, @engagement_index_url)
       @engagement_index.search_for_user @asset_uploader
-      expect(@engagement_index.user_score @asset_uploader).to eql((@uploader_score.to_i + (Activities::GET_COMMENT.points * 3) + Activities::GET_COMMENT_REPLY.points).to_s)
+      expect(@engagement_index.user_score @asset_uploader).to eql((@uploader_score.to_i + (Activity::GET_COMMENT.points * 3) + Activity::GET_COMMENT_REPLY.points).to_s)
       @engagement_index.search_for_user @asset_admirer
-      expect(@engagement_index.user_score @asset_admirer).to eql((@admirer_score.to_i + (Activities::COMMENT.points * 3)).to_s)
+      expect(@engagement_index.user_score @asset_admirer).to eql((@admirer_score.to_i + (Activity::COMMENT.points * 3)).to_s)
     end
   end
 end

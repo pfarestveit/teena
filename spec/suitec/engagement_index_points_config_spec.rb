@@ -29,6 +29,7 @@ describe 'Engagement Index points configuration', order: :defined do
     @canvas.masquerade_as(@driver, @student, @course)
     @asset_library.load_page(@driver, @asset_library_url)
     @asset_library.upload_file_to_library Asset.new(@student.assets.find { |asset| asset['type'] == 'File' })
+    @add_asset_activity = Activity::ADD_ASSET_TO_LIBRARY
 
     @canvas.masquerade_as(@driver, @teacher, @course)
     @engagement_index.load_scores(@driver, @engagement_index_url)
@@ -37,66 +38,23 @@ describe 'Engagement Index points configuration', order: :defined do
 
   after(:all) { @driver.quit }
 
-  it "by default shows '#{Activities::VIEW_ASSET.title}' worth default points" do
-    expect(@engagement_index.activity_points Activities::VIEW_ASSET).to eql(Activities::VIEW_ASSET.points)
-  end
-  it "by default shows '#{Activities::ADD_ASSET_TO_LIBRARY.title}' worth default points" do
-    expect(@engagement_index.activity_points Activities::ADD_ASSET_TO_LIBRARY).to eql(Activities::ADD_ASSET_TO_LIBRARY.points)
-  end
-  it "by default shows '#{Activities::LIKE.title}' worth default point" do
-    expect(@engagement_index.activity_points Activities::LIKE).to eql(Activities::LIKE.points)
-  end
-  it "by default shows '#{Activities::DISLIKE.title}' worth default point" do
-    expect(@engagement_index.activity_points Activities::DISLIKE).to eql(Activities::DISLIKE.points)
-  end
-  it "by default shows '#{Activities::GET_LIKE.title}' worth default point" do
-    expect(@engagement_index.activity_points Activities::GET_LIKE).to eql(Activities::GET_LIKE.points)
-  end
-  it "by default shows '#{Activities::GET_DISLIKE.title}' worth default point" do
-    expect(@engagement_index.activity_points Activities::GET_DISLIKE).to eql(Activities::GET_DISLIKE.points)
-  end
-  it "by default shows '#{Activities::COMMENT.title}' worth default points" do
-    expect(@engagement_index.activity_points Activities::COMMENT).to eql(Activities::COMMENT.points)
-  end
-  it "by default shows '#{Activities::GET_COMMENT.title}' worth default point" do
-    expect(@engagement_index.activity_points Activities::GET_COMMENT).to eql(Activities::GET_COMMENT.points)
-  end
-  it "by default shows '#{Activities::GET_COMMENT_REPLY.title}' worth default point" do
-    expect(@engagement_index.activity_points Activities::GET_COMMENT_REPLY).to eql(Activities::GET_COMMENT_REPLY.points)
-  end
-  it "by default shows '#{Activities::SUBMIT_ASSIGNMENT.title}' worth default points" do
-    expect(@engagement_index.activity_points Activities::SUBMIT_ASSIGNMENT).to eql(Activities::SUBMIT_ASSIGNMENT.points)
-  end
-  it "by default shows '#{Activities::ADD_DISCUSSION_TOPIC.title}' worth default points" do
-    expect(@engagement_index.activity_points Activities::ADD_DISCUSSION_TOPIC).to eql(Activities::ADD_DISCUSSION_TOPIC.points)
-  end
-  it "by default shows '#{Activities::ADD_DISCUSSION_ENTRY.title}' worth default points" do
-    expect(@engagement_index.activity_points Activities::ADD_DISCUSSION_ENTRY).to eql(Activities::ADD_DISCUSSION_ENTRY.points)
-  end
-  it "by default shows '#{Activities::GET_DISCUSSION_REPLY.title}' worth default point" do
-    expect(@engagement_index.activity_points Activities::GET_DISCUSSION_REPLY).to eql(Activities::GET_DISCUSSION_REPLY.points)
-  end
-  it "by default shows '#{Activities::EXPORT_WHITEBOARD.title}' worth default points" do
-    expect(@engagement_index.activity_points Activities::EXPORT_WHITEBOARD).to eql(Activities::EXPORT_WHITEBOARD.points)
-  end
-  it "by default shows '#{Activities::ADD_ASSET_TO_WHITEBOARD.title}' worth default points" do
-    expect(@engagement_index.activity_points Activities::ADD_ASSET_TO_WHITEBOARD).to eql(Activities::ADD_ASSET_TO_WHITEBOARD.points)
-  end
-  it "by default shows '#{Activities::LEAVE_CHAT_MESSAGE.title}' worth default points" do
-    expect(@engagement_index.activity_points Activities::LEAVE_CHAT_MESSAGE).to eql(Activities::LEAVE_CHAT_MESSAGE.points)
+  Activity::ACTIVITIES.each do |activity|
+    it "by default shows '#{activity.title}' worth default points" do
+      expect(@engagement_index.activity_points activity).to eql(activity.points)
+    end
   end
 
   it 'allows a teacher to cancel disabling an activity' do
     @engagement_index.click_edit_points_config
-    @engagement_index.click_disable_activity Activities::ADD_ASSET_TO_LIBRARY
+    @engagement_index.click_disable_activity @add_asset_activity
     @engagement_index.click_cancel_config_edit
-    expect(@engagement_index.enabled_activity_titles).to include(Activities::ADD_ASSET_TO_LIBRARY.title)
+    expect(@engagement_index.enabled_activity_titles).to include(@add_asset_activity.title)
   end
 
   it 'allows a teacher to disable an activity type' do
-    @engagement_index.disable_activity Activities::ADD_ASSET_TO_LIBRARY
-    expect(@engagement_index.enabled_activity_titles).not_to include(Activities::ADD_ASSET_TO_LIBRARY.title)
-    expect(@engagement_index.disabled_activity_titles).to include(Activities::ADD_ASSET_TO_LIBRARY.title)
+    @engagement_index.disable_activity @add_asset_activity
+    expect(@engagement_index.enabled_activity_titles).not_to include(@add_asset_activity.title)
+    expect(@engagement_index.disabled_activity_titles).to include(@add_asset_activity.title)
   end
 
   it 'subtracts points retroactively for a disabled activity' do
@@ -114,7 +72,7 @@ describe 'Engagement Index points configuration', order: :defined do
     @engagement_index.load_page(@driver, @engagement_index_url)
     @engagement_index.share_score
     @engagement_index.click_points_config
-    expect(@engagement_index.enabled_activity_titles).not_to include(Activities::ADD_ASSET_TO_LIBRARY.title)
+    expect(@engagement_index.enabled_activity_titles).not_to include(@add_asset_activity.title)
     expect(@engagement_index.disabled_activity_titles).to be_empty
   end
 
@@ -123,41 +81,41 @@ describe 'Engagement Index points configuration', order: :defined do
     @engagement_index.load_scores(@driver, @engagement_index_url)
     @engagement_index.click_points_config
     @engagement_index.click_edit_points_config
-    @engagement_index.click_enable_activity Activities::ADD_ASSET_TO_LIBRARY
+    @engagement_index.click_enable_activity @add_asset_activity
     @engagement_index.click_cancel_config_edit
-    expect(@engagement_index.enabled_activity_titles).not_to include(Activities::ADD_ASSET_TO_LIBRARY.title)
-    expect(@engagement_index.disabled_activity_titles).to include(Activities::ADD_ASSET_TO_LIBRARY.title)
+    expect(@engagement_index.enabled_activity_titles).not_to include(@add_asset_activity.title)
+    expect(@engagement_index.disabled_activity_titles).to include(@add_asset_activity.title)
   end
 
   it 'allows a teacher to re-enable a disabled activity type' do
-    @engagement_index.enable_activity Activities::ADD_ASSET_TO_LIBRARY
-    expect(@engagement_index.enabled_activity_titles).to include(Activities::ADD_ASSET_TO_LIBRARY.title)
+    @engagement_index.enable_activity @add_asset_activity
+    expect(@engagement_index.enabled_activity_titles).to include(@add_asset_activity.title)
   end
 
   it 'adds points retroactively for a re-enabled activity' do
     @engagement_index.click_back_to_index
-    expect(@engagement_index.user_score @student).to eql("#{@initial_score.to_i + Activities::ADD_ASSET_TO_LIBRARY.points}")
+    expect(@engagement_index.user_score @student).to eql("#{@initial_score.to_i + @add_asset_activity.points}")
   end
 
   it 'adds a re-enabled activity to the CSV export' do
     activity = @engagement_index.download_csv(@driver, @course, @engagement_index_url)
-    expect(activity).to include("#{@student.full_name}, #{Activities::ADD_ASSET_TO_LIBRARY.type}, #{Activities::ADD_ASSET_TO_LIBRARY.points}, #{Activities::ADD_ASSET_TO_LIBRARY.points}")
+    expect(activity).to include("#{@student.full_name}, #{@add_asset_activity.type}, #{@add_asset_activity.points}, #{@add_asset_activity.points}")
   end
 
   it 'allows a teacher to change an activity type point value to a new integer' do
     @engagement_index.click_points_config
-    @engagement_index.change_activity_points(Activities::ADD_ASSET_TO_LIBRARY, (Activities::ADD_ASSET_TO_LIBRARY.points + 10))
-    expect(@engagement_index.activity_points(Activities::ADD_ASSET_TO_LIBRARY)).to eql(Activities::ADD_ASSET_TO_LIBRARY.points + 10)
+    @engagement_index.change_activity_points(@add_asset_activity, (@add_asset_activity.points + 10))
+    expect(@engagement_index.activity_points(@add_asset_activity)).to eql(@add_asset_activity.points + 10)
   end
 
   it 'allows a teacher to recalculate points retroactively when changing activity type point values' do
     @engagement_index.click_back_to_index
-    expect(@engagement_index.user_score @student).to eql("#{Activities::ADD_ASSET_TO_LIBRARY.points + 10}")
+    expect(@engagement_index.user_score @student).to eql("#{@add_asset_activity.points + 10}")
   end
 
   it 'recalculates activity points on the CSV export when changing activity type point values' do
     activity = @engagement_index.download_csv(@driver, @course, @engagement_index_url)
-    expect(activity).to include("#{@student.full_name}, #{Activities::ADD_ASSET_TO_LIBRARY.type}, #{Activities::ADD_ASSET_TO_LIBRARY.points + 10}, #{Activities::ADD_ASSET_TO_LIBRARY.points + 10}")
+    expect(activity).to include("#{@student.full_name}, #{@add_asset_activity.type}, #{@add_asset_activity.points + 10}, #{@add_asset_activity.points + 10}")
   end
 
   it 'allows a student to view the Points Configuration whether or not they share their scores' do
