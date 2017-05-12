@@ -37,8 +37,8 @@ module Page
   def click_element(element, timeout)
     wait_for_element(element, timeout)
     hide_canvas_footer
-    element.click
     sleep Utils.click_wait
+    element.click
   end
 
   def js_click(element)
@@ -50,8 +50,8 @@ module Page
   # @param timeout [Fixnum]
   def click_element_js(element, timeout)
     wait_for_element(element, timeout)
-    js_click element
     sleep Utils.click_wait
+    js_click element
   end
 
   # Awaits an element for a short time then clicks it using WebDriver. Intended for DOM updates rather than page loads.

@@ -21,13 +21,12 @@ begin
 
   # COURSES
 
-  logger.info "Will create #{loops} courses"
+  course_id.nil? ? (logger.info "Will create #{Utils.script_loops} courses") : (logger.info "Will use course ID #{course_id}")
   loops.times do
     begin
 
       @test_course_identifier = Utils.get_test_id
-      @course = Course.new({title: "LRS Groups Test #{@test_course_identifier}"})
-      @course.site_id ||= course_id
+      @course = Course.new({title: "LRS Groups Test #{@test_course_identifier}", site_id: course_id})
       @canvas.stop_masquerading(@driver) if @canvas.stop_masquerading_link?
       @canvas.create_generic_course_site(@driver, Utils.canvas_qa_sub_account, @course, users, @test_course_identifier)
 
