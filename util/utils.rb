@@ -129,6 +129,12 @@ class Utils
     CSV.open(file, 'a+') { |row| row << values }
   end
 
+  def self.log_file
+    log_dir = File.join(ENV['HOME'], '/log/selenium-log')
+    FileUtils.mkdir_p(log_dir) unless File.exist?(log_dir)
+    File.join(log_dir, "#{Time.now.strftime('%Y-%m-%d')}.log")
+  end
+
   # The file path for SuiteC asset upload files
   # @param file_name [String]
   def self.test_data_file_path(file_name)

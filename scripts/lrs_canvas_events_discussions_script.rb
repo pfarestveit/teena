@@ -4,6 +4,8 @@ include Logging
 
 begin
 
+  course_id = ENV['COURSE_ID']
+
   @driver = Utils.launch_browser
 
   @canvas = Page::CanvasActivitiesPage.new @driver
@@ -16,13 +18,12 @@ begin
 
   # COURSES
 
-  logger.info "Will create #{Utils.script_loops} courses"
+  course_id.nil? ? (logger.info "Will create #{Utils.script_loops} courses") : (logger.info "Will use course ID #{course_id}")
   Utils.script_loops.times do
     begin
 
       @test_course_identifier = Utils.get_test_id
-      @course = Course.new({})
-      @course.title = "LRS Discussions Test #{@test_course_identifier}"
+      @course = Course.new({title: "LRS Discussions Test #{@test_course_identifier}", site_id: course_id})
 
       @canvas.load_homepage
       sleep Utils.short_wait

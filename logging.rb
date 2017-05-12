@@ -1,9 +1,12 @@
+require_relative 'util/spec_helper'
 require 'logger'
 
 module Logging
+
   class << self
     def logger
-      @logger ||= Logger.new STDOUT
+      log_file = Utils.log_file
+      @logger ||= Logger.new(log_file)
     end
 
     def logger=(logger)
