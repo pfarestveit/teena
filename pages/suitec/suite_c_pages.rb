@@ -65,6 +65,24 @@ module Page
       switch_to_canvas_iframe driver
     end
 
+    # Given an array of assets, returns their IDs in descending order of creation
+    # @param assets [Array<Asset>]
+    # @return [Array<String>]
+    def recent_asset_ids(assets)
+      asset_ids = assets.map { |asset| asset.id if asset.visible }
+      asset_ids.compact.sort.reverse
+    end
+
+    # Given an array of assets, returns the IDs of the assets with non-zero impact scores in descending order of score
+    # @param assets [Array<Asset>]
+    # @return [Array<String>]
+    def impactful_asset_ids(assets)
+      visible_assets = assets.select { |asset| asset.visible }
+      assets_with_impact = visible_assets.select { |asset| !asset.impact_score.zero? }
+      sorted_assets = (assets_with_impact.sort_by { |asset| [asset.impact_score, asset.id] }).reverse
+      sorted_assets.map { |asset| asset.id }
+    end
+
     # FILE UPLOADS
 
     # Clicks the 'upload file' button

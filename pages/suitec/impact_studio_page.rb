@@ -101,21 +101,17 @@ module Page
       # Given an array of assets, returns the four most recent asset IDs
       # @param assets [Array<Asset>]
       # @return [Array<String>]
-      def recent_asset_ids(assets)
-        asset_ids = assets.map { |asset| asset.id if asset.visible }
-        sorted_asset_ids = asset_ids.compact.sort.reverse
-        (sorted_asset_ids.length > 4) ? sorted_asset_ids[0..3] : sorted_asset_ids
+      def recent_studio_asset_ids(assets)
+        ids = recent_asset_ids assets
+        (ids.length > 4) ? ids[0..3] : ids
       end
 
       # Given an array of assets, returns the asset IDs of the four assets with the highest impact scores
       # @param assets [Array<Asset>]
       # @return [Array<String>]
-      def impactful_asset_ids(assets)
-        visible_assets = assets.select { |asset| asset.visible }
-        assets_with_impact = visible_assets.select { |asset| !asset.impact_score.zero? }
-        sorted_assets = (assets_with_impact.sort_by { |asset| [asset.impact_score, asset.id] }).reverse
-        sorted_asset_ids = sorted_assets.map { |asset| asset.id }
-        (sorted_asset_ids.length > 4) ? sorted_asset_ids[0..3] : sorted_asset_ids
+      def impactful_studio_asset_ids(assets)
+        ids = impactful_asset_ids assets
+        (ids.length > 4) ? ids[0..3] : ids
       end
 
       def trending_asset_ids(assets)
@@ -145,9 +141,9 @@ module Page
       # MY ASSETS
 
       h3(:my_assets_heading, xpath: '//span[text()="My Assets:"]/../..')
-      link(:my_recent_link, xpath: '//span[text()="My Assets:"]/following-sibling::a[text()="Recent"]')
-      link(:my_impactful_link, xpath: '//span[text()="My Assets:"]/following-sibling::a[text()="Most Impactful"]')
-      link(:my_pinned_link, xpath: '//span[text()="My Assets:"]/following-sbiling::a[text()="My Pinned Assets"]')
+      link(:my_recent_link, xpath: '//span[text()="My Assets:"]/following-sibling::span[1]/a[contains(.,"Recent")]')
+      link(:my_impactful_link, xpath: '//span[text()="My Assets:"]/following-sibling::span[2]/a[contains(.,"Most Impactful")]')
+      link(:my_pinned_link, xpath: '//span[text()="My Assets:"]/following-sibling::span[3]/a[contains(.,"Pinned")]')
       div(:no_my_assets_msg, xpath: '//span[text()="My Assets"]/../following-sibling::div/div[contains(.,"No matching assets were found.")]')
       elements(:my_asset_link, :link, xpath: '//span[text()="My Assets:"]/../../following-sibling::div//li/a')
 
@@ -173,30 +169,32 @@ module Page
       # Given an array of assets, waits until the list of My Recent Assets contains the four most recent asset IDs
       # @param assets [Array<Asset>]
       def verify_my_recent_assets(assets)
-        logger.debug "Expecting My Recent list to include asset IDs '#{recent_asset_ids assets}'"
+        logger.debug "Expecting My Recent list to include asset IDs '#{recent_studio_asset_ids assets}'"
+        scroll_to_bottom
         click_my_recent if my_recent_link?
         sleep 2
         logger.debug "My Recent list currently includes asset IDs '#{swim_lane_asset_ids my_asset_link_elements}'"
-        wait_until(Utils.short_wait) { swim_lane_asset_ids(my_asset_link_elements) == recent_asset_ids(assets) }
-        no_my_assets_msg_element.when_visible 1 if recent_asset_ids(assets).empty?
+        wait_until(Utils.short_wait) { swim_lane_asset_ids(my_asset_link_elements) == recent_studio_asset_ids(assets) }
+        no_my_assets_msg_element.when_visible 1 if recent_studio_asset_ids(assets).empty?
       end
 
       # Given an array of assets, waits until the list of My Impactful Assets contains the four most impactful asset IDs
       # @param assets [Array<Asset>]
       def verify_my_impactful_assets(assets)
-        logger.debug "Expecting My Impactful list to include asset IDs '#{impactful_asset_ids assets}'"
+        logger.debug "Expecting My Impactful list to include asset IDs '#{impactful_studio_asset_ids assets}'"
+        scroll_to_bottom
         click_my_most_impactful if my_impactful_link?
         sleep 2
         logger.debug "My Impactful list currently includes asset IDs '#{swim_lane_asset_ids my_asset_link_elements}'"
-        wait_until(Utils.short_wait) { swim_lane_asset_ids(my_asset_link_elements) == impactful_asset_ids(assets) }
-        no_my_assets_msg_element.when_visible 1 if impactful_asset_ids(assets).empty?
+        wait_until(Utils.short_wait) { swim_lane_asset_ids(my_asset_link_elements) == impactful_studio_asset_ids(assets) }
+        no_my_assets_msg_element.when_visible 1 if impactful_studio_asset_ids(assets).empty?
       end
 
       # YOUR ASSETS
 
       h3(:assets_heading, xpath: '//span[text()="Assets:"]/../..')
-      link(:recent_link, xpath: '//span[text()="Assets:"]/following-sibling::a[text()="Recent"]')
-      link(:impactful_link, xpath: '//span[text()="Assets:"]/following-sibling::a[text()="Most Impactful"]')
+      link(:recent_link, xpath: '//span[text()="Assets:"]/following-sibling::span[1]/a[contains(.,"Recent")]')
+      link(:impactful_link, xpath: '//span[text()="Assets:"]/following-sibling::span[2]/a[contains(.,"Most Impactful")]')
       div(:no_assets_msg, xpath: '//span[text()="Assets"]/../following-sibling::div/div[contains(.,"No matching assets were found.")]')
       elements(:asset_link, :link, xpath: '//span[text()="Assets:"]/../../following-sibling::div//li/a')
 
@@ -213,30 +211,32 @@ module Page
       # Given an array of assets, waits until the list of another user's Recent Assets contains the four most recent asset IDs
       # @param assets [Array<Asset>]
       def verify_your_recent_assets(assets)
-        logger.debug "Expecting the other user's Recent list to include asset IDs '#{recent_asset_ids assets}"
+        logger.debug "Expecting the other user's Recent list to include asset IDs '#{recent_studio_asset_ids assets}"
+        scroll_to_bottom
         click_your_recent if recent_link?
         sleep 2
         logger.debug "The other user's Recent list currently includes asset IDs '#{swim_lane_asset_ids asset_link_elements}"
-        wait_until(Utils.short_wait) { swim_lane_asset_ids(asset_link_elements) == recent_asset_ids(assets) }
-        no_assets_msg_element.when_visible 1 if recent_asset_ids(assets).empty?
+        wait_until(Utils.short_wait) { swim_lane_asset_ids(asset_link_elements) == recent_studio_asset_ids(assets) }
+        no_assets_msg_element.when_visible 1 if recent_studio_asset_ids(assets).empty?
       end
 
       # Given an array of assets, waits until the list of another user's Impactful Assets contains the four most impactful asset IDs
       # @param assets [Array<Asset>]
       def verify_your_impactful_assets(assets)
-        logger.debug "Expecting the other user's Impactful list to include asset IDs '#{impactful_asset_ids assets}"
+        logger.debug "Expecting the other user's Impactful list to include asset IDs '#{impactful_studio_asset_ids assets}"
+        scroll_to_bottom
         click_your_impactful if impactful_link?
         sleep 2
         logger.debug "The other user's Impactful list currently includes asset Ids '#{swim_lane_asset_ids asset_link_elements}"
-        wait_until(Utils.short_wait) { swim_lane_asset_ids(asset_link_elements) == impactful_asset_ids(assets) }
-        no_assets_msg_element.when_visible 1 if impactful_asset_ids(assets).empty?
+        wait_until(Utils.short_wait) { swim_lane_asset_ids(asset_link_elements) == impactful_studio_asset_ids(assets) }
+        no_assets_msg_element.when_visible 1 if impactful_studio_asset_ids(assets).empty?
       end
 
       # EVERYONE'S ASSETS
 
       h3(:everyone_assets_heading, xpath: '//div[contains(text(),"Everyone\'s Assets:")]')
-      link(:trending_link, xpath: '//div[contains(text(),"Everyone\'s Assets:")]/a[text()="Trending"]')
-      link(:everyone_impactful_link, xpath: '//div[contains(text(),"Everyone\'s Assets:")]/a[text()="Most Impactful"]')
+      link(:trending_link, xpath: '//div[contains(text(),"Everyone\'s Assets:")]//a[contains(.,"Trending")]')
+      link(:everyone_impactful_link, xpath: '//div[contains(text(),"Everyone\'s Assets:")]//a[contains(.,"Most Impactful")]')
       div(:no_everyone_assets_msg, xpath: '//span[text()="Everyone\'s Assets"]/../following-sibling::div/div[contains(.,"No matching assets were found.")]')
       elements(:everyone_asset_link, :link, xpath: '//div[contains(text(),"Everyone\'s Assets:")]/../following-sibling::div//li/a')
 
@@ -263,23 +263,25 @@ module Page
       # @param assets [Array<Asset>]
       def verify_all_trending_assets(assets)
         # TODO - insert a pause prior to loading the trending assets so that "trending" can be recalculated
-        logger.debug "Expecting Everyone's Trending list to include asset IDs '#{impactful_asset_ids assets}"
+        logger.debug "Expecting Everyone's Trending list to include asset IDs '#{impactful_studio_asset_ids assets}"
+        scroll_to_bottom
         click_all_trending if trending_link?
         sleep 2
         logger.debug "Everyone's Trending list currently includes asset IDs '#{swim_lane_asset_ids everyone_asset_link_elements}"
-        wait_until(Utils.short_wait) { swim_lane_asset_ids(everyone_asset_link_elements) == impactful_asset_ids(assets) }
-        no_everyone_assets_msg_element.when_visible 1 if impactful_asset_ids(assets).empty?
+        wait_until(Utils.short_wait) { swim_lane_asset_ids(everyone_asset_link_elements) == impactful_studio_asset_ids(assets) }
+        no_everyone_assets_msg_element.when_visible 1 if impactful_studio_asset_ids(assets).empty?
       end
 
       # Given an array of assets, waits until the list of everyone's Impactful assets contains the four most impactful asset IDs
       # @param assets [Array<Asset>]
       def verify_all_impactful_assets(assets)
-        logger.debug "Expecting Everyone's Impactful list to include asset IDs '#{impactful_asset_ids assets}'"
+        logger.debug "Expecting Everyone's Impactful list to include asset IDs '#{impactful_studio_asset_ids assets}'"
+        scroll_to_bottom
         click_all_impactful if everyone_impactful_link?
         sleep 2
         logger.debug "Everyone's Impactful list currently includes asset IDs '#{swim_lane_asset_ids everyone_asset_link_elements}"
-        wait_until(Utils.short_wait) { swim_lane_asset_ids(everyone_asset_link_elements) == impactful_asset_ids(assets) }
-        no_everyone_assets_msg_element.when_visible 1 if impactful_asset_ids(assets).empty?
+        wait_until(Utils.short_wait) { swim_lane_asset_ids(everyone_asset_link_elements) == impactful_studio_asset_ids(assets) }
+        no_everyone_assets_msg_element.when_visible 1 if impactful_studio_asset_ids(assets).empty?
       end
 
     end

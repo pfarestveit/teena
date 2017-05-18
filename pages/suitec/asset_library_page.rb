@@ -218,6 +218,7 @@ module Page
       select_list(:category_select, id: 'assetlibrary-search-category')
       select_list(:uploader_select, id: 'assetlibrary-search-user')
       select_list(:asset_type_select, id: 'assetlibrary-search-type')
+      select_list(:sort_by_select, id: 'assetlibrary-sort-by')
       button(:advanced_search_submit, xpath: '//button[text()="Search"]')
       link(:cancel_advanced_search, text: 'Cancel')
 
@@ -231,14 +232,20 @@ module Page
         wait_for_update_and_click search_button_element
       end
 
+      # Ensures the advanced search form is expanded
+      def open_advanced_search
+        wait_for_load_and_click advanced_search_button_element unless keyword_search_input_element.visible?
+      end
+
       # Performs an advanced search of the asset library
       # @param keyword [String]
       # @param category [String]
       # @param uploader [User]
       # @param asset_type [String]
-      def advanced_search(keyword, category, uploader, asset_type)
+      # @param sort_by [String]
+      def advanced_search(keyword, category, uploader, asset_type, sort_by = nil)
         logger.info "Performing advanced search of asset library by keyword '#{keyword}', category '#{category}', uploader '#{uploader && uploader.full_name}', and asset type '#{asset_type}'."
-        wait_for_load_and_click advanced_search_button_element unless keyword_search_input_element.visible?
+        open_advanced_search
         keyword.nil? ?
             wait_for_element_and_type(keyword_search_input_element, '') :
             wait_for_element_and_type(keyword_search_input_element, keyword)
@@ -251,6 +258,9 @@ module Page
         asset_type.nil? ?
             (self.asset_type_select = 'Asset type') :
             (self.asset_type_select = asset_type)
+        sort_by.nil? ?
+            (self.sort_by_select = 'Most recent') :
+            (self.sort_by_select = sort_by)
         wait_for_update_and_click advanced_search_submit_element
       end
 
@@ -508,7 +518,7 @@ module Page
       # Deletes an asset
       def delete_asset
         logger.info 'Deleting asset'
-        confirm(true) { wait_for_update_and_click_js delete_asset_button_element }
+        confirm(true) { wait_for_update_and_click delete_asset_button_element }
         delete_asset_button_element.when_not_visible Utils.short_wait rescue Selenium::WebDriver::Error::StaleElementReferenceError
       end
 

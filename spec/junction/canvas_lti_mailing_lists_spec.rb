@@ -97,12 +97,11 @@ describe 'bCourses Mailgun mailing lists', order: :defined do
       end
 
       it('shows a link to the course site') { expect(@mailing_lists_page.external_link_valid?(@driver, @mailing_lists_page.view_site_link_element, course_site_1.title)).to be true }
-      it('shows a default option to create a CalMail list') do
+
+      it('shows a default mailing list name') do
         @mailing_lists_page.switch_to_canvas_iframe @driver
-        expect(@mailing_lists_page.cal_mail_radio_selected?).to be true
+        expect(@mailing_lists_page.list_name_input).to eql(@mailing_lists_page.default_list_name course_site_1)
       end
-      it('shows a non-default option to create a Mailgun list') { expect(@mailing_lists_page.mail_gun_radio_selected?).to be false }
-      it('shows a default mailing list name') { expect(@mailing_lists_page.list_name_input).to eql(@mailing_lists_page.default_list_name course_site_1) }
 
       it 'requires a non-default mailing list name have no spaces' do
         @mailing_lists_page.enter_mailgun_list_name 'lousy-list name'
@@ -134,7 +133,10 @@ describe 'bCourses Mailgun mailing lists', order: :defined do
         @mailing_lists_page.search_for_list course_site_1.site_id
       end
 
-      it('shows the mailing list email address') { expect(@mailing_lists_page.list_address).to eql("#{@mailing_lists_page.default_list_name course_site_1}@bcourses-mail.berkeley.edu") }
+      it('shows the mailing list email address') do
+        @mailing_lists_page.wait_until(timeout) { @mailing_lists_page.list_address == "#{@mailing_lists_page.default_list_name course_site_1}@bcourses-mail.berkeley.edu" }
+      end
+
       it('shows the membership count') { expect(@mailing_lists_page.list_membership_count).to eql('No members') }
       it('shows the most recent membership update') { expect(@mailing_lists_page.list_update_time).to eql('never') }
       it('shows a link to the course site') { expect(@mailing_lists_page.external_link_valid?(@driver, @mailing_lists_page.list_site_link_element, course_site_1.title)).to be true }
@@ -155,7 +157,6 @@ describe 'bCourses Mailgun mailing lists', order: :defined do
       it 'deletes mailing list memberships for users who have been removed from the site' do
         @canvas_page.remove_user_from_course(course_site_1, students[0])
         Utils.clear_cache(@driver, @splash_page, @toolbox_page)
-        @canvas_page.log_in(@cal_net_page, Utils.super_admin_username, Utils.super_admin_password)
         @mailing_lists_page.load_embedded_tool @driver
         @mailing_lists_page.search_for_list course_site_1.site_id
         @mailing_lists_page.click_update_memberships
@@ -165,7 +166,6 @@ describe 'bCourses Mailgun mailing lists', order: :defined do
       it 'creates mailing list memberships for users who have been restored to the site' do
         @canvas_page.add_users(course_site_1, [students[0]])
         Utils.clear_cache(@driver, @splash_page, @toolbox_page)
-        @canvas_page.log_in(@cal_net_page, Utils.super_admin_username, Utils.super_admin_password)
         @mailing_lists_page.load_embedded_tool @driver
         @mailing_lists_page.search_for_list course_site_1.site_id
         @mailing_lists_page.click_update_memberships
@@ -176,7 +176,6 @@ describe 'bCourses Mailgun mailing lists', order: :defined do
         students[0].email = students[1].email
         @canvas_page.reset_user_email(course_site_1, [students[0]])
         Utils.clear_cache(@driver, @splash_page, @toolbox_page)
-        @canvas_page.log_in(@cal_net_page, Utils.super_admin_username, Utils.super_admin_password)
         @mailing_lists_page.load_embedded_tool @driver
         @mailing_lists_page.search_for_list course_site_1.site_id
         @mailing_lists_page.click_update_memberships
