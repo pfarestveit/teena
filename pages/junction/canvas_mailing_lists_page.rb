@@ -20,8 +20,6 @@ module Page
       div(:site_code, xpath: '//div[@class="bc-page-site-mailing-list-info-box"]//div[@data-ng-bind="canvasSite.codeAndTerm"]')
       div(:site_id, xpath: '//div[@class="bc-page-site-mailing-list-info-box"]//div[@data-ng-bind="canvasSite.codeAndTerm"]/following-sibling::div')
       link(:view_site_link, xpath: '//a[contains(.,"View course site")]')
-      radio_button(:cal_mail_radio, id: 'listTypeCalmail')
-      radio_button(:mail_gun_radio, id: 'listTypeMailgun')
       text_area(:list_name_input, id: 'mailingListName')
       button(:register_list_button, xpath: '//button[@data-ng-click="registerMailingList()"]')
       div(:list_name_error_msg, xpath: '//div[contains(.,"List name may contain only lowercase, numeric, underscore and hyphen characters.")]')
@@ -83,7 +81,6 @@ module Page
       # @param text [String]
       def enter_mailgun_list_name(text)
         logger.info "Entering mailing list name '#{text}'"
-        wait_for_update_and_click mail_gun_radio_element
         wait_for_element_and_type(list_name_input_element, text)
         wait_for_update_and_click register_list_button_element
       end

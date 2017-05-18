@@ -279,7 +279,7 @@ class Utils
     driver.get("#{junction_base_url}/api/cache/clear")
     sleep 3
     my_toolbox_page.load_page
-    my_toolbox_page.click_log_out_link
+    my_toolbox_page.log_out splash_page
   end
 
   # TEST ACCOUNTS

@@ -8,6 +8,7 @@ module Page
   # Switches browser focus into the Canvas LTI tool iframe
   # @param driver [Selenium::WebDriver]
   def switch_to_canvas_iframe(driver)
+    hide_canvas_footer
     wait_until { driver.find_element(id: 'tool_content') }
     driver.switch_to.frame driver.find_element(id: 'tool_content')
   end

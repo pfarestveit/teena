@@ -32,7 +32,7 @@ describe 'The Impact Studio', order: :defined do
   asset_1_actual_score, asset_2_actual_score, asset_3_actual_score, asset_4_actual_score, asset_5_actual_score, asset_6_actual_score, asset_7_actual_score = 0
 
   before(:all) do
-    @course = Course.new({title: "Impact Studio Assets #{test_id}", code: "Impact Studio Assets #{test_id}"})
+    @course = Course.new({title: "Impact Studio Assets #{test_id}", code: "Impact Studio Assets #{test_id}", site_id: ENV['COURSE_ID']})
 
     @driver = Utils.launch_browser
     @canvas = Page::CanvasPage.new @driver
@@ -83,11 +83,11 @@ describe 'The Impact Studio', order: :defined do
         @engagement_index.click_user_dashboard_link(@driver, student_2)
       end
 
-      it('shows a "no assets" message under My Assets') { @impact_studio.no_my_assets_msg_element.when_visible Utils.short_wait }
+      it('shows a "no assets" message under Assets') { @impact_studio.no_assets_msg_element.when_visible Utils.short_wait }
       it('shows no Everyone\'s Assets UI') { expect(@impact_studio.everyone_assets_heading?).to be false }
-      it('offers no Bookmarklet link under My Assets') { expect(@impact_studio.bookmarklet_link?).to be false }
-      it('offers no Add Link link under My Assets') { expect(@impact_studio.add_site_link?).to be false }
-      it('offers no Upload link under My Assets') { expect(@impact_studio.upload_link?).to be false }
+      it('offers no Bookmarklet link under Assets') { expect(@impact_studio.bookmarklet_link?).to be false }
+      it('offers no Add Link link under Assets') { expect(@impact_studio.add_site_link?).to be false }
+      it('offers no Upload link under Assets') { expect(@impact_studio.upload_link?).to be false }
     end
   end
 
@@ -326,8 +326,8 @@ describe 'The Impact Studio', order: :defined do
           @impact_studio.load_page(@driver, @impact_studio_url)
         end
 
-        it('shows the user\'s non-hidden assets under My Assets > Recent') { @impact_studio.verify_my_recent_assets student_2_assets }
-        it('shows the impactful asset under My Assets > Most Impactful') { @impact_studio.verify_my_impactful_assets student_2_assets }
+        it('shows the user\'s non-hidden assets under My Assets > Recent') { @impact_studio.verify_my_recent_assets teacher_assets }
+        it('shows the impactful asset under My Assets > Most Impactful') { @impact_studio.verify_my_impactful_assets teacher_assets }
         it('shows the impactful asset under Community Assets > Trending') { @impact_studio.verify_all_trending_assets all_assets }
         it('shows the impactful asset under Community Assets > Most Impactful') { @impact_studio.verify_all_impactful_assets all_assets }
       end

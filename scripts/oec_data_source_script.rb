@@ -45,7 +45,7 @@ begin
     @driver.find_element(link_text: 'Edit').click
     # Click Data tab and click Edit on Data Blocks tab
     puts "#{Time.now} - Found data source, editing it"
-    click_element_id(@driver, 'AdminUC_Data_Data')
+    click_element_id(@driver, 'AdminUC_Data_primary-tabs_Data')
     @brief_wait.until do
       @driver.find_element(id: 'AdminUC_Data_ucAdminDS_Entities_lblDataSource')
       @brief_wait.until { @driver.find_element(id: 'AdminUC_Data_ucAdminDS_Entities_lblDataSource').text.include? data_source }
@@ -82,12 +82,12 @@ begin
     @long_wait.until { @driver.find_element(xpath: '//a[contains(.,"Data Block has been updated successfully.")]') }
     sleep 2
     # Import data source
-    click_element_id(@driver, 'AdminUC_Data_Import/Export')
+    click_element_id(@driver, 'AdminUC_Data_primary-tabs_ImportExport')
     click_element_id(@driver, 'AdminUC_Data_AdminDS_Import_btnImport')
     @long_wait.until { @driver.find_element(id: 'AdminUC_Data_AdminDS_Import_btnConfirm') }
     click_element_id(@driver, 'AdminUC_Data_AdminDS_Import_btnConfirm')
     @long_wait.until { @driver.find_element(xpath: '//span[contains(.,"Data Import Approved and Successful")]') }
-    @brief_wait.until { @driver.find_element(id: 'AdminUC_Data_btnSave') }
+    @brief_wait.until { @driver.find_element(id: 'AdminUC_Data_lnkBackToDataSources') }
     sleep 2
     puts "#{Time.now} - Import succeeded"
   end
