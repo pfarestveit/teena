@@ -17,6 +17,9 @@ describe 'Asset Library', order: :defined do
   student_1_upload = Asset.new student_1.assets.find { |asset| asset['type'] == 'File' }
   student_2_upload = Asset.new student_2.assets.find { |asset| asset['type'] == 'File' }
   student_3_link = Asset.new student_3.assets.find { |asset| asset['type'] == 'Link' }
+  
+  category_1 = "Category 1 #{category_id}"
+  category_2 = "Category 2 #{category_id}"
 
   before(:all) do
     @course = Course.new({title: "Asset Library Search #{test_id}", site_id: ENV['COURSE_ID']})
@@ -33,7 +36,6 @@ describe 'Asset Library', order: :defined do
     @canvas.disable_tool(@course, SuiteCTools::IMPACT_STUDIO)
     @asset_library_url = @canvas.click_tool_link(@driver, SuiteCTools::ASSET_LIBRARY)
     @whiteboards_url = @canvas.click_tool_link(@driver, SuiteCTools::WHITEBOARDS)
-    @category_1 = "Category 1 #{category_id}"
 
     @canvas.masquerade_as(@driver, student_1, @course)
     @canvas.load_course_site(@driver, @course)
@@ -79,12 +81,12 @@ describe 'Asset Library', order: :defined do
       end
 
       it 'are added to the list of available categories' do
-        @asset_library.add_custom_categories(@driver, @asset_library_url, [@category_1])
-        @asset_library.wait_until(timeout) { @asset_library.custom_category_titles.include? @category_1 }
+        @asset_library.add_custom_categories(@driver, @asset_library_url, [category_1, category_2])
+        @asset_library.wait_until(timeout) { @asset_library.custom_category_titles.include? category_1 }
       end
 
       it 'can be added to existing assets' do
-        student_1_upload.category = @category_1
+        student_1_upload.category = category_1
         @asset_library.load_asset_detail(@driver, @asset_library_url, student_1_upload)
         @asset_library.edit_asset_details student_1_upload
         @asset_library.wait_until(timeout) do
@@ -97,7 +99,7 @@ describe 'Asset Library', order: :defined do
       it 'show how many assets with which they are associated' do
         @asset_library.load_page(@driver, @asset_library_url)
         @asset_library.click_manage_assets_link
-        index = @asset_library.custom_category_index @category_1
+        index = @asset_library.custom_category_index category_1
         expect(@asset_library.custom_category_asset_count index).to eql('Used by 1 item')
       end
 
@@ -106,11 +108,11 @@ describe 'Asset Library', order: :defined do
         @asset_library.click_asset_link_by_id student_1_upload
         @asset_library.click_asset_category 0
         @asset_library.wait_until(timeout) { @asset_library.list_view_asset_ids.first.include? student_1_upload.id }
-        expect(@asset_library.keyword_search_input).to be_empty
-        expect(@asset_library.category_select).to eql(@category_1)
-        expect(@asset_library.uploader_select).to eql('Uploader')
-        expect(@asset_library.asset_type_select).to eql('Asset type')
-        expect(@asset_library.sort_by_select).to eql('Most recent')
+        @asset_library.wait_until(timeout) { @asset_library.keyword_search_input.empty? }
+        @asset_library.wait_until(timeout) { @asset_library.category_select == category_1 }
+        @asset_library.wait_until(timeout) { @asset_library.uploader_select == 'Uploader' }
+        @asset_library.wait_until(timeout) { @asset_library.asset_type_select == 'Asset type' }
+        @asset_library.wait_until(timeout) { @asset_library.sort_by_select == 'Most recent' }
       end
     end
 
@@ -119,13 +121,13 @@ describe 'Asset Library', order: :defined do
       before(:all) do
         @asset_library.load_page(@driver, @asset_library_url)
         @asset_library.click_manage_assets_link
-        @index = @asset_library.custom_category_index @category_1
+        @index = @asset_library.custom_category_index category_1
       end
 
       before(:each) do
         @asset_library.load_page(@driver, @asset_library_url)
         @asset_library.click_manage_assets_link
-        @asset_library.wait_until(timeout) { @asset_library.custom_category_titles.include? @category_1 }
+        @asset_library.wait_until(timeout) { @asset_library.custom_category_titles.include? category_1 }
       end
 
       it 'can be canceled' do
@@ -142,26 +144,26 @@ describe 'Asset Library', order: :defined do
 
       it 'are updated on assets with which they are associated' do
         @asset_library.click_edit_custom_category @index
-        @asset_library.enter_edited_category_title(@index, @category_1 = "#{@category_1} - Edited")
+        @asset_library.enter_edited_category_title(@index, category_1 = "#{category_1} - Edited")
         @asset_library.click_save_custom_category_edit @index
-        @asset_library.wait_until(timeout) { @asset_library.custom_category_titles[@index] == @category_1 }
+        @asset_library.wait_until(timeout) { @asset_library.custom_category_titles[@index] == category_1 }
       end
     end
 
     context 'when deleted' do
 
-      before(:all) { @category_1 = "#{@category_1} - Edited" }
-
       it 'no longer appear in the list of categories' do
-        @asset_library.delete_custom_category @category_1
-        @asset_library.wait_until(timeout) { !@asset_library.custom_category_titles.include?(@category_1) }
+        @asset_library.delete_custom_category category_1
+        @asset_library.load_page(@driver, @asset_library_url)
+        @asset_library.click_manage_assets_link
+        @asset_library.wait_until(timeout) { !@asset_library.custom_category_titles.include?(category_1) }
       end
 
       it 'no longer appear in search options' do
         @asset_library.go_back_to_asset_library
         @asset_library.wait_for_update_and_click_js @asset_library.advanced_search_button_element
         @asset_library.category_select_element.when_visible timeout
-        expect(@asset_library.category_select_options).not_to include(@category_1)
+        expect(@asset_library.category_select_options).not_to include(category_1)
       end
 
       it 'no longer appear on asset detail' do
@@ -175,11 +177,9 @@ describe 'Asset Library', order: :defined do
 
     before(:all) do
 
-      @asset_library.add_custom_categories(@driver, @asset_library_url, [(@category_2 = "Category 2 #{category_id}")])
-
       # Upload a file asset
       student_2_upload.title = "Student 2 upload - #{test_id}"
-      student_2_upload.category = @category_2
+      student_2_upload.category = category_2
       student_2_upload.description = "Description for uploaded file #{test_id}"
       @canvas.masquerade_as(@driver, student_2, @course)
       @canvas.load_course_site(@driver, @course)
@@ -188,7 +188,7 @@ describe 'Asset Library', order: :defined do
 
       # Add a link asset
       student_3_link.title = "Student 3 link - #{test_id}"
-      student_3_link.category = @category_2
+      student_3_link.category = category_2
       student_3_link.description = "#BetterTogether#{test_id}"
       @canvas.masquerade_as(@driver, student_3, @course)
       @canvas.load_course_site(@driver, @course)
@@ -263,7 +263,7 @@ describe 'Asset Library', order: :defined do
     end
 
     it 'lets a user perform an advanced search by category, sorted by Most Recent' do
-      @asset_library.advanced_search(nil, @category_2, nil, nil)
+      @asset_library.advanced_search(nil, category_2, nil, nil)
       @asset_library.wait_until(timeout) { @asset_library.list_view_asset_ids == [student_3_link.id, student_2_upload.id] }
     end
 
@@ -278,7 +278,7 @@ describe 'Asset Library', order: :defined do
     end
 
     it 'lets a user perform an advanced search by keyword and category, sorted by Most Recent' do
-      @asset_library.advanced_search('upload', @category_2, nil, nil)
+      @asset_library.advanced_search('upload', category_2, nil, nil)
       @asset_library.wait_until(timeout) { @asset_library.list_view_asset_ids == [student_2_upload.id] }
     end
 
@@ -288,7 +288,7 @@ describe 'Asset Library', order: :defined do
     end
 
     it 'lets a user perform an advanced search by keyword, category, and uploader, sorted by Most Recent' do
-      @asset_library.advanced_search('#BetterTogether', @category_2, student_3, nil)
+      @asset_library.advanced_search('#BetterTogether', category_2, student_3, nil)
       @asset_library.wait_until(timeout) { @asset_library.list_view_asset_ids == [student_3_link.id] }
     end
 
@@ -298,7 +298,7 @@ describe 'Asset Library', order: :defined do
     end
 
     it 'lets a user perform an advanced search by category and uploader, sorted by Most Recent' do
-      @asset_library.advanced_search(nil, @category_2, student_3, nil)
+      @asset_library.advanced_search(nil, category_2, student_3, nil)
       @asset_library.wait_until(timeout) { @asset_library.list_view_asset_ids == [student_3_link.id] }
     end
 
@@ -308,7 +308,7 @@ describe 'Asset Library', order: :defined do
     end
 
     it 'lets a user perform an advanced search by category and type, sorted by Most Recent' do
-      @asset_library.advanced_search(nil, @category_2, nil, 'File')
+      @asset_library.advanced_search(nil, category_2, nil, 'File')
       @asset_library.wait_until(timeout) { @asset_library.list_view_asset_ids == [student_2_upload.id] }
     end
 
@@ -318,7 +318,7 @@ describe 'Asset Library', order: :defined do
     end
 
     it 'lets a user perform an advanced search by keyword, category, and type, sorted by Most Recent' do
-      @asset_library.advanced_search('Description', @category_2, nil, 'File')
+      @asset_library.advanced_search('Description', category_2, nil, 'File')
       @asset_library.wait_until(timeout) { @asset_library.list_view_asset_ids == [student_2_upload.id] }
     end
 
@@ -328,7 +328,7 @@ describe 'Asset Library', order: :defined do
     end
 
     it 'lets a user perform an advanced search by keyword, category, uploader, and type, sorted by Most Recent' do
-      @asset_library.advanced_search('for', @category_2, student_2, 'File')
+      @asset_library.advanced_search('for', category_2, student_2, 'File')
       @asset_library.wait_until(timeout) { @asset_library.list_view_asset_ids == [student_2_upload.id] }
     end
 
@@ -345,7 +345,7 @@ describe 'Asset Library', order: :defined do
     it 'lets a user perform an advanced search by keyword, sorted by Most Views' do
       @asset_library.advanced_search(test_id, nil, nil, nil, 'Most views')
       @asset_library.wait_until(timeout) do
-        @asset_library.list_view_asset_ids == [student_3_link.id, student_2_upload.id]
+        @asset_library.list_view_asset_ids == [student_1_upload.id, student_3_link.id, student_2_upload.id]
       end
     end
 
@@ -355,7 +355,7 @@ describe 'Asset Library', order: :defined do
     end
 
     it 'lets a user perform an advanced search by keyword and category, sorted by Most Comments' do
-      @asset_library.advanced_search(test_id, @category_2, nil, nil, 'Most comments')
+      @asset_library.advanced_search(test_id, category_2, nil, nil, 'Most comments')
       @asset_library.wait_until(timeout) { @asset_library.list_view_asset_ids == [student_2_upload.id] }
     end
 

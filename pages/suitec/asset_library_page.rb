@@ -227,6 +227,7 @@ module Page
       def simple_search(keyword)
         logger.info "Performing simple search of asset library by keyword '#{keyword}'"
         wait_for_update_and_click(cancel_advanced_search_element) if cancel_advanced_search?
+        search_input_element.when_visible Utils.short_wait
         search_input_element.clear
         search_input_element.send_keys(keyword) unless keyword.nil?
         wait_for_update_and_click search_button_element
@@ -355,6 +356,7 @@ module Page
         wait_until(Utils.short_wait) { custom_category_titles.include? category_title }
         delete_button = button_element(xpath: "//h3[text()='Custom Categories']/following-sibling::ul/li[#{custom_category_index(category_title) + 1}]//button[@title='Delete this category']")
         confirm(true) { wait_for_update_and_click_js delete_button }
+        sleep 2
       end
 
       # Canvas categories
