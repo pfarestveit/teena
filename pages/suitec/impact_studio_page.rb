@@ -26,7 +26,12 @@ module Page
 
       image(:avatar, class: 'profile-summary-avatar')
       h1(:name, xpath: '//h1[@data-ng-bind="user.canvas_full_name"]')
+      div(:profile_desc, xpath: '//div[@data-ng-bind-html="user.personal_bio | linky:\'_blank\' | toolHrefHashtag:\'dashboard\':user.id"]')
       link(:edit_profile_link, text: 'Edit Profile')
+      text_area(:edit_profile_input, id: 'profile-edit-description')
+      span(:char_limit_msg, xpath: '//span[contains(.,"255 character limit")]')
+      button(:update_profile_button, xpath: '//button[text()="Update Profile"]')
+      link(:cancel_edit_profile, text: 'Cancel')
       elements(:section, xpath: '//span[@data-ng-repeat="section in user.canvasCourseSections"]')
       span(:last_activity, xpath: '//div[contains(.,"Last activity:")]/span')
       link(:engagement_index_link, xpath: '//div[contains(@class,"profile-summary")]//a[contains(.,"Engagement Index")]')
@@ -45,6 +50,31 @@ module Page
         wait_for_update_and_click edit_profile_link_element
       end
 
+      # Enters text in the profile description input
+      # @param desc [String]
+      def enter_profile_desc(desc)
+        wait_for_element_and_type(edit_profile_input_element, desc)
+      end
+
+      # Clicks the 'Cancel' link for a profile edit
+      def cancel_profile_edit
+        wait_for_update_and_click cancel_edit_profile_element
+      end
+
+      # Clicks the 'Update Profile' button for a profile edit
+      def save_profile_edit
+        wait_for_update_and_click update_profile_button_element
+      end
+
+      # Edits and saves a profile description
+      # @param desc [String]
+      def edit_profile(desc)
+        logger.info "Adding user description '#{desc}'"
+        click_edit_profile
+        enter_profile_desc desc
+        save_profile_edit
+      end
+
       # Clicks the Engagement Index link
       def click_engagement_index
         wait_for_update_and_click engagement_index_link_element
@@ -61,9 +91,9 @@ module Page
       # @param user [User]
       def search_for_user(user)
         logger.info "Searching for #{user.full_name} UID #{user.uid}"
-        wait_for_load_and_click div_element(class: 'select-search')
-        (option = list_item_element(xpath: "//div[@class='select-dropdown']//li[contains(.,'#{user.full_name}')]")).when_present Utils.short_wait
-        option.click
+        wait_for_load_and_click text_area_element(xpath: '//input[@placeholder="Search for other people"]')
+        (option = list_item_element(xpath: "//div[contains(@class,'select-dropdown')]//li[contains(.,'#{user.full_name}')]")).when_present Utils.short_wait
+        js_click option
         wait_until(Utils.medium_wait) { name == user.full_name }
       end
 

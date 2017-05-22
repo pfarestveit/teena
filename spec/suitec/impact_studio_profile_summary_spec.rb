@@ -1,6 +1,6 @@
 require_relative '../../util/spec_helper'
 
-describe 'Impact Studio' do
+describe 'Impact Studio', order: :defined do
 
   include Logging
   course_id = ENV['COURSE_ID']
@@ -21,8 +21,7 @@ describe 'Impact Studio' do
   student_no_share = students[2]
 
   before(:all) do
-    @course = Course.new({})
-    @course.site_id = course_id
+    @course = Course.new({title: "Impact Studio Profile #{test_id}", site_id: course_id})
 
     @driver = Utils.launch_browser
     @canvas = Page::CanvasPage.new @driver
@@ -37,92 +36,16 @@ describe 'Impact Studio' do
     @course.sections = [Section.new({label: @course.title})]
     @asset_library_url = @canvas.click_tool_link(@driver, SuiteCTools::ASSET_LIBRARY)
     @impact_studio_url = @canvas.click_tool_link(@driver, SuiteCTools::IMPACT_STUDIO)
+    users.each do |user|
+      @canvas.masquerade_as(@driver, user, @course)
+      @impact_studio.load_page(@driver, @impact_studio_url)
+    end
 
     @canvas.masquerade_as(@driver, student_viewer, @course)
     @impact_studio.load_page(@driver, @impact_studio_url)
   end
 
   after(:all) { Utils.quit_browser @driver }
-
-  describe 'profile summary' do
-
-    it('shows the user name') { expect(@impact_studio.name).to eql(student_viewer.full_name) }
-    it('shows the user avatar') { expect(@impact_studio.avatar?).to be true }
-    it('shows an Edit Profile link') { expect(@impact_studio.edit_profile_link?).to be true }
-    it('allows a user to view the profile of any user in the course') { users.each { |user| @impact_studio.search_for_user user } }
-
-    it 'shows no sections section when there is no section' do
-      @impact_studio.search_for_user teacher_no_share
-      expect(@impact_studio.sections).to be_empty
-    end
-
-    it 'shows the sections when there are sections' do
-      @impact_studio.search_for_user student_no_share
-      expect(@impact_studio.sections).to eql(@course.sections.map &:label)
-    end
-
-    describe 'last activity' do
-
-      context 'when the user has no activity' do
-        it('shows "Never"') do
-          course_id.nil? ?
-              (expect(@impact_studio.last_activity).to eql('Never')) :
-              logger.warn('Skipping the test for last activity "Never", since this is not a new course site')
-        end
-      end
-
-      context 'when the user has activity' do
-
-        before(:all) do
-          @asset_library.load_page(@driver, @asset_library_url)
-          @asset_library.add_site Asset.new(title: "Asset #{test_id}", url: 'www.google.com')
-        end
-
-        it 'shows the activity date' do
-          @impact_studio.load_page(@driver, @impact_studio_url)
-          @impact_studio.wait_until(Utils.short_wait) { @impact_studio.last_activity == 'Today' }
-        end
-      end
-    end
-
-    describe 'description' do
-
-      context 'when the user has no description' do
-        it('allows the user to add a description')
-        it('allows the user to include a link in a description')
-        it('allows the user to add a maximum of X characters to a description')
-      end
-
-      context 'when the user has a description' do
-        it('shows the description')
-        it('allows the user to edit a description')
-        it('allows the user to include a link in an edited description')
-        it('allows the user to add a maximum of X characters to an edited description')
-        it('allows the user to remove a description')
-      end
-    end
-
-    describe 'hashtags' do
-
-      context 'when the user has no hashtags' do
-        it('shows no hashtags')
-        it('allows the user to add hashtags')
-        it('allows the user to include special characters in a hashtag')
-        it('allows the user to add X hashtags')
-      end
-
-      context 'when the user has hashtags' do
-        it('shows the hashtags')
-        it('allows the user to edit hashtags')
-        it('allows the user to remove hashtags')
-      end
-
-      context 'when clicked' do
-        it('shows users also associated with the same hashtag')
-        it('shows assets also associated with the same hashtag')
-      end
-    end
-  end
 
   describe 'Engagement Index card' do
 
@@ -479,5 +402,102 @@ describe 'Impact Studio' do
         end
       end
     end
+  end
+
+  describe 'profile summary' do
+
+    before(:all) { @impact_studio.load_page(@driver, @impact_studio_url) }
+
+    it('shows the user name') { expect(@impact_studio.name).to eql(student_viewer.full_name) }
+    it('shows the user avatar') { expect(@impact_studio.avatar?).to be true }
+
+    it 'shows no sections section when there is no section' do
+      @impact_studio.search_for_user teacher_no_share
+      expect(@impact_studio.sections).to be_empty
+    end
+
+    it 'shows the sections when there are sections' do
+      @impact_studio.search_for_user student_no_share
+      expect(@impact_studio.sections).to eql(@course.sections.map &:label)
+    end
+
+    describe 'last activity' do
+
+      context 'when the user has no activity' do
+        it('shows "Never"') do
+          course_id.nil? ?
+              (expect(@impact_studio.last_activity).to eql('Never')) :
+              logger.warn('Skipping the test for last activity "Never", since this is not a new course site')
+        end
+      end
+
+      context 'when the user has activity' do
+
+        before(:all) do
+          @asset_library.load_page(@driver, @asset_library_url)
+          @asset_library.add_site Asset.new(title: "Asset #{test_id}", url: 'www.google.com')
+        end
+
+        it 'shows the activity date' do
+          @impact_studio.load_page(@driver, @impact_studio_url)
+          @impact_studio.wait_until(Utils.short_wait) { @impact_studio.last_activity == 'Today' }
+        end
+      end
+    end
+
+    describe 'description' do
+
+      it 'allows the user to edit a description' do
+        @impact_studio.edit_profile (desc = 'My personal description!')
+        @impact_studio.wait_until { @impact_studio.profile_desc == desc }
+      end
+
+      it 'allows the user to cancel a description edit' do
+        desc = @impact_studio.profile_desc
+        @impact_studio.click_edit_profile
+        @impact_studio.enter_profile_desc 'This is not what I mean!'
+        @impact_studio.cancel_profile_edit
+        @impact_studio.wait_until { @impact_studio.profile_desc == desc }
+      end
+
+      it 'allows the user to include a link in a description' do
+        @impact_studio.edit_profile "My personal description includes a link to #{link = 'www.google.com'} !"
+        @impact_studio.wait_until { @impact_studio.profile_desc.include? 'My personal description includes a link to' }
+        expect(@impact_studio.external_link_valid?(@driver, @impact_studio.link_element(xpath: "//a[contains(.,'#{link}')]"), 'Google'))
+      end
+
+      it 'allows the user to include a hashtag in a description' do
+        @impact_studio.switch_to_canvas_iframe @driver
+        @impact_studio.edit_profile 'My personal description #BitterTogether'
+        @impact_studio.wait_until { @impact_studio.profile_desc.include? 'My personal description ' }
+        @impact_studio.link_element(text: '#BitterTogether').click
+        @asset_library.switch_to_canvas_iframe @driver
+        @asset_library.no_search_results_element.when_visible Utils.short_wait
+      end
+
+      it 'allows the user to add a maximum of X characters to a description' do
+        @impact_studio.load_page(@driver, @impact_studio_url)
+        @impact_studio.click_edit_profile
+        @impact_studio.enter_profile_desc (desc = "#{'A loooooong title' * 15}?")
+        @impact_studio.char_limit_msg_element.when_visible 1
+        @impact_studio.enter_profile_desc (desc = desc[0, 255])
+        @impact_studio.save_profile_edit
+        @impact_studio.wait_until { @impact_studio.profile_desc == desc }
+      end
+
+      it 'allows the user to remove a description' do
+        @impact_studio.edit_profile ''
+        sleep 1
+        @impact_studio.profile_desc_element.when_not_visible Utils.short_wait
+      end
+    end
+  end
+
+  describe 'search' do
+
+    users.each do |user|
+      it("allows the user to view #{user.role} UID #{user.uid}'s profile") { @impact_studio.search_for_user user }
+    end
+
   end
 end
