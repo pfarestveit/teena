@@ -99,23 +99,55 @@ module Page
 
       # ACTIVITY EVENT DROPS
 
-      element(:my_activity_event_drops, xpath: "//h3[contains(.,'My Activity')]/following-sibling::div/*[local-name()='svg']")
-      element(:my_classmates_event_drops, xpath: "//h3[contains(.,'My Classmates')]/following-sibling::div/*[local-name()='svg']")
+      element(:my_activity_event_drops, xpath: '//h3[contains(.,"My Activity")]/following-sibling::div[@class="col-flex"]//*[local-name()="svg"]')
+      element(:activity_event_drops, xpath: '//h3[contains(.,"Activity")]/following-sibling::div[@class="col-flex"]//*[name()="svg"]')
 
-      # Returns the activity labels on the My Activity event drops
+      # Returns a hash of event type counts on the My Activity event drops
       # @param driver [Selenium::WebDriver]
-      # @return [Array<String>]
-      def my_activity_events(driver)
-        elements = driver.find_elements(xpath: '//h3[contains(.,"My Activity")]/following-sibling::div/*[name()="svg"]/*[name()="g"]/*[name()="text"]')
-        elements.map &:text
+      # @return [Hash]
+      def my_activity_event_counts(driver)
+        # Pause a couple times to allow a complete DOM update
+        sleep 1
+        my_activity_event_drops_element.when_visible Utils.short_wait
+        sleep 1
+        elements = driver.find_elements(xpath: '//h3[contains(.,"My Activity")]/following-sibling::div[@class="col-flex"]//*[local-name()="svg"]/*[name()="g"]/*[name()="text"]')
+        labels = elements.map &:text
+        event_drop_counts labels
       end
 
       # Returns the activity labels on the My Classmates event drops
       # @param driver [Selenium::WebDriver]
       # @return [Array<String>]
-      def my_classmates_events(driver)
-        elements = driver.find_elements(xpath: '//h3[contains(.,"My Classmates")]/following-sibling::div/*[name()="svg"]/*[name()="g"]/*[name()="text"]')
-        elements.map &:text
+      def activity_event_counts(driver)
+        # Pause a couple times to allow a complete DOM update
+        sleep 1
+        activity_event_drops_element.when_visible Utils.short_wait
+        sleep 1
+        elements = driver.find_elements(xpath: '//h3[contains(.,"Activity")]/following-sibling::div[@class="col-flex"]//*[local-name()="svg"]/*[name()="g"]/*[name()="text"]')
+        labels = elements.map &:text
+        event_drop_counts labels
+      end
+
+      # Determines the count of drops from the activity type label
+      # @param labels [Array<String>]
+      # @param index [Integer]
+      # @return [Integer]
+      def activity_type_count(labels, index)
+        ((type = labels[index]).include? ' (') ? type.split(' ')[1].delete('()').to_i : 0
+      end
+
+      # Given an array of activity timeline labels in the UI, returns a hash of event type counts
+      # @param labels [Array<String>]
+      # @return [Hash]
+      def event_drop_counts(labels)
+        {
+          engage_contrib: activity_type_count(labels, 0),
+          interact_contrib: activity_type_count(labels, 1),
+          create_contrib: activity_type_count(labels, 2),
+          engage_impact: activity_type_count(labels, 3),
+          interact_impact: activity_type_count(labels, 4),
+          create_impact: activity_type_count(labels, 5)
+        }
       end
 
       # ASSETS
@@ -170,12 +202,11 @@ module Page
 
       # MY ASSETS
 
-      h3(:my_assets_heading, xpath: '//span[text()="My Assets:"]/../..')
-      link(:my_recent_link, xpath: '//span[text()="My Assets:"]/following-sibling::span[1]/a[contains(.,"Recent")]')
-      link(:my_impactful_link, xpath: '//span[text()="My Assets:"]/following-sibling::span[2]/a[contains(.,"Most Impactful")]')
-      link(:my_pinned_link, xpath: '//span[text()="My Assets:"]/following-sibling::span[3]/a[contains(.,"Pinned")]')
-      div(:no_my_assets_msg, xpath: '//span[text()="My Assets"]/../following-sibling::div/div[contains(.,"No matching assets were found.")]')
-      elements(:my_asset_link, :link, xpath: '//span[text()="My Assets:"]/../../following-sibling::div//li/a')
+      h3(:my_assets_heading, xpath: '//h3[contains(text(),"My Assets")]')
+      button(:my_recent_link, id: 'user-assets-filter-by-recent')
+      button(:my_impactful_link, id: 'user-assets-filter-by-impact')
+      div(:no_my_assets_msg, xpath: '//h3[contains(text(),"My Assets")]/../following-sibling::div/div[contains(.,"No matching assets were found.")]')
+      elements(:my_asset_link, :link, xpath: '//h3[contains(text(),"My Assets")]/../following-sibling::div/ul//a')
 
       # Clicks the My Assets swim lane link for My Recent assets
       def click_my_recent
@@ -192,7 +223,7 @@ module Page
       # @param asset [Asset]
       def click_my_asset_link(driver, asset)
         logger.info "Clicking thumbnail for My Asset ID #{asset.id}"
-        wait_for_update_and_click_js link_element(xpath: "//h3[contains(.,'My Assets')]/following-sibling::div//li/a[contains(@href,'_id=#{asset.id}&')]")
+        wait_for_update_and_click_js link_element(xpath: "//h3[contains(.,'My Assets')]/../following-sibling::div/ul//a[contains(@href,'_id=#{asset.id}&')]")
         switch_to_canvas_iframe driver
       end
 
@@ -201,7 +232,7 @@ module Page
       def verify_my_recent_assets(assets)
         logger.debug "Expecting My Recent list to include asset IDs '#{recent_studio_asset_ids assets}'"
         scroll_to_bottom
-        click_my_recent if my_recent_link?
+        click_my_recent unless my_recent_link_element.attribute('disabled')
         sleep 2
         logger.debug "My Recent list currently includes asset IDs '#{swim_lane_asset_ids my_asset_link_elements}'"
         wait_until(Utils.short_wait) { swim_lane_asset_ids(my_asset_link_elements) == recent_studio_asset_ids(assets) }
@@ -213,7 +244,7 @@ module Page
       def verify_my_impactful_assets(assets)
         logger.debug "Expecting My Impactful list to include asset IDs '#{impactful_studio_asset_ids assets}'"
         scroll_to_bottom
-        click_my_most_impactful if my_impactful_link?
+        click_my_most_impactful unless my_impactful_link_element.attribute('disabled')
         sleep 2
         logger.debug "My Impactful list currently includes asset IDs '#{swim_lane_asset_ids my_asset_link_elements}'"
         wait_until(Utils.short_wait) { swim_lane_asset_ids(my_asset_link_elements) == impactful_studio_asset_ids(assets) }
@@ -222,11 +253,11 @@ module Page
 
       # YOUR ASSETS
 
-      h3(:assets_heading, xpath: '//span[text()="Assets:"]/../..')
-      link(:recent_link, xpath: '//span[text()="Assets:"]/following-sibling::span[1]/a[contains(.,"Recent")]')
-      link(:impactful_link, xpath: '//span[text()="Assets:"]/following-sibling::span[2]/a[contains(.,"Most Impactful")]')
-      div(:no_assets_msg, xpath: '//span[text()="Assets"]/../following-sibling::div/div[contains(.,"No matching assets were found.")]')
-      elements(:asset_link, :link, xpath: '//span[text()="Assets:"]/../../following-sibling::div//li/a')
+      h3(:assets_heading, xpath: '//h3[contains(text(),"Assets")]')
+      link(:recent_link, id: 'user-assets-filter-by-recent')
+      link(:impactful_link, id: 'user-assets-filter-by-impact')
+      div(:no_assets_msg, xpath: '//h3[contains(text(),"Assets")]/../following-sibling::div/div[contains(.,"No matching assets were found.")]')
+      elements(:asset_link, :link, xpath: '//h3[contains(text(),"Assets")]/../following-sibling::div/ul//a')
 
       # Clicks the Recent swim lane link when viewing another user's profile
       def click_your_recent
@@ -243,7 +274,7 @@ module Page
       def verify_your_recent_assets(assets)
         logger.debug "Expecting the other user's Recent list to include asset IDs '#{recent_studio_asset_ids assets}"
         scroll_to_bottom
-        click_your_recent if recent_link?
+        click_your_recent unless recent_link_element.attribute('disabled')
         sleep 2
         logger.debug "The other user's Recent list currently includes asset IDs '#{swim_lane_asset_ids asset_link_elements}"
         wait_until(Utils.short_wait) { swim_lane_asset_ids(asset_link_elements) == recent_studio_asset_ids(assets) }
@@ -255,7 +286,7 @@ module Page
       def verify_your_impactful_assets(assets)
         logger.debug "Expecting the other user's Impactful list to include asset IDs '#{impactful_studio_asset_ids assets}"
         scroll_to_bottom
-        click_your_impactful if impactful_link?
+        click_your_impactful unless impactful_link_element.attribute('disabled')
         sleep 2
         logger.debug "The other user's Impactful list currently includes asset Ids '#{swim_lane_asset_ids asset_link_elements}"
         wait_until(Utils.short_wait) { swim_lane_asset_ids(asset_link_elements) == impactful_studio_asset_ids(assets) }
@@ -264,11 +295,11 @@ module Page
 
       # EVERYONE'S ASSETS
 
-      h3(:everyone_assets_heading, xpath: '//div[contains(text(),"Everyone\'s Assets:")]')
-      link(:trending_link, xpath: '//div[contains(text(),"Everyone\'s Assets:")]//a[contains(.,"Trending")]')
-      link(:everyone_impactful_link, xpath: '//div[contains(text(),"Everyone\'s Assets:")]//a[contains(.,"Most Impactful")]')
-      div(:no_everyone_assets_msg, xpath: '//span[text()="Everyone\'s Assets"]/../following-sibling::div/div[contains(.,"No matching assets were found.")]')
-      elements(:everyone_asset_link, :link, xpath: '//div[contains(text(),"Everyone\'s Assets:")]/../following-sibling::div//li/a')
+      h3(:everyone_assets_heading, xpath: '//h3[contains(text(),"Everyone\'s Assets:")]')
+      button(:trending_link, id: 'community-assets-filter-by-recent')
+      button(:everyone_impactful_link, id: 'community-assets-filter-by-impact')
+      div(:no_everyone_assets_msg, xpath: '//h3[contains(text(),"Everyone\'s Assets")]/../following-sibling::div/div[contains(.,"No matching assets were found.")]')
+      elements(:everyone_asset_link, :link, xpath: '//h3[contains(text(),"Everyone\'s Assets")]/../following-sibling::div/ul//a')
 
       # Clicks the Everyone's Assets swim lane link for Trending assets
       def click_all_trending
@@ -285,7 +316,7 @@ module Page
       # @param asset [Asset]
       def click_everyone_asset_link(driver, asset)
         logger.info "Clicking thumbnail for Everyone's Asset ID #{asset.id}"
-        wait_for_update_and_click_js link_element(xpath: "//h3[contains(.,'Everyone's Assets')]/following-sibling::div//li/a[contains(@href,'_id=#{asset.id}&')]")
+        wait_for_update_and_click_js link_element(xpath: "//h3[contains(.,'Everyone's Assets')]/../following-sibling::div/ul//a[contains(@href,'_id=#{asset.id}&')]")
         switch_to_canvas_iframe driver
       end
 
@@ -295,7 +326,7 @@ module Page
         # TODO - insert a pause prior to loading the trending assets so that "trending" can be recalculated
         logger.debug "Expecting Everyone's Trending list to include asset IDs '#{impactful_studio_asset_ids assets}"
         scroll_to_bottom
-        click_all_trending if trending_link?
+        click_all_trending unless trending_link_element.attribute('disabled')
         sleep 2
         logger.debug "Everyone's Trending list currently includes asset IDs '#{swim_lane_asset_ids everyone_asset_link_elements}"
         wait_until(Utils.short_wait) { swim_lane_asset_ids(everyone_asset_link_elements) == impactful_studio_asset_ids(assets) }
@@ -307,7 +338,7 @@ module Page
       def verify_all_impactful_assets(assets)
         logger.debug "Expecting Everyone's Impactful list to include asset IDs '#{impactful_studio_asset_ids assets}'"
         scroll_to_bottom
-        click_all_impactful if everyone_impactful_link?
+        click_all_impactful unless everyone_impactful_link_element.attribute('disabled')
         sleep 2
         logger.debug "Everyone's Impactful list currently includes asset IDs '#{swim_lane_asset_ids everyone_asset_link_elements}"
         wait_until(Utils.short_wait) { swim_lane_asset_ids(everyone_asset_link_elements) == impactful_studio_asset_ids(assets) }
