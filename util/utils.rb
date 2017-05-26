@@ -175,6 +175,10 @@ class Utils
     @config['suite_c']['poller_retries']
   end
 
+  def self.event_drop_drags
+    @config['suite_c']['event_drops_drags']
+  end
+
   def self.db_name
     @config['suite_c']['db_name']
   end

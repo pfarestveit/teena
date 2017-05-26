@@ -61,18 +61,13 @@ module Page
         wait_for_update_and_click cancel_edit_profile_element
       end
 
-      # Clicks the 'Update Profile' button for a profile edit
-      def save_profile_edit
-        wait_for_update_and_click update_profile_button_element
-      end
-
       # Edits and saves a profile description
       # @param desc [String]
       def edit_profile(desc)
         logger.info "Adding user description '#{desc}'"
         click_edit_profile
         enter_profile_desc desc
-        save_profile_edit
+        wait_for_update_and_click update_profile_button_element
       end
 
       # Clicks the Engagement Index link
@@ -93,7 +88,7 @@ module Page
         logger.info "Searching for #{user.full_name} UID #{user.uid}"
         wait_for_load_and_click text_area_element(xpath: '//input[@placeholder="Search for other people"]')
         (option = list_item_element(xpath: "//div[contains(@class,'select-dropdown')]//li[contains(.,'#{user.full_name}')]")).when_present Utils.short_wait
-        js_click option
+        option.click
         wait_until(Utils.medium_wait) { name == user.full_name }
       end
 
@@ -150,6 +145,72 @@ module Page
         }
       end
 
+      # Returns true if an event drop element is in the viewport and therefore clickable
+      # @param drop_element [Selenium::WebDriver::Element]
+      # @return [boolean]
+      def drop_clickable?(drop_element)
+        drop_element.click
+        logger.debug 'Drop is clickable'
+        true
+      rescue
+        Selenium::WebDriver::Error::UnknownError
+        logger.debug 'Nope, not clickable'
+        false
+      end
+
+      # Attempts to drag an event drop into view so that it is clickable. In tests, if the drop is not visible then the drop
+      # should be to the right, so this drags the drops to the left a configurable number of times.
+      # @param driver [Selenium::WebDriver]
+      # @param drop_element [Selenium::WebDriver::Element]
+      def drag_drop_into_view(driver, drop_element)
+        logger.info 'Trying to bring the drop into view'
+        begin
+          tries ||= Utils.event_drop_drags
+          container = driver.find_element(xpath: '//*[name()="svg"]//*[name()="rect"]')
+          driver.action.drag_and_drop_by(container, -65, 0).perform
+          drop_element.click
+          logger.debug "It took #{tries} attempts to drag the drop into view"
+        rescue
+          (tries -= 1).zero? ? fail : retry
+        end
+      end
+
+      # Given the position of an event drop in the HTML, zooms in very close, drags the drop into view, hovers over it,
+      # and verifies the content of the tool-tip that appears.
+      # @param driver [Selenium::WebDriver]
+      # @param user [User]
+      # @param asset [Asset]
+      # @param activity [Activity]
+      # @param line_node [Integer]
+      # @param drop_node [Integer]
+      def verify_event_drop(driver, user, asset, activity, line_node, drop_node)
+        logger.info 'Checking an event drop'
+        wait_until(Utils.short_wait) { driver.find_element(xpath: "//*[name()='svg']//*[@class='drop-line']") }
+        drop = driver.find_element(xpath: "//*[name()='svg']//*[@class='drop-line'][#{line_node}]/*[name()='circle'][#{drop_node}]")
+        logger.debug 'Zooming in to distinguish the drop'
+        7.times do
+          button_element(xpath: '//button[contains(text(),"+")]').click
+          sleep 1
+        end
+        drag_drop_into_view(driver, drop) unless drop_clickable? drop
+        drop = driver.find_element(xpath: "//*[name()='svg']//*[@class='drop-line'][#{line_node}]/*[name()='circle'][#{drop_node}]")
+        driver.action.move_to(drop).perform
+        logger.debug 'Waiting for the tooltip to appear'
+        wait_until(Utils.short_wait) { driver.find_element(xpath: '//div[@class="event-details-container"]//h3') }
+        wait_until(Utils.short_wait) do
+          logger.debug "Verifying that the asset title in the tooltip is '#{asset.title}'"
+          link_element(xpath: '//div[@class="event-details-container"]//h3/a').text == asset.title
+        end
+        wait_until(Utils.short_wait) do
+          logger.debug "Verifying the activity type in the tooltip is '#{activity.impact_type}'"
+          span_element(xpath: '//div[@class="event-details-container"]//p//strong').text.include? activity.impact_type
+        end
+        wait_until(Utils.short_wait) do
+          logger.debug "Verifying that the user name in the tooltip is '#{user.full_name}'"
+          link_element(xpath: '//div[@class="event-details-container"]//p[2]//a').text == user.full_name
+        end
+      end
+
       # ASSETS
 
       # Given an array of list view asset link elements in a swim lane, returns the corresponding asset IDs
@@ -174,10 +235,6 @@ module Page
       def impactful_studio_asset_ids(assets)
         ids = impactful_asset_ids assets
         (ids.length > 4) ? ids[0..3] : ids
-      end
-
-      def trending_asset_ids(assets)
-        # TODO
       end
 
       # Adds a link asset to the Asset Library via the Impact Studio
@@ -208,16 +265,6 @@ module Page
       div(:no_my_assets_msg, xpath: '//h3[contains(text(),"My Assets")]/../following-sibling::div/div[contains(.,"No matching assets were found.")]')
       elements(:my_asset_link, :link, xpath: '//h3[contains(text(),"My Assets")]/../following-sibling::div/ul//a')
 
-      # Clicks the My Assets swim lane link for My Recent assets
-      def click_my_recent
-        wait_for_update_and_click_js my_recent_link_element
-      end
-
-      # Clicks the My Assets swim lane link for My Impactful assets
-      def click_my_most_impactful
-        wait_for_update_and_click_js my_impactful_link_element
-      end
-
       # Clicks an asset detail link on the My Assets swim lane
       # @param driver [Selenium::WebDriver]
       # @param asset [Asset]
@@ -230,25 +277,27 @@ module Page
       # Given an array of assets, waits until the list of My Recent Assets contains the four most recent asset IDs
       # @param assets [Array<Asset>]
       def verify_my_recent_assets(assets)
-        logger.debug "Expecting My Recent list to include asset IDs '#{recent_studio_asset_ids assets}'"
+        recent_ids = recent_studio_asset_ids assets
+        logger.debug "Expecting My Recent list to include asset IDs '#{recent_ids}'"
         scroll_to_bottom
-        click_my_recent unless my_recent_link_element.attribute('disabled')
+        wait_for_update_and_click_js(my_recent_link_element) unless my_recent_link_element.attribute('disabled')
         sleep 2
         logger.debug "My Recent list currently includes asset IDs '#{swim_lane_asset_ids my_asset_link_elements}'"
-        wait_until(Utils.short_wait) { swim_lane_asset_ids(my_asset_link_elements) == recent_studio_asset_ids(assets) }
-        no_my_assets_msg_element.when_visible 1 if recent_studio_asset_ids(assets).empty?
+        wait_until(Utils.short_wait) { swim_lane_asset_ids(my_asset_link_elements) == recent_ids }
+        no_my_assets_msg_element.when_visible 1 if recent_ids.empty?
       end
 
       # Given an array of assets, waits until the list of My Impactful Assets contains the four most impactful asset IDs
       # @param assets [Array<Asset>]
       def verify_my_impactful_assets(assets)
-        logger.debug "Expecting My Impactful list to include asset IDs '#{impactful_studio_asset_ids assets}'"
+        impactful_ids = impactful_studio_asset_ids assets
+        logger.debug "Expecting My Impactful list to include asset IDs '#{impactful_ids}'"
         scroll_to_bottom
-        click_my_most_impactful unless my_impactful_link_element.attribute('disabled')
+        wait_for_update_and_click_js(my_impactful_link_element) unless my_impactful_link_element.attribute('disabled')
         sleep 2
         logger.debug "My Impactful list currently includes asset IDs '#{swim_lane_asset_ids my_asset_link_elements}'"
-        wait_until(Utils.short_wait) { swim_lane_asset_ids(my_asset_link_elements) == impactful_studio_asset_ids(assets) }
-        no_my_assets_msg_element.when_visible 1 if impactful_studio_asset_ids(assets).empty?
+        wait_until(Utils.short_wait) { swim_lane_asset_ids(my_asset_link_elements) == impactful_ids }
+        no_my_assets_msg_element.when_visible 1 if impactful_ids.empty?
       end
 
       # YOUR ASSETS
@@ -259,90 +308,76 @@ module Page
       div(:no_assets_msg, xpath: '//h3[contains(text(),"Assets")]/../following-sibling::div/div[contains(.,"No matching assets were found.")]')
       elements(:asset_link, :link, xpath: '//h3[contains(text(),"Assets")]/../following-sibling::div/ul//a')
 
-      # Clicks the Recent swim lane link when viewing another user's profile
-      def click_your_recent
-        wait_for_update_and_click_js recent_link_element
-      end
-
-      # Clicks the Impactful swim lane link when viewing another user's profile
-      def click_your_impactful
-        wait_for_update_and_click_js impactful_link_element
-      end
-
       # Given an array of assets, waits until the list of another user's Recent Assets contains the four most recent asset IDs
       # @param assets [Array<Asset>]
       def verify_your_recent_assets(assets)
-        logger.debug "Expecting the other user's Recent list to include asset IDs '#{recent_studio_asset_ids assets}"
+        recent_ids = recent_studio_asset_ids assets
+        logger.debug "Expecting the other user's Recent list to include asset IDs '#{recent_ids}"
         scroll_to_bottom
-        click_your_recent unless recent_link_element.attribute('disabled')
+        wait_for_update_and_click_js(recent_link_element) unless recent_link_element.attribute('disabled')
         sleep 2
         logger.debug "The other user's Recent list currently includes asset IDs '#{swim_lane_asset_ids asset_link_elements}"
-        wait_until(Utils.short_wait) { swim_lane_asset_ids(asset_link_elements) == recent_studio_asset_ids(assets) }
-        no_assets_msg_element.when_visible 1 if recent_studio_asset_ids(assets).empty?
+        wait_until(Utils.short_wait) { swim_lane_asset_ids(asset_link_elements) == recent_ids }
+        no_assets_msg_element.when_visible 1 if recent_ids.empty?
       end
 
       # Given an array of assets, waits until the list of another user's Impactful Assets contains the four most impactful asset IDs
       # @param assets [Array<Asset>]
       def verify_your_impactful_assets(assets)
-        logger.debug "Expecting the other user's Impactful list to include asset IDs '#{impactful_studio_asset_ids assets}"
+        impactful_ids = impactful_studio_asset_ids assets
+        logger.debug "Expecting the other user's Impactful list to include asset IDs '#{impactful_ids}"
         scroll_to_bottom
-        click_your_impactful unless impactful_link_element.attribute('disabled')
+        wait_for_update_and_click_js(impactful_link_element) unless impactful_link_element.attribute('disabled')
         sleep 2
         logger.debug "The other user's Impactful list currently includes asset Ids '#{swim_lane_asset_ids asset_link_elements}"
-        wait_until(Utils.short_wait) { swim_lane_asset_ids(asset_link_elements) == impactful_studio_asset_ids(assets) }
-        no_assets_msg_element.when_visible 1 if impactful_studio_asset_ids(assets).empty?
+        wait_until(Utils.short_wait) { swim_lane_asset_ids(asset_link_elements) == impactful_ids }
+        no_assets_msg_element.when_visible 1 if impactful_ids.empty?
       end
 
       # EVERYONE'S ASSETS
 
       h3(:everyone_assets_heading, xpath: '//h3[contains(text(),"Everyone\'s Assets:")]')
-      button(:trending_link, id: 'community-assets-filter-by-recent')
+      button(:everyone_recent_link, id: 'community-assets-filter-by-recent')
+      button(:trending_link, id: 'community-assets-filter-by-trending')
       button(:everyone_impactful_link, id: 'community-assets-filter-by-impact')
       div(:no_everyone_assets_msg, xpath: '//h3[contains(text(),"Everyone\'s Assets")]/../following-sibling::div/div[contains(.,"No matching assets were found.")]')
       elements(:everyone_asset_link, :link, xpath: '//h3[contains(text(),"Everyone\'s Assets")]/../following-sibling::div/ul//a')
 
-      # Clicks the Everyone's Assets swim lane link for Trending assets
-      def click_all_trending
-        wait_for_update_and_click_js trending_link_element
-      end
-
-      # Clicks the Everyone's Assets swim lane link for Impactful assets
-      def click_all_impactful
-        wait_for_update_and_click_js everyone_impactful_link_element
-      end
-
-      # Clicks an asset detail link on the Everyone's Assets swim lane
-      # @param driver [Selenium::WebDriver]
-      # @param asset [Asset]
-      def click_everyone_asset_link(driver, asset)
-        logger.info "Clicking thumbnail for Everyone's Asset ID #{asset.id}"
-        wait_for_update_and_click_js link_element(xpath: "//h3[contains(.,'Everyone's Assets')]/../following-sibling::div/ul//a[contains(@href,'_id=#{asset.id}&')]")
-        switch_to_canvas_iframe driver
+      def verify_all_recent_assets(assets)
+        recent_ids = recent_studio_asset_ids assets
+        logger.debug "Expecting Everyone's Recent list to include asset IDs '#{recent_ids}"
+        scroll_to_bottom
+        wait_for_update_and_click_js(recent_link_element) unless recent_link_element.attribute('disabled')
+        sleep 2
+        logger.debug "Everyone's Recent list currently includes asset IDs '#{swim_lane_asset_ids everyone_asset_link_elements}"
+        wait_until(Utils.short_wait) { swim_lane_asset_ids(everyone_asset_link_elements) == recent_ids }
+        no_everyone_assets_msg_element.when_visible 1 if recent_ids.empty?
       end
 
       # Given an array of assets, waits until the list of everyone's Trending assets contains the four most impactful recent asset IDs
       # @param assets [Array<Asset>]
       def verify_all_trending_assets(assets)
-        # TODO - insert a pause prior to loading the trending assets so that "trending" can be recalculated
-        logger.debug "Expecting Everyone's Trending list to include asset IDs '#{impactful_studio_asset_ids assets}"
+        trending_ids = impactful_studio_asset_ids assets
+        logger.debug "Expecting Everyone's Trending list to include asset IDs '#{trending_ids}"
         scroll_to_bottom
-        click_all_trending unless trending_link_element.attribute('disabled')
+        wait_for_update_and_click_js(trending_link_element) unless trending_link_element.attribute('disabled')
         sleep 2
         logger.debug "Everyone's Trending list currently includes asset IDs '#{swim_lane_asset_ids everyone_asset_link_elements}"
-        wait_until(Utils.short_wait) { swim_lane_asset_ids(everyone_asset_link_elements) == impactful_studio_asset_ids(assets) }
-        no_everyone_assets_msg_element.when_visible 1 if impactful_studio_asset_ids(assets).empty?
+        wait_until(Utils.short_wait) { swim_lane_asset_ids(everyone_asset_link_elements) == trending_ids }
+        no_everyone_assets_msg_element.when_visible 1 if trending_ids.empty?
       end
 
       # Given an array of assets, waits until the list of everyone's Impactful assets contains the four most impactful asset IDs
       # @param assets [Array<Asset>]
       def verify_all_impactful_assets(assets)
-        logger.debug "Expecting Everyone's Impactful list to include asset IDs '#{impactful_studio_asset_ids assets}'"
+        impactful_ids = impactful_studio_asset_ids assets
+        logger.debug "Expecting Everyone's Impactful list to include asset IDs '#{impactful_ids}'"
         scroll_to_bottom
-        click_all_impactful unless everyone_impactful_link_element.attribute('disabled')
+        wait_for_update_and_click_js(everyone_impactful_link_element) unless everyone_impactful_link_element.attribute('disabled')
         sleep 2
         logger.debug "Everyone's Impactful list currently includes asset IDs '#{swim_lane_asset_ids everyone_asset_link_elements}"
-        wait_until(Utils.short_wait) { swim_lane_asset_ids(everyone_asset_link_elements) == impactful_studio_asset_ids(assets) }
-        no_everyone_assets_msg_element.when_visible 1 if impactful_studio_asset_ids(assets).empty?
+        wait_until(Utils.short_wait) { swim_lane_asset_ids(everyone_asset_link_elements) == impactful_ids }
+        no_everyone_assets_msg_element.when_visible 1 if impactful_ids.empty?
       end
 
     end
