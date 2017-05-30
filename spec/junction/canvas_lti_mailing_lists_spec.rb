@@ -165,6 +165,8 @@ describe 'bCourses Mailgun mailing lists', order: :defined do
 
       it 'creates mailing list memberships for users who have been restored to the site' do
         @canvas_page.add_users(course_site_1, [students[0]])
+        @canvas_page.masquerade_as(@driver, students[0], course_site_1)
+        @canvas_page.stop_masquerading @driver
         Utils.clear_cache(@driver, @splash_page, @toolbox_page)
         @mailing_lists_page.load_embedded_tool @driver
         @mailing_lists_page.search_for_list course_site_1.site_id

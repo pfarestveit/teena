@@ -43,7 +43,7 @@ module Page
   end
 
   def js_click(element)
-    execute_script('arguments[0].click();', element)
+    execute_script('arguments[0].click();', element) rescue click_element(element, Utils.short_wait)
   end
 
   # Awaits an element for a given timeout then clicks it using JavaScript.
