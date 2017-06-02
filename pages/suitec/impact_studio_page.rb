@@ -123,14 +123,6 @@ module Page
         event_drop_counts labels
       end
 
-      # Determines the count of drops from the activity type label
-      # @param labels [Array<String>]
-      # @param index [Integer]
-      # @return [Integer]
-      def activity_type_count(labels, index)
-        ((type = labels[index]).include? ' (') ? type.split(' ')[1].delete('()').to_i : 0
-      end
-
       # Given an array of activity timeline labels in the UI, returns a hash of event type counts
       # @param labels [Array<String>]
       # @return [Hash]
@@ -145,36 +137,6 @@ module Page
         }
       end
 
-      # Returns true if an event drop element is in the viewport and therefore clickable
-      # @param drop_element [Selenium::WebDriver::Element]
-      # @return [boolean]
-      def drop_clickable?(drop_element)
-        drop_element.click
-        logger.debug 'Drop is clickable'
-        true
-      rescue
-        Selenium::WebDriver::Error::UnknownError
-        logger.debug 'Nope, not clickable'
-        false
-      end
-
-      # Attempts to drag an event drop into view so that it is clickable. In tests, if the drop is not visible then the drop
-      # should be to the right, so this drags the drops to the left a configurable number of times.
-      # @param driver [Selenium::WebDriver]
-      # @param drop_element [Selenium::WebDriver::Element]
-      def drag_drop_into_view(driver, drop_element)
-        logger.info 'Trying to bring the drop into view'
-        begin
-          tries ||= Utils.event_drop_drags
-          container = driver.find_element(xpath: '//*[name()="svg"]//*[name()="rect"]')
-          driver.action.drag_and_drop_by(container, -65, 0).perform
-          drop_element.click
-          logger.debug "It took #{tries} attempts to drag the drop into view"
-        rescue
-          (tries -= 1).zero? ? fail : retry
-        end
-      end
-
       # Given the position of an event drop in the HTML, zooms in very close, drags the drop into view, hovers over it,
       # and verifies the content of the tool-tip that appears.
       # @param driver [Selenium::WebDriver]
@@ -184,18 +146,7 @@ module Page
       # @param line_node [Integer]
       # @param drop_node [Integer]
       def verify_event_drop(driver, user, asset, activity, line_node, drop_node)
-        logger.info 'Checking an event drop'
-        wait_until(Utils.short_wait) { driver.find_element(xpath: "//*[name()='svg']//*[@class='drop-line']") }
-        drop = driver.find_element(xpath: "//*[name()='svg']//*[@class='drop-line'][#{line_node}]/*[name()='circle'][#{drop_node}]")
-        logger.debug 'Zooming in to distinguish the drop'
-        7.times do
-          button_element(xpath: '//button[contains(text(),"+")]').click
-          sleep 1
-        end
-        drag_drop_into_view(driver, drop) unless drop_clickable? drop
-        drop = driver.find_element(xpath: "//*[name()='svg']//*[@class='drop-line'][#{line_node}]/*[name()='circle'][#{drop_node}]")
-        driver.action.move_to(drop).perform
-        logger.debug 'Waiting for the tooltip to appear'
+        drag_drop_into_view(driver, line_node, drop_node)
         wait_until(Utils.short_wait) { driver.find_element(xpath: '//div[@class="event-details-container"]//h3') }
         wait_until(Utils.short_wait) do
           logger.debug "Verifying that the asset title in the tooltip is '#{asset.title}'"
