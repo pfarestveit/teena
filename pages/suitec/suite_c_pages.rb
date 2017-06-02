@@ -3,7 +3,7 @@ require_relative '../../util/spec_helper'
 module Page
 
   module SuiteCPages
-  
+
     include PageObject
     include Logging
     include Page
@@ -202,6 +202,69 @@ module Page
       wait_until(Utils.short_wait) { driver.window_handles.length > 1 }
       driver.switch_to.window driver.window_handles.last
       wait_until(Utils.medium_wait) { title.include? whiteboard.title }
+    end
+
+    # EVENT DROPS
+
+    # Determines the count of drops from the activity type label
+    # @param labels [Array<String>]
+    # @param index [Integer]
+    # @return [Integer]
+    def activity_type_count(labels, index)
+      labels[index] && (((type = labels[index]).include? ' (') ? type.split(' ').last.delete('()').to_i : 0)
+    end
+
+    # Returns true if an event drop element is in the viewport and therefore clickable
+    # @param drop_element [Selenium::WebDriver::Element]
+    # @return [boolean]
+    def drop_clickable?(drop_element)
+      drop_element.click
+      logger.debug 'Drop is clickable'
+      true
+    rescue
+      Selenium::WebDriver::Error::UnknownError
+      logger.debug 'Nope, not clickable'
+      false
+    end
+
+    # Attempts to drag an event drop into view so that it is clickable. In tests, if the drop is not visible then the drop
+    # should be to the right, so this drags the drops to the left a configurable number of times.
+    # @param driver [Selenium::WebDriver]
+    def drag_drop_into_view(driver, line_node, drop_node)
+      # Find the drop in the SVG
+      logger.info 'Checking an event drop'
+      wait_for_update_and_click_js button_element(xpath: '//button[text()="All"]') unless button_element(xpath: '//button[text()="All"]').attribute('disabled')
+      wait_until(Utils.short_wait) { driver.find_element(xpath: "//*[name()='svg']//*[@class='drop-line'][#{line_node}]/*[name()='circle'][#{drop_node}]") }
+      container = driver.find_element(xpath: '//*[name()="svg"]//*[name()="rect"]')
+      drop = driver.find_element(xpath: "//*[name()='svg']//*[@class='drop-line'][#{line_node}]/*[name()='circle'][#{drop_node}]")
+
+      # Zoom in, but a little less if on asset detail since drops are less likely to be tightly clustered
+      logger.debug 'Zooming in to distinguish the drop'
+      asset_detail = h3_element(xpath: '//h3[contains(.,"Activity Timeline")]').exists?
+      zooms = asset_detail ? 6 : 7
+      zooms.times do
+        js_click button_element(xpath: '//button[contains(text(),"+")]')
+        sleep 1
+        driver.action.drag_and_drop_by(container, -20, 0).perform
+        sleep 1
+      end
+
+      # If on the asset detail, hit the comment input in order to bring the event drops into view. Scroll the lines till the drop appears.
+      wait_for_element_and_type_js(text_area_element(id: 'assetlibrary-item-newcomment-body'), ' ') if asset_detail
+      unless drop_clickable? drop
+        logger.debug 'Trying to bring the drop into view'
+        begin
+          tries ||= Utils.event_drop_drags
+          driver.action.drag_and_drop_by(container, -65, 0).perform
+          drop.click
+          logger.debug "It took #{tries} attempts to drag the drop into view"
+        rescue
+          (tries -= 1).zero? ? fail : retry
+        end
+      end
+
+      # Mouse over the drop to reveal the tooltip.
+      driver.action.move_to(driver.find_element(xpath: "//*[name()='svg']//*[@class='drop-line'][#{line_node}]/*[name()='circle'][#{drop_node}]")).perform
     end
 
   end

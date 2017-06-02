@@ -693,6 +693,59 @@ module Page
         confirm(true) { wait_for_load_and_click_js delete_button_element(index) }
       end
 
+      # ACTIVITY EVENT DROPS
+
+      element(:activity_timeline_event_drops, xpath: '//h3[contains(.,"Activity Timeline")]/following-sibling::div[@data-ng-if="assetActivity"]//*[name()="svg"]')
+
+      # Returns the activity labels on the My Classmates event drops
+      # @param driver [Selenium::WebDriver]
+      # @return [Array<String>]
+      def activity_timeline_event_counts(driver)
+        # Shift focus to the new comment input so that the event drops will also move into the viewport.
+        wait_for_element_and_type_js(text_area_element(id: 'assetlibrary-item-newcomment-body'), ' ')
+        sleep 1
+        activity_timeline_event_drops_element.when_visible Utils.short_wait
+        wait_for_update_and_click_js button_element(xpath: '//button[text()="All"]') unless button_element(xpath: '//button[text()="All"]').attribute('disabled')
+        sleep 1
+        elements = driver.find_elements(xpath: '//h3[contains(.,"Activity Timeline")]/following-sibling::div[@data-ng-if="assetActivity"]//*[name()="svg"]/*[name()="g"]/*[name()="text"]')
+        labels = elements.map &:text
+        asset_event_drop_counts labels
+      end
+
+      # Given an array of activity timeline labels in the UI, returns a hash of event type counts. Note that 'remixed' is only
+      # applicable to whiteboard type assets and its count will be nil for other types.
+      # @param labels [Array<String>]
+      # @return [Hash]
+      def asset_event_drop_counts(labels)
+        {
+          viewed: activity_type_count(labels, 0),
+          liked: activity_type_count(labels, 1),
+          commented: activity_type_count(labels, 2),
+          used_in_whiteboard: activity_type_count(labels, 3),
+          remixed: activity_type_count(labels, 4)
+        }
+      end
+
+      # Given the position of an event drop in the HTML, zooms in very close, drags the drop into view, hovers over it,
+      # and verifies the content of the tool-tip that appears.
+      # @param driver [Selenium::WebDriver]
+      # @param user [User]
+      # @param activity [Activity]
+      # @param line_node [Integer]
+      # @param drop_node [Integer]
+      def verify_asset_event_drop(driver, user, activity, line_node, drop_node)
+        drag_drop_into_view(driver, line_node, drop_node)
+        wait_until(Utils.short_wait) { driver.find_element(class: 'event-details') }
+        wait_until(Utils.short_wait) do
+          logger.debug "Verifying that the user in the tooltip is '#{user.full_name}'"
+          link_element(xpath: '//p[@class="event-details-description"]//a').text == user.full_name
+        end
+        wait_until(Utils.short_wait) do
+          logger.debug "Verifying the activity type in the tooltip is '#{activity.impact_type_asset}'"
+          span_element(xpath: '//p[@class="event-details-description"]/span/span/span').text.include? activity.impact_type_asset
+        end
+      end
+
     end
   end
 end
