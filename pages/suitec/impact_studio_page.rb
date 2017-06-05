@@ -225,6 +225,27 @@ module Page
         switch_to_canvas_iframe driver
       end
 
+      # Returns the pin button for an asset on the My Assets lane
+      # @param asset [Asset]
+      # @return [PageObject::Elements::Button]
+      def my_assets_pin_element(asset)
+        button_element(xpath: "//h3[text()='My Assets:']/../following-sibling::div//button[@id='iconbar-pin-#{asset.id}']")
+      end
+
+      # Pins an asset on the My Assets lane
+      # @param asset [Asset]
+      def pin_my_asset(asset)
+        logger.info "Pinning My Assets asset ID #{asset.id}"
+        change_asset_pinned_state(my_assets_pin_element(asset), 'Pinned')
+      end
+
+      # Unpins an asset on the My Assets lane
+      # @param asset [Asset]
+      def unpin_my_asset(asset)
+        logger.info "Unpinning My Assets asset ID #{asset.id}"
+        change_asset_pinned_state(my_assets_pin_element(asset), 'Pin')
+      end
+
       # Given an array of assets, waits until the list of My Recent Assets contains the four most recent asset IDs
       # @param assets [Array<Asset>]
       def verify_my_recent_assets(assets)
@@ -258,6 +279,27 @@ module Page
       link(:impactful_link, id: 'user-assets-filter-by-impact')
       div(:no_assets_msg, xpath: '//h3[contains(text(),"Assets")]/../following-sibling::div/div[contains(.,"No matching assets were found.")]')
       elements(:asset_link, :link, xpath: '//h3[contains(text(),"Assets")]/../following-sibling::div/ul//a')
+
+      # Returns the pin button for an asset on the Assets lane
+      # @param asset [Asset]
+      # @return [PageObject::Elements::Button]
+      def your_assets_pin_element(asset)
+        button_element(xpath: "//h3[text()='Assets:']/../following-sibling::div//button[@id='iconbar-pin-#{asset.id}']")
+      end
+
+      # Pins an asset on the Assets lane
+      # @param asset [Asset]
+      def pin_your_asset(asset)
+        logger.info "Pinning Assets asset ID #{asset.id}"
+        change_asset_pinned_state(your_assets_pin_element(asset), 'Pinned')
+      end
+
+      # Unpins an asset on the Assets lane
+      # @param asset [Asset]
+      def unpin_your_asset(asset)
+        logger.info "Unpinning Assets asset ID #{asset.id}"
+        change_asset_pinned_state(your_assets_pin_element(asset), 'Pin')
+      end
 
       # Given an array of assets, waits until the list of another user's Recent Assets contains the four most recent asset IDs
       # @param assets [Array<Asset>]
@@ -294,6 +336,29 @@ module Page
       div(:no_everyone_assets_msg, xpath: '//h3[contains(text(),"Everyone\'s Assets")]/../following-sibling::div/div[contains(.,"No matching assets were found.")]')
       elements(:everyone_asset_link, :link, xpath: '//h3[contains(text(),"Everyone\'s Assets")]/../following-sibling::div/ul//a')
 
+      # Returns the pin button for an asset on the Everyone's Assets lane
+      # @param asset [Asset]
+      # @return [PageObject::Elements::Button]
+      def everyone_assets_pin_element(asset)
+        button_element(xpath: "//h3[contains(text(), 'Everyone')]/../following-sibling::div//button[@id='iconbar-pin-#{asset.id}']")
+      end
+
+      # Pins an asset on the Everyone's Assets lane
+      # @param asset [Asset]
+      def pin_everyone_asset(asset)
+        logger.info "Pinning Everyone's Assets asset ID #{asset.id}"
+        change_asset_pinned_state(everyone_assets_pin_element(asset), 'Pinned')
+      end
+
+      # Unpins an asset on the Everyone's Assets lane
+      # @param asset [Asset]
+      def unpin_everyone_asset(asset)
+        logger.info "Unpinning Everyone's Assets asset ID #{asset.id}"
+        change_asset_pinned_state(everyone_assets_pin_element(asset), 'Pin')
+      end
+
+      # Given an array of assets, waits until the list of everyone's Recent assets contains the four most recent asset IDs
+      # @param assets [Array<Asset>]
       def verify_all_recent_assets(assets)
         recent_ids = recent_studio_asset_ids assets
         logger.debug "Expecting Everyone's Recent list to include asset IDs '#{recent_ids}"
