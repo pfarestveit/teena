@@ -204,6 +204,17 @@ module Page
       wait_until(Utils.medium_wait) { title.include? whiteboard.title }
     end
 
+    # PINS
+
+    # Clicks a given pin element and waits for its text to match a given string
+    # @param pin_element [PageObject::Elements::Button]
+    # @param state [String]
+    def change_asset_pinned_state(pin_element, state)
+      wait_for_load_and_click_js pin_element
+      wait_until(1) { pin_element.span_element(xpath: "//span[text()='#{state}']") }
+      sleep 1
+    end
+
     # EVENT DROPS
 
     # Determines the count of drops from the activity type label
@@ -245,7 +256,7 @@ module Page
       zooms.times do
         js_click button_element(xpath: '//button[contains(text(),"+")]')
         sleep 1
-        driver.action.drag_and_drop_by(container, -20, 0).perform
+        driver.action.drag_and_drop_by(container, -50, 0).perform
         sleep 1
       end
 

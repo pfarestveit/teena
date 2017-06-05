@@ -241,11 +241,11 @@ module Page
       # Performs an advanced search of the asset library
       # @param keyword [String]
       # @param category [String]
-      # @param uploader [User]
+      # @param user [User]
       # @param asset_type [String]
       # @param sort_by [String]
-      def advanced_search(keyword, category, uploader, asset_type, sort_by = nil)
-        logger.info "Performing advanced search of asset library by keyword '#{keyword}', category '#{category}', uploader '#{uploader && uploader.full_name}', and asset type '#{asset_type}'."
+      def advanced_search(keyword, category, user, asset_type, sort_by = nil)
+        logger.info "Performing advanced search of asset library by keyword '#{keyword}', category '#{category}', user '#{user && user.full_name}', and asset type '#{asset_type}'."
         open_advanced_search
         keyword.nil? ?
             wait_for_element_and_type(keyword_search_input_element, '') :
@@ -253,9 +253,9 @@ module Page
         category.nil? ?
             (wait_for_element_and_select_js(category_select_element, 'Category')) :
             (wait_for_element_and_select_js(category_select_element, category))
-        uploader.nil? ?
-            (self.uploader_select = 'Uploader') :
-            (self.uploader_select = uploader.full_name)
+        user.nil? ?
+            (self.uploader_select = 'User') :
+            (self.uploader_select = user.full_name)
         asset_type.nil? ?
             (self.asset_type_select = 'Asset type') :
             (self.asset_type_select = asset_type)
@@ -536,6 +536,45 @@ module Page
       def toggle_detail_view_item_like
         logger.info 'Clicking the like button'
         wait_for_update_and_click_js detail_view_asset_like_button_element
+      end
+
+      # PINS
+
+      # Returns the pin button for a list view asset
+      # @param asset [Asset]
+      # @return [PageObject::Elements::Button]
+      def list_view_pin_element(asset)
+        button_element(id: "iconbar-pin-#{asset.id}")
+      end
+
+      # Pins a list view asset
+      # @param asset [Asset]
+      def pin_list_view_asset(asset)
+        logger.info "Pinning list view asset ID #{asset.id}"
+        change_asset_pinned_state(list_view_pin_element(asset), 'Pinned')
+      end
+
+      # Unpins a list view asset
+      # @param asset [Asset]
+      def unpin_list_view_asset(asset)
+        logger.info "Un-pinning list view asset ID #{asset.id}"
+        change_asset_pinned_state(list_view_pin_element(asset), 'Pin')
+      end
+
+      button(:detail_view_pin_button, class: 'assetlibrary-item-pin')
+
+      # Pins a detail view asset
+      # @param asset [Asset]
+      def pin_detail_view_asset(asset)
+        logger.info "Pinning detail view asset ID #{asset.id}"
+        change_asset_pinned_state(detail_view_pin_button_element, 'Pinned')
+      end
+
+      # Unpins a detail view asset
+      # @param asset [Asset]
+      def unpin_detail_view_asset(asset)
+        logger.info "Un-pinning detail view asset ID #{asset.id}"
+        change_asset_pinned_state(detail_view_pin_button_element, 'Pin')
       end
 
       # COMMENTS
