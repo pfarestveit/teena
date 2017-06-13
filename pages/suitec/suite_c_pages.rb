@@ -10,8 +10,8 @@ module Page
 
     # Assets UI shared across tools
 
-    elements(:list_view_asset, :list_item, xpath: '//li[@data-ng-repeat="asset in assets | unique:\'id\'"]')
-    elements(:list_view_asset_link, :link, xpath: '//li[@data-ng-repeat="asset in assets | unique:\'id\'"]//a')
+    elements(:list_view_asset, :list_item, xpath: '//li[contains(@data-ng-repeat,"asset")]')
+    elements(:list_view_asset_link, :link, xpath: '//li[contains(@data-ng-repeat,"asset")]//a')
     div(:no_search_results, class: 'assetlibrary-list-noresults')
 
     link(:upload_link, xpath: '//a[contains(.,"Upload")]')
@@ -47,7 +47,10 @@ module Page
     # @return [Array<String>]
     def list_view_asset_ids
       wait_until { list_view_asset_link_elements.any? }
-      list_view_asset_link_elements.map { |link| link.attribute('href').sub("#{Utils.suite_c_base_url}/assetlibrary/", '') }
+      list_view_asset_link_elements.map do |link|
+        query = link.attribute('href').sub("#{Utils.suite_c_base_url}/assetlibrary/", '')
+        query.include?('?') ? query.split('?').first : query
+      end
     end
 
     # Clicks the 'back to asset library' link and waits for list view to load
@@ -71,6 +74,10 @@ module Page
     def recent_asset_ids(assets)
       asset_ids = assets.map { |asset| asset.id if asset.visible }
       asset_ids.compact.sort.reverse
+    end
+
+    def pinned_asset_ids(pinned_assets)
+      pinned_assets.map { |asset| asset.id if asset.visible }
     end
 
     # Given an array of assets, returns the IDs of the assets with non-zero impact scores in descending order of score
@@ -115,7 +122,7 @@ module Page
     # @param asset [Asset]
     def enter_file_metadata(asset)
       logger.info "Entering title '#{asset.title}', category '#{asset.category}', and description '#{asset.description}'"
-      wait_until(Utils.short_wait) { upload_file_title_input_elements.any? }
+      wait_until(Utils.medium_wait) { upload_file_title_input_elements.any? }
       wait_for_element_and_type(upload_file_title_input_elements[0], asset.title)
       wait_for_element_and_select_js(upload_file_category_select_element, asset.category) unless asset.category.nil?
       wait_for_element_and_type(upload_file_description_input_elements[0], asset.description) unless asset.description.nil?
@@ -215,6 +222,63 @@ module Page
       sleep 1
     end
 
+    # SEARCH / FILTER
+
+    text_area(:search_input, id: 'assetlibrary-search')
+    button(:search_button, xpath: '//button[@title="Search"]')
+
+    button(:advanced_search_button, class: 'search-advanced')
+    text_area(:keyword_search_input, id: 'assetlibrary-search-keywords')
+    select_list(:category_select, id: 'assetlibrary-search-category')
+    select_list(:uploader_select, id: 'assetlibrary-search-user')
+    select_list(:asset_type_select, id: 'assetlibrary-search-type')
+    select_list(:sort_by_select, id: 'assetlibrary-sort-by')
+    button(:advanced_search_submit, xpath: '//button[text()="Search"]')
+    link(:cancel_advanced_search, text: 'Cancel')
+
+    # Performs a simple search of the asset library
+    # @param keyword [String]
+    def simple_search(keyword)
+      logger.info "Performing simple search of asset library by keyword '#{keyword}'"
+      wait_for_update_and_click(cancel_advanced_search_element) if cancel_advanced_search?
+      search_input_element.when_visible Utils.short_wait
+      search_input_element.clear
+      search_input_element.send_keys(keyword) unless keyword.nil?
+      wait_for_update_and_click search_button_element
+    end
+
+    # Ensures the advanced search form is expanded
+    def open_advanced_search
+      wait_for_load_and_click advanced_search_button_element unless keyword_search_input_element.visible?
+    end
+
+    # Performs an advanced search of the asset library
+    # @param keyword [String]
+    # @param category [String]
+    # @param user [User]
+    # @param asset_type [String]
+    # @param sort_by [String]
+    def advanced_search(keyword, category, user, asset_type, sort_by = nil)
+      logger.info "Performing advanced search of asset library by keyword '#{keyword}', category '#{category}', user '#{user && user.full_name}', and asset type '#{asset_type}'."
+      open_advanced_search
+      keyword.nil? ?
+          wait_for_element_and_type(keyword_search_input_element, '') :
+          wait_for_element_and_type(keyword_search_input_element, keyword)
+      category.nil? ?
+          (wait_for_element_and_select_js(category_select_element, 'Category')) :
+          (wait_for_element_and_select_js(category_select_element, category))
+      user.nil? ?
+          (self.uploader_select = 'User') :
+          (self.uploader_select = user.full_name)
+      asset_type.nil? ?
+          (self.asset_type_select = 'Asset type') :
+          (self.asset_type_select = asset_type)
+      sort_by.nil? ?
+          (self.sort_by_select = 'Most recent') :
+          (self.sort_by_select = sort_by)
+      wait_for_update_and_click advanced_search_submit_element
+    end
+
     # EVENT DROPS
 
     # Determines the count of drops from the activity type label
@@ -244,20 +308,26 @@ module Page
     def drag_drop_into_view(driver, line_node, drop_node)
       # Find the drop in the SVG
       logger.info 'Checking an event drop'
-      wait_for_update_and_click_js button_element(xpath: '//button[text()="All"]') unless button_element(xpath: '//button[text()="All"]').attribute('disabled')
+      div_element(xpath: '//strong[contains(text(), "View by")]').when_visible Utils.short_wait
+      if (button = button_element(xpath: '//button[text()="All"]')).exists?
+        wait_for_update_and_click_js button unless button.attribute('disabled')
+      end
       wait_until(Utils.short_wait) { driver.find_element(xpath: "//*[name()='svg']//*[@class='drop-line'][#{line_node}]/*[name()='circle'][#{drop_node}]") }
       container = driver.find_element(xpath: '//*[name()="svg"]//*[name()="rect"]')
       drop = driver.find_element(xpath: "//*[name()='svg']//*[@class='drop-line'][#{line_node}]/*[name()='circle'][#{drop_node}]")
+      driver.action.drag_and_drop_by(container, -25, 0).perform unless drop_clickable? drop
 
       # Zoom in, but a little less if on asset detail since drops are less likely to be tightly clustered
       logger.debug 'Zooming in to distinguish the drop'
       asset_detail = h3_element(xpath: '//h3[contains(.,"Activity Timeline")]').exists?
       zooms = asset_detail ? 6 : 7
-      zooms.times do
-        js_click button_element(xpath: '//button[contains(text(),"+")]')
-        sleep 1
-        driver.action.drag_and_drop_by(container, -50, 0).perform
-        sleep 1
+      unless drop_clickable? drop
+        zooms.times do
+          js_click button_element(xpath: '//button[contains(text(),"+")]')
+          sleep 1
+          driver.action.drag_and_drop_by(container, -50, 0).perform
+          sleep 1
+        end
       end
 
       # If on the asset detail, hit the comment input in order to bring the event drops into view. Scroll the lines till the drop appears.

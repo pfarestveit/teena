@@ -57,7 +57,7 @@ describe 'New asset uploads', order: :defined do
                 @asset_library.upload_file_to_library @asset
                 @asset_library.wait_until(Utils.long_wait) { @asset_library.list_view_asset_elements.any? }
                 file_uploaded = @asset_library.verify_block { @asset_library.verify_first_asset(user, @asset) }
-                preview_generated = @asset_library.preview_generated?(@driver, @asset_library_url, @asset)
+                preview_generated = @asset_library.preview_generated?(@driver, @asset_library_url, @asset, user)
                 asset_downloadable = @asset_library.verify_block { @asset_library.download_asset }
 
                 it("appear in the Asset Library for #{user_full_name} uploading #{asset_title}") { expect(file_uploaded).to be true }
@@ -72,7 +72,7 @@ describe 'New asset uploads', order: :defined do
               @asset_library.add_site @asset
               @asset_library.wait_until(timeout) { @asset_library.list_view_asset_elements.any? }
               url_uploaded = @asset_library.verify_block { @asset_library.verify_first_asset(user, @asset) }
-              preview_generated = @asset_library.preview_generated?(@driver, @asset_library_url, @asset)
+              preview_generated = @asset_library.preview_generated?(@driver, @asset_library_url, @asset, user)
               has_download_button = @asset_library.download_asset_link?
 
               it("appear in the Asset Library for #{user_full_name} uploading #{asset_title}") { expect(url_uploaded).to be true }

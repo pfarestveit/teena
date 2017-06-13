@@ -375,6 +375,7 @@ module Page
       load_course_site(driver, course)
       reset_user_email(course, test_users)
       tools.each { |tool| add_suite_c_tool(course, tool) unless tool_nav_link(tool).exists? } if tools
+      disable_tool(course, SuiteCTools::IMPACT_STUDIO) unless tools.include? SuiteCTools::IMPACT_STUDIO
     end
 
     button(:delete_course_button, xpath: '//button[text()="Delete Course"]')

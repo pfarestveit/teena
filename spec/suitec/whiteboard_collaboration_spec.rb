@@ -47,6 +47,12 @@ describe 'Whiteboard', order: :defined do
       @asset_library.ensure_canvas_sync(@driver_1, @asset_library_url)
     end
 
+    # Each student hits the whiteboards tool to ensure all are synced to the course before proceeding
+    [student_1, student_2, student_3].each do |student|
+      @canvas_driver_1.masquerade_as(@driver_1, student, course)
+      @whiteboards_driver_1.load_page(@driver_1, @whiteboards_url)
+    end
+
     # Create three whiteboards
     @whiteboards = []
     @whiteboards << (@whiteboard_1 = Whiteboard.new({owner: student_1, title: "Whiteboard Collaboration #{test_id} - board 1", collaborators: [student_2, student_3]}))
@@ -298,7 +304,7 @@ describe 'Whiteboard', order: :defined do
     it "allows #{student_1.full_name} to delete a member" do
       @whiteboards_driver_1.remove_collaborator student_3
       @whiteboards_driver_1.show_collaborators_pane
-      @whiteboards_driver_1.collaborator(student_3).when_not_visible timeout
+      @whiteboards_driver_1.collaborator(student_3).when_not_visible timeout rescue Selenium::WebDriver::Error::StaleElementReferenceError
     end
 
     it "allows #{student_1.full_name} to delete its own membership" do
@@ -350,8 +356,8 @@ describe 'Whiteboard', order: :defined do
         @canvas_driver_3.masquerade_as(@driver_3, user, course)
         [@whiteboard_1, @whiteboard_2, @whiteboard_3].each do |whiteboard|
           @whiteboards_driver_3.hit_whiteboard_url(course, @whiteboards_url, whiteboard)
-          has_access = @whiteboards_driver_3.verify_block { @whiteboards_driver_3.settings_button_element.when_visible timeout }
-          expect(has_access).to be false
+          failure_to_launch = @whiteboards_driver_3.verify_block { @whiteboards_driver_3.launch_failure_element.when_visible timeout }
+          expect(failure_to_launch).to be true
         end
       end
     end
