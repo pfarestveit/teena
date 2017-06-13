@@ -1,7 +1,7 @@
-webdriver: firefox
+webdriver: chrome
 
 timeouts:
-  click_wait: 0
+  click_wait: 0.5
   short: 8
   medium: 30
   long: 120
@@ -11,7 +11,7 @@ cal_net:
   base_url: https://auth-test.berkeley.edu
 
 suite_c:
-  base_url: https://calcentral-col-qa-01.ist.berkeley.edu
+  base_url: https://app-qa.ets-berkeley-suitec.net
   lti_key: secret
   lti_secret: secret
   db_host: secret

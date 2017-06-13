@@ -99,7 +99,7 @@ describe 'Canvas assignment submission', order: :defined do
         @asset_library.wait_until(Utils.short_wait) { @asset_library.list_view_asset_elements.length == 1 }
 
         file_uploaded = @asset_library.verify_block { @asset_library.verify_first_asset(student, asset) }
-        preview_generated = @asset_library.preview_generated?(@driver, @asset_library_url, asset)
+        preview_generated = @asset_library.preview_generated?(@driver, @asset_library_url, asset, student)
 
         it("appears in the Asset Library for #{student_full_name}") { expect(file_uploaded).to be true }
         it("generate the expected asset preview for #{student_full_name} uploading #{asset_title}") { expect(preview_generated).to be true }

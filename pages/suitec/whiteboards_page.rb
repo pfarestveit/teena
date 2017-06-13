@@ -95,6 +95,8 @@ module Page
 
       # OPEN / CLOSE EXISTING WHITEBOARD
 
+      h2(:launch_failure, xpath: '//h2[text()="Launch failure"]')
+
       # Opens a whiteboard using its ID and shifts browser focus to the new window
       # @param driver [Selenium::WebDriver]
       # @param whiteboard [Whiteboard]
@@ -148,7 +150,7 @@ module Page
 
       # Clicks the settings button on a whiteboard
       def click_settings_button
-        wait_for_update_and_click settings_button_element
+        wait_for_update_and_click_js settings_button_element
       end
 
       # Changes the title of a whiteboard to the whiteboard object's current title
@@ -176,7 +178,7 @@ module Page
       def remove_collaborator(user)
         click_settings_button
         logger.debug "Clicking the remove button for #{user.full_name}"
-        wait_for_update_and_click button_element(xpath: "//span[text()='#{user.full_name}']/following-sibling::button")
+        wait_for_update_and_click_js button_element(xpath: "//span[text()='#{user.full_name}']/following-sibling::button")
         collaborator_name(user).when_not_visible Utils.short_wait
         # An alert can appear, but only if the user removes itself
         confirm(true) { wait_for_update_and_click save_edit_element } rescue Selenium::WebDriver::Error::NoAlertPresentError

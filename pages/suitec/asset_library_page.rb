@@ -44,8 +44,8 @@ module Page
       # ASSETS
 
       elements(:list_view_asset, :list_item, class: 'assetlibrary-list-item')
-      elements(:list_view_asset_title, :span, xpath: '//li[@data-ng-repeat="asset in assets | unique:\'id\'"]//div[@class="col-list-item-metadata"]/div[1]')
-      elements(:list_view_asset_owner_name, :element, xpath: '//li[@data-ng-repeat="asset in assets | unique:\'id\'"]//small')
+      elements(:list_view_asset_title, :span, xpath: '//li[contains(@data-ng-repeat,"asset")]//div[@class="col-list-item-metadata"]/div[1]')
+      elements(:list_view_asset_owner_name, :element, xpath: '//li[contains(@data-ng-repeat,"asset")]//small')
       elements(:list_view_asset_likes_count, :span, xpath: '//span[@data-ng-bind="asset.likes | number"]')
       elements(:list_view_asset_like_button, :button, xpath: '//button[@data-ng-click="like(asset)"]')
       elements(:list_view_asset_views_count, :span, xoath: '//div[@class="assetlibrary-item-metadata"]//span[@data-ng-bind="asset.views | number"]')
@@ -141,7 +141,7 @@ module Page
         # Pause to allow DOM update to complete
         sleep 1
         logger.debug "Verifying list view asset title includes '#{asset.title}'"
-        wait_until(timeout=Utils.short_wait) { list_view_asset_title_elements[0].text.include? asset.title }
+        wait_until(timeout=Utils.medium_wait) { list_view_asset_title_elements[0].text.include? asset.title }
         logger.debug "Verifying list view asset owner is '#{user.full_name}'"
         # Subtract the 'by ' prefix
         wait_until(timeout) { list_view_asset_owner_name_elements[0].text[3..-1] == user.full_name }
@@ -178,8 +178,9 @@ module Page
       # @param driver [Selenium::WebDriver]
       # @param url [String]
       # @param asset [Asset]
+      # @param user [User]
       # @return [boolean]
-      def preview_generated?(driver, url, asset)
+      def preview_generated?(driver, url, asset, user)
         timeout = Utils.medium_wait
         logger.info "Verifying a preview of type '#{asset.preview}' is generated for the asset within #{timeout} seconds"
         preview_element = case asset.preview
@@ -200,69 +201,14 @@ module Page
                             else
                               paragraph_element(xpath: '//p[contains(.,"No preview available")]')
                           end
-        load_asset_detail(driver, url, asset)
+        load_page(driver, url)
+        advanced_search(nil, asset.category, user, asset.type)
+        click_asset_link_by_id asset
         verify_block do
           preparing_preview_element.when_not_present(timeout) if preparing_preview?
           sleep 1
           preview_element.when_present Utils.short_wait
         end
-      end
-
-      # SEARCH / FILTER
-
-      text_area(:search_input, id: 'assetlibrary-search')
-      button(:search_button, xpath: '//button[@title="Search"]')
-
-      button(:advanced_search_button, class: 'search-advanced')
-      text_area(:keyword_search_input, id: 'assetlibrary-search-keywords')
-      select_list(:category_select, id: 'assetlibrary-search-category')
-      select_list(:uploader_select, id: 'assetlibrary-search-user')
-      select_list(:asset_type_select, id: 'assetlibrary-search-type')
-      select_list(:sort_by_select, id: 'assetlibrary-sort-by')
-      button(:advanced_search_submit, xpath: '//button[text()="Search"]')
-      link(:cancel_advanced_search, text: 'Cancel')
-
-      # Performs a simple search of the asset library
-      # @param keyword [String]
-      def simple_search(keyword)
-        logger.info "Performing simple search of asset library by keyword '#{keyword}'"
-        wait_for_update_and_click(cancel_advanced_search_element) if cancel_advanced_search?
-        search_input_element.when_visible Utils.short_wait
-        search_input_element.clear
-        search_input_element.send_keys(keyword) unless keyword.nil?
-        wait_for_update_and_click search_button_element
-      end
-
-      # Ensures the advanced search form is expanded
-      def open_advanced_search
-        wait_for_load_and_click advanced_search_button_element unless keyword_search_input_element.visible?
-      end
-
-      # Performs an advanced search of the asset library
-      # @param keyword [String]
-      # @param category [String]
-      # @param user [User]
-      # @param asset_type [String]
-      # @param sort_by [String]
-      def advanced_search(keyword, category, user, asset_type, sort_by = nil)
-        logger.info "Performing advanced search of asset library by keyword '#{keyword}', category '#{category}', user '#{user && user.full_name}', and asset type '#{asset_type}'."
-        open_advanced_search
-        keyword.nil? ?
-            wait_for_element_and_type(keyword_search_input_element, '') :
-            wait_for_element_and_type(keyword_search_input_element, keyword)
-        category.nil? ?
-            (wait_for_element_and_select_js(category_select_element, 'Category')) :
-            (wait_for_element_and_select_js(category_select_element, category))
-        user.nil? ?
-            (self.uploader_select = 'User') :
-            (self.uploader_select = user.full_name)
-        asset_type.nil? ?
-            (self.asset_type_select = 'Asset type') :
-            (self.asset_type_select = asset_type)
-        sort_by.nil? ?
-            (self.sort_by_select = 'Most recent') :
-            (self.sort_by_select = sort_by)
-        wait_for_update_and_click advanced_search_submit_element
       end
 
       # MANAGE ASSETS
@@ -459,13 +405,13 @@ module Page
       # @param asset [Asset]
       def edit_asset_details(asset)
         logger.info "Entering title '#{asset.title}, category '#{asset.category}', and description '#{asset.description}'"
-        wait_for_load_and_click_js edit_details_link_element
+        wait_for_load_and_click edit_details_link_element
         wait_for_element_and_type(title_edit_input_element, asset.title)
         asset.category.nil? ?
             wait_for_element_and_select_js(category_edit_select_element, 'Which assignment or topic is this related to') :
             wait_for_element_and_select_js(category_edit_select_element, asset.category)
         wait_for_element_and_type(description_edit_input_element, asset.description)
-        wait_for_update_and_click_js save_changes_element
+        wait_for_update_and_click save_changes_element
       end
 
       # REMIX
@@ -730,6 +676,7 @@ module Page
       def delete_comment(index)
         logger.info "Deleting comment at index #{index}"
         confirm(true) { wait_for_load_and_click_js delete_button_element(index) }
+        sleep 1
       end
 
       # ACTIVITY EVENT DROPS
@@ -744,7 +691,10 @@ module Page
         wait_for_element_and_type_js(text_area_element(id: 'assetlibrary-item-newcomment-body'), ' ')
         sleep 1
         activity_timeline_event_drops_element.when_visible Utils.short_wait
-        wait_for_update_and_click_js button_element(xpath: '//button[text()="All"]') unless button_element(xpath: '//button[text()="All"]').attribute('disabled')
+        div_element(xpath: '//strong[contains(text(), "View by")]').when_visible Utils.short_wait
+        if (button = button_element(xpath: '//button[text()="All"]')).exists?
+          wait_for_update_and_click_js button unless button.attribute('disabled')
+        end
         sleep 1
         elements = driver.find_elements(xpath: '//h3[contains(.,"Activity Timeline")]/following-sibling::div[@data-ng-if="assetActivity"]//*[name()="svg"]/*[name()="g"]/*[name()="text"]')
         labels = elements.map &:text
@@ -771,9 +721,8 @@ module Page
       # @param user [User]
       # @param activity [Activity]
       # @param line_node [Integer]
-      # @param drop_node [Integer]
-      def verify_asset_event_drop(driver, user, activity, line_node, drop_node)
-        drag_drop_into_view(driver, line_node, drop_node)
+      def verify_latest_asset_event_drop(driver, user, activity, line_node)
+        drag_drop_into_view(driver, line_node, 'last()')
         wait_until(Utils.short_wait) { driver.find_element(class: 'event-details') }
         wait_until(Utils.short_wait) do
           logger.debug "Verifying that the user in the tooltip is '#{user.full_name}'"

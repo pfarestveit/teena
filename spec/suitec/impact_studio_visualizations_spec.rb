@@ -116,7 +116,7 @@ describe 'The Impact Studio', order: :defined do
       after(:all) { stud_1_expected_drop_counts = stud_1_actual_drop_counts }
 
       it('shows a My Contributions "Creations" event') { expect(stud_1_actual_drop_counts = @impact_studio.my_activity_event_counts(@driver)).to eql(stud_1_expected_drop_counts) }
-      it('shows the event details in a tooltip') { @impact_studio.verify_event_drop(@driver, student_1, asset_1, Activity::ADD_ASSET_TO_LIBRARY, 3, 1) }
+      it('shows the event details in a tooltip') { @impact_studio.verify_latest_event_drop(@driver, student_1, asset_1, Activity::ADD_ASSET_TO_LIBRARY, 3) }
     end
 
     context 'via adding to a whiteboard but not the library' do
@@ -156,7 +156,7 @@ describe 'The Impact Studio', order: :defined do
       after(:all) { stud_1_expected_drop_counts = stud_1_actual_drop_counts }
 
       it('shows a My Contributions "Creations" event') { expect(stud_1_actual_drop_counts = @impact_studio.my_activity_event_counts(@driver)).to eql(stud_1_expected_drop_counts) }
-      it('shows the event details in a tooltip') { @impact_studio.verify_event_drop(@driver, student_1, asset_3, Activity::ADD_ASSET_TO_LIBRARY, 3, 1) }
+      it('shows the event details in a tooltip') { @impact_studio.verify_latest_event_drop(@driver, student_1, asset_3, Activity::ADD_ASSET_TO_LIBRARY, 3) }
     end
 
     context 'via whiteboard export' do
@@ -180,7 +180,7 @@ describe 'The Impact Studio', order: :defined do
       after(:all) { stud_1_expected_drop_counts = stud_1_actual_drop_counts }
 
       it('shows a My Contributions "Creations" event') { expect(stud_1_actual_drop_counts = @impact_studio.my_activity_event_counts(@driver)).to eql(stud_1_expected_drop_counts) }
-      it('shows the event details in a tooltip') { @impact_studio.verify_event_drop(@driver, student_1, asset_4, Activity::EXPORT_WHITEBOARD, 3, 1) }
+      it('shows the event details in a tooltip') { @impact_studio.verify_latest_event_drop(@driver, student_1, asset_4, Activity::EXPORT_WHITEBOARD, 3) }
     end
 
     context 'via impact studio "upload"' do
@@ -198,7 +198,7 @@ describe 'The Impact Studio', order: :defined do
       after(:all) { teacher_expected_drop_counts = teacher_actual_drop_counts }
 
       it('shows a My Contributions "Creations" event') { expect(teacher_actual_drop_counts = @impact_studio.my_activity_event_counts(@driver)).to eql(teacher_expected_drop_counts) }
-      it('shows the event details in a tooltip') { @impact_studio.verify_event_drop(@driver, teacher, asset_5, Activity::ADD_ASSET_TO_LIBRARY, 3, 1) }
+      it('shows the event details in a tooltip') { @impact_studio.verify_latest_event_drop(@driver, teacher, asset_5, Activity::ADD_ASSET_TO_LIBRARY, 3) }
     end
 
     context 'via asset library upload' do
@@ -216,7 +216,7 @@ describe 'The Impact Studio', order: :defined do
       after(:all) { stud_2_expected_drop_counts = stud_2_actual_drop_counts }
 
       it('shows a My Contributions "Creations" event') { expect(stud_2_actual_drop_counts = @impact_studio.my_activity_event_counts(@driver)).to eql(stud_2_expected_drop_counts) }
-      it('shows the event details in a tooltip') { @impact_studio.verify_event_drop(@driver, student_2, asset_6, Activity::ADD_ASSET_TO_LIBRARY, 3, 1) }
+      it('shows the event details in a tooltip') { @impact_studio.verify_latest_event_drop(@driver, student_2, asset_6, Activity::ADD_ASSET_TO_LIBRARY, 3) }
     end
 
     context 'but then deleted' do
@@ -269,7 +269,7 @@ describe 'The Impact Studio', order: :defined do
         end
 
         it('shows a My Impacts "Creations" event') { expect(stud_1_actual_drop_counts = @impact_studio.my_activity_event_counts(@driver)).to eql(stud_1_expected_drop_counts) }
-        it('shows the event details in a tooltip') { @impact_studio.verify_event_drop(@driver, student_2, asset_1, Activity::ADD_ASSET_TO_WHITEBOARD, 6, 1) }
+        it('shows the event details in a tooltip') { @impact_studio.verify_latest_event_drop(@driver, student_2, asset_1, Activity::ADD_ASSET_TO_WHITEBOARD, 6) }
       end
 
       context 'and the asset owner views the other user\'s profile' do
@@ -277,7 +277,7 @@ describe 'The Impact Studio', order: :defined do
         before(:all) { @impact_studio.search_for_user student_2 }
 
         it('shows a My Contributions "Creations" event') { expect(stud_2_actual_drop_counts = @impact_studio.activity_event_counts(@driver)).to eql(stud_2_expected_drop_counts) }
-        it('shows the event details in a tooltip') { @impact_studio.verify_event_drop(@driver, student_2, asset_1, Activity::ADD_ASSET_TO_WHITEBOARD, 3, 1) }
+        it('shows the event details in a tooltip') { @impact_studio.verify_latest_event_drop(@driver, student_2, asset_1, Activity::ADD_ASSET_TO_WHITEBOARD, 3) }
       end
 
       context 'and the asset owner views the asset detail' do
@@ -285,7 +285,7 @@ describe 'The Impact Studio', order: :defined do
         before(:all) { @asset_library.load_asset_detail(@driver, @asset_library_url, asset_1) }
 
         it('shows an "added to whiteboard" event') { expect(asset_1_actual_drop_counts = @asset_library.activity_timeline_event_counts(@driver)).to eql(asset_1_expected_drop_counts) }
-        it('shows the event details in a tooltip') { @asset_library.verify_asset_event_drop(@driver, student_2, Activity::ADD_ASSET_TO_WHITEBOARD, 4, 1) }
+        it('shows the event details in a tooltip') { @asset_library.verify_latest_asset_event_drop(@driver, student_2, Activity::ADD_ASSET_TO_WHITEBOARD, 4) }
       end
     end
 
@@ -314,7 +314,7 @@ describe 'The Impact Studio', order: :defined do
         end
 
         it('shows a My Impacts "Engagements" event') { expect(stud_1_actual_drop_counts = @impact_studio.my_activity_event_counts(@driver)).to eql(stud_1_expected_drop_counts) }
-        it('shows the event details in a tooltip') { @impact_studio.verify_event_drop(@driver, teacher, asset_3, Activity::VIEW_ASSET, 4, 1) }
+        it('shows the event details in a tooltip') { @impact_studio.verify_latest_event_drop(@driver, teacher, asset_3, Activity::VIEW_ASSET, 4) }
       end
 
       context 'and the asset owner views the other user\'s profile' do
@@ -322,7 +322,7 @@ describe 'The Impact Studio', order: :defined do
         before(:all) { @impact_studio.search_for_user teacher }
 
         it('shows a My Contributions "Engagements" event') { expect(teacher_actual_drop_counts = @impact_studio.activity_event_counts(@driver)).to eql(teacher_expected_drop_counts) }
-        it('shows the event details in a tooltip') { @impact_studio.verify_event_drop(@driver, teacher, asset_3, Activity::VIEW_ASSET, 1, 1) }
+        it('shows the event details in a tooltip') { @impact_studio.verify_latest_event_drop(@driver, teacher, asset_3, Activity::VIEW_ASSET, 1) }
       end
 
       context 'and the asset owner views the asset detail' do
@@ -330,7 +330,7 @@ describe 'The Impact Studio', order: :defined do
         before(:all) { @asset_library.load_asset_detail(@driver, @asset_library_url, asset_3) }
 
         it('shows a "viewed" event') { expect(asset_3_actual_drop_counts = @asset_library.activity_timeline_event_counts(@driver)).to eql(asset_3_expected_drop_counts) }
-        it('shows the event details in a tooltip') { @asset_library.verify_asset_event_drop(@driver, teacher, Activity::VIEW_ASSET, 1, 1) }
+        it('shows the event details in a tooltip') { @asset_library.verify_latest_asset_event_drop(@driver, teacher, Activity::VIEW_ASSET, 1) }
       end
     end
 
@@ -365,7 +365,7 @@ describe 'The Impact Studio', order: :defined do
         end
 
         it('shows My Impacts "Engagement" and "Interaction" events') { expect(stud_2_actual_drop_counts = @impact_studio.my_activity_event_counts(@driver)).to eql(stud_2_expected_drop_counts) }
-        it('shows the comment event details in a tooltip') { @impact_studio.verify_event_drop(@driver, teacher, asset_6, Activity::COMMENT, 5, 1) }
+        it('shows the comment event details in a tooltip') { @impact_studio.verify_latest_event_drop(@driver, teacher, asset_6, Activity::COMMENT, 5) }
       end
 
       context 'and the asset owner views the other user\'s profile' do
@@ -373,7 +373,7 @@ describe 'The Impact Studio', order: :defined do
         before(:all) { @impact_studio.search_for_user teacher }
 
         it('shows My Contributions "Engagement" and "Interaction" events') { expect(teacher_actual_drop_counts = @impact_studio.activity_event_counts(@driver)).to eql(teacher_expected_drop_counts) }
-        it('shows the comment event details in a tooltip') { @impact_studio.verify_event_drop(@driver, teacher, asset_6, Activity::COMMENT, 2, 1) }
+        it('shows the comment event details in a tooltip') { @impact_studio.verify_latest_event_drop(@driver, teacher, asset_6, Activity::COMMENT, 2) }
       end
 
       context 'and the asset owner views the asset detail' do
@@ -381,7 +381,7 @@ describe 'The Impact Studio', order: :defined do
         before(:all) { @asset_library.load_asset_detail(@driver, @asset_library_url, asset_6) }
 
         it('shows a "commented" event') { expect(asset_6_actual_drop_counts = @asset_library.activity_timeline_event_counts(@driver)).to eql(asset_6_expected_drop_counts) }
-        it('shows the event details in a tooltip') { @asset_library.verify_asset_event_drop(@driver, teacher, Activity::COMMENT, 3, 1) }
+        it('shows the event details in a tooltip') { @asset_library.verify_latest_asset_event_drop(@driver, teacher, Activity::COMMENT, 3) }
       end
     end
 
@@ -417,7 +417,7 @@ describe 'The Impact Studio', order: :defined do
         end
 
         it('shows My Impacts "Engagement" and "Interaction" events') { expect(stud_2_actual_drop_counts = @impact_studio.my_activity_event_counts(@driver)).to eql(stud_2_expected_drop_counts) }
-        it('shows the comment event details in a tooltip') { @impact_studio.verify_event_drop(@driver, teacher, asset_6, Activity::COMMENT, 5, 1) }
+        it('shows the comment event details in a tooltip') { @impact_studio.verify_latest_event_drop(@driver, teacher, asset_6, Activity::COMMENT, 5) }
       end
 
       context 'and the asset owner views the other user\'s profile' do
@@ -425,7 +425,7 @@ describe 'The Impact Studio', order: :defined do
         before(:all) { @impact_studio.search_for_user teacher }
 
         it('shows My Contributions "Engagement" and "Interaction" events') { expect(teacher_actual_drop_counts = @impact_studio.activity_event_counts(@driver)).to eql(teacher_expected_drop_counts) }
-        it('shows the comment event details in a tooltip') { @impact_studio.verify_event_drop(@driver, teacher, asset_6, Activity::COMMENT, 2, 1) }
+        it('shows the comment event details in a tooltip') { @impact_studio.verify_latest_event_drop(@driver, teacher, asset_6, Activity::COMMENT, 2) }
       end
 
       context 'and the asset owner views the asset detail' do
@@ -433,7 +433,7 @@ describe 'The Impact Studio', order: :defined do
         before(:all) { @asset_library.load_asset_detail(@driver, @asset_library_url, asset_6) }
 
         it('shows a "commented" event') { expect(asset_6_actual_drop_counts = @asset_library.activity_timeline_event_counts(@driver)).to eql(asset_6_expected_drop_counts) }
-        it('shows the event details in a tooltip') { @asset_library.verify_asset_event_drop(@driver, teacher, Activity::COMMENT, 3, 1) }
+        it('shows the event details in a tooltip') { @asset_library.verify_latest_asset_event_drop(@driver, teacher, Activity::COMMENT, 3) }
       end
     end
 
@@ -483,7 +483,7 @@ describe 'The Impact Studio', order: :defined do
         before(:all) { @asset_library.load_asset_detail(@driver, @asset_library_url, asset_5) }
 
         it('shows a "liked" event') { expect(asset_5_actual_drop_counts = @asset_library.activity_timeline_event_counts(@driver)).to eql(asset_5_expected_drop_counts) }
-        it('shows the event details in a tooltip') { @asset_library.verify_asset_event_drop(@driver, student_1, Activity::LIKE, 2, 1) }
+        it('shows the event details in a tooltip') { @asset_library.verify_latest_asset_event_drop(@driver, student_1, Activity::LIKE, 2) }
       end
     end
 
@@ -521,7 +521,7 @@ describe 'The Impact Studio', order: :defined do
         end
 
         it('shows My Impacts "Engagements" and "Creations" events') { expect(stud_1_actual_drop_counts = @impact_studio.my_activity_event_counts(@driver)).to eql(stud_1_expected_drop_counts) }
-        it('shows the remix event details in a tooltip') { @impact_studio.verify_event_drop(@driver, teacher, asset_4, Activity::REMIX_WHITEBOARD, 6, 1) }
+        it('shows the remix event details in a tooltip') { @impact_studio.verify_latest_event_drop(@driver, teacher, asset_4, Activity::REMIX_WHITEBOARD, 6) }
       end
 
       context 'and another whiteboard asset owner views its own profile' do
@@ -532,7 +532,7 @@ describe 'The Impact Studio', order: :defined do
         end
 
         it('shows My Impacts "Engagements" and "Creations" events') { expect(stud_2_actual_drop_counts = @impact_studio.my_activity_event_counts(@driver)).to eql(stud_2_expected_drop_counts) }
-        it('shows the remix event details in a tooltip') { @impact_studio.verify_event_drop(@driver, teacher, asset_4, Activity::REMIX_WHITEBOARD, 6, 1) }
+        it('shows the remix event details in a tooltip') { @impact_studio.verify_latest_event_drop(@driver, teacher, asset_4, Activity::REMIX_WHITEBOARD, 6) }
       end
 
       context 'and an asset owner views the remixer\'s profile' do
@@ -540,7 +540,7 @@ describe 'The Impact Studio', order: :defined do
         before(:all) { @impact_studio.search_for_user teacher }
 
         it('shows My Contributions "Engagements" and "Creations" events') { expect(teacher_actual_drop_counts = @impact_studio.activity_event_counts(@driver)).to eql(teacher_expected_drop_counts) }
-        it('shows the remix event details in a tooltip') { @impact_studio.verify_event_drop(@driver, teacher, asset_4, Activity::REMIX_WHITEBOARD, 3, 1) }
+        it('shows the remix event details in a tooltip') { @impact_studio.verify_latest_event_drop(@driver, teacher, asset_4, Activity::REMIX_WHITEBOARD, 3) }
       end
 
       context 'and the asset owner views the asset detail' do
@@ -548,12 +548,9 @@ describe 'The Impact Studio', order: :defined do
         before(:all) { @asset_library.load_asset_detail(@driver, @asset_library_url, asset_4) }
 
         it('shows a "remixed" event') { expect(asset_4_actual_drop_counts = @asset_library.activity_timeline_event_counts(@driver)).to eql(asset_4_expected_drop_counts) }
-        it('shows the event details in a tooltip') { @asset_library.verify_asset_event_drop(@driver, teacher, Activity::REMIX_WHITEBOARD, 5, 1) }
+        it('shows the event details in a tooltip') { @asset_library.verify_latest_asset_event_drop(@driver, teacher, Activity::REMIX_WHITEBOARD, 5) }
       end
     end
-
-    # TODO context 'with "Peer Pins my Asset impact"'
-
   end
 
   context 'when assets impact their owners' do
@@ -682,6 +679,7 @@ describe 'The Impact Studio', order: :defined do
         likes = @asset_library.detail_view_asset_likes_count.to_i
         @asset_library.toggle_detail_view_item_like
         @asset_library.wait_until(Utils.short_wait) { @asset_library.detail_view_asset_likes_count.to_i == likes - 1 }
+        sleep 1
         stud_1_expected_drop_counts[:engage_contrib] -= 1
         teacher_expected_drop_counts[:engage_impact] -= 1
         asset_5_expected_drop_counts[:liked] -= 1
@@ -714,9 +712,6 @@ describe 'The Impact Studio', order: :defined do
         it('subtracts a "liked" event') { expect(asset_5_actual_drop_counts = @asset_library.activity_timeline_event_counts(@driver)).to eql(asset_5_expected_drop_counts) }
       end
     end
-
-    # TODO it 'removes pinning impact'
-
   end
 
   context 'when assets are deleted' do

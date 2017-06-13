@@ -82,14 +82,20 @@ module Page
 
       # SEARCH
 
-      # Searches for a given user and loads its Impact Studio profile page
+      # Searches for a given user and loads its Impact Studio profile page. Makes two attempts since sometimes the first click does not
+      # trigger the select options.
       # @param user [User]
       def search_for_user(user)
         logger.info "Searching for #{user.full_name} UID #{user.uid}"
-        wait_for_load_and_click text_area_element(xpath: '//input[@placeholder="Search for other people"]')
-        (option = list_item_element(xpath: "//div[contains(@class,'select-dropdown')]//li[contains(.,'#{user.full_name}')]")).when_present Utils.short_wait
-        option.click
-        wait_until(Utils.medium_wait) { name == user.full_name }
+        tries ||= 2
+        begin
+          wait_for_load_and_click text_area_element(xpath: '//input[@placeholder="Search for other people"]')
+          (option = list_item_element(xpath: "//div[contains(@class,'select-dropdown')]//li[contains(.,'#{user.full_name}')]")).when_present Utils.short_wait
+          option.click
+          wait_until(Utils.medium_wait) { name == user.full_name }
+        rescue
+          (tries -= 1).zero? ? fail : retry
+        end
       end
 
       # ACTIVITY EVENT DROPS
@@ -144,20 +150,16 @@ module Page
       # @param asset [Asset]
       # @param activity [Activity]
       # @param line_node [Integer]
-      # @param drop_node [Integer]
-      def verify_event_drop(driver, user, asset, activity, line_node, drop_node)
-        drag_drop_into_view(driver, line_node, drop_node)
+      def verify_latest_event_drop(driver, user, asset, activity, line_node)
+        drag_drop_into_view(driver, line_node, 'last()')
         wait_until(Utils.short_wait) { driver.find_element(xpath: '//div[@class="event-details-container"]//h3') }
-        wait_until(Utils.short_wait) do
-          logger.debug "Verifying that the asset title in the tooltip is '#{asset.title}'"
+        wait_until(Utils.short_wait, "Expected tooltip asset title '#{asset.title}' but got '#{link_element(xpath: '//div[@class="event-details-container"]//h3/a').text}'") do
           link_element(xpath: '//div[@class="event-details-container"]//h3/a').text == asset.title
         end
-        wait_until(Utils.short_wait) do
-          logger.debug "Verifying the activity type in the tooltip is '#{activity.impact_type}'"
+        wait_until(Utils.short_wait, "Expected tooltip activity type '#{activity.impact_type}' but got '#{span_element(xpath: '//div[@class="event-details-container"]//p//strong').text}'") do
           span_element(xpath: '//div[@class="event-details-container"]//p//strong').text.include? activity.impact_type
         end
-        wait_until(Utils.short_wait) do
-          logger.debug "Verifying that the user name in the tooltip is '#{user.full_name}'"
+        wait_until(Utils.short_wait, "Expected tooltip user name '#{user.full_name}' but got '#{link_element(xpath: '//div[@class="event-details-container"]//p[2]//a').text}'") do
           link_element(xpath: '//div[@class="event-details-container"]//p[2]//a').text == user.full_name
         end
       end
@@ -172,20 +174,33 @@ module Page
         link_elements.map { |link| link.attribute('href').split('?')[1].split('&')[0][4..-1] }
       end
 
+      # Given an array of asset IDs, returns a maximum of the first four
+      # @param ids [Array<String>]
+      # @return [Array<String>]
+      def max_asset_ids(ids)
+        (ids.length > 4) ? ids[0..3] : ids
+      end
+
       # Given an array of assets, returns the four most recent asset IDs
       # @param assets [Array<Asset>]
       # @return [Array<String>]
       def recent_studio_asset_ids(assets)
-        ids = recent_asset_ids assets
-        (ids.length > 4) ? ids[0..3] : ids
+        max_asset_ids recent_asset_ids(assets)
       end
 
       # Given an array of assets, returns the asset IDs of the four assets with the highest impact scores
       # @param assets [Array<Asset>]
       # @return [Array<String>]
       def impactful_studio_asset_ids(assets)
-        ids = impactful_asset_ids assets
-        (ids.length > 4) ? ids[0..3] : ids
+        max_asset_ids impactful_asset_ids(assets)
+      end
+
+      # Given an array of pinned assets, returns the asset IDs of the first four
+      # @param pinned_assets [Array<Asset>]
+      # @return [Array<String>]
+      def pinned_studio_asset_ids(pinned_assets)
+        ids = pinned_assets.map { |a| a.id }
+        max_asset_ids ids
       end
 
       # Adds a link asset to the Asset Library via the Impact Studio
@@ -208,133 +223,147 @@ module Page
         asset.id = list_view_asset_ids.first
       end
 
-      # MY ASSETS
+      # Given a swim lane filter link element, clicks the element unless it is disabled
+      # @param element [PageObject::Elements::Link]
+      def click_swim_lane_filter(element)
+        element.when_present Utils.short_wait
+        sleep 1
+        scroll_to_bottom
+        js_click(element) unless element.attribute('disabled')
+        sleep 1
+      end
 
-      h3(:my_assets_heading, xpath: '//h3[contains(text(),"My Assets")]')
-      button(:my_recent_link, id: 'user-assets-filter-by-recent')
-      button(:my_impactful_link, id: 'user-assets-filter-by-impact')
-      div(:no_my_assets_msg, xpath: '//h3[contains(text(),"My Assets")]/../following-sibling::div/div[contains(.,"No matching assets were found.")]')
-      elements(:my_asset_link, :link, xpath: '//h3[contains(text(),"My Assets")]/../following-sibling::div/ul//a')
+      # Given a set of asset IDs, a 'show more' link element, and the expected asset library sort/filter combination, verifies that
+      # it is possible to show more if it should be and that the resulting asset library advanced search options and results are correct
+      # @param driver [Selenium::WebDriver]
+      # @param expected_asset_ids [Array<String>]
+      # @param show_more_element [PageObject::Elements::Link]
+      # @param search_filter_blk block that verifies the asset library search filters and results
+      def verify_show_more(driver, expected_asset_ids, show_more_element, &search_filter_blk)
+        if expected_asset_ids.length > 4
+          wait_for_update_and_click_js show_more_element
+          switch_to_canvas_iframe driver
+          begin
+            search_filter_blk
+          ensure
+            go_back_to_impact_studio driver
+          end
+        else
+          show_more_element.when_not_visible Utils.short_wait
+        end
+      end
 
-      # Clicks an asset detail link on the My Assets swim lane
+      # USER ASSETS - mine or another user's
+
+      button(:user_recent_link, id: 'user-assets-by-recent')
+      link(:user_impactful_link, id: 'user-assets-by-impact')
+      button(:user_pinned_link, id: 'user-assets-by-pins')
+      link(:user_assets_show_more_link, xpath: '//a[@data-id="user.assets.advancedSearchId"]')
+      elements(:user_asset_link, :link, xpath: '//h3[contains(text(),"Assets")]/../following-sibling::div/ul//a')
+      div(:no_user_assets_msg, xpath: '//h3[contains(text(),"Assets")]/../following-sibling::div/div[contains(.,"No matching assets were found.")]')
+
+      # Clicks an asset detail link on the user Assets swim lane
       # @param driver [Selenium::WebDriver]
       # @param asset [Asset]
-      def click_my_asset_link(driver, asset)
-        logger.info "Clicking thumbnail for My Asset ID #{asset.id}"
-        wait_for_update_and_click_js link_element(xpath: "//h3[contains(.,'My Assets')]/../following-sibling::div/ul//a[contains(@href,'_id=#{asset.id}&')]")
+      def click_user_asset_link(driver, asset)
+        logger.info "Clicking thumbnail for Asset ID #{asset.id}"
+        wait_for_update_and_click_js link_element(xpath: "//h3[contains(.,'Assets')]/../following-sibling::div/ul//a[contains(@href,'_id=#{asset.id}&')]")
         switch_to_canvas_iframe driver
       end
 
-      # Returns the pin button for an asset on the My Assets lane
+      # Returns the pin button for an asset on the user Assets lane
       # @param asset [Asset]
       # @return [PageObject::Elements::Button]
-      def my_assets_pin_element(asset)
-        button_element(xpath: "//h3[text()='My Assets:']/../following-sibling::div//button[@id='iconbar-pin-#{asset.id}']")
+      def user_assets_pin_element(asset)
+        button_element(xpath: "//h3[contains(text(),'Assets')]/../following-sibling::div//button[@id='iconbar-pin-#{asset.id}']")
       end
 
-      # Pins an asset on the My Assets lane
+      # Pins an asset on the user Assets lane
       # @param asset [Asset]
-      def pin_my_asset(asset)
-        logger.info "Pinning My Assets asset ID #{asset.id}"
-        change_asset_pinned_state(my_assets_pin_element(asset), 'Pinned')
-      end
-
-      # Unpins an asset on the My Assets lane
-      # @param asset [Asset]
-      def unpin_my_asset(asset)
-        logger.info "Unpinning My Assets asset ID #{asset.id}"
-        change_asset_pinned_state(my_assets_pin_element(asset), 'Pin')
-      end
-
-      # Given an array of assets, waits until the list of My Recent Assets contains the four most recent asset IDs
-      # @param assets [Array<Asset>]
-      def verify_my_recent_assets(assets)
-        recent_ids = recent_studio_asset_ids assets
-        logger.debug "Expecting My Recent list to include asset IDs '#{recent_ids}'"
-        scroll_to_bottom
-        wait_for_update_and_click_js(my_recent_link_element) unless my_recent_link_element.attribute('disabled')
-        sleep 2
-        logger.debug "My Recent list currently includes asset IDs '#{swim_lane_asset_ids my_asset_link_elements}'"
-        wait_until(Utils.short_wait) { swim_lane_asset_ids(my_asset_link_elements) == recent_ids }
-        no_my_assets_msg_element.when_visible 1 if recent_ids.empty?
-      end
-
-      # Given an array of assets, waits until the list of My Impactful Assets contains the four most impactful asset IDs
-      # @param assets [Array<Asset>]
-      def verify_my_impactful_assets(assets)
-        impactful_ids = impactful_studio_asset_ids assets
-        logger.debug "Expecting My Impactful list to include asset IDs '#{impactful_ids}'"
-        scroll_to_bottom
-        wait_for_update_and_click_js(my_impactful_link_element) unless my_impactful_link_element.attribute('disabled')
-        sleep 2
-        logger.debug "My Impactful list currently includes asset IDs '#{swim_lane_asset_ids my_asset_link_elements}'"
-        wait_until(Utils.short_wait) { swim_lane_asset_ids(my_asset_link_elements) == impactful_ids }
-        no_my_assets_msg_element.when_visible 1 if impactful_ids.empty?
-      end
-
-      # YOUR ASSETS
-
-      h3(:assets_heading, xpath: '//h3[contains(text(),"Assets")]')
-      link(:recent_link, id: 'user-assets-filter-by-recent')
-      link(:impactful_link, id: 'user-assets-filter-by-impact')
-      div(:no_assets_msg, xpath: '//h3[contains(text(),"Assets")]/../following-sibling::div/div[contains(.,"No matching assets were found.")]')
-      elements(:asset_link, :link, xpath: '//h3[contains(text(),"Assets")]/../following-sibling::div/ul//a')
-
-      # Returns the pin button for an asset on the Assets lane
-      # @param asset [Asset]
-      # @return [PageObject::Elements::Button]
-      def your_assets_pin_element(asset)
-        button_element(xpath: "//h3[text()='Assets:']/../following-sibling::div//button[@id='iconbar-pin-#{asset.id}']")
-      end
-
-      # Pins an asset on the Assets lane
-      # @param asset [Asset]
-      def pin_your_asset(asset)
+      def pin_user_asset(asset)
         logger.info "Pinning Assets asset ID #{asset.id}"
-        change_asset_pinned_state(your_assets_pin_element(asset), 'Pinned')
+        change_asset_pinned_state(user_assets_pin_element(asset), 'Pinned')
       end
 
-      # Unpins an asset on the Assets lane
+      # Unpins an asset on the user Assets lane
       # @param asset [Asset]
-      def unpin_your_asset(asset)
+      def unpin_user_asset(asset)
         logger.info "Unpinning Assets asset ID #{asset.id}"
-        change_asset_pinned_state(your_assets_pin_element(asset), 'Pin')
+        change_asset_pinned_state(user_assets_pin_element(asset), 'Pin')
       end
 
-      # Given an array of assets, waits until the list of another user's Recent Assets contains the four most recent asset IDs
+      # Given a set of assets and their owner, verifies that the list of the user's recent assets contains the four most recent asset IDs and that
+      # the "show more" option appears if necessary and directs to the right filtered view of the asset library
+      # @param driver [Selenium::WebDriver]
       # @param assets [Array<Asset>]
-      def verify_your_recent_assets(assets)
-        recent_ids = recent_studio_asset_ids assets
-        logger.debug "Expecting the other user's Recent list to include asset IDs '#{recent_ids}"
-        scroll_to_bottom
-        wait_for_update_and_click_js(recent_link_element) unless recent_link_element.attribute('disabled')
-        sleep 2
-        logger.debug "The other user's Recent list currently includes asset IDs '#{swim_lane_asset_ids asset_link_elements}"
-        wait_until(Utils.short_wait) { swim_lane_asset_ids(asset_link_elements) == recent_ids }
-        no_assets_msg_element.when_visible 1 if recent_ids.empty?
+      # @param user [User]
+      def verify_user_recent_assets(driver, assets, user)
+        recent_studio_ids = recent_studio_asset_ids assets
+        all_recent_ids = recent_asset_ids assets
+        logger.info "Verifying that user Recent assets are #{recent_studio_ids} on the Impact Studio and #{all_recent_ids} on the Asset Library"
+        click_swim_lane_filter recent_link_element
+        wait_until(Utils.short_wait, "Expected user Recent list to include asset IDs #{recent_studio_ids}, but they were #{swim_lane_asset_ids asset_link_elements}") do
+          swim_lane_asset_ids(asset_link_elements) == recent_studio_ids
+          recent_studio_ids.empty? ? no_assets_msg_element.visible? : !no_assets_msg_element.exists?
+        end
+        verify_show_more(driver, recent_studio_ids, assets_show_more_link_element) do
+          wait_until(Utils.short_wait, "User filter should be #{user.full_name}, but it is currently #{uploader_select}") { uploader_select == user.full_name }
+          wait_until(Utils.short_wait, "Sort by filter should be 'Most recent', but it is currently #{sort_by_select}") { sort_by_select == 'Most recent' }
+          wait_until(Utils.short_wait, "List view asset IDs should be #{all_recent_ids}, but they are currently #{list_view_asset_ids}") { list_view_asset_ids == recent_asset_ids(assets) }
+        end
       end
 
-      # Given an array of assets, waits until the list of another user's Impactful Assets contains the four most impactful asset IDs
+      # Given a set of assets and their owner, verifies that the list of the user's impactful assets contains the four most impactful asset IDs and that
+      # the "show more" option appears if necessary and directs to the right filtered view of the asset library
+      # @param driver [Selenium::WebDriver]
       # @param assets [Array<Asset>]
-      def verify_your_impactful_assets(assets)
-        impactful_ids = impactful_studio_asset_ids assets
-        logger.debug "Expecting the other user's Impactful list to include asset IDs '#{impactful_ids}"
-        scroll_to_bottom
-        wait_for_update_and_click_js(impactful_link_element) unless impactful_link_element.attribute('disabled')
-        sleep 2
-        logger.debug "The other user's Impactful list currently includes asset Ids '#{swim_lane_asset_ids asset_link_elements}"
-        wait_until(Utils.short_wait) { swim_lane_asset_ids(asset_link_elements) == impactful_ids }
-        no_assets_msg_element.when_visible 1 if impactful_ids.empty?
+      # @param user [User]
+      def verify_user_impactful_assets(driver, assets, user)
+        impactful_studio_ids = impactful_studio_asset_ids assets
+        all_impactful_ids = impactful_asset_ids assets
+        logger.info "Verifying that user Impactful assets are #{impactful_studio_ids} on the Impact Studio and #{all_impactful_ids} on the Asset Library"
+        click_swim_lane_filter impactful_link_element
+        wait_until(Utils.short_wait, "Expected user Impactful list to include asset IDs #{impactful_studio_ids}, but they were #{swim_lane_asset_ids asset_link_elements}") do
+          swim_lane_asset_ids(asset_link_elements) == impactful_studio_ids
+          impactful_studio_ids.empty? ? no_assets_msg_element.visible? : !no_assets_msg_element.exists?
+        end
+        verify_show_more(driver, all_impactful_ids, assets_show_more_link_element) do
+          wait_until(Utils.short_wait, "User filter should be #{user.full_name}, but it is currently #{uploader_select}") { uploader_select == user.full_name }
+          wait_until(Utils.short_wait, "Sort by filter should be 'Most impactful', but it is currently #{sort_by_select}") { sort_by_select == 'Most impactful' }
+          wait_until(Utils.short_wait, "List view IDs should be '#{all_impactful_ids[0..9]}', but they are currently #{list_view_asset_ids}") { list_view_asset_ids == all_impactful_ids }
+        end
+      end
+
+      # Given a set of pinned assets and their owner, verifies that the list of the user's pinned assets contains the four most recently pinned asset IDs and that
+      # the "show more" option appears if necessary and directs to the right filtered view of the asset library
+      # @param driver [Selenium::WebDriver]
+      # @param assets [Array<Asset>]
+      # @param user [User]
+      def verify_user_pinned_assets(driver, assets, user)
+        pinned_studio_ids = pinned_studio_asset_ids assets
+        all_pinned_ids = pinned_asset_ids assets
+        logger.info "Verifying that user Pinned assets are #{pinned_studio_ids} on the Impact Studio and #{all_pinned_ids} on the Asset Library"
+        click_swim_lane_filter pinned_link_element
+        wait_until(Utils.short_wait, "Expected user Pinned list to include asset IDs #{pinned_studio_ids}, but they were #{swim_lane_asset_ids asset_link_elements}") do
+          swim_lane_asset_ids(asset_link_elements) == pinned_studio_ids
+          pinned_studio_ids.empty? ? no_assets_msg_element.visible? : !no_assets_msg_element.exists?
+        end
+        verify_show_more(driver, all_pinned_ids, assets_show_more_link_element) do
+          wait_until(Utils.short_wait, "User filter should be #{user.full_name}, but it is currently #{uploader_select}") { uploader_select == user.full_name }
+          wait_until(Utils.short_wait, "Sort by filter should be 'Pinned', but it is currently #{sort_by_select}") { sort_by_select == 'Pinned' }
+          wait_until(Utils.short_wait, "List view IDs should be '#{all_pinned_ids[0..9]}', but they are currently #{list_view_asset_ids}") { list_view_asset_ids == all_pinned_ids }
+        end
       end
 
       # EVERYONE'S ASSETS
 
       h3(:everyone_assets_heading, xpath: '//h3[contains(text(),"Everyone\'s Assets:")]')
-      button(:everyone_recent_link, id: 'community-assets-filter-by-recent')
-      button(:trending_link, id: 'community-assets-filter-by-trending')
-      button(:everyone_impactful_link, id: 'community-assets-filter-by-impact')
+      button(:everyone_recent_link, id: 'community-assets-by-recent')
+      button(:trending_link, id: 'community-assets-by-trending')
+      button(:everyone_impactful_link, id: 'community-assets-by-impact')
       div(:no_everyone_assets_msg, xpath: '//h3[contains(text(),"Everyone\'s Assets")]/../following-sibling::div/div[contains(.,"No matching assets were found.")]')
       elements(:everyone_asset_link, :link, xpath: '//h3[contains(text(),"Everyone\'s Assets")]/../following-sibling::div/ul//a')
+      link(:everyone_assets_show_more_link, xpath: '//a[@data-id="community.assets.advancedSearchId"]')
 
       # Returns the pin button for an asset on the Everyone's Assets lane
       # @param asset [Asset]
@@ -357,43 +386,43 @@ module Page
         change_asset_pinned_state(everyone_assets_pin_element(asset), 'Pin')
       end
 
-      # Given an array of assets, waits until the list of everyone's Recent assets contains the four most recent asset IDs
+      # Given a set of assets, verifies that the list of everyone's recent assets contains the four most recent asset IDs and that
+      # the "show more" option appears if necessary and directs to the right filtered view of the asset library
+      # @param driver [Selenium::WebDriver]
       # @param assets [Array<Asset>]
-      def verify_all_recent_assets(assets)
-        recent_ids = recent_studio_asset_ids assets
-        logger.debug "Expecting Everyone's Recent list to include asset IDs '#{recent_ids}"
-        scroll_to_bottom
-        wait_for_update_and_click_js(recent_link_element) unless recent_link_element.attribute('disabled')
-        sleep 2
-        logger.debug "Everyone's Recent list currently includes asset IDs '#{swim_lane_asset_ids everyone_asset_link_elements}"
-        wait_until(Utils.short_wait) { swim_lane_asset_ids(everyone_asset_link_elements) == recent_ids }
-        no_everyone_assets_msg_element.when_visible 1 if recent_ids.empty?
+      def verify_all_recent_assets(driver, assets)
+        recent_studio_ids = recent_studio_asset_ids assets
+        all_recent_ids = recent_asset_ids assets
+        logger.info "Verifying that Everyone's Recent assets are #{recent_studio_ids} on the Impact Studio and #{all_recent_ids} on the Asset Library"
+        click_swim_lane_filter everyone_recent_link_element
+        wait_until(Utils.short_wait, "Expected Everyone's Recent list to include asset IDs #{recent_studio_ids}, but they were #{swim_lane_asset_ids everyone_asset_link_elements}") do
+          swim_lane_asset_ids(everyone_asset_link_elements) == recent_studio_ids
+          recent_studio_ids.empty? ? no_everyone_assets_msg_element.visible? : !no_everyone_assets_msg_element.exists?
+        end
+        verify_show_more(driver, all_recent_ids, everyone_assets_show_more_link_element) do
+          wait_until(Utils.short_wait, 'Gave up waiting for advanced search button') { advanced_search_button_element.when_visible Utils.short_wait }
+          wait_until(Utils.short_wait, "List view IDs should be '#{all_recent_ids[0..9]}', but they are currently #{list_view_asset_ids}") { list_view_asset_ids == recent_asset_ids(assets)[0..9] }
+        end
       end
 
-      # Given an array of assets, waits until the list of everyone's Trending assets contains the four most impactful recent asset IDs
+      # Given a set of assets, verifies that the list of everyone's impactful assets contains the four most impactful asset IDs and that
+      # the "show more" option appears if necessary and directs to the right filtered view of the asset library
+      # @param driver [Selenium::WebDriver]
       # @param assets [Array<Asset>]
-      def verify_all_trending_assets(assets)
-        trending_ids = impactful_studio_asset_ids assets
-        logger.debug "Expecting Everyone's Trending list to include asset IDs '#{trending_ids}"
-        scroll_to_bottom
-        wait_for_update_and_click_js(trending_link_element) unless trending_link_element.attribute('disabled')
-        sleep 2
-        logger.debug "Everyone's Trending list currently includes asset IDs '#{swim_lane_asset_ids everyone_asset_link_elements}"
-        wait_until(Utils.short_wait) { swim_lane_asset_ids(everyone_asset_link_elements) == trending_ids }
-        no_everyone_assets_msg_element.when_visible 1 if trending_ids.empty?
-      end
-
-      # Given an array of assets, waits until the list of everyone's Impactful assets contains the four most impactful asset IDs
-      # @param assets [Array<Asset>]
-      def verify_all_impactful_assets(assets)
-        impactful_ids = impactful_studio_asset_ids assets
-        logger.debug "Expecting Everyone's Impactful list to include asset IDs '#{impactful_ids}'"
-        scroll_to_bottom
-        wait_for_update_and_click_js(everyone_impactful_link_element) unless everyone_impactful_link_element.attribute('disabled')
-        sleep 2
-        logger.debug "Everyone's Impactful list currently includes asset IDs '#{swim_lane_asset_ids everyone_asset_link_elements}"
-        wait_until(Utils.short_wait) { swim_lane_asset_ids(everyone_asset_link_elements) == impactful_ids }
-        no_everyone_assets_msg_element.when_visible 1 if impactful_ids.empty?
+      def verify_all_impactful_assets(driver, assets)
+        impactful_studio_ids = impactful_studio_asset_ids assets
+        all_impactful_ids = impactful_asset_ids assets
+        logger.info "Verifying that Everyone's Impactful assets are #{impactful_studio_ids} on the Impact Studio and #{all_impactful_ids} on the Asset Library"
+        click_swim_lane_filter everyone_impactful_link_element
+        wait_until(Utils.short_wait, "Expected Everyone's Impactful list to include asset IDs #{impactful_studio_ids}, but they were #{swim_lane_asset_ids everyone_asset_link_elements}") do
+          swim_lane_asset_ids(everyone_asset_link_elements) == impactful_studio_ids
+          impactful_studio_ids.empty? ? no_everyone_assets_msg_element.visible? : !no_everyone_assets_msg_element.exists?
+        end
+        verify_show_more(driver, all_impactful_ids, everyone_assets_show_more_link_element) do
+          wait_until(Utils.short_wait, "User filter should be 'User', but it is currently #{uploader_select}") { uploader_select == 'User' }
+          wait_until(Utils.short_wait, "Sort by filter should be 'Most impactful', but it is currently #{sort_by_select}") { sort_by_select == 'Most impactful' }
+          wait_until(Utils.short_wait, "List view IDs should be '#{impactful_asset_ids(assets)[0..9]}', but they are currently #{list_view_asset_ids}") { list_view_asset_ids == all_impactful_ids[0..9] }
+        end
       end
 
     end

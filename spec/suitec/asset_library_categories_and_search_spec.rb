@@ -110,7 +110,7 @@ describe 'Asset Library', order: :defined do
         @asset_library.wait_until(timeout) { @asset_library.list_view_asset_ids.first.include? student_1_upload.id }
         @asset_library.wait_until(timeout) { @asset_library.keyword_search_input.empty? }
         @asset_library.wait_until(timeout) { @asset_library.category_select == category_1 }
-        @asset_library.wait_until(timeout) { @asset_library.uploader_select == 'Uploader' }
+        @asset_library.wait_until(timeout) { @asset_library.uploader_select == 'User' }
         @asset_library.wait_until(timeout) { @asset_library.asset_type_select == 'Asset type' }
         @asset_library.wait_until(timeout) { @asset_library.sort_by_select == 'Most recent' }
       end
@@ -385,7 +385,7 @@ describe 'Asset Library', order: :defined do
       end
 
       it('allows sorting by "Most recent", "Most likes", "Most views", and "Most comments"') do
-        expect(@asset_library.sort_by_select_options).to eql(['Most recent', 'Most likes', 'Most views', 'Most comments'])
+        expect(@asset_library.sort_by_select_options).to eql(['Most recent', 'Most likes', 'Most views', 'Most comments', 'Pinned'])
       end
     end
 
@@ -402,7 +402,7 @@ describe 'Asset Library', order: :defined do
       end
 
       it('allows sorting by "Most recent", "Most likes", "Most views", "Most comments", and "Most impactful"') do
-        expect(@asset_library.sort_by_select_options).to eql(['Most recent', 'Most likes', 'Most views', 'Most comments', 'Most impactful'])
+        expect(@asset_library.sort_by_select_options).to eql(['Most recent', 'Most likes', 'Most views', 'Most comments', 'Pinned', 'Most impactful', 'Trending'])
       end
 
       it('lets a user perform an advanced search by keyword, sorted by Most Impactful') do
