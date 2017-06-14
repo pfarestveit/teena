@@ -698,6 +698,7 @@ module Page
         sleep 1
         elements = driver.find_elements(xpath: '//h3[contains(.,"Activity Timeline")]/following-sibling::div[@data-ng-if="assetActivity"]//*[name()="svg"]/*[name()="g"]/*[name()="text"]')
         labels = elements.map &:text
+        logger.debug "Visible asset event drop counts are #{asset_event_drop_counts labels}"
         asset_event_drop_counts labels
       end
 
