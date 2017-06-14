@@ -128,7 +128,7 @@ describe 'Whiteboard', order: :defined do
       @whiteboards.open_whiteboard(@driver, @whiteboard_delete_1)
       @whiteboards.delete_whiteboard @driver
       # Deleted board should close and be gone from list view
-      expect(@driver.window_handles.length).to be 1
+      @whiteboards.wait_until(Utils.short_wait) { @driver.window_handles.length == 1 }
       expect(@whiteboards.visible_whiteboard_titles).not_to include(@whiteboard_delete_1.title)
     end
 

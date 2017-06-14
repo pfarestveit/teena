@@ -73,7 +73,7 @@ describe 'The Impact Studio', order: :defined do
         @impact_studio.load_page(@driver, @impact_studio_url)
       end
 
-      it('shows a "no assets" message under My Assets') { @impact_studio.no_assets_msg_element.when_visible Utils.short_wait }
+      it('shows a "no assets" message under My Assets') { @impact_studio.no_user_assets_msg_element.when_visible Utils.short_wait }
       it('shows a "no assets" message under Everyone\'s Assets') { @impact_studio.no_everyone_assets_msg_element.when_visible Utils.short_wait }
       it('offers a Bookmarklet link under My Assets') { expect(@impact_studio.bookmarklet_link?).to be true }
       it('offers a link to create a new Link asset') { expect(@impact_studio.add_site_link?).to be true }
@@ -87,7 +87,7 @@ describe 'The Impact Studio', order: :defined do
         @engagement_index.click_user_dashboard_link(@driver, student_2)
       end
 
-      it('shows a "no assets" message under Assets') { @impact_studio.no_assets_msg_element.when_visible Utils.short_wait }
+      it('shows a "no assets" message under Assets') { @impact_studio.no_user_assets_msg_element.when_visible Utils.short_wait }
       it('shows no Everyone\'s Assets UI') { expect(@impact_studio.everyone_assets_heading?).to be false }
       it('offers no Bookmarklet link under Assets') { expect(@impact_studio.bookmarklet_link?).to be false }
       it('offers no Add Link link under Assets') { expect(@impact_studio.add_site_link?).to be false }

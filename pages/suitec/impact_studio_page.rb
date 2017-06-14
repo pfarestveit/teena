@@ -103,30 +103,38 @@ module Page
       element(:my_activity_event_drops, xpath: '//h3[contains(.,"My Activity")]/following-sibling::div[@class="col-flex"]//*[local-name()="svg"]')
       element(:activity_event_drops, xpath: '//h3[contains(.,"Activity")]/following-sibling::div[@class="col-flex"]//*[name()="svg"]')
 
-      # Returns a hash of event type counts on the My Activity event drops
-      # @param driver [Selenium::WebDriver]
-      # @return [Hash]
-      def my_activity_event_counts(driver)
-        # Pause a couple times to allow a complete DOM update
-        sleep 1
-        my_activity_event_drops_element.when_visible Utils.short_wait
-        sleep 1
-        elements = driver.find_elements(xpath: '//h3[contains(.,"My Activity")]/following-sibling::div[@class="col-flex"]//*[local-name()="svg"]/*[name()="g"]/*[name()="text"]')
-        labels = elements.map &:text
-        event_drop_counts labels
-      end
-
-      # Returns the activity labels on the My Classmates event drops
+      # Returns the activity labels on the user event drops
       # @param driver [Selenium::WebDriver]
       # @return [Array<String>]
       def activity_event_counts(driver)
         # Pause a couple times to allow a complete DOM update
-        sleep 1
+        sleep 2
         activity_event_drops_element.when_visible Utils.short_wait
         sleep 1
         elements = driver.find_elements(xpath: '//h3[contains(.,"Activity")]/following-sibling::div[@class="col-flex"]//*[local-name()="svg"]/*[name()="g"]/*[name()="text"]')
         labels = elements.map &:text
+        logger.debug "Visible user event drop counts are #{event_drop_counts labels}"
         event_drop_counts labels
+      end
+
+      # Waits for the Canvas poller to update discussion activities so that they appear in the counts of event drops
+      # @param driver [Selenium::WebDriver]
+      # @param studio_url [String]
+      # @param expected_event_count [Array<String>]
+      def wait_for_canvas_event(driver, studio_url, expected_event_count)
+        logger.info "Waiting until the Canvas poller updates the activity event counts to #{expected_event_count}"
+        tries ||= Utils.poller_retries
+        begin
+          load_page(driver, studio_url)
+          wait_until(3) { activity_event_counts(driver) == expected_event_count }
+        rescue
+          if (tries -= 1).zero?
+            fail
+          else
+            sleep Utils.short_wait
+            retry
+          end
+        end
       end
 
       # Given an array of activity timeline labels in the UI, returns a hash of event type counts
@@ -147,14 +155,16 @@ module Page
       # and verifies the content of the tool-tip that appears.
       # @param driver [Selenium::WebDriver]
       # @param user [User]
-      # @param asset [Asset]
+      # @param asset [Asset] will be nil if the activity is a Canvas discussion
       # @param activity [Activity]
       # @param line_node [Integer]
       def verify_latest_event_drop(driver, user, asset, activity, line_node)
         drag_drop_into_view(driver, line_node, 'last()')
         wait_until(Utils.short_wait) { driver.find_element(xpath: '//div[@class="event-details-container"]//h3') }
-        wait_until(Utils.short_wait, "Expected tooltip asset title '#{asset.title}' but got '#{link_element(xpath: '//div[@class="event-details-container"]//h3/a').text}'") do
-          link_element(xpath: '//div[@class="event-details-container"]//h3/a').text == asset.title
+        unless asset.nil?
+          wait_until(Utils.short_wait, "Expected tooltip asset title '#{asset.title}' but got '#{link_element(xpath: '//div[@class="event-details-container"]//h3/a').text}'") do
+            link_element(xpath: '//div[@class="event-details-container"]//h3/a').text == asset.title
+          end
         end
         wait_until(Utils.short_wait, "Expected tooltip activity type '#{activity.impact_type}' but got '#{span_element(xpath: '//div[@class="event-details-container"]//p//strong').text}'") do
           span_element(xpath: '//div[@class="event-details-container"]//p//strong').text.include? activity.impact_type
@@ -226,11 +236,10 @@ module Page
       # Given a swim lane filter link element, clicks the element unless it is disabled
       # @param element [PageObject::Elements::Link]
       def click_swim_lane_filter(element)
-        element.when_present Utils.short_wait
-        sleep 1
-        scroll_to_bottom
+        element.when_visible Utils.short_wait
+        sleep 2
+        scroll_to_element element
         js_click(element) unless element.attribute('disabled')
-        sleep 1
       end
 
       # Given a set of asset IDs, a 'show more' link element, and the expected asset library sort/filter combination, verifies that
@@ -249,7 +258,7 @@ module Page
             go_back_to_impact_studio driver
           end
         else
-          show_more_element.when_not_visible Utils.short_wait
+          show_more_element.when_not_visible Utils.short_wait rescue Selenium::WebDriver::Error::StaleElementReferenceError
         end
       end
 
@@ -301,12 +310,13 @@ module Page
         recent_studio_ids = recent_studio_asset_ids assets
         all_recent_ids = recent_asset_ids assets
         logger.info "Verifying that user Recent assets are #{recent_studio_ids} on the Impact Studio and #{all_recent_ids} on the Asset Library"
-        click_swim_lane_filter recent_link_element
-        wait_until(Utils.short_wait, "Expected user Recent list to include asset IDs #{recent_studio_ids}, but they were #{swim_lane_asset_ids asset_link_elements}") do
-          swim_lane_asset_ids(asset_link_elements) == recent_studio_ids
-          recent_studio_ids.empty? ? no_assets_msg_element.visible? : !no_assets_msg_element.exists?
+        click_swim_lane_filter user_recent_link_element
+        wait_until(Utils.short_wait, "Expected user Recent list to include asset IDs #{recent_studio_ids}, but they were #{swim_lane_asset_ids user_asset_link_elements}") do
+          sleep 1
+          swim_lane_asset_ids(user_asset_link_elements) == recent_studio_ids
+          recent_studio_ids.empty? ? no_user_assets_msg_element.visible? : !no_user_assets_msg_element.exists?
         end
-        verify_show_more(driver, recent_studio_ids, assets_show_more_link_element) do
+        verify_show_more(driver, recent_studio_ids, user_assets_show_more_link_element) do
           wait_until(Utils.short_wait, "User filter should be #{user.full_name}, but it is currently #{uploader_select}") { uploader_select == user.full_name }
           wait_until(Utils.short_wait, "Sort by filter should be 'Most recent', but it is currently #{sort_by_select}") { sort_by_select == 'Most recent' }
           wait_until(Utils.short_wait, "List view asset IDs should be #{all_recent_ids}, but they are currently #{list_view_asset_ids}") { list_view_asset_ids == recent_asset_ids(assets) }
@@ -322,12 +332,13 @@ module Page
         impactful_studio_ids = impactful_studio_asset_ids assets
         all_impactful_ids = impactful_asset_ids assets
         logger.info "Verifying that user Impactful assets are #{impactful_studio_ids} on the Impact Studio and #{all_impactful_ids} on the Asset Library"
-        click_swim_lane_filter impactful_link_element
-        wait_until(Utils.short_wait, "Expected user Impactful list to include asset IDs #{impactful_studio_ids}, but they were #{swim_lane_asset_ids asset_link_elements}") do
-          swim_lane_asset_ids(asset_link_elements) == impactful_studio_ids
-          impactful_studio_ids.empty? ? no_assets_msg_element.visible? : !no_assets_msg_element.exists?
+        click_swim_lane_filter user_impactful_link_element
+        wait_until(Utils.short_wait, "Expected user Impactful list to include asset IDs #{impactful_studio_ids}, but they were #{swim_lane_asset_ids user_asset_link_elements}") do
+          sleep 1
+          swim_lane_asset_ids(user_asset_link_elements) == impactful_studio_ids
+          impactful_studio_ids.empty? ? no_user_assets_msg_element.visible? : !no_user_assets_msg_element.exists?
         end
-        verify_show_more(driver, all_impactful_ids, assets_show_more_link_element) do
+        verify_show_more(driver, all_impactful_ids, user_assets_show_more_link_element) do
           wait_until(Utils.short_wait, "User filter should be #{user.full_name}, but it is currently #{uploader_select}") { uploader_select == user.full_name }
           wait_until(Utils.short_wait, "Sort by filter should be 'Most impactful', but it is currently #{sort_by_select}") { sort_by_select == 'Most impactful' }
           wait_until(Utils.short_wait, "List view IDs should be '#{all_impactful_ids[0..9]}', but they are currently #{list_view_asset_ids}") { list_view_asset_ids == all_impactful_ids }
@@ -343,12 +354,13 @@ module Page
         pinned_studio_ids = pinned_studio_asset_ids assets
         all_pinned_ids = pinned_asset_ids assets
         logger.info "Verifying that user Pinned assets are #{pinned_studio_ids} on the Impact Studio and #{all_pinned_ids} on the Asset Library"
-        click_swim_lane_filter pinned_link_element
-        wait_until(Utils.short_wait, "Expected user Pinned list to include asset IDs #{pinned_studio_ids}, but they were #{swim_lane_asset_ids asset_link_elements}") do
-          swim_lane_asset_ids(asset_link_elements) == pinned_studio_ids
-          pinned_studio_ids.empty? ? no_assets_msg_element.visible? : !no_assets_msg_element.exists?
+        click_swim_lane_filter user_pinned_link_element
+        wait_until(Utils.short_wait, "Expected user Pinned list to include asset IDs #{pinned_studio_ids}, but they were #{swim_lane_asset_ids user_asset_link_elements}") do
+          sleep 1
+          swim_lane_asset_ids(user_asset_link_elements) == pinned_studio_ids
+          pinned_studio_ids.empty? ? no_user_assets_msg_element.visible? : !no_user_assets_msg_element.exists?
         end
-        verify_show_more(driver, all_pinned_ids, assets_show_more_link_element) do
+        verify_show_more(driver, all_pinned_ids, user_assets_show_more_link_element) do
           wait_until(Utils.short_wait, "User filter should be #{user.full_name}, but it is currently #{uploader_select}") { uploader_select == user.full_name }
           wait_until(Utils.short_wait, "Sort by filter should be 'Pinned', but it is currently #{sort_by_select}") { sort_by_select == 'Pinned' }
           wait_until(Utils.short_wait, "List view IDs should be '#{all_pinned_ids[0..9]}', but they are currently #{list_view_asset_ids}") { list_view_asset_ids == all_pinned_ids }
@@ -396,6 +408,7 @@ module Page
         logger.info "Verifying that Everyone's Recent assets are #{recent_studio_ids} on the Impact Studio and #{all_recent_ids} on the Asset Library"
         click_swim_lane_filter everyone_recent_link_element
         wait_until(Utils.short_wait, "Expected Everyone's Recent list to include asset IDs #{recent_studio_ids}, but they were #{swim_lane_asset_ids everyone_asset_link_elements}") do
+          sleep 1
           swim_lane_asset_ids(everyone_asset_link_elements) == recent_studio_ids
           recent_studio_ids.empty? ? no_everyone_assets_msg_element.visible? : !no_everyone_assets_msg_element.exists?
         end
@@ -415,6 +428,7 @@ module Page
         logger.info "Verifying that Everyone's Impactful assets are #{impactful_studio_ids} on the Impact Studio and #{all_impactful_ids} on the Asset Library"
         click_swim_lane_filter everyone_impactful_link_element
         wait_until(Utils.short_wait, "Expected Everyone's Impactful list to include asset IDs #{impactful_studio_ids}, but they were #{swim_lane_asset_ids everyone_asset_link_elements}") do
+          sleep 1
           swim_lane_asset_ids(everyone_asset_link_elements) == impactful_studio_ids
           impactful_studio_ids.empty? ? no_everyone_assets_msg_element.visible? : !no_everyone_assets_msg_element.exists?
         end

@@ -43,7 +43,13 @@ module Page
   end
 
   def js_click(element)
-    execute_script('arguments[0].click();', element) rescue click_element(element, Utils.short_wait)
+    tries ||= 2
+    begin
+      element.when_present Utils.short_wait
+      execute_script('arguments[0].click();', element)
+    rescue Selenium::WebDriver::Error::UnknownError
+      retry unless (tries -= 1).zero?
+    end
   end
 
   # Awaits an element for a given timeout then clicks it using JavaScript.
@@ -158,6 +164,17 @@ module Page
   def scroll_to_bottom
     execute_script 'window.scrollTo(0, document.body.scrollHeight);'
     sleep 1
+  end
+
+  # Uses JavaScript to scroll an element into view. If the attempt fails, it tries once more.
+  # @param element [PageObject::Elements::Element]
+  def scroll_to_element(element)
+    tries ||= 2
+    begin
+      execute_script('arguments[0].scrollIntoView(true);', element)
+    rescue Selenium::WebDriver::Error::UnknownError
+      retry unless (tries -= 1).zero?
+    end
   end
 
   # Pauses to allow the Canvas poller to complete any active cycle
