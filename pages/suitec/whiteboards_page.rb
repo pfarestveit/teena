@@ -71,7 +71,7 @@ module Page
 
       # Clicks the create button to complete creation of a whiteboard
       def click_create_whiteboard
-        wait_for_update_and_click_js create_whiteboard_button_element
+        wait_for_update_and_click create_whiteboard_button_element
       end
 
       # Combines methods to create a new whiteboard and obtain its ID

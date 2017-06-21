@@ -98,23 +98,93 @@ module Page
         end
       end
 
+      # ACTIVITY
+
+      # Initializes a hash of all a user's activities.  Key is the activity type and value is both the activity label shown on the activity bars and a zero count
+      # @return [Hash]
+      def init_user_activities
+        (Activity::ACTIVITIES.map { |a| [a.type.to_sym, {type: a.impact_type_bar, count: 0}] }).to_h
+      end
+
+      # Given a hash of user activities and an array of Activities of a certain type (i.e., contributions vs impacts), returns a new hash containing
+      # only that type of the user's activities
+      # @param user_activities [Hash]
+      # @param eligible_activities [Array<Activity>]
+      # @return [Hash]
+      def activities_by_type(user_activities, eligible_activities)
+        types = eligible_activities.map { |a| a.type }
+        user_activities.select { |k, _| types.include? k.to_s }
+      end
+
+      # Given a hash of user activities, returns a hash of those considered 'contributions'
+      # @param user_activities [Hash]
+      # @return [Hash]
+      def contrib_activities(user_activities)
+        contrib_activities = [Activity::VIEW_ASSET, Activity::LIKE, Activity::COMMENT, Activity::ADD_DISCUSSION_TOPIC, Activity::ADD_DISCUSSION_ENTRY,
+                              Activity::ADD_ASSET_TO_LIBRARY, Activity::EXPORT_WHITEBOARD, Activity::ADD_ASSET_TO_WHITEBOARD, Activity::REMIX_WHITEBOARD]
+        activities_by_type(user_activities, contrib_activities)
+      end
+
+      # Given a hash of activities, returns a hash of those considered 'impactful'
+      # @param user_activities [Hash]
+      # @return [Hash]
+      def impact_activities(user_activities)
+        impact_activities = [Activity::GET_VIEW_ASSET, Activity::GET_LIKE, Activity::GET_COMMENT, Activity::GET_DISCUSSION_REPLY,
+                             Activity::GET_REMIX_WHITEBOARD, Activity::GET_ADD_ASSET_TO_WHITEBOARD]
+        activities_by_type(user_activities, impact_activities)
+      end
+
+      # The activity bar combines certain activities into a single segment of the bar and sums their activity counts.
+      # Given a hash of user activities, returns a new hash that combines those with the same activity bar label into one with a summed activity count
+      # @param user_activities [Hash]
+      # @return [Hash]
+      def user_bar_activities(user_activities)
+        # Convert activities hash to array of hashes, keeping only the activity 'type' and 'count' portion of each
+        activity_type_and_count = user_activities.to_a.map { |a| a[1] }
+        # Create a new array with each 'type' and 'count' hash converted to its own array
+        activity_type_and_count_to_a = activity_type_and_count.map { |item| [item[:type], item[:count]] if item }
+        # Convert the array back into a hash with identical types combined and their counts summed
+        activity_type_and_count_to_a.each_with_object(Hash.new(0)) { |(type, count), h| h[type] += count }
+      end
+
       # ACTIVITY EVENT DROPS
 
       element(:my_activity_event_drops, xpath: '//h3[contains(.,"My Activity")]/following-sibling::div[@class="col-flex"]//*[local-name()="svg"]')
       element(:activity_event_drops, xpath: '//h3[contains(.,"Activity")]/following-sibling::div[@class="col-flex"]//*[name()="svg"]')
 
+      def expected_event_drop_count(user_activity_count)
+        event_drop_counts = {
+          engage_contrib: (user_activity_count[:view_asset][:count] + user_activity_count[:like][:count]),
+          interact_contrib: (user_activity_count[:comment][:count] + user_activity_count[:discussion_topic][:count] + user_activity_count[:discussion_entry][:count]),
+          create_contrib: (user_activity_count[:add_asset][:count] + user_activity_count[:export_whiteboard][:count] + user_activity_count[:whiteboard_add_asset][:count] + user_activity_count[:remix_whiteboard][:count]),
+          engage_impact: (user_activity_count[:get_view_asset][:count] + user_activity_count[:get_like][:count]),
+          interact_impact: (user_activity_count[:get_comment][:count] + user_activity_count[:get_discussion_entry_reply][:count]),
+          create_impact: (user_activity_count[:get_remix_whiteboard][:count] + user_activity_count[:get_whiteboard_add_asset][:count])
+        }
+        logger.debug "Expected user event drop counts are #{event_drop_counts}"
+        event_drop_counts
+      end
+
       # Returns the activity labels on the user event drops
       # @param driver [Selenium::WebDriver]
       # @return [Array<String>]
-      def activity_event_counts(driver)
+      def visible_event_drop_count(driver)
         # Pause a couple times to allow a complete DOM update
         sleep 2
         activity_event_drops_element.when_visible Utils.short_wait
         sleep 1
         elements = driver.find_elements(xpath: '//h3[contains(.,"Activity")]/following-sibling::div[@class="col-flex"]//*[local-name()="svg"]/*[name()="g"]/*[name()="text"]')
         labels = elements.map &:text
-        logger.debug "Visible user event drop counts are #{event_drop_counts labels}"
-        event_drop_counts labels
+        event_drop_counts = {
+          engage_contrib: activity_type_count(labels, 0),
+          interact_contrib: activity_type_count(labels, 1),
+          create_contrib: activity_type_count(labels, 2),
+          engage_impact: activity_type_count(labels, 3),
+          interact_impact: activity_type_count(labels, 4),
+          create_impact: activity_type_count(labels, 5)
+        }
+        logger.debug "Visible user event drop counts are #{event_drop_counts}"
+        event_drop_counts
       end
 
       # Waits for the Canvas poller to update discussion activities so that they appear in the counts of event drops
@@ -126,7 +196,7 @@ module Page
         tries ||= Utils.poller_retries
         begin
           load_page(driver, studio_url)
-          wait_until(3) { activity_event_counts(driver) == expected_event_count }
+          wait_until(3) { visible_event_drop_count(driver) == expected_event_count }
         rescue
           if (tries -= 1).zero?
             fail
@@ -135,20 +205,6 @@ module Page
             retry
           end
         end
-      end
-
-      # Given an array of activity timeline labels in the UI, returns a hash of event type counts
-      # @param labels [Array<String>]
-      # @return [Hash]
-      def event_drop_counts(labels)
-        {
-          engage_contrib: activity_type_count(labels, 0),
-          interact_contrib: activity_type_count(labels, 1),
-          create_contrib: activity_type_count(labels, 2),
-          engage_impact: activity_type_count(labels, 3),
-          interact_impact: activity_type_count(labels, 4),
-          create_impact: activity_type_count(labels, 5)
-        }
       end
 
       # Given the position of an event drop in the HTML, zooms in very close, drags the drop into view, hovers over it,
@@ -172,6 +228,145 @@ module Page
         wait_until(Utils.short_wait, "Expected tooltip user name '#{user.full_name}' but got '#{link_element(xpath: '//div[@class="event-details-container"]//p[2]//a').text}'") do
           link_element(xpath: '//div[@class="event-details-container"]//p[2]//a').text == user.full_name
         end
+      end
+
+      # ACTIVITY BARS
+
+      # Given an array of user activity hashes, combines them into one hash with activity counts summed. Used to check 'Everyone' activity bars.
+      # @param users_activities [Array<Hash>]
+      # @return [Hash]
+      def everyone_bar_activities(users_activities)
+        users_activities.inject do |a, b|
+          a.merge(b) { |_, x, y| x + y if x.instance_of? Fixnum }
+        end
+      end
+
+      # Returns the button element for the 'Contributions' activity bar filter
+      # @return [PageObject::Elements::Button]
+      def contribs_filter_button
+        button_element(id: 'total-activities-by-contributions')
+      end
+
+      # Returns the button element for the 'Impacts' activity bar filter
+      # @return [PageObject::Elements::Button]
+      def impacts_filter_button
+        button_element(id: 'total-activities-by-impacts')
+      end
+
+      # Given a filter button element, makes sure the activity bars are filtered correctly
+      # @param button [PageObject::Elements::Button]
+      def filter_activity_bar(button)
+        if button.exists?
+          logger.debug 'Clicking activity filter'
+          scroll_to_element button
+          js_click button unless button.attribute('disabled')
+        end
+      end
+
+      # Given the activity bar's label, returns the element containing the 'no activity' message
+      # @param bar_label [String]
+      def no_activity_msg_element(bar_label)
+        div_element(xpath: "//div[contains(@class,'profile-activity-breakdown-label')][contains(text(),'#{bar_label}')]/following-sibling::div[contains(.,'Currently no')]")
+      end
+
+      # Given the activity bar's label, returns the elements containing the various activity types
+      # @param driver [Selenium::WebDriver]
+      # @param bar_label [String]
+      # @return [Array<Selenium::WebDriver::Element>]
+      def activity_bar_elements(driver, bar_label)
+        driver.find_elements(xpath: "//div[contains(@class,'profile-activity-breakdown-label')][contains(text(),'#{bar_label}')]/following-sibling::div/div[@data-ng-repeat='segment in segments']")
+      end
+
+      # Given the activity bar's label, returns the text shown on each segment of the bar
+      # @param driver [Selenium::WebDriver]
+      # @param bar_label [String]
+      # @return [Array<String>]
+      def visible_bar_activity(driver, bar_label)
+        activity_bar_elements(driver, bar_label).map &:text
+      end
+
+      # Given the activity bar's label and a user's or users' bar activities, verifies that the bar activities match those shown in the UI
+      # @param driver [Selenium::WebDriver]
+      # @param bar_activities [Hash]
+      # @param bar_label [String]
+      def verify_activity_bar(driver, bar_activities, bar_label)
+        if bar_activities.any?
+          scroll_to_element activity_bar_elements(driver, bar_label).first
+          # Check the visible activity on the bar
+          expected_bar_activity_desc = bar_activities.map { |k, _| k.to_s }
+          wait_until(Utils.short_wait, "Expected '#{expected_bar_activity_desc}' but got '#{visible_bar_activity(driver, bar_label)}'") do
+            logger.debug "Waiting for '#{bar_label}' '#{expected_bar_activity_desc}', and they are currently '#{visible_bar_activity(driver, bar_label)}'"
+            expected_bar_activity_desc == visible_bar_activity(driver, bar_label)
+          end
+          # Check the popover for each activity segment
+          bar_activities.each_pair do |k, v|
+            segment = activity_bar_elements(driver, bar_label).find { |el| el.text.include? k.to_s }
+            driver.action.move_to(segment).perform
+            driver.action.click_and_hold(segment).release.perform
+            sleep 2
+            (activity_count = span_element(xpath: '//span[@count="segment.count"]')).when_visible 2
+            wait_until(2, "Expected '#{k} #{v}' but got '#{activity_count.text}'") do
+              logger.debug "Waiting for '#{bar_label}' '#{k}' '#{v}', and it is currently '#{k}' '#{activity_count.text}'"
+              activity_count.text.include? "#{v} time"
+            end
+          end
+        else
+          no_activity_msg_element(bar_label).when_visible Utils.short_wait
+        end
+      end
+
+      # Given a hash of user activities and the expected label for the user contributions bar element, verifies that the
+      # contributions activity count shown matches expectations.
+      # @param driver [Selenium::WebDriver]
+      # @param user_activities [Hash]
+      # @param bar_label [String]
+      def verify_user_contributions(driver, user_activities, bar_label)
+        non_zero = user_activities.select { |_, v| !v[:count].zero? }
+        expected_bar_activities = user_bar_activities contrib_activities(non_zero)
+        filter_activity_bar contribs_filter_button
+        logger.info "Expecting user contributions to be '#{expected_bar_activities}'"
+        verify_activity_bar(driver, expected_bar_activities, bar_label)
+      end
+
+      # Given a hash of all users' activities and the expected label for the 'everyone' contributions bar element, verifies that the
+      # contributions activity count shown matches expectations.
+      # @param driver [Selenium::WebDriver]
+      # @param all_activities [Hash]
+      def verify_everyone_contributions(driver, all_activities)
+        contrib_activities = all_activities.map { |a| contrib_activities a }
+        activities = contrib_activities.map { |a| user_bar_activities a }
+        expected_bar_activities = everyone_bar_activities activities
+        expected_bar_activities = expected_bar_activities.select { |_, v| !v.zero? }
+        filter_activity_bar contribs_filter_button
+        logger.info "Expecting everyone's contributions to be '#{expected_bar_activities}"
+        verify_activity_bar(driver, expected_bar_activities, 'Compared to Everyone')
+      end
+
+      # Given a hash of user activities and the expected label for the user impacts bar element, verifies that the
+      # impacts activity count shown matches expectations.
+      # @param driver [Selenium::WebDriver]
+      # @param user_activities [Hash]
+      # @param bar_label [String]
+      def verify_user_impacts(driver, user_activities, bar_label)
+        non_zero = user_activities.select { |_, v| !v[:count].zero? }
+        expected_bar_activities = user_bar_activities impact_activities(non_zero)
+        filter_activity_bar impacts_filter_button
+        logger.info "Expecting user impacts to be '#{expected_bar_activities}'"
+        verify_activity_bar(driver, expected_bar_activities, bar_label)
+      end
+
+      # Given a hash of all users' activities and the expected label for the 'everyone' impacts bar element, verifies that the
+      # impacts activity count shown matches expectations.
+      # @param driver [Selenium::WebDriver]
+      # @param all_activities [Hash]
+      def verify_everyone_impacts(driver, all_activities)
+        impact_activities = all_activities.map { |a| impact_activities a }
+        activities = impact_activities.map { |a| user_bar_activities a }
+        expected_bar_activities = everyone_bar_activities activities
+        expected_bar_activities = expected_bar_activities.select { |_, v| !v.zero? }
+        filter_activity_bar impacts_filter_button
+        logger.info "Expecting everyone's impacts to be '#{expected_bar_activities}"
+        verify_activity_bar(driver, expected_bar_activities, 'Compared to Everyone')
       end
 
       # ASSETS

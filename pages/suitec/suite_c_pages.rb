@@ -294,7 +294,6 @@ module Page
     # @return [boolean]
     def drop_clickable?(drop_element)
       drop_element.click
-      logger.debug 'Drop is clickable'
       true
     rescue
       Selenium::WebDriver::Error::UnknownError
