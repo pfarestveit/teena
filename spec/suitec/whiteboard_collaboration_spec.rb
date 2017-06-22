@@ -33,6 +33,7 @@ describe 'Whiteboard', order: :defined do
     @canvas_driver_1 = Page::CanvasPage.new @driver_1
     @cal_net_driver_1 = Page::CalNetPage.new @driver_1
     @whiteboards_driver_1 = Page::SuiteCPages::WhiteboardsPage.new @driver_1
+    @engagement_index_driver_1 = Page::SuiteCPages::EngagementIndexPage.new @driver_1
 
     # Create course site if necessary. If using an existing site, include the Asset Library and make sure Canvas sync is enabled.
     tools = [SuiteCTools::ENGAGEMENT_INDEX, SuiteCTools::WHITEBOARDS]
@@ -47,11 +48,8 @@ describe 'Whiteboard', order: :defined do
       @asset_library.ensure_canvas_sync(@driver_1, @asset_library_url)
     end
 
-    # Each student hits the whiteboards tool to ensure all are synced to the course before proceeding
-    [student_1, student_2, student_3].each do |student|
-      @canvas_driver_1.masquerade_as(@driver_1, student, course)
-      @whiteboards_driver_1.load_page(@driver_1, @whiteboards_url)
-    end
+    # Wait until all are synced to the course before proceeding
+    @engagement_index_driver_1.wait_for_new_user_sync(@driver_1, @engagement_index_url, users)
 
     # Create three whiteboards
     @whiteboards = []
@@ -339,10 +337,7 @@ describe 'Whiteboard', order: :defined do
         @canvas_driver_1.load_course_site(@driver_1, course)
         @canvas_driver_1.stop_masquerading(@driver_1) if @canvas_driver_1.stop_masquerading_link?
         # Wait until the user has been dropped from the Engagement Index before checking whiteboards
-        @engagement_index_driver_1.wait_until(Utils.long_wait) do
-          @engagement_index_driver_1.load_page(@driver_1, @engagement_index_url)
-          !@engagement_index_driver_1.visible_names.include? user.full_name
-        end
+        @engagement_index_driver_1.wait_for_removed_user_sync(@driver_1, @engagement_index_url, [user])
         [@whiteboard_1, @whiteboard_2, @whiteboard_3].each do |whiteboard|
           @whiteboards_driver_1.wait_until(Utils.long_wait) do
             @whiteboards_driver_1.hit_whiteboard_url(course, @whiteboards_url, whiteboard)

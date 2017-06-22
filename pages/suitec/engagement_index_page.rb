@@ -27,6 +27,38 @@ module Page
       span(:user_info_points, xpath: '//span[@data-ng-bind="me.points"]')
       div(:user_info_boxplot, id: 'leaderboard-userinfo-boxplot')
 
+      # Reloads the Engagement Index page until a given block succeeds.
+      # @param driver [Selenium::WebDriver]
+      # @param url [String]
+      # @param blk - the block to execute
+      def wait_for_poller_user_sync(driver, url, &blk)
+        wait_until Utils.long_wait do
+          sleep Utils.short_wait
+          load_page(driver, url)
+          blk
+        end
+      end
+
+      # Waits for the Canvas poller to sync new course site members so that they appear on the Engagement Index
+      # @param driver [Selenium::WebDriver]
+      # @param url [String]
+      # @param users [Array<User>]
+      def wait_for_new_user_sync(driver, url, users)
+        wait_for_poller_user_sync(driver, url) do
+          users.each { |u| visible_names.include? u.full_name }
+        end
+      end
+
+      # Waits for the Canvas poller to sync removed course site members so that they disappear from the Engagement Index
+      # @param driver [Selenium::WebDriver]
+      # @param url [String]
+      # @param users [Array<User>]
+      def wait_for_removed_user_sync(driver, url, users)
+        wait_for_poller_user_sync(driver, url) do
+          users.each { |u| !visible_names.include?(u.full_name) }
+        end
+      end
+
       # LEADERBOARD
 
       table(:users_table, class: 'leaderboard-list-table')

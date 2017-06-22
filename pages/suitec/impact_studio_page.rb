@@ -19,7 +19,7 @@ module Page
         wait_until { title == "#{SuiteCTools::IMPACT_STUDIO.name}" }
         hide_canvas_footer
         switch_to_canvas_iframe driver
-        name_element.when_visible Utils.medium_wait
+        my_activity_event_drops_element.when_visible Utils.medium_wait
       end
 
       # IDENTITY
@@ -82,6 +82,10 @@ module Page
 
       # SEARCH
 
+      text_area(:search_input, xpath: '//input[@placeholder="Search for other people"]')
+      button(:browse_previous, xpath: '//button[@data-ng-if="browse.previous"]')
+      button(:browse_next, xpath: '//button[@data-ng-if="browse.next"]')
+
       # Searches for a given user and loads its Impact Studio profile page. Makes two attempts since sometimes the first click does not
       # trigger the select options.
       # @param user [User]
@@ -89,13 +93,31 @@ module Page
         logger.info "Searching for #{user.full_name} UID #{user.uid}"
         tries ||= 2
         begin
-          wait_for_load_and_click text_area_element(xpath: '//input[@placeholder="Search for other people"]')
+          wait_for_load_and_click search_input_element
           (option = list_item_element(xpath: "//div[contains(@class,'select-dropdown')]//li[contains(.,'#{user.full_name}')]")).when_present Utils.short_wait
           option.click
           wait_until(Utils.medium_wait) { name == user.full_name }
         rescue
           (tries -= 1).zero? ? fail : retry
         end
+      end
+
+      # Given a user who should be next on profile pagination, clicks the next button and waits for that user's profile to load
+      # @param user [User]
+      def browse_next_user(user)
+        logger.info "Browsing for next user #{user.full_name}"
+        wait_until(1) { browse_next_element.text == user.full_name }
+        browse_next
+        wait_until(Utils.short_wait) { name == user.full_name }
+      end
+
+      # Given a user who should be previous on profile pagination, clicks the previous button and waits for that user's profile to load
+      # @param user [User]
+      def browse_previous_user(user)
+        logger.info "Browsing for previous user #{user.full_name}"
+        wait_until(1) { browse_previous_element.text == user.full_name }
+        browse_previous
+        wait_until(Utils.short_wait) { name == user.full_name }
       end
 
       # ACTIVITY

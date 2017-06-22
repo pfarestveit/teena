@@ -217,7 +217,7 @@ module Page
           rescue => e
             logger.error "#{e.message}\n#{e.backtrace}"
             logger.warn 'Add User failed, retrying'
-            retry unless (tries -=1).zero?
+            (tries -= 1).zero? ? fail : retry
           end
         end
       end
