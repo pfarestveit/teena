@@ -19,7 +19,7 @@ module Page
         wait_until { title == "#{SuiteCTools::IMPACT_STUDIO.name}" }
         hide_canvas_footer
         switch_to_canvas_iframe driver
-        my_activity_event_drops_element.when_visible Utils.medium_wait
+        activity_event_drops_element.when_visible Utils.medium_wait rescue Selenium::WebDriver::Error::StaleElementReferenceError
       end
 
       # IDENTITY
@@ -38,7 +38,7 @@ module Page
       link(:turn_on_sharing_link, text: 'Turn on?')
       div(:engagement_index_score, class: 'profile-engagement-score')
       span(:engagement_index_rank, xpath: '//span[@data-ng-bind="userRank"]')
-      span(:engagement_index_rank_ttl, xpath: '//span[@data-ng-bind="courseUserCount"]')
+      span(:engagement_index_rank_ttl, xpath: '//span[@data-ng-bind="leaderboardCount"]')
 
       # Returns the visible sections
       def sections
@@ -142,7 +142,7 @@ module Page
       # @param user_activities [Hash]
       # @return [Hash]
       def contrib_activities(user_activities)
-        contrib_activities = [Activity::VIEW_ASSET, Activity::LIKE, Activity::COMMENT, Activity::ADD_DISCUSSION_TOPIC, Activity::ADD_DISCUSSION_ENTRY,
+        contrib_activities = [Activity::VIEW_ASSET, Activity::LIKE, Activity::COMMENT, Activity::ADD_DISCUSSION_TOPIC, Activity::ADD_DISCUSSION_ENTRY, Activity::PIN_ASSET,
                               Activity::ADD_ASSET_TO_LIBRARY, Activity::EXPORT_WHITEBOARD, Activity::ADD_ASSET_TO_WHITEBOARD, Activity::REMIX_WHITEBOARD]
         activities_by_type(user_activities, contrib_activities)
       end
@@ -151,36 +151,25 @@ module Page
       # @param user_activities [Hash]
       # @return [Hash]
       def impact_activities(user_activities)
-        impact_activities = [Activity::GET_VIEW_ASSET, Activity::GET_LIKE, Activity::GET_COMMENT, Activity::GET_DISCUSSION_REPLY,
+        impact_activities = [Activity::GET_VIEW_ASSET, Activity::GET_LIKE, Activity::GET_COMMENT, Activity::GET_DISCUSSION_REPLY, Activity::GET_PIN_ASSET,
                              Activity::GET_REMIX_WHITEBOARD, Activity::GET_ADD_ASSET_TO_WHITEBOARD]
         activities_by_type(user_activities, impact_activities)
       end
 
-      # The activity bar combines certain activities into a single segment of the bar and sums their activity counts.
-      # Given a hash of user activities, returns a new hash that combines those with the same activity bar label into one with a summed activity count
-      # @param user_activities [Hash]
-      # @return [Hash]
-      def user_bar_activities(user_activities)
-        # Convert activities hash to array of hashes, keeping only the activity 'type' and 'count' portion of each
-        activity_type_and_count = user_activities.to_a.map { |a| a[1] }
-        # Create a new array with each 'type' and 'count' hash converted to its own array
-        activity_type_and_count_to_a = activity_type_and_count.map { |item| [item[:type], item[:count]] if item }
-        # Convert the array back into a hash with identical types combined and their counts summed
-        activity_type_and_count_to_a.each_with_object(Hash.new(0)) { |(type, count), h| h[type] += count }
-      end
-
       # ACTIVITY EVENT DROPS
 
-      element(:my_activity_event_drops, xpath: '//h3[contains(.,"My Activity")]/following-sibling::div[@class="col-flex"]//*[local-name()="svg"]')
-      element(:activity_event_drops, xpath: '//h3[contains(.,"Activity")]/following-sibling::div[@class="col-flex"]//*[name()="svg"]')
+      element(:activity_event_drops, xpath: '//h3[contains(.,"Activity Timeline")]/following-sibling::div[@class="col-flex"]//*[name()="svg"]')
 
+      # Given a user activity hash, returns a hash with the activity counts that should appear on the six user event drops lines.
+      # @param user_activity_count [Hash]
+      # @return [Hash]
       def expected_event_drop_count(user_activity_count)
         event_drop_counts = {
           engage_contrib: (user_activity_count[:view_asset][:count] + user_activity_count[:like][:count]),
-          interact_contrib: (user_activity_count[:comment][:count] + user_activity_count[:discussion_topic][:count] + user_activity_count[:discussion_entry][:count]),
+          interact_contrib: (user_activity_count[:comment][:count] + user_activity_count[:discussion_topic][:count] + user_activity_count[:discussion_entry][:count] + user_activity_count[:pin_asset][:count]),
           create_contrib: (user_activity_count[:add_asset][:count] + user_activity_count[:export_whiteboard][:count] + user_activity_count[:whiteboard_add_asset][:count] + user_activity_count[:remix_whiteboard][:count]),
           engage_impact: (user_activity_count[:get_view_asset][:count] + user_activity_count[:get_like][:count]),
-          interact_impact: (user_activity_count[:get_comment][:count] + user_activity_count[:get_discussion_entry_reply][:count]),
+          interact_impact: (user_activity_count[:get_comment][:count] + user_activity_count[:get_discussion_entry_reply][:count] + user_activity_count[:get_pin_asset][:count]),
           create_impact: (user_activity_count[:get_remix_whiteboard][:count] + user_activity_count[:get_whiteboard_add_asset][:count])
         }
         logger.debug "Expected user event drop counts are #{event_drop_counts}"
@@ -195,7 +184,7 @@ module Page
         sleep 2
         activity_event_drops_element.when_visible Utils.short_wait
         sleep 1
-        elements = driver.find_elements(xpath: '//h3[contains(.,"Activity")]/following-sibling::div[@class="col-flex"]//*[local-name()="svg"]/*[name()="g"]/*[name()="text"]')
+        elements = driver.find_elements(xpath: '//h3[contains(.,"Activity Timeline")]/following-sibling::div[@class="col-flex"]//*[local-name()="svg"]/*[name()="g"]/*[name()="text"]')
         labels = elements.map &:text
         event_drop_counts = {
           engage_contrib: activity_type_count(labels, 0),
@@ -244,22 +233,47 @@ module Page
             link_element(xpath: '//div[@class="event-details-container"]//h3/a').text == asset.title
           end
         end
-        wait_until(Utils.short_wait, "Expected tooltip activity type '#{activity.impact_type}' but got '#{span_element(xpath: '//div[@class="event-details-container"]//p//strong').text}'") do
-          span_element(xpath: '//div[@class="event-details-container"]//p//strong').text.include? activity.impact_type
+        wait_until(Utils.short_wait, "Expected tooltip activity type '#{activity.impact_type_drop}' but got '#{span_element(xpath: '//div[@class="event-details-container"]//p/span/span').text}'") do
+          span_element(xpath: '//div[@class="event-details-container"]//p//span').text.include? activity.impact_type_drop
         end
-        wait_until(Utils.short_wait, "Expected tooltip user name '#{user.full_name}' but got '#{link_element(xpath: '//div[@class="event-details-container"]//p[2]//a').text}'") do
-          link_element(xpath: '//div[@class="event-details-container"]//p[2]//a').text == user.full_name
+        wait_until(Utils.short_wait, "Expected tooltip user name '#{user.full_name}' but got '#{link_element(xpath: '//div[@class="event-details-container"]//p//a').text}'") do
+          link_element(xpath: '//div[@class="event-details-container"]//p//a').text == user.full_name
         end
       end
 
       # ACTIVITY BARS
 
-      # Given an array of user activity hashes, combines them into one hash with activity counts summed. Used to check 'Everyone' activity bars.
-      # @param users_activities [Array<Hash>]
+      # The activity bar combines certain activities into a single segment of the bar and sums their activity counts.
+      # Given a hash of user activities, returns a new hash that combines those with the same activity bar label into one with a summed activity count
+      # @param user_activities [Hash]
       # @return [Hash]
-      def everyone_bar_activities(users_activities)
-        users_activities.inject do |a, b|
+      def user_bar_activities(user_activities)
+        # Convert activities hash to array of hashes, keeping only the activity 'type' and 'count' portion of each
+        activity_type_and_count = user_activities.to_a.map { |a| a[1] }
+        # Create a new array with each 'type' and 'count' hash converted to its own array
+        activity_type_and_count_to_a = activity_type_and_count.map { |item| [item[:type], item[:count]] if item }
+        # Convert the array back into a hash with identical types combined and their counts summed
+        activity_type_and_count_to_a.each_with_object(Hash.new(0)) { |(type, count), h| h[type] += count }
+      end
+
+      # Used to check 'Everyone' activity bars. Given an array of user activity hashes, converts them into hashes containing only
+      # the data shown on the activity bars. Merges them into one hash with activity counts summed. Activities with zero counts
+      # are removed, and the sums are converted to rounded averages for all users enrolled in the course.
+      # @param users_activities [Array<Hash>]
+      # @param users [Array<User>]
+      # @return [Hash]
+      def everyone_bar_activities(users_activities, users)
+        bar_data = users_activities.map { |a| user_bar_activities a }
+        # Merge the user activities, combining the count of each
+        summed_bar_data = bar_data.inject do |a, b|
           a.merge(b) { |_, x, y| x + y if x.instance_of? Fixnum }
+        end
+        # Toss out activities with zero count
+        non_zero_bar_data = summed_bar_data.select { |_, v| !v.zero? }
+        # Average the activity counts
+        non_zero_bar_data.each_with_object({}) do |(k,v), h|
+          avg = (v.to_f / users.length)
+          h[k] = (avg.round == 0) ? 1 : avg.round
         end
       end
 
@@ -326,10 +340,10 @@ module Page
             driver.action.move_to(segment).perform
             driver.action.click_and_hold(segment).release.perform
             sleep 2
-            (activity_count = span_element(xpath: '//span[@count="segment.count"]')).when_visible 2
+            (activity_count = span_element(xpath: '//div[contains(@class,"profile-activity-breakdown-popover-details")]//strong')).when_visible 2
             wait_until(2, "Expected '#{k} #{v}' but got '#{activity_count.text}'") do
               logger.debug "Waiting for '#{bar_label}' '#{k}' '#{v}', and it is currently '#{k}' '#{activity_count.text}'"
-              activity_count.text.include? "#{v} time"
+              activity_count.text.include? "#{v}"
             end
           end
         else
@@ -350,20 +364,6 @@ module Page
         verify_activity_bar(driver, expected_bar_activities, bar_label)
       end
 
-      # Given a hash of all users' activities and the expected label for the 'everyone' contributions bar element, verifies that the
-      # contributions activity count shown matches expectations.
-      # @param driver [Selenium::WebDriver]
-      # @param all_activities [Hash]
-      def verify_everyone_contributions(driver, all_activities)
-        contrib_activities = all_activities.map { |a| contrib_activities a }
-        activities = contrib_activities.map { |a| user_bar_activities a }
-        expected_bar_activities = everyone_bar_activities activities
-        expected_bar_activities = expected_bar_activities.select { |_, v| !v.zero? }
-        filter_activity_bar contribs_filter_button
-        logger.info "Expecting everyone's contributions to be '#{expected_bar_activities}"
-        verify_activity_bar(driver, expected_bar_activities, 'Compared to Everyone')
-      end
-
       # Given a hash of user activities and the expected label for the user impacts bar element, verifies that the
       # impacts activity count shown matches expectations.
       # @param driver [Selenium::WebDriver]
@@ -377,15 +377,27 @@ module Page
         verify_activity_bar(driver, expected_bar_activities, bar_label)
       end
 
+      # Given a hash of all users' activities and the expected label for the 'everyone' contributions bar element, verifies that the
+      # contributions activity count shown matches expectations.
+      # @param driver [Selenium::WebDriver]
+      # @param all_activities [Hash]
+      # @param users [Array<User>]
+      def verify_everyone_contributions(driver, all_activities, users)
+        contrib_activities = all_activities.map { |a| contrib_activities a }
+        expected_bar_activities = everyone_bar_activities(contrib_activities, users)
+        filter_activity_bar contribs_filter_button
+        logger.info "Expecting everyone's contributions to be '#{expected_bar_activities}"
+        verify_activity_bar(driver, expected_bar_activities, 'Compared to Everyone')
+      end
+
       # Given a hash of all users' activities and the expected label for the 'everyone' impacts bar element, verifies that the
       # impacts activity count shown matches expectations.
       # @param driver [Selenium::WebDriver]
       # @param all_activities [Hash]
-      def verify_everyone_impacts(driver, all_activities)
+      # @param users [Array<User>]
+      def verify_everyone_impacts(driver, all_activities, users)
         impact_activities = all_activities.map { |a| impact_activities a }
-        activities = impact_activities.map { |a| user_bar_activities a }
-        expected_bar_activities = everyone_bar_activities activities
-        expected_bar_activities = expected_bar_activities.select { |_, v| !v.zero? }
+        expected_bar_activities = everyone_bar_activities(impact_activities, users)
         filter_activity_bar impacts_filter_button
         logger.info "Expecting everyone's impacts to be '#{expected_bar_activities}"
         verify_activity_bar(driver, expected_bar_activities, 'Compared to Everyone')
@@ -453,10 +465,10 @@ module Page
       # Given a swim lane filter link element, clicks the element unless it is disabled
       # @param element [PageObject::Elements::Link]
       def click_swim_lane_filter(element)
-        element.when_visible Utils.short_wait
-        sleep 2
-        scroll_to_element element
-        js_click(element) unless element.attribute('disabled')
+        if element.exists?
+          scroll_to_element element
+          js_click element
+        end
       end
 
       # Given a set of asset IDs, a 'show more' link element, and the expected asset library sort/filter combination, verifies that
@@ -467,10 +479,12 @@ module Page
       # @param search_filter_blk block that verifies the asset library search filters and results
       def verify_show_more(driver, expected_asset_ids, show_more_element, &search_filter_blk)
         if expected_asset_ids.length > 4
+          sleep 1
           wait_for_update_and_click_js show_more_element
+          wait_until(Utils.short_wait) { title == 'Asset Library' }
           switch_to_canvas_iframe driver
           begin
-            search_filter_blk
+            return yield
           ensure
             go_back_to_impact_studio driver
           end
@@ -485,15 +499,15 @@ module Page
       link(:user_impactful_link, id: 'user-assets-by-impact')
       button(:user_pinned_link, id: 'user-assets-by-pins')
       link(:user_assets_show_more_link, xpath: '//a[@data-id="user.assets.advancedSearchId"]')
-      elements(:user_asset_link, :link, xpath: '//h3[contains(text(),"Assets")]/../following-sibling::div/ul//a')
-      div(:no_user_assets_msg, xpath: '//h3[contains(text(),"Assets")]/../following-sibling::div/div[contains(.,"No matching assets were found.")]')
+      elements(:user_asset_link, :link, xpath: '//div[@id="user-assets"]//ul//a')
+      div(:no_user_assets_msg, xpath: '//div[@id="user-assets"]/div[contains(.,"No matching assets were found.")]')
 
       # Clicks an asset detail link on the user Assets swim lane
       # @param driver [Selenium::WebDriver]
       # @param asset [Asset]
       def click_user_asset_link(driver, asset)
         logger.info "Clicking thumbnail for Asset ID #{asset.id}"
-        wait_for_update_and_click_js link_element(xpath: "//h3[contains(.,'Assets')]/../following-sibling::div/ul//a[contains(@href,'_id=#{asset.id}&')]")
+        wait_for_update_and_click_js link_element(xpath: "//div[@id='user-assets']//ul//a[contains(@href,'_id=#{asset.id}&')]")
         switch_to_canvas_iframe driver
       end
 
@@ -501,7 +515,7 @@ module Page
       # @param asset [Asset]
       # @return [PageObject::Elements::Button]
       def user_assets_pin_element(asset)
-        button_element(xpath: "//h3[contains(text(),'Assets')]/../following-sibling::div//button[@id='iconbar-pin-#{asset.id}']")
+        button_element(xpath: "//div[@id='user-assets']//button[@id='iconbar-pin-#{asset.id}']")
       end
 
       # Pins an asset on the user Assets lane
@@ -529,7 +543,7 @@ module Page
         logger.info "Verifying that user Recent assets are #{recent_studio_ids} on the Impact Studio and #{all_recent_ids} on the Asset Library"
         click_swim_lane_filter user_recent_link_element
         wait_until(Utils.short_wait, "Expected user Recent list to include asset IDs #{recent_studio_ids}, but they were #{swim_lane_asset_ids user_asset_link_elements}") do
-          sleep 1
+          sleep 2
           swim_lane_asset_ids(user_asset_link_elements) == recent_studio_ids
           recent_studio_ids.empty? ? no_user_assets_msg_element.visible? : !no_user_assets_msg_element.exists?
         end
@@ -551,7 +565,7 @@ module Page
         logger.info "Verifying that user Impactful assets are #{impactful_studio_ids} on the Impact Studio and #{all_impactful_ids} on the Asset Library"
         click_swim_lane_filter user_impactful_link_element
         wait_until(Utils.short_wait, "Expected user Impactful list to include asset IDs #{impactful_studio_ids}, but they were #{swim_lane_asset_ids user_asset_link_elements}") do
-          sleep 1
+          sleep 2
           swim_lane_asset_ids(user_asset_link_elements) == impactful_studio_ids
           impactful_studio_ids.empty? ? no_user_assets_msg_element.visible? : !no_user_assets_msg_element.exists?
         end
@@ -573,7 +587,7 @@ module Page
         logger.info "Verifying that user Pinned assets are #{pinned_studio_ids} on the Impact Studio and #{all_pinned_ids} on the Asset Library"
         click_swim_lane_filter user_pinned_link_element
         wait_until(Utils.short_wait, "Expected user Pinned list to include asset IDs #{pinned_studio_ids}, but they were #{swim_lane_asset_ids user_asset_link_elements}") do
-          sleep 1
+          sleep 2
           swim_lane_asset_ids(user_asset_link_elements) == pinned_studio_ids
           pinned_studio_ids.empty? ? no_user_assets_msg_element.visible? : !no_user_assets_msg_element.exists?
         end
@@ -590,15 +604,15 @@ module Page
       button(:everyone_recent_link, id: 'community-assets-by-recent')
       button(:trending_link, id: 'community-assets-by-trending')
       button(:everyone_impactful_link, id: 'community-assets-by-impact')
-      div(:no_everyone_assets_msg, xpath: '//h3[contains(text(),"Everyone\'s Assets")]/../following-sibling::div/div[contains(.,"No matching assets were found.")]')
-      elements(:everyone_asset_link, :link, xpath: '//h3[contains(text(),"Everyone\'s Assets")]/../following-sibling::div/ul//a')
+      div(:no_everyone_assets_msg, xpath: '//div[@id="community-assets"]/div[contains(.,"No matching assets were found.")]')
+      elements(:everyone_asset_link, :link, xpath: '//div[@id="community-assets"]//ul//a')
       link(:everyone_assets_show_more_link, xpath: '//a[@data-id="community.assets.advancedSearchId"]')
 
       # Returns the pin button for an asset on the Everyone's Assets lane
       # @param asset [Asset]
       # @return [PageObject::Elements::Button]
       def everyone_assets_pin_element(asset)
-        button_element(xpath: "//h3[contains(text(), 'Everyone')]/../following-sibling::div//button[@id='iconbar-pin-#{asset.id}']")
+        button_element(xpath: "//div[@id='community-assets']//button[@id='iconbar-pin-#{asset.id}']")
       end
 
       # Pins an asset on the Everyone's Assets lane
@@ -625,7 +639,7 @@ module Page
         logger.info "Verifying that Everyone's Recent assets are #{recent_studio_ids} on the Impact Studio and #{all_recent_ids} on the Asset Library"
         click_swim_lane_filter everyone_recent_link_element
         wait_until(Utils.short_wait, "Expected Everyone's Recent list to include asset IDs #{recent_studio_ids}, but they were #{swim_lane_asset_ids everyone_asset_link_elements}") do
-          sleep 1
+          sleep 2
           swim_lane_asset_ids(everyone_asset_link_elements) == recent_studio_ids
           recent_studio_ids.empty? ? no_everyone_assets_msg_element.visible? : !no_everyone_assets_msg_element.exists?
         end
@@ -645,7 +659,7 @@ module Page
         logger.info "Verifying that Everyone's Impactful assets are #{impactful_studio_ids} on the Impact Studio and #{all_impactful_ids} on the Asset Library"
         click_swim_lane_filter everyone_impactful_link_element
         wait_until(Utils.short_wait, "Expected Everyone's Impactful list to include asset IDs #{impactful_studio_ids}, but they were #{swim_lane_asset_ids everyone_asset_link_elements}") do
-          sleep 1
+          sleep 2
           swim_lane_asset_ids(everyone_asset_link_elements) == impactful_studio_ids
           impactful_studio_ids.empty? ? no_everyone_assets_msg_element.visible? : !no_everyone_assets_msg_element.exists?
         end

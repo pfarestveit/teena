@@ -52,7 +52,7 @@ module Page
       wait_for_update_and_click_js profile_link_element
       wait_for_update_and_click_js profile_form_element
       wait_for_update_and_click_js logout_link_element if logout_link_element.exists?
-      cal_net.logout_conf_heading_element.when_visible
+      cal_net.username_element.when_visible
     end
 
     # Masquerades as a user and then loads a course site
@@ -175,7 +175,8 @@ module Page
       current_url.sub("#{Utils.canvas_base_url}/courses/", '')
     rescue
       logger.error('Course site not found, retrying')
-      retry unless (tries -= 1).zero?
+      sleep Utils.short_wait
+      (tries -= 1).zero? ? fail : retry
     end
 
     # Scrolls down the users table until a given user appears in the table
@@ -374,8 +375,10 @@ module Page
       add_users(course, test_users)
       load_course_site(driver, course)
       reset_user_email(course, test_users)
-      tools.each { |tool| add_suite_c_tool(course, tool) unless tool_nav_link(tool).exists? } if tools
-      disable_tool(course, SuiteCTools::IMPACT_STUDIO) unless tools.include? SuiteCTools::IMPACT_STUDIO
+      if tools
+        tools.each { |tool| add_suite_c_tool(course, tool) unless tool_nav_link(tool).exists? }
+        disable_tool(course, SuiteCTools::IMPACT_STUDIO) unless tools.include? SuiteCTools::IMPACT_STUDIO
+      end
     end
 
     button(:delete_course_button, xpath: '//button[text()="Delete Course"]')

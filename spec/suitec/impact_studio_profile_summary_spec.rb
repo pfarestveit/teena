@@ -21,7 +21,7 @@ describe 'Impact Studio', order: :defined do
   student_no_share = students[2]
 
   before(:all) do
-    @course = Course.new({title: "Impact Studio Profile #{test_id}", site_id: course_id})
+    @course = Course.new({title: "Impact Studio Profile #{test_id}", code: "Impact Studio Profile #{test_id}", site_id: course_id})
 
     @driver = Utils.launch_browser
     @canvas = Page::CanvasPage.new @driver
@@ -32,17 +32,12 @@ describe 'Impact Studio', order: :defined do
 
     # Create course site if necessary
     @canvas.log_in(@cal_net, Utils.super_admin_username, Utils.super_admin_password)
-    @canvas.create_generic_course_site(@driver, Utils.canvas_qa_sub_account, @course, users, test_id, [SuiteCTools::ASSET_LIBRARY, SuiteCTools::IMPACT_STUDIO])
+    @canvas.create_generic_course_site(@driver, Utils.canvas_qa_sub_account, @course, users, test_id, [SuiteCTools::ASSET_LIBRARY, SuiteCTools::IMPACT_STUDIO, SuiteCTools::ENGAGEMENT_INDEX])
     @course.sections = [Section.new({label: @course.title})]
     @asset_library_url = @canvas.click_tool_link(@driver, SuiteCTools::ASSET_LIBRARY)
     @impact_studio_url = @canvas.click_tool_link(@driver, SuiteCTools::IMPACT_STUDIO)
-    users.each do |user|
-      @canvas.masquerade_as(@driver, user, @course)
-      @impact_studio.load_page(@driver, @impact_studio_url)
-    end
-
-    @canvas.masquerade_as(@driver, student_viewer, @course)
-    @impact_studio.load_page(@driver, @impact_studio_url)
+    @engagement_index_url = @canvas.click_tool_link(@driver, SuiteCTools::ENGAGEMENT_INDEX)
+    @engagement_index.wait_for_new_user_sync(@driver, @engagement_index_url, users)
   end
 
   after(:all) { Utils.quit_browser @driver }
@@ -51,10 +46,7 @@ describe 'Impact Studio', order: :defined do
 
     context 'when the Engagement Index is not present' do
 
-      before(:all) do
-        @canvas.stop_masquerading @driver
-        @canvas.disable_tool(@course, SuiteCTools::ENGAGEMENT_INDEX)
-      end
+      before(:all) { @canvas.disable_tool(@course, SuiteCTools::ENGAGEMENT_INDEX) }
 
       context 'and an instructor' do
 
@@ -471,6 +463,7 @@ describe 'Impact Studio', order: :defined do
         @impact_studio.edit_profile 'My personal description #BitterTogether'
         @impact_studio.wait_until { @impact_studio.profile_desc.include? 'My personal description ' }
         @impact_studio.link_element(text: '#BitterTogether').click
+        @asset_library.wait_until(Utils.short_wait) { @asset_library.title == 'Asset Library' }
         @asset_library.switch_to_canvas_iframe @driver
         @asset_library.no_search_results_element.when_visible Utils.short_wait
       end
@@ -480,8 +473,8 @@ describe 'Impact Studio', order: :defined do
         @impact_studio.click_edit_profile
         @impact_studio.enter_profile_desc (desc = "#{'A loooooong title' * 15}?")
         @impact_studio.char_limit_msg_element.when_visible 1
-        @impact_studio.enter_profile_desc (desc = desc[0, 255])
-        @impact_studio.save_profile_edit
+        @impact_studio.cancel_profile_edit
+        @impact_studio.edit_profile (desc = desc[0, 255])
         @impact_studio.wait_until { @impact_studio.profile_desc == desc }
       end
 

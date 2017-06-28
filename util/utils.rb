@@ -93,7 +93,7 @@ class Utils
 
   # Returns the current datetime for use as a unique test identifier
   def self.get_test_id
-    "#{Time.now.strftime('%Y-%m-%d %H:%M')}"
+    "#{Time.now.to_i}"
   end
 
   # Loads file containing test date for course-driven tests
