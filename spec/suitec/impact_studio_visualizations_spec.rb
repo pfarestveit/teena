@@ -83,9 +83,9 @@ describe 'The Impact Studio', order: :defined do
 
       it('shows empty lanes under My Activity') { expect(@impact_studio.visible_event_drop_count(@driver)).to eql(@impact_studio.expected_event_drop_count student_1_activities) }
       it('shows "currently no contributions" under Activity > My Contributions') { @impact_studio.verify_user_contributions(@driver, student_1_activities, 'My Contributions') }
-      it('shows "currently no contributions" under Activity > Everyone Contributions') { @impact_studio.verify_everyone_contributions(@driver, [student_1_activities, student_2_activities, teacher_activities]) }
+      it('shows "currently no contributions" under Activity > Everyone Contributions') { @impact_studio.verify_everyone_contributions(@driver, [student_1_activities, student_2_activities, teacher_activities], users) }
       it('shows "currently no impacts" under Activity > My Impacts') { @impact_studio.verify_user_impacts(@driver, student_1_activities, 'My Impacts') }
-      it('shows "currently no impacts" under Activity > Everyone Impacts') { @impact_studio.verify_everyone_impacts(@driver, [student_1_activities, student_2_activities, teacher_activities]) }
+      it('shows "currently no impacts" under Activity > Everyone Impacts') { @impact_studio.verify_everyone_impacts(@driver, [student_1_activities, student_2_activities, teacher_activities], users) }
     end
 
     context 'and a user views another user\'s profile' do
@@ -97,9 +97,9 @@ describe 'The Impact Studio', order: :defined do
 
       it('shows empty lanes under Activity') { expect(@impact_studio.visible_event_drop_count(@driver)).to eql(@impact_studio.expected_event_drop_count student_2_activities) }
       it('shows "currently no contributions" under Activity > User Contributions') { @impact_studio.verify_user_contributions(@driver, student_2_activities, "#{student_2.full_name}") }
-      it('shows "currently no contributions" under Activity > Everyone Contributions') { @impact_studio.verify_everyone_contributions(@driver, [student_1_activities, student_2_activities, teacher_activities]) }
+      it('shows "currently no contributions" under Activity > Everyone Contributions') { @impact_studio.verify_everyone_contributions(@driver, [student_1_activities, student_2_activities, teacher_activities], users) }
       it('shows "currently no impacts" under Activity > User Impacts') { @impact_studio.verify_user_impacts(@driver, student_2_activities, "#{student_2.full_name}") }
-      it('shows "currently no impacts" under Activity > Everyone Impacts') { @impact_studio.verify_everyone_impacts(@driver, [student_1_activities, student_2_activities, teacher_activities]) }
+      it('shows "currently no impacts" under Activity > Everyone Impacts') { @impact_studio.verify_everyone_impacts(@driver, [student_1_activities, student_2_activities, teacher_activities], users) }
     end
   end
 
@@ -120,9 +120,9 @@ describe 'The Impact Studio', order: :defined do
       it('shows a My Contributions "Creations" event') { expect(@impact_studio.visible_event_drop_count(@driver)).to eql(@impact_studio.expected_event_drop_count student_1_activities) }
       it('shows the event details in a tooltip') { @impact_studio.verify_latest_event_drop(@driver, student_1, asset_1, Activity::ADD_ASSET_TO_LIBRARY, 3) }
       it('shows the activity under Activity > My Contributions') { @impact_studio.verify_user_contributions(@driver, student_1_activities, 'My Contributions') }
-      it('shows the activity under Activity > Everyone Contributions') { @impact_studio.verify_everyone_contributions(@driver, [student_1_activities, student_2_activities, teacher_activities]) }
-      it('shows the activity under Activity > My Impacts') { @impact_studio.verify_user_impacts(@driver, student_1_activities, 'My Impacts') }
-      it('shows the activity under Activity > Everyone Impacts') { @impact_studio.verify_everyone_impacts(@driver, [student_1_activities, student_2_activities, teacher_activities]) }
+      it('shows the activity under Activity > Everyone Contributions') { @impact_studio.verify_everyone_contributions(@driver, [student_1_activities, student_2_activities, teacher_activities], users) }
+      it('shows no activity under Activity > My Impacts') { @impact_studio.verify_user_impacts(@driver, student_1_activities, 'My Impacts') }
+      it('shows no activity under Activity > Everyone Impacts') { @impact_studio.verify_everyone_impacts(@driver, [student_1_activities, student_2_activities, teacher_activities], users) }
     end
 
     context 'via adding to a whiteboard but not the library' do
@@ -141,9 +141,9 @@ describe 'The Impact Studio', order: :defined do
 
       it('shows no My Contributions "Creations" event') { expect(@impact_studio.visible_event_drop_count(@driver)).to eql(@impact_studio.expected_event_drop_count student_1_activities) }
       it('shows no additional activity under Activity > My Contributions') { @impact_studio.verify_user_contributions(@driver, student_1_activities, 'My Contributions') }
-      it('shows no additional activity under Activity > Everyone Contributions') { @impact_studio.verify_everyone_contributions(@driver, [student_1_activities, student_2_activities, teacher_activities]) }
-      it('shows no additional activity under Activity > My Impacts') { @impact_studio.verify_user_impacts(@driver, student_1_activities, 'My Impacts') }
-      it('shows no additional activity under Activity > Everyone Impacts') { @impact_studio.verify_everyone_impacts(@driver, [student_1_activities, student_2_activities, teacher_activities]) }
+      it('shows no additional activity under Activity > Everyone Contributions') { @impact_studio.verify_everyone_contributions(@driver, [student_1_activities, student_2_activities, teacher_activities], users) }
+      it('shows no activity under Activity > My Impacts') { @impact_studio.verify_user_impacts(@driver, student_1_activities, 'My Impacts') }
+      it('shows no activity under Activity > Everyone Impacts') { @impact_studio.verify_everyone_impacts(@driver, [student_1_activities, student_2_activities, teacher_activities], users) }
     end
 
     context 'via adding to a whiteboard and to the library' do
@@ -164,9 +164,9 @@ describe 'The Impact Studio', order: :defined do
       it('shows a My Contributions "Creations" event') { expect(@impact_studio.visible_event_drop_count(@driver)).to eql(@impact_studio.expected_event_drop_count student_1_activities) }
       it('shows the event details in a tooltip') { @impact_studio.verify_latest_event_drop(@driver, student_1, asset_3, Activity::ADD_ASSET_TO_LIBRARY, 3) }
       it('shows the activity under Activity > My Contributions') { @impact_studio.verify_user_contributions(@driver, student_1_activities, 'My Contributions') }
-      it('shows the activity under Activity > Everyone Contributions') { @impact_studio.verify_everyone_contributions(@driver, [student_1_activities, student_2_activities, teacher_activities]) }
-      it('shows the activity under Activity > My Impacts') { @impact_studio.verify_user_impacts(@driver, student_1_activities, 'My Impacts') }
-      it('shows the activity under Activity > Everyone Impacts') { @impact_studio.verify_everyone_impacts(@driver, [student_1_activities, student_2_activities, teacher_activities]) }
+      it('shows the activity under Activity > Everyone Contributions') { @impact_studio.verify_everyone_contributions(@driver, [student_1_activities, student_2_activities, teacher_activities], users) }
+      it('shows no activity under Activity > My Impacts') { @impact_studio.verify_user_impacts(@driver, student_1_activities, 'My Impacts') }
+      it('shows no activity under Activity > Everyone Impacts') { @impact_studio.verify_everyone_impacts(@driver, [student_1_activities, student_2_activities, teacher_activities], users) }
     end
 
     context 'via whiteboard export' do
@@ -190,9 +190,9 @@ describe 'The Impact Studio', order: :defined do
       it('shows a My Contributions "Creations" event') { expect(@impact_studio.visible_event_drop_count(@driver)).to eql(@impact_studio.expected_event_drop_count student_1_activities) }
       it('shows the event details in a tooltip') { @impact_studio.verify_latest_event_drop(@driver, student_1, asset_4, Activity::EXPORT_WHITEBOARD, 3) }
       it('shows the activity under Activity > My Contributions') { @impact_studio.verify_user_contributions(@driver, student_1_activities, 'My Contributions') }
-      it('shows the activity under Activity > Everyone Contributions') { @impact_studio.verify_everyone_contributions(@driver, [student_1_activities, student_2_activities, teacher_activities]) }
-      it('shows the activity under Activity > My Impacts') { @impact_studio.verify_user_impacts(@driver, student_1_activities, 'My Impacts') }
-      it('shows the activity under Activity > Everyone Impacts') { @impact_studio.verify_everyone_impacts(@driver, [student_1_activities, student_2_activities, teacher_activities]) }
+      it('shows the activity under Activity > Everyone Contributions') { @impact_studio.verify_everyone_contributions(@driver, [student_1_activities, student_2_activities, teacher_activities], users) }
+      it('shows no activity under Activity > My Impacts') { @impact_studio.verify_user_impacts(@driver, student_1_activities, 'My Impacts') }
+      it('shows no activity under Activity > Everyone Impacts') { @impact_studio.verify_everyone_impacts(@driver, [student_1_activities, student_2_activities, teacher_activities], users) }
     end
 
     context 'via impact studio "upload"' do
@@ -210,9 +210,9 @@ describe 'The Impact Studio', order: :defined do
       it('shows a My Contributions "Creations" event') { expect(@impact_studio.visible_event_drop_count(@driver)).to eql(@impact_studio.expected_event_drop_count teacher_activities) }
       it('shows the event details in a tooltip') { @impact_studio.verify_latest_event_drop(@driver, teacher, asset_5, Activity::ADD_ASSET_TO_LIBRARY, 3) }
       it('shows the activity under Activity > My Contributions') { @impact_studio.verify_user_contributions(@driver, teacher_activities, 'My Contributions') }
-      it('shows the activity under Activity > Everyone Contributions') { @impact_studio.verify_everyone_contributions(@driver, [student_1_activities, student_2_activities, teacher_activities]) }
-      it('shows the activity under Activity > My Impacts') { @impact_studio.verify_user_impacts(@driver, teacher_activities, 'My Impacts') }
-      it('shows the activity under Activity > Everyone Impacts') { @impact_studio.verify_everyone_impacts(@driver, [student_1_activities, student_2_activities, teacher_activities]) }
+      it('shows the activity under Activity > Everyone Contributions') { @impact_studio.verify_everyone_contributions(@driver, [student_1_activities, student_2_activities, teacher_activities], users) }
+      it('shows no activity under Activity > My Impacts') { @impact_studio.verify_user_impacts(@driver, teacher_activities, 'My Impacts') }
+      it('shows no activity under Activity > Everyone Impacts') { @impact_studio.verify_everyone_impacts(@driver, [student_1_activities, student_2_activities, teacher_activities], users) }
     end
 
     context 'via asset library upload' do
@@ -230,29 +230,9 @@ describe 'The Impact Studio', order: :defined do
       it('shows a My Contributions "Creations" event') { expect(@impact_studio.visible_event_drop_count(@driver)).to eql(@impact_studio.expected_event_drop_count student_2_activities) }
       it('shows the event details in a tooltip') { @impact_studio.verify_latest_event_drop(@driver, student_2, asset_6, Activity::ADD_ASSET_TO_LIBRARY, 3) }
       it('shows the activity under Activity > My Contributions') { @impact_studio.verify_user_contributions(@driver, student_2_activities, 'My Contributions') }
-      it('shows the activity under Activity > Everyone Contributions') { @impact_studio.verify_everyone_contributions(@driver, [student_1_activities, student_2_activities, teacher_activities]) }
-      it('shows the activity under Activity > My Impacts') { @impact_studio.verify_user_impacts(@driver, student_2_activities, 'My Impacts') }
-      it('shows the activity under Activity > Everyone Impacts') { @impact_studio.verify_everyone_impacts(@driver, [student_1_activities, student_2_activities, teacher_activities]) }
-    end
-
-    context 'but then deleted' do
-
-      before(:all) do
-        # Student 2 add asset 7 via asset library and then delete it
-        @asset_library.load_page(@driver, @asset_library_url)
-        @asset_library.add_site asset_7
-        logger.debug "Asset 7 ID is #{asset_7.id}"
-        @asset_library.load_asset_detail(@driver, @asset_library_url, asset_7)
-        @asset_library.delete_asset
-        asset_7.visible = false
-        @impact_studio.load_page(@driver, @impact_studio_url)
-      end
-
-      it('shows no My Contributions "Creations" event') { expect(@impact_studio.visible_event_drop_count(@driver)).to eql(@impact_studio.expected_event_drop_count student_2_activities) }
-      it('shows no additional activity under Activity > My Contributions') { @impact_studio.verify_user_contributions(@driver, student_2_activities, 'My Contributions') }
-      it('shows no additional activity under Activity > Everyone Contributions') { @impact_studio.verify_everyone_contributions(@driver, [student_1_activities, student_2_activities, teacher_activities]) }
-      it('shows no additional activity under Activity > My Impacts') { @impact_studio.verify_user_impacts(@driver, student_2_activities, 'My Impacts') }
-      it('shows no additional activity under Activity > Everyone Impacts') { @impact_studio.verify_everyone_impacts(@driver, [student_1_activities, student_2_activities, teacher_activities]) }
+      it('shows the activity under Activity > Everyone Contributions') { @impact_studio.verify_everyone_contributions(@driver, [student_1_activities, student_2_activities, teacher_activities], users) }
+      it('shows no activity under Activity > My Impacts') { @impact_studio.verify_user_impacts(@driver, student_2_activities, 'My Impacts') }
+      it('shows no activity under Activity > Everyone Impacts') { @impact_studio.verify_everyone_impacts(@driver, [student_1_activities, student_2_activities, teacher_activities], users) }
     end
   end
 
@@ -285,9 +265,9 @@ describe 'The Impact Studio', order: :defined do
         it('shows a My Impacts "Creations" event') { expect(@impact_studio.visible_event_drop_count(@driver)).to eql(@impact_studio.expected_event_drop_count student_1_activities) }
         it('shows the event details in a tooltip') { @impact_studio.verify_latest_event_drop(@driver, student_2, asset_1, Activity::ADD_ASSET_TO_WHITEBOARD, 6) }
         it('shows the activity under Activity > My Contributions') { @impact_studio.verify_user_contributions(@driver, student_1_activities, 'My Contributions') }
-        it('shows the activity under Activity > Everyone Contributions') { @impact_studio.verify_everyone_contributions(@driver, [student_1_activities, student_2_activities, teacher_activities]) }
+        it('shows the activity under Activity > Everyone Contributions') { @impact_studio.verify_everyone_contributions(@driver, [student_1_activities, student_2_activities, teacher_activities], users) }
         it('shows the activity under Activity > My Impacts') { @impact_studio.verify_user_impacts(@driver, student_1_activities, 'My Impacts') }
-        it('shows the activity under Activity > Everyone Impacts') { @impact_studio.verify_everyone_impacts(@driver, [student_1_activities, student_2_activities, teacher_activities]) }
+        it('shows the activity under Activity > Everyone Impacts') { @impact_studio.verify_everyone_impacts(@driver, [student_1_activities, student_2_activities, teacher_activities], users) }
       end
 
       context 'and the asset owner views the other user\'s profile' do
@@ -297,9 +277,9 @@ describe 'The Impact Studio', order: :defined do
         it('shows a My Contributions "Creations" event') { expect(@impact_studio.visible_event_drop_count(@driver)).to eql(@impact_studio.expected_event_drop_count student_2_activities) }
         it('shows the event details in a tooltip') { @impact_studio.verify_latest_event_drop(@driver, student_2, asset_1, Activity::ADD_ASSET_TO_WHITEBOARD, 3) }
         it('shows the activity under Activity > User Contributions') { @impact_studio.verify_user_contributions(@driver, student_2_activities, "#{student_2.full_name}") }
-        it('shows the activity under Activity > Everyone Contributions') { @impact_studio.verify_everyone_contributions(@driver, [student_1_activities, student_2_activities, teacher_activities]) }
+        it('shows the activity under Activity > Everyone Contributions') { @impact_studio.verify_everyone_contributions(@driver, [student_1_activities, student_2_activities, teacher_activities], users) }
         it('shows the activity under Activity > User Impacts') { @impact_studio.verify_user_impacts(@driver, student_2_activities, "#{student_2.full_name}") }
-        it('shows the activity under Activity > Everyone Impacts') { @impact_studio.verify_everyone_impacts(@driver, [student_1_activities, student_2_activities, teacher_activities]) }
+        it('shows the activity under Activity > Everyone Impacts') { @impact_studio.verify_everyone_impacts(@driver, [student_1_activities, student_2_activities, teacher_activities], users) }
       end
 
       context 'and the asset owner views the asset detail' do
@@ -311,7 +291,7 @@ describe 'The Impact Studio', order: :defined do
       end
     end
 
-    context 'with "view asset" impact' do
+    context '"view asset"' do
 
       before(:all) do
         # Teacher views the student's asset
@@ -334,9 +314,9 @@ describe 'The Impact Studio', order: :defined do
         it('shows a My Impacts "Engagements" event') { expect(@impact_studio.visible_event_drop_count(@driver)).to eql(@impact_studio.expected_event_drop_count student_1_activities) }
         it('shows the event details in a tooltip') { @impact_studio.verify_latest_event_drop(@driver, teacher, asset_3, Activity::VIEW_ASSET, 4) }
         it('shows the activity under Activity > My Contributions') { @impact_studio.verify_user_contributions(@driver, student_1_activities, 'My Contributions') }
-        it('shows the activity under Activity > Everyone Contributions') { @impact_studio.verify_everyone_contributions(@driver, [student_1_activities, student_2_activities, teacher_activities]) }
+        it('shows the activity under Activity > Everyone Contributions') { @impact_studio.verify_everyone_contributions(@driver, [student_1_activities, student_2_activities, teacher_activities], users) }
         it('shows the activity under Activity > My Impacts') { @impact_studio.verify_user_impacts(@driver, student_1_activities, 'My Impacts') }
-        it('shows the activity under Activity > Everyone Impacts') { @impact_studio.verify_everyone_impacts(@driver, [student_1_activities, student_2_activities, teacher_activities]) }
+        it('shows the activity under Activity > Everyone Impacts') { @impact_studio.verify_everyone_impacts(@driver, [student_1_activities, student_2_activities, teacher_activities], users) }
       end
 
       context 'and the asset owner views the other user\'s profile' do
@@ -346,9 +326,9 @@ describe 'The Impact Studio', order: :defined do
         it('shows a My Contributions "Engagements" event') { expect(@impact_studio.visible_event_drop_count(@driver)).to eql(@impact_studio.expected_event_drop_count teacher_activities) }
         it('shows the event details in a tooltip') { @impact_studio.verify_latest_event_drop(@driver, teacher, asset_3, Activity::VIEW_ASSET, 1) }
         it('shows the activity under Activity > My Contributions') { @impact_studio.verify_user_contributions(@driver, teacher_activities, "#{teacher.full_name}") }
-        it('shows the activity under Activity > Everyone Contributions') { @impact_studio.verify_everyone_contributions(@driver, [student_1_activities, student_2_activities, teacher_activities]) }
+        it('shows the activity under Activity > Everyone Contributions') { @impact_studio.verify_everyone_contributions(@driver, [student_1_activities, student_2_activities, teacher_activities], users) }
         it('shows the activity under Activity > My Impacts') { @impact_studio.verify_user_impacts(@driver, teacher_activities, "#{teacher.full_name}") }
-        it('shows the activity under Activity > Everyone Impacts') { @impact_studio.verify_everyone_impacts(@driver, [student_1_activities, student_2_activities, teacher_activities]) }
+        it('shows the activity under Activity > Everyone Impacts') { @impact_studio.verify_everyone_impacts(@driver, [student_1_activities, student_2_activities, teacher_activities], users) }
       end
 
       context 'and the asset owner views the asset detail' do
@@ -360,7 +340,7 @@ describe 'The Impact Studio', order: :defined do
       end
     end
 
-    context 'with "comment" impact' do
+    context '"comment"' do
 
       before(:all) do
         # Teacher comments on the student's asset
@@ -388,9 +368,9 @@ describe 'The Impact Studio', order: :defined do
         it('shows My Impacts "Engagement" and "Interaction" events') { expect(@impact_studio.visible_event_drop_count(@driver)).to eql(@impact_studio.expected_event_drop_count student_2_activities) }
         it('shows the comment event details in a tooltip') { @impact_studio.verify_latest_event_drop(@driver, teacher, asset_6, Activity::COMMENT, 5) }
         it('shows the activity under Activity > My Contributions') { @impact_studio.verify_user_contributions(@driver, student_2_activities, 'My Contributions') }
-        it('shows the activity under Activity > Everyone Contributions') { @impact_studio.verify_everyone_contributions(@driver, [student_1_activities, student_2_activities, teacher_activities]) }
+        it('shows the activity under Activity > Everyone Contributions') { @impact_studio.verify_everyone_contributions(@driver, [student_1_activities, student_2_activities, teacher_activities], users) }
         it('shows the activity under Activity > My Impacts') { @impact_studio.verify_user_impacts(@driver, student_2_activities, 'My Impacts') }
-        it('shows the activity under Activity > Everyone Impacts') { @impact_studio.verify_everyone_impacts(@driver, [student_1_activities, student_2_activities, teacher_activities]) }
+        it('shows the activity under Activity > Everyone Impacts') { @impact_studio.verify_everyone_impacts(@driver, [student_1_activities, student_2_activities, teacher_activities], users) }
       end
 
       context 'and the asset owner views the other user\'s profile' do
@@ -400,9 +380,9 @@ describe 'The Impact Studio', order: :defined do
         it('shows My Contributions "Engagement" and "Interaction" events') { expect(@impact_studio.visible_event_drop_count(@driver)).to eql(@impact_studio.expected_event_drop_count teacher_activities) }
         it('shows the comment event details in a tooltip') { @impact_studio.verify_latest_event_drop(@driver, teacher, asset_6, Activity::COMMENT, 2) }
         it('shows the activity under Activity > My Contributions') { @impact_studio.verify_user_contributions(@driver, teacher_activities, "#{teacher.full_name}") }
-        it('shows the activity under Activity > Everyone Contributions') { @impact_studio.verify_everyone_contributions(@driver, [student_1_activities, student_2_activities, teacher_activities]) }
+        it('shows the activity under Activity > Everyone Contributions') { @impact_studio.verify_everyone_contributions(@driver, [student_1_activities, student_2_activities, teacher_activities], users) }
         it('shows the activity under Activity > My Impacts') { @impact_studio.verify_user_impacts(@driver, teacher_activities, "#{teacher.full_name}") }
-        it('shows the activity under Activity > Everyone Impacts') { @impact_studio.verify_everyone_impacts(@driver, [student_1_activities, student_2_activities, teacher_activities]) }
+        it('shows the activity under Activity > Everyone Impacts') { @impact_studio.verify_everyone_impacts(@driver, [student_1_activities, student_2_activities, teacher_activities], users) }
       end
 
       context 'and the asset owner views the asset detail' do
@@ -414,7 +394,7 @@ describe 'The Impact Studio', order: :defined do
       end
     end
 
-    context 'with "comment reply" impact' do
+    context '"comment reply"' do
 
       before(:all) do
         # Teacher replies to comment on the student's asset
@@ -444,9 +424,9 @@ describe 'The Impact Studio', order: :defined do
         it('shows My Impacts "Engagement" and "Interaction" events') { expect(@impact_studio.visible_event_drop_count(@driver)).to eql(@impact_studio.expected_event_drop_count student_2_activities) }
         it('shows the comment event details in a tooltip') { @impact_studio.verify_latest_event_drop(@driver, teacher, asset_6, Activity::COMMENT, 5) }
         it('shows the activity under Activity > My Contributions') { @impact_studio.verify_user_contributions(@driver, student_2_activities, 'My Contributions') }
-        it('shows the activity under Activity > Everyone Contributions') { @impact_studio.verify_everyone_contributions(@driver, [student_1_activities, student_2_activities, teacher_activities]) }
+        it('shows the activity under Activity > Everyone Contributions') { @impact_studio.verify_everyone_contributions(@driver, [student_1_activities, student_2_activities, teacher_activities], users) }
         it('shows the activity under Activity > My Impacts') { @impact_studio.verify_user_impacts(@driver, student_2_activities, 'My Impacts') }
-        it('shows the activity under Activity > Everyone Impacts') { @impact_studio.verify_everyone_impacts(@driver, [student_1_activities, student_2_activities, teacher_activities]) }
+        it('shows the activity under Activity > Everyone Impacts') { @impact_studio.verify_everyone_impacts(@driver, [student_1_activities, student_2_activities, teacher_activities], users) }
       end
 
       context 'and the asset owner views the other user\'s profile' do
@@ -456,9 +436,9 @@ describe 'The Impact Studio', order: :defined do
         it('shows My Contributions "Engagement" and "Interaction" events') { expect(@impact_studio.visible_event_drop_count(@driver)).to eql(@impact_studio.expected_event_drop_count teacher_activities) }
         it('shows the comment event details in a tooltip') { @impact_studio.verify_latest_event_drop(@driver, teacher, asset_6, Activity::COMMENT, 2) }
         it('shows the activity under Activity > My Contributions') { @impact_studio.verify_user_contributions(@driver, teacher_activities, "#{teacher.full_name}") }
-        it('shows the activity under Activity > Everyone Contributions') { @impact_studio.verify_everyone_contributions(@driver, [student_1_activities, student_2_activities, teacher_activities]) }
+        it('shows the activity under Activity > Everyone Contributions') { @impact_studio.verify_everyone_contributions(@driver, [student_1_activities, student_2_activities, teacher_activities], users) }
         it('shows the activity under Activity > My Impacts') { @impact_studio.verify_user_impacts(@driver, teacher_activities, "#{teacher.full_name}") }
-        it('shows the activity under Activity > Everyone Impacts') { @impact_studio.verify_everyone_impacts(@driver, [student_1_activities, student_2_activities, teacher_activities]) }
+        it('shows the activity under Activity > Everyone Impacts') { @impact_studio.verify_everyone_impacts(@driver, [student_1_activities, student_2_activities, teacher_activities], users) }
       end
 
       context 'and the asset owner views the asset detail' do
@@ -470,7 +450,7 @@ describe 'The Impact Studio', order: :defined do
       end
     end
 
-    context 'with "like" impact' do
+    context '"like"' do
 
       before(:all) do
         # One student likes the teacher's asset
@@ -499,9 +479,9 @@ describe 'The Impact Studio', order: :defined do
 
         it('shows My Impacts "Engagement" events') { expect(@impact_studio.visible_event_drop_count(@driver)).to eql(@impact_studio.expected_event_drop_count teacher_activities) }
         it('shows the activity under Activity > My Contributions') { @impact_studio.verify_user_contributions(@driver, teacher_activities, 'My Contributions') }
-        it('shows the activity under Activity > Everyone Contributions') { @impact_studio.verify_everyone_contributions(@driver, [student_1_activities, student_2_activities, teacher_activities]) }
+        it('shows the activity under Activity > Everyone Contributions') { @impact_studio.verify_everyone_contributions(@driver, [student_1_activities, student_2_activities, teacher_activities], users) }
         it('shows the activity under Activity > My Impacts') { @impact_studio.verify_user_impacts(@driver, teacher_activities, 'My Impacts') }
-        it('shows the activity under Activity > Everyone Impacts') { @impact_studio.verify_everyone_impacts(@driver, [student_1_activities, student_2_activities, teacher_activities]) }
+        it('shows the activity under Activity > Everyone Impacts') { @impact_studio.verify_everyone_impacts(@driver, [student_1_activities, student_2_activities, teacher_activities], users) }
       end
 
       context 'and the asset owner views the other user\'s profile' do
@@ -510,9 +490,9 @@ describe 'The Impact Studio', order: :defined do
 
         it('shows My Contributions "Engagement" events') { expect(@impact_studio.visible_event_drop_count(@driver)).to eql(@impact_studio.expected_event_drop_count student_1_activities) }
         it('shows the activity under Activity > My Contributions') { @impact_studio.verify_user_contributions(@driver, student_1_activities, "#{student_1.full_name}") }
-        it('shows the activity under Activity > Everyone Contributions') { @impact_studio.verify_everyone_contributions(@driver, [student_1_activities, student_2_activities, teacher_activities]) }
+        it('shows the activity under Activity > Everyone Contributions') { @impact_studio.verify_everyone_contributions(@driver, [student_1_activities, student_2_activities, teacher_activities], users) }
         it('shows the activity under Activity > My Impacts') { @impact_studio.verify_user_impacts(@driver, student_1_activities, "#{student_1.full_name}") }
-        it('shows the activity under Activity > Everyone Impacts') { @impact_studio.verify_everyone_impacts(@driver, [student_1_activities, student_2_activities, teacher_activities]) }
+        it('shows the activity under Activity > Everyone Impacts') { @impact_studio.verify_everyone_impacts(@driver, [student_1_activities, student_2_activities, teacher_activities], users) }
       end
 
       context 'and the asset owner views the asset detail' do
@@ -524,7 +504,7 @@ describe 'The Impact Studio', order: :defined do
       end
     end
 
-    context 'with "remix whiteboard" impact' do
+    context '"remix whiteboard"' do
 
       before(:all) do
         # Teacher remixes the students' whiteboard
@@ -555,9 +535,9 @@ describe 'The Impact Studio', order: :defined do
         it('shows My Impacts "Engagements" and "Creations" events') { expect(@impact_studio.visible_event_drop_count(@driver)).to eql(@impact_studio.expected_event_drop_count student_1_activities) }
         it('shows the remix event details in a tooltip') { @impact_studio.verify_latest_event_drop(@driver, teacher, asset_4, Activity::REMIX_WHITEBOARD, 6) }
         it('shows the activity under Activity > My Contributions') { @impact_studio.verify_user_contributions(@driver, student_1_activities, 'My Contributions') }
-        it('shows the activity under Activity > Everyone Contributions') { @impact_studio.verify_everyone_contributions(@driver, [student_1_activities, student_2_activities, teacher_activities]) }
+        it('shows the activity under Activity > Everyone Contributions') { @impact_studio.verify_everyone_contributions(@driver, [student_1_activities, student_2_activities, teacher_activities], users) }
         it('shows the activity under Activity > My Impacts') { @impact_studio.verify_user_impacts(@driver, student_1_activities, 'My Impacts') }
-        it('shows the activity under Activity > Everyone Impacts') { @impact_studio.verify_everyone_impacts(@driver, [student_1_activities, student_2_activities, teacher_activities]) }
+        it('shows the activity under Activity > Everyone Impacts') { @impact_studio.verify_everyone_impacts(@driver, [student_1_activities, student_2_activities, teacher_activities], users) }
       end
 
       context 'and another whiteboard asset owner views its own profile' do
@@ -570,9 +550,9 @@ describe 'The Impact Studio', order: :defined do
         it('shows My Impacts "Engagements" and "Creations" events') { expect(@impact_studio.visible_event_drop_count(@driver)).to eql(@impact_studio.expected_event_drop_count student_2_activities) }
         it('shows the remix event details in a tooltip') { @impact_studio.verify_latest_event_drop(@driver, teacher, asset_4, Activity::REMIX_WHITEBOARD, 6) }
         it('shows the activity under Activity > My Contributions') { @impact_studio.verify_user_contributions(@driver, student_2_activities, 'My Contributions') }
-        it('shows the activity under Activity > Everyone Contributions') { @impact_studio.verify_everyone_contributions(@driver, [student_1_activities, student_2_activities, teacher_activities]) }
+        it('shows the activity under Activity > Everyone Contributions') { @impact_studio.verify_everyone_contributions(@driver, [student_1_activities, student_2_activities, teacher_activities], users) }
         it('shows the activity under Activity > My Impacts') { @impact_studio.verify_user_impacts(@driver, student_2_activities, 'My Impacts') }
-        it('shows the activity under Activity > Everyone Impacts') { @impact_studio.verify_everyone_impacts(@driver, [student_1_activities, student_2_activities, teacher_activities]) }
+        it('shows the activity under Activity > Everyone Impacts') { @impact_studio.verify_everyone_impacts(@driver, [student_1_activities, student_2_activities, teacher_activities], users) }
       end
 
       context 'and an asset owner views the remixer\'s profile' do
@@ -582,9 +562,9 @@ describe 'The Impact Studio', order: :defined do
         it('shows My Contributions "Engagements" and "Creations" events') { expect(@impact_studio.visible_event_drop_count(@driver)).to eql(@impact_studio.expected_event_drop_count teacher_activities) }
         it('shows the remix event details in a tooltip') { @impact_studio.verify_latest_event_drop(@driver, teacher, asset_4, Activity::REMIX_WHITEBOARD, 3) }
         it('shows the activity under Activity > My Contributions') { @impact_studio.verify_user_contributions(@driver, teacher_activities, "#{teacher.full_name}") }
-        it('shows the activity under Activity > Everyone Contributions') { @impact_studio.verify_everyone_contributions(@driver, [student_1_activities, student_2_activities, teacher_activities]) }
+        it('shows the activity under Activity > Everyone Contributions') { @impact_studio.verify_everyone_contributions(@driver, [student_1_activities, student_2_activities, teacher_activities], users) }
         it('shows the activity under Activity > My Impacts') { @impact_studio.verify_user_impacts(@driver, teacher_activities, "#{teacher.full_name}") }
-        it('shows the activity under Activity > Everyone Impacts') { @impact_studio.verify_everyone_impacts(@driver, [student_1_activities, student_2_activities, teacher_activities]) }
+        it('shows the activity under Activity > Everyone Impacts') { @impact_studio.verify_everyone_impacts(@driver, [student_1_activities, student_2_activities, teacher_activities], users) }
       end
 
       context 'and the asset owner views the asset detail' do
@@ -594,6 +574,50 @@ describe 'The Impact Studio', order: :defined do
         it('shows a "remixed" event') { expect(asset_4_actual_drop_counts = @asset_library.activity_timeline_event_counts(@driver)).to eql(asset_4_expected_drop_counts) }
         it('shows the event details in a tooltip') { @asset_library.verify_latest_asset_event_drop(@driver, teacher, Activity::REMIX_WHITEBOARD, 5) }
      end
+    end
+
+    context '"pin"' do
+
+      before(:all) do
+        # Student 2 pins Student 1's asset
+        @canvas.masquerade_as(@driver, student_2, @course)
+
+        @asset_library.load_asset_detail(@driver, @asset_library_url, asset_1)
+        student_2_activities[:view_asset][:count] += 1
+        student_1_activities[:get_view_asset][:count] += 1
+        asset_1_expected_drop_counts[:viewed] += 1
+
+        @asset_library.pin_detail_view_asset asset_1
+        student_2_activities[:pin_asset][:count] += 1
+        student_1_activities[:get_pin_asset][:count] += 1
+      end
+
+      context 'and the asset owner views its own profile' do
+
+        before(:all) do
+          @canvas.masquerade_as(@driver, student_1, @course)
+          @impact_studio.load_page(@driver, @impact_studio_url)
+        end
+
+        it('shows My Impacts "Engagements" and "Interactions" events') { expect(@impact_studio.visible_event_drop_count(@driver)).to eql(@impact_studio.expected_event_drop_count student_1_activities) }
+        it('shows the pin event details in a tooltip') { @impact_studio.verify_latest_event_drop(@driver, student_2, asset_1, Activity::PIN_ASSET, 5) }
+        it('shows the activity under Activity > My Contributions') { @impact_studio.verify_user_contributions(@driver, student_1_activities, 'My Contributions') }
+        it('shows the activity under Activity > Everyone Contributions') { @impact_studio.verify_everyone_contributions(@driver, [student_1_activities, student_2_activities, teacher_activities], users) }
+        it('shows the activity under Activity > My Impacts') { @impact_studio.verify_user_impacts(@driver, student_1_activities, 'My Impacts') }
+        it('shows the activity under Activity > Everyone Impacts') { @impact_studio.verify_everyone_impacts(@driver, [student_1_activities, student_2_activities, teacher_activities], users) }
+      end
+
+      context 'and the asset owner views the pinner\'s profile' do
+
+        before(:all) { @impact_studio.search_for_user student_2 }
+
+        it('shows My Contributions "Engagements" and "Creations" events') { expect(@impact_studio.visible_event_drop_count(@driver)).to eql(@impact_studio.expected_event_drop_count student_2_activities) }
+        it('shows the remix event details in a tooltip') { @impact_studio.verify_latest_event_drop(@driver, student_2, asset_1, Activity::PIN_ASSET, 2) }
+        it('shows the activity under Activity > My Contributions') { @impact_studio.verify_user_contributions(@driver, student_2_activities, "#{student_2.full_name}") }
+        it('shows the activity under Activity > Everyone Contributions') { @impact_studio.verify_everyone_contributions(@driver, [student_1_activities, student_2_activities, teacher_activities], users) }
+        it('shows the activity under Activity > My Impacts') { @impact_studio.verify_user_impacts(@driver, student_2_activities, "#{student_2.full_name}") }
+        it('shows the activity under Activity > Everyone Impacts') { @impact_studio.verify_everyone_impacts(@driver, [student_1_activities, student_2_activities, teacher_activities], users) }
+      end
     end
   end
 
@@ -611,9 +635,9 @@ describe 'The Impact Studio', order: :defined do
 
       it('does not show My Contributions "Engagements" events') { expect(@impact_studio.visible_event_drop_count(@driver)).to eql(@impact_studio.expected_event_drop_count student_1_activities) }
       it('shows no activity under Activity > My Contributions') { @impact_studio.verify_user_contributions(@driver, student_1_activities, 'My Contributions') }
-      it('shows no activity under Activity > Everyone Contributions') { @impact_studio.verify_everyone_contributions(@driver, [student_1_activities, student_2_activities, teacher_activities]) }
+      it('shows no activity under Activity > Everyone Contributions') { @impact_studio.verify_everyone_contributions(@driver, [student_1_activities, student_2_activities, teacher_activities], users) }
       it('shows no activity under Activity > My Impacts') { @impact_studio.verify_user_impacts(@driver, student_1_activities, 'My Impacts') }
-      it('shows no activity under Activity > Everyone Impacts') { @impact_studio.verify_everyone_impacts(@driver, [student_1_activities, student_2_activities, teacher_activities]) }
+      it('shows no activity under Activity > Everyone Impacts') { @impact_studio.verify_everyone_impacts(@driver, [student_1_activities, student_2_activities, teacher_activities], users) }
 
       context 'and the asset owner views the asset detail' do
 
@@ -634,9 +658,9 @@ describe 'The Impact Studio', order: :defined do
 
       it('does not show My Contributions "Engagements" or "Interactions" events') { expect(@impact_studio.visible_event_drop_count(@driver)).to eql(@impact_studio.expected_event_drop_count student_1_activities) }
       it('shows no activity under Activity > My Contributions') { @impact_studio.verify_user_contributions(@driver, student_1_activities, 'My Contributions') }
-      it('shows no activity under Activity > Everyone Contributions') { @impact_studio.verify_everyone_contributions(@driver, [student_1_activities, student_2_activities, teacher_activities]) }
+      it('shows no activity under Activity > Everyone Contributions') { @impact_studio.verify_everyone_contributions(@driver, [student_1_activities, student_2_activities, teacher_activities], users) }
       it('shows no activity under Activity > My Impacts') { @impact_studio.verify_user_impacts(@driver, student_1_activities, 'My Impacts') }
-      it('shows no activity under Activity > Everyone Impacts') { @impact_studio.verify_everyone_impacts(@driver, [student_1_activities, student_2_activities, teacher_activities]) }
+      it('shows no activity under Activity > Everyone Impacts') { @impact_studio.verify_everyone_impacts(@driver, [student_1_activities, student_2_activities, teacher_activities], users) }
 
       context 'and the asset owner views the asset detail' do
 
@@ -657,9 +681,9 @@ describe 'The Impact Studio', order: :defined do
 
       it('does not show My Contributions "Engagements" or "Creations" events') { expect(@impact_studio.visible_event_drop_count(@driver)).to eql(@impact_studio.expected_event_drop_count student_1_activities) }
       it('shows no activity under Activity > My Contributions') { @impact_studio.verify_user_contributions(@driver, student_1_activities, 'My Contributions') }
-      it('shows no activity under Activity > Everyone Contributions') { @impact_studio.verify_everyone_contributions(@driver, [student_1_activities, student_2_activities, teacher_activities]) }
+      it('shows no activity under Activity > Everyone Contributions') { @impact_studio.verify_everyone_contributions(@driver, [student_1_activities, student_2_activities, teacher_activities], users) }
       it('shows no activity under Activity > My Impacts') { @impact_studio.verify_user_impacts(@driver, student_1_activities, 'My Impacts') }
-      it('shows no activity under Activity > Everyone Impacts') { @impact_studio.verify_everyone_impacts(@driver, [student_1_activities, student_2_activities, teacher_activities]) }
+      it('shows no activity under Activity > Everyone Impacts') { @impact_studio.verify_everyone_impacts(@driver, [student_1_activities, student_2_activities, teacher_activities], users) }
     end
 
     context 'and the asset owner views the asset detail' do
@@ -667,6 +691,21 @@ describe 'The Impact Studio', order: :defined do
       before(:all) { @asset_library.load_asset_detail(@driver, @asset_library_url, asset_4) }
 
       it('shows no "remixed" event') { expect(asset_4_actual_drop_counts = @asset_library.activity_timeline_event_counts(@driver)).to eql(asset_4_expected_drop_counts) }
+    end
+
+    context 'with "pin" impact' do
+
+      before(:all) do
+        @asset_library.load_asset_detail(@driver, @asset_library_url, asset_4)
+        @asset_library.pin_detail_view_asset asset_4
+        @impact_studio.load_page(@driver, @impact_studio_url)
+      end
+
+      it('does not show My Contributions "Engagements" events') { expect(@impact_studio.visible_event_drop_count(@driver)).to eql(@impact_studio.expected_event_drop_count student_1_activities) }
+      it('shows no activity under Activity > My Contributions') { @impact_studio.verify_user_contributions(@driver, student_1_activities, 'My Contributions') }
+      it('shows no activity under Activity > Everyone Contributions') { @impact_studio.verify_everyone_contributions(@driver, [student_1_activities, student_2_activities, teacher_activities], users) }
+      it('shows no activity under Activity > My Impacts') { @impact_studio.verify_user_impacts(@driver, student_1_activities, 'My Impacts') }
+      it('shows no activity under Activity > Everyone Impacts') { @impact_studio.verify_everyone_impacts(@driver, [student_1_activities, student_2_activities, teacher_activities], users) }
     end
   end
 
@@ -711,9 +750,9 @@ describe 'The Impact Studio', order: :defined do
 
         it('adds My Contributions "Engagements" and removes "Interactions" events') { expect(@impact_studio.visible_event_drop_count(@driver)).to eql(@impact_studio.expected_event_drop_count teacher_activities) }
         it('shows the activity under Activity > My Contributions') { @impact_studio.verify_user_contributions(@driver, teacher_activities, 'My Contributions') }
-        it('shows the activity under Activity > Everyone Contributions') { @impact_studio.verify_everyone_contributions(@driver, [student_1_activities, student_2_activities, teacher_activities]) }
+        it('shows the activity under Activity > Everyone Contributions') { @impact_studio.verify_everyone_contributions(@driver, [student_1_activities, student_2_activities, teacher_activities], users) }
         it('shows the activity under Activity > My Impacts') { @impact_studio.verify_user_impacts(@driver, teacher_activities, 'My Impacts') }
-        it('shows the activity under Activity > Everyone Impacts') { @impact_studio.verify_everyone_impacts(@driver, [student_1_activities, student_2_activities, teacher_activities]) }
+        it('shows the activity under Activity > Everyone Impacts') { @impact_studio.verify_everyone_impacts(@driver, [student_1_activities, student_2_activities, teacher_activities], users) }
       end
 
       context 'and the comment deleter views the asset owner\'s profile' do
@@ -722,9 +761,9 @@ describe 'The Impact Studio', order: :defined do
 
         it('adds My Impact "Engagements" and removes "Interactions" events') { expect(@impact_studio.visible_event_drop_count(@driver)).to eql(@impact_studio.expected_event_drop_count student_2_activities) }
         it('shows the activity under Activity > My Contributions') { @impact_studio.verify_user_contributions(@driver, student_2_activities, "#{student_2.full_name}") }
-        it('shows the activity under Activity > Everyone Contributions') { @impact_studio.verify_everyone_contributions(@driver, [student_1_activities, student_2_activities, teacher_activities]) }
+        it('shows the activity under Activity > Everyone Contributions') { @impact_studio.verify_everyone_contributions(@driver, [student_1_activities, student_2_activities, teacher_activities], users) }
         it('shows the activity under Activity > My Impacts') { @impact_studio.verify_user_impacts(@driver, student_2_activities, "#{student_2.full_name}") }
-        it('shows the activity under Activity > Everyone Impacts') { @impact_studio.verify_everyone_impacts(@driver, [student_1_activities, student_2_activities, teacher_activities]) }
+        it('shows the activity under Activity > Everyone Impacts') { @impact_studio.verify_everyone_impacts(@driver, [student_1_activities, student_2_activities, teacher_activities], users) }
       end
     end
 
@@ -770,9 +809,9 @@ describe 'The Impact Studio', order: :defined do
 
         it('adds and removes My Contributions "Engagements" events') { expect(@impact_studio.visible_event_drop_count(@driver)).to eql(@impact_studio.expected_event_drop_count student_1_activities) }
         it('shows the activity under Activity > My Contributions') { @impact_studio.verify_user_contributions(@driver, student_1_activities, 'My Contributions') }
-        it('shows the activity under Activity > Everyone Contributions') { @impact_studio.verify_everyone_contributions(@driver, [student_1_activities, student_2_activities, teacher_activities]) }
+        it('shows the activity under Activity > Everyone Contributions') { @impact_studio.verify_everyone_contributions(@driver, [student_1_activities, student_2_activities, teacher_activities], users) }
         it('shows the activity under Activity > My Impacts') { @impact_studio.verify_user_impacts(@driver, student_1_activities, 'My Impacts') }
-        it('shows the activity under Activity > Everyone Impacts') { @impact_studio.verify_everyone_impacts(@driver, [student_1_activities, student_2_activities, teacher_activities]) }
+        it('shows the activity under Activity > Everyone Impacts') { @impact_studio.verify_everyone_impacts(@driver, [student_1_activities, student_2_activities, teacher_activities], users) }
       end
 
       context 'and the un-liker views the asset owner\'s profile' do
@@ -781,17 +820,79 @@ describe 'The Impact Studio', order: :defined do
 
         it('adds and removes My Impact "Engagements" events') { expect(@impact_studio.visible_event_drop_count(@driver)).to eql(@impact_studio.expected_event_drop_count teacher_activities) }
         it('shows the activity under Activity > My Contributions') { @impact_studio.verify_user_contributions(@driver, teacher_activities, "#{teacher.full_name}") }
-        it('shows the activity under Activity > Everyone Contributions') { @impact_studio.verify_everyone_contributions(@driver, [student_1_activities, student_2_activities, teacher_activities]) }
+        it('shows the activity under Activity > Everyone Contributions') { @impact_studio.verify_everyone_contributions(@driver, [student_1_activities, student_2_activities, teacher_activities], users) }
         it('shows the activity under Activity > My Impacts') { @impact_studio.verify_user_impacts(@driver, teacher_activities, "#{teacher.full_name}") }
-        it('shows the activity under Activity > Everyone Impacts') { @impact_studio.verify_everyone_impacts(@driver, [student_1_activities, student_2_activities, teacher_activities]) }
+        it('shows the activity under Activity > Everyone Impacts') { @impact_studio.verify_everyone_impacts(@driver, [student_1_activities, student_2_activities, teacher_activities], users) }
+      end
+    end
+
+    context '"pin"' do
+
+      before(:all) do
+        @canvas.masquerade_as(@driver, student_2, @course)
+
+        @asset_library.load_asset_detail(@driver, @asset_library_url, asset_1)
+        student_2_activities[:view_asset][:count] += 1
+        student_1_activities[:get_view_asset][:count] += 1
+
+        @asset_library.unpin_detail_view_asset asset_1
+      end
+
+      context 'and the un-pinner views its own profile' do
+
+        before(:all) { @impact_studio.load_page(@driver, @impact_studio_url) }
+
+        it('adds and removes My Contributions "Engagements" events') { expect(@impact_studio.visible_event_drop_count(@driver)).to eql(@impact_studio.expected_event_drop_count student_2_activities) }
+        it('shows the activity under Activity > My Contributions') { @impact_studio.verify_user_contributions(@driver, student_2_activities, 'My Contributions') }
+        it('shows the activity under Activity > Everyone Contributions') { @impact_studio.verify_everyone_contributions(@driver, [student_1_activities, student_2_activities, teacher_activities], users) }
+        it('shows the activity under Activity > My Impacts') { @impact_studio.verify_user_impacts(@driver, student_2_activities, 'My Impacts') }
+        it('shows the activity under Activity > Everyone Impacts') { @impact_studio.verify_everyone_impacts(@driver, [student_1_activities, student_2_activities, teacher_activities], users) }
+      end
+
+      context 'and the un-pinner views the asset owner\'s profile' do
+
+        before(:all) { @impact_studio.search_for_user student_1 }
+
+        it('adds and removes My Impact "Engagements" events') { expect(@impact_studio.visible_event_drop_count(@driver)).to eql(@impact_studio.expected_event_drop_count student_1_activities) }
+        it('shows the activity under Activity > My Contributions') { @impact_studio.verify_user_contributions(@driver, student_1_activities, "#{student_1.full_name}") }
+        it('shows the activity under Activity > Everyone Contributions') { @impact_studio.verify_everyone_contributions(@driver, [student_1_activities, student_2_activities, teacher_activities], users) }
+        it('shows the activity under Activity > My Impacts') { @impact_studio.verify_user_impacts(@driver, student_1_activities, "#{student_1.full_name}") }
+        it('shows the activity under Activity > Everyone Impacts') { @impact_studio.verify_everyone_impacts(@driver, [student_1_activities, student_2_activities, teacher_activities], users) }
       end
     end
   end
 
   context 'when assets are deleted' do
 
-    # TODO - delete an impactful asset
+    context 'before they have impact' do
 
+      before(:all) do
+        # Student 2 add asset 7 via asset library and then delete it
+        @asset_library.load_page(@driver, @asset_library_url)
+        @asset_library.add_site asset_7
+        logger.debug "Asset 7 ID is #{asset_7.id}"
+        @asset_library.load_asset_detail(@driver, @asset_library_url, asset_7)
+        @asset_library.delete_asset
+        asset_7.visible = false
+        @impact_studio.load_page(@driver, @impact_studio_url)
+      end
+
+      it('shows no My Contributions "Creations" event') { expect(@impact_studio.visible_event_drop_count(@driver)).to eql(@impact_studio.expected_event_drop_count student_2_activities) }
+      it('shows no additional activity under Activity > My Contributions') { @impact_studio.verify_user_contributions(@driver, student_2_activities, 'My Contributions') }
+      it('shows no additional activity under Activity > Everyone Contributions') { @impact_studio.verify_everyone_contributions(@driver, [student_1_activities, student_2_activities, teacher_activities], users) }
+      it('shows no additional activity under Activity > My Impacts') { @impact_studio.verify_user_impacts(@driver, student_2_activities, 'My Impacts') }
+      it('shows no additional activity under Activity > Everyone Impacts') { @impact_studio.verify_everyone_impacts(@driver, [student_1_activities, student_2_activities, teacher_activities], users) }
+    end
+
+    context 'when they have impact' do
+
+      before(:all) do
+        # Teacher deletes asset 4
+
+      end
+
+
+    end
   end
 
   describe 'Canvas discussions' do
@@ -809,9 +910,9 @@ describe 'The Impact Studio', order: :defined do
       it('adds a My Contributions "Interactions" event') { @impact_studio.wait_for_canvas_event(@driver, @impact_studio_url, @impact_studio.expected_event_drop_count(teacher_activities)) }
       it('shows the event details in a tooltip') { @impact_studio.verify_latest_event_drop(@driver, teacher, nil, Activity::ADD_DISCUSSION_TOPIC, 2) }
       it('shows the activity under Activity > My Contributions') { @impact_studio.verify_user_contributions(@driver, teacher_activities, 'My Contributions') }
-      it('shows the activity under Activity > Everyone Contributions') { @impact_studio.verify_everyone_contributions(@driver, [student_1_activities, student_2_activities, teacher_activities]) }
+      it('shows the activity under Activity > Everyone Contributions') { @impact_studio.verify_everyone_contributions(@driver, [student_1_activities, student_2_activities, teacher_activities], users) }
       it('shows the activity under Activity > My Impacts') { @impact_studio.verify_user_impacts(@driver, teacher_activities, 'My Impacts') }
-      it('shows the activity under Activity > Everyone Impacts') { @impact_studio.verify_everyone_impacts(@driver, [student_1_activities, student_2_activities, teacher_activities]) }
+      it('shows the activity under Activity > Everyone Impacts') { @impact_studio.verify_everyone_impacts(@driver, [student_1_activities, student_2_activities, teacher_activities], users) }
     end
 
     context 'when an entry is added' do
@@ -825,9 +926,9 @@ describe 'The Impact Studio', order: :defined do
       it('adds a My Contributions "Interactions" event') { @impact_studio.wait_for_canvas_event(@driver, @impact_studio_url, @impact_studio.expected_event_drop_count(student_1_activities)) }
       it('shows the event details in a tooltip') { @impact_studio.verify_latest_event_drop(@driver, student_1, nil, Activity::ADD_DISCUSSION_ENTRY, 2) }
       it('shows the activity under Activity > My Contributions') { @impact_studio.verify_user_contributions(@driver, student_1_activities, 'My Contributions') }
-      it('shows the activity under Activity > Everyone Contributions') { @impact_studio.verify_everyone_contributions(@driver, [student_1_activities, student_2_activities, teacher_activities]) }
+      it('shows the activity under Activity > Everyone Contributions') { @impact_studio.verify_everyone_contributions(@driver, [student_1_activities, student_2_activities, teacher_activities], users) }
       it('shows the activity under Activity > My Impacts') { @impact_studio.verify_user_impacts(@driver, student_1_activities, 'My Impacts') }
-      it('shows the activity under Activity > Everyone Impacts') { @impact_studio.verify_everyone_impacts(@driver, [student_1_activities, student_2_activities, teacher_activities]) }
+      it('shows the activity under Activity > Everyone Impacts') { @impact_studio.verify_everyone_impacts(@driver, [student_1_activities, student_2_activities, teacher_activities], users) }
     end
 
     context 'when a reply is added' do
@@ -844,11 +945,11 @@ describe 'The Impact Studio', order: :defined do
         before(:all) { @impact_studio.load_page(@driver, @impact_studio_url) }
 
         it('adds a My Contributions "Interactions" event') { @impact_studio.wait_for_canvas_event(@driver, @impact_studio_url, @impact_studio.expected_event_drop_count(student_2_activities)) }
-        it('shows the event details in a tooltip') { @impact_studio.verify_latest_event_drop(@driver, student_2, nil, Activity::ADD_DISCUSSION_ENTRY, 2) }
+        it('shows the event details in a tooltip') { @impact_studio.verify_latest_event_drop(@driver, student_2, nil, Activity::GET_DISCUSSION_REPLY, 2) }
         it('shows the activity under Activity > My Contributions') { @impact_studio.verify_user_contributions(@driver, student_2_activities, 'My Contributions') }
-        it('shows the activity under Activity > Everyone Contributions') { @impact_studio.verify_everyone_contributions(@driver, [student_1_activities, student_2_activities, teacher_activities]) }
+        it('shows the activity under Activity > Everyone Contributions') { @impact_studio.verify_everyone_contributions(@driver, [student_1_activities, student_2_activities, teacher_activities], users) }
         it('shows the activity under Activity > My Impacts') { @impact_studio.verify_user_impacts(@driver, student_2_activities, 'My Impacts') }
-        it('shows the activity under Activity > Everyone Impacts') { @impact_studio.verify_everyone_impacts(@driver, [student_1_activities, student_2_activities, teacher_activities]) }
+        it('shows the activity under Activity > Everyone Impacts') { @impact_studio.verify_everyone_impacts(@driver, [student_1_activities, student_2_activities, teacher_activities], users) }
       end
 
       context 'and the entry-creator views its own profile' do
@@ -859,11 +960,11 @@ describe 'The Impact Studio', order: :defined do
         end
 
         it('adds a My Impact "Interactions" event') { @impact_studio.wait_for_canvas_event(@driver, @impact_studio_url, @impact_studio.expected_event_drop_count(student_1_activities)) }
-        it('shows the event details in a tooltip') { @impact_studio.verify_latest_event_drop(@driver, student_2, nil, Activity::ADD_DISCUSSION_ENTRY, 5) }
+        it('shows the event details in a tooltip') { @impact_studio.verify_latest_event_drop(@driver, student_2, nil, Activity::GET_DISCUSSION_REPLY, 5) }
         it('shows the activity under Activity > My Contributions') { @impact_studio.verify_user_contributions(@driver, student_1_activities, 'My Contributions') }
-        it('shows the activity under Activity > Everyone Contributions') { @impact_studio.verify_everyone_contributions(@driver, [student_1_activities, student_2_activities, teacher_activities]) }
+        it('shows the activity under Activity > Everyone Contributions') { @impact_studio.verify_everyone_contributions(@driver, [student_1_activities, student_2_activities, teacher_activities], users) }
         it('shows the activity under Activity > My Impacts') { @impact_studio.verify_user_impacts(@driver, student_1_activities, 'My Impacts') }
-        it('shows the activity under Activity > Everyone Impacts') { @impact_studio.verify_everyone_impacts(@driver, [student_1_activities, student_2_activities, teacher_activities]) }
+        it('shows the activity under Activity > Everyone Impacts') { @impact_studio.verify_everyone_impacts(@driver, [student_1_activities, student_2_activities, teacher_activities], users) }
       end
     end
   end

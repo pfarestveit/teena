@@ -259,7 +259,7 @@ module Page
     # @param asset_type [String]
     # @param sort_by [String]
     def advanced_search(keyword, category, user, asset_type, sort_by = nil)
-      logger.info "Performing advanced search of asset library by keyword '#{keyword}', category '#{category}', user '#{user && user.full_name}', and asset type '#{asset_type}'."
+      logger.info "Performing advanced search of asset library by keyword '#{keyword}', category '#{category}', user '#{user && user.full_name}', asset type '#{asset_type}', sort by '#{sort_by}'."
       open_advanced_search
       keyword.nil? ?
           wait_for_element_and_type(keyword_search_input_element, '') :
@@ -318,7 +318,7 @@ module Page
 
       # Zoom in, but a little less if on asset detail since drops are less likely to be tightly clustered
       logger.debug 'Zooming in to distinguish the drop'
-      asset_detail = h3_element(xpath: '//h3[contains(.,"Activity Timeline")]').exists?
+      asset_detail = text_area_element(id: 'assetlibrary-item-newcomment-body').exists?
       zooms = asset_detail ? 6 : 7
       unless drop_clickable? drop
         zooms.times do

@@ -17,7 +17,7 @@ describe 'Asset Library', order: :defined do
   student_1_upload = Asset.new student_1.assets.find { |asset| asset['type'] == 'File' }
   student_2_upload = Asset.new student_2.assets.find { |asset| asset['type'] == 'File' }
   student_3_link = Asset.new student_3.assets.find { |asset| asset['type'] == 'Link' }
-  
+
   category_1 = "Category 1 #{category_id}"
   category_2 = "Category 2 #{category_id}"
 

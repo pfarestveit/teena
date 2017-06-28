@@ -27,16 +27,18 @@ module Page
       span(:user_info_points, xpath: '//span[@data-ng-bind="me.points"]')
       div(:user_info_boxplot, id: 'leaderboard-userinfo-boxplot')
 
-      # Reloads the Engagement Index page until a given block succeeds.
+      # Waits for the Canvas poller to sync course data, which is defined by the block executed.
       # @param driver [Selenium::WebDriver]
       # @param url [String]
       # @param blk - the block to execute
-      def wait_for_poller_user_sync(driver, url, &blk)
-        wait_until Utils.long_wait do
-          sleep Utils.short_wait
-          load_page(driver, url)
-          blk
+      def wait_for_poller_sync(driver, url, &blk)
+        tries ||= Utils.poller_retries
+        begin
+          return yield
         end
+      rescue
+        sleep Utils.short_wait
+        (tries -= 1).zero? ? fail : retry
       end
 
       # Waits for the Canvas poller to sync new course site members so that they appear on the Engagement Index
@@ -44,8 +46,12 @@ module Page
       # @param url [String]
       # @param users [Array<User>]
       def wait_for_new_user_sync(driver, url, users)
-        wait_for_poller_user_sync(driver, url) do
-          users.each { |u| visible_names.include? u.full_name }
+        wait_for_poller_sync(driver, url) do
+          load_scores(driver, url)
+          users.each do |u|
+            logger.debug "Checking if #{u.full_name} has been added to the course"
+            wait_until(1) { visible_names.include? u.full_name }
+          end
         end
       end
 
@@ -54,8 +60,12 @@ module Page
       # @param url [String]
       # @param users [Array<User>]
       def wait_for_removed_user_sync(driver, url, users)
-        wait_for_poller_user_sync(driver, url) do
-          users.each { |u| !visible_names.include?(u.full_name) }
+        wait_for_poller_sync(driver, url) do
+          load_scores(driver, url)
+          users.each do |u|
+            logger.debug "Checking if #{u.full_name} has been removed from the course"
+            wait_until(1) { !visible_names.include? u.full_name }
+          end
         end
       end
 

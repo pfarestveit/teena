@@ -55,6 +55,8 @@ describe 'The Impact Studio', order: :defined do
     @impact_studio_url = @canvas.click_tool_link(@driver, SuiteCTools::IMPACT_STUDIO)
     @whiteboards_url = @canvas.click_tool_link(@driver, SuiteCTools::WHITEBOARDS)
 
+    @engagement_index.wait_for_new_user_sync(@driver, @engagement_index_url, [teacher, student_1, student_2])
+
     [student_1, student_2].each do |student|
       @canvas.masquerade_as(@driver, student, @course)
       @engagement_index.load_page(@driver, @engagement_index_url)
@@ -267,38 +269,6 @@ describe 'The Impact Studio', order: :defined do
       it('does not show any assets under Assets > Pinned') { @impact_studio.verify_user_pinned_assets(@driver, student_2_pins, student_2) }
 
       it('shows no Everyone\'s Assets UI') { expect(@impact_studio.everyone_assets_heading?).to be false }
-    end
-  end
-
-  context 'when a user pins assets' do
-
-    before(:all) do
-      @canvas.masquerade_as(@driver, student_2, @course)
-      @asset_library.load_page(@driver, @asset_library_url)
-      @asset_library.pin_list_view_asset asset_6
-      @asset_library.pin_list_view_asset asset_4
-      @asset_library.pin_list_view_asset asset_5
-      @asset_library.pin_list_view_asset asset_3
-      @asset_library.pin_list_view_asset asset_1
-      student_2_pins << asset_1 << asset_3 << asset_5 << asset_4 << asset_6
-    end
-
-    context 'and the user views its own profile' do
-
-      before(:all) { @impact_studio.load_page(@driver, @impact_studio_url) }
-
-      it('shows the user\'s pinned assets under My Assets > Pinned') { @impact_studio.verify_user_pinned_assets(@driver, student_2_pins, student_2) }
-    end
-
-    context 'and another user views the user\'s profile' do
-
-      before(:all) do
-        @canvas.masquerade_as(@driver, student_1, @course)
-        @impact_studio.load_page(@driver, @impact_studio_url)
-        @impact_studio.search_for_user student_2
-      end
-
-      it('shows the other user\'s pinned assets under Assets > Pinned') { @impact_studio.verify_user_pinned_assets(@driver, student_2_pins, student_2) }
     end
   end
 
@@ -638,6 +608,38 @@ describe 'The Impact Studio', order: :defined do
 
         it('shows the right assets under the user\'s Assets > Most Impactful') { @impact_studio.verify_user_impactful_assets(@driver, teacher_assets, teacher) }
       end
+    end
+  end
+
+  context 'when a user pins assets' do
+
+    before(:all) do
+      @canvas.masquerade_as(@driver, student_2, @course)
+      @asset_library.load_page(@driver, @asset_library_url)
+      @asset_library.pin_list_view_asset asset_6
+      @asset_library.pin_list_view_asset asset_4
+      @asset_library.pin_list_view_asset asset_5
+      @asset_library.pin_list_view_asset asset_3
+      @asset_library.pin_list_view_asset asset_1
+      student_2_pins << asset_1 << asset_3 << asset_5 << asset_4 << asset_6
+    end
+
+    context 'and the user views its own profile' do
+
+      before(:all) { @impact_studio.load_page(@driver, @impact_studio_url) }
+
+      it('shows the user\'s pinned assets under My Assets > Pinned') { @impact_studio.verify_user_pinned_assets(@driver, student_2_pins, student_2) }
+    end
+
+    context 'and another user views the user\'s profile' do
+
+      before(:all) do
+        @canvas.masquerade_as(@driver, student_1, @course)
+        @impact_studio.load_page(@driver, @impact_studio_url)
+        @impact_studio.search_for_user student_2
+      end
+
+      it('shows the other user\'s pinned assets under Assets > Pinned') { @impact_studio.verify_user_pinned_assets(@driver, student_2_pins, student_2) }
     end
   end
 

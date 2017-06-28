@@ -730,8 +730,8 @@ module Page
           link_element(xpath: '//p[@class="event-details-description"]//a').text == user.full_name
         end
         wait_until(Utils.short_wait) do
-          logger.debug "Verifying the activity type in the tooltip is '#{activity.impact_type_asset}'"
-          span_element(xpath: '//p[@class="event-details-description"]/span/span/span').text.include? activity.impact_type_asset
+          logger.debug "Verifying the activity type in the tooltip is '#{activity.impact_type_drop}'"
+          span_element(xpath: '//p[@class="event-details-description"]/span/span').text.include? activity.impact_type_drop
         end
       end
 
