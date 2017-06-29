@@ -392,6 +392,7 @@ module Page
       def add_asset_exclude_from_library(asset)
         click_add_new_asset asset
         (asset.type == 'File') ? enter_and_upload_file(asset) : enter_and_submit_url(asset)
+        asset.visible = false
       end
 
       # Uploads a new file or adds a new link to an open whiteboard and also makes the asset available in the asset library

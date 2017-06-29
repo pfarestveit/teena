@@ -93,7 +93,8 @@ module Page
         logger.info "Searching for #{user.full_name} UID #{user.uid}"
         tries ||= 2
         begin
-          wait_for_load_and_click search_input_element
+          wait_for_load_and_click name_element
+          wait_for_update_and_click search_input_element
           (option = list_item_element(xpath: "//div[contains(@class,'select-dropdown')]//li[contains(.,'#{user.full_name}')]")).when_present Utils.short_wait
           option.click
           wait_until(Utils.medium_wait) { name == user.full_name }
@@ -226,7 +227,7 @@ module Page
       # @param activity [Activity]
       # @param line_node [Integer]
       def verify_latest_event_drop(driver, user, asset, activity, line_node)
-        drag_drop_into_view(driver, line_node, 'last()')
+        drag_latest_drop_into_view(driver, line_node)
         wait_until(Utils.short_wait) { driver.find_element(xpath: '//div[@class="event-details-container"]//h3') }
         unless asset.nil?
           wait_until(Utils.short_wait, "Expected tooltip asset title '#{asset.title}' but got '#{link_element(xpath: '//div[@class="event-details-container"]//h3/a').text}'") do

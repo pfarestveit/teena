@@ -464,10 +464,11 @@ module Page
       button(:delete_asset_button, xpath: '//button[@data-ng-click="deleteAsset()"]')
 
       # Deletes an asset
-      def delete_asset
-        logger.info 'Deleting asset'
+      def delete_asset(asset = nil)
+        logger.info "Deleting asset ID #{asset.id}"
         confirm(true) { wait_for_update_and_click delete_asset_button_element }
         delete_asset_button_element.when_not_visible Utils.short_wait rescue Selenium::WebDriver::Error::StaleElementReferenceError
+        asset.visible = false unless asset.nil?
       end
 
       # LIKES
@@ -683,10 +684,32 @@ module Page
 
       element(:activity_timeline_event_drops, xpath: '//h3[contains(.,"Activity Timeline")]/following-sibling::div[@data-ng-if="assetActivity"]//*[name()="svg"]')
 
+      # Initializes a hash of all an asset's activities. Key is the activity type that appears on the popover and value is a zero count.
+      # @return [Hash]
+      def init_asset_activities
+        (Activity::ACTIVITIES.map { |a| [a.type.to_sym, 0] }).to_h
+      end
+
+      # Given an asset activity hash, returns a hash with the activity counts that should appear on the four or five asset event drops lines.
+      # @param asset_activity_count [Hash]
+      # @return [Hash]
+      def expected_event_drop_count(asset, asset_activity_count)
+        event_drop_counts = {
+          viewed: asset_activity_count[:get_view_asset],
+          liked: asset_activity_count[:get_like],
+          commented: asset_activity_count[:get_comment],
+          used_in_whiteboard: asset_activity_count[:get_whiteboard_add_asset]
+        }
+        # Whiteboard assets have an extra lane of metaballs for remixes
+        (event_drop_counts[:remixed] = asset_activity_count[:get_remix_whiteboard]) if asset.type == 'Whiteboard'
+        logger.debug "Expected asset event drop counts are #{event_drop_counts}"
+        event_drop_counts
+      end
+
       # Returns the activity labels on the My Classmates event drops
       # @param driver [Selenium::WebDriver]
       # @return [Array<String>]
-      def activity_timeline_event_counts(driver)
+      def visible_event_drop_count(driver, asset)
         # Shift focus to the new comment input so that the event drops will also move into the viewport.
         wait_for_element_and_type_js(text_area_element(id: 'assetlibrary-item-newcomment-body'), ' ')
         sleep 1
@@ -698,22 +721,16 @@ module Page
         sleep 1
         elements = driver.find_elements(xpath: '//h3[contains(.,"Activity Timeline")]/following-sibling::div[@data-ng-if="assetActivity"]//*[name()="svg"]/*[name()="g"]/*[name()="text"]')
         labels = elements.map &:text
-        logger.debug "Visible asset event drop counts are #{asset_event_drop_counts labels}"
-        asset_event_drop_counts labels
-      end
-
-      # Given an array of activity timeline labels in the UI, returns a hash of event type counts. Note that 'remixed' is only
-      # applicable to whiteboard type assets and its count will be nil for other types.
-      # @param labels [Array<String>]
-      # @return [Hash]
-      def asset_event_drop_counts(labels)
-        {
+        visible_event_drop_counts = {
           viewed: activity_type_count(labels, 0),
           liked: activity_type_count(labels, 1),
           commented: activity_type_count(labels, 2),
-          used_in_whiteboard: activity_type_count(labels, 3),
-          remixed: activity_type_count(labels, 4)
+          used_in_whiteboard: activity_type_count(labels, 3)
         }
+        # Whiteboard assets have an extra lane of metaballs for remixes
+        (visible_event_drop_counts[:remixed] = activity_type_count(labels, 4)) if asset.type == 'Whiteboard'
+        logger.debug "Visible asset event drop counts are #{visible_event_drop_counts}"
+        visible_event_drop_counts
       end
 
       # Given the position of an event drop in the HTML, zooms in very close, drags the drop into view, hovers over it,
@@ -723,7 +740,7 @@ module Page
       # @param activity [Activity]
       # @param line_node [Integer]
       def verify_latest_asset_event_drop(driver, user, activity, line_node)
-        drag_drop_into_view(driver, line_node, 'last()')
+        drag_latest_drop_into_view(driver, line_node)
         wait_until(Utils.short_wait) { driver.find_element(class: 'event-details') }
         wait_until(Utils.short_wait) do
           logger.debug "Verifying that the user in the tooltip is '#{user.full_name}'"

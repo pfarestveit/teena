@@ -101,8 +101,7 @@ begin
   @asset_library.load_page(@driver, @asset_library_url)
   @asset_library.add_site asset_7
   @asset_library.load_asset_detail(@driver, @asset_library_url, asset_7)
-  @asset_library.delete_asset
-  asset_7.visible = false
+  @asset_library.delete_asset asset_7
 
   # One student uses the other's asset on the shared whiteboard
   @whiteboards.load_page(@driver, @whiteboards_url)
