@@ -107,8 +107,7 @@ module Page
       # @param url [String]
       # @param asset [Asset]
       def load_asset_detail(driver, url, asset)
-        load_list_view_asset(driver, url, asset)
-        click_asset_link_by_id asset
+        navigate_to "#{url}#col_asset=#{asset.id}"
         wait_for_asset_detail asset
       end
 

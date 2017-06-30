@@ -96,7 +96,7 @@ module Page
           wait_for_load_and_click name_element
           wait_for_update_and_click search_input_element
           (option = list_item_element(xpath: "//div[contains(@class,'select-dropdown')]//li[contains(.,'#{user.full_name}')]")).when_present Utils.short_wait
-          option.click
+          js_click option
           wait_until(Utils.medium_wait) { name == user.full_name }
         rescue
           (tries -= 1).zero? ? fail : retry

@@ -641,10 +641,4 @@ describe 'The Impact Studio', order: :defined do
       it('shows the other user\'s pinned assets under Assets > Pinned') { @impact_studio.verify_user_pinned_assets(@driver, student_2_pins, student_2) }
     end
   end
-
-  context 'when assets are deleted' do
-
-    # TODO - delete an impactful asset
-
-  end
 end
