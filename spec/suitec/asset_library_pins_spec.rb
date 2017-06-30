@@ -302,7 +302,7 @@ describe 'Asset pinning', order: :defined do
       @canvas.masquerade_as(@driver, user_2, @course)
       @asset_library.load_asset_detail(@driver, @asset_library_url, user_2_asset)
       @asset_library.pin_detail_view_asset user_2_asset
-      @asset_library.delete_asset
+      @asset_library.delete_asset user_2_asset
       @asset_library.advanced_search(test_id, nil, nil, nil, 'Pinned')
     end
 

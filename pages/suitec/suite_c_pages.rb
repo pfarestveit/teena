@@ -304,16 +304,16 @@ module Page
     # Attempts to drag an event drop into view so that it is clickable. In tests, if the drop is not visible then the drop
     # should be to the right, so this drags the drops to the left a configurable number of times.
     # @param driver [Selenium::WebDriver]
-    def drag_drop_into_view(driver, line_node, drop_node)
+    def drag_latest_drop_into_view(driver, line_node)
       # Find the drop in the SVG
       logger.info 'Checking an event drop'
       div_element(xpath: '//strong[contains(text(), "View by")]').when_visible Utils.short_wait
       if (button = button_element(xpath: '//button[text()="All"]')).exists?
         wait_for_update_and_click_js button unless button.attribute('disabled')
       end
-      wait_until(Utils.short_wait) { driver.find_element(xpath: "//*[name()='svg']//*[@class='drop-line'][#{line_node}]/*[name()='circle'][#{drop_node}]") }
+      wait_until(Utils.short_wait) { driver.find_element(xpath: "//*[name()='svg']//*[@class='drop-line'][#{line_node}]/*[name()='circle'][last()]") }
       container = driver.find_element(xpath: '//*[name()="svg"]//*[name()="rect"]')
-      drop = driver.find_element(xpath: "//*[name()='svg']//*[@class='drop-line'][#{line_node}]/*[name()='circle'][#{drop_node}]")
+      drop = driver.find_element(xpath: "//*[name()='svg']//*[@class='drop-line'][#{line_node}]/*[name()='circle'][last()]")
       driver.action.drag_and_drop_by(container, -25, 0).perform unless drop_clickable? drop
 
       # Zoom in, but a little less if on asset detail since drops are less likely to be tightly clustered
@@ -344,7 +344,7 @@ module Page
       end
 
       # Mouse over the drop to reveal the tooltip.
-      driver.action.move_to(driver.find_element(xpath: "//*[name()='svg']//*[@class='drop-line'][#{line_node}]/*[name()='circle'][#{drop_node}]")).perform
+      driver.action.move_to(driver.find_element(xpath: "//*[name()='svg']//*[@class='drop-line'][#{line_node}]/*[name()='circle'][last()]")).perform
     end
 
   end

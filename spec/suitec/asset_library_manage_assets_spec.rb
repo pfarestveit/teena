@@ -108,7 +108,7 @@ describe 'Asset', order: :defined do
         # Delete asset
         @canvas.masquerade_as(@driver, teacher, @course)
         @asset_library.load_asset_detail(@driver, @asset_library_url, asset)
-        @asset_library.delete_asset
+        @asset_library.delete_asset asset
         @asset_library.advanced_search(test_id, nil, student_uploader, nil)
         @asset_library.no_search_results_element.when_present Utils.short_wait
 
@@ -124,7 +124,7 @@ describe 'Asset', order: :defined do
         # Delete asset
         @canvas.masquerade_as(@driver, student_uploader, @course)
         @asset_library.load_asset_detail(@driver, @asset_library_url, asset)
-        @asset_library.delete_asset
+        @asset_library.delete_asset asset
         @asset_library.advanced_search(test_id, nil, student_uploader, nil)
         @asset_library.no_search_results_element.when_present Utils.short_wait
 
@@ -168,7 +168,7 @@ describe 'Asset', order: :defined do
         # Delete asset
         @canvas.masquerade_as(@driver, teacher, @course)
         @asset_library.load_asset_detail(@driver, @asset_library_url, asset)
-        @asset_library.delete_asset
+        @asset_library.delete_asset asset
         @asset_library.advanced_search(test_id, nil, student_uploader, nil)
         @asset_library.no_search_results_element.when_present Utils.short_wait
 
@@ -222,7 +222,7 @@ describe 'Asset', order: :defined do
         # Delete asset
         @canvas.masquerade_as(@driver, teacher, @course)
         @asset_library.load_asset_detail(@driver, @asset_library_url, asset)
-        @asset_library.delete_asset
+        @asset_library.delete_asset asset
         @asset_library.advanced_search(test_id, nil, student_uploader, nil)
         @asset_library.no_search_results_element.when_present Utils.short_wait
 
@@ -283,7 +283,7 @@ describe 'Asset', order: :defined do
         # Delete asset
         @canvas.masquerade_as(@driver, teacher, @course)
         @asset_library.load_asset_detail(@driver, @asset_library_url, asset)
-        @asset_library.delete_asset
+        @asset_library.delete_asset asset
         @asset_library.advanced_search(test_id, nil, student_uploader, nil)
         @asset_library.no_search_results_element.when_present Utils.short_wait
 
@@ -341,7 +341,7 @@ describe 'Asset', order: :defined do
       @non_migrated_delete = Asset.new({type: 'File', file_name: 'image-jpegSmall2.jpg', title: "#{destination_test_id} - Deleted File"})
       @asset_library.upload_file_to_library @non_migrated_delete
       @asset_library.load_asset_detail(@driver, @asset_library_url, @non_migrated_delete)
-      @asset_library.delete_asset
+      @asset_library.delete_asset asset
 
       @migrated_link = Asset.new({type: 'Link', url: 'https://news.google.com', title: "#{destination_test_id} - Migrated Link", description: 'Migrated link description'})
       @asset_library.add_site @migrated_link
