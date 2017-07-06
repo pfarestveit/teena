@@ -107,7 +107,10 @@ module Page
       # @param url [String]
       # @param asset [Asset]
       def load_asset_detail(driver, url, asset)
+        # TODO - remove the following line when asset deep links work from the Asset Library
+        navigate_to 'http://www.google.com'
         navigate_to "#{url}#col_asset=#{asset.id}"
+        switch_to_canvas_iframe driver
         wait_for_asset_detail asset
       end
 

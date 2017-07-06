@@ -105,7 +105,7 @@ module Page
     def upload_file_to_library(asset)
       click_upload_file_link
       enter_and_upload_file asset
-      asset.id = list_view_asset_ids.first
+      logger.info "Asset ID is #{asset.id = list_view_asset_ids.first}"
     end
 
     # Uses JavaScript to make the file upload input visible, then enters the file to be uploaded
@@ -157,7 +157,7 @@ module Page
     def add_site(asset)
       click_add_site_link
       enter_and_submit_url asset
-      asset.id = list_view_asset_ids.first
+      logger.info "Asset ID is #{asset.id = list_view_asset_ids.first}"
     end
 
     # Enters asset metadata while adding a link type asset

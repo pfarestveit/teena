@@ -35,10 +35,12 @@ describe 'Canvas assignment submission', order: :defined do
     @canvas.masquerade_as(@driver, @teacher, @course)
     @canvas.create_assignment(@course, @assignment)
 
-    # Enable Canvas assignment sync
+    # Enable Canvas assignment sync, then create another assignment. When the latter appears as a category, the former should have sync enabled.
     @asset_library.wait_for_canvas_category(@driver, @asset_library_url, @assignment)
     @asset_library.enable_assignment_sync @assignment
-    @asset_library.pause_for_poller
+    poller_assignment = Assignment.new("Throwaway Assignment #{test_id}", nil)
+    @canvas.create_assignment(@course, poller_assignment)
+    @asset_library.wait_for_canvas_category(@driver, @asset_library_url, poller_assignment)
     @canvas.stop_masquerading @driver
 
     # Submit assignment

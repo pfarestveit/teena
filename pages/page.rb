@@ -48,7 +48,7 @@ module Page
       element.when_present Utils.short_wait
       execute_script('arguments[0].click();', element)
     rescue Selenium::WebDriver::Error::UnknownError
-      retry unless (tries -= 1).zero?
+      (tries -= 1).zero? ? fail : retry
     end
   end
 
