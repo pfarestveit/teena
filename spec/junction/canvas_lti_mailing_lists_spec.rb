@@ -155,7 +155,7 @@ describe 'bCourses Mailgun mailing lists', order: :defined do
       end
 
       it 'deletes mailing list memberships for users who have been removed from the site' do
-        @canvas_page.remove_user_from_course(course_site_1, students[0])
+        @canvas_page.remove_users_from_course(course_site_1, [students[0]])
         Utils.clear_cache(@driver, @splash_page, @toolbox_page)
         @mailing_lists_page.load_embedded_tool @driver
         @mailing_lists_page.search_for_list course_site_1.site_id

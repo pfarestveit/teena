@@ -222,7 +222,7 @@ describe 'The Engagement Index', order: :defined do
 
     before(:all) do
       @canvas.stop_masquerading @driver
-      [teacher, student_4].each { |user| @canvas.remove_user_from_course(@course, user) }
+      @canvas.remove_users_from_course(@course, [teacher, student_4])
     end
 
     [teacher, student_4].each do |user|

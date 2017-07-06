@@ -318,7 +318,7 @@ describe 'Whiteboard', order: :defined do
 
     before(:all) do
       @canvas_driver_1.stop_masquerading @driver_1
-      [teacher, student_1].each { |user| @canvas_driver_1.remove_user_from_course(course, user) }
+      @canvas_driver_1.remove_users_from_course(course, [teacher, student_1])
       # Access to whiteboards is based on session cookie, so launch another browser to check cookie-less access
       @driver_3 = Utils.launch_browser
       @canvas_driver_3 = Page::CanvasPage.new @driver_3

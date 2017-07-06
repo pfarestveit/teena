@@ -68,7 +68,9 @@ describe 'Canvas assignment sync', order: :defined do
       @asset_library.load_page(@driver, @asset_library_url)
       @asset_library.click_manage_assets_link
       @asset_library.enable_assignment_sync @assignment_1
-      @asset_library.pause_for_poller
+      poller_assignment = Assignment.new("Throwaway Assignment 1 #{test_id}", nil)
+      @canvas.create_assignment(@course, poller_assignment)
+      @asset_library.wait_for_canvas_category(@driver, @asset_library_url, poller_assignment)
 
       # Student submits both assignments
       @canvas.masquerade_as(@driver, @student, @course)
@@ -118,7 +120,9 @@ describe 'Canvas assignment sync', order: :defined do
       @asset_library.click_manage_assets_link
       @asset_library.disable_assignment_sync @assignment_1
       @asset_library.enable_assignment_sync @assignment_2
-      @asset_library.pause_for_poller
+      poller_assignment = Assignment.new("Throwaway Assignment 2 #{test_id}", nil)
+      @canvas.create_assignment(@course, poller_assignment)
+      @asset_library.wait_for_canvas_category(@driver, @asset_library_url, poller_assignment)
     end
 
     it 'does not alter existing assignment submission points on the Engagement Index score' do
@@ -155,6 +159,8 @@ describe 'Canvas assignment sync', order: :defined do
     end
 
     it 'deletes the Assignment 1 submission files from the Files system' do
+      # Wait a bit for the files to be deleted
+      sleep Utils.medium_wait
       @canvas.search_for_file(@course, asset_1_canvas_file_name)
       @canvas.paragraph_element(xpath: '//p[contains(.,"did not match any files")]').when_present Utils.medium_wait
     end

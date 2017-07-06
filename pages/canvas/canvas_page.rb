@@ -97,7 +97,7 @@ module Page
     text_area(:ref_code_input, id: 'course_course_code')
     span(:create_course_button, xpath: '//span[contains(.,"Add Course")]')
 
-    h2(:course_site_heading, xpath: '//div[@id="course_home_content"]/h2')
+    span(:course_site_heading, xpath: '//li[contains(@id,"crumb_course_")]//span')
     text_area(:search_course_input, id: 'course_name')
     button(:search_course_button, xpath: '//input[@id="course_name"]/following-sibling::button')
     li(:add_course_success, xpath: '//li[contains(.,"successfully added!")]')
@@ -106,25 +106,8 @@ module Page
     text_area(:course_title, id: 'course_name')
     text_area(:course_code, id: 'course_course_code')
 
-    select_list(:enrollment_roles, name: 'enrollment_role_id')
-    link(:add_people_button, id: 'addUsers')
-    link(:help_finding_users_link, id: 'add-people-help')
-    link(:find_person_to_add_link, xpath: '//a[contains(.,"Find a Person to Add")]')
-    checkbox(:add_user_by_email, xpath: '//span[contains(text(),"Email Address")]/..')
-    checkbox(:add_user_by_uid, xpath: '//span[contains(text(),"Berkeley UID")]/..')
-    checkbox(:add_user_by_sid, xpath: '//span[contains(text(),"Student ID")]/..')
-    text_area(:user_list, xpath: '//textarea')
-    select_list(:user_role, id: 'peoplesearch_select_role')
-    button(:next_button, id: 'addpeople_next')
-    div(:users_ready_to_add_msg, xpath: '//div[contains(text(),"The following users are ready to be added to the course.")]')
-    li(:remove_user_success, xpath: '//li[contains(.,"User successfully removed")]')
-    button(:done_button, xpath: '//button[contains(.,"Done")]')
-    td(:default_email, xpath: '//th[text()="Default Email:"]/following-sibling::td')
-    link(:edit_user_link, xpath: '//a[@class="edit_user_link"]')
-    text_area(:user_email, id: 'user_email')
-    button(:update_details_button, xpath: '//button[text()="Update Details"]')
-
-    text_area(:search_user_input, xpath: '//input[@placeholder="Search people"]')
+    button(:delete_course_button, xpath: '//button[text()="Delete Course"]')
+    li(:delete_course_success, xpath: '//li[contains(.,"successfully deleted")]')
 
     # Clicks the 'create a site' button for the Junction LTI tool
     # @param driver [Selenium::WebDriver]
@@ -155,12 +138,6 @@ module Page
       end
     end
 
-    # Loads the course users page
-    # @param course [Course]
-    def load_users_page(course)
-      navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/users"
-    end
-
     # Searches a sub-account for a course site using a unique identifier
     # @param course [Course]
     # @param sub_account [String]
@@ -179,12 +156,68 @@ module Page
       (tries -= 1).zero? ? fail : retry
     end
 
-    # Scrolls down the users table until a given user appears in the table
-    # @param user [User]
-    def wait_for_user(user)
-      wait_until(Utils.medium_wait) do
-        scroll_to_bottom
-        cell_element(xpath: "//tr[contains(@id,'#{user.canvas_id}')]").exists?
+    # Publishes a course site
+    # @param driver [Selenium::WebDriver]
+    # @param course [Course]
+    def publish_course_site(driver, course)
+      logger.info 'Publishing the course'
+      load_course_site(driver, course)
+      (publish_button = button_element(xpath: '//div[@id="pubunpub_btn_container"]//input')).when_visible Utils.short_wait
+      js_click publish_button unless span_element(xpath: '//div[@id="pubunpub_btn_container"]//span[text()="Click to unpublish."]').exists?
+      span_element(xpath: '//div[@id="pubunpub_btn_container"]//span[text()="Click to unpublish."]').when_visible Utils.short_wait
+
+      # publish_div_element.when_present Utils.short_wait
+      # wait_for_update_and_click_js publish_button_element unless published_button?
+      # published_button_element.when_present Utils.medium_wait
+    end
+
+    # Deletes a course site
+    # @param driver [Selenium::WebDriver]
+    # @param course [Course]
+    def delete_course(driver, course)
+      load_homepage
+      stop_masquerading(driver) if stop_masquerading_link?
+      navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/confirm_action?event=delete"
+      wait_for_load_and_click_js delete_course_button_element
+      delete_course_success_element.when_visible Utils.medium_wait
+      logger.info "Course id #{course.site_id} has been deleted"
+    end
+
+    # COURSE USERS
+
+    select_list(:enrollment_roles, name: 'enrollment_role_id')
+    link(:add_people_button, id: 'addUsers')
+    link(:help_finding_users_link, id: 'add-people-help')
+    link(:find_person_to_add_link, xpath: '//a[contains(.,"Find a Person to Add")]')
+    checkbox(:add_user_by_email, xpath: '//span[contains(text(),"Email Address")]/..')
+    checkbox(:add_user_by_uid, xpath: '//span[contains(text(),"Berkeley UID")]/..')
+    checkbox(:add_user_by_sid, xpath: '//span[contains(text(),"Student ID")]/..')
+    text_area(:user_list, xpath: '//textarea')
+    select_list(:user_role, id: 'peoplesearch_select_role')
+    button(:next_button, id: 'addpeople_next')
+    div(:users_ready_to_add_msg, xpath: '//div[contains(text(),"The following users are ready to be added to the course.")]')
+    li(:remove_user_success, xpath: '//li[contains(.,"User successfully removed")]')
+    button(:done_button, xpath: '//button[contains(.,"Done")]')
+    td(:default_email, xpath: '//th[text()="Default Email:"]/following-sibling::td')
+    link(:edit_user_link, xpath: '//a[@class="edit_user_link"]')
+    text_area(:user_email, id: 'user_email')
+    button(:update_details_button, xpath: '//button[text()="Update Details"]')
+
+    text_area(:search_user_input, xpath: '//input[@placeholder="Search people"]')
+
+    # Loads the course users page
+    # @param course [Course]
+    def load_users_page(course)
+      navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/users"
+      div_element(xpath: '//div[@data-view="users"]').when_present Utils.medium_wait
+    end
+
+    # Scrolls down the users table until a given set of users appear in the table
+    # @param users [User]
+    def wait_for_users(users)
+      scroll_to_bottom
+      users.each do |user|
+        wait_until(Utils.short_wait) { cell_element(xpath: "//tr[contains(@id,'#{user.canvas_id}')]").exists? }
       end
     end
 
@@ -192,9 +225,28 @@ module Page
     # @param course [Course]
     # @param test_users [Array<User>]
     def add_users(course, test_users)
+      users_to_add = Array.new test_users
+      logger.info "Users needed for the site are #{users_to_add.map { |u| u.uid }}"
+
+      # Users already on the site with the right role do not need to be added again
+      users_missing = []
+      load_users_page course
+      sleep Utils.short_wait
+      scroll_to_bottom
+      users_to_add.each do |user|
+        if cell_element(xpath: "//tr[contains(@id,'#{user.canvas_id}')]//td[contains(.,'#{user.role}')]").exists?
+          logger.debug "UID #{user.uid} is already on the course site as a #{user.role}, no need to add"
+        else
+          logger.debug "UID #{user.uid} is not on the course site as a #{user.role}, will need to add"
+          users_missing << user
+        end
+      end
+      logger.info "Users who need to be added are #{users_missing.map { |u| u.uid }}"
+
+      # Add users by role
       ['Teacher', 'Designer', 'Lead TA', 'TA', 'Observer', 'Reader', 'Student'].each do |user_role|
         users = ''
-        users_with_role = test_users.select { |user| user.role == user_role }
+        users_with_role = users_missing.select { |user| user.role == user_role }
         users_with_role.each { |user| users << "#{user.uid}, " }
         if users.empty?
           logger.warn "No test users with role #{user_role}"
@@ -214,7 +266,7 @@ module Page
             users_ready_to_add_msg_element.when_visible Utils.medium_wait
             hide_canvas_footer
             wait_for_update_and_click_js next_button_element
-            users_with_role.each { |user| wait_for_user user }
+            wait_for_users users_with_role
           rescue => e
             logger.error "#{e.message}\n#{e.backtrace}"
             logger.warn 'Add User failed, retrying'
@@ -222,19 +274,24 @@ module Page
           end
         end
       end
+
+      # Set test users' email to address in test data in order to test email sending
+      reset_user_email(course, users_missing)
     end
 
-    # Removes a user from a course site
+    # Removes users from a course site
     # @param course [Course]
-    # @param user [User]
-    def remove_user_from_course(course, user)
-      logger.info "Removing #{user.role} UID #{user.uid} from course site ID #{course.site_id}"
+    # @param users [Array<User>]
+    def remove_users_from_course(course, users)
       load_users_page course
       hide_canvas_footer
-      wait_for_user user
-      wait_for_update_and_click link_element(xpath: "//tr[@id='user_#{user.canvas_id}']//a[contains(@class,'al-trigger')]")
-      confirm(true) { wait_for_update_and_click link_element(xpath: "//tr[@id='user_#{user.canvas_id}']//a[@data-event='removeFromCourse']") }
-      remove_user_success_element.when_visible Utils.short_wait
+      wait_for_users users
+      users.each do |user|
+        logger.info "Removing #{user.role} UID #{user.uid} from course site ID #{course.site_id}"
+        wait_for_update_and_click link_element(xpath: "//tr[@id='user_#{user.canvas_id}']//a[contains(@class,'al-trigger')]")
+        confirm(true) { wait_for_update_and_click link_element(xpath: "//tr[@id='user_#{user.canvas_id}']//a[@data-event='removeFromCourse']") }
+        remove_user_success_element.when_visible Utils.short_wait
+      end
     end
 
     # Searches for a user by Canvas user ID
@@ -242,6 +299,25 @@ module Page
     def search_user_by_canvas_id(user)
       wait_for_element_and_type(search_user_input_element, user.canvas_id)
       sleep 1
+    end
+
+    # Changes users' Canvas email addresses to the email defined for each in test data. This enables SuiteC email testing.
+    # @param course [Course]
+    # @param test_users [Array<User>]
+    def reset_user_email(course, test_users)
+      test_users.each do |user|
+        navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/users/#{user.canvas_id}"
+        default_email_element.when_present Utils.short_wait
+        if default_email == user.email
+          logger.debug "Test user '#{user.full_name}' already has an updated default email"
+        else
+          logger.debug "Resetting test user #{user.full_name}'s email to #{user.email}"
+          wait_for_load_and_click_js edit_user_link_element
+          wait_for_element_and_type_js(user_email_element, user.email)
+          wait_for_update_and_click_js update_details_button_element
+          default_email_element.when_present Utils.short_wait
+        end
+      end
     end
 
     # Returns the UID displayed for a user on a course site roster
@@ -306,36 +382,6 @@ module Page
       count
     end
 
-    # Changes users' Canvas email addresses to the email defined for each in test data. This enables SuiteC email testing.
-    # @param course [Course]
-    # @param test_users [Array<User>]
-    def reset_user_email(course, test_users)
-      test_users.each do |user|
-        navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/users/#{user.canvas_id}"
-        default_email_element.when_present Utils.short_wait
-        if default_email == user.email
-          logger.debug "Test user '#{user.full_name}' already has an updated default email"
-        else
-          logger.debug "Resetting test user #{user.full_name}'s email to #{user.email}"
-          wait_for_load_and_click_js edit_user_link_element
-          wait_for_element_and_type_js(user_email_element, user.email)
-          wait_for_update_and_click_js update_details_button_element
-          default_email_element.when_present Utils.short_wait
-        end
-      end
-    end
-
-    # Publishes a course site
-    # @param driver [Selenium::WebDriver]
-    # @param course [Course]
-    def publish_course_site(driver, course)
-      logger.info 'Publishing the course'
-      load_course_site(driver, course)
-      publish_div_element.when_present Utils.short_wait
-      wait_for_update_and_click_js publish_button_element unless published_button?
-      published_button_element.when_present Utils.medium_wait
-    end
-
     # Creates standard Canvas course site in a given sub-account, publishes it, and adds test users.
     # @param driver [Selenium::WebDriver]
     # @param sub_account [String]
@@ -348,8 +394,8 @@ module Page
         load_sub_account sub_account
         wait_for_load_and_click add_new_course_button_element
         course_name_input_element.when_visible Utils.short_wait
-        course.title = "QA Test - #{test_id}" if course.title.nil?
-        course.code = "QA #{test_id} LEC001" if course.code.nil?
+        course.title = "QA Test - #{Time.at test_id.to_i}" if course.title.nil?
+        course.code = "QA #{Time.at test_id.to_i} LEC001" if course.code.nil?
         self.course_name_input = "#{course.title}"
         self.ref_code_input = "#{course.code}"
         logger.info "Creating a course site named #{course.title} in #{course.term} semester"
@@ -369,31 +415,14 @@ module Page
         course.code = course_code
       end
       publish_course_site(driver, course)
-      logger.info "Course site URL is #{current_url}"
-      current_url.sub("#{Utils.canvas_base_url}/courses/", '')
       logger.info "Course ID is #{course.site_id}"
       add_users(course, test_users)
-      load_course_site(driver, course)
-      reset_user_email(course, test_users)
       if tools
-        tools.each { |tool| add_suite_c_tool(course, tool) unless tool_nav_link(tool).exists? }
-        disable_tool(course, SuiteCTools::IMPACT_STUDIO) unless tools.include? SuiteCTools::IMPACT_STUDIO
+        tools.each do |tool|
+          add_suite_c_tool(course, tool) unless tool_nav_link(tool).exists?
+          disable_tool(course, tool) unless tools.include? tool
+        end
       end
-    end
-
-    button(:delete_course_button, xpath: '//button[text()="Delete Course"]')
-    li(:delete_course_success, xpath: '//li[contains(.,"successfully deleted")]')
-
-    # Deletes a course site
-    # @param driver [Selenium::WebDriver]
-    # @param course [Course]
-    def delete_course(driver, course)
-      load_homepage
-      stop_masquerading(driver) if stop_masquerading_link?
-      navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/confirm_action?event=delete"
-      wait_for_load_and_click_js delete_course_button_element
-      delete_course_success_element.when_visible Utils.medium_wait
-      logger.info "Course id #{course.site_id} has been deleted"
     end
 
     # SUITEC LTI TOOLS
