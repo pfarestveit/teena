@@ -46,6 +46,7 @@ module Page
     tries ||= 2
     begin
       element.when_present Utils.short_wait
+      scroll_to_element element
       execute_script('arguments[0].click();', element)
     rescue Selenium::WebDriver::Error::UnknownError
       (tries -= 1).zero? ? fail : retry

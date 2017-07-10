@@ -165,10 +165,6 @@ module Page
       (publish_button = button_element(xpath: '//div[@id="pubunpub_btn_container"]//input')).when_visible Utils.short_wait
       js_click publish_button unless span_element(xpath: '//div[@id="pubunpub_btn_container"]//span[text()="Click to unpublish."]').exists?
       span_element(xpath: '//div[@id="pubunpub_btn_container"]//span[text()="Click to unpublish."]').when_visible Utils.short_wait
-
-      # publish_div_element.when_present Utils.short_wait
-      # wait_for_update_and_click_js publish_button_element unless published_button?
-      # published_button_element.when_present Utils.medium_wait
     end
 
     # Deletes a course site

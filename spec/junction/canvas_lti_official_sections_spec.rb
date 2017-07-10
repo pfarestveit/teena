@@ -237,7 +237,7 @@ describe 'bCourses Official Sections tool' do
 
         # Check that sections present on Find a Person to Add tool are updated immediately
         @course_add_user_page.load_embedded_tool(@driver, @course)
-        @course_add_user_page.search('61889', 'CalNet UID')
+        @course_add_user_page.search(Utils.oski_uid, 'CalNet UID')
         ttl_user_sections_with_adds = @course_add_user_page.verify_block do
           @course_add_user_page.wait_until(Utils.medium_wait) { @course_add_user_page.course_section_options.length == sections.length }
         end
@@ -271,7 +271,7 @@ describe 'bCourses Official Sections tool' do
 
         # Check that sections present on Find a Person to Add tool are updated immediately
         @course_add_user_page.load_embedded_tool(@driver, @course)
-        @course_add_user_page.search('61889', 'CalNet UID')
+        @course_add_user_page.search(Utils.oski_uid, 'CalNet UID')
         ttl_user_sections_with_deletes = @course_add_user_page.verify_block do
           @course_add_user_page.wait_until(Utils.medium_wait) { @course_add_user_page.course_section_options.length == sections_for_site.length }
         end
@@ -322,8 +322,6 @@ describe 'bCourses Official Sections tool' do
       rescue => e
         it("encountered an error for #{@course.code}") { fail }
         logger.error "#{e.message}#{"\n"}#{e.backtrace.join("\n")}"
-      ensure
-        @canvas.delete_course(@driver, @course) if @course.site_id
       end
     end
   rescue => e
