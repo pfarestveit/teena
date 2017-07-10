@@ -43,13 +43,18 @@ module Page
   end
 
   def js_click(element)
-    tries ||= 2
     begin
-      element.when_present Utils.short_wait
-      scroll_to_element element
-      execute_script('arguments[0].click();', element)
-    rescue Selenium::WebDriver::Error::UnknownError
-      (tries -= 1).zero? ? fail : retry
+      tries ||= 2
+      begin
+        element.when_present Utils.short_wait
+        scroll_to_element element
+        execute_script('arguments[0].click();', element)
+      rescue Selenium::WebDriver::Error::UnknownError
+        (tries -= 1).zero? ? fail : retry
+      end
+    rescue
+      # If clicking an element using JavaScript fails, then try the WebDriver method.
+      click_element(element, Utils.short_wait)
     end
   end
 

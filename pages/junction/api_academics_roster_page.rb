@@ -40,7 +40,7 @@ class ApiAcademicsRosterPage
   end
 
   def student_last_names(students)
-    names = students.map { |student| student['last_name'] }
+    names = students.map { |student| student['last_name'].downcase }
     names.sort
   end
 

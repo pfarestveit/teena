@@ -231,9 +231,9 @@ describe 'bCourses E-Grades Export', order: :defined do
     it 'has the right names' do
       # Compare last names only, since preferred names can cause mismatches
       expected_names = @rosters_api.student_last_names @students
-      actual_names = @csv_parsed.map { |n| n[:name].split(',')[0].strip }
+      actual_names = @csv_parsed.map { |n| n[:name].split(',')[0].strip.downcase }
       expect(actual_names.any? &:empty?).to be false
-      expect(actual_names.sort).to eql(expected_names)
+      expect(actual_names.sort).to eql(expected_names.sort)
     end
 
     it 'has reasonable grades' do
