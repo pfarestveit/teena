@@ -89,7 +89,7 @@ class Utils
     @config['timeouts']['canvas_poller']
   end
 
-  # TEST DATA, UPLOADS, AND DOWNLOADS
+  # TEST DATA, TEST RESULTS, UPLOADS, AND DOWNLOADS
 
   # Returns the current datetime for use as a unique test identifier
   def self.get_test_id
@@ -133,6 +133,14 @@ class Utils
     log_dir = File.join(ENV['HOME'], '/log/selenium-log')
     FileUtils.mkdir_p(log_dir) unless File.exist?(log_dir)
     File.join(log_dir, "#{Time.now.strftime('%Y-%m-%d')}.log")
+  end
+
+  # The file to be used to write rake task test results
+  # @param app_and_version [String] - e.g., 'junction-91' or 'suitec-2.2'
+  def self.test_results(app_and_version)
+    results_dir = File.join(ENV['HOME'], '/log/test-results')
+    FileUtils.mkdir_p(results_dir) unless File.exist?(results_dir)
+    File.join(results_dir, "test-results-#{app_and_version}-#{Time.now.strftime('%Y-%m-%d-%H-%M')}.log")
   end
 
   # The file path for SuiteC asset upload files
@@ -306,6 +314,10 @@ class Utils
 
   def self.ets_qa_password
     @config['users']['ets_qa_password']
+  end
+
+  def self.oski_uid
+    @config['users']['oski_uid']
   end
 
   def self.test_user_password

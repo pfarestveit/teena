@@ -141,7 +141,10 @@ describe 'bCourses course site creation' do
 
         # Wait for redirect to new Canvas course site
         site_created = @create_course_site_page.verify_block do
-          @canvas_page.wait_until(Utils.long_wait) { @canvas_page.current_url.include? "#{Utils.canvas_base_url}/courses" }
+          @canvas_page.wait_until(Utils.long_wait) do
+            @canvas_page.current_url.include? "#{Utils.canvas_base_url}/courses"
+            @canvas_page.recent_activity_heading?
+          end
         end
         it ("redirects to the #{course.term} #{course.code} course site in Canvas when finished") { expect(site_created).to be true }
 
@@ -225,7 +228,6 @@ describe 'bCourses course site creation' do
         ensure
           Utils.add_csv_row(test_output, [course.term, course.code, teacher.uid, course.site_id, expected_teacher_count,
                                           expected_ta_count, expected_student_count, expected_waitlist_count])
-          @canvas_page.delete_course(@driver, course)
         end
       end
     end

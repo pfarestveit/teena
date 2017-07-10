@@ -126,7 +126,12 @@ module Page
         users_table_element.when_present Utils.short_wait
         search_for_user user
         sleep 1
-        users_table_element.each { |row| score = row[3].text if row[1].text == user.full_name }
+        users_table_element.each do |row|
+          if row[1].text == user.full_name
+            # If the Impact Studio is enabled, then an additional 'Collaborate' column will be present.
+            score = row.columns == 5 ? row[3].text : row[4].text
+          end
+        end
         logger.debug "#{user.full_name}'s score is currently '#{score}'"
         score
       end

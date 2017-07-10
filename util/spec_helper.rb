@@ -1,4 +1,5 @@
 require 'rspec'
+require 'rspec/core/rake_task'
 require 'logger'
 require 'csv'
 require 'json'
