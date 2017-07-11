@@ -27,7 +27,7 @@ describe 'The Impact Studio', order: :defined do
   asset_1_activities, asset_3_activities, asset_4_activities, asset_5_activities, asset_6_activities = nil
 
   before(:all) do
-    @course = Course.new({title: "Impact Studio Visualizations #{test_id}", code: "Impact Studio Visualizations #{test_id}", site_id: ENV['COURSE_ID']})
+    @course = Course.new({title: "Impact Studio Visualizations #{test_id}", code: "Impact Studio Visualizations #{test_id}"})
 
     @driver = Utils.launch_browser
     @canvas = Page::CanvasActivitiesPage.new @driver

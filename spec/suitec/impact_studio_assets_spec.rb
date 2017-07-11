@@ -36,7 +36,7 @@ describe 'The Impact Studio', order: :defined do
   asset_1_actual_score, asset_2_actual_score, asset_3_actual_score, asset_4_actual_score, asset_5_actual_score, asset_6_actual_score, asset_7_actual_score = 0
 
   before(:all) do
-    @course = Course.new({title: "Impact Studio Assets #{test_id}", code: "Impact Studio Assets #{test_id}", site_id: ENV['COURSE_ID']})
+    @course = Course.new({title: "Impact Studio Assets #{test_id}", code: "Impact Studio Assets #{test_id}"})
 
     @driver = Utils.launch_browser
     @canvas = Page::CanvasPage.new @driver
