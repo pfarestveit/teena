@@ -228,17 +228,17 @@ module Page
       # @param line_node [Integer]
       def verify_latest_event_drop(driver, user, asset, activity, line_node)
         drag_latest_drop_into_view(driver, line_node)
-        wait_until(Utils.short_wait) { driver.find_element(xpath: '//div[@class="event-details-container"]//h3') }
+        wait_until(Utils.short_wait) { driver.find_element(xpath: '//div[@class="details-popover-container"]//h3') }
         unless asset.nil?
-          wait_until(Utils.short_wait, "Expected tooltip asset title '#{asset.title}' but got '#{link_element(xpath: '//div[@class="event-details-container"]//h3/a').text}'") do
-            link_element(xpath: '//div[@class="event-details-container"]//h3/a').text == asset.title
+          wait_until(Utils.short_wait, "Expected tooltip asset title '#{asset.title}' but got '#{link_element(xpath: '//div[@class="details-popover-container"]//h3/a').text}'") do
+            link_element(xpath: '//div[@class="details-popover-container"]//h3/a').text == asset.title
           end
         end
-        wait_until(Utils.short_wait, "Expected tooltip activity type '#{activity.impact_type_drop}' but got '#{span_element(xpath: '//div[@class="event-details-container"]//p/span/span').text}'") do
-          span_element(xpath: '//div[@class="event-details-container"]//p//span').text.include? activity.impact_type_drop
+        wait_until(Utils.short_wait, "Expected tooltip activity type '#{activity.impact_type_drop}' but got '#{span_element(xpath: '//div[@class="details-popover-container"]//p/span/span').text}'") do
+          span_element(xpath: '//div[@class="details-popover-container"]//p//span').text.include? activity.impact_type_drop
         end
-        wait_until(Utils.short_wait, "Expected tooltip user name '#{user.full_name}' but got '#{link_element(xpath: '//div[@class="event-details-container"]//p//a').text}'") do
-          link_element(xpath: '//div[@class="event-details-container"]//p//a').text == user.full_name
+        wait_until(Utils.short_wait, "Expected tooltip user name '#{user.full_name}' but got '#{link_element(xpath: '//div[@class="details-popover-container"]//p//a').text}'") do
+          link_element(xpath: '//div[@class="details-popover-container"]//p//a').text == user.full_name
         end
       end
 
@@ -341,7 +341,7 @@ module Page
             driver.action.move_to(segment).perform
             driver.action.click_and_hold(segment).release.perform
             sleep 2
-            (activity_count = span_element(xpath: '//div[contains(@class,"profile-activity-breakdown-popover-details")]//strong')).when_visible 2
+            (activity_count = span_element(xpath: '//div[contains(@class,"profile-activity-breakdown-popover-details")]/span[contains(@data-ng-bind-html, "segment.activityDescription")]/strong')).when_visible 2
             wait_until(2, "Expected '#{k} #{v}' but got '#{activity_count.text}'") do
               logger.debug "Waiting for '#{bar_label}' '#{k}' '#{v}', and it is currently '#{k}' '#{activity_count.text}'"
               activity_count.text.include? "#{v}"

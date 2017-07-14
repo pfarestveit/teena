@@ -44,7 +44,7 @@ describe 'New asset uploads', order: :defined do
               asset_file_name = @asset.file_name
 
               # Excessively large files should be rejected
-              if @asset_size > 12
+              if @asset_size > 10
 
                 @asset_library.click_upload_file_link
                 @asset_library.enter_file_path_for_upload @asset.file_name

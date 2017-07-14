@@ -699,6 +699,7 @@ module Page
         event_drop_counts = {
           viewed: asset_activity_count[:get_view_asset],
           liked: asset_activity_count[:get_like],
+          pinned: asset_activity_count[:get_pin_asset],
           commented: asset_activity_count[:get_comment],
           used_in_whiteboard: asset_activity_count[:get_whiteboard_add_asset]
         }
@@ -726,11 +727,12 @@ module Page
         visible_event_drop_counts = {
           viewed: activity_type_count(labels, 0),
           liked: activity_type_count(labels, 1),
-          commented: activity_type_count(labels, 2),
-          used_in_whiteboard: activity_type_count(labels, 3)
+          pinned: activity_type_count(labels, 2),
+          commented: activity_type_count(labels, 3),
+          used_in_whiteboard: activity_type_count(labels, 4)
         }
         # Whiteboard assets have an extra lane of metaballs for remixes
-        (visible_event_drop_counts[:remixed] = activity_type_count(labels, 4)) if asset.type == 'Whiteboard'
+        (visible_event_drop_counts[:remixed] = activity_type_count(labels, 5)) if asset.type == 'Whiteboard'
         logger.debug "Visible asset event drop counts are #{visible_event_drop_counts}"
         visible_event_drop_counts
       end
@@ -743,14 +745,14 @@ module Page
       # @param line_node [Integer]
       def verify_latest_asset_event_drop(driver, user, activity, line_node)
         drag_latest_drop_into_view(driver, line_node)
-        wait_until(Utils.short_wait) { driver.find_element(class: 'event-details') }
+        wait_until(Utils.short_wait) { driver.find_element(class: 'details-popover') }
         wait_until(Utils.short_wait) do
           logger.debug "Verifying that the user in the tooltip is '#{user.full_name}'"
-          link_element(xpath: '//p[@class="event-details-description"]//a').text == user.full_name
+          link_element(xpath: '//p[@class="details-popover-description"]//a').text == user.full_name
         end
         wait_until(Utils.short_wait) do
           logger.debug "Verifying the activity type in the tooltip is '#{activity.impact_type_drop}'"
-          span_element(xpath: '//p[@class="event-details-description"]/span/span').text.include? activity.impact_type_drop
+          span_element(xpath: '//p[@class="details-popover-description"]/span/span').text.include? activity.impact_type_drop
         end
       end
 
