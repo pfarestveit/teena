@@ -19,7 +19,7 @@ begin
 
   task default: :suitec_thread_2
   RSpec::Core::RakeTask.new(:suitec_thread_2) do |t|
-    t.pattern = 'spec/suitec/whiteboards*_spec.rb, spec/suitec/canvas*_spec.rb'
+    t.pattern = 'spec/suitec/whiteboard*_spec.rb, spec/suitec/canvas*_spec.rb'
     t.rspec_opts = opts
   end
 
