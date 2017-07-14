@@ -277,7 +277,7 @@ describe 'The Impact Studio', order: :defined do
         before(:all) { @asset_library.load_asset_detail(@driver, @asset_library_url, asset_1) }
 
         it('shows an "added to whiteboard" event') { expect(@asset_library.visible_event_drop_count(@driver, asset_1)).to eql(@asset_library.expected_event_drop_count(asset_1, asset_1_activities)) }
-        it('shows the event details in a tooltip') { @asset_library.verify_latest_asset_event_drop(@driver, student_2, Activity::ADD_ASSET_TO_WHITEBOARD, 4) }
+        it('shows the event details in a tooltip') { @asset_library.verify_latest_asset_event_drop(@driver, student_2, Activity::ADD_ASSET_TO_WHITEBOARD, 5) }
       end
     end
 
@@ -378,7 +378,7 @@ describe 'The Impact Studio', order: :defined do
         before(:all) { @asset_library.load_asset_detail(@driver, @asset_library_url, asset_6) }
 
         it('shows a "commented" event') { expect(@asset_library.visible_event_drop_count(@driver, asset_6)).to eql(@asset_library.expected_event_drop_count(asset_6, asset_6_activities)) }
-        it('shows the event details in a tooltip') { @asset_library.verify_latest_asset_event_drop(@driver, teacher, Activity::COMMENT, 3) }
+        it('shows the event details in a tooltip') { @asset_library.verify_latest_asset_event_drop(@driver, teacher, Activity::COMMENT, 4) }
       end
     end
 
@@ -432,7 +432,7 @@ describe 'The Impact Studio', order: :defined do
         before(:all) { @asset_library.load_asset_detail(@driver, @asset_library_url, asset_6) }
 
         it('shows a "commented" event') { expect(@asset_library.visible_event_drop_count(@driver, asset_6)).to eql(@asset_library.expected_event_drop_count(asset_6, asset_6_activities)) }
-        it('shows the event details in a tooltip') { @asset_library.verify_latest_asset_event_drop(@driver, teacher, Activity::COMMENT, 3) }
+        it('shows the event details in a tooltip') { @asset_library.verify_latest_asset_event_drop(@driver, teacher, Activity::COMMENT, 4) }
       end
     end
 
@@ -554,7 +554,7 @@ describe 'The Impact Studio', order: :defined do
         before(:all) { @asset_library.load_asset_detail(@driver, @asset_library_url, asset_4) }
 
         it('shows a "remixed" event') { expect(@asset_library.visible_event_drop_count(@driver, asset_4)).to eql(@asset_library.expected_event_drop_count(asset_4, asset_4_activities)) }
-        it('shows the event details in a tooltip') { @asset_library.verify_latest_asset_event_drop(@driver, teacher, Activity::REMIX_WHITEBOARD, 5) }
+        it('shows the event details in a tooltip') { @asset_library.verify_latest_asset_event_drop(@driver, teacher, Activity::REMIX_WHITEBOARD, 6) }
       end
     end
 
@@ -572,6 +572,7 @@ describe 'The Impact Studio', order: :defined do
         @asset_library.pin_detail_view_asset asset_1
         student_2_activities[:pin_asset][:count] += 1
         student_1_activities[:get_pin_asset][:count] += 1
+        asset_1_activities[:get_pin_asset] += 1
       end
 
       context 'and the asset owner views its own profile' do
@@ -599,6 +600,14 @@ describe 'The Impact Studio', order: :defined do
         it('shows the activity under Activity > Everyone Contributions') { @impact_studio.verify_everyone_contributions(@driver, [student_1_activities, student_2_activities, teacher_activities], users) }
         it('shows the activity under Activity > My Impacts') { @impact_studio.verify_user_impacts(@driver, student_2_activities, "#{student_2.full_name}") }
         it('shows the activity under Activity > Everyone Impacts') { @impact_studio.verify_everyone_impacts(@driver, [student_1_activities, student_2_activities, teacher_activities], users) }
+      end
+
+      context 'and the asset owner views the asset detail' do
+
+        before(:all) { @asset_library.load_asset_detail(@driver, @asset_library_url, asset_1) }
+
+        it('shows a "pinned" event') { expect(@asset_library.visible_event_drop_count(@driver, asset_1)).to eql(@asset_library.expected_event_drop_count(asset_1, asset_1_activities)) }
+        it('shows the event details in a tooltip') { @asset_library.verify_latest_asset_event_drop(@driver, student_2, Activity::PIN_ASSET, 3) }
       end
     end
   end
@@ -811,8 +820,26 @@ describe 'The Impact Studio', order: :defined do
         @asset_library.load_asset_detail(@driver, @asset_library_url, asset_1)
         student_2_activities[:view_asset][:count] += 1
         student_1_activities[:get_view_asset][:count] += 1
+        asset_1_activities[:get_view_asset] += 1
 
         @asset_library.unpin_detail_view_asset asset_1
+        # No change to pinning activity, since pins are expected to be removed eventually
+      end
+
+      after(:all) do
+        # Up the expected asset 5 view count since it was viewed to verify the impact of un-pinning
+        asset_1_activities[:get_view_asset] += 1
+      end
+
+      context 'and the un-pinner views the asset detail' do
+
+        before(:all) do
+          @asset_library.load_asset_detail(@driver, @asset_library_url, asset_1)
+          student_2_activities[:view_asset][:count] +=1
+          student_1_activities[:get_view_asset][:count] += 1
+        end
+
+        it('does not remove the "pinned" event') { expect(@asset_library.visible_event_drop_count(@driver, asset_1)).to eql(@asset_library.expected_event_drop_count(asset_1, asset_1_activities)) }
       end
 
       context 'and the un-pinner views its own profile' do

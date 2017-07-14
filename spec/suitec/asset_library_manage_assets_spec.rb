@@ -338,7 +338,7 @@ describe 'Asset', order: :defined do
 
       # Teacher creates an asset of each type in origin course site plus one extra that is deleted
       @asset_library.load_page(@driver, @asset_library_url)
-      @non_migrated_delete = Asset.new({type: 'File', file_name: 'image-jpegSmall2.jpg', title: "#{destination_test_id} - Deleted File"})
+      @non_migrated_delete = Asset.new({type: 'File', file_name: 'image-jpegSmall-1.jpg', title: "#{destination_test_id} - Deleted File"})
       @asset_library.upload_file_to_library @non_migrated_delete
       @asset_library.load_asset_detail(@driver, @asset_library_url, @non_migrated_delete)
       @asset_library.delete_asset asset
@@ -346,7 +346,7 @@ describe 'Asset', order: :defined do
       @migrated_link = Asset.new({type: 'Link', url: 'https://news.google.com', title: "#{destination_test_id} - Migrated Link", description: 'Migrated link description'})
       @asset_library.add_site @migrated_link
 
-      @migrated_file = Asset.new({type: 'File', file_name: 'image-jpegSmall1.jpg', title: "#{destination_test_id} - Migrated File", category: @category_1})
+      @migrated_file = Asset.new({type: 'File', file_name: 'image-jpegSmall-2.jpg', title: "#{destination_test_id} - Migrated File", category: @category_1})
       @asset_library.upload_file_to_library @migrated_file
 
       @non_migrated_whiteboard = Whiteboard.new({owner: teacher, title: "#{destination_test_id} - Migrated Whiteboard", collaborators: []})
