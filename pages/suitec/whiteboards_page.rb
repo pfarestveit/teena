@@ -300,7 +300,7 @@ module Page
       text_area(:export_title_input, id: 'whiteboards-exportasasset-title')
       button(:export_confirm_button, xpath: '//span[text()="Export to Asset Library"]/..')
       button(:export_cancel_button, xpath: '//button[contains(.,"Cancel")]')
-      span(:export_success_msg, xpath: '//span[contains(.,"This board has been added successfully")]')
+      span(:export_success_msg, xpath: '//span[contains(.,"This board has been successfully added")]')
       button(:download_as_image_button, xpath: '//a[contains(.,"Download as image")]')
 
       # Clicks the 'export' button on an open whiteboard
@@ -318,8 +318,8 @@ module Page
         wait_for_update_and_click export_to_library_button_element
         wait_until(Utils.short_wait) { export_title_input == whiteboard.title }
         wait_for_update_and_click_js export_confirm_button_element
-        sleep Utils.short_wait
         export_title_input_element.when_not_visible Utils.medium_wait rescue Selenium::WebDriver::Error::StaleElementReferenceError
+        export_success_msg_element.when_visible Utils.short_wait
         Asset.new({ type: 'Whiteboard', title: whiteboard.title, preview: 'image' })
       end
 

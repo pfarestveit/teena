@@ -195,12 +195,18 @@ describe 'Whiteboard', order: :defined do
 
       it "allows #{student_1.full_name} to see which members have just come online" do
         @whiteboards_driver_2.open_whiteboard(@driver_2, @whiteboard_1)
-        @whiteboards_driver_1.wait_until(timeout) { @whiteboards_driver_1.collaborator_online? student_3 }
+        actual_online_time = Time.now
+        @whiteboards_driver_1.wait_until(Utils.medium_wait) { @whiteboards_driver_1.collaborator_online? student_3 }
+        apparent_online_time = Time.now
+        logger.warn "It took #{apparent_online_time - actual_online_time} seconds for the user to visually appear online"
       end
 
       it "allows #{student_1.full_name} to see which members have just gone offline" do
         @whiteboards_driver_2.close_whiteboard @driver_2
-        @whiteboards_driver_1.wait_until(timeout) { !@whiteboards_driver_1.collaborator_online? student_3 }
+        actual_offline_time = Time.now
+        @whiteboards_driver_1.wait_until(Utils.medium_wait) { !@whiteboards_driver_1.collaborator_online? student_3 }
+        apparent_offline_time = Time.now
+        logger.warn "It took #{apparent_offline_time - actual_offline_time} seconds for the user to visually go offline"
       end
 
       it "does not allow #{student_1.full_name} to see if a non-member teacher has just come online" do
