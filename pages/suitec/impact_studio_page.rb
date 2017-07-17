@@ -26,7 +26,7 @@ module Page
 
       image(:avatar, class: 'profile-summary-avatar')
       h1(:name, xpath: '//h1[@data-ng-bind="user.canvas_full_name"]')
-      div(:profile_desc, xpath: '//div[@data-ng-bind-html="user.personal_bio | linky:\'_blank\' | toolHrefHashtag:\'dashboard\':user.id"]')
+      div(:profile_desc, class: 'profile-user-description')
       link(:edit_profile_link, text: 'Edit Profile')
       text_area(:edit_profile_input, id: 'profile-edit-description')
       span(:char_limit_msg, xpath: '//span[contains(.,"255 character limit")]')

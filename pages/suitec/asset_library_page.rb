@@ -467,7 +467,7 @@ module Page
 
       # Deletes an asset
       def delete_asset(asset = nil)
-        logger.info "Deleting asset ID #{asset.id}"
+        logger.info "Deleting asset ID #{asset.id}" unless asset.nil?
         confirm(true) { wait_for_update_and_click delete_asset_button_element }
         delete_asset_button_element.when_not_visible Utils.short_wait rescue Selenium::WebDriver::Error::StaleElementReferenceError
         asset.visible = false unless asset.nil?

@@ -398,7 +398,10 @@ describe 'Impact Studio', order: :defined do
 
   describe 'profile summary' do
 
-    before(:all) { @impact_studio.load_page(@driver, @impact_studio_url) }
+    before(:all) do
+      @canvas.masquerade_as(@driver, @course, student_viewer)
+      @impact_studio.load_page(@driver, @impact_studio_url)
+    end
 
     it('shows the user name') { expect(@impact_studio.name).to eql(student_viewer.full_name) }
     it('shows the user avatar') { expect(@impact_studio.avatar?).to be true }
