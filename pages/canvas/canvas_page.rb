@@ -15,10 +15,6 @@ module Page
     link(:stop_masquerading_link, class: 'stop_masquerading')
     h2(:recent_activity_heading, xpath: '//h2[contains(text(),"Recent Activity")]')
 
-    div(:publish_div, id: 'course_status_actions')
-    button(:publish_button, class: 'btn-publish')
-    button(:save_and_publish_button, class: 'save_and_publish')
-    button(:published_button, class: 'btn-published')
     button(:submit_button, xpath: '//button[contains(.,"Submit")]')
     button(:save_button, xpath: '//button[text()="Save"]')
     button(:update_course_button, xpath: '//button[contains(.,"Update Course Details")]')
@@ -156,15 +152,30 @@ module Page
       (tries -= 1).zero? ? fail : retry
     end
 
+    div(:publish_div, id: 'course_status_actions')
+    button(:publish_button, class: 'btn-publish')
+    button(:save_and_publish_button, class: 'save_and_publish')
+    button(:published_button, class: 'btn-published')
+    form(:published_status, id: 'course_status_form')
+    label(:activity_stream_radio, xpath: '//span[contains(.,"Course Activity Stream")]/ancestor::label')
+    button(:choose_and_publish_button, xpath: '//div[@aria-label="Choose Course Home Page"]//span[contains(.,"Choose and Publish")]/..')
+
     # Publishes a course site
     # @param driver [Selenium::WebDriver]
     # @param course [Course]
     def publish_course_site(driver, course)
       logger.info 'Publishing the course'
       load_course_site(driver, course)
-      (publish_button = button_element(xpath: '//div[@id="pubunpub_btn_container"]//input')).when_visible Utils.short_wait
-      js_click publish_button unless span_element(xpath: '//div[@id="pubunpub_btn_container"]//span[text()="Click to unpublish."]').exists?
-      span_element(xpath: '//div[@id="pubunpub_btn_container"]//span[text()="Click to unpublish."]').when_visible Utils.short_wait
+      published_status_element.when_visible Utils.short_wait
+      if published_button?
+        logger.debug 'The site is already published'
+      else
+        logger.debug 'The site is unpublished, publishing'
+        wait_for_update_and_click publish_button_element
+        wait_for_update_and_click activity_stream_radio_element
+        wait_for_update_and_click choose_and_publish_button_element
+        published_button_element.when_present Utils.medium_wait
+      end
     end
 
     # Deletes a course site
@@ -230,12 +241,7 @@ module Page
       sleep Utils.short_wait
       scroll_to_bottom
       users_to_add.each do |user|
-        if cell_element(xpath: "//tr[contains(@id,'#{user.canvas_id}')]//td[contains(.,'#{user.role}')]").exists?
-          logger.debug "UID #{user.uid} is already on the course site as a #{user.role}, no need to add"
-        else
-          logger.debug "UID #{user.uid} is not on the course site as a #{user.role}, will need to add"
-          users_missing << user
-        end
+        users_missing << user unless cell_element(xpath: "//tr[contains(@id,'#{user.canvas_id}')]//td[contains(.,'#{user.role}')]").exists?
       end
       logger.info "Users who need to be added are #{users_missing.map { |u| u.uid }}"
 
@@ -244,9 +250,7 @@ module Page
         users = ''
         users_with_role = users_missing.select { |user| user.role == user_role }
         users_with_role.each { |user| users << "#{user.uid}, " }
-        if users.empty?
-          logger.warn "No test users with role #{user_role}"
-        else
+        unless users.empty?
           begin
             # Canvas add-user function is often flaky in test envs, so retry if it fails
             tries ||= 3

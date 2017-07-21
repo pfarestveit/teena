@@ -2,7 +2,7 @@ require_relative 'util/spec_helper'
 
 begin
 
-  # These opts will show test progress in the terminal as well as output the results to a file. VERSION is required and
+  # These opts will show test progress in the terminal as well as output the results to a file. VERSION is not required and
   # should include the service and code version in a recognizable format (e.g., 'junction-v91' or 'suitec-v2.2'), which
   # will be included in the test results file name.
 
@@ -13,13 +13,13 @@ begin
 
   task default: :suitec_thread_1
   RSpec::Core::RakeTask.new(:suitec_thread_1) do |t|
-    t.pattern = 'spec/suitec/asset_library*_spec.rb, spec/suitec/engagement_index*_spec.rb, spec/suitec/impact_studio*_spec.rb'
+    t.pattern = 'spec/suitec/asset_library*_spec.rb, spec/suitec/engagement_index*_spec.rb'
     t.rspec_opts = opts
   end
 
   task default: :suitec_thread_2
   RSpec::Core::RakeTask.new(:suitec_thread_2) do |t|
-    t.pattern = 'spec/suitec/whiteboard*_spec.rb, spec/suitec/canvas*_spec.rb'
+    t.pattern = 'spec/suitec/whiteboard*_spec.rb, spec/suitec/canvas*_spec.rb, spec/suitec/impact_studio*_spec.rb'
     t.rspec_opts = opts
   end
 

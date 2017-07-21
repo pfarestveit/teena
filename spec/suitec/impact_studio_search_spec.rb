@@ -14,7 +14,7 @@ describe 'Impact Studio', order: :defined do
   student_2 = students[1]
 
   before(:all) do
-    @course = Course.new({title: "Impact Studio Search #{test_id}", code: "Impact Studio Search #{test_id}", site_id: ENV['COURSE_ID']})
+    @course = Course.new({title: "Impact Studio Search #{test_id}", code: "Impact Studio Search #{test_id}"})
 
     @driver = Utils.launch_browser
     @canvas = Page::CanvasPage.new @driver

@@ -169,6 +169,7 @@ describe 'Whiteboard', order: :defined do
     describe 'members pane' do
 
       before(:all) do
+        @canvas_driver_1.masquerade_as(@driver_1, student_1, course)
         @canvas_driver_2.masquerade_as(@driver_2, student_3, course)
         @whiteboards_driver_2.load_page(@driver_2, @whiteboards_url)
       end
@@ -197,16 +198,14 @@ describe 'Whiteboard', order: :defined do
         @whiteboards_driver_2.open_whiteboard(@driver_2, @whiteboard_1)
         actual_online_time = Time.now
         @whiteboards_driver_1.wait_until(Utils.medium_wait) { @whiteboards_driver_1.collaborator_online? student_3 }
-        apparent_online_time = Time.now
-        logger.warn "It took #{apparent_online_time - actual_online_time} seconds for the user to visually appear online"
+        logger.warn "It took #{Time.now - actual_online_time} seconds for the user to visually appear online"
       end
 
       it "allows #{student_1.full_name} to see which members have just gone offline" do
         @whiteboards_driver_2.close_whiteboard @driver_2
         actual_offline_time = Time.now
-        @whiteboards_driver_1.wait_until(Utils.medium_wait) { !@whiteboards_driver_1.collaborator_online? student_3 }
-        apparent_offline_time = Time.now
-        logger.warn "It took #{apparent_offline_time - actual_offline_time} seconds for the user to visually go offline"
+        @whiteboards_driver_1.wait_until(Utils.long_wait) { !@whiteboards_driver_1.collaborator_online? student_3 }
+        logger.warn "It took #{Time.now - actual_offline_time} seconds for the user to visually go offline"
       end
 
       it "does not allow #{student_1.full_name} to see if a non-member teacher has just come online" do
