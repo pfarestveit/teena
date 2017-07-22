@@ -411,5 +411,29 @@ module Page
       list_item_element(xpath: '//li[contains(.,"Group set successfully removed")]').when_present Utils.short_wait
     end
 
+    # MESSAGES
+
+    link(:inbox_link, id: 'global_nav_conversations_link')
+    button(:msg_delete_button, id: 'delete-btn')
+    paragraph(:msg_body, xpath: '//li[@class="message-item-view"]/p')
+
+    # Verifies the existence and content of a message in the Canvas inbox
+    # @param from_user [User]
+    # @param to_user [User]
+    # @param msg [String]
+    # @param test_id [String]
+    def verify_message(from_user, to_user, msg, test_id)
+      wait_for_update_and_click inbox_link_element
+      div_element(xpath: "//h2[contains(., '#{from_user.full_name}, #{to_user.full_name}')]/following-sibling::div[contains(., '#{test_id}')]").when_visible Utils.short_wait
+      wait_for_update_and_click list_item_element(xpath: "//h2[contains(., '#{from_user.full_name}, #{to_user.full_name}')]/..")
+      msg_body_element.when_visible Utils.short_wait
+      wait_until(Utils.short_wait, "Expected '#{msg}' but got '#{msg_body}'") { msg_body == msg }
+    end
+
+    # Deletes an open Canvas inbox message
+    def delete_open_msg
+      confirm(true) { wait_for_update_and_click msg_delete_button_element }
+    end
+
   end
 end

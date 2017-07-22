@@ -5,6 +5,7 @@ describe 'The Engagement Index', order: :defined do
   include Logging
 
   # Load test data
+  test_id = Utils.get_test_id
   test_user_data = Utils.load_test_users.select { |data| data['tests']['engagementIndexSorting'] }
   teacher = User.new test_user_data.find { |user| user['role'] == 'Teacher' }
   student_data = test_user_data.select { |user| user['role'] == 'Student' }
@@ -18,7 +19,7 @@ describe 'The Engagement Index', order: :defined do
     @course = Course.new({})
 
     @driver = Utils.launch_browser
-    @canvas = Page::CanvasPage.new @driver
+    @canvas = Page::CanvasActivitiesPage.new @driver
     @cal_net = Page::CalNetPage.new @driver
     @asset_library = Page::SuiteCPages::AssetLibraryPage.new @driver
     @engagement_index = Page::SuiteCPages::EngagementIndexPage.new @driver
@@ -241,7 +242,103 @@ describe 'The Engagement Index', order: :defined do
         @engagement_index.navigate_to @engagement_index_url
         @canvas.unauthorized_msg_element.when_visible Utils.short_wait
       end
+
+    end
+  end
+
+  # COLLABORATION
+
+  describe '"looking for collaborators"' do
+
+    before(:all) do
+      @canvas.stop_masquerading @driver
+      @canvas.add_suite_c_tool(@course, SuiteCTools::IMPACT_STUDIO)
+      @canvas.click_tool_link(@driver, SuiteCTools::IMPACT_STUDIO)
     end
 
+    context 'when the user is not looking' do
+
+      before(:all) do
+        @canvas.masquerade_as(@driver, student_1, @course)
+        @engagement_index.load_page(@driver, @engagement_index_url)
+        @engagement_index.share_score
+      end
+
+      context 'and the user views itself' do
+
+        it 'shows the right status on the Engagement Index' do
+          @engagement_index.collaboration_status_element(student_1).when_visible Utils.short_wait
+          expect(@engagement_index.collaboration_status_element(student_1).text).to eql('Not looking')
+        end
+      end
+
+      context 'and another user views the user' do
+
+        before(:all) do
+          @canvas.masquerade_as(@driver, student_2, @course)
+          @engagement_index.load_page(@driver, @engagement_index_url)
+          @engagement_index.share_score
+        end
+
+        it 'shows no collaboration elements on the Engagement Index' do
+          @engagement_index.load_page(@driver, @engagement_index_url)
+          @engagement_index.user_profile_link(student_1).when_visible Utils.short_wait
+          expect(@engagement_index.collaboration_status_element(student_1).exists?).to be false
+          expect(@engagement_index.collaboration_button_element(student_1).exists?).to be false
+        end
+      end
+    end
+
+    context 'when the user is looking' do
+
+      before(:all) do
+        @canvas.masquerade_as(@driver, student_1, @course)
+        @engagement_index.load_page(@driver, @engagement_index_url)
+      end
+
+      context 'and the user views itself' do
+
+        it('shows the right status on the Engagement Index') { @engagement_index.set_collaboration_true student_1 }
+
+      end
+
+      context 'and another user views the user' do
+
+        before(:all) do
+          @canvas.masquerade_as(@driver, student_2, @course)
+          @engagement_index.load_page(@driver, @engagement_index_url)
+        end
+
+        it 'shows a collaborate button on the Engagement Index' do
+          @engagement_index.user_profile_link(student_1).when_visible Utils.short_wait
+          expect(@engagement_index.collaboration_button_element(student_1).exists?).to be true
+        end
+      end
+    end
+
+    context 'when another user clicks a collaborate button' do
+
+      before(:all) do
+        @canvas.masquerade_as(@driver, student_2, @course)
+        @engagement_index.load_page(@driver, @engagement_index_url)
+      end
+
+      it 'allows the other user to cancel sending a message' do
+        @engagement_index.click_collaborate_button student_1
+        @engagement_index.click_cancel_collaborate_msg
+      end
+
+      it 'allows the other user to send a message' do
+        @engagement_index.click_collaborate_button student_1
+        @engagement_index.send_collaborate_msg "All work and no play makes Jack #{test_id} a dull cat"
+      end
+
+      it 'delivers a message to the looking-user\'s Canvas inbox' do
+        @canvas.masquerade_as(@driver, student_1, @course)
+        @canvas.verify_message(student_2, student_1, "All work and no play makes Jack #{test_id} a dull cat", test_id)
+        @canvas.delete_open_msg
+      end
+
+    end
   end
 end

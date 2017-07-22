@@ -113,6 +113,7 @@ module Page
           sleep 1
           user_profile_link(user).exists?
         end
+        scroll_to_element user_profile_link(user)
         user_profile_link(user).click
         wait_until { title == "#{SuiteCTools::IMPACT_STUDIO.name}" }
         hide_canvas_footer
@@ -329,6 +330,55 @@ module Page
           driver.switch_to.window window
         end
         activities
+      end
+
+      # COLLABORATION
+
+      # Returns the element containing a user's collaboration 'looking' status
+      # @param user [User]
+      # @return [PageObject::Elements::Span]
+      def collaboration_status_element(user)
+        span_element(xpath: "//span[contains(.,'#{user.full_name}')]/ancestor::td/following-sibling::td[1]//span")
+      end
+
+      def collaboration_toggle_element(user)
+        label_element(xpath: "//span[contains(.,'#{user.full_name}')]/ancestor::td/following-sibling::td[1]//label")
+      end
+
+      # Returns a user's 'collaborate' button element
+      # @param user [User]
+      # @return [PageObject::Elements::Button]
+      def collaboration_button_element(user)
+        button_element(xpath: "//span[contains(.,'#{user.full_name}')]/ancestor::td/following-sibling::td//button[@title='Looking for Collaborators']")
+      end
+
+      def set_collaboration_true(user)
+        collaboration_status_element(user).when_visible Utils.short_wait
+        if collaboration_status_element(user).text.include? 'Not'
+          wait_for_update_and_click collaboration_toggle_element(user)
+          sleep 1
+          wait_until(Utils.short_wait) { !collaboration_status_element.text.include?('Not') rescue Selenium::WebDriver::Error::StaleElementReferenceError }
+        else
+          logger.debug('"Looking for collaborators" is already true, doing nothing')
+        end
+      end
+
+      def set_collaboration_false(user)
+        collaboration_status_element(user).when_visible Utils.short_wait
+        if collaboration_status_element(user).text.include? 'Not'
+          logger.debug('"Looking for collaborators" is already true, doing nothing')
+        else
+          wait_for_update_and_click collaboration_toggle_element(user)
+          sleep 1
+          wait_until(Utils.short_wait) { collaboration_status_element.text.include?('Not') rescue Selenium::WebDriver::Error::StaleElementReferenceError }
+        end
+      end
+
+      def click_collaborate_button(user)
+        logger.debug "Clicking 'Collaborate' button for #{user.full_name}"
+        collaboration_button_element(user).when_visible Utils.short_wait
+        scroll_to_element collaboration_button_element(user)
+        wait_for_update_and_click collaboration_button_element(user)
       end
 
       # POINTS CONFIG

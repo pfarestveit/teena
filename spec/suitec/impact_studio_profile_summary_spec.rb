@@ -24,7 +24,7 @@ describe 'Impact Studio', order: :defined do
     @course = Course.new({title: "Impact Studio Profile #{test_id}", code: "Impact Studio Profile #{test_id}", site_id: course_id})
 
     @driver = Utils.launch_browser
-    @canvas = Page::CanvasPage.new @driver
+    @canvas = Page::CanvasActivitiesPage.new @driver
     @cal_net = Page::CalNetPage.new @driver
     @asset_library = Page::SuiteCPages::AssetLibraryPage.new @driver
     @impact_studio = Page::SuiteCPages::ImpactStudioPage.new @driver
@@ -399,7 +399,7 @@ describe 'Impact Studio', order: :defined do
   describe 'profile summary' do
 
     before(:all) do
-      @canvas.masquerade_as(@driver, @course, student_viewer)
+      @canvas.masquerade_as(@driver, student_viewer, @course)
       @impact_studio.load_page(@driver, @impact_studio_url)
     end
 
@@ -465,6 +465,7 @@ describe 'Impact Studio', order: :defined do
         @impact_studio.switch_to_canvas_iframe @driver
         @impact_studio.edit_profile 'My personal description #BitterTogether'
         @impact_studio.wait_until { @impact_studio.profile_desc.include? 'My personal description ' }
+        sleep 2
         @impact_studio.link_element(text: '#BitterTogether').click
         @asset_library.wait_until(Utils.short_wait) { @asset_library.title == 'Asset Library' }
         @asset_library.switch_to_canvas_iframe @driver
@@ -489,11 +490,84 @@ describe 'Impact Studio', order: :defined do
     end
   end
 
-  describe 'search' do
+  describe '"looking for collaborators"' do
 
-    users.each do |user|
-      it("allows the user to view #{user.role} UID #{user.uid}'s profile") { @impact_studio.search_for_user user }
+    context 'when the user is not looking' do
+
+      before(:all) do
+        @canvas.masquerade_as(@driver, student_viewer, @course)
+        @impact_studio.load_page(@driver, @impact_studio_url)
+      end
+
+      context 'and the user views itself' do
+
+        it('shows the right status on the Impact Studio') { @impact_studio.set_collaboration_false }
+
+      end
+
+      context 'and another user views the user' do
+
+        before(:all) do
+          @canvas.masquerade_as(@driver, student_share, @course)
+          @impact_studio.load_page(@driver, @impact_studio_url)
+          @impact_studio.search_for_user student_viewer
+        end
+
+        it('shows no collaboration element on the Impact Studio') { expect(@impact_studio.collaboration_button?).to be false }
+
+      end
     end
 
+    context 'when the user is looking' do
+
+      before(:all) do
+        @canvas.masquerade_as(@driver, student_viewer, @course)
+        @impact_studio.load_page(@driver, @impact_studio_url)
+      end
+
+      context 'and the user views itself' do
+
+        it('shows the right status on the Impact Studio') { @impact_studio.set_collaboration_true }
+
+      end
+
+      context 'and another user views the user' do
+
+        before(:all) do
+          @canvas.masquerade_as(@driver, student_share, @course)
+          @impact_studio.load_page(@driver, @impact_studio_url)
+          @impact_studio.search_for_user student_viewer
+        end
+
+        it('shows a collaborate button on the Impact Studio') { expect(@impact_studio.collaboration_button?).to be true }
+
+      end
+    end
+
+    context 'when another user clicks a collaborate button' do
+
+      before(:all) do
+        @canvas.masquerade_as(@driver, student_share, @course)
+        @impact_studio.load_page(@driver, @impact_studio_url)
+        @impact_studio.search_for_user student_viewer
+      end
+
+      it 'allows the other user to cancel sending a message' do
+        @impact_studio.click_collaborate_button
+        @impact_studio.click_cancel_collaborate_msg
+      end
+
+      it 'allows the other user to send a message' do
+        @impact_studio.click_collaborate_button
+        @impact_studio.send_collaborate_msg "All work and no play makes Jack #{test_id} a dull cat"
+      end
+
+      it 'delivers a message to the looking-user\'s Canvas inbox' do
+        @canvas.masquerade_as(@driver, student_viewer, @course)
+        @canvas.verify_message(student_share, student_viewer, "All work and no play makes Jack #{test_id} a dull cat", test_id)
+        @canvas.delete_open_msg
+      end
+
+    end
   end
 end

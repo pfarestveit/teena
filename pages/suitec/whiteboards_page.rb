@@ -235,7 +235,7 @@ module Page
         sleep 1
         logger.debug "Verifying list view whiteboard title includes '#{whiteboard.title}'"
         wait_until(Utils.short_wait) { list_view_whiteboard_title_elements[0].text.include? whiteboard.title }
-        whiteboard.id = get_first_whiteboard_id
+        logger.info "New whiteboard ID is #{whiteboard.id = get_first_whiteboard_id}"
       end
 
       # Finds a whiteboard link by its ID and then clicks to open it

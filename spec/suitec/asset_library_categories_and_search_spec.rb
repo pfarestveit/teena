@@ -384,7 +384,7 @@ describe 'Asset Library', order: :defined do
         @asset_library.sort_by_select_element.when_visible timeout
       end
 
-      it('allows sorting by "Most recent", "Most likes", "Most views", and "Most comments"') do
+      it('allows sorting by "Most recent", "Most likes", "Most views", "Most comments", and "Pinned"') do
         expect(@asset_library.sort_by_select_options).to eql(['Most recent', 'Most likes', 'Most views', 'Most comments', 'Pinned'])
       end
     end
@@ -401,7 +401,7 @@ describe 'Asset Library', order: :defined do
         @asset_library.open_advanced_search
       end
 
-      it('allows sorting by "Most recent", "Most likes", "Most views", "Most comments", and "Most impactful"') do
+      it('allows sorting by "Most recent", "Most likes", "Most views", "Most comments", "Pinned", "Most impactful", and "Trending"') do
         expect(@asset_library.sort_by_select_options).to eql(['Most recent', 'Most likes', 'Most views', 'Most comments', 'Pinned', 'Most impactful', 'Trending'])
       end
 

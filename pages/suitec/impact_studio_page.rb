@@ -80,6 +80,44 @@ module Page
         wait_for_update_and_click turn_on_sharing_link_element
       end
 
+      # LOOKING FOR COLLABORATORS
+
+      label(:collaboration_toggle, class: 'looking-for-collaborators-toggle')
+      span(:collaboration_status, xpath: '//label[@class="looking-for-collaborators-toggle"]/span')
+      button(:collaboration_button, class: 'looking-for-collaborators-button')
+
+      # Sets "Looking for collaborators" to true
+      def set_collaboration_true
+        logger.info 'Setting "Looking for collaborators" to true'
+        collaboration_status_element.when_present Utils.short_wait
+        if collaboration_status.include? 'Not'
+          wait_for_update_and_click collaboration_toggle_element
+          sleep 1
+          wait_until(Utils.short_wait) { !collaboration_status.include?('Not') rescue Selenium::WebDriver::Error::StaleElementReferenceError }
+        else
+          logger.debug('"Looking for collaborators" is already true, doing nothing')
+        end
+      end
+
+      # Sets "Looking for collaborators" to false
+      def set_collaboration_false
+        logger.info 'Setting "Looking for collaborators" to false'
+        collaboration_status_element.when_present Utils.short_wait
+        if collaboration_status.include? 'Not'
+          logger.debug('"Looking for collaborators" is already false, doing nothing')
+        else
+          wait_for_update_and_click collaboration_toggle_element
+          sleep 1
+          wait_until(Utils.short_wait) { collaboration_status.include?('Not') rescue Selenium::WebDriver::Error::StaleElementReferenceError }
+        end
+      end
+
+      # Clicks the "Collaborate" button
+      def click_collaborate_button
+        logger.debug 'Clicking "Collaborate" button'
+        wait_for_update_and_click collaboration_button_element
+      end
+
       # SEARCH
 
       text_area(:search_input, xpath: '//input[@placeholder="Search for other people"]')

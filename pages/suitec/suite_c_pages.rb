@@ -347,5 +347,28 @@ module Page
       driver.action.move_to(driver.find_element(xpath: "//*[name()='svg']//*[@class='drop-line'][#{line_node}]/*[name()='circle'][last()]")).perform
     end
 
+    # LOOKING FOR COLLABORATORS
+
+    text_area(:collaboration_msg_input, xpath: '//textarea[contains(@placeholder, "looking to collaborate on...")]')
+    button(:collaboration_msg_cancel, xpath: '//div[@id="collaboration-modal-dialog"]//button[text()="Cancel"]')
+    button(:collaboration_msg_send, xpath: '//div[@id="collaboration-modal-dialog"]//button[text()="Send Invite"]')
+    div(:collaboration_msg_success, xpath: '//div[contains(.,"Your message was sent to")]')
+
+    # Clicks the Cancel button in the collaboration popup
+    def click_cancel_collaborate_msg
+      logger.debug 'Clicking cancel'
+      wait_for_update_and_click collaboration_msg_cancel_element
+      sleep 1
+    end
+
+    # Enters and sends a message
+    # @param msg_text [String]
+    def send_collaborate_msg(msg_text)
+      logger.info "Sending message '#{msg_text}'"
+      wait_for_element_and_type(collaboration_msg_input_element, msg_text)
+      wait_for_update_and_click collaboration_msg_send_element
+      collaboration_msg_success_element.when_visible Utils.short_wait
+    end
+
   end
 end
