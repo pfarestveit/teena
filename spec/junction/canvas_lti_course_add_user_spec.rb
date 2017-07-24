@@ -6,19 +6,17 @@ describe 'bCourses Find a Person to Add', order: :defined do
 
   course_id = ENV['COURSE_ID']
 
-  # Load test data
-
-  test_course_data = Utils.load_test_courses.find { |course| course['tests']['course_add_user'] }
+  # Load test course data
+  test_course_data = Utils.load_bcourses_test_course_data.find { |course| course['tests']['course_add_user'] }
   course = Course.new test_course_data
   sections = course.sections.map { |section_data| Section.new section_data }
   sections_for_site = sections.select { |section| section.include_in_site }
 
-  test_user_data = Utils.load_test_users.select { |user| user['tests']['course_add_user'] }
-
+  # Load test user data
+  test_user_data = Utils.load_bcourses_test_user_data.select { |user| user['tests']['course_add_user'] }
   teachers_data = test_user_data.select { |data| data['role'] == 'Teacher' }
   teacher_1 = User.new teachers_data[0]
   teacher_2 = User.new teachers_data[1]
-
   lead_ta = User.new test_user_data.find { |data| data['role'] == 'Lead TA' }
   ta = User.new test_user_data.find { |data| data['role'] == 'TA' }
   designer = User.new test_user_data.find { |data| data['role'] == 'Designer' }

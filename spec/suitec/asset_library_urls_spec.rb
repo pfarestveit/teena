@@ -10,7 +10,7 @@ describe 'Asset Library URLs', order: :defined do
     @course.site_id = ENV['COURSE_ID']
 
     # Get test user and asset
-    test_user_data = Utils.load_test_users.find { |data| data['tests']['assetLibraryUrls'] }
+    test_user_data = Utils.load_suitec_test_data.find { |data| data['tests']['asset_library_urls'] }
     @user = User.new test_user_data
     @asset = Asset.new @user.assets.find { |asset| asset['type'] == 'Link' }
     @title = "#{@asset.title} - #{test_id}"

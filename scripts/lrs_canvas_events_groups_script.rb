@@ -12,7 +12,7 @@ begin
   @cal_net = Page::CalNetPage.new @driver
 
   # Script requires a minimum of one teacher and three students in test data
-  user_test_data = Utils.load_test_users.select { |data| data['tests']['canvasGroups'] }
+  user_test_data = Utils.load_suitec_test_data.select { |data| data['tests']['canvas_groups'] }
   users = user_test_data.map { |user_data| User.new(user_data) }
   students = users.select { |user| user.role == 'Student' }
   @teacher = users.find { |user| user.role == 'Teacher' }

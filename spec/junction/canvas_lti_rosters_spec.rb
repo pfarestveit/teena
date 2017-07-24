@@ -7,7 +7,7 @@ describe 'bCourses Roster Photos' do
   course_id = ENV['COURSE_ID']
 
   # Load test course data
-  test_course_data = Utils.load_test_courses.find { |course| course['tests']['roster_photos'] }
+  test_course_data = Utils.load_bcourses_test_course_data.find { |course| course['tests']['roster_photos'] }
   course = Course.new test_course_data
   course.site_id = course_id
   sections = course.sections.map { |section_data| Section.new section_data }
@@ -15,7 +15,7 @@ describe 'bCourses Roster Photos' do
   teacher_1 = User.new course.teachers.first
 
   # Load test user data
-  test_user_data = Utils.load_test_users.select { |user| user['tests']['roster_photos'] }
+  test_user_data = Utils.load_bcourses_test_user_datal.select { |user| user['tests']['roster_photos'] }
   lead_ta = User.new test_user_data.find { |data| data['role'] == 'Lead TA' }
   ta = User.new test_user_data.find { |data| data['role'] == 'TA' }
   designer = User.new test_user_data.find { |data| data['role'] == 'Designer' }

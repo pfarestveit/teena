@@ -6,7 +6,7 @@ describe 'The Engagement Index', order: :defined do
 
   # Load test data
   test_id = Utils.get_test_id
-  test_user_data = Utils.load_test_users.select { |data| data['tests']['engagementIndexSorting'] }
+  test_user_data = Utils.load_suitec_test_data.select { |data| data['tests']['engagement_index'] }
   teacher = User.new test_user_data.find { |user| user['role'] == 'Teacher' }
   student_data = test_user_data.select { |user| user['role'] == 'Student' }
   student_1 = User.new student_data[0]

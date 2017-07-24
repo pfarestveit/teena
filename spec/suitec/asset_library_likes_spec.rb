@@ -5,7 +5,7 @@ include Logging
 describe 'Asset', order: :defined do
 
   test_id = Utils.get_test_id
-  test_users = Utils.load_test_users.select { |user| user['tests']['assetLibraryLikes'] }
+  test_users = Utils.load_suitec_test_data.select { |user| user['tests']['asset_library_likes'] }
 
   before(:all) do
     @course = Course.new({})

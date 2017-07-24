@@ -7,7 +7,7 @@ describe 'Asset Library', order: :defined do
   timeout = Utils.short_wait
 
   # Get test users
-  user_test_data = Utils.load_test_users.select { |data| data['tests']['assetLibraryCategorySearch'] }
+  user_test_data = Utils.load_suitec_test_data.select { |data| data['tests']['asset_library_search'] }
   users = user_test_data.map { |data| User.new(data) if ['Teacher', 'Designer', 'Lead TA', 'TA', 'Observer', 'Reader', 'Student'].include? data['role'] }
   teacher = users.find { |user| user.role == 'Teacher' }
   students = users.select { |user| user.role == 'Student' }
