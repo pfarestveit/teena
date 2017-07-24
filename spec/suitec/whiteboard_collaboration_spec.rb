@@ -71,7 +71,7 @@ describe 'Whiteboard', order: :defined do
     after(:each) { @whiteboards_driver_1.close_whiteboard @driver_1 }
 
     [teacher, lead_ta, ta, designer, observer, reader].each do |user|
-
+  
       it "allows a course #{user.role} to search for whiteboards if the user has permission to do so" do
         @canvas_driver_1.masquerade_as(@driver_1, user, course)
         @whiteboards_driver_1.load_page(@driver_1, @whiteboards_url)
@@ -87,43 +87,35 @@ describe 'Whiteboard', order: :defined do
         end
       end
 
-      it "allows a course #{user.role} to view every whiteboard and its membership if the user has permission to do so" do
+      it "allows a course #{user.role} to view any whiteboard and its membership if the user has permission to do so" do
         @canvas_driver_1.masquerade_as(@driver_1, user, course)
         if ['Teacher', 'Lead TA', 'TA', 'Designer', 'Reader'].include? user.role
-          @whiteboards.each do |board|
-            logger.info "Verifying #{user.role} #{user.full_name} has access to '#{board.title}' and its membership"
-            @whiteboards_driver_1.load_page(@driver_1, @whiteboards_url)
-            @whiteboards_driver_1.open_whiteboard(@driver_1, board)
-            @whiteboards_driver_1.verify_collaborators [board.owner, board.collaborators]
-            @whiteboards_driver_1.close_whiteboard @driver_1
-          end
+          logger.info "Verifying #{user.role} #{user.full_name} has access to '#{@whiteboard_3.title}' and its membership"
+          @whiteboards_driver_1.load_page(@driver_1, @whiteboards_url)
+          @whiteboards_driver_1.open_whiteboard(@driver_1, @whiteboard_3)
+          @whiteboards_driver_1.verify_collaborators [@whiteboard_3.owner, @whiteboard_3.collaborators]
+          @whiteboards_driver_1.close_whiteboard @driver_1
         else
-          @whiteboards.each do |board|
-            @whiteboards_driver_1.hit_whiteboard_url(course, @whiteboards_url, board)
-            has_access = @whiteboards_driver_1.verify_block { @whiteboards_driver_1.settings_button_element.when_visible timeout }
-            expect(has_access).to be false
-          end
+          @whiteboards_driver_1.hit_whiteboard_url(course, @whiteboards_url, @whiteboard_3)
+          has_access = @whiteboards_driver_1.verify_block { @whiteboards_driver_1.settings_button_element.when_visible timeout }
+          expect(has_access).to be false
         end
       end
 
       it "allows a course #{user.role} to delete any whiteboard if the user has permission to do so" do
         @canvas_driver_1.masquerade_as(@driver_1, user, course)
         if ['Teacher', 'Lead TA', 'TA', 'Designer', 'Reader'].include? user.role
-          @whiteboards.each do |board|
-            logger.info "Verifying #{user.role} #{user.full_name} has a delete button for '#{board.title}'"
-            @whiteboards_driver_1.load_page(@driver_1, @whiteboards_url)
-            @whiteboards_driver_1.open_whiteboard(@driver_1, board)
-            @whiteboards_driver_1.click_settings_button
-            has_delete_button = @whiteboards_driver_1.verify_block { @whiteboards_driver_1.delete_button_element.when_visible timeout }
-            @whiteboards_driver_1.close_whiteboard @driver_1
-            expect(has_delete_button).to be true
-          end
+          logger.info "Verifying #{user.role} #{user.full_name} has a delete button for '#{@whiteboard_3.title}'"
+          @whiteboards_driver_1.load_page(@driver_1, @whiteboards_url)
+          @whiteboards_driver_1.open_whiteboard(@driver_1, @whiteboard_3)
+          @whiteboards_driver_1.click_settings_button
+          has_delete_button = @whiteboards_driver_1.verify_block { @whiteboards_driver_1.delete_button_element.when_visible timeout }
+          @whiteboards_driver_1.close_whiteboard @driver_1
+          expect(has_delete_button).to be true
         else
-          @whiteboards.each do |board|
-            @whiteboards_driver_1.hit_whiteboard_url(course, @whiteboards_url, board)
-            has_access = @whiteboards_driver_1.verify_block { @whiteboards_driver_1.settings_button_element.when_visible timeout }
-            expect(has_access).to be false
-          end
+          @whiteboards_driver_1.hit_whiteboard_url(course, @whiteboards_url, @whiteboard_3)
+          has_access = @whiteboards_driver_1.verify_block { @whiteboards_driver_1.settings_button_element.when_visible timeout }
+          expect(has_access).to be false
         end
       end
     end
@@ -231,15 +223,28 @@ describe 'Whiteboard', order: :defined do
     describe 'chat' do
 
       before(:all) do
+        @whiteboards_driver_1.show_chat_pane
+
+        # Make sure chat activity is configured with a non-zero point value
         @engagement_index_driver_2 = Page::SuiteCPages::EngagementIndexPage.new @driver_2
         @canvas_driver_2.load_course_site(@driver_2, course)
-        # Make sure chat activity is configured with a non-zero point value
         @engagement_index_driver_2.load_page(@driver_2, @engagement_index_url)
         @new_chat_point_value = Activity::LEAVE_CHAT_MESSAGE.points + 1
         @engagement_index_driver_2.click_points_config
         @engagement_index_driver_2.change_activity_points(Activity::LEAVE_CHAT_MESSAGE, @new_chat_point_value)
         @engagement_index_driver_2.click_back_to_index
         @initial_score = @engagement_index_driver_2.user_score student_1
+      end
+
+      it "allows #{student_1.full_name} to close the chat pane" do
+        @whiteboards_driver_1.hide_chat_pane
+        @whiteboards_driver_1.wait_until(timeout) { !@whiteboards_driver_1.chat_msg_input_element.visible? }
+        @whiteboards_driver_1.wait_until(timeout) { !@whiteboards_driver_1.collaborator_elements.any? }
+      end
+
+      it "allows #{student_1.full_name} to reopen the chat pane" do
+        @whiteboards_driver_1.show_chat_pane
+        @whiteboards_driver_1.wait_until(timeout) { @whiteboards_driver_1.chat_msg_input? }
       end
 
       it "allows #{teacher.full_name} to send messages to another user" do
@@ -250,7 +255,6 @@ describe 'Whiteboard', order: :defined do
       end
 
       it "allows #{student_1.full_name} to receive messages from another user" do
-        @whiteboards_driver_1.show_chat_pane
         @whiteboards_driver_1.verify_chat_msg(teacher, 'foo')
       end
 
@@ -267,17 +271,6 @@ describe 'Whiteboard', order: :defined do
         @whiteboards_driver_1.send_chat_msg 'check out www.google.com'
         @whiteboards_driver_1.wait_until(timeout) { @whiteboards_driver_1.chat_msg_body_elements.last.text.include? 'check out' }
         @whiteboards_driver_1.external_link_valid?(@driver_1, @whiteboards_driver_1.chat_msg_link('last()', 'www.google.com'), 'Google')
-      end
-
-      it "allows #{student_1.full_name} to close the chat pane" do
-        @whiteboards_driver_1.hide_chat_pane
-        @whiteboards_driver_1.wait_until(timeout) { !@whiteboards_driver_1.chat_msg_elements.last.visible? }
-        @whiteboards_driver_1.wait_until(timeout) { !@whiteboards_driver_1.collaborator_elements.any? }
-      end
-
-      it "allows #{student_1.full_name} to reopen the chat pane" do
-        @whiteboards_driver_1.show_chat_pane
-        @whiteboards_driver_1.wait_until(timeout) { @whiteboards_driver_1.chat_msg_elements.last.visible? }
       end
 
       it "earns '#{Activity::LEAVE_CHAT_MESSAGE.title}' points on the Engagement Index for #{student_1.full_name}" do
@@ -298,14 +291,24 @@ describe 'Whiteboard', order: :defined do
 
   describe 'membership' do
 
+    before(:all) do
+      @whiteboards_driver_1.close_whiteboard @driver_1
+      # @whiteboards_driver_1.load_page(@driver_1, @whiteboards_url)
+      @whiteboards_driver_1.open_whiteboard(@driver_1, @whiteboard_1)
+    end
+
     it "allows #{student_1.full_name} to add a member" do
       @whiteboards_driver_1.add_collaborator teacher
+      @whiteboards_driver_1.close_whiteboard @driver_1
+      @whiteboards_driver_1.open_whiteboard(@driver_1, @whiteboard_1)
       @whiteboards_driver_1.show_collaborators_pane
       @whiteboards_driver_1.wait_until(timeout) { @whiteboards_driver_1.collaborator teacher }
     end
 
     it "allows #{student_1.full_name} to delete a member" do
       @whiteboards_driver_1.remove_collaborator student_3
+      @whiteboards_driver_1.close_whiteboard @driver_1
+      @whiteboards_driver_1.open_whiteboard(@driver_1, @whiteboard_1)
       @whiteboards_driver_1.show_collaborators_pane
       @whiteboards_driver_1.collaborator(student_3).when_not_visible timeout rescue Selenium::WebDriver::Error::StaleElementReferenceError
     end
