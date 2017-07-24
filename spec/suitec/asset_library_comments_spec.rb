@@ -19,7 +19,7 @@ describe 'An asset comment', order: :defined do
     @course = Course.new({})
     @course.site_id = ENV['COURSE_ID']
 
-    test_users = Utils.load_test_users.select { |user| user['tests']['assetLibraryComments'] }
+    test_users = Utils.load_suitec_test_data.select { |user| user['tests']['asset_library_comments'] }
     students = test_users.select { |user| user['role'] == 'Student' }
     @teacher = User.new test_users.find { |user| user['role'] == 'Teacher' }
     @asset_uploader = User.new students[0]

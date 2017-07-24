@@ -11,7 +11,7 @@ begin
   @canvas = Page::CanvasActivitiesPage.new @driver
   @cal_net = Page::CalNetPage.new @driver
 
-  @test_user_data = Utils.load_test_users.select { |data| data['tests']['canvasDiscussions'] }
+  @test_user_data = Utils.load_suitec_test_data.select { |data| data['tests']['canvas_discussions'] }
   @admin_user = User.new(username: Utils.ets_qa_username)
   @user_1 = User.new @test_user_data[0]
   @user_2 = User.new @test_user_data[1]

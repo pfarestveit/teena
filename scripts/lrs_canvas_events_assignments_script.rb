@@ -11,7 +11,7 @@ begin
   @canvas = Page::CanvasActivitiesPage.new @driver
   @cal_net= Page::CalNetPage.new @driver
 
-  user_test_data = Utils.load_test_users.select { |data| data['tests']['canvasAssignmentSubmissions'] }
+  user_test_data = Utils.load_suitec_test_data.select { |data| data['tests']['canvas_assignment_submissions'] }
   users = user_test_data.map { |user_data| User.new(user_data) }
   @students = users.select { |user| user.role == 'Student' }
   @teacher = users.find { |user| user.role == 'Teacher' }

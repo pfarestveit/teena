@@ -4,8 +4,8 @@ describe 'bCourses E-Grades Export', order: :defined do
 
   include Logging
 
-  # Load course test data
-  test_course_data = Utils.load_test_courses.find { |course| course['tests']['e_grades_export'] }
+  # Load test course data
+  test_course_data = Utils.load_bcourses_test_course_data.find { |course| course['tests']['e_grades_export'] }
   course = Course.new test_course_data
   teacher = User.new course.teachers.first
   sections = course.sections.map { |section_data| Section.new section_data }
@@ -13,8 +13,8 @@ describe 'bCourses E-Grades Export', order: :defined do
   primary_section = sections_for_site.first
   secondary_section = sections_for_site.last
 
-  # Load user test data
-  test_user_data = Utils.load_test_users.select { |user| user['tests']['e_grades_export'] }
+  # Load test user data
+  test_user_data = Utils.load_bcourses_test_user_data.select { |user| user['tests']['e_grades_export'] }
   lead_ta = User.new test_user_data.find { |data| data['role'] == 'Lead TA' }
   ta = User.new test_user_data.find { |data| data['role'] == 'TA' }
   designer = User.new test_user_data.find { |data| data['role'] == 'Designer' }

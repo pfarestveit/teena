@@ -4,9 +4,8 @@ describe 'bCourses project site', order: :defined do
 
   include Logging
 
-  # Load test data
-
-  test_user_data = Utils.load_test_users.select { |u| u['tests']['create_project_site'] }
+  # Load test user data
+  test_user_data = Utils.load_bcourses_test_user_data.select { |u| u['tests']['create_project_site'] }
   teacher = User.new test_user_data.find { |u| u['role'] == 'Teacher' }
   ta = User.new test_user_data.find { |u| u['role'] == 'TA' }
   staff = User.new test_user_data.find { |u| u['role'] == 'Staff' }

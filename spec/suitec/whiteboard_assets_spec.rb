@@ -10,7 +10,7 @@ describe 'Whiteboard Add Asset', order: :defined do
     @course.site_id = ENV['COURSE_ID']
 
     # Load test data
-    test_user_data = Utils.load_test_users.select { |user| user['tests']['whiteboardAssets'] }
+    test_user_data = Utils.load_suitec_test_data.select { |user| user['tests']['whiteboard_assets'] }
     @student_1 = User.new test_user_data[0]
     @student_2 = User.new test_user_data[1]
     @student_3 = User.new test_user_data[2]

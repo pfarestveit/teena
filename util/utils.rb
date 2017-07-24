@@ -96,15 +96,25 @@ class Utils
     "#{Time.now.to_i}"
   end
 
-  # Loads file containing test date for course-driven tests
-  def self.load_test_courses
-    test_data_file = File.join(ENV['HOME'], '/.webdriver-config/testCourses.json')
-    JSON.parse(File.read(test_data_file))['courses']
+  # Loads file containing test date for course-driven bCourses tests
+  def self.load_bcourses_test_data
+    test_data_file = File.join(ENV['HOME'], '/.webdriver-config/test-data-bcourses.json')
+    @bcourses_data = JSON.parse(File.read(test_data_file))
   end
 
-  # Loads file containing test data for user-driven tests
-  def self.load_test_users
-    test_users = File.join(ENV['HOME'], '/.webdriver-config/testUsers.json')
+  # Loads test data for course-driven bCourses tests
+  def self.load_bcourses_test_course_data
+    @bcourses_data['courses']
+  end
+
+  # Loads test data for user-driven bCourses tests
+  def self.load_bcourses_test_user_data
+    @bcourses_data['users']
+  end
+
+  # Loads file containing test data for SuiteC tests
+  def self.load_suitec_test_data
+    test_users = File.join(ENV['HOME'], '/.webdriver-config/test-data-suitec.json')
     (JSON.parse File.read(test_users))['users']
   end
 

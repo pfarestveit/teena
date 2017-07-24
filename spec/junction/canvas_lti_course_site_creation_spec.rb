@@ -23,7 +23,7 @@ describe 'bCourses course site creation' do
 
     # SITE CREATION
 
-    test_courses = Utils.load_test_courses.select { |course| course['tests']['create_course_site'] }
+    test_courses = Utils.load_bcourses_test_course_data.select { |course| course['tests']['create_course_site'] }
     test_courses.each do |course|
 
       begin

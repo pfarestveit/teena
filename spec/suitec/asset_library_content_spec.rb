@@ -10,7 +10,7 @@ describe 'New asset uploads', order: :defined do
 
     @course = Course.new({})
     @course.site_id = ENV['COURSE_ID']
-    user_test_data = Utils.load_test_users.select { |data| data['tests']['assetLibraryContent'] }
+    user_test_data = Utils.load_suitec_test_data.select { |data| data['tests']['asset_library_content'] }
     users = user_test_data.map { |user_data| User.new(user_data) }
 
     @driver = Utils.launch_browser

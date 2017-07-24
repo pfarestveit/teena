@@ -9,7 +9,7 @@ describe 'bCourses Course Captures tool' do
   begin
 
     # The test data file should contain data variations such as cross-listings and courses with multiple primary sections
-    test_user_data = Utils.load_test_users.select { |user| user['tests']['courseCapture'] }
+    test_user_data = Utils.load_bcourses_test_user_data.select { |user| user['tests']['course_capture'] }
 
     @driver = Utils.launch_browser
     @course_captures_page = Page::JunctionPages::CanvasCourseCapturesPage.new @driver
@@ -28,13 +28,12 @@ describe 'bCourses Course Captures tool' do
 
         # Get the Course Capture data expected to appear in Canvas sites for each test user
         user = User.new data
-        canvas_content = data['tests']['courseCapture']['canvas']
 
-        if canvas_content
+        if (course_sites = data['tests']['course_capture'])
 
           # Verify each Canvas site ID in the test data
-          canvas_content.each do |course_site|
-            course = Course.new({site_id: "#{course_site['siteId']}"})
+          course_sites.each do |course_site|
+            course = Course.new({site_id: "#{course_site['site_id']}"})
 
             if masquerade
               @canvas.masquerade_as(@driver, user, course)
@@ -63,8 +62,8 @@ describe 'bCourses Course Captures tool' do
                   # Verify that the number of recordings and the section information matches expectations
                   @course_captures_page.show_all_recordings index
                   expected_section_code = section['code']
-                  expected_video_count = section['videoCount']
-                  expected_video_id = section['videoId']
+                  expected_video_count = section['video_count']
+                  expected_video_id = section['video_id']
                   visible_video_count = @course_captures_page.you_tube_recording_elements(@driver, index).length
                   visible_section_code = @course_captures_page.section_course_code index
 
