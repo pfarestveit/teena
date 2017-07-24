@@ -166,6 +166,7 @@ module Page
       def add_collaborator(user)
         click_settings_button
         wait_for_update_and_click collaborator_list_element
+        sleep 1
         wait_for_update_and_click collaborator_option_link(user)
         wait_until(Utils.short_wait) { collaborator_name user }
         wait_for_update_and_click edit_title_input_element
@@ -178,7 +179,7 @@ module Page
       def remove_collaborator(user)
         click_settings_button
         logger.debug "Clicking the remove button for #{user.full_name}"
-        wait_for_update_and_click_js button_element(xpath: "//span[text()='#{user.full_name}']/following-sibling::button")
+        wait_for_update_and_click button_element(xpath: "//span[text()='#{user.full_name}']/following-sibling::button")
         collaborator_name(user).when_not_visible Utils.short_wait
         # An alert can appear, but only if the user removes itself
         confirm(true) { wait_for_update_and_click save_edit_element } rescue Selenium::WebDriver::Error::NoAlertPresentError
