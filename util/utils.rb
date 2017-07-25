@@ -99,17 +99,17 @@ class Utils
   # Loads file containing test date for course-driven bCourses tests
   def self.load_bcourses_test_data
     test_data_file = File.join(ENV['HOME'], '/.webdriver-config/test-data-bcourses.json')
-    @bcourses_data = JSON.parse(File.read(test_data_file))
+    JSON.parse(File.read(test_data_file))
   end
 
   # Loads test data for course-driven bCourses tests
   def self.load_bcourses_test_course_data
-    @bcourses_data['courses']
+    load_bcourses_test_data['courses']
   end
 
   # Loads test data for user-driven bCourses tests
   def self.load_bcourses_test_user_data
-    @bcourses_data['users']
+    load_bcourses_test_data['users']
   end
 
   # Loads file containing test data for SuiteC tests
