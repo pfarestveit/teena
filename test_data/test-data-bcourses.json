@@ -382,6 +382,7 @@
             "tests": {
                 "course_add_user": true,
                 "e_grades_export": true,
+                "mailing_lists": true,
                 "official_sections": true,
                 "roster_photos": true
             }
@@ -394,6 +395,7 @@
                 "course_add_user": true,
                 "create_project_site": true,
                 "e_grades_export": true,
+                "mailing_lists": true,
                 "official_sections": true,
                 "roster_photos": true
             }
@@ -405,6 +407,7 @@
             "tests": {
                 "course_add_user": true,
                 "e_grades_export": true,
+                "mailing_lists": true,
                 "official_sections": true,
                 "roster_photos": true
             }
@@ -416,6 +419,7 @@
             "tests": {
                 "course_add_user": true,
                 "e_grades_export": true,
+                "mailing_lists": true,
                 "official_sections": true,
                 "roster_photos": true
             }
@@ -427,6 +431,7 @@
             "tests": {
                 "course_add_user": true,
                 "e_grades_export": true,
+                "mailing_lists": true,
                 "roster_photos": true,
                 "official_sections": true
             }
@@ -447,6 +452,7 @@
                 "create_project_site": true,
                 "course_add_user": true,
                 "e_grades_export": true,
+                "mailing_lists": true,
                 "official_sections": true,
                 "roster_photos": true
             }
@@ -467,7 +473,8 @@
             "canvas_id": 7654321,
             "role": "Student",
             "tests": {
-                "create_project_site": true
+                "create_project_site": true,
+                "mailing_lists": true
             }
         }
     ]
