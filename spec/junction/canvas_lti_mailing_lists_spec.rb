@@ -14,7 +14,7 @@ describe 'bCourses Mailgun mailing lists', order: :defined do
   course_site_3 = Course.new({title: "QA instructor #{test_id}", code: "QA Mailing List 3 #{test_id}"})
 
   # Load test user data
-  user_test_data = Utils.load_bcourses_test_user_data.select { |data| data['tests']['assetLibraryCategorySearch'] }
+  user_test_data = Utils.load_bcourses_test_user_data.select { |data| data['tests']['mailing_lists'] }
   users = user_test_data.map { |data| User.new(data) if ['Teacher', 'Designer', 'Lead TA', 'TA', 'Observer', 'Reader', 'Student'].include? data['role'] }
   teacher = users.find { |user| user.role == 'Teacher' }
   students = users.select { |user| user.role == 'Student' }

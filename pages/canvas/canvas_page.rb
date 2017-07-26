@@ -105,6 +105,49 @@ module Page
     button(:delete_course_button, xpath: '//button[text()="Delete Course"]')
     li(:delete_course_success, xpath: '//li[contains(.,"successfully deleted")]')
 
+    # Creates standard Canvas course site in a given sub-account, publishes it, and adds test users.
+    # @param driver [Selenium::WebDriver]
+    # @param sub_account [String]
+    # @param course [Course]
+    # @param test_users [Array<User>]
+    # @param test_id [String]
+    # @param tools [Array<SuiteCTools>]
+    def create_generic_course_site(driver, sub_account, course, test_users, test_id, tools = nil)
+      if course.site_id.nil?
+        load_sub_account sub_account
+        wait_for_load_and_click add_new_course_button_element
+        course_name_input_element.when_visible Utils.short_wait
+        course.title = "QA Test - #{Time.at test_id.to_i}" if course.title.nil?
+        course.code = "QA #{Time.at test_id.to_i} LEC001" if course.code.nil?
+        self.course_name_input = "#{course.title}"
+        self.ref_code_input = "#{course.code}"
+        logger.info "Creating a course site named #{course.title} in #{course.term} semester"
+        wait_for_update_and_click_js create_course_button_element
+        add_course_success_element.when_visible Utils.medium_wait
+        course.site_id = search_for_course(course, sub_account)
+        unless course.term.nil?
+          navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/settings"
+          wait_for_element_and_select_js(term_element, course.term)
+          wait_for_update_and_click_js update_course_button_element
+          update_course_success_element.when_visible Utils.medium_wait
+        end
+      else
+        navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/settings"
+        course_details_link if course_details_link?
+        course.title = course_title
+        course.code = course_code
+      end
+      publish_course_site(driver, course)
+      logger.info "Course ID is #{course.site_id}"
+      add_users(course, test_users)
+      if tools
+        tools.each do |tool|
+          add_suite_c_tool(course, tool) unless tool_nav_link(tool).exists?
+          disable_tool(course, tool) unless tools.include? tool
+        end
+      end
+    end
+
     # Clicks the 'create a site' button for the Junction LTI tool
     # @param driver [Selenium::WebDriver]
     def click_create_site(driver)
@@ -172,8 +215,12 @@ module Page
       else
         logger.debug 'The site is unpublished, publishing'
         wait_for_update_and_click publish_button_element
-        wait_for_update_and_click activity_stream_radio_element
-        wait_for_update_and_click choose_and_publish_button_element
+        # Junction test courses from SIS data always have a term and have the site's front page set during creation. Other
+        # test courses never have a term and need to set the site's front page while publishing.
+        if course.term.nil?
+          wait_for_update_and_click activity_stream_radio_element
+          wait_for_update_and_click choose_and_publish_button_element
+        end
         published_button_element.when_present Utils.medium_wait
       end
     end
@@ -380,49 +427,6 @@ module Page
       count = role_option.delete("#{role} ()").to_i
       logger.debug "The count of #{role} users is currently #{count}"
       count
-    end
-
-    # Creates standard Canvas course site in a given sub-account, publishes it, and adds test users.
-    # @param driver [Selenium::WebDriver]
-    # @param sub_account [String]
-    # @param course [Course]
-    # @param test_users [Array<User>]
-    # @param test_id [String]
-    # @param tools [Array<SuiteCTools>]
-    def create_generic_course_site(driver, sub_account, course, test_users, test_id, tools = nil)
-      if course.site_id.nil?
-        load_sub_account sub_account
-        wait_for_load_and_click add_new_course_button_element
-        course_name_input_element.when_visible Utils.short_wait
-        course.title = "QA Test - #{Time.at test_id.to_i}" if course.title.nil?
-        course.code = "QA #{Time.at test_id.to_i} LEC001" if course.code.nil?
-        self.course_name_input = "#{course.title}"
-        self.ref_code_input = "#{course.code}"
-        logger.info "Creating a course site named #{course.title} in #{course.term} semester"
-        wait_for_update_and_click_js create_course_button_element
-        add_course_success_element.when_visible Utils.medium_wait
-        course.site_id = search_for_course(course, sub_account)
-        unless course.term.nil?
-          navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/settings"
-          wait_for_element_and_select_js(term_element, course.term)
-          wait_for_update_and_click_js update_course_button_element
-          update_course_success_element.when_visible Utils.medium_wait
-        end
-      else
-        navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/settings"
-        course_details_link if course_details_link?
-        course.title = course_title
-        course.code = course_code
-      end
-      publish_course_site(driver, course)
-      logger.info "Course ID is #{course.site_id}"
-      add_users(course, test_users)
-      if tools
-        tools.each do |tool|
-          add_suite_c_tool(course, tool) unless tool_nav_link(tool).exists?
-          disable_tool(course, tool) unless tools.include? tool
-        end
-      end
     end
 
     # SUITEC LTI TOOLS

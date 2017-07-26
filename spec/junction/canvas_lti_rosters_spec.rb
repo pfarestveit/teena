@@ -15,7 +15,7 @@ describe 'bCourses Roster Photos' do
   teacher_1 = User.new course.teachers.first
 
   # Load test user data
-  test_user_data = Utils.load_bcourses_test_user_datal.select { |user| user['tests']['roster_photos'] }
+  test_user_data = Utils.load_bcourses_test_user_data.select { |user| user['tests']['roster_photos'] }
   lead_ta = User.new test_user_data.find { |data| data['role'] == 'Lead TA' }
   ta = User.new test_user_data.find { |data| data['role'] == 'TA' }
   designer = User.new test_user_data.find { |data| data['role'] == 'Designer' }
