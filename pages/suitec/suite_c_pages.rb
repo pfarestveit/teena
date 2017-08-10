@@ -95,7 +95,7 @@ module Page
 
     # Clicks the 'upload file' button
     def click_upload_file_link
-       go_back_to_asset_library if back_to_library_link? && back_to_library_link_element.visible?
+      go_back_to_asset_library if back_to_library_link? && back_to_library_link_element.visible?
       wait_for_load_and_click upload_link_element
       upload_file_heading_element.when_visible Utils.short_wait
     end
