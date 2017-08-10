@@ -165,9 +165,17 @@ module Page
       # @param user [User]
       def add_collaborator(user)
         click_settings_button
-        wait_for_update_and_click collaborator_list_element
-        sleep 1
-        wait_for_update_and_click collaborator_option_link(user)
+        # Try a couple times since the click() doesn't always trigger the options
+        tries = 2
+        begin
+          # Click the title first to ensure the subsequent collaborator click always fires
+          wait_for_update_and_click edit_title_input_element
+          wait_for_update_and_click collaborator_list_element
+          sleep 1
+          wait_for_update_and_click collaborator_option_link(user)
+        rescue
+          (tries -= 1).zero? ? fail : retry
+        end
         wait_until(Utils.short_wait) { collaborator_name user }
         wait_for_update_and_click edit_title_input_element
         wait_for_update_and_click save_edit_element

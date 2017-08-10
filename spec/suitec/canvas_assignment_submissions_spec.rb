@@ -107,7 +107,7 @@ describe 'Canvas assignment submission', order: :defined do
         it("generate the expected asset preview for #{student_full_name} uploading #{asset_title}") { expect(preview_generated).to be true }
 
         if asset.type == 'File'
-          asset_downloadable = @asset_library.verify_block { @asset_library.download_asset }
+          asset_downloadable = @asset_library.verify_block { @asset_library.download_asset asset }
           it("can be downloaded by #{student_full_name} from the #{asset_title} asset detail page") { expect(asset_downloadable).to be true }
         else
           has_download_button = @asset_library.download_asset_link?

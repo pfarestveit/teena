@@ -170,9 +170,7 @@ module Page
       assignment_name_element.when_visible Utils.medium_wait
       assignment_name_element.send_keys assignment.title
       wait_for_element_and_type_js(assignment_due_date_element, assignment.due_date.strftime("%b %-d %Y")) unless assignment.due_date.nil?
-      assignment_type_element.when_visible Utils.medium_wait
-      scroll_to_bottom
-      wait_for_element_and_select_js(assignment_type_element, 'Online')
+      scroll_to_element assignment_type_element
       online_url_cbx_element.when_visible Utils.short_wait
       check_online_url_cbx
       check_online_upload_cbx
@@ -209,11 +207,18 @@ module Page
     # FILES
 
     div(:file_search_no_results, xpath: '//div[contains(.,"This folder is empty")]')
+    span(:suitec_dir, xpath: '//span[contains(.,"_suitec")]')
 
     # Loads the Files page for a given course
     # @param course [Course]
     def load_files(course)
       navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/files"
+    end
+
+    # Loads the SuiteC files directory for a given course
+    # @param course [Course]
+    def load_suitec_files(course)
+      navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/files/_suitec"
     end
 
     # Searches for a file in a course site

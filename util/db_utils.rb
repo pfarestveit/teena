@@ -24,6 +24,16 @@ class DBUtils
     end
   end
 
+  # Returns a given asset's ID, provided the asset has a unique title
+  # @param asset [Asset]
+  # @return [String]
+  def self.get_asset_id_by_title(asset)
+    query = "SELECT id FROM assets WHERE title = '#{asset.title}'"
+    id = query_db_field(query, 'id').first
+    logger.info "Asset ID is #{id['id']}"
+    id['id'].to_s
+  end
+
   # Returns a given asset's current impact score
   # @param asset [Asset]
   # @return [Integer]

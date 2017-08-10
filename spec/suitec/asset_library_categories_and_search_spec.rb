@@ -82,7 +82,6 @@ describe 'Asset Library', order: :defined do
 
       it 'are added to the list of available categories' do
         @asset_library.add_custom_categories(@driver, @asset_library_url, [category_1, category_2])
-        @asset_library.wait_until(timeout) { @asset_library.custom_category_titles.include? category_1 }
       end
 
       it 'can be added to existing assets' do

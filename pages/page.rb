@@ -9,8 +9,12 @@ module Page
   # @param driver [Selenium::WebDriver]
   def switch_to_canvas_iframe(driver)
     hide_canvas_footer
-    wait_until { driver.find_element(id: 'tool_content') }
-    driver.switch_to.frame driver.find_element(id: 'tool_content')
+    begin
+      wait_until { driver.find_element(id: 'tool_content') }
+      driver.switch_to.frame driver.find_element(id: 'tool_content')
+    rescue
+      logger.warn 'Either there is no iframe or focus is already in the iframe'
+    end
   end
 
   # Hides the Canvas footer element in order to interact with elements hidden beneath it. Clicks once to set focus on the footer
@@ -39,6 +43,7 @@ module Page
     wait_for_element(element, timeout)
     hide_canvas_footer
     sleep Utils.click_wait
+    scroll_to_element element
     element.click
   end
 
@@ -63,6 +68,7 @@ module Page
   # @param timeout [Fixnum]
   def click_element_js(element, timeout)
     wait_for_element(element, timeout)
+    scroll_to_element element
     sleep Utils.click_wait
     js_click element
   end
@@ -97,6 +103,7 @@ module Page
   # @param text [String]
   def wait_for_element_and_type(element, text)
     wait_for_update_and_click element
+    sleep 0.5
     element.clear
     element.send_keys text
   end
@@ -126,7 +133,8 @@ module Page
   def verify_block(&blk)
     begin
       return true if yield
-    rescue
+    rescue => e
+      logger.warn e.message
       false
     end
   end

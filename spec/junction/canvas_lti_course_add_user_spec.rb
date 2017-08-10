@@ -162,12 +162,13 @@ describe 'bCourses Find a Person to Add', order: :defined do
 
       it "allows a course #{user.role} to access the tool and add a subset of roles to a course site if permitted to do so" do
           @canvas.masquerade_as(@driver, user, course)
-          @canvas.load_users_page course
         if ['Lead TA', 'TA'].include? user.role
+          @canvas.load_users_page course
           @canvas.click_find_person_to_add @driver
           @course_add_user_page.search('Oski', 'Last Name, First Name')
           @course_add_user_page.wait_until(Utils.medium_wait) { @course_add_user_page.user_role_options == ['Student', 'Waitlist Student', 'Observer'] }
         elsif user.role == 'Designer'
+          @canvas.load_users_page course
           @canvas.click_find_person_to_add @driver
           @course_add_user_page.no_access_msg_element.when_visible Utils.medium_wait
         elsif user.role == 'Reader'

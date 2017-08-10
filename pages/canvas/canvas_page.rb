@@ -72,9 +72,7 @@ module Page
       logger.debug 'Ending masquerade'
       load_homepage
       wait_for_load_and_click stop_masquerading_link_element
-      ("#{driver.browser}" == 'chrome') ?
-          (stop_masquerading_link_element.when_not_visible(Utils.medium_wait) rescue Selenium::WebDriver::Error::StaleElementReferenceError) :
-          stop_masquerading_link_element.when_not_present(Utils.medium_wait)
+      stop_masquerading_link_element.when_not_visible(Utils.medium_wait) rescue Selenium::WebDriver::Error::StaleElementReferenceError
     end
 
     # Loads a given sub-account page
@@ -133,7 +131,7 @@ module Page
         end
       else
         navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/settings"
-        course_details_link if course_details_link?
+        course_details_link_element.when_visible Utils.medium_wait
         course.title = course_title
         course.code = course_code
       end
@@ -171,9 +169,7 @@ module Page
       if accept_course_invite?
         logger.info 'Accepting course invite'
         accept_course_invite
-        ("#{driver.browser}" == 'chrome') ?
-            accept_course_invite_element.when_not_visible(Utils.medium_wait) :
-            accept_course_invite_element.when_not_present(Utils.medium_wait)
+        accept_course_invite_element.when_not_visible Utils.medium_wait
       end
     end
 

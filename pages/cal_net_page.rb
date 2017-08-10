@@ -35,7 +35,7 @@ module Page
         logger.debug "#{username} is logging in"
         wait_for_element_and_type_js(username_element, username)
         password_element.send_keys password
-        wait_for_update_and_click_js sign_in_button_element
+        wait_for_update_and_click sign_in_button_element
       end
     end
 
