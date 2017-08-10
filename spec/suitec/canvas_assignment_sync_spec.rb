@@ -98,11 +98,13 @@ describe 'Canvas assignment sync', order: :defined do
       @asset_library.verify_first_asset(@student, @asset_1)
     end
 
-    it 'imports the Assignment 1 submission files to the Files system' do
+    it 'imports no Assignment 1 submission files to the Files system' do
       @asset_library.load_asset_detail(@driver, @asset_library_url, @asset_1)
-      asset_1_canvas_file_name = @asset_library.download_asset[0..24]
-      @canvas.search_for_file(@course, asset_1_canvas_file_name)
-      @canvas.link_element(xpath: "//a[contains(.,'#{asset_1_canvas_file_name}')]").when_present Utils.medium_wait
+      asset_1_file_name = @asset_library.download_asset @asset_1
+      @canvas.load_suitec_files @course
+      expect(@canvas.verify_block { @canvas.suitec_dir_element.when_present 3 }).to be false
+      @canvas.search_for_file(@course, asset_1_file_name)
+      @canvas.paragraph_element(xpath: '//p[contains(.,"did not match any files")]').when_present Utils.medium_wait
     end
 
     it 'does not show the Assignment 2 submission in the Asset Library' do
@@ -151,16 +153,16 @@ describe 'Canvas assignment sync', order: :defined do
       expect(@asset_1.id).to_not eql(@asset_2.id)
     end
 
-    it 'imports the Assignment 2 submission files to the Files system' do
+    it 'imports no Assignment 2 submission files to the Files system' do
       @asset_library.load_asset_detail(@driver, @asset_library_url, @asset_2)
-      asset_2_canvas_file_name = @asset_library.download_asset[0..24]
-      @canvas.search_for_file(@course, asset_2_canvas_file_name)
-      @canvas.link_element(xpath: "//a[contains(.,'#{asset_2_canvas_file_name}')]").when_present Utils.medium_wait
+      asset_2_file_name = @asset_library.download_asset @asset_2
+      @canvas.load_suitec_files @course
+      expect(@canvas.verify_block { @canvas.suitec_dir_element.when_present 3 }).to be false
+      @canvas.search_for_file(@course, asset_2_file_name)
+      @canvas.paragraph_element(xpath: '//p[contains(.,"did not match any files")]').when_present Utils.medium_wait
     end
 
-    it 'deletes the Assignment 1 submission files from the Files system' do
-      # Wait a bit for the files to be deleted
-      sleep Utils.medium_wait
+    it 'imports no Assignment 1 submission files to the Files system' do
       @canvas.search_for_file(@course, asset_1_canvas_file_name)
       @canvas.paragraph_element(xpath: '//p[contains(.,"did not match any files")]').when_present Utils.medium_wait
     end

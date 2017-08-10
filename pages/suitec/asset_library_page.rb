@@ -93,7 +93,7 @@ module Page
       # @param asset [Asset]
       def click_asset_link_by_id(asset)
         logger.info "Clicking thumbnail for asset ID #{asset.id}"
-        wait_for_update_and_click link_element(xpath: "//a[contains(@href,'/assetlibrary/#{asset.id}')]")
+        wait_for_update_and_click_js link_element(xpath: "//a[contains(@href,'/assetlibrary/#{asset.id}')]")
       end
 
       # Waits for an asset's detail view to load
@@ -111,7 +111,13 @@ module Page
         navigate_to 'http://www.google.com'
         navigate_to "#{url}#col_asset=#{asset.id}"
         switch_to_canvas_iframe driver
-        wait_for_asset_detail asset
+        # TODO - remove the rescue once deep links work again
+        begin
+          wait_for_asset_detail asset
+        rescue
+          click_asset_link_by_id asset
+          wait_for_asset_detail asset
+        end
       end
 
       # On an asset's detail view, clicks the category link at the given index
@@ -149,7 +155,7 @@ module Page
         wait_until(timeout) { list_view_asset_owner_name_elements[0].text[3..-1] == user.full_name }
         asset.id = list_view_asset_ids.first
         logger.debug "Asset ID is #{asset.id}"
-        wait_for_load_and_click_js list_view_asset_link_elements.first
+        wait_for_load_and_click list_view_asset_elements.first
         logger.debug "Verifying detail view asset title is '#{asset.title}'"
         wait_until(timeout) { detail_view_asset_title.include? asset.title }
         logger.debug "Verifying detail view asset owner is '#{user.full_name}'"
@@ -244,7 +250,11 @@ module Page
         category_titles.each do |category_title|
           logger.info "Adding category called #{category_title}"
           wait_for_element_and_type_js(custom_category_input_element, category_title)
-          wait_for_update_and_click_js add_custom_category_button_element
+          wait_for_update_and_click add_custom_category_button_element
+          sleep 1
+          load_page(driver, url)
+          click_manage_assets_link
+          wait_until(Utils.short_wait) { custom_category_titles.include? category_title }
         end
       end
 
@@ -406,13 +416,14 @@ module Page
       # Edits the metadata of an existing asset
       # @param asset [Asset]
       def edit_asset_details(asset)
-        logger.info "Entering title '#{asset.title}, category '#{asset.category}', and description '#{asset.description}'"
+        logger.info "Entering title '#{asset.title}', category '#{asset.category}', and description '#{asset.description}'"
         wait_for_load_and_click edit_details_link_element
         wait_for_element_and_type(title_edit_input_element, asset.title)
         asset.category.nil? ?
             wait_for_element_and_select_js(category_edit_select_element, 'Which assignment or topic is this related to') :
             wait_for_element_and_select_js(category_edit_select_element, asset.category)
         wait_for_element_and_type(description_edit_input_element, asset.description)
+        sleep 1
         wait_for_update_and_click save_changes_element
       end
 
@@ -443,21 +454,25 @@ module Page
       link(:download_asset_link, xpath: '//a[contains(.,"Download")]')
 
       # Prepares the download directory, clicks an asset's download button, waits for a file to appear in the
-      # directory, and returns the resulting file name
+      # directory and reach the right size, and returns the resulting file name
+      # @param [Asset]
       # @return [String]
-      def download_asset
+      def download_asset(asset)
         logger.info 'Downloading original asset'
         Utils.prepare_download_dir
-        wait_for_load_and_click_js download_asset_link_element
+        wait_for_load_and_click download_asset_link_element
         sleep 2
         wait_until(Utils.medium_wait) do
           Dir.entries("#{Utils.download_dir}").length == 3
-          sleep 2
-          wait_until(15) do
-            logger.debug 'Download started, waiting for download to complete'
-            !(Dir.entries("#{Utils.download_dir}")[2]).include? '.crdownload'
+          download_file_name = Dir.entries("#{Utils.download_dir}")[2]
+          logger.debug "Downloaded file name is '#{download_file_name}'"
+          download_file = File.new File.join(Utils.download_dir, download_file_name)
+          asset_file = File.new Utils.test_data_file_path(asset.file_name)
+          wait_until(Utils.medium_wait) do
+            logger.debug "The downloaded file size is currently #{download_file.size}, waiting for it to reach #{asset_file.size}"
+            download_file.size == asset_file.size
           end
-          Dir.entries("#{Utils.download_dir}")[2]
+          download_file_name
         end
       end
 

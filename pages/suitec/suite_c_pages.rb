@@ -55,6 +55,7 @@ module Page
 
     # Clicks the 'back to asset library' link and waits for list view to load
     def go_back_to_asset_library
+      sleep 1
       wait_for_update_and_click back_to_library_link_element
       wait_until(Utils.short_wait) { list_view_asset_elements.any? }
     end
@@ -94,7 +95,7 @@ module Page
 
     # Clicks the 'upload file' button
     def click_upload_file_link
-      go_back_to_asset_library if back_to_library_link?
+      go_back_to_asset_library if back_to_library_link? && back_to_library_link_element.visible?
       wait_for_load_and_click upload_link_element
       upload_file_heading_element.when_visible Utils.short_wait
     end
@@ -163,11 +164,12 @@ module Page
     # Enters asset metadata while adding a link type asset
     # @param asset [Asset]
     def enter_url_metadata(asset)
+      logger.info "Entering URL '#{asset.url}', title '#{asset.title}', category '#{asset.category}', and description '#{asset.description}'"
       wait_for_update_and_click url_input_element
-      self.url_input = asset.url unless asset.url.nil?
-      self.url_title_input = asset.title unless asset.title.nil?
-      self.url_description = asset.description unless asset.description.nil?
-      self.url_category = asset.category unless asset.category.nil?
+      wait_for_element_and_type(url_input_element, asset.url) unless asset.url.nil?
+      wait_for_element_and_type(url_title_input_element, asset.title) unless asset.title.nil?
+      wait_for_element_and_type(url_description_element, asset.description) unless asset.description.nil?
+      wait_for_element_and_select_js(url_category_element, asset.category) unless asset.category.nil?
     end
 
     # Clicks the 'add URL' button to finish adding a link
