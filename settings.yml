@@ -2,6 +2,7 @@ webdriver: chrome
 
 timeouts:
   click_wait: 0.5
+  event_wait: 0
   short: 8
   medium: 30
   long: 120

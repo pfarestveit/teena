@@ -49,8 +49,8 @@ describe 'Asset', order: :defined do
       logger.debug "Asset ID #{asset.id} has title '#{asset.title}'"
 
       @asset_library.load_asset_detail(@driver, @asset_library_url, asset)
-      @asset_library.add_comment 'An asset comment'
-      @asset_library.toggle_detail_view_item_like
+      @asset_library.add_comment(asset, 'An asset comment')
+      @asset_library.toggle_detail_view_item_like asset
     end
 
     it 'are not allowed if the user is a student who is not the asset creator' do
@@ -109,7 +109,7 @@ describe 'Asset', order: :defined do
         @canvas.masquerade_as(@driver, teacher, @course)
         @asset_library.load_asset_detail(@driver, @asset_library_url, asset)
         @asset_library.delete_asset asset
-        @asset_library.advanced_search(test_id, nil, student_uploader, nil)
+        @asset_library.advanced_search(test_id, nil, student_uploader, nil, nil)
         @asset_library.no_search_results_element.when_present Utils.short_wait
 
         # Check points
@@ -125,7 +125,7 @@ describe 'Asset', order: :defined do
         @canvas.masquerade_as(@driver, student_uploader, @course)
         @asset_library.load_asset_detail(@driver, @asset_library_url, asset)
         @asset_library.delete_asset asset
-        @asset_library.advanced_search(test_id, nil, student_uploader, nil)
+        @asset_library.advanced_search(test_id, nil, student_uploader, nil, nil)
         @asset_library.no_search_results_element.when_present Utils.short_wait
 
         # Check points
@@ -155,7 +155,7 @@ describe 'Asset', order: :defined do
         # Add a comment
         @canvas.masquerade_as(@driver, student_viewer, @course)
         @asset_library.load_asset_detail(@driver, @asset_library_url, asset)
-        @asset_library.add_comment 'An asset comment'
+        @asset_library.add_comment(asset, 'An asset comment')
 
         # Get the students' initial scores
         @canvas.stop_masquerading @driver
@@ -169,7 +169,7 @@ describe 'Asset', order: :defined do
         @canvas.masquerade_as(@driver, teacher, @course)
         @asset_library.load_asset_detail(@driver, @asset_library_url, asset)
         @asset_library.delete_asset asset
-        @asset_library.advanced_search(test_id, nil, student_uploader, nil)
+        @asset_library.advanced_search(test_id, nil, student_uploader, nil, nil)
         @asset_library.no_search_results_element.when_present Utils.short_wait
 
         # Check points
@@ -209,7 +209,7 @@ describe 'Asset', order: :defined do
         # Add a like
         @canvas.masquerade_as(@driver, student_viewer, @course)
         @asset_library.load_asset_detail(@driver, @asset_library_url, asset)
-        @asset_library.toggle_detail_view_item_like
+        @asset_library.toggle_detail_view_item_like asset
 
         # Get the students' initial scores
         @canvas.stop_masquerading @driver
@@ -223,7 +223,7 @@ describe 'Asset', order: :defined do
         @canvas.masquerade_as(@driver, teacher, @course)
         @asset_library.load_asset_detail(@driver, @asset_library_url, asset)
         @asset_library.delete_asset asset
-        @asset_library.advanced_search(test_id, nil, student_uploader, nil)
+        @asset_library.advanced_search(test_id, nil, student_uploader, nil, nil)
         @asset_library.no_search_results_element.when_present Utils.short_wait
 
         # Check points
@@ -284,7 +284,7 @@ describe 'Asset', order: :defined do
         @canvas.masquerade_as(@driver, teacher, @course)
         @asset_library.load_asset_detail(@driver, @asset_library_url, asset)
         @asset_library.delete_asset asset
-        @asset_library.advanced_search(test_id, nil, student_uploader, nil)
+        @asset_library.advanced_search(test_id, nil, student_uploader, nil, nil)
         @asset_library.no_search_results_element.when_present Utils.short_wait
 
         # Check points

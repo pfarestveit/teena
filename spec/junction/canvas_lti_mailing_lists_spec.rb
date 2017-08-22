@@ -39,7 +39,7 @@ describe 'bCourses Mailgun mailing lists', order: :defined do
 
   it 'is not added to site navigation by default' do
     @canvas_page.load_course_site(@driver, course_site_1)
-    @canvas_page.div_element(id: 'modules_homepage_user_create').when_present Utils.medium_wait
+    @canvas_page.list_item_element(id: 'section-tabs').when_present Utils.medium_wait
     expect(@mailing_list_page.mailing_list_link?).to be false
   end
 

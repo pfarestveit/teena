@@ -194,20 +194,20 @@ describe 'Whiteboard', order: :defined do
     end
 
     it 'allows a teacher to perform an advanced search by title that returns results' do
-      @whiteboards.advanced_search("#{@search_test_id} Non-unique Title", nil)
+      @whiteboards.advanced_search("#{@search_test_id} Non-unique Title", nil, false)
       @whiteboards.wait_until(timeout) { @whiteboards.list_view_whiteboard_elements.length == 2 }
       @whiteboards.wait_until(timeout) { @whiteboards.visible_whiteboard_titles.sort == [@whiteboard_2.title, @whiteboard_3.title].sort }
       expect(@whiteboards.no_results_msg?).to be false
     end
 
     it 'allows a teacher to perform an advanced search by title that returns no results' do
-      @whiteboards.advanced_search('bar', nil)
+      @whiteboards.advanced_search('bar', nil, false)
       @whiteboards.wait_until(timeout) { @whiteboards.list_view_whiteboard_elements.empty? }
       @whiteboards.wait_until(timeout) { @whiteboards.no_results_msg? }
     end
 
     it 'allows a teacher to perform an advanced search by collaborator that returns results' do
-      @whiteboards.advanced_search(nil, @student_1)
+      @whiteboards.advanced_search(nil, @student_1, false)
       # Search could return whiteboards from other test runs, so just verify that those from this run are present too
       @whiteboards.wait_until(timeout) { @whiteboards.list_view_whiteboard_elements.length > 3 }
       @whiteboards.wait_until(timeout) { (@whiteboards.visible_whiteboard_titles & [@whiteboard_1.title, @whiteboard_2.title, @whiteboard_3.title]).length == 2 }
@@ -215,12 +215,12 @@ describe 'Whiteboard', order: :defined do
     end
 
     it 'allows a teacher to perform an advanced search by collaborator that returns no results' do
-      @whiteboards.advanced_search(nil, @student_3)
+      @whiteboards.advanced_search(nil, @student_3, false)
       @whiteboards.wait_until(timeout) { !@whiteboards.visible_whiteboard_titles.include? (@whiteboard_1.title || @whiteboard_2.title || @whiteboard_3.title) }
     end
 
     it 'allows a teacher to perform an advanced search by title and collaborator that returns results' do
-      @whiteboards.advanced_search("#{@search_test_id} Unique Title", @student_1)
+      @whiteboards.advanced_search("#{@search_test_id} Unique Title", @student_1, false)
       @whiteboards.wait_until(timeout) { @whiteboards.list_view_whiteboard_elements.length == 3 }
       # Expect all 3 whiteboards since all contain the components of the search string
       @whiteboards.wait_until(timeout) { (@whiteboards.visible_whiteboard_titles.sort) == [@whiteboard_1.title, @whiteboard_2.title, @whiteboard_3.title].sort }
@@ -228,7 +228,7 @@ describe 'Whiteboard', order: :defined do
     end
 
     it 'allows a teacher to perform an advanced search by title and collaborator that returns no results' do
-      @whiteboards.advanced_search("#{@search_test_id} Non-unique Title", @student_3)
+      @whiteboards.advanced_search("#{@search_test_id} Non-unique Title", @student_3, false)
       @whiteboards.wait_until(timeout) { @whiteboards.list_view_whiteboard_elements.empty? }
       @whiteboards.wait_until(timeout) { @whiteboards.no_results_msg? }
     end

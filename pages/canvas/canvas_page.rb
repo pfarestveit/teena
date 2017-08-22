@@ -149,7 +149,7 @@ module Page
     # Clicks the 'create a site' button for the Junction LTI tool
     # @param driver [Selenium::WebDriver]
     def click_create_site(driver)
-      wait_for_load_and_click create_site_link_element
+      wait_for_load_and_click_js create_site_link_element
       switch_to_canvas_iframe driver
     end
 
@@ -531,17 +531,20 @@ module Page
       end
     end
 
-    # Clicks the navigation link for a tool and returns the tool's URL
+    # Clicks the navigation link for a tool and returns the tool's URL. Optionally records an analytics event.
     # @param driver [Selenium::WebDriver]
     # @param tool [SuiteCTools]
+    # @param event [Event]
     # @return [String]
-    def click_tool_link(driver, tool)
+    def click_tool_link(driver, tool, event = nil)
       driver.switch_to.default_content
       hide_canvas_footer
       wait_for_update_and_click_js tool_nav_link(tool)
       wait_until(Utils.medium_wait) { title == "#{tool.name}" }
-      logger.info "#{tool.name} URL is #{current_url}"
-      current_url.delete '#'
+      logger.info "#{tool.name} URL is #{url = current_url}"
+      add_event(event, EventType::NAVIGATE)
+      add_event(event, EventType::VIEW)
+      url.delete '#'
     end
 
   end

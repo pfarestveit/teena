@@ -205,26 +205,26 @@ describe 'Asset Library', order: :defined do
       @asset_library.load_page(@driver, @asset_library_url)
       @whiteboard_asset.id = @asset_library.list_view_asset_ids.first
       @asset_library.load_asset_detail(@driver, @asset_library_url, @whiteboard_asset)
-      @asset_library.add_comment 'Comment from asset owner'
+      @asset_library.add_comment(@whiteboard_asset, 'Comment from asset owner')
       @asset_library.wait_until(timeout) { @asset_library.comment_elements.any? }
-      @asset_library.reply_to_comment(0, 'Reply from asset owner')
+      @asset_library.reply_to_comment(@whiteboard_asset, 0, 'Reply from asset owner')
       @asset_library.wait_until(timeout) { @asset_library.comment_elements.length == 2 }
 
       # Add a comment to an asset and like it
       @asset_library.load_asset_detail(@driver, @asset_library_url, student_2_upload)
-      @asset_library.add_comment '#BadHombre'
+      @asset_library.add_comment(student_2_upload, '#BadHombre')
       @asset_library.wait_until(timeout) { @asset_library.comment_elements.any? }
-      @asset_library.toggle_detail_view_item_like
+      @asset_library.toggle_detail_view_item_like student_2_upload
 
       # View an asset and like it
       @canvas.masquerade_as(@driver, student_2, @course)
       @asset_library.load_asset_detail(@driver, @asset_library_url, student_3_link)
-      @asset_library.toggle_detail_view_item_like
+      @asset_library.toggle_detail_view_item_like student_3_link
 
       # View an asset and like it, then view another
       @canvas.masquerade_as(@driver, student_1, @course)
       @asset_library.load_asset_detail(@driver, @asset_library_url, student_3_link)
-      @asset_library.toggle_detail_view_item_like
+      @asset_library.toggle_detail_view_item_like student_3_link
       @asset_library.load_asset_detail(@driver, @asset_library_url, student_2_upload)
       @asset_library.go_back_to_asset_library
     end
@@ -247,87 +247,87 @@ describe 'Asset Library', order: :defined do
     end
 
     it 'lets a user perform an advanced search by a string in the title, sorted by Most Recent' do
-      @asset_library.advanced_search("link - #{test_id}", nil, nil, nil)
+      @asset_library.advanced_search("link - #{test_id}", nil, nil, nil, nil)
       @asset_library.wait_until(timeout) { @asset_library.list_view_asset_ids == [student_3_link.id] }
     end
 
     it 'lets a user perform an advanced search by a string in the description, sorted by Most Recent' do
-      @asset_library.advanced_search("uploaded file #{test_id}", nil, nil, nil)
+      @asset_library.advanced_search("uploaded file #{test_id}", nil, nil, nil, nil)
       @asset_library.wait_until(timeout) { @asset_library.list_view_asset_ids == [student_2_upload.id] }
     end
 
     it 'lets a user perform an advanced search by a hashtag in the description, sorted by Most Recent' do
-      @asset_library.advanced_search("#BetterTogether #{test_id}", nil, nil, nil)
+      @asset_library.advanced_search("#BetterTogether #{test_id}", nil, nil, nil, nil)
       @asset_library.wait_until(timeout) { @asset_library.list_view_asset_ids == [student_3_link.id] }
     end
 
     it 'lets a user perform an advanced search by category, sorted by Most Recent' do
-      @asset_library.advanced_search(nil, category_2, nil, nil)
+      @asset_library.advanced_search(nil, category_2, nil, nil, nil)
       @asset_library.wait_until(timeout) { @asset_library.list_view_asset_ids == [student_3_link.id, student_2_upload.id] }
     end
 
     it 'lets a user perform an advanced search by uploader, sorted by Most Recent' do
-      @asset_library.advanced_search(nil, nil, student_3, nil)
+      @asset_library.advanced_search(nil, nil, student_3, nil, nil)
       @asset_library.wait_until(timeout) { @asset_library.list_view_asset_ids.include?(@whiteboard_asset.id && student_3_link.id) }
     end
 
     it 'lets a user perform an advanced search by type, sorted by Most Recent' do
-      @asset_library.advanced_search(nil, nil, nil, 'Whiteboard')
+      @asset_library.advanced_search(nil, nil, nil, 'Whiteboard', nil)
       @asset_library.wait_until(timeout) { @asset_library.list_view_asset_ids.include? @whiteboard_asset.id }
     end
 
     it 'lets a user perform an advanced search by keyword and category, sorted by Most Recent' do
-      @asset_library.advanced_search('upload', category_2, nil, nil)
+      @asset_library.advanced_search('upload', category_2, nil, nil, nil)
       @asset_library.wait_until(timeout) { @asset_library.list_view_asset_ids == [student_2_upload.id] }
     end
 
     it 'lets a user perform an advanced search by keyword and uploader, sorted by Most Recent' do
-      @asset_library.advanced_search('link', nil, student_3, nil)
+      @asset_library.advanced_search('link', nil, student_3, nil, nil)
       @asset_library.wait_until(timeout) { @asset_library.list_view_asset_ids.include? student_3_link.id }
     end
 
     it 'lets a user perform an advanced search by keyword, category, and uploader, sorted by Most Recent' do
-      @asset_library.advanced_search('#BetterTogether', category_2, student_3, nil)
+      @asset_library.advanced_search('#BetterTogether', category_2, student_3, nil, nil)
       @asset_library.wait_until(timeout) { @asset_library.list_view_asset_ids == [student_3_link.id] }
     end
 
     it 'lets a user perform an advanced search by keyword and type, sorted by Most Recent' do
-      @asset_library.advanced_search("#{test_id}", nil, nil, 'File')
+      @asset_library.advanced_search("#{test_id}", nil, nil, 'File', nil)
       @asset_library.wait_until(timeout) { @asset_library.list_view_asset_ids == [student_2_upload.id, student_1_upload.id] }
     end
 
     it 'lets a user perform an advanced search by category and uploader, sorted by Most Recent' do
-      @asset_library.advanced_search(nil, category_2, student_3, nil)
+      @asset_library.advanced_search(nil, category_2, student_3, nil, nil)
       @asset_library.wait_until(timeout) { @asset_library.list_view_asset_ids == [student_3_link.id] }
     end
 
     it 'lets a user perform an advanced search by uploader and type, sorted by Most Recent' do
-      @asset_library.advanced_search(nil, nil, student_2, 'Whiteboard')
+      @asset_library.advanced_search(nil, nil, student_2, 'Whiteboard', nil)
       @asset_library.wait_until(timeout) { @asset_library.list_view_asset_ids.include? @whiteboard_asset.id }
     end
 
     it 'lets a user perform an advanced search by category and type, sorted by Most Recent' do
-      @asset_library.advanced_search(nil, category_2, nil, 'File')
+      @asset_library.advanced_search(nil, category_2, nil, 'File', nil)
       @asset_library.wait_until(timeout) { @asset_library.list_view_asset_ids == [student_2_upload.id] }
     end
 
     it 'returns a no results message for an advanced search by a hashtag in a comment, sorted by Most Recent' do
-      @asset_library.advanced_search('#BadHombre', nil, nil, nil)
+      @asset_library.advanced_search('#BadHombre', nil, nil, nil, nil)
       @asset_library.wait_until(timeout) { @asset_library.no_search_results? }
     end
 
     it 'lets a user perform an advanced search by keyword, category, and type, sorted by Most Recent' do
-      @asset_library.advanced_search('Description', category_2, nil, 'File')
+      @asset_library.advanced_search('Description', category_2, nil, 'File', nil)
       @asset_library.wait_until(timeout) { @asset_library.list_view_asset_ids == [student_2_upload.id] }
     end
 
     it 'lets a user perform an advanced search by keyword, uploader, and type, sorted by Most Recent' do
-      @asset_library.advanced_search('3', nil, student_3, 'Link')
+      @asset_library.advanced_search('3', nil, student_3, 'Link', nil)
       @asset_library.wait_until(timeout) { @asset_library.list_view_asset_ids.include? student_3_link.id }
     end
 
     it 'lets a user perform an advanced search by keyword, category, uploader, and type, sorted by Most Recent' do
-      @asset_library.advanced_search('for', category_2, student_2, 'File')
+      @asset_library.advanced_search('for', category_2, student_2, 'File', nil)
       @asset_library.wait_until(timeout) { @asset_library.list_view_asset_ids == [student_2_upload.id] }
     end
 

@@ -351,7 +351,7 @@ describe 'The Impact Studio', order: :defined do
         @asset_library.load_asset_detail(@driver, @asset_library_url, asset_6)
         asset_6.impact_score += Activity::VIEW_ASSET.impact_points
 
-        @asset_library.add_comment 'This is a comment from Teacher to Student 2'
+        @asset_library.add_comment(asset_6, 'This is a comment from Teacher to Student 2')
         @asset_library.wait_until(Utils.short_wait) { @asset_library.asset_detail_comment_count == '1' }
         asset_6.impact_score += Activity::COMMENT.impact_points
       end
@@ -385,7 +385,7 @@ describe 'The Impact Studio', order: :defined do
         @asset_library.load_asset_detail(@driver, @asset_library_url, asset_6)
         asset_6.impact_score += Activity::VIEW_ASSET.impact_points
 
-        @asset_library.reply_to_comment(0, 'This is another comment from Teacher to Student 2')
+        @asset_library.reply_to_comment(asset_6, 0, 'This is another comment from Teacher to Student 2')
         @asset_library.wait_until(Utils.short_wait) { @asset_library.asset_detail_comment_count == '2' }
         logger.debug "Asset 6 impact score should be #{asset_6.impact_score += Activity::COMMENT.impact_points}"
       end
@@ -419,7 +419,7 @@ describe 'The Impact Studio', order: :defined do
         @asset_library.load_asset_detail(@driver, @asset_library_url, asset_5)
         asset_5.impact_score += Activity::VIEW_ASSET.impact_points
 
-        @asset_library.toggle_detail_view_item_like
+        @asset_library.toggle_detail_view_item_like asset_5
         @asset_library.wait_until { @asset_library.detail_view_asset_likes_count == '1' }
         logger.debug "Asset 5 impact score should be #{asset_5.impact_score += Activity::LIKE.impact_points}"
       end
@@ -516,7 +516,7 @@ describe 'The Impact Studio', order: :defined do
 
       before(:all) do
         @asset_library.load_asset_detail(@driver, @asset_library_url, asset_4)
-        @asset_library.add_comment 'Impact-free comment'
+        @asset_library.add_comment(asset_4, 'Impact-free comment')
         @impact_studio.load_page(@driver, @impact_studio_url)
         logger.debug "Asset 4 impact score should be #{asset_4.impact_score}"
       end
@@ -555,7 +555,7 @@ describe 'The Impact Studio', order: :defined do
         @asset_library.load_asset_detail(@driver, @asset_library_url, asset_6)
         logger.debug "Asset 6 impact score should be #{asset_6.impact_score += Activity::VIEW_ASSET.impact_points}"
 
-        @asset_library.delete_comment 1
+        @asset_library.delete_comment(asset_6, 1)
         logger.debug "Asset 6 impact score should be #{asset_6.impact_score -= Activity::COMMENT.impact_points}"
       end
 
@@ -586,7 +586,7 @@ describe 'The Impact Studio', order: :defined do
         @asset_library.load_asset_detail(@driver, @asset_library_url, asset_5)
         asset_5.impact_score += Activity::VIEW_ASSET.impact_points
 
-        @asset_library.toggle_detail_view_item_like
+        @asset_library.toggle_detail_view_item_like asset_5
         logger.debug "Asset 5 impact score should be #{asset_5.impact_score -= Activity::LIKE.impact_points}"
       end
 

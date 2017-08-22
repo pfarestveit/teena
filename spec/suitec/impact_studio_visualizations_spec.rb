@@ -339,7 +339,7 @@ describe 'The Impact Studio', order: :defined do
         student_2_activities[:get_view_asset][:count] += 1
         asset_6_activities[:get_view_asset] += 1
 
-        @asset_library.add_comment 'This is a comment from Teacher to Student 2'
+        @asset_library.add_comment(asset_6, 'This is a comment from Teacher to Student 2')
         @asset_library.wait_until(Utils.short_wait) { @asset_library.asset_detail_comment_count == '1' }
         teacher_activities[:comment][:count] += 1
         student_2_activities[:get_comment][:count] += 1
@@ -393,7 +393,7 @@ describe 'The Impact Studio', order: :defined do
         student_2_activities[:get_view_asset][:count] += 1
         asset_6_activities[:get_view_asset] += 1
 
-        @asset_library.reply_to_comment(0, 'This is another comment from Teacher to Student 2')
+        @asset_library.reply_to_comment(asset_6, 0, 'This is another comment from Teacher to Student 2')
         @asset_library.wait_until(Utils.short_wait) { @asset_library.asset_detail_comment_count == '2' }
         teacher_activities[:comment][:count] += 1
         student_2_activities[:get_comment][:count] += 1
@@ -447,7 +447,7 @@ describe 'The Impact Studio', order: :defined do
         teacher_activities[:get_view_asset][:count] += 1
         asset_5_activities[:get_view_asset] += 1
 
-        @asset_library.toggle_detail_view_item_like
+        @asset_library.toggle_detail_view_item_like asset_5
         @asset_library.wait_until { @asset_library.detail_view_asset_likes_count == '1' }
         student_1_activities[:like][:count] += 1
         teacher_activities[:get_like][:count] += 1
@@ -641,7 +641,7 @@ describe 'The Impact Studio', order: :defined do
 
       before(:all) do
         @asset_library.load_asset_detail(@driver, @asset_library_url, asset_4)
-        @asset_library.add_comment 'Impact-free comment'
+        @asset_library.add_comment(asset_4, 'Impact-free comment')
         @impact_studio.load_page(@driver, @impact_studio_url)
       end
 
@@ -709,7 +709,7 @@ describe 'The Impact Studio', order: :defined do
         student_2_activities[:get_view_asset][:count] += 1
         asset_6_activities[:get_view_asset] += 1
 
-        @asset_library.delete_comment 1
+        @asset_library.delete_comment(asset_6, 1)
         teacher_activities[:comment][:count] -= 1
         student_2_activities[:get_comment][:count] -= 1
         asset_6_activities[:get_comment] -= 1
@@ -765,7 +765,7 @@ describe 'The Impact Studio', order: :defined do
         asset_5_activities[:get_view_asset] += 1
 
         likes = @asset_library.detail_view_asset_likes_count.to_i
-        @asset_library.toggle_detail_view_item_like
+        @asset_library.toggle_detail_view_item_like asset_5
         @asset_library.wait_until(Utils.short_wait) { @asset_library.detail_view_asset_likes_count.to_i == likes - 1 }
         sleep Utils.short_wait
         student_1_activities[:like][:count] -= 1

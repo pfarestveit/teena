@@ -97,7 +97,7 @@ describe 'Canvas assignment submission', order: :defined do
 
         # Check that submission is added to Asset Library with right metadata
         @asset_library.load_page(@driver, @asset_library_url)
-        @asset_library.advanced_search(nil, asset.category, student, asset.type)
+        @asset_library.advanced_search(nil, asset.category, student, asset.type, nil)
         @asset_library.wait_until(Utils.short_wait) { @asset_library.list_view_asset_elements.length == 1 }
 
         file_uploaded = @asset_library.verify_block { @asset_library.verify_first_asset(student, asset) }

@@ -96,17 +96,20 @@ module Page
     # Clicks the 'upload file' button
     def click_upload_file_link
       go_back_to_asset_library if back_to_library_link? && back_to_library_link_element.visible?
-      wait_for_load_and_click upload_link_element
+      wait_for_load_and_click_js upload_link_element
       upload_file_heading_element.when_visible Utils.short_wait
     end
 
     # Combines methods to upload a new file to the asset library, and sets the asset object's ID
     # @param asset [Asset]
-    # @return [String]
-    def upload_file_to_library(asset)
+    # @param event [Event]
+    def upload_file_to_library(asset, event = nil)
       click_upload_file_link
       enter_and_upload_file asset
-      logger.info "Asset ID is #{asset.id = list_view_asset_ids.first}"
+      wait_until { list_view_asset_link_elements.any? }
+      asset.id = DBUtils.get_asset_id_by_title(asset)
+      add_event(event, EventType::CREATE, asset.id)
+      add_event(event, EventType::VIEW)
     end
 
     # Uses JavaScript to make the file upload input visible, then enters the file to be uploaded
@@ -148,17 +151,20 @@ module Page
     # Clicks the 'add site' button
     def click_add_site_link
       go_back_to_asset_library if back_to_library_link?
-      wait_for_load_and_click add_site_link_element
+      wait_for_load_and_click_js add_site_link_element
       add_url_heading_element.when_visible Utils.short_wait
     end
 
     # Combines methods to add a new site to the asset library, and sets the asset object's ID
     # @param asset [Asset]
-    # @return [String]
-    def add_site(asset)
+    # @param event [Event]
+    def add_site(asset, event = nil)
       click_add_site_link
       enter_and_submit_url asset
-      logger.info "Asset ID is #{asset.id = list_view_asset_ids.first}"
+      wait_until { list_view_asset_link_elements.any? }
+      asset.id = DBUtils.get_asset_id_by_title(asset)
+      add_event(event, EventType::CREATE, asset.id)
+      add_event(event, EventType::VIEW)
     end
 
     # Enters asset metadata while adding a link type asset
@@ -260,7 +266,8 @@ module Page
     # @param user [User]
     # @param asset_type [String]
     # @param sort_by [String]
-    def advanced_search(keyword, category, user, asset_type, sort_by = nil)
+    # @param event [Event]
+    def advanced_search(keyword, category, user, asset_type, sort_by, event = nil)
       logger.info "Performing advanced search of asset library by keyword '#{keyword}', category '#{category}', user '#{user && user.full_name}', asset type '#{asset_type}', sort by '#{sort_by}'."
       open_advanced_search
       keyword.nil? ?
@@ -279,6 +286,7 @@ module Page
           (self.sort_by_select = 'Most recent') :
           (self.sort_by_select = sort_by)
       wait_for_update_and_click advanced_search_submit_element
+      add_event(event, EventType::SEARCH)
     end
 
     # EVENT DROPS

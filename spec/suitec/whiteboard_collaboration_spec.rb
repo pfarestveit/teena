@@ -298,7 +298,7 @@ describe 'Whiteboard', order: :defined do
     end
 
     it "allows #{student_1.full_name} to add a member" do
-      @whiteboards_driver_1.add_collaborator teacher
+      @whiteboards_driver_1.add_collaborator(@whiteboard_1, teacher)
       @whiteboards_driver_1.close_whiteboard @driver_1
       @whiteboards_driver_1.open_whiteboard(@driver_1, @whiteboard_1)
       @whiteboards_driver_1.show_collaborators_pane
