@@ -9,7 +9,7 @@ describe 'bCourses course site creation' do
 
   begin
     @driver = Utils.launch_browser
-    test_output = Utils.initialize_canvas_test_output(self, ['Term', 'Course', 'Instructor', 'Site ID', 'Teachers', 'TAs', 'Students', 'Waitlist Students'])
+    test_output = Utils.initialize_canvas_test_output(self, ['Term', 'Course', 'Instructor', 'Site ID', 'Teachers', 'Lead TAs', 'TAs', 'Students', 'Waitlist Students'])
 
     @splash_page = Page::JunctionPages::SplashPage.new @driver
     @cal_net_page = Page::CalNetPage.new @driver
@@ -134,6 +134,16 @@ describe 'bCourses course site creation' do
         expected_abbreviation = course.code
         it ("shows the default site abbreviation #{course.code}") { expect(default_abbreviation).to include(expected_abbreviation) }
 
+        requires_name_and_abbreviation = @create_course_site_page.verify_block do
+          @create_course_site_page.site_name_input_element.clear
+          @create_course_site_page.site_name_error_element.when_present 1
+          @create_course_site_page.wait_until(1) { @create_course_site_page.create_site_button_element.attribute('disabled') }
+          @create_course_site_page.site_abbreviation_element.clear
+          @create_course_site_page.site_abbreviation_error_element.when_present 1
+        end
+
+        it("requires a site name and abbreviation for #{course.code}") { expect(requires_name_and_abbreviation).to be true }
+
         site_abbreviation = @create_course_site_page.enter_site_titles course
         logger.info "Course site abbreviation will be #{site_abbreviation}"
 
@@ -195,12 +205,13 @@ describe 'bCourses course site creation' do
           api_sections = @academics_api.course_sections(api_course).select { |s| section_ids.include? s['ccn'] }
 
           expected_teacher_count = @academics_api.course_section_teachers(api_sections).length
+          expected_lead_ta_count = @academics_api.course_section_lead_tas(api_sections).length
           expected_ta_count = @academics_api.course_section_tas(api_sections).length
           expected_student_count = @rosters_api.enrolled_students.length
           expected_waitlist_count = @rosters_api.waitlisted_students.length
 
-          expected_enrollment_counts = [expected_student_count, expected_waitlist_count, expected_teacher_count, expected_ta_count]
-          actual_enrollment_counts = @canvas_page.wait_for_enrollment_import(course, ['Student', 'Waitlist Student', 'Teacher', 'TA'])
+          expected_enrollment_counts = [expected_student_count, expected_waitlist_count, expected_teacher_count, expected_lead_ta_count, expected_ta_count]
+          actual_enrollment_counts = @canvas_page.wait_for_enrollment_import(course, ['Student', 'Waitlist Student', 'Teacher', 'Lead TA', 'TA'])
           it("results in the right course site membership for #{course.term} #{course.code} site ID #{course.site_id}") { expect(actual_enrollment_counts).to eql(expected_enrollment_counts) }
 
           # ROSTER PHOTOS - check that roster photos tool shows the right sections
@@ -226,7 +237,7 @@ describe 'bCourses course site creation' do
           it("encountered an error verifying the course site for #{course.code}") { fail }
           logger.error "#{e.message}#{"\n"}#{e.backtrace.join("\n")}"
         ensure
-          Utils.add_csv_row(test_output, [course.term, course.code, teacher.uid, course.site_id, expected_teacher_count,
+          Utils.add_csv_row(test_output, [course.term, course.code, teacher.uid, course.site_id, expected_teacher_count, expected_lead_ta_count,
                                           expected_ta_count, expected_student_count, expected_waitlist_count])
         end
       end

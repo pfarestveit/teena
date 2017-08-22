@@ -32,6 +32,8 @@ module Page
 
       text_area(:site_name_input, id: 'siteName')
       text_area(:site_abbreviation, id: 'siteAbbreviation')
+      div(:site_name_error, xpath: '//div[contains(.,"Please fill out a site name.")]')
+      div(:site_abbreviation_error, xpath: '//div[contains(.,"Please fill out a site abbreviation.")]')
 
       button(:create_site_button, xpath: '//button[text()="Create Course Site"]')
       button(:go_back_button, xpath: '//button[text()="Go Back"]')
