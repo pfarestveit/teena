@@ -14,11 +14,14 @@ module Page
       # Loads the Asset Library tool and switches browser focus to the tool iframe
       # @param driver [Selenium::WebDriver]
       # @param url [String]
-      def load_page(driver, url)
+      # @param event [Event]
+      def load_page(driver, url, event = nil)
         navigate_to url
         wait_until { title == "#{SuiteCTools::ASSET_LIBRARY.name}" }
         hide_canvas_footer
         switch_to_canvas_iframe driver
+        add_event(event, EventType::NAVIGATE)
+        add_event(event, EventType::VIEW)
       end
 
       button(:resume_sync_button, xpath: '//button[contains(.,"Resume syncing")]')
@@ -73,8 +76,9 @@ module Page
       # @param driver [Selenium::WebDriver]
       # @param url [String]
       # @param asset [Asset]
-      def load_list_view_asset(driver, url, asset)
-        load_page(driver, url)
+      # @param event [Event]
+      def load_list_view_asset(driver, url, asset, event = nil)
+        load_page(driver, url, event)
         wait_until(Utils.medium_wait) do
           scroll_to_bottom
           sleep 1
@@ -98,26 +102,25 @@ module Page
 
       # Waits for an asset's detail view to load
       # @param asset [Asset]
-      def wait_for_asset_detail(asset)
+      # @param event [Event]
+      def wait_for_asset_detail(asset, event = nil)
         wait_until(Utils.short_wait) { detail_view_asset_title.include? "#{asset.title}" }
+        add_event(event, EventType::VIEW, asset.id)
       end
 
       # Combines methods to load the asset library, find a given asset, and load its detail view
       # @param driver [Selenium::WebDriver]
       # @param url [String]
       # @param asset [Asset]
-      def load_asset_detail(driver, url, asset)
+      # @param event [Event]
+      def load_asset_detail(driver, url, asset, event = nil)
         # TODO - remove the following line when asset deep links work from the Asset Library
         navigate_to 'http://www.google.com'
         navigate_to "#{url}#col_asset=#{asset.id}"
         switch_to_canvas_iframe driver
-        # TODO - remove the rescue once deep links work again
-        begin
-          wait_for_asset_detail asset
-        rescue
-          click_asset_link_by_id asset
-          wait_for_asset_detail asset
-        end
+        add_event(event, EventType::NAVIGATE)
+        add_event(event, EventType::VIEW)
+        wait_for_asset_detail(asset, event)
       end
 
       # On an asset's detail view, clicks the category link at the given index
@@ -145,7 +148,8 @@ module Page
       # ID. Used to make sure the most recent asset addition has appeared at the top of the list.
       # @param user [User]
       # @param asset [Asset]
-      def verify_first_asset(user, asset)
+      # @param event [Event]
+      def verify_first_asset(user, asset, event = nil)
         # Pause to allow DOM update to complete
         sleep 1
         logger.debug "Verifying list view asset title includes '#{asset.title}'"
@@ -156,6 +160,7 @@ module Page
         asset.id = list_view_asset_ids.first
         logger.debug "Asset ID is #{asset.id}"
         wait_for_load_and_click list_view_asset_elements.first
+        add_event(event, EventType::VIEW, asset.id)
         logger.debug "Verifying detail view asset title is '#{asset.title}'"
         wait_until(timeout) { detail_view_asset_title.include? asset.title }
         logger.debug "Verifying detail view asset owner is '#{user.full_name}'"
@@ -210,7 +215,7 @@ module Page
                               paragraph_element(xpath: '//p[contains(.,"No preview available")]')
                           end
         load_page(driver, url)
-        advanced_search(nil, asset.category, user, asset.type)
+        advanced_search(nil, asset.category, user, asset.type, nil)
         click_asset_link_by_id asset
         verify_block do
           preparing_preview_element.when_not_present(timeout) if preparing_preview?
@@ -244,15 +249,16 @@ module Page
       # @param driver [Selenium::WebDriver]
       # @param url [String]
       # @param category_titles [Array<String>]
-      def add_custom_categories(driver, url, category_titles)
-        load_page(driver, url)
+      # @param event [Event]
+      def add_custom_categories(driver, url, category_titles, event = nil)
+        load_page(driver, url, event)
         click_manage_assets_link
         category_titles.each do |category_title|
           logger.info "Adding category called #{category_title}"
           wait_for_element_and_type_js(custom_category_input_element, category_title)
           wait_for_update_and_click add_custom_category_button_element
           sleep 1
-          load_page(driver, url)
+          load_page(driver, url, event)
           click_manage_assets_link
           wait_until(Utils.short_wait) { custom_category_titles.include? category_title }
         end
@@ -395,7 +401,7 @@ module Page
       def asset_migrated?(driver, url, asset, user)
         tries ||= 10
         load_page(driver, url)
-        advanced_search(asset.title, nil, user, asset.type)
+        advanced_search(asset.title, nil, user, asset.type, nil)
         verify_first_asset(user, asset)
         true
       rescue
@@ -415,7 +421,8 @@ module Page
 
       # Edits the metadata of an existing asset
       # @param asset [Asset]
-      def edit_asset_details(asset)
+      # @param event [Event]
+      def edit_asset_details(asset, event = nil)
         logger.info "Entering title '#{asset.title}', category '#{asset.category}', and description '#{asset.description}'"
         wait_for_load_and_click edit_details_link_element
         wait_for_element_and_type(title_edit_input_element, asset.title)
@@ -425,6 +432,11 @@ module Page
         wait_for_element_and_type(description_edit_input_element, asset.description)
         sleep 1
         wait_for_update_and_click save_changes_element
+        add_event(event, EventType::MODIFY, asset.id)
+        sleep 1
+        wait_until(Utils.short_wait) { detail_view_asset_title == asset.title }
+        add_event(event, EventType::VIEW, asset.id)
+        add_event(event, EventType::VIEW)
       end
 
       # REMIX
@@ -497,9 +509,14 @@ module Page
       end
 
       # Toggles the 'like' button on an asset's detail view
-      def toggle_detail_view_item_like
+      # @param asset [Asset]
+      # @param event [Event]
+      def toggle_detail_view_item_like(asset, event = nil)
         logger.info 'Clicking the like button'
-        wait_for_update_and_click_js detail_view_asset_like_button_element
+        wait_for_element(detail_view_asset_like_button_element, Utils.short_wait)
+        already_liked = detail_view_asset_like_button_element.attribute('class').include? 'active'
+        js_click detail_view_asset_like_button_element
+        already_liked ? add_event(event, EventType::REMOVE, asset.id) : add_event(event, EventType::LIKE, asset.id)
       end
 
       # PINS
@@ -549,13 +566,16 @@ module Page
       elements(:comment, :div, class: 'assetlibrary-item-comment')
 
       # Adds a given comment on an asset's detail view
+      # @param asset [Asset]
       # @param comment_body [String]
-      def add_comment(comment_body)
+      # @param event [Event]
+      def add_comment(asset, comment_body, event = nil)
         logger.info "Adding the comment '#{comment_body}'"
         scroll_to_bottom
         wait_for_element_and_type_js(comment_input_element, comment_body)
         wait_until(Utils.short_wait) { comment_add_button_element.enabled? }
         wait_for_update_and_click_js comment_add_button_element
+        add_event(event, EventType::POST, asset.id)
       end
 
       # Returns the number of an asset's comments on list view
@@ -624,14 +644,17 @@ module Page
       end
 
       # Enters and saves a reply at a given index in the list of comments
+      # @param asset [Asset]
       # @param index [Integer]
       # @param reply_body [String]
-      def reply_to_comment(index, reply_body)
+      # @param event [Event]
+      def reply_to_comment(asset, index, reply_body, event = nil)
         logger.info "Replying to comment at index #{index}. Reply is '#{reply_body}'"
         click_reply_button(index)
         reply_input_element(index).when_visible Utils.short_wait
         reply_input_element(index).send_keys reply_body
         wait_for_update_and_click_js reply_add_button_element(index)
+        add_event(event, EventType::POST, asset.id)
       end
 
       # Returns the reply edit button at a given index in the list of comments or nil if no button exists
@@ -664,13 +687,16 @@ module Page
       end
 
       # Enters and saves a comment edit at a given index in the list of comments
+      # @param asset [Asset]
       # @param index [Integer]
       # @param edited_body [String]
-      def edit_comment(index, edited_body)
+      # @param event [Event]
+      def edit_comment(asset, index, edited_body, event = nil)
         logger.info "Editing comment at index #{index}. New comment is '#{edited_body}'"
         click_edit_button(index)
         wait_for_element_and_type_js(edit_input_element(index), edited_body)
         wait_for_update_and_click_js edit_save_button_element(index)
+        add_event(event, EventType::MODIFY, asset.id)
       end
 
       # Returns the 'cancel' comment edit button at a given index in the list of comments
@@ -690,10 +716,13 @@ module Page
       end
 
       # Deletes a comment at a given index in the list of comments
+      # @param asset [Asset]
       # @param index [Integer]
-      def delete_comment(index)
+      # @param event [Event]
+      def delete_comment(asset, index, event = nil)
         logger.info "Deleting comment at index #{index}"
         confirm(true) { wait_for_load_and_click_js delete_button_element(index) }
+        add_event(event, EventType::DELETE, asset.id)
         sleep 1
       end
 

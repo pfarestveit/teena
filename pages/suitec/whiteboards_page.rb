@@ -14,11 +14,14 @@ module Page
       # Loads Whiteboards tool and switches browser focus to the tool iframe
       # @param driver [Selenium::WebDriver]
       # @param url [String]
-      def load_page(driver, url)
+      # @param event [Event]
+      def load_page(driver, url, event = nil)
         navigate_to url
         wait_until { title == "#{SuiteCTools::WHITEBOARDS.name}" }
         hide_canvas_footer
         switch_to_canvas_iframe driver
+        add_event(event, EventType::NAVIGATE)
+        add_event(event, EventType::VIEW)
       end
 
       # CREATE WHITEBOARD
@@ -76,13 +79,16 @@ module Page
 
       # Combines methods to create a new whiteboard and obtain its ID
       # @param whiteboard [Whiteboard]
-      def create_whiteboard(whiteboard)
+      # @param event [Event]
+      def create_whiteboard(whiteboard, event = nil)
         logger.info "Creating a new whiteboard named '#{whiteboard.title}'"
         click_add_whiteboard
         enter_whiteboard_title whiteboard.title
         enter_whiteboard_collaborators whiteboard.collaborators
         click_create_whiteboard
         verify_first_whiteboard whiteboard
+        add_event(event, EventType::CREATE, whiteboard.id)
+        add_event(event, EventType::VIEW)
       end
 
       # Combines methods to create a new whiteboard and then open it
@@ -100,19 +106,27 @@ module Page
       # Opens a whiteboard using its ID and shifts browser focus to the new window
       # @param driver [Selenium::WebDriver]
       # @param whiteboard [Whiteboard]
-      def open_whiteboard(driver, whiteboard)
+      # @param event [Event]
+      def open_whiteboard(driver, whiteboard, event = nil)
         logger.info "Opening whiteboard ID #{whiteboard.id}"
         click_whiteboard_link whiteboard
         shift_to_whiteboard_window(driver, whiteboard)
+        add_event(event, EventType::VIEW, whiteboard.id)
+        add_event(event, EventType::VIEW, 'Chat')
       end
 
       # Opens a whiteboard directly via URL
       # @param course [Course]
       # @param whiteboard [Whiteboard]
-      def hit_whiteboard_url(course, whiteboards_url, whiteboard)
+      # @param event [Event]
+      def hit_whiteboard_url(course, whiteboards_url, whiteboard, event = nil)
         url = "#{Utils.suite_c_base_url}/whiteboards/#{whiteboard.id}?api_domain=#{Utils.canvas_base_url[8..-1]}&course_id=#{course.site_id}&tool_url=#{whiteboards_url}"
         logger.debug "Hitting URL '#{url}'"
         navigate_to url
+        if title.include? whiteboard.title
+          add_event(event, EventType::VIEW, whiteboard.id)
+          add_event(event, EventType::VIEW, object: 'Chat')
+        end
       end
 
       # Closes a browser window if it contains a whiteboard and if more than one window is open
@@ -155,15 +169,19 @@ module Page
 
       # Changes the title of a whiteboard to the whiteboard object's current title
       # @param whiteboard [Whiteboard]
-      def edit_whiteboard_title(whiteboard)
+      # @param event [Event]
+      def edit_whiteboard_title(whiteboard, event = nil)
         click_settings_button
         wait_for_element_and_type_js(edit_title_input_element, whiteboard.title)
         wait_for_update_and_click_js save_edit_element
+        add_event(event, EventType::MODIFY, whiteboard.id)
       end
 
       # Adds a new collaborator to an existing whiteboard
+      # @param whiteboard [Whiteboard]
       # @param user [User]
-      def add_collaborator(user)
+      # @param event [Event]
+      def add_collaborator(whiteboard, user, event = nil)
         click_settings_button
         # Try a couple times since the click() doesn't always trigger the options
         tries = 2
@@ -180,17 +198,20 @@ module Page
         wait_for_update_and_click edit_title_input_element
         wait_for_update_and_click save_edit_element
         save_edit_element.when_not_visible Utils.short_wait rescue Selenium::WebDriver::Error::NoAlertPresentError
+        add_event(event, EventType::MODIFY, whiteboard.id)
       end
 
       # Removes a given collaborator from a whiteboard
       # @param user [User]
-      def remove_collaborator(user)
+      # @param event [Event]
+      def remove_collaborator(user, event = nil)
         click_settings_button
         logger.debug "Clicking the remove button for #{user.full_name}"
         wait_for_update_and_click button_element(xpath: "//span[text()='#{user.full_name}']/following-sibling::button")
         collaborator_name(user).when_not_visible Utils.short_wait
         # An alert can appear, but only if the user removes itself
         confirm(true) { wait_for_update_and_click save_edit_element } rescue Selenium::WebDriver::Error::NoAlertPresentError
+        add_event(event, EventType::MODIFY)
       end
 
       # DELETE/RESTORE WHITEBOARD
@@ -199,17 +220,23 @@ module Page
       button(:restore_button, xpath: '//button[@title="Restore"]')
       span(:restored_msg, xpath: '//span[contains(.,"The whiteboard has been restored")]')
 
-      def delete_whiteboard(driver)
-        logger.info 'Deleting whiteboard'
+      # Deletes an open whiteboard
+      # @param driver [Selenium::WebDriver]
+      # @param event [Event]
+      def delete_whiteboard(driver, event = nil)
+        logger.info "Deleting whiteboard #{board = title}"
         click_settings_button
         wait_for_update_and_click_js delete_button_element
         driver.switch_to.alert.accept
         # Two alerts will appear if the user is an admin
         driver.switch_to.alert.accept rescue Selenium::WebDriver::Error::StaleElementReferenceError
+        add_event(event, EventType::MODIFY, board)
         driver.switch_to.window driver.window_handles.first
         switch_to_canvas_iframe driver
+        add_event(event, EventType::VIEW)
       end
 
+      # Clicks the 'restore' button and waits for the success message
       def restore_whiteboard
         logger.info 'Restoring whiteboard'
         wait_for_update_and_click_js restore_button_element
@@ -268,19 +295,25 @@ module Page
 
       # Performs a simple whiteboard search
       # @param string [String]
-      def simple_search(string)
+      # @param event [Event]
+      def simple_search(string, event = nil)
         logger.info "Performing simple search for '#{string}'"
-        cancel_search_link if cancel_search_link_element.visible?
+        if cancel_search_link_element.visible?
+          cancel_search_link
+          add_event(event, EventType::VIEW)
+        end
         wait_for_element_and_type_js(simple_search_input_element, string)
         sleep 1
         wait_for_update_and_click_js simple_search_button_element
+        add_event(event, EventType::SEARCH)
       end
 
       # Performs an advanced whiteboard search
       # @param string [String]
       # @param user [User]
-      # @param inc_deleted [boolean] defaults to nil
-      def advanced_search(string, user, inc_deleted = nil)
+      # @param inc_deleted [boolean]
+      # @param event [Event]
+      def advanced_search(string, user, inc_deleted, event = nil)
         logger.info 'Performing advanced search'
         open_advanced_search_button unless advanced_search_keyword_input_element.visible?
         logger.debug "Search keyword is '#{string}'"
@@ -297,6 +330,7 @@ module Page
         end
         inc_deleted ? check_include_deleted_cbx : uncheck_include_deleted_cbx
         wait_for_update_and_click_js advanced_search_button_element
+        add_event(event, EventType::SEARCH)
       end
 
       # WHITEBOARD EXPORT
@@ -320,8 +354,9 @@ module Page
 
       # Exports a whiteboard as a new asset library asset
       # @param whiteboard [Whiteboard]
+      # @param event [Event]
       # @return [Asset]
-      def export_to_asset_library(whiteboard)
+      def export_to_asset_library(whiteboard, event = nil)
         click_export_button
         logger.debug 'Exporting whiteboard to asset library'
         wait_for_update_and_click export_to_library_button_element
@@ -329,6 +364,7 @@ module Page
         wait_for_update_and_click_js export_confirm_button_element
         export_title_input_element.when_not_visible Utils.medium_wait rescue Selenium::WebDriver::Error::StaleElementReferenceError
         export_success_msg_element.when_visible Utils.short_wait
+        add_event(event, EventType::SHARE, whiteboard.title)
         Asset.new({ type: 'Whiteboard', title: whiteboard.title, preview: 'image' })
       end
 
@@ -342,11 +378,13 @@ module Page
 
       # Waits for a downloaded whiteboard PNG file to appear in the configured download directory
       # @param whiteboard [Whiteboard]
-      def verify_image_download(whiteboard)
+      # @param event [Event]
+      def verify_image_download(whiteboard, event = nil)
         logger.info 'Waiting for PNG file to be downloaded from whiteboard'
         expected_file_path = "#{Utils.download_dir}/#{whiteboard.title.gsub(' ', '-')}-#{Time.now.strftime('%Y-%m-%d')}-*.png"
         wait_until { Dir[expected_file_path].any? }
         logger.debug 'Whiteboard converted to PNG successfully'
+        add_event(event, EventType::RETRIEVE, whiteboard.title)
         true
       rescue
         logger.debug 'Whiteboard not converted to PNG successfully'
@@ -375,11 +413,14 @@ module Page
 
       # Adds a given set of existing assets to an open whiteboard
       # @param assets [Array<Asset>]
-      def add_existing_assets(assets)
+      # @param event [Event]
+      def add_existing_assets(assets, event = nil)
         click_add_existing_asset
+        2.times { add_event(event, EventType::VIEW, 'Assets') }
         assets.each { |asset| wait_for_update_and_click text_area_element(xpath: "//input[@value = '#{asset.id}']") }
         wait_for_update_and_click_js add_selected_button_element
         add_selected_button_element.when_not_visible Utils.short_wait
+        assets.each { |asset| add_event(event, EventType::ADD, asset.id) }
       end
 
       # Clicks the 'upload new' or 'add link' button to add a new asset to an open whiteboard, depending on asset type
@@ -398,15 +439,21 @@ module Page
 
       # Uploads a new file or adds a new link to an open whiteboard but does not make the asset available in the asset library
       # @param asset [Asset]
-      def add_asset_exclude_from_library(asset)
+      # @param event [Event]
+      def add_asset_exclude_from_library(asset, event = nil)
         click_add_new_asset asset
         (asset.type == 'File') ? enter_and_upload_file(asset) : enter_and_submit_url(asset)
         asset.visible = false
+        open_original_asset_link_element.when_visible Utils.medium_wait
+        asset.id = DBUtils.get_asset_id_by_title asset
+        add_event(event, EventType::CREATE, asset.id)
+        add_event(event, EventType::ADD, asset.id)
       end
 
       # Uploads a new file or adds a new link to an open whiteboard and also makes the asset available in the asset library
       # @param asset [Asset]
-      def add_asset_include_in_library(asset)
+      # @param event [Event]
+      def add_asset_include_in_library(asset, event = nil)
         click_add_new_asset asset
         if asset.type == 'File'
           enter_file_path_for_upload asset.file_name
@@ -418,6 +465,10 @@ module Page
           check_add_link_to_library_cbx
           click_add_url_button
         end
+        open_original_asset_link_element.when_visible Utils.medium_wait
+        asset.id = DBUtils.get_asset_id_by_title asset
+        add_event(event, EventType::CREATE, asset.id)
+        add_event(event, EventType::ADD, asset.id)
       end
 
       # Returns the ID of the currently highlighted asset on a whiteboard
@@ -430,10 +481,13 @@ module Page
       # @param driver [Selenium::WebDriver]
       # @param asset_library [Page::SuiteCPages::AssetLibraryPage]
       # @param asset [Asset]
-      def open_original_asset(driver, asset_library, asset)
+      # @param event [Event]
+      def open_original_asset(driver, asset_library, asset, event = nil)
         wait_for_update_and_click open_original_asset_link_element
         driver.switch_to.window driver.window_handles.last
         wait_until { asset_library.detail_view_asset_title == asset.title }
+        add_event(event, EventType::VIEW, asset.id)
+        add_event(event, EventType::VIEW)
       end
 
       # Closes the browser window containing an asset opened from a whiteboard window using open_original_asset

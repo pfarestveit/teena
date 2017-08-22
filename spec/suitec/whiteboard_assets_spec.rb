@@ -4,6 +4,7 @@ describe 'Whiteboard Add Asset', order: :defined do
 
   test_id = Utils.get_test_id
   timeout = Utils.short_wait
+  event = Event.new({csv: Utils.initialize_events_csv('WhiteboardAssets')})
 
   before(:all) do
     @course = Course.new({})
@@ -11,6 +12,7 @@ describe 'Whiteboard Add Asset', order: :defined do
 
     # Load test data
     test_user_data = Utils.load_suitec_test_data.select { |user| user['tests']['whiteboard_assets'] }
+    @admin = User.new({username: Utils.super_admin_username, full_name: 'Admin'})
     @student_1 = User.new test_user_data[0]
     @student_2 = User.new test_user_data[1]
     @student_3 = User.new test_user_data[2]
@@ -23,25 +25,25 @@ describe 'Whiteboard Add Asset', order: :defined do
     @whiteboards = Page::SuiteCPages::WhiteboardsPage.new @driver
 
     # Create test course
-    @canvas.log_in(@cal_net, Utils.super_admin_username, Utils.super_admin_password)
+    @canvas.log_in(@cal_net, (event.actor = @admin).username, Utils.super_admin_password)
     @canvas.create_generic_course_site(@driver, Utils.canvas_qa_sub_account, @course, [@student_1, @student_2, @student_3], test_id,
                                        [SuiteCTools::ASSET_LIBRARY, SuiteCTools::ENGAGEMENT_INDEX, SuiteCTools::WHITEBOARDS])
     @canvas.load_course_site(@driver, @course)
-    @asset_library_url = @canvas.click_tool_link(@driver, SuiteCTools::ASSET_LIBRARY)
-    @engagement_index_url = @canvas.click_tool_link(@driver, SuiteCTools::ENGAGEMENT_INDEX)
-    @whiteboards_url = @canvas.click_tool_link(@driver, SuiteCTools::WHITEBOARDS)
-    @asset_library.add_custom_categories(@driver, @asset_library_url, [(@category = "Category #{test_id}")])
+    @asset_library_url = @canvas.click_tool_link(@driver, SuiteCTools::ASSET_LIBRARY, event)
+    @engagement_index_url = @canvas.click_tool_link(@driver, SuiteCTools::ENGAGEMENT_INDEX, event)
+    @whiteboards_url = @canvas.click_tool_link(@driver, SuiteCTools::WHITEBOARDS, event)
+    @asset_library.add_custom_categories(@driver, @asset_library_url, [(@category = "Category #{test_id}")], event)
 
     # Set "whiteboard add asset" points to non-zero value
-    @engagement_index.load_page(@driver, @engagement_index_url)
-    @engagement_index.click_points_config
+    @engagement_index.load_scores(@driver, @engagement_index_url, event)
+    @engagement_index.click_points_config event
     @engagement_index.change_activity_points(Activity::ADD_ASSET_TO_WHITEBOARD, '1')
 
     # Student 1 create whiteboard, invite Student 2
     @whiteboard = Whiteboard.new({ owner: @student_1, title: "Whiteboard #{test_id}", collaborators: [@student_2] })
-    @canvas.masquerade_as(@driver, @student_1, @course)
-    @whiteboards.load_page(@driver, @whiteboards_url)
-    @whiteboards.create_whiteboard @whiteboard
+    @canvas.masquerade_as(@driver, (event.actor = @student_1), @course)
+    @whiteboards.load_page(@driver, @whiteboards_url, event)
+    @whiteboards.create_whiteboard(@whiteboard, event)
     @canvas.stop_masquerading @driver
   end
 
@@ -54,36 +56,37 @@ describe 'Whiteboard Add Asset', order: :defined do
       @student_1_asset_file = Asset.new(@student_1.assets.find { |asset| asset['type'] == 'File' })
       @student_1_asset_file.title = "#{@student_1.full_name} file #{test_id}"
       @student_1_asset_file.category = @category
-      @canvas.masquerade_as(@driver, @student_1, @course)
-      @asset_library.load_page(@driver, @asset_library_url)
-      @asset_library.upload_file_to_library @student_1_asset_file
+      @canvas.masquerade_as(@driver, (event.actor = @student_1), @course)
+      @asset_library.load_page(@driver, @asset_library_url, event)
+      @asset_library.upload_file_to_library(@student_1_asset_file, event)
 
       # Student 2 add URL to asset library
       @student_2_asset_url = Asset.new(@student_2.assets.find { |asset| asset['type'] == 'Link' })
       @student_2_asset_url.title = "#{@student_2.full_name} link #{test_id}"
       @student_2_asset_url.category = @category
-      @canvas.masquerade_as(@driver, @student_2, @course)
-      @asset_library.load_page(@driver, @asset_library_url)
-      @asset_library.add_site @student_2_asset_url
+      @canvas.masquerade_as(@driver, (event.actor = @student_2), @course)
+      @asset_library.load_page(@driver, @asset_library_url, event)
+      @asset_library.add_site(@student_2_asset_url, event)
 
       # Student 3 add file to asset library
       @student_3_asset_file = Asset.new(@student_3.assets.find { |asset| asset['type'] == 'File' })
       @student_3_asset_file.title = "#{@student_3.full_name} file #{test_id}"
       @student_3_asset_file.category = @category
-      @canvas.masquerade_as(@driver, @student_3, @course)
-      @asset_library.load_page(@driver, @asset_library_url)
-      @asset_library.upload_file_to_library @student_3_asset_file
+      @canvas.masquerade_as(@driver, (event.actor = @student_3), @course)
+      @asset_library.load_page(@driver, @asset_library_url, event)
+      @asset_library.upload_file_to_library(@student_3_asset_file, event)
 
       # Get initial scores
       @canvas.stop_masquerading @driver
-      @engagement_index.load_scores(@driver, @engagement_index_url)
+      event.actor = @admin
+      @engagement_index.load_scores(@driver, @engagement_index_url, event)
       @initial_score_stu_1 = @engagement_index.user_score @student_1
       @initial_score_stu_2 = @engagement_index.user_score @student_2
       @initial_score_stu_3 = @engagement_index.user_score @student_3
 
-      @canvas.masquerade_as(@driver, @student_1, @course)
-      @whiteboards.load_page(@driver, @whiteboards_url)
-      @whiteboards.open_whiteboard(@driver, @whiteboard)
+      @canvas.masquerade_as(@driver, (event.actor = @student_1), @course)
+      @whiteboards.load_page(@driver, @whiteboards_url, event)
+      @whiteboards.open_whiteboard(@driver, @whiteboard, event)
     end
 
     before(:each) { @whiteboards.click_cancel_button if @whiteboards.cancel_asset_button? }
@@ -97,34 +100,35 @@ describe 'Whiteboard Add Asset', order: :defined do
     end
 
     it 'allows the user to add the user\'s own assets' do
-      @whiteboards.add_existing_assets [@student_1_asset_file]
+      @whiteboards.add_existing_assets([@student_1_asset_file], event)
       @whiteboards.wait_until(timeout) { @whiteboards.open_original_asset_link_element.attribute('href').include? @student_1_asset_file.id }
     end
 
     it 'allows the user to add a collaborator\'s assets' do
-      @whiteboards.add_existing_assets [@student_2_asset_url]
+      @whiteboards.add_existing_assets([@student_2_asset_url], event)
       @whiteboards.wait_until(timeout) { @whiteboards.open_original_asset_link_element.attribute('href').include? @student_2_asset_url.id }
     end
 
     it 'allows the user to add a non-collaborator\'s assets' do
-      @whiteboards.add_existing_assets [@student_3_asset_file]
+      @whiteboards.add_existing_assets([@student_3_asset_file], event)
       @whiteboards.wait_until(timeout) { @whiteboards.open_original_asset_link_element.attribute('href').include? @student_3_asset_file.id }
     end
 
     it 'allows the user to add multiple assets at once' do
-      @whiteboards.add_existing_assets [@student_1_asset_file, @student_2_asset_url, @student_3_asset_file]
+      @whiteboards.add_existing_assets([@student_1_asset_file, @student_2_asset_url, @student_3_asset_file], event)
       @whiteboards.wait_until(timeout) { @whiteboards.open_original_asset_link_element.attribute('href').include? (@student_1_asset_file.id || @student_2_asset_url.id || @student_3_asset_file.id) }
     end
 
     it 'earns "Add an asset to a whiteboard" but not "Add a new asset to the Asset Library" points on the Engagement Index for each asset used' do
       @whiteboards.close_whiteboard @driver
       @canvas.stop_masquerading @driver
-      @engagement_index.load_scores(@driver, @engagement_index_url)
+      event.actor = @admin
+      @engagement_index.load_scores(@driver, @engagement_index_url, event)
       expect(@engagement_index.user_score @student_1).to eql("#{@initial_score_stu_1.to_i + 4}")
     end
 
     it 'shows "add_asset_to_whiteboard" but not "add_asset" activity on the CSV export for each asset belonging to another user' do
-      scores = @engagement_index.download_csv(@driver, @course, @engagement_index_url)
+      scores = @engagement_index.download_csv(@driver, @course, @engagement_index_url, event)
       expect(scores).to include("#{@student_1.full_name}, #{Activity::ADD_ASSET_TO_WHITEBOARD.type}, 1, #{@initial_score_stu_1.to_i + 1}")
       expect(scores).to include("#{@student_2.full_name}, #{Activity::GET_ADD_ASSET_TO_WHITEBOARD.type}, 0, #{@initial_score_stu_2}")
 
@@ -142,9 +146,9 @@ describe 'Whiteboard Add Asset', order: :defined do
   context 'when uploading new assets' do
 
     before(:all) do
-      @engagement_index.load_scores(@driver, @engagement_index_url)
+      @engagement_index.load_scores(@driver, @engagement_index_url, event)
       @initial_score = @engagement_index.user_score @student_1
-      @canvas.masquerade_as(@driver, @student_1, @course)
+      @canvas.masquerade_as(@driver, (event.actor = @student_1), @course)
     end
 
     before(:each) { @whiteboards.close_whiteboard @driver }
@@ -152,79 +156,77 @@ describe 'Whiteboard Add Asset', order: :defined do
     it 'requires an asset title' do
       student_1_asset_no_title = Asset.new(@student_1.assets.find { |asset| asset['type'] == 'File' })
       student_1_asset_no_title.title = nil
-      @whiteboards.load_page(@driver, @whiteboards_url)
-      @whiteboards.open_whiteboard(@driver, @whiteboard)
-      @whiteboards.add_asset_exclude_from_library student_1_asset_no_title
+      @whiteboards.load_page(@driver, @whiteboards_url, event)
+      @whiteboards.open_whiteboard(@driver, @whiteboard, event)
+      @whiteboards.click_add_new_asset student_1_asset_no_title
+      @whiteboards.enter_file_path_for_upload student_1_asset_no_title.file_name
+      @whiteboards.enter_file_metadata student_1_asset_no_title
+      @whiteboards.click_add_files_button
       @whiteboards.wait_until(timeout) { @whiteboards.missing_title_error_elements.any? }
     end
 
     it 'requires an asset title of 255 characters maximum' do
       student_1_asset_long_title = Asset.new(@student_1.assets.find { |asset| asset['type'] == 'File' })
       student_1_asset_long_title.title = "File #{test_id} #{'A loooooong title' * 15}"
-      @whiteboards.load_page(@driver, @whiteboards_url)
-      @whiteboards.open_whiteboard(@driver, @whiteboard)
+      @whiteboards.load_page(@driver, @whiteboards_url, event)
+      @whiteboards.open_whiteboard(@driver, @whiteboard, event)
 
       # More than 255 chars is rejected
-      @whiteboards.add_asset_include_in_library student_1_asset_long_title
-      @whiteboards.wait_until(timeout) { @whiteboards.long_title_error_elements.any? }
-
-      # Exactly 255 chars is accepted
-      student_1_asset_long_title.title = student_1_asset_long_title.title[0, 255]
+      @whiteboards.click_add_new_asset student_1_asset_long_title
+      @whiteboards.enter_file_path_for_upload student_1_asset_long_title.file_name
       @whiteboards.enter_file_metadata student_1_asset_long_title
       @whiteboards.click_add_files_button
+      @whiteboards.wait_until(timeout) { @whiteboards.long_title_error_elements.any? }
+      @whiteboards.click_cancel_button
 
-      # Asset is created
-      @whiteboards.open_original_asset_link_element.when_present Utils.medium_wait
-      expect(student_1_asset_long_title.id = DBUtils.get_asset_id_by_title(student_1_asset_long_title)).not_to be_nil
+      # Exactly 255 chars is accepted and asset is created
+      student_1_asset_long_title.title = student_1_asset_long_title.title[0, 255]
+      @whiteboards.add_asset_include_in_library(student_1_asset_long_title, event)
+      expect(student_1_asset_long_title.id).not_to be_nil
     end
 
     it 'allows the user to add the upload to the asset library' do
       student_1_asset_visible = Asset.new(@student_1.assets.find { |asset| asset['type'] == 'File' })
       student_1_asset_visible.title = "#{test_id} Student 1 file added to library"
-      @whiteboards.load_page(@driver, @whiteboards_url)
-      @whiteboards.open_whiteboard(@driver, @whiteboard)
-      @whiteboards.add_asset_include_in_library student_1_asset_visible
-
-      # Asset is created
-      @whiteboards.open_original_asset_link_element.when_visible Utils.medium_wait
-      @whiteboards.close_whiteboard @driver
-      expect(student_1_asset_visible.id = DBUtils.get_asset_id_by_title(student_1_asset_visible)).not_to be_nil
+      @whiteboards.load_page(@driver, @whiteboards_url, event)
+      @whiteboards.open_whiteboard(@driver, @whiteboard, event)
+      @whiteboards.add_asset_include_in_library(student_1_asset_visible, event)
+      expect(student_1_asset_visible.id).not_to be_nil
 
       # Asset appears in the library
-      @asset_library.load_page(@driver, @asset_library_url)
-      @asset_library.verify_first_asset(@student_1, student_1_asset_visible)
+      @whiteboards.close_whiteboard @driver
+      @asset_library.load_page(@driver, @asset_library_url, event)
+      @asset_library.verify_first_asset(@student_1, student_1_asset_visible, event)
     end
 
     it 'allows the user to exclude the upload from the asset library' do
       student_1_asset_hidden = Asset.new(@student_1.assets.find { |asset| asset['type'] == 'File' })
       student_1_asset_hidden.title = "#{test_id} Student 1 file not added to library"
-      @whiteboards.load_page(@driver, @whiteboards_url)
-      @whiteboards.open_whiteboard(@driver, @whiteboard)
-      @whiteboards.add_asset_exclude_from_library student_1_asset_hidden
-
-      # Asset is created
-      @whiteboards.open_original_asset_link_element.when_present Utils.medium_wait
-      @whiteboards.close_whiteboard @driver
-      expect(student_1_asset_hidden.id = DBUtils.get_asset_id_by_title(student_1_asset_hidden)).not_to be_nil
+      @whiteboards.load_page(@driver, @whiteboards_url, event)
+      @whiteboards.open_whiteboard(@driver, @whiteboard, event)
+      @whiteboards.add_asset_exclude_from_library(student_1_asset_hidden, event)
+      expect(student_1_asset_hidden.id).not_to be_nil
 
       # Asset is not reachable via deep link
-      reachable = @asset_library.verify_block { @asset_library.load_asset_detail(@driver, @asset_library_url, student_1_asset_hidden) }
+      @whiteboards.close_whiteboard @driver
+      reachable = @asset_library.verify_block { @asset_library.load_asset_detail(@driver, @asset_library_url, student_1_asset_hidden, event) }
       expect(reachable).to be false
 
       # Asset is not searchable
-      @asset_library.load_page(@driver, @asset_library_url)
-      @asset_library.advanced_search(student_1_asset_hidden.title, nil, @student_1, 'File')
+      @asset_library.load_page(@driver, @asset_library_url, event)
+      @asset_library.advanced_search(student_1_asset_hidden.title, nil, @student_1, 'File', nil, event)
       @asset_library.no_search_results_element.when_visible Utils.short_wait
     end
 
     it 'earns "Add a new asset to the Asset Library" points on the Engagement Index' do
       @canvas.stop_masquerading @driver
-      @engagement_index.load_scores(@driver, @engagement_index_url)
+      event.actor = @admin
+      @engagement_index.load_scores(@driver, @engagement_index_url, event)
       expect(@engagement_index.user_score @student_1).to eql("#{@initial_score.to_i + (Activity::ADD_ASSET_TO_LIBRARY.points * 2)}")
     end
 
     it 'shows "add_asset" activity on the CSV export' do
-      scores = @engagement_index.download_csv(@driver, @course, @engagement_index_url)
+      scores = @engagement_index.download_csv(@driver, @course, @engagement_index_url, event)
       expect(scores).to include("#{@student_1.full_name}, #{Activity::ADD_ASSET_TO_LIBRARY.type}, #{Activity::ADD_ASSET_TO_LIBRARY.points}, #{@initial_score.to_i + Activity::ADD_ASSET_TO_LIBRARY.points}")
       expect(scores).to include("#{@student_1.full_name}, #{Activity::ADD_ASSET_TO_LIBRARY.type}, #{Activity::ADD_ASSET_TO_LIBRARY.points}, #{@initial_score.to_i + (Activity::ADD_ASSET_TO_LIBRARY.points * 2)}")
       expect(scores).to_not include("#{@student_1.full_name}, #{Activity::ADD_ASSET_TO_LIBRARY.type}, #{Activity::ADD_ASSET_TO_LIBRARY.points}, #{@initial_score.to_i + (Activity::ADD_ASSET_TO_LIBRARY.points * 3)}")
@@ -234,9 +236,9 @@ describe 'Whiteboard Add Asset', order: :defined do
   context 'when adding new URL assets' do
 
     before(:all) do
-      @engagement_index.load_scores(@driver, @engagement_index_url)
+      @engagement_index.load_scores(@driver, @engagement_index_url, event)
       @initial_score = @engagement_index.user_score @student_2
-      @canvas.masquerade_as(@driver, @student_2, @course)
+      @canvas.masquerade_as(@driver, (event.actor = @student_2), @course)
     end
 
     before(:each) { @whiteboards.close_whiteboard @driver }
@@ -244,79 +246,75 @@ describe 'Whiteboard Add Asset', order: :defined do
     it 'requires an asset title' do
       student_2_asset_no_title = Asset.new(@student_2.assets.find { |asset| asset['type'] == 'Link' })
       student_2_asset_no_title.title = nil
-      @whiteboards.load_page(@driver, @whiteboards_url)
-      @whiteboards.open_whiteboard(@driver, @whiteboard)
-      @whiteboards.add_asset_exclude_from_library student_2_asset_no_title
+      @whiteboards.load_page(@driver, @whiteboards_url, event)
+      @whiteboards.open_whiteboard(@driver, @whiteboard, event)
+      @whiteboards.click_add_new_asset student_2_asset_no_title
+      @whiteboards.enter_url_metadata student_2_asset_no_title
+      @whiteboards.click_add_url_button
       @whiteboards.wait_until(timeout) { @whiteboards.missing_title_error_elements.any? }
     end
 
     it 'requires an asset title of 255 characters maximum' do
       student_2_asset_long_title = Asset.new(@student_2.assets.find { |asset| asset['type'] == 'Link' })
       student_2_asset_long_title.title = "Link #{test_id} #{'A loooooong title' * 15}"
-      @whiteboards.load_page(@driver, @whiteboards_url)
-      @whiteboards.open_whiteboard(@driver, @whiteboard)
+      @whiteboards.load_page(@driver, @whiteboards_url, event)
+      @whiteboards.open_whiteboard(@driver, @whiteboard, event)
 
       # More than 255 chars is rejected
-      @whiteboards.add_asset_include_in_library student_2_asset_long_title
-      @whiteboards.wait_until(timeout) { @whiteboards.long_title_error_elements.any? }
-
-      # Exactly 255 chars is accepted
-      student_2_asset_long_title.title = student_2_asset_long_title.title[0, 255]
+      @whiteboards.click_add_new_asset student_2_asset_long_title
       @whiteboards.enter_url_metadata student_2_asset_long_title
       @whiteboards.click_add_url_button
+      @whiteboards.wait_until(timeout) { @whiteboards.long_title_error_elements.any? }
+      @whiteboards.click_cancel_button
 
-      # Asset is created
-      @whiteboards.open_original_asset_link_element.when_present
-      expect(student_2_asset_long_title.id = DBUtils.get_asset_id_by_title(student_2_asset_long_title)).not_to be_nil
+      # Exactly 255 chars is accepted and asset is created
+      student_2_asset_long_title.title = student_2_asset_long_title.title[0, 255]
+      @whiteboards.add_asset_include_in_library(student_2_asset_long_title, event)
+      expect(student_2_asset_long_title.id).not_to be_nil
     end
 
-    it 'allows the user to add the upload to the asset library' do
+    it 'allows the user to add the site to the asset library' do
       student_2_asset_visible = Asset.new(@student_2.assets.find { |asset| asset['type'] == 'Link' })
       student_2_asset_visible.title = "#{test_id} Student 2 link added to library"
-      @whiteboards.load_page(@driver, @whiteboards_url)
-      @whiteboards.open_whiteboard(@driver, @whiteboard)
-      @whiteboards.add_asset_include_in_library student_2_asset_visible
-
-      # Asset is created
-      @whiteboards.open_original_asset_link_element.when_present Utils.medium_wait
-      @whiteboards.close_whiteboard @driver
-      expect(student_2_asset_visible.id = DBUtils.get_asset_id_by_title(student_2_asset_visible)).not_to be_nil
+      @whiteboards.load_page(@driver, @whiteboards_url, event)
+      @whiteboards.open_whiteboard(@driver, @whiteboard, event)
+      @whiteboards.add_asset_include_in_library(student_2_asset_visible, event)
+      expect(student_2_asset_visible.id).not_to be_nil
 
       # Asset appears in the library
-      @asset_library.load_page(@driver, @asset_library_url)
-      @asset_library.verify_first_asset(@student_2, student_2_asset_visible)
+      @whiteboards.close_whiteboard @driver
+      @asset_library.load_page(@driver, @asset_library_url, event)
+      @asset_library.verify_first_asset(@student_2, student_2_asset_visible, event)
     end
 
-    it 'allows the user to exclude the upload from the asset library' do
+    it 'allows the user to exclude the site from the asset library' do
       student_2_asset_hidden = Asset.new(@student_2.assets.find { |asset| asset['type'] == 'Link' })
       student_2_asset_hidden.title = "#{test_id} Student 2 link not added to library"
-      @whiteboards.load_page(@driver, @whiteboards_url)
-      @whiteboards.open_whiteboard(@driver, @whiteboard)
-      @whiteboards.add_asset_exclude_from_library student_2_asset_hidden
-
-      # Asset is created
-      @whiteboards.open_original_asset_link_element.when_present Utils.medium_wait
-      @whiteboards.close_whiteboard @driver
-      expect(student_2_asset_hidden.id = DBUtils.get_asset_id_by_title(student_2_asset_hidden)).not_to be_nil
+      @whiteboards.load_page(@driver, @whiteboards_url, event)
+      @whiteboards.open_whiteboard(@driver, @whiteboard, event)
+      @whiteboards.add_asset_exclude_from_library(student_2_asset_hidden, event)
+      expect(student_2_asset_hidden.id).not_to be_nil
 
       # Asset is reachable via deep link
-      reachable = @asset_library.verify_block { @asset_library.load_asset_detail(@driver, @asset_library_url, student_2_asset_hidden) }
+      @whiteboards.close_whiteboard @driver
+      reachable = @asset_library.verify_block { @asset_library.load_asset_detail(@driver, @asset_library_url, student_2_asset_hidden, event) }
       expect(reachable).to be false
 
       # Asset is not searchable
-      @asset_library.load_page(@driver, @asset_library_url)
-      @asset_library.advanced_search(student_2_asset_hidden.title, nil, @student_2, 'Link')
+      @asset_library.load_page(@driver, @asset_library_url, event)
+      @asset_library.advanced_search(student_2_asset_hidden.title, nil, @student_2, 'Link', nil, event)
       @asset_library.no_search_results_element.when_visible Utils.short_wait
     end
 
     it 'earns "Add a new asset to the Asset Library" points on the Engagement Index' do
       @canvas.stop_masquerading @driver
-      @engagement_index.load_scores(@driver, @engagement_index_url)
+      event.actor = @admin
+      @engagement_index.load_scores(@driver, @engagement_index_url, event)
       expect(@engagement_index.user_score @student_2).to eql("#{@initial_score.to_i + (Activity::ADD_ASSET_TO_LIBRARY.points * 2)}")
     end
 
     it 'shows "add_asset" activity on the CSV export' do
-      scores = @engagement_index.download_csv(@driver, @course, @engagement_index_url)
+      scores = @engagement_index.download_csv(@driver, @course, @engagement_index_url, event)
       expect(scores).to include("#{@student_2.full_name}, #{Activity::ADD_ASSET_TO_LIBRARY.type}, #{Activity::ADD_ASSET_TO_LIBRARY.points}, #{@initial_score.to_i + Activity::ADD_ASSET_TO_LIBRARY.points}")
       expect(scores).to include("#{@student_2.full_name}, #{Activity::ADD_ASSET_TO_LIBRARY.type}, #{Activity::ADD_ASSET_TO_LIBRARY.points}, #{@initial_score.to_i + (Activity::ADD_ASSET_TO_LIBRARY.points * 2)}")
       expect(scores).to_not include("#{@student_2.full_name}, #{Activity::ADD_ASSET_TO_LIBRARY.type}, #{Activity::ADD_ASSET_TO_LIBRARY.points}, #{@initial_score.to_i + (Activity::ADD_ASSET_TO_LIBRARY.points * 3)}")
@@ -326,25 +324,25 @@ describe 'Whiteboard Add Asset', order: :defined do
   context 'when the asset is hidden from the asset library' do
 
     before(:all) do
-      @canvas.masquerade_as(@driver, @student_1, @course)
-      @whiteboards.load_page(@driver, @whiteboards_url)
-      @whiteboards.open_whiteboard(@driver, @whiteboard)
-      @whiteboards.add_collaborator @student_3
+      @canvas.masquerade_as(@driver, (event.actor = @student_1), @course)
+      @whiteboards.load_page(@driver, @whiteboards_url, event)
+      @whiteboards.open_whiteboard(@driver, @whiteboard, event)
+      @whiteboards.add_collaborator(@whiteboard, @student_3, event)
       @whiteboards.close_whiteboard @driver
       @canvas.stop_masquerading @driver
 
       @student_3_asset_hidden = Asset.new(@student_3.assets.find { |asset| asset['type'] == 'File' })
       @student_3_asset_hidden.title = "#{test_id} Student 3 file not added to library"
 
-      @canvas.masquerade_as(@driver, @student_3, @course)
-      @whiteboards.load_page(@driver, @whiteboards_url)
-      @whiteboards.open_whiteboard(@driver, @whiteboard)
-      @whiteboards.add_asset_exclude_from_library @student_3_asset_hidden
-      @whiteboards.open_original_asset(@driver, @asset_library, @student_3_asset_hidden)
+      @canvas.masquerade_as(@driver, (event.actor = @student_3), @course)
+      @whiteboards.load_page(@driver, @whiteboards_url, event)
+      @whiteboards.open_whiteboard(@driver, @whiteboard, event)
+      @whiteboards.add_asset_exclude_from_library(@student_3_asset_hidden, event)
+      @whiteboards.open_original_asset(@driver, @asset_library, @student_3_asset_hidden, event)
     end
 
     it 'allows the user to comment on it via the whiteboard' do
-      @asset_library.add_comment 'Comment on a hidden asset'
+      @asset_library.add_comment(@student_3_asset_hidden, 'Comment on a hidden asset', event)
       @asset_library.wait_until(timeout) { @asset_library.comment_elements.length == 1 }
       @asset_library.wait_until(timeout) { @asset_library.asset_detail_comment_count == '1' }
       @asset_library.wait_until(timeout) { @asset_library.commenter_name(0).include?(@student_3.full_name) }
@@ -353,9 +351,7 @@ describe 'Whiteboard Add Asset', order: :defined do
 
     it 'allows the user to edit its metadata via the whiteboard' do
       @student_3_asset_hidden.title = "#{@student_3_asset_hidden.title} - edited"
-      @asset_library.edit_asset_details @student_3_asset_hidden
-      sleep 1
-      @asset_library.wait_until(timeout) { @asset_library.detail_view_asset_title == @student_3_asset_hidden.title }
+      @asset_library.edit_asset_details(@student_3_asset_hidden, event)
     end
 
     it('does not allow a student user to delete it via the whiteboard') { expect(@asset_library.delete_asset_button?).to be false }

@@ -23,7 +23,7 @@ module Page
     if (footer = div_element(id: 'element_toggler_0')).exists? && footer.visible?
       footer.click
       sleep 1
-      footer.click
+      footer.click if footer.visible?
     end
   end
 
@@ -33,7 +33,7 @@ module Page
   def wait_for_element(element, timeout)
     element.when_present timeout
     element.when_visible timeout
-    sleep Utils.click_wait
+    sleep Utils.event_wait
   end
 
   # Awaits an element for a given timeout then clicks it using WebDriver click method.
@@ -52,7 +52,6 @@ module Page
       tries ||= 2
       begin
         element.when_present Utils.short_wait
-        scroll_to_element element
         execute_script('arguments[0].click();', element)
       rescue Selenium::WebDriver::Error::UnknownError
         (tries -= 1).zero? ? fail : retry
@@ -68,7 +67,6 @@ module Page
   # @param timeout [Fixnum]
   def click_element_js(element, timeout)
     wait_for_element(element, timeout)
-    scroll_to_element element
     sleep Utils.click_wait
     js_click element
   end
@@ -195,6 +193,20 @@ module Page
   def pause_for_poller
     logger.info "Waiting for the Canvas poller for #{wait = Utils.canvas_poller_wait} seconds"
     sleep wait
+  end
+
+  # Given a CSV, adds a row with data about a user action that occurred during a test run, for comparison with
+  # the application's own analytic event tracking.
+  # @param event [Event]
+  # @param event_type [EventType]
+  # @param event_object [String]
+  def add_event(event, event_type, event_object = nil)
+    if event
+      event.object = event_object
+      values = [(event.time = Time.now.strftime('%Y-%m-%d-%H-%M-%S')), event.actor.full_name, (event.action = event_type).desc, (event.object.nil? ? title : event.object)]
+      logger.debug "Logging new event: '#{values}'"
+      Utils.add_csv_row(event.csv, values)
+    end
   end
 
 end

@@ -117,18 +117,18 @@ begin
   # Teacher comments on the student's asset
   @canvas.masquerade_as(@driver, teacher, @course)
   @asset_library.load_asset_detail(@driver, @asset_library_url, asset_6)
-  @asset_library.add_comment 'This is a comment from Teacher to Student 2'
+  @asset_library.add_comment(asset_6, 'This is a comment from Teacher to Student 2')
   @asset_library.wait_until(Utils.short_wait) { @asset_library.asset_detail_comment_count == '1' }
 
   # Teacher replies to comment on the student's asset
   @asset_library.load_asset_detail(@driver, @asset_library_url, asset_6)
-  @asset_library.reply_to_comment(0, 'This is another comment from Teacher to Student 2')
+  @asset_library.reply_to_comment(asset_6, 0, 'This is another comment from Teacher to Student 2')
   @asset_library.wait_until(Utils.short_wait) { @asset_library.asset_detail_comment_count == '2' }
 
   # One student likes the teacher's asset
   @canvas.masquerade_as(@driver, student_1, @course)
   @asset_library.load_asset_detail(@driver, @asset_library_url, asset_5)
-  @asset_library.toggle_detail_view_item_like
+  @asset_library.toggle_detail_view_item_like asset_5
   @asset_library.wait_until { @asset_library.detail_view_asset_likes_count == '1' }
 
   # Teacher remixes the students' whiteboard

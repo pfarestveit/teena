@@ -14,11 +14,13 @@ module Page
       # Loads the Engagement Index tool and switches browser focus to the tool iframe
       # @param driver [Selenium::WebDriver]
       # @param url [String]
-      def load_page(driver, url)
+      # @param event [Event]
+      def load_page(driver, url, event = nil)
         navigate_to url
         wait_until { title == "#{SuiteCTools::ENGAGEMENT_INDEX.name}" }
         hide_canvas_footer
         switch_to_canvas_iframe driver
+        add_event(event, EventType::NAVIGATE)
       end
 
       # USER INFO
@@ -85,15 +87,19 @@ module Page
       # Loads the engagement index leaderboard
       # @param driver [Selenium::WebDriver]
       # @param url [String]
-      def load_scores(driver, url)
-        load_page(driver, url)
+      # @param event [Event]
+      def load_scores(driver, url, event = nil)
+        load_page(driver, url, event)
         users_table_element.when_visible Utils.medium_wait
+        add_event(event, EventType::VIEW, 'Leaderboard')
       end
 
       # Searches for a user on the leaderboard
       # @param user [User]
-      def search_for_user(user)
+      # @param event [Event]
+      def search_for_user(user, event = nil)
         wait_for_element_and_type(text_area_element(class: 'leaderboard-list-search'), user.full_name)
+        add_event(event, EventType::SEARCH)
       end
 
       # Returns the Impact Studio link for a given user
@@ -267,23 +273,29 @@ module Page
       button(:continue_button, xpath: '//button[text()="Continue"]')
 
       # Opts to share a user's score on the leaderboard
-      def share_score
+      # @param event [Event]
+      def share_score(event = nil)
         scroll_to_bottom
         share_score_cbx_element.when_visible Utils.short_wait
         logger.info 'Sharing score'
-        share_score_cbx_checked? ? logger.warn('Score is already shared') : js_click(share_score_cbx_element)
+        js_click(share_score_cbx_element) unless share_score_cbx_checked?
         continue_button if continue_button?
         users_table_element.when_visible Utils.short_wait
+        add_event(event, EventType::SHOW)
+        add_event(event, EventType::VIEW, 'Leaderboard')
       end
 
       # Opts not to share a user's score on the leaderboard
-      def un_share_score
+      # @param event [Event]
+      def un_share_score(event = nil)
         scroll_to_bottom
         share_score_cbx_element.when_visible Utils.short_wait
         logger.info 'Un-sharing score'
         share_score_cbx_checked? ? js_click(share_score_cbx_element) : logger.warn('Score is already un-shared')
         continue_button if continue_button?
         users_table_element.when_not_visible Utils.short_wait rescue Selenium::WebDriver::Error::StaleElementReferenceError
+        add_event(event, EventType::HIDE)
+        add_event(event, EventType::VIEW, 'Leaderboard') if event && event.actor && !%w(Student Observer).include?(event.actor.role)
       end
 
       # Returns the current sharing preference of a user
@@ -304,12 +316,13 @@ module Page
       # @param driver [Selenium::WebDriver]
       # @param course [Course]
       # @param url [String]
+      # @param event [Event]
       # @return [Array<String>]
-      def download_csv(driver, course, url)
+      def download_csv(driver, course, url, event = nil)
         logger.info 'Downloading activities CSV'
         sleep 1
         Utils.prepare_download_dir
-        load_scores(driver, url)
+        load_scores(driver, url, event)
         window = driver.window_handle
         window_count = driver.window_handles.length
         wait_for_load_and_click_js download_csv_link_element
@@ -359,14 +372,14 @@ module Page
           sleep 1
           wait_until(Utils.short_wait) { !collaboration_status_element.text.include?('Not') rescue Selenium::WebDriver::Error::StaleElementReferenceError }
         else
-          logger.debug('"Looking for collaborators" is already true, doing nothing')
+          logger.debug '"Looking for collaborators" is already true, doing nothing'
         end
       end
 
       def set_collaboration_false(user)
         collaboration_status_element(user).when_visible Utils.short_wait
         if collaboration_status_element(user).text.include? 'Not'
-          logger.debug('"Looking for collaborators" is already true, doing nothing')
+          logger.debug '"Looking for collaborators" is already false, doing nothing'
         else
           wait_for_update_and_click collaboration_toggle_element(user)
           sleep 1
@@ -395,9 +408,11 @@ module Page
       link(:back_to_engagement_index, xpath: '//a[contains(.,"Back to Engagement Index")]')
 
       # Clicks the points configuration button
-      def click_points_config
+      # @param event [Event]
+      def click_points_config(event = nil)
         wait_for_update_and_click points_config_link_element
         wait_until(Utils.short_wait) { enabled_activity_title_elements.any? }
+        add_event(event, EventType::VIEW, 'Points config')
         sleep 2
       end
 
