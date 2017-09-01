@@ -281,10 +281,19 @@ module Page
       # Users already on the site with the right role do not need to be added again
       users_missing = []
       load_users_page course
-      sleep Utils.short_wait
-      scroll_to_bottom
-      users_to_add.each do |user|
-        users_missing << user unless cell_element(xpath: "//tr[contains(@id,'#{user.canvas_id}')]//td[contains(.,'#{user.role}')]").exists?
+      sleep 4
+      if paragraph_element(xpath: '//p[contains(.,"No people found")]').exists?
+        users_missing = users_to_add
+      else
+        users_to_add.each do |user|
+          tries ||= 5
+          begin
+            scroll_to_bottom
+            wait_until(3) { cell_element(xpath: "//tr[contains(@id,'#{user.canvas_id}')]//td[contains(.,'#{user.role}')]").exists? }
+          rescue
+            (tries -= 1).zero? ? (users_missing << user) : retry
+          end
+        end
       end
       logger.info "Users who need to be added are #{users_missing.map { |u| u.uid }}"
 

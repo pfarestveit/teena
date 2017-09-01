@@ -488,7 +488,7 @@ module Page
         wait_for_update_and_click_js add_site_link_element
         switch_to_canvas_iframe driver
         enter_and_submit_url asset
-        asset.id = list_view_asset_ids.first
+        wait_for_asset_and_get_id asset
       end
 
       # Adds a file asset to the Asset Library via the Impact Studio
@@ -498,7 +498,7 @@ module Page
         wait_for_update_and_click_js upload_link_element
         switch_to_canvas_iframe driver
         enter_and_upload_file asset
-        asset.id = list_view_asset_ids.first
+        wait_for_asset_and_get_id asset
       end
 
       # Given a swim lane filter link element, clicks the element unless it is disabled

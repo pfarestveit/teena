@@ -16,6 +16,7 @@ describe 'The Engagement Index', order: :defined do
   student_3 = User.new student_data[2]
   student_4 = User.new student_data[3]
   asset = Asset.new(student_3.assets.find { |asset| asset['type'] == 'File' })
+  asset.title = "#{asset.title} #{test_id}"
 
   before(:all) do
     @course = Course.new({})
@@ -150,7 +151,7 @@ describe 'The Engagement Index', order: :defined do
   it 'allows teachers to share their scores with students' do
     @engagement_index.share_score event
     @engagement_index.wait_until(Utils.short_wait) { @engagement_index.sharing_preference(teacher) == 'Yes' }
-    @canvas.masquerade_as(@driver, (event.user = student_4), @course)
+    @canvas.masquerade_as(@driver, (event.actor = student_4), @course)
     @engagement_index.load_scores(@driver, @engagement_index_url, event)
     expect(@engagement_index.visible_names).to include(teacher.full_name)
   end
@@ -208,7 +209,7 @@ describe 'The Engagement Index', order: :defined do
   end
 
   it 'allows students to hide their scores from other students' do
-    @engagement_index.un_share_score(events_csv, student_1)
+    @engagement_index.un_share_score event
   end
 
   it 'shows students who have not shared their scores only their own scores' do

@@ -16,14 +16,15 @@ describe 'The Impact Studio', order: :defined do
 
   # Get test assets
   whiteboard = Whiteboard.new({owner: student_1, title: "Whiteboard #{test_id}", collaborators: [student_2]})
-  all_assets = []
-  all_assets << (asset_1 = Asset.new(student_1.assets.find { |a| a['type'] == 'Link' }))
-  all_assets << (asset_2 = Asset.new((student_1.assets.select { |a| a['type'] == 'File' })[0]))
-  all_assets << (asset_3 = Asset.new((student_1.assets.select { |a| a['type'] == 'File' })[1]))
-  all_assets << (asset_4 = Asset.new({title: whiteboard.title, type: 'Whiteboard'}))
-  all_assets << (asset_5 = Asset.new(teacher.assets.find { |a| a['type'] == 'File' }))
-  all_assets << (asset_6 = Asset.new(student_2.assets.find { |a| a['type'] == 'File' }))
-  all_assets << (asset_7 = Asset.new(student_2.assets.find { |a| a['type'] == 'Link' }))
+  asset_1 = Asset.new(student_1.assets.find { |a| a['type'] == 'Link' })
+  asset_2 = Asset.new((student_1.assets.select { |a| a['type'] == 'File' })[0])
+  asset_3 = Asset.new((student_1.assets.select { |a| a['type'] == 'File' })[1])
+  asset_4 = Asset.new({title: whiteboard.title, type: 'Whiteboard'})
+  asset_5 = Asset.new(teacher.assets.find { |a| a['type'] == 'File' })
+  asset_6 = Asset.new(student_2.assets.find { |a| a['type'] == 'File' })
+  asset_7 = Asset.new(student_2.assets.find { |a| a['type'] == 'Link' })
+  # Append test ID to all asset titles, except whiteboard asset which will inherit test ID from its whiteboard
+  [asset_1, asset_2, asset_3, asset_5, asset_6, asset_7].each { |a| a.title = "#{a.title} #{test_id}" }
   asset_1_activities, asset_3_activities, asset_4_activities, asset_5_activities, asset_6_activities = nil
 
   before(:all) do
@@ -109,7 +110,6 @@ describe 'The Impact Studio', order: :defined do
         @impact_studio.load_page(@driver, @impact_studio_url)
         @impact_studio.add_site(@driver, asset_1)
         student_1_activities[:add_asset][:count] += 1
-        logger.debug "Asset 1 ID is #{asset_1.id}"
         @impact_studio.load_page(@driver, @impact_studio_url)
       end
 
@@ -128,8 +128,6 @@ describe 'The Impact Studio', order: :defined do
         @whiteboards.load_page(@driver, @whiteboards_url)
         @whiteboards.create_and_open_whiteboard(@driver, whiteboard)
         @whiteboards.add_asset_exclude_from_library asset_2
-        @whiteboards.open_original_asset_link_element.when_visible Utils.long_wait
-        logger.debug "Asset 2 ID is #{asset_2.id = @whiteboards.added_asset_id}"
         @whiteboards.close_whiteboard @driver
         @impact_studio.load_page(@driver, @impact_studio_url)
       end
@@ -149,10 +147,7 @@ describe 'The Impact Studio', order: :defined do
         @whiteboards.open_whiteboard(@driver, whiteboard)
         @whiteboards.add_asset_include_in_library asset_3
         student_1_activities[:add_asset][:count] += 1
-        @whiteboards.open_original_asset_link_element.when_visible Utils.long_wait
         @whiteboards.close_whiteboard @driver
-        @asset_library.load_page(@driver, @asset_library_url)
-        logger.debug "Asset 3 ID is #{asset_3.id = @asset_library.list_view_asset_ids.first}"
         @impact_studio.load_page(@driver, @impact_studio_url)
       end
 
@@ -171,11 +166,10 @@ describe 'The Impact Studio', order: :defined do
         @whiteboards.load_page(@driver, @whiteboards_url)
         @whiteboards.open_whiteboard(@driver, whiteboard)
         @whiteboards.export_to_asset_library whiteboard
+        asset_4.id = DBUtils.get_asset_id_by_title asset_4
         student_1_activities[:export_whiteboard][:count] += 1
         student_2_activities[:export_whiteboard][:count] += 1
         @whiteboards.close_whiteboard @driver
-        @asset_library.load_page(@driver, @asset_library_url)
-        logger.debug "Asset 4 ID is #{asset_4.id = @asset_library.list_view_asset_ids.first}"
         @impact_studio.load_page(@driver, @impact_studio_url)
       end
 
@@ -195,7 +189,6 @@ describe 'The Impact Studio', order: :defined do
         @impact_studio.load_page(@driver, @impact_studio_url)
         @impact_studio.add_file(@driver, asset_5)
         teacher_activities[:add_asset][:count] += 1
-        logger.debug "Asset 5 ID is #{asset_5.id = @asset_library.list_view_asset_ids.first}"
         @impact_studio.load_page(@driver, @impact_studio_url)
       end
 
@@ -215,7 +208,6 @@ describe 'The Impact Studio', order: :defined do
         @asset_library.load_page(@driver, @asset_library_url)
         @asset_library.upload_file_to_library asset_6
         student_2_activities[:add_asset][:count] += 1
-        logger.debug "Asset 6 ID is #{asset_6.id}"
         @impact_studio.load_page(@driver, @impact_studio_url)
       end
 

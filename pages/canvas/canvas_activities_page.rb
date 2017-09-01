@@ -148,8 +148,8 @@ module Page
     text_area(:assignment_due_date, class: 'DueDateInput')
     checkbox(:online_url_cbx, id: 'assignment_online_url')
     checkbox(:online_upload_cbx, id: 'assignment_online_upload')
-    checkbox(:text_entry_cbx, id: 'assignment_text_entry')
-
+    checkbox(:online_text_entry_cbx, id: 'assignment_text_entry')
+    checkbox(:online_media_cbx, id: 'assignment_media_recording')
     h1(:assignment_title_heading, class: 'title')
     link(:submit_assignment_link, text: 'Submit Assignment')
     link(:resubmit_assignment_link, text: 'Re-submit Assignment')
@@ -161,23 +161,48 @@ module Page
     button(:url_upload_submit_button, xpath: '(//button[@type="submit"])[2]')
     div(:assignment_submission_conf, xpath: '//div[contains(.,"Turned In!")]')
 
-    # Creates an assignment on a course site
+    # Begins creating a new assignment, entering title and scrolling to the submission types
     # @param course [Course]
     # @param assignment [Assignment]
-    def create_assignment(course, assignment)
-      logger.info "Creating submission assignment named '#{assignment.title}'"
+    def enter_new_assignment_title(course, assignment)
       navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/assignments/new"
       assignment_name_element.when_visible Utils.medium_wait
       assignment_name_element.send_keys assignment.title
       wait_for_element_and_type_js(assignment_due_date_element, assignment.due_date.strftime("%b %-d %Y")) unless assignment.due_date.nil?
       scroll_to_element assignment_type_element
       online_url_cbx_element.when_visible Utils.short_wait
-      check_online_url_cbx
-      check_online_upload_cbx
+    end
+
+    # Saves and publishes an assignment and returns its URL
+    # @param assignment [Assignment]
+    # @return [String]
+    def save_and_publish_assignment(assignment)
       click_save_and_publish
       published_button_element.when_visible Utils.medium_wait
       logger.info "Submission assignment URL is #{current_url}"
       assignment.url = current_url
+    end
+
+    # Creates a sync-able assignment on a course site
+    # @param course [Course]
+    # @param assignment [Assignment]
+    def create_assignment(course, assignment)
+      logger.info "Creating submission assignment named '#{assignment.title}'"
+      enter_new_assignment_title(course, assignment)
+      check_online_url_cbx
+      check_online_upload_cbx
+      save_and_publish_assignment assignment
+    end
+
+    # Creates a non-sync-able assignment on a course site
+    # @param course [Course]
+    # @param assignment [Assignment]
+    def create_unsyncable_assignment(course, assignment)
+      logger.info "Creating unsyncable assignment named '#{assignment.title}'"
+      enter_new_assignment_title(course, assignment)
+      check_online_text_entry_cbx
+      check_online_media_cbx
+      save_and_publish_assignment assignment
     end
 
     # Upload's a user's asset as an assignment submission

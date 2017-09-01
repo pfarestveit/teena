@@ -15,9 +15,7 @@ describe 'Asset pinning', order: :defined do
   user_2_asset = Asset.new(user_2.assets.find { |a| a['type'] == 'File' })
   user_3_asset = Asset.new(user_3.assets.find { |a| a['type'] == 'File' })
 
-  user_1_asset.title = "User 1 asset #{test_id}"
-  user_2_asset.title = "User 2 asset #{test_id}"
-  user_3_asset.title = "User 3 asset #{test_id}"
+  [user_1_asset, user_2_asset, user_3_asset].each { |a| a.title = "#{a.title} #{test_id}" }
 
   pin = Activity::PIN_ASSET
   get_pin = Activity::GET_PIN_ASSET

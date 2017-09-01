@@ -175,7 +175,6 @@ module Page
   # are not scrolled into focus prior to an interaction.
   def scroll_to_bottom
     execute_script 'window.scrollTo(0, document.body.scrollHeight);'
-    sleep 1
   end
 
   # Uses JavaScript to scroll an element into view. If the attempt fails, it tries once more.
