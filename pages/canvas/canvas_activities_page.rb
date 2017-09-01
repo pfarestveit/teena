@@ -173,7 +173,7 @@ module Page
       online_url_cbx_element.when_visible Utils.short_wait
     end
 
-    # Saves and publishes an assingment and returns its URL
+    # Saves and publishes an assignment and returns its URL
     # @param assignment [Assignment]
     # @return [String]
     def save_and_publish_assignment(assignment)
