@@ -247,6 +247,7 @@ describe 'Whiteboard', order: :defined do
       @assets = []
       user_asset_data.each do |data|
         asset = Asset.new data
+        asset.title = "#{asset.title} #{test_id}"
         (data['type'] == 'File') ? @asset_library.upload_file_to_library(asset) : @asset_library.add_site(asset)
         @asset_library.verify_first_asset(@student_1, asset)
         @assets << asset
@@ -329,6 +330,7 @@ describe 'Whiteboard', order: :defined do
       asset_detail_test_id = "#{Time.now.to_i}"
       @canvas.masquerade_as(@driver, @teacher, @course)
       @asset = Asset.new(@teacher.assets.find { |asset| asset['type'] == 'File' })
+      @asset.title = "#{@asset.title} #{test_id}"
       @asset_library.load_page(@driver, @asset_library_url)
       @asset_library.upload_file_to_library @asset
 

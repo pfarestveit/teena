@@ -69,6 +69,13 @@ module Page
       switch_to_canvas_iframe driver
     end
 
+    # Waits for asset list view to load when a new asset is created, then gets the asset's ID. Requires that the asset have a unique title.
+    # @param asset [Asset]
+    def wait_for_asset_and_get_id(asset)
+      wait_until { list_view_asset_link_elements.any? }
+      asset.id = DBUtils.get_asset_id_by_title asset
+    end
+
     # Given an array of assets, returns their IDs in descending order of creation
     # @param assets [Array<Asset>]
     # @return [Array<String>]
@@ -106,8 +113,7 @@ module Page
     def upload_file_to_library(asset, event = nil)
       click_upload_file_link
       enter_and_upload_file asset
-      wait_until { list_view_asset_link_elements.any? }
-      asset.id = DBUtils.get_asset_id_by_title(asset)
+      wait_for_asset_and_get_id asset
       add_event(event, EventType::CREATE, asset.id)
       add_event(event, EventType::VIEW)
     end
@@ -161,8 +167,7 @@ module Page
     def add_site(asset, event = nil)
       click_add_site_link
       enter_and_submit_url asset
-      wait_until { list_view_asset_link_elements.any? }
-      asset.id = DBUtils.get_asset_id_by_title(asset)
+      wait_for_asset_and_get_id asset
       add_event(event, EventType::CREATE, asset.id)
       add_event(event, EventType::VIEW)
     end

@@ -23,6 +23,7 @@ describe 'Canvas assignment sync', order: :defined do
     @student = User.new user_test_data.find { |data| data['role'] == 'Student' }
     @assignment_1 = Assignment.new("Submission Assignment 1 #{test_id}", nil)
     @assignment_2 = Assignment.new("Submission Assignment 2 #{test_id}", nil)
+    @unsinkable_assignment = Assignment.new("Unsinkable Assignment #{test_id}", nil)
 
     # Create course site if necessary. If an existing site, ensure Canvas sync is enabled.
     @canvas.log_in(@cal_net, Utils.super_admin_username, Utils.super_admin_password)
@@ -45,9 +46,10 @@ describe 'Canvas assignment sync', order: :defined do
     @engagement_index.load_scores(@driver, @engagement_index_url)
     @initial_score = @engagement_index.user_score @student
 
-    # Teacher creates two assignments and waits for them to appear in the Asset Library categories list
+    # Teacher creates on non-sync-able assignment and two sync-able assignments and waits for the latter to appear in the Asset Library categories list
     @canvas.masquerade_as(@driver, @teacher, @course)
     @canvas.load_course_site(@driver, @course)
+    @canvas.create_unsyncable_assignment(@course, @unsinkable_assignment)
     @canvas.create_assignment(@course, @assignment_1)
     @canvas.create_assignment(@course, @assignment_2)
     @asset_library.wait_for_canvas_category(@driver, @asset_library_url, @assignment_1)
@@ -60,6 +62,8 @@ describe 'Canvas assignment sync', order: :defined do
     expect(@asset_library.assignment_sync_cbx(@assignment_1).checked?).to be false
     expect(@asset_library.assignment_sync_cbx(@assignment_2).checked?).to be false
   end
+
+  it('does not include assignments without sync-able submission types') { expect((@asset_library.canvas_category_title_elements.map &:text).include?(@unsinkable_assignment.title)).to be false }
 
   context 'when enabled for Assignment 1 but not enabled for Assignment 2' do
 

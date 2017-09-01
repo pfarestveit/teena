@@ -7,6 +7,7 @@ describe 'New asset uploads', order: :defined do
   begin
 
     timeout = Utils.short_wait
+    test_id = Utils.get_test_id
 
     @course = Course.new({})
     @course.site_id = ENV['COURSE_ID']
@@ -33,7 +34,7 @@ describe 'New asset uploads', order: :defined do
 
           begin
             @asset = Asset.new asset
-            asset_title = @asset.title
+            asset_title = (@asset.title = "#{@asset.title} #{test_id}")
             asset_preview_type = @asset.preview
             @asset.description = nil
             @asset.category = nil
