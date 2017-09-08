@@ -61,8 +61,14 @@ module Page
       stop_masquerading(driver) if stop_masquerading_link?
       logger.info "Masquerading as #{user.role} UID #{user.uid}"
       navigate_to "#{Utils.canvas_base_url}/users/#{user.canvas_id.to_s}/masquerade"
-      wait_for_load_and_click masquerade_link_element
-      stop_masquerading_link_element.when_visible
+      # Handle the panda UI whenever it crashes the party
+      begin
+        wait_for_update_and_click masquerade_link_element
+      rescue
+        link_element(xpath: '//a[contains(@href, "masquerade")]').click
+      ensure
+        stop_masquerading_link_element.when_visible
+      end
       load_course_site(driver, course) unless course.nil?
     end
 
