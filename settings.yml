@@ -52,4 +52,12 @@ users:
   oski_uid: secret
 
 lrs:
+  lti_key: secret
+  lti_secret: secret
+  db_host: secret
+  db_port: secret
+  db_name: secret
+  db_user: secret
+  db_password: secret
   script_loops: 10
+  event_time_discrep_seconds: 2

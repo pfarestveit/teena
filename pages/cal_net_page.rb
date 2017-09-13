@@ -24,7 +24,8 @@ module Page
     # person's credentials.
     # @param username [String]
     # @param password [String]
-    def log_in(username, password)
+    # @param event [Event]
+    def log_in(username, password, event = nil)
       # If no credentials are available, then wait for manual login
       if username == 'secret' || password == 'secret'
         logger.debug 'Waiting for manual login'
@@ -36,6 +37,7 @@ module Page
         wait_for_element_and_type_js(username_element, username)
         password_element.send_keys password
         wait_for_update_and_click sign_in_button_element
+        add_event(event, EventType::LOGGED_IN)
       end
     end
 

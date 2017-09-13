@@ -35,20 +35,23 @@ module Page
     # @param cal_net [Page::CalNetPage]
     # @param username [String]
     # @param password [String]
-    def log_in(cal_net, username, password)
+    # @param event [Event]
+    def log_in(cal_net, username, password, event = nil)
       load_homepage
-      cal_net.log_in(username, password)
+      cal_net.log_in(username, password, event)
     end
 
     # Shifts to default content, logs out, and waits for CalNet logout confirmation
     # @param driver [Selenium::WebDriver]
     # @param cal_net [Page::CalNetPage]
-    def log_out(driver, cal_net)
+    # @param event [Event]
+    def log_out(driver, cal_net, event = nil)
       driver.switch_to.default_content
       wait_for_update_and_click_js profile_link_element
       wait_for_update_and_click_js profile_form_element
       wait_for_update_and_click_js logout_link_element if logout_link_element.exists?
       cal_net.username_element.when_visible
+      add_event(event, EventType::LOGGED_OUT)
     end
 
     # Masquerades as a user and then loads a course site
@@ -162,7 +165,8 @@ module Page
     # Loads a course site and handles prompts that can appear
     # @param driver [Selenium::WebDriver]
     # @param course [Course]
-    def load_course_site(driver, course)
+    # @param event [Event]
+    def load_course_site(driver, course, event = nil)
       navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}"
       wait_until { current_url.include? "#{course.site_id}" }
       if updated_terms_heading?
@@ -176,6 +180,7 @@ module Page
         logger.info 'Accepting course invite'
         accept_course_invite
         accept_course_invite_element.when_not_visible Utils.medium_wait
+        add_event(event, EventType::MODIFY)
       end
     end
 

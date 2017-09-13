@@ -6,7 +6,7 @@ describe 'An asset comment', order: :defined do
 
   test_id = Utils.get_test_id
   timeout = Utils.short_wait
-  event = Event.new(csv: Utils.initialize_events_csv('Comments'))
+  event = Event.new({csv: Utils.initialize_events_csv('Comments')})
 
   comment_1_by_uploader = 'Uploader makes Comment 1'
   comment_1_reply_by_uploader = 'Uploader replies to own Comment 1'
