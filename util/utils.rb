@@ -218,24 +218,14 @@ class Utils
     @config['suite_c']['event_drops_drags']
   end
 
-  def self.db_name
-    @config['suite_c']['db_name']
-  end
-
-  def self.db_host
-    @config['suite_c']['db_host']
-  end
-
-  def self.db_port
-    @config['suite_c']['db_port']
-  end
-
-  def self.db_user
-    @config['suite_c']['db_user']
-  end
-
-  def self.db_password
-    @config['suite_c']['db_password']
+  def self.suitec_db_credentials
+    {
+      host: @config['suite_c']['db_host'],
+      port: @config['suite_c']['db_port'],
+      name: @config['suite_c']['db_name'],
+      user: @config['suite_c']['db_user'],
+      password: @config['suite_c']['db_password']
+    }
   end
 
   # CANVAS
@@ -365,8 +355,22 @@ class Utils
 
   # LRS
 
+  def self.lrs_db_credentials
+    {
+      host: @config['lrs']['db_host'],
+      port: @config['lrs']['db_port'],
+      name: @config['lrs']['db_name'],
+      user: @config['lrs']['db_user'],
+      password: @config['lrs']['db_password']
+    }
+  end
+
   def self.script_loops
     @config['lrs']['script_loops']
+  end
+
+  def self.event_time_discrep_seconds
+    @config['lrs']['event_time_discrep_seconds']
   end
 
 end

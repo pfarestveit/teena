@@ -202,10 +202,17 @@ module Page
   def add_event(event, event_type, event_object = nil)
     if event
       event.object = event_object
-      values = [(event.time = Time.now.strftime('%Y-%m-%d-%H-%M-%S')), event.actor.full_name, (event.action = event_type).desc, (event.object.nil? ? title : event.object)]
+      values = [(event.time_str = Time.now.strftime('%Y-%m-%d %H:%M:%S')), event.actor.uid, (event.action = event_type).desc, (event.object.nil? ? title : event.object)]
       logger.debug "Logging new event: '#{values}'"
       Utils.add_csv_row(event.csv, values)
     end
+  end
+
+  # Pauses to allow enough time for Canvas live events to be consumed and stored in the LRS db
+  def wait_for_event
+    wait = Utils.medium_wait
+    logger.info "Pausing for #{wait} seconds for events to make it from Canvas to the LRS"
+    sleep wait
   end
 
 end

@@ -83,11 +83,12 @@ module Page
     # @param driver [Selenium::WebDriver]
     # @param course [Course]
     # @param discussion [Discussion]
-    def create_course_discussion(driver, course, discussion)
+    # @param event [Event]
+    def create_course_discussion(driver, course, discussion, event = nil)
       logger.info "Creating discussion topic named '#{discussion.title}'"
-      load_course_site(driver, course)
+      load_course_site(driver, course, event)
       navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/discussion_topics"
-      enter_and_save_discussion discussion
+      enter_and_save_discussion(discussion, event)
     end
 
     # Creates a discussion on a group site
@@ -101,12 +102,14 @@ module Page
 
     # Enters and saves a discussion topic
     # @param discussion [Discussion]
-    def enter_and_save_discussion(discussion)
+    # @param event [Event]
+    def enter_and_save_discussion(discussion, event = nil)
       wait_for_load_and_click new_discussion_link_element
       discussion_title_element.when_present Utils.short_wait
       discussion_title_element.send_keys discussion.title
       js_click threaded_discussion_cbx_element
       click_save_and_publish
+      add_event(event, EventType::CREATE, discussion.title)
       published_button_element.when_visible Utils.medium_wait
       logger.info "Discussion URL is #{current_url}"
       discussion.url = current_url
@@ -117,7 +120,8 @@ module Page
     # @param discussion [Discussion]
     # @param index [Integer]
     # @param reply_body [String]
-    def add_reply(discussion, index, reply_body)
+    # @param event [Event]
+    def add_reply(discussion, index, reply_body, event = nil)
       navigate_to discussion.url
       if index.nil?
         logger.info "Creating new discussion entry with body '#{reply_body}'"
@@ -137,6 +141,7 @@ module Page
         hide_canvas_footer
         wait_for_update_and_click_js secondary_post_reply_button_elements[index]
       end
+      add_event(event, EventType::POST, discussion.title)
       wait_until(Utils.short_wait) { discussion_reply_elements.length == replies + 1 }
     end
 

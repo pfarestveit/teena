@@ -12,6 +12,8 @@ class EventType
       DELETE = new('Deleted'),
       HIDE = new('Hid'),
       LIKE = new('Liked'),
+      LOGGED_IN = new('LoggedIn'),
+      LOGGED_OUT = new('LoggedOut'),
       MODIFY = new('Modified'),
       NAVIGATE = new('NavigatedTo'),
       POST = new('Posted'),
