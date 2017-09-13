@@ -165,8 +165,7 @@ module Page
     # Loads a course site and handles prompts that can appear
     # @param driver [Selenium::WebDriver]
     # @param course [Course]
-    # @param event [Event]
-    def load_course_site(driver, course, event = nil)
+    def load_course_site(driver, course)
       navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}"
       wait_until { current_url.include? "#{course.site_id}" }
       if updated_terms_heading?
@@ -180,7 +179,6 @@ module Page
         logger.info 'Accepting course invite'
         accept_course_invite
         accept_course_invite_element.when_not_visible Utils.medium_wait
-        add_event(event, EventType::MODIFY)
       end
     end
 

@@ -34,7 +34,7 @@ describe 'Canvas discussion events' do
     # User 2 logs in, adds a reply, adds a nested reply, and logs out
     event.actor = @user_2
     @canvas.log_in(@cal_net, @user_2.username, Utils.test_user_password, event)
-    @canvas.load_course_site(@driver, @course, event)
+    @canvas.load_course_site(@driver, @course)
     @canvas.add_reply(discussion, nil, 'Discussion entry by somebody other than the discussion topic creator', event)
     @canvas.add_reply(discussion, 0, 'Discussion entry by somebody other than the discussion topic creator', event)
     @canvas.log_out(@driver, @cal_net, event)
@@ -45,15 +45,6 @@ describe 'Canvas discussion events' do
 
   after(:all) { Utils.quit_browser @driver }
 
-  it 'end up in the LRS database' do
+  it('end up in the LRS database') { LRSUtils.verify_canvas_events event }
 
-    CSV.foreach(event.csv, headers: true) do |row|
-      event_time_str = row['Time']
-      event_user = User.new({uid: row['Actor']})
-      event_type = EventType::EVENT_TYPES.find { |t| t.desc == row['Action'] }
-      event = Event.new({time_str: event_time_str, actor: event_user, action: event_type})
-      logger.info "Checking the event data for #{event.actor.uid} performing a #{event.action} event at approx #{event.time_str}"
-      expect(DBUtils.lrs_event_present? event).to be true
-    end
-  end
 end
