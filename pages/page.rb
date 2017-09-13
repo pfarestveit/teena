@@ -202,7 +202,7 @@ module Page
   def add_event(event, event_type, event_object = nil)
     if event
       event.object = event_object
-      values = [(event.time_str = Time.now.strftime('%Y-%m-%d %H:%M:%S')), event.actor.uid, (event.action = event_type).desc, (event.object.nil? ? title : event.object)]
+      values = [(event.time_str = Time.now.strftime('%Y-%m-%d %H:%M:%S')), event.actor.uid, (event.action = event_type).desc, event.object]
       logger.debug "Logging new event: '#{values}'"
       Utils.add_csv_row(event.csv, values)
     end

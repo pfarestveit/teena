@@ -54,14 +54,14 @@ class DBUtils
 
   # LRS
 
-  # Checks the LRS for the presence of a given event
+  # Checks the LRS for the presence of a unique event
   # @param event [Event]
   # @return [boolean]
   def self.lrs_event_present?(event)
     event_time = Time.parse(event.time_str).getgm
     min_time_range = (event_time - Utils.event_time_discrep_seconds).strftime('%Y-%m-%d %H:%M:%S')
     max_time_range = (event_time + Utils.event_time_discrep_seconds).strftime('%Y-%m-%d %H:%M:%S')
-    query = "SELECT statements.timestamp, users.external_id, statements.activity_type, statements.uuid
+    query = "SELECT statements.timestamp, users.external_id, statements.activity_type, statements.statement
              FROM users
              INNER JOIN statements ON users.id=statements.user_id
              WHERE users.external_id = '#{event.actor.uid}'
@@ -69,8 +69,9 @@ class DBUtils
                AND statements.timestamp BETWEEN TIMESTAMP '#{min_time_range}' AND TIMESTAMP '#{max_time_range}';"
     event_rows = []
     results = query_db(Utils.lrs_db_credentials, query)
-    results.each { |row| event_rows << {uid: row['external_id'], event_type: row['activity_type'], time: row['timestamp']} }
-    logger.info "Event rows obtained from the db are '#{event_rows}'"
+    results.each { |row| event_rows << {uid: row['external_id'], event_type: row['activity_type'], time: row['timestamp'], json: row['statement']} }
+    # If the event has an object, make sure the Caliper statement includes that object
+    event_rows = event_rows.select { |row| row[:json].include? event.object } if event.object
     event_rows.length == 1 ? true : false
   end
 end

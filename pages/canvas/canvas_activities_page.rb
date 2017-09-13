@@ -41,19 +41,24 @@ module Page
     # Creates an announcement in a group within a course site
     # @param group [Group]
     # @param announcement [Announcement]
-    def create_group_announcement(group, announcement)
+    # @param event [Event]
+    def create_group_announcement(group, announcement, event = nil)
       logger.info "Creating group announcement: #{announcement.title}"
       navigate_to "#{Utils.canvas_base_url}/groups/#{group.site_id}/discussion_topics/new?is_announcement=true"
-      enter_and_save_announcement announcement
+      enter_and_save_announcement(announcement, event)
     end
 
-    def enter_and_save_announcement(announcement)
+    # Enters an announcement title and body and saves it
+    # @param announcement [Announcement]
+    # @param event [Event]
+    def enter_and_save_announcement(announcement, event = nil)
       discussion_title_element.when_present Utils.short_wait
       discussion_title_element.send_keys announcement.title
       html_editor_link if html_editor_link_element.visible?
       wait_for_element_and_type_js(announcement_msg_element, announcement.body)
       wait_for_update_and_click_js save_announcement_button_element
       announcement_title_heading_element.when_visible Utils.medium_wait
+      add_event(event, EventType::CREATE, announcement.title)
       logger.info "Announcement URL is #{announcement.url = current_url}"
     end
 
@@ -86,7 +91,7 @@ module Page
     # @param event [Event]
     def create_course_discussion(driver, course, discussion, event = nil)
       logger.info "Creating discussion topic named '#{discussion.title}'"
-      load_course_site(driver, course, event)
+      load_course_site(driver, course)
       navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/discussion_topics"
       enter_and_save_discussion(discussion, event)
     end
@@ -94,10 +99,11 @@ module Page
     # Creates a discussion on a group site
     # @param group [Group]
     # @param discussion [Discussion]
-    def create_group_discussion(group, discussion)
+    # @param event [Event]
+    def create_group_discussion(group, discussion, event = nil)
       logger.info "Creating group discussion topic named '#{discussion.title}'"
       navigate_to "#{Utils.canvas_base_url}/groups/#{group.site_id}/discussion_topics"
-      enter_and_save_discussion discussion
+      enter_and_save_discussion(discussion, event)
     end
 
     # Enters and saves a discussion topic
@@ -141,7 +147,7 @@ module Page
         hide_canvas_footer
         wait_for_update_and_click_js secondary_post_reply_button_elements[index]
       end
-      add_event(event, EventType::POST, discussion.title)
+      add_event(event, EventType::POST, reply_body)
       wait_until(Utils.short_wait) { discussion_reply_elements.length == replies + 1 }
     end
 
@@ -379,11 +385,13 @@ module Page
     # Joins a group on a course site
     # @param course [Course]
     # @param group [Group]
-    def student_join_grp(course, group)
+    # @param event [Event]
+    def student_join_grp(course, group, event = nil)
       load_course_grps course
       logger.info "Joining group '#{group.title}'"
       wait_for_update_and_click link_element(xpath: "//a[contains(@aria-label,'Join group #{group.title}')]")
       list_item_element(xpath: '//li[contains(.,"Joined Group")]').when_present Utils.short_wait
+      add_event(event, EventType::CREATE, "#{group.title}")
     end
 
     # Leaves a group on a course site
@@ -412,7 +420,8 @@ module Page
     # As an instructor, creates a new group set and a group
     # @param course [Course]
     # @param group [Group]
-    def instructor_create_grp(course, group)
+    # @param event [Event]
+    def instructor_create_grp(course, group, event = nil)
       load_course_grps course
 
       # Create new group set
@@ -423,6 +432,7 @@ module Page
       checkbox_element(id: 'enable_self_signup').check
       button_element(id: 'newGroupSubmitButton').click
       link_element(xpath: "//a[@title='#{group.group_set}']").when_present Utils.short_wait
+      add_event(event, EventType::CREATE, group.group_set)
 
       # Create new group within the group set
       logger.info "Creating new group called '#{group.title}'"
@@ -430,6 +440,7 @@ module Page
       wait_for_element_and_type(edit_group_name_input_element, group.title)
       button_element(id: 'groupEditSaveButton').click
       link_element(xpath: "//a[contains(.,'#{group.title}')]").when_present Utils.short_wait
+      add_event(event, EventType::CREATE, group.title)
       (link = link_element(xpath: "//a[contains(.,'#{group.title}')]/../following-sibling::div[contains(@class,'group-actions')]//a")).when_present Utils.short_wait
       logger.info "Group ID is '#{group.site_id = link.attribute('id').split('-')[1]}'"
     end
