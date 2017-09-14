@@ -13,6 +13,10 @@ class Utils
   @config.merge! YAML.load_file File.path('settings.yml')
   @config.deep_merge! YAML.load_file File.join(ENV['HOME'], '/.webdriver-config/settings.yml')
 
+  def self.config
+    @config
+  end
+
   # BROWSER CONFIGS
 
   # Instantiates the browser and alters default browser settings.

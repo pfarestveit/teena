@@ -22,6 +22,7 @@ class EventType
       SEARCH = new('Searched'),
       SHARE = new('Shared'),
       SHOW = new('Showed'),
+      SUBMITTED = new('Submitted'),
       VIEW = new('Viewed')
   ]
 

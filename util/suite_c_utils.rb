@@ -4,6 +4,8 @@ class SuiteCUtils
 
   include Logging
 
+  @config = Utils.config
+
   # TIMEOUTS
 
   # Timeout intended to wait for a Canvas poller cycle to complete

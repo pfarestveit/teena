@@ -4,6 +4,8 @@ class JunctionUtils
 
   include Logging
 
+  @config = Utils.config
+
   # JUNCTION
 
   # Base URL of Junction test environment
