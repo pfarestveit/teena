@@ -11,15 +11,15 @@ begin
   @canvas = Page::CanvasActivitiesPage.new @driver
   @cal_net = Page::CalNetPage.new @driver
 
-  @test_user_data = Utils.load_suitec_test_data.select { |data| data['tests']['canvas_discussions'] }
+  @test_user_data = SuiteCUtils.load_suitec_test_data.select { |data| data['tests']['canvas_discussions'] }
   @admin_user = User.new(username: Utils.ets_qa_username)
   @user_1 = User.new @test_user_data[0]
   @user_2 = User.new @test_user_data[1]
 
   # COURSES
 
-  course_id.nil? ? (logger.info "Will create #{Utils.script_loops} courses") : (logger.info "Will use course ID #{course_id}")
-  Utils.script_loops.times do
+  course_id.nil? ? (logger.info "Will create #{LRSUtils.script_loops} courses") : (logger.info "Will use course ID #{course_id}")
+  LRSUtils.script_loops.times do
     begin
 
       @test_course_identifier = Utils.get_test_id
@@ -33,8 +33,8 @@ begin
 
       # DISCUSSIONS
 
-      logger.info "Will create #{Utils.script_loops} discussions"
-      Utils.script_loops.times do
+      logger.info "Will create #{LRSUtils.script_loops} discussions"
+      LRSUtils.script_loops.times do
         begin
 
           @test_discuss_identifier = Utils.get_test_id

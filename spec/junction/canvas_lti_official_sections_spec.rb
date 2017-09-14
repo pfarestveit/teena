@@ -7,8 +7,8 @@ describe 'bCourses Official Sections tool' do
   begin
 
     # Load test course data
-    test_course_data = Utils.load_bcourses_test_course_data.select { |course| course['tests']['official_sections'] }
-    test_output = Utils.initialize_canvas_test_output(self, ['UID', 'Semester', 'Course', 'Section Label', 'Section CCN',
+    test_course_data = JunctionUtils.load_junction_test_course_data.select { |course| course['tests']['official_sections'] }
+    test_output = JunctionUtils.initialize_junction_test_output(self, ['UID', 'Semester', 'Course', 'Section Label', 'Section CCN',
                                                              'Section Schedules', 'Section Locations', 'Section Instructors'])
 
     @driver = Utils.launch_browser
@@ -284,7 +284,7 @@ describe 'bCourses Official Sections tool' do
         if test_data == test_course_data.last
 
           # Load test user data and add each to the site
-          test_user_data = Utils.load_bcourses_test_user_data.select { |user| user['tests']['official_sections'] }
+          test_user_data = JunctionUtils.load_junction_test_user_data.select { |user| user['tests']['official_sections'] }
           lead_ta = User.new test_user_data.find { |data| data['role'] == 'Lead TA' }
           ta = User.new test_user_data.find { |data| data['role'] == 'TA' }
           designer = User.new test_user_data.find { |data| data['role'] == 'Designer' }

@@ -120,7 +120,7 @@ module Page
       # @param whiteboard [Whiteboard]
       # @param event [Event]
       def hit_whiteboard_url(course, whiteboards_url, whiteboard, event = nil)
-        url = "#{Utils.suite_c_base_url}/whiteboards/#{whiteboard.id}?api_domain=#{Utils.canvas_base_url[8..-1]}&course_id=#{course.site_id}&tool_url=#{whiteboards_url}"
+        url = "#{SuiteCUtils.suite_c_base_url}/whiteboards/#{whiteboard.id}?api_domain=#{Utils.canvas_base_url[8..-1]}&course_id=#{course.site_id}&tool_url=#{whiteboards_url}"
         logger.debug "Hitting URL '#{url}'"
         navigate_to url
         if title.include? whiteboard.title
@@ -133,7 +133,7 @@ module Page
       # @param driver [Selenium::WebDriver]
       def close_whiteboard(driver)
         sleep 1
-        if (driver.window_handles.length > 1) && current_url.include?("#{Utils.suite_c_base_url}/whiteboards")
+        if (driver.window_handles.length > 1) && current_url.include?("#{SuiteCUtils.suite_c_base_url}/whiteboards")
           logger.debug "The browser window count is #{driver.window_handles.length}, and the current window is a whiteboard. Closing it."
           driver.close
           driver.switch_to.window driver.window_handles.first
@@ -261,7 +261,7 @@ module Page
         wait_until { list_view_whiteboard_link_elements.any? }
         href = list_view_whiteboard_link_elements.first.attribute('href')
         whiteboard_url = href.split('?').first
-        whiteboard_url.sub("#{Utils.suite_c_base_url}/whiteboards/", '')
+        whiteboard_url.sub("#{SuiteCUtils.suite_c_base_url}/whiteboards/", '')
       end
 
       # Verifies that the title of the first whiteboard in list view matches that of a given whiteboard object
@@ -445,7 +445,7 @@ module Page
         (asset.type == 'File') ? enter_and_upload_file(asset) : enter_and_submit_url(asset)
         asset.visible = false
         open_original_asset_link_element.when_visible Utils.medium_wait
-        asset.id = DBUtils.get_asset_id_by_title asset
+        asset.id = SuiteCUtils.get_asset_id_by_title asset
         add_event(event, EventType::CREATE, asset.id)
         add_event(event, EventType::ADD, asset.id)
       end
@@ -466,7 +466,7 @@ module Page
           click_add_url_button
         end
         open_original_asset_link_element.when_visible Utils.medium_wait
-        asset.id = DBUtils.get_asset_id_by_title asset
+        asset.id = SuiteCUtils.get_asset_id_by_title asset
         add_event(event, EventType::CREATE, asset.id)
         add_event(event, EventType::ADD, asset.id)
       end

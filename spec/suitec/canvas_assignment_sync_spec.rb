@@ -18,7 +18,7 @@ describe 'Canvas assignment sync', order: :defined do
     @engagement_index = Page::SuiteCPages::EngagementIndexPage.new @driver
 
     # Load test data
-    user_test_data = Utils.load_suitec_test_data.select { |data| data['tests']['canvas_assignment_sync'] }
+    user_test_data = SuiteCUtils.load_suitec_test_data.select { |data| data['tests']['canvas_assignment_sync'] }
     @teacher = User.new user_test_data.find { |data| data['role'] == 'Teacher' }
     @student = User.new user_test_data.find { |data| data['role'] == 'Student' }
     @assignment_1 = Assignment.new("Submission Assignment 1 #{test_id}", nil)

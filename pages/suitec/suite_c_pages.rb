@@ -48,7 +48,7 @@ module Page
     def list_view_asset_ids
       wait_until { list_view_asset_link_elements.any? }
       list_view_asset_link_elements.map do |link|
-        query = link.attribute('href').sub("#{Utils.suite_c_base_url}/assetlibrary/", '')
+        query = link.attribute('href').sub("#{SuiteCUtils.suite_c_base_url}/assetlibrary/", '')
         query.include?('?') ? query.split('?').first : query
       end
     end
@@ -73,7 +73,7 @@ module Page
     # @param asset [Asset]
     def wait_for_asset_and_get_id(asset)
       wait_until { list_view_asset_link_elements.any? }
-      asset.id = DBUtils.get_asset_id_by_title asset
+      asset.id = SuiteCUtils.get_asset_id_by_title asset
     end
 
     # Given an array of assets, returns their IDs in descending order of creation
@@ -125,7 +125,7 @@ module Page
       upload_file_path_input_element.when_present Utils.short_wait
       execute_script('arguments[0].style.height="auto"; arguments[0].style.width="auto"; arguments[0].style.visibility="visible";', upload_file_path_input_element)
       sleep 1
-      self.upload_file_path_input_element.send_keys Utils.test_data_file_path(file_name)
+      self.upload_file_path_input_element.send_keys SuiteCUtils.test_data_file_path(file_name)
     end
 
     # Enters asset metadata while uploading a file type asset
@@ -212,7 +212,7 @@ module Page
       link_element.when_present Utils.short_wait
       href = link_element.attribute('href')
       partial_url = href.split('?').first
-      partial_url.sub("#{Utils.suite_c_base_url}/whiteboards/", '')
+      partial_url.sub("#{SuiteCUtils.suite_c_base_url}/whiteboards/", '')
     end
 
     # Shifts driver focus to a newly opened whiteboard
@@ -349,7 +349,7 @@ module Page
       unless drop_clickable? drop
         logger.debug 'Trying to bring the drop into view'
         begin
-          tries ||= Utils.event_drop_drags
+          tries ||= SuiteCUtils.event_drop_drags
           driver.action.drag_and_drop_by(container, -65, 0).perform
           drop.click
           logger.debug "It took #{tries} attempts to drag the drop into view"

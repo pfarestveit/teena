@@ -243,7 +243,7 @@ module Page
       # @param expected_event_count [Array<String>]
       def wait_for_canvas_event(driver, studio_url, expected_event_count)
         logger.info "Waiting until the Canvas poller updates the activity event counts to #{expected_event_count}"
-        tries ||= Utils.poller_retries
+        tries ||= SuiteCUtils.poller_retries
         begin
           load_page(driver, studio_url)
           wait_until(3) { visible_event_drop_count(driver) == expected_event_count }

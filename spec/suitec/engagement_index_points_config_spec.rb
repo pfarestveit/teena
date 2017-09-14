@@ -8,7 +8,7 @@ describe 'Engagement Index points configuration', order: :defined do
     @course = Course.new({})
 
     # Load test data
-    test_user_data = Utils.load_suitec_test_data.select { |data| data['tests']['engagement_index_points_config'] }
+    test_user_data = SuiteCUtils.load_suitec_test_data.select { |data| data['tests']['engagement_index_points_config'] }
     @teacher = User.new test_user_data.find { |user| user['role'] == 'Teacher' }
     @student = User.new test_user_data.find { |user| user['role'] == 'Student' }
 

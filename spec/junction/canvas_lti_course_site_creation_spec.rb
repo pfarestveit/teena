@@ -9,7 +9,7 @@ describe 'bCourses course site creation' do
 
   begin
     @driver = Utils.launch_browser
-    test_output = Utils.initialize_canvas_test_output(self, ['Term', 'Course', 'Instructor', 'Site ID', 'Teachers', 'Lead TAs', 'TAs', 'Students', 'Waitlist Students'])
+    test_output = JunctionUtils.initialize_junction_test_output(self, ['Term', 'Course', 'Instructor', 'Site ID', 'Teachers', 'Lead TAs', 'TAs', 'Students', 'Waitlist Students'])
 
     @splash_page = Page::JunctionPages::SplashPage.new @driver
     @cal_net_page = Page::CalNetPage.new @driver
@@ -23,7 +23,7 @@ describe 'bCourses course site creation' do
 
     # SITE CREATION
 
-    test_courses = Utils.load_bcourses_test_course_data.select { |course| course['tests']['create_course_site'] }
+    test_courses = JunctionUtils.load_junction_test_course_data.select { |course| course['tests']['create_course_site'] }
     test_courses.each do |course|
 
       begin

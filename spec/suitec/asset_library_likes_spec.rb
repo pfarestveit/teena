@@ -5,8 +5,8 @@ include Logging
 describe 'Asset', order: :defined do
 
   test_id = Utils.get_test_id
-  test_users = Utils.load_suitec_test_data.select { |user| user['tests']['asset_library_likes'] }
-  event = Event.new({csv: Utils.initialize_events_csv('Likes')})
+  test_users = SuiteCUtils.load_suitec_test_data.select { |user| user['tests']['asset_library_likes'] }
+  event = Event.new({csv: LRSUtils.initialize_events_csv('Likes')})
 
   before(:all) do
     @course = Course.new({})

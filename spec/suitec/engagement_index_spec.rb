@@ -6,9 +6,9 @@ describe 'The Engagement Index', order: :defined do
 
   # Load test data
   test_id = Utils.get_test_id
-  event = Event.new({csv: Utils.initialize_events_csv('EngagementIndex')})
+  event = Event.new({csv: LRSUtils.initialize_events_csv('EngagementIndex')})
   admin = User.new({username: Utils.super_admin_username, full_name: 'Admin'})
-  test_user_data = Utils.load_suitec_test_data.select { |data| data['tests']['engagement_index'] }
+  test_user_data = SuiteCUtils.load_suitec_test_data.select { |data| data['tests']['engagement_index'] }
   teacher = User.new test_user_data.find { |user| user['role'] == 'Teacher' }
   student_data = test_user_data.select { |user| user['role'] == 'Student' }
   student_1 = User.new student_data[0]

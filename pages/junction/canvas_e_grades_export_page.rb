@@ -37,14 +37,14 @@ module Page
       # @param driver [Selenium::WebDriver]
       # @param course [Course]
       def load_embedded_tool(driver, course)
-        navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/external_tools/#{Utils.canvas_e_grades_export_tool}"
+        navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/external_tools/#{JunctionUtils.canvas_e_grades_export_tool}"
         switch_to_canvas_iframe driver
       end
 
       # Loads the LTI tool in the Junction context
       # @param course [Course]
       def load_standalone_tool(course)
-        navigate_to "#{Utils.junction_base_url}/canvas/course_grade_export/#{course.site_id}"
+        navigate_to "#{JunctionUtils.junction_base_url}/canvas/course_grade_export/#{course.site_id}"
       end
 
       # Clicks the 'un-mute all assignments' checkbox

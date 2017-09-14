@@ -6,7 +6,7 @@ describe 'An asset comment', order: :defined do
 
   test_id = Utils.get_test_id
   timeout = Utils.short_wait
-  event = Event.new({csv: Utils.initialize_events_csv('Comments')})
+  event = Event.new({csv: LRSUtils.initialize_events_csv('Comments')})
 
   comment_1_by_uploader = 'Uploader makes Comment 1'
   comment_1_reply_by_uploader = 'Uploader replies to own Comment 1'
@@ -21,7 +21,7 @@ describe 'An asset comment', order: :defined do
     @course.site_id = ENV['COURSE_ID']
 
     admin = User.new({username: Utils.super_admin_username, full_name: 'Admin'})
-    test_users = Utils.load_suitec_test_data.select { |user| user['tests']['asset_library_comments'] }
+    test_users = SuiteCUtils.load_suitec_test_data.select { |user| user['tests']['asset_library_comments'] }
     students = test_users.select { |user| user['role'] == 'Student' }
     @teacher = User.new test_users.find { |user| user['role'] == 'Teacher' }
     @asset_uploader = User.new students[0]

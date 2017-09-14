@@ -7,7 +7,7 @@ describe 'Impact Studio', order: :defined do
   test_id = Utils.get_test_id
 
   # Get test users
-  user_test_data = Utils.load_suitec_test_data.select { |data| data['tests']['impact_studio_profile'] }
+  user_test_data = SuiteCUtils.load_suitec_test_data.select { |data| data['tests']['impact_studio_profile'] }
   users = user_test_data.map { |data| User.new(data) if ['Teacher', 'Designer', 'Lead TA', 'TA', 'Observer', 'Reader', 'Student'].include? data['role'] }
 
   teachers = users.select { |user| %w(Teacher TA).include? user.role }

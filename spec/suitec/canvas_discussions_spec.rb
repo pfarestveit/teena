@@ -4,7 +4,7 @@ describe 'A Canvas discussion', order: :defined do
 
   course_id = ENV['COURSE_ID']
   test_id = Utils.get_test_id
-  test_user_data = Utils.load_suitec_test_data.select { |data| data['tests']['canvas_discussions'] }
+  test_user_data = SuiteCUtils.load_suitec_test_data.select { |data| data['tests']['canvas_discussions'] }
 
   add_topic = Activity::ADD_DISCUSSION_TOPIC
   add_entry = Activity::ADD_DISCUSSION_ENTRY

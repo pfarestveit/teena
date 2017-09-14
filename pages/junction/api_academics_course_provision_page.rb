@@ -7,7 +7,7 @@ class ApiAcademicsCourseProvisionPage
 
   def get_feed(driver)
     logger.info 'Parsing data from /api/academics/canvas/course_provision'
-    navigate_to "#{Utils.junction_base_url}/api/academics/canvas/course_provision"
+    navigate_to "#{JunctionUtils.junction_base_url}/api/academics/canvas/course_provision"
     wait_until(Utils.long_wait) { driver.find_element(xpath: '//pre') }
     @parsed = JSON.parse driver.find_element(xpath: '//pre').text
   end

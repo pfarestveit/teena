@@ -34,7 +34,7 @@ module Page
       # @param url [String]
       # @param blk - the block to execute
       def wait_for_poller_sync(driver, url, &blk)
-        tries ||= Utils.poller_retries
+        tries ||= SuiteCUtils.poller_retries
         begin
           return yield
         end
@@ -150,7 +150,7 @@ module Page
       # @param expected_score [String]
       # @return [boolean]
       def user_score_updated?(driver, url, user, expected_score)
-        tries ||= Utils.poller_retries
+        tries ||= SuiteCUtils.poller_retries
         logger.info("Checking if #{user.full_name} has an updated score of #{expected_score}")
         load_scores(driver, url)
         wait_until(3) { user_score(user) == expected_score }

@@ -5,7 +5,7 @@ describe 'Asset pinning', order: :defined do
   include Logging
   test_id = Utils.get_test_id
 
-  user_test_data = Utils.load_suitec_test_data.select { |data| data['tests']['asset_library_pins'] }
+  user_test_data = SuiteCUtils.load_suitec_test_data.select { |data| data['tests']['asset_library_pins'] }
   users = user_test_data.map { |data| User.new(data) }
   user_1 = users[0]
   user_2 = users[1]

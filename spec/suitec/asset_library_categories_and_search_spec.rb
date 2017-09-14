@@ -7,7 +7,7 @@ describe 'Asset Library', order: :defined do
   timeout = Utils.short_wait
 
   # Get test users
-  user_test_data = Utils.load_suitec_test_data.select { |data| data['tests']['asset_library_search'] }
+  user_test_data = SuiteCUtils.load_suitec_test_data.select { |data| data['tests']['asset_library_search'] }
   users = user_test_data.map { |data| User.new(data) if ['Teacher', 'Designer', 'Lead TA', 'TA', 'Observer', 'Reader', 'Student'].include? data['role'] }
   teacher = users.find { |user| user.role == 'Teacher' }
   students = users.select { |user| user.role == 'Student' }
@@ -395,7 +395,7 @@ describe 'Asset Library', order: :defined do
         @canvas.add_suite_c_tool(@course, SuiteCTools::IMPACT_STUDIO)
         @canvas.click_tool_link(@driver, SuiteCTools::IMPACT_STUDIO)
         @all_assets = [student_1_upload, student_2_upload, student_3_link, @whiteboard_asset]
-        @all_assets.each { |asset| asset.impact_score = DBUtils.get_asset_impact_score(asset) }
+        @all_assets.each { |asset| asset.impact_score = SuiteCUtils.get_asset_impact_score(asset) }
         @asset_library.load_page(@driver, @asset_library_url)
         @asset_library.open_advanced_search
       end
