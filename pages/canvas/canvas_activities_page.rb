@@ -154,6 +154,7 @@ module Page
     # ASSIGNMENTS
 
     link(:new_assignment_link, text: 'Assignment')
+    link(:edit_assignment_link, class: 'edit_assignment_link')
     select_list(:assignment_type, id: 'assignment_submission_type')
     text_area(:assignment_name, id: 'assignment_name')
     text_area(:assignment_due_date, class: 'DueDateInput')
@@ -197,12 +198,14 @@ module Page
     # Creates a sync-able assignment on a course site
     # @param course [Course]
     # @param assignment [Assignment]
-    def create_assignment(course, assignment)
+    # @param event [Event]
+    def create_assignment(course, assignment, event = nil)
       logger.info "Creating submission assignment named '#{assignment.title}'"
       enter_new_assignment_title(course, assignment)
       check_online_url_cbx
       check_online_upload_cbx
       save_and_publish_assignment assignment
+      add_event(event, EventType::CREATE, assignment.title)
     end
 
     # Creates a non-sync-able assignment on a course site
@@ -216,19 +219,28 @@ module Page
       save_and_publish_assignment assignment
     end
 
-    # Upload's a user's asset as an assignment submission
+    # Changes an assignment's title
     # @param assignment [Assignment]
-    # @param user [User]
-    # @submission [Asset]
-    def submit_assignment(assignment, user, submission)
-      logger.info "Submitting #{submission.title} for #{user.full_name}"
+    # @param event [Event]
+    def edit_assignment_title(assignment, event = nil)
       navigate_to assignment.url
-      wait_for_load_and_click_js submit_assignment_link_element
+      wait_for_load_and_click edit_assignment_link_element
+      wait_for_element_and_type(assignment_name_element, (assignment.title = "#{assignment.title} - Edited"))
+      wait_for_update_and_click_js save_button_element
+      wait_until(Utils.short_wait) { assignment_title_heading_element.exists? && assignment_title_heading.include?(assignment.title) }
+      add_event(event, EventType::MODIFY, assignment.title)
+    end
+
+    # Uploads a user's asset as an assignment submission
+    # @param submission [Asset]
+    # @param event [Event]
+    def upload_assignment(submission, event = nil)
       case submission.type
         when 'File'
           file_upload_input_element.when_visible Utils.short_wait
           self.file_upload_input_element.send_keys SuiteCUtils.test_data_file_path(submission.file_name)
           wait_for_update_and_click_js file_upload_submit_button_element
+          add_event(event, EventType::CREATE, submission.file_name)
         when 'Link'
           wait_for_update_and_click_js assignment_site_url_tab_element
           url_upload_input_element.when_visible Utils.short_wait
@@ -237,7 +249,38 @@ module Page
         else
           logger.error 'Unsupported submission type in test data'
       end
+    end
+
+    # Navigates to and submits an assignment
+    # @param assignment [Assignment]
+    # @param user [User]
+    # @param submission [Asset]
+    # @param event [Event]
+    def submit_assignment(assignment, user, submission, event = nil)
+      logger.info "Submitting #{submission.title} for #{user.full_name}"
+      navigate_to assignment.url
+      wait_for_load_and_click_js submit_assignment_link_element
+      upload_assignment(submission, event)
       assignment_submission_conf_element.when_visible Utils.long_wait
+      (submission.type == 'File') ?
+          add_event(event, EventType::SUBMITTED, 'online_upload') :
+          add_event(event, EventType::SUBMITTED, 'online_url')
+    end
+
+    # Uploads a user's asset as an assignment resubmission
+    # @param assignment [Assignment]
+    # @param user [User]
+    # @param resubmission [Asset]
+    # @param event [Event]
+    def resubmit_assignment(assignment, user, resubmission, event = nil)
+      logger.info "Resubmitting #{resubmission.title} for #{user.full_name}"
+      navigate_to assignment.url
+      wait_for_load_and_click_js resubmit_assignment_link_element
+      upload_assignment(resubmission, event)
+      resubmit_assignment_link_element.when_visible Utils.long_wait
+      (resubmission.type == 'File') ?
+          add_event(event, EventType::MODIFY, 'online_upload') :
+          add_event(event, EventType::MODIFY, 'online_url')
     end
 
     # FILES

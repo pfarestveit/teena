@@ -4,6 +4,8 @@ class LRSUtils
 
   include Logging
 
+  @config = Utils.config
+
   # Returns the number of times to loop through LRS events scripts
   # @return [Integer]
   def self.script_loops
@@ -32,7 +34,7 @@ class LRSUtils
   def self.initialize_events_csv(script)
     output_file = "selenium-events-#{script}-#{Time.now.strftime('%Y-%m-%d-%H-%M-%S')}.csv"
     logger.info "Initializing test output CSV named #{output_file}"
-    test_output = File.join(initialize_test_output_dir, output_file)
+    test_output = File.join(Utils.initialize_test_output_dir, output_file)
     CSV.open(test_output, 'wb') { |heading| heading << %w(Time Actor Action Object) }
     test_output
   end
@@ -76,7 +78,7 @@ class LRSUtils
     CSV.foreach(event.csv, :headers => true) do |row|
       event = events_csv_row_to_event row
       logger.info "Checking the event data for #{event.actor.uid} performing a #{event.action.desc} event at approx #{event.time_str}"
-      test_results << [event, lrs_event_present?(event)]
+      test_results << [[event.time_str, event.actor.uid, event.action.desc, event.object], lrs_event_present?(event)]
      end
     test_results.each { |result| logger.warn "Test result: #{result}" }
     failures = test_results.keep_if { |result| !result[1] }

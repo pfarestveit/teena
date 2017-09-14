@@ -13,6 +13,10 @@ class Utils
   @config.merge! YAML.load_file File.path('settings.yml')
   @config.deep_merge! YAML.load_file File.join(ENV['HOME'], '/.webdriver-config/settings.yml')
 
+  def self.config
+    @config
+  end
+
   # BROWSER CONFIGS
 
   # Instantiates the browser and alters default browser settings.
@@ -79,6 +83,18 @@ class Utils
   # Long timeout intended for things like large file uploads or asynchronous processes
   def self.long_wait
     @config['timeouts']['long']
+  end
+
+  # Returns the number of times to loop through LRS events scripts
+  # @return [Integer]
+  def self.script_loops
+    @config['lrs']['script_loops']
+  end
+
+  # The possible discrepancy between the timestamp a test script assigns an event and the timestamp Canvas assigns the event
+  # @return [Integer]
+  def self.event_time_discrep_seconds
+    @config['lrs']['event_time_discrep_seconds']
   end
 
   # CALNET AND CANVAS

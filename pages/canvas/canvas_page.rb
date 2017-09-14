@@ -295,10 +295,10 @@ module Page
         users_missing = users_to_add
       else
         users_to_add.each do |user|
-          tries ||= 5
+          user == users_to_add.first ? tries ||= 10 : tries ||= 1
           begin
             scroll_to_bottom
-            wait_until(3) { cell_element(xpath: "//tr[contains(@id,'#{user.canvas_id}')]//td[contains(.,'#{user.role}')]").exists? }
+            wait_until(1) { cell_element(xpath: "//tr[contains(@id,'#{user.canvas_id}')]//td[contains(.,'#{user.role}')]").exists? }
           rescue
             (tries -= 1).zero? ? (users_missing << user) : retry
           end
