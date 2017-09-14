@@ -9,7 +9,7 @@ describe 'bCourses Course Captures tool' do
   begin
 
     # The test data file should contain data variations such as cross-listings and courses with multiple primary sections
-    test_user_data = Utils.load_bcourses_test_user_data.select { |user| user['tests']['course_capture'] }
+    test_user_data = JunctionUtils.load_junction_test_user_data.select { |user| user['tests']['course_capture'] }
 
     @driver = Utils.launch_browser
     @course_captures_page = Page::JunctionPages::CanvasCourseCapturesPage.new @driver

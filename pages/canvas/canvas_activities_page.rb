@@ -227,7 +227,7 @@ module Page
       case submission.type
         when 'File'
           file_upload_input_element.when_visible Utils.short_wait
-          self.file_upload_input_element.send_keys Utils.test_data_file_path(submission.file_name)
+          self.file_upload_input_element.send_keys SuiteCUtils.test_data_file_path(submission.file_name)
           wait_for_update_and_click_js file_upload_submit_button_element
         when 'Link'
           wait_for_update_and_click_js assignment_site_url_tab_element
@@ -391,7 +391,7 @@ module Page
       logger.info "Joining group '#{group.title}'"
       wait_for_update_and_click link_element(xpath: "//a[contains(@aria-label,'Join group #{group.title}')]")
       list_item_element(xpath: '//li[contains(.,"Joined Group")]').when_present Utils.short_wait
-      add_event(event, EventType::CREATE, "#{group.title}")
+      add_event(event, EventType::CREATE, group.title)
     end
 
     # Leaves a group on a course site

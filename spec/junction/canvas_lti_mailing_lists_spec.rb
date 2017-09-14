@@ -14,7 +14,7 @@ describe 'bCourses Mailgun mailing lists', order: :defined do
   course_site_3 = Course.new({title: "QA instructor #{test_id}", code: "QA Mailing List 3 #{test_id}"})
 
   # Load test user data
-  user_test_data = Utils.load_bcourses_test_user_data.select { |data| data['tests']['mailing_lists'] }
+  user_test_data = JunctionUtils.load_junction_test_user_data.select { |data| data['tests']['mailing_lists'] }
   users = user_test_data.map { |data| User.new(data) if ['Teacher', 'Designer', 'Lead TA', 'TA', 'Observer', 'Reader', 'Student'].include? data['role'] }
   teacher = users.find { |user| user.role == 'Teacher' }
   students = users.select { |user| user.role == 'Student' }
@@ -156,7 +156,7 @@ describe 'bCourses Mailgun mailing lists', order: :defined do
 
       it 'deletes mailing list memberships for users who have been removed from the site' do
         @canvas_page.remove_users_from_course(course_site_1, [students[0]])
-        Utils.clear_cache(@driver, @splash_page, @toolbox_page)
+        JunctionUtils.clear_cache(@driver, @splash_page, @toolbox_page)
         @mailing_lists_page.load_embedded_tool @driver
         @mailing_lists_page.search_for_list course_site_1.site_id
         @mailing_lists_page.click_update_memberships
@@ -167,7 +167,7 @@ describe 'bCourses Mailgun mailing lists', order: :defined do
         @canvas_page.add_users(course_site_1, [students[0]])
         @canvas_page.masquerade_as(@driver, students[0], course_site_1)
         @canvas_page.stop_masquerading @driver
-        Utils.clear_cache(@driver, @splash_page, @toolbox_page)
+        JunctionUtils.clear_cache(@driver, @splash_page, @toolbox_page)
         @mailing_lists_page.load_embedded_tool @driver
         @mailing_lists_page.search_for_list course_site_1.site_id
         @mailing_lists_page.click_update_memberships
@@ -177,7 +177,7 @@ describe 'bCourses Mailgun mailing lists', order: :defined do
       it 'does not create mailing list memberships for site members with the same email addresses as existing mailing list members' do
         students[0].email = students[1].email
         @canvas_page.reset_user_email(course_site_1, [students[0]])
-        Utils.clear_cache(@driver, @splash_page, @toolbox_page)
+        JunctionUtils.clear_cache(@driver, @splash_page, @toolbox_page)
         @mailing_lists_page.load_embedded_tool @driver
         @mailing_lists_page.search_for_list course_site_1.site_id
         @mailing_lists_page.click_update_memberships

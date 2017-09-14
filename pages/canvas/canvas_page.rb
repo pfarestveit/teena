@@ -539,9 +539,9 @@ module Page
           sleep 1
           wait_for_update_and_click_js app_name_input_element
           self.app_name_input = "#{tool.name}"
-          self.key_input = Utils.suitec_lti_key
-          self.secret_input = Utils.suitec_lti_secret
-          self.url_input = "#{Utils.suite_c_base_url}#{tool.xml}"
+          self.key_input = SuiteCUtils.suitec_lti_key
+          self.secret_input = SuiteCUtils.suitec_lti_secret
+          self.url_input = "#{SuiteCUtils.suite_c_base_url}#{tool.xml}"
           submit_button
           link_element(xpath: "//td[@title='#{tool.name}']").when_present Utils.medium_wait
           enable_tool(course, tool)

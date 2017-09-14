@@ -15,7 +15,7 @@ module Page
 
       # Loads the Junction splash page
       def load_page
-        navigate_to Utils.junction_base_url
+        navigate_to JunctionUtils.junction_base_url
       end
 
       # Authenticates using basic auth
@@ -26,7 +26,7 @@ module Page
         scroll_to_bottom
         wait_for_update_and_click toggle_footer_link_element
         wait_for_element_and_type_js(basic_auth_uid_input_element, uid)
-        wait_for_element_and_type_js(basic_auth_password_input_element, Utils.junction_basic_auth_password)
+        wait_for_element_and_type_js(basic_auth_password_input_element, JunctionUtils.junction_basic_auth_password)
         # The log in button element will disappear and reappear
         button = basic_auth_log_in_button_element
         button.click

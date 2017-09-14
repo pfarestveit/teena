@@ -7,7 +7,7 @@ describe 'bCourses Roster Photos' do
   course_id = ENV['COURSE_ID']
 
   # Load test course data
-  test_course_data = Utils.load_bcourses_test_course_data.find { |course| course['tests']['roster_photos'] }
+  test_course_data = JunctionUtils.load_junction_test_course_data.find { |course| course['tests']['roster_photos'] }
   course = Course.new test_course_data
   course.site_id = course_id
   sections = course.sections.map { |section_data| Section.new section_data }
@@ -15,7 +15,7 @@ describe 'bCourses Roster Photos' do
   teacher_1 = User.new course.teachers.first
 
   # Load test user data
-  test_user_data = Utils.load_bcourses_test_user_data.select { |user| user['tests']['roster_photos'] }
+  test_user_data = JunctionUtils.load_junction_test_user_data.select { |user| user['tests']['roster_photos'] }
   lead_ta = User.new test_user_data.find { |data| data['role'] == 'Lead TA' }
   ta = User.new test_user_data.find { |data| data['role'] == 'TA' }
   designer = User.new test_user_data.find { |data| data['role'] == 'Designer' }
@@ -140,7 +140,7 @@ describe 'bCourses Roster Photos' do
 
       it "allows a course #{user.role} with UID #{user.uid} to access the tool on #{course.code} course site ID #{course.site_id} if permitted to do so" do
         @canvas.masquerade_as(@driver, user, course)
-        @canvas.navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/external_tools/#{Utils.canvas_rosters_tool}"
+        @canvas.navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/external_tools/#{JunctionUtils.canvas_rosters_tool}"
 
         if ['Lead TA', 'TA'].include? user.role
           @roster_photos_page.switch_to_canvas_iframe @driver

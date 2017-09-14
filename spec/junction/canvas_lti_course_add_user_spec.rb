@@ -7,13 +7,13 @@ describe 'bCourses Find a Person to Add', order: :defined do
   course_id = ENV['COURSE_ID']
 
   # Load test course data
-  test_course_data = Utils.load_bcourses_test_course_data.find { |course| course['tests']['course_add_user'] }
+  test_course_data = JunctionUtils.load_junction_test_course_data.find { |course| course['tests']['course_add_user'] }
   course = Course.new test_course_data
   sections = course.sections.map { |section_data| Section.new section_data }
   sections_for_site = sections.select { |section| section.include_in_site }
 
   # Load test user data
-  test_user_data = Utils.load_bcourses_test_user_data.select { |user| user['tests']['course_add_user'] }
+  test_user_data = JunctionUtils.load_junction_test_user_data.select { |user| user['tests']['course_add_user'] }
   teachers_data = test_user_data.select { |data| data['role'] == 'Teacher' }
   teacher_1 = User.new teachers_data[0]
   teacher_2 = User.new teachers_data[1]

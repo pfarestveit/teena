@@ -14,7 +14,7 @@ module Page
       # Loads My Toolbox
       def load_page
         logger.info 'Loading My Toolbox page'
-        navigate_to "#{Utils.junction_base_url}/toolbox"
+        navigate_to "#{JunctionUtils.junction_base_url}/toolbox"
       end
 
     end

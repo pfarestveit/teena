@@ -19,7 +19,7 @@ module Page
       # Loads the LTI tool in the Junction context
       def load_standalone_tool
         logger.info 'Loading standalone version of Create Course Site tool'
-        navigate_to "#{Utils.junction_base_url}/canvas/create_project_site"
+        navigate_to "#{JunctionUtils.junction_base_url}/canvas/create_project_site"
       end
 
       def enter_site_name(name)

@@ -6,7 +6,7 @@ describe 'The Impact Studio', order: :defined do
   test_id = Utils.get_test_id
 
   # Get test users
-  user_test_data = Utils.load_suitec_test_data.select { |data| data['tests']['impact_studio_assets'] }
+  user_test_data = SuiteCUtils.load_suitec_test_data.select { |data| data['tests']['impact_studio_assets'] }
   users = user_test_data.map { |data| User.new(data) if %w(Teacher Student).include? data['role'] }
   teacher = users.find { |user| user.role == 'Teacher' }
   students = users.select { |user| user.role == 'Student' }
@@ -112,7 +112,7 @@ describe 'The Impact Studio', order: :defined do
 
       after(:all) { asset_1.impact_score = asset_1_actual_score }
 
-      it('stores a zero impact score') { expect(asset_1_actual_score = DBUtils.get_asset_impact_score(asset_1)).to eql(asset_1.impact_score) }
+      it('stores a zero impact score') { expect(asset_1_actual_score = SuiteCUtils.get_asset_impact_score(asset_1)).to eql(asset_1.impact_score) }
     end
 
     context 'via adding to a whiteboard but not the library' do
@@ -132,7 +132,7 @@ describe 'The Impact Studio', order: :defined do
 
       after(:all) { asset_2.impact_score = asset_2_actual_score }
 
-      it('stores a zero impact score') { expect(asset_2_actual_score = DBUtils.get_asset_impact_score(asset_2)).to eql(asset_2.impact_score) }
+      it('stores a zero impact score') { expect(asset_2_actual_score = SuiteCUtils.get_asset_impact_score(asset_2)).to eql(asset_2.impact_score) }
     end
 
     context 'via adding to a whiteboard and to the library' do
@@ -147,7 +147,7 @@ describe 'The Impact Studio', order: :defined do
 
       after(:all) { asset_3.impact_score = asset_3_actual_score }
 
-      it('stores a zero impact score') { expect(asset_3_actual_score = DBUtils.get_asset_impact_score(asset_3)).to eql(asset_3.impact_score) }
+      it('stores a zero impact score') { expect(asset_3_actual_score = SuiteCUtils.get_asset_impact_score(asset_3)).to eql(asset_3.impact_score) }
     end
 
     context 'via whiteboard export' do
@@ -157,13 +157,13 @@ describe 'The Impact Studio', order: :defined do
         @whiteboards.load_page(@driver, @whiteboards_url)
         @whiteboards.open_whiteboard(@driver, whiteboard)
         @whiteboards.export_to_asset_library whiteboard
-        asset_4.id = DBUtils.get_asset_id_by_title asset_4
+        asset_4.id = SuiteCUtils.get_asset_id_by_title asset_4
         @whiteboards.close_whiteboard @driver
       end
 
       after(:all) { asset_4.impact_score = asset_4_actual_score }
 
-      it('stores a zero impact score') { expect(asset_4_actual_score = DBUtils.get_asset_impact_score(asset_4)).to eql(asset_4.impact_score) }
+      it('stores a zero impact score') { expect(asset_4_actual_score = SuiteCUtils.get_asset_impact_score(asset_4)).to eql(asset_4.impact_score) }
     end
 
     context 'via impact studio "upload"' do
@@ -177,7 +177,7 @@ describe 'The Impact Studio', order: :defined do
 
       after(:all) { asset_5.impact_score = asset_5_actual_score }
 
-      it('stores a zero impact score for an asset uploaded via the Impact Studio') { expect(asset_5_actual_score = DBUtils.get_asset_impact_score(asset_5)).to eql(asset_5.impact_score) }
+      it('stores a zero impact score for an asset uploaded via the Impact Studio') { expect(asset_5_actual_score = SuiteCUtils.get_asset_impact_score(asset_5)).to eql(asset_5.impact_score) }
     end
 
     context 'via asset library upload' do
@@ -191,7 +191,7 @@ describe 'The Impact Studio', order: :defined do
 
       after(:all) { asset_6.impact_score = asset_6_actual_score }
 
-      it('stores a zero impact score') { expect(asset_6_actual_score = DBUtils.get_asset_impact_score(asset_6)).to eql(asset_6.impact_score) }
+      it('stores a zero impact score') { expect(asset_6_actual_score = SuiteCUtils.get_asset_impact_score(asset_6)).to eql(asset_6.impact_score) }
     end
 
     context 'but then deleted' do
@@ -209,7 +209,7 @@ describe 'The Impact Studio', order: :defined do
 
       after(:all) { asset_7.impact_score = asset_7_actual_score }
 
-      it('stores a zero impact score') { expect(asset_7_actual_score = DBUtils.get_asset_impact_score(asset_7)).to eql(asset_7.impact_score) }
+      it('stores a zero impact score') { expect(asset_7_actual_score = SuiteCUtils.get_asset_impact_score(asset_7)).to eql(asset_7.impact_score) }
     end
 
     context 'and a user views its own profile' do
@@ -270,7 +270,7 @@ describe 'The Impact Studio', order: :defined do
 
       after(:all) { asset_1.impact_score = asset_1_actual_score }
 
-      it('stores the impact score for the asset added to a whiteboard') { expect(asset_1_actual_score = DBUtils.get_asset_impact_score(asset_1)).to eql(asset_1.impact_score) }
+      it('stores the impact score for the asset added to a whiteboard') { expect(asset_1_actual_score = SuiteCUtils.get_asset_impact_score(asset_1)).to eql(asset_1.impact_score) }
 
       context 'and the asset owner views its own profile' do
 
@@ -306,7 +306,7 @@ describe 'The Impact Studio', order: :defined do
 
       after(:all) { asset_3.impact_score = asset_3_actual_score }
 
-      it('stores the right impact score for the viewed asset') { expect(asset_3_actual_score = DBUtils.get_asset_impact_score(asset_3)).to eql(asset_3.impact_score) }
+      it('stores the right impact score for the viewed asset') { expect(asset_3_actual_score = SuiteCUtils.get_asset_impact_score(asset_3)).to eql(asset_3.impact_score) }
 
       context 'and the asset owner views its own profile' do
 
@@ -340,7 +340,7 @@ describe 'The Impact Studio', order: :defined do
 
       after(:all) { asset_6.impact_score = asset_6_actual_score }
 
-      it('stores the right impact score for the commented-on asset') { expect(asset_6_actual_score = DBUtils.get_asset_impact_score(asset_6)).to eql(asset_6.impact_score) }
+      it('stores the right impact score for the commented-on asset') { expect(asset_6_actual_score = SuiteCUtils.get_asset_impact_score(asset_6)).to eql(asset_6.impact_score) }
 
       context 'and the asset owner views its own profile' do
 
@@ -374,7 +374,7 @@ describe 'The Impact Studio', order: :defined do
 
       after(:all) { asset_6.impact_score = asset_6_actual_score }
 
-      it('stores the right impact score for the commented-on asset') { expect(asset_6_actual_score = DBUtils.get_asset_impact_score(asset_6)).to eql(asset_6.impact_score) }
+      it('stores the right impact score for the commented-on asset') { expect(asset_6_actual_score = SuiteCUtils.get_asset_impact_score(asset_6)).to eql(asset_6.impact_score) }
 
       context 'and the asset owner views its own profile' do
 
@@ -408,7 +408,7 @@ describe 'The Impact Studio', order: :defined do
 
       after(:all) { asset_5.impact_score = asset_5_actual_score }
 
-      it('stores the right impact score for the liked asset') { expect(asset_5_actual_score = DBUtils.get_asset_impact_score(asset_5)).to eql(asset_5.impact_score) }
+      it('stores the right impact score for the liked asset') { expect(asset_5_actual_score = SuiteCUtils.get_asset_impact_score(asset_5)).to eql(asset_5.impact_score) }
 
       context 'and the asset owner views its own profile' do
 
@@ -441,7 +441,7 @@ describe 'The Impact Studio', order: :defined do
 
       after(:all) { asset_4.impact_score = asset_4_actual_score }
 
-      it('stores the right impact score for the remixed whiteboard asset') { expect(asset_4_actual_score = DBUtils.get_asset_impact_score(asset_4)).to eql(asset_4.impact_score) }
+      it('stores the right impact score for the remixed whiteboard asset') { expect(asset_4_actual_score = SuiteCUtils.get_asset_impact_score(asset_4)).to eql(asset_4.impact_score) }
 
       context 'and one whiteboard asset owner views its own profile' do
 
@@ -490,7 +490,7 @@ describe 'The Impact Studio', order: :defined do
 
       it('shows the right assets in My Assets > Most Impactful') { @impact_studio.verify_user_impactful_assets(@driver, student_1_assets, student_1) }
       it('shows the right assets in Community Assets > Most Impactful') { @impact_studio.verify_all_impactful_assets(@driver, all_assets) }
-      it('does not add "view" impact') { expect(asset_4_actual_score = DBUtils.get_asset_impact_score(asset_4)).to eql(asset_4.impact_score) }
+      it('does not add "view" impact') { expect(asset_4_actual_score = SuiteCUtils.get_asset_impact_score(asset_4)).to eql(asset_4.impact_score) }
     end
 
     context 'with "comment" impact' do
@@ -505,7 +505,7 @@ describe 'The Impact Studio', order: :defined do
 
       it('shows the right assets in My Assets > Most Impactful') { @impact_studio.verify_user_impactful_assets(@driver, student_1_assets, student_1) }
       it('shows the right assets in Community Assets > Most Impactful') { @impact_studio.verify_all_impactful_assets(@driver, all_assets) }
-      it('does not add "comment" impact') { expect(asset_4_actual_score = DBUtils.get_asset_impact_score(asset_4)).to eql(asset_4.impact_score) }
+      it('does not add "comment" impact') { expect(asset_4_actual_score = SuiteCUtils.get_asset_impact_score(asset_4)).to eql(asset_4.impact_score) }
     end
 
     context 'with "remix" impact' do
@@ -520,7 +520,7 @@ describe 'The Impact Studio', order: :defined do
 
       it('shows the right assets in My Assets > Most Impactful') { @impact_studio.verify_user_impactful_assets(@driver, student_1_assets, student_1) }
       it('shows the right assets in Community Assets > Most Impactful') { @impact_studio.verify_all_impactful_assets(@driver, all_assets) }
-      it('does not add "remix" impact') { expect(asset_4_actual_score = DBUtils.get_asset_impact_score(asset_4)).to eql(asset_4.impact_score) }
+      it('does not add "remix" impact') { expect(asset_4_actual_score = SuiteCUtils.get_asset_impact_score(asset_4)).to eql(asset_4.impact_score) }
     end
   end
 
@@ -540,7 +540,7 @@ describe 'The Impact Studio', order: :defined do
 
       after(:all) { asset_6.impact_score = asset_6_actual_score }
 
-      it('removes "comment" impact') { expect(asset_6_actual_score = DBUtils.get_asset_impact_score(asset_6)).to eql(asset_6.impact_score) }
+      it('removes "comment" impact') { expect(asset_6_actual_score = SuiteCUtils.get_asset_impact_score(asset_6)).to eql(asset_6.impact_score) }
 
       context 'and the comment deleter views its own profile' do
 
@@ -571,7 +571,7 @@ describe 'The Impact Studio', order: :defined do
 
       after(:all) { asset_5.impact_score = asset_5_actual_score }
 
-      it('removes "like" impact') { expect(asset_5_actual_score = DBUtils.get_asset_impact_score(asset_5)).to eql(asset_5.impact_score) }
+      it('removes "like" impact') { expect(asset_5_actual_score = SuiteCUtils.get_asset_impact_score(asset_5)).to eql(asset_5.impact_score) }
 
       context 'and the un-liker views its own profile' do
 

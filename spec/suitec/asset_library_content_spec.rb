@@ -11,7 +11,7 @@ describe 'New asset uploads', order: :defined do
 
     @course = Course.new({})
     @course.site_id = ENV['COURSE_ID']
-    user_test_data = Utils.load_suitec_test_data.select { |data| data['tests']['asset_library_content'] }
+    user_test_data = SuiteCUtils.load_suitec_test_data.select { |data| data['tests']['asset_library_content'] }
     users = user_test_data.map { |user_data| User.new(user_data) }
 
     @driver = Utils.launch_browser
@@ -38,7 +38,7 @@ describe 'New asset uploads', order: :defined do
             asset_preview_type = @asset.preview
             @asset.description = nil
             @asset.category = nil
-            @asset_size = File.size(Utils.test_data_file_path(@asset.file_name)).to_f / 1024000
+            @asset_size = File.size(SuiteCUtils.test_data_file_path(@asset.file_name)).to_f / 1024000
             @asset_library.load_page(@driver, @asset_library_url)
 
             if @asset.type == 'File'

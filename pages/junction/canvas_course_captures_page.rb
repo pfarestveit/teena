@@ -22,7 +22,7 @@ module Page
       # @param course [Course]
       def load_embedded_tool(driver, course)
         logger.info "Loading course capture tool on site ID #{course.site_id}"
-        navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/external_tools/#{Utils.canvas_course_captures_tool}"
+        navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/external_tools/#{JunctionUtils.canvas_course_captures_tool}"
         switch_to_canvas_iframe driver
       end
 
@@ -30,7 +30,7 @@ module Page
       # @param course [Course]
       def load_standalone_tool(course)
         logger.info "Loading standalone course capture tool for site ID #{course.site_id}"
-        navigate_to "#{Utils.junction_base_url}/canvas/course_mediacasts/#{course.site_id}"
+        navigate_to "#{JunctionUtils.junction_base_url}/canvas/course_mediacasts/#{course.site_id}"
       end
 
       # Returns the course plus section code at a given index, which is shown when more than one set of recordings is present

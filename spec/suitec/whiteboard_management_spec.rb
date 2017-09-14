@@ -11,7 +11,7 @@ describe 'Whiteboard', order: :defined do
     @course.site_id = ENV['COURSE_ID']
 
     # Load test data
-    user_test_data = Utils.load_suitec_test_data.select { |data| data['tests']['whiteboard_management'] }
+    user_test_data = SuiteCUtils.load_suitec_test_data.select { |data| data['tests']['whiteboard_management'] }
     @teacher = User.new user_test_data.find { |data| data['role'] == 'Teacher' }
     students_data = user_test_data.select { |data| data['role'] == 'Student' }
     @student_1 = User.new students_data[0]

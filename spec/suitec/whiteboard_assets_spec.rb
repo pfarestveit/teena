@@ -4,14 +4,14 @@ describe 'Whiteboard Add Asset', order: :defined do
 
   test_id = Utils.get_test_id
   timeout = Utils.short_wait
-  event = Event.new({csv: Utils.initialize_events_csv('WhiteboardAssets')})
+  event = Event.new({csv: LRSUtils.initialize_events_csv('WhiteboardAssets')})
 
   before(:all) do
     @course = Course.new({})
     @course.site_id = ENV['COURSE_ID']
 
     # Load test data
-    test_user_data = Utils.load_suitec_test_data.select { |user| user['tests']['whiteboard_assets'] }
+    test_user_data = SuiteCUtils.load_suitec_test_data.select { |user| user['tests']['whiteboard_assets'] }
     @admin = User.new({username: Utils.super_admin_username, full_name: 'Admin'})
     @student_1 = User.new test_user_data[0]
     @student_2 = User.new test_user_data[1]

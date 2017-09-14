@@ -11,7 +11,7 @@ begin
   @canvas = Page::CanvasActivitiesPage.new @driver
   @cal_net= Page::CalNetPage.new @driver
 
-  user_test_data = Utils.load_suitec_test_data.select { |data| data['tests']['canvas_assignment_submissions'] }
+  user_test_data = SuiteCUtils.load_suitec_test_data.select { |data| data['tests']['canvas_assignment_submissions'] }
   users = user_test_data.map { |user_data| User.new(user_data) }
   @students = users.select { |user| user.role == 'Student' }
   @teacher = users.find { |user| user.role == 'Teacher' }
@@ -20,8 +20,8 @@ begin
 
   # COURSES
 
-  course_id.nil? ? (logger.info "Will create #{Utils.script_loops} courses") : (logger.info "Will use course ID #{course_id}")
-  Utils.script_loops.times do
+  course_id.nil? ? (logger.info "Will create #{LRSUtils.script_loops} courses") : (logger.info "Will use course ID #{course_id}")
+  LRSUtils.script_loops.times do
     begin
 
       @test_course_identifier = Utils.get_test_id
@@ -30,8 +30,8 @@ begin
 
       # ASSIGNMENTS
 
-      logger.info "Will create #{Utils.script_loops} assignments"
-      Utils.script_loops.times do
+      logger.info "Will create #{LRSUtils.script_loops} assignments"
+      LRSUtils.script_loops.times do
         begin
 
           # Create assignment

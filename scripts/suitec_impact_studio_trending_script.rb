@@ -8,7 +8,7 @@ begin
   test_id = Utils.get_test_id
 
   # Get test users
-  user_test_data = Utils.load_suitec_test_data.select { |data| data['tests']['impact_studio_assets'] }
+  user_test_data = SuiteCUtils.load_suitec_test_data.select { |data| data['tests']['impact_studio_assets'] }
   users = user_test_data.map { |data| User.new(data) if %w(Teacher Student).include? data['role'] }
   teacher = users.find { |user| user.role == 'Teacher' }
   students = users.select { |user| user.role == 'Student' }
@@ -136,13 +136,13 @@ begin
   @asset_library.load_asset_detail(@driver, @asset_library_url, asset_4)
   @asset_library.click_remix
 
-  asset_1.impact_score = DBUtils.get_asset_impact_score asset_1
-  asset_2.impact_score = DBUtils.get_asset_impact_score asset_2
-  asset_3.impact_score = DBUtils.get_asset_impact_score asset_3
-  asset_4.impact_score = DBUtils.get_asset_impact_score asset_4
-  asset_5.impact_score = DBUtils.get_asset_impact_score asset_5
-  asset_6.impact_score = DBUtils.get_asset_impact_score asset_6
-  asset_7.impact_score = DBUtils.get_asset_impact_score asset_7
+  asset_1.impact_score = SuiteCUtils.get_asset_impact_score asset_1
+  asset_2.impact_score = SuiteCUtils.get_asset_impact_score asset_2
+  asset_3.impact_score = SuiteCUtils.get_asset_impact_score asset_3
+  asset_4.impact_score = SuiteCUtils.get_asset_impact_score asset_4
+  asset_5.impact_score = SuiteCUtils.get_asset_impact_score asset_5
+  asset_6.impact_score = SuiteCUtils.get_asset_impact_score asset_6
+  asset_7.impact_score = SuiteCUtils.get_asset_impact_score asset_7
 
   logger.info "The trending asset IDs should be '#{@impact_studio.impactful_studio_asset_ids all_assets}'"
 

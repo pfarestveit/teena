@@ -5,14 +5,14 @@ include Logging
 begin
 
   course_id = ENV['COURSE_ID']
-  loops = Utils.script_loops
+  loops = LRSUtils.script_loops
   @driver = Utils.launch_browser
 
   @canvas = Page::CanvasActivitiesPage.new @driver
   @cal_net = Page::CalNetPage.new @driver
 
   # Script requires a minimum of one teacher and three students in test data
-  user_test_data = Utils.load_suitec_test_data.select { |data| data['tests']['canvas_groups'] }
+  user_test_data = SuiteCUtils.load_suitec_test_data.select { |data| data['tests']['canvas_groups'] }
   users = user_test_data.map { |user_data| User.new(user_data) }
   students = users.select { |user| user.role == 'Student' }
   @teacher = users.find { |user| user.role == 'Teacher' }
@@ -21,7 +21,7 @@ begin
 
   # COURSES
 
-  course_id.nil? ? (logger.info "Will create #{Utils.script_loops} courses") : (logger.info "Will use course ID #{course_id}")
+  course_id.nil? ? (logger.info "Will create #{LRSUtils.script_loops} courses") : (logger.info "Will use course ID #{course_id}")
   loops.times do
     begin
 

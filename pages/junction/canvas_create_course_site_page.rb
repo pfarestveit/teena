@@ -41,7 +41,7 @@ module Page
       # Loads the LTI tool in the Junction context
       def load_standalone_tool
         logger.info 'Loading standalone version of Create Course Site tool'
-        navigate_to "#{Utils.junction_base_url}/canvas/create_course_site"
+        navigate_to "#{JunctionUtils.junction_base_url}/canvas/create_course_site"
       end
 
       # Clicks the button for the test course's term. Uses JavaScript rather than WebDriver

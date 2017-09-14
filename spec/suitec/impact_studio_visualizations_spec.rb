@@ -6,7 +6,7 @@ describe 'The Impact Studio', order: :defined do
   test_id = Utils.get_test_id
 
   # Get test users
-  user_test_data = Utils.load_suitec_test_data.select { |data| data['tests']['impact_studio_assets'] }
+  user_test_data = SuiteCUtils.load_suitec_test_data.select { |data| data['tests']['impact_studio_assets'] }
   users = user_test_data.map { |data| User.new(data) if %w(Teacher Student).include? data['role'] }
   teacher = users.find { |user| user.role == 'Teacher' }
   students = users.select { |user| user.role == 'Student' }
@@ -166,7 +166,7 @@ describe 'The Impact Studio', order: :defined do
         @whiteboards.load_page(@driver, @whiteboards_url)
         @whiteboards.open_whiteboard(@driver, whiteboard)
         @whiteboards.export_to_asset_library whiteboard
-        asset_4.id = DBUtils.get_asset_id_by_title asset_4
+        asset_4.id = SuiteCUtils.get_asset_id_by_title asset_4
         student_1_activities[:export_whiteboard][:count] += 1
         student_2_activities[:export_whiteboard][:count] += 1
         @whiteboards.close_whiteboard @driver

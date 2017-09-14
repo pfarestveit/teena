@@ -7,7 +7,7 @@ describe 'Asset', order: :defined do
   test_id = Utils.get_test_id
 
   # Get test users
-  user_test_data = Utils.load_suitec_test_data.select { |data| data['tests']['asset_library_manage_assets'] }
+  user_test_data = SuiteCUtils.load_suitec_test_data.select { |data| data['tests']['asset_library_manage_assets'] }
   users = user_test_data.map { |data| User.new(data) if ['Teacher', 'Designer', 'Lead TA', 'TA', 'Observer', 'Reader', 'Student'].include? data['role'] }
   teacher = users.find { |user| user.role == 'Teacher' }
   students = users.select { |user| user.role == 'Student' }

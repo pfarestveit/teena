@@ -12,7 +12,7 @@ describe 'Whiteboard', order: :defined do
   course.site_id = course_id
 
   # Load test users
-  user_test_data = Utils.load_suitec_test_data.select { |data| data['tests']['whiteboard_collaboration'] }
+  user_test_data = SuiteCUtils.load_suitec_test_data.select { |data| data['tests']['whiteboard_collaboration'] }
   users = []
   users << (teacher = User.new user_test_data.find { |data| data['role'] == 'Teacher' })
   users << (lead_ta = User.new user_test_data.find { |data| data['role'] == 'Lead TA' })
