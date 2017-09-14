@@ -85,18 +85,6 @@ class Utils
     @config['timeouts']['long']
   end
 
-  # Returns the number of times to loop through LRS events scripts
-  # @return [Integer]
-  def self.script_loops
-    @config['lrs']['script_loops']
-  end
-
-  # The possible discrepancy between the timestamp a test script assigns an event and the timestamp Canvas assigns the event
-  # @return [Integer]
-  def self.event_time_discrep_seconds
-    @config['lrs']['event_time_discrep_seconds']
-  end
-
   # CALNET AND CANVAS
 
   # Base URL of CalNet authentication service test instance
