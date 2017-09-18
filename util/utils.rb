@@ -102,6 +102,11 @@ class Utils
     @config['canvas']['admin_sub_account']
   end
 
+  # Canvas 'UC Berkeley' sub-account ID
+  def self.canvas_uc_berkeley_sub_account
+    @config['canvas']['uc_berkeley_sub_account']
+  end
+
   # Canvas 'Official Courses' sub-account ID
   def self.canvas_official_courses_sub_account
     @config['canvas']['official_courses_sub_account']
@@ -144,6 +149,37 @@ class Utils
   def self.prepare_download_dir
     FileUtils::mkdir_p download_dir
     FileUtils.rm_rf(download_dir, secure: true)
+  end
+
+  # Creates users CSV for SIS import testing
+  # @param users [Array<User>]
+  # @return [File]
+  def self.create_sis_user_import(users)
+    logger.info 'Creating a user CSV for SIS import'
+    csv = File.join(initialize_test_output_dir, 'users.csv')
+    CSV.open(csv, 'wb') { |heading| heading << %w(user_id login_id first_name last_name email status) }
+    users.each do |user|
+      first_name = user.full_name.split(' ')[0]
+      last_name = user.full_name.split(' ')[1]
+      add_csv_row(csv, [user.sis_id, user.uid, first_name, last_name, user.email, user.status])
+    end
+    csv
+  end
+
+  # Creates enrollments CSV for SIS import testing
+  # @param course [Course]
+  # @param section [Section]
+  # @param users [Array<User>]
+  # @return [File]
+  def self.create_sis_enrollment_import(course, section, users)
+    logger.info 'Creating an enrollment CSV for SIS import'
+    csv = File.join(initialize_test_output_dir, 'enrollments.csv')
+    CSV.open(csv, 'wb') { |heading| heading << %w(course_id user_id role section_id status) }
+    users.each do |user|
+      logger.debug "UID #{user.uid} will be a #{user.role} in section #{section.sis_id} with status #{user.status}"
+      add_csv_row(csv, [course.sis_id, user.sis_id, user.role, section.sis_id, user.status])
+    end
+    csv
   end
 
   # LOGGING

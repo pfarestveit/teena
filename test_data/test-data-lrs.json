@@ -1,0 +1,137 @@
+{
+    "users": [
+        {
+            "uid": 123456,
+            "sis_id": 987654321,
+            "username": "the-username",
+            "full_name": "Full E. Name",
+            "email": "email@gmail.com",
+            "role": "Teacher",
+            "canvas_id": 654321,
+            "tests": {
+                "assignments": true,
+                "discussions": true,
+                "enrollments": true,
+                "groups": true
+            },
+            "assets": [
+                {
+                    "type": "File",
+                    "file_name": "file.doc"
+                },
+                {
+                    "type": "Link",
+                    "url": "https://non-embeddable.com"
+                }
+            ]
+        },
+        {
+            "uid": 123456,
+            "sis_id": 987654321,
+            "username": "the-username",
+            "full_name": "Full E. Name",
+            "email": "email@gmail.com",
+            "role": "Teacher",
+            "canvas_id": 654321,
+            "tests": {
+                "discussions": true,
+                "enrollments": true
+            },
+            "assets": [
+                {
+                    "type": "Link",
+                    "url": "http://embeddable.com"
+                }
+            ]
+        },
+        {
+            "uid": 123456,
+            "sis_id": 987654321,
+            "username": "the-username",
+            "full_name": "Full E. Name",
+            "email": "email@gmail.com",
+            "role": "Student",
+            "canvas_id": 654321,
+            "tests": {
+                "assignments": true,
+                "enrollments": true,
+                "groups": true
+            },
+            "assets": [
+                {
+                    "type": "File",
+                    "file_name": "file.pdf"
+                },
+                {
+                    "type": "Link",
+                    "url": "https://newhive.com/some_id"
+                }
+            ]
+        },
+        {
+            "uid": 123456,
+            "sis_id": 987654321,
+            "username": "the-username",
+            "full_name": "Full E. Name",
+            "email": "email@gmail.com",
+            "role": "Student",
+            "canvas_id": 654321,
+            "tests": {
+                "enrollments": true,
+                "groups": true
+            },
+            "assets": [
+                {
+                    "type": "File",
+                    "file_name": "file.xls"
+                },
+                {
+                    "type": "Link",
+                    "url": "http://vimeo.com/some_id"
+                }
+            ]
+        },
+        {
+            "uid": 123456,
+            "sis_id": 987654321,
+            "username": "the-username",
+            "full_name": "Full E. Name",
+            "email": "email@gmail.com",
+            "role": "Student",
+            "canvas_id": 654321,
+            "tests": {
+                "enrollments": true,
+                "groups": true
+            },
+            "assets": [
+                {
+                    "type": "File",
+                    "file_name": "file.jpg"
+                },
+                {
+                    "type": "Link",
+                    "url": "https://www.another_embeddable_url.com"
+                }
+            ]
+        },
+        {
+            "uid": 123456,
+            "sis_id": 987654321,
+            "username": "the-username",
+            "full_name": "Full E. Name",
+            "email": "email@gmail.com",
+            "role": "Student",
+            "canvas_id": 654321,
+            "tests": {
+                "enrollments": true,
+                "groups": true
+            },
+            "assets": [
+                {
+                    "type": "File",
+                    "file_name": "file.png"
+                }
+            ]
+        }
+    ]
+}

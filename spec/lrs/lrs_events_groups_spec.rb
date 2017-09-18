@@ -5,7 +5,7 @@ describe 'Canvas groups events' do
   include Logging
 
   course_id = ENV['COURSE_ID']
-  event = Event.new({csv: LRSUtils.initialize_events_csv('CanvasGroups')})
+  event = Event.new({csv: LRSUtils.initialize_events_csv(script = 'CanvasGroups')})
 
   before(:all) do
 
@@ -15,7 +15,7 @@ describe 'Canvas groups events' do
     @cal_net = Page::CalNetPage.new @driver
 
     # Script requires a minimum of one teacher and three students in test data
-    user_test_data = SuiteCUtils.load_suitec_test_data.select { |data| data['tests']['canvas_groups'] }
+    user_test_data = LRSUtils.load_lrs_test_data.select { |data| data['tests']['groups'] }
     users = user_test_data.map { |user_data| User.new(user_data) }
     students = users.select { |user| user.role == 'Student' }
     @teacher = users.find { |user| user.role == 'Teacher' }
@@ -86,7 +86,10 @@ describe 'Canvas groups events' do
     @canvas.wait_for_event
   end
 
-  after(:all) { Utils.quit_browser @driver }
+  after(:all) do
+    Utils.quit_browser @driver
+    LRSUtils.get_all_test_events(script, event.csv)
+  end
 
   it('end up in the LRS database') { LRSUtils.verify_canvas_events event }
 

@@ -18,6 +18,11 @@ class LRSUtils
     @config['lrs']['event_time_discrep_seconds']
   end
 
+  def self.load_lrs_test_data
+    test_users = File.join(ENV['HOME'], '/.webdriver-config/test-data-lrs.json')
+    (JSON.parse File.read(test_users))['users']
+  end
+
   def self.lrs_db_credentials
     {
       host: @config['lrs']['db_host'],
@@ -48,6 +53,26 @@ class LRSUtils
     event_action = EventType::EVENT_TYPES.find { |t| t.desc == row['Action'] }
     event_object = row['Object']
     Event.new({time_str: event_time_str, actor: event_actor, action: event_action, object: event_object})
+  end
+
+  def self.get_all_test_events(script, event_file)
+    # Get the times of the first and last events in a test script and all of the script's test users
+    csv = CSV.read(event_file, headers: true)
+    timestamps = csv['Time'].sort
+    earliest_time = (Time.parse(timestamps.first).getgm - event_time_discrep_seconds).strftime('%Y-%m-%d %H:%M:%S')
+    latest_time = (Time.parse(timestamps.last).getgm + event_time_discrep_seconds).strftime('%Y-%m-%d %H:%M:%S')
+    uids = csv['Actor'].uniq
+    actors = ''
+    uids.each { |u| actors << "'#{u}'," }
+    query = "SELECT statements.timestamp, users.external_id, statements.activity_type, statements.statement
+             FROM users
+             INNER JOIN statements ON users.id=statements.user_id
+             WHERE users.external_id IN (#{actors[0..-2]})
+               AND statements.timestamp BETWEEN TIMESTAMP '#{earliest_time}' AND TIMESTAMP '#{latest_time}';"
+    results = Utils.query_db(lrs_db_credentials, query)
+    # Write the results to a CSV
+    new_csv = initialize_events_csv script
+    results.each { |row| Utils.add_csv_row(new_csv, [row['timestamp'], row['external_id'], row['activity_type'], row['statement']]) }
   end
 
   # Checks the LRS for the presence of a unique event

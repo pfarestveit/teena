@@ -5,7 +5,7 @@ describe 'Canvas discussion events' do
   include Logging
 
   course_id = ENV['COURSE_ID']
-  event = Event.new({csv: LRSUtils.initialize_events_csv('CanvasDiscussion')})
+  event = Event.new({csv: LRSUtils.initialize_events_csv(script = 'CanvasDiscussion')})
   discussion = Discussion.new("Discussion Topic #{Utils.get_test_id}")
 
   before(:all) do
@@ -13,7 +13,7 @@ describe 'Canvas discussion events' do
     @canvas = Page::CanvasActivitiesPage.new @driver
     @cal_net = Page::CalNetPage.new @driver
 
-    @test_user_data = SuiteCUtils.load_suitec_test_data.select { |data| data['tests']['canvas_discussions'] }
+    @test_user_data = LRSUtils.load_lrs_test_data.select { |data| data['tests']['discussions'] }
     @admin_user = User.new({username: Utils.ets_qa_username})
     @user_1 = User.new @test_user_data[0]
     @user_2 = User.new @test_user_data[1]
@@ -43,7 +43,10 @@ describe 'Canvas discussion events' do
     @canvas.wait_for_event
   end
 
-  after(:all) { Utils.quit_browser @driver }
+  after(:all) do
+    Utils.quit_browser @driver
+    LRSUtils.get_all_test_events(script, event.csv)
+  end
 
   it('end up in the LRS database') { LRSUtils.verify_canvas_events event }
 

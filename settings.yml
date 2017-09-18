@@ -26,6 +26,7 @@ suite_c:
 canvas:
   base_url: https://ucberkeley.test.instructure.com
   admin_sub_account: secret
+  uc_berkeley_sub_account: secret
   official_courses_sub_account: secret
   qa_sub_account: secret
   create_site_tool: secret
