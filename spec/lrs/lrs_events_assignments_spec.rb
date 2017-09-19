@@ -5,14 +5,14 @@ describe 'Canvas assignment events' do
   include Logging
 
   course_id = ENV['COURSE_ID']
-  event = Event.new({csv: LRSUtils.initialize_events_csv('CanvasAssignment')})
+  event = Event.new({csv: LRSUtils.initialize_events_csv(script = 'CanvasAssignment')})
 
   before(:all) do
     @driver = Utils.launch_browser
     @canvas = Page::CanvasActivitiesPage.new @driver
     @cal_net = Page::CalNetPage.new @driver
 
-    @test_user_data = SuiteCUtils.load_suitec_test_data.select { |data| data['tests']['canvas_assignment_sync'] }
+    @test_user_data = LRSUtils.load_lrs_test_data.select { |data| data['tests']['assignments'] }
     @teacher = User.new(@test_user_data.find { |u| u['role'] == 'Teacher' })
     @student = User.new(@test_user_data.find { |u| u['role'] == 'Student' })
 
@@ -39,6 +39,11 @@ describe 'Canvas assignment events' do
     @canvas.resubmit_assignment(@assignment, @student, resubmission, event)
 
     @canvas.wait_for_event
+  end
+
+  after(:all) do
+    Utils.quit_browser @driver
+    LRSUtils.get_all_test_events(script, event.csv)
   end
 
   it('end up in the LRS database') { LRSUtils.verify_canvas_events event }

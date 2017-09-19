@@ -68,8 +68,8 @@ class SuiteCUtils
   def self.get_asset_id_by_title(asset)
     query = "SELECT id FROM assets WHERE title = '#{asset.title}'"
     id = Utils.query_db_field(suitec_db_credentials, query, 'id').first
-    logger.info "Asset ID is #{id['id']}"
-    id['id'].to_s
+    logger.info "Asset ID is #{id}"
+    id.to_s
   end
 
   # Returns a given asset's current impact score
@@ -78,7 +78,7 @@ class SuiteCUtils
   def self.get_asset_impact_score(asset)
     query = "SELECT impact_score FROM assets WHERE id = #{asset.id}"
     score = Utils.query_db_field(suitec_db_credentials, query, 'impact_score').first
-    score['impact_score'].to_i
+    score.to_i
   end
 
 end

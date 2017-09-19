@@ -11,7 +11,7 @@ module Page
     h2(:updated_terms_heading, xpath: '//h2[contains(text(),"Updated Terms of Use")]')
     checkbox(:terms_cbx, name: 'user[terms_of_use]')
     button(:accept_course_invite, name: 'accept')
-    link(:masquerade_link, class: 'masquerade_button')
+    link(:masquerade_link, xpath: '//a[contains(@href, "masquerade")]')
     link(:stop_masquerading_link, class: 'stop_masquerading')
     h2(:recent_activity_heading, xpath: '//h2[contains(text(),"Recent Activity")]')
 
@@ -64,14 +64,8 @@ module Page
       stop_masquerading(driver) if stop_masquerading_link?
       logger.info "Masquerading as #{user.role} UID #{user.uid}"
       navigate_to "#{Utils.canvas_base_url}/users/#{user.canvas_id.to_s}/masquerade"
-      # Handle the panda UI whenever it crashes the party
-      begin
-        wait_for_update_and_click masquerade_link_element
-      rescue
-        link_element(xpath: '//a[contains(@href, "masquerade")]').click
-      ensure
-        stop_masquerading_link_element.when_visible
-      end
+      wait_for_update_and_click masquerade_link_element
+      stop_masquerading_link_element.when_visible
       load_course_site(driver, course) unless course.nil?
     end
 
@@ -119,7 +113,8 @@ module Page
     # @param test_users [Array<User>]
     # @param test_id [String]
     # @param tools [Array<SuiteCTools>]
-    def create_generic_course_site(driver, sub_account, course, test_users, test_id, tools = nil)
+    # @param event [Event]
+    def create_generic_course_site(driver, sub_account, course, test_users, test_id, tools = nil, event = nil)
       if course.site_id.nil?
         load_sub_account sub_account
         wait_for_load_and_click add_new_course_button_element
@@ -146,7 +141,7 @@ module Page
       end
       publish_course_site(driver, course)
       logger.info "Course ID is #{course.site_id}"
-      add_users(course, test_users)
+      add_users(course, test_users, event)
       if tools
         tools.each do |tool|
           add_suite_c_tool(course, tool) unless tool_nav_link(tool).exists?
@@ -200,13 +195,44 @@ module Page
       (tries -= 1).zero? ? fail : retry
     end
 
+    link(:course_details_tab, xpath: '//a[contains(.,"Course Details")]')
+    text_area(:course_sis_id, id: 'course_sis_source_id')
+    link(:sections_tab, xpath: '//a[contains(.,"Sections")]')
+    text_area(:section_name, id: 'course_section_name')
+    button(:add_section_button, xpath: '//button[@title="Add Section"]')
+    link(:edit_section_link, class: 'edit_section_link')
+    text_area(:section_sis_id, id: 'course_section_sis_source_id')
+    button(:update_section_button, xpath: '//button[contains(.,"Update Section")]')
+
+    # Adds a section to a course site and assigns SIS IDs to both the course and the section
+    # @param course [Course]
+    # @param section [Section]
+    def add_sis_section_and_ids(course, section)
+      # Add SIS id to course
+      navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/settings"
+      wait_for_load_and_click course_details_tab_element
+      wait_for_element_and_type(course_sis_id_element, course.sis_id)
+      wait_for_update_and_click update_course_button_element
+      update_course_success_element.when_visible Utils.short_wait
+      # Add unique section
+      wait_for_update_and_click_js sections_tab_element
+      wait_for_element_and_type(section_name_element, section.sis_id)
+      wait_for_update_and_click add_section_button_element
+      # Add SIS id to section
+      wait_for_update_and_click link_element(text: section.sis_id)
+      wait_for_update_and_click edit_section_link_element
+      wait_for_element_and_type(section_sis_id_element, section.sis_id)
+      wait_for_update_and_click update_section_button_element
+      update_section_button_element.when_not_visible Utils.short_wait
+    end
+
     div(:publish_div, id: 'course_status_actions')
     button(:publish_button, class: 'btn-publish')
     button(:save_and_publish_button, class: 'save_and_publish')
     button(:published_button, class: 'btn-published')
     form(:published_status, id: 'course_status_form')
-    label(:activity_stream_radio, xpath: '//span[contains(.,"Course Activity Stream")]/ancestor::label')
-    button(:choose_and_publish_button, xpath: '//div[@aria-label="Choose Course Home Page"]//span[contains(.,"Choose and Publish")]/..')
+    radio_button(:activity_stream_radio, xpath: '//span[contains(.,"Course Activity Stream")]/ancestor::label')
+    button(:choose_and_publish_button, xpath: '//span[contains(.,"Choose and Publish")]/ancestor::button')
 
     # Publishes a course site
     # @param driver [Selenium::WebDriver]
@@ -223,7 +249,8 @@ module Page
         # Junction test courses from SIS data always have a term and have the site's front page set during creation. Other
         # test courses never have a term and need to set the site's front page while publishing.
         if course.term.nil?
-          wait_for_update_and_click activity_stream_radio_element
+          activity_stream_radio_element.when_visible Utils.short_wait
+          select_activity_stream_radio
           wait_for_update_and_click choose_and_publish_button_element
         end
         published_button_element.when_present Utils.medium_wait
@@ -253,6 +280,7 @@ module Page
     checkbox(:add_user_by_sid, xpath: '//span[contains(text(),"Student ID")]/..')
     text_area(:user_list, xpath: '//textarea')
     select_list(:user_role, id: 'peoplesearch_select_role')
+    select_list(:user_section, id: 'peoplesearch_select_section')
     button(:next_button, id: 'addpeople_next')
     div(:users_ready_to_add_msg, xpath: '//div[contains(text(),"The following users are ready to be added to the course.")]')
     li(:remove_user_success, xpath: '//li[contains(.,"User successfully removed")]')
@@ -272,7 +300,7 @@ module Page
     end
 
     # Scrolls down the users table until a given set of users appear in the table
-    # @param users [User]
+    # @param users [Array<User>]
     def wait_for_users(users)
       scroll_to_bottom
       users.each do |user|
@@ -283,7 +311,9 @@ module Page
     # Adds a collection of users to a course site with the role associated with the user
     # @param course [Course]
     # @param test_users [Array<User>]
-    def add_users(course, test_users)
+    # @param section [Section]
+    # @param event [Event]
+    def add_users(course, test_users, section = nil, event = nil)
       users_to_add = Array.new test_users
       logger.info "Users needed for the site are #{users_to_add.map { |u| u.uid }}"
 
@@ -323,11 +353,13 @@ module Page
             check_add_user_by_uid
             wait_for_element_and_type_js(user_list_element, users)
             self.user_role = user_role
+            wait_for_element_and_select_js(user_section_element, section.sis_id) if section
             wait_for_update_and_click_js next_button_element
             users_ready_to_add_msg_element.when_visible Utils.medium_wait
             hide_canvas_footer
             wait_for_update_and_click_js next_button_element
             wait_for_users users_with_role
+            users_with_role.each { |u| add_event(event, EventType::CREATE, u.full_name) }
           rescue => e
             logger.error "#{e.message}\n#{e.backtrace}"
             logger.warn 'Add User failed, retrying'
@@ -343,7 +375,8 @@ module Page
     # Removes users from a course site
     # @param course [Course]
     # @param users [Array<User>]
-    def remove_users_from_course(course, users)
+    # @param event [Event]
+    def remove_users_from_course(course, users, event = nil)
       load_users_page course
       hide_canvas_footer
       wait_for_users users
@@ -352,6 +385,8 @@ module Page
         wait_for_update_and_click link_element(xpath: "//tr[@id='user_#{user.canvas_id}']//a[contains(@class,'al-trigger')]")
         confirm(true) { wait_for_update_and_click link_element(xpath: "//tr[@id='user_#{user.canvas_id}']//a[@data-event='removeFromCourse']") }
         remove_user_success_element.when_visible Utils.short_wait
+        add_event(event, EventType::MODIFY, '"state": "deleted"')
+        add_event(event, EventType::MODIFY, user.full_name)
       end
     end
 
@@ -441,6 +476,32 @@ module Page
       count = role_option.delete("#{role} ()").to_i
       logger.debug "The count of #{role} users is currently #{count}"
       count
+    end
+
+    # SIS IMPORTS
+
+    text_area(:file_input, name: 'attachment')
+    button(:upload_button, xpath: '//button[contains(.,"Process Data")]')
+    div(:import_success_msg, xpath: '//div[contains(.,"The import is complete and all records were successfully imported.")]')
+
+    # Uploads CSVs on the SIS Import page
+    # @param files [Array<String>]
+    # @param users [Array<User>]
+    # @param event [Event]
+    def upload_sis_imports(files, users, event = nil)
+      files.each do |csv|
+        logger.info "Uploading a SIS import CSV at #{csv}"
+        navigate_to "#{Utils.canvas_base_url}/accounts/#{Utils.canvas_uc_berkeley_sub_account}/sis_import"
+        file_input_element.when_visible Utils.short_wait
+        file_input_element.send_keys csv
+        wait_for_update_and_click upload_button_element
+        import_success_msg_element.when_present Utils.medium_wait
+      end
+      users.each do |u|
+        (u.status == 'active') ?
+            add_event(event, EventType::CREATE, u.full_name) :
+            add_event(event, EventType::MODIFY, u.full_name)
+      end
     end
 
     # SUITEC LTI TOOLS

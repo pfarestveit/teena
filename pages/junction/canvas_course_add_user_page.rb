@@ -124,17 +124,19 @@ module Page
       # Selects a user, a course section, and a user role; clicks the add button; and waits for the success message
       # @param user [User]
       # @param section [Section]
-      def add_user_by_uid(user, section = nil)
+      # @param event [Event]
+      def add_user_by_uid(user, section = nil, event = nil)
         logger.info "Adding UID #{user.uid} with role '#{user.role}'%s" % (" to section '#{section.course} #{section.label}'" if section)
         user_checkbox(user).when_present Utils.medium_wait
         user_checkbox(user).check
         if section
           course_section_element.when_visible Utils.short_wait
-          self.course_section = "#{section.course} #{section.label}"
+          section.sis_id ? self.course_section = section.sis_id : self.course_section = "#{section.course} #{section.label}"
         end
         self.user_role = user.role
         wait_for_update_and_click_js add_user_button_element
         success_msg_element.when_visible Utils.medium_wait
+        add_event(event, EventType::CREATE, user.full_name)
       end
 
     end
