@@ -210,7 +210,9 @@ describe 'bCourses course site creation' do
           expected_student_count = @rosters_api.enrolled_students.length
           expected_waitlist_count = @rosters_api.waitlisted_students.length
 
-          expected_enrollment_counts = [expected_student_count, expected_waitlist_count, expected_teacher_count, expected_lead_ta_count, expected_ta_count]
+          expected_enrollment_counts = [{:role => 'Student', :count => expected_student_count}, {:role => 'Waitlist Student', :count => expected_waitlist_count},
+                                        {:role => 'Teacher', :count => expected_teacher_count}, {:role => 'Lead TA', :count => expected_lead_ta_count},
+                                        {:role => 'TA', :count => expected_ta_count}]
           actual_enrollment_counts = @canvas_page.wait_for_enrollment_import(course, ['Student', 'Waitlist Student', 'Teacher', 'Lead TA', 'TA'])
           it("results in the right course site membership for #{course.term} #{course.code} site ID #{course.site_id}") { expect(actual_enrollment_counts).to eql(expected_enrollment_counts) }
 
