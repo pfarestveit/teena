@@ -50,8 +50,8 @@ describe 'bCourses Roster Photos' do
     @roster_api.get_feed(@driver, course)
     if course_id.nil?
       user_counts = @canvas.wait_for_enrollment_import(course, ['Student', 'Waitlist Student'])
-      @student_count = user_counts[0]
-      @waitlist_count = user_counts[1]
+      @student_count = user_counts[0][:count]
+      @waitlist_count = user_counts[1][:count]
     else
       @student_count = @canvas.enrollment_count_by_role(course, 'Student')
       @waitlist_count = @canvas.enrollment_count_by_role(course, 'Waitlist Student')

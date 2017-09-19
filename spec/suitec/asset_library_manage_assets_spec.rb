@@ -315,7 +315,7 @@ describe 'Asset', order: :defined do
     users.each do |user|
       it "are visible to course #{user.role} UID #{user.uid} if the user has permission to see them" do
         @canvas.masquerade_as(@driver, user, @course)
-        expect(@canvas.suitec_files_hidden?(@course, user)).to be true
+        expect(@canvas.suitec_files_hidden? @course).to be true
       end
     end
   end
@@ -333,7 +333,9 @@ describe 'Asset', order: :defined do
       @destination_library_url = @canvas.click_tool_link(@driver, SuiteCTools::ASSET_LIBRARY)
 
       # Teacher logs in to new asset library so that enrollment is synced immediately
-      @canvas.masquerade_as(@driver, teacher, @destination_course)
+      @canvas.log_out(@driver, @cal_net)
+      @canvas.log_in(@cal_net, teacher.username, Utils.test_user_password)
+      @canvas.load_course_site(@driver, @destination_course)
       @destination_library.load_page(@driver, @destination_library_url)
 
       # Teacher creates an asset of each type in origin course site plus one extra that is deleted

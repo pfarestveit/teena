@@ -1,5 +1,9 @@
 webdriver: chrome
 
+window:
+  height: 0
+  width: 0
+
 timeouts:
   click_wait: 0.5
   event_wait: 0

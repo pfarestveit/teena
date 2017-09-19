@@ -42,7 +42,12 @@ class Utils
       else
         driver = Selenium::WebDriver.for :safari
       end
-      driver.manage.window.maximize
+      # If a specific window size is needed (e.g., Chrome or Safari on a small screen), set size. Else, maximize the window.
+      width = @config['window']['width']
+      height = @config['window']['height']
+      (height.zero? || width.zero?) ?
+          driver.manage.window.maximize :
+          driver.manage.window.resize_to(width, height)
       driver
     else
       logger.error 'Designated WebDriver is not supported'

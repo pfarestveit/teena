@@ -451,18 +451,13 @@ module Page
     # @param roles [Array<String>]
     # @return [Array<Integer>]
     def wait_for_enrollment_import(course, roles)
-      enrollment_counts = []
-      roles.each do |role|
-        starting_count = 0
-        ending_count = enrollment_count_by_role(course, role)
-        begin
-          starting_count = ending_count
-          sleep 20
-          ending_count = enrollment_count_by_role(course, role)
-        end while ending_count > starting_count
-        enrollment_counts << ending_count
-      end
-      enrollment_counts
+      current_count = roles.map { |role| {:role => role, :count => enrollment_count_by_role(course, role)} }
+      begin
+        starting_count = current_count
+        sleep 20
+        current_count = roles.map { |role| {:role => role, :count => enrollment_count_by_role(course, role)} }
+      end while current_count != starting_count
+      current_count
     end
 
     # Returns the number of users in a course site with a given role

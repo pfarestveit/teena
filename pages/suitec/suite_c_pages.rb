@@ -329,6 +329,7 @@ module Page
       wait_until(Utils.short_wait) { driver.find_element(xpath: "//*[name()='svg']//*[@class='drop-line'][#{line_node}]/*[name()='circle'][last()]") }
       container = driver.find_element(xpath: '//*[name()="svg"]//*[name()="rect"]')
       drop = driver.find_element(xpath: "//*[name()='svg']//*[@class='drop-line'][#{line_node}]/*[name()='circle'][last()]")
+      scroll_to_element container
       driver.action.drag_and_drop_by(container, -25, 0).perform unless drop_clickable? drop
 
       # Zoom in, but a little less if on asset detail since drops are less likely to be tightly clustered

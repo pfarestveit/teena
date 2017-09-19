@@ -312,14 +312,11 @@ module Page
 
     # Verifies that the asset file directory on a course site is set to 'hidden' but visible to the right user roles
     # @param course [Course]
-    # @param user [User]
     # @return [boolean]
-    def suitec_files_hidden?(course, user)
+    def suitec_files_hidden?(course)
       load_files course
       div_element(class: 'ef-folder-list').when_visible Utils.medium_wait
-      ['Teacher', 'Lead TA', 'TA', 'Designer', 'Reader'].include?(user.role) ?
-          verify_block { button_element(xpath: '//a[contains(.,"_suitec")]/../following-sibling::div[5]/button[@title="Hidden. Available with a link"]').when_visible Utils.short_wait } :
-          verify_block { file_search_no_results_element.when_visible Utils.short_wait }
+      verify_block { file_search_no_results_element.when_visible Utils.short_wait }
     end
 
     # GRADES
