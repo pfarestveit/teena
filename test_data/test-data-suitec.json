@@ -13,7 +13,7 @@
                 "asset_library_content": true,
                 "asset_library_likes": true,
                 "asset_library_manage_assets": true,
-                "asset_library_uploads": true,
+                "asset_library_links_and_files": true,
                 "canvas_assignment_submissions": true,
                 "canvas_assignment_sync": true,
                 "canvas_discussions": true,
@@ -52,7 +52,6 @@
             "tests": {
                 "asset_library_search": true,
                 "asset_library_likes": true,
-                "asset_library_urls": true,
                 "canvas_discussions": true,
                 "impact_studio_profile": true
             },

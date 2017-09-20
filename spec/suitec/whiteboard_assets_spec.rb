@@ -167,7 +167,7 @@ describe 'Whiteboard Add Asset', order: :defined do
     end
 
     it 'requires an asset title of 255 characters maximum' do
-      student_1_asset_long_title = Asset.new(@student_1.assets.find { |asset| asset['type'] == 'File' })
+      student_1_asset_long_title = Asset.new((@student_1.assets.select { |asset| asset['type'] == 'File' })[0])
       student_1_asset_long_title.title = "File #{test_id} #{'A loooooong title' * 15}"
       @whiteboards.load_page(@driver, @whiteboards_url, event)
       @whiteboards.open_whiteboard(@driver, @whiteboard, event)
@@ -187,7 +187,7 @@ describe 'Whiteboard Add Asset', order: :defined do
     end
 
     it 'allows the user to add the upload to the asset library' do
-      student_1_asset_visible = Asset.new(@student_1.assets.find { |asset| asset['type'] == 'File' })
+      student_1_asset_visible = Asset.new((@student_1.assets.select { |asset| asset['type'] == 'File' })[1])
       student_1_asset_visible.title = "#{test_id} Student 1 file added to library"
       @whiteboards.load_page(@driver, @whiteboards_url, event)
       @whiteboards.open_whiteboard(@driver, @whiteboard, event)
@@ -201,7 +201,7 @@ describe 'Whiteboard Add Asset', order: :defined do
     end
 
     it 'allows the user to exclude the upload from the asset library' do
-      student_1_asset_hidden = Asset.new(@student_1.assets.find { |asset| asset['type'] == 'File' })
+      student_1_asset_hidden = Asset.new((@student_1.assets.select { |asset| asset['type'] == 'File' })[2])
       student_1_asset_hidden.title = "#{test_id} Student 1 file not added to library"
       @whiteboards.load_page(@driver, @whiteboards_url, event)
       @whiteboards.open_whiteboard(@driver, @whiteboard, event)

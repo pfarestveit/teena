@@ -150,10 +150,11 @@ module Page
       # @param asset [Asset]
       # @param event [Event]
       def verify_first_asset(user, asset, event = nil)
+        wait_until(timeout=Utils.medium_wait) { list_view_asset_elements.any? }
         # Pause to allow DOM update to complete
         sleep 1
         logger.debug "Verifying list view asset title includes '#{asset.title}'"
-        wait_until(timeout=Utils.medium_wait) { list_view_asset_title_elements[0].text.include? asset.title }
+        wait_until(timeout) { list_view_asset_title_elements[0].text.include? asset.title }
         logger.debug "Verifying list view asset owner is '#{user.full_name}'"
         # Subtract the 'by ' prefix
         wait_until(timeout) { list_view_asset_owner_name_elements[0].text[3..-1] == user.full_name }
