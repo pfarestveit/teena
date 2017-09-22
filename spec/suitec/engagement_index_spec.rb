@@ -50,7 +50,7 @@ describe 'The Engagement Index', order: :defined do
     @engagement_index.load_page(@driver, @engagement_index_url, event)
     @engagement_index.un_share_score event
     @asset_library.load_asset_detail(@driver, @asset_library_url, asset, event)
-    @asset_library.add_comment(asset, 'Testing Testing', event)
+    @asset_library.add_comment(asset, Comment.new(student_1, 'Testing Testing'), event)
 
     # Like the asset
     @canvas.masquerade_as(@driver, (event.actor = student_2), @course)

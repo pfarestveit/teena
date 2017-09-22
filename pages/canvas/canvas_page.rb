@@ -446,31 +446,33 @@ module Page
       switch_to_canvas_iframe driver
     end
 
+    # Returns the number of users in a course site with a given set of roles
+    # @param course [Course]
+    # @param roles [Array<String>]
+    # @return [Array<Hash>]
+    def enrollment_count_by_roles(course, roles)
+      load_users_page course
+      wait_for_load_and_click enrollment_roles_element
+      roles.map do |role|
+        role_option = enrollment_roles_options.find { |option| option.include? role }
+        count = role_option.delete("#{role} ()").to_i
+        logger.debug "The count of #{role} users is currently #{count}"
+        {:role => role, :count => count}
+      end
+    end
+
     # Waits for a course site's enrollment to finish updating for a given set of user roles and then returns the final count for each role
     # @param course [Course]
     # @param roles [Array<String>]
     # @return [Array<Integer>]
     def wait_for_enrollment_import(course, roles)
-      current_count = roles.map { |role| {:role => role, :count => enrollment_count_by_role(course, role)} }
+      current_count = enrollment_count_by_roles(course, roles)
       begin
         starting_count = current_count
         sleep 20
-        current_count = roles.map { |role| {:role => role, :count => enrollment_count_by_role(course, role)} }
+        current_count = enrollment_count_by_roles(course, roles)
       end while current_count != starting_count
       current_count
-    end
-
-    # Returns the number of users in a course site with a given role
-    # @param course [Course]
-    # @param role [String]
-    # @return Integer
-    def enrollment_count_by_role(course, role)
-      load_users_page course
-      wait_for_load_and_click enrollment_roles_element
-      role_option = enrollment_roles_options.find { |option| option.include? role }
-      count = role_option.delete("#{role} ()").to_i
-      logger.debug "The count of #{role} users is currently #{count}"
-      count
     end
 
     # SIS IMPORTS

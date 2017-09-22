@@ -566,16 +566,17 @@ module Page
       button(:comment_add_button, xpath: '//span[text()="Comment"]/..')
       elements(:comment, :div, class: 'assetlibrary-item-comment')
 
-      # Adds a given comment on an asset's detail view
+      # Adds a comment on an asset's detail view
       # @param asset [Asset]
-      # @param comment_body [String]
+      # @param comment [Comment]
       # @param event [Event]
-      def add_comment(asset, comment_body, event = nil)
-        logger.info "Adding the comment '#{comment_body}'"
+      def add_comment(asset, comment, event = nil)
+        logger.info "Adding the comment '#{comment.body}'"
         scroll_to_bottom
-        wait_for_element_and_type_js(comment_input_element, comment_body)
+        wait_for_element_and_type_js(comment_input_element, comment.body)
         wait_until(Utils.short_wait) { comment_add_button_element.enabled? }
         wait_for_update_and_click_js comment_add_button_element
+        asset.comments.unshift(comment)
         add_event(event, EventType::POST, asset.id)
       end
 
@@ -644,17 +645,19 @@ module Page
         comment_elements[index].button_element(xpath: '//span[text()="Reply"]/..')
       end
 
-      # Enters and saves a reply at a given index in the list of comments
+      # Replies to a comment
       # @param asset [Asset]
-      # @param index [Integer]
-      # @param reply_body [String]
+      # @param comment [Comment]
+      # @param reply [Comment]
       # @param event [Event]
-      def reply_to_comment(asset, index, reply_body, event = nil)
-        logger.info "Replying to comment at index #{index}. Reply is '#{reply_body}'"
+      def reply_to_comment(asset, comment, reply, event = nil)
+        logger.info "Replying '#{reply.body}'"
+        index = asset.comments.index comment
         click_reply_button(index)
         reply_input_element(index).when_visible Utils.short_wait
-        reply_input_element(index).send_keys reply_body
+        reply_input_element(index).send_keys reply.body
         wait_for_update_and_click_js reply_add_button_element(index)
+        asset.comments.insert((index + 1), reply)
         add_event(event, EventType::POST, asset.id)
       end
 
@@ -680,23 +683,17 @@ module Page
         comment_elements[index].text_area_element(id: 'assetlibrary-item-editcomment-body')
       end
 
-      # Returns the 'save' button of an edited comment at a given index in the list of comments
-      # @param index [Integer]
-      # @return [PageObject::Elements::Button]
-      def edit_save_button_element(index)
-        comment_elements[index].button_element(xpath: '//button[contains(.,"Save Changes")]')
-      end
-
-      # Enters and saves a comment edit at a given index in the list of comments
+      # Edits a comment
       # @param asset [Asset]
-      # @param index [Integer]
-      # @param edited_body [String]
+      # @param comment [Comment]
       # @param event [Event]
-      def edit_comment(asset, index, edited_body, event = nil)
-        logger.info "Editing comment at index #{index}. New comment is '#{edited_body}'"
+      def edit_comment(asset, comment, event = nil)
+        index = asset.comments.index comment
+        logger.info "Editing comment at index #{index}. New comment is '#{comment.body}'"
         click_edit_button(index)
-        wait_for_element_and_type_js(edit_input_element(index), edited_body)
-        wait_for_update_and_click_js edit_save_button_element(index)
+        wait_for_element_and_type_js(edit_input_element(index), comment.body)
+        wait_for_update_and_click_js comment_elements[index].button_element(xpath: '//button[contains(.,"Save Changes")]')
+        wait_until(Utils.short_wait) { comment_body(index) == comment.body }
         add_event(event, EventType::MODIFY, asset.id)
       end
 
@@ -716,15 +713,29 @@ module Page
         nil
       end
 
-      # Deletes a comment at a given index in the list of comments
+      # Deletes a comment
       # @param asset [Asset]
-      # @param index [Integer]
+      # @param comment [Comment]
       # @param event [Event]
-      def delete_comment(asset, index, event = nil)
+      def delete_comment(asset, comment, event = nil)
+        index = asset.comments.index comment
         logger.info "Deleting comment at index #{index}"
         confirm(true) { wait_for_load_and_click_js delete_button_element(index) }
+        asset.comments.delete comment
         add_event(event, EventType::DELETE, asset.id)
         sleep 1
+      end
+
+      # Given an asset, verifies that each of its comments appears correctly in the asset detail view
+      # @param asset [Asset]
+      def verify_comments(asset)
+        wait_until(timeout = Utils.short_wait) { comment_elements.length == asset.comments.length }
+        wait_until(timeout) { asset_detail_comment_count == "#{asset.comments.length}" }
+        asset.comments.each do |comment|
+          index = asset.comments.index comment
+          wait_until(timeout) { commenter_name(index).include?(comment.user.full_name) }
+          wait_until(timeout) { comment_body(index) == comment.body }
+        end
       end
 
       # ACTIVITY EVENT DROPS

@@ -27,6 +27,10 @@ describe 'The Impact Studio', order: :defined do
   [asset_1, asset_2, asset_3, asset_5, asset_6, asset_7].each { |a| a.title = "#{a.title} #{test_id}" }
   asset_1_activities, asset_3_activities, asset_4_activities, asset_5_activities, asset_6_activities = nil
 
+  asset_4_comment = Comment.new(student_1, 'Impact-free comment')
+  asset_6_comment = Comment.new(teacher, 'This is a comment from Teacher to Student 2')
+  asset_6_reply = Comment.new(teacher, 'This is another comment from Teacher to Student 2')
+
   before(:all) do
     @course = Course.new({title: "Impact Studio Visualizations #{test_id}", code: "Impact Studio Visualizations #{test_id}"})
 
@@ -331,7 +335,7 @@ describe 'The Impact Studio', order: :defined do
         student_2_activities[:get_view_asset][:count] += 1
         asset_6_activities[:get_view_asset] += 1
 
-        @asset_library.add_comment(asset_6, 'This is a comment from Teacher to Student 2')
+        @asset_library.add_comment(asset_6, asset_6_comment)
         @asset_library.wait_until(Utils.short_wait) { @asset_library.asset_detail_comment_count == '1' }
         teacher_activities[:comment][:count] += 1
         student_2_activities[:get_comment][:count] += 1
@@ -385,7 +389,7 @@ describe 'The Impact Studio', order: :defined do
         student_2_activities[:get_view_asset][:count] += 1
         asset_6_activities[:get_view_asset] += 1
 
-        @asset_library.reply_to_comment(asset_6, 0, 'This is another comment from Teacher to Student 2')
+        @asset_library.reply_to_comment(asset_6, asset_6_comment, asset_6_reply)
         @asset_library.wait_until(Utils.short_wait) { @asset_library.asset_detail_comment_count == '2' }
         teacher_activities[:comment][:count] += 1
         student_2_activities[:get_comment][:count] += 1
@@ -633,7 +637,7 @@ describe 'The Impact Studio', order: :defined do
 
       before(:all) do
         @asset_library.load_asset_detail(@driver, @asset_library_url, asset_4)
-        @asset_library.add_comment(asset_4, 'Impact-free comment')
+        @asset_library.add_comment(asset_4, asset_4_comment)
         @impact_studio.load_page(@driver, @impact_studio_url)
       end
 
@@ -701,7 +705,7 @@ describe 'The Impact Studio', order: :defined do
         student_2_activities[:get_view_asset][:count] += 1
         asset_6_activities[:get_view_asset] += 1
 
-        @asset_library.delete_comment(asset_6, 1)
+        @asset_library.delete_comment(asset_6, asset_6_reply)
         teacher_activities[:comment][:count] -= 1
         student_2_activities[:get_comment][:count] -= 1
         asset_6_activities[:get_comment] -= 1
