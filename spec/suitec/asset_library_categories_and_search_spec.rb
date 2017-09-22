@@ -195,25 +195,25 @@ describe 'Asset Library', order: :defined do
       @asset_library.add_site student_3_link
 
       # Create a whiteboard, export it, and add two comments
-      @whiteboards.load_page(@driver, @whiteboards_url)
       @whiteboard = Whiteboard.new({owner: student_3, title: "Whiteboard #{test_id}", collaborators: [student_1, student_2]})
-      @whiteboards.create_whiteboard @whiteboard
-      @whiteboards.open_whiteboard(@driver, @whiteboard)
+      @whiteboards.load_page(@driver, @whiteboards_url)
+      @whiteboards.create_and_open_whiteboard(@driver, @whiteboard)
       @whiteboards.add_existing_assets [student_2_upload]
       @whiteboards.wait_until(timeout) { @whiteboards.open_original_asset_link_element.attribute('href').include? student_2_upload.id }
       @whiteboard_asset = @whiteboards.export_to_asset_library @whiteboard
+
       @asset_library.load_page(@driver, @asset_library_url)
       @whiteboard_asset.id = @asset_library.list_view_asset_ids.first
       @asset_library.load_asset_detail(@driver, @asset_library_url, @whiteboard_asset)
-      @asset_library.add_comment(@whiteboard_asset, 'Comment from asset owner')
-      @asset_library.wait_until(timeout) { @asset_library.comment_elements.any? }
-      @asset_library.reply_to_comment(@whiteboard_asset, 0, 'Reply from asset owner')
-      @asset_library.wait_until(timeout) { @asset_library.comment_elements.length == 2 }
+      @asset_library.add_comment(@whiteboard_asset, (whiteboard_comment = Comment.new(student_3, 'Comment from asset owner')))
+      @asset_library.verify_comments @whiteboard_asset
+      @asset_library.reply_to_comment(@whiteboard_asset, whiteboard_comment, Comment.new(student_3, 'Reply from asset owner'))
+      @asset_library.verify_comments @whiteboard_asset
 
       # Add a comment to an asset and like it
       @asset_library.load_asset_detail(@driver, @asset_library_url, student_2_upload)
-      @asset_library.add_comment(student_2_upload, '#BadHombre')
-      @asset_library.wait_until(timeout) { @asset_library.comment_elements.any? }
+      @asset_library.add_comment(student_2_upload, Comment.new(student_3, '#BadHombre'))
+      @asset_library.verify_comments student_2_upload
       @asset_library.toggle_detail_view_item_like student_2_upload
 
       # View an asset and like it

@@ -49,7 +49,7 @@ describe 'Asset', order: :defined do
       logger.debug "Asset ID #{asset.id} has title '#{asset.title}'"
 
       @asset_library.load_asset_detail(@driver, @asset_library_url, asset)
-      @asset_library.add_comment(asset, 'An asset comment')
+      @asset_library.add_comment(asset, Comment.new(student_uploader, 'An asset comment'))
       @asset_library.toggle_detail_view_item_like asset
     end
 
@@ -155,7 +155,7 @@ describe 'Asset', order: :defined do
         # Add a comment
         @canvas.masquerade_as(@driver, student_viewer, @course)
         @asset_library.load_asset_detail(@driver, @asset_library_url, asset)
-        @asset_library.add_comment(asset, 'An asset comment')
+        @asset_library.add_comment(asset, Comment.new(student_viewer, 'An asset comment'))
 
         # Get the students' initial scores
         @canvas.stop_masquerading @driver

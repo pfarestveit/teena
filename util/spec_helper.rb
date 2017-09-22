@@ -19,6 +19,7 @@ require_relative '../models/canvas/discussion'
 require_relative '../models/canvas/group'
 require_relative '../models/suitec/activity'
 require_relative '../models/suitec/asset'
+require_relative '../models/suitec/comment'
 require_relative '../models/suitec/whiteboard'
 require_relative '../models/suitec/suite_c_tools'
 

@@ -343,11 +343,8 @@ describe 'Whiteboard Add Asset', order: :defined do
     end
 
     it 'allows the user to comment on it via the whiteboard' do
-      @asset_library.add_comment(@student_3_asset_hidden, 'Comment on a hidden asset', event)
-      @asset_library.wait_until(timeout) { @asset_library.comment_elements.length == 1 }
-      @asset_library.wait_until(timeout) { @asset_library.asset_detail_comment_count == '1' }
-      @asset_library.wait_until(timeout) { @asset_library.commenter_name(0).include?(@student_3.full_name) }
-      expect(@asset_library.comment_body(0)).to eql('Comment on a hidden asset')
+      @asset_library.add_comment(@student_3_asset_hidden, Comment.new(@student_3, 'Comment on a hidden asset'), event)
+      @asset_library.verify_comments @student_3_asset_hidden
     end
 
     it 'allows the user to edit its metadata via the whiteboard' do

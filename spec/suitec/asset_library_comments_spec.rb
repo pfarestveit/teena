@@ -8,14 +8,6 @@ describe 'An asset comment', order: :defined do
   timeout = Utils.short_wait
   event = Event.new({csv: LRSUtils.initialize_events_csv('Comments')})
 
-  comment_1_by_uploader = 'Uploader makes Comment 1'
-  comment_1_reply_by_uploader = 'Uploader replies to own Comment 1'
-  comment_1_reply_by_viewer = 'Viewer replies to uploader\'s Comment 1'
-  comment_2_by_viewer = 'Viewer makes Comment 2'
-  comment_2_reply_by_viewer = 'Viewer replies to own Comment 2'
-  comment_2_edit_by_viewer = 'Viewer edits own Comment 2'
-  comment_3_by_viewer = 'Viewer makes Comment 3 with link to www.google.com'
-
   before(:all) do
     @course = Course.new({})
     @course.site_id = ENV['COURSE_ID']
@@ -28,6 +20,13 @@ describe 'An asset comment', order: :defined do
     @asset_admirer = User.new students[1]
     @asset = Asset.new (@asset_uploader.assets.find { |asset| asset['type'] == 'Link' })
     @asset.title = "#{@asset.title} - #{test_id}"
+
+    @comment_1_by_uploader = Comment.new(@asset_uploader, 'Uploader makes Comment 1')
+    @comment_1_reply_by_uploader = Comment.new(@asset_uploader, 'Uploader replies to own Comment 1')
+    @comment_1_reply_by_viewer = Comment.new(@asset_admirer, 'Viewer replies to uploader\'s Comment 1')
+    @comment_2_by_viewer = Comment.new(@asset_admirer, 'Viewer makes Comment 2')
+    @comment_2_reply_by_viewer = Comment.new(@asset_admirer, 'Viewer replies to own Comment 2')
+    @comment_3_by_viewer = Comment.new(@asset_admirer, 'Viewer makes Comment 3 with link to www.google.com')
 
     @driver = Utils.launch_browser
     @canvas = Page::CanvasPage.new @driver
@@ -61,26 +60,18 @@ describe 'An asset comment', order: :defined do
     it 'can be added on the detail view' do
       @canvas.masquerade_as(@driver, (event.actor = @asset_uploader), @course)
       @asset_library.load_asset_detail(@driver, @asset_library_url, @asset, event)
-      @asset_library.add_comment(@asset, comment_1_by_uploader, event)
-      @asset_library.wait_until(timeout) { @asset_library.comment_elements.length == 1 }
-      @asset_library.wait_until(timeout) { @asset_library.asset_detail_comment_count == '1' }
-      @asset_library.wait_until(timeout) { @asset_library.commenter_name(0).include?(@asset_uploader.full_name) }
-      expect(@asset_library.comment_body(0)).to eql(comment_1_by_uploader)
+      @asset_library.add_comment(@asset, @comment_1_by_uploader, event)
+      @asset_library.verify_comments @asset
       @asset_library.go_back_to_asset_library
-      @asset_library.wait_until(timeout) { @asset_library.asset_comment_count(0) == '1' }
+      @asset_library.wait_until(timeout) { @asset_library.asset_comment_count(0) == "#{@asset.comments.length}" }
     end
 
     it 'can be added as a reply to an existing comment' do
       @asset_library.load_asset_detail(@driver, @asset_library_url, @asset, event)
-      @asset_library.reply_to_comment(@asset, 0, comment_1_reply_by_uploader, event)
-      @asset_library.wait_until(timeout) { @asset_library.comment_elements.length == 2 }
-      @asset_library.wait_until(timeout) { @asset_library.asset_detail_comment_count == '2' }
-      expect(@asset_library.commenter_name(0)).to include(@asset_uploader.full_name)
-      expect(@asset_library.comment_body(0)).to eql(comment_1_by_uploader)
-      expect(@asset_library.commenter_name(1)).to include(@asset_uploader.full_name)
-      expect(@asset_library.comment_body(1)).to eql(comment_1_reply_by_uploader)
+      @asset_library.reply_to_comment(@asset, @comment_1_by_uploader, @comment_1_reply_by_uploader, event)
+      @asset_library.verify_comments @asset
       @asset_library.go_back_to_asset_library
-      @asset_library.wait_until(timeout) { @asset_library.asset_comment_count(0) == '2' }
+      @asset_library.wait_until(timeout) { @asset_library.asset_comment_count(0) == "#{@asset.comments.length}" }
     end
 
     it 'does not earn commenting points on the engagement index' do
@@ -99,53 +90,26 @@ describe 'An asset comment', order: :defined do
 
     it 'can be added on the detail view' do
       @asset_library.load_asset_detail(@driver, @asset_library_url, @asset, event)
-      @asset_library.add_comment(@asset, comment_2_by_viewer, event)
-      @asset_library.wait_until(timeout) { @asset_library.comment_elements.length == 3 }
-      @asset_library.wait_until(timeout) { @asset_library.asset_detail_comment_count == '3' }
-      expect(@asset_library.commenter_name(0)).to include(@asset_admirer.full_name)
-      expect(@asset_library.comment_body(0)).to eql(comment_2_by_viewer)
-      expect(@asset_library.commenter_name(1)).to include(@asset_uploader.full_name)
-      expect(@asset_library.comment_body(1)).to eql(comment_1_by_uploader)
-      expect(@asset_library.commenter_name(2)).to include(@asset_uploader.full_name)
-      expect(@asset_library.comment_body(2)).to eql(comment_1_reply_by_uploader)
+      @asset_library.add_comment(@asset, @comment_2_by_viewer, event)
+      @asset_library.verify_comments @asset
       @asset_library.go_back_to_asset_library
-      @asset_library.wait_until(timeout) { @asset_library.asset_comment_count(0) == '3' }
+      @asset_library.wait_until(timeout) { @asset_library.asset_comment_count(0) == "#{@asset.comments.length}" }
     end
 
     it 'can be added as a reply to the user\'s own comment' do
       @asset_library.load_asset_detail(@driver, @asset_library_url, @asset, event)
-      @asset_library.reply_to_comment(@asset, 0, comment_2_reply_by_viewer, event)
-      @asset_library.wait_until(timeout) { @asset_library.comment_elements.length == 4 }
-      @asset_library.wait_until(timeout) { @asset_library.asset_detail_comment_count == '4' }
-      expect(@asset_library.commenter_name(0)).to include(@asset_admirer.full_name)
-      expect(@asset_library.comment_body(0)).to eql(comment_2_by_viewer)
-      expect(@asset_library.commenter_name(1)).to include(@asset_admirer.full_name)
-      expect(@asset_library.comment_body(1)).to eql(comment_2_reply_by_viewer)
-      expect(@asset_library.commenter_name(2)).to include(@asset_uploader.full_name)
-      expect(@asset_library.comment_body(2)).to eql(comment_1_by_uploader)
-      expect(@asset_library.commenter_name(3)).to include(@asset_uploader.full_name)
-      expect(@asset_library.comment_body(3)).to eql(comment_1_reply_by_uploader)
+      @asset_library.reply_to_comment(@asset, @comment_2_by_viewer, @comment_2_reply_by_viewer, event)
+      @asset_library.verify_comments @asset
       @asset_library.go_back_to_asset_library
-      @asset_library.wait_until(timeout) { @asset_library.asset_comment_count(0) == '4' }
+      @asset_library.wait_until(timeout) { @asset_library.asset_comment_count(0) == "#{@asset.comments.length}" }
     end
 
     it 'can be added as a reply to another user\'s comment' do
       @asset_library.load_asset_detail(@driver, @asset_library_url, @asset, event)
-      @asset_library.reply_to_comment(@asset, 2, comment_1_reply_by_viewer, event)
-      @asset_library.wait_until(timeout) { @asset_library.comment_elements.length == 5 }
-      @asset_library.wait_until(timeout) { @asset_library.asset_detail_comment_count == '5' }
-      expect(@asset_library.commenter_name(0)).to include(@asset_admirer.full_name)
-      expect(@asset_library.comment_body(0)).to eql(comment_2_by_viewer)
-      expect(@asset_library.commenter_name(1)).to include(@asset_admirer.full_name)
-      expect(@asset_library.comment_body(1)).to eql(comment_2_reply_by_viewer)
-      expect(@asset_library.commenter_name(2)).to include(@asset_uploader.full_name)
-      expect(@asset_library.comment_body(2)).to eql(comment_1_by_uploader)
-      expect(@asset_library.commenter_name(3)).to include(@asset_admirer.full_name)
-      expect(@asset_library.comment_body(3)).to eql(comment_1_reply_by_viewer)
-      expect(@asset_library.commenter_name(4)).to include(@asset_uploader.full_name)
-      expect(@asset_library.comment_body(4)).to eql(comment_1_reply_by_uploader)
+      @asset_library.reply_to_comment(@asset, @comment_1_by_uploader, @comment_1_reply_by_viewer, event)
+      @asset_library.verify_comments @asset
       @asset_library.go_back_to_asset_library
-      @asset_library.wait_until(timeout) { @asset_library.asset_comment_count(0) == '5' }
+      @asset_library.wait_until(timeout) { @asset_library.asset_comment_count(0) == "#{@asset.comments.length}" }
     end
 
     it 'earns "Comment" points on the engagement index for the user adding a comment or reply' do
@@ -181,67 +145,59 @@ describe 'An asset comment', order: :defined do
     it 'can include a link that opens in a new browser window' do
       @canvas.masquerade_as(@driver, (event.actor = @asset_admirer), @course)
       @asset_library.load_asset_detail(@driver, @asset_library_url, @asset, event)
-      @asset_library.add_comment(@asset, comment_3_by_viewer, event)
-      @asset_library.wait_until(timeout) { @asset_library.comment_elements.count == 6 }
+      @asset_library.add_comment(@asset, @comment_3_by_viewer, event)
+      @asset_library.verify_comments @asset
       @asset_library.external_link_valid?(@driver, @asset_library.comment_body_link(0, 'google'), 'Google')
     end
 
     it 'cannot be added as a reply to a reply' do
       @asset_library.load_asset_detail(@driver, @asset_library_url, @asset, event)
       @asset_library.wait_until(timeout) { @asset_library.comment_elements.length == 6 }
-      expect(@asset_library.reply_button_element(1).exists?).to be true
-      expect(@asset_library.reply_button_element(2).exists?).to be false
+      expect(@asset_library.reply_button_element(@asset.comments.index @comment_2_by_viewer).exists?).to be true
+      expect(@asset_library.reply_button_element(@asset.comments.index @comment_2_reply_by_viewer).exists?).to be false
     end
 
     it 'can be canceled when a reply' do
+      index = @asset.comments.index @comment_3_by_viewer
       @asset_library.load_asset_detail(@driver, @asset_library_url, @asset, event)
-      @asset_library.click_reply_button 0
-      @asset_library.reply_input_element(0).when_visible timeout
-      @asset_library.wait_for_update_and_click_js @asset_library.cancel_button_element(0)
-      @asset_library.reply_input_element(0).when_not_visible timeout
+      @asset_library.click_reply_button index
+      @asset_library.reply_input_element(index).when_visible timeout
+      @asset_library.wait_for_update_and_click_js @asset_library.cancel_button_element(index)
+      @asset_library.reply_input_element(index).when_not_visible timeout
     end
   end
 
   describe 'edit' do
 
     it 'can be done by the user who created the comment' do
+      @comment_2_by_viewer.body = 'Viewer edits own Comment 2'
       @asset_library.load_asset_detail(@driver, @asset_library_url, @asset, event)
-      @asset_library.edit_comment(@asset, 1, comment_2_edit_by_viewer, event)
-      @asset_library.wait_until(timeout) { @asset_library.comment_body(1) == comment_2_edit_by_viewer }
-      expect(@asset_library.asset_detail_comment_count).to eql('6')
-      expect(@asset_library.comment_body(0)).to eql(comment_3_by_viewer)
-      expect(@asset_library.comment_body(2)).to eql(comment_2_reply_by_viewer)
-      expect(@asset_library.comment_body(3)).to eql(comment_1_by_uploader)
-      expect(@asset_library.comment_body(4)).to eql(comment_1_reply_by_viewer)
-      expect(@asset_library.comment_body(5)).to eql(comment_1_reply_by_uploader)
+      @asset_library.edit_comment(@asset, @comment_2_by_viewer, event)
+      @asset_library.verify_comments @asset
     end
 
     it 'cannot be done by a user who did not create the comment' do
-      expect(@asset_library.edit_button_element(0).exists?).to be true
-      expect(@asset_library.edit_button_element(1).exists?).to be true
-      expect(@asset_library.edit_button_element(2).exists?).to be true
-      expect(@asset_library.edit_button_element(3).exists?).to be false
-      expect(@asset_library.edit_button_element(4).exists?).to be true
-      expect(@asset_library.edit_button_element(5).exists?).to be false
+      expect(@asset_library.edit_button_element(@asset.comments.index @comment_3_by_viewer).exists?).to be true
+      expect(@asset_library.edit_button_element(@asset.comments.index @comment_2_by_viewer).exists?).to be true
+      expect(@asset_library.edit_button_element(@asset.comments.index @comment_2_reply_by_viewer).exists?).to be true
+      expect(@asset_library.edit_button_element(@asset.comments.index @comment_1_by_uploader).exists?).to be false
+      expect(@asset_library.edit_button_element(@asset.comments.index @comment_1_reply_by_viewer).exists?).to be true
+      expect(@asset_library.edit_button_element(@asset.comments.index @comment_1_reply_by_uploader).exists?).to be false
     end
 
     it 'can be done to any comment when the user is a teacher' do
       @canvas.masquerade_as(@driver, (event.actor = @teacher), @course)
       @asset_library.load_asset_detail(@driver, @asset_library_url, @asset, event)
-      expect(@asset_library.edit_button_element(0).exists?).to be true
-      expect(@asset_library.edit_button_element(1).exists?).to be true
-      expect(@asset_library.edit_button_element(2).exists?).to be true
-      expect(@asset_library.edit_button_element(3).exists?).to be true
-      expect(@asset_library.edit_button_element(4).exists?).to be true
-      expect(@asset_library.edit_button_element(5).exists?).to be true
+      @asset.comments.each { |comment| expect(@asset_library.edit_button_element(@asset.comments.index comment).exists?).to be true }
     end
 
     it 'can be canceled' do
+      index = @asset.comments.index @comment_2_by_viewer
       @asset_library.load_asset_detail(@driver, @asset_library_url, @asset, event)
-      @asset_library.click_edit_button 1
-      @asset_library.edit_input_element(1).when_visible timeout
-      @asset_library.wait_for_update_and_click_js @asset_library.cancel_button_element(1)
-      @asset_library.edit_input_element(1).when_not_visible timeout
+      @asset_library.click_edit_button index
+      @asset_library.edit_input_element(index).when_visible timeout
+      @asset_library.wait_for_update_and_click_js @asset_library.cancel_button_element(index)
+      @asset_library.edit_input_element(index).when_not_visible timeout
     end
 
     it 'does not alter existing engagement scores' do
@@ -258,33 +214,27 @@ describe 'An asset comment', order: :defined do
     it 'can be done by a student who created the comment' do
       @canvas.masquerade_as(@driver, (event.actor = @asset_admirer), @course)
       @asset_library.load_asset_detail(@driver, @asset_library_url, @asset, event)
-      @asset_library.delete_comment(@asset, 0, event)
-      @asset_library.wait_until(timeout) { @asset_library.comment_elements.count == 5 }
-      @asset_library.wait_until(timeout) { @asset_library.asset_detail_comment_count == '5' }
-      expect(@asset_library.comment_body(0)).to eql(comment_2_edit_by_viewer)
-      expect(@asset_library.comment_body(1)).to eql(comment_2_reply_by_viewer)
-      expect(@asset_library.comment_body(2)).to eql(comment_1_by_uploader)
-      expect(@asset_library.comment_body(3)).to eql(comment_1_reply_by_viewer)
-      expect(@asset_library.comment_body(4)).to eql(comment_1_reply_by_uploader)
+      @asset_library.delete_comment(@asset, @comment_3_by_viewer, event)
+      @asset_library.verify_comments @asset
     end
 
     it 'cannot be done by a student who did not create the comment' do
-      expect(@asset_library.delete_button_element(0).exists?).to be false
-      expect(@asset_library.delete_button_element(1).exists?).to be true
-      expect(@asset_library.delete_button_element(2).exists?).to be false
-      expect(@asset_library.delete_button_element(3).exists?).to be true
-      expect(@asset_library.delete_button_element(4).exists?).to be false
+      expect(@asset_library.delete_button_element(@asset.comments.index @comment_2_by_viewer).exists?).to be false
+      expect(@asset_library.delete_button_element(@asset.comments.index @comment_2_reply_by_viewer).exists?).to be true
+      expect(@asset_library.delete_button_element(@asset.comments.index @comment_1_by_uploader).exists?).to be false
+      expect(@asset_library.delete_button_element(@asset.comments.index @comment_1_reply_by_viewer).exists?).to be true
+      expect(@asset_library.delete_button_element(@asset.comments.index @comment_1_reply_by_uploader).exists?).to be false
     end
 
     it 'can be done when the user is a teacher unless the comment has replies' do
       @canvas.masquerade_as(@driver, (event.actor = @teacher), @course)
       @asset_library.load_asset_detail(@driver, @asset_library_url, @asset, event)
       @asset_library.wait_until(timeout) { @asset_library.comment_elements.count == 5 }
-      expect(@asset_library.delete_button_element(0).exists?).to be false
-      expect(@asset_library.delete_button_element(1).exists?).to be true
-      expect(@asset_library.delete_button_element(2).exists?).to be false
-      expect(@asset_library.delete_button_element(3).exists?).to be true
-      expect(@asset_library.delete_button_element(4).exists?).to be true
+      expect(@asset_library.delete_button_element(@asset.comments.index @comment_2_by_viewer).exists?).to be false
+      expect(@asset_library.delete_button_element(@asset.comments.index @comment_2_reply_by_viewer).exists?).to be true
+      expect(@asset_library.delete_button_element(@asset.comments.index @comment_1_by_uploader).exists?).to be false
+      expect(@asset_library.delete_button_element(@asset.comments.index @comment_1_reply_by_viewer).exists?).to be true
+      expect(@asset_library.delete_button_element(@asset.comments.index @comment_1_reply_by_uploader).exists?).to be true
     end
 
     it 'removes engagement index points earned for the comment' do

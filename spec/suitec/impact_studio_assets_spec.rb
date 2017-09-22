@@ -30,6 +30,12 @@ describe 'The Impact Studio', order: :defined do
   student_2_assets = [asset_7, asset_6, asset_4]
   teacher_assets = [asset_5]
 
+  asset_4_comments = []
+  asset_4_comment = Comment.new(student_1, 'Impact-free comment')
+  asset_6_comments = []
+  asset_6_comment = Comment.new(teacher, 'This is a comment from Teacher to Student 2')
+  asset_6_reply = Comment.new(teacher, 'This is another comment from Teacher to Student 2')
+
   student_1_pins = []
   student_2_pins = []
   teacher_pins = []
@@ -333,7 +339,7 @@ describe 'The Impact Studio', order: :defined do
         @asset_library.load_asset_detail(@driver, @asset_library_url, asset_6)
         asset_6.impact_score += Activity::VIEW_ASSET.impact_points
 
-        @asset_library.add_comment(asset_6, 'This is a comment from Teacher to Student 2')
+        @asset_library.add_comment(asset_6, asset_6_comment)
         @asset_library.wait_until(Utils.short_wait) { @asset_library.asset_detail_comment_count == '1' }
         asset_6.impact_score += Activity::COMMENT.impact_points
       end
@@ -367,7 +373,7 @@ describe 'The Impact Studio', order: :defined do
         @asset_library.load_asset_detail(@driver, @asset_library_url, asset_6)
         asset_6.impact_score += Activity::VIEW_ASSET.impact_points
 
-        @asset_library.reply_to_comment(asset_6, 0, 'This is another comment from Teacher to Student 2')
+        @asset_library.reply_to_comment(asset_6, asset_6_comment, asset_6_reply)
         @asset_library.wait_until(Utils.short_wait) { @asset_library.asset_detail_comment_count == '2' }
         asset_6.impact_score += Activity::COMMENT.impact_points
       end
@@ -497,7 +503,7 @@ describe 'The Impact Studio', order: :defined do
 
       before(:all) do
         @asset_library.load_asset_detail(@driver, @asset_library_url, asset_4)
-        @asset_library.add_comment(asset_4, 'Impact-free comment')
+        @asset_library.add_comment(asset_4, asset_4_comment)
         @impact_studio.load_page(@driver, @impact_studio_url)
       end
 
@@ -534,7 +540,7 @@ describe 'The Impact Studio', order: :defined do
         @asset_library.load_asset_detail(@driver, @asset_library_url, asset_6)
         asset_6.impact_score += Activity::VIEW_ASSET.impact_points
 
-        @asset_library.delete_comment(asset_6, 1)
+        @asset_library.delete_comment(asset_6, asset_6_reply)
         asset_6.impact_score -= Activity::COMMENT.impact_points
       end
 
