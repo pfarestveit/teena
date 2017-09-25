@@ -65,7 +65,7 @@ module Page
     def go_back_to_impact_studio(driver)
       wait_for_load_and_click back_to_impact_studio_link_element
       wait_until(Utils.medium_wait) { title == SuiteCTools::IMPACT_STUDIO.name }
-      hide_canvas_footer
+      hide_canvas_footer_and_popup
       switch_to_canvas_iframe driver
     end
 

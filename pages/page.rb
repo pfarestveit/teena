@@ -8,7 +8,7 @@ module Page
   # Switches browser focus into the Canvas LTI tool iframe
   # @param driver [Selenium::WebDriver]
   def switch_to_canvas_iframe(driver)
-    hide_canvas_footer
+    hide_canvas_footer_and_popup
     begin
       wait_until { driver.find_element(id: 'tool_content') }
       driver.switch_to.frame driver.find_element(id: 'tool_content')
@@ -19,7 +19,11 @@ module Page
 
   # Hides the Canvas footer element in order to interact with elements hidden beneath it. Clicks once to set focus on the footer
   # and once again to hide it.
-  def hide_canvas_footer
+  def hide_canvas_footer_and_popup
+    if (browser_warning = button_element(xpath: '//li[@class="ic-flash-warning"]//button')).exists?
+      browser_warning.click
+      browser_warning.when_not_present Utils.short_wait
+    end
     if (footer = div_element(id: 'element_toggler_0')).exists? && footer.visible?
       footer.click
       sleep 1
@@ -41,7 +45,7 @@ module Page
   # @param timeout [Fixnum]
   def click_element(element, timeout)
     wait_for_element(element, timeout)
-    hide_canvas_footer
+    hide_canvas_footer_and_popup
     sleep Utils.click_wait
     scroll_to_element element
     element.click

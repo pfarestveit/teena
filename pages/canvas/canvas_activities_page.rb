@@ -144,7 +144,7 @@ module Page
         wait_until(Utils.short_wait) { secondary_reply_input_elements.any? }
         wait_for_element_and_type_js(secondary_reply_input_elements[index], reply_body)
         replies = discussion_reply_elements.length
-        hide_canvas_footer
+        hide_canvas_footer_and_popup
         wait_for_update_and_click_js secondary_post_reply_button_elements[index]
       end
       add_event(event, EventType::POST, reply_body)

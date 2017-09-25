@@ -157,7 +157,7 @@ describe 'Asset', order: :defined do
   describe 'views' do
 
     # View count update can be slow to happen
-    before { sleep Utils.medium_wait }
+    before { sleep Utils.short_wait }
 
     it 'are only incremented when viewed by users other than the asset creator' do
       @asset_library.load_list_view_asset(@driver, @asset_library_url, @asset, event)
