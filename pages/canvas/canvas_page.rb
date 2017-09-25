@@ -356,7 +356,7 @@ module Page
             wait_for_element_and_select_js(user_section_element, section.sis_id) if section
             wait_for_update_and_click_js next_button_element
             users_ready_to_add_msg_element.when_visible Utils.medium_wait
-            hide_canvas_footer
+            hide_canvas_footer_and_popup
             wait_for_update_and_click_js next_button_element
             wait_for_users users_with_role
             users_with_role.each { |u| add_event(event, EventType::CREATE, u.full_name) }
@@ -378,7 +378,7 @@ module Page
     # @param event [Event]
     def remove_users_from_course(course, users, event = nil)
       load_users_page course
-      hide_canvas_footer
+      hide_canvas_footer_and_popup
       wait_for_users users
       users.each do |user|
         logger.info "Removing #{user.role} UID #{user.uid} from course site ID #{course.site_id}"
@@ -529,7 +529,7 @@ module Page
     def load_navigation_page(course)
       load_tools_config_page course
       wait_for_update_and_click navigation_link_element
-      hide_canvas_footer
+      hide_canvas_footer_and_popup
     end
 
     # Enables an LTI tool that is already installed
@@ -574,7 +574,7 @@ module Page
       logger.info "Adding and/or enabling #{tool.name}"
       load_tools_config_page course
       wait_for_update_and_click navigation_link_element
-      hide_canvas_footer
+      hide_canvas_footer_and_popup
       if verify_block { link_element(xpath: "//ul[@id='nav_enabled_list']/li[contains(.,'#{tool.name}')]//a").when_present 2 }
         logger.debug "#{tool.name} is already installed and enabled, skipping"
       else
@@ -612,7 +612,7 @@ module Page
     # @return [String]
     def click_tool_link(driver, tool, event = nil)
       driver.switch_to.default_content
-      hide_canvas_footer
+      hide_canvas_footer_and_popup
       wait_for_update_and_click_js tool_nav_link(tool)
       wait_until(Utils.medium_wait) { title == "#{tool.name}" }
       logger.info "#{tool.name} URL is #{url = current_url}"
