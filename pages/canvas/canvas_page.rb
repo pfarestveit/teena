@@ -112,7 +112,7 @@ module Page
     # @param course [Course]
     # @param test_users [Array<User>]
     # @param test_id [String]
-    # @param tools [Array<SuiteCTools>]
+    # @param tools [Array<LtiTools>]
     # @param event [Event]
     def create_generic_course_site(driver, sub_account, course, test_users, test_id, tools = nil, event = nil)
       if course.site_id.nil?
@@ -144,7 +144,10 @@ module Page
       add_users(course, test_users, event)
       if tools
         tools.each do |tool|
-          add_suite_c_tool(course, tool) unless tool_nav_link(tool).exists?
+          unless tool_nav_link(tool).exists?
+            add_suite_c_tool(course, tool) if [LtiTools::ASSET_LIBRARY, LtiTools::ENGAGEMENT_INDEX, LtiTools::WHITEBOARDS, LtiTools::IMPACT_STUDIO].include? tool
+            add_privacy_dashboard(course) if tool == LtiTools::PRIVACY_DASHBOARD
+          end
           disable_tool(course, tool) unless tools.include? tool
         end
       end
@@ -501,7 +504,7 @@ module Page
       end
     end
 
-    # SUITEC LTI TOOLS
+    # LTI TOOLS
 
     link(:apps_link, text: 'Apps')
     link(:navigation_link, text: 'Navigation')
@@ -514,7 +517,7 @@ module Page
     text_area(:url_input, xpath: '//input[@placeholder="Config URL"]')
 
     # Returns the link element for the configured LTI tool on the course site sidebar
-    # @param tool [SuiteCTools]
+    # @param tool [LtiTools]
     # @return [PageObject::Elements::Link]
     def tool_nav_link(tool)
       link_element(xpath: "//ul[@id='section-tabs']//a[text()='#{tool.name}']")
@@ -536,7 +539,7 @@ module Page
 
     # Enables an LTI tool that is already installed
     # @param course [Course]
-    # @param tool [SuiteCTools]
+    # @param tool [LtiTools]
     def enable_tool(course, tool)
       load_navigation_page course
       wait_for_update_and_click_js link_element(xpath: "//ul[@id='nav_disabled_list']/li[contains(.,'#{tool.name}')]//a")
@@ -548,7 +551,7 @@ module Page
 
     # Disables an LTI tool that is already installed
     # @param course [Course]
-    # @param tool [SuiteCTools]
+    # @param tool [LtiTools]
     def disable_tool(course, tool)
       logger.info "Disabling #{tool.name}"
       load_navigation_page course
@@ -569,10 +572,14 @@ module Page
       end
     end
 
-    # Adds a SuiteC LTI tool to a course site
+    # Adds an LTI tool to a course site. If the tool is installed and enabled, skips it. If the tool is installed by disabled, enables
+    # it. Otherwise, installs and enables it.
     # @param course [Course]
-    # @param tool [SuiteCTools]
-    def add_suite_c_tool(course, tool)
+    # @param tool [LtiTools]
+    # @param base_url [String]
+    # @param key [String]
+    # @param secret [String]
+    def add_lti_tool(course, tool, base_url, key, secret)
       logger.info "Adding and/or enabling #{tool.name}"
       load_tools_config_page course
       wait_for_update_and_click navigation_link_element
@@ -597,9 +604,9 @@ module Page
           sleep 1
           wait_for_update_and_click_js app_name_input_element
           self.app_name_input = "#{tool.name}"
-          self.key_input = SuiteCUtils.suitec_lti_key
-          self.secret_input = SuiteCUtils.suitec_lti_secret
-          self.url_input = "#{SuiteCUtils.suite_c_base_url}#{tool.xml}"
+          self.key_input = key
+          self.secret_input = secret
+          self.url_input = "#{base_url}#{tool.xml}"
           submit_button
           link_element(xpath: "//td[@title='#{tool.name}']").when_present Utils.medium_wait
           enable_tool(course, tool)
@@ -607,15 +614,28 @@ module Page
       end
     end
 
+    # Adds a SuiteC LTI tool to a course site
+    # @param course [Course]
+    # @param tool [LtiTools]
+    def add_suite_c_tool(course, tool)
+      add_lti_tool(course, tool, SuiteCUtils.suite_c_base_url, SuiteCUtils.lti_credentials[:key], SuiteCUtils.lti_credentials[:secret])
+    end
+
+    # Adds the Student Privacy Dashboard tool to a course site
+    # @param course [Course]
+    def add_privacy_dashboard(course)
+      add_lti_tool(course, LRSUtils.base_url, LtiTools::PRIVACY_DASHBOARD, LRSUtils.lti_credentials[:key], LRSUtils.lrs_db_credentials[:secret])
+    end
+
     # Clicks the navigation link for a tool and returns the tool's URL. Optionally records an analytics event.
     # @param driver [Selenium::WebDriver]
-    # @param tool [SuiteCTools]
+    # @param tool [LtiTools]
     # @param event [Event]
     # @return [String]
     def click_tool_link(driver, tool, event = nil)
       driver.switch_to.default_content
       hide_canvas_footer_and_popup
-      wait_for_update_and_click_js tool_nav_link(tool)
+      wait_for_update_and_click tool_nav_link(tool)
       wait_until(Utils.medium_wait) { title == "#{tool.name}" }
       logger.info "#{tool.name} URL is #{url = current_url}"
       add_event(event, EventType::NAVIGATE)

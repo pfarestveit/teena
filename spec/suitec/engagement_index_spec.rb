@@ -29,14 +29,14 @@ describe 'The Engagement Index', order: :defined do
 
     @canvas.log_in(@cal_net, (event.actor = admin).username, Utils.super_admin_password)
     @canvas.create_generic_course_site(@driver, Utils.canvas_qa_sub_account, @course, [teacher, student_1, student_2, student_3, student_4],
-                                       Utils.get_test_id, [SuiteCTools::ASSET_LIBRARY, SuiteCTools::ENGAGEMENT_INDEX])
+                                       Utils.get_test_id, [LtiTools::ASSET_LIBRARY, LtiTools::ENGAGEMENT_INDEX])
 
     @canvas.load_course_site(@driver, @course)
-    @asset_library_url = @canvas.click_tool_link(@driver, SuiteCTools::ASSET_LIBRARY, event)
-    @engagement_index_url = @canvas.click_tool_link(@driver, SuiteCTools::ENGAGEMENT_INDEX, event)
+    @asset_library_url = @canvas.click_tool_link(@driver, LtiTools::ASSET_LIBRARY, event)
+    @engagement_index_url = @canvas.click_tool_link(@driver, LtiTools::ENGAGEMENT_INDEX, event)
 
     # Make sure the Impact Studio is not enabled on the course site
-    @canvas.disable_tool(@course, SuiteCTools::IMPACT_STUDIO)
+    @canvas.disable_tool(@course, LtiTools::IMPACT_STUDIO)
 
     # Add asset to library
     @canvas.masquerade_as(@driver, (event.actor = student_3), @course)
@@ -254,8 +254,8 @@ describe 'The Engagement Index', order: :defined do
 
     before(:all) do
       @canvas.stop_masquerading @driver
-      @canvas.add_suite_c_tool(@course, SuiteCTools::IMPACT_STUDIO)
-      @canvas.click_tool_link(@driver, SuiteCTools::IMPACT_STUDIO, event)
+      @canvas.add_suite_c_tool(@course, LtiTools::IMPACT_STUDIO)
+      @canvas.click_tool_link(@driver, LtiTools::IMPACT_STUDIO, event)
     end
 
     context 'when the user is not looking' do

@@ -30,7 +30,7 @@ describe 'Canvas enrollment events' do
     @course.sections = [@section]
     @course.sis_id = "CRS:#{@course.title.gsub(' ', '-')}"
 
-    @canvas.create_generic_course_site(@driver, Utils.canvas_qa_sub_account, @course, [], @test_course_identifier, nil, event)
+    @canvas.create_generic_course_site(@driver, Utils.canvas_qa_sub_account, @course, [], @test_course_identifier, [LtiTools::PRIVACY_DASHBOARD], event)
     @canvas.add_sis_section_and_ids(@course, @section)
 
     # Admin creates teacher enrollment via Canvas add-user

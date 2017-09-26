@@ -20,11 +20,11 @@ describe 'Engagement Index points configuration', order: :defined do
 
     @canvas.log_in(@cal_net, Utils.super_admin_username, Utils.super_admin_password)
     @canvas.create_generic_course_site(@driver, Utils.canvas_qa_sub_account, @course, [@teacher, @student],
-                                       Utils.get_test_id, [SuiteCTools::ASSET_LIBRARY, SuiteCTools::ENGAGEMENT_INDEX])
+                                       Utils.get_test_id, [LtiTools::ASSET_LIBRARY, LtiTools::ENGAGEMENT_INDEX])
 
     @canvas.load_course_site(@driver, @course)
-    @asset_library_url = @canvas.click_tool_link(@driver, SuiteCTools::ASSET_LIBRARY)
-    @engagement_index_url = @canvas.click_tool_link(@driver, SuiteCTools::ENGAGEMENT_INDEX)
+    @asset_library_url = @canvas.click_tool_link(@driver, LtiTools::ASSET_LIBRARY)
+    @engagement_index_url = @canvas.click_tool_link(@driver, LtiTools::ENGAGEMENT_INDEX)
 
     @canvas.masquerade_as(@driver, @student, @course)
     @asset_library.load_page(@driver, @asset_library_url)

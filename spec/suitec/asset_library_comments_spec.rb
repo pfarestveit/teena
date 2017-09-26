@@ -36,10 +36,10 @@ describe 'An asset comment', order: :defined do
 
     @canvas.log_in(@cal_net, (event.actor = admin).username, Utils.super_admin_password)
     @canvas.create_generic_course_site(@driver, Utils.canvas_qa_sub_account, @course, [@teacher, @asset_uploader, @asset_admirer],
-                                       test_id, [SuiteCTools::ASSET_LIBRARY, SuiteCTools::ENGAGEMENT_INDEX])
+                                       test_id, [LtiTools::ASSET_LIBRARY, LtiTools::ENGAGEMENT_INDEX])
 
-    @asset_library_url = @canvas.click_tool_link(@driver, SuiteCTools::ASSET_LIBRARY, event)
-    @engagement_index_url = @canvas.click_tool_link(@driver, SuiteCTools::ENGAGEMENT_INDEX, event)
+    @asset_library_url = @canvas.click_tool_link(@driver, LtiTools::ASSET_LIBRARY, event)
+    @engagement_index_url = @canvas.click_tool_link(@driver, LtiTools::ENGAGEMENT_INDEX, event)
 
     # Upload a new asset for the test
     @canvas.masquerade_as(@driver, (event.actor = @asset_uploader), @course)

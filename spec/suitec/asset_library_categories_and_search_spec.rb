@@ -32,10 +32,10 @@ describe 'Asset Library', order: :defined do
 
     # Create course site if necessary, disabling the Impact Studio if it is present
     @canvas.log_in(@cal_net, Utils.super_admin_username, Utils.super_admin_password)
-    @canvas.create_generic_course_site(@driver, Utils.canvas_qa_sub_account, @course, users, test_id, [SuiteCTools::ASSET_LIBRARY, SuiteCTools::WHITEBOARDS])
-    @canvas.disable_tool(@course, SuiteCTools::IMPACT_STUDIO)
-    @asset_library_url = @canvas.click_tool_link(@driver, SuiteCTools::ASSET_LIBRARY)
-    @whiteboards_url = @canvas.click_tool_link(@driver, SuiteCTools::WHITEBOARDS)
+    @canvas.create_generic_course_site(@driver, Utils.canvas_qa_sub_account, @course, users, test_id, [LtiTools::ASSET_LIBRARY, LtiTools::WHITEBOARDS])
+    @canvas.disable_tool(@course, LtiTools::IMPACT_STUDIO)
+    @asset_library_url = @canvas.click_tool_link(@driver, LtiTools::ASSET_LIBRARY)
+    @whiteboards_url = @canvas.click_tool_link(@driver, LtiTools::WHITEBOARDS)
 
     @canvas.masquerade_as(@driver, student_1, @course)
     @canvas.load_course_site(@driver, @course)
@@ -392,8 +392,8 @@ describe 'Asset Library', order: :defined do
 
       before(:all) do
         @canvas.stop_masquerading @driver
-        @canvas.add_suite_c_tool(@course, SuiteCTools::IMPACT_STUDIO)
-        @canvas.click_tool_link(@driver, SuiteCTools::IMPACT_STUDIO)
+        @canvas.add_suite_c_tool(@course, LtiTools::IMPACT_STUDIO)
+        @canvas.click_tool_link(@driver, LtiTools::IMPACT_STUDIO)
         @all_assets = [student_1_upload, student_2_upload, student_3_link, @whiteboard_asset]
         @all_assets.each { |asset| asset.impact_score = SuiteCUtils.get_asset_impact_score(asset) }
         @asset_library.load_page(@driver, @asset_library_url)

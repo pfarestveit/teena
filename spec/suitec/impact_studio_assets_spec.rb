@@ -57,11 +57,11 @@ describe 'The Impact Studio', order: :defined do
     # Create course site if necessary
     @canvas.log_in(@cal_net, Utils.super_admin_username, Utils.super_admin_password)
     @canvas.create_generic_course_site(@driver, Utils.canvas_qa_sub_account, @course, users, test_id,
-                                       [SuiteCTools::ASSET_LIBRARY, SuiteCTools::ENGAGEMENT_INDEX, SuiteCTools::IMPACT_STUDIO, SuiteCTools::WHITEBOARDS])
-    @asset_library_url = @canvas.click_tool_link(@driver, SuiteCTools::ASSET_LIBRARY)
-    @engagement_index_url = @canvas.click_tool_link(@driver, SuiteCTools::ENGAGEMENT_INDEX)
-    @impact_studio_url = @canvas.click_tool_link(@driver, SuiteCTools::IMPACT_STUDIO)
-    @whiteboards_url = @canvas.click_tool_link(@driver, SuiteCTools::WHITEBOARDS)
+                                       [LtiTools::ASSET_LIBRARY, LtiTools::ENGAGEMENT_INDEX, LtiTools::IMPACT_STUDIO, LtiTools::WHITEBOARDS])
+    @asset_library_url = @canvas.click_tool_link(@driver, LtiTools::ASSET_LIBRARY)
+    @engagement_index_url = @canvas.click_tool_link(@driver, LtiTools::ENGAGEMENT_INDEX)
+    @impact_studio_url = @canvas.click_tool_link(@driver, LtiTools::IMPACT_STUDIO)
+    @whiteboards_url = @canvas.click_tool_link(@driver, LtiTools::WHITEBOARDS)
 
     @engagement_index.wait_for_new_user_sync(@driver, @engagement_index_url, [teacher, student_1, student_2])
 

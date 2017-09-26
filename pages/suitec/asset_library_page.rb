@@ -17,7 +17,7 @@ module Page
       # @param event [Event]
       def load_page(driver, url, event = nil)
         navigate_to url
-        wait_until { title == "#{SuiteCTools::ASSET_LIBRARY.name}" }
+        wait_until { title == "#{LtiTools::ASSET_LIBRARY.name}" }
         hide_canvas_footer_and_popup
         switch_to_canvas_iframe driver
         add_event(event, EventType::NAVIGATE)

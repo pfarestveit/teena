@@ -64,7 +64,7 @@ module Page
     # @param driver [Selenium::WebDriver]
     def go_back_to_impact_studio(driver)
       wait_for_load_and_click back_to_impact_studio_link_element
-      wait_until(Utils.medium_wait) { title == SuiteCTools::IMPACT_STUDIO.name }
+      wait_until(Utils.medium_wait) { title == LtiTools::IMPACT_STUDIO.name }
       hide_canvas_footer_and_popup
       switch_to_canvas_iframe driver
     end

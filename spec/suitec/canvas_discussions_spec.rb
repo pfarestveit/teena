@@ -22,14 +22,14 @@ describe 'A Canvas discussion', order: :defined do
     @engagement_index = Page::SuiteCPages::EngagementIndexPage.new @driver
 
     # Create test course site. If using an existing site, include the Asset Library and ensure Canvas sync is enabled.
-    tools = [SuiteCTools::ENGAGEMENT_INDEX]
-    tools << SuiteCTools::ASSET_LIBRARY unless course_id.nil?
+    tools = [LtiTools::ENGAGEMENT_INDEX]
+    tools << LtiTools::ASSET_LIBRARY unless course_id.nil?
     @canvas.log_in(@cal_net, Utils.ets_qa_username, Utils.ets_qa_password)
     @canvas.create_generic_course_site(@driver, Utils.canvas_qa_sub_account, @course, [@user_1, @user_2], test_id, tools)
-    @engagement_index_url = @canvas.click_tool_link(@driver, SuiteCTools::ENGAGEMENT_INDEX)
+    @engagement_index_url = @canvas.click_tool_link(@driver, LtiTools::ENGAGEMENT_INDEX)
     unless course_id.nil?
       @asset_library = Page::SuiteCPages::AssetLibraryPage.new @driver
-      @asset_library_url = @canvas.click_tool_link(@driver, SuiteCTools::ASSET_LIBRARY)
+      @asset_library_url = @canvas.click_tool_link(@driver, LtiTools::ASSET_LIBRARY)
       @asset_library.ensure_canvas_sync(@driver, @asset_library_url)
     end
 

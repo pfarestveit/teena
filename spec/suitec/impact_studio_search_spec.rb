@@ -25,9 +25,9 @@ describe 'Impact Studio', order: :defined do
     # Create course site with only the teacher as member initially
     @canvas.log_in(@cal_net, Utils.super_admin_username, Utils.super_admin_password)
     @canvas.create_generic_course_site(@driver, Utils.canvas_qa_sub_account, @course, [teacher], test_id,
-                                       [SuiteCTools::ENGAGEMENT_INDEX, SuiteCTools::IMPACT_STUDIO])
-    @engagement_index_url = @canvas.click_tool_link(@driver, SuiteCTools::ENGAGEMENT_INDEX)
-    @impact_studio_url = @canvas.click_tool_link(@driver, SuiteCTools::IMPACT_STUDIO)
+                                       [LtiTools::ENGAGEMENT_INDEX, LtiTools::IMPACT_STUDIO])
+    @engagement_index_url = @canvas.click_tool_link(@driver, LtiTools::ENGAGEMENT_INDEX)
+    @impact_studio_url = @canvas.click_tool_link(@driver, LtiTools::IMPACT_STUDIO)
   end
 
   after(:all) { Utils.quit_browser @driver }
