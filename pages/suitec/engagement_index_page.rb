@@ -17,7 +17,7 @@ module Page
       # @param event [Event]
       def load_page(driver, url, event = nil)
         navigate_to url
-        wait_until { title == "#{SuiteCTools::ENGAGEMENT_INDEX.name}" }
+        wait_until { title == "#{LtiTools::ENGAGEMENT_INDEX.name}" }
         hide_canvas_footer_and_popup
         switch_to_canvas_iframe driver
         add_event(event, EventType::NAVIGATE)
@@ -121,7 +121,7 @@ module Page
         end
         scroll_to_element user_profile_link(user)
         user_profile_link(user).click
-        wait_until { title == "#{SuiteCTools::IMPACT_STUDIO.name}" }
+        wait_until { title == "#{LtiTools::IMPACT_STUDIO.name}" }
         hide_canvas_footer_and_popup
         switch_to_canvas_iframe driver
       end

@@ -21,7 +21,7 @@ describe 'Canvas discussion events' do
     @test_course_identifier = Utils.get_test_id
     @course = Course.new({title: "LRS Discussions Test #{@test_course_identifier}", site_id: course_id})
     @canvas.log_in(@cal_net, Utils.ets_qa_username, Utils.ets_qa_password)
-    @canvas.create_generic_course_site(@driver, Utils.canvas_qa_sub_account, @course, [@user_1, @user_2], @test_course_identifier)
+    @canvas.create_generic_course_site(@driver, Utils.canvas_qa_sub_account, @course, [@user_1, @user_2], @test_course_identifier, [LtiTools::PRIVACY_DASHBOARD])
     @canvas.log_out(@driver, @cal_net)
 
     # User 1 logs in, creates topic, adds a reply, and logs out

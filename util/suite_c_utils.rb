@@ -30,14 +30,10 @@ class SuiteCUtils
     @config['suite_c']['base_url']
   end
 
-  # LTI tool key for SuiteC test environment
-  def self.suitec_lti_key
-    @config['suite_c']['lti_key']
-  end
-
-  # LTI tool secret for SuiteC test environment
-  def self.suitec_lti_secret
-    @config['suite_c']['lti_secret']
+  # LTI tool key and secret for SuiteC test environment
+  # @return [Hash]
+  def self.lti_credentials
+    {key: @config['suite_c']['lti_key'], secret: @config['suite_c']['lti_secret']}
   end
 
   # The number of times to check if the SuiteC poller has synced Canvas course site data and SuiteC data

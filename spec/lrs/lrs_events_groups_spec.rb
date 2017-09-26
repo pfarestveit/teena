@@ -23,7 +23,7 @@ describe 'Canvas groups events' do
     @canvas.log_in(@cal_net, Utils.super_admin_username, Utils.super_admin_password)
     @test_course_identifier = Utils.get_test_id
     @course = Course.new({title: "LRS Groups Test #{@test_course_identifier}", site_id: course_id})
-    @canvas.create_generic_course_site(@driver, Utils.canvas_qa_sub_account, @course, users, @test_course_identifier)
+    @canvas.create_generic_course_site(@driver, Utils.canvas_qa_sub_account, @course, users, @test_course_identifier, [LtiTools::PRIVACY_DASHBOARD])
 
     # TEACHER-CREATED GROUPS
 

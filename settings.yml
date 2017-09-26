@@ -57,6 +57,7 @@ users:
   oski_uid: secret
 
 lrs:
+  base_url: https://app-qa.ets-berkeley-cloudlrs.net
   lti_key: secret
   lti_secret: secret
   db_host: secret

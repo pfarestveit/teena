@@ -36,15 +36,15 @@ describe 'Whiteboard', order: :defined do
     @engagement_index_driver_1 = Page::SuiteCPages::EngagementIndexPage.new @driver_1
 
     # Create course site if necessary. If using an existing site, include the Asset Library and make sure Canvas sync is enabled.
-    tools = [SuiteCTools::ENGAGEMENT_INDEX, SuiteCTools::WHITEBOARDS]
-    tools << SuiteCTools::ASSET_LIBRARY unless course_id.nil?
+    tools = [LtiTools::ENGAGEMENT_INDEX, LtiTools::WHITEBOARDS]
+    tools << LtiTools::ASSET_LIBRARY unless course_id.nil?
     @canvas_driver_1.log_in(@cal_net_driver_1, Utils.super_admin_username, Utils.super_admin_password)
     @canvas_driver_1.create_generic_course_site(@driver_1, Utils.canvas_qa_sub_account, course, users, test_id, tools)
-    @whiteboards_url = @canvas_driver_1.click_tool_link(@driver_1, SuiteCTools::WHITEBOARDS)
-    @engagement_index_url = @canvas_driver_1.click_tool_link(@driver_1, SuiteCTools::ENGAGEMENT_INDEX)
+    @whiteboards_url = @canvas_driver_1.click_tool_link(@driver_1, LtiTools::WHITEBOARDS)
+    @engagement_index_url = @canvas_driver_1.click_tool_link(@driver_1, LtiTools::ENGAGEMENT_INDEX)
     unless course_id.nil?
       @asset_library = Page::SuiteCPages::AssetLibraryPage.new @driver_1
-      @asset_library_url = @canvas_driver_1.click_tool_link(@driver_1, SuiteCTools::ASSET_LIBRARY)
+      @asset_library_url = @canvas_driver_1.click_tool_link(@driver_1, LtiTools::ASSET_LIBRARY)
       @asset_library.ensure_canvas_sync(@driver_1, @asset_library_url)
     end
 
@@ -333,7 +333,7 @@ describe 'Whiteboard', order: :defined do
       @cal_net_driver_3 = Page::CalNetPage.new @driver_3
       @whiteboards_driver_3 = Page::SuiteCPages::WhiteboardsPage.new @driver_3
       @canvas_driver_3.log_in(@cal_net_driver_3, Utils.super_admin_username, Utils.super_admin_password)
-      @engagement_index_url = @canvas_driver_1.click_tool_link(@driver_1, SuiteCTools::ENGAGEMENT_INDEX)
+      @engagement_index_url = @canvas_driver_1.click_tool_link(@driver_1, LtiTools::ENGAGEMENT_INDEX)
       @engagement_index_driver_1 = Page::SuiteCPages::EngagementIndexPage.new @driver_1
     end
 

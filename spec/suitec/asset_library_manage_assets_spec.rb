@@ -28,10 +28,10 @@ describe 'Asset', order: :defined do
 
     # Obtain course site and add two new asset categories
     @canvas.log_in(@cal_net, Utils.super_admin_username, Utils.super_admin_password)
-    @canvas.create_generic_course_site(@driver, Utils.canvas_qa_sub_account, @course, users, test_id, [SuiteCTools::ASSET_LIBRARY, SuiteCTools::ENGAGEMENT_INDEX, SuiteCTools::WHITEBOARDS])
-    @whiteboards_url = @canvas.click_tool_link(@driver, SuiteCTools::WHITEBOARDS)
-    @engagement_index_url = @canvas.click_tool_link(@driver, SuiteCTools::ENGAGEMENT_INDEX)
-    @asset_library_url = @canvas.click_tool_link(@driver, SuiteCTools::ASSET_LIBRARY)
+    @canvas.create_generic_course_site(@driver, Utils.canvas_qa_sub_account, @course, users, test_id, [LtiTools::ASSET_LIBRARY, LtiTools::ENGAGEMENT_INDEX, LtiTools::WHITEBOARDS])
+    @whiteboards_url = @canvas.click_tool_link(@driver, LtiTools::WHITEBOARDS)
+    @engagement_index_url = @canvas.click_tool_link(@driver, LtiTools::ENGAGEMENT_INDEX)
+    @asset_library_url = @canvas.click_tool_link(@driver, LtiTools::ASSET_LIBRARY)
     @asset_library.add_custom_categories(@driver, @asset_library_url, [(@category_1="Category 1 - #{test_id}"), (@category_2="Category 2 - #{test_id}")])
   end
 
@@ -328,9 +328,9 @@ describe 'Asset', order: :defined do
       # Create a destination course site with an asset library for asset migration
       destination_test_id = Utils.get_test_id
       @destination_course = Course.new({})
-      @canvas.create_generic_course_site(@driver, Utils.canvas_qa_sub_account, @destination_course, [teacher], destination_test_id, [SuiteCTools::ASSET_LIBRARY])
+      @canvas.create_generic_course_site(@driver, Utils.canvas_qa_sub_account, @destination_course, [teacher], destination_test_id, [LtiTools::ASSET_LIBRARY])
       @destination_library = Page::SuiteCPages::AssetLibraryPage.new @driver
-      @destination_library_url = @canvas.click_tool_link(@driver, SuiteCTools::ASSET_LIBRARY)
+      @destination_library_url = @canvas.click_tool_link(@driver, LtiTools::ASSET_LIBRARY)
 
       # Teacher logs in to new asset library so that enrollment is synced immediately
       @canvas.log_out(@driver, @cal_net)

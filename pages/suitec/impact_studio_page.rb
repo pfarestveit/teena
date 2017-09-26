@@ -16,7 +16,7 @@ module Page
       # @param url [String]
       def load_page(driver, url)
         navigate_to url
-        wait_until { title == "#{SuiteCTools::IMPACT_STUDIO.name}" }
+        wait_until { title == "#{LtiTools::IMPACT_STUDIO.name}" }
         hide_canvas_footer_and_popup
         switch_to_canvas_iframe driver
         activity_event_drops_element.when_visible Utils.medium_wait rescue Selenium::WebDriver::Error::StaleElementReferenceError

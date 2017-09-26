@@ -32,11 +32,11 @@ describe 'Impact Studio', order: :defined do
 
     # Create course site if necessary
     @canvas.log_in(@cal_net, Utils.super_admin_username, Utils.super_admin_password)
-    @canvas.create_generic_course_site(@driver, Utils.canvas_qa_sub_account, @course, users, test_id, [SuiteCTools::ASSET_LIBRARY, SuiteCTools::IMPACT_STUDIO, SuiteCTools::ENGAGEMENT_INDEX])
+    @canvas.create_generic_course_site(@driver, Utils.canvas_qa_sub_account, @course, users, test_id, [LtiTools::ASSET_LIBRARY, LtiTools::IMPACT_STUDIO, LtiTools::ENGAGEMENT_INDEX])
     @course.sections = [Section.new({label: @course.title})]
-    @asset_library_url = @canvas.click_tool_link(@driver, SuiteCTools::ASSET_LIBRARY)
-    @impact_studio_url = @canvas.click_tool_link(@driver, SuiteCTools::IMPACT_STUDIO)
-    @engagement_index_url = @canvas.click_tool_link(@driver, SuiteCTools::ENGAGEMENT_INDEX)
+    @asset_library_url = @canvas.click_tool_link(@driver, LtiTools::ASSET_LIBRARY)
+    @impact_studio_url = @canvas.click_tool_link(@driver, LtiTools::IMPACT_STUDIO)
+    @engagement_index_url = @canvas.click_tool_link(@driver, LtiTools::ENGAGEMENT_INDEX)
     @engagement_index.wait_for_new_user_sync(@driver, @engagement_index_url, users)
   end
 
@@ -46,7 +46,7 @@ describe 'Impact Studio', order: :defined do
 
     context 'when the Engagement Index is not present' do
 
-      before(:all) { @canvas.disable_tool(@course, SuiteCTools::ENGAGEMENT_INDEX) }
+      before(:all) { @canvas.disable_tool(@course, LtiTools::ENGAGEMENT_INDEX) }
 
       context 'and an instructor' do
 
@@ -111,8 +111,8 @@ describe 'Impact Studio', order: :defined do
 
       before(:all) do
         @canvas.stop_masquerading @driver
-        @canvas.add_suite_c_tool(@course, SuiteCTools::ENGAGEMENT_INDEX)
-        @engagement_index_url = @canvas.click_tool_link(@driver, SuiteCTools::ENGAGEMENT_INDEX)
+        @canvas.add_suite_c_tool(@course, LtiTools::ENGAGEMENT_INDEX)
+        @engagement_index_url = @canvas.click_tool_link(@driver, LtiTools::ENGAGEMENT_INDEX)
 
         # One teacher shares score
         @canvas.masquerade_as(@driver, teacher_share, @course)

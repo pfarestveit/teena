@@ -29,7 +29,7 @@ begin
       sleep Utils.short_wait
       @canvas.log_out(@driver, @cal_net) if @canvas.profile_link?
       @canvas.log_in(@cal_net, Utils.ets_qa_username, Utils.ets_qa_password)
-      @canvas.create_generic_course_site(@driver, Utils.canvas_qa_sub_account, @course, [@user_1, @user_2], @test_course_identifier)
+      @canvas.create_generic_course_site(@driver, Utils.canvas_qa_sub_account, @course, [@user_1, @user_2], @test_course_identifier, [LtiTools::PRIVACY_DASHBOARD])
 
       # DISCUSSIONS
 

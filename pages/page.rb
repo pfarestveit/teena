@@ -36,6 +36,7 @@ module Page
   # @param timeout [Fixnum]
   def wait_for_element(element, timeout)
     element.when_present timeout
+    scroll_to_element element
     element.when_visible timeout
     sleep Utils.event_wait
   end
