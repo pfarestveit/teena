@@ -15,10 +15,16 @@ begin
   @driver = Selenium::WebDriver.for :chrome
   @driver.manage.window.maximize
 
+  def scroll_to_element(driver, element)
+    driver.execute_script('arguments[0].scrollIntoView(true);', element)
+    sleep 1
+  end
+
   def click_element_id(driver, id)
     puts "#{Time.now} - Waiting for an element with ID '#{id}' to appear"
     @brief_wait.until { driver.find_element(id: id) }
     puts "#{Time.now} - Found the element, clicking it"
+    scroll_to_element(driver, driver.find_element(id: id))
     driver.find_element(id: id).click
   end
 
@@ -40,8 +46,9 @@ begin
     @brief_wait.until { @driver.find_element(id: 'AdminUC_DataSources_AdminDataSource_Tabs_MultiDataSource_listing') }
     sleep 2
     @driver.find_element(id: 'AdminUC_DataSources_AdminDataSource_Tabs_tbSearchValue').send_keys data_source
-    @driver.find_element(id: 'AdminUC_DataSources_AdminDataSource_Tabs_btnSearch').click
+    click_element_id(@driver, 'AdminUC_DataSources_AdminDataSource_Tabs_btnSearch')
     @brief_wait.until { @driver.find_element(xpath: "//table[@id='AdminUC_DataSources_AdminDataSource_Tabs_MultiDataSource_listing']//tr[3][contains(.,'#{data_source}')]") }
+    scroll_to_element(@driver, @driver.find_element(link_text: 'Edit'))
     @driver.find_element(link_text: 'Edit').click
     # Click Data tab and click Edit on Data Blocks tab
     puts "#{Time.now} - Found data source, editing it"
@@ -50,6 +57,7 @@ begin
       @driver.find_element(id: 'AdminUC_Data_ucAdminDS_Entities_lblDataSource')
       @brief_wait.until { @driver.find_element(id: 'AdminUC_Data_ucAdminDS_Entities_lblDataSource').text.include? data_source }
     end
+    scroll_to_element(@driver, @driver.find_element(link_text: 'Edit'))
     @driver.find_element(link_text: 'Edit').click
   end
 
@@ -58,7 +66,7 @@ begin
     @brief_wait.until { @driver.find_element(id: 'AdminUC_Data_ucAdminDS_Entities_File1') }
     @driver.find_element(id: 'AdminUC_Data_ucAdminDS_Entities_File1').send_keys file
     sleep 2
-    @driver.find_element(id: 'AdminUC_Data_ucAdminDS_Entities_btnUpload').click
+    click_element_id(@driver, 'AdminUC_Data_ucAdminDS_Entities_btnUpload')
     sleep 5
     @long_wait.until { @driver.find_element(id: 'AdminUC_Data_ucAdminDS_Entities_cbAll') }
   end
