@@ -21,11 +21,11 @@ class Utils
 
   # Instantiates the browser and alters default browser settings.
   def self.launch_browser
-    driver = @config['webdriver']
+    driver = @config['webdriver']['browser']
     logger.info "Launching #{driver.capitalize}"
     if %w(firefox chrome safari).include? driver
       if driver == 'firefox'
-        profile = Selenium::WebDriver::Firefox::Profile.new
+        profile = Selenium::WebDriver::Firefox::Profile.from_name @config['webdriver']['firefox_profile']
         profile['browser.download.folderList'] = 2
         profile['browser.download.manager.showWhenStarting'] = false
         profile['browser.download.dir'] = Utils.download_dir
@@ -34,6 +34,7 @@ class Utils
         driver = Selenium::WebDriver.for :firefox, options: options
       elsif driver == 'chrome'
         options = Selenium::WebDriver::Chrome::Options.new
+        options.add_argument("user-data-dir=#{File.join(ENV['HOME'], '.webdriver-config/chrome-profile')}")
         prefs = {
           :prompt_for_download => false,
           :default_directory => Utils.download_dir
