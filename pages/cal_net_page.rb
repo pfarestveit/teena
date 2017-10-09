@@ -37,6 +37,7 @@ module Page
         wait_for_element_and_type_js(username_element, username)
         password_element.send_keys password
         wait_for_update_and_click sign_in_button_element
+        wait_until(Utils.medium_wait) { !current_url.include? Utils.cal_net_url }
         add_event(event, EventType::LOGGED_IN)
       end
     end

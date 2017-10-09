@@ -1,4 +1,6 @@
-webdriver: chrome
+webdriver:
+  browser: chrome
+  firefox_profile: profile
 
 window:
   height: 0
