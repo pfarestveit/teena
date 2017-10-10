@@ -214,6 +214,8 @@ module Page
     def create_unsyncable_assignment(course, assignment)
       logger.info "Creating unsyncable assignment named '#{assignment.title}'"
       enter_new_assignment_title(course, assignment)
+      uncheck_online_url_cbx
+      uncheck_online_upload_cbx
       check_online_text_entry_cbx
       check_online_media_cbx
       save_and_publish_assignment assignment
