@@ -55,9 +55,10 @@ class OecUtils
     initial_csv.each do |r|
       1.upto(10) { |i| depts_present << r["DEPT_NAME_#{i}"] if r["DEPT_NAME_#{i}"]}
     end
-    depts_present.compact!.uniq!
+    depts_present.uniq!
     depts_needed = OECDepartments::DEPARTMENTS.map { |d| d.form_code }
-    depts_needed.compact!.uniq!
+    depts_needed.compact!
+    depts_needed.uniq!
     depts_missing = depts_needed - depts_present
     logger.debug "Departments missing: #{depts_missing}"
     depts_missing
