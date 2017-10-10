@@ -53,7 +53,7 @@ class OecUtils
     initial_csv = CSV.read(file_name, headers: true)
     depts_present = []
     initial_csv.each do |r|
-      depts_present << r['DEPT_NAME_1'] << r['DEPT_NAME_2'] << r['DEPT_NAME_3'] << r['DEPT_NAME_4'] << r['DEPT_NAME_5'] << r['DEPT_NAME_6'] << r['DEPT_NAME_7'] << r['DEPT_NAME_8'] << r['DEPT_NAME_9'] << r['DEPT_NAME_10']
+      1.upto(10) { |i| depts_present << r["DEPT_NAME_#{i}"] if r["DEPT_NAME_#{i}"]}
     end
     depts_present.compact!.uniq!
     depts_needed = OECDepartments::DEPARTMENTS.map { |d| d.form_code }
@@ -106,7 +106,7 @@ class OecUtils
         unless r['EMAIL_ADDRESS'].nil? || (r['CROSS_LISTED_FLAG'] == 'RM SHARE') || (r['START_DATE'] == r['END_DATE']) || (r['DEPT_NAME'] == 'LEGALST')
 
           # Make sure the right department forms are set. FSSEM and BIOLOGY follow their own rules, so ignore them.
-          unless r['DEPT_FORM'].nil? || (r['DEPT_FORM'] == 'FSSEM') || (r['DEPT_NAME'] == 'BIOLOGY')
+          unless r['DEPT_FORM'].nil? || %w(FSSEM BIOLOGY).include?(r['DEPT_FORM'])
             dept = OECDepartments::DEPARTMENTS.find { |d| d.dept_code == r['DEPT_NAME'] }
             r['DEPT_FORM'] = dept.form_code
           end
