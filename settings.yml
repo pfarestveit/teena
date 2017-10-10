@@ -49,6 +49,14 @@ junction:
   basic_auth_password: secret
   admin_uid: secret
 
+oec:
+  term: 2017-D
+  first_name: secret
+  last_name: secret
+  uid: secret
+  sis_id: secret
+  email: secret
+
 users:
   super_admin_username: secret
   super_admin_password: secret
