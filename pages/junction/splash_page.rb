@@ -20,11 +20,21 @@ module Page
 
       # Authenticates using basic auth
       # @param uid [String]
-      def basic_auth(uid)
+      # @param cal_net [Page::CalNetPage]
+      def basic_auth(uid, cal_net = nil)
         logger.info "Logging in as #{uid} using basic auth"
         load_page
         scroll_to_bottom
-        wait_for_update_and_click toggle_footer_link_element
+        begin
+          wait_for_update_and_click toggle_footer_link_element
+        rescue
+          logger.warn 'Session conflict, CAS page loaded'
+          cal_net.log_in(Utils.super_admin_username, Utils.super_admin_password)
+          cal_net.logout_conf_heading_element.when_visible Utils.medium_wait
+          load_page
+          scroll_to_bottom
+          wait_for_update_and_click toggle_footer_link_element
+        end
         wait_for_element_and_type_js(basic_auth_uid_input_element, uid)
         wait_for_element_and_type_js(basic_auth_password_input_element, JunctionUtils.junction_basic_auth_password)
         # The log in button element will disappear and reappear

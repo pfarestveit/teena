@@ -36,7 +36,7 @@ describe 'bCourses Roster Photos' do
 
     # Authenticate
     @splash_page.load_page
-    @splash_page.basic_auth teacher_1.uid
+    @splash_page.basic_auth(teacher_1.uid, @cal_net)
     @canvas.log_in(@cal_net, Utils.super_admin_username, Utils.super_admin_password)
     @canvas.masquerade_as(@driver, teacher_1)
 
