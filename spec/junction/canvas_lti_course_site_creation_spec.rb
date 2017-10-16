@@ -5,7 +5,6 @@ describe 'bCourses course site creation' do
   include Logging
 
   links_tested = false
-  course_sites = []
 
   begin
     @driver = Utils.launch_browser
@@ -13,46 +12,67 @@ describe 'bCourses course site creation' do
 
     @splash_page = Page::JunctionPages::SplashPage.new @driver
     @cal_net_page = Page::CalNetPage.new @driver
-    @academics_api = ApiAcademicsCourseProvisionPage.new @driver
-    @rosters_api = ApiAcademicsRosterPage.new @driver
     @site_creation_page = Page::JunctionPages::CanvasSiteCreationPage.new @driver
     @create_course_site_page = Page::JunctionPages::CanvasCreateCourseSitePage.new @driver
     @canvas_page = Page::CanvasPage.new @driver
     @roster_photos_page = Page::JunctionPages::CanvasRostersPage.new @driver
     @course_captures_page = Page::JunctionPages::CanvasCourseCapturesPage.new @driver
 
-    # SITE CREATION
+    test_data = JunctionUtils.load_junction_test_course_data.select { |course| course['tests']['create_course_site'] }
+    all_test_courses = []
+    sites_to_create = []
 
-    test_courses = JunctionUtils.load_junction_test_course_data.select { |course| course['tests']['create_course_site'] }
-    test_courses.each do |course|
+    # OBTAIN SIS DATA FOR ALL TEST COURSES
+
+    test_data.each do |data|
 
       begin
-        course = Course.new course
-        teacher = User.new course.teachers.first
+        course = Course.new data
+        teacher = User.new(course.teachers.first)
         sections = course.sections.map { |section_data| Section.new section_data }
         sections_for_site = sections.select { |section| section.include_in_site }
         site_abbreviation = nil
+        academic_data = ApiAcademicsCourseProvisionPage.new @driver
+        roster_data = ApiAcademicsRosterPage.new @driver
 
-        logger.info "Creating a course site for #{course.code} in #{course.term} using the '#{course.create_site_workflow}' workflow"
+        test_course = {:course => course, :teacher => teacher, :sections => sections, :sections_for_site => sections_for_site,
+                       :site_abbreviation => site_abbreviation, :academic_data => academic_data, :roster_data => roster_data,
+                       :test_data => data}
 
-        # Get academics data, deleting cookies to avoid authentication conflicts before and after
-        @driver.manage.delete_all_cookies
         @splash_page.load_page
-        @splash_page.basic_auth teacher.uid
-        @academics_api.get_feed @driver
-        @driver.manage.delete_all_cookies
+        @splash_page.basic_auth(test_course[:teacher].uid, @cal_net_page)
+        test_course[:academic_data].get_feed @driver
+        all_test_courses << test_course
+        sites_to_create << test_course unless test_course[:course].site_id
 
-        # Authenticate in Canvas as needed
-        @canvas_page.load_homepage
-        @canvas_page.log_in(@cal_net_page, Utils.super_admin_username, Utils.super_admin_password) if @cal_net_page.username?
+      rescue => e
+        it("encountered an error retrieving SIS data for #{test_course[:course].code}") { fail }
+        Utils.log_error e
+      ensure
+        @splash_page.load_page
+        @splash_page.log_out @splash_page
+      end
+    end
+
+    # CREATE SITES
+
+    @canvas_page.load_homepage
+    @canvas_page.log_in(@cal_net_page, Utils.super_admin_username, Utils.super_admin_password) if @cal_net_page.username?
+
+    sites_to_create.each do |site|
+
+      begin
+
+        logger.info "Creating a course site for #{site[:course].code} in #{site[:course].term} using the '#{site[:course].create_site_workflow}' workflow"
+
         @canvas_page.stop_masquerading @driver if @canvas_page.stop_masquerading_link?
-        @canvas_page.masquerade_as(@driver, teacher) unless %w(uid ccn).include?(course.create_site_workflow)
+        @canvas_page.masquerade_as(@driver, site[:teacher]) unless %w(uid ccn).include?(site[:course].create_site_workflow)
 
         # Navigate to Create a Course Site page
         @canvas_page.load_homepage
         @canvas_page.click_create_site @driver
         @site_creation_page.click_create_course_site
-        @create_course_site_page.search_for_course(course, teacher, sections_for_site)
+        @create_course_site_page.search_for_course(site[:course], site[:teacher], site[:sections_for_site])
 
         # Verify page content and external links for one of the courses
         unless links_tested
@@ -82,22 +102,22 @@ describe 'bCourses course site creation' do
         # Unless admin creates site by CCN list, all sections in the test course and all other semester courses should be shown
 
         # Check the test course against expectations in the test data file
-        @create_course_site_page.expand_available_sections course.code
-        (course.create_site_workflow == 'ccn') ?
-            expected_section_ids = sections_for_site.map { |section| section.id } :
-            expected_section_ids = sections.map { |section| section.id }
-        visible_section_ids = @create_course_site_page.course_section_ids(@driver, course)
-        it ("offers all the expected sections for #{course.term} #{course.code}") { expect(visible_section_ids.sort!).to eql(expected_section_ids.sort!) }
+        @create_course_site_page.expand_available_sections site[:course].code
+        (site[:course].create_site_workflow == 'ccn') ?
+            expected_section_ids = site[:sections_for_site].map { |section| section.id } :
+            expected_section_ids = site[:sections].map { |section| section.id }
+        visible_section_ids = @create_course_site_page.course_section_ids(@driver, site[:course])
+        it ("offers all the expected sections for #{site[:course].term} #{site[:course].code}") { expect(visible_section_ids.sort!).to eql(expected_section_ids.sort!) }
 
-        unless course.create_site_workflow == 'ccn'
+        unless site[:course].create_site_workflow == 'ccn'
 
-          semester = @academics_api.all_teaching_semesters.find { |semester| @academics_api.semester_name(semester) == course.term }
-          semester_courses = @academics_api.semester_courses semester
+          semester = site[:academic_data].all_teaching_semesters.find { |semester| site[:academic_data].semester_name(semester) == site[:course].term }
+          semester_courses = site[:academic_data].semester_courses semester
 
           # Check all other courses against the academics API
           semester_courses.each do |course_data|
-            api_course_code = @academics_api.course_code course_data
-            api_course_title = @academics_api.course_title course_data
+            api_course_code = site[:academic_data].course_code course_data
+            api_course_title = site[:academic_data].course_title course_data
             ui_course_title = @create_course_site_page.available_sections_course_title api_course_code
             ui_sections_expanded = @create_course_site_page.expand_available_sections api_course_code
 
@@ -106,8 +126,8 @@ describe 'bCourses course site creation' do
             it("allows the available sections to be expanded for #{api_course_code}") { expect(ui_sections_expanded).to be_truthy }
 
             # Check each section
-            @academics_api.course_sections(course_data).each do |section_data|
-              api_section_data = @academics_api.section_data section_data
+            site[:academic_data].course_sections(course_data).each do |section_data|
+              api_section_data = site[:academic_data].section_data section_data
               ui_section_data = @create_course_site_page.section_data(@driver, api_section_data[:id])
 
               it("shows the right section labels for #{api_course_code} section #{api_section_data[:id]}") { expect(ui_section_data[:label]).to eql(api_section_data[:label]) }
@@ -122,17 +142,17 @@ describe 'bCourses course site creation' do
         end
 
         # Choose sections and create site
-        @create_course_site_page.expand_available_sections course.code
-        @create_course_site_page.select_sections sections_for_site
+        @create_course_site_page.expand_available_sections site[:course].code
+        @create_course_site_page.select_sections site[:sections_for_site]
         @create_course_site_page.click_next
 
         default_name = @create_course_site_page.site_name_input
-        expected_name = "#{course.title} (#{course.term})"
-        it ("shows the default site name #{course.title}") { expect(default_name).to eql(expected_name) }
+        expected_name = "#{site[:course].title} (#{site[:course].term})"
+        it ("shows the default site name #{site[:course].title}") { expect(default_name).to eql(expected_name) }
 
         default_abbreviation = @create_course_site_page.site_abbreviation
-        expected_abbreviation = course.code
-        it ("shows the default site abbreviation #{course.code}") { expect(default_abbreviation).to include(expected_abbreviation) }
+        expected_abbreviation = site[:course].code
+        it ("shows the default site abbreviation #{site[:course].code}") { expect(default_abbreviation).to include(expected_abbreviation) }
 
         requires_name_and_abbreviation = @create_course_site_page.verify_block do
           @create_course_site_page.site_name_input_element.clear
@@ -142,9 +162,9 @@ describe 'bCourses course site creation' do
           @create_course_site_page.site_abbreviation_error_element.when_present 1
         end
 
-        it("requires a site name and abbreviation for #{course.code}") { expect(requires_name_and_abbreviation).to be true }
+        it("requires a site name and abbreviation for #{site[:course].code}") { expect(requires_name_and_abbreviation).to be true }
 
-        site_abbreviation = @create_course_site_page.enter_site_titles course
+        site_abbreviation = @create_course_site_page.enter_site_titles site[:course]
         logger.info "Course site abbreviation will be #{site_abbreviation}"
 
         @create_course_site_page.click_create_site
@@ -156,98 +176,103 @@ describe 'bCourses course site creation' do
             @canvas_page.recent_activity_heading?
           end
         end
-        it ("redirects to the #{course.term} #{course.code} course site in Canvas when finished") { expect(site_created).to be true }
+        it ("redirects to the #{site[:course].term} #{site[:course].code} course site in Canvas when finished") { expect(site_created).to be true }
 
         # If site creation succeeded, store the site info
         if site_created
-          course.site_id = @canvas_page.current_url.delete "#{Utils.canvas_base_url}/courses/"
-          logger.info "Canvas course site ID is #{course.site_id}"
-          course_sites << {course: course, sections: sections_for_site, teacher: teacher}
+          site[:course].site_id = @canvas_page.current_url.delete "#{Utils.canvas_base_url}/courses/"
+          logger.info "Canvas course site ID is #{site[:course].site_id}"
         else
-          logger.error "Timed out before the #{course.term} #{course.code} course site was created, or another error occurred"
+          logger.error "Timed out before the #{site[:course].term} #{site[:course].code} course site was created, or another error occurred"
         end
 
       rescue => e
-        it("encountered an error creating the course site for #{course.code}") { fail }
-        logger.error "#{e.message}#{"\n"}#{e.backtrace.join("\n")}"
+        it("encountered an error creating the course site for #{site[:course].code}") { fail }
+        Utils.log_error e
       end
     end
 
-    # COURSE SITE CONTENT - MEMBERSHIP, ROSTER PHOTOS, COURSE CAPTURES
+    # OBTAIN SIS ROSTERS DATA FOR ALL TEST COURSES
 
-    if course_sites.any?
-      course_sites.each do |site|
+    @canvas_page.log_out(@driver, @cal_net_page)
 
-        begin
-          course = site[:course]
-          sections = site[:sections]
-          section_ids = sections.map { |s| s.id }
-          teacher = site[:teacher]
-          expected_enrollment_counts = []
-          actual_enrollment_counts = []
+    all_test_courses.each do |site|
 
-          logger.info "Verifying content of #{course.term} #{course.code} site ID #{course.site_id}"
+      begin
+        @splash_page.load_page
+        @splash_page.basic_auth(site[:teacher].uid, @cal_net_page)
+        site[:roster_data].get_feed(@driver, site[:course])
+      ensure
+        @splash_page.load_page
+        @splash_page.log_out @splash_page
+      end
+    end
 
-          # Get academics and roster data, while avoiding authenticated session conflicts
-          @driver.manage.delete_all_cookies
-          @splash_page.load_page
-          @splash_page.basic_auth teacher.uid
-          @academics_api.get_feed @driver
-          @rosters_api.get_feed(@driver, course)
-          @canvas_page.load_homepage
-          @canvas_page.log_in(@cal_net_page, Utils.super_admin_username, Utils.super_admin_password) if @cal_net_page.username?
-          @canvas_page.masquerade_as(@driver, teacher, course)
+    # CHECK COURSE SITE CONTENT - MEMBERSHIP, ROSTER PHOTOS, COURSE CAPTURES
 
-          # MEMBERSHIP - check that course site user counts match expectations for each role
+    @canvas_page.load_homepage
+    @canvas_page.log_in(@cal_net_page, Utils.super_admin_username, Utils.super_admin_password) if @cal_net_page.username?
 
-          api_semester = @academics_api.all_teaching_semesters.find { |s| s['name'] == course.term }
-          api_course = @academics_api.semester_courses(api_semester).find { |c| c['course_code'] == course.code }
-          api_sections = @academics_api.course_sections(api_course).select { |s| section_ids.include? s['ccn'] }
+    all_test_courses.each do |site|
 
-          expected_teacher_count = @academics_api.course_section_teachers(api_sections).length
-          expected_lead_ta_count = @academics_api.course_section_lead_tas(api_sections).length
-          expected_ta_count = @academics_api.course_section_tas(api_sections).length
-          expected_student_count = @rosters_api.enrolled_students.length
-          expected_waitlist_count = @rosters_api.waitlisted_students.length
+      begin
+        section_ids = site[:sections_for_site].map { |s| s.id }
+        expected_enrollment_counts = []
+        actual_enrollment_counts = []
 
-          expected_enrollment_counts = [{:role => 'Student', :count => expected_student_count}, {:role => 'Waitlist Student', :count => expected_waitlist_count},
-                                        {:role => 'Teacher', :count => expected_teacher_count}, {:role => 'Lead TA', :count => expected_lead_ta_count},
-                                        {:role => 'TA', :count => expected_ta_count}]
-          actual_enrollment_counts = @canvas_page.wait_for_enrollment_import(course, ['Student', 'Waitlist Student', 'Teacher', 'Lead TA', 'TA'])
-          it("results in the right course site membership for #{course.term} #{course.code} site ID #{course.site_id}") { expect(actual_enrollment_counts).to eql(expected_enrollment_counts) }
+        logger.info "Verifying content of #{site[:course].term} #{site[:course].code} site ID #{site[:course].site_id}"
 
-          # ROSTER PHOTOS - check that roster photos tool shows the right sections
+        @canvas_page.masquerade_as(@driver, site[:teacher], site[:course])
 
-          has_roster_photos_link = @roster_photos_page.roster_photos_link?
-          it ("shows a Roster Photos tool link in course site navigation for #{course.term} #{course.code} site ID #{course.site_id}") { expect(has_roster_photos_link).to be true }
+        # MEMBERSHIP - check that course site user counts match expectations for each role
 
-          @roster_photos_page.load_embedded_tool(@driver, course)
-          @roster_photos_page.wait_for_load_and_click_js @roster_photos_page.section_select_element
+        api_semester = site[:academic_data].all_teaching_semesters.find { |s| s['name'] == site[:course].term }
+        api_course = site[:academic_data].semester_courses(api_semester).find { |c| c['course_code'] == site[:course].code }
+        api_sections = site[:academic_data].course_sections(api_course).select { |s| section_ids.include? s['ccn'] }
 
-          expected_sections_on_site = (sections.map { |section| "#{section.course} #{section.label}" })
-          actual_sections_on_site = @roster_photos_page.section_options
-          it("shows the right section list on the Roster Photos tool for #{course.term} #{course.code} site ID #{course.site_id}") { expect(actual_sections_on_site).to eql(expected_sections_on_site.sort) }
+        expected_teacher_count = site[:academic_data].course_section_teachers(api_sections).length
+        expected_lead_ta_count = site[:academic_data].course_section_lead_tas(api_sections).length
+        expected_ta_count = site[:academic_data].course_section_tas(api_sections).length
+        expected_student_count = site[:roster_data].enrolled_students.length
+        expected_waitlist_count = site[:roster_data].waitlisted_students.length
 
-          # COURSE CAPTURE - check that course captures tool is not added automatically
+        expected_enrollment_counts = [{:role => 'Student', :count => expected_student_count}, {:role => 'Waitlist Student', :count => expected_waitlist_count},
+                                      {:role => 'Teacher', :count => expected_teacher_count}, {:role => 'Lead TA', :count => expected_lead_ta_count},
+                                      {:role => 'TA', :count => expected_ta_count}]
+        actual_enrollment_counts = @canvas_page.wait_for_enrollment_import(site[:course], ['Student', 'Waitlist Student', 'Teacher', 'Lead TA', 'TA'])
+        it("results in the right course site membership for #{site[:course].term} #{site[:course].code} site ID #{site[:course].site_id}") { expect(actual_enrollment_counts).to eql(expected_enrollment_counts) }
 
-          @canvas_page.load_course_site(@driver, course)
-          has_course_captures_link = @course_captures_page.course_captures_link?
-          it ("shows no Course Captures tool link in course site navigation for #{course.term} #{course.code} site ID #{course.site_id}") { expect(has_course_captures_link).to be false }
+        # ROSTER PHOTOS - check that roster photos tool shows the right sections
 
-          @canvas_page.stop_masquerading @driver
-        rescue => e
-          it("encountered an error verifying the course site for #{course.code}") { fail }
-          logger.error "#{e.message}#{"\n"}#{e.backtrace.join("\n")}"
-        ensure
-          Utils.add_csv_row(test_output, [course.term, course.code, teacher.uid, course.site_id, expected_teacher_count, expected_lead_ta_count,
-                                          expected_ta_count, expected_student_count, expected_waitlist_count])
-        end
+        has_roster_photos_link = @roster_photos_page.roster_photos_link?
+        it ("shows a Roster Photos tool link in course site navigation for #{site[:course].term} #{site[:course].code} site ID #{site[:course].site_id}") { expect(has_roster_photos_link).to be true }
+
+        @roster_photos_page.load_embedded_tool(@driver, site[:course])
+        @roster_photos_page.wait_for_load_and_click_js @roster_photos_page.section_select_element
+
+        expected_sections_on_site = (site[:sections_for_site].map { |section| "#{section.course} #{section.label}" })
+        actual_sections_on_site = @roster_photos_page.section_options
+        it("shows the right section list on the Roster Photos tool for #{site[:course].term} #{site[:course].code} site ID #{site[:course].site_id}") { expect(actual_sections_on_site).to eql(expected_sections_on_site.sort) }
+
+        # COURSE CAPTURE - check that course captures tool is not added automatically
+
+        @canvas_page.load_course_site(@driver, site[:course])
+        has_course_captures_link = @course_captures_page.course_captures_link?
+        it ("shows no Course Captures tool link in course site navigation for #{site[:course].term} #{site[:course].code} site ID #{site[:course].site_id}") { expect(has_course_captures_link).to be false }
+
+        @canvas_page.stop_masquerading @driver
+      rescue => e
+        it("encountered an error verifying the course site for #{site[:course].code}") { fail }
+        Utils.log_error e
+      ensure
+        Utils.add_csv_row(test_output, [site[:course].term, site[:course].code, site[:teacher].uid, site[:course].site_id, expected_teacher_count, expected_lead_ta_count,
+                                        expected_ta_count, expected_student_count, expected_waitlist_count])
       end
     end
 
   rescue => e
     it('encountered an error') { fail }
-    logger.error "#{e.message}#{"\n"}#{e.backtrace.join("\n")}"
+    Utils.log_error e
   ensure
     Utils.quit_browser @driver
   end

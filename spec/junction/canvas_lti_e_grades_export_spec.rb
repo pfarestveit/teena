@@ -35,7 +35,7 @@ describe 'bCourses E-Grades Export', order: :defined do
 
     # Get roster and section data for the site
     @splash_page.load_page
-    @splash_page.basic_auth teacher.uid
+    @splash_page.basic_auth(teacher.uid, @cal_net)
     @rosters_api.get_feed(@driver, course)
     @academics_api.get_feed(@driver)
     @current_semester = @academics_api.semester_name @academics_api.current_semester(@academics_api.all_teaching_semesters)
