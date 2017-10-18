@@ -81,7 +81,7 @@ module Page
     # Loads a given sub-account page
     def load_sub_account(sub_account)
       logger.debug "Loading sub-account #{sub_account}"
-      navigate_to "#{Utils.canvas_base_url}/accounts/#{sub_account}"
+      navigate_to "#{Utils.canvas_base_url}/accounts/#{sub_account}/settings"
     end
 
     # COURSE SITE SETUP
