@@ -6,8 +6,14 @@ class OecUtils
 
   @config = Utils.config
 
-  def self.base_url(args)
-    args.include?('qa') ? 'https://course-evaluations-qa.berkeley.edu' : 'https://course-evaluations.berkeley.edu'
+  def self.base_url(args = nil)
+    (args && args.include?('qa')) ? 'https://course-evaluations-qa.berkeley.edu' : 'https://course-evaluations.berkeley.edu'
+  end
+
+  # Returns the name of the Blue project containing the evaluation forms being tested
+  # @return [String]
+  def self.blue_project_title
+    @config['oec']['blue_project_title']
   end
 
   def self.create_results_file
