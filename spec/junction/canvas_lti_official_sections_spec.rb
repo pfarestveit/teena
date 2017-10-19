@@ -61,7 +61,6 @@ describe 'bCourses Official Sections tool' do
       @canvas.masquerade_as(@driver, site[:teacher])
       logger.debug "Sections to be included at site creation are #{site[:sections_for_site].map { |s| s.id }}"
       @create_course_site_page.provision_course_site(@driver, site[:course], site[:teacher], site[:sections_for_site])
-      @canvas.publish_course_site(@driver, site[:course])
     end
 
     # ADD AND REMOVE SECTIONS FOR ALL TEST COURSES
@@ -76,6 +75,7 @@ describe 'bCourses Official Sections tool' do
 
         @canvas.stop_masquerading @driver if @canvas.stop_masquerading_link?
         @canvas.masquerade_as(@driver, site[:teacher])
+        @canvas.publish_course_site(@driver, site[:course])
 
         # STATIC VIEW - sections currently in the site
 

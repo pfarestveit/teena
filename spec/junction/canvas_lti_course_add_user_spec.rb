@@ -4,8 +4,6 @@ describe 'bCourses Find a Person to Add', order: :defined do
 
   include Logging
 
-  course_id = ENV['COURSE_ID']
-
   # Load test course data
   test_course_data = JunctionUtils.load_junction_test_course_data.find { |course| course['tests']['course_add_user'] }
   course = Course.new test_course_data
@@ -36,8 +34,8 @@ describe 'bCourses Find a Person to Add', order: :defined do
     @canvas.log_in(@cal_net, Utils.super_admin_username, Utils.super_admin_password)
     @canvas.masquerade_as(@driver, teacher_1)
 
-    course.site_id = course_id
     @create_course_site_page.provision_course_site(@driver, course, teacher_1, sections_for_site) if course.site_id.nil?
+    @canvas.publish_course_site(@driver, course)
   end
 
   after(:all) { Utils.quit_browser @driver }

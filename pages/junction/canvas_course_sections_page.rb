@@ -23,9 +23,13 @@ module Page
       # @return [String]
       def available_sections_course_title(course_code)
         logger.debug "Looking for the course title for course code #{course_code}"
-        span_element(xpath: "//span[contains(.,'#{course_code}')]/following-sibling::span[contains(@data-ng-if, 'course.title')]").when_visible Utils.short_wait
-        title = span_element(xpath: "//span[contains(.,'#{course_code}')]/following-sibling::span[contains(@data-ng-if, 'course.title')]").text
-        title && title[2..-1]
+        begin
+          span_element(xpath: "//span[contains(.,'#{course_code}')]/following-sibling::span[contains(@data-ng-if, 'course.title')]").when_visible Utils.short_wait
+          title = span_element(xpath: "//span[contains(.,'#{course_code}')]/following-sibling::span[contains(@data-ng-if, 'course.title')]").text
+          title && title[2..-1]
+        rescue
+          ''
+        end
       end
 
       # Returns the table element containing a given course's sections available to add to a course site

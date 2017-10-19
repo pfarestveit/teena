@@ -70,9 +70,9 @@ module Page
         sleep 1
       end
 
-      # Clicks the Export roster button and returns the count of user rows in the downloaded file
+      # Clicks the Export roster button and returns the SIDs in the downloaded file
       # @param course [Course]
-      # @return Integer
+      # @return [Array<String>]
       def export_roster(course)
         logger.info "Downloading roster CSV for course ID #{course.site_id}"
         Utils.prepare_download_dir
@@ -80,10 +80,10 @@ module Page
         export_roster_link
         csv_file_path = "#{Utils.download_dir}/course_#{course.site_id}_rosters.csv"
         wait_until { Dir[csv_file_path].any? }
-        csv = Dir[csv_file_path].first
-        # Get row count and subtract one for the heading
-        rows = IO.readlines csv
-        rows.count - 1
+        csv = CSV.read(csv_file_path, headers: true)
+        sids = []
+        csv.each { |r| sids << r['Student ID'] }
+        sids
       end
 
       # Returns an array of all SIDs visible on the page

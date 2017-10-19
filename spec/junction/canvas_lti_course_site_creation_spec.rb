@@ -223,6 +223,7 @@ describe 'bCourses course site creation' do
         logger.info "Verifying content of #{site[:course].term} #{site[:course].code} site ID #{site[:course].site_id}"
 
         @canvas_page.masquerade_as(@driver, site[:teacher], site[:course])
+        @canvas_page.publish_course_site(@driver, site[:course])
 
         # MEMBERSHIP - check that course site user counts match expectations for each role
 

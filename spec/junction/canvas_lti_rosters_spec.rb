@@ -4,12 +4,9 @@ describe 'bCourses Roster Photos' do
 
   include Logging
 
-  course_id = ENV['COURSE_ID']
-
   # Load test course data
   test_course_data = JunctionUtils.load_junction_test_course_data.find { |course| course['tests']['roster_photos'] }
   course = Course.new test_course_data
-  course.site_id = course_id
   sections = course.sections.map { |section_data| Section.new section_data }
   sections_for_site = sections.select { |section| section.include_in_site }
   teacher_1 = User.new course.teachers.first
@@ -41,14 +38,12 @@ describe 'bCourses Roster Photos' do
     @canvas.masquerade_as(@driver, teacher_1)
 
     # Create test course site if necessary
-    if course.site_id.nil?
-      @create_course_site_page.provision_course_site(@driver, course, teacher_1, sections_for_site)
-      @canvas.publish_course_site(@driver, course)
-    end
+    @create_course_site_page.provision_course_site(@driver, course, teacher_1, sections_for_site) if course.site_id.nil?
+    @canvas.publish_course_site(@driver, course)
 
     # Get enrollment totals on site
     @roster_api.get_feed(@driver, course)
-    course_id.nil? ?
+    course.site_id.nil? ?
         user_counts = @canvas.wait_for_enrollment_import(course, ['Student', 'Waitlist Student']) :
         user_counts = @canvas.enrollment_count_by_roles(course, ['Student', 'Waitlist Student'])
     @student_count = user_counts[0][:count]
@@ -61,7 +56,7 @@ describe 'bCourses Roster Photos' do
     logger.warn 'There are no students on this site' if @total_users.zero?
 
     # Add remaining user roles
-    [lead_ta, ta, designer, reader, observer].each do |user|
+    [lead_ta, ta, designer, reader, observer, student, waitlist].each do |user|
       @course_add_user_page.search(user.uid, 'CalNet UID')
       @course_add_user_page.add_user_by_uid(user, sections_for_site.first)
     end
@@ -118,8 +113,9 @@ describe 'bCourses Roster Photos' do
     end
 
     it "allows UID #{teacher_1.uid} to download a CSV of the course site enrollment on #{course.code} course site ID #{course.site_id}" do
-      exported_user_count = @roster_photos_page.export_roster course
-      expect(exported_user_count).to eql(@total_users)
+      exported_user_sids = @roster_photos_page.export_roster course
+      logger.info "Exported SIDs #{exported_user_sids}"
+      expect(exported_user_sids.length).to eql(@total_users)
     end
 
     it "shows UID #{teacher_1.uid} a photo print button on #{course.code} course site ID #{course.site_id}" do
@@ -144,13 +140,9 @@ describe 'bCourses Roster Photos' do
           @total_users.zero? ?
               @roster_photos_page.no_students_msg_element.when_visible(Utils.short_wait) :
               @roster_photos_page.wait_until(Utils.short_wait) { @roster_photos_page.roster_sid_elements.any? }
-
-        elsif %w(Designer Reader Observer).include? user.role
+        else ['Designer', 'Reader', 'Observer', 'Student', 'Waitlist Student'].include? user.role
           @roster_photos_page.switch_to_canvas_iframe @driver
           @roster_photos_page.no_access_msg_element.when_visible Utils.short_wait
-
-        else
-          @canvas.unauthorized_msg_element.when_visible Utils.short_wait
         end
       end
     end
