@@ -317,6 +317,7 @@ describe 'bCourses Official Sections tool' do
           student = User.new test_user_data.find { |data| data['role'] == 'Student' }
           waitlist = User.new test_user_data.find { |data| data['role'] == 'Waitlist Student' }
 
+          @canvas.stop_masquerading @driver
           [lead_ta, ta, designer, reader, observer, student, waitlist].each do |user|
             @course_add_user_page.load_embedded_tool(@driver, site[:course])
             @course_add_user_page.search(user.uid, 'CalNet UID')
@@ -327,7 +328,12 @@ describe 'bCourses Official Sections tool' do
           [lead_ta, ta, designer, reader, observer, student, waitlist].each do |user|
             @canvas.masquerade_as(@driver, user, site[:course])
             @official_sections_page.load_embedded_tool(@driver, site[:course])
-            if ['Lead TA', 'TA', 'Designer'].include? user.role
+            if user.role == 'Lead TA'
+              has_right_perms = @official_sections_page.verify_block do
+                @official_sections_page.current_sections_table_element.when_visible Utils.medium_wait
+                @official_sections_page.edit_sections_button_element.when_visible 1
+              end
+            elsif %w(TA Designer).include? user.role
               has_right_perms = @official_sections_page.verify_block do
                 @official_sections_page.current_sections_table_element.when_visible Utils.medium_wait
                 @official_sections_page.edit_sections_button_element.when_not_visible 1
