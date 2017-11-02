@@ -131,6 +131,7 @@ module Page
     button(:task_filter_button, id: 'BlueAppControl_TopLabelProjectManagement_TaskManagementUC_SearchBox_btnSearch')
     link(:first_fill_out_link, xpath: '//span[text()="Form Fill Out"]/ancestor::td/following-sibling::td[6]/a[contains(.,"Link")]')
     button(:next_button, id: 'FilloutController_btnNext')
+    button(:submit_button, id: 'FilloutController_btnSubmit')
 
     # Searches for a project
     # @param title [String]
@@ -146,12 +147,10 @@ module Page
     end
 
     # Returns the "total" portion of the tasks results count string
-    # @return Integer
+    # @return [Integer]
     def total_results
       parts = results_count.split('of ')
-      ttl = parts[1].split(' ').first.to_i
-      logger.debug "Results table shows #{ttl} tasks"
-      ttl
+      parts[1].split(' ').first.to_i
     end
 
     # Waits for the number of results to shrink as filters are applied
@@ -167,10 +166,10 @@ module Page
     end
 
     # Searches for a fill-out form type, opens the first in the list, and navigates to the questionnaire
-    # @param driver [Selenium::WebDriver]
     # @param dept_form [String]
     # @param eval_type [String]
-    def find_and_open_fill_out_form(driver, dept_form, eval_type)
+    # @return [Integer]
+    def search_for_fill_out_form_tasks(dept_form, eval_type)
       # Search for the right form type
       wait_for_element_and_select_js(task_type_select_element, 'Form Fill Out')
       wait_for_filtered_results
@@ -182,13 +181,123 @@ module Page
       wait_for_element_and_type(eval_type_search_input_element, eval_type)
       wait_for_update_and_click task_filter_button_element
       wait_for_filtered_results
+      total_results
+    end
 
+    # Clicks the first task link in the list and navigates to the questionnaire page
+    # @param driver [Selenium::WebDriver]
+    def open_fill_out_form_task(driver)
       # Load the form in a new window
       wait_for_update_and_click first_fill_out_link_element
       wait_until(1) { driver.window_handles.length > 1 }
       driver.switch_to.window driver.window_handles.last
       wait_for_load_and_click next_button_element
+      div_element(xpath: '//div[contains(@id,"MainQuestionDiv")]').when_visible Utils.short_wait
     end
 
+    # Closes the questionnaire if it is open
+    # @param driver [Selenium::WebDriver]
+    def close_form(driver)
+      if driver.window_handles.length > 1 && submit_button?
+        driver.close
+        driver.switch_to.window driver.window_handles.first
+      end
+    end
+
+    # EVALUATION FILL-OUT FORMS
+
+    # Given a questionnaire type, verifies that a given question is actually present in the right location and structure.
+    # @param driver [Selenium::WebDriver]
+    # @param form [Hash]
+    # @param question [Hash]
+    def verify_question(driver, form, question)
+      # Take a screenshot of the form
+      Utils.save_screenshot(driver, "#{form[:dept_code].delete(',')}_#{form[:eval_type]}")
+
+      # Get the xpath to the div containing the question
+      question_xpath = if question[:category] == 'instructor' && form[:eval_type] == 'G'
+                         "//h2[contains(.,'Feedback for Graduate Student Instructor')]/ancestor::div[contains(@id,'MainQuestionDiv')]/div[contains(@class,'FilloutQuestionListingDiv')][contains(.,\"#{question[:question]}\")]"
+                       elsif question[:category] == 'instructor' && form[:eval_type] != 'G'
+                         "//h2[contains(.,'Feedback for Instructor')]/ancestor::div[contains(@id,'MainQuestionDiv')]/div[contains(@class,'FilloutQuestionListingDiv')][contains(.,\"#{question[:question]}\")]"
+                       elsif question[:category] == 'course'
+                         "//h2[contains(.,'Course-Related Questions')]/ancestor::div[contains(@id,'MainQuestionDiv')]/div[contains(@class,'FilloutQuestionListingDiv')][contains(.,\"#{question[:question]}\")]"
+                       elsif question[:category] == 'student'
+                         "//h2[contains(.,'Student Information Questions')]/ancestor::div[contains(@id,'MainQuestionDiv')]/div[contains(@class,'FilloutQuestionListingDiv')][contains(.,\"#{question[:question]}\")]"
+                       elsif question[:category] == 'general'
+                         "//h2[contains(.,'General Open-Ended Questions')]/ancestor::div[contains(@id,'MainQuestionDiv')]/div[contains(@class,'FilloutQuestionListingDiv')][contains(.,\"#{question[:question]}\")]"
+                       else
+                         logger.error "Invalid question category: '#{question[:category]}'"
+                         fail
+                       end
+
+      # Based on the type of question, find the specific element(s) that should contain the question and any associated radio buttons, text inputs, labels
+      case question[:type]
+
+        when 'heading'
+          verify_block do
+            # Check that the exact heading text is in the right section
+            driver.find_element(:xpath => "#{question_xpath}//h2/span[text()=\"#{question[:question]}\"]")
+            logger.info "Found '#{question[:question]}'"
+          end
+
+        when 'radio'
+          verify_block do
+            # Check that the exact question text is in the right section and that it has the right radio button options
+            driver.find_element(:xpath => "#{question_xpath}//table//tr[2]/td/span[text()=\"#{question[:question]}\"]")
+            logger.info "Found '#{question[:question]}'"
+            question[:options].each do |o|
+              cell_node = question[:options].index(o) + 2
+              driver.find_element(:xpath => "#{question_xpath}//table//tr[2]/td[#{cell_node}]/label[text()='#{o}']/following-sibling::input")
+              logger.info "Found '#{o}'"
+            end
+            # TODO - verify right number of options
+          end
+
+        when 'radio desc'
+          verify_block do
+            # Check that the exact question text is in the right section and that it has the right radio button options
+            driver.find_element(:xpath => "#{question_xpath}//a[text()=\"#{question[:question]}\"]")
+            logger.info "Found '#{question[:question]}'"
+            question[:options].each do |o|
+              driver.find_element(:xpath => "#{question_xpath}//div[@class='VerticalQRatingRadioButtonDiv']//label[text()='#{o}']/preceding-sibling::input")
+              logger.info "Found '#{o}'"
+            end
+            # TODO - verify right number of options
+          end
+
+        when 'input'
+          verify_block do
+            # Check that the exact question text is in the right section and that it has an accompanying text input field
+            driver.find_element(:xpath => "#{question_xpath}//h3/a[text()=\"#{question[:question]}\"]")
+            begin
+              driver.find_element(:xpath => "#{question_xpath}//textarea")
+              logger.info "Found '#{question[:question]}'"
+            rescue
+              driver.find_element(:xpath => "#{question_xpath}//input")
+              logger.info "Found '#{question[:question]}'"
+            end
+          end
+
+        when 'nested'
+          verify_block do
+            # Verify the question heading text
+            driver.find_element(:xpath => "#{question_xpath}//h3/a[text()=\"#{question[:question]}\"]")
+            logger.info "Found '#{question[:question]}'"
+            # Verify the radio button labels
+            question[:sub_options].each do |o|
+              cell_node = question[:sub_options].index(o) + 3
+              driver.find_element(:xpath => "#{question_xpath}//table//tr/td[#{cell_node}]/span[text()='#{o}']")
+              logger.info "Found '#{o}'"
+            end
+            # TODO - verify right number of options
+            driver.find_element(:xpath => "#{question_xpath}//table//tr[contains(.,\"#{question[:sub_question]}\")]/td[2]/span[text()=\"#{question[:sub_question]}\"]")
+            logger.info "Found '#{question[:sub_question]}'"
+            # TODO - verify right number of sub-questions
+          end
+        else
+          logger.error "Invalid question type: '#{question[:type]}'"
+          fail
+      end
+    end
   end
 end

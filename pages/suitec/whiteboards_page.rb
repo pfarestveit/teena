@@ -157,7 +157,7 @@ module Page
       button(:settings_button, xpath: '//button[@title="Settings"]')
       text_area(:edit_title_input, id: 'whiteboards-edit-title')
       elements(:collaborator_name, :span, xpath: '//label[text()="Collaborators"]/following-sibling::div//li/span')
-      div(:collaborator_list, class: 'select-search')
+      div(:collaborator_list, xpath: '//li[contains(@class,"select-search-list-item_input")]')
       elements(:remove_collaborator_button, :button, xpath: '//label[text()="Collaborators"]/following-sibling::div//li/button')
       button(:cancel_edit, xpath: '//button[text()="Cancel"]')
       button(:save_edit, xpath: '//button[text()="Save settings"]')
@@ -188,7 +188,7 @@ module Page
         begin
           # Click the title first to ensure the subsequent collaborator click always fires
           wait_for_update_and_click edit_title_input_element
-          wait_for_update_and_click collaborator_list_element
+          wait_for_update_and_click_js collaborator_list_element
           sleep 1
           wait_for_update_and_click collaborator_option_link(user)
         rescue

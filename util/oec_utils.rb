@@ -126,7 +126,7 @@ class OecUtils
           # Set department forms for cross-listed courses
           if r['CROSS_LISTED_FLAG'] == 'Y'
             cross_listed_name = r['CROSS_LISTED_NAME']
-            participating_listing_depts = OECDepartments::DEPARTMENTS.map { |d| d.form_code if cross_listed_name.include?(d.dept_code) }
+            participating_listing_depts = OECDepartments::DEPARTMENTS.map { |d| d.form_code if cross_listed_name && cross_listed_name.include?(d.dept_code) }
             participating_listing_depts.compact!.sort!
             logger.debug "Cross-listed name is #{cross_listed_name}, and participating depts are #{participating_listing_depts}"
             r['DEPT_FORM'] = participating_listing_depts.first
@@ -142,4 +142,55 @@ class OecUtils
       end
     end
   end
+
+  # Selects the OEC departments whose evaluations are managed by ETS and returns a set of department form codes and evaluation types
+  # @return [Array<Hash>]
+  def self.get_forms
+    participating_depts = OECDepartments::DEPARTMENTS.select { |d| d.ets_managed }
+    forms_and_types = participating_depts.map do |dept|
+      if dept.eval_types
+        dept.eval_types.map { |eval_type| {:dept_code => dept.form_code, :eval_type => eval_type} }
+      else
+        {:dept_code => dept.form_code, :eval_type => nil}
+      end
+    end
+    forms_and_types.flatten.uniq
+  end
+
+  # Parses the question bank file as a table
+  # @return [Array<Array>]
+  def self.open_question_bank
+    file = File.join(ENV['HOME'], '/.webdriver-config/oec-question-bank.csv')
+    CSV.table(file, encoding:'iso-8859-1:utf-8')
+  end
+
+  # Converts a question bank row to a hash
+  # @param row [Array<String>]
+  # @return [Hash]
+  def self.question_row_to_hash(row)
+    {
+      :category => row[:category],
+      :question => row[:question],
+      :type => row[:type],
+      :options => row[:options] && (row[:options].split(',').map &:strip),
+      :sub_question => row[:sub_question],
+      :sub_type => row[:sub_type],
+      :sub_options => row[:sub_options] && (row[:sub_options].split(',').map &:strip)
+    }
+  end
+
+  # Returns all the questions applicable to a given department form code and evaluation type
+  # @param question_bank_csv [CSV]
+  # @param form [Hash]
+  # @return [Array<Hash>]
+  def self.get_form_questions(question_bank_csv, form)
+    # The form codes are headers in the question bank. When the CSV is read, the headers are converted to symbols.
+    form_code = "#{form[:dept_code]}#{'_' if form[:eval_type]}#{form[:eval_type]}"
+    form_code_to_sym = form_code.downcase.gsub(' ', '_').to_sym
+    # Questions applicable to a form code have 'Y' under the header symbol
+    questions = []
+    question_bank_csv.each { |r| questions << OecUtils.question_row_to_hash(r) if r[form_code_to_sym] == 'Y' }
+    questions
+  end
+
 end
