@@ -76,7 +76,8 @@ module Page
 
     def upload_file(file)
       logger.info "Uploading file '#{file}'"
-      wait_for_element_and_type(file_input_element, file)
+      file_input_element.when_visible Utils.medium_wait
+      file_input_element.send_keys file
       sleep 2
       wait_for_update_and_click connect_button_element
       sleep 5
