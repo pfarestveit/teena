@@ -1,5 +1,6 @@
 webdriver:
   browser: chrome
+  headless: false
   firefox_profile: profile
 
 window:
