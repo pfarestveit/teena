@@ -40,4 +40,12 @@ begin
     t.rspec_opts = opts
   end
 
+  # The following is for running the OEC test to verify that Blue evaluation forms (fill out) contain the expected questions
+
+  task default: :oec
+  RSpec::Core::RakeTask.new(:oec) do |t|
+    t.pattern = 'spec/oec/oec_form_fill_out_spec.rb'
+    t.rspec_opts = opts
+  end
+
 end
