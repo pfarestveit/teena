@@ -35,6 +35,7 @@ class Utils
       elsif driver == 'chrome'
         options = Selenium::WebDriver::Chrome::Options.new
         options.add_argument("user-data-dir=#{File.join(ENV['HOME'], '.webdriver-config/chrome-profile')}")
+        options.add_argument 'headless' if @config['webdriver']['headless']
         prefs = {
           :prompt_for_download => false,
           :default_directory => Utils.download_dir
