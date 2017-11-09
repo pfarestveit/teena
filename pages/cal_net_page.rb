@@ -13,6 +13,7 @@ module Page
     text_field(:password, id: 'password')
     button(:sign_in_button, value: 'Sign In')
     paragraph(:logout_conf_heading, xpath: '//p[contains(.,"You have successfully logged out")]')
+    span(:access_denied_msg, xpath: '//span[contains(.,"Service access denied due to missing privileges.")]')
 
     # Loads CAS
     def load_page
@@ -28,10 +29,15 @@ module Page
     def log_in(username, password, event = nil)
       # If no credentials are available, then wait for manual login
       if username == 'secret' || password == 'secret'
-        logger.debug 'Waiting for manual login'
-        wait_for_element_and_type(username_element, 'PLEASE LOG IN MANUALLY')
-        username_element.flash
-        sign_in_button_element.when_not_present Utils.long_wait
+        if Utils.config['webdriver']['headless']
+          logger.error 'Browser is running in headless mode, manual login is not supported'
+          fail
+        else
+          logger.debug 'Waiting for manual login'
+          wait_for_element_and_type(username_element, 'PLEASE LOG IN MANUALLY')
+          username_element.flash
+          sign_in_button_element.when_not_present Utils.long_wait
+        end
       else
         logger.debug "#{username} is logging in"
         wait_for_element_and_type_js(username_element, username)
