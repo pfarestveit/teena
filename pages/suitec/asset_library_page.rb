@@ -509,15 +509,34 @@ module Page
         (list_view_asset_like_button_elements.map { |button| button if button.enabled? }).to_a
       end
 
-      # Toggles the 'like' button on an asset's detail view
+      # Toggles the 'like' button on an asset's detail view and returns the 'like' count prior to toggling
       # @param asset [Asset]
       # @param event [Event]
+      # @return [String]
       def toggle_detail_view_item_like(asset, event = nil)
         logger.info 'Clicking the like button'
         wait_for_element(detail_view_asset_like_button_element, Utils.short_wait)
         already_liked = detail_view_asset_like_button_element.attribute('class').include? 'active'
+        count = detail_view_asset_likes_count
         js_click detail_view_asset_like_button_element
         already_liked ? add_event(event, EventType::REMOVE, asset.id) : add_event(event, EventType::LIKE, asset.id)
+        count
+      end
+
+      # Likes an asset and waits for its 'like' count to increment
+      # @param asset [Asset]
+      # @param event [Event]
+      def like_asset(asset, event = nil)
+        count = toggle_detail_view_item_like(asset, event)
+        wait_until(Utils.short_wait) { detail_view_asset_likes_count == "#{count.to_i + 1}" }
+      end
+
+      # Unlikes an asset and waits for its 'like' count to decrement
+      # @param asset [Asset]
+      # @param event [Event]
+      def unlike_asset(asset, event = nil)
+        count = toggle_detail_view_item_like(asset, event)
+        wait_until(Utils.short_wait) { detail_view_asset_likes_count == "#{count.to_i - 1}" }
       end
 
       # PINS
