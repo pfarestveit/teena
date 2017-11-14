@@ -8,12 +8,12 @@ module Page
     include Logging
     include Page
 
-    link(:boac_link, text: 'BOAC')
+    link(:home_link, text: 'Home')
     button(:log_out_button, xpath: '//button[contains(text(),"Log out")]')
 
-    # Clicks the 'BOAC' link in the header
-    def click_boac
-      wait_for_load_and_click boac_link_element
+    # Clicks the 'Home' link in the header
+    def click_home
+      wait_for_load_and_click home_link_element
     end
 
     # Clicks the 'Log out' button in the header

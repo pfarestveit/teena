@@ -18,7 +18,7 @@ module Page
       text_field(:dev_auth_password_input, name: 'password')
       button(:dev_auth_log_in_button, xpath: '//button[text()="Dev Auth Login"]')
 
-      elements(:team_cohort_link, :link, xpath: '//a[@data-ng-bind="cohort.name"]')
+      elements(:team_cohort_link, :link, xpath: '//a[@data-ng-bind="team.name"]')
 
       # Loads the home page
       def load_page
