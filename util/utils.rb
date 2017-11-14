@@ -276,6 +276,7 @@ class Utils
   def self.save_screenshot(driver, unique_id)
     output_dir = File.join(ENV['HOME'], '/webdriver-output/screenshots')
     FileUtils.mkdir_p(output_dir) unless File.exists?(output_dir)
+    logger.info "Saving screenshot named '#{unique_id}.png'"
     driver.save_screenshot File.join(output_dir, "#{unique_id}.png")
   end
 

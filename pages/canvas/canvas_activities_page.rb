@@ -65,6 +65,7 @@ module Page
     # DISCUSSIONS
 
     link(:new_discussion_link, id: 'new-discussion-btn')
+    link(:subscribed_link, class: 'topic-unsubscribe-button')
     text_area(:discussion_title, id: 'discussion-title')
     checkbox(:threaded_discussion_cbx, id: 'threaded')
     checkbox(:graded_discussion_cbx, id: 'use_for_grading')
@@ -114,9 +115,10 @@ module Page
       discussion_title_element.when_present Utils.short_wait
       discussion_title_element.send_keys discussion.title
       js_click threaded_discussion_cbx_element
-      click_save_and_publish
+      teacher_role = save_and_publish_button?
+      teacher_role ? click_save_and_publish : wait_for_update_and_click_js(save_announcement_button_element)
       add_event(event, EventType::CREATE, discussion.title)
-      published_button_element.when_visible Utils.medium_wait
+      teacher_role ? published_button_element.when_visible(Utils.medium_wait) : subscribed_link_element.when_visible(Utils.medium_wait)
       logger.info "Discussion URL is #{current_url}"
       discussion.url = current_url
     end
