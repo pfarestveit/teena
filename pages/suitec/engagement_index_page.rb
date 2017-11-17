@@ -43,16 +43,18 @@ module Page
         (tries -= 1).zero? ? fail : retry
       end
 
-      # Waits for the Canvas poller to sync new course site members so that they appear on the Engagement Index
+      # Waits for the Canvas poller to sync new course site members so that they appear on the Engagement Index, and then sets to user's SuiteC ID.
       # @param driver [Selenium::WebDriver]
       # @param url [String]
+      # @param course [Course]
       # @param users [Array<User>]
-      def wait_for_new_user_sync(driver, url, users)
+      def wait_for_new_user_sync(driver, url, course, users)
         wait_for_poller_sync(driver, url) do
           load_scores(driver, url)
           users.each do |u|
             logger.debug "Checking if #{u.full_name} has been added to the course"
             wait_until(1) { visible_names.include? u.full_name }
+            u.suitec_id = SuiteCUtils.get_user_suitec_id(u, course)
           end
         end
       end

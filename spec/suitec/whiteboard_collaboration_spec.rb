@@ -49,7 +49,7 @@ describe 'Whiteboard', order: :defined do
     end
 
     # Wait until all are synced to the course before proceeding
-    @engagement_index_driver_1.wait_for_new_user_sync(@driver_1, @engagement_index_url, users)
+    @engagement_index_driver_1.wait_for_new_user_sync(@driver_1, @engagement_index_url, course, users)
 
     # Create three whiteboards
     @whiteboards = []

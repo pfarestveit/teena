@@ -77,4 +77,17 @@ class SuiteCUtils
     score.to_i
   end
 
+  # Returns a given user's SuiteC ID for a course
+  # @param user [User]
+  # @param course [Course]
+  # @return [String]
+  def self.get_user_suitec_id(user, course)
+    query = "﻿SELECT users.id
+             FROM users
+             INNER JOIN courses ON users.course_id = courses.id
+             WHERE users.canvas_user_id = #{user.canvas_id}
+               AND courses.name = '#{course.title}';"
+    Utils.query_db_field(suitec_db_credentials, query, 'id').first.to_s
+  end
+
 end

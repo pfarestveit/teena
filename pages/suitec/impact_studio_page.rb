@@ -195,6 +195,68 @@ module Page
         activities_by_type(user_activities, impact_activities)
       end
 
+      # ACTIVITY NETWORK
+
+      element(:activity_network, xpath: '//*[name()="svg"][@id="profile-activity-network"]')
+
+      # Initializes a has of interaction activities, used for tracking expected connection counts between users.
+      def init_user_interactions
+        {
+          views: {exports: 0, imports: 0},
+          likes: {exports: 0, imports: 0},
+          comments: {exports: 0, imports: 0},
+          posts: {exports: 0, imports: 0},
+          pins: {exports: 0, imports: 0},
+          use_assets: {exports: 0, imports: 0},
+          remixes: {exports: 0, imports: 0},
+          co_creations: {exports: 0, imports: 0}
+        }
+      end
+
+      # Returns the outgoing interaction count for an activity type label
+      # @param type [String]
+      # @return [Integer]
+      def visible_exports(type)
+        cell_element(xpath: "//table[contains(@class,'profile-activity-network-tooltip-table')]//td[text()='#{type}']/following-sibling::td[1]").text.to_i
+      end
+
+      # Returns the incoming interaction count for an activity type label
+      # @param type [String]
+      # @return [Integer]
+      def visible_imports(type)
+        cell_element(xpath: "//table[contains(@class,'profile-activity-network-tooltip-table')]//td[text()='#{type}']/following-sibling::td[4]").text.to_i
+      end
+
+      # Verifies that the counts of incoming and outgoing interactions of all types match expectations.
+      # @param driver [Selenium::WebDriver]
+      # @param interactions [Hash]
+      # @param user [User]
+      # @return [Hash]
+      def verify_network_interactions(driver, interactions, user)
+        activity_network_element.when_visible Utils.short_wait
+        # Pause to let the bubbles settle down
+        sleep 3
+        node = driver.find_element(xpath: "//*[name()='svg'][@id='profile-activity-network']//*[name()='g'][@class='nodes']/*[name()='g'][@id='profile-activity-network-user-node-#{user.suitec_id}']")
+        driver.action.move_to(node).perform
+        sleep Utils.click_wait
+        visible_interactions = {
+            views: {exports: visible_exports('Views'), imports: visible_imports('Views')},
+            likes: {exports: visible_exports('Likes'), imports: visible_imports('Likes')},
+            comments: {exports: visible_exports('Comments'), imports: visible_imports('Comments')},
+            posts: {exports: visible_exports('Posts'), imports: visible_imports('Posts')},
+            pins: {exports: visible_exports('Pins'), imports: visible_imports('Pins')},
+            use_assets: {exports: visible_exports('Use Assets'), imports: visible_imports('Use Assets')},
+            remixes: {exports: visible_exports('Remixes'), imports: visible_imports('Remixes')},
+            co_creations: {exports: visible_exports('Co-creations'), imports: visible_imports('Co-creations')}
+        }
+        begin
+          wait_until(1, "Expected #{interactions}, but got #{visible_interactions}") { visible_interactions == interactions }
+        ensure
+          # Overwrite the expected counts with the actual counts to prevent a failure in one script step from cascading to following dependent steps.
+          interactions.merge! visible_interactions unless visible_interactions.nil?
+        end
+      end
+
       # ACTIVITY EVENT DROPS
 
       element(:activity_event_drops, xpath: '//h3[contains(.,"Activity Timeline")]/following-sibling::div[@class="col-flex"]//*[name()="svg"]')
