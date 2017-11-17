@@ -37,7 +37,7 @@ describe 'Impact Studio', order: :defined do
     @asset_library_url = @canvas.click_tool_link(@driver, LtiTools::ASSET_LIBRARY)
     @impact_studio_url = @canvas.click_tool_link(@driver, LtiTools::IMPACT_STUDIO)
     @engagement_index_url = @canvas.click_tool_link(@driver, LtiTools::ENGAGEMENT_INDEX)
-    @engagement_index.wait_for_new_user_sync(@driver, @engagement_index_url, users)
+    @engagement_index.wait_for_new_user_sync(@driver, @engagement_index_url, @course, users)
   end
 
   after(:all) { Utils.quit_browser @driver }

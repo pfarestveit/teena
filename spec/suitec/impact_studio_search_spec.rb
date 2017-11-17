@@ -100,7 +100,7 @@ describe 'Impact Studio', order: :defined do
 
     before(:all) do
       @canvas.add_users(@course, students.drop(1))
-      @engagement_index.wait_for_new_user_sync(@driver, @engagement_index_url, students)
+      @engagement_index.wait_for_new_user_sync(@driver, @engagement_index_url, @course, students)
     end
 
     context 'and a course site member views its profile' do

@@ -63,7 +63,7 @@ describe 'The Impact Studio', order: :defined do
     @impact_studio_url = @canvas.click_tool_link(@driver, LtiTools::IMPACT_STUDIO)
     @whiteboards_url = @canvas.click_tool_link(@driver, LtiTools::WHITEBOARDS)
 
-    @engagement_index.wait_for_new_user_sync(@driver, @engagement_index_url, [teacher, student_1, student_2])
+    @engagement_index.wait_for_new_user_sync(@driver, @engagement_index_url, @course, [teacher, student_1, student_2])
 
     [student_1, student_2].each do |student|
       @canvas.masquerade_as(@driver, student, @course)

@@ -38,7 +38,7 @@ describe 'Whiteboard Add Asset', order: :defined do
     @engagement_index.load_scores(@driver, @engagement_index_url, event)
     @engagement_index.click_points_config event
     @engagement_index.change_activity_points(Activity::ADD_ASSET_TO_WHITEBOARD, '1')
-    @engagement_index.wait_for_new_user_sync(@driver, @engagement_index_url, [@student_1, @student_2, @student_3])
+    @engagement_index.wait_for_new_user_sync(@driver, @engagement_index_url, @course, [@student_1, @student_2, @student_3])
 
     # Student 1 create whiteboard, invite Student 2
     @whiteboard = Whiteboard.new({ owner: @student_1, title: "Whiteboard #{test_id}", collaborators: [@student_2] })

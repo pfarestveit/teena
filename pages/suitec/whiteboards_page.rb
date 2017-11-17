@@ -365,7 +365,9 @@ module Page
         export_title_input_element.when_not_visible Utils.medium_wait rescue Selenium::WebDriver::Error::StaleElementReferenceError
         export_success_msg_element.when_visible Utils.short_wait
         add_event(event, EventType::SHARE, whiteboard.title)
-        Asset.new({ type: 'Whiteboard', title: whiteboard.title, preview: 'image' })
+        asset = Asset.new({type: 'Whiteboard', title: whiteboard.title, preview: 'image'})
+        asset.id = SuiteCUtils.get_asset_id_by_title asset
+        asset
       end
 
       # Cleans the configured download directory and clicks the 'download as image' button on an open whiteboard
