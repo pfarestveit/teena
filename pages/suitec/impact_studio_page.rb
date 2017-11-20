@@ -233,9 +233,10 @@ module Page
       # @param user [User]
       # @return [Hash]
       def verify_network_interactions(driver, interactions, user)
+        logger.debug "Looking for UID #{user.uid} interactions #{interactions}"
         activity_network_element.when_visible Utils.short_wait
         # Pause to let the bubbles settle down
-        sleep 3
+        sleep 2
         node = driver.find_element(xpath: "//*[name()='svg'][@id='profile-activity-network']//*[name()='g'][@class='nodes']/*[name()='g'][@id='profile-activity-network-user-node-#{user.suitec_id}']")
         driver.action.move_to(node).perform
         sleep Utils.click_wait
@@ -245,9 +246,9 @@ module Page
             comments: {exports: visible_exports('Comments'), imports: visible_imports('Comments')},
             posts: {exports: visible_exports('Posts'), imports: visible_imports('Posts')},
             pins: {exports: visible_exports('Pins'), imports: visible_imports('Pins')},
-            use_assets: {exports: visible_exports('Use Assets'), imports: visible_imports('Use Assets')},
+            use_assets: {exports: visible_exports('Assets Added'), imports: visible_imports('Assets Added')},
             remixes: {exports: visible_exports('Remixes'), imports: visible_imports('Remixes')},
-            co_creations: {exports: visible_exports('Co-creations'), imports: visible_imports('Co-creations')}
+            co_creations: {exports: visible_exports('Whiteboards Exported'), imports: visible_imports('Whiteboards Exported')}
         }
         begin
           wait_until(1, "Expected #{interactions}, but got #{visible_interactions}") { visible_interactions == interactions }

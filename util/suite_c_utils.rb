@@ -82,12 +82,13 @@ class SuiteCUtils
   # @param course [Course]
   # @return [String]
   def self.get_user_suitec_id(user, course)
-    query = "﻿SELECT users.id
+    query = "SELECT users.id
              FROM users
-             INNER JOIN courses ON users.course_id = courses.id
+             JOIN courses ON users.course_id=courses.id
              WHERE users.canvas_user_id = #{user.canvas_id}
-               AND courses.name = '#{course.title}';"
-    Utils.query_db_field(suitec_db_credentials, query, 'id').first.to_s
+               AND courses.canvas_course_id = #{course.site_id}"
+    results = Utils.query_db(suitec_db_credentials, query)
+    user.suitec_id = results[0]['id']
   end
 
 end

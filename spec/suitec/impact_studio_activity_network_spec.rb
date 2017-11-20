@@ -102,6 +102,8 @@ describe 'Impact Studio Activity Network', :order => :defined do
       @whiteboard_asset = @whiteboards_page.export_to_asset_library(whiteboard)
       @whiteboards_page.close_whiteboard @driver
       student2_student3_expected[:co_creations][:exports] += 1
+      student2_student3_expected[:co_creations][:imports] += 1
+      student3_student2_expected[:co_creations][:exports] += 1
       student3_student2_expected[:co_creations][:imports] += 1
     end
 
@@ -212,7 +214,7 @@ describe 'Impact Studio Activity Network', :order => :defined do
 
     it 'the asset owner acquires a "view" and "comment" connection to the commenter' do
       @impact_studio_page.search_for_user student_1
-      @impact_studio_page.verify_network_interactions(@driver, student1_student2_expected)
+      @impact_studio_page.verify_network_interactions(@driver, student1_student2_expected, student_2)
     end
   end
 
@@ -349,7 +351,7 @@ describe 'Impact Studio Activity Network', :order => :defined do
     end
 
     it 'the asset owner acquires a "view" connection but not a "pin" connection to the re-pinner' do
-      @impact_studio_page.search_for_user
+      @impact_studio_page.search_for_user student_1
       @impact_studio_page.verify_network_interactions(@driver, student1_student2_expected, student_2)
     end
   end
@@ -361,11 +363,11 @@ describe 'Impact Studio Activity Network', :order => :defined do
       @asset_library_page.load_asset_detail(@driver, @asset_library_page_url, asset)
       @asset_library_page.delete_asset asset
       student3_student1_expected[:use_assets][:exports] -= 1
-      student2_student1_expected[:use_assets][:exports] -= 1
       student1_student3_expected[:use_assets][:imports] -= 1
-      student1_student2_expected[:use_assets][:imports] -=1
       student2_student1_expected[:comments][:exports] -= 1
       student1_student2_expected[:comments][:imports] -= 1
+      student2_student1_expected[:pins][:exports] -= 1
+      student1_student2_expected[:pins][:imports] -= 1
       student2_student1_expected[:views][:exports] -= 6
       student1_student2_expected[:views][:imports] -= 6
       student3_student1_expected[:views][:exports] -= 2
@@ -374,6 +376,7 @@ describe 'Impact Studio Activity Network', :order => :defined do
 
     it 'removes all connections the deleter has to the asset owner through that asset' do
       @impact_studio_page.load_page(@driver, @impact_studio_page_url)
+      @impact_studio_page.search_for_user student_3
       @impact_studio_page.verify_network_interactions(@driver, student3_student1_expected, student_1)
     end
 

@@ -81,21 +81,21 @@ module Page
     # Loads a given sub-account page
     def load_sub_account(sub_account)
       logger.debug "Loading sub-account #{sub_account}"
-      navigate_to "#{Utils.canvas_base_url}/accounts/#{sub_account}/settings"
+      navigate_to "#{Utils.canvas_base_url}/accounts/#{sub_account}"
     end
 
     # COURSE SITE SETUP
 
     link(:create_site_link, xpath: '//a[contains(text(),"Create a Site")]')
 
-    link(:add_new_course_button, xpath: '//a[contains(.,"Add a New Course")]')
-    select_list(:term, id: 'course_enrollment_term_id')
-    text_area(:course_name_input, xpath: '//label[@for="course_name"]/../following-sibling::td/input')
-    text_area(:ref_code_input, id: 'course_course_code')
-    span(:create_course_button, xpath: '//span[contains(.,"Add Course")]')
+    button(:add_new_course_button, class: 'selenium-spec-add-course-button')
+    text_area(:course_name_input, class: 'name')
+    text_area(:ref_code_input, class: 'course_code')
+    select_list(:term, class: 'enrollment_term_id')
+    button(:create_course_button, xpath: '//button[contains(.,"Add Course")]')
 
     span(:course_site_heading, xpath: '//li[contains(@id,"crumb_course_")]//span')
-    text_area(:search_course_input, id: 'course_name')
+    text_area(:search_course_input, xpath: '//input[@placeholder="Search courses..."]')
     button(:search_course_button, xpath: '//input[@id="course_name"]/following-sibling::button')
     li(:add_course_success, xpath: '//li[contains(.,"successfully added!")]')
 
@@ -189,7 +189,8 @@ module Page
       logger.info "Searching for '#{course.code}'"
       load_sub_account sub_account
       wait_for_element_and_type(search_course_input_element, "#{course.code}")
-      wait_for_update_and_click search_course_button_element
+      sleep 1
+      wait_for_load_and_click link_element(xpath: "//div[@class='courses-list']//a[contains(.,'#{course.code}')]")
       wait_until(Utils.short_wait) { course_site_heading.include? "#{course.code}" }
       current_url.sub("#{Utils.canvas_base_url}/courses/", '')
     rescue
