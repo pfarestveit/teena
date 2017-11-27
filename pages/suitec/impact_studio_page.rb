@@ -439,9 +439,7 @@ module Page
           # Check the popover for each activity segment
           bar_activities.each_pair do |k, v|
             segment = activity_bar_elements(driver, bar_label).find { |el| el.text.include? k.to_s }
-            driver.action.move_to(segment).perform
-            driver.action.click_and_hold(segment).release.perform
-            sleep 2
+            mouseover(driver, segment)
             (activity_count = span_element(xpath: '//div[contains(@class,"profile-activity-breakdown-popover-details")]/span[contains(@data-ng-bind-html, "segment.activityDescription")]/strong')).when_visible 2
             wait_until(2, "Expected '#{k} #{v}' but got '#{activity_count.text}'") do
               logger.debug "Waiting for '#{bar_label}' '#{k}' '#{v}', and it is currently '#{k}' '#{activity_count.text}'"

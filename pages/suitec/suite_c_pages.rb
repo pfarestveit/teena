@@ -360,7 +360,7 @@ module Page
       end
 
       # Mouse over the drop to reveal the tooltip.
-      driver.action.move_to(driver.find_element(xpath: "//*[name()='svg']//*[@class='drop-line'][#{line_node}]/*[name()='circle'][last()]")).perform
+      mouseover(driver, driver.find_element(xpath: "//*[name()='svg']//*[@class='drop-line'][#{line_node}]/*[name()='circle'][last()]"))
     end
 
     # LOOKING FOR COLLABORATORS

@@ -9,7 +9,11 @@ describe 'BOAC' do
     # Create file for test output
     user_profile_data = File.join(Utils.initialize_test_output_dir, 'boac-profiles.csv')
     user_profile_data_heading = %w(UID Sport Name Email Phone Units GPA Plan Level Writing History Institutions Cultures Language)
-    CSV.open(user_profile_data, 'wb') { |heading| heading << user_profile_data_heading }
+    CSV.open(user_profile_data, 'wb') { |csv| csv << user_profile_data_heading }
+
+    user_course_data = File.join(Utils.initialize_test_output_dir, 'boac-courses.csv')
+    user_course_data_heading = %w(UID Sport CourseCode CourseName SectionCcn, SectionNumber Grade GradingBasis Units EnrollmentStatus PageViews Assignments Participations)
+    CSV.open(user_course_data, 'wb') { |csv| csv << user_course_data_heading }
 
     # Get all teams and athletes
     athletes = BOACUtils.get_athletes
@@ -136,6 +140,126 @@ describe 'BOAC' do
                   user_analytics_data.language_reqt ?
                       (expect(visible_language_reqt).to eql('Satisfied')) :
                       (expect(visible_language_reqt).to eql('Not Satisfied'))
+                end
+
+                # COURSES
+
+                visible_course_sites = @boac_student_page.course_site_code_elements.map &:text
+                expected_course_sites = user_analytics_data.courses.map { |c| user_analytics_data.course_site_code c }
+
+                it "shows all the course site codes for #{team.name} UID #{team_member.uid}" do
+                  expect(visible_course_sites).to eql(expected_course_sites)
+                  expect(visible_course_sites.all? &:empty?).to be false
+                end
+
+                user_analytics_data.courses.each do |course|
+
+                  course_site_code = user_analytics_data.course_site_code course
+
+                  # SECTIONS
+
+                  sections = user_analytics_data.course_site_sis_sections course
+                  sections.each do |section|
+                    begin
+
+                      index = sections.index section
+                      visible_section_data = @boac_student_page.visible_site_sis_data(course_site_code, index)
+                      visible_section_status = visible_section_data[:status]
+                      visible_section_number = visible_section_data[:number]
+                      visible_section_units = visible_section_data[:units]
+                      visible_section_grading_basis = visible_section_data[:grading_basis]
+
+                      it "shows the section enrollment status for #{team.name} UID #{team_member.uid} course #{course_site_code} at index #{index}" do
+                        expect(visible_section_status.empty?).to be false
+                        case section[:status]
+                          when 'E'
+                            expect(visible_section_status).to eql('Enrolled in')
+                          when 'W'
+                            expect(visible_section_status).to eql('Waitlisted in')
+                          when 'D'
+                            expect(visible_section_status).to eql('Dropped')
+                          else
+                            logger.error "Invalid section status #{section[:enrollment_status]} for #{team.name} UID #{team_member.uid} course #{course_site_code} at index #{index}"
+                            fail
+                        end
+                      end
+
+                      it "shows the section number for #{team.name} UID #{team_member.uid} course #{course_site_code} at index #{index}" do
+                        expect(visible_section_number).to eql(section[:number])
+                        expect(visible_section_number.empty?).to be false
+                      end
+
+                      it "shows the section units for #{team.name} UID #{team_member.uid} course #{course_site_code} at index #{index}" do
+                        expect(visible_section_units).to eql(section[:units])
+                        expect(visible_section_units.empty?).to be false
+                      end
+
+                      it "shows the section grading basis for #{team.name} UID #{team_member.uid} course #{course_site_code} at index #{index}" do
+                        expect(visible_section_grading_basis).to eql(section[:grading_basis])
+                        expect(visible_section_grading_basis.empty?).to be false
+                      end
+
+                      # ANALYTICS - page view
+
+                      page_views_analytics = user_analytics_data.site_page_views(course)
+                      site_page_view_analytics = user_analytics_data.site_statistics page_views_analytics
+
+                      if user_analytics_data.student_percentile(page_views_analytics)
+                        no_data = @boac_student_page.no_page_view_data? course_site_code
+                        it "shows no page view data for #{team.name} UID #{team_member.uid} course #{course_site_code} at index #{index}" do
+                          expect(no_data).to be true
+                        end
+                      else
+                        visible_page_view_analytics = @boac_student_page.visible_page_view_analytics(@driver, course_site_code)
+                        it "shows the page view analytics for #{team.name} UID #{team_member.uid} course #{course_site_code} at index #{index}" do
+                          expect(visible_page_view_analytics).to eql(site_page_view_analytics)
+                        end
+                      end
+
+                      # ANALYTICS - assignments on time
+
+                      assignments_on_time_analytics = user_analytics_data.site_assignments_on_time(course)
+                      site_assignment_analytics = user_analytics_data.site_statistics assignments_on_time_analytics
+
+                      if user_analytics_data.student_percentile(assignments_on_time_analytics)
+                        no_data = @boac_student_page.no_assignment_data? course_site_code
+                        it "shows no assignments on time data for #{team.name} UID #{team_member.uid} course #{course_site_code} at index #{index}" do
+                          expect(no_data).to be true
+                        end
+                      else
+                        visible_assignment_analytics = @boac_student_page.visible_assignment_analytics(@driver, course_site_code)
+                        it "shows the assignments on time analytics for #{team.name} UID #{team_member.uid} course #{course_site_code} at index #{index}" do
+                          expect(visible_assignment_analytics).to eql(site_assignment_analytics)
+                        end
+                      end
+
+                      # ANALYTICS - participations
+
+                      participation_analytics = user_analytics_data.site_participations(course)
+                      site_participation_analytics = user_analytics_data.site_statistics participation_analytics
+
+                      if user_analytics_data.student_percentile(participation_analytics)
+                        no_data = @boac_student_page.no_participations_data? course_site_code
+                        it "shows no participations data for #{team.name} UID #{team_member.uid} course #{course_site_code} at index #{index}" do
+                          expect(no_data).to be true
+                        end
+                      else
+                        visible_participation_analytics = @boac_student_page.visible_participation_analytics(@driver, course_site_code)
+                        it "shows the participations analytics for #{team.name} UID #{team_member.uid} course #{course_site_code} at index #{index}" do
+                          expect(visible_participation_analytics).to eql(site_participation_analytics)
+                        end
+                      end
+
+                    rescue => e
+                      Utils.log_error e
+                      it("encountered an error for #{team.name} UID #{team_member.uid} course #{course_site_code}") { fail }
+                    ensure
+                      row = [team_member.uid, team.name, course_site_code, user_analytics_data.course_site_name(course),
+                            section[:ccn], section[:number], section[:grade], section[:grading_basis], section[:units], section[:enrollment_status],
+                            site_page_view_analytics, site_assignment_analytics, site_participation_analytics]
+                      Utils.add_csv_row(user_course_data, row)
+                    end
+                  end
                 end
 
               rescue => e

@@ -11,7 +11,7 @@ module Page
       include Page
       include BOACPages
 
-      elements(:player_link, :link, class: 'cohort-list-item')
+      elements(:player_link, :link, class: 'cohort-member-list-item')
       elements(:player_name, :h3, class: 'cohort-member-name')
       elements(:player_uid, :div, class: 'cohort-member-uid')
 

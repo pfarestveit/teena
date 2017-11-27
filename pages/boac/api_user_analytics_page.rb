@@ -72,4 +72,59 @@ class ApiUserAnalyticsPage
     sis_profile['phoneNumber'].to_s
   end
 
+  # COURSES
+
+  def courses
+    @parsed['courses']
+  end
+
+  def course_site_name(course)
+    course['courseName']
+  end
+
+  def course_site_code(course)
+    course['courseCode']
+  end
+
+  def course_site_sis_sections(course)
+    course['sisEnrollments'] && course['sisEnrollments'].map do |section|
+      {
+        :status => section['enrollmentStatus'],
+        :number => section['sectionNumber'],
+        :units => section['units'].to_s,
+        :grading_basis => section['gradingBasis'],
+        :ccn => section['ccn'],
+        :grade => section['grade']
+      }
+    end
+  end
+
+  def site_page_views(course)
+    course['analytics'] && course['analytics']['pageViews']
+  end
+
+  def site_assignments_on_time(course)
+    course['analytics'] && course['analytics']['assignmentsOnTime']
+  end
+
+  def site_participations(course)
+    course['analytics'] && course['analytics']['participations']
+  end
+
+  def student_percentile(analytics)
+    analytics['student'] && analytics['student']['percentile']
+  end
+
+  def site_statistics(analytics)
+    {
+      :minimum => analytics['courseDeciles'][0].round.to_s,
+      :maximum => analytics['courseDeciles'][10].round.to_s,
+      :percentile_30 => analytics['courseDeciles'][3].round.to_s,
+      :percentile_50 => analytics['courseDeciles'][5].round.to_s,
+      :percentile_70 => analytics['courseDeciles'][7].round.to_s,
+      :user_score => analytics['student']['raw'].round.to_s,
+      :user_percentile => student_percentile(analytics).round.to_s
+    }
+  end
+
 end
