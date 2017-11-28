@@ -123,7 +123,7 @@ class ApiUserAnalyticsPage
       :percentile_50 => analytics['courseDeciles'][5].round.to_s,
       :percentile_70 => analytics['courseDeciles'][7].round.to_s,
       :user_score => analytics['student']['raw'].round.to_s,
-      :user_percentile => student_percentile(analytics).round.to_s
+      :user_percentile => student_percentile(analytics) && student_percentile(analytics).round.to_s
     }
   end
 

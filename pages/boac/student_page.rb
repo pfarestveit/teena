@@ -38,7 +38,7 @@ module Page
       # @param site_index [Integer]
       # @return [String]
       def site_sis_data_xpath(course_site_code, site_index)
-        "//h3[text()='#{course_site_code}']/following-sibling::div[#{site_index + 1}]"
+        "//h3[text()=\"#{course_site_code}\"]/following-sibling::div[#{site_index + 1}]"
       end
 
       # Returns a hash of visible course section data
@@ -70,7 +70,7 @@ module Page
       # @param label [String]
       # @return [Selenium::WebDriver::Element]
       def boxplot_element(driver, course_site_code, label)
-        driver.find_element(xpath: "#{site_boxplot_xpath(course_site_code, label)}")
+        driver.find_element(xpath: "#{site_boxplot_xpath(course_site_code, label)}/*[name()='g']/*[name()='g']/*[name()='path'][3]")
       end
 
       # Returns the XPath to a particular set of analytics data for a given course site, for example 'page views'
@@ -78,7 +78,7 @@ module Page
       # @param label [String]
       # @return [String]
       def site_analytics_data_xpath(course_site_code, label)
-        "//h3[text()='#{course_site_code}']/following-sibling::ul/li[contains(.,'#{label}:')]"
+        "//h3[text()=\"#{course_site_code}\"]/following-sibling::ul/li[contains(.,'#{label}:')]"
       end
 
       # Returns the element containing the analytics tooltip for a particular set of analytics data for a given course site, for example 'page views'
@@ -126,7 +126,8 @@ module Page
       # @return [Array<String>]
       def get_tooltip_text(driver, course_site_code, label)
         wait_until(Utils.short_wait) { boxplot_element(driver, course_site_code, label) }
-        mouseover(driver, boxplot_element(driver, course_site_code, label))
+        # Add a vertical offset to the mouseover in case the user score tooltip trigger is bang on top of the analytics tooltip trigger
+        mouseover(driver, boxplot_element(driver, course_site_code, label), 0, 5)
         analytics_tooltip_element(course_site_code, label).when_visible Utils.short_wait
         analytics_tooltip_element(course_site_code, label).text.split "\n"
       end
@@ -140,6 +141,12 @@ module Page
         driver.find_element(xpath: "#{site_boxplot_xpath(course_site_code, label)}/*[name()='g'][last()]")
       end
 
+      # Mouses over a boxplot for a particular set of analytics data for a given course site, for example 'page views', and returns
+      # the user score that appears
+      # @param driver [Selenium::WebDriver]
+      # @param course_site_code [String]
+      # @param label [String]
+      # @return [String]
       def get_user_score(driver, course_site_code, label)
         wait_until(Utils.short_wait) { user_score_tooltip_element(driver, course_site_code, label) }
         mouseover(driver, user_score_tooltip_element(driver, course_site_code, label))
@@ -180,28 +187,45 @@ module Page
         span_element(:xpath => "#{site_analytics_data_xpath(course_site_code, label)}//span").text[0..-14]
       end
 
+      # Returns the analytics data shown for a particular set of analytics data for a given course site
+      # @param driver [Selenium::WebDriver]
+      # @param course_site_code [String]
+      # @param label [String]
+      # @return [Hash]
       def visible_analytics(driver, course_site_code, label)
         tooltip_analytics = get_tooltip_text(driver, course_site_code, label)
         user_score = get_user_score(driver, course_site_code, label).delete('User score: ')
         {
-            :minimum => tooltip_analytics[4].delete('Minimum: '),
-            :maximum => tooltip_analytics[0].delete('Maximum: '),
-            :percentile_30 => tooltip_analytics[3][17..-1],
-            :percentile_50 => tooltip_analytics[2][17..-1],
-            :percentile_70 => tooltip_analytics[1][17..-1],
-            :user_score => user_score,
-            :user_percentile => user_percentile(course_site_code, label)
+          :minimum => tooltip_analytics[4].delete('Minimum: '),
+          :maximum => tooltip_analytics[0].delete('Maximum: '),
+          :percentile_30 => tooltip_analytics[3][17..-1],
+          :percentile_50 => tooltip_analytics[2][17..-1],
+          :percentile_70 => tooltip_analytics[1][17..-1],
+          :user_score => user_score,
+          :user_percentile => user_percentile(course_site_code, label)
         }
       end
 
+      # Returns the assignments-on-time analytics data shown for a given course site
+      # @param driver [Selenium::WebDriver]
+      # @param course_site_code [String]
+      # @return [Hash]
       def visible_assignment_analytics(driver, course_site_code)
         visible_analytics(driver, course_site_code, 'Assignments on time')
       end
 
+      # Returns the page-views analytics data shown for a given course site
+      # @param driver [Selenium::WebDriver]
+      # @param course_site_code [String]
+      # @return [Hash]
       def visible_page_view_analytics(driver, course_site_code)
         visible_analytics(driver, course_site_code, 'Page views')
       end
 
+      # Returns the participations analytics data shown for a given course site
+      # @param driver [Selenium::WebDriver]
+      # @param course_site_code [String]
+      # @return [Hash]
       def visible_participation_analytics(driver, course_site_code)
         visible_analytics(driver, course_site_code, 'Participations')
       end

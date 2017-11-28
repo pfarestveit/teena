@@ -193,12 +193,14 @@ module Page
     end
   end
 
-  # Hovers over an element, pausing to allow any events triggered by the action to occur
+  # Hovers over an element with optional offsets, pausing to allow any events triggered by the action to occur.
   # @param driver [Selenium::WebDriver]
   # @param element [Selenium::WebDriver::Element]
-  def mouseover(driver, element)
-    driver.action.move_to(element).perform
-    sleep 1
+  # @param horizontal_offset [Integer]
+  # @param vertical_offset [Integer]
+  def mouseover(driver, element, horizontal_offset = nil, vertical_offset = nil)
+    driver.action.move_to(element, horizontal_offset, vertical_offset).perform
+    sleep Utils.click_wait
   end
 
   # Pauses to allow the Canvas poller to complete any active cycle
