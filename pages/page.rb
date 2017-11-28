@@ -193,6 +193,14 @@ module Page
     end
   end
 
+  # Hovers over an element, pausing to allow any events triggered by the action to occur
+  # @param driver [Selenium::WebDriver]
+  # @param element [Selenium::WebDriver::Element]
+  def mouseover(driver, element)
+    driver.action.move_to(element).perform
+    sleep 1
+  end
+
   # Pauses to allow the Canvas poller to complete any active cycle
   def pause_for_poller
     logger.info "Waiting for the Canvas poller for #{wait = SuiteCUtils.canvas_poller_wait} seconds"
