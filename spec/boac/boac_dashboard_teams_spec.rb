@@ -152,6 +152,9 @@ describe 'BOAC' do
                   expect(visible_course_sites.all? &:empty?).to be false
                 end
 
+                # Pause a moment to let the boxplots do their fancy slidey thing
+                sleep 2
+
                 user_analytics_data.courses.each do |course|
 
                   course_site_code = user_analytics_data.course_site_code course
@@ -205,14 +208,14 @@ describe 'BOAC' do
                       site_page_view_analytics = user_analytics_data.site_statistics page_views_analytics
 
                       if user_analytics_data.student_percentile(page_views_analytics)
-                        no_data = @boac_student_page.no_page_view_data? course_site_code
-                        it "shows no page view data for #{team.name} UID #{team_member.uid} course #{course_site_code} at index #{index}" do
-                          expect(no_data).to be true
-                        end
-                      else
                         visible_page_view_analytics = @boac_student_page.visible_page_view_analytics(@driver, course_site_code)
                         it "shows the page view analytics for #{team.name} UID #{team_member.uid} course #{course_site_code} at index #{index}" do
                           expect(visible_page_view_analytics).to eql(site_page_view_analytics)
+                        end
+                      else
+                        no_data = @boac_student_page.no_page_view_data? course_site_code
+                        it "shows no page view data for #{team.name} UID #{team_member.uid} course #{course_site_code} at index #{index}" do
+                          expect(no_data).to be true
                         end
                       end
 
@@ -222,14 +225,14 @@ describe 'BOAC' do
                       site_assignment_analytics = user_analytics_data.site_statistics assignments_on_time_analytics
 
                       if user_analytics_data.student_percentile(assignments_on_time_analytics)
-                        no_data = @boac_student_page.no_assignment_data? course_site_code
-                        it "shows no assignments on time data for #{team.name} UID #{team_member.uid} course #{course_site_code} at index #{index}" do
-                          expect(no_data).to be true
-                        end
-                      else
                         visible_assignment_analytics = @boac_student_page.visible_assignment_analytics(@driver, course_site_code)
                         it "shows the assignments on time analytics for #{team.name} UID #{team_member.uid} course #{course_site_code} at index #{index}" do
                           expect(visible_assignment_analytics).to eql(site_assignment_analytics)
+                        end
+                      else
+                        no_data = @boac_student_page.no_assignment_data? course_site_code
+                        it "shows no assignments on time data for #{team.name} UID #{team_member.uid} course #{course_site_code} at index #{index}" do
+                          expect(no_data).to be true
                         end
                       end
 
@@ -239,14 +242,14 @@ describe 'BOAC' do
                       site_participation_analytics = user_analytics_data.site_statistics participation_analytics
 
                       if user_analytics_data.student_percentile(participation_analytics)
-                        no_data = @boac_student_page.no_participations_data? course_site_code
-                        it "shows no participations data for #{team.name} UID #{team_member.uid} course #{course_site_code} at index #{index}" do
-                          expect(no_data).to be true
-                        end
-                      else
                         visible_participation_analytics = @boac_student_page.visible_participation_analytics(@driver, course_site_code)
                         it "shows the participations analytics for #{team.name} UID #{team_member.uid} course #{course_site_code} at index #{index}" do
                           expect(visible_participation_analytics).to eql(site_participation_analytics)
+                        end
+                      else
+                        no_data = @boac_student_page.no_participations_data? course_site_code
+                        it "shows no participations data for #{team.name} UID #{team_member.uid} course #{course_site_code} at index #{index}" do
+                          expect(no_data).to be true
                         end
                       end
 

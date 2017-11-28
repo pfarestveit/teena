@@ -32,7 +32,7 @@ module Page
       # Clicks the link for a given player
       # @param player [User]
       def click_player_link(player)
-        logger.debug "Clicking the link for UID #{player.uid}"
+        logger.info "Clicking the link for UID #{player.uid}"
         wait_for_load_and_click link_element(xpath: "//a[contains(.,\"#{player.full_name}\")]")
         h1_element(xpath: '//h1[@data-ng-bind="student.sisProfile.primaryName"]').when_visible Utils.medium_wait
       end
