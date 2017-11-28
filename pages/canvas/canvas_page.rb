@@ -186,11 +186,11 @@ module Page
     # @return [String]
     def search_for_course(course, sub_account)
       tries ||= 6
-      logger.info "Searching for '#{course.code}'"
+      logger.info "Searching for '#{course.title}'"
       load_sub_account sub_account
-      wait_for_element_and_type(search_course_input_element, "#{course.code}")
+      wait_for_element_and_type(search_course_input_element, "#{course.title}")
       sleep 1
-      wait_for_load_and_click link_element(xpath: "//div[@class='courses-list']//a[contains(.,'#{course.code}')]")
+      wait_for_load_and_click link_element(xpath: "//div[@class='courses-list']//a[contains(.,'#{course.title}')]")
       wait_until(Utils.short_wait) { course_site_heading.include? "#{course.code}" }
       current_url.sub("#{Utils.canvas_base_url}/courses/", '')
     rescue
@@ -259,6 +259,15 @@ module Page
         end
         published_button_element.when_present Utils.medium_wait
       end
+    end
+
+    # Edits the course site title
+    # @param course [Course]
+    def edit_course_name(course)
+      navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/settings"
+      wait_for_element_and_type(text_area_element(id: 'course_name'), course.title)
+      wait_for_update_and_click button_element(xpath: '//button[contains(.,"Update Course Details")]')
+      list_item_element(xpath: '//li[contains(.,"Course was successfully updated")]').when_present Utils.short_wait
     end
 
     # Deletes a course site
