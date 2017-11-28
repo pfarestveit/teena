@@ -9,9 +9,9 @@ describe 'bCourses Mailgun mailing lists', order: :defined do
   test_id = "#{Utils.get_test_id}"
   timeout = Utils.short_wait
 
-  course_site_1 = Course.new({title: "QA admin #{test_id}", code: "QA Mailing List 1 #{test_id}"})
-  course_site_2 = Course.new({title: "QA admin #{test_id}", code: "QA Mailing List 2 #{test_id}"})
-  course_site_3 = Course.new({title: "QA instructor #{test_id}", code: "QA Mailing List 3 #{test_id}"})
+  course_site_1 = Course.new({title: "QA Mailing List 1 #{test_id}", code: "QA admin #{test_id}"})
+  course_site_2 = Course.new({title: "QA Mailing List 2 #{test_id}", code: "QA admin #{test_id}"})
+  course_site_3 = Course.new({title: "QA Mailing List 3 #{test_id}", code: "QA instructor #{test_id}"})
 
   # Load test user data
   user_test_data = JunctionUtils.load_junction_test_user_data.select { |data| data['tests']['mailing_lists'] }
@@ -121,7 +121,7 @@ describe 'bCourses Mailgun mailing lists', order: :defined do
       it 'will not create a mailing list for a course site with the same course code as an existing list' do
         @mailing_lists_page.click_cancel
         @mailing_lists_page.search_for_list course_site_2.site_id
-        @mailing_lists_page.enter_mailgun_list_name @mailing_lists_page.default_list_name(course_site_2)
+        @mailing_lists_page.enter_mailgun_list_name @mailing_lists_page.default_list_name(course_site_1)
         @mailing_lists_page.list_name_taken_error_msg_element.when_visible timeout
       end
     end
@@ -189,6 +189,8 @@ describe 'bCourses Mailgun mailing lists', order: :defined do
   describe 'instructor-facing tool' do
 
     before(:all) do
+      course_site_2.title = course_site_1.title
+      @canvas_page.edit_course_name course_site_2
       @canvas_page.masquerade_as(@driver, teacher, course_site_3)
       @mailing_list_page.load_embedded_tool(@driver, course_site_3)
     end
