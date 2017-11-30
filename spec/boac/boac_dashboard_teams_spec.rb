@@ -36,7 +36,7 @@ describe 'BOAC' do
 
           expected_team_members = BOACUtils.get_team_members(team, athletes).sort_by! &:full_name
 
-          @boac_homepage.click_home
+          @boac_homepage.load_page
           @boac_homepage.click_team_link team
           team_url = @boac_cohort_page.current_url
 
