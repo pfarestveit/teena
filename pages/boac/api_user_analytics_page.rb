@@ -74,8 +74,16 @@ class ApiUserAnalyticsPage
 
   # COURSES
 
-  def courses
-    @parsed['courses']
+  def terms
+    @parsed['enrollmentTerms']
+  end
+
+  def term_name(term)
+    term['termName']
+  end
+
+  def courses(term)
+    term['enrollments']
   end
 
   def course_site_name(course)
@@ -86,29 +94,45 @@ class ApiUserAnalyticsPage
     course['courseCode']
   end
 
-  def course_site_sis_sections(course)
-    course['sisEnrollments'] && course['sisEnrollments'].map do |section|
-      {
-        :status => section['enrollmentStatus'],
-        :number => section['sectionNumber'],
-        :units => section['units'].to_s,
-        :grading_basis => section['gradingBasis'],
-        :ccn => section['ccn'],
-        :grade => section['grade']
-      }
-    end
+  def course_sis_data(course)
+    {
+      :code => course['displayName'],
+      :title => course['title'].gsub(/\s+/, ' '),
+      :status => course['enrollmentStatus'],
+      :number => course['sectionNumber'],
+      :units => course['units'].to_s,
+      :grading_basis => course['gradingBasis'],
+      :ccn => course['ccn'],
+      :grade => course['grade']
+    }
   end
 
-  def site_page_views(course)
-    course['analytics'] && course['analytics']['pageViews']
+  def course_sites(course)
+    course['canvasSites']
   end
 
-  def site_assignments_on_time(course)
-    course['analytics'] && course['analytics']['assignmentsOnTime']
+  def unmatched_sites(term)
+    term['unmatchedCanvasSites']
   end
 
-  def site_participations(course)
-    course['analytics'] && course['analytics']['participations']
+  def site_metadata(site)
+    {
+      :code => site['courseCode'],
+      :title => site['courseName'],
+      :site_id => site['canvasCourseId']
+    }
+  end
+
+  def site_page_views(site)
+    site['analytics'] && site['analytics']['pageViews']
+  end
+
+  def site_assignments_on_time(site)
+    site['analytics'] && site['analytics']['assignmentsOnTime']
+  end
+
+  def site_participations(site)
+    site['analytics'] && site['analytics']['participations']
   end
 
   def student_percentile(analytics)

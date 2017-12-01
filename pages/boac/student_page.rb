@@ -27,174 +27,198 @@ module Page
 
       elements(:course_site_code, :h3, xpath: '//h3[@data-ng-bind="course.courseCode"]')
 
+      # COURSES
+
       # Returns all the visible course site codes
       # @return [Array<String>]
       def visible_course_site_codes
         (course_site_code_elements.map &:text).gsub(/\s+/, ' ')
       end
 
-      # Returns the XPath to the SIS data shown for a given course site section
-      # @param course_site_code [String]
-      # @param site_index [Integer]
+      # Returns the XPath to the SIS data shown for a given course in a term
+      # @param term_name [String]
+      # @param course_code [String]
       # @return [String]
-      def site_sis_data_xpath(course_site_code, site_index)
-        "//h3[text()=\"#{course_site_code}\"]/following-sibling::div[#{site_index + 1}]"
+      def course_data_xpath(term_name, course_code)
+        "//h2[text()=\"#{term_name}\"]/following-sibling::div[@data-ng-if='term.enrollments.length']//h3[text()=\"#{course_code}\"]/following-sibling::"
       end
 
-      # Returns a hash of visible course section data
-      # @param course_site_code [String]
-      # @param site_index [Integer]
+      # TODO - handle multiple sections within a course
+      # Returns a hash of visible course SIS data
+      # @param course_code [String]
       # @return [Hash]
-      def visible_site_sis_data(course_site_code, site_index)
-        logger.debug "Checking #{course_site_code}"
-        site_xpath = site_sis_data_xpath(course_site_code, site_index)
+      def visible_course_sis_data(term_name, course_code)
+        logger.debug "Checking #{course_code}"
+        xpath = course_data_xpath(term_name, course_code)
         {
-          :status => span_element(:xpath => "#{site_xpath}/span[@data-ng-switch='enrolledSection.enrollmentStatus']/span").text,
-          :number => span_element(:xpath => "#{site_xpath}/span[@data-ng-bind='enrolledSection.sectionNumber']").text,
-          :units => span_element(:xpath => "#{site_xpath}/span[@data-ng-bind='enrolledSection.units']").text,
-          :grading_basis => span_element(:xpath => "#{site_xpath}/span[@data-ng-bind='enrolledSection.gradingBasis']").text
+          :title => h4_element(:xpath => "#{xpath}h4").text,
+          :status => span_element(:xpath => "#{xpath}span[@data-ng-switch='course.enrollmentStatus']/span").text,
+          :number => span_element(:xpath => "#{xpath}span[@data-ng-bind='course.sectionNumber']").text,
+          :units => span_element(:xpath => "#{xpath}span[@data-ng-bind='course.units']").text,
+          :grading_basis => span_element(:xpath => "#{xpath}span[@data-ng-bind='course.gradingBasis']").text,
+          :grade => (span_element(:xpath => "#{xpath}div[@data-ng-if='course.grade']//span").text if span_element(:xpath => "#{xpath}div[@data-ng-if='course.grade']//span").exists?)
         }
       end
 
-      # Returns the XPath to the boxplot graph for a particular set of analytics data for a given course site, for example 'page views'
-      # @param course_site_code [String]
-      # @param label [String]
+      # COURSE SITES
+
+      # Returns the XPath to the first course site associated with a course in a term
+      # @param term_name [String]
+      # @param course_code [String]
+      # @param index [Integer]
       # @return [String]
-      def site_boxplot_xpath(course_site_code, label)
-        "#{site_analytics_data_xpath(course_site_code, label)}/div[contains(@class,'boxplot-container')]//*[local-name()='svg']/*[name()='g'][@class='highcharts-series-group']"
+      def course_site_xpath(term_name, course_code, index)
+        "#{course_data_xpath(term_name, course_code)}div[@data-ng-repeat='canvasSite in course.canvasSites'][#{index + 1}]//ul"
       end
 
-      # Returns the element containing the boxplot graph for a particular set of analytics data for a given course site, for example 'page views'
+      # Returns the XPath to a course site in a term not matched to a SIS enrollment
+      # @param term_name [String]
+      # @param site_title [String]
+      # @param index [Integer]
+      # @return [String]
+      def unmatched_site_xpath(term_name, site_title, index)
+        "//h2[text()=\"#{term_name}\"]/following-sibling::div[@data-ng-if='term.unmatchedCanvasSites.length']/div[@data-ng-repeat='canvasSite in term.unmatchedCanvasSites'][#{index + 1}]//h3[text()=\"#{site_title}\"]/following-sibling::*[name()='course-site-metrics']/ul"
+      end
+
+      # Returns the XPath to a particular set of analytics data for a site, for example 'page views'
+      # @param site_xpath [String]
+      # @param label [String]
+      # @return [String]
+      def site_analytics_data_xpath(site_xpath, label)
+        "#{site_xpath}/li[contains(.,'#{label}:')]"
+      end
+
+      # Returns the XPath to the boxplot graph for a particular set of analytics data for a given site, for example 'page views'
+      # @param site_xpath [String]
+      # @param label [String]
+      # @return [String]
+      def site_boxplot_xpath(site_xpath, label)
+        "#{site_analytics_data_xpath(site_xpath, label)}/div[contains(@class,'boxplot-container')]//*[local-name()='svg']/*[name()='g'][@class='highcharts-series-group']"
+      end
+
+      # Returns the element that triggers the analytics tooltip for a particular set of analytics data for a given site, for example 'page views'
       # @param driver [Selenium::WebDriver]
-      # @param course_site_code [String]
+      # @param site_xpath [String]
       # @param label [String]
       # @return [Selenium::WebDriver::Element]
-      def boxplot_element(driver, course_site_code, label)
-        driver.find_element(xpath: "#{site_boxplot_xpath(course_site_code, label)}/*[name()='g']/*[name()='g']/*[name()='path'][3]")
+      def analytics_trigger_element(driver, site_xpath, label)
+        driver.find_element(xpath: "#{site_boxplot_xpath(site_xpath, label)}/*[name()='g']/*[name()='g']/*[name()='path'][3]")
       end
 
-      # Returns the XPath to a particular set of analytics data for a given course site, for example 'page views'
-      # @param course_site_code [String]
-      # @param label [String]
-      # @return [String]
-      def site_analytics_data_xpath(course_site_code, label)
-        "//h3[text()=\"#{course_site_code}\"]/following-sibling::ul/li[contains(.,'#{label}:')]"
-      end
-
-      # Returns the element containing the analytics tooltip for a particular set of analytics data for a given course site, for example 'page views'
-      # @param course_site_code [String]
+      # Returns the element containing the analytics tooltip for a particular set of analytics data for a given site, for example 'page views'
+      # @param site_xpath [String]
       # @param label [String]
       # @return [PageObject::Elements::Div]
-      def analytics_tooltip_element(course_site_code, label)
-        div_element(:xpath => "#{site_analytics_data_xpath(course_site_code, label)}//div[contains(@class,'highcharts-tooltip')]")
+      def analytics_tooltip_element(site_xpath, label)
+        div_element(:xpath => "#{site_analytics_data_xpath(site_xpath, label)}//div[contains(@class,'highcharts-tooltip')]")
       end
 
-      # Checks the existence of a 'no data' message for a particular set of analytics for a given course site, for example 'page views'
-      # @param course_site_code [String]
+      # Checks the existence of a 'no data' message for a particular set of analytics for a given site, for example 'page views'
+      # @param site_xpath [String]
       # @param label [String]
       # @return [boolean]
-      def no_data?(course_site_code, label)
-        span_element(:xpath => "#{site_analytics_data_xpath(course_site_code, label)}/span[text()='No data']").exists?
+      def no_data?(site_xpath, label)
+        span_element(:xpath => "#{site_analytics_data_xpath(site_xpath, label)}/span[text()='No data']").exists?
       end
 
-      # Checks the existence of a 'no data' message for assignments on time analytics for a given course site
-      # @param course_site_code [String]
+      # Checks the existence of a 'no data' message for assignments on time analytics for a given site
+      # @param site_xpath [String]
       # @return [boolean]
-      def no_assignment_data?(course_site_code)
-        no_data?(course_site_code, 'Assignments on time')
+      def no_assignment_data?(site_xpath)
+        no_data?(site_xpath, 'Assignments on time')
       end
 
-      # Checks the existence of a 'no data' message for page view analytics for a given course site
-      # @param course_site_code [String]
+      # Checks the existence of a 'no data' message for page view analytics for a given site
+      # @param site_xpath [String]
       # @return [boolean]
-      def no_page_view_data?(course_site_code)
-        no_data?(course_site_code, 'Page views')
+      def no_page_view_data?(site_xpath)
+        no_data?(site_xpath, 'Page views')
       end
 
-      # Checks the existence of a 'no data' message for participations analytics for a given course site
-      # @param course_site_code [String]
+      # Checks the existence of a 'no data' message for participations analytics for a given site
+      # @param site_xpath [String]
       # @return [boolean]
-      def no_participations_data?(course_site_code)
-        no_data?(course_site_code, 'Participations')
+      def no_participations_data?(site_xpath)
+        no_data?(site_xpath, 'Participations')
       end
 
-      # Mouses over a boxplot for a particular set of analytics data for a given course site, for example 'page views', and returns
+      # Mouses over a boxplot for a particular set of analytics data for a given site, for example 'page views', and returns
       # the analytics data that appears
       # @param driver [Selenium::WebDriver]
-      # @param course_site_code [String]
+      # @param site_xpath [String]
       # @param label [String]
       # @return [Array<String>]
-      def get_tooltip_text(driver, course_site_code, label)
-        wait_until(Utils.short_wait) { boxplot_element(driver, course_site_code, label) }
+      def get_tooltip_text(driver, site_xpath, label)
+        wait_until(Utils.short_wait) { analytics_trigger_element(driver, site_xpath, label) }
         # Add a vertical offset to the mouseover in case the user score tooltip trigger is bang on top of the analytics tooltip trigger
-        mouseover(driver, boxplot_element(driver, course_site_code, label), 0, 5)
-        analytics_tooltip_element(course_site_code, label).when_visible Utils.short_wait
-        analytics_tooltip_element(course_site_code, label).text.split "\n"
+        mouseover(driver, analytics_trigger_element(driver, site_xpath, label), 0, 5)
+        analytics_tooltip_element(site_xpath, label).when_visible Utils.short_wait
+        analytics_tooltip_element(site_xpath, label).text.split "\n"
       end
 
-      # Returns the element containing the user score tooltip for a particular set of analytics data for a given course site, for example 'page views'
+      # Returns the 'page views' tooltip analytics for a given site
       # @param driver [Selenium::WebDriver]
-      # @param course_site_code [String]
+      # @param site_xpath [String]
+      # @return [Array<String>]
+      def page_view_tooltip(driver, site_xpath)
+        get_tooltip_text(driver, site_xpath, 'Page views')
+      end
+
+      # Returns the 'assignments on time' tooltip analytics for a given site
+      # @param driver [Selenium::WebDriver]
+      # @param site_xpath [String]
+      # @return [Array<String>]
+      def assignments_tooltip(driver, site_xpath)
+        get_tooltip_text(driver, site_xpath, 'Assignments on time')
+      end
+
+      # Returns the 'participations' tooltip analytics for a given site
+      # @param driver [Selenium::WebDriver]
+      # @param site_xpath [String]
+      # @return [Array<String>]
+      def participations_tooltip(driver, site_xpath)
+        get_tooltip_text(driver, site_xpath, 'Participations')
+      end
+
+      # Returns the element containing the user score tooltip for a particular set of analytics data for a given site, for example 'page views'
+      # @param driver [Selenium::WebDriver]
+      # @param site_xpath [String]
       # @param label [String]
       # @return
-      def user_score_tooltip_element(driver, course_site_code, label)
-        driver.find_element(xpath: "#{site_boxplot_xpath(course_site_code, label)}/*[name()='g'][last()]")
+      def user_score_trigger_element(driver, site_xpath, label)
+        driver.find_element(xpath: "#{site_boxplot_xpath(site_xpath, label)}/*[name()='g'][last()]")
       end
 
-      # Mouses over a boxplot for a particular set of analytics data for a given course site, for example 'page views', and returns
+      # Mouses over a boxplot for a particular set of analytics data for a given site, for example 'page views', and returns
       # the user score that appears
       # @param driver [Selenium::WebDriver]
-      # @param course_site_code [String]
+      # @param site_xpath [String]
       # @param label [String]
       # @return [String]
-      def get_user_score(driver, course_site_code, label)
-        wait_until(Utils.short_wait) { user_score_tooltip_element(driver, course_site_code, label) }
-        mouseover(driver, user_score_tooltip_element(driver, course_site_code, label))
-        analytics_tooltip_element(course_site_code, label).when_visible Utils.short_wait
-        analytics_tooltip_element(course_site_code, label).text
+      def get_user_score(driver, site_xpath, label)
+        wait_until(Utils.short_wait) { user_score_trigger_element(driver, site_xpath, label) }
+        mouseover(driver, user_score_trigger_element(driver, site_xpath, label))
+        analytics_tooltip_element(site_xpath, label).when_visible Utils.short_wait
+        analytics_tooltip_element(site_xpath, label).text
       end
 
-      # Returns the 'page views' tooltip analytics for a given course site
-      # @param driver [Selenium::WebDriver]
-      # @param course_site_code [String]
-      # @return [Array<String>]
-      def page_view_tooltip(driver, course_site_code)
-        get_tooltip_text(driver, course_site_code, 'Page views')
-      end
-
-      # Returns the 'assignments on time' tooltip analytics for a given course site
-      # @param driver [Selenium::WebDriver]
-      # @param course_site_code [String]
-      # @return [Array<String>]
-      def assignments_tooltip(driver, course_site_code)
-        get_tooltip_text(driver, course_site_code, 'Assignments on time')
-      end
-
-      # Returns the 'participations' tooltip analytics for a given course site
-      # @param driver [Selenium::WebDriver]
-      # @param course_site_code [String]
-      # @return [Array<String>]
-      def participations_tooltip(driver, course_site_code)
-        get_tooltip_text(driver, course_site_code, 'Participations')
-      end
-
-      # Returns the user's percentile displayed for a particular set of analytics data for a given course site, removing
+      # Returns the user's percentile displayed for a particular set of analytics data for a given site, removing
       # the ordinal and 'percentile'
-      # @param course_site_code [String]
+      # @param site_xpath [String]
       # @param label [String]
       # @return [String]
-      def user_percentile(course_site_code, label)
-        span_element(:xpath => "#{site_analytics_data_xpath(course_site_code, label)}//span").text[0..-14]
+      def user_percentile(site_xpath, label)
+        span_element(:xpath => "#{site_analytics_data_xpath(site_xpath, label)}//span").text[0..-14]
       end
 
-      # Returns the analytics data shown for a particular set of analytics data for a given course site
+      # Returns the analytics data shown for a particular set of analytics data for a given site
       # @param driver [Selenium::WebDriver]
-      # @param course_site_code [String]
+      # @param site_xpath [String]
       # @param label [String]
       # @return [Hash]
-      def visible_analytics(driver, course_site_code, label)
-        tooltip_analytics = get_tooltip_text(driver, course_site_code, label)
-        user_score = get_user_score(driver, course_site_code, label).delete('User score: ')
+      def visible_analytics(driver, site_xpath, label)
+        tooltip_analytics = get_tooltip_text(driver, site_xpath, label)
+        user_score = get_user_score(driver, site_xpath, label).delete('User score: ')
         {
           :minimum => tooltip_analytics[4].delete('Minimum: '),
           :maximum => tooltip_analytics[0].delete('Maximum: '),
@@ -202,32 +226,32 @@ module Page
           :percentile_50 => tooltip_analytics[2][17..-1],
           :percentile_70 => tooltip_analytics[1][17..-1],
           :user_score => user_score,
-          :user_percentile => user_percentile(course_site_code, label)
+          :user_percentile => user_percentile(site_xpath, label)
         }
       end
 
-      # Returns the assignments-on-time analytics data shown for a given course site
+      # Returns the assignments-on-time analytics data shown for a given site
       # @param driver [Selenium::WebDriver]
-      # @param course_site_code [String]
+      # @param site_xpath [String]
       # @return [Hash]
-      def visible_assignment_analytics(driver, course_site_code)
-        visible_analytics(driver, course_site_code, 'Assignments on time')
+      def visible_assignment_analytics(driver, site_xpath)
+        visible_analytics(driver, site_xpath, 'Assignments on time')
       end
 
-      # Returns the page-views analytics data shown for a given course site
+      # Returns the page-views analytics data shown for a given site
       # @param driver [Selenium::WebDriver]
-      # @param course_site_code [String]
+      # @param site_xpath [String]
       # @return [Hash]
-      def visible_page_view_analytics(driver, course_site_code)
-        visible_analytics(driver, course_site_code, 'Page views')
+      def visible_page_view_analytics(driver, site_xpath)
+        visible_analytics(driver, site_xpath, 'Page views')
       end
 
-      # Returns the participations analytics data shown for a given course site
+      # Returns the participations analytics data shown for a given site
       # @param driver [Selenium::WebDriver]
-      # @param course_site_code [String]
+      # @param site_xpath [String]
       # @return [Hash]
-      def visible_participation_analytics(driver, course_site_code)
-        visible_analytics(driver, course_site_code, 'Participations')
+      def visible_participation_analytics(driver, site_xpath)
+        visible_analytics(driver, site_xpath, 'Participations')
       end
 
     end
