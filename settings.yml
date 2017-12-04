@@ -84,6 +84,7 @@ boac:
   base_url: secret
   password: secret
   term: 2017-D
+  meaningful_minimum: 4
   db_host: secret
   db_port: secret
   db_name: secret

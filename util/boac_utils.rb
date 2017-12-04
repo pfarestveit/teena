@@ -22,6 +22,12 @@ class BOACUtils < Utils
     @config['term']
   end
 
+  # Returns the minimum number of a type of course activities required for individual stats to have meaning
+  # @return [Integer]
+  def self.meaningful_minimum
+    @config['meaningful_minimum']
+  end
+
   # Returns the db credentials for BOAC Shared
   # @return [Hash]
   def self.boac_shared_db_credentials
