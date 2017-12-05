@@ -20,6 +20,7 @@ describe 'bCourses course site creation' do
 
     test_data = JunctionUtils.load_junction_test_course_data.select { |course| course['tests']['create_course_site'] }
     all_test_courses = []
+    sites_created = []
     sites_to_create = []
 
     # OBTAIN SIS DATA FOR ALL TEST COURSES
@@ -43,7 +44,9 @@ describe 'bCourses course site creation' do
         @splash_page.basic_auth(test_course[:teacher].uid, @cal_net_page)
         test_course[:academic_data].get_feed @driver
         all_test_courses << test_course
-        sites_to_create << test_course unless test_course[:course].site_id
+        test_course[:course].site_id ?
+            sites_created << test_course :
+            sites_to_create << test_course
 
       rescue => e
         it("encountered an error retrieving SIS data for #{test_course[:course].code}") { fail }
@@ -180,6 +183,7 @@ describe 'bCourses course site creation' do
 
         # If site creation succeeded, store the site info
         if site_created
+          sites_created << site
           site[:course].site_id = @canvas_page.current_url.delete "#{Utils.canvas_base_url}/courses/"
           logger.info "Canvas course site ID is #{site[:course].site_id}"
         else
@@ -196,7 +200,7 @@ describe 'bCourses course site creation' do
 
     @canvas_page.log_out(@driver, @cal_net_page)
 
-    all_test_courses.each do |site|
+    sites_created.each do |site|
 
       begin
         @splash_page.load_page
@@ -213,7 +217,7 @@ describe 'bCourses course site creation' do
     @canvas_page.load_homepage
     @canvas_page.log_in(@cal_net_page, Utils.super_admin_username, Utils.super_admin_password) if @cal_net_page.username?
 
-    all_test_courses.each do |site|
+    sites_created.each do |site|
 
       begin
         section_ids = site[:sections_for_site].map { |s| s.id }
