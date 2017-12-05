@@ -634,7 +634,7 @@ module Page
     # Adds the Student Privacy Dashboard tool to a course site
     # @param course [Course]
     def add_privacy_dashboard(course)
-      add_lti_tool(course, LRSUtils.base_url, LtiTools::PRIVACY_DASHBOARD, LRSUtils.lti_credentials[:key], LRSUtils.lrs_db_credentials[:secret])
+      add_lti_tool(course, LtiTools::PRIVACY_DASHBOARD, LRSUtils.base_url, LRSUtils.lti_credentials[:key], LRSUtils.lrs_db_credentials[:secret])
     end
 
     # Clicks the navigation link for a tool and returns the tool's URL. Optionally records an analytics event.

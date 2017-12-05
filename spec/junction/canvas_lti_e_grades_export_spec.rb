@@ -211,6 +211,7 @@ describe 'bCourses E-Grades Export', order: :defined do
     before(:all) do
       section_name = "#{primary_section.course} #{primary_section.label}"
       @students = @rosters_api.section_students section_name
+      @e_grades_export_page.load_embedded_tool(@driver, course)
       @csv = @e_grades_export_page.download_final_grades(course, primary_section)
       @csv_parsed = @e_grades_export_page.grades_to_hash @csv
     end
@@ -218,12 +219,14 @@ describe 'bCourses E-Grades Export', order: :defined do
     it 'has the right column headers' do
       expected_header = %w(id name grade grading_basis comments).map { |h| h.to_sym }
       actual_header = @csv.headers
+      logger.debug "Expecting #{expected_header} and got #{actual_header}"
       expect(actual_header).to eql(expected_header)
     end
 
     it 'has the right SIDs' do
       expected_sids = @rosters_api.student_ids @students
       actual_sids = @csv_parsed.map { |s| s[:id] }
+      logger.debug "Expecting #{expected_sids} and got #{actual_sids}"
       expect(actual_sids.any? &:empty?).to be false
       expect(actual_sids.sort).to eql(expected_sids.sort)
     end
@@ -232,13 +235,15 @@ describe 'bCourses E-Grades Export', order: :defined do
       # Compare last names only, since preferred names can cause mismatches
       expected_names = @rosters_api.student_last_names @students
       actual_names = @csv_parsed.map { |n| n[:name].split(',')[0].strip.downcase }
+      logger.debug "Expecting #{expected_names} and got #{actual_names}"
       expect(actual_names.any? &:empty?).to be false
       expect(actual_names.sort).to eql(expected_names.sort)
     end
 
     it 'has reasonable grades' do
-      expected_grades = %w(A A- B+ B B- C+ C C- D+ D D- F)
+      expected_grades = %w(A+ A A- B+ B B- C+ C C- D+ D D- F)
       actual_grades = @csv_parsed.map { |g| g[:grade] }
+      logger.debug "Expecting #{expected_grades} and got #{actual_grades.uniq}"
       expect(actual_grades.any? &:empty?).to be false
       expect((actual_grades - expected_grades).any?).to be false
     end
@@ -246,6 +251,7 @@ describe 'bCourses E-Grades Export', order: :defined do
     it 'has reasonable grading bases' do
       expected_grading_bases = %w(GRD EPN)
       actual_grading_bases = @csv_parsed.map { |b| b[:grading_basis] }
+      logger.debug "Expecting #{expected_grading_bases} and got #{actual_grading_bases.uniq}"
       expect(actual_grading_bases.any? &:empty?).to be false
       expect((actual_grading_bases - expected_grading_bases).any?).to be false
     end
