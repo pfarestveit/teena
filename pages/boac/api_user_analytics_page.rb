@@ -23,8 +23,13 @@ class ApiUserAnalyticsPage
     @parsed['sisProfile']
   end
 
-  def plan
-    sis_profile['plan'] && sis_profile['plan']['description']
+  def majors
+    sis_profile['plans'] && sis_profile['plans'].map { |p| p['description'] }
+  end
+
+  def colleges
+    colleges = sis_profile['plans'] && sis_profile['plans'].map { |p| p['program'] }
+    colleges.compact if colleges
   end
 
   def level
@@ -86,26 +91,30 @@ class ApiUserAnalyticsPage
     term['enrollments']
   end
 
-  def course_site_name(course)
-    course['courseName']
+  def sections(course)
+    course['sections']
   end
 
-  def course_site_code(course)
-    course['courseCode']
+  def section_sis_data(section)
+    {
+      :ccn => section['ccn'],
+      :number => "#{section['sectionNumber']}",
+      :grading_basis => section['gradingBasis'],
+      :component => section['component'],
+      :units => section['units'].to_s,
+      :grade => section['grade'],
+      :status => section['enrollmentStatus']
+    }
   end
 
   def course_sis_data(course)
     {
       :code => course['displayName'],
-      :title => course['title'].gsub(/\s+/, ' '),
-      :status => course['enrollmentStatus'],
-      :number => course['sectionNumber'],
-      :units => course['units'].to_s,
-      :grading_basis => course['gradingBasis'],
-      :ccn => course['ccn'],
-      :grade => course['grade']
+      :title => course['title'].gsub(/\s+/, ' ')
     }
   end
+
+  # COURSE SITES
 
   def course_sites(course)
     course['canvasSites']

@@ -16,7 +16,8 @@ module Page
       link(:email, xpath: '//a[@data-ng-bind="student.sisProfile.emailAddress"]')
       div(:cumulative_units, xpath: '//div[@data-ng-bind="student.sisProfile.cumulativeUnits"]')
       div(:cumulative_gpa, xpath: '//div[contains(@data-ng-bind,"student.sisProfile.cumulativeGPA")]')
-      h3(:plan, xpath: '//h3[@data-ng-bind="student.sisProfile.plan.description"]')
+      elements(:major, :h3, xpath: '//h3[@data-ng-bind="plan.description"]')
+      elements(:college, :div, xpath: '//div[@data-ng-bind="plan.program"]')
       h3(:level, xpath: '//h3[@data-ng-bind="student.sisProfile.level.description"]')
 
       cell(:writing_reqt, xpath: '//td[text()="Entry Level Writing"]/following-sibling::td')
@@ -27,13 +28,19 @@ module Page
 
       elements(:course_site_code, :h3, xpath: '//h3[@data-ng-bind="course.courseCode"]')
 
-      # COURSES
-
-      # Returns all the visible course site codes
+      # Returns the visible college(s)
       # @return [Array<String>]
-      def visible_course_site_codes
-        (course_site_code_elements.map &:text).gsub(/\s+/, ' ')
+      def visible_colleges
+        college_elements.map &:text
       end
+
+      # Returns the visible major(s)
+      # @return [Array<String>]
+      def visible_majors
+        major_elements.map &:text
+      end
+
+      # COURSES
 
       # Returns the XPath to the SIS data shown for a given course in a term
       # @param term_name [String]
@@ -43,20 +50,42 @@ module Page
         "//h2[text()=\"#{term_name}\"]/following-sibling::div[@data-ng-if='term.enrollments.length']//h3[text()=\"#{course_code}\"]/following-sibling::"
       end
 
-      # TODO - handle multiple sections within a course
-      # Returns a hash of visible course SIS data
+      # Returns the title shown for a course
+      # @param term_name [String]
       # @param course_code [String]
+      # @return [String]
+      def course_title(term_name, course_code)
+        xpath = "#{course_data_xpath(term_name, course_code)}h4"
+        h4_element(:xpath => xpath) && h4_element(:xpath => xpath).text
+      end
+
+      # Returns the XPath to the SIS data shown for a given section in a course with a specific component type (e.g., LEC, DIS)
+      # @param term_name [String]
+      # @param course_code [String]
+      # @param component [String]
+      # @return [String]
+      def section_data_xpath(term_name, course_code, component)
+        "#{course_data_xpath(term_name, course_code)}div[@class='student-profile-class-sections']/div[contains(.,'#{component}')]"
+      end
+
+      # Returns the SIS data shown for a given section in a course with a specific component type (e.g., LEC, DIS)
+      # @param term_name [String]
+      # @param course_code [String]
+      # @param component [String]
       # @return [Hash]
-      def visible_course_sis_data(term_name, course_code)
-        logger.debug "Checking #{course_code}"
-        xpath = course_data_xpath(term_name, course_code)
+      def visible_section_sis_data(term_name, course_code, component)
+        section_xpath = section_data_xpath(term_name, course_code, component)
+        status_xpath = "#{section_xpath}//span[contains(@data-ng-if,'section.enrollmentStatus')]"
+        number_xpath = "#{section_xpath}//span[@data-ng-bind='section.sectionNumber']"
+        units_xpath = "#{section_xpath}//span[@data-ng-bind='section.units']"
+        grading_basis_xpath = "#{section_xpath}//span[@data-ng-bind='section.gradingBasis']"
+        grade_xpath = "#{section_xpath}//span[@data-ng-bind='section.grade']"
         {
-          :title => h4_element(:xpath => "#{xpath}h4").text,
-          :status => span_element(:xpath => "#{xpath}span[@data-ng-switch='course.enrollmentStatus']/span").text,
-          :number => span_element(:xpath => "#{xpath}span[@data-ng-bind='course.sectionNumber']").text,
-          :units => span_element(:xpath => "#{xpath}span[@data-ng-bind='course.units']").text,
-          :grading_basis => span_element(:xpath => "#{xpath}span[@data-ng-bind='course.gradingBasis']").text,
-          :grade => (span_element(:xpath => "#{xpath}div[@data-ng-if='course.grade']//span").text if span_element(:xpath => "#{xpath}div[@data-ng-if='course.grade']//span").exists?)
+          :status => (span_element(:xpath => status_xpath).text if span_element(:xpath => status_xpath).exists?),
+          :number => (span_element(:xpath => number_xpath).text if span_element(:xpath => number_xpath).exists?),
+          :units => (span_element(:xpath => units_xpath).text if span_element(:xpath => units_xpath).exists?),
+          :grading_basis => (span_element(:xpath => grading_basis_xpath).text if span_element(:xpath => grading_basis_xpath).exists?),
+          :grade => (span_element(:xpath => grade_xpath).text if span_element(:xpath => grade_xpath).exists?)
         }
       end
 
