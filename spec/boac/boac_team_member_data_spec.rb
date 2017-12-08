@@ -9,7 +9,7 @@ describe 'BOAC' do
     # Optionally, specify a string of comma separated of team codes to test; otherwise, all teams will be tested
     teams_to_test = ENV['TEAMS']
 
-    # Create file for test output
+    # Create files for test output
     user_profile_sis_data = File.join(Utils.initialize_test_output_dir, 'boac-sis-profiles.csv')
     user_profile_data_heading = %w(UID Sport Name Email Phone Units GPA Colleges Majors Level Writing History Institutions Cultures Language)
     CSV.open(user_profile_sis_data, 'wb') { |csv| csv << user_profile_data_heading }
@@ -24,7 +24,7 @@ describe 'BOAC' do
 
     # Get all teams and athletes
     athletes = BOACUtils.get_athletes
-    teams = BOACUtils.get_teams athletes
+    teams = BOACUtils.get_teams
 
     @driver = Utils.launch_browser
     @boac_homepage = Page::BOACPages::HomePage.new @driver
@@ -50,18 +50,18 @@ describe 'BOAC' do
           team_url = @boac_cohort_page.current_url
 
           expected_team_member_names = expected_team_members.map &:full_name
-          expected_team_member_uids = expected_team_members.map &:uid
+          expected_team_member_sids = expected_team_members.map &:sis_id
 
           visible_team_member_names = @boac_cohort_page.team_player_names
-          visible_team_member_uids = @boac_cohort_page.team_player_uids
+          visible_team_member_sids = @boac_cohort_page.team_player_sids
 
           it("shows all the expected players for #{team.name}") { expect(visible_team_member_names).to eql(expected_team_member_names) }
           it("shows no blank player names for #{team.name}") { expect(visible_team_member_names.any? &:empty?).to be false }
-          it("shows all the expected player UIDs for #{team.name}") { expect(visible_team_member_uids).to eql(expected_team_member_uids) }
-          it("shows no blank player UIDs for #{team.name}") { expect(visible_team_member_uids.any? &:empty?).to be false }
+          it("shows all the expected player UIDs for #{team.name}") { expect(visible_team_member_sids).to eql(expected_team_member_sids) }
+          it("shows no blank player UIDs for #{team.name}") { expect(visible_team_member_sids.any? &:empty?).to be false }
 
           expected_team_members.each do |team_member|
-            if visible_team_member_uids.include? team_member.uid
+            if visible_team_member_sids.include? team_member.sis_id
               begin
 
                 user_analytics_data = ApiUserAnalyticsPage.new @driver
@@ -286,60 +286,60 @@ describe 'BOAC' do
                                   site_page_view_analytics, site_assignment_analytics, site_participation_analytics = nil
                                   site_title = user_analytics_data.site_metadata(site)[:title]
 
-                                    index = user_analytics_data.course_sites(course).index site
-                                    analytics_xpath = @boac_student_page.course_site_xpath(term_name, course_code, index)
-                                    logger.info "Checking course site #{site_title} at index #{index}"
+                                  index = user_analytics_data.course_sites(course).index site
+                                  analytics_xpath = @boac_student_page.course_site_xpath(term_name, course_code, index)
+                                  logger.info "Checking course site #{site_title} at index #{index}"
 
-                                    # Page views
+                                  # Page views
 
-                                    page_views_analytics = user_analytics_data.site_page_views site
-                                    site_page_view_analytics = user_analytics_data.site_statistics page_views_analytics
+                                  page_views_analytics = user_analytics_data.site_page_views site
+                                  site_page_view_analytics = user_analytics_data.site_statistics page_views_analytics
 
-                                    if user_analytics_data.student_percentile(page_views_analytics) && site_page_view_analytics[:maximum].to_i >= BOACUtils.meaningful_minimum
-                                      visible_page_view_analytics = @boac_student_page.visible_page_view_analytics(@driver, analytics_xpath)
-                                      it "shows the page view analytics for UID #{team_member.uid} term #{term_name} course site #{site_title}" do
-                                        expect(visible_page_view_analytics).to eql(site_page_view_analytics)
-                                      end
-                                    else
-                                      no_data = @boac_student_page.no_page_view_data? analytics_xpath
-                                      it "shows no page view data for UID #{team_member.uid} term #{term_name} course site #{site_title}" do
-                                        expect(no_data).to be true
-                                      end
+                                  if user_analytics_data.student_percentile(page_views_analytics) && site_page_view_analytics[:maximum].to_i >= BOACUtils.meaningful_minimum
+                                    visible_page_view_analytics = @boac_student_page.visible_page_view_analytics(@driver, analytics_xpath)
+                                    it "shows the page view analytics for UID #{team_member.uid} term #{term_name} course site #{site_title}" do
+                                      expect(visible_page_view_analytics).to eql(site_page_view_analytics)
                                     end
-
-                                    # Assignments on time
-
-                                    assignments_on_time_analytics = user_analytics_data.site_assignments_on_time site
-                                    site_assignment_analytics = user_analytics_data.site_statistics assignments_on_time_analytics
-
-                                    if user_analytics_data.student_percentile(assignments_on_time_analytics) && site_assignment_analytics[:maximum].to_i >= BOACUtils.meaningful_minimum
-                                      visible_assignment_analytics = @boac_student_page.visible_assignment_analytics(@driver, analytics_xpath)
-                                      it "shows the assignments on time analytics for UID #{team_member.uid} term #{term_name} course site #{site_title}" do
-                                        expect(visible_assignment_analytics).to eql(site_assignment_analytics)
-                                      end
-                                    else
-                                      no_data = @boac_student_page.no_assignment_data? analytics_xpath
-                                      it "shows no assignments on time data for UID #{team_member.uid} term #{term_name} course site #{site_title}" do
-                                        expect(no_data).to be true
-                                      end
+                                  else
+                                    no_data = @boac_student_page.no_page_view_data? analytics_xpath
+                                    it "shows no page view data for UID #{team_member.uid} term #{term_name} course site #{site_title}" do
+                                      expect(no_data).to be true
                                     end
+                                  end
 
-                                    # Participations
+                                  # Assignments on time
 
-                                    participation_analytics = user_analytics_data.site_participations site
-                                    site_participation_analytics = user_analytics_data.site_statistics participation_analytics
+                                  assignments_on_time_analytics = user_analytics_data.site_assignments_on_time site
+                                  site_assignment_analytics = user_analytics_data.site_statistics assignments_on_time_analytics
 
-                                    if user_analytics_data.student_percentile(participation_analytics) && site_participation_analytics[:maximum].to_i >= BOACUtils.meaningful_minimum
-                                      visible_participation_analytics = @boac_student_page.visible_participation_analytics(@driver, analytics_xpath)
-                                      it "shows the participations analytics for UID #{team_member.uid} term #{term_name} course site #{site_title}" do
-                                        expect(visible_participation_analytics).to eql(site_participation_analytics)
-                                      end
-                                    else
-                                      no_data = @boac_student_page.no_participations_data? analytics_xpath
-                                      it "shows no participations data for UID #{team_member.uid} term #{term_name} course site #{site_title}" do
-                                        expect(no_data).to be true
-                                      end
+                                  if user_analytics_data.student_percentile(assignments_on_time_analytics) && site_assignment_analytics[:maximum].to_i >= BOACUtils.meaningful_minimum
+                                    visible_assignment_analytics = @boac_student_page.visible_assignment_analytics(@driver, analytics_xpath)
+                                    it "shows the assignments on time analytics for UID #{team_member.uid} term #{term_name} course site #{site_title}" do
+                                      expect(visible_assignment_analytics).to eql(site_assignment_analytics)
                                     end
+                                  else
+                                    no_data = @boac_student_page.no_assignment_data? analytics_xpath
+                                    it "shows no assignments on time data for UID #{team_member.uid} term #{term_name} course site #{site_title}" do
+                                      expect(no_data).to be true
+                                    end
+                                  end
+
+                                  # Participations
+
+                                  participation_analytics = user_analytics_data.site_participations site
+                                  site_participation_analytics = user_analytics_data.site_statistics participation_analytics
+
+                                  if user_analytics_data.student_percentile(participation_analytics) && site_participation_analytics[:maximum].to_i >= BOACUtils.meaningful_minimum
+                                    visible_participation_analytics = @boac_student_page.visible_participation_analytics(@driver, analytics_xpath)
+                                    it "shows the participations analytics for UID #{team_member.uid} term #{term_name} course site #{site_title}" do
+                                      expect(visible_participation_analytics).to eql(site_participation_analytics)
+                                    end
+                                  else
+                                    no_data = @boac_student_page.no_participations_data? analytics_xpath
+                                    it "shows no participations data for UID #{team_member.uid} term #{term_name} course site #{site_title}" do
+                                      expect(no_data).to be true
+                                    end
+                                  end
 
                                 rescue => e
                                   Utils.log_error e
@@ -384,60 +384,60 @@ describe 'BOAC' do
 
                             index = user_analytics_data.unmatched_sites(term).index site
                             site_title = user_analytics_data.site_metadata(site)[:title]
-                              analytics_xpath = @boac_student_page.unmatched_site_xpath(term_name, site_title, index)
+                            analytics_xpath = @boac_student_page.unmatched_site_xpath(term_name, site_title, index)
 
-                              logger.info "Checking unmatched site #{site_title} at index #{index}"
+                            logger.info "Checking unmatched site #{site_title} at index #{index}"
 
-                              # Page views
+                            # Page views
 
-                              page_views_analytics = user_analytics_data.site_page_views site
-                              site_page_view_analytics = user_analytics_data.site_statistics page_views_analytics
+                            page_views_analytics = user_analytics_data.site_page_views site
+                            site_page_view_analytics = user_analytics_data.site_statistics page_views_analytics
 
-                              if user_analytics_data.student_percentile(page_views_analytics) && site_page_view_analytics[:maximum].to_i >= BOACUtils.meaningful_minimum
-                                visible_page_view_analytics = @boac_student_page.visible_page_view_analytics(@driver, analytics_xpath)
-                                it "shows the page view analytics for #{team.name} UID #{team_member.uid} unmatched site #{site_title}" do
-                                  expect(visible_page_view_analytics).to eql(site_page_view_analytics)
-                                end
-                              else
-                                no_data = @boac_student_page.no_page_view_data? analytics_xpath
-                                it "shows no page view data for #{team.name} UID #{team_member.uid} unmatched site #{site_title}" do
-                                  expect(no_data).to be true
-                                end
+                            if user_analytics_data.student_percentile(page_views_analytics) && site_page_view_analytics[:maximum].to_i >= BOACUtils.meaningful_minimum
+                              visible_page_view_analytics = @boac_student_page.visible_page_view_analytics(@driver, analytics_xpath)
+                              it "shows the page view analytics for #{team.name} UID #{team_member.uid} unmatched site #{site_title}" do
+                                expect(visible_page_view_analytics).to eql(site_page_view_analytics)
                               end
-
-                              # Assignments on time
-
-                              assignments_on_time_analytics = user_analytics_data.site_assignments_on_time site
-                              site_assignment_analytics = user_analytics_data.site_statistics assignments_on_time_analytics
-
-                              if user_analytics_data.student_percentile(assignments_on_time_analytics) && site_assignment_analytics[:maximum].to_i >= BOACUtils.meaningful_minimum
-                                visible_assignment_analytics = @boac_student_page.visible_assignment_analytics(@driver, analytics_xpath)
-                                it "shows the assignments on time analytics for #{team.name} UID #{team_member.uid} unmatched site #{site_title}" do
-                                  expect(visible_assignment_analytics).to eql(site_assignment_analytics)
-                                end
-                              else
-                                no_data = @boac_student_page.no_assignment_data? analytics_xpath
-                                it "shows no assignments on time data for #{team.name} UID #{team_member.uid} unmatched site #{site_title}" do
-                                  expect(no_data).to be true
-                                end
+                            else
+                              no_data = @boac_student_page.no_page_view_data? analytics_xpath
+                              it "shows no page view data for #{team.name} UID #{team_member.uid} unmatched site #{site_title}" do
+                                expect(no_data).to be true
                               end
+                            end
 
-                              # Participations
+                            # Assignments on time
 
-                              participation_analytics = user_analytics_data.site_participations site
-                              site_participation_analytics = user_analytics_data.site_statistics participation_analytics
+                            assignments_on_time_analytics = user_analytics_data.site_assignments_on_time site
+                            site_assignment_analytics = user_analytics_data.site_statistics assignments_on_time_analytics
 
-                              if user_analytics_data.student_percentile(participation_analytics) && site_participation_analytics[:maximum].to_i >= BOACUtils.meaningful_minimum
-                                visible_participation_analytics = @boac_student_page.visible_participation_analytics(@driver, analytics_xpath)
-                                it "shows the participations analytics for #{team.name} UID #{team_member.uid} unmatched site #{site_title}" do
-                                  expect(visible_participation_analytics).to eql(site_participation_analytics)
-                                end
-                              else
-                                no_data = @boac_student_page.no_participations_data? analytics_xpath
-                                it "shows no participations data for #{team.name} UID #{team_member.uid} unmatched site #{site_title}" do
-                                  expect(no_data).to be true
-                                end
+                            if user_analytics_data.student_percentile(assignments_on_time_analytics) && site_assignment_analytics[:maximum].to_i >= BOACUtils.meaningful_minimum
+                              visible_assignment_analytics = @boac_student_page.visible_assignment_analytics(@driver, analytics_xpath)
+                              it "shows the assignments on time analytics for #{team.name} UID #{team_member.uid} unmatched site #{site_title}" do
+                                expect(visible_assignment_analytics).to eql(site_assignment_analytics)
                               end
+                            else
+                              no_data = @boac_student_page.no_assignment_data? analytics_xpath
+                              it "shows no assignments on time data for #{team.name} UID #{team_member.uid} unmatched site #{site_title}" do
+                                expect(no_data).to be true
+                              end
+                            end
+
+                            # Participations
+
+                            participation_analytics = user_analytics_data.site_participations site
+                            site_participation_analytics = user_analytics_data.site_statistics participation_analytics
+
+                            if user_analytics_data.student_percentile(participation_analytics) && site_participation_analytics[:maximum].to_i >= BOACUtils.meaningful_minimum
+                              visible_participation_analytics = @boac_student_page.visible_participation_analytics(@driver, analytics_xpath)
+                              it "shows the participations analytics for #{team.name} UID #{team_member.uid} unmatched site #{site_title}" do
+                                expect(visible_participation_analytics).to eql(site_participation_analytics)
+                              end
+                            else
+                              no_data = @boac_student_page.no_participations_data? analytics_xpath
+                              it "shows no participations data for #{team.name} UID #{team_member.uid} unmatched site #{site_title}" do
+                                expect(no_data).to be true
+                              end
+                            end
 
                           rescue => e
                             Utils.log_error e

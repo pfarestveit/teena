@@ -10,6 +10,7 @@ require 'pg'
 
 require_relative '../models/user'
 require_relative '../models/boac/team'
+require_relative '../models/boac/squad'
 require_relative '../models/course'
 require_relative '../models/event'
 require_relative '../models/event_type'
