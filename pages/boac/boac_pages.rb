@@ -15,20 +15,36 @@ module Page
     link(:manage_my_cohorts_link, text: 'Manage My Cohorts')
     link(:view_everyone_cohorts_link, text: "View Everyone's Cohorts")
     button(:log_out_button, xpath: '//button[contains(text(),"Log out")]')
+    elements(:my_cohort_link, :link, :xpath => '//ul[@class="dropdown-menu"]/li[@data-ng-repeat="cohort in myCohorts"]/a')
 
     # Clicks the 'Home' link in the header
     def click_home
       wait_for_load_and_click home_link_element
     end
 
+    # Clicks the 'Cohorts' button in the header
+    def click_cohorts
+      wait_for_load_and_click cohorts_button_element
+    end
+
+    # Returns the names of My Saved Cohorts displayed in the header dropdown
+    # @return [Array<String>]
+    def dropdown_my_cohorts
+      create_new_cohort_link_element.when_visible Utils.short_wait
+      my_cohort_link_elements.map &:text
+    end
+
+    # Clicks the button to create a new custom cohort
     def click_create_new_cohort
       wait_for_load_and_click create_new_cohort_link_element
     end
 
+    # Clicks the button to manage the user's own custom cohorts
     def click_manage_my_cohorts
       wait_for_load_and_click manage_my_cohorts_link_element
     end
 
+    # Clicks the button to view all custom cohorts
     def click_view_everyone_cohorts
       wait_for_load_and_click view_everyone_cohorts_link_element
     end

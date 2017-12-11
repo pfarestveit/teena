@@ -1,49 +1,38 @@
-class Team
-
-  attr_accessor :code, :name
-
-  def initialize(code, name)
-    @code = code
-    @name = name
-  end
+class Team < Cohort
 
   TEAMS = [
-      BAM = new('BAM', 'Baseball - Men'),
-      BBM = new('BBM', 'Basketball - Men'),
-      BBW = new('BBW', 'Basketball - Women'),
-      CCM = new('CCM', 'Cross Country - Men'),
-      CCW = new('CCW', 'Cross Country - Women'),
-      CRM = new('CRM', 'Crew - Men'),
-      CRW = new('CRW', 'Crew - Women'),
-      EMX = new('EMX', 'Equipment Managers'),
-      FBM = new('FBM', 'Football - Men'),
-      FHW = new('FHW', 'Field Hockey - Women'),
-      GOM = new('GOM', 'Golf - Men'),
-      GOW = new('GOW', 'Golf - Women'),
-      GYM = new('GYM', 'Gymnastics - Men'),
-      GYW = new('GYW', 'Gymnastics - Women'),
-      LCW = new('LCW', 'Lacrosse - Women'),
-      RGM = new('RGM', 'Rugby - Men'),
-      SBW = new('SBW', 'Softball - Women'),
-      SCM = new('SCM', 'Soccer - Men'),
-      SCW = new('SCW', 'Soccer - Women'),
-      SDM = new('SDM', 'Swimming & Diving - Men'),
-      SDW = new('SDW', 'Swimming & Diving - Women'),
-      STX = new('STX', 'Student Trainers'),
-      SVW = new('SVW', 'Sand Volleyball - Women'),
-      TIM = new('TIM', 'Indoor Track & Field - Men'),
-      TIW = new('TIW', 'Indoor Track & Field - Women'),
-      TNM = new('TNM', 'Tennis - Men'),
-      TNW = new('TNW', 'Tennis - Women'),
-      TOM = new('TOM', 'Outdoor Track & Field - Men'),
-      TOW = new('TOW', 'Outdoor Track & Field - Women'),
-      VBW = new('VBW', 'Volleyball - Women'),
-      WPM = new('WPM', 'Water Polo - Men'),
-      WPW = new('WPW', 'Water Polo - Women')
+      BAM = new({code: 'BAM', name: 'Men\'s Baseball'}),
+      BBM = new({code: 'BBM', name: 'Men\'s Basketball'}),
+      BBW = new({code: 'BBW', name: 'Women\'s Basketball'}),
+      CCM = new({code: 'CCM', name: 'Men\'s Cross Country'}),
+      CCW = new({code: 'CCW', name: 'Women\'s Cross Country'}),
+      CRM = new({code: 'CRM', name: 'Men\'s Crew'}),
+      CRW = new({code: 'CRW', name: 'Women\'s Crew'}),
+      EMX = new({code: 'EMX', name: 'Equipment Managers'}),
+      FBM = new({code: 'FBM', name: 'Football'}),
+      FHW = new({code: 'FHW', name: 'Women\'s Field Hockey'}),
+      GOM = new({code: 'GOM', name: 'Men\'s Golf'}),
+      GOW = new({code: 'GOW', name: 'Women\'s Golf'}),
+      GYM = new({code: 'GYM', name: 'Men\'s Gymnastics'}),
+      GYW = new({code: 'GYW', name: 'Women\'s Gymnastics'}),
+      LCW = new({code: 'LCW', name: 'Women\'s Lacrosse'}),
+      RGM = new({code: 'RGM', name: 'Men\'s Rugby'}),
+      SBW = new({code: 'SBW', name: 'Women\'s Softball'}),
+      SCM = new({code: 'SCM', name: 'Men\'s Soccer'}),
+      SCW = new({code: 'SCW', name: 'Women\'s Soccer'}),
+      SDM = new({code: 'SDM', name: 'Men\'s SwimDive'}),
+      SDW = new({code: 'SDW', name: 'Women\'s SwimDive'}),
+      STX = new({code: 'STX', name: 'Student Trainers'}),
+      SVW = new({code: 'SVW', name: 'Women\'s Beach Volleyball'}),
+      TIM = new({code: 'TIM', name: 'Men\'s Indoor Track & Field'}),
+      TIW = new({code: 'TIW', name: 'Women\s Indoor Track & Field'}),
+      TNM = new({code: 'TNM', name: 'Men\'s Tennis'}),
+      TNW = new({code: 'TNW', name: 'Women\'s Tennis'}),
+      TOM = new({code: 'TOM', name: 'Men\'s TrackCC'}),
+      TOW = new({code: 'TOW', name: 'Women\'s TrackCC'}),
+      VBW = new({code: 'VBW', name: 'Women\'s Volleyball'}),
+      WPM = new({code: 'WPM', name: 'Men\'s Water Polo'}),
+      WPW = new({code: 'WPW', name: 'Women\'s Water Polo'})
   ]
-
-  class << self
-    private :new
-  end
 
 end

@@ -23,7 +23,6 @@ describe 'BOAC' do
     CSV.open(user_course_canvas_data, 'wb') { |csv| csv << user_canvas_data_heading }
 
     # Get all teams and athletes
-    athletes = BOACUtils.get_athletes
     teams = BOACUtils.get_teams
 
     @driver = Utils.launch_browser
@@ -43,7 +42,7 @@ describe 'BOAC' do
       if visible_team_names.include? team.name
         begin
 
-          expected_team_members = BOACUtils.get_team_members(team, athletes).sort_by! &:full_name
+          expected_team_members = BOACUtils.get_team_members(team).sort_by! &:full_name
 
           @boac_homepage.load_page
           @boac_homepage.click_team_link team
@@ -52,8 +51,8 @@ describe 'BOAC' do
           expected_team_member_names = expected_team_members.map &:full_name
           expected_team_member_sids = expected_team_members.map &:sis_id
 
-          visible_team_member_names = @boac_cohort_page.team_player_names
-          visible_team_member_sids = @boac_cohort_page.team_player_sids
+          visible_team_member_names = @boac_cohort_page.list_view_names
+          visible_team_member_sids = @boac_cohort_page.list_view_sids
 
           it("shows all the expected players for #{team.name}") { expect(visible_team_member_names).to eql(expected_team_member_names) }
           it("shows no blank player names for #{team.name}") { expect(visible_team_member_names.any? &:empty?).to be false }

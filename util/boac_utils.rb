@@ -43,19 +43,37 @@ class BOACUtils < Utils
   # Returns an array of Users stored in the cohorts table
   # @return [Array<User>]
   def self.get_athletes
-    query = 'SELECT member_uid, member_csid, member_name, asc_sport_code
+    query = 'SELECT member_uid, member_csid, first_name, last_name, asc_sport_code
              FROM team_members
              ORDER BY id ASC;'
     results = Utils.query_db(boac_shared_db_credentials, query)
 
     # Users with multiple sports have multiple rows; combine them
     athletes = results.group_by { |h1| h1['member_uid'] }.map do |k,v|
-      {member_uid: k, member_csid: v[0]['member_csid'], member_name: v[0]['member_name'], asc_sport_code: v.map { |h2| h2['asc_sport_code'] }.join(' ')}
+      {member_uid: k, member_csid: v[0]['member_csid'], first_name: v[0]['first_name'], last_nem: v[0]['last_name'], asc_sport_code: v.map { |h2| h2['asc_sport_code'] }.join(' ')}
     end
 
     # Convert to Users
     athletes.map do |a|
-      User.new({uid: a[:member_uid], sis_id: a[:member_csid], full_name: a[:member_name], sports: a[:asc_sport_code].split.uniq})
+      User.new({uid: a[:member_uid], sis_id: a[:member_csid], full_name: "#{a[:first_name]} #{a[:last_name]}", sports: a[:asc_sport_code].split.uniq})
+    end
+  end
+
+  # TODO - add a sample test data file when search filters are available
+  # Returns a collection of search criteria to use for testing cohort search
+  # @return [Array<Hash>]
+  def self.get_test_search_criteria
+    test_data_file = File.join(ENV['HOME'], '/.webdriver-config/test-data-boac.json')
+    test_data = JSON.parse File.read(test_data_file)
+    test_data['search_criteria'].map do |d|
+      criteria = {
+          squads: d['teams'] && d['teams'].map { |t| Squad::SQUADS.find { |s| s.name == t['squad'] } },
+          levels: d['levels'] && d['levels'].map { |l| l['level'] },
+          terms: d['terms'] && d['terms'].map { |t| t['term'] },
+          gpa: d['gpa'],
+          units: d['units']
+      }
+      CohortSearchCriteria.new criteria
     end
   end
 
@@ -68,7 +86,7 @@ class BOACUtils < Utils
     results = Utils.query_db_field(boac_shared_db_credentials, query, 'code')
     teams = Team::TEAMS.select { |team| results.include? team.code }
     logger.info "Teams are #{teams.map &:name}"
-    teams
+    teams.sort_by { |t| t.name }
   end
 
   # Returns all the distinct team squads associated with team members
@@ -80,19 +98,38 @@ class BOACUtils < Utils
     results = Utils.query_db_field(boac_shared_db_credentials, query, 'asc_sport_code')
     squads = Squad::SQUADS.select { |squad| results.include? squad.code }
     logger.info "Squads are #{squads.map &:name}"
-    squads
+    squads.sort_by { |s| s.name }
   end
 
   # Returns all the users associated with a team
   # @param team [Team]
-  # @param users [Array<User>]
   # @return [Array<User>]
-  def self.get_team_members(team, users)
-    team_squads = Squad::SQUADS.select { |s| s.team == team }
-    squad_codes = team_squads.map &:code
-    team_members = users.select { |u| (u.sports & squad_codes).any? }
+  def self.get_team_members(team)
+    team_squads = Squad::SQUADS.select { |s| s.parent_team == team }
+    team_members = get_squad_members team_squads
     logger.info "#{team.name} members are UIDs #{team_members.map &:uid}"
     team_members
+  end
+
+  # Returns all the users associated with a given collection of squads
+  # @param squads [Array<Squad>]
+  # @return [Array<User>]
+  def self.get_squad_members(squads)
+    squad_codes = squads.map &:code
+    get_athletes.select { |u| (u.sports & squad_codes).any? }
+  end
+
+  # Returns the names of custom cohorts belonging to a given user
+  # @param user [User]
+  # @return [Array<String>]
+  def self.get_user_custom_cohorts(user)
+    query = "SELECT cohort_filters.label
+             FROM cohort_filters
+             JOIN cohort_filter_owners ON cohort_filter_owners.cohort_filter_id = cohort_filters.id
+             JOIN authorized_users ON authorized_users.id = cohort_filter_owners.user_id
+             WHERE authorized_users.uid = '#{user.uid}';"
+    results = Utils.query_db(boac_shared_db_credentials, query)
+    results.map { |r| r['label'] }
   end
 
 end
