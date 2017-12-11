@@ -145,7 +145,7 @@ module Page
             page += 1
             unless page == 1
               logger.debug "Clicking page #{page}"
-              wait_for_update_and_click list_view_page_link(page) unless page == 1
+              wait_for_update_and_click list_view_page_link(page)
               sleep 1
             end
             wait_until(Utils.short_wait) { player_link_elements.any? }
