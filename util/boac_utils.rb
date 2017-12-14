@@ -119,17 +119,44 @@ class BOACUtils < Utils
     get_athletes.select { |u| (u.sports & squad_codes).any? }
   end
 
-  # Returns the names of custom cohorts belonging to a given user
+  # Returns the custom cohorts belonging to a given user
   # @param user [User]
-  # @return [Array<String>]
+  # @return [Array<Cohort>]
   def self.get_user_custom_cohorts(user)
-    query = "SELECT cohort_filters.label
+    query = "﻿SELECT cohort_filters.id AS cohort_id,
+                    cohort_filters.label AS cohort_name
              FROM cohort_filters
              JOIN cohort_filter_owners ON cohort_filter_owners.cohort_filter_id = cohort_filters.id
              JOIN authorized_users ON authorized_users.id = cohort_filter_owners.user_id
              WHERE authorized_users.uid = '#{user.uid}';"
     results = Utils.query_db(boac_shared_db_credentials, query)
-    results.map { |r| r['label'] }
+    results.map { |r| Cohort.new({id: r['cohort_id'], name: r['cohort_name'], owner_uid: user.uid})
+  end
+
+  # Returns all custom cohorts
+  # @return [Array<Cohort>]
+  def self.get_everyone_custom_cohorts
+    query = '﻿SELECT cohort_filters.id AS cohort_id,
+                    cohort_filters.label AS cohort_name,
+                    authorized_users.uid AS uid,
+             FROM cohort_filters
+             JOIN cohort_filter_owners ON cohort_filter_owners.cohort_filter_id = cohort_filters.id
+             JOIN authorized_users ON authorized_users.id = cohort_filter_owners.user_id
+             ORDER BY uid, cohort_id ASC;'
+    results = Utils.query_db(boac_shared_db_credentials, query)
+    results.map { |r| Cohort.new({id: r['cohort_id'], name: r['cohort_name'], owner_uid: r['uid']}) }
+  end
+
+  # Obtains and sets the cohort ID given a cohort with a unique title
+  # @param cohort [Cohort]
+  # @return [Integer]
+  def self.get_custom_cohort_id(cohort)
+    query = "SELECT id
+             FROM cohort_filters
+             WHERE label = '#{cohort.name}'"
+    result = Utils.query_db_field(boac_shared_db_credentials, query, 'id')
+    logger.info "Cohort '#{cohort.name}' ID is #{result}"
+    cohort.id = result
   end
 
 end

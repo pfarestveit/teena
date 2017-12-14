@@ -11,6 +11,7 @@ module Page
     link(:home_link, text: 'Home')
     button(:cohorts_button, id: 'btn-append-to-single-button')
     link(:no_cohorts_msg, text: 'No saved cohorts')
+    link(:intensive_cohort_link, text: 'Intensive')
     link(:create_new_cohort_link, text: 'Create New Cohort')
     link(:manage_my_cohorts_link, text: 'Manage My Cohorts')
     link(:view_everyone_cohorts_link, text: "View Everyone's Cohorts")
@@ -24,7 +25,7 @@ module Page
 
     # Clicks the 'Cohorts' button in the header
     def click_cohorts
-      wait_for_load_and_click cohorts_button_element
+      wait_for_load_and_click cohorts_button_element unless create_new_cohort_link_element.visible?
     end
 
     # Returns the names of My Saved Cohorts displayed in the header dropdown
@@ -34,18 +35,27 @@ module Page
       my_cohort_link_elements.map &:text
     end
 
+    # Clicks the link for the Intensive cohort
+    def click_intensive_cohort
+      click_cohorts
+      wait_for_load_and_click intensive_cohort_link_element
+    end
+
     # Clicks the button to create a new custom cohort
     def click_create_new_cohort
+      click_cohorts
       wait_for_load_and_click create_new_cohort_link_element
     end
 
     # Clicks the button to manage the user's own custom cohorts
     def click_manage_my_cohorts
+      click_cohorts
       wait_for_load_and_click manage_my_cohorts_link_element
     end
 
     # Clicks the button to view all custom cohorts
     def click_view_everyone_cohorts
+      click_cohorts
       wait_for_load_and_click view_everyone_cohorts_link_element
     end
 
