@@ -65,7 +65,7 @@ module Page
       # CUSTOM COHORTS
 
       elements(:my_cohort, :link, xpath: '//h2[text()="My Saved Cohorts"]/following-sibling::div//li[@data-ng-repeat="cohort in myCohorts"]/a')
-      link(:intensive_cohort_link, text: 'Intensive')
+      div(:no_cohorts_msg, xpath: '//div[text()="You have no saved cohorts"]')
 
       # Returns the names of My Saved Cohorts shown on the homepage
       # @return [Array<String>]
@@ -77,6 +77,7 @@ module Page
       # Clicks the link for a given My Saved Cohort
       # @param cohort [Cohort]
       def click_my_cohort(cohort)
+        logger.debug "Clicking link to my cohort '#{cohort.name}'"
         wait_until(Utils.short_wait) { my_cohort_link_elements.any? }
         wait_for_update_and_click (my_cohort_link_elements.find { |e| e.text == cohort.name })
       end
