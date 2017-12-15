@@ -7,8 +7,9 @@ describe 'BOAC custom cohorts', order: :defined do
   test_id = Utils.get_test_id
   test_user = User.new({:uid => Utils.super_admin_uid, :username => Utils.super_admin_username})
 
-  # Get cohorts the test user already owns
-  cohorts_pre_existing = BOACUtils.get_user_custom_cohorts test_user
+  # Get all existing cohorts
+  user_cohorts_pre_existing = BOACUtils.get_user_custom_cohorts test_user
+  everyone_cohorts_pre_existing = BOACUtils.get_everyone_custom_cohorts
 
   # Get cohorts to be created during tests
   test_search_criteria = BOACUtils.get_test_search_criteria
@@ -21,9 +22,22 @@ describe 'BOAC custom cohorts', order: :defined do
     @cohort_page = Page::BOACPages::CohortPage.new @driver
     @cal_net = Page::CalNetPage.new @driver
     @homepage.dev_auth Utils.super_admin_uid
+    @visible_everyone_cohorts = @cohort_page.visible_everyone_cohorts @driver
   end
 
-  it('shows the user Everyone\'s Cohorts') { expect(@cohort_page.visible_everyone_cohorts @driver).to eql(BOACUtils.get_everyone_custom_cohorts) }
+  after(:all) { Utils.quit_browser @driver }
+
+  it 'shows the user Everyone\'s Cohorts owners' do
+    expected_owners = everyone_cohorts_pre_existing.map &:owner_uid
+    visible_owners = @visible_everyone_cohorts.map &:owner_uid
+    expect(visible_owners).to eql(expected_owners)
+  end
+
+  it 'shows the user Everyone\'s Cohorts names' do
+    expected_cohort_names = everyone_cohorts_pre_existing.map &:name
+    visible_cohort_names = @visible_everyone_cohorts.map &:name
+    expect(visible_cohort_names).to eql(expected_cohort_names)
+  end
 
   it 'offers a link to the Intensive cohort' do
     intensive = Cohort.new({name: 'Intensive'})
@@ -32,58 +46,56 @@ describe 'BOAC custom cohorts', order: :defined do
     expect(@cohort_page.player_link_elements.any?).to be true
   end
 
-  after(:all) { Utils.quit_browser @driver }
-
   context 'when a user has no cohorts' do
 
     before(:all) do
-      cohorts_pre_existing.each { |c| @cohort_page.delete_cohort c }
+      user_cohorts_pre_existing.each { |c| @cohort_page.delete_cohort c }
+      @homepage.load_page
       @homepage.click_cohorts
     end
 
     it('shows a No Saved Cohorts message in the header') { @homepage.no_cohorts_msg_element.when_visible Utils.short_wait }
-    it('shows a No Saved Cohorts message on the homepage') { expect(@homepage.no_cohorts_msg?).to be true }
+    it('shows a No Saved Cohorts message on the homepage') { expect(@homepage.you_have_no_cohorts_msg?).to be true }
   end
 
   context 'when the user creates a cohort' do
 
-    before(:each) do
-      @homepage.click_create_new_cohort
-      @cohort_page.teams_filter_button_element.when_visible Utils.short_wait
-    end
-
-    it('requires at least one search criterion') { expect(@cohort_page.search_button_element.attribute 'disabled').to eql('true') }
+    before(:each) { @cohort_page.cancel_cohort if @cohort_page.cancel_cohort_button? }
 
     test_search_criteria.each do |criteria|
       it "allows the user to search using '#{criteria.squads.map &:name}', levels '#{criteria.levels}', terms '#{criteria.terms}', GPA '#{criteria.gpa}', and units '#{criteria.units}'" do
+        @cohort_page.click_create_new_cohort
         @cohort_page.perform_search criteria
         @cohort_page.verify_search_results(@driver, criteria)
       end
     end
 
-    it 'requires a title' do
-      @cohort_page.create_and_name_cohort Cohort.new({})
-      @cohort_page.title_required_msg_element.when_visible Utils.short_wait
-    end
-
-    it('allows the user to cancel the cohort creation') { @cohort_page.cancel_cohort }
-
-    it 'truncates a title over 255 characters' do
-      cohort = Cohort.new({name: "#{'A loooooong title' * 15}?"})
-      @cohort_page.create_and_name_cohort cohort
-      cohort.name = cohort.name[0..254]
-      @cohort_page.cohort_heading(cohort).when_visible Utils.short_wait
-    end
-
     cohorts_to_create.each do |cohort|
-      it "allows the user to create a cohort using '#{cohort.squads.map &:name}', levels '#{cohort.levels}', terms '#{cohort.terms}', GPA '#{cohort.gpa}', and units '#{cohort.units}'" do
-        @cohort_page.create_new_cohort cohort
+      it "allows the user to create a cohort using '#{cohort.search_criteria.squads.map &:name}', levels '#{cohort.search_criteria.levels}', terms '#{cohort.search_criteria.terms}', GPA '#{cohort.search_criteria.gpa}', and units '#{cohort.search_criteria.units}'" do
+        @cohort_page.search_and_create_new_cohort cohort
         cohorts_created << cohort
       end
     end
 
+    it 'requires a title' do
+      @homepage.click_create_new_cohort
+      @cohort_page.perform_search test_search_criteria.first
+      @cohort_page.click_save_cohort_button_one
+      expect(@cohort_page.save_cohort_button_two_element.disabled?).to be true
+    end
+
+    it 'truncates a title over 255 characters' do
+      cohort = Cohort.new({name: "#{'A loooooong title' * 15}?"})
+      @homepage.click_create_new_cohort
+      @cohort_page.perform_search test_search_criteria.first
+      @cohort_page.save_and_name_cohort cohort
+      cohort.name = cohort.name[0..254]
+      @cohort_page.cohort_heading(cohort).when_visible Utils.short_wait
+      cohorts_created << cohort
+    end
+
     it 'requires that a title be unique among the user\'s existing cohorts' do
-      @cohort_page.create_and_name_cohort cohorts_to_create.first
+      @cohort_page.save_and_name_cohort cohorts_to_create.first
       @cohort_page.title_dupe_msg_element.when_visible Utils.short_wait
     end
   end
@@ -106,8 +118,9 @@ describe 'BOAC custom cohorts', order: :defined do
 
     it 'creates a new cohort' do
       existing_cohort = cohorts_created.first
-      new_cohort = Cohort.new({name: "Edited Search #{test_id}", search_criteria: cohorts_created.last.search_criteria})
-      @cohort_page.create_edited_cohort(existing_cohort, new_cohort)
+      new_cohort = Cohort.new({name: "Edited Search #{test_id}", search_criteria: test_search_criteria.last})
+      @cohort_page.load_cohort existing_cohort
+      @cohort_page.search_and_create_edited_cohort(existing_cohort, new_cohort)
       expect(new_cohort.id).not_to eql(existing_cohort.id)
     end
   end
@@ -117,8 +130,8 @@ describe 'BOAC custom cohorts', order: :defined do
     it 'renames the existing cohort' do
       cohort = cohorts_created.first
       id = cohort.id
-      cohort.name = "#{cohort.name} - Renamed"
-      @cohort_page.rename_cohort cohort
+      @cohort_page.click_manage_my_cohorts
+      @cohort_page.rename_cohort(cohort, "#{cohort.name} - Renamed")
       expect(cohort.id).to eql(id)
     end
   end
