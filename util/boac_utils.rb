@@ -123,26 +123,25 @@ class BOACUtils < Utils
   # @param user [User]
   # @return [Array<Cohort>]
   def self.get_user_custom_cohorts(user)
-    query = "﻿SELECT cohort_filters.id AS cohort_id,
-                    cohort_filters.label AS cohort_name
-             FROM cohort_filters
-             JOIN cohort_filter_owners ON cohort_filter_owners.cohort_filter_id = cohort_filters.id
-             JOIN authorized_users ON authorized_users.id = cohort_filter_owners.user_id
-             WHERE authorized_users.uid = '#{user.uid}';"
+    query = "SELECT cohort_filters.id AS cohort_id, cohort_filters.label AS cohort_name
+              FROM cohort_filters
+              JOIN cohort_filter_owners ON cohort_filter_owners.cohort_filter_id = cohort_filters.id
+              JOIN authorized_users ON authorized_users.id = cohort_filter_owners.user_id
+              WHERE authorized_users.uid = '#{user.uid}';"
     results = Utils.query_db(boac_shared_db_credentials, query)
-    results.map { |r| Cohort.new({id: r['cohort_id'], name: r['cohort_name'], owner_uid: user.uid})
+    results.map { |r| Cohort.new({id: r['cohort_id'], name: r['cohort_name'], owner_uid: user.uid}) }
   end
 
   # Returns all custom cohorts
   # @return [Array<Cohort>]
   def self.get_everyone_custom_cohorts
-    query = '﻿SELECT cohort_filters.id AS cohort_id,
+    query = 'SELECT cohort_filters.id AS cohort_id,
                     cohort_filters.label AS cohort_name,
-                    authorized_users.uid AS uid,
-             FROM cohort_filters
-             JOIN cohort_filter_owners ON cohort_filter_owners.cohort_filter_id = cohort_filters.id
-             JOIN authorized_users ON authorized_users.id = cohort_filter_owners.user_id
-             ORDER BY uid, cohort_id ASC;'
+                    authorized_users.uid AS uid
+              FROM cohort_filters
+              JOIN cohort_filter_owners ON cohort_filter_owners.cohort_filter_id = cohort_filters.id
+              JOIN authorized_users ON authorized_users.id = cohort_filter_owners.user_id
+              ORDER BY uid, cohort_id ASC;'
     results = Utils.query_db(boac_shared_db_credentials, query)
     results.map { |r| Cohort.new({id: r['cohort_id'], name: r['cohort_name'], owner_uid: r['uid']}) }
   end
@@ -154,7 +153,7 @@ class BOACUtils < Utils
     query = "SELECT id
              FROM cohort_filters
              WHERE label = '#{cohort.name}'"
-    result = Utils.query_db_field(boac_shared_db_credentials, query, 'id')
+    result = Utils.query_db_field(boac_shared_db_credentials, query, 'id').first
     logger.info "Cohort '#{cohort.name}' ID is #{result}"
     cohort.id = result
   end

@@ -123,10 +123,12 @@ module Page
         # Uncheck any options that are already checked from a previous search
         squad_option_elements.each { |o| o.click if o.attribute('class').include?('not-empty') }
         # Check all the options that apply to the new search
-        criteria.squads.each { |s| wait_for_update_and_click squad_option_element(s) } if criteria.squads
+        criteria.squads.each { |s| squad_option_element(s).click } if criteria.squads
         # TODO: the other filters when the UI is done
         wait_for_update_and_click search_button_element
+        start_time = Time.now
         wait_for_search_results
+        logger.warn "Search took #{Time.now - start_time}"
       end
 
       # Returns the cohort data displayed for a user with a link at a given index
@@ -148,15 +150,14 @@ module Page
       # @param driver [Selenium::WebDriver]
       # @return [Array<Hash>]
       def visible_search_results(driver)
-        start_time = Time.now
         # TODO - account for no results
         visible_users_data = []
-        logger.warn "Search took #{Time.now - start_time}"
         page_count = results_page_link_elements.length
-        logger.debug "There are #{page_count} pages"
         if page_count.zero?
+          logger.debug 'There is 1 page'
           player_link_elements.each { |link| visible_users_data << visible_player_data(driver, link, player_link_elements.index(link)) }
         else
+          logger.debug "There are #{page_count} pages"
           page_count.times do |page|
             start_time = Time.now
             page += 1
@@ -186,13 +187,13 @@ module Page
         end
       end
 
-      # CUSTOM COHORTS - Creation and Management
+      # CUSTOM COHORTS - Creation
 
-      button(:create_cohort_button, id: 'create-cohort-btn')
+      button(:save_cohort_button_one, id: 'create-cohort-btn')
       text_area(:cohort_name_input, class: 'cohort-create-input-name')
       span(:title_required_msg, xpath: '//span[text()="Required"]')
       div(:title_dupe_msg, xpath: '//div[text()="You have a cohort with this name. Please choose a different name."]')
-      button(:save_cohort_button, id: 'confirm-create-cohort-btn')
+      button(:save_cohort_button_two, id: 'confirm-create-cohort-btn')
       button(:cancel_cohort_button, id: 'cancel-create-cohort-btn')
       div(:cohort_not_found_msg, xpath: '//div[contains(.,"Sorry, there was an error retrieving cohort data.")]')
       elements(:everyone_cohort_owner, :span, xpath: '//li[@data-ng-repeat="(uid, cohorts) in allCohorts"]/span')
@@ -204,17 +205,22 @@ module Page
         navigate_to "#{BOACUtils.base_url}/cohort/#{cohort.id}"
       end
 
+      # Clicks the button to save a new cohort, which triggers the name input modal
+      def click_save_cohort_button_one
+        wait_for_update_and_click save_cohort_button_one_element
+      end
+
       # Enters a cohort name and clicks the Save button
       # @param cohort [Cohort]
       def name_cohort(cohort)
         wait_for_element_and_type(cohort_name_input_element, cohort.name)
-        wait_for_update_and_click save_cohort_button_element
+        wait_for_update_and_click save_cohort_button_two_element
       end
 
       # Clicks the Save Cohort button, enters a cohort name, and clicks the Save button
       # @param cohort [Cohort]
-      def create_and_name_cohort(cohort)
-        wait_for_update_and_click create_cohort_button_element
+      def save_and_name_cohort(cohort)
+        click_save_cohort_button_one
         name_cohort cohort
       end
 
@@ -229,37 +235,67 @@ module Page
       # Clicks the Cancel button during cohort creation
       def cancel_cohort
         wait_for_update_and_click cancel_cohort_button_element
-        cohort_name_input_element.when_not_visible Utils.short_wait
+        cohort_name_input_element.when_not_visible Utils.short_wait rescue Selenium::WebDriver::Error::StaleElementReferenceError
       end
 
       # Creates a new cohort
       # @param cohort [Cohort]
-      def create_new_cohort(cohort)
+      def search_and_create_new_cohort(cohort)
         logger.info "Creating a new cohort named #{cohort.name}"
         click_create_new_cohort
         perform_search cohort.search_criteria
-        create_and_name_cohort cohort
+        save_and_name_cohort cohort
         wait_for_cohort cohort
       end
 
       # Creates a new cohort by editing the search criteria of an existing one
       # @param old_cohort [Cohort]
       # @param new_cohort [Cohort]
-      def create_edited_cohort(old_cohort, new_cohort)
+      def search_and_create_edited_cohort(old_cohort, new_cohort)
         load_cohort old_cohort
         perform_search new_cohort.search_criteria
-        create_and_name_cohort new_cohort
+        save_and_name_cohort new_cohort
         wait_for_cohort new_cohort
+      end
+
+      # CUSTOM COHORTS - Management
+
+      button(:save_rename_button, xpath: '//button[contains(@id,"cohort-save-btn")]')
+      text_area(:rename_input, name: 'label')
+      button(:confirm_delete_button, id: 'confirm-delete-cohort-btn')
+
+      # Returns the element containing the cohort name on the Manage Cohorts page
+      # @param cohort [Cohort]
+      # @return [PageObject::Elements::Span]
+      def cohort_on_manage_cohorts(cohort)
+        span_element(xpath: "//span[text()='#{cohort.name}']")
+      end
+
+      # Returns the element containing the cohort rename button on the Manage Cohorts page
+      # @param cohort [Cohort]
+      # @return [PageObject::Elements::Button]
+      def cohort_rename_button(cohort)
+        button_element(xpath: "//span[text()='#{cohort.name}']/ancestor::div[@class='cohort-manage-label']/following-sibling::div//button[contains(text(),'Rename')]")
+      end
+
+      # Returns the element containing the cohort delete button on the Manage Cohorts page
+      # @param cohort [Cohort]
+      # @return [PageObject::Elements::Button]
+      def cohort_delete_button(cohort)
+        button_element(xpath: "//span[text()='#{cohort.name}']/ancestor::div[@class='cohort-manage-label']/following-sibling::div//button[contains(text(),'Delete')]")
       end
 
       # Renames a cohort
       # @param cohort [Cohort]
-      def rename_cohort(cohort)
-        logger.info "Changing the name of cohort ID to #{cohort.name}"
+      # @param new_name [String]
+      def rename_cohort(cohort, new_name)
+        logger.info "Changing the name of cohort ID #{cohort.id} to #{new_name}"
         click_manage_my_cohorts
-        wait_for_load_and_click button_element(xpath: "//span[text()='#{cohort.name}']/ancestor::div/following-sibling::div//button[text()='Rename']")
-        name_cohort cohort
-        wait_for_cohort cohort
+        wait_for_load_and_click cohort_rename_button(cohort)
+        cohort.name = new_name
+        wait_for_element_and_type(rename_input_element, new_name)
+        wait_for_update_and_click save_rename_button_element
+        cohort_on_manage_cohorts(cohort).when_present Utils.short_wait
       end
 
       # Deletes a cohort
@@ -267,8 +303,10 @@ module Page
       def delete_cohort(cohort)
         logger.info "Deleting a cohort named #{cohort.name}"
         click_manage_my_cohorts
-        confirm(true) { wait_for_load_and_click button_element(xpath: "//span[text()='#{cohort.name}']/ancestor::div/following-sibling::div//button[text()='Delete']") }
-        span_element(xpath: "//span[text()='#{cohort.name}']").when_not_present Utils.short_wait
+        sleep 1
+        wait_for_load_and_click cohort_delete_button(cohort)
+        wait_for_update_and_click confirm_delete_button_element
+        cohort_on_manage_cohorts(cohort).when_not_present Utils.short_wait
       end
 
       # Returns all the cohorts displayed on the Everyone's Cohorts page
@@ -278,9 +316,9 @@ module Page
         click_view_everyone_cohorts
         wait_until(Utils.short_wait) { everyone_cohort_owner_elements.any? }
         uids = everyone_cohort_owner_elements.map { |o| o.text[13..-1] }
-        cohorts = uids.each do |uid|
+        cohorts = uids.map do |uid|
           names = driver.find_elements(xpath: "//li[@data-ng-repeat='(uid, cohorts) in allCohorts'][contains(.,'#{uid}')]//a")
-          names.map { |n| Cohort.new({id: n.attribute('href').delete('/cohort/'), name: n.text, owner_uid: uid}) }
+          names.map { |n| Cohort.new({id: n.attribute('data-ng-href').delete('/cohort/'), name: n.text, owner_uid: uid}) }
         end
         cohorts.flatten
       end
