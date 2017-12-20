@@ -11,7 +11,7 @@ describe 'BOAC' do
 
     # Create files for test output
     user_profile_sis_data = File.join(Utils.initialize_test_output_dir, 'boac-sis-profiles.csv')
-    user_profile_data_heading = %w(UID Sport Name Email Phone Units GPA Colleges Majors Level Writing History Institutions Cultures Language)
+    user_profile_data_heading = %w(UID Sport Name Email Phone Units GPA Colleges Majors Level Writing History Institutions Cultures)
     CSV.open(user_profile_sis_data, 'wb') { |csv| csv << user_profile_data_heading }
 
     user_course_sis_data = File.join(Utils.initialize_test_output_dir, 'boac-sis-courses.csv')
@@ -56,8 +56,8 @@ describe 'BOAC' do
 
           it("shows all the expected players for #{team.name}") { expect(visible_team_member_names).to eql(expected_team_member_names) }
           it("shows no blank player names for #{team.name}") { expect(visible_team_member_names.any? &:empty?).to be false }
-          it("shows all the expected player UIDs for #{team.name}") { expect(visible_team_member_sids).to eql(expected_team_member_sids) }
-          it("shows no blank player UIDs for #{team.name}") { expect(visible_team_member_sids.any? &:empty?).to be false }
+          it("shows all the expected player SIDs for #{team.name}") { expect(visible_team_member_sids).to eql(expected_team_member_sids) }
+          it("shows no blank player SIDs for #{team.name}") { expect(visible_team_member_sids.any? &:empty?).to be false }
 
           expected_team_members.each do |team_member|
             if visible_team_member_sids.include? team_member.sis_id
@@ -65,149 +65,183 @@ describe 'BOAC' do
 
                 user_analytics_data = ApiUserAnalyticsPage.new @driver
                 user_analytics_data.get_data(@driver, team_member)
+                analytics_api_sis_data = user_analytics_data.user_sis_data
+
+                # COHORT PAGE SIS DATA
 
                 @boac_cohort_page.navigate_to team_url
+                cohort_page_sis_data = @boac_cohort_page.visible_sis_data(@driver, team_member)
+
+                it "shows the level for UID #{team_member.uid} on the #{team.name} page" do
+                  expect(cohort_page_sis_data[:level]).to eql(analytics_api_sis_data[:level])
+                  expect(cohort_page_sis_data[:level]).not_to be_empty
+                end
+
+                it "shows the majors for UID #{team_member.uid} on the #{team.name} page" do
+                  expect(cohort_page_sis_data[:majors]).to eql(analytics_api_sis_data[:majors])
+                  expect(cohort_page_sis_data[:majors]).not_to be_empty
+                end
+
+                it "shows the cumulative GPA for UID #{team_member.uid} on the #{team.name} page" do
+                  expect(cohort_page_sis_data[:gpa]).to eql(analytics_api_sis_data[:cumulative_gpa])
+                  expect(cohort_page_sis_data[:gpa]).not_to be_empty
+                end
+
+                it "shows the units in progress for UID #{team_member.uid} on the #{team.name} page" do
+                  expect(cohort_page_sis_data[:units_in_progress]).to eql(analytics_api_sis_data[:units_in_progress])
+                  expect(cohort_page_sis_data[:units_in_progress]).not_to be_empty
+                end
+
+                it "shows the total units for UID #{team_member.uid} on the #{team.name} page" do
+                  expect(cohort_page_sis_data[:units_cumulative]).to eql(analytics_api_sis_data[:cumulative_units])
+                  expect(cohort_page_sis_data[:units_cumulative]).not_to be_empty
+                end
+
+                it "shows the current term course codes for UID #{team_member.uid} on the #{team.name} page" do
+                  expect(cohort_page_sis_data[:classes]).to eql(user_analytics_data.current_enrolled_course_codes)
+                  expect(cohort_page_sis_data[:classes]).not_to be_empty
+                end
+
+                # STUDENT PAGE SIS DATA
+
                 @boac_cohort_page.click_player_link team_member
 
                 # Pause a moment to let the boxplots do their fancy slidey thing
                 sleep 2
 
-                visible_name = @boac_student_page.name
-                visible_email = @boac_student_page.email_element.text
-                visible_phone = @boac_student_page.phone
-                visible_cumulative_units = @boac_student_page.cumulative_units
-                visible_cumulative_gpa = @boac_student_page.cumulative_gpa
-                visible_majors = @boac_student_page.visible_majors
-                visible_colleges = @boac_student_page.visible_colleges
-                visible_level = @boac_student_page.level
-                visible_writing_reqt = @boac_student_page.writing_reqt.strip
-                visible_history_reqt = @boac_student_page.history_reqt.strip
-                visible_institutions_reqt = @boac_student_page.institutions_reqt.strip
-                visible_cultures_reqt = @boac_student_page.cultures_reqt.strip
-                visible_language_reqt = @boac_student_page.language_reqt.strip
+                student_page_sis_data = @boac_student_page.visible_sis_data
 
-                it("shows the name for UID #{team_member.uid}") { expect(visible_name).to eql(team_member.full_name.split(',').reverse.join(' ').strip) }
+                it("shows the name for UID #{team_member.uid} on the student page") { expect(student_page_sis_data[:name]).to eql(team_member.full_name.split(',').reverse.join(' ').strip) }
 
-                it "shows the email for UID #{team_member.uid}" do
-                  expect(visible_email).to eql(user_analytics_data.email)
-                  expect(visible_email.empty?).to be false
+                it "shows the email for UID #{team_member.uid} on the student page" do
+                  expect(student_page_sis_data[:email]).to eql(analytics_api_sis_data[:email])
+                  expect(student_page_sis_data[:email]).not_to be_empty
                 end
 
-                it "shows the phone for UID #{team_member.uid}" do
-                  expect(visible_phone).to eql(user_analytics_data.phone)
+                it "shows the phone for UID #{team_member.uid} on the student page" do
+                  expect(student_page_sis_data[:phone]).to eql(analytics_api_sis_data[:phone])
                 end
 
-                it "shows the total units for UID #{team_member.uid}" do
-                  expect(visible_cumulative_units).to eql(user_analytics_data.cumulative_units)
-                  expect(visible_cumulative_units.empty?).to be false
+                it "shows the total units for UID #{team_member.uid} on the student page" do
+                  expect(student_page_sis_data[:cumulative_units]).to eql(analytics_api_sis_data[:cumulative_units])
+                  expect(student_page_sis_data[:cumulative_units]).not_to be_empty
                 end
 
-                it "shows the cumulative GPA for UID #{team_member.uid}" do
-                  expect(visible_cumulative_gpa).to eql(user_analytics_data.cumulative_gpa)
-                  expect(visible_cumulative_gpa.empty?).to be false
+                it "shows the cumulative GPA for UID #{team_member.uid} on the student page" do
+                  expect(student_page_sis_data[:cumulative_gpa]).to eql(analytics_api_sis_data[:cumulative_gpa])
+                  expect(student_page_sis_data[:cumulative_gpa]).not_to be_empty
                 end
 
-                user_analytics_data.majors ?
-                    (it("shows the majors for UID #{team_member.uid}") { expect(visible_majors).to eql(user_analytics_data.majors) }) :
-                    (it("shows no majors for UID #{team_member.uid}") { expect(visible_majors).to be_empty })
+                it "shows the majors for UID #{team_member.uid} on the student page" do
+                  expect(student_page_sis_data[:majors]).to eql(analytics_api_sis_data[:majors])
+                  expect(student_page_sis_data[:majors]).not_to be_empty
+                end
 
                 user_analytics_data.colleges ?
-                    (it("shows the colleges for UID #{team_member.uid}") { expect(visible_colleges).to eql(user_analytics_data.colleges) }) :
-                    (it("shows no colleges for UID #{team_member.uid}") { expect(visible_colleges).to be_empty })
+                    (it("shows the colleges for UID #{team_member.uid} on the student page") { expect(student_page_sis_data[:colleges]).to eql(analytics_api_sis_data[:colleges]) }) :
+                    (it("shows no colleges for UID #{team_member.uid} on the student page") { expect(student_page_sis_data[:colleges]).to be_empty })
 
-                it "shows the academic level for UID #{team_member.uid}" do
-                  expect(visible_level).to eql(user_analytics_data.level)
-                  expect(visible_level.empty?).to be false
+                it "shows the academic level for UID #{team_member.uid} on the student page" do
+                  expect(student_page_sis_data[:level]).to eql(analytics_api_sis_data[:level])
+                  expect(student_page_sis_data[:level]).not_to be_empty
                 end
 
-                it "shows the Entry Level Writing Requirement for UID #{team_member.uid}" do
-                  user_analytics_data.writing_reqt ?
-                      (expect(visible_writing_reqt).to eql('Satisfied')) :
-                      (expect(visible_writing_reqt).to eql('Not Satisfied'))
-                end
-
-                it "shows the American History Requirement for UID #{team_member.uid}" do
-                  user_analytics_data.history_reqt ?
-                      (expect(visible_history_reqt).to eql('Satisfied')) :
-                      (expect(visible_history_reqt).to eql('Not Satisfied'))
-                end
-
-                it "shows the American Institutions Requirement for UID #{team_member.uid}" do
-                  user_analytics_data.institutions_reqt ?
-                      (expect(visible_institutions_reqt).to eql('Satisfied')) :
-                      (expect(visible_institutions_reqt).to eql('Not Satisfied'))
-                end
-
-                it "shows the American Cultures Requirement for UID #{team_member.uid}" do
-                  user_analytics_data.cultures_reqt ?
-                      (expect(visible_cultures_reqt).to eql('Satisfied')) :
-                      (expect(visible_cultures_reqt).to eql('Not Satisfied'))
-                end
-
-                # TODO - account for non-L & S
-                it "shows the Foreign Languages Requirement for UID #{team_member.uid}" do
-                  user_analytics_data.language_reqt ?
-                      (expect(visible_language_reqt).to eql('Satisfied')) :
-                      (expect(visible_language_reqt).to eql('Not Satisfied'))
-                end
+                it("shows the Entry Level Writing Requirement for UID #{team_member.uid} on the student page") { expect(student_page_sis_data[:reqt_writing]).to eql(analytics_api_sis_data[:reqt_writing]) }
+                it("shows the American History Requirement for UID #{team_member.uid} on the student page") { expect(student_page_sis_data[:reqt_history]).to eql(analytics_api_sis_data[:reqt_history]) }
+                it("shows the American Institutions Requirement for UID #{team_member.uid} on the student page") { expect(student_page_sis_data[:reqt_institutions]).to eql(analytics_api_sis_data[:reqt_institutions]) }
+                it("shows the American Cultures Requirement for UID #{team_member.uid} on the student page") { expect(student_page_sis_data[:reqt_cultures]).to eql(analytics_api_sis_data[:reqt_cultures]) }
 
                 # TERMS
 
                 terms = user_analytics_data.terms
-
                 if terms.any?
+                  if terms.length > 1
+                    @boac_student_page.click_view_previous_semesters
+                  else
+                    has_view_more_button = @boac_student_page.view_more_button_element.visible?
+                    it("shows no View Previous Semesters button for UID #{team_member.uid} on the student page") { expect(has_view_more_button).to be false }
+                  end
+
                   terms.each do |term|
                     begin
 
                       term_name = user_analytics_data.term_name term
+                      logger.info "Checking #{term_name}"
                       courses = user_analytics_data.courses term
 
-                      logger.info "Checking #{term_name}"
+                      # COURSES
 
                       if courses.any?
-
                         term_section_ccns = []
-
-                        # COURSES
 
                         courses.each do |course|
                           begin
 
                             site_page_view_analytics, site_assignment_analytics, site_participation_analytics = nil
-
                             course_sis_data = user_analytics_data.course_sis_data course
                             course_code = course_sis_data[:code]
 
                             logger.info "Checking course #{course_code}"
 
-                            visible_course_title = @boac_student_page.course_title(term_name, course_code)
+                            visible_course_sis_data = @boac_student_page.visible_course_sis_data(term_name, course_code)
+                            visible_course_title = visible_course_sis_data[:title]
+                            visible_units = visible_course_sis_data[:units]
+                            visible_grading_basis = visible_course_sis_data[:grading_basis]
+                            visible_grade = visible_course_sis_data[:grade]
 
                             it "shows the course title for UID #{team_member.uid} term #{term_name} course #{course_code}" do
                               expect(visible_course_title).to eql(course_sis_data[:title])
-                              expect(visible_course_title.empty?).to be false
+                              expect(visible_course_title).not_to be_empty
                             end
+
+                            if course_sis_data[:units].to_i > 0
+                              it "shows the units for UID #{team_member.uid} term #{term_name} course #{course_code}" do
+                                expect(visible_units).to eql(course_sis_data[:units])
+                                expect(visible_units).not_to be_empty
+                              end
+                            else
+                              it "shows no units for UID #{team_member.uid} term #{term_name} course #{course_code}" do
+                                expect(visible_units).to be_nil
+                              end
+                            end
+
+                            if course_sis_data[:grading_basis] == 'NON' || course_sis_data[:grade]
+                              it "shows no grading basis for UID #{team_member.uid} term #{term_name} course #{course_code}" do
+                                expect(visible_grading_basis).to be_nil
+                              end
+                            else
+                              it "shows the grading basis for UID #{team_member.uid} term #{term_name} course #{course_code}" do
+                                expect(visible_grading_basis).to eql(course_sis_data[:grading_basis])
+                                expect(visible_grading_basis).not_to be_empty
+                              end
+                            end
+
+                            if course_sis_data[:grade]
+                              it "shows the grade for UID #{team_member.uid} term #{term_name} course #{course_code}" do
+                                expect(visible_grade).to eql(course_sis_data[:grade])
+                                expect(visible_grade).not_to be_empty
+                              end
+                            else
+                              it "shows no grade for UID #{team_member.uid} term #{term_name} course #{course_code}" do
+                                expect(visible_grade).to be_nil
+                              end
+                            end
+
+                            # SECTIONS
 
                             sections = user_analytics_data.sections course
                             if sections.any?
 
-                              # SECTIONS
-
                               sections.each do |section|
-
                                 begin
 
                                   section_sis_data = user_analytics_data.section_sis_data section
                                   term_section_ccns << section_sis_data[:ccn]
-
                                   component = section_sis_data[:component]
 
                                   visible_section_sis_data = @boac_student_page.visible_section_sis_data(term_name, course_code, component)
-
                                   visible_enrollment_status = visible_section_sis_data[:status]
                                   visible_section_number = visible_section_sis_data[:number]
-                                  visible_section_units = visible_section_sis_data[:units]
-                                  visible_section_grading_basis = visible_section_sis_data[:grading_basis]
-                                  visible_grade = visible_section_sis_data[:grade]
 
                                   it "shows the section enrollment status for UID #{team_member.uid} term #{term_name} course #{course_code}" do
                                     case (section_sis_data[:status])
@@ -225,40 +259,7 @@ describe 'BOAC' do
 
                                   it "shows the section number for UID #{team_member.uid} term #{term_name} course #{course_code} section #{component}" do
                                     expect(visible_section_number).to eql(section_sis_data[:number])
-                                    expect(visible_section_number.empty?).to be false
-                                  end
-
-                                  if section_sis_data[:units].to_i > 0
-                                    it "shows the section units for UID #{team_member.uid} term #{term_name} course #{course_code} section #{component}" do
-                                      expect(visible_section_units).to eql(section_sis_data[:units])
-                                      expect(visible_section_units.empty?).to be false
-                                    end
-                                  else
-                                    it "shows no section units for UID #{team_member.uid} term #{term_name} course #{course_code} section #{component}" do
-                                      expect(visible_section_units).to be_nil
-                                    end
-                                  end
-
-                                  if section_sis_data[:grading_basis] == 'NON'
-                                    it "shows not section grading basis for UID #{team_member.uid} term #{term_name} course #{course_code} section #{component}" do
-                                      expect(visible_section_grading_basis).to be_nil
-                                    end
-                                  else
-                                    it "shows the section grading basis for UID #{team_member.uid} term #{term_name} course #{course_code} section #{component}" do
-                                      expect(visible_section_grading_basis).to eql(section_sis_data[:grading_basis])
-                                      expect(visible_section_grading_basis.empty?).to be false
-                                    end
-                                  end
-
-                                  if section_sis_data[:grade]
-                                    it "shows the section grade data for UID #{team_member.uid} term #{term_name} course #{course_code} section #{component}" do
-                                      expect(visible_grade).to eql(section_sis_data[:grade])
-                                      expect(visible_grade.empty?).to be false
-                                    end
-                                  else
-                                    it "shows not section grade data for UID #{team_member.uid} term #{term_name} course #{course_code} section #{component}" do
-                                      expect(visible_grade).to be_nil
-                                    end
+                                    expect(visible_section_number).not_to be_empty
                                   end
 
                                 rescue => e
@@ -266,7 +267,7 @@ describe 'BOAC' do
                                   it("encountered an error for UID #{team_member.uid} term #{term_name} course #{course_code} section #{section_sis_data[:ccn]}") { fail }
                                 ensure
                                   row = [team_member.uid, team.name, term_name, course_code, course_sis_data[:title], section_sis_data[:ccn], section_sis_data[:number],
-                                         section_sis_data[:grade], section_sis_data[:grading_basis], section_sis_data[:units], section_sis_data[:status]]
+                                         course_sis_data[:grade], course_sis_data[:grading_basis], course_sis_data[:units], section_sis_data[:status]]
                                   Utils.add_csv_row(user_course_sis_data, row)
                                 end
                               end
@@ -286,59 +287,59 @@ describe 'BOAC' do
                                   site_title = user_analytics_data.site_metadata(site)[:title]
 
                                   index = user_analytics_data.course_sites(course).index site
-                                  analytics_xpath = @boac_student_page.course_site_xpath(term_name, course_code, index)
-                                  logger.info "Checking course site #{site_title} at index #{index}"
+                                  analytics_xpath = @boac_student_page.course_site_xpath(term_name, course_code, site_title)
+                                  logger.info "Checking course site #{site_title}"
 
-                                  # Page views
+                                    # Page views
 
-                                  page_views_analytics = user_analytics_data.site_page_views site
-                                  site_page_view_analytics = user_analytics_data.site_statistics page_views_analytics
+                                    page_views_analytics = user_analytics_data.site_page_views site
+                                    site_page_view_analytics = user_analytics_data.site_statistics page_views_analytics
 
-                                  if user_analytics_data.student_percentile(page_views_analytics) && site_page_view_analytics[:maximum].to_i >= BOACUtils.meaningful_minimum
-                                    visible_page_view_analytics = @boac_student_page.visible_page_view_analytics(@driver, analytics_xpath)
-                                    it "shows the page view analytics for UID #{team_member.uid} term #{term_name} course site #{site_title}" do
-                                      expect(visible_page_view_analytics).to eql(site_page_view_analytics)
+                                    if user_analytics_data.student_percentile(page_views_analytics) && site_page_view_analytics[:maximum].to_i >= BOACUtils.meaningful_minimum
+                                      visible_page_view_analytics = @boac_student_page.visible_page_view_analytics(@driver, analytics_xpath)
+                                      it "shows the page view analytics for UID #{team_member.uid} term #{term_name} course site #{site_title}" do
+                                        expect(visible_page_view_analytics).to eql(site_page_view_analytics)
+                                      end
+                                    else
+                                      no_data = @boac_student_page.no_page_view_data? analytics_xpath
+                                      it "shows no page view data for UID #{team_member.uid} term #{term_name} course site #{site_title}" do
+                                        expect(no_data).to be true
+                                      end
                                     end
-                                  else
-                                    no_data = @boac_student_page.no_page_view_data? analytics_xpath
-                                    it "shows no page view data for UID #{team_member.uid} term #{term_name} course site #{site_title}" do
-                                      expect(no_data).to be true
+
+                                    # Assignments on time
+
+                                    assignments_on_time_analytics = user_analytics_data.site_assignments_on_time site
+                                    site_assignment_analytics = user_analytics_data.site_statistics assignments_on_time_analytics
+
+                                    if user_analytics_data.student_percentile(assignments_on_time_analytics) && site_assignment_analytics[:maximum].to_i >= BOACUtils.meaningful_minimum
+                                      visible_assignment_analytics = @boac_student_page.visible_assignment_analytics(@driver, analytics_xpath)
+                                      it "shows the assignments on time analytics for UID #{team_member.uid} term #{term_name} course site #{site_title}" do
+                                        expect(visible_assignment_analytics).to eql(site_assignment_analytics)
+                                      end
+                                    else
+                                      no_data = @boac_student_page.no_assignment_data? analytics_xpath
+                                      it "shows no assignments on time data for UID #{team_member.uid} term #{term_name} course site #{site_title}" do
+                                        expect(no_data).to be true
+                                      end
                                     end
-                                  end
 
-                                  # Assignments on time
+                                    # Participations
 
-                                  assignments_on_time_analytics = user_analytics_data.site_assignments_on_time site
-                                  site_assignment_analytics = user_analytics_data.site_statistics assignments_on_time_analytics
+                                    participation_analytics = user_analytics_data.site_participations site
+                                    site_participation_analytics = user_analytics_data.site_statistics participation_analytics
 
-                                  if user_analytics_data.student_percentile(assignments_on_time_analytics) && site_assignment_analytics[:maximum].to_i >= BOACUtils.meaningful_minimum
-                                    visible_assignment_analytics = @boac_student_page.visible_assignment_analytics(@driver, analytics_xpath)
-                                    it "shows the assignments on time analytics for UID #{team_member.uid} term #{term_name} course site #{site_title}" do
-                                      expect(visible_assignment_analytics).to eql(site_assignment_analytics)
+                                    if user_analytics_data.student_percentile(participation_analytics) && site_participation_analytics[:maximum].to_i >= BOACUtils.meaningful_minimum
+                                      visible_participation_analytics = @boac_student_page.visible_participation_analytics(@driver, analytics_xpath)
+                                      it "shows the participations analytics for UID #{team_member.uid} term #{term_name} course site #{site_title}" do
+                                        expect(visible_participation_analytics).to eql(site_participation_analytics)
+                                      end
+                                    else
+                                      no_data = @boac_student_page.no_participations_data? analytics_xpath
+                                      it "shows no participations data for UID #{team_member.uid} term #{term_name} course site #{site_title}" do
+                                        expect(no_data).to be true
+                                      end
                                     end
-                                  else
-                                    no_data = @boac_student_page.no_assignment_data? analytics_xpath
-                                    it "shows no assignments on time data for UID #{team_member.uid} term #{term_name} course site #{site_title}" do
-                                      expect(no_data).to be true
-                                    end
-                                  end
-
-                                  # Participations
-
-                                  participation_analytics = user_analytics_data.site_participations site
-                                  site_participation_analytics = user_analytics_data.site_statistics participation_analytics
-
-                                  if user_analytics_data.student_percentile(participation_analytics) && site_participation_analytics[:maximum].to_i >= BOACUtils.meaningful_minimum
-                                    visible_participation_analytics = @boac_student_page.visible_participation_analytics(@driver, analytics_xpath)
-                                    it "shows the participations analytics for UID #{team_member.uid} term #{term_name} course site #{site_title}" do
-                                      expect(visible_participation_analytics).to eql(site_participation_analytics)
-                                    end
-                                  else
-                                    no_data = @boac_student_page.no_participations_data? analytics_xpath
-                                    it "shows no participations data for UID #{team_member.uid} term #{term_name} course site #{site_title}" do
-                                      expect(no_data).to be true
-                                    end
-                                  end
 
                                 rescue => e
                                   Utils.log_error e
@@ -368,6 +369,19 @@ describe 'BOAC' do
                         logger.warn "No course data in #{term_name}"
                       end
 
+                      # DROPPED SECTIONS
+
+                      drops = user_analytics_data.dropped_sections term
+                      if drops
+                        drops.each do |drop|
+                          visible_drop = @boac_student_page.visible_dropped_section_data(term_name, drop[:title], drop[:component], drop[:number])
+                          it("shows dropped section #{drop[:title]} #{drop[:component]} #{drop[:number]} for UID #{team_member.uid} in #{term_name}") { expect(visible_drop).to be_truthy }
+
+                          row = [team_member.uid, team.name, term_name, drop[:title], nil, nil, drop[:number], nil, nil, nil, 'D']
+                          Utils.add_csv_row(user_course_sis_data, row)
+                        end
+                      end
+
                       # UNMATCHED SITE ANALYTICS
 
                       unmatched_sites = user_analytics_data.unmatched_sites term
@@ -387,56 +401,56 @@ describe 'BOAC' do
 
                             logger.info "Checking unmatched site #{site_title} at index #{index}"
 
-                            # Page views
+                              # Page views
 
-                            page_views_analytics = user_analytics_data.site_page_views site
-                            site_page_view_analytics = user_analytics_data.site_statistics page_views_analytics
+                              page_views_analytics = user_analytics_data.site_page_views site
+                              site_page_view_analytics = user_analytics_data.site_statistics page_views_analytics
 
-                            if user_analytics_data.student_percentile(page_views_analytics) && site_page_view_analytics[:maximum].to_i >= BOACUtils.meaningful_minimum
-                              visible_page_view_analytics = @boac_student_page.visible_page_view_analytics(@driver, analytics_xpath)
-                              it "shows the page view analytics for #{team.name} UID #{team_member.uid} unmatched site #{site_title}" do
-                                expect(visible_page_view_analytics).to eql(site_page_view_analytics)
+                              if user_analytics_data.student_percentile(page_views_analytics) && site_page_view_analytics[:maximum].to_i >= BOACUtils.meaningful_minimum
+                                visible_page_view_analytics = @boac_student_page.visible_page_view_analytics(@driver, analytics_xpath)
+                                it "shows the page view analytics for #{team.name} UID #{team_member.uid} unmatched site #{site_title}" do
+                                  expect(visible_page_view_analytics).to eql(site_page_view_analytics)
+                                end
+                              else
+                                no_data = @boac_student_page.no_page_view_data? analytics_xpath
+                                it "shows no page view data for #{team.name} UID #{team_member.uid} unmatched site #{site_title}" do
+                                  expect(no_data).to be true
+                                end
                               end
-                            else
-                              no_data = @boac_student_page.no_page_view_data? analytics_xpath
-                              it "shows no page view data for #{team.name} UID #{team_member.uid} unmatched site #{site_title}" do
-                                expect(no_data).to be true
+
+                              # Assignments on time
+
+                              assignments_on_time_analytics = user_analytics_data.site_assignments_on_time site
+                              site_assignment_analytics = user_analytics_data.site_statistics assignments_on_time_analytics
+
+                              if user_analytics_data.student_percentile(assignments_on_time_analytics) && site_assignment_analytics[:maximum].to_i >= BOACUtils.meaningful_minimum
+                                visible_assignment_analytics = @boac_student_page.visible_assignment_analytics(@driver, analytics_xpath)
+                                it "shows the assignments on time analytics for #{team.name} UID #{team_member.uid} unmatched site #{site_title}" do
+                                  expect(visible_assignment_analytics).to eql(site_assignment_analytics)
+                                end
+                              else
+                                no_data = @boac_student_page.no_assignment_data? analytics_xpath
+                                it "shows no assignments on time data for #{team.name} UID #{team_member.uid} unmatched site #{site_title}" do
+                                  expect(no_data).to be true
+                                end
                               end
-                            end
 
-                            # Assignments on time
+                              # Participations
 
-                            assignments_on_time_analytics = user_analytics_data.site_assignments_on_time site
-                            site_assignment_analytics = user_analytics_data.site_statistics assignments_on_time_analytics
+                              participation_analytics = user_analytics_data.site_participations site
+                              site_participation_analytics = user_analytics_data.site_statistics participation_analytics
 
-                            if user_analytics_data.student_percentile(assignments_on_time_analytics) && site_assignment_analytics[:maximum].to_i >= BOACUtils.meaningful_minimum
-                              visible_assignment_analytics = @boac_student_page.visible_assignment_analytics(@driver, analytics_xpath)
-                              it "shows the assignments on time analytics for #{team.name} UID #{team_member.uid} unmatched site #{site_title}" do
-                                expect(visible_assignment_analytics).to eql(site_assignment_analytics)
+                              if user_analytics_data.student_percentile(participation_analytics) && site_participation_analytics[:maximum].to_i >= BOACUtils.meaningful_minimum
+                                visible_participation_analytics = @boac_student_page.visible_participation_analytics(@driver, analytics_xpath)
+                                it "shows the participations analytics for #{team.name} UID #{team_member.uid} unmatched site #{site_title}" do
+                                  expect(visible_participation_analytics).to eql(site_participation_analytics)
+                                end
+                              else
+                                no_data = @boac_student_page.no_participations_data? analytics_xpath
+                                it "shows no participations data for #{team.name} UID #{team_member.uid} unmatched site #{site_title}" do
+                                  expect(no_data).to be true
+                                end
                               end
-                            else
-                              no_data = @boac_student_page.no_assignment_data? analytics_xpath
-                              it "shows no assignments on time data for #{team.name} UID #{team_member.uid} unmatched site #{site_title}" do
-                                expect(no_data).to be true
-                              end
-                            end
-
-                            # Participations
-
-                            participation_analytics = user_analytics_data.site_participations site
-                            site_participation_analytics = user_analytics_data.site_statistics participation_analytics
-
-                            if user_analytics_data.student_percentile(participation_analytics) && site_participation_analytics[:maximum].to_i >= BOACUtils.meaningful_minimum
-                              visible_participation_analytics = @boac_student_page.visible_participation_analytics(@driver, analytics_xpath)
-                              it "shows the participations analytics for #{team.name} UID #{team_member.uid} unmatched site #{site_title}" do
-                                expect(visible_participation_analytics).to eql(site_participation_analytics)
-                              end
-                            else
-                              no_data = @boac_student_page.no_participations_data? analytics_xpath
-                              it "shows no participations data for #{team.name} UID #{team_member.uid} unmatched site #{site_title}" do
-                                expect(no_data).to be true
-                              end
-                            end
 
                           rescue => e
                             Utils.log_error e
@@ -465,9 +479,11 @@ describe 'BOAC' do
                 Utils.log_error e
                 it("encountered an error for UID #{team_member.uid}") { fail }
               ensure
-                row = [team_member.uid, team.name, visible_name, visible_email, visible_phone, visible_cumulative_units, visible_cumulative_gpa,
-                       visible_colleges && visible_colleges * '; ', visible_majors && visible_majors * '; ', visible_level, visible_writing_reqt,
-                       visible_history_reqt, visible_institutions_reqt, visible_cultures_reqt, visible_language_reqt]
+                row = [team_member.uid, team.name, student_page_sis_data[:name], student_page_sis_data[:email], student_page_sis_data[:phone],
+                       student_page_sis_data[:cumulative_units], student_page_sis_data[:cumulative_gpa],
+                       student_page_sis_data[:colleges] && student_page_sis_data[:colleges] * '; ', student_page_sis_data[:majors] && student_page_sis_data[:majors] * '; ',
+                       student_page_sis_data[:level], student_page_sis_data[:reqt_writing], student_page_sis_data[:reqt_history],
+                       student_page_sis_data[:reqt_institutions], student_page_sis_data[:reqt_cultures]]
                 Utils.add_csv_row(user_profile_sis_data, row)
               end
 

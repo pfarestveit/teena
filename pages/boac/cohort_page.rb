@@ -32,38 +32,82 @@ module Page
         player_sid_elements.map &:text
       end
 
-      # Returns the XPath for a user link at a given node
-      # @param node [Integer]
+      # Returns the XPath for a user
+      # @param user [User]
       # @return [String]
-      def list_view_user_xpath(node)
-        "//a[contains(@class, 'cohort-member-list-item')][#{node}]"
+      def list_view_user_xpath(user)
+        "//a[contains(@class, 'cohort-member-list-item')][contains(.,'#{user.sis_id}')]"
       end
 
-      # Returns the level displayed for a user at a given list view node
+      # Returns the level displayed for a user
       # @param driver [Selenium::WebDriver]
-      # @param node [Integer]
+      # @param user [User]
       # @return [String]
-      def list_view_user_level(driver, node)
-        el = driver.find_element(xpath: "#{list_view_user_xpath node}//div[@data-ng-bind='row.level']")
+      def list_view_user_level(driver, user)
+        el = driver.find_element(xpath: "#{list_view_user_xpath user}//div[@data-ng-bind='row.level']")
         el && el.text
       end
 
-      # Returns the cumulative GPA displayed for a user at a given list view node
+      # Returns the major(s) displayed for a user
       # @param driver [Selenium::WebDriver]
-      # @param node [Integer]
+      # @param user [User]
+      # @return [Array<String>]
+      def list_view_user_majors(driver, user)
+        els = driver.find_elements(xpath: "#{list_view_user_xpath user}//div[@data-ng-bind='major']")
+        els && (els.map &:text)
+      end
+
+      # Returns the cumulative GPA displayed for a user
+      # @param driver [Selenium::WebDriver]
+      # @param user [User]
       # @return [String]
-      def list_view_user_gpa(driver, node)
-        el = driver.find_element(xpath: "#{list_view_user_xpath node}//div[contains(@data-ng-bind,'row.cumulativeGPA')]")
+      def list_view_user_gpa(driver, user)
+        el = driver.find_element(xpath: "#{list_view_user_xpath user}//div[contains(@data-ng-bind,'row.cumulativeGPA')]")
+        el && el.text
+      end
+
+      # Returns the in-progress units displayed for a user
+      # @param driver [Selenium::WebDriver]
+      # @param user [User]
+      # @return [String]
+      def list_view_user_units_in_prog(driver, user)
+        el = driver.find_element(xpath: "#{list_view_user_xpath user}//div[contains(@data-ng-bind,'row.currentTerm.enrolledUnits')]")
+        el && el.text
+      end
+
+      # Returns the cumulative units displayed for a user
+      # @param driver [Selenium::WebDriver]
+      # @param user [User]
+      # @return [String]
+      def list_view_user_units(driver, user)
+        el = driver.find_element(xpath: "#{list_view_user_xpath user}//div[contains(@data-ng-bind,'row.cumulativeUnits')]")
         el && (el.text == '--' ? '0' : el.text)
       end
 
-      # Returns the cumulative units displayed for a user at a given list view node
+      # Returns the classes displayed for a user
       # @param driver [Selenium::WebDriver]
-      # @param node [Integer]
-      # @return [String]
-      def list_view_user_units(driver, node)
-        el = driver.find_element(xpath: "#{list_view_user_xpath node}//div[contains(@data-ng-bind,'row.cumulativeUnits')]")
-        el && (el.text == '--' ? '0' : el.text)
+      # @param user [User]
+      # @return [Array<String>]
+      def list_view_user_classes(driver, user)
+        els = driver.find_elements(xpath: "#{list_view_user_xpath user}//div[@data-ng-bind='enrollment.displayName']")
+        els && (els.map &:text)
+      end
+
+      # Returns a user's SIS data visible on the cohort page
+      # @param [Selenium::WebDriver]
+      # @param user [User]
+      # @return [Hash]
+      def visible_sis_data(driver, user)
+        wait_until(Utils.medium_wait) { player_link_elements.any? }
+        sleep 1
+        {
+            :level => list_view_user_level(driver, user),
+            :majors => list_view_user_majors(driver, user),
+            :gpa => list_view_user_gpa(driver, user),
+            :units_in_progress => list_view_user_units_in_prog(driver, user),
+            :units_cumulative => list_view_user_units(driver, user),
+            :classes => list_view_user_classes(driver, user)
+        }
       end
 
       # Returns the page link element for a given page number

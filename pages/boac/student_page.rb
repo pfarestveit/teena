@@ -24,39 +24,62 @@ module Page
       cell(:history_reqt, xpath: '//td[text()="American History"]/following-sibling::td')
       cell(:institutions_reqt, xpath: '//td[text()="American Institutions"]/following-sibling::td')
       cell(:cultures_reqt, xpath: '//td[text()="American Cultures"]/following-sibling::td')
-      cell(:language_reqt, xpath: '//td[text()="Foreign Language"]/following-sibling::td')
 
       elements(:course_site_code, :h3, xpath: '//h3[@data-ng-bind="course.courseCode"]')
 
-      # Returns the visible college(s)
-      # @return [Array<String>]
-      def visible_colleges
-        college_elements.map &:text
-      end
-
-      # Returns the visible major(s)
-      # @return [Array<String>]
-      def visible_majors
-        major_elements.map &:text
+      # Returns a user's SIS data visible on the student page
+      # @return [Hash]
+      def visible_sis_data
+        {
+          :name => name,
+          :email => email_element.text,
+          :phone => phone,
+          :cumulative_units => cumulative_units,
+          :cumulative_gpa => cumulative_gpa,
+          :majors => (major_elements.map &:text),
+          :colleges => (college_elements.map &:text),
+          :level => level,
+          :reqt_writing => writing_reqt.strip,
+          :reqt_history => history_reqt.strip,
+          :reqt_institutions => institutions_reqt.strip,
+          :reqt_cultures => cultures_reqt.strip
+        }
       end
 
       # COURSES
+
+      button(:view_more_button, :class => 'student-profile-view-previous-semesters')
+
+      # Clicks the button to expand previous semester data
+      def click_view_previous_semesters
+        logger.debug 'Expanding previous semesters'
+        wait_for_load_and_click view_more_button_element
+      end
 
       # Returns the XPath to the SIS data shown for a given course in a term
       # @param term_name [String]
       # @param course_code [String]
       # @return [String]
       def course_data_xpath(term_name, course_code)
-        "//h2[text()=\"#{term_name}\"]/following-sibling::div[@data-ng-if='term.enrollments.length']//h3[text()=\"#{course_code}\"]/following-sibling::"
+        "//h2[text()=\"#{term_name}\"]/following-sibling::div[@data-ng-repeat=\"course in term.enrollments\"][contains(.,\"#{course_code}\")]"
       end
 
-      # Returns the title shown for a course
+      # Returns the SIS data shown for a course with a given course code
       # @param term_name [String]
       # @param course_code [String]
-      # @return [String]
-      def course_title(term_name, course_code)
-        xpath = "#{course_data_xpath(term_name, course_code)}h4"
-        h4_element(:xpath => xpath) && h4_element(:xpath => xpath).text
+      # @return [Hash]
+      def visible_course_sis_data(term_name, course_code)
+        course_xpath = course_data_xpath(term_name, course_code)
+        title_xpath = "#{course_xpath}//h4"
+        units_xpath = "#{course_xpath}//div[contains(@class, 'student-profile-class-units')]"
+        grading_basis_xpath = "#{course_xpath}//div[contains(@class, 'student-profile-class-grading-basis')]"
+        grade_xpath = "#{course_xpath}//div[contains(@class, 'student-profile-class-grade')]"
+        {
+          :title => (h4_element(:xpath => title_xpath).text if h4_element(:xpath => title_xpath).exists?),
+          :units => (div_element(:xpath => units_xpath).text.delete('Units').strip if div_element(:xpath => units_xpath).exists?),
+          :grading_basis => (div_element(:xpath => grading_basis_xpath).text if (div_element(:xpath => grading_basis_xpath).exists? && !div_element(:xpath => grade_xpath).exists?)),
+          :grade => (div_element(:xpath => grade_xpath).text if div_element(:xpath => grade_xpath).exists?)
+        }
       end
 
       # Returns the XPath to the SIS data shown for a given section in a course with a specific component type (e.g., LEC, DIS)
@@ -65,7 +88,7 @@ module Page
       # @param component [String]
       # @return [String]
       def section_data_xpath(term_name, course_code, component)
-        "#{course_data_xpath(term_name, course_code)}div[@class='student-profile-class-sections']/div[contains(.,'#{component}')]"
+        "#{course_data_xpath(term_name, course_code)}//div[@class='student-profile-class-sections']/div[contains(.,'#{component}')]"
       end
 
       # Returns the SIS data shown for a given section in a course with a specific component type (e.g., LEC, DIS)
@@ -77,16 +100,20 @@ module Page
         section_xpath = section_data_xpath(term_name, course_code, component)
         status_xpath = "#{section_xpath}//span[contains(@data-ng-if,'section.enrollmentStatus')]"
         number_xpath = "#{section_xpath}//span[@data-ng-bind='section.sectionNumber']"
-        units_xpath = "#{section_xpath}//span[@data-ng-bind='section.units']"
-        grading_basis_xpath = "#{section_xpath}//span[@data-ng-bind='section.gradingBasis']"
-        grade_xpath = "#{section_xpath}//span[@data-ng-bind='section.grade']"
         {
           :status => (span_element(:xpath => status_xpath).text if span_element(:xpath => status_xpath).exists?),
-          :number => (span_element(:xpath => number_xpath).text if span_element(:xpath => number_xpath).exists?),
-          :units => (span_element(:xpath => units_xpath).text if span_element(:xpath => units_xpath).exists?),
-          :grading_basis => (span_element(:xpath => grading_basis_xpath).text if span_element(:xpath => grading_basis_xpath).exists?),
-          :grade => (span_element(:xpath => grade_xpath).text if span_element(:xpath => grade_xpath).exists?)
+          :number => (span_element(:xpath => number_xpath).text if span_element(:xpath => number_xpath).exists?)
         }
+      end
+
+      # Returns the element containing a dropped section
+      # @param term_name [String]
+      # @param course_code [String]
+      # @param component [String]
+      # @param number [String]
+      # @return [PageObject::Elements::Div]
+      def visible_dropped_section_data(term_name, course_code, component, number)
+        div_element(:xpath => "//h2[text()=\"#{term_name}\"]/following-sibling::div//div[@class=\"student-profile-dropped-section-title\"][contains(.,\"#{course_code}\")][contains(.,\"#{component}\")][contains(.,\"#{number}\")]")
       end
 
       # COURSE SITES
@@ -94,10 +121,10 @@ module Page
       # Returns the XPath to the first course site associated with a course in a term
       # @param term_name [String]
       # @param course_code [String]
-      # @param index [Integer]
+      # @param site_title [String]
       # @return [String]
-      def course_site_xpath(term_name, course_code, index)
-        "#{course_data_xpath(term_name, course_code)}div[@data-ng-repeat='canvasSite in course.canvasSites'][#{index + 1}]//ul"
+      def course_site_xpath(term_name, course_code, site_title)
+        "#{course_data_xpath(term_name, course_code)}/div[@data-ng-repeat='canvasSite in course.canvasSites'][contains(.,\"#{site_title}\")]"
       end
 
       # Returns the XPath to a course site in a term not matched to a SIS enrollment

@@ -50,7 +50,7 @@ class BOACUtils < Utils
 
     # Users with multiple sports have multiple rows; combine them
     athletes = results.group_by { |h1| h1['member_uid'] }.map do |k,v|
-      {member_uid: k, member_csid: v[0]['member_csid'], first_name: v[0]['first_name'], last_nem: v[0]['last_name'], asc_sport_code: v.map { |h2| h2['asc_sport_code'] }.join(' ')}
+      {member_uid: k, member_csid: v[0]['member_csid'], first_name: v[0]['first_name'], last_name: v[0]['last_name'], asc_sport_code: v.map { |h2| h2['asc_sport_code'] }.join(' ')}
     end
 
     # Convert to Users
