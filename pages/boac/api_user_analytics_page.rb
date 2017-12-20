@@ -23,6 +23,23 @@ class ApiUserAnalyticsPage
     @parsed['sisProfile']
   end
 
+  def user_sis_data
+    {
+      :email => sis_profile['emailAddress'],
+      :phone => sis_profile['phoneNumber'].to_s,
+      :units_in_progress => formatted_units(terms.first['enrolledUnits']),
+      :cumulative_units => formatted_units(sis_profile['cumulativeUnits']),
+      :cumulative_gpa => (sis_profile['cumulativeGPA'] == 0 ? '--' : sis_profile['cumulativeGPA'].to_s),
+      :majors => majors,
+      :colleges => colleges,
+      :level => (sis_profile['level'] && sis_profile['level']['description']),
+      :reqt_writing => (degree_progress & degree_progress[:writing]),
+      :reqt_history => (degree_progress & degree_progress[:history]),
+      :reqt_institutions => (degree_progress & degree_progress[:institutions]),
+      :reqt_cultures => (degree_progress & degree_progress[:cultures])
+    }
+  end
+
   def majors
     sis_profile['plans'] && sis_profile['plans'].map { |p| p['description'] }
   end
@@ -32,49 +49,19 @@ class ApiUserAnalyticsPage
     colleges.compact if colleges
   end
 
-  def level
-    sis_profile['level'] && sis_profile['level']['description']
-  end
-
-  def cumulative_units
-    units = sis_profile['cumulativeUnits']
-    (units == units.floor) ? units.floor.to_s : units.to_s
-  end
-
-  def cumulative_gpa
-    sis_profile['cumulativeGPA'] == 0 ? '--' : sis_profile['cumulativeGPA'].to_s
+  def formatted_units(units_as_int)
+    (units_as_int == units_as_int.floor) ? units_as_int.floor.to_s : units_as_int.to_s
   end
 
   def degree_progress
-    sis_profile['degreeProgress']
-  end
-
-  def writing_reqt
-    degree_progress && degree_progress['entryLevelWriting']
-  end
-
-  def history_reqt
-    degree_progress && degree_progress['americanHistory']
-  end
-
-  def cultures_reqt
-    degree_progress && degree_progress['americanCultures']
-  end
-
-  def institutions_reqt
-    degree_progress && degree_progress['americanInstitutions']
-  end
-
-  def language_reqt
-    degree_progress && degree_progress['foreignLanguage']
-  end
-
-  def email
-    sis_profile['emailAddress']
-  end
-
-  def phone
-    sis_profile['phoneNumber'].to_s
+    progress = sis_profile['degreeProgress']
+    progress && {
+      :date => progress['reportDate'],
+      :writing => progress['requirements']['entryLevelWriting']['status'],
+      :cultures => progress['requirements']['americanCultures']['status'],
+      :history => progress['requirements']['americanHistory']['status'],
+      :institutions => progress['requirements']['americanInstitutions']['status']
+    }
   end
 
   # COURSES
@@ -99,10 +86,7 @@ class ApiUserAnalyticsPage
     {
       :ccn => section['ccn'],
       :number => "#{section['sectionNumber']}",
-      :grading_basis => section['gradingBasis'],
       :component => section['component'],
-      :units => section['units'].to_s,
-      :grade => section['grade'],
       :status => section['enrollmentStatus']
     }
   end
@@ -110,8 +94,32 @@ class ApiUserAnalyticsPage
   def course_sis_data(course)
     {
       :code => course['displayName'],
-      :title => course['title'].gsub(/\s+/, ' ')
+      :title => course['title'].gsub(/\s+/, ' '),
+      :units => course['units'].to_s,
+      :grade => course['grade'],
+      :grading_basis => course['gradingBasis']
     }
+  end
+
+  def current_enrolled_course_codes
+    term = terms.find { |t| term_name(t) == BOACUtils.term }
+    # Ignore courses that are waitlisted or dropped, as these are not displayed on the cohort page
+    enrolled_courses = courses(term).select do |c|
+      enrolled_sections = sections(c).select { |s| section_sis_data(s)[:status] == 'E' }
+      enrolled_sections.any?
+    end
+    enrolled_courses.map { |c| course_sis_data(c)[:code] }
+  end
+
+  def dropped_sections(term)
+    sections = term['droppedSections']
+    sections && sections.map do |section|
+      {
+        :title => section['displayName'],
+        :component => section['component'],
+        :number => section['number']
+      }
+    end
   end
 
   # COURSE SITES
