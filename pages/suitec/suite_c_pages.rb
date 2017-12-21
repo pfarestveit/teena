@@ -304,62 +304,10 @@ module Page
       labels[index] && (((type = labels[index]).include? ' (') ? type.split(' ').last.delete('()').to_i : 0)
     end
 
-    # Returns true if an event drop element is in the viewport and therefore clickable
-    # @param drop_element [Selenium::WebDriver::Element]
-    # @return [boolean]
-    def drop_clickable?(drop_element)
-      drop_element.click
-      true
-    rescue
-      Selenium::WebDriver::Error::UnknownError
-      logger.debug 'Nope, not clickable'
-      false
-    end
-
-    # Attempts to drag an event drop into view so that it is clickable. In tests, if the drop is not visible then the drop
-    # should be to the right, so this drags the drops to the left a configurable number of times.
+    # Mouses over an event drop at a given location
     # @param driver [Selenium::WebDriver]
-    def drag_latest_drop_into_view(driver, line_node)
-      # Find the drop in the SVG
-      logger.info 'Checking an event drop'
-      div_element(xpath: '//strong[contains(text(), "View by")]').when_visible Utils.short_wait
-      if (button = button_element(xpath: '//button[text()="All"]')).exists?
-        wait_for_update_and_click_js button unless button.attribute('disabled')
-      end
-      wait_until(Utils.short_wait) { driver.find_element(xpath: "//*[name()='svg']//*[@class='drop-line'][#{line_node}]/*[name()='circle'][last()]") }
-      container = driver.find_element(xpath: '//*[name()="svg"]//*[name()="rect"]')
-      drop = driver.find_element(xpath: "//*[name()='svg']//*[@class='drop-line'][#{line_node}]/*[name()='circle'][last()]")
-      scroll_to_element container
-      driver.action.drag_and_drop_by(container, -25, 0).perform unless drop_clickable? drop
-
-      # Zoom in, but a little less if on asset detail since drops are less likely to be tightly clustered
-      logger.debug 'Zooming in to distinguish the drop'
-      asset_detail = text_area_element(id: 'assetlibrary-item-newcomment-body').exists?
-      zooms = asset_detail ? 6 : 7
-      unless drop_clickable? drop
-        zooms.times do
-          js_click button_element(xpath: '//button[contains(text(),"+")]')
-          sleep 1
-          driver.action.drag_and_drop_by(container, -50, 0).perform
-          sleep 1
-        end
-      end
-
-      # If on the asset detail, hit the comment input in order to bring the event drops into view. Scroll the lines till the drop appears.
-      wait_for_element_and_type_js(text_area_element(id: 'assetlibrary-item-newcomment-body'), ' ') if asset_detail
-      unless drop_clickable? drop
-        logger.debug 'Trying to bring the drop into view'
-        begin
-          tries ||= SuiteCUtils.event_drop_drags
-          driver.action.drag_and_drop_by(container, -65, 0).perform
-          drop.click
-          logger.debug "It took #{tries} attempts to drag the drop into view"
-        rescue
-          (tries -= 1).zero? ? fail : retry
-        end
-      end
-
-      # Mouse over the drop to reveal the tooltip.
+    # @param line_node [Integer]
+    def mouseover_event_drop(driver, line_node)
       mouseover(driver, driver.find_element(xpath: "//*[name()='svg']//*[@class='drop-line'][#{line_node}]/*[name()='circle'][last()]"))
     end
 

@@ -30,8 +30,7 @@ module Page
       # @param course [Course]
       def load_embedded_tool(driver, course)
         logger.info 'Loading embedded version of Roster Photos tool'
-        navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/external_tools/#{JunctionUtils.canvas_rosters_tool}"
-        switch_to_canvas_iframe driver
+        load_tool_in_canvas(driver, "/courses/#{course.site_id}/external_tools/#{JunctionUtils.canvas_rosters_tool}")
       end
 
       # Loads the LTI tool in the Junction context
@@ -46,7 +45,7 @@ module Page
       def click_roster_photos_link(driver)
         logger.info 'Clicking Roster Photos link'
         wait_for_load_and_click_js roster_photos_link_element
-        switch_to_canvas_iframe driver
+        switch_to_canvas_iframe(driver, JunctionUtils.junction_base_url)
       end
 
       # Returns an array of options in the section select

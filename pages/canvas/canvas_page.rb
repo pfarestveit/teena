@@ -157,7 +157,7 @@ module Page
     # @param driver [Selenium::WebDriver]
     def click_create_site(driver)
       wait_for_load_and_click_js create_site_link_element
-      switch_to_canvas_iframe driver
+      switch_to_canvas_iframe(driver, JunctionUtils.junction_base_url)
     end
 
     # Loads a course site and handles prompts that can appear
@@ -456,7 +456,7 @@ module Page
       logger.debug 'Clicking Find a Person to Add button'
       wait_for_load_and_click add_people_button_element
       wait_for_load_and_click find_person_to_add_link_element
-      switch_to_canvas_iframe driver
+      switch_to_canvas_iframe(driver, JunctionUtils.junction_base_url)
     end
 
     # Returns the number of users in a course site with a given set of roles

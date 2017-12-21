@@ -41,11 +41,6 @@ class SuiteCUtils
     @config['suite_c']['poller_retries']
   end
 
-  # The number of times to drag the event drops in order to bring a metaball into view
-  def self.event_drop_drags
-    @config['suite_c']['event_drops_drags']
-  end
-
   # DATABASE
 
   def self.suitec_db_credentials

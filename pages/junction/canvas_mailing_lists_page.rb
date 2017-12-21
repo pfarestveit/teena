@@ -44,8 +44,7 @@ module Page
       # @param driver [Selenium::WebDriver]
       def load_embedded_tool(driver)
         logger.info 'Loading embedded admin Mailing Lists tool'
-        navigate_to "#{Utils.canvas_base_url}/accounts/#{Utils.canvas_admin_sub_account}/external_tools/#{JunctionUtils.canvas_mailing_lists_tool}"
-        switch_to_canvas_iframe driver
+        load_tool_in_canvas(driver, "/accounts/#{Utils.canvas_admin_sub_account}/external_tools/#{JunctionUtils.canvas_mailing_lists_tool}")
       end
 
       # Loads the standalone version of the admin Mailing Lists tool

@@ -5,16 +5,15 @@ module Page
   include PageObject
   include Logging
 
-  # Switches browser focus into the Canvas LTI tool iframe
+  # Switches browser focus into the Canvas LTI tool iframe. For Junction tests, pass the Junction base URL to verify that the tool
+  # is configured with the right Junction environment before proceeding.
   # @param driver [Selenium::WebDriver]
-  def switch_to_canvas_iframe(driver)
+  # @param url [String]
+  def switch_to_canvas_iframe(driver, url = nil)
     hide_canvas_footer_and_popup
-    begin
-      wait_until { driver.find_element(id: 'tool_content') }
-      driver.switch_to.frame driver.find_element(id: 'tool_content')
-    rescue
-      logger.warn 'Either there is no iframe or focus is already in the iframe'
-    end
+    wait_until { driver.find_element(id: 'tool_content') }
+    wait_until(1, "'#{url}' is not present") { form_element(xpath: "//form[contains(@action, '#{url}')]").exists? } if url
+    driver.switch_to.frame driver.find_element(id: 'tool_content')
   end
 
   # Hides the Canvas footer element in order to interact with elements hidden beneath it. Clicks once to set focus on the footer
@@ -199,8 +198,9 @@ module Page
   # @param horizontal_offset [Integer]
   # @param vertical_offset [Integer]
   def mouseover(driver, element, horizontal_offset = nil, vertical_offset = nil)
+    scroll_to_element element
     driver.action.move_to(element, horizontal_offset, vertical_offset).perform
-    sleep Utils.click_wait
+    sleep 1
   end
 
   # Pauses to allow the Canvas poller to complete any active cycle

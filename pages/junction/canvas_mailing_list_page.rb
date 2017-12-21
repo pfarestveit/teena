@@ -22,8 +22,7 @@ module Page
       # @param course [Course]
       def load_embedded_tool(driver, course)
         logger.info "Loading embedded instructor Mailing List tool for course ID #{course.site_id}"
-        navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/external_tools/#{JunctionUtils.canvas_mailing_list_tool}"
-        switch_to_canvas_iframe driver
+        load_tool_in_canvas(driver, "/courses/#{course.site_id}/external_tools/#{JunctionUtils.canvas_mailing_list_tool}")
       end
 
       # Loads the standalone version of the instructor Mailing List tool
