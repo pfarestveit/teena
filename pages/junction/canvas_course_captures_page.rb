@@ -22,8 +22,7 @@ module Page
       # @param course [Course]
       def load_embedded_tool(driver, course)
         logger.info "Loading course capture tool on site ID #{course.site_id}"
-        navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/external_tools/#{JunctionUtils.canvas_course_captures_tool}"
-        switch_to_canvas_iframe driver
+        load_tool_in_canvas(driver, "/courses/#{course.site_id}/external_tools/#{JunctionUtils.canvas_course_captures_tool}")
       end
 
       # Loads the standalone version of the course capture tool

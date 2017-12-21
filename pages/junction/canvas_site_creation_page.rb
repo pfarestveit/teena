@@ -27,8 +27,7 @@ module Page
       # @param user [User]
       def load_embedded_tool(driver, user)
         logger.info 'Loading embedded version of Create Course Site tool'
-        navigate_to "#{Utils.canvas_base_url}/users/#{user.canvas_id}/external_tools/#{JunctionUtils.canvas_create_site_tool}"
-        switch_to_canvas_iframe driver
+        load_tool_in_canvas(driver, "/users/#{user.canvas_id}/external_tools/#{JunctionUtils.canvas_create_site_tool}")
       end
 
       # Loads standalone site creation page

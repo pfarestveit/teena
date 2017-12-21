@@ -819,7 +819,7 @@ module Page
       # @param activity [Activity]
       # @param line_node [Integer]
       def verify_latest_asset_event_drop(driver, user, activity, line_node)
-        drag_latest_drop_into_view(driver, line_node)
+        mouseover_event_drop(driver, line_node)
         wait_until(Utils.short_wait) { driver.find_element(class: 'details-popover') }
         wait_until(Utils.short_wait) do
           logger.debug "Verifying that the user in the tooltip is '#{user.full_name}'"

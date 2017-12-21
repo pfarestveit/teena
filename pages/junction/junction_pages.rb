@@ -17,6 +17,14 @@ module Page
     text_field(:basic_auth_password_input, name: 'password')
     button(:basic_auth_log_in_button, xpath: '//button[contains(text(),"Login")]')
 
+    # Loads a Junction LTI tool in Canvas and switches focus to the iframe
+    # @param driver [Selenium::WebDriver]
+    # @param path [String]
+    def load_tool_in_canvas(driver, path)
+      navigate_to "#{Utils.canvas_base_url}#{path}"
+      switch_to_canvas_iframe(driver, JunctionUtils.junction_base_url)
+    end
+
     # Logs the user out if the user is logged in
     # @param splash_page [Page::JunctionPages::SplashPage]
     def log_out(splash_page)

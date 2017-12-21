@@ -328,7 +328,10 @@ module Page
       # @param activity [Activity]
       # @param line_node [Integer]
       def verify_latest_event_drop(driver, user, asset, activity, line_node)
-        drag_latest_drop_into_view(driver, line_node)
+        # Pause to let the activity network settle down
+        activity_network_element.when_visible Utils.short_wait
+        sleep 2
+        mouseover_event_drop(driver, line_node)
         wait_until(Utils.short_wait) { driver.find_element(xpath: '//div[@class="details-popover-container"]//h3') }
         unless asset.nil?
           wait_until(Utils.short_wait, "Expected tooltip asset title '#{asset.title}' but got '#{link_element(xpath: '//div[@class="details-popover-container"]//h3/a').text}'") do
@@ -440,6 +443,7 @@ module Page
           bar_activities.each_pair do |k, v|
             segment = activity_bar_elements(driver, bar_label).find { |el| el.text.include? k.to_s }
             mouseover(driver, segment)
+            driver.action.click_and_hold(segment).perform
             (activity_count = span_element(xpath: '//div[contains(@class,"profile-activity-breakdown-popover-details")]/span[contains(@data-ng-bind-html, "segment.activityDescription")]/strong')).when_visible 2
             wait_until(2, "Expected '#{k} #{v}' but got '#{activity_count.text}'") do
               logger.debug "Waiting for '#{bar_label}' '#{k}' '#{v}', and it is currently '#{k}' '#{activity_count.text}'"

@@ -47,8 +47,7 @@ module Page
       # @param course [Course]
       def load_embedded_tool(driver, course)
         logger.info 'Loading embedded version of Find a Person to Add tool'
-        navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/external_tools/#{JunctionUtils.canvas_course_add_user_tool}"
-        switch_to_canvas_iframe driver
+        load_tool_in_canvas(driver, "/courses/#{course.site_id}/external_tools/#{JunctionUtils.canvas_course_add_user_tool}")
       end
 
       # Loads the LTI tool in the Junction context
