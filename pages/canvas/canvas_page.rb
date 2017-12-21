@@ -526,10 +526,6 @@ module Page
     text_area(:secret_input, xpath: '//input[@placeholder="Shared Secret"]')
     text_area(:url_input, xpath: '//input[@placeholder="Config URL"]')
 
-    def tool_form_element(tool_url)
-
-    end
-
     # Returns the link element for the configured LTI tool on the course site sidebar
     # @param tool [LtiTools]
     # @return [PageObject::Elements::Link]
