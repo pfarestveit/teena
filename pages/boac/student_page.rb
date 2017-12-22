@@ -11,7 +11,8 @@ module Page
       include Page
       include BOACPages
 
-      h1(:name, xpath: '//h1[@data-ng-bind="student.sisProfile.primaryName"]')
+      h1(:name, class: 'student-profile-header-name')
+      h2(:preferred_name, class: 'student-profile-header-name-preferred')
       div(:phone, xpath: '//div[@data-ng-bind="student.sisProfile.phoneNumber"]')
       link(:email, xpath: '//a[@data-ng-bind="student.sisProfile.emailAddress"]')
       div(:cumulative_units, xpath: '//div[@data-ng-bind="student.sisProfile.cumulativeUnits"]')
@@ -19,6 +20,7 @@ module Page
       elements(:major, :h3, xpath: '//h3[@data-ng-bind="plan.description"]')
       elements(:college, :div, xpath: '//div[@data-ng-bind="plan.program"]')
       h3(:level, xpath: '//h3[@data-ng-bind="student.sisProfile.level.description"]')
+      span(:terms_in_attendance, xpath: '//div[@data-ng-if="student.sisProfile.termsInAttendance"]/span')
 
       cell(:writing_reqt, xpath: '//td[text()="Entry Level Writing"]/following-sibling::td')
       cell(:history_reqt, xpath: '//td[text()="American History"]/following-sibling::td')
@@ -32,6 +34,7 @@ module Page
       def visible_sis_data
         {
           :name => name,
+          :preferred_name => preferred_name,
           :email => email_element.text,
           :phone => phone,
           :cumulative_units => cumulative_units,
@@ -39,10 +42,11 @@ module Page
           :majors => (major_elements.map &:text),
           :colleges => (college_elements.map &:text),
           :level => level,
-          :reqt_writing => writing_reqt.strip,
-          :reqt_history => history_reqt.strip,
-          :reqt_institutions => institutions_reqt.strip,
-          :reqt_cultures => cultures_reqt.strip
+          :terms_in_attendance => (terms_in_attendance if terms_in_attendance?),
+          :reqt_writing => (writing_reqt.strip if writing_reqt_element.exists?),
+          :reqt_history => (history_reqt.strip if history_reqt_element.exists?),
+          :reqt_institutions => (institutions_reqt.strip if institutions_reqt_element.exists?),
+          :reqt_cultures => (cultures_reqt.strip if cultures_reqt_element.exists?)
         }
       end
 
@@ -71,14 +75,16 @@ module Page
       def visible_course_sis_data(term_name, course_code)
         course_xpath = course_data_xpath(term_name, course_code)
         title_xpath = "#{course_xpath}//h4"
-        units_xpath = "#{course_xpath}//div[contains(@class, 'student-profile-class-units')]"
-        grading_basis_xpath = "#{course_xpath}//div[contains(@class, 'student-profile-class-grading-basis')]"
-        grade_xpath = "#{course_xpath}//div[contains(@class, 'student-profile-class-grade')]"
+        units_xpath = "#{course_xpath}//div[contains(@class, \"student-profile-class-units\")]"
+        grading_basis_xpath = "#{course_xpath}//span[contains(@class, \"student-profile-class-grading-basis\")]"
+        mid_point_grade_xpath = "#{course_xpath}//span[contains(@data-ng-bind,\"course.midtermGrade\")]"
+        grade_xpath = "#{course_xpath}//span[contains(@data-ng-bind, \"course.grade\")]"
         {
           :title => (h4_element(:xpath => title_xpath).text if h4_element(:xpath => title_xpath).exists?),
           :units => (div_element(:xpath => units_xpath).text.delete('Units').strip if div_element(:xpath => units_xpath).exists?),
-          :grading_basis => (div_element(:xpath => grading_basis_xpath).text if (div_element(:xpath => grading_basis_xpath).exists? && !div_element(:xpath => grade_xpath).exists?)),
-          :grade => (div_element(:xpath => grade_xpath).text if div_element(:xpath => grade_xpath).exists?)
+          :grading_basis => (span_element(:xpath => grading_basis_xpath).text if (span_element(:xpath => grading_basis_xpath).exists? && !span_element(:xpath => grade_xpath).exists?)),
+          :mid_point_grade => (span_element(:xpath => mid_point_grade_xpath).text if span_element(:xpath => mid_point_grade_xpath).exists?),
+          :grade => (span_element(:xpath => grade_xpath).text if span_element(:xpath => grade_xpath).exists?)
         }
       end
 
@@ -136,12 +142,12 @@ module Page
         "//h2[text()=\"#{term_name}\"]/following-sibling::div[@data-ng-if='term.unmatchedCanvasSites.length']/div[@data-ng-repeat='canvasSite in term.unmatchedCanvasSites'][#{index + 1}]//h3[text()=\"#{site_title}\"]/following-sibling::*[name()='course-site-metrics']/ul"
       end
 
-      # Returns the XPath to a particular set of analytics data for a site, for example 'page views'
+      # Returns the XPath to a the label for a set of analytics data for a site, for example 'page views'
       # @param site_xpath [String]
       # @param label [String]
       # @return [String]
       def site_analytics_data_xpath(site_xpath, label)
-        "#{site_xpath}/li[contains(.,'#{label}:')]"
+        "#{site_xpath}//td[text()='#{label}']/following-sibling::"
       end
 
       # Returns the XPath to the boxplot graph for a particular set of analytics data for a given site, for example 'page views'
