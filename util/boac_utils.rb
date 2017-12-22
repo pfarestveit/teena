@@ -43,19 +43,24 @@ class BOACUtils < Utils
   # Returns an array of Users stored in the cohorts table
   # @return [Array<User>]
   def self.get_athletes
-    query = 'SELECT member_uid, member_csid, first_name, last_name, asc_sport_code
-             FROM team_members
-             ORDER BY id ASC;'
+    query = 'SELECT students.uid AS uid,
+                    students.sid AS sid,
+                    students.first_name AS first_name,
+                    students.last_name AS last_name,
+                    student_athletes.group_code AS group_code
+             FROM students
+             JOIN student_athletes ON student_athletes.sid = students.sid
+             ORDER BY students.uid;'
     results = Utils.query_db(boac_shared_db_credentials, query)
 
     # Users with multiple sports have multiple rows; combine them
-    athletes = results.group_by { |h1| h1['member_uid'] }.map do |k,v|
-      {member_uid: k, member_csid: v[0]['member_csid'], first_name: v[0]['first_name'], last_name: v[0]['last_name'], asc_sport_code: v.map { |h2| h2['asc_sport_code'] }.join(' ')}
+    athletes = results.group_by { |h1| h1['uid'] }.map do |k,v|
+      {uid: k, sid: v[0]['sid'], first_name: v[0]['first_name'], last_name: v[0]['last_name'], group_code: v.map { |h2| h2['group_code'] }.join(' ')}
     end
 
     # Convert to Users
     athletes.map do |a|
-      User.new({uid: a[:member_uid], sis_id: a[:member_csid], full_name: "#{a[:first_name]} #{a[:last_name]}", sports: a[:asc_sport_code].split.uniq})
+      User.new({uid: a[:uid], sis_id: a[:sid], full_name: "#{a[:first_name]} #{a[:last_name]}", sports: a[:group_code].split.uniq})
     end
   end
 
@@ -80,10 +85,10 @@ class BOACUtils < Utils
   # Returns all the distinct teams associated with team members
   # @return [Array<Team>]
   def self.get_teams
-    query = 'SELECT DISTINCT code
-             FROM team_members
-             ORDER BY code ASC;'
-    results = Utils.query_db_field(boac_shared_db_credentials, query, 'code')
+    query = 'SELECT DISTINCT team_code
+             FROM athletics
+             ORDER BY team_code;'
+    results = Utils.query_db_field(boac_shared_db_credentials, query, 'team_code')
     teams = Team::TEAMS.select { |team| results.include? team.code }
     logger.info "Teams are #{teams.map &:name}"
     teams.sort_by { |t| t.name }
@@ -92,10 +97,10 @@ class BOACUtils < Utils
   # Returns all the distinct team squads associated with team members
   # @return [Array<Squad>]
   def self.get_squads
-    query = 'SELECT DISTINCT asc_sport_code
-             FROM team_members
-             ORDER BY asc_sport_code;'
-    results = Utils.query_db_field(boac_shared_db_credentials, query, 'asc_sport_code')
+    query = 'SELECT DISTINCT group_code
+             FROM athletics
+             ORDER BY group_code;'
+    results = Utils.query_db_field(boac_shared_db_credentials, query, 'group_code')
     squads = Squad::SQUADS.select { |squad| results.include? squad.code }
     logger.info "Squads are #{squads.map &:name}"
     squads.sort_by { |s| s.name }

@@ -11,7 +11,7 @@ describe 'BOAC' do
 
     # Create files for test output
     user_profile_sis_data = File.join(Utils.initialize_test_output_dir, 'boac-sis-profiles.csv')
-    user_profile_data_heading = %w(UID Sport Name Email Phone Units GPA Colleges Majors Level Writing History Institutions Cultures)
+    user_profile_data_heading = %w(UID Sport Name PreferredName Email Phone Units GPA Colleges Majors Level Writing History Institutions Cultures)
     CSV.open(user_profile_sis_data, 'wb') { |csv| csv << user_profile_data_heading }
 
     user_course_sis_data = File.join(Utils.initialize_test_output_dir, 'boac-sis-courses.csv')
@@ -47,6 +47,7 @@ describe 'BOAC' do
           @boac_homepage.load_page
           @boac_homepage.click_team_link team
           team_url = @boac_cohort_page.current_url
+          @boac_cohort_page.wait_for_page_load  expected_team_members.length
 
           expected_team_member_names = expected_team_members.map &:full_name
           expected_team_member_sids = expected_team_members.map &:sis_id
@@ -97,10 +98,7 @@ describe 'BOAC' do
                   expect(cohort_page_sis_data[:units_cumulative]).not_to be_empty
                 end
 
-                it "shows the current term course codes for UID #{team_member.uid} on the #{team.name} page" do
-                  expect(cohort_page_sis_data[:classes]).to eql(user_analytics_data.current_enrolled_course_codes)
-                  expect(cohort_page_sis_data[:classes]).not_to be_empty
-                end
+                it("shows the current term course codes for UID #{team_member.uid} on the #{team.name} page") { expect(cohort_page_sis_data[:classes]).to eql(user_analytics_data.current_enrolled_course_codes) }
 
                 # STUDENT PAGE SIS DATA
 
@@ -137,7 +135,7 @@ describe 'BOAC' do
                   expect(student_page_sis_data[:majors]).not_to be_empty
                 end
 
-                user_analytics_data.colleges ?
+                analytics_api_sis_data[:colleges] ?
                     (it("shows the colleges for UID #{team_member.uid} on the student page") { expect(student_page_sis_data[:colleges]).to eql(analytics_api_sis_data[:colleges]) }) :
                     (it("shows no colleges for UID #{team_member.uid} on the student page") { expect(student_page_sis_data[:colleges]).to be_empty })
 
@@ -145,6 +143,10 @@ describe 'BOAC' do
                   expect(student_page_sis_data[:level]).to eql(analytics_api_sis_data[:level])
                   expect(student_page_sis_data[:level]).not_to be_empty
                 end
+
+                analytics_api_sis_data[:terms_in_attendance] ?
+                    (it("shows the terms in attendance for UID #{team_member.uid} on the student page") { expect(student_page_sis_data[:terms_in_attendance]).to include(analytics_api_sis_data[:terms_in_attendance]) }) :
+                    (it("shows no terms in attendance for UID #{team_member.uid} on the student page") { expect(student_page_sis_data[:terms_in_attendance]).to be_nil })
 
                 it("shows the Entry Level Writing Requirement for UID #{team_member.uid} on the student page") { expect(student_page_sis_data[:reqt_writing]).to eql(analytics_api_sis_data[:reqt_writing]) }
                 it("shows the American History Requirement for UID #{team_member.uid} on the student page") { expect(student_page_sis_data[:reqt_history]).to eql(analytics_api_sis_data[:reqt_history]) }
@@ -194,7 +196,7 @@ describe 'BOAC' do
                               expect(visible_course_title).not_to be_empty
                             end
 
-                            if course_sis_data[:units].to_i > 0
+                            if course_sis_data[:units].to_f > 0
                               it "shows the units for UID #{team_member.uid} term #{term_name} course #{course_code}" do
                                 expect(visible_units).to eql(course_sis_data[:units])
                                 expect(visible_units).not_to be_empty
@@ -479,12 +481,14 @@ describe 'BOAC' do
                 Utils.log_error e
                 it("encountered an error for UID #{team_member.uid}") { fail }
               ensure
-                row = [team_member.uid, team.name, student_page_sis_data[:name], student_page_sis_data[:email], student_page_sis_data[:phone],
-                       student_page_sis_data[:cumulative_units], student_page_sis_data[:cumulative_gpa],
-                       student_page_sis_data[:colleges] && student_page_sis_data[:colleges] * '; ', student_page_sis_data[:majors] && student_page_sis_data[:majors] * '; ',
-                       student_page_sis_data[:level], student_page_sis_data[:reqt_writing], student_page_sis_data[:reqt_history],
-                       student_page_sis_data[:reqt_institutions], student_page_sis_data[:reqt_cultures]]
+                if analytics_api_sis_data
+                  row = [team_member.uid, team.name, student_page_sis_data[:name], student_page_sis_data[:preferred_name], student_page_sis_data[:email],
+                         student_page_sis_data[:phone], student_page_sis_data[:cumulative_units], student_page_sis_data[:cumulative_gpa],
+                         student_page_sis_data[:colleges] && student_page_sis_data[:colleges] * '; ', student_page_sis_data[:majors] && student_page_sis_data[:majors] * '; ',
+                         student_page_sis_data[:level], student_page_sis_data[:reqt_writing], student_page_sis_data[:reqt_history],
+                         student_page_sis_data[:reqt_institutions], student_page_sis_data[:reqt_cultures]]
                 Utils.add_csv_row(user_profile_sis_data, row)
+                end
               end
 
             else

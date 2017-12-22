@@ -6,6 +6,7 @@ class ApiUserAnalyticsPage
   include Logging
 
   def get_data(driver, user)
+    logger.info "Getting data for UID #{user.uid}"
     navigate_to "#{BOACUtils.base_url}/api/user/#{user.uid}/analytics"
     wait_until(Utils.long_wait) { driver.find_element(xpath: '//pre') }
     @parsed = JSON.parse driver.find_element(xpath: '//pre').text
@@ -27,16 +28,17 @@ class ApiUserAnalyticsPage
     {
       :email => sis_profile['emailAddress'],
       :phone => sis_profile['phoneNumber'].to_s,
-      :units_in_progress => formatted_units(terms.first['enrolledUnits']),
+      :units_in_progress => (current_term ? formatted_units(current_term['enrolledUnits']) : '0') ,
       :cumulative_units => formatted_units(sis_profile['cumulativeUnits']),
       :cumulative_gpa => (sis_profile['cumulativeGPA'] == 0 ? '--' : sis_profile['cumulativeGPA'].to_s),
       :majors => majors,
       :colleges => colleges,
       :level => (sis_profile['level'] && sis_profile['level']['description']),
-      :reqt_writing => (degree_progress & degree_progress[:writing]),
-      :reqt_history => (degree_progress & degree_progress[:history]),
-      :reqt_institutions => (degree_progress & degree_progress[:institutions]),
-      :reqt_cultures => (degree_progress & degree_progress[:cultures])
+      :term_in_attendance => sis_profile['termsInAttendance'],
+      :reqt_writing => (degree_progress && degree_progress[:writing]),
+      :reqt_history => (degree_progress && degree_progress[:history]),
+      :reqt_institutions => (degree_progress && degree_progress[:institutions]),
+      :reqt_cultures => (degree_progress && degree_progress[:cultures])
     }
   end
 
@@ -74,6 +76,10 @@ class ApiUserAnalyticsPage
     term['termName']
   end
 
+  def current_term
+    terms.find { |t| term_name(t) == BOACUtils.term }
+  end
+
   def courses(term)
     term['enrollments']
   end
@@ -102,13 +108,16 @@ class ApiUserAnalyticsPage
   end
 
   def current_enrolled_course_codes
-    term = terms.find { |t| term_name(t) == BOACUtils.term }
-    # Ignore courses that are waitlisted or dropped, as these are not displayed on the cohort page
-    enrolled_courses = courses(term).select do |c|
-      enrolled_sections = sections(c).select { |s| section_sis_data(s)[:status] == 'E' }
-      enrolled_sections.any?
+    courses = []
+    if (term = current_term)
+      # Ignore courses that are waitlisted or dropped, as these are not displayed on the cohort page
+      enrolled_courses = courses(term).select do |c|
+        enrolled_sections = sections(c).select { |s| section_sis_data(s)[:status] == 'E' }
+        enrolled_sections.any?
+      end
+      courses = enrolled_courses.map { |c| course_sis_data(c)[:code] }
     end
-    enrolled_courses.map { |c| course_sis_data(c)[:code] }
+    courses
   end
 
   def dropped_sections(term)
@@ -140,16 +149,24 @@ class ApiUserAnalyticsPage
     }
   end
 
+  def analytics(site)
+    site['analytics']
+  end
+
   def site_page_views(site)
-    site['analytics'] && site['analytics']['pageViews']
+    analytics(site) && analytics(site)['pageViews']
   end
 
   def site_assignments_on_time(site)
-    site['analytics'] && site['analytics']['assignmentsOnTime']
+    analytics(site) && analytics(site)['assignmentsOnTime']
   end
 
   def site_participations(site)
-    site['analytics'] && site['analytics']['participations']
+    analytics(site) && analytics(site)['participations']
+  end
+
+  def site_scores(site)
+    analytics(site) && analytics(site)['courseCurrentScore']
   end
 
   def student_percentile(analytics)

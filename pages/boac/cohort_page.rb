@@ -18,6 +18,12 @@ module Page
       elements(:player_sid, :div, class: 'cohort-member-sid')
       elements(:page_link, :link, xpath: '//a[contains(@ng-click, "selectPage")]')
 
+      # Waits for the number of players on the page to match expectations, and logs an error if it times out
+      # @param cohort_size [Integer]
+      def wait_for_page_load(cohort_size)
+        wait_until(Utils.medium_wait) { player_link_elements.length == cohort_size } rescue logger.error("Expected #{cohort_size} members, but got #{player_link_elements.length}")
+      end
+
       # Returns all the names shown on list view
       # @return [Array<String>]
       def list_view_names
@@ -122,7 +128,7 @@ module Page
       def click_player_link(player)
         logger.info "Clicking the link for UID #{player.uid}"
         wait_for_load_and_click link_element(xpath: "//a[contains(.,\"#{player.sis_id}\")]")
-        h1_element(xpath: '//h1[@data-ng-bind="student.sisProfile.primaryName"]').when_visible Utils.medium_wait
+        h1_element(class: 'student-profile-header-name').when_visible Utils.medium_wait
       end
 
       # CUSTOM COHORTS - Search
