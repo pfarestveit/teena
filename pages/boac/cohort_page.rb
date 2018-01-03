@@ -116,6 +116,15 @@ module Page
         }
       end
 
+      # Returns the boxplot element for a user's site
+      # @param driver [Selenium::WebDriver]
+      # @param user [User]
+      # @param class_code [String]
+      # @return [Selenium::WebDriver::Element]
+      def list_view_class_boxplot(driver, user, class_code)
+        driver.find_element(xpath: "#{list_view_user_xpath user}//div[contains(@class,'cohort-member-course-activity-row')][contains(.,'#{class_code}')]//*[local-name()='svg']")
+      end
+
       # Returns the page link element for a given page number
       # @param number [Integer]
       # @return [PageObject::Elements::Link]
