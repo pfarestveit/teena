@@ -200,7 +200,7 @@ module Page
   def mouseover(driver, element, horizontal_offset = nil, vertical_offset = nil)
     scroll_to_element element
     driver.action.move_to(element, horizontal_offset, vertical_offset).perform
-    sleep 1
+    sleep Utils.click_wait
   end
 
   # Pauses to allow the Canvas poller to complete any active cycle

@@ -34,7 +34,7 @@ class ApiUserAnalyticsPage
       :majors => majors,
       :colleges => colleges,
       :level => (sis_profile['level'] && sis_profile['level']['description']),
-      :term_in_attendance => sis_profile['termsInAttendance'],
+      :terms_in_attendance => sis_profile['termsInAttendance'].to_s,
       :reqt_writing => (degree_progress && degree_progress[:writing]),
       :reqt_history => (degree_progress && degree_progress[:history]),
       :reqt_institutions => (degree_progress && degree_progress[:institutions]),
@@ -102,6 +102,7 @@ class ApiUserAnalyticsPage
       :code => course['displayName'],
       :title => course['title'].gsub(/\s+/, ' '),
       :units => course['units'].to_s,
+      :midpoint => course['midtermGrade'],
       :grade => course['grade'],
       :grading_basis => course['gradingBasis']
     }
@@ -153,36 +154,56 @@ class ApiUserAnalyticsPage
     site['analytics']
   end
 
-  def site_page_views(site)
-    analytics(site) && analytics(site)['pageViews']
-  end
-
-  def site_assignments_on_time(site)
-    analytics(site) && analytics(site)['assignmentsOnTime']
-  end
-
-  def site_participations(site)
-    analytics(site) && analytics(site)['participations']
-  end
-
   def site_scores(site)
     analytics(site) && analytics(site)['courseCurrentScore']
   end
 
-  def student_percentile(analytics)
-    analytics['student'] && analytics['student']['percentile']
+  def student_data(analytics)
+    analytics['student']
   end
 
+  def course_deciles(analytics)
+    analytics['courseDeciles']
+  end
+
+  def user_score(analytics)
+    score = student_data(analytics) && student_data(analytics)['raw']
+    # Round zero decimal to whole number
+    (score && score == score.floor) ? score.floor.to_s : score.to_s
+  end
+
+  # Given a category of analytics, collects the available data for comparison to what is shown in the UI
   def site_statistics(analytics)
     {
-      :minimum => analytics['courseDeciles'][0].round.to_s,
-      :maximum => analytics['courseDeciles'][10].round.to_s,
-      :percentile_30 => analytics['courseDeciles'][3].round.to_s,
-      :percentile_50 => analytics['courseDeciles'][5].round.to_s,
-      :percentile_70 => analytics['courseDeciles'][7].round.to_s,
-      :user_score => analytics['student']['raw'].round.to_s,
-      :user_percentile => student_percentile(analytics) && student_percentile(analytics).round.to_s
+      :graphable => analytics['boxPlottable'],
+      :user_percentile => analytics['displayPercentile'],
+      :user_score => user_score(analytics),
+      :maximum => (course_deciles(analytics) && course_deciles(analytics)[10].to_s),
+      :percentile_70 => (course_deciles(analytics) && course_deciles(analytics)[7].to_s),
+      :percentile_50 => (course_deciles(analytics) && course_deciles(analytics)[5].to_s),
+      :percentile_30 => (course_deciles(analytics) && course_deciles(analytics)[3].to_s),
+      :minimum => (course_deciles(analytics) && course_deciles(analytics)[0].to_s)
     }
+  end
+
+  # Returns a user's Assignments on Time analytics on a course site
+  def site_assignments_on_time(site)
+    site_statistics(analytics(site)['assignmentsOnTime']).merge!({:type => 'Assignments on Time'})
+  end
+
+  # Returns a user's Assignment Grades analytics on a course site
+  def site_grades(site)
+    site_statistics(analytics(site)['courseCurrentScore']).merge!({:type => 'Assignment Grades'})
+  end
+
+  # Returns a user's Page Views analytics on a course site
+  def site_page_views(site)
+    site_statistics(analytics(site)['pageViews']).merge!({:type => 'Page Views'})
+  end
+
+  # Returns a user's Participations analytics on a course site
+  def site_participations(site)
+    site_statistics(analytics(site)['participations']).merge!({:type => 'Participations'})
   end
 
 end
