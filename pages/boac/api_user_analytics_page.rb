@@ -57,7 +57,7 @@ class ApiUserAnalyticsPage
 
   def degree_progress
     progress = sis_profile['degreeProgress']
-    progress && {
+    progress && progress['requirements'] && {
       :date => progress['reportDate'],
       :writing => progress['requirements']['entryLevelWriting']['status'],
       :cultures => progress['requirements']['americanCultures']['status'],
@@ -204,6 +204,29 @@ class ApiUserAnalyticsPage
   # Returns a user's Participations analytics on a course site
   def site_participations(site)
     site_statistics(analytics(site)['participations']).merge!({:type => 'Participations'})
+  end
+
+  # Returns all user data relevant to cohort search
+  def collect_users_searchable_data(driver)
+    users = BOACUtils.get_athletes
+    users.map do |user|
+      # Get the squad names to use as search criteria
+      user_squad_names = user.sports.map do |squad_code|
+        squad = Squad::SQUADS.find { |s| s.code == squad_code }
+        squad.name
+      end
+      get_data(driver, user)
+      {
+        :sid => user.sis_id,
+        :first_name => user.first_name,
+        :last_name => user.last_name,
+        :squad_names => user_squad_names,
+        :level => user_sis_data[:level],
+        :majors => user_sis_data[:majors],
+        :gpa => user_sis_data[:cumulative_gpa],
+        :units => user_sis_data[:cumulative_units]
+      }
+    end
   end
 
 end

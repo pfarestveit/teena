@@ -34,7 +34,7 @@ module Page
       def visible_sis_data
         {
           :name => name,
-          :preferred_name => preferred_name,
+          :preferred_name => (preferred_name if preferred_name?),
           :email => email_element.text,
           :phone => phone,
           :cumulative_units => cumulative_units,

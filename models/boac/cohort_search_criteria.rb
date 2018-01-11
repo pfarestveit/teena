@@ -1,6 +1,6 @@
 class CohortSearchCriteria
 
-  attr_accessor :squads, :levels, :terms, :gpa, :units
+  attr_accessor :squads, :levels, :majors, :gpa_ranges
 
   def initialize(criteria)
     criteria.each { |k, v| public_send("#{k}=", v) }

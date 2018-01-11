@@ -11,7 +11,7 @@ describe 'BOAC' do
 
     # Create files for test output
     user_profile_sis_data = File.join(Utils.initialize_test_output_dir, 'boac-sis-profiles.csv')
-    user_profile_data_heading = %w(UID Sport Name PreferredName Email Phone Units GPA Colleges Majors Level Terms Writing History Institutions Cultures)
+    user_profile_data_heading = %w(UID Sport Name PreferredName Email Phone Units GPA Level Majors Colleges Terms Writing History Institutions Cultures)
     CSV.open(user_profile_sis_data, 'wb') { |csv| csv << user_profile_data_heading }
 
     user_course_sis_data = File.join(Utils.initialize_test_output_dir, 'boac-sis-courses.csv')
@@ -49,16 +49,16 @@ describe 'BOAC' do
           team_url = @boac_cohort_page.current_url
           @boac_cohort_page.wait_for_page_load expected_team_members.length
 
-          expected_team_member_names = expected_team_members.map &:full_name
-          visible_team_member_names = @boac_cohort_page.list_view_names
+          expected_team_member_names = (expected_team_members.map &:full_name).sort
+          visible_team_member_names = (@boac_cohort_page.list_view_names).sort
           it("shows all the expected players for #{team.name}") do
             logger.debug "Expecting #{expected_team_member_names} and got #{visible_team_member_names}"
             expect(visible_team_member_names).to eql(expected_team_member_names)
           end
           it("shows no blank player names for #{team.name}") { expect(visible_team_member_names.any? &:empty?).to be false }
 
-          expected_team_member_sids = expected_team_members.map &:sis_id
-          visible_team_member_sids = @boac_cohort_page.list_view_sids
+          expected_team_member_sids = (expected_team_members.map &:sis_id).sort
+          visible_team_member_sids = (@boac_cohort_page.list_view_sids).sort
           it("shows all the expected player SIDs for #{team.name}") do
             logger.debug "Expecting #{expected_team_member_sids} and got #{visible_team_member_sids}"
             expect(visible_team_member_sids).to eql(expected_team_member_sids)
