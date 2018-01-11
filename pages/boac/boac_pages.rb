@@ -10,7 +10,7 @@ module Page
 
     link(:home_link, text: 'Home')
     button(:cohorts_button, id: 'btn-append-to-single-button')
-    link(:no_cohorts_msg, text: 'No saved cohorts')
+    list_item(:no_cohorts_msg, xpath: '//li[contains(.,"No saved cohorts")]')
     link(:intensive_cohort_link, text: 'Intensive')
     link(:create_new_cohort_link, text: 'Create New Cohort')
     link(:manage_my_cohorts_link, text: 'Manage My Cohorts')

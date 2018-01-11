@@ -60,7 +60,7 @@ class BOACUtils < Utils
 
     # Convert to Users
     athletes.map do |a|
-      User.new({uid: a[:uid], sis_id: a[:sid], full_name: "#{a[:first_name]} #{a[:last_name]}", sports: a[:group_code].split.uniq})
+      User.new({uid: a[:uid], sis_id: a[:sid], first_name: a[:first_name], last_name: a[:last_name], full_name: "#{a[:first_name]} #{a[:last_name]}", sports: a[:group_code].split.uniq})
     end
   end
 
@@ -72,11 +72,10 @@ class BOACUtils < Utils
     test_data = JSON.parse File.read(test_data_file)
     test_data['search_criteria'].map do |d|
       criteria = {
-          squads: d['teams'] && d['teams'].map { |t| Squad::SQUADS.find { |s| s.name == t['squad'] } },
-          levels: d['levels'] && d['levels'].map { |l| l['level'] },
-          terms: d['terms'] && d['terms'].map { |t| t['term'] },
-          gpa: d['gpa'],
-          units: d['units']
+          squads: (d['teams'] && d['teams'].map { |t| Squad::SQUADS.find { |s| s.name == t['squad'] } }),
+          levels: (d['levels'] && d['levels'].map { |l| l['level'] }),
+          majors: (d['majors'] && d['majors'].map { |t| t['major'] }),
+          gpa_ranges: (d['gpa_ranges'] && d['gpa_ranges'].map { |g| g['gpa_range'] })
       }
       CohortSearchCriteria.new criteria
     end
@@ -148,7 +147,8 @@ class BOACUtils < Utils
               JOIN authorized_users ON authorized_users.id = cohort_filter_owners.user_id
               ORDER BY uid, cohort_id ASC;'
     results = Utils.query_db(boac_shared_db_credentials, query)
-    results.map { |r| Cohort.new({id: r['cohort_id'], name: r['cohort_name'], owner_uid: r['uid']}) }
+    cohorts = results.map { |r| Cohort.new({id: r['cohort_id'], name: r['cohort_name'], owner_uid: r['uid']}) }
+    cohorts.sort_by { |c| [c.owner_uid.to_i, c.id] }
   end
 
   # Obtains and sets the cohort ID given a cohort with a unique title

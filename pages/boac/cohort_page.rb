@@ -13,9 +13,9 @@ module Page
 
       # LIST VIEW
 
-      elements(:player_link, :link, class: 'cohort-member-list-item')
-      elements(:player_name, :h3, class: 'cohort-member-name')
-      elements(:player_sid, :div, class: 'cohort-member-sid')
+      elements(:player_link, :link, xpath: '//ul[@id="cohort-members-list"]/a')
+      elements(:player_name, :h3, xpath: '//ul[@id="cohort-members-list"]//h3')
+      elements(:player_sid, :div, xpath: '//ul[@id="cohort-members-list"]//div[@data-ng-bind="student.sid"]')
       elements(:page_link, :link, xpath: '//a[contains(@ng-click, "selectPage")]')
 
       # Waits for the number of players on the page to match expectations, and logs an error if it times out
@@ -50,7 +50,7 @@ module Page
       # @param user [User]
       # @return [String]
       def list_view_user_level(driver, user)
-        el = driver.find_element(xpath: "#{list_view_user_xpath user}//div[@data-ng-bind='row.level']")
+        el = driver.find_element(xpath: "#{list_view_user_xpath user}//div[@data-ng-bind='student.level']")
         el && el.text
       end
 
@@ -68,7 +68,7 @@ module Page
       # @param user [User]
       # @return [String]
       def list_view_user_gpa(driver, user)
-        el = driver.find_element(xpath: "#{list_view_user_xpath user}//div[contains(@data-ng-bind,'row.cumulativeGPA')]")
+        el = driver.find_element(xpath: "#{list_view_user_xpath user}//div[contains(@data-ng-bind,'student.cumulativeGPA')]")
         el && el.text
       end
 
@@ -77,7 +77,7 @@ module Page
       # @param user [User]
       # @return [String]
       def list_view_user_units_in_prog(driver, user)
-        el = driver.find_element(xpath: "#{list_view_user_xpath user}//div[contains(@data-ng-bind,'row.currentTerm.enrolledUnits')]")
+        el = driver.find_element(xpath: "#{list_view_user_xpath user}//div[contains(@data-ng-bind,'student.currentTerm.enrolledUnits')]")
         el && el.text
       end
 
@@ -86,7 +86,7 @@ module Page
       # @param user [User]
       # @return [String]
       def list_view_user_units(driver, user)
-        el = driver.find_element(xpath: "#{list_view_user_xpath user}//div[contains(@data-ng-bind,'row.cumulativeUnits')]")
+        el = driver.find_element(xpath: "#{list_view_user_xpath user}//div[contains(@data-ng-bind,'student.cumulativeUnits')]")
         el && (el.text == '--' ? '0' : el.text)
       end
 
@@ -140,14 +140,66 @@ module Page
         h1_element(class: 'student-profile-header-name').when_visible Utils.medium_wait
       end
 
+      # SORTING
+
+      select_list(:cohort_sort_select, id: 'cohort-sort-by')
+
+      # Sorts cohort search results by a given option
+      # @param option [String]
+      def sort_by(option)
+        logger.info "Sorting by #{option}"
+        wait_for_element_and_select_js(cohort_sort_select_element, option)
+        sleep 1
+      end
+
+      # Sorts cohort search results by first name
+      def sort_by_first_name
+        sort_by 'First Name'
+      end
+
+      # Sorts cohort search results by last name
+      def sort_by_last_name
+        sort_by 'Last Name'
+      end
+
+      # Sorts cohort search results by team
+      def sort_by_team
+        sort_by 'Team'
+      end
+
+      # Sorts cohort search results by GPA
+      def sort_by_gpa
+        sort_by 'GPA'
+      end
+
+      # Sorts cohort search results by level
+      def sort_by_level
+        sort_by 'Level'
+      end
+
+      # Sorts cohort search results by major
+      def sort_by_major
+        sort_by 'Major'
+      end
+
+      # Sorts cohort search results by units
+      def sort_by_units
+        sort_by 'Units'
+      end
+
       # CUSTOM COHORTS - Search
 
       button(:teams_filter_button, id: 'search-filter-teams')
+      elements(:squad_option, :checkbox, xpath: '//input[contains(@id,"search-option-team")]')
+      button(:level_filter_button, id: 'search-filter-level')
+      elements(:level_option, :checkbox, xpath: '//input[contains(@id, "search-option-level")]')
+      button(:major_filter_button, id: 'search-filter-majors')
+      elements(:major_option, :checkbox, xpath: '//input[contains(@id, "search-option-major")]')
+      button(:gpa_range_filter_button, id: 'search-filter-gpa-ranges')
+      elements(:gpa_range_option, :checkbox, xpath: '//input[contains(@id, "search-option-gpa-range")]')
+
       button(:search_button, id: 'execute-search')
       elements(:results_page_link, class: 'pagination-page')
-      elements(:squad_option, :checkbox, xpath: '//input[contains(@id,"search-option-team")]')
-      # TODO - the 'no results' element
-      div(:no_results, id: 'no-results')
 
       # Returns the heading for a given cohort page
       # @param cohort [Cohort]
@@ -160,61 +212,204 @@ module Page
       # @param squad [Squad]
       # @return [PageObject::Elements::Option]
       def squad_option_element(squad)
-        text_area_element(id: "search-option-team-#{squad.code}")
+        checkbox_element(xpath: "//input[@id='search-option-team-#{squad.code}']")
+      end
+
+      # Returns the option for a given level
+      # @param level [String]
+      # @return [PageObject::Elements::Option]
+      def levels_option_element(level)
+        checkbox_element(id: "search-option-level-#{level}")
+      end
+
+      # Returns the option for a given major
+      # @param major [String]
+      # @return [PageObject::Elements::Option]
+      def majors_option_element(major)
+        checkbox_element(id: "search-option-major-#{major}")
+      end
+
+      # Returns the option for a given GPA range
+      # @param gpa_range [String]
+      # @return [PageObject::Elements::Option]
+      def gpa_range_option_element(gpa_range)
+        checkbox_element(xpath: "//input[@aria-label='#{gpa_range}']")
       end
 
       # Waits for a search to complete, returning either a set of results or 'no results'
       def wait_for_search_results
         begin
           # TODO - no results element
-          no_results_element.when_visible Utils.short_wait
         rescue
           wait_until(Utils.medium_wait) { player_link_elements.any? }
+        end
+      end
+
+      # Checks a search filter option
+      # @param element [PageObject::Elements::Option]
+      def check_search_option(element)
+        begin
+          tries ||= 2
+          element.click
+          wait_until(1) { element.attribute('class').include?('not-empty') }
+        rescue
+          logger.debug 'Trying to check a search option again'
+          (tries -= 1).zero? ? fail : retry
         end
       end
 
       # Executes a custom cohort search using given search criteria
       # @param criteria [CohortSearchCriteria]
       def perform_search(criteria)
-        logger.info "Searching for squads '#{criteria.squads.map &:name}', levels '#{criteria.levels}', terms '#{criteria.terms}', GPA '#{criteria.gpa}', and units '#{criteria.units}'"
-        wait_for_update_and_click teams_filter_button_element
-        wait_until(1) { squad_option_elements.all? &:visible? }
-        # Uncheck any options that are already checked from a previous search
+        logger.info "Searching for squads '#{criteria.squads && (criteria.squads.map &:name)}', levels '#{criteria.levels}', majors '#{criteria.majors}', GPA ranges '#{criteria.gpa_ranges}'"
+        sleep 3
+
+        # Uncheck any options that are already checked from a previous search, then check those that apply to the current search
+        unless squad_option_elements.all? &:visible?
+          wait_for_update_and_click teams_filter_button_element
+          wait_until(1) { squad_option_elements.all? &:visible? }
+        end
         squad_option_elements.each { |o| o.click if o.attribute('class').include?('not-empty') }
-        # Check all the options that apply to the new search
-        criteria.squads.each { |s| squad_option_element(s).click } if criteria.squads
-        # TODO: the other filters when the UI is done
+        criteria.squads.each { |s| check_search_option squad_option_element(s) } if criteria.squads
+
+        unless level_option_elements.all? &:visible?
+          wait_for_update_and_click level_filter_button_element
+          wait_until(1) { level_option_elements.all? &:visible? }
+        end
+        level_option_elements.each { |o| o.click if o.attribute('class').include?('not-empty') }
+        criteria.levels.each { |l| check_search_option levels_option_element(l) } if criteria.levels
+
+        unless major_option_elements.all? &:visible?
+          wait_for_update_and_click major_filter_button_element
+          wait_until(1) { major_option_elements.all? &:visible? }
+        end
+        major_option_elements.each { |o| o.click if o.attribute('class').include?('not-empty') }
+        criteria.majors.each { |m| check_search_option majors_option_element(m) } if criteria.majors
+
+        unless gpa_range_option_elements.all? &:visible?
+          wait_for_update_and_click gpa_range_filter_button_element
+          wait_until(1) { gpa_range_option_elements.all? &:visible? }
+        end
+        gpa_range_option_elements.each { |o| o.click if o.attribute('class').include?('not-empty') }
+        criteria.gpa_ranges.each { |g| check_search_option gpa_range_option_element(g) } if criteria.gpa_ranges
+
+        # Execute search and log time search took to complete
         wait_for_update_and_click search_button_element
         start_time = Time.now
         wait_for_search_results
         logger.warn "Search took #{Time.now - start_time}"
       end
 
-      # Returns the cohort data displayed for a user with a link at a given index
-      # @param driver [Selenium::WebDriver]
-      # @param link [PageObject::Elements::Link]
-      # @param index [Integer]
-      # @return [Hash]
-      def visible_player_data(driver, link, index)
-        node = index + 1
-        {
-            uid: link.attribute('data-ng-href').delete('/student'),
-            level: list_view_user_level(driver, node),
-            gpa: list_view_user_gpa(driver, node),
-            units: list_view_user_units(driver, node)
-        }
+      # Filters an array of user data hashes according to search criteria and returns the users that should be present in the UI after
+      # the search completes
+      # @param user_data [Array<Hash>]
+      # @param search_criteria [CohortSearchCriteria]
+      # @return [Array<Hash>]
+      def expected_search_results(user_data, search_criteria)
+        matching_squad_users = search_criteria.squads ?
+                                  (user_data.select { |u| (u[:squad_names] & (search_criteria.squads.map { |s| s.name })).any? }) : []
+        matching_level_users = search_criteria.levels ?
+                                  (user_data.select { |u| search_criteria.levels.include? u[:level] }) : []
+        matching_major_users = search_criteria.majors ?
+                                  (user_data.select { |u| (u[:majors] & search_criteria.majors).any? }) : []
+        matching_gpa_range_users = []
+        if search_criteria.gpa_ranges
+         search_criteria.gpa_ranges.each do |range|
+           array = range.include?('Below') ? %w(0 2.0) : range.delete(' ').split('-')
+           matching_gpa_range_users << user_data.select { |u| (array[0].to_f <= u[:gpa].to_f) && (u[:gpa].to_f < array[1].to_f.round(1)) }
+         end
+        end
+        matching_users = [matching_squad_users, matching_level_users, matching_major_users, matching_gpa_range_users.flatten].delete_if { |a| a.empty? }
+        matching_users.inject :'&'
       end
 
-      # Returns a collection of the cohort data displayed for all users in search results
-      # @param driver [Selenium::WebDriver]
-      # @return [Array<Hash>]
-      def visible_search_results(driver)
-        # TODO - account for no results
-        visible_users_data = []
+      # Returns the sequence of SIDs that should be present when search results are sorted by first name
+      # @param user_data [Array<Hash>]
+      # @param search_criteria [CohortSearchCriteria]
+      # @return [Array<String>]
+      def expected_results_by_first_name(user_data, search_criteria)
+        expected_users = expected_search_results(user_data, search_criteria)
+        sorted_users = expected_users.sort_by { |u| [u[:first_name], u[:last_name]] }
+        sorted_users.map { |u| u[:sid] }
+      end
+
+      # Returns the sequence of SIDs that should be present when search results are sorted by last name
+      # @param user_data [Array<Hash>]
+      # @param search_criteria [CohortSearchCriteria]
+      # @return [Array<String>]
+      def expected_results_by_last_name(user_data, search_criteria)
+        expected_users = expected_search_results(user_data, search_criteria)
+        sorted_users = expected_users.sort_by { |u| [u[:last_name], u[:first_name]] }
+        sorted_users.map { |u| u[:sid] }
+      end
+
+      # Returns the sequence of SIDs that should be present when search results are sorted by team
+      # @param user_data [Array<Hash>]
+      # @param search_criteria [CohortSearchCriteria]
+      # @return [Array<String>]
+      def expected_results_by_team(user_data, search_criteria)
+        expected_users = expected_search_results(user_data, search_criteria)
+        sorted_users = expected_users.sort_by { |u| [u[:squad_names].first, u[:first_name]] }
+        sorted_users.map { |u| u[:sid] }
+      end
+
+      # Returns the sequence of SIDs that should be present when search results are sorted by GPA
+      # @param user_data [Array<Hash>]
+      # @param search_criteria [CohortSearchCriteria]
+      # @return [Array<String>]
+      def expected_results_by_gpa(user_data, search_criteria)
+        expected_users = expected_search_results(user_data, search_criteria)
+        sorted_users = expected_users.sort_by { |u| [u[:gpa].to_f, u[:first_name]] }
+        sorted_users.map { |u| u[:sid] }
+      end
+
+      # Returns the sequence of SIDs that should be present when search results are sorted by level
+      # @param user_data [Array<Hash>]
+      # @param search_criteria [CohortSearchCriteria]
+      # @return [Array<String>]
+      def expected_results_by_level(user_data, search_criteria)
+        expected_users = expected_search_results(user_data, search_criteria)
+        # Sort first by the secondary sort order
+        users_by_first_name = expected_users.sort_by { |u| u[:first_name] }
+        # Then arrange by the sort order for level
+        users_by_level = []
+        %w(Freshman Sophomore Junior Senior Graduate).each do |level|
+          users_by_level << users_by_first_name.select do |u|
+            u[:level] == level
+          end
+        end
+        users_by_level.flatten.map { |u| u[:sid] }
+      end
+
+      # Returns the sequence of SIDs that should be present when search results are sorted by major
+      # @param user_data [Array<Hash>]
+      # @param search_criteria [CohortSearchCriteria]
+      # @return [Array<String>]
+      def expected_results_by_major(user_data, search_criteria)
+        expected_users = expected_search_results(user_data, search_criteria)
+        sorted_users = expected_users.sort_by { |u| [u[:majors].first, u[:first_name]] }
+        sorted_users.map { |u| u[:sid] }
+      end
+
+      # Returns the sequence of SIDs that should be present when search results are sorted by cumulative units
+      # @param user_data [Array<Hash>]
+      # @param search_criteria [CohortSearchCriteria]
+      # @return [Array<String>]
+      def expected_results_by_units(user_data, search_criteria)
+        expected_users = expected_search_results(user_data, search_criteria)
+        sorted_users = expected_users.sort_by { |u| [u[:units].to_f, u[:first_name]] }
+        sorted_users.map { |u| u[:sid] }
+      end
+
+      # Returns the sequence of SIDs that are actually present following a search and/or sort
+      # @return [Array<String>]
+      def visible_search_results
+        wait_until(Utils.medium_wait) { list_view_sids.any? }
+        visible_sids = []
         page_count = results_page_link_elements.length
         if page_count.zero?
           logger.debug 'There is 1 page'
-          player_link_elements.each { |link| visible_users_data << visible_player_data(driver, link, player_link_elements.index(link)) }
+          visible_sids << list_view_sids
         else
           logger.debug "There are #{page_count} pages"
           page_count.times do |page|
@@ -227,23 +422,10 @@ module Page
             end
             wait_until(Utils.medium_wait) { player_link_elements.any? }
             logger.warn "Search took #{Time.now - start_time}" unless page == 1
-            player_link_elements.each { |link| visible_users_data << visible_player_data(driver, link, player_link_elements.index(link)) }
+            visible_sids << list_view_sids
           end
         end
-        visible_users_data
-      end
-
-      # Verifies that the search results match expectations for given search criteria
-      # @param driver [Selenium::WebDriver]
-      # @param criteria [CohortSearchCriteria]
-      def verify_search_results(driver, criteria)
-        # TODO: the other search criteria when the UI is done
-        visible_results = visible_search_results driver
-        if criteria.squads
-          expected_uids = (BOACUtils.get_squad_members(criteria.squads).map &:uid).sort
-          visible_uids = (visible_results.map { |r| r[:uid] }).sort
-          wait_until(1, "Expected #{expected_uids}, but got #{visible_uids}") { visible_uids == expected_uids }
-        end
+        visible_sids.flatten
       end
 
       # CUSTOM COHORTS - Creation
@@ -261,7 +443,7 @@ module Page
       # @param cohort [Cohort]
       def load_cohort(cohort)
         logger.info "Loading cohort '#{cohort.name}'"
-        navigate_to "#{BOACUtils.base_url}/cohort/#{cohort.id}"
+        navigate_to "#{BOACUtils.base_url}/cohort?c=#{cohort.id}"
       end
 
       # Clicks the button to save a new cohort, which triggers the name input modal
@@ -334,14 +516,14 @@ module Page
       # @param cohort [Cohort]
       # @return [PageObject::Elements::Button]
       def cohort_rename_button(cohort)
-        button_element(xpath: "//span[text()='#{cohort.name}']/ancestor::div[@class='cohort-manage-label']/following-sibling::div//button[contains(text(),'Rename')]")
+        button_element(xpath: "//span[text()='#{cohort.name}']/ancestor::div[contains(@class,'cohort-manage-label')]/following-sibling::div//button[contains(text(),'Rename')]")
       end
 
       # Returns the element containing the cohort delete button on the Manage Cohorts page
       # @param cohort [Cohort]
       # @return [PageObject::Elements::Button]
       def cohort_delete_button(cohort)
-        button_element(xpath: "//span[text()='#{cohort.name}']/ancestor::div[@class='cohort-manage-label']/following-sibling::div//button[contains(text(),'Delete')]")
+        button_element(xpath: "//span[text()='#{cohort.name}']/ancestor::div[contains(@class,'cohort-manage-label')]/following-sibling::div//button[contains(text(),'Delete')]")
       end
 
       # Renames a cohort
@@ -377,7 +559,7 @@ module Page
         uids = everyone_cohort_owner_elements.map { |o| o.text[13..-1] }
         cohorts = uids.map do |uid|
           names = driver.find_elements(xpath: "//li[@data-ng-repeat='(uid, cohorts) in allCohorts'][contains(.,'#{uid}')]//a")
-          names.map { |n| Cohort.new({id: n.attribute('data-ng-href').delete('/cohort/'), name: n.text, owner_uid: uid}) }
+          names.map { |n| Cohort.new({id: n.attribute('data-ng-href').delete('/cohort/'), name: n.text, owner_uid: uid })}
         end
         cohorts.flatten
       end
