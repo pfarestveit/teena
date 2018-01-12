@@ -25,7 +25,7 @@ class LRSUtils
   end
 
   def self.load_lrs_test_data
-    test_users = File.join(ENV['HOME'], '/.webdriver-config/test-data-lrs.json')
+    test_users = File.join(Utils.config_dir, 'test-data-lrs.json')
     (JSON.parse File.read(test_users))['users']
   end
 

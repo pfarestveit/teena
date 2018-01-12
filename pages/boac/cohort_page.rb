@@ -549,6 +549,7 @@ module Page
         wait_for_load_and_click cohort_rename_button(cohort)
         cohort.name = new_name
         rename_input_element.when_present Utils.short_wait
+        sleep 1
         rename_input_element.clear
         rename_input_element.send_keys new_name
         wait_for_update_and_click save_rename_button_element
