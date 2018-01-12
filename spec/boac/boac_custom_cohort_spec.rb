@@ -65,7 +65,7 @@ describe 'BOAC custom cohorts', order: :defined do
     it('shows a No Saved Cohorts message on the homepage') { expect(@homepage.you_have_no_cohorts_msg?).to be true }
   end
 
-  context 'when the user searches for a cohort' do
+  context 'search' do
 
     before(:each) { @cohort_page.cancel_cohort if @cohort_page.cancel_cohort_button? }
 
@@ -148,7 +148,8 @@ describe 'BOAC custom cohorts', order: :defined do
     end
 
     it 'requires that a title be unique among the user\'s existing cohorts' do
-      @cohort_page.save_and_name_cohort cohorts_to_create.first
+      cohort = Cohort.new({name: cohorts_created.last.name})
+      @cohort_page.save_and_name_cohort cohort
       @cohort_page.title_dupe_msg_element.when_visible Utils.short_wait
     end
   end
@@ -157,7 +158,9 @@ describe 'BOAC custom cohorts', order: :defined do
 
     before(:each) { @homepage.load_page }
 
-    it('shows my cohorts on the homepage') { expect(@homepage.my_saved_cohorts.sort).to eql((cohorts_created.map &:name).sort) }
+    it('shows my cohorts on the homepage') do
+      @homepage.wait_until(1, "Expected #{(cohorts_created.map &:name).sort} but got #{@homepage.my_saved_cohorts.sort}") { @homepage.my_saved_cohorts.sort == (cohorts_created.map &:name).sort }
+    end
 
     cohorts_created.each do |c|
       it "offers a link to the user's custom cohort '#{c.name}'" do
@@ -191,11 +194,11 @@ describe 'BOAC custom cohorts', order: :defined do
 
   context 'when the user deletes a cohort and tries to navigate to the deleted cohort' do
 
-    before(:all) { @cohort_page.delete_cohort cohorts_created.first }
+    before(:all) { @cohort_page.delete_cohort cohorts_created.last }
 
     it 'shows a Not Found page'do
-      @cohort_page.load_cohort cohorts_created.first
-      @cohort_page.cohort_not_found_msg_element.when_visible Utils.short_wait
+      @cohort_page.load_cohort cohorts_created.last
+      @cohort_page.cohort_not_found_msg_element.when_visible Utils.medium_wait
     end
   end
 end

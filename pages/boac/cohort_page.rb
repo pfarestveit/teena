@@ -284,7 +284,18 @@ module Page
           wait_until(1) { major_option_elements.all? &:visible? }
         end
         major_option_elements.each { |o| o.click if o.attribute('class').include?('not-empty') }
-        criteria.majors.each { |m| check_search_option majors_option_element(m) } if criteria.majors
+        if criteria.majors
+          criteria.majors.each do |m|
+            # Majors are only shown if they apply to users, so the majors list will change over time. Avoid test failures if
+            # the search criteria is out of sync with actual user majors.
+            if majors_option_element(m).exists?
+              check_search_option majors_option_element(m)
+            else
+              logger.warn "The major '#{m}' is not among the list of majors, removing from search criteria"
+              criteria.majors.delete_if { |i| i == m }
+            end
+          end
+        end
 
         unless gpa_range_option_elements.all? &:visible?
           wait_for_update_and_click gpa_range_filter_button_element
@@ -297,7 +308,7 @@ module Page
         wait_for_update_and_click search_button_element
         start_time = Time.now
         wait_for_search_results
-        logger.warn "Search took #{Time.now - start_time}"
+        logger.warn "Search took #{(Time.now - start_time).round}"
       end
 
       # Filters an array of user data hashes according to search criteria and returns the users that should be present in the UI after
@@ -316,7 +327,9 @@ module Page
         if search_criteria.gpa_ranges
          search_criteria.gpa_ranges.each do |range|
            array = range.include?('Below') ? %w(0 2.0) : range.delete(' ').split('-')
-           matching_gpa_range_users << user_data.select { |u| (array[0].to_f <= u[:gpa].to_f) && (u[:gpa].to_f < array[1].to_f.round(1)) }
+           matching_gpa_range_users << user_data.select do |u|
+             (array[0].to_f <= u[:gpa].to_f) && ((array[1] == '4.00') ? (u[:gpa].to_f <= array[1].to_f.round(1)) : (u[:gpa].to_f < array[1].to_f.round(1)))
+           end
          end
         end
         matching_users = [matching_squad_users, matching_level_users, matching_major_users, matching_gpa_range_users.flatten].delete_if { |a| a.empty? }
@@ -329,7 +342,7 @@ module Page
       # @return [Array<String>]
       def expected_results_by_first_name(user_data, search_criteria)
         expected_users = expected_search_results(user_data, search_criteria)
-        sorted_users = expected_users.sort_by { |u| [u[:first_name], u[:last_name]] }
+        sorted_users = expected_users.sort_by { |u| [u[:first_name_sortable], u[:last_name_sortable]] }
         sorted_users.map { |u| u[:sid] }
       end
 
@@ -339,7 +352,7 @@ module Page
       # @return [Array<String>]
       def expected_results_by_last_name(user_data, search_criteria)
         expected_users = expected_search_results(user_data, search_criteria)
-        sorted_users = expected_users.sort_by { |u| [u[:last_name], u[:first_name]] }
+        sorted_users = expected_users.sort_by { |u| [u[:last_name_sortable], u[:first_name_sortable]] }
         sorted_users.map { |u| u[:sid] }
       end
 
@@ -349,7 +362,7 @@ module Page
       # @return [Array<String>]
       def expected_results_by_team(user_data, search_criteria)
         expected_users = expected_search_results(user_data, search_criteria)
-        sorted_users = expected_users.sort_by { |u| [u[:squad_names].first, u[:first_name]] }
+        sorted_users = expected_users.sort_by { |u| [u[:squad_names].sort.first, u[:first_name_sortable]] }
         sorted_users.map { |u| u[:sid] }
       end
 
@@ -359,7 +372,7 @@ module Page
       # @return [Array<String>]
       def expected_results_by_gpa(user_data, search_criteria)
         expected_users = expected_search_results(user_data, search_criteria)
-        sorted_users = expected_users.sort_by { |u| [u[:gpa].to_f, u[:first_name]] }
+        sorted_users = expected_users.sort_by { |u| [u[:gpa].to_f, u[:first_name_sortable]] }
         sorted_users.map { |u| u[:sid] }
       end
 
@@ -370,7 +383,7 @@ module Page
       def expected_results_by_level(user_data, search_criteria)
         expected_users = expected_search_results(user_data, search_criteria)
         # Sort first by the secondary sort order
-        users_by_first_name = expected_users.sort_by { |u| u[:first_name] }
+        users_by_first_name = expected_users.sort_by { |u| u[:first_name_sortable] }
         # Then arrange by the sort order for level
         users_by_level = []
         %w(Freshman Sophomore Junior Senior Graduate).each do |level|
@@ -387,7 +400,7 @@ module Page
       # @return [Array<String>]
       def expected_results_by_major(user_data, search_criteria)
         expected_users = expected_search_results(user_data, search_criteria)
-        sorted_users = expected_users.sort_by { |u| [u[:majors].first, u[:first_name]] }
+        sorted_users = expected_users.sort_by { |u| [u[:majors].sort.first, u[:first_name_sortable]] }
         sorted_users.map { |u| u[:sid] }
       end
 
@@ -397,7 +410,7 @@ module Page
       # @return [Array<String>]
       def expected_results_by_units(user_data, search_criteria)
         expected_users = expected_search_results(user_data, search_criteria)
-        sorted_users = expected_users.sort_by { |u| [u[:units].to_f, u[:first_name]] }
+        sorted_users = expected_users.sort_by { |u| [u[:units].to_f, u[:first_name_sortable]] }
         sorted_users.map { |u| u[:sid] }
       end
 
@@ -448,6 +461,7 @@ module Page
 
       # Clicks the button to save a new cohort, which triggers the name input modal
       def click_save_cohort_button_one
+        wait_until(Utils.medium_wait) { save_cohort_button_one_element.enabled? }
         wait_for_update_and_click save_cohort_button_one_element
       end
 
@@ -534,7 +548,9 @@ module Page
         click_manage_my_cohorts
         wait_for_load_and_click cohort_rename_button(cohort)
         cohort.name = new_name
-        wait_for_element_and_type(rename_input_element, new_name)
+        rename_input_element.when_present Utils.short_wait
+        rename_input_element.clear
+        rename_input_element.send_keys new_name
         wait_for_update_and_click save_rename_button_element
         cohort_on_manage_cohorts(cohort).when_present Utils.short_wait
       end
