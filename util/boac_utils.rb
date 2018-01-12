@@ -68,7 +68,7 @@ class BOACUtils < Utils
   # Returns a collection of search criteria to use for testing cohort search
   # @return [Array<Hash>]
   def self.get_test_search_criteria
-    test_data_file = File.join(ENV['HOME'], '/.webdriver-config/test-data-boac.json')
+    test_data_file = File.join(Utils.config_dir, 'test-data-boac.json')
     test_data = JSON.parse File.read(test_data_file)
     test_data['search_criteria'].map do |d|
       criteria = {

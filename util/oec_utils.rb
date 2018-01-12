@@ -160,7 +160,7 @@ class OecUtils
   # Parses the question bank file as a table
   # @return [Array<Array>]
   def self.open_question_bank
-    file = File.join(ENV['HOME'], '/.webdriver-config/oec-question-bank.csv')
+    file = File.join(Utils.config_dir, 'oec-question-bank.csv')
     CSV.table(file, encoding:'iso-8859-1:utf-8')
   end
 

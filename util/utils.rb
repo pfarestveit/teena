@@ -5,59 +5,88 @@ class Utils
 
   include Logging
 
+  @config_dir = File.join(ENV['HOME'], '.webdriver-config/')
+
   # Initiate hash (before YAML load) to leverage 'hash_deep_merge' gem. The deep_merge support allows the YAML file in
   # your HOME directory to override a child property (e.g., 'timeouts.short') and yet hold on to sibling properties
   # (e.g., 'timeouts.long') in the default YAML. A standard Hash.merge would cause us to lose the entire parent
   # structure ('timeouts') in the default YAML.
   @config = {}
   @config.merge! YAML.load_file File.path('settings.yml')
-  @config.deep_merge! YAML.load_file File.join(ENV['HOME'], '/.webdriver-config/settings.yml')
+  @config.deep_merge! YAML.load_file File.join(@config_dir, 'settings.yml')
 
   def self.config
     @config
   end
 
+  def self.config_dir
+    @config_dir
+  end
+
+  def self.output_dir
+    File.join(ENV['HOME'], 'webdriver-output/')
+  end
+
   # BROWSER CONFIGS
 
-  # Instantiates the browser and alters default browser settings.
-  def self.launch_browser
+  # Instantiates the browser and alters default browser settings. A specific browser profile dir can be designated; otherwise, the default profile
+  # will be used. A use case for designating a non-default profile is running two browser instances simultaneously to test WebSocket functionality,
+  # which cannot be done using the same profile.
+  # @param profile [String]
+  # @return [Selenium::WebDriver]
+  def self.launch_browser(profile = nil)
     driver = @config['webdriver']['browser']
-    logger.info "Launching #{driver.capitalize}"
-    if %w(firefox chrome safari).include? driver
-      if driver == 'firefox'
-        profile = Selenium::WebDriver::Firefox::Profile.from_name @config['webdriver']['firefox_profile']
+    logger.info "Launching #{driver.capitalize}#{(' using profile at ' + profile) if profile}"
+
+    # When launching browser, select the profile to use, tweak profile settings to facilitate file downloads, and launch in headless mode if desired.
+    case driver
+
+      when 'chrome'
+        options = Selenium::WebDriver::Chrome::Options.new
+        profile_dir = (profile ? profile : File.join(@config_dir, 'chrome-profile'))
+        options.add_argument("user-data-dir=#{profile_dir}")
+        options.add_argument 'headless' if @config['webdriver']['headless']
+        prefs = {
+            :prompt_for_download => false,
+            :default_directory => Utils.download_dir
+        }
+        options.add_preference(:download, prefs)
+        driver = Selenium::WebDriver.for :chrome, :options => options
+
+      when 'firefox'
+        profile = (profile ? Selenium::WebDriver::Firefox::Profile.from_name(profile) : Selenium::WebDriver::Firefox::Profile.from_name(@config['webdriver']['firefox_profile']))
         profile['browser.download.folderList'] = 2
         profile['browser.download.manager.showWhenStarting'] = false
         profile['browser.download.dir'] = Utils.download_dir
         profile['browser.helperApps.neverAsk.saveToDisk'] = 'application/msword, application/vnd.ms-excel, application/vnd.ms-powerpointtd>, application/pdf, application/zip, audio/mpeg, image/png, image/bmp, image/jpeg, image/gif, image/sgi, image/svg+xml, image/webp, text/csv, video/mp4, video/quicktime'
+        # Turn off Firefox's pretty JSON since it prevents parsing JSON strings in the browser.
         profile['devtools.jsonview.enabled'] = false
-        options = Selenium::WebDriver::Firefox::Options.new(profile: profile)
+        options = Selenium::WebDriver::Firefox::Options.new(:profile => profile)
         options.add_argument '-headless' if @config['webdriver']['headless']
-        driver = Selenium::WebDriver.for :firefox, options: options
-      elsif driver == 'chrome'
-        options = Selenium::WebDriver::Chrome::Options.new
-        options.add_argument("user-data-dir=#{File.join(ENV['HOME'], '.webdriver-config/chrome-profile')}")
-        options.add_argument 'headless' if @config['webdriver']['headless']
-        prefs = {
-          :prompt_for_download => false,
-          :default_directory => Utils.download_dir
-        }
-        options.add_preference(:download, prefs)
-        driver = Selenium::WebDriver.for :chrome, options: options
-      else
+        driver = Selenium::WebDriver.for :firefox, :options => options
+
+      when 'safari'
         driver = Selenium::WebDriver.for :safari
-      end
+
+      else
+        logger.error 'Designated WebDriver is not supported'
+        driver = nil
+    end
+
+    if driver
       # If a specific window size is needed (e.g., Chrome or Safari on a small screen), set size. Else, maximize the window.
       width = @config['window']['width']
       height = @config['window']['height']
       (height.zero? || width.zero?) ?
           driver.manage.window.maximize :
           driver.manage.window.resize_to(width, height)
-      driver
-    else
-      logger.error 'Designated WebDriver is not supported'
-      nil
     end
+
+    driver
+  end
+
+  def self.optional_chrome_profile_dir
+    File.join(@config_dir, 'chrome-profile-optional')
   end
 
   # @param driver [Selenium::WebDriver]
@@ -137,7 +166,7 @@ class Utils
   # Makes sure a directory exists for files generated by tests
   # @return [String]
   def self.initialize_test_output_dir
-    output_dir = File.join(ENV['HOME'], '/webdriver-output/test-output')
+    output_dir = File.join(self.output_dir, 'test-output')
     FileUtils.mkdir_p(output_dir) unless File.exists?(output_dir)
     output_dir
   end
@@ -151,14 +180,14 @@ class Utils
 
   # The directory where files are downloaded during test runs
   def self.download_dir
-    File.join(ENV['HOME'], '/webdriver-output/downloads')
+    File.join(output_dir, 'downloads')
   end
 
   # Prepares a directory to receive files downloaded during test runs
   # @param dir [File]
   def self.prepare_download_dir
     FileUtils::mkdir_p download_dir
-    FileUtils.rm_rf(download_dir, secure: true)
+    FileUtils.rm_rf(download_dir, :secure => true)
   end
 
   # Creates users CSV for SIS import testing
@@ -197,7 +226,7 @@ class Utils
   # Returns the path and name of a logger file
   # @return [String]
   def self.log_file
-    log_dir = File.join(ENV['HOME'], '/webdriver-output/selenium-log')
+    log_dir = File.join(output_dir, 'selenium-log')
     FileUtils.mkdir_p(log_dir) unless File.exist?(log_dir)
     File.join(log_dir, "#{Time.now.strftime('%Y-%m-%d')}.log")
   end
@@ -211,7 +240,7 @@ class Utils
   # The file to be used to write rake task test results
   # @param app_and_version [String] - e.g., 'junction-91' or 'suitec-2.2'
   def self.test_results(app_and_version)
-    results_dir = File.join(ENV['HOME'], '/webdriver-output/test-results')
+    results_dir = File.join(output_dir, 'test-results')
     FileUtils.mkdir_p(results_dir) unless File.exist?(results_dir)
     File.join(results_dir, "test-results-#{app_and_version}-#{Time.now.strftime('%Y-%m-%d-%H-%M')}.log")
   end
@@ -255,7 +284,7 @@ class Utils
   def self.query_db(db_credentials, query_string)
     results = []
     begin
-      connection = PG.connect(host: db_credentials[:host], port: db_credentials[:port], dbname: db_credentials[:name], user: db_credentials[:user], password: db_credentials[:password])
+      connection = PG.connect(:host => db_credentials[:host], :port => db_credentials[:port], :dbname => db_credentials[:name], :user => db_credentials[:user], :password => db_credentials[:password])
       logger.debug "Sending query '#{query_string}'"
       results = connection.exec query_string
     rescue PG::Error => e
@@ -276,7 +305,7 @@ class Utils
   end
 
   def self.save_screenshot(driver, unique_id)
-    output_dir = File.join(ENV['HOME'], '/webdriver-output/screenshots')
+    output_dir = File.join(self.output_dir, 'screenshots')
     FileUtils.mkdir_p(output_dir) unless File.exists?(output_dir)
     logger.info "Saving screenshot named '#{unique_id}.png'"
     driver.save_screenshot File.join(output_dir, "#{unique_id}.png")

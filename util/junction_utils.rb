@@ -20,7 +20,7 @@ class JunctionUtils
 
   # Loads file containing test date for course-driven bCourses tests
   def self.load_junction_test_data
-    test_data_file = File.join(ENV['HOME'], '/.webdriver-config/test-data-bcourses.json')
+    test_data_file = File.join(Utils.config_dir, 'test-data-bcourses.json')
     JSON.parse(File.read(test_data_file))
   end
 

@@ -71,7 +71,7 @@ describe 'Whiteboard', order: :defined do
     after(:each) { @whiteboards_driver_1.close_whiteboard @driver_1 }
 
     [teacher, lead_ta, ta, designer, observer, reader].each do |user|
-  
+
       it "allows a course #{user.role} to search for whiteboards if the user has permission to do so" do
         @canvas_driver_1.masquerade_as(@driver_1, user, course)
         @whiteboards_driver_1.load_page(@driver_1, @whiteboards_url)
@@ -149,7 +149,7 @@ describe 'Whiteboard', order: :defined do
   describe 'collaboration' do
 
     before(:all) do
-      @driver_2 = Utils.launch_browser
+      @driver_2 = Utils.launch_browser Utils.optional_chrome_profile_dir
       @canvas_driver_2 = Page::CanvasPage.new @driver_2
       @cal_net_driver_2 = Page::CalNetPage.new @driver_2
       @whiteboards_driver_2 = Page::SuiteCPages::WhiteboardsPage.new @driver_2
@@ -293,7 +293,6 @@ describe 'Whiteboard', order: :defined do
 
     before(:all) do
       @whiteboards_driver_1.close_whiteboard @driver_1
-      # @whiteboards_driver_1.load_page(@driver_1, @whiteboards_url)
       @whiteboards_driver_1.open_whiteboard(@driver_1, @whiteboard_1)
     end
 
@@ -328,7 +327,7 @@ describe 'Whiteboard', order: :defined do
       @canvas_driver_1.stop_masquerading @driver_1
       @canvas_driver_1.remove_users_from_course(course, [teacher, student_1])
       # Access to whiteboards is based on session cookie, so launch another browser to check cookie-less access
-      @driver_3 = Utils.launch_browser
+      @driver_3 = Utils.launch_browser Utils.optional_chrome_profile_dir
       @canvas_driver_3 = Page::CanvasPage.new @driver_3
       @cal_net_driver_3 = Page::CalNetPage.new @driver_3
       @whiteboards_driver_3 = Page::SuiteCPages::WhiteboardsPage.new @driver_3
