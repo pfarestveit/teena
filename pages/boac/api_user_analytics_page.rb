@@ -219,7 +219,9 @@ class ApiUserAnalyticsPage
       {
         :sid => user.sis_id,
         :first_name => user.first_name,
+        :first_name_sortable => user.first_name.delete(" -'.").downcase,
         :last_name => user.last_name,
+        :last_name_sortable => user.last_name.delete(" -'.").downcase,
         :squad_names => user_squad_names,
         :level => user_sis_data[:level],
         :majors => user_sis_data[:majors],
