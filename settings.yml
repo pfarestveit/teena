@@ -82,7 +82,7 @@ lrs:
 boac:
   base_url: secret
   password: secret
-  term: Fall 2017
+  term: Spring 2018
   meaningful_minimum: 4
   db_host: secret
   db_port: secret

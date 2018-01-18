@@ -11,11 +11,43 @@ module Page
       include Page
       include BOACPages
 
+      button(:list_view_button, xpath: '//button[contains(.,"List")]')
+      button(:matrix_view_button, xpath: '//button[contains(.,"Matrix")]')
+      div(:spinner, class: 'loading-spinner-large')
+      h1(:results, xpath: '//h1')
+
+      # Navigates directly to a team page
+      # @param team [Team]
+      def load_team_page(team)
+        logger.info "Loading cohort page for team #{team.name}"
+        navigate_to "#{BOACUtils.base_url}/cohort?c=#{team.code}"
+      end
+
+      # Clicks the list view button
+      def click_list_view
+        wait_for_load_and_click list_view_button_element
+      end
+
+      # Clicks the matrix view button
+      def click_matrix_view
+        logger.info 'Switching to matrix view'
+        wait_for_update_and_click matrix_view_button_element
+        div_element(id: 'scatterplot').when_present Utils.medium_wait
+      end
+
+      # Returns the search results count in the page heading
+      # @return [Integer]
+      def results_count
+        sleep 1
+        results.split(' ')[0].to_i
+      end
+
       # LIST VIEW
 
       elements(:player_link, :link, xpath: '//ul[@id="cohort-members-list"]/a')
       elements(:player_name, :h3, xpath: '//ul[@id="cohort-members-list"]//h3')
       elements(:player_sid, :div, xpath: '//ul[@id="cohort-members-list"]//div[@data-ng-bind="student.sid"]')
+      elements(:page_list_item, :list_item, xpath: '//li[contains(@ng-repeat,"page in pages")]')
       elements(:page_link, :link, xpath: '//a[contains(@ng-click, "selectPage")]')
 
       # Waits for the number of players on the page to match expectations, and logs an error if it times out
@@ -132,12 +164,36 @@ module Page
         page_link_elements.find { |el| el.text == "#{number}" }
       end
 
+      # Returns the current page in list view
+      # @return [Integer]
+      def list_view_current_page
+        if page_list_item_elements.any?
+          page = page_list_item_elements.find { |el| el.attribute('class').include? 'active' }
+          page.text.to_i
+        else
+          1
+        end
+      end
+
+      # Checks whether a given page is the one currently shown in list view
+      # @param number [Integer]
+      # @return [boolean]
+      def list_view_page_selected?(number)
+        if number > 1
+          el = page_list_item_elements[number - 1]
+          el.attribute('class').include? 'active'
+        else
+          page_list_item_elements.empty?
+        end
+      end
+
       # Clicks the link for a given player
       # @param player [User]
       def click_player_link(player)
-        logger.info "Clicking the link for UID #{player.uid}"
         wait_for_load_and_click link_element(xpath: "//a[contains(.,\"#{player.sis_id}\")]")
         h1_element(class: 'student-profile-header-name').when_visible Utils.medium_wait
+        player.uid = current_url.gsub("#{BOACUtils.base_url}/student/", '')
+        logger.info "Viewing the student page for UID #{player.uid}"
       end
 
       # SORTING
@@ -236,13 +292,34 @@ module Page
         checkbox_element(xpath: "//input[@aria-label='#{gpa_range}']")
       end
 
+      # Verifies that a set of cohort search criteria are currently selected
+      # @param search_criteria [CohortSearchCriteria]
+      # @return [boolean]
+      def search_criteria_selected?(search_criteria)
+        wait_until(Utils.short_wait) { squad_option_elements.any? }
+        search_criteria.squads.each do |s|
+          wait_until(Utils.short_wait, "Squad #{s.name} is not selected") { squad_option_element(s).exists? && squad_option_element(s).attribute('class').include?('not-empty') }
+        end if search_criteria.squads
+
+        search_criteria.levels.each do |l|
+          wait_until(Utils.short_wait, "Level #{l} is not selected") { levels_option_element(l).exists? && levels_option_element(l).attribute('class').include?('not-empty') }
+        end if search_criteria.levels
+
+        search_criteria.majors.each do |m|
+          wait_until(Utils.short_wait, "Major #{m} is not selected") { majors_option_element(m).exists? && majors_option_element(m).attribute('class').include?('not-empty') }
+        end if search_criteria.majors
+
+        search_criteria.gpa_ranges.each do |g|
+          wait_until(Utils.short_wait, "GPA range #{g} is not selected") { gpa_range_option_element(g).exists? && gpa_range_option_element(g).attribute('class').include?('not-empty') }
+        end if search_criteria.gpa_ranges
+        true
+      end
+
       # Waits for a search to complete, returning either a set of results or 'no results'
       def wait_for_search_results
-        begin
-          # TODO - no results element
-        rescue
-          wait_until(Utils.medium_wait) { player_link_elements.any? }
-        end
+        sleep 1
+        spinner_element.when_not_present Utils.medium_wait if spinner?
+        results_element.when_present Utils.short_wait
       end
 
       # Checks a search filter option
@@ -262,7 +339,7 @@ module Page
       # @param criteria [CohortSearchCriteria]
       def perform_search(criteria)
         logger.info "Searching for squads '#{criteria.squads && (criteria.squads.map &:name)}', levels '#{criteria.levels}', majors '#{criteria.majors}', GPA ranges '#{criteria.gpa_ranges}'"
-        sleep 3
+        sleep 2
 
         # Uncheck any options that are already checked from a previous search, then check those that apply to the current search
         unless squad_option_elements.all? &:visible?
@@ -308,7 +385,7 @@ module Page
         wait_for_update_and_click search_button_element
         start_time = Time.now
         wait_for_search_results
-        logger.warn "Search took #{(Time.now - start_time).round}"
+        logger.warn "Search took #{Time.now - start_time}"
       end
 
       # Filters an array of user data hashes according to search criteria and returns the users that should be present in the UI after
@@ -428,11 +505,9 @@ module Page
           page_count.times do |page|
             start_time = Time.now
             page += 1
-            unless page == 1
-              logger.debug "Clicking page #{page}"
-              wait_for_update_and_click list_view_page_link(page)
-              sleep 1
-            end
+            logger.debug "Clicking page #{page}"
+            wait_for_update_and_click list_view_page_link(page)
+            sleep 1
             wait_until(Utils.medium_wait) { player_link_elements.any? }
             logger.warn "Search took #{Time.now - start_time}" unless page == 1
             visible_sids << list_view_sids
@@ -549,7 +624,7 @@ module Page
         wait_for_load_and_click cohort_rename_button(cohort)
         cohort.name = new_name
         rename_input_element.when_present Utils.short_wait
-        sleep 1
+        wait_until(Utils.short_wait) { rename_input_element.enabled? }
         rename_input_element.clear
         rename_input_element.send_keys new_name
         wait_for_update_and_click save_rename_button_element

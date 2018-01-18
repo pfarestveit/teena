@@ -11,6 +11,8 @@ module Page
       include Page
       include BOACPages
 
+      link(:return_to_cohort, xpath: '//a[contains(.,"Return to cohort")]')
+
       h1(:name, class: 'student-profile-header-name')
       h2(:preferred_name, class: 'student-profile-header-name-preferred')
       div(:phone, xpath: '//div[@data-ng-bind="student.sisProfile.phoneNumber"]')
@@ -28,6 +30,19 @@ module Page
       cell(:cultures_reqt, xpath: '//td[text()="American Cultures"]/following-sibling::td')
 
       elements(:course_site_code, :h3, xpath: '//h3[@data-ng-bind="course.courseCode"]')
+
+      # Clicks the 'return to cohort' link
+      def click_return_to_cohort
+        logger.debug 'Returning to cohort'
+        wait_for_load_and_click return_to_cohort_element
+      end
+
+      # Waits for the student page to load and then hits the browser's 'back' button
+      def go_back
+        logger.debug 'Hitting back button'
+        return_to_cohort_element.when_visible Utils.short_wait
+        back
+      end
 
       # Returns a user's SIS data visible on the student page
       # @return [Hash]

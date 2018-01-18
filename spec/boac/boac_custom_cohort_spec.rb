@@ -21,7 +21,6 @@ describe 'BOAC custom cohorts', order: :defined do
     @analytics_page = ApiUserAnalyticsPage.new @driver
     @homepage = Page::BOACPages::HomePage.new @driver
     @cohort_page = Page::BOACPages::CohortPage.new @driver
-    @cal_net = Page::CalNetPage.new @driver
     @homepage.dev_auth Utils.super_admin_uid
 
     # Get the user data relevant to all search filters
@@ -143,7 +142,7 @@ describe 'BOAC custom cohorts', order: :defined do
       @cohort_page.perform_search test_search_criteria.first
       @cohort_page.save_and_name_cohort cohort
       cohort.name = cohort.name[0..254]
-      @cohort_page.cohort_heading(cohort).when_visible Utils.short_wait
+      @cohort_page.wait_for_cohort cohort
       cohorts_created << cohort
     end
 
