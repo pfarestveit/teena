@@ -7,7 +7,7 @@ describe 'BOAC' do
   search_criteria = BOACUtils.get_test_search_criteria
   @driver = Utils.launch_browser
   @homepage = Page::BOACPages::HomePage.new @driver
-  @cohort_page = Page::BOACPages::CohortPage.new @driver
+  @cohort_page = Page::BOACPages::CohortListViewPage.new @driver
   @matrix_page = Page::BOACPages::CohortMatrixPage.new @driver
   @student_page = Page::BOACPages::StudentPage.new @driver
   @homepage.dev_auth Utils.super_admin_uid
