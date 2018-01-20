@@ -27,7 +27,7 @@ describe 'BOAC' do
 
     @driver = Utils.launch_browser
     @boac_homepage = Page::BOACPages::HomePage.new @driver
-    @boac_cohort_page = Page::BOACPages::CohortPage.new @driver
+    @boac_cohort_page = Page::BOACPages::CohortListViewPage.new @driver
     @boac_student_page = Page::BOACPages::StudentPage.new @driver
 
     @boac_homepage.dev_auth(Utils.super_admin_uid)
