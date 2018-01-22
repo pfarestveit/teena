@@ -303,6 +303,11 @@ module Page
     text_area(:user_email, id: 'user_email')
     button(:update_details_button, xpath: '//button[text()="Update Details"]')
 
+    cell(:user_login, xpath: '//b[@class="unique_id"]')
+    link(:edit_user_login_link, xpath: '//a[@class="edit_pseudonym_link"]')
+    text_area(:user_login_input, id: 'pseudonym_unique_id')
+    button(:update_user_login_button, xpath: '//button[text()="Update Login"]')
+
     text_area(:search_user_input, xpath: '//input[@placeholder="Search people"]')
 
     # Loads the course users page
@@ -349,6 +354,9 @@ module Page
       end
       logger.info "Users who need to be added are #{users_missing.map { |u| u.uid }}"
 
+      # Reactivate inactivated test users and make sure all test users' emails match addresses in test data
+      activate_user_and_reset_email users_missing
+
       # Add users by role
       ['Teacher', 'Designer', 'Lead TA', 'TA', 'Observer', 'Reader', 'Student'].each do |user_role|
         users = ''
@@ -380,9 +388,6 @@ module Page
           end
         end
       end
-
-      # Set test users' email to address in test data in order to test email sending
-      reset_user_email(course, users_missing)
     end
 
     # Removes users from a course site
@@ -411,11 +416,11 @@ module Page
     end
 
     # Changes users' Canvas email addresses to the email defined for each in test data. This enables SuiteC email testing.
-    # @param course [Course]
+    # Also reactivates test user accounts that have been deactivated.
     # @param test_users [Array<User>]
-    def reset_user_email(course, test_users)
+    def activate_user_and_reset_email(test_users)
       test_users.each do |user|
-        navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/users/#{user.canvas_id}"
+        navigate_to "#{Utils.canvas_base_url}/users/#{user.canvas_id}"
         default_email_element.when_present Utils.short_wait
         if default_email == user.email
           logger.debug "Test user '#{user.full_name}' already has an updated default email"
@@ -425,6 +430,14 @@ module Page
           wait_for_element_and_type_js(user_email_element, user.email)
           wait_for_update_and_click_js update_details_button_element
           default_email_element.when_present Utils.short_wait
+        end
+        user_login_element.when_visible Utils.short_wait
+        if user_login.include? 'inactive'
+          logger.info "Reactivating UID #{user.uid}"
+          wait_for_update_and_click edit_user_login_link_element
+          wait_for_element_and_type(user_login_input_element, user.uid)
+          wait_for_update_and_click update_user_login_button_element
+          wait_until(Utils.short_wait) { user_login == "#{user.uid}" }
         end
       end
     end

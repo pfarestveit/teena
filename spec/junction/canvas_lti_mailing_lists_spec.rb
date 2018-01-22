@@ -176,7 +176,7 @@ describe 'bCourses Mailgun mailing lists', order: :defined do
 
       it 'does not create mailing list memberships for site members with the same email addresses as existing mailing list members' do
         students[0].email = students[1].email
-        @canvas_page.reset_user_email(course_site_1, [students[0]])
+        @canvas_page.activate_user_and_reset_email [students[0]]
         JunctionUtils.clear_cache(@driver, @splash_page, @toolbox_page)
         @mailing_lists_page.load_embedded_tool @driver
         @mailing_lists_page.search_for_list course_site_1.site_id
