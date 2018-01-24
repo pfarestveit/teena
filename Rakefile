@@ -31,7 +31,7 @@ begin
     t.rspec_opts = opts
   end
 
-  # The following is for running a single test script or group of scripts for either SuiteC or for Junction
+  # The following is for running a single test script or group of scripts for SuiteC, Junction, or BOAC
   # (e.g., 'junction/canvas_lti_mailing_lists' or 'suitec/impact_studio').
 
   task default: :scripts

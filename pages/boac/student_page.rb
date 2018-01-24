@@ -80,7 +80,7 @@ module Page
       # @param course_code [String]
       # @return [String]
       def course_data_xpath(term_name, course_code)
-        "//h2[text()=\"#{term_name}\"]/following-sibling::div[@data-ng-repeat='course in term.enrollments'][contains(.,\"#{course_code}\")]"
+        "//h2[text()=\"#{term_name}\"]/following-sibling::div[@data-ng-repeat='course in term.enrollments']//h3[text()=\"#{course_code}\"]/../../.."
       end
 
       # Returns the SIS data shown for a course with a given course code
@@ -139,13 +139,13 @@ module Page
 
       # COURSE SITES
 
-      # Returns the XPath to the first course site associated with a course in a term
+      # Returns the XPath to a course site associated with a course in a term
       # @param term_name [String]
       # @param course_code [String]
-      # @param site_code [String]
+      # @param index [Integer]
       # @return [String]
-      def course_site_xpath(term_name, course_code, site_code)
-        "#{course_data_xpath(term_name, course_code)}/div[@data-ng-repeat='canvasSite in course.canvasSites'][contains(.,\"#{site_code}\")]"
+      def course_site_xpath(term_name, course_code, index)
+        "#{course_data_xpath(term_name, course_code)}/div[@data-ng-repeat='canvasSite in course.canvasSites'][#{index + 1}]"
       end
 
       # Returns the XPath to a course site in a term not matched to a SIS enrollment
@@ -153,7 +153,7 @@ module Page
       # @param site_code [String]
       # @return [String]
       def unmatched_site_xpath(term_name, site_code)
-        "//h2[text()=\"#{term_name}\"]/following-sibling::div[@data-ng-if='term.unmatchedCanvasSites.length']/div[@data-ng-repeat='canvasSite in term.unmatchedCanvasSites']//h3[text()=\"#{site_code}\"]/following-sibling::*[name()='course-site-metrics']/ul"
+        "//h2[text()=\"#{term_name}\"]/following-sibling::div[@data-ng-repeat='canvasSite in term.unmatchedCanvasSites']//h3[text()=\"#{site_code}\"]/following-sibling::*[name()='course-site-metrics']"
       end
 
       # Returns the XPath to the user percentile analytics data for a given category, for example 'page views'
