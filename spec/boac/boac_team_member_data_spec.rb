@@ -190,9 +190,10 @@ describe 'BOAC' do
 
                             course_sis_data = user_analytics_data.course_sis_data course
                             course_code = course_sis_data[:code]
+                            course_sites = user_analytics_data.course_sites course
 
                             # Collect matched Canvas sites in the term as hashes with course codes
-                            term_sites << user_analytics_data.course_sites(course).map { |s| {:course_code => course_code, :data => s} }
+                            term_sites << course_sites.map { |s| {:course_code => course_code, :data => s, :index => course_sites.index(s)} }
 
                             logger.info "Checking course #{course_code}"
 
@@ -204,18 +205,18 @@ describe 'BOAC' do
                             visible_grade = visible_course_sis_data[:grade]
 
                             it "shows the course title for UID #{team_member.uid} term #{term_name} course #{course_code}" do
-                              expect(visible_course_title).to eql(course_sis_data[:title])
                               expect(visible_course_title).not_to be_empty
+                              expect(visible_course_title).to eql(course_sis_data[:title])
                             end
 
                             if course_sis_data[:units].to_f > 0
                               it "shows the units for UID #{team_member.uid} term #{term_name} course #{course_code}" do
-                                expect(visible_units).to eql(course_sis_data[:units])
                                 expect(visible_units).not_to be_empty
+                                expect(visible_units).to eql(course_sis_data[:units])
                               end
                             else
                               it "shows no units for UID #{team_member.uid} term #{term_name} course #{course_code}" do
-                                expect(visible_units).to be_nil
+                                expect(visible_units).to be_empty
                               end
                             end
 
@@ -225,15 +226,15 @@ describe 'BOAC' do
                               end
                             else
                               it "shows the grading basis for UID #{team_member.uid} term #{term_name} course #{course_code}" do
-                                expect(visible_grading_basis).to eql(course_sis_data[:grading_basis])
                                 expect(visible_grading_basis).not_to be_empty
+                                expect(visible_grading_basis).to eql(course_sis_data[:grading_basis])
                               end
                             end
 
                             if course_sis_data[:grade]
                               it "shows the grade for UID #{team_member.uid} term #{term_name} course #{course_code}" do
-                                expect(visible_grade).to eql(course_sis_data[:grade])
                                 expect(visible_grade).not_to be_empty
+                                expect(visible_grade).to eql(course_sis_data[:grade])
                               end
                             else
                               it "shows no grade for UID #{team_member.uid} term #{term_name} course #{course_code}" do
@@ -243,8 +244,8 @@ describe 'BOAC' do
 
                             if course_sis_data[:midpoint]
                               it "shows the midpoint grade for UID #{team_member.uid} term #{term_name} course #{course_code}" do
-                                expect(visible_midpoint).to eql(course_sis_data[:midpoint])
                                 expect(visible_midpoint).not_to be_empty
+                                expect(visible_midpoint).to eql(course_sis_data[:midpoint])
                               end
                             else
                               it "shows no midpoint grade for UID #{team_member.uid} term #{term_name} course #{course_code}" do
@@ -281,8 +282,8 @@ describe 'BOAC' do
                                 end
 
                                 it "shows the section number for UID #{team_member.uid} term #{term_name} course #{course_code} section #{component}" do
-                                  expect(visible_section_number).to eql(section_sis_data[:number])
                                   expect(visible_section_number).not_to be_empty
+                                  expect(visible_section_number).to eql(section_sis_data[:number])
                                 end
 
                               rescue => e
@@ -332,7 +333,7 @@ describe 'BOAC' do
 
                           # Find the site in the UI differently if it's matched versus unmatched
                           site[:course_code] ?
-                              (analytics_xpath = @boac_student_page.course_site_xpath(term_name, site[:course_code], site_code)) :
+                              (analytics_xpath = @boac_student_page.course_site_xpath(term_name, site[:course_code], site[:index])) :
                               (analytics_xpath = @boac_student_page.unmatched_site_xpath(term_name, site_code))
                           logger.info "Checking course site #{site_code}"
 

@@ -111,9 +111,9 @@ class ApiUserAnalyticsPage
   def current_enrolled_course_codes
     courses = []
     if (term = current_term)
-      # Ignore courses that are waitlisted or dropped, as these are not displayed on the cohort page
+      # Ignore courses that are dropped, as these are not displayed on the cohort page
       enrolled_courses = courses(term).select do |c|
-        enrolled_sections = sections(c).select { |s| section_sis_data(s)[:status] == 'E' }
+        enrolled_sections = sections(c).select { |s| %w(E W).include? section_sis_data(s)[:status] }
         enrolled_sections.any?
       end
       courses = enrolled_courses.map { |c| course_sis_data(c)[:code] }
