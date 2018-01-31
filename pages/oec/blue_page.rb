@@ -122,12 +122,13 @@ module Page
     link(:manage_project_link, xpath: '//a[@title="Manage Project"]')
     span(:task_list_heading, id: 'BlueAppControl_TopLabelProjectManagement_TaskManagementUC_lblTaskList')
     span(:results_count, id: 'BlueAppControl_TopLabelProjectManagement_TaskManagementUC_ucBlueGrid_lblTopPageStatus')
-    select(:task_type_select, id: 'BlueAppControl_TopLabelProjectManagement_TaskManagementUC_dplTask')
-    select(:dept_form_field_select, id: 'BlueAppControl_TopLabelProjectManagement_TaskManagementUC_SearchBox_dplField1')
-    select(:dept_form_opr_select, id: 'BlueAppControl_TopLabelProjectManagement_TaskManagementUC_SearchBox_dplOpr1')
+    select_list(:task_type_select, id: 'BlueAppControl_TopLabelProjectManagement_TaskManagementUC_dplTask')
+    select_list(:task_status_select, id: 'BlueAppControl_TopLabelProjectManagement_TaskManagementUC_dplStatus')
+    select_list(:dept_form_field_select, id: 'BlueAppControl_TopLabelProjectManagement_TaskManagementUC_SearchBox_dplField1')
+    select_list(:dept_form_opr_select, id: 'BlueAppControl_TopLabelProjectManagement_TaskManagementUC_SearchBox_dplOpr1')
     text_area(:dept_form_search_input, id: 'BlueAppControl_TopLabelProjectManagement_TaskManagementUC_SearchBox_txtBox1')
-    select(:eval_type_field_select, id: 'BlueAppControl_TopLabelProjectManagement_TaskManagementUC_SearchBox_dplField2')
-    select(:eval_type_opr_select, id: 'BlueAppControl_TopLabelProjectManagement_TaskManagementUC_SearchBox_dplOpr2')
+    select_list(:eval_type_field_select, id: 'BlueAppControl_TopLabelProjectManagement_TaskManagementUC_SearchBox_dplField2')
+    select_list(:eval_type_opr_select, id: 'BlueAppControl_TopLabelProjectManagement_TaskManagementUC_SearchBox_dplOpr2')
     text_area(:eval_type_search_input, id: 'BlueAppControl_TopLabelProjectManagement_TaskManagementUC_SearchBox_txtBox2')
     button(:task_filter_button, id: 'BlueAppControl_TopLabelProjectManagement_TaskManagementUC_SearchBox_btnSearch')
     link(:first_fill_out_link, xpath: '//span[text()="Form Fill Out"]/ancestor::td/following-sibling::td[6]/a[contains(.,"Link")]')
@@ -137,13 +138,14 @@ module Page
     # Searches for a project
     # @param title [String]
     def load_project(title)
-      logger.info "Loading project named '#{title}'"
       wait_for_load_and_click projects_link_element
       projects_heading_element.when_visible Utils.medium_wait
       wait_for_load_and_click project_search_input_element
       wait_for_element_and_type(project_search_input_element, title)
       link_element(xpath: "//div[text()='#{title}']/ancestor::a").when_visible Utils.medium_wait
-      wait_for_update_and_click manage_project_link_element
+      # Invoke 'find_element' by XPath with each interaction to avoid stale element errors
+      link_element(xpath: "//div[text()='#{title}']/../../..//a[@title='Manage Project']").when_visible Utils.short_wait
+      link_element(xpath: "//div[text()='#{title}']/../../..//a[@title='Manage Project']").click
       task_list_heading_element.when_visible Utils.medium_wait
     end
 
@@ -159,9 +161,9 @@ module Page
       initial_results = total_results
       tries = 5
       begin
+        logger.debug 'Waiting for filtered results'
         wait_until(2) { total_results < initial_results }
-      rescue => e
-        logger.error "#{e.message}"
+      rescue
         (tries -= 1).zero? ? fail : retry
       end
     end
@@ -173,6 +175,8 @@ module Page
     def search_for_fill_out_form_tasks(dept_form, eval_type)
       # Search for the right form type
       wait_for_element_and_select_js(task_type_select_element, 'Form Fill Out')
+      wait_for_filtered_results
+      wait_for_element_and_select_js(task_status_select_element, 'Not Completed')
       wait_for_filtered_results
       wait_for_element_and_select_js(dept_form_field_select_element, 'DEPT_FORM (Subjects)')
       wait_for_element_and_select_js(dept_form_opr_select_element, 'Is')
@@ -187,13 +191,17 @@ module Page
 
     # Clicks the first task link in the list and navigates to the questionnaire page
     # @param driver [Selenium::WebDriver]
-    def open_fill_out_form_task(driver)
+    # @param form [Hash]
+    def open_fill_out_form_task(driver, form)
       # Load the form in a new window
       wait_for_update_and_click first_fill_out_link_element
       wait_until(1) { driver.window_handles.length > 1 }
       driver.switch_to.window driver.window_handles.last
       wait_for_load_and_click next_button_element
-      div_element(xpath: '//div[contains(@id,"MainQuestionDiv")]').when_visible Utils.short_wait
+      div_element(xpath: '//div[contains(@id,"MainQuestionDiv")]').when_visible Utils.medium_wait
+
+      # Take a screenshot of the form
+      Utils.save_screenshot(driver, "#{form[:dept_code].delete(',')}_#{form[:eval_type]}")
     end
 
     # Closes the questionnaire if it is open
@@ -212,20 +220,26 @@ module Page
     # @param form [Hash]
     # @param question [Hash]
     def verify_question(driver, form, question)
-      # Take a screenshot of the form
-      Utils.save_screenshot(driver, "#{form[:dept_code].delete(',')}_#{form[:eval_type]}")
+
+      def question_div(question, category_heading)
+        "//h2[contains(.,'#{category_heading}')]/ancestor::div[contains(@id,'MainQuestionDiv')]/div[contains(@class,'FilloutQuestionListingDiv')][contains(.,\"#{question[:question]}\")]"
+      end
 
       # Get the xpath to the div containing the question
-      question_xpath = if question[:category] == 'instructor' && form[:eval_type] == 'G'
-                         "//h2[contains(.,'Feedback for Graduate Student Instructor')]/ancestor::div[contains(@id,'MainQuestionDiv')]/div[contains(@class,'FilloutQuestionListingDiv')][contains(.,\"#{question[:question]}\")]"
+      question_xpath = if question[:category] == 'instructor' && form[:eval_type] == 'G' && form[:dept_code] != 'INTEGBI'
+                         question_div(question, 'Feedback for Graduate Student Instructor')
+                       elsif question[:category] == 'instructor' && form[:eval_type] == 'G' && form[:dept_code] == 'INTEGBI'
+                         question_div(question, 'Feedback for Discussion/Lab Instructor')
                        elsif question[:category] == 'instructor' && form[:eval_type] != 'G'
-                         "//h2[contains(.,'Feedback for Instructor')]/ancestor::div[contains(@id,'MainQuestionDiv')]/div[contains(@class,'FilloutQuestionListingDiv')][contains(.,\"#{question[:question]}\")]"
+                         question_div(question, 'Feedback for Instructor')
                        elsif question[:category] == 'course'
-                         "//h2[contains(.,'Course-Related Questions')]/ancestor::div[contains(@id,'MainQuestionDiv')]/div[contains(@class,'FilloutQuestionListingDiv')][contains(.,\"#{question[:question]}\")]"
+                         question_div(question, 'Course-Related Questions')
                        elsif question[:category] == 'student'
-                         "//h2[contains(.,'Student Information Questions')]/ancestor::div[contains(@id,'MainQuestionDiv')]/div[contains(@class,'FilloutQuestionListingDiv')][contains(.,\"#{question[:question]}\")]"
+                         question_div(question, 'Student Information Questions')
                        elsif question[:category] == 'general'
-                         "//h2[contains(.,'General Open-Ended Questions')]/ancestor::div[contains(@id,'MainQuestionDiv')]/div[contains(@class,'FilloutQuestionListingDiv')][contains(.,\"#{question[:question]}\")]"
+                         question_div(question, 'General Open-Ended Questions')
+                       elsif question[:category] == 'none'
+                         "//div[contains(@class,'FilloutQuestionListingDiv')][contains(.,\"#{question[:question]}\")]"
                        else
                          logger.error "Invalid question category: '#{question[:category]}'"
                          fail
@@ -236,69 +250,115 @@ module Page
 
         when 'heading'
           verify_block do
-            # Check that the exact heading text is in the right section
-            driver.find_element(:xpath => "#{question_xpath}//h2/span[text()=\"#{question[:question]}\"]")
-            logger.info "Found '#{question[:question]}'"
+            wait_until(2) do
+              # Check that the exact heading text is in the right section
+              driver.find_element(:xpath => "#{question_xpath}//h2/span[contains(.,\"#{question[:question]}\")]")
+              logger.info "Found '#{question[:question]}'"
+            end
           end
 
-        when 'radio'
+        when 'radio-horizontal'
           verify_block do
-            # Check that the exact question text is in the right section and that it has the right radio button options
-            driver.find_element(:xpath => "#{question_xpath}//table//tr[2]/td/span[text()=\"#{question[:question]}\"]")
-            logger.info "Found '#{question[:question]}'"
-            question[:options].each do |o|
-              cell_node = question[:options].index(o) + 2
-              driver.find_element(:xpath => "#{question_xpath}//table//tr[2]/td[#{cell_node}]/label[text()='#{o}']/following-sibling::input")
-              logger.info "Found '#{o}'"
+            wait_until(2) do
+              # Check that the exact question text is in the right section and that it has the right radio button options
+              driver.find_element(:xpath => "#{question_xpath}//table//tr[2]/td/span[text()=\"#{question[:question]}\"]")
+              logger.info "Found '#{question[:question]}'"
+              question[:options].each do |o|
+                cell_node = question[:options].index(o) + 2
+                driver.find_element(:xpath => "#{question_xpath}//table//tr[2]/td[#{cell_node}]/label[text()='#{o}']/following-sibling::input")
+              end
+              # TODO - verify right number of options
             end
-            # TODO - verify right number of options
           end
 
-        when 'radio desc'
+        when 'radio-vertical'
           verify_block do
-            # Check that the exact question text is in the right section and that it has the right radio button options
-            driver.find_element(:xpath => "#{question_xpath}//a[text()=\"#{question[:question]}\"]")
-            logger.info "Found '#{question[:question]}'"
-            question[:options].each do |o|
-              driver.find_element(:xpath => "#{question_xpath}//div[@class='VerticalQRatingRadioButtonDiv']//label[text()='#{o}']/preceding-sibling::input")
-              logger.info "Found '#{o}'"
+            wait_until(2) do
+              # Check that the exact question text is in the right section and that it has the right radio button options
+              driver.find_element(:xpath => "#{question_xpath}//a[text()=\"#{question[:question]}\"]")
+              logger.info "Found '#{question[:question]}'"
+              question[:options].each do |o|
+                driver.find_element(:xpath => "#{question_xpath}//div[@class='VerticalQRatingRadioButtonDiv']//label[text()='#{o}']/preceding-sibling::input")
+              end
+              # TODO - verify right number of options
             end
-            # TODO - verify right number of options
           end
 
         when 'input'
           verify_block do
-            # Check that the exact question text is in the right section and that it has an accompanying text input field
-            driver.find_element(:xpath => "#{question_xpath}//h3/a[text()=\"#{question[:question]}\"]")
-            begin
-              driver.find_element(:xpath => "#{question_xpath}//textarea")
-              logger.info "Found '#{question[:question]}'"
-            rescue
-              driver.find_element(:xpath => "#{question_xpath}//input")
-              logger.info "Found '#{question[:question]}'"
+            wait_until(2) do
+              # Check that the exact question text is in the right section and that it has an accompanying text input field
+              driver.find_element(:xpath => "#{question_xpath}//h3/a[text()=\"#{question[:question]}\"]")
+
+              # Two different input elements are in use, so look for the most common one. If not found, check for the other.
+              begin
+                driver.find_element(:xpath => "#{question_xpath}//textarea")
+                logger.info "Found '#{question[:question]}'"
+              rescue
+                driver.find_element(:xpath => "#{question_xpath}//input")
+                logger.info "Found '#{question[:question]}'"
+              end
             end
           end
 
         when 'nested'
           verify_block do
-            # Verify the question heading text
-            driver.find_element(:xpath => "#{question_xpath}//h3/a[text()=\"#{question[:question]}\"]")
-            logger.info "Found '#{question[:question]}'"
-            # Verify the radio button labels
-            question[:sub_options].each do |o|
-              cell_node = question[:sub_options].index(o) + 3
-              driver.find_element(:xpath => "#{question_xpath}//table//tr/td[#{cell_node}]/span[text()='#{o}']")
-              logger.info "Found '#{o}'"
+            wait_until(2) do
+              # Verify the question heading text
+              driver.find_element(:xpath => "#{question_xpath}//h3/a[text()=\"#{question[:question]}\"]")
+              logger.info "Found '#{question[:question]}'"
+
+              # Verify the nested question text
+              driver.find_element(:xpath => "#{question_xpath}//table//tr[contains(.,\"#{question[:sub_question]}\")]/td[2]/span[text()=\"#{question[:sub_question]}\"]")
+              logger.info "Found '#{question[:sub_question]}'"
+              # TODO - verify right number of sub-questions
+
+              # Verify the radio button labels
+              question[:sub_options].each do |o|
+                cell_node = question[:sub_options].index(o) + 3
+                driver.find_element(:xpath => "#{question_xpath}//table//tr/td[#{cell_node}]/span[text()='#{o}']")
+              end
+              # TODO - verify right number of options
             end
-            # TODO - verify right number of options
-            driver.find_element(:xpath => "#{question_xpath}//table//tr[contains(.,\"#{question[:sub_question]}\")]/td[2]/span[text()=\"#{question[:sub_question]}\"]")
-            logger.info "Found '#{question[:sub_question]}'"
-            # TODO - verify right number of sub-questions
           end
         else
           logger.error "Invalid question type: '#{question[:type]}'"
           fail
       end
     end
+
+    elements(:question_div, :div, :class => 'FilloutQuestionListingDiv')
+
+    # Verifies the actual number of sections on a form matches the expected number: one for each question category heading
+    # plus one for each question, with instructor category questions expected once per instructor.
+    # @param driver [Selenium::WebDriver]
+    # @param questions [Array<Hash>]
+    def verify_question_count(driver, questions)
+      verify_block do
+        # Determine the expected number of heading sections
+        heading_types = questions.map { |q| q[:category] }
+        expected_headings = heading_types.uniq.reject { |h| h == 'none' }
+        logger.debug "Expected headings are #{expected_headings}"
+
+        # Account for 'nested' questions appearing together in a single section
+        unique_questions = questions.uniq { |q| [q[:question], q[:type]] }
+
+        # Account for co-taught course forms showing instructor questions more than once
+        instructor_heading_count = driver.find_elements(:xpath => '//h2[contains(.,"Feedback for ")]').length
+        logger.debug "The number of instructors on the form is #{instructor_heading_count}"
+        instructor_questions = unique_questions.select { |q| q[:category] == 'instructor' }
+        (instructor_heading_count - 1).times do
+          expected_headings << 1
+          unique_questions << instructor_questions
+        end
+
+        # Compare the expected section count to that visible on the form
+        visible_question_count = question_div_elements.length
+        expected_question_count = expected_headings.length + unique_questions.flatten.length
+        logger.info "The number of sections on the form should be #{expected_question_count}"
+        wait_until(2, "Expected #{expected_question_count} question divs but got #{visible_question_count}") { visible_question_count == expected_question_count }
+      end
+    end
+
   end
 end

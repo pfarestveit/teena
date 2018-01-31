@@ -157,11 +157,11 @@ class OecUtils
     forms_and_types.flatten.uniq
   end
 
-  # Parses the question bank file as a table
+  # Parses the question bank file as a table. NB the CSV must be UTF-8 encoded.
   # @return [Array<Array>]
   def self.open_question_bank
     file = File.join(Utils.config_dir, 'oec-question-bank.csv')
-    CSV.table(file, encoding:'iso-8859-1:utf-8')
+    CSV.table file
   end
 
   # Converts a question bank row to a hash
@@ -172,11 +172,18 @@ class OecUtils
       :category => row[:category],
       :question => row[:question],
       :type => row[:type],
-      :options => row[:options] && (row[:options].split(',').map &:strip),
+      :options => row[:options] && (row[:options].split(' , ').map &:strip),
       :sub_question => row[:sub_question],
       :sub_type => row[:sub_type],
-      :sub_options => row[:sub_options] && (row[:sub_options].split(',').map &:strip)
+      :sub_options => row[:sub_options] && (row[:sub_options].split(' , ').map &:strip)
     }
+  end
+
+  # Returns the form code string that should be in the CSV header row
+  # @param form [Hash]
+  # @return [String]
+  def self.get_form_code(form)
+    "#{form[:dept_code]}#{'_' if form[:eval_type]}#{form[:eval_type]}"
   end
 
   # Returns all the questions applicable to a given department form code and evaluation type
@@ -185,8 +192,7 @@ class OecUtils
   # @return [Array<Hash>]
   def self.get_form_questions(question_bank_csv, form)
     # The form codes are headers in the question bank. When the CSV is read, the headers are converted to symbols.
-    form_code = "#{form[:dept_code]}#{'_' if form[:eval_type]}#{form[:eval_type]}"
-    form_code_to_sym = form_code.downcase.gsub(' ', '_').to_sym
+    form_code_to_sym = get_form_code(form).downcase.gsub(' ', '_').delete(',').to_sym
     # Questions applicable to a form code have 'Y' under the header symbol
     questions = []
     question_bank_csv.each { |r| questions << OecUtils.question_row_to_hash(r) if r[form_code_to_sym] == 'Y' }
