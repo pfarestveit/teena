@@ -209,6 +209,7 @@ class ApiUserAnalyticsPage
   # Returns all user data relevant to cohort search
   def collect_users_searchable_data(driver)
     users = BOACUtils.get_athletes
+    users = users.select { |u| u.status == 'active' }
     users.map do |user|
       # Get the squad names to use as search criteria
       user_squad_names = user.sports.map do |squad_code|

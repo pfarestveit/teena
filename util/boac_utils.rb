@@ -22,12 +22,6 @@ class BOACUtils < Utils
     @config['term']
   end
 
-  # Returns the minimum number of a type of course activities required for individual stats to have meaning
-  # @return [Integer]
-  def self.meaningful_minimum
-    @config['meaningful_minimum']
-  end
-
   # Returns the db credentials for BOAC Shared
   # @return [Hash]
   def self.boac_shared_db_credentials
@@ -47,6 +41,7 @@ class BOACUtils < Utils
                     students.sid AS sid,
                     students.first_name AS first_name,
                     students.last_name AS last_name,
+                    students.is_active_asc AS status,
                     student_athletes.group_code AS group_code
              FROM students
              JOIN student_athletes ON student_athletes.sid = students.sid
@@ -55,16 +50,15 @@ class BOACUtils < Utils
 
     # Users with multiple sports have multiple rows; combine them
     athletes = results.group_by { |h1| h1['uid'] }.map do |k,v|
-      {uid: k, sid: v[0]['sid'], first_name: v[0]['first_name'], last_name: v[0]['last_name'], group_code: v.map { |h2| h2['group_code'] }.join(' ')}
+      {uid: k, sid: v[0]['sid'], status: (v[0]['status'] == 't' ? 'active' : 'inactive'), first_name: v[0]['first_name'], last_name: v[0]['last_name'], group_code: v.map { |h2| h2['group_code'] }.join(' ')}
     end
 
     # Convert to Users
     athletes.map do |a|
-      User.new({uid: a[:uid], sis_id: a[:sid], first_name: a[:first_name], last_name: a[:last_name], full_name: "#{a[:first_name]} #{a[:last_name]}", sports: a[:group_code].split.uniq})
+      User.new({uid: a[:uid], sis_id: a[:sid], status: a[:status], first_name: a[:first_name], last_name: a[:last_name], full_name: "#{a[:first_name]} #{a[:last_name]}", sports: a[:group_code].split.uniq})
     end
   end
 
-  # TODO - add a sample test data file when search filters are available
   # Returns a collection of search criteria to use for testing cohort search
   # @return [Array<Hash>]
   def self.get_test_search_criteria

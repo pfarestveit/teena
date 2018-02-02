@@ -25,6 +25,7 @@ module Page
 
       # Clicks the list view button
       def click_list_view
+        logger.info 'Switching to list view'
         wait_for_load_and_click list_view_button_element
       end
 
@@ -67,21 +68,21 @@ module Page
       # @param squad [Squad]
       # @return [PageObject::Elements::Option]
       def squad_option_element(squad)
-        checkbox_element(xpath: "//input[@id='search-option-team-#{squad.code}']")
+        checkbox_element(xpath: "//span[text()=\"#{squad.name}\"]/preceding-sibling::input")
       end
 
       # Returns the option for a given level
       # @param level [String]
       # @return [PageObject::Elements::Option]
       def levels_option_element(level)
-        checkbox_element(id: "search-option-level-#{level}")
+        checkbox_element(xpath: "//span[text()=\"#{level}\"]/preceding-sibling::input")
       end
 
       # Returns the option for a given major
       # @param major [String]
       # @return [PageObject::Elements::Option]
       def majors_option_element(major)
-        checkbox_element(id: "search-option-major-#{major}")
+        checkbox_element(xpath: "//span[text()=\"#{major}\"]/preceding-sibling::input")
       end
 
       # Returns the option for a given GPA range
@@ -119,6 +120,7 @@ module Page
         sleep 1
         spinner_element.when_not_present Utils.medium_wait if spinner?
         results_element.when_present Utils.short_wait
+        sleep 1
       end
 
       # Checks a search filter option
@@ -134,9 +136,10 @@ module Page
         end
       end
 
-      # Executes a custom cohort search using given search criteria
-      # @param criteria [CohortSearchCriteria]
-      def perform_search(criteria)
+      # Executes a custom cohort search using search criteria associated with a cohort and stores the result count
+      # @param cohort [Cohort]
+      def perform_search(cohort)
+        criteria = cohort.search_criteria
         logger.info "Searching for squads '#{criteria.squads && (criteria.squads.map &:name)}', levels '#{criteria.levels}', majors '#{criteria.majors}', GPA ranges '#{criteria.gpa_ranges}'"
         sleep 2
 
@@ -161,6 +164,8 @@ module Page
         end
         major_option_elements.each { |o| o.click if o.attribute('class').include?('not-empty') }
         if criteria.majors
+          # If 'Declared' is selected, then no other majors can be used as search criteria.
+          criteria.majors = ['Declared'] if criteria.majors.include? 'Declared'
           criteria.majors.each do |m|
             # Majors are only shown if they apply to users, so the majors list will change over time. Avoid test failures if
             # the search criteria is out of sync with actual user majors.
@@ -185,6 +190,8 @@ module Page
         start_time = Time.now
         wait_for_search_results
         logger.warn "Search took #{Time.now - start_time}"
+        cohort.member_count = results_count
+        logger.warn "No results found for #{criteria}" if cohort.member_count.zero?
       end
 
       # Filters an array of user data hashes according to search criteria and returns the users that should be present in the UI after
@@ -197,14 +204,33 @@ module Page
                                   (user_data.select { |u| (u[:squad_names] & (search_criteria.squads.map { |s| s.name })).any? }) : []
         matching_level_users = search_criteria.levels ?
                                   (user_data.select { |u| search_criteria.levels.include? u[:level] }) : []
-        matching_major_users = search_criteria.majors ?
-                                  (user_data.select { |u| (u[:majors] & search_criteria.majors).any? }) : []
+
+        matching_major_users = []
+        if search_criteria.majors
+          matching_major_users << user_data.select { |u| (u[:majors] & search_criteria.majors).any? }
+          if search_criteria.majors.include? 'Undeclared'
+            matching_major_users << user_data.select do |u|
+              (u[:majors].select { |m| m.downcase.include? 'undeclared' }).any?
+            end
+          end
+          if search_criteria.majors.include? 'Declared'
+            matching_major_users << user_data.select do |u|
+              (u[:majors].select { |m| !m.downcase.include? 'undeclared' }).any?
+            end
+          end
+        end
+        matching_major_users = matching_major_users.uniq.flatten.compact
+
         matching_gpa_range_users = []
         if search_criteria.gpa_ranges
          search_criteria.gpa_ranges.each do |range|
            array = range.include?('Below') ? %w(0 2.0) : range.delete(' ').split('-')
+           low_end = array[0]
+           high_end = array[1]
            matching_gpa_range_users << user_data.select do |u|
-             (array[0].to_f <= u[:gpa].to_f) && ((array[1] == '4.00') ? (u[:gpa].to_f <= array[1].to_f.round(1)) : (u[:gpa].to_f < array[1].to_f.round(1)))
+             gpa = u[:gpa].to_f
+             (gpa != 0) && (low_end.to_f <= gpa) &&
+                 (high_end == '4.00') ? (gpa <= high_end.to_f.round(1)) : (gpa < high_end.to_f.round(1))
            end
          end
         end
@@ -221,7 +247,7 @@ module Page
       button(:save_cohort_button_two, id: 'confirm-create-cohort-btn')
       button(:cancel_cohort_button, id: 'cancel-create-cohort-btn')
       div(:cohort_not_found_msg, xpath: '//div[contains(.,"Sorry, there was an error retrieving cohort data.")]')
-      elements(:everyone_cohort_owner, :span, xpath: '//li[@data-ng-repeat="(uid, cohorts) in allCohorts"]/span')
+      elements(:everyone_cohort_link, :span, xpath: '//h1[text()="Everyone\'s Cohorts"]//a[@data-ng-bind="cohort.label"]')
 
       # Loads a cohort page by the cohort's ID
       # @param cohort [Cohort]
@@ -266,10 +292,8 @@ module Page
 
       # Creates a new cohort
       # @param cohort [Cohort]
-      def search_and_create_new_cohort(cohort)
+      def create_new_cohort(cohort)
         logger.info "Creating a new cohort named #{cohort.name}"
-        click_create_new_cohort
-        perform_search cohort.search_criteria
         save_and_name_cohort cohort
         wait_for_cohort cohort
       end
@@ -279,7 +303,7 @@ module Page
       # @param new_cohort [Cohort]
       def search_and_create_edited_cohort(old_cohort, new_cohort)
         load_cohort old_cohort
-        perform_search new_cohort.search_criteria
+        perform_search new_cohort
         save_and_name_cohort new_cohort
         wait_for_cohort new_cohort
       end
@@ -339,16 +363,11 @@ module Page
       end
 
       # Returns all the cohorts displayed on the Everyone's Cohorts page
-      # @param driver [Selenium::WebDriver]
       # @return [Array<Cohort>]
-      def visible_everyone_cohorts(driver)
+      def visible_everyone_cohorts
         click_view_everyone_cohorts
-        wait_until(Utils.short_wait) { everyone_cohort_owner_elements.any? }
-        uids = everyone_cohort_owner_elements.map { |o| o.text[13..-1] }
-        cohorts = uids.map do |uid|
-          names = driver.find_elements(xpath: "//li[@data-ng-repeat='(uid, cohorts) in allCohorts'][contains(.,'#{uid}')]//a")
-          names.map { |n| Cohort.new({id: n.attribute('data-ng-href').delete('/cohort/'), name: n.text, owner_uid: uid })}
-        end
+        h1_element(xpath: '//h1[text()="Everyone\'s Cohorts"]').when_visible Utils.short_wait
+        cohorts = everyone_cohort_link_elements.map { |link| Cohort.new({id: link.attribute('href').delete('/cohort?c='), name: link.text}) }
         cohorts.flatten
       end
 

@@ -1,4 +1,10 @@
-class Squad < Cohort
+class Squad < Team
+
+  attr_accessor :parent_team
+
+  def initialize(squad_data)
+    squad_data.each { |k, v| public_send("#{k}=", v) }
+  end
 
   SQUADS = [
       MBB_AA = new({code: 'MBB', name: 'Men\'s Baseball', parent_team: Team::BAM}),
