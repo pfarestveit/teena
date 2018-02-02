@@ -67,7 +67,7 @@ module Page
 
       # COURSES
 
-      button(:view_more_button, :class => 'student-profile-view-previous-semesters')
+      button(:view_more_button, :xpath => '//button[contains(.,"View Previous Semesters")]')
 
       # Clicks the button to expand previous semester data
       def click_view_previous_semesters
@@ -106,19 +106,19 @@ module Page
       # Returns the XPath to the SIS data shown for a given section in a course with a specific component type (e.g., LEC, DIS)
       # @param term_name [String]
       # @param course_code [String]
-      # @param component [String]
+      # @param index [Integer]
       # @return [String]
-      def section_data_xpath(term_name, course_code, component)
-        "#{course_data_xpath(term_name, course_code)}//div[@class='student-profile-class-sections']/div[contains(.,\"#{component}\")]"
+      def section_data_xpath(term_name, course_code, index)
+        "#{course_data_xpath(term_name, course_code)}//div[@data-ng-repeat='section in course.sections'][#{index + 1}]"
       end
 
       # Returns the SIS data shown for a given section in a course with a specific component type (e.g., LEC, DIS)
       # @param term_name [String]
       # @param course_code [String]
-      # @param component [String]
+      # @param index [Integer]
       # @return [Hash]
-      def visible_section_sis_data(term_name, course_code, component)
-        section_xpath = section_data_xpath(term_name, course_code, component)
+      def visible_section_sis_data(term_name, course_code, component, index)
+        section_xpath = section_data_xpath(term_name, course_code, index)
         status_xpath = "#{section_xpath}//span[contains(@data-ng-if,'section.enrollmentStatus')]"
         number_xpath = "#{section_xpath}//span[@data-ng-bind='section.sectionNumber']"
         {

@@ -1,5 +1,11 @@
 class Team < Cohort
 
+  attr_accessor :code
+
+  def initialize(team_data)
+    team_data.each { |k, v| public_send("#{k}=", v) }
+  end
+
   TEAMS = [
       BAM = new({code: 'BAM', name: 'Men\'s Baseball'}),
       BBM = new({code: 'BBM', name: 'Men\'s Basketball'}),

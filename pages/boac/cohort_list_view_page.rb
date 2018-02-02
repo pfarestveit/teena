@@ -35,7 +35,6 @@ module Page
       # Returns all the SIDs shown on list view
       # @return [Array<String>]
       def list_view_sids
-        wait_until(Utils.medium_wait) { player_link_elements.any? }
         player_sid_elements.map &:text
       end
 
@@ -293,7 +292,7 @@ module Page
       # Returns the sequence of SIDs that are actually present following a search and/or sort
       # @return [Array<String>]
       def visible_search_results
-        wait_until(Utils.medium_wait) { list_view_sids.any? }
+        wait_for_search_results
         visible_sids = []
         page_count = results_page_link_elements.length
         if page_count.zero?

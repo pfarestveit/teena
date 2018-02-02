@@ -42,14 +42,16 @@ describe 'BOAC' do
       if visible_team_names.include? team.name
         begin
 
-          expected_team_members = BOACUtils.get_team_members(team).sort_by! &:full_name
+          all_team_members = BOACUtils.get_team_members(team).sort_by! &:full_name
+          active_team_members = all_team_members.delete_if { |u| u.status == 'inactive' }
+          logger.debug "There are #{active_team_members.length} active athletes out of #{all_team_members.length} total athletes"
 
           @boac_homepage.load_page
           @boac_homepage.click_team_link team
           team_url = @boac_cohort_page.current_url
-          @boac_cohort_page.wait_for_page_load expected_team_members.length
+          @boac_cohort_page.wait_for_page_load active_team_members.length
 
-          expected_team_member_names = (expected_team_members.map &:full_name).sort
+          expected_team_member_names = (active_team_members.map &:full_name).sort
           visible_team_member_names = (@boac_cohort_page.list_view_names).sort
           it("shows all the expected players for #{team.name}") do
             logger.debug "Expecting #{expected_team_member_names} and got #{visible_team_member_names}"
@@ -57,7 +59,7 @@ describe 'BOAC' do
           end
           it("shows no blank player names for #{team.name}") { expect(visible_team_member_names.any? &:empty?).to be false }
 
-          expected_team_member_sids = (expected_team_members.map &:sis_id).sort
+          expected_team_member_sids = (active_team_members.map &:sis_id).sort
           visible_team_member_sids = (@boac_cohort_page.list_view_sids).sort
           it("shows all the expected player SIDs for #{team.name}") do
             logger.debug "Expecting #{expected_team_member_sids} and got #{visible_team_member_sids}"
@@ -65,7 +67,7 @@ describe 'BOAC' do
           end
           it("shows no blank player SIDs for #{team.name}") { expect(visible_team_member_sids.any? &:empty?).to be false }
 
-          expected_team_members.each do |team_member|
+          active_team_members.each do |team_member|
             if visible_team_member_sids.include? team_member.sis_id
               begin
 
@@ -84,7 +86,7 @@ describe 'BOAC' do
                 end
 
                 it "shows the majors for UID #{team_member.uid} on the #{team.name} page" do
-                  expect(cohort_page_sis_data[:majors]).to eql(analytics_api_sis_data[:majors])
+                  expect(cohort_page_sis_data[:majors]).to eql(analytics_api_sis_data[:majors].sort)
                   expect(cohort_page_sis_data[:majors]).not_to be_empty
                 end
 
@@ -259,11 +261,12 @@ describe 'BOAC' do
                             sections.each do |section|
                               begin
 
+                                index = sections.index section
                                 section_sis_data = user_analytics_data.section_sis_data section
                                 term_section_ccns << section_sis_data[:ccn]
                                 component = section_sis_data[:component]
 
-                                visible_section_sis_data = @boac_student_page.visible_section_sis_data(term_name, course_code, component)
+                                visible_section_sis_data = @boac_student_page.visible_section_sis_data(term_name, course_code, index)
                                 visible_enrollment_status = visible_section_sis_data[:status]
                                 visible_section_number = visible_section_sis_data[:number]
 

@@ -28,21 +28,19 @@ describe 'BOAC custom cohorts', order: :defined do
 
     # Get the current 'everyone' cohorts
     @homepage.load_page
-    @visible_everyone_cohorts = @cohort_page.visible_everyone_cohorts @driver
+    @visible_everyone_cohorts = @cohort_page.visible_everyone_cohorts
   end
 
   after(:all) { Utils.quit_browser @driver }
 
-  it 'shows the user Everyone\'s Cohorts owners' do
-    expected_owners = everyone_cohorts_pre_existing.map &:owner_uid
-    visible_owners = @visible_everyone_cohorts.map &:owner_uid
-    @cohort_page.wait_until(1, "Expected #{expected_owners}, but got #{visible_owners}") { visible_owners == expected_owners }
-  end
-
-  it 'shows the user Everyone\'s Cohorts names' do
-    expected_cohort_names = (everyone_cohorts_pre_existing.map &:name).sort
-    visible_cohort_names = (@visible_everyone_cohorts.map &:name).sort
-    @cohort_page.wait_until(1, "Expected #{expected_cohort_names}, but got #{visible_cohort_names}") { visible_cohort_names == expected_cohort_names }
+  it 'shows the user Everyone\'s Cohorts' do
+    if @visible_everyone_cohorts.any?
+      expected_cohort_names = (everyone_cohorts_pre_existing.map &:name).sort
+      visible_cohort_names = (@visible_everyone_cohorts.map &:name).sort
+      @cohort_page.wait_until(1, "Expected #{expected_cohort_names}, but got #{visible_cohort_names}") { visible_cohort_names == expected_cohort_names }
+    else
+      logger.warn 'No cohorts exist, cannot test Everyone\'s Cohorts'
+    end
   end
 
   it 'offers a link to the Intensive cohort' do
@@ -68,54 +66,54 @@ describe 'BOAC custom cohorts', order: :defined do
 
     before(:each) { @cohort_page.cancel_cohort if @cohort_page.cancel_cohort_button? }
 
-    test_search_criteria.each do |criteria|
-      it "shows by First Name all the users who match sports '#{criteria.squads && (criteria.squads.map &:name)}', levels '#{criteria.levels}', majors '#{criteria.majors}', and GPA ranges '#{criteria.gpa_ranges}'" do
+    cohorts_to_create.each do |cohort|
+      it "shows by First Name all the users who match sports '#{cohort.search_criteria.squads && (cohort.search_criteria.squads.map &:name)}', levels '#{cohort.search_criteria.levels}', majors '#{cohort.search_criteria.majors}', and GPA ranges '#{cohort.search_criteria.gpa_ranges}'" do
         @homepage.load_page
         @cohort_page.click_create_new_cohort
-        @cohort_page.perform_search criteria
-        expected_results = @cohort_page.expected_results_by_first_name(@user_data, criteria)
+        @cohort_page.perform_search cohort
+        expected_results = @cohort_page.expected_results_by_first_name(@user_data, cohort.search_criteria)
         visible_results = @cohort_page.visible_search_results
         @cohort_page.wait_until(1, "Expected #{expected_results} but got #{visible_results}") { visible_results == expected_results }
       end
 
-      it "sorts by Last Name all the users who match sports '#{criteria.squads && (criteria.squads.map &:name)}', levels '#{criteria.levels}', majors '#{criteria.majors}', and GPA ranges '#{criteria.gpa_ranges}'" do
-        @cohort_page.sort_by_last_name
-        expected_results = @cohort_page.expected_results_by_last_name(@user_data, criteria)
+      it "sorts by Last Name all the users who match sports '#{cohort.search_criteria.squads && (cohort.search_criteria.squads.map &:name)}', levels '#{cohort.search_criteria.levels}', majors '#{cohort.search_criteria.majors}', and GPA ranges '#{cohort.search_criteria.gpa_ranges}'" do
+        expected_results = @cohort_page.expected_results_by_last_name(@user_data, cohort.search_criteria)
+        @cohort_page.sort_by_last_name if expected_results.any?
         visible_results = @cohort_page.visible_search_results
         @cohort_page.wait_until(1, "Expected #{expected_results} but got #{visible_results}") { visible_results == expected_results }
       end
 
-      it "sorts by Team all the users who match sports '#{criteria.squads && (criteria.squads.map &:name)}', levels '#{criteria.levels}', majors '#{criteria.majors}', and GPA ranges '#{criteria.gpa_ranges}'" do
-        @cohort_page.sort_by_team
-        expected_results = @cohort_page.expected_results_by_team(@user_data, criteria)
+      it "sorts by Team all the users who match sports '#{cohort.search_criteria.squads && (cohort.search_criteria.squads.map &:name)}', levels '#{cohort.search_criteria.levels}', majors '#{cohort.search_criteria.majors}', and GPA ranges '#{cohort.search_criteria.gpa_ranges}'" do
+        expected_results = @cohort_page.expected_results_by_team(@user_data, cohort.search_criteria)
+        @cohort_page.sort_by_team if expected_results.any?
         visible_results = @cohort_page.visible_search_results
         @cohort_page.wait_until(1, "Expected #{expected_results} but got #{visible_results}") { visible_results == expected_results }
       end
 
-      it "sorts by GPA all the users who match sports '#{criteria.squads && (criteria.squads.map &:name)}', levels '#{criteria.levels}', majors '#{criteria.majors}', and GPA ranges '#{criteria.gpa_ranges}'" do
-        @cohort_page.sort_by_gpa
-        expected_results = @cohort_page.expected_results_by_gpa(@user_data, criteria)
+      it "sorts by GPA all the users who match sports '#{cohort.search_criteria.squads && (cohort.search_criteria.squads.map &:name)}', levels '#{cohort.search_criteria.levels}', majors '#{cohort.search_criteria.majors}', and GPA ranges '#{cohort.search_criteria.gpa_ranges}'" do
+        expected_results = @cohort_page.expected_results_by_gpa(@user_data, cohort.search_criteria)
+        @cohort_page.sort_by_gpa if expected_results.any?
         visible_results = @cohort_page.visible_search_results
         @cohort_page.wait_until(1, "Expected #{expected_results} but got #{visible_results}") { visible_results == expected_results }
       end
 
-      it "sorts by Level all the users who match sports '#{criteria.squads && (criteria.squads.map &:name)}', levels '#{criteria.levels}', majors '#{criteria.majors}', and GPA ranges '#{criteria.gpa_ranges}'" do
-        @cohort_page.sort_by_level
-        expected_results = @cohort_page.expected_results_by_level(@user_data, criteria)
+      it "sorts by Level all the users who match sports '#{cohort.search_criteria.squads && (cohort.search_criteria.squads.map &:name)}', levels '#{cohort.search_criteria.levels}', majors '#{cohort.search_criteria.majors}', and GPA ranges '#{cohort.search_criteria.gpa_ranges}'" do
+        expected_results = @cohort_page.expected_results_by_level(@user_data, cohort.search_criteria)
+        @cohort_page.sort_by_level if expected_results.any?
         visible_results = @cohort_page.visible_search_results
         @cohort_page.wait_until(1, "Expected #{expected_results} but got #{visible_results}") { visible_results == expected_results }
       end
 
-      it "sorts by Major all the users who match sports '#{criteria.squads && (criteria.squads.map &:name)}', levels '#{criteria.levels}', majors '#{criteria.majors}', and GPA ranges '#{criteria.gpa_ranges}'" do
-        @cohort_page.sort_by_major
-        expected_results = @cohort_page.expected_results_by_major(@user_data, criteria)
+      it "sorts by Major all the users who match sports '#{cohort.search_criteria.squads && (cohort.search_criteria.squads.map &:name)}', levels '#{cohort.search_criteria.levels}', majors '#{cohort.search_criteria.majors}', and GPA ranges '#{cohort.search_criteria.gpa_ranges}'" do
+        expected_results = @cohort_page.expected_results_by_major(@user_data, cohort.search_criteria)
+        @cohort_page.sort_by_major if expected_results.any?
         visible_results = @cohort_page.visible_search_results
         @cohort_page.wait_until(1, "Expected #{expected_results} but got #{visible_results}") { visible_results == expected_results }
       end
 
-      it "sorts by Units all the users who match sports '#{criteria.squads && (criteria.squads.map &:name)}', levels '#{criteria.levels}', majors '#{criteria.majors}', and GPA ranges '#{criteria.gpa_ranges}'" do
-        @cohort_page.sort_by_units
-        expected_results = @cohort_page.expected_results_by_units(@user_data, criteria)
+      it "sorts by Units all the users who match sports '#{cohort.search_criteria.squads && (cohort.search_criteria.squads.map &:name)}', levels '#{cohort.search_criteria.levels}', majors '#{cohort.search_criteria.majors}', and GPA ranges '#{cohort.search_criteria.gpa_ranges}'" do
+        expected_results = @cohort_page.expected_results_by_units(@user_data, cohort.search_criteria)
+        @cohort_page.sort_by_units if expected_results.any?
         visible_results = @cohort_page.visible_search_results
         @cohort_page.wait_until(1, "Expected #{expected_results} but got #{visible_results}") { visible_results == expected_results }
       end
@@ -124,14 +122,18 @@ describe 'BOAC custom cohorts', order: :defined do
 
     cohorts_to_create.each do |cohort|
       it "allows the user to create a cohort using '#{cohort.search_criteria.squads && (cohort.search_criteria.squads.map &:name)}', levels '#{cohort.search_criteria.levels}', majors '#{cohort.search_criteria.majors}', GPA '#{cohort.search_criteria.gpa_ranges}'" do
-        @cohort_page.search_and_create_new_cohort cohort
-        cohorts_created << cohort
+        @cohort_page.click_create_new_cohort
+        @cohort_page.perform_search cohort
+        unless cohort.member_count.zero?
+          @cohort_page.create_new_cohort cohort
+          cohorts_created << cohort
+        end
       end
     end
 
     it 'requires a title' do
       @homepage.click_create_new_cohort
-      @cohort_page.perform_search test_search_criteria.first
+      @cohort_page.perform_search cohorts_created.first
       @cohort_page.click_save_cohort_button_one
       expect(@cohort_page.save_cohort_button_two_element.disabled?).to be true
     end
@@ -139,7 +141,7 @@ describe 'BOAC custom cohorts', order: :defined do
     it 'truncates a title over 255 characters' do
       cohort = Cohort.new({name: "#{'A loooooong title' * 15}?"})
       @homepage.click_create_new_cohort
-      @cohort_page.perform_search test_search_criteria.first
+      @cohort_page.perform_search cohorts_created.first
       @cohort_page.save_and_name_cohort cohort
       cohort.name = cohort.name[0..254]
       @cohort_page.wait_for_cohort cohort
