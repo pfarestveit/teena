@@ -69,7 +69,8 @@ class BOACUtils < Utils
           squads: (d['teams'] && d['teams'].map { |t| Squad::SQUADS.find { |s| s.name == t['squad'] } }),
           levels: (d['levels'] && d['levels'].map { |l| l['level'] }),
           majors: (d['majors'] && d['majors'].map { |t| t['major'] }),
-          gpa_ranges: (d['gpa_ranges'] && d['gpa_ranges'].map { |g| g['gpa_range'] })
+          gpa_ranges: (d['gpa_ranges'] && d['gpa_ranges'].map { |g| g['gpa_range'] }),
+          units: (d['units'] && d['units'].map { |u| u['unit'] })
       }
       CohortSearchCriteria.new criteria
     end

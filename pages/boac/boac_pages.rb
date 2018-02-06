@@ -25,6 +25,7 @@ module Page
 
     # Clicks the 'Cohorts' button in the header
     def click_cohorts
+      sleep 1
       wait_for_load_and_click cohorts_button_element unless create_new_cohort_link_element.visible?
     end
 

@@ -201,11 +201,6 @@ class ApiUserAnalyticsPage
     site_statistics(analytics(site)['pageViews']).merge!({:type => 'Page Views'})
   end
 
-  # Returns a user's Participations analytics on a course site
-  def site_participations(site)
-    site_statistics(analytics(site)['participations']).merge!({:type => 'Participations'})
-  end
-
   # Returns all user data relevant to cohort search
   def collect_users_searchable_data(driver)
     users = BOACUtils.get_athletes

@@ -93,7 +93,7 @@ describe 'BOAC' do
 
         # Make sure a matrix view button is present. If not, load a team cohort to obtain matrix view.
 
-        @cohort_page.load_team_page Team::TEAMS::TNW unless @cohort_page.matrix_view_button?
+        @cohort_page.load_team_page Team::TEAMS.first unless @cohort_page.matrix_view_button?
 
         @cohort_page.click_matrix_view
         @cohort_page.perform_search cohort
