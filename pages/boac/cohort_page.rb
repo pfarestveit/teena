@@ -32,7 +32,7 @@ module Page
       # Clicks the matrix view button
       def click_matrix_view
         logger.info 'Switching to matrix view'
-        wait_for_update_and_click matrix_view_button_element
+        wait_for_load_and_click matrix_view_button_element
         div_element(id: 'scatterplot').when_present Utils.medium_wait
       end
 
@@ -45,14 +45,16 @@ module Page
 
       # CUSTOM COHORTS - Search
 
-      button(:teams_filter_button, id: 'search-filter-teams')
-      elements(:squad_option, :checkbox, xpath: '//input[contains(@id,"search-option-team")]')
-      button(:level_filter_button, id: 'search-filter-level')
+      button(:squad_filter_button, id: 'search-filter-group-codes')
+      elements(:squad_option, :checkbox, xpath: '//input[contains(@id,"search-option-group-codes")]')
+      button(:level_filter_button, id: 'search-filter-levels')
       elements(:level_option, :checkbox, xpath: '//input[contains(@id, "search-option-level")]')
       button(:major_filter_button, id: 'search-filter-majors')
       elements(:major_option, :checkbox, xpath: '//input[contains(@id, "search-option-major")]')
       button(:gpa_range_filter_button, id: 'search-filter-gpa-ranges')
       elements(:gpa_range_option, :checkbox, xpath: '//input[contains(@id, "search-option-gpa-range")]')
+      button(:units_filter_button, id: 'search-filter-unit-ranges')
+      elements(:units_option, :checkbox, xpath: '//input[contains(@id, "search-option-unit-ranges")]')
 
       button(:search_button, id: 'execute-search')
       elements(:results_page_link, class: 'pagination-page')
@@ -92,6 +94,13 @@ module Page
         checkbox_element(xpath: "//input[@aria-label='#{gpa_range}']")
       end
 
+      # Returns the option for a given units range
+      # @param units [String]
+      # @return [PageObject::Elements::Option]
+      def units_option_element(units)
+        checkbox_element(xpath: "//span[text()=\"#{units}\"/preceding-sibling::input")
+      end
+
       # Verifies that a set of cohort search criteria are currently selected
       # @param search_criteria [CohortSearchCriteria]
       # @return [boolean]
@@ -112,6 +121,10 @@ module Page
         search_criteria.gpa_ranges.each do |g|
           wait_until(Utils.short_wait, "GPA range #{g} is not selected") { gpa_range_option_element(g).exists? && gpa_range_option_element(g).attribute('class').include?('not-empty') }
         end if search_criteria.gpa_ranges
+
+        search_criteria.units.each do |u|
+          wait_until(Utils.short_wait, "Units #{u} is not selected") { units_option_element(u).exists? && units_option_element(u).attribute('class').include?('not-empty') }
+        end
         true
       end
 
@@ -140,12 +153,12 @@ module Page
       # @param cohort [Cohort]
       def perform_search(cohort)
         criteria = cohort.search_criteria
-        logger.info "Searching for squads '#{criteria.squads && (criteria.squads.map &:name)}', levels '#{criteria.levels}', majors '#{criteria.majors}', GPA ranges '#{criteria.gpa_ranges}'"
+        logger.info "Searching for squads '#{criteria.squads && (criteria.squads.map &:name)}', levels '#{criteria.levels}', majors '#{criteria.majors}', GPA ranges '#{criteria.gpa_ranges}, units '#{criteria.units}"
         sleep 2
 
         # Uncheck any options that are already checked from a previous search, then check those that apply to the current search
         unless squad_option_elements.all? &:visible?
-          wait_for_update_and_click teams_filter_button_element
+          wait_for_update_and_click squad_filter_button_element
           wait_until(1) { squad_option_elements.all? &:visible? }
         end
         squad_option_elements.each { |o| o.click if o.attribute('class').include?('not-empty') }
@@ -184,6 +197,13 @@ module Page
         end
         gpa_range_option_elements.each { |o| o.click if o.attribute('class').include?('not-empty') }
         criteria.gpa_ranges.each { |g| check_search_option gpa_range_option_element(g) } if criteria.gpa_ranges
+
+        unless units_option_elements.all? &:visible?
+          wait_for_update_and_click units_filter_button_element
+          wait_until(1) { units_option_elements.all? &:visible? }
+        end
+        units_option_elements.each { |u| u.click if u.attribute('class').include?('not-empty') }
+        criteria.units.each { |u| check_search_option units_option_element(u) } if criteria.units
 
         # Execute search and log time search took to complete
         wait_for_update_and_click search_button_element
@@ -229,12 +249,28 @@ module Page
            high_end = array[1]
            matching_gpa_range_users << user_data.select do |u|
              gpa = u[:gpa].to_f
-             (gpa != 0) && (low_end.to_f <= gpa) &&
-                 (high_end == '4.00') ? (gpa <= high_end.to_f.round(1)) : (gpa < high_end.to_f.round(1))
+             (gpa != 0) && (low_end.to_f <= gpa) && ((high_end == '4.00') ? (gpa <= high_end.to_f.round(1)) : (gpa < high_end.to_f.round(1)))
            end
          end
         end
-        matching_users = [matching_squad_users, matching_level_users, matching_major_users, matching_gpa_range_users.flatten].delete_if { |a| a.empty? }
+        matching_gpa_range_users = matching_gpa_range_users.flatten
+
+        matching_units_users = []
+        if search_criteria.units
+          search_criteria.units.each do |units|
+            if units.include?('+')
+              matching_units_users << user_data.select { |user| user[:units].to_f >= 120 }
+            else
+              range = units.split(' - ')
+              low_end = range[0].to_f
+              high_end = range[1].to_f
+              matching_units_users << user_data.select { |user| (user[:units].to_f >= low_end) && (user[:units].to_f < high_end.round(-1)) }
+            end
+          end
+        end
+        matching_units_users = matching_units_users.flatten
+
+        matching_users = [matching_squad_users, matching_level_users, matching_major_users, matching_gpa_range_users, matching_units_users].delete_if { |a| a.empty? }
         matching_users.inject :'&'
       end
 
@@ -247,7 +283,7 @@ module Page
       button(:save_cohort_button_two, id: 'confirm-create-cohort-btn')
       button(:cancel_cohort_button, id: 'cancel-create-cohort-btn')
       div(:cohort_not_found_msg, xpath: '//div[contains(.,"Sorry, there was an error retrieving cohort data.")]')
-      elements(:everyone_cohort_link, :span, xpath: '//h1[text()="Everyone\'s Cohorts"]//a[@data-ng-bind="cohort.label"]')
+      elements(:everyone_cohort_link, :span, xpath: '//h1[text()="Everyone\'s Cohorts"]/following-sibling::div//a[@data-ng-bind="cohort.label"]')
 
       # Loads a cohort page by the cohort's ID
       # @param cohort [Cohort]

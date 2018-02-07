@@ -331,7 +331,7 @@ describe 'BOAC' do
                         begin
 
                           site_data = site[:data]
-                          site_assignment_analytics, site_grades_analytics, site_page_view_analytics, site_participation_analytics = nil
+                          site_assignment_analytics, site_grades_analytics, site_page_view_analytics = nil
                           site_code = user_analytics_data.site_metadata(site_data)[:code]
 
                           # Find the site in the UI differently if it's matched versus unmatched
@@ -344,10 +344,9 @@ describe 'BOAC' do
                           site_assignment_analytics = user_analytics_data.site_assignments_on_time(site_data)
                           site_grades_analytics = user_analytics_data.site_grades(site_data)
                           site_page_view_analytics = user_analytics_data.site_page_views(site_data)
-                          site_participation_analytics = user_analytics_data.site_participations(site_data)
 
                           # Compare to what's shown in the UI
-                          [site_assignment_analytics, site_grades_analytics, site_page_view_analytics, site_participation_analytics].each do |api_analytics|
+                          [site_assignment_analytics, site_grades_analytics, site_page_view_analytics].each do |api_analytics|
 
                             if api_analytics[:user_percentile].nil?
                               no_data = @boac_student_page.no_data?(analytics_xpath, api_analytics[:type])
@@ -362,8 +361,6 @@ describe 'BOAC' do
                                                       @boac_student_page.visible_grades_analytics(@driver, analytics_xpath, api_analytics)
                                                     when 'Page Views'
                                                       @boac_student_page.visible_page_view_analytics(@driver, analytics_xpath, api_analytics)
-                                                    when 'Participations'
-                                                      @boac_student_page.visible_participation_analytics(@driver, analytics_xpath, api_analytics)
                                                     else
                                                       logger.error "Unsupported analytics type '#{api_analytics[:type]}'"
                                                   end
@@ -413,7 +410,7 @@ describe 'BOAC' do
                           it("encountered an error for UID #{team_member.uid} term #{term_name} site #{site_code}") { fail }
                         ensure
                           row = [team_member.uid, team.name, term_name, site[:course_code], site_code,
-                                 site_assignment_analytics, site_grades_analytics, site_page_view_analytics, site_participation_analytics]
+                                 site_assignment_analytics, site_grades_analytics, site_page_view_analytics]
                           Utils.add_csv_row(user_course_canvas_data, row)
                         end
                       end
