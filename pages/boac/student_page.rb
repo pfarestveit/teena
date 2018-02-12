@@ -31,17 +31,17 @@ module Page
 
       elements(:course_site_code, :h3, xpath: '//h3[@data-ng-bind="course.courseCode"]')
 
+      # Loads a student page directly
+      # @param user [User]
+      def load_page(user)
+        logger.info "Loading student page for UID #{user.uid}"
+        navigate_to "#{BOACUtils.base_url}/student/#{user.uid}"
+      end
+
       # Clicks the 'return to cohort' link
       def click_return_to_cohort
         logger.debug 'Returning to cohort'
         wait_for_load_and_click return_to_cohort_element
-      end
-
-      # Waits for the student page to load and then hits the browser's 'back' button
-      def go_back
-        logger.debug 'Hitting back button'
-        return_to_cohort_element.when_visible Utils.short_wait
-        back
       end
 
       # Returns a user's SIS data visible on the student page
@@ -117,7 +117,7 @@ module Page
       # @param course_code [String]
       # @param index [Integer]
       # @return [Hash]
-      def visible_section_sis_data(term_name, course_code, component, index)
+      def visible_section_sis_data(term_name, course_code, index)
         section_xpath = section_data_xpath(term_name, course_code, index)
         status_xpath = "#{section_xpath}//span[contains(@data-ng-if,'section.enrollmentStatus')]"
         number_xpath = "#{section_xpath}//span[@data-ng-bind='section.sectionNumber']"

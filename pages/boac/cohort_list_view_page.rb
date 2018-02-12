@@ -275,7 +275,7 @@ module Page
       # @return [Array<String>]
       def expected_results_by_major(user_data, search_criteria)
         expected_users = expected_search_results(user_data, search_criteria)
-        sorted_users = expected_users.sort_by { |u| [u[:majors].sort.first, u[:first_name_sortable], u[:last_name_sortable]] }
+        sorted_users = expected_users.sort_by { |u| [u[:majors].sort.first.downcase, u[:first_name_sortable], u[:last_name_sortable]] }
         sorted_users.map { |u| u[:sid] }
       end
 

@@ -21,7 +21,7 @@ describe 'BOAC custom cohorts', order: :defined do
     @analytics_page = ApiUserAnalyticsPage.new @driver
     @homepage = Page::BOACPages::HomePage.new @driver
     @cohort_page = Page::BOACPages::CohortListViewPage.new @driver
-    @homepage.dev_auth Utils.super_admin_uid
+    @homepage.dev_auth
 
     # Get the user data relevant to all search filters
     @user_data = @analytics_page.collect_users_searchable_data(@driver)

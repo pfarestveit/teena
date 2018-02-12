@@ -24,7 +24,7 @@ describe 'A Canvas discussion', order: :defined do
     # Create test course site. If using an existing site, include the Asset Library and ensure Canvas sync is enabled.
     tools = [LtiTools::ENGAGEMENT_INDEX]
     tools << LtiTools::ASSET_LIBRARY unless course_id.nil?
-    @canvas.log_in(@cal_net, Utils.ets_qa_username, Utils.ets_qa_password)
+    @canvas.log_in(@cal_net, Utils.super_admin_username, Utils.super_admin_password)
     @canvas.create_generic_course_site(@driver, Utils.canvas_qa_sub_account, @course, [@user_1, @user_2], test_id, tools)
     @engagement_index_url = @canvas.click_tool_link(@driver, LtiTools::ENGAGEMENT_INDEX)
     unless course_id.nil?

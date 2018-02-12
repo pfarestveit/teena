@@ -110,12 +110,15 @@ class BOACUtils < Utils
     team_members
   end
 
-  # Returns all the users associated with a given collection of squads
+  # Returns all the users associated with a given collection of squads. If the full set of athlete users is already available,
+  # will use that. Otherwise, obtains the full set too.
   # @param squads [Array<Squad>]
+  # @param athletes [Array<User>]
   # @return [Array<User>]
-  def self.get_squad_members(squads)
+  def self.get_squad_members(squads, all_athletes = nil)
     squad_codes = squads.map &:code
-    get_athletes.select { |u| (u.sports & squad_codes).any? }
+    athletes = all_athletes ? all_athletes : get_athletes
+    athletes.select { |u| (u.sports & squad_codes).any? }
   end
 
   # Returns the custom cohorts belonging to a given user

@@ -10,7 +10,7 @@ describe 'BOAC' do
   @cohort_page = Page::BOACPages::CohortListViewPage.new @driver
   @matrix_page = Page::BOACPages::CohortMatrixPage.new @driver
   @student_page = Page::BOACPages::StudentPage.new @driver
-  @homepage.dev_auth Utils.super_admin_uid
+  @homepage.dev_auth
   @homepage.click_create_new_cohort
 
   # Navigate the various cohort/student views using each of the test search criteria

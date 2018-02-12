@@ -14,9 +14,11 @@ module Page
     link(:intensive_cohort_link, text: 'Intensive')
     link(:create_new_cohort_link, text: 'Create New Cohort')
     link(:manage_my_cohorts_link, text: 'Manage My Cohorts')
-    link(:view_everyone_cohorts_link, text: "View Everyone's Cohorts")
+    link(:view_everyone_cohorts_link, text: 'View Everyone\'s Cohorts')
     button(:log_out_button, xpath: '//button[contains(text(),"Log out")]')
     elements(:my_cohort_link, :link, :xpath => '//ul[@class="dropdown-menu"]/li[@data-ng-repeat="cohort in myCohorts"]/a')
+
+    div(:spinner, class: 'loading-spinner-large')
 
     # Clicks the 'Home' link in the header
     def click_home
@@ -63,6 +65,75 @@ module Page
     # Clicks the 'Log out' button in the header
     def log_out
       wait_for_update_and_click log_out_button_element
+    end
+
+    # Waits for the spinner to vanish following a page load
+    def wait_for_spinner
+      sleep 1
+      spinner_element.when_not_present Utils.medium_wait if spinner?
+    end
+
+    # USER SEARCH
+
+    text_area(:user_search_input, xpath: '//div[@class="select-search"]//input')
+    elements(:user_search_option, :list_item, xpath: '//*[name()="find-student"]//li')
+
+    # Puts focus in the user search field
+    def click_user_search_input
+      wait_for_load_and_click user_search_input_element
+    end
+
+    # Returns the search option for a given user
+    # @param user [User]
+    # @return [PageObject::Elements::ListItem]
+    def user_option(user)
+      list_item_element(xpath: "//li[contains(@class,\"select-dropdown-optgroup-option\")][contains(.,\"#{user.full_name} - #{user.sis_id}\")]")
+    end
+
+    # Returns the search option for a given squad plus user combination
+    # @param squad [Squad]
+    # @param user [User]
+    # @return [PageObject::Elements::ListItem]
+    def squad_user_option(squad, user)
+      list_item_element(xpath: "//div[@class=\"select-dropdown\"]//div[text()=\"#{squad.name}\"]/following-sibling::li[text()=\"#{user.full_name} - #{user.sis_id}\"]")
+    end
+
+    # Enters a string in the user search field and pauses to trigger a search
+    # @param string [String]
+    def enter_search_string(string)
+      logger.info "Searching for '#{string}'"
+      wait_for_element_and_type(user_search_input_element, string)
+      sleep 2
+    end
+
+    # Returns the text of all the visible user search options
+    # @return [Array<String>]
+    def visible_user_options
+      options = user_search_option_elements.map &:text
+      options.reject &:empty?
+    end
+
+    # MY LIST
+
+    # Returns the button for adding a user to or removing a user from My List
+    # @param user [User]
+    # @return [PageObject::Elements::Button]
+    def watchlist_toggle(user)
+      button_element(id: "watchlist-toggle-#{user.sis_id}")
+    end
+
+    # Adds a user to My List
+    # @param user [User]
+    def add_user_to_watchlist(user)
+      wait_for_load_and_click watchlist_toggle(user)
+      wait_until(1) { watchlist_toggle(user).span_element(xpath: "//span[contains(.,'Remove student #{user.sis_id} from my list')]") }
+    end
+
+    # Removes a user from My List
+    # @param user [User]
+    def remove_user_from_watchlist(user)
+      wait_for_load_and_click watchlist_toggle(user)
+      wait_until(1) { watchlist_toggle(user).span_element(xpath: "//span[contains(.,'Add student #{user.sis_id} to my list')]") }
     end
 
   end

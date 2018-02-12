@@ -13,7 +13,6 @@ module Page
 
       button(:list_view_button, xpath: '//button[contains(.,"List")]')
       button(:matrix_view_button, xpath: '//button[contains(.,"Matrix")]')
-      div(:spinner, class: 'loading-spinner-large')
       h1(:results, xpath: '//h1')
 
       # Navigates directly to a team page
@@ -98,7 +97,7 @@ module Page
       # @param units [String]
       # @return [PageObject::Elements::Option]
       def units_option_element(units)
-        checkbox_element(xpath: "//span[text()=\"#{units}\"/preceding-sibling::input")
+        checkbox_element(xpath: "//span[text()=\"#{units}\"]/preceding-sibling::input")
       end
 
       # Verifies that a set of cohort search criteria are currently selected
@@ -124,14 +123,13 @@ module Page
 
         search_criteria.units.each do |u|
           wait_until(Utils.short_wait, "Units #{u} is not selected") { units_option_element(u).exists? && units_option_element(u).attribute('class').include?('not-empty') }
-        end
+        end if search_criteria.units
         true
       end
 
       # Waits for a search to complete, returning either a set of results or 'no results'
       def wait_for_search_results
-        sleep 1
-        spinner_element.when_not_present Utils.medium_wait if spinner?
+        wait_for_spinner
         results_element.when_present Utils.short_wait
         sleep 1
       end
@@ -346,8 +344,9 @@ module Page
 
       # CUSTOM COHORTS - Management
 
-      button(:save_rename_button, xpath: '//button[contains(@id,"cohort-save-btn")]')
-      text_area(:rename_input, name: 'label')
+      elements(:cohort_name, :span, xpath: '//span[@data-ng-bind="cohort.label"]')
+      elements(:rename_input, :text_area, name: 'label')
+      elements(:rename_save_button, :button, xpath: '//button[contains(@id,"cohort-save-btn")]')
       button(:confirm_delete_button, id: 'confirm-delete-cohort-btn')
 
       # Returns the element containing the cohort name on the Manage Cohorts page
@@ -377,13 +376,14 @@ module Page
       def rename_cohort(cohort, new_name)
         logger.info "Changing the name of cohort ID #{cohort.id} to #{new_name}"
         click_manage_my_cohorts
+        visible_names = cohort_name_elements.map &:text
+        cohort_to_rename = visible_names.find { |n| n == cohort.name }
+        index = visible_names.index cohort_to_rename
         wait_for_load_and_click cohort_rename_button(cohort)
         cohort.name = new_name
-        rename_input_element.when_present Utils.short_wait
-        wait_until(Utils.short_wait) { rename_input_element.enabled? }
-        rename_input_element.clear
-        rename_input_element.send_keys new_name
-        wait_for_update_and_click save_rename_button_element
+        wait_until(Utils.short_wait) { rename_input_elements.any? }
+        wait_for_element_and_type(rename_input_elements[index], new_name)
+        wait_for_update_and_click rename_save_button_elements[index]
         cohort_on_manage_cohorts(cohort).when_present Utils.short_wait
       end
 
