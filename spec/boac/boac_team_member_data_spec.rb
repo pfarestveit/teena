@@ -30,7 +30,7 @@ describe 'BOAC' do
     @boac_cohort_page = Page::BOACPages::CohortListViewPage.new @driver
     @boac_student_page = Page::BOACPages::StudentPage.new @driver
 
-    @boac_homepage.dev_auth(Utils.super_admin_uid)
+    @boac_homepage.dev_auth
 
     expected_team_names = teams.map &:name
     visible_team_names = @boac_homepage.teams
@@ -153,7 +153,10 @@ describe 'BOAC' do
                   expect(student_page_sis_data[:level]).not_to be_empty
                 end
 
-                it("shows the terms in attendance for UID #{team_member.uid} on the student page") { expect(student_page_sis_data[:terms_in_attendance]).to include(analytics_api_sis_data[:terms_in_attendance]) }
+                analytics_api_sis_data[:terms_in_attendance] ?
+                    (it("shows the terms in attendance for UID #{team_member.uid} on the student page") { expect(student_page_sis_data[:terms_in_attendance]).to include(analytics_api_sis_data[:terms_in_attendance]) }) :
+                    (it("shows no terms in attendance for UID #{team_member.uid} on the student page") { expect(student_page_sis_data[:terms_in_attendance]).to be_nil })
+
                 it("shows the Entry Level Writing Requirement for UID #{team_member.uid} on the student page") { expect(student_page_sis_data[:reqt_writing]).to eql(analytics_api_sis_data[:reqt_writing]) }
                 it("shows the American History Requirement for UID #{team_member.uid} on the student page") { expect(student_page_sis_data[:reqt_history]).to eql(analytics_api_sis_data[:reqt_history]) }
                 it("shows the American Institutions Requirement for UID #{team_member.uid} on the student page") { expect(student_page_sis_data[:reqt_institutions]).to eql(analytics_api_sis_data[:reqt_institutions]) }

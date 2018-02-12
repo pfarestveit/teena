@@ -88,16 +88,16 @@ module Page
 
     link(:create_site_link, xpath: '//a[contains(text(),"Create a Site")]')
 
-    button(:add_new_course_button, class: 'selenium-spec-add-course-button')
-    text_area(:course_name_input, class: 'name')
-    text_area(:ref_code_input, class: 'course_code')
-    select_list(:term, class: 'enrollment_term_id')
+    button(:add_new_course_button, xpath: '//span[text()="Course"]/parent::span/parent::button')
+    text_area(:course_name_input, xpath: '//span[text()="Course Name"]/parent::span/parent::span/following-sibling::span//input')
+    text_area(:ref_code_input, xpath: '//span[text()="Reference Code"]/parent::span/parent::span/following-sibling::span//input')
+    select_list(:term, xpath:'//span[text()="Enrollment Term"]/parent::span/parent::span/following-sibling::span//select')
     button(:create_course_button, xpath: '//button[contains(.,"Add Course")]')
 
     span(:course_site_heading, xpath: '//li[contains(@id,"crumb_course_")]//span')
     text_area(:search_course_input, xpath: '//input[@placeholder="Search courses..."]')
     button(:search_course_button, xpath: '//input[@id="course_name"]/following-sibling::button')
-    li(:add_course_success, xpath: '//li[contains(.,"successfully added!")]')
+    paragraph(:add_course_success, xpath: '//p[contains(.,"successfully added!")]')
 
     link(:course_details_link, text: 'Course Details')
     text_area(:course_title, id: 'course_name')
@@ -153,10 +153,16 @@ module Page
       end
     end
 
-    # Clicks the 'create a site' button for the Junction LTI tool
+    # Clicks the 'create a site' button for the Junction LTI tool. If the click fails, the button could be behind a footer.
+    # Retries after hiding the footer.
     # @param driver [Selenium::WebDriver]
     def click_create_site(driver)
-      wait_for_load_and_click_js create_site_link_element
+      tries ||= 2
+      wait_for_update_and_click create_site_link_element
+    rescue
+      execute_script('arguments[0].style.hidden="hidden";', div_element(id: 'fixed_bottom'))
+      retry unless (tries -= 1).zero?
+    ensure
       switch_to_canvas_iframe(driver, JunctionUtils.junction_base_url)
     end
 
@@ -190,7 +196,7 @@ module Page
       load_sub_account sub_account
       wait_for_element_and_type(search_course_input_element, "#{course.title}")
       sleep 1
-      wait_for_load_and_click link_element(xpath: "//div[@class='courses-list']//a[contains(.,'#{course.title}')]")
+      wait_for_load_and_click link_element(text: "#{course.title}")
       wait_until(Utils.short_wait) { course_site_heading.include? "#{course.code}" }
       current_url.sub("#{Utils.canvas_base_url}/courses/", '')
     rescue
