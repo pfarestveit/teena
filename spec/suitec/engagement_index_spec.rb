@@ -6,7 +6,7 @@ describe 'The Engagement Index', order: :defined do
 
   # Load test data
   test_id = Utils.get_test_id
-  event = Event.new({csv: LRSUtils.initialize_events_csv('EngagementIndex')})
+  event = Event.new({test_id: test_id})
   admin = User.new({username: Utils.super_admin_username, full_name: 'Admin'})
   test_user_data = SuiteCUtils.load_suitec_test_data.select { |data| data['tests']['engagement_index'] }
   teacher = User.new test_user_data.find { |user| user['role'] == 'Teacher' }
@@ -84,61 +84,61 @@ describe 'The Engagement Index', order: :defined do
 
   it 'can be sorted by "Rank" ascending' do
     rank_asc = @engagement_index.visible_ranks.sort
-    @engagement_index.sort_by_rank_asc
+    @engagement_index.sort_by_rank_asc event
     @engagement_index.wait_until(Utils.short_wait) { @engagement_index.visible_ranks == rank_asc }
   end
 
   it 'can be sorted by "Rank" descending' do
     rank_desc = @engagement_index.visible_ranks.sort { |x, y| y <=> x }
-    @engagement_index.sort_by_rank_desc
+    @engagement_index.sort_by_rank_desc event
     @engagement_index.wait_until(Utils.short_wait) { @engagement_index.visible_ranks == rank_desc }
   end
 
   it 'can be sorted by "Name" ascending' do
     name_asc = @engagement_index.visible_names.sort
-    @engagement_index.sort_by_name_asc
+    @engagement_index.sort_by_name_asc event
     @engagement_index.wait_until(Utils.short_wait) { @engagement_index.visible_names == name_asc }
   end
 
   it 'can be sorted by "Name" descending' do
     name_desc = @engagement_index.visible_names.sort { |x, y| y <=> x }
-    @engagement_index.sort_by_name_desc
+    @engagement_index.sort_by_name_desc event
     @engagement_index.wait_until(Utils.short_wait) { @engagement_index.visible_names == name_desc }
   end
 
   it 'can be sorted by "Share" ascending' do
     share_asc = @engagement_index.visible_sharing.sort
-    @engagement_index.sort_by_share_asc
+    @engagement_index.sort_by_share_asc event
     @engagement_index.wait_until(Utils.short_wait) { @engagement_index.visible_sharing == share_asc }
   end
 
   it 'can be sorted by "Share" descending' do
     share_desc = @engagement_index.visible_sharing.sort { |x, y| y <=> x }
-    @engagement_index.sort_by_share_desc
+    @engagement_index.sort_by_share_desc event
     @engagement_index.wait_until(Utils.short_wait) { @engagement_index.visible_sharing == share_desc }
   end
 
   it 'can be sorted by "Points" ascending' do
     points_asc = @engagement_index.visible_points.sort
-    @engagement_index.sort_by_points_asc
+    @engagement_index.sort_by_points_asc event
     @engagement_index.wait_until(Utils.short_wait) { @engagement_index.visible_points == points_asc }
   end
 
   it 'can be sorted by "Points" descending' do
     points_desc = @engagement_index.visible_points.sort { |x, y| y <=> x }
-    @engagement_index.sort_by_points_desc
+    @engagement_index.sort_by_points_desc event
     @engagement_index.wait_until(Utils.short_wait) { @engagement_index.visible_points == points_desc }
   end
 
   it 'can be sorted by "Recent Activity" ascending' do
     dates_asc = @engagement_index.visible_activity_dates.sort
-    @engagement_index.sort_by_activity_asc
+    @engagement_index.sort_by_activity_asc event
     @engagement_index.wait_until(Utils.short_wait) { @engagement_index.visible_activity_dates == dates_asc }
   end
 
   it 'can be sorted by "Recent Activity" descending' do
     dates_desc = @engagement_index.visible_activity_dates.sort { |x, y| y <=> x }
-    @engagement_index.sort_by_activity_desc
+    @engagement_index.sort_by_activity_desc event
     @engagement_index.wait_until(Utils.short_wait) { @engagement_index.visible_activity_dates == dates_desc }
   end
 

@@ -171,10 +171,23 @@ class Utils
     output_dir
   end
 
+  # Checks if a given (CSV) file exists. If not, creates the file using column headers.
+  # @param file [File]
+  # @param columns [Array<String>]
+  # @return [File]
+  def self.ensure_csv_exists(file, columns)
+    unless File.exist? file
+      logger.info "Initializing test output CSV named #{file}"
+      CSV.open(file, 'wb') { |heading| heading << columns }
+    end
+    file
+  end
+
   # Adds a row of data to a CSV
   # @param file [File]
   # @param values [Array<String>]
-  def self.add_csv_row(file, values)
+  def self.add_csv_row(file, values, columns = nil)
+    ensure_csv_exists(file, columns)
     CSV.open(file, 'a+') { |row| row << values }
   end
 

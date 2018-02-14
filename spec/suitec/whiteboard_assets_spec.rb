@@ -4,7 +4,7 @@ describe 'Whiteboard Add Asset', order: :defined do
 
   test_id = Utils.get_test_id
   timeout = Utils.short_wait
-  event = Event.new({csv: LRSUtils.initialize_events_csv('WhiteboardAssets')})
+  event = Event.new({test_id: test_id})
 
   before(:all) do
     @course = Course.new({})
@@ -81,9 +81,9 @@ describe 'Whiteboard Add Asset', order: :defined do
       @canvas.stop_masquerading @driver
       event.actor = @admin
       @engagement_index.load_scores(@driver, @engagement_index_url, event)
-      @initial_score_stu_1 = @engagement_index.user_score @student_1
-      @initial_score_stu_2 = @engagement_index.user_score @student_2
-      @initial_score_stu_3 = @engagement_index.user_score @student_3
+      @initial_score_stu_1 = @engagement_index.user_score(@student_1, event)
+      @initial_score_stu_2 = @engagement_index.user_score(@student_2, event)
+      @initial_score_stu_3 = @engagement_index.user_score(@student_3, event)
 
       @canvas.masquerade_as(@driver, (event.actor = @student_1), @course)
       @whiteboards.load_page(@driver, @whiteboards_url, event)
@@ -125,7 +125,7 @@ describe 'Whiteboard Add Asset', order: :defined do
       @canvas.stop_masquerading @driver
       event.actor = @admin
       @engagement_index.load_scores(@driver, @engagement_index_url, event)
-      expect(@engagement_index.user_score @student_1).to eql("#{@initial_score_stu_1.to_i + 4}")
+      expect(@engagement_index.user_score(@student_1, event)).to eql("#{@initial_score_stu_1.to_i + 4}")
     end
 
     it 'shows "add_asset_to_whiteboard" but not "add_asset" activity on the CSV export for each asset belonging to another user' do
@@ -148,7 +148,7 @@ describe 'Whiteboard Add Asset', order: :defined do
 
     before(:all) do
       @engagement_index.load_scores(@driver, @engagement_index_url, event)
-      @initial_score = @engagement_index.user_score @student_1
+      @initial_score = @engagement_index.user_score(@student_1, event)
       @student_1_asset_no_title = Asset.new(@student_1.assets.find { |asset| asset['type'] == 'File' })
       @student_1_asset_long_title = Asset.new((@student_1.assets.select { |asset| asset['type'] == 'File' })[0])
       @student_1_asset_visible = Asset.new((@student_1.assets.select { |asset| asset['type'] == 'File' })[1])
@@ -237,7 +237,7 @@ describe 'Whiteboard Add Asset', order: :defined do
       @canvas.stop_masquerading @driver
       event.actor = @admin
       @engagement_index.load_scores(@driver, @engagement_index_url, event)
-      expect(@engagement_index.user_score @student_1).to eql("#{@initial_score.to_i + (Activity::ADD_ASSET_TO_LIBRARY.points * 2)}")
+      expect(@engagement_index.user_score(@student_1, event)).to eql("#{@initial_score.to_i + (Activity::ADD_ASSET_TO_LIBRARY.points * 2)}")
     end
 
     it 'shows "add_asset" activity on the CSV export' do
@@ -252,7 +252,7 @@ describe 'Whiteboard Add Asset', order: :defined do
 
     before(:all) do
       @engagement_index.load_scores(@driver, @engagement_index_url, event)
-      @initial_score = @engagement_index.user_score @student_2
+      @initial_score = @engagement_index.user_score(@student_2, event)
       @canvas.masquerade_as(@driver, (event.actor = @student_2), @course)
     end
 

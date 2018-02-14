@@ -14,12 +14,15 @@ module Page
       # Loads the LTI tool
       # @param driver [Selenium::WebDriver]
       # @param url [String]
-      def load_page(driver, url)
+      # @param event [Event]
+      def load_page(driver, url, event = nil)
         navigate_to url
         wait_until { title == "#{LtiTools::IMPACT_STUDIO.name}" }
         hide_canvas_footer_and_popup
         switch_to_canvas_iframe driver
         activity_event_drops_element.when_visible Utils.medium_wait rescue Selenium::WebDriver::Error::StaleElementReferenceError
+        add_event(event, EventType::LAUNCH_IMPACT_STUDIO)
+        add_event(event, EventType::VIEW_PROFILE)
       end
 
       # IDENTITY
@@ -71,8 +74,10 @@ module Page
       end
 
       # Clicks the Engagement Index link
-      def click_engagement_index
+      # @param event [Event]
+      def click_engagement_index(event = nil)
         wait_for_update_and_click engagement_index_link_element
+        add_event(event, EventType::LINK_TO_ENGAGEMENT_INDEX)
       end
 
       # Clicks the "Turn on?" link
@@ -127,7 +132,8 @@ module Page
       # Searches for a given user and loads its Impact Studio profile page. Makes two attempts since sometimes the first click does not
       # trigger the select options.
       # @param user [User]
-      def search_for_user(user)
+      # @param event [Event]
+      def search_for_user(user, event = nil)
         logger.info "Searching for #{user.full_name} UID #{user.uid}"
         tries ||= 2
         begin
@@ -136,6 +142,8 @@ module Page
           (option = list_item_element(xpath: "//div[contains(@class,'select-dropdown')]//li[contains(.,'#{user.full_name}')]")).when_present Utils.short_wait
           js_click option
           wait_until(Utils.medium_wait) { name == user.full_name }
+          add_event(event, EventType::SEARCH_PROFILE, user.uid)
+          add_event(event, EventType::VIEW_PROFILE, user.uid)
         rescue
           (tries -= 1).zero? ? fail : retry
         end
@@ -143,20 +151,26 @@ module Page
 
       # Given a user who should be next on profile pagination, clicks the next button and waits for that user's profile to load
       # @param user [User]
-      def browse_next_user(user)
+      # @param event [Event]
+      def browse_next_user(user, event = nil)
         logger.info "Browsing for next user #{user.full_name}"
         wait_until(1) { browse_next_element.text == user.full_name }
         browse_next
         wait_until(Utils.short_wait) { name == user.full_name }
+        add_event(event, EventType::BROWSE_PROFILE, user.uid)
+        add_event(event, EventType::VIEW_PROFILE, user.uid)
       end
 
       # Given a user who should be previous on profile pagination, clicks the previous button and waits for that user's profile to load
       # @param user [User]
-      def browse_previous_user(user)
+      # @param event [Event]
+      def browse_previous_user(user, event = nil)
         logger.info "Browsing for previous user #{user.full_name}"
         wait_until(1) { browse_previous_element.text == user.full_name }
         browse_previous
         wait_until(Utils.short_wait) { name == user.full_name }
+        add_event(event, EventType::BROWSE_PROFILE, user.uid)
+        add_event(event, EventType::VIEW_PROFILE, user.uid)
       end
 
       # ACTIVITY
@@ -396,11 +410,15 @@ module Page
 
       # Given a filter button element, makes sure the activity bars are filtered correctly
       # @param button [PageObject::Elements::Button]
-      def filter_activity_bar(button)
+      # @param event [Event]
+      def filter_activity_bar(button, event = nil)
         if button.exists?
           logger.debug 'Clicking activity filter'
           scroll_to_element button
-          js_click button unless button.attribute('disabled')
+          unless button.attribute('disabled')
+            js_click button
+            add_event(event, EventType::FILTER_TOTAL_ACTIVITIES)
+          end
         end
       end
 
@@ -549,26 +567,31 @@ module Page
       # Adds a link asset to the Asset Library via the Impact Studio
       # @param driver [Selenium::WebDriver]
       # @param asset [Asset]
-      def add_site(driver, asset)
+      # @param event [Event]
+      def add_site(driver, asset, event = nil)
         wait_for_update_and_click_js add_site_link_element
         switch_to_canvas_iframe driver
         enter_and_submit_url asset
         wait_for_asset_and_get_id asset
+        add_event(event, EventType::CREATE_LINK_ASSET, asset.id)
       end
 
       # Adds a file asset to the Asset Library via the Impact Studio
       # @param driver [Selenium::WebDriver]
       # @param asset [Asset]
-      def add_file(driver, asset)
+      # @param event [Event]
+      def add_file(driver, asset, event = nil)
         wait_for_update_and_click_js upload_link_element
         switch_to_canvas_iframe driver
         enter_and_upload_file asset
         wait_for_asset_and_get_id asset
+        add_event(event, EventType::CREATE_FILE_ASSET, asset.id)
       end
 
       # Given a swim lane filter link element, clicks the element unless it is disabled
       # @param element [PageObject::Elements::Link]
-      def click_swim_lane_filter(element)
+      # @param event [Event]
+      def click_swim_lane_filter(element, event = nil)
         if element.exists?
           scroll_to_element element
           js_click element
@@ -624,9 +647,11 @@ module Page
 
       # Pins an asset on the user Assets lane
       # @param asset [Asset]
-      def pin_user_asset(asset)
+      # @param event [Event]
+      def pin_user_asset(asset, event = nil)
         logger.info "Pinning Assets asset ID #{asset.id}"
         change_asset_pinned_state(user_assets_pin_element(asset), 'Pinned')
+        add_event(event, EventType::PIN_ASSET_PROFILE, asset.id)
       end
 
       # Unpins an asset on the user Assets lane
@@ -641,11 +666,13 @@ module Page
       # @param driver [Selenium::WebDriver]
       # @param assets [Array<Asset>]
       # @param user [User]
-      def verify_user_recent_assets(driver, assets, user)
+      # @param event [Event]
+      def verify_user_recent_assets(driver, assets, user, event = nil)
         recent_studio_ids = recent_studio_asset_ids assets
         all_recent_ids = recent_asset_ids assets
         logger.info "Verifying that user Recent assets are #{recent_studio_ids} on the Impact Studio and #{all_recent_ids} on the Asset Library"
         click_swim_lane_filter user_recent_link_element
+        add_event(event, EventType::FILTER_USER_ASSETS, user.uid)
         wait_until(Utils.short_wait, "Expected user Recent list to include asset IDs #{recent_studio_ids}, but they were #{swim_lane_asset_ids user_asset_link_elements}") do
           sleep 2
           swim_lane_asset_ids(user_asset_link_elements) == recent_studio_ids
@@ -663,11 +690,13 @@ module Page
       # @param driver [Selenium::WebDriver]
       # @param assets [Array<Asset>]
       # @param user [User]
-      def verify_user_impactful_assets(driver, assets, user)
+      # @param event [Event]
+      def verify_user_impactful_assets(driver, assets, user, event = nil)
         impactful_studio_ids = impactful_studio_asset_ids assets
         all_impactful_ids = impactful_asset_ids assets
         logger.info "Verifying that user Impactful assets are #{impactful_studio_ids} on the Impact Studio and #{all_impactful_ids} on the Asset Library"
         click_swim_lane_filter user_impactful_link_element
+        add_event(event, EventType::FILTER_USER_ASSETS, user.uid)
         wait_until(Utils.short_wait, "Expected user Impactful list to include asset IDs #{impactful_studio_ids}, but they were #{swim_lane_asset_ids user_asset_link_elements}") do
           sleep 2
           swim_lane_asset_ids(user_asset_link_elements) == impactful_studio_ids
@@ -685,11 +714,13 @@ module Page
       # @param driver [Selenium::WebDriver]
       # @param assets [Array<Asset>]
       # @param user [User]
-      def verify_user_pinned_assets(driver, assets, user)
+      # @param event [Event]
+      def verify_user_pinned_assets(driver, assets, user, event = nil)
         pinned_studio_ids = pinned_studio_asset_ids assets
         all_pinned_ids = pinned_asset_ids assets
         logger.info "Verifying that user Pinned assets are #{pinned_studio_ids} on the Impact Studio and #{all_pinned_ids} on the Asset Library"
         click_swim_lane_filter user_pinned_link_element
+        add_event(event, EventType::FILTER_USER_ASSETS, user.uid)
         wait_until(Utils.short_wait, "Expected user Pinned list to include asset IDs #{pinned_studio_ids}, but they were #{swim_lane_asset_ids user_asset_link_elements}") do
           sleep 2
           swim_lane_asset_ids(user_asset_link_elements) == pinned_studio_ids
@@ -721,9 +752,11 @@ module Page
 
       # Pins an asset on the Everyone's Assets lane
       # @param asset [Asset]
-      def pin_everyone_asset(asset)
+      # @param event [Event]
+      def pin_everyone_asset(asset, event = nil)
         logger.info "Pinning Everyone's Assets asset ID #{asset.id}"
         change_asset_pinned_state(everyone_assets_pin_element(asset), 'Pinned')
+        add_event(event, EventType::FILTER_EVERYONE_ASSETS, user.uid)
       end
 
       # Unpins an asset on the Everyone's Assets lane
@@ -737,11 +770,13 @@ module Page
       # the "show more" option appears if necessary and directs to the right filtered view of the asset library
       # @param driver [Selenium::WebDriver]
       # @param assets [Array<Asset>]
-      def verify_all_recent_assets(driver, assets)
+      # @param event [Event]
+      def verify_all_recent_assets(driver, assets, event = nil)
         recent_studio_ids = recent_studio_asset_ids assets
         all_recent_ids = recent_asset_ids assets
         logger.info "Verifying that Everyone's Recent assets are #{recent_studio_ids} on the Impact Studio and #{all_recent_ids} on the Asset Library"
         click_swim_lane_filter everyone_recent_link_element
+        add_event(event, EventType::FILTER_EVERYONE_ASSETS)
         wait_until(Utils.short_wait, "Expected Everyone's Recent list to include asset IDs #{recent_studio_ids}, but they were #{swim_lane_asset_ids everyone_asset_link_elements}") do
           sleep 2
           swim_lane_asset_ids(everyone_asset_link_elements) == recent_studio_ids
@@ -757,11 +792,13 @@ module Page
       # the "show more" option appears if necessary and directs to the right filtered view of the asset library
       # @param driver [Selenium::WebDriver]
       # @param assets [Array<Asset>]
-      def verify_all_impactful_assets(driver, assets)
+      # @param event [Event]
+      def verify_all_impactful_assets(driver, assets, event = nil)
         impactful_studio_ids = impactful_studio_asset_ids assets
         all_impactful_ids = impactful_asset_ids assets
         logger.info "Verifying that Everyone's Impactful assets are #{impactful_studio_ids} on the Impact Studio and #{all_impactful_ids} on the Asset Library"
         click_swim_lane_filter everyone_impactful_link_element
+        add_event(event, EventType::FILTER_EVERYONE_ASSETS)
         wait_until(Utils.short_wait, "Expected Everyone's Impactful list to include asset IDs #{impactful_studio_ids}, but they were #{swim_lane_asset_ids everyone_asset_link_elements}") do
           sleep 2
           swim_lane_asset_ids(everyone_asset_link_elements) == impactful_studio_ids
