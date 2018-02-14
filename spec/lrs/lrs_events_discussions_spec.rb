@@ -5,7 +5,8 @@ describe 'Canvas discussion events' do
   include Logging
 
   course_id = ENV['COURSE_ID']
-  event = Event.new({csv: LRSUtils.initialize_events_csv(script = 'CanvasDiscussion')})
+  test_id = Utils.get_test_id
+  event = Event.new({test_id: test_id})
   discussion = Discussion.new("Discussion Topic #{Utils.get_test_id}")
 
   before(:all) do
@@ -18,10 +19,9 @@ describe 'Canvas discussion events' do
     @user_1 = User.new @test_user_data[0]
     @user_2 = User.new @test_user_data[1]
 
-    @test_course_identifier = Utils.get_test_id
-    @course = Course.new({title: "LRS Discussions Test #{@test_course_identifier}", site_id: course_id})
+    @course = Course.new({title: "LRS Discussions Test #{test_id}", site_id: course_id})
     @canvas.log_in(@cal_net, Utils.ets_qa_username, Utils.ets_qa_password)
-    @canvas.create_generic_course_site(@driver, Utils.canvas_qa_sub_account, @course, [@user_1, @user_2], @test_course_identifier, [LtiTools::PRIVACY_DASHBOARD])
+    @canvas.create_generic_course_site(@driver, Utils.canvas_qa_sub_account, @course, [@user_1, @user_2], test_id, [LtiTools::PRIVACY_DASHBOARD])
     @canvas.log_out(@driver, @cal_net)
 
     # User 1 logs in, creates topic, adds a reply, and logs out
@@ -45,7 +45,7 @@ describe 'Canvas discussion events' do
 
   after(:all) do
     Utils.quit_browser @driver
-    LRSUtils.get_all_test_events(script, event.csv)
+    LRSUtils.get_all_test_events event.csv
   end
 
   it('end up in the LRS database') { LRSUtils.verify_canvas_events event }

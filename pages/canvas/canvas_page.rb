@@ -669,6 +669,22 @@ module Page
       logger.info "#{tool.name} URL is #{url = current_url}"
       add_event(event, EventType::NAVIGATE)
       add_event(event, EventType::VIEW)
+      case tool.name
+        when LtiTools::ASSET_LIBRARY.name
+          add_event(event, EventType::LAUNCH_ASSET_LIBRARY)
+          add_event(event, EventType::LIST_ASSETS)
+        when LtiTools::ENGAGEMENT_INDEX.name
+          add_event(event, EventType::LAUNCH_ENGAGEMENT_INDEX)
+          add_event(event, EventType::GET_ENGAGEMENT_INDEX)
+        when LtiTools::WHITEBOARDS.name
+          add_event(event, EventType::LAUNCH_WHITEBOARDS)
+          add_event(event, EventType::LIST_WHITEBOARDS)
+        when LtiTools::IMPACT_STUDIO.name
+          add_event(event, EventType::LAUNCH_IMPACT_STUDIO)
+          add_event(event, EventType::VIEW_PROFILE)
+        else
+          logger.warn "Cannot add an event for '#{tool.name}'"
+      end
       url.delete '#'
     end
 

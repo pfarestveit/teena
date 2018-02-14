@@ -54,10 +54,12 @@ module Page
     end
 
     # Clicks the 'back to asset library' link and waits for list view to load
-    def go_back_to_asset_library
+    # @param event [Event]
+    def go_back_to_asset_library(event = nil)
       sleep 1
       wait_for_update_and_click back_to_library_link_element
       wait_until(Utils.short_wait) { list_view_asset_elements.any? }
+      add_event(event, EventType::LIST_ASSETS)
     end
 
     # Clicks the 'back to impact studio' link and shifts focus to the iframe
@@ -116,6 +118,8 @@ module Page
       wait_for_asset_and_get_id asset
       add_event(event, EventType::CREATE, asset.id)
       add_event(event, EventType::VIEW)
+      add_event(event, EventType::CREATE_FILE_ASSET, asset.id)
+      add_event(event, EventType::LIST_ASSETS)
     end
 
     # Uses JavaScript to make the file upload input visible, then enters the file to be uploaded
@@ -170,6 +174,8 @@ module Page
       wait_for_asset_and_get_id asset
       add_event(event, EventType::CREATE, asset.id)
       add_event(event, EventType::VIEW)
+      add_event(event, EventType::CREATE_LINK_ASSET, asset.id)
+      add_event(event, EventType::LIST_ASSETS)
     end
 
     # Enters asset metadata while adding a link type asset
@@ -251,13 +257,15 @@ module Page
 
     # Performs a simple search of the asset library
     # @param keyword [String]
-    def simple_search(keyword)
+    # @param event [Event]
+    def simple_search(keyword, event = nil)
       logger.info "Performing simple search of asset library by keyword '#{keyword}'"
       wait_for_update_and_click(cancel_advanced_search_element) if cancel_advanced_search?
       search_input_element.when_visible Utils.short_wait
       search_input_element.clear
       search_input_element.send_keys(keyword) unless keyword.nil?
       wait_for_update_and_click search_button_element
+      add_event(event, EventType::SEARCH_ASSETS, keyword)
     end
 
     # Ensures the advanced search form is expanded
@@ -292,6 +300,7 @@ module Page
           (self.sort_by_select = sort_by)
       wait_for_update_and_click advanced_search_submit_element
       add_event(event, EventType::SEARCH)
+      add_event(event, EventType::SEARCH_ASSETS, keyword)
     end
 
     # EVENT DROPS

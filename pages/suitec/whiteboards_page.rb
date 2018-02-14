@@ -22,6 +22,8 @@ module Page
         switch_to_canvas_iframe driver
         add_event(event, EventType::NAVIGATE)
         add_event(event, EventType::VIEW)
+        add_event(event, EventType::LAUNCH_WHITEBOARDS)
+        add_event(event, EventType::LIST_WHITEBOARDS)
       end
 
       # CREATE WHITEBOARD
@@ -89,14 +91,16 @@ module Page
         verify_first_whiteboard whiteboard
         add_event(event, EventType::CREATE, whiteboard.id)
         add_event(event, EventType::VIEW)
+        add_event(event, EventType::CREATE_WHITEBOARD)
       end
 
       # Combines methods to create a new whiteboard and then open it
       # @param driver [Selenium::WebDriver]
       # @param whiteboard [Whiteboard]
-      def create_and_open_whiteboard(driver, whiteboard)
-        create_whiteboard whiteboard
-        open_whiteboard(driver, whiteboard)
+      # @param event [Event]
+      def create_and_open_whiteboard(driver, whiteboard, event = nil)
+        create_whiteboard(whiteboard, event)
+        open_whiteboard(driver, whiteboard, event)
       end
 
       # OPEN / CLOSE EXISTING WHITEBOARD
@@ -113,6 +117,7 @@ module Page
         shift_to_whiteboard_window(driver, whiteboard)
         add_event(event, EventType::VIEW, whiteboard.id)
         add_event(event, EventType::VIEW, 'Chat')
+        add_event(event, EventType::OPEN_WHITEBOARD, whiteboard.id)
       end
 
       # Opens a whiteboard directly via URL
@@ -175,6 +180,7 @@ module Page
         wait_for_element_and_type_js(edit_title_input_element, whiteboard.title)
         wait_for_update_and_click_js save_edit_element
         add_event(event, EventType::MODIFY, whiteboard.id)
+        add_event(event, EventType::WHITEBOARD_SETTINGS, whiteboard.id)
       end
 
       # Adds a new collaborator to an existing whiteboard
@@ -199,6 +205,7 @@ module Page
         wait_for_update_and_click save_edit_element
         save_edit_element.when_not_visible Utils.short_wait rescue Selenium::WebDriver::Error::NoAlertPresentError
         add_event(event, EventType::MODIFY, whiteboard.id)
+        add_event(event, EventType::WHITEBOARD_SETTINGS, user.uid)
       end
 
       # Removes a given collaborator from a whiteboard
@@ -212,6 +219,7 @@ module Page
         # An alert can appear, but only if the user removes itself
         confirm(true) { wait_for_update_and_click save_edit_element } rescue Selenium::WebDriver::Error::NoAlertPresentError
         add_event(event, EventType::MODIFY)
+        add_event(event, EventType::WHITEBOARD_SETTINGS, user.uid)
       end
 
       # DELETE/RESTORE WHITEBOARD
@@ -306,6 +314,7 @@ module Page
         sleep 1
         wait_for_update_and_click_js simple_search_button_element
         add_event(event, EventType::SEARCH)
+        add_event(event, EventType::SEARCH_WHITEBOARDS, string)
       end
 
       # Performs an advanced whiteboard search
@@ -331,6 +340,7 @@ module Page
         inc_deleted ? check_include_deleted_cbx : uncheck_include_deleted_cbx
         wait_for_update_and_click_js advanced_search_button_element
         add_event(event, EventType::SEARCH)
+        add_event(event, EventType::SEARCH_WHITEBOARDS, string)
       end
 
       # WHITEBOARD EXPORT
@@ -365,6 +375,7 @@ module Page
         export_title_input_element.when_not_visible Utils.medium_wait rescue Selenium::WebDriver::Error::StaleElementReferenceError
         export_success_msg_element.when_visible Utils.short_wait
         add_event(event, EventType::SHARE, whiteboard.title)
+        add_event(event, EventType::EXPORT_WHITEBOARD_ASSET, whiteboard.id)
         asset = Asset.new({type: 'Whiteboard', title: whiteboard.title, preview: 'image'})
         asset.id = SuiteCUtils.get_asset_id_by_title asset
         asset
@@ -387,6 +398,7 @@ module Page
         wait_until { Dir[expected_file_path].any? }
         logger.debug 'Whiteboard converted to PNG successfully'
         add_event(event, EventType::RETRIEVE, whiteboard.title)
+        add_event(event, EventType::EXPORT_WHITEBOARD_IMAGE, whiteboard.id)
         true
       rescue
         logger.debug 'Whiteboard not converted to PNG successfully'
@@ -418,11 +430,17 @@ module Page
       # @param event [Event]
       def add_existing_assets(assets, event = nil)
         click_add_existing_asset
-        2.times { add_event(event, EventType::VIEW, 'Assets') }
+        2.times do
+          add_event(event, EventType::VIEW, 'Assets')
+          add_event(event, EventType::LIST_ASSETS)
+        end
         assets.each { |asset| wait_for_update_and_click text_area_element(xpath: "//input[@value = '#{asset.id}']") }
-        wait_for_update_and_click_js add_selected_button_element
+          wait_for_update_and_click_js add_selected_button_element
         add_selected_button_element.when_not_visible Utils.short_wait
-        assets.each { |asset| add_event(event, EventType::ADD, asset.id) }
+        assets.each do |asset|
+          add_event(event, EventType::ADD, asset.id)
+          add_event(event, EventType::ADD_WHITEBOARD_ELEMENT, asset.id)
+        end
       end
 
       # Clicks the 'upload new' or 'add link' button to add a new asset to an open whiteboard, depending on asset type
@@ -450,6 +468,8 @@ module Page
         asset.id = SuiteCUtils.get_asset_id_by_title asset
         add_event(event, EventType::CREATE, asset.id)
         add_event(event, EventType::ADD, asset.id)
+        (asset.type == 'File') ? add_event(event, EventType::CREATE_FILE_ASSET, asset.id) : add_event(event, EventType::CREATE_LINK_ASSET, asset.id)
+        add_event(event, EventType::ADD_WHITEBOARD_ELEMENT, asset.id)
       end
 
       # Uploads a new file or adds a new link to an open whiteboard and also makes the asset available in the asset library
@@ -471,6 +491,8 @@ module Page
         asset.id = SuiteCUtils.get_asset_id_by_title asset
         add_event(event, EventType::CREATE, asset.id)
         add_event(event, EventType::ADD, asset.id)
+        (asset.type == 'File') ? add_event(event, EventType::CREATE_FILE_ASSET, asset.id) : add_event(event, EventType::CREATE_LINK_ASSET, asset.id)
+        add_event(event, EventType::ADD_WHITEBOARD_ELEMENT, asset.id)
       end
 
       # Returns the ID of the currently highlighted asset on a whiteboard
@@ -490,6 +512,8 @@ module Page
         wait_until { asset_library.detail_view_asset_title == asset.title }
         add_event(event, EventType::VIEW, asset.id)
         add_event(event, EventType::VIEW)
+        add_event(event, EventType::OPEN_ASSET_FROM_WHITEBOARD, asset.id)
+        add_event(event, EventType::VIEW_ASSET, asset.id)
       end
 
       # Closes the browser window containing an asset opened from a whiteboard window using open_original_asset
@@ -551,10 +575,12 @@ module Page
 
       # Sends a given message in the chat pane
       # @param body [String]
-      def send_chat_msg(body)
+      # @param event [Event]
+      def send_chat_msg(body, event)
         logger.debug "Sending chat message with body '#{body}'"
         wait_for_element_and_type_js(chat_msg_input_element, body)
         chat_msg_input_element.send_keys :enter
+        add_event(event, EventType::GET_CHAT_MSG)
       end
 
       # Returns the link element within a chat message at a given index that contains the given link text
@@ -568,12 +594,14 @@ module Page
       # Verifies that a chat message from a given user and with a given body appears in the chat pane
       # @param sender [User]
       # @param body [String]
-      def verify_chat_msg(sender, body)
+      # @param event [Event]
+      def verify_chat_msg(sender, body, event = nil)
         logger.debug "Waiting for chat message from #{sender.full_name} with body '#{body}'"
         wait_until(timeout=Utils.short_wait) { chat_msg_body_elements.any? }
         sleep 1
         wait_until(timeout) { chat_msg_body_elements.last.text == body }
         wait_until(timeout) { chat_msg_sender_elements.last.text.include? sender.full_name }
+        add_event(event, EventType::GET_CHAT_MSG)
       end
 
     end

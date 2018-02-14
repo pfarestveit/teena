@@ -22,6 +22,8 @@ module Page
         switch_to_canvas_iframe driver
         add_event(event, EventType::NAVIGATE)
         add_event(event, EventType::VIEW)
+        add_event(event, EventType::LAUNCH_ASSET_LIBRARY)
+        add_event(event, EventType::LIST_ASSETS)
       end
 
       button(:resume_sync_button, xpath: '//button[contains(.,"Resume syncing")]')
@@ -106,6 +108,7 @@ module Page
       def wait_for_asset_detail(asset, event = nil)
         wait_until(Utils.short_wait) { detail_view_asset_title.include? "#{asset.title}" }
         add_event(event, EventType::VIEW, asset.id)
+        add_event(event, EventType::VIEW_ASSET, asset.id)
       end
 
       # Combines methods to load the asset library, find a given asset, and load its detail view
@@ -120,6 +123,10 @@ module Page
         switch_to_canvas_iframe driver
         add_event(event, EventType::NAVIGATE)
         add_event(event, EventType::VIEW)
+        add_event(event, EventType::LAUNCH_ASSET_LIBRARY)
+        add_event(event, EventType::DEEP_LINK_ASSET, asset.id)
+        add_event(event, EventType::LIST_ASSETS)
+        add_event(event, EventType::VIEW_ASSET, asset.id)
         wait_for_asset_detail(asset, event)
       end
 
@@ -162,6 +169,7 @@ module Page
         logger.debug "Asset ID is #{asset.id}"
         wait_for_load_and_click list_view_asset_elements.first
         add_event(event, EventType::VIEW, asset.id)
+        add_event(event, EventType::VIEW_ASSET, asset.id)
         logger.debug "Verifying detail view asset title is '#{asset.title}'"
         wait_until(timeout) { detail_view_asset_title.include? asset.title }
         logger.debug "Verifying detail view asset owner is '#{user.full_name}'"
@@ -434,10 +442,12 @@ module Page
         sleep 1
         wait_for_update_and_click save_changes_element
         add_event(event, EventType::MODIFY, asset.id)
+        add_event(event, EventType::EDIT_ASSET, asset.id)
         sleep 1
         wait_until(Utils.short_wait) { detail_view_asset_title == asset.title }
         add_event(event, EventType::VIEW, asset.id)
         add_event(event, EventType::VIEW)
+        add_event(event, EventType::VIEW_ASSET, asset.id)
       end
 
       # REMIX
@@ -468,9 +478,10 @@ module Page
 
       # Prepares the download directory, clicks an asset's download button, waits for a file to appear in the
       # directory and reach the right size, and returns the resulting file name
-      # @param [Asset]
+      # @param asset [Asset]
+      # @param event [Event]
       # @return [String]
-      def download_asset(asset)
+      def download_asset(asset, event = nil)
         logger.info 'Downloading original asset'
         Utils.prepare_download_dir
         wait_for_load_and_click download_asset_link_element
@@ -485,6 +496,7 @@ module Page
             logger.debug "The downloaded file size is currently #{download_file.size}, waiting for it to reach #{asset_file.size}"
             download_file.size == asset_file.size
           end
+          add_event(event, EventType::DOWNLOAD_ASSET, asset.id)
           download_file_name
         end
       end
@@ -519,7 +531,13 @@ module Page
         already_liked = detail_view_asset_like_button_element.attribute('class').include? 'active'
         count = detail_view_asset_likes_count
         js_click detail_view_asset_like_button_element
-        already_liked ? add_event(event, EventType::REMOVE, asset.id) : add_event(event, EventType::LIKE, asset.id)
+        if already_liked
+          add_event(event, EventType::REMOVE, asset.id)
+          add_event(event, EventType::UNLIKE_ASSET, asset.id)
+        else
+          add_event(event, EventType::LIKE, asset.id)
+          add_event(event, EventType::LIKE_ASSET, asset.id)
+        end
         count
       end
 
@@ -550,9 +568,11 @@ module Page
 
       # Pins a list view asset
       # @param asset [Asset]
-      def pin_list_view_asset(asset)
+      # @param event [Event]
+      def pin_list_view_asset(asset, event = nil)
         logger.info "Pinning list view asset ID #{asset.id}"
         change_asset_pinned_state(list_view_pin_element(asset), 'Pinned')
+        add_event(event, EventType::PIN_ASSET_LIST, asset.id)
       end
 
       # Unpins a list view asset
@@ -566,9 +586,11 @@ module Page
 
       # Pins a detail view asset
       # @param asset [Asset]
-      def pin_detail_view_asset(asset)
+      # @param event [Event]
+      def pin_detail_view_asset(asset, event = nil)
         logger.info "Pinning detail view asset ID #{asset.id}"
         change_asset_pinned_state(detail_view_pin_button_element, 'Pinned')
+        add_event(event, EventType::PIN_ASSET_DETAIL, asset.id)
       end
 
       # Unpins a detail view asset
@@ -597,6 +619,7 @@ module Page
         wait_for_update_and_click_js comment_add_button_element
         asset.comments.unshift(comment)
         add_event(event, EventType::POST, asset.id)
+        add_event(event, EventType::CREATE_COMMENT, asset.id)
       end
 
       # Returns the number of an asset's comments on list view
@@ -678,6 +701,7 @@ module Page
         wait_for_update_and_click_js reply_add_button_element(index)
         asset.comments.insert((index + 1), reply)
         add_event(event, EventType::POST, asset.id)
+        add_event(event, EventType::CREATE_COMMENT, asset.id)
       end
 
       # Returns the reply edit button at a given index in the list of comments or nil if no button exists
@@ -714,6 +738,7 @@ module Page
         wait_for_update_and_click_js comment_elements[index].button_element(xpath: '//button[contains(.,"Save Changes")]')
         wait_until(Utils.short_wait) { comment_body(index) == comment.body }
         add_event(event, EventType::MODIFY, asset.id)
+        add_event(event, EventType::EDIT_COMMENT, asset.id)
       end
 
       # Returns the 'cancel' comment edit button at a given index in the list of comments
@@ -742,6 +767,7 @@ module Page
         confirm(true) { wait_for_load_and_click_js delete_button_element(index) }
         asset.comments.delete comment
         add_event(event, EventType::DELETE, asset.id)
+        add_event(event, EventType::DELETE_COMMENT, asset.id)
         sleep 1
       end
 

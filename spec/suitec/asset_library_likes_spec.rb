@@ -6,13 +6,13 @@ describe 'Asset', order: :defined do
 
   test_id = Utils.get_test_id
   test_users = SuiteCUtils.load_suitec_test_data.select { |user| user['tests']['asset_library_likes'] }
-  event = Event.new({csv: LRSUtils.initialize_events_csv('Likes')})
+  event = Event.new({test_id: test_id})
 
   before(:all) do
     @course = Course.new({})
     @course.site_id = ENV['COURSE_ID']
 
-    admin = User.new({username: Utils.ets_qa_username, full_name: 'Admin'})
+    admin = User.new({username: Utils.super_admin_username, full_name: 'Admin'})
     @asset_uploader = User.new test_users[0]
     @asset_admirer = User.new test_users[1]
     @asset = Asset.new (@asset_uploader.assets.find { |asset| asset['type'] == 'Link' })
@@ -24,7 +24,7 @@ describe 'Asset', order: :defined do
     @asset_library = Page::SuiteCPages::AssetLibraryPage.new @driver
     @engagement_index = Page::SuiteCPages::EngagementIndexPage.new @driver
 
-    @canvas.log_in(@cal_net, (event.actor = admin).username, Utils.ets_qa_password)
+    @canvas.log_in(@cal_net, (event.actor = admin).username, Utils.super_admin_password)
     @canvas.create_generic_course_site(@driver, Utils.canvas_qa_sub_account, @course, [@asset_uploader, @asset_admirer],
                                        test_id, [LtiTools::ASSET_LIBRARY, LtiTools::ENGAGEMENT_INDEX])
 
@@ -40,8 +40,8 @@ describe 'Asset', order: :defined do
 
     # Get the users' initial scores
     @engagement_index.load_scores(@driver, @engagement_index_url, event)
-    @uploader_score = @engagement_index.user_score @asset_uploader
-    @admirer_score = @engagement_index.user_score @asset_admirer
+    @uploader_score = @engagement_index.user_score(@asset_uploader, event)
+    @admirer_score = @engagement_index.user_score(@asset_admirer, event)
   end
 
   after(:all) { @driver.quit }
@@ -96,13 +96,11 @@ describe 'Asset', order: :defined do
 
       it 'earn Engagement Index "like" points for the liker' do
         @engagement_index.load_scores(@driver, @engagement_index_url, event)
-        @engagement_index.search_for_user @asset_admirer
-        expect(@engagement_index.user_score @asset_admirer).to eql((@admirer_score.to_i + Activity::LIKE.points).to_s)
+        expect(@engagement_index.user_score(@asset_admirer, event)).to eql((@admirer_score.to_i + Activity::LIKE.points).to_s)
       end
 
       it 'earn Engagement Index "get_like" points for the asset creator' do
-        @engagement_index.search_for_user @asset_uploader
-        expect(@engagement_index.user_score @asset_uploader).to eql((@uploader_score.to_i + Activity::GET_LIKE.points).to_s)
+        expect(@engagement_index.user_score(@asset_uploader, event)).to eql((@uploader_score.to_i + Activity::GET_LIKE.points).to_s)
       end
 
       it 'add the liker\'s "like" activity to the activities csv' do
@@ -132,13 +130,11 @@ describe 'Asset', order: :defined do
 
       it 'remove Engagement Index "like" points from the un-liker' do
         @engagement_index.load_scores(@driver, @engagement_index_url, event)
-        @engagement_index.search_for_user @asset_admirer
-        expect(@engagement_index.user_score @asset_admirer).to eql("#{@admirer_score}")
+        expect(@engagement_index.user_score(@asset_admirer, event)).to eql("#{@admirer_score}")
       end
 
       it 'remove Engagement Index "get_like" points from the asset creator' do
-        @engagement_index.search_for_user @asset_uploader
-        expect(@engagement_index.user_score @asset_uploader).to eql("#{@uploader_score}")
+        expect(@engagement_index.user_score(@asset_uploader, event)).to eql("#{@uploader_score}")
       end
 
       it 'remove the un-liker\'s "like" activity from the activities csv' do

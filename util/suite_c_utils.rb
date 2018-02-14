@@ -25,6 +25,13 @@ class SuiteCUtils
     (JSON.parse File.read(test_users))['users']
   end
 
+  # Given a SuiteC test script's event object, returns the file path of the event tracking CSV for that object
+  # @param event [Event]
+  # @return [String]
+  def self.events_csv(event)
+    File.join(Utils.initialize_test_output_dir, "selenium-suitec-events-#{event.test_id}.csv")
+  end
+
   # Base URL of SuiteC test environment
   def self.suite_c_base_url
     @config['suite_c']['base_url']

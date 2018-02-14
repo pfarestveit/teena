@@ -5,7 +5,8 @@ describe 'Canvas assignment events' do
   include Logging
 
   course_id = ENV['COURSE_ID']
-  event = Event.new({csv: LRSUtils.initialize_events_csv(script = 'CanvasAssignment')})
+  test_id = Utils.get_test_id
+  event = Event.new({test_id: test_id})
 
   before(:all) do
     @driver = Utils.launch_browser
@@ -16,11 +17,10 @@ describe 'Canvas assignment events' do
     @teacher = User.new(@test_user_data.find { |u| u['role'] == 'Teacher' })
     @student = User.new(@test_user_data.find { |u| u['role'] == 'Student' })
 
-    @test_course_identifier = Utils.get_test_id
-    @course = Course.new({title: "LRS Assignments Test #{@test_course_identifier}", site_id: course_id})
+    @course = Course.new({title: "LRS Assignments Test #{test_id}", site_id: course_id})
     @assignment = Assignment.new("Assignment #{Utils.get_test_id}", nil, nil)
     @canvas.log_in(@cal_net, Utils.super_admin_username, Utils.super_admin_password)
-    @canvas.create_generic_course_site(@driver, Utils.canvas_qa_sub_account, @course, [@teacher, @student], @test_course_identifier, [LtiTools::PRIVACY_DASHBOARD])
+    @canvas.create_generic_course_site(@driver, Utils.canvas_qa_sub_account, @course, [@teacher, @student], test_id, [LtiTools::PRIVACY_DASHBOARD])
     # Teacher creates and then edits an assignment
     event.actor = @teacher
     @canvas.masquerade_as(@driver, @teacher, @course)
@@ -42,7 +42,7 @@ describe 'Canvas assignment events' do
 
   after(:all) do
     Utils.quit_browser @driver
-    LRSUtils.get_all_test_events(script, event.csv)
+    LRSUtils.get_all_test_events event.csv
   end
 
   it('end up in the LRS database') { LRSUtils.verify_canvas_events event }

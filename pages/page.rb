@@ -209,7 +209,7 @@ module Page
     sleep wait
   end
 
-  # Given a CSV, adds a row with data about a user action that occurred during a test run, for comparison with
+  # Given a unique identifier and event data, adds a row with data about a user action that occurred during a test run, for comparison with
   # the application's own analytic event tracking.
   # @param event [Event]
   # @param event_type [EventType]
@@ -219,7 +219,16 @@ module Page
       event.object = event_object
       values = [(event.time_str = Time.now.strftime('%Y-%m-%d %H:%M:%S')), event.actor.uid, (event.action = event_type).desc, event.object]
       logger.debug "Logging new event: '#{values}'"
-      Utils.add_csv_row(event.csv, values)
+      csv = if EventType::CALIPER_EVENT_TYPES.include?(event_type)
+              logger.debug "Adding caliper event '#{event_type.desc}'"
+              LRSUtils.events_csv event
+            elsif EventType::SUITEC_EVENT_TYPES.include?(event_type)
+              logger.debug "Adding SuiteC event '#{event_type.desc}'"
+              SuiteCUtils.events_csv event
+            else
+              logger.error 'Event type not recognized'
+            end
+      csv ? Utils.add_csv_row(csv, values, %w(Time Actor Action Object)) : fail
     end
   end
 

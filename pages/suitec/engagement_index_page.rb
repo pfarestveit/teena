@@ -21,6 +21,8 @@ module Page
         hide_canvas_footer_and_popup
         switch_to_canvas_iframe driver
         add_event(event, EventType::NAVIGATE)
+        add_event(event, EventType::LAUNCH_ENGAGEMENT_INDEX)
+        add_event(event, EventType::GET_ENGAGEMENT_INDEX)
       end
 
       # USER INFO
@@ -102,6 +104,7 @@ module Page
       def search_for_user(user, event = nil)
         wait_for_element_and_type(text_area_element(class: 'leaderboard-list-search'), user.full_name)
         add_event(event, EventType::SEARCH)
+        user.full_name.length.times { add_event(event, EventType::SEARCH_ENGAGEMENT_INDEX, user.full_name) }
       end
 
       # Returns the Impact Studio link for a given user
@@ -130,10 +133,11 @@ module Page
 
       # Returns the score of a given user on the leaderboard
       # @param user [User]
-      def user_score(user)
+      # @param event [Event]
+      def user_score(user, event = nil)
         score = '0'
         users_table_element.when_present Utils.short_wait
-        search_for_user user
+        search_for_user(user, event)
         sleep 1
         users_table_element.each do |row|
           if row[1].text == user.full_name
@@ -199,73 +203,93 @@ module Page
       end
 
       # Sorts the leaderboard by rank ascending
-      def sort_by_rank_asc
+      # @param event [Event]
+      def sort_by_rank_asc(event = nil)
         logger.info 'Sorting by "Rank" ascending'
         wait_for_update_and_click_js sort_by_rank_element
         sort_by_rank unless sort_asc?
+        add_event(event, EventType::SORT_ENGAGEMENT_INDEX, 'rank asc')
       end
 
       # Sorts the leaderboard by rank descending
-      def sort_by_rank_desc
+      # @param event [Event]
+      def sort_by_rank_desc(event = nil)
         logger.info 'Sorting by "Rank" descending'
         wait_for_update_and_click_js sort_by_rank_element
         sort_by_rank if sort_asc?
+        add_event(event, EventType::SORT_ENGAGEMENT_INDEX, 'rank desc')
       end
 
       # Sorts the leaderboard by name ascending
-      def sort_by_name_asc
+      # @param event [Event]
+      def sort_by_name_asc(event = nil)
         logger.info 'Sorting by "Name" ascending'
         wait_for_update_and_click_js sort_by_name_element
         sort_by_name unless sort_asc?
+        add_event(event, EventType::SORT_ENGAGEMENT_INDEX, 'name asc')
       end
 
       # Sorts the leaderboard by name descending
-      def sort_by_name_desc
+      # @param event [Event]
+      def sort_by_name_desc(event = nil)
         logger.info 'Sorting by "Name" descending'
         wait_for_update_and_click_js sort_by_name_element
         sort_by_name if sort_asc?
+        add_event(event, EventType::SORT_ENGAGEMENT_INDEX, 'name desc')
       end
 
       # Sorts the leaderboard by sharing preference ascending
-      def sort_by_share_asc
+      # @param event [Event]
+      def sort_by_share_asc(event = nil)
         logger.info 'Sorting by "Share" ascending'
         wait_for_update_and_click_js sort_by_share_element
         sort_by_share unless sort_asc?
+        add_event(event, EventType::SORT_ENGAGEMENT_INDEX, 'share asc')
       end
 
       # Sorts the leaderboard by sharing preference descending
-      def sort_by_share_desc
+      # @param event [Event]
+      def sort_by_share_desc(event = nil)
         logger.info 'Sorting by "Share" descending'
         wait_for_update_and_click_js sort_by_share_element
         sort_by_share if sort_asc?
+        add_event(event, EventType::SORT_ENGAGEMENT_INDEX, 'share desc')
       end
 
       # Sorts the leaderboard by point totals ascending
-      def sort_by_points_asc
+      # @param event [Event]
+      def sort_by_points_asc(event = nil)
         logger.info 'Sorting by "Points" ascending'
         wait_for_update_and_click_js sort_by_points_element
         sort_by_points unless sort_asc?
+        add_event(event, EventType::SORT_ENGAGEMENT_INDEX, 'points asc')
       end
 
       # Sorts the leaderboard by point totals descending
-      def sort_by_points_desc
+      # @param event [Event]
+      def sort_by_points_desc(event = nil)
         logger.info 'Sorting by "Points" descending'
         wait_for_update_and_click_js sort_by_points_element
         sort_by_points if sort_asc?
+        add_event(event, EventType::SORT_ENGAGEMENT_INDEX, 'points desc')
       end
 
       # Sorts the leaderboard by last activity dates ascending
-      def sort_by_activity_asc
+      # @param event [Event]
+      def sort_by_activity_asc(event = nil)
         logger.info 'Sorting by "Last Activity" ascending'
         wait_for_update_and_click_js sort_by_activity_element
         sort_by_activity unless sort_asc?
+        add_event(event, EventType::SORT_ENGAGEMENT_INDEX, 'last activity asc')
       end
 
       # Sorts the leaderboard by last activity dates descending
-      def sort_by_activity_desc
+      # @param event [Event]
+      def sort_by_activity_desc(event = nil)
         logger.info 'Sorting by "Last Activity" descending'
         wait_for_update_and_click_js sort_by_activity_element
         sort_by_activity if sort_asc?
+        add_event(event, EventType::SORT_ENGAGEMENT_INDEX, 'last activity desc')
       end
 
       # SHARING
@@ -285,6 +309,7 @@ module Page
         users_table_element.when_visible Utils.short_wait
         add_event(event, EventType::SHOW)
         add_event(event, EventType::VIEW, 'Leaderboard')
+        add_event(event, EventType::EDIT_SCORE_SHARING, 'share')
       end
 
       # Opts not to share a user's score on the leaderboard
@@ -298,6 +323,7 @@ module Page
         users_table_element.when_not_visible Utils.short_wait rescue Selenium::WebDriver::Error::StaleElementReferenceError
         add_event(event, EventType::HIDE)
         add_event(event, EventType::VIEW, 'Leaderboard') if event && event.actor && !%w(Student Observer).include?(event.actor.role)
+        add_event(event, EventType::EDIT_SCORE_SHARING, 'unshare')
       end
 
       # Returns the current sharing preference of a user
@@ -416,6 +442,7 @@ module Page
         wait_for_update_and_click points_config_link_element
         wait_until(Utils.short_wait) { enabled_activity_title_elements.any? }
         add_event(event, EventType::VIEW, 'Points config')
+        add_event(event, EventType::GET_POINTS_CONFIG)
         sleep 2
       end
 
