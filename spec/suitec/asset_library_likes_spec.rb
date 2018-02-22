@@ -153,4 +153,10 @@ describe 'Asset', order: :defined do
       @asset_library.wait_until(Utils.short_wait) { @asset_library.list_view_asset_view_count(0) == '2' }
     end
   end
+
+  describe 'events' do
+
+    it('record the right number of events') { expect(SuiteCUtils.events_match?(@course, event)).to be true }
+  end
+
 end

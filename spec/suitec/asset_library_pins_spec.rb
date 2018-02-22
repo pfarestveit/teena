@@ -330,4 +330,10 @@ describe 'Asset pinning', order: :defined do
       end
     end
   end
+
+  describe 'events' do
+
+    it('record the right number of events') { expect(SuiteCUtils.events_match?(@course, event)).to be true }
+  end
+
 end

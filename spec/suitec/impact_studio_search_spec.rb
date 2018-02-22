@@ -155,4 +155,10 @@ describe 'Impact Studio', order: :defined do
       users.each { |user| @impact_studio.browse_previous_user(student_1, user, event) }
     end
   end
+
+  describe 'events' do
+
+    it('record the right number of events') { expect(SuiteCUtils.events_match?(@course, event)).to be true }
+  end
+
 end

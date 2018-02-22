@@ -243,6 +243,7 @@ module Page
         driver.switch_to.alert.accept rescue Selenium::WebDriver::Error::StaleElementReferenceError
         add_event(event, EventType::MODIFY, board)
         add_event(event, EventType::WHITEBOARD_SETTINGS, board)
+        add_event(event, EventType::LIST_WHITEBOARDS)
         driver.switch_to.window driver.window_handles.first
         switch_to_canvas_iframe driver
         add_event(event, EventType::VIEW)
@@ -439,7 +440,7 @@ module Page
       # @param event [Event]
       def add_existing_assets(assets, event = nil)
         click_add_existing_asset event
-        assets.each { |asset| wait_for_update_and_click text_area_element(xpath : "//input[@value = '#{asset.id}']") }
+        assets.each { |asset| wait_for_update_and_click text_area_element(xpath: "//input[@value = '#{asset.id}']") }
         wait_for_update_and_click_js add_selected_button_element
         add_selected_button_element.when_not_visible Utils.short_wait
         assets.each do |asset|

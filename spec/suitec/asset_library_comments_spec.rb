@@ -233,4 +233,10 @@ describe 'An asset comment', order: :defined do
       expect(@engagement_index.user_score(@driver, @engagement_index_url, @asset_admirer, event)).to eql((@admirer_score.to_i + (Activity::COMMENT.points * 3)).to_s)
     end
   end
+
+  describe 'events' do
+
+    it('record the right number of events') { expect(SuiteCUtils.events_match?(@course, event)).to be true }
+  end
+
 end

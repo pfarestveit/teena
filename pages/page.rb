@@ -221,10 +221,10 @@ module Page
       event.object = event_object
       values = [(event.time_str = Time.now.strftime('%Y-%m-%d %H:%M:%S')), event.actor.uid, (event.action = event_type).desc, event.object]
       csv = if EventType::CALIPER_EVENT_TYPES.include?(event_type)
-              LRSUtils.events_csv event
+              event.csv = LRSUtils.events_csv event
             elsif EventType::SUITEC_EVENT_TYPES.include?(event_type)
               logger.debug "Adding SuiteC event '#{event_type.desc}'"
-              SuiteCUtils.events_csv event
+              event.csv = SuiteCUtils.script_events_csv event
             else
               logger.error 'Event type not recognized'
             end

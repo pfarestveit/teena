@@ -628,4 +628,10 @@ describe 'The Impact Studio', order: :defined do
       it('shows the other user\'s pinned assets under Assets > Pinned') { @impact_studio.verify_user_pinned_assets(@driver, student_2_pins, student_2, event) }
     end
   end
+
+  describe 'events' do
+
+    it('record the right number of events') { expect(SuiteCUtils.events_match?(@course, event)).to be true }
+  end
+
 end

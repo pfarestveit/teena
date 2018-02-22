@@ -6,8 +6,6 @@ class SuiteCUtils
 
   @config = Utils.config
 
-  # TIMEOUTS
-
   # Timeout intended to wait for a Canvas poller cycle to complete
   def self.canvas_poller_wait
     @config['timeouts']['canvas_poller']
@@ -28,9 +26,23 @@ class SuiteCUtils
   # Given a SuiteC test script's event object, returns the file path of the event tracking CSV for that object
   # @param event [Event]
   # @return [String]
-  def self.events_csv(event)
+  def self.script_events_csv(event)
     spec = Utils.get_test_script_name event.test_script
     File.join(Utils.initialize_test_output_dir, "selenium-suitec-events-#{spec}-#{event.test_id}.csv")
+  end
+
+  # Returns the file path of a CSV containing the events table rows for a given course site
+  # @param course [Course]
+  # @return [String]
+  def self.db_events_csv(course)
+    File.join(Utils.initialize_test_output_dir, "events-table-events-#{course.site_id}.csv")
+  end
+
+  # The acceptable percentage difference between the number of events tracked by a test script and the actual number of
+  # events stored in the events table
+  # @return [Float]
+  def self.acceptable_events_diff
+    @config['suite_c']['acceptable_events_diff'].to_f
   end
 
   # Base URL of SuiteC test environment
@@ -98,6 +110,44 @@ class SuiteCUtils
                AND courses.canvas_course_id = #{course.site_id}"
     results = Utils.query_db(suitec_db_credentials, query)
     user.suitec_id = results[0]['id']
+  end
+
+  # Returns the events recorded in the events table for a course
+  # @param course [Course]
+  # @return [PG::Result]
+  def self.get_course_events(course)
+    logger.debug "Course site id is #{course.site_id}"
+    domain = "#{Utils.canvas_base_url.gsub('https://', '')}"
+    query = "SELECT event_name, event_metadata, canvas_user_id, asset_id, comment_id, whiteboard_id
+             FROM events
+             WHERE canvas_course_id = '#{course.site_id}'
+               AND canvas_domain LIKE '%#{domain}'
+             ORDER BY id ASC;"
+    Utils.query_db(suitec_db_credentials, query)
+  end
+
+  # Checks whether the total events tracked by a test script and the total events stored in the events table are within
+  # an acceptable range of one another. Also writes the events table data to a CSV for debugging after a test run.
+  # @param course [Course]
+  # @param event [Event]
+  # @return [boolean]
+  def self.events_match?(course, event)
+    # Generate a CSV of events table events for manual comparison with the script's events CSV
+    db_rows = get_course_events course
+    csv = db_events_csv course
+    columns = db_rows.first.keys
+    db_rows.each { |row| Utils.add_csv_row(csv, row.values, columns) }
+
+    # Get event rows from db and from test script CSV and toss out flaky EI searches
+    script_results = CSV.parse(File.read(event.csv))
+    filtered_script_results = (script_results.delete_if { |r| r.include? 'Search engagement index' }).length.to_f
+    filtered_db_results = (db_rows.reject { |r| r['event_name'] == 'Search engagement index' }).length.to_f
+
+    event_count_diff = ((filtered_script_results - filtered_db_results).abs / filtered_script_results).round(2)
+
+    logger.warn "Expecting #{filtered_script_results} events in the events table, and there are #{filtered_db_results}"
+    logger.warn "Acceptable diff is is #{acceptable_events_diff * 100} percent, and the actual diff is #{event_count_diff * 100} percent"
+    event_count_diff <= acceptable_events_diff
   end
 
 end

@@ -355,6 +355,7 @@ describe 'Whiteboard', order: :defined do
       @asset_library.load_page(@driver, @asset_library_url, event)
       @asset_library.wait_until(Utils.medium_wait) { @asset_library.list_view_asset_link_elements.any? }
       @asset_library.wait_for_load_and_click_js @asset_library.list_view_asset_link_elements.first
+      @asset_library.add_event(event, EventType::VIEW_ASSET)
       @asset_library.delete_asset(nil, event)
 
       # Load the asset's detail
@@ -369,4 +370,10 @@ describe 'Whiteboard', order: :defined do
 
     it('links to the whiteboard asset detail') { @asset_library.click_whiteboard_usage_link(@whiteboard_exported, event) }
   end
+
+  describe 'events' do
+
+    it('record the right number of events') { expect(SuiteCUtils.events_match?(@course, event)).to be true }
+  end
+
 end
