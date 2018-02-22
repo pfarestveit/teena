@@ -16,7 +16,7 @@ describe 'Asset', order: :defined do
   asset = Asset.new (student_uploader.assets.find { |asset| asset['type'] == 'Link' })
 
   before(:all) do
-    @course = Course.new({})
+    @course = Course.new({title: "Asset Library Manage Assets #{test_id}"})
     @course.site_id = ENV['COURSE_ID']
 
     @driver = Utils.launch_browser
@@ -100,8 +100,7 @@ describe 'Asset', order: :defined do
 
         # Get the students' initial scores
         @canvas.stop_masquerading @driver
-        @engagement_index.load_page(@driver, @engagement_index_url)
-        @uploader_score = @engagement_index.user_score student_uploader
+        @uploader_score = @engagement_index.user_score(@driver, @engagement_index_url, student_uploader)
       end
 
       it 'can be done by a teacher with no effect on points already earned' do
@@ -114,8 +113,7 @@ describe 'Asset', order: :defined do
 
         # Check points
         @canvas.stop_masquerading @driver
-        @engagement_index.load_page(@driver, @engagement_index_url)
-        expect(@engagement_index.user_score student_uploader).to eql(@uploader_score)
+        expect(@engagement_index.user_score(@driver, @engagement_index_url, student_uploader)).to eql(@uploader_score)
         scores = @engagement_index.download_csv(@driver, @course, @engagement_index_url)
         expect(scores).to include("#{student_uploader.full_name}, add_asset, #{Activity::ADD_ASSET_TO_LIBRARY.points}, #{@uploader_score}")
       end
@@ -130,8 +128,7 @@ describe 'Asset', order: :defined do
 
         # Check points
         @canvas.stop_masquerading @driver
-        @engagement_index.load_page(@driver, @engagement_index_url)
-        expect(@engagement_index.user_score student_uploader).to eql(@uploader_score)
+        expect(@engagement_index.user_score(@driver, @engagement_index_url, student_uploader)).to eql(@uploader_score)
       end
 
       it 'cannot be done by a student who did not create the asset' do
@@ -159,9 +156,8 @@ describe 'Asset', order: :defined do
 
         # Get the students' initial scores
         @canvas.stop_masquerading @driver
-        @engagement_index.load_page(@driver, @engagement_index_url)
-        @uploader_score = @engagement_index.user_score student_uploader
-        @viewer_score = @engagement_index.user_score student_viewer
+        @uploader_score = @engagement_index.user_score(@driver, @engagement_index_url, student_uploader)
+        @viewer_score = @engagement_index.user_score(@driver, @engagement_index_url, student_viewer)
       end
 
       it 'can be done by a teacher with no effect on points already earned' do
@@ -174,9 +170,8 @@ describe 'Asset', order: :defined do
 
         # Check points
         @canvas.stop_masquerading @driver
-        @engagement_index.load_page(@driver, @engagement_index_url)
-        expect(@engagement_index.user_score student_uploader).to eql(@uploader_score)
-        expect(@engagement_index.user_score student_viewer).to eql(@viewer_score)
+        expect(@engagement_index.user_score(@driver, @engagement_index_url, student_uploader)).to eql(@uploader_score)
+        expect(@engagement_index.user_score(@driver, @engagement_index_url, student_viewer)).to eql(@viewer_score)
         scores = @engagement_index.download_csv(@driver, @course, @engagement_index_url)
         expect(scores).to include("#{student_uploader.full_name}, get_asset_comment, #{Activity::GET_COMMENT.points}, #{@uploader_score}")
         expect(scores).to include("#{student_viewer.full_name}, asset_comment, #{Activity::COMMENT.points}, #{@viewer_score}")
@@ -213,9 +208,8 @@ describe 'Asset', order: :defined do
 
         # Get the students' initial scores
         @canvas.stop_masquerading @driver
-        @engagement_index.load_page(@driver, @engagement_index_url)
-        @uploader_score = @engagement_index.user_score student_uploader
-        @viewer_score = @engagement_index.user_score student_viewer
+        @uploader_score = @engagement_index.user_score(@driver, @engagement_index_url, student_uploader)
+        @viewer_score = @engagement_index.user_score(@driver, @engagement_index_url, student_viewer)
       end
 
       it 'can be done by a teacher with no effect on points already earned' do
@@ -228,9 +222,8 @@ describe 'Asset', order: :defined do
 
         # Check points
         @canvas.stop_masquerading @driver
-        @engagement_index.load_page(@driver, @engagement_index_url)
-        expect(@engagement_index.user_score student_uploader).to eql(@uploader_score)
-        expect(@engagement_index.user_score student_viewer).to eql(@viewer_score)
+        expect(@engagement_index.user_score(@driver, @engagement_index_url, student_uploader)).to eql(@uploader_score)
+        expect(@engagement_index.user_score(@driver, @engagement_index_url, student_viewer)).to eql(@viewer_score)
         scores = @engagement_index.download_csv(@driver, @course, @engagement_index_url)
         expect(scores).to include("#{student_uploader.full_name}, get_like, #{Activity::GET_LIKE.points}, #{@uploader_score}")
         expect(scores).to include("#{student_viewer.full_name}, like, #{Activity::LIKE.points}, #{@viewer_score}")
@@ -275,8 +268,8 @@ describe 'Asset', order: :defined do
         # Get the students' initial scores
         @canvas.stop_masquerading @driver
         @engagement_index.load_page(@driver, @engagement_index_url)
-        @uploader_score = @engagement_index.user_score student_uploader
-        @viewer_score = @engagement_index.user_score student_viewer
+        @uploader_score = @engagement_index.user_score(@driver, @engagement_index_url, student_uploader)
+        @viewer_score = @engagement_index.user_score(@driver, @engagement_index_url, student_viewer)
       end
 
       it 'can be done by a teacher with no effect on points already earned' do
@@ -289,9 +282,8 @@ describe 'Asset', order: :defined do
 
         # Check points
         @canvas.stop_masquerading @driver
-        @engagement_index.load_page(@driver, @engagement_index_url)
-        expect(@engagement_index.user_score student_uploader).to eql(@uploader_score)
-        expect(@engagement_index.user_score student_viewer).to eql(@viewer_score)
+        expect(@engagement_index.user_score(@driver, @engagement_index_url, student_uploader)).to eql(@uploader_score)
+        expect(@engagement_index.user_score(@driver, @engagement_index_url, student_viewer)).to eql(@viewer_score)
         # TODO: verify that whiteboard points remain on csv
       end
 

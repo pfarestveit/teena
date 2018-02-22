@@ -6,7 +6,7 @@ test_id = Utils.get_test_id
 timeout = Utils.short_wait
 
   before(:all) do
-    @course = Course.new({})
+    @course = Course.new({title: "Asset Library Links and Files #{test_id}"})
     @course.site_id = ENV['COURSE_ID']
 
     # Get test user and asset
@@ -39,9 +39,7 @@ timeout = Utils.short_wait
 
     before(:all) do
       # Get initial user score
-      @engagement_index.load_scores(@driver, @engagement_index_url)
-      @engagement_index.search_for_user @user
-      @initial_score = @engagement_index.user_score(@user).to_i
+      @initial_score = @engagement_index.user_score(@driver, @engagement_index_url, @user).to_i
       @canvas.log_out(@driver, @cal_net)
 
       @canvas.log_in(@cal_net, @user.username, Utils.test_user_password)
@@ -66,9 +64,7 @@ timeout = Utils.short_wait
     end
 
     it 'earn "Add a new asset to the Asset Library" points on the Engagement Index' do
-      @engagement_index.load_scores(@driver, @engagement_index_url)
-      @engagement_index.search_for_user @user
-      current_score = @engagement_index.user_score @user
+      current_score = @engagement_index.user_score(@driver, @engagement_index_url, @user)
       expect(current_score).to eql("#{@initial_score + @activity.points}")
     end
 
@@ -174,9 +170,7 @@ timeout = Utils.short_wait
       @file_title = "#{@file_asset.title} - #{test_id}"
       @file_desc = "#{@file_asset.description} - #{test_id}"
 
-      @engagement_index.load_scores(@driver, @engagement_index_url)
-      @engagement_index.search_for_user @user
-      @initial_score = @engagement_index.user_score(@user).to_i
+      @initial_score = @engagement_index.user_score(@driver, @engagement_index_url, @user).to_i
       @canvas.log_out(@driver, @cal_net)
 
       @canvas.log_in(@cal_net, @user.username, Utils.test_user_password)
@@ -193,9 +187,7 @@ timeout = Utils.short_wait
     end
 
     it 'earn "Add a new asset to the Asset Library" points on the Engagement Index' do
-      @engagement_index.load_scores(@driver, @engagement_index_url)
-      @engagement_index.search_for_user @user
-      current_score = @engagement_index.user_score @user
+      current_score = @engagement_index.user_score(@driver, @engagement_index_url, @user)
       expect(current_score).to eql("#{@initial_score + @activity.points}")
     end
 

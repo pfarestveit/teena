@@ -25,7 +25,7 @@ describe 'Impact Studio Activity Network', :order => :defined do
   reply = Comment.new(teacher, "Reply #{test_id}")
 
   before(:all) do
-    course_title = "Activity Network #{test_id}"
+    course_title = "Impact Studio Activity Network #{test_id}"
     course_id = ENV['COURSE_ID']
     @course = Course.new({:title => course_title, :code => course_title, :site_id => course_id})
     @driver = Utils.launch_browser

@@ -78,6 +78,8 @@ module Page
   # Awaits an element for a short time then clicks it using WebDriver. Intended for DOM updates rather than page loads.
   # @param element [PageObject::Elements::Element]
   def wait_for_update_and_click(element)
+    # When clicking Canvas elements, the footer might be in the way. Hide it if it exists.
+    execute_script('arguments[0].style.hidden="hidden";', div_element(id: 'fixed_bottom')) if div_element(id: 'fixed_bottom').exists?
     click_element(element, Utils.short_wait)
   end
 
@@ -218,9 +220,7 @@ module Page
     if event
       event.object = event_object
       values = [(event.time_str = Time.now.strftime('%Y-%m-%d %H:%M:%S')), event.actor.uid, (event.action = event_type).desc, event.object]
-      logger.debug "Logging new event: '#{values}'"
       csv = if EventType::CALIPER_EVENT_TYPES.include?(event_type)
-              logger.debug "Adding caliper event '#{event_type.desc}'"
               LRSUtils.events_csv event
             elsif EventType::SUITEC_EVENT_TYPES.include?(event_type)
               logger.debug "Adding SuiteC event '#{event_type.desc}'"

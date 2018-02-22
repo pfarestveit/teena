@@ -22,7 +22,6 @@ module Page
         switch_to_canvas_iframe driver
         activity_event_drops_element.when_visible Utils.medium_wait rescue Selenium::WebDriver::Error::StaleElementReferenceError
         add_event(event, EventType::LAUNCH_IMPACT_STUDIO)
-        add_event(event, EventType::VIEW_PROFILE)
       end
 
       # IDENTITY
@@ -143,34 +142,34 @@ module Page
           js_click option
           wait_until(Utils.medium_wait) { name == user.full_name }
           add_event(event, EventType::SEARCH_PROFILE, user.uid)
-          add_event(event, EventType::VIEW_PROFILE, user.uid)
+          add_event(event, EventType::VIEW_PROFILE, user.uid) unless (event && event.actor.uid == user.uid)
         rescue
           (tries -= 1).zero? ? fail : retry
         end
       end
 
       # Given a user who should be next on profile pagination, clicks the next button and waits for that user's profile to load
-      # @param user [User]
+      # @param browsing_user [User]
+      # @param browsed_user [User]
       # @param event [Event]
-      def browse_next_user(user, event = nil)
-        logger.info "Browsing for next user #{user.full_name}"
-        wait_until(1) { browse_next_element.text == user.full_name }
+      def browse_next_user(browsing_user, browsed_user, event = nil)
+        logger.info "Browsing for next user #{browsed_user.full_name}"
+        wait_until(Utils.short_wait) { browse_next_element.text == browsed_user.full_name }
         browse_next
-        wait_until(Utils.short_wait) { name == user.full_name }
-        add_event(event, EventType::BROWSE_PROFILE, user.uid)
-        add_event(event, EventType::VIEW_PROFILE, user.uid)
+        wait_until(Utils.short_wait) { name == browsed_user.full_name }
+        add_event(event, EventType::BROWSE_PROFILE, browsed_user.uid) unless browsed_user.uid == browsing_user.uid
       end
 
       # Given a user who should be previous on profile pagination, clicks the previous button and waits for that user's profile to load
-      # @param user [User]
+      # @param browsing_user [User]
+      # @param browsed_user [User]
       # @param event [Event]
-      def browse_previous_user(user, event = nil)
-        logger.info "Browsing for previous user #{user.full_name}"
-        wait_until(1) { browse_previous_element.text == user.full_name }
+      def browse_previous_user(browsing_user, browsed_user, event = nil)
+        logger.info "Browsing for previous user #{browsed_user.full_name}"
+        wait_until(Utils.short_wait) { browse_previous_element.text == browsed_user.full_name }
         browse_previous
-        wait_until(Utils.short_wait) { name == user.full_name }
-        add_event(event, EventType::BROWSE_PROFILE, user.uid)
-        add_event(event, EventType::VIEW_PROFILE, user.uid)
+        wait_until(Utils.short_wait) { name == browsed_user.full_name }
+        add_event(event, EventType::BROWSE_PROFILE, browsed_user.uid) unless browsed_user.uid == browsing_user.uid
       end
 
       # ACTIVITY
@@ -571,9 +570,12 @@ module Page
       def add_site(driver, asset, event = nil)
         wait_for_update_and_click_js add_site_link_element
         switch_to_canvas_iframe driver
+        add_event(event, EventType::LAUNCH_ASSET_LIBRARY)
+        add_event(event, EventType::LIST_ASSETS)
         enter_and_submit_url asset
         wait_for_asset_and_get_id asset
         add_event(event, EventType::CREATE_LINK_ASSET, asset.id)
+        add_event(event, EventType::LIST_ASSETS)
       end
 
       # Adds a file asset to the Asset Library via the Impact Studio
@@ -583,19 +585,12 @@ module Page
       def add_file(driver, asset, event = nil)
         wait_for_update_and_click_js upload_link_element
         switch_to_canvas_iframe driver
+        add_event(event, EventType::LAUNCH_ASSET_LIBRARY)
+        add_event(event, EventType::LIST_ASSETS)
         enter_and_upload_file asset
         wait_for_asset_and_get_id asset
         add_event(event, EventType::CREATE_FILE_ASSET, asset.id)
-      end
-
-      # Given a swim lane filter link element, clicks the element unless it is disabled
-      # @param element [PageObject::Elements::Link]
-      # @param event [Event]
-      def click_swim_lane_filter(element, event = nil)
-        if element.exists?
-          scroll_to_element element
-          js_click element
-        end
+        add_event(event, EventType::LIST_ASSETS)
       end
 
       # Given a set of asset IDs, a 'show more' link element, and the expected asset library sort/filter combination, verifies that
@@ -603,17 +598,21 @@ module Page
       # @param driver [Selenium::WebDriver]
       # @param expected_asset_ids [Array<String>]
       # @param show_more_element [PageObject::Elements::Link]
+      # @param event [Event]
       # @param search_filter_blk block that verifies the asset library search filters and results
-      def verify_show_more(driver, expected_asset_ids, show_more_element, &search_filter_blk)
+      def verify_show_more(driver, expected_asset_ids, show_more_element, event, &search_filter_blk)
         if expected_asset_ids.length > 4
           sleep 1
-          wait_for_update_and_click_js show_more_element
+          wait_for_update_and_click show_more_element
           wait_until(Utils.short_wait) { title == 'Asset Library' }
+          add_event(event, EventType::LAUNCH_ASSET_LIBRARY)
+          add_event(event, EventType::SEARCH_ASSETS_DEEP_LINK)
+          add_event(event, EventType::LIST_ASSETS)
           switch_to_canvas_iframe driver
           begin
             return yield
           ensure
-            go_back_to_impact_studio driver
+            go_back_to_impact_studio(driver, event)
           end
         else
           show_more_element.when_not_visible Utils.short_wait rescue Selenium::WebDriver::Error::StaleElementReferenceError
@@ -632,10 +631,14 @@ module Page
       # Clicks an asset detail link on the user Assets swim lane
       # @param driver [Selenium::WebDriver]
       # @param asset [Asset]
-      def click_user_asset_link(driver, asset)
+      # @param event [Event]
+      def click_user_asset_link(driver, asset, event = nil)
         logger.info "Clicking thumbnail for Asset ID #{asset.id}"
         wait_for_update_and_click_js link_element(xpath: "//div[@id='user-assets']//ul//a[contains(@href,'_id=#{asset.id}&')]")
         switch_to_canvas_iframe driver
+        add_event(event, EventType::DEEP_LINK_ASSET, asset.id)
+        add_event(event, EventType::LAUNCH_ASSET_LIBRARY)
+        add_event(event, EventType::LIST_ASSETS)
       end
 
       # Returns the pin button for an asset on the user Assets lane
@@ -671,16 +674,16 @@ module Page
         recent_studio_ids = recent_studio_asset_ids assets
         all_recent_ids = recent_asset_ids assets
         logger.info "Verifying that user Recent assets are #{recent_studio_ids} on the Impact Studio and #{all_recent_ids} on the Asset Library"
-        click_swim_lane_filter user_recent_link_element
-        add_event(event, EventType::FILTER_USER_ASSETS, user.uid)
+        if user_recent_link?
+          wait_for_update_and_click_js user_recent_link_element
+          add_event(event, EventType::FILTER_USER_ASSETS, user.uid)
+        end
         wait_until(Utils.short_wait, "Expected user Recent list to include asset IDs #{recent_studio_ids}, but they were #{swim_lane_asset_ids user_asset_link_elements}") do
           sleep 2
           swim_lane_asset_ids(user_asset_link_elements) == recent_studio_ids
-          recent_studio_ids.empty? ? no_user_assets_msg_element.visible? : !no_user_assets_msg_element.exists?
         end
-        verify_show_more(driver, recent_studio_ids, user_assets_show_more_link_element) do
+        verify_show_more(driver, recent_studio_ids, user_assets_show_more_link_element, event) do
           wait_until(Utils.short_wait, "User filter should be #{user.full_name}, but it is currently #{uploader_select}") { uploader_select == user.full_name }
-          wait_until(Utils.short_wait, "Sort by filter should be 'Most recent', but it is currently #{sort_by_select}") { sort_by_select == 'Most recent' }
           wait_until(Utils.short_wait, "List view asset IDs should be #{all_recent_ids}, but they are currently #{list_view_asset_ids}") { list_view_asset_ids == recent_asset_ids(assets) }
         end
       end
@@ -695,16 +698,16 @@ module Page
         impactful_studio_ids = impactful_studio_asset_ids assets
         all_impactful_ids = impactful_asset_ids assets
         logger.info "Verifying that user Impactful assets are #{impactful_studio_ids} on the Impact Studio and #{all_impactful_ids} on the Asset Library"
-        click_swim_lane_filter user_impactful_link_element
-        add_event(event, EventType::FILTER_USER_ASSETS, user.uid)
+        if user_impactful_link?
+          wait_for_update_and_click user_impactful_link_element
+          add_event(event, EventType::FILTER_USER_ASSETS, user.uid)
+        end
         wait_until(Utils.short_wait, "Expected user Impactful list to include asset IDs #{impactful_studio_ids}, but they were #{swim_lane_asset_ids user_asset_link_elements}") do
           sleep 2
           swim_lane_asset_ids(user_asset_link_elements) == impactful_studio_ids
-          impactful_studio_ids.empty? ? no_user_assets_msg_element.visible? : !no_user_assets_msg_element.exists?
         end
-        verify_show_more(driver, all_impactful_ids, user_assets_show_more_link_element) do
+        verify_show_more(driver, all_impactful_ids, user_assets_show_more_link_element, event) do
           wait_until(Utils.short_wait, "User filter should be #{user.full_name}, but it is currently #{uploader_select}") { uploader_select == user.full_name }
-          wait_until(Utils.short_wait, "Sort by filter should be 'Most impactful', but it is currently #{sort_by_select}") { sort_by_select == 'Most impactful' }
           wait_until(Utils.short_wait, "List view IDs should be '#{all_impactful_ids[0..9]}', but they are currently #{list_view_asset_ids}") { list_view_asset_ids == all_impactful_ids }
         end
       end
@@ -719,16 +722,16 @@ module Page
         pinned_studio_ids = pinned_studio_asset_ids assets
         all_pinned_ids = pinned_asset_ids assets
         logger.info "Verifying that user Pinned assets are #{pinned_studio_ids} on the Impact Studio and #{all_pinned_ids} on the Asset Library"
-        click_swim_lane_filter user_pinned_link_element
-        add_event(event, EventType::FILTER_USER_ASSETS, user.uid)
+        if user_pinned_link?
+          wait_for_update_and_click user_pinned_link_element
+          add_event(event, EventType::FILTER_USER_ASSETS, user.uid)
+        end
         wait_until(Utils.short_wait, "Expected user Pinned list to include asset IDs #{pinned_studio_ids}, but they were #{swim_lane_asset_ids user_asset_link_elements}") do
           sleep 2
           swim_lane_asset_ids(user_asset_link_elements) == pinned_studio_ids
-          pinned_studio_ids.empty? ? no_user_assets_msg_element.visible? : !no_user_assets_msg_element.exists?
         end
-        verify_show_more(driver, all_pinned_ids, user_assets_show_more_link_element) do
+        verify_show_more(driver, all_pinned_ids, user_assets_show_more_link_element, event) do
           wait_until(Utils.short_wait, "User filter should be #{user.full_name}, but it is currently #{uploader_select}") { uploader_select == user.full_name }
-          wait_until(Utils.short_wait, "Sort by filter should be 'Pinned', but it is currently #{sort_by_select}") { sort_by_select == 'Pinned' }
           wait_until(Utils.short_wait, "List view IDs should be '#{all_pinned_ids[0..9]}', but they are currently #{list_view_asset_ids}") { list_view_asset_ids == all_pinned_ids }
         end
       end
@@ -775,14 +778,16 @@ module Page
         recent_studio_ids = recent_studio_asset_ids assets
         all_recent_ids = recent_asset_ids assets
         logger.info "Verifying that Everyone's Recent assets are #{recent_studio_ids} on the Impact Studio and #{all_recent_ids} on the Asset Library"
-        click_swim_lane_filter everyone_recent_link_element
-        add_event(event, EventType::FILTER_EVERYONE_ASSETS)
+        if everyone_recent_link?
+          wait_for_update_and_click_js everyone_recent_link_element
+          add_event(event, EventType::FILTER_EVERYONE_ASSETS)
+        end
         wait_until(Utils.short_wait, "Expected Everyone's Recent list to include asset IDs #{recent_studio_ids}, but they were #{swim_lane_asset_ids everyone_asset_link_elements}") do
           sleep 2
           swim_lane_asset_ids(everyone_asset_link_elements) == recent_studio_ids
           recent_studio_ids.empty? ? no_everyone_assets_msg_element.visible? : !no_everyone_assets_msg_element.exists?
         end
-        verify_show_more(driver, all_recent_ids, everyone_assets_show_more_link_element) do
+        verify_show_more(driver, all_recent_ids, everyone_assets_show_more_link_element, event) do
           wait_until(Utils.short_wait, 'Gave up waiting for advanced search button') { advanced_search_button_element.when_visible Utils.short_wait }
           wait_until(Utils.short_wait, "List view IDs should be '#{all_recent_ids[0..9]}', but they are currently #{list_view_asset_ids}") { list_view_asset_ids == recent_asset_ids(assets)[0..9] }
         end
@@ -797,15 +802,16 @@ module Page
         impactful_studio_ids = impactful_studio_asset_ids assets
         all_impactful_ids = impactful_asset_ids assets
         logger.info "Verifying that Everyone's Impactful assets are #{impactful_studio_ids} on the Impact Studio and #{all_impactful_ids} on the Asset Library"
-        click_swim_lane_filter everyone_impactful_link_element
-        add_event(event, EventType::FILTER_EVERYONE_ASSETS)
+        if everyone_impactful_link?
+          wait_for_update_and_click everyone_impactful_link_element
+          add_event(event, EventType::FILTER_EVERYONE_ASSETS)
+        end
         wait_until(Utils.short_wait, "Expected Everyone's Impactful list to include asset IDs #{impactful_studio_ids}, but they were #{swim_lane_asset_ids everyone_asset_link_elements}") do
           sleep 2
           swim_lane_asset_ids(everyone_asset_link_elements) == impactful_studio_ids
           impactful_studio_ids.empty? ? no_everyone_assets_msg_element.visible? : !no_everyone_assets_msg_element.exists?
         end
-        verify_show_more(driver, all_impactful_ids, everyone_assets_show_more_link_element) do
-          wait_until(Utils.short_wait, "User filter should be 'User', but it is currently #{uploader_select}") { uploader_select == 'User' }
+        verify_show_more(driver, all_impactful_ids, everyone_assets_show_more_link_element, event) do
           wait_until(Utils.short_wait, "Sort by filter should be 'Most impactful', but it is currently #{sort_by_select}") { sort_by_select == 'Most impactful' }
           wait_until(Utils.short_wait, "List view IDs should be '#{impactful_asset_ids(assets)[0..9]}', but they are currently #{list_view_asset_ids}") { list_view_asset_ids == all_impactful_ids[0..9] }
         end

@@ -9,7 +9,7 @@ describe 'Canvas assignment sync', order: :defined do
   asset_1_canvas_file_name = nil
 
   before(:all) do
-    @course = Course.new({})
+    @course = Course.new({title: "Canvas Assignment Sync #{test_id}"})
     @course.site_id = course_id
     @driver = Utils.launch_browser
     @canvas = Page::CanvasActivitiesPage.new @driver
@@ -43,8 +43,7 @@ describe 'Canvas assignment sync', order: :defined do
     @asset_2.category = @assignment_2.title
 
     # Get users' scores before submission
-    @engagement_index.load_scores(@driver, @engagement_index_url)
-    @initial_score = @engagement_index.user_score @student
+    @initial_score = @engagement_index.user_score(@driver, @engagement_index_url, @student)
 
     # Teacher creates on non-sync-able assignment and two sync-able assignments and waits for the latter to appear in the Asset Library categories list
     @canvas.masquerade_as(@driver, @teacher, @course)
@@ -132,8 +131,7 @@ describe 'Canvas assignment sync', order: :defined do
     end
 
     it 'does not alter existing assignment submission points on the Engagement Index score' do
-      @engagement_index.load_scores(@driver, @engagement_index_url)
-      expect(@engagement_index.user_score @student).to eql((@initial_score.to_i + (Activity::SUBMIT_ASSIGNMENT.points * 2)).to_s)
+      expect(@engagement_index.user_score(@driver, @engagement_index_url, @student)).to eql((@initial_score.to_i + (Activity::SUBMIT_ASSIGNMENT.points * 2)).to_s)
     end
 
     it 'does not alter existing assignment submission activity on the CSV export' do

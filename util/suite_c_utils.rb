@@ -29,7 +29,8 @@ class SuiteCUtils
   # @param event [Event]
   # @return [String]
   def self.events_csv(event)
-    File.join(Utils.initialize_test_output_dir, "selenium-suitec-events-#{event.test_id}.csv")
+    spec = Utils.get_test_script_name event.test_script
+    File.join(Utils.initialize_test_output_dir, "selenium-suitec-events-#{spec}-#{event.test_id}.csv")
   end
 
   # Base URL of SuiteC test environment
@@ -58,6 +59,12 @@ class SuiteCUtils
       user: @config['suite_c']['db_user'],
       password: @config['suite_c']['db_password']
     }
+  end
+
+  # Inactivates all existing courses. Used to stop the poller checking courses other than the one under test.
+  def self.inactivate_all_courses
+    query = 'UPDATE courses SET active = false;'
+    Utils.query_db(suitec_db_credentials, query)
   end
 
   # Returns a given asset's ID, provided the asset has a unique title

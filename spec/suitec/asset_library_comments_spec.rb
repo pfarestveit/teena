@@ -6,10 +6,10 @@ describe 'An asset comment', order: :defined do
 
   test_id = Utils.get_test_id
   timeout = Utils.short_wait
-  event = Event.new({test_id: test_id})
+  event = Event.new({test_script: self, test_id: test_id})
 
   before(:all) do
-    @course = Course.new({})
+    @course = Course.new({title: "Asset Library Comments #{test_id}"})
     @course.site_id = ENV['COURSE_ID']
 
     admin = User.new({username: Utils.super_admin_username, full_name: 'Admin'})
@@ -48,9 +48,8 @@ describe 'An asset comment', order: :defined do
 
     # Get the users' initial scores
     @canvas.masquerade_as(@driver, (event.actor = @teacher), @course)
-    @engagement_index.load_scores(@driver, @engagement_index_url, event)
-    @uploader_score = @engagement_index.user_score(@asset_uploader, event)
-    @admirer_score = @engagement_index.user_score(@asset_admirer, event)
+    @uploader_score = @engagement_index.user_score(@driver, @engagement_index_url, @asset_uploader, event)
+    @admirer_score = @engagement_index.user_score(@driver, @engagement_index_url, @asset_admirer, event)
   end
 
   after(:all) { @driver.quit }
@@ -76,8 +75,7 @@ describe 'An asset comment', order: :defined do
 
     it 'does not earn commenting points on the engagement index' do
       @canvas.masquerade_as(@driver, (event.actor = @teacher), @course)
-      @engagement_index.load_scores(@driver, @engagement_index_url, event)
-      expect(@engagement_index.user_score(@asset_uploader, event)).to eql(@uploader_score)
+      expect(@engagement_index.user_score(@driver, @engagement_index_url, @asset_uploader, event)).to eql(@uploader_score)
     end
   end
 
@@ -113,13 +111,11 @@ describe 'An asset comment', order: :defined do
 
     it 'earns "Comment" points on the engagement index for the user adding a comment or reply' do
       @canvas.masquerade_as(@driver, (event.actor = @teacher), @course)
-      @engagement_index.load_scores(@driver, @engagement_index_url, event)
-      expect(@engagement_index.user_score(@asset_admirer, event)).to eql((@admirer_score.to_i + (Activity::COMMENT.points * 3)).to_s)
+      expect(@engagement_index.user_score(@driver, @engagement_index_url, @asset_admirer, event)).to eql((@admirer_score.to_i + (Activity::COMMENT.points * 3)).to_s)
     end
 
     it 'earns "Receive a Comment" points on the engagement index for the user receiving the comment or reply' do
-      @engagement_index.load_scores(@driver, @engagement_index_url, event)
-      expect(@engagement_index.user_score(@asset_uploader, event)).to eql((@uploader_score.to_i + (Activity::GET_COMMENT.points * 3) + Activity::GET_COMMENT_REPLY.points).to_s)
+      expect(@engagement_index.user_score(@driver, @engagement_index_url, @asset_uploader, event)).to eql((@uploader_score.to_i + (Activity::GET_COMMENT.points * 3) + Activity::GET_COMMENT_REPLY.points).to_s)
     end
 
     it 'shows "Comment" activity on the CSV export for the user adding the comment or reply' do
@@ -199,9 +195,8 @@ describe 'An asset comment', order: :defined do
     end
 
     it 'does not alter existing engagement scores' do
-      @engagement_index.load_scores(@driver, @engagement_index_url, event)
-      expect(@engagement_index.user_score(@asset_uploader, event)).to eql((@uploader_score.to_i + (Activity::GET_COMMENT.points * 4) + Activity::GET_COMMENT_REPLY.points).to_s)
-      expect(@engagement_index.user_score(@asset_admirer, event)).to eql((@admirer_score.to_i + (Activity::COMMENT.points * 4)).to_s)
+      expect(@engagement_index.user_score(@driver, @engagement_index_url, @asset_uploader, event)).to eql((@uploader_score.to_i + (Activity::GET_COMMENT.points * 4) + Activity::GET_COMMENT_REPLY.points).to_s)
+      expect(@engagement_index.user_score(@driver, @engagement_index_url, @asset_admirer, event)).to eql((@admirer_score.to_i + (Activity::COMMENT.points * 4)).to_s)
     end
   end
 
@@ -234,9 +229,8 @@ describe 'An asset comment', order: :defined do
     end
 
     it 'removes engagement index points earned for the comment' do
-      @engagement_index.load_scores(@driver, @engagement_index_url, event)
-      expect(@engagement_index.user_score(@asset_uploader, event)).to eql((@uploader_score.to_i + (Activity::GET_COMMENT.points * 3) + Activity::GET_COMMENT_REPLY.points).to_s)
-      expect(@engagement_index.user_score(@asset_admirer, event)).to eql((@admirer_score.to_i + (Activity::COMMENT.points * 3)).to_s)
+      expect(@engagement_index.user_score(@driver, @engagement_index_url, @asset_uploader, event)).to eql((@uploader_score.to_i + (Activity::GET_COMMENT.points * 3) + Activity::GET_COMMENT_REPLY.points).to_s)
+      expect(@engagement_index.user_score(@driver, @engagement_index_url, @asset_admirer, event)).to eql((@admirer_score.to_i + (Activity::COMMENT.points * 3)).to_s)
     end
   end
 end

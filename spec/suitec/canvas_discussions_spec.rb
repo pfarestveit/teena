@@ -11,7 +11,7 @@ describe 'A Canvas discussion', order: :defined do
   get_reply = Activity::GET_DISCUSSION_REPLY
 
   before(:all) do
-    @course = Course.new({})
+    @course = Course.new({title: "Canvas Discussions #{test_id}"})
     @course.site_id = course_id
     @user_1 = User.new test_user_data[0]
     @user_2 = User.new test_user_data[1]
@@ -34,8 +34,7 @@ describe 'A Canvas discussion', order: :defined do
     end
 
     # Get current score
-    @engagement_index.load_scores(@driver, @engagement_index_url)
-    @user_1_score = @engagement_index.user_score @user_1
+    @user_1_score = @engagement_index.user_score(@driver, @engagement_index_url, @user_1)
 
     # User 1 creates a discussion topic, which should earn points
     @discussion = Discussion.new "Discussion Topic #{test_id}"
@@ -60,9 +59,8 @@ describe 'A Canvas discussion', order: :defined do
 
     before(:all) do
       # Get current scores
-      @engagement_index.load_page(@driver, @engagement_index_url)
-      @user_1_score = @engagement_index.user_score @user_1
-      @user_2_score = @engagement_index.user_score @user_2
+      @user_1_score = @engagement_index.user_score(@driver, @engagement_index_url, @user_1)
+      @user_2_score = @engagement_index.user_score(@driver, @engagement_index_url, @user_2)
 
       # User 1 creates an entry on the topic, which should earn no points
       @canvas.add_reply(@discussion, nil, 'Discussion entry by the discussion topic creator')
@@ -81,7 +79,7 @@ describe 'A Canvas discussion', order: :defined do
         expect(@engagement_index.user_score_updated?(@driver, @engagement_index_url, @user_2, @user_2_expected_score)).to be true
       end
 
-      it('earns no points for the discussion topic creator') { expect(@engagement_index.user_score @user_1).to eql(@user_1_score) }
+      it('earns no points for the discussion topic creator') { expect(@engagement_index.user_score(@driver, @engagement_index_url, @user_1)).to eql(@user_1_score) }
 
       it 'adds "discussion_entry" activity to the CSV export for the user adding the entry' do
         scores = @engagement_index.download_csv(@driver, @course, @engagement_index_url)
@@ -91,7 +89,7 @@ describe 'A Canvas discussion', order: :defined do
 
     context 'when added by the discussion topic creator' do
 
-      it("earns no '#{add_entry.title}' Engagement Index points for the user adding the entry") { expect(@engagement_index.user_score @user_1).to eql(@user_1_score) }
+      it("earns no '#{add_entry.title}' Engagement Index points for the user adding the entry") { expect(@engagement_index.user_score(@driver, @engagement_index_url, @user_1)).to eql(@user_1_score) }
 
       it "adds no '#{add_entry.type}' activity to the CSV export for the discussion creator" do
         scores = @engagement_index.download_csv(@driver, @course, @engagement_index_url)
@@ -103,9 +101,8 @@ describe 'A Canvas discussion', order: :defined do
 
       before(:all) do
         # Get current scores
-        @engagement_index.load_page(@driver, @engagement_index_url)
-        @user_1_score = @engagement_index.user_score @user_1
-        @user_2_score = @engagement_index.user_score @user_2
+        @user_1_score = @engagement_index.user_score(@driver, @engagement_index_url, @user_1)
+        @user_2_score = @engagement_index.user_score(@driver, @engagement_index_url, @user_2)
 
         # User 2 replies to the topic again, which should earn points for User 2 only
         @canvas.add_reply(@discussion, nil, 'Discussion entry by somebody other than the discussion topic creator')
@@ -116,7 +113,7 @@ describe 'A Canvas discussion', order: :defined do
         expect(@engagement_index.user_score_updated?(@driver, @engagement_index_url, @user_2, @user_2_expected_score)).to be true
       end
 
-      it('earns no points for the discussion topic creator') { expect(@engagement_index.user_score @user_1).to eql(@user_1_score) }
+      it('earns no points for the discussion topic creator') { expect(@engagement_index.user_score(@driver, @engagement_index_url, @user_1)).to eql(@user_1_score) }
 
       it 'adds "discussion_entry" activity to the CSV export for the user adding the entry' do
         scores = @engagement_index.download_csv(@driver, @course, @engagement_index_url)
@@ -131,9 +128,8 @@ describe 'A Canvas discussion', order: :defined do
 
       before(:all) do
         # Get current scores
-        @engagement_index.load_page(@driver, @engagement_index_url)
-        @user_1_score = @engagement_index.user_score @user_1
-        @user_2_score = @engagement_index.user_score @user_2
+        @user_1_score = @engagement_index.user_score(@driver, @engagement_index_url, @user_1)
+        @user_2_score = @engagement_index.user_score(@driver, @engagement_index_url, @user_2)
 
         # User 1 replies to own entry, which should earn no points
         @canvas.log_out(@driver, @cal_net)
@@ -167,7 +163,7 @@ describe 'A Canvas discussion', order: :defined do
 
       context 'when added by someone who created the discussion topic and the discussion entry' do
 
-        it('earns no Engagement Index points for the user') { expect(@engagement_index.user_score @user_1).to eql(@user_1_expected_score) }
+        it('earns no Engagement Index points for the user') { expect(@engagement_index.user_score(@driver, @engagement_index_url, @user_1)).to eql(@user_1_expected_score) }
 
       end
     end
@@ -176,9 +172,8 @@ describe 'A Canvas discussion', order: :defined do
 
       before(:all) do
         # Get current scores
-        @engagement_index.load_page(@driver, @engagement_index_url)
-        @user_1_score = @engagement_index.user_score @user_1
-        @user_2_score = @engagement_index.user_score @user_2
+        @user_1_score = @engagement_index.user_score(@driver, @engagement_index_url, @user_1)
+        @user_2_score = @engagement_index.user_score(@driver, @engagement_index_url, @user_2)
 
         # User 2 replies to own first entry, which should earn no points
         @canvas.log_out(@driver, @cal_net)
@@ -212,7 +207,7 @@ describe 'A Canvas discussion', order: :defined do
 
       context 'who did not create the discussion topic but did create the discussion entry' do
 
-        it('earns no Engagement Index points for the user') { expect(@engagement_index.user_score @user_2).to eql(@user_2_expected_score) }
+        it('earns no Engagement Index points for the user') { expect(@engagement_index.user_score(@driver, @engagement_index_url, @user_2)).to eql(@user_2_expected_score) }
 
       end
 
@@ -223,8 +218,8 @@ describe 'A Canvas discussion', order: :defined do
       before(:all) do
         # Get current scores
         @engagement_index.load_page(@driver, @engagement_index_url)
-        @user_1_score = @engagement_index.user_score @user_1
-        @user_2_score = @engagement_index.user_score @user_2
+        @user_1_score = @engagement_index.user_score(@driver, @engagement_index_url, @user_1)
+        @user_2_score = @engagement_index.user_score(@driver, @engagement_index_url, @user_2)
 
         # User 2 replies to own first entry, which should earn no points
         @canvas.log_out(@driver, @cal_net)
@@ -258,7 +253,7 @@ describe 'A Canvas discussion', order: :defined do
 
       context 'who added an earlier discussion entry reply' do
 
-        it('earns no Engagement Index points for the user') { expect(@engagement_index.user_score @user_2).to eql(@user_2_expected_score) }
+        it('earns no Engagement Index points for the user') { expect(@engagement_index.user_score(@driver, @engagement_index_url, @user_2)).to eql(@user_2_expected_score) }
 
       end
     end
@@ -271,8 +266,8 @@ describe 'A Canvas discussion', order: :defined do
       before(:all) do
         # Get current scores
         @engagement_index.load_page(@driver, @engagement_index_url)
-        @user_1_score = @engagement_index.user_score @user_1
-        @user_2_score = @engagement_index.user_score @user_2
+        @user_1_score = @engagement_index.user_score(@driver, @engagement_index_url, @user_1)
+        @user_2_score = @engagement_index.user_score(@driver, @engagement_index_url, @user_2)
 
         # User 2 replies to its own first reply to User 1's entry, which should earn no points
         @canvas.log_out(@driver, @cal_net)
@@ -308,7 +303,7 @@ describe 'A Canvas discussion', order: :defined do
 
       context 'who created the reply but not the entry' do
 
-        it('earns no Engagement Index points for the user') { expect(@engagement_index.user_score @user_2).to eql(@user_2_expected_score) }
+        it('earns no Engagement Index points for the user') { expect(@engagement_index.user_score(@driver, @engagement_index_url, @user_2)).to eql(@user_2_expected_score) }
 
       end
     end

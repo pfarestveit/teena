@@ -32,11 +32,12 @@ module Page
       # Checks if Canvas sync is disabled. If so, adds an asset to create new activity and resumes sync.
       # @param driver [Selenium::WebDriver]
       # @param url [String]
-      def ensure_canvas_sync(driver, url)
-        load_page(driver, url)
+      # @param event [Event]
+      def ensure_canvas_sync(driver, url, event = nil)
+        load_page(driver, url, event)
         add_site_link_element.when_visible Utils.short_wait
         if resume_sync_button?
-          add_site Asset.new({ url: 'www.google.com', title: 'resume sync asset' })
+          add_site(Asset.new({url: 'www.google.com', title: 'resume sync asset'}), event)
           logger.info 'Syncing is disabled for this course site, re-enabling'
           wait_for_update_and_click_js resume_sync_button_element
           resume_sync_success_element.when_visible Utils.short_wait
@@ -126,7 +127,6 @@ module Page
         add_event(event, EventType::LAUNCH_ASSET_LIBRARY)
         add_event(event, EventType::DEEP_LINK_ASSET, asset.id)
         add_event(event, EventType::LIST_ASSETS)
-        add_event(event, EventType::VIEW_ASSET, asset.id)
         wait_for_asset_detail(asset, event)
       end
 
@@ -149,6 +149,15 @@ module Page
       # @return [Array<String>]
       def detail_view_whiteboards_list
         (detail_view_used_in_elements.map &:text).to_a
+      end
+
+      # On an asset's detail view, clicks the first link to a whiteboard asset in which the asset was used
+      # @param whiteboard_asset [Asset]
+      # @param event [Event]
+      def click_whiteboard_usage_link(whiteboard_asset, event = nil)
+        wait_for_update_and_click_js link_element(text: "#{whiteboard_asset.title}")
+        wait_until(Utils.short_wait) { detail_view_asset_title == whiteboard_asset.title }
+        add_event(event, EventType::VIEW_ASSET, whiteboard_asset.id)
       end
 
       # Verifies that the metadata of the first list view asset matches the expected metadata and sets the asset object's
@@ -264,11 +273,9 @@ module Page
         click_manage_assets_link
         category_titles.each do |category_title|
           logger.info "Adding category called #{category_title}"
-          wait_for_element_and_type_js(custom_category_input_element, category_title)
+          wait_for_element_and_type(custom_category_input_element, category_title)
           wait_for_update_and_click add_custom_category_button_element
-          sleep 1
-          load_page(driver, url, event)
-          click_manage_assets_link
+          sleep 2
           wait_until(Utils.short_wait) { custom_category_titles.include? category_title }
         end
       end
@@ -408,7 +415,7 @@ module Page
       # @param user [User]
       # @return [boolean]
       def asset_migrated?(driver, url, asset, user)
-        tries ||= 10
+        tries ||= 3
         load_page(driver, url)
         advanced_search(asset.title, nil, user, asset.type, nil)
         verify_first_asset(user, asset)
@@ -448,6 +455,7 @@ module Page
         add_event(event, EventType::VIEW, asset.id)
         add_event(event, EventType::VIEW)
         add_event(event, EventType::VIEW_ASSET, asset.id)
+        add_event(event, EventType::LIST_ASSETS)
       end
 
       # REMIX
@@ -467,9 +475,12 @@ module Page
       # Clicks the link to a newly created remix whiteboard and shifts focus to the whiteboard
       # @param driver [Selenium::WebDriver]
       # @param whiteboard [Whiteboard]
-      def open_remixed_board(driver, whiteboard)
+      # @param event [Event]
+      def open_remixed_board(driver, whiteboard, event = nil)
         wait_for_update_and_click remixed_board_link_element
         shift_to_whiteboard_window(driver, whiteboard)
+        add_event(event, EventType::OPEN_WHITEBOARD)
+        add_event(event, EventType::GET_CHAT_MSG)
       end
 
       # DOWNLOAD
@@ -506,11 +517,14 @@ module Page
       button(:delete_asset_button, xpath: '//button[@data-ng-click="deleteAsset()"]')
 
       # Deletes an asset
-      def delete_asset(asset = nil)
+      # @param asset [Asset]
+      # @param event [Event]
+      def delete_asset(asset, event = nil)
         logger.info "Deleting asset ID #{asset.id}" unless asset.nil?
         confirm(true) { wait_for_update_and_click delete_asset_button_element }
-        delete_asset_button_element.when_not_visible Utils.short_wait rescue Selenium::WebDriver::Error::StaleElementReferenceError
+        add_event(event, EventType::LIST_ASSETS)
         asset.visible = false unless asset.nil?
+        delete_asset_button_element.when_not_visible Utils.short_wait rescue Selenium::WebDriver::Error::StaleElementReferenceError
       end
 
       # LIKES

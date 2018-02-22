@@ -64,9 +64,11 @@ module Page
 
     # Clicks the 'back to impact studio' link and shifts focus to the iframe
     # @param driver [Selenium::WebDriver]
-    def go_back_to_impact_studio(driver)
+    # @param event [Event]
+    def go_back_to_impact_studio(driver, event = nil)
       wait_for_load_and_click back_to_impact_studio_link_element
       wait_until(Utils.medium_wait) { title == LtiTools::IMPACT_STUDIO.name }
+      add_event(event, EventType::LAUNCH_IMPACT_STUDIO)
       hide_canvas_footer_and_popup
       switch_to_canvas_iframe driver
     end
@@ -74,7 +76,7 @@ module Page
     # Waits for asset list view to load when a new asset is created, then gets the asset's ID. Requires that the asset have a unique title.
     # @param asset [Asset]
     def wait_for_asset_and_get_id(asset)
-      wait_until { list_view_asset_link_elements.any? }
+      wait_until(Utils.medium_wait) { list_view_asset_link_elements.any? }
       asset.id = SuiteCUtils.get_asset_id_by_title asset
     end
 
@@ -182,7 +184,7 @@ module Page
     # @param asset [Asset]
     def enter_url_metadata(asset)
       logger.info "Entering URL '#{asset.url}', title '#{asset.title}', category '#{asset.category}', and description '#{asset.description}'"
-      wait_for_update_and_click url_input_element
+      wait_for_update_and_click_js url_input_element
       wait_for_element_and_type(url_input_element, asset.url) unless asset.url.nil?
       wait_for_element_and_type(url_title_input_element, asset.title) unless asset.title.nil?
       wait_for_element_and_type(url_description_element, asset.description) unless asset.description.nil?

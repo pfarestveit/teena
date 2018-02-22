@@ -116,6 +116,9 @@ module Page
     # @param event [Event]
     def create_generic_course_site(driver, sub_account, course, test_users, test_id, tools = nil, event = nil)
       if course.site_id.nil?
+        # If creating a new SuiteC course site, inactivate all existing courses to avoid slow poller cycles
+        SuiteCUtils.inactivate_all_courses if tools && ((tools & [LtiTools::ASSET_LIBRARY, LtiTools::ENGAGEMENT_INDEX, LtiTools::WHITEBOARDS, LtiTools::IMPACT_STUDIO]).any?)
+
         load_sub_account sub_account
         wait_for_load_and_click add_new_course_button_element
         course_name_input_element.when_visible Utils.short_wait
@@ -681,7 +684,6 @@ module Page
           add_event(event, EventType::LIST_WHITEBOARDS)
         when LtiTools::IMPACT_STUDIO.name
           add_event(event, EventType::LAUNCH_IMPACT_STUDIO)
-          add_event(event, EventType::VIEW_PROFILE)
         else
           logger.warn "Cannot add an event for '#{tool.name}'"
       end

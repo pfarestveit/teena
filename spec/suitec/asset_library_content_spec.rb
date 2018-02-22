@@ -9,7 +9,7 @@ describe 'New asset uploads', order: :defined do
     timeout = Utils.short_wait
     test_id = Utils.get_test_id
 
-    @course = Course.new({})
+    @course = Course.new({title: "Asset Library Content #{test_id}"})
     @course.site_id = ENV['COURSE_ID']
     user_test_data = SuiteCUtils.load_suitec_test_data.select { |data| data['tests']['asset_library_content'] }
     users = user_test_data.map { |user_data| User.new(user_data) }
