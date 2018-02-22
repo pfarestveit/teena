@@ -109,8 +109,8 @@ class OecUtils
           r['EMAIL_ADDRESS'] = user[:email]
         end
 
-        # Exclude room shares and instructors without email (adjusting the data is complicated) and one-day modular courses and LEGALST (not evaluated anyway)
-        unless r['EMAIL_ADDRESS'].nil? || (r['CROSS_LISTED_FLAG'] == 'RM SHARE') || (r['START_DATE'] == r['END_DATE']) || (r['DEPT_NAME'] == 'LEGALST')
+        # Exclude room shares and instructors without email (adjusting the data is complicated) and one-day modular courses (not evaluated anyway)
+        unless r['EMAIL_ADDRESS'].nil? || (r['CROSS_LISTED_FLAG'] == 'RM SHARE') || (r['START_DATE'] == r['END_DATE'])
 
           # Make sure the right department forms are set. FSSEM and BIOLOGY follow their own rules, so ignore them.
           unless r['DEPT_FORM'].nil? || r['DEPT_FORM'] == 'FSSEM' || r['DEPT_NAME'] == 'BIOLOGY'
