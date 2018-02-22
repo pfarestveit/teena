@@ -28,6 +28,7 @@ suite_c:
   db_user: secret
   db_password: secret
   poller_retries: 20
+  acceptable_events_diff: 0.03
 
 canvas:
   base_url: https://ucberkeley.test.instructure.com

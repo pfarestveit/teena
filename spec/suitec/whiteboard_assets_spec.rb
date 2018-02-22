@@ -360,4 +360,10 @@ describe 'Whiteboard Add Asset', order: :defined do
     it('does not allow a student user to delete it via the whiteboard') { expect(@asset_library.delete_asset_button?).to be false }
 
   end
+
+  describe 'events' do
+
+    it('record the right number of events') { expect(SuiteCUtils.events_match?(@course, event)).to be true }
+  end
+
 end

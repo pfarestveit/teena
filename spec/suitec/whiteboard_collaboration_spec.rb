@@ -355,6 +355,8 @@ describe 'Whiteboard', order: :defined do
         [@whiteboard_1, @whiteboard_2, @whiteboard_3].each do |whiteboard|
           @whiteboards_driver_1.wait_until(Utils.long_wait) do
             @whiteboards_driver_1.hit_whiteboard_url(course, @whiteboards_url, whiteboard, event_driver_1)
+            @whiteboards_driver_1.add_event(event_driver_1, EventType::OPEN_WHITEBOARD)
+            @whiteboards_driver_1.add_event(event_driver_1, EventType::GET_CHAT_MSG)
             @whiteboards_driver_1.click_settings_button
             !@whiteboards_driver_1.collaborator_name(user).exists?
           end
@@ -371,4 +373,10 @@ describe 'Whiteboard', order: :defined do
       end
     end
   end
+
+  describe 'events' do
+
+    it('record the right number of events') { expect(SuiteCUtils.events_match?(@course, event)).to be true }
+  end
+
 end
