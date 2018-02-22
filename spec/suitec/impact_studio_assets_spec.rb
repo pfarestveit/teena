@@ -4,8 +4,10 @@ describe 'The Impact Studio', order: :defined do
 
   include Logging
   test_id = Utils.get_test_id
+  event = Event.new({test_script: self, test_id: test_id})
 
   # Get test users
+  admin = User.new({uid: Utils.super_admin_uid, username: Utils.super_admin_username})
   user_test_data = SuiteCUtils.load_suitec_test_data.select { |data| data['tests']['impact_studio_assets'] }
   users = user_test_data.map { |data| User.new(data) if %w(Teacher Student).include? data['role'] }
   teacher = users.find { |user| user.role == 'Teacher' }
@@ -55,20 +57,20 @@ describe 'The Impact Studio', order: :defined do
     @whiteboards = Page::SuiteCPages::WhiteboardsPage.new @driver
 
     # Create course site if necessary
-    @canvas.log_in(@cal_net, Utils.super_admin_username, Utils.super_admin_password)
+    @canvas.log_in(@cal_net, (event.actor = admin).username, Utils.super_admin_password)
     @canvas.create_generic_course_site(@driver, Utils.canvas_qa_sub_account, @course, users, test_id,
                                        [LtiTools::ASSET_LIBRARY, LtiTools::ENGAGEMENT_INDEX, LtiTools::IMPACT_STUDIO, LtiTools::WHITEBOARDS])
-    @asset_library_url = @canvas.click_tool_link(@driver, LtiTools::ASSET_LIBRARY)
-    @engagement_index_url = @canvas.click_tool_link(@driver, LtiTools::ENGAGEMENT_INDEX)
-    @impact_studio_url = @canvas.click_tool_link(@driver, LtiTools::IMPACT_STUDIO)
-    @whiteboards_url = @canvas.click_tool_link(@driver, LtiTools::WHITEBOARDS)
+    @asset_library_url = @canvas.click_tool_link(@driver, LtiTools::ASSET_LIBRARY, event)
+    @engagement_index_url = @canvas.click_tool_link(@driver, LtiTools::ENGAGEMENT_INDEX, event)
+    @impact_studio_url = @canvas.click_tool_link(@driver, LtiTools::IMPACT_STUDIO, event)
+    @whiteboards_url = @canvas.click_tool_link(@driver, LtiTools::WHITEBOARDS, event)
 
-    @engagement_index.wait_for_new_user_sync(@driver, @engagement_index_url, @course, [teacher, student_1, student_2])
+    @engagement_index.wait_for_new_user_sync(@driver, @engagement_index_url, @course, [teacher, student_1, student_2], event)
 
     [student_1, student_2].each do |student|
-      @canvas.masquerade_as(@driver, student, @course)
-      @engagement_index.load_page(@driver, @engagement_index_url)
-      @engagement_index.share_score
+      @canvas.masquerade_as(@driver, (event.actor = student), @course)
+      @engagement_index.load_page(@driver, @engagement_index_url, event)
+      @engagement_index.share_score event
     end
   end
 
@@ -79,8 +81,8 @@ describe 'The Impact Studio', order: :defined do
     context 'and a user views its own profile' do
 
       before(:all) do
-        @canvas.masquerade_as(@driver, student_1, @course)
-        @impact_studio.load_page(@driver, @impact_studio_url)
+        @canvas.masquerade_as(@driver, (event.actor = student_1), @course)
+        @impact_studio.load_page(@driver, @impact_studio_url, event)
       end
 
       it('shows a "no assets" message under My Assets') { @impact_studio.no_user_assets_msg_element.when_visible Utils.short_wait }
@@ -93,8 +95,8 @@ describe 'The Impact Studio', order: :defined do
     context 'and a user views another user\'s profile' do
 
       before(:all) do
-        @engagement_index.load_page(@driver, @engagement_index_url)
-        @engagement_index.click_user_dashboard_link(@driver, student_2)
+        @engagement_index.load_scores(@driver, @engagement_index_url, event)
+        @engagement_index.click_user_dashboard_link(@driver, student_2, event)
       end
 
       it('shows a "no assets" message under Assets') { @impact_studio.no_user_assets_msg_element.when_visible Utils.short_wait }
@@ -111,9 +113,9 @@ describe 'The Impact Studio', order: :defined do
 
       before(:all) do
         # Student 1 add asset 1 via impact studio
-        @canvas.masquerade_as(@driver, student_1, @course)
-        @impact_studio.load_page(@driver, @impact_studio_url)
-        @impact_studio.add_site(@driver, asset_1)
+        @canvas.masquerade_as(@driver, (event.actor = student_1), @course)
+        @impact_studio.load_page(@driver, @impact_studio_url, event)
+        @impact_studio.add_site(@driver, asset_1, event)
       end
 
       after(:all) { asset_1.impact_score = asset_1_actual_score }
@@ -125,13 +127,13 @@ describe 'The Impact Studio', order: :defined do
 
       before(:all) do
         # Student 1 add asset 2 to whiteboard, exclude from asset library
-        @whiteboards.load_page(@driver, @whiteboards_url)
-        @whiteboards.create_and_open_whiteboard(@driver, whiteboard)
-        @whiteboards.add_asset_exclude_from_library asset_2
+        @whiteboards.load_page(@driver, @whiteboards_url, event)
+        @whiteboards.create_and_open_whiteboard(@driver, whiteboard, event)
+        @whiteboards.add_asset_exclude_from_library(asset_2, event)
 
         # Pin the asset to verify that invisible assets are not returned in 'Pinned' search results
-        @whiteboards.open_original_asset(@driver, @asset_library, asset_2)
-        @asset_library.pin_detail_view_asset asset_2
+        @whiteboards.open_original_asset(@driver, @asset_library, asset_2, event)
+        @asset_library.pin_detail_view_asset(asset_2, event)
         @whiteboards.close_original_asset @driver
         @whiteboards.close_whiteboard @driver
       end
@@ -145,9 +147,9 @@ describe 'The Impact Studio', order: :defined do
 
       before(:all) do
         # Student 1 add asset 3 to a whiteboard and include it in the asset library
-        @whiteboards.load_page(@driver, @whiteboards_url)
-        @whiteboards.open_whiteboard(@driver, whiteboard)
-        @whiteboards.add_asset_include_in_library asset_3
+        @whiteboards.load_page(@driver, @whiteboards_url, event)
+        @whiteboards.open_whiteboard(@driver, whiteboard, event)
+        @whiteboards.add_asset_include_in_library(asset_3, event)
         @whiteboards.close_whiteboard @driver
       end
 
@@ -160,9 +162,9 @@ describe 'The Impact Studio', order: :defined do
 
       before(:all) do
         # Student 1 export whiteboard to create asset 4
-        @whiteboards.load_page(@driver, @whiteboards_url)
-        @whiteboards.open_whiteboard(@driver, whiteboard)
-        @whiteboards.export_to_asset_library whiteboard
+        @whiteboards.load_page(@driver, @whiteboards_url, event)
+        @whiteboards.open_whiteboard(@driver, whiteboard, event)
+        @whiteboards.export_to_asset_library(whiteboard, event)
         asset_4.id = SuiteCUtils.get_asset_id_by_title asset_4
         @whiteboards.close_whiteboard @driver
       end
@@ -176,9 +178,9 @@ describe 'The Impact Studio', order: :defined do
 
       before(:all) do
         # Teacher add asset 5 via impact studio
-        @canvas.masquerade_as(@driver, teacher, @course)
-        @impact_studio.load_page(@driver, @impact_studio_url)
-        @impact_studio.add_file(@driver, asset_5)
+        @canvas.masquerade_as(@driver, (event.actor = teacher), @course)
+        @impact_studio.load_page(@driver, @impact_studio_url, event)
+        @impact_studio.add_file(@driver, asset_5, event)
       end
 
       after(:all) { asset_5.impact_score = asset_5_actual_score }
@@ -190,9 +192,9 @@ describe 'The Impact Studio', order: :defined do
 
       before(:all) do
         # Student 2 add asset 6 via asset library
-        @canvas.masquerade_as(@driver, student_2, @course)
-        @asset_library.load_page(@driver, @asset_library_url)
-        @asset_library.upload_file_to_library asset_6
+        @canvas.masquerade_as(@driver, (event.actor = student_2), @course)
+        @asset_library.load_page(@driver, @asset_library_url, event)
+        @asset_library.upload_file_to_library(asset_6, event)
       end
 
       after(:all) { asset_6.impact_score = asset_6_actual_score }
@@ -204,12 +206,12 @@ describe 'The Impact Studio', order: :defined do
 
       before(:all) do
         # Student 2 add asset 7 via asset library
-        @asset_library.load_page(@driver, @asset_library_url)
-        @asset_library.add_site asset_7
+        @asset_library.load_page(@driver, @asset_library_url, event)
+        @asset_library.add_site(asset_7, event)
 
         # Pin the asset to verify that deleted assets are not returned in 'Pinned' search results and then delete it
-        @asset_library.load_asset_detail(@driver, @asset_library_url, asset_7)
-        @asset_library.pin_detail_view_asset asset_7
+        @asset_library.load_asset_detail(@driver, @asset_library_url, asset_7, event)
+        @asset_library.pin_detail_view_asset(asset_7, event)
         @asset_library.delete_asset asset_7
       end
 
@@ -221,39 +223,39 @@ describe 'The Impact Studio', order: :defined do
     context 'and a user views its own profile' do
 
       before(:all) do
-        @canvas.masquerade_as(@driver, student_1, @course)
-        @impact_studio.load_page(@driver, @impact_studio_url)
+        @canvas.masquerade_as(@driver, (event.actor = student_1), @course)
+        @impact_studio.load_page(@driver, @impact_studio_url, event)
       end
 
-      it('shows the user\'s non-hidden assets under My Assets > Recent') { @impact_studio.verify_user_recent_assets(@driver, student_1_assets, student_1) }
+      it('shows the user\'s non-hidden assets under My Assets > Recent') { @impact_studio.verify_user_recent_assets(@driver, student_1_assets, student_1, event) }
 
       it 'allows the user to click an asset in My Assets > Recent to view its detail' do
-        @impact_studio.click_user_asset_link(@driver, asset_1)
-        @asset_library.wait_for_asset_detail asset_1
+        @impact_studio.click_user_asset_link(@driver, asset_1, event)
+        @asset_library.wait_for_asset_detail(asset_1, event)
       end
 
       it 'allows the user to return to its own Impact Studio profile from an asset\'s detail' do
-        @asset_library.go_back_to_impact_studio @driver
-        @impact_studio.verify_user_recent_assets(@driver, student_1_assets, student_1)
+        @asset_library.go_back_to_impact_studio(@driver, event)
+        @impact_studio.verify_user_recent_assets(@driver, student_1_assets, student_1, event)
       end
 
-      it('does not show any assets under My Assets > Most Impactful') { @impact_studio.verify_user_impactful_assets(@driver, student_1_assets, student_1) }
-      it('does not show any assets under My Assets > Pinned') { @impact_studio.verify_user_pinned_assets(@driver, student_1_pins, student_1) }
+      it('does not show any assets under My Assets > Most Impactful') { @impact_studio.verify_user_impactful_assets(@driver, student_1_assets, student_1, event) }
+      it('does not show any assets under My Assets > Pinned') { @impact_studio.verify_user_pinned_assets(@driver, student_1_pins, student_1, event) }
 
-      it('shows all the most recent assets under Community Assets > Recent') { @impact_studio.verify_all_recent_assets(@driver, all_assets) }
-      it('does not show any assets under Community Assets > Most Impactful') { @impact_studio.verify_all_impactful_assets(@driver, all_assets) }
+      it('shows all the most recent assets under Community Assets > Recent') { @impact_studio.verify_all_recent_assets(@driver, all_assets, event) }
+      it('does not show any assets under Community Assets > Most Impactful') { @impact_studio.verify_all_impactful_assets(@driver, all_assets, event) }
     end
 
     context 'and a user views another user\'s profile' do
 
       before(:all) do
-        @engagement_index.load_page(@driver, @engagement_index_url)
-        @engagement_index.click_user_dashboard_link(@driver, student_2)
+        @engagement_index.load_scores(@driver, @engagement_index_url, event)
+        @engagement_index.click_user_dashboard_link(@driver, student_2, event)
       end
 
-      it('shows the other user\'s non-hidden assets under Assets > Recent') { @impact_studio.verify_user_recent_assets(@driver, student_2_assets, student_2) }
-      it('does not show the other user\'s assets under Assets > Most Impactful') { @impact_studio.verify_user_impactful_assets(@driver, student_2_assets, student_2) }
-      it('does not show any assets under Assets > Pinned') { @impact_studio.verify_user_pinned_assets(@driver, student_2_pins, student_2) }
+      it('shows the other user\'s non-hidden assets under Assets > Recent') { @impact_studio.verify_user_recent_assets(@driver, student_2_assets, student_2, event) }
+      it('does not show the other user\'s assets under Assets > Most Impactful') { @impact_studio.verify_user_impactful_assets(@driver, student_2_assets, student_2, event) }
+      it('does not show any assets under Assets > Pinned') { @impact_studio.verify_user_pinned_assets(@driver, student_2_pins, student_2, event) }
 
       it('shows no Everyone\'s Assets UI') { expect(@impact_studio.everyone_assets_heading?).to be false }
     end
@@ -265,10 +267,10 @@ describe 'The Impact Studio', order: :defined do
 
       before(:all) do
         # One student uses the other's asset on the shared whiteboard
-        @canvas.masquerade_as(@driver, student_2, @course)
-        @whiteboards.load_page(@driver, @whiteboards_url)
-        @whiteboards.open_whiteboard(@driver, whiteboard)
-        @whiteboards.add_existing_assets [asset_1]
+        @canvas.masquerade_as(@driver, (event.actor = student_2), @course)
+        @whiteboards.load_page(@driver, @whiteboards_url, event)
+        @whiteboards.open_whiteboard(@driver, whiteboard, event)
+        @whiteboards.add_existing_assets([asset_1], event)
         @whiteboards.open_original_asset_link_element.when_visible Utils.medium_wait
         @whiteboards.close_whiteboard @driver
         asset_1.impact_score += Activity::ADD_ASSET_TO_WHITEBOARD.impact_points
@@ -281,21 +283,21 @@ describe 'The Impact Studio', order: :defined do
       context 'and the asset owner views its own profile' do
 
         before(:all) do
-          @canvas.masquerade_as(@driver, student_1, @course)
-          @impact_studio.load_page(@driver, @impact_studio_url)
+          @canvas.masquerade_as(@driver, (event.actor = student_1), @course)
+          @impact_studio.load_page(@driver, @impact_studio_url, event)
         end
 
-        it('shows the user\'s non-hidden assets under My Assets > Recent') { @impact_studio.verify_user_recent_assets(@driver, student_1_assets, student_1) }
-        it('shows the impactful asset under My Assets > Most Impactful') { @impact_studio.verify_user_impactful_assets(@driver, student_1_assets, student_1) }
-        it('shows the pinned assets under My Assets > Pinned') { @impact_studio.verify_user_pinned_assets(@driver, student_1_pins, student_1) }
+        it('shows the user\'s non-hidden assets under My Assets > Recent') { @impact_studio.verify_user_recent_assets(@driver, student_1_assets, student_1, event) }
+        it('shows the impactful asset under My Assets > Most Impactful') { @impact_studio.verify_user_impactful_assets(@driver, student_1_assets, student_1, event) }
+        it('shows the pinned assets under My Assets > Pinned') { @impact_studio.verify_user_pinned_assets(@driver, student_1_pins, student_1, event) }
 
-        it('shows all the most recent assets under Community Assets > Recent') { @impact_studio.verify_all_recent_assets(@driver, all_assets) }
-        it('shows the impactful asset under Community Assets > Most Impactful') { @impact_studio.verify_all_impactful_assets(@driver, all_assets) }
+        it('shows all the most recent assets under Community Assets > Recent') { @impact_studio.verify_all_recent_assets(@driver, all_assets, event) }
+        it('shows the impactful asset under Community Assets > Most Impactful') { @impact_studio.verify_all_impactful_assets(@driver, all_assets, event) }
       end
 
       context 'and the asset owner views the other user\'s profile' do
 
-        before(:all) { @impact_studio.search_for_user student_2 }
+        before(:all) { @impact_studio.search_for_user(student_2, event) }
 
         it('shows no Everyone\'s Assets UI') { expect(@impact_studio.everyone_assets_heading?).to be false }
       end
@@ -305,8 +307,8 @@ describe 'The Impact Studio', order: :defined do
 
       before(:all) do
         # Teacher views the student's asset
-        @canvas.masquerade_as(@driver, teacher, @course)
-        @asset_library.load_asset_detail(@driver, @asset_library_url, asset_3)
+        @canvas.masquerade_as(@driver, (event.actor = teacher), @course)
+        @asset_library.load_asset_detail(@driver, @asset_library_url, asset_3, event)
         asset_3.impact_score += Activity::VIEW_ASSET.impact_points
       end
 
@@ -317,16 +319,16 @@ describe 'The Impact Studio', order: :defined do
       context 'and the asset owner views its own profile' do
 
         before(:all) do
-          @canvas.masquerade_as(@driver, student_1, @course)
-          @impact_studio.load_page(@driver, @impact_studio_url)
+          @canvas.masquerade_as(@driver, (event.actor = student_1), @course)
+          @impact_studio.load_page(@driver, @impact_studio_url, event)
         end
 
-        it('shows the user\'s non-hidden assets under My Assets > Recent') { @impact_studio.verify_user_recent_assets(@driver, student_1_assets, student_1) }
-        it('shows the impactful asset under My Assets > Most Impactful') { @impact_studio.verify_user_impactful_assets(@driver, student_1_assets, student_1) }
-        it('shows the pinned assets under My Assets > Pinned') { @impact_studio.verify_user_pinned_assets(@driver, student_1_pins, student_1) }
+        it('shows the user\'s non-hidden assets under My Assets > Recent') { @impact_studio.verify_user_recent_assets(@driver, student_1_assets, student_1, event) }
+        it('shows the impactful asset under My Assets > Most Impactful') { @impact_studio.verify_user_impactful_assets(@driver, student_1_assets, student_1, event) }
+        it('shows the pinned assets under My Assets > Pinned') { @impact_studio.verify_user_pinned_assets(@driver, student_1_pins, student_1, event) }
 
-        it('shows all the most recent assets under Community Assets > Recent') { @impact_studio.verify_all_recent_assets(@driver, all_assets) }
-        it('shows the impactful asset under Community Assets > Most Impactful') { @impact_studio.verify_all_impactful_assets(@driver, all_assets) }
+        it('shows all the most recent assets under Community Assets > Recent') { @impact_studio.verify_all_recent_assets(@driver, all_assets, event) }
+        it('shows the impactful asset under Community Assets > Most Impactful') { @impact_studio.verify_all_impactful_assets(@driver, all_assets, event) }
       end
     end
 
@@ -334,12 +336,12 @@ describe 'The Impact Studio', order: :defined do
 
       before(:all) do
         # Teacher comments on the student's asset
-        @canvas.masquerade_as(@driver, teacher, @course)
+        @canvas.masquerade_as(@driver, (event.actor = teacher), @course)
 
-        @asset_library.load_asset_detail(@driver, @asset_library_url, asset_6)
+        @asset_library.load_asset_detail(@driver, @asset_library_url, asset_6, event)
         asset_6.impact_score += Activity::VIEW_ASSET.impact_points
 
-        @asset_library.add_comment(asset_6, asset_6_comment)
+        @asset_library.add_comment(asset_6, asset_6_comment, event)
         @asset_library.wait_until(Utils.short_wait) { @asset_library.asset_detail_comment_count == '1' }
         asset_6.impact_score += Activity::COMMENT.impact_points
       end
@@ -351,16 +353,16 @@ describe 'The Impact Studio', order: :defined do
       context 'and the asset owner views its own profile' do
 
         before(:all) do
-          @canvas.masquerade_as(@driver, student_2, @course)
-          @impact_studio.load_page(@driver, @impact_studio_url)
+          @canvas.masquerade_as(@driver, (event.actor = student_2), @course)
+          @impact_studio.load_page(@driver, @impact_studio_url, event)
         end
 
-        it('shows the user\'s non-hidden assets under My Assets > Recent') { @impact_studio.verify_user_recent_assets(@driver, student_2_assets, student_2) }
-        it('shows the impactful asset under My Assets > Most Impactful') { @impact_studio.verify_user_impactful_assets(@driver, student_2_assets, student_2) }
-        it('shows the pinned assets under My Assets > Pinned') { @impact_studio.verify_user_pinned_assets(@driver, student_2_pins, student_2) }
+        it('shows the user\'s non-hidden assets under My Assets > Recent') { @impact_studio.verify_user_recent_assets(@driver, student_2_assets, student_2, event) }
+        it('shows the impactful asset under My Assets > Most Impactful') { @impact_studio.verify_user_impactful_assets(@driver, student_2_assets, student_2, event) }
+        it('shows the pinned assets under My Assets > Pinned') { @impact_studio.verify_user_pinned_assets(@driver, student_2_pins, student_2, event) }
 
-        it('shows all the most recent assets under Community Assets > Recent') { @impact_studio.verify_all_recent_assets(@driver, all_assets) }
-        it('shows the impactful asset under Community Assets > Most Impactful') { @impact_studio.verify_all_impactful_assets(@driver, all_assets) }
+        it('shows all the most recent assets under Community Assets > Recent') { @impact_studio.verify_all_recent_assets(@driver, all_assets, event) }
+        it('shows the impactful asset under Community Assets > Most Impactful') { @impact_studio.verify_all_impactful_assets(@driver, all_assets, event) }
       end
     end
 
@@ -368,12 +370,12 @@ describe 'The Impact Studio', order: :defined do
 
       before(:all) do
         # Teacher replies to comment on the student's asset
-        @canvas.masquerade_as(@driver, teacher, @course)
+        @canvas.masquerade_as(@driver, (event.actor = teacher), @course)
 
-        @asset_library.load_asset_detail(@driver, @asset_library_url, asset_6)
+        @asset_library.load_asset_detail(@driver, @asset_library_url, asset_6, event)
         asset_6.impact_score += Activity::VIEW_ASSET.impact_points
 
-        @asset_library.reply_to_comment(asset_6, asset_6_comment, asset_6_reply)
+        @asset_library.reply_to_comment(asset_6, asset_6_comment, asset_6_reply, event)
         @asset_library.wait_until(Utils.short_wait) { @asset_library.asset_detail_comment_count == '2' }
         asset_6.impact_score += Activity::COMMENT.impact_points
       end
@@ -385,16 +387,16 @@ describe 'The Impact Studio', order: :defined do
       context 'and the asset owner views its own profile' do
 
         before(:all) do
-          @canvas.masquerade_as(@driver, student_2, @course)
-          @impact_studio.load_page(@driver, @impact_studio_url)
+          @canvas.masquerade_as(@driver, (event.actor = student_2), @course)
+          @impact_studio.load_page(@driver, @impact_studio_url, event)
         end
 
-        it('shows the user\'s non-hidden assets under My Assets > Recent') { @impact_studio.verify_user_recent_assets(@driver, student_2_assets, student_2) }
-        it('shows the impactful asset under My Assets > Most Impactful') { @impact_studio.verify_user_impactful_assets(@driver, student_2_assets, student_2) }
-        it('shows the pinned assets under My Assets > Pinned') { @impact_studio.verify_user_pinned_assets(@driver, student_2_pins, student_2) }
+        it('shows the user\'s non-hidden assets under My Assets > Recent') { @impact_studio.verify_user_recent_assets(@driver, student_2_assets, student_2, event) }
+        it('shows the impactful asset under My Assets > Most Impactful') { @impact_studio.verify_user_impactful_assets(@driver, student_2_assets, student_2, event) }
+        it('shows the pinned assets under My Assets > Pinned') { @impact_studio.verify_user_pinned_assets(@driver, student_2_pins, student_2, event) }
 
-        it('shows all the most recent assets under Community Assets > Recent') { @impact_studio.verify_all_recent_assets(@driver, all_assets) }
-        it('shows the impactful asset under Community Assets > Most Impactful') { @impact_studio.verify_all_impactful_assets(@driver, all_assets) }
+        it('shows all the most recent assets under Community Assets > Recent') { @impact_studio.verify_all_recent_assets(@driver, all_assets, event) }
+        it('shows the impactful asset under Community Assets > Most Impactful') { @impact_studio.verify_all_impactful_assets(@driver, all_assets, event) }
       end
     end
 
@@ -402,12 +404,12 @@ describe 'The Impact Studio', order: :defined do
 
       before(:all) do
         # One student likes the teacher's asset
-        @canvas.masquerade_as(@driver, student_1, @course)
+        @canvas.masquerade_as(@driver, (event.actor = student_1), @course)
 
-        @asset_library.load_asset_detail(@driver, @asset_library_url, asset_5)
+        @asset_library.load_asset_detail(@driver, @asset_library_url, asset_5, event)
         asset_5.impact_score += Activity::VIEW_ASSET.impact_points
 
-        @asset_library.toggle_detail_view_item_like asset_5
+        @asset_library.like_asset(asset_5, event)
         @asset_library.wait_until { @asset_library.detail_view_asset_likes_count == '1' }
         asset_5.impact_score += Activity::LIKE.impact_points
       end
@@ -419,16 +421,16 @@ describe 'The Impact Studio', order: :defined do
       context 'and the asset owner views its own profile' do
 
         before(:all) do
-          @canvas.masquerade_as(@driver, teacher, @course)
-          @impact_studio.load_page(@driver, @impact_studio_url)
+          @canvas.masquerade_as(@driver, (event.actor = teacher), @course)
+          @impact_studio.load_page(@driver, @impact_studio_url, event)
         end
 
-        it('shows the user\'s non-hidden assets under My Assets > Recent') { @impact_studio.verify_user_recent_assets(@driver, teacher_assets, teacher) }
-        it('shows the impactful asset under My Assets > Most Impactful') { @impact_studio.verify_user_impactful_assets(@driver, teacher_assets, teacher) }
-        it('shows the pinned assets under My Assets > Pinned') { @impact_studio.verify_user_pinned_assets(@driver, teacher_pins, teacher) }
+        it('shows the user\'s non-hidden assets under My Assets > Recent') { @impact_studio.verify_user_recent_assets(@driver, teacher_assets, teacher, event) }
+        it('shows the impactful asset under My Assets > Most Impactful') { @impact_studio.verify_user_impactful_assets(@driver, teacher_assets, teacher, event) }
+        it('shows the pinned assets under My Assets > Pinned') { @impact_studio.verify_user_pinned_assets(@driver, teacher_pins, teacher, event) }
 
-        it('shows all the most recent assets under Community Assets > Recent') { @impact_studio.verify_all_recent_assets(@driver, all_assets) }
-        it('shows the impactful asset under Community Assets > Most Impactful') { @impact_studio.verify_all_impactful_assets(@driver, all_assets) }
+        it('shows all the most recent assets under Community Assets > Recent') { @impact_studio.verify_all_recent_assets(@driver, all_assets, event) }
+        it('shows the impactful asset under Community Assets > Most Impactful') { @impact_studio.verify_all_impactful_assets(@driver, all_assets, event) }
       end
     end
 
@@ -436,9 +438,9 @@ describe 'The Impact Studio', order: :defined do
 
       before(:all) do
         # Teacher remixes the students' whiteboard
-        @canvas.masquerade_as(@driver, teacher, @course)
+        @canvas.masquerade_as(@driver, (event.actor = teacher), @course)
 
-        @asset_library.load_asset_detail(@driver, @asset_library_url, asset_4)
+        @asset_library.load_asset_detail(@driver, @asset_library_url, asset_4, event)
         asset_4.impact_score += Activity::VIEW_ASSET.impact_points
 
         @asset_library.click_remix
@@ -452,80 +454,80 @@ describe 'The Impact Studio', order: :defined do
       context 'and one whiteboard asset owner views its own profile' do
 
         before(:all) do
-          @canvas.masquerade_as(@driver, student_1, @course)
-          @impact_studio.load_page(@driver, @impact_studio_url)
+          @canvas.masquerade_as(@driver, (event.actor = student_1), @course)
+          @impact_studio.load_page(@driver, @impact_studio_url, event)
         end
 
-        it('shows the user\'s non-hidden assets under My Assets > Recent') { @impact_studio.verify_user_recent_assets(@driver, student_1_assets, student_1) }
-        it('shows the impactful asset under My Assets > Most Impactful') { @impact_studio.verify_user_impactful_assets(@driver, student_1_assets, student_1) }
-        it('shows the pinned assets under My Assets > Pinned') { @impact_studio.verify_user_pinned_assets(@driver, student_1_pins, student_1) }
+        it('shows the user\'s non-hidden assets under My Assets > Recent') { @impact_studio.verify_user_recent_assets(@driver, student_1_assets, student_1, event) }
+        it('shows the impactful asset under My Assets > Most Impactful') { @impact_studio.verify_user_impactful_assets(@driver, student_1_assets, student_1, event) }
+        it('shows the pinned assets under My Assets > Pinned') { @impact_studio.verify_user_pinned_assets(@driver, student_1_pins, student_1, event) }
 
-        it('shows all the most recent assets under Community Assets > Recent') { @impact_studio.verify_all_recent_assets(@driver, all_assets) }
-        it('shows the impactful asset under Community Assets > Most Impactful') { @impact_studio.verify_all_impactful_assets(@driver, all_assets) }
+        it('shows all the most recent assets under Community Assets > Recent') { @impact_studio.verify_all_recent_assets(@driver, all_assets, event) }
+        it('shows the impactful asset under Community Assets > Most Impactful') { @impact_studio.verify_all_impactful_assets(@driver, all_assets, event) }
       end
 
       context 'and another whiteboard asset owner views its own profile' do
 
         before(:all) do
-          @canvas.masquerade_as(@driver, student_2, @course)
-          @impact_studio.load_page(@driver, @impact_studio_url)
+          @canvas.masquerade_as(@driver, (event.actor = student_2), @course)
+          @impact_studio.load_page(@driver, @impact_studio_url, event)
         end
 
-        it('shows the user\'s non-hidden assets under My Assets > Recent') { @impact_studio.verify_user_recent_assets(@driver, student_2_assets, student_2) }
-        it('shows the impactful asset under My Assets > Most Impactful') { @impact_studio.verify_user_impactful_assets(@driver, student_2_assets, student_2) }
-        it('shows the pinned assets under My Assets > Pinned') { @impact_studio.verify_user_pinned_assets(@driver, student_2_pins, student_2) }
+        it('shows the user\'s non-hidden assets under My Assets > Recent') { @impact_studio.verify_user_recent_assets(@driver, student_2_assets, student_2, event) }
+        it('shows the impactful asset under My Assets > Most Impactful') { @impact_studio.verify_user_impactful_assets(@driver, student_2_assets, student_2, event) }
+        it('shows the pinned assets under My Assets > Pinned') { @impact_studio.verify_user_pinned_assets(@driver, student_2_pins, student_2, event) }
 
-        it('shows all the most recent assets under Community Assets > Recent') { @impact_studio.verify_all_recent_assets(@driver, all_assets) }
-        it('shows the impactful asset under Community Assets > Most Impactful') { @impact_studio.verify_all_impactful_assets(@driver, all_assets) }
+        it('shows all the most recent assets under Community Assets > Recent') { @impact_studio.verify_all_recent_assets(@driver, all_assets, event) }
+        it('shows the impactful asset under Community Assets > Most Impactful') { @impact_studio.verify_all_impactful_assets(@driver, all_assets, event) }
       end
     end
   end
 
   context 'when assets impact their owners' do
 
-    before(:all) { @canvas.masquerade_as(@driver, student_1, @course) }
+    before(:all) { @canvas.masquerade_as(@driver, (event.actor = student_1), @course) }
 
     context 'with "view" impact' do
 
       before(:all) do
-        @asset_library.load_asset_detail(@driver, @asset_library_url, asset_4)
-        @impact_studio.load_page(@driver, @impact_studio_url)
+        @asset_library.load_asset_detail(@driver, @asset_library_url, asset_4, event)
+        @impact_studio.load_page(@driver, @impact_studio_url, event)
       end
 
       after(:all) { asset_4.impact_score = asset_4_actual_score }
 
-      it('shows the right assets in My Assets > Most Impactful') { @impact_studio.verify_user_impactful_assets(@driver, student_1_assets, student_1) }
-      it('shows the right assets in Community Assets > Most Impactful') { @impact_studio.verify_all_impactful_assets(@driver, all_assets) }
+      it('shows the right assets in My Assets > Most Impactful') { @impact_studio.verify_user_impactful_assets(@driver, student_1_assets, student_1, event) }
+      it('shows the right assets in Community Assets > Most Impactful') { @impact_studio.verify_all_impactful_assets(@driver, all_assets, event) }
       it('does not add "view" impact') { expect(asset_4_actual_score = SuiteCUtils.get_asset_impact_score(asset_4)).to eql(asset_4.impact_score) }
     end
 
     context 'with "comment" impact' do
 
       before(:all) do
-        @asset_library.load_asset_detail(@driver, @asset_library_url, asset_4)
-        @asset_library.add_comment(asset_4, asset_4_comment)
-        @impact_studio.load_page(@driver, @impact_studio_url)
+        @asset_library.load_asset_detail(@driver, @asset_library_url, asset_4, event)
+        @asset_library.add_comment(asset_4, asset_4_comment, event)
+        @impact_studio.load_page(@driver, @impact_studio_url, event)
       end
 
       after(:all) { asset_4.impact_score = asset_4_actual_score }
 
-      it('shows the right assets in My Assets > Most Impactful') { @impact_studio.verify_user_impactful_assets(@driver, student_1_assets, student_1) }
-      it('shows the right assets in Community Assets > Most Impactful') { @impact_studio.verify_all_impactful_assets(@driver, all_assets) }
+      it('shows the right assets in My Assets > Most Impactful') { @impact_studio.verify_user_impactful_assets(@driver, student_1_assets, student_1, event) }
+      it('shows the right assets in Community Assets > Most Impactful') { @impact_studio.verify_all_impactful_assets(@driver, all_assets, event) }
       it('does not add "comment" impact') { expect(asset_4_actual_score = SuiteCUtils.get_asset_impact_score(asset_4)).to eql(asset_4.impact_score) }
     end
 
     context 'with "remix" impact' do
 
       before(:all) do
-        @asset_library.load_asset_detail(@driver, @asset_library_url, asset_4)
+        @asset_library.load_asset_detail(@driver, @asset_library_url, asset_4, event)
         @asset_library.click_remix
-        @impact_studio.load_page(@driver, @impact_studio_url)
+        @impact_studio.load_page(@driver, @impact_studio_url, event)
       end
 
       after(:all) { asset_4.impact_score = asset_4_actual_score }
 
-      it('shows the right assets in My Assets > Most Impactful') { @impact_studio.verify_user_impactful_assets(@driver, student_1_assets, student_1) }
-      it('shows the right assets in Community Assets > Most Impactful') { @impact_studio.verify_all_impactful_assets(@driver, all_assets) }
+      it('shows the right assets in My Assets > Most Impactful') { @impact_studio.verify_user_impactful_assets(@driver, student_1_assets, student_1, event) }
+      it('shows the right assets in Community Assets > Most Impactful') { @impact_studio.verify_all_impactful_assets(@driver, all_assets, event) }
       it('does not add "remix" impact') { expect(asset_4_actual_score = SuiteCUtils.get_asset_impact_score(asset_4)).to eql(asset_4.impact_score) }
     end
   end
@@ -535,12 +537,12 @@ describe 'The Impact Studio', order: :defined do
     context '"comment"' do
 
       before(:all) do
-        @canvas.masquerade_as(@driver, teacher, @course)
+        @canvas.masquerade_as(@driver, (event.actor = teacher), @course)
 
-        @asset_library.load_asset_detail(@driver, @asset_library_url, asset_6)
+        @asset_library.load_asset_detail(@driver, @asset_library_url, asset_6, event)
         asset_6.impact_score += Activity::VIEW_ASSET.impact_points
 
-        @asset_library.delete_comment(asset_6, asset_6_reply)
+        @asset_library.delete_comment(asset_6, asset_6_reply, event)
         asset_6.impact_score -= Activity::COMMENT.impact_points
       end
 
@@ -550,28 +552,28 @@ describe 'The Impact Studio', order: :defined do
 
       context 'and the comment deleter views its own profile' do
 
-        before(:all) { @impact_studio.load_page(@driver, @impact_studio_url) }
+        before(:all) { @impact_studio.load_page(@driver, @impact_studio_url, event) }
 
-        it('shows the right assets in Community Assets > Most Impactful') { @impact_studio.verify_all_impactful_assets(@driver, all_assets) }
+        it('shows the right assets in Community Assets > Most Impactful') { @impact_studio.verify_all_impactful_assets(@driver, all_assets, event) }
       end
 
       context 'and the comment deleter views the asset owner\'s profile' do
 
-        before(:all) { @impact_studio.search_for_user student_2 }
+        before(:all) { @impact_studio.search_for_user(student_2, event) }
 
-        it('shows the right assets in Assets > Most Impactful') { @impact_studio.verify_user_impactful_assets(@driver, student_2_assets, student_2) }
+        it('shows the right assets in Assets > Most Impactful') { @impact_studio.verify_user_impactful_assets(@driver, student_2_assets, student_2, event) }
       end
     end
 
     context '"like"' do
 
       before(:all) do
-        @canvas.masquerade_as(@driver, student_1, @course)
+        @canvas.masquerade_as(@driver, (event.actor = student_1), @course)
 
-        @asset_library.load_asset_detail(@driver, @asset_library_url, asset_5)
+        @asset_library.load_asset_detail(@driver, @asset_library_url, asset_5, event)
         asset_5.impact_score += Activity::VIEW_ASSET.impact_points
 
-        @asset_library.toggle_detail_view_item_like asset_5
+        @asset_library.unlike_asset(asset_5, event)
         asset_5.impact_score -= Activity::LIKE.impact_points
       end
 
@@ -581,16 +583,16 @@ describe 'The Impact Studio', order: :defined do
 
       context 'and the un-liker views its own profile' do
 
-        before(:all) { @impact_studio.load_page(@driver, @impact_studio_url) }
+        before(:all) { @impact_studio.load_page(@driver, @impact_studio_url, event) }
 
-        it('shows the right assets under Community Assets > Most Impactful') { @impact_studio.verify_all_impactful_assets(@driver, all_assets) }
+        it('shows the right assets under Community Assets > Most Impactful') { @impact_studio.verify_all_impactful_assets(@driver, all_assets, event) }
       end
 
       context 'and the un-liker views the asset owner\'s profile' do
 
-        before(:all) { @impact_studio.search_for_user teacher }
+        before(:all) { @impact_studio.search_for_user(teacher, event) }
 
-        it('shows the right assets under the user\'s Assets > Most Impactful') { @impact_studio.verify_user_impactful_assets(@driver, teacher_assets, teacher) }
+        it('shows the right assets under the user\'s Assets > Most Impactful') { @impact_studio.verify_user_impactful_assets(@driver, teacher_assets, teacher, event) }
       end
     end
   end
@@ -598,32 +600,32 @@ describe 'The Impact Studio', order: :defined do
   context 'when a user pins assets' do
 
     before(:all) do
-      @canvas.masquerade_as(@driver, student_2, @course)
-      @asset_library.load_page(@driver, @asset_library_url)
-      @asset_library.pin_list_view_asset asset_6
-      @asset_library.pin_list_view_asset asset_4
-      @asset_library.pin_list_view_asset asset_5
-      @asset_library.pin_list_view_asset asset_3
-      @asset_library.pin_list_view_asset asset_1
+      @canvas.masquerade_as(@driver, (event.actor = student_2), @course)
+      @asset_library.load_page(@driver, @asset_library_url, event)
+      @asset_library.pin_list_view_asset(asset_6, event)
+      @asset_library.pin_list_view_asset(asset_4, event)
+      @asset_library.pin_list_view_asset(asset_5, event)
+      @asset_library.pin_list_view_asset(asset_3, event)
+      @asset_library.pin_list_view_asset(asset_1, event)
       student_2_pins << asset_1 << asset_3 << asset_5 << asset_4 << asset_6
     end
 
     context 'and the user views its own profile' do
 
-      before(:all) { @impact_studio.load_page(@driver, @impact_studio_url) }
+      before(:all) { @impact_studio.load_page(@driver, @impact_studio_url, event) }
 
-      it('shows the user\'s pinned assets under My Assets > Pinned') { @impact_studio.verify_user_pinned_assets(@driver, student_2_pins, student_2) }
+      it('shows the user\'s pinned assets under My Assets > Pinned') { @impact_studio.verify_user_pinned_assets(@driver, student_2_pins, student_2, event) }
     end
 
     context 'and another user views the user\'s profile' do
 
       before(:all) do
-        @canvas.masquerade_as(@driver, student_1, @course)
-        @impact_studio.load_page(@driver, @impact_studio_url)
-        @impact_studio.search_for_user student_2
+        @canvas.masquerade_as(@driver, (event.actor = student_1), @course)
+        @impact_studio.load_page(@driver, @impact_studio_url, event)
+        @impact_studio.search_for_user(student_2, event)
       end
 
-      it('shows the other user\'s pinned assets under Assets > Pinned') { @impact_studio.verify_user_pinned_assets(@driver, student_2_pins, student_2) }
+      it('shows the other user\'s pinned assets under Assets > Pinned') { @impact_studio.verify_user_pinned_assets(@driver, student_2_pins, student_2, event) }
     end
   end
 end

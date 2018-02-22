@@ -22,7 +22,6 @@ module Page
         switch_to_canvas_iframe driver
         add_event(event, EventType::NAVIGATE)
         add_event(event, EventType::LAUNCH_ENGAGEMENT_INDEX)
-        add_event(event, EventType::GET_ENGAGEMENT_INDEX)
       end
 
       # USER INFO
@@ -50,9 +49,10 @@ module Page
       # @param url [String]
       # @param course [Course]
       # @param users [Array<User>]
-      def wait_for_new_user_sync(driver, url, course, users)
+      # @param event [Event]
+      def wait_for_new_user_sync(driver, url, course, users, event = nil)
         wait_for_poller_sync(driver, url) do
-          load_scores(driver, url)
+          load_scores(driver, url, event)
           users.each do |u|
             logger.debug "Checking if #{u.full_name} has been added to the course"
             wait_until(1) { visible_names.include? u.full_name }
@@ -65,9 +65,10 @@ module Page
       # @param driver [Selenium::WebDriver]
       # @param url [String]
       # @param users [Array<User>]
-      def wait_for_removed_user_sync(driver, url, users)
+      # @param event [Event]
+      def wait_for_removed_user_sync(driver, url, users, event = nil)
         wait_for_poller_sync(driver, url) do
-          load_scores(driver, url)
+          load_scores(driver, url, event)
           users.each do |u|
             logger.debug "Checking if #{u.full_name} has been removed from the course"
             wait_until(1) { !visible_names.include? u.full_name }
@@ -88,13 +89,20 @@ module Page
       elements(:sharing, :span, xpath: '//span[@data-ng-if="user.share_points"]')
       elements(:last_activity, :span, xpath: '//span[@data-ng-if="user.last_activity"]')
 
+      # Waits for the leaderboard to load
+      # @param event [Event]
+      def wait_for_scores(event = nil)
+        users_table_element.when_visible Utils.medium_wait
+        add_event(event, EventType::GET_ENGAGEMENT_INDEX)
+      end
+
       # Loads the engagement index leaderboard
       # @param driver [Selenium::WebDriver]
       # @param url [String]
       # @param event [Event]
       def load_scores(driver, url, event = nil)
         load_page(driver, url, event)
-        users_table_element.when_visible Utils.medium_wait
+        wait_for_scores event
         add_event(event, EventType::VIEW, 'Leaderboard')
       end
 
@@ -104,7 +112,8 @@ module Page
       def search_for_user(user, event = nil)
         wait_for_element_and_type(text_area_element(class: 'leaderboard-list-search'), user.full_name)
         add_event(event, EventType::SEARCH)
-        user.full_name.length.times { add_event(event, EventType::SEARCH_ENGAGEMENT_INDEX, user.full_name) }
+        # Search events are fired for all but whitespace in the search string
+        (user.full_name.gsub(' ', '').length).times { add_event(event, EventType::SEARCH_ENGAGEMENT_INDEX, user.full_name) }
       end
 
       # Returns the Impact Studio link for a given user
@@ -117,7 +126,8 @@ module Page
       # Clicks the user name link to open the Impact Studio page
       # @param driver [Selenium::WebDriver]
       # @param user [User]
-      def click_user_dashboard_link(driver, user)
+      # @param event [Event]
+      def click_user_dashboard_link(driver, user, event = nil)
         logger.info "Clicking the Impact Studio link for UID #{user.uid}"
         wait_until(Utils.medium_wait) do
           scroll_to_bottom
@@ -127,16 +137,20 @@ module Page
         scroll_to_element user_profile_link(user)
         user_profile_link(user).click
         wait_until { title == "#{LtiTools::IMPACT_STUDIO.name}" }
+        add_event(event, EventType::LAUNCH_IMPACT_STUDIO)
+        add_event(event, EventType::VIEW_PROFILE, user.uid)
         hide_canvas_footer_and_popup
         switch_to_canvas_iframe driver
       end
 
       # Returns the score of a given user on the leaderboard
+      # @param driver [Selenium::WebDriver]
+      # @param url [String]
       # @param user [User]
       # @param event [Event]
-      def user_score(user, event = nil)
+      def user_score(driver, url, user, event = nil)
+        load_scores(driver, url, event)
         score = '0'
-        users_table_element.when_present Utils.short_wait
         search_for_user(user, event)
         sleep 1
         users_table_element.each do |row|
@@ -207,8 +221,11 @@ module Page
       def sort_by_rank_asc(event = nil)
         logger.info 'Sorting by "Rank" ascending'
         wait_for_update_and_click_js sort_by_rank_element
-        sort_by_rank unless sort_asc?
         add_event(event, EventType::SORT_ENGAGEMENT_INDEX, 'rank asc')
+        unless sort_asc?
+          sort_by_rank
+          add_event(event, EventType::SORT_ENGAGEMENT_INDEX, 'rank desc')
+        end
       end
 
       # Sorts the leaderboard by rank descending
@@ -216,8 +233,11 @@ module Page
       def sort_by_rank_desc(event = nil)
         logger.info 'Sorting by "Rank" descending'
         wait_for_update_and_click_js sort_by_rank_element
-        sort_by_rank if sort_asc?
         add_event(event, EventType::SORT_ENGAGEMENT_INDEX, 'rank desc')
+        if sort_asc?
+          sort_by_rank
+          add_event(event, EventType::SORT_ENGAGEMENT_INDEX, 'rank asc')
+        end
       end
 
       # Sorts the leaderboard by name ascending
@@ -225,8 +245,11 @@ module Page
       def sort_by_name_asc(event = nil)
         logger.info 'Sorting by "Name" ascending'
         wait_for_update_and_click_js sort_by_name_element
-        sort_by_name unless sort_asc?
         add_event(event, EventType::SORT_ENGAGEMENT_INDEX, 'name asc')
+        unless sort_asc?
+          sort_by_name
+          add_event(event, EventType::SORT_ENGAGEMENT_INDEX, 'name desc')
+        end
       end
 
       # Sorts the leaderboard by name descending
@@ -234,8 +257,11 @@ module Page
       def sort_by_name_desc(event = nil)
         logger.info 'Sorting by "Name" descending'
         wait_for_update_and_click_js sort_by_name_element
-        sort_by_name if sort_asc?
         add_event(event, EventType::SORT_ENGAGEMENT_INDEX, 'name desc')
+        if sort_asc?
+          sort_by_name
+          add_event(event, EventType::SORT_ENGAGEMENT_INDEX, 'name asc')
+        end
       end
 
       # Sorts the leaderboard by sharing preference ascending
@@ -243,8 +269,11 @@ module Page
       def sort_by_share_asc(event = nil)
         logger.info 'Sorting by "Share" ascending'
         wait_for_update_and_click_js sort_by_share_element
-        sort_by_share unless sort_asc?
         add_event(event, EventType::SORT_ENGAGEMENT_INDEX, 'share asc')
+        unless sort_asc?
+          sort_by_share
+          add_event(event, EventType::SORT_ENGAGEMENT_INDEX, 'share desc')
+        end
       end
 
       # Sorts the leaderboard by sharing preference descending
@@ -252,8 +281,11 @@ module Page
       def sort_by_share_desc(event = nil)
         logger.info 'Sorting by "Share" descending'
         wait_for_update_and_click_js sort_by_share_element
-        sort_by_share if sort_asc?
         add_event(event, EventType::SORT_ENGAGEMENT_INDEX, 'share desc')
+        if sort_asc?
+          sort_by_share
+          add_event(event, EventType::SORT_ENGAGEMENT_INDEX, 'share asc')
+        end
       end
 
       # Sorts the leaderboard by point totals ascending
@@ -261,8 +293,11 @@ module Page
       def sort_by_points_asc(event = nil)
         logger.info 'Sorting by "Points" ascending'
         wait_for_update_and_click_js sort_by_points_element
-        sort_by_points unless sort_asc?
         add_event(event, EventType::SORT_ENGAGEMENT_INDEX, 'points asc')
+        unless sort_asc?
+          sort_by_points
+          add_event(event, EventType::SORT_ENGAGEMENT_INDEX, 'points desc')
+        end
       end
 
       # Sorts the leaderboard by point totals descending
@@ -270,8 +305,11 @@ module Page
       def sort_by_points_desc(event = nil)
         logger.info 'Sorting by "Points" descending'
         wait_for_update_and_click_js sort_by_points_element
-        sort_by_points if sort_asc?
         add_event(event, EventType::SORT_ENGAGEMENT_INDEX, 'points desc')
+        if sort_asc?
+          sort_by_points
+          add_event(event, EventType::SORT_ENGAGEMENT_INDEX, 'points asc')
+        end
       end
 
       # Sorts the leaderboard by last activity dates ascending
@@ -279,8 +317,11 @@ module Page
       def sort_by_activity_asc(event = nil)
         logger.info 'Sorting by "Last Activity" ascending'
         wait_for_update_and_click_js sort_by_activity_element
-        sort_by_activity unless sort_asc?
         add_event(event, EventType::SORT_ENGAGEMENT_INDEX, 'last activity asc')
+        unless sort_asc?
+          sort_by_activity
+          add_event(event, EventType::SORT_ENGAGEMENT_INDEX, 'last activity desc')
+        end
       end
 
       # Sorts the leaderboard by last activity dates descending
@@ -288,8 +329,11 @@ module Page
       def sort_by_activity_desc(event = nil)
         logger.info 'Sorting by "Last Activity" descending'
         wait_for_update_and_click_js sort_by_activity_element
-        sort_by_activity if sort_asc?
         add_event(event, EventType::SORT_ENGAGEMENT_INDEX, 'last activity desc')
+        if sort_asc?
+          sort_by_activity
+          add_event(event, EventType::SORT_ENGAGEMENT_INDEX, 'last activity asc')
+        end
       end
 
       # SHARING
@@ -306,7 +350,7 @@ module Page
         logger.info 'Sharing score'
         js_click(share_score_cbx_element) unless share_score_cbx_checked?
         continue_button if continue_button?
-        users_table_element.when_visible Utils.short_wait
+        wait_for_scores event
         add_event(event, EventType::SHOW)
         add_event(event, EventType::VIEW, 'Leaderboard')
         add_event(event, EventType::EDIT_SCORE_SHARING, 'share')
@@ -523,8 +567,10 @@ module Page
       end
 
       # Clicks the 'back to engagement index' link
-      def click_back_to_index
+      # @param event [Event]
+      def click_back_to_index(event = nil)
         wait_for_update_and_click_js back_to_engagement_index_element
+        add_event(event, EventType::GET_ENGAGEMENT_INDEX)
       end
 
     end

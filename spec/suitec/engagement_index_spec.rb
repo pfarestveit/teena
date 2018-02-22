@@ -6,7 +6,7 @@ describe 'The Engagement Index', order: :defined do
 
   # Load test data
   test_id = Utils.get_test_id
-  event = Event.new({test_id: test_id})
+  event = Event.new({test_script: self, test_id: test_id})
   admin = User.new({username: Utils.super_admin_username, full_name: 'Admin'})
   test_user_data = SuiteCUtils.load_suitec_test_data.select { |data| data['tests']['engagement_index'] }
   teacher = User.new test_user_data.find { |user| user['role'] == 'Teacher' }
@@ -19,7 +19,7 @@ describe 'The Engagement Index', order: :defined do
   asset.title = "#{asset.title} #{test_id}"
 
   before(:all) do
-    @course = Course.new({})
+    @course = Course.new({title: "Engagement Index #{Utils.get_test_id}"})
 
     @driver = Utils.launch_browser
     @canvas = Page::CanvasActivitiesPage.new @driver
@@ -160,6 +160,7 @@ describe 'The Engagement Index', order: :defined do
     @canvas.masquerade_as(@driver, (event.actor = teacher), @course)
     @engagement_index.load_scores(@driver, @engagement_index_url, event)
     @engagement_index.un_share_score event
+    @engagement_index.wait_for_scores event
     @engagement_index.wait_until(Utils.short_wait) { @engagement_index.sharing_preference(teacher) == 'No' }
     @canvas.masquerade_as(@driver, (event.actor = student_4), @course)
     @engagement_index.load_scores(@driver, @engagement_index_url, event)

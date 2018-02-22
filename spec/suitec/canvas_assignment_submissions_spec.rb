@@ -8,7 +8,7 @@ describe 'Canvas assignment submission', order: :defined do
 
     course_id = ENV['COURSE_ID']
     test_id = Utils.get_test_id
-    @course = Course.new({})
+    @course = Course.new({title: "Canvas Assignment Submissions #{test_id}"})
     @course.site_id = course_id
 
     # Load test data
@@ -51,8 +51,7 @@ describe 'Canvas assignment submission', order: :defined do
         @asset = Asset.new student.assets.first
 
         # Get user's score before submission
-        @engagement_index.load_scores(@driver, @engagement_index_url)
-        @initial_score = @engagement_index.user_score student
+        @initial_score = @engagement_index.user_score(@driver, @engagement_index_url, student)
         logger.debug "The initial score for #{student.full_name} is #{@initial_score}"
 
         # Submit assignment

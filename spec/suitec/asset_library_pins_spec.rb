@@ -4,8 +4,10 @@ describe 'Asset pinning', order: :defined do
 
   include Logging
   test_id = Utils.get_test_id
+  event = Event.new({test_script: self, test_id: test_id})
 
   user_test_data = SuiteCUtils.load_suitec_test_data.select { |data| data['tests']['asset_library_pins'] }
+  admin = User.new({uid: Utils.super_admin_uid, username: Utils.super_admin_username})
   users = user_test_data.map { |data| User.new(data) }
   user_1 = users[0]
   user_2 = users[1]
@@ -32,27 +34,28 @@ describe 'Asset pinning', order: :defined do
     @engagement_index = Page::SuiteCPages::EngagementIndexPage.new @driver
 
     # Create course site if necessary
-    @canvas.log_in(@cal_net, Utils.super_admin_username, Utils.super_admin_password)
+    @canvas.log_in(@cal_net, admin.username, Utils.super_admin_password)
+    event.actor = admin
     @canvas.create_generic_course_site(@driver, Utils.canvas_qa_sub_account, @course, users, test_id, [LtiTools::ASSET_LIBRARY, LtiTools::ENGAGEMENT_INDEX])
-    @asset_library_url = @canvas.click_tool_link(@driver, LtiTools::ASSET_LIBRARY)
-    @engagement_index_url = @canvas.click_tool_link(@driver, LtiTools::ENGAGEMENT_INDEX)
-    @engagement_index.wait_for_new_user_sync(@driver, @engagement_index_url, @course, users)
+    @asset_library_url = @canvas.click_tool_link(@driver, LtiTools::ASSET_LIBRARY, event)
+    @engagement_index_url = @canvas.click_tool_link(@driver, LtiTools::ENGAGEMENT_INDEX, event)
+    @engagement_index.wait_for_new_user_sync(@driver, @engagement_index_url, @course, users, event)
 
     # Users 1 and 2 upload assets
-    @canvas.masquerade_as(@driver, user_1, @course)
-    @asset_library.load_page(@driver, @asset_library_url)
-    @asset_library.upload_file_to_library user_1_asset
+    @canvas.masquerade_as(@driver, (event.actor = user_1), @course)
+    @asset_library.load_page(@driver, @asset_library_url, event)
+    @asset_library.upload_file_to_library(user_1_asset, event)
 
-    @canvas.masquerade_as(@driver, user_2, @course)
-    @asset_library.load_page(@driver, @asset_library_url)
-    @asset_library.upload_file_to_library user_2_asset
+    @canvas.masquerade_as(@driver, (event.actor = user_2), @course)
+    @asset_library.load_page(@driver, @asset_library_url, event)
+    @asset_library.upload_file_to_library(user_2_asset, event)
 
     # Get the users' initial scores
     @canvas.stop_masquerading @driver
-    @engagement_index.load_scores(@driver, @engagement_index_url)
-    @user_1_score = @engagement_index.user_score(user_1).to_i
-    @user_2_score = @engagement_index.user_score(user_2).to_i
-    @user_3_score = @engagement_index.user_score(user_3).to_i
+    event.actor = admin
+    @user_1_score = @engagement_index.user_score(@driver, @engagement_index_url, user_1, event).to_i
+    @user_2_score = @engagement_index.user_score(@driver, @engagement_index_url, user_2, event).to_i
+    @user_3_score = @engagement_index.user_score(@driver, @engagement_index_url, user_3, event).to_i
   end
 
   after(:all) { Utils.quit_browser @driver }
@@ -60,25 +63,25 @@ describe 'Asset pinning', order: :defined do
   context 'when a user pins its own asset' do
 
     before(:all) do
-      @canvas.masquerade_as(@driver, user_1, @course)
-      @asset_library.load_page(@driver, @asset_library_url)
+      @canvas.masquerade_as(@driver, (event.actor = user_1), @course)
+      @asset_library.load_page(@driver, @asset_library_url, event)
     end
 
-    it('shows a "pinned" state') { @asset_library.pin_list_view_asset user_1_asset }
+    it('shows a "pinned" state') { @asset_library.pin_list_view_asset(user_1_asset, event) }
 
     context 'the Engagement Index' do
 
       before(:all) do
         @canvas.stop_masquerading @driver
-        @engagement_index.load_scores(@driver, @engagement_index_url)
+        event.actor = admin
       end
 
-      it('shows no "pin" points for the pinner') { expect(@engagement_index.user_score user_1).to eql("#{@user_1_score}") }
-      it('shows no "get pin" points for the asset creator') { expect(@engagement_index.user_score user_1).to eql("#{@user_1_score}") }
+      it('shows no "pin" points for the pinner') { expect(@engagement_index.user_score(@driver, @engagement_index_url, user_1, event)).to eql("#{@user_1_score}") }
+      it('shows no "get pin" points for the asset creator') { expect(@engagement_index.user_score(@driver, @engagement_index_url, user_1, event)).to eql("#{@user_1_score}") }
 
       context 'activities csv' do
 
-        before(:all) { @scores = @engagement_index.download_csv(@driver, @course, @engagement_index_url) }
+        before(:all) { @scores = @engagement_index.download_csv(@driver, @course, @engagement_index_url, event) }
 
         it('adds no "pin" activity') { expect(@scores).not_to include("#{user_1.full_name}, #{pin.type}, #{pin.points}, #{@user_1_score + pin.points}") }
         it('adds no "get_pin" activity') { expect(@scores).not_to include("#{user_1.full_name}, #{get_pin.type}, #{get_pin.points}, #{@user_1_score + get_pin.points}") }
@@ -89,8 +92,8 @@ describe 'Asset pinning', order: :defined do
   context 'when a user un-pins its own asset' do
 
     before(:all) do
-      @canvas.masquerade_as(@driver, user_1, @course)
-      @asset_library.load_page(@driver, @asset_library_url)
+      @canvas.masquerade_as(@driver, (event.actor = user_1), @course)
+      @asset_library.load_page(@driver, @asset_library_url, event)
     end
 
     it('shows an "un-pinned" state') { @asset_library.unpin_list_view_asset user_1_asset }
@@ -98,21 +101,21 @@ describe 'Asset pinning', order: :defined do
 
   context 'when a user re-pins its own asset' do
 
-    it('shows a "pinned" state') { @asset_library.pin_list_view_asset user_1_asset }
+    it('shows a "pinned" state') { @asset_library.pin_list_view_asset(user_1_asset, event) }
 
     context 'the Engagement Index' do
 
       before(:all) do
         @canvas.stop_masquerading @driver
-        @engagement_index.load_scores(@driver, @engagement_index_url)
+        event.actor = admin
       end
 
-      it('shows no "re-pin" points for the pinner') { expect(@engagement_index.user_score user_1).to eql("#{@user_1_score}") }
-      it('shows no "get re-pin" points for the asset creator') { expect(@engagement_index.user_score user_1).to eql("#{@user_1_score}") }
+      it('shows no "re-pin" points for the pinner') { expect(@engagement_index.user_score(@driver, @engagement_index_url, user_1, event)).to eql("#{@user_1_score}") }
+      it('shows no "get re-pin" points for the asset creator') { expect(@engagement_index.user_score(@driver, @engagement_index_url, user_1, event)).to eql("#{@user_1_score}") }
 
       context 'activities csv' do
 
-        before(:all) { @scores = @engagement_index.download_csv(@driver, @course, @engagement_index_url) }
+        before(:all) { @scores = @engagement_index.download_csv(@driver, @course, @engagement_index_url, event) }
 
         it('adds no "re-pin" activity') { expect(@scores).not_to include("#{user_1.full_name}, #{re_pin.type}, #{re_pin.points}, #{@user_1_score + re_pin.points}") }
         it('adds no "get re-pin" activity') { expect(@scores).not_to include("#{user_1.full_name}, #{get_re_pin.type}, #{get_re_pin.points}, #{@user_1_score + get_re_pin.points}") }
@@ -123,25 +126,25 @@ describe 'Asset pinning', order: :defined do
   context 'when a user pins another user\'s asset' do
 
     before(:all) do
-      @canvas.masquerade_as(@driver, user_1, @course)
-      @asset_library.load_asset_detail(@driver, @asset_library_url, user_2_asset)
+      @canvas.masquerade_as(@driver, (event.actor = user_1), @course)
+      @asset_library.load_asset_detail(@driver, @asset_library_url, user_2_asset, event)
     end
 
-    it('shows a "pinned" state') { @asset_library.pin_detail_view_asset user_2_asset }
+    it('shows a "pinned" state') { @asset_library.pin_detail_view_asset(user_2_asset, event) }
 
     context 'the Engagement Index' do
 
       before(:all) do
         @canvas.stop_masquerading @driver
-        @engagement_index.load_scores(@driver, @engagement_index_url)
+        event.actor = admin
       end
 
-      it('shows "pin" points for the pinner') { expect(@engagement_index.user_score user_1).to eql("#{@user_1_score + pin.points}") }
-      it('shows "get pin" points for the asset creator') { expect(@engagement_index.user_score user_2).to eql("#{@user_2_score + get_pin.points}") }
+      it('shows "pin" points for the pinner') { expect(@engagement_index.user_score(@driver, @engagement_index_url, user_1, event)).to eql("#{@user_1_score + pin.points}") }
+      it('shows "get pin" points for the asset creator') { expect(@engagement_index.user_score(@driver, @engagement_index_url, user_2, event)).to eql("#{@user_2_score + get_pin.points}") }
 
       context 'activities csv' do
 
-        before(:all) { @scores = @engagement_index.download_csv(@driver, @course, @engagement_index_url) }
+        before(:all) { @scores = @engagement_index.download_csv(@driver, @course, @engagement_index_url, event) }
 
         it('adds "pin" activity') { expect(@scores).to include("#{user_1.full_name}, #{pin.type}, #{pin.points}, #{@user_1_score + pin.points}") }
         it('adds "get_pin" activity') { expect(@scores).to include("#{user_2.full_name}, #{get_pin.type}, #{get_pin.points}, #{@user_2_score + get_pin.points}") }
@@ -152,8 +155,8 @@ describe 'Asset pinning', order: :defined do
   context 'when a user unpins another user\'s asset' do
 
     before(:all) do
-      @canvas.masquerade_as(@driver, user_1, @course)
-      @asset_library.load_asset_detail(@driver, @asset_library_url, user_2_asset)
+      @canvas.masquerade_as(@driver, (event.actor = user_1), @course)
+      @asset_library.load_asset_detail(@driver, @asset_library_url, user_2_asset, event)
     end
 
     it('shows an "unpinned" state') { @asset_library.unpin_detail_view_asset user_2_asset }
@@ -162,15 +165,15 @@ describe 'Asset pinning', order: :defined do
 
       before(:all) do
         @canvas.stop_masquerading @driver
-        @engagement_index.load_scores(@driver, @engagement_index_url)
+        event.actor = admin
       end
 
-      it('deducts no "pin" points from the pinner') { expect(@engagement_index.user_score user_1).to eql("#{@user_1_score + pin.points}") }
-      it('deducts no "get pin" points for the asset creator') { expect(@engagement_index.user_score user_2).to eql("#{@user_2_score + get_pin.points}") }
+      it('deducts no "pin" points from the pinner') { expect(@engagement_index.user_score(@driver, @engagement_index_url, user_1, event)).to eql("#{@user_1_score + pin.points}") }
+      it('deducts no "get pin" points for the asset creator') { expect(@engagement_index.user_score(@driver, @engagement_index_url, user_2, event)).to eql("#{@user_2_score + get_pin.points}") }
 
       context 'activities csv' do
 
-        before(:all) { @scores = @engagement_index.download_csv(@driver, @course, @engagement_index_url) }
+        before(:all) { @scores = @engagement_index.download_csv(@driver, @course, @engagement_index_url, event) }
 
         it('does not delete "pin" activity') { expect(@scores).to include("#{user_1.full_name}, #{pin.type}, #{pin.points}, #{@user_1_score + pin.points}") }
         it('does not delete "get pin" activity') { expect(@scores).to include("#{user_2.full_name}, #{get_pin.type}, #{get_pin.points}, #{@user_2_score + get_pin.points}") }
@@ -181,25 +184,25 @@ describe 'Asset pinning', order: :defined do
   context 'when a user re-pins another user\'s asset' do
 
     before(:all) do
-      @canvas.masquerade_as(@driver, user_1, @course)
-      @asset_library.load_asset_detail(@driver, @asset_library_url, user_2_asset)
+      @canvas.masquerade_as(@driver, (event.actor = user_1), @course)
+      @asset_library.load_asset_detail(@driver, @asset_library_url, user_2_asset, event)
     end
 
-    it('shows a "pinned" state') { @asset_library.pin_detail_view_asset user_2_asset }
+    it('shows a "pinned" state') { @asset_library.pin_detail_view_asset(user_2_asset, event) }
 
     context 'the Engagement Index' do
 
       before(:all) do
         @canvas.stop_masquerading @driver
-        @engagement_index.load_scores(@driver, @engagement_index_url)
+        event.actor = admin
       end
 
-      it('shows "re-pin" points for the re-pinner') { expect(@engagement_index.user_score user_1).to eql("#{@user_1_score + pin.points + re_pin.points}") }
-      it('shows "get re-pin" points for the asset creator') { expect(@engagement_index.user_score user_2).to eql("#{@user_2_score + get_pin.points + get_re_pin.points}") }
+      it('shows "re-pin" points for the re-pinner') { expect(@engagement_index.user_score(@driver, @engagement_index_url, user_1, event)).to eql("#{@user_1_score + pin.points + re_pin.points}") }
+      it('shows "get re-pin" points for the asset creator') { expect(@engagement_index.user_score(@driver, @engagement_index_url, user_2, event)).to eql("#{@user_2_score + get_pin.points + get_re_pin.points}") }
 
       context 'activities csv' do
 
-        before(:all) { @scores = @engagement_index.download_csv(@driver, @course, @engagement_index_url) }
+        before(:all) { @scores = @engagement_index.download_csv(@driver, @course, @engagement_index_url, event) }
 
         it('adds "re-pin" activity') { expect(@scores).to include("#{user_1.full_name}, #{re_pin.type}, #{re_pin.points}, #{@user_1_score + pin.points + re_pin.points}") }
         it('adds "get re-pin" activity') { expect(@scores).to include("#{user_2.full_name}, #{get_re_pin.type}, #{get_re_pin.points}, #{@user_2_score + get_pin.points + get_re_pin.points}") }
@@ -210,8 +213,8 @@ describe 'Asset pinning', order: :defined do
   context 'when a user un-re-pins another user\'s asset' do
 
     before(:all) do
-      @canvas.masquerade_as(@driver, user_1, @course)
-      @asset_library.load_asset_detail(@driver, @asset_library_url, user_2_asset)
+      @canvas.masquerade_as(@driver, (event.actor = user_1), @course)
+      @asset_library.load_asset_detail(@driver, @asset_library_url, user_2_asset, event)
     end
 
     it('shows an "unpinned" state') { @asset_library.unpin_detail_view_asset user_2_asset }
@@ -220,15 +223,15 @@ describe 'Asset pinning', order: :defined do
 
       before(:all) do
         @canvas.stop_masquerading @driver
-        @engagement_index.load_scores(@driver, @engagement_index_url)
+        event.actor = admin
       end
 
-      it('deducts no "re-pin" points from the re-pinner') { expect(@engagement_index.user_score user_1).to eql("#{@user_1_score + pin.points + re_pin.points}") }
-      it('deducts no "get re-pin" points from the asset creator') { expect(@engagement_index.user_score user_2).to eql("#{@user_2_score + get_pin.points + get_re_pin.points}") }
+      it('deducts no "re-pin" points from the re-pinner') { expect(@engagement_index.user_score(@driver, @engagement_index_url, user_1, event)).to eql("#{@user_1_score + pin.points + re_pin.points}") }
+      it('deducts no "get re-pin" points from the asset creator') { expect(@engagement_index.user_score(@driver, @engagement_index_url, user_2, event)).to eql("#{@user_2_score + get_pin.points + get_re_pin.points}") }
 
       context 'activities csv' do
 
-        before(:all) { @scores = @engagement_index.download_csv(@driver, @course, @engagement_index_url) }
+        before(:all) { @scores = @engagement_index.download_csv(@driver, @course, @engagement_index_url, event) }
 
         it('does not delete "re-pin" activity') { expect(@scores).to include("#{user_1.full_name}, #{pin.type}, #{pin.points}, #{@user_1_score + pin.points + re_pin.points}") }
         it('does not delete "get re-pin" activity') { expect(@scores).to include("#{user_2.full_name}, #{get_pin.type}, #{get_pin.points}, #{@user_2_score + get_pin.points + get_re_pin.points}") }
@@ -239,14 +242,14 @@ describe 'Asset pinning', order: :defined do
   describe 'advanced search' do
 
     before(:all) do
-      @canvas.masquerade_as(@driver, user_3, @course)
-      @asset_library.load_page(@driver, @asset_library_url)
-      @asset_library.upload_file_to_library user_3_asset
+      @canvas.masquerade_as(@driver, (event.actor = user_3), @course)
+      @asset_library.load_page(@driver, @asset_library_url, event)
+      @asset_library.upload_file_to_library(user_3_asset, event)
     end
 
     context 'when a user has no pinned assets' do
 
-      before(:all) { @asset_library.advanced_search(test_id, nil, nil, nil, 'Pinned') }
+      before(:all) { @asset_library.advanced_search(test_id, nil, nil, nil, 'Pinned', event) }
 
       it('shows a "No assets" message') { @asset_library.no_search_results_element.when_visible Utils.short_wait }
     end
@@ -255,10 +258,10 @@ describe 'Asset pinning', order: :defined do
 
       before(:all) do
         # User 3 pins assets 1 and 3
-        @asset_library.load_page(@driver, @asset_library_url)
-        @asset_library.pin_list_view_asset user_1_asset
-        @asset_library.pin_list_view_asset user_3_asset
-        @asset_library.advanced_search(test_id, nil, nil, nil, 'Pinned')
+        @asset_library.load_page(@driver, @asset_library_url, event)
+        @asset_library.pin_list_view_asset(user_1_asset, event)
+        @asset_library.pin_list_view_asset(user_3_asset, event)
+        @asset_library.advanced_search(test_id, nil, nil, nil, 'Pinned', event)
       end
 
       it 'returns only the assets that the user has pinned' do
@@ -269,9 +272,9 @@ describe 'Asset pinning', order: :defined do
     context 'when a user searches for the assets that another user has pinned' do
 
       before(:all) do
-        @canvas.masquerade_as(@driver, user_1, @course)
-        @asset_library.load_page(@driver, @asset_library_url)
-        @asset_library.advanced_search(test_id, nil, user_3, nil, 'Pinned')
+        @canvas.masquerade_as(@driver, (event.actor = user_1), @course)
+        @asset_library.load_page(@driver, @asset_library_url, event)
+        @asset_library.advanced_search(test_id, nil, user_3, nil, 'Pinned', event)
       end
 
       it 'returns only the assets that the other user has pinned' do
@@ -283,8 +286,8 @@ describe 'Asset pinning', order: :defined do
 
       before(:all) do
         # User 1 unpins asset 1
-        @asset_library.load_page(@driver, @asset_library_url)
-        @asset_library.advanced_search(test_id, nil, nil, nil, 'Pinned')
+        @asset_library.load_page(@driver, @asset_library_url, event)
+        @asset_library.advanced_search(test_id, nil, nil, nil, 'Pinned', event)
         @asset_library.wait_until(Utils.short_wait) { @asset_library.list_view_asset_ids == [user_1_asset.id] }
         @asset_library.unpin_list_view_asset user_1_asset
       end
@@ -297,11 +300,11 @@ describe 'Asset pinning', order: :defined do
 
     before(:all) do
       # User 2 pins its own asset then deletes it
-      @canvas.masquerade_as(@driver, user_2, @course)
-      @asset_library.load_asset_detail(@driver, @asset_library_url, user_2_asset)
-      @asset_library.pin_detail_view_asset user_2_asset
-      @asset_library.delete_asset user_2_asset
-      @asset_library.advanced_search(test_id, nil, nil, nil, 'Pinned')
+      @canvas.masquerade_as(@driver, (event.actor = user_2), @course)
+      @asset_library.load_asset_detail(@driver, @asset_library_url, user_2_asset, event)
+      @asset_library.pin_detail_view_asset(user_2_asset, event)
+      @asset_library.delete_asset(user_2_asset, event)
+      @asset_library.advanced_search(test_id, nil, nil, nil, 'Pinned', event)
     end
 
     it('does not return the asset among the user\'s pins') { @asset_library.no_search_results_element.when_visible Utils.short_wait }
@@ -310,15 +313,15 @@ describe 'Asset pinning', order: :defined do
 
       before(:all) do
         @canvas.stop_masquerading @driver
-        @engagement_index.load_scores(@driver, @engagement_index_url)
+        event.actor = admin
       end
 
-      it('deducts no "pin" or "re-pin" points from the pinner') { expect(@engagement_index.user_score user_1).to eql("#{@user_1_score + pin.points + re_pin.points + get_pin.points}") }
-      it('deducts no "get pin" or "get re-pin" points from the asset creator') { expect(@engagement_index.user_score user_2).to eql("#{@user_2_score + get_pin.points + get_re_pin.points}") }
+      it('deducts no "pin" or "re-pin" points from the pinner') { expect(@engagement_index.user_score(@driver, @engagement_index_url, user_1, event)).to eql("#{@user_1_score + pin.points + re_pin.points + get_pin.points}") }
+      it('deducts no "get pin" or "get re-pin" points from the asset creator') { expect(@engagement_index.user_score(@driver, @engagement_index_url, user_2, event)).to eql("#{@user_2_score + get_pin.points + get_re_pin.points}") }
 
       context 'activities csv' do
 
-        before(:all) { @scores = @engagement_index.download_csv(@driver, @course, @engagement_index_url) }
+        before(:all) { @scores = @engagement_index.download_csv(@driver, @course, @engagement_index_url, event) }
 
         it('does not delete "pin" activity') { expect(@scores).to include("#{user_1.full_name}, #{pin.type}, #{pin.points}, #{@user_1_score + pin.points}") }
         it('does not delete "get pin" activity') { expect(@scores).to include("#{user_2.full_name}, #{get_pin.type}, #{get_pin.points}, #{@user_2_score + get_pin.points}") }

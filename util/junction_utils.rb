@@ -52,7 +52,7 @@ class JunctionUtils
   # @param column_headers [Array]
   # @return [File]
   def self.initialize_junction_test_output(spec, column_headers)
-    output_file = "#{spec.inspect.sub('RSpec::ExampleGroups::', '')}.csv"
+    output_file = "#{Utils.get_test_script_name spec}.csv"
     logger.info "Initializing test output CSV named #{output_file}"
     test_output = File.join(Utils.initialize_test_output_dir, output_file)
     CSV.open(test_output, 'wb') { |heading| heading << column_headers }

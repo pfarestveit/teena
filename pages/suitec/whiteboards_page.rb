@@ -92,6 +92,7 @@ module Page
         add_event(event, EventType::CREATE, whiteboard.id)
         add_event(event, EventType::VIEW)
         add_event(event, EventType::CREATE_WHITEBOARD)
+        add_event(event, EventType::LIST_WHITEBOARDS)
       end
 
       # Combines methods to create a new whiteboard and then open it
@@ -118,6 +119,7 @@ module Page
         add_event(event, EventType::VIEW, whiteboard.id)
         add_event(event, EventType::VIEW, 'Chat')
         add_event(event, EventType::OPEN_WHITEBOARD, whiteboard.id)
+        add_event(event, EventType::GET_CHAT_MSG, whiteboard.id)
       end
 
       # Opens a whiteboard directly via URL
@@ -131,6 +133,7 @@ module Page
         if title.include? whiteboard.title
           add_event(event, EventType::VIEW, whiteboard.id)
           add_event(event, EventType::VIEW, object: 'Chat')
+          add_event(event, EventType::GET_CHAT_MSG, whiteboard.id)
         end
       end
 
@@ -239,6 +242,7 @@ module Page
         # Two alerts will appear if the user is an admin
         driver.switch_to.alert.accept rescue Selenium::WebDriver::Error::StaleElementReferenceError
         add_event(event, EventType::MODIFY, board)
+        add_event(event, EventType::WHITEBOARD_SETTINGS, board)
         driver.switch_to.window driver.window_handles.first
         switch_to_canvas_iframe driver
         add_event(event, EventType::VIEW)
@@ -420,26 +424,28 @@ module Page
       button(:delete_asset_button, xpath: '//button[@title="Delete"]')
 
       # Clicks the button to add an existing asset to an open whiteboard
-      def click_add_existing_asset
+      # @param event [Event]
+      def click_add_existing_asset(event = nil)
         wait_for_update_and_click add_asset_button_element unless use_existing_button_element.visible?
         wait_for_update_and_click use_existing_button_element
+        2.times do
+          add_event(event, EventType::VIEW, 'Assets')
+          add_event(event, EventType::LIST_ASSETS)
+        end
       end
 
       # Adds a given set of existing assets to an open whiteboard
       # @param assets [Array<Asset>]
       # @param event [Event]
       def add_existing_assets(assets, event = nil)
-        click_add_existing_asset
-        2.times do
-          add_event(event, EventType::VIEW, 'Assets')
-          add_event(event, EventType::LIST_ASSETS)
-        end
-        assets.each { |asset| wait_for_update_and_click text_area_element(xpath: "//input[@value = '#{asset.id}']") }
-          wait_for_update_and_click_js add_selected_button_element
+        click_add_existing_asset event
+        assets.each { |asset| wait_for_update_and_click text_area_element(xpath : "//input[@value = '#{asset.id}']") }
+        wait_for_update_and_click_js add_selected_button_element
         add_selected_button_element.when_not_visible Utils.short_wait
         assets.each do |asset|
           add_event(event, EventType::ADD, asset.id)
           add_event(event, EventType::ADD_WHITEBOARD_ELEMENT, asset.id)
+          add_event(event, EventType::SELECT_WHITEBOARD_ELEMENT, asset.id)
         end
       end
 
@@ -470,6 +476,7 @@ module Page
         add_event(event, EventType::ADD, asset.id)
         (asset.type == 'File') ? add_event(event, EventType::CREATE_FILE_ASSET, asset.id) : add_event(event, EventType::CREATE_LINK_ASSET, asset.id)
         add_event(event, EventType::ADD_WHITEBOARD_ELEMENT, asset.id)
+        add_event(event, EventType::SELECT_WHITEBOARD_ELEMENT, asset.id)
       end
 
       # Uploads a new file or adds a new link to an open whiteboard and also makes the asset available in the asset library
@@ -493,6 +500,7 @@ module Page
         add_event(event, EventType::ADD, asset.id)
         (asset.type == 'File') ? add_event(event, EventType::CREATE_FILE_ASSET, asset.id) : add_event(event, EventType::CREATE_LINK_ASSET, asset.id)
         add_event(event, EventType::ADD_WHITEBOARD_ELEMENT, asset.id)
+        add_event(event, EventType::SELECT_WHITEBOARD_ELEMENT, asset.id)
       end
 
       # Returns the ID of the currently highlighted asset on a whiteboard
@@ -514,6 +522,7 @@ module Page
         add_event(event, EventType::VIEW)
         add_event(event, EventType::OPEN_ASSET_FROM_WHITEBOARD, asset.id)
         add_event(event, EventType::VIEW_ASSET, asset.id)
+        add_event(event, EventType::LIST_ASSETS)
       end
 
       # Closes the browser window containing an asset opened from a whiteboard window using open_original_asset
@@ -576,10 +585,11 @@ module Page
       # Sends a given message in the chat pane
       # @param body [String]
       # @param event [Event]
-      def send_chat_msg(body, event)
+      def send_chat_msg(body, event = nil)
         logger.debug "Sending chat message with body '#{body}'"
         wait_for_element_and_type_js(chat_msg_input_element, body)
         chat_msg_input_element.send_keys :enter
+        add_event(event, EventType::CREATE_CHAT_MSG)
         add_event(event, EventType::GET_CHAT_MSG)
       end
 

@@ -5,7 +5,7 @@ describe 'Engagement Index points configuration', order: :defined do
   include Logging
 
   before(:all) do
-    @course = Course.new({})
+    @course = Course.new({title: "Engagement Index Points Config #{Utils.get_test_id}"})
 
     # Load test data
     test_user_data = SuiteCUtils.load_suitec_test_data.select { |data| data['tests']['engagement_index_points_config'] }
@@ -59,7 +59,7 @@ describe 'Engagement Index points configuration', order: :defined do
 
   it 'subtracts points retroactively for a disabled activity' do
     @engagement_index.click_back_to_index
-    expect(@engagement_index.user_score @student).to eql('0')
+    expect(@engagement_index.user_score(@driver, @engagement_index_url, @student)).to eql('0')
   end
 
   it 'removes a disabled activity from the CSV export' do
@@ -94,7 +94,7 @@ describe 'Engagement Index points configuration', order: :defined do
 
   it 'adds points retroactively for a re-enabled activity' do
     @engagement_index.click_back_to_index
-    expect(@engagement_index.user_score @student).to eql("#{@initial_score.to_i + @add_asset_activity.points}")
+    expect(@engagement_index.user_score(@driver, @engagement_index_url, @student)).to eql("#{@initial_score.to_i + @add_asset_activity.points}")
   end
 
   it 'adds a re-enabled activity to the CSV export' do
@@ -110,7 +110,7 @@ describe 'Engagement Index points configuration', order: :defined do
 
   it 'allows a teacher to recalculate points retroactively when changing activity type point values' do
     @engagement_index.click_back_to_index
-    expect(@engagement_index.user_score @student).to eql("#{@add_asset_activity.points + 10}")
+    expect(@engagement_index.user_score(@driver, @engagement_index_url, @student)).to eql("#{@add_asset_activity.points + 10}")
   end
 
   it 'recalculates activity points on the CSV export when changing activity type point values' do
