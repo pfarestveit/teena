@@ -64,7 +64,6 @@ class OECDepartments
       L_AND_S = new('L & S', 'Undergraduate and Interdisciplinary Studies', 'UGIS', %w(F G), true),
       LAN_PRO = new('LAN PRO', 'Graduate Division', 'LAN PRO', nil, true),
       LATAMST = new('LATAMST', 'Graduate Division', 'LAN PRO', nil, true),
-      LEGALST = new('LEGALST', 'Law', nil, nil, false),
       LGBT = new('LGBT', 'Gender and Women\'s Studies', 'GWS', %w(F G), true),
       LINGUIS = new('LINGUIS', 'Linguistics', 'LINGUIS', %w(F G), true),
       MATH = new('MATH', 'Math', 'MATH', %w(F G), true),
