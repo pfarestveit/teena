@@ -98,7 +98,8 @@ module Page
         choose_section section
         wait_for_update_and_click download_current_grades_element
         file_path = "#{Utils.download_dir}/egrades-current-#{section.id}-#{course.term.gsub(' ', '-')}-*.csv"
-        parse_grades_csv file_path
+        csv = parse_grades_csv file_path
+        csv.map { |r| r.to_hash }
       end
 
       # Downloads final grades for a given section
@@ -109,7 +110,8 @@ module Page
         choose_section section
         wait_for_update_and_click download_final_grades_element
         file_path = "#{Utils.download_dir}/egrades-final-#{section.id}-#{course.term.gsub(' ', '-')}-*.csv"
-        parse_grades_csv file_path
+        csv = parse_grades_csv file_path
+        csv.map { |r| r.to_hash }
       end
 
     end

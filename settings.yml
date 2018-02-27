@@ -36,6 +36,7 @@ canvas:
   uc_berkeley_sub_account: secret
   official_courses_sub_account: secret
   qa_sub_account: secret
+  enrollment_retries: 20
   create_site_tool: secret
   course_add_user_tool: secret
   course_captures_tool: secret
