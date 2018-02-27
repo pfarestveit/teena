@@ -325,6 +325,7 @@ module Page
 
     # GRADES
 
+    text_area(:user_search_input, :class => 'search-query')
     checkbox(:set_grading_scheme_cbx, id: 'course_grading_standard_enabled')
     link(:assignment_heading_link, xpath: '//a[@class="gradebook-header-drop assignment_header_drop"]')
     link(:toggle_muting_link, xpath: '//a[@data-action="toggleMuting"]')
@@ -374,6 +375,135 @@ module Page
     def click_e_grades_export_button
       logger.info 'Clicking E-Grades Export button'
       wait_for_load_and_click e_grades_export_link_element
+    end
+
+    # Given a user and its Gradebook total score, returns the user's UID, SIS ID, and expected grade (based on the default grading scheme)
+    # @param user [User]
+    # @param score [Float]
+    # @return [Hash]
+    def student_and_grade(user, score)
+      grade = case score
+                when 99.9..100
+                  'A+'
+                when 95..99.89
+                  'A'
+                when 90..94.99
+                  'A-'
+                when 87..89.99
+                  'B+'
+                when 83..86.99
+                  'B'
+                when 80..82.99
+                  'B-'
+                when 77..79.99
+                  'C+'
+                when 73..76.99
+                  'C'
+                when 70..72.99
+                  'C-'
+                when 67..69.99
+                  'D+'
+                when 63..66.99
+                  'D'
+                when 60..62.99
+                  'D-'
+                when 0..59.99
+                  'F'
+                else
+                  logger.error "Invalid score '#{score}'"
+              end
+      {uid: user.uid, canvas_id: user.canvas_id, sis_id: user.sis_id, score: score, grade: grade}
+    end
+
+    # GRADES - BETA - the new UX that is yet to be enabled in Prod
+
+    div(:total_grade_column_beta, xpath: '//div[contains(@class, "total_grade")]')
+    button(:total_grade_menu_button_beta, xpath: '//div[contains(@class, "total_grade")]//button[contains(@id, "PopoverMenu")]')
+    span(:total_grade_column_move_beta, xpath: '//span[contains(@data-menu-item-id, "total-grade-move-to-")]')
+    span(:total_grade_column_move_front_beta, xpath: '//span[@data-menu-item-id="total-grade-move-to-front"]')
+
+    # Returns the row for a given user
+    # @param user [User]
+    # @return [PageObject::Elements::Div]
+    def gradebook_user_row_beta(user)
+      div_element(xpath: "//div[contains(@class,'student_#{user.canvas_id}')]")
+    end
+
+    # Returns the element containing a given user's total score
+    # @param user [User]
+    # @return [PageObject::Elements::Span]
+    def user_score_element_beta(user)
+      span_element(xpath: "//div[contains(@class,'student_#{user.canvas_id}')]//div[contains(@class,'total_grade')]//span[@class='percentage']")
+    end
+
+    # Returns the Gradebook data for a given user
+    # @param user [User]
+    # @return [Hash]
+    def student_score_beta(user)
+      wait_until(Utils.medium_wait) { user_search_input_element.attribute('aria-disabled') == 'false' }
+      wait_for_element_and_type(user_search_input_element, user.uid)
+      gradebook_user_row_beta(user).when_present Utils.medium_wait
+      # Bring the 'total grade' column into the viewport in order to make the user's total grade load in the UI
+      unless total_grade_column_beta_element.visible?
+        wait_for_update_and_click_js total_grade_column_beta_element
+        wait_for_update_and_click total_grade_menu_button_beta_element
+        total_grade_column_move_beta_element.when_visible Utils.short_wait
+        wait_for_update_and_click total_grade_column_move_front_beta_element if total_grade_column_move_front_beta_element.exists?
+      end
+      user_score_element_beta(user).when_present Utils.medium_wait
+      score = user_score_element_beta(user).text.strip.delete('%').to_f
+      # If the score in the UI is zero, the score might not have loaded yet. Retry.
+      score = if score.zero?
+                logger.debug 'Double-checking a zero score'
+                wait_for_element_and_type(user_search_input_element, user.uid)
+                sleep 1
+                user_score_element_beta(user).text.strip.delete('%').to_f
+              else
+                score
+              end
+      student_and_grade(user, score)
+    end
+
+    # GRADES - TEST - the current Prod UX
+
+    div(:total_grade_column_test, xpath: '//div[contains(@id, "total_grade")]')
+    link(:total_grade_menu_link_test, id: 'total_dropdown')
+    span(:total_grade_column_menu_test, class: 'gradebook-header-menu')
+    span(:total_grade_column_move_front_test, xpath: '//ul[contains(@class, "gradebook-header-menu")]//*[contains(.,"Move to front")]')
+
+    # Returns the row for a given user
+    # @param user [User]
+    # @return [PageObject::Elements::Link]
+    def gradebook_user_row_test(user)
+      link_element(xpath: "//a[@data-student_id='#{user.canvas_id}']")
+    end
+
+    # Returns the element containing a given user's total score
+    # @param user [User]
+    # @return [PageObject::Elements::Span]
+    def user_score_element_test(user)
+      span_element(xpath: "//a[@data-user-id='#{user.canvas_id}']/../../following-sibling::div[contains(@class, 'total-cell')]//span")
+    end
+
+    # Returns the Gradebook data for a given user
+    # @param user [User]
+    # @return [Hash]
+    def student_score_test(user)
+      user_search_input_element.when_visible Utils.medium_wait
+      self.user_search_input = user.uid
+      gradebook_user_row_test(user).when_present Utils.medium_wait
+      user_score_element_test(user).when_present Utils.medium_wait
+      score = user_score_element_test(user).text.strip.delete('%').to_f
+      # If the score in the UI is zero, the score might not have loaded yet. Retry.
+      score = if score.zero?
+                logger.debug 'Double-checking a zero score'
+                wait_for_element_and_type(user_search_input_element, user.uid)
+                sleep 1
+                user_score_element_test(user).text.strip.delete('%').to_f
+              else
+                score
+              end
+      student_and_grade(user, score)
     end
 
     # GROUPS

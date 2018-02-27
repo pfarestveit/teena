@@ -510,6 +510,33 @@ module Page
       current_count
     end
 
+    elements(:student_enrollment_row, :row, :xpath => '//table[contains(@class, "roster")]/tbody/tr[contains(@class, "StudentEnrollment")]')
+
+    # Returns all the users on a course site with a Student role
+    # @param course [Course]
+    # @return [Array<User>]
+    def get_enrolled_students(course)
+      # Load the users page and scroll until all enrolled students are visible on the page.
+      load_users_page course
+      expected_count = enrollment_count_by_roles(course, ['Student']).first
+      begin
+        tries ||= Utils.canvas_enrollment_retries
+        scroll_to_bottom
+        wait_until(4, "Looking for #{expected_count[:count]} students, but there are #{student_enrollment_row_elements.length}") { student_enrollment_row_elements.length == expected_count[:count] }
+      rescue
+        logger.debug "Found #{student_enrollment_row_elements.length} students, loading more"
+        (tries -= 1).zero? ? fail : retry
+      end
+
+      # Get an array of student users with all IDs
+      student_enrollment_row_elements.map do |row|
+        canvas_id = row.attribute('id').delete('user_')
+        uid = cell_element(xpath: "//table[contains(@class, 'roster')]//tr[contains(@id,'user_#{canvas_id}')]//td[3]").text.strip
+        logger.debug "Canvas ID #{canvas_id}, UID #{uid}"
+        User.new({uid: uid, canvas_id: canvas_id})
+      end
+    end
+
     # SIS IMPORTS
 
     text_area(:file_input, name: 'attachment')

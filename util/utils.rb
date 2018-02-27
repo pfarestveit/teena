@@ -156,6 +156,11 @@ class Utils
     @config['canvas']['qa_sub_account']
   end
 
+  # The number of times to try loading additional rows on a Canvas course site roster
+  def self.canvas_enrollment_retries
+    @config['canvas']['enrollment_retries']
+  end
+
   # TEST DATA, TEST RESULTS, UPLOADS
 
   # Returns the current datetime for use as a unique test identifier

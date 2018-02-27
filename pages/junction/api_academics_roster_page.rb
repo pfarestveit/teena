@@ -48,4 +48,13 @@ class ApiAcademicsRosterPage
     students.map { |student| student['student_id'] }
   end
 
+  def sid_from_uid(uid)
+    begin
+      student = students.find { |s| s['id'] == uid }
+      student['student_id']
+    rescue
+      logger.warn "There is no UID #{uid} on the course SIS roster"
+    end
+  end
+
 end

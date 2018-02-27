@@ -4,6 +4,9 @@ describe 'bCourses E-Grades Export', order: :defined do
 
   include Logging
 
+  # Default Canvas env is Test. For Beta, specify BETA env variable.
+  canvas = ENV['CANVAS']
+
   # Load test course data
   test_course_data = JunctionUtils.load_junction_test_course_data.find { |course| course['tests']['e_grades_export'] }
   course = Course.new test_course_data
@@ -162,7 +165,7 @@ describe 'bCourses E-Grades Export', order: :defined do
     end
 
     it 'allows the user to download current grades for a primary section' do
-      csv = @e_grades_export_page.grades_to_hash @e_grades_export_page.download_current_grades(course, primary_section)
+      csv = @e_grades_export_page.download_current_grades(course, primary_section)
       if course.term == @current_semester
         expect(csv.any?).to be true
       else
@@ -173,7 +176,7 @@ describe 'bCourses E-Grades Export', order: :defined do
     end
 
     it 'allows the user to download current grades for a secondary section' do
-      csv = @e_grades_export_page.grades_to_hash @e_grades_export_page.download_current_grades(course, secondary_section)
+      csv = @e_grades_export_page.download_current_grades(course, secondary_section)
       if course.term == @current_semester
         expect(csv.any?).to be true
       else
@@ -184,7 +187,7 @@ describe 'bCourses E-Grades Export', order: :defined do
     end
 
     it 'allows the user to download final grades for a primary section' do
-      csv = @e_grades_export_page.grades_to_hash @e_grades_export_page.download_final_grades(course, primary_section)
+      csv = @e_grades_export_page.download_final_grades(course, primary_section)
       if course.term == @current_semester
         expect(csv.any?).to be true
       else
@@ -195,7 +198,7 @@ describe 'bCourses E-Grades Export', order: :defined do
     end
 
     it 'allows the user to download final grades for a secondary section' do
-      csv = @e_grades_export_page.grades_to_hash @e_grades_export_page.download_current_grades(course, secondary_section)
+      csv = @e_grades_export_page.download_current_grades(course, secondary_section)
       if course.term == @current_semester
         expect(csv.any?).to be true
       else
@@ -210,22 +213,29 @@ describe 'bCourses E-Grades Export', order: :defined do
 
     before(:all) do
       section_name = "#{primary_section.course} #{primary_section.label}"
-      @students = @rosters_api.section_students section_name
+      @roster_students = @rosters_api.section_students section_name
+
+      @canvas_students = @canvas.get_enrolled_students course
+      @canvas.load_gradebook course
+      @gradebook_grades = @canvas_students.map do |user|
+        user.sis_id = @rosters_api.sid_from_uid user.uid
+        canvas == 'BETA' ? @canvas.student_score_beta(user) : @canvas.student_score_test(user)
+      end
+
       @e_grades_export_page.load_embedded_tool(@driver, course)
-      @csv = @e_grades_export_page.download_final_grades(course, primary_section)
-      @csv_parsed = @e_grades_export_page.grades_to_hash @csv
+      @e_grades = @e_grades_export_page.download_final_grades(course, primary_section)
     end
 
     it 'has the right column headers' do
       expected_header = %w(id name grade grading_basis comments).map { |h| h.to_sym }
-      actual_header = @csv.headers
+      actual_header = (@e_grades.map { |h| h.keys }).flatten.uniq
       logger.debug "Expecting #{expected_header} and got #{actual_header}"
       expect(actual_header).to eql(expected_header)
     end
 
     it 'has the right SIDs' do
-      expected_sids = @rosters_api.student_ids @students
-      actual_sids = @csv_parsed.map { |s| s[:id] }
+      expected_sids = @rosters_api.student_ids @roster_students
+      actual_sids = @e_grades.map { |s| s[:id] }
       logger.debug "Expecting #{expected_sids} and got #{actual_sids}"
       expect(actual_sids.any? &:empty?).to be false
       expect(actual_sids.sort).to eql(expected_sids.sort)
@@ -233,8 +243,8 @@ describe 'bCourses E-Grades Export', order: :defined do
 
     it 'has the right names' do
       # Compare last names only, since preferred names can cause mismatches
-      expected_names = @rosters_api.student_last_names @students
-      actual_names = @csv_parsed.map { |n| n[:name].split(',')[0].strip.downcase }
+      expected_names = @rosters_api.student_last_names @roster_students
+      actual_names = @e_grades.map { |n| n[:name].split(',')[0].strip.downcase }
       logger.debug "Expecting #{expected_names} and got #{actual_names}"
       expect(actual_names.any? &:empty?).to be false
       expect(actual_names.sort).to eql(expected_names.sort)
@@ -242,7 +252,7 @@ describe 'bCourses E-Grades Export', order: :defined do
 
     it 'has reasonable grades' do
       expected_grades = %w(A+ A A- B+ B B- C+ C C- D+ D D- F)
-      actual_grades = @csv_parsed.map { |g| g[:grade] }
+      actual_grades = @e_grades.map { |g| g[:grade] }
       logger.debug "Expecting #{expected_grades} and got #{actual_grades.uniq}"
       expect(actual_grades.any? &:empty?).to be false
       expect((actual_grades - expected_grades).any?).to be false
@@ -250,18 +260,32 @@ describe 'bCourses E-Grades Export', order: :defined do
 
     it 'has reasonable grading bases' do
       expected_grading_bases = %w(GRD EPN)
-      actual_grading_bases = @csv_parsed.map { |b| b[:grading_basis] }
+      actual_grading_bases = @e_grades.map { |b| b[:grading_basis] }
       logger.debug "Expecting #{expected_grading_bases} and got #{actual_grading_bases.uniq}"
       expect(actual_grading_bases.any? &:empty?).to be false
       expect((actual_grading_bases - expected_grading_bases).any?).to be false
     end
 
     it 'includes a comment if the user is taking the class Pass/No Pass' do
-      @csv_parsed.each do |g|
+      @e_grades.each do |g|
         logger.error "SID #{g[:id]} is missing a Grading Basis comment" if g[:grading_basis] == 'EPN' && g[:comments].nil?
         logger.error "SID #{g[:id]} has an unexpected Grading Basis comment" if %w(GRD EPN).include? g[:grading_basis] && !g[:comments].nil?
         (g[:grading_basis] == 'EPN') ? (expect(g[:comments]).to eql('Opted for P/NP Grade')) : ((expect(g[:comments].empty?).to be true))
       end
+    end
+
+    it 'shows the right E-Grade for each student' do
+      grade_mismatches = []
+      @gradebook_grades.each do |gradebook_row|
+        begin
+          e_grades_row = @e_grades.find { |e_grade| e_grade[:id] == gradebook_row[:sis_id] }
+          @e_grades_export_page.wait_until(1) { e_grades_row[:grade] == gradebook_row[:grade] }
+        rescue
+          logger.error "Expected '#{gradebook_row}' but got '#{e_grades_row}'"
+          grade_mismatches << gradebook_row
+        end
+      end
+      fail if grade_mismatches.any?
     end
   end
 
