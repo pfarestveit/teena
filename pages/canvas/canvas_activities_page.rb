@@ -412,7 +412,7 @@ module Page
                 else
                   logger.error "Invalid score '#{score}'"
               end
-      {uid: user.uid, canvas_id: user.canvas_id sis_id: user.sis_id, score: score, grade: grade}
+      {uid: user.uid, canvas_id: user.canvas_id, sis_id: user.sis_id, score: score, grade: grade}
     end
 
     # GRADES - BETA - the new UX that is yet to be enabled in Prod
