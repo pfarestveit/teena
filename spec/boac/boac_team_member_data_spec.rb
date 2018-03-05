@@ -51,7 +51,7 @@ describe 'BOAC' do
           team_url = @boac_cohort_page.current_url
           @boac_cohort_page.wait_for_page_load active_team_members.length
 
-          expected_team_member_names = (active_team_members.map &:full_name).sort
+          expected_team_member_names = (active_team_members.map { |u| "#{u.last_name}, #{u.first_name}" }).sort
           visible_team_member_names = (@boac_cohort_page.list_view_names).sort
           it("shows all the expected players for #{team.name}") do
             logger.debug "Expecting #{expected_team_member_names} and got #{visible_team_member_names}"
@@ -202,6 +202,8 @@ describe 'BOAC' do
 
                             logger.info "Checking course #{course_code}"
 
+                            @boac_student_page.expand_course_data(term_name, course_code)
+
                             visible_course_sis_data = @boac_student_page.visible_course_sis_data(term_name, course_code)
                             visible_course_title = visible_course_sis_data[:title]
                             visible_units = visible_course_sis_data[:units]
@@ -270,26 +272,22 @@ describe 'BOAC' do
                                 component = section_sis_data[:component]
 
                                 visible_section_sis_data = @boac_student_page.visible_section_sis_data(term_name, course_code, index)
-                                visible_enrollment_status = visible_section_sis_data[:status]
                                 visible_section_number = visible_section_sis_data[:number]
-
-                                it "shows the section enrollment status for UID #{team_member.uid} term #{term_name} course #{course_code}" do
-                                  case (section_sis_data[:status])
-                                    when 'E'
-                                      expect(visible_enrollment_status).to be_nil
-                                    when 'W'
-                                      expect(visible_enrollment_status).to eql('Waitlisted in')
-                                    when 'D'
-                                      expect(visible_enrollment_status).to eql('Dropped')
-                                    else
-                                      logger.error "Invalid course status #{section_sis_data[:status]} for UID #{team_member.uid} term #{term_name} course #{course_code} section #{component}"
-                                      fail
-                                  end
-                                end
+                                visible_wait_list_status = visible_course_sis_data[:wait_list]
 
                                 it "shows the section number for UID #{team_member.uid} term #{term_name} course #{course_code} section #{component}" do
                                   expect(visible_section_number).not_to be_empty
                                   expect(visible_section_number).to eql(section_sis_data[:number])
+                                end
+
+                                if section_sis_data[:status] == 'W'
+                                  it "shows the wait list status for UID #{team_member.uid} term #{term_name} course #{course_code}" do
+                                    expect(visible_wait_list_status).to be true
+                                  end
+                                else
+                                  it "shows no enrollment status for UID #{team_member.uid} term #{term_name} course #{course_code}" do
+                                    expect(visible_wait_list_status).to be false
+                                  end
                                 end
 
                               rescue => e

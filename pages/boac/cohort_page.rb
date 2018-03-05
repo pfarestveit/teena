@@ -219,9 +219,9 @@ module Page
       # @return [Array<Hash>]
       def expected_search_results(user_data, search_criteria)
         matching_squad_users = search_criteria.squads ?
-                                  (user_data.select { |u| (u[:squad_names] & (search_criteria.squads.map { |s| s.name })).any? }) : []
+                                  (user_data.select { |u| (u[:squad_names] & (search_criteria.squads.map { |s| s.name })).any? }) : user_data
         matching_level_users = search_criteria.levels ?
-                                  (user_data.select { |u| search_criteria.levels.include? u[:level] }) : []
+                                  (user_data.select { |u| search_criteria.levels.include? u[:level] }) : user_data
 
         matching_major_users = []
         if search_criteria.majors
@@ -236,6 +236,8 @@ module Page
               (u[:majors].select { |m| !m.downcase.include? 'undeclared' }).any?
             end
           end
+        else
+          matching_major_users = user_data
         end
         matching_major_users = matching_major_users.uniq.flatten.compact
 
@@ -250,6 +252,8 @@ module Page
              (gpa != 0) && (low_end.to_f <= gpa) && ((high_end == '4.00') ? (gpa <= high_end.to_f.round(1)) : (gpa < high_end.to_f.round(1)))
            end
          end
+        else
+          matching_gpa_range_users = user_data
         end
         matching_gpa_range_users = matching_gpa_range_users.flatten
 
@@ -265,10 +269,12 @@ module Page
               matching_units_users << user_data.select { |user| (user[:units].to_f >= low_end) && (user[:units].to_f < high_end.round(-1)) }
             end
           end
+        else
+          matching_units_users = user_data
         end
         matching_units_users = matching_units_users.flatten
 
-        matching_users = [matching_squad_users, matching_level_users, matching_major_users, matching_gpa_range_users, matching_units_users].delete_if { |a| a.empty? }
+        matching_users = [matching_squad_users, matching_level_users, matching_major_users, matching_gpa_range_users, matching_units_users].delete_if &:empty?
         matching_users.inject :'&'
       end
 
@@ -321,7 +327,9 @@ module Page
       # Clicks the Cancel button during cohort creation
       def cancel_cohort
         wait_for_update_and_click cancel_cohort_button_element
-        cohort_name_input_element.when_not_visible Utils.short_wait rescue Selenium::WebDriver::Error::StaleElementReferenceError
+        cohort_name_input_element.when_not_visible Utils.short_wait
+      rescue
+        logger.warn 'No cancel button to click'
       end
 
       # Creates a new cohort

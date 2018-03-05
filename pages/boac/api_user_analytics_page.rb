@@ -202,9 +202,10 @@ class ApiUserAnalyticsPage
   end
 
   # Returns all user data relevant to cohort search
-  def collect_users_searchable_data(driver)
-    users = BOACUtils.get_athletes
-    users = users.select { |u| u.status == 'active' }
+  # @param driver [Selenium::WebDriver]
+  # @param users [Array<User>]
+  # @return [Array<Hash>]
+  def collect_users_searchable_data(driver, users)
     users.map do |user|
       # Get the squad names to use as search criteria
       user_squad_names = user.sports.map do |squad_code|
@@ -215,9 +216,9 @@ class ApiUserAnalyticsPage
       {
         :sid => user.sis_id,
         :first_name => user.first_name,
-        :first_name_sortable => user.first_name.delete(" -'.").downcase,
+        :first_name_sortable => user.first_name.gsub(/\W/, '').downcase,
         :last_name => user.last_name,
-        :last_name_sortable => user.last_name.delete(" -'.").downcase,
+        :last_name_sortable => user.last_name.gsub(/\W/, '').downcase,
         :squad_names => user_squad_names,
         :level => user_sis_data[:level],
         :majors => user_sis_data[:majors],

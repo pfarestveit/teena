@@ -21,10 +21,24 @@ describe 'BOAC custom cohorts', order: :defined do
     @analytics_page = ApiUserAnalyticsPage.new @driver
     @homepage = Page::BOACPages::HomePage.new @driver
     @cohort_page = Page::BOACPages::CohortListViewPage.new @driver
+    @student_page = Page::BOACPages::StudentPage.new @driver
     @homepage.dev_auth
 
     # Get the user data relevant to all search filters
-    @user_data = @analytics_page.collect_users_searchable_data(@driver)
+    all_users = BOACUtils.get_all_athletes
+    @all_user_search_data = @analytics_page.collect_users_searchable_data(@driver, all_users)
+
+    active_users = all_users.select { |u| u.status == 'active' }
+    active_user_sids = active_users.map &:sis_id
+    @active_user_search_data = @all_user_search_data.select { |d| active_user_sids.include? d[:sid] }
+
+    inactive_users = all_users.select { |u| u.status == 'inactive' }
+    inactive_user_sids = inactive_users.map &:sis_id
+    @inactive_user_search_data = @all_user_search_data.select { |d| inactive_user_sids.include? d[:sid] }
+
+    intensive_users = BOACUtils.get_intensive_athletes
+    intensive_user_sids = intensive_users.map &:sis_id
+    @intensive_user_search_data = @all_user_search_data.select { |d| intensive_user_sids.include? d[:sid] }
 
     # Get the current 'everyone' cohorts
     @homepage.load_page
@@ -41,13 +55,6 @@ describe 'BOAC custom cohorts', order: :defined do
     else
       logger.warn 'No cohorts exist, cannot test Everyone\'s Cohorts'
     end
-  end
-
-  it 'offers a link to the Intensive cohort' do
-    intensive = Cohort.new({name: 'Intensive'})
-    @homepage.click_intensive_cohort
-    @cohort_page.cohort_heading(intensive).when_visible Utils.medium_wait
-    expect(@cohort_page.player_link_elements.any?).to be true
   end
 
   context 'when a user has no cohorts' do
@@ -71,54 +78,54 @@ describe 'BOAC custom cohorts', order: :defined do
         @homepage.load_page
         @cohort_page.click_create_new_cohort
         @cohort_page.perform_search cohort
-        expected_results = @cohort_page.expected_search_results(@user_data, cohort.search_criteria).map { |u| u[:sid] }
+        expected_results = @cohort_page.expected_search_results(@active_user_search_data, cohort.search_criteria).map { |u| u[:sid] }
         visible_results = @cohort_page.visible_search_results
         @cohort_page.wait_until(1, "Expected #{expected_results.sort} but got #{visible_results.sort}") { visible_results.sort == expected_results.sort }
       end
 
-      it "shows by First Name all the users who match sports '#{cohort.search_criteria.squads && (cohort.search_criteria.squads.map &:name)}', levels '#{cohort.search_criteria.levels}', majors '#{cohort.search_criteria.majors}', GPA ranges '#{cohort.search_criteria.gpa_ranges}', units '#{cohort.search_criteria.units}'" do
-        expected_results = @cohort_page.expected_results_by_first_name(@user_data, cohort.search_criteria)
+      it "sorts by Last Name all the users who match sports '#{cohort.search_criteria.squads && (cohort.search_criteria.squads.map &:name)}', levels '#{cohort.search_criteria.levels}', majors '#{cohort.search_criteria.majors}', GPA ranges '#{cohort.search_criteria.gpa_ranges}', units '#{cohort.search_criteria.units}'" do
+        expected_results = @cohort_page.expected_results_by_last_name(@active_user_search_data, cohort.search_criteria)
         visible_results = @cohort_page.visible_search_results
         @cohort_page.wait_until(1, "Expected #{expected_results} but got #{visible_results}") { visible_results == expected_results }
       end
 
-      it "sorts by Last Name all the users who match sports '#{cohort.search_criteria.squads && (cohort.search_criteria.squads.map &:name)}', levels '#{cohort.search_criteria.levels}', majors '#{cohort.search_criteria.majors}', GPA ranges '#{cohort.search_criteria.gpa_ranges}', units '#{cohort.search_criteria.units}'" do
-        expected_results = @cohort_page.expected_results_by_last_name(@user_data, cohort.search_criteria)
-        @cohort_page.sort_by_last_name if expected_results.any?
+      it "shows by First Name all the users who match sports '#{cohort.search_criteria.squads && (cohort.search_criteria.squads.map &:name)}', levels '#{cohort.search_criteria.levels}', majors '#{cohort.search_criteria.majors}', GPA ranges '#{cohort.search_criteria.gpa_ranges}', units '#{cohort.search_criteria.units}'" do
+        expected_results = @cohort_page.expected_results_by_first_name(@active_user_search_data, cohort.search_criteria)
+        @cohort_page.sort_by_first_name if expected_results.any?
         visible_results = @cohort_page.visible_search_results
         @cohort_page.wait_until(1, "Expected #{expected_results} but got #{visible_results}") { visible_results == expected_results }
       end
 
       it "sorts by Team all the users who match sports '#{cohort.search_criteria.squads && (cohort.search_criteria.squads.map &:name)}', levels '#{cohort.search_criteria.levels}', majors '#{cohort.search_criteria.majors}', GPA ranges '#{cohort.search_criteria.gpa_ranges}', units '#{cohort.search_criteria.units}'" do
-        expected_results = @cohort_page.expected_results_by_team(@user_data, cohort.search_criteria)
+        expected_results = @cohort_page.expected_results_by_team(@active_user_search_data, cohort.search_criteria)
         @cohort_page.sort_by_team if expected_results.any?
         visible_results = @cohort_page.visible_search_results
         @cohort_page.wait_until(1, "Expected #{expected_results} but got #{visible_results}") { visible_results == expected_results }
       end
 
       it "sorts by GPA all the users who match sports '#{cohort.search_criteria.squads && (cohort.search_criteria.squads.map &:name)}', levels '#{cohort.search_criteria.levels}', majors '#{cohort.search_criteria.majors}', GPA ranges '#{cohort.search_criteria.gpa_ranges}', units '#{cohort.search_criteria.units}'" do
-        expected_results = @cohort_page.expected_results_by_gpa(@user_data, cohort.search_criteria)
+        expected_results = @cohort_page.expected_results_by_gpa(@active_user_search_data, cohort.search_criteria)
         @cohort_page.sort_by_gpa if expected_results.any?
         visible_results = @cohort_page.visible_search_results
         @cohort_page.wait_until(1, "Expected #{expected_results} but got #{visible_results}") { visible_results == expected_results }
       end
 
       it "sorts by Level all the users who match sports '#{cohort.search_criteria.squads && (cohort.search_criteria.squads.map &:name)}', levels '#{cohort.search_criteria.levels}', majors '#{cohort.search_criteria.majors}', GPA ranges '#{cohort.search_criteria.gpa_ranges}', units '#{cohort.search_criteria.units}'" do
-        expected_results = @cohort_page.expected_results_by_level(@user_data, cohort.search_criteria)
+        expected_results = @cohort_page.expected_results_by_level(@active_user_search_data, cohort.search_criteria)
         @cohort_page.sort_by_level if expected_results.any?
         visible_results = @cohort_page.visible_search_results
         @cohort_page.wait_until(1, "Expected #{expected_results} but got #{visible_results}") { visible_results == expected_results }
       end
 
       it "sorts by Major all the users who match sports '#{cohort.search_criteria.squads && (cohort.search_criteria.squads.map &:name)}', levels '#{cohort.search_criteria.levels}', majors '#{cohort.search_criteria.majors}', GPA ranges '#{cohort.search_criteria.gpa_ranges}', units '#{cohort.search_criteria.units}'" do
-        expected_results = @cohort_page.expected_results_by_major(@user_data, cohort.search_criteria)
+        expected_results = @cohort_page.expected_results_by_major(@active_user_search_data, cohort.search_criteria)
         @cohort_page.sort_by_major if expected_results.any?
         visible_results = @cohort_page.visible_search_results
         @cohort_page.wait_until(1, "Expected #{expected_results} but got #{visible_results}") { visible_results == expected_results }
       end
 
       it "sorts by Units all the users who match sports '#{cohort.search_criteria.squads && (cohort.search_criteria.squads.map &:name)}', levels '#{cohort.search_criteria.levels}', majors '#{cohort.search_criteria.majors}', GPA ranges '#{cohort.search_criteria.gpa_ranges}', units '#{cohort.search_criteria.units}'" do
-        expected_results = @cohort_page.expected_results_by_units(@user_data, cohort.search_criteria)
+        expected_results = @cohort_page.expected_results_by_units(@active_user_search_data, cohort.search_criteria)
         @cohort_page.sort_by_units if expected_results.any?
         visible_results = @cohort_page.visible_search_results
         @cohort_page.wait_until(1, "Expected #{expected_results} but got #{visible_results}") { visible_results == expected_results }
@@ -205,9 +212,76 @@ describe 'BOAC custom cohorts', order: :defined do
 
     before(:all) { @cohort_page.delete_cohort cohorts_created.last }
 
-    it 'shows a Not Found page'do
+    it 'shows a Not Found page' do
       @cohort_page.load_cohort cohorts_created.last
       @cohort_page.cohort_not_found_msg_element.when_visible Utils.medium_wait
+    end
+  end
+
+  describe 'Inactive cohort students' do
+
+    before(:all) do
+      @homepage.click_inactive_cohort
+      @visible_inactive_users = @cohort_page.visible_search_results
+      @student = User.new({})
+    end
+
+    it 'all appear on the cohort page with an INACTIVE indicator' do
+      expected_results = @cohort_page.expected_results_by_last_name(@inactive_user_search_data, CohortSearchCriteria.new({}))
+      expect(@visible_inactive_users).to eql(expected_results)
+    end
+
+    it('include at least one inactive student') { expect(@visible_inactive_users.empty?).to be false }
+
+    it 'have an inactive indicator on the student page' do
+      @student.sis_id = @student_page.list_view_sids.first
+      @cohort_page.click_player_link @student
+      @student_page.wait_for_spinner
+      @student_page.inactive_flag_element.when_visible Utils.short_wait
+    end
+
+    it 'have an inactive indicator on My List' do
+      @student_page.add_user_to_watchlist @student
+      @homepage.load_page
+      @homepage.wait_for_spinner
+      expect(@homepage.my_list_user_inactive?(@student)).to be true
+    end
+
+    test_search_criteria.each do |search_criteria|
+      it "can be searched by sports '#{search_criteria.squads && (search_criteria.squads.map &:name)}', levels '#{search_criteria.levels}', majors '#{search_criteria.majors}', GPA ranges '#{search_criteria.gpa_ranges}', units '#{search_criteria.units}'" do
+        @homepage.load_page
+        @cohort_page.click_inactive_cohort
+        @cohort_page.perform_search search_criteria
+        expected_results = @cohort_page.expected_search_results(@inactive_user_search_data, search_criteria).map { |u| u[:sid] }
+        visible_results = @cohort_page.visible_search_results
+        @cohort_page.wait_until(1, "Expected #{expected_results.sort} but got #{visible_results.sort}") { visible_results.sort == expected_results.sort }
+      end
+    end
+  end
+
+  describe 'Intensive cohort students' do
+
+    before(:all) do
+      @homepage.click_intensive_cohort
+      @visible_intensive_users = @cohort_page.visible_search_results
+    end
+
+    it 'all appear on the cohort page' do
+      expected_results = @cohort_page.expected_results_by_last_name(@intensive_user_search_data, CohortSearchCriteria.new({}))
+      expect(@visible_intensive_users).to eql(expected_results)
+    end
+
+    it('include at least one intensive student') { expect(@visible_intensive_users.empty?).to be false }
+
+    test_search_criteria.each do |search_criteria|
+      it "can be searched by sports '#{search_criteria.squads && (search_criteria.squads.map &:name)}', levels '#{search_criteria.levels}', majors '#{search_criteria.majors}', GPA ranges '#{search_criteria.gpa_ranges}', units '#{search_criteria.units}'" do
+        @homepage.load_page
+        @cohort_page.click_intensive_cohort
+        @cohort_page.perform_search search_criteria
+        expected_results = @cohort_page.expected_search_results(@intensive_user_search_data, search_criteria).map { |u| u[:sid] }
+        visible_results = @cohort_page.visible_search_results
+        @cohort_page.wait_until(1, "Expected #{expected_results.sort} but got #{visible_results.sort}") { visible_results.sort == expected_results.sort }
+      end
     end
   end
 end

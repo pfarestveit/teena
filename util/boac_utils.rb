@@ -22,9 +22,9 @@ class BOACUtils < Utils
     @config['term']
   end
 
-  # Returns the db credentials for BOAC Shared
+  # Returns the db credentials for BOAC
   # @return [Hash]
-  def self.boac_shared_db_credentials
+  def self.boac_db_credentials
     {
       host: @config['db_host'],
       port: @config['db_port'],
@@ -34,22 +34,34 @@ class BOACUtils < Utils
     }
   end
 
-  # Returns an array of Users stored in the cohorts table
-  # @return [Array<User>]
-  def self.get_athletes
+  # Returns all students
+  # @return [PG::Result]
+  def self.query_all_athletes
     query = 'SELECT students.uid AS uid,
                     students.sid AS sid,
                     students.first_name AS first_name,
                     students.last_name AS last_name,
                     students.is_active_asc AS status,
+                    students.in_intensive_cohort AS intensive,
                     student_athletes.group_code AS group_code
              FROM students
              JOIN student_athletes ON student_athletes.sid = students.sid
              ORDER BY students.uid;'
-    results = Utils.query_db(boac_shared_db_credentials, query)
+    Utils.query_db(boac_db_credentials, query)
+  end
 
+  # Returns students where 'intensive' is true
+  # @return [PG::Result]
+  def self.query_intensive_athletes
+    query_all_athletes.select { |a| a['intensive'] == 't' }
+  end
+
+  # Converts a students result object to an array of users
+  # @param athletes [PG::Result]
+  # @return [Array<User>]
+  def self.athletes_to_users(athletes)
     # Users with multiple sports have multiple rows; combine them
-    athletes = results.group_by { |h1| h1['uid'] }.map do |k,v|
+    athletes = athletes.group_by { |h1| h1['uid'] }.map do |k,v|
       {uid: k, sid: v[0]['sid'], status: (v[0]['status'] == 't' ? 'active' : 'inactive'), first_name: v[0]['first_name'], last_name: v[0]['last_name'], group_code: v.map { |h2| h2['group_code'] }.join(' ')}
     end
 
@@ -57,6 +69,18 @@ class BOACUtils < Utils
     athletes.map do |a|
       User.new({uid: a[:uid], sis_id: a[:sid], status: a[:status], first_name: a[:first_name], last_name: a[:last_name], full_name: "#{a[:first_name]} #{a[:last_name]}", sports: a[:group_code].split.uniq})
     end
+  end
+
+  # Returns an array of users for all students
+  # @return [Array<User>]
+  def self.get_all_athletes
+    athletes_to_users query_all_athletes
+  end
+
+  # Returns an array of users for intensive students only
+  # @return [Array<User>]
+  def self.get_intensive_athletes
+    athletes_to_users query_intensive_athletes
   end
 
   # Returns a collection of search criteria to use for testing cohort search
@@ -82,7 +106,7 @@ class BOACUtils < Utils
     query = 'SELECT DISTINCT team_code
              FROM athletics
              ORDER BY team_code;'
-    results = Utils.query_db_field(boac_shared_db_credentials, query, 'team_code')
+    results = Utils.query_db_field(boac_db_credentials, query, 'team_code')
     teams = Team::TEAMS.select { |team| results.include? team.code }
     logger.info "Teams are #{teams.map &:name}"
     teams.sort_by { |t| t.name }
@@ -94,7 +118,7 @@ class BOACUtils < Utils
     query = 'SELECT DISTINCT group_code
              FROM athletics
              ORDER BY group_code;'
-    results = Utils.query_db_field(boac_shared_db_credentials, query, 'group_code')
+    results = Utils.query_db_field(boac_db_credentials, query, 'group_code')
     squads = Squad::SQUADS.select { |squad| results.include? squad.code }
     logger.info "Squads are #{squads.map &:name}"
     squads.sort_by { |s| s.name }
@@ -117,7 +141,7 @@ class BOACUtils < Utils
   # @return [Array<User>]
   def self.get_squad_members(squads, all_athletes = nil)
     squad_codes = squads.map &:code
-    athletes = all_athletes ? all_athletes : get_athletes
+    athletes = all_athletes ? all_athletes : get_all_athletes
     athletes.select { |u| (u.sports & squad_codes).any? }
   end
 
@@ -130,7 +154,7 @@ class BOACUtils < Utils
               JOIN cohort_filter_owners ON cohort_filter_owners.cohort_filter_id = cohort_filters.id
               JOIN authorized_users ON authorized_users.id = cohort_filter_owners.user_id
               WHERE authorized_users.uid = '#{user.uid}';"
-    results = Utils.query_db(boac_shared_db_credentials, query)
+    results = Utils.query_db(boac_db_credentials, query)
     results.map { |r| Cohort.new({id: r['cohort_id'], name: r['cohort_name'], owner_uid: user.uid}) }
   end
 
@@ -144,7 +168,7 @@ class BOACUtils < Utils
               JOIN cohort_filter_owners ON cohort_filter_owners.cohort_filter_id = cohort_filters.id
               JOIN authorized_users ON authorized_users.id = cohort_filter_owners.user_id
               ORDER BY uid, cohort_id ASC;'
-    results = Utils.query_db(boac_shared_db_credentials, query)
+    results = Utils.query_db(boac_db_credentials, query)
     cohorts = results.map { |r| Cohort.new({id: r['cohort_id'], name: r['cohort_name'], owner_uid: r['uid']}) }
     cohorts.sort_by { |c| [c.owner_uid.to_i, c.id] }
   end
@@ -156,7 +180,7 @@ class BOACUtils < Utils
     query = "SELECT id
              FROM cohort_filters
              WHERE label = '#{cohort.name}'"
-    result = Utils.query_db_field(boac_shared_db_credentials, query, 'id').first
+    result = Utils.query_db_field(boac_db_credentials, query, 'id').first
     logger.info "Cohort '#{cohort.name}' ID is #{result}"
     cohort.id = result
   end

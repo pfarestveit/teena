@@ -4,7 +4,7 @@ describe 'BOAC' do
 
   include Logging
 
-  athletes = BOACUtils.get_athletes
+  athletes = BOACUtils.get_all_athletes
   active_athletes = athletes.select { |a| a.status == 'active' }
   inactive_athletes = athletes.select { |a| a.status == 'inactive' }
 
