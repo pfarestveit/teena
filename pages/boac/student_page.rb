@@ -19,9 +19,10 @@ module Page
       link(:email, xpath: '//a[@data-ng-bind="student.sisProfile.emailAddress"]')
       div(:cumulative_units, xpath: '//div[@data-ng-bind="student.sisProfile.cumulativeUnits"]')
       div(:cumulative_gpa, xpath: '//div[contains(@data-ng-bind,"student.sisProfile.cumulativeGPA")]')
-      elements(:major, :h3, xpath: '//h3[@data-ng-bind="plan.description"]')
+      h4(:inactive_flag, xpath: '//h4[text()="INACTIVE"]')
+      elements(:major, :h4, xpath: '//div[@data-ng-repeat="plan in student.sisProfile.plans"]/h4')
       elements(:college, :div, xpath: '//div[@data-ng-bind="plan.program"]')
-      h3(:level, xpath: '//h3[@data-ng-bind="student.sisProfile.level.description"]')
+      h4(:level, xpath: '//h4[@data-ng-bind="student.sisProfile.level.description"]')
       span(:terms_in_attendance, xpath: '//div[@data-ng-if="student.sisProfile.termsInAttendance"]/span')
 
       cell(:writing_reqt, xpath: '//td[text()="Entry Level Writing"]/following-sibling::td')
@@ -80,7 +81,7 @@ module Page
       # @param course_code [String]
       # @return [String]
       def course_data_xpath(term_name, course_code)
-        "//h2[text()=\"#{term_name}\"]/following-sibling::div[@data-ng-repeat='course in term.enrollments']//h3[text()=\"#{course_code}\"]/../../.."
+        "//h3[text()=\"#{term_name}\"]/following-sibling::*[name()='uib-accordion']//div[@data-ng-repeat=\"course in term.enrollments\"][contains(.,\"#{course_code}\")]"
       end
 
       # Returns the SIS data shown for a course with a given course code
@@ -89,17 +90,19 @@ module Page
       # @return [Hash]
       def visible_course_sis_data(term_name, course_code)
         course_xpath = course_data_xpath(term_name, course_code)
-        title_xpath = "#{course_xpath}//h4"
-        units_xpath = "#{course_xpath}//div[contains(@class, 'student-profile-class-units')]"
+        title_xpath = "#{course_xpath}//h5"
+        units_xpath = "#{course_xpath}//span[@count='course.units']"
         grading_basis_xpath = "#{course_xpath}//span[contains(@class, 'student-profile-class-grading-basis')]"
         mid_point_grade_xpath = "#{course_xpath}//span[contains(@data-ng-bind,'course.midtermGrade')]"
         grade_xpath = "#{course_xpath}//span[contains(@data-ng-bind, 'course.grade')]"
+        wait_list_xpath = "#{course_xpath}//div[@data-ng-if='course.waitlisted']"
         {
           :title => (h4_element(:xpath => title_xpath).text if h4_element(:xpath => title_xpath).exists?),
           :units => (div_element(:xpath => units_xpath).text.delete('Units').strip if div_element(:xpath => units_xpath).exists?),
           :grading_basis => (span_element(:xpath => grading_basis_xpath).text if (span_element(:xpath => grading_basis_xpath).exists? && !span_element(:xpath => grade_xpath).exists?)),
           :mid_point_grade => (span_element(:xpath => mid_point_grade_xpath).text if span_element(:xpath => mid_point_grade_xpath).exists?),
-          :grade => (span_element(:xpath => grade_xpath).text if span_element(:xpath => grade_xpath).exists?)
+          :grade => (span_element(:xpath => grade_xpath).text if span_element(:xpath => grade_xpath).exists?),
+          :wait_list => (div_element(:xpath => wait_list_xpath).exists?)
         }
       end
 
@@ -112,17 +115,15 @@ module Page
         "#{course_data_xpath(term_name, course_code)}//div[@data-ng-repeat='section in course.sections'][#{index + 1}]"
       end
 
-      # Returns the SIS data shown for a given section in a course with a specific component type (e.g., LEC, DIS)
+      # Returns the SIS data shown for a given section in a course at a specific index
       # @param term_name [String]
       # @param course_code [String]
       # @param index [Integer]
       # @return [Hash]
       def visible_section_sis_data(term_name, course_code, index)
         section_xpath = section_data_xpath(term_name, course_code, index)
-        status_xpath = "#{section_xpath}//span[contains(@data-ng-if,'section.enrollmentStatus')]"
         number_xpath = "#{section_xpath}//span[@data-ng-bind='section.sectionNumber']"
         {
-          :status => (span_element(:xpath => status_xpath).text if span_element(:xpath => status_xpath).exists?),
           :number => (span_element(:xpath => number_xpath).text if span_element(:xpath => number_xpath).exists?)
         }
       end
@@ -139,13 +140,28 @@ module Page
 
       # COURSE SITES
 
+      # Returns the element for expanding or collapsing course data
+      # @param term_name [String]
+      # @param course_code [String]
+      # @return [PageObject::Elements::Link]
+      def course_data_toggle(term_name, course_code)
+        link_element(:xpath => "#{course_data_xpath(term_name, course_code)}//a")
+      end
+
+      # Expands course data
+      # @param term_name [String]
+      # @param course_code [String]
+      def expand_course_data(term_name, course_code)
+        wait_for_update_and_click course_data_toggle(term_name, course_code)
+      end
+
       # Returns the XPath to a course site associated with a course in a term
       # @param term_name [String]
       # @param course_code [String]
       # @param index [Integer]
       # @return [String]
       def course_site_xpath(term_name, course_code, index)
-        "#{course_data_xpath(term_name, course_code)}/div[@data-ng-repeat='canvasSite in course.canvasSites'][#{index + 1}]"
+        "#{course_data_xpath(term_name, course_code)}//div[@data-ng-repeat='canvasSite in course.canvasSites'][#{index + 1}]"
       end
 
       # Returns the XPath to a course site in a term not matched to a SIS enrollment
@@ -210,7 +226,7 @@ module Page
       # @param label [String]
       # @return [String]
       def graphable_user_score(site_xpath, label)
-        el = div_element(:xpath => "#{site_analytics_score_xpath(site_xpath, label)}//div[@class='student-profile-boxplot-container-tooltip-header']/div[2]")
+        el = div_element(:xpath => "#{site_analytics_score_xpath(site_xpath, label)}//div[@class='student-profile-tooltip-header']/div[2]")
         el && el.text
       end
 
@@ -245,7 +261,7 @@ module Page
           mouseover(driver, analytics_trigger_element(driver, site_xpath, label))
           div_element(:xpath => "#{site_analytics_score_xpath(site_xpath, label)}//div[contains(@class,'highcharts-tooltip')]").when_visible Utils.short_wait
         end
-        tool_tip_detail_elements = driver.find_elements(:xpath => "#{site_analytics_score_xpath(site_xpath, label)}//div[@class='student-profile-boxplot-container-tooltip-content']//div[@class='student-profile-boxplot-container-tooltip-value']")
+        tool_tip_detail_elements = driver.find_elements(:xpath => "#{site_analytics_score_xpath(site_xpath, label)}//div[@class='student-profile-tooltip-content']//div[@class='student-profile-tooltip-value']")
         tool_tip_detail = []
         tool_tip_detail = tool_tip_detail_elements.map &:text if tool_tip_detail_elements.any?
         {

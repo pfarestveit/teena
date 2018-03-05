@@ -12,11 +12,13 @@ module Page
     button(:cohorts_button, id: 'btn-append-to-single-button')
     list_item(:no_cohorts_msg, xpath: '//li[contains(.,"No saved cohorts")]')
     link(:intensive_cohort_link, text: 'Intensive')
+    link(:inactive_cohort_link, text: 'Inactive')
     link(:create_new_cohort_link, text: 'Create New Cohort')
     link(:manage_my_cohorts_link, text: 'Manage My Cohorts')
     link(:view_everyone_cohorts_link, text: 'View Everyone\'s Cohorts')
     button(:log_out_button, xpath: '//button[contains(text(),"Log out")]')
     elements(:my_cohort_link, :link, :xpath => '//ul[@class="dropdown-menu"]/li[@data-ng-repeat="cohort in myCohorts"]/a')
+    link(:feedback_link, text: 'ascpilot@lists.berkeley.edu')
 
     div(:spinner, class: 'loading-spinner-large')
 
@@ -42,6 +44,12 @@ module Page
     def click_intensive_cohort
       click_cohorts
       wait_for_load_and_click intensive_cohort_link_element
+    end
+
+    # Clicks the link for the Inactive cohort
+    def click_inactive_cohort
+      click_cohorts
+      wait_for_load_and_click inactive_cohort_link_element
     end
 
     # Clicks the button to create a new custom cohort

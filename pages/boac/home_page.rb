@@ -71,7 +71,14 @@ module Page
       # @param user [User]
       # @return [PageObject::Elements::Row]
       def my_list_user_row(user)
-        row_element(xpath: "//h2[text()='My List']/following-sibling::div//tr[contains(.,\"#{user.full_name}\")][contains(.,\"#{user.sis_id}\")]")
+        row_element(xpath: "//h2[text()='My List']/following-sibling::div//tr[contains(.,\"#{user.last_name}, #{user.first_name}\")][contains(.,\"#{user.sis_id}\")]")
+      end
+
+      # Checks if a user is marked inactive in My List
+      # @param user [User]
+      # @return [boolean]
+      def my_list_user_inactive?(user)
+        my_list_user_row(user).span_element(class: 'landing-inactive-info-icon').exists?
       end
 
       # Removes a user from My List
