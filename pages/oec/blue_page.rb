@@ -122,14 +122,22 @@ module Page
     link(:manage_project_link, xpath: '//a[@title="Manage Project"]')
     span(:task_list_heading, id: 'BlueAppControl_TopLabelProjectManagement_TaskManagementUC_lblTaskList')
     span(:results_count, id: 'BlueAppControl_TopLabelProjectManagement_TaskManagementUC_ucBlueGrid_lblTopPageStatus')
+
     select_list(:task_type_select, id: 'BlueAppControl_TopLabelProjectManagement_TaskManagementUC_dplTask')
     select_list(:task_status_select, id: 'BlueAppControl_TopLabelProjectManagement_TaskManagementUC_dplStatus')
+
     select_list(:dept_form_field_select, id: 'BlueAppControl_TopLabelProjectManagement_TaskManagementUC_SearchBox_dplField1')
     select_list(:dept_form_opr_select, id: 'BlueAppControl_TopLabelProjectManagement_TaskManagementUC_SearchBox_dplOpr1')
     text_area(:dept_form_search_input, id: 'BlueAppControl_TopLabelProjectManagement_TaskManagementUC_SearchBox_txtBox1')
+
     select_list(:eval_type_field_select, id: 'BlueAppControl_TopLabelProjectManagement_TaskManagementUC_SearchBox_dplField2')
     select_list(:eval_type_opr_select, id: 'BlueAppControl_TopLabelProjectManagement_TaskManagementUC_SearchBox_dplOpr2')
     text_area(:eval_type_search_input, id: 'BlueAppControl_TopLabelProjectManagement_TaskManagementUC_SearchBox_txtBox2')
+
+    select_list(:catalog_id_field_select, id: 'BlueAppControl_TopLabelProjectManagement_TaskManagementUC_SearchBox_dplField3')
+    select_list(:catalog_id_opr_select, id: 'BlueAppControl_TopLabelProjectManagement_TaskManagementUC_SearchBox_dplOpr3')
+    text_area(:catalog_id_search_input, id: 'BlueAppControl_TopLabelProjectManagement_TaskManagementUC_SearchBox_txtBox3')
+
     button(:task_filter_button, id: 'BlueAppControl_TopLabelProjectManagement_TaskManagementUC_SearchBox_btnSearch')
     link(:first_fill_out_link, xpath: '//span[text()="Form Fill Out"]/ancestor::td/following-sibling::td[6]/a[contains(.,"Link")]')
     button(:next_button, id: 'FilloutController_btnNext')
@@ -169,10 +177,9 @@ module Page
     end
 
     # Searches for a fill-out form type, opens the first in the list, and navigates to the questionnaire
-    # @param dept_form [String]
-    # @param eval_type [String]
+    # @param form [Hash]
     # @return [Integer]
-    def search_for_fill_out_form_tasks(dept_form, eval_type)
+    def search_for_fill_out_form_tasks(form)
       # Search for the right form type
       wait_for_element_and_select_js(task_type_select_element, 'Form Fill Out')
       wait_for_filtered_results
@@ -180,10 +187,24 @@ module Page
       wait_for_filtered_results
       wait_for_element_and_select_js(dept_form_field_select_element, 'DEPT_FORM (Subjects)')
       wait_for_element_and_select_js(dept_form_opr_select_element, 'Is')
-      wait_for_element_and_type(dept_form_search_input_element, dept_form)
+      wait_for_element_and_type(dept_form_search_input_element, form[:dept_code])
       wait_for_element_and_select_js(eval_type_field_select_element, 'EVALUATION_TYPE (Subjects)')
       wait_for_element_and_select_js(eval_type_opr_select_element, 'Is')
-      wait_for_element_and_type(eval_type_search_input_element, eval_type)
+      wait_for_element_and_type(eval_type_search_input_element, form[:eval_type])
+
+      # A department can use a special form for specific catalog IDs and default form for the rest
+      dept = OECDepartments::DEPARTMENTS.find { |d| d.dept_code == form[:dept_code] }
+      if dept.catalog_id
+        wait_for_element_and_select_js(catalog_id_field_select_element, 'CATALOG_ID (Subjects)')
+        if form[:catalog_id]
+          wait_for_element_and_select_js(catalog_id_opr_select_element, 'Is')
+          wait_for_element_and_type(catalog_id_search_input_element, form[:catalog_id])
+        else
+          wait_for_element_and_select_js(catalog_id_opr_select_element, 'Is not')
+          wait_for_element_and_type(catalog_id_search_input_element, dept.catalog_id)
+        end
+      end
+
       wait_for_update_and_click task_filter_button_element
       wait_for_filtered_results
       total_results
@@ -284,19 +305,38 @@ module Page
             end
           end
 
+        when 'checkbox'
+          verify_block do
+            wait_until(2) do
+              # Verify the question heading text
+              driver.find_element(:xpath => "#{question_xpath}//h3/a[text()=\"#{question[:question]}\"]")
+              logger.info "Found '#{question[:question]}'"
+
+              # Verify the checkboxes and labels
+              driver.find_element(:xpath => "#{question_xpath}//label[text()=\"#{question[:sub_question]}\"]/preceding-sibling::input")
+              logger.info "Found '#{question[:sub_question]}'"
+              # TODO - verify right number of checkboxes
+            end
+          end
+
         when 'input'
           verify_block do
             wait_until(2) do
               # Check that the exact question text is in the right section and that it has an accompanying text input field
               driver.find_element(:xpath => "#{question_xpath}//h3/a[text()=\"#{question[:question]}\"]")
+              logger.info "Found '#{question[:question]}'"
+
+              # Some questions have supplemental text on separate lines
+              if question[:sub_type] && question[:sub_type] == 'list'
+                driver.find_element(:xpath => "#{question_xpath}//span[contains(.,\"#{question[:sub_question]}\")]")
+                logger.info "Found '#{question[:sub_question]}'"
+              end
 
               # Two different input elements are in use, so look for the most common one. If not found, check for the other.
               begin
                 driver.find_element(:xpath => "#{question_xpath}//textarea")
-                logger.info "Found '#{question[:question]}'"
               rescue
                 driver.find_element(:xpath => "#{question_xpath}//input")
-                logger.info "Found '#{question[:question]}'"
               end
             end
           end

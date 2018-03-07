@@ -151,9 +151,13 @@ class OecUtils
       if dept.eval_types
         dept.eval_types.map { |eval_type| {:dept_code => dept.form_code, :eval_type => eval_type} }
       else
-        {:dept_code => dept.form_code, :eval_type => nil}
+        {:dept_code => dept.form_code}
       end
     end
+    # Departments can use a special form for specific catalog IDs and default form for the rest
+    catalog_id_depts = participating_depts.select { |d| d.catalog_id }
+    forms_and_catalog_ids = catalog_id_depts.map { |dept| {:dept_code => dept.form_code, :catalog_id => dept.catalog_id} }
+    forms_and_types << forms_and_catalog_ids
     forms_and_types.flatten.uniq
   end
 
@@ -162,6 +166,17 @@ class OecUtils
   def self.open_question_bank
     file = File.join(Utils.config_dir, 'oec-question-bank.csv')
     CSV.table file
+  end
+
+  # Compares the expected list of evaluation forms to the forms defined in the question bank.
+  # @param csv [CSV::Table]
+  # @return [boolean]
+  def self.verify_all_forms_present(csv)
+    expected_forms = get_forms.map { |f| get_form_code(f).gsub(/\W/, '').gsub('_', '').gsub('&', '') }
+    bank_forms = csv.headers[7..-1].map { |h| h.to_s.gsub(/\W/, '').gsub('_', '').upcase }
+    logger.warn "Expected evaluation forms that are not in the question bank: #{expected_forms - bank_forms}"
+    logger.warn "Evaluation forms in the question bank items that are unexpected: #{bank_forms - expected_forms}"
+    bank_forms.sort == expected_forms.sort
   end
 
   # Converts a question bank row to a hash
@@ -183,7 +198,7 @@ class OecUtils
   # @param form [Hash]
   # @return [String]
   def self.get_form_code(form)
-    "#{form[:dept_code]}#{'_' if form[:eval_type]}#{form[:eval_type]}"
+    "#{form[:dept_code]}#{'_' if form[:eval_type]}#{form[:eval_type]}#{'_' if form[:catalog_id]}#{form[:catalog_id]}"
   end
 
   # Returns all the questions applicable to a given department form code and evaluation type
@@ -192,7 +207,7 @@ class OecUtils
   # @return [Array<Hash>]
   def self.get_form_questions(question_bank_csv, form)
     # The form codes are headers in the question bank. When the CSV is read, the headers are converted to symbols.
-    form_code_to_sym = get_form_code(form).downcase.gsub(' ', '_').delete(',').to_sym
+    form_code_to_sym = get_form_code(form).downcase.gsub(' ', '_').gsub('&', '').delete(',').to_sym
     # Questions applicable to a form code have 'Y' under the header symbol
     questions = []
     question_bank_csv.each { |r| questions << OecUtils.question_row_to_hash(r) if r[form_code_to_sym] == 'Y' }
