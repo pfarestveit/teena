@@ -1,13 +1,14 @@
 class OECDepartments
 
-  attr_accessor :dept_code, :file_name, :form_code, :eval_types, :ets_managed
+  attr_accessor :dept_code, :file_name, :form_code, :eval_types, :ets_managed, :catalog_id
 
-  def initialize(dept_code, file_name, form_code, eval_types, ets_managed)
+  def initialize(dept_code, file_name, form_code, eval_types, ets_managed, catalog_id = nil)
     @dept_code = dept_code
     @dept_name = file_name
     @form_code = form_code
     @eval_types = eval_types
     @ets_managed = ets_managed
+    @catalog_id = catalog_id
   end
 
   DEPARTMENTS = [
@@ -25,10 +26,11 @@ class OECDepartments
       CATALAN = new('CATALAN', 'Spanish and Portuguese', 'SPANISH', %w(LANG LECT SEMI WRIT), true),
       CHEM = new('CHEM', 'Chemistry', 'CHEM', %w(F G), true),
       CIV_ENG = new('CIV ENG', 'Civil and Environmental Engineering', 'CIV ENG', nil, false),
+      CMP_BIO = new('CMP BIO', 'Computational Biology', 'CMP BIO', nil, true),
       COG_SCI = new('COG SCI', 'International and Area Studies', 'IAS', %w(F G), true),
       COLWRIT = new('COLWRIT', 'College Writing', 'COLWRIT', %w(F G), true),
       COM_LIT = new('COM LIT', 'Comparative Literature', 'COM LIT', %w(G), true),
-      COMPBIO = new('COMPBIO', 'Graduate Division', 'COMPBIO', nil, true),
+      COMPBIO = new('COMPBIO', 'Graduate Division', 'COMPBIO', nil, false),
       COMPSCI = new('COMPSCI', 'Electrical Engineering and Computer Science', 'COMPSCI', nil, false),
       DATASCI = new('DATASCI', 'Information', 'DATASCI', nil, true),
       DES_INV = new('DES INV', 'Engineering', 'ENGIN', nil, false),
@@ -41,7 +43,7 @@ class OECDepartments
       EL_ENG = new('EL ENG', 'Electrical Engineering and Computer Science', 'EL ENG', nil, false),
       ENE_RES = new('ENE,RES', 'Energy and Resources Group', 'ENE,RES', %w(F G), true),
       ENGIN = new('ENGIN', 'Engineering', 'ENGIN', nil, false),
-      ENVECON = new('ENVECON', 'Agricultural and Resource Economics', 'A,RESEC', %w(F G), true),
+      ENVECON = new('ENVECON', 'Agricultural and Resource Economics', 'ENVECON', %w(F G), true),
       ENV_SCI = new('ENV SCI',  'Environmental Science, Policy, and Management', 'ESPM', %w(F G), true),
       EPS = new('EPS', 'Earth and Planetary Science', 'EPS', %w(F G), true),
       ESPM = new('ESPM', 'Environmental Science, Policy, and Management', 'ESPM', %w(F G), true),
@@ -61,7 +63,7 @@ class OECDepartments
       INTEGBI = new('INTEGBI', 'Integrative Biology', 'INTEGBI', %w(F G), true),
       ISF = new('ISF', 'Undergraduate and Interdisciplinary Studies', 'ISF', nil, true),
       JOURN = new('JOURN', 'Journalism', 'JOURN', nil, true),
-      L_AND_S = new('L & S', 'Undergraduate and Interdisciplinary Studies', 'UGIS', %w(F G), true),
+      L_AND_S = new('L & S', 'Undergraduate and Interdisciplinary Studies', 'L & S', %w(F G), true),
       LAN_PRO = new('LAN PRO', 'Graduate Division', 'LAN PRO', nil, true),
       LATAMST = new('LATAMST', 'Graduate Division', 'LAN PRO', nil, true),
       LGBT = new('LGBT', 'Gender and Women\'s Studies', 'GWS', %w(F G), true),
@@ -91,7 +93,7 @@ class OECDepartments
       PUB_POL = new('PUB POL', 'Goldman School of Public Policy', 'PUB POL', nil, false),
       RELIGST = new('RELIGST', 'Undergraduate and Interdisciplinary Studies', 'UGIS', %w(F G), true),
       RHETOR = new('RHETOR', 'Rhetoric', 'RHETOR', %w(F G), true),
-      SOC_WEL = new('SOC WEL', 'Social Welfare', 'SOC WEL', nil, false),
+      SOC_WEL = new('SOC WEL', 'Social Welfare', 'SOC WEL', nil, true, '290'),
       SPANISH = new('SPANISH', 'Spanish and Portuguese', 'SPANISH', %w(LANG LECT SEMI WRIT), true),
       STAT = new('STAT', 'Statistics', 'STAT', %w(F G), true),
       THEATER = new('THEATER', 'Theater, Dance, and Performance', 'THEATER', %w(F G), true),

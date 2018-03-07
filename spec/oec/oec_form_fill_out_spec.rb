@@ -10,6 +10,7 @@ describe 'Blue form fill out tasks' do
   begin
 
     question_bank = OecUtils.open_question_bank
+    it('agree on the expected form types and those defined in the question bank') { expect(OecUtils.verify_all_forms_present question_bank).to be true }
 
     forms = OecUtils.get_forms
     form_codes = forms.map { |f| OecUtils.get_form_code f }
@@ -30,7 +31,7 @@ describe 'Blue form fill out tasks' do
           if (dept_form == OecUtils.get_form_code(form)) || !dept_form
             logger.info "Checking #{form}"
             @blue.load_project OecUtils.blue_project_title
-            results = @blue.search_for_fill_out_form_tasks(form[:dept_code], form[:eval_type])
+            results = @blue.search_for_fill_out_form_tasks form
 
             if results.zero?
               logger.warn "No tasks found for #{form}, skipping"
