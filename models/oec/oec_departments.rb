@@ -1,6 +1,6 @@
 class OECDepartments
 
-  attr_accessor :dept_code, :file_name, :form_code, :eval_types, :catalog_ids, :ets_managed, :catalog_id
+  attr_accessor :dept_code, :file_name, :form_code, :eval_types, :ets_managed, :catalog_id
 
   def initialize(dept_code, file_name, form_code, eval_types, ets_managed, catalog_id = nil)
     @dept_code = dept_code
