@@ -13,7 +13,7 @@ timeouts:
   short: 8
   medium: 30
   long: 120
-  canvas_poller: 120
+  canvas_poller: 60
 
 cal_net:
   base_url: https://auth-test.berkeley.edu
@@ -27,7 +27,7 @@ suite_c:
   db_name: secret
   db_user: secret
   db_password: secret
-  poller_retries: 20
+  poller_retries: 10
   acceptable_events_diff: 0.03
 
 canvas:

@@ -134,7 +134,7 @@ module Page
       if index.nil?
         logger.info "Creating new discussion entry with body '#{reply_body}'"
         wait_for_load_and_click_js primary_reply_link_element
-        wait_for_update_and_click primary_html_editor_link_element
+        wait_for_update_and_click_js primary_html_editor_link_element
         wait_for_element_and_type_js(primary_reply_input_element, reply_body)
         replies = discussion_reply_elements.length
         primary_post_reply_button
@@ -633,27 +633,8 @@ module Page
 
     # MESSAGES
 
-    link(:inbox_link, id: 'global_nav_conversations_link')
-    button(:msg_delete_button, id: 'delete-btn')
-    paragraph(:msg_body, xpath: '//li[@class="message-item-view"]/p')
-
-    # Verifies the existence and content of a message in the Canvas inbox
-    # @param from_user [User]
-    # @param to_user [User]
-    # @param msg [String]
-    # @param test_id [String]
-    def verify_message(from_user, to_user, msg, test_id)
-      wait_for_update_and_click inbox_link_element
-      div_element(xpath: "//h2[contains(., '#{from_user.full_name}, #{to_user.full_name}')]/following-sibling::div[contains(., '#{test_id}')]").when_visible Utils.short_wait
-      wait_for_update_and_click list_item_element(xpath: "//h2[contains(., '#{from_user.full_name}, #{to_user.full_name}')]/..")
-      msg_body_element.when_visible Utils.short_wait
-      wait_until(Utils.short_wait, "Expected '#{msg}' but got '#{msg_body}'") { msg_body == msg }
-    end
-
-    # Deletes an open Canvas inbox message
-    def delete_open_msg
-      confirm(true) { wait_for_update_and_click msg_delete_button_element }
-    end
+    text_area(:message_addressee, name: 'recipients[]')
+    text_area(:message_input, name: 'body')
 
   end
 end

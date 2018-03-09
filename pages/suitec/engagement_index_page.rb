@@ -110,6 +110,7 @@ module Page
       # @param user [User]
       # @param event [Event]
       def search_for_user(user, event = nil)
+        logger.debug "Searching for #{user.full_name}"
         wait_for_element_and_type(text_area_element(class: 'leaderboard-list-search'), user.full_name)
         add_event(event, EventType::SEARCH)
         # Search events are fired for all but whitespace in the search string
@@ -173,7 +174,7 @@ module Page
         tries ||= SuiteCUtils.poller_retries
         logger.info("Checking if #{user.full_name} has an updated score of #{expected_score}")
         load_scores(driver, url)
-        wait_until(3) { user_score(user) == expected_score }
+        wait_until(3) { user_score(driver, url, user) == expected_score }
         true
       rescue
         logger.warn 'Score is not yet updated, retrying'
