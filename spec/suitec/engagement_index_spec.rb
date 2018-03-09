@@ -325,20 +325,10 @@ describe 'The Engagement Index', order: :defined do
         @engagement_index.load_scores(@driver, @engagement_index_url, event)
       end
 
-      it 'allows the other user to cancel sending a message' do
+      it 'directs the user to the Canvas messaging feature' do
         @engagement_index.click_collaborate_button student_1
-        @engagement_index.click_cancel_collaborate_msg
-      end
-
-      it 'allows the other user to send a message' do
-        @engagement_index.click_collaborate_button student_1
-        @engagement_index.send_collaborate_msg "All work and no play makes Jack #{test_id} a dull cat"
-      end
-
-      it 'delivers a message to the looking-user\'s Canvas inbox' do
-        @canvas.masquerade_as(@driver, student_1, @course)
-        @canvas.verify_message(student_2, student_1, "All work and no play makes Jack #{test_id} a dull cat", test_id)
-        @canvas.delete_open_msg
+        @canvas.message_input_element.when_visible Utils.short_wait
+        expect(@canvas.message_addressee_element.attribute('value')).to eql("#{student_1.canvas_id}")
       end
 
     end
