@@ -322,9 +322,17 @@ module Page
         when 'input'
           verify_block do
             wait_until(2) do
-              # Check that the exact question text is in the right section and that it has an accompanying text input field
-              driver.find_element(:xpath => "#{question_xpath}//h3/a[text()=\"#{question[:question]}\"]")
-              logger.info "Found '#{question[:question]}'"
+
+              if question[:sub_type] && question[:sub_type] == 'line-break'
+                # Check that the question text appears but don't look for exact match
+                driver.find_element(:xpath => "#{question_xpath}//h3/a[contains(., \"#{question[:question]}\")]")
+                driver.find_element(:xpath => "#{question_xpath}//h3/a[contains(., \"#{question[:sub_question]}\")]")
+                logger.info "Found '#{question[:question]}'"
+              else
+                # Check that the exact question text is in the right section and that it has an accompanying text input field
+                driver.find_element(:xpath => "#{question_xpath}//h3/a[text()=\"#{question[:question]}\"]")
+                logger.info "Found '#{question[:question]}'"
+              end
 
               # Some questions have supplemental text on separate lines
               if question[:sub_type] && question[:sub_type] == 'list'
