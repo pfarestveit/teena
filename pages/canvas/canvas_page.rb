@@ -63,7 +63,7 @@ module Page
       sleep 2
       stop_masquerading(driver) if stop_masquerading_link?
       logger.info "Masquerading as #{user.role} UID #{user.uid}"
-      navigate_to "#{Utils.canvas_base_url}/users/#{user.canvas_id.to_s}/masquerade"
+      navigate_to "#{Utils.canvas_base_url}/users/#{user.canvas_id}/masquerade"
       wait_for_update_and_click masquerade_link_element
       stop_masquerading_link_element.when_visible
       load_course_site(driver, course) unless course.nil?
@@ -199,7 +199,7 @@ module Page
       load_sub_account sub_account
       wait_for_element_and_type(search_course_input_element, "#{course.title}")
       sleep 1
-      wait_for_load_and_click link_element(text: "#{course.title}")
+      wait_for_update_and_click link_element(text: "#{course.title}")
       wait_until(Utils.short_wait) { course_site_heading.include? "#{course.code}" }
       current_url.sub("#{Utils.canvas_base_url}/courses/", '')
     rescue
@@ -512,10 +512,11 @@ module Page
 
     elements(:student_enrollment_row, :row, :xpath => '//table[contains(@class, "roster")]/tbody/tr[contains(@class, "StudentEnrollment")]')
 
-    # Returns all the users on a course site with a Student role
+    # Returns all the users on a course site section with a Student role
     # @param course [Course]
+    # @param section [Section]
     # @return [Array<User>]
-    def get_enrolled_students(course)
+    def get_enrolled_students(course, section)
       # Load the users page and scroll until all enrolled students are visible on the page.
       load_users_page course
       expected_count = enrollment_count_by_roles(course, ['Student']).first
@@ -528,13 +529,16 @@ module Page
         (tries -= 1).zero? ? fail : retry
       end
 
-      # Get an array of student users with all IDs
-      student_enrollment_row_elements.map do |row|
-        canvas_id = row.attribute('id').delete('user_')
-        uid = cell_element(xpath: "//table[contains(@class, 'roster')]//tr[contains(@id,'user_#{canvas_id}')]//td[3]").text.strip
-        logger.debug "Canvas ID #{canvas_id}, UID #{uid}"
-        User.new({uid: uid, canvas_id: canvas_id})
+      # Get an array of student users in the with all IDs
+      students = student_enrollment_row_elements.map do |row|
+        if row.text.include? "#{section.course} #{section.label}"
+          canvas_id = row.attribute('id').delete('user_')
+          uid = cell_element(xpath: "//table[contains(@class, 'roster')]//tr[contains(@id,'user_#{canvas_id}')]//td[3]").text.strip
+          logger.debug "Canvas ID #{canvas_id}, UID #{uid}"
+          User.new({uid: uid, canvas_id: canvas_id})
+        end
       end
+      students.compact
     end
 
     # SIS IMPORTS

@@ -54,6 +54,7 @@ class ApiAcademicsRosterPage
       student['student_id']
     rescue
       logger.warn "There is no UID #{uid} on the course SIS roster"
+      nil
     end
   end
 

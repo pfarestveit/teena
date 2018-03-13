@@ -11,7 +11,7 @@ module Page
     h2(:page_heading, xpath: '//h2[contains(.,"CalNet Authentication Service")]')
     text_field(:username, id: 'username')
     text_field(:password, id: 'password')
-    button(:sign_in_button, value: 'Sign In')
+    button(:sign_in_button, name: 'submit')
     paragraph(:logout_conf_heading, xpath: '//p[contains(.,"You have successfully logged out")]')
     span(:access_denied_msg, xpath: '//span[contains(.,"Service access denied due to missing privileges.")]')
 
@@ -40,9 +40,9 @@ module Page
         end
       else
         logger.debug "#{username} is logging in"
-        wait_for_element_and_type_js(username_element, username)
-        password_element.send_keys password
-        wait_for_update_and_click sign_in_button_element
+        wait_for_element_and_type(username_element, username)
+        wait_for_element_and_type(password_element, password)
+        wait_for_update_and_click_js sign_in_button_element
         add_event(event, EventType::LOGGED_IN)
       end
     end

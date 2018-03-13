@@ -59,7 +59,8 @@ module Page
       wait_for_update_and_click_js save_announcement_button_element
       announcement_title_heading_element.when_visible Utils.medium_wait
       add_event(event, EventType::CREATE, announcement.title)
-      logger.info "Announcement URL is #{announcement.url = current_url}"
+      announcement.url = current_url
+      logger.info "Announcement URL is #{announcement.url}"
     end
 
     # DISCUSSIONS
@@ -119,8 +120,8 @@ module Page
       teacher_role ? click_save_and_publish : wait_for_update_and_click_js(save_announcement_button_element)
       add_event(event, EventType::CREATE, discussion.title)
       teacher_role ? published_button_element.when_visible(Utils.medium_wait) : subscribed_link_element.when_visible(Utils.medium_wait)
-      logger.info "Discussion URL is #{current_url}"
       discussion.url = current_url
+      logger.info "Discussion URL is #{discussion.url}"
     end
 
     # Adds a reply to a discussion.  If an index is given, then adds a reply to an existing reply at that index.  Otherwise,
@@ -325,17 +326,32 @@ module Page
 
     # GRADES
 
-    text_area(:user_search_input, :class => 'search-query')
+    link(:switch_to_default_gradebook, id: 'switch_to_default_gradebook')
+    text_area(:user_search_input, class: 'search-query')
+    link(:e_grades_export_link, xpath: '//a[contains(.,"E-Grades")]')
+
+    div(:total_grade_column, xpath: '//div[contains(@id, "total_grade")]')
+    link(:total_grade_menu_link, id: 'total_dropdown')
+    span(:total_grade_column_menu, class: 'gradebook-header-menu')
+    span(:total_grade_column_move_front, xpath: '//ul[contains(@class, "gradebook-header-menu")]//*[contains(.,"Move to front")]')
+
+    elements(:gradebook_row, :link, xpath: '//div[@class="canvas_0 grid-canvas"]//div[@class="student-name"]')
+    elements(:gradebook_uid, :div, class: 'secondary_identifier_cell')
+    elements(:gradebook_total, :span, xpath: '//span[@class="letter-grade-points"]/preceding-sibling::span')
+
+    button(:gradebook_settings_button, id: 'gradebook_settings')
+    checkbox(:gradebook_include_ungraded, id: 'include-ungraded-list-item')
+
     checkbox(:set_grading_scheme_cbx, id: 'course_grading_standard_enabled')
     link(:assignment_heading_link, xpath: '//a[@class="gradebook-header-drop assignment_header_drop"]')
     link(:toggle_muting_link, xpath: '//a[@data-action="toggleMuting"]')
     button(:mute_assignment_button, xpath: '//button[contains(.,"Mute Assignment")]')
-    link(:e_grades_export_link, xpath: '//a[contains(.,"E-Grades")]')
 
-    # Loads the Canvas Gradebook
+    # Loads the Canvas Gradebook, switching to default view if necessary
     # @param course [Course]
     def load_gradebook(course)
       navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/gradebook"
+      e_grades_export_link_element.when_visible Utils.medium_wait rescue switch_to_default_gradebook
     end
 
     # Ensures that no grading scheme is set on a course site
@@ -415,91 +431,33 @@ module Page
       {uid: user.uid, canvas_id: user.canvas_id, sis_id: user.sis_id, score: score, grade: grade}
     end
 
-    # GRADES - BETA - the new UX that is yet to be enabled in Prod
-
-    div(:total_grade_column_beta, xpath: '//div[contains(@class, "total_grade")]')
-    button(:total_grade_menu_button_beta, xpath: '//div[contains(@class, "total_grade")]//button[contains(@id, "PopoverMenu")]')
-    span(:total_grade_column_move_beta, xpath: '//span[contains(@data-menu-item-id, "total-grade-move-to-")]')
-    span(:total_grade_column_move_front_beta, xpath: '//span[@data-menu-item-id="total-grade-move-to-front"]')
-
-    # Returns the row for a given user
-    # @param user [User]
-    # @return [PageObject::Elements::Div]
-    def gradebook_user_row_beta(user)
-      div_element(xpath: "//div[contains(@class,'student_#{user.canvas_id}')]")
-    end
-
-    # Returns the element containing a given user's total score
-    # @param user [User]
-    # @return [PageObject::Elements::Span]
-    def user_score_element_beta(user)
-      span_element(xpath: "//div[contains(@class,'student_#{user.canvas_id}')]//div[contains(@class,'total_grade')]//span[@class='percentage']")
+    # Clicks the gradebook settings button
+    def click_gradebook_settings
+      logger.debug 'Clicking gradebook settings'
+      wait_for_load_and_click gradebook_settings_button_element
     end
 
     # Returns the Gradebook data for a given user
     # @param user [User]
     # @return [Hash]
-    def student_score_beta(user)
-      wait_until(Utils.medium_wait) { user_search_input_element.attribute('aria-disabled') == 'false' }
-      wait_for_element_and_type(user_search_input_element, user.uid)
-      gradebook_user_row_beta(user).when_present Utils.medium_wait
-      # Bring the 'total grade' column into the viewport in order to make the user's total grade load in the UI
-      unless total_grade_column_beta_element.visible?
-        wait_for_update_and_click_js total_grade_column_beta_element
-        wait_for_update_and_click total_grade_menu_button_beta_element
-        total_grade_column_move_beta_element.when_visible Utils.short_wait
-        wait_for_update_and_click total_grade_column_move_front_beta_element if total_grade_column_move_front_beta_element.exists?
-      end
-      user_score_element_beta(user).when_present Utils.medium_wait
-      score = user_score_element_beta(user).text.strip.delete('%').to_f
-      # If the score in the UI is zero, the score might not have loaded yet. Retry.
-      score = if score.zero?
-                logger.debug 'Double-checking a zero score'
-                wait_for_element_and_type(user_search_input_element, user.uid)
-                sleep 1
-                user_score_element_beta(user).text.strip.delete('%').to_f
-              else
-                score
-              end
-      student_and_grade(user, score)
-    end
-
-    # GRADES - TEST - the current Prod UX
-
-    div(:total_grade_column_test, xpath: '//div[contains(@id, "total_grade")]')
-    link(:total_grade_menu_link_test, id: 'total_dropdown')
-    span(:total_grade_column_menu_test, class: 'gradebook-header-menu')
-    span(:total_grade_column_move_front_test, xpath: '//ul[contains(@class, "gradebook-header-menu")]//*[contains(.,"Move to front")]')
-
-    # Returns the row for a given user
-    # @param user [User]
-    # @return [PageObject::Elements::Link]
-    def gradebook_user_row_test(user)
-      link_element(xpath: "//a[@data-student_id='#{user.canvas_id}']")
-    end
-
-    # Returns the element containing a given user's total score
-    # @param user [User]
-    # @return [PageObject::Elements::Span]
-    def user_score_element_test(user)
-      span_element(xpath: "//a[@data-user-id='#{user.canvas_id}']/../../following-sibling::div[contains(@class, 'total-cell')]//span")
-    end
-
-    # Returns the Gradebook data for a given user
-    # @param user [User]
-    # @return [Hash]
-    def student_score_test(user)
+    def student_score(user)
       user_search_input_element.when_visible Utils.medium_wait
       self.user_search_input = user.uid
-      gradebook_user_row_test(user).when_present Utils.medium_wait
-      user_score_element_test(user).when_present Utils.medium_wait
-      score = user_score_element_test(user).text.strip.delete('%').to_f
+      wait_until(2) { gradebook_uid_elements.first.text == "#{user.uid}" }
+      unless gradebook_total_elements.any? &:visible?
+        wait_for_update_and_click_js total_grade_column_element
+        js_click total_grade_menu_link_element
+        sleep 1
+        total_grade_column_move_front_element.click if total_grade_column_move_front_element.exists?
+        wait_until(Utils.medium_wait) { gradebook_total_elements.any? }
+      end
+      score = gradebook_total_elements.first.text.strip.delete('%').to_f
       # If the score in the UI is zero, the score might not have loaded yet. Retry.
       score = if score.zero?
                 logger.debug 'Double-checking a zero score'
                 wait_for_element_and_type(user_search_input_element, user.uid)
                 sleep 1
-                user_score_element_test(user).text.strip.delete('%').to_f
+                gradebook_total_elements.first.text.strip.delete('%').to_f
               else
                 score
               end

@@ -4,9 +4,6 @@ describe 'bCourses E-Grades Export', order: :defined do
 
   include Logging
 
-  # Default Canvas env is Test. For Beta, specify BETA env variable.
-  canvas = ENV['CANVAS']
-
   # Load test course data
   test_course_data = JunctionUtils.load_junction_test_course_data.find { |course| course['tests']['e_grades_export'] }
   course = Course.new test_course_data
@@ -215,7 +212,7 @@ describe 'bCourses E-Grades Export', order: :defined do
       section_name = "#{primary_section.course} #{primary_section.label}"
       @roster_students = @rosters_api.section_students section_name
 
-      @canvas_students = @canvas.get_enrolled_students course
+      @canvas_students = @canvas.get_enrolled_students(course, primary_section)
       @canvas.load_gradebook course
       @gradebook_grades = @canvas_students.map do |user|
         user.sis_id = @rosters_api.sid_from_uid user.uid
@@ -272,20 +269,6 @@ describe 'bCourses E-Grades Export', order: :defined do
         logger.error "SID #{g[:id]} has an unexpected Grading Basis comment" if %w(GRD EPN).include? g[:grading_basis] && !g[:comments].nil?
         (g[:grading_basis] == 'EPN') ? (expect(g[:comments]).to eql('Opted for P/NP Grade')) : ((expect(g[:comments].empty?).to be true))
       end
-    end
-
-    it 'shows the right E-Grade for each student' do
-      grade_mismatches = []
-      @gradebook_grades.each do |gradebook_row|
-        begin
-          e_grades_row = @e_grades.find { |e_grade| e_grade[:id] == gradebook_row[:sis_id] }
-          @e_grades_export_page.wait_until(1) { e_grades_row[:grade] == gradebook_row[:grade] }
-        rescue
-          logger.error "Expected '#{gradebook_row}' but got '#{e_grades_row}'"
-          grade_mismatches << gradebook_row
-        end
-      end
-      fail if grade_mismatches.any?
     end
   end
 
