@@ -152,7 +152,7 @@ module Page
       # @param term_name [String]
       # @param course_code [String]
       def expand_course_data(term_name, course_code)
-        wait_for_update_and_click course_data_toggle(term_name, course_code)
+        wait_for_update_and_click_js course_data_toggle(term_name, course_code)
       end
 
       # Returns the XPath to a course site associated with a course in a term

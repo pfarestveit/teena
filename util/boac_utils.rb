@@ -22,6 +22,11 @@ class BOACUtils < Utils
     @config['term']
   end
 
+  # Whether or not to check tooltips during tests. Checking tooltips slows down test execution.
+  def self.tooltips
+    @config['tooltips']
+  end
+
   # Returns the db credentials for BOAC
   # @return [Hash]
   def self.boac_db_credentials

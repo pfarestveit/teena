@@ -30,7 +30,7 @@ describe 'bCourses E-Grades Export' do
         rosters_api = ApiAcademicsRosterPage.new @driver
         rosters_api.get_feed(@driver, course)
 
-        # Disable existing grading scheme in case it is not default, then set default and un-mute assignments
+        # Disable existing grading scheme in case it is not default, then set default scheme
         @canvas.masquerade_as(@driver, instructor, course)
         @canvas.disable_grading_scheme course
         @e_grades_export_page.set_default_grading_scheme(@driver, course)
@@ -60,7 +60,7 @@ describe 'bCourses E-Grades Export' do
             it("shows the right grade for #{course.term} #{course.code} UID #{gradebook_row[:uid]}") { expect(e_grades_row[:grade]).to eql(gradebook_row[:grade]) }
 
           rescue => e
-            # Catch and report errors related to the course
+            # Catch and report errors related to the user
             Utils.log_error e
             it("encountered an unexpected error with #{course.code} UID #{gradebook_row[:uid]}") { fail }
           end
