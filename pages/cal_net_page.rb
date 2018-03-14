@@ -8,18 +8,11 @@ module Page
     include Logging
     include Page
 
-    h2(:page_heading, xpath: '//h2[contains(.,"CalNet Authentication Service")]')
     text_field(:username, id: 'username')
     text_field(:password, id: 'password')
     button(:sign_in_button, name: 'submit')
     paragraph(:logout_conf_heading, xpath: '//p[contains(.,"You have successfully logged out")]')
     span(:access_denied_msg, xpath: '//span[contains(.,"Service access denied due to missing privileges.")]')
-
-    # Loads CAS
-    def load_page
-      navigate_to Utils.cal_net_url
-      page_heading_element.when_visible Utils.medium_wait
-    end
 
     # Logs in to CAS. If no real credentials available in a Settings override, then waits for manual login using a real
     # person's credentials.

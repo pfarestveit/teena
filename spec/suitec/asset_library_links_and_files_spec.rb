@@ -21,7 +21,7 @@ timeout = Utils.short_wait
     @engagement_index = Page::SuiteCPages::EngagementIndexPage.new @driver
 
     # Create test course site
-    @canvas.log_in(@cal_net, Utils.ets_qa_username, Utils.ets_qa_password)
+    @canvas.log_in(@cal_net, Utils.super_admin_username, Utils.super_admin_password)
     @canvas.create_generic_course_site(@driver, Utils.canvas_qa_sub_account, @course, [@user], test_id, [LtiTools::ASSET_LIBRARY, LtiTools::ENGAGEMENT_INDEX])
     @canvas.load_course_site(@driver, @course)
     @asset_library_url = @canvas.click_tool_link(@driver, LtiTools::ASSET_LIBRARY)
@@ -31,6 +31,8 @@ timeout = Utils.short_wait
     category_id = "#{Time.now.to_i}"
     @asset_library.add_custom_categories(@driver, @asset_library_url, [(@category_1="Category 1 - #{category_id}"), (@category_2="Category 2 - #{category_id}")])
     @asset_library.delete_custom_category @category_2
+
+    @canvas.masquerade_as(@driver, @user, @course)
   end
 
   after(:all) { Utils.quit_browser @driver }
@@ -38,18 +40,13 @@ timeout = Utils.short_wait
   describe 'links' do
 
     before(:all) do
-      # Get initial user score
-      @initial_score = @engagement_index.user_score(@driver, @engagement_index_url, @user).to_i
-      @canvas.log_out(@driver, @cal_net)
-
-      @canvas.log_in(@cal_net, @user.username, Utils.test_user_password)
-      @canvas.load_course_site(@driver, @course)
-      @asset_library.load_page(@driver, @asset_library_url)
-
       @link_asset = Asset.new @user.assets.find { |asset| asset['type'] == 'Link' }
       @link_title = "#{@link_asset.title} - #{test_id}"
       @link_desc = "#{@link_asset.description} - #{test_id}"
       @link_url = @link_asset.url
+      @initial_score = @engagement_index.user_score(@driver, @engagement_index_url, @user).to_i
+
+      @asset_library.load_page(@driver, @asset_library_url)
     end
 
     # Metadata
@@ -169,12 +166,8 @@ timeout = Utils.short_wait
       @file_asset = Asset.new @user.assets.find { |asset| asset['type'] == 'File' }
       @file_title = "#{@file_asset.title} - #{test_id}"
       @file_desc = "#{@file_asset.description} - #{test_id}"
-
       @initial_score = @engagement_index.user_score(@driver, @engagement_index_url, @user).to_i
-      @canvas.log_out(@driver, @cal_net)
 
-      @canvas.log_in(@cal_net, @user.username, Utils.test_user_password)
-      @canvas.load_course_site(@driver, @course)
       @asset_library.load_page(@driver, @asset_library_url)
     end
 

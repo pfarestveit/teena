@@ -346,61 +346,64 @@ describe 'BOAC' do
                           site_grades_analytics = user_analytics_data.site_grades(site_data)
                           site_page_view_analytics = user_analytics_data.site_page_views(site_data)
 
-                          # Compare to what's shown in the UI
-                          [site_assignment_analytics, site_grades_analytics, site_page_view_analytics].each do |api_analytics|
+                          if BOACUtils.tooltips
 
-                            if api_analytics[:user_percentile].nil?
-                              no_data = @boac_student_page.no_data?(analytics_xpath, api_analytics[:type])
-                              it "shows no '#{api_analytics[:type]}' data for UID #{team_member.uid} term #{term_name} course site #{site_code}" do
-                                expect(no_data).to be true
-                              end
-                            else
-                              visible_analytics = case api_analytics[:type]
-                                                    when 'Assignments on Time'
-                                                      @boac_student_page.visible_assignment_analytics(@driver, analytics_xpath, api_analytics)
-                                                    when 'Assignment Grades'
-                                                      @boac_student_page.visible_grades_analytics(@driver, analytics_xpath, api_analytics)
-                                                    when 'Page Views'
-                                                      @boac_student_page.visible_page_view_analytics(@driver, analytics_xpath, api_analytics)
-                                                    else
-                                                      logger.error "Unsupported analytics type '#{api_analytics[:type]}'"
-                                                  end
+                            # Compare to what's shown in the UI
+                            [site_assignment_analytics, site_grades_analytics, site_page_view_analytics].each do |api_analytics|
 
-                              it "shows the '#{api_analytics[:type]}' user percentile for UID #{team_member.uid} term #{term_name} course site #{site_code}" do
-                                expect(visible_analytics[:user_percentile]).to eql(api_analytics[:user_percentile])
-                              end
-                              it "shows the '#{api_analytics[:type]}' user score for UID #{team_member.uid} term #{term_name} course site #{site_code}" do
-                                expect(visible_analytics[:user_score]).to eql(api_analytics[:user_score])
-                              end
-                              it "shows the '#{api_analytics[:type]}' course maximum for UID #{team_member.uid} term #{term_name} course site #{site_code}" do
-                                expect(visible_analytics[:maximum]).to eql(api_analytics[:maximum])
-                              end
-
-                              if api_analytics[:graphable]
-                                it "shows the '#{api_analytics[:type]}' course 70th percentile for UID #{team_member.uid} term #{term_name} course site #{site_code}" do
-                                  expect(visible_analytics[:percentile_70]).to eql(api_analytics[:percentile_70])
-                                end
-                                it "shows the '#{api_analytics[:type]}' course 50th percentile for UID #{team_member.uid} term #{term_name} course site #{site_code}" do
-                                  expect(visible_analytics[:percentile_50]).to eql(api_analytics[:percentile_50])
-                                end
-                                it "shows the '#{api_analytics[:type]}' course 30th percentile for UID #{team_member.uid} term #{term_name} course site #{site_code}" do
-                                  expect(visible_analytics[:percentile_30]).to eql(api_analytics[:percentile_30])
-                                end
-                                it "shows the '#{api_analytics[:type]}' course minimum for UID #{team_member.uid} term #{term_name} course site #{site_code}" do
-                                  expect(visible_analytics[:minimum]).to eql(api_analytics[:minimum])
+                              if api_analytics[:user_percentile].nil?
+                                no_data = @boac_student_page.no_data?(analytics_xpath, api_analytics[:type])
+                                it "shows no '#{api_analytics[:type]}' data for UID #{team_member.uid} term #{term_name} course site #{site_code}" do
+                                  expect(no_data).to be true
                                 end
                               else
-                                it "shows no '#{api_analytics[:type]}' course 70th percentile for UID #{team_member.uid} term #{term_name} course site #{site_code}" do
-                                  expect(visible_analytics[:percentile_70]).to be_nil
+                                visible_analytics = case api_analytics[:type]
+                                                      when 'Assignments on Time'
+                                                        @boac_student_page.visible_assignment_analytics(@driver, analytics_xpath, api_analytics)
+                                                      when 'Assignment Grades'
+                                                        @boac_student_page.visible_grades_analytics(@driver, analytics_xpath, api_analytics)
+                                                      when 'Page Views'
+                                                        @boac_student_page.visible_page_view_analytics(@driver, analytics_xpath, api_analytics)
+                                                      else
+                                                        logger.error "Unsupported analytics type '#{api_analytics[:type]}'"
+                                                    end
+
+                                it "shows the '#{api_analytics[:type]}' user percentile for UID #{team_member.uid} term #{term_name} course site #{site_code}" do
+                                  expect(visible_analytics[:user_percentile]).to eql(api_analytics[:user_percentile])
                                 end
-                                it "shows no '#{api_analytics[:type]}' course 50th percentile for UID #{team_member.uid} term #{term_name} course site #{site_code}" do
-                                  expect(visible_analytics[:percentile_50]).to be_nil
+                                it "shows the '#{api_analytics[:type]}' user score for UID #{team_member.uid} term #{term_name} course site #{site_code}" do
+                                  expect(visible_analytics[:user_score]).to eql(api_analytics[:user_score])
                                 end
-                                it "shows no '#{api_analytics[:type]}' course 30th percentile for UID #{team_member.uid} term #{term_name} course site #{site_code}" do
-                                  expect(visible_analytics[:percentile_30]).to be_nil
+                                it "shows the '#{api_analytics[:type]}' course maximum for UID #{team_member.uid} term #{term_name} course site #{site_code}" do
+                                  expect(visible_analytics[:maximum]).to eql(api_analytics[:maximum])
                                 end
-                                it "shows no '#{api_analytics[:type]}' course minimum for UID #{team_member.uid} term #{term_name} course site #{site_code}" do
-                                  expect(visible_analytics[:minimum]).to be_nil
+
+                                if api_analytics[:graphable]
+                                  it "shows the '#{api_analytics[:type]}' course 70th percentile for UID #{team_member.uid} term #{term_name} course site #{site_code}" do
+                                    expect(visible_analytics[:percentile_70]).to eql(api_analytics[:percentile_70])
+                                  end
+                                  it "shows the '#{api_analytics[:type]}' course 50th percentile for UID #{team_member.uid} term #{term_name} course site #{site_code}" do
+                                    expect(visible_analytics[:percentile_50]).to eql(api_analytics[:percentile_50])
+                                  end
+                                  it "shows the '#{api_analytics[:type]}' course 30th percentile for UID #{team_member.uid} term #{term_name} course site #{site_code}" do
+                                    expect(visible_analytics[:percentile_30]).to eql(api_analytics[:percentile_30])
+                                  end
+                                  it "shows the '#{api_analytics[:type]}' course minimum for UID #{team_member.uid} term #{term_name} course site #{site_code}" do
+                                    expect(visible_analytics[:minimum]).to eql(api_analytics[:minimum])
+                                  end
+                                else
+                                  it "shows no '#{api_analytics[:type]}' course 70th percentile for UID #{team_member.uid} term #{term_name} course site #{site_code}" do
+                                    expect(visible_analytics[:percentile_70]).to be_nil
+                                  end
+                                  it "shows no '#{api_analytics[:type]}' course 50th percentile for UID #{team_member.uid} term #{term_name} course site #{site_code}" do
+                                    expect(visible_analytics[:percentile_50]).to be_nil
+                                  end
+                                  it "shows no '#{api_analytics[:type]}' course 30th percentile for UID #{team_member.uid} term #{term_name} course site #{site_code}" do
+                                    expect(visible_analytics[:percentile_30]).to be_nil
+                                  end
+                                  it "shows no '#{api_analytics[:type]}' course minimum for UID #{team_member.uid} term #{term_name} course site #{site_code}" do
+                                    expect(visible_analytics[:minimum]).to be_nil
+                                  end
                                 end
                               end
                             end

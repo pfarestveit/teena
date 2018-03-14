@@ -35,7 +35,8 @@ class Utils
   # @param profile [String]
   # @return [Selenium::WebDriver]
   def self.launch_browser(profile = nil)
-    driver = @config['webdriver']['browser']
+    driver_config = @config['webdriver']
+    driver = driver_config['browser']
     logger.info "Launching #{driver.capitalize}#{(' using profile at ' + profile) if profile}"
 
     # When launching browser, select the profile to use, tweak profile settings to facilitate file downloads, and launch in headless mode if desired.
@@ -45,7 +46,7 @@ class Utils
         options = Selenium::WebDriver::Chrome::Options.new
         profile_dir = (profile ? profile : File.join(@config_dir, 'chrome-profile'))
         options.add_argument("user-data-dir=#{profile_dir}")
-        options.add_argument 'headless' if @config['webdriver']['headless']
+        options.add_argument 'headless' if driver_config['headless']
         prefs = {
             :prompt_for_download => false,
             :default_directory => Utils.download_dir
@@ -54,7 +55,7 @@ class Utils
         driver = Selenium::WebDriver.for :chrome, :options => options
 
       when 'firefox'
-        profile = (profile ? Selenium::WebDriver::Firefox::Profile.from_name(profile) : Selenium::WebDriver::Firefox::Profile.from_name(@config['webdriver']['firefox_profile']))
+        profile = (profile ? Selenium::WebDriver::Firefox::Profile.from_name(profile) : Selenium::WebDriver::Firefox::Profile.from_name(driver_config['firefox_profile']))
         profile['browser.download.folderList'] = 2
         profile['browser.download.manager.showWhenStarting'] = false
         profile['browser.download.dir'] = Utils.download_dir
@@ -62,7 +63,7 @@ class Utils
         # Turn off Firefox's pretty JSON since it prevents parsing JSON strings in the browser.
         profile['devtools.jsonview.enabled'] = false
         options = Selenium::WebDriver::Firefox::Options.new(:profile => profile)
-        options.add_argument '-headless' if @config['webdriver']['headless']
+        options.add_argument '-headless' if driver_config['headless']
         driver = Selenium::WebDriver.for :firefox, :options => options
 
       when 'safari'
@@ -75,8 +76,8 @@ class Utils
 
     if driver
       # If a specific window size is needed (e.g., Chrome or Safari on a small screen), set size. Else, maximize the window.
-      width = @config['window']['width']
-      height = @config['window']['height']
+      width = driver_config['window']['width']
+      height = driver_config['window']['height']
       (height.zero? || width.zero?) ?
           driver.manage.window.maximize :
           driver.manage.window.resize_to(width, height)

@@ -166,7 +166,7 @@ module Page
       # @param asset [Asset]
       # @param event [Event]
       def verify_first_asset(user, asset, event = nil)
-        wait_until(timeout=Utils.medium_wait) { list_view_asset_elements.any? }
+        wait_until(timeout=Utils.short_wait) { list_view_asset_elements.any? }
         # Pause to allow DOM update to complete
         sleep 1
         logger.debug "Verifying list view asset title includes '#{asset.title}'"
@@ -422,7 +422,6 @@ module Page
         true
       rescue
         logger.debug "The migrated asset has not yet appeared, will retry in #{Utils.short_wait} seconds"
-        sleep Utils.short_wait
         retry unless (tries -= 1).zero?
         false
       end

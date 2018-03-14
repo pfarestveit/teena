@@ -325,9 +325,7 @@ describe 'Asset', order: :defined do
       @destination_library_url = @canvas.click_tool_link(@driver, LtiTools::ASSET_LIBRARY)
 
       # Teacher logs in to new asset library so that enrollment is synced immediately
-      @canvas.log_out(@driver, @cal_net)
-      @canvas.log_in(@cal_net, teacher.username, Utils.test_user_password)
-      @canvas.load_course_site(@driver, @destination_course)
+      @canvas.masquerade_as(@driver, teacher, @destination_course)
       @destination_library.load_page(@driver, @destination_library_url)
 
       # Teacher creates an asset of each type in origin course site plus one extra that is deleted
