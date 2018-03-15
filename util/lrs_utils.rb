@@ -115,7 +115,7 @@ class LRSUtils
       event = events_csv_row_to_event row
       logger.info "Checking the event data for #{event.actor.uid} performing a #{event.action.desc} event at approx #{event.time_str}"
       test_results << [[event.time_str, event.actor.uid, event.action.desc, event.object], lrs_event_present?(event)]
-     end
+    end
     test_results.each { |result| logger.warn "Test result: #{result}" }
     failures = test_results.keep_if { |result| !result[1] }
     fail if failures.any?
