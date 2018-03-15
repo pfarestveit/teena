@@ -195,7 +195,7 @@ describe 'bCourses E-Grades Export', order: :defined do
     end
 
     it 'allows the user to download final grades for a secondary section' do
-      csv = @e_grades_export_page.download_current_grades(course, secondary_section)
+      csv = @e_grades_export_page.download_final_grades(course, secondary_section)
       if course.term == @current_semester
         expect(csv.any?).to be true
       else
@@ -211,14 +211,6 @@ describe 'bCourses E-Grades Export', order: :defined do
     before(:all) do
       section_name = "#{primary_section.course} #{primary_section.label}"
       @roster_students = @rosters_api.section_students section_name
-
-      @canvas_students = @canvas.get_enrolled_students(course, primary_section)
-      @canvas.load_gradebook course
-      @gradebook_grades = @canvas_students.map do |user|
-        user.sis_id = @rosters_api.sid_from_uid user.uid
-        canvas == 'BETA' ? @canvas.student_score_beta(user) : @canvas.student_score_test(user)
-      end
-
       @e_grades_export_page.load_embedded_tool(@driver, course)
       @e_grades = @e_grades_export_page.download_final_grades(course, primary_section)
     end

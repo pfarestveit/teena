@@ -89,7 +89,7 @@ describe 'bCourses Course Captures tool' do
                 end
 
                 # Verify that the 'report a problem' link works
-                has_report_problem_link = @course_captures_page.external_link_valid?(@driver, @course_captures_page.report_problem_element, 'Request Support or Give Feedback | Educational Technology Services')
+                has_report_problem_link = @course_captures_page.external_link_valid?(@driver, @course_captures_page.report_problem_element, 'General Support Request or Give Feedback | Educational Technology Services')
                 @course_captures_page.switch_to_canvas_iframe @driver if masquerade
 
                 it("offers UID #{user.uid} a 'Report a Problem' link on on site ID #{course.site_id}") { expect(has_report_problem_link).to be true }

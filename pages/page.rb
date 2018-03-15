@@ -11,7 +11,7 @@ module Page
   # @param url [String]
   def switch_to_canvas_iframe(driver, url = nil)
     hide_canvas_footer_and_popup
-    wait_until { driver.find_element(id: 'tool_content') }
+    wait_until(Utils.medium_wait) { driver.find_element(id: 'tool_content') }
     wait_until(1, "'#{url}' is not present") { form_element(xpath: "//form[contains(@action, '#{url}')]").exists? } if url
     driver.switch_to.frame driver.find_element(id: 'tool_content')
   end
