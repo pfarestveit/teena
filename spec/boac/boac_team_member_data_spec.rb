@@ -18,9 +18,12 @@ describe 'BOAC' do
     user_course_data_heading = %w(UID Sport Term CourseCode CourseName SectionCcn SectionNumber Midpoint Grade GradingBasis Units EnrollmentStatus)
     CSV.open(user_course_sis_data, 'wb') { |csv| csv << user_course_data_heading }
 
-    user_course_canvas_data = File.join(Utils.initialize_test_output_dir, 'boac-canvas-courses.csv')
-    user_canvas_data_heading = %w(UID Sport Term CourseCode SiteCode Assignments Grades PageViews Participations)
-    CSV.open(user_course_canvas_data, 'wb') { |csv| csv << user_canvas_data_heading }
+    user_course_analytics_data = File.join(Utils.initialize_test_output_dir, 'boac-canvas-courses.csv')
+    user_analytics_data_heading = %w(UID Sport Term CourseCode SiteCode SiteId
+                                    AssignMinCanvas AssignMinLoch AssignMaxCanvas AssignMaxLoch AssignUserCanvas AssignUserLoch AssignPercCanvas AssignPercLoch AssignRoundCanvas AssignRoundLoch
+                                    GradesMinCanvas GradesMinLoch GradesMaxCanvas GradesMaxLoch GradesUserCanvas GradesUserLoch GradesPercCanvas GradesPercLoch GradesRoundCanvas GradesRoundLoch
+                                    PageMinCanvas PageMinLoch PageMaxCanvas PageMaxLoch PageUserCanvas PageUserLoch PagePercCanvas PagePercLoch PageRoundCanvas PageRoundLoch)
+    CSV.open(user_course_analytics_data, 'wb') { |csv| csv << user_analytics_data_heading }
 
     # Get all teams and athletes
     teams = BOACUtils.get_teams
@@ -156,6 +159,10 @@ describe 'BOAC' do
                 analytics_api_sis_data[:terms_in_attendance] ?
                     (it("shows the terms in attendance for UID #{team_member.uid} on the student page") { expect(student_page_sis_data[:terms_in_attendance]).to include(analytics_api_sis_data[:terms_in_attendance]) }) :
                     (it("shows no terms in attendance for UID #{team_member.uid} on the student page") { expect(student_page_sis_data[:terms_in_attendance]).to be_nil })
+
+                analytics_api_sis_data[:level] == 'Graduate' ?
+                    (it("shows no expected graduation date for UID #{team_member.uid} on the #{team.name} page") { expect(student_page_sis_data[:expected_graduation]).to be nil }) :
+                    (it("shows the expected graduation date for UID #{team_member.uid} on the #{team.name} page") { expect(student_page_sis_data[:expected_graduation]).to eql(analytics_api_sis_data[:expected_graduation]) })
 
                 it("shows the Entry Level Writing Requirement for UID #{team_member.uid} on the student page") { expect(student_page_sis_data[:reqt_writing]).to eql(analytics_api_sis_data[:reqt_writing]) }
                 it("shows the American History Requirement for UID #{team_member.uid} on the student page") { expect(student_page_sis_data[:reqt_history]).to eql(analytics_api_sis_data[:reqt_history]) }
@@ -332,8 +339,8 @@ describe 'BOAC' do
                         begin
 
                           site_data = site[:data]
-                          site_assignment_analytics, site_grades_analytics, site_page_view_analytics = nil
                           site_code = user_analytics_data.site_metadata(site_data)[:code]
+                          site_id = user_analytics_data.site_metadata(site_data)[:site_id]
 
                           # Find the site in the UI differently if it's matched versus unmatched
                           site[:course_code] ?
@@ -341,17 +348,72 @@ describe 'BOAC' do
                               (analytics_xpath = @boac_student_page.unmatched_site_xpath(term_name, site_code))
                           logger.info "Checking course site #{site_code}"
 
-                          # Gather the expected analytics data
-                          site_assignment_analytics = user_analytics_data.site_assignments_on_time(site_data)
-                          site_grades_analytics = user_analytics_data.site_grades(site_data)
-                          site_page_view_analytics = user_analytics_data.site_page_views(site_data)
+                          # Gather the expected analytics data from Canvas
+                          canvas_assigns = user_analytics_data.canvas_api_assigns_on_time site_data
+                          canvas_grades = user_analytics_data.canvas_api_grades site_data
+                          canvas_pages = user_analytics_data.canvas_api_page_views site_data
+
+                          # Gather the expected analytics data from the Data Loch
+                          loch_assigns = user_analytics_data.loch_assigns_on_time site_data
+                          loch_grades = user_analytics_data.loch_grades site_data
+                          loch_pages = user_analytics_data.loch_page_views site_data
+
+                          # Compare the two analytics sources
+
+                          it "has the same Canvas and Data Loch assignments-on-time minimum for UID #{team_member.uid} term #{term_name} course site ID #{site_id}, #{site_code}" do
+                            expect(loch_assigns[:min]).to eql(canvas_assigns[:min])
+                          end
+                          it "has the same Canvas and Data Loch assignments-on-time maximum for UID #{team_member.uid} term #{term_name} course site ID #{site_id}, #{site_code}" do
+                            expect(loch_assigns[:max]).to eql(canvas_assigns[:max])
+                          end
+                          it "has the same Canvas and Data Loch assignments-on-time user score for UID #{team_member.uid} term #{term_name} course site ID #{site_id}, #{site_code}" do
+                            expect(loch_assigns[:score]).to eql(canvas_assigns[:score])
+                          end
+                          it "has the same Canvas and Data Loch assignments-on-time user percentile for UID #{team_member.uid} term #{term_name} course site ID #{site_id}, #{site_code}" do
+                            expect(loch_assigns[:perc]).to eql(canvas_assigns[:perc])
+                          end
+                          it "has the same Canvas and Data Loch assignments-on-time user rounded percentile for UID #{team_member.uid} term #{term_name} course site ID #{site_id}, #{site_code}" do
+                            expect(loch_assigns[:perc_round]).to eql(canvas_assigns[:perc_round])
+                          end
+
+                          it "has the same Canvas and Data Loch grades minimum for UID #{team_member.uid} term #{term_name} course site ID #{site_id}, #{site_code}" do
+                            expect(loch_grades[:min]).to eql(canvas_grades[:min])
+                          end
+                          it "has the same Canvas and Data Loch grades maximum for UID #{team_member.uid} term #{term_name} course site ID #{site_id}, #{site_code}" do
+                            expect(loch_grades[:max]).to eql(canvas_grades[:max])
+                          end
+                          it "has the same Canvas and Data Loch grades user score for UID #{team_member.uid} term #{term_name} course site ID #{site_id}, #{site_code}" do
+                            expect(loch_grades[:score]).to eql(canvas_grades[:score])
+                          end
+                          it "has the same Canvas and Data Loch grades user percentile for UID #{team_member.uid} term #{term_name} course site ID #{site_id}, #{site_code}" do
+                            expect(loch_grades[:perc]).to eql(canvas_grades[:perc])
+                          end
+                          it "has the same Canvas and Data Loch grades user rounded percentile for UID #{team_member.uid} term #{term_name} course site ID #{site_id}, #{site_code}" do
+                            expect(loch_grades[:perc_round]).to eql(canvas_grades[:perc_round])
+                          end
+
+                          it "has the same Canvas and Data Loch page views minimum for UID #{team_member.uid} term #{term_name} course site ID #{site_id}, #{site_code}" do
+                            expect(loch_pages[:min]).to eql(canvas_pages[:min])
+                          end
+                          it "has the same Canvas and Data Loch page views maximum for UID #{team_member.uid} term #{term_name} course site ID #{site_id}, #{site_code}" do
+                            expect(loch_pages[:max]).to eql(canvas_pages[:max])
+                          end
+                          it "has the same Canvas and Data Loch page views user score for UID #{team_member.uid} term #{term_name} course site ID #{site_id}, #{site_code}" do
+                            expect(loch_pages[:score]).to eql(canvas_pages[:score])
+                          end
+                          it "has the same Canvas and Data Loch page views user percentile for UID #{team_member.uid} term #{term_name} course site ID #{site_id}, #{site_code}" do
+                            expect(loch_pages[:perc]).to eql(canvas_pages[:perc])
+                          end
+                          it "has the same Canvas and Data Loch page views user rounded percentile for UID #{team_member.uid} term #{term_name} course site ID #{site_id}, #{site_code}" do
+                            expect(loch_pages[:perc_round]).to eql(canvas_pages[:perc_round])
+                          end
 
                           if BOACUtils.tooltips
 
                             # Compare to what's shown in the UI
-                            [site_assignment_analytics, site_grades_analytics, site_page_view_analytics].each do |api_analytics|
+                            [canvas_assigns, canvas_grades, canvas_pages].each do |api_analytics|
 
-                              if api_analytics[:user_percentile].nil?
+                              if api_analytics[:perc_round].nil?
                                 no_data = @boac_student_page.no_data?(analytics_xpath, api_analytics[:type])
                                 it "shows no '#{api_analytics[:type]}' data for UID #{team_member.uid} term #{term_name} course site #{site_code}" do
                                   expect(no_data).to be true
@@ -369,37 +431,37 @@ describe 'BOAC' do
                                                     end
 
                                 it "shows the '#{api_analytics[:type]}' user percentile for UID #{team_member.uid} term #{term_name} course site #{site_code}" do
-                                  expect(visible_analytics[:user_percentile]).to eql(api_analytics[:user_percentile])
+                                  expect(visible_analytics[:perc_round]).to eql(api_analytics[:perc_round])
                                 end
                                 it "shows the '#{api_analytics[:type]}' user score for UID #{team_member.uid} term #{term_name} course site #{site_code}" do
-                                  expect(visible_analytics[:user_score]).to eql(api_analytics[:user_score])
+                                  expect(visible_analytics[:score]).to eql(api_analytics[:score])
                                 end
                                 it "shows the '#{api_analytics[:type]}' course maximum for UID #{team_member.uid} term #{term_name} course site #{site_code}" do
-                                  expect(visible_analytics[:maximum]).to eql(api_analytics[:maximum])
+                                  expect(visible_analytics[:max]).to eql(api_analytics[:max])
                                 end
 
                                 if api_analytics[:graphable]
                                   it "shows the '#{api_analytics[:type]}' course 70th percentile for UID #{team_member.uid} term #{term_name} course site #{site_code}" do
-                                    expect(visible_analytics[:percentile_70]).to eql(api_analytics[:percentile_70])
+                                    expect(visible_analytics[:perc_70]).to eql(api_analytics[:perc_70])
                                   end
                                   it "shows the '#{api_analytics[:type]}' course 50th percentile for UID #{team_member.uid} term #{term_name} course site #{site_code}" do
-                                    expect(visible_analytics[:percentile_50]).to eql(api_analytics[:percentile_50])
+                                    expect(visible_analytics[:perc_50]).to eql(api_analytics[:perc_50])
                                   end
                                   it "shows the '#{api_analytics[:type]}' course 30th percentile for UID #{team_member.uid} term #{term_name} course site #{site_code}" do
-                                    expect(visible_analytics[:percentile_30]).to eql(api_analytics[:percentile_30])
+                                    expect(visible_analytics[:perc_30]).to eql(api_analytics[:perc_30])
                                   end
                                   it "shows the '#{api_analytics[:type]}' course minimum for UID #{team_member.uid} term #{term_name} course site #{site_code}" do
                                     expect(visible_analytics[:minimum]).to eql(api_analytics[:minimum])
                                   end
                                 else
                                   it "shows no '#{api_analytics[:type]}' course 70th percentile for UID #{team_member.uid} term #{term_name} course site #{site_code}" do
-                                    expect(visible_analytics[:percentile_70]).to be_nil
+                                    expect(visible_analytics[:perc_70]).to be_nil
                                   end
                                   it "shows no '#{api_analytics[:type]}' course 50th percentile for UID #{team_member.uid} term #{term_name} course site #{site_code}" do
-                                    expect(visible_analytics[:percentile_50]).to be_nil
+                                    expect(visible_analytics[:perc_50]).to be_nil
                                   end
                                   it "shows no '#{api_analytics[:type]}' course 30th percentile for UID #{team_member.uid} term #{term_name} course site #{site_code}" do
-                                    expect(visible_analytics[:percentile_30]).to be_nil
+                                    expect(visible_analytics[:perc_30]).to be_nil
                                   end
                                   it "shows no '#{api_analytics[:type]}' course minimum for UID #{team_member.uid} term #{term_name} course site #{site_code}" do
                                     expect(visible_analytics[:minimum]).to be_nil
@@ -413,9 +475,15 @@ describe 'BOAC' do
                           Utils.log_error e
                           it("encountered an error for UID #{team_member.uid} term #{term_name} site #{site_code}") { fail }
                         ensure
-                          row = [team_member.uid, team.name, term_name, site[:course_code], site_code,
-                                 site_assignment_analytics, site_grades_analytics, site_page_view_analytics]
-                          Utils.add_csv_row(user_course_canvas_data, row)
+                          row = [team_member.uid, team.name, term_name, site[:course_code], site_code, site[:site_id],
+                                 canvas_assigns[:min], loch_assigns[:min], canvas_assigns[:max], loch_assigns[:max], canvas_assigns[:score], loch_assigns[:score],
+                                 canvas_assigns[:perc], loch_assigns[:perc], canvas_assigns[:perc_round], loch_assigns[:perc_round],
+                                 canvas_grades[:min], loch_grades[:min], canvas_grades[:max], loch_grades[:max], canvas_grades[:score], loch_grades[:score],
+                                 canvas_grades[:perc], loch_grades[:perc],canvas_grades[:perc_round], loch_grades[:perc_round],
+                                 canvas_pages[:min], loch_pages[:min], canvas_pages[:max], loch_pages[:max], canvas_pages[:score], loch_pages[:score],
+                                 canvas_pages[:perc], loch_pages[:perc],canvas_pages[:perc_round], loch_pages[:perc_round]
+                                ]
+                          Utils.add_csv_row(user_course_analytics_data, row)
                         end
                       end
                     rescue => e

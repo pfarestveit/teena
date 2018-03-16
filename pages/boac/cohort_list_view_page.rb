@@ -15,7 +15,7 @@ module Page
 
       elements(:player_link, :link, xpath: '//ul[@id="cohort-members-list"]/a')
       elements(:player_name, :h3, xpath: '//ul[@id="cohort-members-list"]//h3')
-      elements(:player_sid, :div, xpath: '//ul[@id="cohort-members-list"]//div[contains(@class, "cohort-member-sid")]')
+      elements(:player_sid, :div, xpath: '//ul[@id="cohort-members-list"]//div[contains(@class, "student-sid")]')
       elements(:page_list_item, :list_item, xpath: '//li[contains(@ng-repeat,"page in pages")]')
       elements(:page_link, :link, xpath: '//a[contains(@ng-click, "selectPage")]')
 
@@ -42,7 +42,7 @@ module Page
       # @param user [User]
       # @return [String]
       def list_view_user_xpath(user)
-        "//a[contains(@class, 'cohort-member-list-item')][contains(.,'#{user.sis_id}')]"
+        "//a[contains(@class, 'student-list-item')][contains(.,'#{user.sis_id}')]"
       end
 
       # Returns the level displayed for a user
@@ -77,7 +77,7 @@ module Page
       # @param user [User]
       # @return [String]
       def list_view_user_units_in_prog(driver, user)
-        el = driver.find_element(xpath: "#{list_view_user_xpath user}//div[contains(@data-ng-bind,'student.currentTerm.enrolledUnits')]")
+        el = driver.find_element(xpath: "#{list_view_user_xpath user}//div[contains(@data-ng-bind,'student.term.enrolledUnits')]")
         el && el.text
       end
 
@@ -122,7 +122,7 @@ module Page
       # @param class_code [String]
       # @return [Selenium::WebDriver::Element]
       def list_view_class_boxplot(driver, user, class_code)
-        driver.find_element(xpath: "#{list_view_user_xpath user}//div[contains(@class,'cohort-member-course-activity-row')][contains(.,'#{class_code}')]//*[local-name()='svg']")
+        driver.find_element(xpath: "#{list_view_user_xpath user}//div[contains(@class,'student-course-activity-row')][contains(.,'#{class_code}')]//*[local-name()='svg']")
       end
 
       # Returns the page link element for a given page number
@@ -159,8 +159,8 @@ module Page
       # @param player [User]
       def click_player_link(player)
         wait_for_load_and_click link_element(xpath: "//a[contains(.,\"#{player.sis_id}\")]")
-        h1_element(class: 'student-profile-header-name').when_visible Utils.medium_wait
-        player.uid = current_url.gsub("#{BOACUtils.base_url}/student/", '')
+        h1_element(class: 'profile-header-name').when_visible Utils.medium_wait
+        player.uid = current_url.split('?').first.gsub("#{BOACUtils.base_url}/student/", '')
         logger.info "Viewing the student page for UID #{player.uid}"
       end
 
