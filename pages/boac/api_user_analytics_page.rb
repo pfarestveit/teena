@@ -35,6 +35,7 @@ class ApiUserAnalyticsPage
       :colleges => colleges,
       :level => (sis_profile['level'] && sis_profile['level']['description']),
       :terms_in_attendance => sis_profile['termsInAttendance'].to_s,
+      :expected_graduation => sis_profile['expectedGraduationTerm']['name'],
       :reqt_writing => (degree_progress && degree_progress[:writing]),
       :reqt_history => (degree_progress && degree_progress[:history]),
       :reqt_institutions => (degree_progress && degree_progress[:institutions]),
@@ -154,6 +155,10 @@ class ApiUserAnalyticsPage
     site['analytics']
   end
 
+  def loch_analytics(site)
+    analytics(site)['loch']
+  end
+
   def site_scores(site)
     analytics(site) && analytics(site)['courseCurrentScore']
   end
@@ -166,7 +171,7 @@ class ApiUserAnalyticsPage
     analytics['courseDeciles']
   end
 
-  def user_score(analytics)
+  def score(analytics)
     score = student_data(analytics) && student_data(analytics)['raw']
     # Round zero decimal to whole number
     (score && score == score.floor) ? score.floor.to_s : score.to_s
@@ -176,29 +181,57 @@ class ApiUserAnalyticsPage
   def site_statistics(analytics)
     {
       :graphable => analytics['boxPlottable'],
-      :user_percentile => analytics['displayPercentile'],
-      :user_score => user_score(analytics),
-      :maximum => (course_deciles(analytics) && course_deciles(analytics)[10].to_s),
-      :percentile_70 => (course_deciles(analytics) && course_deciles(analytics)[7].to_s),
-      :percentile_50 => (course_deciles(analytics) && course_deciles(analytics)[5].to_s),
-      :percentile_30 => (course_deciles(analytics) && course_deciles(analytics)[3].to_s),
-      :minimum => (course_deciles(analytics) && course_deciles(analytics)[0].to_s)
+      :perc => student_data(analytics) && student_data(analytics)['percentile'],
+      :perc_round => student_data(analytics) && student_data(analytics)['roundedUpPercentile'],
+      :score => score(analytics),
+      :max => (course_deciles(analytics) && course_deciles(analytics)[10].to_s),
+      :perc_70 => (course_deciles(analytics) && course_deciles(analytics)[7].to_s),
+      :perc_50 => (course_deciles(analytics) && course_deciles(analytics)[5].to_s),
+      :perc_30 => (course_deciles(analytics) && course_deciles(analytics)[3].to_s),
+      :min => (course_deciles(analytics) && course_deciles(analytics)[0].to_s)
     }
   end
 
-  # Returns a user's Assignments on Time analytics on a course site
-  def site_assignments_on_time(site)
+  # Returns a user's Canvas API Assignments on Time analytics on a course site
+  # @param site [Hash]
+  # @return [Hash]
+  def canvas_api_assigns_on_time(site)
     site_statistics(analytics(site)['assignmentsOnTime']).merge!({:type => 'Assignments on Time'})
   end
 
-  # Returns a user's Assignment Grades analytics on a course site
-  def site_grades(site)
+  # Returns a user's Canvas API Assignment Grades analytics on a course site
+  # @param site [Hash]
+  # @return [Hash]
+  def canvas_api_grades(site)
     site_statistics(analytics(site)['courseCurrentScore']).merge!({:type => 'Assignment Grades'})
   end
 
-  # Returns a user's Page Views analytics on a course site
-  def site_page_views(site)
+  # Returns a user's Canvas API Page Views analytics on a course site
+  # @param site [Hash]
+  # @return [Hash]
+  def canvas_api_page_views(site)
     site_statistics(analytics(site)['pageViews']).merge!({:type => 'Page Views'})
+  end
+
+  # Returns a user's Data Loch Assignments on Time analytics on a course site
+  # @param site [Hash]
+  # @return [Hash]
+  def loch_assigns_on_time(site)
+    site_statistics(loch_analytics(site)['assignmentsOnTime'])
+  end
+
+  # Returns a user's Data Loch Current Scores analytics on a course site
+  # @param site [Hash]
+  # @return [Hash]
+  def loch_grades(site)
+    site_statistics(loch_analytics(site)['currentScores'])
+  end
+
+  # Returns a user's Data Loch Page Views analytics on a course site
+  # @param site [Hash]
+  # @return [Hash]
+  def loch_page_views(site)
+    site_statistics(loch_analytics(site)['pageViews'])
   end
 
   # Returns all user data relevant to cohort search

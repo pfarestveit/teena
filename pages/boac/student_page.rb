@@ -13,9 +13,9 @@ module Page
 
       link(:return_to_cohort, xpath: '//a[contains(.,"Return to cohort")]')
 
-      h1(:name, class: 'student-profile-header-name')
-      h2(:preferred_name, class: 'student-profile-header-name-preferred')
-      div(:phone, xpath: '//div[@data-ng-bind="student.sisProfile.phoneNumber"]')
+      h1(:name, class: 'profile-header-name')
+      h2(:preferred_name, class: 'profile-header-name-preferred')
+      span(:phone, xpath: '//span[@data-ng-bind="student.sisProfile.phoneNumber"]')
       link(:email, xpath: '//a[@data-ng-bind="student.sisProfile.emailAddress"]')
       div(:cumulative_units, xpath: '//div[@data-ng-bind="student.sisProfile.cumulativeUnits"]')
       div(:cumulative_gpa, xpath: '//div[contains(@data-ng-bind,"student.sisProfile.cumulativeGPA")]')
@@ -23,7 +23,8 @@ module Page
       elements(:major, :h4, xpath: '//div[@data-ng-repeat="plan in student.sisProfile.plans"]/h4')
       elements(:college, :div, xpath: '//div[@data-ng-bind="plan.program"]')
       h4(:level, xpath: '//h4[@data-ng-bind="student.sisProfile.level.description"]')
-      span(:terms_in_attendance, xpath: '//div[@data-ng-if="student.sisProfile.termsInAttendance"]/span')
+      span(:terms_in_attendance, xpath: '//div[@data-ng-if="student.sisProfile.termsInAttendance"]')
+      span(:expected_graduation, xpath: '//span[@data-ng-bind="student.sisProfile.expectedGraduationTerm.name"]')
 
       cell(:writing_reqt, xpath: '//td[text()="Entry Level Writing"]/following-sibling::td')
       cell(:history_reqt, xpath: '//td[text()="American History"]/following-sibling::td')
@@ -59,6 +60,7 @@ module Page
           :colleges => (college_elements.map &:text),
           :level => level,
           :terms_in_attendance => (terms_in_attendance if terms_in_attendance?),
+          :expected_graduation => expected_graduation,
           :reqt_writing => (writing_reqt.strip if writing_reqt_element.exists?),
           :reqt_history => (history_reqt.strip if history_reqt_element.exists?),
           :reqt_institutions => (institutions_reqt.strip if institutions_reqt_element.exists?),
@@ -92,7 +94,7 @@ module Page
         course_xpath = course_data_xpath(term_name, course_code)
         title_xpath = "#{course_xpath}//h5"
         units_xpath = "#{course_xpath}//span[@count='course.units']"
-        grading_basis_xpath = "#{course_xpath}//span[contains(@class, 'student-profile-class-grading-basis')]"
+        grading_basis_xpath = "#{course_xpath}//span[contains(@class, 'profile-class-grading-basis')]"
         mid_point_grade_xpath = "#{course_xpath}//span[contains(@data-ng-bind,'course.midtermGrade')]"
         grade_xpath = "#{course_xpath}//span[contains(@data-ng-bind, 'course.grade')]"
         wait_list_xpath = "#{course_xpath}//div[@data-ng-if='course.waitlisted']"
@@ -217,7 +219,7 @@ module Page
       # @param site_xpath [String]
       # @param label [String]
       # @return [String]
-      def user_percentile(site_xpath, label)
+      def perc_round(site_xpath, label)
         cell_element(:xpath => "#{site_analytics_percentile_xpath(site_xpath, label)}/strong").text
       end
 
@@ -265,12 +267,12 @@ module Page
         tool_tip_detail = []
         tool_tip_detail = tool_tip_detail_elements.map &:text if tool_tip_detail_elements.any?
         {
-          :user_percentile => user_percentile(site_xpath, label),
-          :user_score => (api_analytics[:graphable] ? graphable_user_score(site_xpath, label) : non_graphable_user_score(site_xpath, label)),
-          :maximum => (api_analytics[:graphable] ? tool_tip_detail[0] : non_graphable_maximum(site_xpath, label)) ,
-          :percentile_70 => tool_tip_detail[1],
-          :percentile_50 => tool_tip_detail[2],
-          :percentile_30 => tool_tip_detail[3],
+          :perc_round => perc_round(site_xpath, label),
+          :score => (api_analytics[:graphable] ? graphable_user_score(site_xpath, label) : non_graphable_user_score(site_xpath, label)),
+          :max => (api_analytics[:graphable] ? tool_tip_detail[0] : non_graphable_maximum(site_xpath, label)) ,
+          :perc_70 => tool_tip_detail[1],
+          :perc_50 => tool_tip_detail[2],
+          :perc_30 => tool_tip_detail[3],
           :minimum => tool_tip_detail[4]
         }
       end
