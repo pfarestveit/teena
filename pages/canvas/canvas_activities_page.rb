@@ -329,6 +329,8 @@ module Page
     link(:switch_to_default_gradebook, id: 'switch_to_default_gradebook')
     text_area(:user_search_input, class: 'search-query')
     link(:e_grades_export_link, xpath: '//a[contains(.,"E-Grades")]')
+    button(:grades_export_button, id: 'download_csv')
+    link(:grades_csv_link, xpath: '//a[text()="CSV File"]')
 
     div(:total_grade_column, xpath: '//div[contains(@id, "total_grade")]')
     link(:total_grade_menu_link, id: 'total_dropdown')
@@ -385,6 +387,26 @@ module Page
       else
         logger.debug 'An assignment is already muted'
       end
+    end
+
+    # Downloads the grades export CSV and returns an array of hashes of UIDs and current scores
+    # @param course [Course]
+    # @return [Array<Hash>]
+    def export_grades(course)
+      Utils.prepare_download_dir
+      load_gradebook course
+      sleep 1
+      wait_for_load_and_click grades_export_button_element
+      wait_for_update_and_click grades_csv_link_element
+      file_path = "#{Utils.download_dir}/*.csv"
+      wait_until(Utils.medium_wait) { Dir[file_path].any? }
+      sleep Utils.short_wait
+      file = Dir[file_path].first
+      table = CSV.table file
+      table.delete_if { |row| row[:sis_user_id].nil? || row[:sis_login_id].nil? }
+      scores = []
+      table.each { |row| scores << {:uid => row[:sis_login_id].to_s, :score => row[:current_score].to_i} }
+      scores.sort_by { |s| s[:score] }
     end
 
     # Clicks the E-Grades export button

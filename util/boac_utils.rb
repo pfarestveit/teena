@@ -22,6 +22,12 @@ class BOACUtils < Utils
     @config['term']
   end
 
+  # Returns the semester to use for testing Data Loch current scores
+  # @return [String]
+  def self.current_scores_term
+    @config['current_scores_term']
+  end
+
   # Whether or not to check tooltips during tests. Checking tooltips slows down test execution.
   def self.tooltips
     @config['tooltips']
