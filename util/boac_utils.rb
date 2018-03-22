@@ -33,6 +33,21 @@ class BOACUtils < Utils
     @config['tooltips']
   end
 
+  # Whether or not to check Data Loch scores during tests.
+  def self.loch_scores
+    @config['loch_scores']
+  end
+
+  # Whether or not to check Data Loch assignments-on-time during tests.
+  def self.loch_assignments
+    @config['loch_assignments']
+  end
+
+  # Whether or not to check Data Loch page views during tests.
+  def self.loch_page_views
+    @config['loch_page_views']
+  end
+
   # Returns the db credentials for BOAC
   # @return [Hash]
   def self.boac_db_credentials
@@ -92,6 +107,12 @@ class BOACUtils < Utils
   # @return [Array<User>]
   def self.get_intensive_athletes
     athletes_to_users query_intensive_athletes
+  end
+
+  # Returns the file path containing stored searchable student data to drive cohort search tests
+  # @return [String]
+  def self.searchable_data
+    File.join(Utils.config_dir, 'boac-searchable-data.json')
   end
 
   # Returns a collection of search criteria to use for testing cohort search

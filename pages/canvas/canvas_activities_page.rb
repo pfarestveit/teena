@@ -395,7 +395,7 @@ module Page
     def export_grades(course)
       Utils.prepare_download_dir
       load_gradebook course
-      sleep 1
+      sleep 2
       wait_for_load_and_click grades_export_button_element
       wait_for_update_and_click grades_csv_link_element
       file_path = "#{Utils.download_dir}/*.csv"
@@ -403,7 +403,7 @@ module Page
       sleep Utils.short_wait
       file = Dir[file_path].first
       table = CSV.table file
-      table.delete_if { |row| row[:sis_user_id].nil? || row[:sis_login_id].nil? }
+      table.delete_if { |row| row[:sis_user_id].nil? || row[:sis_login_id].nil? || row[:sis_login_id].to_s.include?('inactive') }
       scores = []
       table.each { |row| scores << {:uid => row[:sis_login_id].to_s, :score => row[:current_score].to_i} }
       scores.sort_by { |s| s[:score] }

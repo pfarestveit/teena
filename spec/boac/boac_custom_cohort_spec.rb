@@ -26,7 +26,7 @@ describe 'BOAC custom cohorts', order: :defined do
 
     # Get the user data relevant to all search filters
     all_users = BOACUtils.get_all_athletes
-    @all_user_search_data = @analytics_page.collect_users_searchable_data(@driver, all_users)
+    @all_user_search_data = @analytics_page.collect_users_searchable_data @driver
 
     active_users = all_users.select { |u| u.status == 'active' }
     active_user_sids = active_users.map &:sis_id
@@ -39,6 +39,7 @@ describe 'BOAC custom cohorts', order: :defined do
     intensive_users = BOACUtils.get_intensive_athletes
     intensive_user_sids = intensive_users.map &:sis_id
     @intensive_user_search_data = @all_user_search_data.select { |d| intensive_user_sids.include? d[:sid] }
+    @intensive_user_search_data.delete_if { |d| inactive_user_sids.include? d[:sid] }
 
     # Get the current 'everyone' cohorts
     @homepage.load_page

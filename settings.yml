@@ -91,3 +91,6 @@ boac:
   db_user: secret
   db_password: secret
   tooltips: true
+  loch_scores: true
+  loch_assignments: false
+  loch_page_views: false

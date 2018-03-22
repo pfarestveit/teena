@@ -20,6 +20,7 @@ module Page
       def load_team_page(team)
         logger.info "Loading cohort page for team #{team.name}"
         navigate_to "#{BOACUtils.base_url}/cohort?c=#{team.code}"
+        wait_for_title "#{team.name}"
       end
 
       # Clicks the list view button
@@ -76,7 +77,7 @@ module Page
       # @param level [String]
       # @return [PageObject::Elements::Option]
       def levels_option_element(level)
-        checkbox_element(xpath: "//span[text()=\"#{level}\"]/preceding-sibling::input")
+        checkbox_element(xpath: "//span[contains(text(),\"#{level}\")]/preceding-sibling::input")
       end
 
       # Returns the option for a given major
@@ -151,7 +152,7 @@ module Page
       # @param cohort [Cohort]
       def perform_search(cohort)
         criteria = cohort.search_criteria
-        logger.info "Searching for squads '#{criteria.squads && (criteria.squads.map &:name)}', levels '#{criteria.levels}', majors '#{criteria.majors}', GPA ranges '#{criteria.gpa_ranges}, units '#{criteria.units}"
+        logger.info "Searching for squads '#{criteria.squads && (criteria.squads.map &:name)}', levels '#{criteria.levels}', majors '#{criteria.majors}', GPA ranges '#{criteria.gpa_ranges}', units '#{criteria.units}'"
         sleep 2
 
         # Uncheck any options that are already checked from a previous search, then check those that apply to the current search
@@ -209,7 +210,7 @@ module Page
         wait_for_search_results
         logger.warn "Search took #{Time.now - start_time}"
         cohort.member_count = results_count
-        logger.warn "No results found for #{criteria}" if cohort.member_count.zero?
+        logger.warn "No results found for #{criteria.squads && criteria.squads.map(&:name)}, #{criteria.majors}, #{criteria.levels}, #{criteria.gpa_ranges}, #{criteria.units}" if cohort.member_count.zero?
       end
 
       # Filters an array of user data hashes according to search criteria and returns the users that should be present in the UI after
@@ -294,6 +295,7 @@ module Page
       def load_cohort(cohort)
         logger.info "Loading cohort '#{cohort.name}'"
         navigate_to "#{BOACUtils.base_url}/cohort?c=#{cohort.id}"
+        wait_for_title cohort.name
       end
 
       # Clicks the button to save a new cohort, which triggers the name input modal
@@ -411,6 +413,7 @@ module Page
       def visible_everyone_cohorts
         click_view_everyone_cohorts
         h1_element(xpath: '//h1[text()="Everyone\'s Cohorts"]').when_visible Utils.short_wait
+        wait_for_title 'Cohorts'
         cohorts = everyone_cohort_link_elements.map { |link| Cohort.new({id: link.attribute('href').delete('/cohort?c='), name: link.text}) }
         cohorts.flatten
       end

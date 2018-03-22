@@ -35,7 +35,7 @@ class ApiUserAnalyticsPage
       :colleges => colleges,
       :level => (sis_profile['level'] && sis_profile['level']['description']),
       :terms_in_attendance => sis_profile['termsInAttendance'].to_s,
-      :expected_graduation => sis_profile['expectedGraduationTerm']['name'],
+      :expected_graduation => sis_profile['expectedGraduationTerm'] && sis_profile['expectedGraduationTerm']['name'],
       :reqt_writing => (degree_progress && degree_progress[:writing]),
       :reqt_history => (degree_progress && degree_progress[:history]),
       :reqt_institutions => (degree_progress && degree_progress[:institutions]),
@@ -234,31 +234,41 @@ class ApiUserAnalyticsPage
     site_statistics(loch_analytics(site)['pageViews'])
   end
 
-  # Returns all user data relevant to cohort search
+  # To support cohort search tests, returns all relevant user data. If a file containing the data already
+  # exists, will skip collecting the data and simply parse the file. Otherwise, will collect the data and
+  # write it to a file for subsequent test runs.
   # @param driver [Selenium::WebDriver]
-  # @param users [Array<User>]
-  # @return [Array<Hash>]
-  def collect_users_searchable_data(driver, users)
-    users.map do |user|
-      # Get the squad names to use as search criteria
-      user_squad_names = user.sports.map do |squad_code|
-        squad = Squad::SQUADS.find { |s| s.code == squad_code }
-        squad.name
+  # @return Array[<Hash>]
+  def collect_users_searchable_data(driver)
+    users_data_file = BOACUtils.searchable_data
+    if File.exist? users_data_file
+      logger.warn 'Found an existing copy of searchable user data, skipping data collection'
+      users_data = JSON.parse(File.read(users_data_file), {:symbolize_names => true})
+    else
+      logger.warn 'Searchable user data file not found, collecting data and writing it to a file for reuse'
+      users = BOACUtils.get_all_athletes
+      users_data = users.map do |user|
+        # Get the squad names to use as search criteria
+        user_squad_names = user.sports.map do |squad_code|
+          squad = Squad::SQUADS.find { |s| s.code == squad_code }
+          squad.name
+        end
+        get_data(driver, user)
+        {
+          :sid => user.sis_id,
+          :first_name => user.first_name,
+          :first_name_sortable => user.first_name.gsub(/\W/, '').downcase,
+          :last_name => user.last_name,
+          :last_name_sortable => user.last_name.gsub(/\W/, '').downcase,
+          :squad_names => user_squad_names,
+          :level => user_sis_data[:level],
+          :majors => user_sis_data[:majors],
+          :gpa => user_sis_data[:cumulative_gpa],
+          :units => user_sis_data[:cumulative_units]
+        }
       end
-      get_data(driver, user)
-      {
-        :sid => user.sis_id,
-        :first_name => user.first_name,
-        :first_name_sortable => user.first_name.gsub(/\W/, '').downcase,
-        :last_name => user.last_name,
-        :last_name_sortable => user.last_name.gsub(/\W/, '').downcase,
-        :squad_names => user_squad_names,
-        :level => user_sis_data[:level],
-        :majors => user_sis_data[:majors],
-        :gpa => user_sis_data[:cumulative_gpa],
-        :units => user_sis_data[:cumulative_units]
-      }
+      File.open(users_data_file, 'w') { |f| f.write users_data.to_json }
     end
+    users_data
   end
-
 end
