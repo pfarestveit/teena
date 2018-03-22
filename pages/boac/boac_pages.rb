@@ -22,6 +22,12 @@ module Page
 
     div(:spinner, class: 'loading-spinner-large')
 
+    # Waits for an expected page title
+    # @param page_title [String]
+    def wait_for_title(page_title)
+      wait_until(Utils.medium_wait) { title == "#{page_title} | BOAC" }
+    end
+
     # Clicks the 'Home' link in the header
     def click_home
       wait_for_load_and_click home_link_element
@@ -44,35 +50,41 @@ module Page
     def click_intensive_cohort
       click_cohorts
       wait_for_load_and_click intensive_cohort_link_element
+      wait_for_title 'Intensive'
     end
 
     # Clicks the link for the Inactive cohort
     def click_inactive_cohort
       click_cohorts
       wait_for_load_and_click inactive_cohort_link_element
+      wait_for_title 'Inactive'
     end
 
     # Clicks the button to create a new custom cohort
     def click_create_new_cohort
       click_cohorts
       wait_for_load_and_click create_new_cohort_link_element
+      wait_for_title 'Cohort'
     end
 
     # Clicks the button to manage the user's own custom cohorts
     def click_manage_my_cohorts
       click_cohorts
       wait_for_load_and_click manage_my_cohorts_link_element
+      wait_for_title 'Cohorts Manage'
     end
 
     # Clicks the button to view all custom cohorts
     def click_view_everyone_cohorts
       click_cohorts
       wait_for_load_and_click view_everyone_cohorts_link_element
+      wait_for_title 'Cohorts'
     end
 
     # Clicks the 'Log out' button in the header
     def log_out
       wait_for_update_and_click log_out_button_element
+      wait_for_title 'Welcome'
     end
 
     # Waits for the spinner to vanish following a page load

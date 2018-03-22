@@ -38,6 +38,7 @@ module Page
       def load_page(user)
         logger.info "Loading student page for UID #{user.uid}"
         navigate_to "#{BOACUtils.base_url}/student/#{user.uid}"
+        wait_for_title user.full_name
       end
 
       # Clicks the 'return to cohort' link
@@ -108,25 +109,15 @@ module Page
         }
       end
 
-      # Returns the XPath to the SIS data shown for a given section in a course with a specific component type (e.g., LEC, DIS)
-      # @param term_name [String]
-      # @param course_code [String]
-      # @param index [Integer]
-      # @return [String]
-      def section_data_xpath(term_name, course_code, index)
-        "#{course_data_xpath(term_name, course_code)}//div[@data-ng-repeat='section in course.sections'][#{index + 1}]"
-      end
-
       # Returns the SIS data shown for a given section in a course at a specific index
       # @param term_name [String]
       # @param course_code [String]
       # @param index [Integer]
       # @return [Hash]
       def visible_section_sis_data(term_name, course_code, index)
-        section_xpath = section_data_xpath(term_name, course_code, index)
-        number_xpath = "#{section_xpath}//span[@data-ng-bind='section.sectionNumber']"
+        section_xpath = "#{course_data_xpath(term_name, course_code)}//span[@data-ng-repeat='section in course.sections'][#{index + 1}]/*[@data-ng-bind='section.displayName']"
         {
-          :number => (span_element(:xpath => number_xpath).text if span_element(:xpath => number_xpath).exists?)
+          :section => (span_element(:xpath => section_xpath).text if span_element(:xpath => section_xpath).exists?)
         }
       end
 

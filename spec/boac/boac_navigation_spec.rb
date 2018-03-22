@@ -17,7 +17,7 @@ describe 'BOAC' do
   cohorts.each do |cohort|
 
     begin
-      search = cohort.search_criteria
+      search = "#{cohort.search_criteria.squads}, #{cohort.search_criteria.levels}, #{cohort.search_criteria.majors}, #{cohort.search_criteria.gpa_ranges}, #{cohort.search_criteria.units}"
 
       # Every other search starts from list view
       if cohorts.index(cohort).even?
@@ -50,9 +50,9 @@ describe 'BOAC' do
 
           student = User.new({:sis_id => @cohort_page.list_view_sids.last})
           @cohort_page.click_player_link student
-          @student_page.click_return_to_cohort
+          @driver.navigate.back
 
-          list_search_preserved = @cohort_page.search_criteria_selected? search
+          list_search_preserved = @cohort_page.search_criteria_selected? cohort.search_criteria
           list_results_count_preserved = @cohort_page.verify_block { @cohort_page.wait_until { @cohort_page.results_count == cohort.member_count } }
           list_results_page_preserved = @cohort_page.list_view_page_selected? list_results_page
 
@@ -68,7 +68,7 @@ describe 'BOAC' do
 
           logger.info "Got #{scatterplot_uids.length + no_data_uids.length} matrix view UIDs"
 
-          matrix_search = @matrix_page.search_criteria_selected? search
+          matrix_search = @matrix_page.search_criteria_selected? cohort.search_criteria
           matrix_results_right = (scatterplot_uids.length + no_data_uids.length == cohort.member_count)
 
           it("preserves cohort search criteria #{search} when switching to matrix view") { expect(matrix_search).to be true }
@@ -77,11 +77,11 @@ describe 'BOAC' do
           # Navigate to student page and back. Click a bubble if there are any; otherwise a 'no data' row.
 
           scatterplot_uids.any? ? @matrix_page.click_last_student_bubble(@driver) : @matrix_page.click_last_no_data_student
-          @student_page.click_return_to_cohort
+          @driver.navigate.back
           scatterplot_uids = @matrix_page.visible_matrix_uids @driver
           no_data_uids = @matrix_page.visible_no_data_uids
 
-          matrix_search_preserved = @matrix_page.search_criteria_selected? search
+          matrix_search_preserved = @matrix_page.search_criteria_selected? cohort.search_criteria
           matrix_results_count_preserved =  (scatterplot_uids.length + no_data_uids.length == cohort.member_count)
 
           it("preserves cohort search criteria #{search} when returning to matrix view from the student page") { expect(matrix_search_preserved).to be true }
@@ -120,11 +120,11 @@ describe 'BOAC' do
           # Navigate to student page and back. Click a bubble if there are any; otherwise a 'no data' row.
 
           scatterplot_uids.any? ? @matrix_page.click_last_student_bubble(@driver) : @matrix_page.click_last_no_data_student
-          @student_page.click_return_to_cohort
+          @driver.navigate.back
           scatterplot_uids = @matrix_page.visible_matrix_uids @driver
           no_data_uids = @matrix_page.visible_no_data_uids
 
-          matrix_search_preserved = @matrix_page.search_criteria_selected? search
+          matrix_search_preserved = @matrix_page.search_criteria_selected? cohort.search_criteria
           matrix_results_count_preserved =  (scatterplot_uids.length + no_data_uids.length == cohort.member_count)
 
           it("preserves cohort search criteria #{search} when returning to matrix view from the student page") { expect(matrix_search_preserved).to be true }
@@ -144,9 +144,9 @@ describe 'BOAC' do
 
           student = User.new({:sis_id => @cohort_page.list_view_sids.last})
           @cohort_page.click_player_link student
-          @student_page.click_return_to_cohort
+          @driver.navigate.back
 
-          list_search_preserved = @cohort_page.search_criteria_selected? search
+          list_search_preserved = @cohort_page.search_criteria_selected? cohort.search_criteria
           list_results_count_preserved = @cohort_page.wait_until { @cohort_page.results_count == cohort.member_count }
           list_results_page_preserved = @cohort_page.list_view_page_selected? list_results_page
 

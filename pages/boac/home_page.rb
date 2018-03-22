@@ -11,12 +11,12 @@ module Page
       include Page
       include BOACPages
 
-      button(:sign_in, xpath: '//button[text()="Sign In"]')
+      button(:sign_in, id: 'splash-sign-in')
       div(:sign_in_msg, xpath: '//div[text()="Please sign in."]')
 
-      text_field(:dev_auth_uid_input, xpath: '//input[@placeholder="UID"]')
-      text_field(:dev_auth_password_input, name: 'password')
-      button(:dev_auth_log_in_button, xpath: '//button[text()="Dev Auth Login"]')
+      text_field(:dev_auth_uid_input, id: 'dev-auth-uid')
+      text_field(:dev_auth_password_input, id: 'dev-auth-password')
+      button(:dev_auth_log_in_button, id: 'dev-auth-submit')
 
       # Loads the home page
       def load_page
@@ -30,8 +30,10 @@ module Page
       # @param cal_net [Page::CalNetPage]
       def log_in(username, password, cal_net)
         load_page
+        wait_for_title 'Welcome'
         wait_for_load_and_click sign_in_element
         cal_net.log_in(username, password)
+        wait_for_title 'Home'
       end
 
       # Authenticates using dev auth
@@ -78,7 +80,7 @@ module Page
       # @param user [User]
       # @return [boolean]
       def my_list_user_inactive?(user)
-        my_list_user_row(user).span_element(class: 'landing-inactive-info-icon').exists?
+        my_list_user_row(user).span_element(class: 'home-inactive-info-icon').exists?
       end
 
       # Removes a user from My List

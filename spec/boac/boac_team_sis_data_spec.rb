@@ -45,16 +45,17 @@ describe 'BOAC' do
       if visible_team_names.include? team.name
         begin
 
-          all_team_members = BOACUtils.get_team_members(team).sort_by! &:full_name
-          active_team_members = all_team_members.delete_if { |u| u.status == 'inactive' }
-          logger.debug "There are #{active_team_members.length} active athletes out of #{all_team_members.length} total athletes"
+          team_members = BOACUtils.get_team_members(team).sort_by! &:full_name
+          logger.debug "There are #{team_members.length} total athletes"
+          team_members.delete_if { |u| u.status == 'inactive' }
+          logger.debug "There are #{team_members.length} active athletes"
 
           @boac_homepage.load_page
           @boac_homepage.click_team_link team
           team_url = @boac_cohort_page.current_url
-          @boac_cohort_page.wait_for_page_load active_team_members.length
+          @boac_cohort_page.wait_for_page_load team_members.length
 
-          expected_team_member_names = (active_team_members.map { |u| "#{u.last_name}, #{u.first_name}" }).sort
+          expected_team_member_names = (team_members.map { |u| "#{u.last_name}, #{u.first_name}" }).sort
           visible_team_member_names = (@boac_cohort_page.list_view_names).sort
           it("shows all the expected players for #{team.name}") do
             logger.debug "Expecting #{expected_team_member_names} and got #{visible_team_member_names}"
@@ -62,7 +63,7 @@ describe 'BOAC' do
           end
           it("shows no blank player names for #{team.name}") { expect(visible_team_member_names.any? &:empty?).to be false }
 
-          expected_team_member_sids = (active_team_members.map &:sis_id).sort
+          expected_team_member_sids = (team_members.map &:sis_id).sort
           visible_team_member_sids = (@boac_cohort_page.list_view_sids).sort
           it("shows all the expected player SIDs for #{team.name}") do
             logger.debug "Expecting #{expected_team_member_sids} and got #{visible_team_member_sids}"
@@ -70,7 +71,7 @@ describe 'BOAC' do
           end
           it("shows no blank player SIDs for #{team.name}") { expect(visible_team_member_sids.any? &:empty?).to be false }
 
-          active_team_members.each do |team_member|
+          team_members.each do |team_member|
             if visible_team_member_sids.include? team_member.sis_id
               begin
 
@@ -110,11 +111,10 @@ describe 'BOAC' do
 
                 it("shows the current term course codes for UID #{team_member.uid} on the #{team.name} page") { expect(cohort_page_sis_data[:classes]).to eql(user_analytics_data.current_enrolled_course_codes) }
 
-                # TODO - site analytics on cohort page
-
                 # STUDENT PAGE SIS DATA
 
                 @boac_cohort_page.click_player_link team_member
+                @boac_student_page.wait_for_title team_member.full_name
 
                 # Pause a moment to let the boxplots do their fancy slidey thing
                 sleep 1
@@ -186,10 +186,6 @@ describe 'BOAC' do
                       term_name = user_analytics_data.term_name term
                       logger.info "Checking #{term_name}"
 
-                      # Collect unmatched Canvas sites in the term as hashes with null course code
-                      term_sites = []
-                      term_sites << user_analytics_data.unmatched_sites(term).map { |s| {:course_code => nil, :data => s} }
-
                       courses = user_analytics_data.courses term
 
                       # COURSES
@@ -202,10 +198,6 @@ describe 'BOAC' do
 
                             course_sis_data = user_analytics_data.course_sis_data course
                             course_code = course_sis_data[:code]
-                            course_sites = user_analytics_data.course_sites course
-
-                            # Collect matched Canvas sites in the term as hashes with course codes
-                            term_sites << course_sites.map { |s| {:course_code => course_code, :data => s, :index => course_sites.index(s)} }
 
                             logger.info "Checking course #{course_code}"
 
@@ -279,12 +271,12 @@ describe 'BOAC' do
                                 component = section_sis_data[:component]
 
                                 visible_section_sis_data = @boac_student_page.visible_section_sis_data(term_name, course_code, index)
-                                visible_section_number = visible_section_sis_data[:number]
+                                visible_section = visible_section_sis_data[:section]
                                 visible_wait_list_status = visible_course_sis_data[:wait_list]
 
                                 it "shows the section number for UID #{team_member.uid} term #{term_name} course #{course_code} section #{component}" do
-                                  expect(visible_section_number).not_to be_empty
-                                  expect(visible_section_number).to eql(section_sis_data[:number])
+                                  expect(visible_section).not_to be_empty
+                                  expect(visible_section).to eql("#{section_sis_data[:component]} #{section_sis_data[:number]}")
                                 end
 
                                 if section_sis_data[:status] == 'W'
@@ -332,98 +324,6 @@ describe 'BOAC' do
                         end
                       end
 
-                      # CANVAS SITE ANALYTICS
-
-                      term_sites.flatten.each do |site|
-
-                        begin
-
-                          site_data = site[:data]
-                          site_code = user_analytics_data.site_metadata(site_data)[:code]
-                          site_id = user_analytics_data.site_metadata(site_data)[:site_id]
-
-                          # Find the site in the UI differently if it's matched versus unmatched
-                          site[:course_code] ?
-                              (analytics_xpath = @boac_student_page.course_site_xpath(term_name, site[:course_code], site[:index])) :
-                              (analytics_xpath = @boac_student_page.unmatched_site_xpath(term_name, site_code))
-                          logger.info "Checking course site #{site_code}"
-
-                          # Gather the expected analytics data from Canvas
-                          canvas_assigns = user_analytics_data.canvas_api_assigns_on_time site_data
-                          canvas_grades = user_analytics_data.canvas_api_grades site_data
-                          canvas_pages = user_analytics_data.canvas_api_page_views site_data
-
-                          if BOACUtils.tooltips
-
-                            # Compare to what's shown in the UI
-                            [canvas_assigns, canvas_grades, canvas_pages].each do |api_analytics|
-
-                              if api_analytics[:perc_round].nil?
-                                no_data = @boac_student_page.no_data?(analytics_xpath, api_analytics[:type])
-                                it "shows no '#{api_analytics[:type]}' data for UID #{team_member.uid} term #{term_name} course site #{site_code}" do
-                                  expect(no_data).to be true
-                                end
-                              else
-                                visible_analytics = case api_analytics[:type]
-                                                      when 'Assignments on Time'
-                                                        @boac_student_page.visible_assignment_analytics(@driver, analytics_xpath, api_analytics)
-                                                      when 'Assignment Grades'
-                                                        @boac_student_page.visible_grades_analytics(@driver, analytics_xpath, api_analytics)
-                                                      when 'Page Views'
-                                                        @boac_student_page.visible_page_view_analytics(@driver, analytics_xpath, api_analytics)
-                                                      else
-                                                        logger.error "Unsupported analytics type '#{api_analytics[:type]}'"
-                                                    end
-
-                                it "shows the '#{api_analytics[:type]}' user percentile for UID #{team_member.uid} term #{term_name} course site #{site_code}" do
-                                  expect(visible_analytics[:perc_round]).to eql(api_analytics[:perc_round])
-                                end
-                                it "shows the '#{api_analytics[:type]}' user score for UID #{team_member.uid} term #{term_name} course site #{site_code}" do
-                                  expect(visible_analytics[:score]).to eql(api_analytics[:score])
-                                end
-                                it "shows the '#{api_analytics[:type]}' course maximum for UID #{team_member.uid} term #{term_name} course site #{site_code}" do
-                                  expect(visible_analytics[:max]).to eql(api_analytics[:max])
-                                end
-
-                                if api_analytics[:graphable]
-                                  it "shows the '#{api_analytics[:type]}' course 70th percentile for UID #{team_member.uid} term #{term_name} course site #{site_code}" do
-                                    expect(visible_analytics[:perc_70]).to eql(api_analytics[:perc_70])
-                                  end
-                                  it "shows the '#{api_analytics[:type]}' course 50th percentile for UID #{team_member.uid} term #{term_name} course site #{site_code}" do
-                                    expect(visible_analytics[:perc_50]).to eql(api_analytics[:perc_50])
-                                  end
-                                  it "shows the '#{api_analytics[:type]}' course 30th percentile for UID #{team_member.uid} term #{term_name} course site #{site_code}" do
-                                    expect(visible_analytics[:perc_30]).to eql(api_analytics[:perc_30])
-                                  end
-                                  it "shows the '#{api_analytics[:type]}' course minimum for UID #{team_member.uid} term #{term_name} course site #{site_code}" do
-                                    expect(visible_analytics[:minimum]).to eql(api_analytics[:minimum])
-                                  end
-                                else
-                                  it "shows no '#{api_analytics[:type]}' course 70th percentile for UID #{team_member.uid} term #{term_name} course site #{site_code}" do
-                                    expect(visible_analytics[:perc_70]).to be_nil
-                                  end
-                                  it "shows no '#{api_analytics[:type]}' course 50th percentile for UID #{team_member.uid} term #{term_name} course site #{site_code}" do
-                                    expect(visible_analytics[:perc_50]).to be_nil
-                                  end
-                                  it "shows no '#{api_analytics[:type]}' course 30th percentile for UID #{team_member.uid} term #{term_name} course site #{site_code}" do
-                                    expect(visible_analytics[:perc_30]).to be_nil
-                                  end
-                                  it "shows no '#{api_analytics[:type]}' course minimum for UID #{team_member.uid} term #{term_name} course site #{site_code}" do
-                                    expect(visible_analytics[:minimum]).to be_nil
-                                  end
-                                end
-                              end
-                            end
-                          end
-
-                        rescue => e
-                          Utils.log_error e
-                          it("encountered an error for UID #{team_member.uid} term #{term_name} site #{site_code}") { fail }
-                        ensure
-                          row = [team_member.uid, team.name, term_name, site[:course_code], site_code, site_id]
-                          Utils.add_csv_row(user_course_analytics_data, row)
-                        end
-                      end
                     rescue => e
                       Utils.log_error e
                       it("encountered an error for UID #{team_member.uid} term #{term_name}") { fail }
@@ -452,6 +352,7 @@ describe 'BOAC' do
               logger.warn "Skipping #{team.name} UID #{team_member.uid} because it is not present in the UI"
             end
           end
+
         rescue => e
           Utils.log_error e
           it("encountered an error for #{team.name}") { fail }

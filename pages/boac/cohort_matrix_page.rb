@@ -12,7 +12,7 @@ module Page
       include BOACPages
 
       div(:matrix, id: 'scatterplot')
-      elements(:missing_data_link, :link, xpath: '//a[@data-ng-repeat="student in studentsWithoutData"]')
+      elements(:missing_data_link, :link, xpath: '//a[contains(@data-ng-repeat,"student in studentsWithoutData")]')
       elements(:missing_data_image, :image, xpath: '//h4[text()="Missing Student Data"]/following-sibling::ul//img')
 
       # Waits for the matrix graphic to appear and pauses briefly to allow bubbles to start forming
@@ -26,7 +26,7 @@ module Page
       # @return [Array<Selenium::WebDriver::Element>]
       def matrix_bubbles(driver)
         wait_for_matrix
-        driver.find_elements(xpath: '//*[name()="svg"][@class="cohort-matrix-svg"]/*[name()="svg"]//*[name()="circle"]')
+        driver.find_elements(xpath: '//*[name()="svg"][@class="matrix-svg"]/*[name()="svg"]//*[name()="circle"]')
       end
 
       # Returns the UIDs of the users in matrix bubbles
@@ -34,7 +34,7 @@ module Page
       # @return [Array<String>]
       def visible_matrix_uids(driver)
         wait_for_matrix
-        els = driver.find_elements(xpath: '//*[name()="svg"][@class="cohort-matrix-svg"]/*[name()="defs"]/*[name()="pattern"]')
+        els = driver.find_elements(xpath: '//*[name()="svg"][@class="matrix-svg"]/*[name()="defs"]/*[name()="pattern"]')
         els.any? ? (els.map { |el| el.attribute('id').delete('avatar_') }) : []
       end
 
@@ -50,12 +50,14 @@ module Page
       def click_last_student_bubble(driver)
         logger.info 'Clicking student bubble'
         matrix_bubbles(driver).last.click
+        h1_element(class: 'profile-header-name').when_visible Utils.medium_wait
       end
 
       # Clicks the last user in the 'no data' list
       def click_last_no_data_student
         logger.info 'Clicking missing data student'
         missing_data_link_elements.last.click
+        h1_element(class: 'profile-header-name').when_visible Utils.medium_wait
       end
 
     end
