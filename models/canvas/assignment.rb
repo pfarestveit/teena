@@ -1,11 +1,9 @@
 class Assignment
 
-  attr_accessor :title, :due_date, :url
+  attr_accessor :id, :type, :title, :url, :due_date, :submitted, :submission_date, :on_time, :graded
 
-  def initialize(title, due_date, url = nil)
-    @title = title
-    @due_date = due_date
-    @url = url
+  def initialize(test_data)
+    test_data.each { |k, v| public_send("#{k}=", v) }
   end
 
 end

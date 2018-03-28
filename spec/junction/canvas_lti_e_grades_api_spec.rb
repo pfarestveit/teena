@@ -33,7 +33,7 @@ describe 'bCourses E-Grades Export' do
         # Disable existing grading scheme in case it is not default, then set default scheme
         @canvas.masquerade_as(@driver, instructor, course)
         @canvas.disable_grading_scheme course
-        @e_grades_export_page.set_default_grading_scheme(@driver, course)
+        @e_grades_export_page.resolve_all_issues(@driver, course)
 
         # Get grades in Canvas
         students = @canvas.get_enrolled_students(course, primary_section)
