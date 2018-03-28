@@ -31,14 +31,14 @@ describe 'Canvas assignment submission', order: :defined do
     @asset_library.ensure_canvas_sync(@driver, @asset_library_url) unless course_id.nil?
 
     # Create assignment
-    @assignment = Assignment.new("Submission Assignment #{test_id}", nil)
+    @assignment = Assignment.new({title: "Submission Assignment #{test_id}"})
     @canvas.masquerade_as(@driver, @teacher, @course)
     @canvas.create_assignment(@course, @assignment)
 
     # Enable Canvas assignment sync, then create another assignment. When the latter appears as a category, the former should have sync enabled.
     @asset_library.wait_for_canvas_category(@driver, @asset_library_url, @assignment)
     @asset_library.enable_assignment_sync @assignment
-    poller_assignment = Assignment.new("Throwaway Assignment #{test_id}", nil)
+    poller_assignment = Assignment.new({title: "Throwaway Assignment #{test_id}"})
     @canvas.create_assignment(@course, poller_assignment)
     @asset_library.wait_for_canvas_category(@driver, @asset_library_url, poller_assignment)
     @canvas.stop_masquerading @driver

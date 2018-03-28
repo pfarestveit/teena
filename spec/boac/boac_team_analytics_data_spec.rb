@@ -16,6 +16,10 @@ describe 'BOAC analytics' do
                                       PageMinCanvas PageMinLoch PageMaxCanvas PageMaxLoch PageUserCanvas PageUserLoch PagePercCanvas PagePercLoch PageRoundCanvas PageRoundLoch)
     CSV.open(user_course_analytics_data, 'wb') { |csv| csv << user_analytics_data_heading }
 
+    user_course_assigns = File.join(Utils.initialize_test_output_dir, 'boac-assignments.csv')
+    user_course_assigns_heading = %w(UID CanvasID Site AssignmentID URL DueDate Submission SubmitDate Type OnTime)
+    CSV.open(user_course_assigns, 'wb') { |csv| csv << user_course_assigns_heading }
+
     @driver = Utils.launch_browser
     @cal_net = Page::CalNetPage.new @driver
     @canvas = Page::CanvasActivitiesPage.new @driver
@@ -28,10 +32,13 @@ describe 'BOAC analytics' do
 
       boac_api_page = ApiUserAnalyticsPage.new @driver
       boac_api_page.get_data(@driver, student)
+      boac_api_page.set_canvas_id student
       term = boac_api_page.terms.find { |t| boac_api_page.term_name(t) == term_to_test }
 
       if term
         begin
+
+          @canvas.masquerade_as(@driver, student)
 
           # Collect all the Canvas sites in the term, matched and unmatched
           term_sites = []
@@ -51,6 +58,7 @@ describe 'BOAC analytics' do
               site_data = site[:data]
               site_code = boac_api_page.site_metadata(site_data)[:code]
               site_id = boac_api_page.site_metadata(site_data)[:site_id]
+              course = Course.new({:site_id => site_id})
 
               logger.info "Checking site #{site_id}, #{site_code}"
 
@@ -66,28 +74,21 @@ describe 'BOAC analytics' do
 
               if BOACUtils.loch_assignments
 
-                # Assignments on time - compare Data Loch with Canvas API
-
                 logger.warn "Checking assignments-on-time for UID #{student.uid} term #{term_to_test} course site ID #{site_id}, #{site_code}"
 
-                it "has the same Canvas API and Data Loch assignments-on-time minimum for UID #{student.uid} term #{term_to_test} course site ID #{site_id}, #{site_code}" do
-                  expect(loch_assigns[:min]).to eql(canvas_assigns[:min])
-                end
-                it "has the same Canvas API and Data Loch assignments-on-time maximum for UID #{student.uid} term #{term_to_test} course site ID #{site_id}, #{site_code}" do
-                  expect(loch_assigns[:max]).to eql(canvas_assigns[:max])
-                end
-                it "has the same Canvas API and Data Loch assignments-on-time user score for UID #{student.uid} term #{term_to_test} course site ID #{site_id}, #{site_code}" do
-                  expect(loch_assigns[:score]).to eql(canvas_assigns[:score])
-                end
-                it "has the same Canvas API and Data Loch assignments-on-time user percentile for UID #{student.uid} term #{term_to_test} course site ID #{site_id}, #{site_code}" do
-                  expect(loch_assigns[:perc]).to eql(canvas_assigns[:perc])
-                end
-                it "has the same Canvas API and Data Loch assignments-on-time user rounded percentile for UID #{student.uid} term #{term_to_test} course site ID #{site_id}, #{site_code}" do
-                  expect(loch_assigns[:perc_round]).to eql(canvas_assigns[:perc_round])
+                assignments = @canvas.get_assignments(@driver, course, student)
+                assignments.each { |a| Utils.add_csv_row(user_course_assigns, [student.uid, student.canvas_id, site_id, a.id, a.url, a.due_date, a.submitted, a.submission_date, a.type, a.on_time]) }
+
+                # Get all submitted assignments
+                submitted = assignments.select &:submitted
+                # If due date and submission date are known, exclude submissions that were late
+                submitted.delete_if { |a| !a.on_time if a.due_date && a.submission_date }
+                it "has the right Data Loch assignments-submitted count for UID #{student.uid} term #{term_to_test} course site ID #{site_id}, #{site_code}" do
+                  expect(loch_assigns[:score].to_i).to eql(submitted.length)
                 end
 
               else
-                logger.warn 'Skipping comparison of assignments-on-time in Data Loch versus Canvas API'
+                logger.warn 'Skipping comparison of assignments-on-time in Data Loch versus Canvas UI'
               end
 
               if BOACUtils.loch_page_views
@@ -150,7 +151,7 @@ describe 'BOAC analytics' do
 
                   # Scores - compare with Canvas Gradebook export, using a range of +/- 1 to account for rounding differences
 
-                  course = Course.new({:site_id => site_id})
+                  @canvas.stop_masquerading @driver
                   @canvas.load_gradebook course
                   scores = @canvas.export_grades course
 

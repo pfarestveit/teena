@@ -19,9 +19,9 @@ module Page
     button(:save_button, xpath: '//button[text()="Save"]')
     button(:update_course_button, xpath: '//button[contains(.,"Update Course Details")]')
     li(:update_course_success, xpath: '//li[contains(.,"successfully updated")]')
-    form(:profile_form, class: 'ic-NavMenu-profile-header-logout-form')
+    form(:profile_form, xpath: '//form[@action="/logout"]')
     link(:profile_link, id: 'global_nav_profile_link')
-    button(:logout_link, xpath: '//button[text()="Logout"]')
+    button(:logout_link, xpath: '//button[contains(.,"Logout")]')
 
     h1(:unexpected_error_msg, xpath: '//h1[contains(text(),"Unexpected Error")]')
     h2(:unauthorized_msg, xpath: '//h2[contains(text(),"Unauthorized")]')
@@ -62,7 +62,7 @@ module Page
       load_homepage
       sleep 2
       stop_masquerading(driver) if stop_masquerading_link?
-      logger.info "Masquerading as #{user.role} UID #{user.uid}"
+      logger.info "Masquerading as #{user.role} UID #{user.uid}, Canvas ID #{user.canvas_id}"
       navigate_to "#{Utils.canvas_base_url}/users/#{user.canvas_id}/masquerade"
       wait_for_update_and_click masquerade_link_element
       stop_masquerading_link_element.when_visible

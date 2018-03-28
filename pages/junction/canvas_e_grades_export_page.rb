@@ -64,16 +64,6 @@ module Page
         wait_for_load_and_click_js continue_button_element
       end
 
-      # Sets the default grading scheme
-      # @param driver [Selenium::WebDriver]
-      # @param course [Course]
-      def set_default_grading_scheme(driver, course)
-        load_embedded_tool(driver, course)
-        click_set_default_scheme
-        click_continue
-        download_final_grades_element.when_visible Utils.medium_wait
-      end
-
       # Un-mutes any muted assignments and sets the default grading scheme
       # @param driver [Selenium::WebDriver]
       # @param course [Course]
@@ -83,7 +73,7 @@ module Page
         if required_adjustments_heading_element.visible?
           logger.debug "Adjustments needed on site #{course.site_id}"
           un_mute_all_cbx_element.when_present Utils.short_wait
-          sleep 1
+          sleep 3
           click_un_mute_all if un_mute_all_cbx_element.visible?
           click_set_default_scheme if set_scheme_cbx_element.visible?
           click_continue

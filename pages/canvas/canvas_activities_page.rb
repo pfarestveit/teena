@@ -154,6 +154,20 @@ module Page
       wait_until(Utils.short_wait) { discussion_reply_elements.length == replies + 1 }
     end
 
+    # Returns all the authors and dates of discussion entries visible on the page
+    # @param driver [Selenium::WebDriver]
+    # @return [Array<Hash>]
+    def discussion_entries(driver)
+      entries = driver.find_elements(xpath: '//ul[@class="discussion-entries"]/li')
+      entries.map do |el|
+        entry_xpath = "//ul[@class='discussion-entries']/li[#{entries.index(el) + 1}]"
+        {
+          :canvas_id => link_element(xpath: "#{entry_xpath}//h2[@class='discussion-title']/a").attribute('data-student_id'),
+          :date => DateTime.parse(span_element(xpath: "#{entry_xpath}//div[contains(@class, 'discussion-pubdate')]//span[@class='screenreader-only']").text.gsub('at', ''))
+        }
+      end
+    end
+
     # ASSIGNMENTS
 
     link(:new_assignment_link, text: 'Assignment')
@@ -175,6 +189,9 @@ module Page
     text_area(:url_upload_input, id: 'submission_url')
     button(:url_upload_submit_button, xpath: '(//button[@type="submit"])[2]')
     div(:assignment_submission_conf, xpath: '//div[contains(.,"Turned In!")]')
+    elements(:list_view_assignment, :link, xpath: '//li[contains(@class, "assignment")]/div[contains(@id, "assignment_")]')
+    link(:assignment_submission_link, xpath: '//a[contains(.,"Submission Details")]')
+    span(:assignment_submission_date, xpath: '//h3[text()="Submission"]/following-sibling::div[@class="content"]/span')
 
     # Begins creating a new assignment, entering title and scrolling to the submission types
     # @param course [Course]
@@ -286,6 +303,110 @@ module Page
       (resubmission.type == 'File') ?
           add_event(event, EventType::MODIFY, 'online_upload') :
           add_event(event, EventType::MODIFY, 'online_url')
+    end
+
+    # Returns all of a student's assignments on a course site
+    # @param driver [Selenium::WebDriver]
+    # @param course [Course]
+    # @param student [User]
+    # @return [Array<Assignment>]
+    def get_assignments(driver, course, student)
+
+      # Get all the assignments in list view
+      navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/assignments"
+      begin
+        wait_until(Utils.short_wait) { list_view_assignment_elements.any? }
+      rescue => e
+        logger.error "#{e.message + "\n"}"
+        logger.warn "There are no assignments for course ID #{course.site_id}"
+      end
+
+      sleep 2
+
+      # Collect all possible info from list view
+      assignments = list_view_assignment_elements.map do |el|
+
+        id = el.attribute('id').gsub('assignment_', '')
+        url = "#{Utils.canvas_base_url}/courses/#{course.site_id}/assignments/#{id}"
+        title = link_element(xpath: "//div[@id='assignment_#{id}']").text.strip
+        type = 'roll-call' if title.include? 'Roll Call'
+
+        # Due date and/or score (meaning submitted) are sometimes present on list view
+        assignment_xpath = "//div[@id='assignment_#{id}']"
+        if (date_el = span_element(xpath: "#{assignment_xpath}//div[contains(@class, 'assignment-date-due')]/span")).exists?
+          due_date = DateTime.parse date_el.text.strip.gsub('at', '')
+        end
+        if (score_el = span_element(xpath: "#{assignment_xpath}//span[@class='score-display']/b")).exists?
+          grading = span_element(xpath: "#{assignment_xpath}//span[@class='grade-display']").exists?
+          submitted = (score_el.text != '-') || (score_el.text == '-' && grading)
+        end
+
+        Assignment.new({:id => id, :type => type, :title => title, :url => url, :due_date => due_date, :submitted => submitted})
+      end
+
+      # Collect all possible info from detail view
+      assignments.each do |assign|
+        begin
+          logger.debug "Checking assignment ID #{assign.id}"
+          navigate_to assign.url
+          sleep 1
+          Utils.save_screenshot(driver, assign.id)
+          h1_element(xpath: '//h1').when_visible Utils.short_wait
+
+          # Besides 'Roll Call', assignments can be Canvas assignments, Canvas quizzes, Canvas discussions, or external tools
+          unless assign.type
+            assign.type = if current_url.include? 'quizzes'
+                            'quiz'
+                          elsif current_url.include? 'discussion_topics'
+                            'discussion'
+                          elsif current_url.include? 'assignments'
+                            if verify_block { driver.find_element(id: 'tool_content') }
+                              form_element(id: 'tool_form').attribute('data-tool-id')
+                            else
+                              'assignment'
+                            end
+                          end
+          end
+
+          case assign.type
+            when 'assignment'
+              # Assignments submitted via Canvas
+              assign.submitted = assignment_submission_link?
+              if assign.submitted
+                assign.submission_date = DateTime.parse(assignment_submission_date.gsub('at', '').strip) unless assignment_submission_date.strip.empty?
+              end
+
+              # Assignments submitted outside Canvas
+              assign.submitted = div_element(xpath: '//div[contains(.,"Submission Details:")]').exists? unless assign.submitted
+
+            when 'quiz'
+              assign.submitted = (date_element = div_element(xpath: '//div[@class="quiz_score"]/following-sibling::div[contains(.,"Submitted")]')).exists?
+              if assign.submitted
+                assign.submission_date = DateTime.parse(date_element.text.gsub('Submitted', '').gsub('at', '').strip)
+              end
+
+            when 'discussion'
+              assign.submitted = (replies = discussion_entries(driver).select { |d| d[:canvas_id] == student.canvas_id }).any?
+              if assign.submitted
+                assign.submission_date = replies.first[:date]
+              end
+
+            else
+              logger.info 'Unable to determine if assignment is submitted'
+          end
+
+          # Assignment timeliness and grading
+          assign.on_time = assign.submission_date && assign.due_date && assign.submission_date < assign.due_date
+          assign.graded = div_element(xpath: '//h3[text()="Submission"]//div[contains(.,"Grade: ")]').exists?
+          logger.debug "Assignment ID #{assign.id}, type #{assign.type}, URL #{assign.url}, due date #{assign.due_date}, submitted '#{assign.submitted}', submission date #{assign.submission_date}"
+
+        rescue => e
+          # Some assignment links are dead links
+          Utils.log_error e
+        end
+      end
+
+      assignments
     end
 
     # FILES

@@ -21,9 +21,9 @@ describe 'Canvas assignment sync', order: :defined do
     user_test_data = SuiteCUtils.load_suitec_test_data.select { |data| data['tests']['canvas_assignment_sync'] }
     @teacher = User.new user_test_data.find { |data| data['role'] == 'Teacher' }
     @student = User.new user_test_data.find { |data| data['role'] == 'Student' }
-    @assignment_1 = Assignment.new("Submission Assignment 1 #{test_id}", nil)
-    @assignment_2 = Assignment.new("Submission Assignment 2 #{test_id}", nil)
-    @unsinkable_assignment = Assignment.new("Unsinkable Assignment #{test_id}", nil)
+    @assignment_1 = Assignment.new({title: "Submission Assignment 1 #{test_id}"})
+    @assignment_2 = Assignment.new({title: "Submission Assignment 2 #{test_id}"})
+    @unsinkable_assignment = Assignment.new({title: "Unsinkable Assignment #{test_id}"})
 
     # Create course site if necessary. If an existing site, ensure Canvas sync is enabled.
     @canvas.log_in(@cal_net, Utils.super_admin_username, Utils.super_admin_password)
@@ -71,7 +71,7 @@ describe 'Canvas assignment sync', order: :defined do
       @asset_library.load_page(@driver, @asset_library_url)
       @asset_library.click_manage_assets_link
       @asset_library.enable_assignment_sync @assignment_1
-      poller_assignment = Assignment.new("Throwaway Assignment 1 #{test_id}", nil)
+      poller_assignment = Assignment.new({title: "Throwaway Assignment 1 #{test_id}"})
       @canvas.create_assignment(@course, poller_assignment)
       @asset_library.wait_for_canvas_category(@driver, @asset_library_url, poller_assignment)
 
@@ -125,7 +125,7 @@ describe 'Canvas assignment sync', order: :defined do
       @asset_library.click_manage_assets_link
       @asset_library.disable_assignment_sync @assignment_1
       @asset_library.enable_assignment_sync @assignment_2
-      poller_assignment = Assignment.new("Throwaway Assignment 2 #{test_id}", nil)
+      poller_assignment = Assignment.new({title: "Throwaway Assignment 2 #{test_id}"})
       @canvas.create_assignment(@course, poller_assignment)
       @asset_library.wait_for_canvas_category(@driver, @asset_library_url, poller_assignment)
     end

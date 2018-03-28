@@ -36,7 +36,7 @@ begin
 
           # Create assignment
           @test_assignment_identifier = Utils.get_test_id
-          @assignment = Assignment.new("Submission Assignment #{@test_assignment_identifier}", nil)
+          @assignment = Assignment.new({title: "Submission Assignment #{@test_assignment_identifier}"})
           @canvas.masquerade_as(@driver, @teacher, @course)
           @canvas.create_assignment(@course, @assignment)
           @canvas.stop_masquerading @driver
