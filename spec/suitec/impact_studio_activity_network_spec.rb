@@ -29,7 +29,7 @@ describe 'Impact Studio Activity Network', :order => :defined do
     course_id = ENV['COURSE_ID']
     @course = Course.new({:title => course_title, :code => course_title, :site_id => course_id})
     @driver = Utils.launch_browser
-    @canvas = Page::CanvasActivitiesPage.new @driver
+    @canvas = Page::CanvasAnnounceDiscussPage.new @driver
     @cal_net = Page::CalNetPage.new @driver
     @asset_library_page = Page::SuiteCPages::AssetLibraryPage.new @driver
     @impact_studio_page = Page::SuiteCPages::ImpactStudioPage.new @driver

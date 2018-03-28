@@ -20,7 +20,7 @@ describe 'Asset', order: :defined do
     @course.site_id = ENV['COURSE_ID']
 
     @driver = Utils.launch_browser
-    @canvas = Page::CanvasActivitiesPage.new @driver
+    @canvas = Page::CanvasPage.new @driver
     @cal_net = Page::CalNetPage.new @driver
     @asset_library = Page::SuiteCPages::AssetLibraryPage.new @driver
     @engagement_index = Page::SuiteCPages::EngagementIndexPage.new @driver
@@ -299,16 +299,6 @@ describe 'Asset', order: :defined do
         expect(@asset_library.delete_asset_button?).to be false
       end
 
-    end
-  end
-
-  describe 'files in Canvas' do
-
-    users.each do |user|
-      it "are visible to course #{user.role} UID #{user.uid} if the user has permission to see them" do
-        @canvas.masquerade_as(@driver, user, @course)
-        expect(@canvas.suitec_files_hidden? @course).to be true
-      end
     end
   end
 

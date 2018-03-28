@@ -8,7 +8,7 @@ begin
 
   @driver = Utils.launch_browser
 
-  @canvas = Page::CanvasActivitiesPage.new @driver
+  @canvas = Page::CanvasAnnounceDiscussPage.new @driver
   @cal_net = Page::CalNetPage.new @driver
 
   @test_user_data = SuiteCUtils.load_suitec_test_data.select { |data| data['tests']['canvas_discussions'] }

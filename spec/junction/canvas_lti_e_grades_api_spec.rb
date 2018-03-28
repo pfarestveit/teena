@@ -11,7 +11,7 @@ describe 'bCourses E-Grades Export' do
 
     @driver = Utils.launch_browser
     @cal_net = Page::CalNetPage.new @driver
-    @canvas = Page::CanvasActivitiesPage.new @driver
+    @canvas = Page::CanvasGradesPage.new @driver
     @splash_page = Page::JunctionPages::SplashPage.new @driver
     @e_grades_export_page = Page::JunctionPages::CanvasEGradesExportPage.new @driver
     @rosters_api = ApiAcademicsRosterPage.new @driver

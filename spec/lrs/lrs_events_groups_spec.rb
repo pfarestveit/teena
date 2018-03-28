@@ -12,7 +12,8 @@ describe 'Canvas groups events' do
 
     @driver = Utils.launch_browser
 
-    @canvas = Page::CanvasActivitiesPage.new @driver
+    @canvas = Page::CanvasGroupsPage.new @driver
+    @canvas_discussions_page = Page::CanvasAnnounceDiscussPage.new @driver
     @cal_net = Page::CalNetPage.new @driver
 
     # Script requires a minimum of one teacher and three students in test data
@@ -47,33 +48,33 @@ describe 'Canvas groups events' do
 
     # Announcement
     @announcement = Announcement.new("Teacher Group Announcement #{@test_activity_identifier}", 'This is a teacher-created group announcement')
-    @canvas.create_group_announcement(@teacher_group, @announcement, event)
+    @canvas_discussions_page.create_group_announcement(@teacher_group, @announcement, event)
 
     # Discussion
     @discussion = Discussion.new("Teacher Group Discussion #{@test_activity_identifier}")
-    @canvas.create_group_discussion(@teacher_group, @discussion, event)
+    @canvas_discussions_page.create_group_discussion(@teacher_group, @discussion, event)
     # Student 1 creates an entry on the topic
     event.actor = students[0]
-    @canvas.masquerade_as(@driver, students[0])
-    @canvas.add_reply(@discussion, nil, 'Discussion entry by student 1', event)
+    @canvas_discussions_page.masquerade_as(@driver, students[0])
+    @canvas_discussions_page.add_reply(@discussion, nil, 'Discussion entry by student 1', event)
     # Student 2 creates two entries on the topic
     event.actor = students[1]
-    @canvas.masquerade_as(@driver, students[1])
-    @canvas.add_reply(@discussion, nil, 'Discussion entry by student 2', event)
-    @canvas.add_reply(@discussion, nil, 'Discussion entry by student 2', event)
+    @canvas_discussions_page.masquerade_as(@driver, students[1])
+    @canvas_discussions_page.add_reply(@discussion, nil, 'Discussion entry by student 2', event)
+    @canvas_discussions_page.add_reply(@discussion, nil, 'Discussion entry by student 2', event)
     # Student 1 replies to User 2's first entry
     event.actor = students[0]
-    @canvas.masquerade_as(@driver, students[0], @course)
-    @canvas.add_reply(@discussion, 1, 'Reply by student 1', event)
+    @canvas_discussions_page.masquerade_as(@driver, students[0], @course)
+    @canvas_discussions_page.add_reply(@discussion, 1, 'Reply by student 1', event)
     # Student 2 replies to User 1's entry
     event.actor = students[1]
-    @canvas.masquerade_as(@driver, students[1], @course)
-    @canvas.add_reply(@discussion, 0, 'Reply by student 2', event)
+    @canvas_discussions_page.masquerade_as(@driver, students[1], @course)
+    @canvas_discussions_page.add_reply(@discussion, 0, 'Reply by student 2', event)
 
     # Delete announcement and discussion
-    @canvas.masquerade_as(@driver, @teacher, @course)
-    @canvas.delete_activity(@announcement.title, @announcement.url)
-    @canvas.delete_activity(@discussion.title, @discussion.url)
+    @canvas_discussions_page.masquerade_as(@driver, @teacher, @course)
+    @canvas_discussions_page.delete_activity(@announcement.title, @announcement.url)
+    @canvas_discussions_page.delete_activity(@discussion.title, @discussion.url)
 
     # Student leaves group
     @canvas.masquerade_as(@driver, students[0], @course)

@@ -17,7 +17,7 @@ describe 'A Canvas discussion', order: :defined do
     @user_2 = User.new test_user_data[1]
 
     @driver = Utils.launch_browser
-    @canvas = Page::CanvasActivitiesPage.new @driver
+    @canvas = Page::CanvasAnnounceDiscussPage.new @driver
     @cal_net = Page::CalNetPage.new @driver
     @engagement_index = Page::SuiteCPages::EngagementIndexPage.new @driver
 

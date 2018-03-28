@@ -1,0 +1,172 @@
+require_relative '../../util/spec_helper'
+
+module Page
+
+  class CanvasAnnounceDiscussPage < CanvasPage
+
+    include PageObject
+    include Logging
+    include Page
+
+    link(:settings_link, class: 'announcement_cog')
+    link(:delete_link, class: 'delete_discussion')
+
+    # Deletes an announcement or a discussion
+    # @param title [String]
+    # @param url [String]
+    def delete_activity(title, url)
+      logger.info "Deleting '#{title}'"
+      navigate_to url
+      wait_for_load_and_click settings_link_element
+      confirm(true) { wait_for_update_and_click delete_link_element }
+      list_item_element(xpath: "//li[contains(.,'#{title} deleted successfully')]").when_present Utils.short_wait
+    end
+
+    # ANNOUNCEMENTS
+
+    link(:html_editor_link, xpath: '//a[contains(.,"HTML Editor")]')
+    text_area(:announcement_msg, name: 'message')
+    button(:save_announcement_button, xpath: '//h1[contains(text(),"New Discussion")]/following-sibling::div/button[contains(text(),"Save")]')
+    h1(:announcement_title_heading, class: 'discussion-title')
+
+    # Creates an announcement on a course site
+    # @param course [Course]
+    # @param announcement [Announcement]
+    def create_course_announcement(course, announcement)
+      logger.info "Creating announcement: #{announcement.title}"
+      navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/discussion_topics/new?is_announcement=true"
+      enter_and_save_announcement announcement
+    end
+
+    # Creates an announcement in a group within a course site
+    # @param group [Group]
+    # @param announcement [Announcement]
+    # @param event [Event]
+    def create_group_announcement(group, announcement, event = nil)
+      logger.info "Creating group announcement: #{announcement.title}"
+      navigate_to "#{Utils.canvas_base_url}/groups/#{group.site_id}/discussion_topics/new?is_announcement=true"
+      enter_and_save_announcement(announcement, event)
+    end
+
+    # Enters an announcement title and body and saves it
+    # @param announcement [Announcement]
+    # @param event [Event]
+    def enter_and_save_announcement(announcement, event = nil)
+      discussion_title_element.when_present Utils.short_wait
+      discussion_title_element.send_keys announcement.title
+      html_editor_link if html_editor_link_element.visible?
+      wait_for_element_and_type_js(announcement_msg_element, announcement.body)
+      wait_for_update_and_click_js save_announcement_button_element
+      announcement_title_heading_element.when_visible Utils.medium_wait
+      add_event(event, EventType::CREATE, announcement.title)
+      announcement.url = current_url
+      logger.info "Announcement URL is #{announcement.url}"
+    end
+
+    # DISCUSSIONS
+
+    link(:new_discussion_link, id: 'new-discussion-btn')
+    link(:subscribed_link, class: 'topic-unsubscribe-button')
+    text_area(:discussion_title, id: 'discussion-title')
+    checkbox(:threaded_discussion_cbx, id: 'threaded')
+    checkbox(:graded_discussion_cbx, id: 'use_for_grading')
+    elements(:discussion_reply, :list_item, xpath: '//ul[@class="discussion-entries"]/li')
+    link(:primary_reply_link, xpath: '//article[@id="discussion_topic"]//a[@data-event="addReply"]')
+    link(:primary_html_editor_link, xpath: '//article[@id="discussion_topic"]//a[contains(.,"HTML Editor")]')
+    text_area(:primary_reply_input, xpath: '//article[@id="discussion_topic"]//textarea[@class="reply-textarea"]')
+    button(:primary_post_reply_button, xpath: '//article[@id="discussion_topic"]//button[contains(.,"Post Reply")]')
+    elements(:secondary_reply_link, :link, xpath: '//li[contains(@class,"entry")]//span[text()="Reply"]/..')
+    elements(:secondary_html_editor_link, :link, xpath: '//li[contains(@class,"entry")]//a[contains(.,"HTML Editor")]')
+    elements(:secondary_reply_input, :text_area, xpath: '//li[contains(@class,"entry")]//textarea[@class="reply-textarea"]')
+    elements(:secondary_post_reply_button, :button, xpath: '//li[contains(@class,"entry")]//button[contains(.,"Post Reply")]')
+
+    # Clicks the 'save and publish' button using JavaScript rather than WebDriver
+    def click_save_and_publish
+      scroll_to_bottom
+      wait_for_update_and_click_js save_and_publish_button_element
+    end
+
+    # Creates a discussion on a course site
+    # @param driver [Selenium::WebDriver]
+    # @param course [Course]
+    # @param discussion [Discussion]
+    # @param event [Event]
+    def create_course_discussion(driver, course, discussion, event = nil)
+      logger.info "Creating discussion topic named '#{discussion.title}'"
+      load_course_site(driver, course)
+      navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/discussion_topics"
+      enter_and_save_discussion(discussion, event)
+    end
+
+    # Creates a discussion on a group site
+    # @param group [Group]
+    # @param discussion [Discussion]
+    # @param event [Event]
+    def create_group_discussion(group, discussion, event = nil)
+      logger.info "Creating group discussion topic named '#{discussion.title}'"
+      navigate_to "#{Utils.canvas_base_url}/groups/#{group.site_id}/discussion_topics"
+      enter_and_save_discussion(discussion, event)
+    end
+
+    # Enters and saves a discussion topic
+    # @param discussion [Discussion]
+    # @param event [Event]
+    def enter_and_save_discussion(discussion, event = nil)
+      wait_for_load_and_click new_discussion_link_element
+      discussion_title_element.when_present Utils.short_wait
+      discussion_title_element.send_keys discussion.title
+      js_click threaded_discussion_cbx_element
+      teacher_role = save_and_publish_button?
+      teacher_role ? click_save_and_publish : wait_for_update_and_click_js(save_announcement_button_element)
+      add_event(event, EventType::CREATE, discussion.title)
+      teacher_role ? published_button_element.when_visible(Utils.medium_wait) : subscribed_link_element.when_visible(Utils.medium_wait)
+      discussion.url = current_url
+      logger.info "Discussion URL is #{discussion.url}"
+    end
+
+    # Adds a reply to a discussion.  If an index is given, then adds a reply to an existing reply at that index.  Otherwise,
+    # adds a reply to the topic itself.
+    # @param discussion [Discussion]
+    # @param index [Integer]
+    # @param reply_body [String]
+    # @param event [Event]
+    def add_reply(discussion, index, reply_body, event = nil)
+      navigate_to discussion.url
+      if index.nil?
+        logger.info "Creating new discussion entry with body '#{reply_body}'"
+        wait_for_load_and_click_js primary_reply_link_element
+        wait_for_update_and_click_js primary_html_editor_link_element
+        wait_for_element_and_type_js(primary_reply_input_element, reply_body)
+        replies = discussion_reply_elements.length
+        primary_post_reply_button
+      else
+        logger.info "Replying to a discussion entry at index #{index} with body '#{reply_body}'"
+        wait_until { secondary_reply_link_elements.any? }
+        wait_for_load_and_click_js secondary_reply_link_elements[index]
+        wait_for_update_and_click_js secondary_html_editor_link_elements[index]
+        wait_until(Utils.short_wait) { secondary_reply_input_elements.any? }
+        wait_for_element_and_type_js(secondary_reply_input_elements[index], reply_body)
+        replies = discussion_reply_elements.length
+        hide_canvas_footer_and_popup
+        wait_for_update_and_click_js secondary_post_reply_button_elements[index]
+      end
+      add_event(event, EventType::POST, reply_body)
+      wait_until(Utils.short_wait) { discussion_reply_elements.length == replies + 1 }
+    end
+
+    # Returns all the authors and dates of discussion entries visible on the page
+    # @param driver [Selenium::WebDriver]
+    # @return [Array<Hash>]
+    def discussion_entries(driver)
+      entries = driver.find_elements(xpath: '//ul[@class="discussion-entries"]/li')
+      entries.map do |el|
+        entry_xpath = "//ul[@class='discussion-entries']/li[#{entries.index(el) + 1}]"
+        {
+            :canvas_id => link_element(xpath: "#{entry_xpath}//h2[@class='discussion-title']/a").attribute('data-student_id'),
+            :date => DateTime.parse(span_element(xpath: "#{entry_xpath}//div[contains(@class, 'discussion-pubdate')]//span[@class='screenreader-only']").text.gsub('at', ''))
+        }
+      end
+    end
+
+  end
+end

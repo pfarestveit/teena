@@ -24,7 +24,7 @@ describe 'Impact Studio', order: :defined do
     @course = Course.new({title: "Impact Studio Profile #{test_id}", code: "Impact Studio Profile #{test_id}", site_id: course_id})
 
     @driver = Utils.launch_browser
-    @canvas = Page::CanvasActivitiesPage.new @driver
+    @canvas = Page::CanvasPage.new @driver
     @cal_net = Page::CalNetPage.new @driver
     @asset_library = Page::SuiteCPages::AssetLibraryPage.new @driver
     @impact_studio = Page::SuiteCPages::ImpactStudioPage.new @driver
@@ -544,30 +544,5 @@ describe 'Impact Studio', order: :defined do
       end
     end
 
-    context 'when another user clicks a collaborate button' do
-
-      before(:all) do
-        @canvas.masquerade_as(@driver, student_share, @course)
-        @impact_studio.load_page(@driver, @impact_studio_url)
-        @impact_studio.search_for_user student_viewer
-      end
-
-      it 'allows the other user to cancel sending a message' do
-        @impact_studio.click_collaborate_button
-        @impact_studio.click_cancel_collaborate_msg
-      end
-
-      it 'allows the other user to send a message' do
-        @impact_studio.click_collaborate_button
-        @impact_studio.send_collaborate_msg "All work and no play makes Jack #{test_id} a dull cat"
-      end
-
-      it 'delivers a message to the looking-user\'s Canvas inbox' do
-        @canvas.masquerade_as(@driver, student_viewer, @course)
-        @canvas.verify_message(student_share, student_viewer, "All work and no play makes Jack #{test_id} a dull cat", test_id)
-        @canvas.delete_open_msg
-      end
-
-    end
   end
 end

@@ -721,5 +721,10 @@ module Page
       url.delete '#'
     end
 
+    # MESSAGES
+
+    text_area(:message_addressee, name: 'recipients[]')
+    text_area(:message_input, name: 'body')
+
   end
 end
