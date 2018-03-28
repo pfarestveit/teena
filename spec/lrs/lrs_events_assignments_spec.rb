@@ -10,7 +10,7 @@ describe 'Canvas assignment events' do
 
   before(:all) do
     @driver = Utils.launch_browser
-    @canvas = Page::CanvasActivitiesPage.new @driver
+    @canvas = Page::CanvasAssignmentsPage.new @driver
     @cal_net = Page::CalNetPage.new @driver
 
     @test_user_data = LRSUtils.load_lrs_test_data.select { |data| data['tests']['assignments'] }

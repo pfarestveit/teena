@@ -8,7 +8,8 @@ begin
   loops = LRSUtils.script_loops
   @driver = Utils.launch_browser
 
-  @canvas = Page::CanvasActivitiesPage.new @driver
+  @canvas = Page::CanvasGroupsPage.new @driver
+  @canvas_discussions_page = Page::CanvasAnnounceDiscussPage.new @driver
   @cal_net = Page::CalNetPage.new @driver
 
   # Script requires a minimum of one teacher and three students in test data
@@ -58,38 +59,38 @@ begin
               # Announcement
 
               @announcement = Announcement.new("Teacher Group Announcement #{@test_activity_identifier}", 'This is a teacher-created group announcement')
-              @canvas.create_group_announcement(@teacher_group, @announcement)
+              @canvas_discussions_page.create_group_announcement(@teacher_group, @announcement)
 
               # Discussion
 
               @discussion = Discussion.new("Teacher Group Discussion #{@test_activity_identifier}")
-              @canvas.create_group_discussion(@teacher_group, @discussion)
+              @canvas_discussions_page.create_group_discussion(@teacher_group, @discussion)
               # Student 1 creates an entry on the topic
-              @canvas.masquerade_as(@driver, students[0])
-              @canvas.add_reply(@discussion, nil, 'Discussion entry by student 1')
+              @canvas_discussions_page.masquerade_as(@driver, students[0])
+              @canvas_discussions_page.add_reply(@discussion, nil, 'Discussion entry by student 1')
               # Student 2 creates two entries on the topic
-              @canvas.masquerade_as(@driver, students[1])
-              @canvas.add_reply(@discussion, nil, 'Discussion entry by student 2')
-              @canvas.add_reply(@discussion, nil, 'Discussion entry by student 2')
+              @canvas_discussions_page.masquerade_as(@driver, students[1])
+              @canvas_discussions_page.add_reply(@discussion, nil, 'Discussion entry by student 2')
+              @canvas_discussions_page.add_reply(@discussion, nil, 'Discussion entry by student 2')
               # Student 1 replies to User 2's first entry
-              @canvas.masquerade_as(@driver, students[0], @course)
-              @canvas.add_reply(@discussion, 1, 'Reply by student 1')
+              @canvas_discussions_page.masquerade_as(@driver, students[0], @course)
+              @canvas_discussions_page.add_reply(@discussion, 1, 'Reply by student 1')
               # Student 2 replies to User 1's entry
-              @canvas.masquerade_as(@driver, students[1], @course)
-              @canvas.add_reply(@discussion, 0, 'Reply by student 2')
+              @canvas_discussions_page.masquerade_as(@driver, students[1], @course)
+              @canvas_discussions_page.add_reply(@discussion, 0, 'Reply by student 2')
               # Student 1 replies to own entry
-              @canvas.masquerade_as(@driver, students[0], @course)
-              @canvas.add_reply(@discussion, 0, 'Reply by student 1')
+              @canvas_discussions_page.masquerade_as(@driver, students[0], @course)
+              @canvas_discussions_page.add_reply(@discussion, 0, 'Reply by student 1')
               # Student 2 replies to own first entry and to Student 1's reply
-              @canvas.masquerade_as(@driver, students[1], @course)
-              @canvas.add_reply(@discussion, 3, 'Reply by student 2')
-              @canvas.add_reply(@discussion, 0, 'Reply by student 2')
+              @canvas_discussions_page.masquerade_as(@driver, students[1], @course)
+              @canvas_discussions_page.add_reply(@discussion, 3, 'Reply by student 2')
+              @canvas_discussions_page.add_reply(@discussion, 0, 'Reply by student 2')
 
               # Delete announcement and discussion
 
-              @canvas.masquerade_as(@driver, @teacher, @course)
-              @canvas.delete_activity(@announcement.title, @announcement.url)
-              @canvas.delete_activity(@discussion.title, @discussion.url)
+              @canvas_discussions_page.masquerade_as(@driver, @teacher, @course)
+              @canvas_discussions_page.delete_activity(@announcement.title, @announcement.url)
+              @canvas_discussions_page.delete_activity(@discussion.title, @discussion.url)
 
             rescue => e
               # Catch errors related to the activities
@@ -140,39 +141,39 @@ begin
 
               # Announcement
               @announcement = Announcement.new("Student Group Announcement #{@test_activity_identifier}", 'This is a student-created group announcement')
-              @canvas.create_group_announcement(@student_group, @announcement)
+              @canvas_discussions_page.create_group_announcement(@student_group, @announcement)
 
               # Discussion
 
               @discussion = Discussion.new("Student Group Discussion #{@test_activity_identifier}")
-              @canvas.create_group_discussion(@student_group, @discussion)
+              @canvas_discussions_page.create_group_discussion(@student_group, @discussion)
 
               # Student 2 creates an entry on the topic
-              @canvas.masquerade_as(@driver, students[1])
-              @canvas.add_reply(@discussion, nil, 'Discussion entry by student 2')
+              @canvas_discussions_page.masquerade_as(@driver, students[1])
+              @canvas_discussions_page.add_reply(@discussion, nil, 'Discussion entry by student 2')
               # Student 3 creates two entries on the topic
-              @canvas.masquerade_as(@driver, students[2])
-              @canvas.add_reply(@discussion, nil, 'Discussion entry by student 3')
-              @canvas.add_reply(@discussion, nil, 'Discussion entry by student 3')
+              @canvas_discussions_page.masquerade_as(@driver, students[2])
+              @canvas_discussions_page.add_reply(@discussion, nil, 'Discussion entry by student 3')
+              @canvas_discussions_page.add_reply(@discussion, nil, 'Discussion entry by student 3')
               # Student 2 replies to User 2's first entry
-              @canvas.masquerade_as(@driver, students[1], @course)
-              @canvas.add_reply(@discussion, 1, 'Reply by student 2')
+              @canvas_discussions_page.masquerade_as(@driver, students[1], @course)
+              @canvas_discussions_page.add_reply(@discussion, 1, 'Reply by student 2')
               # Student 3 replies to User 1's entry
-              @canvas.masquerade_as(@driver, students[2], @course)
-              @canvas.add_reply(@discussion, 0, 'Reply by student 3')
+              @canvas_discussions_page.masquerade_as(@driver, students[2], @course)
+              @canvas_discussions_page.add_reply(@discussion, 0, 'Reply by student 3')
               # Student 2 replies to own entry
-              @canvas.masquerade_as(@driver, students[1], @course)
-              @canvas.add_reply(@discussion, 0, 'Reply by student 2')
+              @canvas_discussions_page.masquerade_as(@driver, students[1], @course)
+              @canvas_discussions_page.add_reply(@discussion, 0, 'Reply by student 2')
               # Student 3 replies to own first entry and to Student 2's reply
-              @canvas.masquerade_as(@driver, students[2], @course)
-              @canvas.add_reply(@discussion, 3, 'Reply by student 3')
-              @canvas.add_reply(@discussion, 0, 'Reply by student 3')
+              @canvas_discussions_page.masquerade_as(@driver, students[2], @course)
+              @canvas_discussions_page.add_reply(@discussion, 3, 'Reply by student 3')
+              @canvas_discussions_page.add_reply(@discussion, 0, 'Reply by student 3')
 
               # Delete announcement and discussion
 
-              @canvas.masquerade_as(@driver, students[0], @course)
-              @canvas.delete_activity(@announcement.title, @announcement.url)
-              @canvas.delete_activity(@discussion.title, @discussion.url)
+              @canvas_discussions_page.masquerade_as(@driver, students[0], @course)
+              @canvas_discussions_page.delete_activity(@announcement.title, @announcement.url)
+              @canvas_discussions_page.delete_activity(@discussion.title, @discussion.url)
 
             rescue => e
               # Catch errors related to the activities

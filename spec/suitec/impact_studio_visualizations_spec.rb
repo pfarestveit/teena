@@ -35,7 +35,7 @@ describe 'The Impact Studio', order: :defined do
     @course = Course.new({title: "Impact Studio Visualizations #{test_id}", code: "Impact Studio Visualizations #{test_id}"})
 
     @driver = Utils.launch_browser
-    @canvas = Page::CanvasActivitiesPage.new @driver
+    @canvas = Page::CanvasAnnounceDiscussPage.new @driver
     @cal_net = Page::CalNetPage.new @driver
     @asset_library = Page::SuiteCPages::AssetLibraryPage.new @driver
     @engagement_index = Page::SuiteCPages::EngagementIndexPage.new @driver

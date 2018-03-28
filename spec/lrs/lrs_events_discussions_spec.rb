@@ -11,7 +11,7 @@ describe 'Canvas discussion events' do
 
   before(:all) do
     @driver = Utils.launch_browser
-    @canvas = Page::CanvasActivitiesPage.new @driver
+    @canvas = Page::CanvasAnnounceDiscussPage.new @driver
     @cal_net = Page::CalNetPage.new @driver
 
     @test_user_data = LRSUtils.load_lrs_test_data.select { |data| data['tests']['discussions'] }

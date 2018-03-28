@@ -22,7 +22,8 @@ describe 'BOAC analytics' do
 
     @driver = Utils.launch_browser
     @cal_net = Page::CalNetPage.new @driver
-    @canvas = Page::CanvasActivitiesPage.new @driver
+    @canvas_assignments_page = Page::CanvasAssignmentsPage.new @driver
+    @canvas_grades_page = Page::CanvasGradesPage.new @driver
     @boac_homepage = Page::BOACPages::HomePage.new @driver
     @boac_student_page = Page::BOACPages::StudentPage.new @driver
     @boac_homepage.log_in(Utils.super_admin_username, Utils.super_admin_password, @cal_net)
@@ -38,7 +39,7 @@ describe 'BOAC analytics' do
       if term
         begin
 
-          @canvas.masquerade_as(@driver, student)
+          @canvas_assignments_page.masquerade_as(@driver, student)
 
           # Collect all the Canvas sites in the term, matched and unmatched
           term_sites = []
@@ -76,7 +77,7 @@ describe 'BOAC analytics' do
 
                 logger.warn "Checking assignments-on-time for UID #{student.uid} term #{term_to_test} course site ID #{site_id}, #{site_code}"
 
-                assignments = @canvas.get_assignments(@driver, course, student)
+                assignments = @canvas_assignments_page.get_assignments(@driver, course, student)
                 assignments.each { |a| Utils.add_csv_row(user_course_assigns, [student.uid, student.canvas_id, site_id, a.id, a.url, a.due_date, a.submitted, a.submission_date, a.type, a.on_time]) }
 
                 # Get all submitted assignments
@@ -151,9 +152,9 @@ describe 'BOAC analytics' do
 
                   # Scores - compare with Canvas Gradebook export, using a range of +/- 1 to account for rounding differences
 
-                  @canvas.stop_masquerading @driver
-                  @canvas.load_gradebook course
-                  scores = @canvas.export_grades course
+                  @canvas_grades_page.stop_masquerading @driver
+                  @canvas_grades_page.load_gradebook course
+                  scores = @canvas_grades_page.export_grades course
 
                   gradebook_min = scores.first
                   logger.debug "Gradebook minimum current score: #{gradebook_min}"

@@ -22,7 +22,7 @@ describe 'The Engagement Index', order: :defined do
     @course = Course.new({title: "Engagement Index #{Utils.get_test_id}"})
 
     @driver = Utils.launch_browser
-    @canvas = Page::CanvasActivitiesPage.new @driver
+    @canvas = Page::CanvasPage.new @driver
     @cal_net = Page::CalNetPage.new @driver
     @asset_library = Page::SuiteCPages::AssetLibraryPage.new @driver
     @engagement_index = Page::SuiteCPages::EngagementIndexPage.new @driver
