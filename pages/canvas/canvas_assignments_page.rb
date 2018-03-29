@@ -218,7 +218,7 @@ module Page
           case assign.type
             when 'assignment'
               # Assignments submitted via Canvas
-              assign.submitted = assignment_submission_link?
+              assign.submitted = assignment_submission_link? unless assign.submitted
               if assign.submitted
                 assign.submission_date = DateTime.parse(assignment_submission_date.gsub('at', '').strip) unless assignment_submission_date.strip.empty?
               end
@@ -227,7 +227,7 @@ module Page
               assign.submitted = div_element(xpath: '//div[contains(.,"Submission Details:")]').exists? unless assign.submitted
 
             when 'quiz'
-              assign.submitted = (date_element = div_element(xpath: '//div[@class="quiz_score"]/following-sibling::div[contains(.,"Submitted")]')).exists?
+              assign.submitted = (date_element = div_element(xpath: '//div[@class="quiz_score"]/following-sibling::div[contains(.,"Submitted")]')).exists? unless assign.submitted
               if assign.submitted
                 assign.submission_date = DateTime.parse(date_element.text.gsub('Submitted', '').gsub('at', '').strip)
               end
@@ -235,7 +235,7 @@ module Page
               assign.submitted = link_element(xpath: '//a[contains(.,"View Previous Attempts")]').exists? unless assign.submitted
 
             when 'discussion'
-              assign.submitted = (replies = canvas_discussions.discussion_entries(course).select { |d| d[:canvas_id] == student.canvas_id.to_s }).any?
+              assign.submitted = (replies = canvas_discussions.discussion_entries(course).select { |d| d[:canvas_id] == student.canvas_id.to_s }).any? unless assign.submitted
               if assign.submitted
                 assign.submission_date = replies.first[:date]
               end
