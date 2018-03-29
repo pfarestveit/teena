@@ -168,7 +168,7 @@ module Page
         logger.warn "There are no assignments for course ID #{course.site_id}"
       end
 
-      sleep 1
+      sleep 2
 
       # Collect all possible info from list view
       assignments = list_view_assignment_elements.map do |el|
@@ -231,6 +231,8 @@ module Page
               if assign.submitted
                 assign.submission_date = DateTime.parse(date_element.text.gsub('Submitted', '').gsub('at', '').strip)
               end
+              # Quizzes that allow multiple attempts have a different UI
+              assign.submitted = link_element(xpath: '//a[contains(.,"View Previous Attempts")]').exists? unless assign.submitted
 
             when 'discussion'
               assign.submitted = (replies = canvas_discussions.discussion_entries(course).select { |d| d[:canvas_id] == student.canvas_id.to_s }).any?

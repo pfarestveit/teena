@@ -174,7 +174,7 @@ module Page
     # @return [Array[<Hash>]]
     def get_page_discussion_entries(course, author_elements)
       author_elements.map do |el|
-        canvas_id = el.attribute('href').gsub("#{Utils.canvas_base_url}/courses/#{course.site_id}/users/", '')
+        canvas_id = el.attribute('href').split('/users/')[1]
         logger.debug "Found Canvas ID #{canvas_id}"
         {
           :canvas_id => canvas_id,
