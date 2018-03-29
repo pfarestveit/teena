@@ -155,8 +155,9 @@ module Page
     # @param driver [Selenium::WebDriver]
     # @param course [Course]
     # @param student [User]
+    # @param canvas_discussions [Page::CanvasAnnounceDiscussPage]
     # @return [Array<Assignment>]
-    def get_assignments(driver, course, student)
+    def get_assignments(driver, course, student, canvas_discussions)
 
       # Get all the assignments in list view
       navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/assignments"
@@ -167,7 +168,7 @@ module Page
         logger.warn "There are no assignments for course ID #{course.site_id}"
       end
 
-      sleep 2
+      sleep 1
 
       # Collect all possible info from list view
       assignments = list_view_assignment_elements.map do |el|
@@ -196,7 +197,7 @@ module Page
           logger.debug "Checking assignment ID #{assign.id}"
           navigate_to assign.url
           sleep 1
-          Utils.save_screenshot(driver, assign.id)
+          Utils.save_screenshot(driver, assign.id) if BOACUtils.screenshots
           h1_element(xpath: '//h1').when_visible Utils.short_wait
 
           # Besides 'Roll Call', assignments can be Canvas assignments, Canvas quizzes, Canvas discussions, or external tools
@@ -232,7 +233,7 @@ module Page
               end
 
             when 'discussion'
-              assign.submitted = (replies = discussion_entries(driver).select { |d| d[:canvas_id] == student.canvas_id }).any?
+              assign.submitted = (replies = canvas_discussions.discussion_entries(course).select { |d| d[:canvas_id] == student.canvas_id.to_s }).any?
               if assign.submitted
                 assign.submission_date = replies.first[:date]
               end
@@ -249,6 +250,7 @@ module Page
         rescue => e
           # Some assignment links are dead links
           Utils.log_error e
+          Utils.save_screenshot(driver, assign.id)
         end
       end
 

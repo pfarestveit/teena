@@ -33,6 +33,11 @@ class BOACUtils < Utils
     @config['tooltips']
   end
 
+  # Whether or not to take screenshots of pages.
+  def self.screenshots
+    @config['screenshots']
+  end
+
   # Whether or not to check Data Loch scores during tests.
   def self.loch_scores
     @config['loch_scores']

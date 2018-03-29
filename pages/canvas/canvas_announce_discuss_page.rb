@@ -71,6 +71,8 @@ module Page
     checkbox(:threaded_discussion_cbx, id: 'threaded')
     checkbox(:graded_discussion_cbx, id: 'use_for_grading')
     elements(:discussion_reply, :list_item, xpath: '//ul[@class="discussion-entries"]/li')
+    elements(:discussion_reply_author, :link, xpath: '//ul[@class="discussion-entries"]/li//h2[@class="discussion-title"]/a')
+    elements(:discussion_page_link, :link, xpath: '//div[@class="discussion-page-nav"]//a')
     link(:primary_reply_link, xpath: '//article[@id="discussion_topic"]//a[@data-event="addReply"]')
     link(:primary_html_editor_link, xpath: '//article[@id="discussion_topic"]//a[contains(.,"HTML Editor")]')
     text_area(:primary_reply_input, xpath: '//article[@id="discussion_topic"]//textarea[@class="reply-textarea"]')
@@ -154,18 +156,52 @@ module Page
       wait_until(Utils.short_wait) { discussion_reply_elements.length == replies + 1 }
     end
 
-    # Returns all the authors and dates of discussion entries visible on the page
-    # @param driver [Selenium::WebDriver]
-    # @return [Array<Hash>]
-    def discussion_entries(driver)
-      entries = driver.find_elements(xpath: '//ul[@class="discussion-entries"]/li')
-      entries.map do |el|
-        entry_xpath = "//ul[@class='discussion-entries']/li[#{entries.index(el) + 1}]"
+    # Waits for a discussion thread to load and returns an array of elements containing the discussion entry authors
+    # @return [Array<PageObject::Elements::Link>]
+    def wait_for_discussion
+      begin
+        wait_until(Utils.short_wait) { discussion_reply_author_elements.any? &:visible? }
+        discussion_reply_author_elements
+      rescue
+        logger.warn 'No discussion entries found'
+        []
+      end
+    end
+
+    # Given an array of elements containing discussion entry authors, returns the creators' Canvas IDs and entry dates
+    # @param course [Course]
+    # @param author_elements [Array<PageObject::Elements::Link>]
+    # @return [Array[<Hash>]]
+    def get_page_discussion_entries(course, author_elements)
+      author_elements.map do |el|
+        canvas_id = el.attribute('href').gsub("#{Utils.canvas_base_url}/courses/#{course.site_id}/users/", '')
+        logger.debug "Found Canvas ID #{canvas_id}"
         {
-            :canvas_id => link_element(xpath: "#{entry_xpath}//h2[@class='discussion-title']/a").attribute('data-student_id'),
-            :date => DateTime.parse(span_element(xpath: "#{entry_xpath}//div[contains(@class, 'discussion-pubdate')]//span[@class='screenreader-only']").text.gsub('at', ''))
+          :canvas_id => canvas_id,
+          :date => DateTime.parse(span_element(xpath: "//a[@href='#{Utils.canvas_base_url}/courses/#{course.site_id}/users/#{canvas_id}']/../following-sibling::div[contains(@class, 'discussion-pubdate')]//span[@class='screenreader-only']").text.gsub('at', ''))
         }
       end
+    end
+
+    # Returns all the authors and dates of discussion entries on a course site discussion thread
+    # @param course [Course]
+    # @return [Array<Hash>]
+    def discussion_entries(course)
+      author_els = wait_for_discussion
+
+      # If there are entries, collect those on page one
+      replies = get_page_discussion_entries(course, author_els)
+
+      # If there are additional pages, collect those as well
+      pages = (discussion_page_link_elements.map &:text).uniq if discussion_page_link_elements.any?
+      if pages && pages.any?
+        pages.each do |page|
+          wait_for_update_and_click_js(discussion_page_link_elements.find { |el| el.text == page })
+          author_els = wait_for_discussion
+          replies << get_page_discussion_entries(course, author_els)
+        end
+      end
+      replies.flatten
     end
 
   end
