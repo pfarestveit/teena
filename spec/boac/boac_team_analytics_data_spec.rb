@@ -23,6 +23,7 @@ describe 'BOAC analytics' do
     @driver = Utils.launch_browser
     @cal_net = Page::CalNetPage.new @driver
     @canvas_assignments_page = Page::CanvasAssignmentsPage.new @driver
+    @canvas_discussions_page = Page::CanvasAnnounceDiscussPage.new @driver
     @canvas_grades_page = Page::CanvasGradesPage.new @driver
     @boac_homepage = Page::BOACPages::HomePage.new @driver
     @boac_student_page = Page::BOACPages::StudentPage.new @driver
@@ -39,7 +40,7 @@ describe 'BOAC analytics' do
       if term
         begin
 
-          @canvas_assignments_page.masquerade_as(@driver, student)
+          @canvas_assignments_page.masquerade_as(@driver, student) if BOACUtils.loch_assignments
 
           # Collect all the Canvas sites in the term, matched and unmatched
           term_sites = []
@@ -77,7 +78,7 @@ describe 'BOAC analytics' do
 
                 logger.warn "Checking assignments-on-time for UID #{student.uid} term #{term_to_test} course site ID #{site_id}, #{site_code}"
 
-                assignments = @canvas_assignments_page.get_assignments(@driver, course, student)
+                assignments = @canvas_assignments_page.get_assignments(@driver, course, student, @canvas_discussions_page)
                 assignments.each { |a| Utils.add_csv_row(user_course_assigns, [student.uid, student.canvas_id, site_id, a.id, a.url, a.due_date, a.submitted, a.submission_date, a.type, a.on_time]) }
 
                 # Get all submitted assignments
@@ -120,39 +121,15 @@ describe 'BOAC analytics' do
 
               if BOACUtils.loch_scores
 
-                # Scores - compare Data Loch with Canvas API
-
-                logger.warn "Checking current score for UID #{student.uid} term #{term_to_test} course site ID #{site_id}, #{site_code}"
-
                 if loch_grades[:score].empty?
 
                   logger.warn "Skipping current score tests for UID #{student.uid} term #{term_to_test} course site ID #{site_id}, #{site_code}"
 
-                  it "has neither Canvas nor Data Loch grades user score for UID #{student.uid} term #{term_to_test} course site ID #{site_id}, #{site_code}" do
-                    expect(canvas_grades[:score]).to be_empty
-                  end
-
                 else
 
-                  it "has the same Canvas API and Data Loch grades minimum for UID #{student.uid} term #{term_to_test} course site ID #{site_id}, #{site_code}" do
-                    expect((canvas_grades[:min].to_i - 1)..(canvas_grades[:min].to_i + 1)).to include(loch_grades[:min].to_i)
-                  end
-                  it "has the same Canvas API and Data Loch grades maximum for UID #{student.uid} term #{term_to_test} course site ID #{site_id}, #{site_code}" do
-                    expect((canvas_grades[:max].to_i - 1)..(canvas_grades[:max].to_i + 1)).to include(loch_grades[:max].to_i)
-                  end
-                  it "has the same Canvas API and Data Loch grades user score for UID #{student.uid} term #{term_to_test} course site ID #{site_id}, #{site_code}" do
-                    expect((canvas_grades[:score].to_i - 1)..(canvas_grades[:score].to_i + 1)).to include(loch_grades[:score].to_i)
-                  end
-                  it "has the same Canvas API and Data Loch grades user percentile for UID #{student.uid} term #{term_to_test} course site ID #{site_id}, #{site_code}" do
-                    expect(loch_grades[:perc]).to eql(canvas_grades[:perc])
-                  end
-                  it "has the same Canvas API and Data Loch grades user rounded percentile for UID #{student.uid} term #{term_to_test} course site ID #{site_id}, #{site_code}" do
-                    expect(loch_grades[:perc_round]).to eql(canvas_grades[:perc_round])
-                  end
+                  logger.warn "Checking current score for UID #{student.uid} term #{term_to_test} course site ID #{site_id}, #{site_code}"
 
-                  # Scores - compare with Canvas Gradebook export, using a range of +/- 1 to account for rounding differences
-
-                  @canvas_grades_page.stop_masquerading @driver
+                  @canvas_grades_page.stop_masquerading @driver if BOACUtils.loch_assignments
                   @canvas_grades_page.load_gradebook course
                   scores = @canvas_grades_page.export_grades course
 
@@ -179,8 +156,6 @@ describe 'BOAC analytics' do
               else
                 logger.warn 'Skipping comparison of current scores in Data Loch versus Canvas API'
               end
-
-              # Optionally, verify the analytics displayed in BOAC
 
               if BOACUtils.tooltips
 

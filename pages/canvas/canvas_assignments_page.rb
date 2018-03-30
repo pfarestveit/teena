@@ -155,8 +155,9 @@ module Page
     # @param driver [Selenium::WebDriver]
     # @param course [Course]
     # @param student [User]
+    # @param canvas_discussions [Page::CanvasAnnounceDiscussPage]
     # @return [Array<Assignment>]
-    def get_assignments(driver, course, student)
+    def get_assignments(driver, course, student, canvas_discussions)
 
       # Get all the assignments in list view
       navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/assignments"
@@ -196,7 +197,7 @@ module Page
           logger.debug "Checking assignment ID #{assign.id}"
           navigate_to assign.url
           sleep 1
-          Utils.save_screenshot(driver, assign.id)
+          Utils.save_screenshot(driver, assign.id) if BOACUtils.screenshots
           h1_element(xpath: '//h1').when_visible Utils.short_wait
 
           # Besides 'Roll Call', assignments can be Canvas assignments, Canvas quizzes, Canvas discussions, or external tools
@@ -217,7 +218,7 @@ module Page
           case assign.type
             when 'assignment'
               # Assignments submitted via Canvas
-              assign.submitted = assignment_submission_link?
+              assign.submitted = assignment_submission_link? unless assign.submitted
               if assign.submitted
                 assign.submission_date = DateTime.parse(assignment_submission_date.gsub('at', '').strip) unless assignment_submission_date.strip.empty?
               end
@@ -226,13 +227,15 @@ module Page
               assign.submitted = div_element(xpath: '//div[contains(.,"Submission Details:")]').exists? unless assign.submitted
 
             when 'quiz'
-              assign.submitted = (date_element = div_element(xpath: '//div[@class="quiz_score"]/following-sibling::div[contains(.,"Submitted")]')).exists?
+              assign.submitted = (date_element = div_element(xpath: '//div[@class="quiz_score"]/following-sibling::div[contains(.,"Submitted")]')).exists? unless assign.submitted
               if assign.submitted
                 assign.submission_date = DateTime.parse(date_element.text.gsub('Submitted', '').gsub('at', '').strip)
               end
+              # Quizzes that allow multiple attempts have a different UI
+              assign.submitted = link_element(xpath: '//a[contains(.,"View Previous Attempts")]').exists? unless assign.submitted
 
             when 'discussion'
-              assign.submitted = (replies = discussion_entries(driver).select { |d| d[:canvas_id] == student.canvas_id }).any?
+              assign.submitted = (replies = canvas_discussions.discussion_entries(course).select { |d| d[:canvas_id] == student.canvas_id.to_s }).any? unless assign.submitted
               if assign.submitted
                 assign.submission_date = replies.first[:date]
               end
@@ -249,6 +252,7 @@ module Page
         rescue => e
           # Some assignment links are dead links
           Utils.log_error e
+          Utils.save_screenshot(driver, assign.id)
         end
       end
 
