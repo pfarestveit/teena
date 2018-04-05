@@ -199,13 +199,6 @@ class ApiUserAnalyticsPage
     site_statistics(analytics(site)['assignmentsOnTime']).merge!({:type => 'Assignments on Time'})
   end
 
-  # Returns a user's Canvas API Assignment Grades analytics on a course site
-  # @param site [Hash]
-  # @return [Hash]
-  def canvas_api_grades(site)
-    site_statistics(analytics(site)['courseCurrentScore']).merge!({:type => 'Assignment Grades'})
-  end
-
   # Returns a user's Canvas API Page Views analytics on a course site
   # @param site [Hash]
   # @return [Hash]
@@ -220,11 +213,18 @@ class ApiUserAnalyticsPage
     site_statistics(loch_analytics(site)['assignmentsOnTime'])
   end
 
+  # Returns a user's Data Loch Assignments Submitted on Time analytics on a course site
+  # @param site [Hash]
+  # @return [Hash]
+  def loch_assigns_submitted(site)
+    site_statistics(loch_analytics(site)['assignmentsSubmitted'])
+  end
+
   # Returns a user's Data Loch Current Scores analytics on a course site
   # @param site [Hash]
   # @return [Hash]
   def loch_grades(site)
-    site_statistics(loch_analytics(site)['currentScores'])
+    site_statistics(analytics(site)['courseCurrentScore']).merge!({:type => 'Assignment Grades'})
   end
 
   # Returns a user's Data Loch Page Views analytics on a course site

@@ -82,12 +82,6 @@ module Page
     elements(:secondary_reply_input, :text_area, xpath: '//li[contains(@class,"entry")]//textarea[@class="reply-textarea"]')
     elements(:secondary_post_reply_button, :button, xpath: '//li[contains(@class,"entry")]//button[contains(.,"Post Reply")]')
 
-    # Clicks the 'save and publish' button using JavaScript rather than WebDriver
-    def click_save_and_publish
-      scroll_to_bottom
-      wait_for_update_and_click_js save_and_publish_button_element
-    end
-
     # Creates a discussion on a course site
     # @param driver [Selenium::WebDriver]
     # @param course [Course]

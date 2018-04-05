@@ -148,8 +148,12 @@ module Page
     # ASSIGNMENT METADATA
 
     elements(:list_view_assignment, :link, xpath: '//li[contains(@class, "assignment")]/div[contains(@id, "assignment_")]')
-    link(:assignment_submission_link, xpath: '//a[contains(.,"Submission Details")]')
+    div(:assignment_submission_details_section, xpath: '//div[contains(.,"Submission Details:")]')
+    link(:assignment_submission_details_link, xpath: '//a[contains(.,"Submission Details")]')
     span(:assignment_submission_date, xpath: '//h3[text()="Submission"]/following-sibling::div[@class="content"]/span')
+    div(:assignment_submission_grade, xpath: '//h3[text()="Submission"]//div[contains(.,"Grade: ")]')
+    link(:quiz_attempt_1_link, xpath: '//a[contains(text(),"Attempt 1")]')
+    div(:quiz_submitted_msg, xpath: '//div[@class="quiz_score"]/following-sibling::div[contains(.,"Submitted")]')
 
     # Returns all of a student's assignments on a course site
     # @param driver [Selenium::WebDriver]
@@ -168,24 +172,26 @@ module Page
         logger.warn "There are no assignments for course ID #{course.site_id}"
       end
 
+      # Pause to avoid stale element errors
       sleep 2
 
       # Collect all possible info from list view
       assignments = list_view_assignment_elements.map do |el|
 
         id = el.attribute('id').gsub('assignment_', '')
+        assignment_xpath = "//div[@id='assignment_#{id}']"
         url = "#{Utils.canvas_base_url}/courses/#{course.site_id}/assignments/#{id}"
-        title = link_element(xpath: "//div[@id='assignment_#{id}']").text.strip
+        title = link_element(xpath: assignment_xpath).text.strip
         type = 'roll-call' if title.include? 'Roll Call'
 
         # Due date and/or score (meaning submitted) are sometimes present on list view
-        assignment_xpath = "//div[@id='assignment_#{id}']"
         if (date_el = span_element(xpath: "#{assignment_xpath}//div[contains(@class, 'assignment-date-due')]/span")).exists?
-        due_date = DateTime.parse date_el.text.strip.gsub('at', '')
+          due_date = DateTime.parse date_el.text.strip.gsub('at', '')
         end
-        if (score_el = span_element(xpath: "#{assignment_xpath}//span[@class='score-display']/b")).exists?
-        grading = span_element(xpath: "#{assignment_xpath}//span[@class='grade-display']").exists?
-        submitted = (score_el.text != '-') || (score_el.text == '-' && grading)
+        # Visible grading status means a submission exists. Also a non-empty (e.g., not '-/100') score means a submission exists.
+        if (score_el = span_element(xpath: "#{assignment_xpath}//span[@class='score-display']")).exists?
+          submitted = (grading = span_element(xpath: "#{assignment_xpath}//span[@class='grade-display']")).exists? && grading.visible?
+          submitted = score_el.visible? && !score_el.text.include?('-/') && !score_el.text.include?(' 0/') unless submitted
         end
 
         Assignment.new({:id => id, :type => type, :title => title, :url => url, :due_date => due_date, :submitted => submitted})
@@ -194,7 +200,6 @@ module Page
       # Collect all possible info from detail view
       assignments.each do |assign|
         begin
-          logger.debug "Checking assignment ID #{assign.id}"
           navigate_to assign.url
           sleep 1
           Utils.save_screenshot(driver, assign.id) if BOACUtils.screenshots
@@ -216,29 +221,22 @@ module Page
           end
 
           case assign.type
+
             when 'assignment'
               # Assignments submitted via Canvas
-              assign.submitted = assignment_submission_link? unless assign.submitted
-              if assign.submitted
-                assign.submission_date = DateTime.parse(assignment_submission_date.gsub('at', '').strip) unless assignment_submission_date.strip.empty?
-              end
+              assign.submitted = assignment_submission_details_link? unless assign.submitted
+              assign.submission_date = DateTime.parse(assignment_submission_date.gsub('at', '').strip) if assignment_submission_date? && !assignment_submission_date.strip.empty?
 
               # Assignments submitted outside Canvas
-              assign.submitted = div_element(xpath: '//div[contains(.,"Submission Details:")]').exists? unless assign.submitted
+              assign.submitted = assignment_submission_details_section? unless assign.submitted
 
             when 'quiz'
-              assign.submitted = (date_element = div_element(xpath: '//div[@class="quiz_score"]/following-sibling::div[contains(.,"Submitted")]')).exists? unless assign.submitted
-              if assign.submitted
-                assign.submission_date = DateTime.parse(date_element.text.gsub('Submitted', '').gsub('at', '').strip)
-              end
-              # Quizzes that allow multiple attempts have a different UI
-              assign.submitted = link_element(xpath: '//a[contains(.,"View Previous Attempts")]').exists? unless assign.submitted
+              assign.submitted = quiz_attempt_1_link? unless assign.submitted
+              assign.submission_date = DateTime.parse(quiz_submitted_msg.gsub('Submitted', '').gsub('at', '').strip) if quiz_submitted_msg?
 
             when 'discussion'
               assign.submitted = (replies = canvas_discussions.discussion_entries(course).select { |d| d[:canvas_id] == student.canvas_id.to_s }).any? unless assign.submitted
-              if assign.submitted
-                assign.submission_date = replies.first[:date]
-              end
+              assign.submission_date = replies.first[:date] if assign.submitted && replies
 
             else
               logger.info 'Unable to determine if assignment is submitted'
@@ -246,7 +244,7 @@ module Page
 
           # Assignment timeliness and grading
           assign.on_time = assign.submission_date && assign.due_date && assign.submission_date < assign.due_date
-          assign.graded = div_element(xpath: '//h3[text()="Submission"]//div[contains(.,"Grade: ")]').exists?
+          assign.graded = assignment_submission_grade?
           logger.debug "Assignment ID #{assign.id}, type #{assign.type}, URL #{assign.url}, due date #{assign.due_date}, submitted '#{assign.submitted}', submission date #{assign.submission_date}"
 
         rescue => e

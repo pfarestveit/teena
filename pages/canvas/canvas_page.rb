@@ -84,6 +84,12 @@ module Page
       navigate_to "#{Utils.canvas_base_url}/accounts/#{sub_account}"
     end
 
+    # Clicks the 'save and publish' button using JavaScript rather than WebDriver
+    def click_save_and_publish
+      scroll_to_bottom
+      wait_for_update_and_click_js save_and_publish_button_element
+    end
+
     # COURSE SITE SETUP
 
     link(:create_site_link, xpath: '//a[contains(text(),"Create a Site")]')
@@ -410,7 +416,7 @@ module Page
       users.each do |user|
         logger.info "Removing #{user.role} UID #{user.uid} from course site ID #{course.site_id}"
         wait_for_update_and_click link_element(xpath: "//tr[@id='user_#{user.canvas_id}']//a[contains(@class,'al-trigger')]")
-        confirm(true) { wait_for_update_and_click link_element(xpath: "//tr[@id='user_#{user.canvas_id}']//a[@data-event='removeFromCourse']") }
+        confirm(true) { wait_for_update_and_click_js link_element(xpath: "//tr[@id='user_#{user.canvas_id}']//a[@data-event='removeFromCourse']") }
         remove_user_success_element.when_visible Utils.short_wait
         add_event(event, EventType::MODIFY, '"state": "deleted"')
         add_event(event, EventType::MODIFY, user.full_name)
