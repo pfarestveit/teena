@@ -40,8 +40,6 @@ describe 'BOAC analytics' do
       if term
         begin
 
-          @canvas_assignments_page.masquerade_as(@driver, student) if BOACUtils.loch_assignments
-
           # Collect all the Canvas sites in the term, matched and unmatched
           term_sites = []
           term_sites << boac_api_page.unmatched_sites(term).map { |s| {:data => s} }
@@ -78,6 +76,7 @@ describe 'BOAC analytics' do
 
                 logger.warn "Checking assignments-on-time for Canvas ID #{student.canvas_id} UID #{student.uid} term #{term_to_test} course site ID #{site_id}, #{site_code}"
 
+                @canvas_assignments_page.masquerade_as(@driver, student)
                 assignments = @canvas_assignments_page.get_assignments(@driver, course, student, @canvas_discussions_page)
 
                 if assignments.any?
@@ -258,5 +257,7 @@ describe 'BOAC analytics' do
   rescue => e
     Utils.log_error e
     it('encountered an unexpected error') { fail }
+  ensure
+    Utils.quit_browser @driver
   end
 end

@@ -46,24 +46,6 @@ module Page
         wait_for_update_and_click dev_auth_log_in_button_element
       end
 
-      # TEAMS
-
-      elements(:team_cohort_link, :link, xpath: '//a[@data-ng-bind="team.name"]')
-
-      # Returns the text of all the team cohort links
-      # @return [Array<String>]
-      def teams
-        wait_until(Utils.medium_wait) { team_cohort_link_elements.any? }
-        team_cohort_link_elements.map &:text
-      end
-
-      # Clicks the dashboard link for a team
-      # @param team [Team]
-      def click_team_link(team)
-        logger.info "Clicking link for #{team.name}"
-        wait_for_load_and_click link_element(xpath: "//a[text()=\"#{team.name}\"]")
-      end
-
       # MY LIST
 
       div(:my_list_no_users_msg, xpath: '//div[text()="You have no students in your list. Add students from their profile pages."]')

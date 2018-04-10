@@ -48,7 +48,7 @@ describe 'BOAC' do
 
           # Navigate to student page and back.
 
-          student = User.new({:sis_id => @cohort_page.list_view_sids.last})
+          student = User.new({:sis_id => @cohort_page.list_view_sids.last, :uid => @cohort_page.player_link_elements.last.attribute('id')})
           @cohort_page.click_player_link student
           @driver.navigate.back
 
@@ -142,7 +142,7 @@ describe 'BOAC' do
 
           # Navigate to student page and back.
 
-          student = User.new({:sis_id => @cohort_page.list_view_sids.last})
+          student = User.new({:sis_id => @cohort_page.list_view_sids.last, :uid => @cohort_page.player_link_elements.last.attribute('id')})
           @cohort_page.click_player_link student
           @driver.navigate.back
 

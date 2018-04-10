@@ -50,14 +50,14 @@ module Page
       def click_last_student_bubble(driver)
         logger.info 'Clicking student bubble'
         matrix_bubbles(driver).last.click
-        h1_element(class: 'profile-header-name').when_visible Utils.medium_wait
+        student_name_heading_element.when_visible Utils.medium_wait
       end
 
       # Clicks the last user in the 'no data' list
       def click_last_no_data_student
         logger.info 'Clicking missing data student'
         missing_data_link_elements.last.click
-        h1_element(class: 'profile-header-name').when_visible Utils.medium_wait
+        student_name_heading_element.when_visible Utils.medium_wait
       end
 
     end

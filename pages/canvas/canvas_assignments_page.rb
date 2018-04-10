@@ -185,13 +185,15 @@ module Page
         type = 'roll-call' if title.include? 'Roll Call'
 
         # Due date and/or score (meaning submitted) are sometimes present on list view
-        if (date_el = span_element(xpath: "#{assignment_xpath}//div[contains(@class, 'assignment-date-due')]/span")).exists?
-          due_date = DateTime.parse date_el.text.strip.gsub('at', '')
+        due_date_xpath = "#{assignment_xpath}//div[contains(@class, 'assignment-date-due')]/span"
+        if span_element(xpath: due_date_xpath).exists?
+          due_date = DateTime.parse span_element(xpath: due_date_xpath).text.strip.gsub('at', '')
         end
         # Visible grading status means a submission exists. Also a non-empty (e.g., not '-/100') score means a submission exists.
-        if (score_el = span_element(xpath: "#{assignment_xpath}//span[@class='score-display']")).exists?
+        score_xpath = "#{assignment_xpath}//span[@class='score-display']"
+        if span_element(xpath: score_xpath).exists?
           submitted = (grading = span_element(xpath: "#{assignment_xpath}//span[@class='grade-display']")).exists? && grading.visible?
-          submitted = score_el.visible? && !score_el.text.include?('-/') && !score_el.text.include?(' 0/') unless submitted
+          submitted = span_element(xpath: score_xpath).visible? && !span_element(xpath: score_xpath).text.include?('-/') && !span_element(xpath: score_xpath).text.include?(' 0/') unless submitted
         end
 
         Assignment.new({:id => id, :type => type, :title => title, :url => url, :due_date => due_date, :submitted => submitted})
