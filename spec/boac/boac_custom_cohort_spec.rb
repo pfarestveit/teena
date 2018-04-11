@@ -9,7 +9,9 @@ describe 'BOAC custom cohorts', order: :defined do
 
   # Get all existing cohorts
   user_cohorts_pre_existing = BOACUtils.get_user_custom_cohorts test_user
+  logger.debug "User has #{user_cohorts_pre_existing.length} existing cohorts"
   everyone_cohorts_pre_existing = BOACUtils.get_everyone_custom_cohorts
+  logger.debug "Everyone has #{everyone_cohorts_pre_existing.length} total cohorts"
 
   # Get cohorts to be created during tests
   test_search_criteria = BOACUtils.get_test_search_criteria
@@ -63,10 +65,8 @@ describe 'BOAC custom cohorts', order: :defined do
     before(:all) do
       user_cohorts_pre_existing.each { |c| @cohort_page.delete_cohort c }
       @homepage.load_page
-      @homepage.click_cohorts
     end
 
-    it('shows a No Saved Cohorts message in the header') { @homepage.no_cohorts_msg_element.when_visible Utils.short_wait }
     it('shows a No Saved Cohorts message on the homepage') { expect(@homepage.you_have_no_cohorts_msg?).to be true }
   end
 
@@ -163,7 +163,7 @@ describe 'BOAC custom cohorts', order: :defined do
     end
 
     it 'requires that a title be unique among the user\'s existing cohorts' do
-      cohort = Cohort.new({name: cohorts_created.last.name})
+      cohort = Cohort.new({name: cohorts_created.first.name})
       @cohort_page.save_and_name_cohort cohort
       @cohort_page.title_dupe_msg_element.when_visible Utils.short_wait
     end

@@ -26,20 +26,20 @@ class ApiUserAnalyticsPage
 
   def user_sis_data
     {
-      :email => sis_profile['emailAddress'],
-      :phone => sis_profile['phoneNumber'].to_s,
+      :email => (sis_profile && sis_profile['emailAddress']),
+      :phone => (sis_profile && sis_profile['phoneNumber'].to_s),
       :units_in_progress => (current_term ? formatted_units(current_term['enrolledUnits']) : '0') ,
-      :cumulative_units => formatted_units(sis_profile['cumulativeUnits']),
-      :cumulative_gpa => (sis_profile['cumulativeGPA'] == 0 ? '--' : sis_profile['cumulativeGPA'].to_s),
-      :majors => majors,
-      :colleges => colleges,
-      :level => (sis_profile['level'] && sis_profile['level']['description']),
-      :terms_in_attendance => sis_profile['termsInAttendance'].to_s,
-      :expected_graduation => sis_profile['expectedGraduationTerm'] && sis_profile['expectedGraduationTerm']['name'],
-      :reqt_writing => (degree_progress && degree_progress[:writing]),
-      :reqt_history => (degree_progress && degree_progress[:history]),
-      :reqt_institutions => (degree_progress && degree_progress[:institutions]),
-      :reqt_cultures => (degree_progress && degree_progress[:cultures])
+      :cumulative_units => (sis_profile && formatted_units(sis_profile['cumulativeUnits'])),
+      :cumulative_gpa => (sis_profile && (sis_profile['cumulativeGPA'] == 0 ? '--' : sis_profile['cumulativeGPA'].to_s)),
+      :majors => (sis_profile && majors),
+      :colleges => (sis_profile && colleges),
+      :level => (sis_profile && (sis_profile['level'] && sis_profile['level']['description'])),
+      :terms_in_attendance => (sis_profile && sis_profile['termsInAttendance'].to_s),
+      :expected_graduation => (sis_profile && sis_profile['expectedGraduationTerm'] && sis_profile['expectedGraduationTerm']['name']),
+      :reqt_writing => (sis_profile && degree_progress && degree_progress[:writing]),
+      :reqt_history => (sis_profile && degree_progress && degree_progress[:history]),
+      :reqt_institutions => (sis_profile && degree_progress && degree_progress[:institutions]),
+      :reqt_cultures => (sis_profile && degree_progress && degree_progress[:cultures])
     }
   end
 

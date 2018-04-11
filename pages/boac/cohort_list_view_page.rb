@@ -13,7 +13,7 @@ module Page
 
       # LIST VIEW
 
-      elements(:player_link, :link, xpath: '//ul[@id="cohort-members-list"]/a')
+      elements(:player_link, :link, xpath: '//ul[@id="cohort-members-list"]//a')
       elements(:player_name, :h3, xpath: '//ul[@id="cohort-members-list"]//h3')
       elements(:player_sid, :div, xpath: '//ul[@id="cohort-members-list"]//div[contains(@class, "student-sid")]')
       elements(:page_list_item, :list_item, xpath: '//li[contains(@ng-repeat,"page in pages")]')
@@ -42,7 +42,7 @@ module Page
       # @param user [User]
       # @return [String]
       def list_view_user_xpath(user)
-        "//a[contains(@class, 'student-list-item')][contains(.,'#{user.sis_id}')]"
+        "//ul[@id=\"cohort-members-list\"]/div[contains(.,\"#{user.sis_id}\")]"
       end
 
       # Returns the level displayed for a user
@@ -158,10 +158,9 @@ module Page
       # Clicks the link for a given player
       # @param player [User]
       def click_player_link(player)
-        wait_for_load_and_click link_element(xpath: "//a[contains(.,\"#{player.sis_id}\")]")
-        h1_element(class: 'profile-header-name').when_visible Utils.medium_wait
-        player.uid = current_url.split('?').first.gsub("#{BOACUtils.base_url}/student/", '')
-        logger.info "Viewing the student page for UID #{player.uid}"
+        logger.info "Clicking the link for UID #{player.uid}"
+        wait_for_load_and_click link_element(xpath: "//a[@id=\"#{player.uid}\"]")
+        student_name_heading_element.when_visible Utils.medium_wait
       end
 
       # SORTING

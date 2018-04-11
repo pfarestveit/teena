@@ -11,16 +11,18 @@ module Page
     link(:home_link, text: 'Home')
     button(:cohorts_button, id: 'btn-append-to-single-button')
     list_item(:no_cohorts_msg, xpath: '//li[contains(.,"No saved cohorts")]')
+    link(:team_list_link, id: 'sidebar-teams-link')
     link(:intensive_cohort_link, text: 'Intensive')
     link(:inactive_cohort_link, text: 'Inactive')
-    link(:create_new_cohort_link, text: 'Create New Cohort')
-    link(:manage_my_cohorts_link, text: 'Manage My Cohorts')
-    link(:view_everyone_cohorts_link, text: 'View Everyone\'s Cohorts')
+    link(:create_new_cohort_link, id: 'sidebar-cohort-create')
+    link(:manage_my_cohorts_link, id: 'sidebar-cohorts-manage')
+    link(:view_everyone_cohorts_link, id: 'sidebar-cohorts-all')
     button(:log_out_button, xpath: '//button[contains(text(),"Log out")]')
     elements(:my_cohort_link, :link, :xpath => '//ul[@class="dropdown-menu"]/li[@data-ng-repeat="cohort in myCohorts"]/a')
     link(:feedback_link, text: 'ascpilot@lists.berkeley.edu')
 
     div(:spinner, class: 'loading-spinner-large')
+    h1(:student_name_heading, class: 'student-bio-name')
 
     # Waits for an expected page title
     # @param page_title [String]
@@ -33,12 +35,6 @@ module Page
       wait_for_load_and_click home_link_element
     end
 
-    # Clicks the 'Cohorts' button in the header
-    def click_cohorts
-      sleep 1
-      wait_for_load_and_click cohorts_button_element unless create_new_cohort_link_element.visible?
-    end
-
     # Returns the names of My Saved Cohorts displayed in the header dropdown
     # @return [Array<String>]
     def dropdown_my_cohorts
@@ -46,37 +42,38 @@ module Page
       my_cohort_link_elements.map &:text
     end
 
+    # Clicks the link for the Teams List page
+    def click_teams_list
+      wait_for_load_and_click team_list_link_element
+      wait_for_title 'Teams'
+    end
+
     # Clicks the link for the Intensive cohort
     def click_intensive_cohort
-      click_cohorts
       wait_for_load_and_click intensive_cohort_link_element
       wait_for_title 'Intensive'
     end
 
     # Clicks the link for the Inactive cohort
     def click_inactive_cohort
-      click_cohorts
       wait_for_load_and_click inactive_cohort_link_element
       wait_for_title 'Inactive'
     end
 
     # Clicks the button to create a new custom cohort
     def click_create_new_cohort
-      click_cohorts
       wait_for_load_and_click create_new_cohort_link_element
       wait_for_title 'Cohort'
     end
 
     # Clicks the button to manage the user's own custom cohorts
     def click_manage_my_cohorts
-      click_cohorts
       wait_for_load_and_click manage_my_cohorts_link_element
       wait_for_title 'Cohorts Manage'
     end
 
     # Clicks the button to view all custom cohorts
     def click_view_everyone_cohorts
-      click_cohorts
       wait_for_load_and_click view_everyone_cohorts_link_element
       wait_for_title 'Cohorts'
     end

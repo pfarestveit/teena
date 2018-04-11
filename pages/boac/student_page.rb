@@ -13,8 +13,7 @@ module Page
 
       link(:return_to_cohort, xpath: '//a[contains(.,"Return to cohort")]')
 
-      h1(:name, class: 'profile-header-name')
-      h2(:preferred_name, class: 'profile-header-name-preferred')
+      h2(:preferred_name, class: 'student-bio-name-preferred')
       span(:phone, xpath: '//span[@data-ng-bind="student.sisProfile.phoneNumber"]')
       link(:email, xpath: '//a[@data-ng-bind="student.sisProfile.emailAddress"]')
       div(:cumulative_units, xpath: '//div[@data-ng-bind="student.sisProfile.cumulativeUnits"]')
@@ -51,7 +50,7 @@ module Page
       # @return [Hash]
       def visible_sis_data
         {
-          :name => name,
+          :name => student_name_heading,
           :preferred_name => (preferred_name if preferred_name?),
           :email => email_element.text,
           :phone => phone,

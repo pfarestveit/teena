@@ -284,7 +284,7 @@ module Page
       button(:save_cohort_button_one, id: 'create-cohort-btn')
       text_area(:cohort_name_input, class: 'cohort-create-input-name')
       span(:title_required_msg, xpath: '//span[text()="Required"]')
-      div(:title_dupe_msg, xpath: '//div[text()="You have a cohort with this name. Please choose a different name."]')
+      div(:title_dupe_msg, xpath: '//div[text()="You have an existing cohort/group with this name. Please choose a different name."]')
       button(:save_cohort_button_two, id: 'confirm-create-cohort-btn')
       button(:cancel_cohort_button, id: 'cancel-create-cohort-btn')
       div(:cohort_not_found_msg, xpath: '//div[contains(.,"Sorry, there was an error retrieving cohort data.")]')
@@ -370,14 +370,14 @@ module Page
       # @param cohort [Cohort]
       # @return [PageObject::Elements::Button]
       def cohort_rename_button(cohort)
-        button_element(xpath: "//span[text()='#{cohort.name}']/ancestor::div[contains(@class,'cohort-manage-label')]/following-sibling::div//button[contains(text(),'Rename')]")
+        button_element(xpath: "//span[text()='#{cohort.name}']/ancestor::div[contains(@class,'cohort-manage-name')]/following-sibling::div//button[contains(text(),'Rename')]")
       end
 
       # Returns the element containing the cohort delete button on the Manage Cohorts page
       # @param cohort [Cohort]
       # @return [PageObject::Elements::Button]
       def cohort_delete_button(cohort)
-        button_element(xpath: "//span[text()='#{cohort.name}']/ancestor::div[contains(@class,'cohort-manage-label')]/following-sibling::div//button[contains(text(),'Delete')]")
+        button_element(xpath: "//span[text()='#{cohort.name}']/ancestor::div[contains(@class,'cohort-manage-name')]/following-sibling::div//button[contains(text(),'Delete')]")
       end
 
       # Renames a cohort

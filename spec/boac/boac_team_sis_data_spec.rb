@@ -18,25 +18,20 @@ describe 'BOAC' do
     user_course_data_heading = %w(UID Sport Term CourseCode CourseName SectionCcn SectionNumber Midpoint Grade GradingBasis Units EnrollmentStatus)
     CSV.open(user_course_sis_data, 'wb') { |csv| csv << user_course_data_heading }
 
-    user_course_analytics_data = File.join(Utils.initialize_test_output_dir, 'boac-canvas-courses.csv')
-    user_analytics_data_heading = %w(UID Sport Term CourseCode SiteCode SiteId
-                                    AssignMinCanvas AssignMinLoch AssignMaxCanvas AssignMaxLoch AssignUserCanvas AssignUserLoch AssignPercCanvas AssignPercLoch AssignRoundCanvas AssignRoundLoch
-                                    GradesMinCanvas GradesMinLoch GradesMaxCanvas GradesMaxLoch GradesUserCanvas GradesUserLoch GradesPercCanvas GradesPercLoch GradesRoundCanvas GradesRoundLoch
-                                    PageMinCanvas PageMinLoch PageMaxCanvas PageMaxLoch PageUserCanvas PageUserLoch PagePercCanvas PagePercLoch PageRoundCanvas PageRoundLoch)
-    CSV.open(user_course_analytics_data, 'wb') { |csv| csv << user_analytics_data_heading }
-
     # Get all teams and athletes
     teams = BOACUtils.get_teams
 
     @driver = Utils.launch_browser
     @boac_homepage = Page::BOACPages::HomePage.new @driver
+    @boac_teams_list_page = Page::BOACPages::TeamsListPage.new @driver
     @boac_cohort_page = Page::BOACPages::CohortListViewPage.new @driver
     @boac_student_page = Page::BOACPages::StudentPage.new @driver
 
     @boac_homepage.dev_auth
+    @boac_homepage.click_teams_list
 
     expected_team_names = teams.map &:name
-    visible_team_names = @boac_homepage.teams
+    visible_team_names = @boac_teams_list_page.teams
     it('shows all the expected teams') { expect(visible_team_names.sort).to eql(expected_team_names.sort) }
 
     teams.select! { |t| teams_to_test.split(',').include? t.code } if teams_to_test
@@ -50,8 +45,8 @@ describe 'BOAC' do
           team_members.delete_if { |u| u.status == 'inactive' }
           logger.debug "There are #{team_members.length} active athletes"
 
-          @boac_homepage.load_page
-          @boac_homepage.click_team_link team
+          @boac_teams_list_page.load_page
+          @boac_teams_list_page.click_team_link team
           team_url = @boac_cohort_page.current_url
           @boac_cohort_page.wait_for_page_load team_members.length
 
