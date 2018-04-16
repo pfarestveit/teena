@@ -193,7 +193,7 @@ module Page
         score_xpath = "#{assignment_xpath}//span[@class='score-display']"
         if span_element(xpath: score_xpath).exists?
           submitted = (grading = span_element(xpath: "#{assignment_xpath}//span[@class='grade-display']")).exists? && grading.visible?
-          submitted = span_element(xpath: score_xpath).visible? && !span_element(xpath: score_xpath).text.include?('-/') && !span_element(xpath: score_xpath).text.include?(' 0/') unless submitted
+          submitted = span_element(xpath: score_xpath).visible? && !span_element(xpath: score_xpath).text.include?('-/') unless submitted
         end
 
         Assignment.new({:id => id, :type => type, :title => title, :url => url, :due_date => due_date, :submitted => submitted})

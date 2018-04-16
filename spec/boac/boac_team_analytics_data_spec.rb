@@ -7,7 +7,7 @@ describe 'BOAC analytics' do
   begin
 
     team_code = ENV['TEAM']
-    term_to_test = BOACUtils.current_scores_term
+    term_to_test = BOACUtils.analytics_term
 
     user_course_analytics_data = File.join(Utils.initialize_test_output_dir, 'boac-canvas-courses.csv')
     user_analytics_data_heading = %w(UID Sport Term CourseCode SiteCode SiteId

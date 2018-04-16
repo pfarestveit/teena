@@ -33,15 +33,18 @@ describe 'BOAC custom cohorts', order: :defined do
     active_users = all_users.select { |u| u.status == 'active' }
     active_user_sids = active_users.map &:sis_id
     @active_user_search_data = @all_user_search_data.select { |d| active_user_sids.include? d[:sid] }
+    logger.debug "There are #{@active_user_search_data.length} active users"
 
     inactive_users = all_users.select { |u| u.status == 'inactive' }
     inactive_user_sids = inactive_users.map &:sis_id
     @inactive_user_search_data = @all_user_search_data.select { |d| inactive_user_sids.include? d[:sid] }
+    logger.debug "There are #{@inactive_user_search_data.length} inactive users"
 
     intensive_users = BOACUtils.get_intensive_athletes
     intensive_user_sids = intensive_users.map &:sis_id
     @intensive_user_search_data = @all_user_search_data.select { |d| intensive_user_sids.include? d[:sid] }
     @intensive_user_search_data.delete_if { |d| inactive_user_sids.include? d[:sid] }
+    logger.debug "There are #{@intensive_user_search_data.length} active intensive users"
 
     # Get the current 'everyone' cohorts
     @homepage.load_page
@@ -214,7 +217,7 @@ describe 'BOAC custom cohorts', order: :defined do
     before(:all) { @cohort_page.delete_cohort cohorts_created.last }
 
     it 'shows a Not Found page' do
-      @cohort_page.load_cohort cohorts_created.last
+      @cohort_page.navigate_to "#{BOACUtils.base_url}/cohort?c=#{cohorts_created.last.id}"
       @cohort_page.cohort_not_found_msg_element.when_visible Utils.medium_wait
     end
   end
@@ -235,7 +238,7 @@ describe 'BOAC custom cohorts', order: :defined do
     it('include at least one inactive student') { expect(@visible_inactive_users.empty?).to be false }
 
     it 'have an inactive indicator on the student page' do
-      @student.sis_id = @cohort_page.list_view_sids.first
+      @student.uid = @cohort_page.list_view_uids.first
       @cohort_page.click_player_link @student
       @student_page.wait_for_spinner
       @student_page.inactive_flag_element.when_visible Utils.short_wait
@@ -248,12 +251,12 @@ describe 'BOAC custom cohorts', order: :defined do
       expect(@homepage.my_list_user_inactive?(@student)).to be true
     end
 
-    test_search_criteria.each do |criteria|
-      it "can be searched by sports '#{criteria.squads && (criteria.squads.map &:name)}', levels '#{criteria.levels}', majors '#{criteria.majors}', GPA ranges '#{criteria.gpa_ranges}', units '#{criteria.units}'" do
+    cohorts_to_create.each do |cohort|
+      it "shows all the users who match sports '#{cohort.search_criteria.squads && (cohort.search_criteria.squads.map &:name)}', levels '#{cohort.search_criteria.levels}', majors '#{cohort.search_criteria.majors}', GPA ranges '#{cohort.search_criteria.gpa_ranges}', units '#{cohort.search_criteria.units}'" do
         @homepage.load_page
         @cohort_page.click_inactive_cohort
-        @cohort_page.perform_search Cohort.new({:search_criteria => criteria})
-        expected_results = @cohort_page.expected_search_results(@inactive_user_search_data, criteria).map { |u| u[:sid] }
+        @cohort_page.perform_search cohort
+        expected_results = @cohort_page.expected_search_results(@inactive_user_search_data, cohort.search_criteria).map { |u| u[:sid] }
         visible_results = @cohort_page.visible_search_results
         @cohort_page.wait_until(1, "Expected #{expected_results.sort} but got #{visible_results.sort}") { visible_results.sort == expected_results.sort }
       end
@@ -274,12 +277,12 @@ describe 'BOAC custom cohorts', order: :defined do
 
     it('include at least one intensive student') { expect(@visible_intensive_users.empty?).to be false }
 
-    test_search_criteria.each do |criteria|
-      it "can be searched by sports '#{criteria.squads && (criteria.squads.map &:name)}', levels '#{criteria.levels}', majors '#{criteria.majors}', GPA ranges '#{criteria.gpa_ranges}', units '#{criteria.units}'" do
+    cohorts_to_create.each do |cohort|
+      it "shows all the users who match sports '#{cohort.search_criteria.squads && (cohort.search_criteria.squads.map &:name)}', levels '#{cohort.search_criteria.levels}', majors '#{cohort.search_criteria.majors}', GPA ranges '#{cohort.search_criteria.gpa_ranges}', units '#{cohort.search_criteria.units}'" do
         @homepage.load_page
         @cohort_page.click_intensive_cohort
-        @cohort_page.perform_search Cohort.new({:search_criteria => criteria})
-        expected_results = @cohort_page.expected_search_results(@intensive_user_search_data, criteria).map { |u| u[:sid] }
+        @cohort_page.perform_search cohort
+        expected_results = @cohort_page.expected_search_results(@intensive_user_search_data, cohort.search_criteria).map { |u| u[:sid] }
         visible_results = @cohort_page.visible_search_results
         @cohort_page.wait_until(1, "Expected #{expected_results.sort} but got #{visible_results.sort}") { visible_results.sort == expected_results.sort }
       end
