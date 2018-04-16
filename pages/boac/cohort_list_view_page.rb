@@ -38,6 +38,12 @@ module Page
         player_sid_elements.map { |el| el.text.gsub(/(INACTIVE)/, '').strip }
       end
 
+      # Returns all the UIDs shown on list view
+      # @return [Array<String>]
+      def list_view_uids
+        player_link_elements.map { |el| el.attribute 'id' }
+      end
+
       # Returns the XPath for a user
       # @param user [User]
       # @return [String]

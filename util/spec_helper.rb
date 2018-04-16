@@ -9,6 +9,7 @@ require 'fileutils'
 require 'pg'
 
 require_relative '../models/user'
+require_relative '../models/boac/alert'
 require_relative '../models/boac/cohort'
 require_relative '../models/boac/cohort_search_criteria'
 require_relative '../models/boac/team'

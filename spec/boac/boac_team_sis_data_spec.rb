@@ -8,10 +8,11 @@ describe 'BOAC' do
 
     # Optionally, specify a string of comma separated of team codes to test; otherwise, all teams will be tested
     teams_to_test = ENV['TEAMS']
+    users_with_alerts = []
 
     # Create files for test output
     user_profile_sis_data = File.join(Utils.initialize_test_output_dir, 'boac-sis-profiles.csv')
-    user_profile_data_heading = %w(UID Sport Name PreferredName Email Phone Units GPA Level Majors Colleges Terms Writing History Institutions Cultures)
+    user_profile_data_heading = %w(UID Sport Name PreferredName Email Phone Units GPA Level Majors Colleges Terms Writing History Institutions Cultures Graduation Alerts)
     CSV.open(user_profile_sis_data, 'wb') { |csv| csv << user_profile_data_heading }
 
     user_course_sis_data = File.join(Utils.initialize_test_output_dir, 'boac-sis-courses.csv')
@@ -163,6 +164,26 @@ describe 'BOAC' do
                 it("shows the American History Requirement for UID #{team_member.uid} on the student page") { expect(student_page_sis_data[:reqt_history]).to eql(analytics_api_sis_data[:reqt_history]) }
                 it("shows the American Institutions Requirement for UID #{team_member.uid} on the student page") { expect(student_page_sis_data[:reqt_institutions]).to eql(analytics_api_sis_data[:reqt_institutions]) }
                 it("shows the American Cultures Requirement for UID #{team_member.uid} on the student page") { expect(student_page_sis_data[:reqt_cultures]).to eql(analytics_api_sis_data[:reqt_cultures]) }
+
+                # ALERTS
+
+                alerts = BOACUtils.get_user_alerts team_member
+                alert_msgs = alerts.map &:message
+                users_with_alerts << team_member if alert_msgs.any?
+
+                dismissed = BOACUtils.get_dismissed_alerts(alerts).map &:message
+                non_dismissed = alert_msgs - dismissed
+                logger.info "UID #{team_member.uid} alert count is #{alert_msgs.length}, with #{dismissed.length} dismissed"
+
+                non_dismissed_visible = @boac_student_page.non_dismissed_alert_msg_elements.all? &:visible?
+                non_dismissed_present = @boac_student_page.non_dismissed_alert_msgs
+                dismissed_visible = @boac_student_page.dismissed_alert_msg_elements.any? &:visible?
+                dismissed_present = @boac_student_page.dismissed_alert_msgs
+
+                it("has the non-dismissed alert messages for UID #{team_member.uid} on the student page") { expect(non_dismissed_present).to eql(non_dismissed) }
+                it("has the dismissed alert messages for UID #{team_member.uid} on the student page") { expect(dismissed_present).to eql(dismissed) }
+                it("shows the non-dismissed alert messages for UID #{team_member.uid} on the student page") { expect(non_dismissed_visible).to be true }
+                it("hides the dismissed alert messages for UID #{team_member.uid} on the student page") { expect(dismissed_visible).to be false }
 
                 # TERMS
 
@@ -338,7 +359,7 @@ describe 'BOAC' do
                          student_page_sis_data[:phone], student_page_sis_data[:cumulative_units], student_page_sis_data[:cumulative_gpa], student_page_sis_data[:level],
                          student_page_sis_data[:colleges] && student_page_sis_data[:colleges] * '; ', student_page_sis_data[:majors] && student_page_sis_data[:majors] * '; ',
                          student_page_sis_data[:terms_in_attendance], student_page_sis_data[:reqt_writing], student_page_sis_data[:reqt_history],
-                         student_page_sis_data[:reqt_institutions], student_page_sis_data[:reqt_cultures]]
+                         student_page_sis_data[:reqt_institutions], student_page_sis_data[:reqt_cultures], student_page_sis_data[:expected_graduation], alert_msgs]
                   Utils.add_csv_row(user_profile_sis_data, row)
                 end
               end
@@ -347,6 +368,9 @@ describe 'BOAC' do
               logger.warn "Skipping #{team.name} UID #{team_member.uid} because it is not present in the UI"
             end
           end
+
+          # Perhaps there are legitimately no alerts for the test users, but fail anyway in case there is a problem with alerts.
+          it("contains at least one alert for #{team.name} members") { expect(users_with_alerts.any?).to be true }
 
         rescue => e
           Utils.log_error e

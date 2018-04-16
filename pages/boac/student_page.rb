@@ -30,6 +30,11 @@ module Page
       cell(:institutions_reqt, xpath: '//td[text()="American Institutions"]/following-sibling::td')
       cell(:cultures_reqt, xpath: '//td[text()="American Cultures"]/following-sibling::td')
 
+      elements(:non_dismissed_alert_msg, :span, xpath: '//div[@data-ng-repeat="alert in alerts.shown"]//span[@data-ng-bind="alert.message"]')
+      elements(:dismissed_alert_msg, :span, xpath: '//div[@data-ng-repeat="alert in alerts.dismissed"]//span[@data-ng-bind="alert.message"]')
+      button(:view_dismissed_button, xpath: '//button[contains(.,"View dismissed status alerts")]')
+      button(:hide_dismissed_button, xpath: '//button[contains(.,"Hide dismissed status alerts")]')
+
       elements(:course_site_code, :h3, xpath: '//h3[@data-ng-bind="course.courseCode"]')
 
       # Loads a student page directly
@@ -40,10 +45,29 @@ module Page
         wait_for_title user.full_name
       end
 
-      # Clicks the 'return to cohort' link
-      def click_return_to_cohort
-        logger.debug 'Returning to cohort'
-        wait_for_load_and_click return_to_cohort_element
+      # Returns the message text of non-dismissed alerts
+      # @return [Array<String>]
+      def non_dismissed_alert_msgs
+        non_dismissed_alert_msg_elements.map &:text
+      end
+
+      # Returns the message text of dismissed alerts
+      # @return [Array<String>]
+      def dismissed_alert_msgs
+        click_view_dismissed_alerts if view_dismissed_button_element.visible?
+        dismissed_alert_msg_elements.map &:text
+      end
+
+      # Clicks the button to reveal dismissed alerts
+      def click_view_dismissed_alerts
+        logger.info "Clicking view dismissed alerts button"
+        wait_for_load_and_click view_dismissed_button_element
+      end
+
+      # Clicks the button to hide dismissed alerts
+      def click_hide_dismissed_alerts
+        logger.info "Clicking hide dismissed alerts button"
+        wait_for_load_and_click hide_dismissed_button_element
       end
 
       # Returns a user's SIS data visible on the student page
@@ -83,7 +107,7 @@ module Page
       # @param course_code [String]
       # @return [String]
       def course_data_xpath(term_name, course_code)
-        "//h3[text()=\"#{term_name}\"]/following-sibling::*[name()='uib-accordion']//div[@data-ng-repeat=\"course in term.enrollments\"][contains(.,\"#{course_code}\")]"
+        "//h3[text()=\"#{term_name}\"]/following-sibling::*[name()='uib-accordion']//h4[text()=\"#{course_code}\"]/ancestor::div[@data-ng-repeat=\"course in term.enrollments\"]"
       end
 
       # Returns the SIS data shown for a course with a given course code

@@ -88,13 +88,13 @@ module Page
 
       # CUSTOM COHORTS
 
-      elements(:my_cohort, :link, xpath: '//h2[text()="My Saved Cohorts"]/following-sibling::div//li[@data-ng-repeat="cohort in myCohorts"]/div/a')
+      elements(:my_cohort, :link, xpath: '//h1[text()="Cohorts"]/following-sibling::div[@data-ng-repeat="cohort in myCohorts"]/h2/a')
       div(:you_have_no_cohorts_msg, xpath: '//div[contains(.,"You have no saved cohorts.")]')
 
       # Returns the names of My Saved Cohorts shown on the homepage
       # @return [Array<String>]
       def my_saved_cohorts
-        h2_element(xpath: '//h2[text()="My Saved Cohorts"]').when_present Utils.medium_wait
+        h1_element(xpath: '//h1[text()="Cohorts"]').when_present Utils.medium_wait
         my_cohort_elements.map &:text
       end
 

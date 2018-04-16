@@ -22,7 +22,7 @@ module Page
     link(:feedback_link, text: 'ascpilot@lists.berkeley.edu')
 
     div(:spinner, class: 'loading-spinner-large')
-    h1(:student_name_heading, class: 'student-bio-name')
+    h1(:student_name_heading, class: 'student-section-header')
 
     # Waits for an expected page title
     # @param page_title [String]

@@ -219,13 +219,13 @@ module Page
       # @param search_criteria [CohortSearchCriteria]
       # @return [Array<Hash>]
       def expected_search_results(user_data, search_criteria)
-        matching_squad_users = search_criteria.squads ?
+        matching_squad_users = (search_criteria.squads && search_criteria.squads.any?) ?
                                   (user_data.select { |u| (u[:squad_names] & (search_criteria.squads.map { |s| s.name })).any? }) : user_data
-        matching_level_users = search_criteria.levels ?
+        matching_level_users = (search_criteria.levels && search_criteria.levels.any?) ?
                                   (user_data.select { |u| search_criteria.levels.include? u[:level] }) : user_data
 
         matching_major_users = []
-        if search_criteria.majors
+        if search_criteria.majors && search_criteria.majors.any?
           matching_major_users << user_data.select { |u| (u[:majors] & search_criteria.majors).any? }
           if search_criteria.majors.include? 'Undeclared'
             matching_major_users << user_data.select do |u|
@@ -243,7 +243,7 @@ module Page
         matching_major_users = matching_major_users.uniq.flatten.compact
 
         matching_gpa_range_users = []
-        if search_criteria.gpa_ranges
+        if search_criteria.gpa_ranges && search_criteria.gpa_ranges.any?
          search_criteria.gpa_ranges.each do |range|
            array = range.include?('Below') ? %w(0 2.0) : range.delete(' ').split('-')
            low_end = array[0]
@@ -275,8 +275,8 @@ module Page
         end
         matching_units_users = matching_units_users.flatten
 
-        matching_users = [matching_squad_users, matching_level_users, matching_major_users, matching_gpa_range_users, matching_units_users].delete_if &:empty?
-        matching_users.inject :'&'
+        matches = [matching_squad_users, matching_level_users, matching_major_users, matching_gpa_range_users, matching_units_users]
+        matches.any?(&:empty?) ? [] : matches.inject(:'&')
       end
 
       # CUSTOM COHORTS - Creation
@@ -287,7 +287,7 @@ module Page
       div(:title_dupe_msg, xpath: '//div[text()="You have an existing cohort/group with this name. Please choose a different name."]')
       button(:save_cohort_button_two, id: 'confirm-create-cohort-btn')
       button(:cancel_cohort_button, id: 'cancel-create-cohort-btn')
-      div(:cohort_not_found_msg, xpath: '//div[contains(.,"Sorry, there was an error retrieving cohort data.")]')
+      span(:cohort_not_found_msg, xpath: '//span[contains(.,"No cohort found with identifier: ")]')
       elements(:everyone_cohort_link, :span, xpath: '//h1[text()="Everyone\'s Cohorts"]/following-sibling::div//a[@data-ng-bind="cohort.label"]')
 
       # Loads a cohort page by the cohort's ID
@@ -354,8 +354,8 @@ module Page
 
       # CUSTOM COHORTS - Management
 
-      elements(:cohort_name, :span, xpath: '//span[@data-ng-bind="cohort.label"]')
-      elements(:rename_input, :text_area, name: 'label')
+      elements(:cohort_name, :span, xpath: '//span[@data-ng-bind="cohort.name"]')
+      elements(:rename_input, :text_area, name: 'name')
       elements(:rename_save_button, :button, xpath: '//button[contains(@id,"cohort-save-btn")]')
       button(:confirm_delete_button, id: 'confirm-delete-cohort-btn')
 
@@ -386,14 +386,12 @@ module Page
       def rename_cohort(cohort, new_name)
         logger.info "Changing the name of cohort ID #{cohort.id} to #{new_name}"
         click_manage_my_cohorts
-        visible_names = cohort_name_elements.map &:text
-        cohort_to_rename = visible_names.find { |n| n == cohort.name }
-        index = visible_names.index cohort_to_rename
+        wait_until(Utils.short_wait) { cohort_name_elements.map(&:text).include? cohort.name }
         wait_for_load_and_click cohort_rename_button(cohort)
         cohort.name = new_name
         wait_until(Utils.short_wait) { rename_input_elements.any? }
-        wait_for_element_and_type(rename_input_elements[index], new_name)
-        wait_for_update_and_click rename_save_button_elements[index]
+        wait_for_element_and_type(rename_input_elements.first, new_name)
+        wait_for_update_and_click rename_save_button_elements.first
         cohort_on_manage_cohorts(cohort).when_present Utils.short_wait
       end
 

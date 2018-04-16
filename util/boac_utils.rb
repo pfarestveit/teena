@@ -22,10 +22,15 @@ class BOACUtils < Utils
     @config['term']
   end
 
-  # Returns the semester to use for testing Data Loch current scores
+  # Returns the current BOAC semester code
+  def self.term_code
+    @config['term_code']
+  end
+
+  # Returns the semester to use for testing Data Loch analytics
   # @return [String]
-  def self.current_scores_term
-    @config['current_scores_term']
+  def self.analytics_term
+    @config['analytics_term']
   end
 
   # Whether or not to check tooltips during tests. Checking tooltips slows down test execution.
@@ -220,6 +225,39 @@ class BOACUtils < Utils
     result = Utils.query_db_field(boac_db_credentials, query, 'id').first
     logger.info "Cohort '#{cohort.name}' ID is #{result}"
     cohort.id = result
+  end
+
+  # Returns user status alerts for the current term
+  # @param user [User]
+  # @return [Array<Alert>]
+  def self.get_user_alerts(user)
+    query = "SELECT id, alert_type, message
+              FROM alerts
+              WHERE sid = '#{user.sis_id}'
+                AND active = true
+                AND key LIKE '#{term_code}%';"
+    results = Utils.query_db(boac_db_credentials, query)
+    alerts = results.map { |r| Alert.new({id: r['id'], type: r['alert_type'], message: r['message']}) }
+    alerts.sort_by &:message
+  end
+
+  # Given user status alerts, returns those that have been dismissed by the configured admin user
+  # @param alerts [Array<Alert>]
+  # @return [Array<Alert>]
+  def self.get_dismissed_alerts(alerts)
+    if alerts.any?
+      alert_ids = (alerts.map &:id).join(', ')
+      query = "SELECT alert_views.alert_id
+              FROM alert_views
+              JOIN authorized_users ON authorized_users.id = alert_views.viewer_id
+              WHERE alert_views.alert_id IN (#{alert_ids})
+                AND authorized_users.uid = '#{Utils.super_admin_uid}';"
+      results = Utils.query_db(boac_db_credentials, query.gsub("", ''))
+      dismissed = results.map { |r| r['alert_id'].to_s }
+      alerts.select { |a| dismissed.include? a.id }
+    else
+      alerts
+    end
   end
 
 end
