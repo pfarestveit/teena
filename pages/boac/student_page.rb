@@ -55,7 +55,9 @@ module Page
       # @return [Array<String>]
       def dismissed_alert_msgs
         click_view_dismissed_alerts if view_dismissed_button_element.visible?
-        dismissed_alert_msg_elements.map &:text
+        msgs = dismissed_alert_msg_elements.map &:text
+        click_hide_dismissed_alerts
+        msgs
       end
 
       # Clicks the button to reveal dismissed alerts
@@ -68,6 +70,13 @@ module Page
       def click_hide_dismissed_alerts
         logger.info "Clicking hide dismissed alerts button"
         wait_for_load_and_click hide_dismissed_button_element
+      end
+
+      # Dismisses an alert
+      # @param alert [Alert]
+      def dismiss_alert(alert)
+        logger.info "Dismissing alert ID #{alert.id}"
+        wait_for_load_and_click link_element(xpath: "//div[@id='alert-#{alert.id}']//a")
       end
 
       # Returns a user's SIS data visible on the student page

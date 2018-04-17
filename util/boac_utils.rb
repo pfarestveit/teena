@@ -70,6 +70,17 @@ class BOACUtils < Utils
     }
   end
 
+  # Returns all authorized users
+  # @return [Array<User>]
+  def self.get_authorized_users
+    query = 'SELECT authorized_users.uid AS uid,
+                    authorized_users.is_advisor AS advisor,
+                    authorized_users.is_admin AS admin
+              FROM authorized_users;'
+    results = query_db(boac_db_credentials, query)
+    results.map { |r| User.new({uid: r['uid']}) }
+  end
+
   # Returns all students
   # @return [PG::Result]
   def self.query_all_athletes
@@ -244,20 +255,51 @@ class BOACUtils < Utils
   # Given user status alerts, returns those that have been dismissed by the configured admin user
   # @param alerts [Array<Alert>]
   # @return [Array<Alert>]
-  def self.get_dismissed_alerts(alerts)
+  def self.get_dismissed_alerts(alerts, user = nil)
     if alerts.any?
       alert_ids = (alerts.map &:id).join(', ')
       query = "SELECT alert_views.alert_id
-              FROM alert_views
-              JOIN authorized_users ON authorized_users.id = alert_views.viewer_id
-              WHERE alert_views.alert_id IN (#{alert_ids})
-                AND authorized_users.uid = '#{Utils.super_admin_uid}';"
+                FROM alert_views
+                JOIN authorized_users ON authorized_users.id = alert_views.viewer_id
+                WHERE alert_views.alert_id IN (#{alert_ids})
+                  AND authorized_users.uid = '#{user ? user.uid : Utils.super_admin_uid}';"
       results = Utils.query_db(boac_db_credentials, query.gsub("", ''))
       dismissed = results.map { |r| r['alert_id'].to_s }
       alerts.select { |a| dismissed.include? a.id }
     else
       alerts
     end
+  end
+
+  # Deletes the dismissal of an alert by a given user or the admin test user by default
+  # @param alert [Alert]
+  # @param user [User]
+  def self.remove_alert_dismissal(alert, user = nil)
+    query = "DELETE
+              FROM alert_views
+              WHERE alert_views.alert_id = '#{alert.id}'
+                AND alert_views.viewer_id IN (SELECT authorized_users.id
+                                              FROM authorized_users
+                                              WHERE authorized_users.uid = '#{user ? user.uid : Utils.super_admin_uid}');"
+    Utils.query_db(boac_db_credentials, query)
+  end
+
+  # Returns an alert that has not been dismissed by the admin test user
+  # @return [Alert]
+  def self.get_test_alert
+    # Get one active alert in the current term
+    query = "SELECT alerts.id, alerts.alert_type, alerts.message, students.uid, students.first_name, students.last_name
+              FROM alerts
+              JOIN students ON alerts.sid = students.sid
+              WHERE active = true
+                AND key LIKE '#{term_code}%'
+              LIMIT 1;"
+    results = Utils.query_db(boac_db_credentials, query)
+    alert = (results.map { |r| Alert.new({id: r['id'], message: r['message'], user: User.new({uid: r['uid'], full_name: "#{r['first_name']} #{r['last_name']}"})}) }).first
+    # If the admin tester has dismissed the alert, delete the dismissal to permit dismissal testing
+    remove_alert_dismissal(alert) if get_dismissed_alerts([alert]).any?
+    logger.info "Test alert ID #{alert.id}, message '#{alert.message}', user UID #{alert.user.uid}, name #{alert.user.full_name}"
+    alert
   end
 
 end

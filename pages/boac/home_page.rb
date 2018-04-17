@@ -37,13 +37,15 @@ module Page
       end
 
       # Authenticates using dev auth
-      def dev_auth
+      # @param user [User]
+      def dev_auth(user = nil)
         logger.info 'Logging in using developer auth'
         load_page
         scroll_to_bottom
-        wait_for_element_and_type(dev_auth_uid_input_element, Utils.super_admin_uid)
+        wait_for_element_and_type(dev_auth_uid_input_element, (user ? user.uid : Utils.super_admin_uid))
         wait_for_element_and_type(dev_auth_password_input_element, BOACUtils.password)
         wait_for_update_and_click dev_auth_log_in_button_element
+        wait_for_title 'Home'
       end
 
       # MY LIST
