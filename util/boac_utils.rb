@@ -238,32 +238,43 @@ class BOACUtils < Utils
     cohort.id = result
   end
 
-  # Returns user status alerts for the current term
-  # @param user [User]
+  # Given a set of students, returns all their active alerts in the current term
+  # @param users [Array<User>]
   # @return [Array<Alert>]
-  def self.get_user_alerts(user)
-    query = "SELECT id, alert_type, message
+  def self.get_students_alerts(users)
+    sids = users.map(&:sis_id).to_s.delete('[]')
+    query = "SELECT id, sid, alert_type, message
               FROM alerts
-              WHERE sid = '#{user.sis_id}'
+              WHERE sid IN (#{sids})
                 AND active = true
                 AND key LIKE '#{term_code}%';"
-    results = Utils.query_db(boac_db_credentials, query)
-    alerts = results.map { |r| Alert.new({id: r['id'], type: r['alert_type'], message: r['message']}) }
+    results = Utils.query_db(boac_db_credentials, query.gsub("\"", '\''))
+    alerts = results.map { |r| Alert.new({id: r['id'], type: r['alert_type'], message: r['message'], user: User.new({sis_id: r['sid']})}) }
     alerts.sort_by &:message
   end
 
-  # Given user status alerts, returns those that have been dismissed by the configured admin user
+  # Given a set of students, returns all their active alerts in the current term that have not been dismissed by an advisor. If no
+  # advisor is specified, then the test admin user is the advisor by default.
+  def self.get_un_dismissed_users_alerts(students, advisor = nil)
+    alerts = get_students_alerts students
+    dismissed_alerts = get_dismissed_alerts(alerts, advisor)
+    alerts - dismissed_alerts
+  end
+
+  # Given a set of alerts, returns those that have been dismissed by an advisor. If no advisor is specificed, then the test admin user
+  # is the advisor by default.
   # @param alerts [Array<Alert>]
+  # @param advisor [User]
   # @return [Array<Alert>]
-  def self.get_dismissed_alerts(alerts, user = nil)
+  def self.get_dismissed_alerts(alerts, advisor = nil)
     if alerts.any?
       alert_ids = (alerts.map &:id).join(', ')
       query = "SELECT alert_views.alert_id
                 FROM alert_views
                 JOIN authorized_users ON authorized_users.id = alert_views.viewer_id
                 WHERE alert_views.alert_id IN (#{alert_ids})
-                  AND authorized_users.uid = '#{user ? user.uid : Utils.super_admin_uid}';"
-      results = Utils.query_db(boac_db_credentials, query.gsub("", ''))
+                  AND authorized_users.uid = '#{advisor ? advisor.uid : Utils.super_admin_uid}';"
+      results = Utils.query_db(boac_db_credentials, query.gsub("\"", '\''))
       dismissed = results.map { |r| r['alert_id'].to_s }
       alerts.select { |a| dismissed.include? a.id }
     else
@@ -271,16 +282,16 @@ class BOACUtils < Utils
     end
   end
 
-  # Deletes the dismissal of an alert by a given user or the admin test user by default
+  # Deletes the dismissal of an alert by a given advisor or the admin test user by default
   # @param alert [Alert]
-  # @param user [User]
-  def self.remove_alert_dismissal(alert, user = nil)
+  # @param advisor [User]
+  def self.remove_alert_dismissal(alert, advisor = nil)
     query = "DELETE
               FROM alert_views
               WHERE alert_views.alert_id = '#{alert.id}'
                 AND alert_views.viewer_id IN (SELECT authorized_users.id
                                               FROM authorized_users
-                                              WHERE authorized_users.uid = '#{user ? user.uid : Utils.super_admin_uid}');"
+                                              WHERE authorized_users.uid = '#{advisor ? advisor.uid : Utils.super_admin_uid}');"
     Utils.query_db(boac_db_credentials, query)
   end
 
