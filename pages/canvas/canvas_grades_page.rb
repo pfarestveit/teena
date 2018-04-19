@@ -149,6 +149,7 @@ module Page
     def student_score(user)
       user_search_input_element.when_visible Utils.medium_wait
       self.user_search_input = user.uid
+      sleep Utils.click_wait
       wait_until(2) { gradebook_uid_elements.first.text == "#{user.uid}" }
       unless gradebook_total_elements.any? &:visible?
         wait_for_update_and_click_js total_grade_column_element
@@ -157,6 +158,7 @@ module Page
         total_grade_column_move_front_element.click if total_grade_column_move_front_element.exists?
         wait_until(Utils.medium_wait) { gradebook_total_elements.any? }
       end
+      sleep Utils.click_wait
       score = gradebook_total_elements.first.text.strip.delete('%').to_f
       # If the score in the UI is zero, the score might not have loaded yet. Retry.
       score = if score.zero?
