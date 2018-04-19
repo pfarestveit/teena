@@ -410,8 +410,8 @@ module Page
       # @return [Array<Cohort>]
       def visible_everyone_cohorts
         click_view_everyone_cohorts
-        h1_element(xpath: '//h1[text()="Everyone\'s Cohorts"]').when_visible Utils.short_wait
         wait_for_title 'Cohorts'
+        wait_until(Utils.short_wait) { everyone_cohort_link_elements.any? }
         cohorts = everyone_cohort_link_elements.map { |link| Cohort.new({id: link.attribute('href').delete('/cohort?c='), name: link.text}) }
         cohorts.flatten
       end

@@ -167,7 +167,7 @@ describe 'BOAC' do
 
                 # ALERTS
 
-                alerts = BOACUtils.get_user_alerts team_member
+                alerts = BOACUtils.get_students_alerts [team_member]
                 alert_msgs = alerts.map &:message
                 users_with_alerts << team_member if alert_msgs.any?
 

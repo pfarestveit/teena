@@ -39,7 +39,7 @@ describe 'BOAC' do
 
           # Page through results
 
-          list_results_length = @cohort_page.visible_search_results.length
+          list_results_length = @cohort_page.visible_sids.length
           list_results_page = @cohort_page.list_view_current_page
 
           logger.info "Got #{list_results_length} list view results"
@@ -133,7 +133,7 @@ describe 'BOAC' do
           # Switch to list view, and page through results.
 
           @matrix_page.click_list_view
-          results_length = @cohort_page.visible_search_results.length
+          results_length = @cohort_page.visible_sids.length
           list_results_page = @cohort_page.list_view_current_page
 
           logger.info "Got #{results_length} list view results"

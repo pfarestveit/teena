@@ -18,7 +18,6 @@ module Page
     link(:manage_my_cohorts_link, id: 'sidebar-cohorts-manage')
     link(:view_everyone_cohorts_link, id: 'sidebar-cohorts-all')
     button(:log_out_button, xpath: '//button[contains(text(),"Log out")]')
-    elements(:my_cohort_link, :link, :xpath => '//ul[@class="dropdown-menu"]/li[@data-ng-repeat="cohort in myCohorts"]/a')
     link(:feedback_link, text: 'ascpilot@lists.berkeley.edu')
 
     div(:spinner, class: 'loading-spinner-large')
