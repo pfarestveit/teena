@@ -4,7 +4,7 @@ module Page
 
   module BOACPages
 
-    class CohortMatrixPage < CohortPage
+    class FilteredCohortMatrixPage < FilteredCohortPage
 
       include Logging
       include PageObject

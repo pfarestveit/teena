@@ -4,7 +4,7 @@ module Page
 
   module BOACPages
 
-    class CohortPage
+    class FilteredCohortPage
 
       include PageObject
       include Logging
@@ -43,7 +43,90 @@ module Page
         results.split(' ')[0].to_i
       end
 
-      # CUSTOM COHORTS - Search
+      # FILTERED COHORTS - Creation
+
+      button(:save_cohort_button_one, id: 'create-cohort-btn')
+      text_area(:cohort_name_input, class: 'cohort-create-input-name')
+      span(:title_required_msg, xpath: '//span[text()="Required"]')
+      div(:title_dupe_msg, xpath: '//div[text()="You have an existing cohort/group with this name. Please choose a different name."]')
+      button(:save_cohort_button_two, id: 'confirm-create-cohort-btn')
+      button(:cancel_cohort_button, id: 'cancel-create-cohort-btn')
+      span(:cohort_not_found_msg, xpath: '//span[contains(.,"No cohort found with identifier: ")]')
+      elements(:everyone_cohort_link, :span, xpath: '//h1[text()="Everyone\'s Cohorts"]/following-sibling::div//a[@data-ng-bind="cohort.label"]')
+
+      # Loads a cohort page by the cohort's ID
+      # @param cohort [Cohort]
+      def load_cohort(cohort)
+        logger.info "Loading cohort '#{cohort.name}'"
+        navigate_to "#{BOACUtils.base_url}/cohort?c=#{cohort.id}"
+        wait_for_title cohort.name
+      end
+
+      # Clicks the button to save a new cohort, which triggers the name input modal
+      def click_save_cohort_button_one
+        wait_until(Utils.medium_wait) { save_cohort_button_one_element.enabled? }
+        wait_for_update_and_click save_cohort_button_one_element
+      end
+
+      # Enters a cohort name and clicks the Save button
+      # @param cohort [Cohort]
+      def name_cohort(cohort)
+        wait_for_element_and_type(cohort_name_input_element, cohort.name)
+        wait_for_update_and_click save_cohort_button_two_element
+      end
+
+      # Clicks the Save Cohort button, enters a cohort name, and clicks the Save button
+      # @param cohort [Cohort]
+      def save_and_name_cohort(cohort)
+        click_save_cohort_button_one
+        name_cohort cohort
+      end
+
+      # Waits for a cohort page to load and obtains the cohort's ID
+      # @param cohort [Cohort]
+      # @return [Integer]
+      def wait_for_cohort(cohort)
+        cohort_heading(cohort).when_present Utils.medium_wait
+        cohort.id = BOACUtils.get_custom_cohort_id cohort
+      end
+
+      # Clicks the Cancel button during cohort creation
+      def cancel_cohort
+        wait_for_update_and_click cancel_cohort_button_element
+        cohort_name_input_element.when_not_visible Utils.short_wait
+      rescue
+        logger.warn 'No cancel button to click'
+      end
+
+      # Creates a new cohort
+      # @param cohort [Cohort]
+      def create_new_cohort(cohort)
+        logger.info "Creating a new cohort named #{cohort.name}"
+        save_and_name_cohort cohort
+        wait_for_cohort cohort
+      end
+
+      # Creates a new cohort by editing the search criteria of an existing one
+      # @param old_cohort [Cohort]
+      # @param new_cohort [Cohort]
+      def search_and_create_edited_cohort(old_cohort, new_cohort)
+        load_cohort old_cohort
+        perform_search new_cohort
+        save_and_name_cohort new_cohort
+        wait_for_cohort new_cohort
+      end
+
+      # Returns all the cohorts displayed on the Everyone's Cohorts page
+      # @return [Array<Cohort>]
+      def visible_everyone_cohorts
+        click_view_everyone_cohorts
+        wait_for_title 'Cohorts'
+        wait_until(Utils.short_wait) { everyone_cohort_link_elements.any? }
+        cohorts = everyone_cohort_link_elements.map { |link| Cohort.new({id: link.attribute('href').delete('/cohort?c='), name: link.text}) }
+        cohorts.flatten
+      end
+
+      # FILTERED COHORTS - Search
 
       button(:squad_filter_button, id: 'search-filter-group-codes')
       elements(:squad_option, :checkbox, xpath: '//input[contains(@id,"search-option-group-codes")]')
@@ -220,9 +303,9 @@ module Page
       # @return [Array<Hash>]
       def expected_search_results(user_data, search_criteria)
         matching_squad_users = (search_criteria.squads && search_criteria.squads.any?) ?
-                                  (user_data.select { |u| (u[:squad_names] & (search_criteria.squads.map { |s| s.name })).any? }) : user_data
+            (user_data.select { |u| (u[:squad_names] & (search_criteria.squads.map { |s| s.name })).any? }) : user_data
         matching_level_users = (search_criteria.levels && search_criteria.levels.any?) ?
-                                  (user_data.select { |u| search_criteria.levels.include? u[:level] }) : user_data
+            (user_data.select { |u| search_criteria.levels.include? u[:level] }) : user_data
 
         matching_major_users = []
         if search_criteria.majors && search_criteria.majors.any?
@@ -244,15 +327,15 @@ module Page
 
         matching_gpa_range_users = []
         if search_criteria.gpa_ranges && search_criteria.gpa_ranges.any?
-         search_criteria.gpa_ranges.each do |range|
-           array = range.include?('Below') ? %w(0 2.0) : range.delete(' ').split('-')
-           low_end = array[0]
-           high_end = array[1]
-           matching_gpa_range_users << user_data.select do |u|
-             gpa = u[:gpa].to_f
-             (gpa != 0) && (low_end.to_f <= gpa) && ((high_end == '4.00') ? (gpa <= high_end.to_f.round(1)) : (gpa < high_end.to_f.round(1)))
-           end
-         end
+          search_criteria.gpa_ranges.each do |range|
+            array = range.include?('Below') ? %w(0 2.0) : range.delete(' ').split('-')
+            low_end = array[0]
+            high_end = array[1]
+            matching_gpa_range_users << user_data.select do |u|
+              gpa = u[:gpa].to_f
+              (gpa != 0) && (low_end.to_f <= gpa) && ((high_end == '4.00') ? (gpa <= high_end.to_f.round(1)) : (gpa < high_end.to_f.round(1)))
+            end
+          end
         else
           matching_gpa_range_users = user_data
         end
@@ -279,80 +362,7 @@ module Page
         matches.any?(&:empty?) ? [] : matches.inject(:'&')
       end
 
-      # CUSTOM COHORTS - Creation
-
-      button(:save_cohort_button_one, id: 'create-cohort-btn')
-      text_area(:cohort_name_input, class: 'cohort-create-input-name')
-      span(:title_required_msg, xpath: '//span[text()="Required"]')
-      div(:title_dupe_msg, xpath: '//div[text()="You have an existing cohort/group with this name. Please choose a different name."]')
-      button(:save_cohort_button_two, id: 'confirm-create-cohort-btn')
-      button(:cancel_cohort_button, id: 'cancel-create-cohort-btn')
-      span(:cohort_not_found_msg, xpath: '//span[contains(.,"No cohort found with identifier: ")]')
-      elements(:everyone_cohort_link, :span, xpath: '//h1[text()="Everyone\'s Cohorts"]/following-sibling::div//a[@data-ng-bind="cohort.label"]')
-
-      # Loads a cohort page by the cohort's ID
-      # @param cohort [Cohort]
-      def load_cohort(cohort)
-        logger.info "Loading cohort '#{cohort.name}'"
-        navigate_to "#{BOACUtils.base_url}/cohort?c=#{cohort.id}"
-        wait_for_title cohort.name
-      end
-
-      # Clicks the button to save a new cohort, which triggers the name input modal
-      def click_save_cohort_button_one
-        wait_until(Utils.medium_wait) { save_cohort_button_one_element.enabled? }
-        wait_for_update_and_click save_cohort_button_one_element
-      end
-
-      # Enters a cohort name and clicks the Save button
-      # @param cohort [Cohort]
-      def name_cohort(cohort)
-        wait_for_element_and_type(cohort_name_input_element, cohort.name)
-        wait_for_update_and_click save_cohort_button_two_element
-      end
-
-      # Clicks the Save Cohort button, enters a cohort name, and clicks the Save button
-      # @param cohort [Cohort]
-      def save_and_name_cohort(cohort)
-        click_save_cohort_button_one
-        name_cohort cohort
-      end
-
-      # Waits for a cohort page to load and obtains the cohort's ID
-      # @param cohort [Cohort]
-      # @return [Integer]
-      def wait_for_cohort(cohort)
-        cohort_heading(cohort).when_present Utils.medium_wait
-        cohort.id = BOACUtils.get_custom_cohort_id cohort
-      end
-
-      # Clicks the Cancel button during cohort creation
-      def cancel_cohort
-        wait_for_update_and_click cancel_cohort_button_element
-        cohort_name_input_element.when_not_visible Utils.short_wait
-      rescue
-        logger.warn 'No cancel button to click'
-      end
-
-      # Creates a new cohort
-      # @param cohort [Cohort]
-      def create_new_cohort(cohort)
-        logger.info "Creating a new cohort named #{cohort.name}"
-        save_and_name_cohort cohort
-        wait_for_cohort cohort
-      end
-
-      # Creates a new cohort by editing the search criteria of an existing one
-      # @param old_cohort [Cohort]
-      # @param new_cohort [Cohort]
-      def search_and_create_edited_cohort(old_cohort, new_cohort)
-        load_cohort old_cohort
-        perform_search new_cohort
-        save_and_name_cohort new_cohort
-        wait_for_cohort new_cohort
-      end
-
-      # CUSTOM COHORTS - Management
+      # FILTERED COHORTS - Management
 
       elements(:cohort_name, :span, xpath: '//span[@data-ng-bind="cohort.name"]')
       elements(:rename_input, :text_area, name: 'name')
@@ -404,16 +414,6 @@ module Page
         wait_for_load_and_click cohort_delete_button(cohort)
         wait_for_update_and_click confirm_delete_button_element
         cohort_on_manage_cohorts(cohort).when_not_present Utils.short_wait
-      end
-
-      # Returns all the cohorts displayed on the Everyone's Cohorts page
-      # @return [Array<Cohort>]
-      def visible_everyone_cohorts
-        click_view_everyone_cohorts
-        wait_for_title 'Cohorts'
-        wait_until(Utils.short_wait) { everyone_cohort_link_elements.any? }
-        cohorts = everyone_cohort_link_elements.map { |link| Cohort.new({id: link.attribute('href').delete('/cohort?c='), name: link.text}) }
-        cohorts.flatten
       end
 
     end

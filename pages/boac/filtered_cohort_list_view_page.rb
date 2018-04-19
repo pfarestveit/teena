@@ -4,7 +4,7 @@ module Page
 
   module BOACPages
 
-    class CohortListViewPage < CohortPage
+    class FilteredCohortListViewPage < FilteredCohortPage
 
       include Logging
       include PageObject

@@ -22,7 +22,7 @@ describe 'BOAC custom cohorts', order: :defined do
     @driver = Utils.launch_browser
     @analytics_page = ApiUserAnalyticsPage.new @driver
     @homepage = Page::BOACPages::HomePage.new @driver
-    @cohort_page = Page::BOACPages::CohortListViewPage.new @driver
+    @cohort_page = Page::BOACPages::FilteredCohortListViewPage.new @driver
     @student_page = Page::BOACPages::StudentPage.new @driver
     @homepage.dev_auth
 

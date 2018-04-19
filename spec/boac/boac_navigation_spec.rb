@@ -7,8 +7,8 @@ describe 'BOAC' do
   cohorts = BOACUtils.get_test_search_criteria.map { |c| Cohort.new({:search_criteria => c}) }
   @driver = Utils.launch_browser
   @homepage = Page::BOACPages::HomePage.new @driver
-  @cohort_page = Page::BOACPages::CohortListViewPage.new @driver
-  @matrix_page = Page::BOACPages::CohortMatrixPage.new @driver
+  @cohort_page = Page::BOACPages::FilteredCohortListViewPage.new @driver
+  @matrix_page = Page::BOACPages::FilteredCohortMatrixPage.new @driver
   @student_page = Page::BOACPages::StudentPage.new @driver
   @homepage.dev_auth
   @homepage.click_create_new_cohort
