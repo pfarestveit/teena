@@ -70,6 +70,7 @@ module Page
       def resolve_all_issues(driver, course)
         load_embedded_tool(driver, course)
         required_adjustments_heading_element.when_present Utils.medium_wait
+        sleep Utils.short_wait
         if required_adjustments_heading_element.visible?
           logger.debug "Adjustments needed on site #{course.site_id}"
           un_mute_all_cbx_element.when_present Utils.short_wait
@@ -77,8 +78,8 @@ module Page
           click_un_mute_all if un_mute_all_cbx_element.visible?
           click_set_default_scheme if set_scheme_cbx_element.visible?
           click_continue
-          logger.debug 'Waiting for sections selection'
-          sections_select_element.when_visible Utils.medium_wait
+          logger.debug 'Waiting for download-grades button'
+          download_final_grades_element.when_visible Utils.medium_wait
         else
           logger.debug "No adjustments needed on site #{course.site_id}"
         end
