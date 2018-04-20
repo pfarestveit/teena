@@ -129,7 +129,7 @@ module Page
       end
 
       # Returns the XPath to a cohort's div
-      # @param cohort [Cohort]
+      # @param cohort [FilteredCohort]
       # @return [String]
       def cohort_xpath(cohort)
         "//h1[text()=\"Cohorts\"]/following-sibling::div[contains(.,\"#{cohort.name}\")]"
@@ -137,14 +137,14 @@ module Page
 
       # Returns all the user divs beneath a cohort
       # @param driver [Selenium::WebDriver]
-      # @param cohort [Cohort]
+      # @param cohort [FilteredCohort]
       # @return [Array<Selenium::WebDriver::Element>]
       def cohort_member_rows(driver, cohort)
         user_rows(driver, cohort_xpath(cohort))
       end
 
       # Returns the membership count shown for a cohort
-      # @param cohort [Cohort]
+      # @param cohort [FilteredCohort]
       # @return [Integer]
       def cohort_member_count(cohort)
         el = span_element(xpath: "#{cohort_xpath cohort}//span")
@@ -153,7 +153,7 @@ module Page
 
       # Verifies the user + alert data shown for a cohort's membership
       # @param driver [Selenium::WebDriver]
-      # @param cohort [Cohort]
+      # @param cohort [FilteredCohort]
       # @param members [Array<User>]
       def verify_cohort_alert_rows(driver, cohort, members)
 
@@ -183,7 +183,7 @@ module Page
       end
 
       # Clicks the link for a given My Saved Cohort
-      # @param cohort [Cohort]
+      # @param cohort [FilteredCohort]
       def click_my_cohort(cohort)
         logger.debug "Clicking link to my cohort '#{cohort.name}'"
         wait_until(Utils.short_wait) { my_cohort_elements.any? }

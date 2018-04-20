@@ -15,14 +15,14 @@ describe 'BOAC custom cohorts', order: :defined do
 
   # Get cohorts to be created during tests
   test_search_criteria = BOACUtils.get_test_search_criteria
-  cohorts = test_search_criteria.map { |criteria| Cohort.new({:name => "Test Cohort #{test_search_criteria.index criteria} #{test_id}", :search_criteria => criteria}) }
+  cohorts = test_search_criteria.map { |criteria| FilteredCohort.new({:name => "Test Cohort #{test_search_criteria.index criteria} #{test_id}", :search_criteria => criteria}) }
   all_students = BOACUtils.get_all_athletes
 
   before(:all) do
     @driver = Utils.launch_browser
     @analytics_page = ApiUserAnalyticsPage.new @driver
     @homepage = Page::BOACPages::HomePage.new @driver
-    @cohort_page = Page::BOACPages::CohortListViewPage.new @driver
+    @cohort_page = Page::BOACPages::CohortPages::FilteredCohortListViewPage.new @driver
     @student_page = Page::BOACPages::StudentPage.new @driver
     @homepage.dev_auth
 
@@ -162,7 +162,7 @@ describe 'BOAC custom cohorts', order: :defined do
     end
 
     it 'truncates a title over 255 characters' do
-      cohort = Cohort.new({name: "#{'A loooooong title' * 15}?"})
+      cohort = FilteredCohort.new({name: "#{'A loooooong title' * 15}?"})
       @homepage.click_create_new_cohort
       @cohort_page.perform_search cohorts.first
       @cohort_page.save_and_name_cohort cohort
@@ -172,7 +172,7 @@ describe 'BOAC custom cohorts', order: :defined do
     end
 
     it 'requires that a title be unique among the user\'s existing cohorts' do
-      cohort = Cohort.new({name: cohorts.first.name})
+      cohort = FilteredCohort.new({name: cohorts.first.name})
       @cohort_page.save_and_name_cohort cohort
       @cohort_page.title_dupe_msg_element.when_visible Utils.short_wait
     end
@@ -191,7 +191,7 @@ describe 'BOAC custom cohorts', order: :defined do
 
     it 'creates a new cohort' do
       existing_cohort = cohorts.first
-      new_cohort = Cohort.new({name: "Edited Search #{test_id}", search_criteria: test_search_criteria.last})
+      new_cohort = FilteredCohort.new({name: "Edited Search #{test_id}", search_criteria: test_search_criteria.last})
       @cohort_page.load_cohort existing_cohort
       @cohort_page.search_and_create_edited_cohort(existing_cohort, new_cohort)
       expect(new_cohort.id).not_to eql(existing_cohort.id)

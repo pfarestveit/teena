@@ -25,7 +25,7 @@ describe 'BOAC' do
     @driver = Utils.launch_browser
     @boac_homepage = Page::BOACPages::HomePage.new @driver
     @boac_teams_list_page = Page::BOACPages::TeamsListPage.new @driver
-    @boac_cohort_page = Page::BOACPages::CohortListViewPage.new @driver
+    @boac_cohort_page = Page::BOACPages::CohortPages::FilteredCohortListViewPage.new @driver
     @boac_student_page = Page::BOACPages::StudentPage.new @driver
 
     @boac_homepage.dev_auth
@@ -175,15 +175,19 @@ describe 'BOAC' do
                 non_dismissed = alert_msgs - dismissed
                 logger.info "UID #{team_member.uid} alert count is #{alert_msgs.length}, with #{dismissed.length} dismissed"
 
-                non_dismissed_visible = @boac_student_page.non_dismissed_alert_msg_elements.all? &:visible?
-                non_dismissed_present = @boac_student_page.non_dismissed_alert_msgs
-                dismissed_visible = @boac_student_page.dismissed_alert_msg_elements.any? &:visible?
-                dismissed_present = @boac_student_page.dismissed_alert_msgs
+                if non_dismissed.any?
+                  non_dismissed_visible = @boac_student_page.non_dismissed_alert_msg_elements.all? &:visible?
+                  non_dismissed_present = @boac_student_page.non_dismissed_alert_msgs
+                  it("has the non-dismissed alert messages for UID #{team_member.uid} on the student page") { expect(non_dismissed_present).to eql(non_dismissed) }
+                  it("shows the non-dismissed alert messages for UID #{team_member.uid} on the student page") { expect(non_dismissed_visible).to be true }
+                end
 
-                it("has the non-dismissed alert messages for UID #{team_member.uid} on the student page") { expect(non_dismissed_present).to eql(non_dismissed) }
-                it("has the dismissed alert messages for UID #{team_member.uid} on the student page") { expect(dismissed_present).to eql(dismissed) }
-                it("shows the non-dismissed alert messages for UID #{team_member.uid} on the student page") { expect(non_dismissed_visible).to be true }
-                it("hides the dismissed alert messages for UID #{team_member.uid} on the student page") { expect(dismissed_visible).to be false }
+                if dismissed.any?
+                  dismissed_visible = @boac_student_page.dismissed_alert_msg_elements.any? &:visible?
+                  dismissed_present = @boac_student_page.dismissed_alert_msgs
+                  it("has the dismissed alert messages for UID #{team_member.uid} on the student page") { expect(dismissed_present).to eql(dismissed) }
+                  it("hides the dismissed alert messages for UID #{team_member.uid} on the student page") { expect(dismissed_visible).to be false }
+                end
 
                 # TERMS
 
