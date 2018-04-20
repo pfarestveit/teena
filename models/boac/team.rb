@@ -1,4 +1,4 @@
-class Team < Cohort
+class Team < FilteredCohort
 
   attr_accessor :code
 

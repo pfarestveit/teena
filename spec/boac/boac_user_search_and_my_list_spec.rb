@@ -144,10 +144,10 @@ describe 'BOAC' do
   describe 'My List' do
 
     before(:all) do
-      @cohort_page = Page::BOACPages::FilteredCohortListViewPage.new @driver
+      @cohort_page = Page::BOACPages::CohortPages::FilteredCohortListViewPage.new @driver
       @student_page = Page::BOACPages::StudentPage.new @driver
       # Get test users for My List
-      @cohort = Cohort.new({:search_criteria => CohortSearchCriteria.new({:squads => [Squad::MGO_AA]})})
+      @cohort = FilteredCohort.new({:search_criteria => CohortSearchCriteria.new({:squads => [Squad::MGO_AA]})})
       students = active_athletes.select { |a| a.sports.include? @cohort.search_criteria.squads.first.code }
       @student_1 = students[0]
       @student_2 = students[1]
