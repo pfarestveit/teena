@@ -14,6 +14,8 @@ module Page
       button(:list_view_button, xpath: '//button[contains(.,"List")]')
       button(:matrix_view_button, xpath: '//button[contains(.,"Matrix")]')
       h1(:results, xpath: '//h1')
+      button(:confirm_delete_button, id: 'confirm-delete-btn')
+      button(:cancel_delete_button, id: 'cancel-delete-btn')
 
       # Clicks the list view button
       def click_list_view
@@ -33,27 +35,6 @@ module Page
       def results_count
         sleep 1
         results.split(' ')[0].to_i
-      end
-
-      # Returns the element containing the cohort name on the Manage Cohorts page
-      # @param cohort [Cohort]
-      # @return [PageObject::Elements::Span]
-      def cohort_on_manage_cohorts(cohort)
-        span_element(xpath: "//span[text()='#{cohort.name}']")
-      end
-
-      # Returns the element containing the cohort rename button on the Manage Cohorts page
-      # @param cohort [Cohort]
-      # @return [PageObject::Elements::Button]
-      def cohort_rename_button(cohort)
-        button_element(xpath: "//span[text()='#{cohort.name}']/ancestor::div[contains(@class,'cohort-manage-name')]/following-sibling::div//button[contains(text(),'Rename')]")
-      end
-
-      # Returns the element containing the cohort delete button on the Manage Cohorts page
-      # @param cohort [Cohort]
-      # @return [PageObject::Elements::Button]
-      def cohort_delete_button(cohort)
-        button_element(xpath: "//span[text()='#{cohort.name}']/ancestor::div[contains(@class,'cohort-manage-name')]/following-sibling::div//button[contains(text(),'Delete')]")
       end
 
     end
