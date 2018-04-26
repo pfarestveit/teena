@@ -1,6 +1,6 @@
 require_relative '../../util/spec_helper'
 
-describe 'BOAC custom cohorts', order: :defined do
+describe 'BOAC filtered cohorts', order: :defined do
 
   include Logging
 
@@ -8,9 +8,9 @@ describe 'BOAC custom cohorts', order: :defined do
   test_advisor = User.new({:uid => Utils.super_admin_uid, :username => Utils.super_admin_username})
 
   # Get all existing cohorts
-  advisor_cohorts_pre_existing = BOACUtils.get_user_custom_cohorts test_advisor
+  advisor_cohorts_pre_existing = BOACUtils.get_user_filtered_cohorts test_advisor
   logger.debug "Advisor has #{advisor_cohorts_pre_existing.length} existing cohorts"
-  everyone_cohorts_pre_existing = BOACUtils.get_everyone_custom_cohorts
+  everyone_cohorts_pre_existing = BOACUtils.get_everyone_filtered_cohorts
   logger.debug "Everyone has #{everyone_cohorts_pre_existing.length} total cohorts"
 
   # Get cohorts to be created during tests
@@ -63,7 +63,7 @@ describe 'BOAC custom cohorts', order: :defined do
       @homepage.load_page
     end
 
-    it('shows a No Saved Cohorts message on the homepage') { expect(@homepage.you_have_no_cohorts_msg?).to be true }
+    it('shows a No Filtered Cohorts message on the homepage') { expect(@homepage.no_filtered_cohorts_msg?).to be true }
   end
 
   context 'search' do
@@ -73,7 +73,7 @@ describe 'BOAC custom cohorts', order: :defined do
     cohorts.each do |cohort|
       it "shows all the students who match sports '#{cohort.search_criteria.squads && (cohort.search_criteria.squads.map &:name)}', levels '#{cohort.search_criteria.levels}', majors '#{cohort.search_criteria.majors}', GPA ranges '#{cohort.search_criteria.gpa_ranges}', units '#{cohort.search_criteria.units}'" do
         @homepage.load_page
-        @cohort_page.click_create_new_cohort
+        @cohort_page.click_sidebar_create_filtered
         @cohort_page.perform_search cohort
         expected_results = @cohort_page.expected_search_results(@active_student_search_data, cohort.search_criteria).map { |u| u[:sid] }
         visible_results = @cohort_page.visible_sids
@@ -131,43 +131,43 @@ describe 'BOAC custom cohorts', order: :defined do
 
     cohorts.each do |cohort|
       it "allows the advisor to create a cohort using '#{cohort.search_criteria.squads && (cohort.search_criteria.squads.map &:name)}', levels '#{cohort.search_criteria.levels}', majors '#{cohort.search_criteria.majors}', GPA ranges '#{cohort.search_criteria.gpa_ranges}', units '#{cohort.search_criteria.units}'" do
-        @cohort_page.click_create_new_cohort
+        @cohort_page.click_sidebar_create_filtered
         @cohort_page.perform_search cohort
         @cohort_page.create_new_cohort cohort
       end
 
       it "shows cohort ID #{cohort.id} on the homepage" do
         @homepage.load_page
-        @homepage.wait_until(Utils.medium_wait) { @homepage.my_saved_cohorts.include? cohort.name }
+        @homepage.wait_until(Utils.medium_wait) { @homepage.filtered_cohorts.include? cohort.name }
       end
 
       it "shows cohort ID #{cohort.id} members who have alerts on the homepage" do
         member_sids = @cohort_page.expected_sids_by_last_name(@active_student_search_data, cohort.search_criteria)
-        @homepage.wait_until(Utils.short_wait) { @homepage.cohort_member_count(cohort) == member_sids.length }
+        @homepage.wait_until(Utils.short_wait) { @homepage.filtered_cohort_member_count(cohort) == member_sids.length }
         members = all_students.select { |u| member_sids.include? u.sis_id }
         @homepage.verify_cohort_alert_rows(@driver, cohort, members)
       end
 
       it "offers a link to the advisor's custom cohort '#{cohort.name}'" do
-        @homepage.click_my_cohort cohort
+        @homepage.click_filtered_cohort cohort
         @cohort_page.cohort_heading(cohort).when_visible Utils.medium_wait
       end
     end
 
     it 'requires a title' do
-      @homepage.click_create_new_cohort
+      @homepage.click_sidebar_create_filtered
       @cohort_page.perform_search cohorts.first
       @cohort_page.click_save_cohort_button_one
       expect(@cohort_page.save_cohort_button_two_element.disabled?).to be true
     end
 
     it 'truncates a title over 255 characters' do
-      cohort = FilteredCohort.new({name: "#{'A loooooong title' * 15}?"})
-      @homepage.click_create_new_cohort
+      cohort = FilteredCohort.new({name: "#{'A loooooong title ' * 15}?"})
+      @homepage.click_sidebar_create_filtered
       @cohort_page.perform_search cohorts.first
       @cohort_page.save_and_name_cohort cohort
       cohort.name = cohort.name[0..254]
-      @cohort_page.wait_for_cohort cohort
+      @cohort_page.wait_for_filtered_cohort cohort
       cohorts << cohort
     end
 
@@ -182,8 +182,8 @@ describe 'BOAC custom cohorts', order: :defined do
 
     it('shows only the advisor\'s cohorts on the homepage') do
       @homepage.load_page
-      @homepage.wait_until(Utils.short_wait) { @homepage.my_saved_cohorts.any? }
-      expect(@homepage.my_saved_cohorts.sort).to eql((cohorts.map &:name).sort)
+      @homepage.wait_until(Utils.short_wait) { @homepage.filtered_cohorts.any? }
+      expect(@homepage.filtered_cohorts.sort).to eql((cohorts.map &:name).sort)
     end
   end
 
@@ -244,7 +244,7 @@ describe 'BOAC custom cohorts', order: :defined do
       @student_page.add_user_to_watchlist @student
       @homepage.load_page
       @homepage.wait_for_spinner
-      expect(@homepage.my_list_user_inactive?(@student)).to be true
+      expect(@homepage.curated_cohort_user_inactive?(@student)).to be true
     end
 
     cohorts.each do |cohort|

@@ -13,7 +13,7 @@ module Page
 
       link(:return_to_cohort, xpath: '//a[contains(.,"Return to cohort")]')
 
-      h2(:preferred_name, class: 'student-bio-name-preferred')
+      h2(:preferred_name, :class => 'student-bio-name-preferred')
       span(:phone, xpath: '//span[@data-ng-bind="student.sisProfile.phoneNumber"]')
       link(:email, xpath: '//a[@data-ng-bind="student.sisProfile.emailAddress"]')
       div(:cumulative_units, xpath: '//div[@data-ng-bind="student.sisProfile.cumulativeUnits"]')
@@ -99,6 +99,65 @@ module Page
           :reqt_institutions => (institutions_reqt.strip if institutions_reqt_element.exists?),
           :reqt_cultures => (cultures_reqt.strip if cultures_reqt_element.exists?)
         }
+      end
+
+      # CURATED COHORTS
+
+      link(:student_create_curated_cohort, id: 'curated-cohort-create')
+      link(:student_manage_created_cohort, id: 'curated-cohorts-manage')
+      elements(:student_curated_cohort_name, :link, xpath: '//div[contains(@class,"student-groups-checkboxes")]//a[@data-ng-bind="group.name"]')
+
+      # Clicks the checkbox to add or remove a student from a curated cohort
+      # @param cohort [CuratedCohort]
+      def click_curated_cbx(cohort)
+        wait_for_update_and_click checkbox_element(xpath: "//div[contains(@class,\"student-group-checkbox\")][contains(.,\"#{cohort.name}\")]/input")
+      end
+
+      # Adds a student to a curated cohort
+      # @param student [User]
+      # @param cohort [CuratedCohort]
+      def add_student_to_curated(student, cohort)
+        logger.info "Adding UID #{student.uid} to cohort '#{cohort.name}'"
+        click_curated_cbx cohort
+        cohort.members << student
+        wait_for_sidebar_curated_member_count cohort
+      end
+
+      # Removes a student from a curated cohort
+      # @param student [User]
+      # @param cohort [CuratedCohort]
+      def remove_student_from_curated(student, cohort)
+        logger.info "Removing UID #{student.uid} from cohort '#{cohort.name}'"
+        click_curated_cbx cohort
+        cohort.members.delete student
+        wait_for_sidebar_curated_member_count cohort
+      end
+
+      # Creates a curated cohort using the create button on the student page
+      # @param cohort [CuratedCohort]
+      def create_student_curated(cohort)
+        wait_for_update_and_click student_create_curated_cohort_element
+        name_and_save_curated_cohort cohort
+        wait_for_sidebar_curated cohort
+      end
+
+      # Clicks the manage curated cohorts link on the student page
+      def click_student_manage_curated
+        wait_for_update_and_click student_manage_created_cohort_element
+        wait_for_title 'Manage Curated Cohorts'
+      end
+
+      # Returns all the curated cohorts shown on the student page
+      # @return [Array<String>]
+      def visible_curated_names
+        student_curated_cohort_name_elements.map &:text
+      end
+
+      # Whether or not a curated cohort is selected on the student page
+      # @param cohort [CuratedCohort]
+      # @return [boolean]
+      def curated_selected?(cohort)
+        checkbox_element(xpath: "//div[contains(@class,\"student-group-checkbox\")][contains(.,\"#{cohort.name}\")]//input[contains(@class,\"ng-not-empty\")]").exists?
       end
 
       # COURSES
@@ -292,7 +351,7 @@ module Page
         {
           :perc_round => perc_round(site_xpath, label),
           :score => (api_analytics[:graphable] ? graphable_user_score(site_xpath, label) : non_graphable_user_score(site_xpath, label)),
-          :max => (api_analytics[:graphable] ? tool_tip_detail[0] : non_graphable_maximum(site_xpath, label)) ,
+          :max => (api_analytics[:graphable] ? tool_tip_detail[0] : non_graphable_maximum(site_xpath, label)),
           :perc_70 => tool_tip_detail[1],
           :perc_50 => tool_tip_detail[2],
           :perc_30 => tool_tip_detail[3],

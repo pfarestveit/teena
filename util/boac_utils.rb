@@ -74,12 +74,38 @@ class BOACUtils < Utils
   # @return [Array<User>]
   def self.get_authorized_users
     query = 'SELECT authorized_users.uid AS uid,
-                    authorized_users.is_advisor AS advisor,
                     authorized_users.is_admin AS admin
               FROM authorized_users;'
     results = query_db(boac_db_credentials, query)
     results.map { |r| User.new({uid: r['uid']}) }
   end
+
+  # SEARCH TEST DATA
+
+  # Returns the file path containing stored searchable student data to drive cohort search tests
+  # @return [String]
+  def self.searchable_data
+    File.join(Utils.config_dir, 'boac-searchable-data.json')
+  end
+
+  # Returns a collection of search criteria to use for testing cohort search
+  # @return [Array<Hash>]
+  def self.get_test_search_criteria
+    test_data_file = File.join(Utils.config_dir, 'test-data-boac.json')
+    test_data = JSON.parse File.read(test_data_file)
+    test_data['search_criteria'].map do |d|
+      criteria = {
+          squads: (d['teams'] && d['teams'].map { |t| Squad::SQUADS.find { |s| s.name == t['squad'] } }),
+          levels: (d['levels'] && d['levels'].map { |l| l['level'] }),
+          majors: (d['majors'] && d['majors'].map { |t| t['major'] }),
+          gpa_ranges: (d['gpa_ranges'] && d['gpa_ranges'].map { |g| g['gpa_range'] }),
+          units: (d['units'] && d['units'].map { |u| u['unit'] })
+      }
+      CohortSearchCriteria.new criteria
+    end
+  end
+
+  # DATABASE - ATHLETES
 
   # Returns all students
   # @return [PG::Result]
@@ -130,29 +156,6 @@ class BOACUtils < Utils
     athletes_to_users query_intensive_athletes
   end
 
-  # Returns the file path containing stored searchable student data to drive cohort search tests
-  # @return [String]
-  def self.searchable_data
-    File.join(Utils.config_dir, 'boac-searchable-data.json')
-  end
-
-  # Returns a collection of search criteria to use for testing cohort search
-  # @return [Array<Hash>]
-  def self.get_test_search_criteria
-    test_data_file = File.join(Utils.config_dir, 'test-data-boac.json')
-    test_data = JSON.parse File.read(test_data_file)
-    test_data['search_criteria'].map do |d|
-      criteria = {
-          squads: (d['teams'] && d['teams'].map { |t| Squad::SQUADS.find { |s| s.name == t['squad'] } }),
-          levels: (d['levels'] && d['levels'].map { |l| l['level'] }),
-          majors: (d['majors'] && d['majors'].map { |t| t['major'] }),
-          gpa_ranges: (d['gpa_ranges'] && d['gpa_ranges'].map { |g| g['gpa_range'] }),
-          units: (d['units'] && d['units'].map { |u| u['unit'] })
-      }
-      CohortSearchCriteria.new criteria
-    end
-  end
-
   # Returns all the distinct teams associated with team members
   # @return [Array<Team>]
   def self.get_teams
@@ -198,10 +201,37 @@ class BOACUtils < Utils
     athletes.select { |u| (u.sports & squad_codes).any? }
   end
 
-  # Returns the custom cohorts belonging to a given user
+  # DATABASE - CURATED COHORTS
+
+  # Returns the curated cohorts belonging to a given user
+  # @param user [User]
+  # @return [Array<CuratedCohort>]
+  def self.get_user_curated_cohorts(user)
+    query = "SELECT student_groups.id AS id, student_groups.name AS name
+              FROM student_groups
+              JOIN authorized_users ON authorized_users.id = student_groups.owner_id
+              WHERE authorized_users.uid = '#{user.uid}';"
+    results = Utils.query_db(boac_db_credentials, query)
+    results.map { |r| CuratedCohort.new({id: r['id'], name: r['name'], owner_uid: user.uid}) }
+  end
+
+  # Obtains and sets the cohort ID given a curated cohort with a unique title
+  # @param cohort [CuratedCohort]
+  def self.set_curated_cohort_id(cohort)
+    query = "SELECT id
+              FROM student_groups
+              WHERE name = '#{cohort.name}';"
+    result = Utils.query_db_field(boac_db_credentials, query, 'id').first
+    logger.info "Curated cohort '#{cohort.name}' ID is #{result}"
+    cohort.id = result
+  end
+
+  # DATABASE - FILTERED COHORTS
+
+  # Returns the filtered cohorts belonging to a given user
   # @param user [User]
   # @return [Array<FilteredCohort>]
-  def self.get_user_custom_cohorts(user)
+  def self.get_user_filtered_cohorts(user)
     query = "SELECT cohort_filters.id AS cohort_id, cohort_filters.label AS cohort_name
               FROM cohort_filters
               JOIN cohort_filter_owners ON cohort_filter_owners.cohort_filter_id = cohort_filters.id
@@ -211,9 +241,9 @@ class BOACUtils < Utils
     results.map { |r| FilteredCohort.new({id: r['cohort_id'], name: r['cohort_name'], owner_uid: user.uid}) }
   end
 
-  # Returns all custom cohorts
+  # Returns all filtered cohorts
   # @return [Array<FilteredCohort>]
-  def self.get_everyone_custom_cohorts
+  def self.get_everyone_filtered_cohorts
     query = 'SELECT cohort_filters.id AS cohort_id,
                     cohort_filters.label AS cohort_name,
                     authorized_users.uid AS uid
@@ -226,17 +256,19 @@ class BOACUtils < Utils
     cohorts.sort_by { |c| [c.owner_uid.to_i, c.id] }
   end
 
-  # Obtains and sets the cohort ID given a cohort with a unique title
+  # Obtains and sets the cohort ID given a filtered cohort with a unique title
   # @param cohort [FilteredCohort]
   # @return [Integer]
-  def self.get_custom_cohort_id(cohort)
+  def self.set_filtered_cohort_id(cohort)
     query = "SELECT id
              FROM cohort_filters
              WHERE label = '#{cohort.name}'"
     result = Utils.query_db_field(boac_db_credentials, query, 'id').first
-    logger.info "Cohort '#{cohort.name}' ID is #{result}"
+    logger.info "Filtered cohort '#{cohort.name}' ID is #{result}"
     cohort.id = result
   end
+
+  # DATABASE - ALERTS
 
   # Given a set of students, returns all their active alerts in the current term
   # @param users [Array<User>]

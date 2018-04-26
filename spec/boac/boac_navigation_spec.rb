@@ -11,7 +11,7 @@ describe 'BOAC' do
   @matrix_page = Page::BOACPages::CohortPages::FilteredCohortMatrixPage.new @driver
   @student_page = Page::BOACPages::StudentPage.new @driver
   @homepage.dev_auth
-  @homepage.click_create_new_cohort
+  @homepage.click_sidebar_create_filtered
 
   # Navigate the various cohort/student views using each of the test search criteria
   cohorts.each do |cohort|

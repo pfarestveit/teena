@@ -33,11 +33,11 @@ module Page
         # FILTERED COHORTS - Creation
 
         button(:save_cohort_button_one, id: 'create-cohort-btn')
-        text_area(:cohort_name_input, class: 'cohort-create-input-name')
+        text_area(:cohort_name_input, id: 'filtered-cohort-create-input')
         span(:title_required_msg, xpath: '//span[text()="Required"]')
         div(:title_dupe_msg, xpath: '//div[text()="You have an existing cohort/group with this name. Please choose a different name."]')
-        button(:save_cohort_button_two, id: 'confirm-create-cohort-btn')
-        button(:cancel_cohort_button, id: 'cancel-create-cohort-btn')
+        button(:save_cohort_button_two, id: 'confirm-create-filtered-cohort-btn')
+        button(:cancel_cohort_button, id: 'cancel-create-filtered-cohort-btn')
         span(:cohort_not_found_msg, xpath: '//span[contains(.,"No cohort found with identifier: ")]')
         elements(:everyone_cohort_link, :span, xpath: '//h1[text()="Everyone\'s Cohorts"]/following-sibling::div//a[@data-ng-bind="cohort.label"]')
 
@@ -65,9 +65,9 @@ module Page
         # Waits for a cohort page to load and obtains the cohort's ID
         # @param cohort [FilteredCohort]
         # @return [Integer]
-        def wait_for_cohort(cohort)
+        def wait_for_filtered_cohort(cohort)
           cohort_heading(cohort).when_present Utils.medium_wait
-          cohort.id = BOACUtils.get_custom_cohort_id cohort
+          BOACUtils.set_filtered_cohort_id cohort
         end
 
         # Clicks the Cancel button during cohort creation
@@ -83,7 +83,7 @@ module Page
         def create_new_cohort(cohort)
           logger.info "Creating a new cohort named #{cohort.name}"
           save_and_name_cohort cohort
-          wait_for_cohort cohort
+          wait_for_filtered_cohort cohort
         end
 
         # Creates a new cohort by editing the search criteria of an existing one
@@ -93,7 +93,7 @@ module Page
           load_cohort old_cohort
           perform_search new_cohort
           save_and_name_cohort new_cohort
-          wait_for_cohort new_cohort
+          wait_for_filtered_cohort new_cohort
         end
 
         # Returns all the cohorts displayed on the Everyone's Cohorts page
@@ -108,18 +108,18 @@ module Page
 
         # FILTERED COHORTS - Search
 
-        button(:squad_filter_button, id: 'search-filter-group-codes')
-        elements(:squad_option, :checkbox, xpath: '//input[contains(@id,"search-option-group-codes")]')
-        button(:level_filter_button, id: 'search-filter-levels')
-        elements(:level_option, :checkbox, xpath: '//input[contains(@id, "search-option-level")]')
-        button(:major_filter_button, id: 'search-filter-majors')
-        elements(:major_option, :checkbox, xpath: '//input[contains(@id, "search-option-major")]')
-        button(:gpa_range_filter_button, id: 'search-filter-gpa-ranges')
-        elements(:gpa_range_option, :checkbox, xpath: '//input[contains(@id, "search-option-gpa-range")]')
-        button(:units_filter_button, id: 'search-filter-unit-ranges')
-        elements(:units_option, :checkbox, xpath: '//input[contains(@id, "search-option-unit-ranges")]')
+        button(:squad_filter_button, id: 'cohort-filter-group-codes')
+        elements(:squad_option, :checkbox, xpath: '//input[contains(@id,"cohort-filter-option-group-codes")]')
+        button(:level_filter_button, id: 'cohort-filter-levels')
+        elements(:level_option, :checkbox, xpath: '//input[contains(@id, "cohort-filter-option-level")]')
+        button(:major_filter_button, id: 'cohort-filter-majors')
+        elements(:major_option, :checkbox, xpath: '//input[contains(@id, "cohort-filter-option-major")]')
+        button(:gpa_range_filter_button, id: 'cohort-filter-gpa-ranges')
+        elements(:gpa_range_option, :checkbox, xpath: '//input[contains(@id, "cohort-filter-option-gpa-range")]')
+        button(:units_filter_button, id: 'cohort-filter-unit-ranges')
+        elements(:units_option, :checkbox, xpath: '//input[contains(@id, "cohort-filter-option-unit-ranges")]')
 
-        button(:search_button, id: 'execute-search')
+        button(:search_button, id: 'apply-filters-btn')
         elements(:results_page_link, class: 'pagination-page')
 
         # Returns the heading for a given cohort page
@@ -347,14 +347,34 @@ module Page
         elements(:cohort_name, :span, xpath: '//span[@data-ng-bind="cohort.name"]')
         elements(:rename_input, :text_area, name: 'name')
         elements(:rename_save_button, :button, xpath: '//button[contains(@id,"cohort-save-btn")]')
-        button(:confirm_delete_button, id: 'confirm-delete-cohort-btn')
+
+        # Returns the element containing the cohort name on the Manage Cohorts page
+        # @param cohort [Cohort]
+        # @return [PageObject::Elements::Span]
+        def cohort_on_manage_cohorts(cohort)
+          span_element(xpath: "//span[text()='#{cohort.name}']")
+        end
+
+        # Returns the element containing the cohort rename button on the Manage Cohorts page
+        # @param cohort [Cohort]
+        # @return [PageObject::Elements::Button]
+        def cohort_rename_button(cohort)
+          button_element(xpath: "//span[text()='#{cohort.name}']/ancestor::div[contains(@class,'cohort-manage-name')]/following-sibling::div//button[contains(text(),'Rename')]")
+        end
+
+        # Returns the element containing the cohort delete button on the Manage Cohorts page
+        # @param cohort [Cohort]
+        # @return [PageObject::Elements::Button]
+        def cohort_delete_button(cohort)
+          button_element(xpath: "//span[text()='#{cohort.name}']/ancestor::div[contains(@class,'cohort-manage-name')]/following-sibling::div//button[contains(text(),'Delete')]")
+        end
 
         # Renames a cohort
         # @param cohort [FilteredCohort]
         # @param new_name [String]
         def rename_cohort(cohort, new_name)
           logger.info "Changing the name of cohort ID #{cohort.id} to #{new_name}"
-          click_manage_my_cohorts
+          click_sidebar_manage_filtered
           wait_until(Utils.short_wait) { cohort_name_elements.map(&:text).include? cohort.name }
           wait_for_load_and_click cohort_rename_button(cohort)
           cohort.name = new_name
@@ -368,7 +388,7 @@ module Page
         # @param cohort [FilteredCohort]
         def delete_cohort(cohort)
           logger.info "Deleting a cohort named #{cohort.name}"
-          click_manage_my_cohorts
+          click_sidebar_manage_filtered
           sleep 1
           wait_for_load_and_click cohort_delete_button(cohort)
           wait_for_update_and_click confirm_delete_button_element

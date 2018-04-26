@@ -160,7 +160,7 @@ describe 'BOAC' do
     it('shows a user a "nobody\'s on your list" message for an empty My List') { @homepage.my_list_no_users_msg_element.when_present Utils.short_wait }
 
     it 'allows a user to add students on the cohort page' do
-      @cohort_page.click_create_new_cohort
+      @cohort_page.click_sidebar_create_filtered
       @cohort_page.perform_search @cohort
       @cohort_page.wait_for_search_results
       @cohort_page.add_user_to_watchlist @student_1
@@ -174,21 +174,21 @@ describe 'BOAC' do
 
     it 'allows a user to view its list on the landing page' do
       @homepage.load_page
-      [@student_1, @student_2, @student_3].each { |s| @homepage.my_list_user_row(s).when_present Utils.short_wait }
+      [@student_1, @student_2, @student_3].each { |s| @homepage.curated_cohort_user_row(s).when_present Utils.short_wait }
     end
 
-    it('allows a user to remove a student on the landing page') { @homepage.remove_user_from_watchlist @student_1 }
+    it('allows a user to remove a student on the landing page') { @homepage.remove_curated_cohort_member @student_1 }
 
     it 'allows a user to remove students on the cohort page' do
-      @cohort_page.click_create_new_cohort
+      @cohort_page.click_sidebar_create_filtered
       @cohort_page.perform_search @cohort
       @cohort_page.wait_for_search_results
-      @cohort_page.remove_user_from_watchlist @student_2
+      @cohort_page.remove_curated_cohort_member @student_2
     end
 
     it 'allows a user to remove a student on the student page' do
       @student_page.load_page @student_3
-      @student_page.remove_user_from_watchlist @student_3
+      @student_page.remove_curated_cohort_member @student_3
     end
 
   end

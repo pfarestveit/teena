@@ -76,30 +76,54 @@ module Page
         }
       end
 
-      # MY LIST
+      # CURATED COHORTS
 
-      div(:my_list_no_users_msg, xpath: '//div[text()="You have no students in your list. Add students from their profile pages."]')
-      elements(:my_list_remove_button, :button, xpath: '//button[contains(@id,"watchlist-toggle")]')
+      link(:home_create_first_curated_link, id: 'home-curated-cohort-create')
+      link(:home_create_curated_link, id: 'home-curated-cohorts-create-link')
+      link(:home_manage_curated_link, id: 'home-curated-cohorts-manage-link')
+      div(:home_no_curated_cohorts_msg, xpath: '//h1[text()="Curated Cohorts"]/../following-sibling::div[contains(.,"You have no curated cohorts.")]')
+
+      # Creates a curated cohort using the 'Create' link in the main content area of the homepage
+      # @param cohort [CuratedCohort]
+      def home_create_curated(cohort)
+        wait_for_load_and_click home_create_curated_link_element
+        name_and_save_curated_cohort cohort
+        wait_for_sidebar_curated cohort
+      end
+
+      # Creates a curated cohort using the 'Create a new curated cohort' link shown on the homepage when no other curated cohorts exist
+      # @param cohort [CuratedCohort]
+      def home_create_first_curated(cohort)
+        wait_for_load_and_click home_create_first_curated_link_element
+        name_and_save_curated_cohort cohort
+        wait_for_sidebar_curated cohort
+      end
+
+      # Clicks the manage-curate link in the main content area
+      def click_home_manage_curated
+        wait_for_load_and_click home_manage_curated_link_element
+        wait_for_title 'Manage Curated Cohorts'
+      end
 
       # Returns the element for a user on My List
       # @param user [User]
       # @return [PageObject::Elements::Row]
-      def my_list_user_row(user)
-        row_element(xpath: "//h2[text()='My List']/following-sibling::div//tr[contains(.,\"#{user.last_name}, #{user.first_name}\")][contains(.,\"#{user.sis_id}\")]")
+      def curated_cohort_user_row(user)
+        row_element(xpath: "//h2[text()='Curated Cohorts']/following-sibling::div//tr[contains(.,\"#{user.last_name}, #{user.first_name}\")][contains(.,\"#{user.sis_id}\")]")
       end
 
       # Checks if a user is marked inactive in My List
       # @param user [User]
       # @return [boolean]
-      def my_list_user_inactive?(user)
-        my_list_user_row(user).span_element(class: 'home-inactive-info-icon').exists?
+      def curated_cohort_user_inactive?(user)
+        curated_cohort_user_row(user).span_element(class: 'home-inactive-info-icon').exists?
       end
 
       # Removes a user from My List
       # @param user [User]
-      def remove_user_from_watchlist(user)
+      def remove_curated_cohort_member(user)
         wait_for_load_and_click watchlist_toggle(user)
-        my_list_user_row(user).when_not_present Utils.short_wait
+        curated_cohort_user_row(user).when_not_present Utils.short_wait
       end
 
       # Removes all users from My List
@@ -116,38 +140,38 @@ module Page
         end
       end
 
-      # CUSTOM COHORTS
+      # FILTERED COHORTS
 
-      elements(:my_cohort, :link, xpath: '//h1[text()="Cohorts"]/following-sibling::div[@data-ng-repeat="cohort in myCohorts"]/h2/a')
-      div(:you_have_no_cohorts_msg, xpath: '//div[contains(.,"You have no saved cohorts.")]')
+      elements(:filtered_cohort, :link, xpath: '//h1[text()="Filtered Cohorts"]/following-sibling::div[@data-ng-repeat="cohort in myCohorts"]/h2/a')
+      div(:no_filtered_cohorts_msg, xpath: '//div[contains(.,"You have no filtered cohorts.")]')
 
       # Returns the names of My Saved Cohorts shown on the homepage
       # @return [Array<String>]
-      def my_saved_cohorts
-        h1_element(xpath: '//h1[text()="Cohorts"]').when_present Utils.medium_wait
-        my_cohort_elements.map &:text
+      def filtered_cohorts
+        h1_element(xpath: '//h1[text()="Filtered Cohorts"]').when_present Utils.medium_wait
+        filtered_cohort_elements.map &:text
       end
 
       # Returns the XPath to a cohort's div
       # @param cohort [FilteredCohort]
       # @return [String]
-      def cohort_xpath(cohort)
-        "//h1[text()=\"Cohorts\"]/following-sibling::div[contains(.,\"#{cohort.name}\")]"
+      def filtered_cohort_xpath(cohort)
+        "//h1[text()=\"Filtered Cohorts\"]/following-sibling::div[contains(.,\"#{cohort.name}\")]"
       end
 
       # Returns all the user divs beneath a cohort
       # @param driver [Selenium::WebDriver]
       # @param cohort [FilteredCohort]
       # @return [Array<Selenium::WebDriver::Element>]
-      def cohort_member_rows(driver, cohort)
-        user_rows(driver, cohort_xpath(cohort))
+      def filtered_cohort_member_rows(driver, cohort)
+        user_rows(driver, filtered_cohort_xpath(cohort))
       end
 
       # Returns the membership count shown for a cohort
       # @param cohort [FilteredCohort]
       # @return [Integer]
-      def cohort_member_count(cohort)
-        el = span_element(xpath: "#{cohort_xpath cohort}//span")
+      def filtered_cohort_member_count(cohort)
+        el = span_element(xpath: "#{filtered_cohort_xpath cohort}//span")
         el && el.text.to_i
       end
 
@@ -167,13 +191,13 @@ module Page
 
         # Verify that there are only rows for members with alerts
         expected_member_row_count = members_and_alert_counts.length
-        visible_member_row_count = cohort_member_rows(driver, cohort).length
+        visible_member_row_count = filtered_cohort_member_rows(driver, cohort).length
         wait_until(1, "Expecting #{expected_member_row_count}, got #{visible_member_row_count}") { visible_member_row_count == expected_member_row_count }
 
         # Verify that there is a row for each student with a positive alert count and that the alert count is right
         members_and_alert_counts.each do |member|
           logger.debug "Checking cohort row for SID #{member[:user].sis_id}"
-          visible_row_data = user_row_data(driver, cohort_xpath(cohort), member[:user])
+          visible_row_data = user_row_data(driver, filtered_cohort_xpath(cohort), member[:user])
           wait_until(1, "Expecting name #{member[:user].last_name}, #{member[:user].first_name}, got #{visible_row_data[:name]}") { visible_row_data[:name] == "#{member[:user].last_name}, #{member[:user].first_name}" }
           wait_until(1, "Expecting SID #{member[:user].sis_id}, got #{visible_row_data[:sid]}") { visible_row_data[:sid] == member[:user].sis_id }
           wait_until(1, "Expecting alert count #{member[:alert_count]}, got #{visible_row_data[:alert_count]}") { visible_row_data[:alert_count] == member[:alert_count] }
@@ -182,12 +206,12 @@ module Page
         end
       end
 
-      # Clicks the link for a given My Saved Cohort
+      # Clicks the link for a given Filtered Cohort
       # @param cohort [FilteredCohort]
-      def click_my_cohort(cohort)
+      def click_filtered_cohort(cohort)
         logger.debug "Clicking link to my cohort '#{cohort.name}'"
-        wait_until(Utils.short_wait) { my_cohort_elements.any? }
-        wait_for_update_and_click (my_cohort_elements.find { |e| e.text == cohort.name })
+        wait_until(Utils.short_wait) { filtered_cohort_elements.any? }
+        wait_for_update_and_click (filtered_cohort_elements.find { |e| e.text == cohort.name })
       end
 
     end
