@@ -137,7 +137,8 @@ module Page
   def verify_block(&blk)
     begin
       return true if yield
-    rescue
+    rescue => e
+      logger.warn e.message
       false
     end
   end

@@ -31,7 +31,7 @@ describe 'A BOAC alert' do
     before(:all) { @student_page.dismiss_alert @alert }
 
     it 'is no longer shown by default' do
-      @student_page.wait_until(1) { !@student_page.non_dismissed_alert_msgs.include? @alert.message }
+      @student_page.wait_until(1) { !@student_page.non_dismissed_alert_ids.include? @alert.id }
       expect(@student_page.dismissed_alert_msgs).to include(@alert.message)
       @student_page.wait_until(1) { !@student_page.dismissed_alert_msg_elements.any?(&:visible?) }
     end

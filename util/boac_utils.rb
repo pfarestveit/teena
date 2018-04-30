@@ -80,6 +80,18 @@ class BOACUtils < Utils
     results.map { |r| User.new({uid: r['uid']}) }
   end
 
+  # Returns all the advisors associated with a department
+  # @return [Array<User>]
+  def self.get_dept_advisors(dept)
+    query = "SELECT authorized_users.uid
+              FROM authorized_users
+              INNER JOIN university_dept_members ON authorized_users.id = university_dept_members.authorized_user_id
+              INNER JOIN university_depts on university_dept_members.university_dept_id = university_depts.id
+              WHERE university_depts.dept_code = '#{dept.code}';"
+    results = query_db(boac_db_credentials, query)
+    results.map { |r| User.new({uid: r['uid']}) }
+  end
+
   # SEARCH TEST DATA
 
   # Returns the file path containing stored searchable student data to drive cohort search tests

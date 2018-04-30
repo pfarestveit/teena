@@ -136,19 +136,19 @@ describe 'BOAC filtered cohorts', order: :defined do
         @cohort_page.create_new_cohort cohort
       end
 
-      it "shows cohort ID #{cohort.id} on the homepage" do
+      it 'shows the filtered cohort on the homepage' do
         @homepage.load_page
         @homepage.wait_until(Utils.medium_wait) { @homepage.filtered_cohorts.include? cohort.name }
       end
 
-      it "shows cohort ID #{cohort.id} members who have alerts on the homepage" do
+      it 'shows the filtered cohort members who have alerts on the homepage' do
         member_sids = @cohort_page.expected_sids_by_last_name(@active_student_search_data, cohort.search_criteria)
         @homepage.wait_until(Utils.short_wait) { @homepage.filtered_cohort_member_count(cohort) == member_sids.length }
         members = all_students.select { |u| member_sids.include? u.sis_id }
         @homepage.verify_cohort_alert_rows(@driver, cohort, members)
       end
 
-      it "offers a link to the advisor's custom cohort '#{cohort.name}'" do
+      it 'offers a link to the filtered cohort' do
         @homepage.click_filtered_cohort cohort
         @cohort_page.cohort_heading(cohort).when_visible Utils.medium_wait
       end
@@ -174,7 +174,7 @@ describe 'BOAC filtered cohorts', order: :defined do
     it 'requires that a title be unique among the user\'s existing cohorts' do
       cohort = FilteredCohort.new({name: cohorts.first.name})
       @cohort_page.save_and_name_cohort cohort
-      @cohort_page.title_dupe_msg_element.when_visible Utils.short_wait
+      @cohort_page.dupe_filtered_name_msg_element.when_visible Utils.short_wait
     end
   end
 
@@ -238,13 +238,6 @@ describe 'BOAC filtered cohorts', order: :defined do
       @cohort_page.click_player_link @student
       @student_page.wait_for_spinner
       @student_page.inactive_flag_element.when_visible Utils.short_wait
-    end
-
-    it 'have an inactive indicator on My List' do
-      @student_page.add_user_to_watchlist @student
-      @homepage.load_page
-      @homepage.wait_for_spinner
-      expect(@homepage.curated_cohort_user_inactive?(@student)).to be true
     end
 
     cohorts.each do |cohort|

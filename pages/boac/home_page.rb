@@ -55,25 +55,7 @@ module Page
       # @param xpath [String]
       # @return [Array<Selenium::WebDriver::Element>]
       def user_rows(driver, xpath)
-        driver.find_elements(xpath: "#{xpath}//div[contains(@data-ng-repeat,'student in group.students')]")
-      end
-
-      # Returns the data visible for a cohort or group member
-      # @param driver [Selenium::WebDriver]
-      # @param xpath [String]
-      # @param user [User]
-      # @return [Hash]
-      def user_row_data(driver, xpath, user)
-        row_xpath = "#{xpath}//div[contains(@data-ng-repeat,'student in group.students')][contains(.,'#{user.sis_id}')]"
-        {
-          :name => link_element(xpath: "#{row_xpath}//a").text,
-          :sid => span_element(xpath: "#{row_xpath}//span").text,
-          :majors => driver.find_elements(xpath: "#{row_xpath}//span[@data-ng-repeat='major in student.majors']").map(&:text),
-          :units_in_progress => div_element(xpath: "#{row_xpath}//div[contains(@data-ng-bind,'student.term.enrolledUnits')]").text,
-          :cumulative_units => div_element(xpath: "#{row_xpath}//div[contains(@data-ng-bind,'student.cumulativeUnits')]").text,
-          :gpa => div_element(xpath: "#{row_xpath}//div[contains(@data-ng-bind, 'student.cumulativeGPA')]").text,
-          :alert_count => div_element(xpath: "#{row_xpath}//div[contains(@class,'home-issues-pill')]").text
-        }
+        driver.find_elements(xpath: "#{xpath}//div[contains(@data-ng-repeat,'student in students')]")
       end
 
       # CURATED COHORTS
@@ -142,7 +124,9 @@ module Page
 
       # FILTERED COHORTS
 
-      elements(:filtered_cohort, :link, xpath: '//h1[text()="Filtered Cohorts"]/following-sibling::div[@data-ng-repeat="cohort in myCohorts"]/h2/a')
+      elements(:filtered_cohort, :link, xpath: '//div[@data-ng-repeat="cohort in myCohorts"]/h2/a')
+      link(:home_create_filtered_link, id: 'home-filtered-cohorts-create-link')
+      link(:home_manage_filtered_link, id: 'home-filtered-cohorts-manage-link')
       div(:no_filtered_cohorts_msg, xpath: '//div[contains(.,"You have no filtered cohorts.")]')
 
       # Returns the names of My Saved Cohorts shown on the homepage
@@ -156,7 +140,7 @@ module Page
       # @param cohort [FilteredCohort]
       # @return [String]
       def filtered_cohort_xpath(cohort)
-        "//h1[text()=\"Filtered Cohorts\"]/following-sibling::div[contains(.,\"#{cohort.name}\")]"
+        "//div[@data-ng-repeat=\"cohort in myCohorts\"][contains(.,\"#{cohort.name}\")]"
       end
 
       # Returns all the user divs beneath a cohort
@@ -197,7 +181,7 @@ module Page
         # Verify that there is a row for each student with a positive alert count and that the alert count is right
         members_and_alert_counts.each do |member|
           logger.debug "Checking cohort row for SID #{member[:user].sis_id}"
-          visible_row_data = user_row_data(driver, filtered_cohort_xpath(cohort), member[:user])
+          visible_row_data = user_row_data(driver, member[:user], filtered_cohort_xpath(cohort))
           wait_until(1, "Expecting name #{member[:user].last_name}, #{member[:user].first_name}, got #{visible_row_data[:name]}") { visible_row_data[:name] == "#{member[:user].last_name}, #{member[:user].first_name}" }
           wait_until(1, "Expecting SID #{member[:user].sis_id}, got #{visible_row_data[:sid]}") { visible_row_data[:sid] == member[:user].sis_id }
           wait_until(1, "Expecting alert count #{member[:alert_count]}, got #{visible_row_data[:alert_count]}") { visible_row_data[:alert_count] == member[:alert_count] }

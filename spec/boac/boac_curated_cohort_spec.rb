@@ -191,8 +191,8 @@ describe 'BOAC', order: :defined do
 
     it 'is shown on the curated cohort list view page' do
       @curated_page.load_page @cohort_1
-      @curated_page.wait_for_curated_members @driver
-      @curated_page.wait_until(Utils.short_wait) { @curated_page.visible_curated_uids(@driver) == @cohort_1.members.map(&:uid) }
+      @curated_page.wait_for_student_list
+      @curated_page.wait_until(Utils.short_wait) { @curated_page.visible_sids == @cohort_1.members.map(&:sis_id) }
     end
 
     it 'is shown on the student page' do

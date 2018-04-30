@@ -76,13 +76,12 @@
         },
         {
             "teams": [
-                {"squad": "Men's SwimDive"},
                 {"squad": "Men's SwimDive, Divers"},
                 {"squad": "Men's SwimDive, Swimmers"}
             ],
             "levels": null,
             "majors": [
-                {"major": "Letters & Sci Undeclared UG"}
+                {"major": "Undeclared"}
             ],
             "gpa_ranges": [
                 {"gpa_range": "3.00 - 3.49"},
@@ -100,6 +99,10 @@
             "majors": null,
             "gpa_ranges": [
                 {"gpa_range": "2.50 - 2.99"}
+            ],
+            "units": [
+                {"unit": "0 - 29"},
+                {"unit": "30 - 59"}
             ]
         },
         {
@@ -161,13 +164,23 @@
                 {"level": "Sophomore"}
             ],
             "majors": [
-                {"major": "Letters & Sci Undeclared UG"},
-                {"major": "CNR Undeclared UG"}
+                {"major": "Undeclared"}
             ],
             "gpa_ranges": [
                 {"gpa_range": "Below 2.0"},
                 {"gpa_range": "2.00 - 2.49"}
             ]
+        },
+        {
+            "teams": null,
+            "levels": [
+                {"level": "Freshman"}
+            ],
+            "majors": [
+                {"major": "Declared"},
+                {"major": "Economics BA"}
+            ],
+            "gpa_ranges": null
         },
         {
             "teams": null,

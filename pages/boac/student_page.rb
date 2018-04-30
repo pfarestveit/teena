@@ -30,7 +30,9 @@ module Page
       cell(:institutions_reqt, xpath: '//td[text()="American Institutions"]/following-sibling::td')
       cell(:cultures_reqt, xpath: '//td[text()="American Cultures"]/following-sibling::td')
 
+      elements(:non_dismissed_alert, :div, xpath: '//div[@data-ng-repeat="alert in alerts.shown"]')
       elements(:non_dismissed_alert_msg, :span, xpath: '//div[@data-ng-repeat="alert in alerts.shown"]//span[@data-ng-bind="alert.message"]')
+      elements(:dismissed_alert, :div, xpath: '//div[@data-ng-repeat="alert in alerts.dismissed"]')
       elements(:dismissed_alert_msg, :span, xpath: '//div[@data-ng-repeat="alert in alerts.dismissed"]//span[@data-ng-bind="alert.message"]')
       button(:view_dismissed_button, xpath: '//button[contains(.,"View dismissed status alerts")]')
       button(:hide_dismissed_button, xpath: '//button[contains(.,"Hide dismissed status alerts")]')
@@ -43,6 +45,12 @@ module Page
         logger.info "Loading student page for UID #{user.uid}"
         navigate_to "#{BOACUtils.base_url}/student/#{user.uid}"
         wait_for_title user.full_name
+      end
+
+      # Returns the IDs of non-dismissed alerts
+      # @return [Array<String>]
+      def non_dismissed_alert_ids
+        non_dismissed_alert_elements.map { |a| a.attribute('id').split('-')[1] }
       end
 
       # Returns the message text of non-dismissed alerts
@@ -58,6 +66,12 @@ module Page
         msgs = dismissed_alert_msg_elements.map &:text
         click_hide_dismissed_alerts
         msgs
+      end
+
+      # Returns the IDs of dismissed alerts
+      # @return [Array<String>]
+      def dismissed_alert_ids
+        dismissed_alert_elements.map { |a| a.attribute('id').split('-')[1] }
       end
 
       # Clicks the button to reveal dismissed alerts
@@ -76,7 +90,7 @@ module Page
       # @param alert [Alert]
       def dismiss_alert(alert)
         logger.info "Dismissing alert ID #{alert.id}"
-        wait_for_load_and_click link_element(xpath: "//div[@id='alert-#{alert.id}']//a")
+        wait_for_load_and_click button_element(id: "dismiss-alert-#{alert.id}")
       end
 
       # Returns a user's SIS data visible on the student page
