@@ -49,7 +49,7 @@ describe 'BOAC' do
           @boac_teams_list_page.load_page
           @boac_teams_list_page.click_team_link team
           team_url = @boac_cohort_page.current_url
-          @boac_cohort_page.wait_for_page_load team_members.length
+          @boac_cohort_page.wait_for_team team_members.length
 
           expected_team_member_names = (team_members.map { |u| "#{u.last_name}, #{u.first_name}" }).sort
           visible_team_member_names = (@boac_cohort_page.list_view_names).sort

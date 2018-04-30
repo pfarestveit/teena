@@ -35,12 +35,10 @@ module Page
         button(:save_cohort_button_one, id: 'create-cohort-btn')
         text_area(:cohort_name_input, id: 'filtered-cohort-create-input')
         span(:title_required_msg, xpath: '//span[text()="Required"]')
-        div(:title_dupe_msg, xpath: '//div[text()="You have an existing cohort/group with this name. Please choose a different name."]')
         button(:save_cohort_button_two, id: 'confirm-create-filtered-cohort-btn')
         button(:cancel_cohort_button, id: 'cancel-create-filtered-cohort-btn')
         span(:cohort_not_found_msg, xpath: '//span[contains(.,"No cohort found with identifier: ")]')
         elements(:everyone_cohort_link, :span, xpath: '//h1[text()="Everyone\'s Cohorts"]/following-sibling::div//a[@data-ng-bind="cohort.label"]')
-
 
         # Clicks the button to save a new cohort, which triggers the name input modal
         def click_save_cohort_button_one
@@ -216,6 +214,7 @@ module Page
         def perform_search(cohort)
           criteria = cohort.search_criteria
           logger.info "Searching for squads '#{criteria.squads && (criteria.squads.map &:name)}', levels '#{criteria.levels}', majors '#{criteria.majors}', GPA ranges '#{criteria.gpa_ranges}', units '#{criteria.units}'"
+          wait_until(Utils.short_wait) { squad_option_elements.any? }
           sleep 2
 
           # Uncheck any options that are already checked from a previous search, then check those that apply to the current search

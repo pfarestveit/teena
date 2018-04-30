@@ -186,8 +186,8 @@ module Page
     link(:manage_filtered_cohorts_link, id: 'sidebar-filtered-cohorts-manage')
     link(:view_everyone_cohorts_link, id: 'sidebar-filtered-cohorts-all')
     link(:team_list_link, id: 'sidebar-teams-link')
-    link(:intensive_cohort_link, text: 'Intensive')
-    link(:inactive_cohort_link, text: 'Inactive')
+    link(:intensive_cohort_link, text: 'Intensive Students')
+    link(:inactive_cohort_link, text: 'Inactive Students')
     elements(:filtered_cohort_link, :link, xpath: '//div[@data-ng-repeat="cohort in myCohorts"]//a')
 
     # Clicks the button to create a new custom cohort
@@ -233,44 +233,37 @@ module Page
       wait_for_update_and_click link
     end
 
-    # USER SEARCH
+    # USER SEARCH AND STUDENT LISTS (homepage and search results)
 
-    text_area(:user_search_input, xpath: '//div[@class="select-search"]//input')
-    elements(:user_search_option, :list_item, xpath: '//*[name()="find-student"]//li')
+    text_area(:user_search_input, id: 'sidebar-search-students-input')
 
-    # Puts focus in the user search field
-    def click_user_search_input
-      wait_for_load_and_click user_search_input_element
-    end
-
-    # Returns the search option for a given user
-    # @param user [User]
-    # @return [PageObject::Elements::ListItem]
-    def user_option(user)
-      list_item_element(xpath: "//li[contains(@class,\"select-dropdown-optgroup-option\")][contains(.,\"#{user.full_name} - #{user.sis_id}\")]")
-    end
-
-    # Returns the search option for a given squad plus user combination
-    # @param squad [Squad]
-    # @param user [User]
-    # @return [PageObject::Elements::ListItem]
-    def squad_user_option(squad, user)
-      list_item_element(xpath: "//div[@class=\"select-dropdown\"]//div[text()=\"#{squad.name}\"]/following-sibling::li[text()=\"#{user.full_name} - #{user.sis_id}\"]")
-    end
-
-    # Enters a string in the user search field and pauses to trigger a search
+    # Searches for a string using the sidebar search input
     # @param string [String]
     def enter_search_string(string)
       logger.info "Searching for '#{string}'"
-      wait_for_element_and_type(user_search_input_element, string)
-      sleep 2
+      user_search_input_element.when_visible Utils.short_wait
+      sleep Utils.click_wait
+      self.user_search_input = string
+      user_search_input_element.send_keys :enter
     end
 
-    # Returns the text of all the visible user search options
-    # @return [Array<String>]
-    def visible_user_options
-      options = user_search_option_elements.map &:text
-      options.reject &:empty?
+    # Returns the data visible for a user on the search results page or in a filtered or curated cohort on the homepage. If a cohort,
+    # then an XPath is required in order to find the user under the right cohort heading.
+    # @param driver [Selenium::WebDriver]
+    # @param user [User]
+    # @param xpath [String]
+    # @return [Hash]
+    def user_row_data(driver, user, xpath = nil)
+      row_xpath = "#{xpath}//div[contains(@data-ng-repeat,'student in students')][contains(.,'#{user.sis_id}')]"
+      {
+        :name => link_element(xpath: "#{row_xpath}//a").text,
+        :sid => span_element(xpath: "#{row_xpath}//span[@data-ng-bind='student.sid']").text,
+        :majors => driver.find_elements(xpath: "#{row_xpath}//span[@data-ng-repeat='major in student.majors']").map(&:text),
+        :units_in_progress => div_element(xpath: "#{row_xpath}//div[contains(@data-ng-bind,'student.term.enrolledUnits')]").text,
+        :cumulative_units => div_element(xpath: "#{row_xpath}//div[contains(@data-ng-bind,'student.cumulativeUnits')]").text,
+        :gpa => div_element(xpath: "#{row_xpath}//div[contains(@data-ng-bind, 'student.cumulativeGPA')]").text,
+        :alert_count => div_element(xpath: "#{row_xpath}//div[contains(@class,'home-issues-pill')]").text
+      }
     end
 
   end
