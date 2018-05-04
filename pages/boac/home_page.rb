@@ -39,7 +39,7 @@ module Page
       # Authenticates using dev auth
       # @param user [User]
       def dev_auth(user = nil)
-        logger.info 'Logging in using developer auth'
+        logger.info "Logging in #{('UID ' + user.uid + ' ') if user}using developer auth"
         load_page
         scroll_to_bottom
         wait_for_element_and_type(dev_auth_uid_input_element, (user ? user.uid : Utils.super_admin_uid))
@@ -163,12 +163,14 @@ module Page
       # @param driver [Selenium::WebDriver]
       # @param cohort [FilteredCohort]
       # @param members [Array<User>]
-      def verify_cohort_alert_rows(driver, cohort, members)
+      # @param advisor [User]
+      def verify_cohort_alert_rows(driver, cohort, members, advisor)
 
         # Only cohort members with alerts should be shown. Collect the expected alert count for each member, and toss out those with a zero count.
-        member_alerts = members.any? ? BOACUtils.get_un_dismissed_users_alerts(members) : []
+        member_alerts = members.any? ? BOACUtils.get_un_dismissed_users_alerts(members, advisor) : []
         members_and_alert_counts = members.map do |member|
           alert_count = member_alerts.count { |a| a.user.sis_id == member.sis_id }
+          logger.debug "SID #{member.sis_id} has alert count #{alert_count}" unless alert_count.zero?
           {:user => member, :alert_count => alert_count.to_s}
         end
         members_and_alert_counts.delete_if { |u| u[:alert_count] == '0' }
@@ -176,7 +178,7 @@ module Page
         # Verify that there are only rows for members with alerts
         expected_member_row_count = members_and_alert_counts.length
         visible_member_row_count = filtered_cohort_member_rows(driver, cohort).length
-        wait_until(1, "Expecting #{expected_member_row_count}, got #{visible_member_row_count}") { visible_member_row_count == expected_member_row_count }
+        wait_until(1, "Expecting cohort #{cohort.name} to have row count of #{expected_member_row_count}, got #{visible_member_row_count}") { visible_member_row_count == expected_member_row_count }
 
         # Verify that there is a row for each student with a positive alert count and that the alert count is right
         members_and_alert_counts.each do |member|

@@ -35,7 +35,6 @@ module Page
   # @param timeout [Fixnum]
   def wait_for_element(element, timeout)
     element.when_present timeout
-    scroll_to_element element
     element.when_visible timeout
     sleep Utils.event_wait
   end
@@ -46,8 +45,8 @@ module Page
   def click_element(element, timeout)
     wait_for_element(element, timeout)
     hide_canvas_footer_and_popup
-    sleep Utils.click_wait
     scroll_to_element element
+    sleep Utils.click_wait
     element.click
   end
 

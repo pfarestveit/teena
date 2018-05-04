@@ -86,11 +86,12 @@ module Page
         # @param cohort [CuratedCohort]
         def delete_curated(cohort)
           logger.info "Deleting a curated cohort named #{cohort.name}"
+          sleep Utils.click_wait
           sidebar_click_manage_curated
-          sleep 2
+          sleep Utils.click_wait
           wait_for_load_and_click curated_delete_button(cohort)
           wait_for_update_and_click confirm_delete_button_element
-          cohort_on_manage_curated(cohort).when_not_present Utils.short_wait
+          modal_element.when_not_present Utils.short_wait
         end
 
       end

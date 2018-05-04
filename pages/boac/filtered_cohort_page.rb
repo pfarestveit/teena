@@ -71,7 +71,7 @@ module Page
         # Clicks the Cancel button during cohort creation
         def cancel_cohort
           wait_for_update_and_click cancel_cohort_button_element
-          cohort_name_input_element.when_not_visible Utils.short_wait
+          modal_element.when_not_present Utils.short_wait
         rescue
           logger.warn 'No cancel button to click'
         end
@@ -94,6 +94,12 @@ module Page
           wait_for_filtered_cohort new_cohort
         end
 
+        # Loads the Everyone's Cohorts page
+        def load_everyone_cohorts_page
+          navigate_to "#{BOACUtils.base_url}/cohorts/all"
+          wait_for_title 'Cohorts'
+        end
+
         # Returns all the cohorts displayed on the Everyone's Cohorts page
         # @return [Array<FilteredCohort>]
         def visible_everyone_cohorts
@@ -102,6 +108,16 @@ module Page
           wait_until(Utils.short_wait) { everyone_cohort_link_elements.any? }
           cohorts = everyone_cohort_link_elements.map { |link| FilteredCohort.new({id: link.attribute('href').delete('/cohort?c='), name: link.text}) }
           cohorts.flatten
+        end
+
+        # Navigates to the Inactive Students page
+        def load_inactive_students_page
+          navigate_to "#{BOACUtils.base_url}/cohort?inactive=true&c=search"
+        end
+
+        # Navigates to the Intensive Students page
+        def load_intensive_students_page
+          navigate_to "#{BOACUtils.base_url}/cohort?i=true&c=search"
         end
 
         # FILTERED COHORTS - Search
@@ -118,7 +134,6 @@ module Page
         elements(:units_option, :checkbox, xpath: '//input[contains(@id, "cohort-filter-option-unit-ranges")]')
 
         button(:search_button, id: 'apply-filters-btn')
-        elements(:results_page_link, class: 'pagination-page')
 
         # Returns the heading for a given cohort page
         # @param cohort [FilteredCohort]
@@ -214,16 +229,19 @@ module Page
         def perform_search(cohort)
           criteria = cohort.search_criteria
           logger.info "Searching for squads '#{criteria.squads && (criteria.squads.map &:name)}', levels '#{criteria.levels}', majors '#{criteria.majors}', GPA ranges '#{criteria.gpa_ranges}', units '#{criteria.units}'"
-          wait_until(Utils.short_wait) { squad_option_elements.any? }
+          wait_until(Utils.short_wait) { level_option_elements.any? }
           sleep 2
 
-          # Uncheck any options that are already checked from a previous search, then check those that apply to the current search
-          unless squad_option_elements.all? &:visible?
-            wait_for_update_and_click squad_filter_button_element
-            wait_until(1) { squad_option_elements.all? &:visible? }
+          # Uncheck any options that are already checked from a previous search, then check those that apply to the current search.
+          # Do not look for squad options if the search criteria do not include teams, as non-ASC advisors cannot search by teams.
+          if criteria.squads
+            unless squad_option_elements.all? &:visible?
+              wait_for_update_and_click squad_filter_button_element
+              wait_until(1) { squad_option_elements.all? &:visible? }
+            end
+            squad_option_elements.each { |o| o.click if o.attribute('class').include?('not-empty') }
+            criteria.squads.each { |s| check_search_option squad_option_element(s) }
           end
-          squad_option_elements.each { |o| o.click if o.attribute('class').include?('not-empty') }
-          criteria.squads.each { |s| check_search_option squad_option_element(s) } if criteria.squads
 
           unless level_option_elements.all? &:visible?
             wait_for_update_and_click level_filter_button_element
@@ -374,7 +392,10 @@ module Page
         def rename_cohort(cohort, new_name)
           logger.info "Changing the name of cohort ID #{cohort.id} to #{new_name}"
           click_sidebar_manage_filtered
-          wait_until(Utils.short_wait) { cohort_name_elements.map(&:text).include? cohort.name }
+          wait_until(Utils.short_wait) do
+            cohort_name_elements.any?
+            cohort_name_elements.map(&:text).include? cohort.name
+          end
           wait_for_load_and_click cohort_rename_button(cohort)
           cohort.name = new_name
           wait_until(Utils.short_wait) { rename_input_elements.any? }

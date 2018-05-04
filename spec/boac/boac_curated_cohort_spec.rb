@@ -47,7 +47,6 @@ describe 'BOAC', order: :defined do
       @disposable_cohort_3 = CuratedCohort.new({:name => "Sidebar + link #{test_id}"})
       @disposable_cohort_4 = CuratedCohort.new({:name => "Manage Curated Cohorts Create-a-new-curated-cohort link #{test_id}"})
       @disposable_cohort_5 = CuratedCohort.new({:name => "Filtered cohort list view curated cohort selector #{test_id}"})
-      @disposable_cohort_6 = CuratedCohort.new({:name => "Student page curated cohort box #{test_id}"})
     end
 
     before(:each) do
@@ -83,13 +82,8 @@ describe 'BOAC', order: :defined do
       @cohorts_created << @disposable_cohort_5
     end
 
-    it 'can be created from the student page curated cohort box' do
-      @student_page.load_page students.first
-      @student_page.create_student_curated @disposable_cohort_6
-      @cohorts_created << @disposable_cohort_6
-    end
-
     # TODO - it('can be created from the class page list view curated cohort selector')
+    # TODO - it('can be created from search results curated cohort selector')
 
   end
 
@@ -106,7 +100,7 @@ describe 'BOAC', order: :defined do
       @homepage.sidebar_create_curated @deleted_curated_cohort
       @curated_page.delete_curated @deleted_curated_cohort
 
-      @existing_filtered_cohort = FilteredCohort.new({:name => "Existing Filtered Cohort #{test_id}", :search_criteria => BOACUtils.get_test_search_criteria.first})
+      @existing_filtered_cohort = FilteredCohort.new({:name => "Existing Filtered Cohort #{test_id}", :search_criteria => {:gpa_ranges => [:gpa_range => '3.50 - 4.00']}})
       @curated_page.click_sidebar_create_filtered
       @filtered_page.perform_search @existing_filtered_cohort
       @filtered_page.create_new_cohort @existing_filtered_cohort
@@ -192,7 +186,10 @@ describe 'BOAC', order: :defined do
     it 'is shown on the curated cohort list view page' do
       @curated_page.load_page @cohort_1
       @curated_page.wait_for_student_list
-      @curated_page.wait_until(Utils.short_wait) { @curated_page.visible_sids == @cohort_1.members.map(&:sis_id) }
+      @curated_page.wait_until(Utils.short_wait) do
+        logger.debug "Visible SIDs are #{@curated_page.list_view_uids}, and they should be #{@cohort_1.members.map(&:uid)}"
+        @curated_page.list_view_uids == @cohort_1.members.map(&:uid)
+      end
     end
 
     it 'is shown on the student page' do
@@ -206,7 +203,7 @@ describe 'BOAC', order: :defined do
     it 'can be removed on the curated cohort list view page' do
       student = students.last
       @curated_page.load_page @cohort_2
-      @curated_page.curated_remove_student(@driver, student, @cohort_2)
+      @curated_page.curated_remove_student(student, @cohort_2)
     end
 
     it 'can be removed on the student page using the curated cohort box' do
@@ -223,11 +220,6 @@ describe 'BOAC', order: :defined do
     it 'can be reached from the homepage' do
       @homepage.load_page
       @homepage.click_home_manage_curated
-    end
-
-    it 'can be reached from the student page' do
-      @student_page.load_page students.last
-      @student_page.click_student_manage_curated
     end
   end
 

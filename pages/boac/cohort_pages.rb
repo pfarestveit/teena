@@ -16,6 +16,7 @@ module Page
       h1(:results, xpath: '//h1')
       button(:confirm_delete_button, id: 'confirm-delete-btn')
       button(:cancel_delete_button, id: 'cancel-delete-btn')
+      span(:no_access_msg, xpath: '//span[text()="You are unauthorized to access student data managed by other departments"]')
 
       # Clicks the list view button
       def click_list_view
@@ -44,6 +45,7 @@ module Page
       elements(:player_sid, :div, xpath: '//div[contains(@class,"list-group-item")]//div[contains(@class, "student-sid")]')
       elements(:page_list_item, :list_item, xpath: '//li[contains(@ng-repeat,"page in pages")]')
       elements(:page_link, :link, xpath: '//a[contains(@ng-click, "selectPage")]')
+      elements(:results_page_link, class: 'pagination-page')
 
       # Waits for the number of players on the page to match expectations, and logs an error if it times out
       # @param cohort_size [Integer]
@@ -79,7 +81,7 @@ module Page
       # @param user [User]
       # @return [String]
       def list_view_user_xpath(user)
-        "//div[contains(@class,\"list-group-item\")]/div[contains(.,\"#{user.sis_id}\")]"
+        "//div[contains(@class,\"list-group-item\")][contains(.,\"#{user.sis_id}\")]"
       end
 
       # Returns the level displayed for a user
