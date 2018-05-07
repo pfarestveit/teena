@@ -13,7 +13,7 @@ module Page
 
       link(:return_to_cohort, xpath: '//a[contains(.,"Return to cohort")]')
 
-      h2(:preferred_name, :class => 'student-bio-name-preferred')
+      h2(:preferred_name, :class => 'student-preferred-name')
       span(:phone, xpath: '//span[@data-ng-bind="student.sisProfile.phoneNumber"]')
       link(:email, xpath: '//a[@data-ng-bind="student.sisProfile.emailAddress"]')
       div(:cumulative_units, xpath: '//div[@data-ng-bind="student.sisProfile.cumulativeUnits"]')
@@ -107,7 +107,7 @@ module Page
           :colleges => (college_elements.map &:text),
           :level => level,
           :terms_in_attendance => (terms_in_attendance if terms_in_attendance?),
-          :expected_graduation => expected_graduation,
+          :expected_graduation => (expected_graduation if expected_graduation?),
           :reqt_writing => (writing_reqt.strip if writing_reqt_element.exists?),
           :reqt_history => (history_reqt.strip if history_reqt_element.exists?),
           :reqt_institutions => (institutions_reqt.strip if institutions_reqt_element.exists?),

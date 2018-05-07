@@ -9,9 +9,11 @@ module Page
     include Page
 
     link(:home_link, text: 'Home')
-    button(:log_out_button, xpath: '//button[contains(text(),"Log out")]')
-    link(:feedback_link, text: 'ascpilot@lists.berkeley.edu')
+    button(:header_dropdown, id: 'header-dropdown-under-name')
+    link(:log_out_link, text: 'Log Out')
+    link(:feedback_link, text: 'Feedback/Help')
     div(:spinner, class: 'loading-spinner-large')
+    div(:modal, class: 'modal-content')
     h1(:student_name_heading, class: 'student-section-header')
 
     # Waits for an expected page title
@@ -27,14 +29,16 @@ module Page
 
     # Clicks the 'Log out' button in the header
     def log_out
-      wait_for_update_and_click log_out_button_element
+      logger.info 'Logging out'
+      wait_for_update_and_click header_dropdown_element
+      wait_for_update_and_click_js log_out_link_element
       wait_for_title 'Welcome'
     end
 
     # Waits for the spinner to vanish following a page load
     def wait_for_spinner
       sleep 1
-      spinner_element.when_not_present Utils.medium_wait if spinner?
+      spinner_element.when_not_visible Utils.medium_wait if spinner? rescue Selenium::WebDriver::Error::StaleElementReferenceError
     end
 
     # COHORTS - validation errors shared on various pages
@@ -83,7 +87,7 @@ module Page
     # Clicks Cancel in the curated cohort 'create' modal if it is open
     def cancel_curated_cohort
       curated_cancel_button
-      curated_name_input_element.when_not_visible Utils.short_wait
+      modal_element.when_not_present Utils.short_wait
     rescue
       logger.warn 'No cancel button to click'
     end
@@ -217,7 +221,7 @@ module Page
     # Clicks the link for the Inactive cohort
     def click_inactive_cohort
       wait_for_load_and_click inactive_cohort_link_element
-      wait_for_title 'Inactive'
+      wait_for_title 'Search'
     end
 
     # Clicks the button to view all custom cohorts
@@ -245,6 +249,14 @@ module Page
       sleep Utils.click_wait
       self.user_search_input = string
       user_search_input_element.send_keys :enter
+    end
+
+    # Returns the UIDs of students in list views that include add-to-curated checkboxes (filtered cohort and class pages)
+    # @param driver [Selenium::WebDriver]
+    # @return [Array<String>]
+    def list_view_uids(driver)
+      els = driver.find_elements(xpath: '//input[contains(@id,"curated-cohort-checkbox")]')
+      els && els.map { |el| el.attribute('id').split('-')[1] }
     end
 
     # Returns the data visible for a user on the search results page or in a filtered or curated cohort on the homepage. If a cohort,

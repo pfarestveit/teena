@@ -4,13 +4,14 @@ describe 'BOAC' do
 
   include Logging
 
+  advisor = BOACUtils.get_dept_advisors(BOACDepartments::ASC).first
   cohorts = BOACUtils.get_test_search_criteria.map { |c| FilteredCohort.new({:search_criteria => c}) }
   @driver = Utils.launch_browser
   @homepage = Page::BOACPages::HomePage.new @driver
   @cohort_page = Page::BOACPages::CohortPages::FilteredCohortListViewPage.new @driver
   @matrix_page = Page::BOACPages::CohortPages::FilteredCohortMatrixPage.new @driver
   @student_page = Page::BOACPages::StudentPage.new @driver
-  @homepage.dev_auth
+  @homepage.dev_auth advisor
   @homepage.click_sidebar_create_filtered
 
   # Navigate the various cohort/student views using each of the test search criteria
@@ -107,7 +108,7 @@ describe 'BOAC' do
 
         if cohort.member_count.zero?
 
-          bubbles_visible = @matrix_page.visible_matrix_uids.any?
+          bubbles_visible = @matrix_page.visible_matrix_uids(@driver).any?
           rows_visible = @matrix_page.visible_no_data_uids.any?
 
           it("shows no bubbles on matrix view cohort search for #{search}") { expect(bubbles_visible).to be false }
