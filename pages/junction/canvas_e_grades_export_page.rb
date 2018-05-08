@@ -49,13 +49,15 @@ module Page
       # Clicks the 'un-mute all assignments' checkbox
       def click_un_mute_all
         logger.debug 'Clicking the un-mute checkbox'
-        wait_for_load_and_click un_mute_all_cbx_element
+        un_mute_all_cbx_element.when_visible Utils.medium_wait
+        check_un_mute_all_cbx
       end
 
       # Clicks the 'set default grading scheme' checkbox
       def click_set_default_scheme
         logger.debug 'Clicking the set default scheme checkbox'
-        wait_for_load_and_click set_scheme_cbx_element
+        set_scheme_cbx_element.when_visible Utils.medium_wait
+        check_set_scheme_cbx
       end
 
       # Clicks the Continue button

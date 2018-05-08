@@ -265,6 +265,11 @@ describe 'bCourses course site creation' do
         has_course_captures_link = @course_captures_page.course_captures_link?
         it ("shows no Course Captures tool link in course site navigation for #{site[:course].term} #{site[:course].code} site ID #{site[:course].site_id}") { expect(has_course_captures_link).to be false }
 
+        # GRADES - check that grade distribution is hidden by default
+
+        grade_distribution_hidden = @canvas_page.grade_distribution_hidden? site[:course]
+        it("hides grade distribution graphs from students for #{site[:course].term} #{site[:course].code} site ID #{site[:course].site_id}") { expect(grade_distribution_hidden).to be true }
+
         @canvas_page.stop_masquerading @driver
       rescue => e
         it("encountered an error verifying the course site for #{site[:course].code}") { fail }

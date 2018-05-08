@@ -70,6 +70,7 @@ describe 'BOAC', order: :defined do
   context 'when an advisor has no filtered cohorts' do
 
     before(:all) do
+      @homepage.load_page
       advisor_cohorts_pre_existing.each { |c| @cohort_page.delete_cohort c }
     end
 

@@ -65,7 +65,7 @@ module Page
 
     # DISCUSSIONS
 
-    link(:new_discussion_link, id: 'new-discussion-btn')
+    link(:new_discussion_link, id: 'add_discussion')
     link(:subscribed_link, class: 'topic-unsubscribe-button')
     text_area(:discussion_title, id: 'discussion-title')
     checkbox(:threaded_discussion_cbx, id: 'threaded')

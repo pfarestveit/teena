@@ -444,6 +444,7 @@ module Page
           wait_for_load_and_click_js edit_user_link_element
           wait_for_element_and_type_js(user_email_element, user.email)
           wait_for_update_and_click_js update_details_button_element
+
           default_email_element.when_present Utils.short_wait
         end
         user_login_element.when_visible Utils.short_wait
@@ -725,6 +726,18 @@ module Page
           logger.warn "Cannot add an event for '#{tool.name}'"
       end
       url.delete '#'
+    end
+
+    checkbox(:hide_grade_distrib_cbx, id: 'course_hide_distribution_graphs')
+
+    # Returns whether or not the 'Hide grade distribution graphs from students' option is selected on a course site
+    # @param course [Course]
+    # @return [boolean]
+    def grade_distribution_hidden?(course)
+      navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/settings"
+      wait_for_load_and_click link_element(text: 'more options')
+      hide_grade_distrib_cbx_element.when_visible Utils.short_wait
+      hide_grade_distrib_cbx_checked?
     end
 
     # MESSAGES

@@ -104,7 +104,7 @@ describe 'bCourses E-Grades Export', order: :defined do
       @e_grades_export_page.click_un_mute_all
       @e_grades_export_page.click_set_default_scheme
       @e_grades_export_page.click_continue
-      @e_grades_export_page.sections_select_element.when_visible Utils.medium_wait
+      @e_grades_export_page.download_final_grades_element.when_visible Utils.medium_wait
     end
   end
 
@@ -123,7 +123,7 @@ describe 'bCourses E-Grades Export', order: :defined do
     it 'allows the user to proceed if "Unmute All" is checked' do
       @e_grades_export_page.click_un_mute_all
       @e_grades_export_page.click_continue
-      @e_grades_export_page.sections_select_element.when_visible Utils.medium_wait
+      @e_grades_export_page.download_final_grades_element.when_visible Utils.medium_wait
     end
   end
 
@@ -142,7 +142,7 @@ describe 'bCourses E-Grades Export', order: :defined do
     it 'allows the user to proceed if "Enable default" grading scheme is checked' do
       @e_grades_export_page.click_set_default_scheme
       @e_grades_export_page.click_continue
-      @e_grades_export_page.sections_select_element.when_visible Utils.medium_wait
+      @e_grades_export_page.download_final_grades_element.when_visible Utils.medium_wait
     end
   end
 
@@ -153,12 +153,14 @@ describe 'bCourses E-Grades Export', order: :defined do
 
     it 'loads the Download page' do
       @e_grades_export_page.load_embedded_tool(@driver, course)
-      @e_grades_export_page.sections_select_element.when_visible Utils.medium_wait
+      @e_grades_export_page.download_final_grades_element.when_visible Utils.medium_wait
     end
 
     it 'allows the user the select any section on the course site' do
       expected_options = @rosters_api.section_names.sort
-      expect(@e_grades_export_page.sections_select_options.sort).to eql(expected_options)
+      if expected_options.length > 1
+        expect(@e_grades_export_page.sections_select_options.sort).to eql(expected_options)
+      end
     end
 
     it 'allows the user to download current grades for a primary section' do

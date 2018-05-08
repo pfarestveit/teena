@@ -39,7 +39,7 @@ module Page
       # Authenticates using dev auth
       # @param user [User]
       def dev_auth(user = nil)
-        logger.info "Logging in #{('UID ' + user.uid + ' ') if user}using developer auth"
+        logger.info "Logging in #{('UID ' + user.uid.to_s + ' ') if user}using developer auth"
         load_page
         scroll_to_bottom
         wait_for_element_and_type(dev_auth_uid_input_element, (user ? user.uid : Utils.super_admin_uid))
