@@ -91,7 +91,7 @@ module Page
     link(:assignment_site_url_tab, class: 'submit_online_url_option')
     text_area(:url_upload_input, id: 'submission_url')
     button(:url_upload_submit_button, xpath: '(//button[@type="submit"])[2]')
-    div(:assignment_submission_conf, xpath: '//div[contains(.,"Turned In!")]')
+    div(:assignment_submission_conf, xpath: '//div[contains(.,"Submitted!")]')
 
     # Uploads a user's asset as an assignment submission
     # @param submission [Asset]
