@@ -37,7 +37,7 @@ describe 'Whiteboard', order: :defined do
     @canvas_driver_1 = Page::CanvasPage.new @driver_1
     @cal_net_driver_1 = Page::CalNetPage.new @driver_1
     @whiteboards_driver_1 = Page::SuiteCPages::WhiteboardsPage.new @driver_1
-    @engagement_index_driver_1 = Page::SuiteCPages::EngagementIndexPage.new @driver_1
+    @engagement_index_driver_1 = Page::SuiteCPages::EngagementIndexConfigPage.new @driver_1
 
     # Create course site if necessary. If using an existing site, include the Asset Library and make sure Canvas sync is enabled.
     tools = [LtiTools::ENGAGEMENT_INDEX, LtiTools::WHITEBOARDS]

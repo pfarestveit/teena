@@ -24,7 +24,7 @@ describe 'Whiteboard', order: :defined do
     @canvas = Page::CanvasPage.new @driver
     @cal_net = Page::CalNetPage.new @driver
     @asset_library = Page::SuiteCPages::AssetLibraryDetailPage.new @driver
-    @engagement_index = Page::SuiteCPages::EngagementIndexPage.new @driver
+    @engagement_index = Page::SuiteCPages::EngagementIndexConfigPage.new @driver
     @whiteboards = Page::SuiteCPages::WhiteboardsPage.new @driver
 
     # Create course site if necessary
