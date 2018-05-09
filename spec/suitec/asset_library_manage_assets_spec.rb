@@ -22,7 +22,8 @@ describe 'Asset', order: :defined do
     @driver = Utils.launch_browser
     @canvas = Page::CanvasPage.new @driver
     @cal_net = Page::CalNetPage.new @driver
-    @asset_library = Page::SuiteCPages::AssetLibraryPage.new @driver
+    @asset_library = Page::SuiteCPages::AssetLibraryDetailPage.new @driver
+    @asset_library_manage = Page::SuiteCPages::AssetLibraryManageAssetsPage.new @driver
     @engagement_index = Page::SuiteCPages::EngagementIndexPage.new @driver
     @whiteboards = Page::SuiteCPages::WhiteboardsPage.new @driver
 
@@ -32,7 +33,7 @@ describe 'Asset', order: :defined do
     @whiteboards_url = @canvas.click_tool_link(@driver, LtiTools::WHITEBOARDS)
     @engagement_index_url = @canvas.click_tool_link(@driver, LtiTools::ENGAGEMENT_INDEX)
     @asset_library_url = @canvas.click_tool_link(@driver, LtiTools::ASSET_LIBRARY)
-    @asset_library.add_custom_categories(@driver, @asset_library_url, [(@category_1="Category 1 - #{test_id}"), (@category_2="Category 2 - #{test_id}")])
+    @asset_library_manage.add_custom_categories(@driver, @asset_library_url, [(@category_1="Category 1 - #{test_id}"), (@category_2="Category 2 - #{test_id}")])
   end
 
   after(:all) { @driver.quit }
@@ -311,7 +312,7 @@ describe 'Asset', order: :defined do
       destination_test_id = Utils.get_test_id
       @destination_course = Course.new({})
       @canvas.create_generic_course_site(@driver, Utils.canvas_qa_sub_account, @destination_course, [teacher], destination_test_id, [LtiTools::ASSET_LIBRARY])
-      @destination_library = Page::SuiteCPages::AssetLibraryPage.new @driver
+      @destination_library = Page::SuiteCPages::AssetLibraryManageAssetsPage.new @driver
       @destination_library_url = @canvas.click_tool_link(@driver, LtiTools::ASSET_LIBRARY)
 
       # Teacher logs in to new asset library so that enrollment is synced immediately
@@ -346,7 +347,7 @@ describe 'Asset', order: :defined do
       end
 
       # Migrate assets
-      @asset_library.migrate_assets(@driver, @asset_library_url, @destination_course)
+      @asset_library_manage.migrate_assets(@driver, @asset_library_url, @destination_course)
     end
 
     it('copies File type assets') { expect(@destination_library.asset_migrated?(@driver, @destination_library_url, @migrated_file, teacher)).to be true }

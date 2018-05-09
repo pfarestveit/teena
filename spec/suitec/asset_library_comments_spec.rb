@@ -31,7 +31,7 @@ describe 'An asset comment', order: :defined do
     @driver = Utils.launch_browser
     @canvas = Page::CanvasPage.new @driver
     @cal_net = Page::CalNetPage.new @driver
-    @asset_library = Page::SuiteCPages::AssetLibraryPage.new @driver
+    @asset_library = Page::SuiteCPages::AssetLibraryDetailPage.new @driver
     @engagement_index = Page::SuiteCPages::EngagementIndexPage.new @driver
 
     @canvas.log_in(@cal_net, (event.actor = admin).username, Utils.super_admin_password)

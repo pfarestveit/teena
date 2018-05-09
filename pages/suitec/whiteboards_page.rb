@@ -512,7 +512,7 @@ module Page
 
       # Clicks the link to open a whiteboard asset in the asset library
       # @param driver [Selenium::WebDriver]
-      # @param asset_library [Page::SuiteCPages::AssetLibraryPage]
+      # @param asset_library [Page::SuiteCPages::AssetLibraryDetailPage]
       # @param asset [Asset]
       # @param event [Event]
       def open_original_asset(driver, asset_library, asset, event = nil)
