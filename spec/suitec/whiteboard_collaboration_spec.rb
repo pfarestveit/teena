@@ -36,7 +36,7 @@ describe 'Whiteboard', order: :defined do
     @driver_1 = Utils.launch_browser
     @canvas_driver_1 = Page::CanvasPage.new @driver_1
     @cal_net_driver_1 = Page::CalNetPage.new @driver_1
-    @whiteboards_driver_1 = Page::SuiteCPages::WhiteboardsPage.new @driver_1
+    @whiteboards_driver_1 = Page::SuiteCPages::WhiteboardPage.new @driver_1
     @engagement_index_driver_1 = Page::SuiteCPages::EngagementIndexConfigPage.new @driver_1
 
     # Create course site if necessary. If using an existing site, include the Asset Library and make sure Canvas sync is enabled.
@@ -157,7 +157,7 @@ describe 'Whiteboard', order: :defined do
       @driver_2 = Utils.launch_browser Utils.optional_chrome_profile_dir
       @canvas_driver_2 = Page::CanvasPage.new @driver_2
       @cal_net_driver_2 = Page::CalNetPage.new @driver_2
-      @whiteboards_driver_2 = Page::SuiteCPages::WhiteboardsPage.new @driver_2
+      @whiteboards_driver_2 = Page::SuiteCPages::WhiteboardPage.new @driver_2
       @canvas_driver_2.log_in(@cal_net_driver_2, Utils.super_admin_username, Utils.super_admin_password)
     end
 
@@ -335,7 +335,7 @@ describe 'Whiteboard', order: :defined do
       @driver_3 = Utils.launch_browser Utils.optional_chrome_profile_dir
       @canvas_driver_3 = Page::CanvasPage.new @driver_3
       @cal_net_driver_3 = Page::CalNetPage.new @driver_3
-      @whiteboards_driver_3 = Page::SuiteCPages::WhiteboardsPage.new @driver_3
+      @whiteboards_driver_3 = Page::SuiteCPages::WhiteboardPage.new @driver_3
       @canvas_driver_3.log_in(@cal_net_driver_3, admin.username, Utils.super_admin_password)
       event_driver_3.actor = admin
       @engagement_index_url = @canvas_driver_1.click_tool_link(@driver_1, LtiTools::ENGAGEMENT_INDEX, event_driver_3)

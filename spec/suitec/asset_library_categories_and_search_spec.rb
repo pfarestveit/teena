@@ -29,7 +29,7 @@ describe 'Asset Library', order: :defined do
     @cal_net = Page::CalNetPage.new @driver
     @asset_library = Page::SuiteCPages::AssetLibraryDetailPage.new @driver
     @asset_library_manage = Page::SuiteCPages::AssetLibraryManageAssetsPage.new @driver
-    @whiteboards = Page::SuiteCPages::WhiteboardsPage.new @driver
+    @whiteboards = Page::SuiteCPages::WhiteboardPage.new @driver
 
     # Create course site if necessary, disabling the Impact Studio if it is present
     @canvas.log_in(@cal_net, Utils.super_admin_username, Utils.super_admin_password)
