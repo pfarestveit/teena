@@ -25,7 +25,7 @@ describe 'Asset', order: :defined do
     @asset_library = Page::SuiteCPages::AssetLibraryDetailPage.new @driver
     @asset_library_manage = Page::SuiteCPages::AssetLibraryManageAssetsPage.new @driver
     @engagement_index = Page::SuiteCPages::EngagementIndexPage.new @driver
-    @whiteboards = Page::SuiteCPages::WhiteboardsPage.new @driver
+    @whiteboards = Page::SuiteCPages::WhiteboardPage.new @driver
 
     # Obtain course site and add two new asset categories
     @canvas.log_in(@cal_net, Utils.super_admin_username, Utils.super_admin_password)

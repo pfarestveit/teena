@@ -33,7 +33,7 @@ describe 'Impact Studio Activity Network', :order => :defined do
     @cal_net = Page::CalNetPage.new @driver
     @asset_library_page = Page::SuiteCPages::AssetLibraryDetailPage.new @driver
     @impact_studio_page = Page::SuiteCPages::ImpactStudioPage.new @driver
-    @whiteboards_page = Page::SuiteCPages::WhiteboardsPage.new @driver
+    @whiteboards_page = Page::SuiteCPages::WhiteboardPage.new @driver
     @engagement_index_page = Page::SuiteCPages::EngagementIndexPage.new @driver
 
     # Create course site

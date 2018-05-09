@@ -54,7 +54,7 @@ describe 'The Impact Studio', order: :defined do
     @asset_library = Page::SuiteCPages::AssetLibraryDetailPage.new @driver
     @engagement_index = Page::SuiteCPages::EngagementIndexPage.new @driver
     @impact_studio = Page::SuiteCPages::ImpactStudioPage.new @driver
-    @whiteboards = Page::SuiteCPages::WhiteboardsPage.new @driver
+    @whiteboards = Page::SuiteCPages::WhiteboardPage.new @driver
 
     # Create course site if necessary
     @canvas.log_in(@cal_net, (event.actor = admin).username, Utils.super_admin_password)
