@@ -47,8 +47,8 @@ describe 'Whiteboard', order: :defined do
     @canvas_driver_1.create_generic_course_site(@driver_1, Utils.canvas_qa_sub_account, course, users, test_id, tools)
     @whiteboards_url = @canvas_driver_1.click_tool_link(@driver_1, LtiTools::WHITEBOARDS, event_driver_1)
     @engagement_index_url = @canvas_driver_1.click_tool_link(@driver_1, LtiTools::ENGAGEMENT_INDEX, event_driver_1)
-    unless course_id.nil?
-      @asset_library = Page::SuiteCPages::AssetLibraryPage.new @driver_1
+    if course_id
+      @asset_library = Page::SuiteCPages::AssetLibraryDetailPage.new @driver_1
       @asset_library_url = @canvas_driver_1.click_tool_link(@driver_1, LtiTools::ASSET_LIBRARY, event_driver_1)
       @asset_library.ensure_canvas_sync(@driver_1, @asset_library_url, event_driver_1)
     end

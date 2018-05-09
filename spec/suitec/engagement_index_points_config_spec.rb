@@ -15,7 +15,7 @@ describe 'Engagement Index points configuration', order: :defined do
     @driver = Utils.launch_browser
     @canvas = Page::CanvasPage.new @driver
     @cal_net = Page::CalNetPage.new @driver
-    @asset_library = Page::SuiteCPages::AssetLibraryPage.new @driver
+    @asset_library = Page::SuiteCPages::AssetLibraryListViewPage.new @driver
     @engagement_index = Page::SuiteCPages::EngagementIndexPage.new @driver
 
     @canvas.log_in(@cal_net, Utils.super_admin_username, Utils.super_admin_password)

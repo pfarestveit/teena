@@ -14,7 +14,8 @@ describe 'Canvas assignment sync', order: :defined do
     @driver = Utils.launch_browser
     @canvas = Page::CanvasAssignmentsPage.new @driver
     @cal_net = Page::CalNetPage.new @driver
-    @asset_library = Page::SuiteCPages::AssetLibraryPage.new @driver
+    @asset_library = Page::SuiteCPages::AssetLibraryDetailPage.new @driver
+    @asset_library_manage = Page::SuiteCPages::AssetLibraryManageAssetsPage.new @driver
     @engagement_index = Page::SuiteCPages::EngagementIndexPage.new @driver
 
     # Load test data
@@ -51,18 +52,18 @@ describe 'Canvas assignment sync', order: :defined do
     @canvas.create_unsyncable_assignment(@course, @unsinkable_assignment)
     @canvas.create_assignment(@course, @assignment_1)
     @canvas.create_assignment(@course, @assignment_2)
-    @asset_library.wait_for_canvas_category(@driver, @asset_library_url, @assignment_1)
-    @asset_library.wait_for_canvas_category(@driver, @asset_library_url, @assignment_2)
+    @asset_library_manage.wait_for_canvas_category(@driver, @asset_library_url, @assignment_1)
+    @asset_library_manage.wait_for_canvas_category(@driver, @asset_library_url, @assignment_2)
   end
 
   after(:all) { @driver.quit }
 
   it 'is false by default' do
-    expect(@asset_library.assignment_sync_cbx(@assignment_1).checked?).to be false
-    expect(@asset_library.assignment_sync_cbx(@assignment_2).checked?).to be false
+    expect(@asset_library_manage.assignment_sync_cbx(@assignment_1).checked?).to be false
+    expect(@asset_library_manage.assignment_sync_cbx(@assignment_2).checked?).to be false
   end
 
-  it('does not include assignments without sync-able submission types') { expect((@asset_library.canvas_category_title_elements.map &:text).include?(@unsinkable_assignment.title)).to be false }
+  it('does not include assignments without sync-able submission types') { expect((@asset_library_manage.canvas_category_title_elements.map &:text).include?(@unsinkable_assignment.title)).to be false }
 
   context 'when enabled for Assignment 1 but not enabled for Assignment 2' do
 
@@ -70,10 +71,10 @@ describe 'Canvas assignment sync', order: :defined do
       # Teacher enables sync for assignment 1 but not assignment 2
       @asset_library.load_page(@driver, @asset_library_url)
       @asset_library.click_manage_assets_link
-      @asset_library.enable_assignment_sync @assignment_1
+      @asset_library_manage.enable_assignment_sync @assignment_1
       poller_assignment = Assignment.new({title: "Throwaway Assignment 1 #{test_id}"})
       @canvas.create_assignment(@course, poller_assignment)
-      @asset_library.wait_for_canvas_category(@driver, @asset_library_url, poller_assignment)
+      @asset_library_manage.wait_for_canvas_category(@driver, @asset_library_url, poller_assignment)
 
       # Student submits both assignments
       @canvas.masquerade_as(@driver, @student, @course)
@@ -114,11 +115,11 @@ describe 'Canvas assignment sync', order: :defined do
       # Teacher disables sync for assignment 1 and enables it for assignment 2
       @asset_library.load_page(@driver, @asset_library_url)
       @asset_library.click_manage_assets_link
-      @asset_library.disable_assignment_sync @assignment_1
-      @asset_library.enable_assignment_sync @assignment_2
+      @asset_library_manage.disable_assignment_sync @assignment_1
+      @asset_library_manage.enable_assignment_sync @assignment_2
       poller_assignment = Assignment.new({title: "Throwaway Assignment 2 #{test_id}"})
       @canvas.create_assignment(@course, poller_assignment)
-      @asset_library.wait_for_canvas_category(@driver, @asset_library_url, poller_assignment)
+      @asset_library_manage.wait_for_canvas_category(@driver, @asset_library_url, poller_assignment)
     end
 
     it 'does not alter existing assignment submission points on the Engagement Index score' do

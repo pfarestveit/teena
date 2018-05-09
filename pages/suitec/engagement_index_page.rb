@@ -399,7 +399,6 @@ module Page
         window = driver.window_handle
         window_count = driver.window_handles.length
         wait_for_load_and_click_js download_csv_link_element
-        Utils.save_screenshot(driver, "#{Time.now}")
         date = Time.now.strftime('%Y_%m_%d')
         # Hour and minute in the file name are globbed to avoid test failures due to clock sync issues
         csv_file_path = "#{Utils.download_dir}/engagement_index_activities_#{course.site_id}_#{date}_*.csv"

@@ -20,7 +20,8 @@ describe 'Canvas assignment submission', order: :defined do
     @driver = Utils.launch_browser
     @canvas = Page::CanvasAssignmentsPage.new @driver
     @cal_net = Page::CalNetPage.new @driver
-    @asset_library = Page::SuiteCPages::AssetLibraryPage.new @driver
+    @asset_library = Page::SuiteCPages::AssetLibraryDetailPage.new @driver
+    @asset_library_manage = Page::SuiteCPages::AssetLibraryManageAssetsPage.new @driver
     @engagement_index = Page::SuiteCPages::EngagementIndexPage.new @driver
 
     # Create course site if necessary. If an existing site, then ensure Canvas sync is enabled.
@@ -36,11 +37,11 @@ describe 'Canvas assignment submission', order: :defined do
     @canvas.create_assignment(@course, @assignment)
 
     # Enable Canvas assignment sync, then create another assignment. When the latter appears as a category, the former should have sync enabled.
-    @asset_library.wait_for_canvas_category(@driver, @asset_library_url, @assignment)
-    @asset_library.enable_assignment_sync @assignment
+    @asset_library_manage.wait_for_canvas_category(@driver, @asset_library_url, @assignment)
+    @asset_library_manage.enable_assignment_sync @assignment
     poller_assignment = Assignment.new({title: "Throwaway Assignment #{test_id}"})
     @canvas.create_assignment(@course, poller_assignment)
-    @asset_library.wait_for_canvas_category(@driver, @asset_library_url, poller_assignment)
+    @asset_library_manage.wait_for_canvas_category(@driver, @asset_library_url, poller_assignment)
     @canvas.stop_masquerading @driver
 
     # Submit assignment

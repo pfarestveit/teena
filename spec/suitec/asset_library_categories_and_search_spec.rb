@@ -27,7 +27,8 @@ describe 'Asset Library', order: :defined do
     @driver = Utils.launch_browser
     @canvas = Page::CanvasPage.new @driver
     @cal_net = Page::CalNetPage.new @driver
-    @asset_library = Page::SuiteCPages::AssetLibraryPage.new @driver
+    @asset_library = Page::SuiteCPages::AssetLibraryDetailPage.new @driver
+    @asset_library_manage = Page::SuiteCPages::AssetLibraryManageAssetsPage.new @driver
     @whiteboards = Page::SuiteCPages::WhiteboardsPage.new @driver
 
     # Create course site if necessary, disabling the Impact Studio if it is present
@@ -69,19 +70,19 @@ describe 'Asset Library', order: :defined do
       it 'require a title' do
         @asset_library.load_page(@driver, @asset_library_url)
         @asset_library.click_manage_assets_link
-        @asset_library.wait_for_update_and_click_js @asset_library.custom_category_input_element
-        expect(@asset_library.add_custom_category_button_element.attribute('disabled')).to eql('true')
+        @asset_library_manage.wait_for_update_and_click_js @asset_library_manage.custom_category_input_element
+        expect(@asset_library_manage.add_custom_category_button_element.attribute('disabled')).to eql('true')
       end
 
       it 'required a title under 256 characters' do
         @asset_library.load_page(@driver, @asset_library_url)
         @asset_library.click_manage_assets_link
-        @asset_library.wait_for_element_and_type_js(@asset_library.custom_category_input_element, "#{'A loooooong title' * 15}?")
-        expect(@asset_library.add_custom_category_button_element.attribute('disabled')).to eql('true')
+        @asset_library_manage.wait_for_element_and_type_js(@asset_library_manage.custom_category_input_element, "#{'A loooooong title' * 15}?")
+        expect(@asset_library_manage.add_custom_category_button_element.attribute('disabled')).to eql('true')
       end
 
       it 'are added to the list of available categories' do
-        @asset_library.add_custom_categories(@driver, @asset_library_url, [category_1, category_2])
+        @asset_library_manage.add_custom_categories(@driver, @asset_library_url, [category_1, category_2])
       end
 
       it 'can be added to existing assets' do
@@ -98,12 +99,12 @@ describe 'Asset Library', order: :defined do
       it 'show how many assets with which they are associated' do
         @asset_library.load_page(@driver, @asset_library_url)
         @asset_library.click_manage_assets_link
-        index = @asset_library.custom_category_index category_1
-        expect(@asset_library.custom_category_asset_count index).to eql('Used by 1 item')
+        index = @asset_library_manage.custom_category_index category_1
+        expect(@asset_library_manage.custom_category_asset_count index).to eql('Used by 1 item')
       end
 
       it 'appear on the asset detail of associated assets as links to the asset library filtered for that category' do
-        @asset_library.go_back_to_asset_library
+        @asset_library_manage.go_back_to_asset_library
         @asset_library.click_asset_link_by_id student_1_upload
         @asset_library.click_asset_category 0
         @asset_library.wait_until(timeout) { @asset_library.list_view_asset_ids.first.include? student_1_upload.id }
@@ -120,46 +121,46 @@ describe 'Asset Library', order: :defined do
       before(:all) do
         @asset_library.load_page(@driver, @asset_library_url)
         @asset_library.click_manage_assets_link
-        @index = @asset_library.custom_category_index category_1
+        @index = @asset_library_manage.custom_category_index category_1
       end
 
       before(:each) do
         @asset_library.load_page(@driver, @asset_library_url)
         @asset_library.click_manage_assets_link
-        @asset_library.wait_until(timeout) { @asset_library.custom_category_titles.include? category_1 }
+        @asset_library_manage.wait_until(timeout) { @asset_library_manage.custom_category_titles.include? category_1 }
       end
 
       it 'can be canceled' do
-        @asset_library.click_edit_custom_category @index
-        @asset_library.click_cancel_custom_category_edit @index
-        @asset_library.wait_until(timeout) { @asset_library.edit_category_form_elements.empty? }
+        @asset_library_manage.click_edit_custom_category @index
+        @asset_library_manage.click_cancel_custom_category_edit @index
+        @asset_library_manage.wait_until(timeout) { @asset_library_manage.edit_category_form_elements.empty? }
       end
 
       it 'require a title' do
-        @asset_library.click_edit_custom_category @index
-        @asset_library.enter_edited_category_title(@index, '')
-        @asset_library.category_title_error_msg_element.when_visible timeout
+        @asset_library_manage.click_edit_custom_category @index
+        @asset_library_manage.enter_edited_category_title(@index, '')
+        @asset_library_manage.category_title_error_msg_element.when_visible timeout
       end
 
       it 'are updated on assets with which they are associated' do
-        @asset_library.click_edit_custom_category @index
-        @asset_library.enter_edited_category_title(@index, category_1 = "#{category_1} - Edited")
-        @asset_library.click_save_custom_category_edit @index
-        @asset_library.wait_until(timeout) { @asset_library.custom_category_titles[@index] == category_1 }
+        @asset_library_manage.click_edit_custom_category @index
+        @asset_library_manage.enter_edited_category_title(@index, category_1 = "#{category_1} - Edited")
+        @asset_library_manage.click_save_custom_category_edit @index
+        @asset_library_manage.wait_until(timeout) { @asset_library_manage.custom_category_titles[@index] == category_1 }
       end
     end
 
     context 'when deleted' do
 
       it 'no longer appear in the list of categories' do
-        @asset_library.delete_custom_category category_1
+        @asset_library_manage.delete_custom_category category_1
         @asset_library.load_page(@driver, @asset_library_url)
         @asset_library.click_manage_assets_link
-        @asset_library.wait_until(timeout) { !@asset_library.custom_category_titles.include?(category_1) }
+        @asset_library_manage.wait_until(timeout) { !@asset_library_manage.custom_category_titles.include?(category_1) }
       end
 
       it 'no longer appear in search options' do
-        @asset_library.go_back_to_asset_library
+        @asset_library_manage.go_back_to_asset_library
         @asset_library.wait_for_update_and_click_js @asset_library.advanced_search_button_element
         @asset_library.category_select_element.when_visible timeout
         expect(@asset_library.category_select_options).not_to include(category_1)

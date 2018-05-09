@@ -17,7 +17,8 @@ timeout = Utils.short_wait
     @driver = Utils.launch_browser
     @canvas = Page::CanvasPage.new @driver
     @cal_net= Page::CalNetPage.new @driver
-    @asset_library = Page::SuiteCPages::AssetLibraryPage.new @driver
+    @asset_library = Page::SuiteCPages::AssetLibraryDetailPage.new @driver
+    @asset_library_manage = Page::SuiteCPages::AssetLibraryManageAssetsPage.new @driver
     @engagement_index = Page::SuiteCPages::EngagementIndexPage.new @driver
 
     # Create test course site
@@ -29,8 +30,8 @@ timeout = Utils.short_wait
 
     # Create two categories but delete one
     category_id = "#{Time.now.to_i}"
-    @asset_library.add_custom_categories(@driver, @asset_library_url, [(@category_1="Category 1 - #{category_id}"), (@category_2="Category 2 - #{category_id}")])
-    @asset_library.delete_custom_category @category_2
+    @asset_library_manage.add_custom_categories(@driver, @asset_library_url, [(@category_1="Category 1 - #{category_id}"), (@category_2="Category 2 - #{category_id}")])
+    @asset_library_manage.delete_custom_category @category_2
 
     @canvas.masquerade_as(@driver, @user, @course)
   end

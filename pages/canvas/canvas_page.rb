@@ -705,7 +705,7 @@ module Page
     def click_tool_link(driver, tool, event = nil)
       driver.switch_to.default_content
       hide_canvas_footer_and_popup
-      wait_for_update_and_click tool_nav_link(tool)
+      wait_for_update_and_click_js tool_nav_link(tool)
       wait_until(Utils.medium_wait) { title == "#{tool.name}" }
       logger.info "#{tool.name} URL is #{url = current_url}"
       add_event(event, EventType::NAVIGATE)

@@ -20,7 +20,7 @@ describe 'Whiteboard Add Asset', order: :defined do
     @driver = Utils.launch_browser
     @canvas = Page::CanvasPage.new @driver
     @cal_net = Page::CalNetPage.new @driver
-    @asset_library = Page::SuiteCPages::AssetLibraryPage.new @driver
+    @asset_library = Page::SuiteCPages::AssetLibraryDetailPage.new @driver
     @engagement_index = Page::SuiteCPages::EngagementIndexPage.new @driver
     @whiteboards = Page::SuiteCPages::WhiteboardsPage.new @driver
 
