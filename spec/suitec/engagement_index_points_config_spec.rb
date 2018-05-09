@@ -16,7 +16,7 @@ describe 'Engagement Index points configuration', order: :defined do
     @canvas = Page::CanvasPage.new @driver
     @cal_net = Page::CalNetPage.new @driver
     @asset_library = Page::SuiteCPages::AssetLibraryListViewPage.new @driver
-    @engagement_index = Page::SuiteCPages::EngagementIndexPage.new @driver
+    @engagement_index = Page::SuiteCPages::EngagementIndexConfigPage.new @driver
 
     @canvas.log_in(@cal_net, Utils.super_admin_username, Utils.super_admin_password)
     @canvas.create_generic_course_site(@driver, Utils.canvas_qa_sub_account, @course, [@teacher, @student],
