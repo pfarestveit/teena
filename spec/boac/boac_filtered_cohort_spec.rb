@@ -8,6 +8,9 @@ describe 'BOAC', order: :defined do
   dept_code = ENV['DEPT']
   all_students = BOACUtils.get_all_athletes
 
+  # Create CSV for writing search performance data
+  performance_data = File.join(Utils.initialize_test_output_dir, 'boac-search-performance.csv')
+
   # Filtered cohort UX differs for admins vs ASC advisors vs non-ASC advisors
   admin = User.new({:uid => Utils.super_admin_uid})
   asc_advisor = BOACUtils.get_dept_advisors(BOACDepartments::ASC).first
@@ -88,7 +91,7 @@ describe 'BOAC', order: :defined do
       it "shows all the students who match sports '#{cohort.search_criteria.squads && (cohort.search_criteria.squads.map &:name)}', levels '#{cohort.search_criteria.levels}', majors '#{cohort.search_criteria.majors}', GPA ranges '#{cohort.search_criteria.gpa_ranges}', units '#{cohort.search_criteria.units}'" do
         @homepage.load_page
         @cohort_page.click_sidebar_create_filtered
-        @cohort_page.perform_search cohort
+        @cohort_page.perform_search(cohort, performance_data)
         expected_results = @cohort_page.expected_search_results(@searchable_students, cohort.search_criteria).map { |u| u[:sid] }
         visible_results = cohort.member_count.zero? ? [] : @cohort_page.visible_sids
         @cohort_page.wait_until(1, "Expected #{expected_results.sort} but got #{visible_results.sort}") { visible_results.sort == expected_results.sort }

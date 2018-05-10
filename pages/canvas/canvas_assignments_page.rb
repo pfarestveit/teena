@@ -232,6 +232,11 @@ module Page
               # Assignments submitted outside Canvas
               assign.submitted = assignment_submission_details_section? unless assign.submitted
 
+              # If an assignment grade is zero, consider it non-submitted
+              if (grade_el = div_element(xpath: '//div[@id="sidebar_content"]//div[@class="module"]/div')).exists?
+                assign.submitted = !grade_el.text.include?(' 0')
+              end
+
             when 'quiz'
               assign.submitted = quiz_attempt_1_link? unless assign.submitted
               assign.submission_date = DateTime.parse(quiz_submitted_msg.gsub('Submitted', '').gsub('at', '').strip) if quiz_submitted_msg?
