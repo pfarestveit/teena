@@ -224,7 +224,8 @@ module Page
           end
         end
 
-        # Executes a custom cohort search using search criteria associated with a cohort and stores the result count
+        # Executes a custom cohort search using search criteria associated with a cohort and stores the result count. Optionally writes
+        # performance info to a CSV.
         # @param cohort [FilteredCohort]
         # @param csv [CSV]
         def perform_search(cohort, csv = nil)
@@ -293,7 +294,10 @@ module Page
           logger.warn "Search took #{search_wait}"
           cohort.member_count = results_count
           logger.warn "No results found for #{criteria.squads && criteria.squads.map(&:name)}, #{criteria.majors}, #{criteria.levels}, #{criteria.gpa_ranges}, #{criteria.units}" if cohort.member_count.zero?
-          Utils.add_csv_row(csv, [(criteria.squads && (criteria.squads.map &:name)), criteria.levels, criteria.majors, criteria.gpa_ranges, criteria.units, search_wait, cohort.member_count], %w(Squads Levels Majors GPAs Units Time Results))
+          # Optionally record the search criteria, result count, and time it took to load the first page of results.
+          if csv
+            Utils.add_csv_row(csv, [(criteria.squads && (criteria.squads.map &:name)), criteria.levels, criteria.majors, criteria.gpa_ranges, criteria.units, search_wait, cohort.member_count], %w(Squads Levels Majors GPAs Units Time Results))
+          end
         end
 
         # Filters an array of user data hashes according to search criteria and returns the users that should be present in the UI after
