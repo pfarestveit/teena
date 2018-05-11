@@ -29,9 +29,10 @@ class Utils
 
   # BROWSER CONFIGS
 
-  # Instantiates the browser and alters default browser settings. A specific browser profile dir can be designated; otherwise, the default profile
-  # will be used. A use case for designating a non-default profile is running two browser instances simultaneously to test WebSocket functionality,
-  # which cannot be done using the same profile.
+  # Instantiates the browser and alters default browser settings. If using Chrome and the 'chrome_profile' setting is true, an existing profile will
+  # be used. A specific browser profile dir can be designated; otherwise, the default profile will be used. A use case for designating a non-default
+  # profile is running two browser instances simultaneously to test WebSocket functionality, which cannot be done using the same profile. If the 'chrome_profile'
+  # is false, a new profile will be used.
   # @param profile [String]
   # @return [Selenium::WebDriver]
   def self.launch_browser(profile = nil)
@@ -44,8 +45,10 @@ class Utils
 
       when 'chrome'
         options = Selenium::WebDriver::Chrome::Options.new
-        profile_dir = (profile ? profile : File.join(@config_dir, 'chrome-profile'))
-        options.add_argument("user-data-dir=#{profile_dir}")
+        if @config['webdriver']['chrome_profile']
+          profile_dir = (profile ? profile : File.join(@config_dir, 'chrome-profile'))
+          options.add_argument("user-data-dir=#{profile_dir}")
+        end
         options.add_argument 'headless' if driver_config['headless']
         prefs = {
             :prompt_for_download => false,

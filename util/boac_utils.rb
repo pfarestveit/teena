@@ -43,19 +43,14 @@ class BOACUtils < Utils
     @config['screenshots']
   end
 
-  # Whether or not to check Data Loch scores during tests.
-  def self.loch_scores
-    @config['loch_scores']
+  # Whether or not to check Nessie assignment scores during tests.
+  def self.nessie_scores
+    @config['nessie_scores']
   end
 
-  # Whether or not to check Data Loch assignments-on-time during tests.
-  def self.loch_assignments
-    @config['loch_assignments']
-  end
-
-  # Whether or not to check Data Loch page views during tests.
-  def self.loch_page_views
-    @config['loch_page_views']
+  # Whether or not to check Nessie assignments submission counts during tests.
+  def self.nessie_assignments
+    @config['nessie_assignments']
   end
 
   # Returns the db credentials for BOAC

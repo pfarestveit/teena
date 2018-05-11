@@ -373,7 +373,7 @@ module Page
         }
       end
 
-      # Returns the assignments-on-time analytics data shown for a given site
+      # Returns the assignments-submitted analytics data shown for a given site
       # @param driver [Selenium::WebDriver]
       # @param site_xpath [String]
       # @param api_analytics [Hash]
@@ -389,24 +389,6 @@ module Page
       # @return [Hash]
       def visible_grades_analytics(driver, site_xpath, api_analytics)
         visible_analytics(driver, site_xpath, 'Assignment Grades', api_analytics)
-      end
-
-      # Returns the page-views analytics data shown for a given site
-      # @param driver [Selenium::WebDriver]
-      # @param site_xpath [String]
-      # @param api_analytics [Hash]
-      # @return [Hash]
-      def visible_page_view_analytics(driver, site_xpath, api_analytics)
-        visible_analytics(driver, site_xpath, 'Page Views', api_analytics)
-      end
-
-      # Returns the participations analytics data shown for a given site
-      # @param driver [Selenium::WebDriver]
-      # @param site_xpath [String]
-      # @param api_analytics [Hash]
-      # @return [Hash]
-      def visible_participation_analytics(driver, site_xpath, api_analytics)
-        visible_analytics(driver, site_xpath, 'Participations', api_analytics)
       end
 
     end

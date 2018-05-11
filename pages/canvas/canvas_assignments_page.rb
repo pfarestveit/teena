@@ -189,11 +189,17 @@ module Page
         if span_element(xpath: due_date_xpath).exists?
           due_date = DateTime.parse span_element(xpath: due_date_xpath).text.strip.gsub('at', '')
         end
-        # Visible grading status means a submission exists. Also a non-empty (e.g., not '-/100') score means a submission exists.
+
         score_xpath = "#{assignment_xpath}//span[@class='score-display']"
         if span_element(xpath: score_xpath).exists?
+          # If a grade exists, consider it submitted
           submitted = (grading = span_element(xpath: "#{assignment_xpath}//span[@class='grade-display']")).exists? && grading.visible?
-          submitted = span_element(xpath: score_xpath).visible? && !span_element(xpath: score_xpath).text.include?('-/') unless submitted
+          # If no grade exists but a non-null and non-zero score exists, consider it submitted
+          unless submitted
+            submitted = span_element(xpath: score_xpath).visible? &&
+                        !span_element(xpath: score_xpath).text.include?('-/') &&
+                        (span_element(xpath: "#{score_xpath}/b").text != '0' if span_element(xpath: "#{score_xpath}/b").exists?)
+          end
         end
 
         Assignment.new({:id => id, :type => type, :title => title, :url => url, :due_date => due_date, :submitted => submitted})
@@ -232,9 +238,9 @@ module Page
               # Assignments submitted outside Canvas
               assign.submitted = assignment_submission_details_section? unless assign.submitted
 
-              # If an assignment grade is zero, consider it non-submitted
+              # If an assignment grade is zero, consider it non-submitted unless there's a submission date
               if (grade_el = div_element(xpath: '//div[@id="sidebar_content"]//div[@class="module"]/div')).exists?
-                assign.submitted = !grade_el.text.include?(' 0')
+                assign.submitted = !grade_el.text.include?(' 0 ') unless assign.submission_date
               end
 
             when 'quiz'

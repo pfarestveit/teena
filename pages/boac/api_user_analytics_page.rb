@@ -155,10 +155,6 @@ class ApiUserAnalyticsPage
     site['analytics']
   end
 
-  def loch_analytics(site)
-    analytics(site)['loch']
-  end
-
   def site_scores(site)
     analytics(site) && analytics(site)['courseCurrentScore']
   end
@@ -192,46 +188,18 @@ class ApiUserAnalyticsPage
     }
   end
 
-  # Returns a user's Canvas API Assignments on Time analytics on a course site
+  # Returns a user's Nessie Assignments Submitted analytics on a course site
   # @param site [Hash]
   # @return [Hash]
-  def canvas_api_assigns_on_time(site)
-    site_statistics(analytics(site)['assignmentsOnTime']).merge!({:type => 'Assignments on Time'})
+  def nessie_assigns_submitted(site)
+    site_statistics(analytics(site)['assignmentsSubmitted']).merge!({:type => 'Assignments Submitted'})
   end
 
-  # Returns a user's Canvas API Page Views analytics on a course site
+  # Returns a user's Nessie Current Scores analytics on a course site
   # @param site [Hash]
   # @return [Hash]
-  def canvas_api_page_views(site)
-    site_statistics(analytics(site)['pageViews']).merge!({:type => 'Page Views'})
-  end
-
-  # Returns a user's Data Loch Assignments on Time analytics on a course site
-  # @param site [Hash]
-  # @return [Hash]
-  def loch_assigns_on_time(site)
-    site_statistics(loch_analytics(site)['assignmentsOnTime'])
-  end
-
-  # Returns a user's Data Loch Assignments Submitted on Time analytics on a course site
-  # @param site [Hash]
-  # @return [Hash]
-  def loch_assigns_submitted(site)
-    site_statistics(loch_analytics(site)['assignmentsSubmitted'])
-  end
-
-  # Returns a user's Data Loch Current Scores analytics on a course site
-  # @param site [Hash]
-  # @return [Hash]
-  def loch_grades(site)
+  def nessie_grades(site)
     site_statistics(analytics(site)['courseCurrentScore']).merge!({:type => 'Assignment Grades'})
-  end
-
-  # Returns a user's Data Loch Page Views analytics on a course site
-  # @param site [Hash]
-  # @return [Hash]
-  def loch_page_views(site)
-    site_statistics(loch_analytics(site)['pageViews'])
   end
 
   # To support cohort search tests, returns all relevant user data. If a file containing the data already
