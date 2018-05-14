@@ -96,3 +96,8 @@ boac:
   screenshots: true
   nessie_scores: true
   nessie_assignments: true
+
+salesforce:
+  base_url: https://test.salesforce.com
+  username: secret
+  password: secret
