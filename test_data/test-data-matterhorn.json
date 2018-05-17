@@ -321,19 +321,19 @@
         {
             "building": "Valley Life Sciences",
             "room": "2040",
-            "captureAgent": "VLSB 2040",
+            "captureAgent": "Valley Life Sciences 2040",
             "capability": "Screencast"
         },
         {
             "building": "Valley Life Sciences",
             "room": "2050",
-            "captureAgent": "VLSB 2050",
+            "captureAgent": "Valley Life Sciences 2050",
             "capability": "Screencast + Video"
         },
         {
             "building": "Valley Life Sciences",
             "room": "2060",
-            "captureAgent": "VLSB 2060",
+            "captureAgent": "Valley Life Sciences 2060",
             "capability": "Screencast"
         },
         {

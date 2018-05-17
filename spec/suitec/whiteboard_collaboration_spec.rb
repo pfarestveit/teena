@@ -231,7 +231,7 @@ describe 'Whiteboard', order: :defined do
         @whiteboards_driver_1.show_chat_pane
 
         # Make sure chat activity is configured with a non-zero point value
-        @engagement_index_driver_2 = Page::SuiteCPages::EngagementIndexPage.new @driver_2
+        @engagement_index_driver_2 = Page::SuiteCPages::EngagementIndexConfigPage.new @driver_2
         @canvas_driver_2.load_course_site(@driver_2, course)
         @engagement_index_driver_2.load_page(@driver_2, @engagement_index_url, event_driver_2)
         @new_chat_point_value = Activity::LEAVE_CHAT_MESSAGE.points + 1
@@ -372,11 +372,6 @@ describe 'Whiteboard', order: :defined do
         end
       end
     end
-  end
-
-  describe 'events' do
-
-    it('record the right number of events') { expect(SuiteCUtils.events_match?(@course, event)).to be true }
   end
 
 end
