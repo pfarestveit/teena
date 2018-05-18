@@ -21,6 +21,7 @@ describe 'Whiteboard Add Asset', order: :defined do
     @canvas = Page::CanvasPage.new @driver
     @cal_net = Page::CalNetPage.new @driver
     @asset_library = Page::SuiteCPages::AssetLibraryDetailPage.new @driver
+    @asset_library_manage = Page::SuiteCPages::AssetLibraryManageAssetsPage.new @driver
     @engagement_index = Page::SuiteCPages::EngagementIndexConfigPage.new @driver
     @whiteboards = Page::SuiteCPages::WhiteboardPage.new @driver
 
@@ -32,7 +33,7 @@ describe 'Whiteboard Add Asset', order: :defined do
     @asset_library_url = @canvas.click_tool_link(@driver, LtiTools::ASSET_LIBRARY, event)
     @engagement_index_url = @canvas.click_tool_link(@driver, LtiTools::ENGAGEMENT_INDEX, event)
     @whiteboards_url = @canvas.click_tool_link(@driver, LtiTools::WHITEBOARDS, event)
-    @asset_library.add_custom_categories(@driver, @asset_library_url, [(@category = "Category #{test_id}")], event)
+    @asset_library_manage.add_custom_categories(@driver, @asset_library_url, [(@category = "Category #{test_id}")], event)
 
     # Set "whiteboard add asset" points to non-zero value
     @engagement_index.load_scores(@driver, @engagement_index_url, event)

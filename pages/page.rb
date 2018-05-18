@@ -106,7 +106,7 @@ module Page
   # @param text [String]
   def wait_for_element_and_type(element, text)
     wait_for_update_and_click element
-    sleep 0.5
+    sleep Utils.click_wait
     element.clear
     element.send_keys text
   end
