@@ -73,6 +73,10 @@ class ApiUserAnalyticsPage
     @parsed['enrollmentTerms']
   end
 
+  def term_id(term)
+    term['termId']
+  end
+
   def term_name(term)
     term['termName']
   end
@@ -89,18 +93,24 @@ class ApiUserAnalyticsPage
     course['sections']
   end
 
+  def course_display_name(course)
+    course['displayName']
+  end
+
   def section_sis_data(section)
     {
       :ccn => section['ccn'],
       :number => "#{section['sectionNumber']}",
       :component => section['component'],
+      :units => section['units'].to_s,
+      :primary => section['primary'],
       :status => section['enrollmentStatus']
     }
   end
 
   def course_sis_data(course)
     {
-      :code => course['displayName'],
+      :code => course_display_name(course),
       :title => course['title'].gsub(/\s+/, ' '),
       :units => course['units'].to_s,
       :midpoint => course['midtermGrade'],
@@ -199,7 +209,7 @@ class ApiUserAnalyticsPage
   # @param site [Hash]
   # @return [Hash]
   def nessie_grades(site)
-    site_statistics(analytics(site)['courseCurrentScore']).merge!({:type => 'Assignment Grades'})
+    site_statistics(analytics(site)['currentScore']).merge!({:type => 'Assignment Grades'})
   end
 
   # To support cohort search tests, returns all relevant user data. If a file containing the data already

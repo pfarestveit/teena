@@ -187,12 +187,14 @@ class BOACUtils < Utils
     squads.sort_by { |s| s.name }
   end
 
-  # Returns all the users associated with a team
+  # Returns all the users associated with a team. If the full set of athlete users is already available,
+  # will use that. Otherwise, obtains the full set too.
   # @param team [Team]
+  # @param all_athletes [Array<User>]
   # @return [Array<User>]
-  def self.get_team_members(team)
+  def self.get_team_members(team, all_athletes = nil)
     team_squads = Squad::SQUADS.select { |s| s.parent_team == team }
-    team_members = get_squad_members team_squads
+    team_members = get_squad_members(team_squads, all_athletes)
     logger.info "#{team.name} members are UIDs #{team_members.map &:uid}"
     team_members
   end
