@@ -232,7 +232,6 @@ module Page
 
             when 'assignment'
               # Assignments submitted via Canvas
-              assign.submitted = assignment_submission_details_link? unless assign.submitted
               assign.submission_date = DateTime.parse(assignment_submission_date.gsub('at', '').strip) if assignment_submission_date? && !assignment_submission_date.strip.empty?
 
               # Assignments submitted outside Canvas
@@ -264,6 +263,7 @@ module Page
           # Some assignment links are dead links
           Utils.log_error e
           Utils.save_screenshot(driver, assign.id)
+          fail
         end
       end
 
