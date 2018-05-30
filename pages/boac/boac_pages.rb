@@ -251,14 +251,6 @@ module Page
       user_search_input_element.send_keys :enter
     end
 
-    # Returns the UIDs of students in list views that include add-to-curated checkboxes (filtered cohort and class pages)
-    # @param driver [Selenium::WebDriver]
-    # @return [Array<String>]
-    def list_view_uids(driver)
-      els = driver.find_elements(xpath: '//input[contains(@id,"curated-cohort-checkbox")]')
-      els && els.map { |el| el.attribute('id').split('-')[1] }
-    end
-
     # Returns the data visible for a user on the search results page or in a filtered or curated cohort on the homepage. If a cohort,
     # then an XPath is required in order to find the user under the right cohort heading.
     # @param driver [Selenium::WebDriver]
@@ -276,6 +268,156 @@ module Page
         :gpa => div_element(xpath: "#{row_xpath}//div[contains(@data-ng-bind, 'student.cumulativeGPA')]").text,
         :alert_count => div_element(xpath: "#{row_xpath}//div[contains(@class,'home-issues-pill')]").text
       }
+    end
+
+    button(:list_view_button, xpath: '//button[contains(.,"List")]')
+    button(:matrix_view_button, xpath: '//button[contains(.,"Matrix")]')
+
+    # Clicks the list view button
+    def click_list_view
+      logger.info 'Switching to list view'
+      wait_for_load_and_click list_view_button_element
+    end
+
+    # Clicks the matrix view button
+    def click_matrix_view
+      logger.info 'Switching to matrix view'
+      wait_for_load_and_click matrix_view_button_element
+      div_element(id: 'scatterplot').when_present Utils.medium_wait
+    end
+
+    # LIST VIEW PAGINATION
+
+    elements(:page_list_item, :list_item, xpath: '//li[contains(@ng-repeat,"page in pages")]')
+    elements(:page_link, :link, xpath: '//a[contains(@ng-click, "selectPage")]')
+    elements(:results_page_link, :class => 'pagination-page')
+
+    # Returns the page link element for a given page number
+    # @param number [Integer]
+    # @return [PageObject::Elements::Link]
+    def list_view_page_link(number)
+      page_link_elements.find { |el| el.text == "#{number}" }
+    end
+
+    # Returns the current page in list view
+    # @return [Integer]
+    def list_view_current_page
+      if page_list_item_elements.any?
+        page = page_list_item_elements.find { |el| el.attribute('class').include? 'active' }
+        page.text.to_i
+      else
+        1
+      end
+    end
+
+    # Checks whether a given page is the one currently shown in list view
+    # @param number [Integer]
+    # @return [boolean]
+    def list_view_page_selected?(number)
+      if number > 1
+        el = page_list_item_elements[number - 1]
+        el.attribute('class').include? 'active'
+      else
+        page_list_item_elements.empty?
+      end
+    end
+
+    # DATA FOR ALL USERS PRESENT
+
+    elements(:player_link, :link, xpath: '//div[contains(@class,"list-group-item")]//a')
+    elements(:player_name, :h3, xpath: '//div[contains(@class,"list-group-item")]//h3')
+    elements(:player_sid, :div, xpath: '//div[contains(@class,"list-group-item")]//div[contains(@class, "student-sid")]')
+
+    # Waits for list view results to load
+    def wait_for_student_list
+      wait_until(Utils.medium_wait) { list_view_sids.any? }
+    end
+
+    # Returns all the names shown on list view
+    # @return [Array<String>]
+    def list_view_names
+      wait_until(Utils.medium_wait) { player_link_elements.any? }
+      player_name_elements.map &:text
+    end
+
+    # Returns all the SIDs shown on list view
+    # @return [Array<String>]
+    def list_view_sids
+      player_sid_elements.map { |el| el.text.gsub(/(INACTIVE)/, '').strip }
+    end
+
+    # Returns all the UIDs shown on list view
+    # @return [Array<String>]
+    def list_view_uids
+      player_link_elements.map { |el| el.attribute 'id' }
+    end
+
+    # Returns the sequence of SIDs that are actually present following a search and/or sort
+    # @return [Array<String>]
+    def visible_sids
+      wait_for_student_list
+      visible_sids = []
+      page_count = results_page_link_elements.length
+      if page_count.zero?
+        logger.debug 'There is 1 page'
+        visible_sids << list_view_sids
+      else
+        logger.debug "There are #{page_count} pages"
+        page_count.times do |page|
+          start_time = Time.now
+          page += 1
+          logger.debug "Clicking page #{page}"
+          wait_for_update_and_click list_view_page_link(page)
+          sleep 1
+          wait_until(Utils.medium_wait) { player_link_elements.any? }
+          logger.warn "Search took #{Time.now - start_time}" unless page == 1
+          visible_sids << list_view_sids
+        end
+      end
+      visible_sids.flatten
+    end
+
+    # DATA FOR A SINGLE USER
+
+    # Returns the XPath for a user
+    # @param user [User]
+    # @return [String]
+    def list_view_user_xpath(user)
+      "//div[contains(@class,\"list-group-item\")][contains(.,\"#{user.sis_id}\")]"
+    end
+
+    # Returns the level displayed for a user
+    # @param user [User]
+    # @return [String]
+    def list_view_user_level(user)
+      el = span_element(xpath: "#{list_view_user_xpath user}//*[@data-ng-bind='student.level']")
+      el && el.text
+    end
+
+    # Returns the major(s) displayed for a user
+    # @param driver [Selenium::WebDriver]
+    # @param user [User]
+    # @return [Array<String>]
+    def list_view_user_majors(driver, user)
+      els = driver.find_elements(xpath: "#{list_view_user_xpath user}//div[@data-ng-bind='major']")
+      els && (els.map &:text)
+    end
+
+    # Returns the sport(s) displayed for a user
+    # @param driver [Selenium::WebDriver]
+    # @param user [User]
+    # @return [Array<String>]
+    def list_view_user_sports(driver, user)
+      els = driver.find_elements(xpath: "#{list_view_user_xpath user}//div[@data-ng-bind='membership.groupName']")
+      els && (els.map &:text)
+    end
+
+    # Clicks the link for a given player
+    # @param player [User]
+    def click_player_link(player)
+      logger.info "Clicking the link for UID #{player.uid}"
+      wait_for_load_and_click link_element(xpath: "//a[@id=\"#{player.uid}\"]")
+      student_name_heading_element.when_visible Utils.medium_wait
     end
 
   end

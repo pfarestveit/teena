@@ -44,7 +44,7 @@ module Page
       def load_page(user)
         logger.info "Loading student page for UID #{user.uid}"
         navigate_to "#{BOACUtils.base_url}/student/#{user.uid}"
-        wait_for_title user.full_name
+        wait_for_spinner
       end
 
       # Returns the IDs of non-dismissed alerts
@@ -190,6 +190,24 @@ module Page
       # @return [String]
       def course_data_xpath(term_name, course_code)
         "//h3[text()=\"#{term_name}\"]/following-sibling::*[name()='uib-accordion']//h4[text()=\"#{course_code}\"]/ancestor::div[@data-ng-repeat=\"course in term.enrollments\"]"
+      end
+
+      # Returns the class page link for a given section
+      # @param term_code [String]
+      # @param ccn [Integer]
+      # @return [PageObject::Elements::Link]
+      def class_page_link(term_code, ccn)
+        link_element(id: "term-#{term_code}-section-#{ccn}")
+      end
+
+      # Clicks the class page link for a given section
+      # @param term_code [String]
+      # @param ccn [Integer]
+      def click_class_page_link(term_code, ccn)
+        logger.info "Clicking link for term #{term_code} section #{ccn}"
+        wait_for_load_and_click class_page_link(term_code, ccn)
+        wait_for_spinner
+        div_element(class: 'course-column-schedule').when_visible Utils.short_wait
       end
 
       # Returns the SIS data shown for a course with a given course code
