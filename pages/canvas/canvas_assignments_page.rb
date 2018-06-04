@@ -173,7 +173,7 @@ module Page
       end
 
       # Pause to avoid stale element errors
-      sleep 2
+      sleep 3
 
       # Collect all possible info from list view
       assignments = list_view_assignment_elements.map do |el|
@@ -233,6 +233,7 @@ module Page
             when 'assignment'
               # Assignments submitted via Canvas
               assign.submission_date = DateTime.parse(assignment_submission_date.gsub('at', '').strip) if assignment_submission_date? && !assignment_submission_date.strip.empty?
+              assign.submitted = true if assign.submission_date
 
               # Assignments submitted outside Canvas
               assign.submitted = assignment_submission_details_section? unless assign.submitted

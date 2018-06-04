@@ -14,6 +14,7 @@ module Page
     link(:masquerade_link, xpath: '//a[contains(@href, "masquerade")]')
     link(:stop_masquerading_link, class: 'stop_masquerading')
     h2(:recent_activity_heading, xpath: '//h2[contains(text(),"Recent Activity")]')
+    h3(:project_site_heading, xpath: '//h3[text()="Is bCourses Right For My Project?"]')
 
     button(:submit_button, xpath: '//button[contains(.,"Submit")]')
     button(:save_button, xpath: '//button[text()="Save"]')

@@ -57,15 +57,14 @@ describe 'BOAC' do
                         class_test_case = "term #{term_name} course #{course_sis_data[:code]} section #{section_data[:component]} #{section_data[:number]} #{section_data[:ccn]}"
                         logger.info "Checking #{class_test_case}"
 
-                        # Check that a class page link is present if the section is LEC
+                        # Check that a class page link is present if the section is primary
                         @student_page.load_page athlete
                         @student_page.click_view_previous_semesters if terms.length > 1
                         class_page_link_present = @student_page.verify_block { @student_page.class_page_link(term_id, section_data[:ccn]).when_present 1 }
-                        section_data[:component].include?('LEC') ?
+                        section_data[:primary] ?
                             it("shows a class page link for #{class_test_case}") { expect(class_page_link_present).to be true } :
                             it("shows no class page link for #{class_test_case}") { expect(class_page_link_present).to be false }
 
-                        # Click the class page for LEC sections only
                         if class_page_link_present
                           @student_page.click_class_page_link(term_id, section_data[:ccn])
 
@@ -73,8 +72,9 @@ describe 'BOAC' do
 
                           # Check that the course + section info is presented as expected
                           visible_course_data = @class_page.visible_course_data
+                          section_course_code = course_sis_data[:code].gsub("#{section_data[:component]} #{section_data[:number]}", '').strip
                           it("shows the right term for #{class_test_case}") { expect(visible_course_data[:term]).to eql(term_name) }
-                          it("shows the right course code for #{class_test_case}") { expect(visible_course_data[:code]).to eql(course_sis_data[:code]) }
+                          it("shows the right course code for #{class_test_case}") { expect(visible_course_data[:code]).to eql(section_course_code) }
                           it("shows the right course title for #{class_test_case}") { expect(visible_course_data[:title]).to eql(course_sis_data[:title]) }
                           it("shows the right section units for #{class_test_case}") { expect(visible_course_data[:units]).to eql(section_data[:units]) }
                           it("shows the right section format for #{class_test_case}") { expect(visible_course_data[:format]).to eql(section_data[:component]) }
@@ -102,7 +102,7 @@ describe 'BOAC' do
                           # STUDENT DATA
 
                           # Check that all student who should appear actually do
-                          visible_sids = @class_page.visible_sids
+                          visible_sids = @class_page.visible_sids.sort
                           logger.error "Expecting #{api_section_page.student_sids.sort} but got #{visible_sids}" unless visible_sids == api_section_page.student_sids.sort
                           it("shows the right students for #{class_test_case}") { expect(visible_sids.sort).to eql(api_section_page.student_sids.sort) }
 

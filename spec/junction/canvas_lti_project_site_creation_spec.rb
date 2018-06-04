@@ -57,7 +57,7 @@ describe 'bCourses project site', order: :defined do
       project.site_id = @canvas.current_url.delete "#{Utils.canvas_base_url}/courses/"
       logger.info "Project site ID is #{project.site_id}"
       expect(@canvas.course_site_heading).to eql("#{project.title}")
-      expect(@canvas.recent_activity_heading?).to be true
+      @canvas.project_site_heading_element.when_visible Utils.short_wait
     end
 
     it('does not add the Roster Photos tool') { expect(@roster_photos_page.roster_photos_link?).to be false }

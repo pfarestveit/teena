@@ -30,7 +30,8 @@ module Page
     # Clicks the 'Log out' button in the header
     def log_out
       logger.info 'Logging out'
-      wait_for_update_and_click header_dropdown_element
+      sleep Utils.click_wait
+      wait_for_update_and_click_js header_dropdown_element
       wait_for_update_and_click_js log_out_link_element
       wait_for_title 'Welcome'
     end
@@ -128,7 +129,7 @@ module Page
     # Selector 'create' and 'add student(s)' UI shared by list view pages (filtered cohort page and class page)
     button(:selector_create_curated_button, id: 'curated-cohort-create')
     checkbox(:add_all_to_curated_checkbox, id: 'curated-cohort-checkbox-add-all')
-    elements(:add_individual_to_curated_checkbox, :checkbox, xpath: '//input[@data-ng-click="curatedCohortStudentToggle(student)"]')
+    elements(:add_individual_to_curated_checkbox, :checkbox, xpath: '//input[@data-ng-model="student.selectedForCuratedCohort"]')
     button(:add_to_curated_button, id: 'add-to-curated-cohort-button')
     button(:added_to_curated_conf, id: 'added-to-curated-cohort-confirmation')
 
@@ -330,7 +331,11 @@ module Page
 
     # Waits for list view results to load
     def wait_for_student_list
-      wait_until(Utils.medium_wait) { list_view_sids.any? }
+      begin
+        wait_until(Utils.medium_wait) { list_view_sids.any? }
+      rescue
+        logger.warn 'There are no students listed.'
+      end
     end
 
     # Returns all the names shown on list view

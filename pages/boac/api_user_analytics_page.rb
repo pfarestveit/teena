@@ -15,7 +15,7 @@ class ApiUserAnalyticsPage
   # Canvas Profile
 
   def set_canvas_id(user)
-    user.canvas_id = @parsed['canvasProfile']['id']
+    user.canvas_id = @parsed['canvasProfile']['canvas_id']
   end
 
   # SIS Profile
@@ -102,7 +102,7 @@ class ApiUserAnalyticsPage
       :ccn => section['ccn'],
       :number => "#{section['sectionNumber']}",
       :component => section['component'],
-      :units => section['units'].to_s,
+      :units => (section['units'].floor == section['units'] ? section['units'].floor.to_s : section['units'].to_s),
       :primary => section['primary'],
       :status => section['enrollmentStatus']
     }
@@ -112,7 +112,7 @@ class ApiUserAnalyticsPage
     {
       :code => course_display_name(course),
       :title => course['title'].gsub(/\s+/, ' '),
-      :units => course['units'].to_s,
+      :units => (course['units'].floor == course['units'] ? course['units'].floor.to_s : course['units'].to_s),
       :midpoint => course['midtermGrade'],
       :grade => course['grade'],
       :grading_basis => course['gradingBasis']

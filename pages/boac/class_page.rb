@@ -148,7 +148,7 @@ module Page
       # Returns the XPath to the assignment grades element
       # @return [String]
       def assigns_score_xpath
-        '//*[@data-dataset="canvasSite.analytics.currentScore"]'
+        '//*[@data-ng-if="canvasSite.analytics.currentScore"]'
       end
 
       # Returns a student's assignments-submitted count for a site at a given node
