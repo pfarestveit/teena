@@ -20,7 +20,7 @@ module Page
         # @return [Array<String>]
         def expected_sids_by_first_name(user_data, search_criteria)
           expected_users = expected_search_results(user_data, search_criteria)
-          sorted_users = expected_users.sort_by { |u| [u[:first_name_sortable], u[:last_name_sortable], u[:sid]] }
+          sorted_users = expected_users.sort_by { |u| [u[:first_name_sortable].downcase, u[:last_name_sortable].downcase, u[:sid]] }
           sorted_users.map { |u| u[:sid] }
         end
 
@@ -30,7 +30,7 @@ module Page
         # @return [Array<String>]
         def expected_sids_by_last_name(user_data, search_criteria)
           expected_users = expected_search_results(user_data, search_criteria)
-          sorted_users = expected_users.sort_by { |u| [u[:last_name_sortable], u[:first_name_sortable], u[:sid]] }
+          sorted_users = expected_users.sort_by { |u| [u[:last_name_sortable].downcase, u[:first_name_sortable].downcase, u[:sid]] }
           sorted_users.map { |u| u[:sid] }
         end
 
@@ -78,7 +78,7 @@ module Page
         # @return [Array<String>]
         def expected_sids_by_major(user_data, search_criteria)
           expected_users = expected_search_results(user_data, search_criteria)
-          sorted_users = expected_users.sort_by { |u| [u[:majors].sort.first.downcase, u[:last_name_sortable], u[:first_name_sortable]] }
+          sorted_users = expected_users.sort_by { |u| [u[:majors].sort.first.downcase.gsub(/\s+/, ''), u[:last_name_sortable], u[:first_name_sortable]] }
           sorted_users.map { |u| u[:sid] }
         end
 

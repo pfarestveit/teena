@@ -5,7 +5,7 @@ describe 'BOAC', order: :defined do
   include Logging
 
   test_id = Utils.get_test_id
-  advisor = User.new({:uid => Utils.super_admin_uid, :username => Utils.super_admin_username})
+  advisor = BOACUtils.get_dept_advisors(BOACDepartments::ASC).first
   advisor_cohorts = []
   other_advisor = BOACUtils.get_authorized_users.find { |u| u.uid != advisor.uid }
   pre_existing_cohorts = BOACUtils.get_user_curated_cohorts advisor
@@ -25,7 +25,7 @@ describe 'BOAC', order: :defined do
     @curated_page = Page::BOACPages::CohortPages::CuratedCohortListViewPage.new @driver
     @filtered_page = Page::BOACPages::CohortPages::FilteredCohortListViewPage.new @driver
     @student_page = Page::BOACPages::StudentPage.new @driver
-    @homepage.dev_auth
+    @homepage.dev_auth advisor
   end
 
   after(:all) { Utils.quit_browser @driver }
@@ -100,7 +100,7 @@ describe 'BOAC', order: :defined do
       @homepage.sidebar_create_curated @deleted_curated_cohort
       @curated_page.delete_curated @deleted_curated_cohort
 
-      @existing_filtered_cohort = FilteredCohort.new({:name => "Existing Filtered Cohort #{test_id}", :search_criteria => {:gpa_ranges => [:gpa_range => '3.50 - 4.00']}})
+      @existing_filtered_cohort = FilteredCohort.new({:name => "Existing Filtered Cohort #{test_id}", :search_criteria => BOACUtils.get_test_search_criteria.first})
       @curated_page.click_sidebar_create_filtered
       @filtered_page.perform_search @existing_filtered_cohort
       @filtered_page.create_new_cohort @existing_filtered_cohort

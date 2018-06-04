@@ -130,11 +130,11 @@ module Page
       navigate_to discussion.url
       if index.nil?
         logger.info "Creating new discussion entry with body '#{reply_body}'"
-        wait_for_load_and_click_js primary_reply_link_element
+        wait_for_load_and_click primary_reply_link_element
         wait_for_update_and_click_js primary_html_editor_link_element
         wait_for_element_and_type_js(primary_reply_input_element, reply_body)
         replies = discussion_reply_elements.length
-        primary_post_reply_button
+        wait_for_update_and_click_js primary_post_reply_button_element
       else
         logger.info "Replying to a discussion entry at index #{index} with body '#{reply_body}'"
         wait_until { secondary_reply_link_elements.any? }

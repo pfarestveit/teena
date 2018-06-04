@@ -248,7 +248,7 @@ describe 'BOAC' do
                             end
                           end
 
-                          if course_sis_data[:grading_basis] == 'NON' || course_sis_data[:grade]
+                          if course_sis_data[:grading_basis] == 'NON' || !course_sis_data[:grade].empty?
                             it "shows no grading basis for UID #{team_member.uid} term #{term_name} course #{course_code}" do
                               expect(visible_grading_basis).to be_nil
                             end
@@ -259,14 +259,14 @@ describe 'BOAC' do
                             end
                           end
 
-                          if course_sis_data[:grade]
+                          if course_sis_data[:grade].empty?
+                            it "shows no grade for UID #{team_member.uid} term #{term_name} course #{course_code}" do
+                              expect(visible_grade).to be_nil
+                            end
+                          else
                             it "shows the grade for UID #{team_member.uid} term #{term_name} course #{course_code}" do
                               expect(visible_grade).not_to be_empty
                               expect(visible_grade).to eql(course_sis_data[:grade])
-                            end
-                          else
-                            it "shows no grade for UID #{team_member.uid} term #{term_name} course #{course_code}" do
-                              expect(visible_grade).to be_nil
                             end
                           end
 

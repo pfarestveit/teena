@@ -99,23 +99,35 @@ describe 'BOAC', order: :defined do
 
       it "sorts by Last Name all the students who match sports '#{cohort.search_criteria.squads && (cohort.search_criteria.squads.map &:name)}', levels '#{cohort.search_criteria.levels}', majors '#{cohort.search_criteria.majors}', GPA ranges '#{cohort.search_criteria.gpa_ranges}', units '#{cohort.search_criteria.units}'" do
         expected_results = @cohort_page.expected_sids_by_last_name(@searchable_students, cohort.search_criteria)
-        visible_results = @cohort_page.visible_sids
-        @cohort_page.wait_until(1, "Expected #{expected_results} but got #{visible_results}") { visible_results == expected_results }
+        if expected_results.length.zero?
+          logger.warn 'Skipping sort-by-last-name test since there are no results'
+        else
+          visible_results = @cohort_page.visible_sids
+          @cohort_page.wait_until(1, "Expected #{expected_results} but got #{visible_results}") { visible_results == expected_results }
+        end
       end
 
       it "shows by First Name all the students who match sports '#{cohort.search_criteria.squads && (cohort.search_criteria.squads.map &:name)}', levels '#{cohort.search_criteria.levels}', majors '#{cohort.search_criteria.majors}', GPA ranges '#{cohort.search_criteria.gpa_ranges}', units '#{cohort.search_criteria.units}'" do
         expected_results = @cohort_page.expected_sids_by_first_name(@searchable_students, cohort.search_criteria)
-        @cohort_page.sort_by_first_name if expected_results.any?
-        visible_results = @cohort_page.visible_sids
-        @cohort_page.wait_until(1, "Expected #{expected_results} but got #{visible_results}") { visible_results == expected_results }
+        if expected_results.length.zero?
+          logger.warn 'Skipping sort-by-first-name test since there are no results'
+        else
+          @cohort_page.sort_by_first_name if expected_results.any?
+          visible_results = @cohort_page.visible_sids
+          @cohort_page.wait_until(1, "Expected #{expected_results} but got #{visible_results}") { visible_results == expected_results }
+        end
       end
 
       it "sorts by Team all the students who match sports '#{cohort.search_criteria.squads && (cohort.search_criteria.squads.map &:name)}', levels '#{cohort.search_criteria.levels}', majors '#{cohort.search_criteria.majors}', GPA ranges '#{cohort.search_criteria.gpa_ranges}', units '#{cohort.search_criteria.units}'" do
         if advisor == asc_advisor
           expected_results = @cohort_page.expected_sids_by_team(@searchable_students, cohort.search_criteria)
-          @cohort_page.sort_by_team if expected_results.any?
-          visible_results = @cohort_page.visible_sids
-          @cohort_page.wait_until(1, "Expected #{expected_results} but got #{visible_results}") { visible_results == expected_results }
+          if expected_results.length.zero?
+            logger.warn 'Skipping sort-by-team test since there are no results'
+          else
+            @cohort_page.sort_by_team if expected_results.any?
+            visible_results = @cohort_page.visible_sids
+            @cohort_page.wait_until(1, "Expected #{expected_results} but got #{visible_results}") { visible_results == expected_results }
+          end
         else
           logger.warn 'Skipping sort-by-team since the user is not with ASC'
         end
@@ -123,30 +135,46 @@ describe 'BOAC', order: :defined do
 
       it "sorts by GPA all the students who match sports '#{cohort.search_criteria.squads && (cohort.search_criteria.squads.map &:name)}', levels '#{cohort.search_criteria.levels}', majors '#{cohort.search_criteria.majors}', GPA ranges '#{cohort.search_criteria.gpa_ranges}', units '#{cohort.search_criteria.units}'" do
         expected_results = @cohort_page.expected_sids_by_gpa(@searchable_students, cohort.search_criteria)
-        @cohort_page.sort_by_gpa if expected_results.any?
-        visible_results = @cohort_page.visible_sids
-        @cohort_page.wait_until(1, "Expected #{expected_results} but got #{visible_results}") { visible_results == expected_results }
+        if expected_results.length.zero?
+          logger.warn 'Skipping sort-by-GPA test since there are no results'
+        else
+          @cohort_page.sort_by_gpa if expected_results.any?
+          visible_results = @cohort_page.visible_sids
+          @cohort_page.wait_until(1, "Expected #{expected_results} but got #{visible_results}") { visible_results == expected_results }
+        end
       end
 
       it "sorts by Level all the students who match sports '#{cohort.search_criteria.squads && (cohort.search_criteria.squads.map &:name)}', levels '#{cohort.search_criteria.levels}', majors '#{cohort.search_criteria.majors}', GPA ranges '#{cohort.search_criteria.gpa_ranges}', units '#{cohort.search_criteria.units}'" do
         expected_results = @cohort_page.expected_sids_by_level(@searchable_students, cohort.search_criteria)
-        @cohort_page.sort_by_level if expected_results.any?
-        visible_results = @cohort_page.visible_sids
-        @cohort_page.wait_until(1, "Expected #{expected_results} but got #{visible_results}") { visible_results == expected_results }
+        if expected_results.length.zero?
+          logger.warn 'Skipping sort-by-level test since there are no results'
+        else
+          @cohort_page.sort_by_level if expected_results.any?
+          visible_results = @cohort_page.visible_sids
+          @cohort_page.wait_until(1, "Expected #{expected_results} but got #{visible_results}") { visible_results == expected_results }
+        end
       end
 
       it "sorts by Major all the students who match sports '#{cohort.search_criteria.squads && (cohort.search_criteria.squads.map &:name)}', levels '#{cohort.search_criteria.levels}', majors '#{cohort.search_criteria.majors}', GPA ranges '#{cohort.search_criteria.gpa_ranges}', units '#{cohort.search_criteria.units}'" do
         expected_results = @cohort_page.expected_sids_by_major(@searchable_students, cohort.search_criteria)
-        @cohort_page.sort_by_major if expected_results.any?
-        visible_results = @cohort_page.visible_sids
-        @cohort_page.wait_until(1, "Expected #{expected_results} but got #{visible_results}") { visible_results == expected_results }
+        if expected_results.length.zero?
+          logger.warn 'Skipping sort-by-major test since there are no results'
+        else
+          @cohort_page.sort_by_major if expected_results.any?
+          visible_results = @cohort_page.visible_sids
+          @cohort_page.wait_until(1, "Expected #{expected_results} but got #{visible_results}") { visible_results == expected_results }
+        end
       end
 
       it "sorts by Units all the students who match sports '#{cohort.search_criteria.squads && (cohort.search_criteria.squads.map &:name)}', levels '#{cohort.search_criteria.levels}', majors '#{cohort.search_criteria.majors}', GPA ranges '#{cohort.search_criteria.gpa_ranges}', units '#{cohort.search_criteria.units}'" do
         expected_results = @cohort_page.expected_sids_by_units(@searchable_students, cohort.search_criteria)
-        @cohort_page.sort_by_units if expected_results.any?
-        visible_results = @cohort_page.visible_sids
-        @cohort_page.wait_until(1, "Expected #{expected_results} but got #{visible_results}") { visible_results == expected_results }
+        if expected_results.length.zero?
+          logger.warn 'Skipping sort-by-units test since there are no results'
+        else
+          @cohort_page.sort_by_units if expected_results.any?
+          visible_results = @cohort_page.visible_sids
+          @cohort_page.wait_until(1, "Expected #{expected_results} but got #{visible_results}") { visible_results == expected_results }
+        end
       end
     end
 

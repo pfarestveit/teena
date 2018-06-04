@@ -376,21 +376,21 @@ module Page
         # @param cohort [Cohort]
         # @return [PageObject::Elements::Span]
         def cohort_on_manage_cohorts(cohort)
-          span_element(xpath: "//span[text()='#{cohort.name}']")
+          span_element(xpath: "//span[text()=\"#{cohort.name}\"]")
         end
 
         # Returns the element containing the cohort rename button on the Manage Cohorts page
         # @param cohort [Cohort]
         # @return [PageObject::Elements::Button]
         def cohort_rename_button(cohort)
-          button_element(xpath: "//span[text()='#{cohort.name}']/ancestor::div[contains(@class,'cohort-manage-name')]/following-sibling::div//button[contains(text(),'Rename')]")
+          button_element(xpath: "//span[text()=\"#{cohort.name}\"]/ancestor::div[contains(@class,\"cohort-manage-name\")]/following-sibling::div//button[contains(text(),\"Rename\")]")
         end
 
         # Returns the element containing the cohort delete button on the Manage Cohorts page
         # @param cohort [Cohort]
         # @return [PageObject::Elements::Button]
         def cohort_delete_button(cohort)
-          button_element(xpath: "//span[text()='#{cohort.name}']/ancestor::div[contains(@class,'cohort-manage-name')]/following-sibling::div//button[contains(text(),'Delete')]")
+          button_element(xpath: "//span[text()=\"#{cohort.name}\"]/ancestor::div[contains(@class,\"cohort-manage-name\")]/following-sibling::div//button[contains(text(),\"Delete\")]")
         end
 
         # Renames a cohort
