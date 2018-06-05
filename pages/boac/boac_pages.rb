@@ -30,7 +30,7 @@ module Page
     # Clicks the 'Log out' button in the header
     def log_out
       logger.info 'Logging out'
-      sleep Utils.click_wait
+      sleep 3
       wait_for_update_and_click_js header_dropdown_element
       wait_for_update_and_click_js log_out_link_element
       wait_for_title 'Welcome'
@@ -240,7 +240,7 @@ module Page
 
     # USER SEARCH AND STUDENT LISTS (homepage and search results)
 
-    text_area(:user_search_input, id: 'sidebar-search-students-input')
+    text_area(:user_search_input, id: 'search-students-input')
 
     # Searches for a string using the sidebar search input
     # @param string [String]

@@ -306,11 +306,11 @@ class Utils
 
   # DATABASE
 
-  # Queries a given database using a query string and returns the results
+  # Queries a Postgres database using a query string and returns the results
   # @param db_credentials [Hash]
   # @param query_string [String]
   # @return [PG::Result]
-  def self.query_db(db_credentials, query_string)
+  def self.query_pg_db(db_credentials, query_string)
     results = []
     begin
       connection = PG.connect(:host => db_credentials[:host], :port => db_credentials[:port], :dbname => db_credentials[:name], :user => db_credentials[:user], :password => db_credentials[:password])
@@ -324,14 +324,33 @@ class Utils
     end
   end
 
-  # Queries a database and returns the values in a given field
+  # Queries a Postgres database and returns the values in a given field
   # @param query_string [String]
   # @param field [String]
   # @return [String]
-  def self.query_db_field(db_credentials, query_string, field)
-    results = query_db(db_credentials, query_string)
+  def self.query_pg_db_field(db_credentials, query_string, field)
+    results = query_pg_db(db_credentials, query_string)
     results.field_values(field)
   end
+
+  # Queries Redshift and returns results
+  # @param db_credentials [Hash]
+  # @param query_string [String]
+  # @return [PG::Result]
+  def self.query_redshift_db(db_credentials, query_string)
+    results = []
+    begin
+      Redshift::Client.establish_connection({:host => db_credentials[:host], :port => db_credentials[:port], :dbname => db_credentials[:name], :user => db_credentials[:user], :password => db_credentials[:password]})
+      results = Redshift::Client.connection.exec query_string
+    rescue Redshift::Client::RedshiftClientError => e
+      Utils.log_error e
+    ensure
+      Redshift::Client.disconnect if Redshift::Client.connected?
+      results
+    end
+  end
+
+  # SCREENSHOTS
 
   def self.save_screenshot(driver, unique_id)
     output_dir = File.join(self.output_dir, 'screenshots')

@@ -60,32 +60,40 @@ describe 'BOAC analytics' do
               site_code = boac_api_page.site_metadata(site_data)[:code]
               site_id = boac_api_page.site_metadata(site_data)[:site_id]
               course = Course.new({:site_id => site_id})
+              test_case = "Canvas ID #{student.canvas_id} UID #{student.uid} term #{term_to_test} course site ID #{site_id}, #{site_code}"
 
               logger.info "Checking site #{site_id}, #{site_code}"
 
               # Gather the analytics data obtained from Nessie
-              nessie_assigns_submitted = boac_api_page.nessie_assigns_submitted site_data
-              nessie_grades = boac_api_page.nessie_grades site_data
+              boac_api_assigns_submitted = boac_api_page.nessie_assigns_submitted site_data
+              boac_api_grades = boac_api_page.nessie_grades site_data
 
               if BOACUtils.nessie_assignments
 
-                logger.warn "Checking assignment submissions for Canvas ID #{student.canvas_id} UID #{student.uid} term #{term_to_test} course site ID #{site_id}, #{site_code}"
+                logger.warn "Checking assignment submissions for #{test_case}"
 
                 # Un-mute all assignments so that scores are visible to the student
                 @canvas_assignments_page.load_course_site(@driver, course)
                 @canvas_assignments_page.stop_masquerading(@driver) if @canvas_assignments_page.stop_masquerading_link?
                 @e_grades_page.resolve_all_issues(@driver, course)
                 @canvas_assignments_page.masquerade_as(@driver, student)
-                assignments = @canvas_assignments_page.get_assignments(@driver, course, student, @canvas_discussions_page)
+                ui_assignments = @canvas_assignments_page.get_assignments(@driver, course, student, @canvas_discussions_page)
+                nessie_assignments = NessieUtils.get_assignments(student, course)
 
-                if assignments.any?
-                  assignments.each { |a| Utils.add_csv_row(user_course_assigns, [student.uid, student.canvas_id, site_id, a.id, a.url, a.due_date, a.submitted, a.submission_date, a.type, a.on_time]) }
-
-                  # Get all submitted assignments
-                  submitted = assignments.select &:submitted
-                  it "has the right Nessie assignments-submitted count for Canvas ID #{student.canvas_id} UID #{student.uid} term #{term_to_test} course site ID #{site_id}, #{site_code}" do
-                    expect(nessie_assigns_submitted[:score].to_i).to eql(submitted.length)
+                if ui_assignments.any?
+                  # Compare the individual assignment data in Nessie with the same assignments in the Canvas UI
+                  it("has the right assignments for #{test_case}") { expect(ui_assignments.map(&:id).sort).to eql(nessie_assignments.map(&:id).sort) }
+                  ui_assignments.each do |ui|
+                    Utils.add_csv_row(user_course_assigns, [student.uid, student.canvas_id, site_id, ui.id, ui.url, ui.due_date, ui.submitted, ui.submission_date, ui.type, ui.on_time])
+                    nessie_assign = nessie_assignments.find { |n| n.id == ui.id }
+                    it("has the right assignment submission status for assignment ID #{ui.id} #{test_case}") { expect(nessie_assign.submitted).to eql(ui.submitted) }
                   end
+
+                  # Compare the total submitted assignment count in the BOAC API with the same assignment count in the Canvas UI
+                  submitted = ui_assignments.select &:submitted
+                  it("has the right Nessie assignments-submitted count for #{test_case}") { expect(boac_api_assigns_submitted[:score].to_i).to eql(submitted.length) }
+                else
+                  logger.warn 'Either there are no assignments, or they are from a past semester and have been hidden in the UI.'
                 end
 
               else
@@ -94,13 +102,13 @@ describe 'BOAC analytics' do
 
               if BOACUtils.nessie_scores
 
-                if nessie_grades[:score].empty?
+                if boac_api_grades[:score].empty?
 
-                  logger.warn "Skipping current score tests for Canvas ID #{student.canvas_id} UID #{student.uid} term #{term_to_test} course site ID #{site_id}, #{site_code}"
+                  logger.warn "Skipping current score tests for #{test_case}"
 
                 else
 
-                  logger.warn "Checking current score for Canvas ID #{student.canvas_id} UID #{student.uid} term #{term_to_test} course site ID #{site_id}, #{site_code}"
+                  logger.warn "Checking current score for #{test_case}"
 
                   @canvas_grades_page.stop_masquerading(@driver) if @canvas_grades_page.stop_masquerading_link?
                   @canvas_grades_page.load_gradebook course
@@ -109,21 +117,15 @@ describe 'BOAC analytics' do
                   gradebook_min = scores.first
                   logger.debug "Gradebook minimum current score: #{gradebook_min}"
                   gradebook_min = gradebook_min[:score]
-                  it "has the same Canvas Gradebook and Nessie grades minimum for Canvas ID #{student.canvas_id} UID #{student.uid} term #{term_to_test} course site ID #{site_id}, #{site_code}" do
-                    expect((gradebook_min.to_i - 1)..(gradebook_min.to_i + 1)).to include(nessie_grades[:min].to_i)
-                  end
+                  it("has the same Canvas Gradebook and Nessie grades minimum for #{test_case}") { expect((gradebook_min.to_i - 1)..(gradebook_min.to_i + 1)).to include(boac_api_grades[:min].to_i) }
 
                   gradebook_max = scores.last
                   logger.debug "Gradebook maximum current score: #{gradebook_max}"
                   gradebook_max = gradebook_max[:score]
-                  it "has the same Canvas Gradebook and Nessie grades maximum for Canvas ID #{student.canvas_id} UID #{student.uid} term #{term_to_test} course site ID #{site_id}, #{site_code}" do
-                    expect((gradebook_max.to_i - 1)..(gradebook_max.to_i + 1)).to include(nessie_grades[:max].to_i)
-                  end
+                  it("has the same Canvas Gradebook and Nessie grades maximum for #{test_case}") { expect((gradebook_max.to_i - 1)..(gradebook_max.to_i + 1)).to include(boac_api_grades[:max].to_i) }
 
                   gradebook_user_score = (scores.find { |s| s[:uid] == student.uid })[:score]
-                  it "has the same Canvas Gradebook and Nessie grades user score for Canvas ID #{student.canvas_id} UID #{student.uid} term #{term_to_test} course site ID #{site_id}, #{site_code}" do
-                    expect((gradebook_user_score.to_i - 1)..(gradebook_user_score.to_i + 1)).to include(nessie_grades[:score].to_i)
-                  end
+                  it("has the same Canvas Gradebook and Nessie grades user score for #{test_case}") { expect((gradebook_user_score.to_i - 1)..(gradebook_user_score.to_i + 1)).to include(boac_api_grades[:score].to_i) }
                 end
 
               else
@@ -140,13 +142,11 @@ describe 'BOAC analytics' do
                     (analytics_xpath = @boac_student_page.course_site_xpath(term_to_test, site[:course_code], site[:index])) :
                     (analytics_xpath = @boac_student_page.unmatched_site_xpath(term_to_test, site_code))
 
-                [nessie_assigns_submitted, nessie_grades].each do |analytics|
+                [boac_api_assigns_submitted, boac_api_grades].each do |analytics|
 
                   if analytics[:perc_round].nil?
                     no_data = @boac_student_page.no_data?(analytics_xpath, analytics[:type])
-                    it "shows no '#{analytics[:type]}' data for Canvas ID #{student.canvas_id} UID #{student.uid} term #{term_to_test} course site #{site_code}" do
-                      expect(no_data).to be true
-                    end
+                    it("shows no '#{analytics[:type]}' data for #{test_case}") { expect(no_data).to be true }
                   else
                     visible_analytics = case analytics[:type]
                                           when 'Assignments Submitted'
@@ -157,42 +157,20 @@ describe 'BOAC analytics' do
                                             logger.error "Unsupported analytics type '#{analytics[:type]}'"
                                         end
 
-                    it "shows the '#{analytics[:type]}' user percentile for Canvas ID #{student.canvas_id} UID #{student.uid} term #{term_to_test} course site #{site_code}" do
-                      expect(visible_analytics[:perc_round]).to eql(analytics[:perc_round])
-                    end
-                    it "shows the '#{analytics[:type]}' user score for Canvas ID #{student.canvas_id} UID #{student.uid} term #{term_to_test} course site #{site_code}" do
-                      expect(visible_analytics[:score]).to eql(analytics[:score])
-                    end
-                    it "shows the '#{analytics[:type]}' course maximum for Canvas ID #{student.canvas_id} UID #{student.uid} term #{term_to_test} course site #{site_code}" do
-                      expect(visible_analytics[:max]).to eql(analytics[:max])
-                    end
+                    it("shows the '#{analytics[:type]}' user percentile for #{test_case}") { expect(visible_analytics[:perc_round]).to eql(analytics[:perc_round]) }
+                    it("shows the '#{analytics[:type]}' user score for #{test_case}") { expect(visible_analytics[:score]).to eql(analytics[:score]) }
+                    it("shows the '#{analytics[:type]}' course maximum for #{test_case}") { expect(visible_analytics[:max]).to eql(analytics[:max]) }
 
                     if analytics[:graphable]
-                      it "shows the '#{analytics[:type]}' course 70th percentile for Canvas ID #{student.canvas_id} UID #{student.uid} term #{term_to_test} course site #{site_code}" do
-                        expect(visible_analytics[:perc_70]).to eql(analytics[:perc_70])
-                      end
-                      it "shows the '#{analytics[:type]}' course 50th percentile for Canvas ID #{student.canvas_id} UID #{student.uid} term #{term_to_test} course site #{site_code}" do
-                        expect(visible_analytics[:perc_50]).to eql(analytics[:perc_50])
-                      end
-                      it "shows the '#{analytics[:type]}' course 30th percentile for Canvas ID #{student.canvas_id} UID #{student.uid} term #{term_to_test} course site #{site_code}" do
-                        expect(visible_analytics[:perc_30]).to eql(analytics[:perc_30])
-                      end
-                      it "shows the '#{analytics[:type]}' course minimum for Canvas ID #{student.canvas_id} UID #{student.uid} term #{term_to_test} course site #{site_code}" do
-                        expect(visible_analytics[:minimum]).to eql(analytics[:minimum])
-                      end
+                      it("shows the '#{analytics[:type]}' course 70th percentile for #{test_case}") { expect(visible_analytics[:perc_70]).to eql(analytics[:perc_70]) }
+                      it("shows the '#{analytics[:type]}' course 50th percentile for #{test_case}") { expect(visible_analytics[:perc_50]).to eql(analytics[:perc_50]) }
+                      it("shows the '#{analytics[:type]}' course 30th percentile for #{test_case}") { expect(visible_analytics[:perc_30]).to eql(analytics[:perc_30]) }
+                      it("shows the '#{analytics[:type]}' course minimum for #{test_case}") { expect(visible_analytics[:minimum]).to eql(analytics[:minimum]) }
                     else
-                      it "shows no '#{analytics[:type]}' course 70th percentile for Canvas ID #{student.canvas_id} UID #{student.uid} term #{term_to_test} course site #{site_code}" do
-                        expect(visible_analytics[:perc_70]).to be_nil
-                      end
-                      it "shows no '#{analytics[:type]}' course 50th percentile for Canvas ID #{student.canvas_id} UID #{student.uid} term #{term_to_test} course site #{site_code}" do
-                        expect(visible_analytics[:perc_50]).to be_nil
-                      end
-                      it "shows no '#{analytics[:type]}' course 30th percentile for Canvas ID #{student.canvas_id} UID #{student.uid} term #{term_to_test} course site #{site_code}" do
-                        expect(visible_analytics[:perc_30]).to be_nil
-                      end
-                      it "shows no '#{analytics[:type]}' course minimum for Canvas ID #{student.canvas_id} UID #{student.uid} term #{term_to_test} course site #{site_code}" do
-                        expect(visible_analytics[:minimum]).to be_nil
-                      end
+                      it("shows no '#{analytics[:type]}' course 70th percentile for #{test_case}") { expect(visible_analytics[:perc_70]).to be_nil }
+                      it("shows no '#{analytics[:type]}' course 50th percentile for #{test_case}") { expect(visible_analytics[:perc_50]).to be_nil }
+                      it("shows no '#{analytics[:type]}' course 30th percentile for #{test_case}") { expect(visible_analytics[:perc_30]).to be_nil }
+                      it("shows no '#{analytics[:type]}' course minimum for #{test_case}") { expect(visible_analytics[:minimum]).to be_nil }
                     end
                   end
                 end
@@ -200,11 +178,11 @@ describe 'BOAC analytics' do
 
             rescue => e
               Utils.log_error e
-              it("encountered an error with UID #{student.uid} term #{term_to_test} course site ID #{site_id}, #{site_code}") { fail }
+              it("encountered an error with UID #{student.uid} #{test_case}") { fail }
             ensure
               row = [student.uid, team.name, term_to_test, site[:course_code], site_code, site[:site_id],
-                     nessie_assigns_submitted[:min], nessie_assigns_submitted[:max], nessie_assigns_submitted[:score], nessie_assigns_submitted[:perc], nessie_assigns_submitted[:perc_round],
-                     nessie_grades[:min], nessie_grades[:max], nessie_grades[:score], nessie_grades[:perc], nessie_grades[:perc_round]
+                     boac_api_assigns_submitted[:min], boac_api_assigns_submitted[:max], boac_api_assigns_submitted[:score], boac_api_assigns_submitted[:perc], boac_api_assigns_submitted[:perc_round],
+                     boac_api_grades[:min], boac_api_grades[:max], boac_api_grades[:score], boac_api_grades[:perc], boac_api_grades[:perc_round]
               ]
               Utils.add_csv_row(user_course_analytics_data, row)
             end

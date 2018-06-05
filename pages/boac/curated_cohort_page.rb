@@ -88,7 +88,7 @@ module Page
           logger.info "Deleting a curated cohort named #{cohort.name}"
           sleep Utils.click_wait
           sidebar_click_manage_curated
-          sleep Utils.click_wait
+          sleep 3
           wait_for_load_and_click curated_delete_button(cohort)
           wait_for_update_and_click confirm_delete_button_element
           modal_element.when_not_present Utils.short_wait

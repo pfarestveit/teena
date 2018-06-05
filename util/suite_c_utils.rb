@@ -76,7 +76,7 @@ class SuiteCUtils
   # Inactivates all existing courses. Used to stop the poller checking courses other than the one under test.
   def self.inactivate_all_courses
     query = 'UPDATE courses SET active = false;'
-    Utils.query_db(suitec_db_credentials, query)
+    Utils.query_pg_db(suitec_db_credentials, query)
   end
 
   # Returns a given asset's ID, provided the asset has a unique title
@@ -84,7 +84,7 @@ class SuiteCUtils
   # @return [String]
   def self.get_asset_id_by_title(asset)
     query = "SELECT id FROM assets WHERE title = '#{asset.title}'"
-    id = Utils.query_db_field(suitec_db_credentials, query, 'id').first
+    id = Utils.query_pg_db_field(suitec_db_credentials, query, 'id').first
     logger.info "Asset ID is #{id}"
     id.to_s
   end
@@ -94,7 +94,7 @@ class SuiteCUtils
   # @return [Integer]
   def self.get_asset_impact_score(asset)
     query = "SELECT impact_score FROM assets WHERE id = #{asset.id}"
-    score = Utils.query_db_field(suitec_db_credentials, query, 'impact_score').first
+    score = Utils.query_pg_db_field(suitec_db_credentials, query, 'impact_score').first
     score.to_i
   end
 
@@ -108,7 +108,7 @@ class SuiteCUtils
              JOIN courses ON users.course_id=courses.id
              WHERE users.canvas_user_id = #{user.canvas_id}
                AND courses.canvas_course_id = #{course.site_id}"
-    results = Utils.query_db(suitec_db_credentials, query)
+    results = Utils.query_pg_db(suitec_db_credentials, query)
     user.suitec_id = results[0]['id']
   end
 
@@ -123,7 +123,7 @@ class SuiteCUtils
              WHERE canvas_course_id = '#{course.site_id}'
                AND canvas_domain LIKE '%#{domain}'
              ORDER BY id ASC;"
-    Utils.query_db(suitec_db_credentials, query)
+    Utils.query_pg_db(suitec_db_credentials, query)
   end
 
   # Checks whether the total events tracked by a test script and the total events stored in the events table are within

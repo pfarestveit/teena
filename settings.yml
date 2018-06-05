@@ -1,3 +1,5 @@
+#### Browser driver configs ####
+
 webdriver:
   browser: chrome
   chrome_profile: true
@@ -15,20 +17,37 @@ timeouts:
   long: 120
   canvas_poller: 60
 
-cal_net:
-  base_url: https://auth-test.berkeley.edu
+#### Test user accounts ####
 
-suite_c:
-  base_url: https://app-qa.ets-berkeley-suitec.net
-  lti_key: secret
-  lti_secret: secret
+users:
+  super_admin_username: secret
+  super_admin_password: secret
+  super_admin_uid: secret
+  ets_qa_username: secret
+  ets_qa_password: secret
+  test_user_password: secret
+  oski_uid: secret
+
+#### Test environment configs ####
+
+boac:
+  base_url: https://asc-pilot-qa.berkeley.edu
+  password: secret
+  term: Summer 2018
+  term_code: 2182
+  analytics_term: Spring 2018
   db_host: secret
   db_port: secret
   db_name: secret
   db_user: secret
   db_password: secret
-  poller_retries: 10
-  acceptable_events_diff: 0.03
+  tooltips: true
+  screenshots: true
+  nessie_scores: true
+  nessie_assignments: true
+
+cal_net:
+  base_url: https://auth-test.berkeley.edu
 
 canvas:
   base_url: https://ucberkeley.test.instructure.com
@@ -51,24 +70,6 @@ junction:
   basic_auth_password: secret
   admin_uid: secret
 
-oec:
-  term: 2018-B
-  blue_project_title: 'Spring 2018 Evaluations'
-  first_name: secret
-  last_name: secret
-  uid: secret
-  sis_id: secret
-  email: secret
-
-users:
-  super_admin_username: secret
-  super_admin_password: secret
-  super_admin_uid: secret
-  ets_qa_username: secret
-  ets_qa_password: secret
-  test_user_password: secret
-  oski_uid: secret
-
 lrs:
   base_url: https://app-qa.ets-berkeley-cloudlrs.net
   lti_key: secret
@@ -81,23 +82,35 @@ lrs:
   script_loops: 10
   event_time_discrep_seconds: 2
 
-boac:
-  base_url: https://asc-pilot-qa.berkeley.edu
-  password: secret
-  term: Spring 2018
-  term_code: 2182
-  analytics_term: Fall 2017
+nessie:
   db_host: secret
   db_port: secret
   db_name: secret
   db_user: secret
   db_password: secret
-  tooltips: true
-  screenshots: true
-  nessie_scores: true
-  nessie_assignments: true
+
+oec:
+  term: 2018-C
+  blue_project_title: 'Summer 2018 Evaluations'
+  first_name: secret
+  last_name: secret
+  uid: secret
+  sis_id: secret
+  email: secret
 
 salesforce:
   base_url: https://test.salesforce.com
   username: secret
   password: secret
+
+suite_c:
+  base_url: https://app-qa.ets-berkeley-suitec.net
+  lti_key: secret
+  lti_secret: secret
+  db_host: secret
+  db_port: secret
+  db_name: secret
+  db_user: secret
+  db_password: secret
+  poller_retries: 10
+  acceptable_events_diff: 0.03

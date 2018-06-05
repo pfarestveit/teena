@@ -154,7 +154,7 @@ describe 'BOAC' do
                 expect(student_page_sis_data[:level]).not_to be_empty
               end
 
-              analytics_api_sis_data[:terms_in_attendance] ?
+              (analytics_api_sis_data[:terms_in_attendance] && analytics_api_sis_data[:level] != 'Graduate') ?
                   (it("shows the terms in attendance for UID #{team_member.uid} on the student page") { expect(student_page_sis_data[:terms_in_attendance]).to include(analytics_api_sis_data[:terms_in_attendance]) }) :
                   (it("shows no terms in attendance for UID #{team_member.uid} on the student page") { expect(student_page_sis_data[:terms_in_attendance]).to be_nil })
 

@@ -71,7 +71,7 @@ class BOACUtils < Utils
     query = 'SELECT authorized_users.uid AS uid,
                     authorized_users.is_admin AS admin
               FROM authorized_users;'
-    results = query_db(boac_db_credentials, query)
+    results = query_pg_db(boac_db_credentials, query)
     results.map { |r| User.new({uid: r['uid']}) }
   end
 
@@ -83,7 +83,7 @@ class BOACUtils < Utils
               INNER JOIN university_dept_members ON authorized_users.id = university_dept_members.authorized_user_id
               INNER JOIN university_depts on university_dept_members.university_dept_id = university_depts.id
               WHERE university_depts.dept_code = '#{dept.code}';"
-    results = query_db(boac_db_credentials, query)
+    results = query_pg_db(boac_db_credentials, query)
     results.map { |r| User.new({uid: r['uid']}) }
   end
 
@@ -127,7 +127,7 @@ class BOACUtils < Utils
              FROM students
              JOIN student_athletes ON student_athletes.sid = students.sid
              ORDER BY students.uid;'
-    Utils.query_db(boac_db_credentials, query)
+    Utils.query_pg_db(boac_db_credentials, query)
   end
 
   # Returns students where 'intensive' is true
@@ -169,7 +169,7 @@ class BOACUtils < Utils
     query = 'SELECT DISTINCT team_code
              FROM athletics
              ORDER BY team_code;'
-    results = Utils.query_db_field(boac_db_credentials, query, 'team_code')
+    results = Utils.query_pg_db_field(boac_db_credentials, query, 'team_code')
     teams = Team::TEAMS.select { |team| results.include? team.code }
     logger.info "Teams are #{teams.map &:name}"
     teams.sort_by { |t| t.name }
@@ -181,7 +181,7 @@ class BOACUtils < Utils
     query = 'SELECT DISTINCT group_code
              FROM athletics
              ORDER BY group_code;'
-    results = Utils.query_db_field(boac_db_credentials, query, 'group_code')
+    results = Utils.query_pg_db_field(boac_db_credentials, query, 'group_code')
     squads = Squad::SQUADS.select { |squad| results.include? squad.code }
     logger.info "Squads are #{squads.map &:name}"
     squads.sort_by { |s| s.name }
@@ -220,7 +220,7 @@ class BOACUtils < Utils
               FROM student_groups
               JOIN authorized_users ON authorized_users.id = student_groups.owner_id
               WHERE authorized_users.uid = '#{user.uid}';"
-    results = Utils.query_db(boac_db_credentials, query)
+    results = Utils.query_pg_db(boac_db_credentials, query)
     results.map { |r| CuratedCohort.new({id: r['id'], name: r['name'], owner_uid: user.uid}) }
   end
 
@@ -230,7 +230,7 @@ class BOACUtils < Utils
     query = "SELECT id
               FROM student_groups
               WHERE name = '#{cohort.name}';"
-    result = Utils.query_db_field(boac_db_credentials, query, 'id').first
+    result = Utils.query_pg_db_field(boac_db_credentials, query, 'id').first
     logger.info "Curated cohort '#{cohort.name}' ID is #{result}"
     cohort.id = result
   end
@@ -246,7 +246,7 @@ class BOACUtils < Utils
               JOIN cohort_filter_owners ON cohort_filter_owners.cohort_filter_id = cohort_filters.id
               JOIN authorized_users ON authorized_users.id = cohort_filter_owners.user_id
               WHERE authorized_users.uid = '#{user.uid}';"
-    results = Utils.query_db(boac_db_credentials, query)
+    results = Utils.query_pg_db(boac_db_credentials, query)
     results.map { |r| FilteredCohort.new({id: r['cohort_id'], name: r['cohort_name'], owner_uid: user.uid}) }
   end
 
@@ -260,7 +260,7 @@ class BOACUtils < Utils
               JOIN cohort_filter_owners ON cohort_filter_owners.cohort_filter_id = cohort_filters.id
               JOIN authorized_users ON authorized_users.id = cohort_filter_owners.user_id
               ORDER BY uid, cohort_id ASC;'
-    results = Utils.query_db(boac_db_credentials, query)
+    results = Utils.query_pg_db(boac_db_credentials, query)
     cohorts = results.map { |r| FilteredCohort.new({id: r['cohort_id'], name: r['cohort_name'], owner_uid: r['uid']}) }
     cohorts.sort_by { |c| [c.owner_uid.to_i, c.id] }
   end
@@ -272,7 +272,7 @@ class BOACUtils < Utils
     query = "SELECT id
              FROM cohort_filters
              WHERE label = '#{cohort.name}'"
-    result = Utils.query_db_field(boac_db_credentials, query, 'id').first
+    result = Utils.query_pg_db_field(boac_db_credentials, query, 'id').first
     logger.info "Filtered cohort '#{cohort.name}' ID is #{result}"
     cohort.id = result
   end
@@ -289,7 +289,7 @@ class BOACUtils < Utils
               WHERE sid IN (#{sids})
                 AND active = true
                 AND key LIKE '#{term_code}%';"
-    results = Utils.query_db(boac_db_credentials, query.gsub("\"", '\''))
+    results = Utils.query_pg_db(boac_db_credentials, query.gsub("\"", '\''))
     alerts = results.map { |r| Alert.new({id: r['id'], type: r['alert_type'], message: r['message'], user: User.new({sis_id: r['sid']})}) }
     alerts.sort_by &:message
   end
@@ -315,7 +315,7 @@ class BOACUtils < Utils
                 JOIN authorized_users ON authorized_users.id = alert_views.viewer_id
                 WHERE alert_views.alert_id IN (#{alert_ids})
                   AND authorized_users.uid = '#{advisor ? advisor.uid : Utils.super_admin_uid}';"
-      results = Utils.query_db(boac_db_credentials, query.gsub("\"", '\''))
+      results = Utils.query_pg_db(boac_db_credentials, query.gsub("\"", '\''))
       dismissed = results.map { |r| r['alert_id'].to_s }
       alerts.select { |a| dismissed.include? a.id }
     else
@@ -333,7 +333,7 @@ class BOACUtils < Utils
                 AND alert_views.viewer_id IN (SELECT authorized_users.id
                                               FROM authorized_users
                                               WHERE authorized_users.uid = '#{advisor ? advisor.uid : Utils.super_admin_uid}');"
-    Utils.query_db(boac_db_credentials, query)
+    Utils.query_pg_db(boac_db_credentials, query)
   end
 
   # Returns an alert that has not been dismissed by the admin test user
@@ -346,11 +346,13 @@ class BOACUtils < Utils
               WHERE active = true
                 AND key LIKE '#{term_code}%'
               LIMIT 1;"
-    results = Utils.query_db(boac_db_credentials, query)
+    results = Utils.query_pg_db(boac_db_credentials, query)
     alert = (results.map { |r| Alert.new({id: r['id'], message: r['message'], user: User.new({uid: r['uid'], full_name: "#{r['first_name']} #{r['last_name']}"})}) }).first
-    # If the admin tester has dismissed the alert, delete the dismissal to permit dismissal testing
-    remove_alert_dismissal(alert) if get_dismissed_alerts([alert]).any?
-    logger.info "Test alert ID #{alert.id}, message '#{alert.message}', user UID #{alert.user.uid}, name #{alert.user.full_name}"
+    # If an alert exists and the admin tester has dismissed the alert, delete the dismissal to permit dismissal testing
+    if alert
+      remove_alert_dismissal(alert) if get_dismissed_alerts([alert]).any?
+      logger.info "Test alert ID #{alert.id}, message '#{alert.message}', user UID #{alert.user.uid}, name #{alert.user.full_name}"
+    end
     alert
   end
 
