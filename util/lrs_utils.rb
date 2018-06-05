@@ -80,7 +80,7 @@ class LRSUtils
              INNER JOIN statements ON users.id=statements.user_id
              WHERE users.external_id IN (#{actors[0..-2]})
                AND statements.timestamp BETWEEN TIMESTAMP '#{earliest_time}' AND TIMESTAMP '#{latest_time}';"
-    results = Utils.query_db(lrs_db_credentials, query)
+    results = Utils.query_pg_db(lrs_db_credentials, query)
     # Write the results to a CSV
     new_csv = Utils.ensure_csv_exists(LRSUtils.events_csv, %w(Time Actor Action Object))
     results.each { |row| Utils.add_csv_row(new_csv, [row['timestamp'], row['external_id'], row['activity_type'], row['statement']]) }
@@ -100,7 +100,7 @@ class LRSUtils
                AND statements.activity_type = '#{event.action.desc}'
                AND statements.timestamp BETWEEN TIMESTAMP '#{min_time_range}' AND TIMESTAMP '#{max_time_range}';"
     event_rows = []
-    results = Utils.query_db(lrs_db_credentials, query)
+    results = Utils.query_pg_db(lrs_db_credentials, query)
     results.each { |row| event_rows << {uid: row['external_id'], event_type: row['activity_type'], time: row['timestamp'], json: row['statement']} }
     # If the event has an object, make sure the Caliper statement includes that object
     event_rows = event_rows.select { |row| row[:json].include? event.object } if event.object
