@@ -27,4 +27,8 @@ class ApiSectionPage
     @parsed['students'] && @parsed['students'].map { |s| s['sid'] }
   end
 
+  def student_uids
+    @parsed['students'] && @parsed['students'].map { |s| s['uid'] }
+  end
+
 end

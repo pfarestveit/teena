@@ -2,8 +2,8 @@
 
 webdriver:
   browser: chrome
-  chrome_profile: true
   headless: false
+  chrome_profile: true
   firefox_profile: profile
   window:
     height: 0
@@ -45,6 +45,12 @@ boac:
   screenshots: true
   nessie_scores: true
   nessie_assignments: true
+  nessie_last_activity: true
+  test_team_assignments: GOM
+  test_team_class_page: GOW
+  test_team_last_activity: TNM
+  test_team_search: TNW
+  test_team_sis_data: FBM
 
 cal_net:
   base_url: https://auth-test.berkeley.edu

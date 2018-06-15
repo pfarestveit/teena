@@ -27,19 +27,21 @@ module Page
     h1(:unexpected_error_msg, xpath: '//h1[contains(text(),"Unexpected Error")]')
     h2(:unauthorized_msg, xpath: '//h2[contains(text(),"Unauthorized")]')
 
-    # Loads the Canvas homepage
-    def load_homepage
-      navigate_to "#{Utils.canvas_base_url}"
+    # Loads the Canvas homepage, optionally using a non-default Canvas base URL
+    # @param canvas_base_url [String]
+    def load_homepage(canvas_base_url = nil)
+      logger.debug "Canvas base url is #{canvas_base_url}" if canvas_base_url
+      canvas_base_url ? navigate_to(canvas_base_url) : navigate_to("#{Utils.canvas_base_url}")
     end
 
-    # Loads the Canvas homepage and logs in to CalNet
+    # Loads the Canvas homepage and logs in to CalNet, optionally using a non-default Canvas base URL
     # @param cal_net [Page::CalNetPage]
     # @param username [String]
     # @param password [String]
-    # @param event [Event]
-    def log_in(cal_net, username, password, event = nil)
-      load_homepage
-      cal_net.log_in(username, password, event)
+    # @param canvas_base_url [String]
+    def log_in(cal_net, username, password, canvas_base_url = nil)
+      load_homepage canvas_base_url
+      cal_net.log_in(username, password)
     end
 
     # Shifts to default content, logs out, and waits for CalNet logout confirmation
@@ -134,7 +136,7 @@ module Page
         self.course_name_input = "#{course.title}"
         self.ref_code_input = "#{course.code}"
         logger.info "Creating a course site named #{course.title} in #{course.term} semester"
-        wait_for_update_and_click_js create_course_button_element
+        wait_for_update_and_click create_course_button_element
         add_course_success_element.when_visible Utils.medium_wait
         course.site_id = search_for_course(course, sub_account)
         unless course.term.nil?
@@ -326,10 +328,12 @@ module Page
 
     text_area(:search_user_input, xpath: '//input[@placeholder="Search people"]')
 
-    # Loads the course users page
+    # Loads the course users page, optionally using a non-default Canvas base URL
     # @param course [Course]
-    def load_users_page(course)
-      navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/users"
+    def load_users_page(course, canvas_base_url = nil)
+      canvas_base_url ?
+          navigate_to("#{canvas_base_url}/courses/#{course.site_id}/users") :
+          navigate_to("#{Utils.canvas_base_url}/courses/#{course.site_id}/users")
       div_element(xpath: '//div[@data-view="users"]').when_present Utils.medium_wait
     end
 
@@ -445,7 +449,6 @@ module Page
           wait_for_load_and_click_js edit_user_link_element
           wait_for_element_and_type_js(user_email_element, user.email)
           wait_for_update_and_click_js update_details_button_element
-
           default_email_element.when_present Utils.short_wait
         end
         user_login_element.when_visible Utils.short_wait
@@ -480,6 +483,16 @@ module Page
       cell_element(xpath: "//tr[contains(@id,'#{canvas_id}')]/td[6]").text
     end
 
+    # Returns the text in the table cell containing a user's last activity. If multiple sections exist, the text is repeated
+    # in separate divs in the cell, so returns the text in the first div.
+    # @param uid [Integer]
+    # @return [String]
+    def roster_user_last_activity(uid)
+      path = "//tr[contains(.,'#{uid}')]/td[7]"
+      (cell = cell_element(xpath: path)).when_visible Utils.short_wait
+      (div = div_element(xpath: "#{path}/div")).exists? ? div.text : cell.text
+    end
+
     # Clicks the Canvas Add People button followed by the Find a Person to Add button and switches to the LTI tool
     # @param driver [Selenium::WebDriver]
     def click_find_person_to_add(driver)
@@ -489,12 +502,12 @@ module Page
       switch_to_canvas_iframe(driver, JunctionUtils.junction_base_url)
     end
 
-    # Returns the number of users in a course site with a given set of roles
+    # Returns the number of users in a course site with a given set of roles, optionally using a non-default Canvas base URL
     # @param course [Course]
     # @param roles [Array<String>]
     # @return [Array<Hash>]
-    def enrollment_count_by_roles(course, roles)
-      load_users_page course
+    def enrollment_count_by_roles(course, roles, canvas_base_url = nil)
+      load_users_page(course, canvas_base_url)
       wait_for_load_and_click enrollment_roles_element
       roles.map do |role|
         role_option = enrollment_roles_options.find { |option| option.include? role }
@@ -518,24 +531,42 @@ module Page
       current_count
     end
 
+    elements(:user_row, :row, xpath: '//table[contains(@class, "roster")]/tbody/tr')
     elements(:student_enrollment_row, :row, :xpath => '//table[contains(@class, "roster")]/tbody/tr[contains(@class, "StudentEnrollment")]')
+    elements(:waitlist_enrollment_row, :row, :xpath => '//table[contains(@class, "roster")]/tbody/tr[contains(@class, "Waitlist")]')
+
+    # Determines the number of enrolled and waitlisted students on a course site and scrolls down on the users page until all have loaded. Optionally uses a non-default Canvas base URL.
+    # @param course [Course]
+    # @param canvas_base_url [String]
+    def load_all_students(course, canvas_base_url = nil)
+      counts = enrollment_count_by_roles(course, ['Student', 'Waitlist Student'], canvas_base_url)
+      total_count = counts[0][:count] + counts[1][:count]
+      logger.debug "Trying to load #{total_count} students and wait list students"
+      wait_until(Utils.short_wait) { user_row_elements.any? }
+      initial_count = user_row_elements.length
+      if initial_count >= total_count
+        logger.debug 'All users are currently visible'
+      else
+        begin
+          tries ||= Utils.canvas_enrollment_retries
+          new_initial_count = user_row_elements.length
+          logger.debug "There are now #{new_initial_count} user rows"
+          scroll_to_bottom
+          wait_until(Utils.short_wait) { user_row_elements.length > new_initial_count }
+          wait_until(Utils.click_wait) { (student_enrollment_row_elements.length + waitlist_enrollment_row_elements.length) == total_count }
+        rescue
+          (tries -= 1).zero? ? fail : retry
+        end
+      end
+    end
 
     # Returns all the users on a course site section with a Student role
     # @param course [Course]
     # @param section [Section]
     # @return [Array<User>]
     def get_enrolled_students(course, section)
-      # Load the users page and scroll until all enrolled students are visible on the page.
-      load_users_page course
-      expected_count = enrollment_count_by_roles(course, ['Student']).first
-      begin
-        tries ||= Utils.canvas_enrollment_retries
-        scroll_to_bottom
-        wait_until(4, "Looking for #{expected_count[:count]} students, but there are #{student_enrollment_row_elements.length}") { student_enrollment_row_elements.length == expected_count[:count] }
-      rescue
-        logger.debug "Found #{student_enrollment_row_elements.length} students, loading more"
-        (tries -= 1).zero? ? fail : retry
-      end
+      # Load the users page and scroll until all students are visible on the page.
+      load_all_students course
 
       # Get an array of student users in the with all IDs
       students = student_enrollment_row_elements.map do |row|

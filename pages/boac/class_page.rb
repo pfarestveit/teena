@@ -22,7 +22,7 @@ module Page
       h1(:course_code, xpath: '//h1')
       span(:section_format, xpath: '//span[@data-ng-bind="section.instructionFormat"]')
       span(:section_number, xpath: '//span[@data-ng-bind="section.sectionNum"]')
-      span(:section_units, xpath: '//span[@data-ng-bind="section.units"]')
+      span(:section_units, xpath: '//span[@count="section.units"]')
       span(:course_title, xpath: '//span[@data-ng-bind="section.title"]')
       div(:term_name, xpath: '//div[@data-ng-bind="section.termName"]')
 
@@ -33,7 +33,7 @@ module Page
           :code => (course_code if course_code?),
           :format => (section_format if section_format?),
           :number => (section_number if section_number?),
-          :units => (section_units if section_units?),
+          :units => (section_units.split.first if section_units?),
           :title => (course_title if course_title?),
           :term => (term_name if term_name?)
         }
@@ -140,32 +140,17 @@ module Page
       # @param student [User]
       # @param node [Integer]
       # @return [String]
-      def student_site_code(student, node)
+      def site_code(student, node)
         el = div_element(xpath: "(#{list_view_user_xpath student}//span[@data-ng-bind=\"canvasSite.courseCode\"])[#{node}]")
         el.text if el.exists?
-      end
-
-      # Returns the XPath to the assignment grades element
-      # @return [String]
-      def assigns_score_xpath
-        '//*[@data-ng-if="canvasSite.analytics.currentScore"]'
       end
 
       # Returns a student's assignments-submitted count for a site at a given node
       # @param student [User]
       # @param node [Integer]
       # @return [String]
-      def student_assigns_submit(student, node)
-        el = div_element(xpath: "(#{list_view_user_xpath student}//strong[@data-ng-bind=\"canvasSite.analytics.assignmentsSubmitted.student.raw\"])[#{node}]")
-        el.text if el.exists?
-      end
-
-      # Returns the 'No Data' message shown for a student's assignment-submitted count for a site at a given node
-      # @param student [User]
-      # @param node [Integer]
-      # @return [String]
-      def student_assigns_submit_no_data(student, node)
-        el = div_element(xpath: "(#{list_view_user_xpath student}//div[contains(@class,\"course-list-view-column-04\")]//div[@data-ng-repeat=\"canvasSite in student.enrollment.canvasSites\"])[#{node}][contains(.,\"No Data\")]")
+      def assigns_submit_score(student, node)
+        el = div_element(xpath: "(#{list_view_user_xpath student}//div[contains(@class,\"course-list-view-column-04\")]//div[@data-ng-repeat=\"canvasSite in student.enrollment.canvasSites\"])[#{node}]//strong[@data-ng-bind=\"canvasSite.analytics.assignmentsSubmitted.student.raw\"]")
         el.text if el.exists?
       end
 
@@ -173,49 +158,86 @@ module Page
       # @param student [User]
       # @param node [Integer]
       # @return [String]
-      def student_assigns_submit_max(student, node)
-        el = span_element(xpath: "(#{list_view_user_xpath student}//span[@data-ng-bind=\"canvasSite.analytics.assignmentsSubmitted.courseDeciles[10]\"])[#{node}]")
+      def assigns_submit_max(student, node)
+        el = span_element(xpath: "(#{list_view_user_xpath student}//div[contains(@class,\"course-list-view-column-04\")]//div[@data-ng-repeat=\"canvasSite in student.enrollment.canvasSites\"])[#{node}]//span[@data-ng-bind=\"canvasSite.analytics.assignmentsSubmitted.courseDeciles[10]\"]")
         el.text if el.exists?
       end
 
-      # Returns a student's assignment total score for a site at a given node
+      # Returns the 'No Data' message shown for a student's assignment-submitted count for a site at a given node
       # @param student [User]
       # @param node [Integer]
       # @return [String]
-      def student_assigns_score_no_data(driver, student, node)
-        msg_el_xpath = "(#{list_view_user_xpath student}#{assigns_score_xpath})[#{node}][contains(.,\"No Data\")]"
-        msg_el_exists = verify_block { driver.find_element(xpath: msg_el_xpath) }
-        driver.find_element(xpath: msg_el_xpath).text if msg_el_exists
+      def assigns_submit_no_data(student, node)
+        el = div_element(xpath: "(#{list_view_user_xpath student}//div[contains(@class,\"course-list-view-column-04\")]//div[@data-ng-repeat=\"canvasSite in student.enrollment.canvasSites\"])[#{node}][contains(.,\"No Data\")]")
+        el.text if el.exists?
       end
 
-      # Mouses over an assignment grades boxplot if it exists and returns the student's assignment total score for a site at a given node
+      # Returns the XPath to the assignment grades element
+      # @param student [User]
+      # @param node [Integer]
+      # @return [String]
+      def assigns_grade_xpath(student, node)
+        "(#{list_view_user_xpath student}/div[@class=\"course-list-view-column-05 ng-scope\"]//div[@class=\"profile-boxplot-container ng-scope\"])[#{node}]"
+      end
+
+      # Returns the student's assignment total score for a site at a given node. If a boxplot exists, mouses over it to reveal the score.
       # @param driver [Selenium::WebDriver]
       # @param student [User]
       # @param node [Integer]
       # @return [String]
-      def student_assigns_boxplot_score(driver, student, node)
-        score_xpath = "(#{list_view_user_xpath student}#{assigns_score_xpath})[#{node}]//div[text()=\"User Score\"]/following-sibling::div"
-        boxplot_exists = verify_block do
-          mouseover(driver, driver.find_element(:xpath => "(#{list_view_user_xpath student}#{assigns_score_xpath})[#{node}]//*[@class=\"highcharts-boxplot-box\"]"))
-          driver.find_element(:xpath => "#{score_xpath}")
-        end
-        driver.find_element(:xpath => "#{score_xpath}").text if boxplot_exists
+      def assigns_grade_score(driver, student, node)
+        score_xpath = "(#{list_view_user_xpath student}/div[@class=\"course-list-view-column-05 ng-scope\"]//div[@class=\"profile-boxplot-container ng-scope\"])[#{node}]"
+        has_boxplot = verify_block { mouseover(driver, driver.find_element(xpath: "#{score_xpath}//*[@class=\"highcharts-boxplot-box\"]")) }
+        el = has_boxplot ?
+            div_element(xpath: "#{score_xpath}//div[text()=\"User Score\"]/following-sibling::div") :
+            div_element(xpath: "#{score_xpath}//strong[@data-ng-bind=\"canvasSite.analytics.currentScore.student.raw\"]")
+        el.text if el.exists?
+      end
+
+      # Returns a student's assignment total score No Data message for a site at a given node
+      # @param student [User]
+      # @param node [Integer]
+      # @return [String]
+      def assigns_grade_no_data(student, node)
+        msg_el = div_element(xpath: "#{assigns_grade_xpath(student, node)}[contains(.,\"No Data\")]")
+        msg_el if msg_el.exists?
       end
 
       # Returns a student's visible analytics data for a site at a given index
+      # @param driver [Selenium::WebDriver]
       # @param student [User]
       # @param index [Integer]
       # @return [Hash]
-      def visible_student_site_data(driver, student, index)
+      def visible_assigns_data(driver, student, index)
         node = index + 1
         {
-          :site_code => student_site_code(student, node),
-          :assigns_submitted => student_assigns_submit(student, node),
-          :assigns_submitted_max => student_assigns_submit_max(student, node),
-          :assigns_submit_no_data => student_assigns_submit_no_data(student, node),
-          :assigns_boxplot_score => student_assigns_boxplot_score(driver, student, node),
-          :assigns_score_no_data => student_assigns_score_no_data(driver, student, node)
-          # TODO - :last_activity
+          :site_code => site_code(student, node),
+          :assigns_submitted => assigns_submit_score(student, node),
+          :assigns_submitted_max => assigns_submit_max(student, node),
+          :assigns_submit_no_data => assigns_submit_no_data(student, node),
+          :assigns_grade => assigns_grade_score(driver, student, node),
+          :assigns_grade_no_data => assigns_grade_no_data(student, node)
+        }
+      end
+
+      # Returns a student's visible last activity data for a site at a given node
+      # @param student [User]
+      # @param node [Integer]
+      # @return [String]
+      def last_activity(student, node)
+        el = span_element(xpath: "(#{list_view_user_xpath student}/div[@class=\"course-list-view-column-06 ng-scope\"]//div[@class=\"profile-boxplot-container ng-scope\"])[#{node}]/span")
+        el && el.text
+      end
+
+      # Returns both a course site code and a student's last activity on the site at a given index
+      # @param student [User]
+      # @param index [Integer]
+      # @return [Hash]
+      def visible_last_activity(student, index)
+        node = index + 1
+        {
+          :site_code => site_code(student, node),
+          :last_activity => last_activity(student, node)
         }
       end
 

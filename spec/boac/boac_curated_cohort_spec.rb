@@ -9,7 +9,8 @@ describe 'BOAC', order: :defined do
   advisor_cohorts = []
   other_advisor = BOACUtils.get_authorized_users.find { |u| u.uid != advisor.uid }
   pre_existing_cohorts = BOACUtils.get_user_curated_cohorts advisor
-  team = Team::GOW
+  team_code = ENV['TEAM']
+  team = BOACUtils.get_teams.find { |t| t.code == team_code }
   students = BOACUtils.get_team_members(team).delete_if { |s| s.status == 'inactive' }
 
   before(:all) do
@@ -194,7 +195,7 @@ describe 'BOAC', order: :defined do
 
     it 'is shown on the student page' do
       @student_page.load_page students.last
-      expect(@student_page.curated_selected? @cohort_1).to be true
+      @student_page.wait_until(Utils.short_wait) { @student_page.curated_selected? @cohort_1 }
       expect(@student_page.curated_selected? @cohort_2).to be true
       expect(@student_page.curated_selected? @cohort_3).to be true
       expect(@student_page.curated_selected? @cohort_4).to be false

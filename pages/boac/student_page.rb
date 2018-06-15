@@ -181,6 +181,7 @@ module Page
       # Clicks the button to expand previous semester data
       def click_view_previous_semesters
         logger.debug 'Expanding previous semesters'
+        scroll_to_bottom
         wait_for_load_and_click view_more_button_element
       end
 
@@ -268,7 +269,7 @@ module Page
       # @param term_name [String]
       # @param course_code [String]
       def expand_course_data(term_name, course_code)
-        wait_for_update_and_click_js course_data_toggle(term_name, course_code)
+        wait_for_update_and_click course_data_toggle(term_name, course_code)
       end
 
       # Returns the XPath to a course site associated with a course in a term
@@ -407,6 +408,21 @@ module Page
       # @return [Hash]
       def visible_grades_analytics(driver, site_xpath, api_analytics)
         visible_analytics(driver, site_xpath, 'Assignment Grades', api_analytics)
+      end
+
+      # Returns the last activity date shown for a given site
+      # @param term_name [String]
+      # @param course_code [String]
+      # @param index [Integer]
+      # @return [String]
+      def visible_last_activity(term_name, course_code, index)
+        sleep 1
+        begin
+          span_element(:xpath => "#{course_site_xpath(term_name, course_code, index)}//td[contains(.,\"Last bCourses Activity\")]/following-sibling::td//span[2]").text
+        rescue
+          el = div_element(:xpath => "#{course_site_xpath(term_name, course_code, index)}//td[contains(.,\"Last bCourses Activity\")]/following-sibling::td/div")
+          el && el.text
+        end
       end
 
     end

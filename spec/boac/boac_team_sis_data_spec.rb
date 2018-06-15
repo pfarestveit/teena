@@ -8,9 +8,8 @@ describe 'BOAC' do
 
     # This script is team-driven, so only an ASC advisor can be used
     advisor = BOACUtils.get_dept_advisors(BOACDepartments::ASC).first
+    team = BOACUtils.sis_data_team
 
-    # Specify the team to test
-    team_code = ENV['TEAM']
     users_with_alerts = []
 
     # Create files for test output
@@ -19,7 +18,7 @@ describe 'BOAC' do
     CSV.open(user_profile_sis_data, 'wb') { |csv| csv << user_profile_data_heading }
 
     user_course_sis_data = File.join(Utils.initialize_test_output_dir, 'boac-sis-courses.csv')
-    user_course_data_heading = %w(UID Sport Term CourseCode CourseName SectionCcn SectionNumber Midpoint Grade GradingBasis Units EnrollmentStatus)
+    user_course_data_heading = %w(UID Sport Term CourseCode CourseName SectionCcn SectionCode Primary? Midpoint Grade GradingBasis Units EnrollmentStatus)
     CSV.open(user_course_sis_data, 'wb') { |csv| csv << user_course_data_heading }
 
     # Get all teams and athletes
@@ -37,8 +36,6 @@ describe 'BOAC' do
     expected_team_names = teams.map &:name
     visible_team_names = @boac_teams_list_page.teams
     it('shows all the expected teams') { expect(visible_team_names.sort).to eql(expected_team_names.sort) }
-
-    team = BOACUtils.get_teams.find { |t| t.code == team_code }
 
     if visible_team_names.include? team.name
       begin
@@ -315,8 +312,8 @@ describe 'BOAC' do
                               Utils.log_error e
                               it("encountered an error for UID #{team_member.uid} term #{term_name} course #{course_code} section #{section_sis_data[:ccn]}") { fail }
                             ensure
-                              row = [team_member.uid, team.name, term_name, course_code, course_sis_data[:title], section_sis_data[:ccn], section_sis_data[:number],
-                                     course_sis_data[:midpoint], course_sis_data[:grade], course_sis_data[:grading_basis], course_sis_data[:units], section_sis_data[:status]]
+                              row = [team_member.uid, team.name, term_name, course_code, course_sis_data[:title], section_sis_data[:ccn], "#{section_sis_data[:component]} #{section_sis_data[:number]}",
+                                     section_sis_data[:primary], course_sis_data[:midpoint], course_sis_data[:grade], course_sis_data[:grading_basis], course_sis_data[:units], section_sis_data[:status]]
                               Utils.add_csv_row(user_course_sis_data, row)
                             end
                           end

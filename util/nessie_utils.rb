@@ -25,7 +25,7 @@ class NessieUtils < Utils
                 AND canvas_user_id = #{user.canvas_id}
               ORDER BY assignment_id;"
     logger.info "Sending query: '#{query}'"
-    results = NessieUtils.query_redshift_db(nessie_db_credentials, query)
+    results = query_redshift_db(nessie_db_credentials, query)
     results.map do |r|
       submitted = %w(on_time late submitted graded).include? r['assignment_status']
       Assignment.new({:id => r['assignment_id'], :due_date => r['due_at'], :submission_date => r['submitted_at'], :submitted => submitted})

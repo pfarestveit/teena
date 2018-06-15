@@ -187,6 +187,16 @@ class Utils
     output_dir
   end
 
+  # Creates a CSV in which test scripts can record information that is being presented in the UI
+  # @param file_name [String]
+  # @param headings [Array<String>]
+  # @return [String]
+  def self.create_test_output_csv(file_name, headings)
+    file = File.join(Utils.initialize_test_output_dir, file_name)
+    CSV.open(file, 'wb') { |csv| csv << headings }
+    file
+  end
+
   # Checks if a given (CSV) file exists. If not, creates the file using column headers.
   # @param file [File]
   # @param columns [Array<String>]

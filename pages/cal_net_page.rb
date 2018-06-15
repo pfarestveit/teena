@@ -21,6 +21,7 @@ module Page
     # @param event [Event]
     def log_in(username, password, event = nil)
       # If no credentials are available, then wait for manual login
+      wait_until(Utils.medium_wait) { title.include? 'CAS – Central Authentication Service' }
       if username == 'secret' || password == 'secret'
         if Utils.config['webdriver']['headless']
           logger.error 'Browser is running in headless mode, manual login is not supported'
@@ -29,7 +30,7 @@ module Page
           logger.debug 'Waiting for manual login'
           wait_for_element_and_type(username_element, 'PLEASE LOG IN MANUALLY')
           username_element.flash
-          wait_until(Utils.long_wait) { !current_url.include? Utils.cal_net_url }
+          wait_until(Utils.long_wait) { !title.include? 'CAS – Central Authentication Service' }
         end
       else
         logger.debug "#{username} is logging in"

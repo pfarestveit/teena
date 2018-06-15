@@ -137,7 +137,6 @@ module Page
     begin
       return true if yield
     rescue => e
-      logger.warn e.message
       false
     end
   end
