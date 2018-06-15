@@ -40,7 +40,7 @@ module Page
         # Creates a curated cohort using the 'Create a new curated cohort' link on the Manage Curated Cohorts page, shown when no curated cohorts exist
         # @param cohort [CuratedCohort]
         def manage_create_first_curated(cohort)
-          sleep 1
+          sleep 3
           wait_for_load_and_click manage_create_first_curated_link_element
           name_and_save_curated_cohort cohort
           wait_for_sidebar_curated cohort

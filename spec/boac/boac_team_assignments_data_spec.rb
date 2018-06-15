@@ -1,17 +1,16 @@
 require_relative '../../util/spec_helper'
 
-describe 'BOAC analytics' do
+describe 'BOAC assignment analytics' do
 
   include Logging
 
   begin
 
-    # Specify the team to test
-    team_code = ENV['TEAM']
+    team = BOACUtils.assignments_team
     term_to_test = BOACUtils.analytics_term
 
     user_course_analytics_data = File.join(Utils.initialize_test_output_dir, 'boac-canvas-courses.csv')
-    user_analytics_data_heading = %w(UID Sport Term CourseCode SiteCode SiteId
+    user_analytics_data_heading = %w(UID Sport Term SiteCode SiteId
                                       AssignMin AssignMax AssignUser AssignPerc AssignRound
                                       GradesMin GradesMax GradesUser GradesPerc GradesRound)
     CSV.open(user_course_analytics_data, 'wb') { |csv| csv << user_analytics_data_heading }
@@ -25,12 +24,12 @@ describe 'BOAC analytics' do
     @canvas_assignments_page = Page::CanvasAssignmentsPage.new @driver
     @canvas_discussions_page = Page::CanvasAnnounceDiscussPage.new @driver
     @canvas_grades_page = Page::CanvasGradesPage.new @driver
+    @canvas_users_page = Page::CanvasPage.new @driver
     @e_grades_page = Page::JunctionPages::CanvasEGradesExportPage.new @driver
     @boac_homepage = Page::BOACPages::HomePage.new @driver
     @boac_student_page = Page::BOACPages::StudentPage.new @driver
     @boac_homepage.log_in(Utils.super_admin_username, Utils.super_admin_password, @cal_net)
 
-    team = BOACUtils.get_teams.find { |t| t.code == team_code }
     BOACUtils.get_team_members(team).each do |student|
 
       boac_api_page = ApiUserAnalyticsPage.new @driver
@@ -135,7 +134,7 @@ describe 'BOAC analytics' do
               if BOACUtils.tooltips
 
                 @boac_student_page.load_page student
-                @boac_student_page.click_view_previous_semesters if boac_api_page.terms.length > 1
+                @boac_student_page.click_view_previous_semesters if term_to_test != BOACUtils.term
 
                 # Find the site in the UI differently if it's matched versus unmatched
                 site[:course_code] ?
@@ -180,8 +179,8 @@ describe 'BOAC analytics' do
               Utils.log_error e
               it("encountered an error with UID #{student.uid} #{test_case}") { fail }
             ensure
-              row = [student.uid, team.name, term_to_test, site[:course_code], site_code, site[:site_id],
-                     boac_api_assigns_submitted[:min], boac_api_assigns_submitted[:max], boac_api_assigns_submitted[:score], boac_api_assigns_submitted[:perc], boac_api_assigns_submitted[:perc_round],
+              row = [student.uid, team.name, term_to_test, site_code, site_id, boac_api_assigns_submitted[:min], boac_api_assigns_submitted[:max],
+                     boac_api_assigns_submitted[:score], boac_api_assigns_submitted[:perc], boac_api_assigns_submitted[:perc_round],
                      boac_api_grades[:min], boac_api_grades[:max], boac_api_grades[:score], boac_api_grades[:perc], boac_api_grades[:perc_round]
               ]
               Utils.add_csv_row(user_course_analytics_data, row)

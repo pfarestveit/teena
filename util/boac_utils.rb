@@ -53,6 +53,37 @@ class BOACUtils < Utils
     @config['nessie_assignments']
   end
 
+  # Whether or not to check Nessie last activity data during tests
+  def self.nessie_last_activity
+    @config['nessie_last_activity']
+  end
+
+  # The team to use for testing Canvas assignments data, which should not be the same as the team used for testing Canvas
+  # last activity data
+  def self.assignments_team
+    get_teams.find { |t| t.code == @config['test_team_assignments'] }
+  end
+
+  def self.class_page_team
+    get_teams.find { |t| t.code == @config['test_team_class_page'] }
+  end
+
+  # The team to use for testing Canvas last activity data, which should not be the same as the team used for testing Canvas
+  # assignments data
+  def self.last_activity_team
+    get_teams.find { |t| t.code == @config['test_team_last_activity'] }
+  end
+
+  # The team to use for testing user search
+  def self.user_search_team
+    get_teams.find { |t| t.code == @config['test_team_search'] }
+  end
+
+  # The team to use for testing SIS data
+  def self.sis_data_team
+    get_teams.find { |t| t.code == @config['test_team_sis_data'] }
+  end
+
   # Returns the db credentials for BOAC
   # @return [Hash]
   def self.boac_db_credentials
