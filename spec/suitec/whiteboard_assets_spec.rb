@@ -364,7 +364,7 @@ describe 'Whiteboard Add Asset', order: :defined do
 
   describe 'events' do
 
-    it('record the right number of events') { expect(SuiteCUtils.events_match?(@course, event)).to be true }
+    it('record the right number of events') { expect(SuiteCUtils.events_match?(@course, event)).to be true unless ENV['COURSE_ID'] }
   end
 
 end
