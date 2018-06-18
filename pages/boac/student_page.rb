@@ -222,14 +222,14 @@ module Page
         grading_basis_xpath = "#{course_xpath}//span[contains(@class, 'profile-class-grading-basis')]"
         mid_point_grade_xpath = "#{course_xpath}//span[contains(@data-ng-bind,'course.midtermGrade')]"
         grade_xpath = "#{course_xpath}//span[contains(@data-ng-bind, 'course.grade')]"
-        wait_list_xpath = "#{course_xpath}//div[@data-ng-if='course.waitlisted']"
+        wait_list_xpath = "#{course_xpath}//span[@data-ng-if='course.waitlisted']"
         {
           :title => (h4_element(:xpath => title_xpath).text if h4_element(:xpath => title_xpath).exists?),
           :units => (div_element(:xpath => units_xpath).text.delete('Units').strip if div_element(:xpath => units_xpath).exists?),
           :grading_basis => (span_element(:xpath => grading_basis_xpath).text if (span_element(:xpath => grading_basis_xpath).exists? && !span_element(:xpath => grade_xpath).exists?)),
           :mid_point_grade => (span_element(:xpath => mid_point_grade_xpath).text if span_element(:xpath => mid_point_grade_xpath).exists?),
           :grade => (span_element(:xpath => grade_xpath).text if span_element(:xpath => grade_xpath).exists?),
-          :wait_list => (div_element(:xpath => wait_list_xpath).exists?)
+          :wait_list => (span_element(:xpath => wait_list_xpath).exists?)
         }
       end
 

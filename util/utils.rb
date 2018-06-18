@@ -49,7 +49,7 @@ class Utils
           profile_dir = (profile ? profile : File.join(@config_dir, 'chrome-profile'))
           options.add_argument("user-data-dir=#{profile_dir}")
         end
-        options.add_argument 'headless' if driver_config['headless']
+        options.add_argument 'headless' if headless?
         prefs = {
             :prompt_for_download => false,
             :default_directory => Utils.download_dir
@@ -66,7 +66,7 @@ class Utils
         # Turn off Firefox's pretty JSON since it prevents parsing JSON strings in the browser.
         profile['devtools.jsonview.enabled'] = false
         options = Selenium::WebDriver::Firefox::Options.new(:profile => profile)
-        options.add_argument '-headless' if driver_config['headless']
+        options.add_argument '-headless' if headless?
         driver = Selenium::WebDriver.for :firefox, :options => options
 
       when 'safari'
@@ -91,6 +91,10 @@ class Utils
 
   def self.optional_chrome_profile_dir
     File.join(@config_dir, 'chrome-profile-optional')
+  end
+
+  def self.headless?
+    @config['webdriver']['headless']
   end
 
   # @param driver [Selenium::WebDriver]
