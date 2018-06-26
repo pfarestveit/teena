@@ -92,7 +92,7 @@ describe 'BOAC', order: :defined do
         @cohort_page.perform_search(cohort, performance_data)
         expected_results = @cohort_page.expected_search_results(@searchable_students, cohort.search_criteria).map { |u| u[:sid] }
         visible_results = cohort.member_count.zero? ? [] : @cohort_page.visible_sids
-        @cohort_page.wait_until(1, "Expected #{expected_results.sort} but got #{visible_results.sort}") { visible_results.sort == expected_results.sort }
+        @cohort_page.wait_until(1, "Expected but not present: #{expected_results - visible_results}. Present but not expected: #{visible_results - expected_results}") { visible_results.sort == expected_results.sort }
       end
 
       it "sorts by Last Name all the students who match sports '#{cohort.search_criteria.squads && (cohort.search_criteria.squads.map &:name)}', levels '#{cohort.search_criteria.levels}', majors '#{cohort.search_criteria.majors}', GPA ranges '#{cohort.search_criteria.gpa_ranges}', units '#{cohort.search_criteria.units}'" do
@@ -390,7 +390,7 @@ describe 'BOAC', order: :defined do
           @cohort_page.perform_search cohort
           expected_results = @cohort_page.expected_search_results(@inactive_student_search_data, cohort.search_criteria).map { |u| u[:sid] }
           visible_results = cohort.member_count.zero? ? [] : @cohort_page.visible_sids
-          @cohort_page.wait_until(1, "Expected #{expected_results.sort} but got #{visible_results.sort}") { visible_results.sort == expected_results.sort }
+          @cohort_page.wait_until(1, "Expected but not present: #{expected_results - visible_results}. Present but not expected: #{visible_results - expected_results}") { visible_results.sort == expected_results.sort }
         end
       end
     end
@@ -451,7 +451,7 @@ describe 'BOAC', order: :defined do
           @cohort_page.perform_search cohort
           expected_results = @cohort_page.expected_search_results(@intensive_student_search_data, cohort.search_criteria).map { |u| u[:sid] }
           visible_results = cohort.member_count.zero? ? [] : @cohort_page.visible_sids
-          @cohort_page.wait_until(1, "Expected #{expected_results.sort} but got #{visible_results.sort}") { visible_results.sort == expected_results.sort }
+          @cohort_page.wait_until(1, "Expected but not present: #{expected_results - visible_results}. Present but not expected: #{visible_results - expected_results}") { visible_results.sort == expected_results.sort }
         end
       end
     end

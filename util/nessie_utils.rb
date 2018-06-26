@@ -32,4 +32,14 @@ class NessieUtils < Utils
     end
   end
 
+  def self.nessie_rds_credentials
+    {
+      :host => @config['rds_host'],
+      :port => @config['rds_port'],
+      :name => @config['rds_name'],
+      :user => @config['rds_user'],
+      :password => @config['rds_password']
+    }
+  end
+
 end
