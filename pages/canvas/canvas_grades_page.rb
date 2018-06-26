@@ -156,10 +156,6 @@ module Page
         unless gradebook_total_elements.any? &:visible?
           logger.debug 'Gradebook totals are not visible, bringing them to the front'
           scroll_to_element total_grade_column_element
-          wait_for_update_and_click total_grade_column_element
-          wait_for_update_and_click total_grade_menu_link_element
-          sleep 1
-          total_grade_column_move_front_element.click
           wait_until(Utils.medium_wait) { gradebook_total_elements.any? }
         end
         sleep Utils.click_wait
