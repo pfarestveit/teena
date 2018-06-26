@@ -19,7 +19,7 @@ module Page
     div(:total_grade_column, xpath: '//div[contains(@id, "total_grade")]')
     link(:total_grade_menu_link, id: 'total_dropdown')
     span(:total_grade_column_menu, class: 'gradebook-header-menu')
-    span(:total_grade_column_move_front, xpath: '//ul[contains(@class, "gradebook-header-menu")]//*[contains(.,"Move to front")]')
+    link(:total_grade_column_move_front, xpath: '//ul[contains(@class, "gradebook-header-menu")]//a[contains(.,"Move to front")]')
 
     elements(:gradebook_row, :link, xpath: '//div[@class="canvas_0 grid-canvas"]//div[@class="student-name"]')
     elements(:gradebook_uid, :div, class: 'secondary_identifier_cell')
@@ -143,33 +143,40 @@ module Page
       wait_for_load_and_click gradebook_settings_button_element
     end
 
-    # Returns the Gradebook data for a given user
+    # Returns the Gradebook data for a given user. If the score cannot be found, log an error but do not fail.
     # @param user [User]
     # @return [Hash]
     def student_score(user)
-      user_search_input_element.when_visible Utils.medium_wait
-      self.user_search_input = user.uid
-      sleep Utils.click_wait
-      wait_until(2) { gradebook_uid_elements.first.text == "#{user.uid}" }
-      unless gradebook_total_elements.any? &:visible?
-        wait_for_update_and_click_js total_grade_column_element
-        js_click total_grade_menu_link_element
-        sleep 1
-        total_grade_column_move_front_element.click if total_grade_column_move_front_element.exists?
-        wait_until(Utils.medium_wait) { gradebook_total_elements.any? }
+      begin
+        logger.debug "Searching for score for UID #{user.uid}"
+        user_search_input_element.when_visible Utils.medium_wait
+        self.user_search_input = user.uid
+        sleep Utils.click_wait
+        wait_until(2) { gradebook_uid_elements.first.text == "#{user.uid}" }
+        unless gradebook_total_elements.any? &:visible?
+          logger.debug 'Gradebook totals are not visible, bringing them to the front'
+          scroll_to_element total_grade_column_element
+          wait_for_update_and_click total_grade_column_element
+          wait_for_update_and_click total_grade_menu_link_element
+          sleep 1
+          total_grade_column_move_front_element.click
+          wait_until(Utils.medium_wait) { gradebook_total_elements.any? }
+        end
+        sleep Utils.click_wait
+        score = gradebook_total_elements.first.text.strip.delete('%').to_f
+        # If the score in the UI is zero, the score might not have loaded yet. Retry.
+        score = if score.zero?
+                  logger.debug 'Double-checking a zero score'
+                  wait_for_element_and_type(user_search_input_element, user.uid)
+                  sleep 1
+                  gradebook_total_elements.first.text.strip.delete('%').to_f
+                else
+                  score
+                end
+        student_and_grade(user, score)
+      rescue => e
+        Utils.log_error e
       end
-      sleep Utils.click_wait
-      score = gradebook_total_elements.first.text.strip.delete('%').to_f
-      # If the score in the UI is zero, the score might not have loaded yet. Retry.
-      score = if score.zero?
-                logger.debug 'Double-checking a zero score'
-                wait_for_element_and_type(user_search_input_element, user.uid)
-                sleep 1
-                gradebook_total_elements.first.text.strip.delete('%').to_f
-              else
-                score
-              end
-      student_and_grade(user, score)
     end
 
   end

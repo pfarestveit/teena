@@ -58,17 +58,40 @@ class BOACUtils < Utils
     @config['nessie_last_activity']
   end
 
+  # The advisor department to use for tests that can run with different departments
+  def self.test_department
+    BOACDepartments::DEPARTMENTS.find { |d| d.code == @config['test_dept'] }
+  end
+
+  # Looping, team-driven tests can take a very long time to execute depending how many members there are. This config limits
+  # the number of members tested to the first X.
+  def self.constrained_users(users)
+    max = @config['test_max_users']
+    (users.length <= max) ? users : users[0..(max - 1)]
+  end
+
+  # The number of days that synced Canvas data is behind actual site usage data
+  def self.canvas_data_lag_days
+    @config['test_canvas_data_lag']
+  end
+
   # The team to use for testing Canvas assignments data, which should not be the same as the team used for testing Canvas
   # last activity data
   def self.assignments_team
     get_teams.find { |t| t.code == @config['test_team_assignments'] }
   end
 
+  # The team to use for testing BOAC class pages
   def self.class_page_team
     get_teams.find { |t| t.code == @config['test_team_class_page'] }
   end
 
-  # The team to use for testing Canvas last activity data, which should not be the same as the team used for testing Canvas
+  # The team to use for testing BOAC curated cohorts
+  def self.curated_cohort_team
+    get_teams.find { |t| t.code == @config['test_team_curated_cohort'] }
+  end
+
+  # The team to use for testing Canvas last activity data
   # assignments data
   def self.last_activity_team
     get_teams.find { |t| t.code == @config['test_team_last_activity'] }

@@ -538,6 +538,7 @@ module Page
     # Determines the number of enrolled and waitlisted students on a course site and scrolls down on the users page until all have loaded. Optionally uses a non-default Canvas base URL.
     # @param course [Course]
     # @param canvas_base_url [String]
+    # @return [Integer]
     def load_all_students(course, canvas_base_url = nil)
       counts = enrollment_count_by_roles(course, ['Student', 'Waitlist Student'], canvas_base_url)
       total_count = counts[0][:count] + counts[1][:count]
@@ -558,6 +559,7 @@ module Page
           (tries -= 1).zero? ? fail : retry
         end
       end
+      total_count
     end
 
     # Returns all the users on a course site section with a Student role

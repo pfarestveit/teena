@@ -246,10 +246,10 @@ class ApiUserAnalyticsPage
           :last_name => user.last_name,
           :last_name_sortable => user.last_name.gsub(/\W/, '').downcase,
           :squad_names => user_squad_names,
-          :level => user_sis_data[:level],
-          :majors => user_sis_data[:majors],
-          :gpa => user_sis_data[:cumulative_gpa],
-          :units => user_sis_data[:cumulative_units]
+          :level => (user_sis_data[:level] if user_sis_data[:level]),
+          :majors => (user_sis_data[:majors] ? user_sis_data[:majors] : []),
+          :gpa => (user_sis_data[:cumulative_gpa] if user_sis_data[:cumulative_gpa]),
+          :units => (user_sis_data[:cumulative_units] if user_sis_data[:cumulative_units])
         }
       end
       File.open(users_data_file, 'w') { |f| f.write users_data.to_json }

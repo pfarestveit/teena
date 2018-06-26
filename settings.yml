@@ -46,8 +46,12 @@ boac:
   nessie_scores: true
   nessie_assignments: true
   nessie_last_activity: true
+  test_dept: UWASC
+  test_max_users: 10
+  test_canvas_data_lag: 1
   test_team_assignments: GOM
   test_team_class_page: GOW
+  test_team_curated_cohort: BAM
   test_team_last_activity: TNM
   test_team_search: TNW
   test_team_sis_data: FBM

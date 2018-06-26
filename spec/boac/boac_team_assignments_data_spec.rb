@@ -35,7 +35,8 @@ describe 'BOAC assignment analytics' do
       @boac_student_page = Page::BOACPages::StudentPage.new @driver
       @boac_homepage.log_in(Utils.super_admin_username, Utils.super_admin_password, @cal_net)
 
-      BOACUtils.get_team_members(team).each do |student|
+      all_team_members = BOACUtils.get_team_members(team)
+      BOACUtils.constrained_users(all_team_members).each do |student|
 
         boac_api_page = ApiUserAnalyticsPage.new @driver
         boac_api_page.get_data(@driver, student)

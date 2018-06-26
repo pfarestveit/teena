@@ -73,7 +73,7 @@ module Page
         load_embedded_tool(driver, course)
         begin
           # First check if it's necessary to un-mute assignments or set the grading scheme
-          download_final_grades_element.when_visible Utils.short_wait
+          download_final_grades_element.when_visible Utils.medium_wait
           logger.debug "No adjustments needed on site #{course.site_id}"
         rescue
           if required_adjustments_heading_element.visible?

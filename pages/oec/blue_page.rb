@@ -172,7 +172,7 @@ module Page
         logger.debug 'Waiting for filtered results'
         wait_until(2) { total_results < initial_results }
       rescue
-        (tries -= 1).zero? ? fail : retry
+        (tries -= 1).zero? ? (logger.warn 'Task count is unchanged, moving on.') : retry
       end
     end
 
@@ -369,6 +369,23 @@ module Page
               # TODO - verify right number of options
             end
           end
+
+        when 'drop-down-list-vertical'
+          verify_block do
+            wait_until(2) do
+              # Verify the question heading text
+              logger.debug "Checking path: '#{question_xpath}//h3/a[text()=\"#{question[:question]}\"]'"
+              driver.find_element(:xpath => "#{question_xpath}//h3/a[text()=\"#{question[:question]}\"]")
+              logger.info "Found '#{question[:question]}'"
+
+              # Verify select options
+              question[:options].each do |o|
+                logger.debug "Checking path: '#{question_xpath}//select/option[text()='#{o}']'"
+                driver.find_element(:xpath => "#{question_xpath}//select/option[text()='#{o}']")
+              end
+            end
+          end
+
         else
           logger.error "Invalid question type: '#{question[:type]}'"
           fail

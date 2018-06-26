@@ -333,7 +333,7 @@ describe 'Asset pinning', order: :defined do
 
   describe 'events' do
 
-    it('record the right number of events') { expect(SuiteCUtils.events_match?(@course, event)).to be true ENV['COURSE_ID'] }
+    it('record the right number of events') { expect(SuiteCUtils.events_match?(@course, event)).to be true } unless ENV['COURSE_ID']
   end
 
 end

@@ -9,8 +9,7 @@ describe 'BOAC', order: :defined do
   advisor_cohorts = []
   other_advisor = BOACUtils.get_authorized_users.find { |u| u.uid != advisor.uid }
   pre_existing_cohorts = BOACUtils.get_user_curated_cohorts advisor
-  team_code = ENV['TEAM']
-  team = BOACUtils.get_teams.find { |t| t.code == team_code }
+  team = BOACUtils.curated_cohort_team
   students = BOACUtils.get_team_members(team).delete_if { |s| s.status == 'inactive' }
 
   before(:all) do
