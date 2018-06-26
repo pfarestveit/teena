@@ -173,7 +173,9 @@ class OecUtils
   # @return [boolean]
   def self.verify_all_forms_present(csv)
     expected_forms = get_forms.map { |f| get_form_code(f).gsub(/\W/, '').gsub('_', '').gsub('&', '') }
+    expected_forms.each { |f| logger.info "Expecting a form for #{f}" }
     bank_forms = csv.headers[7..-1].map { |h| h.to_s.gsub(/\W/, '').gsub('_', '').upcase }
+    expected_forms.each { |f| logger.info "Question bank has a form for #{f}" }
     logger.warn "Expected evaluation forms that are not in the question bank: #{expected_forms - bank_forms}"
     logger.warn "Evaluation forms in the question bank items that are unexpected: #{bank_forms - expected_forms}"
     bank_forms.sort == expected_forms.sort
@@ -190,7 +192,7 @@ class OecUtils
       :options => row[:options] && (row[:options].split(' , ').map &:strip),
       :sub_question => row[:sub_question],
       :sub_type => row[:sub_type],
-      :sub_options => row[:sub_options] && (row[:sub_options].split(' , ').map &:strip)
+      :sub_options => row[:sub_options] && (row[:sub_options].split(' , '))
     }
   end
 

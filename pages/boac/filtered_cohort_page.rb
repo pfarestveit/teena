@@ -232,7 +232,7 @@ module Page
           criteria = cohort.search_criteria
           logger.info "Searching for squads '#{criteria.squads && (criteria.squads.map &:name)}', levels '#{criteria.levels}', majors '#{criteria.majors}', GPA ranges '#{criteria.gpa_ranges}', units '#{criteria.units}'"
           wait_until(Utils.short_wait) { level_option_elements.any? }
-          sleep 2
+          sleep 3
 
           # Uncheck any options that are already checked from a previous search, then check those that apply to the current search.
           # Do not look for squad options if the search criteria do not include teams, as non-ASC advisors cannot search by teams.
@@ -242,7 +242,17 @@ module Page
               wait_until(1) { squad_option_elements.all? &:visible? }
             end
             squad_option_elements.each { |o| o.click if o.attribute('class').include?('not-empty') }
-            criteria.squads.each { |s| check_search_option squad_option_element(s) }
+
+            criteria.squads.each do |s|
+              # The squads list can change over time. Avoid test failures if the search criteria is out of sync with actual squads.
+              if squad_option_element(s).exists?
+                logger.debug "Selecting #{s.name}"
+                check_search_option squad_option_element(s)
+              else
+                logger.warn "The squad '#{s.name}' is not among the list of squads, removing from search criteria"
+                criteria.squads.delete_if { |i| i == s }
+              end
+            end
           end
 
           unless level_option_elements.all? &:visible?
@@ -250,7 +260,10 @@ module Page
             wait_until(1) { level_option_elements.all? &:visible? }
           end
           level_option_elements.each { |o| o.click if o.attribute('class').include?('not-empty') }
-          criteria.levels.each { |l| check_search_option levels_option_element(l) } if criteria.levels
+          criteria.levels.each do |l|
+            logger.debug "Selecting #{l}"
+            check_search_option levels_option_element(l)
+          end if criteria.levels
 
           unless major_option_elements.all? &:visible?
             wait_for_update_and_click major_filter_button_element
@@ -264,6 +277,7 @@ module Page
               # Majors are only shown if they apply to users, so the majors list will change over time. Avoid test failures if
               # the search criteria is out of sync with actual user majors.
               if majors_option_element(m).exists?
+                logger.debug "Selecting #{m}"
                 check_search_option majors_option_element(m)
               else
                 logger.warn "The major '#{m}' is not among the list of majors, removing from search criteria"
@@ -277,14 +291,20 @@ module Page
             wait_until(1) { gpa_range_option_elements.all? &:visible? }
           end
           gpa_range_option_elements.each { |o| o.click if o.attribute('class').include?('not-empty') }
-          criteria.gpa_ranges.each { |g| check_search_option gpa_range_option_element(g) } if criteria.gpa_ranges
+          criteria.gpa_ranges.each do |g|
+            logger.debug "Selecting #{g}"
+            check_search_option gpa_range_option_element(g)
+          end if criteria.gpa_ranges
 
           unless units_option_elements.all? &:visible?
             wait_for_update_and_click units_filter_button_element
             wait_until(1) { units_option_elements.all? &:visible? }
           end
           units_option_elements.each { |u| u.click if u.attribute('class').include?('not-empty') }
-          criteria.units.each { |u| check_search_option units_option_element(u) } if criteria.units
+          criteria.units.each do |u|
+            logger.debug "Selecting #{u}"
+            check_search_option units_option_element(u)
+          end if criteria.units
 
           # Execute search and log time search took to complete
           wait_for_update_and_click search_button_element
@@ -309,7 +329,7 @@ module Page
           matching_squad_users = (search_criteria.squads && search_criteria.squads.any?) ?
               (user_data.select { |u| (u[:squad_names] & (search_criteria.squads.map { |s| s.name })).any? }) : user_data
           matching_level_users = (search_criteria.levels && search_criteria.levels.any?) ?
-              (user_data.select { |u| search_criteria.levels.include? u[:level] }) : user_data
+              (user_data.select { |u| search_criteria.levels.include?(u[:level]) if u[:level]}) : user_data
 
           matching_major_users = []
           if search_criteria.majors && search_criteria.majors.any?
@@ -336,8 +356,10 @@ module Page
               low_end = array[0]
               high_end = array[1]
               matching_gpa_range_users << user_data.select do |u|
-                gpa = u[:gpa].to_f
-                (gpa != 0) && (low_end.to_f <= gpa) && ((high_end == '4.00') ? (gpa <= high_end.to_f.round(1)) : (gpa < high_end.to_f.round(1)))
+                if u[:gpa]
+                  gpa = u[:gpa].to_f
+                  (gpa != 0) && (low_end.to_f <= gpa) && ((high_end == '4.00') ? (gpa <= high_end.to_f.round(1)) : (gpa < high_end.to_f.round(1)))
+                end
               end
             end
           else
@@ -349,7 +371,7 @@ module Page
           if search_criteria.units
             search_criteria.units.each do |units|
               if units.include?('+')
-                matching_units_users << user_data.select { |user| user[:units].to_f >= 120 }
+                matching_units_users << user_data.select { |user| user[:units].to_f >= 120 if user[:units] }
               else
                 range = units.split(' - ')
                 low_end = range[0].to_f
@@ -416,7 +438,7 @@ module Page
         def delete_cohort(cohort)
           logger.info "Deleting a cohort named #{cohort.name}"
           click_sidebar_manage_filtered
-          sleep 1
+          sleep 3
           wait_for_load_and_click cohort_delete_button(cohort)
           wait_for_update_and_click confirm_delete_button_element
           cohort_on_manage_cohorts(cohort).when_not_present Utils.short_wait

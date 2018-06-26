@@ -199,6 +199,7 @@ module Page
     def click_sidebar_create_filtered
       wait_for_load_and_click create_filtered_cohort_link_element
       wait_for_title 'Filtered Cohort'
+      sleep 3
     end
 
     # Clicks the button to manage the user's own filtered cohorts

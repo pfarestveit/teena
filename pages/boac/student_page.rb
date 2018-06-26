@@ -344,7 +344,7 @@ module Page
       # @return [String]
       def graphable_user_score(site_xpath, label)
         el = div_element(:xpath => "#{site_analytics_score_xpath(site_xpath, label)}//div[@class='student-profile-tooltip-header']/div[2]")
-        el && el.text
+        el.text if el.exists?
       end
 
       # When no boxplot is shown for a set of analytics, returns the user score shown
@@ -353,7 +353,7 @@ module Page
       # @return [String]
       def non_graphable_user_score(site_xpath, label)
         el = cell_element(:xpath => "#{site_analytics_score_xpath(site_xpath, label)}/strong")
-        el && el.text
+        el.text if el.exists?
       end
 
       # When no boxplot is shown for a set of analytics, returns the maximum score shown
@@ -362,7 +362,7 @@ module Page
       # @return [String]
       def non_graphable_maximum(site_xpath, label)
         el = cell_element(:xpath => "#{site_analytics_score_xpath(site_xpath, label)}/span/span")
-        el && el.text
+        el.text if el.exists?
       end
 
       # Returns all the analytics data shown for a given category, whether with boxplot or without
@@ -410,19 +410,43 @@ module Page
         visible_analytics(driver, site_xpath, 'Assignment Grades', api_analytics)
       end
 
-      # Returns the last activity date shown for a given site
+      # Returns the visible days since the user's last site activity
       # @param term_name [String]
       # @param course_code [String]
       # @param index [Integer]
       # @return [String]
-      def visible_last_activity(term_name, course_code, index)
-        sleep 1
+      def visible_days_since(term_name, course_code, index)
+        # Look first for days since last activity
         begin
           span_element(:xpath => "#{course_site_xpath(term_name, course_code, index)}//td[contains(.,\"Last bCourses Activity\")]/following-sibling::td//span[2]").text
+        # If no days-since exists, check for 'never'
         rescue
           el = div_element(:xpath => "#{course_site_xpath(term_name, course_code, index)}//td[contains(.,\"Last bCourses Activity\")]/following-sibling::td/div")
-          el && el.text
+          el.text if el.exists?
         end
+      end
+
+      # Returns the visible days since the user's last site activity
+      # @param term_name [String]
+      # @param course_code [String]
+      # @param index [Integer]
+      # @return [String]
+      def visible_activity_context(term_name, course_code, index)
+        el = span_element(:xpath => "#{course_site_xpath(term_name, course_code, index)}//span[@data-ng-bind=\"lastActivityInContext(canvasSite.analytics)\"]")
+        el.text if el.exists?
+      end
+
+      # Returns the last activity data shown for a given site
+      # @param term_name [String]
+      # @param course_code [String]
+      # @param index [Integer]
+      # @return [Hash]
+      def visible_last_activity(term_name, course_code, index)
+        sleep 1
+        {
+          :last_activity => visible_days_since(term_name, course_code, index),
+          :activity_context => visible_activity_context(term_name, course_code, index)
+        }
       end
 
     end

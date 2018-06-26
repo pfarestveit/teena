@@ -5,7 +5,7 @@ describe 'BOAC', order: :defined do
   include Logging
 
   test_id = Utils.get_test_id
-  dept_code = ENV['DEPT']
+  dept = BOACUtils.test_department
   all_students = BOACUtils.get_all_athletes
 
   # Create CSV for writing search performance data
@@ -14,12 +14,11 @@ describe 'BOAC', order: :defined do
   # Filtered cohort UX differs for admins vs ASC advisors vs non-ASC advisors
   admin = User.new({:uid => Utils.super_admin_uid})
   asc_advisor = BOACUtils.get_dept_advisors(BOACDepartments::ASC).first
-  non_asc_advisor = BOACUtils.get_dept_advisors(BOACDepartments::COE).first
+  coe_advisor = BOACUtils.get_dept_advisors(BOACDepartments::COE).first
 
-  # The DEPT env variable determines which advisor will execute the search tests. If it's nil, then admin will execute them.
-  advisor = if dept_code
-              dept = BOACDepartments::DEPARTMENTS.find { |d| d.code == dept_code }
-              (dept == BOACDepartments::ASC) ? asc_advisor : non_asc_advisor
+  # The department determines which advisor will execute the search tests. If it's nil, then admin will execute them.
+  advisor = if dept
+              (dept == BOACDepartments::ASC) ? asc_advisor : coe_advisor
             else
               admin
             end
@@ -89,7 +88,6 @@ describe 'BOAC', order: :defined do
 
     cohorts.each do |cohort|
       it "shows all the students who match sports '#{cohort.search_criteria.squads && (cohort.search_criteria.squads.map &:name)}', levels '#{cohort.search_criteria.levels}', majors '#{cohort.search_criteria.majors}', GPA ranges '#{cohort.search_criteria.gpa_ranges}', units '#{cohort.search_criteria.units}'" do
-        @homepage.load_page
         @cohort_page.click_sidebar_create_filtered
         @cohort_page.perform_search(cohort, performance_data)
         expected_results = @cohort_page.expected_search_results(@searchable_students, cohort.search_criteria).map { |u| u[:sid] }
@@ -176,12 +174,8 @@ describe 'BOAC', order: :defined do
           @cohort_page.wait_until(1, "Expected #{expected_results} but got #{visible_results}") { visible_results == expected_results }
         end
       end
-    end
 
-    cohorts.each do |cohort|
       it "allows the advisor to create a cohort using '#{cohort.search_criteria.squads && (cohort.search_criteria.squads.map &:name)}', levels '#{cohort.search_criteria.levels}', majors '#{cohort.search_criteria.majors}', GPA ranges '#{cohort.search_criteria.gpa_ranges}', units '#{cohort.search_criteria.units}'" do
-        @cohort_page.click_sidebar_create_filtered
-        @cohort_page.perform_search cohort
         @cohort_page.create_new_cohort cohort
       end
 
@@ -286,7 +280,7 @@ describe 'BOAC', order: :defined do
 
       before(:all) do
         @homepage.log_out
-        @homepage.dev_auth non_asc_advisor
+        @homepage.dev_auth coe_advisor
       end
 
       it 'offers no Teams filters' do
@@ -336,7 +330,7 @@ describe 'BOAC', order: :defined do
 
       before(:all) do
         @homepage.log_out
-        @homepage.dev_auth non_asc_advisor
+        @homepage.dev_auth coe_advisor
       end
 
       it('shows no link to Everyone\'s Cohorts') { expect(@homepage.view_everyone_cohorts_link?).to be false }
@@ -405,7 +399,7 @@ describe 'BOAC', order: :defined do
 
       before(:all) do
         @homepage.log_out
-        @homepage.dev_auth non_asc_advisor
+        @homepage.dev_auth coe_advisor
       end
 
       it('shows no link to Inactive Students') { expect(@homepage.inactive_cohort_link?).to be false }
@@ -466,7 +460,7 @@ describe 'BOAC', order: :defined do
 
       before(:all) do
         @homepage.log_out
-        @homepage.dev_auth non_asc_advisor
+        @homepage.dev_auth coe_advisor
       end
 
       it('shows no link to Intensive Students') { expect(@homepage.intensive_cohort_link?).to be false }

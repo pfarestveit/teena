@@ -17,11 +17,13 @@ describe 'BOAC' do
       pages_tested = []
       all_students = BOACUtils.get_all_athletes
       team_members = BOACUtils.get_team_members(team, all_students)
-      term_to_test = BOACUtils.analytics_term
+
+      # Test Last Activity using the current term rather than past term
+      term_to_test = BOACUtils.term
       testable_users = []
       logger.info "Checking term #{term_to_test}"
 
-      last_activity_csv = Utils.create_test_output_csv('boac-last-activity', %w(Term CCN UID Canvas API ClassPage StudentPage))
+      last_activity_csv = Utils.create_test_output_csv('boac-last-activity.csv', %w(Term CCN UID Canvas APIActivity ClassPageActivity StudentPageActivity StudentPageContext))
 
       @driver = Utils.launch_browser
       @homepage = Page::BOACPages::HomePage.new @driver
@@ -50,6 +52,8 @@ describe 'BOAC' do
             api_athlete_page.courses(term).each do |course|
 
               course_sis_data = api_athlete_page.course_sis_data course
+
+              # Skip PHYS ED sites for now, since the rosters are large and they rarely have active course sites
               unless course_sis_data[:code].include? 'PHYS ED'
                 logger.info "Checking course #{course_sis_data[:code]}"
 
@@ -120,7 +124,7 @@ describe 'BOAC' do
 
                         begin
                           logger.debug "Checking site ID #{site_id}"
-                          @canvas_page.load_all_students(Course.new({:site_id => site_id}), 'https://bcourses.berkeley.edu')
+                          total_students = @canvas_page.load_all_students(Course.new({:site_id => site_id}), 'https://bcourses.berkeley.edu')
 
                           all_student_data.each do |d|
 
@@ -131,30 +135,32 @@ describe 'BOAC' do
 
                                 if s[:site_id] == site_id
                                   canvas_last_activity = @canvas_page.roster_user_last_activity d[:student].uid
-                                  Utils.add_csv_row(last_activity_csv, [term_to_test, site_id, d[:student].uid, canvas_last_activity, s[:last_activity_api], s[:last_activity_class_page], s[:last_activity_student_page]])
+                                  Utils.add_csv_row(last_activity_csv, [term_to_test, site_id, d[:student].uid, canvas_last_activity, s[:last_activity_api], s[:last_activity_class_page], s[:last_activity_student_page][:last_activity], s[:last_activity_student_page][:activity_context]])
 
                                   if canvas_last_activity.empty?
                                     it("shows null Last Activity in the BOAC API for #{test_case}") { expect(s[:last_activity_api]).to be_nil }
                                     it("shows 'Never' Last Activity in the BOAC class page for #{test_case}") { expect(s[:last_activity_class_page]).to eql('Never') }
-                                    it("shows 'never' Last Activity in the BOAC student page for #{test_case}") { expect(s[:last_activity_student_page]).to include('never') }
+                                    it("shows 'never' Last Activity in the BOAC student page for #{test_case}") { expect(s[:last_activity_student_page][:last_activity]).to include('never') }
 
                                   else
 
                                     day_count = ((Time.now.utc - Time.parse(canvas_last_activity).utc) / (24 * 60 * 60)).floor
 
-                                    if day_count.zero?
-                                      logger.warn "Skipping last activity check for #{test_case}, since the user visited the site today and BOAC will not know that."
+                                    if day_count < BOACUtils.canvas_data_lag_days
+                                      logger.warn "Skipping last activity check for #{test_case}, since the user visited the site within day count #{day_count}, and BOAC will not know that."
 
                                     else
                                       it("shows #{day_count} days since Last Activity in the BOAC API for #{test_case}") { expect(s[:last_activity_api]).to eql(day_count) }
 
                                       if day_count == 1
                                         it("shows 'Yesterday' Last Activity on the class page for #{test_case}") { expect(s[:last_activity_class_page]).to eql('Yesterday') }
-                                        it("shows 'Yesterday' Last Activity on the student page for #{test_case}") { expect(s[:last_activity_student_page]).to eql('Yesterday') }
+                                        it("shows 'yesterday' Last Activity on the student page for #{test_case}") { expect(s[:last_activity_student_page][:last_activity]).to eql('yesterday') }
                                       else
                                         it("shows '#{day_count} days ago' Last Activity on the class page for #{test_case}") { expect(s[:last_activity_class_page]).to eql("#{day_count} days ago") }
-                                        it("shows '#{day_count} days ago' Last Activity on the student page for #{test_case}") { expect(s[:last_activity_student_page]).to eql("#{day_count} days ago") }
+                                        it("shows '#{day_count} days ago' Last Activity on the student page for #{test_case}") { expect(s[:last_activity_student_page][:last_activity]).to eql("#{day_count} days ago") }
                                       end
+
+                                      it("shows #{total_students} total students for #{test_case}") { expect(s[:last_activity_student_page][:activity_context]).to include("out of #{total_students} enrolled students") }
                                     end
                                   end
                                 else
