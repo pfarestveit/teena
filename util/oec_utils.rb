@@ -113,7 +113,7 @@ class OecUtils
         unless r['EMAIL_ADDRESS'].nil? || (r['CROSS_LISTED_FLAG'] == 'RM SHARE') || (r['START_DATE'] == r['END_DATE'])
 
           # Make sure the right department forms are set. FSSEM and BIOLOGY follow their own rules, so ignore them.
-          unless r['DEPT_FORM'].nil? || r['DEPT_FORM'] == 'FSSEM' || r['DEPT_NAME'] == 'BIOLOGY'
+          unless r['DEPT_FORM'].nil? || r['DEPT_FORM'] == 'FSSEM' || r['DEPT_NAME'] == 'BIOLOGY' || r['DEPT_FORM'] == 'CALTEACH'
             dept = OECDepartments::DEPARTMENTS.find { |d| d.dept_code == r['DEPT_NAME'] }
             r['DEPT_FORM'] = dept.form_code
           end

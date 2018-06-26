@@ -57,7 +57,10 @@ describe 'bCourses E-Grades Export' do
           gradebook_grades.each do |gradebook_row|
             begin
 
-              e_grades_row = e_grades.find { |e_grade| e_grade[:id] == gradebook_row[:sis_id] }
+              e_grades_row = e_grades.find do |e_grade|
+                logger.debug "Comparing grade for SID #{gradebook_row[:sis_id]}"
+                e_grade[:id] == gradebook_row[:sis_id]
+              end
               it("shows the right grade for #{course.term} #{course.code} UID #{gradebook_row[:uid]}") { expect(e_grades_row[:grade]).to eql(gradebook_row[:grade]) }
 
             rescue => e
