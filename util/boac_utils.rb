@@ -53,11 +53,6 @@ class BOACUtils < Utils
     @config['nessie_assignments']
   end
 
-  # Whether or not to check Nessie last activity data during tests
-  def self.nessie_last_activity
-    @config['nessie_last_activity']
-  end
-
   # The advisor department to use for tests that can run with different departments
   def self.test_department
     BOACDepartments::DEPARTMENTS.find { |d| d.code == @config['test_dept'] }
@@ -66,45 +61,45 @@ class BOACUtils < Utils
   # Looping, team-driven tests can take a very long time to execute depending how many members there are. This config limits
   # the number of members tested to the first X.
   def self.constrained_users(users)
-    max = @config['test_max_users']
-    (users.length <= max) ? users : users[0..(max - 1)]
+    max = @config['max_test_users']
+    users[0..(max - 1)]
   end
 
   # The number of days that synced Canvas data is behind actual site usage data
   def self.canvas_data_lag_days
-    @config['test_canvas_data_lag']
+    @config['canvas_data_lag_days']
   end
 
   # The team to use for testing Canvas assignments data, which should not be the same as the team used for testing Canvas
   # last activity data
   def self.assignments_team
-    get_teams.find { |t| t.code == @config['test_team_assignments'] }
+    get_teams.find { |t| t.code == @config['assignments_team'] }
   end
 
   # The team to use for testing BOAC class pages
   def self.class_page_team
-    get_teams.find { |t| t.code == @config['test_team_class_page'] }
+    get_teams.find { |t| t.code == @config['class_page_team'] }
   end
 
   # The team to use for testing BOAC curated cohorts
   def self.curated_cohort_team
-    get_teams.find { |t| t.code == @config['test_team_curated_cohort'] }
+    get_teams.find { |t| t.code == @config['curated_cohort_team'] }
   end
 
   # The team to use for testing Canvas last activity data
   # assignments data
   def self.last_activity_team
-    get_teams.find { |t| t.code == @config['test_team_last_activity'] }
+    get_teams.find { |t| t.code == @config['last_activity_team'] }
   end
 
   # The team to use for testing user search
   def self.user_search_team
-    get_teams.find { |t| t.code == @config['test_team_search'] }
+    get_teams.find { |t| t.code == @config['user_search_team'] }
   end
 
   # The team to use for testing SIS data
   def self.sis_data_team
-    get_teams.find { |t| t.code == @config['test_team_sis_data'] }
+    get_teams.find { |t| t.code == @config['sis_data_team'] }
   end
 
   # Returns the db credentials for BOAC

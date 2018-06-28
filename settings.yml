@@ -1,3 +1,5 @@
+logger_level: Logger::INFO
+
 #### Browser driver configs ####
 
 webdriver:
@@ -34,7 +36,7 @@ boac:
   base_url: https://asc-pilot-qa.berkeley.edu
   password: secret
   term: Summer 2018
-  term_code: 2182
+  term_code: 2185
   analytics_term: Spring 2018
   db_host: secret
   db_port: secret
@@ -45,16 +47,15 @@ boac:
   screenshots: true
   nessie_scores: true
   nessie_assignments: true
-  nessie_last_activity: true
   test_dept: UWASC
-  test_max_users: 10
-  test_canvas_data_lag: 1
-  test_team_assignments: GOM
-  test_team_class_page: GOW
-  test_team_curated_cohort: BAM
-  test_team_last_activity: TNM
-  test_team_search: TNW
-  test_team_sis_data: FBM
+  max_test_users: 10
+  canvas_data_lag_days: 1
+  assignments_team: GOM
+  class_page_team: GOW
+  curated_cohort_team: BAM
+  last_activity_team: TNM
+  user_search_team: TNW
+  sis_data_team: FBM
 
 cal_net:
   base_url: https://auth-test.berkeley.edu

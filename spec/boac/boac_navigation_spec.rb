@@ -18,7 +18,7 @@ describe 'BOAC' do
   cohorts.each do |cohort|
 
     begin
-      search = "#{cohort.search_criteria.squads}, #{cohort.search_criteria.levels}, #{cohort.search_criteria.majors}, #{cohort.search_criteria.gpa_ranges}, #{cohort.search_criteria.units}"
+      search = "#{cohort.search_criteria.squads && cohort.search_criteria.squads.map(&:name)}, #{cohort.search_criteria.levels}, #{cohort.search_criteria.majors}, #{cohort.search_criteria.gpa_ranges}, #{cohort.search_criteria.units}"
 
       # Every other search starts from list view
       if cohorts.index(cohort).even?
