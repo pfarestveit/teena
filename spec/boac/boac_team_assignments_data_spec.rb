@@ -14,15 +14,13 @@ describe 'BOAC assignment analytics' do
       team = BOACUtils.assignments_team
       term_to_test = BOACUtils.analytics_term
 
-      user_course_analytics_data = File.join(Utils.initialize_test_output_dir, 'boac-canvas-courses.csv')
       user_analytics_data_heading = %w(UID Sport Term SiteCode SiteId
                                         AssignMin AssignMax AssignUser AssignPerc AssignRound
                                         GradesMin GradesMax GradesUser GradesPerc GradesRound)
-      CSV.open(user_course_analytics_data, 'wb') { |csv| csv << user_analytics_data_heading }
+      user_course_analytics_data = Utils.create_test_output_csv('boac-canvas-courses.csv', user_analytics_data_heading)
 
-      user_course_assigns = File.join(Utils.initialize_test_output_dir, 'boac-assignments.csv')
       user_course_assigns_heading = %w(UID CanvasID Site AssignmentID URL DueDate Submission SubmitDate Type OnTime)
-      CSV.open(user_course_assigns, 'wb') { |csv| csv << user_course_assigns_heading }
+      user_course_assigns = Utils.create_test_output_csv('boac-assignments.csv', user_course_assigns_heading)
 
       @driver = Utils.launch_browser
       @cal_net = Page::CalNetPage.new @driver

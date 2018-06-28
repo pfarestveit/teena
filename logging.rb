@@ -7,6 +7,8 @@ module Logging
     def logger
       log_file = Utils.log_file
       @logger ||= Logger.new(log_file)
+      @logger.level = Utils.logger_level
+      @logger
     end
 
     def logger=(logger)

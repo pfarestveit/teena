@@ -27,6 +27,10 @@ class Utils
     File.join(ENV['HOME'], 'webdriver-output/')
   end
 
+  def self.logger_level
+    const_get @config['logger_level']
+  end
+
   # BROWSER CONFIGS
 
   # Instantiates the browser and alters default browser settings. If using Chrome and the 'chrome_profile' setting is true, an existing profile will

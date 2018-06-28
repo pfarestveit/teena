@@ -13,13 +13,11 @@ describe 'BOAC' do
     users_with_alerts = []
 
     # Create files for test output
-    user_profile_sis_data = File.join(Utils.initialize_test_output_dir, 'boac-sis-profiles.csv')
     user_profile_data_heading = %w(UID Sport Name PreferredName Email Phone Units GPA Level Colleges Majors Terms Writing History Institutions Cultures Graduation Alerts)
-    CSV.open(user_profile_sis_data, 'wb') { |csv| csv << user_profile_data_heading }
+    user_profile_sis_data = Utils.create_test_output_csv('boac-sis-profiles.csv', user_profile_data_heading)
 
-    user_course_sis_data = File.join(Utils.initialize_test_output_dir, 'boac-sis-courses.csv')
     user_course_data_heading = %w(UID Sport Term CourseCode CourseName SectionCcn SectionCode Primary? Midpoint Grade GradingBasis Units EnrollmentStatus)
-    CSV.open(user_course_sis_data, 'wb') { |csv| csv << user_course_data_heading }
+    user_course_sis_data = Utils.create_test_output_csv('boac-sis-courses.csv', user_course_data_heading)
 
     # Get all teams and athletes
     teams = BOACUtils.get_teams
