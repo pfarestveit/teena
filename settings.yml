@@ -47,15 +47,16 @@ boac:
   screenshots: true
   nessie_scores: true
   nessie_assignments: true
-  test_dept: UWASC
-  max_test_users: 10
   canvas_data_lag_days: 1
   assignments_team: GOM
+  assignments_max_users: 10
   class_page_team: GOW
+  class_page_max_users: 5
   curated_cohort_team: BAM
+  filtered_cohort_dept: UWASC
   last_activity_team: TNM
-  user_search_team: TNW
   sis_data_team: FBM
+  user_search_team: TNW
 
 cal_net:
   base_url: https://auth-test.berkeley.edu

@@ -10,8 +10,6 @@ describe 'BOAC' do
     advisor = BOACUtils.get_dept_advisors(BOACDepartments::ASC).first
     team = BOACUtils.sis_data_team
 
-    users_with_alerts = []
-
     # Create files for test output
     user_profile_data_heading = %w(UID Sport Name PreferredName Email Phone Units GPA Level Colleges Majors Terms Writing History Institutions Cultures Graduation Alerts)
     user_profile_sis_data = Utils.create_test_output_csv('boac-sis-profiles.csv', user_profile_data_heading)
@@ -166,7 +164,6 @@ describe 'BOAC' do
 
               alerts = BOACUtils.get_students_alerts [team_member]
               alert_msgs = alerts.map &:message
-              users_with_alerts << team_member if alert_msgs.any?
 
               dismissed = BOACUtils.get_dismissed_alerts(alerts).map &:message
               non_dismissed = alert_msgs - dismissed
@@ -369,9 +366,6 @@ describe 'BOAC' do
             logger.warn "Skipping #{team.name} UID #{team_member.uid} because it is not present in the UI"
           end
         end
-
-        # Perhaps there are legitimately no alerts for the test users, but fail anyway in case there is a problem with alerts.
-        it("contains at least one alert for #{team.name} members") { expect(users_with_alerts.any?).to be true }
 
       rescue => e
         Utils.log_error e
