@@ -54,14 +54,21 @@ class BOACUtils < Utils
   end
 
   # The advisor department to use for tests that can run with different departments
-  def self.test_department
-    BOACDepartments::DEPARTMENTS.find { |d| d.code == @config['test_dept'] }
+  def self.filtered_cohort_dept
+    BOACDepartments::DEPARTMENTS.find { |d| d.code == @config['filtered_cohort_dept'] }
   end
 
-  # Looping, team-driven tests can take a very long time to execute depending how many members there are. This config limits
+  # Looping, team-driven class page tests can take a very long time to execute depending how many members there are. This config limits
   # the number of members tested to the first X.
-  def self.constrained_users(users)
-    max = @config['max_test_users']
+  def self.class_page_max_users(users)
+    max = @config['class_page_max_users']
+    users[0..(max - 1)]
+  end
+
+  # Looping, team-driven assignment submission and grades tests can take a very long time to execute depending how many members there are.
+  # This config limits the number of members tested to the first X.
+  def self.assignments_max_users(users)
+    max = @config['assignments_max_users']
     users[0..(max - 1)]
   end
 
@@ -141,7 +148,7 @@ class BOACUtils < Utils
   # Returns the file path containing stored searchable student data to drive cohort search tests
   # @return [String]
   def self.searchable_data
-    File.join(Utils.config_dir, 'boac-searchable-data.json')
+    File.join(Utils.config_dir, "boac-searchable-data-#{Time.now.strftime('%Y-%m-%d')}.json")
   end
 
   # Returns a collection of search criteria to use for testing cohort search

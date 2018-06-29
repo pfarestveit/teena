@@ -227,10 +227,12 @@ class ApiUserAnalyticsPage
   def collect_users_searchable_data(driver)
     users_data_file = BOACUtils.searchable_data
     if File.exist? users_data_file
-      logger.warn 'Found an existing copy of searchable user data, skipping data collection'
+      logger.warn 'Found a copy of searchable user data created today, skipping data collection'
       users_data = JSON.parse(File.read(users_data_file), {:symbolize_names => true})
     else
-      logger.warn 'Searchable user data file not found, collecting data and writing it to a file for reuse'
+      logger.warn 'Cannot find a searchable user data file created today, collecting data and writing it to a file for reuse today'
+      # Delete searchable data file from previous days before writing the new one
+      Dir.glob("#{Utils.config_dir}/boac-searchable-data*").each { |f| File.delete f }
       users = BOACUtils.get_all_athletes
       users_data = users.map do |user|
         # Get the squad names to use as search criteria

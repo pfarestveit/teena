@@ -5,7 +5,7 @@ describe 'BOAC', order: :defined do
   include Logging
 
   test_id = Utils.get_test_id
-  dept = BOACUtils.test_department
+  dept = BOACUtils.filtered_cohort_dept
   all_students = BOACUtils.get_all_athletes
 
   # Create CSV for writing search performance data

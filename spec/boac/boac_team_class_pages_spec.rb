@@ -26,7 +26,7 @@ describe 'BOAC' do
 
     @homepage.dev_auth advisor
 
-    BOACUtils.constrained_users(team_members).each do |athlete|
+    BOACUtils.class_page_max_users(team_members).each do |athlete|
       begin
 
         api_user_page = ApiUserAnalyticsPage.new @driver
