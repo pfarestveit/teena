@@ -1,14 +1,14 @@
 class OECDepartments
 
-  attr_accessor :dept_code, :file_name, :form_code, :eval_types, :ets_managed, :catalog_id
+  attr_accessor :dept_code, :file_name, :form_code, :eval_types, :ets_managed, :catalog_ids
 
-  def initialize(dept_code, file_name, form_code, eval_types, ets_managed, catalog_id = nil)
+  def initialize(dept_code, file_name, form_code, eval_types, ets_managed, catalog_ids = nil)
     @dept_code = dept_code
     @dept_name = file_name
     @form_code = form_code
     @eval_types = eval_types
     @ets_managed = ets_managed
-    @catalog_id = catalog_id
+    @catalog_ids = catalog_ids
   end
 
   DEPARTMENTS = [
@@ -23,7 +23,7 @@ class OECDepartments
       ASTRON = new('ASTRON', 'Astronomy', 'ASTRON', %w(F G), true),
       BIC = new('BIC', 'Undergraduate and Interdisciplinary Studies', 'BIC', %w(F G), true),
       BIO_ENG = new('BIO ENG', 'Bioengineering', 'BIO ENG', nil, false),
-      CAL_TEACH = new('CALTEACH', 'CalTeach', 'CALTEACH', nil, true),
+      CAL_TEACH = new('CALTEACH', 'CalTeach', 'CALTEACH', %w(F G), true),
       CATALAN = new('CATALAN', 'Spanish and Portuguese', 'SPANISH', %w(LANG LECT SEMI WRIT), true),
       CHEM = new('CHEM', 'Chemistry', 'CHEM', %w(F G), true),
       CIV_ENG = new('CIV ENG', 'Civil and Environmental Engineering', 'CIV ENG', nil, false),
@@ -64,7 +64,7 @@ class OECDepartments
       INTEGBI = new('INTEGBI', 'Integrative Biology', 'INTEGBI', %w(F G), true),
       ISF = new('ISF', 'Undergraduate and Interdisciplinary Studies', 'ISF', nil, true),
       JOURN = new('JOURN', 'Journalism', 'JOURN', nil, true),
-      L_AND_S = new('L & S', 'Undergraduate and Interdisciplinary Studies', 'L & S', %w(F G), true),
+      L_AND_S = new('L & S', 'Undergraduate and Interdisciplinary Studies', 'L & S', %w(F G), true, %w(W1 1W)),
       LAN_PRO = new('LAN PRO', 'Graduate Division', 'LAN PRO', nil, true),
       LATAMST = new('LATAMST', 'Graduate Division', 'LAN PRO', nil, true),
       LGBT = new('LGBT', 'Gender and Women\'s Studies', 'GWS', %w(F G), true),
@@ -73,7 +73,7 @@ class OECDepartments
       MAT_SCI = new('MAT SCI', 'Materials Science and Engineering', 'MAT SCI', nil, false),
       MCELLBI = new('MCELLBI', 'Molecular and Cell Biology', 'MCELLBI', %w(F G), true),
       MEC_ENG = new('MEC ENG', 'Mechanical Engineering', 'MEC ENG', nil, false),
-      MEDIAST = new('MEDIAST', 'Undergraduate and Interdisciplinary Studies', 'UGIS', %w(F G), true),
+      MEDIAST = new('MEDIAST', 'Undergraduate and Interdisciplinary Studies', 'MEDIAST', %w(F G), true),
       M_E_STU = new('M E STU', 'International and Area Studies', 'IAS', %w(F G), true),
       MUSIC = new('MUSIC', 'Music', 'MUSIC', %w(F G), true),
       NAT_RES = new('NAT RES', 'Natural Resources', 'NAT RES', nil, false),
@@ -93,7 +93,7 @@ class OECDepartments
       PSYCH = new('PSYCH', 'Psychology', 'PSYCH', nil, true),
       PUB_POL = new('PUB POL', 'Goldman School of Public Policy', 'PUB POL', nil, false),
       RELIGST = new('RELIGST', 'Undergraduate and Interdisciplinary Studies', 'UGIS', %w(F G), true),
-      SOC_WEL = new('SOC WEL', 'Social Welfare', 'SOC WEL', nil, true, '290'),
+      SOC_WEL = new('SOC WEL', 'Social Welfare', 'SOC WEL', nil, true, %w(290)),
       SPANISH = new('SPANISH', 'Spanish and Portuguese', 'SPANISH', %w(LANG LECT SEMI WRIT), true),
       STAT = new('STAT', 'Statistics', 'STAT', %w(F G), true),
       THEATER = new('THEATER', 'Theater, Dance, and Performance', 'THEATER', %w(F G), true),

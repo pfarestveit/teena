@@ -147,18 +147,22 @@ class OecUtils
   # @return [Array<Hash>]
   def self.get_forms
     participating_depts = OECDepartments::DEPARTMENTS.select { |d| d.ets_managed }
-    forms_and_types = participating_depts.map do |dept|
+    forms_and_types = []
+    participating_depts.each do |dept|
       if dept.eval_types
-        dept.eval_types.map { |eval_type| {:dept_code => dept.form_code, :eval_type => eval_type} }
+        # If both eval types and catalog IDs exist, then expect forms with only the eval types and forms with both the eval types and the catalog IDs.
+        # Otherwise, just expect the eval types.
+        forms_and_types << dept.eval_types.map { |eval| {:dept_code => dept.form_code, :eval_type => eval} }
+        forms_and_types << dept.eval_types.map { |eval| {:dept_code => dept.form_code, :eval_type => eval, :catalog_ids => dept.catalog_ids} } if dept.catalog_ids
       else
-        {:dept_code => dept.form_code}
+        # If no eval types exist but catalog IDs exist, then expect forms with and without the catalog IDs
+        forms_and_types << {:dept_code => dept.form_code}
+        forms_and_types << {:dept_code => dept.form_code, :catalog_ids => dept.catalog_ids} if dept.catalog_ids
       end
     end
-    # Departments can use a special form for specific catalog IDs and default form for the rest
-    catalog_id_depts = participating_depts.select { |d| d.catalog_id }
-    forms_and_catalog_ids = catalog_id_depts.map { |dept| {:dept_code => dept.form_code, :catalog_id => dept.catalog_id} }
-    forms_and_types << forms_and_catalog_ids
-    forms_and_types.flatten.uniq
+    forms = forms_and_types.flatten.uniq
+    logger.debug "Forms are #{forms}"
+    forms
   end
 
   # Parses the question bank file as a table. NB the CSV must be UTF-8 encoded.
@@ -200,7 +204,7 @@ class OecUtils
   # @param form [Hash]
   # @return [String]
   def self.get_form_code(form)
-    "#{form[:dept_code]}#{'_' if form[:eval_type]}#{form[:eval_type]}#{'_' if form[:catalog_id]}#{form[:catalog_id]}"
+    "#{form[:dept_code]}#{'_' + form[:eval_type] if form[:eval_type]}#{'_' + form[:catalog_ids].first if form[:catalog_ids]}"
   end
 
   # Returns all the questions applicable to a given department form code and evaluation type

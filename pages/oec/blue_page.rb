@@ -180,34 +180,47 @@ module Page
     # @param form [Hash]
     # @return [Integer]
     def search_for_fill_out_form_tasks(form)
-      # Search for the right form type
-      wait_for_element_and_select_js(task_type_select_element, 'Form Fill Out')
-      wait_for_filtered_results
-      wait_for_element_and_select_js(task_status_select_element, 'Not Completed')
-      wait_for_filtered_results
-      wait_for_element_and_select_js(dept_form_field_select_element, 'DEPT_FORM (Subjects)')
-      wait_for_element_and_select_js(dept_form_opr_select_element, 'Is')
-      wait_for_element_and_type(dept_form_search_input_element, form[:dept_code])
-      wait_for_element_and_select_js(eval_type_field_select_element, 'EVALUATION_TYPE (Subjects)')
-      wait_for_element_and_select_js(eval_type_opr_select_element, 'Is')
-      wait_for_element_and_type(eval_type_search_input_element, form[:eval_type])
-
-      # A department can use a special form for specific catalog IDs and default form for the rest
       dept = OECDepartments::DEPARTMENTS.find { |d| d.dept_code == form[:dept_code] }
-      if dept.catalog_id
-        wait_for_element_and_select_js(catalog_id_field_select_element, 'CATALOG_ID (Subjects)')
-        if form[:catalog_id]
-          wait_for_element_and_select_js(catalog_id_opr_select_element, 'Is')
-          wait_for_element_and_type(catalog_id_search_input_element, form[:catalog_id])
-        else
-          wait_for_element_and_select_js(catalog_id_opr_select_element, 'Is not')
-          wait_for_element_and_type(catalog_id_search_input_element, dept.catalog_id)
-        end
-      end
+      # A department can use a special form for specific catalog IDs and default form for the rest. Search for tasks for each
+      # catalog ID in case any are present for the semester.
+      tries = dept.catalog_ids ? dept.catalog_ids.length : 1
+      begin
+        # Search for the right form type
+        wait_for_element_and_select_js(task_type_select_element, 'Form Fill Out')
+        wait_for_filtered_results
+        wait_for_element_and_select_js(task_status_select_element, 'Not Completed')
+        wait_for_filtered_results
+        wait_for_element_and_select_js(dept_form_field_select_element, 'DEPT_FORM (Subjects)')
+        wait_for_element_and_select_js(dept_form_opr_select_element, 'Is')
+        wait_for_element_and_type(dept_form_search_input_element, form[:dept_code])
+        wait_for_element_and_select_js(eval_type_field_select_element, 'EVALUATION_TYPE (Subjects)')
+        wait_for_element_and_select_js(eval_type_opr_select_element, 'Is')
+        wait_for_element_and_type(eval_type_search_input_element, form[:eval_type])
 
-      wait_for_update_and_click task_filter_button_element
-      wait_for_filtered_results
-      total_results
+        if dept.catalog_ids
+          index = dept.catalog_ids.length - tries
+          wait_for_element_and_select_js(catalog_id_field_select_element, 'CATALOG_ID (Subjects)')
+          # If this is a special form for catalog IDs, include that search parameter
+          if form[:catalog_ids]
+            logger.info "Catalog ID is #{form[:catalog_ids][index]}"
+            wait_for_element_and_select_js(catalog_id_opr_select_element, 'Is')
+            wait_for_element_and_type(catalog_id_search_input_element, form[:catalog_ids][index])
+          # If the dept has special forms for catalog IDs but this is the default form, then exclude the catalog ID in the search
+          else
+            logger.info "Catalog ID is not #{dept.catalog_ids[index]}"
+            wait_for_element_and_select_js(catalog_id_opr_select_element, 'Is not')
+            wait_for_element_and_type(catalog_id_search_input_element, dept.catalog_ids[index])
+          end
+        end
+
+        wait_for_update_and_click task_filter_button_element
+        wait_for_filtered_results
+        wait_until(1, "Visible task count is #{total_results}") { total_results > 0 }
+      rescue
+        retry unless (tries -= 1).zero?
+      ensure
+        return total_results
+      end
     end
 
     # Clicks the first task link in the list and navigates to the questionnaire page
