@@ -105,8 +105,9 @@ class BOACUtils < Utils
   end
 
   # The team to use for testing SIS data
-  def self.sis_data_team
-    get_teams.find { |t| t.code == @config['sis_data_team'] }
+  def self.sis_data_team(teams = nil)
+    all_teams = teams ? teams : get_teams
+    all_teams.find { |t| t.code == @config['sis_data_team'] }
   end
 
   # Returns the db credentials for BOAC
@@ -119,6 +120,10 @@ class BOACUtils < Utils
       user: @config['db_user'],
       password: @config['db_password']
     }
+  end
+
+  def self.nessie_data
+    @config['nessie_students_data']
   end
 
   # Returns all authorized users
@@ -210,37 +215,29 @@ class BOACUtils < Utils
   # Returns an array of users for all students
   # @return [Array<User>]
   def self.get_all_athletes
-    athletes_to_users query_all_athletes
+    nessie_data ? NessieUtils.get_all_asc_students : athletes_to_users(query_all_athletes)
   end
 
   # Returns an array of users for intensive students only
   # @return [Array<User>]
   def self.get_intensive_athletes
-    athletes_to_users query_intensive_athletes
+    nessie_data ? NessieUtils.get_intensive_asc_students : athletes_to_users(query_intensive_athletes)
   end
 
   # Returns all the distinct teams associated with team members
   # @return [Array<Team>]
   def self.get_teams
-    query = 'SELECT DISTINCT team_code
-             FROM athletics
-             ORDER BY team_code;'
-    results = Utils.query_pg_db_field(boac_db_credentials, query, 'team_code')
-    teams = Team::TEAMS.select { |team| results.include? team.code }
-    logger.info "Teams are #{teams.map &:name}"
-    teams.sort_by { |t| t.name }
-  end
-
-  # Returns all the distinct team squads associated with team members
-  # @return [Array<Squad>]
-  def self.get_squads
-    query = 'SELECT DISTINCT group_code
-             FROM athletics
-             ORDER BY group_code;'
-    results = Utils.query_pg_db_field(boac_db_credentials, query, 'group_code')
-    squads = Squad::SQUADS.select { |squad| results.include? squad.code }
-    logger.info "Squads are #{squads.map &:name}"
-    squads.sort_by { |s| s.name }
+    if nessie_data
+      NessieUtils.get_asc_teams
+    else
+      query = 'SELECT DISTINCT team_code
+               FROM athletics
+               ORDER BY team_code;'
+      results = Utils.query_pg_db_field(boac_db_credentials, query, 'team_code')
+      teams = Team::TEAMS.select { |team| results.include? team.code }
+      logger.info "Teams are #{teams.map &:name}"
+      teams.sort_by { |t| t.name }
+    end
   end
 
   # Returns all the users associated with a team. If the full set of athlete users is already available,
@@ -249,10 +246,14 @@ class BOACUtils < Utils
   # @param all_athletes [Array<User>]
   # @return [Array<User>]
   def self.get_team_members(team, all_athletes = nil)
-    team_squads = Squad::SQUADS.select { |s| s.parent_team == team }
-    team_members = get_squad_members(team_squads, all_athletes)
-    logger.info "#{team.name} members are UIDs #{team_members.map &:uid}"
-    team_members
+    if nessie_data
+      NessieUtils.get_asc_team_members(team, all_athletes)
+    else
+      team_squads = Squad::SQUADS.select { |s| s.parent_team == team }
+      team_members = get_squad_members(team_squads, all_athletes)
+      logger.info "#{team.name} members are UIDs #{team_members.map &:uid}"
+      team_members
+    end
   end
 
   # Returns all the users associated with a given collection of squads. If the full set of athlete users is already available,

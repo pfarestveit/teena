@@ -8,7 +8,10 @@ describe 'BOAC' do
 
     # This script is team-driven, so only an ASC advisor can be used
     advisor = BOACUtils.get_dept_advisors(BOACDepartments::ASC).first
-    team = BOACUtils.sis_data_team
+
+    # Get all teams and get the one for testing
+    teams = BOACUtils.get_teams
+    team = BOACUtils.sis_data_team teams
 
     # Create files for test output
     user_profile_data_heading = %w(UID Sport Name PreferredName Email Phone Units GPA Level Colleges Majors Terms Writing History Institutions Cultures Graduation Alerts)
@@ -16,9 +19,6 @@ describe 'BOAC' do
 
     user_course_data_heading = %w(UID Sport Term CourseCode CourseName SectionCcn SectionCode Primary? Midpoint Grade GradingBasis Units EnrollmentStatus)
     user_course_sis_data = Utils.create_test_output_csv('boac-sis-courses.csv', user_course_data_heading)
-
-    # Get all teams and athletes
-    teams = BOACUtils.get_teams
 
     @driver = Utils.launch_browser
     @boac_homepage = Page::BOACPages::HomePage.new @driver
@@ -36,7 +36,7 @@ describe 'BOAC' do
     if visible_team_names.include? team.name
       begin
 
-        team_members = BOACUtils.get_team_members(team).sort_by! &:full_name
+        team_members = BOACUtils. get_team_members(team).sort_by! &:full_name
         logger.debug "There are #{team_members.length} total athletes"
         team_members.delete_if { |u| u.status == 'inactive' }
         logger.debug "There are #{team_members.length} active athletes"

@@ -45,6 +45,7 @@ boac:
   db_password: secret
   tooltips: true
   screenshots: true
+  nessie_students_data: false
   nessie_scores: true
   nessie_assignments: true
   canvas_data_lag_days: 1

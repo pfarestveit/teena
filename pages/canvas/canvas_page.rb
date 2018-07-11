@@ -125,9 +125,6 @@ module Page
     # @param event [Event]
     def create_generic_course_site(driver, sub_account, course, test_users, test_id, tools = nil, event = nil)
       if course.site_id.nil?
-        # If creating a new SuiteC course site, inactivate all existing courses to avoid slow poller cycles
-        SuiteCUtils.inactivate_all_courses if tools && ((tools & [LtiTools::ASSET_LIBRARY, LtiTools::ENGAGEMENT_INDEX, LtiTools::WHITEBOARDS, LtiTools::IMPACT_STUDIO]).any?)
-
         load_sub_account sub_account
         wait_for_load_and_click add_new_course_button_element
         course_name_input_element.when_visible Utils.short_wait
@@ -170,7 +167,7 @@ module Page
     # @param driver [Selenium::WebDriver]
     def click_create_site(driver)
       tries ||= 2
-      wait_for_update_and_click create_site_link_element
+      wait_for_load_and_click create_site_link_element
     rescue
       execute_script('arguments[0].style.hidden="hidden";', div_element(id: 'fixed_bottom'))
       retry unless (tries -= 1).zero?
