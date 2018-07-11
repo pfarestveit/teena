@@ -359,6 +359,7 @@ class Utils
     results = []
     begin
       Redshift::Client.establish_connection({:host => db_credentials[:host], :port => db_credentials[:port], :dbname => db_credentials[:name], :user => db_credentials[:user], :password => db_credentials[:password]})
+      logger.debug "Sending query '#{query_string}'"
       results = Redshift::Client.connection.exec query_string
     rescue Redshift::Client::RedshiftClientError => e
       Utils.log_error e
