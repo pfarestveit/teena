@@ -333,7 +333,9 @@ module Page
     # Waits for list view results to load
     def wait_for_student_list
       begin
+        start_time = Time.now
         wait_until(Utils.medium_wait) { list_view_sids.any? }
+        logger.debug "Took #{Time.now - start_time} seconds for users to appear"
       rescue
         logger.warn 'There are no students listed.'
       end
@@ -363,6 +365,7 @@ module Page
     def visible_sids
       wait_for_student_list
       visible_sids = []
+      sleep 2
       page_count = results_page_link_elements.length
       if page_count.zero?
         logger.debug 'There is 1 page'
@@ -376,7 +379,7 @@ module Page
           wait_for_update_and_click list_view_page_link(page)
           sleep 1
           wait_until(Utils.medium_wait) { player_link_elements.any? }
-          logger.warn "Search took #{Time.now - start_time}" unless page == 1
+          logger.warn "Page #{page} took #{Time.now - start_time} seconds to load" unless page == 1
           visible_sids << list_view_sids
         end
       end

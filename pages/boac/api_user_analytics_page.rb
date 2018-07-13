@@ -15,7 +15,7 @@ class ApiUserAnalyticsPage
   # Canvas Profile
 
   def set_canvas_id(user)
-    user.canvas_id = @parsed['canvasProfile']['canvas_id']
+    user.canvas_id = @parsed['canvasUserId']
   end
 
   # SIS Profile
@@ -26,6 +26,7 @@ class ApiUserAnalyticsPage
 
   def user_sis_data
     {
+      :preferred_name => (sis_profile && sis_profile['preferredName']),
       :email => (sis_profile && sis_profile['emailAddress']),
       :phone => (sis_profile && sis_profile['phoneNumber'].to_s),
       :units_in_progress => (current_term ? formatted_units(current_term['enrolledUnits']) : '0') ,

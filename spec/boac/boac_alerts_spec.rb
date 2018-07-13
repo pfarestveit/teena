@@ -56,7 +56,7 @@ describe 'A BOAC alert' do
     end
 
   rescue => e
-    Utils.log_error e
+    BOACUtils.log_error_and_screenshot(@driver, e, "#{@alert.user.uid}")
     it('encountered an unexpected error') { fail }
   ensure
     Utils.quit_browser @driver

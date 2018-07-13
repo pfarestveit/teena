@@ -105,7 +105,9 @@ describe 'BOAC' do
               # STUDENT PAGE SIS DATA
 
               @boac_cohort_page.click_player_link team_member
-              @boac_student_page.wait_for_title team_member.full_name
+              analytics_api_sis_data[:preferred_name] ?
+                  @boac_student_page.wait_for_title(analytics_api_sis_data[:preferred_name]) :
+                  @boac_student_page.wait_for_title(team_member.full_name)
 
               # Pause a moment to let the boxplots do their fancy slidey thing
               sleep 1
@@ -304,7 +306,7 @@ describe 'BOAC' do
                               end
 
                             rescue => e
-                              Utils.log_error e
+                              BOACUtils.log_error_and_screenshot(@driver, e, "#{team_member.uid}-#{term_name}-#{course_code}-#{section_sis_data[:ccn]}")
                               it("encountered an error for UID #{team_member.uid} term #{term_name} course #{course_code} section #{section_sis_data[:ccn]}") { fail }
                             ensure
                               row = [team_member.uid, team.name, term_name, course_code, course_sis_data[:title], section_sis_data[:ccn], "#{section_sis_data[:component]} #{section_sis_data[:number]}",
@@ -314,7 +316,7 @@ describe 'BOAC' do
                           end
 
                         rescue => e
-                          Utils.log_error e
+                          BOACUtils.log_error_and_screenshot(@driver, e, "#{team_member.uid}-#{term_name}-#{course_code}")
                           it("encountered an error for UID #{team_member.uid} term #{term_name} course #{course_code}") { fail }
                         end
                       end
@@ -331,7 +333,9 @@ describe 'BOAC' do
                     if drops
                       drops.each do |drop|
                         visible_drop = @boac_student_page.visible_dropped_section_data(term_name, drop[:title], drop[:component], drop[:number])
-                        it("shows dropped section #{drop[:title]} #{drop[:component]} #{drop[:number]} for UID #{team_member.uid} in #{term_name}") { expect(visible_drop).to be_truthy }
+                        (term_name == BOACUtils.term) ?
+                            (it("shows dropped section #{drop[:title]} #{drop[:component]} #{drop[:number]} for UID #{team_member.uid} in #{term_name}") { expect(visible_drop).to be_truthy }) :
+                            (it("shows no dropped section #{drop[:title]} #{drop[:component]} #{drop[:number]} for UID #{team_member.uid} in past term #{term_name}") { expect(visible_drop).to be_falsey })
 
                         row = [team_member.uid, team.name, term_name, drop[:title], nil, nil, drop[:number], nil, nil, nil, 'D']
                         Utils.add_csv_row(user_course_sis_data, row)
@@ -339,7 +343,7 @@ describe 'BOAC' do
                     end
 
                   rescue => e
-                    Utils.log_error e
+                    BOACUtils.log_error_and_screenshot(@driver, e, "#{team_member.uid}-#{term_name}")
                     it("encountered an error for UID #{team_member.uid} term #{term_name}") { fail }
                   end
                 end
@@ -349,7 +353,7 @@ describe 'BOAC' do
               end
 
             rescue => e
-              Utils.log_error e
+              BOACUtils.log_error_and_screenshot(@driver, e, "#{team_member.uid}")
               it("encountered an error for UID #{team_member.uid}") { fail }
             ensure
               if analytics_api_sis_data
@@ -368,7 +372,7 @@ describe 'BOAC' do
         end
 
       rescue => e
-        Utils.log_error e
+        BOACUtils.log_error_and_screenshot(@driver, e, team.name)
         it("encountered an error for #{team.name}") { fail }
       end
 

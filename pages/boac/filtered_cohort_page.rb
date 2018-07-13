@@ -311,7 +311,7 @@ module Page
           start_time = Time.now
           wait_for_search_results
           search_wait = "#{Time.now - start_time} seconds"
-          logger.warn "Search took #{search_wait}"
+          logger.warn "Took #{search_wait} seconds for the spinner to go away"
           cohort.member_count = results_count
           logger.warn "No results found for #{criteria.squads && criteria.squads.map(&:name)}, #{criteria.majors}, #{criteria.levels}, #{criteria.gpa_ranges}, #{criteria.units}" if cohort.member_count.zero?
           # Optionally record the search criteria, result count, and time it took to load the first page of results.
