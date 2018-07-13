@@ -238,27 +238,27 @@ describe 'BOAC' do
                         end
 
                       rescue => e
-                        Utils.log_error e
+                        BOACUtils.log_error_and_screenshot(@driver, e, "#{athlete.uid}-#{term_name}-#{course_sis_data[:code]}")
                         it("test hit an error with UID #{athlete.uid} term #{term_name} course #{course_sis_data[:code]}") { fail }
                       end
                     end
                   end
 
                 rescue => e
-                  Utils.log_error e
+                  BOACUtils.log_error_and_screenshot(@driver, e, "#{athlete.uid}-#{term_name}-#{course_sis_data[:code]}")
                   it("test hit an error with UID #{athlete.uid} term #{term_name} course #{course_sis_data[:code]}") { fail }
                 end
               end
 
             rescue => e
-              Utils.log_error e
+              BOACUtils.log_error_and_screenshot(@driver, e, "#{athlete.uid}-#{term_name}")
               it("test hit an error with UID #{athlete.uid} term #{term_name}") { fail }
             end
           end
         end
 
       rescue => e
-        Utils.log_error e
+        BOACUtils.log_error_and_screenshot(@driver, e, "#{athlete.uid}")
         it("test hit an error with UID #{athlete.uid}") { fail }
       end
     end

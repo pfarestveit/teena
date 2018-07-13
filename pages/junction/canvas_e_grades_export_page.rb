@@ -71,12 +71,12 @@ module Page
       # @param course [Course]
       def resolve_all_issues(driver, course)
         load_embedded_tool(driver, course)
+        tries ||= Utils.medium_wait
         begin
-          # First check if it's necessary to un-mute assignments or set the grading scheme
-          download_final_grades_element.when_visible Utils.medium_wait
-          logger.debug "No adjustments needed on site #{course.site_id}"
-        rescue
-          if required_adjustments_heading_element.visible?
+          wait_until(1) { download_final_grades_element.visible? || required_adjustments_heading_element.visible? }
+          if download_final_grades_element.visible?
+            logger.debug "No adjustments needed on site #{course.site_id}"
+          else
             logger.debug "Adjustments needed on site #{course.site_id}"
             un_mute_all_cbx_element.when_present Utils.short_wait
             sleep 3
@@ -85,10 +85,9 @@ module Page
             click_continue
             logger.debug 'Waiting for download-grades button'
             download_final_grades_element.when_visible Utils.medium_wait
-          else
-            logger.error "Can't figure out what to do for site #{course.site_id}"
-            fail
           end
+        rescue
+          (tries -= 1).zero? ? fail : retry
         end
       end
 

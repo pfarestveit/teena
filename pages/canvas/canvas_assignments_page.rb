@@ -210,7 +210,6 @@ module Page
         begin
           navigate_to assign.url
           sleep 1
-          Utils.save_screenshot(driver, assign.id) if BOACUtils.screenshots
           h1_element(xpath: '//h1').when_visible Utils.short_wait
 
           # Besides 'Roll Call', assignments can be Canvas assignments, Canvas quizzes, Canvas discussions, or external tools

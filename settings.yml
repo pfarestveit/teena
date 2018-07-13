@@ -44,7 +44,6 @@ boac:
   db_user: secret
   db_password: secret
   tooltips: true
-  screenshots: true
   nessie_students_data: false
   nessie_scores: true
   nessie_assignments: true

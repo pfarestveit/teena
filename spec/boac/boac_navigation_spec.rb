@@ -160,7 +160,7 @@ describe 'BOAC' do
         end
 
       rescue => e
-        Utils.log_error e
+        BOACUtils.log_error_and_screenshot(@driver, e, "cohort-#{cohorts.index cohort}")
         it("threw an error with #{search}") { fail }
       end
     end

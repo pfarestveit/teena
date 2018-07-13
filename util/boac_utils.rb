@@ -38,11 +38,6 @@ class BOACUtils < Utils
     @config['tooltips']
   end
 
-  # Whether or not to take screenshots of pages.
-  def self.screenshots
-    @config['screenshots']
-  end
-
   # Whether or not to check Nessie assignment scores during tests.
   def self.nessie_scores
     @config['nessie_scores']
@@ -108,6 +103,12 @@ class BOACUtils < Utils
   def self.sis_data_team(teams = nil)
     all_teams = teams ? teams : get_teams
     all_teams.find { |t| t.code == @config['sis_data_team'] }
+  end
+
+  # Logs error, prints stack trace, and saves a screenshot when running headlessly
+  def self.log_error_and_screenshot(driver, error, unique_id)
+    log_error error
+    save_screenshot(driver, unique_id) if Utils.headless?
   end
 
   # Returns the db credentials for BOAC

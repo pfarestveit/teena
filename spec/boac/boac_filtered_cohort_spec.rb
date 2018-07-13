@@ -179,19 +179,19 @@ describe 'BOAC', order: :defined do
         @cohort_page.create_new_cohort cohort
       end
 
-      it 'shows the filtered cohort on the homepage' do
+      it "shows the filtered cohort on the homepage with criteria sports '#{cohort.search_criteria.squads && (cohort.search_criteria.squads.map &:name)}', levels '#{cohort.search_criteria.levels}', majors '#{cohort.search_criteria.majors}', GPA ranges '#{cohort.search_criteria.gpa_ranges}', units '#{cohort.search_criteria.units}'" do
         @homepage.load_page
         @homepage.wait_until(Utils.medium_wait) { @homepage.filtered_cohorts.include? cohort.name }
       end
 
-      it 'shows the filtered cohort members who have alerts on the homepage' do
+      it "shows the filtered cohort members who have alerts on the homepage with criteria sports '#{cohort.search_criteria.squads && (cohort.search_criteria.squads.map &:name)}', levels '#{cohort.search_criteria.levels}', majors '#{cohort.search_criteria.majors}', GPA ranges '#{cohort.search_criteria.gpa_ranges}', units '#{cohort.search_criteria.units}'" do
         member_sids = @cohort_page.expected_sids_by_last_name(@searchable_students, cohort.search_criteria)
         @homepage.wait_until(Utils.short_wait) { @homepage.filtered_cohort_member_count(cohort) == member_sids.length }
         members = all_students.select { |u| member_sids.include? u.sis_id }
         @homepage.verify_cohort_alert_rows(@driver, cohort, members, advisor)
       end
 
-      it 'offers a link to the filtered cohort' do
+      it "offers a link to the filtered cohort with criteria sports '#{cohort.search_criteria.squads && (cohort.search_criteria.squads.map &:name)}', levels '#{cohort.search_criteria.levels}', majors '#{cohort.search_criteria.majors}', GPA ranges '#{cohort.search_criteria.gpa_ranges}', units '#{cohort.search_criteria.units}'" do
         @homepage.click_filtered_cohort cohort
         @cohort_page.cohort_heading(cohort).when_visible Utils.medium_wait
       end
