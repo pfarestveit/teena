@@ -5,7 +5,7 @@ describe 'BOAC' do
   include Logging
 
   team = BOACUtils.user_search_team
-  athletes = BOACUtils.get_team_members team
+  athletes = NessieUtils.get_asc_team_members team
   active_athletes = athletes.select { |a| a.status == 'active' }
   inactive_athlete = athletes.find { |a| a.status == 'inactive' }
 

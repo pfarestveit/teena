@@ -44,7 +44,6 @@ boac:
   db_user: secret
   db_password: secret
   tooltips: true
-  nessie_students_data: false
   nessie_scores: true
   nessie_assignments: true
   canvas_data_lag_days: 1
@@ -100,11 +99,6 @@ nessie:
   db_name: secret
   db_user: secret
   db_password: secret
-  rds_host: secret
-  rds_port: secret
-  rds_name: secret
-  rds_user: secret
-  rds_password: secret
 
 oec:
   term: 2018-C

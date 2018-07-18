@@ -220,23 +220,28 @@ class ApiUserAnalyticsPage
     analytics(site)['lastActivity'] && analytics(site)['lastActivity']['student'] && analytics(site)['lastActivity']['student']['daysSinceLastActivity']
   end
 
-  # To support cohort search tests, returns all relevant user data. If a file containing the data already
-  # exists, will skip collecting the data and simply parse the file. Otherwise, will collect the data and
-  # write it to a file for subsequent test runs.
+  # To support cohort search tests, returns all relevant user data for a given set of students. If a file containing the data already
+  # exists, will skip collecting the data and simply parse the file. Otherwise, will collect the data and write it to a file for
+  # subsequent test runs. If a department is given, then the file name will include the department code.
   # @param driver [Selenium::WebDriver]
+  # @param students [Array<User>]
+  # @param dept [BOACDepartments]
   # @return Array[<Hash>]
-  def collect_users_searchable_data(driver)
-    users_data_file = BOACUtils.searchable_data
+  def collect_users_searchable_data(driver, students, dept = nil)
+    users_data_file = BOACUtils.searchable_data dept
     if File.exist? users_data_file
-      logger.warn 'Found a copy of searchable user data created today, skipping data collection'
+      logger.warn "Found a copy of searchable user data created today#{' for ' + dept.code if dept}, skipping data collection"
       users_data = JSON.parse(File.read(users_data_file), {:symbolize_names => true})
     else
-      logger.warn 'Cannot find a searchable user data file created today, collecting data and writing it to a file for reuse today'
-      # Delete searchable data file from previous days before writing the new one
-      Dir.glob("#{Utils.config_dir}/boac-searchable-data*").each { |f| File.delete f }
-      users = BOACUtils.get_all_athletes
-      users_data = users.map do |user|
-        # Get the squad names to use as search criteria
+      logger.warn "Cannot find a searchable user data file created today#{' for ' + dept.code if dept}, collecting data and writing it to a file for reuse today"
+
+      # Delete older searchable data files before writing the new one
+      Dir.glob("#{Utils.config_dir}/#{BOACUtils.searchable_data_prefix dept}boac-searchable-data*").each { |f| File.delete f }
+
+      # Fetch all the data and write it to a file for search tests to use
+      logger.info "Getting searchable info for #{students.length} students"
+      users_data = students.map do |user|
+        # Get the squad names to use as search criteria if the students are athletes
         user_squad_names = user.sports.map do |squad_code|
           squad = Squad::SQUADS.find { |s| s.code == squad_code }
           squad.name
@@ -245,9 +250,7 @@ class ApiUserAnalyticsPage
         {
           :sid => user.sis_id,
           :first_name => user.first_name,
-          :first_name_sortable => user.first_name.gsub(/\W/, '').downcase,
           :last_name => user.last_name,
-          :last_name_sortable => user.last_name.gsub(/\W/, '').downcase,
           :squad_names => user_squad_names,
           :level => (user_sis_data[:level] if user_sis_data[:level]),
           :majors => (user_sis_data[:majors] ? user_sis_data[:majors] : []),

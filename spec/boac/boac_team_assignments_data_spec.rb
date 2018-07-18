@@ -33,7 +33,7 @@ describe 'BOAC assignment analytics' do
       @boac_student_page = Page::BOACPages::StudentPage.new @driver
       @boac_homepage.log_in(Utils.super_admin_username, Utils.super_admin_password, @cal_net)
 
-      all_team_members = BOACUtils.get_team_members(team)
+      all_team_members = NessieUtils.get_asc_team_members team
       BOACUtils.assignments_max_users(all_team_members).each do |student|
 
         boac_api_page = ApiUserAnalyticsPage.new @driver

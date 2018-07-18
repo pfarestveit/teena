@@ -11,8 +11,8 @@ describe 'BOAC' do
     team = BOACUtils.class_page_team
 
     pages_tested = []
-    all_students = BOACUtils.get_all_athletes
-    team_members = BOACUtils.get_team_members(team, all_students)
+    students = NessieUtils.get_all_asc_students
+    team_members = NessieUtils.get_asc_team_members(team, students)
 
     courses_csv = Utils.create_test_output_csv('boac-class-page-courses.csv', %w(Term Course Title Format Units))
     meetings_csv =Utils.create_test_output_csv('boac-class-page-meetings.csv', %w(Term Course Instructors Days Time Location))
@@ -118,7 +118,7 @@ describe 'BOAC' do
                           it("shows the right students for #{class_test_case}") { expect(visible_sids.sort).to eql(api_section_page.student_sids.sort) }
 
                           # Perform further tests on the students who do appear
-                          students = all_students.select { |s| visible_sids.include? s.sis_id }
+                          students = students.select { |s| visible_sids.include? s.sis_id }
                           expected_student_names = (students.map { |u| "#{u.last_name}, #{u.first_name}" }).sort
                           visible_student_names = (@class_page.list_view_names).sort
                           logger.error "Expecting #{expected_student_names} and got #{visible_student_names}" unless visible_student_names == expected_student_names

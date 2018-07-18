@@ -15,8 +15,8 @@ describe 'BOAC' do
       advisor = BOACUtils.get_dept_advisors(BOACDepartments::ASC).first
       team = BOACUtils.last_activity_team
       pages_tested = []
-      all_students = BOACUtils.get_all_athletes
-      team_members = BOACUtils.get_team_members(team, all_students)
+      students = NessieUtils.get_all_asc_students
+      team_members = NessieUtils.get_asc_team_members(team, students)
 
       # Test Last Activity using the current term rather than past term
       term_to_test = BOACUtils.term
@@ -69,7 +69,7 @@ describe 'BOAC' do
                       api_section_page.get_data(@driver, term_id, section_data[:ccn])
 
                       all_student_data = []
-                      section_students = all_students.select { |s| api_section_page.student_uids.include? s.uid }
+                      section_students = students.select { |s| api_section_page.student_uids.include? s.uid }
                       section_students.each do |student|
 
                         # Collect all the Canvas sites associated with that student in that course and the last activity data in BOAC's API data

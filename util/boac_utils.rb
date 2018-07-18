@@ -75,33 +75,33 @@ class BOACUtils < Utils
   # The team to use for testing Canvas assignments data, which should not be the same as the team used for testing Canvas
   # last activity data
   def self.assignments_team
-    get_teams.find { |t| t.code == @config['assignments_team'] }
+    NessieUtils.get_asc_teams.find { |t| t.code == @config['assignments_team'] }
   end
 
   # The team to use for testing BOAC class pages
   def self.class_page_team
-    get_teams.find { |t| t.code == @config['class_page_team'] }
+    NessieUtils.get_asc_teams.find { |t| t.code == @config['class_page_team'] }
   end
 
   # The team to use for testing BOAC curated cohorts
   def self.curated_cohort_team
-    get_teams.find { |t| t.code == @config['curated_cohort_team'] }
+    NessieUtils.get_asc_teams.find { |t| t.code == @config['curated_cohort_team'] }
   end
 
   # The team to use for testing Canvas last activity data
   # assignments data
   def self.last_activity_team
-    get_teams.find { |t| t.code == @config['last_activity_team'] }
+    NessieUtils.get_asc_teams.find { |t| t.code == @config['last_activity_team'] }
   end
 
   # The team to use for testing user search
   def self.user_search_team
-    get_teams.find { |t| t.code == @config['user_search_team'] }
+    NessieUtils.get_asc_teams.find { |t| t.code == @config['user_search_team'] }
   end
 
   # The team to use for testing SIS data
   def self.sis_data_team(teams = nil)
-    all_teams = teams ? teams : get_teams
+    all_teams = teams ? teams : NessieUtils.get_asc_teams
     all_teams.find { |t| t.code == @config['sis_data_team'] }
   end
 
@@ -109,6 +109,41 @@ class BOACUtils < Utils
   def self.log_error_and_screenshot(driver, error, unique_id)
     log_error error
     save_screenshot(driver, unique_id) if Utils.headless?
+  end
+
+  # SEARCH TEST DATA
+
+  # Returns the prefix for the searchable data file name. The prefix identifies the pool of students who could be returned in
+  # search results, i.e., ASC students, CoE students, or all students.
+  # @param dept [BOACDepartments]
+  # @return [String]
+  def self.searchable_data_prefix(dept = nil)
+    dept ? "#{dept.code}-" : 'ALL-'
+  end
+
+  # Returns the file path containing stored searchable student data to drive cohort search tests, which is
+  # department-specific if a department is given.
+  # @param dept [BOACDepartments]
+  # @return [String]
+  def self.searchable_data(dept = nil)
+    File.join(Utils.config_dir, "#{searchable_data_prefix dept}boac-searchable-data-#{Time.now.strftime('%Y-%m-%d')}.json")
+  end
+
+  # Returns a collection of search criteria to use for testing cohort search
+  # @return [Array<Hash>]
+  def self.get_test_search_criteria
+    test_data_file = File.join(Utils.config_dir, 'test-data-boac.json')
+    test_data = JSON.parse File.read(test_data_file)
+    test_data['search_criteria'].map do |d|
+      criteria = {
+        squads: (d['teams'] && d['teams'].map { |t| Squad::SQUADS.find { |s| s.name == t['squad'] } }),
+        levels: (d['levels'] && d['levels'].map { |l| l['level'] }),
+        majors: (d['majors'] && d['majors'].map { |t| t['major'] }),
+        gpa_ranges: (d['gpa_ranges'] && d['gpa_ranges'].map { |g| g['gpa_range'] }),
+        units: (d['units'] && d['units'].map { |u| u['unit'] })
+      }
+      CohortSearchCriteria.new criteria
+    end
   end
 
   # Returns the db credentials for BOAC
@@ -123,9 +158,7 @@ class BOACUtils < Utils
     }
   end
 
-  def self.nessie_data
-    @config['nessie_students_data']
-  end
+  # DATABASE - USERS
 
   # Returns all authorized users
   # @return [Array<User>]
@@ -147,125 +180,6 @@ class BOACUtils < Utils
               WHERE university_depts.dept_code = '#{dept.code}';"
     results = query_pg_db(boac_db_credentials, query)
     results.map { |r| User.new({uid: r['uid']}) }
-  end
-
-  # SEARCH TEST DATA
-
-  # Returns the file path containing stored searchable student data to drive cohort search tests
-  # @return [String]
-  def self.searchable_data
-    File.join(Utils.config_dir, "boac-searchable-data-#{Time.now.strftime('%Y-%m-%d')}.json")
-  end
-
-  # Returns a collection of search criteria to use for testing cohort search
-  # @return [Array<Hash>]
-  def self.get_test_search_criteria
-    test_data_file = File.join(Utils.config_dir, 'test-data-boac.json')
-    test_data = JSON.parse File.read(test_data_file)
-    test_data['search_criteria'].map do |d|
-      criteria = {
-          squads: (d['teams'] && d['teams'].map { |t| Squad::SQUADS.find { |s| s.name == t['squad'] } }),
-          levels: (d['levels'] && d['levels'].map { |l| l['level'] }),
-          majors: (d['majors'] && d['majors'].map { |t| t['major'] }),
-          gpa_ranges: (d['gpa_ranges'] && d['gpa_ranges'].map { |g| g['gpa_range'] }),
-          units: (d['units'] && d['units'].map { |u| u['unit'] })
-      }
-      CohortSearchCriteria.new criteria
-    end
-  end
-
-  # DATABASE - ATHLETES
-
-  # Returns all students
-  # @return [PG::Result]
-  def self.query_all_athletes
-    query = 'SELECT students.uid AS uid,
-                    students.sid AS sid,
-                    students.first_name AS first_name,
-                    students.last_name AS last_name,
-                    students.is_active_asc AS status,
-                    students.in_intensive_cohort AS intensive,
-                    student_athletes.group_code AS group_code
-             FROM students
-             JOIN student_athletes ON student_athletes.sid = students.sid
-             ORDER BY students.uid;'
-    Utils.query_pg_db(boac_db_credentials, query)
-  end
-
-  # Returns students where 'intensive' is true
-  # @return [PG::Result]
-  def self.query_intensive_athletes
-    query_all_athletes.select { |a| a['intensive'] == 't' }
-  end
-
-  # Converts a students result object to an array of users
-  # @param athletes [PG::Result]
-  # @return [Array<User>]
-  def self.athletes_to_users(athletes)
-    # Users with multiple sports have multiple rows; combine them
-    athletes = athletes.group_by { |h1| h1['uid'] }.map do |k,v|
-      {uid: k, sid: v[0]['sid'], status: (v[0]['status'] == 't' ? 'active' : 'inactive'), first_name: v[0]['first_name'], last_name: v[0]['last_name'], group_code: v.map { |h2| h2['group_code'] }.join(' ')}
-    end
-
-    # Convert to Users
-    athletes.map do |a|
-      User.new({uid: a[:uid], sis_id: a[:sid], status: a[:status], first_name: a[:first_name], last_name: a[:last_name], full_name: "#{a[:first_name]} #{a[:last_name]}", sports: a[:group_code].split.uniq})
-    end
-  end
-
-  # Returns an array of users for all students
-  # @return [Array<User>]
-  def self.get_all_athletes
-    nessie_data ? NessieUtils.get_all_asc_students : athletes_to_users(query_all_athletes)
-  end
-
-  # Returns an array of users for intensive students only
-  # @return [Array<User>]
-  def self.get_intensive_athletes
-    nessie_data ? NessieUtils.get_intensive_asc_students : athletes_to_users(query_intensive_athletes)
-  end
-
-  # Returns all the distinct teams associated with team members
-  # @return [Array<Team>]
-  def self.get_teams
-    if nessie_data
-      NessieUtils.get_asc_teams
-    else
-      query = 'SELECT DISTINCT team_code
-               FROM athletics
-               ORDER BY team_code;'
-      results = Utils.query_pg_db_field(boac_db_credentials, query, 'team_code')
-      teams = Team::TEAMS.select { |team| results.include? team.code }
-      logger.info "Teams are #{teams.map &:name}"
-      teams.sort_by { |t| t.name }
-    end
-  end
-
-  # Returns all the users associated with a team. If the full set of athlete users is already available,
-  # will use that. Otherwise, obtains the full set too.
-  # @param team [Team]
-  # @param all_athletes [Array<User>]
-  # @return [Array<User>]
-  def self.get_team_members(team, all_athletes = nil)
-    if nessie_data
-      NessieUtils.get_asc_team_members(team, all_athletes)
-    else
-      team_squads = Squad::SQUADS.select { |s| s.parent_team == team }
-      team_members = get_squad_members(team_squads, all_athletes)
-      logger.info "#{team.name} members are UIDs #{team_members.map &:uid}"
-      team_members
-    end
-  end
-
-  # Returns all the users associated with a given collection of squads. If the full set of athlete users is already available,
-  # will use that. Otherwise, obtains the full set too.
-  # @param squads [Array<Squad>]
-  # @param athletes [Array<User>]
-  # @return [Array<User>]
-  def self.get_squad_members(squads, all_athletes = nil)
-    squad_codes = squads.map &:code
-    athletes = all_athletes ? all_athletes : get_all_athletes
-    athletes.select { |u| (u.sports & squad_codes).any? }
   end
 
   # DATABASE - CURATED COHORTS
@@ -299,25 +213,36 @@ class BOACUtils < Utils
   # @param user [User]
   # @return [Array<FilteredCohort>]
   def self.get_user_filtered_cohorts(user)
-    query = "SELECT cohort_filters.id AS cohort_id, cohort_filters.label AS cohort_name
+    query = "SELECT cohort_filters.id AS cohort_id,
+                    cohort_filters.label AS cohort_name,
+                    cohort_filters.filter_criteria AS criteria
               FROM cohort_filters
               JOIN cohort_filter_owners ON cohort_filter_owners.cohort_filter_id = cohort_filters.id
               JOIN authorized_users ON authorized_users.id = cohort_filter_owners.user_id
               WHERE authorized_users.uid = '#{user.uid}';"
     results = Utils.query_pg_db(boac_db_credentials, query)
-    results.map { |r| FilteredCohort.new({id: r['cohort_id'], name: r['cohort_name'], owner_uid: user.uid}) }
+    # If the filter criteria includes a non-null CoE advisor UID, then the filter is read-only (no deleting).
+    results.map do |r|
+      FilteredCohort.new({id: r['cohort_id'], name: r['cohort_name'], owner_uid: user.uid, read_only: (!r['criteria'].include?('"coeAdvisorUid": null'))})
+    end
   end
 
-  # Returns all filtered cohorts
+  # Returns all filtered cohorts. If a department is given, then returns only the cohorts associated with that department.
+  # @param dept [BOACDepartments]
   # @return [Array<FilteredCohort>]
-  def self.get_everyone_filtered_cohorts
-    query = 'SELECT cohort_filters.id AS cohort_id,
+  def self.get_everyone_filtered_cohorts(dept = nil)
+    query = "SELECT cohort_filters.id AS cohort_id,
                     cohort_filters.label AS cohort_name,
                     authorized_users.uid AS uid
               FROM cohort_filters
               JOIN cohort_filter_owners ON cohort_filter_owners.cohort_filter_id = cohort_filters.id
               JOIN authorized_users ON authorized_users.id = cohort_filter_owners.user_id
-              ORDER BY uid, cohort_id ASC;'
+              #{if dept
+                 'JOIN university_dept_members ON university_dept_members.authorized_user_id = authorized_users.id
+                  JOIN university_depts ON university_depts.id = university_dept_members.university_dept_id
+                  WHERE university_depts.dept_code = \'' + dept.code + '\' '
+                end}
+              ORDER BY uid, cohort_id ASC;"
     results = Utils.query_pg_db(boac_db_credentials, query)
     cohorts = results.map { |r| FilteredCohort.new({id: r['cohort_id'], name: r['cohort_name'], owner_uid: r['uid']}) }
     cohorts.sort_by { |c| [c.owner_uid.to_i, c.id] }

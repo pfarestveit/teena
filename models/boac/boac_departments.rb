@@ -8,7 +8,7 @@ class BOACDepartments
 
   DEPARTMENTS = [
       ASC = new('UWASC'),
-      COE = new('EHEEC')
+      COE = new('COENG')
   ]
 
 end
