@@ -22,6 +22,13 @@ module Page
           wait_for_title cohort.name
         end
 
+        # Hits a cohort URL and expects the 404 page to load
+        # @param cohort [FilteredCohort]
+        def hit_non_auth_cohort(cohort)
+          navigate_to "#{BOACUtils.base_url}/cohort?c=#{cohort.id}"
+          wait_for_title '404'
+        end
+
         # Navigates directly to a team page
         # @param team [Team]
         def load_team_page(team)
@@ -104,7 +111,6 @@ module Page
         # @return [Array<FilteredCohort>]
         def visible_everyone_cohorts
           click_view_everyone_cohorts
-          wait_for_title 'Cohorts'
           wait_until(Utils.short_wait) { everyone_cohort_link_elements.any? }
           cohorts = everyone_cohort_link_elements.map { |link| FilteredCohort.new({id: link.attribute('href').delete('/cohort?c='), name: link.text}) }
           cohorts.flatten
@@ -236,6 +242,9 @@ module Page
 
           # Uncheck any options that are already checked from a previous search, then check those that apply to the current search.
           # Do not look for squad options if the search criteria do not include teams, as non-ASC advisors cannot search by teams.
+
+          # Squads
+
           if criteria.squads
             unless squad_option_elements.all? &:visible?
               wait_for_update_and_click squad_filter_button_element
@@ -255,6 +264,8 @@ module Page
             end
           end
 
+          # Levels
+
           unless level_option_elements.all? &:visible?
             wait_for_update_and_click level_filter_button_element
             wait_until(1) { level_option_elements.all? &:visible? }
@@ -265,6 +276,8 @@ module Page
             check_search_option levels_option_element(l)
           end if criteria.levels
 
+          # Majors
+
           unless major_option_elements.all? &:visible?
             wait_for_update_and_click major_filter_button_element
             wait_until(1) { major_option_elements.all? &:visible? }
@@ -273,18 +286,17 @@ module Page
           if criteria.majors
             # If 'Declared' is selected, then no other majors can be used as search criteria.
             criteria.majors = ['Declared'] if criteria.majors.include? 'Declared'
+            # Majors are only shown if they apply to users, so the majors list will change over time. Avoid test failures if
+            # the search criteria is out of sync with actual user majors.
+            criteria.majors.delete_if { |m| !majors_option_element(m).exists? }
+            logger.warn "The majors actually available to select are #{criteria.majors}"
             criteria.majors.each do |m|
-              # Majors are only shown if they apply to users, so the majors list will change over time. Avoid test failures if
-              # the search criteria is out of sync with actual user majors.
-              if majors_option_element(m).exists?
-                logger.debug "Selecting #{m}"
-                check_search_option majors_option_element(m)
-              else
-                logger.warn "The major '#{m}' is not among the list of majors, removing from search criteria"
-                criteria.majors.delete_if { |i| i == m }
-              end
+              logger.debug "Selecting #{m}"
+              check_search_option majors_option_element(m)
             end
           end
+
+          # GPA ranges
 
           unless gpa_range_option_elements.all? &:visible?
             wait_for_update_and_click gpa_range_filter_button_element
@@ -295,6 +307,8 @@ module Page
             logger.debug "Selecting #{g}"
             check_search_option gpa_range_option_element(g)
           end if criteria.gpa_ranges
+
+          # Units ranges
 
           unless units_option_elements.all? &:visible?
             wait_for_update_and_click units_filter_button_element
@@ -436,12 +450,16 @@ module Page
         # Deletes a cohort
         # @param cohort [FilteredCohort]
         def delete_cohort(cohort)
-          logger.info "Deleting a cohort named #{cohort.name}"
-          click_sidebar_manage_filtered
-          sleep 3
-          wait_for_load_and_click cohort_delete_button(cohort)
-          wait_for_update_and_click confirm_delete_button_element
-          cohort_on_manage_cohorts(cohort).when_not_present Utils.short_wait
+          if cohort.read_only
+            logger.warn "Unable to delete cohort named #{cohort.name} because it is read-only"
+          else
+            logger.info "Deleting a cohort named #{cohort.name}"
+            click_sidebar_manage_filtered
+            sleep 3
+            wait_for_load_and_click cohort_delete_button(cohort)
+            wait_for_update_and_click confirm_delete_button_element
+            cohort_on_manage_cohorts(cohort).when_not_present Utils.short_wait
+          end
         end
 
       end

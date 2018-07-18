@@ -5,29 +5,24 @@ describe 'BOAC', order: :defined do
   include Logging
 
   test_id = Utils.get_test_id
-  dept = BOACUtils.filtered_cohort_dept
-  all_students = BOACUtils.get_all_athletes
-
-  # Create CSV for writing search performance data
   performance_data = File.join(Utils.initialize_test_output_dir, 'boac-search-performance.csv')
 
-  # Filtered cohort UX differs for admins vs ASC advisors vs non-ASC advisors
-  admin = User.new({:uid => Utils.super_admin_uid})
+  # Filtered cohort UX differs for admins vs ASC advisors vs CoE advisors. The department determines which advisor will
+  # execute the search tests. If it's nil, then admin will execute them.
+  dept = BOACUtils.filtered_cohort_dept
   asc_advisor = BOACUtils.get_dept_advisors(BOACDepartments::ASC).first
   coe_advisor = BOACUtils.get_dept_advisors(BOACDepartments::COE).first
-
-  # The department determines which advisor will execute the search tests. If it's nil, then admin will execute them.
   advisor = if dept
               (dept == BOACDepartments::ASC) ? asc_advisor : coe_advisor
             else
-              admin
+              User.new({:uid => Utils.super_admin_uid})
             end
-
-  # Get all the advisor's existing cohorts
-  advisor_cohorts_pre_existing = BOACUtils.get_user_filtered_cohorts advisor
+  students = NessieUtils.get_all_relevant_students dept
+  # If the advisor is from ASC, then inactive students should not appear in default search results
+  students.delete_if { |s| s.status == 'inactive' } if advisor == asc_advisor
 
   # Get cohorts to be created during tests. If the advisor is not with ASC, then no team filters will exist. So remove sports-related search criteria
-  # from searches. If there are no other criteria in the search, then toss it out.
+  # from searches. If there are no other criteria in the search, then toss out the search.
   test_search_criteria = BOACUtils.get_test_search_criteria
   unless advisor == asc_advisor
     test_search_criteria.each { |c| c.squads = nil }
@@ -43,28 +38,8 @@ describe 'BOAC', order: :defined do
     @student_page = Page::BOACPages::StudentPage.new @driver
     @homepage.dev_auth advisor
 
-    # Get the student data relevant to all search filters
-    @all_student_search_data = @analytics_page.collect_users_searchable_data @driver
-
-    active_students = all_students.select { |u| u.status == 'active' }
-    active_student_sids = active_students.map &:sis_id
-    @active_student_search_data = @all_student_search_data.select { |d| active_student_sids.include? d[:sid] }
-    logger.debug "There are #{@active_student_search_data.length} active students"
-
-    inactive_students = all_students.select { |u| u.status == 'inactive' }
-    inactive_student_sids = inactive_students.map &:sis_id
-    @inactive_student_search_data = @all_student_search_data.select { |d| inactive_student_sids.include? d[:sid] }
-    logger.debug "There are #{@inactive_student_search_data.length} inactive students"
-
-    intensive_students = BOACUtils.get_intensive_athletes
-    intensive_student_sids = intensive_students.map &:sis_id
-    @intensive_student_search_data = @all_student_search_data.select { |d| intensive_student_sids.include? d[:sid] }
-    @intensive_student_search_data.delete_if { |d| inactive_student_sids.include? d[:sid] }
-    logger.debug "There are #{@intensive_student_search_data.length} active intensive students"
-
-    # If the advisor is from ASC, then only active students should appear in search results. If from another dept or an admin user,
-    # then all students should appear.
-    @searchable_students = (advisor == asc_advisor) ? @active_student_search_data : @all_student_search_data
+    # Get the student data relevant to all search filters.
+    @searchable_students = @analytics_page.collect_users_searchable_data(@driver, students, dept)
   end
 
   after(:all) { Utils.quit_browser @driver }
@@ -73,12 +48,15 @@ describe 'BOAC', order: :defined do
 
     before(:all) do
       @homepage.load_page
-      advisor_cohorts_pre_existing.each { |c| @cohort_page.delete_cohort c }
+      BOACUtils.get_user_filtered_cohorts(advisor).each { |c| @cohort_page.delete_cohort c }
     end
 
     it('shows a No Filtered Cohorts message on the homepage') do
       @homepage.load_page
-      expect(@homepage.no_filtered_cohorts_msg?).to be true
+      # CoE advisors will always have a 'my students' filtered cohort that cannot be deleted
+      (advisor == coe_advisor) ?
+          expect(@homepage.no_filtered_cohorts_msg?).to be false :
+          expect(@homepage.no_filtered_cohorts_msg?).to be true
     end
   end
 
@@ -187,7 +165,7 @@ describe 'BOAC', order: :defined do
       it "shows the filtered cohort members who have alerts on the homepage with criteria sports '#{cohort.search_criteria.squads && (cohort.search_criteria.squads.map &:name)}', levels '#{cohort.search_criteria.levels}', majors '#{cohort.search_criteria.majors}', GPA ranges '#{cohort.search_criteria.gpa_ranges}', units '#{cohort.search_criteria.units}'" do
         member_sids = @cohort_page.expected_sids_by_last_name(@searchable_students, cohort.search_criteria)
         @homepage.wait_until(Utils.short_wait) { @homepage.filtered_cohort_member_count(cohort) == member_sids.length }
-        members = all_students.select { |u| member_sids.include? u.sis_id }
+        members = students.select { |u| member_sids.include? u.sis_id }
         @homepage.verify_cohort_alert_rows(@driver, cohort, members, advisor)
       end
 
@@ -261,230 +239,4 @@ describe 'BOAC', order: :defined do
     end
   end
 
-  describe 'filtered cohorts' do
-
-    context 'when an advisor is with ASC' do
-
-      before(:all) do
-        @homepage.log_out
-        @homepage.dev_auth asc_advisor
-      end
-
-      it 'offers Teams filters' do
-        @homepage.click_sidebar_create_filtered
-        @cohort_page.wait_until(Utils.short_wait) { @cohort_page.squad_option_elements.any? }
-      end
-    end
-
-    context 'when an advisor is not with ASC' do
-
-      before(:all) do
-        @homepage.log_out
-        @homepage.dev_auth coe_advisor
-      end
-
-      it 'offers no Teams filters' do
-        @homepage.click_sidebar_create_filtered
-        @cohort_page.wait_until(Utils.short_wait) { @cohort_page.level_option_elements.any? }
-        expect(@cohort_page.squad_option_elements.any?).to be false
-      end
-    end
-
-    context 'when an admin' do
-
-      before(:all) do
-        @homepage.log_out
-        @homepage.dev_auth admin
-      end
-
-      it 'offers no Teams filters' do
-        @homepage.click_sidebar_create_filtered
-        @cohort_page.wait_until(Utils.short_wait) { @cohort_page.level_option_elements.any? }
-        expect(@cohort_page.squad_option_elements.any?).to be false
-      end
-    end
-  end
-
-  describe 'Everyone\'s Cohorts' do
-
-    before(:all) do
-      @everyone_cohorts_pre_existing = BOACUtils.get_everyone_filtered_cohorts
-      logger.debug "Everyone has #{@everyone_cohorts_pre_existing.length} total cohorts"
-    end
-
-    context 'when an advisor is with ASC' do
-
-      before(:all) do
-        @homepage.log_out
-        @homepage.dev_auth asc_advisor
-      end
-
-      it 'shows the user Everyone\'s Cohorts' do
-        expected_cohort_names = (@everyone_cohorts_pre_existing.map &:name).sort
-        visible_cohort_names = (@cohort_page.visible_everyone_cohorts.map &:name).sort
-        @cohort_page.wait_until(1, "Expected #{expected_cohort_names}, but got #{visible_cohort_names}") { visible_cohort_names == expected_cohort_names }
-      end
-    end
-
-    context 'when an advisor is not with ASC' do
-
-      before(:all) do
-        @homepage.log_out
-        @homepage.dev_auth coe_advisor
-      end
-
-      it('shows no link to Everyone\'s Cohorts') { expect(@homepage.view_everyone_cohorts_link?).to be false }
-
-      it 'prevents the advisor reaching the Everyone\'s Cohorts page' do
-        @cohort_page.load_everyone_cohorts_page
-        expect(@cohort_page.everyone_cohort_link_elements.any?).to be false
-      end
-    end
-
-    context 'when an admin' do
-
-      before(:all) do
-        @homepage.log_out
-        @homepage.dev_auth admin
-      end
-
-      it('shows no link to Everyone\'s Cohorts') { expect(@homepage.view_everyone_cohorts_link?).to be false }
-
-      it 'allows the admin to reach the Everyone\'s Cohorts page' do
-        @cohort_page.load_everyone_cohorts_page
-        @cohort_page.wait_until(Utils.medium_wait) { @cohort_page.everyone_cohort_link_elements.any? }
-      end
-    end
-  end
-
-  describe 'Inactive cohort students' do
-
-    context 'when an advisor is with ASC' do
-
-      before(:all) do
-        @homepage.log_out
-        @homepage.dev_auth asc_advisor
-        @homepage.click_inactive_cohort
-        @visible_inactive_students = @cohort_page.visible_sids
-        @student = User.new({})
-      end
-
-      it 'all appear on the cohort page with an INACTIVE indicator' do
-        expected_results = @cohort_page.expected_sids_by_last_name(@inactive_student_search_data, CohortSearchCriteria.new({}))
-        expect(@visible_inactive_students).to eql(expected_results)
-      end
-
-      it('include at least one inactive student') { expect(@visible_inactive_students.empty?).to be false }
-
-      it 'have an inactive indicator on the student page' do
-        @student.uid = @cohort_page.list_view_uids.first
-        @cohort_page.click_player_link @student
-        @student_page.wait_for_spinner
-        @student_page.inactive_flag_element.when_visible Utils.short_wait
-      end
-
-      cohorts.each do |cohort|
-        it "shows all the students who match sports '#{cohort.search_criteria.squads && (cohort.search_criteria.squads.map &:name)}', levels '#{cohort.search_criteria.levels}', majors '#{cohort.search_criteria.majors}', GPA ranges '#{cohort.search_criteria.gpa_ranges}', units '#{cohort.search_criteria.units}'" do
-          @homepage.load_page
-          @cohort_page.click_inactive_cohort
-          @cohort_page.perform_search cohort
-          expected_results = @cohort_page.expected_search_results(@inactive_student_search_data, cohort.search_criteria).map { |u| u[:sid] }
-          visible_results = cohort.member_count.zero? ? [] : @cohort_page.visible_sids
-          @cohort_page.wait_until(1, "Expected but not present: #{expected_results - visible_results}. Present but not expected: #{visible_results - expected_results}") { visible_results.sort == expected_results.sort }
-        end
-      end
-    end
-
-    context 'when an advisor is not with ASC' do
-
-      before(:all) do
-        @homepage.log_out
-        @homepage.dev_auth coe_advisor
-      end
-
-      it('shows no link to Inactive Students') { expect(@homepage.inactive_cohort_link?).to be false }
-
-      it 'prevents the advisor reaching the Inactive Students page' do
-        @cohort_page.load_inactive_students_page
-        @cohort_page.no_access_msg_element.when_visible Utils.short_wait
-      end
-    end
-
-    context 'when an admin' do
-
-      before(:all) do
-        @homepage.log_out
-        @homepage.dev_auth admin
-      end
-
-      it('shows no link to Inactive Students') { expect(@homepage.inactive_cohort_link?).to be false }
-
-      it 'allows the admin to reach the Inactive Students page' do
-        @cohort_page.load_inactive_students_page
-        @cohort_page.wait_until(Utils.medium_wait) { @cohort_page.list_view_uids.any? }
-      end
-    end
-  end
-
-  describe 'Intensive cohort students' do
-
-    context 'when an advisor is with ASC' do
-
-      before(:all) do
-        @homepage.log_out
-        @homepage.dev_auth asc_advisor
-        @homepage.click_intensive_cohort
-        @visible_intensive_students = @cohort_page.visible_sids
-      end
-
-      it 'all appear on the cohort page' do
-        expected_results = @cohort_page.expected_sids_by_last_name(@intensive_student_search_data, CohortSearchCriteria.new({}))
-        expect(@visible_intensive_students).to eql(expected_results)
-      end
-
-      it('include at least one intensive student') { expect(@visible_intensive_students.empty?).to be false }
-
-      cohorts.each do |cohort|
-        it "shows all the users who match sports '#{cohort.search_criteria.squads && (cohort.search_criteria.squads.map &:name)}', levels '#{cohort.search_criteria.levels}', majors '#{cohort.search_criteria.majors}', GPA ranges '#{cohort.search_criteria.gpa_ranges}', units '#{cohort.search_criteria.units}'" do
-          @homepage.load_page
-          @cohort_page.click_intensive_cohort
-          @cohort_page.perform_search cohort
-          expected_results = @cohort_page.expected_search_results(@intensive_student_search_data, cohort.search_criteria).map { |u| u[:sid] }
-          visible_results = cohort.member_count.zero? ? [] : @cohort_page.visible_sids
-          @cohort_page.wait_until(1, "Expected but not present: #{expected_results - visible_results}. Present but not expected: #{visible_results - expected_results}") { visible_results.sort == expected_results.sort }
-        end
-      end
-    end
-
-    context 'when an advisor is not with ASC' do
-
-      before(:all) do
-        @homepage.log_out
-        @homepage.dev_auth coe_advisor
-      end
-
-      it('shows no link to Intensive Students') { expect(@homepage.intensive_cohort_link?).to be false }
-
-      it 'prevents the advisor reaching the Intensive Students page' do
-        @cohort_page.load_intensive_students_page
-        @cohort_page.no_access_msg_element.when_visible Utils.short_wait
-      end
-    end
-
-    context 'when an admin' do
-
-      before(:all) do
-        @homepage.log_out
-        @homepage.dev_auth admin
-      end
-
-      it('shows no link to Intensive Students') { expect(@homepage.intensive_cohort_link?).to be false }
-
-      it 'allows the admin to reach the Intensive Students page' do
-        @cohort_page.load_intensive_students_page
-        @cohort_page.wait_until(Utils.medium_wait) { @cohort_page.list_view_uids.any? }
-      end
-    end
-
-  end
 end

@@ -10,7 +10,7 @@ describe 'BOAC', order: :defined do
   other_advisor = BOACUtils.get_authorized_users.find { |u| u.uid != advisor.uid }
   pre_existing_cohorts = BOACUtils.get_user_curated_cohorts advisor
   team = BOACUtils.curated_cohort_team
-  students = BOACUtils.get_team_members(team).delete_if { |s| s.status == 'inactive' }
+  students = NessieUtils.get_asc_team_members(team).delete_if { |s| s.status == 'inactive' }
 
   before(:all) do
     @driver = Utils.launch_browser

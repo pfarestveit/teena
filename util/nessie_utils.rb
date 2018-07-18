@@ -14,6 +14,8 @@ class NessieUtils < Utils
     }
   end
 
+  # DATABASE - ASSIGNMENTS
+
   # Returns the assignments associated with a user in a course site
   # @param user [User]
   # @param course [Course]
@@ -31,14 +33,61 @@ class NessieUtils < Utils
     end
   end
 
-  def self.nessie_rds_credentials
-    {
-      :host => @config['rds_host'],
-      :port => @config['rds_port'],
-      :name => @config['rds_name'],
-      :user => @config['rds_user'],
-      :password => @config['rds_password']
-    }
+  # DATABASE - ALL STUDENTS
+
+  # Converts a students result object to an array of users
+  # @param athletes [PG::Result]
+  # @return [Array<User>]
+  def self.student_result_to_users(student_result)
+    # If a user has multiple sports, they will be on multiple rows and should be merged. The 'status' refers to active or inactive athletes.
+    students = student_result.group_by { |h1| h1['uid'] }.map do |k,v|
+      {
+        :uid => k,
+        :sid => v[0]['sid'],
+        :status => ((v[0]['status'] == 't' ? 'active' : 'inactive') if v[0]['status']),
+        :first_name => v[0]['first_name'],
+        :last_name => v[0]['last_name'],
+        :group_code => v.map { |h2| h2['group_code'] }.join(' ')
+      }
+    end
+
+    # Convert to Users
+    students.map do |a|
+      attributes = {
+        :uid => a[:uid],
+        :sis_id => a[:sid],
+        :status => a[:status],
+        :first_name => a[:first_name],
+        :last_name => a[:last_name],
+        :full_name => "#{a[:first_name]} #{a[:last_name]}",
+        :sports => a[:group_code].split.uniq
+      }
+      User.new attributes
+    end
+  end
+
+  # Returns all students belonging to a department if a department is given; otherwise, returns all students.
+  # @param dept [BOACDepartments]
+  # @return [Array<User>]
+  def self.get_all_relevant_students(dept = nil)
+    if dept
+      logger.info "Returning students who belong to department '#{dept.code}'"
+      case dept
+        when BOACDepartments::ASC
+          get_all_asc_students
+        when BOACDepartments::COE
+          get_all_coe_students
+        else
+          logger.error "Invalid dept code '#{dept.code}'"
+          fail
+      end
+    else
+      logger.info 'Returning all students'
+      asc_students = get_all_asc_students
+      coe_students = get_all_coe_students asc_students
+      logger.debug "There are #{asc_students.length} ASC students and #{coe_students.length} CoE students, for a total of #{all.length} and #{(asc_students & coe_students).length} shared students."
+      (asc_students + coe_students).uniq
+    end
   end
 
   # DATABASE - ASC STUDENTS
@@ -59,32 +108,17 @@ class NessieUtils < Utils
     Utils.query_redshift_db(nessie_db_credentials, query)
   end
 
-  # Converts a students result object to an array of users
-  # @param athletes [PG::Result]
-  # @return [Array<User>]
-  def self.asc_students_to_users(athletes)
-    # Users with multiple sports have multiple rows; combine them
-    athletes = athletes.group_by { |h1| h1['uid'] }.map do |k,v|
-      {uid: k, sid: v[0]['sid'], status: (v[0]['status'] == 't' ? 'active' : 'inactive'), first_name: v[0]['first_name'], last_name: v[0]['last_name'], group_code: v.map { |h2| h2['group_code'] }.join(' ')}
-    end
-
-    # Convert to Users
-    athletes.map do |a|
-      User.new({uid: a[:uid], sis_id: a[:sid], status: a[:status], first_name: a[:first_name], last_name: a[:last_name], full_name: "#{a[:first_name]} #{a[:last_name]}", sports: a[:group_code].split.uniq})
-    end
-  end
-
-  # Returns an array of users for all students
+  # Returns an array of users for all ASC students
   # @return [Array<User>]
   def self.get_all_asc_students
-    asc_students_to_users query_all_asc_students
+    student_result_to_users query_all_asc_students
   end
 
-  # Returns an array of users for intensive students only
+  # Returns an array of users for intensive ASC students only
   # @return [Array<User>]
   def self.get_intensive_asc_students
     results = query_all_asc_students.select { |a| a['intensive'] == 'TRUE' }
-    asc_students_to_users results
+    student_result_to_users results
   end
 
   # Returns all the distinct teams associated with team members
@@ -117,6 +151,51 @@ class NessieUtils < Utils
     team_members = athletes.select { |u| (u.sports & squad_codes).any? }
     logger.info "#{team.name} members are UIDs #{team_members.map &:uid}"
     team_members
+  end
+
+  # DATABASE - CoE STUDENTS
+
+  # Returns all CoE students
+  # @return [PG::Result]
+  def self.query_all_coe_students
+    query = 'SELECT students.sid AS sid,
+                    persons.ldap_uid AS uid,
+                    persons.first_name AS first_name,
+                    persons.last_name AS last_name
+             FROM boac_advising_coe.students
+             JOIN calnet_ext_dev.persons ON calnet_ext_dev.persons.sid = boac_advising_coe.students.sid
+             ORDER BY students.sid;'
+    Utils.query_redshift_db(nessie_db_credentials, query)
+  end
+
+  # Returns an array of users for all CoE students. If ASC students are given, then overlapping ASC-CoE students
+  # will be merged so that their ASC data can be included in their attributes.
+  # @param [Array<User>]
+  # @return [Array<User>]
+  def self.get_all_coe_students(asc_students = nil)
+    coe_students = student_result_to_users query_all_coe_students
+    if asc_students
+      coe_students.map do |coe|
+        match = asc_students.find { |asc| asc.sis_id == coe.sis_id }
+        match ? match : coe
+      end
+    else
+      coe_students
+    end
+  end
+
+  # Returns all the CoE students associated with a given advisor
+  # @param advisor [User]
+  # @param all_coe_students [Array<User>]
+  # @return [Array<User>]
+  def self.get_coe_advisor_students(advisor, all_coe_students)
+    query = "SELECT students.sid
+              FROM boac_advising_coe.students
+              WHERE students.advisor_ldap_uid = '#{advisor.uid}'
+              ORDER BY students.sid;"
+    result = Utils.query_redshift_db(nessie_db_credentials, query)
+    result = result.map { |r| r['sid'] }
+    all_coe_students.select { |s| result.include? s.sis_id }
   end
 
 end

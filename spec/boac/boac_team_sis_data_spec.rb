@@ -10,7 +10,7 @@ describe 'BOAC' do
     advisor = BOACUtils.get_dept_advisors(BOACDepartments::ASC).first
 
     # Get all teams and get the one for testing
-    teams = BOACUtils.get_teams
+    teams = NessieUtils.get_asc_teams
     team = BOACUtils.sis_data_team teams
 
     # Create files for test output
@@ -36,7 +36,7 @@ describe 'BOAC' do
     if visible_team_names.include? team.name
       begin
 
-        team_members = BOACUtils.get_team_members(team).sort_by! &:full_name
+        team_members = NessieUtils.get_asc_team_members(team).sort_by! &:full_name
         logger.debug "There are #{team_members.length} total athletes"
         team_members.delete_if { |u| u.status == 'inactive' }
         logger.debug "There are #{team_members.length} active athletes"
