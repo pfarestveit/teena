@@ -6,13 +6,8 @@ describe 'BOAC' do
 
   begin
 
-    # This script is team-driven, so only an ASC advisor can be used
-    advisor = BOACUtils.get_dept_advisors(BOACDepartments::ASC).first
-    team = BOACUtils.class_page_team
-
+    test_config = BOACUtils.get_class_page_test_config
     pages_tested = []
-    students = NessieUtils.get_all_asc_students
-    team_members = NessieUtils.get_asc_team_members(team, students)
 
     courses_csv = Utils.create_test_output_csv('boac-class-page-courses.csv', %w(Term Course Title Format Units))
     meetings_csv =Utils.create_test_output_csv('boac-class-page-meetings.csv', %w(Term Course Instructors Days Time Location))
@@ -24,17 +19,17 @@ describe 'BOAC' do
     @student_page = Page::BOACPages::StudentPage.new @driver
     @class_page = Page::BOACPages::ClassPage.new @driver
 
-    @homepage.dev_auth advisor
+    @homepage.dev_auth test_config.advisor
 
-    BOACUtils.class_page_max_users(team_members).each do |athlete|
+    test_config.max_cohort_members.each do |student|
       begin
 
         api_user_page = ApiUserAnalyticsPage.new @driver
-        api_user_page.get_data(@driver, athlete)
+        api_user_page.get_data(@driver, student)
 
         terms = api_user_page.terms
         if terms.any?
-          @student_page.load_page athlete
+          @student_page.load_page student
           @student_page.click_view_previous_semesters if terms.length > 1
 
           terms.each do |term|
@@ -63,7 +58,7 @@ describe 'BOAC' do
                         logger.info "Checking #{class_test_case}"
 
                         # Check that a class page link is present if the section is primary
-                        @student_page.load_page athlete
+                        @student_page.load_page student
                         @student_page.click_view_previous_semesters if terms.length > 1
                         class_page_link_present = @student_page.verify_block { @student_page.class_page_link(term_id, section_data[:ccn]).when_present 1 }
                         section_data[:primary] ?
@@ -114,11 +109,12 @@ describe 'BOAC' do
 
                           # Check that all student who should appear actually do
                           visible_sids = @class_page.visible_sids.sort
+                          logger.info "Visible student count is #{visible_sids.length}"
                           logger.error "Expecting #{api_section_page.student_sids.sort} but got #{visible_sids}" unless visible_sids == api_section_page.student_sids.sort
                           it("shows the right students for #{class_test_case}") { expect(visible_sids.sort).to eql(api_section_page.student_sids.sort) }
 
                           # Perform further tests on the students who do appear
-                          students = students.select { |s| visible_sids.include? s.sis_id }
+                          students = test_config.all_dept_students.select { |s| visible_sids.include? s.sis_id }
                           expected_student_names = (students.map { |u| "#{u.last_name}, #{u.first_name}" }).sort
                           visible_student_names = (@class_page.list_view_names).sort
                           logger.error "Expecting #{expected_student_names} and got #{visible_student_names}" unless visible_student_names == expected_student_names
@@ -127,21 +123,21 @@ describe 'BOAC' do
 
                           # Collect all the expected class page data for each student in the class
                           all_student_data = []
-                          students.each do |student|
+                          students.each do |dept_student|
 
                             # Load the student's data and find the matching course
                             student_api = ApiUserAnalyticsPage.new @driver
-                            student_api.get_data(@driver, student)
+                            student_api.get_data(@driver, dept_student)
                             term = student_api.terms.find { |t| student_api.term_name(t) == term_name }
                             course = student_api.courses(term).find { |c| student_api.course_display_name(c) == course_sis_data[:code] }
-                            student_squad_names = student.sports.map do |squad_code|
+                            student_squad_names = dept_student.sports.map do |squad_code|
                               squad = Squad::SQUADS.find { |s| s.code == squad_code }
                               squad.name
                             end
 
                             # Collect the student data relevant to the class page
                             student_class_page_data = {
-                              :sid => student.sis_id,
+                              :sid => dept_student.sis_id,
                               :level => student_api.user_sis_data[:level],
                               :majors => student_api.user_sis_data[:majors],
                               :sports => student_squad_names,
@@ -238,28 +234,28 @@ describe 'BOAC' do
                         end
 
                       rescue => e
-                        BOACUtils.log_error_and_screenshot(@driver, e, "#{athlete.uid}-#{term_name}-#{course_sis_data[:code]}")
-                        it("test hit an error with UID #{athlete.uid} term #{term_name} course #{course_sis_data[:code]}") { fail }
+                        BOACUtils.log_error_and_screenshot(@driver, e, "#{student.uid}-#{term_name}-#{course_sis_data[:code]}")
+                        it("test hit an error with UID #{student.uid} term #{term_name} course #{course_sis_data[:code]}") { fail }
                       end
                     end
                   end
 
                 rescue => e
-                  BOACUtils.log_error_and_screenshot(@driver, e, "#{athlete.uid}-#{term_name}-#{course_sis_data[:code]}")
-                  it("test hit an error with UID #{athlete.uid} term #{term_name} course #{course_sis_data[:code]}") { fail }
+                  BOACUtils.log_error_and_screenshot(@driver, e, "#{student.uid}-#{term_name}-#{course_sis_data[:code]}")
+                  it("test hit an error with UID #{student.uid} term #{term_name} course #{course_sis_data[:code]}") { fail }
                 end
               end
 
             rescue => e
-              BOACUtils.log_error_and_screenshot(@driver, e, "#{athlete.uid}-#{term_name}")
-              it("test hit an error with UID #{athlete.uid} term #{term_name}") { fail }
+              BOACUtils.log_error_and_screenshot(@driver, e, "#{student.uid}-#{term_name}")
+              it("test hit an error with UID #{student.uid} term #{term_name}") { fail }
             end
           end
         end
 
       rescue => e
-        BOACUtils.log_error_and_screenshot(@driver, e, "#{athlete.uid}")
-        it("test hit an error with UID #{athlete.uid}") { fail }
+        BOACUtils.log_error_and_screenshot(@driver, e, "#{student.uid}")
+        it("test hit an error with UID #{student.uid}") { fail }
       end
     end
 

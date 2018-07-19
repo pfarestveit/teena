@@ -11,12 +11,9 @@ describe 'BOAC' do
       logger.warn 'This script requires admin Canvas access and cannot be run headless. Terminating.'
 
     else
-      # This script is team-driven, so only an ASC advisor can be used
-      advisor = BOACUtils.get_dept_advisors(BOACDepartments::ASC).first
-      team = BOACUtils.last_activity_team
+
+      test_config = BOACUtils.get_last_activity_test_config
       pages_tested = []
-      students = NessieUtils.get_all_asc_students
-      team_members = NessieUtils.get_asc_team_members(team, students)
 
       # Test Last Activity using the current term rather than past term
       term_to_test = BOACUtils.term
@@ -34,15 +31,15 @@ describe 'BOAC' do
       @student_page = Page::BOACPages::StudentPage.new @driver
 
       @canvas_page.log_in(@cal_net_page, Utils.super_admin_username, Utils.super_admin_password, 'https://bcourses.berkeley.edu')
-      @homepage.dev_auth advisor
+      @homepage.dev_auth test_config.advisor
 
-      team_members.each do |athlete|
+      test_config.max_cohort_members.each do |student|
 
         begin
 
           # Get the user API data for the athlete to determine which courses to check
           api_athlete_page = ApiUserAnalyticsPage.new @driver
-          api_athlete_page.get_data(@driver, athlete)
+          api_athlete_page.get_data(@driver, student)
 
           term = api_athlete_page.terms.find { |t| api_athlete_page.term_name(t) == term_to_test }
 
@@ -69,25 +66,25 @@ describe 'BOAC' do
                       api_section_page.get_data(@driver, term_id, section_data[:ccn])
 
                       all_student_data = []
-                      section_students = students.select { |s| api_section_page.student_uids.include? s.uid }
-                      section_students.each do |student|
+                      section_students = test_config.all_dept_students.select { |s| api_section_page.student_uids.include? s.uid }
+                      section_students.each do |section_student|
 
                         # Collect all the Canvas sites associated with that student in that course and the last activity data in BOAC's API data
                         begin
                           api_student_page = ApiUserAnalyticsPage.new @driver
-                          api_student_page.get_data(@driver, student)
+                          api_student_page.get_data(@driver, section_student)
                           term = api_student_page.terms.find { |t| api_student_page.term_name(t) == term_to_test }
                           student_course = api_student_page.courses(term).find { |c| api_student_page.course_display_name(c) == course_sis_data[:code] }
                           sites = api_student_page.course_sites student_course
 
                           # Load the student page for the student, and collect all the last activity info shown for each relevant site
-                          @student_page.load_page student
+                          @student_page.load_page section_student
                           @student_page.click_view_previous_semesters if term_to_test != BOACUtils.term
                           sleep 2
                           @student_page.expand_course_data(term_to_test, course_sis_data[:code])
 
                           student_data = {
-                            :student => student,
+                            :student => section_student,
                             :sites => (sites.map do |site|
                               {
                                 :site_id => api_student_page.site_metadata(site)[:site_id],
@@ -117,7 +114,7 @@ describe 'BOAC' do
                       unique_site_ids = all_sites_ids.flatten.uniq
                       logger.info "Canvas course site IDs associated with this course are #{unique_site_ids}"
 
-                      testable_users << athlete if unique_site_ids.any?
+                      testable_users << student if unique_site_ids.any?
 
                       # For each student in each site, compare the last activity date shown in the Canvas UI with the date shown on BOAC pages
                       unique_site_ids.each do |site_id|
@@ -188,17 +185,17 @@ describe 'BOAC' do
               end
             end
           else
-            logger.warn "UID #{athlete.uid} has no enrollments in #{term_to_test}"
+            logger.warn "UID #{student.uid} has no enrollments in #{term_to_test}"
           end
 
         rescue => e
           Utils.log_error e
-          it("hit an error with team UID #{athlete.uid}") { fail }
+          it("hit an error with #{test_config.cohort.name} UID #{student.uid}") { fail }
         end
       end
 
       if testable_users.empty?
-        it("has nothing with which to test Last Activity for team #{team.code}") { fail }
+        it("has nothing with which to test Last Activity for #{test_config.cohort.name}") { fail }
       end
     end
   rescue => e

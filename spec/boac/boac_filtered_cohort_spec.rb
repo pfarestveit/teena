@@ -9,7 +9,7 @@ describe 'BOAC', order: :defined do
 
   # Filtered cohort UX differs for admins vs ASC advisors vs CoE advisors. The department determines which advisor will
   # execute the search tests. If it's nil, then admin will execute them.
-  dept = BOACUtils.filtered_cohort_dept
+  dept = BOACUtils.test_dept
   asc_advisor = BOACUtils.get_dept_advisors(BOACDepartments::ASC).first
   coe_advisor = BOACUtils.get_dept_advisors(BOACDepartments::COE).first
   advisor = if dept
@@ -55,8 +55,8 @@ describe 'BOAC', order: :defined do
       @homepage.load_page
       # CoE advisors will always have a 'my students' filtered cohort that cannot be deleted
       (advisor == coe_advisor) ?
-          expect(@homepage.no_filtered_cohorts_msg?).to be false :
-          expect(@homepage.no_filtered_cohorts_msg?).to be true
+          (expect(@homepage.no_filtered_cohorts_msg?).to be false) :
+          (expect(@homepage.no_filtered_cohorts_msg?).to be true)
     end
   end
 
@@ -235,7 +235,7 @@ describe 'BOAC', order: :defined do
 
     it 'shows a Not Found page' do
       @cohort_page.navigate_to "#{BOACUtils.base_url}/cohort?c=#{cohorts.last.id}"
-      @cohort_page.cohort_not_found_msg_element.when_visible Utils.medium_wait
+      @cohort_page.wait_for_title '404'
     end
   end
 

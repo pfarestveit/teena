@@ -18,7 +18,9 @@ module Page
         # @param cohort [FilteredCohort]
         def load_cohort(cohort)
           logger.info "Loading cohort '#{cohort.name}'"
-          navigate_to "#{BOACUtils.base_url}/cohort?c=#{cohort.id}"
+          cohort.instance_of?(Team) ?
+              navigate_to("#{BOACUtils.base_url}/cohort?c=#{cohort.code}") :
+              navigate_to("#{BOACUtils.base_url}/cohort?c=#{cohort.id}")
           wait_for_title cohort.name
         end
 

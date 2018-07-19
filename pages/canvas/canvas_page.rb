@@ -542,6 +542,7 @@ module Page
       logger.debug "Trying to load #{total_count} students and wait list students"
       wait_until(Utils.short_wait) { user_row_elements.any? }
       initial_count = user_row_elements.length
+      scroll_to_bottom
       if initial_count >= total_count
         logger.debug 'All users are currently visible'
       else
