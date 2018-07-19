@@ -168,19 +168,16 @@ class NessieUtils < Utils
     Utils.query_redshift_db(nessie_db_credentials, query)
   end
 
-  # Returns an array of users for all CoE students. If ASC students are given, then overlapping ASC-CoE students
-  # will be merged so that their ASC data can be included in their attributes.
+  # Returns an array of users for all CoE students. Overlapping ASC-CoE students are added with their ASC attributes so that
+  # the visibility of inactive, etc can be tested.
   # @param [Array<User>]
   # @return [Array<User>]
   def self.get_all_coe_students(asc_students = nil)
     coe_students = student_result_to_users query_all_coe_students
-    if asc_students
-      coe_students.map do |coe|
-        match = asc_students.find { |asc| asc.sis_id == coe.sis_id }
-        match ? match : coe
-      end
-    else
-      coe_students
+    asc = asc_students ? asc_students : get_all_asc_students
+    coe_students.map do |coe|
+      match = asc.find { |a| a.sis_id == coe.sis_id }
+      match ? match : coe
     end
   end
 
@@ -188,14 +185,15 @@ class NessieUtils < Utils
   # @param advisor [User]
   # @param all_coe_students [Array<User>]
   # @return [Array<User>]
-  def self.get_coe_advisor_students(advisor, all_coe_students)
+  def self.get_coe_advisor_students(advisor, all_coe_students = nil)
     query = "SELECT students.sid
               FROM boac_advising_coe.students
               WHERE students.advisor_ldap_uid = '#{advisor.uid}'
               ORDER BY students.sid;"
     result = Utils.query_redshift_db(nessie_db_credentials, query)
     result = result.map { |r| r['sid'] }
-    all_coe_students.select { |s| result.include? s.sis_id }
+    all = all_coe_students ? all_coe_students : get_all_coe_students
+    all.select { |s| result.include? s.sis_id }
   end
 
 end

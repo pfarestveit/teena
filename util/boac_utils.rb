@@ -27,10 +27,9 @@ class BOACUtils < Utils
     @config['term_code']
   end
 
-  # Returns the semester to use for testing Data Loch analytics
-  # @return [String]
-  def self.analytics_term
-    @config['analytics_term']
+  # Returns the UID of a CoE advisor for testing
+  def self.test_coe_advisor_uid
+    @config['test_coe_advisor_uid']
   end
 
   # Whether or not to check tooltips during tests. Checking tooltips slows down test execution.
@@ -48,61 +47,93 @@ class BOACUtils < Utils
     @config['nessie_assignments']
   end
 
+  # Returns test data and configuration specific to a cohort-driven test script run, driven primarily by the department configured
+  # for testing.
+  # @param team_config [String]
+  # @param max_users_config [String]
+  # @return [BOACTestConfig]
+  def self.cohort_driven_test_config(team_config, max_users_config)
+
+    # The department determines many of the other config options
+    dept = test_dept
+
+    # Select an advisor from the department being tested
+    advisor = case dept
+                when BOACDepartments::ASC
+                  get_dept_advisors(dept).first
+                when BOACDepartments::COE
+                  test_coe_advisor_uid ? (get_dept_advisors(dept).find { |a| a.uid.to_i == test_coe_advisor_uid }) : get_dept_advisors(dept).first
+                else
+                  logger.error 'Admin user is not supported for this test, quitting'
+                  fail
+              end
+
+    # Use a team as a pre-existing cohort for ASC tests
+    if dept == BOACDepartments::ASC
+      all_dept_students = NessieUtils.get_all_asc_students
+      cohort = NessieUtils.get_asc_teams.find { |t| t.code == team_config }
+      cohort_members = NessieUtils.get_asc_team_members cohort
+
+    # Use a 'my students' cohort for CoE tests
+    else
+      all_dept_students = NessieUtils.get_all_coe_students
+      cohort = get_user_filtered_cohorts(advisor).find { |c| c.read_only }
+      cohort_members = NessieUtils.get_coe_advisor_students advisor
+    end
+
+    # Limit the number of students tested to avoid endless test runs
+    max_cohort_members = cohort_members[0..(max_users_config - 1)]
+
+    # Use a specific term for Canvas data tests
+    assignments_term = @config['assignments_term']
+
+    config = {
+      :id=> get_test_id,
+      :dept => dept,
+      :advisor => advisor,
+      :all_dept_students => all_dept_students,
+      :cohort => cohort,
+      :cohort_members => cohort_members,
+      :max_cohort_members => max_cohort_members,
+      :term => assignments_term
+    }
+    test_config = BOACTestConfig.new(config)
+    logger.info "Test ID is #{test_config.id}, department is #{test_config.dept.code}, advisor UID is #{test_config.advisor.uid}, cohort member count is #{test_config.cohort_members.length}, and to be tested is #{test_config.max_cohort_members.length}"
+    test_config
+  end
+
+  def self.get_assignments_test_config
+    cohort_driven_test_config(@config['assignments_team'], @config['assignments_max_users'])
+  end
+
+  def self.get_class_page_test_config
+    cohort_driven_test_config(@config['class_page_team'], @config['class_page_max_users'])
+  end
+
+  def self.get_curated_cohort_test_config
+    cohort_driven_test_config(@config['curated_cohort_team'], @config['curated_cohort_max_users'])
+  end
+
+  def self.get_last_activity_test_config
+    cohort_driven_test_config(@config['last_activity_team'], @config['last_activity_max_users'])
+  end
+
+  def self.get_user_search_test_config
+    cohort_driven_test_config(@config['user_search_team'], @config['user_search_max_users'])
+  end
+
   # The advisor department to use for tests that can run with different departments
-  def self.filtered_cohort_dept
-    BOACDepartments::DEPARTMENTS.find { |d| d.code == @config['filtered_cohort_dept'] }
+  def self.test_dept
+    BOACDepartments::DEPARTMENTS.find { |d| d.code == @config['test_dept'] }
   end
 
-  # Looping, team-driven class page tests can take a very long time to execute depending how many members there are. This config limits
-  # the number of members tested to the first X.
-  def self.class_page_max_users(users)
-    max = @config['class_page_max_users']
-    users[0..(max - 1)]
-  end
-
-  # Looping, team-driven assignment submission and grades tests can take a very long time to execute depending how many members there are.
-  # This config limits the number of members tested to the first X.
-  def self.assignments_max_users(users)
-    max = @config['assignments_max_users']
-    users[0..(max - 1)]
+  def self.sis_data_team
+    @config['sis_data_team']
   end
 
   # The number of days that synced Canvas data is behind actual site usage data
   def self.canvas_data_lag_days
     @config['canvas_data_lag_days']
-  end
-
-  # The team to use for testing Canvas assignments data, which should not be the same as the team used for testing Canvas
-  # last activity data
-  def self.assignments_team
-    NessieUtils.get_asc_teams.find { |t| t.code == @config['assignments_team'] }
-  end
-
-  # The team to use for testing BOAC class pages
-  def self.class_page_team
-    NessieUtils.get_asc_teams.find { |t| t.code == @config['class_page_team'] }
-  end
-
-  # The team to use for testing BOAC curated cohorts
-  def self.curated_cohort_team
-    NessieUtils.get_asc_teams.find { |t| t.code == @config['curated_cohort_team'] }
-  end
-
-  # The team to use for testing Canvas last activity data
-  # assignments data
-  def self.last_activity_team
-    NessieUtils.get_asc_teams.find { |t| t.code == @config['last_activity_team'] }
-  end
-
-  # The team to use for testing user search
-  def self.user_search_team
-    NessieUtils.get_asc_teams.find { |t| t.code == @config['user_search_team'] }
-  end
-
-  # The team to use for testing SIS data
-  def self.sis_data_team(teams = nil)
-    all_teams = teams ? teams : NessieUtils.get_asc_teams
-    all_teams.find { |t| t.code == @config['sis_data_team'] }
   end
 
   # Logs error, prints stack trace, and saves a screenshot when running headlessly
@@ -215,7 +246,7 @@ class BOACUtils < Utils
   def self.get_user_filtered_cohorts(user)
     query = "SELECT cohort_filters.id AS cohort_id,
                     cohort_filters.label AS cohort_name,
-                    cohort_filters.filter_criteria AS criteria
+                    cohort_filters.filter_criteria->>'coeAdvisorUid' AS criteria
               FROM cohort_filters
               JOIN cohort_filter_owners ON cohort_filter_owners.cohort_filter_id = cohort_filters.id
               JOIN authorized_users ON authorized_users.id = cohort_filter_owners.user_id
@@ -223,7 +254,7 @@ class BOACUtils < Utils
     results = Utils.query_pg_db(boac_db_credentials, query)
     # If the filter criteria includes a non-null CoE advisor UID, then the filter is read-only (no deleting).
     results.map do |r|
-      FilteredCohort.new({id: r['cohort_id'], name: r['cohort_name'], owner_uid: user.uid, read_only: (!r['criteria'].include?('"coeAdvisorUid": null'))})
+      FilteredCohort.new({id: r['cohort_id'], name: r['cohort_name'], owner_uid: user.uid, read_only: (!r['criteria'].nil?)})
     end
   end
 

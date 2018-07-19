@@ -37,7 +37,6 @@ boac:
   password: secret
   term: Summer 2018
   term_code: 2185
-  analytics_term: Spring 2018
   db_host: secret
   db_port: secret
   db_name: secret
@@ -47,15 +46,28 @@ boac:
   nessie_scores: true
   nessie_assignments: true
   canvas_data_lag_days: 1
+
+  test_dept: UWASC
+  test_coe_advisor_uid: 123456
+
   assignments_team: GOM
   assignments_max_users: 10
+  assignments_term: Spring 2018
+
   class_page_team: GOW
   class_page_max_users: 5
+
   curated_cohort_team: BAM
-  filtered_cohort_dept: UWASC
+  curated_cohort_max_users: 51
+
   last_activity_team: TNM
+  last_activity_max_users: 3
+
   sis_data_team: FBM
+  sis_data_max_users: 100
+
   user_search_team: TNW
+  user_search_max_users: 50
 
 cal_net:
   base_url: https://auth-test.berkeley.edu

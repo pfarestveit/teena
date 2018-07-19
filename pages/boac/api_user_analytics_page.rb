@@ -10,6 +10,7 @@ class ApiUserAnalyticsPage
     navigate_to "#{BOACUtils.base_url}/api/user/#{user.uid}/analytics"
     wait_until(Utils.long_wait) { driver.find_element(xpath: '//pre') }
     @parsed = JSON.parse driver.find_element(xpath: '//pre').text
+    (@parsed['message'] == 'Unknown student') ? logger.error("BOAC does not recognize UID #{user.uid}!") : @parsed
   end
 
   # Canvas Profile
@@ -21,7 +22,7 @@ class ApiUserAnalyticsPage
   # SIS Profile
 
   def sis_profile
-    @parsed['sisProfile']
+    @parsed && @parsed['sisProfile']
   end
 
   def user_sis_data
@@ -29,7 +30,7 @@ class ApiUserAnalyticsPage
       :preferred_name => (sis_profile && sis_profile['preferredName']),
       :email => (sis_profile && sis_profile['emailAddress']),
       :phone => (sis_profile && sis_profile['phoneNumber'].to_s),
-      :units_in_progress => (current_term ? formatted_units(current_term['enrolledUnits']) : '0') ,
+      :units_in_progress => (sis_profile && (current_term ? formatted_units(current_term['enrolledUnits']) : '0')),
       :cumulative_units => (sis_profile && formatted_units(sis_profile['cumulativeUnits'])),
       :cumulative_gpa => (sis_profile && (sis_profile['cumulativeGPA'] == 0 ? '--' : sis_profile['cumulativeGPA'].to_s)),
       :majors => (sis_profile && majors),

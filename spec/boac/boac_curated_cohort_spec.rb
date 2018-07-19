@@ -4,28 +4,27 @@ describe 'BOAC', order: :defined do
 
   include Logging
 
-  test_id = Utils.get_test_id
-  advisor = BOACUtils.get_dept_advisors(BOACDepartments::ASC).first
+  test_config = BOACUtils.get_curated_cohort_test_config
+
   advisor_cohorts = []
-  other_advisor = BOACUtils.get_authorized_users.find { |u| u.uid != advisor.uid }
-  pre_existing_cohorts = BOACUtils.get_user_curated_cohorts advisor
-  team = BOACUtils.curated_cohort_team
-  students = NessieUtils.get_asc_team_members(team).delete_if { |s| s.status == 'inactive' }
+  other_advisor = BOACUtils.get_authorized_users.find { |u| u.uid != test_config.advisor.uid }
+  pre_existing_cohorts = BOACUtils.get_user_curated_cohorts test_config.advisor
+  students = test_config.cohort_members.delete_if { |s| s.status == 'inactive' }
 
   before(:all) do
     @driver = Utils.launch_browser
 
-    @cohort_1 = CuratedCohort.new({:name => "Cohort 1 #{test_id}"})
-    @cohort_2 = CuratedCohort.new({:name => "Cohort 2 #{test_id}"})
-    @cohort_3 = CuratedCohort.new({:name => "Cohort 3 #{test_id}"})
-    @cohort_4 = CuratedCohort.new({:name => "Cohort 4 #{test_id}"})
+    @cohort_1 = CuratedCohort.new({:name => "Cohort 1 #{test_config.id}"})
+    @cohort_2 = CuratedCohort.new({:name => "Cohort 2 #{test_config.id}"})
+    @cohort_3 = CuratedCohort.new({:name => "Cohort 3 #{test_config.id}"})
+    @cohort_4 = CuratedCohort.new({:name => "Cohort 4 #{test_config.id}"})
 
     @analytics_page = ApiUserAnalyticsPage.new @driver
     @homepage = Page::BOACPages::HomePage.new @driver
     @curated_page = Page::BOACPages::CohortPages::CuratedCohortListViewPage.new @driver
     @filtered_page = Page::BOACPages::CohortPages::FilteredCohortListViewPage.new @driver
     @student_page = Page::BOACPages::StudentPage.new @driver
-    @homepage.dev_auth advisor
+    @homepage.dev_auth test_config.advisor
   end
 
   after(:all) { Utils.quit_browser @driver }
@@ -42,11 +41,11 @@ describe 'BOAC', order: :defined do
     # Some 'create' links only appear when there are no other curated cohorts, so get rid of existing ones prior to each example
     before(:all) do
       @cohorts_created = []
-      @disposable_cohort_1 = CuratedCohort.new({:name => "Homepage Create-a-new-curated-cohort link #{test_id}"})
-      @disposable_cohort_2 = CuratedCohort.new({:name => "Homepage Create link #{test_id}"})
-      @disposable_cohort_3 = CuratedCohort.new({:name => "Sidebar + link #{test_id}"})
-      @disposable_cohort_4 = CuratedCohort.new({:name => "Manage Curated Cohorts Create-a-new-curated-cohort link #{test_id}"})
-      @disposable_cohort_5 = CuratedCohort.new({:name => "Filtered cohort list view curated cohort selector #{test_id}"})
+      @disposable_cohort_1 = CuratedCohort.new({:name => "Homepage Create-a-new-curated-cohort link #{test_config.id}"})
+      @disposable_cohort_2 = CuratedCohort.new({:name => "Homepage Create link #{test_config.id}"})
+      @disposable_cohort_3 = CuratedCohort.new({:name => "Sidebar + link #{test_config.id}"})
+      @disposable_cohort_4 = CuratedCohort.new({:name => "Manage Curated Cohorts Create-a-new-curated-cohort link #{test_config.id}"})
+      @disposable_cohort_5 = CuratedCohort.new({:name => "Filtered cohort list view curated cohort selector #{test_config.id}"})
     end
 
     before(:each) do
@@ -77,7 +76,7 @@ describe 'BOAC', order: :defined do
     end
 
     it 'can be done using the filtered cohort list view curated cohort selector' do
-      @filtered_page.load_team_page team
+      @filtered_page.load_cohort test_config.cohort
       @filtered_page.selector_add_students_to_new_curated(students, @disposable_cohort_5)
       @cohorts_created << @disposable_cohort_5
     end
@@ -93,14 +92,14 @@ describe 'BOAC', order: :defined do
 
       @homepage.load_page
 
-      @existing_curated_cohort = CuratedCohort.new({:name => "Existing Curated Cohort #{test_id}"})
+      @existing_curated_cohort = CuratedCohort.new({:name => "Existing Curated Cohort #{test_config.id}"})
       @homepage.sidebar_create_curated @existing_curated_cohort
 
-      @deleted_curated_cohort = CuratedCohort.new({:name => "Deleted Curated Cohort #{test_id}"})
+      @deleted_curated_cohort = CuratedCohort.new({:name => "Deleted Curated Cohort #{test_config.id}"})
       @homepage.sidebar_create_curated @deleted_curated_cohort
       @curated_page.delete_curated @deleted_curated_cohort
 
-      @existing_filtered_cohort = FilteredCohort.new({:name => "Existing Filtered Cohort #{test_id}", :search_criteria => BOACUtils.get_test_search_criteria.first})
+      @existing_filtered_cohort = FilteredCohort.new({:name => "Existing Filtered Cohort #{test_config.id}", :search_criteria => BOACUtils.get_test_search_criteria.first})
       @curated_page.click_sidebar_create_filtered
       @filtered_page.perform_search @existing_filtered_cohort
       @filtered_page.create_new_cohort @existing_filtered_cohort
@@ -164,13 +163,13 @@ describe 'BOAC', order: :defined do
     end
 
     it 'can be added from filtered cohort list view using select-all' do
-      @filtered_page.load_team_page team
+      @filtered_page.load_cohort test_config.cohort
       @filtered_page.selector_add_all_students_to_curated @cohort_1
     end
 
     it 'can be added from filtered cohort list view using individual selections' do
       students.pop
-      @filtered_page.load_team_page team
+      @filtered_page.load_cohort test_config.cohort
       @filtered_page.selector_add_students_to_curated(students, @cohort_2)
     end
 

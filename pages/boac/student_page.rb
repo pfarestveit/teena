@@ -206,9 +206,11 @@ module Page
       # @param ccn [Integer]
       def click_class_page_link(term_code, ccn)
         logger.info "Clicking link for term #{term_code} section #{ccn}"
+        start = Time.now
         wait_for_load_and_click class_page_link(term_code, ccn)
         wait_for_spinner
         div_element(class: 'course-column-schedule').when_visible Utils.short_wait
+        logger.warn "Took #{Time.now - start} seconds for the term #{term_code} section #{ccn} page to load"
       end
 
       # Returns the SIS data shown for a course with a given course code
