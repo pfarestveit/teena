@@ -41,10 +41,18 @@ class NessieUtils < Utils
   def self.student_result_to_users(student_result)
     # If a user has multiple sports, they will be on multiple rows and should be merged. The 'status' refers to active or inactive athletes.
     students = student_result.group_by { |h1| h1['uid'] }.map do |k,v|
+      # Athletes with two sports can be active in one and inactive in the other. Drop the inactive sport altogether.
+      if v.length > 1 && (%w(t f) & (v.map { |i| i['status'] }) == %w(t f))
+        v.delete_if { |r| r['status'] == 'f' }
+      end
+      # ASC status only applies to athletes
+      status = if v[0]['status']
+                 (v.map { |i| i['status'] }).include?('t') ? 'active' : 'inactive'
+               end
       {
         :uid => k,
         :sid => v[0]['sid'],
-        :status => ((v[0]['status'] == 't' ? 'active' : 'inactive') if v[0]['status']),
+        :status => status,
         :first_name => v[0]['first_name'],
         :last_name => v[0]['last_name'],
         :group_code => v.map { |h2| h2['group_code'] }.join(' ')
@@ -95,7 +103,8 @@ class NessieUtils < Utils
   # Returns all ASC students
   # @return [PG::Result]
   def self.query_all_asc_students
-    query = 'SELECT students.sid AS sid,
+    env = nessie_db_credentials[:name][7..-1]
+    query = "SELECT students.sid AS sid,
                     students.intensive AS intensive,
                     students.active AS status,
                     students.group_code AS group_code,
@@ -103,8 +112,8 @@ class NessieUtils < Utils
                     persons.first_name AS first_name,
                     persons.last_name AS last_name
              FROM boac_advising_asc.students
-             JOIN calnet_ext_dev.persons ON calnet_ext_dev.persons.sid = boac_advising_asc.students.sid
-             ORDER BY students.sid;'
+             JOIN calnet_ext_#{env}.persons ON calnet_ext_#{env}.persons.sid = boac_advising_asc.students.sid
+             ORDER BY students.sid;"
     Utils.query_redshift_db(nessie_db_credentials, query)
   end
 
@@ -117,7 +126,7 @@ class NessieUtils < Utils
   # Returns an array of users for intensive ASC students only
   # @return [Array<User>]
   def self.get_intensive_asc_students
-    results = query_all_asc_students.select { |a| a['intensive'] == 'TRUE' }
+    results = query_all_asc_students.select { |a| a['intensive'] == 't' }
     student_result_to_users results
   end
 
@@ -158,13 +167,14 @@ class NessieUtils < Utils
   # Returns all CoE students
   # @return [PG::Result]
   def self.query_all_coe_students
-    query = 'SELECT students.sid AS sid,
+    env = nessie_db_credentials[:name][7..-1]
+    query = "SELECT students.sid AS sid,
                     persons.ldap_uid AS uid,
                     persons.first_name AS first_name,
                     persons.last_name AS last_name
              FROM boac_advising_coe.students
-             JOIN calnet_ext_dev.persons ON calnet_ext_dev.persons.sid = boac_advising_coe.students.sid
-             ORDER BY students.sid;'
+             JOIN calnet_ext_#{env}.persons ON calnet_ext_#{env}.persons.sid = boac_advising_coe.students.sid
+             ORDER BY students.sid;"
     Utils.query_redshift_db(nessie_db_credentials, query)
   end
 

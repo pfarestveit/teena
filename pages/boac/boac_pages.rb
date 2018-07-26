@@ -10,6 +10,7 @@ module Page
 
     link(:home_link, text: 'Home')
     button(:header_dropdown, id: 'header-dropdown-under-name')
+    link(:admin_link, text: 'Admin')
     link(:log_out_link, text: 'Log Out')
     link(:feedback_link, text: 'Feedback/Help')
     div(:spinner, class: 'loading-spinner-large')
@@ -27,13 +28,25 @@ module Page
       wait_for_load_and_click home_link_element
     end
 
-    # Clicks the 'Log out' button in the header
-    def log_out
-      logger.info 'Logging out'
+    # Clicks the header name button to reveal additional links
+    def click_header_dropdown
       sleep 3
       wait_for_update_and_click_js header_dropdown_element
+    end
+
+    # Clicks the 'Log out' link in the header
+    def log_out
+      logger.info 'Logging out'
+      click_header_dropdown
       wait_for_update_and_click_js log_out_link_element
       wait_for_title 'Welcome'
+    end
+
+    # Clicks the 'Admin' link in the header
+    def click_admin_link
+      click_header_dropdown
+      wait_for_update_and_click_js admin_link_element
+      wait_for_title 'Admin'
     end
 
     # Waits for the spinner to vanish following a page load
@@ -193,6 +206,7 @@ module Page
     link(:team_list_link, id: 'sidebar-teams-link')
     link(:intensive_cohort_link, text: 'Intensive Students')
     link(:inactive_cohort_link, text: 'Inactive Students')
+    link(:my_students_link, text: 'My Students')
     elements(:filtered_cohort_link, :link, xpath: '//div[@data-ng-repeat="cohort in myCohorts"]//a')
 
     # Clicks the button to create a new custom cohort
@@ -223,13 +237,19 @@ module Page
     # Clicks the link for the Inactive cohort
     def click_inactive_cohort
       wait_for_load_and_click inactive_cohort_link_element
-      wait_for_title 'Search'
+      wait_for_title 'Inactive'
     end
 
     # Clicks the button to view all custom cohorts
     def click_view_everyone_cohorts
       wait_for_load_and_click view_everyone_cohorts_link_element
       wait_for_title 'Cohorts'
+    end
+
+    # Clicks the link for My Students
+    def click_my_students
+      wait_for_load_and_click my_students_link_element
+      wait_for_title 'My Students'
     end
 
     # Clicks the sidebar link to a filtered cohort
@@ -292,13 +312,14 @@ module Page
 
     elements(:page_list_item, :list_item, xpath: '//li[contains(@ng-repeat,"page in pages")]')
     elements(:page_link, :link, xpath: '//a[contains(@ng-click, "selectPage")]')
+    elements(:page_ellipsis_link, :link, xpath: '//a[contains(@ng-click, "selectPage")][text()="..."]')
     elements(:results_page_link, :class => 'pagination-page')
 
     # Returns the page link element for a given page number
     # @param number [Integer]
     # @return [PageObject::Elements::Link]
     def list_view_page_link(number)
-      page_link_elements.find { |el| el.text == "#{number}" }
+      link_element(xpath: "//a[contains(@ng-click, 'selectPage')][text()='#{number}']")
     end
 
     # Returns the current page in list view
@@ -336,6 +357,7 @@ module Page
         start_time = Time.now
         wait_until(Utils.medium_wait) { list_view_sids.any? }
         logger.debug "Took #{Time.now - start_time} seconds for users to appear"
+        sleep 1
       rescue
         logger.warn 'There are no students listed.'
       end
@@ -366,17 +388,21 @@ module Page
       wait_for_student_list
       visible_sids = []
       sleep 2
-      page_count = results_page_link_elements.length
-      if page_count.zero?
+      page_count = results_page_link_elements.any? ? results_page_link_elements.last.text.to_i : 1
+      page = 1
+      if page_count == 1
         logger.debug 'There is 1 page'
         visible_sids << list_view_sids
       else
         logger.debug "There are #{page_count} pages"
-        page_count.times do |page|
+        visible_sids << list_view_sids
+        (page_count - 1).times do
           start_time = Time.now
           page += 1
           logger.debug "Clicking page #{page}"
-          wait_for_update_and_click list_view_page_link(page)
+          list_view_page_link(page).exists? ?
+              (wait_for_update_and_click list_view_page_link(page)) :
+              (wait_for_update_and_click page_ellipsis_link_elements.last)
           sleep 1
           wait_until(Utils.medium_wait) { player_link_elements.any? }
           logger.warn "Page #{page} took #{Time.now - start_time} seconds to load" unless page == 1

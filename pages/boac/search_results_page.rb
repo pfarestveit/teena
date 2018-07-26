@@ -57,6 +57,13 @@ module Page
         end
       end
 
+      # Clicks the search results row for a given student
+      # @param student [User]
+      def click_student_result(student)
+        wait_for_update_and_click div_element(xpath: "//div[contains(@class,'group-summary-row')][contains(.,'#{student.sis_id}')]//a")
+        wait_for_spinner
+      end
+
     end
   end
 end

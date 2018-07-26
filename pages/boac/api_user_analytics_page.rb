@@ -10,13 +10,24 @@ class ApiUserAnalyticsPage
     navigate_to "#{BOACUtils.base_url}/api/user/#{user.uid}/analytics"
     wait_until(Utils.long_wait) { driver.find_element(xpath: '//pre') }
     @parsed = JSON.parse driver.find_element(xpath: '//pre').text
-    (@parsed['message'] == 'Unknown student') ? logger.error("BOAC does not recognize UID #{user.uid}!") : @parsed
+    if @parsed['message'] == 'Unknown student'
+      logger.error "BOAC does not recognize UID #{user.uid}!"
+      nil
+    else
+      @parsed
+    end
   end
 
   # Canvas Profile
 
   def set_canvas_id(user)
     user.canvas_id = @parsed['canvasUserId']
+  end
+
+  # Athletics Profile
+
+  def asc_profile
+    @parsed['athleticsProfile']
   end
 
   # SIS Profile

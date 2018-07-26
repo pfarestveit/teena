@@ -9,7 +9,11 @@ describe 'BOAC', order: :defined do
   advisor_cohorts = []
   other_advisor = BOACUtils.get_authorized_users.find { |u| u.uid != test_config.advisor.uid }
   pre_existing_cohorts = BOACUtils.get_user_curated_cohorts test_config.advisor
-  students = test_config.cohort_members.delete_if { |s| s.status == 'inactive' }
+  test_config.cohort_members.delete_if { |s| s.status == 'inactive' }
+  if test_config.dept == BOACDepartments::COE
+    test_config.cohort_members = test_config.cohort_members[0..49]
+    test_config.cohort.name = 'My Students'
+  end
 
   before(:all) do
     @driver = Utils.launch_browser
@@ -77,7 +81,9 @@ describe 'BOAC', order: :defined do
 
     it 'can be done using the filtered cohort list view curated cohort selector' do
       @filtered_page.load_cohort test_config.cohort
-      @filtered_page.selector_add_students_to_new_curated(students, @disposable_cohort_5)
+      @filtered_page.wait_for_student_list
+      test_config.cohort_members.keep_if { |m| @filtered_page.list_view_sids.include? m.sis_id }
+      @filtered_page.selector_add_students_to_new_curated(test_config.cohort_members, @disposable_cohort_5)
       @cohorts_created << @disposable_cohort_5
     end
 
@@ -99,7 +105,7 @@ describe 'BOAC', order: :defined do
       @homepage.sidebar_create_curated @deleted_curated_cohort
       @curated_page.delete_curated @deleted_curated_cohort
 
-      @existing_filtered_cohort = FilteredCohort.new({:name => "Existing Filtered Cohort #{test_config.id}", :search_criteria => BOACUtils.get_test_search_criteria.first})
+      @existing_filtered_cohort = FilteredCohort.new({:name => "Existing Filtered Cohort #{test_config.id}", :search_criteria => CohortSearchCriteria.new({:levels => ['Freshman']})})
       @curated_page.click_sidebar_create_filtered
       @filtered_page.perform_search @existing_filtered_cohort
       @filtered_page.create_new_cohort @existing_filtered_cohort
@@ -168,13 +174,13 @@ describe 'BOAC', order: :defined do
     end
 
     it 'can be added from filtered cohort list view using individual selections' do
-      students.pop
+      test_config.cohort_members.pop
       @filtered_page.load_cohort test_config.cohort
-      @filtered_page.selector_add_students_to_curated(students, @cohort_2)
+      @filtered_page.selector_add_students_to_curated(test_config.cohort_members, @cohort_2)
     end
 
     it 'can be added on the student page using the curated cohort box' do
-      student = students.last
+      student = test_config.cohort_members.last
       @student_page.load_page student
       @student_page.add_student_to_curated(student, @cohort_3)
     end
@@ -192,7 +198,7 @@ describe 'BOAC', order: :defined do
     end
 
     it 'is shown on the student page' do
-      @student_page.load_page students.last
+      @student_page.load_page test_config.cohort_members.last
       @student_page.wait_until(Utils.short_wait) { @student_page.curated_selected? @cohort_1 }
       expect(@student_page.curated_selected? @cohort_2).to be true
       expect(@student_page.curated_selected? @cohort_3).to be true
@@ -200,13 +206,13 @@ describe 'BOAC', order: :defined do
     end
 
     it 'can be removed on the curated cohort list view page' do
-      student = students.last
+      student = test_config.cohort_members.last
       @curated_page.load_page @cohort_2
       @curated_page.curated_remove_student(student, @cohort_2)
     end
 
     it 'can be removed on the student page using the curated cohort box' do
-      student = students.first
+      student = test_config.cohort_members.first
       @student_page.load_page student
       @student_page.remove_student_from_curated(student, @cohort_1)
     end

@@ -9,6 +9,8 @@ describe 'BOAC' do
     test_config = BOACUtils.get_class_page_test_config
     pages_tested = []
 
+    all_dept_student_sids = test_config.all_dept_students.map &:sis_id
+
     courses_csv = Utils.create_test_output_csv('boac-class-page-courses.csv', %w(Term Course Title Format Units))
     meetings_csv =Utils.create_test_output_csv('boac-class-page-meetings.csv', %w(Term Course Instructors Days Time Location))
     students_sis_csv = Utils.create_test_output_csv('boac-class-page-student-sis.csv', %w(Term Course SID Level Majors Sports MidPoint Basis Grade))
@@ -112,6 +114,9 @@ describe 'BOAC' do
                           logger.info "Visible student count is #{visible_sids.length}"
                           logger.error "Expecting #{api_section_page.student_sids.sort} but got #{visible_sids}" unless visible_sids == api_section_page.student_sids.sort
                           it("shows the right students for #{class_test_case}") { expect(visible_sids.sort).to eql(api_section_page.student_sids.sort) }
+
+                          # Check that only students who should be visible to the advisor appear on the page
+                          it("shows only #{test_config.dept.name} students for #{class_test_case}") { expect(all_dept_student_sids & visible_sids).to eql(visible_sids) }
 
                           # Perform further tests on the students who do appear
                           students = test_config.all_dept_students.select { |s| visible_sids.include? s.sis_id }

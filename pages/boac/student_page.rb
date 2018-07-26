@@ -13,6 +13,8 @@ module Page
 
       link(:return_to_cohort, xpath: '//a[contains(.,"Return to cohort")]')
 
+      h1(:not_found_msg, xpath: '//h1[text()="Not Found"]')
+
       h2(:preferred_name, :class => 'student-preferred-name')
       span(:phone, xpath: '//span[@data-ng-bind="student.sisProfile.phoneNumber"]')
       link(:email, xpath: '//a[@data-ng-bind="student.sisProfile.emailAddress"]')
@@ -97,15 +99,15 @@ module Page
       # @return [Hash]
       def visible_sis_data
         {
-          :name => student_name_heading,
+          :name => (student_name_heading if student_name_heading?),
           :preferred_name => (preferred_name if preferred_name?),
-          :email => email_element.text,
-          :phone => phone,
-          :cumulative_units => cumulative_units,
-          :cumulative_gpa => cumulative_gpa,
+          :email => (email_element.text if email?),
+          :phone => (phone if phone?),
+          :cumulative_units => (cumulative_units if cumulative_units?),
+          :cumulative_gpa => (cumulative_gpa if cumulative_gpa?),
           :majors => (major_elements.map &:text),
           :colleges => (college_elements.map &:text),
-          :level => level,
+          :level => (level if level?),
           :terms_in_attendance => (terms_in_attendance if terms_in_attendance?),
           :expected_graduation => (expected_graduation if expected_graduation?),
           :reqt_writing => (writing_reqt.strip if writing_reqt_element.exists?),

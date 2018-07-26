@@ -28,7 +28,10 @@ describe 'BOAC', order: :defined do
     test_search_criteria.each { |c| c.squads = nil }
     test_search_criteria.keep_if { |c| [c.levels, c.majors, c.gpa_ranges, c.units].compact.any? }
   end
+
+  # Get a list of the advisor's pre-existing cohorts and the ones to be created during the tests.
   cohorts = test_search_criteria.map { |criteria| FilteredCohort.new({:name => "Test Cohort #{test_search_criteria.index criteria} #{test_id}", :search_criteria => criteria}) }
+  pre_existing_cohorts = BOACUtils.get_user_filtered_cohorts advisor
 
   before(:all) do
     @driver = Utils.launch_browser
@@ -48,7 +51,7 @@ describe 'BOAC', order: :defined do
 
     before(:all) do
       @homepage.load_page
-      BOACUtils.get_user_filtered_cohorts(advisor).each { |c| @cohort_page.delete_cohort c }
+      pre_existing_cohorts.each { |c| @cohort_page.delete_cohort(cohorts, c) }
     end
 
     it('shows a No Filtered Cohorts message on the homepage') do
@@ -64,23 +67,21 @@ describe 'BOAC', order: :defined do
 
     before(:each) { @cohort_page.cancel_cohort if @cohort_page.cancel_cohort_button? }
 
+    it "shows only filters available to #{dept.name}" do
+      @cohort_page.click_sidebar_create_filtered
+      @cohort_page.wait_until(Utils.short_wait) { @cohort_page.level_option_elements.any? }
+      (dept == BOACDepartments::ASC) ?
+          (expect(@cohort_page.squad_filter_button?).to be true) :
+          (expect(@cohort_page.squad_filter_button?).to be false)
+    end
+
     cohorts.each do |cohort|
-      it "shows all the students who match sports '#{cohort.search_criteria.squads && (cohort.search_criteria.squads.map &:name)}', levels '#{cohort.search_criteria.levels}', majors '#{cohort.search_criteria.majors}', GPA ranges '#{cohort.search_criteria.gpa_ranges}', units '#{cohort.search_criteria.units}'" do
+      it "shows all the students sorted by Last Name who match sports '#{cohort.search_criteria.squads && (cohort.search_criteria.squads.map &:name)}', levels '#{cohort.search_criteria.levels}', majors '#{cohort.search_criteria.majors}', GPA ranges '#{cohort.search_criteria.gpa_ranges}', units '#{cohort.search_criteria.units}'" do
         @cohort_page.click_sidebar_create_filtered
         @cohort_page.perform_search(cohort, performance_data)
-        expected_results = @cohort_page.expected_search_results(@searchable_students, cohort.search_criteria).map { |u| u[:sid] }
+        expected_results = @cohort_page.expected_sids_by_last_name(@searchable_students, cohort.search_criteria)
         visible_results = cohort.member_count.zero? ? [] : @cohort_page.visible_sids
         @cohort_page.wait_until(1, "Expected but not present: #{expected_results - visible_results}. Present but not expected: #{visible_results - expected_results}") { visible_results.sort == expected_results.sort }
-      end
-
-      it "sorts by Last Name all the students who match sports '#{cohort.search_criteria.squads && (cohort.search_criteria.squads.map &:name)}', levels '#{cohort.search_criteria.levels}', majors '#{cohort.search_criteria.majors}', GPA ranges '#{cohort.search_criteria.gpa_ranges}', units '#{cohort.search_criteria.units}'" do
-        expected_results = @cohort_page.expected_sids_by_last_name(@searchable_students, cohort.search_criteria)
-        if expected_results.length.zero?
-          logger.warn 'Skipping sort-by-last-name test since there are no results'
-        else
-          visible_results = @cohort_page.visible_sids
-          @cohort_page.wait_until(1, "Expected #{expected_results} but got #{visible_results}") { visible_results == expected_results }
-        end
       end
 
       it "shows by First Name all the students who match sports '#{cohort.search_criteria.squads && (cohort.search_criteria.squads.map &:name)}', levels '#{cohort.search_criteria.levels}', majors '#{cohort.search_criteria.majors}', GPA ranges '#{cohort.search_criteria.gpa_ranges}', units '#{cohort.search_criteria.units}'" do
@@ -202,6 +203,10 @@ describe 'BOAC', order: :defined do
   context 'when the advisor views its cohorts' do
 
     it('shows only the advisor\'s cohorts on the homepage') do
+      cohorts << pre_existing_cohorts
+      cohorts.flatten!
+      my_students = cohorts.find &:read_only
+      my_students.name = 'My Students'
       @homepage.load_page
       @homepage.wait_until(Utils.short_wait) { @homepage.filtered_cohorts.any? }
       expect(@homepage.filtered_cohorts.sort).to eql((cohorts.map &:name).sort)
@@ -231,7 +236,7 @@ describe 'BOAC', order: :defined do
 
   context 'when the advisor deletes a cohort and tries to navigate to the deleted cohort' do
 
-    before(:all) { @cohort_page.delete_cohort cohorts.last }
+    before(:all) { @cohort_page.delete_cohort(cohorts, cohorts.last) }
 
     it 'shows a Not Found page' do
       @cohort_page.navigate_to "#{BOACUtils.base_url}/cohort?c=#{cohorts.last.id}"

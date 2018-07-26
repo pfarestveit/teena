@@ -1,14 +1,15 @@
 class BOACDepartments
 
-  attr_accessor :code
+  attr_accessor :code, :name
 
-  def initialize(code)
+  def initialize(code, name)
     @code = code
+    @name = name
   end
 
   DEPARTMENTS = [
-      ASC = new('UWASC'),
-      COE = new('COENG')
+      ASC = new('UWASC', 'Athletic Study Center'),
+      COE = new('COENG', 'College of Engineering')
   ]
 
 end

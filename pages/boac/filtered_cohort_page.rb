@@ -39,6 +39,14 @@ module Page
           wait_for_title "#{team.name}"
         end
 
+        # Hits a cohort search URL for a squad
+        # @param squad [Squad]
+        def load_squad(squad)
+          logger.info "Loading cohort page for squad #{squad.name}"
+          navigate_to "#{BOACUtils.base_url}/cohort?c=search&p=1&t=#{squad.code}"
+          wait_for_title 'Filtered Cohort'
+        end
+
         # FILTERED COHORTS - Creation
 
         button(:save_cohort_button_one, id: 'create-cohort-btn')
@@ -47,7 +55,7 @@ module Page
         button(:save_cohort_button_two, id: 'confirm-create-filtered-cohort-btn')
         button(:cancel_cohort_button, id: 'cancel-create-filtered-cohort-btn')
         span(:cohort_not_found_msg, xpath: '//span[contains(.,"No cohort found with identifier: ")]')
-        elements(:everyone_cohort_link, :span, xpath: '//h1[text()="Everyone\'s Cohorts"]/following-sibling::div//a[@data-ng-bind="cohort.label"]')
+        elements(:everyone_cohort_link, :link, xpath: '//h1[text()="Everyone\'s Cohorts"]/following-sibling::div//a[@data-ng-bind="cohort.name"]')
 
         # Clicks the button to save a new cohort, which triggers the name input modal
         def click_save_cohort_button_one
@@ -114,7 +122,8 @@ module Page
         def visible_everyone_cohorts
           click_view_everyone_cohorts
           wait_until(Utils.short_wait) { everyone_cohort_link_elements.any? }
-          cohorts = everyone_cohort_link_elements.map { |link| FilteredCohort.new({id: link.attribute('href').delete('/cohort?c='), name: link.text}) }
+          sleep 2
+          cohorts = everyone_cohort_link_elements.map { |link| FilteredCohort.new({id: link.attribute('href').gsub("#{BOACUtils.base_url}/cohort?c=", ''), name: link.text}) }
           cohorts.flatten
         end
 
@@ -140,6 +149,10 @@ module Page
         elements(:gpa_range_option, :checkbox, xpath: '//input[contains(@id, "cohort-filter-option-gpa-range")]')
         button(:units_filter_button, id: 'cohort-filter-unit-ranges')
         elements(:units_option, :checkbox, xpath: '//input[contains(@id, "cohort-filter-option-unit-ranges")]')
+
+        text_area(:inactive_cbx, id: 'inactive-checkbox')
+        text_area(:intensive_cbx, id: 'intensive-checkbox')
+        text_area(:my_students_cbx, id: 'advisor-ldap-uid-checkbox')
 
         button(:search_button, id: 'apply-filters-btn')
 
@@ -183,6 +196,21 @@ module Page
         # @return [PageObject::Elements::Option]
         def units_option_element(units)
           checkbox_element(xpath: "//span[text()=\"#{units}\"]/preceding-sibling::input")
+        end
+
+        # Clicks the Inactive checkbox
+        def click_inactive
+          wait_for_update_and_click inactive_cbx_element
+        end
+
+        # Clicks the Intensive checkbox
+        def click_intensive
+          wait_for_update_and_click intensive_cbx_element
+        end
+
+        # Clicks the My Students checkbox
+        def click_my_students
+          wait_for_update_and_click my_students_cbx_element
         end
 
         # Verifies that a set of cohort search criteria are currently selected
@@ -449,9 +477,10 @@ module Page
           cohort_on_manage_cohorts(cohort).when_present Utils.short_wait
         end
 
-        # Deletes a cohort
+        # Deletes a cohort unless it is read-only (e.g., CoE default cohorts).
+        # @param cohorts [Array<FilteredCohort>]
         # @param cohort [FilteredCohort]
-        def delete_cohort(cohort)
+        def delete_cohort(cohorts, cohort)
           if cohort.read_only
             logger.warn "Unable to delete cohort named #{cohort.name} because it is read-only"
           else
@@ -461,6 +490,7 @@ module Page
             wait_for_load_and_click cohort_delete_button(cohort)
             wait_for_update_and_click confirm_delete_button_element
             cohort_on_manage_cohorts(cohort).when_not_present Utils.short_wait
+            cohorts.delete cohort
           end
         end
 
