@@ -246,7 +246,7 @@ class BOACUtils < Utils
   def self.get_user_filtered_cohorts(user)
     query = "SELECT cohort_filters.id AS cohort_id,
                     cohort_filters.label AS cohort_name,
-                    cohort_filters.filter_criteria->>'coeAdvisorUid' AS criteria
+                    cohort_filters.filter_criteria AS criteria
               FROM cohort_filters
               JOIN cohort_filter_owners ON cohort_filter_owners.cohort_filter_id = cohort_filters.id
               JOIN authorized_users ON authorized_users.id = cohort_filter_owners.user_id
@@ -254,7 +254,7 @@ class BOACUtils < Utils
     results = Utils.query_pg_db(boac_db_credentials, query)
     # If the filter criteria includes a non-null CoE advisor UID, then the filter is read-only (no deleting).
     results.map do |r|
-      FilteredCohort.new({id: r['cohort_id'], name: r['cohort_name'], owner_uid: user.uid, read_only: (!r['criteria'].nil?)})
+      FilteredCohort.new({id: r['cohort_id'], name: r['cohort_name'], owner_uid: user.uid, read_only: (!r['criteria'].to_s.include? '\\"advisorLdapUid\\": null')})
     end
   end
 
@@ -264,6 +264,7 @@ class BOACUtils < Utils
   def self.get_everyone_filtered_cohorts(dept = nil)
     query = "SELECT cohort_filters.id AS cohort_id,
                     cohort_filters.label AS cohort_name,
+                    cohort_filters.filter_criteria AS criteria,
                     authorized_users.uid AS uid
               FROM cohort_filters
               JOIN cohort_filter_owners ON cohort_filter_owners.cohort_filter_id = cohort_filters.id
@@ -275,7 +276,7 @@ class BOACUtils < Utils
                 end}
               ORDER BY uid, cohort_id ASC;"
     results = Utils.query_pg_db(boac_db_credentials, query)
-    cohorts = results.map { |r| FilteredCohort.new({id: r['cohort_id'], name: r['cohort_name'], owner_uid: r['uid']}) }
+    cohorts = results.map { |r| FilteredCohort.new({id: r['cohort_id'], name: r['cohort_name'], owner_uid: r['uid'], read_only: (!r['criteria'].to_s.include? '\\"advisorLdapUid\\": null')}) }
     cohorts.sort_by { |c| [c.owner_uid.to_i, c.id] }
   end
 
@@ -354,18 +355,17 @@ class BOACUtils < Utils
   # @return [Alert]
   def self.get_test_alert
     # Get one active alert in the current term
-    query = "SELECT alerts.id, alerts.alert_type, alerts.message, students.uid, students.first_name, students.last_name
+    query = "SELECT alerts.id, alerts.sid, alerts.alert_type, alerts.message
               FROM alerts
-              JOIN students ON alerts.sid = students.sid
               WHERE active = true
                 AND key LIKE '#{term_code}%'
               LIMIT 1;"
     results = Utils.query_pg_db(boac_db_credentials, query)
-    alert = (results.map { |r| Alert.new({id: r['id'], message: r['message'], user: User.new({uid: r['uid'], full_name: "#{r['first_name']} #{r['last_name']}"})}) }).first
+    alert = (results.map { |r| Alert.new({id: r['id'], message: r['message'], user: User.new({sis_id: r['sid']})}) }).first
     # If an alert exists and the admin tester has dismissed the alert, delete the dismissal to permit dismissal testing
     if alert
       remove_alert_dismissal(alert) if get_dismissed_alerts([alert]).any?
-      logger.info "Test alert ID #{alert.id}, message '#{alert.message}', user UID #{alert.user.uid}, name #{alert.user.full_name}"
+      logger.info "Test alert ID #{alert.id}, message '#{alert.message}', user SID #{alert.user.sis_id}"
     end
     alert
   end

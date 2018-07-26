@@ -15,11 +15,13 @@ describe 'A BOAC alert' do
       BOACUtils.remove_alert_dismissal(@alert) if BOACUtils.get_dismissed_alerts([@alert], @advisor).any?
 
       @homepage = Page::BOACPages::HomePage.new @driver
+      @search_page = Page::BOACPages::SearchResultsPage.new @driver
       @student_page = Page::BOACPages::StudentPage.new @driver
 
       # View non-dismissed alert
       @homepage.dev_auth
-      @student_page.load_page @alert.user
+      @search_page.search @alert.user.sis_id
+      @search_page.click_student_result @alert.user
       alert_visible = @student_page.wait_until(Utils.short_wait) { @student_page.non_dismissed_alert_msgs.include? @alert.message }
       it('is shown by default on the student page when not dismissed') { expect(alert_visible).to be_truthy }
 
@@ -45,7 +47,8 @@ describe 'A BOAC alert' do
       # As another user, verify alert is not dismissed
       @student_page.log_out
       @homepage.dev_auth @advisor
-      @student_page.load_page @alert.user
+      @search_page.search @alert.user.sis_id
+      @search_page.click_student_result @alert.user
       alert_not_dismissed = @student_page.wait_until(Utils.short_wait) { @student_page.non_dismissed_alert_msgs.include? @alert.message }
       it('is not dismissed for other users when dismissed') { expect(alert_not_dismissed).to be_truthy }
 
