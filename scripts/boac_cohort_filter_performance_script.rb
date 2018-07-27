@@ -7,14 +7,7 @@ begin
   performance_data = File.join(Utils.initialize_test_output_dir, "boac-search-performance-#{Utils.get_test_id}.csv")
 
   dept = BOACUtils.test_dept
-  user = case dept
-              when BOACDepartments::ASC
-                get_dept_advisors(dept).first
-              when BOACDepartments::COE
-                get_dept_advisors(dept).first
-              else
-                User.new({:uid => Utils.super_admin_uid})
-            end
+  user = BOACDepartments::DEPARTMENTS.include?(dept) ? BOACUtils.get_dept_advisors(dept).first : User.new({:uid => Utils.super_admin_uid})
 
   test_search_criteria = BOACUtils.get_test_search_criteria
   unless dept == BOACDepartments::ASC
@@ -22,7 +15,7 @@ begin
     test_search_criteria.keep_if { |c| [c.levels, c.majors, c.gpa_ranges, c.units].compact.any? }
   end
 
-  cohorts = test_search_criteria.map { |criteria| FilteredCohort.new({:search_criteria => CohortSearchCriteria.new(criteria)}) }
+  cohorts = test_search_criteria.map { |criteria| FilteredCohort.new({:search_criteria => criteria}) }
 
   @driver = Utils.launch_browser
   @analytics_page = ApiUserAnalyticsPage.new @driver
@@ -35,6 +28,7 @@ begin
 
       # SEARCHING
 
+      @homepage.load_page
       @homepage.click_sidebar_create_filtered
       @cohort_page.perform_search(cohort, performance_data)
 
