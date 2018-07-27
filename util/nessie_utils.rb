@@ -93,7 +93,7 @@ class NessieUtils < Utils
       logger.info 'Returning all students'
       asc_students = get_all_asc_students
       coe_students = get_all_coe_students asc_students
-      logger.debug "There are #{asc_students.length} ASC students and #{coe_students.length} CoE students, for a total of #{all.length} and #{(asc_students & coe_students).length} shared students."
+      logger.debug "There are #{asc_students.length} ASC students and #{coe_students.length} CoE students, and #{(asc_students & coe_students).length} shared students."
       (asc_students + coe_students).uniq
     end
   end

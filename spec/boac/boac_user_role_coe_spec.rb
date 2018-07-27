@@ -28,6 +28,7 @@ describe 'A CoE advisor using BOAC' do
     @admin_page = Page::BOACPages::AdminPage.new @driver
     @api_admin_page = ApiAdminPage.new @driver
     @api_section_page = ApiSectionPage.new @driver
+    @api_user_analytics_page = ApiUserAnalyticsPage.new @driver
     @class_page = Page::BOACPages::ClassPage.new @driver
     @filtered_cohort_page = Page::BOACPages::CohortPages::FilteredCohortListViewPage.new @driver
     @homepage = Page::BOACPages::HomePage.new @driver
@@ -94,7 +95,7 @@ describe 'A CoE advisor using BOAC' do
     it 'sees only CoE student data in a section endpoint' do
       api_section_page = ApiSectionPage.new @driver
       api_section_page.get_data(@driver, '2178', '13826')
-      api_section_page.wait_until(1, "Expected #{coe_students.map(&:sis_id) & api_section_page.student_sids}, but got #{api_section_page.student_sids}") expect(coe_students.map(&:sis_id) & api_section_page.student_sids).to eql(api_section_page.student_sids)
+      api_section_page.wait_until(1, "Expected #{coe_students.map(&:sis_id) & api_section_page.student_sids}, but got #{api_section_page.student_sids}") { expect(coe_students.map(&:sis_id) & api_section_page.student_sids).to eql(api_section_page.student_sids) }
     end
   end
 
@@ -144,7 +145,7 @@ describe 'A CoE advisor using BOAC' do
       cohort = FilteredCohort.new({:search_criteria => search_criteria[0]})
       expect(@filtered_cohort_page.my_students_cbx_element.attribute('checked')).to eql('true')
       @filtered_cohort_page.perform_search cohort
-      expected_results = @filtered_cohort_page.expected_sids_by_last_name(@my_students_search_data, cohor.search_criteria).sort
+      expected_results = @filtered_cohort_page.expected_sids_by_last_name(@my_students_search_data, cohort.search_criteria).sort
       visible_results = @filtered_cohort_page.visible_sids
       @filtered_cohort_page.wait_until(1, "Expected but not present: #{expected_results - visible_results}. Present but not expected: #{visible_results - expected_results}") { visible_results.sort == expected_results.sort }
     end

@@ -38,6 +38,7 @@ class ApiUserAnalyticsPage
 
   def user_sis_data
     {
+      :name => (sis_profile && sis_profile['name']),
       :preferred_name => (sis_profile && sis_profile['preferredName']),
       :email => (sis_profile && sis_profile['emailAddress']),
       :phone => (sis_profile && sis_profile['phoneNumber'].to_s),
