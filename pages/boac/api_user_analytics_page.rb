@@ -42,7 +42,7 @@ class ApiUserAnalyticsPage
       :preferred_name => (sis_profile && sis_profile['preferredName']),
       :email => (sis_profile && sis_profile['emailAddress']),
       :phone => (sis_profile && sis_profile['phoneNumber'].to_s),
-      :units_in_progress => (sis_profile && (current_term ? formatted_units(current_term['enrolledUnits']) : '0')),
+      :units_in_progress => (sis_profile && ((current_term ? formatted_units(current_term['enrolledUnits']) : '0') if terms.any?)),
       :cumulative_units => (sis_profile && formatted_units(sis_profile['cumulativeUnits'])),
       :cumulative_gpa => (sis_profile && (sis_profile['cumulativeGPA'] == 0 ? '--' : sis_profile['cumulativeGPA'].to_s)),
       :majors => (sis_profile && majors),
@@ -67,7 +67,9 @@ class ApiUserAnalyticsPage
   end
 
   def formatted_units(units_as_int)
-    (units_as_int == units_as_int.floor) ? units_as_int.floor.to_s : units_as_int.to_s
+    if units_as_int
+      (units_as_int == units_as_int.floor) ? units_as_int.floor.to_s : units_as_int.to_s
+    end
   end
 
   def degree_progress

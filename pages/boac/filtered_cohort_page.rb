@@ -24,6 +24,16 @@ module Page
           wait_for_title cohort.name
         end
 
+        # Loads a cohort directly in matrix view
+        # @param cohort [FilteredCohort]
+        def load_cohort_matrix(cohort)
+          logger.info "Loading cohort '#{cohort.name}' ID #{cohort.id} in matrix view"
+          cohort.instance_of?(Team) ?
+              navigate_to("#{BOACUtils.base_url}/cohort?c=#{cohort.code}&v=matrix") :
+              navigate_to("#{BOACUtils.base_url}/cohort?c=#{cohort.id}&v=matrix")
+          wait_for_title cohort.name
+        end
+
         # Hits a cohort URL and expects the 404 page to load
         # @param cohort [FilteredCohort]
         def hit_non_auth_cohort(cohort)
@@ -31,11 +41,17 @@ module Page
           wait_for_title '404'
         end
 
+        # Hits a team page URL
+        # @param team [Team]
+        def hit_team_url(team)
+          navigate_to "#{BOACUtils.base_url}/cohort?c=#{team.code}"
+        end
+
         # Navigates directly to a team page
         # @param team [Team]
         def load_team_page(team)
           logger.info "Loading cohort page for team #{team.name}"
-          navigate_to "#{BOACUtils.base_url}/cohort?c=#{team.code}"
+          hit_team_url team
           wait_for_title "#{team.name}"
         end
 
@@ -121,10 +137,12 @@ module Page
         # @return [Array<FilteredCohort>]
         def visible_everyone_cohorts
           click_view_everyone_cohorts
-          wait_until(Utils.short_wait) { everyone_cohort_link_elements.any? }
-          sleep 2
+          wait_for_spinner
+          sleep 1
           cohorts = everyone_cohort_link_elements.map { |link| FilteredCohort.new({id: link.attribute('href').gsub("#{BOACUtils.base_url}/cohort?c=", ''), name: link.text}) }
-          cohorts.flatten
+          cohorts = cohorts.flatten
+          logger.info "Visible Everyone's Cohorts are #{cohorts.map &:name}"
+          cohorts
         end
 
         # Navigates to the Inactive Students page
@@ -217,7 +235,7 @@ module Page
         # @param search_criteria [CohortSearchCriteria]
         # @return [boolean]
         def search_criteria_selected?(search_criteria)
-          wait_until(Utils.short_wait) { squad_option_elements.any? }
+          wait_until(Utils.short_wait) { level_option_elements.any? }
           search_criteria.squads.each do |s|
             wait_until(Utils.short_wait, "Squad #{s.name} is not selected") { squad_option_element(s).exists? && squad_option_element(s).attribute('class').include?('not-empty') }
           end if search_criteria.squads
@@ -240,11 +258,13 @@ module Page
           true
         end
 
-        # Waits for a search to complete, returning either a set of results or 'no results'
+        # Waits for a search to complete, returning the spinner duration
+        # @return [Float]
         def wait_for_search_results
-          wait_for_spinner
+          time = wait_for_spinner
           results_element.when_present Utils.short_wait
           sleep 1
+          time
         end
 
         # Checks a search filter option
@@ -352,10 +372,7 @@ module Page
 
           # Execute search and log time search took to complete
           wait_for_update_and_click search_button_element
-          start_time = Time.now
-          wait_for_search_results
-          search_wait = "#{Time.now - start_time} seconds"
-          logger.warn "Took #{search_wait} seconds for the spinner to go away"
+          search_wait = wait_for_search_results
           cohort.member_count = results_count
           logger.warn "No results found for #{criteria.squads && criteria.squads.map(&:name)}, #{criteria.majors}, #{criteria.levels}, #{criteria.gpa_ranges}, #{criteria.units}" if cohort.member_count.zero?
           # Optionally record the search criteria, result count, and time it took to load the first page of results.

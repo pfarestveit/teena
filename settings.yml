@@ -63,6 +63,8 @@ boac:
   last_activity_team: TNM
   last_activity_max_users: 3
 
+  navigation_team: FBM
+
   sis_data_team: FBM
   sis_data_max_users: 100
 

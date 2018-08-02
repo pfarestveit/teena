@@ -20,7 +20,9 @@ module Page
     # Waits for an expected page title
     # @param page_title [String]
     def wait_for_title(page_title)
+      start = Time.now
       wait_until(Utils.medium_wait) { title == "#{page_title} | BOAC" }
+      logger.debug "Page title updated in #{Time.now - start} seconds"
     end
 
     # Clicks the 'Home' link in the header
@@ -49,10 +51,19 @@ module Page
       wait_for_title 'Admin'
     end
 
-    # Waits for the spinner to vanish following a page load
+    # Waits for the spinner to vanish following a page load and returns the number of seconds it took the spinner to vanish if greater than 1
+    # @return [Float]
     def wait_for_spinner
+      start = Time.now
       sleep 1
-      spinner_element.when_not_visible Utils.medium_wait if spinner? rescue Selenium::WebDriver::Error::StaleElementReferenceError
+      if spinner?
+        spinner_element.when_not_visible Utils.medium_wait rescue Selenium::WebDriver::Error::StaleElementReferenceError
+        wait = Time.now - start
+        logger.debug "Spinner lasted for #{wait} seconds"
+        wait
+      else
+        logger.debug 'Spinner lasted less than 1 second'
+      end
     end
 
     # COHORTS - validation errors shared on various pages
@@ -305,7 +316,6 @@ module Page
     def click_matrix_view
       logger.info 'Switching to matrix view'
       wait_for_load_and_click matrix_view_button_element
-      div_element(id: 'scatterplot').when_present Utils.medium_wait
     end
 
     # LIST VIEW PAGINATION
@@ -338,7 +348,9 @@ module Page
     # @return [boolean]
     def list_view_page_selected?(number)
       if number > 1
-        el = page_list_item_elements[number - 1]
+        wait_until(Utils.short_wait) { page_list_item_elements.any? }
+        logger.debug "The page numbers visible are #{page_list_item_elements.map &:text}"
+        el = page_list_item_elements.find { |el| el.text == number.to_s }
         el.attribute('class').include? 'active'
       else
         page_list_item_elements.empty?
@@ -383,9 +395,10 @@ module Page
     end
 
     # Returns the sequence of SIDs that are actually present following a search and/or sort
+    # @param filtered_cohort [FilteredCohort]
     # @return [Array<String>]
-    def visible_sids
-      wait_for_student_list
+    def visible_sids(filtered_cohort = nil)
+      wait_for_student_list unless (filtered_cohort && filtered_cohort.member_count.zero?)
       visible_sids = []
       sleep 2
       page_count = results_page_link_elements.any? ? results_page_link_elements.last.text.to_i : 1

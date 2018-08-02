@@ -52,7 +52,7 @@ class BOACUtils < Utils
   # @param team_config [String]
   # @param max_users_config [String]
   # @return [BOACTestConfig]
-  def self.cohort_driven_test_config(team_config, max_users_config)
+  def self.cohort_driven_test_config(team_config, max_users_config = nil)
 
     # The department determines many of the other config options
     dept = test_dept
@@ -81,8 +81,9 @@ class BOACUtils < Utils
       cohort_members = NessieUtils.get_coe_advisor_students advisor
     end
 
+    cohort.member_count = cohort_members.length
     # Limit the number of students tested to avoid endless test runs
-    max_cohort_members = cohort_members[0..(max_users_config - 1)]
+    max_cohort_members = cohort_members[0..(max_users_config - 1)] if max_users_config
 
     # Use a specific term for Canvas data tests
     assignments_term = @config['assignments_term']
@@ -98,7 +99,7 @@ class BOACUtils < Utils
       :term => assignments_term
     }
     test_config = BOACTestConfig.new(config)
-    logger.info "Test ID is #{test_config.id}, department is #{test_config.dept.code}, advisor UID is #{test_config.advisor.uid}, cohort member count is #{test_config.cohort_members.length}, and to be tested is #{test_config.max_cohort_members.length}"
+    logger.info "Test ID is #{test_config.id}, department is #{test_config.dept.code}, advisor UID is #{test_config.advisor.uid}, cohort member count is #{test_config.cohort_members.length}"
     test_config
   end
 
@@ -116,6 +117,10 @@ class BOACUtils < Utils
 
   def self.get_last_activity_test_config
     cohort_driven_test_config(@config['last_activity_team'], @config['last_activity_max_users'])
+  end
+
+  def self.get_navigation_test_config
+    cohort_driven_test_config(@config['navigation_team'])
   end
 
   def self.get_user_search_test_config
@@ -254,7 +259,7 @@ class BOACUtils < Utils
     results = Utils.query_pg_db(boac_db_credentials, query)
     # If the filter criteria includes a non-null CoE advisor UID, then the filter is read-only (no deleting).
     results.map do |r|
-      FilteredCohort.new({id: r['cohort_id'], name: r['cohort_name'], owner_uid: user.uid, read_only: (!r['criteria'].to_s.include? '\\"advisorLdapUid\\": null')})
+      FilteredCohort.new({id: r['cohort_id'], name: r['cohort_name'], owner_uid: user.uid, read_only: (r['criteria'].to_s.include?('\\"advisorLdapUid\\"') && !r['criteria'].to_s.include?('\\"advisorLdapUid\\": null'))})
     end
   end
 
@@ -276,7 +281,7 @@ class BOACUtils < Utils
                 end}
               ORDER BY uid, cohort_id ASC;"
     results = Utils.query_pg_db(boac_db_credentials, query)
-    cohorts = results.map { |r| FilteredCohort.new({id: r['cohort_id'], name: r['cohort_name'], owner_uid: r['uid'], read_only: (!r['criteria'].to_s.include? '\\"advisorLdapUid\\": null')}) }
+    cohorts = results.map { |r| FilteredCohort.new({id: r['cohort_id'], name: r['cohort_name'], owner_uid: r['uid'], read_only: (r['criteria'].to_s.include?('\\"advisorLdapUid\\"') && !r['criteria'].to_s.include?('\\"advisorLdapUid\\": null'))}) }
     cohorts.sort_by { |c| [c.owner_uid.to_i, c.id] }
   end
 

@@ -184,7 +184,7 @@ describe 'BOAC', order: :defined do
     end
 
     it 'truncates a title over 255 characters' do
-      cohort = FilteredCohort.new({name: "#{'A loooooong title ' * 15}?"})
+      cohort = FilteredCohort.new({name: "#{test_id}#{'A loooooong title ' * 15}?"})
       @homepage.click_sidebar_create_filtered
       @cohort_page.perform_search cohorts.first
       @cohort_page.save_and_name_cohort cohort
@@ -205,8 +205,9 @@ describe 'BOAC', order: :defined do
     it('shows only the advisor\'s cohorts on the homepage') do
       cohorts << pre_existing_cohorts
       cohorts.flatten!
+      # Account for My Students if the advisor is CoE
       my_students = cohorts.find &:read_only
-      my_students.name = 'My Students'
+      my_students.name = 'My Students' if my_students
       @homepage.load_page
       @homepage.wait_until(Utils.short_wait) { @homepage.filtered_cohorts.any? }
       expect(@homepage.filtered_cohorts.sort).to eql((cohorts.map &:name).sort)
@@ -236,10 +237,13 @@ describe 'BOAC', order: :defined do
 
   context 'when the advisor deletes a cohort and tries to navigate to the deleted cohort' do
 
-    before(:all) { @cohort_page.delete_cohort(cohorts, cohorts.last) }
+    before(:all) do
+      @cohort_to_delete = cohorts.find { |c| !c.read_only }
+      @cohort_page.delete_cohort(cohorts, @cohort_to_delete)
+    end
 
     it 'shows a Not Found page' do
-      @cohort_page.navigate_to "#{BOACUtils.base_url}/cohort?c=#{cohorts.last.id}"
+      @cohort_page.navigate_to "#{BOACUtils.base_url}/cohort?c=#{@cohort_to_delete.id}"
       @cohort_page.wait_for_title '404'
     end
   end
