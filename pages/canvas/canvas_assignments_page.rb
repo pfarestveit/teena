@@ -173,7 +173,7 @@ module Page
       end
 
       # Pause to avoid stale element errors
-      sleep 3
+      sleep Utils.short_wait
 
       # Collect all possible info from list view
       assignments = list_view_assignment_elements.map do |el|

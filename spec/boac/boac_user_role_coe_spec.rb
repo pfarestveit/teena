@@ -84,7 +84,7 @@ describe 'A CoE advisor using BOAC' do
     it 'cannot hit team filters directly' do
       @filtered_cohort_page.load_squad Squad::MFB_ST
       @filtered_cohort_page.wait_for_search_results
-      expect(@filtered_cohort_page.results_count).to be_zero
+      expect(@filtered_cohort_page.results_count).to eql(coe_students.length)
     end
   end
 
@@ -95,7 +95,7 @@ describe 'A CoE advisor using BOAC' do
     it 'sees only CoE student data in a section endpoint' do
       api_section_page = ApiSectionPage.new @driver
       api_section_page.get_data(@driver, '2178', '13826')
-      api_section_page.wait_until(1, "Expected #{coe_students.map(&:sis_id) & api_section_page.student_sids}, but got #{api_section_page.student_sids}") { expect(coe_students.map(&:sis_id) & api_section_page.student_sids).to eql(api_section_page.student_sids) }
+      api_section_page.wait_until(1, "Expected #{coe_students.map(&:sis_id).sort & api_section_page.student_sids}, but got #{api_section_page.student_sids.sort}") { expect(coe_students.map(&:sis_id).sort & api_section_page.student_sids).to eql(api_section_page.student_sids.sort) }
     end
   end
 
@@ -135,7 +135,7 @@ describe 'A CoE advisor using BOAC' do
     end
 
     it 'sees all My Students' do
-      expected_results = @filtered_cohort_page.expected_sids_by_last_name(@coe_student_search_data, CohortSearchCriteria.new({})).sort
+      expected_results = @filtered_cohort_page.expected_sids_by_last_name(@my_students_search_data, CohortSearchCriteria.new({})).sort
       @filtered_cohort_page.wait_until(1, "Expected #{expected_results}, but got #{@visible_my_students.sort}") { @visible_my_students.sort == expected_results }
     end
 
@@ -146,7 +146,7 @@ describe 'A CoE advisor using BOAC' do
       expect(@filtered_cohort_page.my_students_cbx_element.attribute('checked')).to eql('true')
       @filtered_cohort_page.perform_search cohort
       expected_results = @filtered_cohort_page.expected_sids_by_last_name(@my_students_search_data, cohort.search_criteria).sort
-      visible_results = @filtered_cohort_page.visible_sids
+      visible_results = @filtered_cohort_page.visible_sids cohort
       @filtered_cohort_page.wait_until(1, "Expected but not present: #{expected_results - visible_results}. Present but not expected: #{visible_results - expected_results}") { visible_results.sort == expected_results.sort }
     end
 
@@ -155,8 +155,8 @@ describe 'A CoE advisor using BOAC' do
       expect(@filtered_cohort_page.my_students_cbx_element.attribute('checked')).to eql('true')
       @filtered_cohort_page.click_my_students
       @filtered_cohort_page.perform_search cohort
-      expected_results = @filtered_cohort_page.expected_sids_by_last_name(@my_students_search_data, cohort.search_criteria).sort
-      visible_results = @filtered_cohort_page.visible_sids
+      expected_results = @filtered_cohort_page.expected_sids_by_last_name(@coe_student_search_data, cohort.search_criteria).sort
+      visible_results = @filtered_cohort_page.visible_sids cohort
       @filtered_cohort_page.wait_until(1, "Expected but not present: #{expected_results - visible_results}. Present but not expected: #{visible_results - expected_results}") { visible_results.sort == expected_results.sort }
     end
 
@@ -182,7 +182,7 @@ describe 'A CoE advisor using BOAC' do
       expect(@filtered_cohort_page.my_students_cbx_element.attribute('checked')).to eql('true')
       @filtered_cohort_page.perform_search cohort
       expected_results = @filtered_cohort_page.expected_sids_by_last_name(@your_students_search_data, cohort.search_criteria).sort
-      visible_results = @filtered_cohort_page.visible_sids
+      visible_results = @filtered_cohort_page.visible_sids cohort
       @filtered_cohort_page.wait_until(1, "Expected but not present: #{expected_results - visible_results}. Present but not expected: #{visible_results - expected_results}") { visible_results.sort == expected_results.sort }
     end
 
@@ -191,8 +191,8 @@ describe 'A CoE advisor using BOAC' do
       expect(@filtered_cohort_page.my_students_cbx_element.attribute('checked')).to eql('true')
       @filtered_cohort_page.click_my_students
       @filtered_cohort_page.perform_search cohort
-      expected_results = @filtered_cohort_page.expected_sids_by_last_name(@your_students_search_data, cohort.search_criteria).sort
-      visible_results = @filtered_cohort_page.visible_sids
+      expected_results = @filtered_cohort_page.expected_sids_by_last_name(@coe_student_search_data, cohort.search_criteria).sort
+      visible_results = @filtered_cohort_page.visible_sids cohort
       @filtered_cohort_page.wait_until(1, "Expected but not present: #{expected_results - visible_results}. Present but not expected: #{visible_results - expected_results}") { visible_results.sort == expected_results.sort }
     end
 
@@ -229,9 +229,8 @@ describe 'A CoE advisor using BOAC' do
     # TODO - it 'cannot reach the Teams page'
 
     it 'cannot hit a team cohort directly' do
-      @filtered_cohort_page.load_team_page Team::FBM
-      @filtered_cohort_page.wait_for_spinner
-      expect(@filtered_cohort_page.list_view_sids).to be_empty
+      @filtered_cohort_page.hit_team_url Team::FBM
+      @filtered_cohort_page.wait_for_title '404'
     end
   end
 

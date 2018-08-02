@@ -6,14 +6,22 @@ describe 'BOAC' do
 
   begin
 
-    advisor = BOACUtils.get_dept_advisors(BOACDepartments::ASC).first
-    cohorts = BOACUtils.get_test_search_criteria.map { |c| FilteredCohort.new({:search_criteria => c}) }
+    test_config = BOACUtils.get_navigation_test_config
+    test_config.cohort.name = 'My Students' if test_config.dept == BOACDepartments::COE
+
+    test_search_criteria = BOACUtils.get_test_search_criteria
+    unless test_config.dept == BOACDepartments::ASC
+      test_search_criteria.each { |c| c.squads = nil }
+      test_search_criteria.keep_if { |c| [c.levels, c.majors, c.gpa_ranges, c.units].compact.any? }
+    end
+    cohorts = test_search_criteria.map { |c| FilteredCohort.new({:search_criteria => c}) }
+
     @driver = Utils.launch_browser
     @homepage = Page::BOACPages::HomePage.new @driver
     @cohort_page = Page::BOACPages::CohortPages::FilteredCohortListViewPage.new @driver
     @matrix_page = Page::BOACPages::CohortPages::FilteredCohortMatrixPage.new @driver
     @student_page = Page::BOACPages::StudentPage.new @driver
-    @homepage.dev_auth advisor
+    @homepage.dev_auth test_config.advisor
     @homepage.click_sidebar_create_filtered
 
     # Navigate the various cohort/student views using each of the test search criteria
@@ -26,7 +34,7 @@ describe 'BOAC' do
         if cohorts.index(cohort).even?
 
           # Make sure a list view button is present from the previous loop. If not, load a team cohort to obtain an initial list view.
-          @cohort_page.load_team_page Team::TEAMS.last unless @cohort_page.list_view_button?
+          @cohort_page.load_cohort test_config.cohort unless @cohort_page.list_view_button?
 
           @cohort_page.click_list_view
           @cohort_page.perform_search cohort
@@ -65,41 +73,51 @@ describe 'BOAC' do
 
             # Switch to matrix view
 
-            @cohort_page.click_matrix_view
-            scatterplot_uids = @matrix_page.visible_matrix_uids @driver
-            no_data_uids = @matrix_page.visible_no_data_uids
+            if cohort.member_count > 800
 
-            logger.info "Got #{scatterplot_uids.length + no_data_uids.length} matrix view UIDs"
+              button_disabled = @cohort_page.matrix_view_button_element.attribute 'disabled'
+              it("disables the matrix button for #{search} with result count #{cohort.member_count}") { expect(button_disabled).to eql('true') }
 
-            matrix_search = @matrix_page.search_criteria_selected? cohort.search_criteria
-            matrix_results_right = (scatterplot_uids.length + no_data_uids.length == cohort.member_count)
+            else
 
-            it("preserves cohort search criteria #{search} when switching to matrix view") { expect(matrix_search).to be true }
-            it("preserves the cohort search criteria #{search} results count when switching to matrix view") { expect(matrix_results_right).to be true }
+              @cohort_page.click_matrix_view
+              @matrix_page.wait_for_matrix
+              scatterplot_uids = @matrix_page.visible_matrix_uids @driver
+              no_data_uids = @matrix_page.visible_no_data_uids
 
-            # Navigate to student page and back. Click a bubble if there are any; otherwise a 'no data' row.
+              logger.info "Got #{scatterplot_uids.length + no_data_uids.length} matrix view UIDs"
 
-            scatterplot_uids.any? ? @matrix_page.click_last_student_bubble(@driver) : @matrix_page.click_last_no_data_student
-            @driver.navigate.back
-            scatterplot_uids = @matrix_page.visible_matrix_uids @driver
-            no_data_uids = @matrix_page.visible_no_data_uids
+              matrix_search = @matrix_page.search_criteria_selected? cohort.search_criteria
+              matrix_results_right = (scatterplot_uids.length + no_data_uids.length == cohort.member_count)
 
-            matrix_search_preserved = @matrix_page.search_criteria_selected? cohort.search_criteria
-            matrix_results_count_preserved = (scatterplot_uids.length + no_data_uids.length == cohort.member_count)
+              it("preserves cohort search criteria #{search} when switching to matrix view") { expect(matrix_search).to be true }
+              it("preserves the cohort search criteria #{search} results count when switching to matrix view") { expect(matrix_results_right).to be true }
 
-            it("preserves cohort search criteria #{search} when returning to matrix view from the student page") { expect(matrix_search_preserved).to be true }
-            it("preserves the cohort search criteria #{search} results count when returning to matrix view from the student page") { expect(matrix_results_count_preserved).to be true }
+              # Navigate to student page and back. Click a bubble if there are any; otherwise a 'no data' row.
+
+              scatterplot_uids.any? ? @matrix_page.click_last_student_bubble(@driver) : @matrix_page.click_last_no_data_student
+              @driver.navigate.back
+              @matrix_page.wait_for_matrix
+              scatterplot_uids = @matrix_page.visible_matrix_uids @driver
+              no_data_uids = @matrix_page.visible_no_data_uids
+
+              matrix_search_preserved = @matrix_page.search_criteria_selected? cohort.search_criteria
+              matrix_results_count_preserved = (scatterplot_uids.length + no_data_uids.length == cohort.member_count)
+
+              it("preserves cohort search criteria #{search} when returning to matrix view from the student page") { expect(matrix_search_preserved).to be true }
+              it("preserves the cohort search criteria #{search} results count when returning to matrix view from the student page") { expect(matrix_results_count_preserved).to be true }
+            end
           end
 
-          # Every other search starts from matrix view
+        # Every other search starts from matrix view
         else
 
           # Make sure a matrix view button is present. If not, load a team cohort to obtain matrix view.
 
-          @cohort_page.load_team_page Team::TEAMS.first unless @cohort_page.matrix_view_button?
+          @matrix_page.load_cohort_matrix test_config.cohort unless @cohort_page.matrix_view_button?
 
-          @cohort_page.click_matrix_view
-          @cohort_page.perform_search cohort
+          @matrix_page.perform_search cohort
+          @matrix_page.wait_for_matrix
           scatterplot_uids = @matrix_page.visible_matrix_uids @driver
           no_data_uids = @matrix_page.visible_no_data_uids
           total_results = scatterplot_uids.length + no_data_uids.length
@@ -124,6 +142,7 @@ describe 'BOAC' do
 
             scatterplot_uids.any? ? @matrix_page.click_last_student_bubble(@driver) : @matrix_page.click_last_no_data_student
             @driver.navigate.back
+            @matrix_page.wait_for_matrix
             scatterplot_uids = @matrix_page.visible_matrix_uids @driver
             no_data_uids = @matrix_page.visible_no_data_uids
 

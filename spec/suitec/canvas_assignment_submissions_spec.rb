@@ -53,7 +53,6 @@ describe 'Canvas assignment submission', order: :defined do
 
         # Get user's score before submission
         @initial_score = @engagement_index.user_score(@driver, @engagement_index_url, student)
-        logger.debug "The initial score for #{student.full_name} is #{@initial_score}"
 
         # Submit assignment
         @canvas.masquerade_as(@driver, student, @course)

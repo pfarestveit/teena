@@ -84,7 +84,7 @@ describe 'An ASC advisor using BOAC' do
     it 'sees only ASC student data in a section endpoint' do
       api_section_page = ApiSectionPage.new @driver
       api_section_page.get_data(@driver, '2178', '13826')
-      expect(asc_students.map(&:sis_id) & api_section_page.student_sids).to eql(api_section_page.student_sids)
+      expect(asc_students.map(&:sis_id).sort & api_section_page.student_sids).to eql(api_section_page.student_sids.sort)
     end
   end
 

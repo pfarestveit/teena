@@ -17,16 +17,22 @@ module Page
   end
 
   # Hides the Canvas footer element in order to interact with elements hidden beneath it. Clicks once to set focus on the footer
-  # and once again to hide it.
+  # and once again to hide it, with a retry in case the footer itself is obstructed.
   def hide_canvas_footer_and_popup
     if (browser_warning = button_element(xpath: '//li[@class="ic-flash-warning"]//button')).exists?
       browser_warning.click
       browser_warning.when_not_present Utils.short_wait
     end
     if (footer = div_element(id: 'element_toggler_0')).exists? && footer.visible?
-      footer.click
-      sleep 1
-      footer.click if footer.visible?
+      tries ||= 2
+      begin
+        footer.click
+        sleep 1
+        footer.click if footer.visible?
+      rescue => e
+        Utils.log_error e
+        (tries -= 1).zero? ? fail : (sleep 2; retry)
+      end
     end
   end
 
