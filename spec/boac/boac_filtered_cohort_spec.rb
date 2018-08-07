@@ -4,34 +4,11 @@ describe 'BOAC', order: :defined do
 
   include Logging
 
-  test_id = Utils.get_test_id
   performance_data = File.join(Utils.initialize_test_output_dir, 'boac-search-performance.csv')
 
-  # Filtered cohort UX differs for admins vs ASC advisors vs CoE advisors. The department determines which advisor will
-  # execute the search tests. If it's nil, then admin will execute them.
-  dept = BOACUtils.test_dept
-  asc_advisor = BOACUtils.get_dept_advisors(BOACDepartments::ASC).first
-  coe_advisor = BOACUtils.get_dept_advisors(BOACDepartments::COE).first
-  advisor = if dept
-              (dept == BOACDepartments::ASC) ? asc_advisor : coe_advisor
-            else
-              User.new({:uid => Utils.super_admin_uid})
-            end
-  students = NessieUtils.get_all_relevant_students dept
-  # If the advisor is from ASC, then inactive students should not appear in default search results
-  students.delete_if { |s| s.status == 'inactive' } if advisor == asc_advisor
-
-  # Get cohorts to be created during tests. If the advisor is not with ASC, then no team filters will exist. So remove sports-related search criteria
-  # from searches. If there are no other criteria in the search, then toss out the search.
-  test_search_criteria = BOACUtils.get_test_search_criteria
-  unless advisor == asc_advisor
-    test_search_criteria.each { |c| c.squads = nil }
-    test_search_criteria.keep_if { |c| [c.levels, c.majors, c.gpa_ranges, c.units].compact.any? }
-  end
-
-  # Get a list of the advisor's pre-existing cohorts and the ones to be created during the tests.
-  cohorts = test_search_criteria.map { |criteria| FilteredCohort.new({:name => "Test Cohort #{test_search_criteria.index criteria} #{test_id}", :search_criteria => criteria}) }
-  pre_existing_cohorts = BOACUtils.get_user_filtered_cohorts advisor
+  test = BOACTestConfig.new
+  test.filtered_cohorts
+  pre_existing_cohorts = BOACUtils.get_user_filtered_cohorts test.advisor
 
   before(:all) do
     @driver = Utils.launch_browser
@@ -39,10 +16,15 @@ describe 'BOAC', order: :defined do
     @homepage = Page::BOACPages::HomePage.new @driver
     @cohort_page = Page::BOACPages::CohortPages::FilteredCohortListViewPage.new @driver
     @student_page = Page::BOACPages::StudentPage.new @driver
-    @homepage.dev_auth advisor
 
     # Get the student data relevant to all search filters.
-    @searchable_students = @analytics_page.collect_users_searchable_data(@driver, students, dept)
+    @homepage.dev_auth
+    test.dept_students.delete_if { |s| s.status == 'inactive' } if test.dept == BOACDepartments::ASC
+    @searchable_students = @analytics_page.collect_users_searchable_data(@driver, test)
+
+    @homepage.load_page
+    @homepage.log_out
+    @homepage.dev_auth test.advisor
   end
 
   after(:all) { Utils.quit_browser @driver }
@@ -51,13 +33,13 @@ describe 'BOAC', order: :defined do
 
     before(:all) do
       @homepage.load_page
-      pre_existing_cohorts.each { |c| @cohort_page.delete_cohort(cohorts, c) }
+      pre_existing_cohorts.each { |c| @cohort_page.delete_cohort(test.searches, c) }
     end
 
     it('shows a No Filtered Cohorts message on the homepage') do
       @homepage.load_page
       # CoE advisors will always have a 'my students' filtered cohort that cannot be deleted
-      (advisor == coe_advisor) ?
+      (test.dept == BOACDepartments::COE) ?
           (expect(@homepage.no_filtered_cohorts_msg?).to be false) :
           (expect(@homepage.no_filtered_cohorts_msg?).to be true)
     end
@@ -67,15 +49,15 @@ describe 'BOAC', order: :defined do
 
     before(:each) { @cohort_page.cancel_cohort if @cohort_page.cancel_cohort_button? }
 
-    it "shows only filters available to #{dept.name}" do
+    it "shows only filters available to #{test.dept.name}" do
       @cohort_page.click_sidebar_create_filtered
       @cohort_page.wait_until(Utils.short_wait) { @cohort_page.level_option_elements.any? }
-      (dept == BOACDepartments::ASC) ?
+      (test.dept == BOACDepartments::ASC) ?
           (expect(@cohort_page.squad_filter_button?).to be true) :
           (expect(@cohort_page.squad_filter_button?).to be false)
     end
 
-    cohorts.each do |cohort|
+    test.searches.each do |cohort|
       it "shows all the students sorted by Last Name who match sports '#{cohort.search_criteria.squads && (cohort.search_criteria.squads.map &:name)}', levels '#{cohort.search_criteria.levels}', majors '#{cohort.search_criteria.majors}', GPA ranges '#{cohort.search_criteria.gpa_ranges}', units '#{cohort.search_criteria.units}'" do
         @cohort_page.click_sidebar_create_filtered
         @cohort_page.perform_search(cohort, performance_data)
@@ -96,7 +78,7 @@ describe 'BOAC', order: :defined do
       end
 
       it "sorts by Team all the students who match sports '#{cohort.search_criteria.squads && (cohort.search_criteria.squads.map &:name)}', levels '#{cohort.search_criteria.levels}', majors '#{cohort.search_criteria.majors}', GPA ranges '#{cohort.search_criteria.gpa_ranges}', units '#{cohort.search_criteria.units}'" do
-        if advisor == asc_advisor
+        if test.dept == BOACDepartments::ASC
           expected_results = @cohort_page.expected_sids_by_team(@searchable_students, cohort.search_criteria)
           if expected_results.length.zero?
             logger.warn 'Skipping sort-by-team test since there are no results'
@@ -166,8 +148,8 @@ describe 'BOAC', order: :defined do
       it "shows the filtered cohort members who have alerts on the homepage with criteria sports '#{cohort.search_criteria.squads && (cohort.search_criteria.squads.map &:name)}', levels '#{cohort.search_criteria.levels}', majors '#{cohort.search_criteria.majors}', GPA ranges '#{cohort.search_criteria.gpa_ranges}', units '#{cohort.search_criteria.units}'" do
         member_sids = @cohort_page.expected_sids_by_last_name(@searchable_students, cohort.search_criteria)
         @homepage.wait_until(Utils.short_wait) { @homepage.filtered_cohort_member_count(cohort) == member_sids.length }
-        members = students.select { |u| member_sids.include? u.sis_id }
-        @homepage.verify_cohort_alert_rows(@driver, cohort, members, advisor)
+        members = test.dept_students.select { |u| member_sids.include? u.sis_id }
+        @homepage.verify_cohort_alert_rows(@driver, cohort, members, test.advisor)
       end
 
       it "offers a link to the filtered cohort with criteria sports '#{cohort.search_criteria.squads && (cohort.search_criteria.squads.map &:name)}', levels '#{cohort.search_criteria.levels}', majors '#{cohort.search_criteria.majors}', GPA ranges '#{cohort.search_criteria.gpa_ranges}', units '#{cohort.search_criteria.units}'" do
@@ -178,23 +160,23 @@ describe 'BOAC', order: :defined do
 
     it 'requires a title' do
       @homepage.click_sidebar_create_filtered
-      @cohort_page.perform_search cohorts.first
+      @cohort_page.perform_search test.searches.first
       @cohort_page.click_save_cohort_button_one
       expect(@cohort_page.save_cohort_button_two_element.disabled?).to be true
     end
 
     it 'truncates a title over 255 characters' do
-      cohort = FilteredCohort.new({name: "#{test_id}#{'A loooooong title ' * 15}?"})
+      cohort = FilteredCohort.new({name: "#{test.id}#{'A loooooong title ' * 15}?"})
       @homepage.click_sidebar_create_filtered
-      @cohort_page.perform_search cohorts.first
+      @cohort_page.perform_search test.searches.first
       @cohort_page.save_and_name_cohort cohort
       cohort.name = cohort.name[0..254]
       @cohort_page.wait_for_filtered_cohort cohort
-      cohorts << cohort
+      test.searches << cohort
     end
 
     it 'requires that a title be unique among the user\'s existing cohorts' do
-      cohort = FilteredCohort.new({name: cohorts.first.name})
+      cohort = FilteredCohort.new({name: test.searches.first.name})
       @cohort_page.save_and_name_cohort cohort
       @cohort_page.dupe_filtered_name_msg_element.when_visible Utils.short_wait
     end
@@ -203,22 +185,22 @@ describe 'BOAC', order: :defined do
   context 'when the advisor views its cohorts' do
 
     it('shows only the advisor\'s cohorts on the homepage') do
-      cohorts << pre_existing_cohorts
-      cohorts.flatten!
+      test.searches << pre_existing_cohorts
+      test.searches.flatten!
       # Account for My Students if the advisor is CoE
-      my_students = cohorts.find &:read_only
+      my_students = test.searches.find &:read_only
       my_students.name = 'My Students' if my_students
       @homepage.load_page
       @homepage.wait_until(Utils.short_wait) { @homepage.filtered_cohorts.any? }
-      expect(@homepage.filtered_cohorts.sort).to eql((cohorts.map &:name).sort)
+      expect(@homepage.filtered_cohorts.sort).to eql((test.searches.map &:name).sort)
     end
   end
 
   context 'when the advisor edits a cohort\'s search filters' do
 
     it 'creates a new cohort' do
-      existing_cohort = cohorts.first
-      new_cohort = FilteredCohort.new({name: "Edited Search #{test_id}", search_criteria: test_search_criteria.last})
+      existing_cohort = test.searches.first
+      new_cohort = FilteredCohort.new({name: "Edited Search #{test.id}", search_criteria: test.searches.last.search_criteria})
       @cohort_page.load_cohort existing_cohort
       @cohort_page.search_and_create_edited_cohort(existing_cohort, new_cohort)
       expect(new_cohort.id).not_to eql(existing_cohort.id)
@@ -228,7 +210,7 @@ describe 'BOAC', order: :defined do
   context 'when the advisor edits a cohort\'s name' do
 
     it 'renames the existing cohort' do
-      cohort = cohorts.first
+      cohort = test.searches.first
       id = cohort.id
       @cohort_page.rename_cohort(cohort, "#{cohort.name} - Renamed")
       expect(cohort.id).to eql(id)
@@ -238,8 +220,8 @@ describe 'BOAC', order: :defined do
   context 'when the advisor deletes a cohort and tries to navigate to the deleted cohort' do
 
     before(:all) do
-      @cohort_to_delete = cohorts.find { |c| !c.read_only }
-      @cohort_page.delete_cohort(cohorts, @cohort_to_delete)
+      @cohort_to_delete = test.searches.find { |c| !c.read_only }
+      @cohort_page.delete_cohort(test.searches, @cohort_to_delete)
     end
 
     it 'shows a Not Found page' do

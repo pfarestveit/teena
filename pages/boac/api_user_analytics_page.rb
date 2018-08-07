@@ -237,25 +237,23 @@ class ApiUserAnalyticsPage
 
   # To support cohort search tests, returns all relevant user data for a given set of students. If a file containing the data already
   # exists, will skip collecting the data and simply parse the file. Otherwise, will collect the data and write it to a file for
-  # subsequent test runs. If a department is given, then the file name will include the department code.
+  # subsequent test runs.
   # @param driver [Selenium::WebDriver]
-  # @param students [Array<User>]
-  # @param dept [BOACDepartments]
+  # @param test_config [BOACTestConfig]
   # @return Array[<Hash>]
-  def collect_users_searchable_data(driver, students, dept = nil)
-    users_data_file = BOACUtils.searchable_data dept
+  def collect_users_searchable_data(driver, test_config = nil)
+    users_data_file = BOACUtils.searchable_data
     if File.exist? users_data_file
-      logger.warn "Found a copy of searchable user data created today#{' for ' + dept.code if dept}, skipping data collection"
+      logger.warn 'Found a copy of searchable user data created today, skipping data collection'
       users_data = JSON.parse(File.read(users_data_file), {:symbolize_names => true})
     else
-      logger.warn "Cannot find a searchable user data file created today#{' for ' + dept.code if dept}, collecting data and writing it to a file for reuse today"
+      logger.warn 'Cannot find a searchable user data file created today, collecting data and writing it to a file for reuse today'
 
       # Delete older searchable data files before writing the new one
-      Dir.glob("#{Utils.config_dir}/#{BOACUtils.searchable_data_prefix dept}boac-searchable-data*").each { |f| File.delete f }
+      Dir.glob("#{Utils.config_dir}/boac-searchable-data*").each { |f| File.delete f }
 
       # Fetch all the data and write it to a file for search tests to use
-      logger.info "Getting searchable info for #{students.length} students"
-      users_data = students.map do |user|
+      users_data = NessieUtils.get_all_students.map do |user|
         # Get the squad names to use as search criteria if the students are athletes
         user_squad_names = user.sports.map do |squad_code|
           squad = Squad::SQUADS.find { |s| s.code == squad_code }
@@ -275,6 +273,13 @@ class ApiUserAnalyticsPage
       end
       File.open(users_data_file, 'w') { |f| f.write users_data.to_json }
     end
-    users_data
+    # If special configuration exists for the test, then return only user data for the dept specified in the config; else return all.
+    if test_config
+      student_sids = test_config.dept_students.map &:sis_id
+      users_data.select { |u| student_sids.include? u[:sid] }
+    else
+      users_data
+    end
   end
+
 end

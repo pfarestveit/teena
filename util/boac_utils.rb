@@ -27,6 +27,11 @@ class BOACUtils < Utils
     @config['term_code']
   end
 
+  # Returns the term to be used for testing assignments
+  def self.assignments_term
+    @config['assignments_term']
+  end
+
   # Returns the UID of a CoE advisor for testing
   def self.test_coe_advisor_uid
     @config['test_coe_advisor_uid']
@@ -45,86 +50,6 @@ class BOACUtils < Utils
   # Whether or not to check Nessie assignments submission counts during tests.
   def self.nessie_assignments
     @config['nessie_assignments']
-  end
-
-  # Returns test data and configuration specific to a cohort-driven test script run, driven primarily by the department configured
-  # for testing.
-  # @param team_config [String]
-  # @param max_users_config [String]
-  # @return [BOACTestConfig]
-  def self.cohort_driven_test_config(team_config, max_users_config = nil)
-
-    # The department determines many of the other config options
-    dept = test_dept
-
-    # Select an advisor from the department being tested
-    advisor = case dept
-                when BOACDepartments::ASC
-                  get_dept_advisors(dept).first
-                when BOACDepartments::COE
-                  test_coe_advisor_uid ? (get_dept_advisors(dept).find { |a| a.uid.to_i == test_coe_advisor_uid }) : get_dept_advisors(dept).first
-                else
-                  logger.error 'Admin user is not supported for this test, quitting'
-                  fail
-              end
-
-    # Use a team as a pre-existing cohort for ASC tests
-    if dept == BOACDepartments::ASC
-      all_dept_students = NessieUtils.get_all_asc_students
-      cohort = NessieUtils.get_asc_teams.find { |t| t.code == team_config }
-      cohort_members = NessieUtils.get_asc_team_members cohort
-
-    # Use a 'my students' cohort for CoE tests
-    else
-      all_dept_students = NessieUtils.get_all_coe_students
-      cohort = get_user_filtered_cohorts(advisor).find { |c| c.read_only }
-      cohort_members = NessieUtils.get_coe_advisor_students advisor
-    end
-
-    cohort.member_count = cohort_members.length
-    # Limit the number of students tested to avoid endless test runs
-    max_cohort_members = cohort_members[0..(max_users_config - 1)] if max_users_config
-
-    # Use a specific term for Canvas data tests
-    assignments_term = @config['assignments_term']
-
-    config = {
-      :id=> get_test_id,
-      :dept => dept,
-      :advisor => advisor,
-      :all_dept_students => all_dept_students,
-      :cohort => cohort,
-      :cohort_members => cohort_members,
-      :max_cohort_members => max_cohort_members,
-      :term => assignments_term
-    }
-    test_config = BOACTestConfig.new(config)
-    logger.info "Test ID is #{test_config.id}, department is #{test_config.dept.code}, advisor UID is #{test_config.advisor.uid}, cohort member count is #{test_config.cohort_members.length}"
-    test_config
-  end
-
-  def self.get_assignments_test_config
-    cohort_driven_test_config(@config['assignments_team'], @config['assignments_max_users'])
-  end
-
-  def self.get_class_page_test_config
-    cohort_driven_test_config(@config['class_page_team'], @config['class_page_max_users'])
-  end
-
-  def self.get_curated_cohort_test_config
-    cohort_driven_test_config(@config['curated_cohort_team'], @config['curated_cohort_max_users'])
-  end
-
-  def self.get_last_activity_test_config
-    cohort_driven_test_config(@config['last_activity_team'], @config['last_activity_max_users'])
-  end
-
-  def self.get_navigation_test_config
-    cohort_driven_test_config(@config['navigation_team'])
-  end
-
-  def self.get_user_search_test_config
-    cohort_driven_test_config(@config['user_search_team'], @config['user_search_max_users'])
   end
 
   # The advisor department to use for tests that can run with different departments
@@ -149,28 +74,19 @@ class BOACUtils < Utils
 
   # SEARCH TEST DATA
 
-  # Returns the prefix for the searchable data file name. The prefix identifies the pool of students who could be returned in
-  # search results, i.e., ASC students, CoE students, or all students.
-  # @param dept [BOACDepartments]
+  # Returns the file path containing stored searchable student data to drive cohort search tests
   # @return [String]
-  def self.searchable_data_prefix(dept = nil)
-    dept ? "#{dept.code}-" : 'ALL-'
-  end
-
-  # Returns the file path containing stored searchable student data to drive cohort search tests, which is
-  # department-specific if a department is given.
-  # @param dept [BOACDepartments]
-  # @return [String]
-  def self.searchable_data(dept = nil)
-    File.join(Utils.config_dir, "#{searchable_data_prefix dept}boac-searchable-data-#{Time.now.strftime('%Y-%m-%d')}.json")
+  def self.searchable_data
+    File.join(Utils.config_dir, "boac-searchable-data-#{Time.now.strftime('%Y-%m-%d')}.json")
   end
 
   # Returns a collection of search criteria to use for testing cohort search
+  # @param dept [BOACDepartments]
   # @return [Array<Hash>]
-  def self.get_test_search_criteria
+  def self.get_test_search_criteria(dept = nil)
     test_data_file = File.join(Utils.config_dir, 'test-data-boac.json')
     test_data = JSON.parse File.read(test_data_file)
-    test_data['search_criteria'].map do |d|
+    searches = test_data['search_criteria'].map do |d|
       criteria = {
         squads: (d['teams'] && d['teams'].map { |t| Squad::SQUADS.find { |s| s.name == t['squad'] } }),
         levels: (d['levels'] && d['levels'].map { |l| l['level'] }),
@@ -180,6 +96,11 @@ class BOACUtils < Utils
       }
       CohortSearchCriteria.new criteria
     end
+    unless dept == BOACDepartments::ASC
+      searches.each { |c| c.squads = nil }
+      searches.keep_if { |c| [c.levels, c.majors, c.gpa_ranges, c.units].compact.any? }
+    end
+    searches
   end
 
   # Returns the db credentials for BOAC

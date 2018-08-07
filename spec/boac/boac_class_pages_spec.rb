@@ -6,10 +6,11 @@ describe 'BOAC' do
 
   begin
 
-    test_config = BOACUtils.get_class_page_test_config
+    test = BOACTestConfig.new
+    test.class_pages
     pages_tested = []
 
-    all_dept_student_sids = test_config.all_dept_students.map &:sis_id
+    all_dept_student_sids = test.dept_students.map &:sis_id
 
     courses_csv = Utils.create_test_output_csv('boac-class-page-courses.csv', %w(Term Course Title Format Units))
     meetings_csv =Utils.create_test_output_csv('boac-class-page-meetings.csv', %w(Term Course Instructors Days Time Location))
@@ -21,9 +22,9 @@ describe 'BOAC' do
     @student_page = Page::BOACPages::StudentPage.new @driver
     @class_page = Page::BOACPages::ClassPage.new @driver
 
-    @homepage.dev_auth test_config.advisor
+    @homepage.dev_auth test.advisor
 
-    test_config.max_cohort_members.each do |student|
+    test.max_cohort_members.each do |student|
       begin
 
         api_user_page = ApiUserAnalyticsPage.new @driver
@@ -116,10 +117,10 @@ describe 'BOAC' do
                           it("shows the right students for #{class_test_case}") { expect(visible_sids.sort).to eql(api_section_page.student_sids.sort) }
 
                           # Check that only students who should be visible to the advisor appear on the page
-                          it("shows only #{test_config.dept.name} students for #{class_test_case}") { expect(all_dept_student_sids & visible_sids).to eql(visible_sids) }
+                          it("shows only #{test.dept.name} students for #{class_test_case}") { expect(all_dept_student_sids & visible_sids).to eql(visible_sids) }
 
                           # Perform further tests on the students who do appear
-                          students = test_config.all_dept_students.select { |s| visible_sids.include? s.sis_id }
+                          students = test.dept_students.select { |s| visible_sids.include? s.sis_id }
                           expected_student_names = (students.map { |u| "#{u.last_name}, #{u.first_name}" }).sort
                           visible_student_names = (@class_page.list_view_names).sort
                           logger.error "Expecting #{expected_student_names} and got #{visible_student_names}" unless visible_student_names == expected_student_names

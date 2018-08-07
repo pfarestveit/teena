@@ -14,7 +14,7 @@ begin
   @boac_homepage = Page::BOACPages::HomePage.new @driver
   @boac_homepage.dev_auth
 
-  students = NessieUtils.get_all_relevant_students
+  students = NessieUtils.get_all_students
   logger.info "There are #{students.length} students"
   students.each do |student|
     begin

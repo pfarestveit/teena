@@ -6,36 +6,29 @@ describe 'BOAC' do
 
   begin
 
-    test_config = BOACUtils.get_navigation_test_config
-    test_config.cohort.name = 'My Students' if test_config.dept == BOACDepartments::COE
-
-    test_search_criteria = BOACUtils.get_test_search_criteria
-    unless test_config.dept == BOACDepartments::ASC
-      test_search_criteria.each { |c| c.squads = nil }
-      test_search_criteria.keep_if { |c| [c.levels, c.majors, c.gpa_ranges, c.units].compact.any? }
-    end
-    cohorts = test_search_criteria.map { |c| FilteredCohort.new({:search_criteria => c}) }
+    test = BOACTestConfig.new
+    test.navigation
+    test.default_cohort.name = 'My Students' if test.dept == BOACDepartments::COE
 
     @driver = Utils.launch_browser
     @homepage = Page::BOACPages::HomePage.new @driver
     @cohort_page = Page::BOACPages::CohortPages::FilteredCohortListViewPage.new @driver
     @matrix_page = Page::BOACPages::CohortPages::FilteredCohortMatrixPage.new @driver
     @student_page = Page::BOACPages::StudentPage.new @driver
-    @homepage.dev_auth test_config.advisor
+    @homepage.dev_auth test.advisor
     @homepage.click_sidebar_create_filtered
 
     # Navigate the various cohort/student views using each of the test search criteria
-    cohorts.each do |cohort|
+    test.searches.each do |cohort|
 
       begin
         search = "#{cohort.search_criteria.squads && cohort.search_criteria.squads.map(&:name)}, #{cohort.search_criteria.levels}, #{cohort.search_criteria.majors}, #{cohort.search_criteria.gpa_ranges}, #{cohort.search_criteria.units}"
 
         # Every other search starts from list view
-        if cohorts.index(cohort).even?
+        if test.searches.index(cohort).even?
 
           # Make sure a list view button is present from the previous loop. If not, load a team cohort to obtain an initial list view.
-          @cohort_page.load_cohort test_config.cohort unless @cohort_page.list_view_button?
-
+          @cohort_page.load_cohort test.default_cohort unless @cohort_page.list_view_button?
           @cohort_page.click_list_view
           @cohort_page.perform_search cohort
 
@@ -113,9 +106,7 @@ describe 'BOAC' do
         else
 
           # Make sure a matrix view button is present. If not, load a team cohort to obtain matrix view.
-
-          @matrix_page.load_cohort_matrix test_config.cohort unless @cohort_page.matrix_view_button?
-
+          @matrix_page.load_cohort_matrix test.default_cohort unless @cohort_page.matrix_view_button?
           @matrix_page.perform_search cohort
           @matrix_page.wait_for_matrix
           scatterplot_uids = @matrix_page.visible_matrix_uids @driver
@@ -179,7 +170,7 @@ describe 'BOAC' do
         end
 
       rescue => e
-        BOACUtils.log_error_and_screenshot(@driver, e, "cohort-#{cohorts.index cohort}")
+        BOACUtils.log_error_and_screenshot(@driver, e, "cohort-#{test.searches.index cohort}")
         it("threw an error with #{search}") { fail }
       end
     end

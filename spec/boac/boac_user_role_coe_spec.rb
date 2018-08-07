@@ -9,15 +9,15 @@ describe 'A CoE advisor using BOAC' do
 
   overlap_students = asc_students & coe_students
   asc_only_students = asc_students - overlap_students
-  all_students = (asc_students + coe_students).uniq
 
-  coe_advisor = BOACUtils.get_dept_advisors(BOACDepartments::COE).first
+  coe_advisors = BOACUtils.get_dept_advisors BOACDepartments::COE
+  coe_advisor = coe_advisors.first
   coe_advisor_students = NessieUtils.get_coe_advisor_students(coe_advisor, coe_students)
 
   coe_everyone_filters = BOACUtils.get_everyone_filtered_cohorts BOACDepartments::COE
   coe_other_advisor_filter = coe_everyone_filters.find { |f| f.read_only && f.owner_uid != coe_advisor.uid }
 
-  coe_other_advisor = BOACUtils.get_dept_advisors(BOACDepartments::COE).find { |a| a.uid == coe_other_advisor_filter.owner_uid }
+  coe_other_advisor = coe_advisors.find { |a| a.uid == coe_other_advisor_filter.owner_uid }
   coe_other_advisor_students = NessieUtils.get_coe_advisor_students(coe_other_advisor, coe_students)
 
   search_criteria = BOACUtils.get_test_search_criteria.each { |c| c.squads = nil }
@@ -37,16 +37,16 @@ describe 'A CoE advisor using BOAC' do
     @teams_page = Page::BOACPages::TeamsListPage.new @driver
 
     @homepage.dev_auth
-    @all_student_search_data = @api_user_analytics_page.collect_users_searchable_data(@driver, all_students)
+    all_student_search_data = @api_user_analytics_page.collect_users_searchable_data @driver
 
     @coe_student_sids = coe_students.map &:sis_id
-    @coe_student_search_data = @all_student_search_data.select { |d| @coe_student_sids.include? d[:sid] }
+    @coe_student_search_data = all_student_search_data.select { |d| @coe_student_sids.include? d[:sid] }
 
     @my_students_sids = coe_advisor_students.map &:sis_id
-    @my_students_search_data = @all_student_search_data.select { |d| @my_students_sids.include? d[:sid] }
+    @my_students_search_data = all_student_search_data.select { |d| @my_students_sids.include? d[:sid] }
 
     @your_students_sids = coe_other_advisor_students.map &:sis_id
-    @your_students_search_data = @all_student_search_data.select { |d| @your_students_sids.include? d[:sid] }
+    @your_students_search_data = all_student_search_data.select { |d| @your_students_sids.include? d[:sid] }
 
     @homepage.load_page
     @homepage.log_out

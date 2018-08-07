@@ -74,28 +74,13 @@ class NessieUtils < Utils
     end
   end
 
-  # Returns all students belonging to a department if a department is given; otherwise, returns all students.
-  # @param dept [BOACDepartments]
+  # Returns all students
   # @return [Array<User>]
-  def self.get_all_relevant_students(dept = nil)
-    if dept
-      logger.info "Returning students who belong to department '#{dept.code}'"
-      case dept
-        when BOACDepartments::ASC
-          get_all_asc_students
-        when BOACDepartments::COE
-          get_all_coe_students
-        else
-          logger.error "Invalid dept code '#{dept.code}'"
-          fail
-      end
-    else
-      logger.info 'Returning all students'
-      asc_students = get_all_asc_students
-      coe_students = get_all_coe_students asc_students
-      logger.debug "There are #{asc_students.length} ASC students and #{coe_students.length} CoE students, and #{(asc_students & coe_students).length} shared students."
-      (asc_students + coe_students).uniq
-    end
+  def self.get_all_students
+    asc_students = get_all_asc_students
+    coe_students = get_all_coe_students asc_students
+    logger.debug "There are #{asc_students.length} ASC students and #{coe_students.length} CoE students, and #{(asc_students & coe_students).length} shared students."
+    (asc_students + coe_students).uniq
   end
 
   # DATABASE - ASC STUDENTS

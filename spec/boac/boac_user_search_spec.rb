@@ -4,16 +4,17 @@ describe 'BOAC' do
 
   include Logging
 
-  test_config = BOACUtils.get_user_search_test_config
+  test_config = BOACTestConfig.new
+  test_config.user_search
   # Avoid using ASC 'inactive' students since they won't be visible if the dept is ASC
-  students = test_config.max_cohort_members.select { |s| ['active', nil].include? s.status }
+  test_config.max_cohort_members.select! { |s| s.status != 'inactive' } if test_config.dept == BOACDepartments::ASC
 
   before(:all) do
     @driver = Utils.launch_browser
     @homepage = Page::BOACPages::HomePage.new @driver
     @search_page = Page::BOACPages::SearchResultsPage.new @driver
     @student_page = Page::BOACPages::StudentPage.new @driver
-    @homepage.dev_auth
+    @homepage.dev_auth test_config.advisor
   end
 
   after(:all) { Utils.quit_browser @driver }
@@ -22,7 +23,7 @@ describe 'BOAC' do
 
     after(:all) { @homepage.log_out }
 
-    students.each do |s|
+    test_config.max_cohort_members.each do |s|
 
       it "finds UID #{s.uid} with the complete first name" do
         result_count = @search_page.search s.first_name
