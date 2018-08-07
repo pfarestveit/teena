@@ -85,7 +85,7 @@ module Page
       def click_home_manage_curated
         wait_for_load_and_click home_manage_curated_link_element
         wait_for_title 'Manage Curated Cohorts'
-      end
+      end 
 
       # Returns the element for a user on My List
       # @param user [User]

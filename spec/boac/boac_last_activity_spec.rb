@@ -12,13 +12,14 @@ describe 'BOAC' do
 
     else
 
-      test_config = BOACUtils.get_last_activity_test_config
+      test = BOACTestConfig.new
+      test.last_activity
       pages_tested = []
 
       # Test Last Activity using the current term rather than past term
-      term_to_test = BOACUtils.term
+      test.term = BOACUtils.term
       testable_users = []
-      logger.info "Checking term #{term_to_test}"
+      logger.info "Checking term #{test.term}"
 
       last_activity_csv = Utils.create_test_output_csv('boac-last-activity.csv', %w(Term CCN UID Canvas APIActivity ClassPageActivity StudentPageActivity StudentPageContext))
 
@@ -31,9 +32,9 @@ describe 'BOAC' do
       @student_page = Page::BOACPages::StudentPage.new @driver
 
       @canvas_page.log_in(@cal_net_page, Utils.super_admin_username, Utils.super_admin_password, 'https://bcourses.berkeley.edu')
-      @homepage.dev_auth test_config.advisor
+      @homepage.dev_auth test.advisor
 
-      test_config.max_cohort_members.each do |student|
+      test.max_cohort_members.each do |student|
 
         begin
 
@@ -41,7 +42,7 @@ describe 'BOAC' do
           api_athlete_page = ApiUserAnalyticsPage.new @driver
           api_athlete_page.get_data(@driver, student)
 
-          term = api_athlete_page.terms.find { |t| api_athlete_page.term_name(t) == term_to_test }
+          term = api_athlete_page.terms.find { |t| api_athlete_page.term_name(t) == test.term }
 
           if term
             term_id = api_athlete_page.term_id term
@@ -66,22 +67,22 @@ describe 'BOAC' do
                       api_section_page.get_data(@driver, term_id, section_data[:ccn])
 
                       all_student_data = []
-                      section_students = test_config.all_dept_students.select { |s| api_section_page.student_uids.include? s.uid }
+                      section_students = test.dept_students.select { |s| api_section_page.student_uids.include? s.uid }
                       section_students.each do |section_student|
 
                         # Collect all the Canvas sites associated with that student in that course and the last activity data in BOAC's API data
                         begin
                           api_student_page = ApiUserAnalyticsPage.new @driver
                           api_student_page.get_data(@driver, section_student)
-                          term = api_student_page.terms.find { |t| api_student_page.term_name(t) == term_to_test }
+                          term = api_student_page.terms.find { |t| api_student_page.term_name(t) == test.term }
                           student_course = api_student_page.courses(term).find { |c| api_student_page.course_display_name(c) == course_sis_data[:code] }
                           sites = api_student_page.course_sites student_course
 
                           # Load the student page for the student, and collect all the last activity info shown for each relevant site
                           @student_page.load_page section_student
-                          @student_page.click_view_previous_semesters if term_to_test != BOACUtils.term
+                          @student_page.click_view_previous_semesters if test.term != BOACUtils.term
                           sleep 2
-                          @student_page.expand_course_data(term_to_test, course_sis_data[:code])
+                          @student_page.expand_course_data(test.term, course_sis_data[:code])
 
                           student_data = {
                             :student => section_student,
@@ -90,7 +91,7 @@ describe 'BOAC' do
                                 :site_id => api_student_page.site_metadata(site)[:site_id],
                                 :site_code => api_student_page.site_metadata(site)[:code],
                                 :last_activity_api => api_student_page.nessie_last_activity(site),
-                                :last_activity_student_page => @student_page.visible_last_activity(term_to_test, course_sis_data[:code], sites.index(site))
+                                :last_activity_student_page => @student_page.visible_last_activity(test.term, course_sis_data[:code], sites.index(site))
                               }
                             end)
                           }
@@ -132,7 +133,7 @@ describe 'BOAC' do
 
                                 if s[:site_id] == site_id
                                   canvas_last_activity = @canvas_page.roster_user_last_activity d[:student].uid
-                                  Utils.add_csv_row(last_activity_csv, [term_to_test, site_id, d[:student].uid, canvas_last_activity, s[:last_activity_api], s[:last_activity_class_page], s[:last_activity_student_page][:last_activity], s[:last_activity_student_page][:activity_context]])
+                                  Utils.add_csv_row(last_activity_csv, [test.term, site_id, d[:student].uid, canvas_last_activity, s[:last_activity_api], s[:last_activity_class_page], s[:last_activity_student_page][:last_activity], s[:last_activity_student_page][:activity_context]])
 
                                   if canvas_last_activity.empty?
                                     it("shows null Last Activity in the BOAC API for #{test_case}") { expect(s[:last_activity_api]).to be_nil }
@@ -179,23 +180,23 @@ describe 'BOAC' do
 
                   rescue => e
                     Utils.log_error e
-                    it("hit an error with term #{term_to_test} CCN #{section_data[:ccn]}") { fail }
+                    it("hit an error with term #{test.term} CCN #{section_data[:ccn]}") { fail }
                   end
                 end
               end
             end
           else
-            logger.warn "UID #{student.uid} has no enrollments in #{term_to_test}"
+            logger.warn "UID #{student.uid} has no enrollments in #{test.term}"
           end
 
         rescue => e
           Utils.log_error e
-          it("hit an error with #{test_config.cohort.name} UID #{student.uid}") { fail }
+          it("hit an error with #{test.default_cohort.name} UID #{student.uid}") { fail }
         end
       end
 
       if testable_users.empty?
-        it("has nothing with which to test Last Activity for #{test_config.cohort.name}") { fail }
+        it("has nothing with which to test Last Activity for #{test.default_cohort.name}") { fail }
       end
     end
   rescue => e
