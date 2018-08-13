@@ -14,14 +14,16 @@ module Page
         include BOACPages
         include CohortPages
 
-        # Loads a cohort page by the cohort's ID
+        # If a cohort is a team, loads the team page using search queries; otherwise loads the cohort page by the cohort's ID
         # @param cohort [FilteredCohort]
         def load_cohort(cohort)
           logger.info "Loading cohort '#{cohort.name}'"
-          cohort.instance_of?(Team) ?
-              navigate_to("#{BOACUtils.base_url}/cohort?c=#{cohort.code}") :
-              navigate_to("#{BOACUtils.base_url}/cohort?c=#{cohort.id}")
-          wait_for_title cohort.name
+          if cohort.instance_of? Team
+            load_team_page(cohort)
+          else
+            navigate_to("#{BOACUtils.base_url}/cohort/filtered?c=#{cohort.id}")
+            wait_for_title cohort.name
+          end
         end
 
         # Loads a cohort directly in matrix view
@@ -29,22 +31,25 @@ module Page
         def load_cohort_matrix(cohort)
           logger.info "Loading cohort '#{cohort.name}' ID #{cohort.id} in matrix view"
           cohort.instance_of?(Team) ?
-              navigate_to("#{BOACUtils.base_url}/cohort?c=#{cohort.code}&v=matrix") :
-              navigate_to("#{BOACUtils.base_url}/cohort?c=#{cohort.id}&v=matrix")
+              navigate_to("#{BOACUtils.base_url}/cohort/filtered?c=#{cohort.code}&v=matrix") :
+              navigate_to("#{BOACUtils.base_url}/cohort/filtered?c=#{cohort.id}&v=matrix")
           wait_for_title cohort.name
         end
 
         # Hits a cohort URL and expects the 404 page to load
         # @param cohort [FilteredCohort]
         def hit_non_auth_cohort(cohort)
-          navigate_to "#{BOACUtils.base_url}/cohort?c=#{cohort.id}"
+          navigate_to "#{BOACUtils.base_url}/cohort/filtered?c=#{cohort.id}"
           wait_for_title '404'
         end
 
         # Hits a team page URL
         # @param team [Team]
         def hit_team_url(team)
-          navigate_to "#{BOACUtils.base_url}/cohort?c=#{team.code}"
+          squads = Squad::SQUADS.select { |s| s.parent_team == team }
+          squads.delete_if { |s| s.code.include? '-AA' }
+          query_string = squads.map { |s| "t=#{s.code}&" }
+          navigate_to "#{BOACUtils.base_url}/cohort/filtered?#{query_string}c=search"
         end
 
         # Navigates directly to a team page
@@ -52,14 +57,14 @@ module Page
         def load_team_page(team)
           logger.info "Loading cohort page for team #{team.name}"
           hit_team_url team
-          wait_for_title "#{team.name}"
+          wait_for_title 'Search'
         end
 
         # Hits a cohort search URL for a squad
         # @param squad [Squad]
         def load_squad(squad)
           logger.info "Loading cohort page for squad #{squad.name}"
-          navigate_to "#{BOACUtils.base_url}/cohort?c=search&p=1&t=#{squad.code}"
+          navigate_to "#{BOACUtils.base_url}/cohort/filtered?c=search&p=1&t=#{squad.code}"
           wait_for_title 'Filtered Cohort'
         end
 
@@ -139,7 +144,7 @@ module Page
           click_view_everyone_cohorts
           wait_for_spinner
           sleep 1
-          cohorts = everyone_cohort_link_elements.map { |link| FilteredCohort.new({id: link.attribute('href').gsub("#{BOACUtils.base_url}/cohort?c=", ''), name: link.text}) }
+          cohorts = everyone_cohort_link_elements.map { |link| FilteredCohort.new({id: link.attribute('href').gsub("#{BOACUtils.base_url}/cohort/filtered?c=", ''), name: link.text}) }
           cohorts = cohorts.flatten
           logger.info "Visible Everyone's Cohorts are #{cohorts.map &:name}"
           cohorts
@@ -147,12 +152,12 @@ module Page
 
         # Navigates to the Inactive Students page
         def load_inactive_students_page
-          navigate_to "#{BOACUtils.base_url}/cohort?inactive=true&c=search"
+          navigate_to "#{BOACUtils.base_url}/cohort/filtered?v=true&c=search"
         end
 
         # Navigates to the Intensive Students page
         def load_intensive_students_page
-          navigate_to "#{BOACUtils.base_url}/cohort?i=true&c=search"
+          navigate_to "#{BOACUtils.base_url}/cohort/filtered?i=true&c=search"
         end
 
         # FILTERED COHORTS - Search
@@ -232,7 +237,7 @@ module Page
         end
 
         # Verifies that a set of cohort search criteria are currently selected
-        # @param search_criteria [CohortSearchCriteria]
+        # @param search_criteria [CohortFilter]
         # @return [boolean]
         def search_criteria_selected?(search_criteria)
           wait_until(Utils.short_wait) { level_option_elements.any? }
@@ -280,6 +285,17 @@ module Page
           end
         end
 
+        # Deselects all search options on a given filter
+        # @param filter_button_el [PageObject::Elements::Element]
+        # @param option_els [Array<PageObject::Elements::Element>]
+        def clear_search_options(filter_button_el, option_els)
+          unless option_els.all? &:visible?
+            wait_for_update_and_click filter_button_el
+            wait_until(1) { option_els.all? &:visible? }
+          end
+          option_els.each { |o| o.click if o.attribute('class').include?('not-empty') }
+        end
+
         # Executes a custom cohort search using search criteria associated with a cohort and stores the result count. Optionally writes
         # performance info to a CSV.
         # @param cohort [FilteredCohort]
@@ -296,12 +312,7 @@ module Page
           # Squads
 
           if criteria.squads
-            unless squad_option_elements.all? &:visible?
-              wait_for_update_and_click squad_filter_button_element
-              wait_until(1) { squad_option_elements.all? &:visible? }
-            end
-            squad_option_elements.each { |o| o.click if o.attribute('class').include?('not-empty') }
-
+            clear_search_options(squad_filter_button_element, squad_option_elements)
             criteria.squads.each do |s|
               # The squads list can change over time. Avoid test failures if the search criteria is out of sync with actual squads.
               if squad_option_element(s).exists?
@@ -316,11 +327,7 @@ module Page
 
           # Levels
 
-          unless level_option_elements.all? &:visible?
-            wait_for_update_and_click level_filter_button_element
-            wait_until(1) { level_option_elements.all? &:visible? }
-          end
-          level_option_elements.each { |o| o.click if o.attribute('class').include?('not-empty') }
+          clear_search_options(level_filter_button_element, level_option_elements)
           criteria.levels.each do |l|
             logger.debug "Selecting #{l}"
             check_search_option levels_option_element(l)
@@ -328,11 +335,7 @@ module Page
 
           # Majors
 
-          unless major_option_elements.all? &:visible?
-            wait_for_update_and_click major_filter_button_element
-            wait_until(1) { major_option_elements.all? &:visible? }
-          end
-          major_option_elements.each { |o| o.click if o.attribute('class').include?('not-empty') }
+          clear_search_options(major_filter_button_element, major_option_elements)
           if criteria.majors
             # If 'Declared' is selected, then no other majors can be used as search criteria.
             criteria.majors = ['Declared'] if criteria.majors.include? 'Declared'
@@ -348,11 +351,7 @@ module Page
 
           # GPA ranges
 
-          unless gpa_range_option_elements.all? &:visible?
-            wait_for_update_and_click gpa_range_filter_button_element
-            wait_until(1) { gpa_range_option_elements.all? &:visible? }
-          end
-          gpa_range_option_elements.each { |o| o.click if o.attribute('class').include?('not-empty') }
+          clear_search_options(gpa_range_filter_button_element, gpa_range_option_elements)
           criteria.gpa_ranges.each do |g|
             logger.debug "Selecting #{g}"
             check_search_option gpa_range_option_element(g)
@@ -360,11 +359,7 @@ module Page
 
           # Units ranges
 
-          unless units_option_elements.all? &:visible?
-            wait_for_update_and_click units_filter_button_element
-            wait_until(1) { units_option_elements.all? &:visible? }
-          end
-          units_option_elements.each { |u| u.click if u.attribute('class').include?('not-empty') }
+          clear_search_options(units_filter_button_element, units_option_elements)
           criteria.units.each do |u|
             logger.debug "Selecting #{u}"
             check_search_option units_option_element(u)
@@ -384,7 +379,7 @@ module Page
         # Filters an array of user data hashes according to search criteria and returns the users that should be present in the UI after
         # the search completes
         # @param user_data [Array<Hash>]
-        # @param search_criteria [CohortSearchCriteria]
+        # @param search_criteria [CohortFilter]
         # @return [Array<Hash>]
         def expected_search_results(user_data, search_criteria)
           matching_squad_users = (search_criteria.squads && search_criteria.squads.any?) ?

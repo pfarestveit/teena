@@ -208,6 +208,7 @@ module Page
       # Collect all possible info from detail view
       assignments.each do |assign|
         begin
+          logger.debug "Checking assignment ID #{assign.id}"
           navigate_to assign.url
           sleep 1
           h1_element(xpath: '//h1').when_visible Utils.short_wait

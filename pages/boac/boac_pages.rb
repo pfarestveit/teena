@@ -75,13 +75,13 @@ module Page
 
     # 'Create' modal
     text_area(:curated_name_input, id: 'curated-cohort-create-input')
-    button(:curated_save_button, id: 'confirm-create-curated-cohort-btn')
-    button(:curated_cancel_button, id: 'cancel-create-curated-cohort-btn')
+    button(:curated_save_button, id: 'curated-cohort-create-confirm-btn')
+    button(:curated_cancel_button, id: 'curated-cohort-create-cancel-btn')
 
     # Sidebar
     link(:sidebar_create_curated_link, id: 'sidebar-curated-cohort-create')
     link(:sidebar_manage_curated_link, id: 'sidebar-curated-cohorts-manage')
-    elements(:sidebar_curated_cohort_link, :link, xpath: '//div[@data-ng-repeat="group in myGroups"]//a')
+    elements(:sidebar_curated_cohort_link, :link, xpath: '//div[@data-ng-repeat="cohort in myCuratedCohorts"]//a[contains(@class,"sidebar")]')
 
     # Clicks the sidebar button to manage the user's curated cohorts
     def sidebar_click_manage_curated
@@ -137,7 +137,7 @@ module Page
     def wait_for_sidebar_curated_member_count(cohort)
       logger.debug "Waiting for curated cohort member count of #{cohort.members.length}"
       wait_until(Utils.short_wait) do
-        el = span_element(xpath: "//div[@data-ng-repeat=\"group in myGroups\"]//a[contains(.,\"#{cohort.name}\")]/following-sibling::span")
+        el = span_element(xpath: "//div[@data-ng-repeat=\"cohort in myCuratedCohorts\"]//a[contains(.,\"#{cohort.name}\")][contains(@class,\"sidebar\")]/following-sibling::span")
         (el && el.text) == cohort.members.length.to_s
       end
     end
@@ -195,8 +195,8 @@ module Page
       name_and_save_curated_cohort cohort
       cohort.members << students
       cohort.members.flatten!
-      wait_for_sidebar_curated cohort
       added_to_curated_conf_element.when_visible Utils.short_wait
+      wait_for_sidebar_curated cohort
     end
 
     # Adds all the students on a page to a curated cohort
@@ -254,7 +254,7 @@ module Page
     # Clicks the button to view all custom cohorts
     def click_view_everyone_cohorts
       wait_for_load_and_click view_everyone_cohorts_link_element
-      wait_for_title 'Cohorts'
+      wait_for_title 'Filtered Cohorts All'
     end
 
     # Clicks the link for My Students
@@ -359,9 +359,9 @@ module Page
 
     # DATA FOR ALL USERS PRESENT
 
-    elements(:player_link, :link, xpath: '//div[contains(@class,"list-group-item")]//a')
-    elements(:player_name, :h3, xpath: '//div[contains(@class,"list-group-item")]//h3')
-    elements(:player_sid, :div, xpath: '//div[contains(@class,"list-group-item")]//div[contains(@class, "student-sid")]')
+    elements(:player_link, :link, xpath: '//div[contains(@data-ng-repeat,"student in cohort.students")]//a')
+    elements(:player_name, :h3, xpath: '//div[contains(@data-ng-repeat,"student in cohort.students")]//h3')
+    elements(:player_sid, :div, xpath: '//div[contains(@data-ng-repeat,"student in cohort.students")]//div[contains(@class, "student-sid")]')
 
     # Waits for list view results to load
     def wait_for_student_list

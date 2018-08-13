@@ -5,17 +5,9 @@ begin
   include Logging
 
   performance_data = File.join(Utils.initialize_test_output_dir, "boac-search-performance-#{Utils.get_test_id}.csv")
-
-  dept = BOACUtils.test_dept
-  user = BOACDepartments::DEPARTMENTS.include?(dept) ? BOACUtils.get_dept_advisors(dept).first : User.new({:uid => Utils.super_admin_uid})
-
-  test_search_criteria = BOACUtils.get_test_search_criteria
-  unless dept == BOACDepartments::ASC
-    test_search_criteria.each { |c| c.squads = nil }
-    test_search_criteria.keep_if { |c| [c.levels, c.majors, c.gpa_ranges, c.units].compact.any? }
-  end
-
-  cohorts = test_search_criteria.map { |criteria| FilteredCohort.new({:search_criteria => criteria}) }
+  all_students = NessieUtils.get_all_students
+  test = BOACTestConfig.new
+  test.filtered_cohorts all_students
 
   @driver = Utils.launch_browser
   @analytics_page = ApiUserAnalyticsPage.new @driver
@@ -23,7 +15,7 @@ begin
   @cohort_page = Page::BOACPages::CohortPages::FilteredCohortListViewPage.new @driver
   @homepage.dev_auth user
 
-  cohorts.each do |cohort|
+  test.searches.each do |cohort|
     begin
 
       # SEARCHING

@@ -6,8 +6,9 @@ describe 'BOAC', order: :defined do
 
   performance_data = File.join(Utils.initialize_test_output_dir, 'boac-search-performance.csv')
 
+  all_students = NessieUtils.get_all_students
   test = BOACTestConfig.new
-  test.filtered_cohorts
+  test.filtered_cohorts all_students
   pre_existing_cohorts = BOACUtils.get_user_filtered_cohorts test.advisor
 
   before(:all) do
@@ -19,8 +20,8 @@ describe 'BOAC', order: :defined do
 
     # Get the student data relevant to all search filters.
     @homepage.dev_auth
-    test.dept_students.delete_if { |s| s.status == 'inactive' } if test.dept == BOACDepartments::ASC
-    @searchable_students = @analytics_page.collect_users_searchable_data(@driver, test)
+    test.dept_students.keep_if &:status if test.dept == BOACDepartments::ASC
+    @searchable_students = @analytics_page.collect_users_searchable_data(@driver, all_students, test)
 
     @homepage.load_page
     @homepage.log_out
@@ -192,7 +193,7 @@ describe 'BOAC', order: :defined do
       my_students.name = 'My Students' if my_students
       @homepage.load_page
       @homepage.wait_until(Utils.short_wait) { @homepage.filtered_cohorts.any? }
-      expect(@homepage.filtered_cohorts.sort).to eql((test.searches.map &:name).sort)
+      @homepage.wait_until(1, "Expected #{(test.searches.map &:name).sort}, but got #{@homepage.filtered_cohorts.sort}") { @homepage.filtered_cohorts.sort == (test.searches.map &:name).sort }
     end
   end
 

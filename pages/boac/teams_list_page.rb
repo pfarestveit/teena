@@ -17,7 +17,7 @@ module Page
 
       # Loads the teams list page
       def load_page
-        navigate_to "#{BOACUtils.base_url}/cohorts/teams"
+        navigate_to "#{BOACUtils.base_url}/teams"
       end
 
       # Returns the text of all the team cohort links
