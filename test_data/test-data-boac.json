@@ -1,5 +1,5 @@
 {
-    "search_criteria": [
+    "filters": [
         {
             "teams": [
                 {"squad": "Women's Tennis"},

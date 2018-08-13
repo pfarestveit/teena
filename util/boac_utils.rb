@@ -83,24 +83,19 @@ class BOACUtils < Utils
   # Returns a collection of search criteria to use for testing cohort search
   # @param dept [BOACDepartments]
   # @return [Array<Hash>]
-  def self.get_test_search_criteria(dept = nil)
+  def self.get_test_cohort_filters(dept)
     test_data_file = File.join(Utils.config_dir, 'test-data-boac.json')
     test_data = JSON.parse File.read(test_data_file)
-    searches = test_data['search_criteria'].map do |d|
-      criteria = {
-        squads: (d['teams'] && d['teams'].map { |t| Squad::SQUADS.find { |s| s.name == t['squad'] } }),
-        levels: (d['levels'] && d['levels'].map { |l| l['level'] }),
-        majors: (d['majors'] && d['majors'].map { |t| t['major'] }),
-        gpa_ranges: (d['gpa_ranges'] && d['gpa_ranges'].map { |g| g['gpa_range'] }),
-        units: (d['units'] && d['units'].map { |u| u['unit'] })
-      }
-      CohortSearchCriteria.new criteria
+    filters = test_data['filters'].map do |data|
+      filter = CohortFilter.new
+      filter.set_test_filters(data, dept)
     end
-    unless dept == BOACDepartments::ASC
-      searches.each { |c| c.squads = nil }
-      searches.keep_if { |c| [c.levels, c.majors, c.gpa_ranges, c.units].compact.any? }
+    # Get rid of empty filter sets (e.g., filtering only for teams but the advisor is CoE)
+    filters.delete_if do |f|
+      filter_options = f.instance_variables.map { |variable| f.instance_variable_get variable }
+      filter_options.delete_if { |value| value.nil? || value.empty? }
+      filter_options.empty?
     end
-    searches
   end
 
   # Returns the db credentials for BOAC
@@ -118,17 +113,17 @@ class BOACUtils < Utils
   # DATABASE - USERS
 
   # Returns all authorized users
-  # @return [Array<User>]
+  # @return [Array<BOACUser>]
   def self.get_authorized_users
     query = 'SELECT authorized_users.uid AS uid,
                     authorized_users.is_admin AS admin
               FROM authorized_users;'
     results = query_pg_db(boac_db_credentials, query)
-    results.map { |r| User.new({uid: r['uid']}) }
+    results.map { |r| BOACUser.new({uid: r['uid']}) }
   end
 
   # Returns all the advisors associated with a department
-  # @return [Array<User>]
+  # @return [Array<BOACUser>]
   def self.get_dept_advisors(dept)
     query = "SELECT authorized_users.uid
               FROM authorized_users
@@ -136,13 +131,13 @@ class BOACUtils < Utils
               INNER JOIN university_depts on university_dept_members.university_dept_id = university_depts.id
               WHERE university_depts.dept_code = '#{dept.code}';"
     results = query_pg_db(boac_db_credentials, query)
-    results.map { |r| User.new({uid: r['uid']}) }
+    results.map { |r| BOACUser.new({uid: r['uid']}) }
   end
 
   # DATABASE - CURATED COHORTS
 
   # Returns the curated cohorts belonging to a given user
-  # @param user [User]
+  # @param user [BOACUser]
   # @return [Array<CuratedCohort>]
   def self.get_user_curated_cohorts(user)
     query = "SELECT student_groups.id AS id, student_groups.name AS name
@@ -167,7 +162,7 @@ class BOACUtils < Utils
   # DATABASE - FILTERED COHORTS
 
   # Returns the filtered cohorts belonging to a given user
-  # @param user [User]
+  # @param user [BOACUser]
   # @return [Array<FilteredCohort>]
   def self.get_user_filtered_cohorts(user)
     query = "SELECT cohort_filters.id AS cohort_id,
@@ -221,7 +216,7 @@ class BOACUtils < Utils
   # DATABASE - ALERTS
 
   # Given a set of students, returns all their active alerts in the current term
-  # @param users [Array<User>]
+  # @param users [Array<BOACUser>]
   # @return [Array<Alert>]
   def self.get_students_alerts(users)
     sids = users.map(&:sis_id).to_s.delete('[]')
@@ -231,7 +226,7 @@ class BOACUtils < Utils
                 AND active = true
                 AND key LIKE '#{term_code}%';"
     results = Utils.query_pg_db(boac_db_credentials, query.gsub("\"", '\''))
-    alerts = results.map { |r| Alert.new({id: r['id'], type: r['alert_type'], message: r['message'], user: User.new({sis_id: r['sid']})}) }
+    alerts = results.map { |r| Alert.new({id: r['id'], type: r['alert_type'], message: r['message'], user: BOACUser.new({sis_id: r['sid']})}) }
     alerts.sort_by &:message
   end
 
@@ -246,7 +241,7 @@ class BOACUtils < Utils
   # Given a set of alerts, returns those that have been dismissed by an advisor. If no advisor is specificed, then the test admin user
   # is the advisor by default.
   # @param alerts [Array<Alert>]
-  # @param advisor [User]
+  # @param advisor [BOACUser]
   # @return [Array<Alert>]
   def self.get_dismissed_alerts(alerts, advisor = nil)
     if alerts.any?
@@ -266,7 +261,7 @@ class BOACUtils < Utils
 
   # Deletes the dismissal of an alert by a given advisor or the admin test user by default
   # @param alert [Alert]
-  # @param advisor [User]
+  # @param advisor [BOACUser]
   def self.remove_alert_dismissal(alert, advisor = nil)
     query = "DELETE
               FROM alert_views
@@ -287,7 +282,7 @@ class BOACUtils < Utils
                 AND key LIKE '#{term_code}%'
               LIMIT 1;"
     results = Utils.query_pg_db(boac_db_credentials, query)
-    alert = (results.map { |r| Alert.new({id: r['id'], message: r['message'], user: User.new({sis_id: r['sid']})}) }).first
+    alert = (results.map { |r| Alert.new({id: r['id'], message: r['message'], user: BOACUser.new({sis_id: r['sid']})}) }).first
     # If an alert exists and the admin tester has dismissed the alert, delete the dismissal to permit dismissal testing
     if alert
       remove_alert_dismissal(alert) if get_dismissed_alerts([alert]).any?

@@ -10,6 +10,9 @@ begin
   user_course_data_heading = %w(UID Term CourseCode CourseName SectionCcn SectionCode Primary? Midpoint Grade GradingBasis Units EnrollmentStatus)
   user_course_sis_data = Utils.create_test_output_csv('boac-sis-courses.csv', user_course_data_heading)
 
+  user_site_data_heading = %w(UID Term SiteCode SiteId AssignMin AssignMax AssignUser AssignPerc AssignRound GradesMin GradesMax GradesUser GradesPerc GradesRound)
+  user_course_site_data = Utils.create_test_output_csv('boac-canvas-sites.csv', user_site_data_heading)
+
   @driver = Utils.launch_browser
   @boac_homepage = Page::BOACPages::HomePage.new @driver
   @boac_homepage.dev_auth
@@ -63,6 +66,23 @@ begin
                       drops.each do |drop|
                         row = [student.uid, term_name, drop[:title], nil, nil, drop[:number], nil, nil, nil, nil, nil, 'D']
                         Utils.add_csv_row(user_course_sis_data, row)
+                      end
+                    end
+
+                    user_analytics_data.course_sites(course).each do |site|
+                      begin
+
+                        site_metadata = user_analytics_data.site_metadata site
+                        site_assigns = user_analytics_data.nessie_assigns_submitted site
+                        site_grades = user_analytics_data.nessie_grades site
+
+                        row = [student.uid, term_name, course_code, site_metadata[:code], site_metadata[:title], site_metadata[:site_id],
+                               site_assigns[:min], site_assigns[:score], site_assigns[:max], site_assigns[:perc_round],
+                               site_grades[:min], site_grades[:score], site_grades[:max], site_grades[:perc_round]]
+
+                        Utils.add_csv_row(user_course_site_data, row)
+                      rescue => e
+                        BOACUtils.log_error_and_screenshot(@driver, e, "#{student.uid}-#{term_name}-#{course_code}")
                       end
                     end
 

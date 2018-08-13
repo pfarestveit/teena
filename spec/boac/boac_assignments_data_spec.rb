@@ -13,7 +13,7 @@ describe 'BOAC assignment analytics' do
     else
 
       test = BOACTestConfig.new
-      test.assignments
+      test.assignments NessieUtils.get_all_students
 
       user_analytics_data_heading = %w(UID Sport Term SiteCode SiteId
                                         AssignMin AssignMax AssignUser AssignPerc AssignRound

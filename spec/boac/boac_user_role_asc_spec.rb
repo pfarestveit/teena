@@ -4,17 +4,19 @@ describe 'An ASC advisor' do
 
   include Logging
 
-  asc_advisor = BOACUtils.get_dept_advisors(BOACDepartments::ASC).first
-  asc_students = NessieUtils.get_all_asc_students
-  asc_inactive_students = asc_students.select { |u| u.status == 'inactive' }
-  asc_intensive_students = NessieUtils.get_intensive_asc_students
+  all_students = NessieUtils.get_all_students
 
-  coe_students = NessieUtils.get_all_coe_students asc_students
+  test_asc = BOACTestConfig.new
+  test_asc.user_role_asc all_students
 
-  overlap_students = asc_students & coe_students
-  coe_only_students = coe_students - overlap_students
+  test_coe = BOACTestConfig.new
+  test_coe.user_role_coe all_students
 
-  search_criteria = BOACUtils.get_test_search_criteria BOACDepartments::ASC
+  asc_inactive_students = test_asc.dept_students.reject &:active_asc
+  asc_intensive_students = test_asc.dept_students.select &:intensive_asc
+
+  overlap_students = test_asc.dept_students & test_coe.dept_students
+  coe_only_students = test_coe.dept_students - overlap_students
 
   before(:all) do
     @driver = Utils.launch_browser
@@ -32,9 +34,9 @@ describe 'An ASC advisor' do
 
     # Collect searchable user data relevant to an ASC advisor
     @homepage.dev_auth
-    @all_student_search_data = @api_user_analytics_page.collect_users_searchable_data @driver
+    @all_student_search_data = @api_user_analytics_page.collect_users_searchable_data(@driver, all_students)
 
-    @asc_student_sids = asc_students.map &:sis_id
+    @asc_student_sids = test_asc.dept_students.map &:sis_id
     @asc_student_search_data = @all_student_search_data.select { |d| @asc_student_sids.include? d[:sid] }
 
     @inactive_student_sids = asc_inactive_students.map &:sis_id
@@ -48,7 +50,7 @@ describe 'An ASC advisor' do
 
     @homepage.load_page
     @homepage.log_out
-    @homepage.dev_auth asc_advisor
+    @homepage.dev_auth test_asc.advisor
   end
 
   after(:all) { Utils.quit_browser @driver }
@@ -83,7 +85,7 @@ describe 'An ASC advisor' do
     it 'sees only ASC student data in a section endpoint' do
       api_section_page = ApiSectionPage.new @driver
       api_section_page.get_data(@driver, '2178', '13826')
-      expect(asc_students.map(&:sis_id).sort & api_section_page.student_sids).to eql(api_section_page.student_sids.sort)
+      expect(test_asc.dept_students.map(&:sis_id).sort & api_section_page.student_sids).to eql(api_section_page.student_sids.sort)
     end
   end
 
@@ -115,7 +117,7 @@ describe 'An ASC advisor' do
     end
 
     it 'sees all inactive students with an INACTIVE indicator' do
-      expected_results = @filtered_cohort_page.expected_sids_by_last_name(@inactive_student_search_data, CohortSearchCriteria.new({})).sort
+      expected_results = @filtered_cohort_page.expected_sids_by_last_name(@inactive_student_search_data, CohortFilter.new).sort
       @filtered_cohort_page.wait_until(1, "Expected #{expected_results}, but got #{@visible_inactive_students.sort}") { @visible_inactive_students.sort == expected_results }
       # TODO - inactive indicator
     end
@@ -129,21 +131,19 @@ describe 'An ASC advisor' do
     end
 
     it 'can filter for inactive students in a search' do
-      cohort = FilteredCohort.new({:search_criteria => search_criteria[0]})
       @filtered_cohort_page.click_inactive_cohort
       expect(@filtered_cohort_page.inactive_cbx_element.attribute('checked')).to eql('true')
-      @filtered_cohort_page.perform_search cohort
-      expected_results = @filtered_cohort_page.expected_sids_by_last_name(@inactive_student_search_data, cohort.search_criteria).sort
+      @filtered_cohort_page.perform_search test_asc.searches[0]
+      expected_results = @filtered_cohort_page.expected_sids_by_last_name(@inactive_student_search_data, test_asc.searches[0].search_criteria).sort
       visible_results = @filtered_cohort_page.visible_sids
       @filtered_cohort_page.wait_until(1, "Expected but not present: #{expected_results - visible_results}. Present but not expected: #{visible_results - expected_results}") { visible_results.sort == expected_results.sort }
     end
 
     it 'can remove the filter for inactive students in a search' do
-      cohort = FilteredCohort.new({:search_criteria => search_criteria[1]})
       expect(@filtered_cohort_page.inactive_cbx_element.attribute('checked')).to eql('true')
       @filtered_cohort_page.click_inactive
-      @filtered_cohort_page.perform_search cohort
-      expected_results = @filtered_cohort_page.expected_sids_by_last_name((@asc_student_search_data - @inactive_student_search_data), cohort.search_criteria).sort
+      @filtered_cohort_page.perform_search test_asc.searches[1]
+      expected_results = @filtered_cohort_page.expected_sids_by_last_name((@asc_student_search_data - @inactive_student_search_data), test_asc.searches[1].search_criteria).sort
       visible_results = @filtered_cohort_page.visible_sids
       @filtered_cohort_page.wait_until(1, "Expected but not present: #{expected_results - visible_results}. Present but not expected: #{visible_results - expected_results}") { visible_results.sort == expected_results.sort }
     end
@@ -159,27 +159,25 @@ describe 'An ASC advisor' do
     end
 
     it 'sees all intensive students' do
-      expected_results = @filtered_cohort_page.expected_sids_by_last_name(@intensive_student_search_data, CohortSearchCriteria.new({})).sort
+      expected_results = @filtered_cohort_page.expected_sids_by_last_name(@intensive_student_search_data, CohortFilter.new({})).sort
       @filtered_cohort_page.wait_until(1, "Expected #{expected_results}, but got #{@visible_intensive_students.sort}")  { @visible_intensive_students.sort == expected_results }
     end
 
     it('sees at least one intensive student') { expect(@visible_intensive_students.any?).to be true }
 
     it 'can filter for intensive students in a search' do
-      cohort = FilteredCohort.new({:search_criteria => search_criteria[0]})
       expect(@filtered_cohort_page.intensive_cbx_element.attribute('checked')).to eql('true')
-      @filtered_cohort_page.perform_search cohort
-      expected_results = @filtered_cohort_page.expected_sids_by_last_name(@intensive_student_search_data, cohort.search_criteria).sort
+      @filtered_cohort_page.perform_search test_asc.searches[0]
+      expected_results = @filtered_cohort_page.expected_sids_by_last_name(@intensive_student_search_data, test_asc.searches[0].search_criteria).sort
       visible_results = @filtered_cohort_page.visible_sids
       @filtered_cohort_page.wait_until(1, "Expected but not present: #{expected_results - visible_results}. Present but not expected: #{visible_results - expected_results}") { visible_results.sort == expected_results.sort }
     end
 
     it 'can remove the filter for intensive students in a search' do
-      cohort = FilteredCohort.new({:search_criteria => search_criteria[1]})
       expect(@filtered_cohort_page.intensive_cbx_element.attribute('checked')).to eql('true')
       @filtered_cohort_page.click_intensive
-      @filtered_cohort_page.perform_search cohort
-      expected_results = @filtered_cohort_page.expected_sids_by_last_name((@asc_student_search_data - @inactive_student_search_data), cohort.search_criteria).sort
+      @filtered_cohort_page.perform_search test_asc.searches[1]
+      expected_results = @filtered_cohort_page.expected_sids_by_last_name((@asc_student_search_data - @inactive_student_search_data), test_asc.searches[1]).sort
       visible_results = @filtered_cohort_page.visible_sids
       @filtered_cohort_page.wait_until(1, "Expected but not present: #{expected_results - visible_results}. Present but not expected: #{visible_results - expected_results}") { visible_results.sort == expected_results.sort }
     end

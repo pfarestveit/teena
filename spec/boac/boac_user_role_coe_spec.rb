@@ -4,24 +4,23 @@ describe 'A CoE advisor using BOAC' do
 
   include Logging
 
-  asc_students = NessieUtils.get_all_asc_students
-  coe_students = NessieUtils.get_all_coe_students asc_students
+  all_students = NessieUtils.get_all_students
 
-  overlap_students = asc_students & coe_students
-  asc_only_students = asc_students - overlap_students
+  test_asc = BOACTestConfig.new
+  test_asc.user_role_asc all_students
 
-  coe_advisors = BOACUtils.get_dept_advisors BOACDepartments::COE
-  coe_advisor = coe_advisors.first
-  coe_advisor_students = NessieUtils.get_coe_advisor_students(coe_advisor, coe_students)
+  test_coe = BOACTestConfig.new
+  test_coe.user_role_coe all_students
 
-  coe_everyone_filters = BOACUtils.get_everyone_filtered_cohorts BOACDepartments::COE
-  coe_other_advisor_filter = coe_everyone_filters.find { |f| f.read_only && f.owner_uid != coe_advisor.uid }
+  overlap_students = test_asc.dept_students & test_coe.dept_students
+  asc_only_students = test_asc.dept_students - overlap_students
+
+  coe_advisors = BOACUtils.get_dept_advisors test_coe.dept
+  coe_everyone_filters = BOACUtils.get_everyone_filtered_cohorts test_coe.dept
+  coe_other_advisor_filter = coe_everyone_filters.find { |f| f.read_only && f.owner_uid != test_coe.advisor.uid }
 
   coe_other_advisor = coe_advisors.find { |a| a.uid == coe_other_advisor_filter.owner_uid }
-  coe_other_advisor_students = NessieUtils.get_coe_advisor_students(coe_other_advisor, coe_students)
-
-  search_criteria = BOACUtils.get_test_search_criteria.each { |c| c.squads = nil }
-  search_criteria.keep_if { |c| [c.levels, c.majors, c.gpa_ranges, c.units].compact.any? }
+  coe_other_advisor_students = NessieUtils.get_coe_advisor_students(coe_other_advisor, test_coe.dept_students)
 
   before(:all) do
     @driver = Utils.launch_browser
@@ -37,12 +36,12 @@ describe 'A CoE advisor using BOAC' do
     @teams_page = Page::BOACPages::TeamsListPage.new @driver
 
     @homepage.dev_auth
-    all_student_search_data = @api_user_analytics_page.collect_users_searchable_data @driver
+    all_student_search_data = @api_user_analytics_page.collect_users_searchable_data(@driver, all_students)
 
-    @coe_student_sids = coe_students.map &:sis_id
+    @coe_student_sids = test_coe.dept_students.map &:sis_id
     @coe_student_search_data = all_student_search_data.select { |d| @coe_student_sids.include? d[:sid] }
 
-    @my_students_sids = coe_advisor_students.map &:sis_id
+    @my_students_sids = test_coe.cohort_members.map &:sis_id
     @my_students_search_data = all_student_search_data.select { |d| @my_students_sids.include? d[:sid] }
 
     @your_students_sids = coe_other_advisor_students.map &:sis_id
@@ -50,7 +49,7 @@ describe 'A CoE advisor using BOAC' do
 
     @homepage.load_page
     @homepage.log_out
-    @homepage.dev_auth coe_advisor
+    @homepage.dev_auth test_coe.advisor
   end
 
   after(:all) { Utils.quit_browser @driver }
@@ -58,13 +57,13 @@ describe 'A CoE advisor using BOAC' do
   context 'when visiting Everyone\'s Cohorts' do
 
     it 'sees only filtered cohorts created by CoE advisors' do
-      expected_cohort_names = BOACUtils.get_everyone_filtered_cohorts(BOACDepartments::COE).map(&:id).sort
+      expected_cohort_names = coe_everyone_filters.map(&:id).sort
       visible_cohort_names = (@filtered_cohort_page.visible_everyone_cohorts.map &:id).sort
       @filtered_cohort_page.wait_until(1, "Expected #{expected_cohort_names}, but got #{visible_cohort_names}") { visible_cohort_names == expected_cohort_names }
     end
 
     it 'cannot hit a non-CoE filtered cohort URL' do
-      asc_everyone_cohorts = BOACUtils.get_everyone_filtered_cohorts BOACDepartments::ASC
+      asc_everyone_cohorts = BOACUtils.get_everyone_filtered_cohorts test_asc.dept
       asc_everyone_cohorts.any? ?
           @filtered_cohort_page.hit_non_auth_cohort(asc_everyone_cohorts.first) :
           logger.warn('Skipping test for CoE access to ASC cohorts because ASC has no cohorts.')
@@ -84,7 +83,7 @@ describe 'A CoE advisor using BOAC' do
     it 'cannot hit team filters directly' do
       @filtered_cohort_page.load_squad Squad::MFB_ST
       @filtered_cohort_page.wait_for_search_results
-      expect(@filtered_cohort_page.results_count).to eql(coe_students.length)
+      expect(@filtered_cohort_page.results_count).to eql(test_coe.dept_students.length)
     end
   end
 
@@ -95,7 +94,7 @@ describe 'A CoE advisor using BOAC' do
     it 'sees only CoE student data in a section endpoint' do
       api_section_page = ApiSectionPage.new @driver
       api_section_page.get_data(@driver, '2178', '13826')
-      api_section_page.wait_until(1, "Expected #{coe_students.map(&:sis_id).sort & api_section_page.student_sids}, but got #{api_section_page.student_sids.sort}") { expect(coe_students.map(&:sis_id).sort & api_section_page.student_sids).to eql(api_section_page.student_sids.sort) }
+      api_section_page.wait_until(1, "Expected #{test_coe.dept_students.map(&:sis_id).sort & api_section_page.student_sids}, but got #{api_section_page.student_sids.sort}") { expect(test_coe.dept_students.map(&:sis_id).sort & api_section_page.student_sids).to eql(api_section_page.student_sids.sort) }
     end
   end
 
@@ -135,14 +134,14 @@ describe 'A CoE advisor using BOAC' do
     end
 
     it 'sees all My Students' do
-      expected_results = @filtered_cohort_page.expected_sids_by_last_name(@my_students_search_data, CohortSearchCriteria.new({})).sort
+      expected_results = @filtered_cohort_page.expected_sids_by_last_name(@my_students_search_data, CohortFilter.new).sort
       @filtered_cohort_page.wait_until(1, "Expected #{expected_results}, but got #{@visible_my_students.sort}") { @visible_my_students.sort == expected_results }
     end
 
     it('sees at least one student') { expect(@visible_my_students.any?).to be true }
 
     it 'can filter for My Students in a search' do
-      cohort = FilteredCohort.new({:search_criteria => search_criteria[0]})
+      cohort = test_coe.searches[0]
       expect(@filtered_cohort_page.my_students_cbx_element.attribute('checked')).to eql('true')
       @filtered_cohort_page.perform_search cohort
       expected_results = @filtered_cohort_page.expected_sids_by_last_name(@my_students_search_data, cohort.search_criteria).sort
@@ -151,7 +150,7 @@ describe 'A CoE advisor using BOAC' do
     end
 
     it 'can remove the filter for My Students in a search' do
-      cohort = FilteredCohort.new({:search_criteria => search_criteria[1]})
+      cohort = test_coe.searches[1]
       expect(@filtered_cohort_page.my_students_cbx_element.attribute('checked')).to eql('true')
       @filtered_cohort_page.click_my_students
       @filtered_cohort_page.perform_search cohort
@@ -171,14 +170,14 @@ describe 'A CoE advisor using BOAC' do
     end
 
     it 'sees all Your Students' do
-      expected_results = @filtered_cohort_page.expected_sids_by_last_name(@your_students_search_data, CohortSearchCriteria.new({})).sort
+      expected_results = @filtered_cohort_page.expected_sids_by_last_name(@your_students_search_data, CohortFilter.new).sort
       @filtered_cohort_page.wait_until(1, "Expected #{expected_results}, but got #{@visible_your_students.sort}")  { @visible_your_students.sort == expected_results }
     end
 
     it('sees at least one student') { expect(@visible_your_students.any?).to be true }
 
     it 'can filter for Your Students in a search' do
-      cohort = FilteredCohort.new({:search_criteria => search_criteria[0]})
+      cohort = test_coe.searches[0]
       expect(@filtered_cohort_page.my_students_cbx_element.attribute('checked')).to eql('true')
       @filtered_cohort_page.perform_search cohort
       expected_results = @filtered_cohort_page.expected_sids_by_last_name(@your_students_search_data, cohort.search_criteria).sort
@@ -187,7 +186,7 @@ describe 'A CoE advisor using BOAC' do
     end
 
     it 'can remove the filter for Your Students in a search' do
-      cohort = FilteredCohort.new({:search_criteria => search_criteria[1]})
+      cohort = test_coe.searches[1]
       expect(@filtered_cohort_page.my_students_cbx_element.attribute('checked')).to eql('true')
       @filtered_cohort_page.click_my_students
       @filtered_cohort_page.perform_search cohort

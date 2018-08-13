@@ -4,12 +4,12 @@ describe 'An admin using BOAC' do
 
   include Logging
 
-  asc_students = NessieUtils.get_all_asc_students
-  coe_students = NessieUtils.get_all_coe_students asc_students
+  all_students = NessieUtils.get_all_students
+  test = BOACTestConfig.new
+  test.user_role_admin all_students
 
-  overlap_students = asc_students & coe_students
-  asc_only_students = asc_students - overlap_students
-  coe_only_students = coe_students - overlap_students
+  coe_only_students = all_students.select { |s| s.depts == [BOACDepartments::COE] }
+  asc_only_students = all_students.select { |s| s.depts == [BOACDepartments::ASC] }
 
   everyone_cohorts = BOACUtils.get_everyone_filtered_cohorts
 
@@ -25,7 +25,7 @@ describe 'An admin using BOAC' do
     @student_page = Page::BOACPages::StudentPage.new @driver
     @teams_page = Page::BOACPages::TeamsListPage.new @driver
 
-    @homepage.dev_auth
+    @homepage.dev_auth test.advisor
   end
 
   after(:all) { Utils.quit_browser @driver }

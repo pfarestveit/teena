@@ -5,16 +5,11 @@ describe 'BOAC', order: :defined do
   include Logging
 
   test = BOACTestConfig.new
-  test.curated_cohorts
+  test.curated_cohorts NessieUtils.get_all_students
 
   advisor_cohorts = []
   other_advisor = BOACUtils.get_authorized_users.find { |u| u.uid != test.advisor.uid }
   pre_existing_cohorts = BOACUtils.get_user_curated_cohorts test.advisor
-  test.cohort_members.delete_if { |s| s.status == 'inactive' }
-  if test.dept == BOACDepartments::COE
-    test.cohort_members = test.cohort_members[0..49]
-    test.default_cohort.name = 'My Students'
-  end
 
   before(:all) do
     @driver = Utils.launch_browser
@@ -83,7 +78,8 @@ describe 'BOAC', order: :defined do
     it 'can be done using the filtered cohort list view curated cohort selector' do
       @filtered_page.load_cohort test.default_cohort
       @filtered_page.wait_for_student_list
-      test.cohort_members.keep_if { |m| @filtered_page.list_view_sids.include? m.sis_id }
+      sids = @filtered_page.list_view_sids
+      test.cohort_members.keep_if { |m| sids.include? m.sis_id }
       @filtered_page.selector_add_students_to_new_curated(test.cohort_members, @disposable_cohort_5)
       @cohorts_created << @disposable_cohort_5
     end
@@ -106,7 +102,9 @@ describe 'BOAC', order: :defined do
       @homepage.sidebar_create_curated @deleted_curated_cohort
       @curated_page.delete_curated @deleted_curated_cohort
 
-      @existing_filtered_cohort = FilteredCohort.new({:name => "Existing Filtered Cohort #{test.id}", :search_criteria => CohortSearchCriteria.new({:levels => ['Freshman']})})
+      filters = CohortFilter.new
+      filters.set_custom_filters({:levels => ['Freshman']})
+      @existing_filtered_cohort = FilteredCohort.new({:name => "Existing Filtered Cohort #{test.id}", :search_criteria => filters})
       @curated_page.click_sidebar_create_filtered
       @filtered_page.perform_search @existing_filtered_cohort
       @filtered_page.create_new_cohort @existing_filtered_cohort

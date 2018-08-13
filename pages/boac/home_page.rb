@@ -124,7 +124,7 @@ module Page
 
       # FILTERED COHORTS
 
-      elements(:filtered_cohort, :link, xpath: '//div[@data-ng-repeat="cohort in myCohorts"]/h2/a')
+      elements(:filtered_cohort, :link, xpath: '//div[@data-ng-repeat="cohort in myFilteredCohorts"]/h2/a')
       link(:home_create_filtered_link, id: 'home-filtered-cohorts-create-link')
       link(:home_manage_filtered_link, id: 'home-filtered-cohorts-manage-link')
       div(:no_filtered_cohorts_msg, xpath: '//div[contains(.,"You have no filtered cohorts.")]')
@@ -140,7 +140,7 @@ module Page
       # @param cohort [FilteredCohort]
       # @return [String]
       def filtered_cohort_xpath(cohort)
-        "//div[@data-ng-repeat=\"cohort in myCohorts\"][contains(.,\"#{cohort.name}\")]"
+        "//div[@data-ng-repeat=\"cohort in myFilteredCohorts\"][contains(.,\"#{cohort.name}\")]"
       end
 
       # Returns all the user divs beneath a cohort

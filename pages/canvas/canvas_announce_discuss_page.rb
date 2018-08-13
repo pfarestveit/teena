@@ -170,9 +170,10 @@ module Page
       author_elements.map do |el|
         canvas_id = el.attribute('href').split('/users/')[1]
         logger.debug "Found Canvas ID #{canvas_id}"
+        date_el = span_element(xpath: "//a[@data-student_id='#{canvas_id}'][contains(@title,'Author')]/../following-sibling::div[contains(@class, 'discussion-pubdate')]//span[@class='screenreader-only']")
         {
           :canvas_id => canvas_id,
-          :date => DateTime.parse(span_element(xpath: "//a[@href='#{Utils.canvas_base_url}/courses/#{course.site_id}/users/#{canvas_id}']/../following-sibling::div[contains(@class, 'discussion-pubdate')]//span[@class='screenreader-only']").text.gsub('at', ''))
+          :date => DateTime.parse(date_el.text.gsub('at', ''))
         }
       end
     end

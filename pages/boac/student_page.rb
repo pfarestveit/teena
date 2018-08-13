@@ -126,7 +126,7 @@ module Page
       # Clicks the checkbox to add or remove a student from a curated cohort
       # @param cohort [CuratedCohort]
       def click_curated_cbx(cohort)
-        wait_for_update_and_click checkbox_element(xpath: "//div[contains(@class,\"student-group-checkbox\")][contains(.,\"#{cohort.name}\")]/input")
+        wait_for_update_and_click checkbox_element(xpath: "//div[contains(@class,\"curated-cohort-checkbox\")][contains(.,\"#{cohort.name}\")]/input")
       end
 
       # Adds a student to a curated cohort
@@ -173,7 +173,7 @@ module Page
       # @param cohort [CuratedCohort]
       # @return [boolean]
       def curated_selected?(cohort)
-        checkbox_element(xpath: "//div[contains(@class,\"student-group-checkbox\")][contains(.,\"#{cohort.name}\")]//input[contains(@class,\"ng-not-empty\")]").exists?
+        checkbox_element(xpath: "//div[contains(@class,\"curated-cohort-checkbox\")][contains(.,\"#{cohort.name}\")]//input[contains(@class,\"ng-not-empty\")]").exists?
       end
 
       # COURSES

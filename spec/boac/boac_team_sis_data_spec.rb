@@ -6,12 +6,10 @@ describe 'BOAC' do
 
   begin
 
-    # This script is team-driven, so only an ASC advisor can be used
-    advisor = BOACUtils.get_dept_advisors(BOACDepartments::ASC).first
-
-    # Get all teams and get the one for testing
+    test = BOACTestConfig.new
+    all_students = NessieUtils.get_all_students
+    test.team_sis_data all_students
     teams = NessieUtils.get_asc_teams
-    team = NessieUtils.get_asc_teams.find { |t| t.code == BOACUtils.sis_data_team }
 
     # Create files for test output
     user_profile_data_heading = %w(UID Sport Name PreferredName Email Phone Units GPA Level Colleges Majors Terms Writing History Institutions Cultures Graduation Alerts)
@@ -26,41 +24,41 @@ describe 'BOAC' do
     @boac_cohort_page = Page::BOACPages::CohortPages::FilteredCohortListViewPage.new @driver
     @boac_student_page = Page::BOACPages::StudentPage.new @driver
 
-    @boac_homepage.dev_auth advisor
+    @boac_homepage.dev_auth test.advisor
     @boac_homepage.click_teams_list
 
     expected_team_names = teams.map &:name
     visible_team_names = @boac_teams_list_page.teams
     it('shows all the expected teams') { expect(visible_team_names.sort).to eql(expected_team_names.sort) }
 
-    if visible_team_names.include? team.name
+    if visible_team_names.include? test.default_cohort.name
       begin
 
-        team_members = NessieUtils.get_asc_team_members(team).sort_by! &:full_name
+        team_members = test.cohort_members.sort_by! &:full_name
         logger.debug "There are #{team_members.length} total athletes"
-        team_members.delete_if { |u| u.status == 'inactive' }
+        team_members.keep_if &:active_asc
         logger.debug "There are #{team_members.length} active athletes"
 
         @boac_teams_list_page.load_page
-        @boac_teams_list_page.click_team_link team
+        @boac_teams_list_page.click_team_link test.default_cohort
         team_url = @boac_cohort_page.current_url
         @boac_cohort_page.wait_for_team team_members.length
 
         expected_team_member_names = (team_members.map { |u| "#{u.last_name}, #{u.first_name}" }).sort
         visible_team_member_names = (@boac_cohort_page.list_view_names).sort
-        it("shows all the expected players for #{team.name}") do
+        it("shows all the expected players for #{test.default_cohort.name}") do
           logger.debug "Expecting #{expected_team_member_names} and got #{visible_team_member_names}"
           expect(visible_team_member_names).to eql(expected_team_member_names)
         end
-        it("shows no blank player names for #{team.name}") { expect(visible_team_member_names.any? &:empty?).to be false }
+        it("shows no blank player names for #{test.default_cohort.name}") { expect(visible_team_member_names.any? &:empty?).to be false }
 
         expected_team_member_sids = (team_members.map &:sis_id).sort
         visible_team_member_sids = (@boac_cohort_page.list_view_sids).sort
-        it("shows all the expected player SIDs for #{team.name}") do
+        it("shows all the expected player SIDs for #{test.default_cohort.name}") do
           logger.debug "Expecting #{expected_team_member_sids} and got #{visible_team_member_sids}"
           expect(visible_team_member_sids).to eql(expected_team_member_sids)
         end
-        it("shows no blank player SIDs for #{team.name}") { expect(visible_team_member_sids.any? &:empty?).to be false }
+        it("shows no blank player SIDs for #{test.default_cohort.name}") { expect(visible_team_member_sids.any? &:empty?).to be false }
 
         team_members.each do |team_member|
           if visible_team_member_sids.include? team_member.sis_id
@@ -75,39 +73,37 @@ describe 'BOAC' do
               @boac_cohort_page.navigate_to team_url
               cohort_page_sis_data = @boac_cohort_page.visible_sis_data(@driver, team_member)
 
-              it "shows the level for UID #{team_member.uid} on the #{team.name} page" do
+              it "shows the level for UID #{team_member.uid} on the #{test.default_cohort.name} page" do
                 expect(cohort_page_sis_data[:level]).to eql(analytics_api_sis_data[:level])
                 expect(cohort_page_sis_data[:level]).not_to be_empty
               end
 
-              it "shows the majors for UID #{team_member.uid} on the #{team.name} page" do
+              it "shows the majors for UID #{team_member.uid} on the #{test.default_cohort.name} page" do
                 expect(cohort_page_sis_data[:majors]).to eql(analytics_api_sis_data[:majors].sort)
                 expect(cohort_page_sis_data[:majors]).not_to be_empty
               end
 
-              it "shows the cumulative GPA for UID #{team_member.uid} on the #{team.name} page" do
+              it "shows the cumulative GPA for UID #{team_member.uid} on the #{test.default_cohort.name} page" do
                 expect(cohort_page_sis_data[:gpa]).to eql(analytics_api_sis_data[:cumulative_gpa])
                 expect(cohort_page_sis_data[:gpa]).not_to be_empty
               end
 
-              it "shows the units in progress for UID #{team_member.uid} on the #{team.name} page" do
+              it "shows the units in progress for UID #{team_member.uid} on the #{test.default_cohort.name} page" do
                 expect(cohort_page_sis_data[:units_in_progress]).to eql(analytics_api_sis_data[:units_in_progress])
                 expect(cohort_page_sis_data[:units_in_progress]).not_to be_empty
               end
 
-              it "shows the total units for UID #{team_member.uid} on the #{team.name} page" do
+              it "shows the total units for UID #{team_member.uid} on the #{test.default_cohort.name} page" do
                 expect(cohort_page_sis_data[:units_cumulative]).to eql(analytics_api_sis_data[:cumulative_units])
                 expect(cohort_page_sis_data[:units_cumulative]).not_to be_empty
               end
 
-              it("shows the current term course codes for UID #{team_member.uid} on the #{team.name} page") { expect(cohort_page_sis_data[:classes]).to eql(user_analytics_data.current_enrolled_course_codes) }
+              it("shows the current term course codes for UID #{team_member.uid} on the #{test.default_cohort.name} page") { expect(cohort_page_sis_data[:classes]).to eql(user_analytics_data.current_enrolled_course_codes) }
 
               # STUDENT PAGE SIS DATA
 
               @boac_cohort_page.click_player_link team_member
-              analytics_api_sis_data[:preferred_name] ?
-                  @boac_student_page.wait_for_title(analytics_api_sis_data[:preferred_name]) :
-                  @boac_student_page.wait_for_title(team_member.full_name)
+              @boac_student_page.wait_for_title(team_member.full_name)
 
               # Pause a moment to let the boxplots do their fancy slidey thing
               sleep 1
@@ -154,8 +150,8 @@ describe 'BOAC' do
                   (it("shows no terms in attendance for UID #{team_member.uid} on the student page") { expect(student_page_sis_data[:terms_in_attendance]).to be_nil })
 
               analytics_api_sis_data[:level] == 'Graduate' ?
-                  (it("shows no expected graduation date for UID #{team_member.uid} on the #{team.name} page") { expect(student_page_sis_data[:expected_graduation]).to be nil }) :
-                  (it("shows the expected graduation date for UID #{team_member.uid} on the #{team.name} page") { expect(student_page_sis_data[:expected_graduation]).to eql(analytics_api_sis_data[:expected_graduation]) })
+                  (it("shows no expected graduation date for UID #{team_member.uid} on the #{test.default_cohort.name} page") { expect(student_page_sis_data[:expected_graduation]).to be nil }) :
+                  (it("shows the expected graduation date for UID #{team_member.uid} on the #{test.default_cohort.name} page") { expect(student_page_sis_data[:expected_graduation]).to eql(analytics_api_sis_data[:expected_graduation]) })
 
               it("shows the Entry Level Writing Requirement for UID #{team_member.uid} on the student page") { expect(student_page_sis_data[:reqt_writing]).to eql(analytics_api_sis_data[:reqt_writing]) }
               it("shows the American History Requirement for UID #{team_member.uid} on the student page") { expect(student_page_sis_data[:reqt_history]).to eql(analytics_api_sis_data[:reqt_history]) }
@@ -309,7 +305,7 @@ describe 'BOAC' do
                               BOACUtils.log_error_and_screenshot(@driver, e, "#{team_member.uid}-#{term_name}-#{course_code}-#{section_sis_data[:ccn]}")
                               it("encountered an error for UID #{team_member.uid} term #{term_name} course #{course_code} section #{section_sis_data[:ccn]}") { fail }
                             ensure
-                              row = [team_member.uid, team.name, term_name, course_code, course_sis_data[:title], section_sis_data[:ccn], "#{section_sis_data[:component]} #{section_sis_data[:number]}",
+                              row = [team_member.uid, test.default_cohort.name, term_name, course_code, course_sis_data[:title], section_sis_data[:ccn], "#{section_sis_data[:component]} #{section_sis_data[:number]}",
                                      section_sis_data[:primary], course_sis_data[:midpoint], course_sis_data[:grade], course_sis_data[:grading_basis], course_sis_data[:units], section_sis_data[:status]]
                               Utils.add_csv_row(user_course_sis_data, row)
                             end
@@ -337,7 +333,7 @@ describe 'BOAC' do
                             (it("shows dropped section #{drop[:title]} #{drop[:component]} #{drop[:number]} for UID #{team_member.uid} in #{term_name}") { expect(visible_drop).to be_truthy }) :
                             (it("shows no dropped section #{drop[:title]} #{drop[:component]} #{drop[:number]} for UID #{team_member.uid} in past term #{term_name}") { expect(visible_drop).to be_falsey })
 
-                        row = [team_member.uid, team.name, term_name, drop[:title], nil, nil, drop[:number], nil, nil, nil, 'D']
+                        row = [team_member.uid, test.default_cohort.name, term_name, drop[:title], nil, nil, drop[:number], nil, nil, nil, 'D']
                         Utils.add_csv_row(user_course_sis_data, row)
                       end
                     end
@@ -357,7 +353,7 @@ describe 'BOAC' do
               it("encountered an error for UID #{team_member.uid}") { fail }
             ensure
               if analytics_api_sis_data
-                row = [team_member.uid, team.name, student_page_sis_data[:name], student_page_sis_data[:preferred_name], student_page_sis_data[:email],
+                row = [team_member.uid, test.default_cohort.name, student_page_sis_data[:name], student_page_sis_data[:preferred_name], student_page_sis_data[:email],
                        student_page_sis_data[:phone], student_page_sis_data[:cumulative_units], student_page_sis_data[:cumulative_gpa], student_page_sis_data[:level],
                        student_page_sis_data[:colleges] && student_page_sis_data[:colleges] * '; ', student_page_sis_data[:majors] && student_page_sis_data[:majors] * '; ',
                        student_page_sis_data[:terms_in_attendance], student_page_sis_data[:reqt_writing], student_page_sis_data[:reqt_history],
@@ -367,17 +363,17 @@ describe 'BOAC' do
             end
 
           else
-            logger.warn "Skipping #{team.name} UID #{team_member.uid} because it is not present in the UI"
+            logger.warn "Skipping #{test.default_cohort.name} UID #{team_member.uid} because it is not present in the UI"
           end
         end
 
       rescue => e
-        BOACUtils.log_error_and_screenshot(@driver, e, team.name)
-        it("encountered an error for #{team.name}") { fail }
+        BOACUtils.log_error_and_screenshot(@driver, e, test.default_cohort.name)
+        it("encountered an error for #{test.default_cohort.name}") { fail }
       end
 
     else
-      logger.warn "Skipping #{team.name} because there is no link for it"
+      logger.warn "Skipping #{test.default_cohort.name} because there is no link for it"
     end
 
   rescue => e

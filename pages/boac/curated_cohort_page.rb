@@ -17,7 +17,7 @@ module Page
         # Loads a curated cohort
         # @param cohort [CuratedCohort]
         def load_page(cohort)
-          navigate_to "#{BOACUtils.base_url}/group/#{cohort.id}"
+          navigate_to "#{BOACUtils.base_url}/cohort/curated/#{cohort.id}"
         end
 
         span(:title_required_msg, xpath: '//span[text()="Required"]')

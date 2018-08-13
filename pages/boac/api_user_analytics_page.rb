@@ -239,9 +239,10 @@ class ApiUserAnalyticsPage
   # exists, will skip collecting the data and simply parse the file. Otherwise, will collect the data and write it to a file for
   # subsequent test runs.
   # @param driver [Selenium::WebDriver]
+  # @param all_students [Array<User>]
   # @param test_config [BOACTestConfig]
   # @return Array[<Hash>]
-  def collect_users_searchable_data(driver, test_config = nil)
+  def collect_users_searchable_data(driver, all_students, test_config = nil)
     users_data_file = BOACUtils.searchable_data
     if File.exist? users_data_file
       logger.warn 'Found a copy of searchable user data created today, skipping data collection'
@@ -253,7 +254,7 @@ class ApiUserAnalyticsPage
       Dir.glob("#{Utils.config_dir}/boac-searchable-data*").each { |f| File.delete f }
 
       # Fetch all the data and write it to a file for search tests to use
-      users_data = NessieUtils.get_all_students.map do |user|
+      users_data = all_students.map do |user|
         # Get the squad names to use as search criteria if the students are athletes
         user_squad_names = user.sports.map do |squad_code|
           squad = Squad::SQUADS.find { |s| s.code == squad_code }
@@ -263,7 +264,9 @@ class ApiUserAnalyticsPage
         {
           :sid => user.sis_id,
           :first_name => user.first_name,
+          :first_name_sortable => user.first_name.gsub(/\W/, '').downcase,
           :last_name => user.last_name,
+          :last_name_sortable => user.last_name.gsub(/\W/, '').downcase,
           :squad_names => user_squad_names,
           :level => (user_sis_data[:level] if user_sis_data[:level]),
           :majors => (user_sis_data[:majors] ? user_sis_data[:majors] : []),
