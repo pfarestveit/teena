@@ -33,7 +33,7 @@ users:
 #### Test environment configs ####
 
 boac:
-  base_url: https://asc-pilot-qa.berkeley.edu
+  base_url: https://boac-qa.berkeley.edu
   password: secret
   term: Summer 2018
   term_code: 2185
