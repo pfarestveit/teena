@@ -229,7 +229,7 @@ describe 'A CoE advisor using BOAC' do
 
     it 'cannot hit a team cohort directly' do
       @filtered_cohort_page.hit_team_url Team::FBM
-      @filtered_cohort_page.wait_for_title '404'
+      @filtered_cohort_page.wait_until(Utils.short_wait) { @filtered_cohort_page.results_count == test_coe.dept_students.length }
     end
   end
 
