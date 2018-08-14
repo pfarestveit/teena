@@ -278,8 +278,8 @@ module Page
     # @param string [String]
     def enter_search_string(string)
       logger.info "Searching for '#{string}'"
-      user_search_input_element.when_visible Utils.short_wait
       sleep Utils.click_wait
+      user_search_input_element.when_visible Utils.short_wait
       self.user_search_input = string
       user_search_input_element.send_keys :enter
     end
@@ -359,9 +359,9 @@ module Page
 
     # DATA FOR ALL USERS PRESENT
 
-    elements(:player_link, :link, xpath: '//div[contains(@data-ng-repeat,"student in cohort.students")]//a')
-    elements(:player_name, :h3, xpath: '//div[contains(@data-ng-repeat,"student in cohort.students")]//h3')
-    elements(:player_sid, :div, xpath: '//div[contains(@data-ng-repeat,"student in cohort.students")]//div[contains(@class, "student-sid")]')
+    elements(:player_link, :link, xpath: '//div[contains(@class,"list-item")]//a')
+    elements(:player_name, :h3, xpath: '//div[contains(@class,"list-item")]//h3')
+    elements(:player_sid, :div, xpath: '//div[contains(@class,"list-item")]//div[contains(@class, "student-sid")]')
 
     # Waits for list view results to load
     def wait_for_student_list

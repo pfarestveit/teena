@@ -14,6 +14,10 @@ module Page
         include BOACPages
         include CohortPages
 
+        def filtered_cohort_base_url
+          "#{BOACUtils.base_url}/cohort/filtered?"
+        end
+
         # If a cohort is a team, loads the team page using search queries; otherwise loads the cohort page by the cohort's ID
         # @param cohort [FilteredCohort]
         def load_cohort(cohort)
@@ -21,7 +25,7 @@ module Page
           if cohort.instance_of? Team
             load_team_page(cohort)
           else
-            navigate_to("#{BOACUtils.base_url}/cohort/filtered?c=#{cohort.id}")
+            navigate_to("#{filtered_cohort_base_url}c=#{cohort.id}")
             wait_for_title cohort.name
           end
         end
@@ -31,15 +35,15 @@ module Page
         def load_cohort_matrix(cohort)
           logger.info "Loading cohort '#{cohort.name}' ID #{cohort.id} in matrix view"
           cohort.instance_of?(Team) ?
-              navigate_to("#{BOACUtils.base_url}/cohort/filtered?c=#{cohort.code}&v=matrix") :
-              navigate_to("#{BOACUtils.base_url}/cohort/filtered?c=#{cohort.id}&v=matrix")
+              navigate_to("#{filtered_cohort_base_url}c=#{cohort.code}&v=matrix") :
+              navigate_to("#{filtered_cohort_base_url}c=#{cohort.id}&v=matrix")
           wait_for_title cohort.name
         end
 
         # Hits a cohort URL and expects the 404 page to load
         # @param cohort [FilteredCohort]
         def hit_non_auth_cohort(cohort)
-          navigate_to "#{BOACUtils.base_url}/cohort/filtered?c=#{cohort.id}"
+          navigate_to "#{filtered_cohort_base_url}c=#{cohort.id}"
           wait_for_title '404'
         end
 
@@ -49,7 +53,7 @@ module Page
           squads = Squad::SQUADS.select { |s| s.parent_team == team }
           squads.delete_if { |s| s.code.include? '-AA' }
           query_string = squads.map { |s| "t=#{s.code}&" }
-          navigate_to "#{BOACUtils.base_url}/cohort/filtered?#{query_string}c=search"
+          navigate_to "#{filtered_cohort_base_url}#{query_string.join}c=search"
         end
 
         # Navigates directly to a team page
@@ -64,7 +68,7 @@ module Page
         # @param squad [Squad]
         def load_squad(squad)
           logger.info "Loading cohort page for squad #{squad.name}"
-          navigate_to "#{BOACUtils.base_url}/cohort/filtered?c=search&p=1&t=#{squad.code}"
+          navigate_to "#{filtered_cohort_base_url}c=search&p=1&t=#{squad.code}"
           wait_for_title 'Filtered Cohort'
         end
 
@@ -152,12 +156,12 @@ module Page
 
         # Navigates to the Inactive Students page
         def load_inactive_students_page
-          navigate_to "#{BOACUtils.base_url}/cohort/filtered?v=true&c=search"
+          navigate_to "#{filtered_cohort_base_url}v=true&c=search"
         end
 
         # Navigates to the Intensive Students page
         def load_intensive_students_page
-          navigate_to "#{BOACUtils.base_url}/cohort/filtered?i=true&c=search"
+          navigate_to "#{filtered_cohort_base_url}i=true&c=search"
         end
 
         # FILTERED COHORTS - Search

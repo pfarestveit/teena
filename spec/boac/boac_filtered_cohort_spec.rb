@@ -20,7 +20,7 @@ describe 'BOAC', order: :defined do
 
     # Get the student data relevant to all search filters.
     @homepage.dev_auth
-    test.dept_students.keep_if &:status if test.dept == BOACDepartments::ASC
+    test.dept_students.keep_if &:active_asc if test.dept == BOACDepartments::ASC
     @searchable_students = @analytics_page.collect_users_searchable_data(@driver, all_students, test)
 
     @homepage.load_page

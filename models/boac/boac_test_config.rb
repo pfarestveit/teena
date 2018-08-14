@@ -27,7 +27,13 @@ class BOACTestConfig < TestConfig
         fail
     end
 
-    @dept_students = (@dept == BOACDepartments::ADMIN) ? all_students : (all_students.select { |s| s.depts.include? @dept })
+    @dept_students = if @dept == BOACDepartments::ADMIN
+                       all_students
+                     else
+                       all_students.select do |s|
+                         (s.depts.select { |d| d == @dept }).any?
+                       end
+                     end
   end
 
   # Sets an existing cohort to use for testing, e.g., a team for ASC and admin or My Students for CoE
