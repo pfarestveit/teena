@@ -186,8 +186,6 @@ describe 'BOAC', order: :defined do
   context 'when the advisor views its cohorts' do
 
     it('shows only the advisor\'s cohorts on the homepage') do
-      test.searches << pre_existing_cohorts
-      test.searches.flatten!
       # Account for My Students if the advisor is CoE
       my_students = test.searches.find &:read_only
       my_students.name = 'My Students' if my_students
@@ -201,7 +199,7 @@ describe 'BOAC', order: :defined do
 
     it 'creates a new cohort' do
       existing_cohort = test.searches.first
-      new_cohort = FilteredCohort.new({name: "Edited Search #{test.id}", search_criteria: test.searches.last.search_criteria})
+      new_cohort = FilteredCohort.new({name: "Edited Search #{test.id}", search_criteria: test.searches.first.search_criteria})
       @cohort_page.load_cohort existing_cohort
       @cohort_page.search_and_create_edited_cohort(existing_cohort, new_cohort)
       expect(new_cohort.id).not_to eql(existing_cohort.id)

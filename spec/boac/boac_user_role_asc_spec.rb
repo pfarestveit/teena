@@ -159,7 +159,7 @@ describe 'An ASC advisor' do
     end
 
     it 'sees all intensive students' do
-      expected_results = @filtered_cohort_page.expected_sids_by_last_name(@intensive_student_search_data, CohortFilter.new({})).sort
+      expected_results = @filtered_cohort_page.expected_sids_by_last_name(@intensive_student_search_data, CohortFilter.new).sort
       @filtered_cohort_page.wait_until(1, "Expected #{expected_results}, but got #{@visible_intensive_students.sort}")  { @visible_intensive_students.sort == expected_results }
     end
 
@@ -177,7 +177,7 @@ describe 'An ASC advisor' do
       expect(@filtered_cohort_page.intensive_cbx_element.attribute('checked')).to eql('true')
       @filtered_cohort_page.click_intensive
       @filtered_cohort_page.perform_search test_asc.searches[1]
-      expected_results = @filtered_cohort_page.expected_sids_by_last_name((@asc_student_search_data - @inactive_student_search_data), test_asc.searches[1]).sort
+      expected_results = @filtered_cohort_page.expected_sids_by_last_name((@asc_student_search_data - @inactive_student_search_data), test_asc.searches[1].search_criteria).sort
       visible_results = @filtered_cohort_page.visible_sids
       @filtered_cohort_page.wait_until(1, "Expected but not present: #{expected_results - visible_results}. Present but not expected: #{visible_results - expected_results}") { visible_results.sort == expected_results.sort }
     end
