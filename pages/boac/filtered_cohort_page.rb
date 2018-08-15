@@ -35,8 +35,8 @@ module Page
         def load_cohort_matrix(cohort)
           logger.info "Loading cohort '#{cohort.name}' ID #{cohort.id} in matrix view"
           cohort.instance_of?(Team) ?
-              navigate_to("#{filtered_cohort_base_url}c=#{cohort.code}&v=matrix") :
-              navigate_to("#{filtered_cohort_base_url}c=#{cohort.id}&v=matrix")
+              navigate_to("#{filtered_cohort_base_url}c=#{cohort.code}&tab=matrix") :
+              navigate_to("#{filtered_cohort_base_url}c=#{cohort.id}&tab=matrix")
           wait_for_title cohort.name
         end
 

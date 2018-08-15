@@ -117,11 +117,14 @@ describe 'BOAC' do
                           it("shows the right students for #{class_test_case}") { expect(visible_sids.sort).to eql(api_section_page.student_sids.sort) }
 
                           # Check that only students who should be visible to the advisor appear on the page
-                          it("shows only #{test.dept.name} students for #{class_test_case}") { expect(all_dept_student_sids & visible_sids).to eql(visible_sids) }
+                          logger.error "Expected #{visible_sids - all_dept_student_sids} to be empty" unless (visible_sids - all_dept_student_sids).empty?
+                          it("shows only #{test.dept.name} students for #{class_test_case}") { expect(visible_sids - all_dept_student_sids).to be_empty }
 
-                          # Perform further tests on the students who do appear
-                          students = test.dept_students.select { |s| visible_sids.include? s.sis_id }
-                          expected_student_names = (students.map { |u| "#{u.last_name}, #{u.first_name}" }).sort
+                          # Perform further tests on the students who appear on the first page
+                          @class_page.click_list_view_page 1 unless @class_page.list_view_page_count == 1
+                          visible_students = @class_page.list_view_sids
+                          expected_students = test.dept_students.select { |s| visible_students.include? s.sis_id }
+                          expected_student_names = (expected_students.map { |u| "#{u.last_name}, #{u.first_name}" }).sort
                           visible_student_names = (@class_page.list_view_names).sort
                           logger.error "Expecting #{expected_student_names} and got #{visible_student_names}" unless visible_student_names == expected_student_names
                           it("shows all the expected students for #{class_test_case}") { expect(visible_student_names).to eql(expected_student_names) }
@@ -129,7 +132,7 @@ describe 'BOAC' do
 
                           # Collect all the expected class page data for each student in the class
                           all_student_data = []
-                          students.each do |dept_student|
+                          expected_students.each do |dept_student|
 
                             # Load the student's data and find the matching course
                             student_api = ApiUserAnalyticsPage.new @driver
@@ -163,7 +166,7 @@ describe 'BOAC' do
                           end
 
                           @class_page.load_page(term_id, section_data[:ccn])
-                          students.each do |student|
+                          expected_students.each do |student|
                             logger.info "Checking UID #{student.uid}"
                             student_test_case = "UID #{student.uid} #{class_test_case}"
                             student_data = all_student_data.find { |d| d[:sid] == student.sis_id }
@@ -180,7 +183,10 @@ describe 'BOAC' do
                               expect(visible_student_sis_data[:majors]).not_to be_empty
                             end
 
-                            it("shows the right sports for #{student_test_case}") { expect(visible_student_sis_data[:sports]).to eql(student_data[:sports].sort) }
+                            # TODO - move this into user role scripts
+                            if student_data[:sports].any? && test.dept == BOACDepartments::ASC
+                              it("shows the right sports for #{student_test_case}") { expect(visible_student_sis_data[:sports]).to eql(student_data[:sports].sort) }
+                            end
 
                             if student_data[:grading_basis] == 'NON' || !student_data[:final_grade].empty?
                               it("shows no grading basis for #{student_test_case}") { expect(visible_student_sis_data[:grading_basis]).to be_nil }

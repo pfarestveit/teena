@@ -54,7 +54,7 @@ class NessieUtils < Utils
         :sid => v[0]['sid'],
         :dept => dept,
         :active => active,
-        :intensive => v[0]['intensive'],
+        :intensive => (v[0]['intensive'] == 't'),
         :first_name => v[0]['first_name'],
         :last_name => v[0]['last_name'],
         :group_code => v.map { |h2| h2['group_code'] }.join(' ')
@@ -85,8 +85,10 @@ class NessieUtils < Utils
     asc_students = student_result_to_users(query_all_asc_students, BOACDepartments::ASC)
     coe_students = student_result_to_users(query_all_coe_students, BOACDepartments::COE)
 
-    # Find students served by more than one department
+    # Find students served by more than one department and merge their attributes into a new user
     all_students = asc_students + coe_students
+    logger.info "There are #{asc_students.length} ASC students and #{coe_students.length} CoE students, for a total of #{all_students.length}"
+    merged_students = []
     all_students.group_by { |s| s.uid }.map do |k,v|
       if v.length > 1
         depts = (v.map &:depts).flatten
@@ -94,21 +96,28 @@ class NessieUtils < Utils
         active_asc = athlete.active_asc
         intensive_asc = athlete.intensive_asc
         sports = athlete.sports
-      end
 
-      attributes = {
-        :uid => k,
-        :sis_id => v[0].sis_id,
-        :depts => (depts ? depts : v[0].depts),
-        :active_asc => (active_asc ? active_asc : v[0].active_asc),
-        :intensive_asc => (intensive_asc ? intensive_asc : v[0].intensive_asc),
-        :sports => (sports ? sports : v[0].sports),
-        :first_name => v[0].first_name,
-        :last_name => v[0].last_name,
-        :full_name => v[0].full_name
-      }
-      BOACUser.new attributes
+        attributes = {
+            :uid => k,
+            :sis_id => v[0].sis_id,
+            :depts => (depts ? depts : v[0].depts),
+            :active_asc => (active_asc ? active_asc : v[0].active_asc),
+            :intensive_asc => (intensive_asc ? intensive_asc : v[0].intensive_asc),
+            :sports => (sports ? sports : v[0].sports),
+            :first_name => v[0].first_name,
+            :last_name => v[0].last_name,
+            :full_name => v[0].full_name
+        }
+        merged_students << BOACUser.new(attributes)
+      end
     end
+
+    # Replace the duplicates with the merged users
+    merged_student_sids = merged_students.map &:sis_id
+    all_students.delete_if { |s| merged_student_sids.include? s.sis_id }
+    net = all_students + merged_students
+    logger.info "There are #{merged_students.length} overlapping students, for a net total of #{net.length}"
+    net
   end
 
   # DATABASE - ASC STUDENTS

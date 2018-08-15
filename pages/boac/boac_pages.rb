@@ -332,6 +332,12 @@ module Page
       link_element(xpath: "//a[contains(@ng-click, 'selectPage')][text()='#{number}']")
     end
 
+    # Returns the number of list view pages shown
+    # @return [Integer]
+    def list_view_page_count
+      results_page_link_elements.any? ? results_page_link_elements.last.text.to_i : 1
+    end
+
     # Returns the current page in list view
     # @return [Integer]
     def list_view_current_page
@@ -355,6 +361,17 @@ module Page
       else
         page_list_item_elements.empty?
       end
+    end
+
+    # Clicks a given page number and waits for student rows to appear
+    # @param number [Integer]
+    def click_list_view_page(number)
+      logger.debug "Clicking page #{number}"
+      list_view_page_link(number).exists? ?
+          (wait_for_update_and_click list_view_page_link(number)) :
+          (wait_for_update_and_click page_ellipsis_link_elements.last)
+      sleep 1
+      wait_until(Utils.medium_wait) { player_link_elements.any? }
     end
 
     # DATA FOR ALL USERS PRESENT
@@ -385,7 +402,7 @@ module Page
     # Returns all the SIDs shown on list view
     # @return [Array<String>]
     def list_view_sids
-      player_sid_elements.map { |el| el.text.gsub(/(INACTIVE)/, '').strip }
+      player_sid_elements.map { |el| el.text.gsub(/(INACTIVE)/, '').gsub(/(WAITLISTED)/, '').strip }
     end
 
     # Returns all the UIDs shown on list view
@@ -401,7 +418,7 @@ module Page
       wait_for_student_list unless (filtered_cohort && filtered_cohort.member_count.zero?)
       visible_sids = []
       sleep 2
-      page_count = results_page_link_elements.any? ? results_page_link_elements.last.text.to_i : 1
+      page_count = list_view_page_count
       page = 1
       if page_count == 1
         logger.debug 'There is 1 page'
@@ -412,12 +429,7 @@ module Page
         (page_count - 1).times do
           start_time = Time.now
           page += 1
-          logger.debug "Clicking page #{page}"
-          list_view_page_link(page).exists? ?
-              (wait_for_update_and_click list_view_page_link(page)) :
-              (wait_for_update_and_click page_ellipsis_link_elements.last)
-          sleep 1
-          wait_until(Utils.medium_wait) { player_link_elements.any? }
+          click_list_view_page page
           logger.warn "Page #{page} took #{Time.now - start_time} seconds to load" unless page == 1
           visible_sids << list_view_sids
         end
@@ -439,7 +451,7 @@ module Page
     # @return [String]
     def list_view_user_level(user)
       el = span_element(xpath: "#{list_view_user_xpath user}//*[@data-ng-bind='student.level']")
-      el && el.text
+      el.text if el.exists?
     end
 
     # Returns the major(s) displayed for a user
@@ -448,7 +460,7 @@ module Page
     # @return [Array<String>]
     def list_view_user_majors(driver, user)
       els = driver.find_elements(xpath: "#{list_view_user_xpath user}//div[@data-ng-bind='major']")
-      els && (els.map &:text)
+      els.map &:text if els.any?
     end
 
     # Returns the sport(s) displayed for a user
@@ -457,7 +469,7 @@ module Page
     # @return [Array<String>]
     def list_view_user_sports(driver, user)
       els = driver.find_elements(xpath: "#{list_view_user_xpath user}//div[@data-ng-bind='membership.groupName']")
-      els && (els.map &:text)
+      els.map &:text if els.any?
     end
 
     # Clicks the link for a given player

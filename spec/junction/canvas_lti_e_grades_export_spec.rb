@@ -51,6 +51,7 @@ describe 'bCourses E-Grades Export', order: :defined do
     @canvas.load_gradebook course
     @canvas.click_e_grades_export_button
     @e_grades_export_page.wait_until(Utils.medium_wait) { @e_grades_export_page.title == 'Download E-Grades' }
+    @e_grades_export_page.wait_until(1, 'Wrong Junction environment is configured') { @e_grades_export_page.i_frame_form_element? JunctionUtils.junction_base_url }
   end
 
   context 'when no grading scheme is enabled and an assignment is muted' do

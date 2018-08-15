@@ -88,7 +88,7 @@ class BOACTestConfig < TestConfig
     set_global_configs all_students
     set_default_cohort(CONFIG['curated_cohort_team'], CONFIG['curated_cohort_max_users'])
     if @dept == BOACDepartments::COE
-      @cohort_members = test.cohort_members[0..49]
+      @cohort_members = @cohort_members[0..49]
       @default_cohort.name = 'My Students'
     elsif @dept == BOACDepartments::ASC
       @cohort_members.keep_if &:active_asc
@@ -140,8 +140,8 @@ class BOACTestConfig < TestConfig
   end
 
   # Config for user search testing
-  def user_search
-    set_global_configs
+  def user_search(all_students)
+    set_global_configs all_students
     set_default_cohort(CONFIG['user_search_team'], CONFIG['user_search_max_users'])
   end
 

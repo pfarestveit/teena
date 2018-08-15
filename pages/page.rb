@@ -12,8 +12,15 @@ module Page
   def switch_to_canvas_iframe(driver, url = nil)
     hide_canvas_footer_and_popup
     wait_until(Utils.medium_wait) { driver.find_element(id: 'tool_content') }
-    wait_until(1, "'#{url}' is not present") { form_element(xpath: "//form[contains(@action, '#{url}')]").exists? } if url
+    wait_until(1, "'#{url}' is not present") { i_frame_form_element? url } if url
     driver.switch_to.frame driver.find_element(id: 'tool_content')
+  end
+
+  # Whether or not an iframe containing a given URL exists
+  # @param url [String]
+  # @return [boolean]
+  def i_frame_form_element?(url)
+    form_element(xpath: "//form[contains(@action, '#{url}')]").exists?
   end
 
   # Hides the Canvas footer element in order to interact with elements hidden beneath it. Clicks once to set focus on the footer
