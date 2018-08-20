@@ -11,7 +11,7 @@ module Page
     text_field(:username, id: 'username')
     text_field(:password, id: 'password')
     text_area(:sign_in_button, xpath: '//input[@value="Sign In"]')
-    paragraph(:logout_conf_heading, xpath: '//p[contains(.,"You have successfully logged out")]')
+    h3(:logout_conf_heading, xpath: '//h3[text()="Logout Successful"]')
     span(:access_denied_msg, xpath: '//span[contains(.,"Service access denied due to missing privileges.")]')
 
     # Logs in to CAS. If no real credentials available in a Settings override, then waits for manual login using a real
@@ -30,7 +30,6 @@ module Page
           logger.debug 'Waiting for manual login'
           wait_for_element_and_type(username_element, 'PLEASE LOG IN MANUALLY')
           username_element.flash
-          wait_until(Utils.long_wait) { !title.include? 'CAS – Central Authentication Service' }
         end
       else
         logger.debug "#{username} is logging in"
@@ -39,6 +38,10 @@ module Page
         wait_for_update_and_click sign_in_button_element
         sleep 2
         add_event(event, EventType::LOGGED_IN)
+      end
+      wait_until(Utils.long_wait) do
+        # If login is to resolve a Junction session conflict, then logout should occur. Otherwise, expect successful login.
+        logout_conf_heading_element.visible? || !title.include?('CAS – Central Authentication Service')
       end
     end
 

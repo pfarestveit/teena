@@ -34,7 +34,7 @@ describe 'BOAC', order: :defined do
 
     before(:all) do
       @homepage.load_page
-      pre_existing_cohorts.each { |c| @cohort_page.delete_cohort(test.searches, c) }
+      pre_existing_cohorts.each { |c| @cohort_page.delete_cohort(pre_existing_cohorts, c) }
     end
 
     it('shows a No Filtered Cohorts message on the homepage') do
@@ -65,6 +65,7 @@ describe 'BOAC', order: :defined do
         expected_results = @cohort_page.expected_sids_by_last_name(@searchable_students, cohort.search_criteria)
         visible_results = cohort.member_count.zero? ? [] : @cohort_page.visible_sids
         @cohort_page.wait_until(1, "Expected but not present: #{expected_results - visible_results}. Present but not expected: #{visible_results - expected_results}") { visible_results.sort == expected_results.sort }
+        @cohort_page.verify_list_view_sorting(expected_results, visible_results)
       end
 
       it "shows by First Name all the students who match sports '#{cohort.search_criteria.squads && (cohort.search_criteria.squads.map &:name)}', levels '#{cohort.search_criteria.levels}', majors '#{cohort.search_criteria.majors}', GPA ranges '#{cohort.search_criteria.gpa_ranges}', units '#{cohort.search_criteria.units}'" do
@@ -74,6 +75,7 @@ describe 'BOAC', order: :defined do
         else
           @cohort_page.sort_by_first_name if expected_results.any?
           visible_results = @cohort_page.visible_sids
+          @cohort_page.verify_list_view_sorting(expected_results, visible_results)
           @cohort_page.wait_until(1, "Expected #{expected_results} but got #{visible_results}") { visible_results == expected_results }
         end
       end
@@ -86,6 +88,7 @@ describe 'BOAC', order: :defined do
           else
             @cohort_page.sort_by_team if expected_results.any?
             visible_results = @cohort_page.visible_sids
+            @cohort_page.verify_list_view_sorting(expected_results, visible_results)
             @cohort_page.wait_until(1, "Expected #{expected_results} but got #{visible_results}") { visible_results == expected_results }
           end
         else
@@ -100,6 +103,7 @@ describe 'BOAC', order: :defined do
         else
           @cohort_page.sort_by_gpa if expected_results.any?
           visible_results = @cohort_page.visible_sids
+          @cohort_page.verify_list_view_sorting(expected_results, visible_results)
           @cohort_page.wait_until(1, "Expected #{expected_results} but got #{visible_results}") { visible_results == expected_results }
         end
       end
@@ -111,6 +115,7 @@ describe 'BOAC', order: :defined do
         else
           @cohort_page.sort_by_level if expected_results.any?
           visible_results = @cohort_page.visible_sids
+          @cohort_page.verify_list_view_sorting(expected_results, visible_results)
           @cohort_page.wait_until(1, "Expected #{expected_results} but got #{visible_results}") { visible_results == expected_results }
         end
       end
@@ -122,6 +127,7 @@ describe 'BOAC', order: :defined do
         else
           @cohort_page.sort_by_major if expected_results.any?
           visible_results = @cohort_page.visible_sids
+          @cohort_page.verify_list_view_sorting(expected_results, visible_results)
           @cohort_page.wait_until(1, "Expected #{expected_results} but got #{visible_results}") { visible_results == expected_results }
         end
       end
@@ -133,6 +139,7 @@ describe 'BOAC', order: :defined do
         else
           @cohort_page.sort_by_units if expected_results.any?
           visible_results = @cohort_page.visible_sids
+          @cohort_page.verify_list_view_sorting(expected_results, visible_results)
           @cohort_page.wait_until(1, "Expected #{expected_results} but got #{visible_results}") { visible_results == expected_results }
         end
       end
@@ -186,6 +193,8 @@ describe 'BOAC', order: :defined do
   context 'when the advisor views its cohorts' do
 
     it('shows only the advisor\'s cohorts on the homepage') do
+      test.searches << pre_existing_cohorts
+      test.searches.flatten!
       # Account for My Students if the advisor is CoE
       my_students = test.searches.find &:read_only
       my_students.name = 'My Students' if my_students

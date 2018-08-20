@@ -30,7 +30,6 @@ module Page
         rescue
           logger.warn 'Session conflict, CAS page loaded'
           cal_net.log_in(Utils.super_admin_username, Utils.super_admin_password)
-          cal_net.logout_conf_heading_element.when_visible Utils.medium_wait
           load_page
           scroll_to_bottom
           wait_for_update_and_click toggle_footer_link_element
