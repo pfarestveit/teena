@@ -281,7 +281,7 @@ module Page
         def check_search_option(element)
           begin
             tries ||= 2
-            element.click
+            wait_for_update_and_click element
             wait_until(1) { element.attribute('class').include?('not-empty') }
           rescue
             logger.debug 'Trying to check a search option again'
@@ -297,7 +297,7 @@ module Page
             wait_for_update_and_click filter_button_el
             wait_until(1) { option_els.all? &:visible? }
           end
-          option_els.each { |o| o.click if o.attribute('class').include?('not-empty') }
+          option_els.each { |o| wait_for_update_and_click(o) if o.attribute('class').include?('not-empty') }
         end
 
         # Executes a custom cohort search using search criteria associated with a cohort and stores the result count. Optionally writes

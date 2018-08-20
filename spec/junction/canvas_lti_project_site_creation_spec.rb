@@ -35,7 +35,7 @@ describe 'bCourses project site', order: :defined do
       @site_creation_page.load_embedded_tool(@driver, teacher)
     end
 
-    it('shows a link to project site help') { expect(@site_creation_page.external_link_valid?(@driver, @site_creation_page.projects_learn_more_link_element, 'Service at UC Berkeley')).to be true }
+    it('shows a link to project site help') { expect(@site_creation_page.external_link_valid?(@driver, @site_creation_page.projects_learn_more_link_element, 'IT - bDrive vs. Box vs. CalShare vs. bCourses Projects: What\'s the best choice for online collaboration?')).to be true }
 
   end
 
@@ -57,8 +57,9 @@ describe 'bCourses project site', order: :defined do
       project.site_id = @canvas.current_url.delete "#{Utils.canvas_base_url}/courses/"
       logger.info "Project site ID is #{project.site_id}"
       expect(@canvas.course_site_heading).to eql("#{project.title}")
-      @canvas.project_site_heading_element.when_visible Utils.short_wait
     end
+
+    it('redirects to a custom project homepage') { @canvas.project_site_heading_element.when_visible Utils.short_wait }
 
     it('does not add the Roster Photos tool') { expect(@roster_photos_page.roster_photos_link?).to be false }
     it('does not add the Official Sections tool') { expect(@official_sections_page.official_sections_link?).to be false }

@@ -166,7 +166,7 @@ module Page
       sleep 2
       if driver.window_handles.length > 1
         driver.switch_to.window driver.window_handles.last
-        wait_until { driver.find_element(xpath: "//title[contains(.,'#{expected_page_title}')]") }
+        wait_until(Utils.short_wait) { driver.find_element(xpath: "//title[contains(.,\"#{expected_page_title}\")]") }
         logger.debug "Found new window with title '#{expected_page_title}'"
         true
       else
@@ -174,7 +174,8 @@ module Page
         logger.debug "Expecting page title #{expected_page_title}, but visible page title is #{driver.title}"
         false
       end
-    rescue
+    rescue => e
+      Utils.log_error e
       false
     ensure
       if driver.window_handles.length > 1

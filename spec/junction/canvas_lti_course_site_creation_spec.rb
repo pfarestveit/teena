@@ -171,24 +171,14 @@ describe 'bCourses course site creation' do
         logger.info "Course site abbreviation will be #{site_abbreviation}"
 
         @create_course_site_page.click_create_site
+        @create_course_site_page.wait_for_site_id site[:course]
 
-        # Wait for redirect to new Canvas course site
-        site_created = @create_course_site_page.verify_block do
-          @canvas_page.wait_until(Utils.long_wait) do
-            @canvas_page.current_url.include? "#{Utils.canvas_base_url}/courses"
-            @canvas_page.recent_activity_heading?
-          end
-        end
-        it ("redirects to the #{site[:course].term} #{site[:course].code} course site in Canvas when finished") { expect(site_created).to be true }
+        it("redirects to the #{site[:course].term} #{site[:course].code} course site in Canvas when finished") { expect(site[:course].site_id).not_to be_nil }
 
-        # If site creation succeeded, store the site info
-        if site_created
-          sites_created << site
-          site[:course].site_id = @canvas_page.current_url.delete "#{Utils.canvas_base_url}/courses/"
-          logger.info "Canvas course site ID is #{site[:course].site_id}"
-        else
-          logger.error "Timed out before the #{site[:course].term} #{site[:course].code} course site was created, or another error occurred"
-        end
+        # If site creation succeeded, store the site info for the rest of the tests
+        site[:course].site_id ?
+            (sites_created << site) :
+            logger.error("Timed out before the #{site[:course].term} #{site[:course].code} course site was created, or another error occurred")
 
       rescue => e
         it("encountered an error creating the course site for #{site[:course].code}") { fail }

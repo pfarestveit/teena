@@ -187,6 +187,16 @@ module Page
         wait_for_update_and_click_js create_site_button_element
       end
 
+      # Waits for a newly created course site to load, sets the site ID for a course, and then writes the site ID to the
+      # Junction test data file for use in further tests.
+      # @param course [Course]
+      def wait_for_site_id(course)
+        wait_until(Utils.long_wait) { current_url.include? "#{Utils.canvas_base_url}/courses" }
+        course.site_id = current_url.delete "#{Utils.canvas_base_url}/courses/"
+        logger.info "Course site ID is #{course.site_id}"
+        JunctionUtils.set_junction_test_course_id course
+      end
+
       # Combines methods to search for a course, select sections, and create a new site
       # @param driver [Selenium::WebDriver]
       # @param course [Course]
@@ -202,9 +212,7 @@ module Page
         click_next
         enter_site_titles course
         click_create_site
-        wait_until(Utils.long_wait) { current_url.include? "#{Utils.canvas_base_url}/courses" }
-        course.site_id = current_url.delete "#{Utils.canvas_base_url}/courses/"
-        logger.info "Course site ID is #{course.site_id}"
+        wait_for_site_id course
       end
 
     end

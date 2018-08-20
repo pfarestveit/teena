@@ -40,9 +40,11 @@ module Page
       # @param user [User]
       def dev_auth(user = nil)
         logger.info "Logging in #{('UID ' + user.uid.to_s + ' ') if user}using developer auth"
+        start = Time.now
         load_page
         scroll_to_bottom
         wait_for_element_and_type(dev_auth_uid_input_element, (user ? user.uid : Utils.super_admin_uid))
+        logger.warn "Took #{Time.now - start - Utils.click_wait} seconds for dev auth input to become available"
         wait_for_element_and_type(dev_auth_password_input_element, BOACUtils.password)
         wait_for_update_and_click dev_auth_log_in_button_element
         wait_for_title 'Home'

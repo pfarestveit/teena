@@ -1,6 +1,6 @@
 require_relative 'spec_helper'
 
-class JunctionUtils
+class JunctionUtils < Utils
 
   include Logging
 
@@ -18,10 +18,13 @@ class JunctionUtils
     @config['junction']['basic_auth_password']
   end
 
-  # Loads file containing test date for course-driven bCourses tests
+  def self.junction_test_data_file
+    File.join(Utils.config_dir, 'test-data-bcourses.json')
+  end
+
+  # Loads file containing test data for course-driven bCourses tests
   def self.load_junction_test_data
-    test_data_file = File.join(Utils.config_dir, 'test-data-bcourses.json')
-    JSON.parse(File.read(test_data_file))
+    JSON.parse File.read(junction_test_data_file)
   end
 
   # Loads test data for course-driven bCourses tests
@@ -34,13 +37,25 @@ class JunctionUtils
     load_junction_test_data['users']
   end
 
+  # Sets the site id for a course in the test data for course-driven bCourses tests
+  # @param course [Course]
+  def self.set_junction_test_course_id(course)
+    logger.info "Updating Junction test data with course site ID #{course.site_id} for #{course.term} #{course.code}"
+    parsed = load_junction_test_data
+    course_test_data = parsed['courses'].find { |data| data['code'] == course.code && data['term'] == course.term }
+    course_test_data['site_id'] = course.site_id
+
+    Dir.glob("#{Utils.config_dir}/test-data-bcourses.json").each { |f| File.delete f }
+    File.open(junction_test_data_file, 'w') { |f| f.write JSON.pretty_generate(parsed) }
+  end
+
   # Authenticates in Junction as an admin and expires all cache
   # @param driver [Selenium::WebDriver]
   # @param splash_page [Page::JunctionPages::SplashPage]
   # @param my_toolbox_page [Page::JunctionPages::MyToolboxPage]
   def self.clear_cache(driver, splash_page, my_toolbox_page)
     splash_page.load_page
-    splash_page.basic_auth @config['junction']['admin_uid']
+    splash_page.basic_auth super_admin_uid
     driver.get("#{junction_base_url}/api/cache/clear")
     sleep 3
     my_toolbox_page.load_page
