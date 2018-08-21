@@ -144,22 +144,24 @@ module Page
     end
 
     # Returns the Gradebook data for a given user. If the score cannot be found, log an error but do not fail.
+    # @param driver [Selenium::WebDriver]
     # @param user [User]
     # @return [Hash]
-    def student_score(user)
+    def student_score(driver, user)
       begin
         logger.debug "Searching for score for UID #{user.uid}"
         user_search_input_element.when_visible Utils.medium_wait
-        self.user_search_input = user.uid
-        sleep Utils.click_wait
-        wait_until(2) { gradebook_uid_elements.first.text == "#{user.uid}" }
         unless gradebook_total_elements.any? &:visible?
           logger.debug 'Gradebook totals are not visible, bringing them to the front'
           scroll_to_element total_grade_column_element
-          click_element_js total_grade_menu_link_element
+          mouseover(driver, total_grade_menu_link_element)
+          js_click total_grade_menu_link_element
           wait_for_update_and_click total_grade_column_move_front_element
           wait_until(Utils.short_wait) { gradebook_total_elements.any? }
+          sleep 2
         end
+        self.user_search_input = user.uid
+        wait_until(2) { gradebook_uid_elements.first.text == "#{user.uid}" }
         sleep Utils.click_wait
         score = gradebook_total_elements.first.text.strip.delete('%').to_f
         # If the score in the UI is zero, the score might not have loaded yet. Retry.
