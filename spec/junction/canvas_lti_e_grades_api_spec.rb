@@ -42,7 +42,7 @@ describe 'bCourses E-Grades Export' do
         grades_are_final = @canvas.gradebook_include_ungraded_checked?
         gradebook_grades = students.map do |user|
           user.sis_id = rosters_api.sid_from_uid user.uid
-          @canvas.student_score user unless user.sis_id.nil?
+          @canvas.student_score(@driver, user) unless user.sis_id.nil?
         end
         gradebook_grades.compact!
 

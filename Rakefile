@@ -13,25 +13,25 @@ begin
 
   task default: :boac
   RSpec::Core::RakeTask.new(:boac) do |t|
-    t.pattern = ENV['SCRIPTS'] ? "spec/boac/#{ENV['SCRIPTS']}*" : 'spec/boac/*'
+    t.pattern = ENV['SCRIPTS'] ? "spec/boac/*#{ENV['SCRIPTS']}*" : 'spec/boac/*'
     t.rspec_opts = opts
   end
 
   task default: :junction
   RSpec::Core::RakeTask.new(:junction) do |t|
-    t.pattern = ENV['SCRIPTS'] ? "spec/junction/#{ENV['SCRIPTS']}*" : 'spec/junction/*'
+    t.pattern = ENV['SCRIPTS'] ? "spec/junction/*#{ENV['SCRIPTS']}*" : 'spec/junction/*'
     t.rspec_opts = opts
   end
 
   task default: :oec
   RSpec::Core::RakeTask.new(:oec) do |t|
-    t.pattern = ENV['SCRIPTS'] ? "spec/oec/#{ENV['SCRIPTS']}*" : 'spec/oec/*'
+    t.pattern = ENV['SCRIPTS'] ? "spec/oec/*#{ENV['SCRIPTS']}*" : 'spec/oec/*'
     t.rspec_opts = opts
   end
 
   task default: :suitec
   RSpec::Core::RakeTask.new(:suitec) do |t|
-    t.pattern = ENV['SCRIPTS'] ? "spec/suitec/#{ENV['SCRIPTS']}*" : 'spec/suitec/*'
+    t.pattern = ENV['SCRIPTS'] ? "spec/suitec/*#{ENV['SCRIPTS']}*" : 'spec/suitec/*'
     t.rspec_opts = opts
   end
 
