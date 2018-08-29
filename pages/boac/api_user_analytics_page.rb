@@ -7,7 +7,7 @@ class ApiUserAnalyticsPage
 
   def get_data(driver, user)
     logger.info "Getting data for UID #{user.uid}"
-    navigate_to "#{BOACUtils.base_url}/api/user/#{user.uid}/analytics"
+    navigate_to "#{BOACUtils.base_url}/api/student/#{user.uid}/analytics"
     wait_until(Utils.long_wait) { driver.find_element(xpath: '//pre') }
     @parsed = JSON.parse driver.find_element(xpath: '//pre').text
     if @parsed['message'] == 'Unknown student'
@@ -28,6 +28,21 @@ class ApiUserAnalyticsPage
 
   def asc_profile
     @parsed['athleticsProfile']
+  end
+
+  # CoE Profile
+
+  def coe_profile
+    profile = @parsed && @parsed['coeProfile']
+    {
+      :advisor => (profile && profile['advisorUid']),
+      :gender => (profile && profile['gender']),
+      :ethnicity => (profile && profile['ethnicity']),
+      :prep => (profile && profile['didPrep']),
+      :prep_elig => (profile && profile['prepEligible']),
+      :t_prep => (profile && profile['didTprep']),
+      :t_prep_elig => (profile && profile['tprepEligible'])
+    }
   end
 
   # SIS Profile
@@ -268,10 +283,19 @@ class ApiUserAnalyticsPage
           :last_name => user.last_name,
           :last_name_sortable => user.last_name.gsub(/\W/, '').downcase,
           :squad_names => user_squad_names,
-          :level => (user_sis_data[:level] if user_sis_data[:level]),
-          :majors => (user_sis_data[:majors] ? user_sis_data[:majors] : []),
+          :active_asc => user.active_asc,
+          :intensive_asc => user.intensive_asc,
           :gpa => (user_sis_data[:cumulative_gpa] if user_sis_data[:cumulative_gpa]),
-          :units => (user_sis_data[:cumulative_units] if user_sis_data[:cumulative_units])
+          :level => (user_sis_data[:level] if user_sis_data[:level]),
+          :units => (user_sis_data[:cumulative_units] if user_sis_data[:cumulative_units]),
+          :majors => (user_sis_data[:majors] ? user_sis_data[:majors] : []),
+          :advisor => (coe_profile[:advisor] if coe_profile[:advisor]),
+          :gender => (coe_profile[:gender] if coe_profile[:gender]),
+          :ethnicity => (coe_profile[:ethnicity] if coe_profile[:ethnicity]),
+          :prep => coe_profile[:prep],
+          :prep_elig => coe_profile[:prep_elig],
+          :t_prep => coe_profile[:t_prep],
+          :t_prep_elig => coe_profile[:t_prep_elig]
         }
       end
       File.open(users_data_file, 'w') { |f| f.write users_data.to_json }

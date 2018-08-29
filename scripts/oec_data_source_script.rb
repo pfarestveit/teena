@@ -87,7 +87,7 @@ begin
       @driver.find_elements(xpath: '//table[@id="AdminUC_Data_ucAdminDS_Entities_FieldTable"]//input[@type="checkbox"]').each { |e| e.selected? }
     end
     click_element_id(@driver, 'AdminUC_Data_ucAdminDS_Entities_btnAdd')
-    @long_wait.until { @driver.find_element(xpath: '//a[contains(.,"Data Block has been updated successfully.")]') }
+    @long_wait.until { @driver.find_element(xpath: '//a[contains(.,"Data block updated.")]') }
     sleep 2
     # Import data source
     click_element_id(@driver, 'AdminUC_Data_primary-tabs_ImportExport')

@@ -56,7 +56,7 @@ describe 'BOAC' do
             @cohort_page.click_player_link student
             @driver.navigate.back
 
-            list_search_preserved = @cohort_page.search_criteria_selected? cohort.search_criteria
+            list_search_preserved = @cohort_page.filters_selected? cohort.search_criteria
             list_results_count_preserved = @cohort_page.verify_block { @cohort_page.wait_until { @cohort_page.results_count == cohort.member_count } }
             list_results_page_preserved = @cohort_page.list_view_page_selected? list_results_page
 
@@ -80,7 +80,7 @@ describe 'BOAC' do
 
               logger.info "Got #{scatterplot_uids.length + no_data_uids.length} matrix view UIDs"
 
-              matrix_search = @matrix_page.search_criteria_selected? cohort.search_criteria
+              matrix_search = @matrix_page.filters_selected? cohort.search_criteria
               matrix_results_right = (scatterplot_uids.length + no_data_uids.length == cohort.member_count)
 
               it("preserves cohort search criteria #{search} when switching to matrix view") { expect(matrix_search).to be true }
@@ -94,7 +94,7 @@ describe 'BOAC' do
               scatterplot_uids = @matrix_page.visible_matrix_uids @driver
               no_data_uids = @matrix_page.visible_no_data_uids
 
-              matrix_search_preserved = @matrix_page.search_criteria_selected? cohort.search_criteria
+              matrix_search_preserved = @matrix_page.filters_selected? cohort.search_criteria
               matrix_results_count_preserved = (scatterplot_uids.length + no_data_uids.length == cohort.member_count)
 
               it("preserves cohort search criteria #{search} when returning to matrix view from the student page") { expect(matrix_search_preserved).to be true }
@@ -137,7 +137,7 @@ describe 'BOAC' do
             scatterplot_uids = @matrix_page.visible_matrix_uids @driver
             no_data_uids = @matrix_page.visible_no_data_uids
 
-            matrix_search_preserved = @matrix_page.search_criteria_selected? cohort.search_criteria
+            matrix_search_preserved = @matrix_page.filters_selected? cohort.search_criteria
             matrix_results_count_preserved = (scatterplot_uids.length + no_data_uids.length == cohort.member_count)
 
             it("preserves cohort search criteria #{search} when returning to matrix view from the student page") { expect(matrix_search_preserved).to be true }
@@ -159,7 +159,7 @@ describe 'BOAC' do
             @cohort_page.click_player_link student
             @driver.navigate.back
 
-            list_search_preserved = @cohort_page.search_criteria_selected? cohort.search_criteria
+            list_search_preserved = @cohort_page.filters_selected? cohort.search_criteria
             list_results_count_preserved = @cohort_page.wait_until { @cohort_page.results_count == cohort.member_count }
             list_results_page_preserved = @cohort_page.list_view_page_selected? list_results_page
 

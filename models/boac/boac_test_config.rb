@@ -27,6 +27,7 @@ class BOACTestConfig < TestConfig
         fail
     end
 
+    # Admin should see all students; departments should see only their own students.
     @dept_students = if @dept == BOACDepartments::ADMIN
                        all_students
                      else
@@ -65,7 +66,7 @@ class BOACTestConfig < TestConfig
     # Get rid of empty filter sets (e.g., filtering only for teams but the advisor is CoE)
     filters.delete_if do |f|
       filter_options = f.instance_variables.map { |variable| f.instance_variable_get variable }
-      filter_options.delete_if { |value| value.nil? || value.empty? }
+      filter_options.delete_if { |value| value.nil? || (value.instance_of?(Array) && value.empty?) }
       filter_options.empty?
     end
     @searches = filters.map { |c| FilteredCohort.new({:name => "Test Cohort #{filters.index c} #{@id}", :search_criteria => c}) }
