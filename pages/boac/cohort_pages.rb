@@ -18,6 +18,7 @@ module Page
       # @return [Integer]
       def results_count
         sleep 1
+        results_element.when_visible Utils.short_wait
         results.split(' ')[0].to_i
       end
 

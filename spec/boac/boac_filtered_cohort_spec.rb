@@ -4,8 +4,6 @@ describe 'BOAC', order: :defined do
 
   include Logging
 
-  performance_data = File.join(Utils.initialize_test_output_dir, 'boac-search-performance.csv')
-
   all_students = NessieUtils.get_all_students
   test = BOACTestConfig.new
   test.filtered_cohorts all_students
@@ -34,7 +32,7 @@ describe 'BOAC', order: :defined do
 
     before(:all) do
       @homepage.load_page
-      pre_existing_cohorts.each { |c| @cohort_page.delete_cohort(pre_existing_cohorts, c) }
+      pre_existing_cohorts.each { |c| @cohort_page.delete_cohort c }
     end
 
     it('shows a No Filtered Cohorts message on the homepage') do
@@ -59,16 +57,16 @@ describe 'BOAC', order: :defined do
     end
 
     test.searches.each do |cohort|
-      it "shows all the students sorted by Last Name who match sports '#{cohort.search_criteria.squads && (cohort.search_criteria.squads.map &:name)}', levels '#{cohort.search_criteria.levels}', majors '#{cohort.search_criteria.majors}', GPA ranges '#{cohort.search_criteria.gpa_ranges}', units '#{cohort.search_criteria.units}'" do
+      it "shows all the students sorted by Last Name who match #{cohort.search_criteria.list_filters}" do
         @cohort_page.click_sidebar_create_filtered
-        @cohort_page.perform_search(cohort, performance_data)
+        @cohort_page.perform_search cohort
         expected_results = @cohort_page.expected_sids_by_last_name(@searchable_students, cohort.search_criteria)
         visible_results = cohort.member_count.zero? ? [] : @cohort_page.visible_sids
         @cohort_page.wait_until(1, "Expected but not present: #{expected_results - visible_results}. Present but not expected: #{visible_results - expected_results}") { visible_results.sort == expected_results.sort }
         @cohort_page.verify_list_view_sorting(expected_results, visible_results)
       end
 
-      it "shows by First Name all the students who match sports '#{cohort.search_criteria.squads && (cohort.search_criteria.squads.map &:name)}', levels '#{cohort.search_criteria.levels}', majors '#{cohort.search_criteria.majors}', GPA ranges '#{cohort.search_criteria.gpa_ranges}', units '#{cohort.search_criteria.units}'" do
+      it "shows by First Name all the students who match #{cohort.search_criteria.list_filters}" do
         expected_results = @cohort_page.expected_sids_by_first_name(@searchable_students, cohort.search_criteria)
         if expected_results.length.zero?
           logger.warn 'Skipping sort-by-first-name test since there are no results'
@@ -80,7 +78,7 @@ describe 'BOAC', order: :defined do
         end
       end
 
-      it "sorts by Team all the students who match sports '#{cohort.search_criteria.squads && (cohort.search_criteria.squads.map &:name)}', levels '#{cohort.search_criteria.levels}', majors '#{cohort.search_criteria.majors}', GPA ranges '#{cohort.search_criteria.gpa_ranges}', units '#{cohort.search_criteria.units}'" do
+      it "sorts by Team all the students who match #{cohort.search_criteria.list_filters}" do
         if test.dept == BOACDepartments::ASC
           expected_results = @cohort_page.expected_sids_by_team(@searchable_students, cohort.search_criteria)
           if expected_results.length.zero?
@@ -96,7 +94,7 @@ describe 'BOAC', order: :defined do
         end
       end
 
-      it "sorts by GPA all the students who match sports '#{cohort.search_criteria.squads && (cohort.search_criteria.squads.map &:name)}', levels '#{cohort.search_criteria.levels}', majors '#{cohort.search_criteria.majors}', GPA ranges '#{cohort.search_criteria.gpa_ranges}', units '#{cohort.search_criteria.units}'" do
+      it "sorts by GPA all the students who match #{cohort.search_criteria.list_filters}" do
         expected_results = @cohort_page.expected_sids_by_gpa(@searchable_students, cohort.search_criteria)
         if expected_results.length.zero?
           logger.warn 'Skipping sort-by-GPA test since there are no results'
@@ -108,7 +106,7 @@ describe 'BOAC', order: :defined do
         end
       end
 
-      it "sorts by Level all the students who match sports '#{cohort.search_criteria.squads && (cohort.search_criteria.squads.map &:name)}', levels '#{cohort.search_criteria.levels}', majors '#{cohort.search_criteria.majors}', GPA ranges '#{cohort.search_criteria.gpa_ranges}', units '#{cohort.search_criteria.units}'" do
+      it "sorts by Level all the students who match #{cohort.search_criteria.list_filters}" do
         expected_results = @cohort_page.expected_sids_by_level(@searchable_students, cohort.search_criteria)
         if expected_results.length.zero?
           logger.warn 'Skipping sort-by-level test since there are no results'
@@ -120,7 +118,7 @@ describe 'BOAC', order: :defined do
         end
       end
 
-      it "sorts by Major all the students who match sports '#{cohort.search_criteria.squads && (cohort.search_criteria.squads.map &:name)}', levels '#{cohort.search_criteria.levels}', majors '#{cohort.search_criteria.majors}', GPA ranges '#{cohort.search_criteria.gpa_ranges}', units '#{cohort.search_criteria.units}'" do
+      it "sorts by Major all the students who match #{cohort.search_criteria.list_filters}" do
         expected_results = @cohort_page.expected_sids_by_major(@searchable_students, cohort.search_criteria)
         if expected_results.length.zero?
           logger.warn 'Skipping sort-by-major test since there are no results'
@@ -132,7 +130,7 @@ describe 'BOAC', order: :defined do
         end
       end
 
-      it "sorts by Units all the students who match sports '#{cohort.search_criteria.squads && (cohort.search_criteria.squads.map &:name)}', levels '#{cohort.search_criteria.levels}', majors '#{cohort.search_criteria.majors}', GPA ranges '#{cohort.search_criteria.gpa_ranges}', units '#{cohort.search_criteria.units}'" do
+      it "sorts by Units all the students who match #{cohort.search_criteria.list_filters}" do
         expected_results = @cohort_page.expected_sids_by_units(@searchable_students, cohort.search_criteria)
         if expected_results.length.zero?
           logger.warn 'Skipping sort-by-units test since there are no results'
@@ -144,23 +142,23 @@ describe 'BOAC', order: :defined do
         end
       end
 
-      it "allows the advisor to create a cohort using '#{cohort.search_criteria.squads && (cohort.search_criteria.squads.map &:name)}', levels '#{cohort.search_criteria.levels}', majors '#{cohort.search_criteria.majors}', GPA ranges '#{cohort.search_criteria.gpa_ranges}', units '#{cohort.search_criteria.units}'" do
+      it "allows the advisor to create a cohort using #{cohort.search_criteria.list_filters}" do
         @cohort_page.create_new_cohort cohort
       end
 
-      it "shows the filtered cohort on the homepage with criteria sports '#{cohort.search_criteria.squads && (cohort.search_criteria.squads.map &:name)}', levels '#{cohort.search_criteria.levels}', majors '#{cohort.search_criteria.majors}', GPA ranges '#{cohort.search_criteria.gpa_ranges}', units '#{cohort.search_criteria.units}'" do
+      it "shows the filtered cohort on the homepage with criteria #{cohort.search_criteria.list_filters}" do
         @homepage.load_page
         @homepage.wait_until(Utils.medium_wait) { @homepage.filtered_cohorts.include? cohort.name }
       end
 
-      it "shows the filtered cohort members who have alerts on the homepage with criteria sports '#{cohort.search_criteria.squads && (cohort.search_criteria.squads.map &:name)}', levels '#{cohort.search_criteria.levels}', majors '#{cohort.search_criteria.majors}', GPA ranges '#{cohort.search_criteria.gpa_ranges}', units '#{cohort.search_criteria.units}'" do
+      it "shows the filtered cohort members who have alerts on the homepage with criteria #{cohort.search_criteria.list_filters}" do
         member_sids = @cohort_page.expected_sids_by_last_name(@searchable_students, cohort.search_criteria)
         @homepage.wait_until(Utils.short_wait) { @homepage.filtered_cohort_member_count(cohort) == member_sids.length }
         members = test.dept_students.select { |u| member_sids.include? u.sis_id }
         @homepage.verify_cohort_alert_rows(@driver, cohort, members, test.advisor)
       end
 
-      it "offers a link to the filtered cohort with criteria sports '#{cohort.search_criteria.squads && (cohort.search_criteria.squads.map &:name)}', levels '#{cohort.search_criteria.levels}', majors '#{cohort.search_criteria.majors}', GPA ranges '#{cohort.search_criteria.gpa_ranges}', units '#{cohort.search_criteria.units}'" do
+      it "offers a link to the filtered cohort with criteria #{cohort.search_criteria.list_filters}" do
         @homepage.click_filtered_cohort cohort
         @cohort_page.cohort_heading(cohort).when_visible Utils.medium_wait
       end
@@ -193,7 +191,7 @@ describe 'BOAC', order: :defined do
   context 'when the advisor views its cohorts' do
 
     it('shows only the advisor\'s cohorts on the homepage') do
-      test.searches << pre_existing_cohorts
+      test.searches
       test.searches.flatten!
       # Account for My Students if the advisor is CoE
       my_students = test.searches.find &:read_only
@@ -229,7 +227,7 @@ describe 'BOAC', order: :defined do
 
     before(:all) do
       @cohort_to_delete = test.searches.find { |c| !c.read_only }
-      @cohort_page.delete_cohort(test.searches, @cohort_to_delete)
+      @cohort_page.delete_cohort @cohort_to_delete
     end
 
     it 'shows a Not Found page' do

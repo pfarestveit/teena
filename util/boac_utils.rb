@@ -80,24 +80,6 @@ class BOACUtils < Utils
     File.join(Utils.config_dir, "boac-searchable-data-#{Time.now.strftime('%Y-%m-%d')}.json")
   end
 
-  # Returns a collection of search criteria to use for testing cohort search
-  # @param dept [BOACDepartments]
-  # @return [Array<Hash>]
-  def self.get_test_cohort_filters(dept)
-    test_data_file = File.join(Utils.config_dir, 'test-data-boac.json')
-    test_data = JSON.parse File.read(test_data_file)
-    filters = test_data['filters'].map do |data|
-      filter = CohortFilter.new
-      filter.set_test_filters(data, dept)
-    end
-    # Get rid of empty filter sets (e.g., filtering only for teams but the advisor is CoE)
-    filters.delete_if do |f|
-      filter_options = f.instance_variables.map { |variable| f.instance_variable_get variable }
-      filter_options.delete_if { |value| value.nil? || value.empty? }
-      filter_options.empty?
-    end
-  end
-
   # Returns the db credentials for BOAC
   # @return [Hash]
   def self.boac_db_credentials
