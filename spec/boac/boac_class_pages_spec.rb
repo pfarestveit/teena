@@ -19,10 +19,12 @@ describe 'BOAC' do
 
     @driver = Utils.launch_browser
     @homepage = Page::BOACPages::HomePage.new @driver
+    @filtered_cohort_page = Page::BOACPages::CohortPages::FilteredCohortListViewPage.new @driver
     @student_page = Page::BOACPages::StudentPage.new @driver
     @class_page = Page::BOACPages::ClassPage.new @driver
 
     @homepage.dev_auth test.advisor
+    @filtered_cohort_page.search_and_create_new_cohort(test.default_cohort) unless test.default_cohort.id
 
     test.max_cohort_members.each do |student|
       begin
@@ -185,7 +187,8 @@ describe 'BOAC' do
 
                             # TODO - move this into user role scripts
                             if student_data[:sports].any? && test.dept == BOACDepartments::ASC
-                              it("shows the right sports for #{student_test_case}") { expect(visible_student_sis_data[:sports]).to eql(student_data[:sports].sort) }
+                              sports = student_data[:sports].map { |s| s.gsub(' (AA)', '') }
+                              it("shows the right sports for #{student_test_case}") { expect(visible_student_sis_data[:sports]).to eql(sports.sort) }
                             end
 
                             if student_data[:grading_basis] == 'NON' || !student_data[:final_grade].empty?

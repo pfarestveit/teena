@@ -55,6 +55,26 @@ describe 'An ASC advisor' do
 
   after(:all) { Utils.quit_browser @driver }
 
+  context 'performing a filtered cohort search' do
+
+    before(:all) do
+      @homepage.click_sidebar_create_filtered
+      @filtered_cohort_page.wait_for_update_and_click @filtered_cohort_page.new_filter_button_element
+      @filtered_cohort_page.wait_until(1) { @filtered_cohort_page.new_filter_option_elements.any? &:visible? }
+    end
+
+    it('sees a Level filter') { expect(@filtered_cohort_page.new_filter_option('Level').visible?).to be true }
+    it('sees a Major filter') { expect(@filtered_cohort_page.new_filter_option('Major').visible?).to be true }
+    it('sees a Units filter') { expect(@filtered_cohort_page.new_filter_option('Units').visible?).to be true }
+    it('sees no Advisor filter') { expect(@filtered_cohort_page.new_filter_option('Advisor').exists?).to be false }
+    it('sees no Ethnicity filter') { expect(@filtered_cohort_page.new_filter_option('Ethnicity').exists?).to be false }
+    it('sees no Gender filter') { expect(@filtered_cohort_page.new_filter_option('Gender').exists?).to be false }
+    it('sees no PREP filter') { expect(@filtered_cohort_page.new_filter_option('PREP').exists?).to be false }
+    it('sees a Inactive filter') { expect(@filtered_cohort_page.new_filter_option('Inactive').visible?).to be true }
+    it('sees a Intensive filter') { expect(@filtered_cohort_page.new_filter_option('Intensive').visible?).to be true }
+    it('sees a Team filter') { expect(@filtered_cohort_page.new_filter_option('Team').visible?).to be true }
+  end
+
   context 'visiting Everyone\'s Cohorts' do
 
     it 'sees only filtered cohorts created by ASC advisors' do
@@ -129,26 +149,6 @@ describe 'An ASC advisor' do
       @student_page.wait_for_spinner
       @student_page.inactive_flag_element.when_visible Utils.short_wait
     end
-
-    it 'can filter for inactive students in a search' do
-      @filtered_cohort_page.click_inactive_cohort
-      expect(@filtered_cohort_page.inactive_cbx_element.attribute('checked')).to eql('true')
-      @filtered_cohort_page.perform_search test_asc.searches[0]
-      expected_results = @filtered_cohort_page.expected_sids_by_last_name(@inactive_student_search_data, test_asc.searches[0].search_criteria).sort
-      visible_results = @filtered_cohort_page.visible_sids
-      @filtered_cohort_page.wait_until(1, "Expected but not present: #{expected_results - visible_results}. Present but not expected: #{visible_results - expected_results}") { visible_results.sort == expected_results.sort }
-    end
-
-    it 'can remove the filter for inactive students in a search' do
-      expect(@filtered_cohort_page.inactive_cbx_element.attribute('checked')).to eql('true')
-      @filtered_cohort_page.click_inactive
-      @filtered_cohort_page.perform_search test_asc.searches[1]
-      expected_results = @filtered_cohort_page.expected_sids_by_last_name((@asc_student_search_data - @inactive_student_search_data), test_asc.searches[1].search_criteria).sort
-      visible_results = @filtered_cohort_page.visible_sids
-      @filtered_cohort_page.wait_until(1, "Expected but not present: #{expected_results - visible_results}. Present but not expected: #{visible_results - expected_results}") { visible_results.sort == expected_results.sort }
-    end
-
-    it('can no longer see the filter for inactive students if it was removed in a previous search') { expect(@filtered_cohort_page.inactive_cbx_element.visible?).to be false }
   end
 
   context 'visiting the intensive cohort' do
@@ -165,24 +165,6 @@ describe 'An ASC advisor' do
 
     it('sees at least one intensive student') { expect(@visible_intensive_students.any?).to be true }
 
-    it 'can filter for intensive students in a search' do
-      expect(@filtered_cohort_page.intensive_cbx_element.attribute('checked')).to eql('true')
-      @filtered_cohort_page.perform_search test_asc.searches[0]
-      expected_results = @filtered_cohort_page.expected_sids_by_last_name(@intensive_student_search_data, test_asc.searches[0].search_criteria).sort
-      visible_results = @filtered_cohort_page.visible_sids
-      @filtered_cohort_page.wait_until(1, "Expected but not present: #{expected_results - visible_results}. Present but not expected: #{visible_results - expected_results}") { visible_results.sort == expected_results.sort }
-    end
-
-    it 'can remove the filter for intensive students in a search' do
-      expect(@filtered_cohort_page.intensive_cbx_element.attribute('checked')).to eql('true')
-      @filtered_cohort_page.click_intensive
-      @filtered_cohort_page.perform_search test_asc.searches[1]
-      expected_results = @filtered_cohort_page.expected_sids_by_last_name((@asc_student_search_data - @inactive_student_search_data), test_asc.searches[1].search_criteria).sort
-      visible_results = @filtered_cohort_page.visible_sids
-      @filtered_cohort_page.wait_until(1, "Expected but not present: #{expected_results - visible_results}. Present but not expected: #{visible_results - expected_results}") { visible_results.sort == expected_results.sort }
-    end
-
-    it('can no longer see the filter for intensive students if it was removed in a previous search') { expect(@filtered_cohort_page.intensive_cbx?).to be false }
   end
 
   context 'looking for admin functions' do

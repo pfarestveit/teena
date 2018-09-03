@@ -13,9 +13,9 @@ describe 'bCourses Course Captures tool' do
 
     @driver = Utils.launch_browser
     @course_captures_page = Page::JunctionPages::CanvasCourseCapturesPage.new @driver
+    @cal_net = Page::CalNetPage.new @driver
 
     if masquerade
-      @cal_net = Page::CalNetPage.new @driver
       @canvas = Page::CanvasPage.new @driver
       @canvas.log_in(@cal_net, Utils.super_admin_username, Utils.super_admin_password)
     else
@@ -40,7 +40,7 @@ describe 'bCourses Course Captures tool' do
               @course_captures_page.load_embedded_tool(@driver, course)
             else
               @splash_page.load_page
-              @splash_page.basic_auth user.uid
+              @splash_page.basic_auth(user.uid, @cal_net)
               @course_captures_page.load_standalone_tool course
             end
 

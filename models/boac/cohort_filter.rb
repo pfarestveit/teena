@@ -1,5 +1,7 @@
 class CohortFilter
 
+  include Logging
+
   attr_accessor :gpa_ranges,
                 :levels,
                 :units,
@@ -94,7 +96,7 @@ class CohortFilter
       when 'Z'
         'Foreign'
       else
-        fail
+        logger.warn "Unrecognized ethnicity '#{code}'"
     end
   end
 

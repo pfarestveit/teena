@@ -10,6 +10,8 @@ describe 'BOAC' do
     all_students = NessieUtils.get_all_students
     test.team_sis_data all_students
     teams = NessieUtils.get_asc_teams
+    team = Team::TEAMS.find { |t| t.code == BOACUtils.sis_data_team }
+    test.default_cohort.name = team.name
 
     # Create files for test output
     user_profile_data_heading = %w(UID Sport Name PreferredName Email Phone Units GPA Level Colleges Majors Terms Writing History Institutions Cultures Graduation Alerts)

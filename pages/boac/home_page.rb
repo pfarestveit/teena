@@ -126,7 +126,7 @@ module Page
 
       # FILTERED COHORTS
 
-      elements(:filtered_cohort, :link, xpath: '//div[@data-ng-repeat="cohort in myFilteredCohorts"]/h2/a')
+      elements(:filtered_cohort, :span, xpath: '//div[@data-ng-repeat="cohort in myFilteredCohorts"]//h2/span[1]')
       link(:home_create_filtered_link, id: 'home-filtered-cohorts-create-link')
       link(:home_manage_filtered_link, id: 'home-filtered-cohorts-manage-link')
       div(:no_filtered_cohorts_msg, xpath: '//div[contains(.,"You have no filtered cohorts.")]')
@@ -135,14 +135,28 @@ module Page
       # @return [Array<String>]
       def filtered_cohorts
         h1_element(xpath: '//h1[text()="Filtered Cohorts"]').when_present Utils.medium_wait
+        wait_until(Utils.medium_wait) { filtered_cohort_elements.any? }
         filtered_cohort_elements.map &:text
       end
 
-      # Returns the XPath to a cohort's div
+      # Returns the XPath to a cohort's div in the main content area
       # @param cohort [FilteredCohort]
       # @return [String]
       def filtered_cohort_xpath(cohort)
-        "//div[@data-ng-repeat=\"cohort in myFilteredCohorts\"][contains(.,\"#{cohort.name}\")]"
+        "//div[@id=\"content\"]//div[@data-ng-repeat=\"cohort in myFilteredCohorts\"][contains(.,\"#{cohort.name}\")]"
+      end
+
+      # Returns the 'view all' link on a filtered cohort row
+      # @param cohort [FilteredCohort]
+      # @return [PageObject::Elements::Link]
+      def filtered_cohort_view_all_link(cohort)
+        link_element(xpath: "//a[contains(@href,'/filtered?id=#{cohort.id}')][contains(.,'View all')]")
+      end
+
+      # Expands a filtered cohort row in the main content area
+      # @param cohort [FilteredCohort]
+      def expand_filtered_cohort(cohort)
+        wait_for_update_and_click link_element(xpath: "#{filtered_cohort_xpath cohort}//a")
       end
 
       # Returns all the user divs beneath a cohort
@@ -157,7 +171,7 @@ module Page
       # @param cohort [FilteredCohort]
       # @return [Integer]
       def filtered_cohort_member_count(cohort)
-        el = span_element(xpath: "#{filtered_cohort_xpath cohort}//span")
+        el = span_element(xpath: "#{filtered_cohort_xpath cohort}//span[@data-ng-bind=\"cohort.totalStudentCount\"]")
         el && el.text.to_i
       end
 
@@ -177,8 +191,9 @@ module Page
         end
         members_and_alert_counts.delete_if { |u| u[:alert_count] == '0' }
 
-        # Verify that there are only rows for members with alerts
+        # Expand the cohort, and verify that there are only rows for members with alerts
         expected_member_row_count = members_and_alert_counts.length
+        expand_filtered_cohort cohort
         visible_member_row_count = filtered_cohort_member_rows(driver, cohort).length
         wait_until(1, "Expecting cohort #{cohort.name} to have row count of #{expected_member_row_count}, got #{visible_member_row_count}") { visible_member_row_count == expected_member_row_count }
 
@@ -186,11 +201,7 @@ module Page
         members_and_alert_counts.each do |member|
           logger.debug "Checking cohort row for SID #{member[:user].sis_id}"
           visible_row_data = user_row_data(driver, member[:user], filtered_cohort_xpath(cohort))
-          wait_until(1, "Expecting name #{member[:user].last_name}, #{member[:user].first_name}, got #{visible_row_data[:name]}") { visible_row_data[:name] == "#{member[:user].last_name}, #{member[:user].first_name}" }
-          wait_until(1, "Expecting SID #{member[:user].sis_id}, got #{visible_row_data[:sid]}") { visible_row_data[:sid] == member[:user].sis_id }
           wait_until(1, "Expecting alert count #{member[:alert_count]}, got #{visible_row_data[:alert_count]}") { visible_row_data[:alert_count] == member[:alert_count] }
-          # The following data is verified on other pages, so just check that it's not blank on the homepage.
-          wait_until(1) { ![visible_row_data[:majors], visible_row_data[:units_in_progress], visible_row_data[:cumulative_units], visible_row_data[:gpa]].any?(&:empty?) }
         end
       end
 
@@ -199,7 +210,7 @@ module Page
       def click_filtered_cohort(cohort)
         logger.debug "Clicking link to my cohort '#{cohort.name}'"
         wait_until(Utils.short_wait) { filtered_cohort_elements.any? }
-        wait_for_update_and_click (filtered_cohort_elements.find { |e| e.text == cohort.name })
+        wait_for_update_and_click_js filtered_cohort_view_all_link(cohort)
       end
 
     end

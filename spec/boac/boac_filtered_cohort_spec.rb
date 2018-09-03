@@ -37,10 +37,7 @@ describe 'BOAC', order: :defined do
 
     it('shows a No Filtered Cohorts message on the homepage') do
       @homepage.load_page
-      # CoE advisors will always have a 'my students' filtered cohort that cannot be deleted
-      (test.dept == BOACDepartments::COE) ?
-          (expect(@homepage.no_filtered_cohorts_msg?).to be false) :
-          (expect(@homepage.no_filtered_cohorts_msg?).to be true)
+      @homepage.no_filtered_cohorts_msg_element.when_visible Utils.short_wait
     end
   end
 
@@ -48,15 +45,8 @@ describe 'BOAC', order: :defined do
 
     before(:each) { @cohort_page.cancel_cohort if @cohort_page.cancel_cohort_button? }
 
-    it "shows only filters available to #{test.dept.name}" do
-      @cohort_page.click_sidebar_create_filtered
-      @cohort_page.wait_until(Utils.short_wait) { @cohort_page.level_option_elements.any? }
-      (test.dept == BOACDepartments::ASC) ?
-          (expect(@cohort_page.squad_filter_button?).to be true) :
-          (expect(@cohort_page.squad_filter_button?).to be false)
-    end
-
     test.searches.each do |cohort|
+
       it "shows all the students sorted by Last Name who match #{cohort.search_criteria.list_filters}" do
         @cohort_page.click_sidebar_create_filtered
         @cohort_page.perform_search cohort
@@ -191,11 +181,7 @@ describe 'BOAC', order: :defined do
   context 'when the advisor views its cohorts' do
 
     it('shows only the advisor\'s cohorts on the homepage') do
-      test.searches
       test.searches.flatten!
-      # Account for My Students if the advisor is CoE
-      my_students = test.searches.find &:read_only
-      my_students.name = 'My Students' if my_students
       @homepage.load_page
       @homepage.wait_until(Utils.short_wait) { @homepage.filtered_cohorts.any? }
       @homepage.wait_until(1, "Expected #{(test.searches.map &:name).sort}, but got #{@homepage.filtered_cohorts.sort}") { @homepage.filtered_cohorts.sort == (test.searches.map &:name).sort }
@@ -231,7 +217,7 @@ describe 'BOAC', order: :defined do
     end
 
     it 'shows a Not Found page' do
-      @cohort_page.navigate_to "#{BOACUtils.base_url}/cohort?c=#{@cohort_to_delete.id}"
+      @cohort_page.navigate_to "#{BOACUtils.base_url}/cohort/filtered?id=#{@cohort_to_delete.id}"
       @cohort_page.wait_for_title '404'
     end
   end
