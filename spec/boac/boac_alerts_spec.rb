@@ -11,7 +11,9 @@ describe 'A BOAC alert' do
     if @alert
 
       @driver = Utils.launch_browser
-      @advisor = BOACUtils.get_authorized_users.find { |u| u.uid != Utils.super_admin_uid }
+      logger.debug "Picking an advisor whose UID is not #{Utils.super_admin_uid}"
+      @advisor = BOACUtils.get_admin_users.find { |u| u.uid.to_s != Utils.super_admin_uid.to_s }
+      logger.debug "Advisor UID is #{@advisor.uid}"
       BOACUtils.remove_alert_dismissal(@alert) if BOACUtils.get_dismissed_alerts([@alert], @advisor).any?
 
       @homepage = Page::BOACPages::HomePage.new @driver
@@ -27,7 +29,7 @@ describe 'A BOAC alert' do
 
       # Dismiss alert
       @student_page.dismiss_alert @alert
-      alert_dismissed = @student_page.wait_until(1) do
+      alert_dismissed = @student_page.wait_until(3) do
         !@student_page.non_dismissed_alert_ids.include? @alert.id
         @student_page.dismissed_alert_msgs.include? @alert.message
         !@student_page.dismissed_alert_msg_elements.any?(&:visible?)

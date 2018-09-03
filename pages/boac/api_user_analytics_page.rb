@@ -243,13 +243,6 @@ class ApiUserAnalyticsPage
     site_statistics(analytics(site)['currentScore']).merge!({:type => 'Assignment Grades'})
   end
 
-  # Returns a user's Nessie Last Activity analytics on a course site
-  # @param site [Hash]
-  # @return [Integer]
-  def nessie_last_activity(site)
-    analytics(site)['lastActivity'] && analytics(site)['lastActivity']['student'] && analytics(site)['lastActivity']['student']['daysSinceLastActivity']
-  end
-
   # To support cohort search tests, returns all relevant user data for a given set of students. If a file containing the data already
   # exists, will skip collecting the data and simply parse the file. Otherwise, will collect the data and write it to a file for
   # subsequent test runs.

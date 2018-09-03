@@ -137,8 +137,8 @@ module Page
     def wait_for_sidebar_curated_member_count(cohort)
       logger.debug "Waiting for curated cohort member count of #{cohort.members.length}"
       wait_until(Utils.short_wait) do
-        el = span_element(xpath: "//div[@data-ng-repeat=\"cohort in myCuratedCohorts\"]//a[contains(.,\"#{cohort.name}\")][contains(@class,\"sidebar\")]/following-sibling::span")
-        (el && el.text) == cohort.members.length.to_s
+        el = span_element(xpath: "//div[contains(@class,\"sidebar-row-link\")][contains(.,\"#{cohort.name}\")]//span")
+        (el && el.text.delete(' students').chomp) == cohort.members.length.to_s
       end
     end
 
@@ -253,6 +253,7 @@ module Page
 
     # Clicks the button to view all custom cohorts
     def click_view_everyone_cohorts
+      sleep 2
       wait_for_load_and_click view_everyone_cohorts_link_element
       wait_for_title 'Filtered Cohorts All'
     end
@@ -291,9 +292,9 @@ module Page
     # @param xpath [String]
     # @return [Hash]
     def user_row_data(driver, user, xpath = nil)
-      row_xpath = "#{xpath}//div[contains(@data-ng-repeat,'student in students')][contains(.,'#{user.sis_id}')]"
+      row_xpath = "#{xpath}//div[contains(@data-ng-repeat,\"student in students\")][contains(.,\"#{user.sis_id}\")]"
       {
-        :name => link_element(xpath: "#{row_xpath}//a").text,
+        :name => link_element(xpath: "#{row_xpath}//a[@data-ng-bind=\"student.sortableName\"]").text,
         :sid => span_element(xpath: "#{row_xpath}//span[@data-ng-bind='student.sid']").text,
         :majors => driver.find_elements(xpath: "#{row_xpath}//span[@data-ng-repeat='major in student.majors']").map(&:text),
         :units_in_progress => div_element(xpath: "#{row_xpath}//div[contains(@data-ng-bind,'student.term.enrolledUnits')]").text,

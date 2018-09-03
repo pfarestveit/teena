@@ -21,7 +21,7 @@ describe 'BOAC' do
       testable_users = []
       logger.info "Checking term #{test.term}"
 
-      last_activity_csv = Utils.create_test_output_csv('boac-last-activity.csv', %w(Term CCN UID Canvas APIActivity ClassPageActivity StudentPageActivity StudentPageContext))
+      last_activity_csv = Utils.create_test_output_csv('boac-last-activity.csv', %w(Term CCN UID Canvas ClassPageActivity StudentPageActivity StudentPageContext))
 
       @driver = Utils.launch_browser
       @homepage = Page::BOACPages::HomePage.new @driver
@@ -90,7 +90,6 @@ describe 'BOAC' do
                               {
                                 :site_id => api_student_page.site_metadata(site)[:site_id],
                                 :site_code => api_student_page.site_metadata(site)[:code],
-                                :last_activity_api => api_student_page.nessie_last_activity(site),
                                 :last_activity_student_page => @student_page.visible_last_activity(test.term, course_sis_data[:code], sites.index(site))
                               }
                             end)
@@ -133,10 +132,9 @@ describe 'BOAC' do
 
                                 if s[:site_id] == site_id
                                   canvas_last_activity = @canvas_page.roster_user_last_activity d[:student].uid
-                                  Utils.add_csv_row(last_activity_csv, [test.term, site_id, d[:student].uid, canvas_last_activity, s[:last_activity_api], s[:last_activity_class_page], s[:last_activity_student_page][:last_activity], s[:last_activity_student_page][:activity_context]])
+                                  Utils.add_csv_row(last_activity_csv, [test.term, site_id, d[:student].uid, canvas_last_activity, s[:last_activity_class_page], s[:last_activity_student_page][:last_activity], s[:last_activity_student_page][:activity_context]])
 
                                   if canvas_last_activity.empty?
-                                    it("shows null Last Activity in the BOAC API for #{test_case}") { expect(s[:last_activity_api]).to be_nil }
                                     it("shows 'Never' Last Activity in the BOAC class page for #{test_case}") { expect(s[:last_activity_class_page]).to eql('Never') }
                                     it("shows 'never' Last Activity in the BOAC student page for #{test_case}") { expect(s[:last_activity_student_page][:last_activity]).to include('never') }
 
@@ -148,7 +146,6 @@ describe 'BOAC' do
                                       logger.warn "Skipping last activity check for #{test_case}, since the user visited the site within day count #{day_count}, and BOAC will not know that."
 
                                     else
-                                      it("shows #{day_count} days since Last Activity in the BOAC API for #{test_case}") { expect(s[:last_activity_api]).to eql(day_count) }
 
                                       if day_count == 1
                                         it("shows 'Yesterday' Last Activity on the class page for #{test_case}") { expect(s[:last_activity_class_page]).to eql('Yesterday') }

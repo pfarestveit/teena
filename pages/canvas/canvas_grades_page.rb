@@ -83,7 +83,7 @@ module Page
       wait_for_load_and_click grades_export_button_element
       wait_for_update_and_click grades_csv_link_element
       file_path = "#{Utils.download_dir}/*.csv"
-      wait_until(Utils.long_wait) { Dir[file_path].any? }
+      wait_until(Utils.long_wait, "Timed out waiting for Canvas to export grades for site ID #{course.site_id}") { Dir[file_path].any? }
       sleep Utils.short_wait
       file = Dir[file_path].first
       table = CSV.table file

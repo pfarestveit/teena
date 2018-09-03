@@ -193,7 +193,7 @@ module Page
         score_xpath = "#{assignment_xpath}//span[@class='score-display']"
         if span_element(xpath: score_xpath).exists?
           # If a grade exists, consider it submitted
-          submitted = (grading = span_element(xpath: "#{assignment_xpath}//span[@class='grade-display']")).exists? && grading.visible?
+          submitted = (grading = span_element(xpath: "#{assignment_xpath}//span[@class='grade-display']")).exists? && grading.visible? && !grading.text.include?('Incomplete')
           # If no grade exists but a non-null and non-zero score exists, consider it submitted
           unless submitted
             submitted = span_element(xpath: score_xpath).visible? &&

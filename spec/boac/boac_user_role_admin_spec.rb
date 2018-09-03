@@ -32,7 +32,10 @@ describe 'An admin using BOAC' do
 
   context 'visiting Everyone\'s Cohorts' do
 
-    before(:all) { @homepage.load_page }
+    before(:all) do
+      @homepage.load_page
+      @homepage.click_view_everyone_cohorts
+    end
 
     it 'sees all filtered cohorts' do
       expected_cohort_names = everyone_cohorts.map(&:name).sort
@@ -54,17 +57,22 @@ describe 'An admin using BOAC' do
 
   context 'performing a filtered cohort search' do
 
-    it 'does not see Team filters' do
+    before(:all) do
       @homepage.click_sidebar_create_filtered
-      @filtered_cohort_page.wait_until(Utils.short_wait) { @filtered_cohort_page.level_option_elements.any? }
-      expect(@filtered_cohort_page.squad_option_elements.any?).to be false
+      @filtered_cohort_page.wait_for_update_and_click @filtered_cohort_page.new_filter_button_element
+      @filtered_cohort_page.wait_until(1) { @filtered_cohort_page.new_filter_option_elements.any? &:visible? }
     end
 
-    it 'can hit team filters directly' do
-      @filtered_cohort_page.load_squad Squad::MFB_ST
-      @filtered_cohort_page.wait_for_search_results
-      expect(@filtered_cohort_page.results_count).not_to be_zero
-    end
+    it('sees a Level filter') { expect(@filtered_cohort_page.new_filter_option('Level').visible?).to be true }
+    it('sees a Major filter') { expect(@filtered_cohort_page.new_filter_option('Major').visible?).to be true }
+    it('sees a Units filter') { expect(@filtered_cohort_page.new_filter_option('Units').visible?).to be true }
+    it('sees a Advisor filter') { expect(@filtered_cohort_page.new_filter_option('Advisor').visible?).to be true }
+    it('sees a Ethnicity filter') { expect(@filtered_cohort_page.new_filter_option('Ethnicity').visible?).to be true }
+    it('sees a Gender filter') { expect(@filtered_cohort_page.new_filter_option('Gender').visible?).to be true }
+    it('sees a PREP filter') { expect(@filtered_cohort_page.new_filter_option('PREP').visible?).to be true }
+    it('sees a Inactive filter') { expect(@filtered_cohort_page.new_filter_option('Inactive').visible?).to be true }
+    it('sees a Intensive filter') { expect(@filtered_cohort_page.new_filter_option('Intensive').visible?).to be true }
+    it('sees a Team filter') { expect(@filtered_cohort_page.new_filter_option('Team').visible?).to be true }
   end
 
   context 'visiting a class page' do

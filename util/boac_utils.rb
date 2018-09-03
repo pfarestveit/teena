@@ -94,12 +94,12 @@ class BOACUtils < Utils
 
   # DATABASE - USERS
 
-  # Returns all authorized users
+  # Returns all admin users
   # @return [Array<BOACUser>]
-  def self.get_authorized_users
-    query = 'SELECT authorized_users.uid AS uid,
-                    authorized_users.is_admin AS admin
-              FROM authorized_users;'
+  def self.get_admin_users
+    query = 'SELECT authorized_users.uid AS uid
+              FROM authorized_users
+              WHERE authorized_users.is_admin = true;'
     results = query_pg_db(boac_db_credentials, query)
     results.map { |r| BOACUser.new({uid: r['uid']}) }
   end

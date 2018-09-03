@@ -64,7 +64,7 @@ module Page
       # Returns the message text of dismissed alerts
       # @return [Array<String>]
       def dismissed_alert_msgs
-        click_view_dismissed_alerts if view_dismissed_button_element.visible?
+        click_view_dismissed_alerts
         msgs = dismissed_alert_msg_elements.map &:text
         click_hide_dismissed_alerts
         msgs
