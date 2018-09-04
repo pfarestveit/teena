@@ -209,7 +209,8 @@ describe 'BOAC' do
                               it("shows no grade for #{student_test_case}") { expect(visible_student_sis_data[:final_grade]).to be_nil }
                             end
 
-                            if student_data[:midpoint_grade]
+                            # Midpoint grades display for the current term only.
+                            if student_data[:midpoint_grade] && term_id == BOACUtils.term_code
                               it "shows the midpoint grade for #{student_test_case}" do
                                 expect(visible_student_sis_data[:mid_point_grade]).not_to be_empty
                                 expect(visible_student_sis_data[:mid_point_grade]).to eql(student_data[:midpoint_grade])
