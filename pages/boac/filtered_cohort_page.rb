@@ -180,7 +180,7 @@ module Page
         button(:delete_button, id: 'delete-cohort-button')
 
         button(:new_filter_button, id: 'draft-filter')
-        button(:new_filter_sub_button, id: 'draft-filter-subcategory')
+        button(:new_filter_sub_button, id: 'filter-subcategory')
         elements(:new_filter_option, :link, xpath: '//a[@data-ng-bind="option.name"]')
         button(:unsaved_filter_add_button, id: 'unsaved-filter-add')
         button(:unsaved_filter_cancel_button, id: 'unsaved-filter-reset')
@@ -321,7 +321,7 @@ module Page
           # Global
           cohort.search_criteria.gpa_ranges.each { |g| select_filter('GPA', g) } if cohort.search_criteria.gpa_ranges
           cohort.search_criteria.levels.each { |l| select_filter('Level', l) } if cohort.search_criteria.levels
-          cohort.search_criteria.units.each { |u| select_filter('Units', u) } if cohort.search_criteria.units
+          cohort.search_criteria.units.each { |u| select_filter('Units Completed', u) } if cohort.search_criteria.units
           cohort.search_criteria.majors.each { |m| select_filter('Major', m) } if cohort.search_criteria.majors
 
           # CoE
