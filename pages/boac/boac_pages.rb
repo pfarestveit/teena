@@ -212,7 +212,6 @@ module Page
     # FILTERED COHORTS
 
     link(:create_filtered_cohort_link, id: 'sidebar-filtered-cohort-create')
-    link(:manage_filtered_cohorts_link, id: 'sidebar-filtered-cohorts-manage')
     link(:view_everyone_cohorts_link, id: 'sidebar-filtered-cohorts-all')
     link(:team_list_link, id: 'sidebar-teams-link')
     link(:intensive_cohort_link, text: 'Intensive Students')
@@ -225,12 +224,6 @@ module Page
       wait_for_load_and_click create_filtered_cohort_link_element
       wait_for_title 'Filtered Cohort'
       sleep 3
-    end
-
-    # Clicks the button to manage the user's own filtered cohorts
-    def click_sidebar_manage_filtered
-      wait_for_load_and_click manage_filtered_cohorts_link_element
-      wait_for_title 'Manage Filtered Cohorts'
     end
 
     # Clicks the link for the Teams List page

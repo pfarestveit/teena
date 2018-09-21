@@ -120,7 +120,6 @@ module Page
       # CURATED COHORTS
 
       link(:student_create_curated_cohort, id: 'curated-cohort-create')
-      link(:student_manage_created_cohort, id: 'curated-cohorts-manage')
       elements(:student_curated_cohort_name, :link, xpath: '//div[contains(@class,"student-groups-checkboxes")]//a[@data-ng-bind="group.name"]')
 
       # Clicks the checkbox to add or remove a student from a curated cohort
@@ -155,12 +154,6 @@ module Page
         wait_for_update_and_click student_create_curated_cohort_element
         name_and_save_curated_cohort cohort
         wait_for_sidebar_curated cohort
-      end
-
-      # Clicks the manage curated cohorts link on the student page
-      def click_student_manage_curated
-        wait_for_update_and_click student_manage_created_cohort_element
-        wait_for_title 'Manage Curated Cohorts'
       end
 
       # Returns all the curated cohorts shown on the student page

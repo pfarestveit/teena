@@ -127,8 +127,7 @@ module Page
       # FILTERED COHORTS
 
       elements(:filtered_cohort, :span, xpath: '//div[@data-ng-repeat="cohort in myFilteredCohorts"]//h2/span[1]')
-      link(:home_create_filtered_link, id: 'home-filtered-cohorts-create-link')
-      link(:home_manage_filtered_link, id: 'home-filtered-cohorts-manage-link')
+      link(:home_create_filtered_link, id: 'create-another-filtered-cohort')
       div(:no_filtered_cohorts_msg, xpath: '//div[contains(.,"You have no filtered cohorts.")]')
 
       # Returns the names of My Saved Cohorts shown on the homepage
