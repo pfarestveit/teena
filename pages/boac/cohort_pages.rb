@@ -136,7 +136,7 @@ module Page
 
       # Sorts cohort search results by units
       def sort_by_units
-        sort_by 'Units'
+        sort_by 'Units Completed'
       end
 
     end

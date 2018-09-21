@@ -65,7 +65,7 @@ describe 'An ASC advisor' do
 
     it('sees a Level filter') { expect(@filtered_cohort_page.new_filter_option('Level').visible?).to be true }
     it('sees a Major filter') { expect(@filtered_cohort_page.new_filter_option('Major').visible?).to be true }
-    it('sees a Units filter') { expect(@filtered_cohort_page.new_filter_option('Units').visible?).to be true }
+    it('sees a Units filter') { expect(@filtered_cohort_page.new_filter_option('Units Completed').visible?).to be true }
     it('sees no Advisor filter') { expect(@filtered_cohort_page.new_filter_option('Advisor').exists?).to be false }
     it('sees no Ethnicity filter') { expect(@filtered_cohort_page.new_filter_option('Ethnicity').exists?).to be false }
     it('sees no Gender filter') { expect(@filtered_cohort_page.new_filter_option('Gender').exists?).to be false }

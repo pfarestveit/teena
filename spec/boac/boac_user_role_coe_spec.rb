@@ -80,7 +80,7 @@ describe 'A CoE advisor using BOAC' do
 
     it('sees a Level filter') { expect(@filtered_cohort_page.new_filter_option('Level').visible?).to be true }
     it('sees a Major filter') { expect(@filtered_cohort_page.new_filter_option('Major').visible?).to be true }
-    it('sees a Units filter') { expect(@filtered_cohort_page.new_filter_option('Units').visible?).to be true }
+    it('sees a Units filter') { expect(@filtered_cohort_page.new_filter_option('Units Completed').visible?).to be true }
     it('sees a Advisor filter') { expect(@filtered_cohort_page.new_filter_option('Advisor').visible?).to be true }
     it('sees a Ethnicity filter') { expect(@filtered_cohort_page.new_filter_option('Ethnicity').visible?).to be true }
     it('sees a Gender filter') { expect(@filtered_cohort_page.new_filter_option('Gender').visible?).to be true }
