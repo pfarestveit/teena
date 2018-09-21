@@ -173,6 +173,7 @@ describe 'BOAC', order: :defined do
 
     it 'requires that a title be unique among the user\'s existing cohorts' do
       cohort = FilteredCohort.new({name: test.searches.first.name})
+      @cohort_page.perform_search test.searches.first
       @cohort_page.save_and_name_cohort cohort
       @cohort_page.dupe_filtered_name_msg_element.when_visible Utils.short_wait
     end
@@ -190,12 +191,12 @@ describe 'BOAC', order: :defined do
 
   context 'when the advisor edits a cohort\'s search filters' do
 
-    it 'creates a new cohort' do
+    it 'updates the cohort' do
       existing_cohort = test.searches.first
       new_cohort = FilteredCohort.new({name: "Edited Search #{test.id}", search_criteria: test.searches.first.search_criteria})
       @cohort_page.load_cohort existing_cohort
       @cohort_page.search_and_create_edited_cohort(existing_cohort, new_cohort)
-      expect(new_cohort.id).not_to eql(existing_cohort.id)
+      expect(new_cohort.id).to eql(existing_cohort.id)
     end
   end
 
