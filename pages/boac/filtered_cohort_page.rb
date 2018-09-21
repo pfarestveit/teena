@@ -74,7 +74,7 @@ module Page
 
         # FILTERED COHORTS - Creation
 
-        button(:save_cohort_button_one, id: 'unsaved-filter-save-cohort')
+        button(:save_cohort_button_one, id: 'save-filtered-cohort')
         text_area(:cohort_name_input, id: 'filtered-cohort-create-input')
         span(:title_required_msg, xpath: '//span[text()="Required"]')
         button(:save_cohort_button_two, id: 'confirm-create-filtered-cohort-btn')
@@ -175,7 +175,7 @@ module Page
 
         # FILTERED COHORTS - Search
 
-        button(:show_filters_button, id: 'show-details-button')
+        button(:show_filters_button, id: 'show-hide-details-button')
         button(:rename_button, id: 'rename-cohort-button')
         button(:delete_button, id: 'delete-cohort-button')
 
@@ -209,14 +209,14 @@ module Page
         # @param option_name [String]
         # @return [PageObject::Elements::Link]
         def new_filter_sub_option(option_name)
-          link_element(xpath: "//ul[contains(@class,\"cohort-filter-subcategory-dropdown\")]//a[text()=\"#{option_name}\"]")
+          link_element(id: "cohort-filter-subcategory-#{option_name}")
         end
 
         # Returns a filter option list item with given text, used to find 'Advisor' options
         # @param advisor_uid [String]
         # @return [PageObject::Elements::ListItem]
         def new_filter_advisor_option(advisor_uid)
-          list_item_element(id: "advisor-#{advisor_uid}")
+          list_item_element(id: "advisorLdapUids-#{advisor_uid}")
         end
 
         # Selects, adds, and applies a filter
