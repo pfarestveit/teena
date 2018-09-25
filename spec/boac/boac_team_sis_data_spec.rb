@@ -23,7 +23,7 @@ describe 'BOAC' do
     @driver = Utils.launch_browser
     @boac_homepage = Page::BOACPages::HomePage.new @driver
     @boac_teams_list_page = Page::BOACPages::TeamsListPage.new @driver
-    @boac_cohort_page = Page::BOACPages::CohortPages::FilteredCohortListViewPage.new @driver
+    @boac_cohort_page = Page::BOACPages::CohortPages::FilteredCohortPage.new @driver
     @boac_student_page = Page::BOACPages::StudentPage.new @driver
 
     @boac_homepage.dev_auth test.advisor
@@ -104,7 +104,7 @@ describe 'BOAC' do
 
               # STUDENT PAGE SIS DATA
 
-              @boac_cohort_page.click_player_link team_member
+              @boac_cohort_page.click_student_link team_member
               @boac_student_page.wait_for_title(team_member.full_name)
 
               # Pause a moment to let the boxplots do their fancy slidey thing

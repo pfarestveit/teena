@@ -8,100 +8,128 @@ describe 'BOAC' do
 
     test = BOACTestConfig.new
     test.navigation NessieUtils.get_all_students
+    pages_tested = []
 
     @driver = Utils.launch_browser
     @homepage = Page::BOACPages::HomePage.new @driver
-    @cohort_page = Page::BOACPages::CohortPages::FilteredCohortListViewPage.new @driver
-    @matrix_page = Page::BOACPages::CohortPages::FilteredCohortMatrixPage.new @driver
+    @class_list_page = Page::BOACPages::ClassPages::ClassListViewPage.new @driver
+    @class_matrix_page = Page::BOACPages::ClassPages::ClassMatrixViewPage.new @driver
     @student_page = Page::BOACPages::StudentPage.new @driver
     @homepage.dev_auth test.advisor
-    @cohort_page.search_and_create_new_cohort(test.default_cohort) unless test.default_cohort.id
 
-    # Navigate the various cohort/student views using each of the test search criteria
-    test.searches.each do |cohort|
-
+    test.max_cohort_members.each do |student|
       begin
-        search = cohort.search_criteria.list_filters
 
-        # Make sure a list view button is present from the previous loop. If not, load a team cohort to obtain an initial list view.
-        @cohort_page.load_cohort test.default_cohort unless @cohort_page.list_view_button?
-        @cohort_page.click_list_view
-        @cohort_page.show_filters
-        @cohort_page.perform_search cohort
+        api_user_page = ApiUserAnalyticsPage.new @driver
+        api_user_page.get_data(@driver, student)
 
-        if cohort.member_count.zero?
+        terms = api_user_page.terms
+        if terms.any?
+          @student_page.load_page student
+          @student_page.click_view_previous_semesters if terms.length > 1
 
-          rows_visible = @cohort_page.player_link_elements.any?
-          it("shows no results on list view cohort search for #{search}") { expect(rows_visible).to be false }
+          terms.each do |term|
+            begin
 
-          logger.warn 'No results, skipping further tests'
+              term_name = api_user_page.term_name term
+              term_id = api_user_page.term_id term
+              logger.info "Checking term #{term_name}"
 
-        else
+              courses = api_user_page.courses term
+              courses.each do |course|
+                begin
 
-          # Page through results
+                  course_sis_data = api_user_page.course_sis_data course
+                  logger.info "Checking course #{course_sis_data[:code]}"
+                  sections = api_user_page.sections course
+                  sections.each do |section|
+                    begin
 
-          list_results_length = @cohort_page.visible_sids.length
-          list_results_page = @cohort_page.list_view_current_page
+                      section_data = api_user_page.section_sis_data section
+                      api_section_page = ApiSectionPage.new @driver
+                      api_section_page.get_data(@driver, term_id, section_data[:ccn])
+                      class_test_case = "term #{term_name} course #{course_sis_data[:code]} section #{section_data[:component]} #{section_data[:number]} #{section_data[:ccn]}"
+                      logger.info "Checking #{class_test_case}"
 
-          logger.info "Got #{list_results_length} list view results"
+                      @student_page.load_page student
+                      @student_page.click_view_previous_semesters if terms.length > 1
+                      if @student_page.class_page_link(term_id, section_data[:ccn]).exists? && !pages_tested.include?("#{term_id} #{section_data[:ccn]}")
+                        @student_page.click_class_page_link(term_id, section_data[:ccn])
+                        pages_tested << "#{term_id} #{section_data[:ccn]}"
 
-          it("shows the right list view cohort search results count for #{search}") { expect(cohort.member_count).to eql(list_results_length) }
+                        # CLASS PAGE - List View
 
-          # Navigate to student page and back.
+                        visible_sids = @class_list_page.visible_sids.sort
+                        expected_sids = api_section_page.student_sids.sort
+                        it("shows all the expected list view students in #{class_test_case}") { expect(visible_sids).to eql(expected_sids) }
 
-          student = BOACUser.new({:sis_id => @cohort_page.list_view_sids.last, :uid => @cohort_page.player_link_elements.last.attribute('id')})
-          @cohort_page.click_player_link student
-          @driver.navigate.back
+                        # Visit student
+                        @class_list_page.click_student_link BOACUser.new({:uid => @class_list_page.list_view_uids.last})
+                        list_to_student = @student_page.verify_block { @student_page.sid_element.when_visible Utils.short_wait }
+                        it("links student pages from the list view of #{class_test_case}") { expect(list_to_student).to be true }
 
-          list_search_preserved = @cohort_page.filters_selected? cohort.search_criteria
-          list_results_count_preserved = @cohort_page.verify_block { @cohort_page.wait_until { @cohort_page.results_count == cohort.member_count } }
-          list_results_page_preserved = @cohort_page.list_view_page_selected? list_results_page
-          # TODO - it("preserves cohort search criteria #{search} when returning to list view from the student #{student.sis_id} page") { expect(list_search_preserved).to be true }
-          it("preserves the cohort search criteria #{search} results count when returning to list view from the student #{student.sis_id} page") { expect(list_results_count_preserved).to be true }
-          it("preserves the cohort search criteria #{search} results page when returning to list view from the student #{student.sis_id} page") { expect(list_results_page_preserved).to be true }
+                        # Back to list view
+                        @driver.navigate.back
+                        student_to_list = @class_list_page.verify_block { @class_list_page.wait_until(Utils.short_wait) { @class_list_page.course_title == course_sis_data[:title] } }
+                        it("returns to the list view of #{class_test_case}") { expect(student_to_list).to be true }
 
-          # Switch to matrix view
+                        # CLASS PAGE - Matrix View
 
-          if cohort.member_count > 800
+                        if @class_matrix_page.matrix_view_button_element.attribute 'disabled'
+                          logger.warn "Skipping matrix view testing since there is no matrix view for #{class_test_case}"
+                        else
 
-            button_disabled = @cohort_page.matrix_view_button_element.attribute 'disabled'
-            it("disables the matrix button for #{search} with result count #{cohort.member_count}") { expect(button_disabled).to eql('true') }
+                          @class_list_page.click_matrix_view
+                          @class_matrix_page.wait_for_matrix
+                          matrix_student_count = @class_matrix_page.matrix_bubble_count @driver
+                          missing_data_student_count = @class_matrix_page.visible_no_data_uids.length
+                          it("shows all the expected matrix view students in #{class_test_case}") { expect(missing_data_student_count + matrix_student_count).to eql(expected_sids.length) }
 
-          else
+                          # Visit student
+                          @class_matrix_page.matrix_bubbles(@driver).any? ?
+                              @class_matrix_page.click_last_student_bubble(@driver) :
+                              @class_matrix_page.click_last_no_data_student
+                          matrix_to_student = @student_page.verify_block { @student_page.sid_element.when_visible Utils.short_wait }
+                          it("links student pages from the matrix view of #{class_test_case}") { expect(matrix_to_student).to be true }
 
-            @cohort_page.click_matrix_view
-            @matrix_page.wait_for_matrix
-            scatterplot_uids = @matrix_page.visible_matrix_uids @driver
-            no_data_uids = @matrix_page.visible_no_data_uids
+                          # Back to matrix view
+                          @driver.navigate.back
+                          student_to_matrix = @class_matrix_page.verify_block { @class_matrix_page.wait_for_matrix }
+                          it("returns to the matrix view of #{class_test_case}") { expect(student_to_matrix).to be_truthy }
 
-            logger.info "Got #{scatterplot_uids.length + no_data_uids.length} matrix view UIDs"
+                          # Hit 'Back' twice
+                          @driver.navigate.back
+                          @driver.navigate.back
 
-            matrix_results_right = (scatterplot_uids.length + no_data_uids.length == cohort.member_count)
-            it("preserves the cohort search criteria #{search} results count when switching to matrix view") { expect(matrix_results_right).to be true }
+                          back_to_student = @student_page.verify_block { @student_page.wait_until(Utils.short_wait) { @student_page.sid == student.sis_id } }
+                          it("returns to the original student UID #{student.uid}") { expect(back_to_student).to be true }
 
-            # Navigate to student page and back. Click a bubble if there are any; otherwise a 'no data' row.
-
-            scatterplot_uids.any? ? @matrix_page.click_last_student_bubble(@driver) : @matrix_page.click_last_no_data_student
-            @driver.navigate.back
-            @matrix_page.wait_for_matrix
-            scatterplot_uids = @matrix_page.visible_matrix_uids @driver
-            no_data_uids = @matrix_page.visible_no_data_uids
-
-            matrix_results_count_preserved = (scatterplot_uids.length + no_data_uids.length == cohort.member_count)
-            it("preserves the cohort search criteria #{search} results count when returning to matrix view from the student page") { expect(matrix_results_count_preserved).to be true }
-
-            @driver.navigate.back
+                        end
+                      end
+                    rescue => e
+                      BOACUtils.log_error e
+                      it("caused an error with UID #{student.uid} #{class_test_case}") { fail }
+                    end
+                  end
+                rescue => e
+                  BOACUtils.log_error e
+                  it("caused an error with UID #{student.uid} term #{term_id} course #{course_sis_data[:code]}") { fail }
+                end
+              end
+            rescue => e
+              BOACUtils.log_error e
+              it("caused an error with UID #{student.uid} term #{term_id}") { fail }
+            end
           end
         end
-
       rescue => e
-        BOACUtils.log_error_and_screenshot(@driver, e, "cohort-#{test.searches.index cohort}")
-        it("threw an error with #{search}") { fail }
+        BOACUtils.log_error e
+        it("caused an error with UID #{student.uid}") { fail }
       end
     end
 
   rescue => e
-    Utils.log_error e
+    BOACUtils.log_error e
     it('threw an error') { fail }
   ensure
     Utils.quit_browser @driver

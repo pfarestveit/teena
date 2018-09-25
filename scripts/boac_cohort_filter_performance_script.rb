@@ -12,7 +12,7 @@ begin
   @driver = Utils.launch_browser
   @analytics_page = ApiUserAnalyticsPage.new @driver
   @homepage = Page::BOACPages::HomePage.new @driver
-  @cohort_page = Page::BOACPages::CohortPages::FilteredCohortListViewPage.new @driver
+  @cohort_page = Page::BOACPages::CohortPages::FilteredCohortPage.new @driver
   @homepage.dev_auth test.advisor
 
   test.searches.each do |cohort|

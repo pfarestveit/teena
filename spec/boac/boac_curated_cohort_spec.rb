@@ -21,8 +21,8 @@ describe 'BOAC', order: :defined do
 
     @analytics_page = ApiUserAnalyticsPage.new @driver
     @homepage = Page::BOACPages::HomePage.new @driver
-    @curated_page = Page::BOACPages::CohortPages::CuratedCohortListViewPage.new @driver
-    @filtered_page = Page::BOACPages::CohortPages::FilteredCohortListViewPage.new @driver
+    @curated_page = Page::BOACPages::CohortPages::CuratedCohortPage.new @driver
+    @filtered_page = Page::BOACPages::CohortPages::FilteredCohortPage.new @driver
     @student_page = Page::BOACPages::StudentPage.new @driver
     @homepage.dev_auth test.advisor
 

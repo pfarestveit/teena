@@ -11,11 +11,10 @@ module Page
       include Page
       include BOACPages
 
-      link(:return_to_cohort, xpath: '//a[contains(.,"Return to cohort")]')
-
       h1(:not_found_msg, xpath: '//h1[text()="Not Found"]')
 
       h2(:preferred_name, :class => 'student-preferred-name')
+      span(:sid, xpath: '//span[@data-ng-bind="student.sid"]')
       span(:phone, xpath: '//span[@data-ng-bind="student.sisProfile.phoneNumber"]')
       link(:email, xpath: '//a[@data-ng-bind="student.sisProfile.emailAddress"]')
       div(:cumulative_units, xpath: '//div[@data-ng-bind="student.sisProfile.cumulativeUnits"]')

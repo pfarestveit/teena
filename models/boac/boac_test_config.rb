@@ -88,14 +88,14 @@ class BOACTestConfig < TestConfig
     set_default_cohort(CONFIG['assignments_team'], CONFIG['assignments_max_users'])
   end
 
-  # Config for assignments testing
+  # Config for class page testing
   # @param all_students [Array<BOACUser>]
   def class_pages(all_students)
     set_global_configs all_students
     set_default_cohort(CONFIG['class_page_team'], CONFIG['class_page_max_users'])
   end
 
-  # Config for assignments testing
+  # Config for curated cohort testing
   # @param all_students [Array<BOACUser>]
   def curated_cohorts(all_students)
     set_global_configs all_students
@@ -108,50 +108,49 @@ class BOACTestConfig < TestConfig
     end
   end
 
-  # Config for assignments testing
+  # Config for filtered cohort testing
   # @param all_students [Array<BOACUser>]
   def filtered_cohorts(all_students)
     set_global_configs all_students
     set_search_cohorts
   end
 
-  # Config for assignments testing
+  # Config for last activity testing
   # @param all_students [Array<BOACUser>]
   def last_activity(all_students)
     set_global_configs all_students
     set_default_cohort(CONFIG['last_activity_team'], CONFIG['last_activity_max_users'])
   end
 
-  # Config for assignments testing
+  # Config for page navigation testing
   # @param all_students [Array<BOACUser>]
   def navigation(all_students)
     set_global_configs all_students
-    set_default_cohort(CONFIG['navigation_team'])
-    set_search_cohorts
+    set_default_cohort(CONFIG['class_page_team'], CONFIG['class_page_max_users'])
   end
 
-  # Config for assignments testing
+  # Config for SIS data testing
   # @param all_students [Array<BOACUser>]
   def team_sis_data(all_students)
     set_global_configs(all_students, BOACDepartments::ASC)
     set_default_cohort(CONFIG['sis_data_team'])
   end
 
-  # Config for assignments testing
+  # Config for admin user role testing
   # @param all_students [Array<BOACUser>]
   def user_role_admin(all_students)
     set_global_configs(all_students, BOACDepartments::ADMIN)
     set_search_cohorts
   end
 
-  # Config for assignments testing
+  # Config for ASC user role testing
   # @param all_students [Array<BOACUser>]
   def user_role_asc(all_students)
     set_global_configs(all_students, BOACDepartments::ASC)
     set_search_cohorts
   end
 
-  # Config for assignments testing
+  # Config for CoE user role testing
   # @param all_students [Array<BOACUser>]
   def user_role_coe(all_students)
     set_global_configs(all_students, BOACDepartments::COE)
@@ -159,7 +158,7 @@ class BOACTestConfig < TestConfig
     set_search_cohorts
   end
 
-  # Config for assignments testing
+  # Config for user search testing
   # @param all_students [Array<BOACUser>]
   def user_search(all_students)
     set_global_configs all_students

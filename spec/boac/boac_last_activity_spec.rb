@@ -27,8 +27,8 @@ describe 'BOAC' do
       @homepage = Page::BOACPages::HomePage.new @driver
       @cal_net_page = Page::CalNetPage.new @driver
       @canvas_page = Page::CanvasPage.new @driver
-      @class_page = Page::BOACPages::ClassPage.new @driver
-      @curated_page = Page::BOACPages::CohortPages::CuratedCohortListViewPage.new @driver
+      @class_page = Page::BOACPages::ClassPages::ClassListViewPage.new @driver
+      @curated_page = Page::BOACPages::CohortPages::CuratedCohortPage.new @driver
       @student_page = Page::BOACPages::StudentPage.new @driver
 
       @canvas_page.log_in(@cal_net_page, Utils.super_admin_username, Utils.super_admin_password, 'https://bcourses.berkeley.edu')

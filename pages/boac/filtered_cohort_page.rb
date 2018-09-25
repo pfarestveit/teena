@@ -30,16 +30,6 @@ module Page
           end
         end
 
-        # Loads a cohort directly in matrix view
-        # @param cohort [FilteredCohort]
-        def load_cohort_matrix(cohort)
-          logger.info "Loading cohort '#{cohort.name}' ID #{cohort.id} in matrix view"
-          cohort.instance_of?(Team) ?
-              navigate_to("#{filtered_cohort_base_url}c=#{cohort.code}&tab=matrix") :
-              navigate_to("#{filtered_cohort_base_url}id=#{cohort.id}&tab=matrix")
-          wait_for_title cohort.name
-        end
-
         # Hits a cohort URL and expects the 404 page to load
         # @param cohort [FilteredCohort]
         def hit_non_auth_cohort(cohort)
@@ -512,6 +502,84 @@ module Page
           wait_for_update_and_click confirm_delete_button_element
           wait_until(Utils.short_wait) { current_url == "#{BOACUtils.base_url}/home" }
           sleep 1
+        end
+
+        # Returns the sequence of SIDs that should be present when search results are sorted by first name
+        # @param user_data [Array<Hash>]
+        # @param search_criteria [CohortFilter]
+        # @return [Array<String>]
+        def expected_sids_by_first_name(user_data, search_criteria)
+          expected_users = expected_search_results(user_data, search_criteria)
+          sorted_users = expected_users.sort_by { |u| [u[:first_name_sortable].downcase, u[:last_name_sortable].downcase, u[:sid]] }
+          sorted_users.map { |u| u[:sid] }
+        end
+
+        # Returns the sequence of SIDs that should be present when search results are sorted by last name
+        # @param user_data [Array<Hash>]
+        # @param search_criteria [CohortFilter]
+        # @return [Array<String>]
+        def expected_sids_by_last_name(user_data, search_criteria)
+          expected_users = expected_search_results(user_data, search_criteria)
+          sorted_users = expected_users.sort_by { |u| [u[:last_name_sortable].downcase, u[:first_name_sortable].downcase, u[:sid]] }
+          sorted_users.map { |u| u[:sid] }
+        end
+
+        # Returns the sequence of SIDs that should be present when search results are sorted by team
+        # @param user_data [Array<Hash>]
+        # @param search_criteria [CohortFilter]
+        # @return [Array<String>]
+        def expected_sids_by_team(user_data, search_criteria)
+          expected_users = expected_search_results(user_data, search_criteria)
+          sorted_users = expected_users.sort_by { |u| [u[:squad_names].sort.first, u[:last_name_sortable].downcase, u[:first_name_sortable].downcase, u[:sid]] }
+          sorted_users.map { |u| u[:sid] }
+        end
+
+        # Returns the sequence of SIDs that should be present when search results are sorted by GPA
+        # @param user_data [Array<Hash>]
+        # @param search_criteria [CohortFilter]
+        # @return [Array<String>]
+        def expected_sids_by_gpa(user_data, search_criteria)
+          expected_users = expected_search_results(user_data, search_criteria)
+          sorted_users = expected_users.sort_by { |u| [u[:gpa].to_f, u[:last_name_sortable].downcase, u[:first_name_sortable].downcase, u[:sid]] }
+          sorted_users.map { |u| u[:sid] }
+        end
+
+        # Returns the sequence of SIDs that should be present when search results are sorted by level
+        # @param user_data [Array<Hash>]
+        # @param search_criteria [CohortFilter]
+        # @return [Array<String>]
+        def expected_sids_by_level(user_data, search_criteria)
+          expected_users = expected_search_results(user_data, search_criteria)
+          # Sort first by the secondary sort order
+          users_by_first_name = expected_users.sort_by { |u| [u[:last_name_sortable].downcase, u[:first_name_sortable].downcase, u[:sid]] }
+          # Then arrange by the sort order for level
+          users_by_level = []
+          %w(Freshman Sophomore Junior Senior Graduate).each do |level|
+            users_by_level << users_by_first_name.select do |u|
+              u[:level] == level
+            end
+          end
+          users_by_level.flatten.map { |u| u[:sid] }
+        end
+
+        # Returns the sequence of SIDs that should be present when search results are sorted by major
+        # @param user_data [Array<Hash>]
+        # @param search_criteria [CohortFilter]
+        # @return [Array<String>]
+        def expected_sids_by_major(user_data, search_criteria)
+          expected_users = expected_search_results(user_data, search_criteria)
+          sorted_users = expected_users.sort_by { |u| [u[:majors].sort.first.gsub(/\W/, '').downcase, u[:last_name_sortable].downcase, u[:first_name_sortable].downcase, u[:sid]] }
+          sorted_users.map { |u| u[:sid] }
+        end
+
+        # Returns the sequence of SIDs that should be present when search results are sorted by cumulative units
+        # @param user_data [Array<Hash>]
+        # @param search_criteria [CohortFilter]
+        # @return [Array<String>]
+        def expected_sids_by_units(user_data, search_criteria)
+          expected_users = expected_search_results(user_data, search_criteria)
+          sorted_users = expected_users.sort_by { |u| [u[:units].to_f, u[:last_name_sortable].downcase, u[:first_name_sortable].downcase, u[:sid]] }
+          sorted_users.map { |u| u[:sid] }
         end
 
       end

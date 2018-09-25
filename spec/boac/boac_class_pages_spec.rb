@@ -19,9 +19,9 @@ describe 'BOAC' do
 
     @driver = Utils.launch_browser
     @homepage = Page::BOACPages::HomePage.new @driver
-    @filtered_cohort_page = Page::BOACPages::CohortPages::FilteredCohortListViewPage.new @driver
+    @filtered_cohort_page = Page::BOACPages::CohortPages::FilteredCohortPage.new @driver
     @student_page = Page::BOACPages::StudentPage.new @driver
-    @class_page = Page::BOACPages::ClassPage.new @driver
+    @class_page = Page::BOACPages::ClassPages::ClassListViewPage.new @driver
 
     @homepage.dev_auth test.advisor
     @filtered_cohort_page.search_and_create_new_cohort(test.default_cohort) unless test.default_cohort.id
