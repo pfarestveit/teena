@@ -96,7 +96,7 @@ class CohortFilter
       when 'Z'
         'Foreign'
       else
-        logger.warn "Unrecognized ethnicity '#{code}'"
+        logger.warn "Unrecognized ethnicity '#{code}'" if code
     end
   end
 

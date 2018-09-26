@@ -23,8 +23,8 @@ describe 'A CoE advisor using BOAC' do
     @api_admin_page = ApiAdminPage.new @driver
     @api_section_page = ApiSectionPage.new @driver
     @api_user_analytics_page = ApiUserAnalyticsPage.new @driver
-    @class_page = Page::BOACPages::ClassPage.new @driver
-    @filtered_cohort_page = Page::BOACPages::CohortPages::FilteredCohortListViewPage.new @driver
+    @class_page = Page::BOACPages::ClassPages::ClassListViewPage.new @driver
+    @filtered_cohort_page = Page::BOACPages::CohortPages::FilteredCohortPage.new @driver
     @homepage = Page::BOACPages::HomePage.new @driver
     @search_page = Page::BOACPages::SearchResultsPage.new @driver
     @student_page = Page::BOACPages::StudentPage.new @driver

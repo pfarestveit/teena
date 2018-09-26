@@ -297,21 +297,6 @@ module Page
       }
     end
 
-    button(:list_view_button, xpath: '//button[contains(.,"List")]')
-    button(:matrix_view_button, xpath: '//button[contains(.,"Matrix")]')
-
-    # Clicks the list view button
-    def click_list_view
-      logger.info 'Switching to list view'
-      wait_for_load_and_click list_view_button_element
-    end
-
-    # Clicks the matrix view button
-    def click_matrix_view
-      logger.info 'Switching to matrix view'
-      wait_for_load_and_click matrix_view_button_element
-    end
-
     # LIST VIEW PAGINATION
 
     elements(:page_list_item, :list_item, xpath: '//li[contains(@ng-repeat,"page in pages")]')
@@ -466,11 +451,11 @@ module Page
       els.map &:text if els.any?
     end
 
-    # Clicks the link for a given player
-    # @param player [User]
-    def click_player_link(player)
-      logger.info "Clicking the link for UID #{player.uid}"
-      wait_for_load_and_click link_element(xpath: "//a[@id=\"#{player.uid}\"]")
+    # Clicks the link for a given student
+    # @param student [BOACUser]
+    def click_student_link(student)
+      logger.info "Clicking the link for UID #{student.uid}"
+      wait_for_load_and_click link_element(xpath: "//a[@id=\"#{student.uid}\"]")
       student_name_heading_element.when_visible Utils.medium_wait
     end
 

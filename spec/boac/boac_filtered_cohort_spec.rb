@@ -13,7 +13,7 @@ describe 'BOAC', order: :defined do
     @driver = Utils.launch_browser
     @analytics_page = ApiUserAnalyticsPage.new @driver
     @homepage = Page::BOACPages::HomePage.new @driver
-    @cohort_page = Page::BOACPages::CohortPages::FilteredCohortListViewPage.new @driver
+    @cohort_page = Page::BOACPages::CohortPages::FilteredCohortPage.new @driver
     @student_page = Page::BOACPages::StudentPage.new @driver
 
     # Get the student data relevant to all search filters.

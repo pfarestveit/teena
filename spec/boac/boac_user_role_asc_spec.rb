@@ -24,9 +24,9 @@ describe 'An ASC advisor' do
     @api_admin_page = ApiAdminPage.new @driver
     @api_section_page = ApiSectionPage.new @driver
     @api_user_analytics_page = ApiUserAnalyticsPage.new @driver
-    @class_page = Page::BOACPages::ClassPage.new @driver
-    @curated_cohort_page = Page::BOACPages::CohortPages::CuratedCohortListViewPage.new @driver
-    @filtered_cohort_page = Page::BOACPages::CohortPages::FilteredCohortListViewPage.new @driver
+    @class_page = Page::BOACPages::ClassPages::ClassListViewPage.new @driver
+    @curated_cohort_page = Page::BOACPages::CohortPages::CuratedCohortPage.new @driver
+    @filtered_cohort_page = Page::BOACPages::CohortPages::FilteredCohortPage.new @driver
     @homepage = Page::BOACPages::HomePage.new @driver
     @search_page = Page::BOACPages::SearchResultsPage.new @driver
     @student_page = Page::BOACPages::StudentPage.new @driver
@@ -95,7 +95,12 @@ describe 'An ASC advisor' do
 
     it('sees no non-ASC students in search results') { expect(@search_page.search coe_only_students.first.sis_id).to be_zero }
     it('sees no inactive ASC students in search results') { expect(@search_page.search @inactive_student_sids.first).to be_zero }
-    it('sees overlapping ASC and CoE students in search results') { expect(@search_page.search overlap_students.first.sis_id).to eql(1) }
+    it('sees overlapping ASC and CoE active students in search results') do
+      student = overlap_students.find &:active_asc
+      student ?
+          (expect(@search_page.search student.sis_id).to eql(1)) :
+          logger.warn('Skipping search for overlapping students since none are active')
+    end
   end
 
   context 'visiting a class page' do
@@ -145,7 +150,7 @@ describe 'An ASC advisor' do
     it('sees at least one inactive student') { expect(@visible_inactive_students.any?).to be true }
 
     it 'sees an inactive indicator on the student page' do
-      @filtered_cohort_page.click_player_link User.new({:uid => @filtered_cohort_page.list_view_uids.first })
+      @filtered_cohort_page.click_student_link User.new({:uid => @filtered_cohort_page.list_view_uids.first })
       @student_page.wait_for_spinner
       @student_page.inactive_flag_element.when_visible Utils.short_wait
     end
