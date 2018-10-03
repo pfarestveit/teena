@@ -88,7 +88,7 @@ module Page
       # Returns an array of all SIDs visible on the page
       # @return [Array<String>]
       def all_sids
-        (roster_sid_elements.map &:text).to_a
+        roster_sid_elements.map &:text
       end
 
     end

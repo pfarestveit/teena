@@ -51,6 +51,7 @@ module Page
     def log_out(driver, cal_net, event = nil)
       driver.switch_to.default_content
       wait_for_update_and_click_js profile_link_element
+      sleep 1
       wait_for_update_and_click_js profile_form_element
       wait_for_update_and_click_js logout_link_element if logout_link_element.exists?
       cal_net.username_element.when_visible

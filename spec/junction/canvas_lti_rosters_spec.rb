@@ -48,12 +48,13 @@ describe 'bCourses Roster Photos' do
         user_counts = @canvas.enrollment_count_by_roles(course, ['Student', 'Waitlist Student'])
     @student_count = user_counts[0][:count]
     @waitlist_count = user_counts[1][:count]
+    @expected_sids = @roster_api.student_ids @roster_api.students
     @canvas.load_users_page course
     @canvas.click_find_person_to_add @driver
 
-    @total_users = @student_count + @waitlist_count
-    logger.info "There are #{@student_count} enrolled students and #{@waitlist_count} waitlisted students, for a total of #{@total_users}"
-    logger.warn 'There are no students on this site' if @total_users.zero?
+    @total_user_count = @student_count + @waitlist_count
+    logger.info "There are #{@student_count} enrolled students and #{@waitlist_count} waitlisted students, for a total of #{@total_user_count}"
+    logger.warn 'There are no students on this site' if @total_user_count.zero?
 
     # Add remaining user roles
     [lead_ta, ta, designer, reader, observer, student, waitlist].each do |user|
@@ -72,8 +73,10 @@ describe 'bCourses Roster Photos' do
     end
 
     it "shows UID #{teacher_1.uid} all students and waitlisted students on #{course.code} course site ID #{course.site_id}" do
-      @roster_photos_page.wait_until(Utils.medium_wait) { @roster_photos_page.roster_sid_elements.length == @total_users }
-      expect(@roster_photos_page.all_sids.sort).to eql(@roster_api.student_ids(@roster_api.students).sort)
+      @roster_photos_page.wait_until(Utils.medium_wait, "Visible SIDs: #{@roster_photos_page.all_sids}. Expected: #{@expected_sids}") do
+        @roster_photos_page.all_sids.length == @total_user_count
+      end
+      expect(@roster_photos_page.all_sids.sort).to eql(@expected_sids.sort)
     end
 
     it "shows UID #{teacher_1.uid} actual photos for enrolled students on #{course.code} course site ID #{course.site_id}" do
@@ -115,7 +118,7 @@ describe 'bCourses Roster Photos' do
     it "allows UID #{teacher_1.uid} to download a CSV of the course site enrollment on #{course.code} course site ID #{course.site_id}" do
       exported_user_sids = @roster_photos_page.export_roster course
       logger.info "Exported SIDs #{exported_user_sids}"
-      expect(exported_user_sids.length).to eql(@total_users)
+      expect(exported_user_sids.sort).to eql(@expected_sids.sort)
     end
 
     it "shows UID #{teacher_1.uid} a photo print button on #{course.code} course site ID #{course.site_id}" do
@@ -123,7 +126,7 @@ describe 'bCourses Roster Photos' do
     end
 
     it "shows UID #{teacher_1.uid} a 'no students enrolled' message on #{course.code} course site ID #{course.site_id}" do
-      expect(@roster_photos_page.no_students_msg?).to be true if @total_users.zero?
+      expect(@roster_photos_page.no_students_msg?).to be true if @total_user_count.zero?
     end
   end
 
@@ -137,7 +140,7 @@ describe 'bCourses Roster Photos' do
 
         if ['Lead TA', 'TA'].include? user.role
           @roster_photos_page.switch_to_canvas_iframe @driver
-          @total_users.zero? ?
+          @total_user_count.zero? ?
               @roster_photos_page.no_students_msg_element.when_visible(Utils.short_wait) :
               @roster_photos_page.wait_until(Utils.short_wait) { @roster_photos_page.roster_sid_elements.any? }
         else ['Designer', 'Reader', 'Observer', 'Student', 'Waitlist Student'].include? user.role

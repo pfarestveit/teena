@@ -110,12 +110,14 @@ class ApiAcademicsCourseProvisionPage
   end
 
   def course_section_teachers(sections)
-    includes_primary_sections = (sections.select { |s| s['is_primary_section'] }).any?
-    teachers = sections.map do |section|
-      includes_primary_sections ?
-          section['instructors'].select { |instructor| %w(PI ICNT TNIC).include?(instructor['role']) && instructor['gradeRosterAccess'] != ' ' } :
-          section['instructors']
-    end
+    primaries = sections.select { |s| s['is_primary_section'] }
+    teachers = if primaries.any?
+                 primaries.map do |s|
+                   s['instructors'].select { |instructor| %w(PI ICNT).include?(instructor['role']) && instructor['gradeRosterAccess'] != ' ' }
+                 end
+               else
+                 sections.map { |s| s['instructors'] }
+               end
     teachers.flatten.uniq
   end
 
@@ -128,11 +130,12 @@ class ApiAcademicsCourseProvisionPage
   end
 
   def course_section_tas(sections)
-    includes_primary_sections = (sections.select { |s| s['is_primary_section'] }).any?
-    tas = sections.map do |section|
-      section['instructors'].select { |instructor| instructor['role'] == 'TNIC' unless includes_primary_sections }
-    end
-    tas.flatten.uniq
+    primaries = sections.select { |s| s['is_primary_section'] }
+    non_primaries = sections - primaries
+    tas = non_primaries.map do |s|
+            s['instructors'].select { |instructor| instructor['role'] == 'TNIC' } if primaries.any?
+          end
+    tas.flatten.uniq.compact
   end
 
   # COURSE SITES

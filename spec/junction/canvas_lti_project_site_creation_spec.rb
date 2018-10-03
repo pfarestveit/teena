@@ -41,19 +41,18 @@ describe 'bCourses project site', order: :defined do
 
   describe 'creation' do
 
-    before(:each) do
+    it 'requires that a site name be no more than 255 characters' do
       @site_creation_page.load_embedded_tool(@driver, teacher)
       @site_creation_page.click_create_project_site
-    end
-
-    it 'requires that a site name be no more than 255 characters' do
       @create_project_site_page.create_project_site "#{'A loooooong title' * 15}?"
       @create_project_site_page.name_too_long_msg_element.when_present Utils.short_wait
     end
 
     it 'allows a user to create a project site' do
+      @site_creation_page.load_embedded_tool(@driver, teacher)
+      @site_creation_page.click_create_project_site
       @create_project_site_page.create_project_site (project.title = "QA Project Site #{Time.now}")
-      @canvas.wait_until(Utils.long_wait) { @canvas.current_url.include? "#{Utils.canvas_base_url}/courses" }
+      @canvas.wait_until(10) { @canvas.current_url.include? "#{Utils.canvas_base_url}/courses" }
       project.site_id = @canvas.current_url.delete "#{Utils.canvas_base_url}/courses/"
       logger.info "Project site ID is #{project.site_id}"
       expect(@canvas.course_site_heading).to eql("#{project.title}")
