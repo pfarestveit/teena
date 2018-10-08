@@ -105,7 +105,7 @@ describe 'BOAC', order: :defined do
       @curated_page.delete_curated @deleted_curated_cohort
 
       filters = CohortFilter.new
-      filters.set_custom_filters({:levels => ['Freshman (0-29 Units)']})
+      filters.set_custom_filters({:level => ['Freshman (0-29 Units)']})
       @existing_filtered_cohort = FilteredCohort.new({:name => "Existing Filtered Cohort #{test.id}", :search_criteria => filters})
       @curated_page.click_sidebar_create_filtered
       @filtered_page.perform_search @existing_filtered_cohort

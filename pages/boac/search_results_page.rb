@@ -52,7 +52,7 @@ module Page
             end
             visible_row_data = user_row_data(driver, student)
             wait_until(2, "Expecting name #{student.last_name}, #{student.first_name}, got #{visible_row_data[:name]}") { visible_row_data[:name] == "#{student.last_name}, #{student.first_name}" }
-            wait_until(2) { ![visible_row_data[:majors], visible_row_data[:units_in_progress], visible_row_data[:cumulative_units], visible_row_data[:gpa], visible_row_data[:alert_count]].any?(&:empty?) }
+            wait_until(2) { ![visible_row_data[:major], visible_row_data[:units_in_progress], visible_row_data[:cumulative_units], visible_row_data[:gpa], visible_row_data[:alert_count]].any?(&:empty?) }
           end
         end
       end

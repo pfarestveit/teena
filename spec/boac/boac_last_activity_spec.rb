@@ -140,7 +140,7 @@ describe 'BOAC' do
 
                                   else
 
-                                    day_count = ((Time.now.utc - Time.parse(canvas_last_activity).utc) / (24 * 60 * 60)).floor
+                                    day_count = (Date.today - Date.parse(canvas_last_activity)).to_i
 
                                     if day_count < BOACUtils.canvas_data_lag_days
                                       logger.warn "Skipping last activity check for #{test_case}, since the user visited the site within day count #{day_count}, and BOAC will not know that."

@@ -17,12 +17,16 @@ describe 'BOAC', order: :defined do
     @student_page = Page::BOACPages::StudentPage.new @driver
 
     # Get the student data relevant to all search filters.
-    @homepage.dev_auth
-    test.dept_students.keep_if &:active_asc if test.dept == BOACDepartments::ASC
-    @searchable_students = @analytics_page.collect_users_searchable_data(@driver, all_students, test)
+    @all_searchable_students = @analytics_page.users_searchable_data
+    unless @all_searchable_students
+      @homepage.dev_auth
+      test.dept_students.keep_if &:active_asc if test.dept == BOACDepartments::ASC
+      @all_searchable_students = @analytics_page.collect_users_searchable_data(@driver, all_students)
 
-    @homepage.load_page
-    @homepage.log_out
+      @homepage.load_page
+      @homepage.log_out
+    end
+    @searchable_students = @analytics_page.applicable_user_search_data(@all_searchable_students, test)
     @homepage.dev_auth test.advisor
   end
 
@@ -132,9 +136,9 @@ describe 'BOAC', order: :defined do
         end
       end
 
-      it "allows the advisor to create a cohort using #{cohort.search_criteria.list_filters}" do
-        @cohort_page.create_new_cohort cohort
-      end
+      it("allows the advisor to create a cohort using #{cohort.search_criteria.list_filters}") { @cohort_page.create_new_cohort cohort }
+
+      it("shows the cohort filters for a cohort using #{cohort.search_criteria.list_filters}") { @cohort_page.verify_filters_present cohort }
 
       it "shows the filtered cohort on the homepage with criteria #{cohort.search_criteria.list_filters}" do
         @homepage.load_page
@@ -173,6 +177,7 @@ describe 'BOAC', order: :defined do
 
     it 'requires that a title be unique among the user\'s existing cohorts' do
       cohort = FilteredCohort.new({name: test.searches.first.name})
+      @cohort_page.click_sidebar_create_filtered
       @cohort_page.perform_search test.searches.first
       @cohort_page.save_and_name_cohort cohort
       @cohort_page.dupe_filtered_name_msg_element.when_visible Utils.short_wait
@@ -191,13 +196,206 @@ describe 'BOAC', order: :defined do
 
   context 'when the advisor edits a cohort\'s search filters' do
 
-    it 'updates the cohort' do
-      existing_cohort = test.searches.first
-      new_cohort = FilteredCohort.new({name: "Edited Search #{test.id}", search_criteria: test.searches.first.search_criteria})
-      @cohort_page.load_cohort existing_cohort
-      @cohort_page.search_and_create_edited_cohort(existing_cohort, new_cohort)
-      expect(new_cohort.id).to eql(existing_cohort.id)
+    before(:all) { @cohort_page.search_and_create_new_cohort test.default_cohort }
+
+    it 'allows the advisor to edit a GPA filter' do
+      test.default_cohort.search_criteria.gpa = ['3.50 - 4.00']
+      @cohort_page.edit_filter_and_confirm('GPA', test.default_cohort.search_criteria.gpa.first)
+      @cohort_page.verify_filters_present test.default_cohort
     end
+
+    it 'allows the advisor to remove a GPA filter' do
+      test.default_cohort.search_criteria.gpa = []
+      @cohort_page.remove_filter_of_type 'GPA'
+      @cohort_page.verify_filters_present test.default_cohort
+    end
+
+    it 'allows the advisor to edit a Level filter' do
+      test.default_cohort.search_criteria.level = ['Junior (60-89 Units)']
+      @cohort_page.edit_filter_and_confirm('Level', test.default_cohort.search_criteria.level.first)
+      @cohort_page.verify_filters_present test.default_cohort
+    end
+
+    it 'allows the advisor to remove a Level filter' do
+      test.default_cohort.search_criteria.level = []
+      @cohort_page.remove_filter_of_type 'Level'
+      @cohort_page.verify_filters_present test.default_cohort
+    end
+
+    it 'allows the advisor to edit a Units Completed filter' do
+      test.default_cohort.search_criteria.units_completed = ['60 - 89']
+      @cohort_page.edit_filter_and_confirm('Units Completed', test.default_cohort.search_criteria.units_completed.first)
+      @cohort_page.verify_filters_present test.default_cohort
+    end
+
+    it 'allows the advisor to remove a Units Completed filter' do
+      test.default_cohort.search_criteria.units_completed = []
+      @cohort_page.remove_filter_of_type 'Units Completed'
+      @cohort_page.verify_filters_present test.default_cohort
+    end
+
+    it 'allows the advisor to edit a Major filter' do
+      if test.default_cohort.search_criteria.major.any?
+        test.default_cohort.search_criteria.major = ['Bioengineering BS']
+        @cohort_page.edit_filter_and_confirm('Major', test.default_cohort.search_criteria.major.first)
+        @cohort_page.verify_filters_present test.default_cohort
+      else
+        logger.warn 'Skipping test for editing majors since there is nothing to edit'
+      end
+    end
+
+    it 'allows the advisor to remove a Major filter' do
+      if test.default_cohort.search_criteria.major.any?
+        test.default_cohort.search_criteria.major = []
+        @cohort_page.remove_filter_of_type 'Major'
+        @cohort_page.verify_filters_present test.default_cohort
+      else
+        logger.warn 'Skipping test for removing majors since there is nothing to remove'
+      end
+    end
+
+    it 'allows the advisor to edit an Ethnicity filter' do
+      if test.default_cohort.search_criteria.ethnicity
+        test.default_cohort.search_criteria.ethnicity = ['Mexican / Mexican-American / Chicano']
+        @cohort_page.edit_filter_and_confirm('Ethnicity', test.default_cohort.search_criteria.ethnicity.first)
+        @cohort_page.verify_filters_present test.default_cohort
+      else
+        logger.warn 'Skipping test for editing ethnicity since the filter is not available to the user'
+      end
+    end
+
+    it 'allows the advisor to remove an Ethnicity filter' do
+      if test.default_cohort.search_criteria.ethnicity
+        test.default_cohort.search_criteria.ethnicity = []
+        @cohort_page.remove_filter_of_type 'Ethnicity'
+        @cohort_page.verify_filters_present test.default_cohort
+      else
+        logger.warn 'Skipping test for removing ethnicity since the filter is not available to the user'
+      end
+    end
+
+    it 'allows the advisor to edit a Gender filter' do
+      if test.default_cohort.search_criteria.gender
+        test.default_cohort.search_criteria.gender = ['Male']
+        @cohort_page.edit_filter_and_confirm('Gender', test.default_cohort.search_criteria.gender.first)
+        @cohort_page.verify_filters_present test.default_cohort
+      else
+        logger.warn 'Skipping test for editing genders since the filter is not available to the user'
+      end
+    end
+
+    it 'allows the advisor to remove a Gender filter' do
+      if test.default_cohort.search_criteria.gender
+        test.default_cohort.search_criteria.gender = []
+        @cohort_page.remove_filter_of_type 'Gender'
+        @cohort_page.verify_filters_present test.default_cohort
+      else
+        logger.warn 'Skipping test for removing genders since the filter is not available to the user'
+      end
+    end
+
+    it 'allows the advisor to remove an Underrepresented Minority filter' do
+      if test.default_cohort.search_criteria.underrepresented_minority
+        test.default_cohort.search_criteria.underrepresented_minority = false
+        @cohort_page.remove_filter_of_type 'Underrepresented Minority'
+        @cohort_page.verify_filters_present test.default_cohort
+      else
+        logger.warn 'Skipping test for removing underrepresented minority since the filter is not available to the user'
+      end
+    end
+
+    it 'allows the advisor to remove an Inactive filter' do
+      if test.default_cohort.search_criteria.inactive
+        test.default_cohort.search_criteria.inactive = false
+        @cohort_page.remove_filter_of_type 'Inactive'
+        @cohort_page.verify_filters_present test.default_cohort
+      else
+        logger.warn 'Skipping test for removing inactive since the filter is not available to the user'
+      end
+    end
+
+    it 'allows the advisor to remove an Intensive filter' do
+      if test.default_cohort.search_criteria.intensive
+        test.default_cohort.search_criteria.intensive = false
+        @cohort_page.remove_filter_of_type 'Intensive'
+        @cohort_page.verify_filters_present test.default_cohort
+      else
+        logger.warn 'Skipping test for removing intensive since the filter is not available to the user'
+      end
+    end
+
+    it 'allows the advisor to edit a Team filter' do
+      if test.default_cohort.search_criteria.team && test.default_cohort.search_criteria.team.any?
+        test.default_cohort.search_criteria.team = [Squad::WCR]
+        @cohort_page.edit_filter_and_confirm('Team', test.default_cohort.search_criteria.team.first.name)
+        @cohort_page.verify_filters_present test.default_cohort
+      else
+        logger.warn 'Skipping test for editing teams since the filter is not available to the user or there is nothing to edit'
+      end
+    end
+
+    it 'allows the advisor to remove a Team filter' do
+      if test.default_cohort.search_criteria.team && test.default_cohort.search_criteria.team.any?
+        test.default_cohort.search_criteria.team = []
+        @cohort_page.remove_filter_of_type 'Team'
+        @cohort_page.verify_filters_present test.default_cohort
+      else
+        logger.warn 'Skipping test for removing teams since the filter is not available to the user or there is nothing to edit'
+      end
+    end
+
+    it 'allows the advisor to edit a PREP filter' do
+      if test.default_cohort.search_criteria.prep
+        test.default_cohort.search_criteria.prep = ['T-PREP']
+        @cohort_page.edit_filter_and_confirm('PREP', test.default_cohort.search_criteria.prep.first)
+        @cohort_page.verify_filters_present test.default_cohort
+      else
+        logger.warn 'Skipping test for editing PREPs since the filter is not available to the user'
+      end
+    end
+
+    it 'allows the advisor to remove a PREP filter' do
+      if test.default_cohort.search_criteria.prep
+        test.default_cohort.search_criteria.prep = []
+        @cohort_page.remove_filter_of_type 'PREP'
+        @cohort_page.verify_filters_present test.default_cohort
+      else
+        logger.warn 'Skipping test for removing PREPs since the filter is not available to the user'
+      end
+    end
+
+    it 'allows the advisor to edit a Last Name filter' do
+      test.default_cohort.search_criteria.last_name = 'BY'
+      @cohort_page.edit_filter_and_confirm('Last Name', test.default_cohort.search_criteria.last_name)
+      @cohort_page.verify_filters_present test.default_cohort
+    end
+
+    it 'allows the advisor to remove a Last Name filter' do
+      test.default_cohort.search_criteria.last_name = nil
+      @cohort_page.remove_filter_of_type 'Last Name'
+      @cohort_page.verify_filters_present test.default_cohort
+    end
+
+    it 'allows the advisor to edit an Advisor filter' do
+      if test.default_cohort.search_criteria.advisor
+        test.default_cohort.search_criteria.advisor = [BOACUtils.get_dept_advisors(BOACDepartments::COE).last.uid.to_s]
+        @cohort_page.edit_filter_and_confirm('Advisor', test.default_cohort.search_criteria.advisor.first)
+        @cohort_page.verify_filters_present test.default_cohort
+      else
+        logger.warn 'Skipping test for editing advisors since the filter is not available to the user'
+      end
+    end
+
+    it 'allows the advisor to remove an Advisor filter' do
+      if test.default_cohort.search_criteria.advisor
+        test.default_cohort.search_criteria.advisor = []
+        @cohort_page.remove_filter_of_type 'Advisor'
+        @cohort_page.verify_filters_present test.default_cohort
+      else
+        logger.warn 'Skipping test for removing advisors since the filter is not available to the user'
+      end
+    end
+
   end
 
   context 'when the advisor edits a cohort\'s name' do

@@ -149,7 +149,7 @@ module Page
       # @param cohort [FilteredCohort]
       # @return [PageObject::Elements::Link]
       def filtered_cohort_view_all_link(cohort)
-        link_element(xpath: "//a[contains(@href,'/filtered?id=#{cohort.id}')][contains(.,'View all')]")
+        link_element(xpath: "//h1[text()='Filtered Cohorts']/../following-sibling::*//a[contains(@href,'/filtered?id=#{cohort.id}')]")
       end
 
       # Expands a filtered cohort row in the main content area

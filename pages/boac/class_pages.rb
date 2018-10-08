@@ -36,7 +36,7 @@ module Page
           :code => (course_code if course_code?),
           :format => (section_format if section_format?),
           :number => (section_number if section_number?),
-          :units => (section_units.split.first if section_units?),
+          :units_completed => (section_units.split.first if section_units?),
           :title => (course_title if course_title?),
           :term => (term_name if term_name?)
         }

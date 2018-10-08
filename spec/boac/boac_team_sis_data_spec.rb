@@ -163,7 +163,7 @@ describe 'BOAC' do
               # ALERTS
 
               alerts = BOACUtils.get_students_alerts [team_member]
-              alert_msgs = alerts.map &:message
+              alert_msgs = (alerts.map &:message).sort
 
               dismissed = BOACUtils.get_dismissed_alerts(alerts).map &:message
               non_dismissed = alert_msgs - dismissed
@@ -171,14 +171,14 @@ describe 'BOAC' do
 
               if non_dismissed.any?
                 non_dismissed_visible = @boac_student_page.non_dismissed_alert_msg_elements.all? &:visible?
-                non_dismissed_present = @boac_student_page.non_dismissed_alert_msgs
+                non_dismissed_present = @boac_student_page.non_dismissed_alert_msgs.sort
                 it("has the non-dismissed alert messages for UID #{team_member.uid} on the student page") { expect(non_dismissed_present).to eql(non_dismissed) }
                 it("shows the non-dismissed alert messages for UID #{team_member.uid} on the student page") { expect(non_dismissed_visible).to be true }
               end
 
               if dismissed.any?
                 dismissed_visible = @boac_student_page.dismissed_alert_msg_elements.any? &:visible?
-                dismissed_present = @boac_student_page.dismissed_alert_msgs
+                dismissed_present = @boac_student_page.dismissed_alert_msgs.sort
                 it("has the dismissed alert messages for UID #{team_member.uid} on the student page") { expect(dismissed_present).to eql(dismissed) }
                 it("hides the dismissed alert messages for UID #{team_member.uid} on the student page") { expect(dismissed_visible).to be false }
               end
@@ -219,7 +219,7 @@ describe 'BOAC' do
 
                           visible_course_sis_data = @boac_student_page.visible_course_sis_data(term_name, course_code)
                           visible_course_title = visible_course_sis_data[:title]
-                          visible_units = visible_course_sis_data[:units]
+                          visible_units = visible_course_sis_data[:units_completed]
                           visible_grading_basis = visible_course_sis_data[:grading_basis]
                           visible_midpoint = visible_course_sis_data[:mid_point_grade]
                           visible_grade = visible_course_sis_data[:grade]
@@ -229,10 +229,10 @@ describe 'BOAC' do
                             expect(visible_course_title).to eql(course_sis_data[:title])
                           end
 
-                          if course_sis_data[:units].to_f > 0
+                          if course_sis_data[:units_completed].to_f > 0
                             it "shows the units for UID #{team_member.uid} term #{term_name} course #{course_code}" do
                               expect(visible_units).not_to be_empty
-                              expect(visible_units).to eql(course_sis_data[:units])
+                              expect(visible_units).to eql(course_sis_data[:units_completed])
                             end
                           else
                             it "shows no units for UID #{team_member.uid} term #{term_name} course #{course_code}" do
@@ -262,7 +262,7 @@ describe 'BOAC' do
                             end
                           end
 
-                          if course_sis_data[:midpoint]
+                          if course_sis_data[:midpoint] && term_name == BOACUtils.term
                             it "shows the midpoint grade for UID #{team_member.uid} term #{term_name} course #{course_code}" do
                               expect(visible_midpoint).not_to be_empty
                               expect(visible_midpoint).to eql(course_sis_data[:midpoint])
@@ -308,7 +308,7 @@ describe 'BOAC' do
                               it("encountered an error for UID #{team_member.uid} term #{term_name} course #{course_code} section #{section_sis_data[:ccn]}") { fail }
                             ensure
                               row = [team_member.uid, test.default_cohort.name, term_name, course_code, course_sis_data[:title], section_sis_data[:ccn], "#{section_sis_data[:component]} #{section_sis_data[:number]}",
-                                     section_sis_data[:primary], course_sis_data[:midpoint], course_sis_data[:grade], course_sis_data[:grading_basis], course_sis_data[:units], section_sis_data[:status]]
+                                     section_sis_data[:primary], course_sis_data[:midpoint], course_sis_data[:grade], course_sis_data[:grading_basis], course_sis_data[:units_completed], section_sis_data[:status]]
                               Utils.add_csv_row(user_course_sis_data, row)
                             end
                           end

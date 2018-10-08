@@ -30,14 +30,19 @@ describe 'A CoE advisor using BOAC' do
     @student_page = Page::BOACPages::StudentPage.new @driver
     @teams_page = Page::BOACPages::TeamsListPage.new @driver
 
-    @homepage.dev_auth
-    all_student_search_data = @api_user_analytics_page.collect_users_searchable_data(@driver, all_students)
+    all_student_search_data = @api_user_analytics_page.users_searchable_data
+    unless all_student_search_data
+      @homepage.dev_auth
+      test.dept_students.keep_if &:active_asc if test.dept == BOACDepartments::ASC
+      all_student_search_data = @api_user_analytics_page.collect_users_searchable_data(@driver, all_students)
+
+      @homepage.load_page
+      @homepage.log_out
+    end
 
     @coe_student_sids = test_coe.dept_students.map &:sis_id
     @coe_student_search_data = all_student_search_data.select { |d| @coe_student_sids.include? d[:sid] }
 
-    @homepage.load_page
-    @homepage.log_out
     @homepage.dev_auth test_coe.advisor
   end
 

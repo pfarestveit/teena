@@ -289,7 +289,7 @@ module Page
       {
         :name => link_element(xpath: "#{row_xpath}//a[@data-ng-bind=\"student.sortableName\"]").text,
         :sid => span_element(xpath: "#{row_xpath}//span[@data-ng-bind='student.sid']").text,
-        :majors => driver.find_elements(xpath: "#{row_xpath}//span[@data-ng-repeat='major in student.majors']").map(&:text),
+        :major => driver.find_elements(xpath: "#{row_xpath}//span[@data-ng-repeat='major in student.majors']").map(&:text),
         :units_in_progress => div_element(xpath: "#{row_xpath}//div[contains(@data-ng-bind,'student.term.enrolledUnits')]").text,
         :cumulative_units => div_element(xpath: "#{row_xpath}//div[contains(@data-ng-bind,'student.cumulativeUnits')]").text,
         :gpa => div_element(xpath: "#{row_xpath}//div[contains(@data-ng-bind, 'student.cumulativeGPA')]").text,
@@ -381,6 +381,7 @@ module Page
     # Returns all the SIDs shown on list view
     # @return [Array<String>]
     def list_view_sids
+      wait_until(Utils.medium_wait) { player_link_elements.any? }
       player_sid_elements.map { |el| el.text.gsub(/(INACTIVE)/, '').gsub(/(WAITLISTED)/, '').strip }
     end
 
