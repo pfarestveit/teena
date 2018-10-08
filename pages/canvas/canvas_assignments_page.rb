@@ -19,6 +19,7 @@ module Page
     checkbox(:online_upload_cbx, id: 'assignment_online_upload')
     checkbox(:online_text_entry_cbx, id: 'assignment_text_entry')
     checkbox(:online_media_cbx, id: 'assignment_media_recording')
+    button(:save_assignment_button, xpath: '//button[contains(.,"Save")]')
     h1(:assignment_title_heading, class: 'title')
 
     # Begins creating a new assignment, entering title and scrolling to the submission types
@@ -76,7 +77,7 @@ module Page
       navigate_to assignment.url
       wait_for_load_and_click edit_assignment_link_element
       wait_for_element_and_type(assignment_name_element, (assignment.title = "#{assignment.title} - Edited"))
-      wait_for_update_and_click_js save_button_element
+      wait_for_update_and_click_js save_assignment_button_element
       wait_until(Utils.short_wait) { assignment_title_heading_element.exists? && assignment_title_heading.include?(assignment.title) }
       add_event(event, EventType::MODIFY, assignment.title)
     end

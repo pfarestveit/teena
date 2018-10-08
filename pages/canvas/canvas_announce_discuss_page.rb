@@ -26,7 +26,6 @@ module Page
 
     link(:html_editor_link, xpath: '//a[contains(.,"HTML Editor")]')
     text_area(:announcement_msg, name: 'message')
-    button(:save_announcement_button, xpath: '//h1[contains(text(),"New Discussion")]/following-sibling::div/button[contains(text(),"Save")]')
     h1(:announcement_title_heading, class: 'discussion-title')
 
     # Creates an announcement on a course site
@@ -56,7 +55,7 @@ module Page
       discussion_title_element.send_keys announcement.title
       html_editor_link if html_editor_link_element.visible?
       wait_for_element_and_type_js(announcement_msg_element, announcement.body)
-      wait_for_update_and_click_js save_announcement_button_element
+      wait_for_update_and_click_js save_button_element
       announcement_title_heading_element.when_visible Utils.medium_wait
       add_event(event, EventType::CREATE, announcement.title)
       announcement.url = current_url
@@ -113,7 +112,7 @@ module Page
       discussion_title_element.send_keys discussion.title
       js_click threaded_discussion_cbx_element
       teacher_role = save_and_publish_button?
-      teacher_role ? click_save_and_publish : wait_for_update_and_click_js(save_announcement_button_element)
+      teacher_role ? click_save_and_publish : wait_for_update_and_click_js(save_button_element)
       add_event(event, EventType::CREATE, discussion.title)
       teacher_role ? published_button_element.when_visible(Utils.medium_wait) : subscribed_link_element.when_visible(Utils.medium_wait)
       discussion.url = current_url

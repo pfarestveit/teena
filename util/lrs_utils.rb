@@ -29,10 +29,6 @@ class LRSUtils
     (JSON.parse File.read(test_users))['users']
   end
 
-  def self.lti_credentials
-    {key: @config['lrs']['lti_key'], secret: @config['lrs']['lti_secret']}
-  end
-
   def self.lrs_db_credentials
     {
       host: @config['lrs']['db_host'],
@@ -66,7 +62,7 @@ class LRSUtils
   # stored in the LRS db. Returns a new CSV.
   # @param event_csv [File]
   # @return [File]
-  def self.get_all_test_events(event_csv)
+  def self.get_all_test_events(event, event_csv)
     # Get the times of the first and last events in a test script and all of the script's test users
     csv = CSV.read(event_csv, headers: true)
     timestamps = csv['Time'].sort
@@ -82,7 +78,7 @@ class LRSUtils
                AND statements.timestamp BETWEEN TIMESTAMP '#{earliest_time}' AND TIMESTAMP '#{latest_time}';"
     results = Utils.query_pg_db(lrs_db_credentials, query)
     # Write the results to a CSV
-    new_csv = Utils.ensure_csv_exists(LRSUtils.events_csv, %w(Time Actor Action Object))
+    new_csv = Utils.ensure_csv_exists(LRSUtils.events_csv(event), %w(Time Actor Action Object))
     results.each { |row| Utils.add_csv_row(new_csv, [row['timestamp'], row['external_id'], row['activity_type'], row['statement']]) }
   end
 

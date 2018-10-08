@@ -31,7 +31,7 @@ describe 'Canvas enrollment events' do
     @course.sections = [@section]
     @course.sis_id = "CRS:#{@course.title.gsub(' ', '-')}"
 
-    @canvas.create_generic_course_site(@driver, Utils.canvas_qa_sub_account, @course, [], test_id, [LtiTools::PRIVACY_DASHBOARD], event)
+    @canvas.create_generic_course_site(@driver, Utils.canvas_qa_sub_account, @course, [], test_id, nil, event)
     @canvas.add_sis_section_and_ids(@course, @section)
 
     # Admin creates teacher enrollment via Canvas add-user
@@ -43,12 +43,12 @@ describe 'Canvas enrollment events' do
     enrollments_csv = Utils.create_sis_enrollment_import(@course, @section, users_to_add)
     @canvas.upload_sis_imports([users_csv, enrollments_csv], users_to_add)
 
-    # Teacher creates student enrollment via Canvas add-user
-    event.actor = teachers[0]
-    @canvas.masquerade_as(@driver, teachers[0], @course)
+    # Admin creates student enrollment via Canvas add-user
     @canvas.add_users(@course, [students[1]], @section, event)
 
     # Teacher creates student enrollment via Find a Person to Add - no events are captured yet
+    event.actor = teachers[0]
+    @canvas.masquerade_as(@driver, teachers[0], @course)
     @canvas.load_users_page @course
     @canvas.click_find_person_to_add @driver
     @find_person_to_add.search(students[2].uid, 'CalNet UID')
@@ -70,7 +70,7 @@ describe 'Canvas enrollment events' do
 
   after(:all) do
     Utils.quit_browser @driver
-    LRSUtils.get_all_test_events event.csv
+    LRSUtils.get_all_test_events(event, event.csv)
   end
 
   it('should end up in the LRS database') { LRSUtils.verify_canvas_events event }
