@@ -83,7 +83,7 @@ describe 'BOAC' do
                           it("shows the right term for #{class_test_case}") { expect(visible_course_data[:term]).to eql(term_name) }
                           it("shows the right course code for #{class_test_case}") { expect(visible_course_data[:code]).to eql(section_course_code) }
                           it("shows the right course title for #{class_test_case}") { expect(visible_course_data[:title]).to eql(course_sis_data[:title]) }
-                          it("shows the right section units for #{class_test_case}") { expect(visible_course_data[:units]).to eql(section_data[:units]) }
+                          it("shows the right section units for #{class_test_case}") { expect(visible_course_data[:units_completed]).to eql(section_data[:units_completed]) }
                           it("shows the right section format for #{class_test_case}") { expect(visible_course_data[:format]).to eql(section_data[:component]) }
                           it("shows the right section number for #{class_test_case}") { expect(visible_course_data[:number]).to eql(section_data[:number]) }
                           it("shows no empty course data for #{class_test_case}") do
@@ -91,7 +91,7 @@ describe 'BOAC' do
                             expect(visible_course_data.values.any? &:empty?).to be false
                           end
 
-                          Utils.add_csv_row(courses_csv, [term_name, section_course_code, course_sis_data[:title], "#{section_data[:component]} #{section_data[:number]}", section_data[:units]])
+                          Utils.add_csv_row(courses_csv, [term_name, section_course_code, course_sis_data[:title], "#{section_data[:component]} #{section_data[:number]}", section_data[:units_completed]])
 
                           # Check that the section schedules are presented as expected
                           api_section_page.meetings.each do |meet|

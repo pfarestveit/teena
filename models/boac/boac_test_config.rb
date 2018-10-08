@@ -45,14 +45,14 @@ class BOACTestConfig < TestConfig
       # For CoE, use the advisor's assigned students
       when BOACDepartments::COE
         filter = CohortFilter.new
-        filter.advisors = [@advisor.uid]
+        filter.advisor = [@advisor.uid]
         @default_cohort = FilteredCohort.new({:search_criteria => filter})
         @cohort_members = NessieUtils.get_coe_advisor_students(@advisor, @dept_students)
       # For ASC or admin, use a team
       else
         team = NessieUtils.get_asc_teams.find { |t| t.code == team_config }
         filter = CohortFilter.new
-        filter.squads = Squad::SQUADS.select { |s| s.parent_team == team }
+        filter.team = Squad::SQUADS.select { |s| s.parent_team == team }
         @default_cohort = FilteredCohort.new({:search_criteria => filter})
         @cohort_members = NessieUtils.get_asc_team_members(team, @dept_students)
     end
@@ -113,6 +113,26 @@ class BOACTestConfig < TestConfig
   def filtered_cohorts(all_students)
     set_global_configs all_students
     set_search_cohorts
+
+    # Set a default cohort with all possible filters to exercise editing and removing filters
+    filters = {
+      :gpa => ['3.00 - 3.49'],
+      :level => ['Senior (90+ Units)'],
+      :units_completed => ['90 - 119'],
+      :major => ['Electrical Eng & Comp Sci BS'],
+      :last_name => 'AZ',
+      :advisor => ([BOACUtils.get_dept_advisors(BOACDepartments::COE).first.uid.to_s] unless @dept == BOACDepartments::ASC),
+      :ethnicity => (['Chinese / Chinese-American'] unless @dept == BOACDepartments::ASC),
+      :gender => (['Female'] unless @dept == BOACDepartments::ASC),
+      :underrepresented_minority => (true unless @dept == BOACDepartments::ASC),
+      :prep => (['PREP'] unless @dept == BOACDepartments::ASC),
+      :inactive => (true unless @dept == BOACDepartments::COE),
+      :intensive => (true unless @dept == BOACDepartments::COE),
+      :team => ([Squad::MCR] unless @dept == BOACDepartments::COE)
+    }
+    editing_test_search_criteria = CohortFilter.new
+    editing_test_search_criteria.set_custom_filters(filters)
+    @default_cohort = FilteredCohort.new({:name => "Default cohort #{@id}", :search_criteria => editing_test_search_criteria})
   end
 
   # Config for last activity testing

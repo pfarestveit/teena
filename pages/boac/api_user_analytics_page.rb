@@ -38,6 +38,7 @@ class ApiUserAnalyticsPage
       :advisor => (profile && profile['advisorUid']),
       :gender => (profile && profile['gender']),
       :ethnicity => (profile && profile['ethnicity']),
+      :underrepresented_minority => (profile && profile['minority']),
       :prep => (profile && profile['didPrep']),
       :prep_elig => (profile && profile['prepEligible']),
       :t_prep => (profile && profile['didTprep']),
@@ -133,7 +134,7 @@ class ApiUserAnalyticsPage
       :ccn => section['ccn'],
       :number => "#{section['sectionNumber']}",
       :component => section['component'],
-      :units => (section['units'].floor == section['units'] ? section['units'].floor.to_s : section['units'].to_s),
+      :units_completed => (section['units'].floor == section['units'] ? section['units'].floor.to_s : section['units'].to_s),
       :primary => section['primary'],
       :status => section['enrollmentStatus']
     }
@@ -143,7 +144,7 @@ class ApiUserAnalyticsPage
     {
       :code => course_display_name(course),
       :title => course['title'].gsub(/\s+/, ' '),
-      :units => (course['units'].floor == course['units'] ? course['units'].floor.to_s : course['units'].to_s),
+      :units_completed => (course['units'].floor == course['units'] ? course['units'].floor.to_s : course['units'].to_s),
       :midpoint => course['midtermGrade'],
       :grade => course['grade'],
       :grading_basis => course['gradingBasis']
@@ -243,57 +244,64 @@ class ApiUserAnalyticsPage
     site_statistics(analytics(site)['currentScore']).merge!({:type => 'Assignment Grades'})
   end
 
-  # To support cohort search tests, returns all relevant user data for a given set of students. If a file containing the data already
-  # exists, will skip collecting the data and simply parse the file. Otherwise, will collect the data and write it to a file for
+  # Parses a file containing searchable user data if it exists
+  # @return [Array<Hash>]
+  def users_searchable_data
+    users_data_file = BOACUtils.searchable_data
+    JSON.parse(File.read(users_data_file), {:symbolize_names => true}) if File.exist? users_data_file
+  end
+
+  # To support cohort search tests, returns all relevant user data for a given set of students, writing it to a file for
   # subsequent test runs.
   # @param driver [Selenium::WebDriver]
   # @param all_students [Array<User>]
-  # @param test_config [BOACTestConfig]
   # @return Array[<Hash>]
-  def collect_users_searchable_data(driver, all_students, test_config = nil)
-    users_data_file = BOACUtils.searchable_data
-    if File.exist? users_data_file
-      logger.warn 'Found a copy of searchable user data created today, skipping data collection'
-      users_data = JSON.parse(File.read(users_data_file), {:symbolize_names => true})
-    else
-      logger.warn 'Cannot find a searchable user data file created today, collecting data and writing it to a file for reuse today'
+  def collect_users_searchable_data(driver, all_students)
+    logger.warn 'Cannot find a searchable user data file created today, collecting data and writing it to a file for reuse today'
 
-      # Delete older searchable data files before writing the new one
-      Dir.glob("#{Utils.config_dir}/boac-searchable-data*").each { |f| File.delete f }
+    # Delete older searchable data files before writing the new one
+    Dir.glob("#{Utils.config_dir}/boac-searchable-data*").each { |f| File.delete f }
 
-      # Fetch all the data and write it to a file for search tests to use
-      users_data = all_students.map do |user|
-        # Get the squad names to use as search criteria if the students are athletes
-        user_squad_names = user.sports.map do |squad_code|
-          squad = Squad::SQUADS.find { |s| s.code == squad_code }
-          squad.name
-        end
-        get_data(driver, user)
-        {
-          :sid => user.sis_id,
-          :first_name => user.first_name,
-          :first_name_sortable => user.first_name.gsub(/\W/, '').downcase,
-          :last_name => user.last_name,
-          :last_name_sortable => user.last_name.gsub(/\W/, '').downcase,
-          :squad_names => user_squad_names,
-          :active_asc => user.active_asc,
-          :intensive_asc => user.intensive_asc,
-          :gpa => (user_sis_data[:cumulative_gpa] if user_sis_data[:cumulative_gpa]),
-          :level => (user_sis_data[:level] if user_sis_data[:level]),
-          :units => (user_sis_data[:cumulative_units] if user_sis_data[:cumulative_units]),
-          :majors => (user_sis_data[:majors] ? user_sis_data[:majors] : []),
-          :advisor => (coe_profile[:advisor] if coe_profile[:advisor]),
-          :gender => (coe_profile[:gender] if coe_profile[:gender]),
-          :ethnicity => (coe_profile[:ethnicity] if coe_profile[:ethnicity]),
-          :prep => coe_profile[:prep],
-          :prep_elig => coe_profile[:prep_elig],
-          :t_prep => coe_profile[:t_prep],
-          :t_prep_elig => coe_profile[:t_prep_elig]
-        }
+    # Fetch all the data and write it to a file for search tests to use
+    users_data = all_students.map do |user|
+      # Get the squad names to use as search criteria if the students are athletes
+      user_squad_names = user.sports.map do |squad_code|
+        squad = Squad::SQUADS.find { |s| s.code == squad_code }
+        squad ? squad.name : (logger.error "Unrecognized squad code '#{squad_code}'")
       end
-      File.open(users_data_file, 'w') { |f| f.write users_data.to_json }
+      get_data(driver, user)
+      {
+        :sid => user.sis_id,
+        :first_name => user.first_name,
+        :first_name_sortable => user.first_name.gsub(/\W/, '').downcase,
+        :last_name => user.last_name,
+        :last_name_sortable => user.last_name.gsub(/\W/, '').downcase,
+        :squad_names => user_squad_names,
+        :active_asc => user.active_asc,
+        :intensive_asc => user.intensive_asc,
+        :gpa => (user_sis_data[:cumulative_gpa] if user_sis_data[:cumulative_gpa]),
+        :level => (user_sis_data[:level] if user_sis_data[:level]),
+        :units_completed => (user_sis_data[:cumulative_units] if user_sis_data[:cumulative_units]),
+        :major => (user_sis_data[:majors] ? user_sis_data[:majors] : []),
+        :advisor => (coe_profile[:advisor] if coe_profile[:advisor]),
+        :gender => (coe_profile[:gender] if coe_profile[:gender]),
+        :ethnicity => (coe_profile[:ethnicity] if coe_profile[:ethnicity]),
+        :underrepresented_minority => (coe_profile[:underrepresented_minority] if coe_profile[:underrepresented_minority]),
+        :prep => coe_profile[:prep],
+        :prep_elig => coe_profile[:prep_elig],
+        :t_prep => coe_profile[:t_prep],
+        :t_prep_elig => coe_profile[:t_prep_elig]
+      }
     end
-    # If special configuration exists for the test, then return only user data for the dept specified in the config; else return all.
+    File.open(BOACUtils.searchable_data, 'w') { |f| f.write users_data.to_json }
+    users_data
+  end
+
+  # If special configuration exists for the test, then return only user data for the dept specified in the config; else return all.
+  # @param users_data [Array<Hash>]
+  # @param test_config [BOACTestConfig]
+  # @return [Array<Hash>]
+  def applicable_user_search_data(users_data, test_config = nil)
     if test_config
       student_sids = test_config.dept_students.map &:sis_id
       users_data.select { |u| student_sids.include? u[:sid] }

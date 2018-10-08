@@ -33,11 +33,19 @@ describe 'An ASC advisor' do
     @teams_page = Page::BOACPages::TeamsListPage.new @driver
 
     # Collect searchable user data relevant to an ASC advisor
-    @homepage.dev_auth
-    @all_student_search_data = @api_user_analytics_page.collect_users_searchable_data(@driver, all_students)
+    @all_searchable_students = @api_user_analytics_page.users_searchable_data
+    unless @all_searchable_students
+      @homepage.dev_auth
+      test.dept_students.keep_if &:active_asc if test.dept == BOACDepartments::ASC
+      @all_searchable_students = @api_user_analytics_page.collect_users_searchable_data(@driver, all_students)
+
+      @homepage.load_page
+      @homepage.log_out
+    end
+    @searchable_students = @api_user_analytics_page.applicable_user_search_data(@all_searchable_students)
 
     @asc_student_sids = test_asc.dept_students.map &:sis_id
-    @asc_student_search_data = @all_student_search_data.select { |d| @asc_student_sids.include? d[:sid] }
+    @asc_student_search_data = @searchable_students.select { |d| @asc_student_sids.include? d[:sid] }
 
     @inactive_student_sids = asc_inactive_students.map &:sis_id
     @inactive_student_search_data = @asc_student_search_data.select { |d| @inactive_student_sids.include? d[:sid] }
@@ -48,8 +56,6 @@ describe 'An ASC advisor' do
     @intensive_student_search_data.delete_if { |d| @inactive_student_sids.include? d[:sid] }
     logger.debug "There are #{@intensive_student_search_data.length} active intensive students"
 
-    @homepage.load_page
-    @homepage.log_out
     @homepage.dev_auth test_asc.advisor
   end
 

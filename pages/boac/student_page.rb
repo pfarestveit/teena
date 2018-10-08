@@ -221,7 +221,7 @@ module Page
         wait_list_xpath = "#{course_xpath}//span[@data-ng-if='course.waitlisted']"
         {
           :title => (h4_element(:xpath => title_xpath).text if h4_element(:xpath => title_xpath).exists?),
-          :units => (div_element(:xpath => units_xpath).text.delete('Units').strip if div_element(:xpath => units_xpath).exists?),
+          :units_completed => (div_element(:xpath => units_xpath).text.delete('Units').strip if div_element(:xpath => units_xpath).exists?),
           :grading_basis => (span_element(:xpath => grading_basis_xpath).text if (span_element(:xpath => grading_basis_xpath).exists? && !span_element(:xpath => grade_xpath).exists?)),
           :mid_point_grade => (span_element(:xpath => mid_point_grade_xpath).text if span_element(:xpath => mid_point_grade_xpath).exists?),
           :grade => (span_element(:xpath => grade_xpath).text if span_element(:xpath => grade_xpath).exists?),

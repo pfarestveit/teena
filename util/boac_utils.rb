@@ -208,7 +208,7 @@ class BOACUtils < Utils
                 AND active = true
                 AND key LIKE '#{term_code}%';"
     results = Utils.query_pg_db(boac_db_credentials, query.gsub("\"", '\''))
-    alerts = results.map { |r| Alert.new({id: r['id'], type: r['alert_type'], message: r['message'], user: BOACUser.new({sis_id: r['sid']})}) }
+    alerts = results.map { |r| Alert.new({id: r['id'], type: r['alert_type'], message: r['message'].gsub("\n", ' ').gsub(/\s+/, ' '), user: BOACUser.new({sis_id: r['sid']})}) }
     alerts.sort_by &:message
   end
 

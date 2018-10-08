@@ -124,17 +124,6 @@ module Page
           create_new_cohort cohort
         end
 
-        # Creates a new cohort by editing the search criteria of an existing one
-        # @param old_cohort [FilteredCohort]
-        # @param new_cohort [FilteredCohort]
-        def search_and_create_edited_cohort(old_cohort, new_cohort)
-          load_cohort old_cohort
-          show_filters
-          perform_search new_cohort
-          save_and_name_cohort new_cohort
-          wait_for_filtered_cohort new_cohort
-        end
-
         # Loads the Everyone's Cohorts page
         def load_everyone_cohorts_page
           navigate_to "#{BOACUtils.base_url}/cohorts/all"
@@ -165,13 +154,14 @@ module Page
 
         # FILTERED COHORTS - Search
 
-        button(:show_filters_button, id: 'show-hide-details-button')
+        button(:show_filters_button, id: 'show-details-button')
         button(:rename_button, id: 'rename-cohort-button')
         button(:delete_button, id: 'delete-cohort-button')
 
         button(:new_filter_button, id: 'draft-filter')
         button(:new_filter_sub_button, id: 'filter-subcategory')
         elements(:new_filter_option, :link, xpath: '//a[@data-ng-bind="option.name"]')
+        elements(:new_filter_initial_input, :text_area, class: 'filter-range-input')
         button(:unsaved_filter_add_button, id: 'unsaved-filter-add')
         button(:unsaved_filter_cancel_button, id: 'unsaved-filter-reset')
         button(:unsaved_filter_apply_button, id: 'unsaved-filter-apply')
@@ -180,13 +170,6 @@ module Page
         elements(:filter_row_type, :span, xpath: '//div[@class="cohort-filter-item-filter"]/span')
         elements(:filter_row_option, :span, xpath: '//div[@class="cohort-filter-item-name"]/span')
         button(:filter_row_remove_button, xpath: '//button[contains(@id,"remove-added-filter")]')
-
-        # Returns the element containing an added cohort filter
-        # @param filter_option [String]
-        # @return [PageObject::Elements::Span]
-        def existing_filter(filter_option)
-          span_element(xpath: "//div[@class=\"cohort-filter-item-name\"]/span[text()=\"#{filter_option}\"]")
-        end
 
         # Returns a filter option link with given text, used to find options other than 'Advisor'
         # @param option_name [String]
@@ -209,6 +192,22 @@ module Page
           list_item_element(id: "advisorLdapUids-#{advisor_uid}")
         end
 
+        # Selects a sub-category for a filter type that offers sub-categories
+        # @param filter_name [String]
+        # @param filter_option [String]
+        def choose_sub_option(filter_name, filter_option)
+          # Last Name requires input
+          if filter_name == 'Last Name'
+            wait_for_element_and_type(new_filter_initial_input_elements[0], filter_option[0])
+            wait_for_element_and_type(new_filter_initial_input_elements[1], filter_option[1])
+          # All others require a selection
+          else
+            wait_for_update_and_click new_filter_sub_button_element
+            option_element = (filter_name == 'Advisor') ? new_filter_advisor_option(filter_option) : new_filter_sub_option(filter_option)
+            wait_for_update_and_click option_element
+          end
+        end
+
         # Selects, adds, and applies a filter
         # @param filter_name [String]
         # @param filter_option [String]
@@ -217,19 +216,10 @@ module Page
           wait_for_update_and_click new_filter_button_element
           wait_for_update_and_click new_filter_option(filter_name)
 
-          # Inactive and Intensive have no sub-options
-          if %w(Inactive Intensive).include? filter_name
-            wait_for_update_and_click unsaved_filter_add_button_element
-            unsaved_filter_apply_button_element.when_present Utils.short_wait
-
-          # All other filters have sub-options
-          else
-            wait_for_update_and_click new_filter_sub_button_element
-            option_element = (filter_name == 'Advisor') ? new_filter_advisor_option(filter_option) : new_filter_sub_option(filter_option)
-            wait_for_update_and_click option_element
-            wait_for_update_and_click unsaved_filter_add_button_element
-            unsaved_filter_apply_button_element.when_present Utils.short_wait
-          end
+          # Inactive, Intensive, and Underrepresented Minority have no sub-options
+          choose_sub_option(filter_name, filter_option) unless ['Inactive', 'Intensive', 'Underrepresented Minority'].include? filter_name
+          wait_for_update_and_click unsaved_filter_add_button_element
+          unsaved_filter_apply_button_element.when_present Utils.short_wait
         end
 
         # Returns the heading for a given cohort page
@@ -241,33 +231,94 @@ module Page
 
         # Ensures that cohort filters are visible
         def show_filters
-          div_element(class: 'cohort-header-button-links').when_visible Utils.medium_wait
+          button_element(xpath: '//button[@data-ng-attr-id="{{filtersVisible ? \'hide\' : \'show\'}}-details-button"]').when_visible Utils.medium_wait
           show_filters_button if show_filters_button?
         end
 
-        # Verifies that a set of cohort search criteria are currently selected
-        # @param filter [CohortFilter]
-        # @return [boolean]
-        def filters_selected?(filter)
-          wait_until(Utils.short_wait) { filter_row_type_elements.any? }
-          filter.gpa_ranges.each { |g| wait_until(1, "GPA range #{g} is not selected") { existing_filter(g).exists? } } if filter.gpa_ranges
-          filter.levels.each { |l| wait_until(1, "Level #{l} is not selected") { existing_filter(l).exists? } } if filter.levels
-          filter.units.each { |u| wait_until(1, "Units #{u} is not selected") { existing_filter(u).exists? } } if filter.units
-          filter.majors.each { |m| wait_until(1, "Major #{m} is not selected") { existing_filter(m).exists? } } if filter.majors
-          filter.squads.each { |s| wait_until(1, "Squad #{s.name} is not selected") { existing_filter(s).exists? } } if filter.squads
-          # TODO - remaining filter types
-          true
+        elements(:cohort_filter_row, :div, :class => 'cohort-filter-row')
+
+        # Returns the element containing an added cohort filter
+        # @param filter_option [String]
+        # @return [PageObject::Elements::Element]
+        def existing_filter_element(filter_name, filter_option = nil)
+          if ['Intensive', 'Inactive', 'Underrepresented Minority'].include? filter_name
+            div_element(xpath: "//div[@class=\"cohort-added-filter-name\"][contains(.,\"#{filter_name}\")]")
+          elsif filter_name == 'Last Name'
+            span_element(xpath: "//div[@class=\"cohort-added-filter-name\"][contains(.,\"#{filter_name}\")]/following-sibling::div/span[text()=\"#{filter_option.split.join(' through ')}\"]")
+          else
+            span_element(xpath: "//div[@class=\"cohort-added-filter-name\"][contains(.,\"#{filter_name}\")]/following-sibling::div/span[text()=\"#{filter_option}\"]")
+          end
         end
 
-        # Removes all existing filters on a cohort or cohort search
-        def remove_all_filters
-          filter_count = filter_row_type_elements.length
-          logger.info "Removing #{filter_count} existing filters"
-          filter_count.times do
-            wait_for_update_and_click filter_row_remove_button_element
-            wait_until(2) { filter_row_type_elements.length == filter_count - 1 }
-            filter_count -= 1
+        # Verifies that a cohort's filters are visibly selected
+        # @param cohort [FilteredCohort]
+        def verify_filters_present(cohort)
+          show_filters
+          if cohort.search_criteria.list_filters.flatten.compact.any?
+            wait_until(Utils.short_wait) { cohort_filter_row_elements.any? }
+            filters = cohort.search_criteria
+            wait_until(5) do
+              filters.gpa.each { |g| existing_filter_element('GPA', g).exists? } if filters.gpa && filters.gpa.any?
+              filters.level.each { |l| existing_filter_element('Level', l).exists? } if filters.level && filters.level.any?
+              filters.units_completed.each { |u| existing_filter_element('Units Completed', u).exists? } if filters.units_completed && filters.units_completed.any?
+              filters.major.each { |m| existing_filter_element('Major', m).exists? } if filters.major && filters.major.any?
+              existing_filter_element('Last Name', filters.last_name).exists? if filters.last_name
+              # TODO - advisors
+              filters.ethnicity.each { |e| existing_filter_element('Ethnicity', e).exists? } if filters.ethnicity && filters.ethnicity.any?
+              filters.gender.each { |g| existing_filter_element('Gender', g).exists? } if filters.gender && filters.gender.any?
+              existing_filter_element('Underrepresented Minority').exists? if filters.underrepresented_minority
+              filters.prep.each { |p| existing_filter_element('PREP', p).exists? } if filters.prep && filters.prep.any?
+              existing_filter_element('Inactive').exists? if filters.inactive
+              existing_filter_element('Intensive').exists? if filters.intensive
+              filters.team.each { |t| existing_filter_element('Team', t.name).exists? } if filters.team && filters.team.any?
+              true
+            end
+          else
+            unsaved_filter_apply_button_element.when_not_present Utils.short_wait
+            wait_until(1) { cohort_filter_row_elements.empty? }
           end
+        end
+
+        # Edits the first filter of a given type
+        # @param filter_name [String]
+        # @param new_filter_option [String]
+        def edit_filter_of_type(filter_name, new_filter_option)
+          wait_for_update_and_click button_element(xpath: "//span[contains(.,\"#{filter_name}\")]/parent::div/following-sibling::div[contains(@class,'controls')]//button[contains(.,'Edit')]")
+          choose_sub_option(filter_name, new_filter_option)
+        end
+
+        # Clicks the cancel button for the first filter of a given type that is in edit mode
+        # @param filter_name [String]
+        def cancel_filter_edit(filter_name)
+          el = button_element(xpath: "//span[contains(.,\"#{filter_name}\")]/parent::div/following-sibling::div[contains(@class,'controls')]//button[contains(.,'Cancel')]")
+          wait_for_update_and_click el
+          el.when_not_present 1
+        end
+
+        # Clicks the update button for the first filter of a given type that is in edit mode
+        # @param filter_name [String]
+        def confirm_filter_edit(filter_name)
+          el = button_element(xpath: "//span[contains(.,\"#{filter_name}\")]/parent::div/following-sibling::div[contains(@class,'controls')]//button[contains(.,'Update')]")
+          wait_for_update_and_click el
+          el.when_not_present 1
+        end
+
+        # Saves an edit to the first filter of a given type
+        # @param filter_name [String]
+        # @param filter_option [String]
+        def edit_filter_and_confirm(filter_name, filter_option)
+          logger.info "Changing '#{filter_name}' to '#{filter_option}'"
+          edit_filter_of_type(filter_name, filter_option)
+          confirm_filter_edit(filter_name)
+        end
+
+        # Removes the first filter of a given type
+        # @param filter_name [String]
+        def remove_filter_of_type(filter_name)
+          logger.info "Removing '#{filter_name}'"
+          row_count = cohort_filter_row_elements.length
+          wait_for_update_and_click button_element(xpath: "//span[@data-ng-bind=\"row.name\"][text()=\"#{filter_name}\"]/parent::div/following-sibling::div[contains(@class,'controls')]//button[contains(.,'Remove')]")
+          wait_until(Utils.short_wait) { cohort_filter_row_elements.length == row_count - 1 }
         end
 
         # Waits for a search to complete and returns the count of results.
@@ -280,50 +331,51 @@ module Page
         # Executes a custom cohort search using search criteria associated with a cohort and stores the result count
         # @param cohort [FilteredCohort]
         def perform_search(cohort)
-          sleep 1
-          remove_all_filters
+          sleep 2
 
           # The squads and majors lists can change over time. Avoid test failures if the search criteria is out of sync
           # with actual squads or majors. Advisors might also change, but fail if this happens for now.
-          if cohort.search_criteria.majors && cohort.search_criteria.majors.any?
+          if cohort.search_criteria.major && cohort.search_criteria.major.any?
             wait_for_update_and_click new_filter_button_element
             wait_for_update_and_click new_filter_option('Major')
             wait_for_update_and_click new_filter_sub_button_element
             sleep Utils.click_wait
             filters_missing = []
-            cohort.search_criteria.majors.each { |major| filters_missing << major unless new_filter_option(major).exists? }
+            cohort.search_criteria.major.each { |major| filters_missing << major unless new_filter_option(major).exists? }
             logger.debug "The majors #{filters_missing} are not present, removing from search criteria" if filters_missing.any?
-            filters_missing.each { |f| cohort.search_criteria.majors.delete f }
+            filters_missing.each { |f| cohort.search_criteria.major.delete f }
             wait_for_update_and_click unsaved_filter_cancel_button_element
           end
-          if cohort.search_criteria.squads && cohort.search_criteria.squads.any?
+          if cohort.search_criteria.team && cohort.search_criteria.team.any?
             wait_for_update_and_click new_filter_button_element
             wait_for_update_and_click new_filter_option('Team')
             wait_for_update_and_click new_filter_sub_button_element
             sleep Utils.click_wait
             filters_missing = []
-            cohort.search_criteria.squads.each { |squad| filters_missing << squad unless new_filter_option(squad.name).exists? }
+            cohort.search_criteria.team.each { |squad| filters_missing << squad unless new_filter_option(squad.name).exists? }
             logger.debug "The squads #{filters_missing} are not present, removing from search criteria" if filters_missing.any?
-            filters_missing.each { |f| cohort.search_criteria.squads.delete f }
+            filters_missing.each { |f| cohort.search_criteria.team.delete f }
             wait_for_update_and_click unsaved_filter_cancel_button_element
           end
 
           # Global
-          cohort.search_criteria.gpa_ranges.each { |g| select_filter('GPA', g) } if cohort.search_criteria.gpa_ranges
-          cohort.search_criteria.levels.each { |l| select_filter('Level', l) } if cohort.search_criteria.levels
-          cohort.search_criteria.units.each { |u| select_filter('Units Completed', u) } if cohort.search_criteria.units
-          cohort.search_criteria.majors.each { |m| select_filter('Major', m) } if cohort.search_criteria.majors
+          cohort.search_criteria.gpa.each { |g| select_filter('GPA', g) } if cohort.search_criteria.gpa
+          cohort.search_criteria.level.each { |l| select_filter('Level', l) } if cohort.search_criteria.level
+          cohort.search_criteria.units_completed.each { |u| select_filter('Units Completed', u) } if cohort.search_criteria.units_completed
+          cohort.search_criteria.major.each { |m| select_filter('Major', m) } if cohort.search_criteria.major
+          select_filter('Last Name', cohort.search_criteria.last_name) if cohort.search_criteria.last_name
 
           # CoE
-          cohort.search_criteria.advisors.each { |a| select_filter('Advisor', a) } if cohort.search_criteria.advisors
-          cohort.search_criteria.ethnicities.each { |e| select_filter('Ethnicity', e) } if cohort.search_criteria.ethnicities
-          cohort.search_criteria.genders.each { |g| select_filter('Gender', g) } if cohort.search_criteria.genders
-          cohort.search_criteria.preps.each { |p| select_filter('PREP', p) } if cohort.search_criteria.preps
+          cohort.search_criteria.advisor.each { |a| select_filter('Advisor', a) } if cohort.search_criteria.advisor
+          cohort.search_criteria.ethnicity.each { |e| select_filter('Ethnicity', e) } if cohort.search_criteria.ethnicity
+          select_filter 'Underrepresented Minority' if cohort.search_criteria.underrepresented_minority
+          cohort.search_criteria.gender.each { |g| select_filter('Gender', g) } if cohort.search_criteria.gender
+          cohort.search_criteria.prep.each { |p| select_filter('PREP', p) } if cohort.search_criteria.prep
 
           # ASC
-          select_filter('Inactive', cohort.search_criteria) if cohort.search_criteria.inactive_asc
-          select_filter('Intensive', cohort.search_criteria) if cohort.search_criteria.intensive_asc
-          cohort.search_criteria.squads.each { |s| select_filter('Team', s.name) } if cohort.search_criteria.squads
+          select_filter 'Inactive' if cohort.search_criteria.inactive
+          select_filter 'Intensive' if cohort.search_criteria.intensive
+          cohort.search_criteria.team.each { |s| select_filter('Team', s.name) } if cohort.search_criteria.team
 
           # If there are any search criteria left, execute search and log time search took to complete
           if cohort.search_criteria.list_filters.flatten.compact.any?
@@ -346,8 +398,8 @@ module Page
 
           # GPA
           matching_gpa_users = []
-          if search_criteria.gpa_ranges && search_criteria.gpa_ranges.any?
-            search_criteria.gpa_ranges.each do |range|
+          if search_criteria.gpa && search_criteria.gpa.any?
+            search_criteria.gpa.each do |range|
               array = range.include?('Below') ? %w(0 2.0) : range.delete(' ').split('-')
               low_end = array[0]
               high_end = array[1]
@@ -364,9 +416,9 @@ module Page
           matching_gpa_users.flatten!
 
           # Level
-          matching_level_users = if search_criteria.levels && search_criteria.levels.any?
+          matching_level_users = if search_criteria.level && search_criteria.level.any?
                                    user_data.select do |u|
-                                     search_criteria.levels.find { |search_level| search_level.include? u[:level] } if u[:level]
+                                     search_criteria.level.find { |search_level| search_level.include? u[:level] } if u[:level]
                                    end
                                  else
                                    user_data
@@ -374,15 +426,15 @@ module Page
 
           # Units
           matching_units_users = []
-          if search_criteria.units
-            search_criteria.units.each do |units|
+          if search_criteria.units_completed
+            search_criteria.units_completed.each do |units|
               if units.include?('+')
-                matching_units_users << user_data.select { |u| u[:units].to_f >= 120 if u[:units] }
+                matching_units_users << user_data.select { |u| u[:units_completed].to_f >= 120 if u[:units_completed] }
               else
                 range = units.split(' - ')
                 low_end = range[0].to_f
                 high_end = range[1].to_f
-                matching_units_users << user_data.select { |u| (u[:units].to_f >= low_end) && (u[:units].to_f < high_end.round(-1)) }
+                matching_units_users << user_data.select { |u| (u[:units_completed].to_f >= low_end) && (u[:units_completed].to_f < high_end.round(-1)) }
               end
             end
           else
@@ -392,19 +444,26 @@ module Page
 
           # Major
           matching_major_users = []
-          (search_criteria.majors && search_criteria.majors.any?) ?
-              (matching_major_users << user_data.select { |u| (u[:majors] & search_criteria.majors).any? }) :
+          (search_criteria.major && search_criteria.major.any?) ?
+              (matching_major_users << user_data.select { |u| (u[:major] & search_criteria.major).any? }) :
               (matching_major_users = user_data)
           matching_major_users = matching_major_users.uniq.flatten.compact
 
+          # Last Name
+          matching_last_name_users = if search_criteria.last_name
+                                       user_data.select { |u| u[:last_name_sortable][0] >= search_criteria.last_name[0].downcase && u[:last_name_sortable][0] <= search_criteria.last_name[1].downcase }
+                                     else
+                                       user_data
+                                     end
+
           # Advisor
-          matching_advisor_users = (search_criteria.advisors && search_criteria.advisors.any?) ?
-              (user_data.select { |u| search_criteria.advisors.include? u[:advisor] }) : user_data
+          matching_advisor_users = (search_criteria.advisor && search_criteria.advisor.any?) ?
+              (user_data.select { |u| search_criteria.advisor.include? u[:advisor] }) : user_data
 
           # Ethnicity
           matching_ethnicity_users = []
-          if search_criteria.ethnicities && search_criteria.ethnicities.any?
-            search_criteria.ethnicities.each do |ethnicity|
+          if search_criteria.ethnicity && search_criteria.ethnicity.any?
+            search_criteria.ethnicity.each do |ethnicity|
               matching_ethnicity_users << user_data.select { |u| search_criteria.coe_ethnicity(u[:ethnicity]) == ethnicity }
             end
           else
@@ -412,14 +471,20 @@ module Page
           end
           matching_ethnicity_users.flatten!
 
+          # Underrepresented Minority
+          matching_minority_users = search_criteria.underrepresented_minority ? (user_data.select { |u| u[:underrepresented_minority] }) : user_data
+
           # Gender
           matching_gender_users = []
-          if search_criteria.genders && search_criteria.genders.any?
-            search_criteria.genders.each do |gender|
+          if search_criteria.gender && search_criteria.gender.any?
+            search_criteria.gender.each do |gender|
               if gender == 'Male'
                 matching_gender_users << user_data.select { |u| u[:gender] == 'm' }
               elsif gender == 'Female'
                 matching_gender_users << user_data.select { |u| u[:gender] == 'f' }
+              else
+                logger.error "Test data has an unrecognized gender '#{gender}'"
+                fail
               end
             end
           else
@@ -429,8 +494,8 @@ module Page
 
           # PREP
           matching_preps_users = []
-          if search_criteria.preps && search_criteria.preps.any?
-            search_criteria.preps.each do |prep|
+          if search_criteria.prep && search_criteria.prep.any?
+            search_criteria.prep.each do |prep|
               matching_preps_users << user_data.select { |u| u[:prep] } if prep == 'PREP'
               matching_preps_users << user_data.select { |u| u[:prep_elig] } if prep == 'PREP eligible'
               matching_preps_users << user_data.select { |u| u[:t_prep] } if prep == 'T-PREP'
@@ -442,18 +507,18 @@ module Page
           matching_preps_users.flatten!
 
           # Inactive
-          matching_inactive_users = search_criteria.inactive_asc ? (user_data.select { |u| u[:inactive_asc] }) : user_data
+          matching_inactive_users = search_criteria.inactive ? (user_data.select { |u| u[:inactive_asc] }) : user_data
 
           # Intensive
-          matching_intensive_users = search_criteria.intensive_asc ? (user_data.select { |u| u[:intensive_asc] }) : user_data
+          matching_intensive_users = search_criteria.intensive ? (user_data.select { |u| u[:intensive_asc] }) : user_data
 
           # Team
-          matching_squad_users = (search_criteria.squads && search_criteria.squads.any?) ?
-              (user_data.select { |u| (u[:squad_names] & (search_criteria.squads.map { |s| s.name })).any? }) :
+          matching_squad_users = (search_criteria.team && search_criteria.team.any?) ?
+              (user_data.select { |u| (u[:squad_names] & (search_criteria.team.map { |s| s.name })).any? }) :
               user_data
 
-          matches = [matching_gpa_users, matching_level_users, matching_units_users, matching_major_users, matching_advisor_users, matching_ethnicity_users,
-                     matching_gender_users, matching_preps_users, matching_inactive_users, matching_intensive_users, matching_squad_users]
+          matches = [matching_gpa_users, matching_level_users, matching_units_users, matching_major_users, matching_last_name_users, matching_advisor_users, matching_ethnicity_users,
+                     matching_minority_users, matching_gender_users, matching_preps_users, matching_inactive_users, matching_intensive_users, matching_squad_users]
           matches.any?(&:empty?) ? [] : matches.inject(:'&')
         end
 
@@ -466,20 +531,6 @@ module Page
         button(:rename_cohort_cancel_button, id: 'filtered-cohort-rename-cancel')
         button(:delete_cohort_button, id: 'delete-cohort-button')
 
-        # Returns the element containing the cohort name on the Manage Cohorts page
-        # @param cohort [Cohort]
-        # @return [PageObject::Elements::Span]
-        def cohort_on_manage_cohorts(cohort)
-          span_element(xpath: "//span[text()=\"#{cohort.name}\"]")
-        end
-
-        # Returns the element containing the cohort rename button on the Manage Cohorts page
-        # @param cohort [Cohort]
-        # @return [PageObject::Elements::Button]
-        def cohort_rename_button(cohort)
-          button_element(xpath: "//span[text()=\"#{cohort.name}\"]/ancestor::div[contains(@class,\"cohort-manage-name\")]/following-sibling::div//button[contains(text(),\"Rename\")]")
-        end
-
         # Renames a cohort
         # @param cohort [FilteredCohort]
         # @param new_name [String]
@@ -490,7 +541,7 @@ module Page
           cohort.name = new_name
           wait_for_element_and_type(rename_cohort_input_element, new_name)
           wait_for_update_and_click rename_cohort_confirm_button_element
-          cohort_on_manage_cohorts(cohort).when_present Utils.short_wait
+          span_element(xpath: "//span[text()=\"#{cohort.name}\"]").when_present Utils.short_wait
         end
 
         # Deletes a cohort unless it is read-only (e.g., CoE default cohorts).
@@ -568,7 +619,7 @@ module Page
         # @return [Array<String>]
         def expected_sids_by_major(user_data, search_criteria)
           expected_users = expected_search_results(user_data, search_criteria)
-          sorted_users = expected_users.sort_by { |u| [u[:majors].sort.first.gsub(/\W/, '').downcase, u[:last_name_sortable].downcase, u[:first_name_sortable].downcase, u[:sid]] }
+          sorted_users = expected_users.sort_by { |u| [u[:major].sort.first.gsub(/\W/, '').downcase, u[:last_name_sortable].downcase, u[:first_name_sortable].downcase, u[:sid]] }
           sorted_users.map { |u| u[:sid] }
         end
 
@@ -578,7 +629,7 @@ module Page
         # @return [Array<String>]
         def expected_sids_by_units(user_data, search_criteria)
           expected_users = expected_search_results(user_data, search_criteria)
-          sorted_users = expected_users.sort_by { |u| [u[:units].to_f, u[:last_name_sortable].downcase, u[:first_name_sortable].downcase, u[:sid]] }
+          sorted_users = expected_users.sort_by { |u| [u[:units_completed].to_f, u[:last_name_sortable].downcase, u[:first_name_sortable].downcase, u[:sid]] }
           sorted_users.map { |u| u[:sid] }
         end
 

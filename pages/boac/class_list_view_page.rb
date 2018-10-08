@@ -145,7 +145,7 @@ module Page
         # @return [String]
         def last_activity(student, node)
           el = span_element(xpath: "(#{list_view_user_xpath student}/div[@class=\"course-list-view-column-06 ng-scope\"]//div[@class=\"profile-boxplot-container ng-scope\"])[#{node}]/span")
-          el && el.text
+          el.text if el.exists?
         end
 
         # Returns both a course site code and a student's last activity on the site at a given index
