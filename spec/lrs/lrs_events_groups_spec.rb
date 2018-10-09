@@ -4,7 +4,6 @@ describe 'Canvas groups events' do
 
   include Logging
 
-  course_id = ENV['COURSE_ID']
   test_id = Utils.get_test_id
   event = Event.new({test_id: test_id})
 
@@ -23,8 +22,8 @@ describe 'Canvas groups events' do
     @teacher = users.find { |user| user.role == 'Teacher' }
 
     @canvas.log_in(@cal_net, Utils.super_admin_username, Utils.super_admin_password)
-    @course = Course.new({title: "LRS Groups Test #{test_id}", site_id: course_id})
-    @canvas.create_generic_course_site(@driver, Utils.canvas_qa_sub_account, @course, users, test_id, [LtiTools::PRIVACY_DASHBOARD])
+    @course = Course.new({title: "LRS Groups Test #{test_id}"})
+    @canvas.create_generic_course_site(@driver, Utils.canvas_qa_sub_account, @course, users, test_id)
 
     # TEACHER-CREATED GROUPS
 
@@ -89,7 +88,7 @@ describe 'Canvas groups events' do
 
   after(:all) do
     Utils.quit_browser @driver
-    LRSUtils.get_all_test_events event.csv
+    LRSUtils.get_all_test_events(event, event.csv)
   end
 
   it('end up in the LRS database') { LRSUtils.verify_canvas_events event }

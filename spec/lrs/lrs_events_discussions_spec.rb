@@ -20,24 +20,20 @@ describe 'Canvas discussion events' do
     @user_2 = User.new @test_user_data[1]
 
     @course = Course.new({title: "LRS Discussions Test #{test_id}", site_id: course_id})
-    @canvas.log_in(@cal_net, Utils.ets_qa_username, Utils.ets_qa_password)
-    @canvas.create_generic_course_site(@driver, Utils.canvas_qa_sub_account, @course, [@user_1, @user_2], test_id, [LtiTools::PRIVACY_DASHBOARD])
-    @canvas.log_out(@driver, @cal_net)
+    @canvas.log_in(@cal_net, Utils.super_admin_username, Utils.super_admin_password)
+    @canvas.create_generic_course_site(@driver, Utils.canvas_qa_sub_account, @course, [@user_1, @user_2], test_id)
 
-    # User 1 logs in, creates topic, adds a reply, and logs out
+    # User 1 creates topic, adds a reply
     event.actor = @user_1
-    @canvas.log_in(@cal_net, @user_1.username, Utils.test_user_password, event)
+    @canvas.masquerade_as(@driver, @user_1, @course)
     @canvas.create_course_discussion(@driver, @course, discussion, event)
     @canvas.add_reply(discussion, nil, 'Discussion entry by the discussion topic creator', event)
-    @canvas.log_out(@driver, @cal_net, event)
 
-    # User 2 logs in, adds a reply, adds a nested reply, and logs out
+    # User 2 adds a reply, adds a nested reply
     event.actor = @user_2
-    @canvas.log_in(@cal_net, @user_2.username, Utils.test_user_password, event)
-    @canvas.load_course_site(@driver, @course)
+    @canvas.masquerade_as(@driver, @user_2, @course)
     @canvas.add_reply(discussion, nil, 'Discussion entry by somebody other than the discussion topic creator', event)
     @canvas.add_reply(discussion, 0, 'Discussion entry by somebody other than the discussion topic creator', event)
-    @canvas.log_out(@driver, @cal_net, event)
 
     # Pause to make sure all the events have time to make it to the LRS
     @canvas.wait_for_event
@@ -45,7 +41,7 @@ describe 'Canvas discussion events' do
 
   after(:all) do
     Utils.quit_browser @driver
-    LRSUtils.get_all_test_events event.csv
+    LRSUtils.get_all_test_events(event, event.csv)
   end
 
   it('end up in the LRS database') { LRSUtils.verify_canvas_events event }

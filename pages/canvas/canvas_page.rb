@@ -98,9 +98,9 @@ module Page
 
     link(:create_site_link, xpath: '//a[contains(text(),"Create a Site")]')
 
-    button(:add_new_course_button, xpath: '//span[text()="Course"]/parent::span/parent::button')
-    text_area(:course_name_input, xpath: '//span[text()="Course Name"]/parent::span/parent::span/following-sibling::span//input')
-    text_area(:ref_code_input, xpath: '//span[text()="Reference Code"]/parent::span/parent::span/following-sibling::span//input')
+    button(:add_new_course_button, xpath: '//button[@aria-label="Create new course"]')
+    text_area(:course_name_input, xpath: '(//form[@aria-label="Add a New Course"]//input)[1]')
+    text_area(:ref_code_input, xpath: '(//form[@aria-label="Add a New Course"]//input)[2]')
     select_list(:term, xpath:'//span[text()="Enrollment Term"]/parent::span/parent::span/following-sibling::span//select')
     button(:create_course_button, xpath: '//button[contains(.,"Add Course")]')
 
@@ -156,7 +156,6 @@ module Page
         tools.each do |tool|
           unless tool_nav_link(tool).exists?
             add_suite_c_tool(course, tool) if [LtiTools::ASSET_LIBRARY, LtiTools::ENGAGEMENT_INDEX, LtiTools::WHITEBOARDS, LtiTools::IMPACT_STUDIO].include? tool
-            add_privacy_dashboard(course) if tool == LtiTools::PRIVACY_DASHBOARD
           end
           disable_tool(course, tool) unless tools.include? tool
         end
@@ -722,12 +721,6 @@ module Page
     # @param tool [LtiTools]
     def add_suite_c_tool(course, tool)
       add_lti_tool(course, tool, SuiteCUtils.suite_c_base_url, SuiteCUtils.lti_credentials[:key], SuiteCUtils.lti_credentials[:secret])
-    end
-
-    # Adds the Student Privacy Dashboard tool to a course site
-    # @param course [Course]
-    def add_privacy_dashboard(course)
-      add_lti_tool(course, LtiTools::PRIVACY_DASHBOARD, LRSUtils.base_url, LRSUtils.lti_credentials[:key], LRSUtils.lrs_db_credentials[:secret])
     end
 
     # Clicks the navigation link for a tool and returns the tool's URL. Optionally records an analytics event.

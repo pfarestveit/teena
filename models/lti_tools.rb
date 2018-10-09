@@ -11,7 +11,6 @@ class LtiTools
   ENGAGEMENT_INDEX = new('Engagement Index', '/lti/engagementindex.xml')
   WHITEBOARDS = new('Whiteboards', '/lti/whiteboards.xml')
   IMPACT_STUDIO = new('Impact Studio', '/lti/dashboard.xml')
-  PRIVACY_DASHBOARD = new('Student Privacy Dashboard', '/lti/privacydashboard.xml')
 
   class << self
     private :new
