@@ -33,7 +33,7 @@ describe 'A CoE advisor using BOAC' do
     all_student_search_data = @api_user_analytics_page.users_searchable_data
     unless all_student_search_data
       @homepage.dev_auth
-      test.dept_students.keep_if &:active_asc if test.dept == BOACDepartments::ASC
+      test_asc.dept_students.keep_if &:active_asc if test_asc.dept == BOACDepartments::ASC
       all_student_search_data = @api_user_analytics_page.collect_users_searchable_data(@driver, all_students)
 
       @homepage.load_page

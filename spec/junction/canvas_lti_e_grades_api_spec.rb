@@ -36,7 +36,7 @@ describe 'bCourses E-Grades Export' do
         @e_grades_export_page.resolve_all_issues(@driver, course)
 
         # Get grades in Canvas
-        students = @canvas.get_enrolled_students(course, primary_section)
+        students = @canvas.get_students(course, primary_section)
         @canvas.load_gradebook course
         @canvas.click_gradebook_settings
         grades_are_final = @canvas.gradebook_include_ungraded_checked?

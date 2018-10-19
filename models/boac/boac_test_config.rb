@@ -102,7 +102,6 @@ class BOACTestConfig < TestConfig
     set_default_cohort(CONFIG['curated_cohort_team'], CONFIG['curated_cohort_max_users'])
     if @dept == BOACDepartments::COE
       @cohort_members = @cohort_members[0..49]
-      @default_cohort.name = 'My Students'
     elsif @dept == BOACDepartments::ASC
       @cohort_members.keep_if &:active_asc
     end

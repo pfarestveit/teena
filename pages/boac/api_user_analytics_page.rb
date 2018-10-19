@@ -60,7 +60,7 @@ class ApiUserAnalyticsPage
       :phone => (sis_profile && sis_profile['phoneNumber'].to_s),
       :units_in_progress => (sis_profile && ((current_term ? formatted_units(current_term['enrolledUnits']) : '0') if terms.any?)),
       :cumulative_units => (sis_profile && formatted_units(sis_profile['cumulativeUnits'])),
-      :cumulative_gpa => (sis_profile && (sis_profile['cumulativeGPA'] == 0 ? '--' : sis_profile['cumulativeGPA'].to_s)),
+      :cumulative_gpa => (sis_profile && (sis_profile['cumulativeGPA'] == 0 ? '--' : (sprintf '%.3f', sis_profile['cumulativeGPA']).to_s)),
       :majors => (sis_profile && majors),
       :colleges => (sis_profile && colleges),
       :level => (sis_profile && (sis_profile['level'] && sis_profile['level']['description'])),
@@ -162,6 +162,10 @@ class ApiUserAnalyticsPage
       courses = enrolled_courses.map { |c| course_sis_data(c)[:code] }
     end
     courses
+  end
+
+  def course_section_ccns(course)
+    sections(course).map { |s| section_sis_data(s)[:ccn] }
   end
 
   def dropped_sections(term)

@@ -23,12 +23,33 @@ class ApiSectionPage
     end
   end
 
+  def students
+    @parsed['students']
+  end
+
   def student_sids
-    @parsed['students'] && @parsed['students'].map { |s| s['sid'] }
+    students && students.map { |s| s['sid'] }
   end
 
   def student_uids
-    @parsed['students'] && @parsed['students'].map { |s| s['uid'] }
+    students && students.map { |s| s['uid'] }
+  end
+
+  def student_enrollment(student)
+    student['enrollment']
+  end
+
+  def student_sites(student)
+    student_enrollment(student) && student_enrollment(student)['canvasSites']
+  end
+
+  def site_id(site)
+    site['canvasCourseId']
+  end
+
+  def student_site_ids(student)
+    api_student = students.find { |s| s['uid'] == student.uid }
+    api_student && student_sites(api_student).map { |site| site_id site }
   end
 
 end
