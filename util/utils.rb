@@ -59,7 +59,7 @@ class Utils
             :default_directory => Utils.download_dir
         }
         options.add_preference(:download, prefs)
-        driver = Selenium::WebDriver.for :chrome, :options => options
+        Selenium::WebDriver.for :chrome, :options => options
 
       when 'firefox'
         profile = (profile ? Selenium::WebDriver::Firefox::Profile.from_name(profile) : Selenium::WebDriver::Firefox::Profile.from_name(driver_config['firefox_profile']))
@@ -71,26 +71,15 @@ class Utils
         profile['devtools.jsonview.enabled'] = false
         options = Selenium::WebDriver::Firefox::Options.new(:profile => profile)
         options.add_argument '-headless' if headless?
-        driver = Selenium::WebDriver.for :firefox, :options => options
+        Selenium::WebDriver.for :firefox, :options => options
 
       when 'safari'
-        driver = Selenium::WebDriver.for :safari
+        Selenium::WebDriver.for :safari
 
       else
         logger.error 'Designated WebDriver is not supported'
-        driver = nil
+        nil
     end
-
-    if driver
-      # If a specific window size is needed (e.g., Chrome or Safari on a small screen), set size. Else, maximize the window.
-      width = driver_config['window']['width']
-      height = driver_config['window']['height']
-      (height.zero? || width.zero?) ?
-          driver.manage.window.maximize :
-          driver.manage.window.resize_to(width, height)
-    end
-
-    driver
   end
 
   def self.optional_chrome_profile_dir
