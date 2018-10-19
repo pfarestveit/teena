@@ -66,6 +66,11 @@ class BOACUtils < Utils
     @config['canvas_data_lag_days']
   end
 
+  # Whether or not to compare student data to fellow cohort members in Canvas prod
+  def self.last_activity_context
+    @config['last_activity_context']
+  end
+
   # Logs error, prints stack trace, and saves a screenshot when running headlessly
   def self.log_error_and_screenshot(driver, error, unique_id)
     log_error error
@@ -148,7 +153,7 @@ class BOACUtils < Utils
   # @return [Array<FilteredCohort>]
   def self.get_user_filtered_cohorts(user)
     query = "SELECT cohort_filters.id AS cohort_id,
-                    cohort_filters.label AS cohort_name,
+                    cohort_filters.name AS cohort_name,
                     cohort_filters.filter_criteria AS criteria
               FROM cohort_filters
               JOIN cohort_filter_owners ON cohort_filter_owners.cohort_filter_id = cohort_filters.id
@@ -166,7 +171,7 @@ class BOACUtils < Utils
   # @return [Array<FilteredCohort>]
   def self.get_everyone_filtered_cohorts(dept = nil)
     query = "SELECT cohort_filters.id AS cohort_id,
-                    cohort_filters.label AS cohort_name,
+                    cohort_filters.name AS cohort_name,
                     cohort_filters.filter_criteria AS criteria,
                     authorized_users.uid AS uid
               FROM cohort_filters
@@ -189,7 +194,7 @@ class BOACUtils < Utils
   def self.set_filtered_cohort_id(cohort)
     query = "SELECT id
              FROM cohort_filters
-             WHERE label = '#{cohort.name}'"
+             WHERE name = '#{cohort.name}'"
     result = Utils.query_pg_db_field(boac_db_credentials, query, 'id').first
     logger.info "Filtered cohort '#{cohort.name}' ID is #{result}"
     cohort.id = result

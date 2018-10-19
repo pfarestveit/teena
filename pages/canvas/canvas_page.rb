@@ -356,7 +356,7 @@ module Page
       users_missing = []
       load_users_page course
       sleep 4
-      if paragraph_element(xpath: '//p[contains(.,"No people found")]').exists?
+      if h2_element(xpath: '//h2[text()="No people found"]').exists?
         users_missing = users_to_add
       else
         users_to_add.each do |user|
@@ -487,7 +487,8 @@ module Page
     def roster_user_last_activity(uid)
       path = "//tr[contains(.,'#{uid}')]/td[7]"
       (cell = cell_element(xpath: path)).when_visible Utils.short_wait
-      (div = div_element(xpath: "#{path}/div")).exists? ? div.text : cell.text
+      date_str = (div = div_element(xpath: "#{path}/div")).exists? ? div.text : cell.text
+      date_str unless date_str.empty?
     end
 
     # Clicks the Canvas Add People button followed by the Find a Person to Add button and switches to the LTI tool
@@ -560,22 +561,25 @@ module Page
       total_count
     end
 
-    # Returns all the users on a course site section with a Student role
+    # Returns all the users on a course site or course site section with a Student or Waitlist Student role. Optionally
+    # accepts a Canvas base URL to support BOAC last activity testing in Prod.
     # @param course [Course]
     # @param section [Section]
+    # @param canvas_base_url [String]
     # @return [Array<User>]
-    def get_enrolled_students(course, section)
-      # Load the users page and scroll until all students are visible on the page.
-      load_all_students course
+    def get_students(course, section = nil, canvas_base_url = nil)
+      load_all_students(course, canvas_base_url)
+      els = student_enrollment_row_elements + waitlist_enrollment_row_elements
 
-      # Get an array of student users in the with all IDs
-      students = student_enrollment_row_elements.map do |row|
-        if row.text.include? "#{section.course} #{section.label}"
-          canvas_id = row.attribute('id').delete('user_')
-          uid = cell_element(xpath: "//table[contains(@class, 'roster')]//tr[contains(@id,'user_#{canvas_id}')]//td[3]").text.strip
-          logger.debug "Canvas ID #{canvas_id}, UID #{uid}"
-          User.new({uid: uid, canvas_id: canvas_id})
-        end
+      rows = section ?
+          (els.select { |row| row.text.include? "#{section.course} #{section.label}" }) :
+          els
+
+      students = rows.map do |row|
+        canvas_id = row.attribute('id').delete('user_')
+        uid = cell_element(xpath: "//table[contains(@class, 'roster')]//tr[contains(@id,'user_#{canvas_id}')]//td[3]").text.strip
+        logger.debug "Canvas ID #{canvas_id}, UID #{uid}"
+        User.new({uid: uid, canvas_id: canvas_id})
       end
       students.compact
     end

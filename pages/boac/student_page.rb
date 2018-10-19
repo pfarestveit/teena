@@ -414,7 +414,9 @@ module Page
       def visible_days_since(term_name, course_code, index)
         # Look first for days since last activity
         begin
-          span_element(:xpath => "#{course_site_xpath(term_name, course_code, index)}//td[contains(.,\"Last bCourses Activity\")]/following-sibling::td//span[2]").text
+          xpath = "#{course_site_xpath(term_name, course_code, index)}//td[contains(.,\"Last bCourses Activity\")]/following-sibling::td//span[2]"
+          span_element(:xpath => xpath).when_visible(Utils.click_wait)
+          span_element(:xpath => xpath).text
         # If no days-since exists, check for 'never'
         rescue
           el = div_element(:xpath => "#{course_site_xpath(term_name, course_code, index)}//td[contains(.,\"Last bCourses Activity\")]/following-sibling::td/div")
@@ -438,10 +440,10 @@ module Page
       # @param index [Integer]
       # @return [Hash]
       def visible_last_activity(term_name, course_code, index)
-        sleep 1
+        wait_until(Utils.short_wait) { visible_days_since(term_name, course_code, index) }
         {
-          :last_activity => visible_days_since(term_name, course_code, index),
-          :activity_context => visible_activity_context(term_name, course_code, index)
+          :days => visible_days_since(term_name, course_code, index),
+          :context => visible_activity_context(term_name, course_code, index)
         }
       end
 

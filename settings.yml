@@ -62,6 +62,7 @@ boac:
 
   last_activity_team: TNM
   last_activity_max_users: 3
+  last_activity_context: false
 
   navigation_team: FBM
 

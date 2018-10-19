@@ -175,9 +175,9 @@ describe 'BOAC', order: :defined do
     end
 
     it 'can be added from filtered cohort list view using individual selections' do
-      test.cohort_members.pop
       @filtered_page.load_cohort test.default_cohort
-      @filtered_page.selector_add_students_to_curated(test.cohort_members, @cohort_2)
+      @filtered_page.selector_add_students_to_curated(test.cohort_members[0..-2], @cohort_2)
+      test.cohort_members.pop
     end
 
     it 'can be added on the student page using the curated cohort box' do

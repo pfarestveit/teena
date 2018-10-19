@@ -195,6 +195,7 @@ module Page
   # Uses JavaScript to scroll to the bottom of a page. This is a workaround for a WebDriver bug where certain elements
   # are not scrolled into focus prior to an interaction.
   def scroll_to_bottom
+    sleep Utils.click_wait
     execute_script 'window.scrollTo(0, document.body.scrollHeight);'
   end
 

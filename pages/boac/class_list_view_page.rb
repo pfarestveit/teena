@@ -60,7 +60,7 @@ module Page
         # @param node [Integer]
         # @return [String]
         def site_code(student, node)
-          el = div_element(xpath: "(#{list_view_user_xpath student}//span[@data-ng-bind=\"canvasSite.courseCode\"])[#{node}]")
+          el = div_element(xpath: "(#{list_view_user_xpath student}//strong[@data-ng-bind=\"canvasSite.courseCode\"])[#{node}]")
           el.text if el.exists?
         end
 
@@ -154,9 +154,10 @@ module Page
         # @return [Hash]
         def visible_last_activity(student, index)
           node = index + 1
+          wait_until(Utils.short_wait) { site_code(student, node) }
           {
             :site_code => site_code(student, node),
-            :last_activity => last_activity(student, node)
+            :days => last_activity(student, node)
           }
         end
 

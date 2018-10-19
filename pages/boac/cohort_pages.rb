@@ -35,7 +35,7 @@ module Page
       # @param user [User]
       # @return [String]
       def list_view_user_gpa(driver, user)
-        el = driver.find_element(xpath: "#{list_view_user_xpath user}//div[contains(@data-ng-bind,'student.cumulativeGPA')]")
+        el = driver.find_element(xpath: "#{list_view_user_xpath user}//span[contains(@data-ng-bind,'student.cumulativeGPA')]")
         el && el.text
       end
 
@@ -72,7 +72,7 @@ module Page
       # @return [Hash]
       def visible_sis_data(driver, user)
         wait_until(Utils.medium_wait) { player_link_elements.any? }
-        sleep 1
+        wait_until(Utils.short_wait) { list_view_user_level(user) }
         {
           :level => list_view_user_level(user),
           :majors => list_view_user_majors(driver, user),
