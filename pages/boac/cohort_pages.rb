@@ -77,7 +77,7 @@ module Page
           :level => list_view_user_level(user),
           :majors => list_view_user_majors(driver, user),
           :gpa => list_view_user_gpa(driver, user),
-          :units_in_progress => list_view_user_units_in_prog(driver, user),
+          :term_units => list_view_user_units_in_prog(driver, user),
           :units_cumulative => list_view_user_units(driver, user),
           :classes => list_view_user_classes(driver, user)
         }

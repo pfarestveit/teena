@@ -160,9 +160,8 @@ class BOACUtils < Utils
               JOIN authorized_users ON authorized_users.id = cohort_filter_owners.user_id
               WHERE authorized_users.uid = '#{user.uid}';"
     results = Utils.query_pg_db(boac_db_credentials, query)
-    # If the filter criteria includes a non-null CoE advisor UID, then the filter is read-only (no deleting).
     results.map do |r|
-      FilteredCohort.new({id: r['cohort_id'], name: r['cohort_name'], owner_uid: user.uid, read_only: (r['criteria'].to_s.include?('\\"advisorLdapUid\\"') && !r['criteria'].to_s.include?('\\"advisorLdapUid\\": null'))})
+      FilteredCohort.new({id: r['cohort_id'], name: r['cohort_name'], owner_uid: user.uid})
     end
   end
 
@@ -184,7 +183,7 @@ class BOACUtils < Utils
                 end}
               ORDER BY uid, cohort_id ASC;"
     results = Utils.query_pg_db(boac_db_credentials, query)
-    cohorts = results.map { |r| FilteredCohort.new({id: r['cohort_id'], name: r['cohort_name'], owner_uid: r['uid'], read_only: (r['criteria'].to_s.include?('\\"advisorLdapUid\\"') && !r['criteria'].to_s.include?('\\"advisorLdapUid\\": null'))}) }
+    cohorts = results.map { |r| FilteredCohort.new({id: r['cohort_id'], name: r['cohort_name'], owner_uid: r['uid']}) }
     cohorts.sort_by { |c| [c.owner_uid.to_i, c.id] }
   end
 

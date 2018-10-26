@@ -27,8 +27,8 @@ describe 'An ASC advisor' do
     @class_page = Page::BOACPages::ClassPages::ClassListViewPage.new @driver
     @curated_cohort_page = Page::BOACPages::CohortPages::CuratedCohortPage.new @driver
     @filtered_cohort_page = Page::BOACPages::CohortPages::FilteredCohortPage.new @driver
-    @homepage = Page::BOACPages::HomePage.new @driver
-    @search_page = Page::BOACPages::SearchResultsPage.new @driver
+    @homepage = Page::BOACPages::UserListPages::HomePage.new @driver
+    @search_page = Page::BOACPages::UserListPages::SearchResultsPage.new @driver
     @student_page = Page::BOACPages::StudentPage.new @driver
     @teams_page = Page::BOACPages::TeamsListPage.new @driver
 

@@ -21,7 +21,7 @@ describe 'BOAC' do
     user_course_sis_data = Utils.create_test_output_csv('boac-sis-courses.csv', user_course_data_heading)
 
     @driver = Utils.launch_browser
-    @boac_homepage = Page::BOACPages::HomePage.new @driver
+    @boac_homepage = Page::BOACPages::UserListPages::HomePage.new @driver
     @boac_teams_list_page = Page::BOACPages::TeamsListPage.new @driver
     @boac_cohort_page = Page::BOACPages::CohortPages::FilteredCohortPage.new @driver
     @boac_student_page = Page::BOACPages::StudentPage.new @driver
@@ -91,8 +91,8 @@ describe 'BOAC' do
               end
 
               it "shows the units in progress for UID #{team_member.uid} on the #{test.default_cohort.name} page" do
-                expect(cohort_page_sis_data[:units_in_progress]).to eql(analytics_api_sis_data[:units_in_progress])
-                expect(cohort_page_sis_data[:units_in_progress]).not_to be_empty
+                expect(cohort_page_sis_data[:term_units]).to eql(analytics_api_sis_data[:term_units])
+                expect(cohort_page_sis_data[:term_units]).not_to be_empty
               end
 
               it "shows the total units for UID #{team_member.uid} on the #{test.default_cohort.name} page" do
@@ -152,8 +152,8 @@ describe 'BOAC' do
                   (it("shows no terms in attendance for UID #{team_member.uid} on the student page") { expect(student_page_sis_data[:terms_in_attendance]).to be_nil })
 
               analytics_api_sis_data[:level] == 'Graduate' ?
-                  (it("shows no expected graduation date for UID #{team_member.uid} on the #{test.default_cohort.name} page") { expect(student_page_sis_data[:expected_graduation]).to be nil }) :
-                  (it("shows the expected graduation date for UID #{team_member.uid} on the #{test.default_cohort.name} page") { expect(student_page_sis_data[:expected_graduation]).to eql(analytics_api_sis_data[:expected_graduation]) })
+                  (it("shows no expected graduation date for UID #{team_member.uid} on the #{test.default_cohort.name} page") { expect(student_page_sis_data[:expected_grad_term_name]).to be nil }) :
+                  (it("shows the expected graduation date for UID #{team_member.uid} on the #{test.default_cohort.name} page") { expect(student_page_sis_data[:expected_grad_term_name]).to eql(analytics_api_sis_data[:expected_grad_term_name]) })
 
               it("shows the Entry Level Writing Requirement for UID #{team_member.uid} on the student page") { expect(student_page_sis_data[:reqt_writing]).to eql(analytics_api_sis_data[:reqt_writing]) }
               it("shows the American History Requirement for UID #{team_member.uid} on the student page") { expect(student_page_sis_data[:reqt_history]).to eql(analytics_api_sis_data[:reqt_history]) }
@@ -359,7 +359,7 @@ describe 'BOAC' do
                        student_page_sis_data[:phone], student_page_sis_data[:cumulative_units], student_page_sis_data[:cumulative_gpa], student_page_sis_data[:level],
                        student_page_sis_data[:colleges] && student_page_sis_data[:colleges] * '; ', student_page_sis_data[:majors] && student_page_sis_data[:majors] * '; ',
                        student_page_sis_data[:terms_in_attendance], student_page_sis_data[:reqt_writing], student_page_sis_data[:reqt_history],
-                       student_page_sis_data[:reqt_institutions], student_page_sis_data[:reqt_cultures], student_page_sis_data[:expected_graduation], alert_msgs]
+                       student_page_sis_data[:reqt_institutions], student_page_sis_data[:reqt_cultures], student_page_sis_data[:expected_grad_term_name], alert_msgs]
                 Utils.add_csv_row(user_profile_sis_data, row)
               end
             end

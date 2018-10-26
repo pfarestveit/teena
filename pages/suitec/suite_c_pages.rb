@@ -272,7 +272,7 @@ module Page
 
     # Ensures the advanced search form is expanded
     def open_advanced_search
-      wait_for_load_and_click advanced_search_button_element unless keyword_search_input_element.visible?
+      wait_for_load_and_click_js advanced_search_button_element unless keyword_search_input_element.visible?
     end
 
     # Performs an advanced search of the asset library

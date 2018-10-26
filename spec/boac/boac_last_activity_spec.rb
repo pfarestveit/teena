@@ -23,10 +23,9 @@ describe 'BOAC' do
       last_activity_csv = Utils.create_test_output_csv('boac-last-activity.csv', %w(Term Course SiteId TtlStudents TtlLogins UID CanvasLastActivity StudentPageActivity CanvasContext StudentPageContext))
 
       @driver = Utils.launch_browser
-      @homepage = Page::BOACPages::HomePage.new @driver
+      @homepage = Page::BOACPages::UserListPages::HomePage.new @driver
       @cal_net_page = Page::CalNetPage.new @driver
       @canvas_page = Page::CanvasPage.new @driver
-      @curated_page = Page::BOACPages::CohortPages::CuratedCohortPage.new @driver
       @student_page = Page::BOACPages::StudentPage.new @driver
 
       @canvas_page.log_in(@cal_net_page, Utils.super_admin_username, Utils.super_admin_password, 'https://bcourses.berkeley.edu')
@@ -120,7 +119,7 @@ describe 'BOAC' do
 
                         # Collect the last activity shown for students not visible in BOAC
                         invisible_student_site_data = []
-                        invisible_students = all_site_students.reject { |student| test.dept_students.map(&:uid).include? student.uid }
+                        invisible_students = all_site_students.reject { |student| visible_classmates.map(&:uid).include? student.uid }
                         invisible_students.each do |invisible_student|
                           last_activity = @canvas_page.roster_user_last_activity invisible_student.uid
                           student_data = {
@@ -212,7 +211,7 @@ describe 'BOAC' do
                           logger.debug "Checking #{test_case}"
 
                           # Never show alerts for DeCal courses
-                          if (student_data[:section_format] == /\w+\s1?9[89][A-Z]?[A-Z]?/) && !student_data[:section_format].include?('LEC')
+                          if (/\A[A-Z\s]+1?9[89][A-Z]?[A-Z]?/ === student_data[:course_code].gsub("#{student_data[:section_format]}", '').strip) && !student_data[:section_format].include?('LEC')
                             it("shows no 'No activity!' alert for #{test_case}") { expect(user_alert_msgs).not_to include("No activity! Student has never visited the #{student_data[:course_code]} bCourses site for #{BOACUtils.term}.") }
                             it("shows no infrequent activity alert for #{test_case}") { expect(truncated_alert_msgs).not_to include("Infrequent activity! Last #{student_data[:course_code]} bCourses activity") }
 

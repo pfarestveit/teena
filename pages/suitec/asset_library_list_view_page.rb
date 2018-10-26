@@ -56,7 +56,7 @@ module Page
 
       # Clicks the 'manage assets' link in the admin view
       def click_manage_assets_link
-        wait_for_load_and_click manage_assets_link_element
+        wait_for_load_and_click_js manage_assets_link_element
         manage_assets_heading_element.when_visible Utils.short_wait
       end
 
