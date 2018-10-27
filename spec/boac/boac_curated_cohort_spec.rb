@@ -20,7 +20,7 @@ describe 'BOAC', order: :defined do
     @cohort_4 = CuratedCohort.new({:name => "Cohort 4 #{test.id}"})
 
     @analytics_page = ApiUserAnalyticsPage.new @driver
-    @homepage = Page::BOACPages::HomePage.new @driver
+    @homepage = Page::BOACPages::UserListPages::HomePage.new @driver
     @curated_page = Page::BOACPages::CohortPages::CuratedCohortPage.new @driver
     @filtered_page = Page::BOACPages::CohortPages::FilteredCohortPage.new @driver
     @student_page = Page::BOACPages::StudentPage.new @driver

@@ -44,7 +44,7 @@ module Page
       # Clicks the Edit Sections button and waits for the available sections table to appear
       def click_edit_sections
         logger.debug 'Clicking edit sections button'
-        wait_for_load_and_click edit_sections_button_element
+        wait_for_load_and_click_js edit_sections_button_element
         save_changes_button_element.when_visible Utils.short_wait
       end
 

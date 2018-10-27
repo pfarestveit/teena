@@ -264,7 +264,7 @@ module Page
       wait_for_update_and_click link
     end
 
-    # USER SEARCH AND STUDENT LISTS (homepage and search results)
+    # USER SEARCH
 
     text_area(:user_search_input, id: 'search-students-input')
 
@@ -276,25 +276,6 @@ module Page
       user_search_input_element.when_visible Utils.short_wait
       self.user_search_input = string
       user_search_input_element.send_keys :enter
-    end
-
-    # Returns the data visible for a user on the search results page or in a filtered or curated cohort on the homepage. If a cohort,
-    # then an XPath is required in order to find the user under the right cohort heading.
-    # @param driver [Selenium::WebDriver]
-    # @param user [User]
-    # @param xpath [String]
-    # @return [Hash]
-    def user_row_data(driver, user, xpath = nil)
-      row_xpath = "#{xpath}//div[contains(@data-ng-repeat,\"student in students\")][contains(.,\"#{user.sis_id}\")]"
-      {
-        :name => link_element(xpath: "#{row_xpath}//a[@data-ng-bind=\"student.sortableName\"]").text,
-        :sid => span_element(xpath: "#{row_xpath}//span[@data-ng-bind='student.sid']").text,
-        :major => driver.find_elements(xpath: "#{row_xpath}//span[@data-ng-repeat='major in student.majors']").map(&:text),
-        :units_in_progress => div_element(xpath: "#{row_xpath}//div[contains(@data-ng-bind,'student.term.enrolledUnits')]").text,
-        :cumulative_units => div_element(xpath: "#{row_xpath}//div[contains(@data-ng-bind,'student.cumulativeUnits')]").text,
-        :gpa => div_element(xpath: "#{row_xpath}//div[contains(@data-ng-bind, 'student.cumulativeGPA')]").text,
-        :alert_count => div_element(xpath: "#{row_xpath}//div[contains(@class,'home-issues-pill')]").text
-      }
     end
 
     # LIST VIEW PAGINATION

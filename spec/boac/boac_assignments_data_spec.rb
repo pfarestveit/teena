@@ -30,7 +30,7 @@ describe 'BOAC assignment analytics' do
       @canvas_grades_page = Page::CanvasGradesPage.new @driver
       @canvas_users_page = Page::CanvasPage.new @driver
       @e_grades_page = Page::JunctionPages::CanvasEGradesExportPage.new @driver
-      @boac_homepage = Page::BOACPages::HomePage.new @driver
+      @boac_homepage = Page::BOACPages::UserListPages::HomePage.new @driver
       @boac_student_page = Page::BOACPages::StudentPage.new @driver
       @boac_homepage.log_in(Utils.super_admin_username, Utils.super_admin_password, @cal_net)
 

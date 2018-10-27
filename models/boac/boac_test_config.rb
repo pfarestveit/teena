@@ -112,6 +112,7 @@ class BOACTestConfig < TestConfig
   def filtered_cohorts(all_students)
     set_global_configs all_students
     set_search_cohorts
+    @dept_students.keep_if &:active_asc if @dept == BOACDepartments::ASC
 
     # Set a default cohort with all possible filters to exercise editing and removing filters
     filters = {

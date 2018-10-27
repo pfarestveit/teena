@@ -14,7 +14,7 @@ begin
   user_course_site_data = Utils.create_test_output_csv('boac-canvas-sites.csv', user_site_data_heading)
 
   @driver = Utils.launch_browser
-  @boac_homepage = Page::BOACPages::HomePage.new @driver
+  @boac_homepage = Page::BOACPages::UserListPages::HomePage.new @driver
   @boac_homepage.dev_auth
 
   students = NessieUtils.get_all_students
@@ -112,7 +112,7 @@ begin
                analytics_api_sis_data[:phone], analytics_api_sis_data[:cumulative_units], analytics_api_sis_data[:cumulative_gpa], analytics_api_sis_data[:level],
                analytics_api_sis_data[:colleges] && analytics_api_sis_data[:colleges] * '; ', analytics_api_sis_data[:majors] && analytics_api_sis_data[:majors] * '; ',
                analytics_api_sis_data[:terms_in_attendance], analytics_api_sis_data[:reqt_writing], analytics_api_sis_data[:reqt_history],
-               analytics_api_sis_data[:reqt_institutions], analytics_api_sis_data[:reqt_cultures], analytics_api_sis_data[:expected_graduation], alert_msgs]
+               analytics_api_sis_data[:reqt_institutions], analytics_api_sis_data[:reqt_cultures], analytics_api_sis_data[:expected_grad_term_name], alert_msgs]
         Utils.add_csv_row(user_profile_sis_data, row)
       end
     end

@@ -11,7 +11,7 @@ describe 'BOAC' do
     pages_tested = []
 
     @driver = Utils.launch_browser
-    @homepage = Page::BOACPages::HomePage.new @driver
+    @homepage = Page::BOACPages::UserListPages::HomePage.new @driver
     @class_list_page = Page::BOACPages::ClassPages::ClassListViewPage.new @driver
     @class_matrix_page = Page::BOACPages::ClassPages::ClassMatrixViewPage.new @driver
     @student_page = Page::BOACPages::StudentPage.new @driver
