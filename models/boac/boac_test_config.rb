@@ -100,11 +100,7 @@ class BOACTestConfig < TestConfig
   def curated_cohorts(all_students)
     set_global_configs all_students
     set_default_cohort(CONFIG['curated_cohort_team'], CONFIG['curated_cohort_max_users'])
-    if @dept == BOACDepartments::COE
-      @cohort_members = @cohort_members[0..49]
-    elsif @dept == BOACDepartments::ASC
-      @cohort_members.keep_if &:active_asc
-    end
+    @cohort_members.keep_if &:active_asc if @dept == BOACDepartments::ASC
   end
 
   # Config for filtered cohort testing

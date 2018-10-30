@@ -127,7 +127,7 @@ module Page
 
         # FILTERED COHORTS
 
-        elements(:filtered_cohort, :span, xpath: '//div[@data-ng-repeat="cohort in myFilteredCohorts"]//h2/span[1]')
+        elements(:filtered_cohort, :span, xpath: '//div[@data-ng-repeat="cohort in profile.myFilteredCohorts track by $index"]//h2/span[1]')
         link(:home_create_filtered_link, id: 'create-another-filtered-cohort')
         div(:no_filtered_cohorts_msg, xpath: '//div[contains(.,"You have no filtered cohorts.")]')
 

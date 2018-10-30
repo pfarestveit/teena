@@ -56,7 +56,7 @@ describe 'BOAC', order: :defined do
       @homepage.load_page
     end
 
-    it 'can be done using the homepage "Creat a new curated cohort link"' do
+    it 'can be done using the homepage "Create a new curated cohort link"' do
       @homepage.home_create_first_curated @disposable_cohort_1
       @cohorts_created << @disposable_cohort_1
     end
@@ -176,6 +176,8 @@ describe 'BOAC', order: :defined do
 
     it 'can be added from filtered cohort list view using individual selections' do
       @filtered_page.load_cohort test.default_cohort
+      @filtered_page.wait_until(Utils.short_wait) { @filtered_page.list_view_uids.any? }
+      test.cohort_members = test.cohort_members.select { |m| @filtered_page.list_view_uids.include? m.uid }
       @filtered_page.selector_add_students_to_curated(test.cohort_members[0..-2], @cohort_2)
       test.cohort_members.pop
     end
@@ -192,7 +194,9 @@ describe 'BOAC', order: :defined do
     it 'is shown on the curated cohort list view page' do
       @curated_page.load_page @cohort_1
       @curated_page.wait_for_student_list
-      @curated_page.wait_until(Utils.short_wait, "Expected #{@cohort_1.members.map(&:uid)}, but got #{@curated_page.list_view_uids}") { @curated_page.list_view_uids == @cohort_1.members.map(&:uid) }
+      @curated_page.wait_until(Utils.short_wait, "Expected #{@cohort_1.members.map(&:uid).sort}, but got #{@curated_page.list_view_uids.sort}") do
+        @curated_page.list_view_uids.sort == @cohort_1.members.map(&:uid).sort
+      end
     end
 
     it 'is shown on the student page' do

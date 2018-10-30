@@ -23,18 +23,18 @@ module Page
       # @param cohort [FilteredCohort]
       # @return [String]
       def filtered_cohort_xpath(cohort)
-        "//div[@id=\"content\"]//div[@data-ng-repeat=\"cohort in myFilteredCohorts\"][contains(.,\"#{cohort.name}\")]"
+        "//div[@id=\"content\"]//div[@data-ng-repeat=\"cohort in profile.myFilteredCohorts track by $index\"][contains(.,\"#{cohort.name}\")]"
       end
 
       # Returns the data visible for a user on the search results page or in a filtered or curated cohort on the homepage. If a cohort,
       # then an XPath is required in order to find the user under the right cohort heading.
       # @param driver [Selenium::WebDriver]
-      # @param user [Hash]
+      # @param user_hash [Hash]
       # @param cohort [Cohort]
       # @return [Hash]
-      def user_row_data(driver, user, cohort = nil)
+      def user_row_data(driver, user_hash, cohort = nil)
         cohort_xpath = filtered_cohort_xpath cohort if cohort && cohort.instance_of?(FilteredCohort)
-        row_xpath = "#{cohort_xpath}//div[contains(@data-ng-repeat,\"student in students\")][contains(.,\"#{user[:sid]}\")]"
+        row_xpath = "#{cohort_xpath}//div[contains(@data-ng-repeat,\"student in students\")][contains(.,\"#{user_hash[:sid]}\")]"
         name_el = link_element(xpath: "#{row_xpath}//a[@data-ng-bind=\"student.sortableName\"]")
         sid_el = span_element(xpath: "#{row_xpath}//span[@data-ng-bind='student.sid']")
         major_els = driver.find_elements(xpath: "#{row_xpath}//span[@data-ng-repeat='major in student.majors']")
