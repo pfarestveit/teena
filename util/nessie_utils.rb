@@ -199,4 +199,127 @@ class NessieUtils < Utils
     all_coe_students.select { |s| result.include? s.sis_id }
   end
 
+  # SEARCHABLE STUDENT DATA
+
+  # Parses a file containing searchable user data if it exists
+  # @return [Array<Hash>]
+  def self.users_searchable_data
+    users_data_file = BOACUtils.searchable_data
+    JSON.parse(File.read(users_data_file), {:symbolize_names => true}) if File.exist? users_data_file
+  end
+
+  # To support cohort search tests, returns all relevant user data for a given set of students, writing it to a file for
+  # subsequent test runs.
+  # @param users [Array<BOACUser>]
+  # @return [Array<Hash>]
+  def self.get_user_searchable_data(users)
+    logger.warn 'Cannot find a searchable user data file created today, collecting data and writing it to a file for reuse today'
+
+    # Delete older searchable data files before writing the new one
+    Dir.glob("#{Utils.config_dir}/boac-searchable-data*").each { |f| File.delete f }
+
+    # Get student data that is not already associated with the users. This will probably return more students than those present
+    # in the combined CoE and ASC students tables.
+    query = 'SELECT student.student_profiles.sid AS sid,
+                    student.student_profiles.profile AS profile,
+                    student.student_academic_status.gpa AS gpa,
+                    student.student_academic_status.level AS level_code,
+                    student.student_academic_status.units AS cumulative_units,
+                    student.student_majors.major AS majors,
+                    boac_advising_coe.students.advisor_ldap_uid AS advisor,
+                    boac_advising_coe.students.gender AS gender,
+                    boac_advising_coe.students.ethnicity AS ethnicity,
+                    boac_advising_coe.students.minority AS minority,
+                    boac_advising_coe.students.did_prep AS prep,
+                    boac_advising_coe.students.prep_eligible AS prep_elig,
+                    boac_advising_coe.students.did_tprep AS t_prep,
+                    boac_advising_coe.students.tprep_eligible AS t_prep_elig
+             FROM student.student_profiles
+             LEFT JOIN student.student_majors ON student.student_majors.sid = student.student_profiles.sid
+             LEFT JOIN student.student_academic_status ON student.student_academic_status.sid = student.student_profiles.sid
+             LEFT JOIN boac_advising_coe.students ON boac_advising_coe.students.sid = student.student_profiles.sid
+             ORDER BY sid;'
+
+    results = query_redshift_db(nessie_db_credentials, query)
+
+    # Create a hash for each student in the results. Multiple majors mean multiple rows, so merge them.
+    student_hashes = results.group_by { |h1| h1['sid'] }.map do |k,v|
+      logger.debug "Getting data for SID #{k}"
+      level = case v[0]['level_code']
+                when '10'
+                  'Freshman'
+                when '20'
+                  'Sophomore'
+                when '30'
+                  'Junior'
+                when '40'
+                  'Senior'
+                when 'GR'
+                  'Graduate'
+                else
+                  logger.error "Unknown level code '#{v[0]['level_code']}'"
+              end
+      profile = JSON.parse(v[0]['profile'])['sisProfile']
+      expected_grad = profile && profile['expectedGraduationTerm']
+      {
+        :sid => k,
+        :gpa => v[0]['gpa'],
+        :level => level,
+        :units_completed => v[0]['cumulative_units'],
+        :major => (v.map { |h| h['majors'] }),
+        :expected_grad_term_id => (expected_grad && expected_grad['id']),
+        :advisor => v[0]['advisor'],
+        :gender => v[0]['gender'],
+        :ethnicity => v[0]['ethnicity'],
+        :underrepresented_minority => (v[0]['minority'] == 't'),
+        :prep => (v[0]['prep'] == 't'),
+        :prep_elig => (v[0]['prep_elig'] == 't'),
+        :t_prep => (v[0]['t_prep'] == 't'),
+        :t_prep_elig => (v[0]['t_prep_elig'] == 't')
+      }
+    end
+
+    # Find the student hash associated with each CoE and ASC user and combine it with the data already known about the user.
+    filtered_student_hashes = users.map do |user|
+      logger.debug "Completing data for SID #{user.sis_id}"
+      user_hash = student_hashes.find { |h| h[:sid] == user.sis_id }
+      # Get the squad names to use as search criteria if the students are athletes
+      user_squad_names = user.sports.map do |squad_code|
+        squad = Squad::SQUADS.find { |s| s.code == squad_code }
+        squad ? squad.name : (logger.error "Unrecognized squad code '#{squad_code}'")
+      end
+      addl_user_data = {
+        :first_name => user.first_name,
+        :first_name_sortable => user.first_name.gsub(/\W/, '').downcase,
+        :last_name => user.last_name,
+        :last_name_sortable => user.last_name.gsub(/\W/, '').downcase,
+        :squad_names => user_squad_names,
+        :active_asc => user.active_asc,
+        :intensive_asc => user.intensive_asc
+      }
+      user_hash.merge! addl_user_data
+      user_hash
+    end
+
+    # Write the data to a file for reuse.
+    File.open(BOACUtils.searchable_data, 'w') { |f| f.write filtered_student_hashes.to_json }
+    filtered_student_hashes
+  end
+
+  # If special configuration exists for the test, then return only user data for the dept specified in the config; else return all.
+  # @param users_data [Array<Hash>]
+  # @param test_config [BOACTestConfig]
+  # @return [Array<Hash>]
+  def self.applicable_user_search_data(all_students, test_config = nil)
+    # Get the student data relevant to all search filters and sorting
+    student_search_data = users_searchable_data
+    student_search_data = get_user_searchable_data all_students unless student_search_data
+    if test_config
+      test_config.dept_students.keep_if &:active_asc if test_config.dept == BOACDepartments::ASC
+      student_search_data.select { |u| test_config.dept_students.map(&:sis_id).include? u[:sid] }
+    else
+      student_search_data
+    end
+  end
+
 end

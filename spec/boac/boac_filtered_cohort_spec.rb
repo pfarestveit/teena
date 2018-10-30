@@ -8,24 +8,15 @@ describe 'BOAC', order: :defined do
   test = BOACTestConfig.new
   test.filtered_cohorts all_students
   pre_existing_cohorts = BOACUtils.get_user_filtered_cohorts test.advisor
+  searchable_students = NessieUtils.applicable_user_search_data(all_students, test)
 
-  before(:all) do
+before(:all) do
     @driver = Utils.launch_browser
     @analytics_page = ApiUserAnalyticsPage.new @driver
     @homepage = Page::BOACPages::UserListPages::HomePage.new @driver
     @cohort_page = Page::BOACPages::CohortPages::FilteredCohortPage.new @driver
     @student_page = Page::BOACPages::StudentPage.new @driver
 
-    # Get the student data relevant to all search filters.
-    @all_searchable_students = @analytics_page.users_searchable_data
-    unless @all_searchable_students
-      @homepage.dev_auth
-      @all_searchable_students = @analytics_page.collect_users_searchable_data(@driver, all_students)
-      @homepage.load_page
-      @homepage.log_out
-    end
-    test.dept_students.keep_if &:active_asc if test.dept == BOACDepartments::ASC
-    @searchable_students = @analytics_page.applicable_user_search_data(@all_searchable_students, test)
     @homepage.dev_auth test.advisor
   end
 
@@ -53,7 +44,7 @@ describe 'BOAC', order: :defined do
       it "shows all the students sorted by Last Name who match #{cohort.search_criteria.list_filters}" do
         @cohort_page.click_sidebar_create_filtered
         @cohort_page.perform_search cohort
-        cohort.member_data = @cohort_page.expected_search_results(@searchable_students, cohort.search_criteria)
+        cohort.member_data = @cohort_page.expected_search_results(searchable_students, cohort.search_criteria)
         expected_results = @cohort_page.expected_sids_by_last_name cohort.member_data
         visible_results = cohort.member_count.zero? ? [] : @cohort_page.visible_sids
         @cohort_page.wait_until(1, "Expected but not present: #{expected_results - visible_results}. Present but not expected: #{visible_results - expected_results}") { visible_results.sort == expected_results.sort }
@@ -218,6 +209,8 @@ describe 'BOAC', order: :defined do
 
       it "allows the advisor to sort by term units ascending cohort members who have alerts on the homepage with criteria #{cohort.search_criteria.list_filters}" do
         if cohort.member_data.any?
+          # Scrape the visible term units since it's not stored in the cohort member data
+          cohort.member_data.each { |d| d.merge!({:term_units => @homepage.user_row_data(@driver, d, cohort)[:term_units]}) }
           expected_sequence = @homepage.expected_sids_by_term_units cohort.member_data
           @homepage.sort_by_term_units cohort
           @homepage.wait_until(1, "Expected #{expected_sequence}, but got #{@homepage.all_row_sids(@driver, cohort)}") { @homepage.all_row_sids(@driver, cohort) == expected_sequence }

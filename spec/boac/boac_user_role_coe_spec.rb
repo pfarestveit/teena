@@ -5,6 +5,7 @@ describe 'A CoE advisor using BOAC' do
   include Logging
 
   all_students = NessieUtils.get_all_students
+  all_student_search_data = NessieUtils.applicable_user_search_data all_students
 
   test_asc = BOACTestConfig.new
   test_asc.user_role_asc all_students
@@ -29,16 +30,6 @@ describe 'A CoE advisor using BOAC' do
     @search_page = Page::BOACPages::UserListPages::SearchResultsPage.new @driver
     @student_page = Page::BOACPages::StudentPage.new @driver
     @teams_page = Page::BOACPages::TeamsListPage.new @driver
-
-    all_student_search_data = @api_user_analytics_page.users_searchable_data
-    unless all_student_search_data
-      @homepage.dev_auth
-      test_asc.dept_students.keep_if &:active_asc if test_asc.dept == BOACDepartments::ASC
-      all_student_search_data = @api_user_analytics_page.collect_users_searchable_data(@driver, all_students)
-
-      @homepage.load_page
-      @homepage.log_out
-    end
 
     @coe_student_sids = test_coe.dept_students.map &:sis_id
     @coe_student_search_data = all_student_search_data.select { |d| @coe_student_sids.include? d[:sid] }
@@ -108,7 +99,9 @@ describe 'A CoE advisor using BOAC' do
     it 'sees only CoE student data in a section endpoint' do
       api_section_page = ApiSectionPage.new @driver
       api_section_page.get_data(@driver, '2178', '13826')
-      api_section_page.wait_until(1, "Expected #{test_coe.dept_students.map(&:sis_id).sort & api_section_page.student_sids}, but got #{api_section_page.student_sids.sort}") { expect(test_coe.dept_students.map(&:sis_id).sort & api_section_page.student_sids).to eql(api_section_page.student_sids.sort) }
+      api_section_page.wait_until(1, "Expected #{test_coe.dept_students.map(&:sis_id).sort & api_section_page.student_sids}, but got #{api_section_page.student_sids.sort}") do
+        expect(test_coe.dept_students.map(&:sis_id).sort & api_section_page.student_sids).to eql(api_section_page.student_sids.sort)
+      end
     end
   end
 

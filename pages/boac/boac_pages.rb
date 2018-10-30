@@ -81,7 +81,7 @@ module Page
     # Sidebar
     link(:sidebar_create_curated_link, id: 'sidebar-curated-cohort-create')
     link(:sidebar_manage_curated_link, id: 'sidebar-curated-cohorts-manage')
-    elements(:sidebar_curated_cohort_link, :link, xpath: '//div[@data-ng-repeat="cohort in myCuratedCohorts"]//a[contains(@class,"sidebar")]')
+    elements(:sidebar_curated_cohort_link, :link, xpath: '//div[@data-ng-repeat="cohort in profile.myCuratedCohorts"]//a[contains(@class,"sidebar")]')
 
     # Clicks the sidebar button to manage the user's curated cohorts
     def sidebar_click_manage_curated

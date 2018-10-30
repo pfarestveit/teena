@@ -5,6 +5,7 @@ describe 'An ASC advisor' do
   include Logging
 
   all_students = NessieUtils.get_all_students
+  all_student_search_data = NessieUtils.applicable_user_search_data all_students
 
   test_asc = BOACTestConfig.new
   test_asc.user_role_asc all_students
@@ -32,20 +33,8 @@ describe 'An ASC advisor' do
     @student_page = Page::BOACPages::StudentPage.new @driver
     @teams_page = Page::BOACPages::TeamsListPage.new @driver
 
-    # Collect searchable user data relevant to an ASC advisor
-    @all_searchable_students = @api_user_analytics_page.users_searchable_data
-    unless @all_searchable_students
-      @homepage.dev_auth
-      test.dept_students.keep_if &:active_asc if test.dept == BOACDepartments::ASC
-      @all_searchable_students = @api_user_analytics_page.collect_users_searchable_data(@driver, all_students)
-
-      @homepage.load_page
-      @homepage.log_out
-    end
-    @searchable_students = @api_user_analytics_page.applicable_user_search_data(@all_searchable_students)
-
     @asc_student_sids = test_asc.dept_students.map &:sis_id
-    @asc_student_search_data = @searchable_students.select { |d| @asc_student_sids.include? d[:sid] }
+    @asc_student_search_data = all_student_search_data.select { |d| @asc_student_sids.include? d[:sid] }
 
     @inactive_student_sids = asc_inactive_students.map &:sis_id
     @inactive_student_search_data = @asc_student_search_data.select { |d| @inactive_student_sids.include? d[:sid] }
@@ -148,7 +137,7 @@ describe 'An ASC advisor' do
     end
 
     it 'sees all inactive students with an INACTIVE indicator' do
-      expected_results = @filtered_cohort_page.expected_sids_by_last_name(@inactive_student_search_data, CohortFilter.new).sort
+      expected_results = @filtered_cohort_page.expected_sids_by_last_name(@inactive_student_search_data).sort
       @filtered_cohort_page.wait_until(1, "Expected #{expected_results}, but got #{@visible_inactive_students.sort}") { @visible_inactive_students.sort == expected_results }
       # TODO - inactive indicator
     end
@@ -170,7 +159,7 @@ describe 'An ASC advisor' do
     end
 
     it 'sees all intensive students' do
-      expected_results = @filtered_cohort_page.expected_sids_by_last_name(@intensive_student_search_data, CohortFilter.new).sort
+      expected_results = @filtered_cohort_page.expected_sids_by_last_name(@intensive_student_search_data).sort
       @filtered_cohort_page.wait_until(1, "Expected #{expected_results}, but got #{@visible_intensive_students.sort}")  { @visible_intensive_students.sort == expected_results }
     end
 
