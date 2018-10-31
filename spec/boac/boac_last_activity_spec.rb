@@ -20,7 +20,8 @@ describe 'BOAC' do
       test.term = BOACUtils.term
       logger.info "Checking term #{test.term}"
 
-      last_activity_csv = Utils.create_test_output_csv('boac-last-activity.csv', %w(Term Course SiteId TtlStudents TtlLogins UID CanvasLastActivity StudentPageActivity CanvasContext StudentPageContext))
+      heading = %w(Term Course SiteId TtlStudents TtlLogins UID CanvasLastActivity CaliperLastActivity NessieLastActivity StudentPageActivity CanvasContext StudentPageContext)
+      last_activity_csv = Utils.create_test_output_csv('boac-last-activity.csv', heading)
 
       @driver = Utils.launch_browser
       @homepage = Page::BOACPages::UserListPages::HomePage.new @driver
@@ -82,7 +83,8 @@ describe 'BOAC' do
                             :sites => (classmate_sites.map do |site|
                               {
                                 :site_id => api_student_page.site_metadata(site)[:site_id],
-                                :site_code => api_student_page.site_metadata(site)[:code]
+                                :site_code => api_student_page.site_metadata(site)[:code],
+                                :last_activity_nessie => Time.at(api_student_page.nessie_last_activity(site)[:score].to_i).utc
                               }
                             end)
                           }
@@ -111,6 +113,8 @@ describe 'BOAC' do
                         all_site_students = @canvas_page.get_students(Course.new({:site_id => site_id}), nil, 'https://bcourses.berkeley.edu')
                         visible_student_data.each do |student_data|
                           if (student_data[:sites].map { |s| s[:site_id] }).include? site_id
+                            matching_student = all_site_students.find { |s| s.uid == student_data[:student].uid }
+                            student_data[:student].canvas_id = matching_student.canvas_id
                             student_last_activity = @canvas_page.roster_user_last_activity student_data[:student].uid
                             site_to_update = student_data[:sites].find { |site| site[:site_id] == site_id }
                             site_to_update.merge!(:last_activity_canvas => (Time.parse student_last_activity if student_last_activity))
@@ -146,6 +150,27 @@ describe 'BOAC' do
                           :last_activity_dates => all_last_activities
                         }
                         all_sites_data << all_site_data
+
+                        # Check Nessie's Caliper data for each student in each site
+                        (visible_student_data + invisible_student_site_data).each do |student_data|
+                          student_data[:sites].each do |site_data|
+                            site_data.merge!(:last_activity_caliper => NessieUtils.get_caliper_last_activity(student_data[:student], site_data[:site_id]))
+                            if site_data[:last_activity_canvas].nil?
+                              it "Caliper has no last activity data for site #{site_data[:site_id]}, UID #{student_data[:student].uid}, Canvas ID #{student_data[:student].canvas_id}" do
+                                expect(site_data[:last_activity_caliper]).to be_nil
+                              end
+                            else
+                              if (Date.today - Date.parse(site_data[:last_activity_canvas].to_s)).to_i < BOACUtils.canvas_data_lag_days
+                                logger.warn "Skipping Caliper last activity check for UID #{student_data[:student].uid} Canvas ID #{student_data[:student].canvas_id} in site ID #{site_data[:site_id]}"
+                              else
+                                logger.debug "Canvas vs Caliper diff is #{(site_data[:last_activity_caliper] - site_data[:last_activity_canvas].utc).abs} on site #{site_data[:site_id]} UID #{student_data[:student].uid}"
+                                it "Caliper has the right last activity data for site #{site_data[:site_id]}, UID #{student_data[:student].uid}, Canvas ID #{student_data[:student].canvas_id}" do
+                                  expect((site_data[:last_activity_caliper] - site_data[:last_activity_canvas]).abs).to be < BOACUtils.caliper_time_margin
+                                end
+                              end
+                            end
+                          end
+                        end
                       end
 
                       visible_student_data.each do |student_data|
@@ -157,16 +182,20 @@ describe 'BOAC' do
                             logger.info "Checking last activity for #{test_case}"
 
                             # Record the activity data to a CSV
-                            logger.debug "Last activity in Canvas site #{student_site[:site_id]} is #{student_site[:last_activity_canvas]}"
                             site = all_sites_data.find { |s| s[:site_id] == student_site[:site_id] }
                             total_logins = site[:last_activity_dates].compact.length
                             more_recent_logins = student_site[:last_activity_canvas] ? site[:last_activity_dates].compact.select { |date| date > student_site[:last_activity_canvas] } : []
 
                             data_to_record = [test.term, course_sis_data[:code], site[:site_id], site[:last_activity_dates].length, total_logins,
-                                              student_data[:student].uid, student_site[:last_activity_canvas], student_site[:last_activity_student_page][:days],
+                                              student_data[:student].uid, student_site[:last_activity_canvas], student_site[:last_activity_caliper],
+                                              student_site[:last_activity_nessie], student_site[:last_activity_student_page][:days],
                                               (("#{more_recent_logins.length} out of #{site[:last_activity_dates].length} enrolled students have done so more recently.") if more_recent_logins),
                                               student_site[:last_activity_student_page][:context]]
                             Utils.add_csv_row(last_activity_csv, data_to_record)
+
+                            # NESSIE LAST ACTIVITY DATES
+
+                            it("last activity date is not older than the Caliper date for #{test_case}") { expect(student_site[:last_activity_nessie]).to be >= student_site[:last_activity_caliper] }
 
                             # SITE DETAIL
 
