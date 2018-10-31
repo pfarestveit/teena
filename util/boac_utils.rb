@@ -66,6 +66,11 @@ class BOACUtils < Utils
     @config['canvas_data_lag_days']
   end
 
+  # The number of seconds that is the max acceptable diff between last activity shown in Canvas vs Caliper
+  def self.caliper_time_margin
+    @config['caliper_time_margin']
+  end
+
   # Whether or not to compare student data to fellow cohort members in Canvas prod
   def self.last_activity_context
     @config['last_activity_context']

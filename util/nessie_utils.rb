@@ -33,6 +33,20 @@ class NessieUtils < Utils
     end
   end
 
+  # Returns the Caliper last activity metric for a user in a course site
+  # @param user [BOACUser]
+  # @param site_id [String]
+  # @return [Time]
+  def self.get_caliper_last_activity(user, site_id)
+    query = "SELECT last_activity
+              FROM canvas_caliper_analytics.last_activity_caliper
+              WHERE canvas_course_id = #{site_id}
+                AND canvas_user_id = #{user.canvas_id};"
+    results = query_redshift_db(nessie_db_credentials, query)
+    activities = results.map { |r| Time.parse(r['last_activity'] += ' UTC') }
+    activities.max
+  end
+
   # DATABASE - ALL STUDENTS
 
   # Converts a students result object to an array of users

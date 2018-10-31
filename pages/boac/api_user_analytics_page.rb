@@ -249,4 +249,11 @@ class ApiUserAnalyticsPage
     site_statistics(analytics(site)['currentScore']).merge!({:type => 'Assignment Grades'})
   end
 
+  # Returns a user's Nessie Last Activity analytics on a course site
+  # @param site [Hash]
+  # @return [Hash]
+  def nessie_last_activity(site)
+    site_statistics(analytics(site)['lastActivity']).merge!({:type => 'Last bCourses Activity'})
+  end
+
 end
