@@ -23,6 +23,8 @@ describe 'BOAC' do
       heading = %w(Term Course SiteId TtlStudents TtlLogins UID CanvasLastActivity CaliperLastActivity NessieLastActivity StudentPageActivity CanvasContext StudentPageContext)
       last_activity_csv = Utils.create_test_output_csv('boac-last-activity.csv', heading)
 
+      caliper_error_csv = Utils.create_test_output_csv('caliper-errors.csv', %w(SiteId CanvasId UID CanvasLastActivity CaliperLastActivity DiffSeconds P/F))
+
       @driver = Utils.launch_browser
       @homepage = Page::BOACPages::UserListPages::HomePage.new @driver
       @cal_net_page = Page::CalNetPage.new @driver
@@ -117,7 +119,7 @@ describe 'BOAC' do
                             student_data[:student].canvas_id = matching_student.canvas_id
                             student_last_activity = @canvas_page.roster_user_last_activity student_data[:student].uid
                             site_to_update = student_data[:sites].find { |site| site[:site_id] == site_id }
-                            site_to_update.merge!(:last_activity_canvas => (Time.parse student_last_activity if student_last_activity))
+                            site_to_update.merge!(:last_activity_canvas => (Time.parse(student_last_activity).utc if student_last_activity))
                           end
                         end
 
@@ -131,7 +133,7 @@ describe 'BOAC' do
                             :sites => [
                               {
                                 :site_id => site_id,
-                                :last_activity_canvas => (Time.parse last_activity if last_activity)
+                                :last_activity_canvas => (Time.parse(last_activity).utc if last_activity)
                               }
                             ]
                           }
@@ -151,21 +153,38 @@ describe 'BOAC' do
                         }
                         all_sites_data << all_site_data
 
-                        # Check Nessie's Caliper data for each student in each site
-                        (visible_student_data + invisible_student_site_data).each do |student_data|
-                          student_data[:sites].each do |site_data|
-                            site_data.merge!(:last_activity_caliper => NessieUtils.get_caliper_last_activity(student_data[:student], site_data[:site_id]))
-                            if site_data[:last_activity_canvas].nil?
-                              it "Caliper has no last activity data for site #{site_data[:site_id]}, UID #{student_data[:student].uid}, Canvas ID #{student_data[:student].canvas_id}" do
-                                expect(site_data[:last_activity_caliper]).to be_nil
-                              end
-                            else
-                              if (Date.today - Date.parse(site_data[:last_activity_canvas].to_s)).to_i < BOACUtils.canvas_data_lag_days
-                                logger.warn "Skipping Caliper last activity check for UID #{student_data[:student].uid} Canvas ID #{student_data[:student].canvas_id} in site ID #{site_data[:site_id]}"
+                        # If desired, check Nessie's Caliper data for each student in each site
+                        if NessieUtils.include_caliper_tests
+                          (visible_student_data + invisible_student_site_data).each do |student_data|
+
+                            student_data[:sites].each do |site_data|
+                              site_data.merge!(:last_activity_caliper => NessieUtils.get_caliper_last_activity(student_data[:student], site_data[:site_id]))
+                              if site_data[:last_activity_canvas].nil?
+                                it "Caliper has no last activity data for site #{site_data[:site_id]}, UID #{student_data[:student].uid}, Canvas ID #{student_data[:student].canvas_id}" do
+                                  expect(site_data[:last_activity_caliper]).to be_nil
+                                end
+
                               else
-                                logger.debug "Canvas vs Caliper diff is #{(site_data[:last_activity_caliper] - site_data[:last_activity_canvas].utc).abs} on site #{site_data[:site_id]} UID #{student_data[:student].uid}"
-                                it "Caliper has the right last activity data for site #{site_data[:site_id]}, UID #{student_data[:student].uid}, Canvas ID #{student_data[:student].canvas_id}" do
-                                  expect((site_data[:last_activity_caliper] - site_data[:last_activity_canvas]).abs).to be < BOACUtils.caliper_time_margin
+                                if site_data[:last_activity_caliper].nil?
+                                  it("Caliper has no last activity data for site #{site_data[:site_id]}, UID #{student_data[:student].uid}, Canvas ID #{student_data[:student].canvas_id}, but it should") { fail }
+
+                                else
+                                  hours_since = (Time.now.utc - site_data[:last_activity_canvas]) / 3600
+                                  if hours_since < NessieUtils.canvas_data_lag_hours
+                                    logger.warn "Skipping Caliper last activity check for UID #{student_data[:student].uid} in site ID #{site_data[:site_id]} since it was #{hours_since.round 1} hours ago"
+
+                                  else
+                                    diff = (site_data[:last_activity_caliper] - site_data[:last_activity_canvas]).abs
+                                    it "Caliper has the right last activity data for site #{site_data[:site_id]}, UID #{student_data[:student].uid}, Canvas ID #{student_data[:student].canvas_id}" do
+                                      expect(diff).to be < NessieUtils.caliper_time_margin
+                                    end
+
+                                    result = (diff > NessieUtils.caliper_time_margin) ? 'Fail' : 'Pass'
+                                    error_data = [site_data[:site_id], student_data[:student].canvas_id, student_data[:student].uid,
+                                                  site_data[:last_activity_canvas], site_data[:last_activity_caliper], (site_data[:last_activity_caliper] - site_data[:last_activity_canvas]), result]
+                                    Utils.add_csv_row(caliper_error_csv, error_data)
+                                    logger.debug "Canvas vs Caliper diff is #{diff} on site #{site_data[:site_id]} UID #{student_data[:student].uid}"
+                                  end
                                 end
                               end
                             end
@@ -208,9 +227,10 @@ describe 'BOAC' do
 
                             else
 
-                              day_count = (Date.today - Date.parse(student_site[:last_activity_canvas].to_s)).to_i
-                              if day_count < BOACUtils.canvas_data_lag_days
-                                logger.warn "Skipping last activity check for #{test_case}, since the user visited the site within day count #{day_count}, and BOAC will not know that."
+                              day_count = (Date.today - Date.parse(student_site[:last_activity_canvas].localtime.to_s)).to_i
+                              hours_since = (Time.now.utc - student_site[:last_activity_canvas]) / 3600
+                              if  hours_since < NessieUtils.canvas_data_lag_hours
+                                logger.warn "Skipping Caliper last activity check for #{test_case} since it was #{hours_since.round 1} hours ago"
 
                               else
 

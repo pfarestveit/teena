@@ -12,6 +12,10 @@ class ApiSectionPage
     @parsed = JSON.parse driver.find_element(xpath: '//pre').text
   end
 
+  def course_code
+    @parsed['displayName']
+  end
+
   def meetings
     @parsed['meetings'] && @parsed['meetings'].map do |meet|
       {

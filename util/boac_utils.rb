@@ -61,16 +61,6 @@ class BOACUtils < Utils
     @config['sis_data_team']
   end
 
-  # The number of days that synced Canvas data is behind actual site usage data
-  def self.canvas_data_lag_days
-    @config['canvas_data_lag_days']
-  end
-
-  # The number of seconds that is the max acceptable diff between last activity shown in Canvas vs Caliper
-  def self.caliper_time_margin
-    @config['caliper_time_margin']
-  end
-
   # Whether or not to compare student data to fellow cohort members in Canvas prod
   def self.last_activity_context
     @config['last_activity_context']

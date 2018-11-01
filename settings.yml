@@ -42,7 +42,6 @@ boac:
   tooltips: true
   nessie_scores: true
   nessie_assignments: true
-  canvas_data_lag_days: 1
 
   test_dept: UWASC
   test_coe_advisor_uid: 123456
@@ -60,7 +59,6 @@ boac:
   last_activity_team: TNM
   last_activity_max_users: 3
   last_activity_context: false
-  caliper_time_margin: 120
 
   navigation_team: FBM
 
@@ -109,6 +107,9 @@ nessie:
   db_name: secret
   db_user: secret
   db_password: secret
+  canvas_data_lag_hours: 24
+  include_caliper_tests: false
+  caliper_time_margin: 120
 
 oec:
   term: 2018-C
