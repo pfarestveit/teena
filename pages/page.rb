@@ -153,6 +153,7 @@ module Page
     begin
       return true if yield
     rescue => e
+      logger.debug e.message
       false
     end
   end

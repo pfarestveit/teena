@@ -26,58 +26,59 @@ describe 'BOAC' do
     test_config.max_cohort_members.each do |s|
 
       it "finds UID #{s.uid} with the complete first name" do
-        result_count = @search_page.search s.first_name
-        expect(@search_page.student_in_search_result?(@driver, s, result_count)).to be true
+        @search_page.search s.first_name
+        expect(@search_page.student_in_search_result?(@driver, s)).to be true
       end
 
       it "finds UID #{s.uid} with a partial first name" do
-        result_count = @search_page.search s.first_name[0..2]
-        expect(@search_page.student_in_search_result?(@driver, s, result_count)).to be true
+        @search_page.search s.first_name[0..2]
+        expect(@search_page.student_in_search_result?(@driver, s)).to be true
       end
 
       it "finds UID #{s.uid} with the complete last name" do
-        result_count = @search_page.search s.last_name
-        expect(@search_page.student_in_search_result?(@driver, s, result_count)).to be true
+        @search_page.search s.last_name
+        expect(@search_page.student_in_search_result?(@driver, s)).to be true
       end
 
       it "finds UID #{s.uid} with a partial last name" do
-        result_count = @search_page.search s.last_name[0..2]
-        expect(@search_page.student_in_search_result?(@driver, s, result_count)).to be true
+        @search_page.search s.last_name[0..2]
+        expect(@search_page.student_in_search_result?(@driver, s)).to be true
       end
 
       it "finds UID #{s.uid} with the complete first and last name" do
-        result_count = @search_page.search "#{s.first_name} #{s.last_name}"
-        expect(@search_page.student_in_search_result?(@driver, s, result_count)).to be true
+        @search_page.search "#{s.first_name} #{s.last_name}"
+        expect(@search_page.student_in_search_result?(@driver, s)).to be true
       end
 
       it "finds UID #{s.uid} with the complete last and first name" do
-        result_count = @search_page.search "#{s.last_name}, #{s.first_name}"
-        expect(@search_page.student_in_search_result?(@driver, s, result_count)).to be true
+        @search_page.search "#{s.last_name}, #{s.first_name}"
+        expect(@search_page.student_in_search_result?(@driver, s)).to be true
       end
 
       it "finds UID #{s.uid} with a partial first and last name" do
-        result_count = @search_page.search "#{s.first_name[0..2]} #{s.last_name[0..2]}"
-        expect(@search_page.student_in_search_result?(@driver, s, result_count)).to be true
+        @search_page.search "#{s.first_name[0..2]} #{s.last_name[0..2]}"
+        expect(@search_page.student_in_search_result?(@driver, s)).to be true
       end
 
       it "finds UID #{s.uid} with a partial last and first name" do
-        result_count = @search_page.search "#{s.last_name[0..2]}, #{s.first_name[0..2]}"
-        expect(@search_page.student_in_search_result?(@driver, s, result_count)).to be true
+        @search_page.search "#{s.last_name[0..2]}, #{s.first_name[0..2]}"
+        expect(@search_page.student_in_search_result?(@driver, s)).to be true
       end
 
       it "finds UID #{s.uid} with the complete SID" do
-        result_count = @search_page.search s.sis_id.to_s
-        expect(@search_page.student_in_search_result?(@driver, s, result_count)).to be true
+        @search_page.search s.sis_id.to_s
+        expect(@search_page.student_in_search_result?(@driver, s)).to be true
       end
 
       it "finds UID #{s.uid} with a partial SID" do
-        result_count = @search_page.search s.sis_id.to_s[0..4]
-        expect(@search_page.student_in_search_result?(@driver, s, result_count)).to be true
+        @search_page.search s.sis_id.to_s[0..4]
+        expect(@search_page.student_in_search_result?(@driver, s)).to be true
       end
     end
 
     it 'limits results to 50' do
-      expect(@search_page.search '303').to be > 50
+      @search_page.search '303'
+      expect(@search_page.results_count @search_page.student_results_count_element).to be > 50
       expect(@search_page.student_row_sids.length).to eql(50)
     end
   end

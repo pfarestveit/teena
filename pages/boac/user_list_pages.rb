@@ -29,12 +29,12 @@ module Page
       # Returns the data visible for a user on the search results page or in a filtered or curated cohort on the homepage. If a cohort,
       # then an XPath is required in order to find the user under the right cohort heading.
       # @param driver [Selenium::WebDriver]
-      # @param user_hash [Hash]
+      # @param sid [String]
       # @param cohort [Cohort]
       # @return [Hash]
-      def user_row_data(driver, user_hash, cohort = nil)
+      def user_row_data(driver, sid, cohort = nil)
         cohort_xpath = filtered_cohort_xpath cohort if cohort && cohort.instance_of?(FilteredCohort)
-        row_xpath = "#{cohort_xpath}//div[contains(@data-ng-repeat,\"student in students\")][contains(.,\"#{user_hash[:sid]}\")]"
+        row_xpath = "#{cohort_xpath}//div[contains(@data-ng-repeat,\"student in students\")][contains(.,\"#{sid}\")]"
         name_el = link_element(xpath: "#{row_xpath}//a[@data-ng-bind=\"student.sortableName\"]")
         sid_el = span_element(xpath: "#{row_xpath}//span[@data-ng-bind='student.sid']")
         major_els = driver.find_elements(xpath: "#{row_xpath}//span[@data-ng-repeat='major in student.majors']")

@@ -44,7 +44,7 @@ module Page
     elements(:field_cbx, :checkbox, xpath: '//table[@id="AdminUC_Data_ucAdminDS_Entities_FieldTable"]//input[@type="checkbox"]')
 
     button(:apply_button, id: 'AdminUC_Data_ucAdminDS_Entities_btnAdd')
-    link(:success_msg, xpath: '//a[contains(.,"Data Block updated.")]')
+    link(:success_msg, xpath: '//a[contains(.,"Data block updated.")]')
     link(:import_export_tab, id: 'AdminUC_Data_primary-tabs_ImportExport')
     button(:import_button, id: 'AdminUC_Data_AdminDS_Import_btnImport')
     button(:import_confirm_button, id: 'AdminUC_Data_AdminDS_Import_btnConfirm')

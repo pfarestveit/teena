@@ -10,7 +10,7 @@ describe 'BOAC', order: :defined do
   pre_existing_cohorts = BOACUtils.get_user_filtered_cohorts test.advisor
   searchable_students = NessieUtils.applicable_user_search_data(all_students, test)
 
-before(:all) do
+  before(:all) do
     @driver = Utils.launch_browser
     @analytics_page = ApiUserAnalyticsPage.new @driver
     @homepage = Page::BOACPages::UserListPages::HomePage.new @driver

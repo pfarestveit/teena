@@ -22,6 +22,7 @@ describe 'BOAC' do
     @filtered_cohort_page = Page::BOACPages::CohortPages::FilteredCohortPage.new @driver
     @student_page = Page::BOACPages::StudentPage.new @driver
     @class_page = Page::BOACPages::ClassPages::ClassListViewPage.new @driver
+    @search_page = Page::BOACPages::UserListPages::SearchResultsPage.new @driver
 
     @homepage.dev_auth test.advisor
     @filtered_cohort_page.search_and_create_new_cohort(test.default_cohort) unless test.default_cohort.id
@@ -112,7 +113,7 @@ describe 'BOAC' do
 
                           # STUDENT DATA
 
-                          # Check that all student who should appear actually do
+                          # Check that all students who should appear actually do
                           visible_sids = @class_page.visible_sids.sort
                           logger.info "Visible student count is #{visible_sids.length}"
                           logger.error "Expecting #{api_section_page.student_sids.sort} but got #{visible_sids}" unless visible_sids == api_section_page.student_sids.sort
@@ -246,6 +247,20 @@ describe 'BOAC' do
 
                             # TODO - the 'max' values are the same for all users
 
+                          end
+
+                          # CLASS PAGE SEARCH
+
+                          if term_name == BOACUtils.term
+                            @class_page.search api_section_page.course_code
+                            class_in_results = @search_page.class_in_search_result?(api_section_page.course_code, section_data[:number])
+                            it("allows the user to search for #{class_test_case}") { expect(class_in_results).to be true }
+
+                            if @search_page.class_link(api_section_page.course_code, section_data[:number]).exists?
+                              @search_page.click_class_result(api_section_page.course_code, section_data[:number])
+                              class_page_loads = @class_page.wait_for_title api_section_page.course_code
+                              it("allows the user to visit the class page for #{class_test_case} from search results") { expect(class_page_loads).to be_truthy }
+                            end
                           end
                         end
 

@@ -161,7 +161,8 @@ begin
     end
   end
 rescue => e
-  log_results(results_file, "#{Time.now} - Encountered an error initializing the script. No data sources were updated", e)
+  puts e.message
+  puts e.backtrace
 ensure
   @driver.quit
 end

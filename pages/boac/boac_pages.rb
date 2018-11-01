@@ -266,16 +266,17 @@ module Page
 
     # USER SEARCH
 
-    text_area(:user_search_input, id: 'search-students-input')
+    text_area(:search_input, id: 'search-students-input')
 
     # Searches for a string using the sidebar search input
     # @param string [String]
-    def enter_search_string(string)
+    def search(string)
       logger.info "Searching for '#{string}'"
       sleep 1
-      user_search_input_element.when_visible Utils.short_wait
-      self.user_search_input = string
-      user_search_input_element.send_keys :enter
+      search_input_element.when_visible Utils.short_wait
+      self.search_input = string
+      search_input_element.send_keys :enter
+      wait_for_spinner
     end
 
     # LIST VIEW PAGINATION

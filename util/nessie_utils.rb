@@ -14,6 +14,21 @@ class NessieUtils < Utils
     }
   end
 
+  # The number of hours that synced Canvas data is behind actual site usage data
+  def self.canvas_data_lag_hours
+    @config['canvas_data_lag_hours']
+  end
+
+  # Whether or not to test Caliper last activity data
+  def self.include_caliper_tests
+    @config['include_caliper_tests']
+  end
+
+  # The number of seconds that is the max acceptable diff between last activity shown in Canvas vs Caliper
+  def self.caliper_time_margin
+    @config['caliper_time_margin']
+  end
+
   # DATABASE - ASSIGNMENTS
 
   # Returns the assignments associated with a user in a course site
@@ -39,7 +54,7 @@ class NessieUtils < Utils
   # @return [Time]
   def self.get_caliper_last_activity(user, site_id)
     query = "SELECT last_activity
-              FROM canvas_caliper_analytics.last_activity_caliper
+              FROM lrs_caliper_analytics.last_activity_caliper
               WHERE canvas_course_id = #{site_id}
                 AND canvas_user_id = #{user.canvas_id};"
     results = query_redshift_db(nessie_db_credentials, query)
