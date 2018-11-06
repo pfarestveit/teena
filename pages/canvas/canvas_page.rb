@@ -375,7 +375,7 @@ module Page
       activate_user_and_reset_email users_missing
 
       # Add users by role
-      ['Teacher', 'Designer', 'Lead TA', 'TA', 'Observer', 'Reader', 'Student'].each do |user_role|
+      ['Teacher', 'Designer', 'Lead TA', 'TA', 'Observer', 'Reader', 'Student', 'Owner', 'Maintainer', 'Member'].each do |user_role|
         users = ''
         users_with_role = users_missing.select { |user| user.role == user_role }
         users_with_role.each { |user| users << "#{user.uid}, " }

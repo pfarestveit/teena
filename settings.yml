@@ -22,10 +22,12 @@ users:
   super_admin_username: secret
   super_admin_password: secret
   super_admin_uid: secret
+  super_admin_canvas_id: secret
   ets_qa_username: secret
   ets_qa_password: secret
   test_user_password: secret
   oski_uid: secret
+  gmail_password: secret
 
 #### Test environment configs ####
 
