@@ -295,6 +295,10 @@ class Utils
     @config['users']['super_admin_uid']
   end
 
+  def self.super_admin_canvas_id
+    @config['users']['super_admin_canvas_id']
+  end
+
   def self.ets_qa_username
     @config['users']['ets_qa_username']
   end
@@ -309,6 +313,10 @@ class Utils
 
   def self.test_user_password
     @config['users']['test_user_password']
+  end
+
+  def self.gmail_password
+    @config['users']['gmail_password']
   end
 
   # DATABASE

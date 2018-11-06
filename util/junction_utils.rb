@@ -13,6 +13,11 @@ class JunctionUtils < Utils
     @config['junction']['base_url']
   end
 
+  # The suffix to append to an email address local-part when testing mailing lists
+  def self.mailing_list_suffix
+    junction_base_url.include?('-qa') ? '-cc-ets-qa' : '-cc-ets-dev'
+  end
+
   # Basic auth password for CalCentral test environments
   def self.junction_basic_auth_password
     @config['junction']['basic_auth_password']
