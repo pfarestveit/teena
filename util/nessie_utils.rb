@@ -253,7 +253,6 @@ class NessieUtils < Utils
                     student.student_profiles.profile AS profile,
                     student.student_academic_status.gpa AS gpa,
                     student.student_academic_status.level AS level_code,
-                    student.student_academic_status.units AS cumulative_units,
                     student.student_majors.major AS majors,
                     boac_advising_coe.students.advisor_ldap_uid AS advisor,
                     boac_advising_coe.students.gender AS gender,
@@ -290,11 +289,12 @@ class NessieUtils < Utils
               end
       profile = JSON.parse(v[0]['profile'])['sisProfile']
       expected_grad = profile && profile['expectedGraduationTerm']
+      cumulative_units = profile && profile['cumulativeUnits']
       {
         :sid => k,
         :gpa => v[0]['gpa'],
         :level => level,
-        :units_completed => v[0]['cumulative_units'],
+        :units_completed => cumulative_units,
         :major => (v.map { |h| h['majors'] }),
         :expected_grad_term_id => (expected_grad && expected_grad['id']),
         :advisor => v[0]['advisor'],
