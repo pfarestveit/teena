@@ -198,8 +198,8 @@ module Page
           # Verify that there is a row for each student with a positive alert count and that the alert count is right
           cohort.member_data.each do |member|
             logger.debug "Checking cohort row for SID #{member[:sid]}"
-            wait_until(1, "Expecting alert count #{member[:alert_count]}, got #{user_row_data(driver, member, cohort)[:alert_count]}") do
-              user_row_data(driver, member, cohort)[:alert_count] == member[:alert_count].to_s
+            wait_until(1, "Expecting alert count #{member[:alert_count]}, got #{user_row_data(driver, member[:sid], cohort)[:alert_count]}") do
+              user_row_data(driver, member[:sid], cohort)[:alert_count] == member[:alert_count].to_s
             end
           end
         end

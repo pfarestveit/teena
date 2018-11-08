@@ -62,8 +62,15 @@ describe 'A CoE advisor using BOAC' do
 
   context 'when performing a user search' do
 
-    it('sees no non-CoE students in search results') { expect(@search_page.search asc_only_students.first.sis_id).to be_zero }
-    it('sees overlapping CoE and ASC students in search results') { expect(@search_page.search overlap_students.first.sis_id).to eql(1) }
+    it('sees no non-CoE students in search results') do
+      @search_page.search asc_only_students.first.sis_id
+      expect(@search_page.student_search_results_count).to be_zero
+    end
+
+    it('sees overlapping CoE and ASC students in search results') do
+      @search_page.search overlap_students.first.sis_id
+      expect(@search_page.student_search_results_count).to eql(1)
+    end
   end
 
   context 'performing a filtered cohort search' do

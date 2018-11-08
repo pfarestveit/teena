@@ -47,7 +47,9 @@ describe 'BOAC', order: :defined do
         cohort.member_data = @cohort_page.expected_search_results(searchable_students, cohort.search_criteria)
         expected_results = @cohort_page.expected_sids_by_last_name cohort.member_data
         visible_results = cohort.member_count.zero? ? [] : @cohort_page.visible_sids
-        @cohort_page.wait_until(1, "Expected but not present: #{expected_results - visible_results}. Present but not expected: #{visible_results - expected_results}") { visible_results.sort == expected_results.sort }
+        @cohort_page.wait_until(1, "Expected but not present: #{expected_results - visible_results}. Present but not expected: #{visible_results - expected_results}") do
+          visible_results.sort == expected_results.sort
+        end
         @cohort_page.verify_list_view_sorting(expected_results, visible_results)
       end
 
@@ -210,7 +212,7 @@ describe 'BOAC', order: :defined do
       it "allows the advisor to sort by term units ascending cohort members who have alerts on the homepage with criteria #{cohort.search_criteria.list_filters}" do
         if cohort.member_data.any?
           # Scrape the visible term units since it's not stored in the cohort member data
-          cohort.member_data.each { |d| d.merge!({:term_units => @homepage.user_row_data(@driver, d, cohort)[:term_units]}) }
+          cohort.member_data.each { |d| d.merge!({:term_units => @homepage.user_row_data(@driver, d[:sid], cohort)[:term_units]}) }
           expected_sequence = @homepage.expected_sids_by_term_units cohort.member_data
           @homepage.sort_by_term_units cohort
           @homepage.wait_until(1, "Expected #{expected_sequence}, but got #{@homepage.all_row_sids(@driver, cohort)}") { @homepage.all_row_sids(@driver, cohort) == expected_sequence }

@@ -50,6 +50,11 @@ describe 'An ASC advisor' do
 
   after(:all) { Utils.quit_browser @driver }
 
+  it 'sees all the expected teams' do
+    @homepage.click_teams_list
+    expect(@teams_page.teams.sort).to eql(NessieUtils.get_asc_teams.map(&:name).sort)
+  end
+
   context 'performing a filtered cohort search' do
 
     before(:all) do
@@ -88,13 +93,24 @@ describe 'An ASC advisor' do
 
   context 'performing a user search' do
 
-    it('sees no non-ASC students in search results') { expect(@search_page.search coe_only_students.first.sis_id).to be_zero }
-    it('sees no inactive ASC students in search results') { expect(@search_page.search @inactive_student_sids.first).to be_zero }
+    it('sees no non-ASC students in search results') do
+      @search_page.search coe_only_students.first.sis_id
+      expect(@search_page.student_search_results_count).to be_zero
+    end
+
+    it('sees no inactive ASC students in search results') do
+      @search_page.search @inactive_student_sids.first
+      expect(@search_page.student_search_results_count).to be_zero
+    end
+
     it('sees overlapping ASC and CoE active students in search results') do
       student = overlap_students.find &:active_asc
-      student ?
-          (expect(@search_page.search student.sis_id).to eql(1)) :
-          logger.warn('Skipping search for overlapping students since none are active')
+      if student
+        @search_page.search student.sis_id
+        expect(@search_page.student_search_results_count).to eql(1)
+      else
+        logger.warn 'Skipping search for overlapping students since none are active'
+      end
     end
   end
 
