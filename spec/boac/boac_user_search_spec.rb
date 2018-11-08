@@ -78,7 +78,7 @@ describe 'BOAC' do
 
     it 'limits results to 50' do
       @search_page.search '303'
-      expect(@search_page.results_count @search_page.student_results_count_element).to be > 50
+      expect(@search_page.student_search_results_count).to be > 50
       expect(@search_page.student_row_sids.length).to eql(50)
     end
   end

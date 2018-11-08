@@ -51,8 +51,15 @@ describe 'An admin using BOAC' do
 
   context 'performing a user search' do
 
-    it('sees CoE-only students in search results') { expect(@search_page.search coe_only_students.first.sis_id).to eql(1) }
-    it('sees ASC-only students in search results') { expect(@search_page.search asc_only_students.first.sis_id).to eql(1) }
+    it('sees CoE-only students in search results') do
+      @search_page.search coe_only_students.first.sis_id
+      expect(@search_page.student_search_results_count).to eql(1)
+    end
+
+    it('sees ASC-only students in search results') do
+      @search_page.search asc_only_students.first.sis_id
+      expect(@search_page.student_search_results_count).to eql(1)
+    end
   end
 
   context 'performing a filtered cohort search' do

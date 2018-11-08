@@ -364,6 +364,7 @@ module Page
     # @return [Array<String>]
     def list_view_sids
       wait_until(Utils.medium_wait) { player_link_elements.any? }
+      sleep Utils.click_wait
       player_sid_elements.map { |el| el.text.gsub(/(INACTIVE)/, '').gsub(/(WAITLISTED)/, '').strip }
     end
 

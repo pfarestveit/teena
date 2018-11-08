@@ -24,48 +24,6 @@ module Page
 
       # LIST VIEW - shared by filtered cohorts and curated cohorts
 
-      # Waits for the number of players on the page to match expectations, and logs an error if it times out
-      # @param cohort_size [Integer]
-      def wait_for_team(cohort_size)
-        wait_until(Utils.medium_wait) { player_link_elements.length == cohort_size } rescue logger.error("Expected #{cohort_size} members, but got #{player_link_elements.length}")
-      end
-
-      # Returns the cumulative GPA displayed for a user
-      # @param driver [Selenium::WebDriver]
-      # @param user [User]
-      # @return [String]
-      def list_view_user_gpa(driver, user)
-        el = driver.find_element(xpath: "#{list_view_user_xpath user}//span[contains(@data-ng-bind,'student.cumulativeGPA')]")
-        el && el.text
-      end
-
-      # Returns the in-progress units displayed for a user
-      # @param driver [Selenium::WebDriver]
-      # @param user [User]
-      # @return [String]
-      def list_view_user_units_in_prog(driver, user)
-        el = driver.find_element(xpath: "#{list_view_user_xpath user}//div[contains(@data-ng-bind,'student.term.enrolledUnits')]")
-        el && el.text
-      end
-
-      # Returns the cumulative units displayed for a user
-      # @param driver [Selenium::WebDriver]
-      # @param user [User]
-      # @return [String]
-      def list_view_user_units(driver, user)
-        el = driver.find_element(xpath: "#{list_view_user_xpath user}//div[contains(@data-ng-bind,'student.cumulativeUnits')]")
-        el && (el.text == '--' ? '0' : el.text)
-      end
-
-      # Returns the classes displayed for a user
-      # @param driver [Selenium::WebDriver]
-      # @param user [User]
-      # @return [Array<String>]
-      def list_view_user_classes(driver, user)
-        els = driver.find_elements(xpath: "#{list_view_user_xpath user}//div[@data-ng-bind='enrollment.displayName']")
-        els && (els.map &:text)
-      end
-
       # Returns a user's SIS data visible on the cohort page
       # @param [Selenium::WebDriver]
       # @param user [User]
@@ -73,13 +31,17 @@ module Page
       def visible_sis_data(driver, user)
         wait_until(Utils.medium_wait) { player_link_elements.any? }
         wait_until(Utils.short_wait) { list_view_user_level(user) }
+        gpa_el = div_element(xpath: "#{list_view_user_xpath user}//span[contains(@data-ng-bind,'student.cumulativeGPA')]")
+        term_units_el = div_element(xpath: "#{list_view_user_xpath user}//div[contains(@data-ng-bind,'student.term.enrolledUnits')]")
+        cumul_units_el = div_element(xpath: "#{list_view_user_xpath user}//div[contains(@data-ng-bind,'student.cumulativeUnits')]")
+        class_els = driver.find_elements(xpath: "#{list_view_user_xpath user}//div[@data-ng-bind='enrollment.displayName']")
         {
           :level => list_view_user_level(user),
           :majors => list_view_user_majors(driver, user),
-          :gpa => list_view_user_gpa(driver, user),
-          :term_units => list_view_user_units_in_prog(driver, user),
-          :units_cumulative => list_view_user_units(driver, user),
-          :classes => list_view_user_classes(driver, user)
+          :gpa => (gpa_el.text if gpa_el.exists?),
+          :term_units => (term_units_el.text if term_units_el.exists?),
+          :units_cumulative => ((cumul_units_el.text == '--' ? '0' : cumul_units_el.text) if cumul_units_el.exists?),
+          :classes => class_els.map(&:text)
         }
       end
 

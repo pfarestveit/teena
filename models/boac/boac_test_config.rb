@@ -39,8 +39,7 @@ class BOACTestConfig < TestConfig
 
   # Sets an existing cohort to use for testing, e.g., a team for ASC and admin or My Students for CoE
   # @param team_config [String]
-  # @param max_users_config [Integer]
-  def set_default_cohort(team_config, max_users_config = nil)
+  def set_default_cohort(team_config)
     case @dept
       # For CoE, use the advisor's assigned students
       when BOACDepartments::COE
@@ -58,9 +57,14 @@ class BOACTestConfig < TestConfig
     end
 
     @default_cohort.name = "Default cohort #{@id}"
-    @default_cohort.member_count = @cohort_members.length if @cohort_members
-    @max_cohort_members = @cohort_members[0..(max_users_config - 1)] if max_users_config
+    @default_cohort.member_count = @cohort_members.length
     @term = BOACUtils.assignments_term
+  end
+
+  # Selects only the first n cohort members for testing
+  # @param config [Integer]
+  def set_max_cohort_members(config)
+    @max_cohort_members = @cohort_members.sort_by(&:last_name)[0..(config - 1)]
   end
 
   # Configures a set of cohorts to use for filtered cohort testing
@@ -85,22 +89,25 @@ class BOACTestConfig < TestConfig
   # @param all_students [Array<BOACUser>]
   def assignments(all_students)
     set_global_configs all_students
-    set_default_cohort(CONFIG['assignments_team'], CONFIG['assignments_max_users'])
+    set_default_cohort CONFIG['assignments_team']
+    set_max_cohort_members CONFIG['assignments_max_users']
   end
 
   # Config for class page testing
   # @param all_students [Array<BOACUser>]
   def class_pages(all_students)
     set_global_configs all_students
-    set_default_cohort(CONFIG['class_page_team'], CONFIG['class_page_max_users'])
+    set_default_cohort CONFIG['class_page_team']
+    set_max_cohort_members CONFIG['class_page_max_users']
   end
 
   # Config for curated cohort testing
   # @param all_students [Array<BOACUser>]
   def curated_cohorts(all_students)
     set_global_configs all_students
-    set_default_cohort(CONFIG['curated_cohort_team'], CONFIG['curated_cohort_max_users'])
+    set_default_cohort CONFIG['curated_cohort_team']
     @cohort_members.keep_if &:active_asc if @dept == BOACDepartments::ASC
+    set_max_cohort_members CONFIG['curated_cohort_max_users']
   end
 
   # Config for filtered cohort testing
@@ -135,21 +142,25 @@ class BOACTestConfig < TestConfig
   # @param all_students [Array<BOACUser>]
   def last_activity(all_students)
     set_global_configs all_students
-    set_default_cohort(CONFIG['last_activity_team'], CONFIG['last_activity_max_users'])
+    set_default_cohort CONFIG['last_activity_team']
+    set_max_cohort_members CONFIG['last_activity_max_users']
   end
 
   # Config for page navigation testing
   # @param all_students [Array<BOACUser>]
   def navigation(all_students)
     set_global_configs all_students
-    set_default_cohort(CONFIG['class_page_team'], CONFIG['class_page_max_users'])
+    set_default_cohort CONFIG['class_page_team']
+    set_max_cohort_members CONFIG['class_page_max_users']
   end
 
   # Config for SIS data testing
   # @param all_students [Array<BOACUser>]
-  def team_sis_data(all_students)
-    set_global_configs(all_students, BOACDepartments::ASC)
-    set_default_cohort(CONFIG['sis_data_team'])
+  def sis_data(all_students)
+    set_global_configs all_students
+    set_default_cohort CONFIG['sis_data_team']
+    @cohort_members.keep_if &:active_asc if @dept == BOACDepartments::ASC
+    set_max_cohort_members CONFIG['sis_data_max_users']
   end
 
   # Config for admin user role testing
@@ -178,7 +189,9 @@ class BOACTestConfig < TestConfig
   # @param all_students [Array<BOACUser>]
   def user_search(all_students)
     set_global_configs all_students
-    set_default_cohort(CONFIG['user_search_team'], CONFIG['user_search_max_users'])
+    set_default_cohort CONFIG['user_search_team']
+    @cohort_members.keep_if &:active_asc if @dept == BOACDepartments::ASC
+    set_max_cohort_members CONFIG['user_search_max_users']
   end
 
 end

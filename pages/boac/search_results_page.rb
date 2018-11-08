@@ -28,6 +28,12 @@ module Page
         elements(:student_row, :div, xpath: '//div[contains(@data-ng-repeat,"student in students")]')
         elements(:student_row_sid, :div, xpath: '//div[contains(@data-ng-repeat,"student in students")]//span[@data-ng-bind="student.sid"]')
 
+        # Returns the result count for a student search
+        # @return [Integer]
+        def student_search_results_count
+          results_count student_results_count_element
+        end
+
         # Returns all the SIDs displayed on the page
         # @return [Array<String>]
         def student_row_sids
