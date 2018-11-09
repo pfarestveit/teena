@@ -183,7 +183,7 @@ describe 'BOAC assignment analytics' do
                 Utils.log_error e
                 it("encountered an error with UID #{student.uid} #{test_case}") { fail }
               ensure
-                row = [student.uid, test.default_cohort.name, test.term, site_code, site_id, boac_api_assigns_submitted[:min], boac_api_assigns_submitted[:max],
+                row = [student.uid, student.sports, test.term, site_code, site_id, boac_api_assigns_submitted[:min], boac_api_assigns_submitted[:max],
                        boac_api_assigns_submitted[:score], boac_api_assigns_submitted[:perc], boac_api_assigns_submitted[:perc_round],
                        boac_api_grades[:min], boac_api_grades[:max], boac_api_grades[:score], boac_api_grades[:perc], boac_api_grades[:perc_round]
                 ]

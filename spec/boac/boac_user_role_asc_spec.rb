@@ -93,14 +93,14 @@ describe 'An ASC advisor' do
 
   context 'performing a user search' do
 
-    it('sees no non-ASC students in search results') do
+    it 'sees no non-ASC students in search results' do
       @search_page.search coe_only_students.first.sis_id
-      expect(@search_page.student_search_results_count).to be_zero
+      @search_page.no_results_msg(coe_only_students.first.sis_id).when_visible Utils.short_wait
     end
 
-    it('sees no inactive ASC students in search results') do
+    it 'sees no inactive ASC students in search results' do
       @search_page.search @inactive_student_sids.first
-      expect(@search_page.student_search_results_count).to be_zero
+      @search_page.no_results_msg(@inactive_student_sids.first).when_visible Utils.short_wait
     end
 
     it('sees overlapping ASC and CoE active students in search results') do

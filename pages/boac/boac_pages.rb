@@ -222,7 +222,7 @@ module Page
     # Clicks the button to create a new custom cohort
     def click_sidebar_create_filtered
       wait_for_load_and_click create_filtered_cohort_link_element
-      wait_for_title 'Filtered Cohort'
+      wait_for_title 'Create a Filtered Cohort'
       sleep 3
     end
 
@@ -249,12 +249,6 @@ module Page
       sleep 2
       wait_for_load_and_click view_everyone_cohorts_link_element
       wait_for_title 'Filtered Cohorts All'
-    end
-
-    # Clicks the link for My Students
-    def click_my_students
-      wait_for_load_and_click my_students_link_element
-      wait_for_title 'My Students'
     end
 
     # Clicks the sidebar link to a filtered cohort

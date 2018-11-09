@@ -40,15 +40,17 @@ module Page
         major_els = driver.find_elements(xpath: "#{row_xpath}//span[@data-ng-repeat='major in student.majors']")
         term_units_el = div_element(xpath: "#{row_xpath}//div[contains(@data-ng-bind,'student.term.enrolledUnits')]")
         cumul_units_el = div_element(xpath: "#{row_xpath}//div[contains(@data-ng-bind,'student.cumulativeUnits')]")
+        no_cumul_units_el = div_element(xpath: "#{row_xpath}//div[contains(@data-ng-if,'!student.cumulativeUnits')]")
         gpa_el = div_element(xpath: "#{row_xpath}//div[contains(@data-ng-bind, 'student.cumulativeGPA')]")
+        no_gpa_el = div_element(xpath: "#{row_xpath}//div[contains(@data-ng-if, '!student.cumulativeGPA')]")
         alerts_el = div_element(xpath: "#{row_xpath}//div[contains(@class,'home-issues-pill')]")
         {
             :name => (name_el.text if name_el.exists?),
             :sid => (sid_el.text if sid_el.exists?),
             :major => major_els.map(&:text),
             :term_units => (term_units_el.text if term_units_el.exists?),
-            :cumulative_units => (cumul_units_el.text if cumul_units_el.exists?),
-            :gpa => (gpa_el.text if gpa_el.exists?),
+            :cumulative_units => (cumul_units_el.exists? ? cumul_units_el.text : no_cumul_units_el.text),
+            :gpa => (gpa_el.exists? ? gpa_el.text : no_gpa_el.text),
             :alert_count => (alerts_el.text if alerts_el.exists?)
         }
       end
