@@ -22,6 +22,13 @@ module Page
           count
         end
 
+        # Returns the element containing the 'no results' message for a search
+        # @param search_string [String]
+        # @return [PageObject::Elements::Heading]
+        def no_results_msg(search_string)
+          h1_element(xpath: "//h1[text()=\"No results matching '#{search_string}'\"]")
+        end
+
         # STUDENT SEARCH
 
         span(:student_results_count, xpath: '//span[@count="search.totalStudentCount"]')

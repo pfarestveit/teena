@@ -81,9 +81,8 @@ describe 'BOAC' do
 
                           @class_list_page.click_matrix_view
                           @class_matrix_page.wait_for_matrix
-                          matrix_student_count = @class_matrix_page.matrix_bubble_count @driver
-                          missing_data_student_count = @class_matrix_page.visible_no_data_uids.length
-                          it("shows all the expected matrix view students in #{class_test_case}") { expect(missing_data_student_count + matrix_student_count).to eql(expected_sids.length) }
+                          all_students_present = @class_matrix_page.verify_all_students_present(@driver, expected_sids.length)
+                          it("shows all the expected matrix view students in #{class_test_case}") { expect(all_students_present).to be true }
 
                           # Visit student
                           @class_matrix_page.matrix_bubbles(@driver).any? ?

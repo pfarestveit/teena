@@ -24,7 +24,7 @@ module Page
 
         div(:matrix, id: 'scatterplot')
         elements(:missing_data_link, :link, xpath: '//a[contains(@data-ng-repeat,"student in studentsWithoutData")]')
-        elements(:missing_data_image, :image, xpath: '//h4[text()="Missing Student Data"]/following-sibling::ul//img')
+        elements(:missing_data_row, :image, xpath: '//table[@class="missing-student-data-table"]//tr[contains(@class,"student-list-item")]')
 
         # Waits for the matrix graphic to appear and pauses briefly to allow bubbles to start forming
         def wait_for_matrix
@@ -55,7 +55,19 @@ module Page
         # Returns the UIDs of the users in the 'no data' list
         # @return [Array<String>]
         def visible_no_data_uids
-          missing_data_image_elements.any? ? (missing_data_image_elements.map { |el| el.attribute('data-ng-src').delete('/apiuserphoto') }) : []
+          missing_data_row_elements.any? ? (missing_data_row_elements.map { |el| el.attribute('id') }) : []
+        end
+
+        # Checks whether or not all the list view students are appearing on the matrix view
+        # @param driver [Selenium::WebDriver]
+        # @param expected_count [Integer]
+        # @return [boolean]
+        def verify_all_students_present(driver, expected_count)
+          verify_block do
+            wait_until(Utils.short_wait, "Got #{matrix_bubble_count(driver)} bubbles and #{visible_no_data_uids.length} rows but expected #{expected_count} total") do
+              matrix_bubble_count(driver) + visible_no_data_uids.length == expected_count
+            end
+          end
         end
 
         # Clicks the last user bubble in the matrix graphic

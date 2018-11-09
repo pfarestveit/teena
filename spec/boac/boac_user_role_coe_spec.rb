@@ -62,12 +62,12 @@ describe 'A CoE advisor using BOAC' do
 
   context 'when performing a user search' do
 
-    it('sees no non-CoE students in search results') do
+    it 'sees no non-CoE students in search results' do
       @search_page.search asc_only_students.first.sis_id
-      expect(@search_page.student_search_results_count).to be_zero
+      @search_page.no_results_msg(asc_only_students.first.sis_id).when_visible Utils.short_wait
     end
 
-    it('sees overlapping CoE and ASC students in search results') do
+    it 'sees overlapping CoE and ASC students in search results' do
       @search_page.search overlap_students.first.sis_id
       expect(@search_page.student_search_results_count).to eql(1)
     end
