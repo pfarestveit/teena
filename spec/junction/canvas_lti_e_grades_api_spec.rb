@@ -49,8 +49,8 @@ describe 'bCourses E-Grades Export' do
         # Get grades in export CSV
         @e_grades_export_page.resolve_all_issues(@driver, course)
         e_grades = grades_are_final ?
-            @e_grades_export_page.download_final_grades(course, primary_section) :
-            @e_grades_export_page.download_current_grades(course, primary_section)
+            @e_grades_export_page.download_final_grades(@driver, course, primary_section) :
+            @e_grades_export_page.download_current_grades(@driver, course, primary_section)
 
         if gradebook_grades.any?
           logger.debug "Gradebook grades: #{gradebook_grades}"

@@ -59,10 +59,9 @@ module Page
       def search_for_course(course, instructor, sections)
         logger.debug "Searching for #{course.code} in #{course.term}"
         if course.create_site_workflow == 'uid'
-          uid = instructor.uid
-          logger.debug "Searching by instructor UID #{uid}"
+          logger.debug "Searching by instructor UID #{instructor.uid}"
           switch_mode unless switch_to_ccn?
-          wait_for_element_and_type_js(instructor_uid_element, uid)
+          wait_for_element_and_type_js(instructor_uid_element, instructor.uid)
           wait_for_update_and_click_js as_instructor_button_element
           choose_term course
         elsif course.create_site_workflow == 'ccn'
@@ -70,7 +69,7 @@ module Page
           switch_mode unless switch_to_instructor?
           choose_term course
           sleep 1
-          ccn_list = sections.map { |section| section.id }
+          ccn_list = sections.map &:id
           logger.debug "CCN list is '#{ccn_list}'"
           wait_for_element_and_type_js(ccn_list_element, ccn_list.join(', '))
           wait_for_update_and_click_js review_ccns_button_element
