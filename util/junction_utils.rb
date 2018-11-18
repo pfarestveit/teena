@@ -4,13 +4,13 @@ class JunctionUtils < Utils
 
   include Logging
 
-  @config = Utils.config
+  @config = Utils.config['junction']
 
   # JUNCTION
 
   # Base URL of Junction test environment
   def self.junction_base_url
-    @config['junction']['base_url']
+    @config['base_url']
   end
 
   # The suffix to append to an email address local-part when testing mailing lists
@@ -20,7 +20,7 @@ class JunctionUtils < Utils
 
   # Basic auth password for CalCentral test environments
   def self.junction_basic_auth_password
-    @config['junction']['basic_auth_password']
+    @config['basic_auth_password']
   end
 
   def self.junction_test_data_file
@@ -42,6 +42,16 @@ class JunctionUtils < Utils
     load_junction_test_data['users']
   end
 
+  # The number of times to poll for completed site creation when testing background tasks
+  def self.background_job_attempts
+    @config['background_job_attempts']
+  end
+
+  # The number of times to multiply the test data when testing background tasks
+  def self.background_job_multiplier
+    @config['background_job_multiplier']
+  end
+
   # Sets the site id for a course in the test data for course-driven bCourses tests
   # @param course [Course]
   def self.set_junction_test_course_id(course)
@@ -60,7 +70,7 @@ class JunctionUtils < Utils
   # @param my_toolbox_page [Page::JunctionPages::MyToolboxPage]
   def self.clear_cache(driver, splash_page, my_toolbox_page)
     splash_page.load_page
-    splash_page.basic_auth super_admin_uid
+    splash_page.basic_auth @config['admin_uid']
     driver.get("#{junction_base_url}/api/cache/clear")
     sleep 3
     my_toolbox_page.load_page
@@ -81,42 +91,42 @@ class JunctionUtils < Utils
 
   # Canvas ID of create course site tool
   def self.canvas_create_site_tool
-    @config['canvas']['create_site_tool']
+    Utils.config['canvas']['create_site_tool']
   end
 
   # Canvas ID of course add user tool
   def self.canvas_course_add_user_tool
-    @config['canvas']['course_add_user_tool']
+    Utils.config['canvas']['course_add_user_tool']
   end
 
   # Canvas ID of course captures tool
   def self.canvas_course_captures_tool
-    @config['canvas']['course_captures_tool']
+    Utils.config['canvas']['course_captures_tool']
   end
 
   # Canvas ID of roster photos tool
   def self.canvas_rosters_tool
-    @config['canvas']['rosters_tool']
+    Utils.config['canvas']['rosters_tool']
   end
 
   # Canvas ID of course official sections tool
   def self.canvas_official_sections_tool
-    @config['canvas']['official_sections_tool']
+    Utils.config['canvas']['official_sections_tool']
   end
 
   # Canvas ID of admin mailing lists tool
   def self.canvas_mailing_lists_tool
-    @config['canvas']['mailing_lists_tool']
+    Utils.config['canvas']['mailing_lists_tool']
   end
 
   # Canvas ID of instructor mailing list tool
   def self.canvas_mailing_list_tool
-    @config['canvas']['mailing_list_tool']
+    Utils.config['canvas']['mailing_list_tool']
   end
 
   # Canvas ID of e-grades export tool
   def self.canvas_e_grades_export_tool
-    @config['canvas']['e_grades_export_tool']
+    Utils.config['canvas']['e_grades_export_tool']
   end
 
 end

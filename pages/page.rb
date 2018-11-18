@@ -158,6 +158,15 @@ module Page
     end
   end
 
+  # Opens a new browser tab, switches focus to it, and returns its handle
+  # @param driver [Selenium::WebDriver]
+  # @return [String]
+  def open_new_window(driver)
+    driver.execute_script('window.open()')
+    driver.switch_to.window driver.window_handles.last
+    driver.window_handle
+  end
+
   # Clicks a link that should open in a new browser window and verifies that the expected page title loads on the new window.
   # @param driver [Selenium::WebDriver]
   # @param link [PageObject::Elements::Element]

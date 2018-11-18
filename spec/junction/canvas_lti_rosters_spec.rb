@@ -38,8 +38,9 @@ describe 'bCourses Roster Photos' do
     @canvas.masquerade_as(@driver, teacher_1)
 
     # Create test course site if necessary
-    @create_course_site_page.provision_course_site(@driver, course, teacher_1, sections_for_site) if course.site_id.nil?
+    @create_course_site_page.provision_course_site(@driver, course, teacher_1, sections_for_site)
     @canvas.publish_course_site(@driver, course)
+    @canvas.wait_for_enrollment_import(course, ['Student', 'Waitlist Student'])
 
     # Get enrollment totals on site
     @roster_api.get_feed(@driver, course)
@@ -48,7 +49,7 @@ describe 'bCourses Roster Photos' do
         user_counts = @canvas.enrollment_count_by_roles(course, ['Student', 'Waitlist Student'])
     @student_count = user_counts[0][:count]
     @waitlist_count = user_counts[1][:count]
-    @expected_sids = @roster_api.student_ids @roster_api.students
+    @expected_sids = @roster_api.student_ids(@roster_api.students).sort
     @canvas.load_users_page course
     @canvas.click_find_person_to_add @driver
 
@@ -73,19 +74,25 @@ describe 'bCourses Roster Photos' do
     end
 
     it "shows UID #{teacher_1.uid} all students and waitlisted students on #{course.code} course site ID #{course.site_id}" do
-      @roster_photos_page.wait_until(Utils.medium_wait, "Visible SIDs: #{@roster_photos_page.all_sids}. Expected: #{@expected_sids}") do
+      visible_sids = @roster_photos_page.all_sids.sort
+      @roster_photos_page.wait_until(Utils.medium_wait, "Expected but not present: #{@expected_sids - visible_sids}. Present but not expected: #{visible_sids - @expected_sids}.
+      Expected #{@expected_sids} but got #{visible_sids}") do
         @roster_photos_page.all_sids.length == @total_user_count
+        visible_sids == @expected_sids
       end
-      expect(@roster_photos_page.all_sids.sort).to eql(@expected_sids.sort)
     end
 
     it "shows UID #{teacher_1.uid} actual photos for enrolled students on #{course.code} course site ID #{course.site_id}" do
-      @roster_photos_page.wait_until(Utils.medium_wait) { @roster_photos_page.roster_photo_elements.length <= @student_count }
+      @roster_photos_page.wait_until(Utils.medium_wait, "Expected photo count #{@roster_photos_page.roster_photo_elements.length} to be >= #{@student_count}") do
+        @roster_photos_page.roster_photo_elements.length <= @student_count
+      end
       expect(@roster_photos_page.roster_photo_elements.any?).to be true
     end
 
     it "shows UID #{teacher_1.uid} placeholder photos for waitlisted students on #{course.code} course site ID #{course.site_id}" do
-      @roster_photos_page.wait_until(Utils.medium_wait) { @roster_photos_page.roster_photo_placeholder_elements.length >= @waitlist_count }
+      @roster_photos_page.wait_until(Utils.medium_wait, "Expected placeholder count #{@roster_photos_page.roster_photo_placeholder_elements.length} to be >= #{@waitlist_count}") do
+        @roster_photos_page.roster_photo_placeholder_elements.length >= @waitlist_count
+      end
     end
 
     it "shows UID #{teacher_1.uid} all sections by default on #{course.code} course site ID #{course.site_id}" do
@@ -118,11 +125,12 @@ describe 'bCourses Roster Photos' do
     it "allows UID #{teacher_1.uid} to download a CSV of the course site enrollment on #{course.code} course site ID #{course.site_id}" do
       exported_user_sids = @roster_photos_page.export_roster course
       logger.info "Exported SIDs #{exported_user_sids}"
-      expect(exported_user_sids.sort).to eql(@expected_sids.sort)
+      expect(exported_user_sids.sort).to eql(@expected_sids)
     end
 
     it "shows UID #{teacher_1.uid} a photo print button on #{course.code} course site ID #{course.site_id}" do
-      expect(@roster_photos_page.print_roster_link?).to be true
+      @roster_photos_page.load_embedded_tool(@driver, course)
+      @roster_photos_page.print_roster_link_element.when_visible Utils.medium_wait
     end
 
     it "shows UID #{teacher_1.uid} a 'no students enrolled' message on #{course.code} course site ID #{course.site_id}" do
@@ -143,9 +151,12 @@ describe 'bCourses Roster Photos' do
           @total_user_count.zero? ?
               @roster_photos_page.no_students_msg_element.when_visible(Utils.short_wait) :
               @roster_photos_page.wait_until(Utils.short_wait) { @roster_photos_page.roster_sid_elements.any? }
-        else ['Designer', 'Reader', 'Observer', 'Student', 'Waitlist Student'].include? user.role
+        elsif ['Designer', 'Reader', 'Observer', 'Student', 'Waitlist Student'].include? user.role
           @roster_photos_page.switch_to_canvas_iframe @driver
           @roster_photos_page.no_access_msg_element.when_visible Utils.short_wait
+        else
+          logger.error "Unknown user role '#{user.role}'"
+          fail
         end
       end
     end

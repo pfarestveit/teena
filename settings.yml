@@ -92,6 +92,9 @@ canvas:
 junction:
   base_url: https://junction-qa.berkeley.edu
   basic_auth_password: secret
+  background_job_attempts: 500
+  background_job_multiplier: 1
+  admin_uid: secret
 
 lrs:
   base_url: https://app-qa.ets-berkeley-cloudlrs.net

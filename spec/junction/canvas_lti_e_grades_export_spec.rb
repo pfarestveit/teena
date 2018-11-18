@@ -11,7 +11,7 @@ describe 'bCourses E-Grades Export', order: :defined do
   sections = course.sections.map { |section_data| Section.new section_data }
   sections_for_site = sections.select { |section| section.include_in_site }
   primary_section = sections_for_site.first
-  secondary_section = sections_for_site.last
+  secondary_section = sections_for_site.last if sections_for_site.length > 1
 
   # Load test user data
   test_user_data = JunctionUtils.load_junction_test_user_data.select { |user| user['tests']['e_grades_export'] }
@@ -38,7 +38,8 @@ describe 'bCourses E-Grades Export', order: :defined do
     @splash_page.basic_auth(teacher.uid, @cal_net)
     @rosters_api.get_feed(@driver, course)
     @academics_api.get_feed(@driver)
-    @current_semester = @academics_api.semester_name @academics_api.current_semester(@academics_api.all_teaching_semesters)
+    @current_semester = @academics_api.current_semester @academics_api.all_teaching_semesters
+    @current_semester_name = @academics_api.semester_name @current_semester if @current_semester
     @driver.manage.delete_all_cookies
 
     @canvas.log_in(@cal_net, Utils.super_admin_username, Utils.super_admin_password)
@@ -165,46 +166,58 @@ describe 'bCourses E-Grades Export', order: :defined do
     end
 
     it 'allows the user to download current grades for a primary section' do
-      csv = @e_grades_export_page.download_current_grades(course, primary_section)
-      if course.term == @current_semester
+      csv = @e_grades_export_page.download_current_grades(@driver, course, primary_section)
+      if @current_semester && course.term == @current_semester_name
         expect(csv.any?).to be true
       else
-        expected_sids = @rosters_api.student_ids @rosters_api.section_students("#{primary_section.course} #{primary_section.label}")
-        actual_sids = csv.map { |k| k[:id] }
-        expect(actual_sids.sort).to eql(expected_sids.sort)
+        expected_sids = @rosters_api.student_ids(@rosters_api.section_students("#{primary_section.course} #{primary_section.label}")).sort
+        actual_sids = csv.map { |k| k[:id] }.sort
+        @e_grades_export_page.wait_until(1,  "Expected but not present: #{expected_sids - actual_sids}. Present but not expected: #{actual_sids - expected_sids}") do
+          expected_sids == actual_sids
+        end
       end
     end
 
     it 'allows the user to download current grades for a secondary section' do
-      csv = @e_grades_export_page.download_current_grades(course, secondary_section)
-      if course.term == @current_semester
-        expect(csv.any?).to be true
-      else
-        expected_sids = @rosters_api.student_ids @rosters_api.section_students("#{secondary_section.course} #{secondary_section.label}")
-        actual_sids = csv.map { |k| k[:id] }
-        expect(actual_sids.sort).to eql(expected_sids.sort)
+      if secondary_section
+        csv = @e_grades_export_page.download_current_grades(@driver, course, secondary_section)
+        if @current_semester && course.term == @current_semester_name
+          expect(csv.any?).to be true
+        else
+          expected_sids = @rosters_api.student_ids(@rosters_api.section_students("#{secondary_section.course} #{secondary_section.label}")).sort
+          actual_sids = csv.map { |k| k[:id] }.sort
+          @e_grades_export_page.wait_until(1,  "Expected but not present: #{expected_sids - actual_sids}. Present but not expected: #{actual_sids - expected_sids}") do
+            expected_sids == actual_sids
+          end
+        end
       end
     end
 
     it 'allows the user to download final grades for a primary section' do
-      csv = @e_grades_export_page.download_final_grades(course, primary_section)
-      if course.term == @current_semester
+      csv = @e_grades_export_page.download_final_grades(@driver, course, primary_section)
+      if @current_semester && course.term == @current_semester_name
         expect(csv.any?).to be true
       else
-        expected_sids = @rosters_api.student_ids @rosters_api.section_students("#{primary_section.course} #{primary_section.label}")
-        actual_sids = csv.map { |k| k[:id] }
-        expect(actual_sids.sort).to eql(expected_sids.sort)
+        expected_sids = @rosters_api.student_ids(@rosters_api.section_students("#{primary_section.course} #{primary_section.label}")).sort
+        actual_sids = csv.map { |k| k[:id] }.sort
+        @e_grades_export_page.wait_until(1,  "Expected but not present: #{expected_sids - actual_sids}. Present but not expected: #{actual_sids - expected_sids}") do
+          expected_sids == actual_sids
+        end
       end
     end
 
     it 'allows the user to download final grades for a secondary section' do
-      csv = @e_grades_export_page.download_final_grades(course, secondary_section)
-      if course.term == @current_semester
-        expect(csv.any?).to be true
-      else
-        expected_sids = @rosters_api.student_ids @rosters_api.section_students("#{secondary_section.course} #{secondary_section.label}")
-        actual_sids = csv.map { |k| k[:id] }
-        expect(actual_sids.sort).to eql(expected_sids.sort)
+      if secondary_section
+        csv = @e_grades_export_page.download_final_grades(@driver, course, secondary_section)
+        if @current_semester && course.term == @current_semester_name
+          expect(csv.any?).to be true
+        else
+          expected_sids = @rosters_api.student_ids(@rosters_api.section_students("#{secondary_section.course} #{secondary_section.label}")).sort
+          actual_sids = csv.map { |k| k[:id] }.sort
+          @e_grades_export_page.wait_until(1,  "Expected but not present: #{expected_sids - actual_sids}. Present but not expected: #{actual_sids - expected_sids}") do
+            expected_sids == actual_sids
+          end
+        end
       end
     end
   end
@@ -215,7 +228,7 @@ describe 'bCourses E-Grades Export', order: :defined do
       section_name = "#{primary_section.course} #{primary_section.label}"
       @roster_students = @rosters_api.section_students section_name
       @e_grades_export_page.load_embedded_tool(@driver, course)
-      @e_grades = @e_grades_export_page.download_final_grades(course, primary_section)
+      @e_grades = @e_grades_export_page.download_final_grades(@driver, course, primary_section)
     end
 
     it 'has the right column headers' do
@@ -226,20 +239,24 @@ describe 'bCourses E-Grades Export', order: :defined do
     end
 
     it 'has the right SIDs' do
-      expected_sids = @rosters_api.student_ids @roster_students
-      actual_sids = @e_grades.map { |s| s[:id] }
+      expected_sids = @rosters_api.student_ids(@roster_students).sort
+      actual_sids = @e_grades.map { |s| s[:id] }.sort
       logger.debug "Expecting #{expected_sids} and got #{actual_sids}"
       expect(actual_sids.any? &:empty?).to be false
-      expect(actual_sids.sort).to eql(expected_sids.sort)
+      @e_grades_export_page.wait_until(1,  "Expected but not present: #{expected_sids - actual_sids}. Present but not expected: #{actual_sids - expected_sids}") do
+        expected_sids == actual_sids
+      end
     end
 
     it 'has the right names' do
       # Compare last names only, since preferred names can cause mismatches
-      expected_names = @rosters_api.student_last_names @roster_students
-      actual_names = @e_grades.map { |n| n[:name].split(',')[0].strip.downcase }
+      expected_names = @rosters_api.student_last_names(@roster_students).sort
+      actual_names = @e_grades.map { |n| n[:name].split(',')[0].strip.downcase }.sort
       logger.debug "Expecting #{expected_names} and got #{actual_names}"
       expect(actual_names.any? &:empty?).to be false
-      expect(actual_names.sort).to eql(expected_names.sort)
+      @e_grades_export_page.wait_until(1,  "Expected but not present: #{expected_names - actual_names}. Present but not expected: #{actual_names - expected_names}") do
+        expected_names == actual_names
+      end
     end
 
     it 'has reasonable grades' do

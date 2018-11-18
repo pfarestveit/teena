@@ -117,11 +117,13 @@ module Page
       end
 
       # Downloads current grades for a given section
+      # @param driver [Selenium::WebDriver]
       # @param course [Course]
       # @param section [Section]
       # @return [Array<Hash>]
-      def download_current_grades(course, section)
+      def download_current_grades(driver, course, section)
         logger.info "Downloading current grades for #{course.code} #{section.label}"
+        load_embedded_tool(driver, course)
         choose_section section if course.sections.length > 1
         wait_for_load_and_click download_current_grades_element
         file_path = "#{Utils.download_dir}/egrades-current-#{section.id}-#{course.term.gsub(' ', '-')}-*.csv"
@@ -130,11 +132,13 @@ module Page
       end
 
       # Downloads final grades for a given section
+      # @param driver [Selenium::WebDriver]
       # @param course [Course]
       # @param section [Section]
       # @return [Array<Hash>]
-      def download_final_grades(course, section)
+      def download_final_grades(driver, course, section)
         logger.info "Downloading final grades for #{course.code} #{section.label}"
+        load_embedded_tool(driver, course)
         choose_section section if course.sections.length > 1
         wait_for_load_and_click download_final_grades_element
         file_path = "#{Utils.download_dir}/egrades-final-#{section.id}-#{course.term.gsub(' ', '-')}-*.csv"
