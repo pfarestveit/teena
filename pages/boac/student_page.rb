@@ -116,56 +116,61 @@ module Page
         }
       end
 
-      # CURATED COHORTS
+      # CURATED GROUPS
 
-      link(:student_create_curated_cohort, id: 'curated-cohort-create')
-      elements(:student_curated_cohort_name, :link, xpath: '//div[contains(@class,"student-groups-checkboxes")]//a[@data-ng-bind="group.name"]')
+      link(:student_create_curated_group, id: 'curated-cohort-create-link')
+      elements(:student_curated_group_name, :link, xpath: '//div[contains(@class,"student-groups-checkboxes")]//a[@data-ng-bind="group.name"]')
 
-      # Clicks the checkbox to add or remove a student from a curated cohort
-      # @param cohort [CuratedCohort]
-      def click_curated_cbx(cohort)
-        wait_for_update_and_click checkbox_element(xpath: "//div[contains(@class,\"curated-cohort-checkbox\")][contains(.,\"#{cohort.name}\")]/input")
+      # Clicks the checkbox to add or remove a student from a curated group
+      # @param group [CuratedGroup]
+      def click_curated_cbx(group)
+        wait_for_update_and_click checkbox_element(xpath: "//div[contains(@class,\"curated-cohort-checkbox\")][contains(.,\"#{group.name}\")]/input")
       end
 
-      # Adds a student to a curated cohort
+      # Adds a student to a curated group
       # @param student [User]
-      # @param cohort [CuratedCohort]
-      def add_student_to_curated(student, cohort)
-        logger.info "Adding UID #{student.uid} to cohort '#{cohort.name}'"
-        click_curated_cbx cohort
-        cohort.members << student
-        wait_for_sidebar_curated_member_count cohort
+      # @param group [CuratedGroup]
+      def add_student_to_curated(student, group)
+        logger.info "Adding UID #{student.uid} to group '#{group.name}'"
+        click_curated_cbx group
+        group.members << student
+        wait_for_sidebar_group_member_count group
       end
 
-      # Removes a student from a curated cohort
+      # Removes a student from a curated group
       # @param student [User]
-      # @param cohort [CuratedCohort]
-      def remove_student_from_curated(student, cohort)
-        logger.info "Removing UID #{student.uid} from cohort '#{cohort.name}'"
-        click_curated_cbx cohort
-        cohort.members.delete student
-        wait_for_sidebar_curated_member_count cohort
+      # @param group [CuratedGroup]
+      def remove_student_from_curated(student, group)
+        logger.info "Removing UID #{student.uid} from group '#{group.name}'"
+        click_curated_cbx group
+        group.members.delete student
+        wait_for_sidebar_group_member_count group
       end
 
-      # Creates a curated cohort using the create button on the student page
-      # @param cohort [CuratedCohort]
-      def create_student_curated(cohort)
-        wait_for_update_and_click student_create_curated_cohort_element
-        name_and_save_curated_cohort cohort
-        wait_for_sidebar_curated cohort
+      # Clicks the link to create a curated group
+      def click_create_curated_link
+        wait_for_update_and_click student_create_curated_group_element
       end
 
-      # Returns all the curated cohorts shown on the student page
+      # Creates a curated group using the create button on the student page
+      # @param group [CuratedGroup]
+      def create_student_curated(group)
+        click_create_curated_link
+        name_and_save_group group
+        wait_for_sidebar_group group
+      end
+
+      # Returns all the curated groups shown on the student page
       # @return [Array<String>]
       def visible_curated_names
-        student_curated_cohort_name_elements.map &:text
+        student_curated_group_name_elements.map &:text
       end
 
-      # Whether or not a curated cohort is selected on the student page
-      # @param cohort [CuratedCohort]
+      # Whether or not a curated group is selected on the student page
+      # @param group [CuratedGroup]
       # @return [boolean]
-      def curated_selected?(cohort)
-        checkbox_element(xpath: "//div[contains(@class,\"curated-cohort-checkbox\")][contains(.,\"#{cohort.name}\")]//input[contains(@class,\"ng-not-empty\")]").exists?
+      def curated_selected?(group)
+        checkbox_element(xpath: "//div[contains(@class,\"curated-cohort-checkbox\")][contains(.,\"#{group.name}\")]//input[contains(@class,\"ng-not-empty\")]").exists?
       end
 
       # COURSES

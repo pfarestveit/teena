@@ -12,6 +12,17 @@ module Page
         include BOACPages
         include ClassPages
 
+        elements(:student_link, :link, xpath: '//tr[@data-ng-repeat="student in section.students"]//a')
+        elements(:student_sid, :div, xpath: '//tr[@data-ng-repeat="student in section.students"]//div[contains(@class, "student-sid")]')
+
+        # Returns all the SIDs shown on list view
+        # @return [Array<String>]
+        def list_view_sids
+          wait_until(Utils.medium_wait) { student_link_elements.any? }
+          sleep Utils.click_wait
+          student_sid_elements.map { |el| el.text.gsub(/(INACTIVE)/, '').gsub(/(WAITLISTED)/, '').strip }
+        end
+
         # STUDENT SIS DATA
 
         # Returns the midpoint grade shown for a student

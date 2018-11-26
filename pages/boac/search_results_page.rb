@@ -120,6 +120,41 @@ module Page
           wait_for_spinner
         end
 
+        # CURATED GROUPS
+
+        # Selects the add-to-group checkboxes for a given set of students
+        # @param students [Array<User>]
+        def select_students_to_add(students)
+          logger.info "Adding student UIDs: #{students.map &:uid}"
+          students.each { |s| wait_for_update_and_click checkbox_element(id: "#{s.uid}-curated-cohort-checkbox") }
+        end
+
+        # Adds a given set of students to an existing curated group
+        # @param students [Array<User>]
+        # @param group [CuratedGroup]
+        def selector_add_students_to_group(students, group)
+          select_students_to_add students
+          select_group_and_add(students, group)
+        end
+
+        # Adds a given set of students to a new curated group, which is created as part of the process
+        # @param students [Array<User>]
+        # @param group [CuratedGroup]
+        def selector_add_students_to_new_group(students, group)
+          select_students_to_add students
+          selector_create_new_group(students, group)
+        end
+
+        # Adds all the students on a page to a curated group
+        # @param group [CuratedGroup]
+        def selector_add_all_students_to_curated(group)
+          wait_until(Utils.short_wait) { add_individual_to_curated_checkbox_elements.any? &:visible? }
+          wait_for_update_and_click add_all_to_curated_checkbox_element
+          logger.debug "There are #{add_individual_to_curated_checkbox_elements.length} individual checkboxes"
+          students = add_individual_to_curated_checkbox_elements.map { |el| User.new({uid: el.attribute('id').split('-')[1]}) }
+          select_group_and_add(students, group)
+        end
+
       end
     end
   end

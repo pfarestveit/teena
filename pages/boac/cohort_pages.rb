@@ -10,6 +10,9 @@ module Page
       include BOACPages
 
       h1(:results, xpath: '//h1')
+      button(:rename_cohort_button, id: 'rename-cohort-button')
+      text_area(:rename_cohort_input, id: 'rename-cohort-input')
+      button(:delete_cohort_button, id: 'delete-cohort-button')
       button(:confirm_delete_button, id: 'confirm-delete-btn')
       button(:cancel_delete_button, id: 'cancel-delete-btn')
       span(:no_access_msg, xpath: '//span[text()="You are unauthorized to access student data managed by other departments"]')
@@ -20,6 +23,26 @@ module Page
         sleep 1
         results_element.when_visible Utils.short_wait
         results.split(' ')[0].to_i
+      end
+
+      # Deletes a cohort unless it is read-only (e.g., CoE default cohorts).
+      # @param cohort [Cohort]
+      def delete_cohort(cohort)
+        logger.info "Deleting a cohort named #{cohort.name}"
+        wait_for_load_and_click delete_cohort_button_element
+        wait_for_update_and_click confirm_delete_button_element
+        wait_until(Utils.short_wait) { current_url == "#{BOACUtils.base_url}/home" }
+        sleep Utils.click_wait
+      end
+
+      # Begins deleting a cohort but cancels
+      # @param cohort [Cohort]
+      def cancel_cohort_deletion(cohort)
+        logger.info "Canceling the deletion of cohort #{cohort.name}"
+        wait_for_load_and_click delete_cohort_button_element
+        wait_for_update_and_click cancel_delete_button_element
+        cancel_delete_button_element.when_not_present Utils.short_wait
+        wait_until(1) { current_url.include? cohort.id }
       end
 
       # LIST VIEW - shared by filtered cohorts and curated cohorts

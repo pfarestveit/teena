@@ -26,7 +26,6 @@ describe 'An ASC advisor' do
     @api_section_page = ApiSectionPage.new @driver
     @api_user_analytics_page = ApiUserAnalyticsPage.new @driver
     @class_page = Page::BOACPages::ClassPages::ClassListViewPage.new @driver
-    @curated_cohort_page = Page::BOACPages::CohortPages::CuratedCohortPage.new @driver
     @filtered_cohort_page = Page::BOACPages::CohortPages::FilteredCohortPage.new @driver
     @homepage = Page::BOACPages::UserListPages::HomePage.new @driver
     @search_page = Page::BOACPages::UserListPages::SearchResultsPage.new @driver

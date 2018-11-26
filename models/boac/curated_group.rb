@@ -1,4 +1,4 @@
-class CuratedCohort < Cohort
+class CuratedGroup < Cohort
 
   attr_accessor :members
 

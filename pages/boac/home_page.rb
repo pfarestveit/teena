@@ -58,83 +58,19 @@ module Page
         # @param xpath [String]
         # @return [Array<Selenium::WebDriver::Element>]
         def user_rows(driver, xpath)
-          driver.find_elements(xpath: "#{xpath}//div[contains(@data-ng-repeat,'student in students')]")
-        end
-
-        # CURATED COHORTS
-
-        link(:home_create_first_curated_link, id: 'home-curated-cohort-create')
-        link(:home_create_curated_link, id: 'home-curated-cohorts-create-link')
-        link(:home_manage_curated_link, id: 'home-curated-cohorts-manage-link')
-        div(:home_no_curated_cohorts_msg, xpath: '//h1[text()="Curated Cohorts"]/../following-sibling::div[contains(.,"You have no curated cohorts.")]')
-
-        # Creates a curated cohort using the 'Create' link in the main content area of the homepage
-        # @param cohort [CuratedCohort]
-        def home_create_curated(cohort)
-          wait_for_load_and_click home_create_curated_link_element
-          name_and_save_curated_cohort cohort
-          wait_for_sidebar_curated cohort
-        end
-
-        # Creates a curated cohort using the 'Create a new curated cohort' link shown on the homepage when no other curated cohorts exist
-        # @param cohort [CuratedCohort]
-        def home_create_first_curated(cohort)
-          wait_for_load_and_click home_create_first_curated_link_element
-          name_and_save_curated_cohort cohort
-          wait_for_sidebar_curated cohort
-        end
-
-        # Clicks the manage-curate link in the main content area
-        def click_home_manage_curated
-          wait_for_load_and_click home_manage_curated_link_element
-          wait_for_title 'Manage Curated Cohorts'
-        end
-
-        # Returns the element for a user on My List
-        # @param user [User]
-        # @return [PageObject::Elements::Row]
-        def curated_cohort_user_row(user)
-          row_element(xpath: "//h2[text()='Curated Cohorts']/following-sibling::div//tr[contains(.,\"#{user.last_name}, #{user.first_name}\")][contains(.,\"#{user.sis_id}\")]")
-        end
-
-        # Checks if a user is marked inactive in My List
-        # @param user [User]
-        # @return [boolean]
-        def curated_cohort_user_inactive?(user)
-          curated_cohort_user_row(user).span_element(class: 'home-inactive-info-icon').exists?
-        end
-
-        # Removes a user from My List
-        # @param user [User]
-        def remove_curated_cohort_member(user)
-          wait_for_load_and_click watchlist_toggle(user)
-          curated_cohort_user_row(user).when_not_present Utils.short_wait
-        end
-
-        # Removes all users from My List
-        def remove_all_from_watchlist
-          load_page
-          if my_list_remove_button_elements.any?
-            logger.info "Removing #{my_list_remove_button_elements.length} users from My List"
-            my_list_remove_button_elements.each do |el|
-              el.click
-              el.when_not_present Utils.short_wait
-            end
-          else
-            logger.info 'There are no users on My List'
-          end
+          driver.find_elements(xpath: "#{xpath}//tr[contains(@data-ng-repeat,'student in students')]")
         end
 
         # FILTERED COHORTS
 
         elements(:filtered_cohort, :span, xpath: '//div[@data-ng-repeat="cohort in profile.myFilteredCohorts track by $index"]//h2/span[1]')
         link(:home_create_filtered_link, id: 'create-another-filtered-cohort')
-        div(:no_filtered_cohorts_msg, xpath: '//div[contains(.,"You have no filtered cohorts.")]')
+        h1(:no_filtered_cohorts_msg, xpath: '//h1[contains(.,"You have no saved cohorts.")]')
 
         # Returns the names of My Saved Cohorts shown on the homepage
         # @return [Array<String>]
         def filtered_cohorts
-          h1_element(xpath: '//h1[text()="Filtered Cohorts"]').when_present Utils.medium_wait
+          h1_element(xpath: '//h1[contains(text(),"Cohorts")]').when_present Utils.medium_wait
           wait_until(Utils.medium_wait) { filtered_cohort_elements.any? }
           filtered_cohort_elements.map &:text
         end
@@ -143,7 +79,7 @@ module Page
         # @param cohort [FilteredCohort]
         # @return [PageObject::Elements::Link]
         def filtered_cohort_view_all_link(cohort)
-          link_element(xpath: "//h1[text()='Filtered Cohorts']/../following-sibling::*//a[contains(@href,'/filtered?id=#{cohort.id}')]")
+          link_element(xpath: "//h1[contains(text(),'Cohorts')]/../following-sibling::*//a[contains(@href,'/filtered?id=#{cohort.id}')]")
         end
 
         # Expands a filtered cohort row in the main content area
