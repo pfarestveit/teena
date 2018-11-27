@@ -116,29 +116,29 @@ class BOACUtils < Utils
     results.map { |r| BOACUser.new({uid: r['uid']}) }
   end
 
-  # DATABASE - CURATED COHORTS
+  # DATABASE - CURATED GROUPS
 
-  # Returns the curated cohorts belonging to a given user
+  # Returns the curated groups belonging to a given user
   # @param user [BOACUser]
-  # @return [Array<CuratedCohort>]
-  def self.get_user_curated_cohorts(user)
+  # @return [Array<CuratedGroup>]
+  def self.get_user_curated_groups(user)
     query = "SELECT student_groups.id AS id, student_groups.name AS name
               FROM student_groups
               JOIN authorized_users ON authorized_users.id = student_groups.owner_id
               WHERE authorized_users.uid = '#{user.uid}';"
     results = Utils.query_pg_db(boac_db_credentials, query)
-    results.map { |r| CuratedCohort.new({id: r['id'], name: r['name'], owner_uid: user.uid}) }
+    results.map { |r| CuratedGroup.new({id: r['id'], name: r['name'], owner_uid: user.uid}) }
   end
 
-  # Obtains and sets the cohort ID given a curated cohort with a unique title
-  # @param cohort [CuratedCohort]
-  def self.set_curated_cohort_id(cohort)
+  # Obtains and sets the ID given a curated group with a unique title
+  # @param group [CuratedGroup]
+  def self.set_curated_group_id(group)
     query = "SELECT id
               FROM student_groups
-              WHERE name = '#{cohort.name}';"
+              WHERE name = '#{group.name}';"
     result = Utils.query_pg_db_field(boac_db_credentials, query, 'id').first
-    logger.info "Curated cohort '#{cohort.name}' ID is #{result}"
-    cohort.id = result
+    logger.info "Curated group '#{group.name}' ID is #{result}"
+    group.id = result
   end
 
   # DATABASE - FILTERED COHORTS

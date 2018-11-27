@@ -26,7 +26,10 @@ describe 'BOAC', order: :defined do
 
     before(:all) do
       @homepage.load_page
-      pre_existing_cohorts.each { |c| @cohort_page.delete_cohort c }
+      pre_existing_cohorts.each do |c|
+        @cohort_page.load_cohort c
+        @cohort_page.delete_cohort c
+      end
     end
 
     it('shows a No Filtered Cohorts message on the homepage') do
@@ -533,7 +536,10 @@ describe 'BOAC', order: :defined do
 
   context 'when the advisor deletes a cohort and tries to navigate to the deleted cohort' do
 
-    before(:all) { @cohort_page.delete_cohort test.searches.first }
+    before(:all) do
+      @cohort_page.load_cohort test.searches.first
+      @cohort_page.delete_cohort test.searches.first
+    end
 
     it 'shows a Not Found page' do
       @cohort_page.navigate_to "#{BOACUtils.base_url}/cohort/filtered?id=#{test.searches.first.id}"

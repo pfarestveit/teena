@@ -524,12 +524,9 @@ module Page
 
         # FILTERED COHORTS - Management
 
-        elements(:cohort_name, :span, xpath: '//span[@data-ng-bind="cohort.name"]')
-        button(:rename_cohort_button, id: 'rename-cohort-button')
-        text_area(:rename_cohort_input, id: 'rename-cohort-input')
+        elements(:cohort_name, :span, xpath: '//span[@data-ng-bind="search.cohort.name"]')
         button(:rename_cohort_confirm_button, id: 'filtered-cohort-rename')
         button(:rename_cohort_cancel_button, id: 'filtered-cohort-rename-cancel')
-        button(:delete_cohort_button, id: 'delete-cohort-button')
 
         # Renames a cohort
         # @param cohort [FilteredCohort]
@@ -542,17 +539,6 @@ module Page
           wait_for_element_and_type(rename_cohort_input_element, new_name)
           wait_for_update_and_click rename_cohort_confirm_button_element
           span_element(xpath: "//span[text()=\"#{cohort.name}\"]").when_present Utils.short_wait
-        end
-
-        # Deletes a cohort unless it is read-only (e.g., CoE default cohorts).
-        # @param cohort [FilteredCohort]
-        def delete_cohort(cohort)
-          logger.info "Deleting a cohort named #{cohort.name}"
-          load_cohort cohort
-          wait_for_load_and_click delete_cohort_button_element
-          wait_for_update_and_click confirm_delete_button_element
-          wait_until(Utils.short_wait) { current_url == "#{BOACUtils.base_url}/home" }
-          sleep 1
         end
 
         # Returns the sequence of SIDs that should be present when search results are sorted by first name
