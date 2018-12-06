@@ -26,18 +26,17 @@ module Page
         "//div[@id=\"content\"]//div[@data-ng-repeat=\"cohort in profile.myFilteredCohorts track by $index\"][contains(.,\"#{cohort.name}\")]"
       end
 
-      # Returns the data visible for a user on the search results page or in a filtered or curated cohort on the homepage. If a cohort,
-      # then an XPath is required in order to find the user under the right cohort heading.
+      # Returns the data visible for a user on the search results page or in a filtered or curated cohort on the homepage. If an XPath is included,
+      # then returns rows under the associated filtered cohort or curated group.
       # @param driver [Selenium::WebDriver]
       # @param sid [String]
-      # @param cohort [Cohort]
+      # @param cohort_xpath [String]
       # @return [Hash]
-      def user_row_data(driver, sid, cohort = nil)
-        cohort_xpath = filtered_cohort_xpath cohort if cohort && cohort.instance_of?(FilteredCohort)
+      def user_row_data(driver, sid, cohort_xpath = nil)
         row_xpath = "#{cohort_xpath}//tr[contains(@data-ng-repeat,\"student in students\")][contains(.,\"#{sid}\")]"
         name_el = link_element(xpath: "#{row_xpath}//a[@data-ng-bind=\"student.sortableName\"]")
         sid_el = span_element(xpath: "#{row_xpath}//span[@data-ng-bind='student.sid']")
-        major_els = driver.find_elements(xpath: "#{row_xpath}//span[@data-ng-repeat='major in student.majors']")
+        major_els = driver.find_elements(xpath: "#{row_xpath}//div[@data-ng-repeat='major in student.majors']")
         term_units_el = div_element(xpath: "#{row_xpath}//div[contains(@data-ng-bind,'student.term.enrolledUnits')]")
         cumul_units_el = div_element(xpath: "#{row_xpath}//div[contains(@data-ng-bind,'student.cumulativeUnits')]")
         no_cumul_units_el = div_element(xpath: "#{row_xpath}//div[contains(@data-ng-if,'!student.cumulativeUnits')]")
@@ -63,7 +62,7 @@ module Page
       def sort_by_option(option, cohort = nil)
         logger.info "Sorting by #{option}"
         xpath = filtered_cohort_xpath cohort if cohort && cohort.instance_of?(FilteredCohort)
-        wait_for_update_and_click element(xpath: "#{xpath}//th[contains(@class, \"group-summary-column\")][contains(.,\"#{option}\")]")
+        wait_for_update_and_click row_element(xpath: "#{xpath}//th[contains(@class, \"group-summary-column\")][contains(.,\"#{option}\")]")
       end
 
       # LAST NAME

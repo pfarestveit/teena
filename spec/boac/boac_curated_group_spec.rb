@@ -5,10 +5,23 @@ describe 'BOAC' do
   include Logging
 
   test = BOACTestConfig.new
-  test.curated_cohorts NessieUtils.get_all_students
+  all_students = NessieUtils.get_all_students
+  test.curated_groups all_students
   test_student = test.cohort_members.last
+  logger.debug "Test student is UID #{test_student.uid} SID #{test_student.sis_id}"
+  student_data = NessieUtils.applicable_user_search_data(all_students, test)
 
-  advisor_groups = []
+  # Initialize groups to be used later in the tests
+  advisor_groups = [
+    (group_1 = CuratedGroup.new({:name => "Group 1 #{test.id}"})),
+    (group_2 = CuratedGroup.new({:name => "Group 2 #{test.id}"})),
+    (group_3 = CuratedGroup.new({:name => "Group 3 #{test.id}"})),
+    (group_4 = CuratedGroup.new({:name => "Group 4 #{test.id}"})),
+    (group_5 = CuratedGroup.new({:name => "Group 5 #{test.id}"})),
+    (group_6 = CuratedGroup.new({:name => "Group 6 #{test.id}"})),
+    (group_7 = CuratedGroup.new({:name => "Group 7 #{test.id}"})),
+    (group_8 = CuratedGroup.new({:name => "Group 8 #{test.id}"}))
+  ]
   other_advisor = BOACUtils.get_admin_users.find { |u| u.uid != test.advisor.uid }
   pre_existing_groups = BOACUtils.get_user_curated_groups test.advisor
 
@@ -30,7 +43,7 @@ describe 'BOAC' do
 
     # Create a default filtered cohort
     @homepage.load_page
-    @filtered_page.search_and_create_new_cohort(test.default_cohort) unless test.default_cohort.id
+    @filtered_page.search_and_create_new_cohort(test.default_cohort, test) unless test.default_cohort.id
   end
 
   after(:all) { Utils.quit_browser @driver }
@@ -55,7 +68,7 @@ describe 'BOAC' do
       @filtered_page.load_cohort test.default_cohort
       @filtered_page.wait_for_student_list
       sids = @filtered_page.list_view_sids
-      visible_members = test.cohort_members.select { |m| sids.include? m.sis_id }
+      visible_members = all_students.select { |m| sids.include? m.sis_id }
       @filtered_page.selector_add_students_to_new_group(visible_members, @group_created_from_filter)
       @groups_created << @group_created_from_filter
     end
@@ -63,7 +76,7 @@ describe 'BOAC' do
     it 'can be done using the class page list view curated group selector' do
       @class_page.load_page(@analytics_page.term_id(@term), @analytics_page.course_section_ccns(@course).first)
       sids = @class_page.list_view_sids
-      visible_members = test.cohort_members.select { |m| sids.include? m.sis_id }
+      visible_members = all_students.select { |m| sids.include? m.sis_id }
       @class_page.selector_add_students_to_new_group(visible_members, @group_created_from_class)
       @groups_created << @group_created_from_class
     end
@@ -86,7 +99,7 @@ describe 'BOAC' do
       filters.set_custom_filters({:level => ['Freshman (0-29 Units)']})
       @existing_filtered_cohort = FilteredCohort.new({:name => "Existing Filtered Cohort #{test.id}", :search_criteria => filters})
       @curated_page.click_sidebar_create_filtered
-      @filtered_page.perform_search @existing_filtered_cohort
+      @filtered_page.perform_search(@existing_filtered_cohort, test)
       @filtered_page.create_new_cohort @existing_filtered_cohort
 
       # Create a curated group to verify that another group cannot have the same name
@@ -94,7 +107,7 @@ describe 'BOAC' do
       @student_page.load_page test_student
       @student_page.create_student_curated @existing_curated_group
 
-      # Create and then delete a curated group to verify that another group can have the same nam
+      # Create and then delete a curated group to verify that another group can have the same name
       @deleted_curated_group = CuratedGroup.new({:name => "Deleted Curated Group #{test.id}"})
       @student_page.create_student_curated @deleted_curated_group
       @curated_page.load_page @deleted_curated_group
@@ -148,84 +161,70 @@ describe 'BOAC' do
   describe 'curated group membership' do
 
     before(:all) do
-
-      @group_1 = CuratedGroup.new({:name => "Group 1 #{test.id}"})
-      @group_2 = CuratedGroup.new({:name => "Group 2 #{test.id}"})
-      @group_3 = CuratedGroup.new({:name => "Group 3 #{test.id}"})
-      @group_4 = CuratedGroup.new({:name => "Group 4 #{test.id}"})
-      @group_5 = CuratedGroup.new({:name => "Group 5 #{test.id}"})
-      @group_6 = CuratedGroup.new({:name => "Group 6 #{test.id}"})
-      @group_7 = CuratedGroup.new({:name => "Group 7 #{test.id}"})
-      @group_8 = CuratedGroup.new({:name => "Group 8 #{test.id}"})
-
       @student_page.load_page test_student
-      [@group_1, @group_2, @group_3, @group_4, @group_5, @group_6, @group_7, @group_8].each do |c|
-        @student_page.create_student_curated c
-        advisor_groups << c
-      end
+      advisor_groups.each { |c| @student_page.create_student_curated c }
     end
 
     it 'can be added from filtered cohort list view using select-all' do
       @filtered_page.load_cohort test.default_cohort
-      @filtered_page.selector_add_all_students_to_group @group_1
+      @filtered_page.selector_add_all_students_to_group(all_students, group_1)
     end
 
     it 'can be added from filtered cohort list view using individual selections' do
       @filtered_page.load_cohort test.default_cohort
-      @filtered_page.wait_until(Utils.short_wait) { @filtered_page.list_view_uids.any? }
-      test.cohort_members = test.cohort_members.select { |m| @filtered_page.list_view_uids.include? m.uid }
-      @filtered_page.selector_add_students_to_group(test.cohort_members[0..-2], @group_2)
+      visible_uids = @filtered_page.list_view_uids
+      test.cohort_members = test.cohort_members.select { |m| visible_uids.include? m.uid }
+      @filtered_page.selector_add_students_to_group(test.cohort_members[0..-2], group_2)
       test.cohort_members.pop
     end
 
     it 'can be added on the student page using a curated group box' do
       @student_page.load_page test_student
-      @student_page.add_student_to_curated(test_student, @group_3)
+      @student_page.add_student_to_curated(test_student, group_3)
     end
 
     it 'can be added on class page list view using select-all' do
       @class_page.load_page(@analytics_page.term_id(@term), @analytics_page.course_section_ccns(@course).first)
-      @class_page.selector_add_all_students_to_group @group_5
+      @class_page.selector_add_all_students_to_group(all_students, group_5)
     end
 
     it 'can be added on class page list view using individual selections' do
       @class_page.load_page(@analytics_page.term_id(@term), @analytics_page.course_section_ccns(@course).first)
-      @class_page.selector_add_students_to_group([test_student], @group_6)
+      @class_page.selector_add_students_to_group([test_student], group_6)
     end
 
     it 'can be added on user search results using select-all' do
       @homepage.search test_student.sis_id
-      @search_page.selector_add_all_students_to_curated @group_7
+      @search_page.selector_add_all_students_to_curated(all_students, group_7)
     end
 
     it 'can be added on user search results using individual selections' do
       @homepage.search test_student.sis_id
-      @search_page.selector_add_students_to_group([test_student], @group_8)
+      @search_page.selector_add_students_to_group([test_student], group_8)
     end
 
     it 'is shown on the curated group list view page' do
-      @curated_page.load_page @group_1
+      @curated_page.load_page group_1
       @curated_page.wait_for_student_list
-      @curated_page.wait_until(Utils.short_wait, "Expected #{@group_1.members.map(&:uid).sort}, but got #{@curated_page.list_view_uids.sort}") do
-        @curated_page.list_view_uids.sort == @group_1.members.map(&:uid).sort
+      @curated_page.wait_until(Utils.short_wait, "Expected #{group_1.members.map(&:uid).sort}, but got #{@curated_page.list_view_uids.sort}") do
+        @curated_page.list_view_uids.sort == group_1.members.map(&:uid).sort
       end
     end
 
     it 'is shown on the student page' do
       @student_page.load_page test_student
-      @student_page.wait_until(Utils.short_wait) { @student_page.curated_selected? @group_1 }
-      expect(@student_page.curated_selected? @group_3).to be true
-      expect(@student_page.curated_selected? @group_4).to be false
+      @student_page.wait_until(Utils.short_wait) { @student_page.curated_selected? group_3 }
+      expect(@student_page.curated_selected? group_4).to be false
     end
 
     it 'can be removed on the curated group list view page' do
-      @curated_page.load_page @group_2
-      @curated_page.curated_remove_student(test.cohort_members.last, @group_2)
+      @curated_page.load_page group_2
+      @curated_page.curated_remove_student(group_2.members.last, group_2)
     end
 
     it 'can be removed on the student page using the curated group checkbox' do
-      @student_page.load_page test_student
-      @student_page.remove_student_from_curated(test_student, @group_1)
+      @student_page.load_page group_1.members.last
+      @student_page.remove_student_from_curated(group_1.members.last, group_1)
     end
   end
 
@@ -238,6 +237,28 @@ describe 'BOAC' do
 
     it('allow a deletion to be canceled') { @curated_page.cancel_cohort_deletion advisor_groups.first }
 
+    context 'on the homepage' do
+
+      advisor_groups.each do |group|
+
+        it "shows the curated group named #{group.name}" do
+          @homepage.load_page
+          @homepage.wait_until(Utils.medium_wait) { @homepage.curated_groups.include? group.name }
+        end
+
+        it "shows the curated group #{group.name} membership count" do
+          @homepage.wait_until(Utils.short_wait, "Expected #{group.members.length} members, but got #{@homepage.member_count(group)}") { @homepage.member_count(group) == group.members.length }
+        end
+
+        it "shows the curated group #{group.name} members with alerts" do
+          member_sids = group.members.map &:sis_id
+          group.member_data = student_data.select { |data| member_sids.include? data[:sid] }
+          @homepage.expand_member_rows group
+          @homepage.verify_member_alerts(@driver, group,test.advisor)
+        end
+
+      end
+    end
   end
 
   describe 'curated groups' do

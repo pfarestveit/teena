@@ -25,7 +25,7 @@ describe 'BOAC' do
     @search_page = Page::BOACPages::UserListPages::SearchResultsPage.new @driver
 
     @homepage.dev_auth test.advisor
-    @filtered_cohort_page.search_and_create_new_cohort(test.default_cohort) unless test.default_cohort.id
+    @filtered_cohort_page.search_and_create_new_cohort(test.default_cohort, test) unless test.default_cohort.id
 
     test.max_cohort_members.each do |student|
       begin

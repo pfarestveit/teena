@@ -148,6 +148,7 @@ module Page
     # @param students [Array<User>]
     # @param group [CuratedGroup]
     def select_group_and_add(students, group)
+      logger.info "Selecting group #{group.name}"
       wait_for_update_and_click add_to_curated_button_element
       wait_for_update_and_click checkbox_element(xpath: "//span[text()='#{group.name}']/preceding-sibling::input")
       added_to_curated_conf_element.when_visible Utils.short_wait
@@ -187,13 +188,15 @@ module Page
     end
 
     # Adds all the students on a page to a curated group
+    # @param all_students [Array<BOACUser>]
     # @param group [CuratedGroup]
-    def selector_add_all_students_to_group(group)
+    def selector_add_all_students_to_group(all_students, group)
       wait_until(Utils.short_wait) { add_individual_to_curated_checkbox_elements.any? &:visible? }
       wait_for_update_and_click add_all_to_curated_checkbox_element
       logger.debug "There are #{add_individual_to_curated_checkbox_elements.length} individual checkboxes"
-      students = add_individual_to_curated_checkbox_elements.map { |el| User.new({uid: el.attribute('id').split('-')[1]}) }
-      select_group_and_add(students, group)
+      visible_uids = add_individual_to_curated_checkbox_elements.map { |el| el.attribute('id').split('-')[1] }
+      visible_students = all_students.select { |student| visible_uids.include? student.uid }
+      select_group_and_add(visible_students, group)
     end
 
     ### FILTERED COHORTS ###
@@ -205,7 +208,7 @@ module Page
     link(:inactive_cohort_link, text: 'Inactive Students')
     link(:my_students_link, text: 'My Students')
     elements(:filtered_cohort_link, :link, xpath: '//div[@data-ng-repeat="cohort in myCohorts"]//a')
-    div(:dupe_filtered_name_msg, xpath: '//div[text()="You have an existing filtered cohort with this name. Please choose a different name."]')
+    div(:dupe_filtered_name_msg, xpath: '//div[text()="You have an existing cohort with this name. Please choose a different name."]')
 
     # Clicks the button to create a new custom cohort
     def click_sidebar_create_filtered
@@ -319,9 +322,9 @@ module Page
 
     ### LIST VIEWS - SETS OF USERS ###
 
-    elements(:player_link, :link, xpath: '//div[contains(@class,"list-item")]//a')
-    elements(:player_name, :h3, xpath: '//div[contains(@class,"list-item")]//h3')
-    elements(:player_sid, :div, xpath: '//div[contains(@class,"list-item")]//div[contains(@class, "student-sid")]')
+    elements(:player_link, :link, xpath: '//a[contains(@href,"/student/")]')
+    elements(:player_name, :h3, xpath: '//h3[contains(@class,"student-name")]')
+    elements(:player_sid, :div, xpath: '//div[@class="student-sid ng-binding"]')
 
     # Waits for list view results to load
     def wait_for_student_list

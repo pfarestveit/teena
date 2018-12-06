@@ -83,7 +83,7 @@ class NessieUtils < Utils
         :sid => v[0]['sid'],
         :dept => dept,
         :active => active,
-        :intensive => (v[0]['intensive'] == 't'),
+        :intensive_asc => (v[0]['intensive'] == 't'),
         :first_name => v[0]['first_name'],
         :last_name => v[0]['last_name'],
         :group_code => v.map { |h2| h2['group_code'] }.join(' ')
@@ -97,7 +97,7 @@ class NessieUtils < Utils
         :sis_id => a[:sid],
         :depts => [a[:dept]],
         :active_asc => a[:active],
-        :intensive_asc => a[:intensive],
+        :intensive_asc => a[:intensive_asc],
         :first_name => a[:first_name],
         :last_name => a[:last_name],
         :full_name => "#{a[:first_name]} #{a[:last_name]}",
@@ -261,7 +261,9 @@ class NessieUtils < Utils
                     boac_advising_coe.students.did_prep AS prep,
                     boac_advising_coe.students.prep_eligible AS prep_elig,
                     boac_advising_coe.students.did_tprep AS t_prep,
-                    boac_advising_coe.students.tprep_eligible AS t_prep_elig
+                    boac_advising_coe.students.tprep_eligible AS t_prep_elig,
+                    boac_advising_coe.students.probation AS probation,
+                    boac_advising_coe.students.status AS status
              FROM student.student_profiles
              LEFT JOIN student.student_majors ON student.student_majors.sid = student.student_profiles.sid
              LEFT JOIN student.student_academic_status ON student.student_academic_status.sid = student.student_profiles.sid
@@ -286,6 +288,7 @@ class NessieUtils < Utils
                   'Graduate'
                 else
                   logger.error "Unknown level code '#{v[0]['level_code']}'"
+                  nil
               end
       profile = JSON.parse(v[0]['profile'])['sisProfile']
       expected_grad = profile && profile['expectedGraduationTerm']
@@ -294,7 +297,7 @@ class NessieUtils < Utils
         :sid => k,
         :gpa => v[0]['gpa'],
         :level => level,
-        :units_completed => cumulative_units,
+        :units_completed => (cumulative_units ? cumulative_units : nil),
         :major => (v.map { |h| h['majors'] }),
         :expected_grad_term_id => (expected_grad && expected_grad['id']),
         :advisor => v[0]['advisor'],
@@ -304,7 +307,9 @@ class NessieUtils < Utils
         :prep => (v[0]['prep'] == 't'),
         :prep_elig => (v[0]['prep_elig'] == 't'),
         :t_prep => (v[0]['t_prep'] == 't'),
-        :t_prep_elig => (v[0]['t_prep_elig'] == 't')
+        :t_prep_elig => (v[0]['t_prep_elig'] == 't'),
+        :inactive_coe => %w(D P U W X Z).include?(v[0]['status']),
+        :probation_coe => (v[0]['probation'] == 't')
       }
     end
 
@@ -326,11 +331,12 @@ class NessieUtils < Utils
         :active_asc => user.active_asc,
         :intensive_asc => user.intensive_asc
       }
-      user_hash.merge! addl_user_data
+      user_hash.merge! addl_user_data if user_hash
       user_hash
     end
 
     # Write the data to a file for reuse.
+    filtered_student_hashes.compact!
     File.open(BOACUtils.searchable_data, 'w') { |f| f.write filtered_student_hashes.to_json }
     filtered_student_hashes
   end

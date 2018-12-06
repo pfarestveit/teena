@@ -77,8 +77,10 @@ describe 'An admin using BOAC' do
     it('sees a Ethnicity filter') { expect(@filtered_cohort_page.new_filter_option('Ethnicity').visible?).to be true }
     it('sees a Gender filter') { expect(@filtered_cohort_page.new_filter_option('Gender').visible?).to be true }
     it('sees a PREP filter') { expect(@filtered_cohort_page.new_filter_option('PREP').visible?).to be true }
-    it('sees a Inactive filter') { expect(@filtered_cohort_page.new_filter_option('Inactive').visible?).to be true }
-    it('sees a Intensive filter') { expect(@filtered_cohort_page.new_filter_option('Intensive').visible?).to be true }
+    it('sees an Inactive COE filter') { expect(@filtered_cohort_page.new_filter_option('Inactive (COE)').visible?).to be true }
+    it('sees a Probation filter') { expect(@filtered_cohort_page.new_filter_option('Probation').visible?).to be true }
+    it('sees an Inactive ASC filter') { expect(@filtered_cohort_page.new_filter_option('Inactive (ASC)').visible?).to be true }
+    it('sees an Intensive filter') { expect(@filtered_cohort_page.new_filter_option('Intensive').visible?).to be true }
     it('sees a Team filter') { expect(@filtered_cohort_page.new_filter_option('Team').visible?).to be true }
   end
 

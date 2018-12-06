@@ -32,8 +32,8 @@ module Page
         # STUDENT SEARCH
 
         span(:student_results_count, xpath: '//span[@count="search.totalStudentCount"]')
-        elements(:student_row, :div, xpath: '//div[contains(@data-ng-repeat,"student in students")]')
-        elements(:student_row_sid, :div, xpath: '//div[contains(@data-ng-repeat,"student in students")]//span[@data-ng-bind="student.sid"]')
+        elements(:student_row, :row, xpath: '//tr[contains(@data-ng-repeat,"student in students")]')
+        elements(:student_row_sid, :span, xpath: '//tr[contains(@data-ng-repeat,"student in students")]//span[@data-ng-bind="student.sid"]')
 
         # Returns the result count for a student search
         # @return [Integer]
@@ -74,7 +74,7 @@ module Page
         # Clicks the search results row for a given student
         # @param student [User]
         def click_student_result(student)
-          wait_for_update_and_click div_element(xpath: "//div[contains(@class,'group-summary-row')][contains(.,'#{student.sis_id}')]//a")
+          wait_for_update_and_click row_element(xpath: "//tr[contains(@data-ng-repeat,'student in students')][contains(.,'#{student.sis_id}')]//a")
           wait_for_spinner
         end
 
@@ -147,11 +147,12 @@ module Page
 
         # Adds all the students on a page to a curated group
         # @param group [CuratedGroup]
-        def selector_add_all_students_to_curated(group)
+        def selector_add_all_students_to_curated(all_students, group)
           wait_until(Utils.short_wait) { add_individual_to_curated_checkbox_elements.any? &:visible? }
           wait_for_update_and_click add_all_to_curated_checkbox_element
           logger.debug "There are #{add_individual_to_curated_checkbox_elements.length} individual checkboxes"
-          students = add_individual_to_curated_checkbox_elements.map { |el| User.new({uid: el.attribute('id').split('-')[1]}) }
+          visible_uids = add_individual_to_curated_checkbox_elements.map { |el| el.attribute('id').split('-')[0] }
+          students = all_students.select { |student| visible_uids.include? student.uid }
           select_group_and_add(students, group)
         end
 

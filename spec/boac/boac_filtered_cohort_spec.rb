@@ -46,8 +46,8 @@ describe 'BOAC', order: :defined do
 
       it "shows all the students sorted by Last Name who match #{cohort.search_criteria.list_filters}" do
         @cohort_page.click_sidebar_create_filtered
-        @cohort_page.perform_search cohort
-        cohort.member_data = @cohort_page.expected_search_results(searchable_students, cohort.search_criteria)
+        @cohort_page.perform_search(cohort, test)
+        cohort.member_data = @cohort_page.expected_search_results(test, searchable_students, cohort.search_criteria)
         expected_results = @cohort_page.expected_sids_by_last_name cohort.member_data
         visible_results = cohort.member_count.zero? ? [] : @cohort_page.visible_sids
         @cohort_page.wait_until(1, "Expected but not present: #{expected_results - visible_results}. Present but not expected: #{visible_results - expected_results}") do
@@ -140,13 +140,13 @@ describe 'BOAC', order: :defined do
       end
 
       it "shows the filtered cohort member count with criteria #{cohort.search_criteria.list_filters}" do
-        @homepage.wait_until(Utils.short_wait) { @homepage.filtered_cohort_member_count(cohort) == cohort.member_data.length }
+        @homepage.wait_until(Utils.short_wait) { @homepage.member_count(cohort) == cohort.member_data.length }
       end
 
       it "shows the filtered cohort members who have alerts on the homepage with criteria #{cohort.search_criteria.list_filters}" do
-        members = test.dept_students.select { |u| @homepage.expected_sids_by_last_name(cohort.member_data).include? u.sis_id }
-        @homepage.expand_filtered_cohort cohort
-        @homepage.verify_filtered_cohort_alerts(@driver, cohort, members, test.advisor)
+        cohort.members = test.dept_students.select { |u| @homepage.expected_sids_by_last_name(cohort.member_data).include? u.sis_id }
+        @homepage.expand_member_rows cohort
+        @homepage.verify_member_alerts(@driver, cohort, test.advisor)
       end
 
       it "by default sorts by name ascending cohort members who have alerts on the homepage with criteria #{cohort.search_criteria.list_filters}" do
@@ -215,7 +215,7 @@ describe 'BOAC', order: :defined do
       it "allows the advisor to sort by term units ascending cohort members who have alerts on the homepage with criteria #{cohort.search_criteria.list_filters}" do
         if cohort.member_data.any?
           # Scrape the visible term units since it's not stored in the cohort member data
-          cohort.member_data.each { |d| d.merge!({:term_units => @homepage.user_row_data(@driver, d[:sid], cohort)[:term_units]}) }
+          cohort.member_data.each { |d| d.merge!({:term_units => @homepage.user_row_data(@driver, d[:sid], @homepage.filtered_cohort_xpath(cohort))[:term_units]}) }
           expected_sequence = @homepage.expected_sids_by_term_units cohort.member_data
           @homepage.sort_by_term_units cohort
           @homepage.wait_until(1, "Expected #{expected_sequence}, but got #{@homepage.all_row_sids(@driver, cohort)}") { @homepage.all_row_sids(@driver, cohort) == expected_sequence }
@@ -286,7 +286,7 @@ describe 'BOAC', order: :defined do
 
     it 'requires a title' do
       @homepage.click_sidebar_create_filtered
-      @cohort_page.perform_search test.searches.first
+      @cohort_page.perform_search(test.searches.first, test)
       @cohort_page.click_save_cohort_button_one
       expect(@cohort_page.save_cohort_button_two_element.disabled?).to be true
     end
@@ -294,7 +294,7 @@ describe 'BOAC', order: :defined do
     it 'truncates a title over 255 characters' do
       cohort = FilteredCohort.new({name: "#{test.id}#{'A loooooong title ' * 15}?"})
       @homepage.click_sidebar_create_filtered
-      @cohort_page.perform_search test.searches.first
+      @cohort_page.perform_search(test.searches.first, test)
       @cohort_page.save_and_name_cohort cohort
       cohort.name = cohort.name[0..254]
       @cohort_page.wait_for_filtered_cohort cohort
@@ -304,7 +304,7 @@ describe 'BOAC', order: :defined do
     it 'requires that a title be unique among the user\'s existing cohorts' do
       cohort = FilteredCohort.new({name: test.searches.first.name})
       @cohort_page.click_sidebar_create_filtered
-      @cohort_page.perform_search test.searches.first
+      @cohort_page.perform_search(test.searches.first, test)
       @cohort_page.save_and_name_cohort cohort
       @cohort_page.dupe_filtered_name_msg_element.when_visible Utils.short_wait
     end
@@ -322,7 +322,7 @@ describe 'BOAC', order: :defined do
 
   context 'when the advisor edits a cohort\'s search filters' do
 
-    before(:all) { @cohort_page.search_and_create_new_cohort test.default_cohort }
+    before(:all) { @cohort_page.search_and_create_new_cohort(test.default_cohort, test) }
 
     it 'allows the advisor to edit a GPA filter' do
       test.default_cohort.search_criteria.gpa = ['3.50 - 4.00']
@@ -430,19 +430,20 @@ describe 'BOAC', order: :defined do
       end
     end
 
-    it 'allows the advisor to remove an Inactive filter' do
-      if test.default_cohort.search_criteria.inactive
-        test.default_cohort.search_criteria.inactive = false
-        @cohort_page.remove_filter_of_type 'Inactive'
+    it 'allows the advisor to remove an Inactive ASC filter' do
+      if test.default_cohort.search_criteria.inactive_asc
+        test.default_cohort.search_criteria.inactive_asc = false
+        label = (test.dept == BOACDepartments::ADMIN) ? 'Inactive (ASC)' : 'Inactive'
+        @cohort_page.remove_filter_of_type label
         @cohort_page.verify_filters_present test.default_cohort
       else
-        logger.warn 'Skipping test for removing inactive since the filter is not available to the user'
+        logger.warn 'Skipping test for removing inactive ASC since the filter is not available to the user'
       end
     end
 
     it 'allows the advisor to remove an Intensive filter' do
-      if test.default_cohort.search_criteria.intensive
-        test.default_cohort.search_criteria.intensive = false
+      if test.default_cohort.search_criteria.intensive_asc
+        test.default_cohort.search_criteria.intensive_asc = false
         @cohort_page.remove_filter_of_type 'Intensive'
         @cohort_page.verify_filters_present test.default_cohort
       else
@@ -522,6 +523,26 @@ describe 'BOAC', order: :defined do
       end
     end
 
+    it 'allows the advisor to remove an Inactive CoE filter' do
+      if test.default_cohort.search_criteria.inactive_coe
+        test.default_cohort.search_criteria.inactive_coe = false
+        label = (test.dept == BOACDepartments::ADMIN) ? 'Inactive (COE)' : 'Inactive'
+        @cohort_page.remove_filter_of_type label
+        @cohort_page.verify_filters_present test.default_cohort
+      else
+        logger.warn 'Skipping test for removing inactive CoE since the filter is not available to the user'
+      end
+    end
+
+    it 'allows the advisor to remove a Probation filter' do
+      if test.default_cohort.search_criteria.probation_coe
+        test.default_cohort.search_criteria.probation_coe = false
+        @cohort_page.remove_filter_of_type 'Probation'
+        @cohort_page.verify_filters_present test.default_cohort
+      else
+        logger.warn 'Skipping test for removing probation since the filter is not available to the user'
+      end
+    end
   end
 
   context 'when the advisor edits a cohort\'s name' do

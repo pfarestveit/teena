@@ -88,14 +88,16 @@ describe 'A CoE advisor using BOAC' do
     it('sees a Ethnicity filter') { expect(@filtered_cohort_page.new_filter_option('Ethnicity').visible?).to be true }
     it('sees a Gender filter') { expect(@filtered_cohort_page.new_filter_option('Gender').visible?).to be true }
     it('sees a PREP filter') { expect(@filtered_cohort_page.new_filter_option('PREP').visible?).to be true }
-    it('sees a Inactive filter') { expect(@filtered_cohort_page.new_filter_option('Inactive').exists?).to be false }
-    it('sees a Intensive filter') { expect(@filtered_cohort_page.new_filter_option('Intensive').exists?).to be false }
-    it('sees a Team filter') { expect(@filtered_cohort_page.new_filter_option('Team').exists?).to be false }
+    it('sees an Inactive COE filter') { expect(@filtered_cohort_page.new_filter_option('Inactive').exists?).to be true }
+    it('sees a Probation filter') { expect(@filtered_cohort_page.new_filter_option('Probation').exists?).to be true }
+    it('sees no Inactive ASC filter') { expect(@filtered_cohort_page.new_filter_option('Inactive (ASC)').exists?).to be false }
+    it('sees no Intensive filter') { expect(@filtered_cohort_page.new_filter_option('Intensive').exists?).to be false }
+    it('sees no Team filter') { expect(@filtered_cohort_page.new_filter_option('Team').exists?).to be false }
 
     it 'cannot hit team filters directly' do
-      @filtered_cohort_page.load_squad Squad::MFB_ST
-      @filtered_cohort_page.wait_for_search_results
-      expect(@filtered_cohort_page.results_count).to be_zero
+      @filtered_cohort_page.navigate_to @filtered_cohort_page.squad_url(Squad::MFB_ST)
+      @filtered_cohort_page.new_filter_button_element.when_visible Utils.short_wait
+      expect(@filtered_cohort_page.player_link_elements.any?).to be false
     end
   end
 

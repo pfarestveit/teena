@@ -23,7 +23,7 @@ describe 'BOAC' do
     @boac_student_page = Page::BOACPages::StudentPage.new @driver
 
     @boac_homepage.dev_auth test.advisor
-    @boac_cohort_page.search_and_create_new_cohort test.default_cohort
+    @boac_cohort_page.search_and_create_new_cohort(test.default_cohort, test)
 
     test.max_cohort_members.sort_by(&:last_name).each do |student|
 

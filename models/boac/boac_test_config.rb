@@ -11,7 +11,7 @@ class BOACTestConfig < TestConfig
   # @param all_students [Array<BOACUser>]
   # @param dept [BOACDepartments]
   def set_global_configs(all_students, dept = nil)
-    @dept = dept ? dept : BOACUtils.test_dept
+    @dept = dept ? dept : (BOACDepartments::DEPARTMENTS.find { |d| d.code == CONFIG['test_dept'] })
     advisors = BOACUtils.get_dept_advisors @dept
 
     case @dept
@@ -20,7 +20,7 @@ class BOACTestConfig < TestConfig
       when BOACDepartments::ASC
         @advisor = advisors.first
       when BOACDepartments::COE
-        uid = BOACUtils.test_coe_advisor_uid
+        uid = CONFIG['test_coe_advisor_uid']
         @advisor = uid ? (advisors.find { |a| a.uid.to_i == uid }) : advisors.first
       else
         logger.error 'What kinda department is that??'
@@ -101,13 +101,13 @@ class BOACTestConfig < TestConfig
     set_max_cohort_members CONFIG['class_page_max_users']
   end
 
-  # Config for curated cohort testing
+  # Config for curated group testing
   # @param all_students [Array<BOACUser>]
-  def curated_cohorts(all_students)
+  def curated_groups(all_students)
     set_global_configs all_students
-    set_default_cohort CONFIG['curated_cohort_team']
+    set_default_cohort CONFIG['curated_group_team']
     @cohort_members.keep_if &:active_asc if @dept == BOACDepartments::ASC
-    set_max_cohort_members CONFIG['curated_cohort_max_users']
+    set_max_cohort_members 50
   end
 
   # Config for filtered cohort testing
@@ -115,7 +115,6 @@ class BOACTestConfig < TestConfig
   def filtered_cohorts(all_students)
     set_global_configs all_students
     set_search_cohorts
-    @dept_students.keep_if &:active_asc if @dept == BOACDepartments::ASC
 
     # Set a default cohort with all possible filters to exercise editing and removing filters
     filters = {
@@ -129,8 +128,10 @@ class BOACTestConfig < TestConfig
       :gender => (['Female'] unless @dept == BOACDepartments::ASC),
       :underrepresented_minority => (true unless @dept == BOACDepartments::ASC),
       :prep => (['PREP'] unless @dept == BOACDepartments::ASC),
-      :inactive => (true unless @dept == BOACDepartments::COE),
-      :intensive => (true unless @dept == BOACDepartments::COE),
+      :inactive_coe => (true unless @dept == BOACDepartments::ASC),
+      :probation_coe => (true unless @dept == BOACDepartments::ASC),
+      :inactive_asc => (true unless @dept == BOACDepartments::COE),
+      :intensive_asc => (true unless @dept == BOACDepartments::COE),
       :team => ([Squad::MCR] unless @dept == BOACDepartments::COE)
     }
     editing_test_search_criteria = CohortFilter.new

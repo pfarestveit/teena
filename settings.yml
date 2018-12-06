@@ -55,8 +55,7 @@ boac:
   class_page_team: GOW
   class_page_max_users: 5
 
-  curated_cohort_team: BAM
-  curated_cohort_max_users: 51
+  curated_group_team: BAM
 
   last_activity_team: TNM
   last_activity_max_users: 3
