@@ -10,9 +10,9 @@ begin
   test.filtered_cohorts all_students
 
   @driver = Utils.launch_browser
-  @analytics_page = ApiUserAnalyticsPage.new @driver
-  @homepage = Page::BOACPages::UserListPages::HomePage.new @driver
-  @cohort_page = Page::BOACPages::CohortPages::FilteredCohortPage.new @driver
+  @analytics_page = BOACApiUserAnalyticsPage.new @driver
+  @homepage = Page::BOACPages::BOACUserListPages::BOACHomePage.new @driver
+  @cohort_page = Page::BOACPages::BOACCohortPages::BOACFilteredCohortPage.new @driver
   @homepage.dev_auth test.advisor
 
   test.searches.each do |cohort|

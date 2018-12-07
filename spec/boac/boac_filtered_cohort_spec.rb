@@ -12,10 +12,10 @@ describe 'BOAC', order: :defined do
 
   before(:all) do
     @driver = Utils.launch_browser
-    @analytics_page = ApiUserAnalyticsPage.new @driver
-    @homepage = Page::BOACPages::UserListPages::HomePage.new @driver
-    @cohort_page = Page::BOACPages::CohortPages::FilteredCohortPage.new @driver
-    @student_page = Page::BOACPages::StudentPage.new @driver
+    @analytics_page = BOACApiUserAnalyticsPage.new @driver
+    @homepage = BOACHomePage.new @driver
+    @cohort_page = BOACFilteredCohortPage.new @driver
+    @student_page = BOACStudentPage.new @driver
 
     @homepage.dev_auth test.advisor
   end

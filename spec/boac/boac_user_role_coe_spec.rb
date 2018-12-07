@@ -20,16 +20,16 @@ describe 'A CoE advisor using BOAC' do
 
   before(:all) do
     @driver = Utils.launch_browser
-    @admin_page = Page::BOACPages::AdminPage.new @driver
-    @api_admin_page = ApiAdminPage.new @driver
-    @api_section_page = ApiSectionPage.new @driver
-    @api_user_analytics_page = ApiUserAnalyticsPage.new @driver
-    @class_page = Page::BOACPages::ClassPages::ClassListViewPage.new @driver
-    @filtered_cohort_page = Page::BOACPages::CohortPages::FilteredCohortPage.new @driver
-    @homepage = Page::BOACPages::UserListPages::HomePage.new @driver
-    @search_page = Page::BOACPages::UserListPages::SearchResultsPage.new @driver
-    @student_page = Page::BOACPages::StudentPage.new @driver
-    @teams_page = Page::BOACPages::TeamsListPage.new @driver
+    @admin_page = BOACAdminPage.new @driver
+    @api_admin_page = BOACApiAdminPage.new @driver
+    @api_section_page = BOACApiSectionPage.new @driver
+    @api_user_analytics_page = BOACApiUserAnalyticsPage.new @driver
+    @class_page = BOACClassListViewPage.new @driver
+    @filtered_cohort_page = BOACFilteredCohortPage.new @driver
+    @homepage = BOACHomePage.new @driver
+    @search_page = BOACSearchResultsPage.new @driver
+    @student_page = BOACStudentPage.new @driver
+    @teams_page = BOACTeamsListPage.new @driver
 
     @coe_student_sids = test_coe.dept_students.map &:sis_id
     @coe_student_search_data = all_student_search_data.select { |d| @coe_student_sids.include? d[:sid] }
@@ -106,7 +106,7 @@ describe 'A CoE advisor using BOAC' do
     # Verification that only CoE students are visible is part of the class page test script
 
     it 'sees only CoE student data in a section endpoint' do
-      api_section_page = ApiSectionPage.new @driver
+      api_section_page = BOACApiSectionPage.new @driver
       api_section_page.get_data(@driver, '2178', '13826')
       api_section_page.wait_until(1, "Expected #{test_coe.dept_students.map(&:sis_id).sort & api_section_page.student_sids}, but got #{api_section_page.student_sids.sort}") do
         expect(test_coe.dept_students.map(&:sis_id).sort & api_section_page.student_sids).to eql(api_section_page.student_sids.sort)
@@ -130,12 +130,12 @@ describe 'A CoE advisor using BOAC' do
     end
 
     it 'cannot hit the user analytics endpoint for a non-CoE student' do
-      asc_user_analytics = ApiUserAnalyticsPage.new @driver
+      asc_user_analytics = BOACApiUserAnalyticsPage.new @driver
       expect(asc_user_analytics.get_data(@driver, asc_only_students.first)).to be_nil
     end
 
     it 'cannot see the ASC profile data for an overlapping CoE and ASC student on the user analytics page' do
-      overlap_user_analytics = ApiUserAnalyticsPage.new @driver
+      overlap_user_analytics = BOACApiUserAnalyticsPage.new @driver
       overlap_user_analytics.get_data(@driver, overlap_students.first)
       expect(overlap_user_analytics.asc_profile).to be_nil
     end

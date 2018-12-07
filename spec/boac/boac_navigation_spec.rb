@@ -11,16 +11,16 @@ describe 'BOAC' do
     pages_tested = []
 
     @driver = Utils.launch_browser
-    @homepage = Page::BOACPages::UserListPages::HomePage.new @driver
-    @class_list_page = Page::BOACPages::ClassPages::ClassListViewPage.new @driver
-    @class_matrix_page = Page::BOACPages::ClassPages::ClassMatrixViewPage.new @driver
-    @student_page = Page::BOACPages::StudentPage.new @driver
+    @homepage = BOACHomePage.new @driver
+    @class_list_page = BOACClassListViewPage.new @driver
+    @class_matrix_page = BOACClassMatrixViewPage.new @driver
+    @student_page = BOACStudentPage.new @driver
     @homepage.dev_auth test.advisor
 
     test.max_cohort_members.each do |student|
       begin
 
-        api_user_page = ApiUserAnalyticsPage.new @driver
+        api_user_page = BOACApiUserAnalyticsPage.new @driver
         api_user_page.get_data(@driver, student)
 
         terms = api_user_page.terms
@@ -46,7 +46,7 @@ describe 'BOAC' do
                     begin
 
                       section_data = api_user_page.section_sis_data section
-                      api_section_page = ApiSectionPage.new @driver
+                      api_section_page = BOACApiSectionPage.new @driver
                       api_section_page.get_data(@driver, term_id, section_data[:ccn])
                       class_test_case = "term #{term_name} course #{course_sis_data[:code]} section #{section_data[:component]} #{section_data[:number]} #{section_data[:ccn]}"
                       logger.info "Checking #{class_test_case}"

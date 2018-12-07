@@ -18,11 +18,11 @@ describe 'BOAC' do
     students_canvas_csv = Utils.create_test_output_csv('boac-class-page-student-canvas.csv', %w(Term Course SID SiteId SiteCode SubmittedUser SubmittedMax ScoreUser ScoreMax))
 
     @driver = Utils.launch_browser
-    @homepage = Page::BOACPages::UserListPages::HomePage.new @driver
-    @filtered_cohort_page = Page::BOACPages::CohortPages::FilteredCohortPage.new @driver
-    @student_page = Page::BOACPages::StudentPage.new @driver
-    @class_page = Page::BOACPages::ClassPages::ClassListViewPage.new @driver
-    @search_page = Page::BOACPages::UserListPages::SearchResultsPage.new @driver
+    @homepage = BOACHomePage.new @driver
+    @filtered_cohort_page = BOACFilteredCohortPage.new @driver
+    @student_page = BOACStudentPage.new @driver
+    @class_page = BOACClassListViewPage.new @driver
+    @search_page = BOACSearchResultsPage.new @driver
 
     @homepage.dev_auth test.advisor
     @filtered_cohort_page.search_and_create_new_cohort(test.default_cohort, test) unless test.default_cohort.id
@@ -30,7 +30,7 @@ describe 'BOAC' do
     test.max_cohort_members.each do |student|
       begin
 
-        api_user_page = ApiUserAnalyticsPage.new @driver
+        api_user_page = BOACApiUserAnalyticsPage.new @driver
         api_user_page.get_data(@driver, student)
 
         terms = api_user_page.terms
@@ -58,7 +58,7 @@ describe 'BOAC' do
                       begin
 
                         section_data = api_user_page.section_sis_data section
-                        api_section_page = ApiSectionPage.new @driver
+                        api_section_page = BOACApiSectionPage.new @driver
                         api_section_page.get_data(@driver, term_id, section_data[:ccn])
                         class_test_case = "term #{term_name} course #{course_sis_data[:code]} section #{section_data[:component]} #{section_data[:number]} #{section_data[:ccn]}"
                         logger.info "Checking #{class_test_case}"
@@ -125,7 +125,7 @@ describe 'BOAC' do
 
                           # Perform further tests on the students who appear on the first page
                           @class_page.click_list_view_page 1 unless @class_page.list_view_page_count == 1
-                          visible_students = @class_page.list_view_sids
+                          visible_students = @class_page.class_list_view_sids
                           expected_students = test.dept_students.select { |s| visible_students.include? s.sis_id }
                           expected_student_names = (expected_students.map { |u| "#{u.last_name}, #{u.first_name}" }).sort
                           visible_student_names = (@class_page.list_view_names).sort
@@ -138,7 +138,7 @@ describe 'BOAC' do
                           expected_students.each do |dept_student|
 
                             # Load the student's data and find the matching course
-                            student_api = ApiUserAnalyticsPage.new @driver
+                            student_api = BOACApiUserAnalyticsPage.new @driver
                             student_api.get_data(@driver, dept_student)
                             term = student_api.terms.find { |t| student_api.term_name(t) == term_name }
                             course = student_api.courses(term).find { |c| student_api.course_display_name(c) == course_sis_data[:code] }

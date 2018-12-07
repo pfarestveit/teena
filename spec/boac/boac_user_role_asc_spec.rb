@@ -21,16 +21,16 @@ describe 'An ASC advisor' do
 
   before(:all) do
     @driver = Utils.launch_browser
-    @admin_page = Page::BOACPages::AdminPage.new @driver
-    @api_admin_page = ApiAdminPage.new @driver
-    @api_section_page = ApiSectionPage.new @driver
-    @api_user_analytics_page = ApiUserAnalyticsPage.new @driver
-    @class_page = Page::BOACPages::ClassPages::ClassListViewPage.new @driver
-    @filtered_cohort_page = Page::BOACPages::CohortPages::FilteredCohortPage.new @driver
-    @homepage = Page::BOACPages::UserListPages::HomePage.new @driver
-    @search_page = Page::BOACPages::UserListPages::SearchResultsPage.new @driver
-    @student_page = Page::BOACPages::StudentPage.new @driver
-    @teams_page = Page::BOACPages::TeamsListPage.new @driver
+    @admin_page = BOACAdminPage.new @driver
+    @api_admin_page = BOACApiAdminPage.new @driver
+    @api_section_page = BOACApiSectionPage.new @driver
+    @api_user_analytics_page = BOACApiUserAnalyticsPage.new @driver
+    @class_page = BOACClassListViewPage.new @driver
+    @filtered_cohort_page = BOACFilteredCohortPage.new @driver
+    @homepage = BOACHomePage.new @driver
+    @search_page = BOACSearchResultsPage.new @driver
+    @student_page = BOACStudentPage.new @driver
+    @teams_page = BOACTeamsListPage.new @driver
 
     @asc_student_sids = test_asc.dept_students.map &:sis_id
     @asc_student_search_data = all_student_search_data.select { |d| @asc_student_sids.include? d[:sid] }
@@ -118,7 +118,7 @@ describe 'An ASC advisor' do
     # Verification that only ASC students are visible is part of the class page test script
 
     it 'sees only ASC student data in a section endpoint' do
-      api_section_page = ApiSectionPage.new @driver
+      api_section_page = BOACApiSectionPage.new @driver
       api_section_page.get_data(@driver, '2178', '13826')
       expect(test_asc.dept_students.map(&:sis_id).sort & api_section_page.student_sids).to eql(api_section_page.student_sids.sort)
     end

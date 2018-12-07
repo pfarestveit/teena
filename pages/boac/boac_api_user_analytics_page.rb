@@ -1,6 +1,6 @@
 require_relative '../../util/spec_helper'
 
-class ApiUserAnalyticsPage
+class BOACApiUserAnalyticsPage
 
   include PageObject
   include Logging
