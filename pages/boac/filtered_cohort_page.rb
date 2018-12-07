@@ -42,7 +42,7 @@ module Page
         def hit_team_url(team)
           squads = Squad::SQUADS.select { |s| s.parent_team == team }
           squads.delete_if { |s| s.code.include? '-AA' }
-          query_string = squads.map { |s| "t=#{s.code}&" }
+          query_string = squads.map { |s| "team=#{s.code}&" }
           navigate_to "#{filtered_cohort_base_url}#{query_string.join}c=search"
         end
 
@@ -54,11 +54,18 @@ module Page
           wait_for_title 'Search'
         end
 
+        # Returns the URL for a squad cohort page
+        # @param squad [Squad]
+        # @return [String]
+        def squad_url(squad)
+          "#{filtered_cohort_base_url}c=search&p=1&team=#{squad.code}"
+        end
+
         # Hits a cohort search URL for a squad
         # @param squad [Squad]
         def load_squad(squad)
           logger.info "Loading cohort page for squad #{squad.name}"
-          navigate_to "#{filtered_cohort_base_url}c=search&p=1&t=#{squad.code}"
+          navigate_to squad_url(squad)
           wait_for_title 'Filtered Cohort'
         end
 
@@ -118,9 +125,10 @@ module Page
 
         # Combines methods to load the create filtered cohort page, perform a search, and create a filtered cohort
         # @param cohort [FilteredCohort]
-        def search_and_create_new_cohort(cohort)
+        # @param test [BOACTestConfig]
+        def search_and_create_new_cohort(cohort, test)
           click_sidebar_create_filtered
-          perform_search cohort
+          perform_search(cohort, test)
           create_new_cohort cohort
         end
 
@@ -268,8 +276,8 @@ module Page
               filters.gender.each { |g| existing_filter_element('Gender', g).exists? } if filters.gender && filters.gender.any?
               existing_filter_element('Underrepresented Minority').exists? if filters.underrepresented_minority
               filters.prep.each { |p| existing_filter_element('PREP', p).exists? } if filters.prep && filters.prep.any?
-              existing_filter_element('Inactive').exists? if filters.inactive
-              existing_filter_element('Intensive').exists? if filters.intensive
+              existing_filter_element('Inactive').exists? if filters.inactive_asc
+              existing_filter_element('Intensive').exists? if filters.intensive_asc
               filters.team.each { |t| existing_filter_element('Team', t.name).exists? } if filters.team && filters.team.any?
               true
             end
@@ -330,7 +338,8 @@ module Page
 
         # Executes a custom cohort search using search criteria associated with a cohort and stores the result count
         # @param cohort [FilteredCohort]
-        def perform_search(cohort)
+        # @param test [BOACTestConfig]
+        def perform_search(cohort, test)
           sleep 2
 
           # The squads and majors lists can change over time. Avoid test failures if the search criteria is out of sync
@@ -371,10 +380,13 @@ module Page
           select_filter 'Underrepresented Minority' if cohort.search_criteria.underrepresented_minority
           cohort.search_criteria.gender.each { |g| select_filter('Gender', g) } if cohort.search_criteria.gender
           cohort.search_criteria.prep.each { |p| select_filter('PREP', p) } if cohort.search_criteria.prep
+          inactive_label = (test.dept == BOACDepartments::ADMIN) ? 'Inactive (COE)' : 'Inactive'
+          select_filter inactive_label if cohort.search_criteria.inactive_coe
 
           # ASC
-          select_filter 'Inactive' if cohort.search_criteria.inactive
-          select_filter 'Intensive' if cohort.search_criteria.intensive
+          inactive_label = (test.dept == BOACDepartments::ADMIN) ? 'Inactive (ASC)' : 'Inactive'
+          select_filter inactive_label if cohort.search_criteria.inactive_asc
+          select_filter 'Intensive' if cohort.search_criteria.intensive_asc
           cohort.search_criteria.team.each { |s| select_filter('Team', s.name) } if cohort.search_criteria.team
 
           # If there are any search criteria left, execute search and log time search took to complete
@@ -391,10 +403,11 @@ module Page
 
         # Filters an array of user data hashes according to search criteria and returns the users that should be present in the UI after
         # the search completes
+        # @param test [BOACTestConfig]
         # @param user_data [Array<Hash>]
         # @param search_criteria [CohortFilter]
         # @return [Array<Hash>]
-        def expected_search_results(user_data, search_criteria)
+        def expected_search_results(test, user_data, search_criteria)
 
           # GPA
           matching_gpa_users = []
@@ -506,19 +519,35 @@ module Page
           end
           matching_preps_users.flatten!
 
-          # Inactive
-          matching_inactive_users = search_criteria.inactive ? (user_data.select { |u| u[:inactive_asc] }) : user_data
+          # Inactive COE
+          matching_inactive_coe_users = if search_criteria.inactive_coe
+                                          (user_data.select { |u| u[:inactive_coe] })
+                                        else
+                                          (test.dept == BOACDepartments::COE) ? (user_data.reject { |u| u[:inactive_coe] }) : user_data
+                                        end
 
-          # Intensive
-          matching_intensive_users = search_criteria.intensive ? (user_data.select { |u| u[:intensive_asc] }) : user_data
+          # Probation COE
+          matching_probation_asc_users = search_criteria.probation_coe ? (user_data.select { |u| u[:probation_asc] }) : user_data
+
+          # Inactive ASC
+          matching_inactive_asc_users = if search_criteria.inactive_asc
+                                          (user_data.select { |u| u[:inactive_asc] })
+                                        else
+                                          (test.dept == BOACDepartments::ASC) ? (user_data.reject { |u| u[:inactive_asc] }) : user_data
+                                        end
+
+          # Intensive ASC
+          matching_intensive_asc_users = search_criteria.intensive_asc ? (user_data.select { |u| u[:intensive_asc] }) : user_data
 
           # Team
           matching_squad_users = (search_criteria.team && search_criteria.team.any?) ?
               (user_data.select { |u| (u[:squad_names] & (search_criteria.team.map { |s| s.name })).any? }) :
               user_data
 
-          matches = [matching_gpa_users, matching_level_users, matching_units_users, matching_major_users, matching_last_name_users, matching_advisor_users, matching_ethnicity_users,
-                     matching_minority_users, matching_gender_users, matching_preps_users, matching_inactive_users, matching_intensive_users, matching_squad_users]
+          matches = [matching_gpa_users, matching_level_users, matching_units_users, matching_major_users,
+                     matching_last_name_users, matching_advisor_users, matching_ethnicity_users, matching_minority_users,
+                     matching_gender_users, matching_preps_users, matching_inactive_coe_users, matching_probation_asc_users,
+                     matching_inactive_asc_users, matching_intensive_asc_users, matching_squad_users]
           matches.any?(&:empty?) ? [] : matches.inject(:'&')
         end
 

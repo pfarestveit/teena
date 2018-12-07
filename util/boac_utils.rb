@@ -32,11 +32,6 @@ class BOACUtils < Utils
     @config['assignments_term']
   end
 
-  # Returns the UID of a CoE advisor for testing
-  def self.test_coe_advisor_uid
-    @config['test_coe_advisor_uid']
-  end
-
   # Whether or not to check tooltips during tests. Checking tooltips slows down test execution.
   def self.tooltips
     @config['tooltips']
@@ -50,15 +45,6 @@ class BOACUtils < Utils
   # Whether or not to check Nessie assignments submission counts during tests.
   def self.nessie_assignments
     @config['nessie_assignments']
-  end
-
-  # The advisor department to use for tests that can run with different departments
-  def self.test_dept
-    BOACDepartments::DEPARTMENTS.find { |d| d.code == @config['test_dept'] }
-  end
-
-  def self.sis_data_team
-    @config['sis_data_team']
   end
 
   # Whether or not to compare student data to fellow cohort members in Canvas prod

@@ -12,8 +12,10 @@ class CohortFilter
                 :gender,
                 :underrepresented_minority,
                 :prep,
-                :inactive,
-                :intensive,
+                :inactive_coe,
+                :probation_coe,
+                :inactive_asc,
+                :intensive_asc,
                 :team
 
   # Sets cohort filters based on test data
@@ -33,10 +35,12 @@ class CohortFilter
     @gender = (test_data['genders'] && test_data['genders'].map { |g| g['gender'] })
     @underrepresented_minority = test_data['minority']
     @prep = (test_data['preps'] && test_data['preps'].map { |p| p['prep'] })
+    @inactive_coe = test_data['inactive_coe']
+    @probation_coe = test_data['probation_coe']
 
     # ASC
-    @inactive = test_data['inactive_asc']
-    @intensive = test_data['intensive_asc']
+    @inactive_asc = test_data['inactive_asc']
+    @intensive_asc = test_data['intensive_asc']
     @team = (test_data['teams'] && test_data['teams'].map { |t| Squad::SQUADS.find { |s| s.name == t['squad'] } })
 
     # Remove filters that are not available to the department
@@ -46,9 +50,11 @@ class CohortFilter
       @gender = nil
       @underrepresented_minority = nil
       @prep = nil
+      @inactive_coe = nil
+      @probation_coe = nil
     elsif dept == BOACDepartments::COE
-      @inactive = nil
-      @intensive = nil
+      @inactive_asc = nil
+      @intensive_asc = nil
       @team = nil
     end
   end

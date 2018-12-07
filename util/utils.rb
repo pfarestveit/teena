@@ -41,11 +41,11 @@ class Utils
   # @return [Selenium::WebDriver]
   def self.launch_browser(profile = nil)
     driver_config = @config['webdriver']
-    driver = driver_config['browser']
-    logger.info "Launching #{driver.capitalize}#{(' using profile at ' + profile) if profile}"
+    browser = driver_config['browser']
+    logger.info "Launching #{browser.capitalize}#{(' using profile at ' + profile) if profile}"
 
     # When launching browser, select the profile to use, tweak profile settings to facilitate file downloads, and launch in headless mode if desired.
-    case driver
+    driver = case browser
 
       when 'chrome'
         options = Selenium::WebDriver::Chrome::Options.new
@@ -80,6 +80,8 @@ class Utils
         logger.error 'Designated WebDriver is not supported'
         nil
     end
+    driver.manage.window.resize_to(1600,900)
+    driver
   end
 
   def self.optional_chrome_profile_dir

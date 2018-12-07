@@ -29,7 +29,9 @@ module Page
           wait_for_update_and_click toggle_footer_link_element
         rescue
           logger.warn 'Session conflict, CAS page loaded'
-          cal_net.log_in(Utils.super_admin_username, Utils.super_admin_password)
+          cal_net.log_out
+          navigate_to "#{JunctionUtils.junction_base_url}/logout"
+          wait_until(Utils.short_wait) { text.include? 'redirectUrl' }
           load_page
           scroll_to_bottom
           wait_for_update_and_click toggle_footer_link_element

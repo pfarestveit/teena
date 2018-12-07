@@ -13,16 +13,16 @@ module Page
 
       h1(:not_found_msg, xpath: '//h1[text()="Not Found"]')
 
-      h2(:preferred_name, :class => 'student-preferred-name')
+      div(:preferred_name, :class => 'student-preferred-name')
       span(:sid, xpath: '//span[@data-ng-bind="student.sid"]')
       span(:phone, xpath: '//span[@data-ng-bind="student.sisProfile.phoneNumber"]')
       link(:email, xpath: '//a[@data-ng-bind="student.sisProfile.emailAddress"]')
-      div(:cumulative_units, xpath: '//div[@data-ng-bind="student.sisProfile.cumulativeUnits"]')
+      div(:cumulative_units, xpath: '//div[@data-ng-bind="cumulativeUnits"]')
       div(:cumulative_gpa, xpath: '//div[contains(@data-ng-bind,"student.sisProfile.cumulativeGPA")]')
-      h4(:inactive_flag, xpath: '//h4[text()="INACTIVE"]')
-      elements(:major, :h4, xpath: '//div[@data-ng-repeat="plan in student.sisProfile.plans"]/h4')
+      div(:inactive_flag, xpath: '//div[text()="INACTIVE"]')
+      elements(:major, :div, xpath: '//*[@data-ng-bind="plan.description"]')
       elements(:college, :div, xpath: '//div[@data-ng-bind="plan.program"]')
-      h4(:level, xpath: '//h4[@data-ng-bind="student.sisProfile.level.description"]')
+      div(:level, xpath: '//div[@data-ng-bind="student.sisProfile.level.description"]')
       span(:terms_in_attendance, xpath: '//div[@data-ng-if="student.sisProfile.termsInAttendance"]')
       span(:expected_graduation, xpath: '//span[@data-ng-bind="student.sisProfile.expectedGraduationTerm.name"]')
 
@@ -218,7 +218,7 @@ module Page
       # @return [Hash]
       def visible_course_sis_data(term_name, course_code)
         course_xpath = course_data_xpath(term_name, course_code)
-        title_xpath = "#{course_xpath}//h5"
+        title_xpath = "#{course_xpath}//div[@data-ng-bind='course.title']"
         units_xpath = "#{course_xpath}//span[@count='course.units']"
         grading_basis_xpath = "#{course_xpath}//span[contains(@class, 'profile-class-grading-basis')]"
         mid_point_grade_xpath = "#{course_xpath}//span[contains(@data-ng-bind,'course.midtermGrade')]"
@@ -295,7 +295,7 @@ module Page
       # @param label [String]
       # @return [String]
       def site_analytics_percentile_xpath(site_xpath, label)
-        "#{site_xpath}//td[text()='#{label}']/following-sibling::td[1]"
+        "#{site_xpath}//th[contains(text(),'#{label}')]/following-sibling::td[1]"
       end
 
       # Returns the XPath to the detailed score and percentile analytics data for a given category, for example 'page views'
@@ -303,7 +303,7 @@ module Page
       # @param label [String]
       # @return [String]
       def site_analytics_score_xpath(site_xpath, label)
-        "#{site_xpath}//td[text()='#{label}']/following-sibling::td[2]"
+        "#{site_xpath}//th[contains(text(),'#{label}')]/following-sibling::td[2]"
       end
 
       # Returns the XPath to the boxplot graph for a particular set of analytics data for a given site, for example 'page views'
@@ -336,6 +336,7 @@ module Page
       # @param label [String]
       # @return [String]
       def perc_round(site_xpath, label)
+        logger.debug "Hitting XPath: #{site_analytics_percentile_xpath(site_xpath, label)}"
         cell_element(:xpath => "#{site_analytics_percentile_xpath(site_xpath, label)}/strong").text
       end
 
@@ -399,7 +400,7 @@ module Page
       # @param api_analytics [Hash]
       # @return [Hash]
       def visible_assignment_analytics(driver, site_xpath, api_analytics)
-        visible_analytics(driver, site_xpath, 'Assignments on Time', api_analytics)
+        visible_analytics(driver, site_xpath, 'Assignments Submitted', api_analytics)
       end
 
       # Returns the assignments-grades analytics data shown for a given site
@@ -419,12 +420,12 @@ module Page
       def visible_days_since(term_name, course_code, index)
         # Look first for days since last activity
         begin
-          xpath = "#{course_site_xpath(term_name, course_code, index)}//td[contains(.,\"Last bCourses Activity\")]/following-sibling::td//span[2]"
+          xpath = "#{course_site_xpath(term_name, course_code, index)}//th[contains(.,\"Last bCourses Activity\")]/following-sibling::td//span[2]"
           span_element(:xpath => xpath).when_visible(Utils.click_wait)
           span_element(:xpath => xpath).text
         # If no days-since exists, check for 'never'
         rescue
-          el = div_element(:xpath => "#{course_site_xpath(term_name, course_code, index)}//td[contains(.,\"Last bCourses Activity\")]/following-sibling::td/div")
+          el = div_element(:xpath => "#{course_site_xpath(term_name, course_code, index)}//th[contains(.,\"Last bCourses Activity\")]/following-sibling::td/div")
           el.text if el.exists?
         end
       end

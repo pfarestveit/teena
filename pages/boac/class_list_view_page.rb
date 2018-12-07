@@ -15,6 +15,13 @@ module Page
         elements(:student_link, :link, xpath: '//tr[@data-ng-repeat="student in section.students"]//a')
         elements(:student_sid, :div, xpath: '//tr[@data-ng-repeat="student in section.students"]//div[contains(@class, "student-sid")]')
 
+        # Returns the XPath for a student row in the class page table
+        # @param student [BOACUser]
+        # @return [String]
+        def list_view_user_xpath(student)
+          "//tr[@data-ng-repeat=\"student in section.students\"][contains(.,\"#{student.sis_id}\")]"
+        end
+
         # Returns all the SIDs shown on list view
         # @return [Array<String>]
         def list_view_sids
@@ -80,7 +87,7 @@ module Page
         # @param node [Integer]
         # @return [String]
         def assigns_submit_score(student, node)
-          el = div_element(xpath: "(#{list_view_user_xpath student}//div[contains(@class,\"course-list-view-column-04\")]//div[@data-ng-repeat=\"canvasSite in student.enrollment.canvasSites\"])[#{node}]//strong[@data-ng-bind=\"canvasSite.analytics.assignmentsSubmitted.student.raw\"]")
+          el = div_element(xpath: "(#{list_view_user_xpath student}/td[5]//div[@data-ng-repeat=\"canvasSite in student.enrollment.canvasSites\"])[#{node}]//strong[@data-ng-bind=\"canvasSite.analytics.assignmentsSubmitted.student.raw\"]")
           el.text if el.exists?
         end
 
@@ -89,7 +96,7 @@ module Page
         # @param node [Integer]
         # @return [String]
         def assigns_submit_max(student, node)
-          el = span_element(xpath: "(#{list_view_user_xpath student}//div[contains(@class,\"course-list-view-column-04\")]//div[@data-ng-repeat=\"canvasSite in student.enrollment.canvasSites\"])[#{node}]//span[@data-ng-bind=\"canvasSite.analytics.assignmentsSubmitted.courseDeciles[10]\"]")
+          el = span_element(xpath: "(#{list_view_user_xpath student}/td[5]//div[@data-ng-repeat=\"canvasSite in student.enrollment.canvasSites\"])[#{node}]//span[@data-ng-bind=\"canvasSite.analytics.assignmentsSubmitted.courseDeciles[10]\"]")
           el.text if el.exists?
         end
 
@@ -98,7 +105,7 @@ module Page
         # @param node [Integer]
         # @return [String]
         def assigns_submit_no_data(student, node)
-          el = div_element(xpath: "(#{list_view_user_xpath student}//div[contains(@class,\"course-list-view-column-04\")]//div[@data-ng-repeat=\"canvasSite in student.enrollment.canvasSites\"])[#{node}][contains(.,\"No Data\")]")
+          el = div_element(xpath: "(#{list_view_user_xpath student}/td[5]//div[@data-ng-repeat=\"canvasSite in student.enrollment.canvasSites\"])[#{node}][contains(.,\"No Data\")]")
           el.text if el.exists?
         end
 
@@ -107,7 +114,7 @@ module Page
         # @param node [Integer]
         # @return [String]
         def assigns_grade_xpath(student, node)
-          "(#{list_view_user_xpath student}/div[@class=\"course-list-view-column-05 ng-scope\"]//div[@class=\"profile-boxplot-container ng-scope\"])[#{node}]"
+          "(#{list_view_user_xpath student}/td[6]//div[@class=\"profile-boxplot-container ng-scope\"])[#{node}]"
         end
 
         # Returns the student's assignment total score for a site at a given node. If a boxplot exists, mouses over it to reveal the score.
@@ -116,7 +123,7 @@ module Page
         # @param node [Integer]
         # @return [String]
         def assigns_grade_score(driver, student, node)
-          score_xpath = "(#{list_view_user_xpath student}/div[@class=\"course-list-view-column-05 ng-scope\"]//div[@class=\"profile-boxplot-container ng-scope\"])[#{node}]"
+          score_xpath = "(#{list_view_user_xpath student}/td[6]//div[@class=\"profile-boxplot-container ng-scope\"])[#{node}]"
           has_boxplot = verify_block { mouseover(driver, driver.find_element(xpath: "#{score_xpath}//*[@class=\"highcharts-boxplot-box\"]")) }
           el = has_boxplot ?
               div_element(xpath: "#{score_xpath}//div[text()=\"User Score\"]/following-sibling::div") :
@@ -155,7 +162,7 @@ module Page
         # @param node [Integer]
         # @return [String]
         def last_activity(student, node)
-          el = span_element(xpath: "(#{list_view_user_xpath student}/div[@class=\"course-list-view-column-06 ng-scope\"]//div[@class=\"profile-boxplot-container ng-scope\"])[#{node}]/span")
+          el = span_element(xpath: "(#{list_view_user_xpath student}/td[7]//div[@class=\"profile-boxplot-container ng-scope\"])[#{node}]/span")
           el.text if el.exists?
         end
 

@@ -23,8 +23,8 @@ module Page
         end
 
         div(:matrix, id: 'scatterplot')
-        elements(:missing_data_link, :link, xpath: '//a[contains(@data-ng-repeat,"student in studentsWithoutData")]')
-        elements(:missing_data_row, :image, xpath: '//table[@class="missing-student-data-table"]//tr[contains(@class,"student-list-item")]')
+        elements(:missing_data_link, :link, xpath: '//table[@class="missing-student-data-table"]//a[contains(@href,"/student/")]')
+        elements(:missing_data_row, :image, xpath: '//table[@class="missing-student-data-table"]//tr[contains(@class,"cohort-missing-student-data-row")]')
 
         # Waits for the matrix graphic to appear and pauses briefly to allow bubbles to start forming
         def wait_for_matrix

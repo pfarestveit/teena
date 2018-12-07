@@ -96,13 +96,6 @@ describe 'BOAC' do
                           student_to_matrix = @class_matrix_page.verify_block { @class_matrix_page.wait_for_matrix }
                           it("returns to the matrix view of #{class_test_case}") { expect(student_to_matrix).to be_truthy }
 
-                          # Hit 'Back' twice
-                          @driver.navigate.back
-                          @driver.navigate.back
-
-                          back_to_student = @student_page.verify_block { @student_page.wait_until(Utils.short_wait) { @student_page.sid == student.sis_id } }
-                          it("returns to the original student UID #{student.uid}") { expect(back_to_student).to be true }
-
                         end
                       end
                     rescue => e
