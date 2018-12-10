@@ -16,9 +16,9 @@ describe 'A BOAC alert' do
       logger.debug "Advisor UID is #{@advisor.uid}"
       BOACUtils.remove_alert_dismissal(@alert) if BOACUtils.get_dismissed_alerts([@alert], @advisor).any?
 
-      @homepage = Page::BOACPages::UserListPages::HomePage.new @driver
-      @search_page = Page::BOACPages::UserListPages::SearchResultsPage.new @driver
-      @student_page = Page::BOACPages::StudentPage.new @driver
+      @homepage = BOACHomePage.new @driver
+      @search_page = BOACSearchResultsPage.new @driver
+      @student_page = BOACStudentPage.new @driver
 
       # View non-dismissed alert
       @homepage.dev_auth

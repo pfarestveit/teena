@@ -1,6 +1,6 @@
 require_relative '../../util/spec_helper'
 
-class ApiAdminPage
+class BOACApiAdminPage
 
   include PageObject
   include Logging

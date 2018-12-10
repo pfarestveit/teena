@@ -26,10 +26,10 @@ describe 'BOAC' do
       caliper_error_csv = Utils.create_test_output_csv('caliper-errors.csv', %w(SiteId CanvasId UID CanvasLastActivity CaliperLastActivity DiffSeconds P/F))
 
       @driver = Utils.launch_browser
-      @homepage = Page::BOACPages::UserListPages::HomePage.new @driver
+      @homepage = BOACHomePage.new @driver
       @cal_net_page = Page::CalNetPage.new @driver
       @canvas_page = Page::CanvasPage.new @driver
-      @student_page = Page::BOACPages::StudentPage.new @driver
+      @student_page = BOACStudentPage.new @driver
 
       @canvas_page.log_in(@cal_net_page, Utils.super_admin_username, Utils.super_admin_password, 'https://bcourses.berkeley.edu')
       @homepage.dev_auth test.advisor
@@ -38,7 +38,7 @@ describe 'BOAC' do
         begin
 
           # Get the user API data for the test student to determine which courses to check
-          api_student_page = ApiUserAnalyticsPage.new @driver
+          api_student_page = BOACApiUserAnalyticsPage.new @driver
           api_student_page.get_data(@driver, test_student)
           term = api_student_page.terms.find { |t| api_student_page.term_name(t) == test.term }
           if term
@@ -58,7 +58,7 @@ describe 'BOAC' do
                     pages_tested << "#{term_id} #{section_data[:ccn]}"
 
                     # Get all the students in the course who will be visible in BOAC
-                    api_section_page = ApiSectionPage.new @driver
+                    api_section_page = BOACApiSectionPage.new @driver
                     api_section_page.get_data(@driver, term_id, section_data[:ccn])
                     visible_classmates = test.dept_students.select { |s| api_section_page.student_uids.include? s.uid }
 
@@ -72,7 +72,7 @@ describe 'BOAC' do
                       visible_classmates.each do |classmate|
                         begin
 
-                          api_classmate_page = ApiUserAnalyticsPage.new @driver
+                          api_classmate_page = BOACApiUserAnalyticsPage.new @driver
                           api_classmate_page.get_data(@driver, classmate)
                           term = api_classmate_page.terms.find { |t| api_classmate_page.term_name(t) == test.term }
                           classmate_course = api_classmate_page.courses(term).find { |c| api_classmate_page.course_section_ccns(c).include? section_data[:ccn] }

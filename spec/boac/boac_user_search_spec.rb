@@ -11,9 +11,9 @@ describe 'BOAC' do
 
   before(:all) do
     @driver = Utils.launch_browser
-    @homepage = Page::BOACPages::UserListPages::HomePage.new @driver
-    @search_page = Page::BOACPages::UserListPages::SearchResultsPage.new @driver
-    @student_page = Page::BOACPages::StudentPage.new @driver
+    @homepage = BOACHomePage.new @driver
+    @search_page = BOACSearchResultsPage.new @driver
+    @student_page = BOACStudentPage.new @driver
     @homepage.dev_auth test_config.advisor
   end
 

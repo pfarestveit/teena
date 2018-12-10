@@ -30,13 +30,13 @@ describe 'BOAC assignment analytics' do
       @canvas_grades_page = Page::CanvasGradesPage.new @driver
       @canvas_users_page = Page::CanvasPage.new @driver
       @e_grades_page = Page::JunctionPages::CanvasEGradesExportPage.new @driver
-      @boac_homepage = Page::BOACPages::UserListPages::HomePage.new @driver
-      @boac_student_page = Page::BOACPages::StudentPage.new @driver
+      @boac_homepage = BOACHomePage.new @driver
+      @boac_student_page = BOACStudentPage.new @driver
       @boac_homepage.log_in(Utils.super_admin_username, Utils.super_admin_password, @cal_net)
 
       test.max_cohort_members.each do |student|
 
-        boac_api_page = ApiUserAnalyticsPage.new @driver
+        boac_api_page = BOACApiUserAnalyticsPage.new @driver
         boac_api_page.get_data(@driver, student)
         boac_api_page.set_canvas_id student
         term = boac_api_page.terms.find { |t| boac_api_page.term_name(t) == test.term }

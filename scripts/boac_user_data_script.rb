@@ -14,7 +14,7 @@ begin
   user_course_site_data = Utils.create_test_output_csv('boac-canvas-sites.csv', user_site_data_heading)
 
   @driver = Utils.launch_browser
-  @boac_homepage = Page::BOACPages::UserListPages::HomePage.new @driver
+  @boac_homepage = Page::BOACPages::BOACUserListPages::BOACHomePage.new @driver
   @boac_homepage.dev_auth
 
   students = NessieUtils.get_all_students
@@ -23,7 +23,7 @@ begin
     begin
 
       logger.info "Checking UID #{student.uid}"
-      user_analytics_data = ApiUserAnalyticsPage.new @driver
+      user_analytics_data = BOACApiUserAnalyticsPage.new @driver
       user_analytics_data.get_data(@driver, student)
       analytics_api_sis_data = user_analytics_data.user_sis_data
 

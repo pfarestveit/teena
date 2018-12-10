@@ -27,13 +27,13 @@ describe 'BOAC' do
 
   before(:all) do
     @driver = Utils.launch_browser
-    @analytics_page = ApiUserAnalyticsPage.new @driver
-    @homepage = Page::BOACPages::UserListPages::HomePage.new @driver
-    @curated_page = Page::BOACPages::CohortPages::CuratedGroupPage.new @driver
-    @filtered_page = Page::BOACPages::CohortPages::FilteredCohortPage.new @driver
-    @student_page = Page::BOACPages::StudentPage.new @driver
-    @class_page = Page::BOACPages::ClassPages::ClassListViewPage.new @driver
-    @search_page = Page::BOACPages::UserListPages::SearchResultsPage.new @driver
+    @analytics_page = BOACApiUserAnalyticsPage.new @driver
+    @homepage = BOACHomePage.new @driver
+    @curated_page = BOACCuratedGroupPage.new @driver
+    @filtered_page = BOACFilteredCohortPage.new @driver
+    @student_page = BOACStudentPage.new @driver
+    @class_page = BOACClassListViewPage.new @driver
+    @search_page = BOACSearchResultsPage.new @driver
 
     # Get enrollment data for test student for class page tests
     @homepage.dev_auth test.advisor
@@ -75,7 +75,7 @@ describe 'BOAC' do
 
     it 'can be done using the class page list view curated group selector' do
       @class_page.load_page(@analytics_page.term_id(@term), @analytics_page.course_section_ccns(@course).first)
-      sids = @class_page.list_view_sids
+      sids = @class_page.class_list_view_sids
       visible_members = all_students.select { |m| sids.include? m.sis_id }
       @class_page.selector_add_students_to_new_group(visible_members, @group_created_from_class)
       @groups_created << @group_created_from_class
@@ -117,11 +117,11 @@ describe 'BOAC' do
       @student_page.load_page test_student
     end
 
-    before(:each) { @homepage.cancel_group }
+    before(:each) { @student_page.cancel_group }
 
     it 'are required' do
       @student_page.click_create_curated_link
-      expect(@homepage.curated_save_button_element.disabled?).to be true
+      expect(@student_page.curated_save_button_element.disabled?).to be true
     end
 
     it 'are truncated to 255 characters' do

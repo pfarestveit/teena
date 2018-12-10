@@ -15,15 +15,15 @@ describe 'An admin using BOAC' do
 
   before(:all) do
     @driver = Utils.launch_browser
-    @api_admin_page = ApiAdminPage.new @driver
-    @api_section_page = ApiSectionPage.new @driver
-    @api_user_analytics_page = ApiUserAnalyticsPage.new @driver
-    @class_page = Page::BOACPages::ClassPages::ClassListViewPage.new @driver
-    @filtered_cohort_page = Page::BOACPages::CohortPages::FilteredCohortPage.new @driver
-    @homepage = Page::BOACPages::UserListPages::HomePage.new @driver
-    @search_page = Page::BOACPages::UserListPages::SearchResultsPage.new @driver
-    @student_page = Page::BOACPages::StudentPage.new @driver
-    @teams_page = Page::BOACPages::TeamsListPage.new @driver
+    @api_admin_page = BOACApiAdminPage.new @driver
+    @api_section_page = BOACApiSectionPage.new @driver
+    @api_user_analytics_page = BOACApiUserAnalyticsPage.new @driver
+    @class_page = BOACClassListViewPage.new @driver
+    @filtered_cohort_page = BOACFilteredCohortPage.new @driver
+    @homepage = BOACHomePage.new @driver
+    @search_page = BOACSearchResultsPage.new @driver
+    @student_page = BOACStudentPage.new @driver
+    @teams_page = BOACTeamsListPage.new @driver
 
     @homepage.dev_auth test.advisor
   end

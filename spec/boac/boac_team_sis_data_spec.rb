@@ -17,10 +17,10 @@ describe 'BOAC' do
     user_course_sis_data = Utils.create_test_output_csv('boac-sis-courses.csv', user_course_data_heading)
 
     @driver = Utils.launch_browser
-    @boac_homepage = Page::BOACPages::UserListPages::HomePage.new @driver
-    @boac_teams_list_page = Page::BOACPages::TeamsListPage.new @driver
-    @boac_cohort_page = Page::BOACPages::CohortPages::FilteredCohortPage.new @driver
-    @boac_student_page = Page::BOACPages::StudentPage.new @driver
+    @boac_homepage = BOACHomePage.new @driver
+    @boac_teams_list_page = BOACTeamsListPage.new @driver
+    @boac_cohort_page = BOACFilteredCohortPage.new @driver
+    @boac_student_page = BOACStudentPage.new @driver
 
     @boac_homepage.dev_auth test.advisor
     @boac_cohort_page.search_and_create_new_cohort(test.default_cohort, test)
@@ -28,7 +28,7 @@ describe 'BOAC' do
     test.max_cohort_members.sort_by(&:last_name).each do |student|
 
       begin
-        user_analytics_data = ApiUserAnalyticsPage.new @driver
+        user_analytics_data = BOACApiUserAnalyticsPage.new @driver
         user_analytics_data.get_data(@driver, student)
         analytics_api_sis_data = user_analytics_data.user_sis_data
 

@@ -1,6 +1,6 @@
 require_relative '../../util/spec_helper'
 
-class ApiSectionPage
+class BOACApiSectionPage
 
   include PageObject
   include Logging
