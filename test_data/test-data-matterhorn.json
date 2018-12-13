@@ -151,15 +151,15 @@
             "capability": "Screencast"
         },
         {
-            "building": "Giannini",
-            "room": "141",
-            "captureAgent": "Giannini 141",
-            "capability": "Screencast"
-        },
-        {
             "building": "GPB",
             "room": "100",
             "captureAgent": "GPB 100",
+            "capability": "Screencast"
+        },
+        {
+            "building": "Haviland",
+            "room": "12",
+            "captureAgent": "Haviland 12",
             "capability": "Screencast"
         },
         {
