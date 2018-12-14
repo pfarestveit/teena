@@ -8,47 +8,72 @@ class BOACStudentPage
   include BOACPages
   include BOACAddCuratedModalPages
 
+  # Loads a student page directly
+  # @param user [User]
+  def load_page(user)
+    logger.info "Loading student page for UID #{user.uid}"
+    navigate_to "#{BOACUtils.base_url}/student/#{user.uid}"
+    wait_for_title "#{user.full_name}"
+    wait_for_spinner
+  end
+
+  # SIS PROFILE DATA
+
   h1(:not_found_msg, xpath: '//h1[text()="Not Found"]')
 
-  div(:preferred_name, :class => 'student-preferred-name')
-  span(:sid, xpath: '//span[@data-ng-bind="student.sid"]')
-  span(:phone, xpath: '//span[@data-ng-bind="student.sisProfile.phoneNumber"]')
-  link(:email, xpath: '//a[@data-ng-bind="student.sisProfile.emailAddress"]')
-  div(:cumulative_units, xpath: '//div[@data-ng-bind="cumulativeUnits"]')
-  div(:cumulative_gpa, xpath: '//div[contains(@data-ng-bind,"student.sisProfile.cumulativeGPA")]')
+  div(:preferred_name, :id => 'student-preferred-name')
+  span(:sid, id: 'student-bio-sid')
+  span(:phone, id: 'student-phone-number')
+  link(:email, id: 'student-mailto')
+  div(:cumulative_units, id: 'student-status-units-completed')
+  div(:cumulative_gpa, id: 'student-status-cumulative-gpa')
   div(:inactive_flag, xpath: '//div[text()="INACTIVE"]')
-  elements(:major, :div, xpath: '//*[@data-ng-bind="plan.description"]')
-  elements(:college, :div, xpath: '//div[@data-ng-bind="plan.program"]')
-  div(:level, xpath: '//div[@data-ng-bind="student.sisProfile.level.description"]')
-  span(:terms_in_attendance, xpath: '//div[@data-ng-if="student.sisProfile.termsInAttendance"]')
-  span(:expected_graduation, xpath: '//span[@data-ng-bind="student.sisProfile.expectedGraduationTerm.name"]')
+  elements(:major, :div, xpath: '//div[@id="student-bio-majors"]//div[@class="student-bio-header"]')
+  elements(:college, :div, xpath: '//div[@id="student-bio-majors"]//div[@class="student-bio-details"]')
+  div(:level, id: 'student-bio-level')
+  span(:terms_in_attendance, id: 'student-bio-terms-in-attendance')
+  span(:expected_graduation, id: 'student-bio-expected-graduation')
 
   cell(:writing_reqt, xpath: '//td[text()="Entry Level Writing"]/following-sibling::td')
   cell(:history_reqt, xpath: '//td[text()="American History"]/following-sibling::td')
   cell(:institutions_reqt, xpath: '//td[text()="American Institutions"]/following-sibling::td')
   cell(:cultures_reqt, xpath: '//td[text()="American Cultures"]/following-sibling::td')
 
-  elements(:non_dismissed_alert, :div, xpath: '//div[@data-ng-repeat="alert in alerts.shown"]')
-  elements(:non_dismissed_alert_msg, :span, xpath: '//div[@data-ng-repeat="alert in alerts.shown"]//span[@data-ng-bind="alert.message"]')
-  elements(:dismissed_alert, :div, xpath: '//div[@data-ng-repeat="alert in alerts.dismissed"]')
-  elements(:dismissed_alert_msg, :span, xpath: '//div[@data-ng-repeat="alert in alerts.dismissed"]//span[@data-ng-bind="alert.message"]')
+  # Returns a user's SIS data visible on the student page
+  # @return [Hash]
+  def visible_sis_data
+    {
+      :name => (student_name_heading if student_name_heading?),
+      :preferred_name => (preferred_name if preferred_name?),
+      :email => (email_element.text if email?),
+      :phone => (phone if phone?),
+      :cumulative_units => (cumulative_units.gsub('Units Completed','') if cumulative_units?),
+      :cumulative_gpa => (cumulative_gpa.gsub('Cumulative GPA','').strip if cumulative_gpa?),
+      :majors => (major_elements.map { |m| m.text.strip }),
+      :colleges => (college_elements.map { |c| c.text.strip }),
+      :level => (level.gsub('Level','') if level?),
+      :terms_in_attendance => (terms_in_attendance if terms_in_attendance?),
+      :expected_graduation => (expected_graduation.gsub('Expected graduation','').strip if expected_graduation?),
+      :reqt_writing => (writing_reqt.strip if writing_reqt_element.exists?),
+      :reqt_history => (history_reqt.strip if history_reqt_element.exists?),
+      :reqt_institutions => (institutions_reqt.strip if institutions_reqt_element.exists?),
+      :reqt_cultures => (cultures_reqt.strip if cultures_reqt_element.exists?)
+    }
+  end
+
+  # ALERTS
+
+  elements(:non_dismissed_alert_button, :button, xpath: '//button[contains(@id,"dismiss-alert")]')
+  elements(:non_dismissed_alert_msg, :span, xpath: '//button[contains(@id,"dismiss-alert")]/previous-sibling::span')
+  elements(:dismissed_alert, :div, xpath: '//button[contains(text(),"Hide dismissed status alerts"]/following-sibling::div')
+  elements(:dismissed_alert_msg, :span, xpath: '//button[contains(text(),"Hide dismissed status alerts"]/following-sibling::div//span')
   button(:view_dismissed_button, xpath: '//button[contains(.,"View dismissed status alerts")]')
   button(:hide_dismissed_button, xpath: '//button[contains(.,"Hide dismissed status alerts")]')
-
-  elements(:course_site_code, :h3, xpath: '//h3[@data-ng-bind="course.courseCode"]')
-
-  # Loads a student page directly
-  # @param user [User]
-  def load_page(user)
-    logger.info "Loading student page for UID #{user.uid}"
-    navigate_to "#{BOACUtils.base_url}/student/#{user.uid}"
-    wait_for_spinner
-  end
 
   # Returns the IDs of non-dismissed alerts
   # @return [Array<String>]
   def non_dismissed_alert_ids
-    non_dismissed_alert_elements.map { |a| a.attribute('id').split('-')[1] }
+    non_dismissed_alert_button_elements.map { |a| a.attribute('id').split('-')[2] }
   end
 
   # Returns the message text of non-dismissed alerts
@@ -88,32 +113,10 @@ class BOACStudentPage
   # @param alert [Alert]
   def dismiss_alert(alert)
     logger.info "Dismissing alert ID #{alert.id}"
-    wait_for_load_and_click button_element(id: "dismiss-alert-#{alert.id}")
+    wait_for_load_and_click non_dismissed_alert_button_elements.find { |el| el.attribute('id').include?(alert.id) }
   end
 
-  # Returns a user's SIS data visible on the student page
-  # @return [Hash]
-  def visible_sis_data
-    {
-      :name => (student_name_heading if student_name_heading?),
-      :preferred_name => (preferred_name if preferred_name?),
-      :email => (email_element.text if email?),
-      :phone => (phone if phone?),
-      :cumulative_units => (cumulative_units if cumulative_units?),
-      :cumulative_gpa => (cumulative_gpa if cumulative_gpa?),
-      :majors => (major_elements.map &:text),
-      :colleges => (college_elements.map &:text),
-      :level => (level if level?),
-      :terms_in_attendance => (terms_in_attendance if terms_in_attendance?),
-      :expected_graduation => (expected_graduation if expected_graduation?),
-      :reqt_writing => (writing_reqt.strip if writing_reqt_element.exists?),
-      :reqt_history => (history_reqt.strip if history_reqt_element.exists?),
-      :reqt_institutions => (institutions_reqt.strip if institutions_reqt_element.exists?),
-      :reqt_cultures => (cultures_reqt.strip if cultures_reqt_element.exists?)
-    }
-  end
-
-  # CURATED GROUPS
+  # TODO - CURATED GROUPS
 
   link(:student_create_curated_group, id: 'curated-cohort-create-link')
   elements(:student_curated_group_name, :link, xpath: '//div[contains(@class,"student-groups-checkboxes")]//a[@data-ng-bind="group.name"]')
@@ -181,20 +184,19 @@ class BOACStudentPage
     wait_for_load_and_click view_more_button_element
   end
 
+  # Returns the XPath to a semester's courses
+  # @param [String] term_name
+  # @return [String]
+  def term_data_xpath(term_name)
+    "//h3[text()=\"#{term_name}\"]/following-sibling::div"
+  end
+
   # Returns the XPath to the SIS data shown for a given course in a term
   # @param term_name [String]
   # @param course_code [String]
   # @return [String]
   def course_data_xpath(term_name, course_code)
-    "//h3[text()=\"#{term_name}\"]/following-sibling::*[name()='uib-accordion']//h4[text()=\"#{course_code}\"]/ancestor::div[@data-ng-repeat=\"course in term.enrollments\"]"
-  end
-
-  # Returns the class page link for a given section
-  # @param term_code [String]
-  # @param ccn [Integer]
-  # @return [PageObject::Elements::Link]
-  def class_page_link(term_code, ccn)
-    link_element(id: "term-#{term_code}-section-#{ccn}")
+    "#{term_data_xpath term_name}//h4[text()=\"#{course_code}\"]/ancestor::div[@class=\"student-course\"]"
   end
 
   # Clicks the class page link for a given section
@@ -203,7 +205,8 @@ class BOACStudentPage
   def click_class_page_link(term_code, ccn)
     logger.info "Clicking link for term #{term_code} section #{ccn}"
     start = Time.now
-    wait_for_load_and_click class_page_link(term_code, ccn)
+    link = link_element(id: "term-#{term_code}-section-#{ccn}")
+    wait_for_load_and_click link
     wait_for_spinner
     div_element(class: 'course-column-schedule').when_visible Utils.short_wait
     logger.warn "Took #{Time.now - start} seconds for the term #{term_code} section #{ccn} page to load"
@@ -215,11 +218,11 @@ class BOACStudentPage
   # @return [Hash]
   def visible_course_sis_data(term_name, course_code)
     course_xpath = course_data_xpath(term_name, course_code)
-    title_xpath = "#{course_xpath}//div[@data-ng-bind='course.title']"
-    units_xpath = "#{course_xpath}//span[@count='course.units']"
-    grading_basis_xpath = "#{course_xpath}//span[contains(@class, 'profile-class-grading-basis')]"
-    mid_point_grade_xpath = "#{course_xpath}//span[contains(@data-ng-bind,'course.midtermGrade')]"
-    grade_xpath = "#{course_xpath}//span[contains(@data-ng-bind, 'course.grade')]"
+    title_xpath = "#{course_xpath}//div[@class='student-course-name']"
+    units_xpath = "#{course_xpath}//div[@class='student-course-heading-units']"
+    grading_basis_xpath = "#{course_xpath}//span[@class='student-course-grading-basis']"
+    mid_point_grade_xpath = "#{course_xpath}//div[contains(text(),'Mid:')]/span"
+    grade_xpath = "#{course_xpath}//div[contains(text(),'Final:')]/span"
     wait_list_xpath = "#{course_xpath}//span[@data-ng-if='course.waitlisted']"
     {
       :title => (h4_element(:xpath => title_xpath).text if h4_element(:xpath => title_xpath).exists?),
@@ -237,9 +240,9 @@ class BOACStudentPage
   # @param index [Integer]
   # @return [Hash]
   def visible_section_sis_data(term_name, course_code, index)
-    section_xpath = "#{course_data_xpath(term_name, course_code)}//span[@data-ng-repeat='section in course.sections'][#{index + 1}]/*[@data-ng-bind='section.displayName']"
+    section_xpath = "#{course_data_xpath(term_name, course_code)}//div[@class='student-course-sections']/span[#{index + 1}]"
     {
-      :section => (span_element(:xpath => section_xpath).text if span_element(:xpath => section_xpath).exists?)
+     :section => (span_element(:xpath => section_xpath).text.gsub('|','').strip if span_element(:xpath => section_xpath).exists?)
     }
   end
 
@@ -250,24 +253,17 @@ class BOACStudentPage
   # @param number [String]
   # @return [PageObject::Elements::Div]
   def visible_dropped_section_data(term_name, course_code, component, number)
-    div_element(:xpath => "//h2[text()=\"#{term_name}\"]/following-sibling::div//div[@class='student-profile-dropped-section-title'][contains(.,\"#{course_code}\")][contains(.,\"#{component}\")][contains(.,\"#{number}\")]")
+    div_element(:xpath => "#{term_data_xpath term_name}//div[@class='student-course student-course-dropped'][contains(.,\"#{course_code} - #{component} #{number}\")]")
   end
 
   # COURSE SITES
-
-  # Returns the element for expanding or collapsing course data
-  # @param term_name [String]
-  # @param course_code [String]
-  # @return [PageObject::Elements::Link]
-  def course_data_toggle(term_name, course_code)
-    link_element(:xpath => "#{course_data_xpath(term_name, course_code)}//a")
-  end
 
   # Expands course data
   # @param term_name [String]
   # @param course_code [String]
   def expand_course_data(term_name, course_code)
-    wait_for_update_and_click course_data_toggle(term_name, course_code)
+    toggle = button_element(:xpath => "#{course_data_xpath(term_name, course_code)}//button")
+    wait_for_update_and_click toggle
   end
 
   # Returns the XPath to a course site associated with a course in a term
@@ -276,7 +272,7 @@ class BOACStudentPage
   # @param index [Integer]
   # @return [String]
   def course_site_xpath(term_name, course_code, index)
-    "#{course_data_xpath(term_name, course_code)}//div[@data-ng-repeat='canvasSite in course.canvasSites'][#{index + 1}]"
+    "#{course_data_xpath(term_name, course_code)}//div[@class='student-bcourses-wrapper'][#{index + 1}]"
   end
 
   # Returns the XPath to a course site in a term not matched to a SIS enrollment
@@ -284,7 +280,7 @@ class BOACStudentPage
   # @param site_code [String]
   # @return [String]
   def unmatched_site_xpath(term_name, site_code)
-    "//h2[text()=\"#{term_name}\"]/following-sibling::div[@data-ng-repeat='canvasSite in term.unmatchedCanvasSites']//h3[text()=\"#{site_code}\"]/following-sibling::*[name()='course-site-metrics']"
+    "#{term_data_xpath term_name}//h4[text()=\"#{site_code}\"]/ancestor::div[@class='student-course']//div[@class='student-bcourses-wrapper']"
   end
 
   # Returns the XPath to the user percentile analytics data for a given category, for example 'page views'
@@ -308,7 +304,7 @@ class BOACStudentPage
   # @param label [String]
   # @return [String]
   def site_boxplot_xpath(site_xpath, label)
-    "#{site_analytics_score_xpath(site_xpath, label)}/div[contains(@class,'student-profile-boxplot')]//*[local-name()='svg']/*[name()='g'][@class='highcharts-series-group']"
+    "#{site_analytics_score_xpath(site_xpath, label)}/div[contains(@class,'student-chart-boxplot-container')]//*[local-name()='svg']/*[name()='g'][@class='highcharts-series-group']"
   end
 
   # Returns the element that triggers the analytics tooltip for a particular set of analytics data for a given site, for example 'page views'
@@ -334,7 +330,7 @@ class BOACStudentPage
   # @return [String]
   def perc_round(site_xpath, label)
     logger.debug "Hitting XPath: #{site_analytics_percentile_xpath(site_xpath, label)}"
-    cell_element(:xpath => "#{site_analytics_percentile_xpath(site_xpath, label)}/strong").text
+    cell_element(:xpath => "#{site_analytics_percentile_xpath(site_xpath, label)}//strong").text
   end
 
   # When a boxplot is shown for a set of analytics, returns the user score shown on the tooltip
@@ -342,7 +338,7 @@ class BOACStudentPage
   # @param label [String]
   # @return [String]
   def graphable_user_score(site_xpath, label)
-    el = div_element(:xpath => "#{site_analytics_score_xpath(site_xpath, label)}//div[@class='student-profile-tooltip-header']/div[2]")
+    el = div_element(:xpath => "#{site_analytics_score_xpath(site_xpath, label)}//div[@class='student-chart-tooltip-header']/div[2]")
     el.text if el.exists?
   end
 
@@ -375,9 +371,9 @@ class BOACStudentPage
     if api_analytics[:graphable]
       wait_until(Utils.short_wait) { analytics_trigger_element(driver, site_xpath, label) }
       mouseover(driver, analytics_trigger_element(driver, site_xpath, label))
-      div_element(:xpath => "#{site_analytics_score_xpath(site_xpath, label)}//div[contains(@class,'highcharts-tooltip')]").when_visible Utils.short_wait
+      div_element(:xpath => "#{site_analytics_score_xpath(site_xpath, label)}//div[@class='student-chart-tooltip-header']").when_visible Utils.short_wait
     end
-    tool_tip_detail_elements = driver.find_elements(:xpath => "#{site_analytics_score_xpath(site_xpath, label)}//div[@class='student-profile-tooltip-content']//div[@class='student-profile-tooltip-value']")
+    tool_tip_detail_elements = driver.find_elements(:xpath => "#{site_analytics_score_xpath(site_xpath, label)}//div[@class='student-chart-tooltip-value']")
     tool_tip_detail = []
     tool_tip_detail = tool_tip_detail_elements.map &:text if tool_tip_detail_elements.any?
     {
@@ -409,44 +405,18 @@ class BOACStudentPage
     visible_analytics(driver, site_xpath, 'Assignment Grades', api_analytics)
   end
 
-  # Returns the visible days since the user's last site activity
-  # @param term_name [String]
-  # @param course_code [String]
-  # @param index [Integer]
-  # @return [String]
-  def visible_days_since(term_name, course_code, index)
-    # Look first for days since last activity
-    begin
-      xpath = "#{course_site_xpath(term_name, course_code, index)}//th[contains(.,\"Last bCourses Activity\")]/following-sibling::td//span[2]"
-      span_element(:xpath => xpath).when_visible(Utils.click_wait)
-      span_element(:xpath => xpath).text
-    # If no days-since exists, check for 'never'
-    rescue
-      el = div_element(:xpath => "#{course_site_xpath(term_name, course_code, index)}//th[contains(.,\"Last bCourses Activity\")]/following-sibling::td/div")
-      el.text if el.exists?
-    end
-  end
-
-  # Returns the visible days since the user's last site activity
-  # @param term_name [String]
-  # @param course_code [String]
-  # @param index [Integer]
-  # @return [String]
-  def visible_activity_context(term_name, course_code, index)
-    el = span_element(:xpath => "#{course_site_xpath(term_name, course_code, index)}//span[@data-ng-bind=\"lastActivityInContext(canvasSite.analytics)\"]")
-    el.text if el.exists?
-  end
-
   # Returns the last activity data shown for a given site
   # @param term_name [String]
   # @param course_code [String]
   # @param index [Integer]
-  # @return [Hash]
+  # @return [String]
   def visible_last_activity(term_name, course_code, index)
-    wait_until(Utils.short_wait) { visible_days_since(term_name, course_code, index) }
+    xpath = "#{course_site_xpath(term_name, course_code, index)}//th[contains(.,\"Last bCourses Activity\")]/following-sibling::td/div"
+    div_element(:xpath => xpath).when_visible(Utils.click_wait)
+    text = div_element(:xpath => xpath).text.strip
     {
-      :days => visible_days_since(term_name, course_code, index),
-      :context => visible_activity_context(term_name, course_code, index)
+      :days => text.split('.')[0],
+      :context => text.split('.')[1]
     }
   end
 

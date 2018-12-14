@@ -236,8 +236,8 @@ describe 'BOAC' do
                               else
 
                                 (day_count == 1) ?
-                                    (it("shows 'yesterday' Last Activity on the student page for #{test_case}") { expect(student_site[:last_activity_student_page][:days]).to eql('yesterday') }) :
-                                    (it("shows '#{day_count} days ago' Last Activity on the student page for #{test_case}") { expect(student_site[:last_activity_student_page][:days]).to eql("#{day_count} days ago") })
+                                    (it("shows 'yesterday' Last Activity on the student page for #{test_case}") { expect(student_site[:last_activity_student_page][:days]).to include('yesterday') }) :
+                                    (it("shows '#{day_count} days ago' Last Activity on the student page for #{test_case}") { expect(student_site[:last_activity_student_page][:days]).to include("#{day_count} days ago") })
 
                                 if BOACUtils.last_activity_context
                                   it("shows #{site[:last_activity_dates].length} total students for #{test_case}") { expect(student_site[:last_activity_student_page][:context]).to include("out of #{site[:last_activity_dates].length} enrolled students") }
