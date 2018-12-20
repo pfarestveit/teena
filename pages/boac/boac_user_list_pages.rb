@@ -13,7 +13,7 @@ module BOACUserListPages
   def all_row_sids(driver, cohort = nil)
     # TODO - account for curated cohorts too
     xpath = filtered_cohort_xpath cohort if cohort && cohort.instance_of?(FilteredCohort)
-    driver.find_elements(xpath: "#{xpath}//span[@data-ng-bind='student.sid']").map &:text
+    driver.find_elements(xpath: "#{xpath}//span[text()=\"S I D\"]/following-sibling::span").map &:text
   end
 
   # Returns the XPath to a filtered cohort's div in the main content area on the homepage
@@ -30,16 +30,16 @@ module BOACUserListPages
   # @param cohort_xpath [String]
   # @return [Hash]
   def user_row_data(driver, sid, cohort_xpath = nil)
-    row_xpath = "#{cohort_xpath}//tr[contains(@data-ng-repeat,\"student in students\")][contains(.,\"#{sid}\")]"
-    name_el = link_element(xpath: "#{row_xpath}//a[@data-ng-bind=\"student.sortableName\"]")
-    sid_el = span_element(xpath: "#{row_xpath}//span[@data-ng-bind='student.sid']")
-    major_els = driver.find_elements(xpath: "#{row_xpath}//div[@data-ng-repeat='major in student.majors']")
-    term_units_el = div_element(xpath: "#{row_xpath}//div[contains(@data-ng-bind,'student.term.enrolledUnits')]")
-    cumul_units_el = div_element(xpath: "#{row_xpath}//div[contains(@data-ng-bind,'student.cumulativeUnits')]")
-    no_cumul_units_el = div_element(xpath: "#{row_xpath}//div[contains(@data-ng-if,'!student.cumulativeUnits')]")
-    gpa_el = div_element(xpath: "#{row_xpath}//div[contains(@data-ng-bind, 'student.cumulativeGPA')]")
-    no_gpa_el = div_element(xpath: "#{row_xpath}//div[contains(@data-ng-if, '!student.cumulativeGPA')]")
-    alerts_el = div_element(xpath: "#{row_xpath}//div[contains(@class,'home-issues-pill')]")
+    row_xpath = "#{cohort_xpath}//tr[contains(.,\"#{sid}\")]"
+    name_el = link_element(xpath: "#{row_xpath}//span[text()=\"student name\"]/following-sibling::a")
+    sid_el = span_element(xpath: "#{row_xpath}//span[text()=\"S I D\"]/following-sibling::span")
+    major_els = driver.find_elements(xpath: "#{row_xpath}//span[text()=\"major\"]/following-sibling::div")
+    term_units_el = div_element(xpath: "#{row_xpath}//span[text()=\"term units\"]/following-sibling::div")
+    cumul_units_el = div_element(xpath: "#{row_xpath}//span[text()=\"units completed\"]/following-sibling::div")
+    no_cumul_units_el = span_element(xpath: "#{row_xpath}//span[text()=\"units completed\"]/following-sibling::div/span")
+    gpa_el = div_element(xpath: "#{row_xpath}//span[text()=\"GPA\"]/following-sibling::div")
+    no_gpa_el = span_element(xpath: "#{row_xpath}//span[text()=\"GPA\"]/following-sibling::div/span")
+    alerts_el = div_element(xpath: "#{row_xpath}//span[text()=\"issue count\"]/following-sibling::div")
     {
         :name => (name_el.text if name_el.exists?),
         :sid => (sid_el.text if sid_el.exists?),

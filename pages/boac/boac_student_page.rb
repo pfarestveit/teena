@@ -47,11 +47,11 @@ class BOACStudentPage
       :preferred_name => (preferred_name if preferred_name?),
       :email => (email_element.text if email?),
       :phone => (phone if phone?),
-      :cumulative_units => (cumulative_units.gsub('Units Completed','') if cumulative_units?),
-      :cumulative_gpa => (cumulative_gpa.gsub('Cumulative GPA','').strip if cumulative_gpa?),
+      :cumulative_units => (cumulative_units.gsub("UNITS COMPLETED\n",'').gsub("\nNo data", '') if cumulative_units?),
+      :cumulative_gpa => (cumulative_gpa.gsub("CUMULATIVE GPA\n",'').gsub("\nNo data", '').strip if cumulative_gpa?),
       :majors => (major_elements.map { |m| m.text.strip }),
-      :colleges => (college_elements.map { |c| c.text.strip }),
-      :level => (level.gsub('Level','') if level?),
+      :colleges => (college_elements.map { |c| c.text.strip }).reject(&:empty?),
+      :level => (level.gsub("Level\n",'') if level?),
       :terms_in_attendance => (terms_in_attendance if terms_in_attendance?),
       :expected_graduation => (expected_graduation.gsub('Expected graduation','').strip if expected_graduation?),
       :reqt_writing => (writing_reqt.strip if writing_reqt_element.exists?),
@@ -64,11 +64,12 @@ class BOACStudentPage
   # ALERTS
 
   elements(:non_dismissed_alert_button, :button, xpath: '//button[contains(@id,"dismiss-alert")]')
-  elements(:non_dismissed_alert_msg, :span, xpath: '//button[contains(@id,"dismiss-alert")]/previous-sibling::span')
+  elements(:non_dismissed_alert_msg, :span, xpath: '//button[contains(@id,"dismiss-alert")]/preceding-sibling::span')
   elements(:dismissed_alert, :div, xpath: '//button[contains(text(),"Hide dismissed status alerts"]/following-sibling::div')
   elements(:dismissed_alert_msg, :span, xpath: '//button[contains(text(),"Hide dismissed status alerts"]/following-sibling::div//span')
   button(:view_dismissed_button, xpath: '//button[contains(.,"View dismissed status alerts")]')
   button(:hide_dismissed_button, xpath: '//button[contains(.,"Hide dismissed status alerts")]')
+  span(:withdrawal_msg, class: 'red-flag-small')
 
   # Returns the IDs of non-dismissed alerts
   # @return [Array<String>]
@@ -227,8 +228,8 @@ class BOACStudentPage
     {
       :title => (h4_element(:xpath => title_xpath).text if h4_element(:xpath => title_xpath).exists?),
       :units_completed => (div_element(:xpath => units_xpath).text.delete('Units').strip if div_element(:xpath => units_xpath).exists?),
-      :grading_basis => (span_element(:xpath => grading_basis_xpath).text if (span_element(:xpath => grading_basis_xpath).exists? && !span_element(:xpath => grade_xpath).exists?)),
-      :mid_point_grade => (span_element(:xpath => mid_point_grade_xpath).text if span_element(:xpath => mid_point_grade_xpath).exists?),
+      :grading_basis => (span_element(:xpath => grading_basis_xpath).text if span_element(:xpath => grading_basis_xpath).exists?),
+      :mid_point_grade => (span_element(:xpath => mid_point_grade_xpath).text.gsub("\n", '') if span_element(:xpath => mid_point_grade_xpath).exists?),
       :grade => (span_element(:xpath => grade_xpath).text if span_element(:xpath => grade_xpath).exists?),
       :wait_list => (span_element(:xpath => wait_list_xpath).exists?)
     }
@@ -242,7 +243,7 @@ class BOACStudentPage
   def visible_section_sis_data(term_name, course_code, index)
     section_xpath = "#{course_data_xpath(term_name, course_code)}//div[@class='student-course-sections']/span[#{index + 1}]"
     {
-     :section => (span_element(:xpath => section_xpath).text.gsub('|','').strip if span_element(:xpath => section_xpath).exists?)
+     :section => (span_element(:xpath => section_xpath).text.delete('(|)').strip if span_element(:xpath => section_xpath).exists?)
     }
   end
 

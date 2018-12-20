@@ -29,20 +29,12 @@ class BOACSearchResultsPage
 
   # STUDENT SEARCH
 
-  span(:student_results_count, xpath: '//span[@count="search.totalStudentCount"]')
-  elements(:student_row, :row, xpath: '//tr[contains(@data-ng-repeat,"student in students")]')
-  elements(:student_row_sid, :span, xpath: '//tr[contains(@data-ng-repeat,"student in students")]//span[@data-ng-bind="student.sid"]')
+  span(:student_results_count, xpath: '//h1')
 
   # Returns the result count for a student search
   # @return [Integer]
   def student_search_results_count
     results_count student_results_count_element
-  end
-
-  # Returns all the SIDs displayed on the page
-  # @return [Array<String>]
-  def student_row_sids
-    student_row_sid_elements.map &:text
   end
 
   # Checks if a given student is among search results. If more than 50 results exist, the student could be among them
@@ -54,13 +46,13 @@ class BOACSearchResultsPage
     count = results_count student_results_count_element
     verify_block do
       if count > 50
-        wait_until(2) { student_row_elements.length == 50 }
+        wait_until(2) { all_row_sids(driver).length == 50 }
         logger.warn "Skipping a test with UID #{student.uid} because there are more than 50 results"
         sleep 1
       else
         wait_until(Utils.medium_wait) do
-          student_row_elements.length == count
-          student_row_sids.include? student.sis_id.to_s
+          all_row_sids(driver).length == count
+          all_row_sids(driver).include? student.sis_id.to_s
         end
         visible_row_data = user_row_data(driver, student.sis_id)
         wait_until(2, "Expecting name #{student.last_name}, #{student.first_name}, got #{visible_row_data[:name]}") { visible_row_data[:name] == "#{student.last_name}, #{student.first_name}" }
@@ -72,13 +64,13 @@ class BOACSearchResultsPage
   # Clicks the search results row for a given student
   # @param student [User]
   def click_student_result(student)
-    wait_for_update_and_click row_element(xpath: "//tr[contains(@data-ng-repeat,'student in students')][contains(.,'#{student.sis_id}')]//a")
+    wait_for_update_and_click link_element(xpath: "//a[@href='/student/#{student.uid}']")
     wait_for_spinner
   end
 
   # CLASS SEARCH
 
-  span(:class_results_count, xpath: '//span[@count="search.totalCourseCount"]')
+  span(:class_results_count, xpath: '//h1[2]')
   elements(:class_row, :row, xpath: '//span[@data-ng-bind="course.courseName"]')
 
   # Checks if a given class is among search results. If more than 50 results exist, the class could be among them
