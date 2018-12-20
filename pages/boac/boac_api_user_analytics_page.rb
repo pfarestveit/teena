@@ -67,6 +67,7 @@ class BOACApiUserAnalyticsPage
       :terms_in_attendance => (sis_profile && sis_profile['termsInAttendance'].to_s),
       :expected_grad_term_id => (sis_profile && sis_profile['expectedGraduationTerm'] && sis_profile['expectedGraduationTerm']['id']),
       :expected_grad_term_name => (sis_profile && sis_profile['expectedGraduationTerm'] && sis_profile['expectedGraduationTerm']['name']),
+      :withdrawal => (sis_profile && withdrawal),
       :reqt_writing => (sis_profile && degree_progress && degree_progress[:writing]),
       :reqt_history => (sis_profile && degree_progress && degree_progress[:history]),
       :reqt_institutions => (sis_profile && degree_progress && degree_progress[:institutions]),
@@ -85,8 +86,21 @@ class BOACApiUserAnalyticsPage
 
   def formatted_units(units_as_int)
     if units_as_int
-      (units_as_int == units_as_int.floor) ? units_as_int.floor.to_s : units_as_int.to_s
+      if units_as_int.zero?
+        '--'
+      else
+        (units_as_int == units_as_int.floor) ? units_as_int.floor.to_s : units_as_int.to_s
+      end
     end
+  end
+
+  def withdrawal
+    withdrawal = sis_profile['withdrawalCancel']
+    withdrawal && {
+      :desc => withdrawal['description'],
+      :reason => withdrawal['reason'],
+      :date => Time.parse(withdrawal['date']).strftime('%b %e, %Y')
+    }
   end
 
   def degree_progress

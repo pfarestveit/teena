@@ -21,6 +21,8 @@ describe 'BOAC' do
     @boac_teams_list_page = BOACTeamsListPage.new @driver
     @boac_cohort_page = BOACFilteredCohortPage.new @driver
     @boac_student_page = BOACStudentPage.new @driver
+    @boac_admin_page = BOACAdminPage.new @driver
+    @boac_search_page = BOACSearchResultsPage.new @driver
 
     @boac_homepage.dev_auth test.advisor
     @boac_cohort_page.search_and_create_new_cohort(test.default_cohort, test)
@@ -41,6 +43,9 @@ describe 'BOAC' do
           expect(cohort_page_sis_data[:level]).to eql(analytics_api_sis_data[:level])
           expect(cohort_page_sis_data[:level]).not_to be_empty
         end
+
+
+        # TODO - shows withdrawal indicator if withdrawn
 
         it "shows the majors for UID #{student.uid} on the #{test.default_cohort.name} page" do
           expect(cohort_page_sis_data[:majors]).to eql(analytics_api_sis_data[:majors].sort)
@@ -99,7 +104,7 @@ describe 'BOAC' do
 
         analytics_api_sis_data[:colleges] ?
             (it("shows the colleges for UID #{student.uid} on the student page") { expect(student_page_sis_data[:colleges]).to eql(analytics_api_sis_data[:colleges]) }) :
-            (it("shows no colleges for UID #{student.uid} on the student page") { expect(student_page_sis_data[:colleges]).to be_empty })
+            (it("shows no colleges for UID #{student.uid} on the student page") { expect(student_page_sis_data[:colleges].all?(&:empty?)).to be true })
 
         it "shows the academic level for UID #{student.uid} on the student page" do
           expect(student_page_sis_data[:level]).to eql(analytics_api_sis_data[:level])
@@ -140,6 +145,17 @@ describe 'BOAC' do
           dismissed_present = @boac_student_page.dismissed_alert_msgs.sort
           it("has the dismissed alert messages for UID #{student.uid} on the student page") { expect(dismissed_present).to eql(dismissed) }
           it("hides the dismissed alert messages for UID #{student.uid} on the student page") { expect(dismissed_visible).to be false }
+        end
+
+        if (withdrawal = analytics_api_sis_data[:withdrawal])
+          withdrawal_msg_present = @boac_student_page.withdrawal_msg?
+          it("shows withdrawal information for UID #{student.uid} on the student page") { expect(withdrawal_msg_present).to be true }
+          if withdrawal_msg_present
+            msg = @boac_student_page.withdrawal_msg
+            it("shows the withdrawal type for UID #{student.uid} on the student page") { expect(msg).to include(withdrawal[:desc]) }
+            it("shows the withdrawal reason for UID #{student.uid} on the student page") { expect(msg).to include(withdrawal[:reason]) }
+            it("shows the withdrawal date for UID #{student.uid} on the student page") { expect(msg).to include(withdrawal[:date]) }
+          end
         end
 
         # TERMS
@@ -195,28 +211,27 @@ describe 'BOAC' do
                       it("shows no units for UID #{student.uid} term #{term_name} course #{course_code}") { expect(visible_units).to be_empty }
                     end
 
-                    if course_sis_data[:grading_basis] == 'NON' || !course_sis_data[:grade].empty?
-                      it("shows no grading basis for UID #{student.uid} term #{term_name} course #{course_code}") { expect(visible_grading_basis).to be_nil }
-                    else
-                      it "shows the grading basis for UID #{student.uid} term #{term_name} course #{course_code}" do
-                        expect(visible_grading_basis).not_to be_empty
-                        expect(visible_grading_basis).to eql(course_sis_data[:grading_basis])
-                      end
-                    end
-
                     if course_sis_data[:grade].empty?
-                      it("shows no grade for UID #{student.uid} term #{term_name} course #{course_code}") { expect(visible_grade).to be_nil }
-                    else
-                      it "shows the grade for UID #{student.uid} term #{term_name} course #{course_code}" do
-                        expect(visible_grade).not_to be_empty
-                        expect(visible_grade).to eql(course_sis_data[:grade])
+                      if course_sis_data[:grading_basis] == 'NON'
+                        it "shows no grade and no grading basis for UID #{student.uid} term #{term_name} course #{course_code}" do
+                          expect(visible_grade).to be_empty
+                          expect(visible_grading_basis).to be_nil
+                        end
+                      else
+                        it("shows the grading basis for UID #{student.uid} term #{term_name} course #{course_code}") { expect(visible_grading_basis).to eql(course_sis_data[:grading_basis]) }
                       end
+                    else
+                      it("shows the grade for UID #{student.uid} term #{term_name} course #{course_code}") { expect(visible_grade).to eql(course_sis_data[:grade]) }
                     end
 
-                    if course_sis_data[:midpoint] && term_name == BOACUtils.term
-                      it "shows the midpoint grade for UID #{student.uid} term #{term_name} course #{course_code}" do
-                        expect(visible_midpoint).not_to be_empty
-                        expect(visible_midpoint).to eql(course_sis_data[:midpoint])
+                    if term_name == BOACUtils.term
+                      if course_sis_data[:midpoint]
+                        it "shows the midpoint grade for UID #{student.uid} term #{term_name} course #{course_code}" do
+                          expect(visible_midpoint).not_to be_empty
+                          expect(visible_midpoint).to eql(course_sis_data[:midpoint])
+                        end
+                      else
+                        it("shows no midpoint grade for UID #{student.uid} term #{term_name} course #{course_code}") { expect(visible_midpoint).to include('No data') }
                       end
                     else
                       it("shows no midpoint grade for UID #{student.uid} term #{term_name} course #{course_code}") { expect(visible_midpoint).to be_nil }

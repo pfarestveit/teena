@@ -36,12 +36,12 @@ module BOACPages
   ### HEADER ###
 
   link(:home_link, text: 'Home')
-  button(:header_dropdown, id: 'header-dropdown-under-name')
+  button(:header_dropdown, xpath: '//button[contains(@id,"header-dropdown-under-name")]')
   link(:admin_link, text: 'Admin')
   link(:log_out_link, text: 'Log Out')
   link(:feedback_link, text: 'Feedback/Help')
   div(:modal, class: 'modal-content')
-  h1(:student_name_heading, class: 'student-section-header')
+  h1(:student_name_heading, id: 'student-name-header')
 
   # Clicks the 'Home' link in the header
   def click_home
@@ -50,7 +50,7 @@ module BOACPages
 
   # Clicks the header name button to reveal additional links
   def click_header_dropdown
-    sleep 3
+    sleep 2
     wait_for_update_and_click_js header_dropdown_element
   end
 
@@ -71,7 +71,7 @@ module BOACPages
 
   ### SIDEBAR - CURATED GROUPS ###
 
-  elements(:sidebar_curated_group_link, :link, xpath: '//div[@data-ng-repeat="cohort in profile.myCuratedCohorts"]//a[contains(@class,"sidebar")]')
+  elements(:sidebar_curated_group_link, :link, xpath: '//a[contains(@id,"sidebar-curated-cohort")]')
 
   # Returns the names of all the curated groups in the sidebar
   # @return [Array<String>]
@@ -105,8 +105,7 @@ module BOACPages
   link(:team_list_link, id: 'sidebar-teams-link')
   link(:intensive_cohort_link, text: 'Intensive Students')
   link(:inactive_cohort_link, text: 'Inactive Students')
-  link(:my_students_link, text: 'My Students')
-  elements(:filtered_cohort_link, :link, xpath: '//div[@data-ng-repeat="cohort in myCohorts"]//a')
+  elements(:filtered_cohort_link, :link, xpath: '//div[@class="sidebar-row-link"]//a[contains(@id,"sidebar-filtered-cohort")][contains(@href,"/cohort/")]')
   div(:dupe_filtered_name_msg, xpath: '//div[text()="You have an existing cohort with this name. Please choose a different name."]')
 
   # Clicks the button to create a new custom cohort
