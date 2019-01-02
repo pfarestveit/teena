@@ -38,15 +38,12 @@ describe 'bCourses Roster Photos' do
     @canvas.masquerade_as(@driver, teacher_1)
 
     # Create test course site if necessary
-    @create_course_site_page.provision_course_site(@driver, course, teacher_1, sections_for_site)
+    @create_course_site_page.provision_course_site(@driver, course, teacher_1, sections_for_site) unless course.site_id
     @canvas.publish_course_site(@driver, course)
-    @canvas.wait_for_enrollment_import(course, ['Student', 'Waitlist Student'])
 
     # Get enrollment totals on site
     @roster_api.get_feed(@driver, course)
-    course.site_id.nil? ?
-        user_counts = @canvas.wait_for_enrollment_import(course, ['Student', 'Waitlist Student']) :
-        user_counts = @canvas.enrollment_count_by_roles(course, ['Student', 'Waitlist Student'])
+    user_counts = @canvas.wait_for_enrollment_import(course, ['Student', 'Waitlist Student'])
     @student_count = user_counts[0][:count]
     @waitlist_count = user_counts[1][:count]
     @expected_sids = @roster_api.student_ids(@roster_api.students).sort
