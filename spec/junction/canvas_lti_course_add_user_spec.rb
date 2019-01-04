@@ -33,7 +33,7 @@ describe 'bCourses Find a Person to Add', order: :defined do
     @canvas.log_in(@cal_net, Utils.super_admin_username, Utils.super_admin_password)
     @canvas.masquerade_as(@driver, teacher_1)
 
-    @create_course_site_page.provision_course_site(@driver, course, teacher_1, sections_for_site) if course.site_id.nil?
+    @create_course_site_page.provision_course_site(@driver, course, teacher_1, sections_for_site)
     @canvas.publish_course_site(@driver, course)
   end
 
