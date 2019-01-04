@@ -18,7 +18,7 @@ describe 'Junction background tasks' do
     @canvas_page = Page::CanvasPage.new @driver
 
     # Log in to both Canvas and Junction
-    @canvas_page.log_in(@cal_net_page, Utils.ets_qa_username, Utils.ets_qa_password)
+    @canvas_page.log_in(@cal_net_page, Utils.super_admin_username, Utils.super_admin_password)
     @splash_page.basic_auth config.admin.uid
 
     tests = test_data.map do |data|

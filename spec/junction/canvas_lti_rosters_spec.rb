@@ -37,8 +37,8 @@ describe 'bCourses Roster Photos' do
     @canvas.log_in(@cal_net, Utils.super_admin_username, Utils.super_admin_password)
     @canvas.masquerade_as(@driver, teacher_1)
 
-    # Create test course site if necessary
-    @create_course_site_page.provision_course_site(@driver, course, teacher_1, sections_for_site) unless course.site_id
+    # Create test course site
+    @create_course_site_page.provision_course_site(@driver, course, teacher_1, sections_for_site)
     @canvas.publish_course_site(@driver, course)
 
     # Get enrollment totals on site
