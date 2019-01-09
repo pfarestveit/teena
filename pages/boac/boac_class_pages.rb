@@ -16,25 +16,23 @@ module BOACClassPages
     logger.info "Loading class page for term #{term_id} section #{ccn}"
     navigate_to "#{BOACUtils.base_url}/course/#{term_id}/#{ccn}"
     wait_for_spinner
-    div_element(class: 'course-column-schedule').when_visible Utils.medium_wait
+    div_element(id: 'meetings-0').when_visible Utils.medium_wait
   end
 
-  h1(:course_code, xpath: '//h1')
-  span(:section_format, xpath: '//span[@data-ng-bind="section.instructionFormat"]')
-  span(:section_number, xpath: '//span[@data-ng-bind="section.sectionNum"]')
-  span(:section_units, xpath: '//span[@count="section.units"]')
-  span(:course_title, xpath: '//span[@data-ng-bind="section.title"]')
-  div(:term_name, xpath: '//div[@data-ng-bind="section.termName"]')
+  h1(:course_code, id: 'course-header')
+  div(:course_details, class: 'course-details-section')
+  div(:course_title, class: 'course-section-title')
+  div(:term_name, class: 'course-term-name')
 
   # Returns the course data shown in the left header pane plus term
   # @return [Hash]
   def visible_course_data
     {
       :code => (course_code if course_code?),
-      :format => (section_format if section_format?),
-      :number => (section_number if section_number?),
-      :units_completed => (section_units.split.first if section_units?),
-      :title => (course_title if course_title?),
+      :format => (course_details.split(' ')[1] if course_details?),
+      :number => (course_details.split(' ')[2] if course_details?),
+      :units_completed => (course_details.split(' ')[4] if course_details?),
+      :title => (course_title.strip if course_title?),
       :term => (term_name if term_name?)
     }
   end
@@ -49,47 +47,50 @@ module BOACClassPages
   end
 
   # Returns the instructor names shown for a course meeting at a given node
-  # @param node [Integer]
+  # @param index [Integer]
   # @return [Array<String>]
-  def meeting_instructors(driver, node)
-    els = driver.find_elements(xpath: "#{meeting_xpath node}//span[@data-ng-repeat=\"instructor in meeting.instructors\"]")
-    els.map { |el| el.text.delete(',') }
+  def meeting_instructors(index)
+    el = span_element(xpath: "//span[@id=\"instructors-#{index}\"]/following-sibling::span")
+    el.text.split(', ') if el.exists? && !el.text.empty?
+  end
+
+  def meeting_schedule_xpath(index)
+    "//div[@id=\"meetings-#{index}\"]"
   end
 
   # Returns the days shown for a course meeting at a given node
-  # @param node [Integer]
+  # @param index [Integer]
   # @return [Array<String>]
-  def meeting_days(node)
-    el = div_element(xpath: "#{meeting_xpath node}//div[@data-ng-bind=\"meeting.days\"]")
+  def meeting_days(index)
+    el = div_element(xpath: "#{meeting_schedule_xpath index}//div[1]")
     el.text if el.exists? && !el.text.empty?
   end
 
   # Returns the time shown for a course meeting at given node
-  # @param node [Integer]
+  # @param index [Integer]
   # @return [Array<String>]
-  def meeting_time(node)
-    el = div_element(xpath: "#{meeting_xpath node}//div[@data-ng-bind=\"meeting.time\"]")
+  def meeting_time(index)
+    el = div_element(xpath: "#{meeting_schedule_xpath index}//div[2]")
     el.text if el.exists? && !el.text.empty?
   end
 
   # Returns the location shown for a course meeting at a given node
-  # @param node [Integer]
+  # @param index [Integer]
   # @return [Array<String>]
-  def meeting_location(node)
-    el = div_element(xpath: "#{meeting_xpath node}//div[@data-ng-bind=\"meeting.location\"]")
+  def meeting_location(index)
+    el = div_element(xpath: "#{meeting_schedule_xpath index}//div[3]")
     el.text if el.exists? && !el.text.empty?
   end
 
   # Returns the meeting data shown for a course meeting at a given node
-  # @param driver [Selenium::WebDriver]
-  # @param node [Integer]
+  # @param index [Integer]
   # @return [Hash]
-  def visible_meeting_data(driver, node)
+  def visible_meeting_data(index)
     {
-      :instructors => meeting_instructors(driver, node),
-      :days => meeting_days(node),
-      :time => meeting_time(node),
-      :location => meeting_location(node)
+      :instructors => meeting_instructors(index),
+      :days => meeting_days(index),
+      :time => meeting_time(index),
+      :location => meeting_location(index)
     }
   end
 

@@ -25,8 +25,6 @@ describe 'BOAC' do
     @search_page = BOACSearchResultsPage.new @driver
 
     @homepage.dev_auth test.advisor
-    @filtered_cohort_page.search_and_create_new_cohort(test.default_cohort, test) unless test.default_cohort.id
-
     test.max_cohort_members.each do |student|
       begin
 
@@ -35,9 +33,6 @@ describe 'BOAC' do
 
         terms = api_user_page.terms
         if terms.any?
-          @student_page.load_page student
-          @student_page.click_view_previous_semesters if terms.length > 1
-
           terms.each do |term|
             begin
 
@@ -96,14 +91,14 @@ describe 'BOAC' do
 
                           # Check that the section schedules are presented as expected
                           api_section_page.meetings.each do |meet|
-                            node = api_section_page.meetings.index(meet) + 1
-                            visible_meeting_data = @class_page.visible_meeting_data(@driver, node)
-                            it("shows the right instructors for meeting #{node} for #{class_test_case}") { expect(visible_meeting_data[:instructors]).to eql(meet[:instructors]) }
-                            it("shows the right days for meeting #{node} for #{class_test_case}") { expect(visible_meeting_data[:days]).to eql(meet[:days]) }
-                            it("shows the right time for meeting #{node} for #{class_test_case}") { expect(visible_meeting_data[:time]).to eql(meet[:time]) }
-                            it("shows the right location for meeting #{node} for #{class_test_case}") { expect(visible_meeting_data[:location]).to eql(meet[:location]) }
+                            index = api_section_page.meetings.index meet
+                            visible_meeting_data = @class_page.visible_meeting_data index
+                            it("shows the right instructors for meeting #{index} for #{class_test_case}") { expect(visible_meeting_data[:instructors]).to eql(meet[:instructors]) }
+                            it("shows the right days for meeting #{index} for #{class_test_case}") { expect(visible_meeting_data[:days]).to eql(meet[:days]) }
+                            it("shows the right time for meeting #{index} for #{class_test_case}") { expect(visible_meeting_data[:time]).to eql(meet[:time]) }
+                            it("shows the right location for meeting #{index} for #{class_test_case}") { expect(visible_meeting_data[:location]).to eql(meet[:location]) }
                             # Some meeting data is expected to be empty, but report missing data anyway for further inspection
-                            it("shows no empty meeting data for meeting #{node} for #{class_test_case}") do
+                            it("shows no empty meeting data for meeting #{index} for #{class_test_case}") do
                               expect(visible_meeting_data.values.all?).to be true
                               expect(visible_meeting_data.values.any? &:empty?).to be false
                             end
@@ -170,7 +165,7 @@ describe 'BOAC' do
 
                           @class_page.load_page(term_id, section_data[:ccn])
                           expected_students.each do |student|
-                            logger.info "Checking UID #{student.uid}"
+                            logger.info "Checking SIS data for UID #{student.uid}"
                             student_test_case = "UID #{student.uid} #{class_test_case}"
                             student_data = all_student_data.find { |d| d[:sid] == student.sis_id }
 

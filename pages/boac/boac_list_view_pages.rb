@@ -12,26 +12,31 @@ module BOACListViewPages
   elements(:page_list_item, :list_item, xpath: '//li[contains(@ng-repeat,"page in pages")]')
   elements(:page_link, :link, xpath: '//a[contains(@ng-click, "selectPage")]')
   elements(:page_ellipsis_link, :link, xpath: '//a[contains(@ng-click, "selectPage")][text()="..."]')
-  elements(:results_page_link, :class => 'pagination-page')
+  elements(:results_page_link, xpath: '//ul[@id="pagination-widget"]//a[contains(@class,"page-link")]')
 
   # Returns the page link element for a given page number
   # @param number [Integer]
   # @return [PageObject::Elements::Link]
   def list_view_page_link(number)
-    link_element(xpath: "//a[contains(@ng-click, 'selectPage')][text()='#{number}']")
+    link_element(xpath: "//ul[@id='pagination-widget']//a[contains(@class,'page-link')][text()='#{number}']")
   end
 
   # Returns the number of list view pages shown
   # @return [Integer]
   def list_view_page_count
-    results_page_link_elements.any? ? results_page_link_elements.last.text.to_i : 1
+    if results_page_link_elements.any?
+      pages = results_page_link_elements.map(&:text).delete_if(&:empty?)
+      pages.last.to_i
+    else
+      1
+    end
   end
 
   # Returns the current page in list view
   # @return [Integer]
   def list_view_current_page
     if page_list_item_elements.any?
-      page = page_list_item_elements.find { |el| el.attribute('class').include? 'active' }
+      page = page_list_item_elements.find { |el| el.attribute('class').include? 'primary' }
       page.text.to_i
     else
       1
@@ -67,7 +72,7 @@ module BOACListViewPages
 
   elements(:player_link, :link, xpath: '//a[contains(@href,"/student/")]')
   elements(:player_name, :h3, xpath: '//h3[contains(@class,"student-name")]')
-  elements(:player_sid, :div, xpath: '//div[@class="student-sid ng-binding"]')
+  elements(:player_sid, :div, xpath: '//div[@class="student-sid"]')
 
   # Waits for list view results to load
   def wait_for_student_list

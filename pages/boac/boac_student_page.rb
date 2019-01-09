@@ -200,14 +200,21 @@ class BOACStudentPage
     "#{term_data_xpath term_name}//h4[text()=\"#{course_code}\"]/ancestor::div[@class=\"student-course\"]"
   end
 
+  # Returns the link to a class page
+  # @param term_code [String]
+  # @param ccn [Integer]
+  # @return [PageObject::Elements::Link]
+  def class_page_link(term_code, ccn)
+    link_element(id: "term-#{term_code}-section-#{ccn}")
+  end
+
   # Clicks the class page link for a given section
   # @param term_code [String]
   # @param ccn [Integer]
   def click_class_page_link(term_code, ccn)
     logger.info "Clicking link for term #{term_code} section #{ccn}"
     start = Time.now
-    link = link_element(id: "term-#{term_code}-section-#{ccn}")
-    wait_for_load_and_click link
+    wait_for_load_and_click class_page_link(term_code, ccn)
     wait_for_spinner
     div_element(class: 'course-column-schedule').when_visible Utils.short_wait
     logger.warn "Took #{Time.now - start} seconds for the term #{term_code} section #{ccn} page to load"
@@ -305,7 +312,7 @@ class BOACStudentPage
   # @param label [String]
   # @return [String]
   def site_boxplot_xpath(site_xpath, label)
-    "#{site_analytics_score_xpath(site_xpath, label)}/div[contains(@class,'student-chart-boxplot-container')]//*[local-name()='svg']/*[name()='g'][@class='highcharts-series-group']"
+    "#{site_analytics_score_xpath(site_xpath, label)}#{boxplot_xpath}"
   end
 
   # Returns the element that triggers the analytics tooltip for a particular set of analytics data for a given site, for example 'page views'
@@ -314,7 +321,7 @@ class BOACStudentPage
   # @param label [String]
   # @return [Selenium::WebDriver::Element]
   def analytics_trigger_element(driver, site_xpath, label)
-    driver.find_element(:xpath => "#{site_boxplot_xpath(site_xpath, label)}/*[name()='g']/*[name()='g']/*[name()='path'][3]")
+    driver.find_element(:xpath => "#{site_analytics_score_xpath(site_xpath, label)}#{boxplot_trigger_xpath}")
   end
 
   # Checks the existence of a 'no data' message for a particular set of analytics for a given site, for example 'page views'
