@@ -163,4 +163,16 @@ module BOACPages
     wait_for_spinner
   end
 
+  # Returns the XPath to a boxplot nested under another element
+  # @return [String]
+  def boxplot_xpath
+    "//*[name()='svg']/*[name()='g'][@class='highcharts-series-group']"
+  end
+
+  # Returns the XPath to a boxplot's tooltip trigger nested under another element
+  # @return [String]
+  def boxplot_trigger_xpath
+    "#{boxplot_xpath}/*[name()='g']/*[name()='g']/*[name()='path'][3]"
+  end
+
 end
