@@ -17,7 +17,8 @@ class BOACCuratedGroupPage
   # Loads a curated group
   # @param group [CuratedGroup]
   def load_page(group)
-    navigate_to "#{BOACUtils.base_url}/cohort/curated/#{group.id}"
+    navigate_to "#{BOACUtils.base_url}/curated_group/#{group.id}"
+    wait_for_spinner
   end
 
   # Returns the error message element shown when a user attempts to view a curated group it does not own

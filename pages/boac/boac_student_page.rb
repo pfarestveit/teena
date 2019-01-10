@@ -119,13 +119,17 @@ class BOACStudentPage
 
   # TODO - CURATED GROUPS
 
-  link(:student_create_curated_group, id: 'curated-cohort-create-link')
-  elements(:student_curated_group_name, :link, xpath: '//div[contains(@class,"student-groups-checkboxes")]//a[@data-ng-bind="group.name"]')
+  button(:student_create_curated_group, id: 'curated-group-create-btn')
+  elements(:student_curated_group_name, :link, xpath: '//div[@id="student-curated-groups-box"]//a')
+
+  def curated_cbx(group)
+    checkbox_element(xpath: "//div[@class=\"student-curated-group-checkbox\"][contains(.,\"#{group.name}\")]/input")
+  end
 
   # Clicks the checkbox to add or remove a student from a curated group
   # @param group [CuratedGroup]
   def click_curated_cbx(group)
-    wait_for_update_and_click checkbox_element(xpath: "//div[contains(@class,\"curated-cohort-checkbox\")][contains(.,\"#{group.name}\")]/input")
+    wait_for_update_and_click curated_cbx(group)
   end
 
   # Adds a student to a curated group

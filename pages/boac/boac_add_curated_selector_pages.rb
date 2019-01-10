@@ -9,16 +9,16 @@ module BOACAddCuratedSelectorPages
 
   # Selector 'create' and 'add student(s)' UI shared by list view pages (filtered cohort page and class page)
   button(:selector_create_curated_button, id: 'curated-cohort-create')
-  checkbox(:add_all_to_curated_checkbox, id: 'curated-cohort-checkbox-add-all')
-  elements(:add_individual_to_curated_checkbox, :checkbox, xpath: '//input[@data-ng-model="student.selectedForCuratedCohort"]')
-  button(:add_to_curated_button, id: 'add-to-curated-cohort-button')
+  checkbox(:add_all_to_curated_checkbox, xpath: '//div[@class="course-curated-group-selector-container"]//input')
+  elements(:add_individual_to_curated_checkbox, :checkbox, xpath: "//input[contains(@id,'curated-cohort-checkbox')]")
+  span(:add_to_curated_button, id: 'add-to-curated-cohort-button')
   button(:added_to_curated_conf, id: 'added-to-curated-cohort-confirmation')
 
   # Selects the add-to-group checkboxes for a given set of students
   # @param students [Array<User>]
   def select_students_to_add(students)
-    logger.info "Adding student UIDs: #{students.map &:uid}"
-    students.each { |s| wait_for_update_and_click checkbox_element(id: "student-#{s.uid}-curated-cohort-checkbox") }
+    logger.info "Adding student SIDs: #{students.map &:sis_id}"
+    students.each { |s| wait_for_update_and_click checkbox_element(id: "student-#{s.sis_id}-curated-cohort-checkbox") }
   end
 
   # Selects a curated group for adding users and waits for the 'added' confirmation.
@@ -71,8 +71,8 @@ module BOACAddCuratedSelectorPages
     wait_until(Utils.short_wait) { add_individual_to_curated_checkbox_elements.any? &:visible? }
     wait_for_update_and_click add_all_to_curated_checkbox_element
     logger.debug "There are #{add_individual_to_curated_checkbox_elements.length} individual checkboxes"
-    visible_uids = add_individual_to_curated_checkbox_elements.map { |el| el.attribute('id').split('-')[1] }
-    visible_students = all_students.select { |student| visible_uids.include? student.uid }
+    visible_sids = add_individual_to_curated_checkbox_elements.map { |el| el.attribute('id').split('-')[1] }
+    visible_students = all_students.select { |student| visible_sids.include? student.sis_id }
     select_group_and_add(visible_students, group)
   end
 

@@ -115,8 +115,8 @@ class BOACSearchResultsPage
   # Selects the add-to-group checkboxes for a given set of students
   # @param students [Array<User>]
   def select_students_to_add(students)
-    logger.info "Adding student UIDs: #{students.map &:uid}"
-    students.each { |s| wait_for_update_and_click checkbox_element(id: "#{s.uid}-curated-cohort-checkbox") }
+    logger.info "Adding student UIDs: #{students.map &:sis_id}"
+    students.each { |s| wait_for_update_and_click checkbox_element(id: "student-#{s.sis_id}-curated-cohort-checkbox") }
   end
 
   # Adds a given set of students to an existing curated group
