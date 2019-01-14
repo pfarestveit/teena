@@ -10,9 +10,9 @@ class BOACCuratedGroupPage
   include BOACCohortPages
 
   span(:title_required_msg, xpath: '//span[text()="Required"]')
-  span(:cohort_not_found_msg, xpath: '//span[contains(.,"No cohort found with identifier: ")]')
+  span(:cohort_not_found_msg, xpath: '//span[contains(.,"No curated group found with id: ")]')
   text_area(:curated_rename_input, name: 'label')
-  button(:curated_rename_confirm_button, id: 'curated-cohort-rename')
+  button(:curated_rename_confirm_button, id: 'curated-group-rename')
 
   # Loads a curated group
   # @param group [CuratedGroup]
@@ -25,7 +25,7 @@ class BOACCuratedGroupPage
   # @param user [User]
   # @param group [CuratedGroup]
   def no_group_access_msg(user, group)
-    span_element(xpath: "//span[text()='Current user, #{user.uid}, does not own cohort #{group.id}']")
+    span_element(xpath: "//span[text()='Current user, #{user.uid}, does not own curated group #{group.id}']")
   end
 
   # Renames a curated group
@@ -47,7 +47,7 @@ class BOACCuratedGroupPage
   def curated_remove_student(student, group)
     logger.info "Removing UID #{student.uid} from cohort '#{group.name}'"
     wait_for_student_list
-    wait_for_update_and_click button_element(:id => "student-#{student.uid}-curated-cohort-remove")
+    wait_for_update_and_click button_element(:id => "student-#{student.uid}-curated-group-remove")
     group.members.delete student
     sleep 2
     wait_until(Utils.short_wait) { list_view_uids.sort == group.members.map(&:uid).sort }

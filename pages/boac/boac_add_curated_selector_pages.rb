@@ -8,17 +8,17 @@ module BOACAddCuratedSelectorPages
   include BOACPages
 
   # Selector 'create' and 'add student(s)' UI shared by list view pages (filtered cohort page and class page)
-  button(:selector_create_curated_button, id: 'curated-cohort-create')
-  checkbox(:add_all_to_curated_checkbox, xpath: '//div[@class="course-curated-group-selector-container"]//input')
+  button(:selector_create_curated_button, id: 'create-curated-group')
+  checkbox(:add_all_to_curated_checkbox, id: 'add-all-to-curated-group')
   elements(:add_individual_to_curated_checkbox, :checkbox, xpath: "//input[contains(@id,'curated-cohort-checkbox')]")
-  span(:add_to_curated_button, id: 'add-to-curated-cohort-button')
-  button(:added_to_curated_conf, id: 'added-to-curated-cohort-confirmation')
+  span(:add_to_curated_button, id: 'add-to-curated-group')
+  button(:added_to_curated_conf, id: 'add-to-curated-group-confirmation')
 
   # Selects the add-to-group checkboxes for a given set of students
   # @param students [Array<User>]
   def select_students_to_add(students)
     logger.info "Adding student SIDs: #{students.map &:sis_id}"
-    students.each { |s| wait_for_update_and_click checkbox_element(id: "student-#{s.sis_id}-curated-cohort-checkbox") }
+    students.each { |s| wait_for_update_and_click checkbox_element(id: "student-#{s.sis_id}-curated-group-checkbox") }
   end
 
   # Selects a curated group for adding users and waits for the 'added' confirmation.

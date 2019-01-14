@@ -8,7 +8,7 @@ module BOACPages
 
   ### PAGE LOADS ###
 
-  div(:spinner, class: 'loading-spinner-large')
+  div(:spinner, id: 'spinner-when-loading')
 
   # Waits for an expected page title
   # @param page_title [String]
@@ -112,7 +112,7 @@ module BOACPages
   def click_sidebar_create_filtered
     logger.debug 'Clicking sidebar button to create a filtered cohort'
     wait_for_load_and_click create_filtered_cohort_link_element
-    wait_for_title 'Create a Filtered Cohort'
+    wait_for_title 'Create Cohort'
     sleep 3
   end
 
