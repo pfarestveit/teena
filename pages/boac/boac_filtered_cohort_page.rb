@@ -11,8 +11,8 @@ class BOACFilteredCohortPage
   include BOACAddCuratedModalPages
   include BOACAddCuratedSelectorPages
 
-  def filtered_cohort_base_url
-    "#{BOACUtils.base_url}/cohort/filtered?"
+  def filtered_cohort_base_url(id)
+    "#{BOACUtils.base_url}/cohort/#{id}"
   end
 
   # If a cohort is a team, loads the team page using search queries; otherwise loads the cohort page by the cohort's ID
@@ -22,7 +22,7 @@ class BOACFilteredCohortPage
     if cohort.instance_of? Team
       load_team_page(cohort)
     else
-      navigate_to("#{filtered_cohort_base_url}id=#{cohort.id}")
+      navigate_to(filtered_cohort_base_url(cohort.id))
       wait_for_title cohort.name
     end
   end
@@ -30,22 +30,24 @@ class BOACFilteredCohortPage
   # Hits a cohort URL and expects the 404 page to load
   # @param cohort [FilteredCohort]
   def hit_non_auth_cohort(cohort)
-    navigate_to "#{filtered_cohort_base_url}id=#{cohort.id}"
-    wait_for_title '404'
+    navigate_to filtered_cohort_base_url(cohort.id)
+    wait_for_title 'Page not found'
   end
 
   # Hits a team page URL
   # @param team [Team]
   def hit_team_url(team)
+    # TODO: Remove this test because it is not supported in Vue.
     squads = Squad::SQUADS.select { |s| s.parent_team == team }
     squads.delete_if { |s| s.code.include? '-AA' }
     query_string = squads.map { |s| "team=#{s.code}&" }
-    navigate_to "#{filtered_cohort_base_url}#{query_string.join}c=search"
+    navigate_to "#{filtered_cohort_base_url(nil)}#{query_string.join}c=search"
   end
 
   # Navigates directly to a team page
   # @param team [Team]
   def load_team_page(team)
+    # TODO: Remove this test because it is not supported in Vue.
     logger.info "Loading cohort page for team #{team.name}"
     hit_team_url team
     wait_for_title 'Search'
@@ -55,12 +57,14 @@ class BOACFilteredCohortPage
   # @param squad [Squad]
   # @return [String]
   def squad_url(squad)
-    "#{filtered_cohort_base_url}c=search&p=1&team=#{squad.code}"
+    # TODO: Remove this test because it is not supported in Vue.
+    "#{filtered_cohort_base_url(nil)}c=search&p=1&team=#{squad.code}"
   end
 
   # Hits a cohort search URL for a squad
   # @param squad [Squad]
   def load_squad(squad)
+    # TODO: Remove this test because it is not supported in Vue.
     logger.info "Loading cohort page for squad #{squad.name}"
     navigate_to squad_url(squad)
     wait_for_title 'Filtered Cohort'
@@ -68,11 +72,11 @@ class BOACFilteredCohortPage
 
   # FILTERED COHORTS - Creation
 
-  button(:save_cohort_button_one, id: 'save-filtered-cohort')
-  text_area(:cohort_name_input, id: 'filtered-cohort-create-input')
+  button(:save_cohort_button_one, id: 'save-cohort')
+  text_area(:cohort_name_input, id: 'cohort-create-input')
   span(:title_required_msg, xpath: '//span[text()="Required"]')
-  button(:save_cohort_button_two, id: 'confirm-create-filtered-cohort-btn')
-  button(:cancel_cohort_button, id: 'cancel-create-filtered-cohort-btn')
+  button(:save_cohort_button_two, id: 'cohort-create-confirm')
+  button(:cancel_cohort_button, id: 'cohort-create-cancel')
   span(:cohort_not_found_msg, xpath: '//span[contains(.,"No cohort found with identifier: ")]')
   elements(:everyone_cohort_link, :link, xpath: '//h1[text()="Everyone\'s Cohorts"]/following-sibling::div//a[@data-ng-bind="cohort.name"]')
 
@@ -100,7 +104,7 @@ class BOACFilteredCohortPage
   # @param cohort [FilteredCohort]
   # @return [Integer]
   def wait_for_filtered_cohort(cohort)
-    cohort_heading(cohort).when_present Utils.medium_wait
+    cohort_heading().when_present Utils.medium_wait
     BOACUtils.set_filtered_cohort_id cohort
   end
 
@@ -164,7 +168,7 @@ class BOACFilteredCohortPage
   button(:delete_button, id: 'delete-cohort-button')
 
   button(:new_filter_button, id: 'draft-filter')
-  button(:new_filter_sub_button, id: 'filter-subcategory')
+  button(:new_filter_sub_button, id: 'dropdown-edit-new')
   elements(:new_filter_option, :link, xpath: '//a[@data-ng-bind="option.name"]')
   elements(:new_filter_initial_input, :text_area, class: 'filter-range-input')
   button(:unsaved_filter_add_button, id: 'unsaved-filter-add')
@@ -228,15 +232,14 @@ class BOACFilteredCohortPage
   end
 
   # Returns the heading for a given cohort page
-  # @param cohort [FilteredCohort]
   # @return [PageObject::Elements::Span]
-  def cohort_heading(cohort)
-    span_element(xpath: "//h1/span[text()=\"#{cohort.name}\"]")
+  def cohort_heading()
+    span_element(id: 'cohort-name')
   end
 
   # Ensures that cohort filters are visible
   def show_filters
-    button_element(xpath: '//button[@data-ng-attr-id="{{filtersVisible ? \'hide\' : \'show\'}}-details-button"]').when_visible Utils.medium_wait
+    button_element(xpath: '//button[@data-ng-attr-id="show-hide-details-button"]').when_visible Utils.medium_wait
     show_filters_button if show_filters_button?
   end
 
