@@ -72,7 +72,7 @@ class BOACFilteredCohortPage
 
   # FILTERED COHORTS - Creation
 
-  button(:save_cohort_button_one, id: 'save-cohort')
+  button(:save_cohort_button_one, id: 'save-button')
   text_area(:cohort_name_input, id: 'create-input')
   span(:title_required_msg, xpath: '//span[text()="Required"]')
   button(:save_cohort_button_two, id: 'create-confirm')
@@ -145,7 +145,7 @@ class BOACFilteredCohortPage
     click_view_everyone_cohorts
     wait_for_spinner
     wait_until(Utils.short_wait) { everyone_cohort_link_elements.any? }
-    cohorts = everyone_cohort_link_elements.map { |link| FilteredCohort.new({id: link.attribute('href').gsub("#{BOACUtils.base_url}/cohort/filtered?id=", ''), name: link.text}) }
+    cohorts = everyone_cohort_link_elements.map { |link| FilteredCohort.new({id: link.attribute('href').gsub("#{BOACUtils.base_url}/cohort/", ''), name: link.text}) }
     cohorts = cohorts.flatten
     logger.info "Visible Everyone's Cohorts are #{cohorts.map &:name}"
     cohorts
@@ -174,7 +174,7 @@ class BOACFilteredCohortPage
   button(:unsaved_filter_add_button, id: 'unsaved-filter-add')
   button(:unsaved_filter_cancel_button, id: 'unsaved-filter-reset')
   button(:unsaved_filter_apply_button, id: 'unsaved-filter-apply')
-  button(:save_cohort_button, id: 'unsaved-filter-save-cohort')
+  button(:save_cohort_button, id: 'save-button')
 
   elements(:filter_row_type, :span, xpath: '//div[@class="cohort-filter-item-filter"]/span')
   elements(:filter_row_option, :span, xpath: '//div[@class="cohort-filter-item-name"]/span')
@@ -190,8 +190,8 @@ class BOACFilteredCohortPage
   # Returns a filter sub-option link with given text
   # @param option_name [String]
   # @return [PageObject::Elements::Link]
-  def new_filter_sub_option(option_name)
-    link_element(id: "cohort-filter-subcategory-#{option_name}")
+  def new_filter_sub_option(filter_name, option_name)
+    link_element(id: "#{filter_name}-#{option_name}")
   end
 
   # Returns a filter option list item with given text, used to find 'Advisor' options
@@ -212,7 +212,7 @@ class BOACFilteredCohortPage
     # All others require a selection
     else
       wait_for_update_and_click new_filter_sub_button_element
-      option_element = (filter_name == 'Advisor') ? new_filter_advisor_option(filter_option) : new_filter_sub_option(filter_option)
+      option_element = (filter_name == 'Advisor') ? new_filter_advisor_option(filter_option) : new_filter_sub_option(filter_name, filter_option)
       wait_for_update_and_click option_element
     end
   end

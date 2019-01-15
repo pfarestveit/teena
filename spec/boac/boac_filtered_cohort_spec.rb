@@ -563,7 +563,7 @@ describe 'BOAC', order: :defined do
     end
 
     it 'shows a Not Found page' do
-      @cohort_page.navigate_to "#{BOACUtils.base_url}/cohort/filtered?id=#{test.searches.first.id}"
+      @cohort_page.navigate_to "#{BOACUtils.base_url}/cohort/#{test.searches.first.id}"
       @cohort_page.wait_for_title '404'
     end
   end

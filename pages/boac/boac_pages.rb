@@ -100,8 +100,8 @@ module BOACPages
 
   ### SIDEBAR - FILTERED COHORTS ###
 
-  link(:create_filtered_cohort_link, id: 'sidebar-filtered-cohort-create')
-  link(:view_everyone_cohorts_link, id: 'sidebar-filtered-cohorts-all')
+  link(:create_filtered_cohort_link, id: 'cohort-create')
+  link(:view_everyone_cohorts_link, id: 'cohorts-all')
   link(:team_list_link, id: 'sidebar-teams-link')
   link(:intensive_cohort_link, text: 'Intensive Students')
   link(:inactive_cohort_link, text: 'Inactive Students')
