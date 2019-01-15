@@ -60,7 +60,7 @@ class BOACHomePage
   # FILTERED COHORTS AND CURATED GROUPS
 
   elements(:filtered_cohort, :span, xpath: '//div[@data-ng-repeat="cohort in profile.myFilteredCohorts track by $index"]//h2/span[@data-ng-bind="cohort.name"]')
-  h1(:no_filtered_cohorts_msg, xpath: '//h1[contains(.,"You have no saved cohorts.")]')
+  h1(:no_filtered_cohorts_msg, id: 'no-cohorts-header')
   elements(:curated_group, :span, xpath: '//div[@data-ng-repeat="cohort in profile.myCuratedCohorts track by $index"]//h2/span[@data-ng-bind="cohort.name"]')
 
   # Returns the names of filtered cohorts shown on the homepage
@@ -75,7 +75,7 @@ class BOACHomePage
   # @param cohort [FilteredCohort]
   # @return [String]
   def filtered_cohort_xpath(cohort)
-    "//div[@id=\"content\"]//div[@data-ng-repeat=\"cohort in profile.myFilteredCohorts track by $index\"][contains(.,\"#{cohort.name}\")]"
+    "//div[@id=\"home-cohort-#{cohort.id}\"]"
   end
 
   # Returns the names of curated groups shown on the homepage
@@ -127,7 +127,7 @@ class BOACHomePage
   # @return [Integer]
   def member_count(cohort)
     xpath = cohort.instance_of?(FilteredCohort) ?
-        "#{filtered_cohort_xpath(cohort)}//span[@data-ng-bind=\"cohort.totalStudentCount\"]" :
+        "#{filtered_cohort_xpath(cohort)}//span[@id=\"home-cohort-#{cohort.id}-total-student-count\"]" :
         "#{curated_group_xpath(cohort)}//span[@data-ng-bind=\"cohort.studentCount\"]"
     el = span_element(xpath: xpath)
     el.text.to_i if el.exists?
