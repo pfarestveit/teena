@@ -7,9 +7,9 @@ module BOACAddCuratedModalPages
   include Page
   include BOACPages
 
-  text_area(:curated_name_input, id: 'curated-cohort-create-input')
-  button(:curated_save_button, id: 'curated-cohort-create-confirm-btn')
-  button(:curated_cancel_button, id: 'curated-cohort-create-cancel-btn')
+  text_area(:curated_name_input, id: 'create-input')
+  button(:curated_save_button, id: 'create-confirm')
+  button(:curated_cancel_button, id: 'create-cancel')
   div(:dupe_curated_name_msg, xpath: '//div[text()="You have an existing curated group with this name. Please choose a different name."]')
 
   # Enters a curated group name in the 'create' modal
