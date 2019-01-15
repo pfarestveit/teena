@@ -9,11 +9,11 @@ module BOACCohortPages
   include BOACListViewPages
 
   h1(:results, xpath: '//h1')
-  button(:rename_cohort_button, id: 'rename-cohort-button')
-  text_area(:rename_cohort_input, id: 'rename-cohort-input')
-  button(:delete_cohort_button, id: 'delete-cohort-button')
-  button(:confirm_delete_button, id: 'cohort-delete-confirm')
-  button(:cancel_delete_button, id: 'cohort-delete-cancel')
+  button(:rename_cohort_button, id: 'rename-button')
+  text_area(:rename_cohort_input, id: 'rename-input')
+  button(:delete_cohort_button, id: 'delete-button')
+  button(:confirm_delete_button, id: 'delete-confirm')
+  button(:cancel_delete_button, id: 'delete-cancel')
   span(:no_access_msg, xpath: '//span[text()="You are unauthorized to access student data managed by other departments"]')
 
   # Returns the search results count in the page heading

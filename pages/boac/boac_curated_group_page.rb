@@ -12,7 +12,7 @@ class BOACCuratedGroupPage
   span(:title_required_msg, xpath: '//span[text()="Required"]')
   span(:cohort_not_found_msg, xpath: '//span[contains(.,"No curated group found with id: ")]')
   text_area(:curated_rename_input, name: 'label')
-  button(:curated_rename_confirm_button, id: 'curated-group-rename')
+  button(:curated_rename_confirm_button, id: 'rename-button')
 
   # Loads a curated group
   # @param group [CuratedGroup]

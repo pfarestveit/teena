@@ -73,10 +73,10 @@ class BOACFilteredCohortPage
   # FILTERED COHORTS - Creation
 
   button(:save_cohort_button_one, id: 'save-cohort')
-  text_area(:cohort_name_input, id: 'cohort-create-input')
+  text_area(:cohort_name_input, id: 'create-input')
   span(:title_required_msg, xpath: '//span[text()="Required"]')
-  button(:save_cohort_button_two, id: 'cohort-create-confirm')
-  button(:cancel_cohort_button, id: 'cohort-create-cancel')
+  button(:save_cohort_button_two, id: 'create-confirm')
+  button(:cancel_cohort_button, id: 'create-cancel')
   span(:cohort_not_found_msg, xpath: '//span[contains(.,"No cohort found with identifier: ")]')
   elements(:everyone_cohort_link, :link, xpath: '//h1[text()="Everyone\'s Cohorts"]/following-sibling::div//a[@data-ng-bind="cohort.name"]')
 
@@ -164,8 +164,8 @@ class BOACFilteredCohortPage
   # FILTERED COHORTS - Search
 
   button(:show_filters_button, id: 'show-details-button')
-  button(:rename_button, id: 'rename-cohort-button')
-  button(:delete_button, id: 'delete-cohort-button')
+  button(:rename_button, id: 'rename-button')
+  button(:delete_button, id: 'delete-button')
 
   button(:new_filter_button, id: 'draft-filter')
   button(:new_filter_sub_button, id: 'dropdown-edit-new')
@@ -554,8 +554,8 @@ class BOACFilteredCohortPage
   # FILTERED COHORTS - Management
 
   elements(:cohort_name, :span, xpath: '//span[@data-ng-bind="search.cohort.name"]')
-  button(:rename_cohort_confirm_button, id: 'filtered-cohort-rename')
-  button(:rename_cohort_cancel_button, id: 'filtered-cohort-rename-cancel')
+  button(:rename_cohort_confirm_button, id: 'rename-confirm')
+  button(:rename_cohort_cancel_button, id: 'rename-cancel')
 
   # Renames a cohort
   # @param cohort [FilteredCohort]

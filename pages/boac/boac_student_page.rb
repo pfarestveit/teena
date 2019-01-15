@@ -119,7 +119,7 @@ class BOACStudentPage
 
   # TODO - CURATED GROUPS
 
-  button(:student_create_curated_group, id: 'curated-group-create-btn')
+  button(:student_create_curated_group, id: 'create-curated-group')
   elements(:student_curated_group_name, :link, xpath: '//div[@id="student-curated-groups-box"]//a')
 
   def curated_cbx(group)
