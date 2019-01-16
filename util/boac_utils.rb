@@ -27,6 +27,11 @@ class BOACUtils < Utils
     @config['term_code']
   end
 
+  # Returns the semester session start date for testing activity alerts
+  def self.term_start_date
+    @config['term_start_date']
+  end
+
   # Returns the term to be used for testing assignments
   def self.assignments_term
     @config['assignments_term']
@@ -50,6 +55,11 @@ class BOACUtils < Utils
   # Whether or not to compare student data to fellow cohort members in Canvas prod
   def self.last_activity_context
     @config['last_activity_context']
+  end
+
+  # Returns the number of days into a session before activity alerts are generated
+  def self.no_activity_alert_threshold
+    @config['no_activity_alert_threshold']
   end
 
   # Logs error, prints stack trace, and saves a screenshot when running headlessly
@@ -174,7 +184,7 @@ class BOACUtils < Utils
   def self.set_filtered_cohort_id(cohort)
     query = "SELECT id
              FROM cohort_filters
-             WHERE name = '#{cohort.name}'"
+             WHERE name = '#{cohort.name}';"
     result = Utils.query_pg_db_field(boac_db_credentials, query, 'id').first
     logger.info "Filtered cohort '#{cohort.name}' ID is #{result}"
     cohort.id = result
