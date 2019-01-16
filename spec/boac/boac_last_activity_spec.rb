@@ -19,6 +19,8 @@ describe 'BOAC' do
       # Test Last Activity using the current term rather than past term
       test.term = BOACUtils.term
       logger.info "Checking term #{test.term}"
+      days_into_term = (Time.now - Time.strptime("#{BOACUtils.term_start_date}", '%Y-%m-%d')) / 86400
+      logger.info "Checking term #{test.term}, which began #{days_into_term} days ago"
 
       heading = %w(Term Course SiteId TtlStudents TtlLogins UID CanvasLastActivity CaliperLastActivity NessieLastActivity StudentPageActivity CanvasContext StudentPageContext)
       last_activity_csv = Utils.create_test_output_csv('boac-last-activity.csv', heading)
@@ -84,10 +86,9 @@ describe 'BOAC' do
                             :section_format => "#{api_classmate_page.section_sis_data(classmate_section)[:component]} #{api_classmate_page.section_sis_data(classmate_section)[:number]}",
                             :sites => (classmate_sites.map do |site|
                               {
-                                :site_id => api_student_page.site_metadata(site)[:site_id],
-                                :site_code => api_student_page.site_metadata(site)[:code],
-                                :last_activity_nessie => Time.at(api_student_page.nessie_last_activity(site)[:score].to_i).utc
-                              }
+                                :site_id => api_classmate_page.site_metadata(site)[:site_id],
+                                :site_code => api_classmate_page.site_metadata(site)[:code],
+                                :last_activity_nessie => ((score = api_classmate_page.nessie_last_activity(site)[:score].to_i).zero? ? nil : Time.at(score).utc)}
                             end)
                           }
                           visible_student_data << classmate_data
@@ -201,7 +202,7 @@ describe 'BOAC' do
                           student_data[:sites].each do |student_site|
 
                             test_case = "UID #{student_data[:student].uid} in Canvas site ID #{student_site[:site_id]}"
-                            logger.info "Checking last activity for #{test_case}"
+                            logger.info "Checking last activity for #{student_site}"
 
                             it("last activity date is not older than the Caliper date for UID #{student_data[:student].uid} in Canvas site ID #{student_site[:site_id]}") { expect(student_site[:last_activity_nessie]).to be >= student_site[:last_activity_caliper] }
 
@@ -260,39 +261,48 @@ describe 'BOAC' do
                           test_case = "UID #{student_data[:student].uid} in #{student_data[:course_code]}"
                           logger.debug "Checking #{test_case}"
 
-                          # Never show alerts for DeCal courses
-                          if (/\A[A-Z\s]+1?9[89][A-Z]?[A-Z]?/ === student_data[:course_code].gsub("#{student_data[:section_format]}", '').strip) && !student_data[:section_format].include?('LEC')
+                          # Don't show any activity alerts before at least 14 days into term
+                          if days_into_term < BOACUtils.no_activity_alert_threshold
+
                             it("shows no 'No activity!' alert for #{test_case}") { expect(user_alert_msgs).not_to include("No activity! Student has never visited the #{student_data[:course_code]} bCourses site for #{BOACUtils.term}.") }
                             it("shows no infrequent activity alert for #{test_case}") { expect(truncated_alert_msgs).not_to include("Infrequent activity! Last #{student_data[:course_code]} bCourses activity") }
 
                           else
-                            # Alerts are not shown for sites below an activity threshold, so get the student's 'active' sites
-                            active_student_sites = student_data[:sites].select do |student_site|
-                              course_site = all_sites_data.find { |course_site| course_site[:site_id] == student_site[:site_id]}
-                              (course_site[:last_activity_dates].compact.length.to_f / course_site[:student_count].to_f > 0.8)
-                            end
-                            logger.debug "Active sites are #{active_student_sites}"
 
-                            # Get the sites that could trigger an alert
-                            infrequent_alert_triggers = active_student_sites.select { |site| site[:infrequent_activity_alert] }
-                            no_activity_alert_triggers = active_student_sites.select { |site| site[:no_activity_alert] }
-
-                            # If all the active sites could trigger 'no activity' alerts for the student, then show a 'no activity' alert
-                            if no_activity_alert_triggers.length == active_student_sites.length
-                              it("shows a 'No activity!' alert for #{test_case}") { expect(user_alert_msgs).to include("No activity! Student has never visited the #{student_data[:course_code]} bCourses site for #{BOACUtils.term}.") }
-                              it("shows no infrequent activity alert for #{test_case}") { expect(truncated_alert_msgs).not_to include("Infrequent activity! Last #{student_data[:course_code]} bCourses activity") }
-
-                            # If all the active sites could trigger an alert and some could trigger an 'infrequent activity' alert,
-                            # then show an 'infrequent' alert for the one with the most recent activity
-                            elsif infrequent_alert_triggers.any? && (no_activity_alert_triggers.length + infrequent_alert_triggers.length == active_student_sites.length)
-                              most_recent = infrequent_alert_triggers.max_by { |site| site[:last_activity_canvas] }
-                              day_count = (Date.today - Date.parse(most_recent[:last_activity_canvas].to_s)).to_i
-                              it("shows an infrequent activity alert for #{test_case}") { expect(user_alert_msgs).to include("Infrequent activity! Last #{student_data[:course_code]} bCourses activity was #{day_count} days ago.") }
+                            # Never show alerts for DeCal courses
+                            if (/\A[A-Z\s]+1?9[89][A-Z]?[A-Z]?/ === student_data[:course_code].gsub("#{student_data[:section_format]}", '').strip) && !student_data[:section_format].include?('LEC')
                               it("shows no 'No activity!' alert for #{test_case}") { expect(user_alert_msgs).not_to include("No activity! Student has never visited the #{student_data[:course_code]} bCourses site for #{BOACUtils.term}.") }
+                              it("shows no infrequent activity alert for #{test_case}") { expect(truncated_alert_msgs).not_to include("Infrequent activity! Last #{student_data[:course_code]} bCourses activity") }
 
                             else
-                              it("shows no 'No activity!' alert for #{test_case}") { expect(user_alert_msgs).not_to include("No activity! Student has never visited the #{student_data[:course_code]} bCourses site for #{BOACUtils.term}.") }
-                              it("shows no infrequent activity alert for #{test_case}") { expect(truncated_alert_msgs).not_to include("Infrequent activity! Last #{student_data[:course_code]} bCourses activity") }
+                              # Alerts are not shown for sites below an activity threshold, so get the student's 'active' sites
+                              active_student_sites = student_data[:sites].select do |student_site|
+                                course_site = all_sites_data.find { |course_site| course_site[:site_id] == student_site[:site_id] }
+                                (course_site[:last_activity_dates].compact.length.to_f / course_site[:student_count].to_f > 0.8)
+                              end
+                              logger.debug "Active sites are #{active_student_sites}"
+
+                              # Get the sites that could trigger an alert
+                              infrequent_alert_triggers = active_student_sites.select { |site| site[:infrequent_activity_alert] }
+                              no_activity_alert_triggers = active_student_sites.select { |site| site[:no_activity_alert] }
+
+                              # If all the active sites could trigger 'no activity' alerts for the student, then show a 'no activity' alert
+                              if no_activity_alert_triggers.length == active_student_sites.length
+                                it("shows a 'No activity!' alert for #{test_case}") { expect(user_alert_msgs).to include("No activity! Student has never visited the #{student_data[:course_code]} bCourses site for #{BOACUtils.term}.") }
+                                it("shows no infrequent activity alert for #{test_case}") { expect(truncated_alert_msgs).not_to include("Infrequent activity! Last #{student_data[:course_code]} bCourses activity") }
+
+                                # If all the active sites could trigger an alert and some could trigger an 'infrequent activity' alert,
+                                # then show an 'infrequent' alert for the one with the most recent activity
+                              elsif infrequent_alert_triggers.any? && (no_activity_alert_triggers.length + infrequent_alert_triggers.length == active_student_sites.length)
+                                most_recent = infrequent_alert_triggers.max_by { |site| site[:last_activity_canvas] }
+                                day_count = (Date.today - Date.parse(most_recent[:last_activity_canvas].to_s)).to_i
+                                it("shows an infrequent activity alert for #{test_case}") { expect(user_alert_msgs).to include("Infrequent activity! Last #{student_data[:course_code]} bCourses activity was #{day_count} days ago.") }
+                                it("shows no 'No activity!' alert for #{test_case}") { expect(user_alert_msgs).not_to include("No activity! Student has never visited the #{student_data[:course_code]} bCourses site for #{BOACUtils.term}.") }
+
+                              else
+                                it("shows no 'No activity!' alert for #{test_case}") { expect(user_alert_msgs).not_to include("No activity! Student has never visited the #{student_data[:course_code]} bCourses site for #{BOACUtils.term}.") }
+                                it("shows no infrequent activity alert for #{test_case}") { expect(truncated_alert_msgs).not_to include("Infrequent activity! Last #{student_data[:course_code]} bCourses activity") }
+                              end
                             end
                           end
 

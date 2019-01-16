@@ -37,6 +37,7 @@ boac:
   password: secret
   term: Summer 2018
   term_code: 2185
+  term_start_date: 2019-01-21
   db_host: secret
   db_port: secret
   db_name: secret
@@ -61,6 +62,7 @@ boac:
   last_activity_team: TNM
   last_activity_max_users: 3
   last_activity_context: false
+  no_activity_alert_threshold: 14
 
   navigation_team: FBM
 

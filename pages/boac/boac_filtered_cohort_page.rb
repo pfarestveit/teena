@@ -226,7 +226,7 @@ class BOACFilteredCohortPage
     wait_for_update_and_click new_filter_option(filter_name)
 
     # Inactive, Intensive, and Underrepresented Minority have no sub-options
-    choose_sub_option(filter_name, filter_option) unless ['Inactive', 'Intensive', 'Underrepresented Minority'].include? filter_name
+    choose_sub_option(filter_name, filter_option) unless ['Inactive', 'Inactive (COE)', 'Inactive (ASC)', 'Intensive', 'Underrepresented Minority'].include? filter_name
     wait_for_update_and_click unsaved_filter_add_button_element
     unsaved_filter_apply_button_element.when_present Utils.short_wait
   end
