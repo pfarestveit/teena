@@ -166,22 +166,6 @@ describe 'An ASC advisor' do
     end
   end
 
-  context 'visiting the intensive cohort' do
-
-    before(:all) do
-      @homepage.click_intensive_cohort
-      @visible_intensive_students = @filtered_cohort_page.visible_sids
-    end
-
-    it 'sees all intensive students' do
-      expected_results = @filtered_cohort_page.expected_sids_by_last_name(@intensive_student_search_data).sort
-      @filtered_cohort_page.wait_until(1, "Expected #{expected_results}, but got #{@visible_intensive_students.sort}")  { @visible_intensive_students.sort == expected_results }
-    end
-
-    it('sees at least one intensive student') { expect(@visible_intensive_students.any?).to be true }
-
-  end
-
   context 'looking for admin functions' do
 
     it 'can see no link to the admin page' do

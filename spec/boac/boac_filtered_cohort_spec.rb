@@ -40,7 +40,7 @@ describe 'BOAC', order: :defined do
 
   context 'filtered cohort search' do
 
-    before(:each) { @cohort_page.cancel_cohort if @cohort_page.cancel_cohort_button? }
+    before(:each) { @cohort_page.cancel_cohort if @cohort_page.cancel_cohort_button? && @cohort_page.cancel_cohort_button_element.visible? }
 
     test.searches.each do |cohort|
 
@@ -49,7 +49,7 @@ describe 'BOAC', order: :defined do
         @cohort_page.perform_search(cohort, test)
         cohort.member_data = @cohort_page.expected_search_results(test, searchable_students, cohort.search_criteria)
         expected_results = @cohort_page.expected_sids_by_last_name cohort.member_data
-        visible_results = cohort.member_count.zero? ? [] : @cohort_page.visible_sids
+        visible_results = cohort.member_count.length.zero? ? [] : @cohort_page.visible_sids
         @cohort_page.wait_until(1, "Expected but not present: #{expected_results - visible_results}. Present but not expected: #{visible_results - expected_results}") do
           visible_results.sort == expected_results.sort
         end
@@ -57,8 +57,8 @@ describe 'BOAC', order: :defined do
       end
 
       it "sorts by First Name all the students who match #{cohort.search_criteria.list_filters}" do
-        if cohort.member_data.length.zero?
-          logger.warn 'Skipping sort-by-first-name test since there are no results'
+        if (0..1) === cohort.member_data.length
+          logger.warn 'Skipping sort-by-first-name test since there are no results or only one result'
         else
           @cohort_page.sort_by_first_name
           expected_results = @cohort_page.expected_sids_by_first_name cohort.member_data
@@ -70,8 +70,8 @@ describe 'BOAC', order: :defined do
 
       it "sorts by Team all the students who match #{cohort.search_criteria.list_filters}" do
         if test.dept == BOACDepartments::ASC
-          if cohort.member_data.length.zero?
-            logger.warn 'Skipping sort-by-team test since there are no results'
+          if (0..1) === cohort.member_data.length
+            logger.warn 'Skipping sort-by-team test since there are no results or only one result'
           else
             @cohort_page.sort_by_team
             expected_results = @cohort_page.expected_sids_by_team cohort.member_data
@@ -83,8 +83,8 @@ describe 'BOAC', order: :defined do
       end
 
       it "sorts by GPA all the students who match #{cohort.search_criteria.list_filters}" do
-        if cohort.member_data.length.zero?
-          logger.warn 'Skipping sort-by-GPA test since there are no results'
+        if (0..1) === cohort.member_data.length
+          logger.warn 'Skipping sort-by-GPA test since there are no results or only one result'
         else
           @cohort_page.sort_by_gpa
           expected_results = @cohort_page.expected_sids_by_gpa cohort.member_data
@@ -95,8 +95,8 @@ describe 'BOAC', order: :defined do
       end
 
       it "sorts by Level all the students who match #{cohort.search_criteria.list_filters}" do
-        if cohort.member_data.length.zero?
-          logger.warn 'Skipping sort-by-level test since there are no results'
+        if (0..1) === cohort.member_data.length
+          logger.warn 'Skipping sort-by-level test since there are no results or only one result'
         else
           @cohort_page.sort_by_level
           expected_results = @cohort_page.expected_sids_by_level cohort.member_data
@@ -107,8 +107,8 @@ describe 'BOAC', order: :defined do
       end
 
       it "sorts by Major all the students who match #{cohort.search_criteria.list_filters}" do
-        if cohort.member_data.length.zero?
-          logger.warn 'Skipping sort-by-major test since there are no results'
+        if (0..1) === cohort.member_data.length
+          logger.warn 'Skipping sort-by-major test since there are no results or only one result'
         else
           @cohort_page.sort_by_major
           expected_results = @cohort_page.expected_sids_by_major cohort.member_data
@@ -119,8 +119,8 @@ describe 'BOAC', order: :defined do
       end
 
       it "sorts by Units Completed all the students who match #{cohort.search_criteria.list_filters}" do
-        if cohort.member_data.length.zero?
-          logger.warn 'Skipping sort-by-units test since there are no results'
+        if (0..1) === cohort.member_data.length
+          logger.warn 'Skipping sort-by-units test since there are no results or only one result'
         else
           @cohort_page.sort_by_units
           expected_results = @cohort_page.expected_sids_by_units cohort.member_data
@@ -140,7 +140,7 @@ describe 'BOAC', order: :defined do
       end
 
       it "shows the filtered cohort member count with criteria #{cohort.search_criteria.list_filters}" do
-        @homepage.wait_until(Utils.short_wait) { @homepage.member_count(cohort) == cohort.member_data.length }
+        @homepage.wait_until(Utils.short_wait, "Expected #{cohort.member_data.length} but got #{@homepage.member_count(cohort)}") { @homepage.member_count(cohort) == cohort.member_data.length }
       end
 
       it "shows the filtered cohort members who have alerts on the homepage with criteria #{cohort.search_criteria.list_filters}" do

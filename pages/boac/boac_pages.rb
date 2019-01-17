@@ -9,6 +9,7 @@ module BOACPages
   ### PAGE LOADS ###
 
   div(:spinner, id: 'spinner-when-loading')
+  div(:copyright_year_footer, xpath: '//div[contains(text(),"The Regents of the University of California"]')
 
   # Waits for an expected page title
   # @param page_title [String]

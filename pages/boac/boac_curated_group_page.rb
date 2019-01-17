@@ -9,10 +9,7 @@ class BOACCuratedGroupPage
   include BOACListViewPages
   include BOACCohortPages
 
-  span(:title_required_msg, xpath: '//span[text()="Required"]')
   span(:cohort_not_found_msg, xpath: '//span[contains(.,"No curated group found with id: ")]')
-  text_area(:curated_rename_input, name: 'label')
-  button(:curated_rename_confirm_button, id: 'rename-button')
 
   # Loads a curated group
   # @param group [CuratedGroup]
@@ -37,7 +34,7 @@ class BOACCuratedGroupPage
     wait_for_load_and_click rename_cohort_button_element
     group.name = new_name
     wait_for_element_and_type(rename_cohort_input_element, new_name)
-    wait_for_update_and_click curated_rename_confirm_button_element
+    wait_for_update_and_click rename_cohort_confirm_button_element
     span_element(xpath: "//span[text()=\"#{group.name}\"]").when_present Utils.short_wait
   end
 

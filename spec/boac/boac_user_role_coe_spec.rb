@@ -161,21 +161,6 @@ describe 'A CoE advisor using BOAC' do
     end
   end
 
-  context 'when looking for teams' do
-
-    it 'cannot see the teams list link' do
-      @homepage.load_page
-      expect(@homepage.team_list_link?).to be false
-    end
-
-    # TODO - it 'cannot reach the Teams page'
-
-    it 'cannot hit a team cohort directly' do
-      @filtered_cohort_page.hit_team_url Team::FBM
-      @filtered_cohort_page.wait_until(Utils.short_wait) { @filtered_cohort_page.results == 'Create a Filtered Cohort' }
-    end
-  end
-
   context 'when looking for admin functions' do
 
     it 'can see no link to the admin page' do

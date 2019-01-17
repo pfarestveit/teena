@@ -9,11 +9,10 @@ class BOACHomePage
   include BOACUserListPages
 
   button(:sign_in, id: 'splash-sign-in')
-  div(:sign_in_msg, xpath: '//div[text()="Please sign in."]')
-
   text_field(:dev_auth_uid_input, id: 'dev-auth-uid')
   text_field(:dev_auth_password_input, id: 'dev-auth-password')
   button(:dev_auth_log_in_button, id: 'dev-auth-submit')
+  span(:copyright_year_login, class: 'splash-text-copyright')
 
   # Loads the home page
   def load_page
@@ -28,9 +27,11 @@ class BOACHomePage
   def log_in(username, password, cal_net)
     load_page
     wait_for_title 'Welcome'
+    wait_until(Utils.short_wait) { copyright_year_login.include? Time.now.strftime('%Y') }
     wait_for_load_and_click sign_in_element
     cal_net.log_in(username, password)
     wait_for_title 'Home'
+    wait_until(Utils.short_wait) { copyright_year_footer.include? Time.now.strftime('%Y') }
   end
 
   # Authenticates using dev auth
@@ -54,19 +55,18 @@ class BOACHomePage
   # @param xpath [String]
   # @return [Array<Selenium::WebDriver::Element>]
   def user_rows(driver, xpath)
-    driver.find_elements(xpath: "#{xpath}//tr[contains(@data-ng-repeat,'student in students')]")
+    driver.find_elements(xpath: "#{xpath}//tbody/tr")
   end
 
   # FILTERED COHORTS AND CURATED GROUPS
 
-  elements(:filtered_cohort, :span, xpath: '//div[@data-ng-repeat="cohort in profile.myFilteredCohorts track by $index"]//h2/span[@data-ng-bind="cohort.name"]')
+  elements(:filtered_cohort, :span, xpath: '//div[contains(@id,"home-cohort")]//h2/span[2]')
   h1(:no_filtered_cohorts_msg, id: 'no-cohorts-header')
-  elements(:curated_group, :span, xpath: '//div[@data-ng-repeat="cohort in profile.myCuratedCohorts track by $index"]//h2/span[@data-ng-bind="cohort.name"]')
+  elements(:curated_group, :span, xpath: '//div[contains(@id,"home-curated-group")]//h2/span[2]')
 
   # Returns the names of filtered cohorts shown on the homepage
   # @return [Array<String>]
   def filtered_cohorts
-    h1_element(xpath: '//h1[contains(text(),"Cohorts")]').when_present Utils.medium_wait
     wait_until(Utils.medium_wait) { filtered_cohort_elements.any? }
     filtered_cohort_elements.map &:text
   end
@@ -81,7 +81,6 @@ class BOACHomePage
   # Returns the names of curated groups shown on the homepage
   # @return [Array<String>]
   def curated_groups
-    h1_element(xpath: '//h1[contains(text(),"Curated Groups")]').when_present Utils.medium_wait
     wait_until(Utils.medium_wait) { curated_group_elements.any? }
     curated_group_elements.map &:text
   end
@@ -90,7 +89,7 @@ class BOACHomePage
   # @param group [CuratedGroup]
   # @return [String]
   def curated_group_xpath(group)
-    "//div[@id=\"content\"]//div[@data-ng-repeat=\"cohort in profile.myCuratedCohorts track by $index\"][contains(.,\"#{group.name}\")]"
+    "//div[@id=\"home-curated-group-#{group.id}\"]"
   end
 
   # Returns the link to a filtered cohort or curated group in the main content area of the homepage
@@ -98,8 +97,8 @@ class BOACHomePage
   # @return [PageObject::Elements::Link]
   def view_all_members_link(cohort)
     cohort.instance_of?(FilteredCohort) ?
-        link_element(xpath: "#{filtered_cohort_xpath cohort}//a[contains(@href,'/filtered?id=#{cohort.id}')]") :
-        link_element(xpath: "#{curated_group_xpath cohort}//a[contains(@href,'/curated/#{cohort.id}')]")
+        link_element(id: "home-cohort-#{cohort.id}-view-all") :
+        link_element(id: "home-curated-group-#{cohort.id}-view-all")
   end
 
   # Expands a filtered cohort or curated group row in the main content area
@@ -107,8 +106,8 @@ class BOACHomePage
   def expand_member_rows(cohort)
     unless view_all_members_link(cohort).visible?
       cohort.instance_of?(FilteredCohort) ?
-          wait_for_update_and_click(link_element(xpath: "#{filtered_cohort_xpath cohort}//a")) :
-          wait_for_update_and_click(link_element(xpath: "#{curated_group_xpath cohort}//a"))
+          wait_for_update_and_click(link_element(id: "home-cohort-#{cohort.id}-toggle")) :
+          wait_for_update_and_click(link_element(id: "home-curated-group-#{cohort.id}-toggle"))
     end
   end
 
@@ -126,10 +125,9 @@ class BOACHomePage
   # @param cohort [Cohort]
   # @return [Integer]
   def member_count(cohort)
-    xpath = cohort.instance_of?(FilteredCohort) ?
-        "#{filtered_cohort_xpath(cohort)}//span[@id=\"home-cohort-#{cohort.id}-total-student-count\"]" :
-        "#{curated_group_xpath(cohort)}//span[@data-ng-bind=\"cohort.studentCount\"]"
-    el = span_element(xpath: xpath)
+    el = cohort.instance_of?(FilteredCohort) ?
+        span_element(id: "home-cohort-#{cohort.id}-total-student-count") :
+        span_element(xpath: "#{curated_group_xpath(cohort)}//h2/span[3]")
     el.text.to_i if el.exists?
   end
 
