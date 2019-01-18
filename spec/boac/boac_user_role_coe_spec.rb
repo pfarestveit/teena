@@ -94,11 +94,6 @@ describe 'A CoE advisor using BOAC' do
     it('sees no Intensive filter') { expect(@filtered_cohort_page.new_filter_option('Intensive').exists?).to be false }
     it('sees no Team filter') { expect(@filtered_cohort_page.new_filter_option('Team').exists?).to be false }
 
-    it 'cannot hit team filters directly' do
-      @filtered_cohort_page.navigate_to @filtered_cohort_page.squad_url(Squad::MFB_ST)
-      @filtered_cohort_page.new_filter_button_element.when_visible Utils.short_wait
-      expect(@filtered_cohort_page.player_link_elements.any?).to be false
-    end
   end
 
   context 'when visiting a class page' do
@@ -117,9 +112,8 @@ describe 'A CoE advisor using BOAC' do
   context 'when visiting a student page' do
 
     it 'cannot hit a non-CoE student page' do
-      @student_page.load_page asc_only_students.first
-      @student_page.not_found_msg_element.when_visible Utils.medium_wait
-      expect(@student_page.visible_sis_data[:name]).to be_nil
+      @student_page.navigate_to "#{BOACUtils.base_url}/student/#{asc_only_students.first.uid}"
+      @student_page.wait_for_title 'Page not found'
     end
 
     it 'can hit an overlapping CoE and ASC student page with sports information removed' do
@@ -141,51 +135,17 @@ describe 'A CoE advisor using BOAC' do
     end
   end
 
-  context 'when looking for inactive students' do
-
-    it('sees no link to Inactive Students') { expect(@homepage.inactive_cohort_link?).to be false }
-
-    it 'cannot hit the Inactive Students page' do
-      @filtered_cohort_page.load_inactive_students_page
-      @filtered_cohort_page.wait_until(Utils.short_wait) { @filtered_cohort_page.results == 'Create a Filtered Cohort' }
-    end
-  end
-
-  context 'when looking for intensive students' do
-
-    it('sees no link to Intensive Students') { expect(@homepage.intensive_cohort_link?).to be false }
-
-    it 'cannot hit the Intensive Students page' do
-      @filtered_cohort_page.load_intensive_students_page
-      @filtered_cohort_page.wait_until(Utils.short_wait) { @filtered_cohort_page.results == 'Create a Filtered Cohort' }
-    end
-  end
-
-  context 'when looking for teams' do
-
-    it 'cannot see the teams list link' do
-      @homepage.load_page
-      expect(@homepage.team_list_link?).to be false
-    end
-
-    # TODO - it 'cannot reach the Teams page'
-
-    it 'cannot hit a team cohort directly' do
-      @filtered_cohort_page.hit_team_url Team::FBM
-      @filtered_cohort_page.wait_until(Utils.short_wait) { @filtered_cohort_page.results == 'Create a Filtered Cohort' }
-    end
-  end
-
   context 'when looking for admin functions' do
 
     it 'can see no link to the admin page' do
+      @homepage.load_page
       @homepage.click_header_dropdown
       expect(@homepage.admin_link?).to be false
     end
 
     it 'cannot hit the admin page' do
       @admin_page.load_page
-      @admin_page.wait_for_title '404'
+      @admin_page.wait_for_title 'Page not found'
     end
 
     it 'cannot hit the cachejob page' do

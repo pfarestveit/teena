@@ -9,19 +9,24 @@ module BOACCohortPages
   include BOACListViewPages
 
   h1(:results, xpath: '//h1')
+
   button(:rename_cohort_button, id: 'rename-button')
-  text_area(:rename_cohort_input, id: 'rename-input')
+  button(:rename_cohort_confirm_button, id: 'rename-confirm')
+  button(:rename_cohort_cancel_button, id: 'rename-cancel')
+
   button(:delete_cohort_button, id: 'delete-button')
   button(:confirm_delete_button, id: 'delete-confirm')
   button(:cancel_delete_button, id: 'delete-cancel')
+
   span(:no_access_msg, xpath: '//span[text()="You are unauthorized to access student data managed by other departments"]')
+  span(:title_required_msg, xpath: '//span[text()="Required"]')
 
   # Returns the search results count in the page heading
   # @return [Integer]
   def results_count
     sleep 1
     results_element.when_visible Utils.short_wait
-    results.split(' ')[0].to_i
+    results.split[0].to_i
   end
 
   # Deletes a cohort unless it is read-only (e.g., CoE default cohorts).

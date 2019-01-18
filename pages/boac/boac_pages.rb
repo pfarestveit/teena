@@ -9,6 +9,7 @@ module BOACPages
   ### PAGE LOADS ###
 
   div(:spinner, id: 'spinner-when-loading')
+  div(:copyright_year_footer, xpath: '//div[contains(text(),"The Regents of the University of California"]')
 
   # Waits for an expected page title
   # @param page_title [String]
@@ -116,29 +117,11 @@ module BOACPages
     sleep 3
   end
 
-  # Clicks the link for the Teams List page
-  def click_teams_list
-    wait_for_load_and_click team_list_link_element
-    wait_for_title 'Teams'
-  end
-
-  # Clicks the link for the Intensive cohort
-  def click_intensive_cohort
-    wait_for_load_and_click intensive_cohort_link_element
-    wait_for_title 'Intensive'
-  end
-
-  # Clicks the link for the Inactive cohort
-  def click_inactive_cohort
-    wait_for_load_and_click inactive_cohort_link_element
-    wait_for_title 'Inactive'
-  end
-
   # Clicks the button to view all custom cohorts
   def click_view_everyone_cohorts
     sleep 2
     wait_for_load_and_click view_everyone_cohorts_link_element
-    wait_for_title 'Filtered Cohorts All'
+    wait_for_title 'All Cohorts'
   end
 
   # Clicks the sidebar link to a filtered cohort

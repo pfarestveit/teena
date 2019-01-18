@@ -122,7 +122,7 @@ class BOACTestConfig < TestConfig
       :level => ['Senior (90+ Units)'],
       :units_completed => ['90 - 119'],
       :major => ['Electrical Eng & Comp Sci BS'],
-      :last_name => 'AZ',
+      :last_name => 'A Z',
       :advisor => ([BOACUtils.get_dept_advisors(BOACDepartments::COE).first.uid.to_s] unless @dept == BOACDepartments::ASC),
       :ethnicity => (['Chinese / Chinese-American'] unless @dept == BOACDepartments::ASC),
       :gender => (['Female'] unless @dept == BOACDepartments::ASC),

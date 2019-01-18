@@ -15,16 +15,12 @@ class BOACFilteredCohortPage
     "#{BOACUtils.base_url}/cohort/#{id}"
   end
 
-  # If a cohort is a team, loads the team page using search queries; otherwise loads the cohort page by the cohort's ID
+  # Loads the cohort page by the cohort's ID
   # @param cohort [FilteredCohort]
   def load_cohort(cohort)
     logger.info "Loading cohort '#{cohort.name}'"
-    if cohort.instance_of? Team
-      load_team_page(cohort)
-    else
-      navigate_to(filtered_cohort_base_url(cohort.id))
-      wait_for_title cohort.name
-    end
+    navigate_to(filtered_cohort_base_url(cohort.id))
+    wait_for_title cohort.name
   end
 
   # Hits a cohort URL and expects the 404 page to load
@@ -34,51 +30,13 @@ class BOACFilteredCohortPage
     wait_for_title 'Page not found'
   end
 
-  # Hits a team page URL
-  # @param team [Team]
-  def hit_team_url(team)
-    # TODO: Remove this test because it is not supported in Vue.
-    squads = Squad::SQUADS.select { |s| s.parent_team == team }
-    squads.delete_if { |s| s.code.include? '-AA' }
-    query_string = squads.map { |s| "team=#{s.code}&" }
-    navigate_to "#{filtered_cohort_base_url(nil)}#{query_string.join}c=search"
-  end
-
-  # Navigates directly to a team page
-  # @param team [Team]
-  def load_team_page(team)
-    # TODO: Remove this test because it is not supported in Vue.
-    logger.info "Loading cohort page for team #{team.name}"
-    hit_team_url team
-    wait_for_title 'Search'
-  end
-
-  # Returns the URL for a squad cohort page
-  # @param squad [Squad]
-  # @return [String]
-  def squad_url(squad)
-    # TODO: Remove this test because it is not supported in Vue.
-    "#{filtered_cohort_base_url(nil)}c=search&p=1&team=#{squad.code}"
-  end
-
-  # Hits a cohort search URL for a squad
-  # @param squad [Squad]
-  def load_squad(squad)
-    # TODO: Remove this test because it is not supported in Vue.
-    logger.info "Loading cohort page for squad #{squad.name}"
-    navigate_to squad_url(squad)
-    wait_for_title 'Filtered Cohort'
-  end
-
   # FILTERED COHORTS - Creation
 
   button(:save_cohort_button_one, id: 'save-button')
   text_area(:cohort_name_input, id: 'create-input')
-  span(:title_required_msg, xpath: '//span[text()="Required"]')
   button(:save_cohort_button_two, id: 'create-confirm')
   button(:cancel_cohort_button, id: 'create-cancel')
-  span(:cohort_not_found_msg, xpath: '//span[contains(.,"No cohort found with identifier: ")]')
-  elements(:everyone_cohort_link, :link, xpath: '//h1[text()="Everyone\'s Cohorts"]/following-sibling::div//a[@data-ng-bind="cohort.name"]')
+  elements(:everyone_cohort_link, :link, xpath: '//h1[text()="Everyone\'s Cohorts"]/following-sibling::div//a')
 
   # Clicks the button to save a new cohort, which triggers the name input modal
   def click_save_cohort_button_one
@@ -104,7 +62,7 @@ class BOACFilteredCohortPage
   # @param cohort [FilteredCohort]
   # @return [Integer]
   def wait_for_filtered_cohort(cohort)
-    cohort_heading().when_present Utils.medium_wait
+    cohort_heading(cohort).when_present Utils.medium_wait
     BOACUtils.set_filtered_cohort_id cohort
   end
 
@@ -151,34 +109,16 @@ class BOACFilteredCohortPage
     cohorts
   end
 
-  # Navigates to the Inactive Students page
-  def load_inactive_students_page
-    navigate_to "#{filtered_cohort_base_url}inactive"
-  end
-
-  # Navigates to the Intensive Students page
-  def load_intensive_students_page
-    navigate_to "#{filtered_cohort_base_url}intensive"
-  end
-
   # FILTERED COHORTS - Search
 
-  button(:show_filters_button, id: 'show-details-button')
-  button(:rename_button, id: 'rename-button')
-  button(:delete_button, id: 'delete-button')
+  button(:show_filters_button, xpath: "//button[contains(.,'Show Filters')]")
 
-  button(:new_filter_button, id: 'draft-filter')
-  button(:new_filter_sub_button, id: 'dropdown-edit-new')
-  elements(:new_filter_option, :link, xpath: '//a[@data-ng-bind="option.name"]')
+  button(:new_filter_button, xpath: '//button[contains(.,"New Filter")]')
+  elements(:new_filter_option, :link, class: 'dropdown-item')
   elements(:new_filter_initial_input, :text_area, class: 'filter-range-input')
   button(:unsaved_filter_add_button, id: 'unsaved-filter-add')
   button(:unsaved_filter_cancel_button, id: 'unsaved-filter-reset')
   button(:unsaved_filter_apply_button, id: 'unsaved-filter-apply')
-  button(:save_cohort_button, id: 'save-button')
-
-  elements(:filter_row_type, :span, xpath: '//div[@class="cohort-filter-item-filter"]/span')
-  elements(:filter_row_option, :span, xpath: '//div[@class="cohort-filter-item-name"]/span')
-  button(:filter_row_remove_button, xpath: '//button[contains(@id,"remove-added-filter")]')
 
   # Returns a filter option link with given text, used to find options other than 'Advisor'
   # @param option_name [String]
@@ -187,18 +127,16 @@ class BOACFilteredCohortPage
     link_element(xpath: "//a[text()=\"#{option_name}\"]")
   end
 
-  # Returns a filter sub-option link with given text
-  # @param option_name [String]
-  # @return [PageObject::Elements::Link]
-  def new_filter_sub_option(filter_name, option_name)
-    link_element(id: "#{filter_name}-#{option_name}")
-  end
-
   # Returns a filter option list item with given text, used to find 'Advisor' options
   # @param advisor_uid [String]
   # @return [PageObject::Elements::ListItem]
   def new_filter_advisor_option(advisor_uid)
-    list_item_element(id: "advisorLdapUids-#{advisor_uid}")
+    link_element(id: "Advisor-#{advisor_uid}")
+  end
+
+  def sub_option_element(filter_name, filter_option)
+    link_attribute = (filter_name == 'Advisor') ? "@id='Advisor-#{filter_option}'" : "text()=\"#{filter_option}\""
+    button_element(xpath: "//a[#{link_attribute}]/../preceding-sibling::button")
   end
 
   # Selects a sub-category for a filter type that offers sub-categories
@@ -207,12 +145,12 @@ class BOACFilteredCohortPage
   def choose_sub_option(filter_name, filter_option)
     # Last Name requires input
     if filter_name == 'Last Name'
-      wait_for_element_and_type(new_filter_initial_input_elements[0], filter_option[0])
-      wait_for_element_and_type(new_filter_initial_input_elements[1], filter_option[1])
+      wait_for_element_and_type(new_filter_initial_input_elements[0], filter_option.split[0])
+      wait_for_element_and_type(new_filter_initial_input_elements[1], filter_option.split[1])
     # All others require a selection
     else
-      wait_for_update_and_click new_filter_sub_button_element
-      option_element = (filter_name == 'Advisor') ? new_filter_advisor_option(filter_option) : new_filter_sub_option(filter_name, filter_option)
+      wait_for_update_and_click sub_option_element(filter_name, filter_option)
+      option_element = (filter_name == 'Advisor') ? new_filter_advisor_option(filter_option) : link_element(text: filter_option)
       wait_for_update_and_click option_element
     end
   end
@@ -232,29 +170,38 @@ class BOACFilteredCohortPage
   end
 
   # Returns the heading for a given cohort page
+  # @param cohort [FilteredCohort]
   # @return [PageObject::Elements::Span]
-  def cohort_heading()
-    span_element(id: 'cohort-name')
+  def cohort_heading(cohort)
+    h1_element(xpath: "//h1[contains(text(),\"#{cohort.name}\")]")
   end
 
   # Ensures that cohort filters are visible
   def show_filters
-    button_element(xpath: '//button[@data-ng-attr-id="show-hide-details-button"]').when_visible Utils.medium_wait
+    button_element(id: 'show-hide-details-button').when_visible Utils.medium_wait
     show_filters_button if show_filters_button?
   end
 
-  elements(:cohort_filter_row, :div, :class => 'cohort-filter-row')
+  elements(:cohort_filter_row, :div, class: 'filter-row')
+
+  # Returns the XPath to the filter name on a filter row
+  # @param filter_name [String]
+  # @return [String]
+  def filter_xpath(filter_name)
+    "//div[contains(@class,\"filter-row\")]/div[contains(.,\"#{filter_name}\")]"
+  end
 
   # Returns the element containing an added cohort filter
   # @param filter_option [String]
   # @return [PageObject::Elements::Element]
   def existing_filter_element(filter_name, filter_option = nil)
-    if ['Intensive', 'Inactive', 'Underrepresented Minority'].include? filter_name
-      div_element(xpath: "//div[@class=\"cohort-added-filter-name\"][contains(.,\"#{filter_name}\")]")
+    filter_option_xpath = "#{filter_xpath filter_name}/following-sibling::div"
+    if ['Intensive', 'Inactive', 'Inactive (ASC)', 'Inactive (COE)', 'Underrepresented Minority'].include? filter_name
+      div_element(xpath: filter_xpath(filter_name))
     elsif filter_name == 'Last Name'
-      span_element(xpath: "//div[@class=\"cohort-added-filter-name\"][contains(.,\"#{filter_name}\")]/following-sibling::div/span[text()=\"#{filter_option.split.join(' through ')}\"]")
+      div_element(xpath: "#{filter_option_xpath}[contains(text(),\"#{filter_option.split.join(' through ')}\")]")
     else
-      span_element(xpath: "//div[@class=\"cohort-added-filter-name\"][contains(.,\"#{filter_name}\")]/following-sibling::div/span[text()=\"#{filter_option}\"]")
+      div_element(xpath: "#{filter_option_xpath}[contains(text(),\"#{filter_option}\")]")
     end
   end
 
@@ -287,18 +234,25 @@ class BOACFilteredCohortPage
     end
   end
 
+  # Returns the XPath to the Edit, Cancel, and Update controls for a filter row
+  # @param filter_name [String]
+  # @return [String]
+  def filter_controls_xpath(filter_name)
+    "#{filter_xpath filter_name}/following-sibling::div[2]"
+  end
+
   # Edits the first filter of a given type
   # @param filter_name [String]
   # @param new_filter_option [String]
   def edit_filter_of_type(filter_name, new_filter_option)
-    wait_for_update_and_click button_element(xpath: "//span[contains(.,\"#{filter_name}\")]/parent::div/following-sibling::div[contains(@class,'controls')]//button[contains(.,'Edit')]")
+    wait_for_update_and_click button_element(xpath: "#{filter_controls_xpath filter_name}//button[contains(.,'Edit')]")
     choose_sub_option(filter_name, new_filter_option)
   end
 
   # Clicks the cancel button for the first filter of a given type that is in edit mode
   # @param filter_name [String]
   def cancel_filter_edit(filter_name)
-    el = button_element(xpath: "//span[contains(.,\"#{filter_name}\")]/parent::div/following-sibling::div[contains(@class,'controls')]//button[contains(.,'Cancel')]")
+    el = button_element(xpath: "#{filter_controls_xpath filter_name}//button[contains(.,'Cancel')]")
     wait_for_update_and_click el
     el.when_not_present 1
   end
@@ -306,7 +260,7 @@ class BOACFilteredCohortPage
   # Clicks the update button for the first filter of a given type that is in edit mode
   # @param filter_name [String]
   def confirm_filter_edit(filter_name)
-    el = button_element(xpath: "//span[contains(.,\"#{filter_name}\")]/parent::div/following-sibling::div[contains(@class,'controls')]//button[contains(.,'Update')]")
+    el = button_element(xpath: "#{filter_controls_xpath filter_name}//button[contains(.,'Update')]")
     wait_for_update_and_click el
     el.when_not_present 1
   end
@@ -325,7 +279,7 @@ class BOACFilteredCohortPage
   def remove_filter_of_type(filter_name)
     logger.info "Removing '#{filter_name}'"
     row_count = cohort_filter_row_elements.length
-    wait_for_update_and_click button_element(xpath: "//span[@data-ng-bind=\"row.name\"][text()=\"#{filter_name}\"]/parent::div/following-sibling::div[contains(@class,'controls')]//button[contains(.,'Remove')]")
+    wait_for_update_and_click button_element(xpath: "#{filter_controls_xpath filter_name}//button[contains(.,'Remove')]")
     wait_until(Utils.short_wait) { cohort_filter_row_elements.length == row_count - 1 }
   end
 
@@ -347,7 +301,7 @@ class BOACFilteredCohortPage
     if cohort.search_criteria.major && cohort.search_criteria.major.any?
       wait_for_update_and_click new_filter_button_element
       wait_for_update_and_click new_filter_option('Major')
-      wait_for_update_and_click new_filter_sub_button_element
+      wait_for_update_and_click sub_option_element('Major', 'Letters & Sci Undeclared UG')
       sleep Utils.click_wait
       filters_missing = []
       cohort.search_criteria.major.each { |major| filters_missing << major unless new_filter_option(major).exists? }
@@ -358,7 +312,7 @@ class BOACFilteredCohortPage
     if cohort.search_criteria.team && cohort.search_criteria.team.any?
       wait_for_update_and_click new_filter_button_element
       wait_for_update_and_click new_filter_option('Team')
-      wait_for_update_and_click new_filter_sub_button_element
+      wait_for_update_and_click sub_option_element('Team', 'Football, Quarterbacks')
       sleep Utils.click_wait
       filters_missing = []
       cohort.search_criteria.team.each { |squad| filters_missing << squad unless new_filter_option(squad.name).exists? }
@@ -464,7 +418,7 @@ class BOACFilteredCohortPage
 
     # Last Name
     matching_last_name_users = if search_criteria.last_name
-                                 user_data.select { |u| u[:last_name_sortable][0] >= search_criteria.last_name[0].downcase && u[:last_name_sortable][0] <= search_criteria.last_name[1].downcase }
+                                 user_data.select { |u| u[:last_name_sortable][0] >= search_criteria.last_name.split[0].downcase && u[:last_name_sortable][0] <= search_criteria.last_name.split[1].downcase }
                                else
                                  user_data
                                end
@@ -553,9 +507,7 @@ class BOACFilteredCohortPage
 
   # FILTERED COHORTS - Management
 
-  elements(:cohort_name, :span, xpath: '//span[@data-ng-bind="search.cohort.name"]')
-  button(:rename_cohort_confirm_button, id: 'rename-confirm')
-  button(:rename_cohort_cancel_button, id: 'rename-cancel')
+  text_area(:rename_cohort_input, id: 'rename-cohort-input')
 
   # Renames a cohort
   # @param cohort [FilteredCohort]
@@ -567,7 +519,7 @@ class BOACFilteredCohortPage
     cohort.name = new_name
     wait_for_element_and_type(rename_cohort_input_element, new_name)
     wait_for_update_and_click rename_cohort_confirm_button_element
-    span_element(xpath: "//span[text()=\"#{cohort.name}\"]").when_present Utils.short_wait
+    h1_element(xpath: "//h1[contains(text(),\"#{cohort.name}\")]").when_present Utils.short_wait
   end
 
   # Returns the sequence of SIDs that should be present when search results are sorted by first name

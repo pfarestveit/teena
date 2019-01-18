@@ -104,10 +104,8 @@ class CohortFilter
         'Korean / Korean-American'
       when 'Y'
         'Other Asian'
-      when 'Z'
-        'Foreign'
       else
-        logger.warn "Unrecognized ethnicity '#{code}'" if code && !code.empty?
+        logger.warn "Unrecognized ethnicity '#{code}'" if code && !code.empty? && code != 'Z'
     end
   end
 
