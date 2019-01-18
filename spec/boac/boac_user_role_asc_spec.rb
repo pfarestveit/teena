@@ -49,11 +49,6 @@ describe 'An ASC advisor' do
 
   after(:all) { Utils.quit_browser @driver }
 
-  it 'sees all the expected teams' do
-    @homepage.click_teams_list
-    expect(@teams_page.teams.sort).to eql(NessieUtils.get_asc_teams.map(&:name).sort)
-  end
-
   context 'performing a filtered cohort search' do
 
     before(:all) do
@@ -115,8 +110,6 @@ describe 'An ASC advisor' do
 
   context 'visiting a class page' do
 
-    # Verification that only ASC students are visible is part of the class page test script
-
     it 'sees only ASC student data in a section endpoint' do
       api_section_page = BOACApiSectionPage.new @driver
       api_section_page.get_data(@driver, '2178', '13826')
@@ -127,9 +120,8 @@ describe 'An ASC advisor' do
   context 'visiting a student page' do
 
     it 'cannot hit a non-ASC student page' do
-      @student_page.load_page coe_only_students.first
-      @student_page.not_found_msg_element.when_visible Utils.medium_wait
-      expect(@student_page.visible_sis_data[:name]).to be_nil
+      @student_page.navigate_to "#{BOACUtils.base_url}/student/#{coe_only_students.first.uid}"
+      @student_page.wait_for_title 'Page not found'
     end
 
     it 'can hit an overlapping ASC and CoE student page' do
@@ -146,18 +138,24 @@ describe 'An ASC advisor' do
   context 'visiting the inactive cohort' do
 
     before(:all) do
+      @inactive_search = CohortFilter.new
+      @inactive_search.set_custom_filters({:inactive_asc => true})
+      @inactive_cohort = FilteredCohort.new({:search_criteria => @inactive_search})
       @homepage.load_page
-      @homepage.click_inactive_cohort
-      @visible_inactive_students = @filtered_cohort_page.visible_sids
+      @homepage.click_sidebar_create_filtered
+      @filtered_cohort_page.perform_search(@inactive_cohort, test_asc)
     end
 
-    it 'sees all inactive students with an INACTIVE indicator' do
-      expected_results = @filtered_cohort_page.expected_sids_by_last_name(@inactive_student_search_data).sort
-      @filtered_cohort_page.wait_until(1, "Expected #{expected_results}, but got #{@visible_inactive_students.sort}") { @visible_inactive_students.sort == expected_results }
-      # TODO - inactive indicator
+    it 'sees all inactive students' do
+      expected_results = @inactive_student_sids.sort
+      visible_results = @filtered_cohort_page.visible_sids.sort
+      @filtered_cohort_page.wait_until(1, "Expected #{expected_results}, but got #{visible_results}") { visible_results == expected_results }
     end
 
-    it('sees at least one inactive student') { expect(@visible_inactive_students.any?).to be true }
+    it 'sees an inactive indicator on the cohort page' do
+      sids = @filtered_cohort_page.player_sid_elements.map &:text
+      expect(sids.all? { |s| s.include? 'INACTIVE' }).to be true
+    end
 
     it 'sees an inactive indicator on the student page' do
       @filtered_cohort_page.click_student_link User.new({:uid => @filtered_cohort_page.list_view_uids.first })
@@ -169,13 +167,14 @@ describe 'An ASC advisor' do
   context 'looking for admin functions' do
 
     it 'can see no link to the admin page' do
+      @homepage.load_page
       @homepage.click_header_dropdown
       expect(@homepage.admin_link?).to be false
     end
 
     it 'cannot hit the admin page' do
       @admin_page.load_page
-      @admin_page.wait_for_title '404'
+      @admin_page.wait_for_title 'Page not found'
     end
 
     it 'cannot hit the cachejob page' do

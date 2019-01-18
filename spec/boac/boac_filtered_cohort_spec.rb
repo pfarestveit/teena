@@ -49,7 +49,7 @@ describe 'BOAC', order: :defined do
         @cohort_page.perform_search(cohort, test)
         cohort.member_data = @cohort_page.expected_search_results(test, searchable_students, cohort.search_criteria)
         expected_results = @cohort_page.expected_sids_by_last_name cohort.member_data
-        visible_results = cohort.member_count.length.zero? ? [] : @cohort_page.visible_sids
+        visible_results = cohort.member_count.zero? ? [] : @cohort_page.visible_sids
         @cohort_page.wait_until(1, "Expected but not present: #{expected_results - visible_results}. Present but not expected: #{visible_results - expected_results}") do
           visible_results.sort == expected_results.sort
         end
@@ -492,7 +492,7 @@ describe 'BOAC', order: :defined do
     end
 
     it 'allows the advisor to edit a Last Name filter' do
-      test.default_cohort.search_criteria.last_name = 'BY'
+      test.default_cohort.search_criteria.last_name = 'B Y'
       @cohort_page.edit_filter_and_confirm('Last Name', test.default_cohort.search_criteria.last_name)
       @cohort_page.verify_filters_present test.default_cohort
     end
@@ -564,7 +564,7 @@ describe 'BOAC', order: :defined do
 
     it 'shows a Not Found page' do
       @cohort_page.navigate_to "#{BOACUtils.base_url}/cohort/#{test.searches.first.id}"
-      @cohort_page.wait_for_title '404'
+      @cohort_page.wait_for_title 'Page not found'
     end
   end
 

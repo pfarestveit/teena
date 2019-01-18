@@ -42,11 +42,6 @@ describe 'An admin using BOAC' do
       visible_cohort_names = (@filtered_cohort_page.visible_everyone_cohorts.map &:name).sort
       @filtered_cohort_page.wait_until(1, "Expected #{expected_cohort_names}, but got #{visible_cohort_names}") { visible_cohort_names == expected_cohort_names }
     end
-
-    it 'can hit the teams list' do
-      @teams_page.load_page
-      expect(@teams_page.teams.length).not_to be_zero
-    end
   end
 
   context 'performing a user search' do
@@ -113,29 +108,12 @@ describe 'An admin using BOAC' do
     end
   end
 
-  context 'looking for inactive students' do
-
-    it('sees no link to Inactive Students') { expect(@homepage.inactive_cohort_link?).to be false }
-
-    it 'can hit the Inactive Students page' do
-      @filtered_cohort_page.load_inactive_students_page
-      @filtered_cohort_page.wait_until(Utils.medium_wait) { @filtered_cohort_page.list_view_uids.any? }
-    end
-  end
-
-  context 'looking for intensive students' do
-
-    it('sees no link to Intensive Students') { expect(@homepage.intensive_cohort_link?).to be false }
-
-    it 'can hit the Intensive Students page' do
-      @filtered_cohort_page.load_intensive_students_page
-      @filtered_cohort_page.wait_until(Utils.medium_wait) { @filtered_cohort_page.list_view_uids.any? }
-    end
-  end
-
   context 'visiting the admin page' do
 
-    it('sees a link to the admin page') { @homepage.click_admin_link }
+    it('sees a link to the admin page') do
+      @homepage.load_page
+      @homepage.click_admin_link
+    end
 
     # TODO - it('sees all the authorized users')
 

@@ -20,8 +20,7 @@ class BOACFilteredCohortPage
   def load_cohort(cohort)
     logger.info "Loading cohort '#{cohort.name}'"
     navigate_to(filtered_cohort_base_url(cohort.id))
-    #wait_for_title cohort.name
-    wait_for_title 'Cohort'
+    wait_for_title cohort.name
   end
 
   # Hits a cohort URL and expects the 404 page to load
@@ -110,22 +109,11 @@ class BOACFilteredCohortPage
     cohorts
   end
 
-  # Navigates to the Inactive Students page
-  def load_inactive_students_page
-    navigate_to "#{filtered_cohort_base_url}inactive"
-  end
-
-  # Navigates to the Intensive Students page
-  def load_intensive_students_page
-    navigate_to "#{filtered_cohort_base_url}intensive"
-  end
-
   # FILTERED COHORTS - Search
 
   button(:show_filters_button, xpath: "//button[contains(.,'Show Filters')]")
 
   button(:new_filter_button, xpath: '//button[contains(.,"New Filter")]')
-  button(:new_filter_sub_button, xpath: '//button[contains(.,"Choose...")]')
   elements(:new_filter_option, :link, class: 'dropdown-item')
   elements(:new_filter_initial_input, :text_area, class: 'filter-range-input')
   button(:unsaved_filter_add_button, id: 'unsaved-filter-add')
@@ -146,6 +134,11 @@ class BOACFilteredCohortPage
     link_element(id: "Advisor-#{advisor_uid}")
   end
 
+  def sub_option_element(filter_name, filter_option)
+    link_attribute = (filter_name == 'Advisor') ? "@id='Advisor-#{filter_option}'" : "text()=\"#{filter_option}\""
+    button_element(xpath: "//a[#{link_attribute}]/../preceding-sibling::button")
+  end
+
   # Selects a sub-category for a filter type that offers sub-categories
   # @param filter_name [String]
   # @param filter_option [String]
@@ -156,7 +149,7 @@ class BOACFilteredCohortPage
       wait_for_element_and_type(new_filter_initial_input_elements[1], filter_option.split[1])
     # All others require a selection
     else
-      wait_for_update_and_click new_filter_sub_button_element
+      wait_for_update_and_click sub_option_element(filter_name, filter_option)
       option_element = (filter_name == 'Advisor') ? new_filter_advisor_option(filter_option) : link_element(text: filter_option)
       wait_for_update_and_click option_element
     end
@@ -191,6 +184,9 @@ class BOACFilteredCohortPage
 
   elements(:cohort_filter_row, :div, class: 'filter-row')
 
+  # Returns the XPath to the filter name on a filter row
+  # @param filter_name [String]
+  # @return [String]
   def filter_xpath(filter_name)
     "//div[contains(@class,\"filter-row\")]/div[contains(.,\"#{filter_name}\")]"
   end
@@ -238,6 +234,9 @@ class BOACFilteredCohortPage
     end
   end
 
+  # Returns the XPath to the Edit, Cancel, and Update controls for a filter row
+  # @param filter_name [String]
+  # @return [String]
   def filter_controls_xpath(filter_name)
     "#{filter_xpath filter_name}/following-sibling::div[2]"
   end
@@ -302,7 +301,7 @@ class BOACFilteredCohortPage
     if cohort.search_criteria.major && cohort.search_criteria.major.any?
       wait_for_update_and_click new_filter_button_element
       wait_for_update_and_click new_filter_option('Major')
-      wait_for_update_and_click new_filter_sub_button_element
+      wait_for_update_and_click sub_option_element('Major', 'Letters & Sci Undeclared UG')
       sleep Utils.click_wait
       filters_missing = []
       cohort.search_criteria.major.each { |major| filters_missing << major unless new_filter_option(major).exists? }
@@ -313,7 +312,7 @@ class BOACFilteredCohortPage
     if cohort.search_criteria.team && cohort.search_criteria.team.any?
       wait_for_update_and_click new_filter_button_element
       wait_for_update_and_click new_filter_option('Team')
-      wait_for_update_and_click new_filter_sub_button_element
+      wait_for_update_and_click sub_option_element('Team', 'Football, Quarterbacks')
       sleep Utils.click_wait
       filters_missing = []
       cohort.search_criteria.team.each { |squad| filters_missing << squad unless new_filter_option(squad.name).exists? }
@@ -507,6 +506,8 @@ class BOACFilteredCohortPage
   end
 
   # FILTERED COHORTS - Management
+
+  text_area(:rename_cohort_input, id: 'rename-cohort-input')
 
   # Renames a cohort
   # @param cohort [FilteredCohort]

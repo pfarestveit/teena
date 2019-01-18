@@ -11,7 +11,6 @@ module BOACCohortPages
   h1(:results, xpath: '//h1')
 
   button(:rename_cohort_button, id: 'rename-button')
-  text_area(:rename_cohort_input, id: 'rename-input')
   button(:rename_cohort_confirm_button, id: 'rename-confirm')
   button(:rename_cohort_cancel_button, id: 'rename-cancel')
 
