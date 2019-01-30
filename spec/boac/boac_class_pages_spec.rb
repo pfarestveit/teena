@@ -97,11 +97,6 @@ describe 'BOAC' do
                             it("shows the right days for meeting #{index} for #{class_test_case}") { expect(visible_meeting_data[:days]).to eql(meet[:days]) }
                             it("shows the right time for meeting #{index} for #{class_test_case}") { expect(visible_meeting_data[:time]).to eql(meet[:time]) }
                             it("shows the right location for meeting #{index} for #{class_test_case}") { expect(visible_meeting_data[:location]).to eql(meet[:location]) }
-                            # Some meeting data is expected to be empty, but report missing data anyway for further inspection
-                            it("shows no empty meeting data for meeting #{index} for #{class_test_case}") do
-                              expect(visible_meeting_data.values.all?).to be true
-                              expect(visible_meeting_data.values.any? &:empty?).to be false
-                            end
 
                             Utils.add_csv_row(meetings_csv, [term_name, section_course_code, meet[:instructors], meet[:days], meet[:time], meet[:location]])
                           end
@@ -109,7 +104,7 @@ describe 'BOAC' do
                           # STUDENT DATA
 
                           # Check that all students who should appear actually do
-                          visible_sids = @class_page.visible_sids.sort
+                          visible_sids = @class_page.visible_sids.sort.uniq
                           logger.info "Visible student count is #{visible_sids.length}"
                           logger.error "Expecting #{api_section_page.student_sids.sort} but got #{visible_sids}" unless visible_sids == api_section_page.student_sids.sort
                           it("shows the right students for #{class_test_case}") { expect(visible_sids.sort).to eql(api_section_page.student_sids.sort) }

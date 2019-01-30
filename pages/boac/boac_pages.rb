@@ -9,7 +9,7 @@ module BOACPages
   ### PAGE LOADS ###
 
   div(:spinner, id: 'spinner-when-loading')
-  div(:copyright_year_footer, xpath: '//div[contains(text(),"The Regents of the University of California"]')
+  div(:copyright_year_footer, xpath: '//div[contains(text(),"The Regents of the University of California")]')
 
   # Waits for an expected page title
   # @param page_title [String]
@@ -72,7 +72,7 @@ module BOACPages
 
   ### SIDEBAR - CURATED GROUPS ###
 
-  elements(:sidebar_curated_group_link, :link, xpath: '//a[contains(@id,"sidebar-curated-cohort")]')
+  elements(:sidebar_curated_group_link, :link, xpath: '//a[contains(@id,"sidebar-curated-group")]')
 
   # Returns the names of all the curated groups in the sidebar
   # @return [Array<String>]
@@ -145,6 +145,8 @@ module BOACPages
     search_input_element.send_keys :enter
     wait_for_spinner
   end
+
+  ### BOXPLOTS ###
 
   # Returns the XPath to a boxplot nested under another element
   # @return [String]

@@ -64,7 +64,7 @@ class BOACSearchResultsPage
   # Clicks the search results row for a given student
   # @param student [User]
   def click_student_result(student)
-    wait_for_update_and_click link_element(xpath: "//a[@href='/student/#{student.uid}']")
+    wait_for_update_and_click link_element(xpath: "//a[contains(@href,'/student/#{student.uid}')]")
     wait_for_spinner
   end
 
@@ -116,7 +116,7 @@ class BOACSearchResultsPage
   # @param students [Array<User>]
   def select_students_to_add(students)
     logger.info "Adding student UIDs: #{students.map &:sis_id}"
-    students.each { |s| wait_for_update_and_click checkbox_element(id: "student-#{s.sis_id}-curated-cohort-checkbox") }
+    students.each { |s| wait_for_update_and_click checkbox_element(id: "student-#{s.sis_id}-curated-group-checkbox") }
   end
 
   # Adds a given set of students to an existing curated group

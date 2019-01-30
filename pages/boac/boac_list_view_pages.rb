@@ -9,7 +9,6 @@ module BOACListViewPages
 
   ### PAGINATION ###
 
-  elements(:page_list_item, :list_item, xpath: '//li[contains(@ng-repeat,"page in pages")]')
   elements(:page_link, :link, xpath: '//a[contains(@ng-click, "selectPage")]')
   elements(:page_ellipsis_link, :link, xpath: '//a[contains(@ng-click, "selectPage")][text()="..."]')
   elements(:results_page_link, xpath: '//ul[@id="pagination-widget"]//a[contains(@class,"page-link")]')
@@ -29,31 +28,6 @@ module BOACListViewPages
       pages.last.to_i
     else
       1
-    end
-  end
-
-  # Returns the current page in list view
-  # @return [Integer]
-  def list_view_current_page
-    if page_list_item_elements.any?
-      page = page_list_item_elements.find { |el| el.attribute('class').include? 'primary' }
-      page.text.to_i
-    else
-      1
-    end
-  end
-
-  # Checks whether a given page is the one currently shown in list view
-  # @param number [Integer]
-  # @return [boolean]
-  def list_view_page_selected?(number)
-    if number > 1
-      wait_until(Utils.short_wait) { page_list_item_elements.any? }
-      logger.debug "The page numbers visible are #{page_list_item_elements.map &:text}"
-      el = page_list_item_elements.find { |el| el.text == number.to_s }
-      el.attribute('class').include? 'active'
-    else
-      page_list_item_elements.empty?
     end
   end
 

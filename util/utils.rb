@@ -99,8 +99,15 @@ class Utils
   # @param driver [Selenium::WebDriver]
   def self.quit_browser(driver)
     logger.info 'Quitting the browser'
+
+    # Before quitting, log any JS errors (or other console messages) encountered during the browser session
+    js_log = driver.manage.logs.get(:browser)
+    messages = js_log.map &:message
+    messages.each { |msg| logger.error "Possible JS error: #{msg}" }
+
     # If the browser did not start successfully, the quit method will fail.
     driver.quit rescue NoMethodError
+
     # Pause after quitting the browser to make sure it shuts down completely before the next test relaunches it
     sleep 2
   end

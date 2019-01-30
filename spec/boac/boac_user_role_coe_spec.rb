@@ -29,7 +29,6 @@ describe 'A CoE advisor using BOAC' do
     @homepage = BOACHomePage.new @driver
     @search_page = BOACSearchResultsPage.new @driver
     @student_page = BOACStudentPage.new @driver
-    @teams_page = BOACTeamsListPage.new @driver
 
     @coe_student_sids = test_coe.dept_students.map &:sis_id
     @coe_student_search_data = all_student_search_data.select { |d| @coe_student_sids.include? d[:sid] }

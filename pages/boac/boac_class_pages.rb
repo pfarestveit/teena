@@ -39,13 +39,6 @@ module BOACClassPages
 
   # COURSE MEETING DATA
 
-  # Returns the XPath of the course meeting element at a given node
-  # @param node [Integer]
-  # @return [String]
-  def meeting_xpath(node)
-    "//div[@data-ng-repeat=\"meeting in section.meetings\"][#{node}]"
-  end
-
   # Returns the instructor names shown for a course meeting at a given node
   # @param index [Integer]
   # @return [Array<String>]

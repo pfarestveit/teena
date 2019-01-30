@@ -66,7 +66,7 @@ class BOACStudentPage
   elements(:non_dismissed_alert_button, :button, xpath: '//button[contains(@id,"dismiss-alert")]')
   elements(:non_dismissed_alert_msg, :span, xpath: '//button[contains(@id,"dismiss-alert")]/preceding-sibling::span')
   elements(:dismissed_alert, :div, xpath: '//button[contains(text(),"Hide dismissed status alerts"]/following-sibling::div')
-  elements(:dismissed_alert_msg, :span, xpath: '//button[contains(text(),"Hide dismissed status alerts"]/following-sibling::div//span')
+  elements(:dismissed_alert_msg, :span, xpath: '//button[contains(text(),"Hide dismissed status alerts")]/following-sibling::div//span')
   button(:view_dismissed_button, xpath: '//button[contains(.,"View dismissed status alerts")]')
   button(:hide_dismissed_button, xpath: '//button[contains(.,"Hide dismissed status alerts")]')
   span(:withdrawal_msg, class: 'red-flag-small')
@@ -175,7 +175,7 @@ class BOACStudentPage
   # @param group [CuratedGroup]
   # @return [boolean]
   def curated_selected?(group)
-    checkbox_element(xpath: "//div[contains(@class,\"curated-cohort-checkbox\")][contains(.,\"#{group.name}\")]//input[contains(@class,\"ng-not-empty\")]").exists?
+    checkbox_element(xpath: "//div[@class=\"student-curated-group-checkbox\"][contains(.,\"#{group.name}\")]/input[contains(@aria-label,\"Remove from curated group\")]").exists?
   end
 
   # COURSES

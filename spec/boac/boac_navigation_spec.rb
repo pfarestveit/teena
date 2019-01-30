@@ -59,7 +59,7 @@ describe 'BOAC' do
 
                         # CLASS PAGE - List View
 
-                        visible_sids = @class_list_page.visible_sids.sort
+                        visible_sids = @class_list_page.visible_sids.sort.uniq
                         expected_sids = api_section_page.student_sids.sort
                         it("shows all the expected list view students in #{class_test_case}") { expect(visible_sids).to eql(expected_sids) }
 
