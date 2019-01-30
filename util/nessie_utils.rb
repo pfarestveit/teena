@@ -14,6 +14,10 @@ class NessieUtils < Utils
     }
   end
 
+  def self.nessie_env
+    nessie_db_credentials[:name][7..-1]
+  end
+
   # The number of hours that synced Canvas data is behind actual site usage data
   def self.canvas_data_lag_hours
     @config['canvas_data_lag_hours']
@@ -71,19 +75,18 @@ class NessieUtils < Utils
     # If a user has multiple sports, they will be on multiple rows and should be merged. The 'status' refers to active or inactive athletes.
     students = student_result.group_by { |h1| h1['uid'] }.map do |k,v|
       # Athletes with two sports can be active in one and inactive in the other. Drop the inactive sport altogether.
-      if v.length > 1 && (%w(t f) & (v.map { |i| i['active'] }) == %w(t f))
-        v.delete_if { |r| r['active'] == 'f' }
+      if v.length > 1 && (%w(t f) & (v.map { |i| i['active_asc'] }) == %w(t f))
+        v.delete_if { |r| r['active_asc'] == 'f' }
       end
       # ASC status only applies to athletes
-      active = if v[0]['active']
-                 (v.map { |i| i['active'] }).include?('t')
+      active_asc = if v[0]['active_asc']
+                 (v.map { |i| i['active_asc'] }).include?('t')
                end
       {
         :uid => k,
         :sid => v[0]['sid'],
         :dept => dept,
-        :active => active,
-        :intensive_asc => (v[0]['intensive'] == 't'),
+        :active_asc => active_asc,
         :first_name => v[0]['first_name'],
         :last_name => v[0]['last_name'],
         :group_code => v.map { |h2| h2['group_code'] }.join(' ')
@@ -96,8 +99,7 @@ class NessieUtils < Utils
         :uid => a[:uid],
         :sis_id => a[:sid],
         :depts => [a[:dept]],
-        :active_asc => a[:active],
-        :intensive_asc => a[:intensive_asc],
+        :active_asc => a[:active_asc],
         :first_name => a[:first_name],
         :last_name => a[:last_name],
         :full_name => "#{a[:first_name]} #{a[:last_name]}",
@@ -113,25 +115,26 @@ class NessieUtils < Utils
     # Get a separate set of student users for each department
     asc_students = student_result_to_users(query_all_asc_students, BOACDepartments::ASC)
     coe_students = student_result_to_users(query_all_coe_students, BOACDepartments::COE)
+    physics_students = student_result_to_users(query_all_physics_students, BOACDepartments::PHYSICS)
 
     # Find students served by more than one department and merge their attributes into a new user
-    all_students = asc_students + coe_students
-    logger.info "There are #{asc_students.length} ASC students and #{coe_students.length} CoE students, for a total of #{all_students.length}"
+    all_students = asc_students + coe_students + physics_students
+    logger.info "There are #{asc_students.length} ASC students, #{coe_students.length} CoE students, and #{physics_students.length} Physics students, for a total of #{all_students.length}"
     merged_students = []
     all_students.group_by { |s| s.uid }.map do |k,v|
       if v.length > 1
         depts = (v.map &:depts).flatten
         athlete = v.find { |i| i.sports.any? }
-        active_asc = athlete.active_asc
-        intensive_asc = athlete.intensive_asc
-        sports = athlete.sports
+        if athlete
+          active_asc = athlete.active_asc
+          sports = athlete.sports
+        end
 
         attributes = {
             :uid => k,
             :sis_id => v[0].sis_id,
             :depts => (depts ? depts : v[0].depts),
             :active_asc => (active_asc ? active_asc : v[0].active_asc),
-            :intensive_asc => (intensive_asc ? intensive_asc : v[0].intensive_asc),
             :sports => (sports ? sports : v[0].sports),
             :first_name => v[0].first_name,
             :last_name => v[0].last_name,
@@ -154,16 +157,14 @@ class NessieUtils < Utils
   # Returns all ASC students
   # @return [PG::Result]
   def self.query_all_asc_students
-    env = nessie_db_credentials[:name][7..-1]
     query = "SELECT students.sid AS sid,
-                    students.intensive AS intensive,
-                    students.active AS active,
+                    students.active AS active_asc,
                     students.group_code AS group_code,
                     persons.ldap_uid AS uid,
                     persons.first_name AS first_name,
                     persons.last_name AS last_name
              FROM boac_advising_asc.students
-             JOIN calnet_ext_#{env}.persons ON calnet_ext_#{env}.persons.sid = boac_advising_asc.students.sid
+             JOIN calnet_ext_#{nessie_env}.persons ON calnet_ext_#{nessie_env}.persons.sid = boac_advising_asc.students.sid
              ORDER BY students.sid;"
     Utils.query_redshift_db(nessie_db_credentials, query)
   end
@@ -203,13 +204,12 @@ class NessieUtils < Utils
   # Returns all CoE students
   # @return [PG::Result]
   def self.query_all_coe_students
-    env = nessie_db_credentials[:name][7..-1]
     query = "SELECT students.sid AS sid,
                     persons.ldap_uid AS uid,
                     persons.first_name AS first_name,
                     persons.last_name AS last_name
              FROM boac_advising_coe.students
-             JOIN calnet_ext_#{env}.persons ON calnet_ext_#{env}.persons.sid = boac_advising_coe.students.sid
+             JOIN calnet_ext_#{nessie_env}.persons ON calnet_ext_#{nessie_env}.persons.sid = boac_advising_coe.students.sid
              ORDER BY students.sid;"
     Utils.query_redshift_db(nessie_db_credentials, query)
   end
@@ -226,6 +226,19 @@ class NessieUtils < Utils
     result = Utils.query_redshift_db(nessie_db_credentials, query)
     result = result.map { |r| r['sid'] }
     all_coe_students.select { |s| result.include? s.sis_id }
+  end
+
+  # Returns all Physics students
+  # @return [PG::Result]
+  def self.query_all_physics_students
+    query = "SELECT students.sid AS sid,
+                    persons.ldap_uid AS uid,
+                    persons.first_name AS first_name,
+                    persons.last_name AS last_name
+             FROM boac_advising_physics.students
+             JOIN calnet_ext_#{nessie_env}.persons ON calnet_ext_#{nessie_env}.persons.sid = boac_advising_physics.students.sid
+             ORDER BY students.sid;"
+    Utils.query_redshift_db(nessie_db_credentials, query)
   end
 
   # SEARCHABLE STUDENT DATA
@@ -254,6 +267,7 @@ class NessieUtils < Utils
                     student.student_academic_status.gpa AS gpa,
                     student.student_academic_status.level AS level_code,
                     student.student_majors.major AS majors,
+                    boac_advising_asc.students.intensive AS intensive_asc,
                     boac_advising_coe.students.advisor_ldap_uid AS advisor,
                     boac_advising_coe.students.gender AS gender,
                     boac_advising_coe.students.ethnicity AS ethnicity,
@@ -263,10 +277,11 @@ class NessieUtils < Utils
                     boac_advising_coe.students.did_tprep AS t_prep,
                     boac_advising_coe.students.tprep_eligible AS t_prep_elig,
                     boac_advising_coe.students.probation AS probation,
-                    boac_advising_coe.students.status AS status
+                    boac_advising_coe.students.status AS status_coe
              FROM student.student_profiles
              LEFT JOIN student.student_majors ON student.student_majors.sid = student.student_profiles.sid
              LEFT JOIN student.student_academic_status ON student.student_academic_status.sid = student.student_profiles.sid
+             LEFT JOIN boac_advising_asc.students ON boac_advising_asc.students.sid = student.student_profiles.sid
              LEFT JOIN boac_advising_coe.students ON boac_advising_coe.students.sid = student.student_profiles.sid
              ORDER BY sid;'
 
@@ -300,6 +315,7 @@ class NessieUtils < Utils
         :units_completed => (cumulative_units ? cumulative_units : nil),
         :major => (v.map { |h| h['majors'] }),
         :expected_grad_term_id => (expected_grad && expected_grad['id']),
+        :intensive_asc => v[0]['intensive_asc'],
         :advisor => v[0]['advisor'],
         :gender => v[0]['gender'],
         :ethnicity => v[0]['ethnicity'],
@@ -308,7 +324,7 @@ class NessieUtils < Utils
         :prep_elig => (v[0]['prep_elig'] == 't'),
         :t_prep => (v[0]['t_prep'] == 't'),
         :t_prep_elig => (v[0]['t_prep_elig'] == 't'),
-        :inactive_coe => %w(D P U W X Z).include?(v[0]['status']),
+        :inactive_coe => %w(D P U W X Z).include?(v[0]['status_coe']),
         :probation_coe => (v[0]['probation'] == 't')
       }
     end
@@ -328,8 +344,7 @@ class NessieUtils < Utils
         :last_name => user.last_name,
         :last_name_sortable => user.last_name.gsub(/\W/, '').downcase,
         :squad_names => user_squad_names,
-        :active_asc => user.active_asc,
-        :intensive_asc => user.intensive_asc
+        :active_asc => user.active_asc
       }
       user_hash.merge! addl_user_data if user_hash
       user_hash
