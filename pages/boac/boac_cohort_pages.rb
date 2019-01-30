@@ -45,7 +45,7 @@ module BOACCohortPages
     logger.info "Canceling the deletion of cohort #{cohort.name}"
     wait_for_load_and_click delete_cohort_button_element
     wait_for_update_and_click cancel_delete_button_element
-    cancel_delete_button_element.when_not_present Utils.short_wait
+    cancel_delete_button_element.when_not_visible Utils.short_wait
     wait_until(1) { current_url.include? cohort.id }
   end
 
@@ -62,7 +62,7 @@ module BOACCohortPages
   # @param user [User]
   # @return [String]
   def cohort_list_view_user_level(user)
-    el = span_element(xpath: "#{cohort_list_view_user_xpath user}//*[@data-ng-bind='student.level']")
+    el = div_element(id: "student-#{user.sis_id}-level")
     el.text if el.exists?
   end
 
@@ -71,7 +71,7 @@ module BOACCohortPages
   # @param user [User]
   # @return [Array<String>]
   def cohort_list_view_user_majors(driver, user)
-    els = driver.find_elements(xpath: "#{cohort_list_view_user_xpath user}//div[@data-ng-bind='major']")
+    els = driver.find_elements(xpath: "//span[contains(@id,\"student-#{user.sis_id}-major\")]")
     els.map &:text if els.any?
   end
 
@@ -80,7 +80,7 @@ module BOACCohortPages
   # @param user [User]
   # @return [Array<String>]
   def cohort_list_view_user_sports(driver, user)
-    els = driver.find_elements(xpath: "#{cohort_list_view_user_xpath user}//div[@data-ng-bind='membership.groupName']")
+    els = driver.find_elements(xpath: "//span[contains(@id,\"student-#{user.sis_id}-team\")]")
     els.map &:text if els.any?
   end
 
@@ -91,10 +91,10 @@ module BOACCohortPages
   def visible_sis_data(driver, user)
     wait_until(Utils.medium_wait) { player_link_elements.any? }
     wait_until(Utils.short_wait) { cohort_list_view_user_level(user) }
-    gpa_el = div_element(xpath: "#{cohort_list_view_user_xpath user}//span[contains(@data-ng-bind,'student.cumulativeGPA')]")
-    term_units_el = div_element(xpath: "#{cohort_list_view_user_xpath user}//div[contains(@data-ng-bind,'student.term.enrolledUnits')]")
-    cumul_units_el = div_element(xpath: "#{cohort_list_view_user_xpath user}//div[contains(@data-ng-bind,'student.cumulativeUnits')]")
-    class_els = driver.find_elements(xpath: "#{cohort_list_view_user_xpath user}//div[@data-ng-bind='enrollment.displayName']")
+    gpa_el = div_element(id: "student-#{user.sis_id}-cumulative-gpa")
+    term_units_el = div_element(xpath: "#{cohort_list_view_user_xpath user}//div[text()='Units in Progress']/preceding-sibling::div")
+    cumul_units_el = div_element(id: "student-#{user.sis_id}-cumulative-units")
+    class_els = driver.find_elements(xpath: "#{cohort_list_view_user_xpath user}//td[contains(@class,'cohort-course-activity-course-name')]/div")
     {
       :level => cohort_list_view_user_level(user),
       :majors => cohort_list_view_user_majors(driver, user),

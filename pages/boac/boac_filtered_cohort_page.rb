@@ -114,6 +114,7 @@ class BOACFilteredCohortPage
   button(:show_filters_button, xpath: "//button[contains(.,'Show Filters')]")
 
   button(:new_filter_button, xpath: '//button[contains(.,"New Filter")]')
+  button(:new_sub_filter_button, xpath: '//div[contains(@id,"filter-row-dropdown-secondary")]//button')
   elements(:new_filter_option, :link, class: 'dropdown-item')
   elements(:new_filter_initial_input, :text_area, class: 'filter-range-input')
   button(:unsaved_filter_add_button, id: 'unsaved-filter-add')
@@ -149,7 +150,7 @@ class BOACFilteredCohortPage
       wait_for_element_and_type(new_filter_initial_input_elements[1], filter_option.split[1])
     # All others require a selection
     else
-      wait_for_update_and_click sub_option_element(filter_name, filter_option)
+      wait_for_update_and_click new_sub_filter_button_element
       option_element = (filter_name == 'Advisor') ? new_filter_advisor_option(filter_option) : link_element(text: filter_option)
       wait_for_update_and_click option_element
     end
@@ -301,7 +302,7 @@ class BOACFilteredCohortPage
     if cohort.search_criteria.major && cohort.search_criteria.major.any?
       wait_for_update_and_click new_filter_button_element
       wait_for_update_and_click new_filter_option('Major')
-      wait_for_update_and_click sub_option_element('Major', 'Letters & Sci Undeclared UG')
+      wait_for_update_and_click new_sub_filter_button_element
       sleep Utils.click_wait
       filters_missing = []
       cohort.search_criteria.major.each { |major| filters_missing << major unless new_filter_option(major).exists? }
@@ -312,7 +313,7 @@ class BOACFilteredCohortPage
     if cohort.search_criteria.team && cohort.search_criteria.team.any?
       wait_for_update_and_click new_filter_button_element
       wait_for_update_and_click new_filter_option('Team')
-      wait_for_update_and_click sub_option_element('Team', 'Football, Quarterbacks')
+      wait_for_update_and_click new_sub_filter_button_element
       sleep Utils.click_wait
       filters_missing = []
       cohort.search_criteria.team.each { |squad| filters_missing << squad unless new_filter_option(squad.name).exists? }

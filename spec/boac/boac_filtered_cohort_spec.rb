@@ -293,6 +293,7 @@ describe 'BOAC', order: :defined do
 
     it 'truncates a title over 255 characters' do
       cohort = FilteredCohort.new({name: "#{test.id}#{'A loooooong title ' * 15}?"})
+      @homepage.load_page
       @homepage.click_sidebar_create_filtered
       @cohort_page.perform_search(test.searches.first, test)
       @cohort_page.save_and_name_cohort cohort

@@ -10,7 +10,7 @@ module BOACAddCuratedSelectorPages
   # Selector 'create' and 'add student(s)' UI shared by list view pages (filtered cohort page and class page)
   button(:selector_create_curated_button, id: 'create-curated-group')
   checkbox(:add_all_to_curated_checkbox, id: 'add-all-to-curated-group')
-  elements(:add_individual_to_curated_checkbox, :checkbox, xpath: "//input[contains(@id,'curated-cohort-checkbox')]")
+  elements(:add_individual_to_curated_checkbox, :checkbox, xpath: "//input[contains(@id,'curated-group-checkbox')]")
   span(:add_to_curated_button, id: 'add-to-curated-group')
   button(:added_to_curated_conf, id: 'add-to-curated-group-confirmation')
 
@@ -27,7 +27,7 @@ module BOACAddCuratedSelectorPages
   def select_group_and_add(students, group)
     logger.info "Selecting group #{group.name}"
     wait_for_update_and_click add_to_curated_button_element
-    wait_for_update_and_click checkbox_element(xpath: "//span[text()='#{group.name}']/preceding-sibling::input")
+    wait_for_update_and_click checkbox_element(id: "curated-group-#{group.id}-checkbox")
     added_to_curated_conf_element.when_visible Utils.short_wait
     group.members << students
     group.members.flatten!

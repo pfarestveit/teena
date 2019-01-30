@@ -23,7 +23,6 @@ describe 'An admin using BOAC' do
     @homepage = BOACHomePage.new @driver
     @search_page = BOACSearchResultsPage.new @driver
     @student_page = BOACStudentPage.new @driver
-    @teams_page = BOACTeamsListPage.new @driver
 
     @homepage.dev_auth test.advisor
   end
