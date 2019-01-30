@@ -14,6 +14,10 @@ class NessieUtils < Utils
     }
   end
 
+  def self.nessie_env
+    nessie_db_credentials[:name][7..-1]
+  end
+
   # The number of hours that synced Canvas data is behind actual site usage data
   def self.canvas_data_lag_hours
     @config['canvas_data_lag_hours']
@@ -111,17 +115,20 @@ class NessieUtils < Utils
     # Get a separate set of student users for each department
     asc_students = student_result_to_users(query_all_asc_students, BOACDepartments::ASC)
     coe_students = student_result_to_users(query_all_coe_students, BOACDepartments::COE)
+    physics_students = student_result_to_users(query_all_physics_students, BOACDepartments::PHYSICS)
 
     # Find students served by more than one department and merge their attributes into a new user
-    all_students = asc_students + coe_students
-    logger.info "There are #{asc_students.length} ASC students and #{coe_students.length} CoE students, for a total of #{all_students.length}"
+    all_students = asc_students + coe_students + physics_students
+    logger.info "There are #{asc_students.length} ASC students, #{coe_students.length} CoE students, and #{physics_students.length} Physics students, for a total of #{all_students.length}"
     merged_students = []
     all_students.group_by { |s| s.uid }.map do |k,v|
       if v.length > 1
         depts = (v.map &:depts).flatten
         athlete = v.find { |i| i.sports.any? }
-        active_asc = athlete.active_asc
-        sports = athlete.sports
+        if athlete
+          active_asc = athlete.active_asc
+          sports = athlete.sports
+        end
 
         attributes = {
             :uid => k,
@@ -150,7 +157,6 @@ class NessieUtils < Utils
   # Returns all ASC students
   # @return [PG::Result]
   def self.query_all_asc_students
-    env = nessie_db_credentials[:name][7..-1]
     query = "SELECT students.sid AS sid,
                     students.active AS active_asc,
                     students.group_code AS group_code,
@@ -158,7 +164,7 @@ class NessieUtils < Utils
                     persons.first_name AS first_name,
                     persons.last_name AS last_name
              FROM boac_advising_asc.students
-             JOIN calnet_ext_#{env}.persons ON calnet_ext_#{env}.persons.sid = boac_advising_asc.students.sid
+             JOIN calnet_ext_#{nessie_env}.persons ON calnet_ext_#{nessie_env}.persons.sid = boac_advising_asc.students.sid
              ORDER BY students.sid;"
     Utils.query_redshift_db(nessie_db_credentials, query)
   end
@@ -198,13 +204,12 @@ class NessieUtils < Utils
   # Returns all CoE students
   # @return [PG::Result]
   def self.query_all_coe_students
-    env = nessie_db_credentials[:name][7..-1]
     query = "SELECT students.sid AS sid,
                     persons.ldap_uid AS uid,
                     persons.first_name AS first_name,
                     persons.last_name AS last_name
              FROM boac_advising_coe.students
-             JOIN calnet_ext_#{env}.persons ON calnet_ext_#{env}.persons.sid = boac_advising_coe.students.sid
+             JOIN calnet_ext_#{nessie_env}.persons ON calnet_ext_#{nessie_env}.persons.sid = boac_advising_coe.students.sid
              ORDER BY students.sid;"
     Utils.query_redshift_db(nessie_db_credentials, query)
   end
@@ -221,6 +226,19 @@ class NessieUtils < Utils
     result = Utils.query_redshift_db(nessie_db_credentials, query)
     result = result.map { |r| r['sid'] }
     all_coe_students.select { |s| result.include? s.sis_id }
+  end
+
+  # Returns all Physics students
+  # @return [PG::Result]
+  def self.query_all_physics_students
+    query = "SELECT students.sid AS sid,
+                    persons.ldap_uid AS uid,
+                    persons.first_name AS first_name,
+                    persons.last_name AS last_name
+             FROM boac_advising_physics.students
+             JOIN calnet_ext_#{nessie_env}.persons ON calnet_ext_#{nessie_env}.persons.sid = boac_advising_physics.students.sid
+             ORDER BY students.sid;"
+    Utils.query_redshift_db(nessie_db_credentials, query)
   end
 
   # SEARCHABLE STUDENT DATA

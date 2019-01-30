@@ -22,6 +22,8 @@ class BOACTestConfig < TestConfig
       when BOACDepartments::COE
         uid = CONFIG['test_coe_advisor_uid']
         @advisor = uid ? (advisors.find { |a| a.uid.to_i == uid }) : advisors.first
+      when BOACDepartments::PHYSICS
+        @advisor = advisors.first
       else
         logger.error 'What kinda department is that??'
         fail
