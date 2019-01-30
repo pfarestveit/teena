@@ -6,8 +6,6 @@ describe 'BOAC' do
 
   test_config = BOACTestConfig.new
   test_config.user_search NessieUtils.get_all_students
-  # Avoid using ASC 'inactive' students since they won't be visible if the dept is ASC
-  test_config.max_cohort_members.keep_if &:active_asc if test_config.dept == BOACDepartments::ASC
 
   before(:all) do
     @driver = Utils.launch_browser test_config.chrome_profile

@@ -191,7 +191,14 @@ class BOACTestConfig < TestConfig
   def user_search(all_students)
     set_global_configs all_students
     set_default_cohort CONFIG['user_search_team']
-    @cohort_members.keep_if &:active_asc if @dept == BOACDepartments::ASC
+    if @dept == BOACDepartments::ASC
+      @cohort_members.keep_if &:active_asc if @dept == BOACDepartments::ASC
+    elsif @dept == BOACDepartments::COE
+      searchable_data = Nessie_Utils.get_user_searchable_data all_students
+      non_inactive_coe_data = searchable_data.reject { |d| d[:inactive_coe] }
+      non_inactive_coe_sids = non_inactive_coe_data.map { |d| d[:sid] }
+      @cohort_members.keep_if { |m| non_inactive_coe_sids.include? m.sis_id }
+    end
     set_max_cohort_members CONFIG['user_search_max_users']
   end
 

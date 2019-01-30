@@ -14,7 +14,6 @@ describe 'An ASC advisor' do
   test_coe.user_role_coe all_students
 
   asc_inactive_students = test_asc.dept_students.reject &:active_asc
-  asc_intensive_students = test_asc.dept_students.select &:intensive_asc
 
   overlap_students = test_asc.dept_students & test_coe.dept_students
   coe_only_students = test_coe.dept_students - overlap_students
@@ -37,11 +36,6 @@ describe 'An ASC advisor' do
     @inactive_student_sids = asc_inactive_students.map &:sis_id
     @inactive_student_search_data = @asc_student_search_data.select { |d| @inactive_student_sids.include? d[:sid] }
     logger.debug "There are #{@inactive_student_search_data.length} inactive students"
-
-    @intensive_student_sids = asc_intensive_students.map &:sis_id
-    @intensive_student_search_data = @asc_student_search_data.select { |d| @intensive_student_sids.include? d[:sid] }
-    @intensive_student_search_data.delete_if { |d| @inactive_student_sids.include? d[:sid] }
-    logger.debug "There are #{@intensive_student_search_data.length} active intensive students"
 
     @homepage.dev_auth test_asc.advisor
   end
@@ -73,7 +67,9 @@ describe 'An ASC advisor' do
     it 'sees only filtered cohorts created by ASC advisors' do
       expected_cohort_names = BOACUtils.get_everyone_filtered_cohorts(BOACDepartments::ASC).map(&:id).sort
       visible_cohort_names = (@filtered_cohort_page.visible_everyone_cohorts.map &:id).sort
-      @filtered_cohort_page.wait_until(1, "Expected #{expected_cohort_names}, but got #{visible_cohort_names}") { visible_cohort_names == expected_cohort_names }
+      @filtered_cohort_page.wait_until(1, "Expected but not present: #{expected_cohort_names - visible_cohort_names}. Present but not expected: #{visible_cohort_names - expected_cohort_names}") do
+        visible_cohort_names == expected_cohort_names
+      end
     end
 
     it 'cannot hit a non-ASC filtered cohort URL' do
@@ -148,7 +144,9 @@ describe 'An ASC advisor' do
     it 'sees all inactive students' do
       expected_results = @inactive_student_sids.sort
       visible_results = @filtered_cohort_page.visible_sids.sort
-      @filtered_cohort_page.wait_until(1, "Expected #{expected_results}, but got #{visible_results}") { visible_results == expected_results }
+      @filtered_cohort_page.wait_until(1, "Expected but not present: #{expected_results - visible_results}. Present but not expected: #{visible_results - expected_results}") do
+        visible_results == expected_results
+      end
     end
 
     it 'sees an inactive indicator on the cohort page' do

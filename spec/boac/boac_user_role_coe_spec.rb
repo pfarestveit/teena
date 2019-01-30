@@ -15,6 +15,8 @@ describe 'A CoE advisor using BOAC' do
 
   overlap_students = test_asc.dept_students & test_coe.dept_students
   asc_only_students = test_asc.dept_students - overlap_students
+  inactive_coe_search_data = all_student_search_data.select { |d| d[:inactive_coe] }
+  inactive_coe_sids = inactive_coe_search_data.map { |d| d[:sid] }
 
   coe_everyone_filters = BOACUtils.get_everyone_filtered_cohorts test_coe.dept
 
@@ -48,7 +50,9 @@ describe 'A CoE advisor using BOAC' do
     it 'sees only filtered cohorts created by CoE advisors' do
       expected_cohort_names = coe_everyone_filters.map(&:id).sort
       visible_cohort_names = (@filtered_cohort_page.visible_everyone_cohorts.map &:id).sort
-      @filtered_cohort_page.wait_until(1, "Expected #{expected_cohort_names}, but got #{visible_cohort_names}") { visible_cohort_names == expected_cohort_names }
+      @filtered_cohort_page.wait_until(1, "Expected but not present: #{expected_cohort_names - visible_cohort_names}. Present but not expected: #{visible_cohort_names - expected_cohort_names}") do
+        visible_cohort_names == expected_cohort_names
+      end
     end
 
     it 'cannot hit a non-CoE filtered cohort URL' do
@@ -70,6 +74,12 @@ describe 'A CoE advisor using BOAC' do
       @search_page.search overlap_students.first.sis_id
       expect(@search_page.student_search_results_count).to eql(1)
     end
+
+    it 'sees no inactive CoE students in search results' do
+      @search_page.search inactive_coe_sids.first
+      @search_page.no_results_msg(inactive_coe_sids.first).when_visible Utils.short_wait
+    end
+
   end
 
   context 'performing a filtered cohort search' do
@@ -102,8 +112,10 @@ describe 'A CoE advisor using BOAC' do
     it 'sees only CoE student data in a section endpoint' do
       api_section_page = BOACApiSectionPage.new @driver
       api_section_page.get_data(@driver, '2178', '13826')
-      api_section_page.wait_until(1, "Expected #{test_coe.dept_students.map(&:sis_id).sort & api_section_page.student_sids}, but got #{api_section_page.student_sids.sort}") do
-        expect(test_coe.dept_students.map(&:sis_id).sort & api_section_page.student_sids).to eql(api_section_page.student_sids.sort)
+      expected_sids = test_coe.dept_students.map(&:sis_id).sort & api_section_page.student_sids
+      visible_sids = api_section_page.student_sids.sort
+      api_section_page.wait_until(1, "Expected but not present: #{expected_sids - visible_sids}. Present but not expected: #{visible_sids - expected_sids}") do
+        expect(expected_sids).to eql(visible_sids)
       end
     end
   end
