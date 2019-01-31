@@ -103,7 +103,7 @@ class Utils
     # Before quitting, log any JS errors (or other console messages) encountered during the browser session
     js_log = driver.manage.logs.get(:browser)
     messages = js_log.map &:message
-    messages.each { |msg| logger.error "Possible JS error: #{msg}" }
+    messages.each { |msg| logger.error "Possible JS error: #{msg}" unless msg.include? 'chrome-search://thumb/' }
 
     # If the browser did not start successfully, the quit method will fail.
     driver.quit rescue NoMethodError

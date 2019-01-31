@@ -9,37 +9,32 @@ module BOACListViewPages
 
   ### PAGINATION ###
 
-  elements(:page_link, :link, xpath: '//a[contains(@ng-click, "selectPage")]')
-  elements(:page_ellipsis_link, :link, xpath: '//a[contains(@ng-click, "selectPage")][text()="..."]')
-  elements(:results_page_link, xpath: '//ul[@id="pagination-widget"]//a[contains(@class,"page-link")]')
+  link(:page_one_link, xpath: '//a[@aria-label="Goto page 1"]')
+  link(:go_to_first_page_link, xpath: '//a[@aria-label="Goto first page"]')
+  link(:go_to_next_page_link, xpath: '//a[@aria-label="Goto next page"]')
+  link(:go_to_last_page_link, xpath: '//a[@aria-label="Goto last page"]')
+  elements(:go_to_page_link, :link, xpath: '//a[contains(@aria-label,"Goto page")]')
 
-  # Returns the page link element for a given page number
-  # @param number [Integer]
-  # @return [PageObject::Elements::Link]
-  def list_view_page_link(number)
-    link_element(xpath: "//ul[@id='pagination-widget']//a[contains(@class,'page-link')][text()='#{number}']")
+  # Clicks the go-to-first-page link and waits till page one is loaded
+  def go_to_first_page
+    wait_for_update_and_click go_to_first_page_link_element if go_to_first_page_link?
+    page_one_link_element.when_visible Utils.short_wait
+    wait_until(Utils.short_wait) { page_one_link_element.attribute('aria-checked') }
   end
 
   # Returns the number of list view pages shown
   # @return [Integer]
   def list_view_page_count
-    if results_page_link_elements.any?
-      pages = results_page_link_elements.map(&:text).delete_if(&:empty?)
-      pages.last.to_i
+    if go_to_last_page_link?
+      wait_for_update_and_click go_to_last_page_link_element
+      wait_until(1) { go_to_page_link_elements.empty? }
+      wait_until(Utils.short_wait) { go_to_page_link_elements.any? }
+      count = go_to_page_link_elements.last.text.to_i
+      go_to_first_page
+      count
     else
       1
     end
-  end
-
-  # Clicks a given page number and waits for student rows to appear
-  # @param number [Integer]
-  def click_list_view_page(number)
-    logger.debug "Clicking page #{number}"
-    list_view_page_link(number).exists? ?
-        (wait_for_update_and_click list_view_page_link(number)) :
-        (wait_for_update_and_click page_ellipsis_link_elements.last)
-    sleep 1
-    wait_until(Utils.medium_wait) { player_link_elements.any? }
   end
 
   ### SETS OF USERS ###
@@ -99,7 +94,8 @@ module BOACListViewPages
       (page_count - 1).times do
         start_time = Time.now
         page += 1
-        click_list_view_page page
+        wait_for_update_and_click go_to_next_page_link_element
+        wait_until(Utils.medium_wait) { player_link_elements.any? }
         logger.warn "Page #{page} took #{Time.now - start_time} seconds to load" unless page == 1
         visible_sids << list_view_sids
       end
