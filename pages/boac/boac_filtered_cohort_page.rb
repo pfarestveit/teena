@@ -151,7 +151,7 @@ class BOACFilteredCohortPage
     # All others require a selection
     else
       wait_for_update_and_click new_sub_filter_button_element
-      option_element = (filter_name == 'Advisor') ? new_filter_advisor_option(filter_option) : link_element(text: filter_option)
+      option_element = (filter_name == 'Advisor') ? new_filter_advisor_option(filter_option) : link_element(xpath: "//a[contains(text(),\"#{filter_option}\")]")
       wait_for_update_and_click option_element
     end
   end
@@ -359,10 +359,9 @@ class BOACFilteredCohortPage
   # Filters an array of user data hashes according to search criteria and returns the users that should be present in the UI after
   # the search completes
   # @param test [BOACTestConfig]
-  # @param user_data [Array<Hash>]
   # @param search_criteria [CohortFilter]
   # @return [Array<Hash>]
-  def expected_search_results(test, user_data, search_criteria)
+  def expected_search_results(test, search_criteria)
 
     # GPA
     matching_gpa_users = []
@@ -371,7 +370,7 @@ class BOACFilteredCohortPage
         array = range.include?('Below') ? %w(0 2.0) : range.delete(' ').split('-')
         low_end = array[0]
         high_end = array[1]
-        matching_gpa_users << user_data.select do |u|
+        matching_gpa_users << test.searchable_data.select do |u|
           if u[:gpa]
             gpa = u[:gpa].to_f
             (gpa != 0) && (low_end.to_f <= gpa) && ((high_end == '4.00') ? (gpa <= high_end.to_f.round(1)) : (gpa < high_end.to_f.round(1)))
@@ -379,17 +378,17 @@ class BOACFilteredCohortPage
         end
       end
     else
-      matching_gpa_users = user_data
+      matching_gpa_users = test.searchable_data
     end
     matching_gpa_users.flatten!
 
     # Level
     matching_level_users = if search_criteria.level && search_criteria.level.any?
-                             user_data.select do |u|
+                             test.searchable_data.select do |u|
                                search_criteria.level.find { |search_level| search_level.include? u[:level] } if u[:level]
                              end
                            else
-                             user_data
+                             test.searchable_data
                            end
 
     # Units
@@ -397,66 +396,66 @@ class BOACFilteredCohortPage
     if search_criteria.units_completed
       search_criteria.units_completed.each do |units|
         if units.include?('+')
-          matching_units_users << user_data.select { |u| u[:units_completed].to_f >= 120 if u[:units_completed] }
+          matching_units_users << test.searchable_data.select { |u| u[:units_completed].to_f >= 120 if u[:units_completed] }
         else
           range = units.split(' - ')
           low_end = range[0].to_f
           high_end = range[1].to_f
-          matching_units_users << user_data.select { |u| (u[:units_completed].to_f >= low_end) && (u[:units_completed].to_f < high_end.round(-1)) }
+          matching_units_users << test.searchable_data.select { |u| (u[:units_completed].to_f >= low_end) && (u[:units_completed].to_f < high_end.round(-1)) }
         end
       end
     else
-      matching_units_users = user_data
+      matching_units_users = test.searchable_data
     end
     matching_units_users.flatten!
 
     # Major
     matching_major_users = []
     (search_criteria.major && search_criteria.major.any?) ?
-        (matching_major_users << user_data.select { |u| (u[:major] & search_criteria.major).any? }) :
-        (matching_major_users = user_data)
+        (matching_major_users << test.searchable_data.select { |u| (u[:major] & search_criteria.major).any? }) :
+        (matching_major_users = test.searchable_data)
     matching_major_users = matching_major_users.uniq.flatten.compact
 
     # Last Name
     matching_last_name_users = if search_criteria.last_name
-                                 user_data.select { |u| u[:last_name_sortable][0] >= search_criteria.last_name.split[0].downcase && u[:last_name_sortable][0] <= search_criteria.last_name.split[1].downcase }
+                                 test.searchable_data.select { |u| u[:last_name_sortable][0] >= search_criteria.last_name.split[0].downcase && u[:last_name_sortable][0] <= search_criteria.last_name.split[1].downcase }
                                else
-                                 user_data
+                                 test.searchable_data
                                end
 
     # Advisor
     matching_advisor_users = (search_criteria.advisor && search_criteria.advisor.any?) ?
-        (user_data.select { |u| search_criteria.advisor.include? u[:advisor] }) : user_data
+        (test.searchable_data.select { |u| search_criteria.advisor.include? u[:advisor] }) : test.searchable_data
 
     # Ethnicity
     matching_ethnicity_users = []
     if search_criteria.ethnicity && search_criteria.ethnicity.any?
       search_criteria.ethnicity.each do |ethnicity|
-        matching_ethnicity_users << user_data.select { |u| search_criteria.coe_ethnicity(u[:ethnicity]) == ethnicity }
+        matching_ethnicity_users << test.searchable_data.select { |u| search_criteria.coe_ethnicity(u[:ethnicity]) == ethnicity }
       end
     else
-      matching_ethnicity_users = user_data
+      matching_ethnicity_users = test.searchable_data
     end
     matching_ethnicity_users.flatten!
 
     # Underrepresented Minority
-    matching_minority_users = search_criteria.underrepresented_minority ? (user_data.select { |u| u[:underrepresented_minority] }) : user_data
+    matching_minority_users = search_criteria.underrepresented_minority ? (test.searchable_data.select { |u| u[:underrepresented_minority] }) : ustest.searchable_dataer_data
 
     # Gender
     matching_gender_users = []
     if search_criteria.gender && search_criteria.gender.any?
       search_criteria.gender.each do |gender|
         if gender == 'Male'
-          matching_gender_users << user_data.select { |u| u[:gender] == 'm' }
+          matching_gender_users << test.searchable_data.select { |u| u[:gender] == 'm' }
         elsif gender == 'Female'
-          matching_gender_users << user_data.select { |u| u[:gender] == 'f' }
+          matching_gender_users << test.searchable_data.select { |u| u[:gender] == 'f' }
         else
           logger.error "Test data has an unrecognized gender '#{gender}'"
           fail
         end
       end
     else
-      matching_gender_users = user_data
+      matching_gender_users = test.searchable_data
     end
     matching_gender_users.flatten!
 
@@ -464,40 +463,40 @@ class BOACFilteredCohortPage
     matching_preps_users = []
     if search_criteria.prep && search_criteria.prep.any?
       search_criteria.prep.each do |prep|
-        matching_preps_users << user_data.select { |u| u[:prep] } if prep == 'PREP'
-        matching_preps_users << user_data.select { |u| u[:prep_elig] } if prep == 'PREP eligible'
-        matching_preps_users << user_data.select { |u| u[:t_prep] } if prep == 'T-PREP'
-        matching_preps_users << user_data.select { |u| u[:t_prep_elig] } if prep == 'T-PREP eligible'
+        matching_preps_users << test.searchable_data.select { |u| u[:prep] } if prep == 'PREP'
+        matching_preps_users << test.searchable_data.select { |u| u[:prep_elig] } if prep == 'PREP eligible'
+        matching_preps_users << test.searchable_data.select { |u| u[:t_prep] } if prep == 'T-PREP'
+        matching_preps_users << test.searchable_data.select { |u| u[:t_prep_elig] } if prep == 'T-PREP eligible'
       end
     else
-      matching_preps_users = user_data
+      matching_preps_users = test.searchable_data
     end
     matching_preps_users.flatten!
 
     # Inactive COE
     matching_inactive_coe_users = if search_criteria.inactive_coe
-                                    (user_data.select { |u| u[:inactive_coe] })
+                                    (test.searchable_data.select { |u| u[:inactive_coe] })
                                   else
-                                    (test.dept == BOACDepartments::COE) ? (user_data.reject { |u| u[:inactive_coe] }) : user_data
+                                    (test.dept == BOACDepartments::COE) ? (test.searchable_data.reject { |u| u[:inactive_coe] }) : test.searchable_data
                                   end
 
     # Probation COE
-    matching_probation_asc_users = search_criteria.probation_coe ? (user_data.select { |u| u[:probation_asc] }) : user_data
+    matching_probation_asc_users = search_criteria.probation_coe ? (test.searchable_data.select { |u| u[:probation_asc] }) : test.searchable_data
 
     # Inactive ASC
     matching_inactive_asc_users = if search_criteria.inactive_asc
-                                    (user_data.select { |u| u[:inactive_asc] })
+                                    (test.searchable_data.select { |u| u[:inactive_asc] })
                                   else
-                                    (test.dept == BOACDepartments::ASC) ? (user_data.reject { |u| u[:inactive_asc] }) : user_data
+                                    (test.dept == BOACDepartments::ASC) ? (test.searchable_data.reject { |u| u[:inactive_asc] }) : test.searchable_data
                                   end
 
     # Intensive ASC
-    matching_intensive_asc_users = search_criteria.intensive_asc ? (user_data.select { |u| u[:intensive_asc] }) : user_data
+    matching_intensive_asc_users = search_criteria.intensive_asc ? (test.searchable_data.select { |u| u[:intensive_asc] }) : test.searchable_data
 
     # Team
     matching_squad_users = (search_criteria.team && search_criteria.team.any?) ?
-        (user_data.select { |u| (u[:squad_names] & (search_criteria.team.map { |s| s.name })).any? }) :
-        user_data
+        (test.searchable_data.select { |u| (u[:squad_names] & (search_criteria.team.map { |s| s.name })).any? }) :
+        test.searchable_data
 
     matches = [matching_gpa_users, matching_level_users, matching_units_users, matching_major_users,
                matching_last_name_users, matching_advisor_users, matching_ethnicity_users, matching_minority_users,

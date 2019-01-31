@@ -2,9 +2,17 @@ class BOACTestConfig < TestConfig
 
   include Logging
 
-  attr_accessor :dept, :advisor, :term, :dept_students, :searches, :default_cohort, :cohort_members, :max_cohort_members
-
   CONFIG = BOACUtils.config
+
+  attr_accessor :advisor,
+                :cohort_members,
+                :default_cohort,
+                :dept,
+                :dept_students,
+                :max_cohort_members,
+                :searchable_data,
+                :searches,
+                :term
 
   # Basic settings for department, advisor, and student population under test. Specifying a department will override the
   # department in the settings file.
@@ -37,11 +45,12 @@ class BOACTestConfig < TestConfig
                          (s.depts.select { |d| d == @dept }).any?
                        end
                      end
+
+    @searchable_data = NessieUtils.applicable_user_search_data(all_students, self)
   end
 
   # Sets an existing cohort to use for testing, e.g., a team for ASC and admin or My Students for CoE
-  # @param team_config [String]
-  def set_default_cohort(team_config)
+  def set_default_cohort
     case @dept
       # For CoE, use the advisor's assigned students
       when BOACDepartments::COE
@@ -49,9 +58,21 @@ class BOACTestConfig < TestConfig
         filter.advisor = [@advisor.uid]
         @default_cohort = FilteredCohort.new({:search_criteria => filter})
         @cohort_members = NessieUtils.get_coe_advisor_students(@advisor, @dept_students)
+
+      # For Physics, use students of configured levels
+      when BOACDepartments::PHYSICS
+        filter = CohortFilter.new
+        filter.level = CONFIG['test_physics_levels']
+        @default_cohort = FilteredCohort.new({:search_criteria => filter})
+
+        dept_student_sids = @dept_students.map &:sis_id
+        filtered_searchable_data = @searchable_data.select { |d| filter.level.include?(d[:level]) }
+        filtered_searchabe_sids = filtered_searchable_data.map { |d| d[:sid] }
+        @cohort_members = @dept_students.select { |s| dept_student_sids.include?(s.sis_id) && filtered_searchabe_sids.include?(s.sis_id) }
+
       # For ASC or admin, use a team
       else
-        team = NessieUtils.get_asc_teams.find { |t| t.code == team_config }
+        team = NessieUtils.get_asc_teams.find { |t| t.code == CONFIG['test_asc_team'] }
         filter = CohortFilter.new
         filter.team = Squad::SQUADS.select { |s| s.parent_team == team }
         @default_cohort = FilteredCohort.new({:search_criteria => filter})
@@ -91,7 +112,7 @@ class BOACTestConfig < TestConfig
   # @param all_students [Array<BOACUser>]
   def assignments(all_students)
     set_global_configs all_students
-    set_default_cohort CONFIG['assignments_team']
+    set_default_cohort
     set_max_cohort_members CONFIG['assignments_max_users']
   end
 
@@ -99,7 +120,7 @@ class BOACTestConfig < TestConfig
   # @param all_students [Array<BOACUser>]
   def class_pages(all_students)
     set_global_configs all_students
-    set_default_cohort CONFIG['class_page_team']
+    set_default_cohort
     set_max_cohort_members CONFIG['class_page_max_users']
   end
 
@@ -107,7 +128,7 @@ class BOACTestConfig < TestConfig
   # @param all_students [Array<BOACUser>]
   def curated_groups(all_students)
     set_global_configs all_students
-    set_default_cohort CONFIG['curated_group_team']
+    set_default_cohort
     @cohort_members.keep_if &:active_asc if @dept == BOACDepartments::ASC
     set_max_cohort_members 50
   end
@@ -145,7 +166,7 @@ class BOACTestConfig < TestConfig
   # @param all_students [Array<BOACUser>]
   def last_activity(all_students)
     set_global_configs all_students
-    set_default_cohort CONFIG['last_activity_team']
+    set_default_cohort
     set_max_cohort_members CONFIG['last_activity_max_users']
   end
 
@@ -153,7 +174,7 @@ class BOACTestConfig < TestConfig
   # @param all_students [Array<BOACUser>]
   def navigation(all_students)
     set_global_configs all_students
-    set_default_cohort CONFIG['class_page_team']
+    set_default_cohort
     set_max_cohort_members CONFIG['class_page_max_users']
   end
 
@@ -161,7 +182,7 @@ class BOACTestConfig < TestConfig
   # @param all_students [Array<BOACUser>]
   def sis_data(all_students)
     set_global_configs all_students
-    set_default_cohort CONFIG['sis_data_team']
+    set_default_cohort
     @cohort_members.keep_if &:active_asc if @dept == BOACDepartments::ASC
     set_max_cohort_members CONFIG['sis_data_max_users']
   end
@@ -184,7 +205,14 @@ class BOACTestConfig < TestConfig
   # @param all_students [Array<BOACUser>]
   def user_role_coe(all_students)
     set_global_configs(all_students, BOACDepartments::COE)
-    set_default_cohort nil
+    set_default_cohort
+    set_search_cohorts
+  end
+
+  # Config for Physics user role testing
+  # @param all_students [Array<BOACUser>]
+  def user_role_physics(all_students)
+    set_global_configs(all_students, BOACDepartments::PHYSICS)
     set_search_cohorts
   end
 
@@ -192,7 +220,7 @@ class BOACTestConfig < TestConfig
   # @param all_students [Array<BOACUser>]
   def user_search(all_students)
     set_global_configs all_students
-    set_default_cohort CONFIG['user_search_team']
+    set_default_cohort
     if @dept == BOACDepartments::ASC
       @cohort_members.keep_if &:active_asc if @dept == BOACDepartments::ASC
     elsif @dept == BOACDepartments::COE
