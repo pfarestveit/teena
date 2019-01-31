@@ -13,7 +13,7 @@ module Page
     h1(:welcome_heading, :id => 'headingText')
     link(:sign_in_link, :xpath => '//a[text()="Sign In"]')
     link(:profile_switcher, :xpath => '//div[@aria-label="Switch account"]')
-    button(:use_another_acct_link, :id => 'identifierLink')
+    button(:use_another_acct_link, :xpath => '//div[text()="Use another account"]')
     text_area(:username_input, :id => 'identifierId')
     button(:username_next_button, :id => 'identifierNext')
     text_area(:password_input, :name => 'password')
