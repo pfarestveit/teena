@@ -114,7 +114,7 @@ describe 'BOAC' do
                           it("shows only #{test.dept.name} students for #{class_test_case}") { expect(visible_sids - all_dept_student_sids).to be_empty }
 
                           # Perform further tests on the students who appear on the first page
-                          @class_page.click_list_view_page 1 unless @class_page.list_view_page_count == 1
+                          @class_page.go_to_first_page unless @class_page.list_view_page_count == 1
                           visible_students = @class_page.class_list_view_sids
                           expected_students = test.dept_students.select { |s| visible_students.include? s.sis_id }
                           expected_student_names = (expected_students.map { |u| "#{u.last_name}, #{u.first_name}" }).sort
