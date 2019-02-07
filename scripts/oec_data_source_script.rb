@@ -3,7 +3,7 @@ require 'selenium-webdriver'
 begin
 
   puts "#{Time.now} - Beginning OEC data source update script"
-  args = ARGV.to_s
+  args = ARGV
   campus_data_sources = %w(Campus_Courses Campus_Supervisors Campus_Instructors Campus_Students Campus_Course_Supervisors Campus_Course_Instructors Campus_Course_Students)
   extension_data_sources = Dir[File.join(ENV['HOME'], 'selenium-files/*.csv')] + Dir[File.join(ENV['HOME'], 'selenium-files/*.CSV')]
   @base_url = args.include?('qa') ? 'https://course-evaluations-qa.berkeley.edu' : 'https://course-evaluations.berkeley.edu'
@@ -61,11 +61,23 @@ begin
     @driver.find_element(link_text: 'Edit').click
   end
 
-  def upload_file(file)
-    puts "#{Time.now} - Uploading file '#{file}'"
-    @brief_wait.until { @driver.find_element(id: 'AdminUC_Data_ucAdminDS_Entities_File1') }
-    @driver.find_element(id: 'AdminUC_Data_ucAdminDS_Entities_File1').send_keys file
-    sleep 2
+  def upload_file(file, args)
+    @brief_wait.until { @driver.find_element(id: 'AdminUC_Data_ucAdminDS_Entities_dplConnector') }
+    select = Selenium::WebDriver::Support::Select.new @driver.find_element(id: 'AdminUC_Data_ucAdminDS_Entities_dplConnector')
+    if args.include? 'upload'
+      puts "#{Time.now} - Uploading file '#{file}'"
+      select.select_by(:value, 'CSV')
+      @brief_wait.until { @driver.find_element(id: 'AdminUC_Data_ucAdminDS_Entities_File1') }
+      @driver.find_element(id: 'AdminUC_Data_ucAdminDS_Entities_File1').send_keys file
+      sleep 2
+    else
+      path = "c:\\shares\\UNEX\\#{file.split('/').last}"
+      puts "#{Time.now} - Entering path '#{path}'"
+      select.select_by(:value, 'CSVP')
+      @brief_wait.until { @driver.find_element(id: 'AdminUC_Data_ucAdminDS_Entities_txtPath') }
+      @driver.find_element(id: 'AdminUC_Data_ucAdminDS_Entities_txtPath').clear
+      @driver.find_element(id: 'AdminUC_Data_ucAdminDS_Entities_txtPath').send_keys path
+    end
     click_element_id(@driver, 'AdminUC_Data_ucAdminDS_Entities_btnUpload')
     sleep 5
     @long_wait.until { @driver.find_element(id: 'AdminUC_Data_ucAdminDS_Entities_cbAll') }
@@ -143,19 +155,24 @@ begin
 
     # EXTENSION DATA SOURCES
     if args.include? 'extension'
-      if extension_data_sources.any?
-        extension_data_sources.each do |file|
-          begin
-            find_and_edit_source (data_source = File.basename(file)[0..-5])
-            upload_file file
-            apply_and_import_source
-            log_results(results_file, "#{Time.now} - Update succeeded for #{data_source}")
-          rescue => e
-            log_results(results_file, "#{Time.now} - Encountered an error with data source '#{data_source}'. Update failed.", e)
+      if (%w(path upload) & args).any?
+        if extension_data_sources.any?
+          extension_data_sources.each do |file|
+            begin
+              find_and_edit_source (data_source = File.basename(file)[0..-5])
+              upload_file(file, args)
+              apply_and_import_source
+              log_results(results_file, "#{Time.now} - Update succeeded for #{data_source}")
+            rescue => e
+              log_results(results_file, "#{Time.now} - Encountered an error with data source '#{data_source}'. Update failed.", e)
+            end
           end
+        else
+          puts "#{Time.now} - There are no files to upload!"
+          log_results(results_file, 'No files were uploaded for any data sources')
         end
       else
-        puts "#{Time.now} - There are no files to upload!"
+        puts "#{Time.now} - Extension requires an upload or path argument!"
         log_results(results_file, 'No files were uploaded for any data sources')
       end
     end
