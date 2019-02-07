@@ -439,7 +439,7 @@ class BOACFilteredCohortPage
     matching_ethnicity_users.flatten!
 
     # Underrepresented Minority
-    matching_minority_users = search_criteria.underrepresented_minority ? (test.searchable_data.select { |u| u[:underrepresented_minority] }) : ustest.searchable_dataer_data
+    matching_minority_users = search_criteria.underrepresented_minority ? (test.searchable_data.select { |u| u[:underrepresented_minority] }) : test.searchable_data
 
     # Gender
     matching_gender_users = []

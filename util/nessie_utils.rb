@@ -245,7 +245,7 @@ class NessieUtils < Utils
 
   # Parses a file containing searchable user data if it exists
   # @return [Array<Hash>]
-  def self.users_searchable_data
+  def self.parse_stored_searchable_data
     users_data_file = BOACUtils.searchable_data
     JSON.parse(File.read(users_data_file), {:symbolize_names => true}) if File.exist? users_data_file
   end
@@ -254,7 +254,7 @@ class NessieUtils < Utils
   # subsequent test runs.
   # @param users [Array<BOACUser>]
   # @return [Array<Hash>]
-  def self.get_user_searchable_data(users)
+  def self.get_and_store_searchable_data(users)
     logger.warn 'Cannot find a searchable user data file created today, collecting data and writing it to a file for reuse today'
 
     # Delete older searchable data files before writing the new one
@@ -356,20 +356,12 @@ class NessieUtils < Utils
     filtered_student_hashes
   end
 
-  # If special configuration exists for the test, then return only user data for the dept specified in the config; else return all.
-  # @param users_data [Array<Hash>]
-  # @param test_config [BOACTestConfig]
+  # If a current file containing student search data exists, parse and return it. Otherwise, obtain the data, write it to a
+  # file and return it
+  # @param students [Array<BOACUser>]
   # @return [Array<Hash>]
-  def self.applicable_user_search_data(all_students, test_config = nil)
-    # Get the student data relevant to all search filters and sorting
-    student_search_data = users_searchable_data
-    student_search_data = get_user_searchable_data all_students unless student_search_data
-    if test_config
-      test_config.dept_students.keep_if &:active_asc if test_config.dept == BOACDepartments::ASC
-      student_search_data.select { |u| test_config.dept_students.map(&:sis_id).include? u[:sid] }
-    else
-      student_search_data
-    end
+  def self.searchable_student_data(students)
+    get_and_store_searchable_data students unless parse_stored_searchable_data
   end
 
 end

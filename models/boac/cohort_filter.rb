@@ -52,7 +52,9 @@ class CohortFilter
       @prep = nil
       @inactive_coe = nil
       @probation_coe = nil
-    elsif [BOACDepartments::COE, BOACDepartments::PHYSICS].include? dept
+    end
+
+    if [BOACDepartments::COE, BOACDepartments::PHYSICS].include? dept
       @inactive_asc = nil
       @intensive_asc = nil
       @team = nil

@@ -14,14 +14,15 @@ class BOACTestConfig < TestConfig
                 :searches,
                 :term
 
-  # Basic settings for department, advisor, and student population under test. Specifying a department will override the
-  # department in the settings file.
-  # @param all_students [Array<BOACUser>]
+  # If a test requires a specific dept, sets that one. Otherwise, sets the globally configured dept.
   # @param dept [BOACDepartments]
-  def set_global_configs(all_students, dept = nil)
+  def set_dept(dept)
     @dept = dept ? dept : (BOACDepartments::DEPARTMENTS.find { |d| d.code == CONFIG['test_dept'] })
-    advisors = BOACUtils.get_dept_advisors @dept
+  end
 
+  # Sets the advisor to use for the dept being tested
+  def set_advisor
+    advisors = BOACUtils.get_dept_advisors @dept
     case @dept
       when BOACDepartments::ADMIN
         @advisor = BOACUser.new({:uid => Utils.super_admin_uid})
@@ -36,35 +37,63 @@ class BOACTestConfig < TestConfig
         logger.error 'What kinda department is that??'
         fail
     end
+  end
 
+  # Sets the students relevant to the dept being tested (if admin, all students)
+  # @param all_students [Array<BOACUser>]
+  def set_dept_students(all_students)
     # Admin should see all students; departments should see only their own students.
     @dept_students = if @dept == BOACDepartments::ADMIN
                        all_students
                      else
                        all_students.select do |s|
+                         # Some students belong to multiple depts
                          (s.depts.select { |d| d == @dept }).any?
                        end
                      end
-
-    @searchable_data = NessieUtils.applicable_user_search_data(all_students, self)
   end
 
-  # Sets an existing cohort to use for testing, e.g., a team for ASC and admin or My Students for CoE
+  # Returns all the searchable student data relevant to the dept being tested. Unless a current file containing all student
+  # data already exists, obtain the current data from Redshift. Then filter for the student data relevant to the dept.
+  # @param all_students [Array<BOACUser>]
+  # @return [Array<Hash>]
+  def set_student_searchable_data(all_students)
+    # Get the searchable data for all students.
+    dept_student_sids = @dept_students.map &:sis_id
+    @searchable_data = NessieUtils.searchable_student_data(all_students).select { |u| dept_student_sids.include? u[:sid] }
+
+    # Only 'active' students can be searched by ASC or CoE advisors
+    @searchable_data.keep_if { |d| d[:active_asc] } if @dept == BOACDepartments::ASC
+    @searchable_data.delete_if { |d| d[:inactive_coe] } if @dept == BOACDepartments::COE
+  end
+
+  # Basic settings for department, advisor, and student population under test. Specifying a department will override the
+  # department in the settings file.
+  # @param all_students [Array<BOACUser>]
+  # @param dept [BOACDepartments]
+  def set_global_configs(all_students, dept = nil)
+    set_dept dept
+    set_advisor
+    set_dept_students all_students
+    set_student_searchable_data all_students
+  end
+
+  # Sets a cohort to use as a default group of students for testing, e.g., a team for ASC and admin or My Students for CoE
   def set_default_cohort
+    @default_cohort = FilteredCohort.new({})
+    filter = CohortFilter.new
+
     case @dept
       # For CoE, use the advisor's assigned students
       when BOACDepartments::COE
-        filter = CohortFilter.new
         filter.advisor = [@advisor.uid]
-        @default_cohort = FilteredCohort.new({:search_criteria => filter})
+        @default_cohort.search_criteria = filter
         @cohort_members = NessieUtils.get_coe_advisor_students(@advisor, @dept_students)
 
       # For Physics, use students of configured levels
       when BOACDepartments::PHYSICS
-        filter = CohortFilter.new
         filter.level = CONFIG['test_physics_levels']
-        @default_cohort = FilteredCohort.new({:search_criteria => filter})
-
+        @default_cohort.search_criteria = filter
         dept_student_sids = @dept_students.map &:sis_id
         filtered_searchable_data = @searchable_data.select { |d| filter.level.include?(d[:level]) }
         filtered_searchabe_sids = filtered_searchable_data.map { |d| d[:sid] }
@@ -73,15 +102,13 @@ class BOACTestConfig < TestConfig
       # For ASC or admin, use a team
       else
         team = NessieUtils.get_asc_teams.find { |t| t.code == CONFIG['test_asc_team'] }
-        filter = CohortFilter.new
         filter.team = Squad::SQUADS.select { |s| s.parent_team == team }
-        @default_cohort = FilteredCohort.new({:search_criteria => filter})
+        @default_cohort.search_criteria = filter
         @cohort_members = NessieUtils.get_asc_team_members(team, @dept_students)
     end
 
     @default_cohort.name = "Default cohort #{@id}"
     @default_cohort.member_count = @cohort_members.length
-    @term = BOACUtils.assignments_term
   end
 
   # Selects only the first n cohort members for testing
@@ -108,12 +135,24 @@ class BOACTestConfig < TestConfig
     @searches = filters.map { |c| FilteredCohort.new({:name => "Test Cohort #{filters.index c} #{@id}", :search_criteria => c}) }
   end
 
+  # Uses the secondary Chrome profile if config set to true
+  # @return [String]
+  def chrome_profile
+    if Utils.use_optional_chrome_profile?
+      logger.warn 'Using the secondary Chrome profile'
+      Utils.optional_chrome_profile_dir
+    end
+  end
+
+  ### CONFIGURATION FOR SPECIFIC TEST SCRIPTS ###
+
   # Config for assignments testing
   # @param all_students [Array<BOACUser>]
   def assignments(all_students)
     set_global_configs all_students
     set_default_cohort
     set_max_cohort_members CONFIG['assignments_max_users']
+    @term = CONFIG['assignments_term']
   end
 
   # Config for class page testing
@@ -146,17 +185,28 @@ class BOACTestConfig < TestConfig
       :units_completed => ['90 - 119'],
       :major => ['Electrical Eng & Comp Sci BS'],
       :last_name => 'A Z',
-      :advisor => ([BOACUtils.get_dept_advisors(BOACDepartments::COE).first.uid.to_s] unless @dept == BOACDepartments::ASC),
-      :ethnicity => (['Chinese / Chinese-American'] unless @dept == BOACDepartments::ASC),
-      :gender => (['Female'] unless @dept == BOACDepartments::ASC),
-      :underrepresented_minority => (true unless @dept == BOACDepartments::ASC),
-      :prep => (['PREP'] unless @dept == BOACDepartments::ASC),
-      :inactive_coe => (true unless @dept == BOACDepartments::ASC),
-      :probation_coe => (true unless @dept == BOACDepartments::ASC),
-      :inactive_asc => (true unless @dept == BOACDepartments::COE),
-      :intensive_asc => (true unless @dept == BOACDepartments::COE),
-      :team => ([Squad::MCR] unless @dept == BOACDepartments::COE)
     }
+
+    if [BOACDepartments::ASC, BOACDepartments::ADMIN].include? @dept
+      filters.merge!({
+                         :inactive_asc => true,
+                         :intensive_asc => true,
+                         :team => [Squad::MCR]
+                    })
+    end
+
+    if [BOACDepartments::COE, BOACDepartments::ADMIN].include? @dept
+      filters.merge!({
+                         :advisor => [BOACUtils.get_dept_advisors(BOACDepartments::COE).first.uid.to_s],
+                         :ethnicity => ['Chinese / Chinese-American'],
+                         :gender => ['Female'],
+                         :underrepresented_minority => true,
+                         :prep => ['PREP'],
+                         :inactive_coe => true,
+                         :probation_coe => true
+                     })
+    end
+
     editing_test_search_criteria = CohortFilter.new
     editing_test_search_criteria.set_custom_filters(filters)
     @default_cohort = FilteredCohort.new({:name => "Default cohort #{@id}", :search_criteria => editing_test_search_criteria})
@@ -221,23 +271,7 @@ class BOACTestConfig < TestConfig
   def user_search(all_students)
     set_global_configs all_students
     set_default_cohort
-    if @dept == BOACDepartments::ASC
-      @cohort_members.keep_if &:active_asc if @dept == BOACDepartments::ASC
-    elsif @dept == BOACDepartments::COE
-      searchable_data = Nessie_Utils.get_user_searchable_data all_students
-      non_inactive_coe_data = searchable_data.reject { |d| d[:inactive_coe] }
-      non_inactive_coe_sids = non_inactive_coe_data.map { |d| d[:sid] }
-      @cohort_members.keep_if { |m| non_inactive_coe_sids.include? m.sis_id }
-    end
     set_max_cohort_members CONFIG['user_search_max_users']
-  end
-
-  # Uses the secondary Chrome profile if config set to true
-  def chrome_profile
-    if Utils.use_optional_chrome_profile?
-      logger.warn 'Using the secondary Chrome profile'
-      Utils.optional_chrome_profile_dir
-    end
   end
 
 end

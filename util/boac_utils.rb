@@ -32,11 +32,6 @@ class BOACUtils < Utils
     @config['term_start_date']
   end
 
-  # Returns the term to be used for testing assignments
-  def self.assignments_term
-    @config['assignments_term']
-  end
-
   # Whether or not to check tooltips during tests. Checking tooltips slows down test execution.
   def self.tooltips
     @config['tooltips']
