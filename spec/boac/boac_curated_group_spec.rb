@@ -9,7 +9,6 @@ describe 'BOAC' do
   test.curated_groups all_students
   test_student = test.cohort_members.last
   logger.debug "Test student is UID #{test_student.uid} SID #{test_student.sis_id}"
-  student_data = NessieUtils.applicable_user_search_data(all_students, test)
 
   # Initialize groups to be used later in the tests
   advisor_groups = [
@@ -253,7 +252,7 @@ describe 'BOAC' do
 
         it "shows the curated group #{group.name} members with alerts" do
           member_sids = group.members.map &:sis_id
-          group.member_data = student_data.select { |data| member_sids.include? data[:sid] }
+          group.member_data = test.searchable_data.select { |data| member_sids.include? data[:sid] }
           @homepage.expand_member_rows group
           @homepage.verify_member_alerts(@driver, group,test.advisor)
         end

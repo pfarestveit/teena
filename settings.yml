@@ -48,28 +48,17 @@ boac:
   nessie_assignments: true
 
   test_dept: UWASC
+  test_asc_team: FBM
   test_coe_advisor_uid: 123456
+  test_physics_levels: [Junior, Senior]
 
-  assignments_team: GOM
   assignments_max_users: 10
   assignments_term: Spring 2018
-
-  class_page_team: GOW
   class_page_max_users: 5
-
-  curated_group_team: BAM
-
-  last_activity_team: TNM
   last_activity_max_users: 3
   last_activity_context: false
   no_activity_alert_threshold: 14
-
-  navigation_team: FBM
-
-  sis_data_team: FBM
   sis_data_max_users: 100
-
-  user_search_team: TNW
   user_search_max_users: 50
 
 cal_net:

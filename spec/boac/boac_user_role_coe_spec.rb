@@ -5,7 +5,6 @@ describe 'A CoE advisor using BOAC' do
   include Logging
 
   all_students = NessieUtils.get_all_students
-  all_student_search_data = NessieUtils.applicable_user_search_data all_students
 
   test_asc = BOACTestConfig.new
   test_asc.user_role_asc all_students
@@ -15,7 +14,7 @@ describe 'A CoE advisor using BOAC' do
 
   overlap_students = test_asc.dept_students & test_coe.dept_students
   asc_only_students = test_asc.dept_students - overlap_students
-  inactive_coe_search_data = all_student_search_data.select { |d| d[:inactive_coe] }
+  inactive_coe_search_data = test_coe.searchable_data.select { |d| d[:inactive_coe] }
   inactive_coe_sids = inactive_coe_search_data.map { |d| d[:sid] }
 
   coe_everyone_filters = BOACUtils.get_everyone_filtered_cohorts test_coe.dept
@@ -33,7 +32,7 @@ describe 'A CoE advisor using BOAC' do
     @student_page = BOACStudentPage.new @driver
 
     @coe_student_sids = test_coe.dept_students.map &:sis_id
-    @coe_student_search_data = all_student_search_data.select { |d| @coe_student_sids.include? d[:sid] }
+    @coe_student_search_data = test_coe.searchable_data.select { |d| @coe_student_sids.include? d[:sid] }
 
     @homepage.dev_auth test_coe.advisor
   end
@@ -79,7 +78,6 @@ describe 'A CoE advisor using BOAC' do
       @search_page.search inactive_coe_sids.first
       @search_page.no_results_msg(inactive_coe_sids.first).when_visible Utils.short_wait
     end
-
   end
 
   context 'performing a filtered cohort search' do
@@ -90,9 +88,11 @@ describe 'A CoE advisor using BOAC' do
       @filtered_cohort_page.wait_until(1) { @filtered_cohort_page.new_filter_option_elements.any? &:visible? }
     end
 
+    it('sees a GPA filter') { expect(@filtered_cohort_page.new_filter_option('GPA').visible?).to be true }
     it('sees a Level filter') { expect(@filtered_cohort_page.new_filter_option('Level').visible?).to be true }
     it('sees a Major filter') { expect(@filtered_cohort_page.new_filter_option('Major').visible?).to be true }
     it('sees a Units filter') { expect(@filtered_cohort_page.new_filter_option('Units Completed').visible?).to be true }
+    it('sees a Last Names filter') { expect(@filtered_cohort_page.new_filter_option('Last Names').visible?).to be true }
     it('sees a Advisor filter') { expect(@filtered_cohort_page.new_filter_option('Advisor').visible?).to be true }
     it('sees a Ethnicity filter') { expect(@filtered_cohort_page.new_filter_option('Ethnicity').visible?).to be true }
     it('sees a Gender filter') { expect(@filtered_cohort_page.new_filter_option('Gender').visible?).to be true }
