@@ -61,10 +61,6 @@ class BOACTestConfig < TestConfig
     # Get the searchable data for all students.
     dept_student_sids = @dept_students.map &:sis_id
     @searchable_data = NessieUtils.searchable_student_data(all_students).select { |u| dept_student_sids.include? u[:sid] }
-
-    # Only 'active' students can be searched by ASC or CoE advisors
-    @searchable_data.keep_if { |d| d[:active_asc] } if @dept == BOACDepartments::ASC
-    @searchable_data.delete_if { |d| d[:inactive_coe] } if @dept == BOACDepartments::COE
   end
 
   # Basic settings for department, advisor, and student population under test. Specifying a department will override the

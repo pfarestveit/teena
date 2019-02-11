@@ -7,8 +7,8 @@ class BOACSearchResultsPage
   include Page
   include BOACPages
   include BOACUserListPages
-  include BOACAddCuratedModalPages
-  include BOACAddCuratedSelectorPages
+  include BOACGroupModalPages
+  include BOACAddGroupSelectorPages
 
   # The result count displayed following a search
   # @param element [PageObject::Elements::Element]
@@ -110,7 +110,7 @@ class BOACSearchResultsPage
     wait_for_spinner
   end
 
-  # CURATED GROUPS
+  # GROUPS
 
   # Selects the add-to-group checkboxes for a given set of students
   # @param students [Array<User>]
@@ -119,31 +119,31 @@ class BOACSearchResultsPage
     students.each { |s| wait_for_update_and_click checkbox_element(id: "student-#{s.sis_id}-curated-group-checkbox") }
   end
 
-  # Adds a given set of students to an existing curated group
+  # Adds a given set of students to an existing group
   # @param students [Array<User>]
   # @param group [CuratedGroup]
-  def selector_add_students_to_group(students, group)
+  def select_and_add_students_to_grp(students, group)
     select_students_to_add students
-    select_group_and_add(students, group)
+    add_students_to_grp(students, group)
   end
 
-  # Adds a given set of students to a new curated group, which is created as part of the process
+  # Adds a given set of students to a new group, which is created as part of the process
   # @param students [Array<User>]
   # @param group [CuratedGroup]
-  def selector_add_students_to_new_group(students, group)
+  def select_and_add_students_to_new_grp(students, group)
     select_students_to_add students
-    selector_create_new_group(students, group)
+    add_students_to_new_grp(students, group)
   end
 
-  # Adds all the students on a page to a curated group
+  # Adds all the students on a page to a group
   # @param group [CuratedGroup]
-  def selector_add_all_students_to_curated(all_students, group)
-    wait_until(Utils.short_wait) { add_individual_to_curated_checkbox_elements.any? &:visible? }
-    wait_for_update_and_click add_all_to_curated_checkbox_element
-    logger.debug "There are #{add_individual_to_curated_checkbox_elements.length} individual checkboxes"
-    visible_uids = add_individual_to_curated_checkbox_elements.map { |el| el.attribute('id').split('-')[0] }
-    students = all_students.select { |student| visible_uids.include? student.uid }
-    select_group_and_add(students, group)
+  def select_and_add_all_students_to_grp(all_students, group)
+    wait_until(Utils.short_wait) { add_individual_to_grp_checkbox_elements.any? &:visible? }
+    wait_for_update_and_click add_all_to_grp_checkbox_element
+    logger.debug "There are #{add_individual_to_grp_checkbox_elements.length} individual checkboxes"
+    visible_sids = add_individual_to_grp_checkbox_elements.map { |el| el.attribute('id').split('-')[1] }
+    students = all_students.select { |student| visible_sids.include? student.sis_id }
+    add_students_to_grp(students, group)
   end
 
 end

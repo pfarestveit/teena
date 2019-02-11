@@ -6,7 +6,7 @@ begin
   # should include the service and code version in a recognizable format (e.g., 'junction-v91' or 'suitec-v2.2'), which
   # will be included in the test results file name.
 
-  opts = "--format progress --format documentation --out #{Utils.test_results ENV['VERSION']}"
+  opts = "--format progress --format documentation --out #{Utils.test_results ENV['VERSION']} --no-color"
 
   # These tasks will run all test scripts for a given service, unless SCRIPTS is included. If a SCRIPTS string is included, then
   # it will run only scripts whose file names include the string.
