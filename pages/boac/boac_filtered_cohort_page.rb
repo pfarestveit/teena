@@ -8,8 +8,8 @@ class BOACFilteredCohortPage
   include BOACPages
   include BOACListViewPages
   include BOACCohortPages
-  include BOACAddCuratedModalPages
-  include BOACAddCuratedSelectorPages
+  include BOACGroupModalPages
+  include BOACAddGroupSelectorPages
 
   def filtered_cohort_base_url(id)
     "#{BOACUtils.base_url}/cohort/#{id}"
@@ -156,12 +156,19 @@ class BOACFilteredCohortPage
     end
   end
 
+  # Clicks the new filter button, making two attempts in case of a DOM update
+  def click_new_filter_button
+    wait_for_update_and_click new_filter_button_element
+  rescue Selenium::WebDriver::Error::StaleElementReferenceError
+    wait_for_update_and_click new_filter_button_element
+  end
+
   # Selects, adds, and applies a filter
   # @param filter_name [String]
   # @param filter_option [String]
   def select_filter(filter_name, filter_option = nil)
     logger.info "Selecting #{filter_name} #{filter_option}"
-    wait_for_update_and_click new_filter_button_element
+    click_new_filter_button
     wait_for_update_and_click new_filter_option(filter_name)
 
     # Inactive, Intensive, and Underrepresented Minority have no sub-options
@@ -295,12 +302,11 @@ class BOACFilteredCohortPage
   # @param cohort [FilteredCohort]
   # @param test [BOACTestConfig]
   def perform_search(cohort, test)
-    sleep 2
 
     # The squads and majors lists can change over time. Avoid test failures if the search criteria is out of sync
     # with actual squads or majors. Advisors might also change, but fail if this happens for now.
     if cohort.search_criteria.major && cohort.search_criteria.major.any?
-      wait_for_update_and_click new_filter_button_element
+      click_new_filter_button
       wait_for_update_and_click new_filter_option('Major')
       wait_for_update_and_click new_sub_filter_button_element
       sleep Utils.click_wait

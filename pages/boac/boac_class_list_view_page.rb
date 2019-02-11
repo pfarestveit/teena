@@ -8,8 +8,8 @@ class BOACClassListViewPage
   include BOACPages
   include BOACListViewPages
   include BOACClassPages
-  include BOACAddCuratedModalPages
-  include BOACAddCuratedSelectorPages
+  include BOACGroupModalPages
+  include BOACAddGroupSelectorPages
 
   elements(:student_link, :link, xpath: '//tr[contains(@class,"course-list-view-row")]//a')
   elements(:student_sid, :div, xpath: '//tr[contains(@class,"course-list-view-row")]//div[@class="student-sid"]')

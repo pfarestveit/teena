@@ -361,7 +361,7 @@ class NessieUtils < Utils
   # @param students [Array<BOACUser>]
   # @return [Array<Hash>]
   def self.searchable_student_data(students)
-    get_and_store_searchable_data students unless parse_stored_searchable_data
+    (data = parse_stored_searchable_data) ? data : get_and_store_searchable_data(students)
   end
 
 end

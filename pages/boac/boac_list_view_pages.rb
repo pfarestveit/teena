@@ -9,11 +9,11 @@ module BOACListViewPages
 
   ### PAGINATION ###
 
-  link(:page_one_link, xpath: '//a[@aria-label="Goto page 1"]')
-  link(:go_to_first_page_link, xpath: '//a[@aria-label="Goto first page"]')
-  link(:go_to_next_page_link, xpath: '//a[@aria-label="Goto next page"]')
-  link(:go_to_last_page_link, xpath: '//a[@aria-label="Goto last page"]')
-  elements(:go_to_page_link, :link, xpath: '//a[contains(@aria-label,"Goto page")]')
+  link(:page_one_link, xpath: '//a[@aria-label="Go to page 1"]')
+  link(:go_to_first_page_link, xpath: '//a[@aria-label="Go to first page"]')
+  link(:go_to_next_page_link, xpath: '//a[@aria-label="Go to next page"]')
+  link(:go_to_last_page_link, xpath: '//a[@aria-label="Go to last page"]')
+  elements(:go_to_page_link, :link, xpath: '//a[contains(@aria-label,"Go to page")]')
 
   # Clicks the go-to-first-page link and waits till page one is loaded
   def go_to_first_page
@@ -32,6 +32,8 @@ module BOACListViewPages
       count = go_to_page_link_elements.last.text.to_i
       go_to_first_page
       count
+    elsif go_to_page_link_elements.any?
+      go_to_page_link_elements.length
     else
       1
     end

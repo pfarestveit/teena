@@ -6,7 +6,8 @@ class BOACStudentPage
   include Logging
   include Page
   include BOACPages
-  include BOACAddCuratedModalPages
+  include BOACAddGroupSelectorPages
+  include BOACGroupModalPages
 
   # Loads a student page directly
   # @param user [User]
@@ -25,19 +26,19 @@ class BOACStudentPage
   span(:sid, id: 'student-bio-sid')
   span(:phone, id: 'student-phone-number')
   link(:email, id: 'student-mailto')
-  div(:cumulative_units, id: 'student-status-units-completed')
-  div(:cumulative_gpa, id: 'student-status-cumulative-gpa')
+  div(:cumulative_units, xpath: '//div[@id="cumulative-units"]/div')
+  div(:cumulative_gpa, id: 'cumulative-gpa')
   div(:inactive_flag, xpath: '//div[text()="Inactive"]')
   elements(:major, :div, xpath: '//div[@id="student-bio-majors"]//div[@class="student-bio-header"]')
   elements(:college, :div, xpath: '//div[@id="student-bio-majors"]//div[@class="student-bio-details"]')
-  div(:level, id: 'student-bio-level')
+  div(:level, xpath: '//div[@id="student-bio-level"]/div')
   span(:terms_in_attendance, id: 'student-bio-terms-in-attendance')
   span(:expected_graduation, id: 'student-bio-expected-graduation')
 
-  cell(:writing_reqt, xpath: '//td[text()="Entry Level Writing"]/following-sibling::td')
-  cell(:history_reqt, xpath: '//td[text()="American History"]/following-sibling::td')
-  cell(:institutions_reqt, xpath: '//td[text()="American Institutions"]/following-sibling::td')
-  cell(:cultures_reqt, xpath: '//td[text()="American Cultures"]/following-sibling::td')
+  div(:writing_reqt, xpath: '//div[contains(text(),"Entry Level Writing")]')
+  div(:history_reqt, xpath: '//div[contains(text(),"American History")]')
+  div(:institutions_reqt, xpath: '//div[contains(text(),"American Institutions")]')
+  div(:cultures_reqt, xpath: '//div[contains(text(),"American Cultures")]')
 
   # Returns a user's SIS data visible on the student page
   # @return [Hash]
@@ -54,10 +55,10 @@ class BOACStudentPage
       :level => (level.gsub("Level\n",'') if level?),
       :terms_in_attendance => (terms_in_attendance if terms_in_attendance?),
       :expected_graduation => (expected_graduation.gsub('Expected graduation','').strip if expected_graduation?),
-      :reqt_writing => (writing_reqt.strip if writing_reqt_element.exists?),
-      :reqt_history => (history_reqt.strip if history_reqt_element.exists?),
-      :reqt_institutions => (institutions_reqt.strip if institutions_reqt_element.exists?),
-      :reqt_cultures => (cultures_reqt.strip if cultures_reqt_element.exists?)
+      :reqt_writing => (writing_reqt.gsub('Entry Level Writing', '').strip if writing_reqt_element.exists?),
+      :reqt_history => (history_reqt.gsub('American History', '').strip if history_reqt_element.exists?),
+      :reqt_institutions => (institutions_reqt.gsub('American Institutions', '').strip if institutions_reqt_element.exists?),
+      :reqt_cultures => (cultures_reqt.gsub('American Cultures', '').strip if cultures_reqt_element.exists?)
     }
   end
 
@@ -117,67 +118,6 @@ class BOACStudentPage
     wait_for_load_and_click non_dismissed_alert_button_elements.find { |el| el.attribute('id').include?(alert.id) }
   end
 
-  # TODO - CURATED GROUPS
-
-  button(:student_create_curated_group, id: 'create-curated-group')
-  elements(:student_curated_group_name, :link, xpath: '//div[@id="student-curated-groups-box"]//a')
-
-  def curated_cbx(group)
-    checkbox_element(xpath: "//div[@class=\"student-curated-group-checkbox\"][contains(.,\"#{group.name}\")]/input")
-  end
-
-  # Clicks the checkbox to add or remove a student from a curated group
-  # @param group [CuratedGroup]
-  def click_curated_cbx(group)
-    wait_for_update_and_click curated_cbx(group)
-  end
-
-  # Adds a student to a curated group
-  # @param student [User]
-  # @param group [CuratedGroup]
-  def add_student_to_curated(student, group)
-    logger.info "Adding UID #{student.uid} to group '#{group.name}'"
-    click_curated_cbx group
-    group.members << student
-    wait_for_sidebar_group_member_count group
-  end
-
-  # Removes a student from a curated group
-  # @param student [User]
-  # @param group [CuratedGroup]
-  def remove_student_from_curated(student, group)
-    logger.info "Removing UID #{student.uid} from group '#{group.name}'"
-    click_curated_cbx group
-    group.members.delete student
-    wait_for_sidebar_group_member_count group
-  end
-
-  # Clicks the link to create a curated group
-  def click_create_curated_link
-    wait_for_update_and_click student_create_curated_group_element
-  end
-
-  # Creates a curated group using the create button on the student page
-  # @param group [CuratedGroup]
-  def create_student_curated(group)
-    click_create_curated_link
-    name_and_save_group group
-    wait_for_sidebar_group group
-  end
-
-  # Returns all the curated groups shown on the student page
-  # @return [Array<String>]
-  def visible_curated_names
-    student_curated_group_name_elements.map &:text
-  end
-
-  # Whether or not a curated group is selected on the student page
-  # @param group [CuratedGroup]
-  # @return [boolean]
-  def curated_selected?(group)
-    checkbox_element(xpath: "//div[@class=\"student-curated-group-checkbox\"][contains(.,\"#{group.name}\")]/input[contains(@aria-label,\"Remove from curated group\")]").exists?
-  end
-
   # COURSES
 
   button(:view_more_button, :xpath => '//button[contains(.,"View Previous Semesters")]')
@@ -235,7 +175,7 @@ class BOACStudentPage
     grading_basis_xpath = "#{course_xpath}//span[@class='student-course-grading-basis']"
     mid_point_grade_xpath = "#{course_xpath}//div[contains(text(),'Mid:')]/span"
     grade_xpath = "#{course_xpath}//div[contains(text(),'Final:')]/span"
-    wait_list_xpath = "#{course_xpath}//span[@data-ng-if='course.waitlisted']"
+    wait_list_xpath = "#{course_xpath}//span[contains(@class,'student-waitlisted')]"
     {
       :title => (h4_element(:xpath => title_xpath).text if h4_element(:xpath => title_xpath).exists?),
       :units_completed => (div_element(:xpath => units_xpath).text.delete('Units').strip if div_element(:xpath => units_xpath).exists?),

@@ -70,33 +70,33 @@ module BOACPages
     wait_for_title 'Admin'
   end
 
-  ### SIDEBAR - CURATED GROUPS ###
+  ### SIDEBAR - GROUPS ###
 
-  elements(:sidebar_curated_group_link, :link, xpath: '//a[contains(@id,"sidebar-curated-group")]')
+  elements(:sidebar_group_link, :link, xpath: '//a[contains(@id,"sidebar-curated-group")]')
 
-  # Returns the names of all the curated groups in the sidebar
+  # Returns the names of all the groups in the sidebar
   # @return [Array<String>]
   def sidebar_groups
     sleep Utils.click_wait
-    sidebar_curated_group_link_elements.map &:text
+    sidebar_group_link_elements.map &:text
   end
 
-  # Waits for a curated group's member count in the sidebar to match expectations
+  # Waits for a group's member count in the sidebar to match expectations
   # @param group [CuratedGroup]
   def wait_for_sidebar_group_member_count(group)
-    logger.debug "Waiting for curated group member count of #{group.members.length}"
+    logger.debug "Waiting for group #{group.name} member count of #{group.members.length}"
     wait_until(Utils.short_wait) do
       el = span_element(xpath: "//div[@class=\"sidebar-row-link\"][contains(.,\"#{group.name}\")]//span[@class=\"sr-only\"]")
       (el && el.text.delete(' students').chomp) == group.members.length.to_s
     end
   end
 
-  # Waits for a curated group to appear in the sidebar with the right member count and obtains the cohort's ID
+  # Waits for a group to appear in the sidebar with the right member count and obtains the group's ID
   # @param group [CuratedGroup]
   def wait_for_sidebar_group(group)
     wait_until(Utils.short_wait) { sidebar_groups.include? group.name }
     wait_for_sidebar_group_member_count group
-    BOACUtils.set_curated_group_id group
+    BOACUtils.set_curated_group_id group unless group.id
   end
 
   ### SIDEBAR - FILTERED COHORTS ###
