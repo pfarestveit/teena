@@ -32,13 +32,8 @@ class BOACStudentPage
   elements(:major, :div, xpath: '//div[@id="student-bio-majors"]//div[@class="student-bio-header"]')
   elements(:college, :div, xpath: '//div[@id="student-bio-majors"]//div[@class="student-bio-details"]')
   div(:level, xpath: '//div[@id="student-bio-level"]/div')
-  span(:terms_in_attendance, id: 'student-bio-terms-in-attendance')
-  span(:expected_graduation, id: 'student-bio-expected-graduation')
-
-  div(:writing_reqt, xpath: '//div[contains(text(),"Entry Level Writing")]')
-  div(:history_reqt, xpath: '//div[contains(text(),"American History")]')
-  div(:institutions_reqt, xpath: '//div[contains(text(),"American Institutions")]')
-  div(:cultures_reqt, xpath: '//div[contains(text(),"American Cultures")]')
+  div(:terms_in_attendance, id: 'student-bio-terms-in-attendance')
+  div(:expected_graduation, id: 'student-bio-expected-graduation')
 
   # Returns a user's SIS data visible on the student page
   # @return [Hash]
@@ -54,7 +49,32 @@ class BOACStudentPage
       :colleges => (college_elements.map { |c| c.text.strip }).reject(&:empty?),
       :level => (level.gsub("Level\n",'') if level?),
       :terms_in_attendance => (terms_in_attendance if terms_in_attendance?),
-      :expected_graduation => (expected_graduation.gsub('Expected graduation','').strip if expected_graduation?),
+      :expected_graduation => (expected_graduation.gsub('Expected graduation','').strip if expected_graduation?)
+    }
+  end
+
+  # TIMELINE
+
+  button(:show_hide_msgs_button, id: 'timeline-tab-all-previous-messages')
+
+  # Clicks the 'show previous' button if present
+  def show_previous_msgs
+    logger.info 'Making sure all messages are visible'
+    wait_for_update_and_click show_hide_msgs_button_element if show_hide_msgs_button? && show_hide_msgs_button_element.text.include?('Show')
+  end
+
+  button(:reqts_button, id: 'timeline-tab-requirement')
+  div(:writing_reqt, xpath: '//h2[text()="Academic Timeline"]/following-sibling::div//div[contains(text(),"Entry Level Writing")]')
+  div(:history_reqt, xpath: '//h2[text()="Academic Timeline"]/following-sibling::div//div[contains(text(),"American History")]')
+  div(:institutions_reqt, xpath: '//h2[text()="Academic Timeline"]/following-sibling::div//div[contains(text(),"American Institutions")]')
+  div(:cultures_reqt, xpath: '//h2[text()="Academic Timeline"]/following-sibling::div//div[contains(text(),"American Cultures")]')
+
+  # Returns of requirements statuses
+  # @return [Hash]
+  def visible_requirements
+    show_previous_msgs
+    wait_for_update_and_click reqts_button_element if reqts_button?
+    {
       :reqt_writing => (writing_reqt.gsub('Entry Level Writing', '').strip if writing_reqt_element.exists?),
       :reqt_history => (history_reqt.gsub('American History', '').strip if history_reqt_element.exists?),
       :reqt_institutions => (institutions_reqt.gsub('American Institutions', '').strip if institutions_reqt_element.exists?),
@@ -62,7 +82,27 @@ class BOACStudentPage
     }
   end
 
-  # ALERTS
+  button(:holds_button, id: 'timeline-tab-hold')
+  elements(:hold, :div, xpath: '//div[contains(@id,"timeline-tab-hold-message")]')
+
+  # Returns an array of visible hold messages
+  # @return [Array<String>]
+  def visible_holds
+    show_previous_msgs
+    wait_for_update_and_click holds_button_element if holds_button?
+    hold_elements.map { |h| h.text.strip }
+  end
+
+  button(:alerts_button, id: 'timeline-tab-alert')
+  elements(:alert, :div, xpath: '//div[contains(@id,"timeline-tab-alert-message")]')
+
+  # Returns an array of visible alert messages
+  # @return [Array<String>]
+  def visible_alerts
+    show_previous_msgs
+    wait_for_update_and_click alerts_button_element if alerts_button?
+    alert_elements.map { |a| a.text.strip }
+  end
 
   elements(:non_dismissed_alert_button, :button, xpath: '//button[contains(@id,"dismiss-alert")]')
   elements(:non_dismissed_alert_msg, :span, xpath: '//button[contains(@id,"dismiss-alert")]/preceding-sibling::span')
@@ -120,7 +160,7 @@ class BOACStudentPage
 
   # COURSES
 
-  button(:view_more_button, :xpath => '//button[contains(.,"View Previous Semesters")]')
+  button(:view_more_button, :xpath => '//button[contains(.,"Show Previous Semesters")]')
 
   # Clicks the button to expand previous semester data
   def click_view_previous_semesters

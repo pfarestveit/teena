@@ -24,7 +24,7 @@ describe 'A CoE advisor using BOAC' do
     @admin_page = BOACAdminPage.new @driver
     @api_admin_page = BOACApiAdminPage.new @driver
     @api_section_page = BOACApiSectionPage.new @driver
-    @api_user_analytics_page = BOACApiUserAnalyticsPage.new @driver
+    @api_user_analytics_page = BOACApiStudentPage.new @driver
     @class_page = BOACClassListViewPage.new @driver
     @filtered_cohort_page = BOACFilteredCohortPage.new @driver
     @homepage = BOACHomePage.new @driver
@@ -135,12 +135,12 @@ describe 'A CoE advisor using BOAC' do
     end
 
     it 'cannot hit the user analytics endpoint for a non-CoE student' do
-      asc_user_analytics = BOACApiUserAnalyticsPage.new @driver
+      asc_user_analytics = BOACApiStudentPage.new @driver
       expect(asc_user_analytics.get_data(@driver, asc_only_students.first)).to be_nil
     end
 
     it 'cannot see the ASC profile data for an overlapping CoE and ASC student on the user analytics page' do
-      overlap_user_analytics = BOACApiUserAnalyticsPage.new @driver
+      overlap_user_analytics = BOACApiStudentPage.new @driver
       overlap_user_analytics.get_data(@driver, overlap_students.first)
       expect(overlap_user_analytics.asc_profile).to be_nil
     end

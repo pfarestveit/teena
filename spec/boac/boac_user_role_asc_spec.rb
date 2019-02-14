@@ -22,7 +22,7 @@ describe 'An ASC advisor' do
     @admin_page = BOACAdminPage.new @driver
     @api_admin_page = BOACApiAdminPage.new @driver
     @api_section_page = BOACApiSectionPage.new @driver
-    @api_user_analytics_page = BOACApiUserAnalyticsPage.new @driver
+    @api_user_analytics_page = BOACApiStudentPage.new @driver
     @class_page = BOACClassListViewPage.new @driver
     @filtered_cohort_page = BOACFilteredCohortPage.new @driver
     @homepage = BOACHomePage.new @driver

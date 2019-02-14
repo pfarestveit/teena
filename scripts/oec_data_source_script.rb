@@ -155,21 +155,20 @@ begin
 
     # EXTENSION DATA SOURCES
     if args.include? 'extension'
+      if args.include? 'upload' && extension_data_sources.empty?
+        puts "#{Time.now} - There are no files to upload!"
+        log_results(results_file, 'No files were uploaded for any data sources')
+      end
       if (%w(path upload) & args).any?
-        if extension_data_sources.any?
-          extension_data_sources.each do |file|
-            begin
-              find_and_edit_source (data_source = File.basename(file)[0..-5])
-              upload_file(file, args)
-              apply_and_import_source
-              log_results(results_file, "#{Time.now} - Update succeeded for #{data_source}")
-            rescue => e
-              log_results(results_file, "#{Time.now} - Encountered an error with data source '#{data_source}'. Update failed.", e)
-            end
+        extension_data_sources.each do |file|
+          begin
+            find_and_edit_source (data_source = File.basename(file)[0..-5])
+            upload_file(file, args)
+            apply_and_import_source
+            log_results(results_file, "#{Time.now} - Update succeeded for #{data_source}")
+          rescue => e
+            log_results(results_file, "#{Time.now} - Encountered an error with data source '#{data_source}'. Update failed.", e)
           end
-        else
-          puts "#{Time.now} - There are no files to upload!"
-          log_results(results_file, 'No files were uploaded for any data sources')
         end
       else
         puts "#{Time.now} - Extension requires an upload or path argument!"

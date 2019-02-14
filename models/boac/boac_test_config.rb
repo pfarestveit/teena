@@ -140,6 +140,17 @@ class BOACTestConfig < TestConfig
     end
   end
 
+  def exclude_inactive
+    # Exclude 'inactive' students from search results
+    if @dept == BOACDepartments::ASC
+      @cohort_members.keep_if &:active_asc
+    elsif @dept == BOACDepartments::COE
+      inactive_data = @searchable_data.select { |d| d[:inactive_coe] }
+      inactive_sids = inactive_data.map { |d| d[:sid] }
+      @cohort_members.delete_if { |m|inactive_sids.include? m.sis_id }
+    end
+  end
+
   ### CONFIGURATION FOR SPECIFIC TEST SCRIPTS ###
 
   # Config for assignments testing
@@ -229,7 +240,7 @@ class BOACTestConfig < TestConfig
   def sis_data(all_students)
     set_global_configs all_students
     set_default_cohort
-    @cohort_members.keep_if &:active_asc if @dept == BOACDepartments::ASC
+    exclude_inactive
     set_max_cohort_members CONFIG['sis_data_max_users']
   end
 
@@ -267,6 +278,7 @@ class BOACTestConfig < TestConfig
   def user_search(all_students)
     set_global_configs all_students
     set_default_cohort
+    exclude_inactive
     set_max_cohort_members CONFIG['user_search_max_users']
   end
 

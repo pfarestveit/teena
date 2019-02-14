@@ -12,9 +12,10 @@ module BOACClassPages
   # Loads a class page in default list view
   # @param term_id [String]
   # @param ccn [String]
-  def load_page(term_id, ccn)
+  # @param student [BOACUser]
+  def load_page(term_id, ccn, student=nil)
     logger.info "Loading class page for term #{term_id} section #{ccn}"
-    navigate_to "#{BOACUtils.base_url}/course/#{term_id}/#{ccn}"
+    navigate_to "#{BOACUtils.base_url}/course/#{term_id}/#{ccn}#{'?u=' + student.uid if student}"
     wait_for_spinner
     div_element(id: 'meetings-0').when_visible Utils.medium_wait
   end

@@ -40,7 +40,7 @@ describe 'BOAC' do
         begin
 
           # Get the user API data for the test student to determine which courses to check
-          api_student_page = BOACApiUserAnalyticsPage.new @driver
+          api_student_page = BOACApiStudentPage.new @driver
           api_student_page.get_data(@driver, test_student)
           term = api_student_page.terms.find { |t| api_student_page.term_name(t) == test.term }
           if term
@@ -74,7 +74,7 @@ describe 'BOAC' do
                       visible_classmates.each do |classmate|
                         begin
 
-                          api_classmate_page = BOACApiUserAnalyticsPage.new @driver
+                          api_classmate_page = BOACApiStudentPage.new @driver
                           api_classmate_page.get_data(@driver, classmate)
                           term = api_classmate_page.terms.find { |t| api_classmate_page.term_name(t) == test.term }
                           classmate_course = api_classmate_page.courses(term).find { |c| api_classmate_page.course_section_ccns(c).include? section_data[:ccn] }
@@ -204,7 +204,13 @@ describe 'BOAC' do
                             test_case = "UID #{student_data[:student].uid} in Canvas site ID #{student_site[:site_id]}"
                             logger.info "Checking last activity for #{student_site}"
 
-                            it("last activity date is not older than the Caliper date for UID #{student_data[:student].uid} in Canvas site ID #{student_site[:site_id]}") { expect(student_site[:last_activity_nessie]).to be >= student_site[:last_activity_caliper] }
+                            it("last activity date is not older than the Caliper date for UID #{student_data[:student].uid} in Canvas site ID #{student_site[:site_id]}") do
+                              if student_site[:last_activity_caliper].nil?
+                                expect(student_site[:last_activity_nessie]).to be_nil
+                              else
+                                expect(student_site[:last_activity_nessie]).to be >= student_site[:last_activity_caliper]
+                              end
+                            end
 
                             # Record the activity data to a CSV
                             site = all_sites_data.find { |s| s[:site_id] == student_site[:site_id] }
@@ -278,6 +284,7 @@ describe 'BOAC' do
                               # Alerts are not shown for sites below an activity threshold, so get the student's 'active' sites
                               active_student_sites = student_data[:sites].select do |student_site|
                                 course_site = all_sites_data.find { |course_site| course_site[:site_id] == student_site[:site_id] }
+                                logger.debug "Site #{course_site[:site_id]} has #{course_site[:last_activity_dates].compact.length.to_f} active users out of #{course_site[:student_count].to_f} enrollments"
                                 (course_site[:last_activity_dates].compact.length.to_f / course_site[:student_count].to_f > 0.8)
                               end
                               logger.debug "Active sites are #{active_student_sites}"
@@ -287,7 +294,7 @@ describe 'BOAC' do
                               no_activity_alert_triggers = active_student_sites.select { |site| site[:no_activity_alert] }
 
                               # If all the active sites could trigger 'no activity' alerts for the student, then show a 'no activity' alert
-                              if no_activity_alert_triggers.length == active_student_sites.length
+                              if no_activity_alert_triggers.any? && no_activity_alert_triggers.length == active_student_sites.length
                                 it("shows a 'No activity!' alert for #{test_case}") { expect(user_alert_msgs).to include("No activity! Student has never visited the #{student_data[:course_code]} bCourses site for #{BOACUtils.term}.") }
                                 it("shows no infrequent activity alert for #{test_case}") { expect(truncated_alert_msgs).not_to include("Infrequent activity! Last #{student_data[:course_code]} bCourses activity") }
 

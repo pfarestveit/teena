@@ -36,7 +36,7 @@ describe 'BOAC assignment analytics' do
 
       test.max_cohort_members.each do |student|
 
-        boac_api_page = BOACApiUserAnalyticsPage.new @driver
+        boac_api_page = BOACApiStudentPage.new @driver
         boac_api_page.get_data(@driver, student)
         boac_api_page.set_canvas_id student
         term = boac_api_page.terms.find { |t| boac_api_page.term_name(t) == test.term }

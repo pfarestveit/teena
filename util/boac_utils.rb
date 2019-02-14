@@ -185,7 +185,7 @@ class BOACUtils < Utils
     cohort.id = result
   end
 
-  # DATABASE - ALERTS
+  # DATABASE - ALERTS, HOLDS
 
   # Given a set of students, returns all their active alerts in the current term
   # @param users [Array<BOACUser>]
@@ -196,7 +196,8 @@ class BOACUtils < Utils
               FROM alerts
               WHERE sid IN (#{sids})
                 AND active = true
-                AND key LIKE '#{term_code}%';"
+                AND key LIKE '#{term_code}%'
+                AND alert_type != 'hold';"
     results = Utils.query_pg_db(boac_db_credentials, query.gsub("\"", '\''))
     alerts = results.map { |r| Alert.new({id: r['id'], type: r['alert_type'], message: r['message'].gsub("\n", ' ').gsub(/\s+/, ' '), user: BOACUser.new({sis_id: r['sid']})}) }
     alerts.sort_by &:message
@@ -263,4 +264,13 @@ class BOACUtils < Utils
     alert
   end
 
+  def self.get_student_holds(student)
+    query = "SELECT id, sid, message
+              FROM alerts
+              WHERE sid = '#{student.sis_id}'
+              AND alert_type = 'hold'
+              AND key LIKE '#{term_code}%';"
+    results = Utils.query_pg_db(boac_db_credentials, query)
+    results.map { |r| Alert.new({id: r['id'], message: r['message'], user: student}) }
+  end
 end

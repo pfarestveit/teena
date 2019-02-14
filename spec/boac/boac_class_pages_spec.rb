@@ -28,7 +28,7 @@ describe 'BOAC' do
     test.max_cohort_members.each do |student|
       begin
 
-        api_user_page = BOACApiUserAnalyticsPage.new @driver
+        api_user_page = BOACApiStudentPage.new @driver
         api_user_page.get_data(@driver, student)
 
         terms = api_user_page.terms
@@ -114,7 +114,7 @@ describe 'BOAC' do
                           it("shows only #{test.dept.name} students for #{class_test_case}") { expect(visible_sids - all_dept_student_sids).to be_empty }
 
                           # Perform further tests on the students who appear on the first page
-                          @class_page.go_to_first_page unless @class_page.list_view_page_count == 1
+                          @class_page.load_page(term_id, section_data[:ccn], student)
                           visible_students = @class_page.class_list_view_sids
                           expected_students = test.dept_students.select { |s| visible_students.include? s.sis_id }
                           expected_student_names = (expected_students.map { |u| "#{u.last_name}, #{u.first_name}" }).sort
@@ -128,7 +128,7 @@ describe 'BOAC' do
                           expected_students.each do |dept_student|
 
                             # Load the student's data and find the matching course
-                            student_api = BOACApiUserAnalyticsPage.new @driver
+                            student_api = BOACApiStudentPage.new @driver
                             student_api.get_data(@driver, dept_student)
                             term = student_api.terms.find { |t| student_api.term_name(t) == term_name }
                             course = student_api.courses(term).find { |c| student_api.course_display_name(c) == course_sis_data[:code] }
@@ -140,7 +140,7 @@ describe 'BOAC' do
                             # Collect the student data relevant to the class page
                             student_class_page_data = {
                               :sid => dept_student.sis_id,
-                              :level => student_api.user_sis_data[:level],
+                              :level => (student_api.user_sis_data[:level].nil? ? '' : student_api.user_sis_data[:level]),
                               :majors => student_api.user_sis_data[:majors],
                               :sports => student_squad_names,
                               :grading_basis => student_api.course_sis_data(course)[:grading_basis],
@@ -158,18 +158,15 @@ describe 'BOAC' do
                             all_student_data << student_class_page_data
                           end
 
-                          @class_page.load_page(term_id, section_data[:ccn])
-                          expected_students.each do |student|
-                            logger.info "Checking SIS data for UID #{student.uid}"
-                            student_test_case = "UID #{student.uid} #{class_test_case}"
-                            student_data = all_student_data.find { |d| d[:sid] == student.sis_id }
+                          @class_page.load_page(term_id, section_data[:ccn], student)
+                          expected_students.each do |classmate|
+                            logger.info "Checking SIS data for UID #{classmate.uid}"
+                            student_test_case = "UID #{classmate.uid} #{class_test_case}"
+                            student_data = all_student_data.find { |d| d[:sid] == classmate.sis_id }
 
                             # Check the student's SIS and ASC data
-                            visible_student_sis_data = @class_page.visible_student_sis_data(@driver, student)
-                            it("shows the right level for #{student_test_case}") do
-                              expect(visible_student_sis_data[:level]).to eql(student_data[:level])
-                              expect(visible_student_sis_data[:level]).not_to be_empty
-                            end
+                            visible_student_sis_data = @class_page.visible_student_sis_data(@driver, classmate)
+                            it("shows the right level for #{student_test_case}") { expect(visible_student_sis_data[:level]).to eql(student_data[:level]) }
 
                             it("shows the right majors for #{student_test_case}") do
                               expect(visible_student_sis_data[:majors]).to eql(student_data[:majors].sort)
@@ -216,7 +213,7 @@ describe 'BOAC' do
                             student_data[:sites].each do |site|
                               site_test_case = "#{student_test_case} site ID #{site[:site_id]}"
                               index = student_data[:sites].index site
-                              visible_site_data = @class_page.visible_assigns_data(@driver, student, index)
+                              visible_site_data = @class_page.visible_assigns_data(@driver, classmate, index)
                               logger.debug "Checking #{site_test_case} at node #{index + 1}, code #{site[:site_code]}"
 
                               if site[:nessie_assigns_submitted][:score].empty?

@@ -20,7 +20,7 @@ describe 'BOAC' do
     test.max_cohort_members.each do |student|
       begin
 
-        api_user_page = BOACApiUserAnalyticsPage.new @driver
+        api_user_page = BOACApiStudentPage.new @driver
         api_user_page.get_data(@driver, student)
 
         terms = api_user_page.terms
