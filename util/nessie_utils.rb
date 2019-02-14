@@ -315,7 +315,7 @@ class NessieUtils < Utils
         :units_completed => (cumulative_units ? cumulative_units : nil),
         :major => (v.map { |h| h['majors'] }),
         :expected_grad_term_id => (expected_grad && expected_grad['id']),
-        :intensive_asc => v[0]['intensive_asc'],
+        :intensive_asc => (v[0]['intensive_asc'] == 't'),
         :advisor => v[0]['advisor'],
         :gender => v[0]['gender'],
         :ethnicity => v[0]['ethnicity'],

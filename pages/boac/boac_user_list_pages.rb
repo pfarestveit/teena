@@ -102,11 +102,22 @@ module BOACUserListPages
     sort_by_option('Major', cohort)
   end
 
-  # Returns the sequence of SIDs that should be present when sorted by major
+  # Returns the sequence of SIDs that should be present when sorted by major ascending
   # @param user_data [Array<Hash>]
   # @return [Array<String>]
   def expected_sids_by_major(user_data)
-    sorted_users = user_data.sort_by { |u| [u[:major].sort.first.gsub(/\W/, '').downcase, u[:sid]] }
+    sorted_users = user_data.sort_by { |u| [u[:major].sort.first.gsub(/\W/, '').downcase, u[:last_name_sortable].downcase, u[:first_name_sortable].downcase, u[:sid]] }
+    sorted_users.map { |u| u[:sid] }
+  end
+
+  # Returns the sequence of SIDs that should be present when sorted by major descending
+  # @param user_data [Array<Hash>]
+  # @return [Array<String>]
+  def expected_sids_by_major_desc(user_data)
+    sorted_users = user_data.sort do |a, b|
+      [b[:major].sort.first.gsub(/\W/, '').downcase, a[:last_name_sortable].downcase, a[:first_name_sortable].downcase, a[:sid]] <=>
+          [a[:major].sort.first.gsub(/\W/, '').downcase, b[:last_name_sortable].downcase, b[:first_name_sortable].downcase, b[:sid]]
+    end
     sorted_users.map { |u| u[:sid] }
   end
 
@@ -118,11 +129,22 @@ module BOACUserListPages
     sort_by_option('Grad', cohort)
   end
 
-  # Returns the sequence of SIDs that should be present when sorted by expected graduation term
+  # Returns the sequence of SIDs that should be present when sorted by expected graduation term ascending
   # @param user_data [Array<Hash>]
   # @return [Array<String>]
   def expected_sids_by_grad_term(user_data)
-    sorted_users = user_data.sort_by { |u| [u[:expected_grad_term_id], u[:sid]] }
+    sorted_users = user_data.sort_by { |u| [u[:expected_grad_term_id], u[:last_name_sortable].downcase, u[:first_name_sortable].downcase, u[:sid]] }
+    sorted_users.map { |u| u[:sid] }
+  end
+
+  # Returns the sequence of SIDs that should be present when sorted by expected graduation term descending
+  # @param user_data [Array<Hash>]
+  # @return [Array<String>]
+  def expected_sids_by_grad_term_desc(user_data)
+    sorted_users = user_data.sort do |a, b|
+      [b[:expected_grad_term_id], a[:last_name_sortable].downcase, a[:first_name_sortable].downcase, a[:sid]] <=>
+          [a[:expected_grad_term_id], b[:last_name_sortable].downcase, b[:first_name_sortable].downcase, b[:sid]]
+    end
     sorted_users.map { |u| u[:sid] }
   end
 
@@ -134,11 +156,22 @@ module BOACUserListPages
     sort_by_option('Term Units', cohort)
   end
 
-  # Returns the sequence of SIDs that should be present when sorted by term units
+  # Returns the sequence of SIDs that should be present when sorted by term units ascending
   # @param user_data [Array<Hash>]
   # @return [Array<String>]
   def expected_sids_by_term_units(user_data)
-    sorted_users = user_data.sort_by { |u| [u[:term_units].to_f, u[:sid]] }
+    sorted_users = user_data.sort_by { |u| [u[:term_units].to_f, u[:last_name_sortable].downcase, u[:first_name_sortable].downcase, u[:sid]] }
+    sorted_users.map { |u| u[:sid] }
+  end
+
+  # Returns the sequence of SIDs that should be present when sorted by term units descending
+  # @param user_data [Array<Hash>]
+  # @return [Array<String>]
+  def expected_sids_by_term_units_desc(user_data)
+    sorted_users = user_data.sort do |a, b|
+      [b[:term_units].to_f, a[:last_name_sortable].downcase, a[:first_name_sortable].downcase, a[:sid]] <=>
+          [a[:term_units].to_f, b[:last_name_sortable].downcase, b[:first_name_sortable].downcase, b[:sid]]
+    end
     sorted_users.map { |u| u[:sid] }
   end
 
@@ -150,11 +183,22 @@ module BOACUserListPages
     sort_by_option('Units Completed', cohort)
   end
 
-  # Returns the sequence of SIDs that should be present when sorted by cumulative units
+  # Returns the sequence of SIDs that should be present when sorted by cumulative units ascending
   # @param user_data [Array<Hash>]
   # @return [Array<String>]
   def expected_sids_by_units_cum(user_data)
-    sorted_users = user_data.sort_by { |u| [u[:units_completed].to_f, u[:sid]] }
+    sorted_users = user_data.sort_by { |u| [u[:units_completed].to_f, u[:last_name_sortable].downcase, u[:first_name_sortable].downcase, u[:sid]] }
+    sorted_users.map { |u| u[:sid] }
+  end
+
+  # Returns the sequence of SIDs that should be present when sorted by cumulative units descending
+  # @param user_data [Array<Hash>]
+  # @return [Array<String>]
+  def expected_sids_by_units_cum_desc(user_data)
+    sorted_users = user_data.sort do |a, b|
+      [b[:units_completed].to_f, a[:last_name_sortable].downcase, a[:first_name_sortable].downcase, a[:sid]] <=>
+          [a[:units_completed].to_f, b[:last_name_sortable].downcase, b[:first_name_sortable].downcase, b[:sid]]
+    end
     sorted_users.map { |u| u[:sid] }
   end
 
@@ -166,11 +210,22 @@ module BOACUserListPages
     sort_by_option('GPA', cohort)
   end
 
-  # Returns the sequence of SIDs that should be present when sorted by GPA
+  # Returns the sequence of SIDs that should be present when sorted by GPA ascending
   # @param user_data [Array<Hash>]
   # @return [Array<String>]
   def expected_sids_by_gpa(user_data)
-    sorted_users = user_data.sort_by { |u| [u[:gpa].to_f, u[:sid]] }
+    sorted_users = user_data.sort_by { |u| [u[:gpa].to_f, u[:last_name_sortable].downcase, u[:first_name_sortable].downcase, u[:sid]] }
+    sorted_users.map { |u| u[:sid] }
+  end
+
+  # Returns the sequence of SIDs that should be present when sorted by GPA descending
+  # @param user_data [Array<Hash>]
+  # @return [Array<String>]
+  def expected_sids_by_gpa_desc(user_data)
+    sorted_users = user_data.sort do |a, b|
+      [b[:gpa].to_f, a[:last_name_sortable].downcase, a[:first_name_sortable].downcase, a[:sid]] <=>
+          [a[:gpa].to_f, b[:last_name_sortable].downcase, b[:first_name_sortable].downcase, b[:sid]]
+    end
     sorted_users.map { |u| u[:sid] }
   end
 
@@ -182,11 +237,22 @@ module BOACUserListPages
     sort_by_option('Issues', cohort)
   end
 
-  # Returns the sequence of SIDs that should be present when sorted by alert count
+  # Returns the sequence of SIDs that should be present when sorted by alert count ascending
   # @param user_data [Array<Hash>]
   # @return [Array<String>]
   def expected_sids_by_alerts(user_data)
-    sorted_users = user_data.sort_by { |u| [u[:alert_count], u[:sid]] }
+    sorted_users = user_data.sort_by { |u| [u[:alert_count], u[:last_name_sortable].downcase, u[:first_name_sortable].downcase, u[:sid]] }
+    sorted_users.map { |u| u[:sid] }
+  end
+
+  # Returns the sequence of SIDs that should be present when sorted by alert count descending
+  # @param user_data [Array<Hash>]
+  # @return [Array<String>]
+  def expected_sids_by_alerts_desc(user_data)
+    sorted_users = user_data.sort do |a, b|
+      [b[:alert_count], a[:last_name_sortable].downcase, a[:first_name_sortable].downcase, a[:sid]] <=>
+          [a[:alert_count], b[:last_name_sortable].downcase, b[:first_name_sortable].downcase, b[:sid]]
+    end
     sorted_users.map { |u| u[:sid] }
   end
 

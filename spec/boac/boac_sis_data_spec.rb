@@ -7,10 +7,12 @@ describe 'BOAC' do
   begin
     test = BOACTestConfig.new
     all_students = NessieUtils.get_all_students
+    alert_students = []
+    hold_students = []
     test.sis_data all_students
 
     # Create files for test output
-    user_profile_data_heading = %w(UID Sport Name PreferredName Email Phone Units GPA Level Colleges Majors Terms Writing History Institutions Cultures Graduation Alerts)
+    user_profile_data_heading = %w(UID Sport Name PreferredName Email Phone Units GPA Level Colleges Majors Terms Writing History Institutions Cultures Graduation Alerts Holds)
     user_profile_sis_data = Utils.create_test_output_csv('boac-sis-profiles.csv', user_profile_data_heading)
 
     user_course_data_heading = %w(UID Sport Term CourseCode CourseName SectionCcn SectionCode Primary? Midpoint Grade GradingBasis Units EnrollmentStatus)
@@ -29,7 +31,7 @@ describe 'BOAC' do
     test.max_cohort_members.sort_by(&:last_name).each do |student|
 
       begin
-        user_analytics_data = BOACApiUserAnalyticsPage.new @driver
+        user_analytics_data = BOACApiStudentPage.new @driver
         user_analytics_data.get_data(@driver, student)
         analytics_api_sis_data = user_analytics_data.user_sis_data
 
@@ -42,7 +44,6 @@ describe 'BOAC' do
           expect(cohort_page_sis_data[:level]).to eql(analytics_api_sis_data[:level])
           expect(cohort_page_sis_data[:level]).not_to be_empty
         end
-
 
         # TODO - shows withdrawal indicator if withdrawn
 
@@ -118,32 +119,41 @@ describe 'BOAC' do
             (it("shows no expected graduation date for UID #{student.uid} on the #{test.default_cohort.name} page") { expect(student_page_sis_data[:expected_graduation]).to be nil }) :
             (it("shows the expected graduation date for UID #{student.uid} on the #{test.default_cohort.name} page") { expect(student_page_sis_data[:expected_graduation]).to eql(analytics_api_sis_data[:expected_grad_term_name]) })
 
-        it("shows the Entry Level Writing Requirement for UID #{student.uid} on the student page") { expect(student_page_sis_data[:reqt_writing]).to eql(analytics_api_sis_data[:reqt_writing]) }
-        it("shows the American History Requirement for UID #{student.uid} on the student page") { expect(student_page_sis_data[:reqt_history]).to eql(analytics_api_sis_data[:reqt_history]) }
-        it("shows the American Institutions Requirement for UID #{student.uid} on the student page") { expect(student_page_sis_data[:reqt_institutions]).to eql(analytics_api_sis_data[:reqt_institutions]) }
-        it("shows the American Cultures Requirement for UID #{student.uid} on the student page") { expect(student_page_sis_data[:reqt_cultures]).to eql(analytics_api_sis_data[:reqt_cultures]) }
+        # TIMELINE
 
-        # ALERTS
+        # Requirements
+
+        student_page_reqts = @boac_student_page.visible_requirements
+        it("shows the Entry Level Writing Requirement for UID #{student.uid} on the student page") { expect(student_page_reqts[:reqt_writing]).to eql(analytics_api_sis_data[:reqt_writing]) }
+        it("shows the American History Requirement for UID #{student.uid} on the student page") { expect(student_page_reqts[:reqt_history]).to eql(analytics_api_sis_data[:reqt_history]) }
+        it("shows the American Institutions Requirement for UID #{student.uid} on the student page") { expect(student_page_reqts[:reqt_institutions]).to eql(analytics_api_sis_data[:reqt_institutions]) }
+        it("shows the American Cultures Requirement for UID #{student.uid} on the student page") { expect(student_page_reqts[:reqt_cultures]).to eql(analytics_api_sis_data[:reqt_cultures]) }
+
+        # Alerts
 
         alerts = BOACUtils.get_students_alerts [student]
         alert_msgs = (alerts.map &:message).sort
-
         dismissed = BOACUtils.get_dismissed_alerts(alerts).map &:message
-        non_dismissed = alert_msgs - dismissed
         logger.info "UID #{student.uid} alert count is #{alert_msgs.length}, with #{dismissed.length} dismissed"
 
-        if non_dismissed.any?
-          non_dismissed_visible = @boac_student_page.non_dismissed_alert_msg_elements.all? &:visible?
-          non_dismissed_present = @boac_student_page.non_dismissed_alert_msgs.sort
-          it("has the non-dismissed alert messages for UID #{student.uid} on the student page") { expect(non_dismissed_present).to eql(non_dismissed) }
-          it("shows the non-dismissed alert messages for UID #{student.uid} on the student page") { expect(non_dismissed_visible).to be true }
+        if alerts.any?
+          alert_students << student
+          visible_alerts = @boac_student_page.visible_alerts.sort
+          logger.debug "UID #{student.uid} alerts are #{alert_msgs}, and visible alerts are #{visible_alerts}"
+          it("has the alert messages for UID #{student.uid} on the student page") { expect(visible_alerts).to eql(alert_msgs) }
         end
 
-        if dismissed.any?
-          dismissed_visible = @boac_student_page.dismissed_alert_msg_elements.any? &:visible?
-          dismissed_present = @boac_student_page.dismissed_alert_msgs.sort
-          it("has the dismissed alert messages for UID #{student.uid} on the student page") { expect(dismissed_present).to eql(dismissed) }
-          it("hides the dismissed alert messages for UID #{student.uid} on the student page") { expect(dismissed_visible).to be false }
+        # Holds
+
+        holds = BOACUtils.get_student_holds student
+        hold_msgs = (holds.map &:message).sort
+        logger.info "UID #{student.uid} hold count is #{hold_msgs.length}"
+
+        if holds.any?
+          hold_students << student
+          visible_holds = @boac_student_page.visible_holds.sort
+          logger.debug "UID #{student.uid} holds are #{hold_msgs}, and visible holds are #{visible_holds}"
+          it("has the hold messages for UID #{student.uid} on the student page") { expect(visible_holds).to eql(hold_msgs) }
         end
 
         if (withdrawal = analytics_api_sis_data[:withdrawal])
@@ -314,12 +324,15 @@ describe 'BOAC' do
           row = [student.uid, student.sports, student_page_sis_data[:name], student_page_sis_data[:preferred_name], student_page_sis_data[:email],
                  student_page_sis_data[:phone], student_page_sis_data[:cumulative_units], student_page_sis_data[:cumulative_gpa], student_page_sis_data[:level],
                  student_page_sis_data[:colleges] && student_page_sis_data[:colleges] * '; ', student_page_sis_data[:majors] && student_page_sis_data[:majors] * '; ',
-                 student_page_sis_data[:terms_in_attendance], student_page_sis_data[:reqt_writing], student_page_sis_data[:reqt_history],
-                 student_page_sis_data[:reqt_institutions], student_page_sis_data[:reqt_cultures], student_page_sis_data[:expected_grad_term_name], alert_msgs]
+                 student_page_sis_data[:terms_in_attendance], student_page_reqts[:reqt_writing], student_page_reqts[:reqt_history],
+                 student_page_reqts[:reqt_institutions], student_page_reqts[:reqt_cultures], student_page_sis_data[:expected_graduation], alert_msgs, hold_msgs]
           Utils.add_csv_row(user_profile_sis_data, row)
         end
       end
     end
+
+  it('has at least one student with an alert') { expect(alert_students).not_to be_empty }
+  it('has at least one student with a hold') { expect(hold_students).not_to be_empty }
 
   rescue => e
     Utils.log_error e

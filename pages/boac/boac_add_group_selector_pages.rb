@@ -141,9 +141,13 @@ module BOACAddGroupSelectorPages
     wait_until(Utils.short_wait) { add_individual_to_grp_checkbox_elements.any? &:visible? }
     wait_for_update_and_click add_all_to_grp_checkbox_element
     logger.debug "There are #{add_individual_to_grp_checkbox_elements.length} individual checkboxes"
+
+    # Don't try to add users to the group if they're already in the group
+    group_sids = group.members.map &:sis_id
     visible_sids = add_individual_to_grp_checkbox_elements.map { |el| el.attribute('id').split('-')[1] }
-    visible_students = all_students.select { |student| visible_sids.include? student.sis_id }
-    add_students_to_grp(visible_students, group)
+    sids_to_add = visible_sids - group_sids
+    students_to_add = all_students.select { |student| sids_to_add.include? student.sis_id }
+    add_students_to_grp(students_to_add, group)
   end
 
 end

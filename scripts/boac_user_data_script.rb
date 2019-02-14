@@ -23,7 +23,7 @@ begin
     begin
 
       logger.info "Checking UID #{student.uid}"
-      user_analytics_data = BOACApiUserAnalyticsPage.new @driver
+      user_analytics_data = BOACApiStudentPage.new @driver
       user_analytics_data.get_data(@driver, student)
       analytics_api_sis_data = user_analytics_data.user_sis_data
 

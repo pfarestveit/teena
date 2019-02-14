@@ -26,7 +26,7 @@ describe 'BOAC' do
 
   before(:all) do
     @driver = Utils.launch_browser test.chrome_profile
-    @analytics_page = BOACApiUserAnalyticsPage.new @driver
+    @analytics_page = BOACApiStudentPage.new @driver
     @homepage = BOACHomePage.new @driver
     @group_page = BOACGroupPage.new @driver
     @filtered_page = BOACFilteredCohortPage.new @driver
@@ -181,7 +181,8 @@ describe 'BOAC' do
 
     it 'can be added from filtered cohort list view using individual selections' do
       @filtered_page.load_cohort test.default_cohort
-      visible_uids = @filtered_page.list_view_uids
+      group_uids = group_2.members.map &:uid
+      visible_uids = @filtered_page.list_view_uids - group_uids
       test.cohort_members = test.cohort_members.select { |m| visible_uids.include? m.uid }
       @filtered_page.select_and_add_students_to_grp(test.cohort_members[0..-2], group_2)
       test.cohort_members.pop

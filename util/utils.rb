@@ -105,9 +105,6 @@ class Utils
     messages = js_log.map &:message
     messages.each { |msg| logger.error "Possible JS error: #{msg}" unless msg.include? 'chrome-search://thumb/' }
 
-    # If the browser did not start successfully, the quit method will fail.
-    driver.quit rescue NoMethodError
-
     # Pause after quitting the browser to make sure it shuts down completely before the next test relaunches it
     sleep 2
   end

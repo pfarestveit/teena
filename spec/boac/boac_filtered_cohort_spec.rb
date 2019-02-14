@@ -11,7 +11,7 @@ describe 'BOAC', order: :defined do
 
   before(:all) do
     @driver = Utils.launch_browser test.chrome_profile
-    @analytics_page = BOACApiUserAnalyticsPage.new @driver
+    @analytics_page = BOACApiStudentPage.new @driver
     @homepage = BOACHomePage.new @driver
     @cohort_page = BOACFilteredCohortPage.new @driver
     @student_page = BOACStudentPage.new @driver
@@ -189,7 +189,7 @@ describe 'BOAC', order: :defined do
 
       it "allows the advisor to sort by major descending cohort members who have alerts on the homepage with criteria #{cohort.search_criteria.list_filters}" do
         if cohort.member_data.any?
-          expected_sequence = @homepage.expected_sids_by_major(cohort.member_data).reverse
+          expected_sequence = @homepage.expected_sids_by_major_desc cohort.member_data
           @homepage.sort_by_major cohort
           @homepage.wait_until(1, "Expected #{expected_sequence}, but got #{@homepage.all_row_sids(@driver, cohort)}") { @homepage.all_row_sids(@driver, cohort) == expected_sequence }
         end
@@ -205,7 +205,7 @@ describe 'BOAC', order: :defined do
 
       it "allows the advisor to sort by expected grad date descending cohort members who have alerts on the homepage with criteria #{cohort.search_criteria.list_filters}" do
         if cohort.member_data.any?
-          expected_sequence = @homepage.expected_sids_by_grad_term(cohort.member_data).reverse
+          expected_sequence = @homepage.expected_sids_by_grad_term_desc cohort.member_data
           @homepage.sort_by_expected_grad cohort
           @homepage.wait_until(1, "Expected #{expected_sequence}, but got #{@homepage.all_row_sids@driver, cohort}") { @homepage.all_row_sids(@driver, cohort) == expected_sequence }
         end
@@ -223,7 +223,7 @@ describe 'BOAC', order: :defined do
 
       it "allows the advisor to sort by term units descending cohort members who have alerts on the homepage with criteria #{cohort.search_criteria.list_filters}" do
         if cohort.member_data.any?
-          expected_sequence = @homepage.expected_sids_by_term_units(cohort.member_data).reverse
+          expected_sequence = @homepage.expected_sids_by_term_units_desc cohort.member_data
           @homepage.sort_by_term_units cohort
           @homepage.wait_until(1, "Expected #{expected_sequence}, but got #{@homepage.all_row_sids(@driver, cohort)}") { @homepage.all_row_sids(@driver, cohort) == expected_sequence }
         end
@@ -239,7 +239,7 @@ describe 'BOAC', order: :defined do
 
       it "allows the advisor to sort by cumulative descending cohort members who have alerts on the homepage with criteria #{cohort.search_criteria.list_filters}" do
         if cohort.member_data.any?
-          expected_sequence = @homepage.expected_sids_by_units_cum(cohort.member_data).reverse
+          expected_sequence = @homepage.expected_sids_by_units_cum_desc cohort.member_data
           @homepage.sort_by_cumul_units cohort
           @homepage.wait_until(1, "Expected #{expected_sequence}, but got #{@homepage.all_row_sids(@driver, cohort)}") { @homepage.all_row_sids(@driver, cohort) == expected_sequence }
         end
@@ -255,7 +255,7 @@ describe 'BOAC', order: :defined do
 
       it "allows the advisor to sort by GPA descending cohort members who have alerts on the homepage with criteria #{cohort.search_criteria.list_filters}" do
         if cohort.member_data.any?
-          expected_sequence = @homepage.expected_sids_by_gpa(cohort.member_data).reverse
+          expected_sequence = @homepage.expected_sids_by_gpa_desc cohort.member_data
           @homepage.sort_by_gpa cohort
           @homepage.wait_until(1, "Expected #{expected_sequence}, but got #{@homepage.all_row_sids(@driver, cohort)}") { @homepage.all_row_sids(@driver, cohort) == expected_sequence }
         end
@@ -271,7 +271,7 @@ describe 'BOAC', order: :defined do
 
       it "allows the advisor to sort by alert count descending cohort members who have alerts on the homepage with criteria #{cohort.search_criteria.list_filters}" do
         if cohort.member_data.any?
-          expected_sequence = @homepage.expected_sids_by_alerts(cohort.member_data).reverse
+          expected_sequence = @homepage.expected_sids_by_alerts_desc cohort.member_data
           @homepage.sort_by_alert_count cohort
           @homepage.wait_until(1, "Expected #{expected_sequence}, but got #{@homepage.all_row_sids(@driver, cohort)}") { @homepage.all_row_sids(@driver, cohort) == expected_sequence }
         end

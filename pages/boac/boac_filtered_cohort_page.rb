@@ -491,9 +491,9 @@ class BOACFilteredCohortPage
 
     # Inactive ASC
     matching_inactive_asc_users = if search_criteria.inactive_asc
-                                    (test.searchable_data.select { |u| u[:inactive_asc] })
+                                    (test.searchable_data.reject { |u| u[:active_asc] })
                                   else
-                                    (test.dept == BOACDepartments::ASC) ? (test.searchable_data.reject { |u| u[:inactive_asc] }) : test.searchable_data
+                                    (test.dept == BOACDepartments::ASC) ? (test.searchable_data.select { |u| u[:active_asc] }) : test.searchable_data
                                   end
 
     # Intensive ASC
