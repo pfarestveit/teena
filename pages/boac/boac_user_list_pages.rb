@@ -70,11 +70,21 @@ module BOACUserListPages
     sort_by_option('Name', cohort)
   end
 
-  # Returns the sequence of SIDs that should be present when sorted by last name
+  # Returns the sequence of SIDs that should be present when sorted by last name ascending
   # @param user_data [Array<Hash>]
   # @return [Array<String>]
-  def expected_sids_by_last_name(user_data)
+  def expected_sids_by_name(user_data)
     sorted_users = user_data.sort_by { |u| [u[:last_name_sortable].downcase, u[:first_name_sortable].downcase, u[:sid]] }
+    sorted_users.map { |u| u[:sid] }
+  end
+
+  # Returns the sequence of SIDs that should be present when sorted by last name descending
+  # @param user_data [Array<Hash>]
+  # @return [Array<String>]
+  def expected_sids_by_name_desc(user_data)
+    sorted_users = user_data.sort do |a, b|
+      [b[:last_name_sortable].downcase, a[:first_name_sortable], a[:sid]] <=> [a[:last_name_sortable].downcase, b[:first_name_sortable], b[:sid]]
+    end
     sorted_users.map { |u| u[:sid] }
   end
 
@@ -106,7 +116,7 @@ module BOACUserListPages
   # @param user_data [Array<Hash>]
   # @return [Array<String>]
   def expected_sids_by_major(user_data)
-    sorted_users = user_data.sort_by { |u| [u[:major].sort.first.gsub(/\W/, '').downcase, u[:last_name_sortable].downcase, u[:first_name_sortable].downcase, u[:sid]] }
+    sorted_users = user_data.sort_by { |u| [u[:major].sort.first.downcase, u[:last_name_sortable].downcase, u[:first_name_sortable].downcase, u[:sid]] }
     sorted_users.map { |u| u[:sid] }
   end
 
@@ -115,8 +125,8 @@ module BOACUserListPages
   # @return [Array<String>]
   def expected_sids_by_major_desc(user_data)
     sorted_users = user_data.sort do |a, b|
-      [b[:major].sort.first.gsub(/\W/, '').downcase, a[:last_name_sortable].downcase, a[:first_name_sortable].downcase, a[:sid]] <=>
-          [a[:major].sort.first.gsub(/\W/, '').downcase, b[:last_name_sortable].downcase, b[:first_name_sortable].downcase, b[:sid]]
+      [b[:major].sort.first.downcase, a[:last_name_sortable].downcase, a[:first_name_sortable].downcase, a[:sid]] <=>
+          [a[:major].sort.first.downcase, b[:last_name_sortable].downcase, b[:first_name_sortable].downcase, b[:sid]]
     end
     sorted_users.map { |u| u[:sid] }
   end

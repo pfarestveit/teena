@@ -143,21 +143,21 @@ describe 'BOAC', order: :defined do
       end
 
       it "shows the filtered cohort members who have alerts on the homepage with criteria #{cohort.search_criteria.list_filters}" do
-        cohort.members = test.dept_students.select { |u| @homepage.expected_sids_by_last_name(cohort.member_data).include? u.sis_id }
+        cohort.members = test.dept_students.select { |u| @homepage.expected_sids_by_name(cohort.member_data).include? u.sis_id }
         @homepage.expand_member_rows cohort
         @homepage.verify_member_alerts(@driver, cohort, test.advisor)
       end
 
       it "by default sorts by name ascending cohort members who have alerts on the homepage with criteria #{cohort.search_criteria.list_filters}" do
         if cohort.member_data.any?
-          expected_sequence = @homepage.expected_sids_by_last_name cohort.member_data
+          expected_sequence = @homepage.expected_sids_by_name cohort.member_data
           @homepage.wait_until(1, "Expected #{expected_sequence}, but got #{@homepage.all_row_sids(@driver, cohort)}") { @homepage.all_row_sids(@driver, cohort) == expected_sequence }
         end
       end
 
       it "allows the advisor to sort by name descending cohort members who have alerts on the homepage with criteria #{cohort.search_criteria.list_filters}" do
         if cohort.member_data.any?
-          expected_sequence = @homepage.expected_sids_by_last_name(cohort.member_data).reverse
+          expected_sequence = @homepage.expected_sids_by_name_desc cohort.member_data
           @homepage.sort_by_name cohort
           @homepage.wait_until(1, "Expected #{expected_sequence}, but got #{@homepage.all_row_sids(@driver, cohort)}") { @homepage.all_row_sids(@driver, cohort) == expected_sequence }
         end
