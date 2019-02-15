@@ -114,7 +114,8 @@ module BOACCohortPages
   def sort_by(option)
     logger.info "Sorting by #{option}"
     wait_for_element_and_select_js(cohort_sort_select_element, option)
-    sleep 1
+    wait_until(2) { player_sid_elements.empty? }
+    wait_for_spinner
   end
 
   # Sorts cohort search results by first name

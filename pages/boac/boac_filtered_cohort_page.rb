@@ -151,7 +151,7 @@ class BOACFilteredCohortPage
     # All others require a selection
     else
       wait_for_update_and_click new_sub_filter_button_element
-      option_element = (filter_name == 'Advisor') ? new_filter_advisor_option(filter_option) : link_element(xpath: "//a[contains(text(),\"#{filter_option}\")]")
+      option_element = (filter_name == 'Advisor') ? new_filter_advisor_option(filter_option) : link_element(xpath: "//div[@class=\"cohort-filter-draft-column-02\"]//a[contains(text(),\"#{filter_option}\")]")
       wait_for_update_and_click option_element
     end
   end
@@ -171,8 +171,8 @@ class BOACFilteredCohortPage
     click_new_filter_button
     wait_for_update_and_click new_filter_option(filter_name)
 
-    # Inactive, Intensive, and Underrepresented Minority have no sub-options
-    choose_sub_option(filter_name, filter_option) unless ['Inactive', 'Inactive (COE)', 'Inactive (ASC)', 'Intensive', 'Underrepresented Minority'].include? filter_name
+    # Inactive, Intensive, Probation, and Underrepresented Minority have no sub-options
+    choose_sub_option(filter_name, filter_option) unless ['Inactive', 'Inactive (COE)', 'Inactive (ASC)', 'Intensive', 'Underrepresented Minority', 'Probation'].include? filter_name
     wait_for_update_and_click unsaved_filter_add_button_element
     unsaved_filter_apply_button_element.when_present Utils.short_wait
   end
@@ -216,8 +216,8 @@ class BOACFilteredCohortPage
   # Verifies that a cohort's filters are visibly selected
   # @param cohort [FilteredCohort]
   def verify_filters_present(cohort)
-    show_filters
     if cohort.search_criteria.list_filters.flatten.compact.any?
+      show_filters
       wait_until(Utils.short_wait) { cohort_filter_row_elements.any? }
       filters = cohort.search_criteria
       wait_until(5) do
@@ -231,6 +231,7 @@ class BOACFilteredCohortPage
         filters.gender.each { |g| existing_filter_element('Gender', g).exists? } if filters.gender && filters.gender.any?
         existing_filter_element('Underrepresented Minority').exists? if filters.underrepresented_minority
         filters.prep.each { |p| existing_filter_element('PREP', p).exists? } if filters.prep && filters.prep.any?
+        existing_filter_element('Probation').exists? if filters.probation_coe
         existing_filter_element('Inactive').exists? if filters.inactive_asc
         existing_filter_element('Intensive').exists? if filters.intensive_asc
         filters.team.each { |t| existing_filter_element('Team', t.name).exists? } if filters.team && filters.team.any?
@@ -341,6 +342,7 @@ class BOACFilteredCohortPage
     select_filter 'Underrepresented Minority' if cohort.search_criteria.underrepresented_minority
     cohort.search_criteria.gender.each { |g| select_filter('Gender', g) } if cohort.search_criteria.gender
     cohort.search_criteria.prep.each { |p| select_filter('PREP', p) } if cohort.search_criteria.prep
+    select_filter 'Probation' if cohort.search_criteria.probation_coe
     inactive_label = (test.dept == BOACDepartments::ADMIN) ? 'Inactive (COE)' : 'Inactive'
     select_filter inactive_label if cohort.search_criteria.inactive_coe
 
@@ -487,7 +489,7 @@ class BOACFilteredCohortPage
                                   end
 
     # Probation COE
-    matching_probation_asc_users = search_criteria.probation_coe ? (test.searchable_data.select { |u| u[:probation_asc] }) : test.searchable_data
+    matching_probation_asc_users = search_criteria.probation_coe ? (test.searchable_data.select { |u| u[:probation_coe] }) : test.searchable_data
 
     # Inactive ASC
     matching_inactive_asc_users = if search_criteria.inactive_asc

@@ -9,6 +9,7 @@ describe 'BOAC' do
     test = BOACTestConfig.new
     test.navigation NessieUtils.get_all_students
     pages_tested = []
+    bubbles_tested = []
 
     @driver = Utils.launch_browser test.chrome_profile
     @homepage = BOACHomePage.new @driver
@@ -84,18 +85,32 @@ describe 'BOAC' do
                           all_students_present = @class_matrix_page.verify_all_students_present(@driver, expected_sids.length)
                           it("shows all the expected matrix view students in #{class_test_case}") { expect(all_students_present).to be true }
 
-                          # Visit student
-                          @class_matrix_page.matrix_bubbles(@driver).any? ?
-                              @class_matrix_page.click_last_student_bubble(@driver) :
-                              @class_matrix_page.click_last_no_data_student
-                          matrix_to_student = @student_page.verify_block { @student_page.sid_element.when_visible Utils.short_wait }
-                          it("links student pages from the matrix view of #{class_test_case}") { expect(matrix_to_student).to be true }
+                          # Visit student. Clicking a matrix bubble will throw an error if another bubble obscures it, so only proceed if the bubble is clickable.
+                          student_page_testable = if @class_matrix_page.matrix_bubbles(@driver).any?
+                                                    begin
+                                                      @class_matrix_page.click_last_student_bubble @driver
+                                                      bubbles_tested << class_test_case
+                                                      true
+                                                    rescue => e
+                                                      logger.error "#{e.message}"
+                                                      false
+                                                    end
+                                                  else
+                                                    @class_matrix_page.click_last_no_data_student
+                                                    true
+                                                  end
 
-                          # Back to matrix view
-                          @driver.navigate.back
-                          student_to_matrix = @class_matrix_page.verify_block { @class_matrix_page.wait_for_matrix }
-                          it("returns to the matrix view of #{class_test_case}") { expect(student_to_matrix).to be_truthy }
+                          if student_page_testable
+                            matrix_to_student = @student_page.verify_block { @student_page.sid_element.when_visible Utils.short_wait }
+                            it("links student pages from the matrix view of #{class_test_case}") { expect(matrix_to_student).to be true }
 
+                            # Back to matrix view
+                            @driver.navigate.back
+                            student_to_matrix = @class_matrix_page.verify_block { @class_matrix_page.wait_for_matrix }
+                            it("returns to the matrix view of #{class_test_case}") { expect(student_to_matrix).to be_truthy }
+                          else
+                            logger.warn "Skipping matrix to student page tests because the bubbles are all bunched up for #{class_test_case}"
+                          end
                         end
                       end
                     rescue => e
@@ -122,6 +137,7 @@ describe 'BOAC' do
 
   rescue => e
     BOACUtils.log_error e
+    it('has at least one testable matrix bubble') { expect(bubbles_tested).not_to be_empty }
     it('threw an error') { fail }
   ensure
     Utils.quit_browser @driver
