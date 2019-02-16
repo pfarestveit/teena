@@ -4,8 +4,19 @@ begin
 
   puts "#{Time.now} - Beginning OEC data source update script"
   args = ARGV
-  campus_data_sources = %w(Campus_Courses Campus_Supervisors Campus_Instructors Campus_Students Campus_Course_Supervisors Campus_Course_Instructors Campus_Course_Students)
-  extension_data_sources = Dir[File.join(ENV['HOME'], 'selenium-files/*.csv')] + Dir[File.join(ENV['HOME'], 'selenium-files/*.CSV')]
+  campus_data_sources = campus_data_sources = %w(Campus_Courses Campus_Supervisors Campus_Instructors Campus_Students Campus_Course_Supervisors
+                                                 Campus_Course_Instructors Campus_Course_Students Campus_Department_Hierarchy Campus_Department_Supervisors)
+  extension_data_sources = []
+  extension_data_sources << if args.include? 'upload'
+                             Dir[File.join(ENV['HOME'], 'selenium-files/*.csv')] + Dir[File.join(ENV['HOME'], 'selenium-files/*.CSV')]
+                            elsif args.include? 'path'
+                              %w(UNEX-CE-Course_Instructor UNEX-CE-Course_Student UNEX-CE-Course_Supervisor UNEX-CE-Courses UNEX-CE-Users
+                                 UNEX-Course_Instructor UNEX-Course_Student UNEX-Course_Supervisor UNEX-Courses UNEX-Users)
+                            end
+  extension_data_sources.flatten!
+
+  haas_data_sources = %w(Haas-Course_Instructors Haas-Course_Students Haas-Courses Haas-Instructors Haas-Staff Haas-Students)
+
   @base_url = args.include?('qa') ? 'https://course-evaluations-qa.berkeley.edu' : 'https://course-evaluations.berkeley.edu'
 
   # Set timeouts and launch browser
@@ -61,7 +72,7 @@ begin
     @driver.find_element(link_text: 'Edit').click
   end
 
-  def upload_file(file, args)
+  def upload_file_or_path(file, args)
     @brief_wait.until { @driver.find_element(id: 'AdminUC_Data_ucAdminDS_Entities_dplConnector') }
     select = Selenium::WebDriver::Support::Select.new @driver.find_element(id: 'AdminUC_Data_ucAdminDS_Entities_dplConnector')
     if args.include? 'upload'
@@ -71,7 +82,7 @@ begin
       @driver.find_element(id: 'AdminUC_Data_ucAdminDS_Entities_File1').send_keys file
       sleep 2
     else
-      path = "c:\\shares\\UNEX\\#{file.split('/').last}"
+      path = "c:\\shares\\UNEX\\#{file.split('/').last}.csv"
       puts "#{Time.now} - Entering path '#{path}'"
       select.select_by(:value, 'CSVP')
       @brief_wait.until { @driver.find_element(id: 'AdminUC_Data_ucAdminDS_Entities_txtPath') }
@@ -139,9 +150,10 @@ begin
 
     log_in
 
-    # CAMPUS DATA SOURCES
-    if args.include? 'campus'
-      campus_data_sources.each do |data_source|
+    # CAMPUS OR HAAS DATA SOURCES
+    if (%w(campus haas) & args).any?
+      data_sources = args.include?('campus') ? campus_data_sources : haas_data_sources
+      data_sources.each do |data_source|
         begin
           find_and_edit_source data_source
           connect_source
@@ -155,24 +167,25 @@ begin
 
     # EXTENSION DATA SOURCES
     if args.include? 'extension'
-      if args.include? 'upload' && extension_data_sources.empty?
+      if args.include?('upload') && extension_data_sources.empty?
         puts "#{Time.now} - There are no files to upload!"
         log_results(results_file, 'No files were uploaded for any data sources')
       end
       if (%w(path upload) & args).any?
         extension_data_sources.each do |file|
           begin
-            find_and_edit_source (data_source = File.basename(file)[0..-5])
-            upload_file(file, args)
+            source = args.include?('upload') ? File.basename(file)[0..-5] : file
+            find_and_edit_source source
+            upload_file_or_path(file, args)
             apply_and_import_source
-            log_results(results_file, "#{Time.now} - Update succeeded for #{data_source}")
+            log_results(results_file, "#{Time.now} - Update succeeded for #{source}")
           rescue => e
-            log_results(results_file, "#{Time.now} - Encountered an error with data source '#{data_source}'. Update failed.", e)
+            log_results(results_file, "#{Time.now} - Encountered an error with data source '#{source}'. Update failed.", e)
           end
         end
       else
         puts "#{Time.now} - Extension requires an upload or path argument!"
-        log_results(results_file, 'No files were uploaded for any data sources')
+        log_results(results_file, 'No updates were done for any data sources')
       end
     end
   end
