@@ -51,13 +51,6 @@ module BOACCohortPages
 
   # LIST VIEW - shared by filtered cohorts and curated groups
 
-  # Returns the XPath for a user
-  # @param user [User]
-  # @return [String]
-  def cohort_list_view_user_xpath(user)
-    "//div[contains(@class,\"list-group-item\")][contains(.,\"#{user.sis_id}\")]"
-  end
-
   # Returns the level displayed for a user
   # @param user [User]
   # @return [String]
@@ -89,12 +82,20 @@ module BOACCohortPages
   # @param user [User]
   # @return [Hash]
   def visible_sis_data(driver, user)
+    #
+    # Note: 'row_index' is position of student in list. For each student listed, the page has two hidden span elements
+    #       useful in determining (1) 'row_index' if you know the SID, or (2) SID if you know the 'row_index':
+    #
+    #          <span id="row-index-of-{student.sid}">{{ rowIndex }}</span>
+    #          <span id="student-sid-of-row-{rowIndex}">{{ student.sid }}</span>
+    #
+    row_index = span_element(id: "row-index-of-#{user.sis_id}").text
     wait_until(Utils.medium_wait) { player_link_elements.any? }
     wait_until(Utils.short_wait) { cohort_list_view_user_level(user) }
-    gpa_el = div_element(id: "student-#{user.sis_id}-cumulative-gpa")
-    term_units_el = div_element(xpath: "#{cohort_list_view_user_xpath user}//div[text()='Units in Progress']/preceding-sibling::div")
-    cumul_units_el = div_element(id: "student-#{user.sis_id}-cumulative-units")
-    class_els = driver.find_elements(xpath: "#{cohort_list_view_user_xpath user}//td[contains(@class,'cohort-course-activity-course-name')]/div")
+    gpa_el = div_element(id: "row-#{row_index}-student-cumulative-gpa")
+    term_units_el = div_element(id: "row-#{row_index}-student-enrolled-units")
+    cumul_units_el = div_element(id: "row-#{row_index}-cumulative-units")
+    class_els = driver.find_elements(xpath: "//div[starts-with(@id, 'row-#{row_index}-student-enrollment-name')]")
     {
       :level => cohort_list_view_user_level(user),
       :majors => cohort_list_view_user_majors(driver, user),

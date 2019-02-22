@@ -41,15 +41,16 @@ module BOACListViewPages
 
   ### SETS OF USERS ###
 
-  elements(:player_link, :link, xpath: '//a[contains(@href,"/student/")]')
-  elements(:player_name, :h3, xpath: '//h3[contains(@class,"student-name")]')
-  elements(:player_sid, :div, xpath: '//div[@class="student-sid"]')
+  element(:cohort_students_container, tag: :div, id: 'cohort-students')
+  elements(:player_link, :a, xpath: '//a[ends-with(@id, \'-student-href\')]')
+  elements(:player_name, :h3, xpath: '//h3[ends-with(@id, \'-student-name\')]')
+  elements(:player_sid, :span, xpath: '//span[ends-with(@id, \'-student-sid\')]')
 
   # Waits for list view results to load
   def wait_for_student_list
     begin
       start_time = Time.now
-      wait_until(Utils.medium_wait) { list_view_sids.any? }
+      wait_until(Utils.medium_wait) { cohort_students_container_element }
       logger.debug "Took #{Time.now - start_time} seconds for users to appear"
       sleep 1
     rescue

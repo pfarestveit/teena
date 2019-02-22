@@ -4,6 +4,12 @@ class BOACUtils < Utils
 
   @config = Utils.config['boac']
 
+  # Returns the BOAC test environment API URL
+  # @return [String]
+  def self.api_base_url
+    @config['api_base_url']
+  end
+
   # Returns the BOAC test environment URL
   # @return [String]
   def self.base_url
