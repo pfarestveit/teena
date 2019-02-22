@@ -30,8 +30,6 @@ describe 'An ASC advisor' do
     @student_page = BOACStudentPage.new @driver
 
     @inactive_student_sids = asc_inactive_students.map &:sis_id
-    @inactive_student_search_data = test_asc.searchable_data.select { |d| @inactive_student_sids.include? d[:sid] }
-    logger.debug "There are #{@inactive_student_search_data.length} inactive students"
 
     @homepage.dev_auth test_asc.advisor
   end
@@ -46,18 +44,18 @@ describe 'An ASC advisor' do
       @filtered_cohort_page.wait_until(1) { @filtered_cohort_page.new_filter_option_elements.any? &:visible? }
     end
 
-    it('sees a GPA filter') { expect(@filtered_cohort_page.new_filter_option('GPA').visible?).to be true }
-    it('sees a Level filter') { expect(@filtered_cohort_page.new_filter_option('Level').visible?).to be true }
-    it('sees a Major filter') { expect(@filtered_cohort_page.new_filter_option('Major').visible?).to be true }
-    it('sees a Units filter') { expect(@filtered_cohort_page.new_filter_option('Units Completed').visible?).to be true }
-    it('sees a Last Name filter') { expect(@filtered_cohort_page.new_filter_option('Last Name').visible?).to be true }
-    it('sees no Advisor filter') { expect(@filtered_cohort_page.new_filter_option('Advisor').exists?).to be false }
-    it('sees no Ethnicity filter') { expect(@filtered_cohort_page.new_filter_option('Ethnicity').exists?).to be false }
-    it('sees no Gender filter') { expect(@filtered_cohort_page.new_filter_option('Gender').exists?).to be false }
-    it('sees no PREP filter') { expect(@filtered_cohort_page.new_filter_option('PREP').exists?).to be false }
-    it('sees a Inactive filter') { expect(@filtered_cohort_page.new_filter_option('Inactive').visible?).to be true }
-    it('sees a Intensive filter') { expect(@filtered_cohort_page.new_filter_option('Intensive').visible?).to be true }
-    it('sees a Team filter') { expect(@filtered_cohort_page.new_filter_option('Team').visible?).to be true }
+    it('sees a GPA filter') { expect(@filtered_cohort_page.new_filter_option_by_key('gpaRanges').visible?).to be true }
+    it('sees a Level filter') { expect(@filtered_cohort_page.new_filter_option_by_key('levels').visible?).to be true }
+    it('sees a Major filter') { expect(@filtered_cohort_page.new_filter_option_by_key('majors').visible?).to be true }
+    it('sees a Units filter') { expect(@filtered_cohort_page.new_filter_option_by_key('unitRanges').visible?).to be true }
+    it('sees a Last Name filter') { expect(@filtered_cohort_page.new_filter_option_by_key('lastNameRange').visible?).to be true }
+    it('sees no Advisor filter') { expect(@filtered_cohort_page.new_filter_option_by_key('advisorLdapUids').exists?).to be false }
+    it('sees no Ethnicity filter') { expect(@filtered_cohort_page.new_filter_option_by_key('ethnicities').exists?).to be false }
+    it('sees no Gender filter') { expect(@filtered_cohort_page.new_filter_option_by_key('genders').exists?).to be false }
+    it('sees no PREP filter') { expect(@filtered_cohort_page.new_filter_option_by_key('coePrepStatuses').exists?).to be false }
+    it('sees a Inactive filter') { expect(@filtered_cohort_page.new_filter_option_by_key('isInactiveAsc').visible?).to be true }
+    it('sees a Intensive filter') { expect(@filtered_cohort_page.new_filter_option_by_key('inIntensiveCohort').visible?).to be true }
+    it('sees a Team filter') { expect(@filtered_cohort_page.new_filter_option_by_key('groupCodes').visible?).to be true }
   end
 
   context 'visiting Everyone\'s Cohorts' do
@@ -83,11 +81,6 @@ describe 'An ASC advisor' do
     it 'sees no non-ASC students in search results' do
       @search_page.search coe_only_students.first.sis_id
       @search_page.no_results_msg(coe_only_students.first.sis_id).when_visible Utils.short_wait
-    end
-
-    it 'sees no inactive ASC students in search results' do
-      @search_page.search @inactive_student_sids.first
-      @search_page.no_results_msg(@inactive_student_sids.first).when_visible Utils.short_wait
     end
 
     it('sees overlapping ASC and CoE active students in search results') do

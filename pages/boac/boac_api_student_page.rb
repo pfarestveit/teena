@@ -7,7 +7,7 @@ class BOACApiStudentPage
 
   def get_data(driver, user)
     logger.info "Getting data for UID #{user.uid}"
-    navigate_to "#{BOACUtils.base_url}/api/student/#{user.uid}"
+    navigate_to "#{BOACUtils.api_base_url}/api/student/#{user.uid}"
     wait_until(Utils.long_wait) { driver.find_element(xpath: '//pre') }
     @parsed = JSON.parse driver.find_element(xpath: '//pre').text
     if @parsed['message'] == 'Unknown student'

@@ -14,8 +14,6 @@ describe 'A CoE advisor using BOAC' do
 
   overlap_students = test_asc.dept_students & test_coe.dept_students
   asc_only_students = test_asc.dept_students - overlap_students
-  inactive_coe_search_data = test_coe.searchable_data.select { |d| d[:inactive_coe] }
-  inactive_coe_sids = inactive_coe_search_data.map { |d| d[:sid] }
 
   coe_everyone_filters = BOACUtils.get_everyone_filtered_cohorts test_coe.dept
 
@@ -73,11 +71,6 @@ describe 'A CoE advisor using BOAC' do
       @search_page.search overlap_students.first.sis_id
       expect(@search_page.student_search_results_count).to eql(1)
     end
-
-    it 'sees no inactive CoE students in search results' do
-      @search_page.search inactive_coe_sids.first
-      @search_page.no_results_msg(inactive_coe_sids.first).when_visible Utils.short_wait
-    end
   end
 
   context 'performing a filtered cohort search' do
@@ -88,20 +81,20 @@ describe 'A CoE advisor using BOAC' do
       @filtered_cohort_page.wait_until(1) { @filtered_cohort_page.new_filter_option_elements.any? &:visible? }
     end
 
-    it('sees a GPA filter') { expect(@filtered_cohort_page.new_filter_option('GPA').visible?).to be true }
-    it('sees a Level filter') { expect(@filtered_cohort_page.new_filter_option('Level').visible?).to be true }
-    it('sees a Major filter') { expect(@filtered_cohort_page.new_filter_option('Major').visible?).to be true }
-    it('sees a Units filter') { expect(@filtered_cohort_page.new_filter_option('Units Completed').visible?).to be true }
-    it('sees a Last Name filter') { expect(@filtered_cohort_page.new_filter_option('Last Name').visible?).to be true }
-    it('sees a Advisor filter') { expect(@filtered_cohort_page.new_filter_option('Advisor').visible?).to be true }
-    it('sees a Ethnicity filter') { expect(@filtered_cohort_page.new_filter_option('Ethnicity').visible?).to be true }
-    it('sees a Gender filter') { expect(@filtered_cohort_page.new_filter_option('Gender').visible?).to be true }
-    it('sees a PREP filter') { expect(@filtered_cohort_page.new_filter_option('PREP').visible?).to be true }
-    it('sees an Inactive COE filter') { expect(@filtered_cohort_page.new_filter_option('Inactive').exists?).to be true }
-    it('sees a Probation filter') { expect(@filtered_cohort_page.new_filter_option('Probation').exists?).to be true }
-    it('sees no Inactive ASC filter') { expect(@filtered_cohort_page.new_filter_option('Inactive (ASC)').exists?).to be false }
-    it('sees no Intensive filter') { expect(@filtered_cohort_page.new_filter_option('Intensive').exists?).to be false }
-    it('sees no Team filter') { expect(@filtered_cohort_page.new_filter_option('Team').exists?).to be false }
+    it('sees a GPA filter') { expect(@filtered_cohort_page.new_filter_option_by_key('gpaRanges').visible?).to be true }
+    it('sees a Level filter') { expect(@filtered_cohort_page.new_filter_option_by_key('levels').visible?).to be true }
+    it('sees a Major filter') { expect(@filtered_cohort_page.new_filter_option_by_key('majors').visible?).to be true }
+    it('sees a Units filter') { expect(@filtered_cohort_page.new_filter_option_by_key('unitRanges').visible?).to be true }
+    it('sees a Last Name filter') { expect(@filtered_cohort_page.new_filter_option_by_key('lastNameRange').visible?).to be true }
+    it('sees a Advisor filter') { expect(@filtered_cohort_page.new_filter_option_by_key('advisorLdapUids').visible?).to be true }
+    it('sees a Ethnicity filter') { expect(@filtered_cohort_page.new_filter_option_by_key('ethnicities').visible?).to be true }
+    it('sees a Gender filter') { expect(@filtered_cohort_page.new_filter_option_by_key('genders').visible?).to be true }
+    it('sees a PREP filter') { expect(@filtered_cohort_page.new_filter_option_by_key('coePrepStatuses').visible?).to be true }
+    it('sees an Inactive COE filter') { expect(@filtered_cohort_page.new_filter_option_by_key('isInactiveCoe').exists?).to be true }
+    it('sees a Probation filter') { expect(@filtered_cohort_page.new_filter_option_by_key('coeProbation').exists?).to be true }
+    it('sees no Inactive ASC filter') { expect(@filtered_cohort_page.new_filter_option_by_key('isInactiveAsc').exists?).to be false }
+    it('sees no Intensive filter') { expect(@filtered_cohort_page.new_filter_option_by_key('inIntensiveCohort').exists?).to be false }
+    it('sees no Team filter') { expect(@filtered_cohort_page.new_filter_option_by_key('groupCodes').exists?).to be false }
 
   end
 

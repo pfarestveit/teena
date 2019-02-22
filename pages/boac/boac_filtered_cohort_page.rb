@@ -112,8 +112,8 @@ class BOACFilteredCohortPage
   # FILTERED COHORTS - Search
 
   button(:show_filters_button, xpath: "//button[contains(.,'Show Filters')]")
-
-  button(:new_filter_button, xpath: '//button[contains(.,"New Filter")]')
+  # The 'new_filter_button' xpath uses 'starts-with' because third-party Bootstrap-Vue dynamically appends an id-suffix.
+  button(:new_filter_button, xpath: '//button[starts-with(@id, \'new-filter-button\')]')
   button(:new_sub_filter_button, xpath: '//div[contains(@id,"filter-row-dropdown-secondary")]//button')
   elements(:new_filter_option, :link, class: 'dropdown-item')
   elements(:new_filter_initial_input, :text_area, class: 'filter-range-input')
@@ -124,8 +124,16 @@ class BOACFilteredCohortPage
   # Returns a filter option link with given text, used to find options other than 'Advisor'
   # @param option_name [String]
   # @return [PageObject::Elements::Link]
+  # @deprecated Use <tt>new_filter_option_by_key</tt> instead
   def new_filter_option(option_name)
-    link_element(xpath: "//a[text()=\"#{option_name}\"]")
+    link_element(xpath: "//a[contains(text(),\"#{option_name}\")]")
+  end
+
+  # Returns a filter option link with given text. Element id is based on filter key, not filter label.
+  # @param option_key [String]
+  # @return [PageObject::Elements::Link]
+  def new_filter_option_by_key(option_key)
+    link_element(id: "dropdown-primary-menuitem-#{option_key}-new")
   end
 
   # Returns a filter option list item with given text, used to find 'Advisor' options
@@ -143,6 +151,7 @@ class BOACFilteredCohortPage
   # Selects a sub-category for a filter type that offers sub-categories
   # @param filter_name [String]
   # @param filter_option [String]
+  # @deprecated Use <tt>choose_sub_option_by_key</tt> instead
   def choose_sub_option(filter_name, filter_option)
     # Last Name requires input
     if filter_name == 'Last Name'
@@ -152,6 +161,22 @@ class BOACFilteredCohortPage
     else
       wait_for_update_and_click new_sub_filter_button_element
       option_element = (filter_name == 'Advisor') ? new_filter_advisor_option(filter_option) : link_element(xpath: "//div[@class=\"cohort-filter-draft-column-02\"]//a[contains(text(),\"#{filter_option}\")]")
+      wait_for_update_and_click option_element
+    end
+  end
+
+  # Selects a sub-category for a filter type that offers sub-categories
+  # @param filter_key [String]
+  # @param filter_option [String]
+  def choose_sub_option_by_key(filter_key, filter_option)
+    # Last Name requires input
+    if filter_key == 'lastNameRange'
+      wait_for_element_and_type(new_filter_initial_input_elements[0], filter_option.split[0])
+      wait_for_element_and_type(new_filter_initial_input_elements[1], filter_option.split[1])
+      # All others require a selection
+    else
+      wait_for_update_and_click new_sub_filter_button_element
+      option_element = (filter_key == 'advisorLdapUids') ? new_filter_advisor_option(filter_option) : link_element(xpath: "//div[@class=\"cohort-filter-draft-column-02\"]//a[contains(text(),\"#{filter_option}\")]")
       wait_for_update_and_click option_element
     end
   end
@@ -173,6 +198,20 @@ class BOACFilteredCohortPage
 
     # Inactive, Intensive, Probation, and Underrepresented Minority have no sub-options
     choose_sub_option(filter_name, filter_option) unless ['Inactive', 'Inactive (COE)', 'Inactive (ASC)', 'Intensive', 'Underrepresented Minority', 'Probation'].include? filter_name
+    wait_for_update_and_click unsaved_filter_add_button_element
+    unsaved_filter_apply_button_element.when_present Utils.short_wait
+  end
+
+  # Selects, adds, and applies a filter
+  # @param filter_key [String]
+  # @param filter_option [String]
+  def select_filter_by_key(filter_key, filter_option = nil)
+    logger.info "Selecting #{filter_key} #{filter_option}"
+    click_new_filter_button
+    wait_for_update_and_click new_filter_option_by_key(filter_key)
+
+    # Inactive, Intensive, Probation, and Underrepresented Minority have no sub-options
+    choose_sub_option_by_key(filter_key, filter_option) unless %w(isInactiveAsc isInactiveCoe inIntensiveCohort underrepresented coeProbation).include? filter_key
     wait_for_update_and_click unsaved_filter_add_button_element
     unsaved_filter_apply_button_element.when_present Utils.short_wait
   end
@@ -308,7 +347,7 @@ class BOACFilteredCohortPage
     # with actual squads or majors. Advisors might also change, but fail if this happens for now.
     if cohort.search_criteria.major && cohort.search_criteria.major.any?
       click_new_filter_button
-      wait_for_update_and_click new_filter_option('Major')
+      wait_for_update_and_click new_filter_option_by_key('majors')
       wait_for_update_and_click new_sub_filter_button_element
       sleep Utils.click_wait
       filters_missing = []
@@ -319,7 +358,7 @@ class BOACFilteredCohortPage
     end
     if cohort.search_criteria.team && cohort.search_criteria.team.any?
       wait_for_update_and_click new_filter_button_element
-      wait_for_update_and_click new_filter_option('Team')
+      wait_for_update_and_click new_filter_option_by_key('groupCodes')
       wait_for_update_and_click new_sub_filter_button_element
       sleep Utils.click_wait
       filters_missing = []
@@ -347,9 +386,8 @@ class BOACFilteredCohortPage
     select_filter inactive_label if cohort.search_criteria.inactive_coe
 
     # ASC
-    inactive_label = (test.dept == BOACDepartments::ADMIN) ? 'Inactive (ASC)' : 'Inactive'
-    select_filter inactive_label if cohort.search_criteria.inactive_asc
-    select_filter 'Intensive' if cohort.search_criteria.intensive_asc
+    select_filter_by_key 'isInactiveAsc' if cohort.search_criteria.inactive_asc
+    select_filter_by_key 'inIntensiveCohort' if cohort.search_criteria.intensive_asc
     cohort.search_criteria.team.each { |s| select_filter('Team', s.name) } if cohort.search_criteria.team
 
     # If there are any search criteria left, execute search and log time search took to complete
@@ -482,21 +520,13 @@ class BOACFilteredCohortPage
     matching_preps_users.flatten!
 
     # Inactive COE
-    matching_inactive_coe_users = if search_criteria.inactive_coe
-                                    (test.searchable_data.select { |u| u[:inactive_coe] })
-                                  else
-                                    (test.dept == BOACDepartments::COE) ? (test.searchable_data.reject { |u| u[:inactive_coe] }) : test.searchable_data
-                                  end
+    matching_inactive_coe_users = search_criteria.inactive_coe ? (test.searchable_data.select { |u| u[:inactive_coe] }) : test.searchable_data
 
     # Probation COE
     matching_probation_asc_users = search_criteria.probation_coe ? (test.searchable_data.select { |u| u[:probation_coe] }) : test.searchable_data
 
     # Inactive ASC
-    matching_inactive_asc_users = if search_criteria.inactive_asc
-                                    (test.searchable_data.reject { |u| u[:active_asc] })
-                                  else
-                                    (test.dept == BOACDepartments::ASC) ? (test.searchable_data.select { |u| u[:active_asc] }) : test.searchable_data
-                                  end
+    matching_inactive_asc_users = search_criteria.inactive_asc ? (test.searchable_data.reject { |u| u[:active_asc] }) : test.searchable_data
 
     # Intensive ASC
     matching_intensive_asc_users = search_criteria.intensive_asc ? (test.searchable_data.select { |u| u[:intensive_asc] }) : test.searchable_data

@@ -24,7 +24,7 @@ class BOACSearchResultsPage
   # @param search_string [String]
   # @return [PageObject::Elements::Heading]
   def no_results_msg(search_string)
-    h1_element(xpath: "//h1[text()=\"No results matching '#{search_string}'\"]")
+    h1_element(xpath: "//h1[@id='page-header-no-results']")
   end
 
   # STUDENT SEARCH

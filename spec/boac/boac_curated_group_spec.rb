@@ -228,7 +228,8 @@ describe 'BOAC' do
 
     it 'can be removed on the group list view page' do
       @group_page.load_page group_2
-      @group_page.remove_student(group_2.members.last, group_2)
+      logger.info "Removing UID #{group_2.members.last.uid} from group '#{group_2.name}'"
+      @group_page.remove_student_by_row_index(group_2.members.length - 1)
     end
 
     it 'can be removed on the student page using the group checkbox' do
