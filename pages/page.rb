@@ -215,7 +215,7 @@ module Page
     tries ||= 2
     begin
       execute_script('arguments[0].scrollIntoView(true);', element)
-    rescue Selenium::WebDriver::Error::UnknownError
+    rescue Selenium::WebDriver::Error::JavascriptError
       retry unless (tries -= 1).zero?
     end
   end
