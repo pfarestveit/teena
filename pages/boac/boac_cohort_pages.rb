@@ -51,37 +51,18 @@ module BOACCohortPages
 
   # LIST VIEW - shared by filtered cohorts and curated groups
 
-  # Returns the level displayed for a user
-  # @param user [User]
+  # Returns the XPath to the div containing data for a single student
+  # @param student [BOACUser]
   # @return [String]
-  def cohort_list_view_user_level(user)
-    el = div_element(id: "student-#{user.sis_id}-level")
-    el.text if el.exists?
+  def student_row_xpath(student)
+    "//div[@id=\"student-#{student.uid}\"]"
   end
 
-  # Returns the major(s) displayed for a user
-  # @param driver [Selenium::WebDriver]
-  # @param user [User]
-  # @return [Array<String>]
-  def cohort_list_view_user_majors(driver, user)
-    els = driver.find_elements(xpath: "//span[contains(@id,\"student-#{user.sis_id}-major\")]")
-    els.map &:text if els.any?
-  end
-
-  # Returns the sport(s) displayed for a user
-  # @param driver [Selenium::WebDriver]
-  # @param user [User]
-  # @return [Array<String>]
-  def cohort_list_view_user_sports(driver, user)
-    els = driver.find_elements(xpath: "//span[contains(@id,\"student-#{user.sis_id}-team\")]")
-    els.map &:text if els.any?
-  end
-
-  # Returns a user's SIS data visible on the cohort page
+  # Returns a student's SIS data visible on the cohort page
   # @param [Selenium::WebDriver]
-  # @param user [User]
+  # @param student [BOACUser]
   # @return [Hash]
-  def visible_sis_data(driver, user)
+  def visible_sis_data(driver, student)
     #
     # Note: 'row_index' is position of student in list. For each student listed, the page has two hidden span elements
     #       useful in determining (1) 'row_index' if you know the SID, or (2) SID if you know the 'row_index':
@@ -89,16 +70,20 @@ module BOACCohortPages
     #          <span id="row-index-of-{student.sid}">{{ rowIndex }}</span>
     #          <span id="student-sid-of-row-{rowIndex}">{{ student.sid }}</span>
     #
-    row_index = span_element(id: "row-index-of-#{user.sis_id}").text
     wait_until(Utils.medium_wait) { player_link_elements.any? }
-    wait_until(Utils.short_wait) { cohort_list_view_user_level(user) }
-    gpa_el = div_element(id: "row-#{row_index}-student-cumulative-gpa")
-    term_units_el = div_element(id: "row-#{row_index}-student-enrolled-units")
-    cumul_units_el = div_element(id: "row-#{row_index}-cumulative-units")
-    class_els = driver.find_elements(xpath: "//div[starts-with(@id, 'row-#{row_index}-student-enrollment-name')]")
+    level_el = div_element(xpath: "#{student_row_xpath student}//div[contains(@id,\"student-level\")]")
+    major_els = driver.find_elements(xpath: "#{student_row_xpath student}//span[contains(@id,\"student-major\")]")
+    grad_term_el = div_element(xpath: "#{student_row_xpath student}//div[contains(@id,\"student-grad-term\")]")
+    sports_els = driver.find_elements(xpath: "#{student_row_xpath student}//span[contains(@id,\"student-team\")]")
+    gpa_el = span_element(xpath: "#{student_row_xpath student}//span[contains(@id,\"student-cumulative-gpa\")]")
+    term_units_el = div_element(xpath: "#{student_row_xpath student}//div[contains(@id,\"student-enrolled-units\")]")
+    cumul_units_el = div_element(xpath: "#{student_row_xpath student}//div[contains(@id,\"cumulative-units\")]")
+    class_els = driver.find_elements(xpath: "#{student_row_xpath student}//div[contains(@id,\"student-enrollment-name\")]")
     {
-      :level => cohort_list_view_user_level(user),
-      :majors => cohort_list_view_user_majors(driver, user),
+      :level => (level_el.text.strip if level_el.exists?),
+      :majors => (major_els.map &:text if major_els.any?),
+      :grad_term => (("#{grad_term_el.text.split[1]} #{grad_term_el.text.split[2]}") if grad_term_el.exists?),
+      :sports => (sports_els.map &:text if sports_els.any?),
       :gpa => (gpa_el.text.gsub('No data', '').chomp if gpa_el.exists?),
       :term_units => (term_units_el.text if term_units_el.exists?),
       :units_cumulative => ((cumul_units_el.text.gsub('No data', '').chomp == '--' ? '0' : cumul_units_el.text) if cumul_units_el.exists?),

@@ -64,14 +64,15 @@ class BOACStudentPage
   end
 
   button(:reqts_button, id: 'timeline-tab-requirement')
-  div(:writing_reqt, xpath: '//h2[text()="Academic Timeline"]/following-sibling::div//div[contains(text(),"Entry Level Writing")]')
-  div(:history_reqt, xpath: '//h2[text()="Academic Timeline"]/following-sibling::div//div[contains(text(),"American History")]')
-  div(:institutions_reqt, xpath: '//h2[text()="Academic Timeline"]/following-sibling::div//div[contains(text(),"American Institutions")]')
-  div(:cultures_reqt, xpath: '//h2[text()="Academic Timeline"]/following-sibling::div//div[contains(text(),"American Cultures")]')
+  div(:writing_reqt, xpath: '//span[contains(text(),"Entry Level Writing")]')
+  div(:history_reqt, xpath: '//span[contains(text(),"American History")]')
+  div(:institutions_reqt, xpath: '//span[contains(text(),"American Institutions")]')
+  div(:cultures_reqt, xpath: '//span[contains(text(),"American Cultures")]')
 
   # Returns of requirements statuses
   # @return [Hash]
   def visible_requirements
+    logger.info 'Checking requirements tab'
     show_previous_msgs
     wait_for_update_and_click reqts_button_element if reqts_button?
     {
@@ -83,22 +84,24 @@ class BOACStudentPage
   end
 
   button(:holds_button, id: 'timeline-tab-hold')
-  elements(:hold, :div, xpath: '//div[contains(@id,"timeline-tab-hold-message")]')
+  elements(:hold, :div, xpath: '//div[contains(@id,"timeline-tab-hold-message")]/span')
 
   # Returns an array of visible hold messages
   # @return [Array<String>]
   def visible_holds
+    logger.info 'Checking holds tab'
     show_previous_msgs
     wait_for_update_and_click holds_button_element if holds_button?
     hold_elements.map { |h| h.text.strip }
   end
 
   button(:alerts_button, id: 'timeline-tab-alert')
-  elements(:alert, :div, xpath: '//div[contains(@id,"timeline-tab-alert-message")]')
+  elements(:alert, :div, xpath: '//div[contains(@id,"timeline-tab-alert-message")]/span')
 
   # Returns an array of visible alert messages
   # @return [Array<String>]
   def visible_alerts
+    logger.info 'Checking alerts tab'
     show_previous_msgs
     wait_for_update_and_click alerts_button_element if alerts_button?
     alert_elements.map { |a| a.text.strip }
@@ -174,6 +177,21 @@ class BOACStudentPage
   # @return [String]
   def term_data_xpath(term_name)
     "//h3[text()=\"#{term_name}\"]/following-sibling::div"
+  end
+
+  # Returns the total term units and min/max override units shown for a given term
+  # @param term_id [Integer]
+  # @param term_name [String]
+  # @return [Hash]
+  def visible_term_data(term_id, term_name)
+    term_units_el = span_element(xpath: "#{term_data_xpath term_name}//div[@class=\"student-course-heading-units-total\"]/span")
+    term_units_min_el = span_element(id: "term-#{term_id}-min-units")
+    term_units_max_el = span_element(id: "term-#{term_id}-max-units")
+    {
+      :term_units => (term_units_el.text.split[1] if term_units_el.exists?),
+      :term_units_min => (term_units_min_el.text if term_units_min_el.exists?),
+      :term_units_max => (term_units_max_el.text if term_units_max_el.exists?)
+    }
   end
 
   # Returns the XPath to the SIS data shown for a given course in a term

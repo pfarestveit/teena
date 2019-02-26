@@ -52,15 +52,17 @@ class BOACApiStudentPage
     @parsed && @parsed['sisProfile']
   end
 
-  def user_sis_data
+  def sis_profile_data
     {
       :name => (sis_profile && sis_profile['name']),
       :preferred_name => (sis_profile && sis_profile['preferredName']),
       :email => (sis_profile && sis_profile['emailAddress']),
       :phone => (sis_profile && sis_profile['phoneNumber'].to_s),
       :term_units => (sis_profile && ((current_term ? formatted_units(current_term['enrolledUnits']) : '0') if terms.any?)),
+      :term_units_min => (sis_profile && sis_profile['currentTerm'] && sis_profile['currentTerm']['unitsMinOverride']),
+      :term_units_max => (sis_profile && sis_profile['currentTerm'] && sis_profile['currentTerm']['unitsMaxOverride']),
       :cumulative_units => (sis_profile && formatted_units(sis_profile['cumulativeUnits'])),
-      :cumulative_gpa => (sis_profile && sis_profile['cumulativeGPA'] && (sis_profile['cumulativeGPA'] == 0 ? '--' : (sprintf '%.3f', sis_profile['cumulativeGPA']).to_s)),
+      :cumulative_gpa => (sis_profile && (sis_profile['cumulativeGPA'].nil? ? '--' : (sprintf '%.3f', sis_profile['cumulativeGPA']).to_s)),
       :majors => (sis_profile && majors),
       :colleges => (sis_profile && colleges),
       :level => (sis_profile && (sis_profile['level'] && sis_profile['level']['description'])),
@@ -84,12 +86,12 @@ class BOACApiStudentPage
     colleges.compact if colleges
   end
 
-  def formatted_units(units_as_int)
-    if units_as_int
-      if units_as_int.zero?
+  def formatted_units(units_as_num)
+    if units_as_num
+      if units_as_num.zero?
         '--'
       else
-        (units_as_int == units_as_int.floor) ? units_as_int.floor.to_s : units_as_int.to_s
+        (units_as_num == units_as_num.floor) ? units_as_num.floor.to_s : units_as_num.to_s
       end
     end
   end
@@ -132,6 +134,10 @@ class BOACApiStudentPage
     terms.find { |t| term_name(t) == BOACUtils.term }
   end
 
+  def term_units(term)
+    formatted_units term['enrolledUnits']
+  end
+
   def courses(term)
     term['enrollments']
   end
@@ -144,7 +150,7 @@ class BOACApiStudentPage
     course['displayName']
   end
 
-  def section_sis_data(section)
+  def sis_section_data(section)
     {
       :ccn => section['ccn'],
       :number => "#{section['sectionNumber']}",
@@ -155,7 +161,7 @@ class BOACApiStudentPage
     }
   end
 
-  def course_sis_data(course)
+  def sis_course_data(course)
     {
       :code => course_display_name(course),
       :title => course['title'].gsub(/\s+/, ' '),
@@ -171,16 +177,16 @@ class BOACApiStudentPage
     if (term = current_term)
       # Ignore courses that are dropped, as these are not displayed on the cohort page
       enrolled_courses = courses(term).select do |c|
-        enrolled_sections = sections(c).select { |s| %w(E W).include? section_sis_data(s)[:status] }
+        enrolled_sections = sections(c).select { |s| %w(E W).include? sis_section_data(s)[:status] }
         enrolled_sections.any?
       end
-      courses = enrolled_courses.map { |c| course_sis_data(c)[:code] }
+      courses = enrolled_courses.map { |c| sis_course_data(c)[:code] }
     end
     courses
   end
 
   def course_section_ccns(course)
-    sections(course).map { |s| section_sis_data(s)[:ccn] }
+    sections(course).map { |s| sis_section_data(s)[:ccn] }
   end
 
   def dropped_sections(term)
