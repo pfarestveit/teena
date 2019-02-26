@@ -40,13 +40,13 @@ describe 'BOAC' do
               courses.each do |course|
                 begin
 
-                  course_sis_data = api_user_page.course_sis_data course
+                  course_sis_data = api_user_page.sis_course_data course
                   logger.info "Checking course #{course_sis_data[:code]}"
                   sections = api_user_page.sections course
                   sections.each do |section|
                     begin
 
-                      section_data = api_user_page.section_sis_data section
+                      section_data = api_user_page.sis_section_data section
                       api_section_page = BOACApiSectionPage.new @driver
                       api_section_page.get_data(@driver, term_id, section_data[:ccn])
                       class_test_case = "term #{term_name} course #{course_sis_data[:code]} section #{section_data[:component]} #{section_data[:number]} #{section_data[:ccn]}"

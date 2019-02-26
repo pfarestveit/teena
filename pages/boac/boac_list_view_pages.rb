@@ -41,16 +41,15 @@ module BOACListViewPages
 
   ### SETS OF USERS ###
 
-  element(:cohort_students_container, tag: :div, id: 'cohort-students')
-  elements(:player_link, :a, xpath: '//a[ends-with(@id, \'-student-href\')]')
-  elements(:player_name, :h3, xpath: '//h3[ends-with(@id, \'-student-name\')]')
-  elements(:player_sid, :span, xpath: '//span[ends-with(@id, \'-student-sid\')]')
+  elements(:player_link, :a, xpath: '//a[contains(@id, \'-student-href\')]')
+  elements(:player_name, :h3, xpath: '//h3[contains(@id, \'-student-name\')]')
+  elements(:player_sid, :span, xpath: '//span[contains(@id, \'-student-sid\')]')
 
   # Waits for list view results to load
   def wait_for_student_list
     begin
       start_time = Time.now
-      wait_until(Utils.medium_wait) { cohort_students_container_element }
+      wait_until(Utils.medium_wait) { player_link_elements.any? }
       logger.debug "Took #{Time.now - start_time} seconds for users to appear"
       sleep 1
     rescue
@@ -110,7 +109,7 @@ module BOACListViewPages
   # @param student [BOACUser]
   def click_student_link(student)
     logger.info "Clicking the link for UID #{student.uid}"
-    wait_for_load_and_click link_element(xpath: "//a[@id=\"#{student.uid}\"]")
+    wait_for_load_and_click link_element(xpath: "//a[contains(@href,\"/student/#{student.uid}\")]")
     student_name_heading_element.when_visible Utils.medium_wait
   end
 

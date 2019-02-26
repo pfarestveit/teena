@@ -48,15 +48,15 @@ describe 'BOAC' do
 
             api_student_page.courses(term).each do |course|
 
-              course_sis_data = api_student_page.course_sis_data course
+              course_sis_data = api_student_page.sis_course_data course
               logger.info "Checking course #{course_sis_data[:code]}"
 
               api_student_page.sections(course).each do |section|
                 begin
 
                   # Only test a primary section that hasn't been tested already
-                  section_data = api_student_page.section_sis_data section
-                  if api_student_page.section_sis_data(section)[:primary] && !pages_tested.include?("#{term_id} #{section_data[:ccn]}")
+                  section_data = api_student_page.sis_section_data section
+                  if api_student_page.sis_section_data(section)[:primary] && !pages_tested.include?("#{term_id} #{section_data[:ccn]}")
                     pages_tested << "#{term_id} #{section_data[:ccn]}"
 
                     # Get all the students in the course who will be visible in BOAC
@@ -78,12 +78,12 @@ describe 'BOAC' do
                           api_classmate_page.get_data(@driver, classmate)
                           term = api_classmate_page.terms.find { |t| api_classmate_page.term_name(t) == test.term }
                           classmate_course = api_classmate_page.courses(term).find { |c| api_classmate_page.course_section_ccns(c).include? section_data[:ccn] }
-                          classmate_section = api_classmate_page.sections(classmate_course).find { |s| api_classmate_page.section_sis_data(s)[:ccn] == section_data[:ccn] }
+                          classmate_section = api_classmate_page.sections(classmate_course).find { |s| api_classmate_page.sis_section_data(s)[:ccn] == section_data[:ccn] }
                           classmate_sites = api_classmate_page.course_sites classmate_course
                           classmate_data = {
                             :student => classmate,
                             :course_code => api_classmate_page.course_display_name(classmate_course),
-                            :section_format => "#{api_classmate_page.section_sis_data(classmate_section)[:component]} #{api_classmate_page.section_sis_data(classmate_section)[:number]}",
+                            :section_format => "#{api_classmate_page.sis_section_data(classmate_section)[:component]} #{api_classmate_page.sis_section_data(classmate_section)[:number]}",
                             :sites => (classmate_sites.map do |site|
                               {
                                 :site_id => api_classmate_page.site_metadata(site)[:site_id],

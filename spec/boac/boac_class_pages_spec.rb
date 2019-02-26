@@ -44,7 +44,7 @@ describe 'BOAC' do
               courses.each do |course|
                 begin
 
-                  course_sis_data = api_user_page.course_sis_data course
+                  course_sis_data = api_user_page.sis_course_data course
                   unless course_sis_data[:code].include? 'PHYS ED'
                     logger.info "Checking course #{course_sis_data[:code]}"
 
@@ -52,7 +52,7 @@ describe 'BOAC' do
                     sections.each do |section|
                       begin
 
-                        section_data = api_user_page.section_sis_data section
+                        section_data = api_user_page.sis_section_data section
                         api_section_page = BOACApiSectionPage.new @driver
                         api_section_page.get_data(@driver, term_id, section_data[:ccn])
                         class_test_case = "term #{term_name} course #{course_sis_data[:code]} section #{section_data[:component]} #{section_data[:number]} #{section_data[:ccn]}"
@@ -140,12 +140,12 @@ describe 'BOAC' do
                             # Collect the student data relevant to the class page
                             student_class_page_data = {
                               :sid => dept_student.sis_id,
-                              :level => (student_api.user_sis_data[:level].nil? ? '' : student_api.user_sis_data[:level]),
-                              :majors => student_api.user_sis_data[:majors],
+                              :level => (student_api.sis_profile_data[:level].nil? ? '' : student_api.sis_profile_data[:level]),
+                              :majors => student_api.sis_profile_data[:majors],
                               :sports => student_squad_names,
-                              :grading_basis => student_api.course_sis_data(course)[:grading_basis],
-                              :final_grade => student_api.course_sis_data(course)[:grade],
-                              :midpoint_grade => student_api.course_sis_data(course)[:midpoint],
+                              :grading_basis => student_api.sis_course_data(course)[:grading_basis],
+                              :final_grade => student_api.sis_course_data(course)[:grade],
+                              :midpoint_grade => student_api.sis_course_data(course)[:midpoint],
                               :sites => (student_api.course_sites(course).map do |site|
                                 {
                                   :site_id => student_api.site_metadata(site)[:site_id],

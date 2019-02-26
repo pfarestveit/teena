@@ -25,7 +25,7 @@ begin
       logger.info "Checking UID #{student.uid}"
       user_analytics_data = BOACApiStudentPage.new @driver
       user_analytics_data.get_data(@driver, student)
-      analytics_api_sis_data = user_analytics_data.user_sis_data
+      analytics_api_sis_data = user_analytics_data.sis_profile_data
 
       alerts = BOACUtils.get_students_alerts [student]
       alert_msgs = alerts.map &:message
@@ -44,13 +44,13 @@ begin
                 courses.each do |course|
                   begin
 
-                    course_sis_data = user_analytics_data.course_sis_data course
+                    course_sis_data = user_analytics_data.sis_course_data course
                     course_code = course_sis_data[:code]
                     sections = user_analytics_data.sections course
                     sections.each do |section|
                       begin
 
-                        section_sis_data = user_analytics_data.section_sis_data section
+                        section_sis_data = user_analytics_data.sis_section_data section
                         term_section_ccns << section_sis_data[:ccn]
 
                         row = [student.uid, term_name, course_code, course_sis_data[:title], section_sis_data[:ccn], "#{section_sis_data[:component]} #{section_sis_data[:number]}",

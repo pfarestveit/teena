@@ -59,7 +59,7 @@ module BOACUserListPages
   def sort_by_option(option, cohort = nil)
     logger.info "Sorting by #{option}"
     xpath = filtered_cohort_xpath cohort if cohort && cohort.instance_of?(FilteredCohort)
-    wait_for_update_and_click row_element(xpath: "#{xpath}//th[contains(@class, \"group-summary-column\")][contains(.,\"#{option}\")]")
+    wait_for_update_and_click row_element(xpath: "#{xpath}//th[contains(@class, \"sortable-table-header\")][contains(.,\"#{option}\")]")
   end
 
   # LAST NAME
