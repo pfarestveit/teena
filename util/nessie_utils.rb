@@ -80,8 +80,8 @@ class NessieUtils < Utils
       end
       # ASC status only applies to athletes
       active_asc = if v[0]['active_asc']
-                 (v.map { |i| i['active_asc'] }).include?('t')
-               end
+                     (v.map { |i| i['active_asc'] }).include?('t')
+                   end
       {
         :uid => k,
         :sid => v[0]['sid'],
@@ -364,4 +364,41 @@ class NessieUtils < Utils
     (data = parse_stored_searchable_data) ? data : get_and_store_searchable_data(students)
   end
 
+  # Returns legacy advising notes associated with a given student
+  # @param student [BOACUser]
+  # @return [Array<Note>]
+  def self.get_legacy_notes(student)
+    query = "SELECT boac_advising_notes.advising_notes.id AS id,
+                    boac_advising_notes.advising_notes.note_category AS category,
+                    boac_advising_notes.advising_notes.note_subcategory AS subcategory,
+                    boac_advising_notes.advising_notes.note_body AS body,
+                    boac_advising_notes.advising_notes.created_by AS advisor_uid,
+                    boac_advising_notes.advising_notes.created_at AS created_date,
+                    boac_advising_notes.advising_notes.updated_at AS updated_date,
+                    boac_advising_notes.advising_note_topics.note_topic AS topic,
+                    boac_advising_notes.advising_note_attachments.sis_file_name AS file_name
+            FROM boac_advising_notes.advising_notes
+            LEFT JOIN boac_advising_notes.advising_note_topics
+              ON boac_advising_notes.advising_notes.id = boac_advising_notes.advising_note_topics.advising_note_id
+            LEFT JOIN boac_advising_notes.advising_note_attachments
+              ON boac_advising_notes.advising_notes.id = boac_advising_notes.advising_note_attachments.advising_note_id
+            WHERE boac_advising_notes.advising_notes.sid = '#{student.sis_id}';"
+
+    results = query_redshift_db(nessie_db_credentials, query)
+    notes_data = results.group_by { |h1| h1['id'] }.map do |k,v|
+      {
+        :id => k,
+        :category => v[0]['category'],
+        :subcategory => v[0]['subcategory'],
+        :body => v[0]['body'],
+        :advisor_uid => v[0]['advisor_uid'],
+        :created_date => Time.parse(v[0]['created_date'].to_s),
+        :updated_date => Time.parse(v[0]['updated_date'].to_s),
+        :topics => (v.map { |t| t['topic'] }).compact,
+        :attachment_files => (v.map { |a| a['file_name'] }).compact.uniq
+      }
+    end
+
+    notes_data.map { |d| Note.new d }
+  end
 end
