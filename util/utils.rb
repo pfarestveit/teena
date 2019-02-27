@@ -80,7 +80,7 @@ class Utils
         logger.error 'Designated WebDriver is not supported'
         nil
     end
-    driver.manage.window.maximize
+    headless? ? driver.manage.window.resize_to(1600,900) : driver.manage.window.maximize
     driver
   end
 
