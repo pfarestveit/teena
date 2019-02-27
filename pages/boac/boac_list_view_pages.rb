@@ -43,7 +43,7 @@ module BOACListViewPages
 
   elements(:player_link, :a, xpath: '//a[contains(@id, \'-student-href\')]')
   elements(:player_name, :h3, xpath: '//h3[contains(@id, \'-student-name\')]')
-  elements(:player_sid, :span, xpath: '//span[contains(@id, \'-student-sid\')]')
+  elements(:player_sid, :span, xpath: '//div[contains(@id, \'-student-sid\')]')
 
   # Waits for list view results to load
   def wait_for_student_list
@@ -82,7 +82,7 @@ module BOACListViewPages
   # @param filtered_cohort [FilteredCohort]
   # @return [Array<String>]
   def visible_sids(filtered_cohort = nil)
-    wait_for_student_list unless (filtered_cohort && filtered_cohort.member_count.zero?)
+    wait_for_student_list unless (filtered_cohort && filtered_cohort.member_data.length.zero?)
     visible_sids = []
     sleep 2
     page_count = list_view_page_count

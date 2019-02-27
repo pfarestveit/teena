@@ -580,7 +580,7 @@ class BOACFilteredCohortPage
   # @param expected_users [Array<Hash>]
   # @return [Array<String>]
   def expected_sids_by_team(expected_users)
-    sorted_users = expected_users.sort_by { |u| [u[:squad_names].sort.first, u[:last_name_sortable].downcase, u[:first_name_sortable].downcase, u[:sid]] }
+    sorted_users = expected_users.sort_by { |u| [u[:squad_names].sort.first.gsub(' (AA)', '') .gsub(/\W+/, ''), u[:last_name_sortable].downcase, u[:first_name_sortable].downcase, u[:sid]] }
     sorted_users.map { |u| u[:sid] }
   end
 

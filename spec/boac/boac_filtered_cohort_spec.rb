@@ -48,11 +48,15 @@ describe 'BOAC', order: :defined do
         @cohort_page.perform_search(cohort, test)
         cohort.member_data = @cohort_page.expected_search_results(test, cohort.search_criteria)
         expected_results = @cohort_page.expected_sids_by_last_name cohort.member_data
-        visible_results = cohort.member_count.zero? ? [] : @cohort_page.visible_sids
-        @cohort_page.wait_until(1, "Expected but not present: #{expected_results - visible_results}. Present but not expected: #{visible_results - expected_results}") do
-          visible_results.sort == expected_results.sort
+        if cohort.member_data.length.zero?
+          @cohort_page.wait_until(Utils.short_wait) { @cohort_page.results_count == 0 }
+        else
+          visible_results = @cohort_page.visible_sids
+          @cohort_page.wait_until(1, "Expected but not present: #{expected_results - visible_results}. Present but not expected: #{visible_results - expected_results}") do
+            visible_results.sort == expected_results.sort
+          end
+          @cohort_page.verify_list_view_sorting(expected_results, visible_results)
         end
-        @cohort_page.verify_list_view_sorting(expected_results, visible_results)
       end
 
       it "sorts by First Name all the students who match #{cohort.search_criteria.list_filters}" do
