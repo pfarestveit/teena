@@ -55,26 +55,28 @@ class BOACStudentPage
 
   # TIMELINE
 
-  button(:show_hide_msgs_button, id: 'timeline-tab-all-previous-messages')
+  div(:timeline_loaded_msg, xpath: '//div[text()="Academic Timeline has loaded"]')
+  button(:show_hide_all_button, id: 'timeline-tab-all-previous-messages')
 
-  # Clicks the 'show previous' button if present
-  def show_previous_msgs
-    logger.info 'Making sure all messages are visible'
-    wait_for_update_and_click show_hide_msgs_button_element if show_hide_msgs_button? && show_hide_msgs_button_element.text.include?('Show')
+  def wait_for_timeline
+    timeline_loaded_msg_element.when_present Utils.short_wait
   end
 
+  # Requirements
+
   button(:reqts_button, id: 'timeline-tab-requirement')
+  button(:show_hide_reqts_button, id: 'timeline-tab-requirement-previous-messages')
   div(:writing_reqt, xpath: '//span[contains(text(),"Entry Level Writing")]')
   div(:history_reqt, xpath: '//span[contains(text(),"American History")]')
   div(:institutions_reqt, xpath: '//span[contains(text(),"American Institutions")]')
   div(:cultures_reqt, xpath: '//span[contains(text(),"American Cultures")]')
 
-  # Returns of requirements statuses
+  # Returns requirements statuses
   # @return [Hash]
   def visible_requirements
     logger.info 'Checking requirements tab'
-    show_previous_msgs
     wait_for_update_and_click reqts_button_element if reqts_button?
+    wait_for_update_and_click show_hide_reqts_button_element if show_hide_reqts_button? && show_hide_reqts_button_element.text.include?('Show')
     {
       :reqt_writing => (writing_reqt.gsub('Entry Level Writing', '').strip if writing_reqt_element.exists?),
       :reqt_history => (history_reqt.gsub('American History', '').strip if history_reqt_element.exists?),
@@ -83,86 +85,131 @@ class BOACStudentPage
     }
   end
 
+  # Holds
+
   button(:holds_button, id: 'timeline-tab-hold')
+  button(:show_hide_holds_button, id: 'timeline-tab-hold-previous-messages')
   elements(:hold, :div, xpath: '//div[contains(@id,"timeline-tab-hold-message")]/span')
 
   # Returns an array of visible hold messages
   # @return [Array<String>]
   def visible_holds
     logger.info 'Checking holds tab'
-    show_previous_msgs
     wait_for_update_and_click holds_button_element if holds_button?
+    wait_for_update_and_click show_hide_holds_button_element if show_hide_holds_button? && show_hide_holds_button_element.text.include?('Show')
     hold_elements.map { |h| h.text.strip }
   end
 
+  # Alerts
+
   button(:alerts_button, id: 'timeline-tab-alert')
+  button(:show_hide_alerts_button, id: 'timeline-tab-alert-previous-messages')
   elements(:alert, :div, xpath: '//div[contains(@id,"timeline-tab-alert-message")]/span')
 
   # Returns an array of visible alert messages
   # @return [Array<String>]
   def visible_alerts
     logger.info 'Checking alerts tab'
-    show_previous_msgs
     wait_for_update_and_click alerts_button_element if alerts_button?
+    wait_for_update_and_click show_hide_alerts_button_element if show_hide_alerts_button? && show_hide_alerts_button_element.text.include?('Show')
     alert_elements.map { |a| a.text.strip }
   end
 
-  elements(:non_dismissed_alert_button, :button, xpath: '//button[contains(@id,"dismiss-alert")]')
-  elements(:non_dismissed_alert_msg, :span, xpath: '//button[contains(@id,"dismiss-alert")]/preceding-sibling::span')
-  elements(:dismissed_alert, :div, xpath: '//button[contains(text(),"Hide dismissed status alerts"]/following-sibling::div')
-  elements(:dismissed_alert_msg, :span, xpath: '//button[contains(text(),"Hide dismissed status alerts")]/following-sibling::div//span')
-  button(:view_dismissed_button, xpath: '//button[contains(.,"View dismissed status alerts")]')
-  button(:hide_dismissed_button, xpath: '//button[contains(.,"Hide dismissed status alerts")]')
-  span(:withdrawal_msg, class: 'red-flag-small')
+  # Notes
 
-  # Returns the IDs of non-dismissed alerts
+  button(:notes_button, id: 'timeline-tab-note')
+  button(:show_hide_notes_button, id: 'timeline-tab-note-previous-messages')
+  elements(:note_msg_row, :div, xpath: '//div[contains(@id,"timeline-tab-note-message")]')
+
+  # Clicks the Notes tab and expands the list of notes
+  def show_notes
+    logger.info 'Checking notes tab'
+    timeline_loaded_msg_element.when_present Utils.short_wait
+    wait_for_update_and_click notes_button_element
+    wait_for_update_and_click show_hide_notes_button_element if show_hide_notes_button? && show_hide_notes_button_element.text.include?('Show')
+  end
+
+  # Returns the expected sort order of a student's notes
+  # @param notes [Array<Note>]
   # @return [Array<String>]
-  def non_dismissed_alert_ids
-    non_dismissed_alert_button_elements.map { |a| a.attribute('id').split('-')[2] }
+  def expected_note_id_sort_order(notes)
+    (notes.sort_by {|n| [n.updated_date, n.created_date] }).reverse.map &:id
   end
 
-  # Returns the message text of non-dismissed alerts
+  def expected_note_short_date_format(date)
+    format = (Time.now.strftime('%Y') == date.strftime('%Y')) ? date.strftime('%b %-d') : date.strftime('%b %-d')
+    format
+  end
+
+  # Returns the expected format for an expanded note date
+  def expected_note_long_date_format(date)
+    format = (Time.now.strftime('%Y') == date.strftime('%Y')) ? date.strftime('%b %-d %k:%M%P') : date.strftime('%b %-d, %Y %k:%M%P')
+    format.gsub(/\s+/, ' ')
+  end
+
+  # Returns the visible sequence of note ids
   # @return [Array<String>]
-  def non_dismissed_alert_msgs
-    non_dismissed_alert_msg_elements.map &:text
+  def visible_collapsed_note_ids
+    els = browser.find_elements(xpath: '//div[contains(@id, "note-")][contains(@id, "-message-closed")]')
+    els.map { |el| el.attribute('id').split('-')[1..2].join('-') }
   end
 
-  # Returns the message text of dismissed alerts
-  # @return [Array<String>]
-  def dismissed_alert_msgs
-    click_view_dismissed_alerts
-    msgs = dismissed_alert_msg_elements.map &:text
-    click_hide_dismissed_alerts
-    msgs
+  # Returns the visible note date when the note is collapsed
+  # @param note [Note]
+  # @return [String]
+  def visible_collapsed_note_date(note)
+    el = div_element(id: "collapsed-note-#{note.id}-created-at")
+    el.text.gsub(/\s+/, ' ') if el.exists?
   end
 
-  # Returns the IDs of dismissed alerts
-  # @return [Array<String>]
-  def dismissed_alert_ids
-    dismissed_alert_elements.map { |a| a.attribute('id').split('-')[1] }
+  # Returns the element containing the note body
+  # @param note [Note]
+  # @return [PageObject::Elements::Div]
+  def note_body_el(note)
+    div_element(id: "note-#{note.id}-message-closed")
   end
 
-  # Clicks the button to reveal dismissed alerts
-  def click_view_dismissed_alerts
-    logger.info "Clicking view dismissed alerts button"
-    wait_for_load_and_click view_dismissed_button_element
+  # Returns the element containing the note's advisor name
+  # @param note [Note]
+  # @return [PageObject::Elements::Div]
+  def note_advisor_el(note)
+    div_element(id: "note-#{note.id}-author-name")
   end
 
-  # Clicks the button to hide dismissed alerts
-  def click_hide_dismissed_alerts
-    logger.info "Clicking hide dismissed alerts button"
-    wait_for_load_and_click hide_dismissed_button_element
+  # Returns the elements linked to the note attachments
+  # @param note [Note]
+  # @return [Array<PageObject::Elements::Link>]
+  def note_attachment_els(note)
+    browser.find_elements(xpath: "//a[contains(@id, 'note-#{note.id}-attachment-')]")
   end
 
-  # Dismisses an alert
-  # @param alert [Alert]
-  def dismiss_alert(alert)
-    logger.info "Dismissing alert ID #{alert.id}"
-    wait_for_load_and_click non_dismissed_alert_button_elements.find { |el| el.attribute('id').include?(alert.id) }
+  # Clicks the body of the note to expand it
+  # @param note [Note]
+  def expand_note(note)
+    wait_for_update_and_click note_body_el(note)
+  end
+
+  # Returns the data visible when the note is expanded
+  # @params note [Note]
+  # @return [Hash]
+  def visible_expanded_note_data(note)
+    sleep 2
+    topic_els = browser.find_elements(xpath: "//li[contains(@id, 'note-#{note.id}-topic-')]")
+    created_el = div_element(id: "expanded-note-#{note.id}-created-at")
+    updated_el = div_element(id: "expanded-note-#{note.id}-updated_at")
+    {
+      :body => (note_body_el(note).text.gsub("\n", '') if note_body_el(note).exists?),
+      :advisor => (note_advisor_el(note).text if note_advisor_el(note).exists?),
+      :topics => topic_els.map(&:text).sort,
+      :attachments => note_attachment_els(note).map(&:text).sort,
+      :created_date => (created_el.text.strip.gsub(/\s+/, ' ') if created_el.exists?),
+      :updated_date => (updated_el.text.strip.gsub(/\s+/, ' ') if updated_el.exists?)
+    }
   end
 
   # COURSES
 
+  span(:withdrawal_msg, class: 'red-flag-small')
   button(:view_more_button, :xpath => '//button[contains(.,"Show Previous Semesters")]')
 
   # Clicks the button to expand previous semester data

@@ -373,6 +373,7 @@ class NessieUtils < Utils
                     boac_advising_notes.advising_notes.note_subcategory AS subcategory,
                     boac_advising_notes.advising_notes.note_body AS body,
                     boac_advising_notes.advising_notes.created_by AS advisor_uid,
+                    boac_advising_notes.advising_notes.advisor_sid AS advisor_sid,
                     boac_advising_notes.advising_notes.created_at AS created_date,
                     boac_advising_notes.advising_notes.updated_at AS updated_date,
                     boac_advising_notes.advising_note_topics.note_topic AS topic,
@@ -390,12 +391,13 @@ class NessieUtils < Utils
         :id => k,
         :category => v[0]['category'],
         :subcategory => v[0]['subcategory'],
-        :body => v[0]['body'],
+        :body => v[0]['body'].gsub(/<("[^"]*"|'[^']*'|[^'">])*>/, '').gsub('&Tab;', '').gsub("\n", '').gsub('amp;', '').gsub('&nbsp', ''),
         :advisor_uid => v[0]['advisor_uid'],
+        :advisor_sid => v[0]['advisor_sid'],
         :created_date => Time.parse(v[0]['created_date'].to_s),
         :updated_date => Time.parse(v[0]['updated_date'].to_s),
-        :topics => (v.map { |t| t['topic'] }).compact,
-        :attachment_files => (v.map { |a| a['file_name'] }).compact.uniq
+        :topics => (v.map { |t| t['topic'].upcase if t['topic'] }).compact.sort,
+        :attachment_files => (v.map { |a| a['file_name'] }).compact.uniq.sort
       }
     end
 

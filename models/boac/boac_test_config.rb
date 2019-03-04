@@ -217,6 +217,16 @@ class BOACTestConfig < TestConfig
     set_max_cohort_members CONFIG['last_activity_max_users']
   end
 
+  # Config for legacy advising notes testing
+  # @param all_students [Array<BOACUser>]
+  def legacy_notes(all_students)
+    set_global_configs all_students
+    @searchable_data.keep_if { |d| d[:level] == CONFIG['legacy_notes_level'] }
+    sids = @searchable_data.map { |d| d[:sid] }
+    @cohort_members = @dept_students.select { |s| sids.include? s.sis_id }
+    set_max_cohort_members CONFIG['legacy_notes_max_users']
+  end
+
   # Config for page navigation testing
   # @param all_students [Array<BOACUser>]
   def navigation(all_students)

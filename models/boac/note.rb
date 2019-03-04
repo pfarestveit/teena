@@ -5,6 +5,7 @@ class Note
                 :subcategory,
                 :body,
                 :advisor_uid,
+                :advisor_sid,
                 :created_date,
                 :updated_date,
                 :topics,
