@@ -60,6 +60,8 @@ boac:
   class_page_max_users: 5
   last_activity_max_users: 3
   last_activity_context: false
+  legacy_notes_level: Senior
+  legacy_notes_max_users: 5
   no_activity_alert_threshold: 14
   sis_data_max_users: 100
   user_search_max_users: 50
