@@ -223,7 +223,9 @@ describe 'BOAC' do
     end
 
     it 'is shown on the student page' do
-      # TODO when possible to distinguish
+      @student_page.load_page group_1.members.first
+      @student_page.click_add_to_grp_button
+      expect(@student_page.grp_selected? group_1).to be true
     end
 
     it 'can be removed on the group list view page' do

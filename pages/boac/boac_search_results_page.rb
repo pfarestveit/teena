@@ -14,17 +14,26 @@ class BOACSearchResultsPage
   # @param element [PageObject::Elements::Element]
   # @return [Integer]
   def results_count(element)
-    element.when_visible Utils.short_wait
-    count = element.text.include?('One') ? 1 : element.text.split(' ').first.to_i
-    logger.debug "Results count: #{count}"
-    count
+    tries ||= Utils.short_wait
+    begin
+      wait_until(1) { element.visible? || no_results_msg.exists? }
+      if no_results_msg.visible?
+        logger.info 'No results found'
+        0
+      else
+        count = element.text.include?('One') ? 1 : element.text.split(' ').first.delete('+').to_i
+        logger.debug "Results count: #{count}"
+        count
+      end
+    rescue
+      (tries -=1).zero? ? fail : retry
+    end
   end
 
   # Returns the element containing the 'no results' message for a search
-  # @param search_string [String]
   # @return [PageObject::Elements::Heading]
-  def no_results_msg(search_string)
-    h1_element(xpath: "//h1[@id='page-header-no-results']")
+  def no_results_msg
+    h1_element(id: 'page-header-no-results')
   end
 
   # STUDENT SEARCH
@@ -108,6 +117,60 @@ class BOACSearchResultsPage
   def click_class_result(course_code, section_number)
     wait_for_update_and_click class_link(course_code, section_number)
     wait_for_spinner
+  end
+
+  # NOTES
+
+  h2(:note_results_count_heading, id: 'search-results-category-header-notes')
+  elements(:note_search_result, :div, class: 'advising-note-search-result')
+
+  # Awaits and returns the number of note results returned from a search
+  # @return [Integer]
+  def note_results_count
+    results_count note_results_count_heading_element
+  end
+
+  # Waits for note results to be present
+  def wait_for_note_search_result_rows
+    wait_until(Utils.short_wait) { note_search_result_elements.any? }
+  end
+
+  # Returns the data present for a given note
+  # @param student [BOACUser]
+  # @param note [Note]
+  # @return [Hash]
+  def note_result(student, note)
+    note_link(note).when_visible Utils.short_wait
+    sid_el = h3_element(xpath: "//div[@id='advising-note-search-result-#{note.id}']/h3")
+    snippet_el = div_element(id: "advising-note-search-result-snippet-#{note.id}")
+    advisor_el = span_element(id: "advising-note-search-result-advisor-#{note.id}")
+    footer_el = div_element(xpath: "//div[@id='advising-note-search-result-#{note.id}']/div[@class='advising-note-search-result-footer']")
+    {
+      :student_name => (note_link( note).text.strip if note_link(note).exists?),
+      :student_sid => (sid_el.text.gsub("#{student.full_name}", '').delete('()').strip if sid_el.exists?),
+      :snippet => (snippet_el.text if snippet_el.exists?),
+      :advisor_name => (advisor_el.text.delete('-').strip if advisor_el.exists?),
+      :date => (footer_el.text.split('-').last.strip if footer_el.exists?)
+    }
+  end
+
+  # Returns the note SIDs present in search results
+  # @return [Array<String>]
+  def note_result_sids
+    note_search_result_elements.map { |el| el.attribute('id').split('-')[-2] }
+  end
+
+  # Returns the link element for a given note
+  # @param note [Note]
+  # @return [PageObject::Elements::Link]
+  def note_link(note)
+    link_element(id: "advising-note-search-result-header-link-#{note.id}")
+  end
+
+  # Clicks the link element for a given note
+  # @param note [Note]
+  def click_note_link(note)
+    wait_for_update_and_click note_link(note)
   end
 
   # GROUPS
