@@ -1,11 +1,13 @@
 class Note
 
   attr_accessor :id,
-                :category,
-                :subcategory,
+                :subject,
                 :body,
+                :source_body_empty,
                 :advisor_uid,
-                :advisor_sid,
+                :advisor_name,
+                :advisor_role,
+                :advisor_dept,
                 :created_date,
                 :updated_date,
                 :topics,

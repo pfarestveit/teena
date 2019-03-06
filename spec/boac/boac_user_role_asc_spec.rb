@@ -80,7 +80,7 @@ describe 'An ASC advisor' do
 
     it 'sees no non-ASC students in search results' do
       @search_page.search coe_only_students.first.sis_id
-      @search_page.no_results_msg(coe_only_students.first.sis_id).when_visible Utils.short_wait
+      @search_page.no_results_msg.when_visible Utils.short_wait
     end
 
     it('sees overlapping ASC and CoE active students in search results') do

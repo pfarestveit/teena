@@ -64,7 +64,7 @@ describe 'A CoE advisor using BOAC' do
 
     it 'sees no non-CoE students in search results' do
       @search_page.search asc_only_students.first.sis_id
-      @search_page.no_results_msg(asc_only_students.first.sis_id).when_visible Utils.short_wait
+      @search_page.no_results_msg.when_visible Utils.short_wait
     end
 
     it 'sees overlapping CoE and ASC students in search results' do

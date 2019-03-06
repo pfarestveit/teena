@@ -79,7 +79,7 @@ describe 'A Physics advisor using BOAC' do
 
     it 'sees no non-Physics students in search results' do
       @search_page.search coe_only_students.first.sis_id
-      @search_page.no_results_msg(coe_only_students.first.sis_id).when_visible Utils.short_wait
+      @search_page.no_results_msg.when_visible Utils.short_wait
     end
 
     it 'sees overlapping Physics and ASC / CoE students in search results' do

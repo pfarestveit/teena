@@ -387,13 +387,16 @@ class NessieUtils < Utils
 
     results = query_redshift_db(nessie_db_credentials, query)
     notes_data = results.group_by { |h1| h1['id'] }.map do |k,v|
+      # If the note has no body, concatenate the category and subcategory as the body
+      source_body_empty = (v[0]['body'].nil? || v[0]['body'].strip.empty?)
+      body = source_body_empty ?
+                "#{v[0]['category']}#{+', ' if v[0]['subcategory']}#{v[0]['subcategory']}" :
+                v[0]['body'].gsub(/<("[^"]*"|'[^']*'|[^'">])*>/, ' ').gsub('&Tab;', ' ').gsub("\n", ' ').gsub('amp;', '').gsub('&nbsp;', ' ')
       {
         :id => k,
-        :category => v[0]['category'],
-        :subcategory => v[0]['subcategory'],
-        :body => v[0]['body'].gsub(/<("[^"]*"|'[^']*'|[^'">])*>/, '').gsub('&Tab;', '').gsub("\n", '').gsub('amp;', '').gsub('&nbsp', ''),
+        :body => body,
+        :source_body_empty => source_body_empty,
         :advisor_uid => v[0]['advisor_uid'],
-        :advisor_sid => v[0]['advisor_sid'],
         :created_date => Time.parse(v[0]['created_date'].to_s),
         :updated_date => Time.parse(v[0]['updated_date'].to_s),
         :topics => (v.map { |t| t['topic'].upcase if t['topic'] }).compact.sort,

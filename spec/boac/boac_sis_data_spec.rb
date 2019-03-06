@@ -121,6 +121,9 @@ describe 'BOAC' do
             (it("shows no expected graduation date for UID #{student.uid} on the #{test.default_cohort.name} page") { expect(student_page_sis_data[:expected_graduation]).to be nil }) :
             (it("shows the expected graduation date for UID #{student.uid} on the #{test.default_cohort.name} page") { expect(student_page_sis_data[:expected_graduation]).to eql(api_sis_profile_data[:expected_grad_term_name]) })
 
+        has_calcentral_link = @boac_student_page.calcentral_link(student).exists?
+        it("shows a link to the student overview page in CalCentral on the student page for UID #{student.uid}") { expect(has_calcentral_link).to be true }
+
         # TIMELINE
 
         # Requirements

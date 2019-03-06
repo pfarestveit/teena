@@ -37,7 +37,8 @@ module BOACAddGroupSelectorPages
   # @param group [CuratedGroup]
   # @return [boolean]
   def grp_selected?(group)
-    # TODO
+    grp_checkbox(group).when_visible Utils.short_wait
+    grp_checkbox(group).attribute('aria-label') == 'Checked'
   end
 
   # Clicks the button to create a new group

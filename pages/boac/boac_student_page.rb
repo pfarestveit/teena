@@ -53,6 +53,13 @@ class BOACStudentPage
     }
   end
 
+  # Returns the link to the student overview page in CalCentral
+  # @param student [BOACUser]
+  # @return [PageObject::Elements::Link]
+  def calcentral_link(student)
+    link_element(xpath: "//a[@href='https://calcentral.berkeley.edu/user/overview/#{student.uid}']")
+  end
+
   # TIMELINE
 
   div(:timeline_loaded_msg, xpath: '//div[text()="Academic Timeline has loaded"]')
@@ -137,8 +144,7 @@ class BOACStudentPage
   end
 
   def expected_note_short_date_format(date)
-    format = (Time.now.strftime('%Y') == date.strftime('%Y')) ? date.strftime('%b %-d') : date.strftime('%b %-d')
-    format
+    (Time.now.strftime('%Y') == date.strftime('%Y')) ? date.strftime('%b %-d') : date.strftime('%b %-d, %Y')
   end
 
   # Returns the expected format for an expanded note date
@@ -196,7 +202,7 @@ class BOACStudentPage
     sleep 2
     topic_els = browser.find_elements(xpath: "//li[contains(@id, 'note-#{note.id}-topic-')]")
     created_el = div_element(id: "expanded-note-#{note.id}-created-at")
-    updated_el = div_element(id: "expanded-note-#{note.id}-updated_at")
+    updated_el = div_element(id: "expanded-note-#{note.id}-updated-at")
     {
       :body => (note_body_el(note).text.gsub("\n", '') if note_body_el(note).exists?),
       :advisor => (note_advisor_el(note).text if note_advisor_el(note).exists?),

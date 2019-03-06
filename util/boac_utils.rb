@@ -191,7 +191,7 @@ class BOACUtils < Utils
     cohort.id = result
   end
 
-  # DATABASE - ALERTS, HOLDS
+  # DATABASE - ALERTS, HOLDS, NOTES
 
   # Given a set of students, returns all their active alerts in the current term
   # @param users [Array<BOACUser>]
@@ -270,6 +270,9 @@ class BOACUtils < Utils
     alert
   end
 
+  # Returns a student's current holds
+  # @param student [BOACUser]
+  # @return [Array<Alert>]
   def self.get_student_holds(student)
     query = "SELECT id, sid, message
               FROM alerts
@@ -277,6 +280,29 @@ class BOACUtils < Utils
               AND alert_type = 'hold'
               AND key LIKE '#{term_code}%';"
     results = Utils.query_pg_db(boac_db_credentials, query)
-    results.map { |r| Alert.new({id: r['id'], message: r['message'], user: student}) }
+    results.map { |r| Alert.new({id: r['id'], message: r['message'].gsub('Hold: ', ''), user: student}) }
+  end
+
+  # Returns a student's advising notes
+  # @param student [BOACUser]
+  # @return [Array<Note>]
+  def self.get_student_notes(student)
+    query = "SELECT * FROM notes WHERE sid = '#{student.sis_id}';"
+    results = Utils.query_pg_db(boac_db_credentials, query)
+    notes_data = results.map do |r|
+      {
+        :id => r['id'],
+        :subject => r['subject'],
+        :body => r['body'].gsub(/<("[^"]*"|'[^']*'|[^'">])*>/, ''),
+        :advisor_uid => r['author_uid'],
+        :advisor_name => r['author_name'],
+        :advisor_role => r['author_role'],
+        :advisor_dept => r['author_dept_codes'],
+        :created_date => Time.parse(r['created_at'].to_s),
+        :updated_date => Time.parse(r['updated_at'].to_s)
+      }
+    end
+
+    notes_data.map { |d| Alert.new d }
   end
 end
