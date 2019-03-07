@@ -36,9 +36,7 @@ module Page
     if (footer = div_element(id: 'element_toggler_0')).exists? && footer.visible?
       tries ||= 2
       begin
-        footer.click
-        sleep 1
-        footer.click if footer.visible?
+        execute_script('document.getElementById("element_toggler_0").style.display="none";')
       rescue => e
         Utils.log_error e
         (tries -= 1).zero? ? fail : (sleep 2; retry)
