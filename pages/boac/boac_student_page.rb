@@ -127,6 +127,8 @@ class BOACStudentPage
   button(:notes_button, id: 'timeline-tab-note')
   button(:show_hide_notes_button, id: 'timeline-tab-note-previous-messages')
   elements(:note_msg_row, :div, xpath: '//div[contains(@id,"timeline-tab-note-message")]')
+  elements(:topic, :list_item, xpath: '//li[contains(@id, "topic")]')
+  elements(:attachment, :div, xpath: '//*[contains(@id, "attachment")]')
 
   # Clicks the Notes tab and expands the list of notes
   def show_notes
@@ -184,9 +186,32 @@ class BOACStudentPage
 
   # Returns the elements linked to the note attachments
   # @param note [Note]
-  # @return [Array<PageObject::Elements::Link>]
+  # @return [Array<PageObject::Elements::Element>]
   def note_attachment_els(note)
-    browser.find_elements(xpath: "//a[contains(@id, 'note-#{note.id}-attachment-')]")
+    attachment_elements.select { |el| el.attribute('id').include? note.id }
+  end
+
+  # Returns the element containing a given attachment name
+  # @param attachment_name [String]
+  # @return [Array<PageObject::Elements::Element>]
+  def note_attachment_el(attachment_name)
+    attachment_elements.find { |el| el.text.strip == attachment_name }
+  end
+
+  # Downloads an attachment and returns the file size, deleting the file once downloaded
+  # @param note [Note]
+  # @param attachment_name [String]
+  # @return [File]
+  def download_attachment(note, attachment_name)
+    logger.info "Downloading attachment '#{attachment_name}' from note ID #{note.id}"
+    Utils.prepare_download_dir
+    wait_for_update_and_click note_attachment_el(attachment_name)
+    file_path = "#{Utils.download_dir}/#{attachment_name}"
+    wait_until(Utils.short_wait) { Dir[file_path].any? }
+    file = File.new file_path
+    size = file.size
+    Utils.prepare_download_dir
+    size
   end
 
   # Clicks the body of the note to expand it
@@ -200,14 +225,15 @@ class BOACStudentPage
   # @return [Hash]
   def visible_expanded_note_data(note)
     sleep 2
-    topic_els = browser.find_elements(xpath: "//li[contains(@id, 'note-#{note.id}-topic-')]")
+    topic_els = topic_elements.select { |el| el.attribute('id').include? note.id }
+    attachment_els = attachment_elements.select { |el| el.attribute('id').include? note.id }
     created_el = div_element(id: "expanded-note-#{note.id}-created-at")
     updated_el = div_element(id: "expanded-note-#{note.id}-updated-at")
     {
       :body => (note_body_el(note).text.gsub("\n", '') if note_body_el(note).exists?),
       :advisor => (note_advisor_el(note).text if note_advisor_el(note).exists?),
       :topics => topic_els.map(&:text).sort,
-      :attachments => note_attachment_els(note).map(&:text).sort,
+      :attachments => (attachment_els.map { |el| el.text.strip }).sort,
       :created_date => (created_el.text.strip.gsub(/\s+/, ' ') if created_el.exists?),
       :updated_date => (updated_el.text.strip.gsub(/\s+/, ' ') if updated_el.exists?)
     }

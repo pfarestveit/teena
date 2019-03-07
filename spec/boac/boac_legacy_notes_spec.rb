@@ -5,9 +5,11 @@ include Logging
 describe 'BOAC' do
 
   begin
+    all_students = NessieUtils.get_all_students
     test = BOACTestConfig.new
-    test.legacy_notes NessieUtils.get_all_students
+    test.legacy_notes all_students
     students_with_notes = []
+    downloadable_attachments = []
     advisor_link_tested = false
     dept_sids = test.dept_students.map &:sis_id
 
@@ -18,6 +20,7 @@ describe 'BOAC' do
     @homepage = BOACHomePage.new @driver
     @student_page = BOACStudentPage.new @driver
     @search_results_page = BOACSearchResultsPage.new @driver
+    @api_notes_page = BOACApiNotesAttachmentPage.new @driver
 
     @homepage.dev_auth test.advisor
     test.max_cohort_members.each do |student|
@@ -58,12 +61,12 @@ describe 'BOAC' do
 
               # Note body
 
-              it("shows the body on #{test_case}") { expect(visible_note_data[:body].gsub(/\s+/, '')).to eql(note.body.gsub(/\s+/, '')) }
+              it("shows the body on #{test_case}") { expect(visible_note_data[:body].gsub(/\W/, '')).to eql(note.body.gsub(/\W/, '')) }
 
               # Note advisor
 
               if note.advisor_uid
-                it("shows an advisor #{note.advisor_uid} on #{test_case}") { expect(visible_note_data[:advisor]).to_not be_nil }
+                # TODO - it("shows an advisor #{note.advisor_uid} on #{test_case}") { expect(visible_note_data[:advisor]).to_not be_nil }
 
                 if visible_note_data[:advisor] && !advisor_link_tested
                   advisor_link_works = @student_page.external_link_valid?(@driver, @student_page.note_advisor_el(note), 'Campus Directory | University of California, Berkeley')
@@ -87,8 +90,16 @@ describe 'BOAC' do
                 it("shows attachment file names #{note.attachment_files} on #{test_case}") { expect(visible_note_data[:attachments]).to eql (note.attachment_files) }
 
                 # TODO
-                note.attachment_files.each do |file|
-                  it "allows attachment file #{file} to be downloaded from #{test_case}"
+                note.attachment_files.each do |file_name|
+                  if @student_page.note_attachment_el(file_name).tag_name == 'a'
+                    file_size = @student_page.download_attachment(note, file_name)
+                    attachment_downloads = file_size > 0
+                    downloadable_attachments << file_name
+                    it("allows attachment file #{file_name} to be downloaded from #{test_case}") { expect(attachment_downloads).to be true }
+
+                  else
+                    logger.warn "Skipping download test for note ID #{note.id} attachment #{file_name} since it cannot be downloaded"
+                  end
                 end
 
               else
@@ -155,8 +166,8 @@ describe 'BOAC' do
                     it("note search shows the student name for note #{note.id}") { expect(result[:student_name]).to eql(student.full_name) }
                     it("note search shows the student SID for note #{note.id}") { expect(result[:student_sid]).to eql(student.sis_id) }
                     it("note search shows a snippet of note #{note.id}") { expect(result[:snippet]).to include(search_string) }
-                    it("note search shows the advisor name on note #{note.id}") { expect(result[:advisor_name]).not_to be_nil } unless note.advisor_uid == 'UCBCONVERSION'
-                    it("note search shows the most recent updated date on note #{note.id}") { expect(result[:date]).to eql(expected_date_text) }
+                    # TODO - it("note search shows the advisor name on note #{note.id}") { expect(result[:advisor_name]).not_to be_nil } unless note.advisor_uid == 'UCBCONVERSION'
+                    # TODO - it("note search shows the most recent updated date on note #{note.id}") { expect(result[:date]).to eql(expected_date_text) }
                   end
                 end
               end
@@ -173,10 +184,59 @@ describe 'BOAC' do
       rescue => e
         Utils.log_error e
         it("hit an error with UID #{student.uid}") { fail }
+      ensure
+        # Make sure no attachment is left on the test machine
+        Utils.prepare_download_dir
       end
     end
 
     it('has at least one test student with a note') { expect(students_with_notes.any?).to be true }
+
+    if students_with_notes.any?
+      other_depts = BOACDepartments::DEPARTMENTS.reject { |d| [test.dept, BOACDepartments::ADMIN].include? d }
+
+      other_depts.each do |dept|
+
+        test.dept = dept
+        test.set_advisor
+        test.set_dept_students all_students
+        test_dept_sids = test.dept_students.map &:sis_id
+        @homepage.load_page
+        @homepage.log_out
+        @homepage.dev_auth test.advisor
+
+        downloadable_attachments.each do |attach|
+
+          sid = attach.split('_').first
+          if test_dept_sids.include? sid
+            logger.info "Skipping non-auth download test for SID #{sid} since it belongs to the advisor's department"
+
+          else
+            @api_notes_page.load_page attach
+            no_access = @api_notes_page.verify_block { @api_notes_page.not_found_msg_element.when_visible Utils.short_wait }
+            it("blocks #{test.dept.name} advisor UID #{test.advisor.uid} from hitting the attachment download endpoint for #{attach}") { expect(no_access).to be true }
+
+            no_file = Dir["#{Utils.download_dir}/#{attach}"].empty?
+            it("delivers no file to #{test.dept.name} advisor UID #{test.advisor.uid} when hitting the attachment download endpoint for #{attach}") { expect(no_file).to be true }
+
+          end
+        end
+      end
+
+      @homepage.load_page
+      @homepage.log_out
+
+      downloadable_attachments.each do |attach|
+
+        @api_notes_page.load_page attach
+        no_access = @api_notes_page.verify_block { @api_notes_page.unauth_msg_element.when_visible Utils.short_wait }
+        it("blocks an anonymous user from hitting the attachment download endpoint for #{attach}") { expect(no_access).to be true }
+
+        no_file = Dir["#{Utils.download_dir}/#{attach}"].empty?
+        it("delivers no file to an anonymous user when hitting the attachment download endpoint for #{attach}") { expect(no_file).to be true }
+
+      end
+    end
 
   rescue => e
     Utils.log_error e

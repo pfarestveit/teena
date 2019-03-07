@@ -41,9 +41,9 @@ module BOACListViewPages
 
   ### SETS OF USERS ###
 
-  elements(:player_link, :a, xpath: '//a[contains(@id, \'-student-href\')]')
-  elements(:player_name, :h3, xpath: '//h3[contains(@id, \'-student-name\')]')
-  elements(:player_sid, :span, xpath: '//div[contains(@id, \'-student-sid\')]')
+  elements(:player_link, :a, xpath: '//a[contains(@href, "/student/")]')
+  elements(:player_name, :h3, xpath: '//h3[contains(@class, "student-name")]')
+  elements(:player_sid, :span, xpath: '//div[contains(@id, "student-sid")]')
 
   # Waits for list view results to load
   def wait_for_student_list
