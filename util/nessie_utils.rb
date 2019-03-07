@@ -377,7 +377,8 @@ class NessieUtils < Utils
                     boac_advising_notes.advising_notes.created_at AS created_date,
                     boac_advising_notes.advising_notes.updated_at AS updated_date,
                     boac_advising_notes.advising_note_topics.note_topic AS topic,
-                    boac_advising_notes.advising_note_attachments.sis_file_name AS file_name
+                    boac_advising_notes.advising_note_attachments.sis_file_name AS file_name,
+                    boac_advising_notes.advising_note_attachments.user_file_name AS user_file_name
             FROM boac_advising_notes.advising_notes
             LEFT JOIN boac_advising_notes.advising_note_topics
               ON boac_advising_notes.advising_notes.id = boac_advising_notes.advising_note_topics.advising_note_id
@@ -392,6 +393,7 @@ class NessieUtils < Utils
       body = source_body_empty ?
                 "#{v[0]['category']}#{+', ' if v[0]['subcategory']}#{v[0]['subcategory']}" :
                 v[0]['body'].gsub(/<("[^"]*"|'[^']*'|[^'">])*>/, ' ').gsub('&Tab;', ' ').gsub("\n", ' ').gsub('amp;', '').gsub('&nbsp;', ' ')
+      attachment_files = v.map { |r| (r['advisor_uid'] == 'UCBCONVERSION') ? r['file_name'] : r['user_file_name'] }
       {
         :id => k,
         :body => body,
@@ -400,7 +402,7 @@ class NessieUtils < Utils
         :created_date => Time.parse(v[0]['created_date'].to_s),
         :updated_date => Time.parse(v[0]['updated_date'].to_s),
         :topics => (v.map { |t| t['topic'].upcase if t['topic'] }).compact.sort,
-        :attachment_files => (v.map { |a| a['file_name'] }).compact.uniq.sort
+        :attachment_files => attachment_files.compact.uniq.sort
       }
     end
 
