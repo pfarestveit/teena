@@ -144,7 +144,14 @@ class BOACFilteredCohortPage
   end
 
   def sub_option_element(filter_name, filter_option)
-    link_attribute = (filter_name == 'Advisor') ? "@id='Advisor-#{filter_option}'" : "text()=\"#{filter_option}\""
+    link_attribute = case filter_name
+                       when 'Advisor'
+                         "@id='Advisor-#{filter_option}'"
+                       when 'Major'
+                         "@id='Major-#{filter_option}'"
+                       else
+                         "text()=\"#{filter_option}\""
+                     end
     button_element(xpath: "//a[#{link_attribute}]/../preceding-sibling::button")
   end
 
@@ -160,7 +167,14 @@ class BOACFilteredCohortPage
     # All others require a selection
     else
       wait_for_update_and_click new_sub_filter_button_element
-      option_element = (filter_name == 'Advisor') ? new_filter_advisor_option(filter_option) : link_element(xpath: "//div[@class=\"cohort-filter-draft-column-02\"]//a[contains(text(),\"#{filter_option}\")]")
+      option_element = case filter_name
+                         when 'Advisor'
+                           new_filter_advisor_option(filter_option)
+                         when 'Major'
+                           link_element(id: "Major-#{filter_option}")
+                         else
+                           link_element(xpath: "//div[@class=\"cohort-filter-draft-column-02\"]//a[contains(text(),\"#{filter_option}\")]")
+                       end
       wait_for_update_and_click option_element
     end
   end
@@ -351,7 +365,7 @@ class BOACFilteredCohortPage
       wait_for_update_and_click new_sub_filter_button_element
       sleep Utils.click_wait
       filters_missing = []
-      cohort.search_criteria.major.each { |major| filters_missing << major unless new_filter_option(major).exists? }
+      cohort.search_criteria.major.each { |major| filters_missing << major unless sub_option_element('Major', major).exists? }
       logger.debug "The majors #{filters_missing} are not present, removing from search criteria" if filters_missing.any?
       filters_missing.each { |f| cohort.search_criteria.major.delete f }
       wait_for_update_and_click unsaved_filter_cancel_button_element
@@ -362,7 +376,7 @@ class BOACFilteredCohortPage
       wait_for_update_and_click new_sub_filter_button_element
       sleep Utils.click_wait
       filters_missing = []
-      cohort.search_criteria.team.each { |squad| filters_missing << squad unless new_filter_option(squad.name).exists? }
+      cohort.search_criteria.team.each { |squad| filters_missing << squad unless sub_option_element('Team', squad.name).exists? }
       logger.debug "The squads #{filters_missing} are not present, removing from search criteria" if filters_missing.any?
       filters_missing.each { |f| cohort.search_criteria.team.delete f }
       wait_for_update_and_click unsaved_filter_cancel_button_element

@@ -113,9 +113,11 @@ class BOACTestConfig < TestConfig
     @max_cohort_members = @cohort_members.sort_by(&:last_name)[0..(config - 1)]
   end
 
-  # Configures a set of cohorts to use for filtered cohort testing
+  # Configures a set of cohorts to use for filtered cohort testing. If a test data override file exists in the config override dir,
+  # then uses that to create the filters. Otherwise, uses the default test data.
   def set_search_cohorts
-    test_data_file = File.join(Utils.config_dir, 'test-data-boac.json')
+    override_test_data = File.exist? (override_path = File.join(Utils.config_dir, 'test-data-boac.json'))
+    test_data_file = override_test_data ? override_path : File.expand_path('test_data/test-data-boac.json', Dir.pwd)
     test_data = JSON.parse File.read(test_data_file)
     filters = test_data['filters'].map do |data|
       filter = CohortFilter.new
@@ -176,11 +178,19 @@ class BOACTestConfig < TestConfig
     set_search_cohorts
 
     # Set a default cohort with all possible filters to exercise editing and removing filters
+    major = case @dept
+              when BOACDepartments::COE
+                ['Electrical Eng & Comp Sci BS']
+              when BOACDepartments::PHYSICS
+                ['Physics']
+              else
+                ['Letters & Sci Undeclared UG']
+            end
     filters = {
       :gpa => ['3.00 - 3.49'],
       :level => ['Senior (90+ Units)'],
       :units_completed => ['90 - 119'],
-      :major => ['Electrical Eng & Comp Sci BS'],
+      :major => major,
       :last_name => 'A Z',
     }
 

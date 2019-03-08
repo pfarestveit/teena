@@ -377,7 +377,7 @@ class NessieUtils < Utils
                     boac_advising_notes.advising_notes.created_at AS created_date,
                     boac_advising_notes.advising_notes.updated_at AS updated_date,
                     boac_advising_notes.advising_note_topics.note_topic AS topic,
-                    boac_advising_notes.advising_note_attachments.sis_file_name AS file_name,
+                    boac_advising_notes.advising_note_attachments.sis_file_name AS sis_file_name,
                     boac_advising_notes.advising_note_attachments.user_file_name AS user_file_name
             FROM boac_advising_notes.advising_notes
             LEFT JOIN boac_advising_notes.advising_note_topics
@@ -393,7 +393,18 @@ class NessieUtils < Utils
       body = source_body_empty ?
                 "#{v[0]['category']}#{+', ' if v[0]['subcategory']}#{v[0]['subcategory']}" :
                 v[0]['body'].gsub(/<("[^"]*"|'[^']*'|[^'">])*>/, ' ').gsub('&Tab;', ' ').gsub("\n", ' ').gsub('amp;', '').gsub('&nbsp;', ' ')
-      attachment_files = v.map { |r| (r['advisor_uid'] == 'UCBCONVERSION') ? r['file_name'] : r['user_file_name'] }
+
+      attachment_data = v.map do |r|
+        unless r['sis_file_name'].nil? || r['sis_file_name'].empty?
+          {
+            :sis_file_name => r['sis_file_name'],
+            :user_file_name => r['user_file_name'],
+            :display_file_name => ((r['advisor_uid'] == 'UCBCONVERSION') ? r['sis_file_name'] : r['user_file_name'])
+          }
+        end
+      end
+      attachments = attachment_data.compact.uniq.map { |d| Attachment.new d }
+
       {
         :id => k,
         :body => body,
@@ -402,10 +413,9 @@ class NessieUtils < Utils
         :created_date => Time.parse(v[0]['created_date'].to_s),
         :updated_date => Time.parse(v[0]['updated_date'].to_s),
         :topics => (v.map { |t| t['topic'].upcase if t['topic'] }).compact.sort,
-        :attachment_files => attachment_files.compact.uniq.sort
+        :attachments => attachments
       }
     end
-
     notes_data.map { |d| Note.new d }
   end
 end

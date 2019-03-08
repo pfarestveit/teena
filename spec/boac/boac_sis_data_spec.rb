@@ -200,7 +200,7 @@ describe 'BOAC' do
                 if api_sis_profile_data[:term_units_min].zero? || term != api_student_data.current_term
                   it("shows no term units minimum for UID #{student.uid} term #{term_name}") { expect(visible_term_units_data[:term_units_min]).to be_nil }
                 else
-                  it("shows the term units minimum for UID #{student.uid} term #{term_name}") { expect(visible_term_units_data[:term_units_min]).to eql(api_sis_profile_data[:term_units_min]) }
+                  it("shows the term units minimum for UID #{student.uid} term #{term_name}") { expect(visible_term_units_data[:term_units_min]).to eql(api_sis_profile_data[:term_units_min].to_s) }
                 end
               else
                 it("shows no term units minimum for UID #{student.uid} term #{term_name}") { expect(visible_term_units_data[:term_units_min]).to be_nil }
@@ -210,7 +210,7 @@ describe 'BOAC' do
                 if api_sis_profile_data[:term_units_max].zero? || term != api_student_data.current_term
                   it("shows no term units maximum for UID #{student.uid} term #{term_name}") { expect(visible_term_units_data[:term_units_max]).to be_nil }
                 else
-                  it("shows the term units maximum for UID #{student.uid} term #{term_name}") { expect(visible_term_units_data[:term_units_max]).to eql(api_sis_profile_data[:term_units_max]) }
+                  it("shows the term units maximum for UID #{student.uid} term #{term_name}") { expect(visible_term_units_data[:term_units_max]).to eql(api_sis_profile_data[:term_units_max].to_s) }
                 end
               else
                 it("shows no term units maximum for UID #{student.uid} term #{term_name}") { expect(visible_term_units_data[:term_units_max]).to be_nil }

@@ -84,28 +84,6 @@ describe 'BOAC' do
                   (it("shows topics #{note.topics} on #{test_case}") { expect(visible_note_data[:topics]).to eql(note.topics) }) :
                   (it("shows no topics on #{test_case}") { expect(visible_note_data[:topics]).to be_empty })
 
-              # Note attachments
-
-              if note.attachment_files.any?
-                it("shows attachment file names #{note.attachment_files} on #{test_case}") { expect(visible_note_data[:attachments]).to eql (note.attachment_files) }
-
-                # TODO
-                note.attachment_files.each do |file_name|
-                  if @student_page.note_attachment_el(file_name).tag_name == 'a'
-                    file_size = @student_page.download_attachment(note, file_name)
-                    attachment_downloads = file_size > 0
-                    downloadable_attachments << file_name
-                    it("allows attachment file #{file_name} to be downloaded from #{test_case}") { expect(attachment_downloads).to be true }
-
-                  else
-                    logger.warn "Skipping download test for note ID #{note.id} attachment #{file_name} since it cannot be downloaded"
-                  end
-                end
-
-              else
-                it("shows no attachment file names on #{test_case}") { expect(visible_note_data[:attachments]).to be_empty }
-              end
-
               # Note dates
 
               if updated_date_expected
@@ -113,6 +91,37 @@ describe 'BOAC' do
                 it("shows update date #{expected_update_date_text} on expanded #{test_case}") { expect(visible_note_data[:updated_date]).to eql(expected_update_date_text) }
               else
                 it("shows no updated date #{note.updated_date} on expanded #{test_case}") { expect(visible_note_data[:updated_date]).to be_nil }
+              end
+
+              # Note attachments
+
+              if note.attachments.any?
+                attachment_file_names = note.attachments.map &:display_file_name
+                it("shows attachment file names #{attachment_file_names} on #{test_case}") { expect(visible_note_data[:attachments]).to eql(attachment_file_names) }
+
+                note.attachments.each do |attach|
+                  if @student_page.note_attachment_el(attach.display_file_name).tag_name == 'a'
+                    begin
+                      file_size = @student_page.download_attachment(note, attach.display_file_name)
+                      attachment_downloads = file_size > 0
+                      downloadable_attachments << attach
+                      it("allows attachment file #{attach.display_file_name} to be downloaded from #{test_case}") { expect(attachment_downloads).to be true }
+                    rescue => e
+                      Utils.log_error e
+                      it("encountered an error downloading attachment file #{attach.display_file_name} from #{test_case}") { fail }
+
+                      # If the note download fails, the browser might no longer be on the student page so reload it.
+                      @student_page.load_page student
+                      @student_page.show_notes
+                    end
+
+                  else
+                    logger.warn "Skipping download test for note ID #{note.id} attachment #{attach.display_file_name} since it cannot be downloaded"
+                  end
+                end
+
+              else
+                it("shows no attachment file names on #{test_case}") { expect(visible_note_data[:attachments]).to be_empty }
               end
 
               expected_create_date_text = (note.advisor_uid == 'UCBCONVERSION') ?
@@ -125,7 +134,7 @@ describe 'BOAC' do
               it("hit an error with #{test_case}") { fail }
             ensure
               row = [student.uid, student.sis_id, note.id, note.created_date, note.updated_date, note.advisor_uid,
-                     !note.body.nil?, note.topics.length, note.attachment_files.length]
+                     !note.body.nil?, note.topics.length, note.attachments.length]
               Utils.add_csv_row(legacy_notes_data, row)
             end
           end
@@ -141,7 +150,8 @@ describe 'BOAC' do
               body_words = (body_words.map { |w| w.split("\n") }).flatten
               search_string = body_words[0..(search_string_word_count-1)].join(' ')
 
-              unless search_string.include? '/'
+              # TODO - stop excluding slashes, hyphens, and decimals from searches if/when they become searchable
+              if search_string.delete('/-') == search_string && search_string.gsub(/\d+(.)\d+/, '') == search_string
                 @student_page.search search_string
 
                 results_count = @search_results_page.note_results_count
@@ -156,7 +166,9 @@ describe 'BOAC' do
                   it("returns only results for students in the advisor's department with search string '#{search_string}'") { expect(visible_student_sids - dept_sids).to be_empty }
 
                   student_result_returned = @search_results_page.note_link(note).exists?
-                  it("returns a result for UID #{student.uid} for search string '#{search_string}'") { expect(student_result_returned).to be true }
+                  unless results_count >= 20
+                    it("returns a result for UID #{student.uid} for search string '#{search_string}'") { expect(student_result_returned).to be true }
+                  end
 
                   if student_result_returned
                     result = @search_results_page.note_result(student, note)
@@ -170,6 +182,8 @@ describe 'BOAC' do
                     # TODO - it("note search shows the most recent updated date on note #{note.id}") { expect(result[:date]).to eql(expected_date_text) }
                   end
                 end
+              else
+                logger.warn "Skipping search for UID #{student.uid} note #{note.id} because the body snippet contains unsupported characters"
               end
             end
           end
@@ -207,17 +221,17 @@ describe 'BOAC' do
 
         downloadable_attachments.each do |attach|
 
-          sid = attach.split('_').first
+          sid = attach.sis_file_name.split('_').first
           if test_dept_sids.include? sid
             logger.info "Skipping non-auth download test for SID #{sid} since it belongs to the advisor's department"
 
           else
-            @api_notes_page.load_page attach
+            @api_notes_page.load_page attach.sis_file_name
             no_access = @api_notes_page.verify_block { @api_notes_page.not_found_msg_element.when_visible Utils.short_wait }
-            it("blocks #{test.dept.name} advisor UID #{test.advisor.uid} from hitting the attachment download endpoint for #{attach}") { expect(no_access).to be true }
+            it("blocks #{test.dept.name} advisor UID #{test.advisor.uid} from hitting the attachment download endpoint for #{attach.sis_file_name}") { expect(no_access).to be true }
 
-            no_file = Dir["#{Utils.download_dir}/#{attach}"].empty?
-            it("delivers no file to #{test.dept.name} advisor UID #{test.advisor.uid} when hitting the attachment download endpoint for #{attach}") { expect(no_file).to be true }
+            no_file = Dir["#{Utils.download_dir}/#{attach.sis_file_name}"].empty?
+            it("delivers no file to #{test.dept.name} advisor UID #{test.advisor.uid} when hitting the attachment download endpoint for #{attach.sis_file_name}") { expect(no_file).to be true }
 
           end
         end
@@ -228,12 +242,12 @@ describe 'BOAC' do
 
       downloadable_attachments.each do |attach|
 
-        @api_notes_page.load_page attach
+        @api_notes_page.load_page attach.sis_file_name
         no_access = @api_notes_page.verify_block { @api_notes_page.unauth_msg_element.when_visible Utils.short_wait }
-        it("blocks an anonymous user from hitting the attachment download endpoint for #{attach}") { expect(no_access).to be true }
+        it("blocks an anonymous user from hitting the attachment download endpoint for #{attach.sis_file_name}") { expect(no_access).to be true }
 
-        no_file = Dir["#{Utils.download_dir}/#{attach}"].empty?
-        it("delivers no file to an anonymous user when hitting the attachment download endpoint for #{attach}") { expect(no_file).to be true }
+        no_file = Dir["#{Utils.download_dir}/#{attach.sis_file_name}"].empty?
+        it("delivers no file to an anonymous user when hitting the attachment download endpoint for #{attach.sis_file_name}") { expect(no_file).to be true }
 
       end
     end

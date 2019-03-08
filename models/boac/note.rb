@@ -11,7 +11,7 @@ class Note
                 :created_date,
                 :updated_date,
                 :topics,
-                :attachment_files
+                :attachments
 
   def initialize(note_data)
     note_data.each { |k, v| public_send("#{k}=", v) }

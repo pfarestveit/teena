@@ -121,15 +121,23 @@ describe 'A Physics advisor using BOAC' do
 
   context 'looking for admin functions' do
 
-    it 'can see no link to the admin page' do
+    it 'can load the admin page' do
       @homepage.load_page
       @homepage.click_header_dropdown
-      expect(@homepage.admin_link?).to be false
+      expect(@homepage.admin_link?).to be true
     end
 
-    it 'cannot hit the admin page' do
+    it 'can toggle demo mode' do
       @admin_page.load_page
-      @admin_page.wait_for_title 'Page not found'
+      @admin_page.demo_mode_toggle_element.when_visible Utils.short_wait
+    end
+
+    it 'can see no other admin functions' do
+      expect(@admin_page.asc_tab?).to be false
+      expect(@admin_page.coe_tab?).to be false
+      expect(@admin_page.physics_tab?).to be false
+      expect(@admin_page.admins_tab?).to be false
+      expect(@admin_page.status_heading?).to be false
     end
 
     it 'cannot hit the cachejob page' do
