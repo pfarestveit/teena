@@ -1,77 +1,22 @@
 {
     "filters": [
         {
-            "teams": [
-                {"squad": "Women's Tennis"},
-                {"squad": "Women's Water Polo"},
-                {"squad": "Men's Tennis"},
-                {"squad": "Men's Water Polo"}
-            ],
-            "levels": null,
-            "majors": null,
-            "gpa_ranges": null
-        },
-        {
-            "teams": [
-                {"squad": "Football, Defensive Backs"},
-                {"squad": "Football, Defensive Line"},
-                {"squad": "Football, Inside Linebackers"},
-                {"squad": "Football, Offensive Line"},
-                {"squad": "Football, Outside Linebackers"},
-                {"squad": "Football, Running Backs"},
-                {"squad": "Football, Special Teams"},
-                {"squad": "Football, Tight Ends"},
-                {"squad": "Football, Wide Receivers"}
-            ],
-            "levels": null,
-            "majors": [
-                {"major": "American Studies BA"},
-                {"major": "Legal Studies BA"},
-                {"major": "Sociology BA"}
-            ],
-            "gpa_ranges": null
-        },
-        {
-            "teams": [
-                {"squad": "Men's Gymnastics"},
-                {"squad": "Women's Softball"}
-            ],
-            "levels": [
-                {"level": "Senior"},
-                {"level": "Junior"}
-            ],
-            "majors": null,
-            "gpa_ranges": null
-        },
-        {
-            "teams": [
-                {"squad": "Women's Soccer"}
-            ],
+            "teams": null,
             "levels": null,
             "majors": null,
             "gpa_ranges": [
-                {"gpa_range": "2.50 - 2.99"},
-                {"gpa_range": "3.50 - 4.00"}
-            ]
-        },
-        {
-            "teams": [
-                {"squad": "Women's TrackCC, Distance CC"},
-                {"squad": "Women's TrackCC, Jumps"},
-                {"squad": "Women's TrackCC, Middle Dist"},
-                {"squad": "Women's TrackCC, Pole Vault"},
-                {"squad": "Women's TrackCC, Sprints Hurdles"},
-                {"squad": "Women's TrackCC, Throws"}
+                {"gpa_range": "3.00 - 3.49"}
             ],
-            "levels": [
-                {"level": "Senior"}
-            ],
-            "majors": [
-                {"major": "Business Administration BS"},
-                {"major": "Economics BA"},
-                {"major": "Education MA"}
-            ],
-            "gpa_ranges": null
+            "last_initials": "C K",
+            "advisors": null,
+            "ethnicities": null,
+            "minority": null,
+            "genders": null,
+            "preps": null,
+            "probation_coe": null,
+            "inactive_coe": null,
+            "inactive_asc": null,
+            "intensive_asc": null
         },
         {
             "teams": [
@@ -80,70 +25,172 @@
             ],
             "levels": null,
             "majors": [
-                {"major": "Undeclared"}
+                {"major": "Letters & Sci Undeclared UG"}
             ],
             "gpa_ranges": [
                 {"gpa_range": "3.00 - 3.49"},
                 {"gpa_range": "3.50 - 4.00"}
-            ]
+            ],
+            "advisors": [
+                {"advisor": "1015251"}
+            ],
+            "ethnicities": null,
+            "minority": true,
+            "genders": [
+                {"gender": "Female"}
+            ],
+            "preps": null,
+            "probation_coe": null,
+            "inactive_asc": null,
+            "intensive_asc": null
+        },
+        {
+            "teams": null,
+            "levels": null,
+            "majors": [
+                {"major": "American Studies BA"},
+                {"major": "Legal Studies BA"},
+                {"major": "Sociology BA"},
+                {"major": "Physics BA"},
+                {"major": "Mechanical Engineering BS"},
+                {"major": "Nuclear Engineering BS"}
+            ],
+            "gpa_ranges": null,
+            "advisors": null,
+            "ethnicities": null,
+            "minority": true,
+            "genders": null,
+            "preps": [
+                {"prep": "PREP"},
+                {"prep": "T-PREP"}
+            ],
+            "probation_coe": true,
+            "inactive_asc": null,
+            "intensive_asc": null
         },
         {
             "teams": [
-                {"squad": "Women's Basketball"}
+                {"squad": "Men's Gymnastics"},
+                {"squad": "Women's Softball"}
             ],
             "levels": [
-                {"level": "Freshman"},
-                {"level": "Sophomore"}
+                {"level": "Senior (90+ Units)"},
+                {"level": "Junior (60-89 Units)"}
+            ],
+            "majors": null,
+            "gpa_ranges": null,
+            "advisors": null,
+            "ethnicities": null,
+            "minority": null,
+            "genders": null,
+            "preps": [
+                {"prep": "PREP eligible"}
+            ],
+            "probation_coe": null,
+            "inactive_asc": null,
+            "intensive_asc": null
+        },
+        {
+            "teams": null,
+            "levels": null,
+            "majors": null,
+            "gpa_ranges": [
+                {"gpa_range": "2.00 - 2.49"},
+                {"gpa_range": "Below 2.0"}
+            ],
+            "advisors": [
+                {"advisor": "1015251"}
+            ],
+            "ethnicities": null,
+            "minority": null,
+            "genders": null,
+            "preps": null,
+            "probation_coe": true,
+            "inactive_asc": null,
+            "intensive_asc": true
+        },
+        {
+            "teams": [
+                {"squad": "Women's TrackCC, Distance CC"},
+                {"squad": "Women's TrackCC, Jumps"},
+                {"squad": "Women's TrackCC, Middle Dist"},
+                {"squad": "Women's TrackCC, Multis"},
+                {"squad": "Women's TrackCC, Pole Vault"},
+                {"squad": "Women's TrackCC, Sprints Hurdles"},
+                {"squad": "Women's TrackCC, Throws"}
+            ],
+            "levels": [
+                {"level": "Senior (90+ Units)"}
+            ],
+            "majors": [
+                {"major": "Business Administration BS"},
+                {"major": "Economics BA"},
+                {"major": "Education MA"}
+            ],
+            "gpa_ranges": null,
+            "advisors": null,
+            "ethnicities": [
+                {"ethnicity": "F"}
+            ],
+            "minority": null,
+            "genders": null,
+            "preps": null,
+            "probation_coe": null,
+            "inactive_asc": null,
+            "intensive_asc": null
+        },
+        {
+            "teams": null,
+            "levels": [
+                {"level": "Freshman (0-29 Units)"},
+                {"level": "Sophomore (30-59 Units)"}
             ],
             "majors": null,
             "gpa_ranges": [
                 {"gpa_range": "2.50 - 2.99"}
             ],
             "units": [
-                {"unit": "0 - 29"},
-                {"unit": "30 - 59"}
-            ]
-        },
-        {
-            "teams": [
-                {"squad": "Men's Baseball"}
+                {"unit": "0 - 29"}
             ],
-            "levels": [
-                {"level": "Junior"},
-                {"level": "Senior"}
+            "advisors": null,
+            "ethnicities": [
+                {"ethnicity": "G"}
             ],
-            "majors": [
-                {"major": "English BA"},
-                {"major": "History BA"},
-                {"major": "History of Art BA"}
+            "minority": false,
+            "genders": [
+                {"gender": "Male"},
+                {"gender": "Female"}
             ],
-            "gpa_ranges": [
-                {"gpa_range": "3.00 - 3.49"},
-                {"gpa_range": "2.50 - 2.99"}
-            ]
-        },
-        {
-            "teams": null,
-            "levels": null,
-            "majors": [
-                {"major": "MCB-Biochem & Mol Biol BA"},
-                {"major": "MCB-Cell & Dev Biology BA"},
-                {"major": "MCB-Neurobiology BA"},
-                {"major": "Astronomy BS"}
-            ],
-            "gpa_ranges": null
+            "preps": null,
+            "probation_coe": null,
+            "inactive_asc": null,
+            "intensive_asc": true
         },
         {
             "teams": null,
             "levels": [
-                {"level": "Senior"}
+                {"level": "Senior (90+ Units)"}
             ],
             "majors": [
                 {"major": "Integrative Biology BA"},
                 {"major": "Nut Sci-Physio & Metabol BS"},
-                {"major": "Public Health BA"}
+                {"major": "Public Health BA"},
+                {"major": "Physics"},
+                {"major": "Industrial Eng & Ops Rsch MEng"},
+                {"major": "Industrial Eng & Ops Rsch MS"}
             ],
-            "gpa_ranges": null
+            "gpa_ranges": null,
+            "last_initials": "B P",
+            "advisors": [
+                {"advisor": "2322"}
+            ],
+            "ethnicities": null,
+            "minority": true,
+            "genders": null,
+            "preps": null,
+            "probation_coe": null,
+            "inactive_asc": null,
+            "intensive_asc": null
         },
         {
             "teams": null,
@@ -155,57 +202,133 @@
             ],
             "gpa_ranges": [
                 {"gpa_range": "3.50 - 4.00"}
-            ]
+            ],
+            "advisors": null,
+            "ethnicities": null,
+            "genders": [
+                {"gender": "Male"}
+            ],
+            "preps": [
+                {"prep": "PREP"}
+            ],
+            "probation_coe": null,
+            "inactive_asc": null,
+            "intensive_asc": null
         },
         {
             "teams": null,
             "levels": [
-                {"level": "Sophomore"}
+                {"level": "Freshman (0-29 Units)"}
             ],
             "majors": [
-                {"major": "Undeclared"}
-            ],
-            "gpa_ranges": [
-                {"gpa_range": "Below 2.0"},
-                {"gpa_range": "2.00 - 2.49"}
-            ]
-        },
-        {
-            "teams": null,
-            "levels": [
-                {"level": "Freshman"}
-            ],
-            "majors": [
-                {"major": "Declared"},
                 {"major": "Economics BA"}
             ],
-            "gpa_ranges": null
+            "gpa_ranges": null,
+            "advisors": null,
+            "ethnicities": null,
+            "genders": null,
+            "preps": null,
+            "probation_coe": null,
+            "inactive_asc": null,
+            "intensive_asc": null
         },
         {
             "teams": null,
             "levels": [
-                {"level": "Senior"}
+                {"level": "Senior (90+ Units)"}
             ],
             "majors": null,
-            "gpa_ranges": null
+            "gpa_ranges": null,
+            "units": [
+                {"unit": "120 +"}
+            ],
+            "advisors": [
+                {"advisor": "1015251"}
+            ],
+            "ethnicities": null,
+            "minority": true,
+            "genders": [
+                {"gender": "Female"}
+            ],
+            "preps": null,
+            "probation_coe": null,
+            "inactive_asc": null,
+            "intensive_asc": null
         },
         {
             "teams": null,
             "levels": [
-                {"level": "Freshman"}
+                {"level": "Freshman (0-29 Units)"}
             ],
             "majors": null,
             "gpa_ranges": [
                 {"gpa_range": "Below 2.0"}
-            ]
+            ],
+            "advisors": null,
+            "ethnicities": [
+                {"ethnicity": "H"}
+            ],
+            "genders": null,
+            "preps": null,
+            "probation_coe": true,
+            "inactive_asc": null,
+            "intensive_asc": true
         },
         {
-            "teams": null,
-            "levels": null,
+            "teams": [
+                {"squad": "Women's Basketball"}
+            ],
+            "levels": [
+                {"level": "Junior (60-89 Units)"},
+                {"level": "Senior (90+ Units)"}
+            ],
+            "majors": [
+                {"major": "Electrical Eng & Comp Sci BS"},
+                {"major": "Engineering Physics BS"},
+                {"major": "Environmental Sciences BS"},
+                {"major": "Music BA"}
+            ],
+            "gpa_ranges": [
+                {"gpa_range": "3.00 - 3.49"},
+                {"gpa_range": "2.50 - 2.99"}
+            ],
+            "advisors": null,
+            "ethnicities": null,
+            "minority": null,
+            "genders": [
+                {"gender": "Female"}
+            ],
+            "preps": null,
+            "probation_coe": null,
+            "inactive_asc": null,
+            "intensive_asc": null
+        },
+        {
+            "teams": [
+                {"squad": "Men's Crew"}
+            ],
+            "levels": [
+                {"level": "Freshman (0-29 Units)"},
+                {"level": "Sophomore (30-59 Units)"}
+            ],
             "majors": null,
             "gpa_ranges": [
-                {"gpa_range": "3.50 - 4.00"}
-            ]
+                {"gpa_range": "2.50 - 2.99"}
+            ],
+            "last_initials": "A A",
+            "advisors": [
+                {"advisor": "1015251"},
+                {"advisor": "18767"}
+            ],
+            "ethnicities": null,
+            "minority": null,
+            "genders": null,
+            "preps": [
+                {"prep": "PREP"}
+            ],
+            "probation_coe": null,
+            "inactive_asc": null,
+            "intensive_asc": null
         }
     ]
 }

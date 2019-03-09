@@ -138,7 +138,6 @@ module BOACPages
   # Searches for a string using the sidebar search input
   # @param string [String]
   def search(string)
-    logger.info "Searching for '#{string}'"
     sleep 1
     search_input_element.when_visible Utils.short_wait
     self.search_input = string

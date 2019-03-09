@@ -29,8 +29,8 @@ class BOACStudentPage
   div(:cumulative_units, xpath: '//div[@id="cumulative-units"]/div')
   div(:cumulative_gpa, id: 'cumulative-gpa')
   div(:inactive_flag, xpath: '//div[text()="Inactive"]')
-  elements(:major, :div, xpath: '//div[@id="student-bio-majors"]//div[@class="student-bio-header"]')
-  elements(:college, :div, xpath: '//div[@id="student-bio-majors"]//div[@class="student-bio-details"]')
+  elements(:major, :div, xpath: '//div[@id="student-bio-majors"]//div[@class="bio-header"]')
+  elements(:college, :div, xpath: '//div[@id="student-bio-majors"]//div[@class="bio-details"]')
   div(:level, xpath: '//div[@id="student-bio-level"]/div')
   div(:terms_in_attendance, id: 'student-bio-terms-in-attendance')
   div(:expected_graduation, id: 'student-bio-expected-graduation')
@@ -45,7 +45,7 @@ class BOACStudentPage
       :phone => (phone if phone?),
       :cumulative_units => (cumulative_units.gsub("UNITS COMPLETED\n",'').gsub("\nNo data", '') if cumulative_units?),
       :cumulative_gpa => (cumulative_gpa.gsub("CUMULATIVE GPA\n",'').gsub("\nNo data", '').strip if cumulative_gpa?),
-      :majors => (major_elements.map { |m| m.text.strip }),
+      :majors => (major_elements.map { |m| m.text.gsub('Major', '').strip }),
       :colleges => (college_elements.map { |c| c.text.strip }).reject(&:empty?),
       :level => (level.gsub("Level\n",'') if level?),
       :terms_in_attendance => (terms_in_attendance if terms_in_attendance?),
@@ -82,7 +82,7 @@ class BOACStudentPage
   # @return [Hash]
   def visible_requirements
     logger.info 'Checking requirements tab'
-    wait_for_update_and_click reqts_button_element if reqts_button?
+    wait_for_update_and_click reqts_button_element if reqts_button? && !reqts_button_element.disabled?
     wait_for_update_and_click show_hide_reqts_button_element if show_hide_reqts_button? && show_hide_reqts_button_element.text.include?('Show')
     {
       :reqt_writing => (writing_reqt.gsub('Entry Level Writing', '').strip if writing_reqt_element.exists?),
@@ -102,7 +102,7 @@ class BOACStudentPage
   # @return [Array<String>]
   def visible_holds
     logger.info 'Checking holds tab'
-    wait_for_update_and_click holds_button_element if holds_button?
+    wait_for_update_and_click holds_button_element if holds_button? && !holds_button_element.disabled?
     wait_for_update_and_click show_hide_holds_button_element if show_hide_holds_button? && show_hide_holds_button_element.text.include?('Show')
     hold_elements.map { |h| h.text.strip }
   end
@@ -117,7 +117,7 @@ class BOACStudentPage
   # @return [Array<String>]
   def visible_alerts
     logger.info 'Checking alerts tab'
-    wait_for_update_and_click alerts_button_element if alerts_button?
+    wait_for_update_and_click alerts_button_element if alerts_button? && !alerts_button_element.disabled?
     wait_for_update_and_click show_hide_alerts_button_element if show_hide_alerts_button? && show_hide_alerts_button_element.text.include?('Show')
     alert_elements.map { |a| a.text.strip }
   end

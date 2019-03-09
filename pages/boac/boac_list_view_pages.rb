@@ -69,13 +69,20 @@ module BOACListViewPages
   def list_view_sids
     wait_until(Utils.medium_wait) { player_link_elements.any? }
     sleep Utils.click_wait
-    player_sid_elements.map { |el| el.text.gsub(/(INACTIVE)/, '').gsub(/(WAITLISTED)/, '').strip }
+    player_sid_elements.map &:text
+  end
+
+  # Whether or not an 'INACTIVE' flag is shown for a student
+  # @param student [BOACUser]
+  # @return [boolean]
+  def student_inactive_flag?(student)
+    div_element(xpath: "//div[text()='#{student.sis_id}']/following-sibling::div[text()='INACTIVE']").exists?
   end
 
   # Returns all the UIDs shown on list view
   # @return [Array<String>]
   def list_view_uids
-    player_link_elements.map { |el| el.attribute 'id' }
+    player_link_elements.map { |el| el.attribute('href').gsub("#{BOACUtils.base_url}/student/", '') }
   end
 
   # Returns the sequence of SIDs that are actually present following a search and/or sort

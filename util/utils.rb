@@ -342,7 +342,10 @@ class Utils
     begin
       connection = PG.connect(:host => db_credentials[:host], :port => db_credentials[:port], :dbname => db_credentials[:name], :user => db_credentials[:user], :password => db_credentials[:password])
       logger.debug "Sending query '#{query_string}'"
+      start = Time.now
       results = connection.exec query_string
+      logger.info "Query took #{Time.now - start} seconds"
+      results
     rescue PG::Error => e
       Utils.log_error e
     ensure
@@ -369,7 +372,10 @@ class Utils
     begin
       Redshift::Client.establish_connection({:host => db_credentials[:host], :port => db_credentials[:port], :dbname => db_credentials[:name], :user => db_credentials[:user], :password => db_credentials[:password]})
       logger.debug "Sending query '#{query_string}'"
+      start = Time.now
       results = Redshift::Client.connection.exec query_string
+      logger.info "Query took #{Time.now - start} seconds"
+      results
     rescue Redshift::Client::RedshiftClientError => e
       Utils.log_error e
     ensure
