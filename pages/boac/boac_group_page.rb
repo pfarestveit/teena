@@ -40,10 +40,11 @@ class BOACGroupPage
   end
 
   # Removes a student from a group
-  # @param row_index [Number]
-  def remove_student_by_row_index(row_index)
+  # @param group [Group]
+  # @param student [BOACUser]
+  def remove_student_by_row_index(group, student)
     wait_for_student_list
-    wait_for_update_and_click button_element(:id => "row-#{row_index}-remove-student-from-curated-group")
+    wait_for_update_and_click button_element(xpath: "#{student_row_xpath student}//button[contains(@id,'remove-student-from-curated-group')]")
     group.members.delete student
     sleep 2
     wait_until(Utils.short_wait) { list_view_uids.sort == group.members.map(&:uid).sort }

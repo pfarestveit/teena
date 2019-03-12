@@ -149,7 +149,7 @@ describe 'A CoE advisor using BOAC' do
 
     it 'can toggle demo mode' do
       @admin_page.load_page
-      @admin_page.demo_mode_toggle_element.when_visible Utils.short_wait
+      @admin_page.demo_mode_toggle_element.when_present Utils.short_wait
     end
 
     it 'can see no other admin functions' do

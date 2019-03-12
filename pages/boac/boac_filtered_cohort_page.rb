@@ -149,6 +149,9 @@ class BOACFilteredCohortPage
                          "@id='Advisor-#{filter_option}'"
                        when 'Major'
                          "@id='Major-#{filter_option}'"
+                       when 'Team'
+                         squad = Squad::SQUADS.find { |s| s.name == filter_option }
+                         "@id='Team-#{squad.code}'"
                        else
                          "text()=\"#{filter_option}\""
                      end

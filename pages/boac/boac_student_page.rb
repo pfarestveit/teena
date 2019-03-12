@@ -28,7 +28,7 @@ class BOACStudentPage
   link(:email, id: 'student-mailto')
   div(:cumulative_units, xpath: '//div[@id="cumulative-units"]/div')
   div(:cumulative_gpa, id: 'cumulative-gpa')
-  div(:inactive_flag, xpath: '//div[text()="Inactive"]')
+  div(:inactive_flag, id: 'student-bio-inactive')
   elements(:major, :div, xpath: '//div[@id="student-bio-majors"]//div[@class="bio-header"]')
   elements(:college, :div, xpath: '//div[@id="student-bio-majors"]//div[@class="bio-details"]')
   div(:level, xpath: '//div[@id="student-bio-level"]/div')

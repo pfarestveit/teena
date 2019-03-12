@@ -418,4 +418,23 @@ class NessieUtils < Utils
     end
     notes_data.map { |d| Note.new d }
   end
+
+  # Returns a student's current holds
+  # @param student [BOACUser]
+  # @return [Array<Alert>]
+  def self.get_student_holds(student)
+    query = "SELECT sid, feed
+              FROM student.student_holds
+              WHERE sid = '#{student.sis_id}';"
+    results = Utils.query_redshift_db(nessie_db_credentials, query)
+    results.map do |r|
+      feed = JSON.parse r['feed']
+      alert_data = {
+        :message => "#{feed['reason']['description']}. #{feed['reason']['formalDescription']}".gsub("\n", '').gsub("\\u200b", '').gsub(/\s+/, ' '),
+        :user => student
+      }
+      Alert.new alert_data
+    end
+  end
+
 end
