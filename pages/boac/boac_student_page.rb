@@ -129,6 +129,10 @@ class BOACStudentPage
   elements(:note_msg_row, :div, xpath: '//div[contains(@id,"timeline-tab-note-message")]')
   elements(:topic, :list_item, xpath: '//li[contains(@id, "topic")]')
   elements(:attachment, :div, xpath: '//*[contains(@id, "attachment")]')
+  button(:new_note_button, id: 'new-note-button')
+  text_area(:new_note_subject_input, id: 'create-note-subject')
+  text_area(:new_note_body_textarea, xpath: '//div[@role=\'textbox\']')
+  button(:new_note_save_button, id: 'create-note')
 
   # Clicks the Notes tab and expands the list of notes
   def show_notes
@@ -507,6 +511,18 @@ class BOACStudentPage
       :days => text.split('.')[0],
       :context => text.split('.')[1]
     }
+  end
+
+  # Create note and wait for its arrival in the Academic Timeline
+  def create_new_note(note)
+    logger.debug "Create note with subject #{note.subject}"
+    click_element(new_note_button_element, Utils.short_wait)
+    wait_for_element_and_type(new_note_subject_input_element, note.subject)
+    wait_for_element_and_type(new_note_body_textarea_element, note.body)
+    wait_for_update_and_click new_note_save_button_element
+    # Verify note creation
+    span_element(xpath: "//span[contains(.,'#{note.subject}')]").when_visible Utils.short_wait
+    logger.debug "Note created (subject: #{note.subject})"
   end
 
 end

@@ -290,6 +290,6 @@ class BOACUtils < Utils
       }
     end
 
-    notes_data.map { |d| Alert.new d }
+    notes_data.map { |d| Note.new d }
   end
 end

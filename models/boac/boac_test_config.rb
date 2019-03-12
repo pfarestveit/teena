@@ -245,6 +245,10 @@ class BOACTestConfig < TestConfig
     set_max_cohort_members CONFIG['class_page_max_users']
   end
 
+  def note_management(all_students)
+    set_global_configs all_students
+  end
+
   # Config for SIS data testing
   # @param all_students [Array<BOACUser>]
   def sis_data(all_students)
