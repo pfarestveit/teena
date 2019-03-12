@@ -7,7 +7,7 @@ describe 'BOAC' do
   test = BOACTestConfig.new
   all_students = NessieUtils.get_all_students
   test.curated_groups all_students
-  test_student = test.cohort_members.last
+  test_student = test.cohort_members.first
   logger.debug "Test student is UID #{test_student.uid} SID #{test_student.sis_id}"
 
   # Initialize groups to be used later in the tests
@@ -170,8 +170,10 @@ describe 'BOAC' do
   describe 'group membership' do
 
     before(:all) do
-      @student_page.load_page test.cohort_members.first
-      advisor_groups.each { |c| @student_page.add_student_to_new_grp(test.cohort_members.first, c) }
+      student = test.cohort_members.last
+      test.cohort_members.pop
+      @student_page.load_page student
+      advisor_groups.each { |c| @student_page.add_student_to_new_grp(student, c) }
     end
 
     it 'can be added from filtered cohort list view using select-all' do
@@ -230,8 +232,9 @@ describe 'BOAC' do
 
     it 'can be removed on the group list view page' do
       @group_page.load_page group_2
-      logger.info "Removing UID #{group_2.members.last.uid} from group '#{group_2.name}'"
-      @group_page.remove_student_by_row_index(group_2.members.length - 1)
+      student = group_2.members.last
+      logger.info "Removing UID #{student.uid} from group '#{group_2.name}'"
+      @group_page.remove_student_by_row_index(group_2, student)
     end
 
     it 'can be removed on the student page using the group checkbox' do

@@ -270,19 +270,6 @@ class BOACUtils < Utils
     alert
   end
 
-  # Returns a student's current holds
-  # @param student [BOACUser]
-  # @return [Array<Alert>]
-  def self.get_student_holds(student)
-    query = "SELECT id, sid, message
-              FROM alerts
-              WHERE sid = '#{student.sis_id}'
-              AND alert_type = 'hold'
-              AND key LIKE '#{term_code}%';"
-    results = Utils.query_pg_db(boac_db_credentials, query)
-    results.map { |r| Alert.new({id: r['id'], message: r['message'].gsub('Hold: ', ''), user: student}) }
-  end
-
   # Returns a student's advising notes
   # @param student [BOACUser]
   # @return [Array<Note>]

@@ -40,16 +40,24 @@ describe 'BOAC' do
         @boac_cohort_page.load_cohort test.default_cohort
         cohort_page_sis_data = @boac_cohort_page.visible_sis_data(@driver, student)
 
-        it "shows the level for UID #{student.uid} on the #{test.default_cohort.name} page" do
-          expect(cohort_page_sis_data[:level]).to eql(api_sis_profile_data[:level])
-          expect(cohort_page_sis_data[:level]).not_to be_empty
+        if api_sis_profile_data[:level]
+          it "shows the level for UID #{student.uid} on the #{test.default_cohort.name} page" do
+            expect(cohort_page_sis_data[:level]).to eql(api_sis_profile_data[:level])
+            expect(cohort_page_sis_data[:level]).not_to be_empty
+          end
+        else
+          it("shows no level for UID #{student.uid} on the #{test.default_cohort.name} page") { expect(cohort_page_sis_data[:level]).to be_empty }
         end
 
         # TODO - shows withdrawal indicator if withdrawn
 
-        it "shows the majors for UID #{student.uid} on the #{test.default_cohort.name} page" do
-          expect(cohort_page_sis_data[:majors]).to eql(api_sis_profile_data[:majors].sort)
-          expect(cohort_page_sis_data[:majors]).not_to be_empty
+        if api_sis_profile_data[:majors]
+          it "shows the majors for UID #{student.uid} on the #{test.default_cohort.name} page" do
+            expect(cohort_page_sis_data[:majors]).to eql(api_sis_profile_data[:majors].sort)
+            expect(cohort_page_sis_data[:majors]).not_to be_empty
+          end
+        else
+          it("shows no majors for UID #{student.uid} on the #{test.default_cohort.name} page") { expect(cohort_page_sis_data[:majors]).to be_nil }
         end
 
         it("shows the expected graduation date for UID #{student.uid} on the #{test.default_cohort.name} page") { expect(cohort_page_sis_data[:grad_term]).to eql(api_sis_profile_data[:expected_grad_term_name]) }
@@ -59,14 +67,22 @@ describe 'BOAC' do
           expect(cohort_page_sis_data[:gpa]).not_to be_empty
         end
 
-        it "shows the units in progress for UID #{student.uid} on the #{test.default_cohort.name} page" do
-          expect(cohort_page_sis_data[:term_units]).to eql(api_sis_profile_data[:term_units])
-          expect(cohort_page_sis_data[:term_units]).not_to be_empty
+        if api_sis_profile_data[:term_units]
+          it "shows the units in progress for UID #{student.uid} on the #{test.default_cohort.name} page" do
+            expect(cohort_page_sis_data[:term_units]).to eql(api_sis_profile_data[:term_units])
+            expect(cohort_page_sis_data[:term_units]).not_to be_empty
+          end
+        else
+          it("shows no units in progress for UID #{student.uid} on the #{test.default_cohort.name} page") { expect(cohort_page_sis_data[:term_units]).to eql('0') }
         end
 
-        it "shows the total units for UID #{student.uid} on the #{test.default_cohort.name} page" do
-          expect(cohort_page_sis_data[:units_cumulative]).to eql(api_sis_profile_data[:cumulative_units])
-          expect(cohort_page_sis_data[:units_cumulative]).not_to be_empty
+        if api_sis_profile_data[:cumulative_units]
+          it "shows the total units for UID #{student.uid} on the #{test.default_cohort.name} page" do
+            expect(cohort_page_sis_data[:units_cumulative]).to eql(api_sis_profile_data[:cumulative_units])
+            expect(cohort_page_sis_data[:units_cumulative]).not_to be_empty
+          end
+        else
+          it("shows no total units for UID #{student.uid} on the #{test.default_cohort.name} page") { expect(cohort_page_sis_data[:units_cumulative]).to eql('0') }
         end
 
         it("shows the current term course codes for UID #{student.uid} on the #{test.default_cohort.name} page") { expect(cohort_page_sis_data[:classes]).to eql(api_student_data.current_enrolled_course_codes) }
@@ -85,9 +101,13 @@ describe 'BOAC' do
           expect(student_page_sis_data[:email]).not_to be_empty
         end
 
-        it "shows the total units for UID #{student.uid} on the student page" do
-          expect(student_page_sis_data[:cumulative_units]).to eql(api_sis_profile_data[:cumulative_units])
-          expect(student_page_sis_data[:cumulative_units]).not_to be_empty
+        if api_sis_profile_data[:cumulative_units]
+          it "shows the total units for UID #{student.uid} on the student page" do
+            expect(student_page_sis_data[:cumulative_units]).to eql(api_sis_profile_data[:cumulative_units])
+            expect(student_page_sis_data[:cumulative_units]).not_to be_empty
+          end
+        else
+          it("shows no total units for UID #{student.uid} on the student page") { expect(student_page_sis_data[:cumulative_units]).to eql('--') }
         end
 
         it "shows the phone for UID #{student.uid} on the student page" do
@@ -99,21 +119,29 @@ describe 'BOAC' do
           expect(student_page_sis_data[:cumulative_gpa]).not_to be_empty
         end
 
-        it "shows the majors for UID #{student.uid} on the student page" do
-          expect(student_page_sis_data[:majors]).to eql(api_sis_profile_data[:majors])
-          expect(student_page_sis_data[:majors]).not_to be_empty
+        if api_sis_profile_data[:majors]
+          it "shows the majors for UID #{student.uid} on the student page" do
+            expect(student_page_sis_data[:majors]).to eql(api_sis_profile_data[:majors])
+            expect(student_page_sis_data[:majors]).not_to be_empty
+          end
+        else
+          it("shows no majors for UID #{student.uid} on the student page") { expect(student_page_sis_data[:majors]).to be_empty }
         end
 
         api_sis_profile_data[:colleges] ?
             (it("shows the colleges for UID #{student.uid} on the student page") { expect(student_page_sis_data[:colleges]).to eql(api_sis_profile_data[:colleges]) }) :
             (it("shows no colleges for UID #{student.uid} on the student page") { expect(student_page_sis_data[:colleges].all?(&:empty?)).to be true })
 
-        it "shows the academic level for UID #{student.uid} on the student page" do
-          expect(student_page_sis_data[:level]).to eql(api_sis_profile_data[:level])
-          expect(student_page_sis_data[:level]).not_to be_empty
+        if api_sis_profile_data[:level]
+          it "shows the academic level for UID #{student.uid} on the student page" do
+            expect(student_page_sis_data[:level]).to eql(api_sis_profile_data[:level])
+            expect(student_page_sis_data[:level]).not_to be_empty
+          end
+        else
+          it("shows no academic level for UID #{student.uid} on the student page") { expect(student_page_sis_data[:level]).to be_empty }
         end
 
-        (api_sis_profile_data[:terms_in_attendance] && api_sis_profile_data[:level] != 'Graduate') ?
+        (api_sis_profile_data[:terms_in_attendance] && !api_sis_profile_data[:terms_in_attendance].empty? && api_sis_profile_data[:level] != 'Graduate') ?
             (it("shows the terms in attendance for UID #{student.uid} on the student page") { expect(student_page_sis_data[:terms_in_attendance]).to include(api_sis_profile_data[:terms_in_attendance]) }) :
             (it("shows no terms in attendance for UID #{student.uid} on the student page") { expect(student_page_sis_data[:terms_in_attendance]).to be_nil })
 
@@ -150,7 +178,7 @@ describe 'BOAC' do
 
         # Holds
 
-        holds = BOACUtils.get_student_holds student
+        holds = NessieUtils.get_student_holds student
         hold_msgs = (holds.map &:message).sort
         logger.info "UID #{student.uid} hold count is #{hold_msgs.length}"
 
@@ -194,7 +222,11 @@ describe 'BOAC' do
 
               visible_term_units_data = @boac_student_page.visible_term_data(term_id, term_name)
 
-              it("shows the term units total for UID #{student.uid} term #{term_name}") { expect(visible_term_units_data[:term_units]).to eql(api_student_data.term_units term) }
+              if api_student_data.term_units(term) && api_student_data.term_units(term).to_i.zero?
+                it("shows no term units total for UID #{student.uid} term #{term_name}") { expect(visible_term_units_data[:term_units]).to be_nil }
+              else
+                it("shows the term units total for UID #{student.uid} term #{term_name}") { expect(visible_term_units_data[:term_units]).to eql(api_student_data.term_units term) }
+              end
 
               if api_sis_profile_data[:term_units_min]
                 if api_sis_profile_data[:term_units_min].zero? || term != api_student_data.current_term
@@ -243,13 +275,9 @@ describe 'BOAC' do
                       expect(visible_course_title).to eql(course_sis_data[:title])
                     end
 
-                    if course_sis_data[:units_completed].to_f > 0
-                      it "shows the units for UID #{student.uid} term #{term_name} course #{course_code}" do
-                        expect(visible_units).not_to be_empty
-                        expect(visible_units).to eql(course_sis_data[:units_completed])
-                      end
-                    else
-                      it("shows no units for UID #{student.uid} term #{term_name} course #{course_code}") { expect(visible_units).to be_empty }
+                    it "shows the units for UID #{student.uid} term #{term_name} course #{course_code}" do
+                      expect(visible_units).not_to be_empty
+                      expect(visible_units).to eql(course_sis_data[:units_completed])
                     end
 
                     if course_sis_data[:grade].empty?
@@ -334,7 +362,7 @@ describe 'BOAC' do
                       (it("shows dropped section #{drop[:title]} #{drop[:component]} #{drop[:number]} for UID #{student.uid} in #{term_name}") { expect(visible_drop).to be_truthy }) :
                       (it("shows no dropped section #{drop[:title]} #{drop[:component]} #{drop[:number]} for UID #{student.uid} in past term #{term_name}") { expect(visible_drop).to be_falsey })
 
-                  row = [student.uid, student.sports, term_name, drop[:title], nil, nil, drop[:number], nil, nil, nil, 'D']
+                  row = [student.uid, student.sports, term_name, nil, nil, drop[:title], nil, nil, drop[:number], nil, nil, nil, 'D']
                   Utils.add_csv_row(user_course_sis_data, row)
                 end
               end

@@ -69,7 +69,7 @@ module BOACListViewPages
   def list_view_sids
     wait_until(Utils.medium_wait) { player_link_elements.any? }
     sleep Utils.click_wait
-    player_sid_elements.map &:text
+    player_sid_elements.map { |el| el.text.split(' ').first }
   end
 
   # Whether or not an 'INACTIVE' flag is shown for a student
