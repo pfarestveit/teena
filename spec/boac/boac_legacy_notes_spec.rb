@@ -191,8 +191,7 @@ describe 'BOAC' do
         else
           logger.warn "Ain't got no notes for UID #{student.uid}"
           button_disabled = @student_page.notes_button_element.attribute('disabled')
-          it("shows a disabled notes button for UID #{student.uid}") { expect(button_disabled).to eql('true') }
-
+          it("shows a disabled notes button for UID #{student.uid}") { expect(button_disabled).to be_truthy }
         end
 
       rescue => e

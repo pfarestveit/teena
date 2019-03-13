@@ -132,7 +132,15 @@ class BOACStudentPage
   button(:new_note_button, id: 'new-note-button')
   text_area(:new_note_subject_input, id: 'create-note-subject')
   text_area(:new_note_body_textarea, xpath: '//div[@role=\'textbox\']')
-  button(:new_note_save_button, id: 'create-note')
+  button(:new_note_save_button, id: 'create-note-button')
+  button(:edit_note_button, id: 'edit-note-button')
+  button(:delete_note_button, id: 'delete-note-button')
+  text_area(:edit_note_subject_input, id: 'edit-note-subject')
+  text_area(:edit_note_body_textarea, xpath: '//div[@role=\'textbox\']')
+  button(:existing_note_save_button, id: 'save-note-button')
+  button(:existing_note_cancel_button, id: 'cancel-edit-note-button')
+  button(:confirm_delete_button, id: 'are-you-sure-confirm')
+  span(:popover_error_message, id: 'popover-error-message')
 
   # Clicks the Notes tab and expands the list of notes
   def show_notes
@@ -162,7 +170,7 @@ class BOACStudentPage
   # Returns the visible sequence of note ids
   # @return [Array<String>]
   def visible_collapsed_note_ids
-    els = browser.find_elements(xpath: '//div[contains(@id, "note-")][contains(@id, "-message-closed")]')
+    els = browser.find_elements(xpath: '//div[contains(@id, "note-")][contains(@id, "-is-closed")]')
     els.map { |el| el.attribute('id').split('-')[1..2].join('-') }
   end
 
@@ -177,8 +185,8 @@ class BOACStudentPage
   # Returns the element containing the note body
   # @param note [Note]
   # @return [PageObject::Elements::Div]
-  def note_body_el(note)
-    div_element(id: "note-#{note.id}-message-closed")
+  def collapsed_note_el(note)
+    div_element(id: "note-#{note.id}-is-closed")
   end
 
   # Returns the element containing the note's advisor name
@@ -221,7 +229,7 @@ class BOACStudentPage
   # Clicks the body of the note to expand it
   # @param note [Note]
   def expand_note(note)
-    wait_for_update_and_click note_body_el(note)
+    wait_for_update_and_click collapsed_note_el(note)
   end
 
   # Returns the data visible when the note is expanded
@@ -234,7 +242,7 @@ class BOACStudentPage
     created_el = div_element(id: "expanded-note-#{note.id}-created-at")
     updated_el = div_element(id: "expanded-note-#{note.id}-updated-at")
     {
-      :body => (note_body_el(note).text.gsub("\n", '') if note_body_el(note).exists?),
+      :body => (collapsed_note_el(note).text.gsub("\n", '') if collapsed_note_el(note).exists?),
       :advisor => (note_advisor_el(note).text if note_advisor_el(note).exists?),
       :topics => topic_els.map(&:text).sort,
       :attachments => (attachment_els.map { |el| el.text.strip }).sort,
@@ -513,7 +521,15 @@ class BOACStudentPage
     }
   end
 
+  # Returns DOM element, in Academic Timeline, which contains note subject text
+  # @param note_subject [String]
+  # @return [String]
+  def timeline_note_subject_element(note_subject)
+    span_element(xpath: "//span[contains(.,'#{note_subject}')]")
+  end
+
   # Create note and wait for its arrival in the Academic Timeline
+  # @param note [Object]
   def create_new_note(note)
     logger.debug "Create note with subject #{note.subject}"
     click_element(new_note_button_element, Utils.short_wait)
@@ -521,8 +537,37 @@ class BOACStudentPage
     wait_for_element_and_type(new_note_body_textarea_element, note.body)
     wait_for_update_and_click new_note_save_button_element
     # Verify note creation
-    span_element(xpath: "//span[contains(.,'#{note.subject}')]").when_visible Utils.short_wait
+    timeline_note_subject_element(note.subject).when_visible Utils.short_wait
     logger.debug "Note created (subject: #{note.subject})"
   end
 
+  # Updates subject of an existing note, includes form validation check
+  # @param note [Object]
+  # @param new_note_subject [String]
+  def update_note_subject(note, new_note_subject)
+    logger.debug "Change note subject from '#{note.subject}' to '#{new_note_subject}'"
+    expand_note(note) if collapsed_note_el(note).exists?
+    wait_for_update_and_click edit_note_button_element
+    logger.debug "Note subject gets blank string, expect validation error"
+    wait_for_element_and_type(edit_note_subject_input_element, '   ')
+    wait_for_update_and_click existing_note_save_button_element
+    wait_for_element(popover_error_message_element, Utils.short_wait)
+
+    # Update note subject and verify
+    wait_for_element_and_type(edit_note_subject_input_element, new_note_subject)
+    wait_for_update_and_click existing_note_save_button_element
+    wait_for_update_and_click timeline_note_subject_element(new_note_subject)
+    logger.debug "New note subject saved"
+  end
+
+  # Deletes note, handles 'confirm' modal
+  # @param note [Object]
+  def delete_note(note)
+    note_subject = note.subject
+    logger.debug "Delete note '#{note_subject}'"
+    expand_note(note) if collapsed_note_el(note).exists?
+    wait_for_update_and_click delete_note_button_element
+    wait_for_update_and_click confirm_delete_button_element
+    logger.debug "Note '#{note_subject}' deleted"
+  end
 end
