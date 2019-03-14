@@ -51,6 +51,7 @@ module Page
     element.when_present timeout
     element.when_visible timeout
     sleep Utils.event_wait
+    Utils.log_js_errors browser
   end
 
   # Awaits an element for a given timeout then clicks it using WebDriver click method.
