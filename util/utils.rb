@@ -101,14 +101,18 @@ class Utils
     logger.info 'Quitting the browser'
 
     # Before quitting, log any JS errors (or other console messages) encountered during the browser session
-    js_log = driver.manage.logs.get(:browser)
-    messages = js_log.map &:message
-    messages.each { |msg| logger.error "Possible JS error: #{msg}" unless msg.include? 'chrome-search://thumb/' }
+    log_js_errors driver
 
   rescue NoMethodError
 
     # Pause after quitting the browser to make sure it shuts down completely before the next test relaunches it
     sleep 2
+  end
+
+  def self.log_js_errors(driver)
+    js_log = driver.manage.logs.get(:browser)
+    messages = js_log.map &:message
+    messages.each { |msg| logger.error "Possible JS error: #{msg}" unless msg.include? 'chrome-search://thumb/' }
   end
 
   # TIMEOUTS
