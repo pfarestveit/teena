@@ -243,7 +243,7 @@ describe 'The Engagement Index', order: :defined do
       it "prevents #{user.role} UID #{user.uid} from reaching the Engagement Index if the user has been removed from the course site" do
         @canvas.masquerade_as(@driver, user, @course)
         @engagement_index.navigate_to @engagement_index_url
-        @canvas.unauthorized_msg_element.when_visible Utils.short_wait
+        @canvas.access_denied_msg_element.when_visible Utils.short_wait
       end
 
     end

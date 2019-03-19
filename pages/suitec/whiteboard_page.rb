@@ -100,7 +100,7 @@ module Page
         wait_for_update_and_click button_element(xpath: "//span[text()='#{user.full_name}']/following-sibling::button")
         collaborator_name(user).when_not_visible Utils.short_wait
         # An alert can appear, but only if the user removes itself
-        confirm(true) { wait_for_update_and_click save_edit_element } rescue Selenium::WebDriver::Error::NoAlertPresentError
+        alert { wait_for_update_and_click save_edit_element } rescue Selenium::WebDriver::Error::NoAlertPresentError
         add_event(event, EventType::MODIFY)
         add_event(event, EventType::WHITEBOARD_SETTINGS, user.uid)
       end

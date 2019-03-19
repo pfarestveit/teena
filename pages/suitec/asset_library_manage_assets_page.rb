@@ -93,7 +93,7 @@ module Page
         logger.info "Deleting category called #{category_title}"
         wait_until(Utils.short_wait) { custom_category_titles.include? category_title }
         delete_button = button_element(xpath: "//h3[text()='Custom Categories']/following-sibling::ul/li[#{custom_category_index(category_title) + 1}]//button[@title='Delete this category']")
-        confirm(true) { wait_for_update_and_click_js delete_button }
+        alert { wait_for_update_and_click_js delete_button }
         sleep 2
       end
 
@@ -161,6 +161,7 @@ module Page
         logger.info "Migrating assets to '#{destination_course.title}', ID '#{destination_course.site_id}'"
         load_page(driver, url)
         click_manage_assets_link
+        scroll_to_bottom
         wait_for_element_and_select_js(migrate_assets_select_element, destination_course.title)
         wait_for_update_and_click_js migrate_assets_button_element
         migration_started_msg_element.when_present Utils.medium_wait

@@ -26,6 +26,7 @@ module Page
 
     h1(:unexpected_error_msg, xpath: '//h1[contains(text(),"Unexpected Error")]')
     h2(:unauthorized_msg, xpath: '//h2[contains(text(),"Unauthorized")]')
+    h2(:access_denied_msg, xpath: '//h2[text()="Access Denied"]')
 
     # Loads the Canvas homepage, optionally using a non-default Canvas base URL
     # @param canvas_base_url [String]
