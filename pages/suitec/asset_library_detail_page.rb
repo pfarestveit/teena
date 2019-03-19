@@ -247,7 +247,7 @@ module Page
       # @param event [Event]
       def delete_asset(asset, event = nil)
         logger.info "Deleting asset ID #{asset.id}" unless asset.nil?
-        confirm(true) { wait_for_update_and_click delete_asset_button_element }
+        alert { wait_for_update_and_click delete_asset_button_element }
         add_event(event, EventType::LIST_ASSETS)
         asset.visible = false unless asset.nil?
         delete_asset_button_element.when_not_visible Utils.short_wait rescue Selenium::WebDriver::Error::StaleElementReferenceError
@@ -538,7 +538,7 @@ module Page
       def delete_comment(asset, comment, event = nil)
         index = asset.comments.index comment
         logger.info "Deleting comment at index #{index}"
-        confirm(true) { wait_for_load_and_click_js delete_button_element(index) }
+        alert { wait_for_load_and_click_js delete_button_element(index) }
         asset.comments.delete comment
         add_event(event, EventType::DELETE, asset.id)
         add_event(event, EventType::DELETE_COMMENT, asset.id)
