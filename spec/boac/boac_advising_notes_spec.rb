@@ -2,97 +2,193 @@ require_relative '../../util/spec_helper'
 
 include Logging
 
-describe 'BOAC' do
+test = BOACTestConfig.new
+test.note_management NessieUtils.get_all_students
+other_advisor = BOACUtils.get_dept_advisors(test.dept).find { |a| a.uid != test.advisor.uid }
 
-  include Logging
+if test.dept == BOACDepartments::ADMIN
 
-  test = BOACTestConfig.new
-  test.note_management NessieUtils.get_all_students
+  logger.error 'Tests cannot be run for the Admin dept'
+
+elsif !other_advisor
+
+  logger.error "This script will fail because #{test.dept.name} has only one advisor"
+
+else
+
   test_student = test.dept_students.first
+  notes = []
+  notes << (note_1 = Note.new({:advisor_uid => test.advisor.uid, :advisor_dept => test.dept.name}))
+  notes << (note_2 = Note.new({:advisor_uid => test.advisor.uid, :advisor_dept => test.dept.name}))
+  notes << (note_3 = Note.new({:advisor_uid => test.advisor.uid, :advisor_dept => test.dept.name}))
+  # TODO (attachments) - notes << (note_4 = Note.new({:advisor_uid => test.advisor.uid, :advisor_dept => test.dept.name}))
+  # TODO (topics) - notes << (note_5 = Note.new({:advisor_uid => test.advisor.uid, :advisor_dept => test.dept.name}))
 
-  before(:all) do
-    @driver = Utils.launch_browser test.chrome_profile
-    @homepage = BOACHomePage.new @driver
-    @student_page = BOACStudentPage.new @driver
-    timestamp = Time.now.iso8601
-    @note = Note.new({
-                         subject: "Square Biz at #{timestamp}",
-                         body: "I'm talkin' square biz to you, baby (#{timestamp})",
-                         advisor_uid: test.advisor.uid,
-                         topics: [],
-                         attachments: []
-                     })
-  end
+  describe 'A BOAC', order: :defined do
 
-  describe 'notes management' do
+    include Logging
 
-    context 'Dept advisor' do
+    before(:all) do
+      @driver = Utils.launch_browser
+      @homepage = BOACHomePage.new @driver
+      @student_page = BOACStudentPage.new @driver
+    end
+
+    after(:all) {Utils.quit_browser @driver}
+
+    describe 'advisor' do
 
       before(:all) do
         @homepage.dev_auth test.advisor
         @student_page.load_page test_student
+        @student_page.show_notes
       end
 
-      it 'can create new note' do
-        @student_page.create_new_note(@note)
-        latest_note = BOACUtils.get_student_notes(test_student).last
-        expect(latest_note.subject).to eql @note.subject
-        @note.id = latest_note.id
+      after(:all) { @homepage.log_out }
+
+      context 'creating a new note' do
+
+        it 'cannot create a note without a subject' do
+          @student_page.click_create_new_note
+          @student_page.click_save_new_note
+          @student_page.subj_required_msg_element.when_visible 1
+          @student_page.click_cancel_note
+        end
+
+        it 'can cancel an unsaved new note' do
+          @student_page.click_create_new_note
+          @student_page.wait_for_element_and_type(@student_page.note_body_text_area_elements[0], 'An edit to forget')
+          @student_page.click_cancel_note
+          @student_page.wait_for_update_and_click @student_page.confirm_delete_button_element
+          @student_page.note_body_text_area_elements[0].when_not_visible 1
+        end
+
+        it 'can create a note with a subject' do
+          note_1.subject = "Note 1 subject #{Utils.get_test_id}"
+          @student_page.create_new_note note_1
+          # TODO - remove the page reload once dates are updated dynamically
+          @student_page.load_page test_student
+          @student_page.show_notes
+          @student_page.verify_note note_1
+        end
+
+        it 'can create a note with a subject and a body' do
+          note_2.subject = "Note 2 subject #{Utils.get_test_id}"
+          note_2.body = "Note 2 body"
+          @student_page.create_new_note note_2
+          # TODO - remove the page reload once dates are updated dynamically
+          @student_page.load_page test_student
+          @student_page.show_notes
+          @student_page.verify_note note_2
+        end
+
+        it 'can create a long note with special characters' do
+          note_3.subject = "Σημείωση θέμα 3 #{Utils.get_test_id}"
+          note_3.body = 'ノート本体4' * 100
+          @student_page.create_new_note note_3
+          # TODO - remove the page reload once dates are updated dynamically
+          @student_page.load_page test_student
+          @student_page.show_notes
+          @student_page.verify_note note_3
+        end
+
+        # TODO it 'can create a note with attachments' note_4
+        # TODO it 'can create a note with topics' note_5
       end
 
-      it 'can edit note' do
-        new_note_subject = "Lady Tee at #{Time.now.iso8601}"
-        @student_page.update_note_subject(@note, new_note_subject)
-        latest_note = BOACUtils.get_student_notes(test_student).last
-        expect(latest_note.subject).to eql new_note_subject
-        @note.subject = new_note_subject
-      end
+      context 'editing an existing note' do
 
-      it 'must confirm if discarding unsaved changes' do
-        # TODO
-      end
+        it 'can change the subject' do
+          note_1.subject = "#{note_1.subject} - EDITED"
+          @student_page.edit_note note_1
+          @student_page.verify_note note_1
+        end
 
-      after(:all) do
-        @homepage.log_out
-      end
-    end
+        # TODO it 'can add note attachments' note_4
+        # TODO it 'can remove note attachments' note_4
+        # TODO it 'can add note topics' note_5
+        # TODO it 'can remove note topics' note_5
 
-    context 'admin user' do
+        it 'can only edit one note at a time' do
+          logger.debug 'Verifying only one note can be edited at once'
+          @student_page.expand_note note_1
+          @student_page.edit_note_button(note_1).when_visible 1
+          @student_page.expand_note note_2
+          @student_page.edit_note_button(note_2).when_visible 1
+          @student_page.click_edit_note_button note_1
+          expect(@student_page.edit_note_button(note_2).exists?).to be false
+        end
 
-      before(:all) do
-        admin = BOACUser.new({:uid => Utils.super_admin_uid})
-        @homepage.dev_auth admin
-        @student_page.load_page test_student
-      end
+        it 'can cancel the edit' do
+          @student_page.click_cancel_note_edit
+          @student_page.expand_note note_2
+          @student_page.click_edit_note_button note_2
+          @student_page.wait_for_element_and_type(@student_page.note_body_text_area_elements[1], 'An edit to forget')
+          @student_page.click_cancel_note_edit
+          @student_page.wait_for_update_and_click @student_page.confirm_delete_button_element
+          @student_page.verify_note note_2
+        end
 
-      it 'can delete note' do
-        note_subject = @note.subject
-        @student_page.delete_note(@note)
-        sleep 2
-        notes = BOACUtils.get_student_notes(test_student)
-        if notes.any?
-          expect(notes.last.subject).to_not eql note_subject
+        it 'cannot remove the subject' do
+          @student_page.expand_note note_2
+          @student_page.click_edit_note_button note_2
+          @student_page.wait_for_element_and_type(@student_page.edit_note_subject_input_element, ' ')
+          @student_page.click_save_note_edit
+          @student_page.subj_required_msg_element.when_visible 1
         end
       end
 
-      it 'does not offer \'new note\' button to admin' do
+      context 'attempting to delete a note' do
+
+        it 'cannot do so' do
+          @student_page.expand_note note_1
+          expect(@student_page.delete_note_button?).to be false
+        end
+      end
+    end
+
+    describe 'advisor other than the note creator' do
+
+      before(:all) do
+        @homepage.dev_auth other_advisor
         @student_page.load_page test_student
-        expect(@student_page.new_note_button_element.exists?).to be false
       end
 
-      it 'does not offer \'edit note\' button to admin' do
-        # TODO
+      notes.each do |note|
+        it 'cannot edit the other user\'s note' do
+          @student_page.expand_note note
+          expect(@student_page.edit_note_button(note).exists?).to be false
+        end
       end
 
-      after(:all) do
-        @homepage.log_out
+      after(:all) { @homepage.log_out }
+
+    end
+
+    describe 'admin' do
+
+      before(:all) do
+        @homepage.dev_auth
+        @student_page.load_page test_student
+      end
+
+      it('cannot create a note') { expect(@student_page.new_note_button?).to be false }
+
+      notes.each do |note|
+        it 'cannot edit a note' do
+          @student_page.expand_note note
+          expect(@student_page.edit_note_button(note).exists?).to be false
+        end
+
+        it 'can delete a note' do
+          @student_page.delete_note note
+          @student_page.collapsed_note_el(note).when_not_visible Utils.short_wait
+          deleted = BOACUtils.get_note_delete_status note
+          expect(deleted).to_not be_nil
+        end
       end
     end
 
   end
-
-
-  after(:all) {Utils.quit_browser @driver}
-
-
 end
+

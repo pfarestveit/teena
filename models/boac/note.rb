@@ -8,13 +8,16 @@ class Note
                 :advisor_name,
                 :advisor_role,
                 :advisor_dept,
+                :topics,
+                :attachments,
                 :created_date,
                 :updated_date,
-                :topics,
-                :attachments
+                :deleted_date
 
   def initialize(note_data)
     note_data.each { |k, v| public_send("#{k}=", v) }
+    @topics ||= []
+    @attachments ||= []
   end
 
 end

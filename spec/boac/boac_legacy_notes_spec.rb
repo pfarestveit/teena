@@ -48,56 +48,68 @@ describe 'BOAC' do
 
               # COLLAPSED NOTE
 
+              visible_collapsed_note_data = @student_page.visible_collapsed_note_data note
+
+              # Note subject (NB: migrated notes have no subject, so the body is shown in its place)
+
+              note.subject ?
+                  (it("shows the subject on #{test_case}") { expect(visible_collapsed_note_data[:subject]).to eql(note.subect) }) :
+                  (it("shows the body as the subject on #{test_case}") { expect(visible_collapsed_note_data[:subject].gsub(/\W/, '')).to eql(note.body.gsub(/\W/, '')) })
+
+              # Note updated date
+
               updated_date_expected = note.updated_date && note.updated_date != note.created_date && note.advisor_uid != 'UCBCONVERSION'
               expected_date = updated_date_expected ? note.updated_date : note.created_date
               expected_date_text = "Last updated on #{@student_page.expected_note_short_date_format expected_date}"
-              visible_date = @student_page.visible_collapsed_note_date note
+              visible_date = @student_page.visible_collapsed_note_data(note)[:date]
               it("shows '#{expected_date_text}' on collapsed #{test_case}") { expect(visible_date).to eql(expected_date_text) }
 
               # EXPANDED NOTE
 
               @student_page.expand_note note
-              visible_note_data = @student_page.visible_expanded_note_data note
+              visible_expanded_note_data = @student_page.visible_expanded_note_data note
 
-              # Note body
+              # Note body (NB: migrated notes have no subject, so the body is shown as the subject rather than as the body)
 
-              it("shows the body on #{test_case}") { expect(visible_note_data[:body].gsub(/\W/, '')).to eql(note.body.gsub(/\W/, '')) }
+              note.subject ?
+                  (it("shows the body on #{test_case}") { expect(visible_expanded_note_data[:body]).to eql(note.body) }) :
+                  (it("shows no body on #{test_case}") { expect(visible_expanded_note_data[:body]).to be_nil })
 
               # Note advisor
 
               if note.advisor_uid
                 # TODO - it("shows an advisor #{note.advisor_uid} on #{test_case}") { expect(visible_note_data[:advisor]).to_not be_nil }
 
-                if visible_note_data[:advisor] && !advisor_link_tested
+                if visible_expanded_note_data[:advisor] && !advisor_link_tested
                   advisor_link_works = @student_page.external_link_valid?(@driver, @student_page.note_advisor_el(note), 'Campus Directory | University of California, Berkeley')
                   advisor_link_tested = true
                   it("offers a link to the Berkeley directory for advisor #{note.advisor_uid} on #{test_case}") { expect(advisor_link_works).to be true }
                 end
 
               else
-                it("shows no advisor on #{test_case}") { expect(visible_note_data[:advisor]).to be_nil }
+                it("shows no advisor on #{test_case}") { expect(visible_expanded_note_data[:advisor]).to be_nil }
               end
 
               # Note topics
 
               note.topics.any? ?
-                  (it("shows topics #{note.topics} on #{test_case}") { expect(visible_note_data[:topics]).to eql(note.topics) }) :
-                  (it("shows no topics on #{test_case}") { expect(visible_note_data[:topics]).to be_empty })
+                  (it("shows topics #{note.topics} on #{test_case}") { expect(visible_expanded_note_data[:topics]).to eql(note.topics) }) :
+                  (it("shows no topics on #{test_case}") { expect(visible_expanded_note_data[:topics]).to be_empty })
 
               # Note dates
 
               if updated_date_expected
                 expected_update_date_text = "Last updated on #{@student_page.expected_note_long_date_format note.updated_date}"
-                it("shows update date #{expected_update_date_text} on expanded #{test_case}") { expect(visible_note_data[:updated_date]).to eql(expected_update_date_text) }
+                it("shows update date #{expected_update_date_text} on expanded #{test_case}") { expect(visible_expanded_note_data[:updated_date]).to eql(expected_update_date_text) }
               else
-                it("shows no updated date #{note.updated_date} on expanded #{test_case}") { expect(visible_note_data[:updated_date]).to be_nil }
+                it("shows no updated date #{note.updated_date} on expanded #{test_case}") { expect(visible_expanded_note_data[:updated_date]).to be_nil }
               end
 
               # Note attachments
 
               if note.attachments.any?
                 attachment_file_names = note.attachments.map &:display_file_name
-                it("shows attachment file names #{attachment_file_names} on #{test_case}") { expect(visible_note_data[:attachments]).to eql(attachment_file_names) }
+                it("shows attachment file names #{attachment_file_names} on #{test_case}") { expect(visible_expanded_note_data[:attachments]).to eql(attachment_file_names) }
 
                 note.attachments.each do |attach|
                   if @student_page.note_attachment_el(attach.display_file_name).tag_name == 'a'
@@ -121,13 +133,13 @@ describe 'BOAC' do
                 end
 
               else
-                it("shows no attachment file names on #{test_case}") { expect(visible_note_data[:attachments]).to be_empty }
+                it("shows no attachment file names on #{test_case}") { expect(visible_expanded_note_data[:attachments]).to be_empty }
               end
 
               expected_create_date_text = (note.advisor_uid == 'UCBCONVERSION') ?
                   "Last updated on #{@student_page.expected_note_short_date_format note.created_date}" :
                   "Last updated on #{@student_page.expected_note_long_date_format note.created_date}"
-              it("shows creation date #{expected_create_date_text} on expanded #{test_case}") { expect(visible_note_data[:created_date]).to eql(expected_create_date_text) }
+              it("shows creation date #{expected_create_date_text} on expanded #{test_case}") { expect(visible_expanded_note_data[:created_date]).to eql(expected_create_date_text) }
 
             rescue => e
               Utils.log_error e

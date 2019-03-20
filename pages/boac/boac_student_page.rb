@@ -122,30 +122,17 @@ class BOACStudentPage
     alert_elements.map { |a| a.text.strip }
   end
 
-  # Notes
+  # NOTES - existing
 
   button(:notes_button, id: 'timeline-tab-note')
   button(:show_hide_notes_button, id: 'timeline-tab-note-previous-messages')
   elements(:note_msg_row, :div, xpath: '//div[contains(@id,"timeline-tab-note-message")]')
   elements(:topic, :list_item, xpath: '//li[contains(@id, "topic")]')
   elements(:attachment, :div, xpath: '//*[contains(@id, "attachment")]')
-  button(:new_note_button, id: 'new-note-button')
-  text_area(:new_note_subject_input, id: 'create-note-subject')
-  text_area(:new_note_body_textarea, xpath: '//div[@role=\'textbox\']')
-  button(:new_note_save_button, id: 'create-note-button')
-  button(:edit_note_button, id: 'edit-note-button')
-  button(:delete_note_button, id: 'delete-note-button')
-  text_area(:edit_note_subject_input, id: 'edit-note-subject')
-  text_area(:edit_note_body_textarea, xpath: '//div[@role=\'textbox\']')
-  button(:existing_note_save_button, id: 'save-note-button')
-  button(:existing_note_cancel_button, id: 'cancel-edit-note-button')
-  button(:confirm_delete_button, id: 'are-you-sure-confirm')
-  span(:popover_error_message, id: 'popover-error-message')
 
   # Clicks the Notes tab and expands the list of notes
   def show_notes
     logger.info 'Checking notes tab'
-    timeline_loaded_msg_element.when_present Utils.short_wait
     wait_for_update_and_click notes_button_element
     wait_for_update_and_click show_hide_notes_button_element if show_hide_notes_button? && show_hide_notes_button_element.text.include?('Show')
   end
@@ -174,33 +161,83 @@ class BOACStudentPage
     els.map { |el| el.attribute('id').split('-')[1..2].join('-') }
   end
 
-  # Returns the visible note date when the note is collapsed
-  # @param note [Note]
-  # @return [String]
-  def visible_collapsed_note_date(note)
-    el = div_element(id: "collapsed-note-#{note.id}-created-at")
-    el.text.gsub(/\s+/, ' ') if el.exists?
-  end
-
-  # Returns the element containing the note body
+  # Returns the note element visible when the note is collapsed
   # @param note [Note]
   # @return [PageObject::Elements::Div]
   def collapsed_note_el(note)
     div_element(id: "note-#{note.id}-is-closed")
   end
 
-  # Returns the element containing the note's advisor name
+  # Returns the visible note date when the note is collapsed
   # @param note [Note]
-  # @return [PageObject::Elements::Div]
-  def note_advisor_el(note)
-    div_element(id: "note-#{note.id}-author-name")
+  # @return [Hash]
+  def visible_collapsed_note_data(note)
+    subject_el = span_element(xpath: "//div[@id='note-#{note.id}-is-closed']/span")
+    date_el = div_element(id: "collapsed-note-#{note.id}-created-at")
+    {
+      :subject => (subject_el.text.gsub("\n", '') if subject_el.exists?),
+      :date => (date_el.text.gsub(/\s+/, ' ') if date_el.exists?)
+    }
   end
 
-  # Returns the elements linked to the note attachments
+  # Whether or not a given note is expanded
   # @param note [Note]
-  # @return [Array<PageObject::Elements::Element>]
-  def note_attachment_els(note)
-    attachment_elements.select { |el| el.attribute('id').include? note.id }
+  # @return [boolean]
+  def note_expanded?(note)
+    div_element(id: "note-#{note.id}-is-open").exists?
+  end
+
+  # Expands a note unless it's already expanded
+  # @param note [Note]
+  def expand_note(note)
+    if note_expanded? note
+      logger.debug "Note ID #{note.id} is already expanded"
+    else
+      logger.debug "Expanding note ID #{note.id}"
+      wait_for_update_and_click collapsed_note_el(note)
+    end
+  end
+
+  # Collapses a note unless it's already collapsed
+  # @param note [Note]
+  def collapse_note(note)
+    if note_expanded? note
+      logger.debug "Collapsing note ID #{note.id}"
+      wait_for_update_and_click collapsed_note_el(note)
+    else
+      logger.debug "Note ID #{note.id} is already collapsed"
+    end
+  end
+
+  # Returns the element containing the note's advisor name
+  # @param note [Note]
+  # @return [PageObject::Elements::Link]
+  def note_advisor_el(note)
+    link_element(id: "note-#{note.id}-author-name")
+  end
+
+  # Returns the data visible when the note is expanded
+  # @params note [Note]
+  # @return [Hash]
+  def visible_expanded_note_data(note)
+    sleep 2
+    body_el = span_element(id: "note-#{note.id}-message-open")
+    advisor_role_el = span_element(id: "note-#{note.id}-author-role")
+    advisor_dept_els = span_elements(xpath: "//span[contains(@id, 'note-#{note.id}-author-dept-')]")
+    topic_els = topic_elements.select { |el| el.attribute('id').include? note.id }
+    attachment_els = attachment_elements.select { |el| el.attribute('id').include? note.id }
+    created_el = div_element(id: "expanded-note-#{note.id}-created-at")
+    updated_el = div_element(id: "expanded-note-#{note.id}-updated-at")
+    {
+      :body => (body_el.text if body_el.exists?),
+      # TODO - :advisor => (note_advisor_el(note).text if note_advisor_el(note).exists?),
+      # TODO - :advisor_role => (advisor_role_el.text if advisor_role_el.exists?),
+      # TODO - :advisor_depts => advisor_dept_els.map(&:text).sort,
+      :topics => topic_els.map(&:text).sort,
+      :attachments => (attachment_els.map { |el| el.text.strip }).sort,
+      :created_date => (created_el.text.strip.gsub(/\s+/, ' ') if created_el.exists?),
+      :updated_date => (updated_el.text.strip.gsub(/\s+/, ' ') if updated_el.exists?)
+    }
   end
 
   # Returns the element containing a given attachment name
@@ -226,29 +263,139 @@ class BOACStudentPage
     size
   end
 
-  # Clicks the body of the note to expand it
+  # Verifies the visible content of a note
   # @param note [Note]
-  def expand_note(note)
-    wait_for_update_and_click collapsed_note_el(note)
+  def verify_note(note)
+    logger.debug "Verifying visible data for note ID #{note.id}"
+    expected_short_updated_date = "Last updated on #{expected_note_short_date_format note.updated_date}"
+    expected_long_updated_date = "Last updated on #{expected_note_long_date_format note.updated_date}"
+    expected_long_created_date = "Created on #{expected_note_long_date_format note.created_date}"
+    collapsed_note_el(note).when_present Utils.medium_wait
+    collapse_note note
+    visible_data = visible_collapsed_note_data note
+    expand_note note
+    visible_data.merge!(visible_expanded_note_data note)
+    wait_until(1, "Expected '#{note.subject}', got #{visible_data[:subject]}") { visible_data[:subject] == note.subject }
+    wait_until(1, "Expected '#{expected_short_updated_date}', got #{visible_data[:date]}") { visible_data[:date] == expected_short_updated_date }
+    wait_until(1, "Expected '#{note.body}', got '#{visible_data[:body]}'") do
+      (note.body.nil? || note.body.empty?) ? (visible_data[:body] == ' ') : (visible_data[:body] == note.body)
+    end
+    # TODO wait_until(1, "Expected '#{note.advisor_name}', got #{visible_data[:advisor]}") { visible_data[:advisor] == note.advisor_name }
+    # TODO wait_until(1, "Expected '#{note.advisor_role}', got #{visible_data[:advisor_role]}") { visible_data[:advisor_role] == note.advisor_role }
+    wait_until(1, "Expected '#{note.topics}', got #{visible_data[:topics]}") { visible_data[:topics] == note.topics }
+    wait_until(1, "Expected '#{note.attachments}', got #{visible_data[:attachments]}") { visible_data[:attachments] == note.attachments }
+    # TODO wait_until(1, "Expected '#{expected_long_created_date}', got #{visible_data[:created_date]}") { visible_data[:created_date] == expected_long_created_date }
+    # TODO wait_until(1, "Expected '#{expected_long_updated_date}', got #{visible_data[:updated_date]}") { visible_data[:updated_date] == expected_long_updated_date }
   end
 
-  # Returns the data visible when the note is expanded
-  # @params note [Note]
-  # @return [Hash]
-  def visible_expanded_note_data(note)
-    sleep 2
-    topic_els = topic_elements.select { |el| el.attribute('id').include? note.id }
-    attachment_els = attachment_elements.select { |el| el.attribute('id').include? note.id }
-    created_el = div_element(id: "expanded-note-#{note.id}-created-at")
-    updated_el = div_element(id: "expanded-note-#{note.id}-updated-at")
-    {
-      :body => (collapsed_note_el(note).text.gsub("\n", '') if collapsed_note_el(note).exists?),
-      :advisor => (note_advisor_el(note).text if note_advisor_el(note).exists?),
-      :topics => topic_els.map(&:text).sort,
-      :attachments => (attachment_els.map { |el| el.text.strip }).sort,
-      :created_date => (created_el.text.strip.gsub(/\s+/, ' ') if created_el.exists?),
-      :updated_date => (updated_el.text.strip.gsub(/\s+/, ' ') if updated_el.exists?)
-    }
+  # NOTES - CREATE
+
+  span(:subj_required_msg, xpath: '//span[text()="Subject is required"]')
+  span(:popover_error_message, id: 'popover-error-message')
+  elements(:note_body_text_area, :text_area, xpath: '//div[@role="textbox"]')
+
+  button(:new_note_button, id: 'new-note-button')
+  text_area(:new_note_subject_input, id: 'create-note-subject')
+  button(:new_note_save_button, id: 'create-note-button')
+  button(:new_note_cancel_button, id: 'cancel-new-note-modal')
+  button(:new_note_minimize_button, id: 'minimize-new-note-modal')
+
+  # Returns DOM element, in Academic Timeline, which contains note subject text
+  # @param note_subject [String]
+  # @return [String]
+  def note_subject_element(note_subject)
+    span_element(xpath: "//span[contains(.,'#{note_subject}')]")
+  end
+
+  # Clicks the new note button
+  def click_create_new_note
+    logger.debug 'Clicking the New Note button'
+    wait_for_update_and_click new_note_button_element
+  end
+
+  # Clicks the save new note button
+  def click_save_new_note
+    logger.debug 'Clicking the new note Save button'
+    wait_for_update_and_click new_note_save_button_element
+  end
+
+  # Clicks the cancel new note button
+  def click_cancel_note
+    logger.debug 'Clicking the new note Cancel button'
+    wait_for_update_and_click new_note_cancel_button_element
+  end
+
+  # Create note, get/set its ID, and get/set its created/updated dates
+  # @param note [Note]
+  def create_new_note(note)
+    logger.info "Creating a note with subject '#{note.subject}', body '#{note.body}'"
+    click_create_new_note
+    wait_for_element_and_type(new_note_subject_input_element, note.subject)
+    wait_for_element_and_type(note_body_text_area_elements[0], note.body)
+    # TODO - topics
+    # TODO - attachments
+    click_save_new_note
+    new_note_subject_input_element.when_not_visible Utils.short_wait
+    id = BOACUtils.get_note_id_by_subject note
+    logger.debug "Note ID is #{id}"
+    note.created_date = note.updated_date = Time.now
+  end
+
+  # NOTES - EDIT
+
+  text_area(:edit_note_subject_input, id: 'edit-note-subject')
+  button(:existing_note_save_button, id: 'save-note-button')
+  button(:existing_note_cancel_button, id: 'cancel-edit-note-button')
+
+  # Returns the edit note button element
+  # @param note [Note]
+  # @return [PageObject::Elements::Button]
+  def edit_note_button(note)
+    button_element(id: "edit-note-#{note.id}-button")
+  end
+
+  def click_edit_note_button(note)
+    expand_note note
+    logger.debug 'Clicking the Edit Note button'
+    wait_for_update_and_click edit_note_button(note)
+  end
+
+  def click_save_note_edit
+    logger.debug 'Clicking the edit note Save button'
+    wait_for_update_and_click existing_note_save_button_element
+  end
+
+  def click_cancel_note_edit
+    logger.debug 'Clicking the edit note Cancel button'
+    wait_for_update_and_click existing_note_cancel_button_element
+  end
+
+  # Edits an existing note and sets its updated date
+  # @param note [Note]
+  def edit_note(note)
+    logger.info "Editing note ID #{note.id} with subject '#{note.subject}', body '#{note.body}'"
+    expand_note note
+    click_edit_note_button note
+    wait_for_element_and_type(edit_note_subject_input_element, note.subject)
+    # TODO - topics
+    # TODO - attachments
+    click_save_note_edit
+    collapsed_note_el(note).when_visible Utils.short_wait
+    note.updated_date = Time.now
+  end
+
+  # NOTES - DELETE
+
+  button(:delete_note_button, id: 'delete-note-button')
+  button(:confirm_delete_button, id: 'are-you-sure-confirm')
+
+  # Deletes note, handles 'confirm' modal
+  # @param note [Note]
+  def delete_note(note)
+    logger.info "Deleting note '#{note.id}'"
+    expand_note note
+    wait_for_update_and_click delete_note_button_element
+    wait_for_update_and_click confirm_delete_button_element
   end
 
   # COURSES
@@ -309,7 +456,7 @@ class BOACStudentPage
     start = Time.now
     wait_for_load_and_click class_page_link(term_code, ccn)
     wait_for_spinner
-    div_element(class: 'course-column-schedule').when_visible Utils.short_wait
+    div_element(:class => 'course-column-schedule').when_visible Utils.short_wait
     logger.warn "Took #{Time.now - start} seconds for the term #{term_code} section #{ccn} page to load"
   end
 
@@ -521,53 +668,4 @@ class BOACStudentPage
     }
   end
 
-  # Returns DOM element, in Academic Timeline, which contains note subject text
-  # @param note_subject [String]
-  # @return [String]
-  def timeline_note_subject_element(note_subject)
-    span_element(xpath: "//span[contains(.,'#{note_subject}')]")
-  end
-
-  # Create note and wait for its arrival in the Academic Timeline
-  # @param note [Object]
-  def create_new_note(note)
-    logger.debug "Create note with subject #{note.subject}"
-    click_element(new_note_button_element, Utils.short_wait)
-    wait_for_element_and_type(new_note_subject_input_element, note.subject)
-    wait_for_element_and_type(new_note_body_textarea_element, note.body)
-    wait_for_update_and_click new_note_save_button_element
-    # Verify note creation
-    timeline_note_subject_element(note.subject).when_visible Utils.short_wait
-    logger.debug "Note created (subject: #{note.subject})"
-  end
-
-  # Updates subject of an existing note, includes form validation check
-  # @param note [Object]
-  # @param new_note_subject [String]
-  def update_note_subject(note, new_note_subject)
-    logger.debug "Change note subject from '#{note.subject}' to '#{new_note_subject}'"
-    expand_note(note) if collapsed_note_el(note).exists?
-    wait_for_update_and_click edit_note_button_element
-    logger.debug "Note subject gets blank string, expect validation error"
-    wait_for_element_and_type(edit_note_subject_input_element, '   ')
-    wait_for_update_and_click existing_note_save_button_element
-    wait_for_element(popover_error_message_element, Utils.short_wait)
-
-    # Update note subject and verify
-    wait_for_element_and_type(edit_note_subject_input_element, new_note_subject)
-    wait_for_update_and_click existing_note_save_button_element
-    wait_for_update_and_click timeline_note_subject_element(new_note_subject)
-    logger.debug "New note subject saved"
-  end
-
-  # Deletes note, handles 'confirm' modal
-  # @param note [Object]
-  def delete_note(note)
-    note_subject = note.subject
-    logger.debug "Delete note '#{note_subject}'"
-    expand_note(note) if collapsed_note_el(note).exists?
-    wait_for_update_and_click delete_note_button_element
-    wait_for_update_and_click confirm_delete_button_element
-    logger.debug "Note '#{note_subject}' deleted"
-  end
 end
