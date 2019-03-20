@@ -285,11 +285,29 @@ class BOACUtils < Utils
         :advisor_name => r['author_name'],
         :advisor_role => r['author_role'],
         :advisor_dept => r['author_dept_codes'],
+        # TODO - :topics,
+        # TODO - :attachments,
         :created_date => Time.parse(r['created_at'].to_s),
-        :updated_date => Time.parse(r['updated_at'].to_s)
+        :updated_date => Time.parse(r['updated_at'].to_s),
+        :deleted_date => Time.parse(r['deleted_at'].to_s)
       }
     end
 
     notes_data.map { |d| Note.new d }
+  end
+
+  # Given a note subject, sets and returns the first matching note ID. The subject must be unique for this to be useful.
+  # @param note [Note]
+  # @return [Integer]
+  def self.get_note_id_by_subject(note)
+    query = "SELECT * FROM notes WHERE subject = '#{note.subject}';"
+    note.id = Utils.query_pg_db_field(boac_db_credentials, query, 'id').first
+  end
+
+  def self.get_note_delete_status(note)
+    query = "SELECT deleted_at FROM notes WHERE id = '#{note.id}';"
+    note.deleted_date = Utils.query_pg_db_field(boac_db_credentials, query, 'deleted_at').first
+    logger.debug "Deleted at is #{note.deleted_date}"
+    note.deleted_at
   end
 end
