@@ -59,6 +59,7 @@ class JunctionUtils < Utils
     parsed = load_junction_test_data
     course_test_data = parsed['courses'].find { |data| data['code'] == course.code && data['term'] == course.term && data['teachers'].first['uid'] == course.teachers.first['uid'] }
     course_test_data['site_id'] = course.site_id
+    course_test_data['site_created_date'] = Date.today.to_s
 
     Dir.glob("#{Utils.config_dir}/test-data-bcourses.json").each { |f| File.delete f }
     File.open(junction_test_data_file, 'w') { |f| f.write JSON.pretty_generate(parsed) }

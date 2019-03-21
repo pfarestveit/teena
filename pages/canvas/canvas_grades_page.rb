@@ -37,7 +37,11 @@ module Page
     # @param course [Course]
     def load_gradebook(course)
       navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/gradebook"
-      e_grades_export_link_element.when_visible Utils.medium_wait rescue switch_to_default_gradebook
+      e_grades_export_link_element.when_visible Utils.medium_wait
+    rescue
+      logger.error 'E-Grades export button has not appeared, hard-refreshing the page'
+      browser.execute_script('location.reload(true);')
+      e_grades_export_link_element.when_visible Utils.medium_wait
     end
 
     # Ensures that no grading scheme is set on a course site

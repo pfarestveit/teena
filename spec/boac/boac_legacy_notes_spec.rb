@@ -13,7 +13,7 @@ describe 'BOAC' do
     advisor_link_tested = false
     dept_sids = test.dept_students.map &:sis_id
 
-    legacy_notes_data_heading = %w(UID SID NoteId Created Updated CreatedBy HasBody Topics Attachments)
+    legacy_notes_data_heading = %w(UID SID NoteId Created Updated CreatedBy Advisor AdvisorRole AdvisorDepts HasBody Topics Attachments)
     legacy_notes_data = Utils.create_test_output_csv('boac-legacy-notes.csv', legacy_notes_data_heading)
 
     @driver = Utils.launch_browser
@@ -78,7 +78,7 @@ describe 'BOAC' do
               # Note advisor
 
               if note.advisor_uid
-                # TODO - it("shows an advisor #{note.advisor_uid} on #{test_case}") { expect(visible_note_data[:advisor]).to_not be_nil }
+                it("shows an advisor #{note.advisor_uid} on #{test_case}") { expect(visible_expanded_note_data[:advisor]).to_not be_nil }
 
                 if visible_expanded_note_data[:advisor] && !advisor_link_tested
                   advisor_link_works = @student_page.external_link_valid?(@driver, @student_page.note_advisor_el(note), 'Campus Directory | University of California, Berkeley')
@@ -145,7 +145,8 @@ describe 'BOAC' do
               Utils.log_error e
               it("hit an error with #{test_case}") { fail }
             ensure
-              row = [student.uid, student.sis_id, note.id, note.created_date, note.updated_date, note.advisor_uid,
+              row = [student.uid, student.sis_id, note.id, note.created_date, note.updated_date, note.advisor_uid, (visible_expanded_note_data[:advisor] if visible_expanded_note_data),
+                     (visible_expanded_note_data[:advisor_role] if visible_expanded_note_data), (visible_expanded_note_data[:advisor_depts] if visible_expanded_note_data),
                      !note.body.nil?, note.topics.length, note.attachments.length]
               Utils.add_csv_row(legacy_notes_data, row)
             end
@@ -162,7 +163,7 @@ describe 'BOAC' do
               body_words = (body_words.map { |w| w.split("\n") }).flatten
               search_string = body_words[0..(search_string_word_count-1)].join(' ')
 
-              # TODO - stop excluding slashes, hyphens, and decimals from searches if/when they become searchable
+              # Slashes, hyphens, and decimals wreck searches, so don't bother searching with strings containing them
               if search_string.delete('/-') == search_string && search_string.gsub(/\d+(.)\d+/, '') == search_string
                 @student_page.search search_string
 
@@ -190,8 +191,8 @@ describe 'BOAC' do
                     it("note search shows the student name for note #{note.id}") { expect(result[:student_name]).to eql(student.full_name) }
                     it("note search shows the student SID for note #{note.id}") { expect(result[:student_sid]).to eql(student.sis_id) }
                     it("note search shows a snippet of note #{note.id}") { expect(result[:snippet]).to include(search_string) }
-                    # TODO - it("note search shows the advisor name on note #{note.id}") { expect(result[:advisor_name]).not_to be_nil } unless note.advisor_uid == 'UCBCONVERSION'
-                    # TODO - it("note search shows the most recent updated date on note #{note.id}") { expect(result[:date]).to eql(expected_date_text) }
+                    it("note search shows the advisor name on note #{note.id}") { expect(result[:advisor_name]).not_to be_nil } unless note.advisor_uid == 'UCBCONVERSION'
+                    it("note search shows the most recent updated date on note #{note.id}") { expect(result[:date]).to eql(expected_date_text) }
                   end
                 end
               else

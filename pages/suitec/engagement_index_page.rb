@@ -396,11 +396,20 @@ module Page
         sleep 1
         Utils.prepare_download_dir
         load_scores(driver, url, event)
+
+        # Keep track of the current window since the download can trigger a new one to open
         window = driver.window_handle
         window_count = driver.window_handles.length
-        navigate_to "#{SuiteCUtils.suite_c_base_url}/api/#{Utils.canvas_base_url.gsub('https://', '')}/#{course.site_id}/activities.csv"
+
+        # Clicking the download link causes ChromeDriver to lose track of its window, so hit the API endpoint instead
+        if driver.browser == 'chrome'
+          navigate_to "#{SuiteCUtils.suite_c_base_url}/api/#{Utils.canvas_base_url.gsub('https://', '')}/#{course.site_id}/activities.csv"
+        else
+          wait_for_update_and_click link_element(:text => 'Download CSV')
+        end
+
+        # Wait for the file to download and extract the data needed
         date = Time.now.strftime('%Y_%m_%d')
-        # Hour and minute in the file name are globbed to avoid test failures due to clock sync issues
         csv_file_path = "#{Utils.download_dir}/engagement_index_activities_#{course.site_id}_#{date}_*.csv"
         wait_until { Dir[csv_file_path].any? }
         csv = Dir[csv_file_path].first
@@ -409,6 +418,8 @@ module Page
           # user_name, action, score, running_total
           activities << "#{column[1]}, #{column[2]}, #{column[4]}, #{column[5]}"
         end
+
+        # If starting the download triggered a new browser window to open, make sure it's closed and the browser's focus is on the original one.
         new_window_count = driver.window_handles.length
         if new_window_count > window_count
           driver.switch_to.window driver.window_handles.last

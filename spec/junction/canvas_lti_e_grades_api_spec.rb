@@ -6,7 +6,7 @@ describe 'bCourses E-Grades Export' do
 
   begin
 
-    test_courses_data = JunctionUtils.load_junction_test_course_data.select { |course| course['tests']['e_grades_export'] }
+    test_courses_data = JunctionUtils.load_junction_test_course_data.select { |course| course['tests']['e_grades_api'] }
     courses = test_courses_data.map { |c| Course.new c }
 
     @driver = Utils.launch_browser

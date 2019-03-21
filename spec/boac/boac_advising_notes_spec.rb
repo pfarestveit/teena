@@ -119,6 +119,8 @@ else
           expect(@student_page.edit_note_button(note_2).exists?).to be false
         end
 
+        it('cannot create a new note while editing another') { expect(@student_page.new_note_button_element.disabled?).to be true }
+
         it 'can cancel the edit' do
           @student_page.click_cancel_note_edit
           @student_page.expand_note note_2

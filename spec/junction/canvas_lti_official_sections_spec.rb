@@ -41,7 +41,11 @@ describe 'bCourses Official Sections tool' do
         test_course[:academic_data] = ApiAcademicsCourseProvisionPage.new @driver
         test_course[:academic_data].get_feed @driver
         all_test_courses << test_course
-        sites_to_create << test_course unless test_course[:course].site_id
+
+        # If a test site was already created for the course today, then reuse that one for the tests
+        unless test_course[:course].site_id && test_course[:course].site_created_date && (test_course[:course].site_created_date == "#{Date.today}")
+          sites_to_create << test_course
+        end
 
       rescue => e
         it("encountered an error retrieving SIS data for #{test_course[:course].code}") { fail }
