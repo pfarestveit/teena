@@ -7,7 +7,6 @@ webdriver:
   headless: false
   chrome_profile: true
   chrome_optional_profile: false
-  firefox_profile: profile
 
 timeouts:
   click_wait: 0.5

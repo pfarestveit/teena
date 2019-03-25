@@ -62,7 +62,7 @@ class Utils
         Selenium::WebDriver.for :chrome, :options => options
 
       when 'firefox'
-        profile = (profile ? Selenium::WebDriver::Firefox::Profile.from_name(profile) : Selenium::WebDriver::Firefox::Profile.from_name(driver_config['firefox_profile']))
+        profile = Selenium::WebDriver::Firefox::Profile.new
         profile['browser.download.folderList'] = 2
         profile['browser.download.manager.showWhenStarting'] = false
         profile['browser.download.dir'] = Utils.download_dir
@@ -102,6 +102,7 @@ class Utils
 
     # Before quitting, log any JS errors (or other console messages) encountered during the browser session
     log_js_errors driver
+    driver.quit
 
   rescue NoMethodError
 
@@ -110,9 +111,11 @@ class Utils
   end
 
   def self.log_js_errors(driver)
-    js_log = driver.manage.logs.get(:browser)
-    messages = js_log.map &:message
-    messages.each { |msg| logger.error "Possible JS error: #{msg}" unless msg.include? 'chrome-search://thumb/' }
+    if driver.browser == 'chrome'
+      js_log = driver.manage.logs.get(:browser)
+      messages = js_log.map &:message
+      messages.each { |msg| logger.error "Possible JS error: #{msg}" unless msg.include? 'chrome-search://thumb/' }
+    end
   end
 
   # TIMEOUTS

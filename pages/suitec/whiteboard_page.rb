@@ -34,7 +34,7 @@ module Page
           logger.debug "The browser window count is #{driver.window_handles.length}, and the current window is a whiteboard. Closing it."
           driver.close
           driver.switch_to.window driver.window_handles.first
-          switch_to_canvas_iframe driver
+          switch_to_canvas_iframe driver if driver.browser == 'chrome'
         else
           logger.debug "The browser window count is #{driver.window_handles.length}, and the current window is not a whiteboard. Leaving it open."
         end
@@ -134,7 +134,7 @@ module Page
         add_event(event, EventType::WHITEBOARD_SETTINGS, board)
         add_event(event, EventType::LIST_WHITEBOARDS)
         driver.switch_to.window driver.window_handles.first
-        switch_to_canvas_iframe driver
+        switch_to_canvas_iframe driver if driver.browser == 'chrome'
         add_event(event, EventType::VIEW)
       end
 

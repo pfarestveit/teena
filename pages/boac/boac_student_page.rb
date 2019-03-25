@@ -230,9 +230,9 @@ class BOACStudentPage
     updated_el = div_element(id: "expanded-note-#{note.id}-updated-at")
     {
       :body => (body_el.text if body_el.exists?),
-      # TODO - :advisor => (note_advisor_el(note).text if note_advisor_el(note).exists?),
-      # TODO - :advisor_role => (advisor_role_el.text if advisor_role_el.exists?),
-      # TODO - :advisor_depts => advisor_dept_els.map(&:text).sort,
+      :advisor => (note_advisor_el(note).text if note_advisor_el(note).exists?),
+      :advisor_role => (advisor_role_el.text if advisor_role_el.exists?),
+      :advisor_depts => advisor_dept_els.map(&:text).sort,
       :topics => topic_els.map(&:text).sort,
       :attachments => (attachment_els.map { |el| el.text.strip }).sort,
       :created_date => (created_el.text.strip.gsub(/\s+/, ' ') if created_el.exists?),
@@ -267,16 +267,18 @@ class BOACStudentPage
   # @param note [Note]
   def verify_note(note)
     logger.debug "Verifying visible data for note ID #{note.id}"
-    expected_short_updated_date = "Last updated on #{expected_note_short_date_format note.updated_date}"
-    expected_long_updated_date = "Last updated on #{expected_note_long_date_format note.updated_date}"
-    expected_long_created_date = "Created on #{expected_note_long_date_format note.created_date}"
+
+    # Verify data visible when note is collapsed
     collapsed_note_el(note).when_present Utils.medium_wait
     collapse_note note
     visible_data = visible_collapsed_note_data note
-    expand_note note
-    visible_data.merge!(visible_expanded_note_data note)
+    expected_short_updated_date = "Last updated on #{expected_note_short_date_format note.updated_date}"
     wait_until(1, "Expected '#{note.subject}', got #{visible_data[:subject]}") { visible_data[:subject] == note.subject }
     wait_until(1, "Expected '#{expected_short_updated_date}', got #{visible_data[:date]}") { visible_data[:date] == expected_short_updated_date }
+
+    # Verify data visible when note is expanded
+    expand_note note
+    visible_data.merge!(visible_expanded_note_data note)
     wait_until(1, "Expected '#{note.body}', got '#{visible_data[:body]}'") do
       (note.body.nil? || note.body.empty?) ? (visible_data[:body] == ' ') : (visible_data[:body] == note.body)
     end
@@ -284,8 +286,18 @@ class BOACStudentPage
     # TODO wait_until(1, "Expected '#{note.advisor_role}', got #{visible_data[:advisor_role]}") { visible_data[:advisor_role] == note.advisor_role }
     wait_until(1, "Expected '#{note.topics}', got #{visible_data[:topics]}") { visible_data[:topics] == note.topics }
     wait_until(1, "Expected '#{note.attachments}', got #{visible_data[:attachments]}") { visible_data[:attachments] == note.attachments }
-    # TODO wait_until(1, "Expected '#{expected_long_created_date}', got #{visible_data[:created_date]}") { visible_data[:created_date] == expected_long_created_date }
-    # TODO wait_until(1, "Expected '#{expected_long_updated_date}', got #{visible_data[:updated_date]}") { visible_data[:updated_date] == expected_long_updated_date }
+
+    # Check visible timestamps within 1 minute to avoid failures caused by a 1 second diff
+    expected_long_created_date = "Created on #{expected_note_long_date_format note.created_date}"
+    wait_until(1, "Expected '#{expected_long_created_date}', got #{visible_data[:created_date]}") do
+      Time.parse(visible_data[:created_date]) <= Time.parse(expected_long_created_date) + 60
+      Time.parse(visible_data[:created_date]) >= Time.parse(expected_long_created_date) - 60
+    end
+    expected_long_updated_date = "Last updated on #{expected_note_long_date_format note.updated_date}"
+    wait_until(1, "Expected '#{expected_long_updated_date}', got #{visible_data[:updated_date]}") do
+      Time.parse(visible_data[:updated_date]) <= Time.parse(expected_long_updated_date) + 60
+      Time.parse(visible_data[:updated_date]) >= Time.parse(expected_long_updated_date) - 60
+    end
   end
 
   # NOTES - CREATE

@@ -308,6 +308,6 @@ class BOACUtils < Utils
     query = "SELECT deleted_at FROM notes WHERE id = '#{note.id}';"
     note.deleted_date = Utils.query_pg_db_field(boac_db_credentials, query, 'deleted_at').first
     logger.debug "Deleted at is #{note.deleted_date}"
-    note.deleted_at
+    note.deleted_date
   end
 end
