@@ -71,11 +71,10 @@ describe 'bCourses Roster Photos' do
     end
 
     it "shows UID #{teacher_1.uid} all students and waitlisted students on #{course.code} course site ID #{course.site_id}" do
-      visible_sids = @roster_photos_page.all_sids.sort
-      @roster_photos_page.wait_until(Utils.medium_wait, "Expected but not present: #{@expected_sids - visible_sids}. Present but not expected: #{visible_sids - @expected_sids}.
-      Expected #{@expected_sids} but got #{visible_sids}") do
+      @roster_photos_page.wait_until(Utils.medium_wait, "Expected but not present: #{@expected_sids - @roster_photos_page.all_sids.sort}. Present but not expected: #{@roster_photos_page.all_sids.sort - @expected_sids}.
+      Expected #{@expected_sids} but got #{@roster_photos_page.all_sids.sort}") do
         @roster_photos_page.all_sids.length == @total_user_count
-        visible_sids == @expected_sids
+        @roster_photos_page.all_sids.sort == @expected_sids
       end
     end
 

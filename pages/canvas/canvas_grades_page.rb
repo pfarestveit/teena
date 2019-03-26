@@ -164,8 +164,17 @@ module Page
           wait_until(Utils.short_wait) { gradebook_total_elements.any? }
           sleep 2
         end
-        self.user_search_input = user.uid
-        wait_until(2) { gradebook_uid_elements.first.text == "#{user.uid}" }
+
+        # Try to find the user row a couple times since stale element reference errors may occur
+        tries ||= 2
+        begin
+          tries -= 1
+          wait_for_element_and_type(user_search_input_element, user.uid)
+          wait_until(2) { gradebook_uid_elements.first.text == "#{user.uid}" }
+        rescue => e
+          logger.error e.message
+          tries.zero? ? fail : retry
+        end
         sleep Utils.click_wait
         score = gradebook_total_elements.first.text.strip.delete('%').to_f
         # If the score in the UI is zero, the score might not have loaded yet. Retry.

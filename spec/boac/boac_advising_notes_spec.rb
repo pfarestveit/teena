@@ -94,6 +94,7 @@ else
 
         # TODO it 'can create a note with attachments' note_4
         # TODO it 'can create a note with topics' note_5
+
       end
 
       context 'editing an existing note' do
