@@ -6,7 +6,7 @@ describe 'BOAC assignment analytics' do
 
   begin
 
-    if Utils.headless?
+    if Utils.headless? && (BOACUtils.nessie_assignments || BOACUtils.nessie_scores)
 
       logger.warn 'This script requires admin Canvas access and cannot be run headless. Terminating.'
 
@@ -32,7 +32,10 @@ describe 'BOAC assignment analytics' do
       @e_grades_page = Page::JunctionPages::CanvasEGradesExportPage.new @driver
       @boac_homepage = BOACHomePage.new @driver
       @boac_student_page = BOACStudentPage.new @driver
-      @boac_homepage.log_in(Utils.super_admin_username, Utils.super_admin_password, @cal_net)
+
+      (BOACUtils.nessie_assignments || BOACUtils.nessie_scores) ?
+          @boac_homepage.log_in(Utils.super_admin_username, Utils.super_admin_password, @cal_net) :
+          @boac_homepage.dev_auth
 
       test.max_cohort_members.each do |student|
 
@@ -145,7 +148,8 @@ describe 'BOAC assignment analytics' do
                       (analytics_xpath = @boac_student_page.course_site_xpath(test.term, site_code, site[:index])) :
                       (analytics_xpath = @boac_student_page.unmatched_site_xpath(test.term, site_code))
 
-                  [boac_api_assigns_submitted, boac_api_grades].each do |analytics|
+                  # TODO - check Assignments Submitted once boxplots return
+                  [boac_api_grades].each do |analytics|
 
                     if analytics[:perc_round].nil?
                       no_data = @boac_student_page.no_data?(analytics_xpath, analytics[:type])

@@ -289,7 +289,7 @@ class BOACUtils < Utils
         # TODO - :attachments,
         :created_date => Time.parse(r['created_at'].to_s),
         :updated_date => Time.parse(r['updated_at'].to_s),
-        :deleted_date => Time.parse(r['deleted_at'].to_s)
+        :deleted_date => (Time.parse(r['deleted_at'].to_s) if r['deleted_at'])
       }
     end
 

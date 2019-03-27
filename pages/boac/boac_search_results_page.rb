@@ -38,7 +38,7 @@ class BOACSearchResultsPage
 
   # STUDENT SEARCH
 
-  span(:student_results_count, xpath: '//h1[contains(text(),"student")]')
+  h1(:student_results_count, xpath: '//h1[contains(text(),"student")]')
 
   # Returns the result count for a student search
   # @return [Integer]
@@ -79,7 +79,7 @@ class BOACSearchResultsPage
 
   # CLASS SEARCH
 
-  span(:class_results_count, xpath: '//h1[contains(text(),"class")]')
+  h2(:class_results_count, xpath: '//h2[contains(text(),"class")]')
   elements(:class_row, :row, xpath: '//span[@data-ng-bind="course.courseName"]')
 
   # Checks if a given class is among search results. If more than 50 results exist, the class could be among them

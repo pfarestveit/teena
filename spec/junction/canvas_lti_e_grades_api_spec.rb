@@ -58,8 +58,11 @@ describe 'bCourses E-Grades Export' do
           gradebook_grades.each do |gradebook_row|
             begin
 
-              e_grades_row = e_grades.find { |e_grade| e_grade[:id] == gradebook_row[:sis_id] }
-              it("shows the right grade for #{course.term} #{course.code} UID #{gradebook_row[:uid]}") { expect(e_grades_row[:grade]).to eql(gradebook_row[:grade]) }
+              # If an error occurred fetching a grade, then the row might cause an error in the test
+              e_grades_row = e_grades.find { |e_grade| e_grade[:id] == gradebook_row[:sis_id] if gradebook_row.instance_of? Hash }
+              if e_grades_row
+                it("shows the right grade for #{course.term} #{course.code} UID #{gradebook_row[:uid]}") { expect(e_grades_row[:grade]).to eql(gradebook_row[:grade]) }
+              end
 
             rescue => e
               # Catch and report errors related to the user

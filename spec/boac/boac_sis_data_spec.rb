@@ -28,7 +28,9 @@ describe 'BOAC' do
     @boac_homepage.dev_auth test.advisor
     @boac_cohort_page.search_and_create_new_cohort(test.default_cohort, test)
 
-    test.max_cohort_members.sort_by(&:last_name).each do |student|
+    visible_sids = @boac_cohort_page.list_view_sids
+    test.max_cohort_members.keep_if { |m| visible_sids.include? m.sis_id }
+    test.max_cohort_members.each do |student|
 
       begin
         api_student_data = BOACApiStudentPage.new @driver
@@ -179,7 +181,7 @@ describe 'BOAC' do
         # Holds
 
         holds = NessieUtils.get_student_holds student
-        hold_msgs = (holds.map &:message).sort
+        hold_msgs = (holds.map { |h| h.message.gsub(/\W/, '') }).sort
         logger.info "UID #{student.uid} hold count is #{hold_msgs.length}"
 
         if holds.any?

@@ -98,13 +98,13 @@ class BOACStudentPage
   button(:show_hide_holds_button, id: 'timeline-tab-hold-previous-messages')
   elements(:hold, :div, xpath: '//div[contains(@id,"timeline-tab-hold-message")]/span')
 
-  # Returns an array of visible hold messages
+  # Returns an array of visible hold messages with all whitespace removed
   # @return [Array<String>]
   def visible_holds
     logger.info 'Checking holds tab'
     wait_for_update_and_click holds_button_element if holds_button? && !holds_button_element.disabled?
     wait_for_update_and_click show_hide_holds_button_element if show_hide_holds_button? && show_hide_holds_button_element.text.include?('Show')
-    hold_elements.map { |h| h.text.strip }
+    hold_elements.map { |h| h.text.gsub(/\W+/, '') }
   end
 
   # Alerts
@@ -150,7 +150,7 @@ class BOACStudentPage
 
   # Returns the expected format for an expanded note date
   def expected_note_long_date_format(date)
-    format = (Time.now.strftime('%Y') == date.strftime('%Y')) ? date.strftime('%b %-d %k:%M%P') : date.strftime('%b %-d, %Y %k:%M%P')
+    format = (Time.now.strftime('%Y') == date.strftime('%Y')) ? date.strftime('%b %-d %l:%M%P') : date.strftime('%b %-d, %Y %l:%M%P')
     format.gsub(/\s+/, ' ')
   end
 
@@ -158,7 +158,10 @@ class BOACStudentPage
   # @return [Array<String>]
   def visible_collapsed_note_ids
     els = browser.find_elements(xpath: '//div[contains(@id, "note-")][contains(@id, "-is-closed")]')
-    els.map { |el| el.attribute('id').split('-')[1..2].join('-') }
+    els.map do |el|
+      parts = el.attribute('id').split('-')
+      (parts[2] == 'is') ? parts[1] : parts[1..2].join('-')
+    end
   end
 
   # Returns the note element visible when the note is collapsed
@@ -172,10 +175,10 @@ class BOACStudentPage
   # @param note [Note]
   # @return [Hash]
   def visible_collapsed_note_data(note)
-    subject_el = span_element(xpath: "//div[@id='note-#{note.id}-is-closed']/span")
+    subject_el = div_element(id: "note-#{note.id}-is-closed")
     date_el = div_element(id: "collapsed-note-#{note.id}-created-at")
     {
-      :subject => (subject_el.text.gsub("\n", '') if subject_el.exists?),
+      :subject => (subject_el.attribute('innerText').gsub("\n", '') if subject_el.exists?),
       :date => (date_el.text.gsub(/\s+/, ' ') if date_el.exists?)
     }
   end
@@ -229,7 +232,7 @@ class BOACStudentPage
     created_el = div_element(id: "expanded-note-#{note.id}-created-at")
     updated_el = div_element(id: "expanded-note-#{note.id}-updated-at")
     {
-      :body => (body_el.text if body_el.exists?),
+      :body => (body_el.attribute('innerText') if body_el.exists?),
       :advisor => (note_advisor_el(note).text if note_advisor_el(note).exists?),
       :advisor_role => (advisor_role_el.text if advisor_role_el.exists?),
       :advisor_depts => advisor_dept_els.map(&:text).sort,
@@ -426,7 +429,7 @@ class BOACStudentPage
   # @param [String] term_name
   # @return [String]
   def term_data_xpath(term_name)
-    "//h3[text()=\"#{term_name}\"]/following-sibling::div"
+    "//h3[text()=\"#{term_name}\"]"
   end
 
   # Returns the total term units and min/max override units shown for a given term
@@ -434,7 +437,7 @@ class BOACStudentPage
   # @param term_name [String]
   # @return [Hash]
   def visible_term_data(term_id, term_name)
-    term_units_el = span_element(xpath: "#{term_data_xpath term_name}//div[@class=\"student-course-heading-units-total\"]/span")
+    term_units_el = span_element(xpath: "#{term_data_xpath term_name}/following-sibling::div[@class=\"student-course-heading student-course\"]//div[@class=\"student-course-heading-units-total\"]/span")
     term_units_min_el = span_element(id: "term-#{term_id}-min-units")
     term_units_max_el = span_element(id: "term-#{term_id}-max-units")
     {
@@ -449,7 +452,7 @@ class BOACStudentPage
   # @param course_code [String]
   # @return [String]
   def course_data_xpath(term_name, course_code)
-    "#{term_data_xpath term_name}//h4[text()=\"#{course_code}\"]/ancestor::div[@class=\"student-course\"]"
+    "#{term_data_xpath term_name}/following-sibling::div[contains(., \"#{course_code}\")]"
   end
 
   # Returns the link to a class page
@@ -631,7 +634,8 @@ class BOACStudentPage
     if api_analytics[:graphable]
       wait_until(Utils.short_wait) { analytics_trigger_element(driver, site_xpath, label) }
       mouseover(driver, analytics_trigger_element(driver, site_xpath, label))
-      div_element(:xpath => "#{site_analytics_score_xpath(site_xpath, label)}//div[@class='student-chart-tooltip-header']").when_visible Utils.short_wait
+      logger.debug "Looking for tooltip header at '#{site_analytics_score_xpath(site_xpath, label)}//div[@class='student-chart-tooltip-header']'"
+      div_element(:xpath => "#{site_analytics_score_xpath(site_xpath, label)}//div[@class='student-chart-tooltip-header']").when_present Utils.short_wait
     end
     tool_tip_detail_elements = driver.find_elements(:xpath => "#{site_analytics_score_xpath(site_xpath, label)}//div[@class='student-chart-tooltip-value']")
     tool_tip_detail = []
