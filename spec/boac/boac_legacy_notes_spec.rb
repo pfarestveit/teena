@@ -162,40 +162,35 @@ describe 'BOAC' do
               body_words = (body_words.map { |w| w.split("\n") }).flatten
               search_string = body_words[0..(search_string_word_count-1)].join(' ')
 
-              # Slashes, hyphens, and decimals wreck searches, so don't bother searching with strings containing them
-              if search_string.delete('/-') == search_string && search_string.gsub(/\d+(.)\d+/, '') == search_string
-                @student_page.search search_string
+              @student_page.search search_string
 
-                results_count = @search_results_page.note_results_count
-                it("returns results when searching with the first #{search_string_word_count} words in note ID #{note.id}") { expect(results_count).to be > 0 }
+              results_count = @search_results_page.note_results_count
+              it("returns results when searching with the first #{search_string_word_count} words in note ID #{note.id}") { expect(results_count).to be > 0 }
 
-                unless results_count.zero?
+              unless results_count.zero?
 
-                  it("shows no more than 20 results when searching with the first #{search_string_word_count} words in note ID #{note.id}") { expect(results_count).to be <= 20 }
+                it("shows no more than 20 results when searching with the first #{search_string_word_count} words in note ID #{note.id}") { expect(results_count).to be <= 20 }
 
-                  @search_results_page.wait_for_note_search_result_rows
-                  visible_student_sids = @search_results_page.note_result_sids
-                  it("returns only results for students in the advisor's department when searching with the first #{search_string_word_count} words in note ID #{note.id}") { expect(visible_student_sids - dept_sids).to be_empty }
+                @search_results_page.wait_for_note_search_result_rows
+                visible_student_sids = @search_results_page.note_result_sids
+                it("returns only results for students in the advisor's department when searching with the first #{search_string_word_count} words in note ID #{note.id}") { expect(visible_student_sids - dept_sids).to be_empty }
 
-                  student_result_returned = @search_results_page.note_link(note).exists?
-                  unless results_count >= 20
-                    it("returns a result when searching with the first #{search_string_word_count} words in note ID #{note.id}") { expect(student_result_returned).to be true }
-                  end
-
-                  if student_result_returned
-                    result = @search_results_page.note_result(student, note)
-                    updated_date_expected = note.updated_date && note.updated_date != note.created_date && note.advisor_uid != 'UCBCONVERSION'
-                    expected_date = updated_date_expected ? note.updated_date : note.created_date
-                    expected_date_text = "#{@student_page.expected_note_short_date_format expected_date}"
-                    it("note search shows the student name for note #{note.id}") { expect(result[:student_name]).to eql(student.full_name) }
-                    it("note search shows the student SID for note #{note.id}") { expect(result[:student_sid]).to eql(student.sis_id) }
-                    it("note search shows a snippet of note #{note.id}") { expect(result[:snippet].gsub(/\W/, '')).to include(search_string.gsub(/\W/, '')) }
-                    # TODO it("note search shows the advisor name on note #{note.id}") { expect(result[:advisor_name]).not_to be_nil } unless note.advisor_uid == 'UCBCONVERSION'
-                    it("note search shows the most recent updated date on note #{note.id}") { expect(result[:date]).to eql(expected_date_text) }
-                  end
+                student_result_returned = @search_results_page.note_link(note).exists?
+                unless results_count >= 20
+                  it("returns a result when searching with the first #{search_string_word_count} words in note ID #{note.id}") { expect(student_result_returned).to be true }
                 end
-              else
-                logger.warn "Skipping search for UID #{student.uid} note #{note.id} because the body snippet contains unsupported characters"
+
+                if student_result_returned
+                  result = @search_results_page.note_result(student, note)
+                  updated_date_expected = note.updated_date && note.updated_date != note.created_date && note.advisor_uid != 'UCBCONVERSION'
+                  expected_date = updated_date_expected ? note.updated_date : note.created_date
+                  expected_date_text = "#{@student_page.expected_note_short_date_format expected_date}"
+                  it("note search shows the student name for note #{note.id}") { expect(result[:student_name]).to eql(student.full_name) }
+                  it("note search shows the student SID for note #{note.id}") { expect(result[:student_sid]).to eql(student.sis_id) }
+                  it("note search shows a snippet of note #{note.id}") { expect(result[:snippet].gsub(/\W/, '')).to include(search_string.gsub(/\W/, '')) }
+                  # TODO it("note search shows the advisor name on note #{note.id}") { expect(result[:advisor_name]).not_to be_nil } unless note.advisor_uid == 'UCBCONVERSION'
+                  it("note search shows the most recent updated date on note #{note.id}") { expect(result[:date]).to eql(expected_date_text) }
+                end
               end
             end
           end
