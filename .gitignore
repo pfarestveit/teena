@@ -1,6 +1,7 @@
 # Ignore IDE-related stuff
 .idea/
 *.iml
+.history/
 
 # Ignore .DS_Store files on Mac
 .DS_Store
