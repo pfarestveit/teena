@@ -10,11 +10,11 @@ echo "------------------------"; echo
 echo "  Teena welcomes you."; echo
 echo "------------------------"; echo
 
-tool_being_tested=''
+PS3=$'\nWhich tool are you testing? '
 
 options=("Boa" "OEC" "Junction" "SuiteC")
 
-PS3=$'\nWhich tool are you testing? '
+tool_being_tested=''
 
 select opt in "${options[@]}"
 do
@@ -22,6 +22,8 @@ do
         "Boa")
             tool_being_tested='boac'
             friendly_tool_name=${options[0]}
+            test_dept=$(grep '^  test_dept' "${HOME}/.webdriver-config/settings.yml" | awk '{print $NF}')
+            echo; echo "Boa will be tested with test_dept: ${test_dept}"; echo
             break
             ;;
         "OEC")
@@ -46,31 +48,40 @@ do
     esac
 done
 
-echo; echo "Enter version of ${tool_being_tested} being tested."
+echo; echo "Enter version of ${tool_being_tested} being tested (e.g., '2.15')."
 echo; echo -n "    > "
 
 read version
 
 echo
-echo "Enter snippet (e.g., 'curated') to match the ${tool_being_tested} Selenium script(s) you want to run."
+echo "Enter snippet (e.g., 'user_role' or 'user_role_coe') to match the ${tool_being_tested} Selenium script(s) you want to run."
 echo "Blank input will run all tests."; echo
 echo -n "    > "
 
-read scripts_snippet
+read test_suite
+
+echo; echo "Enter arbitrary keyword (e.g., 'COENG') to add to log file name. Hit return to skip."
+echo; echo -n "    > "
+
+read arbitrary_keyword
 
 echo; echo
 
-DATE=$(date '+%Y-%m-%d_%H-%M-%S')
-script_run_version="${tool_being_tested}-${version}_${DATE}"
 
-if [[ -z "${scripts_snippet}" ]] ; then
+DATE=$(date '+%Y-%m-%d-%H%M%S')
+
+[[ "${arbitrary_keyword}" ]] && suffix="${arbitrary_keyword}-${DATE}" || suffix="${DATE}"
+
+summary="${tool_being_tested}-v${version}-${test_suite:-'all'}-${suffix}"
+
+if [[ -z "${test_suite}" ]] ; then
     echo; echo "Running ALL tests of ${friendly_tool_name} v${version}"
     echo
-    rake VERSION="${script_run_version}" "${tool_being_tested}"
+    rake VERSION="${summary}" "${tool_being_tested}"
 else
-    echo; echo "Running '${scripts_snippet}' tests of ${friendly_tool_name} v${version}"
+    echo; echo "Running '${test_suite}' tests of ${friendly_tool_name} v${version}"
     echo
-    rake SCRIPTS="${scripts_snippet}" VERSION="${script_run_version}" "${tool_being_tested}"
+    rake SCRIPTS="${test_suite}" VERSION="${summary}" "${tool_being_tested}"
 fi
 
 echo
