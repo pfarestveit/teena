@@ -74,7 +74,7 @@ else
 
         it 'can create a note with a subject and a body' do
           note_2.subject = "Note 2 subject #{Utils.get_test_id}"
-          note_2.body = "Note 2 body"
+          note_2.body = 'Note 2 body'
           @student_page.create_new_note note_2
           # TODO - remove the page reload once dates are updated dynamically
           @student_page.load_page test_student
