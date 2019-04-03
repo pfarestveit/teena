@@ -79,7 +79,7 @@ class BOACSearchResultsPage
 
   # CLASS SEARCH
 
-  h2(:class_results_count, xpath: '//h2[contains(text(),"class")]')
+  element(:class_results_count, id: 'course-results-page-header')
   elements(:class_row, :row, xpath: '//span[@data-ng-bind="course.courseName"]')
 
   # Checks if a given class is among search results. If more than 50 results exist, the class could be among them
