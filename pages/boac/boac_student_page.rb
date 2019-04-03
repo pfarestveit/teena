@@ -171,6 +171,13 @@ class BOACStudentPage
     div_element(id: "note-#{note.id}-is-closed")
   end
 
+  # Returns the button element for collapsing a given note
+  # @param note [Note]
+  # @return [PageObject::Elements::Button]
+  def close_msg_button(note)
+    button_element(xpath: "//div[@id='note-#{note.id}-is-closed']/../following-sibling::div/button")
+  end
+
   # Returns the visible note date when the note is collapsed
   # @param note [Note]
   # @return [Hash]
@@ -206,7 +213,7 @@ class BOACStudentPage
   def collapse_note(note)
     if note_expanded? note
       logger.debug "Collapsing note ID #{note.id}"
-      wait_for_update_and_click collapsed_note_el(note)
+      wait_for_update_and_click close_msg_button(note)
     else
       logger.debug "Note ID #{note.id} is already collapsed"
     end
@@ -231,8 +238,13 @@ class BOACStudentPage
     attachment_els = attachment_elements.select { |el| el.attribute('id').include? note.id }
     created_el = div_element(id: "expanded-note-#{note.id}-created-at")
     updated_el = div_element(id: "expanded-note-#{note.id}-updated-at")
+    # The body text area contains formatting elements even without text, so account for that when getting the element's text
+    body_text = if body_el.exists?
+                  text = body_el.attribute('innerText')
+                  text.gsub(/\W/, '').empty? ? '' : text
+                end
     {
-      :body => (body_el.attribute('innerText') if body_el.exists?),
+      :body => body_text,
       :advisor => (note_advisor_el(note).text if note_advisor_el(note).exists?),
       :advisor_role => (advisor_role_el.text if advisor_role_el.exists?),
       :advisor_depts => advisor_dept_els.map(&:text).sort,
@@ -282,9 +294,7 @@ class BOACStudentPage
     # Verify data visible when note is expanded
     expand_note note
     visible_data.merge!(visible_expanded_note_data note)
-    wait_until(1, "Expected '#{note.body}', got '#{visible_data[:body]}'") do
-      (note.body.nil? || note.body.empty?) ? (visible_data[:body] == ' ') : (visible_data[:body] == note.body)
-    end
+    wait_until(1, "Expected '#{note.body}', got '#{visible_data[:body]}'") { visible_data[:body] == "#{note.body}" }
     # TODO wait_until(1, "Expected '#{note.advisor_name}', got #{visible_data[:advisor]}") { visible_data[:advisor] == note.advisor_name }
     # TODO wait_until(1, "Expected '#{note.advisor_role}', got #{visible_data[:advisor_role]}") { visible_data[:advisor_role] == note.advisor_role }
     wait_until(1, "Expected '#{note.topics}', got #{visible_data[:topics]}") { visible_data[:topics] == note.topics }
