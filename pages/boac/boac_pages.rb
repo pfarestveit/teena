@@ -15,7 +15,7 @@ module BOACPages
   # @param page_title [String]
   def wait_for_title(page_title)
     start = Time.now
-    wait_until(Utils.medium_wait) { title == "#{page_title} | BOAC" }
+    wait_until(Utils.medium_wait) { title == "#{page_title} | BOA" }
     logger.debug "Page title updated in #{Time.now - start} seconds"
   end
 
