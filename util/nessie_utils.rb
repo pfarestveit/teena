@@ -404,12 +404,11 @@ class NessieUtils < Utils
         end
       end
       attachments = attachment_data.compact.uniq.map { |d| Attachment.new d }
-
       {
         :id => k,
         :body => body,
         :source_body_empty => source_body_empty,
-        :advisor_uid => v[0]['advisor_uid'],
+        :advisor => BOACUser.new({:uid => v[0]['advisor_uid']}),
         :created_date => Time.parse(v[0]['created_date'].to_s).utc.localtime,
         :updated_date => Time.parse(v[0]['updated_date'].to_s).utc.localtime,
         :topics => (v.map { |t| t['topic'].upcase if t['topic'] }).compact.sort,
