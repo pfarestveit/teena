@@ -12,7 +12,7 @@ class BOACClassListViewPage
   include BOACAddGroupSelectorPages
 
   elements(:student_link, :link, xpath: '//tr[contains(@class,"course-list-view-row")]//a')
-  elements(:student_sid, :div, xpath: '//*[@class="student-sid demo-mode-blur"]')
+  elements(:student_sid, :div, xpath: '//div[@class="student-sid"]')
 
   # Returns all the SIDs shown on list view
   # @return [Array<String>]

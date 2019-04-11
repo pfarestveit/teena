@@ -64,7 +64,7 @@ else
           @student_page.click_create_new_note
           @student_page.wait_for_element_and_type(@student_page.note_body_text_area_elements[0], 'An edit to forget')
           @student_page.click_cancel_note
-          @student_page.wait_for_update_and_click @student_page.confirm_delete_button_element
+          @student_page.confirm_note_discard
           @student_page.note_body_text_area_elements[0].when_not_visible 1
         end
 
@@ -76,14 +76,14 @@ else
 
         it 'can create a note with a subject and a body' do
           note_2.subject = "Note 2 subject #{Utils.get_test_id}"
-          note_2.body = "Note 2 body #{test.id}"
+          note_2.body = "Note 2 body #{test.id}" unless "#{@driver.browser}" == 'firefox'
           @student_page.create_new_note note_2
           @student_page.verify_note note_2
         end
 
         it 'can create a long note with special characters' do
           note_3.subject = "Σημείωση θέμα 3 #{Utils.get_test_id}"
-          note_3.body = 'ノート本体4' * 100
+          note_3.body = 'ノート本体4' * 100 unless "#{@driver.browser}" == 'firefox'
           @student_page.create_new_note note_3
           @student_page.verify_note note_3
         end
@@ -108,9 +108,11 @@ else
         end
 
         it 'can find a note by body' do
-          @student_page.search note_2.body
-          @search_results_page.wait_for_note_search_result_rows
-          expect(@search_results_page.note_link(note_2).exists?).to be true
+          unless "#{@driver.browser}" == 'firefox'
+            @student_page.search note_2.body
+            @search_results_page.wait_for_note_search_result_rows
+            expect(@search_results_page.note_link(note_2).exists?).to be true
+          end
         end
 
         it 'can find a note with special characters' do
@@ -156,7 +158,7 @@ else
           @student_page.click_edit_note_button note_2
           @student_page.wait_for_element_and_type(@student_page.note_body_text_area_elements[1], 'An edit to forget')
           @student_page.click_cancel_note_edit
-          @student_page.wait_for_update_and_click @student_page.confirm_delete_button_element
+          @student_page.confirm_note_discard
           @student_page.verify_note note_2
         end
 
@@ -166,6 +168,8 @@ else
           @student_page.wait_for_element_and_type(@student_page.edit_note_subject_input_element, ' ')
           @student_page.click_save_note_edit
           @student_page.subj_required_msg_element.when_visible 1
+          @student_page.click_cancel_note_edit
+          @student_page.wait_for_update_and_click @student_page.confirm_delete_button_element
         end
       end
 

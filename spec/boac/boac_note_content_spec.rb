@@ -11,7 +11,7 @@ describe 'BOAC' do
     students_with_notes = []
     downloadable_attachments = []
     advisor_link_tested = false
-    dept_sids = test.dept_students.map &:sis_id
+    dept_uids = test.dept_students.map &:uid
 
     legacy_notes_data_heading = %w(UID SID NoteId Created Updated CreatedBy Advisor AdvisorRole AdvisorDepts HasBody Topics Attachments)
     legacy_notes_data = Utils.create_test_output_csv('boac-legacy-notes.csv', legacy_notes_data_heading)
@@ -118,7 +118,8 @@ describe 'BOAC' do
                 it("shows attachment file names #{attachment_file_names} on #{test_case}") { expect(visible_expanded_note_data[:attachments]).to eql(attachment_file_names) }
 
                 note.attachments.each do |attach|
-                  if @student_page.note_attachment_el(attach.display_file_name).tag_name == 'a'
+                  # TODO - get downloads working on Firefox, since the profile prefs aren't having the desired effect
+                  if @student_page.note_attachment_el(attach.display_file_name).tag_name == 'a' && "#{@driver.browser}" != 'firefox'
                     begin
                       file_size = @student_page.download_attachment(note, attach.display_file_name)
                       attachment_downloads = file_size > 0
@@ -156,7 +157,7 @@ describe 'BOAC' do
           search_string_word_count = BOACUtils.config['notes_search_word_count']
 
           expected_notes.each do |note|
-            if note.source_body_empty
+            if note.source_body_empty || note.body.empty?
               logger.warn "Skipping search test for UID #{student.uid} note ID #{note.id} because the source note body was empty and too many results will be returned."
 
             else
@@ -174,8 +175,8 @@ describe 'BOAC' do
                 it("shows no more than 20 results when searching with the first #{search_string_word_count} words in note ID #{note.id}") { expect(results_count).to be <= 20 }
 
                 @search_results_page.wait_for_note_search_result_rows
-                visible_student_sids = @search_results_page.note_result_sids
-                it("returns only results for students in the advisor's department when searching with the first #{search_string_word_count} words in note ID #{note.id}") { expect(visible_student_sids - dept_sids).to be_empty }
+                visible_student_sids = @search_results_page.note_result_uids
+                it("returns only results for students in the advisor's department when searching with the first #{search_string_word_count} words in note ID #{note.id}") { expect(visible_student_sids - dept_uids).to be_empty }
 
                 student_result_returned = @search_results_page.note_link(note).exists?
                 unless results_count >= 20
@@ -186,7 +187,7 @@ describe 'BOAC' do
                   result = @search_results_page.note_result(student, note)
                   updated_date_expected = note.updated_date && note.updated_date != note.created_date && note.advisor.uid != 'UCBCONVERSION'
                   expected_date = updated_date_expected ? note.updated_date : note.created_date
-                  expected_date_text = "#{@student_page.expected_note_short_date_format expected_date}"
+                  expected_date_text = "#{expected_date.strftime('%b %-d, %Y')}"
                   it("note search shows the student name for note #{note.id}") { expect(result[:student_name]).to eql(student.full_name) }
                   it("note search shows the student SID for note #{note.id}") { expect(result[:student_sid]).to eql(student.sis_id) }
                   it("note search shows a snippet of note #{note.id}") { expect(result[:snippet].gsub(/\W/, '')).to include(search_string.gsub(/\W/, '')) }
@@ -267,5 +268,7 @@ describe 'BOAC' do
   rescue => e
     Utils.log_error e
     it('hit an error initializing') { fail }
+  ensure
+    Utils.quit_browser @driver
   end
 end

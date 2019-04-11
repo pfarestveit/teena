@@ -46,7 +46,9 @@ describe 'BOAC' do
           if term
             term_id = api_student_page.term_id term
 
-            api_student_page.courses(term).each do |course|
+            courses = api_student_page.courses term
+            courses.delete_if { |c| api_student_page.course_display_name(c).include? 'PHYS ED' }
+            courses.each do |course|
 
               course_sis_data = api_student_page.sis_course_data course
               logger.info "Checking course #{course_sis_data[:code]}"

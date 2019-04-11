@@ -122,7 +122,7 @@ class BOACSearchResultsPage
   # NOTES
 
   h2(:note_results_count_heading, id: 'search-results-category-header-notes')
-  elements(:note_search_result, :div, class: 'advising-note-search-result')
+  elements(:note_search_result, :link, xpath: '//div[@class="advising-note-search-result"]//a')
 
   # Awaits and returns the number of note results returned from a search
   # @return [Integer]
@@ -154,10 +154,10 @@ class BOACSearchResultsPage
     }
   end
 
-  # Returns the note SIDs present in search results
+  # Returns the UIDs associated with visible note search results
   # @return [Array<String>]
-  def note_result_sids
-    note_search_result_elements.map { |el| el.attribute('id').split('-')[-2] }
+  def note_result_uids
+    note_search_result_elements.map { |el| el.attribute('href').split('/').last }
   end
 
   # Returns the link element for a given note

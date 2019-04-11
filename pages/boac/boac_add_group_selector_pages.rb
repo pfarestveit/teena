@@ -55,7 +55,8 @@ module BOACAddGroupSelectorPages
     logger.info "Adding UID #{student.uid} to group #{group.name} ID #{group.id}"
     click_add_to_grp_button
     check_grp group
-    student_added_to_grp_conf_element.when_visible Utils.short_wait
+    # TODO - reenable this step for Firefox when bug is fixed
+    student_added_to_grp_conf_element.when_visible Utils.short_wait if "#{browser.browser}" == 'chrome'
     group.members << student
     wait_for_sidebar_group group
   end
@@ -67,7 +68,8 @@ module BOACAddGroupSelectorPages
     logger.info "Adding UIDs #{students.map &:uid} to group #{group.name} ID #{group.id}"
     click_add_to_grp_button
     check_grp group
-    students_added_to_grp_conf_element.when_visible Utils.short_wait
+    # TODO - reenable this step for Firefox when bug is fixed
+    students_added_to_grp_conf_element.when_visible Utils.short_wait if "#{browser.browser}" == 'chrome'
     group.members << students
     group.members.flatten!
     wait_for_sidebar_group group
