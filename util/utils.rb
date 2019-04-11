@@ -67,6 +67,7 @@ class Utils
         profile['browser.download.manager.showWhenStarting'] = false
         profile['browser.download.dir'] = Utils.download_dir
         profile['browser.helperApps.neverAsk.saveToDisk'] = 'application/msword, application/vnd.ms-excel, application/vnd.ms-powerpointtd>, application/pdf, application/zip, audio/mpeg, image/png, image/bmp, image/jpeg, image/gif, image/sgi, image/svg+xml, image/webp, text/csv, video/mp4, video/quicktime'
+        profile['browser.helperApps.alwaysAsk.force'] = false
         # Turn off Firefox's pretty JSON since it prevents parsing JSON strings in the browser.
         profile['devtools.jsonview.enabled'] = false
         options = Selenium::WebDriver::Firefox::Options.new(:profile => profile)

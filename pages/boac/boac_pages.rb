@@ -131,9 +131,18 @@ module BOACPages
     wait_for_update_and_click link
   end
 
-  ### SIDEBAR - USER SEARCH ###
+  ### SIDEBAR - SEARCH ###
 
+  button(:search_options_toggle_button, id: 'search-options-panel-toggle')
+  checkbox(:include_students_cbx, id: 'search-include-students-checkbox')
+  checkbox(:include_classes_cbx, id: 'search-include-courses-checkbox')
+  checkbox(:include_notes_cbx, id: 'search-include-notes-checkbox')
   text_area(:search_input, id: 'search-students-input')
+
+  # Expands the sidebar advanced search
+  def expand_search_options
+    wait_for_update_and_click search_options_toggle_button_element unless include_students_cbx_element.visible?
+  end
 
   # Searches for a string using the sidebar search input
   # @param string [String]

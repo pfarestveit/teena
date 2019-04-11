@@ -27,7 +27,7 @@ module BOACListViewPages
   def list_view_page_count
     if go_to_last_page_link?
       wait_for_update_and_click go_to_last_page_link_element
-      wait_until(1) { go_to_page_link_elements.empty? }
+      sleep 1
       wait_until(Utils.short_wait) { go_to_page_link_elements.any? }
       count = go_to_page_link_elements.last.text.to_i
       go_to_first_page
@@ -116,7 +116,7 @@ module BOACListViewPages
   # @param student [BOACUser]
   def click_student_link(student)
     logger.info "Clicking the link for UID #{student.uid}"
-    wait_for_load_and_click link_element(xpath: "//a[contains(@href,\"/student/#{student.uid}\")]")
+    wait_for_load_and_click_js link_element(xpath: "//a[contains(@href,\"/student/#{student.uid}\")]")
     student_name_heading_element.when_visible Utils.medium_wait
   end
 

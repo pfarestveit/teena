@@ -96,7 +96,7 @@ class BOACStudentPage
 
   button(:holds_button, id: 'timeline-tab-hold')
   button(:show_hide_holds_button, id: 'timeline-tab-hold-previous-messages')
-  elements(:hold, :div, xpath: '//div[contains(@id,"timeline-tab-hold-message")]/span')
+  elements(:hold, :div, xpath: '//div[contains(@id,"timeline-tab-hold-message")]/span[2]')
 
   # Returns an array of visible hold messages with all whitespace removed
   # @return [Array<String>]
@@ -111,7 +111,7 @@ class BOACStudentPage
 
   button(:alerts_button, id: 'timeline-tab-alert')
   button(:show_hide_alerts_button, id: 'timeline-tab-alert-previous-messages')
-  elements(:alert, :div, xpath: '//div[contains(@id,"timeline-tab-alert-message")]/span')
+  elements(:alert, :div, xpath: '//div[contains(@id,"timeline-tab-alert-message")]/span[2]')
 
   # Returns an array of visible alert messages
   # @return [Array<String>]
@@ -204,7 +204,7 @@ class BOACStudentPage
       logger.debug "Note ID #{note.id} is already expanded"
     else
       logger.debug "Expanding note ID #{note.id}"
-      wait_for_update_and_click collapsed_note_el(note)
+      wait_for_update_and_click_js collapsed_note_el(note)
     end
   end
 
@@ -234,17 +234,19 @@ class BOACStudentPage
     body_el = span_element(id: "note-#{note.id}-message-open")
     advisor_role_el = span_element(id: "note-#{note.id}-author-role")
     advisor_dept_els = span_elements(xpath: "//span[contains(@id, 'note-#{note.id}-author-dept-')]")
-    topic_els = topic_elements.select { |el| el.attribute('id').include? note.id }
+    topic_els = topic_elements.select { |el| el.attribute('id').include? "note-#{note.id}-topic-" }
     attachment_els = attachment_elements.select { |el| el.attribute('id').include? note.id }
     created_el = div_element(id: "expanded-note-#{note.id}-created-at")
     updated_el = div_element(id: "expanded-note-#{note.id}-updated-at")
     # The body text area contains formatting elements even without text, so account for that when getting the element's text
     body_text = if body_el.exists?
                   text = body_el.attribute('innerText')
-                  text.gsub(/\W/, '').empty? ? '' : text
+                  text.gsub(/\W/, '').gsub('&nbsp;', '').empty? ? '' : text
+                else
+                  ''
                 end
     {
-      :body => body_text,
+      :body => body_text.gsub("\n", '').strip,
       :advisor => (note_advisor_el(note).text if note_advisor_el(note).exists?),
       :advisor_role => (advisor_role_el.text if advisor_role_el.exists?),
       :advisor_depts => advisor_dept_els.map(&:text).sort,
@@ -295,10 +297,11 @@ class BOACStudentPage
     expand_note note
     visible_data.merge!(visible_expanded_note_data note)
     wait_until(1, "Expected '#{note.body}', got '#{visible_data[:body]}'") { visible_data[:body] == "#{note.body}" }
-    # TODO wait_until(1, "Expected '#{note.advisor_name}', got #{visible_data[:advisor]}") { visible_data[:advisor] == note.advisor_name }
-    # TODO wait_until(1, "Expected '#{note.advisor_role}', got #{visible_data[:advisor_role]}") { visible_data[:advisor_role] == note.advisor_role }
-    wait_until(1, "Expected '#{note.topics}', got #{visible_data[:topics]}") { visible_data[:topics] == note.topics }
-    wait_until(1, "Expected '#{note.attachments}', got #{visible_data[:attachments]}") { visible_data[:attachments] == note.attachments }
+    wait_until(1, 'Expected non-blank advisor name') { !visible_data[:advisor].empty? }
+    wait_until(1, 'Expected non-blank advisor role') { !visible_data[:advisor_role].empty? }
+    wait_until(1, "Expected '#{note.advisor.depts}', got #{visible_data[:advisor_depts]}") { visible_data[:advisor_depts] == note.advisor.depts }
+    # TODO - wait_until(1, "Expected '#{note.topics}', got #{visible_data[:topics]}") { visible_data[:topics] == note.topics }
+    # TODO - wait_until(1, "Expected '#{note.attachments}', got #{visible_data[:attachments]}") { visible_data[:attachments] == note.attachments }
 
     # Check visible timestamps within 1 minute to avoid failures caused by a 1 second diff
     expected_long_created_date = "Created on #{expected_note_long_date_format note.created_date}"
@@ -348,6 +351,11 @@ class BOACStudentPage
   def click_cancel_note
     logger.debug 'Clicking the new note Cancel button'
     wait_for_update_and_click new_note_cancel_button_element
+  end
+
+  # Hits the confirm delete button for an uncreated note, unless the browser is Firefox
+  def confirm_note_discard
+    wait_for_update_and_click confirm_delete_button_element unless "#{browser.browser}" == 'firefox'
   end
 
   # Create note, get/set its ID, and get/set its created/updated dates
@@ -421,6 +429,7 @@ class BOACStudentPage
     expand_note note
     wait_for_update_and_click delete_note_button_element
     wait_for_update_and_click confirm_delete_button_element
+    note.deleted_date = Time.now
   end
 
   # COURSES

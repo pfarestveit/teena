@@ -174,7 +174,7 @@ class BOACFilteredCohortPage
                          when 'Advisor'
                            new_filter_advisor_option(filter_option)
                          when 'Major'
-                           link_element(id: "Major-#{filter_option}")
+                           link_element(xpath: "//a[@id=\"Major-#{filter_option}\"]")
                          else
                            link_element(xpath: "//div[@class=\"cohort-filter-draft-column-02\"]//a[contains(text(),\"#{filter_option}\")]")
                        end

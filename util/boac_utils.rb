@@ -277,18 +277,22 @@ class BOACUtils < Utils
     query = "SELECT * FROM notes WHERE sid = '#{student.sis_id}';"
     results = Utils.query_pg_db(boac_db_credentials, query)
     notes_data = results.map do |r|
+      depts = BOACDepartments::DEPARTMENTS.select { |d| r['author_dept_codes'].include? d.code  }
+      advisor_data = {
+        :uid => r['author_uid'],
+        :full_name => r['author_name'],
+        :role => r['author_role'],
+        :depts => depts.map(&:name)
+      }
       {
         :id => r['id'],
         :subject => r['subject'],
-        :body => r['body'].gsub(/<("[^"]*"|'[^']*'|[^'">])*>/, ''),
-        :advisor_uid => r['author_uid'],
-        :advisor_name => r['author_name'],
-        :advisor_role => r['author_role'],
-        :advisor_dept => r['author_dept_codes'],
+        :body => r['body'].gsub(/<("[^"]*"|'[^']*'|[^'">])*>/, '').gsub('&nbsp;', ''),
+        :advisor => BOACUser.new(advisor_data),
         # TODO - :topics,
         # TODO - :attachments,
-        :created_date => Time.parse(r['created_at'].to_s),
-        :updated_date => Time.parse(r['updated_at'].to_s),
+        :created_date => Time.parse(r['created_at'].to_s).utc.localtime,
+        :updated_date => Time.parse(r['updated_at'].to_s).utc.localtime,
         :deleted_date => (Time.parse(r['deleted_at'].to_s) if r['deleted_at'])
       }
     end
