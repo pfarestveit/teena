@@ -44,6 +44,10 @@ class ApiAcademicsRosterPage
     names.sort
   end
 
+  def all_student_uids
+    (enrolled_students + waitlisted_students).map { |student| student['id'] }
+  end
+
   def student_ids(students)
     students.map { |student| student['student_id'] }
   end

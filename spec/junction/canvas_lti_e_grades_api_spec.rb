@@ -9,6 +9,9 @@ describe 'bCourses E-Grades Export' do
     test_courses_data = JunctionUtils.load_junction_test_course_data.select { |course| course['tests']['e_grades_api'] }
     courses = test_courses_data.map { |c| Course.new c }
 
+    # If using Chrome, use a new Chrome profile
+    Utils.config['webdriver']['chrome_profile'] = false
+
     @driver = Utils.launch_browser
     @cal_net = Page::CalNetPage.new @driver
     @canvas = Page::CanvasGradesPage.new @driver
