@@ -237,7 +237,14 @@ describe 'bCourses course site creation' do
                                       {:role => 'Teacher', :count => expected_teacher_count}, {:role => 'Lead TA', :count => expected_lead_ta_count},
                                       {:role => 'TA', :count => expected_ta_count}]
         actual_enrollment_counts = @canvas_page.wait_for_enrollment_import(site[:course], ['Student', 'Waitlist Student', 'Teacher', 'Lead TA', 'TA'])
-        it("results in the right course site membership for #{site[:course].term} #{site[:course].code} site ID #{site[:course].site_id}") { expect(actual_enrollment_counts).to eql(expected_enrollment_counts) }
+
+        actual_student_uids = @canvas_page.get_students(site[:course]).map(&:uid).sort
+        expected_student_uids = site[:roster_data].all_student_uids.sort
+        logger.warn "Student UIDs expected but not present: #{expected_student_uids - actual_student_uids}"
+        logger.warn "Student UIDs present but not expected: #{actual_student_uids - expected_student_uids}"
+
+        it("results in the right course site membership counts for #{site[:course].term} #{site[:course].code} site ID #{site[:course].site_id}") { expect(actual_enrollment_counts).to eql(expected_enrollment_counts) }
+        it("results in the right student enrollments for #{site[:course].term} #{site[:course].code} site ID #{site[:course].site_id}") { expect(actual_student_uids).to eql(expected_student_uids) }
 
         # ROSTER PHOTOS - check that roster photos tool shows the right sections
 
