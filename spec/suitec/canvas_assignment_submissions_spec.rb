@@ -7,6 +7,7 @@ describe 'Canvas assignment submission', order: :defined do
   begin
 
     course_id = ENV['COURSE_ID']
+    poller_retries = ENV['RETRIES'].to_i if ENV['RETRIES']
     test_id = Utils.get_test_id
     @course = Course.new({title: "Canvas Assignment Submissions #{test_id}"})
     @course.site_id = course_id
@@ -84,7 +85,7 @@ describe 'Canvas assignment submission', order: :defined do
         expected_score = initial_score.to_i + Activity::SUBMIT_ASSIGNMENT.points
         logger.debug "Checking submission for #{student_full_name} who uploaded #{asset_title} and should now have a score of #{expected_score}"
 
-        score_updated = @engagement_index.user_score_updated?(@driver, @engagement_index_url, student, "#{expected_score}")
+        score_updated = @engagement_index.user_score_updated?(@driver, @engagement_index_url, student, "#{expected_score}", poller_retries)
 
         it("earns 'Submit an Assignment' points on the Engagement Index for #{student_full_name}") { expect(score_updated).to be true }
 

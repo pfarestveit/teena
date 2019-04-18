@@ -169,9 +169,10 @@ module Page
       # @param url [String]
       # @param user [User]
       # @param expected_score [String]
+      # @param retries [Integer]
       # @return [boolean]
-      def user_score_updated?(driver, url, user, expected_score)
-        tries ||= SuiteCUtils.poller_retries
+      def user_score_updated?(driver, url, user, expected_score, retries = nil)
+        tries ||= (retries ? retries : SuiteCUtils.poller_retries)
         logger.info("Checking if #{user.full_name} has an updated score of #{expected_score}")
         load_scores(driver, url)
         wait_until(3) { user_score(driver, url, user) == expected_score }
