@@ -244,7 +244,8 @@ describe 'bCourses course site creation' do
         logger.warn "Student UIDs present but not expected: #{actual_student_uids - expected_student_uids}"
 
         it("results in the right course site membership counts for #{site[:course].term} #{site[:course].code} site ID #{site[:course].site_id}") { expect(actual_enrollment_counts).to eql(expected_enrollment_counts) }
-        it("results in the right student enrollments for #{site[:course].term} #{site[:course].code} site ID #{site[:course].site_id}") { expect(actual_student_uids).to eql(expected_student_uids) }
+        it("results in no missing student enrollments for #{site[:course].term} #{site[:course].code} site ID #{site[:course].site_id}") { expect(expected_student_uids - actual_student_uids).to be_empty }
+        it("results in no unexpected student enrollments for #{site[:course].term} #{site[:course].code} site ID #{site[:course].site_id}") { expect(actual_student_uids - expected_student_uids).to be_empty }
 
         # ROSTER PHOTOS - check that roster photos tool shows the right sections
 
