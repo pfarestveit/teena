@@ -38,7 +38,7 @@ describe 'New asset uploads', order: :defined do
             asset_preview_type = @asset.preview
             @asset.description = nil
             @asset.category = nil
-            @asset_size = File.size(SuiteCUtils.test_data_file_path(@asset.file_name)).to_f / 1024000
+            @asset_size = File.size(SuiteCUtils.asset_file_path(@asset.file_name)).to_f / 1024000
             @asset_library.load_page(@driver, @asset_library_url)
 
             if @asset.type == 'File'

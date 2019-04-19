@@ -89,6 +89,14 @@ class BOACUtils < Utils
     }
   end
 
+  # ATTACHMENTS TEST DATA
+
+  # The file path for SuiteC asset upload files
+  # @param file_name [String]
+  def self.test_data_file_path(file_name)
+    File.join(Utils.config_dir, "boa-attachments/#{file_name}")
+  end
+
   # DATABASE - USERS
 
   # Returns all admin users
@@ -284,17 +292,27 @@ class BOACUtils < Utils
         :role => r['author_role'],
         :depts => depts.map(&:name)
       }
-      {
+
+      note_data = {
         :id => r['id'],
         :subject => r['subject'],
         :body => r['body'].gsub(/<("[^"]*"|'[^']*'|[^'">])*>/, '').gsub('&nbsp;', ''),
         :advisor => BOACUser.new(advisor_data),
         # TODO - :topics,
-        # TODO - :attachments,
         :created_date => Time.parse(r['created_at'].to_s).utc.localtime,
         :updated_date => Time.parse(r['updated_at'].to_s).utc.localtime,
         :deleted_date => (Time.parse(r['deleted_at'].to_s) if r['deleted_at'])
       }
+
+      attach_query = "SELECT * FROM note_attachments WHERE note_id = #{note_data[:id]};"
+      attach_results = Utils.query_pg_db(boac_db_credentials, attach_query)
+      attachments = attach_results.map do |a|
+        file_name = a['path_to_attachment'].split('/').last
+        # Boa attachment file names should be prefixed with a timestamp, but some older test file names are not
+        visible_file_name = file_name[0..15].gsub(/(20)\d{6}(_)\d{6}(_)/, '').empty? ? file_name[16..-1] : file_name
+        Attachment.new({:id => a['id'], :file_name => visible_file_name, :deleted_at => a['deleted_at']})
+      end
+      note_data.merge!(:attachments => attachments)
     end
 
     notes_data.map { |d| Note.new d }
@@ -308,10 +326,22 @@ class BOACUtils < Utils
     note.id = Utils.query_pg_db_field(boac_db_credentials, query, 'id').first
   end
 
+  # Sets and returns the deleted date for a given note
+  # @param note [Note]
   def self.get_note_delete_status(note)
     query = "SELECT deleted_at FROM notes WHERE id = '#{note.id}';"
     note.deleted_date = Utils.query_pg_db_field(boac_db_credentials, query, 'deleted_at').first
     logger.debug "Deleted at is #{note.deleted_date}"
     note.deleted_date
   end
+
+  # Sets and returns an attachment ID
+  # @param note [Note]
+  # @param attachment [Attachment]
+  # @return [Integer]
+  def self.get_attachment_id_by_file_name(note, attachment)
+    query = "SELECT * FROM note_attachments WHERE note_id = #{note.id} AND path_to_attachment LIKE '%#{attachment.file_name}';"
+    attachment.id = Utils.query_pg_db_field(boac_db_credentials, query, 'id').last
+  end
+
 end

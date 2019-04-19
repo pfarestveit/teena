@@ -340,9 +340,9 @@ class NessieUtils < Utils
       end
       addl_user_data = {
         :first_name => user.first_name,
-        :first_name_sortable => user.first_name.gsub(/\W/, '').downcase,
+        :first_name_sortable => (user.first_name.split(' ').each { |s| s.gsub(/\W/, '').downcase }).join(' '),
         :last_name => user.last_name,
-        :last_name_sortable => user.last_name.gsub(/\W/, '').downcase,
+        :last_name_sortable => (user.last_name.split(' ').each { |s| s.gsub(/\W/, '').downcase }).join(' '),
         :squad_names => user_squad_names,
         :active_asc => user.active_asc
       }
@@ -398,8 +398,7 @@ class NessieUtils < Utils
         unless r['sis_file_name'].nil? || r['sis_file_name'].empty?
           {
             :sis_file_name => r['sis_file_name'],
-            :user_file_name => r['user_file_name'],
-            :display_file_name => ((r['advisor_uid'] == 'UCBCONVERSION') ? r['sis_file_name'] : r['user_file_name'])
+            :file_name => ((r['advisor_uid'] == 'UCBCONVERSION') ? r['sis_file_name'] : r['user_file_name'])
           }
         end
       end

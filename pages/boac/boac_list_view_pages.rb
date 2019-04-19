@@ -28,7 +28,7 @@ module BOACListViewPages
     if go_to_last_page_link?
       wait_for_update_and_click go_to_last_page_link_element
       sleep 1
-      wait_until(Utils.short_wait) { go_to_page_link_elements.any? }
+      wait_until(Utils.medium_wait) { go_to_page_link_elements.any? }
       count = go_to_page_link_elements.last.text.to_i
       go_to_first_page
       count

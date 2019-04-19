@@ -20,7 +20,7 @@ describe 'BOAC' do
     @homepage = BOACHomePage.new @driver
     @student_page = BOACStudentPage.new @driver
     @search_results_page = BOACSearchResultsPage.new @driver
-    @api_notes_page = BOACApiNotesAttachmentPage.new @driver
+    @api_notes_attachment_page = BOACApiNotesAttachmentPage.new @driver
 
     @homepage.dev_auth test.advisor
     test.max_cohort_members.each do |student|
@@ -114,20 +114,21 @@ describe 'BOAC' do
               # Note attachments
 
               if note.attachments.any?
-                attachment_file_names = note.attachments.map &:display_file_name
-                it("shows attachment file names #{attachment_file_names} on #{test_case}") { expect(visible_expanded_note_data[:attachments]).to eql(attachment_file_names) }
+                non_deleted_attachments = note.attachments.reject &:deleted_at
+                attachment_file_names = non_deleted_attachments.map &:file_name
+                it("shows attachment file names #{attachment_file_names.sort} on #{test_case}") { expect(visible_expanded_note_data[:attachments].sort).to eql(attachment_file_names.sort) }
 
-                note.attachments.each do |attach|
+                non_deleted_attachments.each do |attach|
                   # TODO - get downloads working on Firefox, since the profile prefs aren't having the desired effect
-                  if @student_page.note_attachment_el(attach.display_file_name).tag_name == 'a' && "#{@driver.browser}" != 'firefox'
+                  if @student_page.note_attachment_el(note, attach.file_name).tag_name == 'a' && "#{@driver.browser}" != 'firefox'
                     begin
-                      file_size = @student_page.download_attachment(note, attach.display_file_name)
+                      file_size = @student_page.download_attachment(note, attach)
                       attachment_downloads = file_size > 0
                       downloadable_attachments << attach
-                      it("allows attachment file #{attach.display_file_name} to be downloaded from #{test_case}") { expect(attachment_downloads).to be true }
+                      it("allows attachment file #{attach.file_name} to be downloaded from #{test_case}") { expect(attachment_downloads).to be true }
                     rescue => e
                       Utils.log_error e
-                      it("encountered an error downloading attachment file #{attach.display_file_name} from #{test_case}") { fail }
+                      it("encountered an error downloading attachment file #{attach.file_name} from #{test_case}") { fail }
 
                       # If the note download fails, the browser might no longer be on the student page so reload it.
                       @student_page.load_page student
@@ -135,7 +136,7 @@ describe 'BOAC' do
                     end
 
                   else
-                    logger.warn "Skipping download test for note ID #{note.id} attachment #{attach.display_file_name} since it cannot be downloaded"
+                    logger.warn "Skipping download test for note ID #{note.id} attachment #{attach.file_name} since it cannot be downloaded"
                   end
                 end
 
@@ -234,18 +235,23 @@ describe 'BOAC' do
 
         downloadable_attachments.each do |attach|
 
-          sid = attach.sis_file_name.split('_').first
-          if test_dept_sids.include? sid
-            logger.info "Skipping non-auth download test for SID #{sid} since it belongs to the advisor's department"
+          if attach.sis_file_name
+            sid = attach.sis_file_name.split('_').first
+            if test_dept_sids.include? sid
+              logger.info "Skipping non-auth download test for SID #{sid} since it belongs to the advisor's department"
 
+            else
+              identifier = attach.sis_file_name ? attach.sis_file_name : attach.id
+              Utils.prepare_download_dir
+              @api_notes_attachment_page.load_page identifier
+              no_access = @api_notes_attachment_page.verify_block { @api_notes_attachment_page.not_found_msg_element.when_visible Utils.short_wait }
+              it("blocks #{test.dept.name} advisor UID #{test.advisor.uid} from hitting the attachment download endpoint for #{identifier}") { expect(no_access).to be true }
+
+              no_file = Utils.downloads_empty?
+              it("delivers no file to #{test.dept.name} advisor UID #{test.advisor.uid} when hitting the attachment download endpoint for #{identifier}") { expect(no_file).to be true }
+            end
           else
-            @api_notes_page.load_page attach.sis_file_name
-            no_access = @api_notes_page.verify_block { @api_notes_page.not_found_msg_element.when_visible Utils.short_wait }
-            it("blocks #{test.dept.name} advisor UID #{test.advisor.uid} from hitting the attachment download endpoint for #{attach.sis_file_name}") { expect(no_access).to be true }
-
-            no_file = Dir["#{Utils.download_dir}/#{attach.sis_file_name}"].empty?
-            it("delivers no file to #{test.dept.name} advisor UID #{test.advisor.uid} when hitting the attachment download endpoint for #{attach.sis_file_name}") { expect(no_file).to be true }
-
+            logger.warn "Skipping download test for note attachment ID #{attach.id} since it is not a legacy note"
           end
         end
       end
@@ -255,13 +261,14 @@ describe 'BOAC' do
 
       downloadable_attachments.each do |attach|
 
-        @api_notes_page.load_page attach.sis_file_name
-        no_access = @api_notes_page.verify_block { @api_notes_page.unauth_msg_element.when_visible Utils.short_wait }
-        it("blocks an anonymous user from hitting the attachment download endpoint for #{attach.sis_file_name}") { expect(no_access).to be true }
+        identifier = attach.sis_file_name ? attach.sis_file_name : attach.id
+        Utils.prepare_download_dir
+        @api_notes_attachment_page.load_page identifier
+        no_access = @api_notes_attachment_page.verify_block { @api_notes_attachment_page.unauth_msg_element.when_visible Utils.short_wait }
+        it("blocks an anonymous user from hitting the attachment download endpoint for #{identifier}") { expect(no_access).to be true }
 
-        no_file = Dir["#{Utils.download_dir}/#{attach.sis_file_name}"].empty?
-        it("delivers no file to an anonymous user when hitting the attachment download endpoint for #{attach.sis_file_name}") { expect(no_file).to be true }
-
+        no_file = Utils.downloads_empty?
+        it("delivers no file to an anonymous user when hitting the attachment download endpoint for #{identifier}") { expect(no_file).to be true }
       end
     end
 
