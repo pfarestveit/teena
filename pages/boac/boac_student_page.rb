@@ -128,7 +128,6 @@ class BOACStudentPage
   button(:show_hide_notes_button, id: 'timeline-tab-note-previous-messages')
   elements(:note_msg_row, :div, xpath: '//div[contains(@id,"timeline-tab-note-message")]')
   elements(:topic, :list_item, xpath: '//li[contains(@id, "topic")]')
-  elements(:attachment, :div, xpath: '//*[contains(@id, "attachment")]')
 
   # Clicks the Notes tab and expands the list of notes
   def show_notes
@@ -226,6 +225,15 @@ class BOACStudentPage
     link_element(id: "note-#{note.id}-author-name")
   end
 
+  # Returns the elements containing both downloadable and non-downloadable note attachments
+  # @param note [Note]
+  # @return [Array<Selenium::WebDriver::Element>]
+  def note_attachment_els(note)
+    spans = browser.find_elements(xpath: "//li[contains(@id, 'note-#{note.id}-attachment')]//span[contains(@id, '-attachment-')]")
+    links = browser.find_elements(xpath: "//li[contains(@id, 'note-#{note.id}-attachment')]//a[contains(@id, '-attachment-')]")
+    spans + links
+  end
+
   # Returns the data visible when the note is expanded
   # @params note [Note]
   # @return [Hash]
@@ -235,7 +243,6 @@ class BOACStudentPage
     advisor_role_el = span_element(id: "note-#{note.id}-author-role")
     advisor_dept_els = span_elements(xpath: "//span[contains(@id, 'note-#{note.id}-author-dept-')]")
     topic_els = topic_elements.select { |el| el.attribute('id').include? "note-#{note.id}-topic-" }
-    attachment_els = attachment_elements.select { |el| el.attribute('id').include? note.id }
     created_el = div_element(id: "expanded-note-#{note.id}-created-at")
     updated_el = div_element(id: "expanded-note-#{note.id}-updated-at")
     # The body text area contains formatting elements even without text, so account for that when getting the element's text
@@ -251,7 +258,7 @@ class BOACStudentPage
       :advisor_role => (advisor_role_el.text if advisor_role_el.exists?),
       :advisor_depts => advisor_dept_els.map(&:text).sort,
       :topics => topic_els.map(&:text).sort,
-      :attachments => (attachment_els.map { |el| el.text.strip }).sort,
+      :attachments => (note_attachment_els(note).map { |el| el.attribute('innerText').strip }).sort,
       :created_date => (created_el.text.strip.gsub(/\s+/, ' ') if created_el.exists?),
       :updated_date => (updated_el.text.strip.gsub(/\s+/, ' ') if updated_el.exists?)
     }
@@ -260,21 +267,26 @@ class BOACStudentPage
   # Returns the element containing a given attachment name
   # @param attachment_name [String]
   # @return [Array<PageObject::Elements::Element>]
-  def note_attachment_el(attachment_name)
-    attachment_elements.find { |el| el.text.strip == attachment_name }
+  def note_attachment_el(note, attachment_name)
+    note_attachment_els(note).find { |el| el.text.strip == attachment_name }
   end
 
   # Downloads an attachment and returns the file size, deleting the file once downloaded
   # @param note [Note]
-  # @param attachment_name [String]
+  # @param attachment [Attachment]
   # @return [File]
-  def download_attachment(note, attachment_name)
-    logger.info "Downloading attachment '#{attachment_name}' from note ID #{note.id}"
+  def download_attachment(note, attachment)
+    logger.info "Downloading attachment '#{attachment.file_name}' from note ID #{note.id}"
     Utils.prepare_download_dir
-    wait_for_update_and_click note_attachment_el(attachment_name)
-    file_path = "#{Utils.download_dir}/#{attachment_name}"
-    wait_until(Utils.short_wait) { Dir[file_path].any? }
+    wait_until(Utils.short_wait) { note_attachment_els(note).any? }
+    note_attachment_el(note, attachment.file_name).click
+    file_path = "#{Utils.download_dir}/#{attachment.file_name}"
+    wait_until(Utils.medium_wait) { Dir[file_path].any? }
     file = File.new file_path
+    wait_until(Utils.medium_wait) do
+      logger.debug "File size is currently #{file.size}, waiting until it reaches #{attachment.file_size}"
+      file.size == attachment.file_size
+    end
     size = file.size
     Utils.prepare_download_dir
     size
@@ -301,7 +313,11 @@ class BOACStudentPage
     wait_until(1, 'Expected non-blank advisor role') { !visible_data[:advisor_role].empty? }
     wait_until(1, "Expected '#{note.advisor.depts}', got #{visible_data[:advisor_depts]}") { visible_data[:advisor_depts] == note.advisor.depts }
     # TODO - wait_until(1, "Expected '#{note.topics}', got #{visible_data[:topics]}") { visible_data[:topics] == note.topics }
-    # TODO - wait_until(1, "Expected '#{note.attachments}', got #{visible_data[:attachments]}") { visible_data[:attachments] == note.attachments }
+
+    # Attachments
+    non_deleted_attachments = note.attachments.reject &:deleted_at
+    expected_file_names = non_deleted_attachments.map &:file_name
+    wait_until(1, "Expected '#{expected_file_names.sort}', got #{visible_data[:attachments].sort}") { visible_data[:attachments].sort == expected_file_names.sort }
 
     # Check visible timestamps within 1 minute to avoid failures caused by a 1 second diff
     expected_long_created_date = "Created on #{expected_note_long_date_format note.created_date}"
@@ -316,23 +332,23 @@ class BOACStudentPage
     end
   end
 
-  # NOTES - CREATE
-
-  span(:subj_required_msg, xpath: '//span[text()="Subject is required"]')
-  span(:popover_error_message, id: 'popover-error-message')
-  elements(:note_body_text_area, :text_area, xpath: '//div[@role="textbox"]')
+  # NOTES - CREATE / EDIT / DELETE
 
   button(:new_note_button, id: 'new-note-button')
-  text_area(:new_note_subject_input, id: 'create-note-subject')
-  button(:new_note_save_button, id: 'create-note-button')
-  button(:new_note_cancel_button, id: 'cancel-new-note-modal')
   button(:new_note_minimize_button, id: 'minimize-new-note-modal')
 
-  # Returns DOM element, in Academic Timeline, which contains note subject text
-  # @param note_subject [String]
-  # @return [String]
-  def note_subject_element(note_subject)
-    span_element(xpath: "//span[contains(.,'#{note_subject}')]")
+  # Returns the edit note button element for a given note
+  # @param note [Note]
+  # @return [PageObject::Elements::Button]
+  def edit_note_button(note)
+    button_element(id: "edit-note-#{note.id}-button")
+  end
+
+  # Returns the delete note button element for a given note
+  # @param note [Note]
+  # @return [PageObject::Elements::Button]
+  def delete_note_button(note)
+    button_element(xpath: "//tr[descendant::div/@id=\"note-#{note.id}-is-open\"]//button[@id=\"delete-note-button\"]")
   end
 
   # Clicks the new note button
@@ -341,95 +357,220 @@ class BOACStudentPage
     wait_for_update_and_click new_note_button_element
   end
 
+  # Clicks the edit button for a given note
+  # @param note [Note]
+  def click_edit_note_button(note)
+    logger.debug 'Clicking the Edit Note button'
+    wait_for_update_and_click edit_note_button(note)
+  end
+
+  # Obtains the ID of a new note and sets current created and updated dates. Fails if the note ID is not available within a defined
+  # timeout
+  # @param note [Note]
+  # @return [Integer]
+  def set_new_note_id(note)
+    new_note_subject_input_element.when_not_visible Utils.short_wait
+    id = ''
+    wait_until(Utils.short_wait) { (id = BOACUtils.get_note_id_by_subject note) }
+    logger.debug "Note ID is #{id}"
+    note.created_date = note.updated_date = Time.now
+    id
+  rescue
+    logger.debug 'Timed out waiting for note ID'
+    fail
+  end
+
+  # Combines methods to create a note with subject, body, attachments, ID, and created/updated dates
+  # @param note [Note]
+  # @param attachments [Array<Attachment>]
+  def create_note(note, attachments=nil)
+    click_create_new_note
+    enter_new_note_subject note
+    enter_note_body note
+    add_attachments_to_new_note(note, attachments) if attachments
+    click_save_new_note
+    set_new_note_id note
+  end
+
+  # Edits an existing note's subject and updated date
+  # @param note [Note]
+  def edit_note_subject_and_save(note)
+    logger.info "Changing note ID #{note.id} subject to '#{note.subject}'"
+    expand_note note
+    click_edit_note_button note
+    enter_edit_note_subject note
+    click_save_note_edit
+    collapsed_note_el(note).when_visible Utils.short_wait
+    note.updated_date = Time.now
+  end
+
+  # Deletes a note and sets the deleted date
+  # @param note [Note]
+  def delete_note(note)
+    logger.info "Deleting note '#{note.id}'"
+    expand_note note
+    wait_for_update_and_click delete_note_button(note)
+    wait_for_update_and_click confirm_delete_button_element
+    note.deleted_date = Time.now
+  end
+
+  # Notes - subject
+
+  text_area(:new_note_subject_input, id: 'create-note-subject')
+  text_area(:edit_note_subject_input, id: 'edit-note-subject')
+  span(:subj_required_msg, xpath: '//span[text()="Subject is required"]')
+
+  # Enters the subject text for a new note
+  # @param note [Note]
+  def enter_new_note_subject(note)
+    logger.debug "Entering new note subject '#{note.subject}'"
+    wait_for_element_and_type(new_note_subject_input_element, note.subject)
+  end
+
+  # Enters the subject text for an edit to an existing note
+  # @param note [Note]
+  def enter_edit_note_subject(note)
+    logger.debug "Entering edited note subject '#{note.subject}'"
+    wait_for_element_and_type(edit_note_subject_input_element, note.subject)
+  end
+
+  # Notes - body
+
+  elements(:note_body_text_area, :text_area, xpath: '//div[@role="textbox"]')
+
+  # Enters the body text for a new note
+  # @param note [Note]
+  def enter_note_body(note)
+    logger.debug "Entering note body '#{note.body}'"
+    wait_for_element_and_type(note_body_text_area_elements[0], note.body)
+  end
+
+  # Notes - attachments
+
+  button(:adv_note_options_button, id: 'btn-to-advanced-note-options')
+  text_area(:new_note_attach_input, xpath: '//div[@class="modal-full-screen"]//input[@type="file"]')
+  span(:note_attachment_size_msg, xpath: '//span[contains(text(),"Attachments are limited to 20 MB in size.")]')
+  span(:note_dupe_attachment_msg, xpath: '//span[contains(text(),"Another attachment has the name")]')
+
+  # Returns the file input for adding an an attachment to an existing note
+  # @param note [Note]
+  # @return [PageObject::Elements::TextArea]
+  def existing_note_attachment_input(note)
+    text_area_element(xpath: "//div[@id='note-#{note.id}-attachment-dropzone']/input")
+  end
+
+  # Returns the delete button for an attachment on an unsaved note
+  # @param attachment [Attachment]
+  def new_note_attachment_delete_button(attachment)
+    list_item_element(xpath: "//li[contains(@id, \"new-note-attachment-\")][contains(., \"#{attachment.file_name}\")]//button")
+  end
+
+  # Returns the delete button for an attachment on an existing note
+  # @param note [Note]
+  # @param attachment [Attachment]
+  # @return [PageObject::Elements::Button]
+  def existing_note_attachment_delete_button(note, attachment)
+    list_item_element(xpath: "//div[@id=\"note-#{note.id}-outer\"]//li[contains(., \"#{attachment.file_name}\")]//button")
+  end
+
+  # Adds attachments to an unsaved note
+  # @param note [Note]
+  # @param attachments [Array<Attachment>]
+  def add_attachments_to_new_note(note, attachments)
+    attachments.each do |attach|
+      logger.debug "Adding attachment '#{attach.file_name}' to an unsaved note"
+      wait_for_update_and_click adv_note_options_button_element unless new_note_attach_input?
+      new_note_attach_input_element.send_keys Utils.asset_file_path(attach.file_name)
+      new_note_attachment_delete_button(attach).when_present Utils.short_wait
+      sleep Utils.click_wait
+      note.attachments << attach
+    end
+  end
+
+  # Adds a attachments to an existing note
+  # @param note [Note]
+  # @param attachments [Array<Attachment>]
+  def add_attachments_to_existing_note(note, attachments)
+    attachments.each do |attach|
+      logger.debug "Adding attachment '#{attach.file_name}' to note ID #{note.id}"
+      existing_note_attachment_input(note).when_present 1
+      existing_note_attachment_input(note).send_keys Utils.asset_file_path(attach.file_name)
+      existing_note_attachment_delete_button(note, attach).when_present Utils.short_wait
+      sleep Utils.click_wait
+      note.attachments << attach
+    end
+  end
+
+  # Removes attachments from an unsaved note
+  # @param note [Note]
+  # @param attachments [Array<Attachment>]
+  def remove_attachments_from_new_note(note, attachments)
+    attachments.each do |attach|
+      logger.info "Removing attachment '#{attach.file_name}' from an unsaved note"
+      wait_for_update_and_click new_note_attachment_delete_button(attach)
+      new_note_attachment_delete_button(attach).when_not_visible Utils.short_wait
+      note.attachments.delete attach
+    end
+  end
+
+  # Removes attachments from an existing note
+  # @param note [Note]
+  # @param attachments [Array<Attachment>]
+  def remove_attachments_from_existing_note(note, attachments)
+    attachments.each do |attach|
+      logger.info "Removing attachment '#{attach.file_name}' from note ID #{note.id}"
+      wait_for_update_and_click existing_note_attachment_delete_button(note, attach)
+      confirm_delete
+      existing_note_attachment_delete_button(note, attach).when_not_visible Utils.short_wait
+      note.attachments.delete attach
+      attach.deleted_at = Time.now
+    end
+  end
+
+  # Notes - save
+
+  button(:new_note_save_button, id: 'create-note-button')
+  button(:edit_note_save_button, id: 'save-note-button')
+
   # Clicks the save new note button
   def click_save_new_note
     logger.debug 'Clicking the new note Save button'
     wait_for_update_and_click new_note_save_button_element
   end
 
-  # Clicks the cancel new note button
-  def click_cancel_note
+  # Clicks the save note edit button
+  def click_save_note_edit
+    logger.debug 'Clicking the edit note Save button'
+    wait_for_update_and_click edit_note_save_button_element
+  end
+
+  # Notes - cancel
+
+  button(:new_note_modal_cancel_button, id: 'cancel-new-note-modal')
+  button(:new_note_cancel_button, id: 'create-note-cancel')
+  button(:edit_note_cancel_button, id: 'cancel-edit-note-button')
+  button(:confirm_delete_button, id: 'are-you-sure-confirm')
+
+  # Clicks the cancel new note button when the new note modal is in reduced size
+  def click_cancel_new_note_modal
     logger.debug 'Clicking the new note Cancel button'
+    wait_for_update_and_click new_note_modal_cancel_button_element
+  end
+
+  # Clicks the cancel new note button when the new note modal is in expanded size
+  def click_cancel_new_note
     wait_for_update_and_click new_note_cancel_button_element
   end
 
-  # Hits the confirm delete button for an uncreated note, unless the browser is Firefox
-  def confirm_note_discard
-    wait_for_update_and_click confirm_delete_button_element unless "#{browser.browser}" == 'firefox'
-  end
-
-  # Create note, get/set its ID, and get/set its created/updated dates
-  # @param note [Note]
-  def create_new_note(note)
-    logger.info "Creating a note with subject '#{note.subject}', body '#{note.body}'"
-    click_create_new_note
-    wait_for_element_and_type(new_note_subject_input_element, note.subject)
-    wait_for_element_and_type(note_body_text_area_elements[0], note.body)
-    # TODO - topics
-    # TODO - attachments
-    click_save_new_note
-    new_note_subject_input_element.when_not_visible Utils.short_wait
-    id = BOACUtils.get_note_id_by_subject note
-    logger.debug "Note ID is #{id}"
-    note.created_date = note.updated_date = Time.now
-  end
-
-  # NOTES - EDIT
-
-  text_area(:edit_note_subject_input, id: 'edit-note-subject')
-  button(:existing_note_save_button, id: 'save-note-button')
-  button(:existing_note_cancel_button, id: 'cancel-edit-note-button')
-
-  # Returns the edit note button element
-  # @param note [Note]
-  # @return [PageObject::Elements::Button]
-  def edit_note_button(note)
-    button_element(id: "edit-note-#{note.id}-button")
-  end
-
-  def click_edit_note_button(note)
-    expand_note note
-    logger.debug 'Clicking the Edit Note button'
-    wait_for_update_and_click edit_note_button(note)
-  end
-
-  def click_save_note_edit
-    logger.debug 'Clicking the edit note Save button'
-    wait_for_update_and_click existing_note_save_button_element
-  end
-
+  # Clicks the cancel note edit button
   def click_cancel_note_edit
     logger.debug 'Clicking the edit note Cancel button'
-    wait_for_update_and_click existing_note_cancel_button_element
+    wait_for_update_and_click edit_note_cancel_button_element
   end
 
-  # Edits an existing note and sets its updated date
-  # @param note [Note]
-  def edit_note(note)
-    logger.info "Editing note ID #{note.id} with subject '#{note.subject}', body '#{note.body}'"
-    expand_note note
-    click_edit_note_button note
-    wait_for_element_and_type(edit_note_subject_input_element, note.subject)
-    # TODO - topics
-    # TODO - attachments
-    click_save_note_edit
-    collapsed_note_el(note).when_visible Utils.short_wait
-    note.updated_date = Time.now
-  end
-
-  # NOTES - DELETE
-
-  button(:delete_note_button, id: 'delete-note-button')
-  button(:confirm_delete_button, id: 'are-you-sure-confirm')
-
-  # Deletes note, handles 'confirm' modal
-  # @param note [Note]
-  def delete_note(note)
-    logger.info "Deleting note '#{note.id}'"
-    expand_note note
-    wait_for_update_and_click delete_note_button_element
-    wait_for_update_and_click confirm_delete_button_element
-    note.deleted_date = Time.now
+  # Hits the confirm delete button for an uncreated note or removed attachment, unless the browser is Firefox
+  def confirm_delete
+    wait_for_update_and_click confirm_delete_button_element unless "#{browser.browser}" == 'firefox'
   end
 
   # COURSES

@@ -101,7 +101,7 @@ module Page
       case submission.type
         when 'File'
           file_upload_input_element.when_visible Utils.short_wait
-          self.file_upload_input_element.send_keys SuiteCUtils.test_data_file_path(submission.file_name)
+          self.file_upload_input_element.send_keys SuiteCUtils.asset_file_path(submission.file_name)
           wait_for_update_and_click_js file_upload_submit_button_element
           add_event(event, EventType::CREATE, submission.file_name)
         when 'Link'
@@ -246,6 +246,7 @@ module Page
 
             when 'quiz'
               assign.submitted = quiz_attempt_1_link? unless assign.submitted
+              assign.submitted = quiz_submitted_msg? unless assign.submitted
               assign.submission_date = DateTime.parse(quiz_submitted_msg.gsub('Submitted', '').gsub('at', '').strip) if quiz_submitted_msg?
 
             when 'discussion'

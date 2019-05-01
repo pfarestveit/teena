@@ -11,12 +11,6 @@ class SuiteCUtils
     @config['timeouts']['canvas_poller']
   end
 
-  # The file path for SuiteC asset upload files
-  # @param file_name [String]
-  def self.test_data_file_path(file_name)
-    File.join(Utils.config_dir, "suite-c-assets/#{file_name}")
-  end
-
   # Loads file containing test data for SuiteC tests
   def self.load_suitec_test_data
     test_users = File.join(Utils.config_dir, 'test-data-suitec.json')

@@ -23,6 +23,15 @@ class Utils
     @config_dir
   end
 
+  def self.assets_dir
+    File.join(@config_dir, 'assets/')
+  end
+
+  # @param file_name [String]
+  def self.asset_file_path(file_name)
+    File.join(Utils.assets_dir, file_name)
+  end
+
   def self.output_dir
     File.join(ENV['HOME'], 'webdriver-output/')
   end
@@ -244,6 +253,10 @@ class Utils
   def self.prepare_download_dir
     FileUtils::mkdir_p download_dir
     FileUtils.rm_rf(download_dir, :secure => true)
+  end
+
+  def self.downloads_empty?
+    !Dir.exist?(download_dir) || (Dir.entries(download_dir).reject { |f| %w(. ..).include? f }).empty?
   end
 
   # Creates users CSV for SIS import testing

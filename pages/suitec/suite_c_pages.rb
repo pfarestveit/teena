@@ -131,7 +131,7 @@ module Page
       upload_file_path_input_element.when_present Utils.short_wait
       execute_script('arguments[0].style.height="auto"; arguments[0].style.width="auto"; arguments[0].style.visibility="visible";', upload_file_path_input_element)
       sleep 1
-      self.upload_file_path_input_element.send_keys SuiteCUtils.test_data_file_path(file_name)
+      self.upload_file_path_input_element.send_keys SuiteCUtils.asset_file_path(file_name)
     end
 
     # Enters asset metadata while uploading a file type asset

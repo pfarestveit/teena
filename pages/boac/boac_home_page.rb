@@ -148,7 +148,7 @@ class BOACHomePage
 
     # Expand the cohort, and verify that there are only rows for members with alerts
     view_all_members_link(cohort).when_visible Utils.short_wait
-    wait_until(1, "Expecting cohort #{cohort.name} to have row count of #{cohort.member_data.length}, got #{member_rows(driver, cohort).length}") do
+    wait_until(Utils.short_wait, "Expecting cohort #{cohort.name} to have row count of #{cohort.member_data.length}, got #{member_rows(driver, cohort).length}") do
       member_rows(driver, cohort).length == cohort.member_data.length
     end
 

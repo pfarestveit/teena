@@ -5,6 +5,7 @@ class BOACTestConfig < TestConfig
   CONFIG = BOACUtils.config
 
   attr_accessor :advisor,
+                :attachments,
                 :cohort_members,
                 :default_cohort,
                 :dept,
@@ -245,7 +246,14 @@ class BOACTestConfig < TestConfig
     set_max_cohort_members CONFIG['class_page_max_users']
   end
 
+  # Config for note management testing (create, edit, delete)
+  # @param all_students [Array<BOACUser>]
   def note_management(all_students)
+    attachment_filenames = Dir.entries(Utils.assets_dir).reject { |f| %w(. ..).include? f }
+    @attachments = attachment_filenames.map do |f|
+      file = File.new Utils.asset_file_path(f)
+      Attachment.new({:file_name => f, :file_size => file.size})
+    end
     set_global_configs all_students
   end
 

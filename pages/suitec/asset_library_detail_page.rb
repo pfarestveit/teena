@@ -228,7 +228,7 @@ module Page
           download_file_name = Dir.entries("#{Utils.download_dir}")[2]
           logger.debug "Downloaded file name is '#{download_file_name}'"
           download_file = File.new File.join(Utils.download_dir, download_file_name)
-          asset_file = File.new SuiteCUtils.test_data_file_path(asset.file_name)
+          asset_file = File.new SuiteCUtils.asset_file_path(asset.file_name)
           wait_until(Utils.medium_wait) do
             logger.debug "The downloaded file size is currently #{download_file.size}, waiting for it to reach #{asset_file.size}"
             download_file.size == asset_file.size

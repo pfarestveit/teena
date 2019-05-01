@@ -142,6 +142,7 @@ module BOACPages
   # Expands the sidebar advanced search
   def expand_search_options
     wait_for_update_and_click search_options_toggle_button_element unless include_students_cbx_element.visible?
+    include_students_cbx_element.when_visible 1
   end
 
   # Searches for a string using the sidebar search input
