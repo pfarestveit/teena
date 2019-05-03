@@ -238,9 +238,15 @@ describe 'BOAC' do
                           # CLASS PAGE SEARCH
 
                           if term_name == BOACUtils.term
-                            @class_page.search api_section_page.course_code
-                            class_in_results = @search_page.class_in_search_result?(api_section_page.course_code, section_data[:number])
-                            it("allows the user to search for #{class_test_case}") { expect(class_in_results).to be true }
+                            course_code = api_section_page.course_code
+                            subject_area, separator, catalog_id = course_code.rpartition(' ')
+                            abbreviated_subject_area = subject_area[0..-3]
+
+                            [course_code, "#{abbreviated_subject_area} #{catalog_id}", catalog_id].each do |search_string|
+                              @class_page.search search_string
+                              class_in_results = @search_page.class_in_search_result?(api_section_page.course_code, section_data[:number])
+                              it("allows the user to search for #{class_test_case} by string '#{search_string}'") { expect(class_in_results).to be true }
+                            end
 
                             if @search_page.class_link(api_section_page.course_code, section_data[:number]).exists?
                               @search_page.click_class_result(api_section_page.course_code, section_data[:number])
