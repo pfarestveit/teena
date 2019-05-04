@@ -72,7 +72,16 @@ module BOACPages
 
   ### SIDEBAR - GROUPS ###
 
+  link(:create_curated_group_link, id: 'create-curated-group-from-sidebar')
   elements(:sidebar_group_link, :link, xpath: '//a[contains(@id,"sidebar-curated-group")]')
+
+  # Clicks link to create new curated group
+  def click_sidebar_create_curated_group
+    logger.debug 'Clicking sidebar button to create a curated group'
+    wait_for_load_and_click create_curated_group_link_element
+    wait_for_title 'Create Curated Group'
+    sleep 3
+  end
 
   # Returns the names of all the groups in the sidebar
   # @return [Array<String>]
