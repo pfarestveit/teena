@@ -12,13 +12,11 @@ class BOACGroupPage
 
   span(:grp_not_found_msg, xpath: '//span[contains(.,"No curated group found with id: ")]')
   text_area(:rename_group_input, id: 'rename-input')
-  text_area(:create_group_textarea_sids, id: 'curated-group-bulk-add-sids')
-  button(:add_sids_to_group_button, id: 'btn-curated-group-bulk-add-sids')
 
   # Loads a group
   # @param group [CuratedGroup]
   def load_page(group)
-    navigate_to "#{BOACUtils.base_url}/curated_group/#{group.id}"
+    navigate_to "#{BOACUtils.base_url}/curated/#{group.id}"
     wait_for_spinner
   end
 
@@ -54,15 +52,52 @@ class BOACGroupPage
     wait_for_sidebar_group_member_count group
   end
 
-  # Creates a group with list of SIDs
-  # @param sids [Array<String>]
-  # @param name [String]
-  def create_group_with_bulk_sids(sids, name)
-    wait_for_element_and_type(create_group_textarea_sids_element, sids.join(', '))
-    wait_for_update_and_click add_sids_to_group_button_element
+  # ADD STUDENTS
 
-    new_group = CuratedGroup.new({})
-    new_group.name = name
-    name_and_save_group(new_group)
+  button(:add_students_button, id: 'bulk-add-sids-button')
+  text_area(:create_group_textarea_sids, id: 'curated-group-bulk-add-sids')
+  button(:add_sids_to_group_button, id: 'btn-curated-group-bulk-add-sids')
+  span(:sids_bad_format_error_msg, xpath: '//span[contains(text(), "The list provided has not been properly formatted. SIDs must be numeric and comma-separated.")]')
+  span(:sids_not_found_error_msg, xpath: '//span[contains(text(), "not found")]')
+
+  # Clicks the Add Students button on a curated group page
+  def click_add_students_button
+    wait_for_update_and_click add_students_button_element
+  end
+
+  # Enters text in the SID list text area
+  # @param sids [Array<String>]
+  def enter_sid_list(sids)
+    logger.info "Entering SIDs to add to group: '#{sids}'"
+    wait_for_element_and_type(create_group_textarea_sids_element, sids)
+  end
+
+  # Clicks the button to add entered SIDs to a curated group
+  def click_add_sids_to_group_button
+    wait_for_update_and_click add_sids_to_group_button_element
+  end
+
+  # Creates a group with list of SIDs
+  # @param students [Array<BOACUser>]
+  # @param group [CuratedGroup]
+  def create_group_with_bulk_sids(students, group)
+    enter_sid_list students.map(&:sis_id).join(', ')
+    click_add_sids_to_group_button
+    name_and_save_group(group)
+    group.members << students
+    group.members.flatten!
+    group.members.uniq!
+  end
+
+  # Adds a list of SIDs to an existing group
+  # @param students [Array<BOACUser>]
+  # @param group [Group]
+  def add_sids_to_existing_grp(students, group)
+    click_add_students_button
+    enter_sid_list students.map(&:sis_id).join(', ')
+    click_add_sids_to_group_button
+    group.members << students
+    group.members.flatten!
+    group.members.uniq!
   end
 end

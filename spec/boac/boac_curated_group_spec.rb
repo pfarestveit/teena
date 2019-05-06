@@ -56,49 +56,42 @@ describe 'BOAC' do
 
   describe 'group creation' do
 
-    before(:all) do
-      @groups_created = []
-      @group_created_from_filter = CuratedGroup.new({:name => "Group created from filtered cohort #{test.id}"})
-      @group_created_from_class = CuratedGroup.new({:name => "Group created from class page #{test.id}"})
-      @group_created_from_search = CuratedGroup.new({:name => "Group created from search results #{test.id}"})
-      @group_created_from_profile = CuratedGroup.new({:name => "Group created from student page #{test.id}"})
-    end
-
     it 'can be done using the filtered cohort list view group selector' do
       @filtered_page.load_cohort test.default_cohort
       @filtered_page.wait_for_student_list
       sids = @filtered_page.list_view_sids
       visible_members = all_students.select { |m| sids.include? m.sis_id }
-      @filtered_page.select_and_add_students_to_new_grp(visible_members, @group_created_from_filter)
-      @groups_created << @group_created_from_filter
+      group_created_from_filter = CuratedGroup.new({:name => "Group created from filtered cohort #{test.id}"})
+      @filtered_page.select_and_add_students_to_new_grp(visible_members, group_created_from_filter)
     end
 
     it 'can be done using the class page list view group selector' do
       @class_page.load_page(@analytics_page.term_id(@term), @analytics_page.course_section_ccns(@course).first)
       sids = @class_page.class_list_view_sids
       visible_members = all_students.select { |m| sids.include? m.sis_id }
-      @class_page.select_and_add_students_to_new_grp(visible_members, @group_created_from_class)
-      @groups_created << @group_created_from_class
+      group_created_from_class = CuratedGroup.new({:name => "Group created from class page #{test.id}"})
+      @class_page.select_and_add_students_to_new_grp(visible_members, group_created_from_class)
     end
 
     it 'can be done using the user search results group selector' do
       @homepage.search test_student.sis_id
-      @search_page.select_and_add_students_to_new_grp([test_student], @group_created_from_search)
-      @groups_created << @group_created_from_search
+      group_created_from_search = CuratedGroup.new({:name => "Group created from search results #{test.id}"})
+      @search_page.select_and_add_students_to_new_grp([test_student], group_created_from_search)
     end
 
     it 'can be done using the student page group selector' do
       @student_page.load_page test_student
-      @student_page.add_student_to_new_grp(test_student, @group_created_from_profile)
-      @groups_created << @group_created_from_profile
+      group_created_from_profile = CuratedGroup.new({:name => "Group created from student page #{test.id}"})
+      @student_page.add_student_to_new_grp(test_student, group_created_from_profile)
     end
 
     it 'can be done using bulk SIDs feature' do
-      sids = test.dept_students.first(10).map &:sis_id
+      students = test.dept_students.first(10)
       @homepage.click_sidebar_create_curated_group
-      @group_page.create_group_with_bulk_sids(sids, "Create group with bulk SIDs, #{test.id}")
+      group_created_from_bulk = CuratedGroup.new({:name => "Group created with bulk SIDs #{test.id}"})
+      @group_page.create_group_with_bulk_sids(students, group_created_from_bulk)
+      @group_page.wait_for_sidebar_group group_created_from_bulk
     end
-
   end
 
   describe 'group names' do
@@ -201,6 +194,26 @@ describe 'BOAC' do
       @student_page.add_student_to_grp(test_student, group_3)
     end
 
+    it 'can be added on the bulk-add-SIDs page' do
+      @group_page.load_page group_4
+      @group_page.add_sids_to_existing_grp(test.dept_students.last(10), group_4)
+      missing_sids = group_4.members.map(&:sis_id).sort - @group_page.visible_sids.sort
+      # Account for SIDs that have no associated data and will not appear in Boa
+      if missing_sids.any?
+        missing_sids.each do |missing_sid|
+          logger.info "Checking data for missing SID '#{missing_sid}'"
+          student = group_4.members.find { |s| s.sis_id == missing_sid }
+          api_data = @analytics_page.get_data(@driver, student)
+          unless api_data
+            logger.info "Removing SID #{missing_sid} from the group since the student does not appear in Boa"
+            missing_sids.delete missing_sid
+            group_4.members.delete student
+          end
+        end
+      end
+      expect(missing_sids).to be_empty
+    end
+
     it 'can be added on class page list view using select-all' do
       @class_page.load_page(@analytics_page.term_id(@term), @analytics_page.course_section_ccns(@course).first)
       @class_page.select_and_add_all_students_to_grp(all_students, group_5)
@@ -246,6 +259,52 @@ describe 'BOAC' do
     it 'can be removed on the student page using the group checkbox' do
       @student_page.load_page group_1.members.last
       @student_page.remove_student_from_grp(group_1.members.last, group_1)
+    end
+  end
+
+  describe 'group bulk-add SIDs' do
+
+    before(:each) { @group_page.load_page group_4 }
+
+    it 'rejects malformed input' do
+      @group_page.click_add_students_button
+      @group_page.enter_sid_list 'nullum magnum ingenium sine mixtura dementiae fuit'
+      @group_page.click_add_sids_to_group_button
+      @group_page.sids_bad_format_error_msg_element.when_visible Utils.short_wait
+    end
+
+    it 'rejects SIDs that do not match any Boa student SIDs' do
+      @group_page.click_add_students_button
+      @group_page.enter_sid_list '9999999990, 9999999991'
+      @group_page.click_add_sids_to_group_button
+      @group_page.sids_not_found_error_msg_element.when_visible Utils.short_wait
+    end
+
+    it 'hides students who are not available to the user but have been added to the group' do
+      non_dept_student = all_students.find { |s| !test.dept_students.include? s }
+      @group_page.click_add_students_button
+      @group_page.enter_sid_list non_dept_student.sis_id
+      @group_page.click_add_sids_to_group_button
+      expect(@group_page.list_view_sids).not_to include(non_dept_student.sis_id)
+    end
+
+    it 'allows the user to add large sets of SIDs' do
+      @group_page.add_sids_to_existing_grp(test.dept_students.first(200), group_4)
+      missing_sids = group_4.members.map(&:sis_id).sort - @group_page.visible_sids.sort
+      # Account for SIDs that have no associated data and will not appear in Boa
+      if missing_sids.any?
+        missing_sids.each do |missing_sid|
+          logger.info "Checking data for missing SID '#{missing_sid}'"
+          student = group_4.members.find { |s| s.sis_id == missing_sid }
+          api_data = @analytics_page.get_data(@driver, student)
+          unless api_data
+            logger.info "Removing SID #{missing_sid} from the group since the student does not appear in Boa"
+            missing_sids.delete missing_sid
+            group_4.members.delete student
+          end
+        end
+      end
+      expect(missing_sids).to be_empty
     end
   end
 

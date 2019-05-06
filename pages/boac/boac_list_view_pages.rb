@@ -49,9 +49,9 @@ module BOACListViewPages
   def wait_for_student_list
     begin
       start_time = Time.now
+      sleep 1
       wait_until(Utils.medium_wait) { player_link_elements.any? }
       logger.debug "Took #{Time.now - start_time} seconds for users to appear"
-      sleep 1
     rescue
       logger.warn 'There are no students listed.'
     end
