@@ -93,6 +93,12 @@ describe 'BOAC' do
       @groups_created << @group_created_from_profile
     end
 
+    it 'can be done using bulk SIDs feature' do
+      sids = test.dept_students.first(10).map &:sis_id
+      @homepage.click_sidebar_create_curated_group
+      @group_page.create_group_with_bulk_sids(sids, "Create group with bulk SIDs, #{test.id}")
+    end
+
   end
 
   describe 'group names' do

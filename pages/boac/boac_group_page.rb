@@ -8,9 +8,12 @@ class BOACGroupPage
   include BOACPages
   include BOACListViewPages
   include BOACCohortPages
+  include BOACGroupModalPages
 
   span(:grp_not_found_msg, xpath: '//span[contains(.,"No curated group found with id: ")]')
   text_area(:rename_group_input, id: 'rename-input')
+  text_area(:create_group_textarea_sids, id: 'curated-group-bulk-add-sids')
+  button(:add_sids_to_group_button, id: 'btn-curated-group-bulk-add-sids')
 
   # Loads a group
   # @param group [CuratedGroup]
@@ -51,4 +54,15 @@ class BOACGroupPage
     wait_for_sidebar_group_member_count group
   end
 
+  # Creates a group with list of SIDs
+  # @param sids [Array<String>]
+  # @param name [String]
+  def create_group_with_bulk_sids(sids, name)
+    wait_for_element_and_type(create_group_textarea_sids_element, sids.join(', '))
+    wait_for_update_and_click add_sids_to_group_button_element
+
+    new_group = CuratedGroup.new({})
+    new_group.name = name
+    name_and_save_group(new_group)
+  end
 end
