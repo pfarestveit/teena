@@ -102,9 +102,13 @@ class BOACFilteredCohortPage
   def visible_everyone_cohorts
     click_view_everyone_cohorts
     wait_for_spinner
-    wait_until(Utils.short_wait) { everyone_cohort_link_elements.any? }
-    cohorts = everyone_cohort_link_elements.map { |link| FilteredCohort.new({id: link.attribute('href').gsub("#{BOACUtils.base_url}/cohort/", ''), name: link.text}) }
-    cohorts = cohorts.flatten
+    begin
+      wait_until(Utils.short_wait) { everyone_cohort_link_elements.any? }
+      cohorts = everyone_cohort_link_elements.map { |link| FilteredCohort.new({id: link.attribute('href').gsub("#{BOACUtils.base_url}/cohort/", ''), name: link.text}) }
+    rescue
+      cohorts = []
+    end
+    cohorts.flatten!
     logger.info "Visible Everyone's Cohorts are #{cohorts.map &:name}"
     cohorts
   end
