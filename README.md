@@ -6,8 +6,8 @@ QA test automation for PDG services
 
 ### Chrome
 
-Chrome v73.x
-ChromeDriver v73.x
+Chrome v74.x
+ChromeDriver v74.x
 
 ### Firefox
 

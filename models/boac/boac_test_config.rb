@@ -32,6 +32,9 @@ class BOACTestConfig < TestConfig
       when BOACDepartments::COE
         uid = CONFIG['test_coe_advisor_uid']
         @advisor = uid ? (advisors.find { |a| a.uid.to_i == uid }) : advisors.first
+      when BOACDepartments::L_AND_S
+        uid = CONFIG['test_l_and_s_advisor_uid']
+        @advisor = uid ? (advisors.find { |a| a.uid.to_i == uid }) : advisors.first
       when BOACDepartments::PHYSICS
         @advisor = advisors.first
       else
@@ -86,6 +89,15 @@ class BOACTestConfig < TestConfig
         filter.advisor = [@advisor.uid]
         @default_cohort.search_criteria = filter
         @cohort_members = NessieUtils.get_coe_advisor_students(@advisor, @dept_students)
+
+      # For L&S, use students of configured major
+      when BOACDepartments::L_AND_S
+        filter.major = CONFIG['test_l_and_s_major']
+        @default_cohort.search_criteria = filter
+        dept_student_sids = @dept_students.map &:sis_id
+        filtered_searchable_data = @searchable_data.select { |d| d[:major].include? filter.major }
+        filtered_searchabe_sids = filtered_searchable_data.map { |d| d[:sid] }
+        @cohort_members = @dept_students.select { |s| dept_student_sids.include?(s.sis_id) && filtered_searchabe_sids.include?(s.sis_id) }
 
       # For Physics, use students of configured levels
       when BOACDepartments::PHYSICS
@@ -283,6 +295,14 @@ class BOACTestConfig < TestConfig
   # @param all_students [Array<BOACUser>]
   def user_role_coe(all_students)
     set_global_configs(all_students, BOACDepartments::COE)
+    set_default_cohort
+    set_search_cohorts
+  end
+
+  # Config for L&S user role testing
+  # @param all_students [Array<BOACUser]
+  def user_role_l_and_s(all_students)
+    set_global_configs(all_students, BOACDepartments::L_AND_S)
     set_default_cohort
     set_search_cohorts
   end
