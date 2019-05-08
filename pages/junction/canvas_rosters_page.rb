@@ -16,7 +16,7 @@ module Page
       text_area(:search_input, id: 'roster-search')
       select_list(:section_select, id: 'section-select')
       link(:export_roster_link, xpath: '//a[contains(.,"Export")]')
-      link(:print_roster_link, xpath: '//a[contains(.,"Print")]')
+      link(:print_roster_link, xpath: '//button[contains(.,"Print")]')
 
       paragraph(:no_access_msg, xpath: '//p[contains(.,"You must be a teacher in this bCourses course to view official student rosters.")]')
       paragraph(:no_students_msg, xpath: '//p[contains(.,"Students have not yet signed up for this class.")]')
