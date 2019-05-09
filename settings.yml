@@ -53,7 +53,7 @@ boac:
   test_asc_team: FBM
   test_coe_advisor_uid: 123456
   test_l_and_s_advisor_uid: 654321
-  test_l_and_s_major: 'History BA'
+  test_l_and_s_major: [History BA]
   test_physics_levels: [Junior, Senior]
 
   assignments_max_users: 10

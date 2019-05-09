@@ -157,7 +157,7 @@ class BOACSearchResultsPage
   # Returns the UIDs associated with visible note search results
   # @return [Array<String>]
   def note_result_uids
-    note_search_result_elements.map { |el| el.attribute('href').split('/').last }
+    note_search_result_elements.map { |el| el.attribute('href').split('/').last.split('#').first }
   end
 
   # Returns the link element for a given note

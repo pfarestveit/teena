@@ -485,7 +485,7 @@ class BOACFilteredCohortPage
 
     # Last Name
     matching_last_name_users = if search_criteria.last_name
-                                 test.searchable_data.select { |u| u[:last_name_sortable][0] >= search_criteria.last_name.split[0].downcase && u[:last_name_sortable][0] <= search_criteria.last_name.split[1].downcase }
+                                 test.searchable_data.select { |u| u[:last_name_sortable_cohort][0] >= search_criteria.last_name.split[0].downcase && u[:last_name_sortable_cohort][0] <= search_criteria.last_name.split[1].downcase }
                                else
                                  test.searchable_data
                                end
@@ -513,9 +513,9 @@ class BOACFilteredCohortPage
     if search_criteria.gender && search_criteria.gender.any?
       search_criteria.gender.each do |gender|
         if gender == 'Male'
-          matching_gender_users << test.searchable_data.select { |u| u[:gender] == 'm' }
+          matching_gender_users << test.searchable_data.select { |u| %w(M m).include? u[:gender] }
         elsif gender == 'Female'
-          matching_gender_users << test.searchable_data.select { |u| u[:gender] == 'f' }
+          matching_gender_users << test.searchable_data.select { |u| %w(F f).include? u[:gender] }
         else
           logger.error "Test data has an unrecognized gender '#{gender}'"
           fail
@@ -585,7 +585,7 @@ class BOACFilteredCohortPage
   # @param expected_users [Array<Hash>]
   # @return [Array<String>]
   def expected_sids_by_first_name(expected_users)
-    sorted_users = expected_users.sort_by { |u| [u[:first_name_sortable].downcase, u[:last_name_sortable].downcase, u[:sid]] }
+    sorted_users = expected_users.sort_by { |u| [u[:first_name_sortable_cohort].downcase, u[:last_name_sortable_cohort].downcase, u[:sid]] }
     sorted_users.map { |u| u[:sid] }
   end
 
@@ -593,7 +593,7 @@ class BOACFilteredCohortPage
   # @param expected_users [Array<Hash>]
   # @return [Array<String>]
   def expected_sids_by_last_name(expected_users)
-    sorted_users = expected_users.sort_by { |u| [u[:last_name_sortable].downcase, u[:first_name_sortable].downcase, u[:sid]] }
+    sorted_users = expected_users.sort_by { |u| [u[:last_name_sortable_cohort].downcase, u[:first_name_sortable_cohort].downcase, u[:sid]] }
     sorted_users.map { |u| u[:sid] }
   end
 
@@ -601,7 +601,7 @@ class BOACFilteredCohortPage
   # @param expected_users [Array<Hash>]
   # @return [Array<String>]
   def expected_sids_by_team(expected_users)
-    sorted_users = expected_users.sort_by { |u| [u[:squad_names].sort.first.gsub(' (AA)', '') .gsub(/\W+/, ''), u[:last_name_sortable].downcase, u[:first_name_sortable].downcase, u[:sid]] }
+    sorted_users = expected_users.sort_by { |u| [u[:squad_names].sort.first.gsub(' (AA)', '') .gsub(/\W+/, ''), u[:last_name_sortable_cohort].downcase, u[:first_name_sortable_cohort].downcase, u[:sid]] }
     sorted_users.map { |u| u[:sid] }
   end
 
@@ -609,7 +609,7 @@ class BOACFilteredCohortPage
   # @param expected_users [Array<Hash>]
   # @return [Array<String>]
   def expected_sids_by_gpa(expected_users)
-    sorted_users = expected_users.sort_by { |u| [u[:gpa].to_f, u[:last_name_sortable].downcase, u[:first_name_sortable].downcase, u[:sid]] }
+    sorted_users = expected_users.sort_by { |u| [u[:gpa].to_f, u[:last_name_sortable_cohort].downcase, u[:first_name_sortable_cohort].downcase, u[:sid]] }
     sorted_users.map { |u| u[:sid] }
   end
 
@@ -618,7 +618,7 @@ class BOACFilteredCohortPage
   # @return [Array<String>]
   def expected_sids_by_level(expected_users)
     # Sort first by the secondary sort order
-    users_by_first_name = expected_users.sort_by { |u| [u[:last_name_sortable].downcase, u[:first_name_sortable].downcase, u[:sid]] }
+    users_by_first_name = expected_users.sort_by { |u| [u[:last_name_sortable_cohort].downcase, u[:first_name_sortable_cohort].downcase, u[:sid]] }
     # Then arrange by the sort order for level
     users_by_level = []
     %w(Freshman Sophomore Junior Senior Graduate).each do |level|
@@ -633,7 +633,7 @@ class BOACFilteredCohortPage
   # @param expected_users [Array<Hash>]
   # @return [Array<String>]
   def expected_sids_by_major(expected_users)
-    sorted_users = expected_users.sort_by { |u| [u[:major].sort.first.gsub(/\W/, '').downcase, u[:last_name_sortable].downcase, u[:first_name_sortable].downcase, u[:sid]] }
+    sorted_users = expected_users.sort_by { |u| [u[:major].sort.first.gsub(/\W/, '').downcase, u[:last_name_sortable_cohort].downcase, u[:first_name_sortable_cohort].downcase, u[:sid]] }
     sorted_users.map { |u| u[:sid] }
   end
 
@@ -641,7 +641,7 @@ class BOACFilteredCohortPage
   # @param expected_users [Array<Hash>]
   # @return [Array<String>]
   def expected_sids_by_units(expected_users)
-    sorted_users = expected_users.sort_by { |u| [u[:units_completed].to_f, u[:last_name_sortable].downcase, u[:first_name_sortable].downcase, u[:sid]] }
+    sorted_users = expected_users.sort_by { |u| [u[:units_completed].to_f, u[:last_name_sortable_cohort].downcase, u[:first_name_sortable_cohort].downcase, u[:sid]] }
     sorted_users.map { |u| u[:sid] }
   end
 

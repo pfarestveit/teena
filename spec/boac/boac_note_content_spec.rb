@@ -176,8 +176,8 @@ describe 'BOAC' do
                 it("shows no more than 20 results when searching with the first #{search_string_word_count} words in note ID #{note.id}") { expect(results_count).to be <= 20 }
 
                 @search_results_page.wait_for_note_search_result_rows
-                visible_student_sids = @search_results_page.note_result_uids
-                it("returns only results for students in the advisor's department when searching with the first #{search_string_word_count} words in note ID #{note.id}") { expect(visible_student_sids - dept_uids).to be_empty }
+                visible_student_uids = @search_results_page.note_result_uids
+                it("returns only results for students in the advisor's department when searching with the first #{search_string_word_count} words in note ID #{note.id}") { expect(visible_student_uids - dept_uids).to be_empty }
 
                 student_result_returned = @search_results_page.note_link(note).exists?
                 unless results_count >= 20

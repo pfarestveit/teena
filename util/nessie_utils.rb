@@ -355,9 +355,11 @@ class NessieUtils < Utils
       end
       addl_user_data = {
         :first_name => user.first_name,
-        :first_name_sortable => (user.first_name.split(' ').each { |s| s.gsub(/\W/, '').downcase }).join(' '),
+        :first_name_sortable_cohort => (user.first_name.split(' ').map { |s| s.gsub(/\W/, '').downcase }).join,
+        :first_name_sortable_user_list => (user.first_name.split(' ').map { |s| s.gsub(/\W/, '').downcase }).join(' '),
         :last_name => user.last_name,
-        :last_name_sortable => (user.last_name.split(' ').each { |s| s.gsub(/\W/, '').downcase }).join(' '),
+        :last_name_sortable_cohort => (user.last_name.split(' ').map { |s| s.gsub(/\W/, '').downcase }).join,
+        :last_name_sortable_user_list => (user.last_name.split(' ').map { |s| s.gsub(/\W/, '').downcase }).join(' '),
         :squad_names => user_squad_names,
         :active_asc => user.active_asc
       }

@@ -95,7 +95,7 @@ class BOACTestConfig < TestConfig
         filter.major = CONFIG['test_l_and_s_major']
         @default_cohort.search_criteria = filter
         dept_student_sids = @dept_students.map &:sis_id
-        filtered_searchable_data = @searchable_data.select { |d| d[:major].include? filter.major }
+        filtered_searchable_data = @searchable_data.select { |d| (filter.major & d[:major]).any? }
         filtered_searchabe_sids = filtered_searchable_data.map { |d| d[:sid] }
         @cohort_members = @dept_students.select { |s| dept_student_sids.include?(s.sis_id) && filtered_searchabe_sids.include?(s.sis_id) }
 
@@ -129,9 +129,13 @@ class BOACTestConfig < TestConfig
   # Configures a set of cohorts to use for filtered cohort testing. If a test data override file exists in the config override dir,
   # then uses that to create the filters. Otherwise, uses the default test data.
   def set_search_cohorts
-    override_test_data = File.exist? (override_path = File.join(Utils.config_dir, 'test-data-boac.json'))
-    test_data_file = override_test_data ? override_path : File.expand_path('test_data/test-data-boac.json', Dir.pwd)
+
+    # Because its student population dwarfs the others', L&S has its own cohort test data file
+    test_data_file_name = (@dept == BOACDepartments::L_AND_S) ? 'test-data-boac-l-and-s.json' : 'test-data-boac.json'
+    override_test_data = File.exist? (override_path = File.join(Utils.config_dir, test_data_file_name))
+    test_data_file = override_test_data ? override_path : File.expand_path("test_data/#{test_data_file_name}", Dir.pwd)
     test_data = JSON.parse File.read(test_data_file)
+
     filters = test_data['filters'].map do |data|
       filter = CohortFilter.new
       filter.set_test_filters(data, @dept)

@@ -1,6 +1,6 @@
 require_relative 'spec_helper'
 
-class SuiteCUtils
+class SuiteCUtils < Utils
 
   include Logging
 
