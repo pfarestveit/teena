@@ -128,6 +128,7 @@ class BOACStudentPage
   button(:show_hide_notes_button, id: 'timeline-tab-note-previous-messages')
   elements(:note_msg_row, :div, xpath: '//div[contains(@id,"timeline-tab-note-message")]')
   elements(:topic, :list_item, xpath: '//li[contains(@id, "topic")]')
+  element(:sorry_no_attachment_msg, xpath: '//body[text()="Sorry, attachment not available."]')
 
   # Clicks the Notes tab and expands the list of notes
   def show_notes
@@ -140,7 +141,7 @@ class BOACStudentPage
   # @param notes [Array<Note>]
   # @return [Array<String>]
   def expected_note_id_sort_order(notes)
-    (notes.sort_by {|n| [n.updated_date, n.created_date] }).reverse.map &:id
+    (notes.sort_by {|n| [n.updated_date, n.created_date, n.id] }).reverse.map &:id
   end
 
   def expected_note_short_date_format(date)
@@ -271,25 +272,49 @@ class BOACStudentPage
     note_attachment_els(note).find { |el| el.text.strip == attachment_name }
   end
 
-  # Downloads an attachment and returns the file size, deleting the file once downloaded
+  # Downloads an attachment and returns the file size, deleting the file once downloaded. If the download is not available,
+  # logs a warning and moves on if a SIS note or logs and error and fails if a Boa note.
   # @param note [Note]
   # @param attachment [Attachment]
-  # @return [File]
-  def download_attachment(note, attachment)
+  # @param student [BOACUser]
+  # @return [Integer]
+  def download_attachment(note, attachment, student=nil)
     logger.info "Downloading attachment '#{attachment.file_name}' from note ID #{note.id}"
     Utils.prepare_download_dir
     wait_until(Utils.short_wait) { note_attachment_els(note).any? }
     note_attachment_el(note, attachment.file_name).click
     file_path = "#{Utils.download_dir}/#{attachment.file_name}"
-    wait_until(Utils.medium_wait) { Dir[file_path].any? }
-    file = File.new file_path
-    wait_until(Utils.medium_wait) do
-      logger.debug "File size is currently #{file.size}, waiting until it reaches #{attachment.file_size}"
-      file.size == attachment.file_size
+    wait_until(Utils.medium_wait) { sorry_no_attachment_msg? || Dir[file_path].any?  }
+
+    if sorry_no_attachment_msg?
+      # Get back on the student page for subsequent tests
+      load_page student
+      show_notes
+
+      if attachment.sis_file_name
+        logger.warn "Cannot download SIS note ID #{note.id} attachment '#{attachment.file_name}'"
+        nil
+      else
+        logger.error "Cannot download Boa note ID #{note.id} attachment '#{attachment.file_name}'"
+        fail
+      end
+
+    else
+      file = File.new file_path
+
+      # If the attachment file size is known (i.e., it was uploaded as part of the test), then make sure the download reaches the same size.
+      if attachment.file_size
+        wait_until(Utils.medium_wait) do
+          logger.debug "File size is currently #{file.size}, waiting until it reaches #{attachment.file_size}"
+          file.size == attachment.file_size
+        end
+      end
+      size = file.size
+
+      # Zap the download dir again to make sure no attachment downloads are left behind on the test machine
+      Utils.prepare_download_dir
+      size
     end
-    size = file.size
-    Utils.prepare_download_dir
-    size
   end
 
   # Verifies the visible content of a note

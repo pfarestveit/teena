@@ -122,10 +122,12 @@ describe 'BOAC' do
                   # TODO - get downloads working on Firefox, since the profile prefs aren't having the desired effect
                   if @student_page.note_attachment_el(note, attach.file_name).tag_name == 'a' && "#{@driver.browser}" != 'firefox'
                     begin
-                      file_size = @student_page.download_attachment(note, attach)
-                      attachment_downloads = file_size > 0
-                      downloadable_attachments << attach
-                      it("allows attachment file #{attach.file_name} to be downloaded from #{test_case}") { expect(attachment_downloads).to be true }
+                      file_size = @student_page.download_attachment(note, attach, student)
+                      if file_size
+                        attachment_downloads = file_size > 0
+                        downloadable_attachments << attach
+                        it("allows attachment file #{attach.file_name} to be downloaded from #{test_case}") { expect(attachment_downloads).to be true }
+                      end
                     rescue => e
                       Utils.log_error e
                       it("encountered an error downloading attachment file #{attach.file_name} from #{test_case}") { fail }
