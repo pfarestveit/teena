@@ -38,6 +38,11 @@ class BOACUtils < Utils
     @config['term_start_date']
   end
 
+  # Returns the number of SIDs to add during bulk SID group tests
+  def self.group_bulk_sids_max
+    @config['group_bulk_sids_max']
+  end
+
   # Whether or not to check tooltips during tests. Checking tooltips slows down test execution.
   def self.tooltips
     @config['tooltips']

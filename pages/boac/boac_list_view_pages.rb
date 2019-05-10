@@ -112,6 +112,21 @@ module BOACListViewPages
     visible_sids.flatten
   end
 
+  # Waits for students to stop loading on a list view page. Useful for pages that load slowly.
+  def wait_for_list_to_load
+    wait_until(Utils.short_wait) { player_link_elements.any? }
+    begin
+      tries ||= Utils.canvas_enrollment_retries
+      count = player_link_elements.length
+      logger.debug "There are now #{count} students visible"
+      scroll_to_bottom
+      wait_until(Utils.short_wait) { player_link_elements.length > count }
+      logger.info "There are #{player_link_elements.length} students displayed"
+    rescue
+      (tries -= 1).zero? ? fail : retry
+    end
+  end
+
   # Clicks the link for a given student
   # @param student [BOACUser]
   def click_student_link(student)
