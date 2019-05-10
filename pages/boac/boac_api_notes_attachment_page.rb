@@ -7,7 +7,7 @@ class BOACApiNotesAttachmentPage
   include Page
 
   div(:unauth_msg, xpath: '//*[contains(.,"Unauthorized")]')
-  div(:not_found_msg, xpath: '//*[contains(.,"Attachment not found")]')
+  div(:not_found_msg, xpath: '//*[contains(.,"Sorry, attachment not available.")]')
 
   def load_page(attachment_file)
     logger.info "Hitting download endpoint for attachment '#{attachment_file}'"
