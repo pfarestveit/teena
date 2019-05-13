@@ -180,6 +180,11 @@ else
             note_5.attachments.each { |attach| @student_page.download_attachment(note_5, attach) }
           end
         end
+
+        it 'can visit the note permalink' do
+          @student_page.navigate_to @student_page.visible_expanded_note_data(note_5)[:permalink_url]
+          @student_page.wait_until(Utils.short_wait) { @student_page.note_expanded? note_5 }
+        end
       end
 
       context 'editing an existing note' do
@@ -216,7 +221,7 @@ else
 
         it 'can add up to a maximum of 5 attachments' do
           @student_page.expand_note note_6
-          @student_page.wait_until(1) { @student_page.existing_note_attachment_input(note_6).attribute('disabled') == 'true' }
+          expect(@student_page.existing_note_attachment_input(note_6).exists?).to be false
         end
 
         it 'can remove an existing attachment' do

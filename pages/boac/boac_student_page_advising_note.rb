@@ -189,6 +189,7 @@ module BOACStudentPageAdvisingNote
     topic_els = topic_elements.select { |el| el.attribute('id').include? "note-#{note.id}-topic-" }
     created_el = div_element(id: "expanded-note-#{note.id}-created-at")
     updated_el = div_element(id: "expanded-note-#{note.id}-updated-at")
+    permalink_el = link_element(id: "advising-note-permalink-#{note.id}")
     # The body text area contains formatting elements even without text, so account for that when getting the element's text
     body_text = if body_el.exists?
                   text = body_el.attribute('innerText')
@@ -204,7 +205,8 @@ module BOACStudentPageAdvisingNote
       :topics => topic_els.map(&:text).sort,
       :attachments => (note_attachment_els(note).map { |el| el.attribute('innerText').strip }).sort,
       :created_date => (created_el.text.strip.gsub(/\s+/, ' ') if created_el.exists?),
-      :updated_date => (updated_el.text.strip.gsub(/\s+/, ' ') if updated_el.exists?)
+      :updated_date => (updated_el.text.strip.gsub(/\s+/, ' ') if updated_el.exists?),
+      :permalink_url => (permalink_el.attribute('href') if permalink_el.exists?)
     }
   end
 

@@ -33,6 +33,11 @@ class NessieUtils < Utils
     @config['caliper_time_margin']
   end
 
+  # Whether or not to include L&S students and advisors
+  def self.include_l_and_s?
+    @config['include_l_and_s']
+  end
+
   # DATABASE - ASSIGNMENTS
 
   # Returns the assignments associated with a user in a course site
@@ -115,12 +120,13 @@ class NessieUtils < Utils
     # Get a separate set of student users for each department
     asc_students = student_result_to_users(query_all_asc_students, BOACDepartments::ASC)
     coe_students = student_result_to_users(query_all_coe_students, BOACDepartments::COE)
-    l_and_s_students = student_result_to_users(query_all_l_and_s_students, BOACDepartments::L_AND_S)
+    l_and_s_students = student_result_to_users(query_all_l_and_s_students, BOACDepartments::L_AND_S) if include_l_and_s?
     physics_students = student_result_to_users(query_all_physics_students, BOACDepartments::PHYSICS)
 
     # Find students served by more than one department and merge their attributes into a new user
-    all_students = asc_students + coe_students + l_and_s_students + physics_students
-    logger.info "There are #{asc_students.length} ASC students, #{coe_students.length} CoE students, #{l_and_s_students.length} L&S students,
+    all_students = asc_students + coe_students + physics_students
+    all_students = all_students + l_and_s_students if include_l_and_s?
+    logger.info "There are #{asc_students.length} ASC students, #{coe_students.length} CoE students, #{l_and_s_students.length + ' L&S students,' if include_l_and_s?}
                  and #{physics_students.length} Physics students, for a total of #{all_students.length}"
     merged_students = []
     all_students.group_by { |s| s.uid }.map do |k,v|

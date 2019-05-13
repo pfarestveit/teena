@@ -146,6 +146,12 @@ describe 'BOAC' do
                 it("shows no attachment file names on #{test_case}") { expect(visible_expanded_note_data[:attachments]).to be_empty }
               end
 
+              # Permalink
+
+              @student_page.navigate_to visible_expanded_note_data[:permalink_url]
+              permalink_works = @student_page.wait_until(Utils.short_wait) { @student_page.note_expanded? note }
+              it("offers a permalink on #{test_case}") { expect(permalink_works).to be true }
+
             rescue => e
               Utils.log_error e
               it("hit an error with #{test_case}") { fail }
