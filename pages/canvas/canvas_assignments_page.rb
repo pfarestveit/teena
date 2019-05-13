@@ -151,8 +151,8 @@ module Page
     elements(:list_view_assignment, :link, xpath: '//li[contains(@class, "assignment")]/div[contains(@id, "assignment_")]')
     div(:assignment_submission_details_section, xpath: '//div[contains(.,"Submission Details:")]')
     link(:assignment_submission_details_link, xpath: '//a[contains(.,"Submission Details")]')
-    span(:assignment_submission_date, xpath: '//h3[text()="Submission"]/following-sibling::div[@class="content"]/span')
-    div(:assignment_submission_grade, xpath: '//h3[text()="Submission"]//div[contains(.,"Grade: ")]')
+    span(:assignment_submission_date, xpath: '//h2[text()="Submission"]/following-sibling::div[@class="content"]/span')
+    div(:assignment_submission_grade, xpath: '//h2[text()="Submission"]//div[contains(.,"Grade: ")]')
     link(:quiz_attempt_1_link, xpath: '//a[contains(text(),"Attempt 1")]')
     div(:quiz_submitted_msg, xpath: '//div[@class="quiz_score"]/following-sibling::div[contains(.,"Submitted")]')
 

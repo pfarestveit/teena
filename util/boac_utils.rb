@@ -188,7 +188,7 @@ class BOACUtils < Utils
                 end}
               ORDER BY uid, cohort_id ASC;"
     results = Utils.query_pg_db(boac_db_credentials, query)
-    cohorts = results.map { |r| FilteredCohort.new({id: r['cohort_id'], name: r['cohort_name'], owner_uid: r['uid']}) }
+    cohorts = results.map { |r| FilteredCohort.new({id: r['cohort_id'], name: r['cohort_name'].strip, owner_uid: r['uid']}) }
     cohorts.sort_by { |c| [c.owner_uid.to_i, c.id] }
   end
 

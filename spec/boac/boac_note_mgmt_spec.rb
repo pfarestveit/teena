@@ -373,8 +373,6 @@ else
         @student_page.uncheck_include_classes_cbx
       end
 
-      after(:all) { @homepage.log_out }
-
       notes.each do |note|
         it 'cannot find a deleted note' do
           logger.info "Searching for deleted note ID #{note.id} by subject '#{note.subject}'"

@@ -89,7 +89,7 @@ class BOACApiStudentPage
   def formatted_units(units_as_num)
     if units_as_num
       if units_as_num.zero?
-        '--'
+        '0'
       else
         (units_as_num == units_as_num.floor) ? units_as_num.floor.to_s : units_as_num.to_s
       end
