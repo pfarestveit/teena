@@ -153,10 +153,7 @@ describe 'A CoE advisor using BOAC' do
     end
 
     it 'can see no other admin functions' do
-      expect(@admin_page.asc_tab?).to be false
-      expect(@admin_page.coe_tab?).to be false
-      expect(@admin_page.physics_tab?).to be false
-      expect(@admin_page.admins_tab?).to be false
+      BOACDepartments::DEPARTMENTS.each { |dept| expect(@admin_page.dept_tab_link_element(dept).exists?).to be false }
       expect(@admin_page.status_heading?).to be false
     end
 
