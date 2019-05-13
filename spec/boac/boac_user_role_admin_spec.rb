@@ -15,6 +15,7 @@ describe 'An admin using BOAC' do
 
   before(:all) do
     @driver = Utils.launch_browser test.chrome_profile
+    @admin_page = BOACAdminPage.new @driver
     @api_admin_page = BOACApiAdminPage.new @driver
     @api_section_page = BOACApiSectionPage.new @driver
     @api_user_analytics_page = BOACApiStudentPage.new @driver
@@ -115,9 +116,33 @@ describe 'An admin using BOAC' do
       @homepage.click_admin_link
     end
 
+    it('sees all departments in \'Users\' section') do
+      @admin_page.load_page
+      @admin_page.dept_users_section_element.when_present Utils.medium_wait
+      BOACDepartments::DEPARTMENTS.each do |dept|
+        expect(@admin_page.dept_tab_link_element(dept).exists?).to be true
+        BOACUtils.get_dept_advisors(dept) do |user|
+          expect(@admin_page.become_user_link_element(user).exists?).to be true
+        end
+      end
+    end
+
     # TODO - it('sees all the authorized users')
 
     # TODO - it('can authenticate as one of the authorized users')
+
+    it('can update a Service Alert without posting it') do
+      @admin_page.load_page
+      @admin_page.update_service_alert_input_element.when_present Utils.medium_wait
+      if @admin_page.publish_service_alert_checked?
+        # Turn off service alert
+        @admin_page.toggle_publish_service_alert
+      end
+      @admin_page.wait_for_element_and_type(@admin_page.update_service_alert_input_element, "Baby Jane's in Acapulco, we are flyin' down to Rio (#{test.id})")
+      @admin_page.wait_for_update_and_click(@admin_page.update_service_alert_button)
+      expect(@admin_page.service_announcement_banner_element.exists?).to be false
+    end
+
   end
 
 end
