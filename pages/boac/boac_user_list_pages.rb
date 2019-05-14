@@ -143,7 +143,7 @@ module BOACUserListPages
   # @param user_data [Array<Hash>]
   # @return [Array<String>]
   def expected_sids_by_grad_term(user_data)
-    sorted_users = user_data.sort_by { |u| [u[:expected_grad_term_id], u[:last_name_sortable_user_list].downcase, u[:first_name_sortable_user_list].downcase, u[:sid]] }
+    sorted_users = user_data.sort_by { |u| [(u[:expected_grad_term_id].nil? ? '0' : u[:expected_grad_term_id]), u[:last_name_sortable_user_list].downcase, u[:first_name_sortable_user_list].downcase, u[:sid]] }
     sorted_users.map { |u| u[:sid] }
   end
 
@@ -152,8 +152,8 @@ module BOACUserListPages
   # @return [Array<String>]
   def expected_sids_by_grad_term_desc(user_data)
     sorted_users = user_data.sort do |a, b|
-      [b[:expected_grad_term_id], a[:last_name_sortable_user_list].downcase, a[:first_name_sortable_user_list].downcase, a[:sid]] <=>
-          [a[:expected_grad_term_id], b[:last_name_sortable_user_list].downcase, b[:first_name_sortable_user_list].downcase, b[:sid]]
+      [(b[:expected_grad_term_id].nil? ? '0' : b[:expected_grad_term_id]), a[:last_name_sortable_user_list].downcase, a[:first_name_sortable_user_list].downcase, a[:sid]] <=>
+          [(a[:expected_grad_term_id].nil? ? '0' : a[:expected_grad_term_id]), b[:last_name_sortable_user_list].downcase, b[:first_name_sortable_user_list].downcase, b[:sid]]
     end
     sorted_users.map { |u| u[:sid] }
   end

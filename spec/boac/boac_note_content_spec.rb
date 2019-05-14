@@ -94,7 +94,7 @@ describe 'BOAC' do
               # Note topics
 
               note.topics.any? ?
-                  (it("shows topics #{note.topics} on #{test_case}") { expect(visible_expanded_note_data[:topics]).to eql(note.topics) }) :
+                  (it("shows the right topics on #{test_case}") { expect(visible_expanded_note_data[:topics]).to eql(note.topics) }) :
                   (it("shows no topics on #{test_case}") { expect(visible_expanded_note_data[:topics]).to be_empty })
 
               # Note dates
@@ -116,9 +116,15 @@ describe 'BOAC' do
               if note.attachments.any?
                 non_deleted_attachments = note.attachments.reject &:deleted_at
                 attachment_file_names = non_deleted_attachments.map &:file_name
-                it("shows attachment file names #{attachment_file_names.sort} on #{test_case}") { expect(visible_expanded_note_data[:attachments].sort).to eql(attachment_file_names.sort) }
+                it("shows the right attachment file names on #{test_case}") { expect(visible_expanded_note_data[:attachments].sort).to eql(attachment_file_names.sort) }
 
                 non_deleted_attachments.each do |attach|
+                  identifier = attach.sis_file_name || attach.id
+                  if attach.sis_file_name
+                    has_delete_button = @student_page.delete_note_button(note).exists?
+                    it("shows no delete button for imported #{test_case}") { expect(has_delete_button).to be false }
+                  end
+
                   # TODO - get downloads working on Firefox, since the profile prefs aren't having the desired effect
                   if @student_page.note_attachment_el(note, attach.file_name).tag_name == 'a' && "#{@driver.browser}" != 'firefox'
                     begin
@@ -126,11 +132,11 @@ describe 'BOAC' do
                       if file_size
                         attachment_downloads = file_size > 0
                         downloadable_attachments << attach
-                        it("allows attachment file #{attach.file_name} to be downloaded from #{test_case}") { expect(attachment_downloads).to be true }
+                        it("allows attachment ID #{attach.id} to be downloaded from #{test_case}") { expect(attachment_downloads).to be true }
                       end
                     rescue => e
                       Utils.log_error e
-                      it("encountered an error downloading attachment file #{attach.file_name} from #{test_case}") { fail }
+                      it("encountered an error downloading attachment ID #{attach.id} from #{test_case}") { fail }
 
                       # If the note download fails, the browser might no longer be on the student page so reload it.
                       @student_page.load_page student
@@ -138,7 +144,7 @@ describe 'BOAC' do
                     end
 
                   else
-                    logger.warn "Skipping download test for note ID #{note.id} attachment #{attach.file_name} since it cannot be downloaded"
+                    logger.warn "Skipping download test for note ID #{note.id} attachment ID #{attach.id} since it cannot be downloaded"
                   end
                 end
 
@@ -229,7 +235,7 @@ describe 'BOAC' do
     it('has at least one test student with a note') { expect(students_with_notes.any?).to be true }
 
     if downloadable_attachments.any?
-      other_depts = BOACDepartments::DEPARTMENTS.reject { |d| [test.dept, BOACDepartments::ADMIN].include? d }
+      other_depts = BOACDepartments::DEPARTMENTS.reject { |d| [test.dept, BOACDepartments::ADMIN, (BOACDepartments::L_AND_S unless NessieUtils.include_l_and_s?)].include? d }
 
       other_depts.each do |dept|
 
@@ -249,7 +255,7 @@ describe 'BOAC' do
               logger.info "Skipping non-auth download test for SID #{sid} since it belongs to the advisor's department"
 
             else
-              identifier = attach.sis_file_name ? attach.sis_file_name : attach.id
+              identifier = attach.sis_file_name || attach.id
               Utils.prepare_download_dir
               @api_notes_attachment_page.load_page identifier
               no_access = @api_notes_attachment_page.verify_block { @api_notes_attachment_page.not_found_msg_element.when_visible Utils.short_wait }
@@ -269,7 +275,7 @@ describe 'BOAC' do
 
       downloadable_attachments.each do |attach|
 
-        identifier = attach.sis_file_name ? attach.sis_file_name : attach.id
+        identifier = attach.sis_file_name || attach.id
         Utils.prepare_download_dir
         @api_notes_attachment_page.load_page identifier
         no_access = @api_notes_attachment_page.verify_block { @api_notes_attachment_page.unauth_msg_element.when_visible Utils.short_wait }

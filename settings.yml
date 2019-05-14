@@ -65,7 +65,7 @@ boac:
   legacy_notes_level: Senior
   legacy_notes_max_users: 5
   no_activity_alert_threshold: 14
-  notes_search_word_count: 10
+  notes_search_word_count: 7
   sis_data_max_users: 100
   user_search_max_users: 50
 

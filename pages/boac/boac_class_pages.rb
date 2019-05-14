@@ -44,8 +44,8 @@ module BOACClassPages
   # @param index [Integer]
   # @return [Array<String>]
   def meeting_instructors(index)
-    el = span_element(xpath: "//span[@id=\"instructors-#{index}\"]/following-sibling::span")
-    el.text.split(', ') if el.exists? && !el.text.empty?
+    el = span_element(:class => 'course-details-instructors')
+    el.text.gsub('Instructor:', '').gsub('Instructors:', '').strip.split(', ') if el.exists? && !el.text.empty?
   end
 
   def meeting_schedule_xpath(index)
