@@ -143,15 +143,36 @@ module BOACPages
   ### SIDEBAR - SEARCH ###
 
   button(:search_options_toggle_button, id: 'search-options-panel-toggle')
+  button(:search_options_note_filters_toggle_button, id: 'search-options-note-filters-toggle')
   checkbox(:include_students_cbx, id: 'search-include-students-checkbox')
   checkbox(:include_classes_cbx, id: 'search-include-courses-checkbox')
   checkbox(:include_notes_cbx, id: 'search-include-notes-checkbox')
+  div(:search_options_note_filters_subpanel, id: 'search-options-note-filters-subpanel')
+  radio_button(:notes_by_anyone_radio, id: 'search-options-note-filters-posted-by-anyone')
+  radio_button(:notes_by_you_radio, id: 'search-options-note-filters-posted-by-you')
   text_area(:search_input, id: 'search-students-input')
 
   # Expands the sidebar advanced search
   def expand_search_options
     wait_for_update_and_click search_options_toggle_button_element unless include_students_cbx_element.visible?
     include_students_cbx_element.when_visible 1
+  end
+
+  # Expands the sidebar advanced search notes subpanel
+  def expand_search_options_notes_subpanel
+    expand_search_options
+    wait_for_update_and_click search_options_note_filters_toggle_button_element unless search_options_note_filters_subpanel_element.visible?
+    search_options_note_filters_subpanel_element.when_visible 1
+  end
+
+  def select_notes_posted_by_anyone
+    expand_search_options_notes_subpanel
+    js_click notes_by_anyone_radio_element
+  end
+
+  def select_notes_posted_by_you
+    expand_search_options_notes_subpanel
+    js_click notes_by_you_radio_element
   end
 
   # Searches for a string using the sidebar search input

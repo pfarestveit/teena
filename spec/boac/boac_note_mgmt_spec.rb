@@ -143,24 +143,37 @@ else
           @student_page.uncheck_include_classes_cbx
         end
 
-        it 'can find a note by subject' do
-          @student_page.search note_1.subject
-          @search_results_page.wait_for_note_search_result_rows
-          expect(@search_results_page.note_link(note_1).exists?).to be true
-        end
-
-        it 'can find a note by body' do
-          unless "#{@driver.browser}" == 'firefox'
-            @student_page.search note_2.body
+        shared_examples 'searching for your own note' do
+          it 'can find a note by subject' do
+            @student_page.search note_1.subject
             @search_results_page.wait_for_note_search_result_rows
-            expect(@search_results_page.note_link(note_2).exists?).to be true
+            expect(@search_results_page.note_link(note_1).exists?).to be true
+          end
+
+          it 'can find a note by body' do
+            unless "#{@driver.browser}" == 'firefox'
+              @student_page.search note_2.body
+              @search_results_page.wait_for_note_search_result_rows
+              expect(@search_results_page.note_link(note_2).exists?).to be true
+            end
+          end
+
+          it 'can find a note with special characters' do
+            @student_page.search note_3.subject
+            @search_results_page.wait_for_note_search_result_rows
+            expect(@search_results_page.note_link(note_3).exists?).to be true
           end
         end
 
-        it 'can find a note with special characters' do
-          @student_page.search note_3.subject
-          @search_results_page.wait_for_note_search_result_rows
-          expect(@search_results_page.note_link(note_3).exists?).to be true
+        describe 'when searching for "anyone"' do
+          before { @student_page.select_notes_posted_by_anyone }
+          include_examples 'searching for your own note'
+        end
+
+        describe 'when searching for "only you"' do
+          before { @student_page.select_notes_posted_by_you }
+          after { @student_page.select_notes_posted_by_anyone }
+          include_examples 'searching for your own note'
         end
       end
 
@@ -310,19 +323,38 @@ else
       end
 
       after(:all) do
+        @student_page.select_notes_posted_by_anyone
         @homepage.load_page
         @homepage.log_out
       end
 
-        it 'cannot edit the other user\'s note' do
-          @student_page.expand_note note_5
-          expect(@student_page.edit_note_button(note_5).exists?).to be false
+      describe 'when searching for "anyone"' do
+        before { @student_page.select_notes_posted_by_anyone }
+        it 'can find the other user\'s note' do
+          @student_page.search note_1.subject
+          @search_results_page.wait_for_note_search_result_rows
+          expect(@search_results_page.note_link(note_1).exists?).to be true
         end
+      end
 
-        it 'cannot delete attachments on the other user\'s note' do
-          @student_page.expand_note note_5
-          note_5.attachments.reject(&:deleted_at).each { |attach| expect(@student_page.existing_note_attachment_delete_button(note_5, attach).exists?).to be false }
+      describe 'when searching for "only you"' do
+        before { @student_page.select_notes_posted_by_you }
+        after { @student_page.select_notes_posted_by_anyone }
+        it 'cannot find the other user\'s note' do
+          @student_page.search note_1.subject
+          expect(@search_results_page.note_results_count).to be_zero
         end
+      end
+
+      it 'cannot edit the other user\'s note' do
+        @student_page.expand_note note_5
+        expect(@student_page.edit_note_button(note_5).exists?).to be false
+      end
+
+      it 'cannot delete attachments on the other user\'s note' do
+        @student_page.expand_note note_5
+        note_5.attachments.reject(&:deleted_at).each { |attach| expect(@student_page.existing_note_attachment_delete_button(note_5, attach).exists?).to be false }
+      end
 
       it 'can download non-deleted attachments' do
         if Utils.headless?
