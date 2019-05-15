@@ -8,13 +8,14 @@ class BOACAdminPage
   include BOACPages
 
   checkbox(:demo_mode_toggle, :id => 'toggle-demo-mode')
+  checkbox(:post_service_announcement_checkbox, id: 'checkbox-publish-service-announcement')
   h2(:status_heading, :id => 'system-status-header')
   h2(:dept_users_section, :id => 'dept-users-section')
-  h2(:edit_service_alert, :id => 'edit-service-announcement')
-  text_area(:update_service_alert_input, id: 'textarea-update-service-announcement')
-  button(:update_service_alert_button, id: 'update-service-announcement')
-  checkbox(:publish_service_alert_checkbox, id: 'checkbox-publish-service-announcement')
-  div(:service_announcement_banner, id: 'service-announcement-banner')
+  h2(:edit_service_announcement, :id => 'edit-service-announcement')
+  text_area(:update_service_announcement_input, id: 'textarea-update-service-announcement')
+  button(:update_service_announcement_button, id: 'button-update-service-announcement')
+  span(:service_announcement_banner, id: 'service-announcement-banner')
+  span(:service_announcement_checkbox_label, id: 'checkbox-service-announcement-label')
 
   # Loads the admin page
   def load_page
@@ -49,15 +50,43 @@ class BOACAdminPage
     wait_for_load_and_click(become_user_link_element user)
   end
 
-  # Returns the state of a publish_service_alert checkbox
-  # @return [boolean]
-  def publish_service_alert_checked?
-    publish_service_alert_checkbox_element.when_visible Utils.short_wait
-    publish_service_alert_checkbox_element.attribute('aria-label') == 'Checked'
+  def is_service_announcement_posted?
+    service_announcement_checkbox_label_element.when_visible Utils.medium_wait
+    sleep 2
+    service_announcement_checkbox_label_element.text == 'Posted'
   end
 
-  def toggle_publish_service_alert
-    wait_for_update_and_click publish_service_alert_checkbox_element
+  # Updates service announcement without touching the 'Post' checkbox
+  # @param announcement [String]
+  def update_service_announcement(announcement)
+    wait_for_element_and_type(update_service_announcement_input_element, '')
+    wait_for_element_and_type(update_service_announcement_input_element, announcement)
+    wait_for_update_and_click update_service_announcement_button_element
+  end
+
+  # Checks or un-checks the service announcement "Post" checkbox
+  def toggle_service_announcement_checkbox
+    wait_until(Utils.medium_wait) { service_announcement_checkbox_label_element.text.include? 'Post' }
+    js_click post_service_announcement_checkbox_element
+    # Wait for the checkbox to come back, indicating end of transaction
+    sleep 2
+    service_announcement_checkbox_label_element.when_present Utils.medium_wait
+  end
+
+  # Posts service announcement
+  def post_service_announcement
+    unless is_service_announcement_posted?
+      toggle_service_announcement_checkbox
+    end
+    wait_until(Utils.medium_wait) { service_announcement_checkbox_label_element.text == 'Posted' }
+  end
+
+  # Unposts service announcement
+  def unpost_service_announcement
+    if is_service_announcement_posted?
+      toggle_service_announcement_checkbox
+    end
+    wait_until(Utils.medium_wait) { service_announcement_checkbox_label_element.text == 'Post' }
   end
 
 end
