@@ -178,6 +178,8 @@ describe 'BOAC' do
     it 'can be added from filtered cohort list view using select-all' do
       @filtered_page.load_cohort test.default_cohort
       @filtered_page.select_and_add_all_students_to_grp(all_students, group_1)
+      @group_page.load_page group_1
+      expect(@group_page.visible_sids.sort).to eql(group_1.members.map(&:sis_id).sort)
     end
 
     it 'can be added from filtered cohort list view using individual selections' do
@@ -186,12 +188,16 @@ describe 'BOAC' do
       visible_uids = @filtered_page.list_view_uids - group_uids
       test.cohort_members = test.cohort_members.select { |m| visible_uids.include? m.uid }
       @filtered_page.select_and_add_students_to_grp(test.cohort_members[0..-2], group_2)
+      @group_page.load_page group_2
+      expect(@group_page.visible_sids.sort).to eql(group_2.members.map(&:sis_id).sort)
       test.cohort_members.pop
     end
 
     it 'can be added on the student page' do
       @student_page.load_page test_student
       @student_page.add_student_to_grp(test_student, group_3)
+      @group_page.load_page group_3
+      expect(@group_page.visible_sids.sort).to eql(group_3.members.map(&:sis_id).sort)
     end
 
     it 'can be added on the bulk-add-SIDs page' do
@@ -227,30 +233,30 @@ describe 'BOAC' do
     it 'can be added on class page list view using select-all' do
       @class_page.load_page(@analytics_page.term_id(@term), @analytics_page.course_section_ccns(@course).first)
       @class_page.select_and_add_all_students_to_grp(all_students, group_5)
+      @group_page.load_page group_5
+      expect(@group_page.visible_sids.sort).to eql(group_5.members.map(&:sis_id).sort)
     end
 
     it 'can be added on class page list view using individual selections' do
       @student_page.load_page test_student
       @student_page.click_class_page_link(@analytics_page.term_id(@term), @analytics_page.course_section_ccns(@course).first)
       @class_page.select_and_add_students_to_grp([test_student], group_6)
+      @group_page.load_page group_6
+      expect(@group_page.visible_sids.sort).to eql(group_3.members.map(&:sis_id).sort)
     end
 
     it 'can be added on user search results using select-all' do
       @homepage.search test_student.sis_id
       @search_page.select_and_add_all_students_to_grp(all_students, group_7)
+      @group_page.load_page group_7
+      expect(@group_page.visible_sids.sort).to eql(group_7.members.map(&:sis_id).sort)
     end
 
     it 'can be added on user search results using individual selections' do
       @homepage.search test_student.sis_id
       @search_page.select_and_add_students_to_grp([test_student], group_8)
-    end
-
-    it 'is shown on the group list view page' do
-      @group_page.load_page group_1
-      @group_page.wait_for_student_list
-      @group_page.wait_until(Utils.short_wait, "Expected #{group_1.members.map(&:uid).sort}, but got #{@group_page.list_view_uids.sort}") do
-        @group_page.list_view_uids.sort == group_1.members.map(&:uid).sort
-      end
+      @group_page.load_page group_8
+      expect(@group_page.visible_sids.sort).to eql(group_8.members.map(&:sis_id).sort)
     end
 
     it 'is shown on the student page' do
@@ -264,11 +270,14 @@ describe 'BOAC' do
       student = group_2.members.last
       logger.info "Removing UID #{student.uid} from group '#{group_2.name}'"
       @group_page.remove_student_by_row_index(group_2, student)
+      expect(@group_page.visible_sids.sort).to eql(group_2.members.map(&:sis_id).sort)
     end
 
     it 'can be removed on the student page using the group checkbox' do
       @student_page.load_page group_1.members.last
       @student_page.remove_student_from_grp(group_1.members.last, group_1)
+      @group_page.load_page group_1
+      expect(@group_page.visible_sids.sort).to eql(group_1.members.map(&:sis_id).sort)
     end
   end
 
@@ -295,7 +304,7 @@ describe 'BOAC' do
       @group_page.click_add_students_button
       @group_page.enter_sid_list non_dept_student.sis_id
       @group_page.click_add_sids_to_group_button
-      expect(@group_page.list_view_sids).not_to include(non_dept_student.sis_id)
+      expect(@group_page.visible_sids).not_to include(non_dept_student.sis_id)
     end
 
     it 'allows the user to add large sets of SIDs' do

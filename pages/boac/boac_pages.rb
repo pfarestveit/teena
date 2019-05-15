@@ -95,8 +95,8 @@ module BOACPages
   def wait_for_sidebar_group_member_count(group)
     logger.debug "Waiting for group #{group.name} member count of #{group.members.length}"
     wait_until(Utils.short_wait) do
-      el = span_element(xpath: "//div[@class=\"sidebar-row-link\"][contains(.,\"#{group.name}\")]//span[@class=\"sr-only\"]")
-      (el && el.text.delete(' students').chomp) == group.members.length.to_s
+      el = span_element(xpath: "//div[contains(@class, \"sidebar-row-link\")][contains(.,\"#{group.name}\")]//span[@class=\"sr-only\"]")
+      el.exists? && el.text.delete(' students').chomp == group.members.length.to_s
     end
   end
 
@@ -115,7 +115,7 @@ module BOACPages
   link(:team_list_link, id: 'sidebar-teams-link')
   link(:intensive_cohort_link, text: 'Intensive Students')
   link(:inactive_cohort_link, text: 'Inactive Students')
-  elements(:filtered_cohort_link, :link, xpath: '//div[@class="sidebar-row-link"]//a[contains(@id,"sidebar-filtered-cohort")][contains(@href,"/cohort/")]')
+  elements(:filtered_cohort_link, :link, xpath: '//div[contains(@class,"sidebar-row-link")]//a[contains(@id,"sidebar-filtered-cohort")][contains(@href,"/cohort/")]')
   div(:dupe_filtered_name_msg, xpath: '//div[text()="You have an existing cohort with this name. Please choose a different name."]')
 
   # Clicks the button to create a new custom cohort
