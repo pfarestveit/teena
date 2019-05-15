@@ -131,16 +131,20 @@ describe 'An admin using BOAC' do
 
     # TODO - it('can authenticate as one of the authorized users')
 
-    it('can update a Service Alert without posting it') do
+    it('can update a Service Alert') do
       @admin_page.load_page
-      @admin_page.update_service_alert_input_element.when_present Utils.medium_wait
-      if @admin_page.publish_service_alert_checked?
-        # Turn off service alert
-        @admin_page.toggle_publish_service_alert
-      end
-      @admin_page.wait_for_element_and_type(@admin_page.update_service_alert_input_element, "Baby Jane's in Acapulco, we are flyin' down to Rio (#{test.id})")
-      @admin_page.wait_for_update_and_click(@admin_page.update_service_alert_button)
+      @admin_page.unpost_service_announcement
+      expect(@admin_page.is_service_announcement_posted?).to be false
+
+      announcement = "Sentimental gentle wind, blowing through my life again (#{test.id})"
+      @admin_page.update_service_announcement(announcement)
+
+      # Verify announcement has not been posted
       expect(@admin_page.service_announcement_banner_element.exists?).to be false
+      # Next, post the announcement
+      @admin_page.post_service_announcement
+      @admin_page.service_announcement_banner_element.when_present Utils.medium_wait
+      expect(@admin_page.service_announcement_banner_element.text).to eql announcement
     end
 
   end

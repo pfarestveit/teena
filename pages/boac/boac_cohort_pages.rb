@@ -93,7 +93,7 @@ module BOACCohortPages
 
   # SORTING
 
-  select_list(:cohort_sort_select, id: 'sort-students-by')
+  select_list(:cohort_sort_select, id: 'students-sort-by')
 
   # Sorts cohort search results by a given option
   # @param option [String]
