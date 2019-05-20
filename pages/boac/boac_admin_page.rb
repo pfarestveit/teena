@@ -12,7 +12,7 @@ class BOACAdminPage
   h2(:status_heading, :id => 'system-status-header')
   h2(:dept_users_section, :id => 'dept-users-section')
   h2(:edit_service_announcement, :id => 'edit-service-announcement')
-  text_area(:update_service_announcement_input, id: 'textarea-update-service-announcement')
+  elements(:update_service_announcement, :text_area, xpath: '//div[@role="textbox"]')
   button(:update_service_announcement_button, id: 'button-update-service-announcement')
   span(:service_announcement_banner, id: 'service-announcement-banner')
   span(:service_announcement_checkbox_label, id: 'checkbox-service-announcement-label')
@@ -59,8 +59,8 @@ class BOACAdminPage
   # Updates service announcement without touching the 'Post' checkbox
   # @param announcement [String]
   def update_service_announcement(announcement)
-    wait_for_element_and_type(update_service_announcement_input_element, '')
-    wait_for_element_and_type(update_service_announcement_input_element, announcement)
+    service_announcement_textbox = update_service_announcement_elements[0]
+    wait_for_textbox_and_type(service_announcement_textbox, announcement, 200)
     wait_for_update_and_click update_service_announcement_button_element
   end
 

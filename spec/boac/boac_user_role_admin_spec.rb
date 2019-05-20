@@ -135,8 +135,13 @@ describe 'An admin using BOAC' do
       @admin_page.load_page
       @admin_page.unpost_service_announcement
       expect(@admin_page.is_service_announcement_posted?).to be false
-
-      announcement = "Sentimental gentle wind, blowing through my life again (#{test.id})"
+      lyrics = [
+          'We are all of us in the gutter but some of us are looking at the stars',
+          'Sentimental gentle wind, blowing through my life again',
+          'For this is the season of catching the vapors',
+          'Your hair is beautiful. Tonight, make it magnificent!'
+      ]
+      announcement = "#{lyrics[rand(0..3)]} (#{test.id})"
       @admin_page.update_service_announcement(announcement)
 
       # Verify announcement has not been posted
