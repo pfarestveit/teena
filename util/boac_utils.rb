@@ -303,7 +303,6 @@ class BOACUtils < Utils
         :subject => r['subject'],
         :body => r['body'].gsub(/<("[^"]*"|'[^']*'|[^'">])*>/, '').gsub('&nbsp;', ''),
         :advisor => BOACUser.new(advisor_data),
-        # TODO - :topics,
         :created_date => Time.parse(r['created_at'].to_s).utc.localtime,
         :updated_date => Time.parse(r['updated_at'].to_s).utc.localtime,
         :deleted_date => (Time.parse(r['deleted_at'].to_s) if r['deleted_at'])
@@ -318,6 +317,11 @@ class BOACUtils < Utils
         Attachment.new({:id => a['id'], :file_name => visible_file_name, :deleted_at => a['deleted_at']})
       end
       note_data.merge!(:attachments => attachments)
+
+      topic_query = "SELECT topic FROM note_topics WHERE note_id = #{note_data[:id]};"
+      topic_results = Utils.query_pg_db(boac_db_credentials, topic_query)
+      topics = topic_results.map { |t| t['topic'] }
+      note_data.merge!(:topics => topics)
     end
 
     notes_data.map { |d| Note.new d }

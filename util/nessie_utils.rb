@@ -38,6 +38,10 @@ class NessieUtils < Utils
     @config['include_l_and_s']
   end
 
+  def self.include_asc_notes?
+    @config['include_asc_notes']
+  end
+
   # DATABASE - ASSIGNMENTS
 
   # Returns the assignments associated with a user in a course site
@@ -126,7 +130,7 @@ class NessieUtils < Utils
     # Find students served by more than one department and merge their attributes into a new user
     all_students = asc_students + coe_students + physics_students
     all_students = all_students + l_and_s_students if include_l_and_s?
-    logger.info "There are #{asc_students.length} ASC students, #{coe_students.length} CoE students, #{l_and_s_students.length + ' L&S students,' if include_l_and_s?}
+    logger.info "There are #{asc_students.length} ASC students, #{coe_students.length} CoE students, #{l_and_s_students.length.to_s + ' L&S students,' if include_l_and_s?}
                  and #{physics_students.length} Physics students, for a total of #{all_students.length}"
     merged_students = []
     all_students.group_by { |s| s.uid }.map do |k,v|
@@ -387,10 +391,37 @@ class NessieUtils < Utils
     (data = parse_stored_searchable_data) ? data : get_and_store_searchable_data(students)
   end
 
+  def self.get_asc_notes(student)
+    query = "SELECT asc_advising_notes.advising_notes.id AS id,
+                    asc_advising_notes.advising_notes.advisor_uid AS advisor_uid,
+                    asc_advising_notes.advising_notes.advisor_first_name AS advisor_first_name,
+                    asc_advising_notes.advising_notes.advisor_last_name AS advisor_last_name,
+                    asc_advising_notes.advising_notes.created_at AS created_date,
+                    asc_advising_notes.advising_notes.updated_at AS updated_date,
+                    asc_advising_notes.advising_note_topics.topic AS topic
+             FROM asc_advising_notes.advising_notes
+             LEFT JOIN asc_advising_notes.advising_note_topics
+               ON asc_advising_notes.advising_notes.id = asc_advising_notes.advising_note_topics.id
+             WHERE asc_advising_notes.advising_notes.sid = '#{student.sis_id}';"
+
+    results = query_redshift_db(nessie_db_credentials, query)
+    notes_data = results.group_by { |h1| h1['id'] }.map do |k,v|
+      {
+        :id => k,
+        :advisor => BOACUser.new({:uid => v[0]['advisor_uid'], :first_name => "#{v[0]['advisor_first_name']}", :last_name => "#{v[0]['advisor_last_name']}"}),
+        :created_date => Time.parse(v[0]['created_date'].to_s).utc.localtime,
+        :updated_date => Time.parse(v[0]['updated_date'].to_s).utc.localtime,
+        :topics => (v.map { |t| t['topic'].upcase if t['topic'] }).compact.sort
+      }
+    end
+
+    notes_data.map { |d| Note.new d }
+  end
+
   # Returns legacy advising notes associated with a given student
   # @param student [BOACUser]
   # @return [Array<Note>]
-  def self.get_legacy_notes(student)
+  def self.get_sis_notes(student)
     query = "SELECT boac_advising_notes.advising_notes.id AS id,
                     boac_advising_notes.advising_notes.note_category AS category,
                     boac_advising_notes.advising_notes.note_subcategory AS subcategory,
@@ -426,13 +457,17 @@ class NessieUtils < Utils
         end
       end
       attachments = attachment_data.compact.uniq.map { |d| Attachment.new d }
+
+      advisor_uid = v[0]['advisor_uid']
+      created_date = v[0]['created_date']
+      updated_date = (advisor_uid == 'UCBCONVERSION') ? created_date : v[0]['updated_date']
       {
         :id => k,
         :body => body,
         :source_body_empty => source_body_empty,
-        :advisor => BOACUser.new({:uid => v[0]['advisor_uid']}),
-        :created_date => Time.parse(v[0]['created_date'].to_s).utc.localtime,
-        :updated_date => Time.parse(v[0]['updated_date'].to_s).utc.localtime,
+        :advisor => BOACUser.new({:uid => advisor_uid}),
+        :created_date => Time.parse(created_date.to_s).utc.localtime,
+        :updated_date => Time.parse(updated_date.to_s).utc.localtime,
         :topics => (v.map { |t| t['topic'].upcase if t['topic'] }).compact.sort,
         :attachments => attachments
       }
