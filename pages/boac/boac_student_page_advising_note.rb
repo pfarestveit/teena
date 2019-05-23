@@ -187,6 +187,7 @@ module BOACStudentPageAdvisingNote
     advisor_role_el = span_element(id: "note-#{note.id}-author-role")
     advisor_dept_els = span_elements(xpath: "//span[contains(@id, 'note-#{note.id}-author-dept-')]")
     topic_els = topic_elements.select { |el| el.attribute('id').include? "note-#{note.id}-topic-" }
+    topic_remove_btn_els = topic_remove_btn_elements.select { |el| el.attribute('id').include? "remove-note-#{note.id}-topic" }
     created_el = div_element(id: "expanded-note-#{note.id}-created-at")
     updated_el = div_element(id: "expanded-note-#{note.id}-updated-at")
     permalink_el = link_element(id: "advising-note-permalink-#{note.id}")
@@ -203,6 +204,7 @@ module BOACStudentPageAdvisingNote
       :advisor_role => (advisor_role_el.text if advisor_role_el.exists?),
       :advisor_depts => advisor_dept_els.map(&:text).sort,
       :topics => topic_els.map(&:text).sort,
+      :remove_topics_btns => topic_remove_btn_els,
       :attachments => (note_attachment_els(note).map { |el| el.attribute('innerText').strip }).sort,
       :created_date => (created_el.text.strip.gsub(/\s+/, ' ') if created_el.exists?),
       :updated_date => (updated_el.text.strip.gsub(/\s+/, ' ') if updated_el.exists?),
@@ -230,7 +232,11 @@ module BOACStudentPageAdvisingNote
     wait_until(1, 'Expected non-blank advisor name') { !visible_data[:advisor].empty? }
     wait_until(1, 'Expected non-blank advisor role') { !visible_data[:advisor_role].empty? }
     wait_until(1, "Expected '#{note.advisor.depts}', got #{visible_data[:advisor_depts]}") { visible_data[:advisor_depts] == note.advisor.depts }
-    # TODO - wait_until(1, "Expected '#{note.topics}', got #{visible_data[:topics]}") { visible_data[:topics] == note.topics }
+
+    # Topics
+    note_topics = (note.topics.map { |t| t.name.upcase }).sort
+    wait_until(1, "Expected '#{note_topics}', got #{visible_data[:topics]}") { visible_data[:topics] == note_topics }
+    wait_until(1, "Expected no remove-topic buttons, got #{visible_data[:remove_topics_btns].length}") { visible_data[:remove_topics_btns].length.zero? }
 
     # Attachments
     non_deleted_attachments = note.attachments.reject &:deleted_at
@@ -282,6 +288,12 @@ module BOACStudentPageAdvisingNote
     wait_for_update_and_click edit_note_button(note)
   end
 
+  # Clicks the advanced options button to expose all note features
+  def show_adv_note_options
+    logger.debug 'Clicking the Advanced Note Options button'
+    wait_for_update_and_click adv_note_options_button_element unless add_topic_button?
+  end
+
   # Obtains the ID of a new note and sets current created and updated dates. Fails if the note ID is not available within a defined
   # timeout
   # @param note [Note]
@@ -289,8 +301,10 @@ module BOACStudentPageAdvisingNote
   def set_new_note_id(note)
     new_note_subject_input_element.when_not_visible Utils.short_wait
     id = ''
-    wait_until(Utils.short_wait) { (id = BOACUtils.get_note_id_by_subject note) }
+    start_time = Time.now
+    wait_until(10) { (id = BOACUtils.get_note_id_by_subject note) }
     logger.debug "Note ID is #{id}"
+    logger.warn "Note was created in #{Time.now - start_time} seconds"
     note.created_date = note.updated_date = Time.now
     id
   rescue
@@ -298,14 +312,16 @@ module BOACStudentPageAdvisingNote
     fail
   end
 
-  # Combines methods to create a note with subject, body, attachments, ID, and created/updated dates
+  # Combines methods to create a note with subject, body, attachments, topics, ID, and created/updated dates
   # @param note [Note]
+  # @param topics [Array<Topic>]
   # @param attachments [Array<Attachment>]
-  def create_note(note, attachments=nil)
+  def create_note(note, topics, attachments)
     click_create_new_note
     enter_new_note_subject note
     enter_note_body note
-    add_attachments_to_new_note(note, attachments) if attachments
+    add_attachments_to_new_note(note, attachments)
+    add_topics(note, topics)
     click_save_new_note
     set_new_note_id note
   end
@@ -363,6 +379,81 @@ module BOACStudentPageAdvisingNote
     wait_for_element_and_type(note_body_text_area_elements[0], note.body)
   end
 
+  # Topics
+
+  text_area(:topic_input, id: 'add-note-topic')
+  select_list(:add_topic_select, id: 'add-topic-select-list')
+  elements(:topic_option, :option, xpath: '//select[@id="add-topic-select-list"]/option')
+  button(:add_topic_button, id: 'add-topic-button')
+  elements(:topic_remove_btn, :button, xpath: '//li[contains(@id, "remove-note-")]')
+
+  # Returns all the canned note topic options shown on the new or edit note UI
+  # @return [Array<String>]
+  def topic_options
+    wait_for_update_and_click add_topic_select_element
+    wait_until(1) { add_topic_select_element.options.any? }
+    (topic_option_elements.map { |el| el.attribute 'value' }).delete_if &:empty?
+  end
+
+  # Returns the XPath to a topic pill on an unsaved note
+  # @param topic [Topic]
+  # @return [String]
+  def topic_xpath_unsaved_note(topic)
+    "//li[contains(@id, \"note-topic\")][contains(., \"#{topic.name}\")]"
+  end
+
+  # Returns the XPath to a topic pill on a saved note
+  # @param note [Note]
+  # @param topic [Topic]
+  # @return [String]
+  def topic_xpath_saved_note(note, topic)
+    "//li[contains(@id, \"note-#{note.id}-topic\")][contains(., \"#{topic.name}\")]"
+  end
+
+  # Returns a topic pill for a note, saved or unsaved
+  # @param note [Note]
+  # @param topic [Topic]
+  # @return [PageObject::Element::ListItem]
+  def topic_pill(note, topic)
+    list_item_element(xpath: (note.id ? topic_xpath_saved_note(note, topic) : topic_xpath_unsaved_note(topic)))
+  end
+
+  # Returns a topic remove button for a note, saved or unsaved
+  # @param note [Note]
+  # @param topic [Topic]
+  # @return [PageObject::Element::Button]
+  def topic_remove_button(note, topic)
+    button_element(xpath: "#{note.id ? topic_xpath_saved_note(note, topic) : topic_xpath_unsaved_note(topic)}//button")
+  end
+
+  # Adds topics to a new or existing note.
+  # @param note [Note]
+  # @param topics [Array<Topic>]
+  def add_topics(note, topics)
+    logger.info "Adding topics #{topics.map &:name} to note ID '#{note.id}'"
+    show_adv_note_options unless topic_input?
+    topics.each do |topic|
+      logger.debug "Adding topic '#{topic.name}'"
+      wait_for_element_and_select_js(add_topic_select_element, topic.name)
+      wait_for_update_and_click add_topic_button_element
+      topic_pill(note, topic).when_visible Utils.short_wait
+      note.topics << topic
+    end
+  end
+
+  # Removes topics from a new or existing note
+  # @param note [Note]
+  # @param topics [Array<Topic>]
+  def remove_topics(note, topics)
+    logger.info "Removing topics #{topics.map &:name} from note ID '#{note.id}'"
+    topics.each do |topic|
+      logger.debug "Removing topic '#{topic.name}'"
+      wait_for_update_and_click topic_remove_button(note, topic)
+      topic_pill(note, topic).when_not_visible Utils.short_wait
+      note.topics.delete topic
+    end
+  end
+
   # Attachments
 
   button(:adv_note_options_button, id: 'btn-to-advanced-note-options')
@@ -395,9 +486,9 @@ module BOACStudentPageAdvisingNote
   # @param note [Note]
   # @param attachments [Array<Attachment>]
   def add_attachments_to_new_note(note, attachments)
+    show_adv_note_options
     attachments.each do |attach|
       logger.debug "Adding attachment '#{attach.file_name}' to an unsaved note"
-      wait_for_update_and_click adv_note_options_button_element unless new_note_attach_input?
       new_note_attach_input_element.send_keys Utils.asset_file_path(attach.file_name)
       new_note_attachment_delete_button(attach).when_present Utils.short_wait
       sleep Utils.click_wait
@@ -428,6 +519,7 @@ module BOACStudentPageAdvisingNote
       wait_for_update_and_click new_note_attachment_delete_button(attach)
       new_note_attachment_delete_button(attach).when_not_visible Utils.short_wait
       note.attachments.delete attach
+      note.updated_date = Time.now
     end
   end
 
@@ -442,6 +534,7 @@ module BOACStudentPageAdvisingNote
       existing_note_attachment_delete_button(note, attach).when_not_visible Utils.short_wait
       note.attachments.delete attach
       attach.deleted_at = Time.now
+      note.updated_date = Time.now
     end
   end
 

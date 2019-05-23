@@ -26,8 +26,15 @@ else
   notes << (note_2 = Note.new({:advisor => test.advisor}))
   notes << (note_3 = Note.new({:advisor => test.advisor}))
   notes << (note_4 = Note.new({:advisor => test.advisor}))
-  notes << (note_6 = Note.new({:advisor => test.advisor}))
   notes << (note_5 = Note.new({:advisor => test.advisor}))
+  notes << (note_6 = Note.new({:advisor => test.advisor}))
+  notes << (note_7 = Note.new({:advisor => test.advisor}))
+  notes << (note_8 = Note.new({:advisor => test.advisor}))
+
+  # Get the largest attachments for testing max attachments uploads
+  attachments_by_size = test.attachments.sort_by(&:file_size).delete_if { |a| a.file_size > 20000000 }
+  big_attachments = attachments_by_size.last 5
+
   deleted_attachments = []
 
   describe 'A BOAC', order: :defined do
@@ -76,21 +83,21 @@ else
 
         it 'can create a note with a subject' do
           note_1.subject = "Note 1 subject #{Utils.get_test_id}"
-          @student_page.create_note note_1
+          @student_page.create_note(note_1, [], [])
           @student_page.verify_note note_1
         end
 
         it 'can create a note with a subject and a body' do
           note_2.subject = "Note 2 subject #{Utils.get_test_id}"
           note_2.body = "Note 2 body #{test.id}" unless "#{@driver.browser}" == 'firefox'
-          @student_page.create_note note_2
+          @student_page.create_note(note_2, [], [])
           @student_page.verify_note note_2
         end
 
         it 'can create a long note with special characters' do
           note_3.subject = "Σημείωση θέμα 3 #{Utils.get_test_id}"
           note_3.body = 'ノート本体4' * 100 unless "#{@driver.browser}" == 'firefox'
-          @student_page.create_note note_3
+          @student_page.create_note(note_3, [], [])
           @student_page.verify_note note_3
         end
 
@@ -107,7 +114,7 @@ else
 
         it 'can create a note with attachments' do
           note_5.subject = "Note 5 subject #{Utils.get_test_id}"
-          @student_page.create_note(note_5, test.attachments[0..1])
+          @student_page.create_note(note_5, [], test.attachments[0..1])
           @student_page.verify_note note_5
         end
 
@@ -115,7 +122,7 @@ else
           note_6.subject = "Note 6 subject #{Utils.get_test_id}"
           @student_page.click_create_new_note
           @student_page.enter_new_note_subject note_6
-          @student_page.add_attachments_to_new_note(note_6, test.attachments[0..4])
+          @student_page.add_attachments_to_new_note(note_6, big_attachments)
           @student_page.existing_note_attachment_input(note_6).when_not_visible 1
           @student_page.click_save_new_note
           @student_page.set_new_note_id note_6
@@ -125,19 +132,47 @@ else
         end
 
         it 'cannot create a note with an individual attachment larger than 20MB' do
-          big_attachment = test.attachments.find { |a| a.file_size > 20000000 }
+          too_big_attachment = test.attachments.find { |a| a.file_size > 20000000 }
           @student_page.click_create_new_note
-          @student_page.wait_for_update_and_click @student_page.adv_note_options_button_element
+          @student_page.show_adv_note_options
           @student_page.new_note_attach_input_element.when_present 1
-          @student_page.new_note_attach_input_element.send_keys Utils.asset_file_path(big_attachment.file_name)
+          @student_page.new_note_attach_input_element.send_keys Utils.asset_file_path(too_big_attachment.file_name)
           @student_page.note_attachment_size_msg_element.when_visible Utils.short_wait
+        end
+
+        it 'can add and remove topics before saving' do
+          note_7.subject = "Note 7 subject #{Utils.get_test_id}"
+          note_topics = [Topic::COURSE_ADD, Topic::COURSE_DROP]
+          @student_page.load_page test_student
+          @student_page.click_create_new_note
+          @student_page.enter_new_note_subject note_7
+          @student_page.add_topics(note_7, note_topics)
+          @student_page.remove_topics(note_7, note_topics)
+          @student_page.click_save_new_note
+          @student_page.set_new_note_id note_7
+          @student_page.verify_note note_7
+        end
+
+        it 'is offered a list of note topics' do
+          @student_page.click_create_new_note
+          @student_page.show_adv_note_options
+          @student_page.wait_until(20, "Expected #{Topic::TOPICS.map(&:name)}, got #{@student_page.topic_options}") do
+            logger.debug "Visible options are #{@student_page.topic_options}"
+            @student_page.topic_options == Topic::TOPICS.map(&:name)
+          end
+        end
+
+        it 'can create a note with topics' do
+          note_8.subject = "Note 8 subject #{Utils.get_test_id}"
+          @student_page.load_page test_student
+          @student_page.create_note(note_8, [Topic::EAP, Topic::SAT_ACAD_PROGRESS_APPEAL, Topic::PASS_NO_PASS, Topic::PROBATION], [])
+          @student_page.verify_note note_8
         end
       end
 
       context 'searching for a newly created note' do
 
         before(:all) do
-          @student_page.click_cancel_new_note
           @student_page.expand_search_options
           @student_page.uncheck_include_students_cbx
           @student_page.uncheck_include_classes_cbx
@@ -246,6 +281,24 @@ else
           @student_page.verify_note note_5
         end
 
+        it 'can add topics' do
+          @student_page.expand_note note_7
+          @student_page.click_edit_note_button note_7
+          @student_page.add_topics(note_7, [Topic::LATE_ENROLLMENT, Topic::RETROACTIVE_GRADING_OPTION])
+          @student_page.click_save_note_edit
+          note_7.updated_date = Time.now
+          @student_page.verify_note note_7
+        end
+
+        it 'can remove topics' do
+          @student_page.expand_note note_8
+          @student_page.click_edit_note_button note_8
+          @student_page.remove_topics(note_8, [Topic::EAP, Topic::PASS_NO_PASS])
+          @student_page.click_save_note_edit
+          note_8.updated_date = Time.now
+          @student_page.verify_note note_8
+        end
+
         it 'can only create or edit one note at a time' do
           @student_page.expand_note note_1
           @student_page.edit_note_button(note_1).when_visible 1
@@ -283,10 +336,10 @@ else
         end
 
         it 'cannot add an individual attachment larger than 20MB' do
-          big_attachment = test.attachments.find { |a| a.file_size > 20000000 }
+          too_big_attachment = test.attachments.find { |a| a.file_size > 20000000 }
           @student_page.expand_note note_2
           @student_page.existing_note_attachment_input(note_2).when_present 1
-          @student_page.existing_note_attachment_input(note_2).send_keys Utils.asset_file_path(big_attachment.file_name)
+          @student_page.existing_note_attachment_input(note_2).send_keys Utils.asset_file_path(too_big_attachment.file_name)
           @student_page.note_attachment_size_msg_element.when_visible Utils.short_wait
         end
       end

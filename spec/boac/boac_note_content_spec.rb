@@ -13,8 +13,8 @@ describe 'BOAC' do
     advisor_link_tested = false
     dept_uids = test.dept_students.map &:uid
 
-    legacy_notes_data_heading = %w(UID SID NoteId Created Updated CreatedBy Advisor AdvisorRole AdvisorDepts HasBody Topics Attachments)
-    legacy_notes_data = Utils.create_test_output_csv('boac-legacy-notes.csv', legacy_notes_data_heading)
+    notes_data_heading = %w(UID SID NoteId Created Updated CreatedBy Advisor AdvisorRole AdvisorDepts HasBody Topics Attachments)
+    notes_data = Utils.create_test_output_csv('boac-legacy-notes.csv', notes_data_heading)
 
     @driver = Utils.launch_browser
     @homepage = BOACHomePage.new @driver
@@ -27,12 +27,13 @@ describe 'BOAC' do
 
       begin
         @student_page.load_page student
-        expected_nessie_notes = NessieUtils.get_legacy_notes student
-        expected_boa_notes = BOACUtils.get_student_notes student
-        expected_notes = expected_nessie_notes + expected_boa_notes
-        logger.warn "UID #{student.uid} has #{expected_nessie_notes.length} Nessie notes and #{expected_boa_notes.length} BOA notes"
+        expected_asc_notes = NessieUtils.get_asc_notes student if NessieUtils.include_asc_notes?
+        expected_boa_notes = BOACUtils.get_student_notes(student).delete_if &:deleted_date
+        expected_sis_notes = NessieUtils.get_sis_notes student
+        expected_notes = expected_sis_notes + expected_boa_notes + (expected_asc_notes if expected_asc_notes)
+        logger.warn "UID #{student.uid} has #{expected_sis_notes.length} Nessie notes and #{expected_boa_notes.length} BOA notes #{'and ' + expected_asc_notes.length.to_s + ' ASC notes' if expected_asc_notes}"
 
-        if expected_nessie_notes.any?
+        if expected_sis_notes.any?
           students_with_notes << student
           @student_page.show_notes
 
@@ -66,14 +67,19 @@ describe 'BOAC' do
               @student_page.expand_note note
               visible_expanded_note_data = @student_page.visible_expanded_note_data note
 
-              # Note subject and body (NB: migrated notes have no subject, so the body is shown as the subject rather than as the body)
+              # Note subject and body (NB: migrated SIS notes have no subject, so the body is shown as the subject; migrated ASC notes have no subject
+              # or body, so the general topic is shown as the subject)
 
               if note.subject
                 it("shows the subject on #{test_case}") { expect(visible_collapsed_note_data[:subject]).to eql(note.subject) }
-                it("shows the body on #{test_case}") { expect(visible_expanded_note_data[:body]).to eql(note.body) }
-              else
+                it("shows the body on #{test_case}") { expect(visible_expanded_note_data[:body].strip).to eql(note.body) }
+              elsif expected_sis_notes.include? note
                 it("shows the body as the subject on #{test_case}") { expect(visible_collapsed_note_data[:subject].gsub(/\W/, '')).to eql(note.body.gsub(/\W/, '')) }
-                it("shows no body on #{test_case}") { expect(visible_expanded_note_data[:body]).to be_empty }
+                it("shows no body on #{test_case}") { expect(visible_expanded_note_data[:body].strip).to be_empty }
+              else
+                expected_subj = "StudentmetwithAthleticStudyCenteradvisor#{note.advisor.first_name}#{note.advisor.last_name}#{( + 'todiscuss' + note.topics.first.capitalize) if note.topics.any?}"
+                it("shows the advisor and topic as the subject on #{test_case}") { expect(visible_collapsed_note_data[:subject].gsub(/\W/, '')).to eql(expected_subj) }
+                it("shows no body on #{test_case}") { expect(visible_expanded_note_data[:body].strip).to be_empty }
               end
 
               # Note advisor
@@ -94,7 +100,7 @@ describe 'BOAC' do
               # Note topics
 
               note.topics.any? ?
-                  (it("shows the right topics on #{test_case}") { expect(visible_expanded_note_data[:topics]).to eql(note.topics) }) :
+                  (it("shows the right topics on #{test_case}") { expect(visible_expanded_note_data[:topics]).to eql(note.topics.map &:upcase) }) :
                   (it("shows no topics on #{test_case}") { expect(visible_expanded_note_data[:topics]).to be_empty })
 
               # Note dates
@@ -154,8 +160,13 @@ describe 'BOAC' do
 
               # Permalink
 
+              logger.info "Checking permalink: '#{visible_expanded_note_data[:permalink_url]}'"
+              @homepage.load_page
               @student_page.navigate_to visible_expanded_note_data[:permalink_url]
-              permalink_works = @student_page.wait_until(Utils.short_wait) { @student_page.note_expanded? note }
+              permalink_works = @student_page.verify_block do
+                @student_page.wait_until(Utils.short_wait) { @student_page.note_expanded? note }
+              end
+
               it("offers a permalink on #{test_case}") { expect(permalink_works).to be true }
 
             rescue => e
@@ -165,14 +176,14 @@ describe 'BOAC' do
               row = [student.uid, student.sis_id, note.id, note.created_date, note.updated_date, note.advisor.uid, (visible_expanded_note_data[:advisor] if visible_expanded_note_data),
                      (visible_expanded_note_data[:advisor_role] if visible_expanded_note_data), (visible_expanded_note_data[:advisor_depts] if visible_expanded_note_data),
                      !note.body.nil?, note.topics.length, note.attachments.length]
-              Utils.add_csv_row(legacy_notes_data, row)
+              Utils.add_csv_row(notes_data, row)
             end
           end
 
           search_string_word_count = BOACUtils.config['notes_search_word_count']
 
           expected_notes.each do |note|
-            if note.source_body_empty || note.body.empty?
+            if note.source_body_empty || !note.body || note.body.empty?
               logger.warn "Skipping search test for UID #{student.uid} note ID #{note.id} because the source note body was empty and too many results will be returned."
 
             else
