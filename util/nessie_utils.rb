@@ -466,8 +466,9 @@ class NessieUtils < Utils
         :body => body,
         :source_body_empty => source_body_empty,
         :advisor => BOACUser.new({:uid => advisor_uid}),
-        :created_date => Time.parse(created_date.to_s).utc.localtime,
-        :updated_date => Time.parse(updated_date.to_s).utc.localtime,
+        # Subtract 7 hours from the timestamp regardless of DST due to BOAC-1995
+        :created_date => (Time.parse(created_date.to_s) - 25200),
+        :updated_date => (Time.parse(updated_date.to_s) - 25200),
         :topics => (v.map { |t| t['topic'].upcase if t['topic'] }).compact.sort,
         :attachments => attachments
       }

@@ -320,10 +320,10 @@ class BOACTestConfig < TestConfig
 
   # Config for user search testing
   # @param all_students [Array<BOACUser>]
-  def user_search(all_students)
+  def search(all_students)
     set_global_configs all_students
     set_default_cohort
-    set_max_cohort_members CONFIG['user_search_max_users']
+    set_max_cohort_members CONFIG['search_max_users']
   end
 
 end

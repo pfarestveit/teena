@@ -78,13 +78,13 @@ describe 'A Physics advisor using BOAC' do
   context 'performing a user search' do
 
     it 'sees no non-Physics students in search results' do
-      @search_page.search coe_only_students.first.sis_id
+      @search_page.search_non_note coe_only_students.first.sis_id
       @search_page.no_results_msg.when_visible Utils.short_wait
     end
 
     it 'sees overlapping Physics and ASC / CoE students in search results' do
       if overlap_students.first
-        @search_page.search overlap_students.first.sis_id
+        @search_page.search_non_note overlap_students.first.sis_id
         expect(@search_page.student_search_results_count).to eql(1)
       else
         logger.warn 'Skipping search for overlapping students cuz there ain\'t none'

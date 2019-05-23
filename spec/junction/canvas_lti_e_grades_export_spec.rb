@@ -289,7 +289,7 @@ describe 'bCourses E-Grades Export', order: :defined do
     before(:all) do
       [lead_ta, ta, designer, reader, student, waitlist, observer].each do |user|
         @course_add_user_page.load_embedded_tool(@driver, course)
-        @course_add_user_page.search(user.uid, 'CalNet UID')
+        @course_add_user_page.search_non_note(user.uid, 'CalNet UID')
         @course_add_user_page.add_user_by_uid(user, primary_section)
       end
     end

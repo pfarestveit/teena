@@ -106,16 +106,16 @@ describe 'BOAC' do
               # Note dates
 
               if updated_date_expected
-                expected_update_date_text = "Last updated on #{@student_page.expected_note_long_date_format note.updated_date}"
-                # TODO - it("shows update date #{expected_update_date_text} on expanded #{test_case}") { expect(visible_expanded_note_data[:updated_date]).to eql(expected_update_date_text) }
+                expected_update_date_text = @student_page.expected_note_long_date_format note.updated_date
+                it("shows update date #{expected_update_date_text} on expanded #{test_case}") { expect(visible_expanded_note_data[:updated_date]).to eql(expected_update_date_text) }
               else
                 it("shows no updated date #{note.updated_date} on expanded #{test_case}") { expect(visible_expanded_note_data[:updated_date]).to be_nil }
               end
 
               expected_create_date_text = (note.advisor.uid == 'UCBCONVERSION') ?
-                  "Last updated on #{@student_page.expected_note_short_date_format note.created_date}" :
-                  "Last updated on #{@student_page.expected_note_long_date_format note.created_date}"
-              # TODO - it("shows creation date #{expected_create_date_text} on expanded #{test_case}") { expect(visible_expanded_note_data[:created_date]).to eql(expected_create_date_text) }
+                  @student_page.expected_note_short_date_format(note.created_date) :
+                  @student_page.expected_note_long_date_format(note.created_date)
+              it("shows creation date #{expected_create_date_text} on expanded #{test_case}") { expect(visible_expanded_note_data[:created_date]).to eql(expected_create_date_text) }
 
               # Note attachments
 
@@ -125,7 +125,6 @@ describe 'BOAC' do
                 it("shows the right attachment file names on #{test_case}") { expect(visible_expanded_note_data[:attachments].sort).to eql(attachment_file_names.sort) }
 
                 non_deleted_attachments.each do |attach|
-                  identifier = attach.sis_file_name || attach.id
                   if attach.sis_file_name
                     has_delete_button = @student_page.delete_note_button(note).exists?
                     it("shows no delete button for imported #{test_case}") { expect(has_delete_button).to be false }
@@ -177,50 +176,6 @@ describe 'BOAC' do
                      (visible_expanded_note_data[:advisor_role] if visible_expanded_note_data), (visible_expanded_note_data[:advisor_depts] if visible_expanded_note_data),
                      !note.body.nil?, note.topics.length, note.attachments.length]
               Utils.add_csv_row(notes_data, row)
-            end
-          end
-
-          search_string_word_count = BOACUtils.config['notes_search_word_count']
-
-          expected_notes.each do |note|
-            if note.source_body_empty || !note.body || note.body.empty?
-              logger.warn "Skipping search test for UID #{student.uid} note ID #{note.id} because the source note body was empty and too many results will be returned."
-
-            else
-              body_words = note.body.split(' ')
-              body_words = (body_words.map { |w| w.split("\n") }).flatten
-              search_string = body_words[0..(search_string_word_count-1)].join(' ')
-
-              @student_page.search search_string
-
-              results_count = @search_results_page.note_results_count
-              it("returns results when searching with the first #{search_string_word_count} words in note ID #{note.id}") { expect(results_count).to be > 0 }
-
-              unless results_count.zero?
-
-                it("shows no more than 20 results when searching with the first #{search_string_word_count} words in note ID #{note.id}") { expect(results_count).to be <= 20 }
-
-                @search_results_page.wait_for_note_search_result_rows
-                visible_student_uids = @search_results_page.note_result_uids
-                it("returns only results for students in the advisor's department when searching with the first #{search_string_word_count} words in note ID #{note.id}") { expect(visible_student_uids - dept_uids).to be_empty }
-
-                student_result_returned = @search_results_page.note_link(note).exists?
-                unless results_count >= 20
-                  it("returns a result when searching with the first #{search_string_word_count} words in note ID #{note.id}") { expect(student_result_returned).to be true }
-                end
-
-                if student_result_returned
-                  result = @search_results_page.note_result(student, note)
-                  updated_date_expected = note.updated_date && note.updated_date != note.created_date && note.advisor.uid != 'UCBCONVERSION'
-                  expected_date = updated_date_expected ? note.updated_date : note.created_date
-                  expected_date_text = "#{expected_date.strftime('%b %-d, %Y')}"
-                  it("note search shows the student name for note #{note.id}") { expect(result[:student_name]).to eql(student.full_name) }
-                  it("note search shows the student SID for note #{note.id}") { expect(result[:student_sid]).to eql(student.sis_id) }
-                  it("note search shows a snippet of note #{note.id}") { expect(result[:snippet].gsub(/\W/, '')).to include(search_string.gsub(/\W/, '')) }
-                  # TODO it("note search shows the advisor name on note #{note.id}") { expect(result[:advisor_name]).not_to be_nil } unless note.advisor_uid == 'UCBCONVERSION'
-                  it("note search shows the most recent updated date on note #{note.id}") { expect(result[:date]).to eql(expected_date_text) }
-                end
-              end
             end
           end
 

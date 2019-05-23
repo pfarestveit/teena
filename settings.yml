@@ -67,7 +67,7 @@ boac:
   no_activity_alert_threshold: 14
   notes_search_word_count: 7
   sis_data_max_users: 100
-  user_search_max_users: 50
+  search_max_users: 20
 
 cal_net:
   base_url: https://auth-test.berkeley.edu

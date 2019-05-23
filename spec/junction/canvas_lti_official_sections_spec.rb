@@ -265,7 +265,7 @@ describe 'bCourses Official Sections tool' do
 
         # Check that sections present on Find a Person to Add tool are updated immediately
         @course_add_user_page.load_embedded_tool(@driver, site[:course])
-        @course_add_user_page.search(Utils.oski_uid, 'CalNet UID')
+        @course_add_user_page.search_non_note(Utils.oski_uid, 'CalNet UID')
         ttl_user_sections_with_adds = @course_add_user_page.verify_block do
           @course_add_user_page.wait_until(Utils.medium_wait) { @course_add_user_page.course_section_options.length == site[:sections].length }
         end
@@ -299,7 +299,7 @@ describe 'bCourses Official Sections tool' do
 
         # Check that sections present on Find a Person to Add tool are updated immediately
         @course_add_user_page.load_embedded_tool(@driver, site[:course])
-        @course_add_user_page.search(Utils.oski_uid, 'CalNet UID')
+        @course_add_user_page.search_non_note(Utils.oski_uid, 'CalNet UID')
         ttl_user_sections_with_deletes = @course_add_user_page.verify_block do
           @course_add_user_page.wait_until(Utils.medium_wait) { @course_add_user_page.course_section_options.length == site[:sections_for_site].length }
         end
@@ -324,7 +324,7 @@ describe 'bCourses Official Sections tool' do
           @canvas.stop_masquerading @driver
           [lead_ta, ta, designer, reader, observer, student, waitlist].each do |user|
             @course_add_user_page.load_embedded_tool(@driver, site[:course])
-            @course_add_user_page.search(user.uid, 'CalNet UID')
+            @course_add_user_page.search_non_note(user.uid, 'CalNet UID')
             @course_add_user_page.add_user_by_uid(user, site[:sections_for_site].first)
           end
 
