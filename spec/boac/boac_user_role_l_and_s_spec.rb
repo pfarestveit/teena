@@ -65,12 +65,12 @@ if NessieUtils.include_l_and_s?
     context 'when performing a user search' do
 
       it 'sees no non-L&S students in search results' do
-        @search_page.search asc_only_students.first.sis_id
+        @search_page.search_non_note asc_only_students.first.sis_id
         @search_page.no_results_msg.when_visible Utils.short_wait
       end
 
       it 'sees overlapping L&S and ASC students in search results' do
-        @search_page.search overlap_students.first.sis_id
+        @search_page.search_non_note overlap_students.first.sis_id
         expect(@search_page.student_search_results_count).to eql(1)
       end
     end

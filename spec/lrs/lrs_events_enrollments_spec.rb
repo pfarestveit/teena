@@ -51,7 +51,7 @@ describe 'Canvas enrollment events' do
     @canvas.masquerade_as(@driver, teachers[0], @course)
     @canvas.load_users_page @course
     @canvas.click_find_person_to_add @driver
-    @find_person_to_add.search(students[2].uid, 'CalNet UID')
+    @find_person_to_add.search_non_note(students[2].uid, 'CalNet UID')
     @find_person_to_add.add_user_by_uid(students[2], @section)
 
     # Teacher removes student via Canvas remove-user

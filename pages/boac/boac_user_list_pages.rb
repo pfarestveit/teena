@@ -31,15 +31,15 @@ module BOACUserListPages
   # @return [Hash]
   def user_row_data(driver, sid, cohort_xpath = nil)
     row_xpath = "#{cohort_xpath}//tr[contains(.,\"#{sid}\")]"
-    name_el = link_element(xpath: "#{row_xpath}//span[text()=\"student name\"]/following-sibling::a")
+    name_el = link_element(xpath: "#{row_xpath}//span[text()=\"Student name\"]/following-sibling::a")
     sid_el = span_element(xpath: "#{row_xpath}//span[text()=\"S I D\"]/following-sibling::span")
-    major_els = driver.find_elements(xpath: "#{row_xpath}//span[text()=\"major\"]/following-sibling::div")
-    term_units_el = div_element(xpath: "#{row_xpath}//span[text()=\"term units\"]/following-sibling::div")
-    cumul_units_el = div_element(xpath: "#{row_xpath}//span[text()=\"units completed\"]/following-sibling::div")
-    no_cumul_units_el = span_element(xpath: "#{row_xpath}//span[text()=\"units completed\"]/following-sibling::div/span")
+    major_els = driver.find_elements(xpath: "#{row_xpath}//span[text()=\"Major\"]/following-sibling::div")
+    term_units_el = div_element(xpath: "#{row_xpath}//span[text()=\"Term units\"]/following-sibling::div")
+    cumul_units_el = div_element(xpath: "#{row_xpath}//span[text()=\"Units completed\"]/following-sibling::div")
+    no_cumul_units_el = span_element(xpath: "#{row_xpath}//span[text()=\"Units completed\"]/following-sibling::div/span")
     gpa_el = div_element(xpath: "#{row_xpath}//span[text()=\"GPA\"]/following-sibling::div")
     no_gpa_el = span_element(xpath: "#{row_xpath}//span[text()=\"GPA\"]/following-sibling::div/span")
-    alerts_el = div_element(xpath: "#{row_xpath}//span[text()=\"issue count\"]/following-sibling::div")
+    alerts_el = div_element(xpath: "#{row_xpath}//span[text()=\"Issue count\"]/following-sibling::div")
     {
         :name => (name_el.text if name_el.exists?),
         :sid => (sid_el.text if sid_el.exists?),

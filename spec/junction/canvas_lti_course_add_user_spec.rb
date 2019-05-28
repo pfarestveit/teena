@@ -72,49 +72,49 @@ describe 'bCourses Find a Person to Add', order: :defined do
     before(:each) { @course_add_user_page.switch_to_canvas_iframe @driver unless @course_add_user_page.page_heading? }
 
     it 'allows the user to search by name' do
-      @course_add_user_page.search('Bear', 'Last Name, First Name')
+      @course_add_user_page.search_non_note('Bear', 'Last Name, First Name')
       @course_add_user_page.wait_until(Utils.medium_wait) { @course_add_user_page.name_results(@driver).include? 'Oski Bear' }
     end
 
     it 'notifies the user if a name search produces no results' do
-      @course_add_user_page.search('zyxwvu', 'Last Name, First Name')
+      @course_add_user_page.search_non_note('zyxwvu', 'Last Name, First Name')
       @course_add_user_page.no_results_msg_element.when_visible Utils.medium_wait
     end
 
     it 'limits the results of a name search to 20' do
-      @course_add_user_page.search('Smith', 'Last Name, First Name')
+      @course_add_user_page.search_non_note('Smith', 'Last Name, First Name')
       @course_add_user_page.wait_until(Utils.medium_wait) { @course_add_user_page.name_results(@driver).length == 20 }
       @course_add_user_page.too_many_results_msg_element.when_visible Utils.medium_wait
     end
 
     it 'allows the user to search by email and limits the results of an email search to 20' do
-      @course_add_user_page.search('smith@berkeley', 'Email')
+      @course_add_user_page.search_non_note('smith@berkeley', 'Email')
       @course_add_user_page.wait_until(Utils.medium_wait) { @course_add_user_page.email_results(@driver).length == 20 }
       @course_add_user_page.too_many_results_msg_element.when_visible Utils.medium_wait
     end
 
     it 'notifies the user if an email search produces no result' do
-      @course_add_user_page.search('foo@bar', 'Email')
+      @course_add_user_page.search_non_note('foo@bar', 'Email')
       @course_add_user_page.no_results_msg_element.when_visible Utils.medium_wait
     end
 
     it 'allows the user to search by UID' do
-      @course_add_user_page.search(Utils.oski_uid, 'CalNet UID')
+      @course_add_user_page.search_non_note(Utils.oski_uid, 'CalNet UID')
       @course_add_user_page.wait_until(Utils.medium_wait) { @course_add_user_page.uid_results(@driver).include? "#{Utils.oski_uid}" }
     end
 
     it 'notifies the user if a UID search produces no result' do
-      @course_add_user_page.search('12324', 'CalNet UID')
+      @course_add_user_page.search_non_note('12324', 'CalNet UID')
       @course_add_user_page.no_results_msg_element.when_visible Utils.medium_wait
     end
 
     it 'requires that a search term be entered' do
-      @course_add_user_page.search('', 'Last Name, First Name')
+      @course_add_user_page.search_non_note('', 'Last Name, First Name')
       @course_add_user_page.blank_search_msg_element.when_visible Utils.medium_wait
     end
 
     it 'offers the right course site sections' do
-      @course_add_user_page.search('Bear', 'Last Name, First Name')
+      @course_add_user_page.search_non_note('Bear', 'Last Name, First Name')
       @course_add_user_page.wait_until(Utils.medium_wait) { @course_add_user_page.name_results(@driver).include? 'Oski Bear' }
       expect(@course_add_user_page.course_section_options.length).to eql(sections_for_site.length)
     end
@@ -135,7 +135,7 @@ describe 'bCourses Find a Person to Add', order: :defined do
     [teacher_2, lead_ta, ta, designer, reader, student, waitlist, observer].each do |user|
 
       it "allows a course Teacher to add a #{user.role} to a course site with any type of role" do
-        @course_add_user_page.search(user.uid, 'CalNet UID')
+        @course_add_user_page.search_non_note(user.uid, 'CalNet UID')
         @course_add_user_page.add_user_by_uid(user, @section_to_test)
         @canvas.load_users_page course
         @canvas.search_user_by_canvas_id user
@@ -162,7 +162,7 @@ describe 'bCourses Find a Person to Add', order: :defined do
         if ['Lead TA', 'TA'].include? user.role
           @canvas.load_users_page course
           @canvas.click_find_person_to_add @driver
-          @course_add_user_page.search('Oski', 'Last Name, First Name')
+          @course_add_user_page.search_non_note('Oski', 'Last Name, First Name')
           @course_add_user_page.wait_until(Utils.medium_wait) { @course_add_user_page.user_role_options == ['Student', 'Waitlist Student', 'Observer'] }
         elsif user.role == 'Designer'
           @canvas.load_users_page course

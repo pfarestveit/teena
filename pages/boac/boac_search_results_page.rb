@@ -16,7 +16,7 @@ class BOACSearchResultsPage
   def results_count(element)
     tries ||= Utils.short_wait
     begin
-      wait_until(1) { element.visible? || no_results_msg.exists? }
+      wait_until(3) { element.visible? || no_results_msg.exists? }
       if no_results_msg.visible?
         logger.info 'No results found'
         0
@@ -52,6 +52,7 @@ class BOACSearchResultsPage
   # @param student [BOACUser]
   # @return [boolean]
   def student_in_search_result?(driver, student)
+    wait_for_spinner
     count = results_count student_results_count_element
     verify_block do
       if count > 50
@@ -80,7 +81,7 @@ class BOACSearchResultsPage
   # CLASS SEARCH
 
   element(:class_results_count, id: 'course-results-page-header')
-  elements(:class_row, :row, xpath: '//*[@id="course-results-page-header"]/../following-sibling::table/tr/td[1]')
+  elements(:class_row, :row, xpath: '//*[@id="course-results-page-header"]/../following-sibling::table/tr')
 
   # Checks if a given class is among search results. If more than 50 results exist, the class could be among them
   # but not displayed. In that case, returns true without further tests.
@@ -91,13 +92,13 @@ class BOACSearchResultsPage
     count = results_count class_results_count_element
     verify_block do
       if count > 50
-        wait_until(2) { class_row_elements.length == 50 }
+        wait_until(2) { class_row_elements.length == 51 }
         logger.warn "Skipping a test with #{course_code} because there are more than 50 results"
         sleep 1
       else
         wait_until(Utils.medium_wait) do
-          class_row_elements.length == count
-          class_link(course_code, section_number).when_visible(Utils.click_wait)
+          class_row_elements.length == count + 1
+          class_link(course_code, section_number).when_visible 3
         end
       end
     end
@@ -127,12 +128,30 @@ class BOACSearchResultsPage
   # Awaits and returns the number of note results returned from a search
   # @return [Integer]
   def note_results_count
+    wait_for_spinner
     results_count note_results_count_heading_element
   end
 
   # Waits for note results to be present
   def wait_for_note_search_result_rows
     wait_until(Utils.short_wait) { note_search_result_elements.any? }
+  end
+
+  # Checks if a given note is among search results. If more than 20 results exist, the note could be among them
+  # but not displayed. In that case, returns true without further tests.
+  # @param note [Note]
+  # @return [boolean]
+  def note_in_search_result?(note)
+    count = note_results_count
+    verify_block do
+      if count == 20
+        logger.warn "Skipping a test with note ID #{note.id} because there are more than 20 results"
+        sleep 1
+      else
+        wait_for_note_search_result_rows
+        note_link(note).when_present Utils.short_wait
+      end
+    end
   end
 
   # Returns the data present for a given note

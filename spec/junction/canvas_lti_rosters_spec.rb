@@ -56,7 +56,7 @@ describe 'bCourses Roster Photos' do
 
     # Add remaining user roles
     [lead_ta, ta, designer, reader, observer, student, waitlist].each do |user|
-      @course_add_user_page.search(user.uid, 'CalNet UID')
+      @course_add_user_page.search_non_note(user.uid, 'CalNet UID')
       @course_add_user_page.add_user_by_uid(user, sections_for_site.first)
     end
   end

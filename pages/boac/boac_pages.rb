@@ -148,6 +148,7 @@ module BOACPages
   checkbox(:include_classes_cbx, id: 'search-include-courses-checkbox')
   checkbox(:include_notes_cbx, id: 'search-include-notes-checkbox')
   div(:search_options_note_filters_subpanel, id: 'search-options-note-filters-subpanel')
+  select_list(:note_topics_select, id: 'search-option-note-filters-topic')
   radio_button(:notes_by_anyone_radio, id: 'search-options-note-filters-posted-by-anyone')
   radio_button(:notes_by_you_radio, id: 'search-options-note-filters-posted-by-you')
   text_area(:search_input, id: 'search-students-input')
@@ -165,17 +166,26 @@ module BOACPages
     search_options_note_filters_subpanel_element.when_visible 1
   end
 
+  # Selects the sidebar posted by "anyone" radio button
   def select_notes_posted_by_anyone
     expand_search_options_notes_subpanel
     js_click notes_by_anyone_radio_element
   end
 
+  # Selects the sidebar posted by "you" radio button
   def select_notes_posted_by_you
     expand_search_options_notes_subpanel
     js_click notes_by_you_radio_element
   end
 
-  # Searches for a string using the sidebar search input
+  # Selects a sidebar note topic
+  # @param topic [Topic]
+  def select_note_topic(topic)
+    expand_search_options_notes_subpanel
+    wait_for_element_and_select_js(note_topics_select_element, topic.name)
+  end
+
+  # Enters a sidebar search string and hits enter to execute the search
   # @param string [String]
   def search(string)
     sleep 1
@@ -183,6 +193,20 @@ module BOACPages
     self.search_input = string
     search_input_element.send_keys :enter
     wait_for_spinner
+  end
+
+  # Searches for a string using the sidebar search input and logs the search string. Not to be used for note searches.
+  # @param string [String]
+  def search_non_note(string)
+    logger.info "Searching for '#{string}'"
+    search string
+  end
+
+  # Searches for a string using the sidebar search input without logging the search string.  To be used for note searches.
+  # @param string [String]
+  def search_note(string)
+    logger.info 'Searching for a string within a note'
+    search string
   end
 
   ### BOXPLOTS ###
