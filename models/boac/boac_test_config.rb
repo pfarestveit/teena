@@ -265,7 +265,7 @@ class BOACTestConfig < TestConfig
   # Config for note management testing (create, edit, delete)
   # @param all_students [Array<BOACUser>]
   def note_management(all_students)
-    attachment_filenames = Dir.entries(Utils.assets_dir).reject { |f| %w(. ..).include? f }
+    attachment_filenames = Dir.entries(Utils.assets_dir).reject { |f| %w(. .. .DS_Store).include? f }
     @attachments = attachment_filenames.map do |f|
       file = File.new Utils.asset_file_path(f)
       Attachment.new({:file_name => f, :file_size => file.size})

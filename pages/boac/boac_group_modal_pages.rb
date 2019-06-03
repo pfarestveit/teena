@@ -29,7 +29,7 @@ module BOACGroupModalPages
   # Clicks Cancel in the group 'create' modal
   def cancel_group
     grp_cancel_button
-    modal_element.when_not_visible Utils.short_wait
+    modal_element.when_not_present Utils.short_wait
   end
 
 end

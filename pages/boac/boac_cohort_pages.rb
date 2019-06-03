@@ -45,7 +45,7 @@ module BOACCohortPages
     logger.info "Canceling the deletion of cohort #{cohort.name}"
     wait_for_load_and_click delete_cohort_button_element
     wait_for_update_and_click cancel_delete_button_element
-    cancel_delete_button_element.when_not_visible Utils.short_wait
+    cancel_delete_button_element.when_not_present Utils.short_wait
     wait_until(1) { current_url.include? cohort.id }
   end
 

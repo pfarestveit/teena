@@ -506,6 +506,7 @@ module BOACStudentPageAdvisingNote
       existing_note_attachment_input(note).send_keys Utils.asset_file_path(attach.file_name)
       existing_note_attachment_delete_button(note, attach).when_present Utils.short_wait
       sleep Utils.click_wait
+      note.updated_date = Time.now
       note.attachments << attach
     end
   end

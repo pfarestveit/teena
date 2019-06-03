@@ -59,7 +59,7 @@ module BOACUserListPages
   def sort_by_option(option, cohort = nil)
     logger.info "Sorting by #{option}"
     xpath = filtered_cohort_xpath cohort if cohort && cohort.instance_of?(FilteredCohort)
-    wait_for_update_and_click row_element(xpath: "#{xpath}//th[contains(@class, \"sortable-table-header\")][contains(.,\"#{option}\")]")
+    wait_for_update_and_click row_element(xpath: "#{xpath}//th[contains(.,\"#{option}\")]")
   end
 
   # LAST NAME
@@ -163,7 +163,7 @@ module BOACUserListPages
   # Sorts a user list by term units
   # @param cohort [Cohort]
   def sort_by_term_units(cohort = nil)
-    sort_by_option('Term Units', cohort)
+    sort_by_option('Term units', cohort)
   end
 
   # Returns the sequence of SIDs that should be present when sorted by term units ascending
@@ -190,7 +190,7 @@ module BOACUserListPages
   # Sorts a user list by cumulative units
   # @param cohort [Cohort]
   def sort_by_cumul_units(cohort = nil)
-    sort_by_option('Units Completed', cohort)
+    sort_by_option('Units completed', cohort)
   end
 
   # Returns the sequence of SIDs that should be present when sorted by cumulative units ascending
