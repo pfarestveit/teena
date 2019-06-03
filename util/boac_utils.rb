@@ -353,4 +353,26 @@ class BOACUtils < Utils
     attachment.id = Utils.query_pg_db_field(boac_db_credentials, query, 'id').last
   end
 
+  # Creates an admin authorized user
+  # @param user [BOACUser]
+  def self.create_auth_user(user)
+    statement = "INSERT INTO authorized_users (uid, is_admin, created_at, updated_at)
+                 SELECT '#{user.uid}', true, now(), now()
+                 WHERE NOT EXISTS (SELECT id FROM authorized_users WHERE uid = '#{user.uid}');"
+    result = query_pg_db(boac_db_credentials, statement)
+    logger.warn "Command status: #{result.cmd_status}. Result status: #{result.result_status}"
+  end
+
+  # Deletes an authorized user
+  # @param user [BOACUser]
+  def self.delete_auth_user(user)
+    statement_1 = "DELETE FROM authorized_users WHERE uid = '#{user.uid}';"
+    result_1 = query_pg_db(boac_db_credentials, statement_1)
+    logger.warn "Command status: #{result_1.cmd_status}. Result status: #{result_1.result_status}"
+
+    statement_2 = "DELETE FROM json_cache WHERE key = 'calnet_user_for_uid_' || '#{user.uid}';"
+    result_2 = query_pg_db(boac_db_credentials, statement_2)
+    logger.warn "Command status: #{result_2.cmd_status}. Result status: #{result_2.result_status}"
+  end
+
 end
