@@ -13,11 +13,17 @@ class BOACHomePage
   text_field(:dev_auth_password_input, id: 'dev-auth-password')
   button(:dev_auth_log_in_button, id: 'dev-auth-submit')
   span(:copyright_year_login, class: 'splash-text-copyright')
+  div(:not_auth_msg, xpath: '//div[contains(., "Sorry, you are not registered to use BOA.")]')
 
   # Loads the home page
   def load_page
     navigate_to BOACUtils.base_url
     wait_for_spinner
+  end
+
+  # Clicks the sign in button
+  def click_sign_in_button
+    wait_for_load_and_click sign_in_element
   end
 
   # Logs in via CAS
@@ -28,7 +34,7 @@ class BOACHomePage
     load_page
     wait_for_title 'Welcome'
     wait_until(Utils.short_wait) { copyright_year_login.include? Time.now.strftime('%Y') }
-    wait_for_load_and_click sign_in_element
+    click_sign_in_button
     cal_net.log_in(username, password)
     wait_for_title 'Home'
     wait_until(Utils.short_wait) { copyright_year_footer.include? Time.now.strftime('%Y') }
