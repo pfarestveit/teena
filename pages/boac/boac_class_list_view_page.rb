@@ -11,7 +11,7 @@ class BOACClassListViewPage
   include BOACGroupModalPages
   include BOACAddGroupSelectorPages
 
-  elements(:student_link, :link, xpath: '//tr[contains(@class,"course-list-view-row")]//a')
+  elements(:student_link, :link, xpath: '//tr//a[contains(@href, "/student/")]')
   elements(:student_sid, :div, xpath: '//div[@class="student-sid"]')
 
   # Returns all the SIDs shown on list view
@@ -28,7 +28,7 @@ class BOACClassListViewPage
   # @param student [BOACUser]
   # @return [String]
   def student_xpath(student)
-    "//tr[contains(@class,\"course-list-view-row\")][contains(.,\"#{student.sis_id}\")]"
+    "//tr[contains(.,\"#{student.sis_id}\")]"
   end
 
   # Returns the level displayed for a student
@@ -61,7 +61,7 @@ class BOACClassListViewPage
   # @param student [BOACUser]
   # @return [String]
   def student_mid_point_grade(student)
-    el = span_element(xpath: "#{student_xpath student}/td[8]/span")
+    el = span_element(xpath: "#{student_xpath student}/td[8]//span")
     el.text if el.exists?
   end
 
@@ -69,7 +69,7 @@ class BOACClassListViewPage
   # @param student [BOACUser]
   # @return [String]
   def student_grading_basis(student)
-    el = span_element(xpath: "#{student_xpath student}/td[9]/span[@class='cohort-grading-basis']")
+    el = span_element(xpath: "#{student_xpath student}/td[9]//span[@class='cohort-grading-basis']")
     el.text if el.exists?
   end
 
@@ -77,7 +77,7 @@ class BOACClassListViewPage
   # @param student [BOACUser]
   # @return [String]
   def student_final_grade(student)
-    el = span_element(xpath: "#{student_xpath student}/td[9]/span[@class='cohort-grade']")
+    el = span_element(xpath: "#{student_xpath student}/td[9]//span")
     el.text if el.exists?
   end
 
@@ -103,7 +103,7 @@ class BOACClassListViewPage
   # @param node [Integer]
   # @return [String]
   def site_code(student, node)
-    el = div_element(xpath: "#{student_xpath student}/td[4]//div[@class=\"course-list-view-column-canvas-sites-border\"][#{node}]/strong")
+    el = div_element(xpath: "#{student_xpath student}/td[4]/div/div/div[#{node}]/strong")
     el.text if el.exists?
   end
 
@@ -112,7 +112,7 @@ class BOACClassListViewPage
   # @param node [Integer]
   # @return [String]
   def assigns_submit_xpath(student, node)
-    "#{student_xpath student}/td[5]/div[@class=\"course-list-view-column-canvas-sites\"]/div[#{node}]"
+    "#{student_xpath student}/td[5]/div/div/div[#{node}]"
   end
 
   # Returns a student's assignments-submitted count for a site at a given node
@@ -129,7 +129,7 @@ class BOACClassListViewPage
   # @param node [Integer]
   # @return [String]
   def assigns_submit_max(student, node)
-    el = span_element(xpath: "#{assigns_submit_xpath(student, node)}/div/div")
+    el = span_element(xpath: "#{assigns_submit_xpath(student, node)}/div/span")
     el.text.split(' ')[1].delete(')') if el.exists?
   end
 
@@ -147,7 +147,7 @@ class BOACClassListViewPage
   # @param node [Integer]
   # @return [String]
   def assigns_grade_xpath(student, node)
-    "#{student_xpath student}/td[6]/div[@class=\"course-list-view-column-canvas-sites\"]/div[#{node}]"
+    "#{student_xpath student}/td[6]/div/div/div[#{node}]"
   end
 
   # Returns the student's assignment total score for a site at a given node. If a boxplot exists, mouses over it to reveal the score.
@@ -195,7 +195,7 @@ class BOACClassListViewPage
   # @param node [Integer]
   # @return [String]
   def last_activity(student, node)
-    el = span_element(xpath: "#{student_xpath student}/td[7]//div[@class=\"profile-boxplot-container\"][#{node}]")
+    el = span_element(xpath: "#{student_xpath student}/td[7]//div/div/div[#{node}]")
     el.text.split(' ')[0] if el.exists?
   end
 

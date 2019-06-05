@@ -60,7 +60,7 @@ class BOACSearchResultsPage
         logger.warn "Skipping a test with UID #{student.uid} because there are more than 50 results"
         sleep 1
       else
-        wait_until(Utils.medium_wait) do
+        wait_until(Utils.short_wait) do
           all_row_sids(driver).length == count
           all_row_sids(driver).include? student.sis_id.to_s
         end

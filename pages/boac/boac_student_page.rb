@@ -30,8 +30,8 @@ class BOACStudentPage
   div(:cumulative_units, xpath: '//div[@id="cumulative-units"]/div')
   div(:cumulative_gpa, id: 'cumulative-gpa')
   div(:inactive_flag, id: 'student-bio-inactive')
-  elements(:major, :div, xpath: '//div[@id="student-bio-majors"]//div[@class="bio-header"]')
-  elements(:college, :div, xpath: '//div[@id="student-bio-majors"]//div[@class="bio-details"]')
+  elements(:major, :div, xpath: '//div[@id="student-bio-majors"]//div[@class="font-weight-bolder"]')
+  elements(:college, :div, xpath: '//div[@id="student-bio-majors"]//div[@class="text-muted"]')
   div(:level, xpath: '//div[@id="student-bio-level"]/div')
   div(:terms_in_attendance, id: 'student-bio-terms-in-attendance')
   div(:expected_graduation, id: 'student-bio-expected-graduation')
@@ -195,7 +195,7 @@ class BOACStudentPage
     course_xpath = course_data_xpath(term_name, course_code)
     title_xpath = "#{course_xpath}//div[@class='student-course-name']"
     units_xpath = "#{course_xpath}//div[@class='student-course-heading-units']"
-    grading_basis_xpath = "#{course_xpath}//span[@class='student-course-grading-basis']"
+    grading_basis_xpath = "#{course_xpath}//div[contains(text(),'Final:')]/span"
     mid_point_grade_xpath = "#{course_xpath}//div[contains(text(),'Mid:')]/span"
     grade_xpath = "#{course_xpath}//div[contains(text(),'Final:')]/span"
     wait_list_xpath = "#{course_xpath}//span[contains(@class,'student-waitlisted')]"

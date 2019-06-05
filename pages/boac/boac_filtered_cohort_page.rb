@@ -159,7 +159,7 @@ class BOACFilteredCohortPage
                        else
                          "text()=\"#{filter_option}\""
                      end
-    button_element(xpath: "//a[#{link_attribute}]/../preceding-sibling::button")
+    button_element(xpath: "//a[#{link_attribute}]/../../preceding-sibling::button")
   end
 
   # Selects a sub-category for a filter type that offers sub-categories
@@ -381,7 +381,7 @@ class BOACFilteredCohortPage
       wait_for_update_and_click new_filter_button_element
       wait_for_update_and_click new_filter_option_by_key('groupCodes')
       wait_for_update_and_click new_sub_filter_button_element
-      sleep Utils.click_wait
+      sleep 2
       filters_missing = []
       cohort.search_criteria.team.each { |squad| filters_missing << squad unless sub_option_element('Team', squad.name).exists? }
       logger.debug "The squads #{filters_missing} are not present, removing from search criteria" if filters_missing.any?
