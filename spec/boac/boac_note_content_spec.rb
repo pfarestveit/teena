@@ -71,15 +71,15 @@ describe 'BOAC' do
               # or body, so the general topic is shown as the subject)
 
               if note.subject
-                it("shows the subject on #{test_case}") { expect(visible_collapsed_note_data[:subject]).to eql(note.subject) }
-                it("shows the body on #{test_case}") { expect(visible_expanded_note_data[:body].strip).to eql(note.body) }
+                it("shows the subject on #{test_case}") { expect(visible_collapsed_note_data[:subject] == note.subject).to be true }
+                it("shows the body on #{test_case}") { expect(visible_expanded_note_data[:body].strip == note.body).to be true }
               elsif expected_sis_notes.include? note
-                it("shows the body as the subject on #{test_case}") { expect(visible_collapsed_note_data[:subject].gsub(/\W/, '')).to eql(note.body.gsub(/\W/, '')) }
-                it("shows no body on #{test_case}") { expect(visible_expanded_note_data[:body].strip).to be_empty }
+                it("shows the body as the subject on #{test_case}") { expect(visible_collapsed_note_data[:subject].gsub(/\W/, '') == note.body.gsub(/\W/, '')).to be true }
+                it("shows no body on #{test_case}") { expect(visible_expanded_note_data[:body].strip.empty?).to be true }
               else
                 expected_subj = "StudentmetwithAthleticStudyCenteradvisor#{note.advisor.first_name}#{note.advisor.last_name}#{( + 'todiscuss' + note.topics.first.capitalize) if note.topics.any?}"
-                it("shows the advisor and topic as the subject on #{test_case}") { expect(visible_collapsed_note_data[:subject].gsub(/\W/, '')).to eql(expected_subj) }
-                it("shows no body on #{test_case}") { expect(visible_expanded_note_data[:body].strip).to be_empty }
+                it("shows the advisor and topic as the subject on #{test_case}") { expect(visible_collapsed_note_data[:subject].gsub(/\W/, '') == expected_subj).to be true }
+                it("shows no body on #{test_case}") { expect(visible_expanded_note_data[:body].strip.empty?).to be true }
               end
 
               # Note advisor

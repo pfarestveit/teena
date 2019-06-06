@@ -14,6 +14,7 @@ describe 'An admin using BOAC' do
   everyone_cohorts = BOACUtils.get_everyone_filtered_cohorts
 
   before(:all) do
+    @service_announcement = BOACUtils.config['service_announcement']
     @driver = Utils.launch_browser test.chrome_profile
     @admin_page = BOACAdminPage.new @driver
     @api_admin_page = BOACApiAdminPage.new @driver
@@ -111,47 +112,37 @@ describe 'An admin using BOAC' do
 
   context 'visiting the admin page' do
 
-    it('sees a link to the admin page') do
+    it 'sees a link to the admin page' do
       @homepage.load_page
       @homepage.click_admin_link
     end
 
-    it('sees all departments in \'Users\' section') do
+    it 'sees all departments in \'Users\' section' do
       @admin_page.load_page
       @admin_page.dept_users_section_element.when_present Utils.medium_wait
       BOACDepartments::DEPARTMENTS.each do |dept|
         expect(@admin_page.dept_tab_link_element(dept).exists?).to be true
-        BOACUtils.get_dept_advisors(dept) do |user|
-          expect(@admin_page.become_user_link_element(user).exists?).to be true
-        end
+        BOACUtils.get_dept_advisors(dept) { |user| expect(@admin_page.become_user_link_element(user).exists?).to be true }
       end
     end
 
-    # TODO - it('sees all the authorized users')
-
     # TODO - it('can authenticate as one of the authorized users')
 
-    it('can update a Service Alert') do
-      @admin_page.load_page
+    it 'can un-post a service alert' do
       @admin_page.unpost_service_announcement
-      expect(@admin_page.is_service_announcement_posted?).to be false
-      lyrics = [
-          'We are all of us in the gutter but some of us are looking at the stars',
-          'Sentimental gentle wind, blowing through my life again',
-          'For this is the season of catching the vapors',
-          'Your hair is beautiful. Tonight, make it magnificent!'
-      ]
-      announcement = "#{lyrics[rand(0..3)]} (#{test.id})"
-      @admin_page.update_service_announcement(announcement)
-
-      # Verify announcement has not been posted
-      expect(@admin_page.service_announcement_banner_element.exists?).to be false
-      # Next, post the announcement
-      @admin_page.post_service_announcement
-      @admin_page.service_announcement_banner_element.when_present Utils.medium_wait
-      expect(@admin_page.service_announcement_banner_element.text).to eql announcement
+      expect(@admin_page.service_announcement_banner?).to be false
     end
 
-  end
+    it 'can post a service alert' do
+      @admin_page.update_service_announcement @service_announcement
+      @admin_page.post_service_announcement
+      expect(@admin_page.service_announcement_banner).to eql @service_announcement
+    end
 
+    it 'can update a posted service alert' do
+      @service_announcement = "UPDATE - #{@service_announcement}"
+      @admin_page.update_service_announcement @service_announcement
+      @admin_page.wait_until(Utils.short_wait) { @admin_page.service_announcement_banner == @service_announcement }
+    end
+  end
 end

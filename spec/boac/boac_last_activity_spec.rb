@@ -51,6 +51,7 @@ describe 'BOAC' do
             courses.each do |course|
 
               course_sis_data = api_student_page.sis_course_data course
+              has_grade = course_sis_data[:grade] && !course_sis_data[:grade].empty?
               logger.info "Checking course #{course_sis_data[:code]}"
 
               api_student_page.sections(course).each do |section|
@@ -269,8 +270,8 @@ describe 'BOAC' do
                           test_case = "UID #{student_data[:student].uid} in #{student_data[:course_code]}"
                           logger.debug "Checking #{test_case}"
 
-                          # Don't show any activity alerts before at least 14 days into term
-                          if days_into_term < BOACUtils.no_activity_alert_threshold
+                          # Don't show any activity alerts before at least 14 days into term, show no alerts during summer, and show no alerts if a grade exists
+                          if (days_into_term < BOACUtils.no_activity_alert_threshold) || (BOACUtils.term.include? 'Summer') || has_grade
 
                             it("shows no 'No activity!' alert for #{test_case}") { expect(user_alert_msgs).not_to include("No activity! Student has never visited the #{student_data[:course_code]} bCourses site for #{BOACUtils.term}.") }
                             it("shows no infrequent activity alert for #{test_case}") { expect(truncated_alert_msgs).not_to include("Infrequent activity! Last #{student_data[:course_code]} bCourses activity") }

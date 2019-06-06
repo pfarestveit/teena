@@ -140,7 +140,7 @@ module BOACStudentPageAdvisingNote
   # @param student [BOACUser]
   # @return [Integer]
   def download_attachment(note, attachment, student=nil)
-    logger.info "Downloading attachment '#{attachment.sis_file_name || attachment.id}' from note ID #{note.id}"
+    logger.info "Downloading attachment '#{attachment.id}' from note ID #{note.id}"
     Utils.prepare_download_dir
     wait_until(Utils.short_wait) { note_attachment_els(note).any? }
     note_attachment_el(note, attachment.file_name).click
@@ -153,10 +153,10 @@ module BOACStudentPageAdvisingNote
       show_notes
 
       if attachment.sis_file_name
-        logger.warn "Cannot download SIS note ID #{note.id} attachment '#{attachment.file_name}'"
+        logger.warn "Cannot download SIS note ID #{note.id} attachment ID '#{attachment.id}'"
         nil
       else
-        logger.error "Cannot download Boa note ID #{note.id} attachment '#{attachment.file_name}'"
+        logger.error "Cannot download Boa note ID #{note.id} attachment ID '#{attachment.id}'"
         fail
       end
 

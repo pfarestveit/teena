@@ -150,7 +150,9 @@ module BOACPages
   div(:search_options_note_filters_subpanel, id: 'search-options-note-filters-subpanel')
   select_list(:note_topics_select, id: 'search-option-note-filters-topic')
   radio_button(:notes_by_anyone_radio, id: 'search-options-note-filters-posted-by-anyone')
+  div(:notes_by_anyone_div, xpath: '//input[@id="search-options-note-filters-posted-by-anyone"]/..')
   radio_button(:notes_by_you_radio, id: 'search-options-note-filters-posted-by-you')
+  div(:notes_by_you_div, xpath: '//input[@id="search-options-note-filters-posted-by-you"]/..')
   text_area(:search_input, id: 'search-students-input')
 
   # Expands the sidebar advanced search
@@ -169,13 +171,13 @@ module BOACPages
   # Selects the sidebar posted by "anyone" radio button
   def select_notes_posted_by_anyone
     expand_search_options_notes_subpanel
-    js_click notes_by_anyone_radio_element
+    js_click notes_by_anyone_radio_element unless notes_by_anyone_div_element.attribute('ischecked') == 'true'
   end
 
   # Selects the sidebar posted by "you" radio button
   def select_notes_posted_by_you
     expand_search_options_notes_subpanel
-    js_click notes_by_you_radio_element
+    js_click notes_by_you_radio_element unless notes_by_you_div_element.attribute('ischecked') == 'true'
   end
 
   # Selects a sidebar note topic
