@@ -68,6 +68,7 @@ boac:
   notes_search_word_count: 7
   sis_data_max_users: 100
   search_max_users: 20
+  service_announcement: 'A service announcement'
 
 cal_net:
   base_url: https://auth-test.berkeley.edu

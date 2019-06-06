@@ -272,7 +272,7 @@ describe 'BOAC' do
               @homepage.select_notes_posted_by_you
               @homepage.search_note note_search[:string]
               you_posted_match = @search_results_page.note_in_search_result?(note_search[:note])
-              it "returns a result when searching with the first #{notes_search_word_count} words in #{note_search[:test_case]} and posted by #{note_search[:note].advisor.uid}" do
+              it "returns a result when searching with the first #{notes_search_word_count} words in #{note_search[:test_case]} and posted by #{test_config.advisor.uid}" do
                 expect(you_posted_match).to be true
               end
 
@@ -290,9 +290,13 @@ describe 'BOAC' do
               # Posted by you
               @homepage.select_notes_posted_by_you
               @homepage.search_note note_search[:string]
-              you_posted_match = @search_results_page.note_in_search_result?(note_search[:note])
-              it "returns no result when searching with the first #{notes_search_word_count} words in #{note_search[:test_case]} and posted by #{note_search[:note].advisor.uid}" do
-                expect(you_posted_match).to be_falsey
+              if @search_results_page.note_results_count == 20
+                logger.warn "Skipping a test with note ID #{note_search[:note].id} because there are more than 20 results"
+              else
+                you_posted_match = @search_results_page.note_in_search_result?(note_search[:note])
+                it "returns no result when searching with the first #{notes_search_word_count} words in #{note_search[:test_case]} and posted by #{test_config.advisor.uid}" do
+                  expect(you_posted_match).to be_falsey
+                end
               end
 
               # Posted by anyone
