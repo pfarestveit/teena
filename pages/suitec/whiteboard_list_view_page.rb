@@ -115,7 +115,7 @@ module Page
       def open_whiteboard(driver, whiteboard, event = nil)
         logger.info "Opening whiteboard ID #{whiteboard.id}"
         click_whiteboard_link whiteboard
-        shift_to_whiteboard_window(driver, whiteboard) if driver.browser == 'chrome'
+        shift_to_whiteboard_window(driver, whiteboard)
         add_event(event, EventType::VIEW, whiteboard.id)
         add_event(event, EventType::VIEW, 'Chat')
         add_event(event, EventType::OPEN_WHITEBOARD, whiteboard.id)

@@ -137,9 +137,9 @@ module Page
         tries ||= 2
         begin
           wait_for_load_and_click name_element
-          wait_for_update_and_click search_input_element
+          wait_for_element_and_type(search_input_element, user.full_name)
           (option = list_item_element(xpath: "//div[contains(@class,'select-dropdown')]//li[contains(.,'#{user.full_name}')]")).when_present Utils.short_wait
-          js_click option
+          option.click
           wait_until(Utils.medium_wait) { name == user.full_name }
           add_event(event, EventType::SEARCH_PROFILE, user.uid)
           add_event(event, EventType::VIEW_PROFILE, user.uid) unless (event && event.actor.uid == user.uid)
@@ -384,7 +384,7 @@ module Page
         bar_data = users_activities.map { |a| user_bar_activities a }
         # Merge the user activities, combining the count of each
         summed_bar_data = bar_data.inject do |a, b|
-          a.merge(b) { |_, x, y| x + y if x.instance_of? Fixnum }
+          a.merge(b) { |_, x, y| x + y if x.instance_of? Integer }
         end
         # Toss out activities with zero count
         non_zero_bar_data = summed_bar_data.select { |_, v| !v.zero? }
@@ -413,9 +413,8 @@ module Page
       def filter_activity_bar(button, event = nil)
         if button.exists?
           logger.debug 'Clicking activity filter'
-          scroll_to_element button
           unless button.attribute('disabled')
-            js_click button
+            wait_for_update_and_click button
             add_event(event, EventType::FILTER_TOTAL_ACTIVITIES)
           end
         end
@@ -449,7 +448,6 @@ module Page
       # @param bar_label [String]
       def verify_activity_bar(driver, bar_activities, bar_label)
         if bar_activities.any?
-          scroll_to_element activity_bar_elements(driver, bar_label).first
           # Check the visible activity on the bar
           expected_bar_activity_desc = bar_activities.map { |k, _| k.to_s }
           wait_until(Utils.short_wait, "Expected '#{expected_bar_activity_desc}' but got '#{visible_bar_activity(driver, bar_label)}'") do
@@ -460,7 +458,6 @@ module Page
           bar_activities.each_pair do |k, v|
             segment = activity_bar_elements(driver, bar_label).find { |el| el.text.include? k.to_s }
             mouseover(driver, segment)
-            driver.action.click_and_hold(segment).perform
             (activity_count = span_element(xpath: '//div[contains(@class,"profile-activity-breakdown-popover-details")]/span[contains(@data-ng-bind-html, "segment.activityDescription")]/strong')).when_visible 2
             wait_until(2, "Expected '#{k} #{v}' but got '#{activity_count.text}'") do
               logger.debug "Waiting for '#{bar_label}' '#{k}' '#{v}', and it is currently '#{k}' '#{activity_count.text}'"
@@ -568,7 +565,7 @@ module Page
       # @param asset [Asset]
       # @param event [Event]
       def add_site(driver, asset, event = nil)
-        wait_for_update_and_click_js add_site_link_element
+        wait_for_update_and_click add_site_link_element
         switch_to_canvas_iframe driver
         add_event(event, EventType::LAUNCH_ASSET_LIBRARY)
         add_event(event, EventType::LIST_ASSETS)
@@ -583,7 +580,7 @@ module Page
       # @param asset [Asset]
       # @param event [Event]
       def add_file(driver, asset, event = nil)
-        wait_for_update_and_click_js upload_link_element
+        wait_for_update_and_click upload_link_element
         switch_to_canvas_iframe driver
         add_event(event, EventType::LAUNCH_ASSET_LIBRARY)
         add_event(event, EventType::LIST_ASSETS)
@@ -634,7 +631,7 @@ module Page
       # @param event [Event]
       def click_user_asset_link(driver, asset, event = nil)
         logger.info "Clicking thumbnail for Asset ID #{asset.id}"
-        wait_for_update_and_click_js link_element(xpath: "//div[@id='user-assets']//ul//a[contains(@href,'_id=#{asset.id}&')]")
+        wait_for_update_and_click link_element(xpath: "//div[@id='user-assets']//ul//a[contains(@href,'_id=#{asset.id}&')]")
         switch_to_canvas_iframe driver
         add_event(event, EventType::DEEP_LINK_ASSET, asset.id)
         add_event(event, EventType::LAUNCH_ASSET_LIBRARY)

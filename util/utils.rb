@@ -121,10 +121,10 @@ class Utils
   end
 
   def self.log_js_errors(driver)
-    if driver.browser == 'chrome'
+    if "#{driver.browser}" == 'chrome'
       js_log = driver.manage.logs.get(:browser)
       messages = js_log.map &:message
-      messages.each { |msg| logger.error "Possible JS error: #{msg}" unless msg.include? 'chrome-search://thumb/' }
+      messages.each { |msg| logger.error "Possible JS error: #{msg}" unless msg.include?('chrome-search://thumb/') || msg.include?('instructure.com') }
     end
   end
 
