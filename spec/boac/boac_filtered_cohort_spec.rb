@@ -146,20 +146,20 @@ describe 'BOAC', order: :defined do
         @homepage.wait_until(Utils.short_wait, "Expected #{cohort.member_data.length} but got #{@homepage.member_count(cohort)}") { @homepage.member_count(cohort) == cohort.member_data.length }
       end
 
-      it "shows the filtered cohort members who have alerts on the homepage with criteria #{cohort.search_criteria.list_filters}" do
+      it "shows the first 50 filtered cohort members who have alerts on the homepage with criteria #{cohort.search_criteria.list_filters}" do
         cohort.members = test.dept_students.select { |u| @homepage.expected_sids_by_name(cohort.member_data).include? u.sis_id }
         @homepage.expand_member_rows cohort
         @homepage.verify_member_alerts(@driver, cohort, test.advisor)
       end
 
-      it "by default sorts by name ascending cohort members who have alerts on the homepage with criteria #{cohort.search_criteria.list_filters}" do
+      it "by default sorts by name ascending cohort the first 50 members who have alerts on the homepage with criteria #{cohort.search_criteria.list_filters}" do
         if cohort.member_data.any?
           expected_sequence = @homepage.expected_sids_by_name cohort.member_data
           @homepage.wait_until(1, "Expected #{expected_sequence}, but got #{@homepage.all_row_sids(@driver, cohort)}") { @homepage.all_row_sids(@driver, cohort) == expected_sequence }
         end
       end
 
-      it "allows the advisor to sort by name descending cohort members who have alerts on the homepage with criteria #{cohort.search_criteria.list_filters}" do
+      it "allows the advisor to sort by name descending the first 50 cohort members who have alerts on the homepage with criteria #{cohort.search_criteria.list_filters}" do
         if cohort.member_data.any?
           expected_sequence = @homepage.expected_sids_by_name_desc cohort.member_data
           @homepage.sort_by_name cohort
@@ -167,7 +167,7 @@ describe 'BOAC', order: :defined do
         end
       end
 
-      it "allows the advisor to sort by SID ascending cohort members who have alerts on the homepage with criteria #{cohort.search_criteria.list_filters}" do
+      it "allows the advisor to sort by SID ascending the first 50 cohort members who have alerts on the homepage with criteria #{cohort.search_criteria.list_filters}" do
         if cohort.member_data.any?
           expected_sequence = @homepage.expected_sids_by_sid cohort.member_data
           @homepage.sort_by_sid cohort
@@ -175,7 +175,7 @@ describe 'BOAC', order: :defined do
         end
       end
 
-      it "allows the advisor to sort by SID descending cohort members who have alerts on the homepage with criteria #{cohort.search_criteria.list_filters}" do
+      it "allows the advisor to sort by SID descending the first 50 cohort members who have alerts on the homepage with criteria #{cohort.search_criteria.list_filters}" do
         if cohort.member_data.any?
           expected_sequence = @homepage.expected_sids_by_sid(cohort.member_data).reverse
           @homepage.sort_by_sid cohort
@@ -183,7 +183,7 @@ describe 'BOAC', order: :defined do
         end
       end
 
-      it "allows the advisor to sort by major ascending cohort members who have alerts on the homepage with criteria #{cohort.search_criteria.list_filters}" do
+      it "allows the advisor to sort by major ascending the first 50 cohort members who have alerts on the homepage with criteria #{cohort.search_criteria.list_filters}" do
         if cohort.member_data.any?
           expected_sequence = @homepage.expected_sids_by_major cohort.member_data
           @homepage.sort_by_major cohort
@@ -191,7 +191,7 @@ describe 'BOAC', order: :defined do
         end
       end
 
-      it "allows the advisor to sort by major descending cohort members who have alerts on the homepage with criteria #{cohort.search_criteria.list_filters}" do
+      it "allows the advisor to sort by major descending the first 50 cohort members who have alerts on the homepage with criteria #{cohort.search_criteria.list_filters}" do
         if cohort.member_data.any?
           expected_sequence = @homepage.expected_sids_by_major_desc cohort.member_data
           @homepage.sort_by_major cohort
@@ -199,7 +199,7 @@ describe 'BOAC', order: :defined do
         end
       end
 
-      it "allows the advisor to sort by expected grad date ascending cohort members who have alerts on the homepage with criteria #{cohort.search_criteria.list_filters}" do
+      it "allows the advisor to sort by expected grad date ascending the first 50 cohort members who have alerts on the homepage with criteria #{cohort.search_criteria.list_filters}" do
         if cohort.member_data.any?
           expected_sequence = @homepage.expected_sids_by_grad_term cohort.member_data
           @homepage.sort_by_expected_grad cohort
@@ -207,7 +207,7 @@ describe 'BOAC', order: :defined do
         end
       end
 
-      it "allows the advisor to sort by expected grad date descending cohort members who have alerts on the homepage with criteria #{cohort.search_criteria.list_filters}" do
+      it "allows the advisor to sort by expected grad date descending the first 50 cohort members who have alerts on the homepage with criteria #{cohort.search_criteria.list_filters}" do
         if cohort.member_data.any?
           expected_sequence = @homepage.expected_sids_by_grad_term_desc cohort.member_data
           @homepage.sort_by_expected_grad cohort
@@ -215,7 +215,7 @@ describe 'BOAC', order: :defined do
         end
       end
 
-      it "allows the advisor to sort by term units ascending cohort members who have alerts on the homepage with criteria #{cohort.search_criteria.list_filters}" do
+      it "allows the advisor to sort by term units ascending the first 50 cohort members who have alerts on the homepage with criteria #{cohort.search_criteria.list_filters}" do
         if cohort.member_data.any?
           # Scrape the visible term units since it's not stored in the cohort member data
           cohort.member_data.each { |d| d.merge!({:term_units => @homepage.user_row_data(@driver, d[:sid], @homepage.filtered_cohort_xpath(cohort))[:term_units]}) }
@@ -225,7 +225,7 @@ describe 'BOAC', order: :defined do
         end
       end
 
-      it "allows the advisor to sort by term units descending cohort members who have alerts on the homepage with criteria #{cohort.search_criteria.list_filters}" do
+      it "allows the advisor to sort by term units descending the first 50 cohort members who have alerts on the homepage with criteria #{cohort.search_criteria.list_filters}" do
         if cohort.member_data.any?
           expected_sequence = @homepage.expected_sids_by_term_units_desc cohort.member_data
           @homepage.sort_by_term_units cohort
@@ -233,7 +233,7 @@ describe 'BOAC', order: :defined do
         end
       end
 
-      it "allows the advisor to sort by cumulative units ascending cohort members who have alerts on the homepage with criteria #{cohort.search_criteria.list_filters}" do
+      it "allows the advisor to sort by cumulative units ascending the first 50 cohort members who have alerts on the homepage with criteria #{cohort.search_criteria.list_filters}" do
         if cohort.member_data.any?
           expected_sequence = @homepage.expected_sids_by_units_cum cohort.member_data
           @homepage.sort_by_cumul_units cohort
@@ -241,7 +241,7 @@ describe 'BOAC', order: :defined do
         end
       end
 
-      it "allows the advisor to sort by cumulative descending cohort members who have alerts on the homepage with criteria #{cohort.search_criteria.list_filters}" do
+      it "allows the advisor to sort by cumulative descending the first 50 cohort members who have alerts on the homepage with criteria #{cohort.search_criteria.list_filters}" do
         if cohort.member_data.any?
           expected_sequence = @homepage.expected_sids_by_units_cum_desc cohort.member_data
           @homepage.sort_by_cumul_units cohort
@@ -249,7 +249,7 @@ describe 'BOAC', order: :defined do
         end
       end
 
-      it "allows the advisor to sort by GPA ascending cohort members who have alerts on the homepage with criteria #{cohort.search_criteria.list_filters}" do
+      it "allows the advisor to sort by GPA ascending the first 50 cohort members who have alerts on the homepage with criteria #{cohort.search_criteria.list_filters}" do
         if cohort.member_data.any?
           expected_sequence = @homepage.expected_sids_by_gpa cohort.member_data
           @homepage.sort_by_gpa cohort
@@ -257,7 +257,7 @@ describe 'BOAC', order: :defined do
         end
       end
 
-      it "allows the advisor to sort by GPA descending cohort members who have alerts on the homepage with criteria #{cohort.search_criteria.list_filters}" do
+      it "allows the advisor to sort by GPA descending the first 50 cohort members who have alerts on the homepage with criteria #{cohort.search_criteria.list_filters}" do
         if cohort.member_data.any?
           expected_sequence = @homepage.expected_sids_by_gpa_desc cohort.member_data
           @homepage.sort_by_gpa cohort
@@ -265,7 +265,7 @@ describe 'BOAC', order: :defined do
         end
       end
 
-      it "allows the advisor to sort by alert count ascending cohort members who have alerts on the homepage with criteria #{cohort.search_criteria.list_filters}" do
+      it "allows the advisor to sort by alert count ascending the first 50 cohort members who have alerts on the homepage with criteria #{cohort.search_criteria.list_filters}" do
         if cohort.member_data.any?
           expected_sequence = @homepage.expected_sids_by_alerts cohort.member_data
           @homepage.sort_by_alert_count cohort
@@ -273,7 +273,7 @@ describe 'BOAC', order: :defined do
         end
       end
 
-      it "allows the advisor to sort by alert count descending cohort members who have alerts on the homepage with criteria #{cohort.search_criteria.list_filters}" do
+      it "allows the advisor to sort by alert count descending the first 50 cohort members who have alerts on the homepage with criteria #{cohort.search_criteria.list_filters}" do
         if cohort.member_data.any?
           expected_sequence = @homepage.expected_sids_by_alerts_desc cohort.member_data
           @homepage.sort_by_alert_count cohort

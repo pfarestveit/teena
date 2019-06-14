@@ -77,7 +77,7 @@ describe 'BOAC' do
 
         # Collect notes for note searches
         note_searches = []
-        expected_asc_notes = NessieUtils.get_asc_notes student if NessieUtils.include_asc_notes?
+        expected_asc_notes = NessieUtils.get_asc_notes student
         expected_boa_notes = BOACUtils.get_student_notes(student).delete_if &:deleted_date
         expected_sis_notes = NessieUtils.get_sis_notes student
         expected_notes = expected_sis_notes + expected_boa_notes
@@ -215,7 +215,7 @@ describe 'BOAC' do
             it("returns results when searching with the first #{notes_search_word_count} words in #{note_search[:test_case]}") { expect(results_count).to be > 0 }
 
             unless results_count.zero?
-              it("shows no more than 20 results when searching with the first #{notes_search_word_count} words in #{note_search[:test_case]}") { expect(results_count).to be <= 20 }
+              it("shows no more than 100 results when searching with the first #{notes_search_word_count} words in #{note_search[:test_case]}") { expect(results_count).to be <= 100 }
 
               @search_results_page.wait_for_note_search_result_rows
               visible_student_uids = @search_results_page.note_result_uids
@@ -224,7 +224,7 @@ describe 'BOAC' do
               student_result_returned = @search_results_page.note_in_search_result?(note_search[:note])
               it("returns a result when searching with the first #{notes_search_word_count} words in #{note_search[:test_case]}") { expect(student_result_returned).to be true }
 
-              if student_result_returned && @search_results_page.note_results_count < 20
+              if student_result_returned && @search_results_page.note_results_count < 100
                 result = @search_results_page.note_result(search[:student], note_search[:note])
                 updated_date_expected = note_search[:note].updated_date && note_search[:note].updated_date != note_search[:note].created_date && note_search[:note].advisor.uid != 'UCBCONVERSION'
                 expected_date = updated_date_expected ? note_search[:note].updated_date : note_search[:note].created_date

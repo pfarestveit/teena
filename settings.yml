@@ -116,7 +116,6 @@ nessie:
   include_caliper_tests: false
   caliper_time_margin: 120
   include_l_and_s: false
-  include_asc_notes: false
 
 oec:
   term: 2018-C
