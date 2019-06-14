@@ -278,4 +278,10 @@ module Page
     sleep wait
   end
 
+  def alert(&blk)
+    yield
+    sleep Utils.click_wait
+    browser.switch_to.alert.accept rescue Selenium::WebDriver::Error::NoAlertPresentError
+  end
+
 end

@@ -93,7 +93,7 @@ module Page
         logger.info "Deleting category called #{category_title}"
         wait_until(Utils.short_wait) { custom_category_titles.include? category_title }
         delete_button = button_element(xpath: "//h3[text()='Custom Categories']/following-sibling::ul/li[#{custom_category_index(category_title) + 1}]//button[@title='Delete this category']")
-        alert { wait_for_update_and_click_js delete_button }
+        alert { wait_for_update_and_click delete_button }
         sleep 2
       end
 

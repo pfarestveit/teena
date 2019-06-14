@@ -80,6 +80,7 @@ module Page
     elements(:secondary_html_editor_link, :link, xpath: '//li[contains(@class,"entry")]//a[contains(.,"HTML Editor")]')
     elements(:secondary_reply_input, :text_area, xpath: '//li[contains(@class,"entry")]//textarea[@class="reply-textarea"]')
     elements(:secondary_post_reply_button, :button, xpath: '//li[contains(@class,"entry")]//button[contains(.,"Post Reply")]')
+    button(:save_discuss_button, xpath: '//button[text()="Save"][@type="submit"]')
 
     # Creates a discussion on a course site
     # @param driver [Selenium::WebDriver]
@@ -112,7 +113,7 @@ module Page
       discussion_title_element.send_keys discussion.title
       js_click threaded_discussion_cbx_element
       teacher_role = save_and_publish_button?
-      teacher_role ? click_save_and_publish : wait_for_update_and_click_js(save_button_element)
+      teacher_role ? click_save_and_publish : wait_for_update_and_click(save_discuss_button_element)
       add_event(event, EventType::CREATE, discussion.title)
       teacher_role ? published_button_element.when_visible(Utils.medium_wait) : subscribed_link_element.when_visible(Utils.medium_wait)
       discussion.url = current_url

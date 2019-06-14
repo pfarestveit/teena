@@ -80,7 +80,7 @@ describe 'bCourses project site', order: :defined do
       it "include '#{user_role}' in the Find a Person to Add tool" do
         user = User.new({uid: Utils.oski_uid, role: user_role})
         @find_person_to_add_page.load_embedded_tool(@driver, project)
-        @find_person_to_add_page.search_non_note(Utils.oski_uid, 'CalNet UID')
+        @find_person_to_add_page.search(Utils.oski_uid, 'CalNet UID')
         @find_person_to_add_page.add_user_by_uid user
         @find_person_to_add_page.success_msg_element.when_visible Utils.short_wait
       end

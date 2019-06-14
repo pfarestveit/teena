@@ -538,7 +538,7 @@ module Page
       def delete_comment(asset, comment, event = nil)
         index = asset.comments.index comment
         logger.info "Deleting comment at index #{index}"
-        alert { wait_for_load_and_click_js delete_button_element(index) }
+        alert { wait_for_load_and_click delete_button_element(index) }
         asset.comments.delete comment
         add_event(event, EventType::DELETE, asset.id)
         add_event(event, EventType::DELETE_COMMENT, asset.id)

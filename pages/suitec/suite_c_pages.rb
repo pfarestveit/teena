@@ -184,7 +184,6 @@ module Page
     # @param asset [Asset]
     def enter_url_metadata(asset)
       logger.info "Entering URL '#{asset.url}', title '#{asset.title}', category '#{asset.category}', and description '#{asset.description}'"
-      wait_for_update_and_click_js url_input_element
       wait_for_element_and_type(url_input_element, asset.url) unless asset.url.nil?
       wait_for_element_and_type(url_title_input_element, asset.title) unless asset.title.nil?
       wait_for_element_and_type(url_description_element, asset.description) unless asset.description.nil?

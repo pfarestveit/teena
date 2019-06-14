@@ -403,7 +403,7 @@ module Page
         window_count = driver.window_handles.length
 
         # Clicking the download link causes ChromeDriver to lose track of its window, so hit the API endpoint instead
-        if driver.browser == 'chrome'
+        if "#{driver.browser}" == 'chrome'
           navigate_to "#{SuiteCUtils.suite_c_base_url}/api/#{Utils.canvas_base_url.gsub('https://', '')}/#{course.site_id}/activities.csv"
         else
           wait_for_update_and_click link_element(:text => 'Download CSV')
@@ -425,8 +425,8 @@ module Page
         if new_window_count > window_count
           driver.switch_to.window driver.window_handles.last
           driver.close
-          driver.switch_to.window window
         end
+        driver.switch_to.window window
         activities
       end
 
