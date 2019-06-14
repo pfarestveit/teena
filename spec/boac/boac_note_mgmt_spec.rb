@@ -323,7 +323,7 @@ else
         it 'can cancel the edit' do
           @student_page.expand_note note_2
           @student_page.click_edit_note_button note_2
-          @student_page.wait_for_element_and_type(@student_page.note_body_text_area_elements[1], 'An edit to forget')
+          @student_page.wait_for_element_and_type(@student_page.note_body_text_area_elements[0], 'An edit to forget')
           @student_page.click_cancel_note_edit
           @student_page.confirm_delete
           @student_page.verify_note note_2

@@ -8,7 +8,9 @@ describe 'BOAC' do
     all_students = NessieUtils.get_all_students
     test = BOACTestConfig.new
     test.legacy_notes all_students
-    students_with_notes = []
+    students_with_asc_notes = []
+    students_with_boa_notes = []
+    students_with_sis_notes = []
     downloadable_attachments = []
     advisor_link_tested = false
     dept_uids = test.dept_students.map &:uid
@@ -27,14 +29,19 @@ describe 'BOAC' do
 
       begin
         @student_page.load_page student
-        expected_asc_notes = NessieUtils.get_asc_notes student if NessieUtils.include_asc_notes?
+        expected_asc_notes = NessieUtils.get_asc_notes student
         expected_boa_notes = BOACUtils.get_student_notes(student).delete_if &:deleted_date
         expected_sis_notes = NessieUtils.get_sis_notes student
-        expected_notes = expected_sis_notes + expected_boa_notes + (expected_asc_notes if expected_asc_notes)
-        logger.warn "UID #{student.uid} has #{expected_sis_notes.length} Nessie notes and #{expected_boa_notes.length} BOA notes #{'and ' + expected_asc_notes.length.to_s + ' ASC notes' if expected_asc_notes}"
 
-        if expected_sis_notes.any?
-          students_with_notes << student
+        expected_notes = expected_sis_notes + expected_boa_notes + expected_asc_notes
+        logger.warn "UID #{student.uid} has #{expected_sis_notes.length} Nessie notes and #{expected_boa_notes.length} BOA notes and #{expected_asc_notes.length.to_s} ASC notes"
+
+        students_with_asc_notes << student if expected_asc_notes.any?
+        students_with_boa_notes << student if expected_boa_notes.any?
+        students_with_sis_notes << student if expected_sis_notes.any?
+
+        if expected_notes.any?
+
           @student_page.show_notes
 
           visible_note_count = @student_page.note_msg_row_elements.length
@@ -99,9 +106,13 @@ describe 'BOAC' do
 
               # Note topics
 
-              note.topics.any? ?
-                  (it("shows the right topics on #{test_case}") { expect(visible_expanded_note_data[:topics]).to eql(note.topics.map &:upcase) }) :
-                  (it("shows no topics on #{test_case}") { expect(visible_expanded_note_data[:topics]).to be_empty })
+              if note.topics.any?
+                topics = note.topics.map &:upcase
+                topics.sort! if expected_boa_notes.include? note
+                (it("shows the right topics on #{test_case}") { expect(visible_expanded_note_data[:topics]).to eql(topics) })
+              else
+                (it("shows no topics on #{test_case}") { expect(visible_expanded_note_data[:topics]).to be_empty })
+              end
 
               # Note dates
 
@@ -182,11 +193,8 @@ describe 'BOAC' do
         else
           logger.warn "Ain't got no notes for UID #{student.uid}"
 
-          boa_notes = BOACUtils.get_student_notes student
-          if boa_notes.empty?
-            button_disabled = @student_page.notes_button_element.attribute('disabled')
-            it("shows a disabled notes button for UID #{student.uid}") { expect(button_disabled).to be_truthy }
-          end
+          button_disabled = @student_page.notes_button_element.attribute('disabled')
+          it("shows a disabled notes button for UID #{student.uid}") { expect(button_disabled).to be_truthy }
         end
 
       rescue => e
@@ -198,7 +206,9 @@ describe 'BOAC' do
       end
     end
 
-    it('has at least one test student with a note') { expect(students_with_notes.any?).to be true }
+    it('has at least one test student with an ASC note') { expect(students_with_asc_notes.any?).to be true }
+    it('has at least one test student with a BOA note') { expect(students_with_boa_notes.any?).to be true }
+    it('has at least one test student with a SIS note') { expect(students_with_sis_notes.any?).to be true }
 
     if downloadable_attachments.any?
       other_depts = BOACDepartments::DEPARTMENTS.reject { |d| [test.dept, BOACDepartments::ADMIN, (BOACDepartments::L_AND_S unless NessieUtils.include_l_and_s?)].include? d }

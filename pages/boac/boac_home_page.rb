@@ -152,6 +152,10 @@ class BOACHomePage
       member[:alert_count].to_i > 0
     end
 
+    # Only cohort members with the highest alert counts should be shown, to a maximum of 50 members
+    cohort.member_data = cohort.member_data.sort { |a, b| [b[:alert_count], a[:sid]] <=> [a[:alert_count], b[:sid]] }
+    cohort.member_data = cohort.member_data[0..49]
+
     # Expand the cohort, and verify that there are only rows for members with alerts
     view_all_members_link(cohort).when_visible Utils.short_wait
     wait_until(Utils.short_wait, "Expecting cohort #{cohort.name} to have row count of #{cohort.member_data.length}, got #{member_rows(driver, cohort).length}") do

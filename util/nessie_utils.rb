@@ -38,10 +38,6 @@ class NessieUtils < Utils
     @config['include_l_and_s']
   end
 
-  def self.include_asc_notes?
-    @config['include_asc_notes']
-  end
-
   # DATABASE - ASSIGNMENTS
 
   # Returns the assignments associated with a user in a course site
