@@ -62,6 +62,8 @@ class Utils
           profile_dir = (profile ? profile : File.join(@config_dir, 'chrome-profile'))
           options.add_argument("user-data-dir=#{profile_dir}")
         end
+        # Works around Chrome 75 'UnknownCommandError' issue.
+        options.add_option('w3c', @config['webdriver']['w3c'])
         options.add_argument 'headless' if headless?
         prefs = {
             :prompt_for_download => false,
