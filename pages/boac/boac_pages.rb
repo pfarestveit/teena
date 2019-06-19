@@ -153,6 +153,8 @@ module BOACPages
   div(:notes_by_anyone_div, xpath: '//input[@id="search-options-note-filters-posted-by-anyone"]/..')
   radio_button(:notes_by_you_radio, id: 'search-options-note-filters-posted-by-you')
   div(:notes_by_you_div, xpath: '//input[@id="search-options-note-filters-posted-by-you"]/..')
+  text_area(:note_date_from, id: 'search-options-note-filters-last-updated-from')
+  text_area(:note_date_to, id: 'search-options-note-filters-last-updated-to')
   text_area(:search_input, id: 'search-students-input')
 
   # Expands the sidebar advanced search
@@ -180,11 +182,34 @@ module BOACPages
     js_click notes_by_you_radio_element unless notes_by_you_div_element.attribute('ischecked') == 'true'
   end
 
+  # Sets the "Last updated > From" notes search option
+  # @param date [Date]
+  def set_notes_date_from(date)
+    expand_search_options_notes_subpanel
+    self.note_date_from = date ? date.strftime('%m/%d/%Y') : ''
+  end
+
+  # Sets the "Last updated > To" notes search option
+  # @param date [Date]
+  def set_notes_date_to(date)
+    expand_search_options_notes_subpanel
+    self.note_date_to = date ? date.strftime('%m/%d/%Y') : ''
+  end
+
+  # Sets both "Last updated" notes search options
+  # @param from [Date]
+  # @param to [Date]
+  def set_notes_date_range(from, to)
+    set_notes_date_from from
+    set_notes_date_to to
+  end
+
   # Selects a sidebar note topic
   # @param topic [Topic]
   def select_note_topic(topic)
     expand_search_options_notes_subpanel
-    wait_for_element_and_select_js(note_topics_select_element, topic.name)
+    topic_name = topic ? topic.name : 'Any topic'
+    wait_for_element_and_select_js(note_topics_select_element, topic_name)
   end
 
   # Enters a sidebar search string and hits enter to execute the search
@@ -192,6 +217,7 @@ module BOACPages
   def search(string)
     sleep 1
     search_input_element.when_visible Utils.short_wait
+    search_input_element.clear
     self.search_input = string
     search_input_element.send_keys :enter
     wait_for_spinner
