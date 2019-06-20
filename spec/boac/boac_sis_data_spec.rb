@@ -265,7 +265,7 @@ describe 'BOAC' do
 
                     @boac_student_page.expand_course_data(term_name, course_code)
 
-                    visible_course_sis_data = @boac_student_page.visible_course_sis_data(term_name, course_code)
+                    visible_course_sis_data = @boac_student_page.visible_course_sis_data(student.uid, term_id, course_sis_data[:ccn], term_name, course_code)
                     visible_course_title = visible_course_sis_data[:title]
                     visible_units = visible_course_sis_data[:units_completed]
                     visible_grading_basis = visible_course_sis_data[:grading_basis]
