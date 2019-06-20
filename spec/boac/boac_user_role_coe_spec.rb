@@ -116,7 +116,7 @@ describe 'A CoE advisor using BOAC' do
   context 'when visiting a student page' do
 
     it 'cannot hit a non-CoE student page' do
-      @student_page.navigate_to "#{BOACUtils.base_url}/student/#{asc_only_students.first.uid}"
+      @student_page.navigate_to "#{BOACUtils.base_url}#{@homepage.path_to_student_view(asc_only_students.first.uid)}"
       @student_page.wait_for_title 'Page not found'
     end
 

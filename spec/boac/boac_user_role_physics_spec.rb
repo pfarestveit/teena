@@ -104,7 +104,7 @@ describe 'A Physics advisor using BOAC' do
   context 'visiting a student page' do
 
     it 'cannot hit a non-ASC student page' do
-      @student_page.navigate_to "#{BOACUtils.base_url}/student/#{coe_only_students.first.uid}"
+      @student_page.navigate_to "#{BOACUtils.base_url}#{@homepage.path_to_student_view(coe_only_students.first.uid)}"
       @student_page.wait_for_title 'Page not found'
     end
 

@@ -74,7 +74,7 @@ class BOACSearchResultsPage
   # Clicks the search results row for a given student
   # @param student [User]
   def click_student_result(student)
-    wait_for_update_and_click link_element(xpath: "//a[contains(@href,'/student/#{student.uid}')]")
+    wait_for_update_and_click link_element(id: "link-to-student-#{student.uid}")
     wait_for_spinner
   end
 
@@ -185,7 +185,7 @@ class BOACSearchResultsPage
   # @param note [Note]
   # @return [PageObject::Elements::Link]
   def note_link(note)
-    link_element(id: "advising-note-search-result-header-link-#{note.id}")
+    link_element(id: "link-to-student-#{note.id}")
   end
 
   # Clicks the link element for a given note

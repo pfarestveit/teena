@@ -82,7 +82,7 @@ module BOACListViewPages
   # Returns all the UIDs shown on list view
   # @return [Array<String>]
   def list_view_uids
-    player_link_elements.map { |el| el.attribute('href').gsub("#{BOACUtils.base_url}/student/", '') }
+    player_link_elements.map { |el| el.attribute('id').gsub("link-to-student-", '') }
   end
 
   # Returns the sequence of SIDs that are actually present following a search and/or sort
@@ -131,7 +131,7 @@ module BOACListViewPages
   # @param student [BOACUser]
   def click_student_link(student)
     logger.info "Clicking the link for UID #{student.uid}"
-    wait_for_load_and_click_js link_element(xpath: "//a[contains(@href,\"/student/#{student.uid}\")]")
+    wait_for_load_and_click_js link_element(id: "link-to-student-#{student.uid}")
     student_name_heading_element.when_visible Utils.medium_wait
   end
 

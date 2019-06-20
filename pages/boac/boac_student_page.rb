@@ -14,7 +14,7 @@ class BOACStudentPage
   # @param user [User]
   def load_page(user)
     logger.info "Loading student page for UID #{user.uid}"
-    navigate_to "#{BOACUtils.base_url}/student/#{user.uid}"
+    navigate_to "#{BOACUtils.base_url}#{path_to_student_view(user.uid)}"
     wait_for_title "#{user.full_name}"
     wait_for_spinner
   end
@@ -188,24 +188,25 @@ class BOACStudentPage
   end
 
   # Returns the SIS data shown for a course with a given course code
+  # @param uid [Integer]
+  # @param term_id [Integer]
   # @param term_name [String]
   # @param course_code [String]
   # @return [Hash]
-  def visible_course_sis_data(term_name, course_code)
+  def visible_course_sis_data(uid, term_id, ccn, term_name, course_code)
     course_xpath = course_data_xpath(term_name, course_code)
     title_xpath = "#{course_xpath}//div[@class='student-course-name']"
     units_xpath = "#{course_xpath}//div[@class='student-course-heading-units']"
     grading_basis_xpath = "#{course_xpath}//div[contains(text(),'Final:')]/span"
     mid_point_grade_xpath = "#{course_xpath}//div[contains(text(),'Mid:')]/span"
     grade_xpath = "#{course_xpath}//div[contains(text(),'Final:')]/span"
-    wait_list_xpath = "#{course_xpath}//span[contains(@class,'student-waitlisted')]"
     {
       :title => (h4_element(:xpath => title_xpath).text if h4_element(:xpath => title_xpath).exists?),
       :units_completed => (div_element(:xpath => units_xpath).text.delete('Units').strip if div_element(:xpath => units_xpath).exists?),
       :grading_basis => (span_element(:xpath => grading_basis_xpath).text if span_element(:xpath => grading_basis_xpath).exists?),
       :mid_point_grade => (span_element(:xpath => mid_point_grade_xpath).text.gsub("\n", '') if span_element(:xpath => mid_point_grade_xpath).exists?),
       :grade => (span_element(:xpath => grade_xpath).text if span_element(:xpath => grade_xpath).exists?),
-      :wait_list => (span_element(:xpath => wait_list_xpath).exists?)
+      :wait_list => (span_element(:id => "student-#{uid}-waitlisted-for-#{term_id}-#{ccn}").exists?)
     }
   end
 

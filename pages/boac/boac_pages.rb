@@ -237,6 +237,16 @@ module BOACPages
     search string
   end
 
+  ### STUDENT ###
+
+  # BOA route (URI, relative path) to student profile page
+  # @param uid [String]
+  # @return [String]
+  def path_to_student_view(uid)
+    # TODO: If user is in demo-mode this method should return: /student/#{Base64.encode64(uid)}
+    "/student/#{uid}"
+  end
+
   ### BOXPLOTS ###
 
   # Returns the XPath to a boxplot nested under another element

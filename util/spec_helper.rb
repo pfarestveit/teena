@@ -1,6 +1,7 @@
 require 'rspec'
 require 'rspec/core/rake_task'
 require 'logger'
+require "base64"
 require 'csv'
 require 'json'
 require 'selenium-webdriver'
