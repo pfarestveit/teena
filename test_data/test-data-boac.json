@@ -19,6 +19,27 @@
             "intensive_asc": null
         },
         {
+            "teams": null,
+            "levels": null,
+            "majors": null,
+            "gpa_ranges": null,
+            "last_initials": null,
+            "transfer_student": "true",
+            "expected_grad_terms": [
+                {"expected_grad_term": "2198"},
+                {"expected_grad_term": "2202"}
+            ],
+            "advisors": null,
+            "ethnicities": null,
+            "minority": null,
+            "genders": null,
+            "preps": null,
+            "probation_coe": null,
+            "inactive_coe": null,
+            "inactive_asc": null,
+            "intensive_asc": null
+        },
+        {
             "teams": [
                 {"squad": "Men's SwimDive, Divers"},
                 {"squad": "Men's SwimDive, Swimmers"}

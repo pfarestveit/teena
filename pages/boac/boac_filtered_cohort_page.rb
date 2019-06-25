@@ -179,6 +179,8 @@ class BOACFilteredCohortPage
                            new_filter_advisor_option(filter_option)
                          when 'Major'
                            link_element(xpath: "//a[@id=\"Major-#{filter_option}\"]")
+                         when 'Expected Graduation Term'
+                           link_element(xpath: "//a[@id='Expected Graduation Term-#{filter_option}']")
                          else
                            link_element(xpath: "//div[@class=\"cohort-filter-draft-column-02\"]//a[contains(text(),\"#{filter_option}\")]")
                        end
@@ -197,7 +199,11 @@ class BOACFilteredCohortPage
       # All others require a selection
     else
       wait_for_update_and_click new_sub_filter_button_element
-      option_element = (filter_key == 'advisorLdapUids') ? new_filter_advisor_option(filter_option) : link_element(xpath: "//div[@class=\"cohort-filter-draft-column-02\"]//a[contains(text(),\"#{filter_option}\")]")
+      option_element = if filter_key == 'advisorLdapUids'
+                         new_filter_advisor_option(filter_option)
+                       else
+                        link_element(xpath: "//div[@class=\"cohort-filter-draft-column-02\"]//a[contains(text(),\"#{filter_option}\")]")
+                       end
       wait_for_update_and_click option_element
     end
   end
@@ -217,8 +223,10 @@ class BOACFilteredCohortPage
     click_new_filter_button
     wait_for_update_and_click new_filter_option(filter_name)
 
-    # Inactive, Intensive, Probation, and Underrepresented Minority have no sub-options
-    choose_sub_option(filter_name, filter_option) unless ['Inactive', 'Inactive (COE)', 'Inactive (ASC)', 'Intensive', 'Underrepresented Minority', 'Probation'].include? filter_name
+    # Inactive, Intensive, Probation, Underrepresented Minority, Transfer Student have no sub-options
+    unless ['Transfer Student', 'Inactive', 'Inactive (COE)', 'Inactive (ASC)', 'Intensive', 'Underrepresented Minority', 'Probation'].include? filter_name
+      choose_sub_option(filter_name, filter_option)
+    end
     wait_for_update_and_click unsaved_filter_add_button_element
     unsaved_filter_apply_button_element.when_present Utils.short_wait
   end
@@ -285,6 +293,8 @@ class BOACFilteredCohortPage
         filters.level.each { |l| existing_filter_element('Level', l).exists? } if filters.level && filters.level.any?
         filters.units_completed.each { |u| existing_filter_element('Units Completed', u).exists? } if filters.units_completed && filters.units_completed.any?
         filters.major.each { |m| existing_filter_element('Major', m).exists? } if filters.major && filters.major.any?
+        existing_filter_element('Transfer Student').exists? if filters.transfer_student
+        filters.expected_grad_terms.each { |t| existing_filter_element('Expected Graduation Term', t).exists? } if filters.expected_grad_terms && filters.expected_grad_terms.any?
         existing_filter_element('Last Name', filters.last_name).exists? if filters.last_name
         # TODO - advisors
         filters.ethnicity.each { |e| existing_filter_element('Ethnicity', e).exists? } if filters.ethnicity && filters.ethnicity.any?
@@ -394,6 +404,8 @@ class BOACFilteredCohortPage
     cohort.search_criteria.level.each { |l| select_filter('Level', l) } if cohort.search_criteria.level
     cohort.search_criteria.units_completed.each { |u| select_filter('Units Completed', u) } if cohort.search_criteria.units_completed
     cohort.search_criteria.major.each { |m| select_filter('Major', m) } if cohort.search_criteria.major
+    select_filter 'Transfer Student' if cohort.search_criteria.transfer_student
+    cohort.search_criteria.expected_grad_terms.each { |t| select_filter('Expected Graduation Term', t) } if cohort.search_criteria.expected_grad_terms
     select_filter('Last Name', cohort.search_criteria.last_name) if cohort.search_criteria.last_name
 
     # CoE
@@ -483,6 +495,19 @@ class BOACFilteredCohortPage
         (matching_major_users = test.searchable_data)
     matching_major_users = matching_major_users.uniq.flatten.compact
 
+    # Transfer Student
+    matching_tranfer_users = (search_criteria.transfer_student ? (test.searchable_data.select { |u| u[:transfer_student] }) : test.searchable_data)
+
+    # Expected Graduation Term
+    matching_grad_term_users = if search_criteria.expected_grad_terms && search_criteria.expected_grad_terms.any?
+                                 test.searchable_data.select do |u|
+                                   search_criteria.expected_grad_terms.find { |search_term| search_term == u[:expected_grad_term] }
+                                 end
+                               else
+                                 test.searchable_data
+                               end
+    matching_grad_term_users.flatten!
+
     # Last Name
     matching_last_name_users = if search_criteria.last_name
                                  test.searchable_data.select { |u| u[:last_name_sortable_cohort][0] >= search_criteria.last_name.split[0].downcase && u[:last_name_sortable_cohort][0] <= search_criteria.last_name.split[1].downcase }
@@ -557,8 +582,8 @@ class BOACFilteredCohortPage
         (test.searchable_data.select { |u| (u[:squad_names] & (search_criteria.team.map { |s| s.name })).any? }) :
         test.searchable_data
 
-    matches = [matching_gpa_users, matching_level_users, matching_units_users, matching_major_users,
-               matching_last_name_users, matching_advisor_users, matching_ethnicity_users, matching_minority_users,
+    matches = [matching_gpa_users, matching_level_users, matching_units_users, matching_major_users, matching_tranfer_users,
+               matching_grad_term_users, matching_last_name_users, matching_advisor_users, matching_ethnicity_users, matching_minority_users,
                matching_gender_users, matching_preps_users, matching_inactive_coe_users, matching_probation_asc_users,
                matching_inactive_asc_users, matching_intensive_asc_users, matching_squad_users]
     matches.any?(&:empty?) ? [] : matches.inject(:'&')

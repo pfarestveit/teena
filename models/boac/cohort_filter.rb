@@ -6,6 +6,8 @@ class CohortFilter
                 :level,
                 :units_completed,
                 :major,
+                :transfer_student,
+                :expected_grad_terms,
                 :last_name,
                 :advisor,
                 :ethnicity,
@@ -27,6 +29,8 @@ class CohortFilter
     @level = (test_data['levels'] && test_data['levels'].map { |l| l['level'] })
     @units_completed = (test_data['units'] && test_data['units'].map { |u| u['unit'] })
     @major = (test_data['majors'] && test_data['majors'].map { |t| t['major'] })
+    @transfer_student = test_data['transfer_student']
+    @expected_grad_terms = (test_data['expected_grad_terms'] && test_data['expected_grad_terms'].map { |t| t['expected_grad_term'] })
     @last_name = test_data['last_initials']
 
     # CoE

@@ -86,7 +86,7 @@ module BOACCohortPages
       :sports => (sports_els.map &:text if sports_els.any?),
       :gpa => (gpa_el.text.gsub('No data', '').chomp if gpa_el.exists?),
       :term_units => (term_units_el.text if term_units_el.exists?),
-      :units_cumulative => ((cumul_units_el.text.gsub('No data', '').chomp == '--' ? '0' : cumul_units_el.text) if cumul_units_el.exists?),
+      :units_cumulative => (cumul_units_el.text.gsub('No data', '').chomp if cumul_units_el.exists?),
       :classes => class_els.map(&:text)
     }
   end

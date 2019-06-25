@@ -185,7 +185,7 @@ class BOACSearchResultsPage
   # @param note [Note]
   # @return [PageObject::Elements::Link]
   def note_link(note)
-    link_element(id: "link-to-student-#{note.id}")
+    link_element(xpath: "//a[contains(@href, '#{note.id}')]")
   end
 
   # Clicks the link element for a given note

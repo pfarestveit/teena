@@ -68,12 +68,12 @@ else
 
         it 'cannot create a note without a subject' do
           @student_page.click_create_new_note
-          @student_page.click_save_new_note
-          @student_page.subj_required_msg_element.when_visible 1
-          @student_page.click_cancel_new_note_modal
+          @student_page.new_note_save_button_element.when_present 1
+          expect(@student_page.new_note_save_button_element.disabled?).to be true
         end
 
         it 'can cancel an unsaved new note' do
+          @student_page.click_cancel_new_note_modal
           @student_page.click_create_new_note
           @student_page.wait_for_element_and_type(@student_page.note_body_text_area_elements[0], 'An edit to forget')
           @student_page.click_cancel_new_note_modal

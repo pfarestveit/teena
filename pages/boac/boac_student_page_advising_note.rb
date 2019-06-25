@@ -302,7 +302,7 @@ module BOACStudentPageAdvisingNote
     new_note_subject_input_element.when_not_visible Utils.short_wait
     id = ''
     start_time = Time.now
-    wait_until(10) { (id = BOACUtils.get_note_id_by_subject note) }
+    wait_until(15) { (id = BOACUtils.get_note_id_by_subject note) }
     logger.debug "Note ID is #{id}"
     logger.warn "Note was created in #{Time.now - start_time} seconds"
     note.created_date = note.updated_date = Time.now

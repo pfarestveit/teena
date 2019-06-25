@@ -87,6 +87,8 @@ if NessieUtils.include_l_and_s?
       it('sees a Level filter') { expect(@filtered_cohort_page.new_filter_option_by_key('levels').visible?).to be true }
       it('sees a Major filter') { expect(@filtered_cohort_page.new_filter_option_by_key('majors').visible?).to be true }
       it('sees a Units filter') { expect(@filtered_cohort_page.new_filter_option_by_key('unitRanges').visible?).to be true }
+      it('sees a Transfer Student filter') { expect(@filtered_cohort_page.new_filter_option('Transfer Student').visible?).to be true }
+      it('sees an Expected Graduation Term filter') { expect(@filtered_cohort_page.new_filter_option('Expected Graduation Term').visible?).to be true }
       it('sees a Last Name filter') { expect(@filtered_cohort_page.new_filter_option_by_key('lastNameRange').visible?).to be true }
       it('sees no Advisor filter') { expect(@filtered_cohort_page.new_filter_option_by_key('advisorLdapUids').visible?).to be false }
       it('sees no Ethnicity filter') { expect(@filtered_cohort_page.new_filter_option_by_key('ethnicities').visible?).to be false }
