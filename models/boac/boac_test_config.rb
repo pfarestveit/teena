@@ -41,6 +41,7 @@ class BOACTestConfig < TestConfig
         logger.error 'What kinda department is that??'
         fail
     end
+    logger.warn "Advisor is UID #{@advisor.uid}"
   end
 
   # Sets the students relevant to the dept being tested (if admin, all students)
@@ -208,6 +209,8 @@ class BOACTestConfig < TestConfig
       :level => ['Senior (90+ Units)'],
       :units_completed => ['90 - 119'],
       :major => major,
+      :transfer_student => true,
+      :expected_grad_terms => [CONFIG['term_code']],
       :last_name => 'A Z',
     }
 

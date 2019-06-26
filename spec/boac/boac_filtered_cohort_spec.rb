@@ -384,6 +384,37 @@ describe 'BOAC', order: :defined do
       end
     end
 
+    it 'allows the the advisor to remove a Transfer Student filter' do
+      if test.default_cohort.search_criteria.transfer_student
+        test.default_cohort.search_criteria.transfer_student = false
+        @cohort_page.remove_filter_of_type 'Transfer Student'
+        @cohort_page.verify_filters_present test.default_cohort
+      else
+        logger.warn 'Skipping test for removing transfer student filter since there is nothing to remove'
+      end
+    end
+
+    it 'allows the advisor to edit an Expected Graduation Term filter' do
+      if test.default_cohort.search_criteria.expected_grad_terms.any?
+        new_term_id = (test.default_cohort.search_criteria.expected_grad_terms.first.to_i + 10).to_s
+        test.default_cohort.search_criteria.expected_grad_terms = [new_term_id]
+        @cohort_page.edit_filter_and_confirm('Expected Graduation Term', test.default_cohort.search_criteria.expected_grad_terms.first)
+        @cohort_page.verify_filters_present test.default_cohort
+      else
+        logger.warn 'Skipping test for editing expected grad terms since there is nothing to edit'
+      end
+    end
+
+    it 'allows the advisor to remove an Expected Graduation Term filter' do
+      if test.default_cohort.expected_grad_terms.major.any?
+        test.default_cohort.search_criteria.expected_grad_terms = []
+        @cohort_page.remove_filter_of_type 'Expected Graduation Term'
+        @cohort_page.verify_filters_present test.default_cohort
+      else
+        logger.warn 'Skipping test for removing expected grad terms since there is nothing to remove'
+      end
+    end
+
     it 'allows the advisor to edit an Ethnicity filter' do
       if test.default_cohort.search_criteria.ethnicity
         test.default_cohort.search_criteria.ethnicity = ['Mexican / Mexican-American / Chicano']

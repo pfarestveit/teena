@@ -47,6 +47,8 @@ describe 'A Physics advisor using BOAC' do
     it('sees a Level filter') { expect(@filtered_cohort_page.new_filter_option('Level').visible?).to be true }
     it('sees a Major filter') { expect(@filtered_cohort_page.new_filter_option('Major').visible?).to be true }
     it('sees a Units filter') { expect(@filtered_cohort_page.new_filter_option('Units Completed').visible?).to be true }
+    it('sees a Transfer Student filter') { expect(@filtered_cohort_page.new_filter_option('Transfer Student').visible?).to be true }
+    it('sees an Expected Graduation Term filter') { expect(@filtered_cohort_page.new_filter_option('Expected Graduation Term').visible?).to be true }
     it('sees a Last Name filter') { expect(@filtered_cohort_page.new_filter_option('Last Name').visible?).to be true }
     it('sees no Advisor filter') { expect(@filtered_cohort_page.new_filter_option('Advisor').exists?).to be false }
     it('sees no Ethnicity filter') { expect(@filtered_cohort_page.new_filter_option('Ethnicity').exists?).to be false }
