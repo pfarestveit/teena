@@ -186,22 +186,26 @@ module BOACPages
   # @param date [Date]
   def set_notes_date_from(date)
     expand_search_options_notes_subpanel
-    self.note_date_from = date ? date.strftime('%m/%d/%Y') : ''
+    from_date = date ? date.strftime('%m/%d/%Y') : ''
+    logger.debug "Entering note date from '#{from_date}'"
+    wait_for_element_and_type(note_date_from_element, from_date)
   end
 
   # Sets the "Last updated > To" notes search option
   # @param date [Date]
   def set_notes_date_to(date)
     expand_search_options_notes_subpanel
-    self.note_date_to = date ? date.strftime('%m/%d/%Y') : ''
+    to_date = date ? date.strftime('%m/%d/%Y') : ''
+    logger.debug "Entering note date to '#{to_date}'"
+    wait_for_element_and_type(note_date_to_element, to_date)
   end
 
   # Sets both "Last updated" notes search options
   # @param from [Date]
   # @param to [Date]
   def set_notes_date_range(from, to)
-    set_notes_date_from from
     set_notes_date_to to
+    set_notes_date_from from
   end
 
   # Selects a sidebar note topic
@@ -209,6 +213,7 @@ module BOACPages
   def select_note_topic(topic)
     expand_search_options_notes_subpanel
     topic_name = topic ? topic.name : 'Any topic'
+    logger.debug "Selecting note topic '#{topic_name}'"
     wait_for_element_and_select_js(note_topics_select_element, topic_name)
   end
 

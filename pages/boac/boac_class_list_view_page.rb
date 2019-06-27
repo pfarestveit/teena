@@ -120,7 +120,7 @@ class BOACClassListViewPage
   # @param node [Integer]
   # @return [String]
   def assigns_submit_score(student, node)
-    el = div_element(xpath: "#{assigns_submit_xpath(student, node)}/div/strong")
+    el = div_element(xpath: "#{assigns_submit_xpath(student, node)}//strong")
     el.text if el.exists?
   end
 
@@ -129,7 +129,7 @@ class BOACClassListViewPage
   # @param node [Integer]
   # @return [String]
   def assigns_submit_max(student, node)
-    el = span_element(xpath: "#{assigns_submit_xpath(student, node)}/div/span")
+    el = span_element(xpath: "#{assigns_submit_xpath(student, node)}//strong/following-sibling::span")
     el.text.split(' ')[1].delete(')') if el.exists?
   end
 

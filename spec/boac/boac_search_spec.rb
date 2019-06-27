@@ -209,22 +209,23 @@ describe 'BOAC' do
 
             # Search string
 
+            @homepage.set_notes_date_range(nil, nil)
             @homepage.search_note note_search[:string]
 
-            results_count = @search_results_page.note_results_count
-            it("returns results when searching with the first #{notes_search_word_count} words in #{note_search[:test_case]}") { expect(results_count).to be > 0 }
+            string_results_count = @search_results_page.note_results_count
+            it("returns results when searching with the first #{notes_search_word_count} words in #{note_search[:test_case]}") { expect(string_results_count).to be > 0 }
 
-            unless results_count.zero?
-              it("shows no more than 100 results when searching with the first #{notes_search_word_count} words in #{note_search[:test_case]}") { expect(results_count).to be <= 100 }
+            it("shows no more than 100 results when searching with the first #{notes_search_word_count} words in #{note_search[:test_case]}") { expect(string_results_count).to be <= 100 }
 
-              @search_results_page.wait_for_note_search_result_rows
-              visible_student_uids = @search_results_page.note_result_uids
-              it("returns only results for students in the advisor's department when searching with the first #{notes_search_word_count} words in #{note_search[:test_case]}") { expect(visible_student_uids - dept_uids).to be_empty }
+            @search_results_page.wait_for_note_search_result_rows
+            visible_student_uids = @search_results_page.note_result_uids
+            it("returns only results for students in the advisor's department when searching with the first #{notes_search_word_count} words in #{note_search[:test_case]}") { expect(visible_student_uids - dept_uids).to be_empty }
 
+            if string_results_count < 100
               student_result_returned = @search_results_page.note_in_search_result?(note_search[:note])
               it("returns a result when searching with the first #{notes_search_word_count} words in #{note_search[:test_case]}") { expect(student_result_returned).to be true }
 
-              if student_result_returned && @search_results_page.note_results_count < 100
+              if student_result_returned
                 result = @search_results_page.note_result(search[:student], note_search[:note])
                 updated_date_expected = note_search[:note].updated_date && note_search[:note].updated_date != note_search[:note].created_date && note_search[:note].advisor.uid != 'UCBCONVERSION'
                 expected_date = updated_date_expected ? note_search[:note].updated_date : note_search[:note].created_date
@@ -235,29 +236,41 @@ describe 'BOAC' do
                 # TODO it("note search shows the advisor name on #{note_search[:test_case]}") { expect(result[:advisor_name]).not_to be_nil } unless note.advisor_uid == 'UCBCONVERSION'
                 it("note search shows the most recent updated date on #{note_search[:test_case]}") { expect(result[:date]).to eql(expected_date_text) }
               end
+
+            else
+              logger.warn "Skipping a search string test with note ID #{note_search[:note].id} because there are more than 100 results"
             end
 
             # Topics
 
             @homepage.expand_search_options_notes_subpanel
 
+            all_topics = Topic::TOPICS.map &:name
             note_topics = Topic::TOPICS.map(&:name).select { |topic_name| note_search[:note].topics.include? topic_name.upcase }
+            non_note_topics = all_topics - note_topics
 
             note_topics.each do |note_topic|
               topic = Topic::TOPICS.find { |t| t.name == note_topic }
               @homepage.select_note_topic topic
               @homepage.search_note note_search[:string]
-              topic_match = @search_results_page.note_in_search_result?(note_search[:note])
-              it("returns a result when searching with the first #{notes_search_word_count} words in note ID #{note_search[:note].id} and matching topic #{topic.name}") do
-                expect(topic_match).to be true
-              end
+              topic_results_count = @search_results_page.note_results_count
 
-              non_topic = Topic::TOPICS.find{ |t| t.name != note_topic }
-              @homepage.select_note_topic non_topic
-              @homepage.search_note note_search[:string]
-              topic_no_match = @search_results_page.note_in_search_result?(note_search[:note])
-              it "returns no result when searching with the first #{notes_search_word_count} words in note ID #{note_search[:note].id} and non-matching topic #{topic.name}" do
-                expect(topic_no_match).to be false
+              if topic_results_count < 100
+                topic_match = @search_results_page.note_in_search_result?(note_search[:note])
+                it("returns a result when searching with the first #{notes_search_word_count} words in note ID #{note_search[:note].id} and matching topic #{topic.name}") do
+                  expect(topic_match).to be true
+                end
+
+                non_topic = Topic::TOPICS.find{ |t| t.name == non_note_topics.first }
+                @homepage.select_note_topic non_topic
+                @homepage.search_note note_search[:string]
+                topic_no_match = @search_results_page.note_in_search_result?(note_search[:note])
+                it "returns no result when searching with the first #{notes_search_word_count} words in note ID #{note_search[:note].id} and non-matching topic #{topic.name}" do
+                  expect(topic_no_match).to be false
+                end
+
+              else
+                logger.warn "Skipping a search string + topic test with note ID #{note_search[:note].id} because there are more than 100 results"
               end
             end
 
@@ -275,17 +288,31 @@ describe 'BOAC' do
               # Posted by you
               @homepage.select_notes_posted_by_you
               @homepage.search_note note_search[:string]
-              you_posted_match = @search_results_page.note_in_search_result?(note_search[:note])
-              it "returns a result when searching with the first #{notes_search_word_count} words in #{note_search[:test_case]} and posted by #{test_config.advisor.uid}" do
-                expect(you_posted_match).to be true
+              you_posted_results_count = @search_results_page.note_results_count
+
+              if you_posted_results_count < 100
+                you_posted_match = @search_results_page.note_in_search_result?(note_search[:note])
+                it "returns a result when searching with the first #{notes_search_word_count} words in #{note_search[:test_case]} and posted by #{test_config.advisor.uid}" do
+                  expect(you_posted_match).to be true
+                end
+
+              else
+                logger.warn "Skipping a search string + posted-by-you test with note ID #{note_search[:note].id} because there are more than 100 results"
               end
 
               # Posted by anyone
               @homepage.select_notes_posted_by_anyone
               @homepage.search_note note_search[:string]
-              anyone_posted_match = @search_results_page.note_in_search_result?(note_search[:note])
-              it "returns a result when searching with the first #{notes_search_word_count} words in #{note_search[:test_case]} and posted by anyone" do
-                expect(anyone_posted_match).to be true
+              anyone_posted_results_count = @search_results_page.note_results_count
+
+              if anyone_posted_results_count < 100
+                anyone_posted_match = @search_results_page.note_in_search_result?(note_search[:note])
+                it "returns a result when searching with the first #{notes_search_word_count} words in #{note_search[:test_case]} and posted by anyone" do
+                  expect(anyone_posted_match).to be true
+                end
+
+              else
+                logger.warn "Skipping a search string + posted-by-anyone test with note ID #{note_search[:note].id} because there are more than 100 results"
               end
 
             else
@@ -294,17 +321,31 @@ describe 'BOAC' do
               # Posted by you
               @homepage.select_notes_posted_by_you
               @homepage.search_note note_search[:string]
-              you_posted_match = @search_results_page.note_in_search_result?(note_search[:note])
-              it "returns no result when searching with the first #{notes_search_word_count} words in #{note_search[:test_case]} and posted by #{test_config.advisor.uid}" do
-                expect(you_posted_match).to be_falsey
+              you_posted_results_count = @search_results_page.note_results_count
+
+              if you_posted_results_count < 100
+                you_posted_match = @search_results_page.note_in_search_result?(note_search[:note])
+                it "returns no result when searching with the first #{notes_search_word_count} words in #{note_search[:test_case]} and posted by #{test_config.advisor.uid}" do
+                  expect(you_posted_match).to be_falsey
+                end
+
+              else
+                logger.warn "Skipping a search string + posted-by-you test with note ID #{note_search[:note].id} because there are more than 100 results"
               end
 
               # Posted by anyone
               @homepage.select_notes_posted_by_anyone
               @homepage.search_note note_search[:string]
-              anyone_posted_match = @search_results_page.note_in_search_result?(note_search[:note])
-              it "returns a result when searching with the first #{notes_search_word_count} words in #{note_search[:test_case]} and posted by anyone" do
-                expect(anyone_posted_match).to be true
+              anyone_posted_results_count = @search_results_page.note_results_count
+
+              if anyone_posted_results_count < 100
+                anyone_posted_match = @search_results_page.note_in_search_result?(note_search[:note])
+                it "returns a result when searching with the first #{notes_search_word_count} words in #{note_search[:test_case]} and posted by anyone" do
+                  expect(anyone_posted_match).to be true
+                end
+
+              else
+                logger.warn "Skipping a search string + posted-by-anyone test with note ID #{note_search[:note].id} because there are more than 100 results"
               end
             end
 
@@ -315,34 +356,60 @@ describe 'BOAC' do
 
             @homepage.set_notes_date_range(note_date, note_date + 1)
             @homepage.search_note note_search[:string]
-            range_start_match = @search_results_page.note_in_search_result?(note_search[:note])
-            it "returns a result when searching the first #{notes_search_word_count} words in note ID #{note_search[:note].id} in a range starting with last updated date" do
-              expect(range_start_match).to be true
+            range_start_results_count = @search_results_page.note_results_count
+
+            if range_start_results_count < 100
+              range_start_match = @search_results_page.note_in_search_result?(note_search[:note])
+              it "returns a result when searching the first #{notes_search_word_count} words in note ID #{note_search[:note].id} in a range starting with last updated date" do
+                expect(range_start_match).to be true
+              end
+
+            else
+              logger.warn "Skipping a search string + date range test with note ID #{note_search[:note].id} because there are more than 100 results"
             end
 
             @homepage.set_notes_date_range(note_date - 1, note_date)
             @homepage.search_note note_search[:string]
-            range_end_match = @search_results_page.note_in_search_result?(note_search[:note])
-            it "returns a result when searching the first #{notes_search_word_count} words in note ID #{note_search[:note].id} in a range ending with last updated date" do
-              expect(range_end_match).to be true
+            range_end_results_count = @search_results_page.note_results_count
+
+            if range_end_results_count < 100
+              range_end_match = @search_results_page.note_in_search_result?(note_search[:note])
+              it "returns a result when searching the first #{notes_search_word_count} words in note ID #{note_search[:note].id} in a range ending with last updated date" do
+                expect(range_end_match).to be true
+              end
+
+            else
+              logger.warn "Skipping a search string + date range test with note ID #{note_search[:note].id} because there are more than 100 results"
             end
 
             @homepage.set_notes_date_range(note_date - 30, note_date - 1)
             @homepage.search_note note_search[:string]
-            range_before_match = @search_results_page.note_in_search_result?(note_search[:note])
-            it "returns no result when searching the first #{notes_search_word_count} words in note ID #{note_search[:note].id} in a range before last updated date" do
-              expect(range_before_match).to be false
+            range_before_results_count = @search_results_page.note_results_count
+
+            if range_before_results_count < 100
+              range_before_match = @search_results_page.note_in_search_result?(note_search[:note])
+              it "returns no result when searching the first #{notes_search_word_count} words in note ID #{note_search[:note].id} in a range before last updated date" do
+                expect(range_before_match).to be false
+              end
+
+            else
+              logger.warn "Skipping a search string + date range test with note ID #{note_search[:note].id} because there are more than 100 results"
             end
 
             @homepage.set_notes_date_range(note_date + 1, note_date + 30)
             @homepage.search_note note_search[:string]
-            range_after_match = @search_results_page.note_in_search_result?(note_search[:note])
-            it "returns no result when searching the first #{notes_search_word_count} words in note ID #{note_search[:note].id} in a range after last updated date" do
-              expect(range_after_match).to be false
+            range_after_results_count = @search_results_page.note_results_count
+
+            if range_after_results_count < 100
+              range_after_match = @search_results_page.note_in_search_result?(note_search[:note])
+              it "returns no result when searching the first #{notes_search_word_count} words in note ID #{note_search[:note].id} in a range after last updated date" do
+                expect(range_after_match).to be false
+              end
+
+            else
+              logger.warn "Skipping a search string + date range test with note ID #{note_search[:note].id} because there are more than 100 results"
             end
           end
-
-          @homepage.set_notes_date_range(nil, nil)
 
         rescue => e
           Utils.log_error e
