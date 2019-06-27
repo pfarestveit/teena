@@ -107,7 +107,7 @@ describe 'BOAC' do
               # Note topics
 
               if note.topics.any?
-                topics = note.topics.map &:upcase
+                topics = note.topics.map(&:upcase).uniq
                 topics.sort! if expected_boa_notes.include? note
                 (it("shows the right topics on #{test_case}") { expect(visible_expanded_note_data[:topics]).to eql(topics) })
               else
