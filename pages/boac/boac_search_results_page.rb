@@ -137,21 +137,17 @@ class BOACSearchResultsPage
     wait_until(Utils.short_wait) { note_search_result_elements.any? }
   end
 
-  # Checks if a given note is among search results. If more than 100 results exist, the note could be among them
-  # but not displayed. In that case, returns true without further tests.
+  # Checks if a given note is among search results.
   # @param note [Note]
   # @return [boolean]
   def note_in_search_result?(note)
     count = note_results_count
-    verify_block do
-      if count.zero?
-        return false
-      elsif count == 100
-        logger.warn "Skipping a test with note ID #{note.id} because there are more than 100 results"
-        sleep 1
-      else
+    if count.zero?
+      false
+    else
+      verify_block do
         wait_for_note_search_result_rows
-        note_link(note).when_present Utils.short_wait
+        note_link(note).when_present 2
       end
     end
   end
