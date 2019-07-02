@@ -77,7 +77,7 @@ else
           @student_page.click_create_new_note
           @student_page.wait_for_element_and_type(@student_page.note_body_text_area_elements[0], 'An edit to forget')
           @student_page.click_cancel_new_note_modal
-          @student_page.confirm_delete
+          @student_page.confirm_delete_or_discard
           @student_page.note_body_text_area_elements[0].when_not_visible 1
         end
 
@@ -260,7 +260,7 @@ else
           @student_page.click_edit_note_button note_1
           @student_page.enter_edit_note_subject note_1
           @student_page.click_cancel_note_edit
-          @student_page.confirm_delete
+          @student_page.confirm_delete_or_discard
           @student_page.note_body_text_area_elements[0].when_not_visible 1
           note_1.subject = original_subject
           @student_page.verify_note note_1
@@ -325,7 +325,7 @@ else
           @student_page.click_edit_note_button note_2
           @student_page.wait_for_element_and_type(@student_page.note_body_text_area_elements[0], 'An edit to forget')
           @student_page.click_cancel_note_edit
-          @student_page.confirm_delete
+          @student_page.confirm_delete_or_discard
           @student_page.verify_note note_2
         end
 
@@ -336,7 +336,7 @@ else
           @student_page.click_save_note_edit
           @student_page.subj_required_msg_element.when_visible 1
           @student_page.click_cancel_note_edit
-          @student_page.wait_for_update_and_click @student_page.confirm_delete_button_element
+          @student_page.wait_for_update_and_click @student_page.confirm_delete_or_discard_button_element
         end
 
         it 'cannot add an attachment with the same file name as an existing attachment' do

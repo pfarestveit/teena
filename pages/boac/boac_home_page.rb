@@ -6,6 +6,7 @@ class BOACHomePage
   include Logging
   include Page
   include BOACPages
+  include BOACPagesCreateNoteModal
   include BOACUserListPages
 
   button(:sign_in, id: 'splash-sign-in')

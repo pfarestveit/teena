@@ -276,6 +276,18 @@ class BOACTestConfig < TestConfig
     set_global_configs all_students
   end
 
+  # Config for testing batch note creation
+  # @param all_students [Array<BOACUser>]
+  def batch_note_management(all_students)
+    attachment_filenames = Dir.entries(Utils.assets_dir).reject { |f| %w(. .. .DS_Store).include? f }
+    @attachments = attachment_filenames.map do |f|
+      file = File.new Utils.asset_file_path(f)
+      Attachment.new({:file_name => f, :file_size => file.size})
+    end
+    set_global_configs all_students
+    set_default_cohort
+  end
+
   # Config for SIS data testing
   # @param all_students [Array<BOACUser>]
   def sis_data(all_students)

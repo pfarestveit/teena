@@ -216,7 +216,7 @@ module BOACStudentPageAdvisingNote
     attachments.each do |attach|
       logger.info "Removing attachment '#{attach.file_name}' from note ID #{note.id}"
       wait_for_update_and_click existing_note_attachment_delete_button(note, attach)
-      confirm_delete
+      confirm_delete_or_discard
       existing_note_attachment_delete_button(note, attach).when_not_visible Utils.short_wait
       note.attachments.delete attach
       attach.deleted_at = Time.now
@@ -328,12 +328,6 @@ module BOACStudentPageAdvisingNote
     wait_for_update_and_click edit_note_button(note)
   end
 
-  # Clicks the advanced options button to expose all note features
-  def show_adv_note_options
-    logger.debug 'Clicking the Advanced Note Options button'
-    wait_for_update_and_click adv_note_options_button_element unless add_topic_button?
-  end
-
   # Obtains the ID of a new note and sets current created and updated dates. Fails if the note ID is not available within a defined
   # timeout
   # @param note [Note]
@@ -370,7 +364,7 @@ module BOACStudentPageAdvisingNote
     logger.info "Deleting note '#{note.id}'"
     expand_note note
     wait_for_update_and_click delete_note_button(note)
-    wait_for_update_and_click confirm_delete_button_element
+    confirm_delete_or_discard
     note.deleted_date = Time.now
   end
 
@@ -399,7 +393,6 @@ module BOACStudentPageAdvisingNote
   # Cancel
 
   button(:edit_note_cancel_button, id: 'cancel-edit-note-button')
-  button(:confirm_delete_button, id: 'are-you-sure-confirm')
 
   # Clicks the cancel note edit button
   def click_cancel_note_edit
@@ -407,9 +400,20 @@ module BOACStudentPageAdvisingNote
     wait_for_update_and_click edit_note_cancel_button_element
   end
 
-  # Hits the confirm delete button for an uncreated note or removed attachment, unless the browser is Firefox
-  def confirm_delete
-    wait_for_update_and_click confirm_delete_button_element unless "#{browser.browser}" == 'firefox'
+  #### CREATE NOTE, STUDENT PROFILE ####
+
+  # Combines methods to create a note with subject, body, attachments, topics, ID, and created/updated dates
+  # @param note [Note]
+  # @param topics [Array<Topic>]
+  # @param attachments [Array<Attachment>]
+  def create_note(note, topics, attachments)
+    click_create_new_note
+    enter_new_note_subject note
+    enter_note_body note
+    add_attachments_to_new_note(note, attachments)
+    add_topics(note, topics)
+    click_save_new_note
+    set_new_note_id note
   end
 
 end
