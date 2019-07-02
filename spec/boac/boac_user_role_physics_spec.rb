@@ -79,9 +79,9 @@ describe 'A Physics advisor using BOAC' do
 
   context 'performing a user search' do
 
-    it 'sees no non-Physics students in search results' do
+    it 'sees non-Physics students in search results' do
       @search_page.search_non_note coe_only_students.first.sis_id
-      @search_page.no_results_msg.when_visible Utils.short_wait
+      expect(@search_page.student_search_results_count).to eql(1)
     end
 
     it 'sees overlapping Physics and ASC / CoE students in search results' do
@@ -91,33 +91,6 @@ describe 'A Physics advisor using BOAC' do
       else
         logger.warn 'Skipping search for overlapping students cuz there ain\'t none'
       end
-    end
-  end
-
-  context 'visiting a class page' do
-
-    it 'sees only Physics student data in a section endpoint' do
-      api_section_page = BOACApiSectionPage.new @driver
-      api_section_page.get_data(@driver, '2178', '13826')
-      expect(test_physics.dept_students.map(&:sis_id).sort & api_section_page.student_sids).to eql(api_section_page.student_sids.sort)
-    end
-  end
-
-  context 'visiting a student page' do
-
-    it 'cannot hit a non-ASC student page' do
-      @student_page.navigate_to "#{BOACUtils.base_url}#{@homepage.path_to_student_view(coe_only_students.first.uid)}"
-      @student_page.wait_for_title 'Page not found'
-    end
-
-    it 'can hit an overlapping Physics and ASC / CoE student page' do
-      @student_page.load_page overlap_students.first
-      @student_page.student_name_heading_element.when_visible Utils.medium_wait
-      expect(@student_page.visible_sis_data[:name]).to eql(overlap_students.first.full_name.split(',').reverse.join(' ').strip)
-    end
-
-    it('cannot hit the user analytics endpoint for a non-ASC student') do
-      expect(@api_user_analytics_page.get_data(@driver, coe_only_students.first)).to be_nil
     end
   end
 

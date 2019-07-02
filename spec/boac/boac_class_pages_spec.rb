@@ -10,7 +10,7 @@ describe 'BOAC' do
     test.class_pages NessieUtils.get_all_students
     pages_tested = []
 
-    all_dept_student_sids = test.dept_students.map &:sis_id
+    all_student_sids = test.students.map &:sis_id
 
     courses_csv = Utils.create_test_output_csv('boac-class-page-courses.csv', %w(Term Course Title Format Units))
     meetings_csv =Utils.create_test_output_csv('boac-class-page-meetings.csv', %w(Term Course Instructors Days Time Location))
@@ -108,14 +108,10 @@ describe 'BOAC' do
                           logger.error "Expecting #{api_section_page.student_sids.sort} but got #{visible_sids}" unless visible_sids == api_section_page.student_sids.sort
                           it("shows the right students for #{class_test_case}") { expect(visible_sids.sort).to eql(api_section_page.student_sids.sort) }
 
-                          # Check that only students who should be visible to the advisor appear on the page
-                          logger.error "Expected #{visible_sids - all_dept_student_sids} to be empty" unless (visible_sids - all_dept_student_sids).empty?
-                          it("shows only #{test.dept.name} students for #{class_test_case}") { expect(visible_sids - all_dept_student_sids).to be_empty }
-
                           # Perform further tests on the students who appear on the first page
                           @class_page.load_page(term_id, section_data[:ccn], student)
                           visible_students = @class_page.class_list_view_sids
-                          expected_students = test.dept_students.select { |s| visible_students.include? s.sis_id }
+                          expected_students = test.students.select { |s| visible_students.include? s.sis_id }
                           expected_student_names = (expected_students.map { |u| "#{u.last_name}, #{u.first_name}" }).sort
                           visible_student_names = (@class_page.list_view_names).sort
                           logger.error "Expecting #{expected_student_names} and got #{visible_student_names}" unless visible_student_names == expected_student_names
@@ -124,21 +120,21 @@ describe 'BOAC' do
 
                           # Collect all the expected class page data for each student in the class
                           all_student_data = []
-                          expected_students.each do |dept_student|
+                          expected_students.each do |student|
 
                             # Load the student's data and find the matching course
                             student_api = BOACApiStudentPage.new @driver
-                            student_api.get_data(@driver, dept_student)
+                            student_api.get_data(@driver, student)
                             term = student_api.terms.find { |t| student_api.term_name(t) == term_name }
                             course = student_api.courses(term).find { |c| student_api.course_display_name(c) == course_sis_data[:code] }
-                            student_squad_names = dept_student.sports.map do |squad_code|
+                            student_squad_names = student.sports.map do |squad_code|
                               squad = Squad::SQUADS.find { |s| s.code == squad_code }
                               squad.name
                             end
 
                             # Collect the student data relevant to the class page
                             student_class_page_data = {
-                              :sid => dept_student.sis_id,
+                              :sid => student.sis_id,
                               :level => (student_api.sis_profile_data[:level].nil? ? '' : student_api.sis_profile_data[:level]),
                               :majors => student_api.sis_profile_data[:majors],
                               :sports => student_squad_names,

@@ -13,7 +13,6 @@ describe 'BOAC' do
     students_with_sis_notes = []
     downloadable_attachments = []
     advisor_link_tested = false
-    dept_uids = test.dept_students.map &:uid
 
     notes_data_heading = %w(UID SID NoteId Created Updated CreatedBy Advisor AdvisorRole AdvisorDepts HasBody Topics Attachments)
     notes_data = Utils.create_test_output_csv('boac-legacy-notes.csv', notes_data_heading)
@@ -211,40 +210,6 @@ describe 'BOAC' do
     it('has at least one test student with a SIS note') { expect(students_with_sis_notes.any?).to be true }
 
     if downloadable_attachments.any?
-      other_depts = BOACDepartments::DEPARTMENTS.reject { |d| [test.dept, BOACDepartments::ADMIN, (BOACDepartments::L_AND_S unless NessieUtils.include_l_and_s?)].include? d }
-
-      other_depts.each do |dept|
-
-        test.dept = dept
-        test.set_advisor
-        test.set_dept_students all_students
-        test_dept_sids = test.dept_students.map &:sis_id
-        @homepage.load_page
-        @homepage.log_out
-        @homepage.dev_auth test.advisor
-
-        downloadable_attachments.each do |attach|
-
-          if attach.sis_file_name
-            sid = attach.sis_file_name.split('_').first
-            if test_dept_sids.include? sid
-              logger.info "Skipping non-auth download test for SID #{sid} since it belongs to the advisor's department"
-
-            else
-              identifier = attach.sis_file_name || attach.id
-              Utils.prepare_download_dir
-              @api_notes_attachment_page.load_page identifier
-              no_access = @api_notes_attachment_page.verify_block { @api_notes_attachment_page.not_found_msg_element.when_visible Utils.short_wait }
-              it("blocks #{test.dept.name} advisor UID #{test.advisor.uid} from hitting the attachment download endpoint for #{identifier}") { expect(no_access).to be true }
-
-              no_file = Utils.downloads_empty?
-              it("delivers no file to #{test.dept.name} advisor UID #{test.advisor.uid} when hitting the attachment download endpoint for #{identifier}") { expect(no_file).to be true }
-            end
-          else
-            logger.warn "Skipping download test for note attachment ID #{attach.id} since it is not a legacy note"
-          end
-        end
-      end
 
       @homepage.load_page
       @homepage.log_out

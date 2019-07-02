@@ -86,7 +86,7 @@ describe 'BOAC' do
     end
 
     it 'can be done using bulk SIDs feature' do
-      students = test.dept_students.first(10)
+      students = test.students.first(10)
       @homepage.click_sidebar_create_curated_group
       group_created_from_bulk = CuratedGroup.new({:name => "Group created with bulk SIDs #{test.id}"})
       @group_page.create_group_with_bulk_sids(students, group_created_from_bulk)
@@ -202,7 +202,7 @@ describe 'BOAC' do
 
     it 'can be added on the bulk-add-SIDs page' do
       @group_page.load_page group_4
-      @group_page.add_sids_to_existing_grp(test.dept_students.last(10), group_4)
+      @group_page.add_sids_to_existing_grp(test.students.last(10), group_4)
       missing_sids = group_4.members.map(&:sis_id).sort - @group_page.visible_sids.sort
       # Account for SIDs that have no associated data and will not appear in Boa
       if missing_sids.any?
@@ -218,16 +218,6 @@ describe 'BOAC' do
         end
       end
       expect(missing_sids).to be_empty
-    end
-
-    it 'will not show unavailable SIDs added on the bulk-add-SIDs page' do
-      unavailable_students = (all_students - test.dept_students).first(10)
-      @group_page.load_page group_4
-      @group_page.click_add_students_button
-      @group_page.enter_sid_list unavailable_students.map(&:sis_id).join(', ')
-      @group_page.click_add_sids_to_group_button
-      expect(@group_page.visible_sids.sort).to eql(group_4.members.map(&:sis_id).sort)
-      @group_page.wait_for_sidebar_group group_4
     end
 
     it 'can be added on class page list view using select-all' do
@@ -299,16 +289,8 @@ describe 'BOAC' do
       @group_page.sids_not_found_error_msg_element.when_visible Utils.short_wait
     end
 
-    it 'hides students who are not available to the user but have been added to the group' do
-      non_dept_student = all_students.find { |s| !test.dept_students.include? s }
-      @group_page.click_add_students_button
-      @group_page.enter_sid_list non_dept_student.sis_id
-      @group_page.click_add_sids_to_group_button
-      expect(@group_page.visible_sids).not_to include(non_dept_student.sis_id)
-    end
-
     it 'allows the user to add large sets of SIDs' do
-      @group_page.add_sids_to_existing_grp(test.dept_students.first(BOACUtils.group_bulk_sids_max), group_4)
+      @group_page.add_sids_to_existing_grp(test.students.first(BOACUtils.group_bulk_sids_max), group_4)
       @group_page.wait_for_list_to_load
       missing_sids = group_4.members.map(&:sis_id).sort - @group_page.visible_sids.sort
       # Account for SIDs that have no associated data and will not appear in Boa

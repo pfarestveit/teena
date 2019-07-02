@@ -20,7 +20,7 @@ elsif !other_advisor
 
 else
 
-  test_student = test.dept_students.first
+  test_student = test.students.first
   notes = []
   notes << (note_1 = Note.new({:advisor => test.advisor}))
   notes << (note_2 = Note.new({:advisor => test.advisor}))
