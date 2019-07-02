@@ -12,10 +12,8 @@ describe 'An ASC advisor' do
   test_coe = BOACTestConfig.new
   test_coe.user_role_coe all_students
 
-  asc_inactive_students = test_asc.dept_students.reject &:active_asc
-
   overlap_students = test_asc.dept_students & test_coe.dept_students
-  coe_only_students = test_coe.dept_students - overlap_students
+  asc_inactive_students = test_asc.dept_students.reject &:active_asc
 
   before(:all) do
     @driver = Utils.launch_browser test_asc.chrome_profile
@@ -80,46 +78,29 @@ describe 'An ASC advisor' do
 
   context 'performing a user search' do
 
-    it 'sees no non-ASC students in search results' do
-      @search_page.search_non_note coe_only_students.first.sis_id
-      @search_page.no_results_msg.when_visible Utils.short_wait
+    it 'sees ASC students in search results' do
+      @search_page.search_non_note test_asc.dept_students.first.sis_id
+      expect(@search_page.student_search_results_count).to eql(1)
     end
 
-    it('sees overlapping ASC and CoE active students in search results') do
-      student = overlap_students.find &:active_asc
-      if student
-        @search_page.search_non_note student.sis_id
-        expect(@search_page.student_search_results_count).to eql(1)
-      else
-        logger.warn 'Skipping search for overlapping students since none are active'
-      end
+    it 'sees COE students in search results' do
+      @search_page.search_non_note test_coe.dept_students.first.sis_id
+      expect(@search_page.student_search_results_count).to eql(1)
     end
+
   end
 
-  context 'visiting a class page' do
-
-    it 'sees only ASC student data in a section endpoint' do
-      api_section_page = BOACApiSectionPage.new @driver
-      api_section_page.get_data(@driver, '2178', '13826')
-      expect(test_asc.dept_students.map(&:sis_id).sort & api_section_page.student_sids).to eql(api_section_page.student_sids.sort)
-    end
-  end
-
-  context 'visiting a student page' do
-
-    it 'cannot hit a non-ASC student page' do
-      @student_page.navigate_to "#{BOACUtils.base_url}#{@homepage.path_to_student_view(coe_only_students.first.uid)}"
-      @student_page.wait_for_title 'Page not found'
+  context 'when visiting a student page' do
+    it 'can see the ASC profile data for an overlapping CoE and ASC student on the user analytics page' do
+      overlap_user_analytics = BOACApiStudentPage.new @driver
+      overlap_user_analytics.get_data(@driver, overlap_students.first)
+      expect(overlap_user_analytics.asc_profile).to_not be_nil
     end
 
-    it 'can hit an overlapping ASC and CoE student page' do
-      @student_page.load_page overlap_students.first
-      @student_page.student_name_heading_element.when_visible Utils.medium_wait
-      expect(@student_page.visible_sis_data[:name]).to eql(overlap_students.first.full_name.split(',').reverse.join(' ').strip)
-    end
-
-    it('cannot hit the user analytics endpoint for a non-ASC student') do
-      expect(@api_user_analytics_page.get_data(@driver, coe_only_students.first)).to be_nil
+    it 'cannot see the COE profile data for an overlapping CoE and ASC student on the user analytics page' do
+      overlap_user_analytics = BOACApiStudentPage.new @driver
+      overlap_user_analytics.get_data(@driver, overlap_students.first)
+      expect(overlap_user_analytics.coe_profile[:gender]).to be_nil
     end
   end
 

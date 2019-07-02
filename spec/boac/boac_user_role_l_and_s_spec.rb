@@ -64,12 +64,12 @@ if NessieUtils.include_l_and_s?
 
     context 'when performing a user search' do
 
-      it 'sees no non-L&S students in search results' do
+      it 'sees non-L&S students in search results' do
         @search_page.search_non_note asc_only_students.first.sis_id
-        @search_page.no_results_msg.when_visible Utils.short_wait
+        expect(@search_page.student_search_results_count).to eql(1)
       end
 
-      it 'sees overlapping L&S and ASC students in search results' do
+      it 'sees overlap students in search results' do
         @search_page.search_non_note overlap_students.first.sis_id
         expect(@search_page.student_search_results_count).to eql(1)
       end
@@ -100,46 +100,6 @@ if NessieUtils.include_l_and_s?
       it('sees no Intensive filter') { expect(@filtered_cohort_page.new_filter_option_by_key('inIntensiveCohort').exists?).to be false }
       it('sees no Team filter') { expect(@filtered_cohort_page.new_filter_option_by_key('groupCodes').exists?).to be false }
 
-    end
-
-    context 'when visiting a class page' do
-
-      # Verification that only L&S students are visible is part of the class page test script
-
-      it 'sees only L&S student data in a section endpoint' do
-        api_section_page = BOACApiSectionPage.new @driver
-        api_section_page.get_data(@driver, '2178', '13826')
-        expected_sids = test_l_and_s.dept_students.map(&:sis_id).sort & api_section_page.student_sids
-        visible_sids = api_section_page.student_sids.sort
-        api_section_page.wait_until(1, "Expected but not present: #{expected_sids - visible_sids}. Present but not expected: #{visible_sids - expected_sids}") do
-          expect(expected_sids).to eql(visible_sids)
-        end
-      end
-    end
-
-    context 'when visiting a student page' do
-
-      it 'cannot hit a non-L&S student page' do
-        @student_page.navigate_to "#{BOACUtils.base_url}#{@homepage.path_to_student_view(asc_only_students.first.uid)}"
-        @student_page.wait_for_title 'Page not found'
-      end
-
-      it 'can hit an overlapping L&S and ASC student page' do
-        @student_page.load_page overlap_students.first
-        @student_page.student_name_heading_element.when_visible Utils.medium_wait
-        expect(@student_page.visible_sis_data[:name]).to eql(overlap_students.first.full_name.split(',').reverse.join(' ').strip)
-      end
-
-      it 'cannot hit the user analytics endpoint for a non-L&S student' do
-        asc_user_analytics = BOACApiStudentPage.new @driver
-        expect(asc_user_analytics.get_data(@driver, asc_only_students.first)).to be_nil
-      end
-
-      it 'cannot see the ASC profile data for an overlapping L&S and ASC student on the user analytics page' do
-        overlap_user_analytics = BOACApiStudentPage.new @driver
-        overlap_user_analytics.get_data(@driver, overlap_students.first)
-        expect(overlap_user_analytics.asc_profile).to be_nil
-      end
     end
 
     context 'looking for admin functions' do

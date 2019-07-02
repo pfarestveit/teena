@@ -13,6 +13,7 @@ class BOACTestConfig < TestConfig
                 :max_cohort_members,
                 :searchable_data,
                 :searches,
+                :students,
                 :term
 
   # If a test requires a specific dept, sets that one. Otherwise, sets the globally configured dept.
@@ -44,12 +45,17 @@ class BOACTestConfig < TestConfig
     logger.warn "Advisor is UID #{@advisor.uid}"
   end
 
-  # Sets the students relevant to the dept being tested (if admin, all students)
+  # Sets the complete list of potentially visible students
+  # @param all_students [Array<BOACUser>]
+  def set_students(all_students)
+    @students = all_students
+  end
+
+  # Sets the list of students belonging to the department in question (not relevant to admins)
   # @param all_students [Array<BOACUser>]
   def set_dept_students(all_students)
-    # Admin should see all students; departments should see only their own students.
     @dept_students = if @dept == BOACDepartments::ADMIN
-                       all_students
+                       []
                      else
                        all_students.select do |s|
                          # Some students belong to multiple depts
@@ -58,14 +64,14 @@ class BOACTestConfig < TestConfig
                      end
   end
 
-  # Returns all the searchable student data relevant to the dept being tested. Unless a current file containing all student
-  # data already exists, obtain the current data from Redshift. Then filter for the student data relevant to the dept.
+  # Returns all searchable student data. Unless a current file containing all student data already exists, obtain
+  # the current data from Redshift.
   # @param all_students [Array<BOACUser>]
   # @return [Array<Hash>]
   def set_student_searchable_data(all_students)
     # Get the searchable data for all students.
-    dept_student_sids = @dept_students.map &:sis_id
-    @searchable_data = NessieUtils.searchable_student_data(all_students).select { |u| dept_student_sids.include? u[:sid] }
+    student_sids = @students.map &:sis_id
+    @searchable_data = NessieUtils.searchable_student_data(all_students).select { |u| student_sids.include? u[:sid] }
   end
 
   # Basic settings for department, advisor, and student population under test. Specifying a department will override the
@@ -75,6 +81,7 @@ class BOACTestConfig < TestConfig
   def set_global_configs(all_students, dept = nil)
     set_dept dept
     set_advisor
+    set_students all_students
     set_dept_students all_students
     set_student_searchable_data all_students
   end
@@ -89,32 +96,32 @@ class BOACTestConfig < TestConfig
       when BOACDepartments::COE
         filter.advisor = [@advisor.uid]
         @default_cohort.search_criteria = filter
-        @cohort_members = NessieUtils.get_coe_advisor_students(@advisor, @dept_students)
+        @cohort_members = NessieUtils.get_coe_advisor_students(@advisor, @students)
 
       # For L&S, use students of configured major
       when BOACDepartments::L_AND_S
         filter.major = CONFIG['test_l_and_s_major']
         @default_cohort.search_criteria = filter
-        dept_student_sids = @dept_students.map &:sis_id
+        student_sids = @students.map &:sis_id
         filtered_searchable_data = @searchable_data.select { |d| (filter.major & d[:major]).any? }
-        filtered_searchabe_sids = filtered_searchable_data.map { |d| d[:sid] }
-        @cohort_members = @dept_students.select { |s| dept_student_sids.include?(s.sis_id) && filtered_searchabe_sids.include?(s.sis_id) }
+        filtered_searchable_sids = filtered_searchable_data.map { |d| d[:sid] }
+        @cohort_members = @students.select { |s| student_sids.include?(s.sis_id) && filtered_searchable_sids.include?(s.sis_id) }
 
       # For Physics, use students of configured levels
       when BOACDepartments::PHYSICS
         filter.level = CONFIG['test_physics_levels']
         @default_cohort.search_criteria = filter
-        dept_student_sids = @dept_students.map &:sis_id
+        student_sids = @students.map &:sis_id
         filtered_searchable_data = @searchable_data.select { |d| filter.level.include?(d[:level]) }
-        filtered_searchabe_sids = filtered_searchable_data.map { |d| d[:sid] }
-        @cohort_members = @dept_students.select { |s| dept_student_sids.include?(s.sis_id) && filtered_searchabe_sids.include?(s.sis_id) }
+        filtered_searchable_sids = filtered_searchable_data.map { |d| d[:sid] }
+        @cohort_members = @students.select { |s| student_sids.include?(s.sis_id) && filtered_searchable_sids.include?(s.sis_id) }
 
       # For ASC or admin, use a team
       else
         team = NessieUtils.get_asc_teams.find { |t| t.code == CONFIG['test_asc_team'] }
         filter.team = Squad::SQUADS.select { |s| s.parent_team == team }
         @default_cohort.search_criteria = filter
-        @cohort_members = NessieUtils.get_asc_team_members(team, @dept_students)
+        @cohort_members = NessieUtils.get_asc_team_members(team, @students)
     end
 
     @default_cohort.name = "Default cohort #{@id}"
@@ -253,7 +260,7 @@ class BOACTestConfig < TestConfig
     set_global_configs all_students
     @searchable_data.keep_if { |d| d[:level] == CONFIG['legacy_notes_level'] }
     sids = @searchable_data.map { |d| d[:sid] }
-    @cohort_members = @dept_students.select { |s| sids.include? s.sis_id }
+    @cohort_members = @students.select { |s| sids.include? s.sis_id }
     set_max_cohort_members CONFIG['legacy_notes_max_users']
   end
 

@@ -9,7 +9,7 @@ describe 'BOAC' do
     test_config = BOACTestConfig.new
     test_config.search NessieUtils.get_all_students
     notes_search_word_count = BOACUtils.config['notes_search_word_count']
-    dept_uids = test_config.dept_students.map &:uid
+    dept_uids = test_config.students.map &:uid
 
     @driver = Utils.launch_browser test_config.chrome_profile
     @homepage = BOACHomePage.new @driver
@@ -218,8 +218,6 @@ describe 'BOAC' do
             it("shows no more than 100 results when searching with the first #{notes_search_word_count} words in #{note_search[:test_case]}") { expect(string_results_count).to be <= 100 }
 
             @search_results_page.wait_for_note_search_result_rows
-            visible_student_uids = @search_results_page.note_result_uids
-            it("returns only results for students in the advisor's department when searching with the first #{notes_search_word_count} words in #{note_search[:test_case]}") { expect(visible_student_uids - dept_uids).to be_empty }
 
             if string_results_count < 100
               student_result_returned = @search_results_page.note_in_search_result?(note_search[:note])
