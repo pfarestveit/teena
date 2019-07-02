@@ -18,6 +18,13 @@ module BOACPagesCreateNoteModal
     wait_for_element_and_type(new_note_subject_input_element, note.subject)
   end
 
+  # Clicks the advanced options button to expose all note features
+  def show_adv_note_options
+    unless add_topic_button?
+      logger.debug 'Clicking the Advanced Note Options button'
+      wait_for_update_and_click adv_note_options_button_element
+    end
+  end
 
   # Body
 
@@ -147,7 +154,6 @@ module BOACPagesCreateNoteModal
     end
   end
 
-
   # Save
 
   button(:new_note_save_button, id: 'create-note-button')
@@ -163,6 +169,7 @@ module BOACPagesCreateNoteModal
 
   button(:new_note_modal_cancel_button, id: 'cancel-new-note-modal')
   button(:new_note_cancel_button, id: 'create-note-cancel')
+  button(:confirm_delete_or_discard_button, id: 'are-you-sure-confirm')
 
   # Clicks the cancel new note button when the new note modal is in reduced size
   def click_cancel_new_note_modal
@@ -173,6 +180,11 @@ module BOACPagesCreateNoteModal
   # Clicks the cancel new note button when the new note modal is in expanded size
   def click_cancel_new_note
     wait_for_update_and_click new_note_cancel_button_element
+  end
+
+  # Hits the confirm delete/discard button for an uncreated note or removed attachment, unless the browser is Firefox
+  def confirm_delete_or_discard
+    wait_for_update_and_click confirm_delete_or_discard_button_element unless "#{browser.browser}" == 'firefox'
   end
 
 
@@ -186,8 +198,51 @@ module BOACPagesCreateNoteModal
   button(:batch_note_add_cohort_button, xpath: '//button[starts-with(@id, \'batch-note-cohort\')]')
   button(:batch_note_add_curated_group_button, xpath: '//button[starts-with(@id, \'batch-note-curated\')]')
 
+  def cohort_dropdown_element(cohort_id)
+    link_element(id: "batch-note-cohort-option-#{cohort_id}")
+  end
 
-  #### CREATE NOTE, STUDENT PROFILE ####
+  def curated_group_dropdown_element(curated_group_id)
+    link_element("batch-note-curated-group-option-#{curated_group_id}")
+  end
+
+  def add_students_to_batch(note_batch, student_snippets)
+    student_snippets.each_with_index do |student_snippet, index|
+      logger.debug "Find student matching '#{student_snippet}' then add to batch note '#{note_batch.subject}'."
+      wait_for_element_and_type(batch_note_add_student_input_element, student_snippet)
+      sleep Utils.click_wait
+      batch_note_add_student_input_element.send_keys :down
+      batch_note_add_student_input_element.send_keys :enter
+      el = span_element(id: "batch-note-student-#{index}")
+      wait_for_element(el, Utils.short_wait)
+      note_batch.students << el.text
+    end
+  end
+
+  def add_cohorts_to_batch(note_batch, cohorts)
+    cohorts.each_with_index do |cohort, index|
+      logger.debug "Cohort '#{cohort.name}' will be used in creation of batch note '#{note_batch.subject}'."
+      wait_for_load_and_click batch_note_add_cohort_button_element
+      wait_for_load_and_click cohort_dropdown_element(cohort.id)
+      el = span_element(id: "batch-note-cohort-#{index}")
+      wait_for_element(el, Utils.short_wait)
+      note_batch.cohorts << el.text
+    end
+  end
+
+  def add_curated_groups_to_batch(note_batch, curated_groups)
+    curated_groups.each_with_index do |curated_group, index|
+      logger.debug "Curated group '#{curated_group.name}' will be used in creation of batch note '#{note_batch.subject}'."
+      wait_for_load_and_click batch_note_add_curated_group_element
+      wait_for_load_and_click curated_group_dropdown_element(curated_group.id)
+      el = span_element(id: "batch-note-curated-group-#{index}")
+      wait_for_element(el, Utils.short_wait)
+      note_batch.curated_groups << el.text
+    end
+  end
+
+
+  #### CREATE NOTE ####
 
   button(:new_note_button, id: 'new-note-button')
   button(:new_note_minimize_button, id: 'minimize-new-note-modal')
@@ -198,18 +253,30 @@ module BOACPagesCreateNoteModal
     wait_for_update_and_click new_note_button_element
   end
 
-  # Combines methods to create a note with subject, body, attachments, topics, ID, and created/updated dates
-  # @param note [Note]
+  # Clicks the new (batch) note button
+  def click_create_note_batch
+    logger.debug 'Clicking the New Note (batch) button'
+    wait_for_update_and_click batch_note_button_element
+  end
+
+  # Combines methods to create a batch of notes, each with the same subject, body, etc. We expect one note per SID, as
+  # represented in the cohorts, curated groups and students provided.
+  # @param note_batch [NoteBatch]
   # @param topics [Array<Topic>]
   # @param attachments [Array<Attachment>]
-  def create_note(note, topics, attachments)
-    click_create_new_note
-    enter_new_note_subject note
-    enter_note_body note
-    add_attachments_to_new_note(note, attachments)
-    add_topics(note, topics)
+  # @param curated_groups [Array<CuratedGroup>]
+  # @param cohorts [Array<Cohort>]
+  # @param student_snippets [Array<Student>]
+  def create_batch_of_notes(note_batch, topics, attachments, student_snippets, cohorts, curated_groups)
+    click_create_note_batch
+    add_students_to_batch(note_batch, student_snippets)
+    add_cohorts_to_batch(note_batch, cohorts)
+    add_curated_groups_to_batch(note_batch, curated_groups)
+    enter_new_note_subject note_batch
+    enter_note_body note_batch
+    add_attachments_to_new_note(note_batch, attachments) if attachments
+    add_topics(note_batch, topics) if topics
     click_save_new_note
-    set_new_note_id note
   end
 
 end
