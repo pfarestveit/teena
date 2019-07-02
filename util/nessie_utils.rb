@@ -67,7 +67,7 @@ class NessieUtils < Utils
               WHERE canvas_course_id = #{site_id}
                 AND canvas_user_id = #{user.canvas_id};"
     results = query_redshift_db(nessie_db_credentials, query)
-    activities = results.map { |r| Time.parse(r['last_activity'] += ' UTC') }
+    activities = results.map { |r| Time.parse(r['last_activity'][0..18] += ' UTC') }
     activities.max
   end
 
