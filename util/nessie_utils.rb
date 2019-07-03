@@ -4,18 +4,28 @@ class NessieUtils < Utils
 
   @config = Utils.config['nessie']
 
-  def self.nessie_db_credentials
+  def self.nessie_redshift_db_credentials
     {
-      :host => @config['db_host'],
-      :port => @config['db_port'],
-      :name => @config['db_name'],
-      :user => @config['db_user'],
-      :password => @config['db_password']
+      :host => @config['redshift_db_host'],
+      :port => @config['redshift_db_port'],
+      :name => @config['redshift_db_name'],
+      :user => @config['redshift_db_user'],
+      :password => @config['redshift_db_password']
+    }
+  end
+
+  def self.nessie_pg_db_credentials
+    {
+      :host => @config['pg_db_host'],
+      :port => @config['pg_db_port'],
+      :name => @config['pg_db_name'],
+      :user => @config['pg_db_user'],
+      :password => @config['pg_db_password']
     }
   end
 
   def self.nessie_env
-    nessie_db_credentials[:name][7..-1]
+    nessie_redshift_db_credentials[:name][7..-1]
   end
 
   # The number of hours that synced Canvas data is behind actual site usage data
@@ -50,7 +60,7 @@ class NessieUtils < Utils
               WHERE course_id = #{course.site_id}
                 AND canvas_user_id = #{user.canvas_id}
               ORDER BY assignment_id;"
-    results = query_redshift_db(nessie_db_credentials, query)
+    results = query_redshift_db(nessie_redshift_db_credentials, query)
     results.map do |r|
       submitted = %w(on_time late submitted graded).include? r['assignment_status']
       Assignment.new({:id => r['assignment_id'], :due_date => r['due_at'], :submission_date => r['submitted_at'], :submitted => submitted})
@@ -66,7 +76,7 @@ class NessieUtils < Utils
               FROM lrs_caliper_analytics.last_activity_caliper
               WHERE canvas_course_id = #{site_id}
                 AND canvas_user_id = #{user.canvas_id};"
-    results = query_redshift_db(nessie_db_credentials, query)
+    results = query_redshift_db(nessie_redshift_db_credentials, query)
     activities = results.map { |r| Time.parse(r['last_activity'][0..18] += ' UTC') }
     activities.max
   end
@@ -174,7 +184,7 @@ class NessieUtils < Utils
              FROM boac_advising_asc.students
              JOIN calnet_ext_#{nessie_env}.persons ON calnet_ext_#{nessie_env}.persons.sid = boac_advising_asc.students.sid
              ORDER BY students.sid;"
-    Utils.query_redshift_db(nessie_db_credentials, query)
+    Utils.query_redshift_db(nessie_redshift_db_credentials, query)
   end
 
   # Returns all the distinct teams associated with team members
@@ -183,7 +193,7 @@ class NessieUtils < Utils
     # Get the squads associated with ASC students
     query = 'SELECT DISTINCT group_code
               FROM boac_advising_asc.students;'
-    results = Utils.query_redshift_db(nessie_db_credentials, query)
+    results = Utils.query_redshift_db(nessie_redshift_db_credentials, query)
     results = results.map { |r| r['group_code'] }
     squads = Squad::SQUADS.select { |squad| results.include? squad.code }
     squads.sort_by { |s| s.name }
@@ -219,7 +229,7 @@ class NessieUtils < Utils
              FROM boac_advising_coe.students
              JOIN calnet_ext_#{nessie_env}.persons ON calnet_ext_#{nessie_env}.persons.sid = boac_advising_coe.students.sid
              ORDER BY students.sid;"
-    Utils.query_redshift_db(nessie_db_credentials, query)
+    Utils.query_redshift_db(nessie_redshift_db_credentials, query)
   end
 
   # Returns all the CoE students associated with a given advisor
@@ -231,7 +241,7 @@ class NessieUtils < Utils
               FROM boac_advising_coe.students
               WHERE students.advisor_ldap_uid = '#{advisor.uid}'
               ORDER BY students.sid;"
-    result = Utils.query_redshift_db(nessie_db_credentials, query)
+    result = Utils.query_redshift_db(nessie_redshift_db_credentials, query)
     result = result.map { |r| r['sid'] }
     all_coe_students.select { |s| result.include? s.sis_id }
   end
@@ -246,7 +256,7 @@ class NessieUtils < Utils
              FROM boac_advising_physics.students
              JOIN calnet_ext_#{nessie_env}.persons ON calnet_ext_#{nessie_env}.persons.sid = boac_advising_physics.students.sid
              ORDER BY students.sid;"
-    Utils.query_redshift_db(nessie_db_credentials, query)
+    Utils.query_redshift_db(nessie_redshift_db_credentials, query)
   end
 
   # Returns all Letters & Science students
@@ -259,7 +269,7 @@ class NessieUtils < Utils
              FROM boac_advising_l_s.students
              JOIN calnet_ext_#{nessie_env}.persons ON calnet_ext_#{nessie_env}.persons.sid = boac_advising_l_s.students.sid
              ORDER BY students.sid;"
-    Utils.query_redshift_db(nessie_db_credentials, query)
+    Utils.query_redshift_db(nessie_redshift_db_credentials, query)
   end
 
   # SEARCHABLE STUDENT DATA
@@ -306,7 +316,7 @@ class NessieUtils < Utils
              LEFT JOIN boac_advising_coe.students ON boac_advising_coe.students.sid = student.student_profiles.sid
              ORDER BY sid;'
 
-    results = query_redshift_db(nessie_db_credentials, query)
+    results = query_redshift_db(nessie_redshift_db_credentials, query)
 
     # Create a hash for each student in the results. Multiple majors mean multiple rows, so merge them.
     student_hashes = results.group_by { |h1| h1['sid'] }.map do |k,v|
@@ -401,7 +411,7 @@ class NessieUtils < Utils
                ON asc_advising_notes.advising_notes.id = asc_advising_notes.advising_note_topics.id
              WHERE asc_advising_notes.advising_notes.sid = '#{student.sis_id}';"
 
-    results = query_redshift_db(nessie_db_credentials, query)
+    results = query_redshift_db(nessie_redshift_db_credentials, query)
     notes_data = results.group_by { |h1| h1['id'] }.map do |k,v|
       {
         :id => k,
@@ -437,7 +447,7 @@ class NessieUtils < Utils
               ON boac_advising_notes.advising_notes.id = boac_advising_notes.advising_note_attachments.advising_note_id
             WHERE boac_advising_notes.advising_notes.sid = '#{student.sis_id}';"
 
-    results = query_redshift_db(nessie_db_credentials, query)
+    results = query_redshift_db(nessie_redshift_db_credentials, query)
     notes_data = results.group_by { |h1| h1['id'] }.map do |k,v|
       # If the note has no body, concatenate the category and subcategory as the body
       source_body_empty = (v[0]['body'].nil? || v[0]['body'].strip.empty?)
@@ -472,6 +482,40 @@ class NessieUtils < Utils
     notes_data.map { |d| Note.new d }
   end
 
+  # Returns all SIS note authors
+  # @param student [BOACUser]
+  # @return [Array]
+  def self.get_all_advising_note_authors
+    query = "SELECT uid, sid, first_name, last_name
+              FROM boac_advising_notes.advising_note_authors;"
+    results = Utils.query_pg_db(nessie_pg_db_credentials, query)
+    results.map do |r|
+      {
+        :uid => r['uid'],
+        :sid => r['sid'],
+        :first_name => r['first_name'],
+        :last_name => r['last_name']
+      }
+    end
+  end
+
+  # Returns basic identifying data for a SIS note author
+  # @param uid [Fixnum]
+  # @return [Array]
+  def self.get_advising_note_author(uid)
+    query = "SELECT sid, first_name, last_name
+              FROM boac_advising_notes.advising_note_authors
+              WHERE uid = '#{uid}';"
+    results = Utils.query_pg_db(nessie_pg_db_credentials, query)
+    if results.any?
+      {
+        :sid => results[0]['sid'],
+        :first_name => results[0]['first_name'],
+        :last_name => results[0]['last_name']
+      }
+    end
+  end
+
   # Returns a student's current holds
   # @param student [BOACUser]
   # @return [Array<Alert>]
@@ -479,7 +523,7 @@ class NessieUtils < Utils
     query = "SELECT sid, feed
               FROM student.student_holds
               WHERE sid = '#{student.sis_id}';"
-    results = Utils.query_redshift_db(nessie_db_credentials, query)
+    results = Utils.query_redshift_db(nessie_redshift_db_credentials, query)
     results.map do |r|
       feed = JSON.parse r['feed']
       alert_data = {

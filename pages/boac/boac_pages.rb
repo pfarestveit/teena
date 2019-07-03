@@ -153,6 +153,8 @@ module BOACPages
   div(:notes_by_anyone_div, xpath: '//input[@id="search-options-note-filters-posted-by-anyone"]/..')
   radio_button(:notes_by_you_radio, id: 'search-options-note-filters-posted-by-you')
   div(:notes_by_you_div, xpath: '//input[@id="search-options-note-filters-posted-by-you"]/..')
+  text_area(:note_author, id: 'search-options-note-filters-author-input')
+  elements(:author_suggest, :link, :xpath => "//a[contains(@id,'search-options-note-filters-author-suggestion')]")
   text_area(:note_date_from, id: 'search-options-note-filters-last-updated-from')
   text_area(:note_date_to, id: 'search-options-note-filters-last-updated-to')
   text_area(:search_input, id: 'search-students-input')
@@ -170,6 +172,13 @@ module BOACPages
     search_options_note_filters_subpanel_element.when_visible 1
   end
 
+  # Collapses the sidebar advanced search notes subpanel
+  def collapse_search_options_notes_subpanel
+    expand_search_options
+    wait_for_update_and_click search_options_note_filters_toggle_button_element if search_options_note_filters_subpanel_element.visible?
+    sleep 1
+  end
+
   # Selects the sidebar posted by "anyone" radio button
   def select_notes_posted_by_anyone
     expand_search_options_notes_subpanel
@@ -180,6 +189,17 @@ module BOACPages
   def select_notes_posted_by_you
     expand_search_options_notes_subpanel
     js_click notes_by_you_radio_element unless notes_by_you_div_element.attribute('ischecked') == 'true'
+  end
+
+  # Sets the "Advisor" notes search option
+  # @param name [String]
+  def set_notes_author(name)
+    expand_search_options_notes_subpanel
+    logger.debug "Entering notes author name '#{name}'"
+    wait_for_element_and_type(note_author_element, name)
+    sleep Utils.click_wait
+    author_link_element = author_suggest_elements.find { |el| el.attribute('innerText').downcase == name.downcase }
+    wait_for_load_and_click author_link_element
   end
 
   # Sets the "Last updated > From" notes search option
