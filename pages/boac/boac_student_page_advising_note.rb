@@ -96,6 +96,13 @@ module BOACStudentPageAdvisingNote
     end
   end
 
+  # Expands a note unless it's already expanded
+  # @param note_subject [String]
+  def expand_note_by_subject(note_subject)
+    note_el = span_element(xpath: "//span[text()=\"#{note_subject}\"]/..")
+    wait_for_update_and_click_js note_el
+  end
+
   # Collapses a note unless it's already collapsed
   # @param note [Note]
   def collapse_note(note)

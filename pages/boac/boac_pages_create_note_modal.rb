@@ -203,19 +203,16 @@ module BOACPagesCreateNoteModal
   end
 
   def curated_group_dropdown_element(curated_group_id)
-    link_element("batch-note-curated-group-option-#{curated_group_id}")
+    link_element(id: "batch-note-curated-option-#{curated_group_id}")
   end
 
-  def add_students_to_batch(note_batch, student_snippets)
-    student_snippets.each_with_index do |student_snippet, index|
-      logger.debug "Find student matching '#{student_snippet}' then add to batch note '#{note_batch.subject}'."
-      wait_for_element_and_type(batch_note_add_student_input_element, student_snippet)
+  def add_students_to_batch(note_batch, students)
+    students.each do |student|
+      logger.debug "Find student matching '#{student.full_name}' then add to batch note '#{note_batch.subject}'."
+      wait_for_element_and_type(batch_note_add_student_input_element, "#{student.first_name} #{student.last_name} #{student.sis_id}")
       sleep Utils.click_wait
-      batch_note_add_student_input_element.send_keys :down
-      batch_note_add_student_input_element.send_keys :enter
-      el = span_element(id: "batch-note-student-#{index}")
-      wait_for_element(el, Utils.short_wait)
-      note_batch.students << el.text
+      wait_for_load_and_click link_element(id: 'create-note-add-student-suggestion-0')
+      note_batch.students << student
     end
   end
 
@@ -233,9 +230,9 @@ module BOACPagesCreateNoteModal
   def add_curated_groups_to_batch(note_batch, curated_groups)
     curated_groups.each_with_index do |curated_group, index|
       logger.debug "Curated group '#{curated_group.name}' will be used in creation of batch note '#{note_batch.subject}'."
-      wait_for_load_and_click batch_note_add_curated_group_element
+      wait_for_load_and_click batch_note_add_curated_group_button_element
       wait_for_load_and_click curated_group_dropdown_element(curated_group.id)
-      el = span_element(id: "batch-note-curated-group-#{index}")
+      el = span_element(id: "batch-note-curated-#{index}")
       wait_for_element(el, Utils.short_wait)
       note_batch.curated_groups << el.text
     end
@@ -266,10 +263,11 @@ module BOACPagesCreateNoteModal
   # @param attachments [Array<Attachment>]
   # @param curated_groups [Array<CuratedGroup>]
   # @param cohorts [Array<Cohort>]
-  # @param student_snippets [Array<Student>]
-  def create_batch_of_notes(note_batch, topics, attachments, student_snippets, cohorts, curated_groups)
+  # @param students [Array<Student>]
+  def create_batch_of_notes(note_batch, topics, attachments, students, cohorts, curated_groups)
+    logger.debug "Create a batch of notes with #{students.length} students, #{cohorts.length} cohorts and #{curated_groups.length} curated_groups"
     click_create_note_batch
-    add_students_to_batch(note_batch, student_snippets)
+    add_students_to_batch(note_batch, students)
     add_cohorts_to_batch(note_batch, cohorts)
     add_curated_groups_to_batch(note_batch, curated_groups)
     enter_new_note_subject note_batch
