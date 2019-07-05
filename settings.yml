@@ -108,11 +108,16 @@ lrs:
   event_time_discrep_seconds: 2
 
 nessie:
-  db_host: secret
-  db_port: secret
-  db_name: secret
-  db_user: secret
-  db_password: secret
+  pg_db_host: secret
+  pg_db_port: secret
+  pg_db_name: secret
+  pg_db_user: secret
+  pg_db_password: secret
+  redshift_db_host: secret
+  redshift_db_port: secret
+  redshift_db_name: secret
+  redshift_db_user: secret
+  redshift_db_password: secret
   canvas_data_lag_hours: 24
   include_caliper_tests: false
   caliper_time_margin: 120

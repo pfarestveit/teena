@@ -24,6 +24,8 @@ describe 'BOAC' do
     test_students = test_config.max_cohort_members
     student_searches = []
 
+    all_advising_note_authors = NessieUtils.get_all_advising_note_authors
+
     test_students.each do |student|
 
       begin
@@ -345,12 +347,57 @@ describe 'BOAC' do
               else
                 logger.warn "Skipping a search string + posted-by-anyone test with note ID #{note_search[:note].id} because there are more than 100 results"
               end
+
+              # Posted by advisor name
+
+              if (author = NessieUtils.get_advising_note_author(note_search[:note].advisor.uid))
+
+                @homepage.expand_search_options_notes_subpanel
+
+                author_name = "#{author[:first_name]} #{author[:last_name]}"
+                @homepage.set_notes_author author_name
+                @homepage.search_note note_search[:string]
+                author_results_count = @search_results_page.note_results_count
+                if author_results_count < 100
+                  author_match = @search_results_page.note_in_search_result?(note_search[:note])
+                  it("returns a result when searching with the first #{notes_search_word_count} words in note ID #{note_search[:note].id} and author name #{author_name}") do
+                    expect(author_match).to be true
+                  end
+                else
+                  logger.warn "Skipping a search string + name test with note ID #{note_search[:note].id} because there are more than 100 results"
+                end
+
+                other_author = loop do
+                  a = all_advising_note_authors.sample
+                  break a unless a[:uid] == note_search[:note].advisor.uid
+                end
+
+                other_author_name = "#{other_author[:first_name]} #{other_author[:last_name]}"
+                @homepage.set_notes_author other_author_name
+                @homepage.search_note note_search[:string]
+                other_author_results_count = @search_results_page.note_results_count
+                if other_author_results_count < 100
+                  other_author_match = @search_results_page.note_in_search_result?(note_search[:note])
+                  it("returns no result when searching with the first #{notes_search_word_count} words in note ID #{note_search[:note].id} and non-matching author name #{other_author_name}") do
+                    expect(other_author_match).to be false
+                  end
+                else
+                  logger.warn "Skipping a search string + name test with note ID #{note_search[:note].id} because there are more than 100 results"
+                end
+
+                @homepage.collapse_search_options_notes_subpanel
+
+              else
+                logger.warn "Bummer, note ID #{note_search[:note].id} has no identifiable author name"
+              end
             end
 
             # Date last updated
 
             note_date = Date.parse(note_search[:note].updated_date.to_s)
             logger.info "Checking date filters for a note last updated on #{note_date}"
+
+            @homepage.expand_search_options_notes_subpanel
 
             @homepage.set_notes_date_range(note_date, note_date + 1)
             @homepage.search_note note_search[:string]
