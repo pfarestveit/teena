@@ -5,9 +5,8 @@ include Logging
 describe 'BOAC' do
 
   begin
-    all_students = NessieUtils.get_all_students
     test = BOACTestConfig.new
-    test.legacy_notes all_students
+    test.legacy_notes
     students_with_asc_notes = []
     students_with_boa_notes = []
     students_with_sis_notes = []

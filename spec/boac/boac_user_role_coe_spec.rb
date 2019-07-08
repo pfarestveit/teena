@@ -4,15 +4,11 @@ describe 'A CoE advisor using BOAC' do
 
   include Logging
 
-  all_students = NessieUtils.get_all_students
-
   test_asc = BOACTestConfig.new
-  test_asc.user_role_asc all_students
+  test_asc.user_role_asc
 
   test_coe = BOACTestConfig.new
-  test_coe.user_role_coe all_students
-
-  overlap_students = test_asc.dept_students & test_coe.dept_students
+  test_coe.user_role_coe
 
   coe_everyone_filters = BOACUtils.get_everyone_filtered_cohorts test_coe.dept
 
@@ -61,16 +57,10 @@ describe 'A CoE advisor using BOAC' do
 
   context 'when performing a user search' do
 
-    it 'sees ASC students in search results' do
+    it 'sees non-CoE students in search results' do
       @search_page.search_non_note test_asc.dept_students.first.sis_id
       expect(@search_page.student_search_results_count).to eql(1)
     end
-
-    it 'sees COE students in search results' do
-      @search_page.search_non_note test_coe.dept_students.first.sis_id
-      expect(@search_page.student_search_results_count).to eql(1)
-    end
-
   end
 
   context 'performing a filtered cohort search' do
@@ -101,16 +91,16 @@ describe 'A CoE advisor using BOAC' do
   end
 
   context 'when visiting a student page' do
-    it 'cannot see the ASC profile data for an overlapping CoE and ASC student on the user analytics page' do
-      overlap_user_analytics = BOACApiStudentPage.new @driver
-      overlap_user_analytics.get_data(@driver, overlap_students.first)
-      expect(overlap_user_analytics.asc_profile).to be_nil
+    it 'cannot see the ASC profile data on the student API page' do
+      student_api = BOACApiStudentPage.new @driver
+      student_api.get_data(@driver, test_asc.dept_students.first)
+      expect(student_api.asc_profile).to be_nil
     end
 
-    it 'can see the COE profile data for an overlapping CoE and ASC student on the user analytics page' do
-      overlap_user_analytics = BOACApiStudentPage.new @driver
-      overlap_user_analytics.get_data(@driver, overlap_students.first)
-      expect(overlap_user_analytics.coe_profile[:gender]).to_not be_nil
+    it 'can see the COE profile data on the student API page' do
+      student_api = BOACApiStudentPage.new @driver
+      student_api.get_data(@driver, test_coe.dept_students.first)
+      expect(student_api.coe_profile[:gender]).to_not be_nil
     end
   end
 

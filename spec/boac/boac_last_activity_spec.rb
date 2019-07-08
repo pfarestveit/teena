@@ -13,7 +13,7 @@ describe 'BOAC' do
     else
 
       test = BOACTestConfig.new
-      test.last_activity NessieUtils.get_all_students
+      test.last_activity
       pages_tested = []
 
       # Test Last Activity using the current term rather than past term

@@ -7,7 +7,7 @@ describe 'BOAC' do
   begin
 
     test_config = BOACTestConfig.new
-    test_config.search NessieUtils.get_all_students
+    test_config.search
     notes_search_word_count = BOACUtils.config['notes_search_word_count']
     dept_uids = test_config.students.map &:uid
 

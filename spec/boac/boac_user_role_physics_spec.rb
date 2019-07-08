@@ -4,16 +4,14 @@ describe 'A Physics advisor using BOAC' do
 
   include Logging
 
-  all_students = NessieUtils.get_all_students
-
   test_asc = BOACTestConfig.new
-  test_asc.user_role_asc all_students
+  test_asc.user_role_asc
 
   test_coe = BOACTestConfig.new
-  test_coe.user_role_coe all_students
+  test_coe.user_role_coe
 
   test_physics = BOACTestConfig.new
-  test_physics.user_role_physics all_students
+  test_physics.user_role_physics
 
   overlap_students = ((test_asc.dept_students & test_physics.dept_students) + (test_coe.dept_students & test_physics.dept_students)).uniq
   coe_only_students = test_coe.dept_students - overlap_students
@@ -82,15 +80,6 @@ describe 'A Physics advisor using BOAC' do
     it 'sees non-Physics students in search results' do
       @search_page.search_non_note coe_only_students.first.sis_id
       expect(@search_page.student_search_results_count).to eql(1)
-    end
-
-    it 'sees overlapping Physics and ASC / CoE students in search results' do
-      if overlap_students.first
-        @search_page.search_non_note overlap_students.first.sis_id
-        expect(@search_page.student_search_results_count).to eql(1)
-      else
-        logger.warn 'Skipping search for overlapping students cuz there ain\'t none'
-      end
     end
   end
 

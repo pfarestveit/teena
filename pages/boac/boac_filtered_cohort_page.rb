@@ -182,7 +182,7 @@ class BOACFilteredCohortPage
                          when 'Expected Graduation Term'
                            link_element(xpath: "//a[@id='Expected Graduation Term-#{filter_option}']")
                          else
-                           link_element(xpath: "//div[@class=\"cohort-filter-draft-column-02\"]//a[contains(text(),\"#{filter_option}\")]")
+                           link_element(xpath: "//div[@class=\"cohort-filter-draft-column-02\"]//a[contains(.,\"#{filter_option}\")]")
                        end
       wait_for_update_and_click option_element
     end
