@@ -3,7 +3,7 @@ require_relative '../../util/spec_helper'
 include Logging
 
 test = BOACTestConfig.new
-test.batch_note_management NessieUtils.get_all_students
+test.batch_note_management
 
 # TODO - get real array of advisor dept mappings when we have them
 test.advisor.depts = [test.dept.name]

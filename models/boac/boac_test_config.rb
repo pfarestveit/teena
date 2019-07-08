@@ -46,20 +46,20 @@ class BOACTestConfig < TestConfig
   end
 
   # Sets the complete list of potentially visible students
-  # @param all_students [Array<BOACUser>]
-  def set_students(all_students)
-    @students = all_students
+  def set_students
+    @students = NessieUtils.get_all_students
   end
 
   # Sets the list of students belonging to the department in question (not relevant to admins)
-  # @param all_students [Array<BOACUser>]
-  def set_dept_students(all_students)
-    @dept_students = if @dept == BOACDepartments::ADMIN
+  # @param dept [BOACDepartments]
+  def set_dept_students(dept=nil)
+    dept = dept || @dept
+    @dept_students = if dept == BOACDepartments::ADMIN
                        []
                      else
-                       all_students.select do |s|
+                       @students.select do |s|
                          # Some students belong to multiple depts
-                         (s.depts.select { |d| d == @dept }).any?
+                         (s.depts.select { |d| d == dept }).any?
                        end
                      end
   end
@@ -76,14 +76,13 @@ class BOACTestConfig < TestConfig
 
   # Basic settings for department, advisor, and student population under test. Specifying a department will override the
   # department in the settings file.
-  # @param all_students [Array<BOACUser>]
   # @param dept [BOACDepartments]
-  def set_global_configs(all_students, dept = nil)
+  def set_global_configs(dept = nil)
     set_dept dept
     set_advisor
-    set_students all_students
-    set_dept_students all_students
-    set_student_searchable_data all_students
+    set_students
+    set_dept_students dept
+    set_student_searchable_data @students
   end
 
   # Sets a cohort to use as a default group of students for testing, e.g., a team for ASC and admin or My Students for CoE
@@ -171,35 +170,31 @@ class BOACTestConfig < TestConfig
   ### CONFIGURATION FOR SPECIFIC TEST SCRIPTS ###
 
   # Config for assignments testing
-  # @param all_students [Array<BOACUser>]
-  def assignments(all_students)
-    set_global_configs all_students
+  def assignments
+    set_global_configs
     set_default_cohort
     set_max_cohort_members CONFIG['assignments_max_users']
     @term = CONFIG['assignments_term']
   end
 
   # Config for class page testing
-  # @param all_students [Array<BOACUser>]
-  def class_pages(all_students)
-    set_global_configs all_students
+  def class_pages
+    set_global_configs
     set_default_cohort
     set_max_cohort_members CONFIG['class_page_max_users']
   end
 
   # Config for curated group testing
-  # @param all_students [Array<BOACUser>]
-  def curated_groups(all_students)
-    set_global_configs all_students
+  def curated_groups
+    set_global_configs
     set_default_cohort
     @cohort_members.keep_if &:active_asc if @dept == BOACDepartments::ASC
     set_max_cohort_members 50
   end
 
   # Config for filtered cohort testing
-  # @param all_students [Array<BOACUser>]
-  def filtered_cohorts(all_students)
-    set_global_configs all_students
+  def filtered_cohorts
+    set_global_configs
     set_search_cohorts
 
     # Set a default cohort with all possible filters to exercise editing and removing filters
@@ -247,17 +242,15 @@ class BOACTestConfig < TestConfig
   end
 
   # Config for last activity testing
-  # @param all_students [Array<BOACUser>]
-  def last_activity(all_students)
-    set_global_configs all_students
+  def last_activity
+    set_global_configs
     set_default_cohort
     set_max_cohort_members CONFIG['last_activity_max_users']
   end
 
   # Config for legacy advising notes testing
-  # @param all_students [Array<BOACUser>]
-  def legacy_notes(all_students)
-    set_global_configs all_students
+  def legacy_notes
+    set_global_configs
     @searchable_data.keep_if { |d| d[:level] == CONFIG['legacy_notes_level'] }
     sids = @searchable_data.map { |d| d[:sid] }
     @cohort_members = @students.select { |s| sids.include? s.sis_id }
@@ -265,85 +258,75 @@ class BOACTestConfig < TestConfig
   end
 
   # Config for page navigation testing
-  # @param all_students [Array<BOACUser>]
-  def navigation(all_students)
-    set_global_configs all_students
+  def navigation
+    set_global_configs
     set_default_cohort
     set_max_cohort_members CONFIG['class_page_max_users']
   end
 
   # Config for note management testing (create, edit, delete)
-  # @param all_students [Array<BOACUser>]
-  def note_management(all_students)
+  def note_management
     attachment_filenames = Dir.entries(Utils.assets_dir).reject { |f| %w(. .. .DS_Store).include? f }
     @attachments = attachment_filenames.map do |f|
       file = File.new Utils.asset_file_path(f)
       Attachment.new({:file_name => f, :file_size => file.size})
     end
-    set_global_configs all_students
+    set_global_configs
   end
 
   # Config for testing batch note creation
-  # @param all_students [Array<BOACUser>]
-  def batch_note_management(all_students)
+  def batch_note_management
     attachment_filenames = Dir.entries(Utils.assets_dir).reject { |f| %w(. .. .DS_Store).include? f }
     @attachments = attachment_filenames.map do |f|
       file = File.new Utils.asset_file_path(f)
       Attachment.new({:file_name => f, :file_size => file.size})
     end
-    set_global_configs all_students
+    set_global_configs
     set_default_cohort
   end
 
   # Config for SIS data testing
-  # @param all_students [Array<BOACUser>]
-  def sis_data(all_students)
-    set_global_configs all_students
+  def sis_data
+    set_global_configs
     set_default_cohort
     set_max_cohort_members CONFIG['sis_data_max_users']
   end
 
   # Config for admin user role testing
-  # @param all_students [Array<BOACUser>]
-  def user_role_admin(all_students)
-    set_global_configs(all_students, BOACDepartments::ADMIN)
+  def user_role_admin
+    set_global_configs BOACDepartments::ADMIN
     set_search_cohorts
   end
 
   # Config for ASC user role testing
-  # @param all_students [Array<BOACUser>]
-  def user_role_asc(all_students)
-    set_global_configs(all_students, BOACDepartments::ASC)
+  def user_role_asc
+    set_global_configs BOACDepartments::ASC
     set_search_cohorts
   end
 
   # Config for CoE user role testing
-  # @param all_students [Array<BOACUser>]
-  def user_role_coe(all_students)
-    set_global_configs(all_students, BOACDepartments::COE)
+  def user_role_coe
+    set_global_configs BOACDepartments::COE
     set_default_cohort
     set_search_cohorts
   end
 
   # Config for L&S user role testing
-  # @param all_students [Array<BOACUser]
-  def user_role_l_and_s(all_students)
-    set_global_configs(all_students, BOACDepartments::L_AND_S)
+  def user_role_l_and_s
+    set_global_configs BOACDepartments::L_AND_S
     set_default_cohort
     set_search_cohorts
   end
 
   # Config for Physics user role testing
-  # @param all_students [Array<BOACUser>]
-  def user_role_physics(all_students)
-    set_global_configs(all_students, BOACDepartments::PHYSICS)
+  def user_role_physics
+    set_global_configs BOACDepartments::PHYSICS
     set_search_cohorts
   end
 
   # Config for user search testing
-  # @param all_students [Array<BOACUser>]
-  def search(all_students)
-    set_global_configs all_students
+  def search
+    set_global_configs
     set_default_cohort
     set_max_cohort_members CONFIG['search_max_users']
   end

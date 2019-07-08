@@ -5,9 +5,8 @@ describe 'BOAC' do
   include Logging
 
   test = BOACTestConfig.new
-  all_students = NessieUtils.get_all_students
-  test.curated_groups all_students
-  test_student = test.cohort_members.first
+  test.curated_groups
+  test_student = test.cohort_members[1]
   logger.debug "Test student is UID #{test_student.uid} SID #{test_student.sis_id}"
 
   # Initialize groups to be used later in the tests
@@ -60,7 +59,7 @@ describe 'BOAC' do
       @filtered_page.load_cohort test.default_cohort
       @filtered_page.wait_for_student_list
       sids = @filtered_page.list_view_sids
-      visible_members = all_students.select { |m| sids.include? m.sis_id }
+      visible_members = test.students.select { |m| sids.include? m.sis_id }
       group_created_from_filter = CuratedGroup.new({:name => "Group created from filtered cohort #{test.id}"})
       @filtered_page.select_and_add_students_to_new_grp(visible_members, group_created_from_filter)
     end
@@ -68,7 +67,7 @@ describe 'BOAC' do
     it 'can be done using the class page list view group selector' do
       @class_page.load_page(@analytics_page.term_id(@term), @analytics_page.course_section_ccns(@course).first)
       sids = @class_page.class_list_view_sids
-      visible_members = all_students.select { |m| sids.include? m.sis_id }
+      visible_members = test.students.select { |m| sids.include? m.sis_id }
       group_created_from_class = CuratedGroup.new({:name => "Group created from class page #{test.id}"})
       @class_page.select_and_add_students_to_new_grp(visible_members, group_created_from_class)
     end
@@ -177,7 +176,7 @@ describe 'BOAC' do
 
     it 'can be added from filtered cohort list view using select-all' do
       @filtered_page.load_cohort test.default_cohort
-      @filtered_page.select_and_add_all_students_to_grp(all_students, group_1)
+      @filtered_page.select_and_add_all_students_to_grp(test.students, group_1)
       @group_page.load_page group_1
       expect(@group_page.visible_sids.sort).to eql(group_1.members.map(&:sis_id).sort)
     end
@@ -222,7 +221,7 @@ describe 'BOAC' do
 
     it 'can be added on class page list view using select-all' do
       @class_page.load_page(@analytics_page.term_id(@term), @analytics_page.course_section_ccns(@course).first)
-      @class_page.select_and_add_all_students_to_grp(all_students, group_5)
+      @class_page.select_and_add_all_students_to_grp(test.students, group_5)
       @group_page.load_page group_5
       expect(@group_page.visible_sids.sort).to eql(group_5.members.map(&:sis_id).sort)
     end
@@ -237,7 +236,7 @@ describe 'BOAC' do
 
     it 'can be added on user search results using select-all' do
       @homepage.search_non_note test_student.sis_id
-      @search_page.select_and_add_all_students_to_grp(all_students, group_7)
+      @search_page.select_and_add_all_students_to_grp(test.students, group_7)
       @group_page.load_page group_7
       expect(@group_page.visible_sids.sort).to eql(group_7.members.map(&:sis_id).sort)
     end

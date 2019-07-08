@@ -7,7 +7,7 @@ describe 'BOAC' do
   begin
 
     test = BOACTestConfig.new
-    test.class_pages NessieUtils.get_all_students
+    test.class_pages
     pages_tested = []
 
     all_student_sids = test.students.map &:sis_id

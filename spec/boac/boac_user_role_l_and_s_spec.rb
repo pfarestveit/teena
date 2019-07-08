@@ -6,21 +6,19 @@ if NessieUtils.include_l_and_s?
 
     include Logging
 
-    all_students = NessieUtils.get_all_students
-
     test_l_and_s = BOACTestConfig.new
-    test_l_and_s.user_role_l_and_s all_students
+    test_l_and_s.user_role_l_and_s
 
-    test_asc = BOACTestConfig.new
-    test_asc.user_role_asc all_students
+    test_coe = BOACTestConfig.new
+    test_coe.user_role_coe
 
-    overlap_students = test_l_and_s.dept_students & test_asc.dept_students
-    asc_only_students = test_asc.dept_students - overlap_students
+    overlap_students = test_l_and_s.dept_students & test_coe.dept_students
+    coe_only_students = test_coe.dept_students - overlap_students
 
     l_and_s_everyone_filters = BOACUtils.get_everyone_filtered_cohorts test_l_and_s.dept
 
     before(:all) do
-      @driver = Utils.launch_browser test_asc.chrome_profile
+      @driver = Utils.launch_browser test_coe.chrome_profile
       @admin_page = BOACAdminPage.new @driver
       @api_admin_page = BOACApiAdminPage.new @driver
       @api_section_page = BOACApiSectionPage.new @driver
@@ -31,8 +29,8 @@ if NessieUtils.include_l_and_s?
       @search_page = BOACSearchResultsPage.new @driver
       @student_page = BOACStudentPage.new @driver
 
-      @l_and_s_student_sids = test_asc.dept_students.map &:sis_id
-      @l_and_s_student_search_data = test_asc.searchable_data.select { |d| @l_and_s_student_sids.include? d[:sid] }
+      @l_and_s_student_sids = test_coe.dept_students.map &:sis_id
+      @l_and_s_student_search_data = test_coe.searchable_data.select { |d| @l_and_s_student_sids.include? d[:sid] }
 
       @homepage.dev_auth test_l_and_s.advisor
     end
@@ -55,7 +53,7 @@ if NessieUtils.include_l_and_s?
       end
 
       it 'cannot hit a non-L&S filtered cohort URL' do
-        asc_everyone_cohorts = BOACUtils.get_everyone_filtered_cohorts test_asc.dept
+        asc_everyone_cohorts = BOACUtils.get_everyone_filtered_cohorts test_coe.dept
         asc_everyone_cohorts.any? ?
             @filtered_cohort_page.hit_non_auth_cohort(asc_everyone_cohorts.first) :
             logger.warn('Skipping test for L&S access to ASC cohorts because ASC has no cohorts.')
@@ -65,12 +63,7 @@ if NessieUtils.include_l_and_s?
     context 'when performing a user search' do
 
       it 'sees non-L&S students in search results' do
-        @search_page.search_non_note asc_only_students.first.sis_id
-        expect(@search_page.student_search_results_count).to eql(1)
-      end
-
-      it 'sees overlap students in search results' do
-        @search_page.search_non_note overlap_students.first.sis_id
+        @search_page.search_non_note coe_only_students.first.sis_id
         expect(@search_page.student_search_results_count).to eql(1)
       end
     end

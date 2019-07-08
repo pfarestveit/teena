@@ -7,7 +7,7 @@ describe 'BOAC' do
   begin
 
     test = BOACTestConfig.new
-    test.navigation NessieUtils.get_all_students
+    test.navigation
     pages_tested = []
     bubbles_tested = []
 

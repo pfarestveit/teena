@@ -4,9 +4,8 @@ describe 'BOAC', order: :defined do
 
   include Logging
 
-  all_students = NessieUtils.get_all_students
   test = BOACTestConfig.new
-  test.filtered_cohorts all_students
+  test.filtered_cohorts
   pre_existing_cohorts = BOACUtils.get_user_filtered_cohorts test.advisor
 
   before(:all) do

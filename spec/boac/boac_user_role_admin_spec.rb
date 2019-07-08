@@ -4,12 +4,11 @@ describe 'An admin using BOAC' do
 
   include Logging
 
-  all_students = NessieUtils.get_all_students
   test = BOACTestConfig.new
-  test.user_role_admin all_students
+  test.user_role_admin
 
-  coe_only_students = all_students.select { |s| s.depts == [BOACDepartments::COE] }
-  asc_only_students = all_students.select { |s| s.depts == [BOACDepartments::ASC] }
+  coe_only_students = test.students.select { |s| s.depts == [BOACDepartments::COE] }
+  asc_only_students = test.students.select { |s| s.depts == [BOACDepartments::ASC] }
 
   everyone_cohorts = BOACUtils.get_everyone_filtered_cohorts
 

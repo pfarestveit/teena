@@ -6,10 +6,9 @@ describe 'BOAC' do
 
   begin
     test = BOACTestConfig.new
-    all_students = NessieUtils.get_all_students
+    test.sis_data
     alert_students = []
     hold_students = []
-    test.sis_data all_students
 
     # Create files for test output
     user_profile_data_heading = %w(UID Sport Name PreferredName Email Phone Units GPA Level Colleges Majors Terms Writing History Institutions Cultures Graduation Alerts Holds)
