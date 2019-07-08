@@ -33,12 +33,31 @@ else
     after(:all) {Utils.quit_browser @driver}
 
     describe 'advisor' do
+      students = test.dept_students.first BOACUtils.config['notes_batch_students_count']
+      cohorts = []
+      curated_groups = []
 
       before(:all) do
         @homepage.dev_auth test.advisor
-        # Create a default cohort
+
+        # Create cohort
         @homepage.load_page
         @cohort_page.search_and_create_new_cohort(test.default_cohort, test)
+        test.default_cohort.members = test.cohort_members
+        test.default_cohort.member_count = test.cohort_members.length
+        cohorts << test.default_cohort
+
+        # Create curated_groups
+        dept_students = test.dept_students.clone
+        (1..BOACUtils.config['notes_batch_curated_group_count']).each_with_index do |index|
+          students_for_group = dept_students.shuffle.last BOACUtils.config['notes_batch_curated_group_count']
+          curated_group = CuratedGroup.new({:name => "Curated Group #{test.id}-#{index}, batch notes test"})
+          # Create curated group
+          @homepage.click_sidebar_create_curated_group
+          @curated_group_page.create_group_with_bulk_sids(students_for_group, curated_group)
+          @curated_group_page.wait_for_sidebar_group curated_group
+          curated_groups << curated_group
+        end
       end
 
       after(:all) do
@@ -63,49 +82,24 @@ else
         end
 
         it 'can create batch of notes with a list of students, cohorts, and curated groups' do
-          # Create curated group
-          @homepage.click_sidebar_create_curated_group
-          students_in_curated_group = test.dept_students.last(3)
-          curated_group = CuratedGroup.new({:name => "Curated Group #{test.id}, batch notes test"})
-          @curated_group_page.create_group_with_bulk_sids(students_in_curated_group, curated_group)
-          @curated_group_page.wait_for_sidebar_group curated_group
+          unique_students = @homepage.create_batch_of_notes(batch_note_1, [], [], students, cohorts, curated_groups)
+          expect(unique_students.length).to eq BOACUtils.get_note_ids_by_subject(batch_note_1.subject).length
 
-          students_for_auto_complete = test.dept_students.first(3)
-
-          @homepage.create_batch_of_notes(
-              batch_note_1,
-              [ Topic::PROBATION ],
-              test.attachments[0..1],
-              students_for_auto_complete,
-              [ test.default_cohort ],
-              [ curated_group ]
-          )
-          # Give a moment for batch note creation to finish
-          sleep Utils.short_wait
-          # A sample set of students, per grouping, is all we need to verify
-          students_impacted = students_in_curated_group.first(2) | students_for_auto_complete.first(2) | test.cohort_members.first(2)
-
-          students_impacted.each do |student|
+          # Verify sample set of students
+          unique_students.first(5).each do |student|
             @student_page.load_page(student)
             @student_page.expand_note_by_subject(batch_note_1.subject)
           end
         end
 
         it 'immediately shows new note on student profile if student is in curated group of batch note creation' do
-          @homepage.click_sidebar_create_curated_group
-          students_in_curated_group = test.dept_students.first(5)
-          curated_group = CuratedGroup.new({:name => "Curated Group #{test.id}, batch notes test"})
-          @curated_group_page.create_group_with_bulk_sids(students_in_curated_group, curated_group)
-          @curated_group_page.wait_for_sidebar_group curated_group
-
-          # Load profile of an arbitrary student in the curated group
-          student = students_in_curated_group.last
+          # Load profile of student in batch
+          student = curated_groups[0].members.last
           @student_page.load_page(student)
 
-          @homepage.create_batch_of_notes(batch_note_2, [], [], [], [],[ curated_group ])
+          @homepage.create_batch_of_notes(batch_note_2, [ Topic::PROBATION ], test.attachments[0..1], [], [], curated_groups)
 
           # Give a moment for batch note creation to finish
-          sleep Utils.short_wait
           @student_page.expand_note_by_subject(batch_note_2.subject)
         end
 
