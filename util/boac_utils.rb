@@ -328,11 +328,11 @@ class BOACUtils < Utils
   end
 
   # Given a note subject, sets and returns the first matching note ID. The subject must be unique for this to be useful.
-  # @param note [Note]
-  # @return [Integer]
-  def self.get_note_id_by_subject(note)
-    query = "SELECT * FROM notes WHERE subject = '#{note.subject}';"
-    note.id = Utils.query_pg_db_field(boac_db_credentials, query, 'id').first
+  # @param note_subject [String]
+  # @return [Array<Integer>]
+  def self.get_note_ids_by_subject(note_subject)
+    query = "SELECT id FROM notes WHERE subject = '#{note_subject}';"
+    Utils.query_pg_db_field(boac_db_credentials, query, 'id')
   end
 
   # Sets and returns the deleted date for a given note

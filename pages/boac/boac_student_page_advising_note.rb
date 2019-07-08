@@ -100,7 +100,7 @@ module BOACStudentPageAdvisingNote
   # @param note_subject [String]
   def expand_note_by_subject(note_subject)
     note_el = span_element(xpath: "//span[text()=\"#{note_subject}\"]/..")
-    wait_for_update_and_click_js note_el
+    wait_for_update_and_click note_el
   end
 
   # Collapses a note unless it's already collapsed
@@ -343,7 +343,9 @@ module BOACStudentPageAdvisingNote
     new_note_subject_input_element.when_not_visible Utils.short_wait
     id = ''
     start_time = Time.now
-    wait_until(15) { (id = BOACUtils.get_note_id_by_subject note) }
+    wait_until(15) do
+      id, note.id = BOACUtils.get_note_ids_by_subject(note.subject).first
+    end
     logger.debug "Note ID is #{id}"
     logger.warn "Note was created in #{Time.now - start_time} seconds"
     note.created_date = note.updated_date = Time.now
@@ -408,6 +410,15 @@ module BOACStudentPageAdvisingNote
   end
 
   #### CREATE NOTE, STUDENT PROFILE ####
+
+  button(:new_note_button, id: 'new-note-button')
+  button(:new_note_minimize_button, id: 'minimize-new-note-modal')
+
+  # Clicks the new note button
+  def click_create_new_note
+    logger.debug 'Clicking the New Note button'
+    wait_for_update_and_click new_note_button_element
+  end
 
   # Combines methods to create a note with subject, body, attachments, topics, ID, and created/updated dates
   # @param note [Note]

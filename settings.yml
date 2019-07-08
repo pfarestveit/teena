@@ -67,6 +67,9 @@ boac:
   legacy_notes_max_users: 5
   no_activity_alert_threshold: 14
   notes_search_word_count: 7
+  notes_batch_curated_group_count: 2
+  notes_batch_students_count: 3
+  notes_batch_students_per_group_count: 3
   sis_data_max_users: 100
   search_max_users: 20
   service_announcement: 'A service announcement'

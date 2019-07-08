@@ -195,6 +195,7 @@ module BOACPagesCreateNoteModal
   span(:batch_note_alert_no_students_per_cohorts, id: 'no-students-per-cohorts-alert')
   span(:batch_note_no_students_per_curated_groups, id: 'no-students-per-curated-groups-alert')
   span(:batch_note_no_students, id: 'no-students-alert')
+  span(:batch_note_student_count_alert, id: 'target-student-count-alert')
   button(:batch_note_add_cohort_button, xpath: '//button[starts-with(@id, \'batch-note-cohort\')]')
   button(:batch_note_add_curated_group_button, xpath: '//button[starts-with(@id, \'batch-note-curated\')]')
 
@@ -202,8 +203,16 @@ module BOACPagesCreateNoteModal
     link_element(id: "batch-note-cohort-option-#{cohort_id}")
   end
 
+  def added_cohort_element(index)
+    span_element(id: "batch-note-cohort-#{index}")
+  end
+
   def curated_group_dropdown_element(curated_group_id)
     link_element(id: "batch-note-curated-option-#{curated_group_id}")
+  end
+
+  def added_curated_group_element(index)
+    span_element(id: "batch-note-curated-#{index}")
   end
 
   def add_students_to_batch(note_batch, students)
@@ -211,44 +220,30 @@ module BOACPagesCreateNoteModal
       logger.debug "Find student matching '#{student.full_name}' then add to batch note '#{note_batch.subject}'."
       wait_for_element_and_type(batch_note_add_student_input_element, "#{student.first_name} #{student.last_name} #{student.sis_id}")
       sleep Utils.click_wait
-      wait_for_load_and_click link_element(id: 'create-note-add-student-suggestion-0')
-      note_batch.students << student
+      wait_for_update_and_click link_element(id: 'create-note-add-student-suggestion-0')
     end
   end
 
   def add_cohorts_to_batch(note_batch, cohorts)
     cohorts.each_with_index do |cohort, index|
       logger.debug "Cohort '#{cohort.name}' will be used in creation of batch note '#{note_batch.subject}'."
-      wait_for_load_and_click batch_note_add_cohort_button_element
-      wait_for_load_and_click cohort_dropdown_element(cohort.id)
-      el = span_element(id: "batch-note-cohort-#{index}")
-      wait_for_element(el, Utils.short_wait)
-      note_batch.cohorts << el.text
+      wait_for_update_and_click batch_note_add_cohort_button_element
+      wait_for_update_and_click cohort_dropdown_element(cohort.id)
+      wait_for_element(added_cohort_element(index), Utils.short_wait)
     end
   end
 
   def add_curated_groups_to_batch(note_batch, curated_groups)
     curated_groups.each_with_index do |curated_group, index|
       logger.debug "Curated group '#{curated_group.name}' will be used in creation of batch note '#{note_batch.subject}'."
-      wait_for_load_and_click batch_note_add_curated_group_button_element
-      wait_for_load_and_click curated_group_dropdown_element(curated_group.id)
-      el = span_element(id: "batch-note-curated-#{index}")
-      wait_for_element(el, Utils.short_wait)
-      note_batch.curated_groups << el.text
+      wait_for_update_and_click batch_note_add_curated_group_button_element
+      wait_for_update_and_click curated_group_dropdown_element(curated_group.id)
+      wait_for_element(added_curated_group_element(index), Utils.short_wait)
     end
   end
 
 
   #### CREATE NOTE ####
-
-  button(:new_note_button, id: 'new-note-button')
-  button(:new_note_minimize_button, id: 'minimize-new-note-modal')
-
-  # Clicks the new note button
-  def click_create_new_note
-    logger.debug 'Clicking the New Note button'
-    wait_for_update_and_click new_note_button_element
-  end
 
   # Clicks the new (batch) note button
   def click_create_note_batch
@@ -274,7 +269,41 @@ module BOACPagesCreateNoteModal
     enter_note_body note_batch
     add_attachments_to_new_note(note_batch, attachments) if attachments
     add_topics(note_batch, topics) if topics
+
+    unique_students = unique_students_in_batch(students, cohorts, curated_groups)
+    student_count = unique_students.length
+    expected_alert = "Note will be added to student #{student_count} record#{student_count == 1 ? '' : 's'}"
+    alert_text = batch_note_student_count_alert_element.text
+    if alert_text && alert_text.include?(expected_alert)
+      logger.debug expected_alert
+    else
+      fail
+    end
+    if student_count >= 500 && !alert_text.include?('Are you sure?')
+      fail
+    end
+
     click_save_new_note
+    # Give a moment
+    sleep Utils.click_wait
+
+    unique_students
+  end
+
+  private
+
+  def unique_students_in_batch(students, cohorts, curated_groups)
+    # Get unique students
+    students_by_sid = {}
+    students.each { |student| students_by_sid[student.sis_id] = student }
+    cohorts.each do |cohort|
+      cohort.members.each { |student| students_by_sid[student.sis_id] = student }
+    end
+    curated_groups.each do |curated_group|
+      curated_group.members.each { |student| students_by_sid[student.sis_id] = student }
+    end
+    # Return sorted list
+    students_by_sid.values.sort_by &:last_name
   end
 
 end
