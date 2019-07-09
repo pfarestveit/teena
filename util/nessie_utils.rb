@@ -183,6 +183,8 @@ class NessieUtils < Utils
                     persons.last_name AS last_name
              FROM boac_advising_asc.students
              JOIN calnet_ext_#{nessie_env}.persons ON calnet_ext_#{nessie_env}.persons.sid = boac_advising_asc.students.sid
+             LEFT JOIN student.student_academic_status ON student.student_academic_status.sid = boac_advising_asc.students.sid
+               WHERE student.student_academic_status.sid IS NOT NULL
              ORDER BY students.sid;"
     Utils.query_redshift_db(nessie_redshift_db_credentials, query)
   end
@@ -228,6 +230,8 @@ class NessieUtils < Utils
                     persons.last_name AS last_name
              FROM boac_advising_coe.students
              JOIN calnet_ext_#{nessie_env}.persons ON calnet_ext_#{nessie_env}.persons.sid = boac_advising_coe.students.sid
+             LEFT JOIN student.student_academic_status ON student.student_academic_status.sid = boac_advising_coe.students.sid
+               WHERE student.student_academic_status.sid IS NOT NULL
              ORDER BY students.sid;"
     Utils.query_redshift_db(nessie_redshift_db_credentials, query)
   end
@@ -255,6 +259,8 @@ class NessieUtils < Utils
                     persons.last_name AS last_name
              FROM boac_advising_physics.students
              JOIN calnet_ext_#{nessie_env}.persons ON calnet_ext_#{nessie_env}.persons.sid = boac_advising_physics.students.sid
+             LEFT JOIN student.student_academic_status ON student.student_academic_status.sid = boac_advising_physics.students.sid
+               WHERE student.student_academic_status.sid IS NOT NULL
              ORDER BY students.sid;"
     Utils.query_redshift_db(nessie_redshift_db_credentials, query)
   end
@@ -268,6 +274,8 @@ class NessieUtils < Utils
                     persons.last_name AS last_name
              FROM boac_advising_l_s.students
              JOIN calnet_ext_#{nessie_env}.persons ON calnet_ext_#{nessie_env}.persons.sid = boac_advising_l_s.students.sid
+             LEFT JOIN student.student_academic_status ON student.student_academic_status.sid = boac_advising_l_s.students.sid
+               WHERE student.student_academic_status.sid IS NOT NULL
              ORDER BY students.sid;"
     Utils.query_redshift_db(nessie_redshift_db_credentials, query)
   end

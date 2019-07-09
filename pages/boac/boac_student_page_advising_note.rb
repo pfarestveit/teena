@@ -305,10 +305,12 @@ module BOACStudentPageAdvisingNote
       Time.parse(visible_data[:created_date]) <= Time.parse(expected_long_created_date) + 60
       Time.parse(visible_data[:created_date]) >= Time.parse(expected_long_created_date) - 60
     end
-    expected_long_updated_date = "Last updated on #{expected_note_long_date_format note.updated_date}"
-    wait_until(1, "Expected '#{expected_long_updated_date}', got #{visible_data[:updated_date]}") do
-      Time.parse(visible_data[:updated_date]) <= Time.parse(expected_long_updated_date) + 60
-      Time.parse(visible_data[:updated_date]) >= Time.parse(expected_long_updated_date) - 60
+    unless note.instance_of? NoteBatch
+      expected_long_updated_date = "Last updated on #{expected_note_long_date_format note.updated_date}"
+      wait_until(1, "Expected '#{expected_long_updated_date}', got #{visible_data[:updated_date]}") do
+        Time.parse(visible_data[:updated_date]) <= Time.parse(expected_long_updated_date) + 60
+        Time.parse(visible_data[:updated_date]) >= Time.parse(expected_long_updated_date) - 60
+      end
     end
   end
 
@@ -333,26 +335,6 @@ module BOACStudentPageAdvisingNote
   def click_edit_note_button(note)
     logger.debug 'Clicking the Edit Note button'
     wait_for_update_and_click edit_note_button(note)
-  end
-
-  # Obtains the ID of a new note and sets current created and updated dates. Fails if the note ID is not available within a defined
-  # timeout
-  # @param note [Note]
-  # @return [Integer]
-  def set_new_note_id(note)
-    new_note_subject_input_element.when_not_visible Utils.short_wait
-    id = ''
-    start_time = Time.now
-    wait_until(15) do
-      id, note.id = BOACUtils.get_note_ids_by_subject(note.subject).first
-    end
-    logger.debug "Note ID is #{id}"
-    logger.warn "Note was created in #{Time.now - start_time} seconds"
-    note.created_date = note.updated_date = Time.now
-    id
-  rescue
-    logger.debug 'Timed out waiting for note ID'
-    fail
   end
 
   # Edits an existing note's subject and updated date
