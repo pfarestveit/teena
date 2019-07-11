@@ -10,15 +10,12 @@ describe 'bCourses Mailgun mailing lists', order: :defined do
   course_site_1 = Course.new({title: "QA Mailing List 1 #{test_id}", code: "QA admin #{test_id}"})
   course_site_2 = Course.new({title: "QA Mailing List 2 #{test_id}", code: "QA admin #{test_id}"})
   course_site_3 = Course.new({title: "QA Mailing List 3 #{test_id}", code: "QA instructor #{test_id}"})
-  project_site = Course.new({title: "QA Mailing List 4 #{test_id}"})
 
   # Load test user data
-  admin = User.new({canvas_id: Utils.super_admin_canvas_id})
   user_test_data = JunctionUtils.load_junction_test_user_data.select { |data| data['tests']['mailing_lists'] }
   users = user_test_data.map { |data| User.new(data) if ['Teacher', 'Designer', 'Lead TA', 'TA', 'Observer', 'Reader', 'Student'].include? data['role'] }.compact
   teacher = users.find { |user| user.role == 'Teacher' }
   students = users.select { |user| user.role == 'Student' }
-  project_users = user_test_data.map { |data| User.new(data) if %w(Owner Maintainer Member).include? data['role'] }.compact
 
   before(:all) do
     @driver = Utils.launch_browser
@@ -28,7 +25,6 @@ describe 'bCourses Mailgun mailing lists', order: :defined do
     @toolbox_page = Page::JunctionPages::MyToolboxPage.new @driver
     @mailing_list_page = Page::JunctionPages::CanvasMailingListPage.new @driver
     @mailing_lists_page = Page::JunctionPages::CanvasMailingListsPage.new @driver
-    @google_page = Page::GooglePage.new @driver
     @site_creation_page = Page::JunctionPages::CanvasSiteCreationPage.new @driver
     @create_project_site_page = Page::JunctionPages::CanvasCreateProjectSitePage.new @driver
 
@@ -103,7 +99,7 @@ describe 'bCourses Mailgun mailing lists', order: :defined do
       it('shows a link to the course site') { expect(@mailing_lists_page.external_link_valid?(@driver, @mailing_lists_page.view_site_link_element, course_site_1.title)).to be true }
 
       it('shows a default mailing list name') do
-        @mailing_lists_page.switch_to_canvas_iframe @driver
+        @mailing_lists_page.switch_to_canvas_iframe @driver unless "#{@driver.browser}" == 'firefox'
         @mailing_lists_page.wait_until(Utils.short_wait) { @mailing_lists_page.list_name_input == @mailing_lists_page.default_list_name(course_site_1) }
       end
 
@@ -146,7 +142,7 @@ describe 'bCourses Mailgun mailing lists', order: :defined do
       it('shows a link to the course site') { expect(@mailing_lists_page.external_link_valid?(@driver, @mailing_lists_page.list_site_link_element, course_site_1.title)).to be true }
 
       it 'shows the course site code, title, and ID' do
-        @canvas_page.switch_to_canvas_iframe @driver
+        @canvas_page.switch_to_canvas_iframe @driver unless "#{@driver.browser}" == 'firefox'
         expect(@mailing_lists_page.site_name).to eql("#{@mailing_lists_page.default_list_name course_site_1}@bcourses-mail.berkeley.edu")
         expect(@mailing_lists_page.site_code).to eql(("#{course_site_1.code} #{course_site_1.term}").strip)
         expect(@mailing_lists_page.site_id).to eql("Site ID: #{course_site_1.site_id}")
@@ -223,79 +219,6 @@ describe 'bCourses Mailgun mailing lists', order: :defined do
         @mailing_list_page.list_address_element.when_present timeout
         expect(@mailing_list_page.list_address).to include("#{@mailing_lists_page.default_list_name course_site_3}@bcourses-mail.berkeley.edu")
       end
-    end
-  end
-
-  describe 'emails' do
-
-    context 'on a course site' do
-
-      ['Teacher', 'Lead TA', 'TA', 'Reader'].each do |authorized_user|
-
-        it "can be sent by a #{authorized_user}" do
-          sender = users.find { |u| u.role == authorized_user }
-          recipient = "#{@mailing_lists_page.default_list_name course_site_1}#{JunctionUtils.mailing_list_suffix}@bcourses-mail.berkeley.edu"
-          subj = "#{test_id}-#{sender.role}"
-          @google_page.send_email(sender.email, recipient, subj)
-          expect(@google_page.email_received? subj).to be true
-        end
-      end
-
-      %w(Designer Observer Student).each do |unauthorized_user|
-
-        it "cannot be sent by a #{unauthorized_user}" do
-          sender = users.find { |u| u.role == unauthorized_user }
-          recipient = "#{@mailing_lists_page.default_list_name course_site_1}#{JunctionUtils.mailing_list_suffix}@bcourses-mail.berkeley.edu"
-          subj = "#{test_id}-#{sender.role}"
-          @google_page.send_email(sender.email, recipient, subj)
-          expect(@google_page.email_bounced? sender).to be true
-        end
-      end
-    end
-
-    context 'on a project site' do
-
-      before(:all) do
-        @canvas_page.stop_masquerading @driver
-        @site_creation_page.load_embedded_tool(@driver, admin)
-        @site_creation_page.click_create_project_site
-        @create_project_site_page.create_project_site project_site.title
-        @canvas_page.wait_until(Utils.medium_wait) { @canvas_page.current_url.include? "#{Utils.canvas_base_url}/courses" }
-        project_site.site_id = @canvas_page.current_url.delete "#{Utils.canvas_base_url}/courses/"
-        logger.info "Project site ID is #{project_site.site_id}"
-        @canvas_page.wait_for_update_and_click @canvas_page.publish_button_element
-        @canvas_page.published_button_element.when_present Utils.medium_wait
-        @canvas_page.add_users(project_site, project_users)
-        project_users.each { |user| @canvas_page.masquerade_as(@driver, user, project_site) }
-        @canvas_page.stop_masquerading @driver
-
-        @mailing_lists_page.load_embedded_tool @driver
-        @mailing_lists_page.search_for_list project_site.site_id
-        @mailing_lists_page.enter_mailgun_list_name @mailing_lists_page.default_list_name(project_site)
-        @mailing_lists_page.wait_until(timeout) { @mailing_lists_page.list_address == "#{@mailing_lists_page.default_list_name project_site}@bcourses-mail.berkeley.edu" }
-        @mailing_lists_page.click_update_memberships
-        @mailing_lists_page.wait_until(timeout) { @mailing_lists_page.list_membership_count.include? "#{project_users.length + 1}" }
-      end
-
-      %w(Owner Maintainer).each do |authorized_user|
-
-        it "can be sent by a #{authorized_user}" do
-          sender = project_users.find { |u| u.role == authorized_user }
-          recipient = "#{@mailing_lists_page.default_list_name project_site}#{JunctionUtils.mailing_list_suffix}@bcourses-mail.berkeley.edu"
-          subj = "#{test_id}-#{sender.role}"
-          @google_page.send_email(sender.email, recipient, subj)
-          expect(@google_page.email_received? subj).to be true
-        end
-      end
-
-      it 'cannot be sent by a Member' do
-        sender = project_users.find { |u| u.role == 'Member' }
-        recipient = "#{@mailing_lists_page.default_list_name project_site}#{JunctionUtils.mailing_list_suffix}@bcourses-mail.berkeley.edu"
-        subj = "#{test_id}-#{sender.role}"
-        @google_page.send_email(sender.email, recipient, subj)
-        expect(@google_page.email_bounced? sender).to be true
-      end
-
     end
   end
 end

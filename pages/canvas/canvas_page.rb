@@ -460,6 +460,13 @@ module Page
       end
     end
 
+    # Whether or not a user with a given Canvas ID is present on the Users roster
+    # @param canvas_id [String]
+    # @return [boolean]
+    def roster_user?(canvas_id)
+      cell_element(xpath: "//tr[contains(@id,'#{canvas_id}')]/td[3]").exists?
+    end
+
     # Returns the UID displayed for a user on a course site roster
     # @param canvas_id [Integer]
     # @return [String]
