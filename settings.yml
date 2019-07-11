@@ -28,7 +28,6 @@ users:
   ets_qa_password: secret
   test_user_password: secret
   oski_uid: secret
-  gmail_password: secret
 
 #### Test environment configs ####
 

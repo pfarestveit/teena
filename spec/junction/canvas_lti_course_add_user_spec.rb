@@ -137,9 +137,15 @@ describe 'bCourses Find a Person to Add', order: :defined do
       it "allows a course Teacher to add a #{user.role} to a course site with any type of role" do
         @course_add_user_page.search(user.uid, 'CalNet UID')
         @course_add_user_page.add_user_by_uid(user, @section_to_test)
+      end
+    end
+
+    [teacher_2, lead_ta, ta, designer, reader, student, waitlist, observer].each do |user|
+
+      it "shows an added #{user.role} user in the course site roster" do
         @canvas.load_users_page course
         @canvas.search_user_by_canvas_id user
-        @canvas.wait_until(Utils.short_wait) { @canvas.roster_user_uid user.canvas_id }
+        @canvas.wait_until(Utils.medium_wait) { @canvas.roster_user? user.canvas_id }
         expect(@canvas.roster_user_sections(user.canvas_id)).to include("#{@section_to_test.course} #{@section_to_test.label}") unless user.role == 'Observer'
         (user.role == 'Observer') ?
             (expect(@canvas.roster_user_roles(user.canvas_id)).to include('Observing: nobody')) :
@@ -158,7 +164,7 @@ describe 'bCourses Find a Person to Add', order: :defined do
     [lead_ta, ta, designer, reader, student, waitlist, observer].each do |user|
 
       it "allows a course #{user.role} to access the tool and add a subset of roles to a course site if permitted to do so" do
-          @canvas.masquerade_as(@driver, user, course)
+        @canvas.masquerade_as(@driver, user, course)
         if ['Lead TA', 'TA'].include? user.role
           @canvas.load_users_page course
           @canvas.click_find_person_to_add @driver
