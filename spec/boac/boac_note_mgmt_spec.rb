@@ -456,6 +456,8 @@ else
 
       it('cannot create a note') { expect(@student_page.new_note_button?).to be false }
 
+      it('cannot create a batch note') { expect(@student_page.batch_note_button?).to be false }
+
       notes.each do |note|
         it 'cannot edit a note' do
           @student_page.expand_note note

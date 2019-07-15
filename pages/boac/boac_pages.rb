@@ -10,6 +10,7 @@ module BOACPages
 
   div(:spinner, id: 'spinner-when-loading')
   div(:copyright_year_footer, xpath: '//div[contains(text(),"The Regents of the University of California")]')
+  elements(:auto_suggest_option, :link, xpath: '//a[contains(@id, "suggestion")]')
 
   # Waits for an expected page title
   # @param page_title [String]
@@ -154,6 +155,7 @@ module BOACPages
   radio_button(:notes_by_you_radio, id: 'search-options-note-filters-posted-by-you')
   div(:notes_by_you_div, xpath: '//input[@id="search-options-note-filters-posted-by-you"]/..')
   text_area(:note_author, id: 'search-options-note-filters-author-input')
+  text_area(:note_student, id: 'search-options-note-filters-student-input')
   elements(:author_suggest, :link, :xpath => "//a[contains(@id,'search-options-note-filters-author-suggestion')]")
   text_area(:note_date_from, id: 'search-options-note-filters-last-updated-from')
   text_area(:note_date_to, id: 'search-options-note-filters-last-updated-to')
@@ -191,15 +193,29 @@ module BOACPages
     js_click notes_by_you_radio_element unless notes_by_you_div_element.attribute('ischecked') == 'true'
   end
 
+  # Sets text in a given element and waits for and clicks a matching auto-suggest result
+  # @param element [PageObject::Element]
+  # @param name [String]
+  def set_auto_suggest(element, name)
+    expand_search_options_notes_subpanel
+    wait_for_element_and_type(element, name)
+    sleep Utils.click_wait
+    link_element = auto_suggest_option_elements.find { |el| el.attribute('innerText').downcase.include? name.downcase }
+    wait_for_load_and_click link_element
+  end
+
   # Sets the "Advisor" notes search option
   # @param name [String]
   def set_notes_author(name)
-    expand_search_options_notes_subpanel
-    logger.debug "Entering notes author name '#{name}'"
-    wait_for_element_and_type(note_author_element, name)
-    sleep Utils.click_wait
-    author_link_element = author_suggest_elements.find { |el| el.attribute('innerText').downcase == name.downcase }
-    wait_for_load_and_click author_link_element
+    logger.info "Entering notes author name '#{name}'"
+    set_auto_suggest(note_author_element, name)
+  end
+
+  # Sets the "Student" notes search option
+  # @param name [String]
+  def set_notes_student(name)
+    logger.info "Entering notes student name '#{name}'"
+    set_auto_suggest(note_student_element, name)
   end
 
   # Sets the "Last updated > From" notes search option
@@ -284,6 +300,33 @@ module BOACPages
   # @return [String]
   def boxplot_trigger_xpath
     "#{boxplot_xpath}/*[name()='g']/*[name()='g']/*[name()='path'][3]"
+  end
+
+  ### BATCH NOTES ###
+
+  button(:batch_note_button, id: 'batch-note-button')
+
+  # Clicks the new (batch) note button
+  def click_create_note_batch
+    logger.debug 'Clicking the New Note (batch) button'
+    wait_for_update_and_click batch_note_button_element
+  end
+
+  # Obtains the ID of a new note and sets current created and updated dates. Fails if the note ID is not available within a defined
+  # timeout
+  # @param note [Note]
+  # @return [Integer]
+  def set_new_note_id(note, student)
+    new_note_subject_input_element.when_not_visible Utils.short_wait
+    start_time = Time.now
+    wait_until(15) { note.id = BOACUtils.get_note_ids_by_subject(note.subject, student).first }
+    logger.debug "Note ID is #{note.id}"
+    logger.warn "Note was created in #{Time.now - start_time} seconds"
+    note.created_date = note.updated_date = Time.now
+    note.id
+  rescue
+    logger.debug 'Timed out waiting for note ID'
+    fail
   end
 
 end

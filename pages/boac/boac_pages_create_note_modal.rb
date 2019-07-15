@@ -5,6 +5,7 @@ module BOACPagesCreateNoteModal
   include PageObject
   include Logging
   include Page
+  include BOACPages
 
 
   #### CREATE NOTE, SHARED ELEMENTS ####
@@ -190,7 +191,6 @@ module BOACPagesCreateNoteModal
 
   #### CREATE NOTE, BATCH ####
 
-  button(:batch_note_button, id: 'batch-note-button')
   text_area(:batch_note_add_student_input, id: 'create-note-add-student-input')
   span(:batch_note_alert_no_students_per_cohorts, id: 'no-students-per-cohorts-alert')
   span(:batch_note_no_students_per_curated_groups, id: 'no-students-per-curated-groups-alert')
@@ -199,56 +199,129 @@ module BOACPagesCreateNoteModal
   button(:batch_note_add_cohort_button, xpath: '//button[starts-with(@id, \'batch-note-cohort\')]')
   button(:batch_note_add_curated_group_button, xpath: '//button[starts-with(@id, \'batch-note-curated\')]')
 
-  def cohort_dropdown_element(cohort_id)
-    link_element(id: "batch-note-cohort-option-#{cohort_id}")
+  def added_student_element(student)
+    span_element(xpath: "//span[text()=\"#{student.full_name} (#{student.sis_id})\"]")
   end
 
-  def added_cohort_element(index)
-    span_element(id: "batch-note-cohort-#{index}")
+  def student_remove_button(student)
+    button_element(xpath: "//span[text()=\"#{student.full_name} (#{student.sis_id})\"]/following-sibling::button")
   end
 
-  def curated_group_dropdown_element(curated_group_id)
-    link_element(id: "batch-note-curated-option-#{curated_group_id}")
+  def cohort_dropdown_element(cohort)
+    link_element(id: "batch-note-cohort-option-#{cohort.id}")
   end
 
-  def added_curated_group_element(index)
-    span_element(id: "batch-note-curated-#{index}")
+  def added_cohort_element(cohort)
+    span_element(xpath: "//span[contains(@id, \"batch-note-cohort\")][text()=\"#{cohort.name}\"]")
   end
 
+  def cohort_remove_button(cohort)
+    button_element(xpath: "//button[@aria-label=\"Remove cohort #{cohort.name}\"]")
+  end
+
+  def curated_group_dropdown_element(group)
+    link_element(id: "batch-note-curated-option-#{group.id}")
+  end
+
+  def added_curated_group_element(group)
+    span_element(xpath: "//span[contains(@id, \"batch-note-curated\")][text()=\"#{group.name}\"]")
+  end
+
+  def curated_group_remove_button(group)
+    button_element(xpath: "//button[@aria-label=\"Remove curated #{group.name}\"]")
+  end
+
+  # Adds a given set of students to a batch note
+  # @param note_batch [NoteBatch]
+  # @param students [Array<BOACUser>]
   def add_students_to_batch(note_batch, students)
     students.each do |student|
-      logger.debug "Find student matching '#{student.full_name}' then add to batch note '#{note_batch.subject}'."
+      logger.debug "Find student SID '#{student.sis_id}' then add to batch note '#{note_batch.subject}'."
       wait_for_element_and_type(batch_note_add_student_input_element, "#{student.first_name} #{student.last_name} #{student.sis_id}")
       sleep Utils.click_wait
-      wait_for_update_and_click link_element(id: 'create-note-add-student-suggestion-0')
+      student_link_element = auto_suggest_option_elements.find { |el| el.attribute('innerText') == "#{student.full_name} (#{student.sis_id})" }
+      wait_for_update_and_click student_link_element
+      added_student_element(student).when_present 1
+      note_batch.students << student
     end
   end
 
+  # Removes a given set of students from a batch note
+  # @param note_batch [NoteBatch]
+  # @param students [Array<BOACUser>]
+  def remove_students_from_batch(note_batch, students)
+    students.each do |student|
+      logger.info "Removing SID #{student.sis_id} from batch note"
+      wait_for_update_and_click student_remove_button(student)
+      added_student_element(student).when_not_visible 2
+      note_batch.students.delete student
+    end
+  end
+
+  # Adds a given set of cohorts to a batch note
+  # @param note_batch [NoteBatch]
+  # @param [Array<FilteredCohort>]
   def add_cohorts_to_batch(note_batch, cohorts)
-    cohorts.each_with_index do |cohort, index|
+    cohorts.each do |cohort|
       logger.debug "Cohort '#{cohort.name}' will be used in creation of batch note '#{note_batch.subject}'."
       wait_for_update_and_click batch_note_add_cohort_button_element
-      wait_for_update_and_click cohort_dropdown_element(cohort.id)
-      wait_for_element(added_cohort_element(index), Utils.short_wait)
+      wait_for_update_and_click cohort_dropdown_element(cohort)
+      wait_for_element(added_cohort_element(cohort), Utils.short_wait)
+      note_batch.cohorts << cohort
     end
   end
 
+  # Removes a given set of cohorts from a batch note
+  # @param note_batch [NoteBatch]
+  # @param [Array<FilteredCohort>]
+  def remove_cohorts_from_batch(note_batch, cohorts)
+    cohorts.each do |cohort|
+      logger.info "Removing cohort '#{cohort.name}' from batch note"
+      wait_for_update_and_click cohort_remove_button(cohort)
+      added_cohort_element(cohort).when_not_visible 1
+      note_batch.cohorts.delete cohort
+    end
+  end
+
+  # Adds a given set of groups to a batch note
+  # @param note_batch [NoteBatch]
+  # @param [Array<CuratedGroup>]
   def add_curated_groups_to_batch(note_batch, curated_groups)
-    curated_groups.each_with_index do |curated_group, index|
+    curated_groups.each do |curated_group|
       logger.debug "Curated group '#{curated_group.name}' will be used in creation of batch note '#{note_batch.subject}'."
       wait_for_update_and_click batch_note_add_curated_group_button_element
-      wait_for_update_and_click curated_group_dropdown_element(curated_group.id)
-      wait_for_element(added_curated_group_element(index), Utils.short_wait)
+      wait_for_update_and_click curated_group_dropdown_element(curated_group)
+      wait_for_element(added_curated_group_element(curated_group), Utils.short_wait)
+      note_batch.curated_groups << curated_group
+    end
+  end
+
+  # Removes a given set of groups from a batch note
+  # @param note_batch [NoteBatch]
+  # @param [Array<CuratedGroup>]
+  def remove_groups_from_batch(note_batch, curated_groups)
+    curated_groups.each do |curated_group|
+      logger.info "Removing group '#{curated_group.name}' from batch note"
+      wait_for_update_and_click curated_group_remove_button (curated_group)
+      added_curated_group_element(curated_group).when_not_visible 1
+      note_batch.curated_groups.delete curated_group
     end
   end
 
 
   #### CREATE NOTE ####
 
-  # Clicks the new (batch) note button
-  def click_create_note_batch
-    logger.debug 'Clicking the New Note (batch) button'
-    wait_for_update_and_click batch_note_button_element
+  # Verifies the batch note student count alert
+  # @param students [Array<BOACUser>]
+  # @param cohorts [Array<FilteredCohort>]
+  # @param curated_groups [Array<CuratedGroup>]
+  def verify_batch_note_alert(students, cohorts, curated_groups)
+    unique_students = unique_students_in_batch(students, cohorts, curated_groups)
+    student_count = unique_students.length
+    expected_alert = "Note will be added to student #{student_count} record#{student_count == 1 ? '' : 's'}"
+    alert_text = batch_note_student_count_alert_element.text
+    wait_until(1, "Expected alert '#{expected_alert}', got '#{alert_text}'") { alert_text && alert_text.include?(expected_alert) }
+    wait_until(1) { alert_text.include? 'Are you sure?' } if student_count >= 500
   end
 
   # Combines methods to create a batch of notes, each with the same subject, body, etc. We expect one note per SID, as
@@ -269,29 +342,17 @@ module BOACPagesCreateNoteModal
     enter_note_body note_batch
     add_attachments_to_new_note(note_batch, attachments) if attachments
     add_topics(note_batch, topics) if topics
-
-    unique_students = unique_students_in_batch(students, cohorts, curated_groups)
-    student_count = unique_students.length
-    expected_alert = "Note will be added to student #{student_count} record#{student_count == 1 ? '' : 's'}"
-    alert_text = batch_note_student_count_alert_element.text
-    if alert_text && alert_text.include?(expected_alert)
-      logger.debug expected_alert
-    else
-      fail
-    end
-    if student_count >= 500 && !alert_text.include?('Are you sure?')
-      fail
-    end
-
     click_save_new_note
     # Give a moment
     sleep Utils.click_wait
-
-    unique_students
+    unique_students_in_batch(students, cohorts, curated_groups)
   end
 
-  private
-
+  # Returns the unique students contained in combined arrays of students, cohorts, and curated groups
+  # @param students [Array<BOACUser>]
+  # @param cohorts [Array<FilteredCohort>]
+  # @param curated_groups [Array<CuratedGroup>]
+  # @return [Array<BOACUser>]
   def unique_students_in_batch(students, cohorts, curated_groups)
     # Get unique students
     students_by_sid = {}
@@ -302,8 +363,7 @@ module BOACPagesCreateNoteModal
     curated_groups.each do |curated_group|
       curated_group.members.each { |student| students_by_sid[student.sis_id] = student }
     end
-    # Return sorted list
-    students_by_sid.values.sort_by &:last_name
+    students_by_sid.values
   end
 
 end

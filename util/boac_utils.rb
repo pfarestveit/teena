@@ -327,12 +327,27 @@ class BOACUtils < Utils
     notes_data.map { |d| Note.new d }
   end
 
+  def self.get_note_count_by_subject(note)
+    query = "SELECT COUNT(*) FROM notes WHERE subject = '#{note.subject}';"
+    result = Utils.query_pg_db(boac_db_credentials, query)
+    res = result.getvalue(0, 0).to_i
+    logger.info "Note count is '#{res}'"
+    res
+  end
+
   # Given a note subject, sets and returns the first matching note ID. The subject must be unique for this to be useful.
   # @param note_subject [String]
   # @return [Array<Integer>]
-  def self.get_note_ids_by_subject(note_subject)
-    query = "SELECT id FROM notes WHERE subject = '#{note_subject}';"
+  def self.get_note_ids_by_subject(note_subject, student=nil)
+    query = "SELECT id FROM notes WHERE subject = '#{note_subject}'#{+ ' AND sid = \'' + student.sis_id + '\'' if student};"
     Utils.query_pg_db_field(boac_db_credentials, query, 'id')
+  end
+
+  def self.get_note_sids_by_subject(note)
+    query = "SELECT sid FROM notes WHERE subject = '#{note.subject}' ORDER BY sid ASC;"
+    sids = Utils.query_pg_db_field(boac_db_credentials, query, 'sid')
+    logger.debug "Note SIDs are #{sids}"
+    sids
   end
 
   # Sets and returns the deleted date for a given note
