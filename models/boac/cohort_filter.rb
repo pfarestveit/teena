@@ -11,7 +11,7 @@ class CohortFilter
                 :last_name,
                 :advisor,
                 :ethnicity,
-                :gender,
+                :coe_gender,
                 :underrepresented_minority,
                 :prep,
                 :inactive_coe,
@@ -36,7 +36,7 @@ class CohortFilter
     # CoE
     @advisor = (test_data['advisors'] && test_data['advisors'].map { |a| a['advisor'] })
     @ethnicity = (test_data['ethnicities'] && test_data['ethnicities'].map { |e| coe_ethnicity e['ethnicity'] })
-    @gender = (test_data['genders'] && test_data['genders'].map { |g| g['gender'] })
+    @coe_gender = (test_data['coe_genders'] && test_data['coe_genders'].map { |g| g['coe_gender'] })
     @underrepresented_minority = test_data['minority']
     @prep = (test_data['preps'] && test_data['preps'].map { |p| p['prep'] })
     @inactive_coe = test_data['inactive_coe']
@@ -51,7 +51,7 @@ class CohortFilter
     if [BOACDepartments::ASC, BOACDepartments::PHYSICS].include? dept
       @advisor = nil
       @ethnicity = nil
-      @gender = nil
+      @coe_gender = nil
       @underrepresented_minority = nil
       @prep = nil
       @inactive_coe = nil

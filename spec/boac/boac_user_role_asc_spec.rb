@@ -46,9 +46,9 @@ describe 'An ASC advisor' do
     it('sees a Transfer Student filter') { expect(@filtered_cohort_page.new_filter_option('Transfer Student').visible?).to be true }
     it('sees an Expected Graduation Term filter') { expect(@filtered_cohort_page.new_filter_option('Expected Graduation Term').visible?).to be true }
     it('sees a Last Name filter') { expect(@filtered_cohort_page.new_filter_option_by_key('lastNameRange').visible?).to be true }
-    it('sees no Advisor filter') { expect(@filtered_cohort_page.new_filter_option_by_key('advisorLdapUids').exists?).to be false }
+    it('sees no Advisor filter') { expect(@filtered_cohort_page.new_filter_option_by_key('coeAdvisorLdapUids').exists?).to be false }
     it('sees no Ethnicity filter') { expect(@filtered_cohort_page.new_filter_option_by_key('ethnicities').exists?).to be false }
-    it('sees no Gender filter') { expect(@filtered_cohort_page.new_filter_option_by_key('genders').exists?).to be false }
+    it('sees no \'Gender (COE)\' filter') { expect(@filtered_cohort_page.new_filter_option_by_key('coeGenders').exists?).to be false }
     it('sees no PREP filter') { expect(@filtered_cohort_page.new_filter_option_by_key('coePrepStatuses').exists?).to be false }
     it('sees a Inactive filter') { expect(@filtered_cohort_page.new_filter_option_by_key('isInactiveAsc').visible?).to be true }
     it('sees a Intensive filter') { expect(@filtered_cohort_page.new_filter_option_by_key('inIntensiveCohort').visible?).to be true }

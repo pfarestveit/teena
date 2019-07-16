@@ -199,10 +199,10 @@ class BOACFilteredCohortPage
       # All others require a selection
     else
       wait_for_update_and_click new_sub_filter_button_element
-      option_element = if filter_key == 'advisorLdapUids'
+      option_element = if filter_key == 'coeAdvisorLdapUids'
                          new_filter_advisor_option(filter_option)
                        else
-                        link_element(xpath: "//div[@class=\"cohort-filter-draft-column-02\"]//a[contains(text(),\"#{filter_option}\")]")
+                        link_element(xpath: "//div[@class=\"cohort-filter-draft-column-02\"]//a[contains(.,\"#{filter_option}\")]")
                        end
       wait_for_update_and_click option_element
     end
@@ -298,7 +298,7 @@ class BOACFilteredCohortPage
         existing_filter_element('Last Name', filters.last_name).exists? if filters.last_name
         # TODO - advisors
         filters.ethnicity.each { |e| existing_filter_element('Ethnicity', e).exists? } if filters.ethnicity && filters.ethnicity.any?
-        filters.gender.each { |g| existing_filter_element('Gender', g).exists? } if filters.gender && filters.gender.any?
+        filters.gender.each { |g| existing_filter_element('Gender (COE)', g).exists? } if filters.coe_gender && filters.coe_gender.any?
         existing_filter_element('Underrepresented Minority').exists? if filters.underrepresented_minority
         filters.prep.each { |p| existing_filter_element('PREP', p).exists? } if filters.prep && filters.prep.any?
         existing_filter_element('Probation').exists? if filters.probation_coe
@@ -409,10 +409,10 @@ class BOACFilteredCohortPage
     select_filter('Last Name', cohort.search_criteria.last_name) if cohort.search_criteria.last_name
 
     # CoE
-    cohort.search_criteria.advisor.each { |a| select_filter('Advisor', a) } if cohort.search_criteria.advisor
+    cohort.search_criteria.advisor.each { |a| select_filter_by_key('coeAdvisorLdapUids', a) } if cohort.search_criteria.advisor
     cohort.search_criteria.ethnicity.each { |e| select_filter('Ethnicity', e) } if cohort.search_criteria.ethnicity
     select_filter 'Underrepresented Minority' if cohort.search_criteria.underrepresented_minority
-    cohort.search_criteria.gender.each { |g| select_filter('Gender', g) } if cohort.search_criteria.gender
+    cohort.search_criteria.coe_gender.each { |g| select_filter_by_key('coeGenders', g) } if cohort.search_criteria.coe_gender
     cohort.search_criteria.prep.each { |p| select_filter('PREP', p) } if cohort.search_criteria.prep
     select_filter 'Probation' if cohort.search_criteria.probation_coe
     inactive_label = (test.dept == BOACDepartments::ADMIN) ? 'Inactive (COE)' : 'Inactive'
@@ -533,23 +533,23 @@ class BOACFilteredCohortPage
     # Underrepresented Minority
     matching_minority_users = search_criteria.underrepresented_minority ? (test.searchable_data.select { |u| u[:underrepresented_minority] }) : test.searchable_data
 
-    # Gender
-    matching_gender_users = []
-    if search_criteria.gender && search_criteria.gender.any?
-      search_criteria.gender.each do |gender|
-        if gender == 'Male'
-          matching_gender_users << test.searchable_data.select { |u| %w(M m).include? u[:gender] }
-        elsif gender == 'Female'
-          matching_gender_users << test.searchable_data.select { |u| %w(F f).include? u[:gender] }
+    # Gender (COE)
+    matching_coe_gender_users = []
+    if search_criteria.coe_gender && search_criteria.coe_gender.any?
+      search_criteria.coe_gender.each do |coe_gender|
+        if coe_gender == 'Male'
+          matching_coe_gender_users << test.searchable_data.select { |u| %w(M m).include? u[:coe_gender] }
+        elsif coe_gender == 'Female'
+          matching_coe_gender_users << test.searchable_data.select { |u| %w(F f).include? u[:coe_gender] }
         else
-          logger.error "Test data has an unrecognized gender '#{gender}'"
+          logger.error "Test data has an unrecognized COE gender '#{coe_gender}'"
           fail
         end
       end
     else
-      matching_gender_users = test.searchable_data
+      matching_coe_gender_users = test.searchable_data
     end
-    matching_gender_users.flatten!
+    matching_coe_gender_users.flatten!
 
     # PREP
     matching_preps_users = []
@@ -584,7 +584,7 @@ class BOACFilteredCohortPage
 
     matches = [matching_gpa_users, matching_level_users, matching_units_users, matching_major_users, matching_tranfer_users,
                matching_grad_term_users, matching_last_name_users, matching_advisor_users, matching_ethnicity_users, matching_minority_users,
-               matching_gender_users, matching_preps_users, matching_inactive_coe_users, matching_probation_asc_users,
+               matching_coe_gender_users, matching_preps_users, matching_inactive_coe_users, matching_probation_asc_users,
                matching_inactive_asc_users, matching_intensive_asc_users, matching_squad_users]
     matches.any?(&:empty?) ? [] : matches.inject(:'&')
   end

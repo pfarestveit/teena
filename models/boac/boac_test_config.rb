@@ -228,7 +228,7 @@ class BOACTestConfig < TestConfig
       filters.merge!({
                          :advisor => [BOACUtils.get_dept_advisors(BOACDepartments::COE).first.uid.to_s],
                          :ethnicity => ['Chinese / Chinese-American'],
-                         :gender => ['Female'],
+                         :coe_gender => ['Female'],
                          :underrepresented_minority => true,
                          :prep => ['PREP'],
                          :inactive_coe => true,

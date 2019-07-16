@@ -50,7 +50,7 @@ describe 'A Physics advisor using BOAC' do
     it('sees a Last Name filter') { expect(@filtered_cohort_page.new_filter_option('Last Name').visible?).to be true }
     it('sees no Advisor filter') { expect(@filtered_cohort_page.new_filter_option('Advisor').exists?).to be false }
     it('sees no Ethnicity filter') { expect(@filtered_cohort_page.new_filter_option('Ethnicity').exists?).to be false }
-    it('sees no Gender filter') { expect(@filtered_cohort_page.new_filter_option('Gender').exists?).to be false }
+    it('sees no \'Gender (COE)\' filter') { expect(@filtered_cohort_page.new_filter_option('Gender (COE)').exists?).to be false }
     it('sees no PREP filter') { expect(@filtered_cohort_page.new_filter_option('PREP').exists?).to be false }
     it('sees no Inactive filter') { expect(@filtered_cohort_page.new_filter_option('Inactive').visible?).to be false }
     it('sees no Intensive filter') { expect(@filtered_cohort_page.new_filter_option('Intensive').visible?).to be false }

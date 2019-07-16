@@ -434,23 +434,23 @@ describe 'BOAC', order: :defined do
       end
     end
 
-    it 'allows the advisor to edit a Gender filter' do
-      if test.default_cohort.search_criteria.gender
-        test.default_cohort.search_criteria.gender = ['Male']
-        @cohort_page.edit_filter_and_confirm('Gender', test.default_cohort.search_criteria.gender.first)
+    it 'allows the advisor to edit a \'Gender (COE)\' filter' do
+      if test.default_cohort.search_criteria.coe_gender
+        test.default_cohort.search_criteria.coe_gender = ['Male']
+        @cohort_page.edit_filter_and_confirm('Gender (COE)', test.default_cohort.search_criteria.coe_gender.first)
         @cohort_page.verify_filters_present test.default_cohort
       else
-        logger.warn 'Skipping test for editing genders since the filter is not available to the user'
+        logger.warn 'Skipping test for editing \'Gender (COE)\' since the filter is not available to the user'
       end
     end
 
-    it 'allows the advisor to remove a Gender filter' do
-      if test.default_cohort.search_criteria.gender
-        test.default_cohort.search_criteria.gender = []
-        @cohort_page.remove_filter_of_type 'Gender'
+    it 'allows the advisor to remove a \'Gender (COE)\' filter' do
+      if test.default_cohort.search_criteria.coe_gender
+        test.default_cohort.search_criteria.coe_gender = []
+        @cohort_page.remove_filter_of_type 'Gender (COE)'
         @cohort_page.verify_filters_present test.default_cohort
       else
-        logger.warn 'Skipping test for removing genders since the filter is not available to the user'
+        logger.warn 'Skipping test for removing \'Gender (COE)\' since the filter is not available to the user'
       end
     end
 
