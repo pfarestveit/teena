@@ -96,6 +96,8 @@ describe 'A Physics advisor using BOAC' do
       @admin_page.demo_mode_toggle_element.when_present Utils.short_wait
     end
 
+    it('cannot download BOA user lists') { expect(@admin_page.download_users_button?).to be false }
+
     it 'can see no other admin functions' do
       BOACDepartments::DEPARTMENTS.each { |dept| expect(@admin_page.dept_tab_link_element(dept).exists?).to be false }
       expect(@admin_page.status_heading?).to be false
