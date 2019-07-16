@@ -12,7 +12,7 @@
             ],
             "last_initials": "C K",
             "advisors": null,
-            "ethnicities": null,
+            "coe_ethnicities": null,
             "minority": null,
             "coe_genders": null,
             "preps": null,
@@ -35,7 +35,7 @@
                 {"expected_grad_term": "2202"}
             ],
             "advisors": null,
-            "ethnicities": null,
+            "coe_ethnicities": null,
             "minority": null,
             "coe_genders": null,
             "preps": null,
@@ -60,7 +60,7 @@
             "advisors": [
                 {"advisor": "1015251"}
             ],
-            "ethnicities": null,
+            "coe_ethnicities": null,
             "minority": true,
             "coe_genders": [
                 {"coe_gender": "Female"}
@@ -86,7 +86,7 @@
                 {"gender": "Male"}
             ],
             "advisors": null,
-            "ethnicities": null,
+            "coe_ethnicities": null,
             "minority": true,
             "coe_genders": null,
             "preps": [
@@ -113,7 +113,7 @@
                 {"gender": "Decline to State"}
             ],
             "advisors": null,
-            "ethnicities": null,
+            "coe_ethnicities": null,
             "minority": null,
             "coe_genders": null,
             "preps": [
@@ -137,7 +137,7 @@
             "advisors": [
                 {"advisor": "1015251"}
             ],
-            "ethnicities": null,
+            "coe_ethnicities": null,
             "minority": null,
             "coe_genders": null,
             "preps": null,
@@ -166,8 +166,8 @@
             ],
             "gpa_ranges": null,
             "advisors": null,
-            "ethnicities": [
-                {"ethnicity": "F"}
+            "coe_ethnicities": [
+                {"coe_ethnicity": "F"}
             ],
             "minority": null,
             "coe_genders": null,
@@ -190,8 +190,8 @@
                 {"unit": "0 - 29"}
             ],
             "advisors": null,
-            "ethnicities": [
-                {"ethnicity": "G"}
+            "coe_ethnicities": [
+                {"coe_ethnicity": "G"}
             ],
             "minority": false,
             "coe_genders": [
@@ -221,7 +221,7 @@
             "advisors": [
                 {"advisor": "2322"}
             ],
-            "ethnicities": null,
+            "coe_ethnicities": null,
             "minority": true,
             "coe_genders": null,
             "preps": null,
@@ -240,7 +240,7 @@
                 {"gpa_range": "3.50 - 4.00"}
             ],
             "advisors": null,
-            "ethnicities": null,
+            "coe_ethnicities": null,
             "coe_genders": [
                 {"coe_gender": "Male"}
             ],
@@ -261,7 +261,7 @@
             ],
             "gpa_ranges": null,
             "advisors": null,
-            "ethnicities": null,
+            "coe_ethnicities": null,
             "coe_genders": null,
             "preps": null,
             "probation_coe": null,
@@ -281,7 +281,7 @@
             "advisors": [
                 {"advisor": "1015251"}
             ],
-            "ethnicities": null,
+            "coe_ethnicities": null,
             "minority": true,
             "coe_genders": [
                 {"coe_gender": "Female"}
@@ -302,8 +302,8 @@
                 {"gpa_range": "Below 2.0"}
             ],
             "advisors": null,
-            "ethnicities": [
-                {"ethnicity": "H"}
+            "coe_ethnicities": [
+                {"coe_ethnicity": "H"}
             ],
             "coe_genders": null,
             "preps": null,
@@ -330,7 +330,7 @@
                 {"gpa_range": "2.50 - 2.99"}
             ],
             "advisors": null,
-            "ethnicities": null,
+            "coe_ethnicities": null,
             "minority": null,
             "coe_genders": [
                 {"coe_gender": "Female"}
@@ -357,7 +357,7 @@
                 {"advisor": "1015251"},
                 {"advisor": "18767"}
             ],
-            "ethnicities": null,
+            "coe_ethnicities": null,
             "minority": null,
             "coe_genders": null,
             "preps": [
