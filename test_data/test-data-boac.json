@@ -14,7 +14,7 @@
             "advisors": null,
             "ethnicities": null,
             "minority": null,
-            "genders": null,
+            "coe_genders": null,
             "preps": null,
             "probation_coe": null,
             "inactive_coe": null,
@@ -37,7 +37,7 @@
             "advisors": null,
             "ethnicities": null,
             "minority": null,
-            "genders": null,
+            "coe_genders": null,
             "preps": null,
             "probation_coe": null,
             "inactive_coe": null,
@@ -62,8 +62,8 @@
             ],
             "ethnicities": null,
             "minority": true,
-            "genders": [
-                {"gender": "Female"}
+            "coe_genders": [
+                {"coe_gender": "Female"}
             ],
             "preps": null,
             "probation_coe": null,
@@ -85,7 +85,7 @@
             "advisors": null,
             "ethnicities": null,
             "minority": true,
-            "genders": null,
+            "coe_genders": null,
             "preps": [
                 {"prep": "PREP"},
                 {"prep": "T-PREP"}
@@ -109,7 +109,7 @@
             "advisors": null,
             "ethnicities": null,
             "minority": null,
-            "genders": null,
+            "coe_genders": null,
             "preps": [
                 {"prep": "PREP eligible"}
             ],
@@ -133,7 +133,7 @@
             ],
             "ethnicities": null,
             "minority": null,
-            "genders": null,
+            "coe_genders": null,
             "preps": null,
             "probation_coe": true,
             "inactive_asc": null,
@@ -164,7 +164,7 @@
                 {"ethnicity": "F"}
             ],
             "minority": null,
-            "genders": null,
+            "coe_genders": null,
             "preps": null,
             "probation_coe": null,
             "inactive_asc": null,
@@ -188,9 +188,9 @@
                 {"ethnicity": "G"}
             ],
             "minority": false,
-            "genders": [
-                {"gender": "Male"},
-                {"gender": "Female"}
+            "coe_genders": [
+                {"coe_gender": "Male"},
+                {"coe_gender": "Female"}
             ],
             "preps": null,
             "probation_coe": null,
@@ -217,7 +217,7 @@
             ],
             "ethnicities": null,
             "minority": true,
-            "genders": null,
+            "coe_genders": null,
             "preps": null,
             "probation_coe": null,
             "inactive_asc": null,
@@ -235,8 +235,8 @@
             ],
             "advisors": null,
             "ethnicities": null,
-            "genders": [
-                {"gender": "Male"}
+            "coe_genders": [
+                {"coe_gender": "Male"}
             ],
             "preps": [
                 {"prep": "PREP"}
@@ -256,7 +256,7 @@
             "gpa_ranges": null,
             "advisors": null,
             "ethnicities": null,
-            "genders": null,
+            "coe_genders": null,
             "preps": null,
             "probation_coe": null,
             "inactive_asc": null,
@@ -277,8 +277,8 @@
             ],
             "ethnicities": null,
             "minority": true,
-            "genders": [
-                {"gender": "Female"}
+            "coe_genders": [
+                {"coe_gender": "Female"}
             ],
             "preps": null,
             "probation_coe": null,
@@ -299,7 +299,7 @@
             "ethnicities": [
                 {"ethnicity": "H"}
             ],
-            "genders": null,
+            "coe_genders": null,
             "preps": null,
             "probation_coe": true,
             "inactive_asc": null,
@@ -326,8 +326,8 @@
             "advisors": null,
             "ethnicities": null,
             "minority": null,
-            "genders": [
-                {"gender": "Female"}
+            "coe_genders": [
+                {"coe_gender": "Female"}
             ],
             "preps": null,
             "probation_coe": null,
@@ -353,7 +353,7 @@
             ],
             "ethnicities": null,
             "minority": null,
-            "genders": null,
+            "coe_genders": null,
             "preps": [
                 {"prep": "PREP"}
             ],
