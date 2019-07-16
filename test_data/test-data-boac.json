@@ -82,6 +82,9 @@
                 {"major": "Nuclear Engineering BS"}
             ],
             "gpa_ranges": null,
+            "genders": [
+                {"gender": "Male"}
+            ],
             "advisors": null,
             "ethnicities": null,
             "minority": true,
@@ -106,6 +109,9 @@
             ],
             "majors": null,
             "gpa_ranges": null,
+            "genders": [
+                {"gender": "Decline to State"}
+            ],
             "advisors": null,
             "ethnicities": null,
             "minority": null,

@@ -213,6 +213,7 @@ class BOACTestConfig < TestConfig
       :major => major,
       :transfer_student => true,
       :expected_grad_terms => [CONFIG['term_code']],
+      :gender => ['Male'],
       :last_name => 'A Z',
     }
 

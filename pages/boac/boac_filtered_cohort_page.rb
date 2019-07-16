@@ -130,7 +130,7 @@ class BOACFilteredCohortPage
   # @return [PageObject::Elements::Link]
   # @deprecated Use <tt>new_filter_option_by_key</tt> instead
   def new_filter_option(option_name)
-    link_element(xpath: "//a[contains(.,\"#{option_name}\")]")
+    (option == 'Gender') ? link_element(xpath: "//a[contains(.,\"#{option_name}\") and not(contains(.,\"COE\"))]") : link_element(xpath: "//a[contains(.,\"#{option_name}\")]")
   end
 
   # Returns a filter option link with given text. Element id is based on filter key, not filter label.
@@ -153,6 +153,8 @@ class BOACFilteredCohortPage
                          "@id='Advisor-#{filter_option}'"
                        when 'Major'
                          "@id='Major-#{filter_option}'"
+                       when 'Gender'
+                         "@id='Gender-#{filter_option}'"
                        when 'Team'
                          squad = Squad::SQUADS.find { |s| s.name == filter_option }
                          "@id='Team-#{squad.code}'"
@@ -202,7 +204,7 @@ class BOACFilteredCohortPage
       option_element = if filter_key == 'coeAdvisorLdapUids'
                          new_filter_advisor_option(filter_option)
                        else
-                        link_element(xpath: "//div[@class=\"cohort-filter-draft-column-02\"]//a[contains(.,\"#{filter_option}\")]")
+                         link_element(xpath: "//div[@class=\"cohort-filter-draft-column-02\"]//a[contains(.,\"#{filter_option}\")]")
                        end
       wait_for_update_and_click option_element
     end
@@ -264,7 +266,9 @@ class BOACFilteredCohortPage
   # @param filter_name [String]
   # @return [String]
   def filter_xpath(filter_name)
-    "//div[contains(@class,\"filter-row\")]/div[contains(.,\"#{filter_name}\")]"
+    (filter_name == 'Gender') ?
+        "//div[contains(@class,\"filter-row\")]/div[contains(.,\"#{filter_name}\") and not(contains(.,\"COE\"))]" :
+        "//div[contains(@class,\"filter-row\")]/div[contains(.,\"#{filter_name}\")]"
   end
 
   # Returns the element containing an added cohort filter
@@ -276,6 +280,8 @@ class BOACFilteredCohortPage
       div_element(xpath: filter_xpath(filter_name))
     elsif filter_name == 'Last Name'
       div_element(xpath: "#{filter_option_xpath}[contains(text(),\"#{filter_option.split.join(' through ')}\")]")
+    elsif filter_name == 'Gender'
+      div_element(xpath: "#{filter_option_xpath}[contains(text(),\"#{filter_option}\") and not(contains(.,\"COE\"))]")
     else
       div_element(xpath: "#{filter_option_xpath}[contains(text(),\"#{filter_option}\")]")
     end
@@ -296,9 +302,10 @@ class BOACFilteredCohortPage
         existing_filter_element('Transfer Student').exists? if filters.transfer_student
         filters.expected_grad_terms.each { |t| existing_filter_element('Expected Graduation Term', t).exists? } if filters.expected_grad_terms && filters.expected_grad_terms.any?
         existing_filter_element('Last Name', filters.last_name).exists? if filters.last_name
+        filters.gender.each { |g| existing_filter_element('Gender', g).exists? } if filters.gender && filters.gender.any?
         # TODO - advisors
         filters.ethnicity.each { |e| existing_filter_element('Ethnicity', e).exists? } if filters.ethnicity && filters.ethnicity.any?
-        filters.gender.each { |g| existing_filter_element('Gender (COE)', g).exists? } if filters.coe_gender && filters.coe_gender.any?
+        filters.coe_gender.each { |g| existing_filter_element('Gender (COE)', g).exists? } if filters.coe_gender && filters.coe_gender.any?
         existing_filter_element('Underrepresented Minority').exists? if filters.underrepresented_minority
         filters.prep.each { |p| existing_filter_element('PREP', p).exists? } if filters.prep && filters.prep.any?
         existing_filter_element('Probation').exists? if filters.probation_coe
@@ -407,6 +414,7 @@ class BOACFilteredCohortPage
     select_filter 'Transfer Student' if cohort.search_criteria.transfer_student
     cohort.search_criteria.expected_grad_terms.each { |t| select_filter('Expected Graduation Term', t) } if cohort.search_criteria.expected_grad_terms
     select_filter('Last Name', cohort.search_criteria.last_name) if cohort.search_criteria.last_name
+    cohort.search_criteria.gender.each { |g| select_filter_by_key('genders', g) } if cohort.search_criteria.gender
 
     # CoE
     cohort.search_criteria.advisor.each { |a| select_filter_by_key('coeAdvisorLdapUids', a) } if cohort.search_criteria.advisor
@@ -515,6 +523,13 @@ class BOACFilteredCohortPage
                                  test.searchable_data
                                end
 
+    # Gender
+    matching_gender_users = []
+    (search_criteria.gender && search_criteria.gender.any?) ?
+        (matching_gender_users << test.searchable_data.select { |u| search_criteria.gender.include? u[:gender] }) :
+        (matching_gender_users = test.searchable_data)
+    matching_gender_users.flatten!
+
     # Advisor
     matching_advisor_users = (search_criteria.advisor && search_criteria.advisor.any?) ?
         (test.searchable_data.select { |u| search_criteria.advisor.include? u[:advisor] }) : test.searchable_data
@@ -582,7 +597,7 @@ class BOACFilteredCohortPage
         (test.searchable_data.select { |u| (u[:squad_names] & (search_criteria.team.map { |s| s.name })).any? }) :
         test.searchable_data
 
-    matches = [matching_gpa_users, matching_level_users, matching_units_users, matching_major_users, matching_tranfer_users,
+    matches = [matching_gpa_users, matching_level_users, matching_units_users, matching_major_users, matching_tranfer_users, matching_gender_users,
                matching_grad_term_users, matching_last_name_users, matching_advisor_users, matching_ethnicity_users, matching_minority_users,
                matching_coe_gender_users, matching_preps_users, matching_inactive_coe_users, matching_probation_asc_users,
                matching_inactive_asc_users, matching_intensive_asc_users, matching_squad_users]

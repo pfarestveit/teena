@@ -9,6 +9,7 @@ class CohortFilter
                 :transfer_student,
                 :expected_grad_terms,
                 :last_name,
+                :gender,
                 :advisor,
                 :ethnicity,
                 :coe_gender,
@@ -32,6 +33,7 @@ class CohortFilter
     @transfer_student = test_data['transfer_student']
     @expected_grad_terms = (test_data['expected_grad_terms'] && test_data['expected_grad_terms'].map { |t| t['expected_grad_term'] })
     @last_name = test_data['last_initials']
+    @gender = (test_data['genders'] && test_data['genders'].map { |g| g['gender'] })
 
     # CoE
     @advisor = (test_data['advisors'] && test_data['advisors'].map { |a| a['advisor'] })
