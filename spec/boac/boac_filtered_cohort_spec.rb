@@ -405,7 +405,7 @@ describe 'BOAC', order: :defined do
     end
 
     it 'allows the advisor to remove an Expected Graduation Term filter' do
-      if test.default_cohort.expected_grad_terms.major.any?
+      if test.default_cohort.expected_grad_terms.any?
         test.default_cohort.search_criteria.expected_grad_terms = []
         @cohort_page.remove_filter_of_type 'Expected Graduation Term'
         @cohort_page.verify_filters_present test.default_cohort

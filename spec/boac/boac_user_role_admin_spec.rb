@@ -10,6 +10,9 @@ describe 'An admin using BOAC' do
   coe_only_students = test.students.select { |s| s.depts == [BOACDepartments::COE] }
   asc_only_students = test.students.select { |s| s.depts == [BOACDepartments::ASC] }
 
+  non_admin_depts = BOACDepartments::DEPARTMENTS.reject { |d| d == BOACDepartments::ADMIN }
+  dept_advisors =  non_admin_depts.map { |dept| {:dept => dept, :advisors => BOACUtils.get_dept_advisors(dept)} }
+
   everyone_cohorts = BOACUtils.get_everyone_filtered_cohorts
 
   before(:all) do
@@ -41,19 +44,6 @@ describe 'An admin using BOAC' do
       expected_cohort_names = everyone_cohorts.map(&:name).sort
       visible_cohort_names = (@filtered_cohort_page.visible_everyone_cohorts.map &:name).sort
       @filtered_cohort_page.wait_until(1, "Expected #{expected_cohort_names}, but got #{visible_cohort_names}") { visible_cohort_names == expected_cohort_names }
-    end
-  end
-
-  context 'performing a user search' do
-
-    it('sees CoE-only students in search results') do
-      @search_page.search_non_note coe_only_students.first.sis_id
-      expect(@search_page.student_search_results_count).to eql(1)
-    end
-
-    it('sees ASC-only students in search results') do
-      @search_page.search_non_note asc_only_students.first.sis_id
-      expect(@search_page.student_search_results_count).to eql(1)
     end
   end
 
@@ -91,23 +81,16 @@ describe 'An admin using BOAC' do
     end
   end
 
-  context 'visiting a student page' do
+  context 'visiting student API pages' do
 
-    it 'can see an ASC student page' do
-      @student_page.load_page asc_only_students.first
-      @student_page.student_name_heading_element.when_visible Utils.medium_wait
-      expect(@student_page.visible_sis_data[:name]).to eql(asc_only_students.first.full_name.split(',').reverse.join(' ').strip)
-    end
-
-    it 'can see a CoE student page' do
-      @student_page.load_page coe_only_students.first
-      @student_page.student_name_heading_element.when_visible Utils.medium_wait
-      expect(@student_page.visible_sis_data[:name]).to eql(coe_only_students.first.full_name.split(',').reverse.join(' ').strip)
-    end
-
-    it 'can see the ASC profile data for an ASC student on the user analytics page' do
+    it 'can see the ASC profile data for an ASC student on the student API page' do
       @api_user_analytics_page.get_data(@driver, asc_only_students.first)
       expect(@api_user_analytics_page.asc_profile).not_to be_nil
+    end
+
+    it 'can see the CoE profile data for a CoE student on the student API page' do
+      @api_user_analytics_page.get_data(@driver, coe_only_students.first)
+      expect(@api_user_analytics_page.coe_profile).not_to be_nil
     end
   end
 
@@ -121,9 +104,9 @@ describe 'An admin using BOAC' do
     it 'sees all departments in \'Users\' section' do
       @admin_page.load_page
       @admin_page.dept_users_section_element.when_present Utils.medium_wait
-      BOACDepartments::DEPARTMENTS.each do |dept|
-        expect(@admin_page.dept_tab_link_element(dept).exists?).to be true
-        BOACUtils.get_dept_advisors(dept) { |user| expect(@admin_page.become_user_link_element(user).exists?).to be true }
+      dept_advisors.each do |dept|
+        expect(@admin_page.dept_tab_link_element(dept[:dept]).exists?).to be true
+        dept[:advisors].each { |advisor| expect(@admin_page.become_user_link_element(advisor).exists?).to be true }
       end
     end
 
@@ -145,5 +128,27 @@ describe 'An admin using BOAC' do
       @admin_page.update_service_announcement @service_announcement
       @admin_page.wait_until(Utils.short_wait) { @admin_page.service_announcement_banner == @service_announcement }
     end
+  end
+
+  context 'exporting all BOA users' do
+
+    before(:all) { @csv = @admin_page.download_boa_users }
+
+    dept_advisors.each do |dept|
+      it "can export all #{dept[:dept].name} users" do
+        dept_user_uids = dept[:advisors].map &:uid
+        csv_dept_user_uids = @csv.map { |r| r[:uid].to_s if (r[:dept_code] == dept[:dept].code && r[:dept_name] == dept[:dept].name) }
+        expect(csv_dept_user_uids.compact.sort).to eql(dept_user_uids.sort)
+      end
+    end
+
+    it 'can generate valid data' do
+      @csv.each do |r|
+        expect(r[:last_name]).not_to be_empty
+        expect(r[:first_name]).not_to be_empty
+        expect(r[:email]).to include('@berkeley.edu')
+      end
+    end
+
   end
 end

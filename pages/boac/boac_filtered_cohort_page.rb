@@ -626,7 +626,13 @@ class BOACFilteredCohortPage
   # @param expected_users [Array<Hash>]
   # @return [Array<String>]
   def expected_sids_by_team(expected_users)
-    sorted_users = expected_users.sort_by { |u| [u[:squad_names].sort.first.gsub(' (AA)', '') .gsub(/\W+/, ''), u[:last_name_sortable_cohort].downcase, u[:first_name_sortable_cohort].downcase, u[:sid]] }
+    players = []
+    non_players = []
+    expected_users.each { |u| u[:squad_names].any? ? (players << u) : (non_players << u) }
+    # Students with no teams come after those with teams
+    sorted_players = players.sort_by { |u| [u[:squad_names].sort.first.gsub(' (AA)', '') .gsub(/\W+/, ''), u[:last_name_sortable_cohort].downcase, u[:first_name_sortable_cohort].downcase, u[:sid]] }
+    sorted_non_players = non_players.sort_by { |u| [u[:last_name_sortable_cohort].downcase, u[:first_name_sortable_cohort].downcase, u[:sid]] }
+    sorted_users = sorted_players + sorted_non_players
     sorted_users.map { |u| u[:sid] }
   end
 

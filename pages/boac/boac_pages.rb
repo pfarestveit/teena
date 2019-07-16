@@ -316,7 +316,7 @@ module BOACPages
   # timeout
   # @param note [Note]
   # @return [Integer]
-  def set_new_note_id(note, student)
+  def set_new_note_id(note, student=nil)
     new_note_subject_input_element.when_not_visible Utils.short_wait
     start_time = Time.now
     wait_until(15) { note.id = BOACUtils.get_note_ids_by_subject(note.subject, student).first }

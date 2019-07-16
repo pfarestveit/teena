@@ -251,9 +251,7 @@ class BOACTestConfig < TestConfig
   # Config for legacy advising notes testing
   def legacy_notes
     set_global_configs
-    @searchable_data.keep_if { |d| d[:level] == CONFIG['legacy_notes_level'] }
-    sids = @searchable_data.map { |d| d[:sid] }
-    @cohort_members = @students.select { |s| sids.include? s.sis_id }
+    set_default_cohort
     set_max_cohort_members CONFIG['legacy_notes_max_users']
   end
 
@@ -283,6 +281,13 @@ class BOACTestConfig < TestConfig
     end
     set_global_configs
     set_default_cohort
+  end
+
+  # Config for user search testing
+  def search
+    set_global_configs
+    set_default_cohort
+    set_max_cohort_members CONFIG['search_max_users']
   end
 
   # Config for SIS data testing
@@ -322,13 +327,6 @@ class BOACTestConfig < TestConfig
   def user_role_physics
     set_global_configs BOACDepartments::PHYSICS
     set_search_cohorts
-  end
-
-  # Config for user search testing
-  def search
-    set_global_configs
-    set_default_cohort
-    set_max_cohort_members CONFIG['search_max_users']
   end
 
 end

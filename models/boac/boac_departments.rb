@@ -8,7 +8,7 @@ class BOACDepartments
   end
 
   DEPARTMENTS = [
-      ADMIN = new('ADMIN', 'Admin'),
+      ADMIN = new('ADMIN', 'Admins'),
       ASC = new('UWASC', 'Athletic Study Center'),
       COE = new('COENG', 'College of Engineering'),
       L_AND_S = new('QCADV', 'L&S Undergraduate Advising'),

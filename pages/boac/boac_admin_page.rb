@@ -8,6 +8,7 @@ class BOACAdminPage
   include BOACPages
 
   checkbox(:demo_mode_toggle, :id => 'toggle-demo-mode')
+  link(:download_users_button, :id => 'download-boa-users-csv')
   checkbox(:post_service_announcement_checkbox, id: 'checkbox-publish-service-announcement')
   h2(:status_heading, :id => 'system-status-header')
   h2(:dept_users_section, :id => 'dept-users-section')
@@ -20,6 +21,18 @@ class BOACAdminPage
   # Loads the admin page
   def load_page
     navigate_to "#{BOACUtils.base_url}/admin"
+  end
+
+  # Clicks the admin link to download a CSV of BOA users and returns the parsed date
+  # @return [Array<Array>]
+  def download_boa_users
+    logger.info 'Downloading BOA users CSV'
+    Utils.prepare_download_dir
+    wait_for_update_and_click download_users_button_element
+    csv_file_path = "#{Utils.download_dir}/boa_users_#{Date.today.strftime("%Y-%m-%d")}_*.csv"
+    wait_until { Dir[csv_file_path].any? }
+    csv = Dir[csv_file_path].first
+    CSV.table csv
   end
 
   # Returns link to dept tab on admin page
