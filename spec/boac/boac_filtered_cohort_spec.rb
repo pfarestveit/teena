@@ -12,7 +12,7 @@ describe 'BOAC', order: :defined do
     @driver = Utils.launch_browser test.chrome_profile
     @analytics_page = BOACApiStudentPage.new @driver
     @homepage = BOACHomePage.new @driver
-    @cohort_page = BOACFilteredCohortPage.new @driver
+    @cohort_page = BOACFilteredCohortPage.new(@driver, test.advisor)
     @student_page = BOACStudentPage.new @driver
 
     @homepage.dev_auth test.advisor
@@ -534,6 +534,18 @@ describe 'BOAC', order: :defined do
     it 'allows the advisor to remove a Last Name filter' do
       test.default_cohort.search_criteria.last_name = nil
       @cohort_page.remove_filter_of_type 'Last Name'
+      @cohort_page.verify_filters_present test.default_cohort
+    end
+
+    it 'allows the advisor to edit a My Students filter' do
+      test.default_cohort.search_criteria.cohort_owner_academic_plans = ['*']
+      @cohort_page.edit_filter_and_confirm('My Students', '*')
+      @cohort_page.verify_filters_present test.default_cohort
+    end
+
+    it 'allows the advisor to remove a My Students filter' do
+      test.default_cohort.search_criteria.cohort_owner_academic_plans = []
+      @cohort_page.remove_filter_of_type 'My Students'
       @cohort_page.verify_filters_present test.default_cohort
     end
 

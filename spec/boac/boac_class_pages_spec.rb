@@ -19,7 +19,7 @@ describe 'BOAC' do
 
     @driver = Utils.launch_browser test.chrome_profile
     @homepage = BOACHomePage.new @driver
-    @filtered_cohort_page = BOACFilteredCohortPage.new @driver
+    @filtered_cohort_page = BOACFilteredCohortPage.new(@driver, test.advisor)
     @student_page = BOACStudentPage.new @driver
     @class_page = BOACClassListViewPage.new @driver
     @search_page = BOACSearchResultsPage.new @driver

@@ -28,7 +28,7 @@ describe 'BOAC' do
     @analytics_page = BOACApiStudentPage.new @driver
     @homepage = BOACHomePage.new @driver
     @group_page = BOACGroupPage.new @driver
-    @filtered_page = BOACFilteredCohortPage.new @driver
+    @filtered_page = BOACFilteredCohortPage.new(@driver, test.advisor)
     @student_page = BOACStudentPage.new @driver
     @class_page = BOACClassListViewPage.new @driver
     @search_page = BOACSearchResultsPage.new @driver

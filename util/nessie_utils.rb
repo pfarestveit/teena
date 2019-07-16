@@ -316,12 +316,15 @@ class NessieUtils < Utils
                     boac_advising_coe.students.did_tprep AS t_prep,
                     boac_advising_coe.students.tprep_eligible AS t_prep_elig,
                     boac_advising_coe.students.probation AS probation,
-                    boac_advising_coe.students.status AS status_coe
+                    boac_advising_coe.students.status AS status_coe,
+                    boac_advisor.advisor_students.advisor_sid AS advisor_sid,
+                    boac_advisor.advisor_students.academic_plan_code AS advisor_plan_code
              FROM student.student_profiles
              LEFT JOIN student.student_majors ON student.student_majors.sid = student.student_profiles.sid
              LEFT JOIN student.student_academic_status ON student.student_academic_status.sid = student.student_profiles.sid
              LEFT JOIN boac_advising_asc.students ON boac_advising_asc.students.sid = student.student_profiles.sid
              LEFT JOIN boac_advising_coe.students ON boac_advising_coe.students.sid = student.student_profiles.sid
+             LEFT JOIN boac_advisor.advisor_students ON boac_advisor.advisor_students.student_sid = student.student_profiles.sid
              ORDER BY sid;'
 
     results = query_redshift_db(nessie_redshift_db_credentials, query)
@@ -354,7 +357,7 @@ class NessieUtils < Utils
         :gpa => v[0]['gpa'],
         :level => level,
         :units_completed => (cumulative_units ? cumulative_units : nil),
-        :major => (v.map { |h| h['majors'] }),
+        :major => (v.map { |h| h['majors'] }).uniq.compact,
         :transfer_student => (sis_profile && sis_profile['transfer']),
         :expected_grad_term => (expected_grad && expected_grad['id'].to_s),
         :gender => (demographics_profile && demographics_profile['gender']),
@@ -368,7 +371,8 @@ class NessieUtils < Utils
         :t_prep => (v[0]['t_prep'] == 't'),
         :t_prep_elig => (v[0]['t_prep_elig'] == 't'),
         :inactive_coe => %w(D P U W X Z).include?(v[0]['status_coe']),
-        :probation_coe => (v[0]['probation'] == 't')
+        :probation_coe => (v[0]['probation'] == 't'),
+        :advisors => (v.map { |h| {sid: h['advisor_sid'], plan_code: h['advisor_plan_code']}}).uniq.compact
       }
     end
 
@@ -407,6 +411,32 @@ class NessieUtils < Utils
   # @return [Array<Hash>]
   def self.searchable_student_data(students)
     (data = parse_stored_searchable_data) ? data : get_and_store_searchable_data(students)
+  end
+
+  # Get all academic plans associated with a given advisor and current students
+  # @param advisor [User]
+  # @return [Array<String>]
+  def self.get_academic_plans(advisor)
+    query = "SELECT DISTINCT boac_advisor.advisor_students.academic_plan_code AS plan_code
+              FROM boac_advisor.advisor_students
+              JOIN boac_advising_notes.advising_note_authors
+                ON boac_advising_notes.advising_note_authors.uid = '#{advisor.uid}'
+                AND boac_advising_notes.advising_note_authors.sid = boac_advisor.advisor_students.advisor_sid
+              JOIN student.student_profiles
+              ON student.student_profiles.sid = boac_advisor.advisor_students.student_sid
+              ORDER BY boac_advisor.advisor_students.academic_plan_code;"
+    Utils.query_pg_db(nessie_pg_db_credentials, query).map { |r| r['plan_code'] }
+  end
+
+  # Get a mapping of academic plan codes to human-readable descriptions
+  # @return [Hash]
+  def self.get_academic_plan_codes()
+    plan_map = {'*': 'All plans'}
+    query = "SELECT DISTINCT academic_plan_code, academic_plan FROM boac_advisor.advisor_students"
+    Utils.query_pg_db(nessie_pg_db_credentials, query).each do |r|
+      plan_map[r['academic_plan_code']] = r['academic_plan']
+    end
+    plan_map
   end
 
   def self.get_asc_notes(student)

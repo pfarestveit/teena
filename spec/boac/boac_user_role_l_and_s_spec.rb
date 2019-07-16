@@ -24,7 +24,7 @@ if NessieUtils.include_l_and_s?
       @api_section_page = BOACApiSectionPage.new @driver
       @api_user_analytics_page = BOACApiStudentPage.new @driver
       @class_page = BOACClassListViewPage.new @driver
-      @filtered_cohort_page = BOACFilteredCohortPage.new @driver
+      @filtered_cohort_page = BOACFilteredCohortPage.new(@driver, test_l_and_s.advisor)
       @homepage = BOACHomePage.new @driver
       @search_page = BOACSearchResultsPage.new @driver
       @student_page = BOACStudentPage.new @driver
@@ -93,6 +93,7 @@ if NessieUtils.include_l_and_s?
       it('sees no Inactive ASC filter') { expect(@filtered_cohort_page.new_filter_option_by_key('isInactiveAsc').exists?).to be false }
       it('sees no Intensive filter') { expect(@filtered_cohort_page.new_filter_option_by_key('inIntensiveCohort').exists?).to be false }
       it('sees no Team filter') { expect(@filtered_cohort_page.new_filter_option_by_key('groupCodes').exists?).to be false }
+      it('sees a My Students filter') { expect(@filtered_cohort_page.new_filter_option_by_key('cohortOwnerAcademicPlans').visible?).to be true }
 
     end
 
