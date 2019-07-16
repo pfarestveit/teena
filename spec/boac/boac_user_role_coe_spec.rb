@@ -77,10 +77,11 @@ describe 'A CoE advisor using BOAC' do
     it('sees a Units filter') { expect(@filtered_cohort_page.new_filter_option_by_key('unitRanges').visible?).to be true }
     it('sees a Transfer Student filter') { expect(@filtered_cohort_page.new_filter_option_by_key('transfer').visible?).to be true }
     it('sees an Expected Graduation Term filter') { expect(@filtered_cohort_page.new_filter_option_by_key('expectedGradTerms').visible?).to be true }
+    it('sees a Gender filter') { expect(@filtered_cohort_page.new_filter_option_by_key('genders').visible?).to be true }
     it('sees a Last Name filter') { expect(@filtered_cohort_page.new_filter_option_by_key('lastNameRange').visible?).to be true }
     it('sees a Advisor filter') { expect(@filtered_cohort_page.new_filter_option_by_key('coeAdvisorLdapUids').visible?).to be true }
     it('sees a Ethnicity filter') { expect(@filtered_cohort_page.new_filter_option_by_key('ethnicities').visible?).to be true }
-    it('sees a \'Gender (COE)\' filter') { expect(@filtered_cohort_page.new_filter_option_by_key('coeGenders').visible?).to be true }
+    it('sees a Gender (COE) filter') { expect(@filtered_cohort_page.new_filter_option_by_key('coeGenders').visible?).to be true }
     it('sees a PREP filter') { expect(@filtered_cohort_page.new_filter_option_by_key('coePrepStatuses').visible?).to be true }
     it('sees an Inactive COE filter') { expect(@filtered_cohort_page.new_filter_option_by_key('isInactiveCoe').exists?).to be true }
     it('sees a Probation filter') { expect(@filtered_cohort_page.new_filter_option_by_key('coeProbation').exists?).to be true }

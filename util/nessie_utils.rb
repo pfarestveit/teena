@@ -308,7 +308,7 @@ class NessieUtils < Utils
                     student.student_majors.major AS majors,
                     boac_advising_asc.students.intensive AS intensive_asc,
                     boac_advising_coe.students.advisor_ldap_uid AS advisor,
-                    boac_advising_coe.students.gender AS gender,
+                    boac_advising_coe.students.gender AS coe_gender,
                     boac_advising_coe.students.ethnicity AS ethnicity,
                     boac_advising_coe.students.minority AS minority,
                     boac_advising_coe.students.did_prep AS prep,
@@ -344,20 +344,23 @@ class NessieUtils < Utils
                   logger.error "Unknown level code '#{v[0]['level_code']}'"
                   nil
               end
-      profile = JSON.parse(v[0]['profile'])['sisProfile']
-      expected_grad = profile && profile['expectedGraduationTerm']
-      cumulative_units = profile && profile['cumulativeUnits']
+      profile = JSON.parse(v[0]['profile'])
+      sis_profile = profile['sisProfile']
+      expected_grad = sis_profile && sis_profile['expectedGraduationTerm']
+      cumulative_units = sis_profile && sis_profile['cumulativeUnits']
+      demographics_profile = profile && profile['demographics']
       {
         :sid => k,
         :gpa => v[0]['gpa'],
         :level => level,
         :units_completed => (cumulative_units ? cumulative_units : nil),
         :major => (v.map { |h| h['majors'] }),
-        :transfer_student => (profile && profile['transfer']),
+        :transfer_student => (sis_profile && sis_profile['transfer']),
         :expected_grad_term => (expected_grad && expected_grad['id'].to_s),
+        :gender => (demographics_profile && demographics_profile['gender']),
         :intensive_asc => (v[0]['intensive_asc'] == 't'),
         :advisor => v[0]['advisor'],
-        :gender => v[0]['gender'],
+        :coe_gender => v[0]['coe_gender'],
         :ethnicity => v[0]['ethnicity'],
         :underrepresented_minority => (v[0]['minority'] == 't'),
         :prep => (v[0]['prep'] == 't'),

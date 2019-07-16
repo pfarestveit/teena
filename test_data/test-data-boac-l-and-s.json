@@ -10,6 +10,10 @@
                 {"gpa_range": "3.00 - 3.49"}
             ],
             "units": null,
+            "genders": [
+                {"gender": "Female"},
+                {"gender": "Male"}
+            ],
             "last_initials": "C K"
         },
         {
@@ -152,15 +156,14 @@
         },
         {
             "levels": [
-                {"level": "Freshman (0-29 Units)"},
-                {"level": "Sophomore (30-59 Units)"}
+                {"level": "Junior (60-89 Units)"},
+                {"level": "Senior (90+ Units)"}
             ],
             "majors": null,
-            "gpa_ranges": [
-                {"gpa_range": "2.50 - 2.99"}
-            ],
             "units": null,
-            "last_initials": "A A"
+            "genders": [
+                {"gender": "Genderqueer/Gender Non-Conform"}
+            ]
         }
     ]
 }
