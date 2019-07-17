@@ -50,7 +50,7 @@ class CohortFilter
     @team = (test_data['teams'] && test_data['teams'].map { |t| Squad::SQUADS.find { |s| s.name == t['squad'] } })
 
     # Remove filters that are not available to the department
-    if [BOACDepartments::ASC, BOACDepartments::PHYSICS].include? dept
+    if [BOACDepartments::ASC, BOACDepartments::PHYSICS, BOACDepartments::L_AND_S].include? dept
       @advisor = nil
       @coe_ethnicity = nil
       @coe_gender = nil
@@ -60,7 +60,7 @@ class CohortFilter
       @probation_coe = nil
     end
 
-    if [BOACDepartments::COE, BOACDepartments::PHYSICS].include? dept
+    if [BOACDepartments::COE, BOACDepartments::PHYSICS, BOACDepartments::L_AND_S].include? dept
       @inactive_asc = nil
       @intensive_asc = nil
       @team = nil
