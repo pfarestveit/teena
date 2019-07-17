@@ -144,13 +144,13 @@ class BOACFilteredCohortPage
   # @param advisor_uid [String]
   # @return [PageObject::Elements::ListItem]
   def new_filter_advisor_option(advisor_uid)
-    link_element(id: "Advisor-#{advisor_uid}")
+    link_element(id: "Advisor (COE)-#{advisor_uid}")
   end
 
   def sub_option_element(filter_name, filter_option)
     link_attribute = case filter_name
-                       when 'Advisor'
-                         "@id='Advisor-#{filter_option}'"
+                       when 'Advisor (COE)'
+                         "@id='Advisor (COE)-#{filter_option}'"
                        when 'Major'
                          "@id='Major-#{filter_option}'"
                        when 'Gender'
@@ -177,7 +177,7 @@ class BOACFilteredCohortPage
     else
       wait_for_update_and_click new_sub_filter_button_element
       option_element = case filter_name
-                         when 'Advisor'
+                         when 'Advisor (COE)'
                            new_filter_advisor_option(filter_option)
                          when 'Major'
                            link_element(xpath: "//a[@id=\"Major-#{filter_option}\"]")
