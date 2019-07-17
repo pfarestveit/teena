@@ -538,7 +538,7 @@ class BOACFilteredCohortPage
     matching_coe_ethnicity_users = []
     if search_criteria.coe_ethnicity && search_criteria.coe_ethnicity.any?
       search_criteria.coe_ethnicity.each do |coe_ethnicity|
-        matching_coe_ethnicity_users << test.searchable_data.select { |u| search_criteria.coe_ethnicity(u[:coe_ethnicity]) == coe_ethnicity }
+        matching_coe_ethnicity_users << test.searchable_data.select { |u| search_criteria.coe_ethnicity_per_code(u[:coe_ethnicity]) == coe_ethnicity }
       end
     else
       matching_coe_ethnicity_users = test.searchable_data
