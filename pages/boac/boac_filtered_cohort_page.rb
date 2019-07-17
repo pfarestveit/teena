@@ -130,7 +130,7 @@ class BOACFilteredCohortPage
   # @return [PageObject::Elements::Link]
   # @deprecated Use <tt>new_filter_option_by_key</tt> instead
   def new_filter_option(option_name)
-    (option == 'Gender') ? link_element(xpath: "//a[contains(.,\"#{option_name}\") and not(contains(.,\"COE\"))]") : link_element(xpath: "//a[contains(.,\"#{option_name}\")]")
+    (option_name == 'Gender') ? link_element(xpath: "//a[contains(.,\"#{option_name}\") and not(contains(.,\"COE\"))]") : link_element(xpath: "//a[contains(.,\"#{option_name}\")]")
   end
 
   # Returns a filter option link with given text. Element id is based on filter key, not filter label.
