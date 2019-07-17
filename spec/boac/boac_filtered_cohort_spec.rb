@@ -405,7 +405,7 @@ describe 'BOAC', order: :defined do
     end
 
     it 'allows the advisor to remove an Expected Graduation Term filter' do
-      if test.default_cohort.expected_grad_terms.any?
+      if test.default_cohort.search_criteria.expected_grad_terms.any?
         test.default_cohort.search_criteria.expected_grad_terms = []
         @cohort_page.remove_filter_of_type 'Expected Graduation Term'
         @cohort_page.verify_filters_present test.default_cohort
@@ -540,7 +540,7 @@ describe 'BOAC', order: :defined do
     it 'allows the advisor to edit an Advisor filter' do
       if test.default_cohort.search_criteria.advisor
         test.default_cohort.search_criteria.advisor = [BOACUtils.get_dept_advisors(BOACDepartments::COE).last.uid.to_s]
-        @cohort_page.edit_filter_and_confirm('Advisor', test.default_cohort.search_criteria.advisor.first)
+        @cohort_page.edit_filter_and_confirm('Advisor (COE)', test.default_cohort.search_criteria.advisor.first)
         @cohort_page.verify_filters_present test.default_cohort
       else
         logger.warn 'Skipping test for editing advisors since the filter is not available to the user'
@@ -550,7 +550,7 @@ describe 'BOAC', order: :defined do
     it 'allows the advisor to remove an Advisor filter' do
       if test.default_cohort.search_criteria.advisor
         test.default_cohort.search_criteria.advisor = []
-        @cohort_page.remove_filter_of_type 'Advisor'
+        @cohort_page.remove_filter_of_type 'Advisor (COE)'
         @cohort_page.verify_filters_present test.default_cohort
       else
         logger.warn 'Skipping test for removing advisors since the filter is not available to the user'
