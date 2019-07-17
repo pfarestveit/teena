@@ -137,8 +137,7 @@ class BOACTestConfig < TestConfig
   # then uses that to create the filters. Otherwise, uses the default test data.
   def set_search_cohorts
 
-    # Because its student population dwarfs the others', L&S has its own cohort test data file
-    test_data_file_name = (@dept == BOACDepartments::L_AND_S) ? 'test-data-boac-l-and-s.json' : 'test-data-boac.json'
+    test_data_file_name = 'test-data-boac.json'
     override_test_data = File.exist? (override_path = File.join(Utils.config_dir, test_data_file_name))
     test_data_file = override_test_data ? override_path : File.expand_path("test_data/#{test_data_file_name}", Dir.pwd)
     test_data = JSON.parse File.read(test_data_file)

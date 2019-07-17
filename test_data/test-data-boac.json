@@ -1,213 +1,247 @@
 {
     "filters": [
         {
-            "teams": null,
+            "gpa_ranges": [
+                {"gpa_range": "3.00 - 3.49"}
+            ],
             "levels": null,
+            "units": null,
             "majors": [
                 {"major": "Geography BA"},
                 {"major": "Geology BA"}
             ],
-            "gpa_ranges": [
-                {"gpa_range": "3.00 - 3.49"}
-            ],
-            "last_initials": "C K",
-            "advisors": null,
+            "transfer_student": null,
+            "expected_grad_terms": null,
             "coe_ethnicities": null,
-            "minority": null,
             "coe_genders": null,
+            "minority": null,
+            "inactive_asc": null,
+            "intensive_asc": null,
+            "teams": null,
+            "inactive_coe": null,
             "preps": null,
             "probation_coe": null,
-            "inactive_coe": null,
-            "inactive_asc": null,
-            "intensive_asc": null
+            "last_initials": "C K",
+            "genders": [
+                {"gender": "Female"},
+                {"gender": "Male"}
+            ],
+            "advisors": null
         },
         {
-            "teams": null,
-            "levels": null,
+            "gpa_ranges": [
+                {"gpa_range": "3.50 - 4.00"}
+            ],
+            "levels": [
+                {"level": "Senior (90+ Units"}
+            ],
+            "units": null,
             "majors": [
                 {"major": "Letters & Sci Undeclared UG"}
             ],
-            "gpa_ranges": null,
-            "last_initials": null,
             "transfer_student": "true",
             "expected_grad_terms": [
                 {"expected_grad_term": "2198"},
                 {"expected_grad_term": "2202"}
             ],
-            "advisors": null,
             "coe_ethnicities": null,
-            "minority": null,
             "coe_genders": null,
+            "minority": null,
+            "inactive_asc": null,
+            "intensive_asc": null,
+            "teams": null,
+            "inactive_coe": null,
             "preps": null,
             "probation_coe": null,
-            "inactive_coe": null,
-            "inactive_asc": null,
-            "intensive_asc": null
+            "last_initials": null,
+            "genders": null,
+            "advisors": null
         },
         {
-            "teams": [
-                {"squad": "Men's SwimDive, Divers"},
-                {"squad": "Men's SwimDive, Swimmers"}
-            ],
-            "levels": null,
-            "majors": [
-                {"major": "Letters & Sci Undeclared UG"}
-            ],
             "gpa_ranges": [
                 {"gpa_range": "3.00 - 3.49"},
                 {"gpa_range": "3.50 - 4.00"}
             ],
-            "advisors": [
-                {"advisor": "1015251"}
-            ],
-            "coe_ethnicities": null,
-            "minority": true,
-            "coe_genders": [
-                {"coe_gender": "Female"}
-            ],
-            "preps": null,
-            "probation_coe": null,
-            "inactive_asc": null,
-            "intensive_asc": null
-        },
-        {
-            "teams": null,
             "levels": null,
+            "units": null,
             "majors": [
-                {"major": "American Studies BA"},
                 {"major": "Legal Studies BA"},
-                {"major": "Sociology BA"},
                 {"major": "Physics BA"},
                 {"major": "Mechanical Engineering BS"},
                 {"major": "Nuclear Engineering BS"}
             ],
-            "gpa_ranges": null,
-            "genders": [
-                {"gender": "Male"}
-            ],
-            "advisors": null,
+            "transfer_student": null,
+            "expected_grad_terms": null,
             "coe_ethnicities": null,
-            "minority": true,
-            "coe_genders": null,
-            "preps": [
-                {"prep": "PREP"},
-                {"prep": "T-PREP"}
+            "coe_genders": [
+                {"coe_gender": "Female"}
             ],
-            "probation_coe": true,
+            "minority": true,
             "inactive_asc": null,
             "intensive_asc": null,
-            "last_initials": "A B"
+            "teams": null,
+            "inactive_coe": null,
+            "preps": null,
+            "probation_coe": null,
+            "last_initials": null,
+            "genders": null,
+            "advisors": null
         },
         {
-            "teams": [
-                {"squad": "Men's Gymnastics"},
-                {"squad": "Women's Softball"}
-            ],
+            "gpa_ranges": null,
             "levels": [
                 {"level": "Senior (90+ Units)"},
                 {"level": "Junior (60-89 Units)"}
             ],
+            "units": [
+                {"unit": "120 +"}
+            ],
             "majors": null,
+            "transfer_student": null,
+            "expected_grad_terms": null,
+            "coe_ethnicities": null,
+            "coe_genders": null,
+            "minority": true,
+            "inactive_asc": null,
+            "intensive_asc": null,
+            "teams": null,
+            "inactive_coe": null,
+            "preps": [
+                {"prep": "PREP"},
+                {"prep": "T-PREP"}
+            ],
+            "probation_coe": null,
+            "last_initials": "A B",
+            "genders": [
+                {"gender": "Male"}
+            ],
+            "advisors": null
+        },
+        {
             "gpa_ranges": null,
+            "levels": [
+                {"level": "Senior (90+ Units)"},
+                {"level": "Junior (60-89 Units)"}
+            ],
+            "units": null,
+            "majors": null,
+            "transfer_student": null,
+            "expected_grad_terms": null,
+            "coe_ethnicities": null,
+            "coe_genders": null,
+            "minority": null,
+            "inactive_asc": null,
+            "intensive_asc": null,
+            "teams": null,
+            "inactive_coe": null,
+            "preps": [
+                {"prep": "T-PREP"}
+            ],
+            "probation_coe": null,
+            "last_initials": null,
             "genders": [
                 {"gender": "Decline to State"}
             ],
-            "advisors": null,
-            "coe_ethnicities": null,
-            "minority": null,
-            "coe_genders": null,
-            "preps": [
-                {"prep": "PREP eligible"}
-            ],
-            "probation_coe": null,
-            "inactive_asc": null,
-            "intensive_asc": null
+            "advisors": null
         },
         {
-            "teams": null,
-            "levels": null,
-            "majors": null,
             "gpa_ranges": [
                 {"gpa_range": "2.00 - 2.49"},
                 {"gpa_range": "Below 2.0"}
             ],
+            "levels": null,
             "units": [
                 {"unit": "120 +"}
             ],
-            "advisors": [
-                {"advisor": "1015251"}
-            ],
+            "majors": null,
+            "transfer_student": null,
+            "expected_grad_terms": null,
             "coe_ethnicities": null,
-            "minority": null,
             "coe_genders": null,
-            "preps": null,
-            "probation_coe": true,
+            "minority": null,
             "inactive_asc": null,
             "intensive_asc": true,
-            "last_initials": "A B"
+            "teams": null,
+            "inactive_coe": null,
+            "preps": null,
+            "probation_coe": true,
+            "last_initials": null,
+            "genders": null,
+            "advisors": [
+                {"advisor": "1015251"}
+            ]
         },
         {
-            "teams": [
-                {"squad": "Women's TrackCC, Distance CC"},
-                {"squad": "Women's TrackCC, Jumps"},
-                {"squad": "Women's TrackCC, Middle Dist"},
-                {"squad": "Women's TrackCC, Multis"},
-                {"squad": "Women's TrackCC, Pole Vault"},
-                {"squad": "Women's TrackCC, Sprints Hurdles"},
-                {"squad": "Women's TrackCC, Throws"}
-            ],
+            "gpa_ranges": null,
             "levels": [
                 {"level": "Senior (90+ Units)"}
+            ],
+            "units": [
+                {"unit": "120 +"}
             ],
             "majors": [
                 {"major": "Business Administration BS"},
                 {"major": "Economics BA"},
                 {"major": "Education MA"}
             ],
-            "gpa_ranges": null,
-            "advisors": null,
+            "transfer_student": null,
+            "expected_grad_terms": null,
             "coe_ethnicities": [
                 {"coe_ethnicity": "F"}
             ],
-            "minority": null,
             "coe_genders": null,
+            "minority": null,
+            "inactive_asc": null,
+            "intensive_asc": null,
+            "teams": [
+                {"squad": "Women's Crew"},
+                {"squad": "Men's Crew"}
+            ],
+            "inactive_coe": null,
             "preps": null,
             "probation_coe": null,
-            "inactive_asc": null,
-            "intensive_asc": null
+            "last_initials": "A L",
+            "genders": null,
+            "advisors": null
         },
         {
-            "teams": null,
+            "gpa_ranges": [
+                {"gpa_range": "2.50 - 2.99"}
+            ],
             "levels": [
                 {"level": "Freshman (0-29 Units)"},
                 {"level": "Sophomore (30-59 Units)"}
             ],
-            "majors": null,
-            "gpa_ranges": [
-                {"gpa_range": "2.50 - 2.99"}
-            ],
             "units": [
                 {"unit": "0 - 29"}
             ],
-            "advisors": null,
+            "majors": null,
+            "transfer_student": null,
+            "expected_grad_terms": null,
             "coe_ethnicities": [
                 {"coe_ethnicity": "G"}
             ],
-            "minority": false,
             "coe_genders": [
                 {"coe_gender": "Male"},
                 {"coe_gender": "Female"}
             ],
+            "minority": null,
+            "inactive_asc": null,
+            "intensive_asc": true,
+            "teams": null,
+            "inactive_coe": null,
             "preps": null,
             "probation_coe": null,
-            "inactive_asc": null,
-            "intensive_asc": true
+            "last_initials": null,
+            "genders": null,
+            "advisors": null
         },
         {
-            "teams": null,
+            "gpa_ranges": null,
             "levels": [
                 {"level": "Senior (90+ Units)"}
             ],
+            "units": null,
             "majors": [
                 {"major": "Integrative Biology BA"},
                 {"major": "Nut Sci-Physio & Metabol BS"},
@@ -216,156 +250,137 @@
                 {"major": "Industrial Eng & Ops Rsch MEng"},
                 {"major": "Industrial Eng & Ops Rsch MS"}
             ],
-            "gpa_ranges": null,
-            "last_initials": "B G",
-            "advisors": [
-                {"advisor": "2322"}
-            ],
+            "transfer_student": null,
+            "expected_grad_terms": null,
             "coe_ethnicities": null,
-            "minority": true,
             "coe_genders": null,
+            "minority": false,
+            "inactive_asc": null,
+            "intensive_asc": null,
+            "teams": null,
+            "inactive_coe": null,
             "preps": null,
             "probation_coe": null,
-            "inactive_asc": null,
-            "intensive_asc": null
+            "last_initials": "B G",
+            "genders": null,
+            "advisors": null
         },
         {
-            "teams": null,
-            "levels": null,
-            "majors": [
-                {"major": "Business Administration BS"},
-                {"major": "Political Economy BA"}
-            ],
             "gpa_ranges": [
                 {"gpa_range": "3.50 - 4.00"}
             ],
-            "advisors": null,
+            "levels": null,
+            "units": null,
+            "majors": [
+                {"major": "Business Administration BS"},
+                {"major": "Political Economy BA"},
+                {"major": "Nuclear Engineering BS"}
+            ],
+            "transfer_student": null,
+            "expected_grad_terms": null,
             "coe_ethnicities": null,
             "coe_genders": [
-                {"coe_gender": "Male"}
+                {"coe_gender": "Female"}
             ],
-            "preps": [
-                {"prep": "PREP"}
-            ],
-            "probation_coe": null,
+            "minority": true,
             "inactive_asc": null,
-            "intensive_asc": null
-        },
-        {
+            "intensive_asc": null,
             "teams": null,
-            "levels": [
-                {"level": "Freshman (0-29 Units)"}
-            ],
-            "majors": [
-                {"major": "Economics BA"}
-            ],
-            "gpa_ranges": null,
-            "advisors": null,
-            "coe_ethnicities": null,
-            "coe_genders": null,
+            "inactive_coe": null,
             "preps": null,
             "probation_coe": null,
-            "inactive_asc": null,
-            "intensive_asc": null
+            "last_initials": null,
+            "genders": [
+                {"gender": "Female"}
+            ],
+            "advisors": null
         },
         {
+            "gpa_ranges": null,
+            "levels": [
+                {"level": "Junior (60-89 Units)"}
+            ],
+            "units": null,
+            "majors": [
+                {"major": "Legal Studies BA"},
+                {"major": "Economics BA"},
+                {"major": "Electrical Eng & Comp Sci BS"},
+                {"major": "Physics BA"}
+            ],
+            "transfer_student": null,
+            "expected_grad_terms": null,
+            "coe_ethnicities": null,
+            "coe_genders": null,
+            "minority": null,
+            "inactive_asc": null,
+            "intensive_asc": null,
             "teams": null,
+            "inactive_coe": null,
+            "preps": [
+                {"prep": "PREP"},
+                {"prep": "T-PREP"}
+            ],
+            "probation_coe": null,
+            "last_initials": "A J",
+            "genders": null,
+            "advisors": null
+        },
+        {
+            "gpa_ranges": null,
             "levels": [
                 {"level": "Senior (90+ Units)"}
             ],
-            "majors": null,
-            "gpa_ranges": null,
             "units": [
                 {"unit": "120 +"}
             ],
-            "advisors": [
-                {"advisor": "1015251"}
-            ],
-            "coe_ethnicities": null,
-            "minority": true,
-            "coe_genders": [
-                {"coe_gender": "Female"}
-            ],
-            "preps": null,
-            "probation_coe": null,
-            "inactive_asc": null,
-            "intensive_asc": null,
-            "last_initials": "Q Q"
-        },
-        {
-            "teams": null,
-            "levels": [
-                {"level": "Freshman (0-29 Units)"}
-            ],
             "majors": null,
-            "gpa_ranges": [
-                {"gpa_range": "Below 2.0"}
-            ],
-            "advisors": null,
-            "coe_ethnicities": [
-                {"coe_ethnicity": "H"}
-            ],
-            "coe_genders": null,
-            "preps": null,
-            "probation_coe": true,
-            "inactive_asc": null,
-            "intensive_asc": true
-        },
-        {
-            "teams": [
-                {"squad": "Women's Basketball"}
-            ],
-            "levels": [
-                {"level": "Junior (60-89 Units)"},
-                {"level": "Senior (90+ Units)"}
-            ],
-            "majors": [
-                {"major": "Electrical Eng & Comp Sci BS"},
-                {"major": "Engineering Physics BS"},
-                {"major": "Environmental Sciences BS"},
-                {"major": "Music BA"}
-            ],
-            "gpa_ranges": [
-                {"gpa_range": "3.00 - 3.49"},
-                {"gpa_range": "2.50 - 2.99"}
-            ],
-            "advisors": null,
+            "transfer_student": null,
+            "expected_grad_terms": null,
             "coe_ethnicities": null,
-            "minority": null,
-            "coe_genders": [
-                {"coe_gender": "Female"}
-            ],
+            "coe_genders": null,
+            "minority": true,
+            "inactive_asc": true,
+            "intensive_asc": null,
+            "teams": null,
+            "inactive_coe": null,
             "preps": null,
             "probation_coe": null,
-            "inactive_asc": null,
-            "intensive_asc": null
+            "last_initials": "P R",
+            "genders": [
+                {"gender": "Male"}
+            ],
+            "advisors": null
         },
         {
-            "teams": [
-                {"squad": "Men's Crew"}
+            "gpa_ranges": [
+                {"gpa_range": "Below 2.0"},
+                {"gpa_range": "2.50 - 2.99"}
             ],
             "levels": [
                 {"level": "Freshman (0-29 Units)"},
                 {"level": "Sophomore (30-59 Units)"}
             ],
+            "units": null,
             "majors": null,
-            "gpa_ranges": [
-                {"gpa_range": "2.50 - 2.99"}
+            "transfer_student": null,
+            "expected_grad_terms": null,
+            "coe_ethnicities": [
+                {"coe_ethnicity": "H"}
             ],
-            "last_initials": "A A",
+            "coe_genders": null,
+            "minority": null,
+            "inactive_asc": null,
+            "intensive_asc": true,
+            "teams": null,
+            "inactive_coe": null,
+            "preps": null,
+            "probation_coe": true,
+            "last_initials": null,
+            "genders": null,
             "advisors": [
                 {"advisor": "1015251"},
                 {"advisor": "18767"}
-            ],
-            "coe_ethnicities": null,
-            "minority": null,
-            "coe_genders": null,
-            "preps": [
-                {"prep": "PREP"}
-            ],
-            "probation_coe": null,
-            "inactive_asc": null,
-            "intensive_asc": null
+            ]
         }
     ]
 }
