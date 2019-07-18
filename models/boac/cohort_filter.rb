@@ -10,6 +10,7 @@ class CohortFilter
                 :expected_grad_terms,
                 :last_name,
                 :gender,
+                :cohort_owner_academic_plans,
                 :advisor,
                 :coe_ethnicity,
                 :coe_gender,
@@ -34,6 +35,9 @@ class CohortFilter
     @expected_grad_terms = (test_data['expected_grad_terms'] && test_data['expected_grad_terms'].map { |t| t['expected_grad_term'] })
     @last_name = test_data['last_initials']
     @gender = (test_data['genders'] && test_data['genders'].map { |g| g['gender'] })
+
+    # My Students
+    @cohort_owner_academic_plans = (test_data['cohort_owner_academic_plans'] && test_data['cohort_owner_academic_plans'].map { |t| t['plan'] })
 
     # CoE
     @advisor = (test_data['advisors'] && test_data['advisors'].map { |a| a['advisor'] })

@@ -23,7 +23,7 @@ describe 'An admin using BOAC' do
     @api_section_page = BOACApiSectionPage.new @driver
     @api_user_analytics_page = BOACApiStudentPage.new @driver
     @class_page = BOACClassListViewPage.new @driver
-    @filtered_cohort_page = BOACFilteredCohortPage.new @driver
+    @filtered_cohort_page = BOACFilteredCohortPage.new(@driver, test.advisor)
     @homepage = BOACHomePage.new @driver
     @search_page = BOACSearchResultsPage.new @driver
     @student_page = BOACStudentPage.new @driver

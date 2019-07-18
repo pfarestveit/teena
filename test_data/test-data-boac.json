@@ -381,6 +381,24 @@
                 {"advisor": "1015251"},
                 {"advisor": "18767"}
             ]
+        },
+        {
+            "teams": null,
+            "levels": [
+                {"level": "Freshman (0-29 Units)"}
+            ],
+            "majors": null,
+            "gpa_ranges": null,
+            "advisors": null,
+            "cohort_owner_academic_plans": [
+                {"plan": "*"}
+            ],
+            "coe_ethnicities": null,
+            "coe_genders": null,
+            "preps": null,
+            "probation_coe": null,
+            "inactive_asc": null,
+            "intensive_asc": true
         }
     ]
 }

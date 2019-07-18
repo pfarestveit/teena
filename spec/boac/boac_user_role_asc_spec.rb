@@ -19,7 +19,7 @@ describe 'An ASC advisor' do
     @api_section_page = BOACApiSectionPage.new @driver
     @api_user_analytics_page = BOACApiStudentPage.new @driver
     @class_page = BOACClassListViewPage.new @driver
-    @filtered_cohort_page = BOACFilteredCohortPage.new @driver
+    @filtered_cohort_page = BOACFilteredCohortPage.new(@driver, test_asc.advisor)
     @homepage = BOACHomePage.new @driver
     @search_page = BOACSearchResultsPage.new @driver
     @student_page = BOACStudentPage.new @driver
@@ -54,6 +54,8 @@ describe 'An ASC advisor' do
     it('sees a Inactive filter') { expect(@filtered_cohort_page.new_filter_option_by_key('isInactiveAsc').visible?).to be true }
     it('sees a Intensive filter') { expect(@filtered_cohort_page.new_filter_option_by_key('inIntensiveCohort').visible?).to be true }
     it('sees a Team filter') { expect(@filtered_cohort_page.new_filter_option_by_key('groupCodes').visible?).to be true }
+    it('sees a My Students filter') { expect(@filtered_cohort_page.new_filter_option_by_key('cohortOwnerAcademicPlans').visible?).to be true }
+
   end
 
   context 'visiting Everyone\'s Cohorts' do

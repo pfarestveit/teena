@@ -32,7 +32,7 @@ else
     before(:all) do
       @driver = Utils.launch_browser
       @homepage = BOACHomePage.new @driver
-      @cohort_page = BOACFilteredCohortPage.new @driver
+      @cohort_page = BOACFilteredCohortPage.new(@driver, test.advisor)
       @curated_group_page = BOACGroupPage.new @driver
       @student_page = BOACStudentPage.new @driver
       @search_results_page = BOACSearchResultsPage.new @driver

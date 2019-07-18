@@ -42,6 +42,11 @@ class BOACTestConfig < TestConfig
         logger.error 'What kinda department is that??'
         fail
     end
+    if (user_data = NessieUtils.get_advising_note_author(uid))
+      @advisor.sis_id = user_data[:sid]
+      @advisor.first_name = user_data[:first_name]
+      @advisor.last_name = user_data[:last_name]
+    end
     logger.warn "Advisor is UID #{@advisor.uid}"
   end
 
@@ -234,6 +239,13 @@ class BOACTestConfig < TestConfig
                          :inactive_coe => true,
                          :probation_coe => true
                      })
+    end
+
+    advisor_plans = NessieUtils.get_academic_plans(@advisor)
+    if advisor_plans.any?
+      filters[:cohort_owner_academic_plans] = [advisor_plans.first]
+    else
+      logger.warn "Couldn't find any current academic plans for advisor #{@advisor.uid}; skipping the 'My Students' filter"
     end
 
     editing_test_search_criteria = CohortFilter.new

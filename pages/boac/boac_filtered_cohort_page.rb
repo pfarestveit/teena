@@ -11,6 +11,11 @@ class BOACFilteredCohortPage
   include BOACGroupModalPages
   include BOACAddGroupSelectorPages
 
+  def initialize(driver, advisor)
+    super driver
+    @advisor = advisor
+  end
+
   def filtered_cohort_base_url(id)
     "#{BOACUtils.base_url}/cohort/#{id}"
   end
@@ -183,6 +188,8 @@ class BOACFilteredCohortPage
                            link_element(xpath: "//a[@id=\"Major-#{filter_option}\"]")
                          when 'Expected Graduation Term'
                            link_element(xpath: "//a[@id='Expected Graduation Term-#{filter_option}']")
+                         when 'My Students'
+                           link_element(xpath: "//a[@id='My Students-#{filter_option}']")
                          else
                            link_element(xpath: "//div[@class=\"cohort-filter-draft-column-02\"]//a[contains(.,\"#{filter_option}\")]")
                        end
@@ -303,6 +310,7 @@ class BOACFilteredCohortPage
         filters.expected_grad_terms.each { |t| existing_filter_element('Expected Graduation Term', t).exists? } if filters.expected_grad_terms && filters.expected_grad_terms.any?
         existing_filter_element('Last Name', filters.last_name).exists? if filters.last_name
         filters.gender.each { |g| existing_filter_element('Gender', g).exists? } if filters.gender && filters.gender.any?
+        filters.cohort_owner_academic_plans.each { |g| existing_filter_element('My Students', g).exists? } if filters.cohort_owner_academic_plans && filters.cohort_owner_academic_plans.any?
         # TODO - advisors
         filters.coe_ethnicity.each { |e| existing_filter_element('Ethnicity (COE)', e).exists? } if filters.coe_ethnicity && filters.coe_ethnicity.any?
         filters.coe_gender.each { |g| existing_filter_element('Gender (COE)', g).exists? } if filters.coe_gender && filters.coe_gender.any?
@@ -415,6 +423,7 @@ class BOACFilteredCohortPage
     cohort.search_criteria.expected_grad_terms.each { |t| select_filter('Expected Graduation Term', t) } if cohort.search_criteria.expected_grad_terms
     select_filter('Last Name', cohort.search_criteria.last_name) if cohort.search_criteria.last_name
     cohort.search_criteria.gender.each { |g| select_filter_by_key('genders', g) } if cohort.search_criteria.gender
+    cohort.search_criteria.cohort_owner_academic_plans.each { |e| select_filter('My Students', e) } if cohort.search_criteria.cohort_owner_academic_plans
 
     # CoE
     cohort.search_criteria.advisor.each { |a| select_filter_by_key('coeAdvisorLdapUids', a) } if cohort.search_criteria.advisor
@@ -534,6 +543,18 @@ class BOACFilteredCohortPage
     matching_advisor_users = (search_criteria.advisor && search_criteria.advisor.any?) ?
         (test.searchable_data.select { |u| search_criteria.advisor.include? u[:advisor] }) : test.searchable_data
 
+    # My Students (by plan)
+    matching_academic_plan_users = []
+    if (plans = search_criteria.cohort_owner_academic_plans) && plans.any?
+      matching_academic_plan_users = test.searchable_data.select do |u|
+        u[:advisors].find do |a|
+          a[:sid] == @advisor.sis_id && (plans.include?(a['plan_code']) || plans.include?('*'))
+        end
+      end
+    else
+      matching_academic_plan_users = test.searchable_data
+    end
+
     # Ethnicity (COE)
     matching_coe_ethnicity_users = []
     if search_criteria.coe_ethnicity && search_criteria.coe_ethnicity.any?
@@ -598,7 +619,8 @@ class BOACFilteredCohortPage
         test.searchable_data
 
     matches = [matching_gpa_users, matching_level_users, matching_units_users, matching_major_users, matching_tranfer_users, matching_gender_users,
-               matching_grad_term_users, matching_last_name_users, matching_advisor_users, matching_coe_ethnicity_users, matching_minority_users,
+               matching_grad_term_users, matching_last_name_users, matching_advisor_users, matching_academic_plan_users,
+               matching_coe_ethnicity_users, matching_minority_users,
                matching_coe_gender_users, matching_preps_users, matching_inactive_coe_users, matching_probation_asc_users,
                matching_inactive_asc_users, matching_intensive_asc_users, matching_squad_users]
     matches.any?(&:empty?) ? [] : matches.inject(:'&')
