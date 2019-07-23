@@ -163,6 +163,12 @@
             "capability": "Screencast"
         },
         {
+            "building": "Hearst Annex",
+            "room": "A1",
+            "captureAgent": "Hearst Annex A1",
+            "capability": "Screencast"
+        },
+        {
             "building": "Hearst Mining",
             "room": "390",
             "captureAgent": "Hearst Mining 390",
