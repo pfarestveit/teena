@@ -87,6 +87,7 @@ class BOACGroupPage
     group.members << students
     group.members.flatten!
     group.members.uniq!
+    wait_for_sidebar_group group
   end
 
   # Adds a list of SIDs to an existing group

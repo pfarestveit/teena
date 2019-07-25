@@ -136,7 +136,7 @@ class BOACTestConfig < TestConfig
   # test run; otherwise the same ones.
   # @param config [Integer]
   def set_max_cohort_members(config)
-    CONFIG['shuffle_max_users'] ? @cohort_members.shuffle! : @cohort_members.sort_by(&:last_name)
+    BOACUtils.shuffle_max_users ? @cohort_members.shuffle! : @cohort_members.sort_by(&:last_name)
     @max_cohort_members = @cohort_members[0..(config - 1)]
     logger.warn "Test UIDs: #{@max_cohort_members.map &:uid}"
   end

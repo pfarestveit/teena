@@ -19,13 +19,20 @@ describe 'BOAC' do
 
     @driver = Utils.launch_browser test.chrome_profile
     @boac_homepage = BOACHomePage.new @driver
-    @boac_cohort_page = BOACFilteredCohortPage.new(@driver, test.advisor)
+    @boac_cohort_page = BOACUtils.shuffle_max_users ? BOACGroupPage.new(@driver) : BOACFilteredCohortPage.new(@driver, test.advisor)
     @boac_student_page = BOACStudentPage.new @driver
     @boac_admin_page = BOACAdminPage.new @driver
     @boac_search_page = BOACSearchResultsPage.new @driver
 
     @boac_homepage.dev_auth test.advisor
-    @boac_cohort_page.search_and_create_new_cohort(test.default_cohort, test)
+
+    if @boac_cohort_page.instance_of? BOACFilteredCohortPage
+      @boac_cohort_page.search_and_create_new_cohort(test.default_cohort, test)
+    else
+      test.default_cohort = CuratedGroup.new(:name => "Group #{test.id}")
+      @boac_homepage.click_sidebar_create_curated_group
+      @boac_cohort_page.create_group_with_bulk_sids(test.max_cohort_members, test.default_cohort)
+    end
 
     visible_sids = @boac_cohort_page.list_view_sids
     test.max_cohort_members.keep_if { |m| visible_sids.include? m.sis_id }
@@ -38,7 +45,7 @@ describe 'BOAC' do
 
         # COHORT PAGE SIS DATA
 
-        @boac_cohort_page.load_cohort test.default_cohort
+        BOACUtils.shuffle_max_users ? @boac_cohort_page.load_page(test.default_cohort) : @boac_cohort_page.load_cohort(test.default_cohort)
         cohort_page_sis_data = @boac_cohort_page.visible_sis_data(@driver, student)
 
         if api_sis_profile_data[:level]
