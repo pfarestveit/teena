@@ -38,6 +38,10 @@ class BOACUtils < Utils
     @config['term_start_date']
   end
 
+  def self.shuffle_max_users
+    @config['shuffle_max_users']
+  end
+
   # Returns the number of SIDs to add during bulk SID group tests
   def self.group_bulk_sids_max
     @config['group_bulk_sids_max']

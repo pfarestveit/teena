@@ -132,10 +132,13 @@ class BOACTestConfig < TestConfig
     @default_cohort.member_count = @cohort_members.length
   end
 
-  # Selects only the first n cohort members for testing
+  # Selects only the first n cohort members for testing. If shuffle setting is true, different students will be in each
+  # test run; otherwise the same ones.
   # @param config [Integer]
   def set_max_cohort_members(config)
-    @max_cohort_members = @cohort_members.sort_by(&:last_name)[0..(config - 1)]
+    BOACUtils.shuffle_max_users ? @cohort_members.shuffle! : @cohort_members.sort_by(&:last_name)
+    @max_cohort_members = @cohort_members[0..(config - 1)]
+    logger.warn "Test UIDs: #{@max_cohort_members.map &:uid}"
   end
 
   # Configures a set of cohorts to use for filtered cohort testing. If a test data override file exists in the config override dir,
