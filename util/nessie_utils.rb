@@ -365,14 +365,16 @@ class NessieUtils < Utils
         :advisor => v[0]['advisor'],
         :coe_gender => v[0]['coe_gender'],
         :coe_ethnicity => v[0]['coe_ethnicity'],
-        :underrepresented_minority => (v[0]['minority'] == 't'),
+        :coe_underrepresented_minority => (v[0]['minority'] == 't'),
         :prep => (v[0]['prep'] == 't'),
         :prep_elig => (v[0]['prep_elig'] == 't'),
         :t_prep => (v[0]['t_prep'] == 't'),
         :t_prep_elig => (v[0]['t_prep_elig'] == 't'),
         :inactive_coe => %w(D P U W X Z).include?(v[0]['status_coe']),
         :probation_coe => (v[0]['probation'] == 't'),
-        :advisors => (v.map { |h| {sid: h['advisor_sid'], plan_code: h['advisor_plan_code']}}).uniq.compact
+        :advisors => (v.map { |h| {sid: h['advisor_sid'], plan_code: h['advisor_plan_code']}}).uniq.compact,
+        :ethnicities => (demographics_profile && demographics_profile['ethnicities']),
+        :underrepresented_minority => (demographics_profile && demographics_profile['underrepresented'])
       }
     end
 

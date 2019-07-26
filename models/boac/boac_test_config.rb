@@ -146,7 +146,7 @@ class BOACTestConfig < TestConfig
   def set_search_cohorts
 
     test_data_file_name = 'test-data-boac.json'
-    override_test_data = File.exist? (override_path = File.join(Utils.config_dir, test_data_file_name))
+    override_test_data = File.exist?(override_path = File.join(Utils.config_dir, test_data_file_name))
     test_data_file = override_test_data ? override_path : File.expand_path("test_data/#{test_data_file_name}", Dir.pwd)
     test_data = JSON.parse File.read(test_data_file)
 
@@ -237,7 +237,7 @@ class BOACTestConfig < TestConfig
                          :advisor => [BOACUtils.get_dept_advisors(BOACDepartments::COE).first.uid.to_s],
                          :coe_ethnicity => ['Chinese / Chinese-American'],
                          :coe_gender => ['Female'],
-                         :underrepresented_minority => true,
+                         :coe_underrepresented_minority => true,
                          :prep => ['PREP'],
                          :inactive_coe => true,
                          :probation_coe => true

@@ -466,8 +466,8 @@ describe 'BOAC', order: :defined do
     end
 
     it 'allows the advisor to remove an Underrepresented Minority filter' do
-      if test.default_cohort.search_criteria.underrepresented_minority
-        test.default_cohort.search_criteria.underrepresented_minority = false
+      if test.default_cohort.search_criteria.coe_underrepresented_minority
+        test.default_cohort.search_criteria.coe_underrepresented_minority = false
         @cohort_page.remove_filter_of_type 'Underrepresented Minority'
         @cohort_page.verify_filters_present test.default_cohort
       else

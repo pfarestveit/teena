@@ -190,6 +190,8 @@ class BOACFilteredCohortPage
                            link_element(xpath: "//a[@id='Expected Graduation Term-#{filter_option}']")
                          when 'My Students'
                            link_element(xpath: "//a[@id='My Students-#{filter_option}']")
+                         when 'Ethnicity'
+                           link_element(xpath: "//a{@id='Ethnicity-#{filter_option}'}")
                          else
                            link_element(xpath: "//div[@class=\"cohort-filter-draft-column-02\"]//a[contains(.,\"#{filter_option}\")]")
                        end
@@ -233,7 +235,7 @@ class BOACFilteredCohortPage
     wait_for_update_and_click new_filter_option(filter_name)
 
     # Inactive, Intensive, Probation, Underrepresented Minority, Transfer Student have no sub-options
-    unless ['Transfer Student', 'Inactive', 'Inactive (COE)', 'Inactive (ASC)', 'Intensive', 'Underrepresented Minority', 'Probation'].include? filter_name
+    unless ['Transfer Student', 'Inactive', 'Inactive (COE)', 'Inactive (ASC)', 'Intensive', 'Underrepresented Minority (COE)', 'Underrepresented Minority', 'Probation'].include? filter_name
       choose_sub_option(filter_name, filter_option)
     end
     wait_for_update_and_click unsaved_filter_add_button_element
@@ -314,7 +316,7 @@ class BOACFilteredCohortPage
         # TODO - advisors
         filters.coe_ethnicity.each { |e| existing_filter_element('Ethnicity (COE)', e).exists? } if filters.coe_ethnicity && filters.coe_ethnicity.any?
         filters.coe_gender.each { |g| existing_filter_element('Gender (COE)', g).exists? } if filters.coe_gender && filters.coe_gender.any?
-        existing_filter_element('Underrepresented Minority').exists? if filters.underrepresented_minority
+        existing_filter_element('Underrepresented Minority').exists? if filters.coe_underrepresented_minority
         filters.prep.each { |p| existing_filter_element('PREP', p).exists? } if filters.prep && filters.prep.any?
         existing_filter_element('Probation').exists? if filters.probation_coe
         existing_filter_element('Inactive').exists? if filters.inactive_asc
@@ -424,11 +426,13 @@ class BOACFilteredCohortPage
     select_filter('Last Name', cohort.search_criteria.last_name) if cohort.search_criteria.last_name
     cohort.search_criteria.gender.each { |g| select_filter_by_key('genders', g) } if cohort.search_criteria.gender
     cohort.search_criteria.cohort_owner_academic_plans.each { |e| select_filter('My Students', e) } if cohort.search_criteria.cohort_owner_academic_plans
+    select_filter 'Underrepresented Minority' if cohort.search_criteria.underrepresented_minority
+    cohort.search_criteria.ethnicities.each { |e| select_filter('Ethnicity', e) } if cohort.search_criteria.ethnicities
 
     # CoE
     cohort.search_criteria.advisor.each { |a| select_filter_by_key('coeAdvisorLdapUids', a) } if cohort.search_criteria.advisor
     cohort.search_criteria.coe_ethnicity.each { |e| select_filter_by_key('coeEthnicities', e) } if cohort.search_criteria.coe_ethnicity
-    select_filter 'Underrepresented Minority' if cohort.search_criteria.underrepresented_minority
+    select_filter 'Underrepresented Minority (COE)' if cohort.search_criteria.coe_underrepresented_minority
     cohort.search_criteria.coe_gender.each { |g| select_filter_by_key('coeGenders', g) } if cohort.search_criteria.coe_gender
     cohort.search_criteria.prep.each { |p| select_filter_by_key('coePrepStatuses', p) } if cohort.search_criteria.prep
     select_filter 'Probation' if cohort.search_criteria.probation_coe
@@ -532,6 +536,16 @@ class BOACFilteredCohortPage
                                  test.searchable_data
                                end
 
+    # Ethnicity
+    matching_ethnicity_users = []
+    (search_criteria.ethnicities&.any?) ?
+        (matching_ethnicity_users << test.searchable_data.select { |u| (u[:ethnicity] & search_criteria.ethnicities).any? }) :
+        (matching_ethnicity_users = test.searchable_data)
+    matching_ethnicity_users = matching_ethnicity_users.uniq.flatten.compact
+
+    # Underrepresented Minority
+    matching_minority_users = search_criteria.underrepresented_minority ? (test.searchable_data.select { |u| u[:underrepresented_minority] }) : test.searchable_data
+
     # Gender
     matching_gender_users = []
     (search_criteria.gender && search_criteria.gender.any?) ?
@@ -539,7 +553,7 @@ class BOACFilteredCohortPage
         (matching_gender_users = test.searchable_data)
     matching_gender_users.flatten!
 
-    # Advisor
+    # Advisor (COE)
     matching_advisor_users = (search_criteria.advisor && search_criteria.advisor.any?) ?
         (test.searchable_data.select { |u| search_criteria.advisor.include? u[:advisor] }) : test.searchable_data
 
@@ -566,8 +580,8 @@ class BOACFilteredCohortPage
     end
     matching_coe_ethnicity_users.flatten!
 
-    # Underrepresented Minority
-    matching_minority_users = search_criteria.underrepresented_minority ? (test.searchable_data.select { |u| u[:underrepresented_minority] }) : test.searchable_data
+    # Underrepresented Minority (COE)
+    matching_coe_minority_users = search_criteria.coe_underrepresented_minority ? (test.searchable_data.select { |u| u[:coe_underrepresented_minority] }) : test.searchable_data
 
     # Gender (COE)
     matching_coe_gender_users = []
@@ -620,7 +634,8 @@ class BOACFilteredCohortPage
 
     matches = [matching_gpa_users, matching_level_users, matching_units_users, matching_major_users, matching_tranfer_users, matching_gender_users,
                matching_grad_term_users, matching_last_name_users, matching_advisor_users, matching_academic_plan_users,
-               matching_coe_ethnicity_users, matching_minority_users,
+               matching_ethnicity_users, matching_minority_users,
+               matching_coe_ethnicity_users, matching_coe_minority_users,
                matching_coe_gender_users, matching_preps_users, matching_inactive_coe_users, matching_probation_asc_users,
                matching_inactive_asc_users, matching_intensive_asc_users, matching_squad_users]
     matches.any?(&:empty?) ? [] : matches.inject(:'&')
@@ -663,13 +678,10 @@ class BOACFilteredCohortPage
   # @param expected_users [Array<Hash>]
   # @return [Array<String>]
   def expected_sids_by_team(expected_users)
-    players = []
-    non_players = []
-    expected_users.each { |u| u[:squad_names].any? ? (players << u) : (non_players << u) }
-    # Students with no teams come after those with teams
-    sorted_players = players.sort_by { |u| [u[:squad_names].sort.first.gsub(' (AA)', '') .gsub(/\W+/, ''), u[:last_name_sortable_cohort].downcase, u[:first_name_sortable_cohort].downcase, u[:sid]] }
-    sorted_non_players = non_players.sort_by { |u| [u[:last_name_sortable_cohort].downcase, u[:first_name_sortable_cohort].downcase, u[:sid]] }
-    sorted_users = sorted_players + sorted_non_players
+    sorted_users = expected_users.sort_by do |u|
+      team = u[:squad_names].empty? ? 'zzz' : u[:squad_names].sort.first.gsub(' (AA)', '') .gsub(/\W+/, '')
+      [team, u[:last_name_sortable_cohort].downcase, u[:first_name_sortable_cohort].downcase, u[:sid]]
+    end
     sorted_users.map { |u| u[:sid] }
   end
 
@@ -701,7 +713,10 @@ class BOACFilteredCohortPage
   # @param expected_users [Array<Hash>]
   # @return [Array<String>]
   def expected_sids_by_major(expected_users)
-    sorted_users = expected_users.sort_by { |u| [u[:major].sort.first.gsub(/\W/, '').downcase, u[:last_name_sortable_cohort].downcase, u[:first_name_sortable_cohort].downcase, u[:sid]] }
+    sorted_users = expected_users.sort_by do |u|
+      major = u[:major].empty? ? 'aaa' : u[:major].sort.first.gsub(/\W/, '').downcase
+      [major, u[:last_name_sortable_cohort].downcase, u[:first_name_sortable_cohort].downcase, u[:sid]]
+    end
     sorted_users.map { |u| u[:sid] }
   end
 

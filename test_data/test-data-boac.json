@@ -14,7 +14,7 @@
             "expected_grad_terms": null,
             "coe_ethnicities": null,
             "coe_genders": null,
-            "minority": null,
+            "coe_underrepresented_minority": null,
             "inactive_asc": null,
             "intensive_asc": null,
             "teams": null,
@@ -46,7 +46,7 @@
             ],
             "coe_ethnicities": null,
             "coe_genders": null,
-            "minority": null,
+            "coe_underrepresented_minority": null,
             "inactive_asc": null,
             "intensive_asc": null,
             "teams": null,
@@ -59,15 +59,12 @@
         },
         {
             "gpa_ranges": [
-                {"gpa_range": "3.00 - 3.49"},
                 {"gpa_range": "3.50 - 4.00"}
             ],
             "levels": null,
             "units": null,
             "majors": [
-                {"major": "Legal Studies BA"},
                 {"major": "Physics BA"},
-                {"major": "Mechanical Engineering BS"},
                 {"major": "Nuclear Engineering BS"}
             ],
             "transfer_student": null,
@@ -76,7 +73,7 @@
             "coe_genders": [
                 {"coe_gender": "Female"}
             ],
-            "minority": true,
+            "coe_underrepresented_minority": true,
             "inactive_asc": null,
             "intensive_asc": null,
             "teams": null,
@@ -101,7 +98,7 @@
             "expected_grad_terms": null,
             "coe_ethnicities": null,
             "coe_genders": null,
-            "minority": true,
+            "coe_underrepresented_minority": true,
             "inactive_asc": null,
             "intensive_asc": null,
             "teams": null,
@@ -129,7 +126,7 @@
             "expected_grad_terms": null,
             "coe_ethnicities": null,
             "coe_genders": null,
-            "minority": null,
+            "coe_underrepresented_minority": null,
             "inactive_asc": null,
             "intensive_asc": null,
             "teams": null,
@@ -158,7 +155,8 @@
             "expected_grad_terms": null,
             "coe_ethnicities": null,
             "coe_genders": null,
-            "minority": null,
+            "coe_underrepresented_minority": null,
+            "underrepresented_minority": null,
             "inactive_asc": null,
             "intensive_asc": true,
             "teams": null,
@@ -190,7 +188,8 @@
                 {"coe_ethnicity": "F"}
             ],
             "coe_genders": null,
-            "minority": null,
+            "coe_underrepresented_minority": null,
+            "underrepresented_minority": null,
             "inactive_asc": null,
             "intensive_asc": null,
             "teams": [
@@ -225,7 +224,8 @@
                 {"coe_gender": "Male"},
                 {"coe_gender": "Female"}
             ],
-            "minority": null,
+            "coe_underrepresented_minority": null,
+            "underrepresented_minority": null,
             "inactive_asc": null,
             "intensive_asc": true,
             "teams": null,
@@ -254,7 +254,8 @@
             "expected_grad_terms": null,
             "coe_ethnicities": null,
             "coe_genders": null,
-            "minority": false,
+            "coe_underrepresented_minority": false,
+            "underrepresented_minority": null,
             "inactive_asc": null,
             "intensive_asc": null,
             "teams": null,
@@ -282,7 +283,8 @@
             "coe_genders": [
                 {"coe_gender": "Female"}
             ],
-            "minority": true,
+            "coe_underrepresented_minority": true,
+            "underrepresented_minority": null,
             "inactive_asc": null,
             "intensive_asc": null,
             "teams": null,
@@ -311,7 +313,8 @@
             "expected_grad_terms": null,
             "coe_ethnicities": null,
             "coe_genders": null,
-            "minority": null,
+            "coe_underrepresented_minority": null,
+            "underrepresented_minority": null,
             "inactive_asc": null,
             "intensive_asc": null,
             "teams": null,
@@ -338,7 +341,8 @@
             "expected_grad_terms": null,
             "coe_ethnicities": null,
             "coe_genders": null,
-            "minority": true,
+            "coe_underrepresented_minority": true,
+            "underrepresented_minority": null,
             "inactive_asc": true,
             "intensive_asc": null,
             "teams": null,
@@ -368,7 +372,8 @@
                 {"coe_ethnicity": "H"}
             ],
             "coe_genders": null,
-            "minority": null,
+            "coe_underrepresented_minority": null,
+            "underrepresented_minority": null,
             "inactive_asc": null,
             "intensive_asc": true,
             "teams": null,
@@ -394,11 +399,27 @@
                 {"plan": "*"}
             ],
             "coe_ethnicities": null,
+            "underrepresented_minority": null,
             "coe_genders": null,
             "preps": null,
             "probation_coe": null,
             "inactive_asc": null,
             "intensive_asc": true
+        },
+        {
+            "underrepresented_minority": true,
+            "levels": [
+                {"level":  "Freshman (0-29 Units)"}
+            ],
+            "genders": [
+                {"gender": "Female"}
+            ]
+        },
+        {
+            "ethnicities": [
+                {"ethnicity":  "Puerto Rican"},
+                {"ethnicity":  "Pacific Islander"}
+            ]
         }
     ]
 }

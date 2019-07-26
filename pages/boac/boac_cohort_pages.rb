@@ -76,7 +76,8 @@ module BOACCohortPages
             (r.dig(:first_name) == stu.first_name) &&
                 (r.dig(:last_name) == stu.last_name) &&
                 (r.dig(:sid) == stu.sis_id.to_i) &&
-                (!r.dig(:email).empty?)
+                (r.dig(:email)) &&
+                (r.dig(:phone))
           end
         end
       end
@@ -88,7 +89,8 @@ module BOACCohortPages
             (r.dig(:first_name) == stu[:first_name]) &&
                 (r.dig(:last_name) == stu[:last_name]) &&
                 (r.dig(:sid) == stu[:sid].to_i) &&
-                (!r.dig(:email).empty?)
+                (r.dig(:email)) &&
+                (r.dig(:phone))
           end
         end
       end

@@ -2,25 +2,28 @@ class CohortFilter
 
   include Logging
 
-  attr_accessor :gpa,
-                :level,
-                :units_completed,
-                :major,
-                :transfer_student,
-                :expected_grad_terms,
-                :last_name,
-                :gender,
-                :cohort_owner_academic_plans,
-                :advisor,
+  attr_accessor :advisor,
                 :coe_ethnicity,
                 :coe_gender,
-                :underrepresented_minority,
-                :prep,
-                :inactive_coe,
-                :probation_coe,
+                :coe_underrepresented_minority,
+                :cohort_owner_academic_plans,
+                :ethnicities,
+                :expected_grad_terms,
+                :gender,
+                :gpa,
                 :inactive_asc,
+                :inactive_coe,
                 :intensive_asc,
-                :team
+                :last_name,
+                :level,
+                :major,
+                :prep,
+                :probation_coe,
+                :team,
+                :transfer_student,
+                :underrepresented_minority,
+                :units_completed
+
 
   # Sets cohort filters based on test data
   # @param test_data [Hash]
@@ -35,6 +38,7 @@ class CohortFilter
     @expected_grad_terms = (test_data['expected_grad_terms'] && test_data['expected_grad_terms'].map { |t| t['expected_grad_term'] })
     @last_name = test_data['last_initials']
     @gender = (test_data['genders'] && test_data['genders'].map { |g| g['gender'] })
+    @underrepresented_minority = test_data['underrepresented_minority']
 
     # My Students
     @cohort_owner_academic_plans = (test_data['cohort_owner_academic_plans'] && test_data['cohort_owner_academic_plans'].map { |t| t['plan'] })
@@ -43,7 +47,7 @@ class CohortFilter
     @advisor = (test_data['advisors'] && test_data['advisors'].map { |a| a['advisor'] })
     @coe_ethnicity = (test_data['coe_ethnicities'] && test_data['coe_ethnicities'].map { |e| coe_ethnicity_per_code e['coe_ethnicity'] })
     @coe_gender = (test_data['coe_genders'] && test_data['coe_genders'].map { |g| g['coe_gender'] })
-    @underrepresented_minority = test_data['minority']
+    @coe_underrepresented_minority = test_data['coe_underrepresented_minority']
     @prep = (test_data['preps'] && test_data['preps'].map { |p| p['prep'] })
     @inactive_coe = test_data['inactive_coe']
     @probation_coe = test_data['probation_coe']
@@ -58,7 +62,7 @@ class CohortFilter
       @advisor = nil
       @coe_ethnicity = nil
       @coe_gender = nil
-      @underrepresented_minority = nil
+      @coe_underrepresented_minority = nil
       @prep = nil
       @inactive_coe = nil
       @probation_coe = nil

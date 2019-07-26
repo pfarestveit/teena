@@ -37,8 +37,8 @@ class BOACApiStudentPage
     {
       :advisor => (profile && profile['advisorUid']),
       :gender => (profile && profile['gender']),
-      :ethnicity => (profile && profile['ethnicity']),
-      :underrepresented_minority => (profile && profile['minority']),
+      :ethnicities => (profile && profile['ethnicity']),
+      :coe_underrepresented_minority => (profile && profile['minority']),
       :prep => (profile && profile['didPrep']),
       :prep_elig => (profile && profile['prepEligible']),
       :t_prep => (profile && profile['didTprep']),
