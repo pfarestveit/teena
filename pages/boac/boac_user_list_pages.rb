@@ -116,7 +116,10 @@ module BOACUserListPages
   # @param user_data [Array<Hash>]
   # @return [Array<String>]
   def expected_sids_by_major(user_data)
-    sorted_users = user_data.sort_by { |u| [u[:major].sort.first.downcase, u[:last_name_sortable_user_list].downcase, u[:first_name_sortable_user_list].downcase, u[:sid]] }
+    sorted_users = user_data.sort_by do |u|
+      major = u[:major].empty? ? 'aaa' : u[:major].sort.first.downcase
+      [major, u[:last_name_sortable_user_list].downcase, u[:first_name_sortable_user_list].downcase, u[:sid]]
+    end
     sorted_users.map { |u| u[:sid] }
   end
 
@@ -125,8 +128,10 @@ module BOACUserListPages
   # @return [Array<String>]
   def expected_sids_by_major_desc(user_data)
     sorted_users = user_data.sort do |a, b|
-      [b[:major].sort.first.downcase, a[:last_name_sortable_user_list].downcase, a[:first_name_sortable_user_list].downcase, a[:sid]] <=>
-          [a[:major].sort.first.downcase, b[:last_name_sortable_user_list].downcase, b[:first_name_sortable_user_list].downcase, b[:sid]]
+      a_major = a[:major].empty? ? 'aaa' : a[:major].sort.first.downcase
+      b_major = b[:major].empty? ? 'aaa' : b[:major].sort.first.downcase
+      [b_major, a[:last_name_sortable_user_list].downcase, a[:first_name_sortable_user_list].downcase, a[:sid]] <=>
+          [a_major, b[:last_name_sortable_user_list].downcase, b[:first_name_sortable_user_list].downcase, b[:sid]]
     end
     sorted_users.map { |u| u[:sid] }
   end
