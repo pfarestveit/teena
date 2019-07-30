@@ -98,7 +98,7 @@ class BOACTestConfig < TestConfig
     case @dept
       # For CoE, use the advisor's assigned students
       when BOACDepartments::COE
-        filter.advisor = [@advisor.uid]
+        filter.coe_advisor = [@advisor.uid]
         @default_cohort.search_criteria = filter
         @cohort_members = NessieUtils.get_coe_advisor_students(@advisor, @students)
 
@@ -123,7 +123,7 @@ class BOACTestConfig < TestConfig
       # For ASC or admin, use a team
       else
         team = NessieUtils.get_asc_teams.find { |t| t.code == CONFIG['test_asc_team'] }
-        filter.team = Squad::SQUADS.select { |s| s.parent_team == team }
+        filter.asc_team = Squad::SQUADS.select { |s| s.parent_team == team }
         @default_cohort.search_criteria = filter
         @cohort_members = NessieUtils.get_asc_team_members(team, @students)
     end
@@ -226,21 +226,21 @@ class BOACTestConfig < TestConfig
 
     if [BOACDepartments::ASC, BOACDepartments::ADMIN].include? @dept
       filters.merge!({
-                         :inactive_asc => true,
-                         :intensive_asc => true,
-                         :team => [Squad::MCR]
+                         :asc_inactive => true,
+                         :asc_intensive => true,
+                         :asc_team => [Squad::MCR]
                     })
     end
 
     if [BOACDepartments::COE, BOACDepartments::ADMIN].include? @dept
       filters.merge!({
-                         :advisor => [BOACUtils.get_dept_advisors(BOACDepartments::COE).first.uid.to_s],
+                         :coe_advisor => [BOACUtils.get_dept_advisors(BOACDepartments::COE).first.uid.to_s],
                          :coe_ethnicity => ['Chinese / Chinese-American'],
                          :coe_gender => ['Female'],
                          :coe_underrepresented_minority => true,
-                         :prep => ['PREP'],
-                         :inactive_coe => true,
-                         :probation_coe => true
+                         :coe_prep => ['PREP'],
+                         :coe_inactive => true,
+                         :coe_probation => true
                      })
     end
 

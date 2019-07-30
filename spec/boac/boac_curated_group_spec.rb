@@ -104,7 +104,7 @@ describe 'BOAC' do
       filters.set_custom_filters({:level => ['Freshman (0-29 Units)']})
       @existing_filtered_cohort = FilteredCohort.new({:name => "Existing Filtered Cohort #{test.id}", :search_criteria => filters})
       @group_page.click_sidebar_create_filtered
-      @filtered_page.perform_search(@existing_filtered_cohort, test)
+      @filtered_page.perform_search @existing_filtered_cohort
       @filtered_page.create_new_cohort @existing_filtered_cohort
 
       # Create a curated group to verify that another group cannot have the same name
