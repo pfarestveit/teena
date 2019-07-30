@@ -35,11 +35,11 @@ class BOACApiStudentPage
   def coe_profile
     profile = @parsed && @parsed['coeProfile']
     {
-      :advisor => (profile && profile['advisorUid']),
+      :coe_advisor => (profile && profile['advisorUid']),
       :gender => (profile && profile['gender']),
-      :ethnicities => (profile && profile['ethnicity']),
+      :ethnicity => (profile && profile['ethnicity']),
       :coe_underrepresented_minority => (profile && profile['minority']),
-      :prep => (profile && profile['didPrep']),
+      :coe_prep => (profile && profile['didPrep']),
       :prep_elig => (profile && profile['prepEligible']),
       :t_prep => (profile && profile['didTprep']),
       :t_prep_elig => (profile && profile['tprepEligible'])

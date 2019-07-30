@@ -44,7 +44,7 @@ describe 'BOAC', order: :defined do
 
       it "shows all the students sorted by Last Name who match #{cohort.search_criteria.list_filters}" do
         @cohort_page.click_sidebar_create_filtered
-        @cohort_page.perform_search(cohort, test)
+        @cohort_page.perform_search cohort
         cohort.member_data = @cohort_page.expected_search_results(test, cohort.search_criteria)
         expected_results = @cohort_page.expected_sids_by_last_name cohort.member_data
         if cohort.member_data.length.zero?
@@ -299,7 +299,7 @@ describe 'BOAC', order: :defined do
 
     it 'requires a title' do
       @homepage.click_sidebar_create_filtered
-      @cohort_page.perform_search(test.searches.first, test)
+      @cohort_page.perform_search test.searches.first
       @cohort_page.click_save_cohort_button_one
       expect(@cohort_page.save_cohort_button_two_element.disabled?).to be true
     end
@@ -308,7 +308,7 @@ describe 'BOAC', order: :defined do
       cohort = FilteredCohort.new({name: "#{test.id}#{'A loooooong title ' * 15}?"})
       @homepage.load_page
       @homepage.click_sidebar_create_filtered
-      @cohort_page.perform_search(test.searches.first, test)
+      @cohort_page.perform_search test.searches.first
       @cohort_page.save_and_name_cohort cohort
       cohort.name = cohort.name[0..254]
       @cohort_page.wait_for_filtered_cohort cohort
@@ -318,7 +318,7 @@ describe 'BOAC', order: :defined do
     it 'requires that a title be unique among the user\'s existing cohorts' do
       cohort = FilteredCohort.new({name: test.searches.first.name})
       @cohort_page.click_sidebar_create_filtered
-      @cohort_page.perform_search(test.searches.first, test)
+      @cohort_page.perform_search test.searches.first
       @cohort_page.save_and_name_cohort cohort
       @cohort_page.dupe_filtered_name_msg_element.when_visible Utils.short_wait
     end
@@ -476,8 +476,8 @@ describe 'BOAC', order: :defined do
     end
 
     it 'allows the advisor to remove an Inactive ASC filter' do
-      if test.default_cohort.search_criteria.inactive_asc
-        test.default_cohort.search_criteria.inactive_asc = false
+      if test.default_cohort.search_criteria.asc_inactive
+        test.default_cohort.search_criteria.asc_inactive = false
         label = (test.dept == BOACDepartments::ADMIN) ? 'Inactive (ASC)' : 'Inactive'
         @cohort_page.remove_filter_of_type label
         @cohort_page.verify_filters_present test.default_cohort
@@ -487,8 +487,8 @@ describe 'BOAC', order: :defined do
     end
 
     it 'allows the advisor to remove an Intensive filter' do
-      if test.default_cohort.search_criteria.intensive_asc
-        test.default_cohort.search_criteria.intensive_asc = false
+      if test.default_cohort.search_criteria.asc_intensive
+        test.default_cohort.search_criteria.asc_intensive = false
         @cohort_page.remove_filter_of_type 'Intensive'
         @cohort_page.verify_filters_present test.default_cohort
       else
@@ -497,9 +497,9 @@ describe 'BOAC', order: :defined do
     end
 
     it 'allows the advisor to edit a Team filter' do
-      if test.default_cohort.search_criteria.team && test.default_cohort.search_criteria.team.any?
-        test.default_cohort.search_criteria.team = [Squad::WCR]
-        @cohort_page.edit_filter_and_confirm('Team', test.default_cohort.search_criteria.team.first.name)
+      if test.default_cohort.search_criteria.asc_team && test.default_cohort.search_criteria.asc_team.any?
+        test.default_cohort.search_criteria.asc_team = [Squad::WCR]
+        @cohort_page.edit_filter_and_confirm('Team', test.default_cohort.search_criteria.asc_team.first.name)
         @cohort_page.verify_filters_present test.default_cohort
       else
         logger.warn 'Skipping test for editing teams since the filter is not available to the user or there is nothing to edit'
@@ -507,8 +507,8 @@ describe 'BOAC', order: :defined do
     end
 
     it 'allows the advisor to remove a Team filter' do
-      if test.default_cohort.search_criteria.team && test.default_cohort.search_criteria.team.any?
-        test.default_cohort.search_criteria.team = []
+      if test.default_cohort.search_criteria.asc_team && test.default_cohort.search_criteria.asc_team.any?
+        test.default_cohort.search_criteria.asc_team = []
         @cohort_page.remove_filter_of_type 'Team'
         @cohort_page.verify_filters_present test.default_cohort
       else
@@ -517,9 +517,9 @@ describe 'BOAC', order: :defined do
     end
 
     it 'allows the advisor to edit a PREP filter' do
-      if test.default_cohort.search_criteria.prep
-        test.default_cohort.search_criteria.prep = ['T-PREP']
-        @cohort_page.edit_filter_and_confirm('PREP', test.default_cohort.search_criteria.prep.first)
+      if test.default_cohort.search_criteria.coe_prep
+        test.default_cohort.search_criteria.coe_prep = ['T-PREP']
+        @cohort_page.edit_filter_and_confirm('PREP', test.default_cohort.search_criteria.coe_prep.first)
         @cohort_page.verify_filters_present test.default_cohort
       else
         logger.warn 'Skipping test for editing PREPs since the filter is not available to the user'
@@ -527,8 +527,8 @@ describe 'BOAC', order: :defined do
     end
 
     it 'allows the advisor to remove a PREP filter' do
-      if test.default_cohort.search_criteria.prep
-        test.default_cohort.search_criteria.prep = []
+      if test.default_cohort.search_criteria.coe_prep
+        test.default_cohort.search_criteria.coe_prep = []
         @cohort_page.remove_filter_of_type 'PREP'
         @cohort_page.verify_filters_present test.default_cohort
       else
@@ -561,9 +561,9 @@ describe 'BOAC', order: :defined do
     end
 
     it 'allows the advisor to edit an Advisor filter' do
-      if test.default_cohort.search_criteria.advisor
-        test.default_cohort.search_criteria.advisor = [BOACUtils.get_dept_advisors(BOACDepartments::COE).last.uid.to_s]
-        @cohort_page.edit_filter_and_confirm('Advisor (COE)', test.default_cohort.search_criteria.advisor.first)
+      if test.default_cohort.search_criteria.coe_advisor
+        test.default_cohort.search_criteria.coe_advisor = [BOACUtils.get_dept_advisors(BOACDepartments::COE).last.uid.to_s]
+        @cohort_page.edit_filter_and_confirm('Advisor (COE)', test.default_cohort.search_criteria.coe_advisor.first)
         @cohort_page.verify_filters_present test.default_cohort
       else
         logger.warn 'Skipping test for editing advisors since the filter is not available to the user'
@@ -571,8 +571,8 @@ describe 'BOAC', order: :defined do
     end
 
     it 'allows the advisor to remove an Advisor filter' do
-      if test.default_cohort.search_criteria.advisor
-        test.default_cohort.search_criteria.advisor = []
+      if test.default_cohort.search_criteria.coe_advisor
+        test.default_cohort.search_criteria.coe_advisor = []
         @cohort_page.remove_filter_of_type 'Advisor (COE)'
         @cohort_page.verify_filters_present test.default_cohort
       else
@@ -581,8 +581,8 @@ describe 'BOAC', order: :defined do
     end
 
     it 'allows the advisor to remove an Inactive CoE filter' do
-      if test.default_cohort.search_criteria.inactive_coe
-        test.default_cohort.search_criteria.inactive_coe = false
+      if test.default_cohort.search_criteria.coe_inactive
+        test.default_cohort.search_criteria.coe_inactive = false
         label = (test.dept == BOACDepartments::ADMIN) ? 'Inactive (COE)' : 'Inactive'
         @cohort_page.remove_filter_of_type label
         @cohort_page.verify_filters_present test.default_cohort
@@ -592,8 +592,8 @@ describe 'BOAC', order: :defined do
     end
 
     it 'allows the advisor to remove a Probation filter' do
-      if test.default_cohort.search_criteria.probation_coe
-        test.default_cohort.search_criteria.probation_coe = false
+      if test.default_cohort.search_criteria.coe_probation
+        test.default_cohort.search_criteria.coe_probation = false
         @cohort_page.remove_filter_of_type 'Probation'
         @cohort_page.verify_filters_present test.default_cohort
       else

@@ -41,22 +41,22 @@ describe 'A Physics advisor using BOAC' do
       @filtered_cohort_page.wait_until(1) { @filtered_cohort_page.new_filter_option_elements.any? &:visible? }
     end
 
-    it('sees a GPA filter') { expect(@filtered_cohort_page.new_filter_option_by_key('gpaRanges').visible?).to be true }
-    it('sees a Level filter') { expect(@filtered_cohort_page.new_filter_option_by_key('levels').visible?).to be true }
-    it('sees a Major filter') { expect(@filtered_cohort_page.new_filter_option_by_key('majors').visible?).to be true }
-    it('sees a Units filter') { expect(@filtered_cohort_page.new_filter_option_by_key('unitRanges').visible?).to be true }
-    it('sees a Transfer Student filter') { expect(@filtered_cohort_page.new_filter_option_by_key('transfer').visible?).to be true }
-    it('sees an Expected Graduation Term filter') { expect(@filtered_cohort_page.new_filter_option_by_key('expectedGradTerms').visible?).to be true }
-    it('sees a Gender filter') { expect(@filtered_cohort_page.new_filter_option_by_key('genders').visible?).to be true }
-    it('sees a Last Name filter') { expect(@filtered_cohort_page.new_filter_option_by_key('lastNameRange').visible?).to be true }
-    it('sees no Advisor filter') { expect(@filtered_cohort_page.new_filter_option_by_key('coeAdvisorLdapUids').exists?).to be false }
-    it('sees no \'Ethnicity (COE)\' filter') { expect(@filtered_cohort_page.new_filter_option_by_key('coeEthnicities').exists?).to be false }
-    it('sees no \'Gender (COE)\' filter') { expect(@filtered_cohort_page.new_filter_option_by_key('coeGenders').exists?).to be false }
-    it('sees no PREP filter') { expect(@filtered_cohort_page.new_filter_option_by_key('coePrepStatuses').exists?).to be false }
-    it('sees no Inactive filter') { expect(@filtered_cohort_page.new_filter_option_by_key('isInactiveCoe').visible?).to be false }
-    it('sees no Intensive filter') { expect(@filtered_cohort_page.new_filter_option_by_key('inIntensiveCohort').visible?).to be false }
-    it('sees no Team filter') { expect(@filtered_cohort_page.new_filter_option_by_key('groupCodes').visible?).to be false }
-    it('sees a My Students filter') { expect(@filtered_cohort_page.new_filter_option_by_key('cohortOwnerAcademicPlans').visible?).to be true }
+    it('sees a GPA filter') { expect(@filtered_cohort_page.new_filter_option('gpaRanges').visible?).to be true }
+    it('sees a Level filter') { expect(@filtered_cohort_page.new_filter_option('levels').visible?).to be true }
+    it('sees a Major filter') { expect(@filtered_cohort_page.new_filter_option('majors').visible?).to be true }
+    it('sees a Units filter') { expect(@filtered_cohort_page.new_filter_option('unitRanges').visible?).to be true }
+    it('sees a Transfer Student filter') { expect(@filtered_cohort_page.new_filter_option('transfer').visible?).to be true }
+    it('sees an Expected Graduation Term filter') { expect(@filtered_cohort_page.new_filter_option('expectedGradTerms').visible?).to be true }
+    it('sees a Gender filter') { expect(@filtered_cohort_page.new_filter_option('genders').visible?).to be true }
+    it('sees a Last Name filter') { expect(@filtered_cohort_page.new_filter_option('lastNameRange').visible?).to be true }
+    it('sees no Advisor filter') { expect(@filtered_cohort_page.new_filter_option('coeAdvisorLdapUids').exists?).to be false }
+    it('sees no \'Ethnicity (COE)\' filter') { expect(@filtered_cohort_page.new_filter_option('coeEthnicities').exists?).to be false }
+    it('sees no \'Gender (COE)\' filter') { expect(@filtered_cohort_page.new_filter_option('coeGenders').exists?).to be false }
+    it('sees no PREP filter') { expect(@filtered_cohort_page.new_filter_option('coePrepStatuses').exists?).to be false }
+    it('sees no Inactive filter') { expect(@filtered_cohort_page.new_filter_option('isInactiveCoe').visible?).to be false }
+    it('sees no Intensive filter') { expect(@filtered_cohort_page.new_filter_option('inIntensiveCohort').visible?).to be false }
+    it('sees no Team filter') { expect(@filtered_cohort_page.new_filter_option('groupCodes').visible?).to be false }
+    it('sees a My Students filter') { expect(@filtered_cohort_page.new_filter_option('cohortOwnerAcademicPlans').visible?).to be true }
 
   end
 

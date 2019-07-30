@@ -2,24 +2,24 @@ class CohortFilter
 
   include Logging
 
-  attr_accessor :advisor,
+  attr_accessor :asc_inactive,
+                :asc_intensive,
+                :asc_team,
+                :coe_advisor,
                 :coe_ethnicity,
                 :coe_gender,
+                :coe_inactive,
+                :coe_prep,
+                :coe_probation,
                 :coe_underrepresented_minority,
                 :cohort_owner_academic_plans,
-                :ethnicities,
+                :ethnicity,
                 :expected_grad_terms,
                 :gender,
                 :gpa,
-                :inactive_asc,
-                :inactive_coe,
-                :intensive_asc,
                 :last_name,
                 :level,
                 :major,
-                :prep,
-                :probation_coe,
-                :team,
                 :transfer_student,
                 :underrepresented_minority,
                 :units_completed
@@ -30,48 +30,50 @@ class CohortFilter
   # @param dept [BOACDepartments]
   def set_test_filters(test_data, dept)
     # Global
+    @expected_grad_terms = (test_data['expected_grad_terms'] && test_data['expected_grad_terms'].map { |t| t['expected_grad_term'] })
     @gpa = (test_data['gpa_ranges'] && test_data['gpa_ranges'].map { |g| g['gpa_range'] })
     @level = (test_data['levels'] && test_data['levels'].map { |l| l['level'] })
-    @units_completed = (test_data['units'] && test_data['units'].map { |u| u['unit'] })
     @major = (test_data['majors'] && test_data['majors'].map { |t| t['major'] })
     @transfer_student = test_data['transfer_student']
-    @expected_grad_terms = (test_data['expected_grad_terms'] && test_data['expected_grad_terms'].map { |t| t['expected_grad_term'] })
-    @last_name = test_data['last_initials']
+    @units_completed = (test_data['units'] && test_data['units'].map { |u| u['unit'] })
+
+    @ethnicity = (test_data['ethnicities'] && test_data['ethnicities'].map { |e| e['ethnicity'] })
     @gender = (test_data['genders'] && test_data['genders'].map { |g| g['gender'] })
     @underrepresented_minority = test_data['underrepresented_minority']
+    @last_name = test_data['last_initials']
 
     # My Students
     @cohort_owner_academic_plans = (test_data['cohort_owner_academic_plans'] && test_data['cohort_owner_academic_plans'].map { |t| t['plan'] })
 
     # CoE
-    @advisor = (test_data['advisors'] && test_data['advisors'].map { |a| a['advisor'] })
+    @coe_advisor = (test_data['advisors'] && test_data['advisors'].map { |a| a['advisor'] })
     @coe_ethnicity = (test_data['coe_ethnicities'] && test_data['coe_ethnicities'].map { |e| coe_ethnicity_per_code e['coe_ethnicity'] })
     @coe_gender = (test_data['coe_genders'] && test_data['coe_genders'].map { |g| g['coe_gender'] })
     @coe_underrepresented_minority = test_data['coe_underrepresented_minority']
-    @prep = (test_data['preps'] && test_data['preps'].map { |p| p['prep'] })
-    @inactive_coe = test_data['inactive_coe']
-    @probation_coe = test_data['probation_coe']
+    @coe_prep = (test_data['preps'] && test_data['preps'].map { |p| p['prep'] })
+    @coe_inactive = test_data['inactive_coe']
+    @coe_probation = test_data['probation_coe']
 
     # ASC
-    @inactive_asc = test_data['inactive_asc']
-    @intensive_asc = test_data['intensive_asc']
-    @team = (test_data['teams'] && test_data['teams'].map { |t| Squad::SQUADS.find { |s| s.name == t['squad'] } })
+    @asc_inactive = test_data['inactive_asc']
+    @asc_intensive = test_data['intensive_asc']
+    @asc_team = (test_data['teams'] && test_data['teams'].map { |t| Squad::SQUADS.find { |s| s.name == t['squad'] } })
 
     # Remove filters that are not available to the department
-    if [BOACDepartments::ASC, BOACDepartments::PHYSICS, BOACDepartments::L_AND_S].include? dept
-      @advisor = nil
+    unless [BOACDepartments::ADMIN, BOACDepartments::COE].include? dept
+      @coe_advisor = nil
       @coe_ethnicity = nil
       @coe_gender = nil
       @coe_underrepresented_minority = nil
-      @prep = nil
-      @inactive_coe = nil
-      @probation_coe = nil
+      @coe_prep = nil
+      @coe_inactive = nil
+      @coe_probation = nil
     end
 
-    if [BOACDepartments::COE, BOACDepartments::PHYSICS, BOACDepartments::L_AND_S].include? dept
-      @inactive_asc = nil
-      @intensive_asc = nil
-      @team = nil
+    unless [BOACDepartments::ADMIN, BOACDepartments::ASC].include? dept
+      @asc_inactive = nil
+      @asc_intensive = nil
+      @asc_team = nil
     end
   end
 
