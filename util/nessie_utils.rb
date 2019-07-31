@@ -130,13 +130,12 @@ class NessieUtils < Utils
     # Get a separate set of student users for each department
     asc_students = student_result_to_users(query_all_asc_students, BOACDepartments::ASC)
     coe_students = student_result_to_users(query_all_coe_students, BOACDepartments::COE)
-    l_and_s_students = student_result_to_users(query_all_l_and_s_students, BOACDepartments::L_AND_S) if include_l_and_s?
+    undergrad_students = student_result_to_users(query_all_undergrad_students, BOACDepartments::L_AND_S)
     physics_students = student_result_to_users(query_all_physics_students, BOACDepartments::PHYSICS)
 
     # Find students served by more than one department and merge their attributes into a new user
-    all_students = asc_students + coe_students + physics_students
-    all_students = all_students + l_and_s_students if include_l_and_s?
-    logger.info "There are #{asc_students.length} ASC students, #{coe_students.length} CoE students, #{l_and_s_students.length.to_s + ' L&S students,' if include_l_and_s?}
+    all_students = asc_students + coe_students + physics_students + undergrad_students
+    logger.info "There are #{asc_students.length} ASC students, #{coe_students.length} CoE students, #{undergrad_students.length.to_s} undergrad students,
                  and #{physics_students.length} Physics students, for a total of #{all_students.length}"
     merged_students = []
     all_students.group_by { |s| s.uid }.map do |k,v|
@@ -265,16 +264,16 @@ class NessieUtils < Utils
     Utils.query_redshift_db(nessie_redshift_db_credentials, query)
   end
 
-  # Returns all Letters & Science students
+  # Returns all undergrad students
   # @return [PG::Result]
-  def self.query_all_l_and_s_students
+  def self.query_all_undergrad_students
     query = "SELECT students.sid AS sid,
                     persons.ldap_uid AS uid,
                     persons.first_name AS first_name,
                     persons.last_name AS last_name
-             FROM boac_advising_l_s.students
-             JOIN calnet_ext_#{nessie_env}.persons ON calnet_ext_#{nessie_env}.persons.sid = boac_advising_l_s.students.sid
-             LEFT JOIN student.student_academic_status ON student.student_academic_status.sid = boac_advising_l_s.students.sid
+             FROM boac_advising_undergrads.students
+             JOIN calnet_ext_#{nessie_env}.persons ON calnet_ext_#{nessie_env}.persons.sid = boac_advising_undergrads.students.sid
+             LEFT JOIN student.student_academic_status ON student.student_academic_status.sid = boac_advising_undergrads.students.sid
                WHERE student.student_academic_status.sid IS NOT NULL
              ORDER BY students.sid;"
     Utils.query_redshift_db(nessie_redshift_db_credentials, query)
@@ -361,20 +360,20 @@ class NessieUtils < Utils
         :transfer_student => (sis_profile && sis_profile['transfer']),
         :expected_grad_term => (expected_grad && expected_grad['id'].to_s),
         :gender => (demographics_profile && demographics_profile['gender']),
+        :ethnicity => (demographics_profile && demographics_profile['ethnicities']),
+        :underrepresented_minority => (demographics_profile && demographics_profile['underrepresented']),
         :asc_intensive => (v[0]['intensive_asc'] == 't'),
         :coe_advisor => v[0]['advisor'],
         :coe_gender => v[0]['coe_gender'],
         :coe_ethnicity => v[0]['coe_ethnicity'],
         :coe_underrepresented_minority => (v[0]['minority'] == 't'),
         :coe_prep => (v[0]['prep'] == 't'),
+        :coe_inactive => %w(D P U W X Z).include?(v[0]['status_coe']),
+        :coe_probation => (v[0]['probation'] == 't'),
         :prep_elig => (v[0]['prep_elig'] == 't'),
         :t_prep => (v[0]['t_prep'] == 't'),
         :t_prep_elig => (v[0]['t_prep_elig'] == 't'),
-        :coe_inactive => %w(D P U W X Z).include?(v[0]['status_coe']),
-        :coe_probation => (v[0]['probation'] == 't'),
-        :advisors => (v.map { |h| {sid: h['advisor_sid'], plan_code: h['advisor_plan_code']}}).uniq.compact,
-        :ethnicity => (demographics_profile && demographics_profile['ethnicities']),
-        :underrepresented_minority => (demographics_profile && demographics_profile['underrepresented'])
+        :advisors => (v.map { |h| {sid: h['advisor_sid'], plan_code: h['advisor_plan_code']}}).uniq.compact
       }
     end
 
@@ -392,8 +391,8 @@ class NessieUtils < Utils
         :first_name_sortable_cohort => (user.first_name.split(' ').map { |s| s.gsub(/\W/, '').downcase }).join,
         :first_name_sortable_user_list => (user.first_name.split(' ').map { |s| s.gsub(/\W/, '').downcase }).join(' '),
         :last_name => user.last_name,
-        :last_name_sortable_cohort => (user.last_name.split(' ').map { |s| s.gsub(/\W/, '').downcase }).join,
-        :last_name_sortable_user_list => (user.last_name.split(' ').map { |s| s.gsub(/\W/, '').downcase }).join(' '),
+        :last_name_sortable_cohort => user.last_name.empty? ? ' ' : (user.last_name.split(' ').map { |s| s.gsub(/\W/, '').downcase }).join,
+        :last_name_sortable_user_list => user.last_name.empty? ? ' ' : (user.last_name.split(' ').map { |s| s.gsub(/\W/, '').downcase }).join(' '),
         :squad_names => user_squad_names,
         :active_asc => user.active_asc
       }

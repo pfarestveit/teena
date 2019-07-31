@@ -1,425 +1,75 @@
 {
     "filters": [
         {
-            "gpa_ranges": [
-                {"gpa_range": "3.00 - 3.49"}
-            ],
-            "levels": null,
-            "units": null,
-            "majors": [
-                {"major": "Geography BA"},
-                {"major": "Geology BA"}
-            ],
-            "transfer_student": null,
-            "expected_grad_terms": null,
-            "coe_ethnicities": null,
-            "coe_genders": null,
-            "coe_underrepresented_minority": null,
-            "inactive_asc": null,
-            "intensive_asc": null,
-            "teams": null,
-            "inactive_coe": null,
-            "preps": null,
-            "probation_coe": null,
-            "last_initials": "C K",
-            "genders": [
-                {"gender": "Female"},
-                {"gender": "Male"}
-            ],
-            "advisors": null
+            "asc_inactive": true,
+            "asc_teams": [
+                {"squad": "Men's Crew"},
+                {"squad": "Women's Crew"}
+            ]
         },
         {
-            "gpa_ranges": [
-                {"gpa_range": "3.50 - 4.00"}
+            "asc_intensive": true
+        },
+        {
+            "coe_advisors": [
+                {"advisor": "2322"}
             ],
+            "coe_ethnicities": [
+                {"ethnicity": "E"}
+            ]
+        },
+        {
+            "coe_genders": [
+                {"gender": "Female"}
+            ],
+            "coe_inactive": true
+        },
+        {
+            "coe_preps": [
+                {"prep": "PREP"},
+                {"prep": "T-PREP"},
+                {"prep": "PREP eligible"},
+                {"prep": "T-PREP eligible"}
+            ],
+            "coe_probation": true,
+            "coe_underrepresented_minority": true
+        },
+        {
             "levels": [
-                {"level": "Senior (90+ Units"}
+                {"level": "Junior (60-89 Units)"},
+                {"level": "Senior (90+ Units)"}
             ],
-            "units": null,
-            "majors": [
-                {"major": "Letters & Sci Undeclared UG"}
+            "ethnicities": [
+                {"ethnicity": "Puerto Rican"}
             ],
-            "transfer_student": "true",
+            "genders": [
+                {"gender": "Male"}
+            ]
+        },
+        {
             "expected_grad_terms": [
                 {"expected_grad_term": "2198"},
                 {"expected_grad_term": "2202"}
             ],
-            "coe_ethnicities": null,
-            "coe_genders": null,
-            "coe_underrepresented_minority": null,
-            "inactive_asc": null,
-            "intensive_asc": null,
-            "teams": null,
-            "inactive_coe": null,
-            "preps": null,
-            "probation_coe": null,
-            "last_initials": null,
-            "genders": null,
-            "advisors": null
-        },
-        {
             "gpa_ranges": [
-                {"gpa_range": "3.50 - 4.00"}
+                {"gpa_range": "3.50 - 4.00"},
+                {"gpa_range": "3.00 - 3.49"}
             ],
-            "levels": null,
-            "units": null,
             "majors": [
-                {"major": "Physics BA"},
-                {"major": "Nuclear Engineering BS"}
-            ],
-            "transfer_student": null,
-            "expected_grad_terms": null,
-            "coe_ethnicities": null,
-            "coe_genders": [
-                {"coe_gender": "Female"}
-            ],
-            "coe_underrepresented_minority": true,
-            "inactive_asc": null,
-            "intensive_asc": null,
-            "teams": null,
-            "inactive_coe": null,
-            "preps": null,
-            "probation_coe": null,
-            "last_initials": null,
-            "genders": null,
-            "advisors": null
-        },
-        {
-            "gpa_ranges": null,
-            "levels": [
-                {"level": "Senior (90+ Units)"},
-                {"level": "Junior (60-89 Units)"}
+                {"major": "Chemistry BS"},
+                {"major": "History BA"}
             ],
             "units": [
                 {"unit": "120 +"}
-            ],
-            "majors": null,
-            "transfer_student": null,
-            "expected_grad_terms": null,
-            "coe_ethnicities": null,
-            "coe_genders": null,
-            "coe_underrepresented_minority": true,
-            "inactive_asc": null,
-            "intensive_asc": null,
-            "teams": null,
-            "inactive_coe": null,
-            "preps": [
-                {"prep": "PREP"},
-                {"prep": "T-PREP"}
-            ],
-            "probation_coe": null,
-            "last_initials": "A B",
-            "genders": [
-                {"gender": "Male"}
-            ],
-            "advisors": null
-        },
-        {
-            "gpa_ranges": null,
-            "levels": [
-                {"level": "Senior (90+ Units)"},
-                {"level": "Junior (60-89 Units)"}
-            ],
-            "units": null,
-            "majors": null,
-            "transfer_student": null,
-            "expected_grad_terms": null,
-            "coe_ethnicities": null,
-            "coe_genders": null,
-            "coe_underrepresented_minority": null,
-            "inactive_asc": null,
-            "intensive_asc": null,
-            "teams": null,
-            "inactive_coe": null,
-            "preps": [
-                {"prep": "T-PREP"}
-            ],
-            "probation_coe": null,
-            "last_initials": null,
-            "genders": [
-                {"gender": "Decline to State"}
-            ],
-            "advisors": null
-        },
-        {
-            "gpa_ranges": [
-                {"gpa_range": "2.00 - 2.49"},
-                {"gpa_range": "Below 2.0"}
-            ],
-            "levels": null,
-            "units": [
-                {"unit": "120 +"}
-            ],
-            "majors": null,
-            "transfer_student": null,
-            "expected_grad_terms": null,
-            "coe_ethnicities": null,
-            "coe_genders": null,
-            "coe_underrepresented_minority": null,
-            "underrepresented_minority": null,
-            "inactive_asc": null,
-            "intensive_asc": true,
-            "teams": null,
-            "inactive_coe": null,
-            "preps": null,
-            "probation_coe": true,
-            "last_initials": null,
-            "genders": null,
-            "advisors": [
-                {"advisor": "1015251"}
             ]
         },
         {
-            "gpa_ranges": null,
-            "levels": [
-                {"level": "Senior (90+ Units)"}
-            ],
-            "units": [
-                {"unit": "120 +"}
-            ],
             "majors": [
-                {"major": "Business Administration BS"},
-                {"major": "Economics BA"},
-                {"major": "Education MA"}
+                {"major": "Letters & Sci Undeclared UG"}
             ],
-            "transfer_student": null,
-            "expected_grad_terms": null,
-            "coe_ethnicities": [
-                {"coe_ethnicity": "F"}
-            ],
-            "coe_genders": null,
-            "coe_underrepresented_minority": null,
-            "underrepresented_minority": null,
-            "inactive_asc": null,
-            "intensive_asc": null,
-            "teams": [
-                {"squad": "Women's Crew"},
-                {"squad": "Men's Crew"}
-            ],
-            "inactive_coe": null,
-            "preps": null,
-            "probation_coe": null,
-            "last_initials": "A L",
-            "genders": null,
-            "advisors": null
-        },
-        {
-            "gpa_ranges": [
-                {"gpa_range": "2.50 - 2.99"}
-            ],
-            "levels": [
-                {"level": "Freshman (0-29 Units)"},
-                {"level": "Sophomore (30-59 Units)"}
-            ],
-            "units": [
-                {"unit": "0 - 29"}
-            ],
-            "majors": null,
-            "transfer_student": null,
-            "expected_grad_terms": null,
-            "coe_ethnicities": [
-                {"coe_ethnicity": "G"}
-            ],
-            "coe_genders": [
-                {"coe_gender": "Male"},
-                {"coe_gender": "Female"}
-            ],
-            "coe_underrepresented_minority": null,
-            "underrepresented_minority": null,
-            "inactive_asc": null,
-            "intensive_asc": true,
-            "teams": null,
-            "inactive_coe": null,
-            "preps": null,
-            "probation_coe": null,
-            "last_initials": null,
-            "genders": null,
-            "advisors": null
-        },
-        {
-            "gpa_ranges": null,
-            "levels": [
-                {"level": "Senior (90+ Units)"}
-            ],
-            "units": null,
-            "majors": [
-                {"major": "Integrative Biology BA"},
-                {"major": "Nut Sci-Physio & Metabol BS"},
-                {"major": "Public Health BA"},
-                {"major": "Physics"},
-                {"major": "Industrial Eng & Ops Rsch MEng"},
-                {"major": "Industrial Eng & Ops Rsch MS"}
-            ],
-            "transfer_student": null,
-            "expected_grad_terms": null,
-            "coe_ethnicities": null,
-            "coe_genders": null,
-            "coe_underrepresented_minority": false,
-            "underrepresented_minority": null,
-            "inactive_asc": null,
-            "intensive_asc": null,
-            "teams": null,
-            "inactive_coe": null,
-            "preps": null,
-            "probation_coe": null,
-            "last_initials": "B G",
-            "genders": null,
-            "advisors": null
-        },
-        {
-            "gpa_ranges": [
-                {"gpa_range": "3.50 - 4.00"}
-            ],
-            "levels": null,
-            "units": null,
-            "majors": [
-                {"major": "Business Administration BS"},
-                {"major": "Political Economy BA"},
-                {"major": "Nuclear Engineering BS"}
-            ],
-            "transfer_student": null,
-            "expected_grad_terms": null,
-            "coe_ethnicities": null,
-            "coe_genders": [
-                {"coe_gender": "Female"}
-            ],
-            "coe_underrepresented_minority": true,
-            "underrepresented_minority": null,
-            "inactive_asc": null,
-            "intensive_asc": null,
-            "teams": null,
-            "inactive_coe": null,
-            "preps": null,
-            "probation_coe": null,
-            "last_initials": null,
-            "genders": [
-                {"gender": "Female"}
-            ],
-            "advisors": null
-        },
-        {
-            "gpa_ranges": null,
-            "levels": [
-                {"level": "Junior (60-89 Units)"}
-            ],
-            "units": null,
-            "majors": [
-                {"major": "Legal Studies BA"},
-                {"major": "Economics BA"},
-                {"major": "Electrical Eng & Comp Sci BS"},
-                {"major": "Physics BA"}
-            ],
-            "transfer_student": null,
-            "expected_grad_terms": null,
-            "coe_ethnicities": null,
-            "coe_genders": null,
-            "coe_underrepresented_minority": null,
-            "underrepresented_minority": null,
-            "inactive_asc": null,
-            "intensive_asc": null,
-            "teams": null,
-            "inactive_coe": null,
-            "preps": [
-                {"prep": "PREP"},
-                {"prep": "T-PREP"}
-            ],
-            "probation_coe": null,
-            "last_initials": "A J",
-            "genders": null,
-            "advisors": null
-        },
-        {
-            "gpa_ranges": null,
-            "levels": [
-                {"level": "Senior (90+ Units)"}
-            ],
-            "units": [
-                {"unit": "120 +"}
-            ],
-            "majors": null,
-            "transfer_student": null,
-            "expected_grad_terms": null,
-            "coe_ethnicities": null,
-            "coe_genders": null,
-            "coe_underrepresented_minority": true,
-            "underrepresented_minority": null,
-            "inactive_asc": true,
-            "intensive_asc": null,
-            "teams": null,
-            "inactive_coe": null,
-            "preps": null,
-            "probation_coe": null,
-            "last_initials": "P R",
-            "genders": [
-                {"gender": "Male"}
-            ],
-            "advisors": null
-        },
-        {
-            "gpa_ranges": [
-                {"gpa_range": "Below 2.0"},
-                {"gpa_range": "2.50 - 2.99"}
-            ],
-            "levels": [
-                {"level": "Freshman (0-29 Units)"},
-                {"level": "Sophomore (30-59 Units)"}
-            ],
-            "units": null,
-            "majors": null,
-            "transfer_student": null,
-            "expected_grad_terms": null,
-            "coe_ethnicities": [
-                {"coe_ethnicity": "H"}
-            ],
-            "coe_genders": null,
-            "coe_underrepresented_minority": null,
-            "underrepresented_minority": null,
-            "inactive_asc": null,
-            "intensive_asc": true,
-            "teams": null,
-            "inactive_coe": null,
-            "preps": null,
-            "probation_coe": true,
-            "last_initials": null,
-            "genders": null,
-            "advisors": [
-                {"advisor": "1015251"},
-                {"advisor": "18767"}
-            ]
-        },
-        {
-            "teams": null,
-            "levels": [
-                {"level": "Freshman (0-29 Units)"}
-            ],
-            "majors": null,
-            "gpa_ranges": null,
-            "advisors": null,
-            "cohort_owner_academic_plans": [
-                {"plan": "*"}
-            ],
-            "coe_ethnicities": null,
-            "underrepresented_minority": null,
-            "coe_genders": null,
-            "preps": null,
-            "probation_coe": null,
-            "inactive_asc": null,
-            "intensive_asc": true
-        },
-        {
+            "transfer_student": true,
             "underrepresented_minority": true,
-            "levels": [
-                {"level":  "Freshman (0-29 Units)"}
-            ],
-            "genders": [
-                {"gender": "Female"}
-            ]
-        },
-        {
-            "ethnicities": [
-                {"ethnicity":  "Puerto Rican"},
-                {"ethnicity":  "Pacific Islander"}
-            ]
+            "last_initials": "B C"
         }
     ]
 }
