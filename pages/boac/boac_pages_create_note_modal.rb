@@ -36,6 +36,7 @@ module BOACPagesCreateNoteModal
   def enter_note_body(note)
     logger.debug "Entering note body '#{note.body}'"
     wait_for_element_and_type(note_body_text_area_elements[0], note.body)
+    note.body = note.body[1..-1] if note.body # For some reason, text Teena enters in the RTE loses its fist character
   end
 
 

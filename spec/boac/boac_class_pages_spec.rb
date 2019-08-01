@@ -189,7 +189,7 @@ describe 'BOAC' do
                                 expect(visible_student_sis_data[:final_grade]).to eql(student_data[:final_grade])
                               end
                             else
-                              it("shows no grade for #{student_test_case}") { expect(visible_student_sis_data[:final_grade]).to be_nil }
+                              it("shows no grade for #{student_test_case}") { expect(visible_student_sis_data[:final_grade]).to eql(student_data[:grading_basis]) }
                             end
 
                             # Midpoint grades display for the current term only.

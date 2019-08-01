@@ -61,7 +61,7 @@ class BOACApiStudentPage
       :term_units => (sis_profile && ((current_term ? formatted_units(current_term['enrolledUnits']) : '0') if terms.any?)),
       :term_units_min => (sis_profile && sis_profile['currentTerm'] && sis_profile['currentTerm']['unitsMinOverride']),
       :term_units_max => (sis_profile && sis_profile['currentTerm'] && sis_profile['currentTerm']['unitsMaxOverride']),
-      :cumulative_units => (sis_profile && (sis_profile['cumulativeUnits'].zero? ? '--' : formatted_units(sis_profile['cumulativeUnits']))),
+      :cumulative_units => (sis_profile && ((!sis_profile['cumulativeUnits'] || sis_profile['cumulativeUnits'].zero?) ? '--' : formatted_units(sis_profile['cumulativeUnits']))),
       :cumulative_gpa => (sis_profile && (sis_profile['cumulativeGPA'].nil? ? '--' : (sprintf '%.3f', sis_profile['cumulativeGPA']).to_s)),
       :majors => (sis_profile && majors),
       :colleges => (sis_profile && colleges),

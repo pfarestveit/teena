@@ -86,7 +86,7 @@ if NessieUtils.include_l_and_s?
       it('sees a Last Name filter') { expect(@filtered_cohort_page.new_filter_option('lastNameRange').visible?).to be true }
       it('sees no Advisor filter') { expect(@filtered_cohort_page.new_filter_option('coeAdvisorLdapUids').visible?).to be false }
       it('sees no \'Ethnicity (COE)\' filter') { expect(@filtered_cohort_page.new_filter_option('coeEthnicities').visible?).to be false }
-      it('sees \'Gender (COE)\' filter') { expect(@filtered_cohort_page.new_filter_option('coeGenders').visible?).to be true }
+      it('sees no \'Gender (COE)\' filter') { expect(@filtered_cohort_page.new_filter_option('coeGenders').visible?).to be false }
       it('sees no PREP filter') { expect(@filtered_cohort_page.new_filter_option('coePrepStatuses').visible?).to be false }
       it('sees no Inactive COE filter') { expect(@filtered_cohort_page.new_filter_option('isInactiveCoe').exists?).to be false }
       it('sees no Probation filter') { expect(@filtered_cohort_page.new_filter_option('coeProbation').exists?).to be false }
