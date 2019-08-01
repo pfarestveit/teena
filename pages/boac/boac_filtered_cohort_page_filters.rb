@@ -224,33 +224,6 @@ module BOACFilteredCohortPageFilters
         existing_filter_element('Intensive').exists? if filters.asc_intensive
         filters.asc_team.each { |t| existing_filter_element('Team', t.name).exists? } if filters.asc_team&.any?
         true
-
-        # Global
-        cohort.search_criteria.gpa.each { |g| select_new_filter('gpaRanges', g) } if cohort.search_criteria.gpa
-        cohort.search_criteria.level.each { |l| select_new_filter('levels', l) } if cohort.search_criteria.level
-        cohort.search_criteria.units_completed.each { |u| select_new_filter('unitRanges', u) } if cohort.search_criteria.units_completed
-        cohort.search_criteria.major.each { |m| select_new_filter('majors', m) } if cohort.search_criteria.major
-        select_new_filter 'transfer' if cohort.search_criteria.transfer_student
-        cohort.search_criteria.expected_grad_terms.each { |t| select_new_filter('expectedGradTerms', t) } if cohort.search_criteria.expected_grad_terms
-        select_new_filter('lastNameRange', cohort.search_criteria.last_name) if cohort.search_criteria.last_name
-        cohort.search_criteria.gender.each { |g| select_new_filter('genders', g) } if cohort.search_criteria.gender
-        cohort.search_criteria.cohort_owner_academic_plans.each { |e| select_new_filter('cohortOwnerAcademicPlans', e) } if cohort.search_criteria.cohort_owner_academic_plans
-        select_new_filter 'underrepresented' if cohort.search_criteria.underrepresented_minority
-        cohort.search_criteria.ethnicity.each { |e| select_new_filter('ethnicities', e) } if cohort.search_criteria.ethnicity
-
-        # CoE
-        cohort.search_criteria.coe_advisor.each { |a| select_new_filter('coeAdvisorLdapUids', a) } if cohort.search_criteria.coe_advisor
-        cohort.search_criteria.coe_ethnicity.each { |e| select_new_filter('coeEthnicities', e) } if cohort.search_criteria.coe_ethnicity
-        select_new_filter 'coeUnderrepresented' if cohort.search_criteria.coe_underrepresented_minority
-        cohort.search_criteria.coe_gender.each { |g| select_new_filter('coeGenders', g) } if cohort.search_criteria.coe_gender
-        cohort.search_criteria.coe_prep.each { |p| select_new_filter('coePrepStatuses', p) } if cohort.search_criteria.coe_prep
-        select_new_filter 'coeProbation' if cohort.search_criteria.coe_probation
-        select_new_filter 'isInactiveCoe' if cohort.search_criteria.coe_inactive
-
-        # ASC
-        select_new_filter 'isInactiveAsc' if cohort.search_criteria.asc_inactive
-        select_new_filter 'inIntensiveCohort' if cohort.search_criteria.asc_intensive
-        cohort.search_criteria.asc_team.each { |s| select_new_filter('groupCodes', s.name) } if cohort.search_criteria.asc_team
       end
     else
       unsaved_filter_apply_button_element.when_not_visible Utils.short_wait
@@ -267,12 +240,31 @@ module BOACFilteredCohortPageFilters
     "#{existing_filter_xpath filter_name}/following-sibling::div[2]"
   end
 
+  def filter_sub_options_xpath(filter_name)
+    "#{existing_filter_xpath filter_name}/following-sibling::div"
+  end
+
+  def choose_edit_filter_sub_option(filter_name, new_filter_option)
+    # Last Name requires input
+    if filter_name == 'Last Name'
+      wait_for_element_and_type(new_filter_initial_input_elements[0], new_filter_option.split[0])
+      wait_for_element_and_type(new_filter_initial_input_elements[1], new_filter_option.split[1])
+
+    # All others require a selection
+    else
+      wait_for_update_and_click button_element(xpath: "#{filter_sub_options_xpath filter_name}//button")
+      (['Expected Graduation Term', 'Advisor (COE)'].include? filter_name) ?
+          wait_for_update_and_click(link_element(id: "#{filter_name}-#{new_filter_option}")) :
+          wait_for_update_and_click(link_element(xpath: "#{filter_sub_options_xpath filter_name}//span[text()=\"#{new_filter_option}\"]/.."))
+    end
+  end
+
   # Edits the first filter of a given type
   # @param filter_key [String]
   # @param new_filter_option [String]
   def edit_filter_of_type(filter_key, new_filter_option)
     wait_for_update_and_click button_element(xpath: "#{filter_controls_xpath filter_key}//button[contains(.,'Edit')]")
-    choose_new_filter_sub_option(filter_key, new_filter_option)
+    choose_edit_filter_sub_option(filter_key, new_filter_option)
   end
 
   # Clicks the cancel button for the first filter of a given type that is in edit mode

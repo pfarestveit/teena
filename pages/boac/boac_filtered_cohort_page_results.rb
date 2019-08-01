@@ -132,7 +132,7 @@ module BOACFilteredCohortPageResults
   def matching_ethnicity_students(test, search_criteria)
     students = []
     (search_criteria.ethnicity&.any?) ?
-        (students << test.searchable_data.select { |u| (u[:ethnicity] & search_criteria.ethnicity).any? }) :
+        (students << test.searchable_data.select { |u| (u[:ethnicity] & search_criteria.ethnicity).any? if u[:ethnicity] }) :
         (students = test.searchable_data)
     students.uniq.flatten.compact
   end
@@ -311,6 +311,7 @@ module BOACFilteredCohortPageResults
                matching_gender_students(test, search_criteria),
                matching_minority_students(test, search_criteria),
                matching_acad_plan_students(test, search_criteria),
+               matching_last_name_students(test, search_criteria),
                matching_coe_advisor_students(test, search_criteria),
                matching_coe_ethnicity_students(test, search_criteria),
                matching_coe_gender_students(test, search_criteria),

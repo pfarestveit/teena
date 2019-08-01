@@ -201,7 +201,7 @@ class BOACTestConfig < TestConfig
 
   # Config for filtered cohort testing
   def filtered_cohorts
-    set_global_configs
+    set_global_configs BOACDepartments::ADMIN
     set_search_cohorts
 
     # Set a default cohort with all possible filters to exercise editing and removing filters
@@ -214,35 +214,27 @@ class BOACTestConfig < TestConfig
                 ['Letters & Sci Undeclared UG']
             end
     filters = {
-      :gpa => ['3.00 - 3.49'],
-      :level => ['Senior (90+ Units)'],
-      :units_completed => ['90 - 119'],
-      :major => major,
-      :transfer_student => true,
-      :expected_grad_terms => [CONFIG['term_code']],
-      :gender => ['Male'],
-      :last_name => 'A Z',
+        :gpa => ['3.00 - 3.49'],
+        :level => ['Senior (90+ Units)'],
+        :units_completed => ['90 - 119'],
+        :major => major,
+        :transfer_student => true,
+        :expected_grad_terms => [CONFIG['term_code']],
+        :gender => ['Male'],
+        :last_name => 'A Z',
+        :underrepresented_minority => true,
+        :ethnicity => ['Puerto Rican'],
+        :asc_inactive => true,
+        :asc_intensive => true,
+        :asc_team => [Squad::MCR],
+        :coe_advisor => [BOACUtils.get_dept_advisors(BOACDepartments::COE).first.uid.to_s],
+        :coe_ethnicity => ['Chinese / Chinese-American'],
+        :coe_gender => ['Female'],
+        :coe_underrepresented_minority => true,
+        :coe_prep => ['PREP'],
+        :coe_inactive => true,
+        :coe_probation => true
     }
-
-    if [BOACDepartments::ASC, BOACDepartments::ADMIN].include? @dept
-      filters.merge!({
-                         :asc_inactive => true,
-                         :asc_intensive => true,
-                         :asc_team => [Squad::MCR]
-                    })
-    end
-
-    if [BOACDepartments::COE, BOACDepartments::ADMIN].include? @dept
-      filters.merge!({
-                         :coe_advisor => [BOACUtils.get_dept_advisors(BOACDepartments::COE).first.uid.to_s],
-                         :coe_ethnicity => ['Chinese / Chinese-American'],
-                         :coe_gender => ['Female'],
-                         :coe_underrepresented_minority => true,
-                         :coe_prep => ['PREP'],
-                         :coe_inactive => true,
-                         :coe_probation => true
-                     })
-    end
 
     advisor_plans = NessieUtils.get_academic_plans(@advisor)
     if advisor_plans.any?

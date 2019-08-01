@@ -53,7 +53,7 @@ module BOACCohortPages
 
   # Clicks the Export List button and parses the resulting file
   # @param cohort [Cohort]
-  # @return [Array<Array>]
+  # @return [CSV::Table]
   def export_student_list(cohort)
     logger.info "Exporting student list for #{cohort.instance_of?(FilteredCohort) ? 'cohort' : 'group'} ID '#{cohort.id}'"
     Utils.prepare_download_dir
@@ -75,9 +75,7 @@ module BOACCohortPages
           parsed_csv.find do |r|
             (r.dig(:first_name) == stu.first_name) &&
                 (r.dig(:last_name) == stu.last_name) &&
-                (r.dig(:sid) == stu.sis_id.to_i) &&
-                (r.dig(:email)) &&
-                (r.dig(:phone))
+                (r.dig(:sid) == stu.sis_id.to_i)
           end
         end
       end
@@ -88,13 +86,18 @@ module BOACCohortPages
           parsed_csv.find do |r|
             (r.dig(:first_name) == stu[:first_name]) &&
                 (r.dig(:last_name) == stu[:last_name]) &&
-                (r.dig(:sid) == stu[:sid].to_i) &&
-                (r.dig(:email)) &&
-                (r.dig(:phone))
+                (r.dig(:sid) == stu[:sid].to_i)
           end
         end
       end
     end
+    # Make sure there's some phone / email data
+    wait_until(1) do
+      parsed_csv.by_col!
+      parsed_csv.dig(:email).compact.any?
+      parsed_csv.dig(:phone).compact.any?
+    end
+
   end
 
   # LIST VIEW - shared by filtered cohorts and curated groups

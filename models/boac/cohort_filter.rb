@@ -46,18 +46,18 @@ class CohortFilter
     @cohort_owner_academic_plans = (test_data['cohort_owner_academic_plans'] && test_data['cohort_owner_academic_plans'].map { |t| t['plan'] })
 
     # CoE
-    @coe_advisor = (test_data['advisors'] && test_data['advisors'].map { |a| a['advisor'] })
-    @coe_ethnicity = (test_data['coe_ethnicities'] && test_data['coe_ethnicities'].map { |e| coe_ethnicity_per_code e['coe_ethnicity'] })
-    @coe_gender = (test_data['coe_genders'] && test_data['coe_genders'].map { |g| g['coe_gender'] })
+    @coe_advisor = (test_data['coe_advisors'] && test_data['coe_advisors'].map { |a| a['advisor'] })
+    @coe_ethnicity = (test_data['coe_ethnicities'] && test_data['coe_ethnicities'].map { |e| coe_ethnicity_per_code e['ethnicity'] })
+    @coe_gender = (test_data['coe_genders'] && test_data['coe_genders'].map { |g| g['gender'] })
+    @coe_inactive = test_data['coe_inactive']
+    @coe_prep = (test_data['coe_preps'] && test_data['coe_preps'].map { |p| p['prep'] })
+    @coe_probation = test_data['coe_probation']
     @coe_underrepresented_minority = test_data['coe_underrepresented_minority']
-    @coe_prep = (test_data['preps'] && test_data['preps'].map { |p| p['prep'] })
-    @coe_inactive = test_data['inactive_coe']
-    @coe_probation = test_data['probation_coe']
 
     # ASC
-    @asc_inactive = test_data['inactive_asc']
-    @asc_intensive = test_data['intensive_asc']
-    @asc_team = (test_data['teams'] && test_data['teams'].map { |t| Squad::SQUADS.find { |s| s.name == t['squad'] } })
+    @asc_inactive = test_data['asc_inactive']
+    @asc_intensive = test_data['asc_intensive']
+    @asc_team = (test_data['asc_teams'] && test_data['asc_teams'].map { |t| Squad::SQUADS.find { |s| s.name == t['squad'] } })
 
     # Remove filters that are not available to the department
     unless [BOACDepartments::ADMIN, BOACDepartments::COE].include? dept
