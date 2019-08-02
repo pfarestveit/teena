@@ -51,8 +51,8 @@ describe 'An ASC advisor' do
     it('sees no \'Ethnicity (COE)\' filter') { expect(@filtered_cohort_page.new_filter_option('coeEthnicities').exists?).to be false }
     it('sees no \'Gender (COE)\' filter') { expect(@filtered_cohort_page.new_filter_option('coeGenders').exists?).to be false }
     it('sees no PREP filter') { expect(@filtered_cohort_page.new_filter_option('coePrepStatuses').exists?).to be false }
-    it('sees a Inactive filter') { expect(@filtered_cohort_page.new_filter_option('isInactiveAsc').visible?).to be true }
-    it('sees a Intensive filter') { expect(@filtered_cohort_page.new_filter_option('inIntensiveCohort').visible?).to be true }
+    it('sees an Inactive filter') { expect(@filtered_cohort_page.new_filter_option('isInactiveAsc').visible?).to be true }
+    it('sees an Intensive filter') { expect(@filtered_cohort_page.new_filter_option('inIntensiveCohort').visible?).to be true }
     it('sees a Team filter') { expect(@filtered_cohort_page.new_filter_option('groupCodes').visible?).to be true }
     it('sees a My Students filter') { expect(@filtered_cohort_page.new_filter_option('cohortOwnerAcademicPlans').visible?).to be true }
 

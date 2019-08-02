@@ -147,7 +147,7 @@ describe 'An admin using BOAC' do
       @csv.each do |r|
         expect(r[:last_name]).not_to be_empty
         expect(r[:first_name]).not_to be_empty
-        expect(r[:email]).to include('@berkeley.edu')
+        expect(r[:email]).to include('berkeley.edu')
       end
     end
 

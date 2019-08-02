@@ -127,7 +127,6 @@ else
           @student_page.click_save_new_note
           @student_page.set_new_note_id note_6
           @student_page.collapsed_note_el(note_6).when_visible Utils.short_wait
-          note_6.updated_date = Time.now
           @student_page.verify_note note_6
         end
 
@@ -295,7 +294,7 @@ else
         it 'can add topics' do
           @student_page.expand_note note_7
           @student_page.click_edit_note_button note_7
-          @student_page.add_topics(note_7, [Topic::LATE_ENROLLMENT, Topic::RETROACTIVE_GRADING_OPTION])
+          @student_page.add_topics(note_7, [Topic::LATE_ENROLLMENT, Topic::RETROACTIVE_ADD])
           @student_page.click_save_note_edit
           note_7.updated_date = Time.now
           @student_page.verify_note note_7

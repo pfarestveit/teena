@@ -14,6 +14,7 @@ class BOACAdminPage
   h2(:dept_users_section, :id => 'dept-users-section')
   h2(:edit_service_announcement, :id => 'edit-service-announcement')
   text_area(:update_service_announcement, xpath: '//div[@role="textbox"]')
+  text_area(:update_service_announcement_p, xpath: '//div[@role="textbox"]/p')
   button(:update_service_announcement_button, id: 'button-update-service-announcement')
   span(:service_announcement_banner, id: 'service-announcement-banner')
   span(:service_announcement_checkbox_label, id: 'checkbox-service-announcement-label')
@@ -67,7 +68,7 @@ class BOACAdminPage
   # @param announcement [String]
   def update_service_announcement(announcement)
     logger.info "Entering service announcement '#{announcement}'"
-    wait_for_textbox_and_type(update_service_announcement_element, announcement, 200)
+    wait_for_textbox_and_type([update_service_announcement_element, update_service_announcement_p_element], announcement, 200)
     wait_for_update_and_click update_service_announcement_button_element
   end
 

@@ -287,7 +287,7 @@ module BOACStudentPageAdvisingNote
     wait_until(1, "Expected '#{note.body}', got '#{visible_data[:body]}'") { visible_data[:body] == "#{note.body}" }
     wait_until(1, 'Expected non-blank advisor name') { !visible_data[:advisor].empty? }
     wait_until(1, 'Expected non-blank advisor role') { !visible_data[:advisor_role].empty? }
-    wait_until(1, "Expected '#{note.advisor.depts}', got #{visible_data[:advisor_depts]}") { visible_data[:advisor_depts] == note.advisor.depts }
+    wait_until(1) { !visible_data[:advisor_depts].any?(&:empty?) }
 
     # Topics
     note_topics = (note.topics.map { |t| t.name.upcase }).sort
@@ -305,7 +305,7 @@ module BOACStudentPageAdvisingNote
       Time.parse(visible_data[:created_date]) <= Time.parse(expected_long_created_date) + 60
       Time.parse(visible_data[:created_date]) >= Time.parse(expected_long_created_date) - 60
     end
-    unless note.instance_of? NoteBatch
+    unless note.instance_of?(NoteBatch) || (note.updated_date == note.created_date) || !note.updated_date
       expected_long_updated_date = "Last updated on #{expected_note_long_date_format note.updated_date}"
       wait_until(1, "Expected '#{expected_long_updated_date}', got #{visible_data[:updated_date]}") do
         Time.parse(visible_data[:updated_date]) <= Time.parse(expected_long_updated_date) + 60

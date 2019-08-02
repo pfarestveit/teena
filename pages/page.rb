@@ -127,17 +127,18 @@ module Page
   end
 
   # Awaits a textbox element, clicks it, removes existing text, and sends new text.
-  # @param element [PageObject::Elements::Element]
+  # @param elements [Array<PageObject::Elements::Element>]
   # @param text [String]
-  def wait_for_textbox_and_type(element, text, max_input_length)
-    wait_for_update_and_click element
+  # @param max_input_length [Integer]
+  def wait_for_textbox_and_type(elements, text, max_input_length)
+    wait_for_update_and_click elements.first
     sleep Utils.click_wait
     count = 0
     begin
-      element.clear
+      elements.each &:clear
       count += 1
-    end while element.text.length > 0 && count < max_input_length
-    element.send_keys text
+    end while elements.first.attribute('innerText').length > 0 && count < max_input_length
+    elements.first.send_keys text
   end
 
   # Awaits an element for a short time, clicks it using JavaScript, removes existing text, and sends new text. Intended for placing text
