@@ -21,7 +21,7 @@ describe 'An admin using BOAC' do
     @admin_page = BOACAdminPage.new @driver
     @api_admin_page = BOACApiAdminPage.new @driver
     @api_section_page = BOACApiSectionPage.new @driver
-    @api_user_analytics_page = BOACApiStudentPage.new @driver
+    @api_student_page = BOACApiStudentPage.new @driver
     @class_page = BOACClassListViewPage.new @driver
     @filtered_cohort_page = BOACFilteredCohortPage.new(@driver, test.advisor)
     @homepage = BOACHomePage.new @driver
@@ -85,13 +85,13 @@ describe 'An admin using BOAC' do
   context 'visiting student API pages' do
 
     it 'can see the ASC profile data for an ASC student on the student API page' do
-      @api_user_analytics_page.get_data(@driver, asc_only_students.first)
-      expect(@api_user_analytics_page.asc_profile).not_to be_nil
+      @api_student_page.get_data(@driver, asc_only_students.first)
+      expect(@api_student_page.asc_profile).not_to be_nil
     end
 
     it 'can see the CoE profile data for a CoE student on the student API page' do
-      @api_user_analytics_page.get_data(@driver, coe_only_students.first)
-      expect(@api_user_analytics_page.coe_profile).not_to be_nil
+      @api_student_page.get_data(@driver, coe_only_students.first)
+      expect(@api_student_page.coe_profile).not_to be_nil
     end
   end
 

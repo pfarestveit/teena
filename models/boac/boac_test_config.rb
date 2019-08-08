@@ -51,8 +51,8 @@ class BOACTestConfig < TestConfig
   end
 
   # Sets the complete list of potentially visible students
-  def set_students
-    @students = NessieUtils.get_all_students
+  def set_students(students=nil)
+    @students = students || NessieUtils.get_all_students
   end
 
   # Sets the list of students belonging to the department in question (not relevant to admins)
@@ -310,30 +310,37 @@ class BOACTestConfig < TestConfig
     set_search_cohorts
   end
 
+  # Config for advisor user role testing
+  def user_role_advisor
+    set_students
+    set_student_searchable_data @students
+  end
+
   # Config for ASC user role testing
-  def user_role_asc
-    set_global_configs BOACDepartments::ASC
-    set_search_cohorts
+  # @param user_role_config [BOACTestConfig]
+  def user_role_asc(user_role_config)
+    set_dept BOACDepartments::ASC
+    set_advisor
+    set_students user_role_config.students
+    set_dept_students
   end
 
   # Config for CoE user role testing
-  def user_role_coe
-    set_global_configs BOACDepartments::COE
-    set_default_cohort
-    set_search_cohorts
+  # @param user_role_config [BOACTestConfig]
+  def user_role_coe(user_role_config)
+    set_dept BOACDepartments::COE
+    set_advisor
+    set_students user_role_config.students
+    set_dept_students
   end
 
   # Config for L&S user role testing
-  def user_role_l_and_s
-    set_global_configs BOACDepartments::L_AND_S
-    set_default_cohort
-    set_search_cohorts
-  end
-
-  # Config for Physics user role testing
-  def user_role_physics
-    set_global_configs BOACDepartments::PHYSICS
-    set_search_cohorts
+  # @param user_role_config [BOACTestConfig]
+  def user_role_l_and_s(user_role_config)
+    set_dept BOACDepartments::L_AND_S
+    set_advisor
+    set_students user_role_config.students
+    set_dept_students
   end
 
 end
