@@ -61,6 +61,16 @@ class BOACStudentPage
     link_element(xpath: "//a[@href='https://calcentral.berkeley.edu/user/overview/#{student.uid}']")
   end
 
+  # TEAMS
+
+  elements(:squad, :div, id: 'student-bio-athletics')
+
+  # Returns the visible team information
+  # @return [Array<String>]
+  def sports
+    squad_elements.map { |el| el.attribute('innerText') }
+  end
+
   # TIMELINE
 
   div(:timeline_loaded_msg, xpath: '//div[text()="Academic Timeline has loaded"]')

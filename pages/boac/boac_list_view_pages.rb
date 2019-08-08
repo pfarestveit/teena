@@ -79,6 +79,14 @@ module BOACListViewPages
     div_element(xpath: "//div[text()='#{student.sis_id}']/following-sibling::div[text()='INACTIVE']").exists?
   end
 
+  # Returns the visible sports shown for a student
+  # @param student [BOACUser]
+  # @return [Array<String>]
+  def student_sports(student)
+    els = @browser.find_elements(xpath: "//div[@id='student-#{student.uid}']//div[@class='student-teams']")
+    els && els.map { |el| el.attribute('innerText') }
+  end
+
   # Returns all the UIDs shown on list view
   # @return [Array<String>]
   def list_view_uids
