@@ -86,25 +86,10 @@ describe 'BOAC' do
         expected_notes = expected_notes + expected_asc_notes if expected_asc_notes
         if expected_notes.any?
           expected_notes.each do |note|
-
             begin
-              note_test_case = "UID #{student.uid} note ID #{note.id}"
-
-              if note.source_body_empty || !note.body || note.body.empty?
-                logger.warn "Skipping search test for #{note_test_case} because the note body was empty and too many results will be returned."
-
-              else
-                body_words = note.body.split(' ')
-                body_words = (body_words.map { |w| w.split("\n") }).flatten
-                search_string = body_words[0..(notes_search_word_count-1)].join(' ')
-                note_search = {
-                  :note => note,
-                  :test_case => note_test_case,
-                  :string => search_string
-                }
-                note_searches << note_search
+              if (query = BOACUtils.generate_note_search_query(student, note, skip_empty_body: true))
+                note_searches << query
               end
-
             rescue => e
               Utils.log_error e
               it("hit an error collecting note search tests for UID #{student.uid} note ID #{note.id}") { fail }

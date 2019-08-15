@@ -166,6 +166,21 @@ describe 'BOAC' do
                 it("shows no attachment file names on #{test_case}") { expect(visible_expanded_note_data[:attachments]).to be_empty }
               end
 
+              # Note search
+
+              if (query = BOACUtils.generate_note_search_query(student, note))
+                @student_page.show_notes
+                @student_page.search_within_timeline_notes(query[:string])
+                message_ids = @student_page.visible_message_ids
+
+                it("searches within academic timeline for #{query[:test_case]}") do
+                  expect(message_ids.length).to eql 1
+                  expect(message_ids.first).to eql query[:note].id
+                end
+
+                @student_page.clear_timeline_notes_search
+              end
+
               # Permalink
 
               logger.info "Checking permalink: '#{visible_expanded_note_data[:permalink_url]}'"

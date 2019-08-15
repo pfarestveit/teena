@@ -98,6 +98,33 @@ class BOACUtils < Utils
     }
   end
 
+  def self.generate_note_search_query(student, note, opts={})
+    note_test_case = "UID #{student.uid} note ID #{note.id}"
+    notes_search_word_count = BOACUtils.config['notes_search_word_count']
+
+    if (note.source_body_empty || !note.body || note.body.empty?)
+      if (!note.subject || note.subject.empty?)
+        logger.warn "Skipping search test for #{note_test_case} because the note has no body or subject."
+        return nil
+      elsif opts[:skip_empty_body]
+        logger.warn "Skipping search test for #{note_test_case} because the note body was empty and too many results will be returned."
+        return nil
+      else
+        note_text = note.subject
+      end
+    else
+      note_text = note.body
+    end
+
+    query_words = note_text.split(/[\n ]+/)
+    search_string = query_words[0..(notes_search_word_count-1)].join(' ')
+    {
+      :note => note,
+      :test_case => note_test_case,
+      :string => search_string
+    }
+  end
+
   # ATTACHMENTS TEST DATA
 
   # The file path for SuiteC asset upload files
@@ -121,13 +148,13 @@ class BOACUtils < Utils
   # Returns all the advisors associated with a department
   # @return [Array<BOACUser>]
   def self.get_dept_advisors(dept)
-    query = "SELECT authorized_users.uid
+    query = "SELECT authorized_users.uid, authorized_users.can_access_canvas_data
               FROM authorized_users
               INNER JOIN university_dept_members ON authorized_users.id = university_dept_members.authorized_user_id
               INNER JOIN university_depts on university_dept_members.university_dept_id = university_depts.id
               WHERE university_depts.dept_code = '#{dept.code}';"
     results = query_pg_db(boac_db_credentials, query)
-    results.map { |r| BOACUser.new({uid: r['uid']}) }
+    results.map { |r| BOACUser.new({uid: r['uid'], can_access_canvas_data: r['can_access_canvas_data']}) }
   end
 
   # DATABASE - CURATED GROUPS
@@ -295,6 +322,14 @@ class BOACUtils < Utils
   def self.get_student_notes(student)
     query = "SELECT * FROM notes WHERE sid = '#{student.sis_id}';"
     results = Utils.query_pg_db(boac_db_credentials, query)
+    result_ids = results.map { |r| r['id'] }
+
+    attach_query = "SELECT * FROM note_attachments WHERE note_id IN (#{result_ids.join(',')});"
+    attach_results = Utils.query_pg_db(boac_db_credentials, attach_query)
+
+    topic_query = "SELECT note_id, topic FROM note_topics WHERE note_id IN (#{result_ids.join(',')});"
+    topic_results = Utils.query_pg_db(boac_db_credentials, topic_query)
+
     notes_data = results.map do |r|
       depts = BOACDepartments::DEPARTMENTS.select { |d| r['author_dept_codes'].include? d.code  }
       advisor_data = {
@@ -314,9 +349,8 @@ class BOACUtils < Utils
         :deleted_date => (Time.parse(r['deleted_at'].to_s) if r['deleted_at'])
       }
 
-      attach_query = "SELECT * FROM note_attachments WHERE note_id = #{note_data[:id]};"
-      attach_results = Utils.query_pg_db(boac_db_credentials, attach_query)
-      attachments = attach_results.map do |a|
+
+      attachments = attach_results.select { |a| a['note_id'] == note_data[:id] }.map do |a|
         file_name = a['path_to_attachment'].split('/').last
         # Boa attachment file names should be prefixed with a timestamp, but some older test file names are not
         visible_file_name = file_name[0..15].gsub(/(20)\d{6}(_)\d{6}(_)/, '').empty? ? file_name[16..-1] : file_name
@@ -324,9 +358,7 @@ class BOACUtils < Utils
       end
       note_data.merge!(:attachments => attachments)
 
-      topic_query = "SELECT topic FROM note_topics WHERE note_id = #{note_data[:id]};"
-      topic_results = Utils.query_pg_db(boac_db_credentials, topic_query)
-      topics = topic_results.map { |t| t['topic'] }
+      topics = topic_results.select { |t| t['note_id'] == note_data[:id] }.map { |t| t['topic'] }
       note_data.merge!(:topics => topics)
     end
 
