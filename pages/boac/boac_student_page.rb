@@ -243,12 +243,19 @@ class BOACStudentPage
 
   # COURSE SITES
 
+  # Returns the button element to expand course data
+  # @param term_name [String]
+  # @param course_code [String]
+  # @return [PageObject::Elements::Button]
+  def course_expand_toggle(term_name, course_code)
+    button_element(:xpath => "#{course_data_xpath(term_name, course_code)}//button")
+  end
+
   # Expands course data
   # @param term_name [String]
   # @param course_code [String]
   def expand_course_data(term_name, course_code)
-    toggle = button_element(:xpath => "#{course_data_xpath(term_name, course_code)}//button")
-    wait_for_update_and_click toggle
+    wait_for_update_and_click course_expand_toggle
   end
 
   # Returns the XPath to a course site associated with a course in a term
