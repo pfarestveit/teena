@@ -131,12 +131,11 @@ class NessieUtils < Utils
     asc_students = student_result_to_users(query_all_asc_students, BOACDepartments::ASC)
     coe_students = student_result_to_users(query_all_coe_students, BOACDepartments::COE)
     undergrad_students = student_result_to_users(query_all_undergrad_students, BOACDepartments::L_AND_S)
-    physics_students = student_result_to_users(query_all_physics_students, BOACDepartments::PHYSICS)
 
     # Find students served by more than one department and merge their attributes into a new user
-    all_students = asc_students + coe_students + physics_students + undergrad_students
-    logger.info "There are #{asc_students.length} ASC students, #{coe_students.length} CoE students, #{undergrad_students.length.to_s} undergrad students,
-                 and #{physics_students.length} Physics students, for a total of #{all_students.length}"
+    all_students = asc_students + coe_students + undergrad_students
+    logger.info "There are #{asc_students.length} ASC students, #{coe_students.length} CoE students,
+      and #{undergrad_students.length.to_s} undergrad students, for a total of #{all_students.length}"
     merged_students = []
     all_students.group_by { |s| s.uid }.map do |k,v|
       if v.length > 1

@@ -28,7 +28,7 @@ class BOACTestConfig < TestConfig
     case @dept
       when BOACDepartments::ADMIN
         @advisor = BOACUser.new({:uid => Utils.super_admin_uid})
-      when BOACDepartments::ASC
+      when BOACDepartments::ASC, BOACDepartments::PHYSICS
         @advisor = advisors.first
       when BOACDepartments::COE
         uid = CONFIG['test_coe_advisor_uid']
@@ -36,8 +36,12 @@ class BOACTestConfig < TestConfig
       when BOACDepartments::L_AND_S
         uid = CONFIG['test_l_and_s_advisor_uid']
         @advisor = uid ? (advisors.find { |a| a.uid.to_i == uid }) : advisors.first
-      when BOACDepartments::PHYSICS
-        @advisor = advisors.first
+      when BOACDepartments::OTHER
+        if block_given?
+          @advisor = advisors.first { |a| yield a }
+        else
+          @advisor = advisors.first
+        end
       else
         logger.error 'What kinda department is that??'
         fail
@@ -340,6 +344,13 @@ class BOACTestConfig < TestConfig
     set_dept BOACDepartments::L_AND_S
     set_advisor
     set_students user_role_config.students
+    set_dept_students
+  end
+
+  def user_role_notes_only()
+    set_dept BOACDepartments::OTHER
+    set_advisor { |advisor| advisor.can_access_canvas_data == false }
+    set_students
     set_dept_students
   end
 

@@ -56,4 +56,8 @@ class BOACApiSectionPage
     api_student && student_sites(api_student).map { |site| site_id site }
   end
 
+  def unauthorized?
+    @parsed['message'] == 'Unauthorized to view course data'
+  end
+
 end
