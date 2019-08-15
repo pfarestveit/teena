@@ -59,6 +59,13 @@ module BOACStudentPageAdvisingNote
     div_element(id: "note-#{note.id}-is-closed")
   end
 
+  # Returns the visible sequence of message ids, whether or not collapsed
+  # @return [Array<String>]
+  def visible_message_ids
+    els = browser.find_elements(xpath: '//tr[starts-with(@id, "message-row-")]')
+    els.map { |el| el.attribute('id').sub('message-row-', '') }
+  end
+
   # Returns the button element for collapsing a given note
   # @param note [Note]
   # @return [PageObject::Elements::Button]
@@ -119,6 +126,24 @@ module BOACStudentPageAdvisingNote
   # @return [PageObject::Elements::Link]
   def note_advisor_el(note)
     link_element(id: "note-#{note.id}-author-name")
+  end
+
+  # Search
+
+  text_area(:timeline_notes_query_input, id: 'timeline-notes-query-input')
+  div(:timeline_notes_spinner, id: 'timeline-notes-spinner')
+
+  def search_within_timeline_notes(query)
+    timeline_notes_query_input_element.when_visible Utils.short_wait
+    timeline_notes_query_input_element.clear
+    self.timeline_notes_query_input = query
+    timeline_notes_query_input_element.send_keys :enter
+    sleep 1
+    timeline_notes_spinner_element.when_not_visible Utils.medium_wait rescue Selenium::WebDriver::Error::StaleElementReferenceError
+  end
+
+  def clear_timeline_notes_search
+    search_within_timeline_notes ''
   end
 
   # Attachments
@@ -230,7 +255,6 @@ module BOACStudentPageAdvisingNote
       note.updated_date = Time.now
     end
   end
-
 
   # Metadata
 
