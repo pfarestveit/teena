@@ -38,7 +38,7 @@ class BOACTestConfig < TestConfig
         @advisor = uid ? (advisors.find { |a| a.uid.to_i == uid }) : advisors.first
       when BOACDepartments::OTHER
         if block_given?
-          @advisor = advisors.first { |a| yield a }
+          @advisor = advisors.find { |a| yield a }
         else
           @advisor = advisors.first
         end
@@ -46,7 +46,7 @@ class BOACTestConfig < TestConfig
         logger.error 'What kinda department is that??'
         fail
     end
-    if (user_data = NessieUtils.get_advising_note_author(uid))
+    if uid && (user_data = NessieUtils.get_advising_note_author(uid))
       @advisor.sis_id = user_data[:sid]
       @advisor.first_name = user_data[:first_name]
       @advisor.last_name = user_data[:last_name]
@@ -349,7 +349,7 @@ class BOACTestConfig < TestConfig
 
   def user_role_notes_only()
     set_dept BOACDepartments::OTHER
-    set_advisor { |advisor| advisor.can_access_canvas_data == false }
+    set_advisor { |advisor| advisor.can_access_canvas_data == 'f' }
     set_students
     set_dept_students
   end
