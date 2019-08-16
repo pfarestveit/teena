@@ -75,6 +75,7 @@ class JunctionUtils < Utils
     driver.get("#{junction_base_url}/api/cache/clear")
     sleep 3
     my_toolbox_page.load_page
+    my_toolbox_page.toggle_footer_link_element.when_visible Utils.long_wait
     my_toolbox_page.log_out splash_page
   end
 

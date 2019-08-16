@@ -75,9 +75,7 @@ module Page
       def export_roster(course)
         logger.info "Downloading roster CSV for course ID #{course.site_id}"
         Utils.prepare_download_dir
-        wait_for_update_and_click_js export_roster_link_element
-        # Clicking the download link can trigger a 'target frame detached' error as a new window briefly appears
-        export_roster_link rescue Selenium::WebDriver::Error::WebDriverError
+        wait_for_update_and_click export_roster_link_element
         csv_file_path = "#{Utils.download_dir}/course_#{course.site_id}_rosters.csv"
         wait_until { Dir[csv_file_path].any? }
         csv = CSV.read(csv_file_path, headers: true)
