@@ -309,6 +309,7 @@ module Page
     checkbox(:add_user_by_sid, xpath: '//span[contains(text(),"Student ID")]/..')
     text_area(:user_list, xpath: '//textarea')
     select_list(:user_role, id: 'peoplesearch_select_role')
+    elements(:user_role_option, :span, xpath: '//span[@role="option"]')
     select_list(:user_section, id: 'peoplesearch_select_section')
     button(:next_button, id: 'addpeople_next')
     div(:users_ready_to_add_msg, xpath: '//div[contains(text(),"The following users are ready to be added to the course.")]')
@@ -391,7 +392,8 @@ module Page
             sleep 1
             check_add_user_by_uid
             wait_for_element_and_type_js(user_list_element, users)
-            self.user_role = user_role
+            wait_for_update_and_click user_role_element
+            wait_for_update_and_click(user_role_option_elements.find { |el| el.text == user_role })
             wait_for_element_and_select_js(user_section_element, section.sis_id) if section
             wait_for_update_and_click_js next_button_element
             users_ready_to_add_msg_element.when_visible Utils.medium_wait

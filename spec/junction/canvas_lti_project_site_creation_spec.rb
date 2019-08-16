@@ -70,9 +70,9 @@ describe 'bCourses project site', order: :defined do
     it 'include Owner, Maintainer, and Member in the Add People tool' do
       @canvas.load_users_page project
       @canvas.wait_for_load_and_click @canvas.add_people_button_element
-      @canvas.user_role_element.when_visible Utils.short_wait
-      logger.debug "Available user roles are '#{@canvas.user_role_element.options.map &:text}'"
-      expect((@canvas.user_role_element.options.map(&:text) & %w(Owner Maintainer Member)).length == 3).to be true
+      @canvas.wait_for_update_and_click @canvas.user_role_element
+      logger.debug "Available user roles are '#{@canvas.user_role_option_elements.map &:text}'"
+      expect((@canvas.user_role_option_elements.map(&:text) & %w(Owner Maintainer Member)).length == 3).to be true
     end
 
     %w(Owner Maintainer Member).each do |user_role|
