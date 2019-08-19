@@ -28,7 +28,7 @@ class BOACTestConfig < TestConfig
     case @dept
       when BOACDepartments::ADMIN
         @advisor = BOACUser.new({:uid => Utils.super_admin_uid})
-      when BOACDepartments::ASC, BOACDepartments::PHYSICS
+      when BOACDepartments::ASC
         @advisor = advisors.first
       when BOACDepartments::COE
         uid = CONFIG['test_coe_advisor_uid']
@@ -112,15 +112,6 @@ class BOACTestConfig < TestConfig
         @default_cohort.search_criteria = filter
         student_sids = @students.map &:sis_id
         filtered_searchable_data = @searchable_data.select { |d| (filter.major & d[:major]).any? }
-        filtered_searchable_sids = filtered_searchable_data.map { |d| d[:sid] }
-        @cohort_members = @students.select { |s| student_sids.include?(s.sis_id) && filtered_searchable_sids.include?(s.sis_id) }
-
-      # For Physics, use students of configured levels
-      when BOACDepartments::PHYSICS
-        filter.level = CONFIG['test_physics_levels']
-        @default_cohort.search_criteria = filter
-        student_sids = @students.map &:sis_id
-        filtered_searchable_data = @searchable_data.select { |d| filter.level.include?(d[:level]) }
         filtered_searchable_sids = filtered_searchable_data.map { |d| d[:sid] }
         @cohort_members = @students.select { |s| student_sids.include?(s.sis_id) && filtered_searchable_sids.include?(s.sis_id) }
 
@@ -209,19 +200,11 @@ class BOACTestConfig < TestConfig
     set_search_cohorts
 
     # Set a default cohort with all possible filters to exercise editing and removing filters
-    major = case @dept
-              when BOACDepartments::COE
-                ['Electrical Eng & Comp Sci BS']
-              when BOACDepartments::PHYSICS
-                ['Physics']
-              else
-                ['Letters & Sci Undeclared UG']
-            end
     filters = {
         :gpa => ['3.00 - 3.49'],
         :level => ['Senior (90+ Units)'],
         :units_completed => ['90 - 119'],
-        :major => major,
+        :major => ((@dept == BOACDepartments::COE) ? ['Electrical Eng & Comp Sci BS'] : ['Letters & Sci Undeclared UG']),
         :transfer_student => true,
         :expected_grad_terms => [CONFIG['term_code']],
         :gender => ['Male'],

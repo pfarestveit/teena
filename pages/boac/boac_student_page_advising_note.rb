@@ -12,6 +12,9 @@ module BOACStudentPageAdvisingNote
 
   button(:notes_button, id: 'timeline-tab-note')
   button(:show_hide_notes_button, id: 'timeline-tab-note-previous-messages')
+  button(:toggle_all_notes_button, id: 'toggle-expand-all-notes')
+  span(:notes_expanded_msg, xpath: '//span[text()="Collapse all notes"]')
+  span(:notes_collapsed_msg, xpath: '//span[text()="Expand all notes"]')
   elements(:note_msg_row, :div, xpath: '//div[contains(@id,"timeline-tab-note-message")]')
   elements(:topic, :list_item, xpath: '//li[contains(@id, "topic")]')
 
@@ -20,6 +23,18 @@ module BOACStudentPageAdvisingNote
     logger.info 'Checking notes tab'
     wait_for_update_and_click notes_button_element
     wait_for_update_and_click show_hide_notes_button_element if show_hide_notes_button? && show_hide_notes_button_element.text.include?('Show')
+  end
+
+  def expand_all_notes
+    logger.info 'Expanding all notes'
+    wait_for_update_and_click toggle_all_notes_button_element
+    notes_expanded_msg_element.when_visible 2
+  end
+
+  def collapse_all_notes
+    logger.info 'Collapsing all notes'
+    wait_for_update_and_click toggle_all_notes_button_element
+    notes_collapsed_msg_element.when_visible 2
   end
 
   # Returns the expected sort order of a student's notes

@@ -49,6 +49,18 @@ describe 'BOAC' do
           visible_sort_order = @student_page.visible_collapsed_note_ids
           it("shows the notes in the right order for UID #{student.uid}") { expect(visible_sort_order).to eql(expected_sort_order) }
 
+          @student_page.expand_all_notes
+          expected_notes.each do |note|
+            note_expanded = @student_page.note_expanded? note
+            it("expand-all-notes button expands note ID #{note.id} for UID #{student.uid}") { expect(note_expanded).to be true }
+          end
+
+          @student_page.collapse_all_notes
+          expected_notes.each do |note|
+            note_expanded = @student_page.note_expanded? note
+            it("collapse-all-notes-button collapses note ID #{note.id} for UID #{student.uid}") { expect(note_expanded).to be false }
+          end
+
           expected_notes.each do |note|
 
             begin

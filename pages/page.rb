@@ -127,18 +127,14 @@ module Page
   end
 
   # Awaits a textbox element, clicks it, removes existing text, and sends new text.
-  # @param elements [Array<PageObject::Elements::Element>]
+  # @param element [Array<PageObject::Elements::Element>]
   # @param text [String]
   # @param max_input_length [Integer]
-  def wait_for_textbox_and_type(elements, text, max_input_length)
-    wait_for_update_and_click elements.first
+  def wait_for_textbox_and_type(element, text, max_input_length)
+    wait_for_update_and_click element
     sleep Utils.click_wait
-    count = 0
-    begin
-      elements.each &:clear
-      count += 1
-    end while elements.first.attribute('innerText').length > 0 && count < max_input_length
-    elements.first.send_keys text
+    max_input_length.times { hit_delete; hit_backspace }
+    element.send_keys text
   end
 
   # Awaits an element for a short time, clicks it using JavaScript, removes existing text, and sends new text. Intended for placing text
@@ -283,6 +279,16 @@ module Page
     yield
     sleep Utils.click_wait
     browser.switch_to.alert.accept rescue Selenium::WebDriver::Error::NoAlertPresentError
+  end
+
+  # Hits the Delete key
+  def hit_delete
+    browser.action.send_keys(:delete).perform
+  end
+
+  # Hits the Backspace key
+  def hit_backspace
+    browser.action.send_keys(:backspace).perform
   end
 
 end
