@@ -120,7 +120,11 @@ class BOACClassListViewPage
   # @param node [Integer]
   # @return [String]
   def assigns_submit_score(student, node)
-    el = div_element(xpath: "#{assigns_submit_xpath(student, node)}//strong")
+    score_xpath = "#{assigns_submit_xpath(student, node)}"
+    has_boxplot = verify_block { mouseover(browser, browser.find_element(xpath: "#{score_xpath}#{boxplot_trigger_xpath}")) }
+    el = has_boxplot ?
+             div_element(xpath: "#{score_xpath}//div[text()=\"User Score\"]/following-sibling::div") :
+             div_element(xpath: "#{score_xpath}//strong")
     el.text if el.exists?
   end
 
@@ -129,8 +133,14 @@ class BOACClassListViewPage
   # @param node [Integer]
   # @return [String]
   def assigns_submit_max(student, node)
-    el = span_element(xpath: "#{assigns_submit_xpath(student, node)}//strong/following-sibling::span")
-    el.text.split(' ')[1].delete(')') if el.exists?
+    score_xpath = "#{assigns_submit_xpath(student, node)}"
+    has_boxplot = verify_block { mouseover(browser, browser.find_element(xpath: "#{score_xpath}#{boxplot_trigger_xpath}")) }
+    el = has_boxplot ?
+             div_element(xpath: "#{score_xpath}//div[text()=\"Maximum\"]/following-sibling::div") :
+             span_element(xpath: "#{assigns_submit_xpath(student, node)}//strong/following-sibling::span")
+    if el.exists?
+      el.text.include?(' ') ? el.text.split(' ')[1].delete(')') : el.text
+    end
   end
 
   # Returns the 'No Data' message shown for a student's assignment-submitted count for a site at a given node
