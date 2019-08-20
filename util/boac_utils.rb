@@ -145,6 +145,11 @@ class BOACUtils < Utils
     results.map { |r| BOACUser.new({uid: r['uid']}) }
   end
 
+  def self.get_user_login_count(user)
+    query = "SELECT COUNT(*) FROM user_logins WHERE uid = '#{user.uid}';"
+    query_pg_db_field(boac_db_credentials, query, 'count').first.to_i
+  end
+
   # Returns all the advisors associated with a department
   # @return [Array<BOACUser>]
   def self.get_dept_advisors(dept)
@@ -416,9 +421,21 @@ class BOACUtils < Utils
     logger.warn "Command status: #{result.cmd_status}. Result status: #{result.result_status}"
   end
 
+  def self.soft_delete_auth_user(user)
+    statement = "UPDATE authorized_users SET deleted_at = NOW() WHERE uid = '#{user.uid}';"
+    result = query_pg_db(boac_db_credentials, statement)
+    logger.warn "Command status: #{result.cmd_status}. Result status: #{result.result_status}"
+  end
+
+  def self.restore_auth_user(user)
+    statement = "UPDATE authorized_users SET deleted_at = NULL WHERE uid = '#{user.uid}';"
+    result = query_pg_db(boac_db_credentials, statement)
+    logger.warn "Command status: #{result.cmd_status}. Result status: #{result.result_status}"
+  end
+
   # Deletes an authorized user
   # @param user [BOACUser]
-  def self.delete_auth_user(user)
+  def self.hard_delete_auth_user(user)
     statement_1 = "DELETE FROM authorized_users WHERE uid = '#{user.uid}';"
     result_1 = query_pg_db(boac_db_credentials, statement_1)
     logger.warn "Command status: #{result_1.cmd_status}. Result status: #{result_1.result_status}"

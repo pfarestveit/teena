@@ -11,7 +11,7 @@ describe 'An admin using BOAC' do
   asc_only_students = test.students.select { |s| s.depts == [BOACDepartments::ASC] }
 
   non_admin_depts = BOACDepartments::DEPARTMENTS.reject { |d| d == BOACDepartments::ADMIN }
-  dept_advisors =  non_admin_depts.map { |dept| {:dept => dept, :advisors => BOACUtils.get_dept_advisors(dept)} }
+  dept_advisors = non_admin_depts.map { |dept| {:dept => dept, :advisors => BOACUtils.get_dept_advisors(dept)} }
 
   everyone_cohorts = BOACUtils.get_everyone_filtered_cohorts
 
@@ -138,16 +138,25 @@ describe 'An admin using BOAC' do
     dept_advisors.each do |dept|
       it "can export all #{dept[:dept].name} users" do
         dept_user_uids = dept[:advisors].map &:uid
-        csv_dept_user_uids = @csv.map { |r| r[:uid].to_s if (r[:dept_code] == dept[:dept].code && r[:dept_name] == dept[:dept].name) }
+        csv_dept_user_uids = @csv.map do |r|
+          if (r[:dept_code] == dept[:dept].code && r[:dept_name] == dept[:dept].name) ||
+              (dept[:dept].code == BOACDepartments::OTHER.code && [BOACDepartments::OTHER.code, 'NOTESONLY'].include?(r[:dept_code]))
+            r[:uid].to_s
+          end
+        end
+        logger.debug "Unexpected advisors: #{csv_dept_user_uids.compact - dept_user_uids}"
+        logger.debug "Missing advisors: #{dept_user_uids - csv_dept_user_uids.compact}"
         expect(csv_dept_user_uids.compact.sort).to eql(dept_user_uids.sort)
       end
     end
 
     it 'can generate valid data' do
       @csv.each do |r|
-        expect(r[:last_name]).not_to be_empty
-        expect(r[:first_name]).not_to be_empty
-        expect(r[:email].downcase).to include('berkeley.edu')
+        unless r[:dept_code] == 'NOTESONLY'
+          expect(r[:last_name]).not_to be_empty
+          expect(r[:first_name]).not_to be_empty
+          expect(r[:email].downcase).to include('berkeley.edu')
+        end
       end
     end
 
