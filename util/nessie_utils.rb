@@ -439,31 +439,41 @@ class NessieUtils < Utils
     plan_map
   end
 
-  def self.get_asc_notes(student)
-    query = "SELECT asc_advising_notes.advising_notes.id AS id,
-                    asc_advising_notes.advising_notes.advisor_uid AS advisor_uid,
-                    asc_advising_notes.advising_notes.advisor_first_name AS advisor_first_name,
-                    asc_advising_notes.advising_notes.advisor_last_name AS advisor_last_name,
-                    asc_advising_notes.advising_notes.created_at AS created_date,
-                    asc_advising_notes.advising_notes.updated_at AS updated_date,
-                    asc_advising_notes.advising_note_topics.topic AS topic
-             FROM asc_advising_notes.advising_notes
-             LEFT JOIN asc_advising_notes.advising_note_topics
-               ON asc_advising_notes.advising_notes.id = asc_advising_notes.advising_note_topics.id
-             WHERE asc_advising_notes.advising_notes.sid = '#{student.sis_id}';"
+  def self.get_external_notes(schema, student)
+    query = "SELECT #{schema}.advising_notes.id AS id,
+                    #{schema}.advising_notes.advisor_uid AS advisor_uid,
+                    #{schema}.advising_notes.advisor_first_name AS advisor_first_name,
+                    #{schema}.advising_notes.advisor_last_name AS advisor_last_name,
+                    #{schema}.advising_notes.created_at AS created_date,
+                    #{schema}.advising_notes.updated_at AS updated_date,
+                    #{schema}.advising_note_topics.topic AS topic
+             FROM #{schema}.advising_notes
+             LEFT JOIN #{schema}.advising_note_topics
+               ON #{schema}.advising_notes.id = #{schema}.advising_note_topics.id
+             WHERE #{schema}.advising_notes.sid = '#{student.sis_id}';"
 
     results = query_redshift_db(nessie_redshift_db_credentials, query)
     notes_data = results.group_by { |h1| h1['id'] }.map do |k,v|
-      {
-        :id => k,
-        :advisor => BOACUser.new({:uid => v[0]['advisor_uid'], :first_name => "#{v[0]['advisor_first_name']}", :last_name => "#{v[0]['advisor_last_name']}"}),
-        :created_date => Time.parse(v[0]['created_date'].to_s).utc.localtime,
-        :updated_date => Time.parse(v[0]['updated_date'].to_s).utc.localtime,
-        :topics => (v.map { |t| t['topic'].upcase if t['topic'] }).compact.sort
-      }
+      unless v[0]['advisor_first_name'] == 'Reception' && v[0]['advisor_last_name'] == 'Front Desk'
+        {
+            :id => k,
+            :advisor => BOACUser.new({:uid => v[0]['advisor_uid'], :first_name => "#{v[0]['advisor_first_name']}", :last_name => "#{v[0]['advisor_last_name']}"}),
+            :created_date => Time.parse(v[0]['created_date'].to_s).utc.localtime,
+            :updated_date => Time.parse(v[0]['updated_date'].to_s).utc.localtime,
+            :topics => (v.map { |t| t['topic'].upcase if t['topic'] }).compact.sort
+        }
+      end
     end
 
-    notes_data.map { |d| Note.new d }
+    notes_data.compact.map { |d| Note.new d }
+  end
+
+  def self.get_asc_notes(student)
+    get_external_notes('asc_advising_notes', student)
+  end
+
+  def self.get_e_and_i_notes(student)
+    get_external_notes('e_i_advising_notes', student)
   end
 
   # Returns legacy advising notes associated with a given student
