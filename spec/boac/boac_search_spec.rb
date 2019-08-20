@@ -246,7 +246,7 @@ describe 'BOAC' do
                   expect(topic_match).to be true
                 end
 
-                non_topic = Topic::TOPICS.find{ |t| t.name == non_note_topics.first }
+                non_topic = Topic::TOPICS.find { |t| t.name == non_note_topics.first }
                 @homepage.select_note_topic non_topic
                 @homepage.search_note note_search[:string]
                 topic_no_match = @search_results_page.note_in_search_result?(note_search[:note])

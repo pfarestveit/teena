@@ -9,6 +9,7 @@ describe 'BOAC' do
     test.legacy_notes
     students_with_asc_notes = []
     students_with_boa_notes = []
+    students_with_ei_notes = []
     students_with_sis_notes = []
     downloadable_attachments = []
     advisor_link_tested = false
@@ -29,13 +30,15 @@ describe 'BOAC' do
         @student_page.load_page student
         expected_asc_notes = NessieUtils.get_asc_notes student
         expected_boa_notes = BOACUtils.get_student_notes(student).delete_if &:deleted_date
+        expected_ei_notes = NessieUtils.get_e_and_i_notes student
         expected_sis_notes = NessieUtils.get_sis_notes student
 
-        expected_notes = expected_sis_notes + expected_boa_notes + expected_asc_notes
-        logger.warn "UID #{student.uid} has #{expected_sis_notes.length} Nessie notes and #{expected_boa_notes.length} BOA notes and #{expected_asc_notes.length.to_s} ASC notes"
+        expected_notes = expected_sis_notes + expected_ei_notes + expected_boa_notes + expected_asc_notes
+        logger.warn "UID #{student.uid} has #{expected_sis_notes.length} SIS notes, #{expected_asc_notes.length} ASC notes, #{expected_ei_notes.length} E&I notes, and #{expected_boa_notes.length} BOA notes and "
 
         students_with_asc_notes << student if expected_asc_notes.any?
         students_with_boa_notes << student if expected_boa_notes.any?
+        students_with_ei_notes << student if expected_ei_notes.any?
         students_with_sis_notes << student if expected_sis_notes.any?
 
         if expected_notes.any?
@@ -94,7 +97,8 @@ describe 'BOAC' do
                 it("shows the body as the subject on #{test_case}") { expect(visible_collapsed_note_data[:subject].gsub(/\W/, '') == note.body.gsub(/\W/, '')).to be true }
                 it("shows no body on #{test_case}") { expect(visible_expanded_note_data[:body].strip.empty?).to be true }
               else
-                expected_subj = "AthleticStudyCenteradvisor#{note.advisor.first_name}#{note.advisor.last_name}#{note.topics.first.capitalize if note.topics.any?}"
+                subj_prefix = expected_ei_notes.include?(note) ? 'CenterforEducationEquityandExcellenceadvisor' : 'AthleticStudyCenteradvisor'
+                expected_subj = "#{subj_prefix}#{note.advisor.first_name}#{note.advisor.last_name}#{note.topics.first.capitalize if note.topics.any?}"
                 it("shows the advisor and topic as the subject on #{test_case}") { expect(visible_collapsed_note_data[:subject].gsub(/\W/, '') == expected_subj).to be true }
                 it("shows no body on #{test_case}") { expect(visible_expanded_note_data[:body].strip.empty?).to be true }
               end
@@ -111,7 +115,11 @@ describe 'BOAC' do
                 end
 
               else
-                it("shows no advisor on #{test_case}") { expect(visible_expanded_note_data[:advisor]).to be_nil }
+                if note.advisor.last_name && !note.advisor.last_name.empty?
+                  it("shows no advisor on #{test_case}") { expect(visible_expanded_note_data[:advisor]).to be_nil }
+                else
+                  it("shows Graduate Intern on #{test_case}") { expect(visible_expanded_note_data[:advisor]).to eql('Graduate Intern') }
+                end
               end
 
               # Note topics
@@ -182,12 +190,13 @@ describe 'BOAC' do
 
               if (query = BOACUtils.generate_note_search_query(student, note))
                 @student_page.show_notes
+                initial_msg_count = @student_page.visible_message_ids.length
                 @student_page.search_within_timeline_notes(query[:string])
                 message_ids = @student_page.visible_message_ids
 
                 it("searches within academic timeline for #{query[:test_case]}") do
-                  expect(message_ids.length).to eql 1
-                  expect(message_ids.first).to eql query[:note].id
+                  expect(message_ids.length).to be < (initial_msg_count) unless initial_msg_count == 1
+                  expect(message_ids).to include(query[:note].id)
                 end
 
                 @student_page.clear_timeline_notes_search
@@ -233,6 +242,7 @@ describe 'BOAC' do
 
     it('has at least one test student with an ASC note') { expect(students_with_asc_notes.any?).to be true }
     it('has at least one test student with a BOA note') { expect(students_with_boa_notes.any?).to be true }
+    it('has at least one test student with an E&I note') { expect(students_with_ei_notes.any?).to be true }
     it('has at least one test student with a SIS note') { expect(students_with_sis_notes.any?).to be true }
 
     if downloadable_attachments.any?
