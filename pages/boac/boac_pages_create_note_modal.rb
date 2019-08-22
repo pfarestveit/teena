@@ -35,8 +35,8 @@ module BOACPagesCreateNoteModal
   # @param note [Note]
   def enter_note_body(note)
     logger.debug "Entering note body '#{note.body}'"
-    wait_for_element_and_type(note_body_text_area_elements[0], note.body)
-    note.body = note.body[1..-1] if note.body # For some reason, text Teena enters in the RTE loses its fist character
+    existing_text_length = note_body_text_area_elements[0].attribute('innerText').length
+    wait_for_textbox_and_type(note_body_text_area_elements[0], note.body, existing_text_length)
   end
 
 
@@ -240,6 +240,7 @@ module BOACPagesCreateNoteModal
       logger.debug "Find student SID '#{student.sis_id}' then add to batch note '#{note_batch.subject}'."
       wait_for_element_and_type(batch_note_add_student_input_element, "#{student.first_name} #{student.last_name} #{student.sis_id}")
       sleep Utils.click_wait
+      wait_until(3) { auto_suggest_option_elements.any? }
       student_link_element = auto_suggest_option_elements.find { |el| el.attribute('innerText') == "#{student.full_name} (#{student.sis_id})" }
       wait_for_update_and_click student_link_element
       added_student_element(student).when_present 1

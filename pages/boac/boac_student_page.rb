@@ -33,6 +33,7 @@ class BOACStudentPage
   elements(:major, :div, xpath: '//div[@id="student-bio-majors"]//div[@class="font-weight-bolder"]')
   elements(:college, :div, xpath: '//div[@id="student-bio-majors"]//div[@class="text-muted"]')
   div(:level, xpath: '//div[@id="student-bio-level"]/div')
+  div(:transfer, xpath: '//div[@id="student-bio-level"]/following-sibling::div/div[contains(.,"Transfer")]')
   div(:terms_in_attendance, id: 'student-bio-terms-in-attendance')
   div(:expected_graduation, id: 'student-bio-expected-graduation')
 
@@ -49,6 +50,7 @@ class BOACStudentPage
       :majors => (major_elements.map { |m| m.text.gsub('Major', '').strip }),
       :colleges => (college_elements.map { |c| c.text.strip }).reject(&:empty?),
       :level => (level.gsub("Level\n",'') if level?),
+      :transfer => (transfer.strip if transfer?),
       :terms_in_attendance => (terms_in_attendance if terms_in_attendance?),
       :expected_graduation => (expected_graduation.gsub('Expected graduation','').strip if expected_graduation?)
     }
