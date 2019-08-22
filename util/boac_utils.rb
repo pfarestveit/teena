@@ -159,7 +159,7 @@ class BOACUtils < Utils
               INNER JOIN university_depts on university_dept_members.university_dept_id = university_depts.id
               WHERE university_depts.dept_code = '#{dept.code}';"
     results = query_pg_db(boac_db_credentials, query)
-    results.map { |r| BOACUser.new({uid: r['uid'], can_access_canvas_data: r['can_access_canvas_data']}) }
+    results.map { |r| BOACUser.new({uid: r['uid'], can_access_canvas_data: r['can_access_canvas_data'], depts: [dept]}) }
   end
 
   # DATABASE - CURATED GROUPS

@@ -66,6 +66,7 @@ class BOACApiStudentPage
       :majors => (sis_profile && majors),
       :colleges => (sis_profile && colleges),
       :level => (sis_profile && (sis_profile['level'] && sis_profile['level']['description'])),
+      :transfer => (sis_profile && (sis_profile['transfer'])),
       :terms_in_attendance => (sis_profile && sis_profile['termsInAttendance'].to_s),
       :expected_grad_term_id => (sis_profile && sis_profile['expectedGraduationTerm'] && sis_profile['expectedGraduationTerm']['id']),
       :expected_grad_term_name => (sis_profile && sis_profile['expectedGraduationTerm'] && sis_profile['expectedGraduationTerm']['name']),
