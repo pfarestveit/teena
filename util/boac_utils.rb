@@ -328,43 +328,45 @@ class BOACUtils < Utils
     query = "SELECT * FROM notes WHERE sid = '#{student.sis_id}';"
     results = Utils.query_pg_db(boac_db_credentials, query)
     result_ids = results.map { |r| r['id'] }
+    notes_data = []
 
-    attach_query = "SELECT * FROM note_attachments WHERE note_id IN (#{result_ids.join(',')});"
-    attach_results = Utils.query_pg_db(boac_db_credentials, attach_query)
+    if result_ids.any?
+      attach_query = "SELECT * FROM note_attachments WHERE note_id IN (#{result_ids.join(',')});"
+      attach_results = Utils.query_pg_db(boac_db_credentials, attach_query)
 
-    topic_query = "SELECT note_id, topic FROM note_topics WHERE note_id IN (#{result_ids.join(',')});"
-    topic_results = Utils.query_pg_db(boac_db_credentials, topic_query)
+      topic_query = "SELECT note_id, topic FROM note_topics WHERE note_id IN (#{result_ids.join(',')});"
+      topic_results = Utils.query_pg_db(boac_db_credentials, topic_query)
 
-    notes_data = results.map do |r|
-      depts = BOACDepartments::DEPARTMENTS.select { |d| r['author_dept_codes'].include? d.code  }
-      advisor_data = {
-        :uid => r['author_uid'],
-        :full_name => r['author_name'],
-        :role => r['author_role'],
-        :depts => depts.map(&:name)
-      }
+      notes_data = results.map do |r|
+        depts = BOACDepartments::DEPARTMENTS.select { |d| r['author_dept_codes'].include? d.code  }
+        advisor_data = {
+            :uid => r['author_uid'],
+            :full_name => r['author_name'],
+            :role => r['author_role'],
+            :depts => depts.map(&:name)
+        }
 
-      note_data = {
-        :id => r['id'],
-        :subject => r['subject'],
-        :body => r['body'].gsub(/<("[^"]*"|'[^']*'|[^'">])*>/, '').gsub('&nbsp;', ''),
-        :advisor => BOACUser.new(advisor_data),
-        :created_date => Time.parse(r['created_at'].to_s).utc.localtime,
-        :updated_date => Time.parse(r['updated_at'].to_s).utc.localtime,
-        :deleted_date => (Time.parse(r['deleted_at'].to_s) if r['deleted_at'])
-      }
+        note_data = {
+            :id => r['id'],
+            :subject => r['subject'],
+            :body => r['body'].gsub(/<("[^"]*"|'[^']*'|[^'">])*>/, '').gsub('&nbsp;', ''),
+            :advisor => BOACUser.new(advisor_data),
+            :created_date => Time.parse(r['created_at'].to_s).utc.localtime,
+            :updated_date => Time.parse(r['updated_at'].to_s).utc.localtime,
+            :deleted_date => (Time.parse(r['deleted_at'].to_s) if r['deleted_at'])
+        }
 
+        attachments = attach_results.select { |a| a['note_id'] == note_data[:id] }.map do |a|
+          file_name = a['path_to_attachment'].split('/').last
+          # Boa attachment file names should be prefixed with a timestamp, but some older test file names are not
+          visible_file_name = file_name[0..15].gsub(/(20)\d{6}(_)\d{6}(_)/, '').empty? ? file_name[16..-1] : file_name
+          Attachment.new({:id => a['id'], :file_name => visible_file_name, :deleted_at => a['deleted_at']})
+        end
+        note_data.merge!(:attachments => attachments)
 
-      attachments = attach_results.select { |a| a['note_id'] == note_data[:id] }.map do |a|
-        file_name = a['path_to_attachment'].split('/').last
-        # Boa attachment file names should be prefixed with a timestamp, but some older test file names are not
-        visible_file_name = file_name[0..15].gsub(/(20)\d{6}(_)\d{6}(_)/, '').empty? ? file_name[16..-1] : file_name
-        Attachment.new({:id => a['id'], :file_name => visible_file_name, :deleted_at => a['deleted_at']})
+        topics = topic_results.select { |t| t['note_id'] == note_data[:id] }.map { |t| t['topic'] }
+        note_data.merge!(:topics => topics)
       end
-      note_data.merge!(:attachments => attachments)
-
-      topics = topic_results.select { |t| t['note_id'] == note_data[:id] }.map { |t| t['topic'] }
-      note_data.merge!(:topics => topics)
     end
 
     notes_data.map { |d| Note.new d }

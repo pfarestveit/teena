@@ -98,8 +98,8 @@ describe 'BOAC' do
                 it("shows no body on #{test_case}") { expect(visible_expanded_note_data[:body].strip.empty?).to be true }
               else
                 subj_prefix = expected_ei_notes.include?(note) ? 'CenterforEducationEquityandExcellenceadvisor' : 'AthleticStudyCenteradvisor'
-                expected_subj = "#{subj_prefix}#{note.advisor.first_name}#{note.advisor.last_name}#{note.topics.first.capitalize if note.topics.any?}"
-                it("shows the advisor and topic as the subject on #{test_case}") { expect(visible_collapsed_note_data[:subject].gsub(/\W/, '') == expected_subj).to be true }
+                expected_subj = ("#{subj_prefix}#{note.advisor.first_name}#{note.advisor.last_name}").downcase
+                it("shows the advisor as part of the subject on #{test_case}") { expect(visible_collapsed_note_data[:subject].gsub(/\W/, '').downcase).to include(expected_subj) }
                 it("shows no body on #{test_case}") { expect(visible_expanded_note_data[:body].strip.empty?).to be true }
               end
 
@@ -159,8 +159,8 @@ describe 'BOAC' do
                     it("shows no delete button for imported #{test_case}") { expect(has_delete_button).to be false }
                   end
 
-                  # TODO - get downloads working on Firefox, since the profile prefs aren't having the desired effect
-                  if @student_page.note_attachment_el(note, attach.file_name).tag_name == 'a' && "#{@driver.browser}" != 'firefox'
+                  # TODO - get downloads working on Firefox, since the profile prefs aren't having the desired effect; plus headless downloads don't work on Chrome
+                  if @student_page.note_attachment_el(note, attach.file_name).tag_name == 'a' && "#{@driver.browser}" != 'firefox' && !Utils.headless?
                     begin
                       file_size = @student_page.download_attachment(note, attach, student)
                       if file_size
