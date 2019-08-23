@@ -347,9 +347,13 @@ describe 'BOAC' do
     advisor_groups.each do |group|
 
       it "can be exported for group #{group.name}" do
-        @group_page.load_page group
-        csv = @group_page.export_student_list group
-        @group_page.verify_student_list_export(group.members, csv)
+        if Utils.headless?
+          logger.warn "Skipping group export test for #{group.name} because the browser is headless"
+        else
+          @group_page.load_page group
+          csv = @group_page.export_student_list group
+          @group_page.verify_student_list_export(group.members, csv)
+        end
       end
     end
   end
