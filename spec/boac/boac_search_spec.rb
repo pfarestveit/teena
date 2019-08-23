@@ -301,79 +301,84 @@ describe 'BOAC' do
               end
 
             else
-              logger.info 'Searching for a note posted by someone other than the logged in advisor'
-
-              # Posted by you
-              @homepage.select_notes_posted_by_you
-              @homepage.search_note note_search[:string]
-              you_posted_results_count = @search_results_page.note_results_count
-
-              if you_posted_results_count < 100
-                you_posted_match = @search_results_page.note_in_search_result?(note_search[:note])
-                it "returns no result when searching with the first #{notes_search_word_count} words in #{note_search[:test_case]} and posted by #{test_config.advisor.uid}" do
-                  expect(you_posted_match).to be_falsey
-                end
+              if note_search[:note].advisor.uid == 'UCBCONVERSION'
+                logger.warn 'Skipping test for note-posted-by because the available UID is UCBCONVERSION, which might or might not match the logged in user'
 
               else
-                logger.warn "Skipping a search string + posted-by-you test with note ID #{note_search[:note].id} because there are more than 100 results"
-              end
+                logger.info 'Searching for a note posted by someone other than the logged in advisor'
 
-              # Posted by anyone
-              @homepage.select_notes_posted_by_anyone
-              @homepage.search_note note_search[:string]
-              anyone_posted_results_count = @search_results_page.note_results_count
-
-              if anyone_posted_results_count < 100
-                anyone_posted_match = @search_results_page.note_in_search_result?(note_search[:note])
-                it "returns a result when searching with the first #{notes_search_word_count} words in #{note_search[:test_case]} and posted by anyone" do
-                  expect(anyone_posted_match).to be true
-                end
-
-              else
-                logger.warn "Skipping a search string + posted-by-anyone test with note ID #{note_search[:note].id} because there are more than 100 results"
-              end
-
-              # Posted by advisor name
-
-              if (author = NessieUtils.get_advising_note_author(note_search[:note].advisor.uid))
-
-                @homepage.expand_search_options_notes_subpanel
-
-                author_name = "#{author[:first_name]} #{author[:last_name]}"
-                @homepage.set_notes_author author_name
+                # Posted by you
+                @homepage.select_notes_posted_by_you
                 @homepage.search_note note_search[:string]
-                author_results_count = @search_results_page.note_results_count
-                if author_results_count < 100
-                  author_match = @search_results_page.note_in_search_result?(note_search[:note])
-                  it("returns a result when searching with the first #{notes_search_word_count} words in note ID #{note_search[:note].id} and author name #{author_name}") do
-                    expect(author_match).to be true
+                you_posted_results_count = @search_results_page.note_results_count
+
+                if you_posted_results_count < 100
+                  you_posted_match = @search_results_page.note_in_search_result?(note_search[:note])
+                  it "returns no result when searching with the first #{notes_search_word_count} words in #{note_search[:test_case]} and posted by #{test_config.advisor.uid}" do
+                    expect(you_posted_match).to be_falsey
                   end
+
                 else
-                  logger.warn "Skipping a search string + name test with note ID #{note_search[:note].id} because there are more than 100 results"
+                  logger.warn "Skipping a search string + posted-by-you test with note ID #{note_search[:note].id} because there are more than 100 results"
                 end
 
-                other_author = loop do
-                  a = all_advising_note_authors.sample
-                  break a unless a[:uid] == note_search[:note].advisor.uid
-                end
-
-                other_author_name = "#{other_author[:first_name]} #{other_author[:last_name]}"
-                @homepage.set_notes_author other_author_name
+                # Posted by anyone
+                @homepage.select_notes_posted_by_anyone
                 @homepage.search_note note_search[:string]
-                other_author_results_count = @search_results_page.note_results_count
-                if other_author_results_count < 100
-                  other_author_match = @search_results_page.note_in_search_result?(note_search[:note])
-                  it("returns no result when searching with the first #{notes_search_word_count} words in note ID #{note_search[:note].id} and non-matching author name #{other_author_name}") do
-                    expect(other_author_match).to be false
+                anyone_posted_results_count = @search_results_page.note_results_count
+
+                if anyone_posted_results_count < 100
+                  anyone_posted_match = @search_results_page.note_in_search_result?(note_search[:note])
+                  it "returns a result when searching with the first #{notes_search_word_count} words in #{note_search[:test_case]} and posted by anyone" do
+                    expect(anyone_posted_match).to be true
                   end
+
                 else
-                  logger.warn "Skipping a search string + name test with note ID #{note_search[:note].id} because there are more than 100 results"
+                  logger.warn "Skipping a search string + posted-by-anyone test with note ID #{note_search[:note].id} because there are more than 100 results"
                 end
 
-                @homepage.collapse_search_options_notes_subpanel
+                # Posted by advisor name
 
-              else
-                logger.warn "Bummer, note ID #{note_search[:note].id} has no identifiable author name"
+                if (author = NessieUtils.get_advising_note_author(note_search[:note].advisor.uid))
+
+                  @homepage.expand_search_options_notes_subpanel
+
+                  author_name = "#{author[:first_name]} #{author[:last_name]}"
+                  @homepage.set_notes_author author_name
+                  @homepage.search_note note_search[:string]
+                  author_results_count = @search_results_page.note_results_count
+                  if author_results_count < 100
+                    author_match = @search_results_page.note_in_search_result?(note_search[:note])
+                    it("returns a result when searching with the first #{notes_search_word_count} words in note ID #{note_search[:note].id} and author name #{author_name}") do
+                      expect(author_match).to be true
+                    end
+                  else
+                    logger.warn "Skipping a search string + name test with note ID #{note_search[:note].id} because there are more than 100 results"
+                  end
+
+                  other_author = loop do
+                    a = all_advising_note_authors.sample
+                    break a unless a[:uid] == note_search[:note].advisor.uid
+                  end
+
+                  other_author_name = "#{other_author[:first_name]} #{other_author[:last_name]}"
+                  @homepage.set_notes_author other_author_name
+                  @homepage.search_note note_search[:string]
+                  other_author_results_count = @search_results_page.note_results_count
+                  if other_author_results_count < 100
+                    other_author_match = @search_results_page.note_in_search_result?(note_search[:note])
+                    it("returns no result when searching with the first #{notes_search_word_count} words in note ID #{note_search[:note].id} and non-matching author name #{other_author_name}") do
+                      expect(other_author_match).to be false
+                    end
+                  else
+                    logger.warn "Skipping a search string + name test with note ID #{note_search[:note].id} because there are more than 100 results"
+                  end
+
+                  @homepage.collapse_search_options_notes_subpanel
+
+                else
+                  logger.warn "Bummer, note ID #{note_search[:note].id} has no identifiable author name"
+                end
               end
             end
 
