@@ -114,7 +114,7 @@ describe 'bCourses Official Sections tool' do
           @official_sections_page.maintenance_detail_element.when_visible Utils.short_wait
         end
 
-        has_bcourses_service_link = @official_sections_page.external_link_valid?(@driver, @official_sections_page.bcourses_service_link_element, 'bCourses | Educational Technology Services')
+        has_bcourses_service_link = @official_sections_page.external_link_valid?(@driver, @official_sections_page.bcourses_service_link_element, 'bCourses | Digital Learning Services')
         @official_sections_page.switch_to_canvas_iframe @driver
 
         it("shows a collapsed maintenance notice on course site ID #{site[:course].site_id}") { expect(has_maintenance_notice).to be true }
