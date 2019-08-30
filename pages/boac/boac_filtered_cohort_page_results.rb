@@ -80,6 +80,14 @@ module BOACFilteredCohortPageResults
     students.uniq.flatten.compact
   end
 
+  # Returns the student hashes that match a midpoint deficient grade filter
+  # @param test [BOACTestConfig]
+  # @param search_criteria [CohortFilter]
+  # @return [Array<Hash>]
+  def matching_mid_point_students(test, search_criteria)
+    search_criteria.mid_point_deficient ? (test.searchable_data.select { |u| u[:mid_point_deficient] }) : test.searchable_data
+  end
+
   # Returns the student hashes that match a transfer student filter
   # @param test [BOACTestConfig]
   # @param search_criteria [CohortFilter]
@@ -180,7 +188,7 @@ module BOACFilteredCohortPageResults
   # @param search_criteria [CohortFilter]
   # @return [Array<Hash>]
   def matching_asc_inactive_students(test, search_criteria)
-    search_criteria.asc_inactive ? (test.searchable_data.reject { |u| u[:active_asc] }) : test.searchable_data
+    search_criteria.asc_inactive ? (test.searchable_data.reject { |u| u[:active_asc] || u[:active_asc].nil? }) : test.searchable_data
   end
 
   # Returns the student hashes that match an ASC intensive filter
@@ -305,6 +313,7 @@ module BOACFilteredCohortPageResults
                matching_gpa_students(test, search_criteria),
                matching_level_students(test, search_criteria),
                matching_major_students(test, search_criteria),
+               matching_mid_point_students(test, search_criteria),
                matching_transfer_students(test, search_criteria),
                matching_units_students(test, search_criteria),
                matching_ethnicity_students(test, search_criteria),
