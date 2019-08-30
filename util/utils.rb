@@ -57,7 +57,8 @@ class Utils
     driver = case browser
 
       when 'chrome'
-        options = Selenium::WebDriver::Chrome::Options.new
+        options = {w3c: false}
+        options = Selenium::WebDriver::Chrome::Options.new(:options => options)
         if @config['webdriver']['chrome_profile']
           profile_dir = (profile ? profile : File.join(@config_dir, 'chrome-profile'))
           options.add_argument("user-data-dir=#{profile_dir}")
