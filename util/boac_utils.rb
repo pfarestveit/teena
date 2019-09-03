@@ -413,6 +413,14 @@ class BOACUtils < Utils
     attachment.id = Utils.query_pg_db_field(boac_db_credentials, query, 'id').last
   end
 
+  # Sets and returns a note template ID
+  # @param template [NoteTemplate]
+  # @return [Integer]
+  def self.get_note_template_id(template)
+    query = "SELECT * FROM note_templates WHERE title = #{template.title};"
+    template.id = Utils.query_pg_db_field(boac_db_credentials, query, 'id').last
+  end
+
   # Creates an admin authorized user
   # @param user [BOACUser]
   def self.create_auth_user(user)

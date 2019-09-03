@@ -159,6 +159,14 @@ class BOACTestConfig < TestConfig
     @searches = filters.map { |c| FilteredCohort.new({:name => "Test Cohort #{filters.index c} #{@id}", :search_criteria => c}) }
   end
 
+  def set_note_attachments
+    attachment_filenames = Dir.entries(Utils.assets_dir).reject { |f| %w(. .. .DS_Store).include? f }
+    @attachments = attachment_filenames.map do |f|
+      file = File.new Utils.asset_file_path(f)
+      Attachment.new({:file_name => f, :file_size => file.size})
+    end
+  end
+
   # Uses the secondary Chrome profile if config set to true
   # @return [String]
   def chrome_profile
@@ -258,23 +266,23 @@ class BOACTestConfig < TestConfig
 
   # Config for note management testing (create, edit, delete)
   def note_management
-    attachment_filenames = Dir.entries(Utils.assets_dir).reject { |f| %w(. .. .DS_Store).include? f }
-    @attachments = attachment_filenames.map do |f|
-      file = File.new Utils.asset_file_path(f)
-      Attachment.new({:file_name => f, :file_size => file.size})
-    end
+    set_note_attachments
     set_global_configs
   end
 
   # Config for testing batch note creation
   def batch_note_management
-    attachment_filenames = Dir.entries(Utils.assets_dir).reject { |f| %w(. .. .DS_Store).include? f }
-    @attachments = attachment_filenames.map do |f|
-      file = File.new Utils.asset_file_path(f)
-      Attachment.new({:file_name => f, :file_size => file.size})
-    end
+    set_note_attachments
     set_global_configs
     set_default_cohort
+  end
+
+  # Config for testing note templates
+  def note_templates
+    set_note_attachments
+    set_dept BOACDepartments::L_AND_S
+    set_advisor
+    set_students
   end
 
   # Config for user search testing
