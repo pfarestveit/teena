@@ -11,6 +11,9 @@
             "asc_intensive": true
         },
         {
+            "mid_point_deficient": true
+        },
+        {
             "coe_advisors": [
                 {"advisor": "2322"}
             ],

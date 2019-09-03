@@ -45,7 +45,7 @@ module BOACFilteredCohortPageFilters
       when 'cohortOwnerAcademicPlans'
         link_element(id: "My Students-#{filter_option}")
       else
-        link_element(xpath: "//div[@class=\"cohort-filter-draft-column-02\"]//a[contains(.,\"#{filter_option}\")]")
+        link_element(xpath: "//div[@class=\"cohort-filter-draft-column-02 mt-1\"]//a[contains(.,\"#{filter_option}\")]")
     end
   end
 
@@ -73,8 +73,8 @@ module BOACFilteredCohortPageFilters
     click_new_filter_button
     wait_for_update_and_click new_filter_option(filter_key)
 
-    # Inactive, Intensive, Probation, and Underrepresented Minority have no sub-options
-    no_options = %w(transfer underrepresented isInactiveAsc inIntensiveCohort isInactiveCoe coeUnderrepresented coeProbation)
+    # Some have no sub-options
+    no_options = %w(midpointDeficient transfer underrepresented isInactiveAsc inIntensiveCohort isInactiveCoe coeUnderrepresented coeProbation)
     choose_new_filter_sub_option(filter_key, filter_option) unless no_options.include? filter_key
     wait_for_update_and_click unsaved_filter_add_button_element
     unsaved_filter_apply_button_element.when_present Utils.short_wait
@@ -114,6 +114,7 @@ module BOACFilteredCohortPageFilters
     cohort.search_criteria.level.each { |l| select_new_filter('levels', l) } if cohort.search_criteria.level
     cohort.search_criteria.units_completed.each { |u| select_new_filter('unitRanges', u) } if cohort.search_criteria.units_completed
     cohort.search_criteria.major.each { |m| select_new_filter('majors', m) } if cohort.search_criteria.major
+    select_new_filter 'midpointDeficient' if cohort.search_criteria.mid_point_deficient
     select_new_filter 'transfer' if cohort.search_criteria.transfer_student
     cohort.search_criteria.expected_grad_terms.each { |t| select_new_filter('expectedGradTerms', t) } if cohort.search_criteria.expected_grad_terms
     select_new_filter('lastNameRange', cohort.search_criteria.last_name) if cohort.search_criteria.last_name
@@ -203,6 +204,7 @@ module BOACFilteredCohortPageFilters
         filters.gpa.each { |g| existing_filter_element('GPA', g).exists? } if filters.gpa&.any?
         filters.level.each { |l| existing_filter_element('Level', l).exists? } if filters.level&.any?
         filters.major.each { |m| existing_filter_element('Major', m).exists? } if filters.major&.any?
+        existing_filter_element('Midpoint Deficient Grade').exists? if filters.mid_point_deficient
         existing_filter_element('Transfer Student').exists? if filters.transfer_student
         filters.units_completed.each { |u| existing_filter_element('Units Completed', u).exists? } if filters.units_completed&.any?
 

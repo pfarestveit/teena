@@ -89,7 +89,7 @@ class NessieUtils < Utils
         :uid => r['uid'],
         :sid => r['sid'],
         :dept => dept,
-        :active_asc => (true if group_codes_with_status && (group_codes_with_status.reject { |c| c.split(',')[1] == 'false' }).any?),
+        :active_asc => (group_codes_with_status && (group_codes_with_status.reject { |c| c.split(',')[1] == 'false' }).any?),
         :first_name => r['first_name'],
         :last_name => r['last_name'],
         :group_code => (group_codes_with_status && (group_codes_with_status.map { |c| c.split(',').first }).join(' '))
@@ -138,7 +138,7 @@ class NessieUtils < Utils
             :uid => k,
             :sis_id => v[0].sis_id,
             :depts => (depts ? depts : v[0].depts),
-            :active_asc => (active_asc ? active_asc : v[0].active_asc),
+            :active_asc => (active_asc && v[0].active_asc),
             :sports => (sports ? sports : v[0].sports),
             :first_name => v[0].first_name,
             :last_name => v[0].last_name,
@@ -167,7 +167,7 @@ class NessieUtils < Utils
                     student_academic_status.first_name AS first_name,
                     student_academic_status.last_name AS last_name
              FROM boac_advising_asc.students
-             LEFT JOIN student.student_academic_status ON student.student_academic_status.sid = boac_advising_asc.students.sid
+             LEFT JOIN student.student_academic_status ON boac_advising_asc.students.sid = student.student_academic_status.sid
                WHERE student.student_academic_status.sid IS NOT NULL
              GROUP BY students.sid, student_academic_status.uid, student_academic_status.first_name, student_academic_status.last_name
              ORDER BY students.sid;"
@@ -269,31 +269,39 @@ class NessieUtils < Utils
 
     # Get student data that is not already associated with the users. This will probably return more students than those present
     # in the combined CoE and ASC students tables.
-    query = 'SELECT student.student_profiles.sid AS sid,
-                    student.student_profiles.profile AS profile,
-                    student.student_academic_status.gpa AS gpa,
-                    student.student_academic_status.level AS level_code,
-                    student.student_majors.major AS majors,
-                    boac_advising_asc.students.intensive AS intensive_asc,
-                    boac_advising_coe.students.advisor_ldap_uid AS advisor,
-                    boac_advising_coe.students.gender AS coe_gender,
-                    boac_advising_coe.students.ethnicity AS coe_ethnicity,
-                    boac_advising_coe.students.minority AS minority,
-                    boac_advising_coe.students.did_prep AS prep,
-                    boac_advising_coe.students.prep_eligible AS prep_elig,
-                    boac_advising_coe.students.did_tprep AS t_prep,
-                    boac_advising_coe.students.tprep_eligible AS t_prep_elig,
-                    boac_advising_coe.students.probation AS probation,
-                    boac_advising_coe.students.status AS status_coe,
-                    boac_advisor.advisor_students.advisor_sid AS advisor_sid,
-                    boac_advisor.advisor_students.academic_plan_code AS advisor_plan_code
-             FROM student.student_profiles
-             LEFT JOIN student.student_majors ON student.student_majors.sid = student.student_profiles.sid
-             LEFT JOIN student.student_academic_status ON student.student_academic_status.sid = student.student_profiles.sid
-             LEFT JOIN boac_advising_asc.students ON boac_advising_asc.students.sid = student.student_profiles.sid
-             LEFT JOIN boac_advising_coe.students ON boac_advising_coe.students.sid = student.student_profiles.sid
-             LEFT JOIN boac_advisor.advisor_students ON boac_advisor.advisor_students.student_sid = student.student_profiles.sid
-             ORDER BY sid;'
+    query = "SELECT student.student_profiles.sid AS sid,
+                student.student_profiles.profile AS profile,
+                student.student_academic_status.gpa AS gpa,
+                student.student_academic_status.level AS level_code,
+                student.student_majors.major AS majors,
+        				student.student_enrollment_terms.midpoint_deficient_grade AS mid_point_deficient,
+                boac_advising_asc.students.intensive AS intensive_asc,
+                boac_advising_coe.students.advisor_ldap_uid AS advisor,
+                boac_advising_coe.students.gender AS coe_gender,
+                boac_advising_coe.students.ethnicity AS coe_ethnicity,
+                boac_advising_coe.students.minority AS minority,
+                boac_advising_coe.students.did_prep AS prep,
+                boac_advising_coe.students.prep_eligible AS prep_elig,
+                boac_advising_coe.students.did_tprep AS t_prep,
+                boac_advising_coe.students.tprep_eligible AS t_prep_elig,
+                boac_advising_coe.students.probation AS probation,
+                boac_advising_coe.students.status AS status_coe,
+                boac_advisor.advisor_students.advisor_sid AS advisor_sid,
+                boac_advisor.advisor_students.academic_plan_code AS advisor_plan_code
+         FROM student.student_profiles
+         LEFT JOIN student.student_majors
+           ON student.student_majors.sid = student.student_profiles.sid
+         LEFT JOIN student.student_academic_status
+           ON student.student_academic_status.sid = student.student_profiles.sid
+         LEFT JOIN boac_advising_asc.students
+           ON boac_advising_asc.students.sid = student.student_profiles.sid
+         LEFT JOIN boac_advising_coe.students
+           ON boac_advising_coe.students.sid = student.student_profiles.sid
+         LEFT JOIN boac_advisor.advisor_students
+           ON boac_advisor.advisor_students.student_sid = student.student_profiles.sid
+         LEFT JOIN student.student_enrollment_terms
+           ON student.student_profiles.sid = student.student_enrollment_terms.sid AND student.student_enrollment_terms.term_id = '#{BOACUtils.term_code}'
+         ORDER BY sid;"
 
     results = query_pg_db(nessie_pg_db_credentials, query)
 
@@ -326,6 +334,7 @@ class NessieUtils < Utils
         :level => level,
         :units_completed => (cumulative_units ? cumulative_units : nil),
         :major => (v.map { |h| h['majors'] }).uniq.compact,
+        :mid_point_deficient => (v[0]['mid_point_deficient'] == 't'),
         :transfer_student => (sis_profile && sis_profile['transfer']),
         :expected_grad_term => (expected_grad && expected_grad['id'].to_s),
         :gender => (demographics_profile && demographics_profile['gender']),
