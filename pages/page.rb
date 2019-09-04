@@ -291,4 +291,9 @@ module Page
     browser.action.send_keys(:backspace).perform
   end
 
+  # Hits the Tab key
+  def hit_tab
+    browser.action.send_keys(:tab).perform
+  end
+
 end

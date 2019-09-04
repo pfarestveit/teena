@@ -13,7 +13,7 @@ module BOACPagesCreateNoteModal
   text_area(:new_note_subject_input, id: 'create-note-subject')
 
   # Enters the subject text for a new note
-  # @param note [Note]
+  # @param note [NoteTemplate]
   def enter_new_note_subject(note)
     logger.debug "Entering new note subject '#{note.subject}'"
     wait_for_element_and_type(new_note_subject_input_element, note.subject)
@@ -24,6 +24,7 @@ module BOACPagesCreateNoteModal
     unless add_topic_select?
       logger.debug 'Clicking the Advanced Note Options button'
       wait_for_update_and_click adv_note_options_button_element
+      create_template_button_element.when_present 1
     end
   end
 
@@ -32,7 +33,7 @@ module BOACPagesCreateNoteModal
   elements(:note_body_text_area, :text_area, xpath: '//div[@role="textbox"]')
 
   # Enters the body text for a new note
-  # @param note [Note]
+  # @param note [NoteTemplate]
   def enter_note_body(note)
     logger.debug "Entering note body '#{note.body}'"
     existing_text_length = note_body_text_area_elements[0].attribute('innerText').length
@@ -75,7 +76,7 @@ module BOACPagesCreateNoteModal
   # @param topic [Topic]
   # @return [PageObject::Element::ListItem]
   def topic_pill(note, topic)
-    list_item_element(xpath: (note.id ? topic_xpath_saved_note(note, topic) : topic_xpath_unsaved_note(topic)))
+    list_item_element(xpath: topic_xpath_unsaved_note(topic))
   end
 
   # Returns a topic remove button for a note, saved or unsaved
@@ -83,11 +84,11 @@ module BOACPagesCreateNoteModal
   # @param topic [Topic]
   # @return [PageObject::Element::Button]
   def topic_remove_button(note, topic)
-    button_element(xpath: "#{note.id ? topic_xpath_saved_note(note, topic) : topic_xpath_unsaved_note(topic)}//button")
+    button_element(xpath: "#{topic_xpath_unsaved_note(topic)}//button")
   end
 
   # Adds topics to a new or existing note.
-  # @param note [Note]
+  # @param note [NoteTemplate]
   # @param topics [Array<Topic>]
   def add_topics(note, topics)
     logger.info "Adding topics #{topics.map &:name} to note ID '#{note.id}'"
@@ -101,7 +102,7 @@ module BOACPagesCreateNoteModal
   end
 
   # Removes topics from a new or existing note
-  # @param note [Note]
+  # @param note [NoteTemplate]
   # @param topics [Array<Topic>]
   def remove_topics(note, topics)
     logger.info "Removing topics #{topics.map &:name} from note ID '#{note.id}'"
@@ -117,7 +118,7 @@ module BOACPagesCreateNoteModal
   # Attachments
 
   button(:adv_note_options_button, id: 'btn-to-advanced-note-options')
-  text_area(:new_note_attach_input, xpath: '//div[@class="modal-full-screen"]//input[@type="file"]')
+  text_area(:new_note_attach_input, xpath: '//div[@id="new-note-modal-container"]//input[@type="file"]')
   span(:note_attachment_size_msg, xpath: '//span[contains(text(),"Attachments are limited to 20 MB in size.")]')
   span(:note_dupe_attachment_msg, xpath: '//span[contains(text(),"Another attachment has the name")]')
 
@@ -128,7 +129,7 @@ module BOACPagesCreateNoteModal
   end
 
   # Adds attachments to an unsaved note
-  # @param note [Note]
+  # @param note [NoteTemplate]
   # @param attachments [Array<Attachment>]
   def add_attachments_to_new_note(note, attachments)
     show_adv_note_options
@@ -142,7 +143,7 @@ module BOACPagesCreateNoteModal
   end
 
   # Removes attachments from an unsaved note
-  # @param note [Note]
+  # @param note [NoteTemplate]
   # @param attachments [Array<Attachment>]
   def remove_attachments_from_new_note(note, attachments)
     attachments.each do |attach|
@@ -170,6 +171,7 @@ module BOACPagesCreateNoteModal
   button(:new_note_modal_cancel_button, id: 'cancel-new-note-modal')
   button(:new_note_cancel_button, id: 'create-note-cancel')
   button(:confirm_delete_or_discard_button, id: 'are-you-sure-confirm')
+  button(:cancel_delete_or_discard_button, id: 'are-you-sure-cancel')
 
   # Clicks the cancel new note button when the new note modal is in reduced size
   def click_cancel_new_note_modal
@@ -185,6 +187,10 @@ module BOACPagesCreateNoteModal
   # Hits the confirm delete/discard button for an uncreated note or removed attachment, unless the browser is Firefox
   def confirm_delete_or_discard
     wait_for_update_and_click confirm_delete_or_discard_button_element unless "#{browser.browser}" == 'firefox'
+  end
+
+  def cancel_delete_or_discard
+    wait_for_update_and_click cancel_delete_or_discard_button_element
   end
 
 
@@ -364,6 +370,158 @@ module BOACPagesCreateNoteModal
       curated_group.members.each { |student| students_by_sid[student.sis_id] = student }
     end
     students_by_sid.values
+  end
+
+  #### TEMPLATES ####
+
+  button(:templates_button, id: 'my-templates-button__BV_toggle_')
+  elements(:template_select_option, xpath: '//a[contains(@id, "load-note-template-")]')
+  span(:no_templates_msg, xpath: '//div[contains(text(), "You have no saved templates.")]')
+  div(:dupe_template_title_msg, xpath: '//div[contains(text(), "You have an existing template with this name. Please choose a different name.")]')
+
+  # Creation
+
+  button(:create_template_button, xpath: '//button[contains(text(), "Save as template")]')
+  text_area(:template_title_input, id: 'template-title-input')
+  button(:cancel_template_button, id: 'cancel-template-create')
+  button(:create_template_confirm_button, id: 'create-template-confirm')
+
+  # Clicks the Create New Template button
+  def click_create_template
+    logger.info 'Clicking create template button'
+    wait_for_update_and_click create_template_button_element
+    template_title_input_element.when_present 1
+  end
+
+  # Clicks the Save button on the name-your-template modal
+  def click_save_template
+    logger.info 'Saving the template'
+    wait_for_update_and_click create_template_confirm_button_element
+  end
+
+  # Clicks the Cancel button on the name-your-template modal
+  def click_cancel_template
+    logger.info 'Canceling the template'
+    wait_for_update_and_click cancel_template_button_element
+  end
+
+  # Enters a template title on the name-your-template modal
+  def enter_template_title(template)
+    logger.info "Entering template title '#{template.title}'"
+    wait_for_element_and_type(template_title_input_element, template.title)
+  end
+
+  # Creates a template from a note
+  # @param template [NoteTemplate]
+  # @param note [Note]
+  def create_template(template, note)
+    click_create_template
+    enter_template_title template
+    click_save_template
+    get_new_template_id template
+    template.subject = note.subject
+    template.body = note.body
+    template.topics = note.topics
+    template.attachments = note.attachments
+  end
+
+  # Waits for a template record to be created and sets its ID
+  # @param template [NoteTemplate]
+  def get_new_template_id(template)
+    start = Time.now
+    wait_until(15) { template.id = template.get_note_template_id }
+    logger.warn "Note template #{template.id} was created in #{Time.now - start} seconds"
+  rescue
+    logger.debug 'Timed out waiting for note template to be created'
+    fail
+  end
+
+  # Clicks the Templates button
+  def click_templates_button
+    logger.info 'Clicking the Templates button'
+    wait_for_update_and_click templates_button_element
+  end
+
+  # Returns the titles of the user's templates
+  # @return [Array<String>]
+  def template_options
+    template_select_option_elements.map &:text
+  end
+
+  # Returns the element for selecting a given template
+  # @param template [NoteTemplate]
+  # @return [PageObject::Elements::Link]
+  def template_option(template)
+    link_element(xpath: "//a[@id=\"load-note-template-#{template.id}\"][@title=\"#{template.title}\"]")
+  end
+
+  # @param template [NoteTemplate]
+  # @param note [Note]
+  def apply_template(template, note)
+    logger.info "Applying template ID #{template.id}"
+    note.subject = template.subject
+    note.body = template.body
+    note.topics = template.topics
+    note.attachments = template.attachments
+  end
+
+  # Edit
+
+  span(:edit_template_heading, xpath: '//span[text()="Edit Template"]')
+  button(:update_template_button, id: 'btn-update-template')
+
+  # Clicks the edit button for a given template
+  # @param template [NoteTemplate]
+  def click_edit_template(template)
+    logger.info "Editing template ID #{template.id}"
+    click_templates_button unless template_select_option_elements.any?(&:visible?)
+    sleep Utils.click_wait
+    wait_for_update_and_click button_element(id: "btn-edit-note-template-#{template.id}")
+  end
+
+  def click_update_template
+    logger.info 'Clicking the Update Template button'
+    wait_for_update_and_click update_template_button_element
+  end
+
+  # Rename
+
+  text_area(:rename_template_input, id: 'rename-template-input')
+  button(:save_template_rename_button, id: 'rename-template-confirm')
+  button(:cancel_template_rename_button, id: 'cancel-rename-template')
+
+  def click_rename_template(template)
+    logger.info "Renaming template ID #{template.id} to #{template.title}"
+    click_templates_button unless template_select_option_elements.any?(&:visible?)
+    wait_for_update_and_click button_element(id: "btn-rename-note-template-#{template.id}")
+  end
+
+  def rename_template(template)
+    click_rename_template template
+    wait_for_element_and_type(rename_template_input_element, template.title)
+    wait_for_update_and_click save_template_rename_button_element
+    rename_template_input_element.when_not_present 1
+  end
+
+  def click_cancel_template_rename
+    wait_for_update_and_click cancel_template_rename_button_element
+  end
+
+  # Delete
+
+  # Clicks the delete button for a given template
+  # @param template [NoteTemplate]
+  def click_delete_template(template)
+    click_templates_button unless template_select_option_elements.any?(&:visible?)
+    wait_for_update_and_click button_element(id: "btn-delete-note-template-#{template.id}")
+  end
+
+  # Deletes a given template
+  # @para template [NoteTemplate]
+  def delete_template(template)
+    logger.info "Deleting template ID #{template.id}"
+    click_delete_template template
+    wait_for_update_and_click confirm_delete_or_discard_button_element unless "#{browser.browser}" == 'firefox'
   end
 
 end

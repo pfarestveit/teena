@@ -1,12 +1,7 @@
-class Note
+class Note < NoteTemplate
 
-  attr_accessor :id,
-                :subject,
-                :body,
-                :source_body_empty,
+  attr_accessor :source_body_empty,
                 :advisor,
-                :topics,
-                :attachments,
                 :created_date,
                 :updated_date,
                 :deleted_date
