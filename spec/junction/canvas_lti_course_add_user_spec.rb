@@ -48,6 +48,7 @@ describe 'bCourses Find a Person to Add', order: :defined do
 
     it 'include a link to a help page on the Everyone tab' do
       @canvas.help_finding_users_link_element.when_visible Utils.short_wait
+      sleep 1
       expect(@canvas.external_link_valid?(@driver, @canvas.help_finding_users_link_element, 'IT - How do I add people to my site?')).to be true
     end
 
@@ -69,7 +70,11 @@ describe 'bCourses Find a Person to Add', order: :defined do
       @canvas.click_find_person_to_add @driver
     end
 
-    before(:each) { @course_add_user_page.switch_to_canvas_iframe @driver unless @course_add_user_page.page_heading? }
+    before(:each) do
+      @course_add_user_page.page_heading_element.when_present Utils.short_wait
+    rescue
+      @course_add_user_page.switch_to_canvas_iframe @driver
+    end
 
     it 'allows the user to search by name' do
       @course_add_user_page.search('Bear', 'Last Name, First Name')
