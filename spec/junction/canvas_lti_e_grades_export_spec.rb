@@ -88,7 +88,7 @@ describe 'bCourses E-Grades Export', order: :defined do
     end
 
     it 'allows the user to Cancel' do
-      @e_grades_export_page.wait_for_load_and_click_js @e_grades_export_page.cancel_button_element
+      @e_grades_export_page.wait_for_load_and_click @e_grades_export_page.cancel_button_element
       @canvas.wait_until(Utils.medium_wait) { @canvas.current_url == "#{Utils.canvas_base_url}/courses/#{course.site_id}/gradebook" }
     end
 
