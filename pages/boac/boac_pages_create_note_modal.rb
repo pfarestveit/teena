@@ -21,7 +21,7 @@ module BOACPagesCreateNoteModal
 
   # Clicks the advanced options button to expose all note features
   def show_adv_note_options
-    unless add_topic_button?
+    unless add_topic_select?
       logger.debug 'Clicking the Advanced Note Options button'
       wait_for_update_and_click adv_note_options_button_element
     end
@@ -45,7 +45,6 @@ module BOACPagesCreateNoteModal
   text_area(:topic_input, id: 'add-note-topic')
   select_list(:add_topic_select, id: 'add-topic-select-list')
   elements(:topic_option, :option, xpath: '//select[@id="add-topic-select-list"]/option')
-  button(:add_topic_button, id: 'add-topic-button')
   elements(:topic_remove_btn, :button, xpath: '//li[contains(@id, "remove-note-")]')
 
   # Returns all the canned note topic options shown on the new or edit note UI
@@ -96,7 +95,6 @@ module BOACPagesCreateNoteModal
     topics.each do |topic|
       logger.debug "Adding topic '#{topic.name}'"
       wait_for_element_and_select_js(add_topic_select_element, topic.name)
-      wait_for_update_and_click add_topic_button_element
       topic_pill(note, topic).when_visible Utils.short_wait
       note.topics << topic
     end
