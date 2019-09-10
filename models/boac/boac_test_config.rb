@@ -279,10 +279,9 @@ class BOACTestConfig < TestConfig
 
   # Config for testing note templates
   def note_templates
+    set_global_configs BOACDepartments::L_AND_S
+    set_default_cohort
     set_note_attachments
-    set_dept BOACDepartments::L_AND_S
-    set_advisor
-    set_students
   end
 
   # Config for user search testing
