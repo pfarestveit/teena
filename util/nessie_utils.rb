@@ -306,7 +306,8 @@ class NessieUtils < Utils
     results = query_pg_db(nessie_pg_db_credentials, query)
 
     # Create a hash for each student in the results. Multiple majors mean multiple rows, so merge them.
-    student_hashes = results.group_by { |h1| h1['sid'] }.map do |k,v|
+    student_hashes = {}
+    results.group_by { |h1| h1['sid'] }.each do |k,v|
       logger.debug "Getting data for SID #{k}"
       level = case v[0]['level_code']
                 when '10'
@@ -328,7 +329,7 @@ class NessieUtils < Utils
       expected_grad = sis_profile && sis_profile['expectedGraduationTerm']
       cumulative_units = sis_profile && sis_profile['cumulativeUnits']
       demographics_profile = profile && profile['demographics']
-      {
+      student_hashes[k] = {
         :sid => k,
         :gpa => v[0]['gpa'],
         :level => level,
@@ -358,7 +359,7 @@ class NessieUtils < Utils
     # Find the student hash associated with each CoE and ASC user and combine it with the data already known about the user.
     filtered_student_hashes = users.map do |user|
       logger.debug "Completing data for SID #{user.sis_id}"
-      user_hash = student_hashes.find { |h| h[:sid] == user.sis_id }
+      user_hash = student_hashes[user.sis_id]
       # Get the squad names to use as search criteria if the students are athletes
       user_squad_names = user.sports.map do |squad_code|
         squad = Squad::SQUADS.find { |s| s.code == squad_code }
