@@ -109,7 +109,7 @@ class BOACStudentPage
 
   button(:holds_button, id: 'timeline-tab-hold')
   button(:show_hide_holds_button, id: 'timeline-tab-hold-previous-messages')
-  elements(:hold, :div, xpath: '//div[contains(@id,"timeline-tab-hold-message")]/span[2]')
+  elements(:hold, :div, xpath: '//div[contains(@id,"timeline-tab-hold-message")]/span[1]')
 
   # Returns an array of visible hold messages with all whitespace removed
   # @return [Array<String>]
@@ -124,7 +124,7 @@ class BOACStudentPage
 
   button(:alerts_button, id: 'timeline-tab-alert')
   button(:show_hide_alerts_button, id: 'timeline-tab-alert-previous-messages')
-  elements(:alert, :div, xpath: '//div[contains(@id,"timeline-tab-alert-message")]/span[2]')
+  elements(:alert, :div, xpath: '//div[contains(@id,"timeline-tab-alert-message")]/span[1]')
 
   # Returns an array of visible alert messages
   # @return [Array<String>]

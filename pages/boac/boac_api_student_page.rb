@@ -63,8 +63,7 @@ class BOACApiStudentPage
       :term_units_max => (sis_profile && sis_profile['currentTerm'] && sis_profile['currentTerm']['unitsMaxOverride']),
       :cumulative_units => (sis_profile && ((!sis_profile['cumulativeUnits'] || sis_profile['cumulativeUnits'].zero?) ? '--' : formatted_units(sis_profile['cumulativeUnits']))),
       :cumulative_gpa => (sis_profile && (sis_profile['cumulativeGPA'].nil? ? '--' : (sprintf '%.3f', sis_profile['cumulativeGPA']).to_s)),
-      :majors => (sis_profile && majors),
-      :colleges => (sis_profile && colleges),
+      :majors => ((sis_profile && sis_profile['plans']) || []),
       :level => (sis_profile && (sis_profile['level'] && sis_profile['level']['description'])),
       :transfer => (sis_profile && (sis_profile['transfer'])),
       :terms_in_attendance => (sis_profile && sis_profile['termsInAttendance'].to_s),
@@ -76,15 +75,6 @@ class BOACApiStudentPage
       :reqt_institutions => (sis_profile && degree_progress && degree_progress[:institutions]),
       :reqt_cultures => (sis_profile && degree_progress && degree_progress[:cultures])
     }
-  end
-
-  def majors
-    sis_profile['plans'] && sis_profile['plans'].map { |p| p['description'] }
-  end
-
-  def colleges
-    colleges = sis_profile['plans'] && sis_profile['plans'].map { |p| p['program'] }
-    colleges.compact if colleges
   end
 
   def formatted_units(units_as_num)

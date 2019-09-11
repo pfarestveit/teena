@@ -110,7 +110,8 @@ begin
       if analytics_api_sis_data
         row = [student.uid, student.full_name, analytics_api_sis_data[:preferred_name], analytics_api_sis_data[:email],
                analytics_api_sis_data[:phone], analytics_api_sis_data[:cumulative_units], analytics_api_sis_data[:cumulative_gpa], analytics_api_sis_data[:level],
-               analytics_api_sis_data[:colleges] && analytics_api_sis_data[:colleges] * '; ', analytics_api_sis_data[:majors] && analytics_api_sis_data[:majors] * '; ',
+               analytics_api_sis_data[:majors] && (analytics_api_sis_data[:majors].map {|m| m['program']}) * '; ',
+               analytics_api_sis_data[:majors] && (analytics_api_sis_data[:majors].map {|m| m['description']}) * '; ',
                analytics_api_sis_data[:terms_in_attendance], analytics_api_sis_data[:reqt_writing], analytics_api_sis_data[:reqt_history],
                analytics_api_sis_data[:reqt_institutions], analytics_api_sis_data[:reqt_cultures], analytics_api_sis_data[:expected_grad_term_name], alert_msgs]
         Utils.add_csv_row(user_profile_sis_data, row)
