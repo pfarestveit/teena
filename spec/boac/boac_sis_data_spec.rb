@@ -59,10 +59,10 @@ describe 'BOAC' do
 
         # TODO - shows withdrawal indicator if withdrawn
 
-        if api_sis_profile_data[:majors]
+        active_majors = api_sis_profile_data[:majors].map { |m| m['description'] if m['status'] == 'Active' }.compact.sort
+        if active_majors.any?
           it "shows the majors for UID #{student.uid} on the #{test.default_cohort.name} page" do
-            expect(cohort_page_sis_data[:majors]).to eql(api_sis_profile_data[:majors].sort)
-            expect(cohort_page_sis_data[:majors]).not_to be_empty
+            expect(cohort_page_sis_data[:majors]).to eql(active_majors)
           end
         else
           it("shows no majors for UID #{student.uid} on the #{test.default_cohort.name} page") { expect(cohort_page_sis_data[:majors]).to be_nil }
@@ -127,18 +127,15 @@ describe 'BOAC' do
           expect(student_page_sis_data[:cumulative_gpa]).not_to be_empty
         end
 
-        if api_sis_profile_data[:majors]
+        if api_sis_profile_data[:majors].any?
           it "shows the majors for UID #{student.uid} on the student page" do
-            expect(student_page_sis_data[:majors]).to eql(api_sis_profile_data[:majors])
-            expect(student_page_sis_data[:majors]).not_to be_empty
+            expect(student_page_sis_data[:majors]).to eql(api_sis_profile_data[:majors].map { |m| m['description'] })
+            expect(student_page_sis_data[:colleges]).to eql(api_sis_profile_data[:majors].map { |m| m['program'] })
           end
         else
           it("shows no majors for UID #{student.uid} on the student page") { expect(student_page_sis_data[:majors]).to be_empty }
+          it("shows no colleges for UID #{student.uid} on the student page") { expect(student_page_sis_data[:colleges].all?(&:empty?)).to be true }
         end
-
-        api_sis_profile_data[:colleges] ?
-            (it("shows the colleges for UID #{student.uid} on the student page") { expect(student_page_sis_data[:colleges]).to eql(api_sis_profile_data[:colleges]) }) :
-            (it("shows no colleges for UID #{student.uid} on the student page") { expect(student_page_sis_data[:colleges].all?(&:empty?)).to be true })
 
         if api_sis_profile_data[:level]
           it "shows the academic level for UID #{student.uid} on the student page" do
