@@ -61,7 +61,7 @@ class BOACClassListViewPage
   # @param student [BOACUser]
   # @return [String]
   def student_mid_point_grade(student)
-    el = span_element(xpath: "#{student_xpath student}/td[8]//span")
+    el = span_element(xpath: "#{student_xpath student}/td[@data-label='Mid']//span")
     el.text if el.exists?
   end
 
@@ -69,7 +69,7 @@ class BOACClassListViewPage
   # @param student [BOACUser]
   # @return [String]
   def student_grading_basis(student)
-    el = span_element(xpath: "#{student_xpath student}/td[9]//span[@class='cohort-grading-basis']")
+    el = span_element(xpath: "#{student_xpath student}/td[@data-label='Final']//span[@class='cohort-grading-basis']")
     el.text if el.exists?
   end
 
@@ -77,7 +77,7 @@ class BOACClassListViewPage
   # @param student [BOACUser]
   # @return [String]
   def student_final_grade(student)
-    el = span_element(xpath: "#{student_xpath student}/td[9]//span")
+    el = span_element(xpath: "#{student_xpath student}/td[@data-label='Final']//span")
     el.text if el.exists?
   end
 
@@ -103,7 +103,7 @@ class BOACClassListViewPage
   # @param node [Integer]
   # @return [String]
   def site_code(student, node)
-    el = div_element(xpath: "#{student_xpath student}/td[4]/div/div/div[#{node}]/strong")
+    el = div_element(xpath: "#{student_xpath student}/td[@data-label='Course Site(s)']/div/div/div[#{node}]/strong")
     el.text if el.exists?
   end
 
@@ -112,7 +112,7 @@ class BOACClassListViewPage
   # @param node [Integer]
   # @return [String]
   def assigns_submit_xpath(student, node)
-    "#{student_xpath student}/td[5]/div/div/div[#{node}]"
+    "#{student_xpath student}/td[@data-label='Assignments Submitted']/div/div/div[#{node}]"
   end
 
   # Returns a student's assignments-submitted count for a site at a given node
@@ -157,7 +157,7 @@ class BOACClassListViewPage
   # @param node [Integer]
   # @return [String]
   def assigns_grade_xpath(student, node)
-    "#{student_xpath student}/td[6]/div/div/div[#{node}]"
+    "#{student_xpath student}/td[@data-label='Assignment Grades']/div/div/div[#{node}]"
   end
 
   # Returns the student's assignment total score for a site at a given node. If a boxplot exists, mouses over it to reveal the score.
@@ -205,7 +205,7 @@ class BOACClassListViewPage
   # @param node [Integer]
   # @return [String]
   def last_activity(student, node)
-    el = span_element(xpath: "#{student_xpath student}/td[7]//div/div/div[#{node}]")
+    el = span_element(xpath: "#{student_xpath student}/td[@data-label='bCourses Activity']//div/div/div[#{node}]")
     el.text.split(' ')[0] if el.exists?
   end
 
