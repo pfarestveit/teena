@@ -56,7 +56,7 @@ module BOACPagesCreateNoteModal
     (topic_option_elements.map { |el| el.attribute 'value' }).delete_if &:empty?
   end
 
-  # Returns the XPath to a topic pill on an unsaved note
+  # Returns the XPath to a topic pill on an unsaved note or on any template
   # @param topic [Topic]
   # @return [String]
   def topic_xpath_unsaved_note(topic)
@@ -71,23 +71,37 @@ module BOACPagesCreateNoteModal
     "//li[contains(@id, \"note-#{note.id}-topic\")][contains(., \"#{topic.name}\")]"
   end
 
-  # Returns a topic pill for a note, saved or unsaved
+  # Returns a topic pill on an unsaved note or on any template
+  # @param topic [Topic]
+  # @return [PageObject::Elements::ListItem]
+  def new_note_unsaved_topic_pill(topic)
+    list_item_element(xpath: topic_xpath_unsaved_note(topic))
+  end
+
+  # Returns a topic pill on a saved note
   # @param note [Note]
   # @param topic [Topic]
   # @return [PageObject::Element::ListItem]
   def topic_pill(note, topic)
-    list_item_element(xpath: topic_xpath_unsaved_note(topic))
+    list_item_element(xpath: topic_xpath_saved_note(note, topic))
   end
 
-  # Returns a topic remove button for a note, saved or unsaved
+  # Returns a topic remove button on an unsaved note or on any template
+  # @param topic [Topic]
+  # @return [PageObject::Element::Button]
+  def new_note_unsaved_topic_remove_btn(topic)
+    button_element(xpath: "#{topic_xpath_unsaved_note(topic)}//button")
+  end
+
+  # Returns a topic remove button for a saved note
   # @param note [Note]
   # @param topic [Topic]
   # @return [PageObject::Element::Button]
   def topic_remove_button(note, topic)
-    button_element(xpath: "#{topic_xpath_unsaved_note(topic)}//button")
+    button_element(xpath: "#{topic_xpath_saved_note(note, topic)}//button")
   end
 
-  # Adds topics to a new or existing note.
+  # Adds topics to a new or existing note or template
   # @param note [NoteTemplate]
   # @param topics [Array<Topic>]
   def add_topics(note, topics)
@@ -96,20 +110,29 @@ module BOACPagesCreateNoteModal
     topics.each do |topic|
       logger.debug "Adding topic '#{topic.name}'"
       wait_for_element_and_select_js(add_topic_select_element, topic.name)
-      topic_pill(note, topic).when_visible Utils.short_wait
+      if (note.instance_of?(Note) || note.instance_of?(NoteBatch)) && note.id
+        topic_pill(note, topic).when_visible Utils.short_wait
+      else
+        new_note_unsaved_topic_pill(topic).when_visible Utils.short_wait
+      end
       note.topics << topic
     end
   end
 
-  # Removes topics from a new or existing note
+  # Removes topics from a new or existing note or template
   # @param note [NoteTemplate]
   # @param topics [Array<Topic>]
   def remove_topics(note, topics)
     logger.info "Removing topics #{topics.map &:name} from note ID '#{note.id}'"
     topics.each do |topic|
       logger.debug "Removing topic '#{topic.name}'"
-      wait_for_update_and_click topic_remove_button(note, topic)
-      topic_pill(note, topic).when_not_visible Utils.short_wait
+      if (note.instance_of?(Note) || note.instance_of?(NoteBatch)) && note.id
+        wait_for_update_and_click topic_remove_button(note, topic)
+        topic_pill(note, topic).when_not_visible Utils.short_wait
+      else
+        wait_for_update_and_click new_note_unsaved_topic_remove_btn(topic)
+        new_note_unsaved_topic_pill(topic).when_not_visible Utils.short_wait
+      end
       note.topics.delete topic
     end
   end
