@@ -119,11 +119,13 @@ class NessieUtils < Utils
     asc_students = student_result_to_users(query_all_asc_students, BOACDepartments::ASC)
     coe_students = student_result_to_users(query_all_coe_students, BOACDepartments::COE)
     undergrad_students = student_result_to_users(query_all_undergrad_students, BOACDepartments::L_AND_S)
+    non_current_students = student_result_to_users(query_non_current_students, nil)
 
     # Find students served by more than one department and merge their attributes into a new user
-    all_students = asc_students + coe_students + undergrad_students
+    all_students = asc_students + coe_students + undergrad_students + non_current_students
     logger.info "There are #{asc_students.length} ASC students, #{coe_students.length} CoE students,
-      and #{undergrad_students.length.to_s} undergrad students, for a total of #{all_students.length}"
+      and #{undergrad_students.length.to_s} undergrad students, and #{non_current_students.length.to_s}
+      non-current students, for a total of #{all_students.length}"
     merged_students = []
     all_students.group_by { |s| s.uid }.map do |k,v|
       if v.length > 1
@@ -246,6 +248,20 @@ class NessieUtils < Utils
                WHERE student.student_academic_status.sid IS NOT NULL
              ORDER BY students.sid;"
     Utils.query_pg_db(nessie_pg_db_credentials, query)
+  end
+
+  # Returns a random sample of non-current students
+  # @return [PG::Result]
+  def self.query_non_current_students
+    query = "SELECT students.sid,
+                    students.uid,
+                    NULL AS first_name,
+                    NULL AS last_name
+             FROM student.student_profiles_hist_enr students
+             ORDER BY students.sid;"
+    result = Utils.query_pg_db(nessie_pg_db_credentials, query)
+    logger.info result.fields
+    result
   end
 
   # SEARCHABLE STUDENT DATA
