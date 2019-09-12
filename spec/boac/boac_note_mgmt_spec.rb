@@ -78,7 +78,7 @@ else
           @student_page.wait_for_element_and_type(@student_page.note_body_text_area_elements[0], 'An edit to forget')
           @student_page.click_cancel_new_note_modal
           @student_page.confirm_delete_or_discard
-          @student_page.note_body_text_area_elements[0].when_not_visible 1
+          @student_page.wait_until(1) { @student_page.note_body_text_area_elements.empty? }
         end
 
         it 'can create a note with a subject' do
@@ -260,7 +260,7 @@ else
           @student_page.enter_edit_note_subject note_1
           @student_page.click_cancel_note_edit
           @student_page.confirm_delete_or_discard
-          @student_page.note_body_text_area_elements[0].when_not_visible 1
+          @student_page.wait_until(1) { @student_page.note_body_text_area_elements.empty? }
           note_1.subject = original_subject
           @student_page.verify_note note_1
         end

@@ -100,7 +100,7 @@ else
           @homepage.wait_for_element_and_type(@homepage.note_body_text_area_elements[0], 'Discard me!')
           @homepage.click_cancel_new_note
           @homepage.confirm_delete_or_discard
-          @homepage.note_body_text_area_elements[0].when_not_visible 1
+          @homepage.wait_until(1) { @homepage.note_body_text_area_elements.empty? }
         end
 
         it 'can add students' do
@@ -136,7 +136,7 @@ else
         it 'can save a new note' do
           @homepage.click_cancel_new_note
           @homepage.confirm_delete_or_discard
-          @homepage.note_body_text_area_elements[0].when_not_visible 1
+          @homepage.wait_until(1) { @homepage.note_body_text_area_elements.empty? }
           @homepage.create_batch_of_notes(batch_note_1, [Topic::PROBATION, Topic::ACADEMIC_PROGRESS], test.attachments[0..1], students, cohorts, curated_groups)
         end
 
