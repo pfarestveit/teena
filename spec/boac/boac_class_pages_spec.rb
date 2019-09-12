@@ -163,9 +163,17 @@ describe 'BOAC' do
                             visible_student_sis_data = @class_page.visible_student_sis_data(@driver, classmate)
                             it("shows the right level for #{student_test_case}") { expect(visible_student_sis_data[:level]).to eql(student_data[:level]) }
 
-                            it("shows the right majors for #{student_test_case}") do
-                              expect(visible_student_sis_data[:majors]).to eql(student_data[:majors].sort)
-                              expect(visible_student_sis_data[:majors]).not_to be_empty
+                            active_majors = student_data[:majors].map { |m| m[:major] if m[:active] }.compact.sort
+
+                            if active_majors.any?
+                              it("shows the right majors for #{student_test_case}") do
+                                expect(visible_student_sis_data[:majors]).to eql(active_majors)
+                                expect(visible_student_sis_data[:majors]).not_to be_empty
+                              end
+                            else
+                              it("shows no majors for #{student_test_case}") do
+                                expect(visible_student_sis_data[:majors]).to be_nil
+                              end
                             end
 
                             # TODO - move this into user role scripts
@@ -202,7 +210,7 @@ describe 'BOAC' do
                               it("shows no midpoint grade for #{student_test_case}") { expect(visible_student_sis_data[:midpoint_grade]).to be_nil }
                             end
 
-                            Utils.add_csv_row(students_sis_csv, [term_name, section_course_code, student_data[:sid], student_data[:level], student_data[:majors], student_data[:sports], student_data[:mid_point_grade], student_data[:grading_basis], student_data[:final_grade]])
+                            Utils.add_csv_row(students_sis_csv, [term_name, section_course_code, student_data[:sid], student_data[:level], active_majors, student_data[:sports], student_data[:mid_point_grade], student_data[:grading_basis], student_data[:final_grade]])
 
                             # Check the student's course site data
                             student_data[:sites].each do |site|

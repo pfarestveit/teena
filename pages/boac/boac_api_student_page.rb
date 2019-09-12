@@ -63,7 +63,7 @@ class BOACApiStudentPage
       :term_units_max => (sis_profile && sis_profile['currentTerm'] && sis_profile['currentTerm']['unitsMaxOverride']),
       :cumulative_units => (sis_profile && ((!sis_profile['cumulativeUnits'] || sis_profile['cumulativeUnits'].zero?) ? '--' : formatted_units(sis_profile['cumulativeUnits']))),
       :cumulative_gpa => (sis_profile && (sis_profile['cumulativeGPA'].nil? ? '--' : (sprintf '%.3f', sis_profile['cumulativeGPA']).to_s)),
-      :majors => ((sis_profile && sis_profile['plans']) || []),
+      :majors => majors,
       :level => (sis_profile && (sis_profile['level'] && sis_profile['level']['description'])),
       :transfer => (sis_profile && (sis_profile['transfer'])),
       :terms_in_attendance => (sis_profile && sis_profile['termsInAttendance'].to_s),
@@ -84,6 +84,21 @@ class BOACApiStudentPage
       else
         (units_as_num == units_as_num.floor) ? units_as_num.floor.to_s : units_as_num.to_s
       end
+    end
+  end
+
+  def majors
+    if sis_profile && sis_profile['plans']
+      sis_profile['plans'].map do |p|
+        {
+          active: p['status'] == 'Active',
+          college: p['program'],
+          major: p['description'],
+          status: p['status']
+        }
+      end
+    else
+      []
     end
   end
 

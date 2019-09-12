@@ -59,7 +59,7 @@ describe 'BOAC' do
 
         # TODO - shows withdrawal indicator if withdrawn
 
-        active_majors = api_sis_profile_data[:majors].map { |m| m['description'] if m['status'] == 'Active' }.compact.sort
+        active_majors = api_sis_profile_data[:majors].map { |m| m[:major] if m[:active] }.compact.sort
         if active_majors.any?
           it "shows the majors for UID #{student.uid} on the #{test.default_cohort.name} page" do
             expect(cohort_page_sis_data[:majors]).to eql(active_majors)
@@ -129,8 +129,8 @@ describe 'BOAC' do
 
         if api_sis_profile_data[:majors].any?
           it "shows the majors for UID #{student.uid} on the student page" do
-            expect(student_page_sis_data[:majors]).to eql(api_sis_profile_data[:majors].map { |m| m['description'] })
-            expect(student_page_sis_data[:colleges]).to eql(api_sis_profile_data[:majors].map { |m| m['program'] })
+            expect(student_page_sis_data[:majors]).to eql(api_sis_profile_data[:majors].map { |m| m[:major] })
+            expect(student_page_sis_data[:colleges]).to eql(api_sis_profile_data[:majors].map { |m| m[:college] })
           end
         else
           it("shows no majors for UID #{student.uid} on the student page") { expect(student_page_sis_data[:majors]).to be_empty }
