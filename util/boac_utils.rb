@@ -349,7 +349,7 @@ class BOACUtils < Utils
         note_data = {
             :id => r['id'],
             :subject => r['subject'],
-            :body => r['body'].gsub(/<("[^"]*"|'[^']*'|[^'">])*>/, '').gsub('&nbsp;', ''),
+            :body => (r['body'] && r['body'].gsub(/<("[^"]*"|'[^']*'|[^'">])*>/, '').gsub('&nbsp;', '')),
             :advisor => BOACUser.new(advisor_data),
             :created_date => Time.parse(r['created_at'].to_s).utc.localtime,
             :updated_date => Time.parse(r['updated_at'].to_s).utc.localtime,
