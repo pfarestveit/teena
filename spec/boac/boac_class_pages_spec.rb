@@ -137,6 +137,8 @@ describe 'BOAC' do
                               :sid => student.sis_id,
                               :level => (student_api.sis_profile_data[:level].nil? ? '' : student_api.sis_profile_data[:level]),
                               :majors => student_api.sis_profile_data[:majors],
+                              :graduation => student_api.sis_profile_data[:graduation],
+                              :academic_career_status => student_api.sis_profile_data[:academic_career_status],
                               :sports => student_squad_names,
                               :grading_basis => student_api.sis_course_data(course)[:grading_basis],
                               :final_grade => student_api.sis_course_data(course)[:grade],
@@ -161,10 +163,8 @@ describe 'BOAC' do
 
                             # Check the student's SIS and ASC data
                             visible_student_sis_data = @class_page.visible_student_sis_data(@driver, classmate)
-                            it("shows the right level for #{student_test_case}") { expect(visible_student_sis_data[:level]).to eql(student_data[:level]) }
 
                             active_majors = student_data[:majors].map { |m| m[:major] if m[:active] }.compact.sort
-
                             if active_majors.any?
                               it("shows the right majors for #{student_test_case}") do
                                 expect(visible_student_sis_data[:majors]).to eql(active_majors)
@@ -176,7 +176,19 @@ describe 'BOAC' do
                               end
                             end
 
-                            # TODO - move this into user role scripts
+                            if student_data[:academic_career_status] == 'Completed'
+                              it("shows the right graduation date for #{student_test_case}") do
+                                expect(visible_student_sis_data[:graduation_date]).not_to be_nil
+                                expect(visible_student_sis_data[:graduation_date]).to eql('Graduated ' + Date.parse(student_data[:graduation][:date]).strftime('%b %e, %Y'))
+                              end
+                              it("shows the right graduation colleges for #{student_test_case}") do
+                                expect(visible_student_sis_data[:graduation_colleges]).not_to be_empty
+                                expect(visible_student_sis_data[:graduation_colleges]).to eql(student_data[:graduation][:colleges])
+                              end
+                            else
+                              it("shows the right level for #{student_test_case}") { expect(visible_student_sis_data[:level]).to eql(student_data[:level]) }
+                            end
+
                             if student_data[:sports].any? && test.dept == BOACDepartments::ASC
                               sports = student_data[:sports].map { |s| s.gsub(' (AA)', '') }
                               it("shows the right sports for #{student_test_case}") { expect(visible_student_sis_data[:sports]).to eql(sports.sort) }
