@@ -80,99 +80,37 @@ class NessieUtils < Utils
   # DATABASE - ALL STUDENTS
 
   # Converts a students result object to an array of users
-  # @param athletes [PG::Result]
+  # @param student_result [PG::Result]
   # @return [Array<BOACUser>]
-  def self.student_result_to_users(student_result, dept)
-    students = student_result.map do |r|
-      group_codes_with_status = r['group_codes_with_status'] && r['group_codes_with_status'].delete("{}").split("\"").reject(&:empty?)
-      {
+  def self.student_result_to_users(student_result)
+    student_result.map do |r|
+      attributes = {
         :uid => r['uid'],
-        :sid => r['sid'],
-        :dept => dept,
-        :active_asc => (group_codes_with_status && (group_codes_with_status.reject { |c| c.split(',')[1] == 'false' }).any?),
+        :sis_id => r['sid'],
         :first_name => r['first_name'],
         :last_name => r['last_name'],
-        :group_code => (group_codes_with_status && (group_codes_with_status.map { |c| c.split(',').first }).join(' '))
-      }
-    end
-
-    # Convert to Users
-    students.map do |a|
-      attributes = {
-        :uid => a[:uid],
-        :sis_id => a[:sid],
-        :depts => [a[:dept]],
-        :active_asc => a[:active_asc],
-        :first_name => a[:first_name],
-        :last_name => a[:last_name],
-        :full_name => "#{a[:first_name]} #{a[:last_name]}",
-        :sports => (a[:group_code] ? a[:group_code].split.uniq : [])
+        :full_name => "#{r['first_name']} #{r['last_name']}"
       }
       BOACUser.new attributes
     end
   end
 
-  # Returns all students
-  # @return [Array<User>]
+  def self.query_students
+    query = 'SELECT student_academic_status.uid AS uid,
+                    student_academic_status.sid AS sid,
+                    student_academic_status.first_name AS first_name,
+                    student_academic_status.last_name AS last_name
+             FROM student.student_academic_status
+             ORDER BY uid;'
+    Utils.query_pg_db(nessie_pg_db_credentials, query)
+  end
+
   def self.get_all_students
-    # Get a separate set of student users for each department
-    asc_students = student_result_to_users(query_all_asc_students, BOACDepartments::ASC)
-    coe_students = student_result_to_users(query_all_coe_students, BOACDepartments::COE)
-    undergrad_students = student_result_to_users(query_all_undergrad_students, BOACDepartments::L_AND_S)
-
-    # Find students served by more than one department and merge their attributes into a new user
-    all_students = asc_students + coe_students + undergrad_students
-    logger.info "There are #{asc_students.length} ASC students, #{coe_students.length} CoE students,
-      and #{undergrad_students.length.to_s} undergrad students for a total of #{all_students.length}"
-    merged_students = []
-    all_students.group_by { |s| s.uid }.map do |k,v|
-      if v.length > 1
-        depts = (v.map &:depts).flatten
-        athlete = v.find { |i| i.sports.any? }
-        if athlete
-          active_asc = athlete.active_asc
-          sports = athlete.sports
-        end
-
-        attributes = {
-            :uid => k,
-            :sis_id => v[0].sis_id,
-            :depts => (depts ? depts : v[0].depts),
-            :active_asc => (active_asc && v[0].active_asc),
-            :sports => (sports ? sports : v[0].sports),
-            :first_name => v[0].first_name,
-            :last_name => v[0].last_name,
-            :full_name => v[0].full_name
-        }
-        merged_students << BOACUser.new(attributes)
-      end
-    end
-
-    # Replace the duplicates with the merged users
-    merged_student_sids = merged_students.map &:sis_id
-    all_students.delete_if { |s| merged_student_sids.include? s.sis_id }
-    net = all_students + merged_students
-    logger.info "There are #{merged_students.length} overlapping students, for a net total of #{net.length}"
-    net
+    results = query_students
+    student_result_to_users results
   end
 
   # DATABASE - ASC STUDENTS
-
-  # Returns all ASC students
-  # @return [PG::Result]
-  def self.query_all_asc_students
-    query = "SELECT students.sid AS sid,
-                    (ARRAY_AGG (students.group_code || ',' || students.active)) AS group_codes_with_status,
-                    student_academic_status.uid AS uid,
-                    student_academic_status.first_name AS first_name,
-                    student_academic_status.last_name AS last_name
-             FROM boac_advising_asc.students
-             LEFT JOIN student.student_academic_status ON boac_advising_asc.students.sid = student.student_academic_status.sid
-               WHERE student.student_academic_status.sid IS NOT NULL
-             GROUP BY students.sid, student_academic_status.uid, student_academic_status.first_name, student_academic_status.last_name
-             ORDER BY students.sid;"
-    Utils.query_pg_db(nessie_pg_db_credentials, query)
-  end
 
   # Returns all the distinct teams associated with team members
   # @return [Array<Team>]
@@ -192,33 +130,7 @@ class NessieUtils < Utils
     teams.sort_by { |t| t.name }
   end
 
-  # Returns all the users associated with a team. If the full set of athlete users is already available,
-  # will use that. Otherwise, obtains the full set too.
-  # @param team [Team]
-  # @param all_athletes [Array<User>]
-  # @return [Array<User>]
-  def self.get_asc_team_members(team, all_athletes)
-    team_squads = Squad::SQUADS.select { |s| s.parent_team == team }
-    squad_codes = team_squads.map &:code
-    team_members = all_athletes.select { |u| (u.sports & squad_codes).any? }
-    team_members
-  end
-
   # DATABASE - CoE STUDENTS
-
-  # Returns all CoE students
-  # @return [PG::Result]
-  def self.query_all_coe_students
-    query = "SELECT students.sid AS sid,
-                    student_academic_status.uid AS uid,
-                    student_academic_status.first_name AS first_name,
-                    student_academic_status.last_name AS last_name
-             FROM boac_advising_coe.students
-             LEFT JOIN student.student_academic_status ON student.student_academic_status.sid = boac_advising_coe.students.sid
-               WHERE student.student_academic_status.sid IS NOT NULL
-             ORDER BY students.sid;"
-    Utils.query_pg_db(nessie_pg_db_credentials, query)
-  end
 
   # Returns all the CoE students associated with a given advisor
   # @param advisor [User]
@@ -232,20 +144,6 @@ class NessieUtils < Utils
     result = Utils.query_pg_db(nessie_pg_db_credentials, query)
     result = result.map { |r| r['sid'] }
     all_coe_students.select { |s| result.include? s.sis_id }
-  end
-
-  # Returns all undergrad students
-  # @return [PG::Result]
-  def self.query_all_undergrad_students
-    query = "SELECT students.sid AS sid,
-                    student_academic_status.uid AS uid,
-                    student_academic_status.first_name AS first_name,
-                    student_academic_status.last_name AS last_name
-             FROM undergrads.students
-             LEFT JOIN student.student_academic_status ON student.student_academic_status.sid = undergrads.students.sid
-               WHERE student.student_academic_status.sid IS NOT NULL
-             ORDER BY students.sid;"
-    Utils.query_pg_db(nessie_pg_db_credentials, query)
   end
 
   # Returns a random sample of non-current students
@@ -283,47 +181,61 @@ class NessieUtils < Utils
 
     # Get student data that is not already associated with the users. This will probably return more students than those present
     # in the combined CoE and ASC students tables.
-    query = "SELECT student.student_profiles.sid AS sid,
-                student.student_profiles.profile AS profile,
-                student.student_academic_status.gpa AS gpa,
-                student.student_academic_status.level AS level_code,
-                student.student_majors.major AS majors,
-        				student.student_enrollment_terms.midpoint_deficient_grade AS mid_point_deficient,
-                boac_advising_asc.students.intensive AS intensive_asc,
-                boac_advising_coe.students.advisor_ldap_uid AS advisor,
-                boac_advising_coe.students.gender AS coe_gender,
-                boac_advising_coe.students.ethnicity AS coe_ethnicity,
-                boac_advising_coe.students.minority AS minority,
-                boac_advising_coe.students.did_prep AS prep,
-                boac_advising_coe.students.prep_eligible AS prep_elig,
-                boac_advising_coe.students.did_tprep AS t_prep,
-                boac_advising_coe.students.tprep_eligible AS t_prep_elig,
-                boac_advising_coe.students.probation AS probation,
-                boac_advising_coe.students.status AS status_coe,
-                boac_advisor.advisor_students.advisor_sid AS advisor_sid,
-                boac_advisor.advisor_students.academic_plan_code AS advisor_plan_code
-         FROM student.student_profiles
-         LEFT JOIN student.student_majors
-           ON student.student_majors.sid = student.student_profiles.sid
-         LEFT JOIN student.student_academic_status
-           ON student.student_academic_status.sid = student.student_profiles.sid
-         LEFT JOIN boac_advising_asc.students
-           ON boac_advising_asc.students.sid = student.student_profiles.sid
-         LEFT JOIN boac_advising_coe.students
-           ON boac_advising_coe.students.sid = student.student_profiles.sid
-         LEFT JOIN boac_advisor.advisor_students
-           ON boac_advisor.advisor_students.student_sid = student.student_profiles.sid
-         LEFT JOIN student.student_enrollment_terms
-           ON student.student_profiles.sid = student.student_enrollment_terms.sid AND student.student_enrollment_terms.term_id = '#{BOACUtils.term_code}'
-         ORDER BY sid;"
+    query = "SELECT student_academic_status.uid AS uid,
+                    student_academic_status.sid AS sid,
+                    student_academic_status.first_name AS first_name,
+                    student_academic_status.last_name AS last_name,
+                    student.student_profiles.profile AS profile,
+                    student.student_academic_status.gpa AS gpa,
+                    student.student_academic_status.level AS level_code,
+                    student.student_majors.major AS majors,
+                    student.student_enrollment_terms.midpoint_deficient_grade AS mid_point_deficient,
+                    (ARRAY_AGG (boac_advising_asc.students.group_code || ',' || boac_advising_asc.students.active))
+                      AS group_codes_with_status,
+                    boac_advising_asc.students.intensive AS intensive_asc,
+                    boac_advising_coe.students.advisor_ldap_uid AS advisor,
+                    boac_advising_coe.students.gender AS coe_gender,
+                    boac_advising_coe.students.ethnicity AS coe_ethnicity,
+                    boac_advising_coe.students.minority AS minority,
+                    boac_advising_coe.students.did_prep AS prep,
+                    boac_advising_coe.students.prep_eligible AS prep_elig,
+                    boac_advising_coe.students.did_tprep AS t_prep,
+                    boac_advising_coe.students.tprep_eligible AS t_prep_elig,
+                    boac_advising_coe.students.probation AS probation,
+                    boac_advising_coe.students.status AS status_coe,
+                    boac_advisor.advisor_students.advisor_sid AS advisor_sid,
+                    boac_advisor.advisor_students.academic_plan_code AS advisor_plan_code
+             FROM student.student_academic_status
+             LEFT JOIN student.student_profiles
+               ON student.student_academic_status.sid = student.student_profiles.sid
+             LEFT JOIN student.student_majors
+               ON student.student_academic_status.sid = student.student_majors.sid
+             LEFT JOIN boac_advising_asc.students
+               ON student.student_academic_status.sid = boac_advising_asc.students.sid
+             LEFT JOIN boac_advising_coe.students
+               ON student.student_academic_status.sid = boac_advising_coe.students.sid
+             LEFT JOIN boac_advisor.advisor_students
+               ON student.student_academic_status.sid = boac_advisor.advisor_students.student_sid
+             LEFT JOIN student.student_enrollment_terms
+               ON student.student_academic_status.sid = student.student_enrollment_terms.sid
+                 AND student.student_enrollment_terms.term_id = '#{BOACUtils.term_code}'
+             GROUP BY student_academic_status.uid, student_academic_status.sid, student_academic_status.first_name,
+                      student_academic_status.last_name, student.student_profiles.profile, student.student_academic_status.gpa,
+                      student.student_academic_status.level, student.student_majors.major, student.student_enrollment_terms.midpoint_deficient_grade,
+                      boac_advising_asc.students.intensive, boac_advising_coe.students.advisor_ldap_uid, boac_advising_coe.students.gender,
+                      boac_advising_coe.students.ethnicity, boac_advising_coe.students.minority, boac_advising_coe.students.did_prep,
+                      boac_advising_coe.students.prep_eligible, boac_advising_coe.students.did_tprep, boac_advising_coe.students.tprep_eligible,
+                      boac_advising_coe.students.probation, boac_advising_coe.students.status, boac_advisor.advisor_students.advisor_sid,
+                      boac_advisor.advisor_students.academic_plan_code
+             ORDER BY sid;"
 
     results = query_pg_db(nessie_pg_db_credentials, query)
 
-    # Create a hash for each student in the results. Multiple majors mean multiple rows, so merge them.
+    # Create a hash for each student in the results
     student_hashes = {}
     results.group_by { |h1| h1['sid'] }.each do |k,v|
       logger.debug "Getting data for SID #{k}"
-      level = case v[0]['level_code']
+      level = case (code = v[0]['level_code'])
                 when '10'
                   'Freshman'
                 when '20'
@@ -335,34 +247,50 @@ class NessieUtils < Utils
                 when 'GR'
                   'Graduate'
                 else
-                  logger.error "Unknown level code '#{v[0]['level_code']}'"
+                  logger.error "Unknown level code '#{code}'"
                   nil
               end
       profile = JSON.parse(v[0]['profile'])
       sis_profile = profile['sisProfile']
       expected_grad = sis_profile && sis_profile['expectedGraduationTerm']
       cumulative_units = sis_profile && sis_profile['cumulativeUnits']
-      demographics_profile = profile && profile['demographics']
+      demographics = profile && profile['demographics']
+
+      # Determine if the student is ASC active in any sport
+      group_codes_with_status = v[0]['group_codes_with_status'] && v[0]['group_codes_with_status'].delete("{}").split("\"").reject(&:empty?)
+      asc_active = (group_codes_with_status && (group_codes_with_status.reject { |c| c.split(',')[1] == 'false' }).any?)
+
+      # Get the squad names to use as search criteria if the students are athletes
+      group_codes = (group_codes_with_status && (group_codes_with_status.map { |c| c.split(',').first }).join(' '))
+      squad_codes = (group_codes ? group_codes.split.uniq : [])
+      squad_names = squad_codes.map do |squad_code|
+        squad = Squad::SQUADS.find { |s| s.code == squad_code }
+        squad.name if squad
+      end
+      squad_names.compact!
+
       student_hashes[k] = {
         :sid => k,
+        :ethnicity => (demographics && demographics['ethnicities']),
+        :expected_grad_term => (expected_grad && expected_grad['id'].to_s),
+        :gender => (demographics && demographics['gender']),
         :gpa => v[0]['gpa'],
         :level => level,
-        :units_completed => (cumulative_units ? cumulative_units : nil),
         :major => (v.map { |h| h['majors'] }).uniq.compact,
         :mid_point_deficient => (v[0]['mid_point_deficient'] == 't'),
         :transfer_student => (sis_profile && sis_profile['transfer']),
-        :expected_grad_term => (expected_grad && expected_grad['id'].to_s),
-        :gender => (demographics_profile && demographics_profile['gender']),
-        :ethnicity => (demographics_profile && demographics_profile['ethnicities']),
-        :underrepresented_minority => (demographics_profile && demographics_profile['underrepresented']),
+        :underrepresented_minority => (demographics && demographics['underrepresented']),
+        :units_completed => cumulative_units,
+        :asc_active => asc_active,
         :asc_intensive => (v[0]['intensive_asc'] == 't'),
+        :asc_sports => squad_names,
         :coe_advisor => v[0]['advisor'],
-        :coe_gender => v[0]['coe_gender'],
         :coe_ethnicity => v[0]['coe_ethnicity'],
-        :coe_underrepresented_minority => (v[0]['minority'] == 't'),
-        :coe_prep => (v[0]['prep'] == 't'),
+        :coe_gender => v[0]['coe_gender'],
         :coe_inactive => %w(D P U W X Z).include?(v[0]['status_coe']),
+        :coe_prep => (v[0]['prep'] == 't'),
         :coe_probation => (v[0]['probation'] == 't'),
+        :coe_underrepresented_minority => (v[0]['minority'] == 't'),
         :prep_elig => (v[0]['prep_elig'] == 't'),
         :t_prep => (v[0]['t_prep'] == 't'),
         :t_prep_elig => (v[0]['t_prep_elig'] == 't'),
@@ -373,21 +301,16 @@ class NessieUtils < Utils
     # Find the student hash associated with each CoE and ASC user and combine it with the data already known about the user.
     filtered_student_hashes = users.map do |user|
       logger.debug "Completing data for SID #{user.sis_id}"
+
       user_hash = student_hashes[user.sis_id]
-      # Get the squad names to use as search criteria if the students are athletes
-      user_squad_names = user.sports.map do |squad_code|
-        squad = Squad::SQUADS.find { |s| s.code == squad_code }
-        squad ? squad.name : (logger.error "Unrecognized squad code '#{squad_code}'")
-      end
+
       addl_user_data = {
         :first_name => user.first_name,
         :first_name_sortable_cohort => (user.first_name.split(' ').map { |s| s.gsub(/\W/, '').downcase }).join,
         :first_name_sortable_user_list => (user.first_name.split(' ').map { |s| s.gsub(/\W/, '').downcase }).join(' '),
         :last_name => user.last_name,
         :last_name_sortable_cohort => user.last_name.empty? ? ' ' : (user.last_name.split(' ').map { |s| s.gsub(/\W/, '').downcase }).join,
-        :last_name_sortable_user_list => user.last_name.empty? ? ' ' : (user.last_name.split(' ').map { |s| s.gsub(/\W/, '').downcase }).join(' '),
-        :squad_names => user_squad_names,
-        :active_asc => user.active_asc
+        :last_name_sortable_user_list => user.last_name.empty? ? ' ' : (user.last_name.split(' ').map { |s| s.gsub(/\W/, '').downcase }).join(' ')
       }
       user_hash.merge! addl_user_data if user_hash
       user_hash

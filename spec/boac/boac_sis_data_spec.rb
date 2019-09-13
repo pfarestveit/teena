@@ -11,10 +11,10 @@ describe 'BOAC' do
     hold_students = []
 
     # Create files for test output
-    user_profile_data_heading = %w(UID Sport Name PreferredName Email Phone Units GPA Level Transfer Colleges Majors Terms Writing History Institutions Cultures Graduation Alerts Holds)
+    user_profile_data_heading = %w(UID Name PreferredName Email Phone Units GPA Level Transfer Colleges Majors Terms Writing History Institutions Cultures Graduation Alerts Holds)
     user_profile_sis_data = Utils.create_test_output_csv('boac-sis-profiles.csv', user_profile_data_heading)
 
-    user_course_data_heading = %w(UID Sport Term UnitsMin UnitsMax CourseCode CourseName SectionCcn SectionCode Primary? Midpoint Grade GradingBasis Units EnrollmentStatus)
+    user_course_data_heading = %w(UID Term UnitsMin UnitsMax CourseCode CourseName SectionCcn SectionCode Primary? Midpoint Grade GradingBasis Units EnrollmentStatus)
     user_course_sis_data = Utils.create_test_output_csv('boac-sis-courses.csv', user_course_data_heading)
 
     @driver = Utils.launch_browser test.chrome_profile
@@ -421,7 +421,7 @@ describe 'BOAC' do
                         BOACUtils.log_error_and_screenshot(@driver, e, "#{student.uid}-#{term_name}-#{course_code}-#{section_sis_data[:ccn]}")
                         it("encountered an error for UID #{student.uid} term #{term_name} course #{course_code} section #{section_sis_data[:ccn]}") { fail }
                       ensure
-                        row = [student.uid, student.sports, term_name, api_sis_profile_data[:term_units_min], api_sis_profile_data[:term_units_max], course_code, course_sis_data[:title],
+                        row = [student.uid, term_name, api_sis_profile_data[:term_units_min], api_sis_profile_data[:term_units_max], course_code, course_sis_data[:title],
                                section_sis_data[:ccn], "#{section_sis_data[:component]} #{section_sis_data[:number]}", section_sis_data[:primary], course_sis_data[:midpoint],
                                course_sis_data[:grade], course_sis_data[:grading_basis], course_sis_data[:units_completed], section_sis_data[:status]]
                         Utils.add_csv_row(user_course_sis_data, row)
@@ -450,7 +450,7 @@ describe 'BOAC' do
                       (it("shows dropped section #{drop[:title]} #{drop[:component]} #{drop[:number]} for UID #{student.uid} in #{term_name}") { expect(visible_drop).to be_truthy }) :
                       (it("shows no dropped section #{drop[:title]} #{drop[:component]} #{drop[:number]} for UID #{student.uid} in past term #{term_name}") { expect(visible_drop).to be_falsey })
 
-                  row = [student.uid, student.sports, term_name, nil, nil, drop[:title], nil, nil, drop[:number], nil, nil, nil, 'D']
+                  row = [student.uid, term_name, nil, nil, drop[:title], nil, nil, drop[:number], nil, nil, nil, 'D']
                   Utils.add_csv_row(user_course_sis_data, row)
                 end
               end
@@ -470,7 +470,7 @@ describe 'BOAC' do
         it("encountered an error for UID #{student.uid}") { fail }
       ensure
         if student_page_sis_data
-          row = [student.uid, student.sports, student_page_sis_data[:name], student_page_sis_data[:preferred_name], student_page_sis_data[:email],
+          row = [student.uid, student_page_sis_data[:name], student_page_sis_data[:preferred_name], student_page_sis_data[:email],
                  student_page_sis_data[:phone], student_page_sis_data[:cumulative_units], student_page_sis_data[:cumulative_gpa], student_page_sis_data[:level], student_page_sis_data[:transfer],
                  student_page_sis_data[:colleges] && student_page_sis_data[:colleges] * '; ', student_page_sis_data[:majors] && student_page_sis_data[:majors] * '; ',
                  student_page_sis_data[:terms_in_attendance], student_page_reqts[:reqt_writing], student_page_reqts[:reqt_history],

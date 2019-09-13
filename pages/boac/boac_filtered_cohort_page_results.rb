@@ -193,7 +193,7 @@ module BOACFilteredCohortPageResults
   # @param search_criteria [CohortFilter]
   # @return [Array<Hash>]
   def matching_asc_inactive_students(test, search_criteria)
-    search_criteria.asc_inactive ? (test.searchable_data.reject { |u| u[:active_asc] || u[:active_asc].nil? }) : test.searchable_data
+    search_criteria.asc_inactive ? (test.searchable_data.reject { |u| u[:asc_active] }) : test.searchable_data
   end
 
   # Returns the student hashes that match an ASC intensive filter
@@ -210,7 +210,7 @@ module BOACFilteredCohortPageResults
   # @return [Array<Hash>]
   def matching_asc_team_students(test, search_criteria)
     (search_criteria.asc_team&.any?) ?
-        (test.searchable_data.select { |u| (u[:squad_names] & (search_criteria.asc_team.map { |s| s.name })).any? }) :
+        (test.searchable_data.select { |u| (u[:asc_sports] & (search_criteria.asc_team.map &:name)).any? }) :
         test.searchable_data
   end
 
