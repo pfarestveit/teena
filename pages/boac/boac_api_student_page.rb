@@ -70,6 +70,8 @@ class BOACApiStudentPage
       :expected_grad_term_id => (sis_profile && sis_profile['expectedGraduationTerm'] && sis_profile['expectedGraduationTerm']['id']),
       :expected_grad_term_name => (sis_profile && sis_profile['expectedGraduationTerm'] && sis_profile['expectedGraduationTerm']['name']),
       :withdrawal => (sis_profile && withdrawal),
+      :graduation => (sis_profile && graduation),
+      :academic_career_status => (sis_profile && sis_profile['academicCareerStatus']),
       :reqt_writing => (sis_profile && degree_progress && degree_progress[:writing]),
       :reqt_history => (sis_profile && degree_progress && degree_progress[:history]),
       :reqt_institutions => (sis_profile && degree_progress && degree_progress[:institutions]),
@@ -84,6 +86,17 @@ class BOACApiStudentPage
       else
         (units_as_num == units_as_num.floor) ? units_as_num.floor.to_s : units_as_num.to_s
       end
+    end
+  end
+
+  def graduation
+    if sis_profile['degree']
+      {
+        date: sis_profile['degree']['dateAwarded'],
+        degree: sis_profile['degree']['description'],
+        colleges: sis_profile['degree']['plans'].map { |p| p['group'] },
+        majors: sis_profile['degree']['plans'].map { |p| p['plan'] }
+      }
     end
   end
 

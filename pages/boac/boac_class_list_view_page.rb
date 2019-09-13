@@ -35,7 +35,7 @@ class BOACClassListViewPage
   # @param student [BOACUser]
   # @return [String]
   def student_level(student)
-    el = span_element(xpath: "#{student_xpath student}//span[@class='student-text']")
+    el = span_element(xpath: "#{student_xpath student}//div[contains(@id, '-level')]/span[@class='student-text']")
     el.text if el.exists?
   end
 
@@ -44,7 +44,7 @@ class BOACClassListViewPage
   # @param student [BOACUser]
   # @return [Array<String>]
   def student_majors(driver, student)
-    els = driver.find_elements(xpath: "#{student_xpath student}//div[@class='student-text']")
+    els = driver.find_elements(xpath: "#{student_xpath student}//div[contains(@id, '-majors')]/div[@class='student-text']")
     els.map &:text if els.any?
   end
 
@@ -53,7 +53,7 @@ class BOACClassListViewPage
   # @param student [BOACUser]
   # @return [Array<String>]
   def student_sports(driver, student)
-    els = driver.find_elements(xpath: "#{student_xpath student}//div[@class='student-teams']")
+    els = driver.find_elements(xpath: "#{student_xpath student}//div[contains(@id, '-teams')]/div[@class='student-text']")
     els.map { |el| el.text.strip } if els.any?
   end
 
@@ -73,6 +73,22 @@ class BOACClassListViewPage
     el.text if el.exists?
   end
 
+  # Returns the graduation colleges shown for a student
+  # @param student [BOACUser]
+  # @return [String]
+  def student_graduation_colleges(driver, student)
+    els = driver.find_elements(xpath: "#{student_xpath student}//div[contains(@id, '-graduated-colleges')]/div[@class='student-text']")
+    els.map { |el| el.text.strip } if els.any?
+  end
+
+  # Returns the graduation date shown for a student
+  # @param student [BOACUser]
+  # @return [String]
+  def student_graduation_date(student)
+    el = span_element(xpath: "#{student_xpath student}//div[contains(@id, '-graduated-date')]/span[@class='student-text']")
+    el.text if el.exists?
+  end
+
   # Returns the final grade shown for a student
   # @param student [BOACUser]
   # @return [String]
@@ -89,6 +105,8 @@ class BOACClassListViewPage
     {
       :level => student_level(student),
       :majors => student_majors(driver, student),
+      :graduation_date => student_graduation_date(student),
+      :graduation_colleges => student_graduation_colleges(driver, student),
       :sports => student_sports(driver, student),
       :mid_point_grade => student_mid_point_grade(student),
       :grading_basis => student_grading_basis(student),
