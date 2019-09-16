@@ -201,7 +201,7 @@ describe 'BOAC' do
 
     it 'can be added on the bulk-add-SIDs page' do
       @group_page.load_page group_4
-      @group_page.add_sids_to_existing_grp(test.students.last(10), group_4)
+      @group_page.add_comma_sep_sids_to_existing_grp(test.students.last(10), group_4)
       missing_sids = group_4.members.map(&:sis_id).sort - @group_page.visible_sids.sort
       # Account for SIDs that have no associated data and will not appear in Boa
       if missing_sids.any?
@@ -289,8 +289,14 @@ describe 'BOAC' do
     end
 
     it 'allows the user to add large sets of SIDs' do
-      @group_page.add_sids_to_existing_grp(test.students.first(BOACUtils.group_bulk_sids_max), group_4)
+      students = test.students.first(BOACUtils.group_bulk_sids_max)
+      groups = students.each_slice((students.size/2.0).round).to_a
+      comma_separated = groups[0]
+      line_separated = groups[1]
+      @group_page.add_comma_sep_sids_to_existing_grp(comma_separated, group_4)
       @group_page.wait_for_list_to_load
+      @group_page.add_line_sep_sids_to_existing_grp(line_separated, group_4)
+      @group_page.wait_for_spinner
       missing_sids = group_4.members.map(&:sis_id).sort - @group_page.visible_sids.sort
       # Account for SIDs that have no associated data and will not appear in Boa
       if missing_sids.any?

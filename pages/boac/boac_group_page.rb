@@ -66,7 +66,7 @@ class BOACGroupPage
   end
 
   # Enters text in the SID list text area
-  # @param sids [Array<String>]
+  # @param sids [String]
   def enter_sid_list(sids)
     logger.info "Entering SIDs to add to group: '#{sids}'"
     wait_for_element_and_type(create_group_textarea_sids_element, sids)
@@ -90,12 +90,24 @@ class BOACGroupPage
     wait_for_sidebar_group group
   end
 
-  # Adds a list of SIDs to an existing group
+  # Adds a comma-separated list of SIDs to an existing group
   # @param students [Array<BOACUser>]
-  # @param group [Group]
-  def add_sids_to_existing_grp(students, group)
+  # @param group [CuratedGroup]
+  def add_comma_sep_sids_to_existing_grp(students, group)
     click_add_students_button
     enter_sid_list students.map(&:sis_id).join(', ')
+    click_add_sids_to_group_button
+    group.members << students
+    group.members.flatten!
+    group.members.uniq!
+  end
+
+  # Adds a line-separated list of SIDs to an existing group
+  # @param students [Array<BOACUser>]
+  # @param group [CuratedGroup]
+  def add_line_sep_sids_to_existing_grp(students, group)
+    click_add_students_button
+    enter_sid_list students.map(&:sis_id).join("\n")
     click_add_sids_to_group_button
     group.members << students
     group.members.flatten!
