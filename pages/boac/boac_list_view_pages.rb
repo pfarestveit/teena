@@ -72,18 +72,25 @@ module BOACListViewPages
     player_sid_elements.map { |el| el.text.split(' ').first }
   end
 
-  # Whether or not an 'INACTIVE' flag is shown for a student
+  # Whether or not an 'ASC INACTIVE' flag is shown for a student
   # @param student [BOACUser]
   # @return [boolean]
-  def student_inactive_flag?(student)
-    div_element(xpath: "//div[text()='#{student.sis_id}']/following-sibling::div[text()='INACTIVE']").exists?
+  def student_inactive_asc_flag?(student)
+    div_element(xpath: "//div[text()='#{student.sis_id}']/following-sibling::div[contains(text(), 'ASC INACTIVE')]").exists?
+  end
+
+  # Whether or not a 'CoE INACTIVE' flag is shown for a student
+  # @param student [BOACUser]
+  # @return [boolean]
+  def student_inactive_coe_flag?(student)
+    div_element(xpath: "//div[text()='#{student.sis_id}']/following-sibling::div[contains(text(), 'CoE INACTIVE')]").exists?
   end
 
   # Returns the visible sports shown for a student
   # @param student [BOACUser]
   # @return [Array<String>]
   def student_sports(student)
-    els = @browser.find_elements(xpath: "//div[@id='student-#{student.uid}']//div[@class='student-teams']")
+    els = @browser.find_elements(xpath: "//div[@id='student-#{student.uid}']//div[contains(@class, 'student-teams')]")
     els && els.map { |el| el.attribute('innerText') }
   end
 

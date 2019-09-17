@@ -69,11 +69,11 @@ describe 'A BOA advisor' do
         expect(@student_page.sports.sort).to eql(@asc_test_student_sports.sort)
       end
 
-      it('sees ASC Inactive information') { expect(@student_page.inactive_flag?).to be true }
+      it('sees ASC Inactive information') { expect(@student_page.inactive_asc_flag?).to be true }
 
       it 'sees no COE Inactive information' do
         @student_page.load_page @coe_test_student
-        expect(@student_page.inactive_flag?).to be false
+        expect(@student_page.inactive_coe_flag?).to be false
       end
     end
 
@@ -133,7 +133,7 @@ describe 'A BOA advisor' do
         end
 
         it('sees team information') { expect(@cohort_page.student_sports(@asc_test_student).sort).to eql(@asc_test_student_sports.sort) }
-        it('sees ASC Inactive information') { expect(@cohort_page.student_inactive_flag? @asc_test_student).to be true }
+        it('sees ASC Inactive information') { expect(@cohort_page.student_inactive_asc_flag? @asc_test_student).to be true }
       end
     end
 
@@ -190,15 +190,15 @@ describe 'A BOA advisor' do
 
       before(:all) { @student_page.load_page @coe_test_student }
 
-      it('sees COE Inactive information') { expect(@student_page.inactive_flag?).to be true }
+      it('sees COE Inactive information') { expect(@student_page.inactive_coe_flag?).to be true }
     end
 
     context 'visiting an ASC student page' do
 
       before(:all) { @student_page.load_page @asc_test_student }
 
-      it('sees no team information') { expect(@student_page.sports).to be_empty }
-      it('sees no ASC Inactive information') { expect(@student_page.inactive_flag?).to be false }
+      it('sees team information') { expect(@student_page.sports.sort).to eql(@asc_test_student_sports.sort) }
+      it('sees no ASC Inactive information') { expect(@student_page.inactive_asc_flag?).to be false }
     end
 
     context 'visiting a student API page' do
