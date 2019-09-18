@@ -48,7 +48,9 @@ describe 'BOAC' do
         BOACUtils.shuffle_max_users ? @boac_cohort_page.load_page(test.default_cohort) : @boac_cohort_page.load_cohort(test.default_cohort)
         cohort_page_sis_data = @boac_cohort_page.visible_sis_data(@driver, student)
 
-        if api_sis_profile_data[:level]
+        if api_sis_profile_data[:academic_career_status] == 'Completed'
+          it("shows no level for UID #{student.uid} on the #{test.default_cohort.name} page") { expect(cohort_page_sis_data[:level]).to be_nil }
+        elsif api_sis_profile_data[:level]
           it "shows the level for UID #{student.uid} on the #{test.default_cohort.name} page" do
             expect(cohort_page_sis_data[:level]).to eql(api_sis_profile_data[:level])
             expect(cohort_page_sis_data[:level]).not_to be_empty
@@ -68,7 +70,15 @@ describe 'BOAC' do
           it("shows no majors for UID #{student.uid} on the #{test.default_cohort.name} page") { expect(cohort_page_sis_data[:majors]).to be_nil }
         end
 
-        it("shows the expected graduation date for UID #{student.uid} on the #{test.default_cohort.name} page") { expect(cohort_page_sis_data[:grad_term]).to eql(api_sis_profile_data[:expected_grad_term_name]) }
+        if api_sis_profile_data[:academic_career_status] == 'Completed'
+          it "shows no expected graduation date for UID #{student.uid} on the #{test.default_cohort.name} page" do
+            expect(cohort_page_sis_data[:grad_term]).to be_nil
+          end
+        else
+          it "shows the expected graduation date for UID #{student.uid} on the #{test.default_cohort.name} page" do
+            expect(cohort_page_sis_data[:grad_term]).to eql(api_sis_profile_data[:expected_grad_term_name])
+          end
+        end
 
         it "shows the cumulative GPA for UID #{student.uid} on the #{test.default_cohort.name} page" do
           expect(cohort_page_sis_data[:gpa]).to eql(api_sis_profile_data[:cumulative_gpa])
@@ -127,17 +137,19 @@ describe 'BOAC' do
           expect(student_page_sis_data[:cumulative_gpa]).not_to be_empty
         end
 
-        if api_sis_profile_data[:majors].any?
+        if api_sis_profile_data[:academic_career_status] != 'Completed' && api_sis_profile_data[:majors].any?
           it "shows the majors for UID #{student.uid} on the student page" do
-            expect(student_page_sis_data[:majors]).to eql(api_sis_profile_data[:majors].map { |m| m[:major] })
-            expect(student_page_sis_data[:colleges]).to eql(api_sis_profile_data[:majors].map { |m| m[:college] })
+            expect(student_page_sis_data[:majors]).to eql(api_sis_profile_data[:majors].map { |m| m[:major] }.sort)
+            expect(student_page_sis_data[:colleges]).to eql(api_sis_profile_data[:majors].map { |m| m[:college] }.sort)
           end
         else
           it("shows no majors for UID #{student.uid} on the student page") { expect(student_page_sis_data[:majors]).to be_empty }
           it("shows no colleges for UID #{student.uid} on the student page") { expect(student_page_sis_data[:colleges].all?(&:empty?)).to be true }
         end
 
-        if api_sis_profile_data[:level]
+        if api_sis_profile_data[:academic_career_status] == 'Completed'
+          it("shows no academic level for UID #{student.uid} on the student page") { expect(student_page_sis_data[:level]).to be_nil }
+        elsif api_sis_profile_data[:level]
           it "shows the academic level for UID #{student.uid} on the student page" do
             expect(student_page_sis_data[:level]).to eql(api_sis_profile_data[:level])
             expect(student_page_sis_data[:level]).not_to be_empty
@@ -146,15 +158,22 @@ describe 'BOAC' do
           it("shows no academic level for UID #{student.uid} on the student page") { expect(student_page_sis_data[:level]).to be_empty }
         end
 
-        (api_sis_profile_data[:terms_in_attendance] && !api_sis_profile_data[:terms_in_attendance].empty? && api_sis_profile_data[:level] != 'Graduate') ?
-            (it("shows the terms in attendance for UID #{student.uid} on the student page") { expect(student_page_sis_data[:terms_in_attendance]).to include(api_sis_profile_data[:terms_in_attendance]) }) :
-            (it("shows no terms in attendance for UID #{student.uid} on the student page") { expect(student_page_sis_data[:terms_in_attendance]).to be_nil })
+        if (api_sis_profile_data[:academic_career_status] != 'Completed' && api_sis_profile_data[:terms_in_attendance] &&
+            !api_sis_profile_data[:terms_in_attendance].empty? && api_sis_profile_data[:level] != 'Graduate')
+          it "shows the terms in attendance for UID #{student.uid} on the student page" do
+            expect(student_page_sis_data[:terms_in_attendance]).to include(api_sis_profile_data[:terms_in_attendance])
+          end
+        else
+          it "shows no terms in attendance for UID #{student.uid} on the student page" do
+            expect(student_page_sis_data[:terms_in_attendance]).to be_nil
+          end
+        end
 
-        (api_sis_profile_data[:transfer]) ?
+        (api_sis_profile_data[:academic_career_status] != 'Completed' && api_sis_profile_data[:transfer]) ?
             (it("shows Transfer for UID #{student.uid} on the student page") { expect(student_page_sis_data[:transfer]).to eql('Transfer') }) :
             (it("shows no Transfer for UID #{student.uid} on the student page") { expect(student_page_sis_data[:transfer]).to be_nil })
 
-        api_sis_profile_data[:level] == 'Graduate' ?
+        (api_sis_profile_data[:academic_career_status] == 'Completed' || api_sis_profile_data[:level] == 'Graduate') ?
             (it("shows no expected graduation date for UID #{student.uid} on the #{test.default_cohort.name} page") { expect(student_page_sis_data[:expected_graduation]).to be nil }) :
             (it("shows the expected graduation date for UID #{student.uid} on the #{test.default_cohort.name} page") { expect(student_page_sis_data[:expected_graduation]).to eql(api_sis_profile_data[:expected_grad_term_name]) })
 
