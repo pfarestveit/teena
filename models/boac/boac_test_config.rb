@@ -29,7 +29,8 @@ class BOACTestConfig < TestConfig
       when BOACDepartments::ADMIN
         @advisor = BOACUser.new({:uid => Utils.super_admin_uid})
       when BOACDepartments::ASC
-        @advisor = advisors.first
+        uid = CONFIG['test_asc_advisor_uid']
+        @advisor = uid ? (advisors.find { |a| a.uid.to_i == uid }) : advisors.first
       when BOACDepartments::COE
         uid = CONFIG['test_coe_advisor_uid']
         @advisor = uid ? (advisors.find { |a| a.uid.to_i == uid }) : advisors.first

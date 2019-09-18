@@ -113,4 +113,17 @@ class BOACGroupPage
     group.members.flatten!
     group.members.uniq!
   end
+
+  # Adds a tab-separated list of SIDs to an existing group
+  # @param students [Array<BOACUser>]
+  # @param group [CuratedGroup]
+  def add_space_sep_sids_to_existing_grp(students, group)
+    click_add_students_button
+    enter_sid_list students.map(&:sis_id).join(' ')
+    click_add_sids_to_group_button
+    group.members << students
+    group.members.flatten!
+    group.members.uniq!
+  end
+
 end

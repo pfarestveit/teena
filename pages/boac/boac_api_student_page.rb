@@ -102,7 +102,7 @@ class BOACApiStudentPage
 
   def majors
     if sis_profile && sis_profile['plans']
-      sis_profile['plans'].map do |p|
+      majors = sis_profile['plans'].map do |p|
         {
           active: p['status'] == 'Active',
           college: p['program'],
@@ -110,6 +110,7 @@ class BOACApiStudentPage
           status: p['status']
         }
       end
+      majors.sort_by { |m| m[:active] ? 0 : 1 }
     else
       []
     end
