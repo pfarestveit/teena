@@ -130,25 +130,18 @@ describe 'bCourses Find a Person to Add', order: :defined do
     before(:all) do
       @section_to_test = sections_for_site.first
       @canvas.masquerade_as(@driver, teacher_1, course)
-    end
-
-    before(:each) do
       @canvas.load_users_page course
       @canvas.click_find_person_to_add @driver
-    end
-
-    [teacher_2, lead_ta, ta, designer, reader, student, waitlist, observer].each do |user|
-
-      it "allows a course Teacher to add a #{user.role} to a course site with any type of role" do
+      [teacher_2, lead_ta, ta, designer, reader, student, waitlist, observer].each do |user|
         @course_add_user_page.search(user.uid, 'CalNet UID')
         @course_add_user_page.add_user_by_uid(user, @section_to_test)
       end
+      @canvas.load_users_page course
+      @canvas.load_all_students course
     end
 
     [teacher_2, lead_ta, ta, designer, reader, student, waitlist, observer].each do |user|
-
       it "shows an added #{user.role} user in the course site roster" do
-        @canvas.load_users_page course
         @canvas.search_user_by_canvas_id user
         @canvas.wait_until(Utils.medium_wait) { @canvas.roster_user? user.canvas_id }
         expect(@canvas.roster_user_sections(user.canvas_id)).to include("#{@section_to_test.course} #{@section_to_test.label}") unless user.role == 'Observer'
