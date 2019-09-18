@@ -59,6 +59,22 @@ describe 'BOAC' do
           it("shows no level for UID #{student.uid} on the #{test.default_cohort.name} page") { expect(cohort_page_sis_data[:level]).to be_empty }
         end
 
+        if api_sis_profile_data[:academic_career_status] == 'Completed'
+          it "shows the right graduation date for UID #{student.uid} on the #{test.default_cohort.name} page" do
+            expect(cohort_page_sis_data[:graduation_date]).to eql('Graduated ' + Date.parse(api_sis_profile_data[:graduation][:date]).strftime('%b %e, %Y'))
+          end
+          it "shows the right graduation colleges for UID #{student.uid} on the #{test.default_cohort.name} page" do
+            expect(cohort_page_sis_data[:graduation_colleges]).to eql(api_sis_profile_data[:graduation][:colleges])
+          end
+        else
+          it "shows no graduation date for UID #{student.uid} on the #{test.default_cohort.name} page" do
+            expect(cohort_page_sis_data[:graduation_date]).to be_nil
+          end
+          it "shows no graduation colleges for UID #{student.uid} on the #{test.default_cohort.name} page" do
+            expect(cohort_page_sis_data[:graduation_colleges]).to be_nil
+          end
+        end
+
         # TODO - shows withdrawal indicator if withdrawn
 
         active_majors = api_sis_profile_data[:majors].map { |m| m[:major] if m[:active] }.compact.sort
@@ -71,11 +87,11 @@ describe 'BOAC' do
         end
 
         if api_sis_profile_data[:academic_career_status] == 'Completed'
-          it "shows no expected graduation date for UID #{student.uid} on the #{test.default_cohort.name} page" do
+          it "shows no expected graduation term for UID #{student.uid} on the #{test.default_cohort.name} page" do
             expect(cohort_page_sis_data[:grad_term]).to be_nil
           end
         else
-          it "shows the expected graduation date for UID #{student.uid} on the #{test.default_cohort.name} page" do
+          it "shows the expected graduation term for UID #{student.uid} on the #{test.default_cohort.name} page" do
             expect(cohort_page_sis_data[:grad_term]).to eql(api_sis_profile_data[:expected_grad_term_name])
           end
         end
@@ -139,8 +155,8 @@ describe 'BOAC' do
 
         if api_sis_profile_data[:academic_career_status] != 'Completed' && api_sis_profile_data[:majors].any?
           it "shows the majors for UID #{student.uid} on the student page" do
-            expect(student_page_sis_data[:majors]).to eql(api_sis_profile_data[:majors].map { |m| m[:major] }.sort)
-            expect(student_page_sis_data[:colleges]).to eql(api_sis_profile_data[:majors].map { |m| m[:college] }.sort)
+            expect(student_page_sis_data[:majors]).to eql(api_sis_profile_data[:majors].map { |m| m[:major] })
+            expect(student_page_sis_data[:colleges]).to eql(api_sis_profile_data[:majors].map { |m| m[:college] })
           end
         else
           it("shows no majors for UID #{student.uid} on the student page") { expect(student_page_sis_data[:majors]).to be_empty }
@@ -156,6 +172,28 @@ describe 'BOAC' do
           end
         else
           it("shows no academic level for UID #{student.uid} on the student page") { expect(student_page_sis_data[:level]).to be_empty }
+        end
+
+        if api_sis_profile_data[:academic_career_status] == 'Completed'
+          it "shows the right degree for UID #{student.uid} on the student page" do
+            expect(student_page_sis_data[:graduation_degree]).to eql(api_sis_profile_data[:graduation][:degree] + ' in ' + api_sis_profile_data[:graduation][:majors].join(', '))
+          end
+          it "shows the right graduation date for UID #{student.uid} on the student page" do
+            expect(student_page_sis_data[:graduation_date]).to eql('Awarded ' + Date.parse(api_sis_profile_data[:graduation][:date]).strftime('%b %e, %Y'))
+          end
+          it "shows the right graduation colleges for UID #{student.uid} on the student page" do
+            expect(student_page_sis_data[:graduation_colleges]).to eql(api_sis_profile_data[:graduation][:colleges])
+          end
+        else
+          it "shows no graduation degree for UID #{student.uid} on the student page" do
+            expect(student_page_sis_data[:graduation_date]).to be_nil
+          end
+          it "shows no graduation date for UID #{student.uid} on the student page" do
+            expect(student_page_sis_data[:graduation_date]).to be_nil
+          end
+          it "shows no graduation colleges for UID #{student.uid} on the student page" do
+            expect(student_page_sis_data[:graduation_colleges]).to be_nil
+          end
         end
 
         if (api_sis_profile_data[:academic_career_status] != 'Completed' && api_sis_profile_data[:terms_in_attendance] &&
