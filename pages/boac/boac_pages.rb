@@ -91,6 +91,13 @@ module BOACPages
     sidebar_group_link_elements.map &:text
   end
 
+  # Clicks the sidebar link for a curated group
+  # @param group [CuratedGroup]
+  def click_sidebar_group_link(group)
+    link = sidebar_group_link_elements.find { |el| el.text == group.name }
+    wait_for_update_and_click link
+  end
+
   # Waits for a group's member count in the sidebar to match expectations
   # @param group [CuratedGroup]
   def wait_for_sidebar_group_member_count(group)
@@ -137,7 +144,7 @@ module BOACPages
   # Clicks the sidebar link to a filtered cohort
   # @param cohort [FilteredCohort]
   def click_sidebar_filtered_link(cohort)
-    link = filtered_cohort_link_elements.find(&:text) == cohort.name
+    link = filtered_cohort_link_elements.find { |el| el.text == cohort.name }
     wait_for_update_and_click link
   end
 

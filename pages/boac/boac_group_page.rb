@@ -41,7 +41,7 @@ class BOACGroupPage
   end
 
   # Removes a student from a group
-  # @param group [Group]
+  # @param group [CuratedGroup]
   # @param student [BOACUser]
   def remove_student_by_row_index(group, student)
     wait_for_student_list
@@ -114,7 +114,7 @@ class BOACGroupPage
     group.members.uniq!
   end
 
-  # Adds a tab-separated list of SIDs to an existing group
+  # Adds a space-separated list of SIDs to an existing group
   # @param students [Array<BOACUser>]
   # @param group [CuratedGroup]
   def add_space_sep_sids_to_existing_grp(students, group)
