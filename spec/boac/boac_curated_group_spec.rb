@@ -270,6 +270,41 @@ describe 'BOAC' do
     end
   end
 
+  describe 'membership on the sidebar' do
+
+    before(:all) do
+      @group_9 = CuratedGroup.new(name: "Group 9 #{test.id}")
+      @group_10 = CuratedGroup.new(name: "Group 10 #{test.id}")
+      @student = test.cohort_members.last
+      @student_page.load_page @student
+    end
+
+    it 'is updated when a student is added to a new group' do
+      @student_page.add_student_to_new_grp(@student, @group_9)
+      @student_page.wait_for_sidebar_group_member_count @group_9
+    end
+
+    it 'is updated when a student is removed from a new group' do
+      @group_page.click_sidebar_group_link @group_9
+      @group_page.remove_student_by_row_index(@group_9, @student)
+      @group_page.wait_for_sidebar_group_member_count @group_9
+    end
+
+    it 'is updated when the same student is added to yet another new group' do
+      @group_page.search @student.sis_id
+      @search_page.select_and_add_students_to_new_grp([@student], @group_10)
+      @search_page.wait_for_sidebar_group_member_count @group_10
+      @search_page.wait_for_sidebar_group_member_count @group_9
+    end
+
+    it 'is updated when the same student is removed from yet another group' do
+      @student_page.click_sidebar_group_link @group_10
+      @group_page.remove_student_by_row_index(@group_10, @student)
+      @search_page.wait_for_sidebar_group_member_count @group_10
+      @search_page.wait_for_sidebar_group_member_count @group_9
+    end
+  end
+
   describe 'group bulk-add SIDs' do
 
     before(:each) { @group_page.load_page group_4 }
