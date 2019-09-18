@@ -37,6 +37,9 @@ class BOACStudentPage
   div(:transfer, xpath: '//div[@id="student-bio-level"]/following-sibling::div/div[contains(.,"Transfer")]')
   div(:terms_in_attendance, id: 'student-bio-terms-in-attendance')
   div(:expected_graduation, id: 'student-bio-expected-graduation')
+  div(:degree_type, id: 'student-bio-degree-type')
+  div(:degree_date, id: 'student-bio-degree-date')
+  elements(:degree_college, :div, xpath: '//div[@id="student-bio-degree-date"]//following-sibling::div')
 
   # Returns a user's SIS data visible on the student page
   # @return [Hash]
@@ -53,7 +56,10 @@ class BOACStudentPage
       :level => (level.gsub("Level\n",'') if level?),
       :transfer => (transfer.strip if transfer?),
       :terms_in_attendance => (terms_in_attendance if terms_in_attendance?),
-      :expected_graduation => (expected_graduation.gsub('Expected graduation','').strip if expected_graduation?)
+      :expected_graduation => (expected_graduation.gsub('Expected graduation','').strip if expected_graduation?),
+      :graduation_degree => (degree_type_element.text if degree_type_element.exists?),
+      :graduation_date => (degree_date_element.text if degree_date_element.exists?),
+      :graduation_colleges => (degree_college_elements.map &:text if degree_college_elements.any?),
     }
   end
 

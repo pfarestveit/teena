@@ -125,6 +125,8 @@ module BOACCohortPages
     level_el = div_element(xpath: "#{student_row_xpath student}//div[contains(@id,\"student-level\")]")
     major_els = driver.find_elements(xpath: "#{student_row_xpath student}//span[contains(@id,\"student-major\")]")
     grad_term_el = div_element(xpath: "#{student_row_xpath student}//div[contains(@id,\"student-grad-term\")]")
+    graduation_date_el = span_element(xpath: "#{student_row_xpath student}//span[starts-with(text(),\"Graduated\")]")
+    graduation_college_els = driver.find_elements(xpath: "#{student_row_xpath student}//div/span[starts-with(text(),\"Graduated\")]/../following-sibling::div")
     sports_els = driver.find_elements(xpath: "#{student_row_xpath student}//span[contains(@id,\"student-team\")]")
     gpa_el = span_element(xpath: "#{student_row_xpath student}//span[contains(@id,\"student-cumulative-gpa\")]")
     term_units_el = div_element(xpath: "#{student_row_xpath student}//div[contains(@id,\"student-enrolled-units\")]")
@@ -134,6 +136,8 @@ module BOACCohortPages
       :level => (level_el.text.strip if level_el.exists?),
       :majors => (major_els.map &:text if major_els.any?),
       :grad_term => (("#{grad_term_el.text.split[1]} #{grad_term_el.text.split[2]}") if grad_term_el.exists?),
+      :graduation_date => (graduation_date_el.text.strip if graduation_date_el.exists?),
+      :graduation_colleges => (graduation_college_els.map &:text if graduation_college_els.any?),
       :sports => (sports_els.map &:text if sports_els.any?),
       :gpa => (gpa_el.text.gsub('No data', '').chomp if gpa_el.exists?),
       :term_units => (term_units_el.text if term_units_el.exists?),
