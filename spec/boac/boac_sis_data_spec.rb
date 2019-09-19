@@ -155,8 +155,8 @@ describe 'BOAC' do
 
         if api_sis_profile_data[:academic_career_status] != 'Completed' && api_sis_profile_data[:majors].any?
           it "shows the majors for UID #{student.uid} on the student page" do
-            expect(student_page_sis_data[:majors]).to eql(api_sis_profile_data[:majors].map { |m| m[:major] })
-            expect(student_page_sis_data[:colleges]).to eql(api_sis_profile_data[:majors].map { |m| m[:college] })
+            expect(student_page_sis_data[:majors]).to eql(api_sis_profile_data[:majors].map { |m| m[:major] }.compact)
+            expect(student_page_sis_data[:colleges]).to eql(api_sis_profile_data[:majors].map { |m| m[:college] }.compact)
           end
         else
           it("shows no majors for UID #{student.uid} on the student page") { expect(student_page_sis_data[:majors]).to be_empty }
