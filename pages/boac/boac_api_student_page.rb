@@ -121,7 +121,7 @@ class BOACApiStudentPage
     withdrawal && {
       :desc => withdrawal['description'],
       :reason => withdrawal['reason'],
-      :date => Time.parse(withdrawal['date']).strftime('%b %e, %Y')
+      :date => Time.parse(withdrawal['date']).strftime('%b %d, %Y')
     }
   end
 
