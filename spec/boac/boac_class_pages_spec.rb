@@ -164,6 +164,16 @@ describe 'BOAC' do
                             # Check the student's SIS and ASC data
                             visible_student_sis_data = @class_page.visible_student_sis_data(@driver, classmate)
 
+                            if student_data[:academic_career_status] == 'Inactive'
+                              it "shows #{student_test_case} as inactive" do
+                                expect(visible_student_sis_data[:inactive]).to be true
+                              end
+                            else
+                              it "does not show #{student_test_case} as inactive" do
+                                expect(visible_student_sis_data[:inactive]).to be false
+                              end
+                            end
+
                             active_majors = student_data[:majors].map { |m| m[:major] if m[:active] }.compact.sort
                             if active_majors.any?
                               it("shows the right majors for #{student_test_case}") do
