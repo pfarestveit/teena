@@ -25,6 +25,7 @@ class BOACStudentPage
 
   div(:preferred_name, :id => 'student-preferred-name')
   span(:sid, id: 'student-bio-sid')
+  span(:inactive, id: 'student-bio-inactive')
   span(:phone, id: 'student-phone-number')
   link(:email, id: 'student-mailto')
   div(:cumulative_units, xpath: '//div[@id="cumulative-units"]/div')
@@ -60,6 +61,7 @@ class BOACStudentPage
       :graduation_degree => (degree_type_element.text if degree_type_element.exists?),
       :graduation_date => (degree_date_element.text if degree_date_element.exists?),
       :graduation_colleges => (degree_college_elements.map &:text if degree_college_elements.any?),
+      :inactive => (inactive_element.exists? && inactive_element.text.strip == 'INACTIVE')
     }
   end
 

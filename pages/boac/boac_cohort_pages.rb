@@ -134,6 +134,7 @@ module BOACCohortPages
     term_units_el = div_element(xpath: "#{student_row_xpath student}//div[contains(@id,\"student-enrolled-units\")]")
     cumul_units_el = div_element(xpath: "#{student_row_xpath student}//div[contains(@id,\"cumulative-units\")]")
     class_els = driver.find_elements(xpath: "#{student_row_xpath student}//div[contains(@id,\"student-enrollment-name\")]")
+    inactive_el = div_element(xpath: "#{student_row_xpath student}//div[contains(@class,\"student-sid\")]/div[contains(@id,\"-inactive\")]")
     {
       :level => (level_el.text.strip if level_el.exists?),
       :majors => (major_els.map &:text if major_els.any?),
@@ -144,7 +145,8 @@ module BOACCohortPages
       :gpa => (gpa_el.text.gsub('No data', '').chomp if gpa_el.exists?),
       :term_units => (term_units_el.text if term_units_el.exists?),
       :units_cumulative => (cumul_units_el.text.gsub('No data', '').chomp if cumul_units_el.exists?),
-      :classes => class_els.map(&:text)
+      :classes => class_els.map(&:text),
+      :inactive => (inactive_el.exists? && inactive_el.text.strip == 'INACTIVE')
     }
   end
 

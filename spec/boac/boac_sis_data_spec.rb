@@ -75,6 +75,16 @@ describe 'BOAC' do
           end
         end
 
+        if api_sis_profile_data[:academic_career_status] == 'Inactive'
+          it "shows UID #{student.uid} as inactive on the #{test.default_cohort.name} page" do
+            expect(cohort_page_sis_data[:inactive]).to be true
+          end
+        else
+          it "does not show UID #{student.uid} as inactive on the #{test.default_cohort.name} page" do
+            expect(cohort_page_sis_data[:inactive]).to be false
+          end
+        end
+
         # TODO - shows withdrawal indicator if withdrawn
 
         active_majors = api_sis_profile_data[:majors].map { |m| m[:major] if m[:active] }.compact.sort
@@ -193,6 +203,16 @@ describe 'BOAC' do
           end
           it "shows no graduation colleges for UID #{student.uid} on the student page" do
             expect(student_page_sis_data[:graduation_colleges]).to be_nil
+          end
+        end
+
+        if api_sis_profile_data[:academic_career_status] == 'Inactive'
+          it "shows UID #{student.uid} as inactive on the student page" do
+            expect(student_page_sis_data[:inactive]).to be true
+          end
+        else
+          it "does not show UID #{student.uid} as inactive on the student page" do
+            expect(student_page_sis_data[:inactive]).to be false
           end
         end
 

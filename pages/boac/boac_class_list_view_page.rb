@@ -39,6 +39,14 @@ class BOACClassListViewPage
     el.text if el.exists?
   end
 
+  # Returns inactive label, if any, shown for a student
+  # @param student [BOACUser]
+  # @return [String]
+  def inactive_label(student)
+    el = span_element(xpath: "#{student_xpath student}//div[contains(@class,\"student-sid\")]/span[contains(@id,\"-inactive\")]")
+    el.text.strip if el.exists?
+  end
+
   # Returns the major(s) displayed for a student
   # @param driver [Selenium::WebDriver]
   # @param student [BOACUser]
@@ -110,7 +118,8 @@ class BOACClassListViewPage
       :sports => student_sports(driver, student),
       :mid_point_grade => student_mid_point_grade(student),
       :grading_basis => student_grading_basis(student),
-      :final_grade => student_final_grade(student)
+      :final_grade => student_final_grade(student),
+      :inactive => (inactive_label(student) == 'INACTIVE')
     }
   end
 
