@@ -192,15 +192,27 @@ class BOACApiStudentPage
     }
   end
 
-  def current_enrolled_course_codes
+  # Courses that are dropped don't display on the cohort page.
+  def current_non_dropped_course_codes
     courses = []
     if (term = current_term)
-      # Ignore courses that are dropped, as these are not displayed on the cohort page
-      enrolled_courses = courses(term).select do |c|
-        enrolled_sections = sections(c).select { |s| %w(E W).include? sis_section_data(s)[:status] }
-        enrolled_sections.any?
+      courses(term).each do |c|
+        if sections(c).find { |s| %w(E W).include? sis_section_data(s)[:status] }
+          courses << sis_course_data(c)[:code]
+        end
       end
-      courses = enrolled_courses.map { |c| sis_course_data(c)[:code] }
+    end
+    courses
+  end
+
+  def current_waitlisted_course_codes
+    courses = []
+    if (term = current_term)
+      courses(term).each do |c|
+        if sections(c).find { |s| sis_section_data(s)[:status] == 'W' }
+          courses << sis_course_data(c)[:code]
+        end
+      end
     end
     courses
   end

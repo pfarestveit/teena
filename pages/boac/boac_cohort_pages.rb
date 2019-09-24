@@ -133,7 +133,8 @@ module BOACCohortPages
     gpa_el = span_element(xpath: "#{student_row_xpath student}//span[contains(@id,\"student-cumulative-gpa\")]")
     term_units_el = div_element(xpath: "#{student_row_xpath student}//div[contains(@id,\"student-enrolled-units\")]")
     cumul_units_el = div_element(xpath: "#{student_row_xpath student}//div[contains(@id,\"cumulative-units\")]")
-    class_els = driver.find_elements(xpath: "#{student_row_xpath student}//div[contains(@id,\"student-enrollment-name\")]")
+    class_els = driver.find_elements(xpath: "#{student_row_xpath student}//span[contains(@id,\"student-enrollment-name\")]")
+    waitlisted_class_els = driver.find_elements(xpath: "#{student_row_xpath student}//span[contains(@id,\"-waitlisted-\")]/preceding-sibling::span")
     inactive_el = div_element(xpath: "#{student_row_xpath student}//div[contains(@class,\"student-sid\")]/div[contains(@id,\"-inactive\")]")
     {
       :level => (level_el.text.strip if level_el.exists?),
@@ -146,6 +147,7 @@ module BOACCohortPages
       :term_units => (term_units_el.text if term_units_el.exists?),
       :units_cumulative => (cumul_units_el.text.gsub('No data', '').chomp if cumul_units_el.exists?),
       :classes => class_els.map(&:text),
+      :waitlisted_classes => waitlisted_class_els.map(&:text),
       :inactive => (inactive_el.exists? && inactive_el.text.strip == 'INACTIVE')
     }
   end

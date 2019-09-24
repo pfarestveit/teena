@@ -129,7 +129,9 @@ describe 'BOAC' do
           it("shows no total units for UID #{student.uid} on the #{test.default_cohort.name} page") { expect(cohort_page_sis_data[:units_cumulative]).to eql('0') }
         end
 
-        it("shows the current term course codes for UID #{student.uid} on the #{test.default_cohort.name} page") { expect(cohort_page_sis_data[:classes]).to eql(api_student_data.current_enrolled_course_codes) }
+        it("shows the current term course codes for UID #{student.uid} on the #{test.default_cohort.name} page") { expect(cohort_page_sis_data[:classes]).to eql(api_student_data.current_non_dropped_course_codes) }
+
+        it("shows waitlisted indicators, if any, for UID #{student.uid} on the #{test.default_cohort.name} page") { expect(cohort_page_sis_data[:waitlisted_classes]).to eql(api_student_data.current_waitlisted_course_codes) }
 
         # STUDENT PAGE SIS DATA
 
