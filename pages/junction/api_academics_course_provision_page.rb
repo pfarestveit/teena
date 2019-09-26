@@ -122,20 +122,25 @@ class ApiAcademicsCourseProvisionPage
   end
 
   def course_section_lead_tas(sections)
-    includes_primary_sections = (sections.select { |s| s['is_primary_section'] }).any?
-    lead_tas = sections.map do |section|
-      section['instructors'].select { |instructor| instructor['role'] == 'APRX' if includes_primary_sections }
+    primaries = sections.select { |s| s['is_primary_section'] }
+    if primaries.any?
+      lead_tas = primaries.map do |s|
+        s['instructors'].select { |i| i['role'] == 'APRX' }
+      end
+      lead_tas.flatten.uniq
+    else
+      []
     end
-    lead_tas.flatten.uniq
   end
 
   def course_section_tas(sections)
     primaries = sections.select { |s| s['is_primary_section'] }
-    non_primaries = sections - primaries
-    tas = non_primaries.map do |s|
-            s['instructors'].select { |instructor| instructor['role'] == 'TNIC' } if primaries.any?
-          end
-    tas.flatten.uniq.compact
+    if primaries.any?
+      tas = (sections - primaries).map { |s| s['instructors'] }
+      tas.flatten.uniq.compact
+    else
+      []
+    end
   end
 
   # COURSE SITES
