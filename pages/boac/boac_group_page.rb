@@ -20,11 +20,35 @@ class BOACGroupPage
     wait_for_spinner
   end
 
-  # Returns the error message element shown when a user attempts to view a group it does not own
-  # @param user [User]
+  # Hits a cohort URL and expects a 404 page
   # @param group [CuratedGroup]
-  def no_group_access_msg(user, group)
-    span_element(xpath: "//span[text()='Current user, #{user.uid}, does not own curated group #{group.id}']")
+  def hit_non_auth_group(group)
+    navigate_to "#{BOACUtils.base_url}/curated/#{group.id}"
+    wait_for_title 'Page not found'
+  end
+
+  # Loads the Everyone's Groups page
+  def load_everyone_groups_page
+    navigate_to "#{BOACUtils.base_url}/groups/all"
+    wait_for_title 'Groups'
+  end
+
+  elements(:everyone_group_link, :link, xpath: '//h1[text()="Everyone\'s Groups"]/following-sibling::div//a')
+
+  # Returns all the curated groups displayed on the Everyone's Groups page
+  # @return [Array<CuratedGroup>]
+  def visible_everyone_groups
+    click_view_everyone_groups
+    wait_for_spinner
+    begin
+      wait_until(Utils.short_wait) { everyone_group_link_elements.any? }
+      groups = everyone_group_link_elements.map { |link| CuratedGroup.new({id: link.attribute('href').gsub("#{BOACUtils.base_url}/curated/", ''), name: link.text}) }
+    rescue
+      groups = []
+    end
+    groups.flatten!
+    logger.info "Visible Everyone's Groups are #{groups.map &:name}"
+    groups
   end
 
   # Renames a group

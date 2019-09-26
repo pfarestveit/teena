@@ -30,18 +30,19 @@ class BOACTestConfig < TestConfig
         @advisor = BOACUser.new({:uid => Utils.super_admin_uid})
       when BOACDepartments::ASC
         uid = CONFIG['test_asc_advisor_uid']
-        @advisor = uid ? (advisors.find { |a| a.uid.to_i == uid }) : advisors.first
+        # If we don't have a test UID set in configs, we want an advisor who belongs to ASC only to avoid muddying the logic.
+        @advisor = uid ? (advisors.find { |a| a.uid.to_i == uid }) : advisors.find { |a| a.depts == [@dept.code] }
       when BOACDepartments::COE
         uid = CONFIG['test_coe_advisor_uid']
-        @advisor = uid ? (advisors.find { |a| a.uid.to_i == uid }) : advisors.first
+        @advisor = uid ? (advisors.find { |a| a.uid.to_i == uid }) : advisors.find { |a| a.depts == [@dept.code] }
       when BOACDepartments::L_AND_S
         uid = CONFIG['test_l_and_s_advisor_uid']
-        @advisor = uid ? (advisors.find { |a| a.uid.to_i == uid }) : advisors.first
+        @advisor = uid ? (advisors.find { |a| a.uid.to_i == uid }) : advisors.find { |a| a.depts == [@dept.code] }
       when BOACDepartments::OTHER
         if block_given?
           @advisor = advisors.find { |a| yield a }
         else
-          @advisor = advisors.first
+          @advisor = advisors.find { |a| a.depts == [@dept.code] }
         end
       else
         logger.error 'What kinda department is that??'

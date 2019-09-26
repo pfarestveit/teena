@@ -153,13 +153,41 @@ class BOACUtils < Utils
   # Returns all the advisors associated with a department
   # @return [Array<BOACUser>]
   def self.get_dept_advisors(dept)
-    query = "SELECT authorized_users.uid, authorized_users.can_access_canvas_data
-              FROM authorized_users
-              INNER JOIN university_dept_members ON authorized_users.id = university_dept_members.authorized_user_id
-              INNER JOIN university_depts on university_dept_members.university_dept_id = university_depts.id
-              WHERE university_depts.dept_code = '#{dept.code}';"
+    # "Notes Only" isn't a real department and requires special rules.
+    if dept.name == 'Notes Only'
+      query = "SELECT
+              authorized_users.uid AS uid,
+              authorized_users.can_access_canvas_data AS can_access_canvas_data,
+              string_agg(ud.dept_code,',') AS depts
+            FROM authorized_users
+            JOIN university_dept_members udm
+              ON authorized_users.id = udm.authorized_user_id
+            JOIN university_depts ud
+              ON udm.university_dept_id = ud.id
+            WHERE authorized_users.deleted_at IS NULL
+              AND authorized_users.can_access_canvas_data IS FALSE
+            GROUP BY authorized_users.uid, authorized_users.can_access_canvas_data"
+    else
+      query = "SELECT
+              authorized_users.uid AS uid,
+              authorized_users.can_access_canvas_data AS can_access_canvas_data,
+              string_agg(ud2.dept_code,',') AS depts
+            FROM authorized_users
+            JOIN university_dept_members udm1
+              ON authorized_users.id = udm1.authorized_user_id
+            JOIN university_depts ud1
+              ON udm1.university_dept_id = ud1.id
+              AND ud1.dept_code = '#{dept.code}'
+            JOIN university_dept_members udm2
+              ON authorized_users.id = udm2.authorized_user_id
+            JOIN university_depts ud2
+              ON udm2.university_dept_id = ud2.id
+            WHERE authorized_users.deleted_at IS NULL
+              AND authorized_users.can_access_canvas_data IS TRUE
+            GROUP BY authorized_users.uid, authorized_users.can_access_canvas_data"
+    end
     results = query_pg_db(boac_db_credentials, query)
-    results.map { |r| BOACUser.new({uid: r['uid'], can_access_canvas_data: r['can_access_canvas_data'], depts: [dept]}) }
+    results.map { |r| BOACUser.new({uid: r['uid'], can_access_canvas_data: r['can_access_canvas_data'], depts: r['depts'].split(',')}) }
   end
 
   # DATABASE - CURATED GROUPS
@@ -228,6 +256,28 @@ class BOACUtils < Utils
     results = Utils.query_pg_db(boac_db_credentials, query)
     cohorts = results.map { |r| FilteredCohort.new({id: r['cohort_id'], name: r['cohort_name'].strip, owner_uid: r['uid']}) }
     cohorts.sort_by { |c| [c.owner_uid.to_i, c.id] }
+  end
+
+  # Returns all curated groups. If a department is given, then returns only the groups associated with that department.
+  # @param dept [BOACDepartments]
+  # @return [Array<CuratedGroup>]
+  def self.get_everyone_curated_groups(dept = nil)
+    query = "SELECT student_groups.id AS group_id,
+                    student_groups.name AS group_name,
+                    authorized_users.uid AS uid
+              FROM student_groups
+              JOIN authorized_users
+                  ON authorized_users.id = student_groups.owner_id
+                  AND authorized_users.deleted_at IS NULL
+              #{if dept
+                 'JOIN university_dept_members ON university_dept_members.authorized_user_id = authorized_users.id
+                  JOIN university_depts ON university_depts.id = university_dept_members.university_dept_id
+                  WHERE university_depts.dept_code = \'' + dept.code + '\' '
+                end}
+              ORDER BY uid, group_id ASC;"
+    results = Utils.query_pg_db(boac_db_credentials, query)
+    groups = results.map { |r| CuratedGroup.new({id: r['group_id'], name: r['group_name'].strip, owner_uid: r['uid']}) }
+    groups.sort_by { |c| [c.owner_uid.to_i, c.id] }
   end
 
   # Obtains and sets the cohort ID given a filtered cohort with a unique title
