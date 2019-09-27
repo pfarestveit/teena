@@ -14,6 +14,7 @@ describe 'An admin using BOAC' do
   dept_advisors = non_admin_depts.map { |dept| {:dept => dept, :advisors => BOACUtils.get_dept_advisors(dept)} }
 
   everyone_cohorts = BOACUtils.get_everyone_filtered_cohorts
+  everyone_groups = BOACUtils.get_everyone_curated_groups
 
   before(:all) do
     @service_announcement = BOACUtils.config['service_announcement']
@@ -23,6 +24,7 @@ describe 'An admin using BOAC' do
     @api_section_page = BOACApiSectionPage.new @driver
     @api_student_page = BOACApiStudentPage.new @driver
     @class_page = BOACClassListViewPage.new @driver
+    @curated_group_page = BOACGroupPage.new @driver
     @filtered_cohort_page = BOACFilteredCohortPage.new(@driver, test.advisor)
     @homepage = BOACHomePage.new @driver
     @search_page = BOACSearchResultsPage.new @driver
@@ -44,6 +46,20 @@ describe 'An admin using BOAC' do
       expected_cohort_names = everyone_cohorts.map(&:name).sort
       visible_cohort_names = (@filtered_cohort_page.visible_everyone_cohorts.map &:name).sort
       @filtered_cohort_page.wait_until(1, "Expected #{expected_cohort_names}, but got #{visible_cohort_names}") { visible_cohort_names == expected_cohort_names }
+    end
+  end
+
+  context 'visiting Everyone\'s Groups' do
+
+    before(:all) do
+      @homepage.load_page
+      @homepage.click_view_everyone_groups
+    end
+
+    it 'sees all curated groups' do
+      expected_group_names = everyone_groups.map(&:name).sort
+      visible_group_names = (@curated_group_page.visible_everyone_groups.map &:name).sort
+      @curated_group_page.wait_until(1, "Expected #{expected_group_names}, but got #{visible_group_names}") { visible_group_names == expected_group_names }
     end
   end
 
@@ -139,8 +155,7 @@ describe 'An admin using BOAC' do
       it "can export all #{dept[:dept].name} users" do
         dept_user_uids = dept[:advisors].map &:uid
         csv_dept_user_uids = @csv.map do |r|
-          if (r[:dept_code] == dept[:dept].code && r[:dept_name] == dept[:dept].name) ||
-              (dept[:dept].code == BOACDepartments::OTHER.code && [BOACDepartments::OTHER.code, 'NOTESONLY'].include?(r[:dept_code]))
+          if r[:dept_code] == dept[:dept].code && r[:dept_name] == dept[:dept].name
             r[:uid].to_s
           end
         end

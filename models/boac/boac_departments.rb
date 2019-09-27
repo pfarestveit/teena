@@ -19,7 +19,7 @@ class BOACDepartments
       L_AND_S = new('QCADV', 'L&S College Advising'),
       L_AND_S_MAJ = new('QCADVMAJ', 'L&S Major Advising'),
       NAT_RES = new('MANRD', 'College of Natural Resources'),
-      NOTES_ONLY = new('ZZZZZ', 'Notes Only', true),
+      NOTES_ONLY = new('NOTESONLY', 'Notes Only', true),
       OTHER = new('ZZZZZ', 'Other')
   ]
 

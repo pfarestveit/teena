@@ -31,6 +31,7 @@ describe 'A BOA advisor' do
     @student_page = BOACStudentPage.new @driver
     @api_student_page = BOACApiStudentPage.new @driver
     @cohort_page = BOACFilteredCohortPage.new(@driver, @test_asc.advisor)
+    @group_page = BOACGroupPage.new @driver
     @admin_page = BOACAdminPage.new @driver
     @api_admin_page = BOACApiAdminPage.new @driver
   end
@@ -59,6 +60,22 @@ describe 'A BOA advisor' do
         coe_everyone_cohorts.any? ?
             @cohort_page.hit_non_auth_cohort(coe_everyone_cohorts.first) :
             logger.warn('Skipping test for ASC access to CoE cohorts because CoE has no cohorts.')
+      end
+    end
+
+    context 'visiting Everyone\'s Groups' do
+
+      it 'sees only curated groups created by ASC advisors' do
+        expected = BOACUtils.get_everyone_curated_groups(BOACDepartments::ASC).map(&:id).sort
+        visible = (@group_page.visible_everyone_groups.map &:id).sort
+        @group_page.wait_until(1, "Missing: #{expected - visible}. Unexpected: #{visible - expected}") { visible == expected }
+      end
+
+      it 'cannot hit a non-ASC curated group URL' do
+        coe_everyone_groups = BOACUtils.get_everyone_curated_groups BOACDepartments::COE
+        coe_everyone_groups.any? ?
+            @group_page.hit_non_auth_group(coe_everyone_groups.first) :
+            logger.warn('Skipping test for ASC access to CoE curated groups because CoE has no groups.')
       end
     end
 
@@ -132,7 +149,10 @@ describe 'A BOA advisor' do
           @cohort_page.perform_search @inactive_cohort
         end
 
-        it('sees team information') { expect(@cohort_page.student_sports(@asc_test_student).sort).to eql(@asc_test_student_sports.sort) }
+        it('sees team information') do
+          visible_sports = @cohort_page.student_sports(@driver, @asc_test_student).sort
+          expect(visible_sports).to eql(@asc_test_student_sports.sort)
+        end
         it('sees ASC Inactive information') { expect(@cohort_page.student_inactive_asc_flag? @asc_test_student).to be true }
       end
     end
@@ -186,6 +206,22 @@ describe 'A BOA advisor' do
       end
     end
 
+    context 'visiting Everyone\'s Groups' do
+
+      it 'sees only curated groups created by CoE advisors' do
+        expected = BOACUtils.get_everyone_curated_groups(BOACDepartments::COE).map(&:id).sort
+        visible = (@group_page.visible_everyone_groups.map &:id).sort
+        @group_page.wait_until(1, "Missing: #{expected - visible}. Unexpected: #{visible - expected}") { visible == expected }
+      end
+
+      it 'cannot hit a non-COE curated group URL' do
+        asc_groups = BOACUtils.get_everyone_curated_groups BOACDepartments::ASC
+        asc_groups.any? ?
+            @group_page.hit_non_auth_group(asc_groups.first) :
+            logger.warn('Skipping test for COE access to ASC curated groups because ASC has no groups.')
+      end
+    end
+
     context 'visiting a COE student page' do
 
       before(:all) { @student_page.load_page @coe_test_student }
@@ -199,15 +235,6 @@ describe 'A BOA advisor' do
 
       it('sees team information') { expect(@student_page.sports.sort).to eql(@asc_test_student_sports.sort) }
       it('sees no ASC Inactive information') { expect(@student_page.inactive_asc_flag?).to be false }
-    end
-
-    context 'visiting a student API page' do
-
-      it 'cannot see ASC profile data on the student API page' do
-        api_page = BOACApiStudentPage.new @driver
-        api_page.get_data(@driver, @asc_test_student)
-        expect(api_page.asc_profile).to be_nil
-      end
     end
 
     context 'visiting a cohort page' do
@@ -292,28 +319,31 @@ describe 'A BOA advisor' do
       end
     end
 
+    context 'visiting Everyone\'s Groups' do
+
+      it 'sees only curated groups created by advisors in its own department' do
+        expected = BOACUtils.get_everyone_curated_groups(BOACDepartments::L_AND_S).map(&:id).sort
+        visible = (@group_page.visible_everyone_groups.map &:id).sort
+        @group_page.wait_until(1, "Missing: #{expected - visible}. Unexpected: #{visible - expected}") { visible == expected }
+      end
+    end
+
     context 'visiting an ASC student page' do
 
       before(:all) { @student_page.load_page @asc_test_student }
 
-      it('sees no team information') { expect(@student_page.sports).to be_empty }
-      it('sees no ASC Inactive information') { expect(@student_page.inactive_flag?).to be false }
+      it('sees team information') { expect(@student_page.sports.sort).to eql(@asc_test_student_sports.sort) }
+      it('sees no ASC Inactive information') { expect(@student_page.inactive_asc_flag?).to be false }
     end
 
     context 'visiting a COE student page' do
 
       before(:all) { @student_page.load_page @coe_test_student }
 
-      it('sees no COE Inactive information') { expect(@student_page.inactive_flag?).to be false }
+      it('sees no COE Inactive information') { expect(@student_page.inactive_coe_flag?).to be false }
     end
 
     context 'visiting a student API page' do
-
-      it 'cannot see ASC profile data on the student API page' do
-        api_page = BOACApiStudentPage.new @driver
-        api_page.get_data(@driver, @asc_test_student)
-        expect(api_page.asc_profile).to be_nil
-      end
 
       it 'cannot see COE profile data on the student API page' do
         api_page = BOACApiStudentPage.new @driver

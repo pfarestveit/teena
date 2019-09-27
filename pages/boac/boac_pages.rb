@@ -74,6 +74,7 @@ module BOACPages
   ### SIDEBAR - GROUPS ###
 
   link(:create_curated_group_link, id: 'create-curated-group-from-sidebar')
+  link(:view_everyone_groups_link, id: 'groups-all')
   elements(:sidebar_group_link, :link, xpath: '//a[contains(@id,"sidebar-curated-group")]')
 
   # Clicks link to create new curated group
@@ -89,6 +90,13 @@ module BOACPages
   def sidebar_groups
     sleep Utils.click_wait
     sidebar_group_link_elements.map &:text
+  end
+
+  # Clicks the sidebar link to view all curated groups
+  def click_view_everyone_groups
+    sleep 2
+    wait_for_load_and_click view_everyone_groups_link_element
+    wait_for_title 'All Groups'
   end
 
   # Clicks the sidebar link for a curated group

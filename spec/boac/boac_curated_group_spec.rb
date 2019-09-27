@@ -414,14 +414,7 @@ describe 'BOAC' do
       @homepage.dev_auth other_advisor
     end
 
-    it('cannot be seen by a user who does not own them') { expect(@homepage.sidebar_groups & advisor_groups.map(&:name)).to be_empty }
-
-    it 'cannot be reached by a user who does not own them' do
-      advisor_groups.each do |c|
-        @group_page.load_page c
-        @group_page.no_group_access_msg(other_advisor, c)
-      end
-    end
+    it('does not appear in another user\'s sidebar') { expect(@homepage.sidebar_groups & advisor_groups.map(&:name)).to be_empty }
 
   end
 end
