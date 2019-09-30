@@ -100,7 +100,7 @@ describe 'A notes-only BOA user' do
     it('sees no Intensive filter') { expect(@cohort_page.new_filter_option('inIntensiveCohort').visible?).to be false }
     it('sees no Team filter') { expect(@cohort_page.new_filter_option('groupCodes').visible?).to be false }
 
-    it('sees a Last Name filter') { expect(@cohort_page.new_filter_option('lastNameRange').visible?).to be true }
+    it('sees a Last Name filter') { expect(@cohort_page.new_filter_option('lastNameRanges').visible?).to be true }
     it('sees a My Students filter') { expect(@cohort_page.new_filter_option('cohortOwnerAcademicPlans').visible?).to be true }
 
     it('sees no Advisor filter') { expect(@cohort_page.new_filter_option('coeAdvisorLdapUids').exists?).to be false }
