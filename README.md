@@ -1,6 +1,8 @@
 # Teena
 
-QA test automation for PDG services
+QA test automation for PDO services
+
+![Picture of Teena Marie](docs/teena_marie.jpg)
 
 ## Browser / Driver versions
 
