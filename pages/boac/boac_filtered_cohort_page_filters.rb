@@ -11,7 +11,8 @@ module BOACFilteredCohortPageFilters
   button(:new_filter_button, xpath: '//button[starts-with(@id, \'new-filter-button\')]')
   button(:new_sub_filter_button, xpath: '//div[contains(@id,"filter-row-dropdown-secondary")]//button')
   elements(:new_filter_option, :link, class: 'dropdown-item')
-  elements(:new_filter_initial_input, :text_area, class: 'filter-range-input')
+  text_area(:filter_range_min_input, id: 'filter-range-min')
+  text_area(:filter_range_max_input, id: 'filter-range-max')
   button(:unsaved_filter_add_button, id: 'unsaved-filter-add')
   button(:unsaved_filter_cancel_button, id: 'unsaved-filter-reset')
   button(:unsaved_filter_apply_button, id: 'unsaved-filter-apply')
@@ -45,7 +46,7 @@ module BOACFilteredCohortPageFilters
       when 'cohortOwnerAcademicPlans'
         link_element(id: "My Students-#{filter_option}")
       else
-        link_element(xpath: "//div[@class=\"cohort-filter-draft-column-02 mt-1\"]//a[contains(.,\"#{filter_option}\")]")
+        link_element(xpath: "//div[@class=\"filter-row-column-02 mt-1\"]//a[contains(.,\"#{filter_option}\")]")
     end
   end
 
@@ -54,9 +55,9 @@ module BOACFilteredCohortPageFilters
   # @param filter_option [String]
   def choose_new_filter_sub_option(filter_key, filter_option)
     # Last Name requires input
-    if filter_key == 'lastNameRange'
-      wait_for_element_and_type(new_filter_initial_input_elements[0], filter_option.split[0])
-      wait_for_element_and_type(new_filter_initial_input_elements[1], filter_option.split[1])
+    if %w(gpaRanges lastNameRanges).include? filter_key
+      wait_for_element_and_type(filter_range_min_input_element, filter_option['min'])
+      wait_for_element_and_type(filter_range_max_input_element, filter_option['max'])
 
     # All others require a selection
     else
@@ -110,14 +111,14 @@ module BOACFilteredCohortPageFilters
     end
 
     # Global
-    cohort.search_criteria.gpa.each { |g| select_new_filter('gpaRanges', g) } if cohort.search_criteria.gpa
+    select_new_filter('gpaRanges', cohort.search_criteria.gpa) if cohort.search_criteria.gpa
     cohort.search_criteria.level.each { |l| select_new_filter('levels', l) } if cohort.search_criteria.level
     cohort.search_criteria.units_completed.each { |u| select_new_filter('unitRanges', u) } if cohort.search_criteria.units_completed
     cohort.search_criteria.major.each { |m| select_new_filter('majors', m) } if cohort.search_criteria.major
     select_new_filter 'midpointDeficient' if cohort.search_criteria.mid_point_deficient
     select_new_filter 'transfer' if cohort.search_criteria.transfer_student
     cohort.search_criteria.expected_grad_terms.each { |t| select_new_filter('expectedGradTerms', t) } if cohort.search_criteria.expected_grad_terms
-    select_new_filter('lastNameRange', cohort.search_criteria.last_name) if cohort.search_criteria.last_name
+    select_new_filter('lastNameRanges', cohort.search_criteria.last_name) if cohort.search_criteria.last_name
     cohort.search_criteria.gender.each { |g| select_new_filter('genders', g) } if cohort.search_criteria.gender
     cohort.search_criteria.cohort_owner_academic_plans.each { |e| select_new_filter('cohortOwnerAcademicPlans', e) } if cohort.search_criteria.cohort_owner_academic_plans
     select_new_filter 'underrepresented' if cohort.search_criteria.underrepresented_minority
@@ -248,9 +249,9 @@ module BOACFilteredCohortPageFilters
 
   def choose_edit_filter_sub_option(filter_name, new_filter_option)
     # Last Name requires input
-    if filter_name == 'Last Name'
-      wait_for_element_and_type(new_filter_initial_input_elements[0], new_filter_option.split[0])
-      wait_for_element_and_type(new_filter_initial_input_elements[1], new_filter_option.split[1])
+    if ['GPA', 'Last Name'].include? filter_name
+      wait_for_element_and_type(filter_range_min_input_element, new_filter_option['min'])
+      wait_for_element_and_type(filter_range_max_input_element, new_filter_option['max'])
 
     # All others require a selection
     else
