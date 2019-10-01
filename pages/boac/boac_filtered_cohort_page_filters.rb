@@ -11,8 +11,8 @@ module BOACFilteredCohortPageFilters
   button(:new_filter_button, xpath: '//button[starts-with(@id, \'new-filter-button\')]')
   button(:new_sub_filter_button, xpath: '//div[contains(@id,"filter-row-dropdown-secondary")]//button')
   elements(:new_filter_option, :link, class: 'dropdown-item')
-  text_area(:filter_range_min_input, id: 'filter-range-min')
-  text_area(:filter_range_max_input, id: 'filter-range-max')
+  text_field(:filter_range_min_input, id: 'filter-range-min')
+  text_field(:filter_range_max_input, id: 'filter-range-max')
   button(:unsaved_filter_add_button, id: 'unsaved-filter-add')
   button(:unsaved_filter_cancel_button, id: 'unsaved-filter-reset')
   button(:unsaved_filter_apply_button, id: 'unsaved-filter-apply')
@@ -111,7 +111,7 @@ module BOACFilteredCohortPageFilters
     end
 
     # Global
-    select_new_filter('gpaRanges', cohort.search_criteria.gpa) if cohort.search_criteria.gpa
+    cohort.search_criteria.gpa.each { |gpa| select_new_filter('gpaRanges', gpa) } if cohort.search_criteria.gpa
     cohort.search_criteria.level.each { |l| select_new_filter('levels', l) } if cohort.search_criteria.level
     cohort.search_criteria.units_completed.each { |u| select_new_filter('unitRanges', u) } if cohort.search_criteria.units_completed
     cohort.search_criteria.major.each { |m| select_new_filter('majors', m) } if cohort.search_criteria.major
