@@ -38,9 +38,8 @@ module BOACFilteredCohortPageResults
     students = []
     if search_criteria.gpa&.any?
       search_criteria.gpa.each do |range|
-        array = range.include?('Below') ? %w(0 2.0) : range.delete(' ').split('-')
-        low_end = array[0]
-        high_end = array[1]
+        low_end = range['min']
+        high_end = range['max']
         students << test.searchable_data.select do |u|
           if u[:gpa]
             gpa = u[:gpa].to_f

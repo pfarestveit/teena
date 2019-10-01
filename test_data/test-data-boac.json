@@ -78,10 +78,12 @@
             ],
             "transfer_student": true,
             "underrepresented_minority": true,
-            "last_initials": {
-                "min": "B",
-                "max": "C"
-            }
+            "last_initials": [
+                {
+                    "min": "B",
+                    "max": "C"
+                }
+            ]
         }
     ]
 }

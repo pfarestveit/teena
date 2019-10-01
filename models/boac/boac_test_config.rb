@@ -211,7 +211,12 @@ class BOACTestConfig < TestConfig
 
     # Set a default cohort with all possible filters to exercise editing and removing filters
     filters = {
-        :gpa => ['3.00 - 3.49'],
+        :gpa => [
+          {
+            "min": '3.00',
+            "max": '3.49'
+          }
+        ],
         :level => ['Senior (90+ Units)'],
         :units_completed => ['90 - 119'],
         :major => ((@dept == BOACDepartments::COE) ? ['Electrical Eng & Comp Sci BS'] : ['Letters & Sci Undeclared UG']),
