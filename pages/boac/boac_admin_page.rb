@@ -76,8 +76,6 @@ class BOACAdminPage
     logger.info 'Clicking the service announcement posting checkbox'
     (el = post_service_announcement_checkbox_element).when_present Utils.short_wait
     js_click el
-    el.when_not_present Utils.short_wait
-    post_service_announcement_checkbox_element.when_present Utils.short_wait
   end
 
   # Posts service announcement

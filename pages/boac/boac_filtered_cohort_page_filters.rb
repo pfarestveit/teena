@@ -31,10 +31,16 @@ module BOACFilteredCohortPageFilters
     link_element(id: "dropdown-primary-menuitem-#{filter_key}-new")
   end
 
+  # Returns the Choose button for a new filter sub-option
+  # @return [PageObject::Elements::Button]
   def new_filter_sub_option_button
     button_element(xpath: '//button[contains(., "Choose...")]')
   end
 
+  # Returns the sub-option link for a new filter
+  # @param [String] filter_key
+  # @param [String] filter_option
+  # @return [PageObject::Elements::Link]
   def new_filter_sub_option_element(filter_key, filter_option)
     case filter_key
       when 'expectedGradTerms'
@@ -54,7 +60,7 @@ module BOACFilteredCohortPageFilters
   # @param filter_key [String]
   # @param filter_option [String]
   def choose_new_filter_sub_option(filter_key, filter_option)
-    # Last Name requires input
+    # GPA and Last Name require input
     if %w(gpaRanges lastNameRanges).include? filter_key
       wait_for_element_and_type(filter_range_min_input_element, filter_option['min'])
       wait_for_element_and_type(filter_range_max_input_element, filter_option['max'])
@@ -118,7 +124,7 @@ module BOACFilteredCohortPageFilters
     select_new_filter 'midpointDeficient' if cohort.search_criteria.mid_point_deficient
     select_new_filter 'transfer' if cohort.search_criteria.transfer_student
     cohort.search_criteria.expected_grad_terms.each { |t| select_new_filter('expectedGradTerms', t) } if cohort.search_criteria.expected_grad_terms
-    select_new_filter('lastNameRanges', cohort.search_criteria.last_name) if cohort.search_criteria.last_name
+    cohort.search_criteria.last_name.each { |n| select_new_filter('lastNameRanges', n) } if cohort.search_criteria.last_name
     cohort.search_criteria.gender.each { |g| select_new_filter('genders', g) } if cohort.search_criteria.gender
     cohort.search_criteria.cohort_owner_academic_plans.each { |e| select_new_filter('cohortOwnerAcademicPlans', e) } if cohort.search_criteria.cohort_owner_academic_plans
     select_new_filter 'underrepresented' if cohort.search_criteria.underrepresented_minority
@@ -182,7 +188,10 @@ module BOACFilteredCohortPageFilters
       div_element(xpath: existing_filter_xpath(filter_name))
 
     elsif filter_name == 'Last Name'
-      div_element(xpath: "#{filter_option_xpath}[contains(text(),\"#{filter_option.split.join(' through ')}\")]")
+      div_element(xpath: "#{filter_option_xpath}[contains(text(),\"#{filter_option['min'] + ' through ' + filter_option['max']}\")]")
+
+    elsif filter_name == 'GPA'
+      div_element(xpath: "#{filter_option_xpath}[contains(text(),\"#{sprintf('%.3f', filter_option['min']) + ' - ' + sprintf('%.3f', filter_option['max'])}\")]")
 
     elsif %w(Ethnicity Gender).include? filter_name
       div_element(xpath: "#{filter_option_xpath}[contains(text(),\"#{filter_option}\") and not(contains(.,\"COE\"))]")
@@ -217,7 +226,7 @@ module BOACFilteredCohortPageFilters
         filters.coe_ethnicity.each { |e| existing_filter_element('Ethnicity (COE)', e).exists? } if filters.coe_ethnicity&.any?
         filters.coe_gender.each { |g| existing_filter_element('Gender (COE)', g).exists? } if filters.coe_gender&.any?
 
-        existing_filter_element('Last Name', filters.last_name).exists? if filters.last_name
+        filters.last_name.each { |n| existing_filter_element('Last Name', n).exists? } if filters.last_name&.any?
         filters.cohort_owner_academic_plans.each { |g| existing_filter_element('My Students', g).exists? } if filters.cohort_owner_academic_plans&.any?
 
         existing_filter_element('Underrepresented Minority').exists? if filters.coe_underrepresented_minority
@@ -243,22 +252,28 @@ module BOACFilteredCohortPageFilters
     "#{existing_filter_xpath filter_name}/following-sibling::div[2]"
   end
 
-  def filter_sub_options_xpath(filter_name)
+  # Returns the XPath for an existing filter sub-option
+  # @param [String] filter_name
+  # @return [String]
+  def existing_filter_sub_options_xpath(filter_name)
     "#{existing_filter_xpath filter_name}/following-sibling::div"
   end
 
-  def choose_edit_filter_sub_option(filter_name, new_filter_option)
+  # Clicks a sub-option when editing an existing filter
+  # @param [String] filter_name
+  # @param [String] edited_filter_option
+  def choose_edit_filter_sub_option(filter_name, edited_filter_option)
     # Last Name requires input
     if ['GPA', 'Last Name'].include? filter_name
-      wait_for_element_and_type(filter_range_min_input_element, new_filter_option['min'])
-      wait_for_element_and_type(filter_range_max_input_element, new_filter_option['max'])
+      wait_for_element_and_type(text_area_element(xpath: "//input[contains(@id, 'filter-range-min-')]"), edited_filter_option['min'])
+      wait_for_element_and_type(text_area_element(xpath: "//input[contains(@id, 'filter-range-max-')]"), edited_filter_option['max'])
 
     # All others require a selection
     else
-      wait_for_update_and_click button_element(xpath: "#{filter_sub_options_xpath filter_name}//button")
+      wait_for_update_and_click button_element(xpath: "#{existing_filter_sub_options_xpath filter_name}//button")
       (['Expected Graduation Term', 'Advisor (COE)'].include? filter_name) ?
-          wait_for_update_and_click(link_element(id: "#{filter_name}-#{new_filter_option}")) :
-          wait_for_update_and_click(link_element(xpath: "#{filter_sub_options_xpath filter_name}//span[text()=\"#{new_filter_option}\"]/.."))
+          wait_for_update_and_click(link_element(id: "#{filter_name}-#{edited_filter_option}")) :
+          wait_for_update_and_click(link_element(xpath: "#{existing_filter_sub_options_xpath filter_name}//span[text()=\"#{edited_filter_option}\"]/.."))
     end
   end
 
