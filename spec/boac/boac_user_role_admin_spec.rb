@@ -17,7 +17,7 @@ describe 'An admin using BOAC' do
   everyone_groups = BOACUtils.get_everyone_curated_groups
 
   before(:all) do
-    @service_announcement = BOACUtils.config['service_announcement']
+    @service_announcement = "#{BOACUtils.config['service_announcement']} " * 15
     @driver = Utils.launch_browser test.chrome_profile
     @admin_page = BOACAdminPage.new @driver
     @api_admin_page = BOACApiAdminPage.new @driver

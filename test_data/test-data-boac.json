@@ -56,12 +56,18 @@
             ],
             "gpa_ranges": [
                 {
-                    "min": "3.50",
-                    "max": "4.00"
+                    "gpa_range":
+                        {
+                            "min": "3.51",
+                            "max": "4.000"
+                        }
                 },
                 {
-                    "min": "3.00",
-                    "max": "3.49"
+                    "gpa_range":
+                        {
+                            "min": ".02",
+                            "max": "2"
+                        }
                 }
             ],
             "majors": [
@@ -80,8 +86,10 @@
             "underrepresented_minority": true,
             "last_initials": [
                 {
-                    "min": "B",
-                    "max": "C"
+                    "last_initial": {
+                        "min": "B",
+                        "max": "G"
+                    }
                 }
             ]
         }

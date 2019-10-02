@@ -32,7 +32,7 @@ class CohortFilter
   def set_test_filters(test_data, dept)
     # Global
     @expected_grad_terms = (test_data['expected_grad_terms'] && test_data['expected_grad_terms'].map { |t| t['expected_grad_term'] })
-    @gpa = test_data['gpa_ranges'] && test_data['gpa_ranges']
+    @gpa = (test_data['gpa_ranges'] && test_data['gpa_ranges'].map { |g| g['gpa_range'] })
     @level = (test_data['levels'] && test_data['levels'].map { |l| l['level'] })
     @major = (test_data['majors'] && test_data['majors'].map { |t| t['major'] })
     @mid_point_deficient = test_data['mid_point_deficient']
@@ -42,7 +42,7 @@ class CohortFilter
     @ethnicity = (test_data['ethnicities'] && test_data['ethnicities'].map { |e| e['ethnicity'] })
     @gender = (test_data['genders'] && test_data['genders'].map { |g| g['gender'] })
     @underrepresented_minority = test_data['underrepresented_minority']
-    @last_name = test_data['last_initials']
+    @last_name = (test_data['last_initials'] && test_data['last_initials'].map { |l| l['last_initial'] })
 
     # My Students
     @cohort_owner_academic_plans = (test_data['cohort_owner_academic_plans'] && test_data['cohort_owner_academic_plans'].map { |t| t['plan'] })

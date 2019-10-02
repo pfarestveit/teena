@@ -43,7 +43,7 @@ module BOACFilteredCohortPageResults
         students << test.searchable_data.select do |u|
           if u[:gpa]
             gpa = u[:gpa].to_f
-            (gpa != 0) && (low_end.to_f <= gpa) && ((high_end == '4.00') ? (gpa <= high_end.to_f.round(1)) : (gpa < high_end.to_f.round(1)))
+            gpa >= low_end.to_f && gpa <= high_end.to_f
           end
         end
       end
@@ -123,13 +123,19 @@ module BOACFilteredCohortPageResults
   # @param search_criteria [CohortFilter]
   # @return [Array<Hash>]
   def matching_last_name_students(test, search_criteria)
-    if search_criteria.last_name
-      test.searchable_data.select do |u|
-        u[:last_name_sortable_cohort][0] >= search_criteria.last_name.split[0].downcase && u[:last_name_sortable_cohort][0] <= search_criteria.last_name.split[1].downcase
+    students = []
+    if search_criteria.last_name&.any?
+      search_criteria.last_name.each do |range|
+        low_end = range['min'].downcase
+        high_end = range['max'].downcase
+        students << test.searchable_data.select do |u|
+          u[:last_name_sortable_cohort][0] >= low_end && u[:last_name_sortable_cohort][0] <= high_end
+        end
       end
     else
-      test.searchable_data
+      students = test.searchable_data
     end
+    students.flatten
   end
 
   # Returns the student hashes that match a set of ethnicity filters

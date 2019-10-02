@@ -211,19 +211,14 @@ class BOACTestConfig < TestConfig
 
     # Set a default cohort with all possible filters to exercise editing and removing filters
     filters = {
-        :gpa => [
-          {
-            "min": '3.00',
-            "max": '3.49'
-          }
-        ],
+        :gpa => [JSON.parse("{\"min\": \"3.50\", \"max\": \"4\"}")],
         :level => ['Senior (90+ Units)'],
         :units_completed => ['90 - 119'],
         :major => ((@dept == BOACDepartments::COE) ? ['Electrical Eng & Comp Sci BS'] : ['Letters & Sci Undeclared UG']),
         :transfer_student => true,
         :expected_grad_terms => [CONFIG['term_code']],
         :gender => ['Male'],
-        :last_name => 'A Z',
+        :last_name => [JSON.parse("{\"min\": \"A\", \"max\": \"Z\"}")],
         :underrepresented_minority => true,
         :ethnicity => ['Puerto Rican'],
         :asc_inactive => true,

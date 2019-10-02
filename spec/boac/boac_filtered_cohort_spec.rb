@@ -339,12 +339,7 @@ describe 'BOAC', order: :defined do
     before(:all) { @cohort_page.search_and_create_new_cohort(test.default_cohort, test) }
 
     it 'allows the advisor to edit a GPA filter' do
-      test.default_cohort.search_criteria.gpa = [
-        {
-          'min': "3.50",
-          'max': "4"
-        }
-      ]
+      test.default_cohort.search_criteria.gpa = [JSON.parse("{\"min\": \"3.00\", \"max\": \"4\"}")]
       @cohort_page.edit_filter_and_confirm('GPA', test.default_cohort.search_criteria.gpa.first)
       @cohort_page.verify_filters_present test.default_cohort
     end
@@ -507,8 +502,8 @@ describe 'BOAC', order: :defined do
     end
 
     it 'allows the advisor to edit a Last Name filter' do
-      test.default_cohort.search_criteria.last_name = 'B Y'
-      @cohort_page.edit_filter_and_confirm('Last Name', test.default_cohort.search_criteria.last_name)
+      test.default_cohort.search_criteria.last_name = [JSON.parse("{\"min\": \"B\", \"max\": \"Y\"}")]
+      @cohort_page.edit_filter_and_confirm('Last Name', test.default_cohort.search_criteria.last_name.first)
       @cohort_page.verify_filters_present test.default_cohort
     end
 
