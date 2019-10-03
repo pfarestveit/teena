@@ -127,13 +127,12 @@ module Page
   end
 
   # Awaits a textbox element, clicks it, removes existing text, and sends new text.
-  # @param element [Array<PageObject::Elements::Element>]
+  # @param element [PageObject::Elements::Element]
   # @param text [String]
-  # @param max_input_length [Integer]
-  def wait_for_textbox_and_type(element, text, max_input_length)
+  def wait_for_textbox_and_type(element, text)
     wait_for_update_and_click element
     sleep Utils.click_wait
-    max_input_length.times { hit_delete; hit_backspace }
+    element.attribute('innerText').length.times { hit_delete; hit_backspace }
     element.send_keys text
   end
 

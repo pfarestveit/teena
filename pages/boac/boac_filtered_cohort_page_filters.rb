@@ -245,6 +245,8 @@ module BOACFilteredCohortPageFilters
 
   # EXISTING FILTERED COHORTS - Editing
 
+  elements(:cohort_edit_button, :button, xpath: '//button[contains(@id, "edit-added-filter")]')
+
   # Returns the XPath to the Edit, Cancel, and Update controls for a filter row
   # @param filter_name [String]
   # @return [String]

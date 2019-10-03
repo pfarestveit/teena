@@ -82,7 +82,7 @@ module Page
     # @return [Array<Hash>]
     def export_grades(course)
       Utils.prepare_download_dir
-      load_gradebook course
+      navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/gradebook"
       sleep 2
       wait_for_load_and_click grades_export_button_element
       wait_for_update_and_click grades_csv_link_element

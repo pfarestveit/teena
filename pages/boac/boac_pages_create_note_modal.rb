@@ -36,8 +36,7 @@ module BOACPagesCreateNoteModal
   # @param note [NoteTemplate]
   def enter_note_body(note)
     logger.debug "Entering note body '#{note.body}'"
-    existing_text_length = note_body_text_area_elements[0].attribute('innerText').length
-    wait_for_textbox_and_type(note_body_text_area_elements[0], note.body, existing_text_length)
+    wait_for_textbox_and_type(note_body_text_area_elements[0], note.body)
   end
 
 

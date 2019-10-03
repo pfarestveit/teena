@@ -89,15 +89,6 @@ describe 'An admin using BOAC' do
     it('sees a Team filter') { expect(@filtered_cohort_page.new_filter_option('groupCodes').visible?).to be true }
   end
 
-  context 'visiting a class page' do
-
-    it 'sees all students in a section endpoint' do
-      @api_section_page.get_data(@driver, '2178', '13826')
-      expect(asc_only_students.map(&:sis_id) & @api_section_page.student_sids).not_to be_empty
-      expect(coe_only_students.map(&:sis_id) & @api_section_page.student_sids).not_to be_empty
-    end
-  end
-
   context 'visiting student API pages' do
 
     it 'can see the ASC profile data for an ASC student on the student API page' do
@@ -159,20 +150,25 @@ describe 'An admin using BOAC' do
             r[:uid].to_s
           end
         end
-        logger.debug "Unexpected advisors: #{csv_dept_user_uids.compact - dept_user_uids}"
-        logger.debug "Missing advisors: #{dept_user_uids - csv_dept_user_uids.compact}"
+        logger.debug "Unexpected #{dept[:dept].name} advisors: #{csv_dept_user_uids.compact - dept_user_uids}"
+        logger.debug "Missing #{dept[:dept].name} advisors: #{dept_user_uids - csv_dept_user_uids.compact}"
         expect(csv_dept_user_uids.compact.sort).to eql(dept_user_uids.sort)
       end
     end
 
     it 'can generate valid data' do
+      first_names = []
+      last_names = []
+      emails = []
       @csv.each do |r|
-        unless r[:dept_code] == 'NOTESONLY'
-          expect(r[:last_name]).not_to be_empty
-          expect(r[:first_name]).not_to be_empty
-          expect(r[:email].downcase).to include('berkeley.edu')
-        end
+        first_names << r[:first_name] if r[:first_name]
+        last_names << r[:last_name] if r[:last_name]
+        emails << r[:email] if r[:email]
       end
+      logger.warn "The export CSV has #{@csv.count} rows, with #{first_names.length} first names, #{last_names.length} last names, and #{emails.length} emails"
+      expect(first_names).not_to be_empty
+      expect(last_names).not_to be_empty
+      expect(emails).not_to be_empty
     end
 
   end
