@@ -154,7 +154,7 @@ class BOACUtils < Utils
   # @return [Array<BOACUser>]
   def self.get_dept_advisors(dept)
     # "Notes Only" isn't a real department and requires special rules.
-    if dept.name == 'Notes Only'
+    if dept == BOACDepartments::NOTES_ONLY
       query = "SELECT
               authorized_users.uid AS uid,
               authorized_users.can_access_canvas_data AS can_access_canvas_data,
@@ -466,8 +466,8 @@ class BOACUtils < Utils
   # Creates an admin authorized user
   # @param user [BOACUser]
   def self.create_auth_user(user)
-    statement = "INSERT INTO authorized_users (uid, is_admin, created_at, updated_at)
-                 SELECT '#{user.uid}', true, now(), now()
+    statement = "INSERT INTO authorized_users (created_at, updated_at, uid, is_admin, in_demo_mode, can_access_canvas_data, created_by, is_blocked)
+                 SELECT now(), now(), '#{user.uid}', true, false, true, '#{Utils.super_admin_uid}', false
                  WHERE NOT EXISTS (SELECT id FROM authorized_users WHERE uid = '#{user.uid}');"
     result = query_pg_db(boac_db_credentials, statement)
     logger.warn "Command status: #{result.cmd_status}. Result status: #{result.result_status}"

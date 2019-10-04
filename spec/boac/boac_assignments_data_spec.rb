@@ -14,6 +14,7 @@ describe 'BOAC assignment analytics' do
 
       test = BOACTestConfig.new
       test.assignments
+      testable_students = []
 
       user_analytics_data_heading = %w(UID Sport Term SiteCode SiteId
                                         AssignMin AssignMax AssignUser AssignPerc AssignRound
@@ -59,7 +60,10 @@ describe 'BOAC assignment analytics' do
               end
             end
 
-            term_sites.flatten.each do |site|
+            term_sites.flatten!
+            testable_students << student if term_sites.any?
+
+            term_sites.each do |site|
               begin
 
                 site_data = site[:data]
@@ -200,6 +204,9 @@ describe 'BOAC assignment analytics' do
           end
         end
       end
+
+      it('can be tested for at least one student') { expect(testable_students).not_to be_empty }
+
     end
   rescue => e
     Utils.log_error e

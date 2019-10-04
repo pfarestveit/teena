@@ -67,7 +67,7 @@ class BOACAdminPage
   # @param announcement [String]
   def update_service_announcement(announcement)
     logger.info "Entering service announcement '#{announcement}'"
-    wait_for_textbox_and_type(update_service_announcement_element, announcement, 200)
+    wait_for_textbox_and_type(update_service_announcement_element, announcement)
     wait_for_update_and_click update_service_announcement_button_element
   end
 

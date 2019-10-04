@@ -25,6 +25,11 @@ describe 'A BOA advisor' do
     # Get L&S test data
     @test_l_and_s = BOACTestConfig.new
     @test_l_and_s.user_role_l_and_s @test
+    @l_and_s_cohorts = BOACUtils.get_everyone_filtered_cohorts BOACDepartments::L_AND_S
+    @l_and_s_groups = BOACUtils.get_everyone_curated_groups BOACDepartments::L_AND_S
+
+    @admin_cohorts = BOACUtils.get_everyone_filtered_cohorts BOACDepartments::ADMIN
+    @admin_groups = BOACUtils.get_everyone_curated_groups BOACDepartments::ADMIN
 
     @driver = Utils.launch_browser @test.chrome_profile
     @homepage = BOACHomePage.new @driver
@@ -55,6 +60,12 @@ describe 'A BOA advisor' do
         @cohort_page.wait_until(1, "Missing: #{expected - visible}. Unexpected: #{visible - expected}") { visible == expected }
       end
 
+      it 'cannot hit an admin filtered cohort URL' do
+        @admin_cohorts.any? ?
+            @cohort_page.hit_non_auth_cohort(@admin_cohorts.first) :
+            logger.warn('Skipping test for ASC access to admin cohorts because admins have no cohorts.')
+      end
+
       it 'cannot hit a non-ASC filtered cohort URL' do
         coe_everyone_cohorts = BOACUtils.get_everyone_filtered_cohorts BOACDepartments::COE
         coe_everyone_cohorts.any? ?
@@ -69,6 +80,12 @@ describe 'A BOA advisor' do
         expected = BOACUtils.get_everyone_curated_groups(BOACDepartments::ASC).map(&:id).sort
         visible = (@group_page.visible_everyone_groups.map &:id).sort
         @group_page.wait_until(1, "Missing: #{expected - visible}. Unexpected: #{visible - expected}") { visible == expected }
+      end
+
+      it 'cannot hit an admin curated group URL' do
+        @admin_groups.any? ?
+            @group_page.hit_non_auth_group(@admin_groups.first) :
+            logger.warn('Skipping test for ASC access to admin curated groups because admins have no groups.')
       end
 
       it 'cannot hit a non-ASC curated group URL' do
@@ -198,6 +215,12 @@ describe 'A BOA advisor' do
         @cohort_page.wait_until(1, "Missing: #{expected - visible}. Unexpected: #{visible - expected}") { visible == expected }
       end
 
+      it 'cannot hit an admin filtered cohort URL' do
+        @admin_cohorts.any? ?
+            @cohort_page.hit_non_auth_cohort(@admin_cohorts.first) :
+            logger.warn('Skipping test for ASC access to admin cohorts because admins have no cohorts.')
+      end
+
       it 'cannot hit a non-COE filtered cohort URL' do
         asc_cohorts = BOACUtils.get_everyone_filtered_cohorts BOACDepartments::ASC
         asc_cohorts.any? ?
@@ -212,6 +235,12 @@ describe 'A BOA advisor' do
         expected = BOACUtils.get_everyone_curated_groups(BOACDepartments::COE).map(&:id).sort
         visible = (@group_page.visible_everyone_groups.map &:id).sort
         @group_page.wait_until(1, "Missing: #{expected - visible}. Unexpected: #{visible - expected}") { visible == expected }
+      end
+
+      it 'cannot hit an admin curated group URL' do
+        @admin_groups.any? ?
+            @group_page.hit_non_auth_group(@admin_groups.first) :
+            logger.warn('Skipping test for ASC access to admin curated groups because admins have no groups.')
       end
 
       it 'cannot hit a non-COE curated group URL' do
@@ -313,19 +342,52 @@ describe 'A BOA advisor' do
     context 'visiting Everyone\'s Cohorts' do
 
       it 'sees only filtered cohorts created by advisors in its own department' do
-        expected = BOACUtils.get_everyone_filtered_cohorts(BOACDepartments::L_AND_S).map(&:id).sort
+        expected = @l_and_s_cohorts.map(&:id).sort
         visible = (@cohort_page.visible_everyone_cohorts.map &:id).sort
         @cohort_page.wait_until(1, "Missing: #{expected - visible}. Unexpected: #{visible - expected}") { visible == expected }
       end
+
+      it 'cannot hit an admin filtered cohort URL' do
+        @admin_cohorts.any? ?
+            @cohort_page.hit_non_auth_cohort(@admin_cohorts.first) :
+            logger.warn('Skipping test for ASC access to admin cohorts because admins have no cohorts.')
+      end
+    end
+
+    context 'visiting another user\'s cohort' do
+
+      before(:all) { @cohort_page.load_cohort @l_and_s_cohorts.find { |c| c.owner_uid != @test_l_and_s.advisor.uid } }
+
+      it('can view the filters') { @cohort_page.show_filters }
+      it('cannot edit the filters') { expect(@cohort_page.cohort_edit_button_elements).to be_empty }
+      it('can export the student list') { expect(@cohort_page.export_list_button?).to be true }
+      it('cannot rename the cohort') { expect(@cohort_page.rename_cohort_button?).to be false }
+      it('cannot delete the cohort') { expect(@cohort_page.delete_cohort_button?).to be false }
     end
 
     context 'visiting Everyone\'s Groups' do
 
       it 'sees only curated groups created by advisors in its own department' do
-        expected = BOACUtils.get_everyone_curated_groups(BOACDepartments::L_AND_S).map(&:id).sort
+        expected = @l_and_s_groups.map(&:id).sort
         visible = (@group_page.visible_everyone_groups.map &:id).sort
         @group_page.wait_until(1, "Missing: #{expected - visible}. Unexpected: #{visible - expected}") { visible == expected }
       end
+
+      it 'cannot hit an admin curated group URL' do
+        @admin_groups.any? ?
+            @group_page.hit_non_auth_group(@admin_groups.first) :
+            logger.warn('Skipping test for ASC access to admin curated groups because admins have no groups.')
+      end
+    end
+
+    context 'visiting another user\'s curated group' do
+
+      before(:all) { @group_page.load_page @l_and_s_groups.find { |g| g.owner_uid != @test_l_and_s.advisor.uid } }
+
+      it('can export the student list') { expect(@group_page.export_list_button?).to be true }
+      it('cannot add students') { expect(@group_page.add_students_button?).to be false }
+      it('cannot rename the cohort') { expect(@group_page.rename_cohort_button?).to be false }
+      it('cannot delete the cohort') { expect(@group_page.delete_cohort_button?).to be false }
     end
 
     context 'visiting an ASC student page' do

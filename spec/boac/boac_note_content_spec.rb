@@ -76,7 +76,9 @@ describe 'BOAC' do
 
               # Note updated date
 
-              updated_date_expected = note.updated_date && note.updated_date != note.created_date && note.advisor.uid != 'UCBCONVERSION'
+              updated_date_expected = note.updated_date &&
+                  note.updated_date.strftime('%b %-d, %Y %l:%M%P') != note.created_date.strftime('%b %-d, %Y %l:%M%P') &&
+                  note.advisor.uid != 'UCBCONVERSION'
               expected_date = updated_date_expected ? note.updated_date : note.created_date
               expected_date_text = "Last updated on #{@student_page.expected_note_short_date_format expected_date}"
               visible_date = @student_page.visible_collapsed_note_data(note)[:date]
@@ -92,7 +94,7 @@ describe 'BOAC' do
 
               if note.subject
                 it("shows the subject on #{test_case}") { expect(visible_collapsed_note_data[:subject] == note.subject).to be true }
-                it("shows the body on #{test_case}") { expect(visible_expanded_note_data[:body].strip == note.body).to be true }
+                it("shows the body on #{test_case}") { expect(visible_expanded_note_data[:body].strip == "#{note.body}").to be true }
               elsif expected_sis_notes.include? note
                 it("shows the body as the subject on #{test_case}") { expect(visible_collapsed_note_data[:subject].gsub(/\W/, '') == note.body.gsub(/\W/, '')).to be true }
                 it("shows no body on #{test_case}") { expect(visible_expanded_note_data[:body].strip.empty?).to be true }
