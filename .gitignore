@@ -5,3 +5,6 @@
 
 # Ignore .DS_Store files on Mac
 .DS_Store
+
+# Python stuff
+__pycache__/
