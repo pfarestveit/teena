@@ -172,7 +172,7 @@ describe 'BOA note templates' do
 
     before(:all) do
       # Get students to add one-by-one
-      @students = @test.dept_students.first 2
+      @students = @test.students.first 2
 
       # Create cohort to add
       @homepage.load_page
@@ -180,7 +180,7 @@ describe 'BOA note templates' do
       @test.default_cohort.members = @test.cohort_members
 
       # Create group to add
-      group_members = @test.dept_students.shuffle.last BOACUtils.config['notes_batch_curated_group_count']
+      group_members = @test.students.shuffle.last BOACUtils.config['notes_batch_curated_group_count']
       @group = CuratedGroup.new(name: "Group 1 - #{@test.id}")
       @homepage.click_sidebar_create_curated_group
       @curated_group_page.create_group_with_bulk_sids(group_members, @group)

@@ -10,8 +10,6 @@ describe 'BOAC' do
     test.class_pages
     pages_tested = []
 
-    all_student_sids = test.students.map &:sis_id
-
     courses_csv = Utils.create_test_output_csv('boac-class-page-courses.csv', %w(Term Course Title Format Units))
     meetings_csv =Utils.create_test_output_csv('boac-class-page-meetings.csv', %w(Term Course Instructors Days Time Location))
     students_sis_csv = Utils.create_test_output_csv('boac-class-page-student-sis.csv', %w(Term Course SID Level Majors Sports MidPoint Basis Grade))
@@ -127,10 +125,8 @@ describe 'BOAC' do
                             student_api.get_data(@driver, student)
                             term = student_api.terms.find { |t| student_api.term_name(t) == term_name }
                             course = student_api.courses(term).find { |c| student_api.course_display_name(c) == course_sis_data[:code] }
-                            student_squad_names = student.sports.map do |squad_code|
-                              squad = Squad::SQUADS.find { |s| s.code == squad_code }
-                              squad.name
-                            end
+                            student_searchable_data = test.searchable_data.find { |d| student.sis_id == d[:sid] }
+                            student_squad_names = student_searchable_data[:asc_sports].map { |s| s.gsub(' (AA)', '') }
 
                             # Collect the student data relevant to the class page
                             student_class_page_data = {

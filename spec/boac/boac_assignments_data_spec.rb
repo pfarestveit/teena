@@ -16,7 +16,7 @@ describe 'BOAC assignment analytics' do
       test.assignments
       testable_students = []
 
-      user_analytics_data_heading = %w(UID Sport Term SiteCode SiteId
+      user_analytics_data_heading = %w(UID Term SiteCode SiteId
                                         AssignMin AssignMax AssignUser AssignPerc AssignRound
                                         GradesMin GradesMax GradesUser GradesPerc GradesRound)
       user_course_analytics_data = Utils.create_test_output_csv('boac-canvas-courses.csv', user_analytics_data_heading)
@@ -191,7 +191,7 @@ describe 'BOAC assignment analytics' do
                 Utils.log_error e
                 it("encountered an error with UID #{student.uid} #{test_case}") { fail }
               ensure
-                row = [student.uid, student.sports, test.term, site_code, site_id, boac_api_assigns_submitted[:min], boac_api_assigns_submitted[:max],
+                row = [student.uid, test.term, site_code, site_id, boac_api_assigns_submitted[:min], boac_api_assigns_submitted[:max],
                        boac_api_assigns_submitted[:score], boac_api_assigns_submitted[:perc], boac_api_assigns_submitted[:perc_round],
                        boac_api_grades[:min], boac_api_grades[:max], boac_api_grades[:score], boac_api_grades[:perc], boac_api_grades[:perc_round]
                 ]

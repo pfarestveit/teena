@@ -9,7 +9,6 @@ class BOACTestConfig < TestConfig
                 :cohort_members,
                 :default_cohort,
                 :dept,
-                :dept_students,
                 :max_cohort_members,
                 :searchable_data,
                 :searches,
@@ -58,20 +57,6 @@ class BOACTestConfig < TestConfig
     @students = students || NessieUtils.get_all_students
   end
 
-  # Sets the list of students belonging to the department in question (not relevant to admins)
-  # @param dept [BOACDepartments]
-  def set_dept_students(dept=nil)
-    dept = dept || @dept
-    @dept_students = if dept == BOACDepartments::ADMIN
-                       []
-                     else
-                       @students.select do |s|
-                         # Some students belong to multiple depts
-                         (s.depts.select { |d| d == dept }).any?
-                       end
-                     end
-  end
-
   # Returns all searchable student data. Unless a current file containing all student data already exists, obtain
   # the current data from Redshift.
   # @param all_students [Array<BOACUser>]
@@ -89,39 +74,20 @@ class BOACTestConfig < TestConfig
     set_dept dept
     set_advisor
     set_students
-    set_dept_students dept
     set_student_searchable_data @students
   end
 
-  # Sets a cohort to use as a default group of students for testing, e.g., a team for ASC and admin or My Students for CoE
+  # Sets a cohort to use as a default group of students for testing
   def set_default_cohort
     @default_cohort = FilteredCohort.new({})
     filter = CohortFilter.new
+    filter.major = CONFIG['test_default_cohort_major']
+    @default_cohort.search_criteria = filter
+    student_sids = @students.map &:sis_id
+    filtered_searchable_data = @searchable_data.select { |d| (filter.major & d[:major]).any? }
+    filtered_searchable_sids = filtered_searchable_data.map { |d| d[:sid] }
 
-    case @dept
-      # For CoE, use the advisor's assigned students
-      when BOACDepartments::COE
-        filter.coe_advisor = [@advisor.uid]
-        @default_cohort.search_criteria = filter
-        @cohort_members = NessieUtils.get_coe_advisor_students(@advisor, @students)
-
-      # For L&S, use students of configured major
-      when BOACDepartments::L_AND_S
-        filter.major = CONFIG['test_l_and_s_major']
-        @default_cohort.search_criteria = filter
-        student_sids = @students.map &:sis_id
-        filtered_searchable_data = @searchable_data.select { |d| (filter.major & d[:major]).any? }
-        filtered_searchable_sids = filtered_searchable_data.map { |d| d[:sid] }
-        @cohort_members = @students.select { |s| student_sids.include?(s.sis_id) && filtered_searchable_sids.include?(s.sis_id) }
-
-      # For ASC or admin, use a team
-      else
-        team = NessieUtils.get_asc_teams.find { |t| t.code == CONFIG['test_asc_team'] }
-        filter.asc_team = Squad::SQUADS.select { |s| s.parent_team == team }
-        @default_cohort.search_criteria = filter
-        @cohort_members = NessieUtils.get_asc_team_members(team, @students)
-    end
-
+    @cohort_members = @students.select { |s| student_sids.include?(s.sis_id) && filtered_searchable_sids.include?(s.sis_id) }
     @default_cohort.name = "Default cohort #{@id}"
     @default_cohort.member_count = @cohort_members.length
   end
@@ -197,7 +163,6 @@ class BOACTestConfig < TestConfig
   def curated_groups
     set_global_configs
     set_default_cohort
-    @cohort_members.keep_if &:active_asc if @dept == BOACDepartments::ASC
     set_max_cohort_members 50
   end
 
@@ -315,7 +280,6 @@ class BOACTestConfig < TestConfig
     set_dept BOACDepartments::ASC
     set_advisor
     set_students user_role_config.students
-    set_dept_students
   end
 
   # Config for CoE user role testing
@@ -324,7 +288,6 @@ class BOACTestConfig < TestConfig
     set_dept BOACDepartments::COE
     set_advisor
     set_students user_role_config.students
-    set_dept_students
   end
 
   # Config for L&S user role testing
@@ -333,14 +296,12 @@ class BOACTestConfig < TestConfig
     set_dept BOACDepartments::L_AND_S
     set_advisor
     set_students user_role_config.students
-    set_dept_students
   end
 
   def user_role_notes_only
     set_dept BOACDepartments::NOTES_ONLY
     set_advisor { |advisor| advisor.can_access_canvas_data == 'f' && advisor.depts.length == 1 }
     set_students
-    set_dept_students
   end
 
 end

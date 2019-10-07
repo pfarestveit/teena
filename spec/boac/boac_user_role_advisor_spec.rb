@@ -11,16 +11,17 @@ describe 'A BOA advisor' do
     # Get ASC test data
     @test_asc = BOACTestConfig.new
     @test_asc.user_role_asc @test
-    @asc_inactive_students = @test_asc.dept_students.reject &:active_asc
-    @asc_test_student = (@asc_inactive_students.sort_by { |s| s.last_name }).first
-    @asc_test_student_sports = @asc_test_student.sports.map { |squad_code| (Squad::SQUADS.find { |s| s.code == squad_code }).name }
+    asc_inactive_student_data = @test.searchable_data.select { |s| s[:asc_sports].any? && !s[:asc_active] }
+    asc_test_student_data = (asc_inactive_student_data.sort_by { |s| s[:last_name_sortable_cohort] }).first
+    @asc_test_student_sports = asc_test_student_data[:asc_sports].map { |s| s.gsub(' (AA)', '') }
+    @asc_test_student = @test.students.find { |s| s.sis_id == asc_test_student_data[:sid] }
 
     # Get CoE test data
     @test_coe = BOACTestConfig.new
     @test_coe.user_role_coe @test
     coe_inactive_student_data = @test.searchable_data.select { |s| s[:coe_inactive] }
     sorted = coe_inactive_student_data.sort_by { |s| s[:last_name_sortable_cohort] }
-    @coe_test_student = @test_coe.dept_students.find { |s| s.sis_id == sorted.first[:sid] }
+    @coe_test_student = @test_coe.students.find { |s| s.sis_id == sorted.first[:sid] }
 
     # Get L&S test data
     @test_l_and_s = BOACTestConfig.new

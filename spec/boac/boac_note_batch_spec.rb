@@ -18,10 +18,10 @@ else
   batch_notes << (batch_note_1 = NoteBatch.new({advisor: test.advisor, subject: "Batch note 1 subject #{Utils.get_test_id}"}))
   batch_notes << (batch_note_2 = NoteBatch.new({advisor: test.advisor, subject: "Batch note 2 subject #{Utils.get_test_id}"}))
 
-  students = test.dept_students.first BOACUtils.config['notes_batch_students_count']
+  students = test.students.first BOACUtils.config['notes_batch_students_count']
   cohorts = []
   curated_groups = []
-  curated_group_members = test.dept_students.shuffle.last BOACUtils.config['notes_batch_curated_group_count']
+  curated_group_members = test.students.shuffle.last BOACUtils.config['notes_batch_curated_group_count']
   curated_group_1 = CuratedGroup.new({:name => "Group 1 - #{test.id}"})
   curated_group_2 = CuratedGroup.new({:name => "Group 2 - #{test.id}"})
 

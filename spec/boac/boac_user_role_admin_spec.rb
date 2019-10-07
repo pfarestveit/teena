@@ -7,9 +7,6 @@ describe 'An admin using BOAC' do
   test = BOACTestConfig.new
   test.user_role_admin
 
-  coe_only_students = test.students.select { |s| s.depts == [BOACDepartments::COE] }
-  asc_only_students = test.students.select { |s| s.depts == [BOACDepartments::ASC] }
-
   non_admin_depts = BOACDepartments::DEPARTMENTS.reject { |d| d == BOACDepartments::ADMIN }
   dept_advisors = non_admin_depts.map { |dept| {:dept => dept, :advisors => BOACUtils.get_dept_advisors(dept)} }
 
@@ -92,12 +89,16 @@ describe 'An admin using BOAC' do
   context 'visiting student API pages' do
 
     it 'can see the ASC profile data for an ASC student on the student API page' do
-      @api_student_page.get_data(@driver, asc_only_students.first)
+      asc_student_data = test.searchable_data.find { |s| s[:asc_sports].any? }
+      asc_student = test.students.find { |s| s.sis_id == asc_student_data[:sid] }
+      @api_student_page.get_data(@driver, asc_student)
       expect(@api_student_page.asc_profile).not_to be_nil
     end
 
     it 'can see the CoE profile data for a CoE student on the student API page' do
-      @api_student_page.get_data(@driver, coe_only_students.first)
+      coe_student_data = test.searchable_data.find { |s| s[:coe_gender] == 'F' }
+      coe_student = test.students.find { |s| s.sis_id == coe_student_data[:sid] }
+      @api_student_page.get_data(@driver, coe_student)
       expect(@api_student_page.coe_profile).not_to be_nil
     end
   end
