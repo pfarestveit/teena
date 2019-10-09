@@ -86,7 +86,7 @@ module Page
         wait_until(Utils.short_wait) { collaborator_name user }
         wait_for_update_and_click edit_title_input_element
         wait_for_update_and_click save_edit_element
-        save_edit_element.when_not_visible Utils.short_wait rescue Selenium::WebDriver::Error::NoAlertPresentError
+        save_edit_element.when_not_visible Utils.short_wait rescue Selenium::WebDriver::Error::NoSuchAlertError
         add_event(event, EventType::MODIFY, whiteboard.id)
         add_event(event, EventType::WHITEBOARD_SETTINGS, user.uid)
       end
@@ -100,7 +100,7 @@ module Page
         wait_for_update_and_click button_element(xpath: "//span[text()='#{user.full_name}']/following-sibling::button")
         collaborator_name(user).when_not_visible Utils.short_wait
         # An alert can appear, but only if the user removes itself
-        alert { wait_for_update_and_click save_edit_element } rescue Selenium::WebDriver::Error::NoAlertPresentError
+        alert { wait_for_update_and_click save_edit_element } rescue Selenium::WebDriver::Error::NoSuchAlertError
         add_event(event, EventType::MODIFY)
         add_event(event, EventType::WHITEBOARD_SETTINGS, user.uid)
       end

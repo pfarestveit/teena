@@ -207,6 +207,11 @@ class BOACTestConfig < TestConfig
     @default_cohort = FilteredCohort.new({:name => "Default cohort #{@id}", :search_criteria => editing_test_search_criteria})
   end
 
+  # Config for non-current student testing
+  def inactive_students
+    set_global_configs
+  end
+
   # Config for last activity testing
   def last_activity
     set_global_configs

@@ -44,7 +44,7 @@ class NessieUtils < Utils
     @config['include_l_and_s']
   end
 
-  # DATABASE - ASSIGNMENTS
+  #### ASSIGNMENTS ####
 
   # Returns the assignments associated with a user in a course site
   # @param user [User]
@@ -77,13 +77,20 @@ class NessieUtils < Utils
     activities.max
   end
 
-  # DATABASE - ALL STUDENTS
+  #### ALL STUDENTS ####
 
-  # Converts a students result object to an array of users
-  # @param student_result [PG::Result]
+  # Returns an array of students who have current academic status
   # @return [Array<BOACUser>]
-  def self.student_result_to_users(student_result)
-    student_result.map do |r|
+  def self.get_all_students
+    query = 'SELECT student_academic_status.uid AS uid,
+                    student_academic_status.sid AS sid,
+                    student_academic_status.first_name AS first_name,
+                    student_academic_status.last_name AS last_name
+             FROM student.student_academic_status
+             ORDER BY uid;'
+    results = Utils.query_pg_db(nessie_pg_db_credentials, query)
+
+    results.map do |r|
       attributes = {
         :uid => r['uid'],
         :sis_id => r['sid'],
@@ -95,22 +102,7 @@ class NessieUtils < Utils
     end
   end
 
-  def self.query_students
-    query = 'SELECT student_academic_status.uid AS uid,
-                    student_academic_status.sid AS sid,
-                    student_academic_status.first_name AS first_name,
-                    student_academic_status.last_name AS last_name
-             FROM student.student_academic_status
-             ORDER BY uid;'
-    Utils.query_pg_db(nessie_pg_db_credentials, query)
-  end
-
-  def self.get_all_students
-    results = query_students
-    student_result_to_users results
-  end
-
-  # DATABASE - ASC STUDENTS
+  #### ASC ####
 
   # Returns all the distinct teams associated with team members
   # @return [Array<Team>]
@@ -130,7 +122,7 @@ class NessieUtils < Utils
     teams.sort_by { |t| t.name }
   end
 
-  # DATABASE - CoE STUDENTS
+  #### CoE ####
 
   # Returns all the CoE students associated with a given advisor
   # @param advisor [User]
@@ -146,21 +138,124 @@ class NessieUtils < Utils
     all_coe_students.select { |s| result.include? s.sis_id }
   end
 
-  # Returns a random sample of non-current students
-  # @return [PG::Result]
-  def self.query_non_current_students
-    query = "SELECT students.sid,
-                    students.uid,
-                    NULL AS first_name,
-                    NULL AS last_name
-             FROM student.student_profiles_hist_enr students
-             ORDER BY students.sid;"
-    result = Utils.query_pg_db(nessie_pg_db_credentials, query)
-    logger.info result.fields
+  #### HISTORICAL STUDENTS ####
+
+  # Returns the number of non-current students with a given academic career status
+  # @param status [String]
+  # @return [Integer]
+  def self.hist_career_status_count(status)
+    query = "SELECT COUNT(*)
+             FROM student.student_profiles_hist_enr
+             WHERE profile LIKE '%\"academicCareerStatus\": \"#{status}\"%';"
+    result = query_pg_db_field(nessie_pg_db_credentials, query, 'count').last.to_i
+    logger.info "Count of historical students with academic career status '#{status}' is #{result}"
     result
   end
 
-  # SEARCHABLE STUDENT DATA
+  # Returns the number of non-current students with a null academic career status
+  # @return [Integer]
+  def self.null_hist_career_status_count
+    query = "SELECT COUNT(*)
+             FROM student.student_profiles_hist_enr
+             WHERE profile NOT LIKE '%\"academicCareerStatus\": %';"
+    result = query_pg_db_field(nessie_pg_db_credentials, query, 'count').last.to_i
+    logger.info "Count of historical students with NULL academic career status is #{result}"
+    result
+  end
+
+  # Returns the number of non-current students with an unexpected academic career status
+  # @return [Integer]
+  def self.unexpected_hist_career_status_count
+    query = "SELECT COUNT(*)
+             FROM student.student_profiles_hist_enr
+             WHERE profile LIKE '%\"academicCareerStatus\": %'
+               AND profile NOT LIKE '%\"academicCareerStatus\": \"Active\"%'
+               AND profile NOT LIKE '%\"academicCareerStatus\": \"Inactive\"%'
+               AND profile NOT LIKE '%\"academicCareerStatus\": \"Completed\"%';"
+    result = query_pg_db_field(nessie_pg_db_credentials, query, 'count').last.to_i
+    logger.info "Count of historical students with unexpected academic career status is #{result}"
+    result
+  end
+
+  # Returns the number of non-current students with a given program status
+  # @param status [String]
+  # @return [Integer]
+  def self.hist_prog_status_count(status)
+    query = "SELECT COUNT(*)
+             FROM student.student_profiles_hist_enr
+             WHERE profile LIKE '%\"status\": \"#{status}\"%';"
+    result = query_pg_db_field(nessie_pg_db_credentials, query, 'count').last.to_i
+    logger.info "Count of historical students with academic program status '#{status}' is #{result}"
+    result
+  end
+
+  # Returns the number of non-current students with an unexpected program status
+  # @return [Integer]
+  def self.unexpected_hist_prog_status_count
+    query = "SELECT COUNT(*)
+             FROM student.student_profiles_hist_enr
+             WHERE profile LIKE '%\"status\": %'
+               AND profile NOT LIKE '%\"status\": \"Active\"%'
+               AND profile NOT LIKE '%\"status\": \"Cancelled\"%'
+               AND profile NOT LIKE '%\"status\": \"Completed Program\"%'
+               AND profile NOT LIKE '%\"status\": \"Deceased\"%'
+               AND profile NOT LIKE '%\"status\": \"Discontinued\"%'
+               AND profile NOT LIKE '%\"status\": \"Dismissed\"%'
+               AND profile NOT LIKE '%\"status\": \"Suspended\"%';"
+    result = query_pg_db_field(nessie_pg_db_credentials, query, 'count').last.to_i
+    logger.info "Count of historical students with unexpected academic program status is #{result}"
+    result
+  end
+
+  # Returns the SIDs of non-current students in the profiles table
+  # @return [Array<String>]
+  def self.hist_profile_sids
+    query = 'SELECT sid
+             FROM student.student_profiles_hist_enr
+             ORDER BY sid ASC;'
+    query_pg_db(nessie_pg_db_credentials, query).map { |r| r['sid'] }
+  end
+
+  # Returns the SIDs of non-current students with a given academic career status
+  # @param status [String]
+  # @return [Array<String>]
+  def self.hist_profile_sids_of_career_status(status)
+    query = "SELECT sid
+             FROM student.student_profiles_hist_enr
+             WHERE profile LIKE '%\"academicCareerStatus\": \"#{status}\"%';"
+    query_pg_db(nessie_pg_db_credentials, query).map { |r| r['sid'] }
+  end
+
+  # Returns the SIDs of non-current students with null academic career status
+  # @return [Array<String>]
+  def self.null_hist_career_status_sids
+    query = "SELECT sid
+             FROM student.student_profiles_hist_enr
+             WHERE profile NOT LIKE '%\"academicCareerStatus\": %';"
+    query_pg_db(nessie_pg_db_credentials, query).map { |r| r['sid'] }
+  end
+
+  # Returns the SIDs of non-current students in the enrollments table
+  # @return [Array<String>]
+  def self.hist_enrollment_sids
+    query = 'SELECT DISTINCT sid
+             FROM student.student_enrollment_terms_hist_enr
+             ORDER BY sid ASC;'
+    query_pg_db(nessie_pg_db_credentials, query).map { |r| r['sid'] }
+  end
+
+  # Returns a non-current student with a given SID
+  # @param sid [String]
+  # @return [BOACUser]
+  def self.get_hist_student(sid)
+    query = "SELECT uid
+             FROM student.student_profiles_hist_enr
+             WHERE sid = '#{sid}';"
+    uid = query_pg_db_field(nessie_pg_db_credentials, query, 'uid').last
+    BOACUser.new(sis_id: sid, uid: uid)
+  end
+
+  #### SEARCHABLE STUDENT DATA ####
 
   # Parses a file containing searchable user data if it exists
   # @return [Array<Hash>]
@@ -356,6 +451,12 @@ class NessieUtils < Utils
     plan_map
   end
 
+  #### NOTES ####
+
+  # Returns non-BOA advising notes from a given source for a given student
+  # @param [String] schema
+  # @param [BOACUser] student
+  # @return[Array<Note>]
   def self.get_external_notes(schema, student)
     query = "SELECT #{schema}.advising_notes.id AS id,
                     #{schema}.advising_notes.advisor_uid AS advisor_uid,
@@ -385,15 +486,21 @@ class NessieUtils < Utils
     notes_data.compact.map { |d| Note.new d }
   end
 
+  # Returns ASC advising notes associated with a given student
+  # @param [BOACUser] student
+  # @return [Array<Note>]
   def self.get_asc_notes(student)
     get_external_notes('boac_advising_asc', student)
   end
 
+  # Returns E&I advising notes associated with a given student
+  # @param [BOACUser] student
+  # @return [Array<Note>]
   def self.get_e_and_i_notes(student)
     get_external_notes('boac_advising_e_i', student)
   end
 
-  # Returns legacy advising notes associated with a given student
+  # Returns SIS advising notes associated with a given student
   # @param student [BOACUser]
   # @return [Array<Note>]
   def self.get_sis_notes(student)
@@ -483,6 +590,8 @@ class NessieUtils < Utils
       }
     end
   end
+
+  #### HOLDS ####
 
   # Returns a student's current holds
   # @param student [BOACUser]
