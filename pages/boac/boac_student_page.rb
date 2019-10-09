@@ -150,6 +150,7 @@ class BOACStudentPage
 
   span(:withdrawal_msg, class: 'red-flag-small')
   button(:view_more_button, :xpath => '//button[contains(.,"Show Previous Semesters")]')
+  elements(:class_page_link, :xpath => '//a[contains(@href, "/course/")]')
 
   # Clicks the button to expand previous semester data
   def click_view_previous_semesters

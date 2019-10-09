@@ -190,6 +190,33 @@ class BOACUtils < Utils
     results.map { |r| BOACUser.new({uid: r['uid'], can_access_canvas_data: r['can_access_canvas_data'], depts: r['depts'].split(',')}) }
   end
 
+  # Returns all SIDs in the manual advisee table
+  # @return [Array[<String>]]
+  def self.manual_advisee_sids
+    query = 'SELECT sid
+             FROM manually_added_advisees;'
+    query_pg_db(boac_db_credentials, query).map { |r| r['sid'] }
+  end
+
+  # Returns non-current student SIDs who should have complete data feeds since they were added to the list before today
+  # @return [Array<String>]
+  def self.deluxe_manual_advisee_sids
+    query = "SELECT sid
+             FROM manually_added_advisees
+             WHERE created_at < TIMESTAMP '#{Date.today.strftime('%Y-%m-%d')}';"
+    query_pg_db(boac_db_credentials, query).map { |r| r['sid'] }
+  end
+
+  # Whether or not a given student is in the manually added advisee list
+  # @param [BOACUser] student
+  # @return [Boolean]
+  def self.student_in_deluxe_list?(student)
+    query = "SELECT sid
+             FROM manually_added_advisees
+             WHERE sid = '#{student.sis_id}';"
+    query_pg_db(boac_db_credentials, query).values.any?
+  end
+
   # DATABASE - CURATED GROUPS
 
   # Returns the curated groups belonging to a given user

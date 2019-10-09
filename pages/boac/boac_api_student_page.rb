@@ -18,6 +18,13 @@ class BOACApiStudentPage
     end
   end
 
+  def set_identity(user)
+    user.uid = @parsed['uid']
+    user.first_name = @parsed['firstName']
+    user.last_name = @parsed['lastName']
+    user.full_name = @parsed['name']
+  end
+
   # Canvas Profile
 
   def set_canvas_id(user)

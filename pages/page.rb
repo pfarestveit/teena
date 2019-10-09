@@ -202,10 +202,10 @@ module Page
     ensure
       if driver.window_handles.length > 1
         # Handle any alert that might appear when opening the new window
-        driver.switch_to.alert.accept rescue Selenium::WebDriver::Error::NoAlertPresentError
+        driver.switch_to.alert.accept rescue Selenium::WebDriver::Error::NoSuchAlertError
         driver.close
         # Handle any alert that might appear when closing the new window
-        driver.switch_to.alert.accept rescue Selenium::WebDriver::Error::NoAlertPresentError
+        driver.switch_to.alert.accept rescue Selenium::WebDriver::Error::NoSuchAlertError
       end
       driver.switch_to.window original_window
     end
@@ -277,7 +277,7 @@ module Page
   def alert(&blk)
     yield
     sleep Utils.click_wait
-    browser.switch_to.alert.accept rescue Selenium::WebDriver::Error::NoAlertPresentError
+    browser.switch_to.alert.accept rescue Selenium::WebDriver::Error::NoSuchAlertError
   end
 
   # Hits the Delete key
