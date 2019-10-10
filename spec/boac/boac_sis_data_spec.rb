@@ -59,6 +59,10 @@ describe 'BOAC' do
           it("shows no level for UID #{student.uid} on the #{test.default_cohort.name} page") { expect(cohort_page_sis_data[:level]).to be_empty }
         end
 
+        if api_sis_profile_data[:entered_term]
+          it("shows the matriculation term for UID #{student.uid} on the #{test.default_cohort.name} page") { expect(cohort_page_sis_data[:entered_term]).to eql(api_sis_profile_data[:entered_term]) }
+        end
+
         if api_sis_profile_data[:academic_career_status] == 'Completed'
           it "shows the right graduation date for UID #{student.uid} on the #{test.default_cohort.name} page" do
             expect(cohort_page_sis_data[:graduation_date]).to eql('Graduated ' + Date.parse(api_sis_profile_data[:graduation][:date]).strftime('%b %e, %Y'))
@@ -184,6 +188,12 @@ describe 'BOAC' do
           end
         else
           it("shows no academic level for UID #{student.uid} on the student page") { expect(student_page_sis_data[:level]).to be_empty }
+        end
+
+        if api_sis_profile_data[:entered_term]
+          it "shows the matriculation date for UID #{student.uid} on the student page" do
+            expect(student_page_sis_data[:entered_term]).to eql(api_sis_profile_data[:entered_term])
+          end
         end
 
         if api_sis_profile_data[:academic_career_status] == 'Completed'

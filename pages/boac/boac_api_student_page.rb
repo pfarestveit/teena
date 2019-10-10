@@ -74,6 +74,7 @@ class BOACApiStudentPage
       :level => (sis_profile && (sis_profile['level'] && sis_profile['level']['description'])),
       :transfer => (sis_profile && (sis_profile['transfer'])),
       :terms_in_attendance => (sis_profile && sis_profile['termsInAttendance'].to_s),
+      :entered_term => (sis_profile && sis_profile['matriculation']),
       :expected_grad_term_id => (sis_profile && sis_profile['expectedGraduationTerm'] && sis_profile['expectedGraduationTerm']['id']),
       :expected_grad_term_name => (sis_profile && sis_profile['expectedGraduationTerm'] && sis_profile['expectedGraduationTerm']['name']),
       :withdrawal => (sis_profile && withdrawal),
