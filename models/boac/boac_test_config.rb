@@ -178,6 +178,7 @@ class BOACTestConfig < TestConfig
         :units_completed => ['90 - 119'],
         :major => ((@dept == BOACDepartments::COE) ? ['Electrical Eng & Comp Sci BS'] : ['Letters & Sci Undeclared UG']),
         :transfer_student => true,
+        :entering_terms => [CONFIG['term_code']],
         :expected_grad_terms => [CONFIG['term_code']],
         :gender => ['Male'],
         :last_name => [JSON.parse("{\"min\": \"A\", \"max\": \"Z\"}")],

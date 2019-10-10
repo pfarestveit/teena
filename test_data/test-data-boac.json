@@ -1,6 +1,12 @@
 {
     "filters": [
         {
+            "entering_terms": [
+                {"entering_term": "2138"},
+                {"entering_term": "2148"}
+            ]
+        },
+        {
             "asc_inactive": true,
             "asc_teams": [
                 {"squad": "Men's Crew"},
@@ -56,18 +62,10 @@
             ],
             "gpa_ranges": [
                 {
-                    "gpa_range":
-                        {
-                            "min": "3.51",
-                            "max": "4.000"
-                        }
+                    "gpa_range": {"min": "3.51", "max": "4.000"}
                 },
                 {
-                    "gpa_range":
-                        {
-                            "min": ".02",
-                            "max": "2"
-                        }
+                    "gpa_range": {"min": ".02", "max": "2"}
                 }
             ],
             "majors": [
