@@ -134,6 +134,7 @@ describe 'A BOA advisor' do
         @cohort_page.wait_until(1) { @cohort_page.new_filter_option_elements.any? &:visible? }
       end
 
+      it('sees an Entering Term filter') { expect(@filtered_cohort_page.new_filter_option('enteringTerms').visible?).to be true }
       it('sees an Expected Graduation Term filter') { expect(@cohort_page.new_filter_option('expectedGradTerms').visible?).to be true }
       it('sees a GPA filter') { expect(@cohort_page.new_filter_option('gpaRanges').visible?).to be true }
       it('sees a Level filter') { expect(@cohort_page.new_filter_option('levels').visible?).to be true }
@@ -280,6 +281,7 @@ describe 'A BOA advisor' do
         @cohort_page.wait_until(1) { @cohort_page.new_filter_option_elements.any? &:visible? }
       end
 
+      it('sees an Entering Term filter') { expect(@filtered_cohort_page.new_filter_option('enteringTerms').visible?).to be true }
       it('sees an Expected Graduation Term filter') { expect(@cohort_page.new_filter_option('expectedGradTerms').visible?).to be true }
       it('sees a GPA filter') { expect(@cohort_page.new_filter_option('gpaRanges').visible?).to be true }
       it('sees a Level filter') { expect(@cohort_page.new_filter_option('levels').visible?).to be true }
@@ -424,6 +426,7 @@ describe 'A BOA advisor' do
         @cohort_page.wait_until(1) { @cohort_page.new_filter_option_elements.any? &:visible? }
       end
 
+      it('sees an Entering Term filter') { expect(@filtered_cohort_page.new_filter_option('enteringTerms').visible?).to be true }
       it('sees an Expected Graduation Term filter') { expect(@cohort_page.new_filter_option('expectedGradTerms').visible?).to be true }
       it('sees a GPA filter') { expect(@cohort_page.new_filter_option('gpaRanges').visible?).to be true }
       it('sees a Level filter') { expect(@cohort_page.new_filter_option('levels').visible?).to be true }

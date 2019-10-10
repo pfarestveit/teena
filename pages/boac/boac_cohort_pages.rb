@@ -195,6 +195,11 @@ module BOACCohortPages
     sort_by 'Major'
   end
 
+  # Sorts cohort search results by entering term
+  def sort_by_entering_term
+    sort_by 'Entering Term'
+  end
+
   # Sorts cohort search results by units
   def sort_by_units
     sort_by 'Units Completed'

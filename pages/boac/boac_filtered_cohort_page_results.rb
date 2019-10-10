@@ -418,6 +418,17 @@ module BOACFilteredCohortPageResults
     sorted_results.map { |u| u[:sid] }
   end
 
+  # Returns the sequence of SIDs that should be present when search results are sorted by entering term
+  # @param expected_results [Array<Hash>]
+  # @return [Array<String>]
+  def expected_sids_by_matriculation(expected_results)
+    sorted_results = expected_results.sort_by do |u|
+      term = u[:entering_term].nil? ? '9999' : u[:entering_term]
+      [term, u[:last_name_sortable_cohort].downcase, u[:first_name_sortable_cohort].downcase, u[:sid]]
+    end
+    sorted_results.map { |u| u[:sid] }
+  end
+
   # Returns the sequence of SIDs that should be present when search results are sorted by cumulative units
   # @param expected_results [Array<Hash>]
   # @return [Array<String>]

@@ -120,6 +120,18 @@ describe 'BOAC', order: :defined do
         end
       end
 
+      it "sorts by Entering Term all the students who match #{cohort.search_criteria.list_filters}" do
+        if (0..1) === cohort.member_data.length
+          logger.warn 'Skipping sort-by-entering-term test since there are no results or only one result'
+        else
+          @cohort_page.sort_by_entering_term
+          expected_results = @cohort_page.expected_sids_by_matriculation cohort.member_data
+          visible_results = @cohort_page.visible_sids
+          @cohort_page.verify_list_view_sorting(expected_results, visible_results)
+          @cohort_page.wait_until(1, "Expected #{expected_results} but got #{visible_results}") { visible_results == expected_results }
+        end
+      end
+
       it "sorts by Units Completed all the students who match #{cohort.search_criteria.list_filters}" do
         if (0..1) === cohort.member_data.length
           logger.warn 'Skipping sort-by-units test since there are no results or only one result'
