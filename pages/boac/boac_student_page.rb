@@ -37,6 +37,7 @@ class BOACStudentPage
   div(:level, xpath: '//div[@id="student-bio-level"]/div')
   div(:transfer, xpath: '//div[@id="student-bio-level"]/following-sibling::div/div[contains(.,"Transfer")]')
   div(:terms_in_attendance, id: 'student-bio-terms-in-attendance')
+  div(:entered_term, id: 'student-bio-matriculation')
   div(:expected_graduation, id: 'student-bio-expected-graduation')
   div(:degree_type, id: 'student-bio-degree-type')
   div(:degree_date, id: 'student-bio-degree-date')
@@ -57,6 +58,7 @@ class BOACStudentPage
       :level => (level.gsub("Level\n",'') if level?),
       :transfer => (transfer.strip if transfer?),
       :terms_in_attendance => (terms_in_attendance if terms_in_attendance?),
+      :entered_term => (entered_term.gsub('Entered', '').strip if entered_term?),
       :expected_graduation => (expected_graduation.gsub('Expected graduation','').strip if expected_graduation?),
       :graduation_degree => (degree_type_element.text if degree_type_element.exists?),
       :graduation_date => (degree_date_element.text if degree_date_element.exists?),
