@@ -392,6 +392,19 @@ describe 'BOAC', order: :defined do
       @cohort_page.verify_filters_present test.default_cohort
     end
 
+    it 'allows the advisor to edit an Entering Term filter' do
+      new_term_id = (test.default_cohort.search_criteria.entering_terms.first.to_i - 10).to_s
+      test.default_cohort.search_criteria.entering_terms = [new_term_id]
+      @cohort_page.edit_filter_and_confirm('Entering Term', test.default_cohort.search_criteria.entering_terms.first)
+      @cohort_page.verify_filters_present test.default_cohort
+    end
+
+    it 'allows the advisor to remove an Entering Term filter' do
+      test.default_cohort.search_criteria.entering_terms = []
+      @cohort_page.remove_filter_of_type 'Entering Term'
+      @cohort_page.verify_filters_present test.default_cohort
+    end
+
     it 'allows the advisor to edit an Expected Graduation Term filter' do
       new_term_id = (test.default_cohort.search_criteria.expected_grad_terms.first.to_i + 10).to_s
       test.default_cohort.search_criteria.expected_grad_terms = [new_term_id]
