@@ -284,6 +284,7 @@ class NessieUtils < Utils
                     student.student_academic_status.gpa AS gpa,
                     student.student_academic_status.level AS level_code,
                     student.student_majors.major AS majors,
+                    student.student_enrollment_terms.enrolled_units AS units_in_progress,
                     student.student_enrollment_terms.midpoint_deficient_grade AS mid_point_deficient,
                     (ARRAY_AGG (boac_advising_asc.students.group_code || ',' || boac_advising_asc.students.active))
                       AS group_codes_with_status,
@@ -316,12 +317,12 @@ class NessieUtils < Utils
                  AND student.student_enrollment_terms.term_id = '#{BOACUtils.term_code}'
              GROUP BY student_academic_status.uid, student_academic_status.sid, student_academic_status.first_name,
                       student_academic_status.last_name, student.student_profiles.profile, student.student_academic_status.gpa,
-                      student.student_academic_status.level, student.student_majors.major, student.student_enrollment_terms.midpoint_deficient_grade,
-                      boac_advising_asc.students.intensive, boac_advising_coe.students.advisor_ldap_uid, boac_advising_coe.students.gender,
-                      boac_advising_coe.students.ethnicity, boac_advising_coe.students.minority, boac_advising_coe.students.did_prep,
-                      boac_advising_coe.students.prep_eligible, boac_advising_coe.students.did_tprep, boac_advising_coe.students.tprep_eligible,
-                      boac_advising_coe.students.probation, boac_advising_coe.students.status, boac_advisor.advisor_students.advisor_sid,
-                      boac_advisor.advisor_students.academic_plan_code
+                      student.student_academic_status.level, student.student_majors.major, student.student_enrollment_terms.enrolled_units,
+                      student.student_enrollment_terms.midpoint_deficient_grade, boac_advising_asc.students.intensive,
+                      boac_advising_coe.students.advisor_ldap_uid, boac_advising_coe.students.gender, boac_advising_coe.students.ethnicity,
+                      boac_advising_coe.students.minority, boac_advising_coe.students.did_prep, boac_advising_coe.students.prep_eligible,
+                      boac_advising_coe.students.did_tprep, boac_advising_coe.students.tprep_eligible, boac_advising_coe.students.probation,
+                      boac_advising_coe.students.status, boac_advisor.advisor_students.advisor_sid, boac_advisor.advisor_students.academic_plan_code
              ORDER BY sid;"
 
     results = query_pg_db(nessie_pg_db_credentials, query)
@@ -349,6 +350,7 @@ class NessieUtils < Utils
       sis_profile = profile['sisProfile']
       expected_grad = sis_profile && sis_profile['expectedGraduationTerm']
       cumulative_units = sis_profile && sis_profile['cumulativeUnits']
+      units_in_progress = (v[0]['units_in_progress'].nil? ? 0 : v[0]['units_in_progress'].to_f)
       demographics = profile && profile['demographics']
 
       # Determine if the student is ASC active in any sport
@@ -376,6 +378,7 @@ class NessieUtils < Utils
         :mid_point_deficient => (v[0]['mid_point_deficient'] == 't'),
         :transfer_student => (sis_profile && sis_profile['transfer']),
         :underrepresented_minority => (demographics && demographics['underrepresented']),
+        :units_in_progress => units_in_progress,
         :units_completed => cumulative_units,
         :asc_active => asc_active,
         :asc_intensive => (v[0]['intensive_asc'] == 't'),

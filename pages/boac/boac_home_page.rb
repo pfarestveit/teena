@@ -15,6 +15,7 @@ class BOACHomePage
   button(:dev_auth_log_in_button, id: 'dev-auth-submit')
   span(:copyright_year_login, class: 'splash-text-copyright')
   div(:not_auth_msg, xpath: '//div[contains(., "Sorry, you are not registered to use BOA.")]')
+  div(:footer_warning, id: 'fixed-warning-on-all-pages')
 
   # Loads the home page
   def load_page
@@ -47,6 +48,7 @@ class BOACHomePage
     logger.info "Logging in #{('UID ' + user.uid.to_s + ' ') if user}using developer auth"
     start = Time.now
     load_page
+    footer_warning_element.when_visible Utils.short_wait
     scroll_to_bottom
     wait_for_element_and_type(dev_auth_uid_input_element, (user ? user.uid : Utils.super_admin_uid))
     logger.warn "Took #{Time.now - start - Utils.click_wait} seconds for dev auth input to become available"
