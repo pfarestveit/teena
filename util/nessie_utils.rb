@@ -85,7 +85,8 @@ class NessieUtils < Utils
     query = 'SELECT student_academic_status.uid AS uid,
                     student_academic_status.sid AS sid,
                     student_academic_status.first_name AS first_name,
-                    student_academic_status.last_name AS last_name
+                    student_academic_status.last_name AS last_name,
+                    student_academic_status.email_address AS email
              FROM student.student_academic_status
              ORDER BY uid;'
     results = Utils.query_pg_db(nessie_pg_db_credentials, query)
@@ -96,7 +97,8 @@ class NessieUtils < Utils
         :sis_id => r['sid'],
         :first_name => r['first_name'],
         :last_name => r['last_name'],
-        :full_name => "#{r['first_name']} #{r['last_name']}"
+        :full_name => "#{r['first_name']} #{r['last_name']}",
+        :email => r['email']
       }
       BOACUser.new attributes
     end

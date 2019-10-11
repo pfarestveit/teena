@@ -156,6 +156,14 @@ describe 'BOAC' do
         partial_sid_results = @search_results_page.student_in_search_result?(@driver, search[:student])
         it("finds UID #{search[:student].uid} with a partial SID") { expect(partial_sid_results).to be true }
 
+        @homepage.search_non_note search[:student].email
+        complete_email_results = @search_results_page.student_in_search_result?(@driver, search[:student])
+        it("finds UID #{search[:student].uid} with the complete email address") { expect(complete_email_results).to be true }
+
+        @homepage.search_non_note search[:student].email[0..4]
+        partial_email_results = @search_results_page.student_in_search_result?(@driver, search[:student])
+        it("finds UID #{search[:student].uid} with a partial email address") { expect(partial_email_results).to be true }
+
       rescue => e
         Utils.log_error e
         it("hit an error performing user searches for UID #{search[:student].uid}") { fail }
