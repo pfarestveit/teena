@@ -44,6 +44,13 @@ module Page
     end
   end
 
+  # Hides the BOA footer element in order to interact with elements hidden beneath it.
+  def hide_boac_footer
+    if (footer = div_element(id: 'fixed-warning-on-all-pages')).exists? && footer.visible?
+      execute_script('document.getElementById("fixed-warning-on-all-pages").style.display="none";')
+    end
+  end
+
   # Waits for an element to exist and to become visible
   # @param element [PageObject::Elements::Element]
   # @param timeout [Fixnum]
@@ -60,6 +67,7 @@ module Page
   def click_element(element, timeout)
     wait_for_element(element, timeout)
     hide_canvas_footer_and_popup
+    hide_boac_footer
     scroll_to_element element
     sleep Utils.click_wait
     element.click

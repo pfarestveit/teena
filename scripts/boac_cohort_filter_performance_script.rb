@@ -58,7 +58,7 @@ begin
         @cohort_page.wait_for_student_list
 
         # Units
-        @cohort_page.sort_by_units
+        @cohort_page.sort_by_units_completed
         @cohort_page.wait_for_spinner
         @cohort_page.wait_for_student_list
 

@@ -429,10 +429,16 @@ module BOACFilteredCohortPageResults
     sorted_results.map { |u| u[:sid] }
   end
 
+  # Returns the sequence of SIDs that should be present when search results are sorted by units in progress
+  def expected_sids_by_units_in_prog(expected_results)
+    sorted_results = expected_results.sort_by { |u| [u[:units_in_progress].to_f, u[:last_name_sortable_cohort].downcase, u[:first_name_sortable_cohort].downcase, u[:sid]] }
+    sorted_results.map { |u| u[:sid] }
+  end
+
   # Returns the sequence of SIDs that should be present when search results are sorted by cumulative units
   # @param expected_results [Array<Hash>]
   # @return [Array<String>]
-  def expected_sids_by_units(expected_results)
+  def expected_sids_by_units_completed(expected_results)
     sorted_results = expected_results.sort_by { |u| [u[:units_completed].to_f, u[:last_name_sortable_cohort].downcase, u[:first_name_sortable_cohort].downcase, u[:sid]] }
     sorted_results.map { |u| u[:sid] }
   end

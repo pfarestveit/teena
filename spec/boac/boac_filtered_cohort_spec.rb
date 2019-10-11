@@ -132,12 +132,24 @@ describe 'BOAC', order: :defined do
         end
       end
 
+      it "sorts by Units In Progress all the students who match #{cohort.search_criteria.list_filters}" do
+        if (0..1) === cohort.member_data.length
+          logger.warn 'Skipping sort-by-units-in-progress test since there are no results or only one result'
+        else
+          @cohort_page.sort_by_units_in_progress
+          expected_results = @cohort_page.expected_sids_by_units_in_prog cohort.member_data
+          visible_results = @cohort_page.visible_sids
+          @cohort_page.verify_list_view_sorting(expected_results, visible_results)
+          @cohort_page.wait_until(1, "Expected #{expected_results} but got #{visible_results}") { visible_results == expected_results }
+        end
+      end
+
       it "sorts by Units Completed all the students who match #{cohort.search_criteria.list_filters}" do
         if (0..1) === cohort.member_data.length
-          logger.warn 'Skipping sort-by-units test since there are no results or only one result'
+          logger.warn 'Skipping sort-by-units-completed test since there are no results or only one result'
         else
-          @cohort_page.sort_by_units
-          expected_results = @cohort_page.expected_sids_by_units cohort.member_data
+          @cohort_page.sort_by_units_completed
+          expected_results = @cohort_page.expected_sids_by_units_completed cohort.member_data
           visible_results = @cohort_page.visible_sids
           @cohort_page.verify_list_view_sorting(expected_results, visible_results)
           @cohort_page.wait_until(1, "Expected #{expected_results} but got #{visible_results}") { visible_results == expected_results }
