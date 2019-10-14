@@ -16,6 +16,9 @@ module BOACFilteredCohortPageFilters
   button(:unsaved_filter_add_button, id: 'unsaved-filter-add')
   button(:unsaved_filter_cancel_button, id: 'unsaved-filter-reset')
   button(:unsaved_filter_apply_button, id: 'unsaved-filter-apply')
+  span(:gpa_filter_range_error, xpath: '//span[text()="GPA must be a number in the range 0 to 4."]')
+  span(:gpa_filter_logical_error, xpath: '//span[text()="GPA inputs must be in ascending order."]')
+  span(:last_name_filter_logical_error, xpath: '//span[text()="Letters must be in ascending order."]')
 
   # Clicks the new filter button, making two attempts in case of a DOM update
   def click_new_filter_button
@@ -60,7 +63,7 @@ module BOACFilteredCohortPageFilters
 
   # Selects a sub-category for a filter type that offers sub-categories
   # @param filter_key [String]
-  # @param filter_option [String]
+  # @param filter_option [Object]
   def choose_new_filter_sub_option(filter_key, filter_option)
     # GPA and Last Name require input
     if %w(gpaRanges lastNameRanges).include? filter_key
