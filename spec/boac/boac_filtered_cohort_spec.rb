@@ -358,12 +358,64 @@ describe 'BOAC', order: :defined do
     end
   end
 
+  context 'when the advisor enters invalid filter input' do
+
+    before(:all) { @homepage.click_sidebar_create_filtered }
+
+    context 'in the GPA Range filter' do
+
+      before(:all) do
+        @cohort_page.click_new_filter_button
+        @cohort_page.wait_for_update_and_click @cohort_page.new_filter_option 'gpaRanges'
+      end
+
+      it 'an error prompts for numeric input' do
+        @cohort_page.choose_new_filter_sub_option('gpaRanges', {'min' => 'A', 'max' => ''})
+        @cohort_page.gpa_filter_range_error_element.when_visible 1
+      end
+
+      it 'an error prompts for logical numeric input' do
+        @cohort_page.choose_new_filter_sub_option('gpaRanges', {'min' => '4', 'max' => '0'})
+        @cohort_page.gpa_filter_logical_error_element.when_visible 1
+      end
+
+      it 'an error prompts for numeric input from 0 to 4' do
+        @cohort_page.choose_new_filter_sub_option('gpaRanges', {'min' => '-1', 'max' => '5'})
+        @cohort_page.gpa_filter_range_error_element.when_visible 1
+      end
+
+      it 'no Add button appears without two valid values' do
+        @cohort_page.choose_new_filter_sub_option('gpaRanges', {'min' => '3.5', 'max' => ''})
+        expect(@cohort_page.unsaved_filter_add_button?).to be false
+      end
+    end
+
+    context 'in the Last Name filter' do
+
+      before(:all) do
+        @cohort_page.unsaved_filter_cancel_button
+        @cohort_page.click_new_filter_button
+        @cohort_page.wait_for_update_and_click @cohort_page.new_filter_option 'lastNameRanges'
+      end
+
+      it 'an error prompts for logical input' do
+        @cohort_page.choose_new_filter_sub_option('lastNameRanges', {'min' => 'Z', 'max' => 'A'})
+        @cohort_page.last_name_filter_logical_error_element.when_visible 1
+      end
+
+      it 'no Add button appears without two valid values' do
+        @cohort_page.choose_new_filter_sub_option('lastNameRanges', {'min' => 'P', 'max' => ''})
+        expect(@cohort_page.unsaved_filter_add_button?).to be false
+      end
+    end
+  end
+
   context 'when the advisor edits a cohort\'s search filters' do
 
     before(:all) { @cohort_page.search_and_create_new_cohort(test.default_cohort, test) }
 
     it 'allows the advisor to edit a GPA filter' do
-      test.default_cohort.search_criteria.gpa = [JSON.parse("{\"min\": \"3.00\", \"max\": \"4\"}")]
+      test.default_cohort.search_criteria.gpa = [{'min' => '3.00', 'max' => '4'}]
       @cohort_page.edit_filter_and_confirm('GPA', test.default_cohort.search_criteria.gpa.first)
       @cohort_page.verify_filters_present test.default_cohort
     end
@@ -539,7 +591,7 @@ describe 'BOAC', order: :defined do
     end
 
     it 'allows the advisor to edit a Last Name filter' do
-      test.default_cohort.search_criteria.last_name = [JSON.parse("{\"min\": \"B\", \"max\": \"Y\"}")]
+      test.default_cohort.search_criteria.last_name = [{'min': 'B', 'max': 'Y'}]
       @cohort_page.edit_filter_and_confirm('Last Name', test.default_cohort.search_criteria.last_name.first)
       @cohort_page.verify_filters_present test.default_cohort
     end
