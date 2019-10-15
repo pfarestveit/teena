@@ -150,6 +150,64 @@ class BOACUtils < Utils
     query_pg_db_field(boac_db_credentials, query, 'count').first.to_i
   end
 
+  # Returns all authorized users along with any associated department advisor roles
+  # @return [Array<BOACUser>]
+  def self.get_authorized_users
+    query = "SELECT
+              authorized_users.uid AS uid,
+              authorized_users.can_access_canvas_data AS can_access_canvas_data,
+              authorized_users.deleted_at AS deleted_at,
+              authorized_users.is_admin AS is_admin,
+              authorized_users.is_blocked AS is_blocked,
+              university_dept_members.automate_membership AS is_automated,
+              university_dept_members.is_advisor AS is_advisor,
+              university_dept_members.is_director AS is_director,
+              university_dept_members.is_drop_in_advisor AS is_drop_in_advisor,
+              university_dept_members.is_scheduler AS is_scheduler,
+              university_depts.dept_code AS dept_code
+            FROM authorized_users
+            LEFT JOIN university_dept_members
+              ON authorized_users.id = university_dept_members.authorized_user_id
+            LEFT JOIN university_depts
+              ON university_dept_members.university_dept_id = university_depts.id
+            ORDER BY uid ASC;"
+    results = query_pg_db(boac_db_credentials, query)
+
+    advisors = results.group_by { |r1| r1['uid'] }.map do |k,v|
+      logger.info "Getting advisor role(s) for UID #{k}"
+      # TODO - clarify the following definition of 'active'
+      active = v[0]['is_deleted'].nil?
+      can_access_canvas_data = (v[0]['can_access_canvas_data'] == 't')
+      is_admin = (v[0]['is_admin'] == 't')
+      is_blocked = (v[0]['is_blocked'] == 't')
+      roles = v.map do |role|
+        AdvisorRole.new(
+            {
+                    dept: (BOACDepartments::DEPARTMENTS.find { |d| d.code == role['dept_code']}),
+                    is_advisor: (role['is_advisor'] == 't'),
+                    is_automated: (role['is_automated'] == 't'),
+                    is_director: (role['is_director'] == 't'),
+                    is_drop_in_advisor: (role['is_drop_in_advisor'] == 't'),
+                    is_scheduler: (role['is_scheduler'] == 't')
+                  }
+        )
+      end
+      BOACUser.new(
+         {
+                     uid: k,
+                     advisor_roles: roles,
+                     can_access_canvas_data: can_access_canvas_data,
+                     depts: roles.map(&:dept),
+                     active: active,
+                     is_admin: is_admin,
+                     is_blocked: is_blocked
+                  }
+      )
+    end
+    logger.debug "There are #{advisors.length} total advisors out of #{results.values.length} total advisor roles"
+    advisors
+  end
+
   # Returns all the advisors associated with a department
   # @return [Array<BOACUser>]
   def self.get_dept_advisors(dept)

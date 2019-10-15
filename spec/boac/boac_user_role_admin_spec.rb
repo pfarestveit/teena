@@ -111,15 +111,6 @@ describe 'An admin using BOAC' do
       @homepage.click_admin_link
     end
 
-    it 'sees all departments in \'Users\' section' do
-      @admin_page.load_page
-      @admin_page.dept_users_section_element.when_present Utils.medium_wait
-      dept_advisors.each do |dept|
-        expect(@admin_page.dept_tab_link_element(dept[:dept]).exists?).to be true
-        dept[:advisors].each { |advisor| expect(@admin_page.become_user_link_element(advisor).exists?).to be true }
-      end
-    end
-
     # TODO - it('can authenticate as one of the authorized users')
 
     it 'can un-post a service alert' do

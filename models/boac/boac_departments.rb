@@ -16,11 +16,12 @@ class BOACDepartments
       ENV_DESIGN = new('DACED', 'College of Environmental Design'),
       GUEST = new('GUEST', 'Guest Access'),
       HAAS = new('BAHSB', 'Haas School of Business'),
-      L_AND_S = new('QCADV', 'L&S College Advising'),
-      L_AND_S_MAJ = new('QCADVMAJ', 'L&S Major Advising'),
+      L_AND_S = new('QCADV', 'College of Letters & Science'),
+      L_AND_S_MAJ = new('QCADVMAJ', 'Letters & Science Major Advisors'),
       NAT_RES = new('MANRD', 'College of Natural Resources'),
       NOTES_ONLY = new('NOTESONLY', 'Notes Only', true),
-      OTHER = new('ZZZZZ', 'Other')
+      OTHER = new('ZZZZZ', 'Other'),
+      ZCEEE = new('ZCEEE', 'Centers for Educational Equity and Excellence')
   ]
 
 end

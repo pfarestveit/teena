@@ -1,5 +1,10 @@
 class BOACUser < User
 
-  attr_accessor :depts, :active, :can_access_canvas_data
+  attr_accessor :active,
+                :advisor_roles,
+                :can_access_canvas_data,
+                :depts,
+                :is_admin,
+                :is_blocked
 
 end

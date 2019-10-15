@@ -268,6 +268,12 @@ class BOACTestConfig < TestConfig
     set_max_cohort_members CONFIG['sis_data_max_users']
   end
 
+  # Config for user management tests on the admin page
+  def user_mgmt
+    set_dept BOACDepartments::ADMIN
+    set_advisor
+  end
+
   # Config for admin user role testing
   def user_role_admin
     set_global_configs BOACDepartments::ADMIN

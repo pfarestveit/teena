@@ -71,6 +71,17 @@ module BOACPages
     wait_for_title 'Admin'
   end
 
+  ### USER LIST SORTING ###
+
+  # Sorts a user list by a given option. If a cohort is given, then sorts the user list under the cohort.
+  # @param option [String]
+  # @param cohort [Cohort]
+  def sort_by_option(option, cohort = nil)
+    logger.info "Sorting by #{option}"
+    xpath = filtered_cohort_xpath cohort if cohort && cohort.instance_of?(FilteredCohort)
+    wait_for_update_and_click row_element(xpath: "#{xpath}//th[contains(.,\"#{option}\")]")
+  end
+
   ### SIDEBAR - GROUPS ###
 
   link(:create_curated_group_link, id: 'create-curated-group-from-sidebar')
