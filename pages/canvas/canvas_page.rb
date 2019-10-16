@@ -251,8 +251,6 @@ module Page
     button(:save_and_publish_button, class: 'save_and_publish')
     button(:published_button, class: 'btn-published')
     form(:published_status, id: 'course_status_form')
-    radio_button(:activity_stream_radio, xpath: '//span[contains(.,"Course Activity Stream")]/ancestor::label')
-    button(:choose_and_publish_button, xpath: '//span[contains(.,"Choose and Publish")]/ancestor::button')
 
     # Publishes a course site
     # @param driver [Selenium::WebDriver]
@@ -266,13 +264,6 @@ module Page
       else
         logger.debug 'The site is unpublished, publishing'
         wait_for_update_and_click publish_button_element
-        # Junction test courses from SIS data always have a term and have the site's front page set during creation. Other
-        # test courses never have a term and need to set the site's front page while publishing.
-        if course.term.nil?
-          activity_stream_radio_element.when_visible Utils.short_wait
-          select_activity_stream_radio
-          wait_for_update_and_click choose_and_publish_button_element
-        end
         published_button_element.when_present Utils.medium_wait
       end
     end
@@ -658,8 +649,8 @@ module Page
     # @param tool [LtiTools]
     def enable_tool(course, tool)
       load_navigation_page course
-      wait_for_update_and_click_js link_element(xpath: "//ul[@id='nav_disabled_list']/li[contains(.,'#{tool.name}')]//a")
-      wait_for_update_and_click_js link_element(xpath: "//ul[@id='nav_disabled_list']/li[contains(.,'#{tool.name}')]//a[@title='Enable this item']")
+      wait_for_update_and_click link_element(xpath: "//ul[@id='nav_disabled_list']/li[contains(.,'#{tool.name}')]//a")
+      wait_for_update_and_click link_element(xpath: "//ul[@id='nav_disabled_list']/li[contains(.,'#{tool.name}')]//a[@title='Enable this item']")
       list_item_element(xpath: "//ul[@id='nav_enabled_list']/li[contains(.,'#{tool.name}')]").when_visible Utils.medium_wait
       save_button
       tool_nav_link(tool).when_visible Utils.medium_wait
@@ -676,8 +667,8 @@ module Page
       else
         if link_element(xpath: "//ul[@id='nav_enabled_list']/li[contains(.,'#{tool.name}')]//a").exists?
           logger.debug "#{tool.name} is installed and enabled, disabling"
-          wait_for_update_and_click_js link_element(xpath: "//ul[@id='nav_enabled_list']/li[contains(.,'#{tool.name}')]//a")
-          wait_for_update_and_click_js link_element(xpath: "//ul[@id='nav_enabled_list']/li[contains(.,'#{tool.name}')]//a[@title='Disable this item']")
+          wait_for_update_and_click link_element(xpath: "//ul[@id='nav_enabled_list']/li[contains(.,'#{tool.name}')]//a")
+          wait_for_update_and_click link_element(xpath: "//ul[@id='nav_enabled_list']/li[contains(.,'#{tool.name}')]//a[@title='Disable this item']")
           list_item_element(xpath: "//ul[@id='nav_disabled_list']/li[contains(.,'#{tool.name}')]").when_visible Utils.medium_wait
           save_button
           tool_nav_link(tool).when_not_visible Utils.medium_wait
