@@ -51,17 +51,6 @@ module BOACUserListPages
     }
   end
 
-  # SORTING FOR STUDENT LISTS (shared by homepage and search results page)
-
-  # Sorts a student list by a given option. If a cohort is given, then sorts the user list under the cohort.
-  # @param option [String]
-  # @param cohort [Cohort]
-  def sort_by_option(option, cohort = nil)
-    logger.info "Sorting by #{option}"
-    xpath = filtered_cohort_xpath cohort if cohort && cohort.instance_of?(FilteredCohort)
-    wait_for_update_and_click row_element(xpath: "#{xpath}//th[contains(.,\"#{option}\")]")
-  end
-
   # LAST NAME
 
   # Sorts a user list by name
