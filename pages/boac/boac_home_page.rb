@@ -69,9 +69,9 @@ class BOACHomePage
 
   # FILTERED COHORTS AND CURATED GROUPS
 
-  elements(:filtered_cohort, :span, xpath: '//div[contains(@id,"home-cohort")]//h2/span[2]')
+  elements(:filtered_cohort, :span, xpath: '//div[contains(@id,"sortable-cohort")]//h2/span[2]')
   h1(:no_filtered_cohorts_msg, id: 'no-cohorts-header')
-  elements(:curated_group, :span, xpath: '//div[contains(@id,"home-curated-group")]//h2/span[2]')
+  elements(:curated_group, :span, xpath: '//div[contains(@id,"sortable-curated")]//h2/span[2]')
 
   # Returns the names of filtered cohorts shown on the homepage
   # @return [Array<String>]
@@ -84,7 +84,7 @@ class BOACHomePage
   # @param cohort [FilteredCohort]
   # @return [String]
   def filtered_cohort_xpath(cohort)
-    "//div[@id=\"home-cohort-#{cohort.id}\"]"
+    "//div[@id=\"sortable-cohort-#{cohort.id}\"]"
   end
 
   # Returns the names of curated groups shown on the homepage
@@ -98,7 +98,7 @@ class BOACHomePage
   # @param group [CuratedGroup]
   # @return [String]
   def curated_group_xpath(group)
-    "//div[@id=\"home-curated-group-#{group.id}\"]"
+    "//div[@id=\"sortable-curated-#{group.id}\"]"
   end
 
   # Returns the link to a filtered cohort or curated group in the main content area of the homepage
@@ -106,8 +106,8 @@ class BOACHomePage
   # @return [PageObject::Elements::Link]
   def view_all_members_link(cohort)
     cohort.instance_of?(FilteredCohort) ?
-        link_element(id: "home-cohort-#{cohort.id}-view-all") :
-        link_element(id: "home-curated-group-#{cohort.id}-view-all")
+        link_element(id: "sortable-cohort-#{cohort.id}-view-all") :
+        link_element(id: "sortable-curated-#{cohort.id}-view-all")
   end
 
   # Expands a filtered cohort or curated group row in the main content area
@@ -115,8 +115,8 @@ class BOACHomePage
   def expand_member_rows(cohort)
     unless view_all_members_link(cohort).visible?
       cohort.instance_of?(FilteredCohort) ?
-          wait_for_update_and_click_js(link_element(id: "home-cohort-#{cohort.id}-toggle")) :
-          wait_for_update_and_click_js(link_element(id: "home-curated-group-#{cohort.id}-toggle"))
+          wait_for_update_and_click_js(link_element(id: "sortable-cohort-#{cohort.id}-toggle")) :
+          wait_for_update_and_click_js(link_element(id: "sortable-curated-#{cohort.id}-toggle"))
     end
   end
 
@@ -135,7 +135,7 @@ class BOACHomePage
   # @return [Integer]
   def member_count(cohort)
     el = cohort.instance_of?(FilteredCohort) ?
-        span_element(id: "home-cohort-#{cohort.id}-total-student-count") :
+        span_element(id: "sortable-cohort-#{cohort.id}-total-student-count") :
         span_element(xpath: "#{curated_group_xpath(cohort)}//h2/span[3]")
     el.text.to_i if el.exists?
   end

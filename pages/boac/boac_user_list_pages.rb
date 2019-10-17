@@ -20,7 +20,7 @@ module BOACUserListPages
   # @param cohort [FilteredCohort]
   # @return [String]
   def filtered_cohort_xpath(cohort)
-    "//div[@id=\"home-cohort-#{cohort.id}\"]"
+    "//div[@id=\"sortable-cohort-#{cohort.id}\"]"
   end
 
   # Returns the data visible for a user on the search results page or in a filtered or curated cohort on the homepage. If an XPath is included,
