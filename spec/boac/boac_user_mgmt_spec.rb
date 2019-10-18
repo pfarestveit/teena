@@ -8,14 +8,15 @@ describe 'The BOAC users tool' do
   test.user_mgmt
   auth_users = BOACUtils.get_authorized_users
   non_admin_depts = BOACDepartments::DEPARTMENTS - [BOACDepartments::ADMIN, BOACDepartments::NOTES_ONLY]
+  dept_advisors = non_admin_depts.map { |dept| {:dept => dept, :advisors => BOACUtils.get_dept_advisors(dept)} }
 
   before(:all) do
     @driver = Utils.launch_browser
     @homepage = BOACHomePage.new @driver
-    @admin_page = BOACAdminPage.new @driver
+    @admin_page = BOACPaxManifestPage.new @driver
 
     @homepage.dev_auth
-    @homepage.click_admin_link
+    @homepage.click_pax_manifest_link
     @admin_page.user_search_input_element.when_visible Utils.short_wait
   end
 
@@ -124,9 +125,13 @@ describe 'The BOAC users tool' do
 
     it "shows the department membership type(s) for UID #{user.uid}" do
       expected_types = []
-      expected_types << 'Automated Membership' if (user.advisor_roles.find { |r| r.is_automated })
-      expected_types << 'Manual Membership' if (user.advisor_roles.find { |r| !r.is_automated })
-      expect(@admin_page.visible_dept_memberships(user).uniq.sort).to eql(expected_types.sort)
+      if user.advisor_roles.map(&:is_automated).compact.empty?
+        expect(@admin_page.visible_dept_memberships user).to be_empty
+      else
+        expected_types << 'Automated Membership' if (user.advisor_roles.find { |r| r.is_automated })
+        expected_types << 'Manual Membership' if (user.advisor_roles.find { |r| !r.is_automated })
+        expect(@admin_page.visible_dept_memberships(user).uniq.sort).to eql(expected_types.sort)
+      end
     end
   end
 
@@ -252,4 +257,38 @@ describe 'The BOAC users tool' do
   # TODO it 'allows an admin to sort users by Name descending'
   # TODO it 'allows an admin to sort users by Title ascending'
   # TODO it 'allows an admin to sort users by Title descending'
+
+  context 'exporting all BOA users' do
+
+    before(:all) { @csv = @admin_page.download_boa_users }
+
+    dept_advisors.each do |dept|
+      it "exports all #{dept[:dept].name} users" do
+        dept_user_uids = dept[:advisors].map &:uid
+        csv_dept_user_uids = @csv.map do |r|
+          if r[:dept_code] == dept[:dept].code && r[:dept_name] == (dept[:dept].export_name || dept[:dept].name)
+            r[:uid].to_s
+          end
+        end
+        logger.debug "Unexpected #{dept[:dept].name} advisors: #{csv_dept_user_uids.compact - dept_user_uids}"
+        logger.debug "Missing #{dept[:dept].name} advisors: #{dept_user_uids - csv_dept_user_uids.compact}"
+        expect(csv_dept_user_uids.compact.sort).to eql(dept_user_uids.sort)
+      end
+    end
+
+    it 'generates valid data' do
+      first_names = []
+      last_names = []
+      emails = []
+      @csv.each do |r|
+        first_names << r[:first_name] if r[:first_name]
+        last_names << r[:last_name] if r[:last_name]
+        emails << r[:email] if r[:email]
+      end
+      logger.warn "The export CSV has #{@csv.count} rows, with #{first_names.length} first names, #{last_names.length} last names, and #{emails.length} emails"
+      expect(first_names).not_to be_empty
+      expect(last_names).not_to be_empty
+      expect(emails).not_to be_empty
+    end
+  end
 end

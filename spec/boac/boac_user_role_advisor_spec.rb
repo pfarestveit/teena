@@ -38,7 +38,7 @@ describe 'A BOA advisor' do
     @api_student_page = BOACApiStudentPage.new @driver
     @cohort_page = BOACFilteredCohortPage.new(@driver, @test_asc.advisor)
     @group_page = BOACGroupPage.new @driver
-    @admin_page = BOACAdminPage.new @driver
+    @admin_page = BOACFlightDeckPage.new @driver
     @api_admin_page = BOACApiAdminPage.new @driver
   end
 

@@ -21,7 +21,7 @@ describe 'BOAC' do
     @boac_homepage = BOACHomePage.new @driver
     @boac_cohort_page = BOACUtils.shuffle_max_users ? BOACGroupPage.new(@driver) : BOACFilteredCohortPage.new(@driver, test.advisor)
     @boac_student_page = BOACStudentPage.new @driver
-    @boac_admin_page = BOACAdminPage.new @driver
+    @boac_admin_page = BOACFlightDeckPage.new @driver
     @boac_search_page = BOACSearchResultsPage.new @driver
 
     @boac_homepage.dev_auth test.advisor

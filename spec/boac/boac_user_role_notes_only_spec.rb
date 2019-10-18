@@ -155,7 +155,7 @@ describe 'A notes-only BOA user' do
 
   context 'looking for admin functions' do
     before(:all) do
-      @admin_page = BOACAdminPage.new @driver
+      @admin_page = BOACFlightDeckPage.new @driver
       @api_admin_page = BOACApiAdminPage.new @driver
     end
 
