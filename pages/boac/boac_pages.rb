@@ -39,7 +39,8 @@ module BOACPages
 
   link(:home_link, text: 'Home')
   button(:header_dropdown, xpath: '//button[contains(@id,"header-dropdown-under-name")]')
-  link(:admin_link, text: 'Admin')
+  link(:flight_deck_link, text: 'Flight Deck')
+  link(:pax_manifest_link, text: 'Passenger Manifest')
   link(:log_out_link, text: 'Log Out')
   link(:feedback_link, text: 'Feedback/Help')
   div(:modal, class: 'modal-content')
@@ -53,22 +54,29 @@ module BOACPages
   # Clicks the header name button to reveal additional links
   def click_header_dropdown
     sleep 2
-    wait_for_update_and_click_js header_dropdown_element
+    wait_for_update_and_click header_dropdown_element
   end
 
   # Clicks the 'Log out' link in the header
   def log_out
     logger.info 'Logging out'
     click_header_dropdown
-    wait_for_update_and_click_js log_out_link_element
+    wait_for_update_and_click log_out_link_element
     wait_for_title 'Welcome'
   end
 
-  # Clicks the 'Admin' link in the header
-  def click_admin_link
+  # Clicks the 'Flight Deck' link in the header
+  def click_flight_deck_link
     click_header_dropdown
-    wait_for_update_and_click_js admin_link_element
-    wait_for_title 'Admin'
+    wait_for_update_and_click flight_deck_link_element
+    wait_for_title 'Flight Deck'
+  end
+
+  # Clicks the 'Passenger Manifest' link in the header
+  def click_pax_manifest_link
+    click_header_dropdown
+    wait_for_update_and_click pax_manifest_link_element
+    wait_for_title 'Passenger Manifest'
   end
 
   ### USER LIST SORTING ###

@@ -8,7 +8,6 @@ describe 'An admin using BOAC' do
   test.user_role_admin
 
   non_admin_depts = BOACDepartments::DEPARTMENTS.reject { |d| d == BOACDepartments::ADMIN }
-  dept_advisors = non_admin_depts.map { |dept| {:dept => dept, :advisors => BOACUtils.get_dept_advisors(dept)} }
 
   everyone_cohorts = BOACUtils.get_everyone_filtered_cohorts
   everyone_groups = BOACUtils.get_everyone_curated_groups
@@ -16,7 +15,7 @@ describe 'An admin using BOAC' do
   before(:all) do
     @service_announcement = "#{BOACUtils.config['service_announcement']} " * 15
     @driver = Utils.launch_browser test.chrome_profile
-    @admin_page = BOACAdminPage.new @driver
+    @admin_page = BOACFlightDeckPage.new @driver
     @api_admin_page = BOACApiAdminPage.new @driver
     @api_section_page = BOACApiSectionPage.new @driver
     @api_student_page = BOACApiStudentPage.new @driver
@@ -108,7 +107,7 @@ describe 'An admin using BOAC' do
 
     it 'sees a link to the admin page' do
       @homepage.load_page
-      @homepage.click_admin_link
+      @homepage.click_flight_deck_link
     end
 
     # TODO - it('can authenticate as one of the authorized users')
@@ -131,38 +130,4 @@ describe 'An admin using BOAC' do
     end
   end
 
-  context 'exporting all BOA users' do
-
-    before(:all) { @csv = @admin_page.download_boa_users }
-
-    dept_advisors.each do |dept|
-      it "can export all #{dept[:dept].name} users" do
-        dept_user_uids = dept[:advisors].map &:uid
-        csv_dept_user_uids = @csv.map do |r|
-          if r[:dept_code] == dept[:dept].code && r[:dept_name] == dept[:dept].name
-            r[:uid].to_s
-          end
-        end
-        logger.debug "Unexpected #{dept[:dept].name} advisors: #{csv_dept_user_uids.compact - dept_user_uids}"
-        logger.debug "Missing #{dept[:dept].name} advisors: #{dept_user_uids - csv_dept_user_uids.compact}"
-        expect(csv_dept_user_uids.compact.sort).to eql(dept_user_uids.sort)
-      end
-    end
-
-    it 'can generate valid data' do
-      first_names = []
-      last_names = []
-      emails = []
-      @csv.each do |r|
-        first_names << r[:first_name] if r[:first_name]
-        last_names << r[:last_name] if r[:last_name]
-        emails << r[:email] if r[:email]
-      end
-      logger.warn "The export CSV has #{@csv.count} rows, with #{first_names.length} first names, #{last_names.length} last names, and #{emails.length} emails"
-      expect(first_names).not_to be_empty
-      expect(last_names).not_to be_empty
-      expect(emails).not_to be_empty
-    end
-
-  end
 end

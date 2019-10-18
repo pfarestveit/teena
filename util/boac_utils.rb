@@ -176,7 +176,7 @@ class BOACUtils < Utils
     advisors = results.group_by { |r1| r1['uid'] }.map do |k,v|
       logger.info "Getting advisor role(s) for UID #{k}"
       # TODO - clarify the following definition of 'active'
-      active = v[0]['is_deleted'].nil?
+      active = v[0]['deleted_at'].nil?
       can_access_canvas_data = (v[0]['can_access_canvas_data'] == 't')
       is_admin = (v[0]['is_admin'] == 't')
       is_blocked = (v[0]['is_blocked'] == 't')
@@ -185,7 +185,7 @@ class BOACUtils < Utils
             {
                     dept: (BOACDepartments::DEPARTMENTS.find { |d| d.code == role['dept_code']}),
                     is_advisor: (role['is_advisor'] == 't'),
-                    is_automated: (role['is_automated'] == 't'),
+                    is_automated: (role['is_automated'] && role['is_automated'] == 't'),
                     is_director: (role['is_director'] == 't'),
                     is_drop_in_advisor: (role['is_drop_in_advisor'] == 't'),
                     is_scheduler: (role['is_scheduler'] == 't')
@@ -197,7 +197,7 @@ class BOACUtils < Utils
                      uid: k,
                      advisor_roles: roles,
                      can_access_canvas_data: can_access_canvas_data,
-                     depts: roles.map(&:dept),
+                     depts: roles.map(&:dept).compact,
                      active: active,
                      is_admin: is_admin,
                      is_blocked: is_blocked
