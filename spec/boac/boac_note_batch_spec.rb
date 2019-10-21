@@ -151,7 +151,7 @@ else
           @homepage.unique_students_in_batch(students, cohorts, curated_groups).first(5).each do |student|
             @student_page.set_new_note_id(batch_note_1, student)
             @student_page.load_page student
-            @student_page.expand_note batch_note_1
+            @student_page.expand_item batch_note_1
             @student_page.verify_note batch_note_1
           end
         end

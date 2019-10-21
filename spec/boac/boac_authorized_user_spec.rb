@@ -58,7 +58,7 @@ describe 'BOAC' do
 
   context 'when someone is an authorized user' do
 
-    before { BOACUtils.create_auth_user @auth_user }
+    before { BOACUtils.create_admin_auth_user @auth_user }
 
     it 'allows login' do
       @home_page.click_sign_in_button

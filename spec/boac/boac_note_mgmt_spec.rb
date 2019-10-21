@@ -126,7 +126,7 @@ else
           @student_page.existing_note_attachment_input(note_6).when_not_visible 1
           @student_page.click_save_new_note
           @student_page.set_new_note_id note_6
-          @student_page.collapsed_note_el(note_6).when_visible Utils.short_wait
+          @student_page.collapsed_item_el(note_6).when_visible Utils.short_wait
           @student_page.verify_note note_6
         end
 
@@ -155,9 +155,9 @@ else
         it 'is offered a list of note topics' do
           @student_page.click_create_new_note
           @student_page.show_adv_note_options
-          @student_page.wait_until(20, "Expected #{Topic::TOPICS.map(&:name)}, got #{@student_page.topic_options}") do
-            logger.debug "Visible options are #{@student_page.topic_options}"
-            @student_page.topic_options == Topic::TOPICS.map(&:name)
+          expected_topics = Topic::TOPICS.select(&:for_notes).map &:name
+          @student_page.wait_until(1, "Expected #{expected_topics}, got #{@student_page.topic_options}") do
+            @student_page.topic_options == expected_topics
           end
         end
 
@@ -216,7 +216,7 @@ else
         before(:all) do
           @student_page.load_page test_student
           @student_page.show_notes
-          @student_page.expand_note note_5
+          @student_page.expand_item note_5
         end
 
         it 'can download note attachments' do
@@ -230,7 +230,7 @@ else
 
         it 'can visit the note permalink' do
           @student_page.navigate_to @student_page.visible_expanded_note_data(note_5)[:permalink_url]
-          @student_page.wait_until(Utils.short_wait) { @student_page.note_expanded? note_5 }
+          @student_page.wait_until(Utils.short_wait) { @student_page.item_expanded? note_5 }
         end
       end
 
@@ -255,7 +255,7 @@ else
         it 'can cancel the edit' do
           original_subject = note_1.subject
           note_1.subject = 'An edit to forget'
-          @student_page.expand_note note_1
+          @student_page.expand_item note_1
           @student_page.click_edit_note_button note_1
           @student_page.enter_edit_note_subject note_1
           @student_page.click_cancel_note_edit
@@ -272,18 +272,18 @@ else
         end
 
         it 'can add attachments' do
-          @student_page.expand_note note_4
+          @student_page.expand_item note_4
           @student_page.add_attachments_to_existing_note(note_4, test.attachments[5..6])
           @student_page.verify_note note_4
         end
 
         it 'can add up to a maximum of 5 attachments' do
-          @student_page.expand_note note_6
+          @student_page.expand_item note_6
           expect(@student_page.existing_note_attachment_input(note_6).exists?).to be false
         end
 
         it 'can remove an existing attachment' do
-          @student_page.expand_note note_5
+          @student_page.expand_item note_5
           attach_to_delete = note_5.attachments.first
           attach_to_delete.id = BOACUtils.get_attachment_id_by_file_name(note_5, attach_to_delete)
           deleted_attachments << attach_to_delete
@@ -292,7 +292,7 @@ else
         end
 
         it 'can add topics' do
-          @student_page.expand_note note_7
+          @student_page.expand_item note_7
           @student_page.click_edit_note_button note_7
           @student_page.add_topics(note_7, [Topic::LATE_ENROLLMENT, Topic::RETROACTIVE_ADD])
           @student_page.click_save_note_edit
@@ -301,7 +301,7 @@ else
         end
 
         it 'can remove topics' do
-          @student_page.expand_note note_8
+          @student_page.expand_item note_8
           @student_page.click_edit_note_button note_8
           @student_page.remove_topics(note_8, [Topic::EAP, Topic::PASS_NO_PASS])
           @student_page.click_save_note_edit
@@ -310,9 +310,9 @@ else
         end
 
         it 'can only create or edit one note at a time' do
-          @student_page.expand_note note_1
+          @student_page.expand_item note_1
           @student_page.edit_note_button(note_1).when_visible 1
-          @student_page.expand_note note_2
+          @student_page.expand_item note_2
           @student_page.edit_note_button(note_2).when_visible 1
           @student_page.click_edit_note_button note_1
           expect(@student_page.edit_note_button(note_2).exists?).to be false
@@ -320,7 +320,7 @@ else
         end
 
         it 'can cancel the edit' do
-          @student_page.expand_note note_2
+          @student_page.expand_item note_2
           @student_page.click_edit_note_button note_2
           @student_page.wait_for_element_and_type(@student_page.note_body_text_area_elements[0], 'An edit to forget')
           @student_page.click_cancel_note_edit
@@ -329,7 +329,7 @@ else
         end
 
         it 'cannot remove the subject' do
-          @student_page.expand_note note_2
+          @student_page.expand_item note_2
           @student_page.click_edit_note_button note_2
           @student_page.wait_for_element_and_type(@student_page.edit_note_subject_input_element, ' ')
           @student_page.click_save_note_edit
@@ -339,7 +339,7 @@ else
         end
 
         it 'cannot add an attachment with the same file name as an existing attachment' do
-          @student_page.expand_note note_4
+          @student_page.expand_item note_4
           @student_page.existing_note_attachment_input(note_4).when_present 1
           @student_page.existing_note_attachment_input(note_4).send_keys Utils.asset_file_path(test.attachments[5].file_name)
           @student_page.note_dupe_attachment_msg_element.when_present Utils.short_wait
@@ -347,7 +347,7 @@ else
 
         it 'cannot add an individual attachment larger than 20MB' do
           too_big_attachment = test.attachments.find { |a| a.file_size > 20000000 }
-          @student_page.expand_note note_2
+          @student_page.expand_item note_2
           @student_page.existing_note_attachment_input(note_2).when_present 1
           @student_page.existing_note_attachment_input(note_2).send_keys Utils.asset_file_path(too_big_attachment.file_name)
           @student_page.note_attachment_size_msg_element.when_visible Utils.short_wait
@@ -368,7 +368,7 @@ else
       context 'attempting to delete a note' do
 
         it 'cannot do so' do
-          @student_page.expand_note note_1
+          @student_page.expand_item note_1
           expect(@student_page.delete_note_button(note_1).visible?).to be false
         end
       end
@@ -421,12 +421,12 @@ else
       end
 
       it 'cannot edit the other user\'s note' do
-        @student_page.expand_note note_5
+        @student_page.expand_item note_5
         expect(@student_page.edit_note_button(note_5).exists?).to be false
       end
 
       it 'cannot delete attachments on the other user\'s note' do
-        @student_page.expand_note note_5
+        @student_page.expand_item note_5
         note_5.attachments.reject(&:deleted_at).each { |attach| expect(@student_page.existing_note_attachment_delete_button(note_5, attach).exists?).to be false }
       end
 
@@ -459,13 +459,13 @@ else
 
       notes.each do |note|
         it 'cannot edit a note' do
-          @student_page.expand_note note
+          @student_page.expand_item note
           expect(@student_page.edit_note_button(note).exists?).to be false
         end
 
         it 'can delete a note' do
           @student_page.delete_note note
-          @student_page.collapsed_note_el(note).when_not_visible Utils.short_wait
+          @student_page.collapsed_item_el(note).when_not_visible Utils.short_wait
           deleted = BOACUtils.get_note_delete_status note
           expect(deleted).to_not be_nil
         end

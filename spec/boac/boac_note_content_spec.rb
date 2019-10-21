@@ -54,13 +54,13 @@ describe 'BOAC' do
 
           @student_page.expand_all_notes
           expected_notes.each do |note|
-            note_expanded = @student_page.note_expanded? note
+            note_expanded = @student_page.item_expanded? note
             it("expand-all-notes button expands note ID #{note.id} for UID #{student.uid}") { expect(note_expanded).to be true }
           end
 
           @student_page.collapse_all_notes
           expected_notes.each do |note|
-            note_expanded = @student_page.note_expanded? note
+            note_expanded = @student_page.item_expanded? note
             it("collapse-all-notes-button collapses note ID #{note.id} for UID #{student.uid}") { expect(note_expanded).to be false }
           end
 
@@ -81,13 +81,13 @@ describe 'BOAC' do
                   note.updated_date.strftime('%b %-d, %Y %l:%M%P') != note.created_date.strftime('%b %-d, %Y %l:%M%P') &&
                   note.advisor.uid != 'UCBCONVERSION'
               expected_date = updated_date_expected ? note.updated_date : note.created_date
-              expected_date_text = "Last updated on #{@student_page.expected_note_short_date_format expected_date}"
-              visible_date = @student_page.visible_collapsed_note_data(note)[:date]
+              expected_date_text = "Last updated on #{@student_page.expected_item_short_date_format expected_date}"
+              visible_date = @student_page.visible_collapsed_item_data(note)[:date]
               it("shows '#{expected_date_text}' on collapsed #{test_case}") { expect(visible_date).to eql(expected_date_text) }
 
               # EXPANDED NOTE
 
-              @student_page.expand_note note
+              @student_page.expand_item note
               visible_expanded_note_data = @student_page.visible_expanded_note_data note
 
               # Note subject and body (NB: migrated SIS notes have no subject, so the body is shown as the subject; migrated ASC notes have no subject
@@ -143,15 +143,15 @@ describe 'BOAC' do
               # Note dates
 
               if updated_date_expected
-                expected_update_date_text = @student_page.expected_note_long_date_format note.updated_date
+                expected_update_date_text = @student_page.expected_item_long_date_format note.updated_date
                 it("shows update date #{expected_update_date_text} on expanded #{test_case}") { expect(visible_expanded_note_data[:updated_date]).to eql(expected_update_date_text) }
               else
                 it("shows no updated date #{note.updated_date} on expanded #{test_case}") { expect(visible_expanded_note_data[:updated_date]).to be_nil }
               end
 
               expected_create_date_text = (note.advisor.uid == 'UCBCONVERSION') ?
-                  @student_page.expected_note_short_date_format(note.created_date) :
-                  @student_page.expected_note_long_date_format(note.created_date)
+                  @student_page.expected_item_short_date_format(note.created_date) :
+                  @student_page.expected_item_long_date_format(note.created_date)
               it("shows creation date #{expected_create_date_text} on expanded #{test_case}") { expect(visible_expanded_note_data[:created_date]).to eql(expected_create_date_text) }
 
               # Note attachments
@@ -216,7 +216,7 @@ describe 'BOAC' do
               @homepage.load_page
               @student_page.navigate_to visible_expanded_note_data[:permalink_url]
               permalink_works = @student_page.verify_block do
-                @student_page.wait_until(Utils.short_wait) { @student_page.note_expanded? note }
+                @student_page.wait_until(Utils.short_wait) { @student_page.item_expanded? note }
               end
 
               it("offers a permalink on #{test_case}") { expect(permalink_works).to be true }

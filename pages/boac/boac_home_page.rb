@@ -7,6 +7,7 @@ class BOACHomePage
   include Page
   include BOACPages
   include BOACPagesCreateNoteModal
+  include BOACApptIntakeDesk
   include BOACUserListPages
 
   button(:sign_in, id: 'splash-sign-in')
@@ -54,7 +55,16 @@ class BOACHomePage
     logger.warn "Took #{Time.now - start - Utils.click_wait} seconds for dev auth input to become available"
     wait_for_element_and_type(dev_auth_password_input_element, BOACUtils.password)
     wait_for_update_and_click dev_auth_log_in_button_element
-    wait_for_title 'Home'
+    wait_until(Utils.medium_wait) { ['Home | BOA', 'Drop-in Appointments Desk | BOA'].include? title }
+  end
+
+  # DROP-IN APPTS
+
+  button(:new_appt_button, id: 'btn-homepage-create-appointment')
+
+  # Clicks the button to create a new new drop-in appointment
+  def click_new_appt
+    wait_for_update_and_click new_appt_button_element
   end
 
   # GENERIC USER DATA UI

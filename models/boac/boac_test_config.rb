@@ -9,6 +9,8 @@ class BOACTestConfig < TestConfig
                 :cohort_members,
                 :default_cohort,
                 :dept,
+                :drop_in_advisor,
+                :drop_in_scheduler,
                 :max_cohort_members,
                 :searchable_data,
                 :searches,
@@ -23,19 +25,12 @@ class BOACTestConfig < TestConfig
 
   # Sets the advisor to use for the dept being tested
   def set_advisor
-    advisors = BOACUtils.get_dept_advisors @dept
+    role = AdvisorRole.new is_advisor: true
+    advisors = BOACUtils.get_dept_advisors(@dept, role)
     case @dept
       when BOACDepartments::ADMIN
         @advisor = BOACUser.new({:uid => Utils.super_admin_uid})
-      when BOACDepartments::ASC
-        uid = CONFIG['test_asc_advisor_uid']
-        # If we don't have a test UID set in configs, we want an advisor who belongs to ASC only to avoid muddying the logic.
-        @advisor = uid ? (advisors.find { |a| a.uid.to_i == uid }) : advisors.find { |a| a.depts == [@dept.code] }
-      when BOACDepartments::COE
-        uid = CONFIG['test_coe_advisor_uid']
-        @advisor = uid ? (advisors.find { |a| a.uid.to_i == uid }) : advisors.find { |a| a.depts == [@dept.code] }
-      when BOACDepartments::L_AND_S
-        uid = CONFIG['test_l_and_s_advisor_uid']
+      when BOACDepartments::ASC, BOACDepartments::COE, BOACDepartments::L_AND_S
         @advisor = uid ? (advisors.find { |a| a.uid.to_i == uid }) : advisors.find { |a| a.depts == [@dept.code] }
       else
         if block_given?
@@ -50,6 +45,21 @@ class BOACTestConfig < TestConfig
       @advisor.last_name = user_data[:last_name]
     end
     logger.warn "Advisor is UID #{@advisor.uid}"
+  end
+
+  # Sets the three user roles for testing drop-in appointments
+  # @param auth_users [Array<BOACUser>]
+  def set_drop_in_appt_advisors(auth_users)
+    dept_advisors = auth_users.select { |u| u.depts == [@dept] }
+    @advisor = dept_advisors[0]
+    @drop_in_advisor = dept_advisors[1]
+    @drop_in_scheduler = dept_advisors[2]
+
+    dept_id = BOACUtils.get_dept_id @dept
+    BOACUtils.convert_user_to_advisor(dept_id, @advisor)
+    BOACUtils.convert_user_to_drop_in(dept_id, @drop_in_advisor)
+    BOACUtils.convert_user_to_scheduler(dept_id, @drop_in_scheduler)
+    logger.warn "Advisor-only UID #{@advisor.uid}, drop-in advisor UID #{@drop_in_advisor.uid}, scheduler UID #{@drop_in_scheduler.uid}"
   end
 
   # Sets the complete list of potentially visible students
@@ -164,6 +174,13 @@ class BOACTestConfig < TestConfig
     set_global_configs
     set_default_cohort
     set_max_cohort_members 50
+  end
+
+  # Config for drop-in appointment testing
+  def drop_in_appts(auth_users, dept)
+    set_dept dept
+    set_drop_in_appt_advisors auth_users
+    set_students
   end
 
   # Config for filtered cohort testing

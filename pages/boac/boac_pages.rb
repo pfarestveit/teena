@@ -37,7 +37,7 @@ module BOACPages
 
   ### HEADER ###
 
-  link(:home_link, text: 'Home')
+  link(:home_link, xpath: '//a[contains(.,"Home")]')
   button(:header_dropdown, xpath: '//button[contains(@id,"header-dropdown-under-name")]')
   link(:flight_deck_link, text: 'Flight Deck')
   link(:pax_manifest_link, text: 'Passenger Manifest')
@@ -232,7 +232,6 @@ module BOACPages
   # @param element [PageObject::Element]
   # @param name [String]
   def set_auto_suggest(element, name)
-    expand_search_options_notes_subpanel
     wait_for_element_and_type(element, name)
     sleep Utils.click_wait
     link_element = auto_suggest_option_elements.find { |el| el.attribute('innerText').downcase.include? name.downcase }
@@ -243,6 +242,7 @@ module BOACPages
   # @param name [String]
   def set_notes_author(name)
     logger.info "Entering notes author name '#{name}'"
+    expand_search_options_notes_subpanel
     set_auto_suggest(note_author_element, name)
   end
 
@@ -250,6 +250,7 @@ module BOACPages
   # @param student [BOACUser]
   def set_notes_student(student)
     logger.info "Entering notes student '#{student.full_name} (#{student.sis_id})'"
+    expand_search_options_notes_subpanel
     set_auto_suggest(note_student_element, "#{student.full_name} (#{student.sis_id})")
   end
 

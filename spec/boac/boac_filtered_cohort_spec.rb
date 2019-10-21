@@ -591,7 +591,7 @@ describe 'BOAC', order: :defined do
     end
 
     it 'allows the advisor to edit a Last Name filter' do
-      test.default_cohort.search_criteria.last_name = [{'min': 'B', 'max': 'Y'}]
+      test.default_cohort.search_criteria.last_name = [{'min' => 'B', 'max' => 'Y'}]
       @cohort_page.edit_filter_and_confirm('Last Name', test.default_cohort.search_criteria.last_name.first)
       @cohort_page.verify_filters_present test.default_cohort
     end

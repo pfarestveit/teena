@@ -238,8 +238,8 @@ describe 'BOAC' do
 
             @homepage.expand_search_options_notes_subpanel
 
-            all_topics = Topic::TOPICS.map &:name
-            note_topics = Topic::TOPICS.map(&:name).select { |topic_name| note_search[:note].topics.include? topic_name.upcase }
+            all_topics = Topic::TOPICS.select(&:for_notes).map &:name
+            note_topics = all_topics.select { |topic_name| note_search[:note].topics.include? topic_name.upcase }
             non_note_topics = all_topics - note_topics
 
             note_topics.each do |note_topic|
