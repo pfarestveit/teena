@@ -47,6 +47,13 @@ class BOACClassMatrixViewPage
     matrix_bubbles(driver).length
   end
 
+  # Whether or not a given student's bubble is expanded
+  # @param student [BOACUser]
+  # @return [Boolean]
+  def bubble_expanded?(student)
+    h4_element(xpath: "//h4[text()='#{student.full_name}']").visible?
+  end
+
   # Returns the UIDs of the users in the 'no data' list
   # @return [Array<String>]
   def visible_no_data_uids
@@ -80,6 +87,6 @@ class BOACClassMatrixViewPage
     logger.info 'Clicking missing data student'
     missing_data_link_elements.last.click
     student_name_heading_element.when_visible Utils.medium_wait
-
   end
+
 end

@@ -82,6 +82,9 @@ describe 'BOAC' do
 
                           @class_list_page.click_matrix_view
                           @class_matrix_page.wait_for_matrix
+                          student_expanded = @class_matrix_page.bubble_expanded? student
+                          it("shows the student's bubble expanded in #{class_test_case}") { expect(student_expanded).to be true }
+
                           all_students_present = @class_matrix_page.verify_all_students_present(@driver, expected_sids.length)
                           it("shows all the expected matrix view students in #{class_test_case}") { expect(all_students_present).to be true }
 
