@@ -43,16 +43,41 @@ class BOACFlightDeckPage
   def post_service_announcement
     logger.info 'Posting a service announcement'
     service_announcement_checkbox_label_element.when_visible Utils.short_wait
-    toggle_service_announcement_checkbox if service_announcement_checkbox_label == 'Post'
-    wait_until(Utils.short_wait) { service_announcement_checkbox_label == 'Posted' }
+    tries ||= 2
+    begin
+      tries -= 1
+      toggle_service_announcement_checkbox if service_announcement_checkbox_label == 'Post'
+      wait_until(Utils.short_wait) { service_announcement_checkbox_label == 'Posted' }
+    rescue
+      if tries.zero?
+        logger.error 'Failed to post service alert'
+        fail
+      else
+        logger.warn 'Failed to post service alert, retrying'
+        retry
+      end
+    end
   end
 
   # Unposts service announcement
   def unpost_service_announcement
     logger.info 'Un-posting a service announcement'
     service_announcement_checkbox_label_element.when_visible Utils.medium_wait
-    toggle_service_announcement_checkbox if service_announcement_checkbox_label == 'Posted'
-    wait_until(Utils.short_wait) { service_announcement_checkbox_label_element.text == 'Post' }
+    tries ||= 2
+    begin
+      tries -= 1
+      toggle_service_announcement_checkbox if service_announcement_checkbox_label == 'Posted'
+      wait_until(Utils.short_wait) { service_announcement_checkbox_label_element.text == 'Post' }
+    rescue
+      if tries.zero?
+        logger.error 'Failed to unpost a service alert'
+        fail
+      else
+        logger.warn 'Failed to unpost a service alert, retrying'
+        retry
+      end
+
+    end
   end
 
 end

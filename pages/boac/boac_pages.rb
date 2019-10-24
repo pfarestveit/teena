@@ -41,6 +41,7 @@ module BOACPages
   button(:header_dropdown, xpath: '//button[contains(@id,"header-dropdown-under-name")]')
   link(:flight_deck_link, text: 'Flight Deck')
   link(:pax_manifest_link, text: 'Passenger Manifest')
+  link(:settings_link, text: 'Settings')
   link(:log_out_link, text: 'Log Out')
   link(:feedback_link, text: 'Feedback/Help')
   div(:modal, class: 'modal-content')
@@ -246,10 +247,10 @@ module BOACPages
   end
 
   # Sets the "Student" notes search option
-  # @param name [String]
-  def set_notes_student(name)
-    logger.info "Entering notes student name '#{name}'"
-    set_auto_suggest(note_student_element, name)
+  # @param student [BOACUser]
+  def set_notes_student(student)
+    logger.info "Entering notes student '#{student.full_name} (#{student.sis_id})'"
+    set_auto_suggest(note_student_element, "#{student.full_name} (#{student.sis_id})")
   end
 
   # Sets the "Last updated > From" notes search option

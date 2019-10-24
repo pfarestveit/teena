@@ -72,6 +72,7 @@ describe 'BOAC' do
 
               # COLLAPSED NOTE
 
+              @student_page.show_notes
               visible_collapsed_note_data = @student_page.visible_collapsed_note_data note
 
               # Note updated date

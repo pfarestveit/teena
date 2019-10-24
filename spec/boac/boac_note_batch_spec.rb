@@ -170,7 +170,7 @@ else
         it 'can find them by student and subject' do
           student = @homepage.unique_students_in_batch(students, cohorts, curated_groups).last
           @homepage.set_new_note_id(batch_note_1, student)
-          @homepage.set_notes_student student.full_name
+          @homepage.set_notes_student student
           @homepage.search batch_note_1.subject
           expect(@search_results_page.note_in_search_result? batch_note_1).to be true
         end

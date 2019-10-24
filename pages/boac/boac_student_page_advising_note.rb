@@ -167,7 +167,7 @@ module BOACStudentPageAdvisingNote
 
   # Returns the element containing a given attachment name
   # @param attachment_name [String]
-  # @return [Array<PageObject::Elements::Element>]
+  # @return [PageObject::Elements::Element]
   def note_attachment_el(note, attachment_name)
     note_attachment_els(note).find { |el| el.text.strip == attachment_name }
   end
@@ -191,6 +191,7 @@ module BOACStudentPageAdvisingNote
     logger.info "Downloading attachment '#{attachment.id}' from note ID #{note.id}"
     Utils.prepare_download_dir
     wait_until(Utils.short_wait) { note_attachment_els(note).any? }
+    hide_boac_footer
     note_attachment_el(note, attachment.file_name).click
     file_path = "#{Utils.download_dir}/#{attachment.file_name}"
     wait_until(Utils.medium_wait) { sorry_no_attachment_msg? || Dir[file_path].any?  }

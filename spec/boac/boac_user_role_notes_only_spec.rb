@@ -155,24 +155,22 @@ describe 'A notes-only BOA user' do
 
   context 'looking for admin functions' do
     before(:all) do
-      @admin_page = BOACFlightDeckPage.new @driver
+      @settings_page = BOACFlightDeckPage.new @driver
       @api_admin_page = BOACApiAdminPage.new @driver
-    end
-
-    it 'can load the admin page' do
       @homepage.load_page
       @homepage.click_header_dropdown
-      expect(@homepage.admin_link?).to be true
     end
+
+    it('can access the settings page') { expect(@homepage.settings_link?).to be true }
+    it('cannot access the flight deck page') { expect(@homepage.flight_deck_link?).to be false }
+    it('cannot access the passenger manifest page') { expect(@homepage.pax_manifest_link?).to be false }
 
     it 'can toggle demo mode' do
-      @admin_page.load_page
-      @admin_page.demo_mode_toggle_element.when_present Utils.short_wait
+      @settings_page.load_page
+      @settings_page.demo_mode_toggle_element.when_present Utils.short_wait
     end
 
-    it('cannot download BOA user lists') { expect(@admin_page.download_users_button?).to be false }
-    it('cannot see department advisor lists') { BOACDepartments::DEPARTMENTS.each { |dept| expect(@admin_page.dept_tab_link_element(dept).exists?).to be false } }
-    it('cannot post status alerts') { expect(@admin_page.status_heading?).to be false }
+    it('cannot post status alerts') { expect(@settings_page.status_heading?).to be false }
 
     it 'cannot hit the cachejob page' do
       @api_admin_page.load_cachejob

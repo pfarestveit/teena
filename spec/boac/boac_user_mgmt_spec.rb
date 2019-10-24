@@ -82,7 +82,9 @@ describe 'The BOAC users tool' do
     expect(visible_emails).not_to be_empty
   end
 
-  auth_users.select { |u| u.uid.length == 7 }.shuffle.last(25).each do |user|
+  # Inactive users don't come up in search results, so don't try to look for them
+  # TODO - search for inactive users if BOAC-2882 is fixed
+  auth_users.select { |u| u.uid.length == 7 && u.active }.shuffle.last(25).each do |user|
 
     it "allows an admin to search for UID #{user.uid}" do
       @admin_page.search_for_advisor user
@@ -132,6 +134,11 @@ describe 'The BOAC users tool' do
         expected_types << 'Manual Membership' if (user.advisor_roles.find { |r| !r.is_automated })
         expect(@admin_page.visible_dept_memberships(user).uniq.sort).to eql(expected_types.sort)
       end
+    end
+
+    it "shows a 'become' link if UID #{user.uid} is active" do
+      has_become_link = @admin_page.become_user_link_element(user).exists?
+      user.active ? (expect(has_become_link).to be true) : (expect(has_become_link).to be false)
     end
   end
 
