@@ -77,8 +77,8 @@ module BOACStudentPageAdvisingNote
   # Returns the visible sequence of message ids, whether or not collapsed
   # @return [Array<String>]
   def visible_message_ids
-    els = browser.find_elements(xpath: '//tr[starts-with(@id, "message-row-")]')
-    els.map { |el| el.attribute('id').sub('message-row-', '') }
+    els = browser.find_elements(xpath: '//tr[starts-with(@id, "permalink-note-")]')
+    els.map { |el| el.attribute('id').sub('permalink-note-', '') }
   end
 
   # Returns the button element for collapsing a given note
