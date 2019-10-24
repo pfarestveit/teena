@@ -38,7 +38,7 @@ describe 'A BOA advisor' do
     @api_student_page = BOACApiStudentPage.new @driver
     @cohort_page = BOACFilteredCohortPage.new(@driver, @test_asc.advisor)
     @group_page = BOACGroupPage.new @driver
-    @admin_page = BOACFlightDeckPage.new @driver
+    @settings_page = BOACFlightDeckPage.new @driver
     @api_admin_page = BOACApiAdminPage.new @driver
   end
 
@@ -134,7 +134,7 @@ describe 'A BOA advisor' do
         @cohort_page.wait_until(1) { @cohort_page.new_filter_option_elements.any? &:visible? }
       end
 
-      it('sees an Entering Term filter') { expect(@filtered_cohort_page.new_filter_option('enteringTerms').visible?).to be true }
+      it('sees an Entering Term filter') { expect(@cohort_page.new_filter_option('enteringTerms').visible?).to be true }
       it('sees an Expected Graduation Term filter') { expect(@cohort_page.new_filter_option('expectedGradTerms').visible?).to be true }
       it('sees a GPA filter') { expect(@cohort_page.new_filter_option('gpaRanges').visible?).to be true }
       it('sees a Level filter') { expect(@cohort_page.new_filter_option('levels').visible?).to be true }
@@ -178,20 +178,21 @@ describe 'A BOA advisor' do
 
     context 'looking for admin functions' do
 
-      it 'can load the admin page' do
+      before(:all) do
         @homepage.load_page
         @homepage.click_header_dropdown
-        expect(@homepage.admin_link?).to be true
       end
+
+      it('can access the settings page') { expect(@homepage.settings_link?).to be true }
+      it('cannot access the flight deck page') { expect(@homepage.flight_deck_link?).to be false }
+      it('cannot access the passenger manifest page') { expect(@homepage.pax_manifest_link?).to be false }
 
       it 'can toggle demo mode' do
-        @admin_page.load_page
-        @admin_page.demo_mode_toggle_element.when_present Utils.short_wait
+        @settings_page.load_page
+        @settings_page.demo_mode_toggle_element.when_present Utils.short_wait
       end
 
-      it('cannot download BOA user lists') { expect(@admin_page.download_users_button?).to be false }
-      it('cannot see department advisor lists') { BOACDepartments::DEPARTMENTS.each { |d| expect(@admin_page.dept_tab_link_element(d).exists?).to be false } }
-      it('cannot post status alerts') { expect(@admin_page.status_heading?).to be false }
+      it('cannot post status alerts') { expect(@settings_page.status_heading?).to be false }
 
       it 'cannot hit the cachejob page' do
         @api_admin_page.load_cachejob
@@ -281,7 +282,7 @@ describe 'A BOA advisor' do
         @cohort_page.wait_until(1) { @cohort_page.new_filter_option_elements.any? &:visible? }
       end
 
-      it('sees an Entering Term filter') { expect(@filtered_cohort_page.new_filter_option('enteringTerms').visible?).to be true }
+      it('sees an Entering Term filter') { expect(@cohort_page.new_filter_option('enteringTerms').visible?).to be true }
       it('sees an Expected Graduation Term filter') { expect(@cohort_page.new_filter_option('expectedGradTerms').visible?).to be true }
       it('sees a GPA filter') { expect(@cohort_page.new_filter_option('gpaRanges').visible?).to be true }
       it('sees a Level filter') { expect(@cohort_page.new_filter_option('levels').visible?).to be true }
@@ -311,20 +312,21 @@ describe 'A BOA advisor' do
 
     context 'looking for admin functions' do
 
-      it 'can load the admin page' do
+      before(:all) do
         @homepage.load_page
         @homepage.click_header_dropdown
-        expect(@homepage.admin_link?).to be true
       end
+
+      it('can access the settings page') { expect(@homepage.settings_link?).to be true }
+      it('cannot access the flight deck page') { expect(@homepage.flight_deck_link?).to be false }
+      it('cannot access the passenger manifest page') { expect(@homepage.pax_manifest_link?).to be false }
 
       it 'can toggle demo mode' do
-        @admin_page.load_page
-        @admin_page.demo_mode_toggle_element.when_present Utils.short_wait
+        @settings_page.load_page
+        @settings_page.demo_mode_toggle_element.when_present Utils.short_wait
       end
 
-      it('cannot download BOA user lists') { expect(@admin_page.download_users_button?).to be false }
-      it('cannot see department advisor lists') { BOACDepartments::DEPARTMENTS.each { |dept| expect(@admin_page.dept_tab_link_element(dept).exists?).to be false } }
-      it('cannot post status alerts') { expect(@admin_page.status_heading?).to be false }
+      it('cannot post status alerts') { expect(@settings_page.status_heading?).to be false }
 
       it 'cannot hit the cachejob page' do
         @api_admin_page.load_cachejob
@@ -426,7 +428,7 @@ describe 'A BOA advisor' do
         @cohort_page.wait_until(1) { @cohort_page.new_filter_option_elements.any? &:visible? }
       end
 
-      it('sees an Entering Term filter') { expect(@filtered_cohort_page.new_filter_option('enteringTerms').visible?).to be true }
+      it('sees an Entering Term filter') { expect(@cohort_page.new_filter_option('enteringTerms').visible?).to be true }
       it('sees an Expected Graduation Term filter') { expect(@cohort_page.new_filter_option('expectedGradTerms').visible?).to be true }
       it('sees a GPA filter') { expect(@cohort_page.new_filter_option('gpaRanges').visible?).to be true }
       it('sees a Level filter') { expect(@cohort_page.new_filter_option('levels').visible?).to be true }
@@ -455,20 +457,21 @@ describe 'A BOA advisor' do
 
     context 'looking for admin functions' do
 
-      it 'can load the admin page' do
+      before(:all) do
         @homepage.load_page
         @homepage.click_header_dropdown
-        expect(@homepage.admin_link?).to be true
       end
+
+      it('can access the settings page') { expect(@homepage.settings_link?).to be true }
+      it('cannot access the flight deck page') { expect(@homepage.flight_deck_link?).to be false }
+      it('cannot access the passenger manifest page') { expect(@homepage.pax_manifest_link?).to be false }
 
       it 'can toggle demo mode' do
-        @admin_page.load_page
-        @admin_page.demo_mode_toggle_element.when_present Utils.short_wait
+        @settings_page.load_page
+        @settings_page.demo_mode_toggle_element.when_present Utils.short_wait
       end
 
-      it('cannot download BOA user lists') { expect(@admin_page.download_users_button?).to be false }
-      it('cannot see department advisor lists') { BOACDepartments::DEPARTMENTS.each { |dept| expect(@admin_page.dept_tab_link_element(dept).exists?).to be false } }
-      it('cannot post status alerts') { expect(@admin_page.status_heading?).to be false }
+      it('cannot post status alerts') { expect(@settings_page.status_heading?).to be false }
 
       it 'cannot hit the cachejob page' do
         @api_admin_page.load_cachejob

@@ -94,6 +94,7 @@ class Utils
         nil
     end
     headless? ? driver.manage.window.resize_to(1600,900) : driver.manage.window.maximize
+    Selenium::WebDriver.logger.level = :error
     driver
   end
 
