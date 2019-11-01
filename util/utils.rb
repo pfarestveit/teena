@@ -158,6 +158,11 @@ class Utils
     @config['timeouts']['long']
   end
 
+  # Returns the number of seconds to wait for the poller to update appointment lists
+  def self.boac_poller_wait
+    @config['timeouts']['boac_poller']
+  end
+
   # CALNET AND CANVAS
 
   # Base URL of CalNet authentication service test instance

@@ -7,6 +7,8 @@ module BOACStudentPageAdvisingNote
   include Page
   include BOACPages
   include BOACPagesCreateNoteModal
+  include BOACStudentPageTimeline
+  include BOACApptIntakeDesk
 
   #### EXISTING NOTES ####
 
@@ -16,7 +18,6 @@ module BOACStudentPageAdvisingNote
   span(:notes_expanded_msg, xpath: '//span[text()="Collapse all notes"]')
   span(:notes_collapsed_msg, xpath: '//span[text()="Expand all notes"]')
   elements(:note_msg_row, :div, xpath: '//div[contains(@id,"timeline-tab-note-message")]')
-  elements(:topic, :list_item, xpath: '//li[contains(@id, "topic")]')
 
   # Clicks the Notes tab and expands the list of notes
   def show_notes
@@ -44,78 +45,10 @@ module BOACStudentPageAdvisingNote
     (notes.sort_by {|n| [n.updated_date, n.created_date, n.id] }).reverse.map &:id
   end
 
-  # Returns the expected format for a collapsed note date
-  # @return [String]
-  def expected_note_short_date_format(date)
-    (Time.now.strftime('%Y') == date.strftime('%Y')) ? date.strftime('%b %-d') : date.strftime('%b %-d, %Y')
-  end
-
-  # Returns the expected format for an expanded note date
-  # @return [String]
-  def expected_note_long_date_format(date)
-    format = (Time.now.strftime('%Y') == date.strftime('%Y')) ? date.strftime('%b %-d %l:%M%P') : date.strftime('%b %-d, %Y %l:%M%P')
-    format.gsub(/\s+/, ' ')
-  end
-
   # Returns the visible sequence of note ids
   # @return [Array<String>]
   def visible_collapsed_note_ids
-    els = browser.find_elements(xpath: '//div[contains(@id, "note-")][contains(@id, "-is-closed")]')
-    els.map do |el|
-      parts = el.attribute('id').split('-')
-      (parts[2] == 'is') ? parts[1] : parts[1..2].join('-')
-    end
-  end
-
-  # Returns the note element visible when the note is collapsed
-  # @param note [Note]
-  # @return [PageObject::Elements::Div]
-  def collapsed_note_el(note)
-    div_element(id: "note-#{note.id}-is-closed")
-  end
-
-  # Returns the visible sequence of message ids, whether or not collapsed
-  # @return [Array<String>]
-  def visible_message_ids
-    els = browser.find_elements(xpath: '//tr[starts-with(@id, "permalink-note-")]')
-    els.map { |el| el.attribute('id').sub('permalink-note-', '') }
-  end
-
-  # Returns the button element for collapsing a given note
-  # @param note [Note]
-  # @return [PageObject::Elements::Button]
-  def close_msg_button(note)
-    button_element(xpath: "//div[@id='note-#{note.id}-is-closed']/../following-sibling::div/button")
-  end
-
-  # Returns the visible note date when the note is collapsed
-  # @param note [Note]
-  # @return [Hash]
-  def visible_collapsed_note_data(note)
-    subject_el = div_element(id: "note-#{note.id}-is-closed")
-    date_el = div_element(id: "collapsed-note-#{note.id}-created-at")
-    {
-      :subject => (subject_el.attribute('innerText').gsub("\n", '') if subject_el.exists?),
-      :date => (date_el.text.gsub(/\s+/, ' ') if date_el.exists?)
-    }
-  end
-
-  # Whether or not a given note is expanded
-  # @param note [Note]
-  # @return [boolean]
-  def note_expanded?(note)
-    div_element(id: "note-#{note.id}-is-open").exists?
-  end
-
-  # Expands a note unless it's already expanded
-  # @param note [Note]
-  def expand_note(note)
-    if note_expanded? note
-      logger.debug "Note ID #{note.id} is already expanded"
-    else
-      logger.debug "Expanding note ID #{note.id}"
-      wait_for_update_and_click_js collapsed_note_el(note)
-    end
+    visible_collapsed_item_ids 'note'
   end
 
   # Expands a note unless it's already expanded
@@ -123,17 +56,6 @@ module BOACStudentPageAdvisingNote
   def expand_note_by_subject(note_subject)
     note_el = span_element(xpath: "//span[text()=\"#{note_subject}\"]/..")
     wait_for_update_and_click note_el
-  end
-
-  # Collapses a note unless it's already collapsed
-  # @param note [Note]
-  def collapse_note(note)
-    if note_expanded? note
-      logger.debug "Collapsing note ID #{note.id}"
-      wait_for_update_and_click close_msg_button(note)
-    else
-      logger.debug "Note ID #{note.id} is already collapsed"
-    end
   end
 
   # Returns the element containing the note's advisor name
@@ -145,7 +67,7 @@ module BOACStudentPageAdvisingNote
 
   # Search
 
-  text_area(:timeline_notes_query_input, id: 'timeline-notes-query-input')
+  text_field(:timeline_notes_query_input, id: 'timeline-notes-query-input')
   div(:timeline_notes_spinner, id: 'timeline-notes-spinner')
 
   def search_within_timeline_notes(query)
@@ -314,15 +236,15 @@ module BOACStudentPageAdvisingNote
     logger.debug "Verifying visible data for note ID #{note.id}"
 
     # Verify data visible when note is collapsed
-    collapsed_note_el(note).when_present Utils.medium_wait
-    collapse_note note
-    visible_data = visible_collapsed_note_data note
-    expected_short_updated_date = "Last updated on #{expected_note_short_date_format note.updated_date}"
+    collapsed_item_el(note).when_present Utils.medium_wait
+    collapse_item note
+    visible_data = visible_collapsed_item_data note
+    expected_short_updated_date = "Last updated on #{expected_item_short_date_format note.updated_date}"
     wait_until(1, "Expected '#{note.subject}', got #{visible_data[:subject]}") { visible_data[:subject] == note.subject }
     wait_until(1, "Expected '#{expected_short_updated_date}', got #{visible_data[:date]}") { visible_data[:date] == expected_short_updated_date }
 
     # Verify data visible when note is expanded
-    expand_note note
+    expand_item note
     visible_data.merge!(visible_expanded_note_data note)
     wait_until(1, "Expected '#{note.body}', got '#{visible_data[:body]}'") { visible_data[:body] == "#{note.body}" }
     wait_until(1, 'Expected non-blank advisor name') { !visible_data[:advisor].empty? }
@@ -340,13 +262,13 @@ module BOACStudentPageAdvisingNote
     wait_until(1, "Expected '#{expected_file_names.sort}', got #{visible_data[:attachments].sort}") { visible_data[:attachments].sort == expected_file_names.sort }
 
     # Check visible timestamps within 1 minute to avoid failures caused by a 1 second diff
-    expected_long_created_date = "Created on #{expected_note_long_date_format note.created_date}"
+    expected_long_created_date = "Created on #{expected_item_long_date_format note.created_date}"
     wait_until(1, "Expected '#{expected_long_created_date}', got #{visible_data[:created_date]}") do
       Time.parse(visible_data[:created_date]) <= Time.parse(expected_long_created_date) + 60
       Time.parse(visible_data[:created_date]) >= Time.parse(expected_long_created_date) - 60
     end
     unless note.instance_of?(NoteBatch) || (note.updated_date == note.created_date) || !note.updated_date
-      expected_long_updated_date = "Last updated on #{expected_note_long_date_format note.updated_date}"
+      expected_long_updated_date = "Last updated on #{expected_item_long_date_format note.updated_date}"
       wait_until(1, "Expected '#{expected_long_updated_date}', got #{visible_data[:updated_date]}") do
         Time.parse(visible_data[:updated_date]) <= Time.parse(expected_long_updated_date) + 60
         Time.parse(visible_data[:updated_date]) >= Time.parse(expected_long_updated_date) - 60
@@ -381,11 +303,11 @@ module BOACStudentPageAdvisingNote
   # @param note [Note]
   def edit_note_subject_and_save(note)
     logger.info "Changing note ID #{note.id} subject to '#{note.subject}'"
-    expand_note note
+    expand_item note
     click_edit_note_button note
     enter_edit_note_subject note
     click_save_note_edit
-    collapsed_note_el(note).when_visible Utils.short_wait
+    collapsed_item_el(note).when_visible Utils.short_wait
     note.updated_date = Time.now
   end
 
@@ -393,7 +315,7 @@ module BOACStudentPageAdvisingNote
   # @param note [Note]
   def delete_note(note)
     logger.info "Deleting note '#{note.id}'"
-    expand_note note
+    expand_item note
     wait_for_update_and_click delete_note_button(note)
     confirm_delete_or_discard
     note.deleted_date = Time.now

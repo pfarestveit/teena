@@ -9,6 +9,7 @@ class BOACStudentPage
   include BOACAddGroupSelectorPages
   include BOACGroupModalPages
   include BOACStudentPageAdvisingNote
+  include BOACStudentPageAppointment
 
   # Loads a student page directly
   # @param user [User]

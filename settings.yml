@@ -16,6 +16,7 @@ timeouts:
   medium: 30
   long: 120
   canvas_poller: 60
+  boac_poller: 5
 
 #### Test user accounts ####
 
@@ -50,9 +51,6 @@ boac:
   nessie_assignments: true
 
   test_dept: UWASC
-  test_asc_advisor_uid: 192837
-  test_coe_advisor_uid: 123456
-  test_l_and_s_advisor_uid: 654321
   test_default_cohort_major: [History BA]
 
   shuffle_max_users: true

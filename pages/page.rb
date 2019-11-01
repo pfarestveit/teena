@@ -160,8 +160,11 @@ module Page
   # @param option [String]
   def wait_for_element_and_select_js(select_element, option)
     wait_for_update_and_click_js select_element
-    wait_until(Utils.short_wait) { (select_element.options.map { |o| o.text.strip }).include? option }
-    option_to_select = (select_element.options.find { |o| o.text.strip == option })
+    wait_until(Utils.short_wait) do
+      (select_element.options.map { |o| o.text.strip }).include?(option) ||
+      (select_element.options.map { |o| o.attribute('value') }).include?(option)
+    end
+    option_to_select = (select_element.options.find { |o| o.text.strip == option || o.attribute('value') == option })
     option_to_select.click
   end
 
@@ -297,6 +300,13 @@ module Page
   # Hits the Backspace key
   def hit_backspace
     browser.action.send_keys(:backspace).perform
+  end
+
+  # Hits the Escape key twice
+  def hit_escape
+    browser.action.send_keys(:escape).perform
+    sleep Utils.click_wait
+    browser.action.send_keys(:escape).perform
   end
 
   # Hits the Tab key

@@ -208,9 +208,11 @@ class BOACUtils < Utils
     advisors
   end
 
-  # Returns all the advisors associated with a department
+  # Returns all the advisors associated with a department, optionally limited to those with a given role
+  # @param dept [BOACDepartments]
+  # @param role [AdvisorRole]
   # @return [Array<BOACUser>]
-  def self.get_dept_advisors(dept)
+  def self.get_dept_advisors(dept, role = nil)
     # "Notes Only" isn't a real department and requires special rules.
     if dept == BOACDepartments::NOTES_ONLY
       query = "SELECT
@@ -224,6 +226,9 @@ class BOACUtils < Utils
               ON udm.university_dept_id = ud.id
             WHERE authorized_users.deleted_at IS NULL
               AND authorized_users.can_access_canvas_data IS FALSE
+              #{' AND udm.is_advisor IS TRUE ' if role&.is_advisor}
+              #{' AND udm.is_drop_in_advisor IS TRUE ' if role&.is_drop_in_advisor}
+              #{' AND udm.is_scheduler IS TRUE ' if role&.is_scheduler}
             GROUP BY authorized_users.uid, authorized_users.can_access_canvas_data"
     else
       query = "SELECT
@@ -242,6 +247,9 @@ class BOACUtils < Utils
               ON udm2.university_dept_id = ud2.id
             WHERE authorized_users.deleted_at IS NULL
               AND authorized_users.can_access_canvas_data IS TRUE
+              #{' AND udm.is_advisor IS TRUE ' if role&.is_advisor}
+              #{' AND udm.is_drop_in_advisor IS TRUE ' if role&.is_drop_in_advisor}
+              #{' AND udm.is_scheduler IS TRUE ' if role&.is_scheduler}
             GROUP BY authorized_users.uid, authorized_users.can_access_canvas_data"
     end
     results = query_pg_db(boac_db_credentials, query)
@@ -548,14 +556,75 @@ class BOACUtils < Utils
     attachment.id = Utils.query_pg_db_field(boac_db_credentials, query, 'id').last
   end
 
+  ### USERS ###
+
   # Creates an admin authorized user
   # @param user [BOACUser]
-  def self.create_auth_user(user)
+  def self.create_admin_auth_user(user)
     statement = "INSERT INTO authorized_users (created_at, updated_at, uid, is_admin, in_demo_mode, can_access_canvas_data, created_by, is_blocked)
                  SELECT now(), now(), '#{user.uid}', true, false, true, '#{Utils.super_admin_uid}', false
                  WHERE NOT EXISTS (SELECT id FROM authorized_users WHERE uid = '#{user.uid}');"
     result = query_pg_db(boac_db_credentials, statement)
     logger.warn "Command status: #{result.cmd_status}. Result status: #{result.result_status}"
+  end
+
+  def self.get_dept_id(dept)
+    statement_0 = "SELECT id FROM university_depts WHERE dept_code = '#{dept.code}';"
+    query_pg_db_field(boac_db_credentials, statement_0, 'id').first
+  end
+
+  # Sets a given user to a non-admin, unblocked department role per given attributes
+  # @param dept_id [String]
+  # @param user [BOACUser]
+  # @param role [AdvisorRole]
+  def self.convert_user_to_role(dept_id, user, role)
+    statement_0 = "SELECT id FROM authorized_users WHERE uid = '#{user.uid}'"
+    auth_user_id = query_pg_db_field(boac_db_credentials, statement_0, 'id').first
+
+    statement_1 = "UPDATE authorized_users
+                   SET is_admin = FALSE,
+                       in_demo_mode = FALSE,
+                       is_blocked = FALSE
+                   WHERE uid = '#{user.uid}';"
+    result_1 = query_pg_db(boac_db_credentials, statement_1)
+    logger.warn "Authorized users update statuses: '#{result_1.cmd_status}' and '#{result_1.result_status}'"
+
+    statement_2 = "UPDATE university_dept_members
+                   SET is_advisor = #{role.is_advisor ? 'TRUE' : 'FALSE'},
+                       is_director = #{role.is_director ? 'TRUE' : 'FALSE'},
+                       is_scheduler = #{role.is_scheduler ? 'TRUE' : 'FALSE'},
+                       is_drop_in_advisor = #{role.is_drop_in_advisor ? 'TRUE' : 'FALSE'}
+                   WHERE authorized_user_id = '#{auth_user_id}'
+                     AND university_dept_id = '#{dept_id}';"
+    result_2 = query_pg_db(boac_db_credentials, statement_2)
+    logger.warn "University dept members update statuses: '#{result_2.cmd_status}' and '#{result_2.result_status}'"
+  end
+
+  # Converts a given user to a non-drop-in advisor
+  # @param dept_id [String]
+  # @param user [BOACUser]
+  def self.convert_user_to_advisor(dept_id, user)
+    logger.info "Converting UID #{user.uid} into an advisor-only in dept ID #{dept_id}"
+    role = AdvisorRole.new(is_advisor: true, is_director: false, is_scheduler: false, is_drop_in_advisor: false)
+    convert_user_to_role(dept_id, user, role)
+  end
+
+  # Converts a given user to a drop-in advisor
+  # @param dept_id [String]
+  # @param user [BOACUser]
+  def self.convert_user_to_drop_in(dept_id, user)
+    logger.info "Converting UID #{user.uid} into an drop-in advisor in dept ID #{dept_id}"
+    role = AdvisorRole.new(is_advisor: true, is_director: false, is_scheduler: false, is_drop_in_advisor: true)
+    convert_user_to_role(dept_id, user, role)
+  end
+
+  # Converts a given user to a scheduler
+  # @param dept_id [String]
+  # @param user [BOACUser]
+  def self.convert_user_to_scheduler(dept_id, user)
+    logger.info "Converting UID #{user.uid} into a drop-in scheduler in dept ID #{dept_id}"
+    role = AdvisorRole.new(is_advisor: false, is_director: false, is_scheduler: true, is_drop_in_advisor: false)
+    convert_user_to_role(dept_id, user, role)
   end
 
   def self.soft_delete_auth_user(user)
@@ -580,6 +649,134 @@ class BOACUtils < Utils
     statement_2 = "DELETE FROM json_cache WHERE key = 'calnet_user_for_uid_' || '#{user.uid}';"
     result_2 = query_pg_db(boac_db_credentials, statement_2)
     logger.warn "Command status: #{result_2.cmd_status}. Result status: #{result_2.result_status}"
+  end
+
+  ### APPOINTMENTS ###
+
+  # Returns all of a given department's appointments
+  # @param dept [BOACDepartments]
+  # @param students [Array<BOACUser>]
+  # @return [Array<Appointment>]
+  def self.get_dept_drop_in_appts(dept, students)
+    query = "SELECT appointments.id AS id,
+                    appointments.advisor_uid AS advisor_uid,
+                    appointments.advisor_name AS advisor_full_name,
+                    appointments.advisor_dept_codes AS advisor_dept_codes,
+                    appointments.student_sid AS student_sid,
+                    appointments.details AS detail,
+                    ARRAY_AGG (appointment_topics.topic) AS topics,
+                    appointments.appointment_type AS type,
+                    appointments.created_at AS created_date,
+                    appointments.checked_in_at AS checked_in_date,
+                    appointments.canceled_at AS canceled_date,
+                    appointments.cancel_reason AS cancel_reason,
+                    appointments.cancel_reason_explained AS cancel_detail,
+                    appointments.deleted_at AS deleted_date,
+                    appointments.dept_code AS dept_code
+              FROM appointments
+              JOIN appointment_topics
+                ON appointments.id = appointment_topics.appointment_id
+              WHERE appointment_type = 'Drop-in'
+                AND appointments.dept_code = '#{dept.code}'
+              GROUP BY appointments.id, advisor_uid, advisor_full_name, advisor_dept_codes,
+                student_sid, detail, type, created_date, checked_in_date, canceled_date, cancel_reason,
+                cancel_detail, deleted_date;"
+    results = query_pg_db(boac_db_credentials, query)
+    result_to_appts(results, students)
+  end
+
+  # Returns all a department's drop-in appointments created today
+  # @param dept [BOACDepartments]
+  # @param students [Array<BOACUser>]
+  # @return [Array<Appointment>]
+  def self.get_today_drop_in_appts(dept, students)
+    all_appts = get_dept_drop_in_appts(dept, students)
+    all_appts.select { |a| a.created_date.strftime('%Y-%m-%d') == Date.today.strftime('%Y-%m-%d') }
+  end
+
+  # Returns all of a given students's appointments
+  # @param student [BOACUser]
+  # @return [Array<Appointment>]
+  def self.get_student_appts(student)
+    query = "SELECT appointments.id AS id,
+                    appointments.advisor_uid AS advisor_uid,
+                    appointments.advisor_name AS advisor_full_name,
+                    appointments.advisor_dept_codes AS advisor_dept_codes,
+                    appointments.student_sid AS student_sid,
+                    appointments.details AS detail,
+                    ARRAY_AGG (appointment_topics.topic) AS topics,
+                    appointments.appointment_type AS type,
+                    appointments.created_at AS created_date,
+                    appointments.checked_in_at AS checked_in_date,
+                    appointments.canceled_at AS canceled_date,
+                    appointments.cancel_reason AS cancel_reason,
+                    appointments.cancel_reason_explained AS cancel_detail,
+                    appointments.deleted_at AS deleted_date,
+                    appointments.dept_code AS dept_code
+              FROM appointments
+              JOIN appointment_topics
+                ON appointments.id = appointment_topics.appointment_id
+              WHERE appointments.student_sid = '#{student.sis_id}'
+              GROUP BY appointments.id, advisor_uid, advisor_full_name, advisor_dept_codes,
+                student_sid, detail, type, created_date, checked_in_date, canceled_date, cancel_reason,
+                cancel_detail, deleted_date;"
+    results = query_pg_db(boac_db_credentials, query)
+    result_to_appts(results, [student])
+  end
+
+  # Converts the results of an appointment query to an array of appointments
+  # @param results [PG::Result]
+  # @param students [Array<BOACUser>]
+  # @return [Array<Appointment>]
+  def self.result_to_appts(results, students)
+    results.map do |r|
+      student = students.find { |s| s.sis_id == r['student_sid'] }
+      topics = Topic::TOPICS.select { |t| r['topics'].include? t.name }
+      if r['advisor_uid']
+        advisor_depts = BOACDepartments::DEPARTMENTS.select { |d| r['advisor_dept_codes'].include? d.code }
+        advisor = BOACUser.new(
+            uid: r['advisor_uid'],
+            full_name: r['advisor_full_name'],
+            depts: advisor_depts
+        )
+      end
+      Appointment.new(
+          id: r['id'],
+          advisor: advisor,
+          student: student,
+          detail: r['detail'],
+          topics: topics,
+          type: r['type'],
+          canceled_date: (r['canceled_date'] && Time.parse(r['canceled_date'].to_s).utc.localtime),
+          cancel_detail: r['cancel_detail'],
+          cancel_reason: r['cancel_reason'],
+          checked_in_date: (r['checked_in_date'] && Time.parse(r['checked_in_date'].to_s).utc.localtime),
+          created_date: (r['created_date'] && Time.parse(r['created_date'].to_s).utc.localtime),
+          deleted_date: (r['deleted_date'] && Time.parse(r['deleted_date'].to_s).utc.localtime)
+      )
+    end
+  end
+
+  # @param appt [Appointment]
+  def self.get_appt_creation_data(appt)
+    query = "SELECT id, created_at FROM appointments WHERE details LIKE '%#{appt.detail}%'"
+    results = query_pg_db(boac_db_credentials, query)
+    appt.id = results[0]['id']
+    appt.created_date = Time.parse(results[0]['created_at'].to_s).utc.localtime
+    logger.info "Appointment ID is #{appt.id}"
+  end
+
+  def self.delete_appts(appts)
+    if appts.any?
+      statement = "UPDATE appointments
+             SET deleted_at = NOW(),
+                 deleted_by = '#{Utils.super_admin_uid}'
+             WHERE id IN (#{appts.map(&:id).join(',')})
+               AND deleted_at IS NULL;"
+      query_pg_db(boac_db_credentials, statement)
+    else
+      logger.warn 'There are no appointments to delete'
+    end
   end
 
 end
