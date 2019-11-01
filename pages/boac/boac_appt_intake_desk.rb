@@ -81,6 +81,7 @@ module BOACApptIntakeDesk
     wait_for_update_and_click make_appt_button_element
     set_new_appt_id appt
     appt.created_date = Time.now
+    appt.status = AppointmentStatus::WAITING
   end
 
   # Sets the ID of a newly created drop-in appointment

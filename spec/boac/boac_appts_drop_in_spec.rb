@@ -403,7 +403,7 @@ describe 'BOA' do
 
       it 'can be done from the intake desk view' do
         @scheduler_intake_desk.click_modal_check_in_button
-        @appt_2.checked_in_date = Time.now
+        @appt_2.status = AppointmentStatus::CHECKED_IN
         @appt_2.advisor = @test.drop_in_advisor
       end
 
@@ -416,7 +416,7 @@ describe 'BOA' do
         @scheduler_intake_desk.click_details_check_in_button
         @scheduler_intake_desk.select_check_in_advisor @test.drop_in_advisor
         @scheduler_intake_desk.click_modal_check_in_button
-        @appt_3.checked_in_date = Time.now
+        @appt_3.status = AppointmentStatus::CHECKED_IN
         @appt_3.advisor = @test.drop_in_advisor
       end
 
@@ -441,7 +441,7 @@ describe 'BOA' do
 
       it 'can be done from the list view' do
         @advisor_homepage.click_appt_check_in_button @appt_4
-        @appt_4.checked_in_date = Time.now
+        @appt_4.status = AppointmentStatus::CHECKED_IN
         @appt_4.advisor = @test.drop_in_advisor
       end
 
@@ -455,7 +455,7 @@ describe 'BOA' do
       it 'can be done from the appointment details' do
         @advisor_homepage.view_appt_details @appt_5
         @advisor_homepage.click_details_check_in_button
-        @appt_5.checked_in_date = Time.now
+        @appt_5.status = AppointmentStatus::CHECKED_IN
         @appt_5.advisor = @test.drop_in_advisor
       end
 
@@ -508,7 +508,7 @@ describe 'BOA' do
         it 'can be done' do
           @advisor_student_page.click_check_in_button @appt_6
           @advisor_student_page.wait_until(Utils.short_wait) { @advisor_student_page.visible_expanded_appt_data(@appt_6)[:check_in_time] }
-          @appt_6.checked_in_date = Time.now
+          @appt_6.status = AppointmentStatus::CHECKED_IN
           @appt_6.advisor = @test.drop_in_advisor
         end
 
@@ -554,7 +554,7 @@ describe 'BOA' do
 
       it 'can be done' do
         @scheduler_intake_desk.click_cancel_confirm_button
-        @appt_7.canceled_date = Time.now
+        @appt_7.status = AppointmentStatus::CANCELED
       end
 
       it 'removes the appointment from the list' do
@@ -582,7 +582,7 @@ describe 'BOA' do
 
       it 'can be done' do
         @advisor_homepage.click_cancel_confirm_button
-        @appt_8.canceled_date = Time.now
+        @appt_8.status = AppointmentStatus::CANCELED
       end
 
       it 'updates the appointment status on the waiting list' do
@@ -626,7 +626,7 @@ describe 'BOA' do
           visible_data[:cancel_reason] == @appt_9.cancel_reason
           visible_data[:cancel_addl_info] == @appt_9.cancel_detail
         end
-        @appt_9.canceled_date = Time.now
+        @appt_9.status = AppointmentStatus::CANCELED
       end
 
       it 'updates the scheduler appointment desk view dynamically' do
@@ -638,7 +638,7 @@ describe 'BOA' do
   describe 'intake desk appointments' do
 
     it 'shows today\'s pending appointments sorted by creation time' do
-      pending_appts = @appts.select { |a| !a.checked_in_date && !a.canceled_date }.sort_by(&:created_date).reverse.map(&:id)
+      pending_appts = @appts.select { |a| a.status == AppointmentStatus::WAITING }.sort_by(&:created_date).reverse.map(&:id)
       expect(@scheduler_intake_desk.visible_appt_ids).to eql(pending_appts)
     end
   end
@@ -651,7 +651,7 @@ describe 'BOA' do
     end
 
     it 'shows all today\'s appointments sorted by creation time, with canceled segregated at the bottom' do
-      canceled_appts = @appts.select(&:canceled_date).sort_by(&:created_date).reverse
+      canceled_appts = @appts.select{ |a| a.status == AppointmentStatus::CANCELED }.sort_by(&:created_date).reverse
       non_canceled_appts = (@appts - canceled_appts).sort_by(&:created_date).reverse
       expect(@advisor_homepage.visible_appt_ids).to eql((non_canceled_appts + canceled_appts).map(&:id))
     end
