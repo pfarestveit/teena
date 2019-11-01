@@ -19,7 +19,7 @@ begin
 
   task default: :junction
   RSpec::Core::RakeTask.new(:junction) do |t|
-    t.pattern = ENV['SCRIPTS'] ? "spec/junction/*#{ENV['SCRIPTS']}*" : 'spec/junction/*'
+    t.pattern = ENV['SCRIPTS'] ? "spec/junction/*#{ENV['SCRIPTS']}*" : 'spec/junction/canvas*'
     t.rspec_opts = opts
   end
 
