@@ -50,15 +50,15 @@ class BOACTestConfig < TestConfig
   # Sets the three user roles for testing drop-in appointments
   # @param auth_users [Array<BOACUser>]
   def set_drop_in_appt_advisors(auth_users)
-    dept_advisors = auth_users.select { |u| u.depts == [@dept] }
+    dept_advisors = auth_users.select { |u| u.depts.include? @dept }
     @advisor = dept_advisors[0]
     @drop_in_advisor = dept_advisors[1]
     @drop_in_scheduler = dept_advisors[2]
 
     dept_id = BOACUtils.get_dept_id @dept
-    BOACUtils.convert_user_to_advisor(dept_id, @advisor)
-    BOACUtils.convert_user_to_drop_in(dept_id, @drop_in_advisor)
-    BOACUtils.convert_user_to_scheduler(dept_id, @drop_in_scheduler)
+    BOACUtils.convert_user_to_advisor(@dept, dept_id, @advisor)
+    BOACUtils.convert_user_to_drop_in(@dept, dept_id, @drop_in_advisor)
+    BOACUtils.convert_user_to_scheduler(@dept, dept_id, @drop_in_scheduler)
     logger.warn "Advisor-only UID #{@advisor.uid}, drop-in advisor UID #{@drop_in_advisor.uid}, scheduler UID #{@drop_in_scheduler.uid}"
   end
 

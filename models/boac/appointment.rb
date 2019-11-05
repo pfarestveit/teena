@@ -1,11 +1,11 @@
 class Appointment < TimelineRecord
 
   attr_accessor :advisor,
-                :canceled_date,
                 :cancel_reason,
                 :cancel_detail,
-                :checked_in_date,
                 :detail,
+                :status,
+                :status_date,
                 :student,
                 :type
 
