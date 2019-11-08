@@ -41,7 +41,6 @@ describe 'BOA note templates' do
     before do
       @student_page.load_page @student
       @student_page.click_create_new_note
-      @student_page.show_adv_note_options
       @student_page.click_templates_button
     end
 
@@ -102,7 +101,6 @@ describe 'BOA note templates' do
         @note = Note.new(subject: "Note student-page-edit #{@test.id}")
         @student_page.load_page @student
         @student_page.click_create_new_note
-        @student_page.show_adv_note_options
       end
 
       it 'can be cancelled' do
@@ -141,7 +139,6 @@ describe 'BOA note templates' do
 
       it 'can be renamed but cancelled' do
         @student_page.click_create_new_note
-        @student_page.show_adv_note_options
         @student_page.click_rename_template @template_1
         @student_page.click_cancel_template_rename
         @student_page.rename_template_input_element.when_not_visible 1

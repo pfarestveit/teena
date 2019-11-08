@@ -58,7 +58,6 @@ class Topic
       MAJORS = new('Majors', true, false),
       MIN_UNIT_PROGRAM = new('Minimum Unit Program', true, false),
       MINORS = new('Minors', true, false),
-      OTHER = new('Other / Reason not listed', true, true),
       PASS_NO_PASS = new('Pass / Not Pass (PNP)', true, false),
       PERSONAL = new('Personal', true, false),
       PETITION = new('Petition', true, false),
@@ -93,7 +92,8 @@ class Topic
       TRANSITION_SUPPORT = new('Transition Support', true, false),
       TRAVEL_CONFLICTS = new('Travel Conflicts', true, false),
       WAIVE_COLLECT_REQT = new('Waive College Requirement', true, false),
-      WITHDRAWAL = new('Withdrawal', true, true)
+      WITHDRAWAL = new('Withdrawal', true, true),
+      OTHER = new('Other / Reason not listed', true, true)
   ]
 
 end
