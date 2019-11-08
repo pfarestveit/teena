@@ -88,7 +88,7 @@ describe 'BOAC', order: :defined do
         if (0..1) === cohort.member_data.length
           logger.warn 'Skipping sort-by-GPA test since there are no results or only one result'
         else
-          @cohort_page.sort_by_gpa
+          @cohort_page.sort_by_gpa_cumulative
           expected_results = @cohort_page.expected_sids_by_gpa cohort.member_data
           visible_results = @cohort_page.visible_sids
           @cohort_page.verify_list_view_sorting(expected_results, visible_results)
@@ -186,9 +186,24 @@ describe 'BOAC', order: :defined do
         @homepage.verify_member_alerts(@driver, cohort, test.advisor)
       end
 
-      it "by default sorts by name ascending cohort the first 50 members who have alerts on the homepage with criteria #{cohort.search_criteria.list_filters}" do
+      it "by default sorts by alert count descending the first 50 cohort members who have alerts on the homepage with criteria #{cohort.search_criteria.list_filters}" do
+        if cohort.member_data.any?
+          expected_sequence = @homepage.expected_sids_by_alerts_desc cohort.member_data
+          @homepage.wait_until(1, "Expected #{expected_sequence}, but got #{@homepage.all_row_sids(@driver, cohort)}") { @homepage.all_row_sids(@driver, cohort) == expected_sequence }
+        end
+      end
+
+      it "allows the advisor to sort by alert count ascending the first 50 cohort members who have alerts on the homepage with criteria #{cohort.search_criteria.list_filters}" do
+        if cohort.member_data.any?
+          expected_sequence = @homepage.expected_sids_by_alerts cohort.member_data
+          @homepage.wait_until(1, "Expected #{expected_sequence}, but got #{@homepage.all_row_sids(@driver, cohort)}") { @homepage.all_row_sids(@driver, cohort) == expected_sequence }
+        end
+      end
+
+      it "allows the advisor to sort by name ascending cohort the first 50 members who have alerts on the homepage with criteria #{cohort.search_criteria.list_filters}" do
         if cohort.member_data.any?
           expected_sequence = @homepage.expected_sids_by_name cohort.member_data
+          @homepage.sort_by_name cohort
           @homepage.wait_until(1, "Expected #{expected_sequence}, but got #{@homepage.all_row_sids(@driver, cohort)}") { @homepage.all_row_sids(@driver, cohort) == expected_sequence }
         end
       end
@@ -295,22 +310,6 @@ describe 'BOAC', order: :defined do
         if cohort.member_data.any?
           expected_sequence = @homepage.expected_sids_by_gpa_desc cohort.member_data
           @homepage.sort_by_gpa cohort
-          @homepage.wait_until(1, "Expected #{expected_sequence}, but got #{@homepage.all_row_sids(@driver, cohort)}") { @homepage.all_row_sids(@driver, cohort) == expected_sequence }
-        end
-      end
-
-      it "allows the advisor to sort by alert count ascending the first 50 cohort members who have alerts on the homepage with criteria #{cohort.search_criteria.list_filters}" do
-        if cohort.member_data.any?
-          expected_sequence = @homepage.expected_sids_by_alerts cohort.member_data
-          @homepage.sort_by_alert_count cohort
-          @homepage.wait_until(1, "Expected #{expected_sequence}, but got #{@homepage.all_row_sids(@driver, cohort)}") { @homepage.all_row_sids(@driver, cohort) == expected_sequence }
-        end
-      end
-
-      it "allows the advisor to sort by alert count descending the first 50 cohort members who have alerts on the homepage with criteria #{cohort.search_criteria.list_filters}" do
-        if cohort.member_data.any?
-          expected_sequence = @homepage.expected_sids_by_alerts_desc cohort.member_data
-          @homepage.sort_by_alert_count cohort
           @homepage.wait_until(1, "Expected #{expected_sequence}, but got #{@homepage.all_row_sids(@driver, cohort)}") { @homepage.all_row_sids(@driver, cohort) == expected_sequence }
         end
       end

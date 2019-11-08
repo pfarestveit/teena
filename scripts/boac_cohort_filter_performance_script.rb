@@ -43,7 +43,7 @@ begin
         @cohort_page.wait_for_student_list
 
         # GPA
-        @cohort_page.sort_by_gpa
+        @cohort_page.sort_by_gpa_cumulative
         @cohort_page.wait_for_spinner
         @cohort_page.wait_for_student_list
 

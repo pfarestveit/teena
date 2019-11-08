@@ -17,6 +17,9 @@
             "asc_intensive": true
         },
         {
+            "levels": [
+                {"level":  "Freshman (0-29 Units)"}
+            ],
             "mid_point_deficient": true
         },
         {
