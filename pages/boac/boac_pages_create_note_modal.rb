@@ -19,15 +19,6 @@ module BOACPagesCreateNoteModal
     wait_for_element_and_type(new_note_subject_input_element, note.subject)
   end
 
-  # Clicks the advanced options button to expose all note features
-  def show_adv_note_options
-    unless add_topic_select?
-      logger.debug 'Clicking the Advanced Note Options button'
-      wait_for_update_and_click adv_note_options_button_element
-      create_template_button_element.when_present 1
-    end
-  end
-
   # Body
 
   elements(:note_body_text_area, :text_area, xpath: '//div[@role="textbox"]')
@@ -105,7 +96,6 @@ module BOACPagesCreateNoteModal
   # @param topics [Array<Topic>]
   def add_topics(note, topics)
     logger.info "Adding topics #{topics.map &:name} to note ID '#{note.id}'"
-    show_adv_note_options unless topic_input?
     topics.each do |topic|
       logger.debug "Adding topic '#{topic.name}'"
       wait_for_element_and_select_js(add_topic_select_element, topic.name)
@@ -139,7 +129,6 @@ module BOACPagesCreateNoteModal
 
   # Attachments
 
-  button(:adv_note_options_button, id: 'btn-to-advanced-note-options')
   text_area(:new_note_attach_input, xpath: '//div[@id="new-note-modal-container"]//input[@type="file"]')
   span(:note_attachment_size_msg, xpath: '//span[contains(text(),"Attachments are limited to 20 MB in size.")]')
   span(:note_dupe_attachment_msg, xpath: '//span[contains(text(),"Another attachment has the name")]')
@@ -154,7 +143,6 @@ module BOACPagesCreateNoteModal
   # @param note [NoteTemplate]
   # @param attachments [Array<Attachment>]
   def add_attachments_to_new_note(note, attachments)
-    show_adv_note_options
     attachments.each do |attach|
       logger.debug "Adding attachment '#{attach.file_name}' to an unsaved note"
       new_note_attach_input_element.send_keys Utils.asset_file_path(attach.file_name)

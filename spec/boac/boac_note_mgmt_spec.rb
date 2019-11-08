@@ -73,10 +73,10 @@ else
         end
 
         it 'can cancel an unsaved new note' do
-          @student_page.click_cancel_new_note_modal
+          @student_page.click_cancel_new_note
           @student_page.click_create_new_note
           @student_page.wait_for_element_and_type(@student_page.note_body_text_area_elements[0], 'An edit to forget')
-          @student_page.click_cancel_new_note_modal
+          @student_page.click_cancel_new_note
           @student_page.confirm_delete_or_discard
           @student_page.wait_until(1) { @student_page.note_body_text_area_elements.empty? }
         end
@@ -133,7 +133,6 @@ else
         it 'cannot create a note with an individual attachment larger than 20MB' do
           too_big_attachment = test.attachments.find { |a| a.file_size > 20000000 }
           @student_page.click_create_new_note
-          @student_page.show_adv_note_options
           @student_page.new_note_attach_input_element.when_present 1
           @student_page.new_note_attach_input_element.send_keys Utils.asset_file_path(too_big_attachment.file_name)
           @student_page.note_attachment_size_msg_element.when_visible Utils.short_wait
@@ -154,7 +153,6 @@ else
 
         it 'is offered a list of note topics' do
           @student_page.click_create_new_note
-          @student_page.show_adv_note_options
           expected_topics = Topic::TOPICS.select(&:for_notes).map &:name
           @student_page.wait_until(1, "Expected #{expected_topics}, got #{@student_page.topic_options}") do
             @student_page.topic_options == expected_topics

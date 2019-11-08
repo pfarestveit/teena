@@ -24,7 +24,7 @@ class BOACTestConfig < TestConfig
   end
 
   # Sets the advisor to use for the dept being tested
-  def set_advisor
+  def set_advisor(uid = nil)
     role = AdvisorRole.new is_advisor: true
     advisors = BOACUtils.get_dept_advisors(@dept, role)
     case @dept
