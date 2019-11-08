@@ -56,7 +56,7 @@ module BOACStudentPageAppointment
   # @param appt [Appointment]
   # @return [PageObject::Elements::Button]
   def check_in_button(appt)
-    button_element(id: "appointment-#{appt.id}-check-in-dropdown__BV_button_")
+    button_element(id: "appointment-#{appt.id}-dropdown__BV_button_")
   end
 
   # Clicks the Check-in button on an expanded appointment
@@ -68,14 +68,42 @@ module BOACStudentPageAppointment
   # Clicks the Cancel button on an expanded appointment
   # @param appt [Appointment]
   def click_cancel_appt_button(appt)
-    wait_for_update_and_click button_element(id: "appointment-#{appt.id}-cancel")
+    wait_for_update_and_click button_element(id: "btn-appointment-#{appt.id}-cancel")
+  end
+
+  # Returns the button for assigning an appointment
+  # @param appt [Appointment]
+  # @return [PageObject::Elements::Button]
+  def reserve_appt_button(appt)
+    button_element(id: "btn-appointment-#{appt.id}-reserve")
+  end
+
+  # Clicks the button for assigning an appointment
+  # @param appt [Appointment]
+  def click_reserve_appt_button(appt)
+    click_appt_dropdown_button(appt) unless reserve_appt_button(appt).visible?
+    wait_for_update_and_click reserve_appt_button(appt)
+  end
+
+  # Returns the button for un-assigning an appointment
+  # @param appt [Appointment]
+  # @return [PageObject::Elements::Button]
+  def unreserve_appt_button(appt)
+    button_element(id: "btn-appointment-#{appt.id}-unreserve")
+  end
+
+  # Clicks the button for un-assigning an appointment
+  # @param appt [Appointment]
+  def click_unreserve_appt_button(appt)
+    click_appt_dropdown_button(appt) unless unreserve_appt_button(appt).visible?
+    wait_for_update_and_click unreserve_appt_button(appt)
   end
 
   # Toggles the Check-in dropdown for a given appointment
   # @param appt [Appointment]
   def click_appt_dropdown_button(appt)
     logger.info "Clicking check-in dropdown for appt #{appt.id}"
-    wait_for_update_and_click button_element(id: "appointment-#{appt.id}-check-in-dropdown__BV_toggle_")
+    wait_for_update_and_click button_element(id: "appointment-#{appt.id}-dropdown__BV_toggle_")
   end
 
   # Returns the element containing the appointment advisor name
@@ -117,6 +145,13 @@ module BOACStudentPageAppointment
     }
   end
 
+  # Returns the element indicating that an appointment is assigned to an advisor
+  # @param appt [Appointment]
+  # @return [PageObject::Elements::Span]
+  def reserved_for_el(appt)
+    span_element(id: "appointment-#{appt.id}-assigned-to")
+  end
+
   # Returns the data visible when an appointment is expanded
   # @param appt [Appointment]
   # @return [Hash]
@@ -133,6 +168,7 @@ module BOACStudentPageAppointment
     {
         detail: (details_el.text if details_el.exists?),
         created_date: (date_el.attribute('innerText').strip if date_el.exists?),
+        reserve_advisor: (reserved_for_el(appt).attribute('innerText').strip if reserved_for_el(appt).exists?),
         check_in_time: (check_in_time_el.text if check_in_time_el.exists?),
         cancel_reason: (cancel_reason_el.text if cancel_reason_el.exists?),
         cancel_addl_info: (cancel_addl_info_el.text if cancel_addl_info_el.exists?),

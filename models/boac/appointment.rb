@@ -4,6 +4,7 @@ class Appointment < TimelineRecord
                 :cancel_reason,
                 :cancel_detail,
                 :detail,
+                :reserve_advisor,
                 :status,
                 :status_date,
                 :student,

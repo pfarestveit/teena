@@ -174,7 +174,8 @@ class BOACUtils < Utils
                       WHERE drop_in_advisors.authorized_user_id = authorized_users.id
                         AND drop_in_advisors.deleted_at IS NULL) AS is_drop_in_advisor,
               university_dept_members.is_scheduler AS is_scheduler,
-              university_depts.dept_code AS dept_code
+              university_depts.dept_code AS dept_code,
+              drop_in_advisors.is_available AS is_available
             FROM authorized_users
             LEFT JOIN university_dept_members
               ON authorized_users.id = university_dept_members.authorized_user_id
@@ -182,6 +183,7 @@ class BOACUtils < Utils
               ON university_dept_members.university_dept_id = university_depts.id
             LEFT JOIN drop_in_advisors
               ON university_depts.dept_code = drop_in_advisors.dept_code
+              AND authorized_users.id = drop_in_advisors.authorized_user_id
             ORDER BY uid ASC;"
     results = query_pg_db(boac_db_credentials, query)
 
@@ -198,6 +200,8 @@ class BOACUtils < Utils
                     dept: (BOACDepartments::DEPARTMENTS.find { |d| d.code == role['dept_code']}),
                     is_advisor: (role['is_advisor'] == 't'),
                     is_automated: (role['is_automated'] && role['is_automated'] == 't'),
+                    is_available: (role['is_available'] && role['is_available'] == 't'),
+                    is_drop_in_advisor: (role['is_drop_in_advisor'] && role['is_drop_in_advisor'] == 't'),
                     is_director: (role['is_director'] == 't'),
                     is_scheduler: (role['is_scheduler'] == 't')
                   }
@@ -620,11 +624,12 @@ class BOACUtils < Utils
 
     if role.is_drop_in_advisor
       statement_3 = "UPDATE drop_in_advisors
-                     SET deleted_at = NULL
+                     SET deleted_at = NULL,
+                         is_available = #{role.is_available ? 'TRUE' : 'FALSE'}
                      WHERE authorized_user_id = '#{auth_user_id}'
                      AND dept_code = '#{dept.code}';"
       statement_4 = "INSERT INTO drop_in_advisors (authorized_user_id, dept_code, is_available, created_at, updated_at, deleted_at)
-                     SELECT #{auth_user_id}, '#{dept.code}', FALSE, NOW(), NOW(), NULL
+                     SELECT #{auth_user_id}, '#{dept.code}', #{role.is_available ? 'TRUE' : 'FALSE'}, NOW(), NOW(), NULL
                      WHERE NOT EXISTS (SELECT authorized_user_id
                                        FROM drop_in_advisors
                                        WHERE authorized_user_id = #{auth_user_id}
@@ -652,17 +657,17 @@ class BOACUtils < Utils
   # @param user [BOACUser]
   def self.convert_user_to_advisor(dept, dept_id, user)
     logger.info "Converting UID #{user.uid} into an advisor-only in dept #{dept.code} ID #{dept_id}"
-    role = AdvisorRole.new(is_advisor: true, is_director: false, is_scheduler: false, is_drop_in_advisor: false)
+    role = AdvisorRole.new(is_advisor: true, is_available: false, is_director: false, is_scheduler: false, is_drop_in_advisor: false)
     convert_user_to_role(dept, dept_id, user, role)
   end
 
-  # Converts a given user to a drop-in advisor
+  # Converts a given user to an available drop-in advisor
   # @param dept [BOACDepartments]
   # @param dept_id [String]
   # @param user [BOACUser]
-  def self.convert_user_to_drop_in(dept, dept_id, user)
+  def self.convert_user_to_available_drop_in(dept, dept_id, user)
     logger.info "Converting UID #{user.uid} into an drop-in advisor in dept #{dept.code} ID #{dept_id}"
-    role = AdvisorRole.new(is_advisor: true, is_director: false, is_scheduler: false, is_drop_in_advisor: true)
+    role = AdvisorRole.new(is_advisor: true, is_available: true, is_director: false, is_scheduler: false, is_drop_in_advisor: true)
     convert_user_to_role(dept, dept_id, user, role)
   end
 
