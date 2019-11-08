@@ -238,7 +238,7 @@ module BOACUserListPages
   # Sorts a user list by alert count
   # @param cohort [Cohort]
   def sort_by_alert_count(cohort = nil)
-    sort_by_option('Issues', cohort)
+    sort_by_option('Alerts', cohort)
   end
 
   # Returns the sequence of SIDs that should be present when sorted by alert count ascending

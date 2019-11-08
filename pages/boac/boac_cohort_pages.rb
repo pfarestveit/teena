@@ -182,9 +182,9 @@ module BOACCohortPages
     sort_by 'Team'
   end
 
-  # Sorts cohort search results by GPA
-  def sort_by_gpa
-    sort_by 'GPA'
+  # Sorts cohort search results by GPA (Cumulative)
+  def sort_by_gpa_cumulative
+    sort_by 'GPA (Cumulative)'
   end
 
   # Sorts cohort search results by level
