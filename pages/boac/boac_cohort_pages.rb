@@ -19,6 +19,7 @@ module BOACCohortPages
   button(:cancel_delete_button, id: 'delete-cancel')
 
   button(:export_list_button, id: 'export-student-list-button')
+  button(:confirm_export_list_button, id: 'export-list-confirm')
 
   span(:no_access_msg, xpath: '//span[text()="You are unauthorized to access student data managed by other departments"]')
   span(:title_required_msg, xpath: '//span[text()="Required"]')
@@ -55,11 +56,31 @@ module BOACCohortPages
   # @param cohort [Cohort]
   # @return [CSV::Table]
   def export_student_list(cohort)
-    logger.info "Exporting student list for #{cohort.instance_of?(FilteredCohort) ? 'cohort' : 'group'} ID '#{cohort.id}'"
+    logger.info "Exporting student list with default columns for #{cohort.instance_of?(FilteredCohort) ? 'cohort' : 'group'} ID '#{cohort.id}'"
     Utils.prepare_download_dir
-    wait_for_element(export_list_button_element, Utils.short_wait)
+    wait_for_element(export_list_button_element, Utils.medium_wait)
     wait_until(3) { !export_list_button_element.disabled? }
     wait_for_update_and_click export_list_button_element
+    wait_for_update_and_click confirm_export_list_button_element
+    csv_file_path = "#{Utils.download_dir}/#{cohort.name + '-' if cohort.id}students-#{Time.now.strftime('%Y-%m-%d')}_*.csv"
+    wait_until(20) { Dir[csv_file_path].any? }
+    CSV.table Dir[csv_file_path].first
+  end
+
+  # Clicks the Export List button and parses the resulting file
+  # @param cohort [Cohort]
+  # @return [CSV::Table]
+  def export_custom_student_list(cohort)
+    logger.info "Exporting student list with custom columns for #{cohort.instance_of?(FilteredCohort) ? 'cohort' : 'group'} ID '#{cohort.id}'"
+    Utils.prepare_download_dir
+    wait_for_element(export_list_button_element, Utils.medium_wait)
+    wait_until(3) { !export_list_button_element.disabled? }
+    wait_for_update_and_click export_list_button_element
+    13.times do |idx|
+      (el = checkbox_element(id: "csv-column-options__BV_option_#{idx}_")).when_present Utils.short_wait
+      js_click el
+    end
+    wait_for_update_and_click confirm_export_list_button_element
     csv_file_path = "#{Utils.download_dir}/#{cohort.name + '-' if cohort.id}students-#{Time.now.strftime('%Y-%m-%d')}_*.csv"
     wait_until(20) { Dir[csv_file_path].any? }
     CSV.table Dir[csv_file_path].first
@@ -68,7 +89,7 @@ module BOACCohortPages
   # Verifies that the filtered cohort or curated group members in a CSV export match the actual members
   # @param cohort_members [Array<Object>]
   # @param parsed_csv [CSV::Table]
-  def verify_student_list_export(cohort_members, parsed_csv)
+  def verify_student_list_default_export(cohort_members, parsed_csv)
     wait_until(1, "Expected #{cohort_members.length}, got #{parsed_csv.length}") { parsed_csv.length == cohort_members.length }
     # Curated groups contain user objects
     if cohort_members.all? { |m| m.instance_of? BOACUser }
@@ -98,6 +119,24 @@ module BOACCohortPages
       parsed_csv.by_col!
       parsed_csv.dig(:email).compact.any?
       parsed_csv.dig(:phone).compact.any?
+    end
+  end
+
+  # Verifies that the CSV export includes all available columns
+  # @param cohort_members [Array<Object>]
+  # @param parsed_csv [CSV::Table]
+  def verify_student_list_custom_export(cohort_members, parsed_csv)
+    wait_until(1, "Expected #{cohort_members.length}, got #{parsed_csv.length}") { parsed_csv.length == cohort_members.length }
+    wait_until(1) do
+      parsed_csv.by_col!
+      parsed_csv.dig(:majors).compact.any?
+      parsed_csv.dig(:level).compact.any?
+      parsed_csv.dig(:terms_in_attendance).compact.any?
+      parsed_csv.dig(:expected_graduation_date).compact.any?
+      parsed_csv.dig(:units_completed).compact.any?
+      parsed_csv.dig(:term_gpa).compact.any?
+      parsed_csv.dig(:cumulative_gpa).compact.any?
+      parsed_csv.dig(:program_status).compact.any?
     end
 
   end
