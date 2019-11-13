@@ -165,7 +165,16 @@ describe 'BOAC', order: :defined do
       it "allows the advisor to export a non-empty list of students in a cohort using #{cohort.search_criteria.list_filters}" do
         if cohort.member_data.any?
           parsed_csv = @cohort_page.export_student_list cohort
-          @cohort_page.verify_student_list_export(cohort.member_data, parsed_csv)
+          @cohort_page.verify_student_list_default_export(cohort.member_data, parsed_csv)
+        else
+          expect(@cohort_page.export_list_button_element.disabled?).to be true
+        end
+      end
+
+      it "allows the advisor to choose columns to include when exporting a cohort using #{cohort.search_criteria.list_filters}" do
+        if cohort.member_data.any?
+          parsed_csv = @cohort_page.export_custom_student_list cohort
+          @cohort_page.verify_student_list_custom_export(cohort.member_data, parsed_csv)
         else
           expect(@cohort_page.export_list_button_element.disabled?).to be true
         end
