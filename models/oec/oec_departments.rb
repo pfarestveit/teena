@@ -33,6 +33,7 @@ class OECDepartments
       CELTIC = new('CELTIC', 'Celtic Studies', 'CELTIC', %w(F G), true),
       CHEM = new('CHEM', 'Chemistry', 'CHEM', %w(F G), true),
       CHINESE = new('CHINESE', 'Chinese', 'CHINESE', %w(F G), true),
+      CHM_ENG = new('CHM ENG','Chemical Engineering', 'CHM ENG', %w(F G), true),
       CIV_ENG = new('CIV ENG', 'Civil and Environmental Engineering', 'CIV ENG', nil, false),
       CMP_BIO = new('CMP BIO', 'Computational Biology', 'CMP BIO', nil, true),
       COG_SCI = new('COG SCI', 'International and Area Studies', 'IAS', %w(F G), true),
