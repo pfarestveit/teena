@@ -286,8 +286,9 @@ class NessieUtils < Utils
                     student.student_academic_status.gpa AS gpa,
                     student.student_academic_status.level AS level_code,
                     student.student_majors.major AS majors,
-                    student.student_enrollment_terms.enrolled_units AS units_in_progress,
-                    student.student_enrollment_terms.midpoint_deficient_grade AS mid_point_deficient,
+                    current_term.enrolled_units AS units_in_progress,
+                    current_term.midpoint_deficient_grade AS mid_point_deficient,
+                    previous_term.term_gpa AS gpa_last_term,
                     (ARRAY_AGG (boac_advising_asc.students.group_code || ',' || boac_advising_asc.students.active))
                       AS group_codes_with_status,
                     boac_advising_asc.students.intensive AS intensive_asc,
@@ -314,13 +315,16 @@ class NessieUtils < Utils
                ON student.student_academic_status.sid = boac_advising_coe.students.sid
              LEFT JOIN boac_advisor.advisor_students
                ON student.student_academic_status.sid = boac_advisor.advisor_students.student_sid
-             LEFT JOIN student.student_enrollment_terms
-               ON student.student_academic_status.sid = student.student_enrollment_terms.sid
-                 AND student.student_enrollment_terms.term_id = '#{BOACUtils.term_code}'
+             LEFT JOIN student.student_enrollment_terms current_term
+               ON student.student_academic_status.sid = current_term.sid
+                 AND current_term.term_id = '#{BOACUtils.term_code}'
+             LEFT JOIN student.student_enrollment_terms previous_term
+               ON student.student_academic_status.sid = previous_term.sid
+                 AND previous_term.term_id = '#{BOACUtils.previous_term_code}'
              GROUP BY student_academic_status.uid, student_academic_status.sid, student_academic_status.first_name,
                       student_academic_status.last_name, student.student_profiles.profile, student.student_academic_status.gpa,
-                      student.student_academic_status.level, student.student_majors.major, student.student_enrollment_terms.enrolled_units,
-                      student.student_enrollment_terms.midpoint_deficient_grade, boac_advising_asc.students.intensive,
+                      student.student_academic_status.level, student.student_majors.major, current_term.enrolled_units,
+                      current_term.midpoint_deficient_grade, previous_term.term_gpa, boac_advising_asc.students.intensive,
                       boac_advising_coe.students.advisor_ldap_uid, boac_advising_coe.students.gender, boac_advising_coe.students.ethnicity,
                       boac_advising_coe.students.minority, boac_advising_coe.students.did_prep, boac_advising_coe.students.prep_eligible,
                       boac_advising_coe.students.did_tprep, boac_advising_coe.students.tprep_eligible, boac_advising_coe.students.probation,
@@ -375,6 +379,7 @@ class NessieUtils < Utils
         :expected_grad_term => (expected_grad && expected_grad['id'].to_s),
         :gender => (demographics && demographics['gender']),
         :gpa => v[0]['gpa'],
+        :gpa_last_term => v[0]['gpa_last_term'],
         :level => level,
         :major => (v.map { |h| h['majors'] }).uniq.compact,
         :mid_point_deficient => (v[0]['mid_point_deficient'] == 't'),
