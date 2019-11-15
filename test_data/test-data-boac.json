@@ -80,6 +80,20 @@
             ]
         },
         {
+            "gpa_ranges_last_term": [
+                {
+                    "gpa_range": {"min": "3", "max": "3.5"}
+                },
+                {
+                    "gpa_range": {"min": ".02", "max": "2"}
+                }
+            ],
+            "majors": [
+                {"major": "Physics BA"},
+                {"major": "English BA"}
+            ]
+        },
+        {
             "majors": [
                 {"major": "Letters & Sci Undeclared UG"}
             ],

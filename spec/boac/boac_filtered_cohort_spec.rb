@@ -370,32 +370,39 @@ describe 'BOAC', order: :defined do
 
     before(:all) { @homepage.click_sidebar_create_filtered }
 
-    context 'in the GPA Range filter' do
-
+    shared_examples 'GPA range validation' do |filter_name|
       before(:all) do
         @cohort_page.click_new_filter_button
-        @cohort_page.wait_for_update_and_click @cohort_page.new_filter_option 'gpaRanges'
+        @cohort_page.wait_for_update_and_click @cohort_page.new_filter_option filter_name
       end
 
       it 'an error prompts for numeric input' do
-        @cohort_page.choose_new_filter_sub_option('gpaRanges', {'min' => 'A', 'max' => ''})
+        @cohort_page.choose_new_filter_sub_option(filter_name, {'min' => 'A', 'max' => ''})
         @cohort_page.gpa_filter_range_error_element.when_visible 1
       end
 
       it 'an error prompts for logical numeric input' do
-        @cohort_page.choose_new_filter_sub_option('gpaRanges', {'min' => '4', 'max' => '0'})
+        @cohort_page.choose_new_filter_sub_option(filter_name, {'min' => '4', 'max' => '0'})
         @cohort_page.gpa_filter_logical_error_element.when_visible 1
       end
 
       it 'an error prompts for numeric input from 0 to 4' do
-        @cohort_page.choose_new_filter_sub_option('gpaRanges', {'min' => '-1', 'max' => '5'})
+        @cohort_page.choose_new_filter_sub_option(filter_name, {'min' => '-1', 'max' => '5'})
         @cohort_page.gpa_filter_range_error_element.when_visible 1
       end
 
       it 'no Add button appears without two valid values' do
-        @cohort_page.choose_new_filter_sub_option('gpaRanges', {'min' => '3.5', 'max' => ''})
+        @cohort_page.choose_new_filter_sub_option(filter_name, {'min' => '3.5', 'max' => ''})
         expect(@cohort_page.unsaved_filter_add_button?).to be false
       end
+    end
+
+    context 'in the cumulative GPA filter' do
+      include_examples 'GPA range validation', 'gpaRanges'
+    end
+
+    context 'in the term GPA filter' do
+      include_examples 'GPA range validation', 'lastTermGpaRanges'
     end
 
     context 'in the Last Name filter' do
@@ -422,15 +429,27 @@ describe 'BOAC', order: :defined do
 
     before(:all) { @cohort_page.search_and_create_new_cohort(test.default_cohort, test) }
 
-    it 'allows the advisor to edit a GPA filter' do
+    it 'allows the advisor to edit a cumulative GPA filter' do
       test.default_cohort.search_criteria.gpa = [{'min' => '3.00', 'max' => '4'}]
-      @cohort_page.edit_filter_and_confirm('GPA', test.default_cohort.search_criteria.gpa.first)
+      @cohort_page.edit_filter_and_confirm('GPA (Cumulative)', test.default_cohort.search_criteria.gpa.first)
       @cohort_page.verify_filters_present test.default_cohort
     end
 
-    it 'allows the advisor to remove a GPA filter' do
+    it 'allows the advisor to remove a cumulative GPA filter' do
       test.default_cohort.search_criteria.gpa = []
-      @cohort_page.remove_filter_of_type 'GPA'
+      @cohort_page.remove_filter_of_type 'GPA (Cumulative)'
+      @cohort_page.verify_filters_present test.default_cohort
+    end
+
+    it 'allows the advisor to edit a term GPA filter' do
+      test.default_cohort.search_criteria.gpa_last_term = [{'min' => '2', 'max' => '3.80'}]
+      @cohort_page.edit_filter_and_confirm('GPA (Last Term)', test.default_cohort.search_criteria.gpa_last_term.first)
+      @cohort_page.verify_filters_present test.default_cohort
+    end
+
+    it 'allows the advisor to remove a term GPA filter' do
+      test.default_cohort.search_criteria.gpa_last_term = []
+      @cohort_page.remove_filter_of_type 'GPA (Last Term)'
       @cohort_page.verify_filters_present test.default_cohort
     end
 

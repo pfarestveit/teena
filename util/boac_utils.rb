@@ -33,6 +33,13 @@ class BOACUtils < Utils
     @config['term_code']
   end
 
+  # Returns the previous BOAC semester code
+  def self.previous_term_code
+    current_code = @config['term_code'].to_i
+    previous_code = current_code - (if (current_code % 10 == 2) then 4 else 3 end)
+    previous_code.to_s
+  end
+
   # Returns the semester session start date for testing activity alerts
   def self.term_start_date
     @config['term_start_date']

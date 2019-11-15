@@ -68,6 +68,29 @@ module BOACFilteredCohortPageResults
     students.flatten
   end
 
+  # Returns the student hashes that match a set of term-specific GPA filters
+  # @param test [BOACTestConfig]
+  # @param search_criteria [CohortFilter]
+  # @return [Array<Hash>]
+  def matching_gpa_last_term_students(test, search_criteria)
+    students = []
+    if search_criteria.gpa_last_term&.any?
+      search_criteria.gpa_last_term.each do |range|
+        low_end = range['min']
+        high_end = range['max']
+        students << test.searchable_data.select do |u|
+          if u[:gpa_last_term]
+            term_gpa = u[:gpa_last_term].to_f
+            term_gpa >= low_end.to_f && term_gpa <= high_end.to_f
+          end
+        end
+      end
+    else
+      students = test.searchable_data
+    end
+    students.flatten
+  end
+
   # Returns the student hashes that match a set of level filters
   # @param test [BOACTestConfig]
   # @param search_criteria [CohortFilter]
@@ -332,6 +355,7 @@ module BOACFilteredCohortPageResults
     matches = [matching_entering_term_students(test, search_criteria),
                matching_grad_term_students(test, search_criteria),
                matching_gpa_students(test, search_criteria),
+               matching_gpa_last_term_students(test, search_criteria),
                matching_level_students(test, search_criteria),
                matching_major_students(test, search_criteria),
                matching_mid_point_students(test, search_criteria),

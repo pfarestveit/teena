@@ -66,7 +66,7 @@ module BOACFilteredCohortPageFilters
   # @param filter_option [Object]
   def choose_new_filter_sub_option(filter_key, filter_option)
     # GPA and Last Name require input
-    if %w(gpaRanges lastNameRanges).include? filter_key
+    if %w(gpaRanges lastTermGpaRanges lastNameRanges).include? filter_key
       wait_for_element_and_type(filter_range_min_input_element, filter_option['min'])
       wait_for_element_and_type(filter_range_max_input_element, filter_option['max'])
 
@@ -124,6 +124,7 @@ module BOACFilteredCohortPageFilters
     # Global
     cohort.search_criteria.entering_terms.each { |term| select_new_filter('enteringTerms', term) } if cohort.search_criteria.entering_terms
     cohort.search_criteria.gpa.each { |gpa| select_new_filter('gpaRanges', gpa) } if cohort.search_criteria.gpa
+    cohort.search_criteria.gpa_last_term.each { |gpa| select_new_filter('lastTermGpaRanges', gpa) } if cohort.search_criteria.gpa_last_term
     cohort.search_criteria.level.each { |l| select_new_filter('levels', l) } if cohort.search_criteria.level
     cohort.search_criteria.units_completed.each { |u| select_new_filter('unitRanges', u) } if cohort.search_criteria.units_completed
     cohort.search_criteria.major.each { |m| select_new_filter('majors', m) } if cohort.search_criteria.major
@@ -196,7 +197,7 @@ module BOACFilteredCohortPageFilters
     elsif filter_name == 'Last Name'
       div_element(xpath: "#{filter_option_xpath}[contains(text(),\"#{filter_option['min'] + ' through ' + filter_option['max']}\")]")
 
-    elsif filter_name == 'GPA'
+    elsif ['GPA (Cumulative)', 'GPA (Last Term)'].include? filter_name
       div_element(xpath: "#{filter_option_xpath}[contains(text(),\"#{sprintf('%.3f', filter_option['min']) + ' - ' + sprintf('%.3f', filter_option['max'])}\")]")
 
     elsif %w(Ethnicity Gender).include? filter_name
@@ -218,7 +219,8 @@ module BOACFilteredCohortPageFilters
 
         filters.entering_terms.each { |term| existing_filter_element('Entering Term', term).exists? } if filters.entering_terms&.any?
         filters.expected_grad_terms.each { |t| existing_filter_element('Expected Graduation Term', t).exists? } if filters.expected_grad_terms&.any?
-        filters.gpa.each { |g| existing_filter_element('GPA', g).exists? } if filters.gpa&.any?
+        filters.gpa.each { |g| existing_filter_element('GPA (Cumulative)', g).exists? } if filters.gpa&.any?
+        filters.gpa_last_term.each { |g| existing_filter_element('GPA (Last Term)', g).exists? } if filters.gpa_last_term&.any?
         filters.level.each { |l| existing_filter_element('Level', l).exists? } if filters.level&.any?
         filters.major.each { |m| existing_filter_element('Major', m).exists? } if filters.major&.any?
         existing_filter_element('Midpoint Deficient Grade').exists? if filters.mid_point_deficient
@@ -275,7 +277,7 @@ module BOACFilteredCohortPageFilters
   # @param [String] edited_filter_option
   def choose_edit_filter_sub_option(filter_name, edited_filter_option)
     # Last Name requires input
-    if ['GPA', 'Last Name'].include? filter_name
+    if ['GPA (Cumulative)', 'GPA (Last Term)', 'Last Name'].include? filter_name
       wait_for_element_and_type(text_area_element(xpath: "//input[contains(@id, 'filter-range-min-')]"), edited_filter_option['min'])
       wait_for_element_and_type(text_area_element(xpath: "//input[contains(@id, 'filter-range-max-')]"), edited_filter_option['max'])
 
