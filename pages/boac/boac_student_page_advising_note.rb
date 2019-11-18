@@ -196,6 +196,18 @@ module BOACStudentPageAdvisingNote
 
   # Metadata
 
+  # Returns the data visible when a note is collapsed
+  # @param note [Note]
+  # @return [Hash]
+  def visible_collapsed_note_data(note)
+    subject_el = span_element(id: "note-#{note.id}-message-closed")
+    date_el = div_element(id: "collapsed-note-#{note.id}-created-at")
+    {
+      subject: (subject_el.text if subject_el.exists?),
+      created_date: (date_el.attribute('innerText').gsub('Last updated on', '').strip if date_el.exists?)
+    }
+  end
+
   # Returns the data visible when the note is expanded
   # @param note [Note]
   # @return [Hash]
