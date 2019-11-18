@@ -14,7 +14,7 @@ class BOACHomePage
   text_field(:dev_auth_uid_input, id: 'dev-auth-uid')
   text_field(:dev_auth_password_input, id: 'dev-auth-password')
   button(:dev_auth_log_in_button, id: 'dev-auth-submit')
-  span(:copyright_year_login, class: 'splash-text-copyright')
+  div(:copyright_year_login, class: 'splash-cell-copyright')
   div(:not_auth_msg, xpath: '//div[contains(., "Sorry, you are not registered to use BOA.")]')
   div(:footer_warning, id: 'fixed-warning-on-all-pages')
 
