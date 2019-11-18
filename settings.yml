@@ -35,8 +35,8 @@ users:
 # If BOAC is running on your workstation (e.g., you are a developer doing DevOps)
 # then set 'api_base_url: http://localhost:5000'. Otherwise, keep 'api_base_url' and 'base_url' equal.
 boac:
-  api_base_url: https://boac-qa.berkeley.edu
-  base_url: https://boac-qa.berkeley.edu
+  api_base_url: https://boa-qa.berkeley.edu
+  base_url: https://boa-qa.berkeley.edu
   password: secret
   term: Summer 2018
   term_code: 2185
