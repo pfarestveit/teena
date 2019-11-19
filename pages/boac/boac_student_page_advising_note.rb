@@ -200,7 +200,7 @@ module BOACStudentPageAdvisingNote
   # @param note [Note]
   # @return [Hash]
   def visible_collapsed_note_data(note)
-    subject_el = span_element(id: "note-#{note.id}-message-closed")
+    subject_el = span_element(id: "note-#{note.id}-subject")
     date_el = div_element(id: "collapsed-note-#{note.id}-created-at")
     {
       subject: (subject_el.text if subject_el.exists?),
