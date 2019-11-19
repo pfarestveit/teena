@@ -177,7 +177,7 @@ class BoaTaskSet(TaskSet):
         self.client.get('/api/curated_groups/my')
         self.client.get('/api/service_announcement')
         self.client.get('/api/note_templates/my')
-        self.client.get('/api/notes/topics?includeDeleted=false')
+        self.client.get('/api/topics/all?includeDeleted=false')
 
     @task(2)
     def search(self):
