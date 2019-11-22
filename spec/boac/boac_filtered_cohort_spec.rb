@@ -190,7 +190,8 @@ describe 'BOAC', order: :defined do
       end
 
       it "shows the first 50 filtered cohort members who have alerts on the homepage with criteria #{cohort.search_criteria.list_filters}" do
-        cohort.members = test.students.select { |u| @homepage.expected_sids_by_name(cohort.member_data).include? u.sis_id }
+        expected_sids_by_name = @homepage.expected_sids_by_name cohort.member_data
+        cohort.members = test.students.select { |u| expected_sids_by_name.include? u.sis_id }
         @homepage.expand_member_rows cohort
         @homepage.verify_member_alerts(@driver, cohort, test.advisor)
       end

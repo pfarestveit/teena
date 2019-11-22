@@ -10,7 +10,7 @@ module BOACGroupModalPages
   text_area(:grp_name_input, id: 'create-input')
   button(:grp_save_button, id: 'create-confirm')
   button(:grp_cancel_button, id: 'create-cancel')
-  div(:dupe_grp_name_msg, xpath: '//div[text()="You have an existing curated group with this name. Please choose a different name."]')
+  div(:dupe_grp_name_msg, xpath: '//div[contains(text(), "You have an existing curated group with this name. Please choose a different name.")]')
 
   # Enters a group name in the 'create' modal
   # @param group [CuratedGroup]

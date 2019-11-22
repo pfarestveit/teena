@@ -39,7 +39,7 @@ module BOACStudentPageTimeline
   # @param item [Object]
   # @return [PageObject::Elements::Div]
   def collapsed_item_el(item)
-    type = item.instance_of?(Note) ? 'note' : 'appointment'
+    type = (item.instance_of?(Note) || item.instance_of?(NoteBatch)) ? 'note' : 'appointment'
     div_element(id: "#{type}-#{item.id}-is-closed")
   end
 
@@ -56,15 +56,15 @@ module BOACStudentPageTimeline
   # @param item [Object]
   # @return [PageObject::Elements::Button]
   def close_msg_button(item)
-    type = item.instance_of?(Note) ? 'note' : 'appointment'
-    button_element(xpath: "//div[@id='#{type}-#{item.id}-is-closed']/../following-sibling::div/button")
+    type = (item.instance_of?(Note) || item.instance_of?(NoteBatch)) ? 'note' : 'appointment'
+    button_element(xpath: "//tr[@id='permalink-#{type}-#{item.id}']//button[contains(@id, '-close-message')]")
   end
 
   # Returns the visible item date when the item is collapsed
   # @param item [Object]
   # @return [Hash]
   def visible_collapsed_item_data(item)
-    type = item.instance_of?(Note) ? 'note' : 'appointment'
+    type = (item.instance_of?(Note) || item.instance_of?(NoteBatch)) ? 'note' : 'appointment'
     subject_el = div_element(id: "#{type}-#{item.id}-is-closed")
     date_el = div_element(id: "collapsed-#{type}-#{item.id}-created-at")
     {
@@ -77,14 +77,14 @@ module BOACStudentPageTimeline
   # @param item [Object]
   # @return [boolean]
   def item_expanded?(item)
-    type = item.instance_of?(Note) ? 'note' : 'appointment'
+    type = (item.instance_of?(Note) || item.instance_of?(NoteBatch)) ? 'note' : 'appointment'
     div_element(id: "#{type}-#{item.id}-is-open").exists?
   end
 
   # Expands an item unless it's already expanded
   # @param item [Object]
   def expand_item(item)
-    type = item.instance_of?(Note) ? 'note' : 'appointment'
+    type = (item.instance_of?(Note) || item.instance_of?(NoteBatch)) ? 'note' : 'appointment'
     if item_expanded? item
       logger.debug "#{type.capitalize} ID #{item.id} is already expanded"
     else
@@ -96,7 +96,7 @@ module BOACStudentPageTimeline
   # Collapses an item unless it's already collapsed
   # @param item [Object]
   def collapse_item(item)
-    type = item.instance_of?(Note) ? 'note' : 'appointment'
+    type = (item.instance_of?(Note) || item.instance_of?(NoteBatch)) ? 'note' : 'appointment'
     if item_expanded? item
       logger.debug "Collapsing #{type} ID #{item.id}"
       wait_for_update_and_click close_msg_button(item)

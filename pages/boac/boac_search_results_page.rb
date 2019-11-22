@@ -80,8 +80,8 @@ class BOACSearchResultsPage
 
   # CLASS SEARCH
 
-  element(:class_results_count, id: 'course-results-page-h2')
-  elements(:class_row, :row, xpath: '//*[@id="course-results-page-h2"]/../following-sibling::table/tr')
+  element(:class_results_count, xpath: '//*[contains(@id, "course-results-page-h")]')
+  elements(:class_row, :row, xpath: '//*[contains(@id, "course-results-page-h")]/../following-sibling::table/tr')
 
   # Checks if a given class is among search results. If more than 50 results exist, the class could be among them
   # but not displayed. In that case, returns true without further tests.
