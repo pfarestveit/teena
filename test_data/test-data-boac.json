@@ -20,6 +20,9 @@
             "levels": [
                 {"level":  "Freshman (0-29 Units)"}
             ],
+            "genders": [
+                {"gender": "Male"}
+            ],
             "mid_point_deficient": true
         },
         {

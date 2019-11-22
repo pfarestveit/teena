@@ -102,7 +102,7 @@ class BOACApiStudentPage
       {
         date: sis_profile['degree']['dateAwarded'],
         degree: sis_profile['degree']['description'],
-        colleges: sis_profile['degree']['plans'].map { |p| p['group'] },
+        colleges: (sis_profile['degree']['plans'].map { |p| p['group'] }).uniq,
         majors: sis_profile['degree']['plans'].map { |p| p['plan'] }
       }
     end

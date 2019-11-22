@@ -147,7 +147,7 @@ describe 'BOAC' do
         it("shows the name for UID #{student.uid} on the student page") { expect(student_page_sis_data[:name]).to eql(student.full_name.split(',').reverse.join(' ').strip) }
 
         it "shows the email for UID #{student.uid} on the student page" do
-          expect(student_page_sis_data[:email]).to eql(api_sis_profile_data[:email])
+          expect(student_page_sis_data[:email]).to include(api_sis_profile_data[:email])
           expect(student_page_sis_data[:email]).not_to be_empty
         end
 

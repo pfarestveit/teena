@@ -152,7 +152,7 @@ module BOACPages
   link(:intensive_cohort_link, text: 'Intensive Students')
   link(:inactive_cohort_link, text: 'Inactive Students')
   elements(:filtered_cohort_link, :link, xpath: '//div[contains(@class,"sidebar-row-link")]//a[contains(@id,"sidebar-filtered-cohort")][contains(@href,"/cohort/")]')
-  div(:dupe_filtered_name_msg, xpath: '//div[text()="You have an existing cohort with this name. Please choose a different name."]')
+  div(:dupe_filtered_name_msg, xpath: '//div[contains(text(), "You have an existing cohort with this name. Please choose a different name.")]')
 
   # Clicks the button to create a new custom cohort
   def click_sidebar_create_filtered

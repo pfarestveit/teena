@@ -32,6 +32,8 @@ class BOACTestConfig < TestConfig
         @advisor = BOACUser.new({:uid => Utils.super_admin_uid})
       when BOACDepartments::ASC, BOACDepartments::COE, BOACDepartments::L_AND_S
         @advisor = uid ? (advisors.find { |a| a.uid.to_i == uid }) : advisors.find { |a| a.depts == [@dept.code] }
+        dept_id = BOACUtils.get_dept_id @dept
+        BOACUtils.convert_user_to_advisor(@dept, dept_id, @advisor)
       else
         if block_given?
           @advisor = advisors.find { |a| yield a }
