@@ -439,7 +439,7 @@ module BOACPagesCreateNoteModal
   # @param template [NoteTemplate]
   def get_new_template_id(template)
     start = Time.now
-    wait_until(15) { template.id = template.get_note_template_id }
+    wait_until(Utils.long_wait) { template.id = template.get_note_template_id }
     logger.warn "Note template #{template.id} was created in #{Time.now - start} seconds"
   rescue
     logger.debug 'Timed out waiting for note template to be created'

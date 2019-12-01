@@ -86,13 +86,17 @@ describe 'BOAC' do
         expected_notes = expected_notes + expected_asc_notes if expected_asc_notes
         if expected_notes.any?
           expected_notes.each do |note|
-            begin
-              if (query = BOACUtils.generate_note_search_query(student, note, skip_empty_body: true))
-                note_searches << query
+            if note.subject.include? 'QA Test'
+              logger.warn "Skipping note search tests for UID #{student.uid} note ID #{note.id} because it is a testing artifact"
+            else
+              begin
+                if (query = BOACUtils.generate_note_search_query(student, note, skip_empty_body: true))
+                  note_searches << query
+                end
+              rescue => e
+                Utils.log_error e
+                it("hit an error collecting note search tests for UID #{student.uid} note ID #{note.id}") { fail }
               end
-            rescue => e
-              Utils.log_error e
-              it("hit an error collecting note search tests for UID #{student.uid} note ID #{note.id}") { fail }
             end
           end
         else
@@ -210,7 +214,7 @@ describe 'BOAC' do
             string_results_count = @search_results_page.note_results_count
             it("returns results when searching with the first #{notes_search_word_count} words in #{note_search[:test_case]}") { expect(string_results_count).to be > 0 }
 
-            it("shows no more than 100 results when searching with the first #{notes_search_word_count} words in #{note_search[:test_case]}") { expect(string_results_count).to be <= 100 }
+            it("shows no more than 20 results when searching with the first #{notes_search_word_count} words in #{note_search[:test_case]}") { expect(string_results_count).to be <= 20 }
 
             @search_results_page.wait_for_note_search_result_rows
 

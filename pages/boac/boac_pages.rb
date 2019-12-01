@@ -354,7 +354,7 @@ module BOACPages
   # @return [Integer]
   def set_new_note_id(note, student=nil)
     start_time = Time.now
-    wait_until(15) { note.id = BOACUtils.get_note_ids_by_subject(note.subject, student).first }
+    wait_until(Utils.long_wait) { note.id = BOACUtils.get_note_ids_by_subject(note.subject, student).first }
     logger.debug "Note ID is #{note.id}"
     logger.warn "Note was created in #{Time.now - start_time} seconds"
     new_note_subject_input_element.when_not_visible Utils.short_wait rescue Selenium::WebDriver::Error::StaleElementReferenceError

@@ -4,7 +4,7 @@ class TestConfig
 
   # Sets a unique ID (the epoch) for a test run
   def initialize
-    @id = Time.now.to_i.to_s
+    @id = "QA Test #{Time.now.to_i}"
   end
 
   # Parses a JSON file containing test data
