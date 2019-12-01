@@ -21,47 +21,110 @@ module BOACApptIntakeDesk
     time.strftime("%l:%M %p")
   end
 
-  # Splits a string containing one or more topics into separate topic names
+  # Splits a string containing one or more topics into separate topic downcased names
   # @param topic_string [String]
   # @return [Array<String>]
   def topics_from_string(topic_string)
-    if topic_string.include? ' and '
-      topic_string.split(' and ').sort
-    else
-      topic_string.split(', ').map { |t| t.gsub(/^(and )/, '').strip }.sort
+    topics = if topic_string.include? ' and '
+               topic_string.split(' and ').sort
+             else
+               topic_string.split(', ').map { |t| t.gsub(/^(and )/, '').strip }.sort
+             end
+    topics.map &:downcase
+  end
+
+  ### CREATE DROP-IN / UPDATE DROP-IN SHARED ELEMENTS ###
+
+  select_list(:topic_select, id: 'add-topic-select-list')
+  elements(:topic_option, :option, xpath: '//select[@id="add-topic-select-list"]/option')
+  elements(:topic_pill, :div, xpath: '//div[contains(@id, "topic-label-")]')
+  text_area(:addl_info_text_area, id: 'appointment-details')
+
+  # Returns the element element containing an added appointment reason
+  # @param topic [Topic]
+  # @return [PageObject::Elements::ListItem]
+  def appt_reason_pill(topic)
+    list_item_element(xpath: "//li[contains(@id, \"appointment-topic\") and contains(., \"#{topic.name}\")]")
+  end
+
+  # Returns all the visible appointment reasons (downcased)
+  # @return [Array<String>]
+  def appt_reasons
+    topic_pill_elements.map { |el| el.text.strip.downcase }
+  end
+
+  # Returns the button for removing an added appointment reason
+  # @param topic [Topic]
+  # @return [PageObject::Elements::Button]
+  def appt_reason_remove_button(topic)
+    button_element(xpath: "//button[contains(@id, \"remove-appointment-topic-\") and contains(., \"#{topic.name}\")]")
+  end
+
+  # Selects drop-in appointment reasons
+  # @param appt [Appointment]
+  # @param topics [Array<Topic>]
+  def add_reasons(appt, topics)
+    logger.info "Adding reasons #{topics.map &:name} to appt #{appt.id}"
+    topics.each do |t|
+      wait_for_element_and_select_js(topic_select_element, t.name)
+      appt_reason_pill(t).when_present 1
+      appt.topics << t if appt.id
     end
+  end
+
+  # Removes drop-in appointment reasons
+  # @param appt [Appointment]
+  # @param topics [Array<Topic>]
+  def remove_reasons(appt, topics)
+    logger.info "Removing reasons #{topics.map &:name} from appt #{appt.id}"
+    topics.each do |t|
+      wait_for_update_and_click appt_reason_remove_button(t)
+      appt.topics.delete t
+    end
+  end
+
+  # Enters drop-in appointment detail
+  # @param appt [Appointment]
+  def enter_detail(appt)
+    logger.info "Entering appointment detail '#{appt.detail}'"
+    wait_for_textbox_and_type(addl_info_text_area_element, appt.detail)
   end
 
   ### CREATE NEW DROP-IN APPOINTMENT ###
 
   text_field(:student_name_input, id: 'appointment-student-input')
-  select_list(:topic_select, id: 'add-topic-select-list')
-  elements(:topic_option, :option, xpath: '//select[@id="add-topic-select-list"]/option')
-  text_area(:addl_info_text_area, id: 'appointment-details')
+  select_list(:reserve_advisor_select, id: 'create-modal-advisor-select')
+  elements(:reserve_advisor_option, :option, xpath: '//select[@id="create-modal-advisor-select"]/option')
+  div(:no_advisors_msg, xpath: '//div[contains(text(), "Sorry, no advisors are on duty.")]')
   button(:make_appt_button, id: 'create-appointment-confirm')
   button(:make_appt_cancel_button, id: 'create-appointment-cancel')
 
   # Clicks the button to cancel creation of a new appointment
   def click_cancel_new_appt
+    logger.info 'Clicking the new appt Cancel button'
     wait_for_update_and_click make_appt_cancel_button_element
   end
 
   # Selects a drop-in appointment student
   # @param student [BOACUser]
   def choose_student(student)
+    logger.info "Selecting student UID #{student.uid}"
     set_auto_suggest(student_name_input_element, student.full_name)
   end
 
-  # Selects drop-in appointment reasons
-  # @param topics [Array<Topic>]
-  def choose_reasons(topics)
-    topics.each { |t| wait_for_element_and_select_js(topic_select_element, t.name) }
+  def choose_reserve_advisor(advisor)
+    logger.info "Reserving appointment for UID #{advisor.uid}"
+    wait_for_element_and_select_js(reserve_advisor_select_element, advisor.uid.to_s)
   end
 
-  # Enters drop-in appointment detail
-  # @param detail [String]
-  def enter_detail(detail)
-    wait_for_textbox_and_type(addl_info_text_area_element, detail)
+  def new_appt_advisor_uids
+    if no_advisors_msg?
+      []
+    else
+      wait_for_update_and_click reserve_advisor_select_element
+      wait_until(1) { reserve_advisor_select_element.options.any? }
+      (reserve_advisor_option_elements.map { |el| el.attribute('value') }).delete_if &:empty?
+    end
   end
 
   # Returns all the available reasons for a new drop-in appointment
@@ -76,8 +139,9 @@ module BOACApptIntakeDesk
   # @param appt [Appointment]
   def create_appt(appt)
     choose_student appt.student
-    choose_reasons appt.topics
-    enter_detail appt.detail
+    choose_reserve_advisor appt.reserve_advisor if appt.reserve_advisor
+    add_reasons(appt, appt.topics)
+    enter_detail appt
     wait_for_update_and_click make_appt_button_element
     set_new_appt_id appt
     appt.created_date = Time.now
@@ -98,6 +162,80 @@ module BOACApptIntakeDesk
     fail
   end
 
+  ### ADVISOR AVAILABILITY ###
+
+  # Intake desk
+
+  elements(:availability_toggle_button, :button, xpath: '//button[contains(@id, "toggle-drop-in-availability-")]')
+
+  # Returns the UIDs of all drop-in advisors shown
+  # @return [Array<String>]
+  def drop_in_advisor_uids
+    availability_toggle_button_elements.map { |el| el.attribute('id').split('-').last }
+  end
+
+  # Returns the button for toggling advisor availability
+  # @return [PageObject::Elements::Button]
+  def toggle_availability_button(advisor)
+    button_element(id: "toggle-drop-in-availability-#{advisor.uid}")
+  end
+
+  # Returns the visible availability status for an advisor
+  # @param advisor [BOACUser]
+  # @return [Boolean]
+  def advisor_available?(advisor)
+    (el = div_element(xpath: "//button[@id='toggle-drop-in-availability-#{advisor.uid}']/../../div[contains(@class, 'availability-status-active')]")).when_present 2
+    el.text.strip == 'ON DUTY'
+  end
+
+  # Sets an advisor's availability to true
+  # @param advisor [BOACUser]
+  def set_advisor_available(advisor)
+    if advisor_available? advisor
+      logger.warn "UID #{advisor.uid} is already available for drop-in appointments"
+    else
+      logger.info "Making UID #{advisor.uid} available for drop-in appointments"
+      wait_for_update_and_click toggle_availability_button(advisor)
+      wait_until(1) { advisor_available? advisor }
+    end
+  end
+
+  # Sets an advisor's availability to false
+  # @param advisor [BOACUser]
+  def set_advisor_unavailable(advisor)
+    if advisor_available? advisor
+      logger.info "Making UID #{advisor.uid} unavailable for drop-in appointments"
+      wait_for_update_and_click toggle_availability_button(advisor)
+      wait_until(1) { !advisor_available? advisor }
+    else
+      logger.warn "UID #{advisor.uid} is already unavailable for drop-in appointments"
+    end
+  end
+
+  # Waiting list
+
+  button(:availability_toggle_me_button, id: 'toggle-drop-in-availability-me')
+
+  # Returns the visible availability status for a logged-in advisor
+  # @return [Boolean]
+  def self_available?
+    div_element(xpath: '//div[contains(@class, "availability-status-active")]').text.strip == 'ON DUTY'
+  end
+
+  # Sets a logged-in advisor's availability to true
+  def set_self_available
+    logger.info "Making the logged-in advisor available for drop-in appointments"
+    wait_for_update_and_click availability_toggle_me_button_element
+    wait_until(1) { self_available? }
+  end
+
+  # Sets a logged-in advisor's availability to false
+  def set_self_unavailable
+    logger.info "Making the logged-in advisor unavailable for drop-in appointments"
+    wait_for_update_and_click availability_toggle_me_button_element
+    wait_until(1) { !self_available? }
+  end
+
   ### LIST VIEW OF EXISTING APPOINTMENTS ###
 
   div(:empty_wait_list_msg, id: 'waitlist-is-empty')
@@ -113,6 +251,7 @@ module BOACApptIntakeDesk
   # Clicks the link from a drop-in appointment to a student page
   # @param appt [Appointment]
   def click_student_link(appt)
+    logger.info "Clicking the student link for appt #{appt.id}, UID #{appt.student.uid}"
     wait_for_update_and_click student_link_el(appt)
   end
 
@@ -120,6 +259,15 @@ module BOACApptIntakeDesk
   # @return [Array<String>]
   def visible_appt_ids
     appt_created_at_elements.map { |el| el.attribute('id').split('-')[1] }
+  rescue Selenium::WebDriver::Error::StaleElementReferenceError
+    []
+  end
+
+  # Returns the element indicating that an appointment is assigned to an advisor
+  # @param appt [Appointment]
+  # @return [PageObject::Elements::Span]
+  def reserved_for_el(appt)
+    span_element(id: "assigned-to-#{appt.id}")
   end
 
   # Returns all the data visible for a given drop-in appointment
@@ -131,13 +279,14 @@ module BOACApptIntakeDesk
     sid_el = span_element(id: "appointment-#{appt.id}-student-sid")
     topics_el = div_element(id: "appointment-#{appt.id}-topics")
     checked_in_el = div_element(id: "appointment-#{appt.id}-checked-in")
-    canceled_el = div_element(id: "appointment-#{appt.id}-canceled")
+    canceled_el = div_element(id: "appointment-#{appt.id}-cancelled")
     {
         created_date: created_date_el.text,
         student_link_name: (student_link_el(appt).text if student_link_el(appt).exists?),
         student_non_link_name: (student_non_link_el.text if student_non_link_el.exists?),
         student_sid: (sid_el.text if sid_el.exists?),
         topics: (topics_from_string(topics_el.text) if topics_el.exists?),
+        reserved_by: (reserved_for_el(appt).text if reserved_for_el(appt).exists?),
         checked_in_status: (checked_in_el.text if checked_in_el.exists?),
         canceled_status: (canceled_el.text if canceled_el.exists?)
     }
@@ -146,9 +295,6 @@ module BOACApptIntakeDesk
   ### SHARED MODAL UI (check-in and details) ###
 
   span(:modal_created_at, id: 'appointment-created-at')
-  span(:modal_topics, id: 'appointment-topics')
-  span(:modal_details, id: 'appointment-details')
-  button(:modal_check_in_button, id: 'btn-appointment-check-in')
   button(:modal_close_button, id: 'btn-appointment-close')
 
   # Toggles the Check-in dropdown for a given appointment
@@ -156,11 +302,6 @@ module BOACApptIntakeDesk
   def click_appt_dropdown_button(appt)
     logger.info "Clicking check-in dropdown for appt #{appt.id}"
     wait_for_update_and_click button_element(id: "appointment-#{appt.id}-dropdown__BV_toggle_")
-  end
-
-  # Clicks the Check-in button on a modal
-  def click_modal_check_in_button
-    wait_for_update_and_click modal_check_in_button_element
   end
 
   # Clicks the Cancel Appt button for a given appointment
@@ -172,10 +313,18 @@ module BOACApptIntakeDesk
 
   ### CHECK-IN MODAL ###
 
+  button(:modal_check_in_button, id: 'btn-appointment-check-in')
   h3(:check_in_student_name, id: '//div[@id="advising-appointment-check-in"]//h3')
+  span(:modal_topics, id: 'appointment-topics')
+  span(:modal_details, id: 'appointment-details')
   select_list(:check_in_advisor_select, id: 'checkin-modal-advisor-select')
   elements(:check_in_advisor_option, :option, xpath: '//select[@id="checkin-modal-advisor-select"]/option')
   button(:check_in_close_button, id: 'btn-appointment-close')
+
+  # Clicks the Check-in button on a modal
+  def click_modal_check_in_button
+    wait_for_update_and_click modal_check_in_button_element
+  end
 
   # Clicks the Check-in button for a given appointment in the list
   # @param appt [Appointment]
@@ -198,10 +347,42 @@ module BOACApptIntakeDesk
     wait_for_element_and_select_js(check_in_advisor_select_element, advisor.uid)
   end
 
-  ### DETAILS MODAL ###
+  ### RESERVE / UN-RESERVE ###
+
+  # Returns the button for assigning an appointment
+  # @param appt [Appointment]
+  # @return [PageObject::Elements::Button]
+  def reserve_appt_button(appt)
+    button_element(id: "btn-appointment-#{appt.id}-reserve")
+  end
+
+  # Clicks the button for assigning an appointment
+  # @param appt [Appointment]
+  def click_reserve_appt_button(appt)
+    logger.info "Clicking reserve button for appointment #{appt.id}"
+    click_appt_dropdown_button appt
+    wait_for_update_and_click reserve_appt_button(appt)
+  end
+
+  # Returns the button for un-assigning an appointment
+  # @param appt [Appointment]
+  # @return [PageObject::Elements::Button]
+  def unreserve_appt_button(appt)
+    button_element(id: "btn-appointment-#{appt.id}-unreserve")
+  end
+
+  # Clicks the button for un-assigning an appointment
+  # @param appt [Appointment]
+  def click_unreserve_appt_button(appt)
+    logger.info "Clicking unreserve button for appointment #{appt.id}"
+    click_appt_dropdown_button appt
+    wait_for_update_and_click unreserve_appt_button(appt)
+  end
+
+  ### DETAILS (UPDATE) MODAL ###
 
   h3(:details_student_name, id: 'appointment-check-in-student')
-  button(:details_check_in_button, id: 'btn-appointment-details-check-in')
+  button(:details_update_button, id: 'btn-appointment-details-update')
   button(:details_close_button, id: 'btn-appointment-cancel')
 
   # Clicks the Details button for a given appointment
@@ -210,12 +391,12 @@ module BOACApptIntakeDesk
     logger.info "Clicking details button for appt #{appt.id}"
     click_appt_dropdown_button appt
     wait_for_update_and_click button_element(id: "btn-appointment-#{appt.id}-details")
-    details_check_in_button_element.when_visible 1
+    details_update_button_element.when_visible 1
   end
 
-  # Clicks the Check-in button on the appointment details modal
-  def click_details_check_in_button
-    wait_for_update_and_click details_check_in_button_element
+  # Clicks the Update button on the appointment details modal
+  def click_details_update_button
+    wait_for_update_and_click details_update_button_element
   end
 
   # Clicks the Close button on the appointment details modal

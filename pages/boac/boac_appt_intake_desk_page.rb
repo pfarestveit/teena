@@ -13,6 +13,7 @@ class BOACApptIntakeDeskPage
   # Loads the appointment intake desk for a given department
   # @param dept [BOACDepartments]
   def load_page(dept)
+    logger.info "Loading the appointment intake desk for #{dept.name}"
     navigate_to "#{BOACUtils.base_url}/appt/desk/#{dept.code.downcase}"
   end
 
