@@ -86,7 +86,7 @@ describe 'BOAC' do
         expected_notes = expected_notes + expected_asc_notes if expected_asc_notes
         if expected_notes.any?
           expected_notes.each do |note|
-            if note.subject.include? 'QA Test'
+            if !note.subject.nil? && (note.subject.include? 'QA Test')
               logger.warn "Skipping note search tests for UID #{student.uid} note ID #{note.id} because it is a testing artifact"
             else
               begin
