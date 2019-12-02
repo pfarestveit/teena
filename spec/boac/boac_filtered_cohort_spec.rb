@@ -206,6 +206,7 @@ describe 'BOAC', order: :defined do
       it "allows the advisor to sort by alert count ascending the first 50 cohort members who have alerts on the homepage with criteria #{cohort.search_criteria.list_filters}" do
         if cohort.member_data.any?
           expected_sequence = @homepage.expected_sids_by_alerts cohort.member_data
+          @homepage.sort_by_alert_count cohort
           @homepage.wait_until(1, "Expected #{expected_sequence}, but got #{@homepage.all_row_sids(@driver, cohort)}") { @homepage.all_row_sids(@driver, cohort) == expected_sequence }
         end
       end

@@ -100,7 +100,7 @@ class BOACTestConfig < TestConfig
     filtered_searchable_sids = filtered_searchable_data.map { |d| d[:sid] }
 
     @cohort_members = @students.select { |s| student_sids.include?(s.sis_id) && filtered_searchable_sids.include?(s.sis_id) }
-    @default_cohort.name = "Default cohort #{@id}"
+    @default_cohort.name = "Cohort #{@id}"
     @default_cohort.member_count = @cohort_members.length
   end
 
