@@ -10,11 +10,11 @@ class BOACHomePage
   include BOACApptIntakeDesk
   include BOACUserListPages
 
-  button(:sign_in, id: 'splash-sign-in')
+  button(:sign_in, id: 'sign-in')
   text_field(:dev_auth_uid_input, id: 'dev-auth-uid')
   text_field(:dev_auth_password_input, id: 'dev-auth-password')
   button(:dev_auth_log_in_button, id: 'dev-auth-submit')
-  div(:copyright_year_login, class: 'splash-cell-copyright')
+  div(:copyright_year_login, class: 'copyright')
   div(:not_auth_msg, xpath: '//div[contains(., "Sorry, you are not registered to use BOA.")]')
   div(:footer_warning, id: 'fixed-warning-on-all-pages')
 
