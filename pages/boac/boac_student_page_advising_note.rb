@@ -201,9 +201,11 @@ module BOACStudentPageAdvisingNote
   # @return [Hash]
   def visible_collapsed_note_data(note)
     subject_el = span_element(id: "note-#{note.id}-subject")
+    category_el = span_element(id: "note-#{note.id}-category-closed")
     date_el = div_element(id: "collapsed-note-#{note.id}-created-at")
     {
       subject: (subject_el.text if subject_el.exists?),
+      category: (category_el.text if category_el.exists?),
       created_date: (date_el.attribute('innerText').gsub('Last updated on', '').strip if date_el.exists?)
     }
   end
@@ -236,8 +238,8 @@ module BOACStudentPageAdvisingNote
       :topics => topic_els.map(&:text).sort,
       :remove_topics_btns => topic_remove_btn_els,
       :attachments => (note_attachment_els(note).map { |el| el.attribute('innerText').strip }).sort,
-      :created_date => (created_el.text.strip.gsub(/\s+/, ' ') if created_el.exists?),
-      :updated_date => (updated_el.text.strip.gsub(/\s+/, ' ') if updated_el.exists?),
+      :created_date => (created_el.text.gsub('Created on', '').gsub(/\s+/, ' ').strip if created_el.exists?),
+      :updated_date => (updated_el.text.gsub('Last updated on', '').gsub(/\s+/, ' ').strip if updated_el.exists?),
       :permalink_url => (permalink_el.attribute('href') if permalink_el.exists?)
     }
   end
