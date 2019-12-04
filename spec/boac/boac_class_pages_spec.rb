@@ -118,6 +118,9 @@ describe 'BOAC' do
 
                           # Collect all the expected class page data for each student in the class
                           all_student_data = []
+
+                          # Limit the detailed tests to a configurable number of students in the class
+                          expected_students = expected_students[0..BOACUtils.config['class_page_max_classmates']]
                           expected_students.each do |student|
 
                             # Load the student's data and find the matching course
@@ -245,9 +248,13 @@ describe 'BOAC' do
                               end
 
                               # Currently no grades data is shown unless it can produce a boxplot
-                              site[:nessie_grades][:score].empty? ?
-                                  (it("shows a 'No Data' assignments score for #{site_test_case}") { expect(visible_site_data[:assigns_grade_no_data]).to be_truthy }) :
-                                  (it("shows the assignments score for #{site_test_case}") { expect(visible_site_data[:assigns_grade]).to eql(site[:nessie_grades][:score]) })
+                              if site[:nessie_grades][:score].empty?
+                                it("shows a 'No Data' assignments score for #{site_test_case}") { expect(visible_site_data[:assigns_grade_no_data]).to be_truthy }
+                              else
+                                # TODO - BOAC-2754
+                                expected_score = (site[:nessie_grades][:score] == '0') ? '--' : site[:nessie_grades][:score]
+                                it("shows the assignments score for #{site_test_case}") { expect(visible_site_data[:assigns_grade]).to eql(expected_score) }
+                              end
 
                               Utils.add_csv_row(students_canvas_csv, [term_name, section_course_code, student_data[:sid], site[:site_id], site[:site_code], site[:nessie_assigns_submitted][:score], site[:nessie_assigns_submitted][:max], site[:nessie_grades][:score], site[:nessie_grades][:max]])
 

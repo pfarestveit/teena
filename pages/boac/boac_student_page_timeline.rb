@@ -47,7 +47,7 @@ module BOACStudentPageTimeline
   # @return [Array<String>]
   def visible_message_ids
     els = browser.find_elements(xpath: '//tr[contains(@class, "message-row")]')
-    ids = els.map { |el| el.attribute('id').split('-').last }
+    ids = els.map { |el| el.attribute('id').split('-')[2..-1].join('-') }
     logger.debug "Visible message IDs are #{ids}"
     ids
   end

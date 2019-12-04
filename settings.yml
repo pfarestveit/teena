@@ -57,6 +57,7 @@ boac:
   assignments_max_users: 10
   assignments_term: Spring 2018
   class_page_max_users: 5
+  class_page_max_classmates: 10
   group_bulk_sids_max: 200
   last_activity_max_users: 3
   last_activity_context: false
