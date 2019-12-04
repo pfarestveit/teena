@@ -105,7 +105,7 @@ describe 'BOAC' do
                   it("shows the body as the subject on #{test_case}") { expect(visible_collapsed_note_data[:subject].gsub(/\W/, '') == note.body.gsub(/\W/, '')).to be true }
                   it("shows no body on #{test_case}") { expect(visible_expanded_note_data[:body].strip.empty?).to be true }
                 else
-                  subj_prefix = expected_ei_notes.include?(note) ? 'CenterforEducationEquityandExcellenceadvisor' : 'AthleticStudyCenteradvisor'
+                  subj_prefix = expected_ei_notes.include?(note) ? 'CentersforEducationalEquityandExcellenceAdvisor' : 'AthleticStudyCenterAdvisor'
                   expected_subj = ("#{subj_prefix}#{note.advisor.first_name}#{note.advisor.last_name}").downcase
                   it("shows the advisor as part of the subject on #{test_case}") { expect(visible_collapsed_note_data[:category].gsub(/\W/, '').downcase).to include(expected_subj) }
                   it("shows no body on #{test_case}") { expect(visible_expanded_note_data[:body].strip.empty?).to be true }

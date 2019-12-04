@@ -204,7 +204,7 @@ module BOACStudentPageAdvisingNote
     category_el = span_element(id: "note-#{note.id}-category-closed")
     date_el = div_element(id: "collapsed-note-#{note.id}-created-at")
     {
-      subject: (subject_el.text if subject_el.exists?),
+      subject: (subject_el.attribute('innerText') if subject_el.exists?),
       category: (category_el.text if category_el.exists?),
       created_date: (date_el.attribute('innerText').gsub('Last updated on', '').strip if date_el.exists?)
     }
