@@ -539,7 +539,7 @@ class NessieUtils < Utils
       source_body_empty = (v[0]['body'].nil? || v[0]['body'].strip.empty?)
       body = source_body_empty ?
                 "#{v[0]['category']}#{+', ' if v[0]['subcategory']}#{v[0]['subcategory']}" :
-                v[0]['body'].gsub(/<("[^"]*"|'[^']*'|[^'">])*>/, ' ').gsub('&Tab;', ' ').gsub("\n", ' ').gsub('amp;', '').gsub('&nbsp;', ' ')
+                 Nokogiri::HTML(v[0]['body']).text.gsub('&Tab;', '')
 
       attachment_data = v.map do |r|
         unless r['sis_file_name'].nil? || r['sis_file_name'].empty?

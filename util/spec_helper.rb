@@ -4,6 +4,7 @@ require 'logger'
 require "base64"
 require 'csv'
 require 'json'
+require 'nokogiri'
 require 'selenium-webdriver'
 require 'page-object'
 require 'fileutils'
