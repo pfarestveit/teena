@@ -302,6 +302,10 @@ module Page
     browser.action.send_keys(:backspace).perform
   end
 
+  def hit_enter
+    browser.action.send_keys(:enter).perform
+  end
+
   # Hits the Escape key twice
   def hit_escape
     browser.action.send_keys(:escape).perform

@@ -71,10 +71,8 @@ module BOACStudentPageAdvisingNote
   div(:timeline_notes_spinner, id: 'timeline-notes-spinner')
 
   def search_within_timeline_notes(query)
-    timeline_notes_query_input_element.when_visible Utils.short_wait
-    timeline_notes_query_input_element.clear
-    self.timeline_notes_query_input = query
-    timeline_notes_query_input_element.send_keys :enter
+    wait_for_element_and_type(timeline_notes_query_input_element, query)
+    hit_enter
     sleep 1
     timeline_notes_spinner_element.when_not_visible Utils.medium_wait rescue Selenium::WebDriver::Error::StaleElementReferenceError
   end

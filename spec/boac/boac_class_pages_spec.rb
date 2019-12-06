@@ -252,8 +252,12 @@ describe 'BOAC' do
                                 it("shows a 'No Data' assignments score for #{site_test_case}") { expect(visible_site_data[:assigns_grade_no_data]).to be_truthy }
                               else
                                 # TODO - BOAC-2754
-                                expected_score = (site[:nessie_grades][:score] == '0') ? '--' : site[:nessie_grades][:score]
-                                it("shows the assignments score for #{site_test_case}") { expect(visible_site_data[:assigns_grade]).to eql(expected_score) }
+                                expected_score = site[:nessie_grades][:score]
+                                if expected_score == '0'
+                                  it("shows the null or zero assignments score for #{site_test_case}") { expect(%w(0 --)).to include(visible_site_data[:assigns_grade]) }
+                                else
+                                  it("shows the assignments score for #{site_test_case}") { expect(visible_site_data[:assigns_grade]).to eql(expected_score) }
+                                end
                               end
 
                               Utils.add_csv_row(students_canvas_csv, [term_name, section_course_code, student_data[:sid], site[:site_id], site[:site_code], site[:nessie_assigns_submitted][:score], site[:nessie_assigns_submitted][:max], site[:nessie_grades][:score], site[:nessie_grades][:max]])

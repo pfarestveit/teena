@@ -99,7 +99,7 @@ describe 'BOAC' do
                 # or body, so the general topic is shown as the subject)
 
                 if note.subject
-                  it("shows the subject on #{test_case}") { expect(visible_collapsed_note_data[:subject] == note.subject).to be true }
+                  it("shows the subject on #{test_case}") { expect(visible_collapsed_note_data[:subject] == note.subject.strip).to be true }
                   it("shows the body on #{test_case}") { expect(visible_expanded_note_data[:body].strip == "#{note.body}").to be true }
                 elsif expected_sis_notes.include? note
                   it("shows the body as the subject on #{test_case}") { expect(visible_collapsed_note_data[:subject].gsub(/\W/, '') == note.body.gsub(/\W/, '')).to be true }
