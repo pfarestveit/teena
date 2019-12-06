@@ -16,7 +16,7 @@ timeouts:
   medium: 30
   long: 120
   canvas_poller: 60
-  boac_poller: 5
+  boac_poller: 12
 
 #### Test user accounts ####
 

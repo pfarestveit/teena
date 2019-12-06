@@ -167,7 +167,7 @@ module BOACStudentPageAppointment
     topic_els = topic_elements.select { |el| el.attribute('id').include? "appointment-#{appt.id}-topic-" }
     {
         detail: (details_el.text if details_el.exists?),
-        created_date: (date_el.attribute('innerText').strip if date_el.exists?),
+        created_date: (date_el.attribute('innerText').gsub('Appointment date', '').strip if date_el.exists?),
         reserve_advisor: (reserved_for_el(appt).attribute('innerText').strip if reserved_for_el(appt).exists?),
         check_in_time: (check_in_time_el.text if check_in_time_el.exists?),
         cancel_reason: (cancel_reason_el.text if cancel_reason_el.exists?),
