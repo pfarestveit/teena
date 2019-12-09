@@ -173,7 +173,8 @@ class NessieUtils < Utils
              WHERE profile LIKE '%\"academicCareerStatus\": %'
                AND profile NOT LIKE '%\"academicCareerStatus\": \"Active\"%'
                AND profile NOT LIKE '%\"academicCareerStatus\": \"Inactive\"%'
-               AND profile NOT LIKE '%\"academicCareerStatus\": \"Completed\"%';"
+               AND profile NOT LIKE '%\"academicCareerStatus\": \"Completed\"%'
+               AND profile NOT LIKE '%\"academicCareerStatus\": \"Created In Error\"%';"
     result = query_pg_db_field(nessie_pg_db_credentials, query, 'count').last.to_i
     logger.info "Count of historical students with unexpected academic career status is #{result}"
     result
@@ -203,7 +204,9 @@ class NessieUtils < Utils
                AND profile NOT LIKE '%\"status\": \"Deceased\"%'
                AND profile NOT LIKE '%\"status\": \"Discontinued\"%'
                AND profile NOT LIKE '%\"status\": \"Dismissed\"%'
-               AND profile NOT LIKE '%\"status\": \"Suspended\"%';"
+               AND profile NOT LIKE '%\"status\": \"Suspended\"%'
+               AND profile NOT LIKE '%\"status\": {\"code\": \"GST\", \"description\": \"Good Standing\"}%'
+               AND profile NOT LIKE '%\"status\": {\"code\": \"DIS\", \"description\": \"Dismissed\"}%';"
     result = query_pg_db_field(nessie_pg_db_credentials, query, 'count').last.to_i
     logger.info "Count of historical students with unexpected academic program status is #{result}"
     result
