@@ -22,10 +22,9 @@ describe 'BOA' do
     @appt_1 = Appointment.new(student: @student, reserve_advisor: @test.drop_in_advisor, topics: [Topic::RETROACTIVE_ADD, Topic::RETROACTIVE_DROP], detail: "Drop-in appointment details #{@test.id}")
     @appt_2 = Appointment.new(student: @student, topics: [Topic::PROBATION], detail: "Scheduler check-in 1 #{@test.id}")
     @appt_3 = Appointment.new(student: @student, topics: [Topic::PROBATION], detail: "Drop-in advisor waiting list check-in 1 #{@test.id}")
-    @appt_4 = Appointment.new(student: @student, topics: [Topic::EXCESS_UNITS], detail: "Drop-in advisor student page check-in 1 #{@test.id}" )
-    @appt_5 = Appointment.new(student: @student, topics: [Topic::READMISSION], detail: "Scheduler cancel #{@test.id}")
-    @appt_6 = Appointment.new(student: @student, topics: [Topic::WITHDRAWAL], detail: "Drop-in advisor waiting list cancel #{@test.id}")
-    @appt_7 = Appointment.new(student: @student, topics: [Topic::OTHER], detail: "Drop-in advisor student page cancel #{@test.id}")
+    @appt_4 = Appointment.new(student: @student, topics: [Topic::READMISSION], detail: "Scheduler cancel #{@test.id}")
+    @appt_5 = Appointment.new(student: @student, topics: [Topic::WITHDRAWAL], detail: "Drop-in advisor waiting list cancel #{@test.id}")
+    @appt_6 = Appointment.new(student: @student, topics: [Topic::OTHER], detail: "Drop-in advisor student page cancel #{@test.id}")
 
     @driver_scheduler = Utils.launch_browser
     @scheduler_homepage = BOACHomePage.new @driver_scheduler
@@ -147,7 +146,7 @@ describe 'BOA' do
 
       it 'shows no unavailable advisors when making an appointment with a reservation' do
         @scheduler_intake_desk.click_new_appt
-        expect(@scheduler_intake_desk.new_appt_advisor_uids).not_to include(@test.drop_in_advisor.uid)
+        expect(@scheduler_intake_desk.available_appt_advisor_uids).not_to include(@test.drop_in_advisor.uid)
       end
 
       it('allows a scheduler to set a drop-in advisor to "available"') do
@@ -157,7 +156,7 @@ describe 'BOA' do
 
       it 'shows available advisors when making an appointment with a reservation' do
         @scheduler_intake_desk.click_new_appt
-        expect(@scheduler_intake_desk.new_appt_advisor_uids).to include(@test.drop_in_advisor.uid)
+        expect(@scheduler_intake_desk.available_appt_advisor_uids).to include(@test.drop_in_advisor.uid)
       end
     end
 
@@ -222,15 +221,15 @@ describe 'BOA' do
       it 'allows a scheduler to select an available advisor for a new reserved appointment' do
         @scheduler_intake_desk.hit_escape
         @scheduler_intake_desk.click_new_appt
-        @scheduler_intake_desk.wait_until(1) { @scheduler_intake_desk.new_appt_advisor_uids.sort.include? @test.drop_in_advisor.uid }
+        @scheduler_intake_desk.wait_until(1) { @scheduler_intake_desk.available_appt_advisor_uids.sort.include? @test.drop_in_advisor.uid }
       end
 
       it 'shows a scheduler the right reasons for a new appointment' do
         @scheduler_intake_desk.hit_escape
         @scheduler_intake_desk.click_new_appt
         expected_topics = Topic::TOPICS.select(&:for_appts).map &:name
-        @scheduler_intake_desk.wait_until(1, "Expected #{expected_topics}, got #{@scheduler_intake_desk.new_appt_reasons}") do
-          @scheduler_intake_desk.new_appt_reasons == expected_topics
+        @scheduler_intake_desk.wait_until(1, "Expected #{expected_topics}, got #{@scheduler_intake_desk.available_appt_reasons}") do
+          @scheduler_intake_desk.available_appt_reasons == expected_topics
         end
       end
 
@@ -316,8 +315,8 @@ describe 'BOA' do
         @advisor_homepage.hit_escape
         @advisor_homepage.click_new_appt
         expected_topics = Topic::TOPICS.select(&:for_appts).map &:name
-        @advisor_homepage.wait_until(1, "Expected #{expected_topics}, got #{@advisor_homepage.new_appt_reasons}") do
-          @advisor_homepage.new_appt_reasons == expected_topics
+        @advisor_homepage.wait_until(1, "Expected #{expected_topics}, got #{@advisor_homepage.available_appt_reasons}") do
+          @advisor_homepage.available_appt_reasons == expected_topics
         end
       end
 
@@ -375,10 +374,17 @@ describe 'BOA' do
       it('show the appointment reason(s)') { expect(@scheduler_intake_desk.appt_reasons.sort).to eql(@appt_1.topics.map { |t| t.name.downcase }.sort) }
       it('show the arrival time') { expect(@scheduler_intake_desk.modal_created_at).to eql(@scheduler_intake_desk.appt_time_created_format(@appt_1.created_date).strip) }
 
-      it 'does not allow the scheduler to unreserve a reserved appointment' do
+      it 'allows the scheduler to un-reserve a reserved appointment' do
         @scheduler_intake_desk.hit_escape
-        @scheduler_intake_desk.click_appt_dropdown_button @appt_1
-        expect(@scheduler_intake_desk.unreserve_appt_button(@appt_1).exists?).to be false
+        @scheduler_intake_desk.click_unreserve_appt_button @appt_1
+        @scheduler_intake_desk.reserved_for_el(@appt_1).when_not_present Utils.short_wait
+        @appt_1.reserve_advisor = nil
+      end
+
+      it 'allows the scheduler to reserve an unreserved appointment' do
+        @scheduler_intake_desk.reserve_appt_for_advisor(@appt_1, @test.drop_in_advisor)
+        @scheduler_intake_desk.reserved_for_el(@appt_1).when_visible Utils.short_wait
+        @appt_1.reserve_advisor = @test.drop_in_advisor
       end
     end
 
@@ -404,14 +410,12 @@ describe 'BOA' do
       it('show the appointment reason(s)') { expect(@advisor_homepage.appt_reasons.sort).to eql(@appt_1.topics.map { |t| t.name.downcase }.sort) }
       it('show the arrival time') { expect(@advisor_homepage.modal_created_at).to eql(@advisor_homepage.appt_time_created_format(@appt_1.created_date).strip) }
 
-      it 'allow the drop-in advisor to unreserve an appointment' do
+      it 'allow the drop-in advisor to un-reserve an appointment' do
         @advisor_homepage.hit_escape
         @advisor_homepage.click_unreserve_appt_button @appt_1
         @advisor_homepage.reserved_for_el(@appt_1).when_not_present 3
         @appt_1.reserve_advisor = nil
       end
-
-      # TODO it 'show the reserved appointment at the top section of the list'
 
       it 'allow the drop-in advisor to reserve an appointment' do
         @advisor_homepage.click_reserve_appt_button @appt_1
@@ -419,9 +423,6 @@ describe 'BOA' do
         expect(@advisor_homepage.reserved_for_el(@appt_1).text).to eql('Assigned to you')
         @appt_1.reserve_advisor = @test.drop_in_advisor
       end
-
-      # TODO it 'show the unreserved appointment at the bottom section of the list'
-      # TODO it 'allow a drop-in advisor to steal another advisor\'s reservation'
     end
 
     context 'on the student page' do
@@ -490,16 +491,71 @@ describe 'BOA' do
 
     context 'on the intake desk' do
 
-      # TODO
+      it 'allows the scheduler to cancel an edit' do
+        @scheduler_intake_desk.view_appt_details @appt_1
+        @scheduler_intake_desk.click_close_details_button
+        @scheduler_intake_desk.modal_student_name_element.when_not_visible 2
+      end
 
+      it 'allows the scheduler to remove reasons' do
+        @scheduler_intake_desk.hit_escape
+        @scheduler_intake_desk.view_appt_details @appt_1
+        @scheduler_intake_desk.remove_reasons(@appt_1, @appt_1.topics)
+        expect(@scheduler_intake_desk.appt_reasons).to be_empty
+        expect(@scheduler_intake_desk.details_update_button_element.enabled?).to be false
+      end
+
+      it 'allows the scheduler to add reasons' do
+        @scheduler_intake_desk.add_reasons(@appt_1, [Topic::READMISSION, Topic::SAP])
+        expect(@scheduler_intake_desk.appt_reasons.sort).to eql(@appt_1.topics.map { |t| t.name.downcase }.sort)
+        expect(@scheduler_intake_desk.details_update_button_element.enabled?).to be true
+      end
+
+      it 'allows the scheduler to edit additional info' do
+        @appt_1.detail = "#{@appt_1.detail} - edited by scheduler"
+        @scheduler_intake_desk.enter_detail @appt_1
+      end
+
+      it 'allows the scheduler to save an edit' do
+        @scheduler_intake_desk.click_details_update_button
+        @scheduler_intake_desk.wait_until(Utils.short_wait) { @scheduler_intake_desk.visible_list_view_appt_data(@appt_1)[:topics] == (@appt_1.topics.map { |t| t.name.downcase }.sort) }
+      end
     end
 
     # Drop-in Advisor
 
     context 'on the waiting list' do
 
-      # TODO
+      it 'allows the drop-in advisor to cancel an edit' do
+        @advisor_homepage.load_page
+        @advisor_homepage.view_appt_details @appt_1
+        @advisor_homepage.click_close_details_button
+        @advisor_homepage.modal_student_name_element.when_not_visible 2
+      end
 
+      it 'allows the drop-in advisor to remove reasons' do
+        @advisor_homepage.hit_escape
+        @advisor_homepage.view_appt_details @appt_1
+        @advisor_homepage.remove_reasons(@appt_1, @appt_1.topics)
+        expect(@advisor_homepage.appt_reasons).to be_empty
+        expect(@advisor_homepage.details_update_button_element.enabled?).to be false
+      end
+
+      it 'allows the drop-in advisor to add reasons' do
+        @advisor_homepage.add_reasons(@appt_1, [Topic::RETROACTIVE_ADD, Topic::RETROACTIVE_DROP])
+        expect(@advisor_homepage.appt_reasons).to eql(@appt_1.topics.map { |t| t.name.downcase }.sort)
+        expect(@advisor_homepage.details_update_button_element.enabled?).to be true
+      end
+
+      it 'allows the drop-in advisor to edit additional info' do
+        @appt_1.detail = "#{@appt_1.detail} - edited by drop-in advisor"
+        @advisor_homepage.enter_detail @appt_1
+      end
+
+      it 'allows the drop-in advisor to save an edit' do
+        @advisor_homepage.click_details_update_button
+        @advisor_homepage.wait_until(Utils.short_wait) { @advisor_homepage.visible_list_view_appt_data(@appt_1)[:topics] == (@appt_1.topics.map { |t| t.name.downcase }.sort) }
+      end
     end
   end
 
@@ -550,6 +606,7 @@ describe 'BOA' do
         @advisor_homepage.click_new_appt
         @advisor_homepage.create_appt @appt_3
         @appts << @appt_3
+
       end
 
       it 'can be done from the list view' do
@@ -570,18 +627,15 @@ describe 'BOA' do
         @scheduler_intake_desk.wait_for_poller { (@scheduler_intake_desk.visible_appt_ids & [@appt_3.id]).empty? }
       end
 
-      # TODO - it 'can be undone'
-      # TODO - it 'updates the status of the appointment once undone'
-      # TODO - it 'updates the scheduler appointment desk view dynamically once undone'
+      it('can be undone') { @advisor_homepage.undo_appt_check_in @appt_3 }
+      it('updates the status of the appointment once undone') { @advisor_homepage.check_in_button(@appt_3).when_visible Utils.short_wait }
+
+      it 'updates the scheduler appointment desk view dynamically once undone' do
+        @scheduler_intake_desk.wait_for_poller { @scheduler_intake_desk.visible_appt_ids.include? @appt_3.id }
+      end
     end
 
     context 'on the student page' do
-
-      before(:all) do
-        @advisor_homepage.click_new_appt
-        @advisor_homepage.create_appt @appt_4
-        @appts << @appt_4
-      end
 
       context 'when the advisor is not a drop-in advisor' do
 
@@ -595,8 +649,8 @@ describe 'BOA' do
 
         it 'cannot be done' do
           @advisor_student_page.show_appts
-          @advisor_student_page.expand_item @appt_4
-          expect(@advisor_student_page.check_in_button(@appt_4).exists?).to be false
+          @advisor_student_page.expand_item @appt_3
+          expect(@advisor_student_page.check_in_button(@appt_3).exists?).to be false
         end
       end
 
@@ -604,21 +658,21 @@ describe 'BOA' do
 
         before(:all) do
           @advisor_homepage.dev_auth @test.drop_in_advisor
-          @advisor_student_page.click_student_link @appt_4
+          @advisor_student_page.click_student_link @appt_3
           @advisor_student_page.show_appts
-          @advisor_student_page.expand_item @appt_4
+          @advisor_student_page.expand_item @appt_3
         end
 
         it 'can be done' do
-          @advisor_student_page.click_check_in_button @appt_4
+          @advisor_student_page.click_check_in_button @appt_3
           @advisor_student_page.click_modal_check_in_button
-          @advisor_student_page.wait_until(Utils.short_wait) { @advisor_student_page.visible_expanded_appt_data(@appt_4)[:check_in_time] }
-          @appt_4.status = AppointmentStatus::CHECKED_IN
-          @appt_4.advisor = @test.drop_in_advisor
+          @advisor_student_page.wait_until(Utils.short_wait) { @advisor_student_page.visible_expanded_appt_data(@appt_3)[:check_in_time] }
+          @appt_3.status = AppointmentStatus::CHECKED_IN
+          @appt_3.advisor = @test.drop_in_advisor
         end
 
         it 'updates the scheduler appointment desk view dynamically' do
-          @scheduler_intake_desk.wait_for_poller { !@scheduler_intake_desk.visible_appt_ids.include? @appt_4.id }
+          @scheduler_intake_desk.wait_for_poller { !@scheduler_intake_desk.visible_appt_ids.include? @appt_3.id }
         end
       end
     end
@@ -630,7 +684,7 @@ describe 'BOA' do
 
     before(:all) do
       @advisor_student_page.click_home
-      [@appt_5, @appt_6, @appt_7].each do |appt|
+      [@appt_4, @appt_5, @appt_6].each do |appt|
         @advisor_homepage.click_new_appt
         @advisor_homepage.create_appt appt
         @appts << appt
@@ -641,29 +695,29 @@ describe 'BOA' do
 
     context 'on the appointment intake desk' do
 
-      before(:all) { @scheduler_intake_desk.wait_for_poller { @scheduler_intake_desk.visible_appt_ids.include? @appt_5.id } }
+      before(:all) { @scheduler_intake_desk.wait_for_poller { @scheduler_intake_desk.visible_appt_ids.include? @appt_4.id } }
 
       it 'requires a reason' do
-        @scheduler_intake_desk.click_appt_dropdown_button @appt_5
-        @scheduler_intake_desk.click_cancel_appt_button @appt_5
+        @scheduler_intake_desk.click_appt_dropdown_button @appt_4
+        @scheduler_intake_desk.click_cancel_appt_button @appt_4
         expect(@scheduler_intake_desk.cancel_confirm_button_element.disabled?).to be true
-        @appt_5.cancel_reason = 'Cancelled by student'
-        @scheduler_intake_desk.select_cancel_reason @appt_5
+        @appt_4.cancel_reason = 'Cancelled by student'
+        @scheduler_intake_desk.select_cancel_reason @appt_4
         expect(@scheduler_intake_desk.cancel_confirm_button_element.disabled?).to be false
       end
 
       it 'accepts additional info' do
-        @appt_5.cancel_detail = "Some 'splainin' to do #{@test.id}"
-        @scheduler_intake_desk.enter_cancel_explanation @appt_5
+        @appt_4.cancel_detail = "Some 'splainin' to do #{@test.id}"
+        @scheduler_intake_desk.enter_cancel_explanation @appt_4
       end
 
       it 'can be done' do
         @scheduler_intake_desk.click_cancel_confirm_button
-        @appt_5.status = AppointmentStatus::CANCELED
+        @appt_4.status = AppointmentStatus::CANCELED
       end
 
       it 'removes the appointment from the list' do
-        @scheduler_intake_desk.wait_until(Utils.short_wait) { !@scheduler_intake_desk.visible_appt_ids.include? @appt_5.id }
+        @scheduler_intake_desk.wait_until(Utils.short_wait) { !@scheduler_intake_desk.visible_appt_ids.include? @appt_4.id }
       end
     end
 
@@ -672,74 +726,77 @@ describe 'BOA' do
     context 'on the waiting list' do
 
       it 'requires a reason' do
-        @advisor_homepage.click_appt_dropdown_button @appt_6
-        @advisor_homepage.click_cancel_appt_button @appt_6
+        @advisor_homepage.click_appt_dropdown_button @appt_5
+        @advisor_homepage.click_cancel_appt_button @appt_5
         expect(@advisor_homepage.cancel_confirm_button_element.disabled?).to be true
-        @appt_6.cancel_reason = 'Cancelled by department/advisor'
-        @advisor_homepage.select_cancel_reason @appt_6
+        @appt_5.cancel_reason = 'Cancelled by department/advisor'
+        @advisor_homepage.select_cancel_reason @appt_5
         expect(@advisor_homepage.cancel_confirm_button_element.disabled?).to be false
       end
 
       it 'accepts additional info' do
-        @appt_6.cancel_detail = "Even more 'splainin' to do #{@test.id}"
-        @advisor_homepage.enter_cancel_explanation @appt_6
+        @appt_5.cancel_detail = "Even more 'splainin' to do #{@test.id}"
+        @advisor_homepage.enter_cancel_explanation @appt_5
       end
 
       it 'can be done' do
         @advisor_homepage.click_cancel_confirm_button
-        @appt_6.status = AppointmentStatus::CANCELED
+        @appt_5.status = AppointmentStatus::CANCELED
       end
 
       it 'updates the appointment status on the waiting list' do
         @advisor_homepage.wait_until(Utils.short_wait) do
-          visible_data = @advisor_homepage.visible_list_view_appt_data @appt_6
+          visible_data = @advisor_homepage.visible_list_view_appt_data @appt_5
           visible_data[:canceled_status] && visible_data[:canceled_status].include?('CANCELLED')
         end
       end
 
       it 'updates the scheduler appointment desk view dynamically' do
-        @scheduler_intake_desk.wait_for_poller { !@scheduler_intake_desk.visible_appt_ids.include? @appt_5.id }
+        @scheduler_intake_desk.wait_for_poller { !@scheduler_intake_desk.visible_appt_ids.include? @appt_4.id }
       end
 
-      # TODO - it 'can be undone'
-      # TODO - it 'updates the status of the appointment once undone'
-      # TODO - it 'updates the scheduler appointment desk view dynamically once undone'
+      it('can be undone') { @advisor_homepage.undo_appt_cancel @appt_5 }
+      it('updates the status of the appointment once undone') { @advisor_homepage.check_in_button(@appt_5).when_visible Utils.short_wait }
+
+      it 'updates the scheduler appointment desk view dynamically once undone' do
+        @scheduler_intake_desk.wait_for_poller { @scheduler_intake_desk.visible_appt_ids.include? @appt_5.id }
+      end
     end
 
     context 'on the student page' do
 
       before(:all) do
-        @advisor_homepage.click_student_link @appt_7
+        @advisor_homepage.click_student_link @appt_6
         @advisor_student_page.show_appts
-        @advisor_student_page.expand_item @appt_7
+        @advisor_student_page.expand_item @appt_6
       end
 
       it 'requires a reason' do
-        @advisor_student_page.click_appt_dropdown_button @appt_7
-        @advisor_student_page.click_cancel_appt_button @appt_7
+        @advisor_student_page.click_appt_dropdown_button @appt_6
+        @advisor_student_page.click_cancel_appt_button @appt_6
         expect(@advisor_student_page.cancel_confirm_button_element.disabled?).to be true
-        @appt_7.cancel_reason = 'Cancelled by student'
-        @advisor_student_page.select_cancel_reason @appt_7
+        @appt_6.cancel_reason = 'Cancelled by student'
+        @advisor_student_page.select_cancel_reason @appt_6
         expect(@advisor_student_page.cancel_confirm_button_element.disabled?).to be false
       end
 
       it 'accepts additional info' do
-        @appt_7.cancel_detail = "Too much 'splainin' to do #{@test.id}"
-        @advisor_student_page.enter_cancel_explanation @appt_7
+        @appt_6.cancel_detail = "Too much 'splainin' to do #{@test.id}"
+        @advisor_student_page.enter_cancel_explanation @appt_6
       end
 
       it 'can be done' do
         @advisor_student_page.click_cancel_confirm_button
         @advisor_student_page.wait_until(Utils.short_wait) do
-          visible_data = @advisor_student_page.visible_expanded_appt_data @appt_7
-          visible_data[:cancel_reason] == @appt_7.cancel_reason
-          visible_data[:cancel_addl_info] == @appt_7.cancel_detail
+          visible_data = @advisor_student_page.visible_expanded_appt_data @appt_6
+          visible_data[:cancel_reason] == @appt_6.cancel_reason
+          visible_data[:cancel_addl_info] == @appt_6.cancel_detail
         end
-        @appt_7.status = AppointmentStatus::CANCELED
+        @appt_6.status = AppointmentStatus::CANCELED
       end
 
       it 'updates the scheduler appointment desk view dynamically' do
-        @scheduler_intake_desk.wait_for_poller { !@scheduler_intake_desk.visible_appt_ids.include? @appt_7.id }
+        @scheduler_intake_desk.wait_for_poller { !@scheduler_intake_desk.visible_appt_ids.include? @appt_6.id }
       end
     end
   end
@@ -759,10 +816,10 @@ describe 'BOA' do
       @advisor_homepage.wait_until(Utils.short_wait) { @advisor_homepage.visible_appt_ids.any? }
     end
 
-    it 'shows all today\'s appointments sorted by creation time, with canceled segregated at the bottom' do
-      canceled_appts = @appts.select{ |a| a.status == AppointmentStatus::CANCELED }.sort_by(&:created_date)
-      non_canceled_appts = (@appts - canceled_appts).sort_by(&:created_date)
-      expect(@advisor_homepage.visible_appt_ids).to eql((non_canceled_appts + canceled_appts).map(&:id))
+    it 'shows all today\'s appointments sorted by creation time, with canceled and checked-in segregated at the bottom' do
+      non_pending_appts = @appts.select{ |a| [AppointmentStatus::CANCELED, AppointmentStatus::CHECKED_IN].include? a.status }.sort_by(&:created_date)
+      pending_appts = (@appts - non_pending_appts).sort_by(&:created_date)
+      @advisor_homepage.wait_for_poller { @advisor_homepage.visible_appt_ids == ((pending_appts + non_pending_appts).map(&:id)) }
     end
   end
 
