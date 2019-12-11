@@ -27,6 +27,7 @@ module Page
     h1(:unexpected_error_msg, xpath: '//h1[contains(text(),"Unexpected Error")]')
     h2(:unauthorized_msg, xpath: '//h2[contains(text(),"Unauthorized")]')
     h1(:access_denied_msg, xpath: '//h1[text()="Access Denied"]')
+    div(:flash_msg, xpath: '//div[@class="flashalert-message"]')
 
     # Loads the Canvas homepage, optionally using a non-default Canvas base URL
     # @param canvas_base_url [String]
@@ -70,7 +71,7 @@ module Page
       logger.info "Masquerading as #{user.role} UID #{user.uid}, Canvas ID #{user.canvas_id}"
       navigate_to "#{Utils.canvas_base_url}/users/#{user.canvas_id}/masquerade"
       wait_for_update_and_click masquerade_link_element
-      stop_masquerading_link_element.when_visible
+      stop_masquerading_link_element.when_visible Utils.short_wait
       load_course_site(driver, course) unless course.nil?
     end
 
@@ -93,6 +94,11 @@ module Page
     def click_save_and_publish
       scroll_to_bottom
       wait_for_update_and_click_js save_and_publish_button_element
+    end
+
+    def wait_for_flash_msg(text, wait)
+      flash_msg_element.when_visible wait
+      wait_until(1) { flash_msg.include? text }
     end
 
     # COURSE SITE SETUP
@@ -587,7 +593,7 @@ module Page
 
       students = rows.map do |row|
         canvas_id = row.attribute('id').delete('user_')
-        uid = cell_element(xpath: "//table[contains(@class, 'roster')]//tr[contains(@id,'user_#{canvas_id}')]//td[3]").text.strip
+        uid = cell_element(xpath: "//table[contains(@class, 'roster')]//tr[contains(@id,'user_#{canvas_id}')]//td[3]").text.gsub('inactive-', '').strip
         logger.debug "Canvas ID #{canvas_id}, UID #{uid}"
         User.new({uid: uid, canvas_id: canvas_id})
       end

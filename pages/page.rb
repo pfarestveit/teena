@@ -303,6 +303,7 @@ module Page
   end
 
   def hit_enter
+    sleep Utils.click_wait
     browser.action.send_keys(:enter).perform
   end
 
@@ -316,6 +317,11 @@ module Page
   # Hits the Tab key
   def hit_tab
     browser.action.send_keys(:tab).perform
+  end
+
+  def arrow_down
+    sleep Utils.click_wait
+    browser.action.send_keys(:down).perform
   end
 
 end
