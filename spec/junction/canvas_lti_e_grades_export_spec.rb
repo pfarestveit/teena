@@ -59,7 +59,7 @@ describe 'bCourses E-Grades Export', order: :defined do
 
     before(:all) do
       @canvas.disable_grading_scheme course
-      @canvas.mute_assignment course
+      @canvas.set_grade_policy_manual course
     end
 
     before(:each) { @e_grades_export_page.load_embedded_tool(@driver, course) }
@@ -113,7 +113,7 @@ describe 'bCourses E-Grades Export', order: :defined do
   context 'when a grading scheme is enabled but an assignment is muted' do
 
     before(:all) do
-      @canvas.mute_assignment course
+      @canvas.set_grade_policy_manual course
       @e_grades_export_page.load_embedded_tool(@driver, course)
     end
 

@@ -36,13 +36,15 @@ describe 'bCourses E-Grades Export' do
         # Disable existing grading scheme in case it is not default, then set default scheme
         @canvas.masquerade_as(@driver, instructor, course)
         @canvas.disable_grading_scheme course
+        @canvas.set_new_gradebook course
         @e_grades_export_page.resolve_all_issues(@driver, course)
 
         # Get grades in Canvas
         students = @canvas.get_students(course, primary_section)
         @canvas.load_gradebook course
-        @canvas.click_gradebook_settings
-        grades_are_final = @canvas.gradebook_include_ungraded_checked?
+        grades_are_final = @canvas.grades_final?
+        logger.info "Grades are final is #{grades_are_final}"
+        @canvas.hit_escape
         gradebook_grades = students.map do |user|
           user.sis_id = rosters_api.sid_from_uid user.uid
           @canvas.student_score(@driver, user) unless user.sis_id.nil?
@@ -63,7 +65,7 @@ describe 'bCourses E-Grades Export' do
 
               # If an error occurred fetching a grade, then the row might cause an error in the test
               e_grades_row = e_grades.find { |e_grade| e_grade[:id] == gradebook_row[:sis_id] if gradebook_row.instance_of? Hash }
-              if e_grades_row
+              if e_grades_row && gradebook_row[:grade]
                 it("shows the right grade for #{course.term} #{course.code} UID #{gradebook_row[:uid]}") { expect(e_grades_row[:grade]).to eql(gradebook_row[:grade]) }
               end
 
