@@ -52,6 +52,7 @@ boac:
 
   test_dept: UWASC
   test_default_cohort_major: [History BA]
+  test_add_edit_uid: secret
 
   shuffle_max_users: true
   assignments_max_users: 10

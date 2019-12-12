@@ -142,4 +142,116 @@ class BOACPaxManifestPage
     wait_for_load_and_click(become_user_link_element user)
   end
 
+  # Add / edit user
+
+  button(:add_user_button, id: 'add-new-user-btn')
+  text_field(:add_user_uid_input, id: 'uid-input')
+  checkbox(:is_admin_cbx, id: 'is-admin')
+  checkbox(:is_blocked_cbx, id: 'is-admin')
+  checkbox(:can_access_canvas_data_cbx, id: 'can-access-canvas-data')
+  checkbox(:is_deleted_cbx, id: 'is-deleted')
+  elements(:remove_dept_button, :button, xpath: '//button[contains(@id, "remove-department-")]')
+  select_list(:department_select, id: 'department-select-list')
+  button(:save_user_button, id: 'save-changes-to-user-profile')
+  button(:cancel_user_button, id: 'delete-cancel')
+
+  # Returns the button to remove a department role
+  # @param dept [BOACDepartments]
+  # @return [PageObject::Elements::Button]
+  def remove_dept_role_button(dept)
+    button_element(id: "remove-department-#{dept.code}")
+  end
+
+  # Returns the select element for a given department
+  # @param dept [BOACDepartments]
+  # @return [PageObject::Elements::SelectList]
+  def dept_role_select(dept)
+    select_list_element(id: "select-department-#{dept.code}-role")
+  end
+
+  # Returns the checkbox for whether or not a department role is maintained automatically
+  # @param dept [BOACDepartments]
+  # @return [PageObject::Elements::Checkbox]
+  def is_automated_dept_cbx(dept)
+    checkbox_element(id: "is-automate-membership-#{dept.code}")
+  end
+
+  # Returns the button to open the Edit User modal
+  # @param user [BOACUser]
+  # @return [PageObject::Elements::Button]
+  def edit_user_button(user)
+    button_element(xpath: "//span[@id='uid-#{user.uid}']/ancestor::td/following-sibling::td//button")
+  end
+
+  # Clicks the Add User button
+  def click_add_user
+    logger.info 'Clicking the add user button'
+    wait_for_update_and_click add_user_button_element
+  end
+
+  # Clicks the Edit button for a given user
+  # @param user [BOACUser]
+  def click_edit_user(user)
+    logger.info "Clicking the edit button for UID #{user.uid}"
+    wait_for_update_and_click edit_user_button(user)
+  end
+
+  def click_cancel_button
+    logger.info 'Clicking the cancel button'
+    wait_for_update_and_click cancel_user_button_element
+  end
+
+  # Sets the user-level flags that are present on both the Add and Edit modals
+  # @param user [BOACUser]
+  def set_user_level_flags(user)
+    logger.info "UID #{user.uid} is-admin is #{user.is_admin}"
+    user.is_admin ? check_is_admin_cbx : uncheck_is_admin_cbx
+    logger.info "UID #{user.uid} is-blocked is #{user.is_blocked}"
+    user.is_blocked ? check_is_blocked_cbx : uncheck_is_blocked_cbx
+    logger.info "UID #{user.uid} can access Canvas data is #{user.can_access_canvas_data}"
+    user.can_access_canvas_data ? check_can_access_canvas_data_cbx : uncheck_can_access_canvas_data_cbx
+  end
+
+  # Adds the department roles associated with a given user
+  # @param user [BOACUser]
+  def add_user_dept_roles(user)
+    user.advisor_roles.each do |role|
+      logger.info "Adding UID #{user.uid} department role #{role}"
+      wait_for_element_and_select_js(department_select_element, role.dept.code)
+      wait_for_element_and_select_js(dept_role_select(role.dept), 'Advisor') if role.is_advisor
+      wait_for_element_and_select_js(dept_role_select(role.dept), 'Advisor + Drop-In') if role.is_drop_in_advisor
+      wait_for_element_and_select_js(dept_role_select(role.dept), 'Director') if role.is_director
+      wait_for_element_and_select_js(dept_role_select(role.dept), 'Scheduler') if role.is_scheduler
+      wait_for_update_and_click is_automated_dept_cbx(dept) unless role.is_automated
+    end
+  end
+
+  # Adds a given user
+  # @param user [BOACUser]
+  def add_user(user)
+    logger.info "Adding UID #{user.uid}"
+    click_add_user
+    wait_for_element_and_type(add_user_uid_input_element, user.uid)
+    set_user_level_flags user
+    add_user_dept_roles user
+    wait_for_update_and_click save_user_button_element
+    save_user_button_element.when_not_present Utils.short_wait
+  end
+
+  # Edits a given user
+  # @param user [BOACUser]
+  def edit_user(user)
+    click_edit_user user
+    is_admin_cbx_element.when_visible Utils.short_wait
+    set_user_level_flags user
+    user.active ? uncheck_is_deleted_cbx : check_is_deleted_cbx
+    remove_dept_button_elements.each do |el|
+      wait_for_update_and_click el
+      el.when_not_present 2
+    end
+    add_user_dept_roles user
+    wait_for_update_and_click save_user_button_element
+    save_user_button_element.when_not_present Utils.short_wait
+  end
+
 end

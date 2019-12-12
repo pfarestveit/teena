@@ -11,8 +11,21 @@ describe 'The BOAC passenger manifest' do
   dept_advisors = non_admin_depts.map { |dept| {:dept => dept, :advisors => BOACUtils.get_dept_advisors(dept)} }
 
   before(:all) do
-    # for add/edit user tests, generate a test user from a configured test UID
-    # hard delete the test user in case it still exists from previous test runs
+    # Initialize a user for the add/edit user tests
+    @add_edit_user = BOACUser.new(
+        uid: BOACUtils.config['test_add_edit_uid'],
+        active: true,
+        can_access_canvas_data: true,
+        advisor_roles: [
+            AdvisorRole.new(
+                dept: BOACDepartments::L_AND_S,
+                is_advisor: true,
+                is_automated: true
+            )
+        ]
+    )
+    # Hard delete the add/edit user in case it's still lying around from a previous test run
+    BOACUtils.hard_delete_auth_user @add_edit_user
 
     @driver = Utils.launch_browser
     @homepage = BOACHomePage.new @driver
@@ -25,7 +38,7 @@ describe 'The BOAC passenger manifest' do
 
   after(:all) do
     Utils.quit_browser @driver
-    # hard delete the add/edit test user
+    BOACUtils.hard_delete_auth_user @add_edit_user
   end
 
   it 'defaults to user search mode' do
@@ -221,7 +234,6 @@ describe 'The BOAC passenger manifest' do
   context 'in user adding mode' do
 
     before(:all) do
-      # configure the test user's roles/permissions
       # load the pax manifest page
     end
 
