@@ -11,6 +11,9 @@ describe 'The BOAC passenger manifest' do
   dept_advisors = non_admin_depts.map { |dept| {:dept => dept, :advisors => BOACUtils.get_dept_advisors(dept)} }
 
   before(:all) do
+    # for add/edit user tests, generate a test user from a configured test UID
+    # hard delete the test user in case it still exists from previous test runs
+
     @driver = Utils.launch_browser
     @homepage = BOACHomePage.new @driver
     @admin_page = BOACPaxManifestPage.new @driver
@@ -20,7 +23,10 @@ describe 'The BOAC passenger manifest' do
     @admin_page.filter_mode_select_element.when_visible Utils.medium_wait
   end
 
-  after(:all) { Utils.quit_browser @driver }
+  after(:all) do
+    Utils.quit_browser @driver
+    # hard delete the add/edit test user
+  end
 
   it 'defaults to user search mode' do
     expect(@admin_page.filter_mode_select).to eql('Search')
@@ -28,9 +34,7 @@ describe 'The BOAC passenger manifest' do
   end
 
   context 'in user search mode' do
-    # Inactive users don't come up in search results, so don't try to look for them
-    # TODO - search for inactive users if BOAC-2882 is fixed
-    auth_users.select { |u| u.uid.length == 7 && u.active }.shuffle.last(25).each do |user|
+    auth_users.select { |u| u.uid.length == 7 }.shuffle.last(25).each do |user|
       context "searching for UID #{user.uid}" do
         before(:all) do
           @admin_page.search_for_advisor user
@@ -213,4 +217,183 @@ describe 'The BOAC passenger manifest' do
       expect(last_logins).not_to be_empty
     end
   end
+
+  context 'in user adding mode' do
+
+    before(:all) do
+      # configure the test user's roles/permissions
+      # load the pax manifest page
+    end
+
+    it 'allows an admin to cancel adding a user' do
+      # open the add user modal
+      # cancel
+    end
+
+    it 'allows an admin to add a user' do
+      # open the add user modal
+      # add the test user per the user's configured roles/permissions
+      # save the user
+      # search for the user
+    end
+
+    it 'shows an added user\'s name' do
+      # verify the visible name
+    end
+
+    it 'offers a link from an added user\'s name to the directory' do
+      # verify the external directory link
+    end
+
+    it 'shows an added user\' department(s) and role(s)' do
+      # verify the visible department(s) and role(s)
+    end
+
+    it 'shows an added user\'s status' do
+      # verify the visible user status(es)
+    end
+
+    it 'offers a link to email an added user' do
+      # verify the email link is present
+    end
+
+    it 'shows the right expanded added user data' do
+      # expand the user detail
+      # verify the JSON content
+    end
+  end
+
+  context 'in user edit mode' do
+
+    before(:each) do
+      # if the header is present, log out
+      # dev auth as an admin
+      # load the pax manifest
+      # search for the user and await the result
+    end
+
+    it 'allows an admin to cancel an edit' do
+      # open the edit modal
+      # cancel
+    end
+
+    it 'allows an admin to add an admin role to a user' do
+      # open the edit modal
+      # add an admin role and save
+      # become the user
+      # verify the user can load the pax manifest
+    end
+
+    it 'allows an admin to remove an admin role from a user' do
+      # open the edit modal
+      # remove the admin role and save
+      # become the user
+      # verify the user cannot load the pax manifest
+    end
+
+    it 'allows an admin to block a user' do
+      # open the edit modal
+      # block the user and save
+      # log out
+      # dev auth as the user, and verify the user cannot log in
+    end
+
+    it 'allows an admin to unblock a user' do
+      # open the edit modal
+      # unblock the user and save
+      # log out
+      # dev auth as the user, and verify the user can log in
+    end
+
+    it 'allows an admin to permit a user to view Canvas data' do
+      # open the edit modal
+      # add Canvas perm to the user and save
+      # become the user
+      # verify the user can load a class page
+    end
+
+    it 'allows an admin to prevent a user from viewing Canvas data' do
+      # open the edit modal
+      # remove Canvas perm from the user and save
+      # become the user
+      # verify the user cannot load a class page
+    end
+
+    it 'allows an admin to delete a user' do
+      # open the edit modal
+      # delete the user and save
+      # log out
+      # dev auth as the user, and verify the user cannot log in
+    end
+
+    it 'allows an admin to un-delete a user' do
+      # open the edit modal
+      # un-delete the user and save
+      # log out
+      # dev auth as the user, and verify the user can log in
+    end
+
+    it 'allows an admin to give a user a department membership' do
+      # open the edit modal
+      # add a department membership and save (should be CoE or ASC)
+      # become the user
+      # verify the user has access to department-specific cohort filters
+    end
+
+    it 'allows an admin to remove a user\'s department membership' do
+      # open the edit modal
+      # delete a department membership and save (should be CoE or ASC)
+      # become the user
+      # verify the user has no access to department-specific cohort filters
+    end
+
+    it 'prevents an admin from giving a user no department role' do
+      # open the edit modal
+      # remove a department role and save
+      # unable to save
+    end
+
+    it 'allows an admin to give a user a department drop-in advisor role' do
+      # open the edit modal
+      # set a department drop-in advisor role and save
+      # become the user
+      # verify the waiting list loads
+    end
+
+    it 'allows an admin to give a user a department director role' do
+      # open the edit modal
+      # set a department director role and save
+      # become the user
+      # verify the regular homepage loads
+    end
+
+    it 'allows an admin to give a user a department scheduler role' do
+      # open the edit modal
+      # set a department scheduler role
+      # become the user
+      # verify the intake desk loads
+    end
+
+    it 'allows an admin to give a user a department advisor role' do
+      # open the edit modal
+      # set a department advisor role and save
+      # become the user
+      # verify the regular homepage loads
+    end
+
+    it 'allows an admin to set a user\'s department membership to manual' do
+      # open the edit modal
+      # de-select automated membership and save
+      # open the edit modal
+      # verify the automated membership is still deselected
+    end
+
+    it 'allows an admin to set a user\'s department membership to automated' do
+      # open the edit modal
+      # select automated membership and save
+      # open the edit modal
+      # verify the automated membership is still selected
+    end
+  end
+
 end
