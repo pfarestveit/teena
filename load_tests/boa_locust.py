@@ -125,6 +125,7 @@ class TestData:
         FROM authorized_users au
         JOIN cohort_filter_owners cfo on au.id = cfo.user_id
         JOIN cohort_filters cf on cf.id = cfo.cohort_filter_id
+        WHERE au.deleted_at IS NULL
         ORDER BY uid"""
     )
 
