@@ -265,7 +265,6 @@ class BOACUtils < Utils
             JOIN university_depts ud2
               ON udm2.university_dept_id = ud2.id
             WHERE authorized_users.deleted_at IS NULL
-              AND authorized_users.can_access_canvas_data IS TRUE
               #{' AND udm1.is_advisor IS TRUE ' if role&.is_advisor}
               #{' AND EXISTS (SELECT drop_in_advisors.authorized_user_id
                               FROM drop_in_advisors
