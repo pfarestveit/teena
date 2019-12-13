@@ -10,6 +10,17 @@ class BOACPaxManifestPage
 
   h2(:dept_users_section, id: 'dept-users-section')
 
+  # Hits the page URL without verifying that the page loads successfully
+  def hit_page_url
+    navigate_to "#{BOACUtils.base_url}/admin/passengers"
+  end
+
+  # Loads the Passenger Manifest
+  def load_page
+    hit_page_url
+    user_search_input_element.when_visible Utils.medium_wait
+  end
+
   # User export
 
   link(:download_users_button, id: 'download-boa-users-csv')
@@ -61,7 +72,7 @@ class BOACPaxManifestPage
   # Selects the All Departments option
   def select_all_depts
     logger.info 'Selecting All Departments'
-    wait_for_element_and_select_js(dept_select_element, 'All Departments')
+    wait_for_element_and_select_js(dept_select_element, 'All')
   end
 
   # Selects a given department option
@@ -146,14 +157,35 @@ class BOACPaxManifestPage
 
   button(:add_user_button, id: 'add-new-user-btn')
   text_field(:add_user_uid_input, id: 'uid-input')
-  checkbox(:is_admin_cbx, id: 'is-admin')
-  checkbox(:is_blocked_cbx, id: 'is-admin')
-  checkbox(:can_access_canvas_data_cbx, id: 'can-access-canvas-data')
-  checkbox(:is_deleted_cbx, id: 'is-deleted')
+  checkbox(:admin_cbx, id: 'is-admin')
   elements(:remove_dept_button, :button, xpath: '//button[contains(@id, "remove-department-")]')
   select_list(:department_select, id: 'department-select-list')
   button(:save_user_button, id: 'save-changes-to-user-profile')
   button(:cancel_user_button, id: 'delete-cancel')
+
+  # Returns the (WebDriver) element for the is-admin checkbox
+  # @return [Selenium::WebDriver::Element]
+  def is_admin_cbx
+    browser.find_element(xpath: '//input[@id="is-admin"]')
+  end
+
+  # Returns the (WebDriver) element for the is-blocked checkbox
+  # @return [Selenium::WebDriver::Element]
+  def is_blocked_cbx
+    browser.find_element(xpath: '//input[@id="is-blocked"]')
+  end
+
+  # Returns the (WebDriver) element for the can-access-canvas-data checkbox
+  # @return [Selenium::WebDriver::Element]
+  def can_access_canvas_data_cbx
+    browser.find_element(xpath: '//input[@id="can-access-canvas-data"]')
+  end
+
+  # Returns the (WebDriver) element for the is-deleted checkbox
+  # @return [Selenium::WebDriver::Element]
+  def is_deleted_cbx
+    browser.find_element(xpath: '//input[@id="is-deleted"]')
+  end
 
   # Returns the button to remove a department role
   # @param dept [BOACDepartments]
@@ -169,18 +201,18 @@ class BOACPaxManifestPage
     select_list_element(id: "select-department-#{dept.code}-role")
   end
 
-  # Returns the checkbox for whether or not a department role is maintained automatically
+  # Returns the (WebDriver) element for whether or not a department role is maintained automatically
   # @param dept [BOACDepartments]
-  # @return [PageObject::Elements::Checkbox]
+  # @return [Selenium::WebDriver::Element]
   def is_automated_dept_cbx(dept)
-    checkbox_element(id: "is-automate-membership-#{dept.code}")
+    browser.find_element(xpath: "//input[@id='is-automate-membership-#{dept.code}']")
   end
 
   # Returns the button to open the Edit User modal
   # @param user [BOACUser]
   # @return [PageObject::Elements::Button]
   def edit_user_button(user)
-    button_element(xpath: "//span[@id='uid-#{user.uid}']/ancestor::td/following-sibling::td//button")
+    button_element(id: "edit-#{user.uid}")
   end
 
   # Clicks the Add User button
@@ -205,24 +237,37 @@ class BOACPaxManifestPage
   # @param user [BOACUser]
   def set_user_level_flags(user)
     logger.info "UID #{user.uid} is-admin is #{user.is_admin}"
-    user.is_admin ? check_is_admin_cbx : uncheck_is_admin_cbx
-    logger.info "UID #{user.uid} is-blocked is #{user.is_blocked}"
-    user.is_blocked ? check_is_blocked_cbx : uncheck_is_blocked_cbx
-    logger.info "UID #{user.uid} can access Canvas data is #{user.can_access_canvas_data}"
-    user.can_access_canvas_data ? check_can_access_canvas_data_cbx : uncheck_can_access_canvas_data_cbx
+    if (user.is_admin && !is_admin_cbx.selected?) || (!user.is_admin && is_admin_cbx.selected?)
+      logger.debug 'Clicking is-admin checkbox'
+      execute_script('arguments[0].click();', is_admin_cbx)
+      sleep Utils.click_wait
+    end
+    if (user.is_blocked && !is_blocked_cbx.selected?) || (!user.is_blocked && is_blocked_cbx.selected?)
+      logger.debug 'Clicking is-blocked checkbox'
+      execute_script('arguments[0].click();', is_blocked_cbx)
+      sleep Utils.click_wait
+    end
+    if (user.can_access_canvas_data && !can_access_canvas_data_cbx.selected?) || (!user.can_access_canvas_data && can_access_canvas_data_cbx.selected?)
+      logger.debug 'Clicking can-access-canvas-data checkbox'
+      execute_script('arguments[0].click();', can_access_canvas_data_cbx)
+      sleep Utils.click_wait
+    end
   end
 
   # Adds the department roles associated with a given user
   # @param user [BOACUser]
   def add_user_dept_roles(user)
     user.advisor_roles.each do |role|
-      logger.info "Adding UID #{user.uid} department role #{role}"
+      logger.info "Adding UID #{user.uid} department role #{role.inspect}"
       wait_for_element_and_select_js(department_select_element, role.dept.code)
       wait_for_element_and_select_js(dept_role_select(role.dept), 'Advisor') if role.is_advisor
       wait_for_element_and_select_js(dept_role_select(role.dept), 'Advisor + Drop-In') if role.is_drop_in_advisor
       wait_for_element_and_select_js(dept_role_select(role.dept), 'Director') if role.is_director
       wait_for_element_and_select_js(dept_role_select(role.dept), 'Scheduler') if role.is_scheduler
-      wait_for_update_and_click is_automated_dept_cbx(dept) unless role.is_automated
+      if (role.is_automated && !is_automated_dept_cbx(role.dept).selected?) || (!role.is_automated && is_automated_dept_cbx(role.dept).selected?)
+        execute_script('arguments[0].click();', is_automated_dept_cbx(role.dept))
+        sleep Utils.click_wait
+      end
     end
   end
 
@@ -241,10 +286,15 @@ class BOACPaxManifestPage
   # Edits a given user
   # @param user [BOACUser]
   def edit_user(user)
+    logger.info "Editing UID #{user.uid} with roles #{user.advisor_roles.each &:inspect}"
     click_edit_user user
-    is_admin_cbx_element.when_visible Utils.short_wait
+    admin_cbx_element.when_present Utils.short_wait
     set_user_level_flags user
-    user.active ? uncheck_is_deleted_cbx : check_is_deleted_cbx
+    if (user.active && is_deleted_cbx.selected?) || (!user.active && !is_deleted_cbx.selected?)
+      logger.debug 'Clicking is-deleted checkbox'
+      execute_script('arguments[0].click();', is_deleted_cbx)
+      sleep Utils.click_wait
+    end
     remove_dept_button_elements.each do |el|
       wait_for_update_and_click el
       el.when_not_present 2
@@ -252,6 +302,8 @@ class BOACPaxManifestPage
     add_user_dept_roles user
     wait_for_update_and_click save_user_button_element
     save_user_button_element.when_not_present Utils.short_wait
+    # Pause a moment to let the DOM update
+    sleep 1
   end
 
 end

@@ -16,6 +16,7 @@ class BOACHomePage
   button(:dev_auth_log_in_button, id: 'dev-auth-submit')
   div(:copyright_year_login, class: 'copyright')
   div(:not_auth_msg, xpath: '//div[contains(., "Sorry, you are not registered to use BOA.")]')
+  div(:deleted_msg, xpath: '//div[contains(., "Sorry, user is not authorized to use BOA.")]')
   div(:footer_warning, id: 'fixed-warning-on-all-pages')
 
   # Loads the home page
@@ -43,9 +44,9 @@ class BOACHomePage
     wait_until(Utils.short_wait) { copyright_year_footer.include? Time.now.strftime('%Y') }
   end
 
-  # Authenticates using dev auth
+  # Enters dev auth credentials and attempts to log in, without verifying that the login is successful
   # @param user [User]
-  def dev_auth(user = nil)
+  def enter_dev_auth_creds(user = nil)
     logger.info "Logging in #{('UID ' + user.uid.to_s + ' ') if user}using developer auth"
     start = Time.now
     load_page
@@ -55,6 +56,12 @@ class BOACHomePage
     logger.warn "Took #{Time.now - start - Utils.click_wait} seconds for dev auth input to become available"
     wait_for_element_and_type(dev_auth_password_input_element, BOACUtils.password)
     wait_for_update_and_click dev_auth_log_in_button_element
+  end
+
+  # Authenticates using dev auth
+  # @param user [User]
+  def dev_auth(user = nil)
+    enter_dev_auth_creds user
     wait_until(Utils.medium_wait) { ['Home | BOA', 'Drop-in Appointments Desk | BOA'].include? title }
   end
 

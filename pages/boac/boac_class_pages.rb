@@ -9,13 +9,21 @@ module BOACClassPages
 
   # COURSE DATA
 
+  # Hits a class page URL without verifying if the page loads successfully
+  # @param term_id [String]
+  # @param ccn [String]
+  # @param student [BOACUser]
+  def hit_class_page_url(term_id, ccn, student=nil)
+    logger.info "Loading class page for term #{term_id} section #{ccn}"
+    navigate_to "#{BOACUtils.base_url}/course/#{term_id}/#{ccn}#{'?u=' + student.uid if student}"
+  end
+
   # Loads a class page in default list view
   # @param term_id [String]
   # @param ccn [String]
   # @param student [BOACUser]
   def load_page(term_id, ccn, student=nil)
-    logger.info "Loading class page for term #{term_id} section #{ccn}"
-    navigate_to "#{BOACUtils.base_url}/course/#{term_id}/#{ccn}#{'?u=' + student.uid if student}"
+    hit_class_page_url(term_id, ccn, student)
     wait_for_spinner
     div_element(id: 'meetings-0').when_visible Utils.medium_wait
   end
