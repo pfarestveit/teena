@@ -31,12 +31,12 @@ describe 'BOAC' do
     else
       test.default_cohort = CuratedGroup.new(:name => "Group #{test.id}")
       @boac_homepage.click_sidebar_create_curated_group
-      @boac_cohort_page.create_group_with_bulk_sids(test.max_cohort_members, test.default_cohort)
+      @boac_cohort_page.create_group_with_bulk_sids(test.test_students, test.default_cohort)
     end
 
     visible_sids = @boac_cohort_page.list_view_sids
-    test.max_cohort_members.keep_if { |m| visible_sids.include? m.sis_id }
-    test.max_cohort_members.each do |student|
+    test.test_students.keep_if { |m| visible_sids.include? m.sis_id }
+    test.test_students.each do |student|
 
       begin
         api_student_data = BOACApiStudentPage.new @driver

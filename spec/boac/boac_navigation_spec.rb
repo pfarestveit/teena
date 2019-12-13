@@ -18,7 +18,7 @@ describe 'BOAC' do
     @student_page = BOACStudentPage.new @driver
     @homepage.dev_auth test.advisor
 
-    test.max_cohort_members.each do |student|
+    test.test_students.each do |student|
       begin
 
         api_user_page = BOACApiStudentPage.new @driver

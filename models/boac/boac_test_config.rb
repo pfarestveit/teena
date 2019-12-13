@@ -11,7 +11,7 @@ class BOACTestConfig < TestConfig
                 :dept,
                 :drop_in_advisor,
                 :drop_in_scheduler,
-                :max_cohort_members,
+                :test_students,
                 :searchable_data,
                 :searches,
                 :students,
@@ -65,7 +65,7 @@ class BOACTestConfig < TestConfig
   end
 
   # Sets the complete list of potentially visible students
-  def set_students(students=nil)
+  def set_students(students = nil)
     @students = students || NessieUtils.get_all_students
   end
 
@@ -107,10 +107,14 @@ class BOACTestConfig < TestConfig
   # Selects only the first n cohort members for testing. If shuffle setting is true, different students will be in each
   # test run; otherwise the same ones.
   # @param config [Integer]
-  def set_max_cohort_members(config)
-    BOACUtils.shuffle_max_users ? @cohort_members.shuffle! : @cohort_members.sort_by(&:last_name)
-    @max_cohort_members = @cohort_members[0..(config - 1)]
-    logger.warn "Test UIDs: #{@max_cohort_members.map &:uid}"
+  def set_test_students(config)
+    @test_students = if (uids = ENV['UIDS'])
+                       @students.select { |s| uids.split.include? s.uid }
+                     else
+                       BOACUtils.shuffle_max_users ? @cohort_members.shuffle! : @cohort_members.sort_by(&:last_name)
+                       @cohort_members[0..(config - 1)]
+                     end
+    logger.warn "Test UIDs: #{@test_students.map &:uid}"
   end
 
   # Configures a set of cohorts to use for filtered cohort testing. If a test data override file exists in the config override dir,
@@ -160,7 +164,7 @@ class BOACTestConfig < TestConfig
   def assignments
     set_global_configs
     set_default_cohort
-    set_max_cohort_members CONFIG['assignments_max_users']
+    set_test_students CONFIG['assignments_max_users']
     @term = CONFIG['assignments_term']
   end
 
@@ -168,14 +172,14 @@ class BOACTestConfig < TestConfig
   def class_pages
     set_global_configs
     set_default_cohort
-    set_max_cohort_members CONFIG['class_page_max_users']
+    set_test_students CONFIG['class_page_max_users']
   end
 
   # Config for curated group testing
   def curated_groups
     set_global_configs
     set_default_cohort
-    set_max_cohort_members 50
+    set_test_students 50
   end
 
   # Config for drop-in appointment testing
@@ -237,21 +241,36 @@ class BOACTestConfig < TestConfig
   def last_activity
     set_global_configs
     set_default_cohort
-    set_max_cohort_members CONFIG['last_activity_max_users']
+    set_test_students CONFIG['last_activity_max_users']
   end
 
-  # Config for legacy advising notes testing
-  def legacy_notes
+  # Config for advising note content testing
+  def note_content
     set_global_configs
     set_default_cohort
-    set_max_cohort_members CONFIG['legacy_notes_max_users']
+    @test_students = if (uids = ENV['UIDS'])
+                       @students.select { |s| uids.split.include? s.uid.to_s }
+                     else
+                       boa_sids = NessieUtils.get_all_sids
+                       asc_note_sids = boa_sids & NessieUtils.get_sids_with_notes_of_src(NoteSource::ASC)
+                       logger.info "There are #{asc_note_sids.length} students with ASC notes"
+                       e_and_i_note_sids = boa_sids & NessieUtils.get_sids_with_notes_of_src(NoteSource::E_AND_I)
+                       logger.info "There are #{e_and_i_note_sids.length} students with E&I notes"
+                       sis_note_sids = boa_sids & NessieUtils.get_sids_with_notes_of_src(NoteSource::SIS)
+                       logger.info "There are #{sis_note_sids.length} students with SIS notes"
+                       [asc_note_sids, e_and_i_note_sids, sis_note_sids].each { |s| s.shuffle! } if BOACUtils.shuffle_max_users
+                       max = CONFIG['notes_max_users']
+                       test_sids = (asc_note_sids[0..(max - 1)] + e_and_i_note_sids[0..(max - 1)] + sis_note_sids[0..(max - 1)]).uniq
+                       @students.select { |s| test_sids.include? s.sis_id }
+                     end
+    logger.warn "Test UIDS: #{@test_students.map &:uid}"
   end
 
   # Config for page navigation testing
   def navigation
     set_global_configs
     set_default_cohort
-    set_max_cohort_members CONFIG['class_page_max_users']
+    set_test_students CONFIG['class_page_max_users']
   end
 
   # Config for note management testing (create, edit, delete)
@@ -278,14 +297,14 @@ class BOACTestConfig < TestConfig
   def search
     set_global_configs
     set_default_cohort
-    set_max_cohort_members CONFIG['search_max_users']
+    set_test_students CONFIG['search_max_users']
   end
 
   # Config for SIS data testing
   def sis_data
     set_global_configs
     set_default_cohort
-    set_max_cohort_members CONFIG['sis_data_max_users']
+    set_test_students CONFIG['sis_data_max_users']
   end
 
   # Config for user management tests on the admin page
