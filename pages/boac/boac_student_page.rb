@@ -24,6 +24,7 @@ class BOACStudentPage
 
   h1(:not_found_msg, xpath: '//h1[text()="Not Found"]')
 
+  button(:toggle_personal_details, :id => 'show-hide-personal-details')
   div(:preferred_name, :id => 'student-preferred-name')
   span(:sid, id: 'student-bio-sid')
   span(:inactive, id: 'student-bio-inactive')
@@ -35,14 +36,36 @@ class BOACStudentPage
   div(:inactive_coe_flag, id: 'student-bio-inactive-coe')
   elements(:major, :div, xpath: '//div[@id="student-bio-majors"]//div[@class="font-weight-bolder"]')
   elements(:college, :div, xpath: '//div[@id="student-bio-majors"]//div[@class="text-muted"]')
+  elements(:discontinued_major, :div, xpath: '//div[@id="student-details-discontinued-majors"]//div[@class="font-weight-bolder"]')
+  elements(:discontinued_college, :div, xpath: '//div[@id="student-details-discontinued-majors"]//div[@class="text-muted"]')
   div(:level, xpath: '//div[@id="student-bio-level"]/div')
-  div(:transfer, xpath: '//div[@id="student-bio-level"]/following-sibling::div/div[contains(.,"Transfer")]')
+  div(:transfer, id: 'student-profile-transfer')
   div(:terms_in_attendance, id: 'student-bio-terms-in-attendance')
   div(:entered_term, id: 'student-bio-matriculation')
+  elements(:advisor_plan, :div, xpath: '//div[@id="student-profile-advisors"]//div[contains(@id,"-plan")]')
+  elements(:advisor_name, :div, xpath: '//div[@id="student-profile-advisors"]//div[contains(@id,"-name")]')
+  elements(:advisor_email, :div, xpath: '//div[@id="student-profile-advisors"]//div[contains(@id,"-email")]')
+  elements(:intended_major, :div, xpath: '//div[@id="student-details-intended-majors"]/div')
   div(:expected_graduation, id: 'student-bio-expected-graduation')
   div(:degree_type, id: 'student-bio-degree-type')
   div(:degree_date, id: 'student-bio-degree-date')
+  div(:additional_information_outer, id: 'additional-information-outer')
   elements(:degree_college, :div, xpath: '//div[@id="student-bio-degree-date"]//following-sibling::div')
+
+  # Expand personal details tab on student page profile
+  def expand_personal_details
+    if personal_details_expanded?
+      logger.debug "Personal details tab is already expanded"
+    else
+      logger.debug "Expanding personal details tab"
+      wait_for_update_and_click toggle_personal_details_element
+      wait_for_element(additional_information_outer_element, Utils.medium_wait)
+    end
+  end
+
+  def personal_details_expanded?
+    additional_information_outer_element.visible?
+  end
 
   # Returns a user's SIS data visible on the student page
   # @return [Hash]
@@ -56,14 +79,20 @@ class BOACStudentPage
       :cumulative_gpa => (cumulative_gpa.gsub("CUMULATIVE GPA\n",'').gsub("\nNo data", '').strip if cumulative_gpa?),
       :majors => (major_elements.map { |m| m.text.gsub('Major', '').strip }),
       :colleges => (college_elements.map { |c| c.text.strip }).reject(&:empty?),
+      :majors_discontinued => (discontinued_major_elements.map { |m| m.text.gsub('Major', '').strip }),
+      :colleges_discontinued => (discontinued_college_elements.map { |c| c.text.strip }).reject(&:empty?),
       :level => (level.gsub("Level\n",'') if level?),
       :transfer => (transfer.strip if transfer?),
       :terms_in_attendance => (terms_in_attendance if terms_in_attendance?),
       :entered_term => (entered_term.gsub('Entered', '').strip if entered_term?),
+      :intended_majors => (intended_major_elements.map { |m| m.text.strip }),
       :expected_graduation => (expected_graduation.gsub('Expected graduation','').strip if expected_graduation?),
       :graduation_degree => (degree_type_element.text if degree_type_element.exists?),
       :graduation_date => (degree_date_element.text if degree_date_element.exists?),
       :graduation_colleges => (degree_college_elements.map &:text if degree_college_elements.any?),
+      :advisor_plans => (advisor_plan_elements.map &:text),
+      :advisor_names => (advisor_name_elements.map &:text),
+      :advisor_emails => (advisor_email_elements.map &:text),
       :inactive => (inactive_element.exists? && inactive_element.text.strip == 'INACTIVE')
     }
   end

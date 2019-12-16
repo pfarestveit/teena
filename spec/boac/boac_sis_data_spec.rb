@@ -91,10 +91,15 @@ describe 'BOAC' do
 
         # TODO - shows withdrawal indicator if withdrawn
 
-        active_majors = api_sis_profile_data[:majors].map { |m| m[:major] if m[:active] }.compact.sort
+        active_major_feed, inactive_major_feed = api_sis_profile_data[:majors].compact.partition { |m| m[:active] }
+        active_majors = active_major_feed.map { |m| m[:major] }
+        active_colleges = active_major_feed.map { |m| m[:college] }
+        inactive_majors = inactive_major_feed.map { |m| m[:major] }
+        inactive_colleges = inactive_major_feed.map { |m| m[:college] }
+
         if active_majors.any?
           it "shows the majors for UID #{student.uid} on the #{test.default_cohort.name} page" do
-            expect(cohort_page_sis_data[:majors]).to eql(active_majors)
+            expect(cohort_page_sis_data[:majors]).to eql(active_majors.sort)
           end
         else
           it("shows no majors for UID #{student.uid} on the #{test.default_cohort.name} page") { expect(cohort_page_sis_data[:majors]).to be_nil }
@@ -141,6 +146,9 @@ describe 'BOAC' do
 
         @boac_cohort_page.click_student_link student
         @boac_student_page.wait_for_title student.full_name
+        @boac_student_page.expand_personal_details
+
+        api_advisors = api_student_data.advisors
 
         student_page_sis_data = @boac_student_page.visible_sis_data
 
@@ -169,14 +177,24 @@ describe 'BOAC' do
           expect(student_page_sis_data[:cumulative_gpa]).not_to be_empty
         end
 
-        if api_sis_profile_data[:academic_career_status] != 'Completed' && api_sis_profile_data[:majors].any?
-          it "shows the majors for UID #{student.uid} on the student page" do
-            expect(student_page_sis_data[:majors]).to eql(api_sis_profile_data[:majors].map { |m| m[:major] }.compact)
-            expect(student_page_sis_data[:colleges]).to eql(api_sis_profile_data[:majors].map { |m| m[:college] }.compact)
+        if api_sis_profile_data[:academic_career_status] != 'Completed' && active_majors.any?
+          it "shows the active majors for UID #{student.uid} on the student page" do
+            expect(student_page_sis_data[:majors]).to eql(active_majors)
+            expect(student_page_sis_data[:colleges]).to eql(active_colleges)
           end
         else
-          it("shows no majors for UID #{student.uid} on the student page") { expect(student_page_sis_data[:majors]).to be_empty }
+          it("shows no active majors for UID #{student.uid} on the student page") { expect(student_page_sis_data[:majors]).to be_empty }
           it("shows no colleges for UID #{student.uid} on the student page") { expect(student_page_sis_data[:colleges].all?(&:empty?)).to be true }
+        end
+
+        if api_sis_profile_data[:academic_career_status] != 'Completed' && inactive_majors.any?
+          it "shows the discontinued majors for UID #{student.uid} on the student page" do
+            expect(student_page_sis_data[:majors_discontinued]).to eql(inactive_majors)
+            expect(student_page_sis_data[:colleges_discontinued]).to eql(inactive_colleges)
+          end
+        else
+          it("shows no discontinued majors for UID #{student.uid} on the student page") { expect(student_page_sis_data[:majors_discontinued]).to be_empty }
+          it("shows no discontinued colleges for UID #{student.uid} on the student page") { expect(student_page_sis_data[:colleges_discontinued].all?(&:empty?)).to be true }
         end
 
         if api_sis_profile_data[:academic_career_status] == 'Completed'
@@ -190,9 +208,33 @@ describe 'BOAC' do
           it("shows no academic level for UID #{student.uid} on the student page") { expect(student_page_sis_data[:level]).to be_empty }
         end
 
+        if api_advisors.any?
+          it "shows assigned advisor plans for UID #{student.uid} on the student page" do
+            expect(student_page_sis_data[:advisor_plans]).to eq(api_advisors.map { |a| a[:plan] })
+          end
+          it "shows assigned advisor names for UID #{student.uid} on the student page" do
+            expect(student_page_sis_data[:advisor_names]).to eq(api_advisors.map { |a| a[:name] })
+          end
+          it "shows assigned advisor emails for UID #{student.uid} on the student page" do
+            expect(student_page_sis_data[:advisor_emails]).to eq(api_advisors.map { |a| a[:email] })
+          end
+        else
+          it("shows no assigned advisors for UID #{student.uid} on the student page") do
+            expect(student_page_sis_data[:advisor_plans]).to be_empty
+            expect(student_page_sis_data[:advisor_names]).to be_empty
+            expect(student_page_sis_data[:advisor_emails]).to be_empty
+          end
+        end
+
         if api_sis_profile_data[:entered_term]
           it "shows the matriculation date for UID #{student.uid} on the student page" do
             expect(student_page_sis_data[:entered_term]).to eql(api_sis_profile_data[:entered_term])
+          end
+        end
+
+        if api_sis_profile_data[:intended_majors].any?
+          it "shows intended majors for UID #{student.uid} on the student page" do
+            expect(student_page_sis_data[:intended_majors]).to eql(api_sis_profile_data[:intended_majors])
           end
         end
 

@@ -75,6 +75,7 @@ class BOACApiStudentPage
       :transfer => (sis_profile && (sis_profile['transfer'])),
       :terms_in_attendance => (sis_profile && sis_profile['termsInAttendance'].to_s),
       :entered_term => (sis_profile && sis_profile['matriculation']),
+      :intended_majors => (((sis_profile && sis_profile['intendedMajors'] && sis_profile['intendedMajors']) || []).map { |m| m['description'] }),
       :expected_grad_term_id => (sis_profile && sis_profile['expectedGraduationTerm'] && sis_profile['expectedGraduationTerm']['id']),
       :expected_grad_term_name => (sis_profile && sis_profile['expectedGraduationTerm'] && sis_profile['expectedGraduationTerm']['name']),
       :withdrawal => (sis_profile && withdrawal),
@@ -142,6 +143,18 @@ class BOACApiStudentPage
       :history => progress['requirements']['americanHistory']['status'],
       :institutions => progress['requirements']['americanInstitutions']['status']
     }
+  end
+
+  # Advisors
+
+  def advisors
+    ((@parsed && @parsed['advisors']) || []).map do |a|
+      {
+        email: a['email'],
+        name: "#{a['firstName']} #{a['lastName']}",
+        plan: a['plan']
+      }
+    end
   end
 
   # COURSES
