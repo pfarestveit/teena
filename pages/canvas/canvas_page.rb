@@ -571,7 +571,11 @@ module Page
           wait_until(Utils.short_wait) { user_row_elements.length > new_initial_count }
           wait_until(Utils.click_wait) { (student_enrollment_row_elements.length + waitlist_enrollment_row_elements.length) == total_count }
         rescue
-          (tries -= 1).zero? ? fail : retry
+          if (tries -= 1).zero?
+            logger.error "Site role dropdown says #{total_count} students but got #{(student_enrollment_row_elements.length + waitlist_enrollment_row_elements.length)} rows"
+          else
+            retry
+          end
         end
       end
       total_count
