@@ -104,6 +104,14 @@ class NessieUtils < Utils
     end
   end
 
+  # Returns all SIDs present on the student_academic_status table
+  # @return [Array<String>]
+  def self.get_all_sids
+    query = 'SELECT sid FROM student.student_academic_status ORDER BY sid ASC;'
+    results = Utils.query_pg_db(nessie_pg_db_credentials, query)
+    results.map { |r| r['sid'] }
+  end
+
   #### ASC ####
 
   # Returns all the distinct teams associated with team members
@@ -569,6 +577,15 @@ class NessieUtils < Utils
       }
     end
     notes_data.map { |d| Note.new d }
+  end
+
+  # Returns all SIDs represented in a given advising note source
+  # @param src [NoteSource]
+  # @return [Array<String>]
+  def self.get_sids_with_notes_of_src(src)
+    query = "SELECT DISTINCT sid FROM #{src.schema}.advising_notes ORDER BY sid ASC;"
+    results = Utils.query_pg_db(nessie_pg_db_credentials, query)
+    results.map { |r| r['sid'] }
   end
 
   # Returns all SIS note authors

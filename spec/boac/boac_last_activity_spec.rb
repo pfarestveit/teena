@@ -36,7 +36,7 @@ describe 'BOAC' do
       @canvas_page.log_in(@cal_net_page, Utils.super_admin_username, Utils.super_admin_password, 'https://bcourses.berkeley.edu')
       @homepage.dev_auth test.advisor
 
-      test.max_cohort_members.each do |test_student|
+      test.test_students.each do |test_student|
         begin
 
           # Get the user API data for the test student to determine which courses to check

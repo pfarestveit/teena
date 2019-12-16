@@ -6,7 +6,7 @@ describe 'BOAC' do
 
   begin
     test = BOACTestConfig.new
-    test.legacy_notes
+    test.note_content
     students_with_asc_notes = []
     students_with_boa_notes = []
     students_with_ei_notes = []
@@ -15,7 +15,7 @@ describe 'BOAC' do
     advisor_link_tested = false
 
     notes_data_heading = %w(UID SID NoteId Created Updated CreatedBy Advisor AdvisorRole AdvisorDepts HasBody Topics Attachments)
-    notes_data = Utils.create_test_output_csv('boac-legacy-notes.csv', notes_data_heading)
+    notes_data = Utils.create_test_output_csv('boac-notes.csv', notes_data_heading)
 
     @driver = Utils.launch_browser
     @homepage = BOACHomePage.new @driver
@@ -24,7 +24,7 @@ describe 'BOAC' do
     @api_notes_attachment_page = BOACApiNotesAttachmentPage.new @driver
 
     @homepage.dev_auth test.advisor
-    test.max_cohort_members.each do |student|
+    test.test_students.each do |student|
 
       begin
         @student_page.load_page student

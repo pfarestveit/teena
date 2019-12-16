@@ -38,7 +38,7 @@ describe 'BOAC assignment analytics' do
           @boac_homepage.log_in(Utils.super_admin_username, Utils.super_admin_password, @cal_net) :
           @boac_homepage.dev_auth
 
-      test.max_cohort_members.each do |student|
+      test.test_students.each do |student|
 
         boac_api_page = BOACApiStudentPage.new @driver
         boac_api_page.get_data(@driver, student)

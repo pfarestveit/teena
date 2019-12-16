@@ -21,7 +21,7 @@ describe 'BOAC' do
     # COLLECT DATA TO DRIVE SEARCH TESTS
 
     # Get students to use for various searches
-    test_students = test_config.max_cohort_members
+    test_students = test_config.test_students
     student_searches = []
 
     all_advising_note_authors = NessieUtils.get_all_advising_note_authors

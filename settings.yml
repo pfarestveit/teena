@@ -62,15 +62,14 @@ boac:
   group_bulk_sids_max: 200
   last_activity_max_users: 3
   last_activity_context: false
-  legacy_notes_level: Senior
-  legacy_notes_max_users: 5
   no_activity_alert_threshold: 14
-  notes_search_word_count: 7
   notes_batch_curated_group_count: 2
   notes_batch_students_count: 3
   notes_batch_students_per_group_count: 3
-  sis_data_max_users: 100
+  notes_max_users: 5
+  notes_search_word_count: 7
   search_max_users: 20
+  sis_data_max_users: 100
   service_announcement: 'A service announcement'
 
 cal_net:
