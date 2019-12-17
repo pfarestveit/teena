@@ -149,6 +149,7 @@ describe 'BOAC' do
         @boac_student_page.expand_personal_details
 
         api_advisors = api_student_data.advisors
+        api_demographics = api_student_data.demographics_data
 
         student_page_sis_data = @boac_student_page.visible_sis_data
 
@@ -157,6 +158,16 @@ describe 'BOAC' do
         it "shows the email for UID #{student.uid} on the student page" do
           expect(student_page_sis_data[:email]).to include(api_sis_profile_data[:email])
           expect(student_page_sis_data[:email]).not_to be_empty
+        end
+
+        if api_sis_profile_data[:email_alternate]
+          it "shows the alternate email for UID #{student.uid} on the student page" do
+            expect(student_page_sis_data[:email_alternate]).to eq(api_sis_profile_data[:email_alternate])
+          end
+        else
+          it "shows no alternate email for UID #{student.uid} on the student page" do
+            expect(student_page_sis_data[:email_alternate]).to be_nil
+          end
         end
 
         if api_sis_profile_data[:cumulative_units]
@@ -197,6 +208,16 @@ describe 'BOAC' do
           it("shows no discontinued colleges for UID #{student.uid} on the student page") { expect(student_page_sis_data[:colleges_discontinued].all?(&:empty?)).to be true }
         end
 
+        if api_sis_profile_data[:academic_career_status] != 'Completed' && api_sis_profile_data[:minors].any?
+          it "shows minors for UID #{student.uid} on the student page" do
+            expect(student_page_sis_data[:minors].sort).to eq(api_sis_profile_data[:minors].sort)
+          end
+        else
+          it "shows no minors for UID #{student.uid} on the student page" do
+            expect(student_page_sis_data[:minors]).to be_empty
+          end
+        end
+
         if api_sis_profile_data[:academic_career_status] == 'Completed'
           it("shows no academic level for UID #{student.uid} on the student page") { expect(student_page_sis_data[:level]).to be_nil }
         elsif api_sis_profile_data[:level]
@@ -235,6 +256,21 @@ describe 'BOAC' do
         if api_sis_profile_data[:intended_majors].any?
           it "shows intended majors for UID #{student.uid} on the student page" do
             expect(student_page_sis_data[:intended_majors]).to eql(api_sis_profile_data[:intended_majors])
+          end
+        end
+
+        if api_demographics[:visa] && api_demographics[:visa][:status] == 'G'
+          it "shows visa status for UID #{student.uid} on the student page" do
+            expect(student_page_sis_data[:visa]).to eq case api_demographics[:visa][:type]
+              when 'F1' then 'F-1 International Student'
+              when 'J1' then 'J-1 International Student'
+              when 'PR' then 'PR Verified International Student'
+              else 'Other Verified International Student'
+            end
+          end
+        else
+          it "shows no visa status for UID #{student.uid} on the student page" do
+            expect(student_page_sis_data[:visa]).to be_nil
           end
         end
 

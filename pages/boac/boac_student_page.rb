@@ -35,6 +35,7 @@ class BOACStudentPage
   div(:inactive_asc_flag, id: 'student-bio-inactive-asc')
   div(:inactive_coe_flag, id: 'student-bio-inactive-coe')
   elements(:major, :div, xpath: '//div[@id="student-bio-majors"]//div[@class="font-weight-bolder"]')
+  elements(:minor, :div, xpath: '//div[@id="student-bio-minors"]//div[@class="font-weight-bolder"]')
   elements(:college, :div, xpath: '//div[@id="student-bio-majors"]//div[@class="text-muted"]')
   elements(:discontinued_major, :div, xpath: '//div[@id="student-details-discontinued-majors"]//div[@class="font-weight-bolder"]')
   elements(:discontinued_college, :div, xpath: '//div[@id="student-details-discontinued-majors"]//div[@class="text-muted"]')
@@ -42,6 +43,7 @@ class BOACStudentPage
   div(:transfer, id: 'student-profile-transfer')
   div(:terms_in_attendance, id: 'student-bio-terms-in-attendance')
   div(:entered_term, id: 'student-bio-matriculation')
+  div(:visa, id: 'student-profile-visa')
   elements(:advisor_plan, :div, xpath: '//div[@id="student-profile-advisors"]//div[contains(@id,"-plan")]')
   elements(:advisor_name, :div, xpath: '//div[@id="student-profile-advisors"]//div[contains(@id,"-name")]')
   elements(:advisor_email, :div, xpath: '//div[@id="student-profile-advisors"]//div[contains(@id,"-email")]')
@@ -49,6 +51,7 @@ class BOACStudentPage
   div(:expected_graduation, id: 'student-bio-expected-graduation')
   div(:degree_type, id: 'student-bio-degree-type')
   div(:degree_date, id: 'student-bio-degree-date')
+  div(:alternate_email, id: 'student-profile-other-email')
   div(:additional_information_outer, id: 'additional-information-outer')
   elements(:degree_college, :div, xpath: '//div[@id="student-bio-degree-date"]//following-sibling::div')
 
@@ -74,6 +77,7 @@ class BOACStudentPage
       :name => (student_name_heading if student_name_heading?),
       :preferred_name => (preferred_name if preferred_name?),
       :email => (email_element.text if email?),
+      :email_alternate => (alternate_email.strip if alternate_email?),
       :phone => (phone if phone?),
       :cumulative_units => (cumulative_units.gsub("UNITS COMPLETED\n",'').gsub("\nNo data", '') if cumulative_units?),
       :cumulative_gpa => (cumulative_gpa.gsub("CUMULATIVE GPA\n",'').gsub("\nNo data", '').strip if cumulative_gpa?),
@@ -81,9 +85,11 @@ class BOACStudentPage
       :colleges => (college_elements.map { |c| c.text.strip }).reject(&:empty?),
       :majors_discontinued => (discontinued_major_elements.map { |m| m.text.gsub('Major', '').strip }),
       :colleges_discontinued => (discontinued_college_elements.map { |c| c.text.strip }).reject(&:empty?),
+      :minors => (minor_elements.map { |m| m.text.strip }),
       :level => (level.gsub("Level\n",'') if level?),
       :transfer => (transfer.strip if transfer?),
       :terms_in_attendance => (terms_in_attendance if terms_in_attendance?),
+      :visa => (visa.strip if visa?),
       :entered_term => (entered_term.gsub('Entered', '').strip if entered_term?),
       :intended_majors => (intended_major_elements.map { |m| m.text.strip }),
       :expected_graduation => (expected_graduation.gsub('Expected graduation','').strip if expected_graduation?),

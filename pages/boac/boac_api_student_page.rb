@@ -64,6 +64,7 @@ class BOACApiStudentPage
       :name => (sis_profile && sis_profile['name']),
       :preferred_name => (sis_profile && sis_profile['preferredName']),
       :email => (sis_profile && sis_profile['emailAddress']),
+      :email_alternate => (sis_profile && sis_profile['emailAddressAlternate']),
       :phone => (sis_profile && sis_profile['phoneNumber'].to_s),
       :term_units => (sis_profile && ((current_term ? formatted_units(current_term['enrolledUnits']) : '0') if terms.any?)),
       :term_units_min => (sis_profile && sis_profile['currentTerm'] && sis_profile['currentTerm']['unitsMinOverride']),
@@ -71,6 +72,7 @@ class BOACApiStudentPage
       :cumulative_units => (sis_profile && ((!sis_profile['cumulativeUnits'] || sis_profile['cumulativeUnits'].zero?) ? '--' : formatted_units(sis_profile['cumulativeUnits']))),
       :cumulative_gpa => (sis_profile && (sis_profile['cumulativeGPA'].nil? ? '--' : (sprintf '%.3f', sis_profile['cumulativeGPA']).to_s)),
       :majors => majors,
+      :minors => (((sis_profile && sis_profile['plansMinor']) || []).map { |m| m['description'] }),
       :level => (sis_profile && (sis_profile['level'] && sis_profile['level']['description'])),
       :transfer => (sis_profile && (sis_profile['transfer'])),
       :terms_in_attendance => (sis_profile && sis_profile['termsInAttendance'].to_s),
@@ -143,6 +145,28 @@ class BOACApiStudentPage
       :history => progress['requirements']['americanHistory']['status'],
       :institutions => progress['requirements']['americanInstitutions']['status']
     }
+  end
+
+  # Demographics
+
+  def demographics
+    @parsed && @parsed['demographics']
+  end
+
+  def demographics_data
+    {
+      visa: visa
+    }
+  end
+
+
+  def visa
+    if (visa_feed = (demographics && demographics['visa']))
+      {
+        status: visa_feed['status'],
+        type: visa_feed['type']
+      }
+    end
   end
 
   # Advisors
