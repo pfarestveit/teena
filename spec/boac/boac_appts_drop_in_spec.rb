@@ -439,7 +439,7 @@ describe 'BOA' do
 
         it('show the appointment detail') { expect(@visible_collapsed_date[:detail]).to eql(@appt_1.detail) }
         it('show the appointment status') { expect(@visible_collapsed_date[:status]).to eql('ASSIGNED') }
-        it('show the appointment date') { expect(@visible_collapsed_date[:created_date]).to eql(@advisor_student_page.expected_item_short_date_format @appt_1.created_date) }
+        it('show the appointment date') { expect(@visible_collapsed_date[:created_date]).to eql(@advisor_student_page.expected_item_short_date_format(@appt_1.created_date).split("\n")[1]) }
       end
 
       context 'when expanded' do

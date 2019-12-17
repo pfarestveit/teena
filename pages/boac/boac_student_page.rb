@@ -25,7 +25,7 @@ class BOACStudentPage
   h1(:not_found_msg, xpath: '//h1[text()="Not Found"]')
 
   button(:toggle_personal_details, :id => 'show-hide-personal-details')
-  div(:preferred_name, :id => 'student-preferred-name')
+  div(:preferred_name, :xpath => '//div[@id="student-preferred-name"]/span[2]')
   span(:sid, id: 'student-bio-sid')
   span(:inactive, id: 'student-bio-inactive')
   span(:phone, id: 'student-phone-number')
