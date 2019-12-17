@@ -243,7 +243,12 @@ describe 'BOAC' do
                               if site[:nessie_assigns_submitted][:score].empty?
                                 it("shows a 'No Data' assignments submitted count for #{site_test_case}") { expect(visible_site_data[:assigns_submit_no_data]).to be_truthy }
                               else
-                                it("shows the assignments submitted count for #{site_test_case}") { expect(visible_site_data[:assigns_submitted]).to eql(site[:nessie_assigns_submitted][:score]) }
+                                expected_count = site[:nessie_assigns_submitted][:score]
+                                if expected_count == '0'
+                                  it("shows the null or zero assignments submitted count for #{site_test_case}") { expect(%w(0 --)).to include(visible_site_data[:assigns_submitted]) }
+                                else
+                                  it("shows the assignments submitted count for #{site_test_case}") { expect(visible_site_data[:assigns_submitted]).to eql(site[:nessie_assigns_submitted][:score]) }
+                                end
                                 it("shows the assignments submitted max for #{site_test_case}") { expect(visible_site_data[:assigns_submitted_max]).to eql(site[:nessie_assigns_submitted][:max]) }
                               end
 

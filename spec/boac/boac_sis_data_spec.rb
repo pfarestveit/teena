@@ -11,7 +11,10 @@ describe 'BOAC' do
     hold_students = []
 
     # Create files for test output
-    user_profile_data_heading = %w(UID Name PreferredName Email Phone Units GPA Level Transfer Colleges Majors Terms Writing History Institutions Cultures Graduation Alerts Holds)
+    user_profile_data_heading = %w(UID Name PreferredName Email EmailAlt Phone Units GPA Level Transfer Colleges Majors
+                                   CollegesDisc MajorsDisc Minors Terms Writing History Institutions Cultures
+                                   AdvisorPlans AdvisorNames AdvisorEmails EnteredTerm MajorsIntend Visa GradExpect
+                                   GradDegree GradDate GradColleges Inactive Alerts Holds)
     user_profile_sis_data = Utils.create_test_output_csv('boac-sis-profiles.csv', user_profile_data_heading)
 
     user_course_data_heading = %w(UID Term UnitsMin UnitsMax CourseCode CourseName SectionCcn SectionCode Primary? Midpoint Grade GradingBasis Units EnrollmentStatus)
@@ -93,9 +96,9 @@ describe 'BOAC' do
 
         active_major_feed, inactive_major_feed = api_sis_profile_data[:majors].compact.partition { |m| m[:active] }
         active_majors = active_major_feed.map { |m| m[:major] }
-        active_colleges = active_major_feed.map { |m| m[:college] }
+        active_colleges = active_major_feed.map { |m| m[:college] }.compact
         inactive_majors = inactive_major_feed.map { |m| m[:major] }
-        inactive_colleges = inactive_major_feed.map { |m| m[:college] }
+        inactive_colleges = inactive_major_feed.map { |m| m[:college] }.compact
 
         if active_majors.any?
           it "shows the majors for UID #{student.uid} on the #{test.default_cohort.name} page" do
@@ -559,10 +562,16 @@ describe 'BOAC' do
       ensure
         if student_page_sis_data
           row = [student.uid, student_page_sis_data[:name], student_page_sis_data[:preferred_name], student_page_sis_data[:email],
-                 student_page_sis_data[:phone], student_page_sis_data[:cumulative_units], student_page_sis_data[:cumulative_gpa], student_page_sis_data[:level], student_page_sis_data[:transfer],
-                 student_page_sis_data[:colleges] && student_page_sis_data[:colleges] * '; ', student_page_sis_data[:majors] && student_page_sis_data[:majors] * '; ',
-                 student_page_sis_data[:terms_in_attendance], student_page_reqts[:reqt_writing], student_page_reqts[:reqt_history],
-                 student_page_reqts[:reqt_institutions], student_page_reqts[:reqt_cultures], student_page_sis_data[:expected_graduation], alert_msgs, hold_msgs]
+                 student_page_sis_data[:email_alternate], student_page_sis_data[:phone], student_page_sis_data[:cumulative_units],
+                 student_page_sis_data[:cumulative_gpa], student_page_sis_data[:level], student_page_sis_data[:transfer],
+                 student_page_sis_data[:colleges], student_page_sis_data[:majors], student_page_sis_data[:colleges_discontinued],
+                 student_page_sis_data[:majors_discontinued], student_page_sis_data[:minors], student_page_sis_data[:terms_in_attendance],
+                 student_page_reqts[:reqt_writing], student_page_reqts[:reqt_history], student_page_reqts[:reqt_institutions],
+                 student_page_reqts[:reqt_cultures], student_page_sis_data[:advisor_plans], student_page_sis_data[:advisor_names],
+                 student_page_sis_data[:advisor_emails], student_page_sis_data[:entered_term], student_page_sis_data[:intended_majors],
+                 student_page_sis_data[:visa], student_page_sis_data[:expected_graduation], student_page_sis_data[:graduation_degree],
+                 student_page_sis_data[:graduation_date], student_page_sis_data[:graduation_colleges], student_page_sis_data[:inactive],
+                 alert_msgs, hold_msgs]
           Utils.add_csv_row(user_profile_sis_data, row)
         end
       end
