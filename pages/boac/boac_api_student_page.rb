@@ -72,7 +72,7 @@ class BOACApiStudentPage
       :cumulative_units => (sis_profile && ((!sis_profile['cumulativeUnits'] || sis_profile['cumulativeUnits'].zero?) ? '--' : formatted_units(sis_profile['cumulativeUnits']))),
       :cumulative_gpa => (sis_profile && (sis_profile['cumulativeGPA'].nil? ? '--' : (sprintf '%.3f', sis_profile['cumulativeGPA']).to_s)),
       :majors => majors,
-      :minors => (((sis_profile && sis_profile['plansMinor']) || []).map { |m| m['description'] }),
+      :minors => minors,
       :level => (sis_profile && (sis_profile['level'] && sis_profile['level']['description'])),
       :transfer => (sis_profile && (sis_profile['transfer'])),
       :terms_in_attendance => (sis_profile && sis_profile['termsInAttendance'].to_s),
@@ -122,6 +122,21 @@ class BOACApiStudentPage
         }
       end
       majors.sort_by { |m| m[:active] ? 0 : 1 }
+    else
+      []
+    end
+  end
+
+  def minors
+    if sis_profile && sis_profile['plansMinor']
+      sis_profile['plansMinor'].map do |p|
+        {
+          active: p['status'] == 'Active',
+          college: p['program'],
+          minor: p['description'],
+          status: p['status']
+        }
+      end
     else
       []
     end

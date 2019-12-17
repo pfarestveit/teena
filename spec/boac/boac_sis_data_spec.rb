@@ -12,7 +12,7 @@ describe 'BOAC' do
 
     # Create files for test output
     user_profile_data_heading = %w(UID Name PreferredName Email EmailAlt Phone Units GPA Level Transfer Colleges Majors
-                                   CollegesDisc MajorsDisc Minors Terms Writing History Institutions Cultures
+                                   CollegesDisc MajorsDisc Minors MinorsDisc Terms Writing History Institutions Cultures
                                    AdvisorPlans AdvisorNames AdvisorEmails EnteredTerm MajorsIntend Visa GradExpect
                                    GradDegree GradDate GradColleges Inactive Alerts Holds)
     user_profile_sis_data = Utils.create_test_output_csv('boac-sis-profiles.csv', user_profile_data_heading)
@@ -99,6 +99,10 @@ describe 'BOAC' do
         active_colleges = active_major_feed.map { |m| m[:college] }.compact
         inactive_majors = inactive_major_feed.map { |m| m[:major] }
         inactive_colleges = inactive_major_feed.map { |m| m[:college] }.compact
+
+        active_minor_feed, inactive_minor_feed = api_sis_profile_data[:minors].partition { |m| m[:active] }
+        active_minors = active_minor_feed.map { |m| m[:minor] }
+        inactive_minors = inactive_minor_feed.map { |m| m[:minor] }
 
         if active_majors.any?
           it "shows the majors for UID #{student.uid} on the #{test.default_cohort.name} page" do
@@ -211,13 +215,23 @@ describe 'BOAC' do
           it("shows no discontinued colleges for UID #{student.uid} on the student page") { expect(student_page_sis_data[:colleges_discontinued].all?(&:empty?)).to be true }
         end
 
-        if api_sis_profile_data[:academic_career_status] != 'Completed' && api_sis_profile_data[:minors].any?
-          it "shows minors for UID #{student.uid} on the student page" do
-            expect(student_page_sis_data[:minors].sort).to eq(api_sis_profile_data[:minors].sort)
+        if api_sis_profile_data[:academic_career_status] != 'Completed' && active_minors.any?
+          it "shows active minors for UID #{student.uid} on the student page" do
+            expect(student_page_sis_data[:minors]).to eq(active_minors)
           end
         else
-          it "shows no minors for UID #{student.uid} on the student page" do
+          it "shows no active minors for UID #{student.uid} on the student page" do
             expect(student_page_sis_data[:minors]).to be_empty
+          end
+        end
+
+        if api_sis_profile_data[:academic_career_status] != 'Completed' && inactive_minors.any?
+          it "shows inactive minors for UID #{student.uid} on the student page" do
+            expect(student_page_sis_data[:minors_discontinued]).to eq(inactive_minors)
+          end
+        else
+          it "shows no inactive minors for UID #{student.uid} on the student page" do
+            expect(student_page_sis_data[:minors_discontinued]).to be_empty
           end
         end
 
@@ -564,8 +578,10 @@ describe 'BOAC' do
           row = [student.uid, student_page_sis_data[:name], student_page_sis_data[:preferred_name], student_page_sis_data[:email],
                  student_page_sis_data[:email_alternate], student_page_sis_data[:phone], student_page_sis_data[:cumulative_units],
                  student_page_sis_data[:cumulative_gpa], student_page_sis_data[:level], student_page_sis_data[:transfer],
-                 student_page_sis_data[:colleges], student_page_sis_data[:majors], student_page_sis_data[:colleges_discontinued],
-                 student_page_sis_data[:majors_discontinued], student_page_sis_data[:minors], student_page_sis_data[:terms_in_attendance],
+                 student_page_sis_data[:colleges], student_page_sis_data[:majors],
+                 student_page_sis_data[:colleges_discontinued], student_page_sis_data[:majors_discontinued],
+                 student_page_sis_data[:minors], student_page_sis_data[:minors_discontinued],
+                 student_page_sis_data[:terms_in_attendance],
                  student_page_reqts[:reqt_writing], student_page_reqts[:reqt_history], student_page_reqts[:reqt_institutions],
                  student_page_reqts[:reqt_cultures], student_page_sis_data[:advisor_plans], student_page_sis_data[:advisor_names],
                  student_page_sis_data[:advisor_emails], student_page_sis_data[:entered_term], student_page_sis_data[:intended_majors],
