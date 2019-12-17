@@ -19,6 +19,7 @@ module Page
       link(:how_to_mute_link, xpath: '//a[contains(.,"How to mute assignments in Gradebook")]')
       button(:see_gradebook_button, xpath: '//button[contains(.,"See in Gradebook")]')
       checkbox(:un_mute_all_cbx, id: 'bc-page-course-grade-export-unmute-assignments')
+      elements(:muted_assignment, :span, xpath: '//span[@data-ng-bind="assignment.name"]')
 
       h2(:set_grading_scheme_heading, xpath: '//h2[text()="Set Grading Scheme"]')
       link(:how_to_set_scheme_link, xpath: '//a[contains(.,"How to set a Grading Scheme")]')
@@ -46,6 +47,27 @@ module Page
         navigate_to "#{JunctionUtils.junction_base_url}/canvas/course_grade_export/#{course.site_id}"
       end
 
+      # Waits for an un-mute checkbox to appear on the tool. Sometimes there is a lag between muting a Canvas assignment and
+      # seeing the muted assignment on the E-Grades tool, so makes 5 attempts.
+      # @param driver [Selenium::WebDriver]
+      # @param course [Course]
+      def wait_for_un_mute_cbx(driver, course)
+        tries = 5
+        begin
+          load_embedded_tool(driver, course)
+          un_mute_all_cbx_element.when_visible Utils.short_wait
+        rescue => e
+          (tries -= 1).zero? ? Utils.log_error(e) : retry
+        end
+      end
+
+      # Returns all the visible muted assignment titles
+      # @return [Array<String>]
+      def muted_assignment_titles
+        wait_until(Utils.medium_wait) { muted_assignment_elements.any? }
+        muted_assignment_elements.map &:text
+      end
+
       # Clicks the 'un-mute all assignments' checkbox
       def click_un_mute_all
         logger.debug 'Clicking the un-mute checkbox'
@@ -57,7 +79,7 @@ module Page
       def click_set_default_scheme
         logger.debug 'Clicking the set default scheme checkbox'
         set_scheme_cbx_element.when_visible Utils.medium_wait
-        check_set_scheme_cbx
+        wait_for_update_and_click_js set_scheme_cbx_element
       end
 
       # Clicks the Continue button

@@ -8,6 +8,12 @@ module Page
     include Logging
     include Page
 
+    # Loads the assignments page for a given course site
+    # @param course [Course]
+    def load_page(course)
+      navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/assignments"
+    end
+
     # ASSIGNMENT CREATION
 
     link(:new_assignment_link, text: 'Assignment')
@@ -42,6 +48,8 @@ module Page
       published_button_element.when_visible Utils.medium_wait
       logger.info "Submission assignment URL is #{current_url}"
       assignment.url = current_url
+      assignment.id = assignment.url.split('/').last
+      assignment.url
     end
 
     # Creates a sync-able assignment on a course site
@@ -156,14 +164,9 @@ module Page
     link(:quiz_attempt_1_link, xpath: '//a[contains(text(),"Attempt 1")]')
     div(:quiz_submitted_msg, xpath: '//div[@class="quiz_score"]/following-sibling::div[contains(.,"Submitted")]')
 
-    # Returns all of a student's assignments on a course site
-    # @param driver [Selenium::WebDriver]
+    # Loads the list view assignments page for a course
     # @param course [Course]
-    # @param student [User]
-    # @param canvas_discussions [Page::CanvasAnnounceDiscussPage]
-    # @return [Array<Assignment>]
-    def get_assignments(driver, course, student, canvas_discussions)
-
+    def load_list_view_assignments(course)
       # Get all the assignments in list view
       navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/assignments"
       begin
@@ -175,14 +178,25 @@ module Page
 
       # Pause to avoid stale element errors
       sleep Utils.short_wait
+    end
 
-      # Collect all possible info from list view
-      assignments = list_view_assignment_elements.map do |el|
+    # Returns the first visible assignment
+    # @return [Assignment]
+    def first_visible_list_view_assignment
+      id = list_view_assignment_elements.first.attribute('data-item-id')
+      title = link_element(xpath: '//li[contains(@class, "assignment")]/div[contains(@id, "assignment_")]//a').text.strip
+      Assignment.new(id: id, title: title)
+    end
 
+    # Returns the Assignments visible on list view
+    # @return [Array<Assignment>]
+    def get_list_view_assignments(course)
+      load_list_view_assignments course
+      list_view_assignment_elements.map do |el|
         id = el.attribute('id').gsub('assignment_', '')
         assignment_xpath = "//div[@id='assignment_#{id}']"
         url = "#{Utils.canvas_base_url}/courses/#{course.site_id}/assignments/#{id}"
-        title = link_element(xpath: assignment_xpath).text.strip
+        title = link_element(xpath: "#{assignment_xpath}//a").text.strip
         type = 'roll-call' if title.include? 'Roll Call'
 
         # Due date and/or score (meaning submitted) are sometimes present on list view
@@ -205,14 +219,31 @@ module Page
 
         Assignment.new({:id => id, :type => type, :title => title, :url => url, :due_date => due_date, :submitted => submitted})
       end
+    end
+
+    # Loads the assignment detail page
+    # @param assign [Assignment]
+    def load_assignment_detail(assign)
+      navigate_to assign.url
+      sleep 1
+      h1_element(xpath: '//h1').when_visible Utils.short_wait
+    end
+
+    # Returns all of a student's assignments on a course site
+    # @param driver [Selenium::WebDriver]
+    # @param course [Course]
+    # @param student [User]
+    # @param canvas_discussions [Page::CanvasAnnounceDiscussPage]
+    # @return [Array<Assignment>]
+    def get_student_view_assignments(driver, course, student, canvas_discussions)
+      # Collect all possible info from list view
+      assignments = get_list_view_assignments course
 
       # Collect all possible info from detail view
       assignments.each do |assign|
         begin
           logger.debug "Checking assignment ID #{assign.id}"
-          navigate_to assign.url
-          sleep 1
-          h1_element(xpath: '//h1').when_visible Utils.short_wait
+          load_assignment_detail assign
 
           # Besides 'Roll Call', assignments can be Canvas assignments, Canvas quizzes, Canvas discussions, or external tools
           unless assign.type
@@ -271,6 +302,21 @@ module Page
       end
 
       assignments
+    end
+
+    link(:manage_assignment_link, xpath: '//a[contains(., "Manage Assignment")]')
+    link(:delete_assignment_link, xpath: '//a[contains(@class, "delete_assignment_link")]')
+
+    # Deletes all assignments with 'QA Test' in the title
+    # @param assignments [Array<Assignment>]
+    def delete_test_assignments(assignments)
+      test_assignments = assignments.select { |a| a.title.include? Utils.get_test_id.gsub(/\d+/, '') }
+      test_assignments.each do |a|
+        navigate_to "#{a.url}/edit"
+        wait_for_update_and_click manage_assignment_link_element
+        alert { wait_for_update_and_click delete_assignment_link_element }
+        sleep Utils.short_wait
+      end
     end
 
   end

@@ -27,6 +27,7 @@ describe 'bCourses E-Grades Export', order: :defined do
     @driver = Utils.launch_browser
     @cal_net = Page::CalNetPage.new @driver
     @canvas = Page::CanvasGradesPage.new @driver
+    @canvas_assignments_page = Page::CanvasAssignmentsPage.new @driver
     @splash_page = Page::JunctionPages::SplashPage.new @driver
     @e_grades_export_page = Page::JunctionPages::CanvasEGradesExportPage.new @driver
     @course_add_user_page = Page::JunctionPages::CanvasCourseAddUserPage.new @driver
@@ -44,9 +45,23 @@ describe 'bCourses E-Grades Export', order: :defined do
 
     @canvas.log_in(@cal_net, Utils.super_admin_username, Utils.super_admin_password)
     @canvas.masquerade_as(@driver, teacher)
+
+    # Get a graded assignment already on the site to use for testing hidden grades
+    @graded_assignment = @canvas_assignments_page.get_list_view_assignments(course).first
+
+    # Create an ungraded assignment to use for testing manual grading policy
+    @ungraded_assignment = Assignment.new(title: Utils.get_test_id)
+    @canvas.set_grade_policy_manual course
+    @canvas_assignments_page.create_assignment(course, @ungraded_assignment)
   end
 
-  after(:all) { Utils.quit_browser @driver }
+  after(:all) do
+    @canvas.stop_masquerading @driver
+    assignments = @canvas_assignments_page.get_list_view_assignments course
+    @canvas_assignments_page.delete_test_assignments assignments
+  ensure
+    Utils.quit_browser @driver
+  end
 
   it 'offers an E-Grades Export button on the Gradebook' do
     @canvas.load_gradebook course
@@ -55,11 +70,12 @@ describe 'bCourses E-Grades Export', order: :defined do
     @e_grades_export_page.wait_until(1, 'Wrong Junction environment is configured') { @e_grades_export_page.i_frame_form_element? JunctionUtils.junction_base_url }
   end
 
-  context 'when no grading scheme is enabled and an assignment is muted' do
+  context 'when no grading scheme is enabled and assignments are muted' do
 
     before(:all) do
       @canvas.disable_grading_scheme course
-      @canvas.set_grade_policy_manual course
+      @canvas.load_gradebook course
+      @canvas.hide_assignment_grades @graded_assignment
     end
 
     before(:each) { @e_grades_export_page.load_embedded_tool(@driver, course) }
@@ -69,7 +85,15 @@ describe 'bCourses E-Grades Export', order: :defined do
       expect(@e_grades_export_page.continue_button_element.attribute('disabled')).to eql('true')
     end
 
-    it 'offers a "How to mute assignments in Gradebook" link' do
+    it('shows the user the muted assignment with hidden grades') do
+      @e_grades_export_page.wait_until(Utils.short_wait, "Expected #{@e_grades_export_page.muted_assignment_titles} to include #{@graded_assignment.title}") do
+        @e_grades_export_page.muted_assignment_titles.include? @graded_assignment.title
+      end
+    end
+
+    it('shows the user the muted assignment with a manual grading policy') { expect(@e_grades_export_page.muted_assignment_titles).to include(@ungraded_assignment.title) }
+
+    it 'offers a "How to mute/un-mute assignments in Gradebook" link' do
       expect(@e_grades_export_page.external_link_valid?(@driver, @e_grades_export_page.how_to_mute_link_element, 'How do I mute or unmute an assignment in the Gradebook? | Canvas Instructor Guide | Canvas Guides')).to be true
     end
 
@@ -113,9 +137,14 @@ describe 'bCourses E-Grades Export', order: :defined do
   context 'when a grading scheme is enabled but an assignment is muted' do
 
     before(:all) do
-      @canvas.set_grade_policy_manual course
-      @e_grades_export_page.load_embedded_tool(@driver, course)
+      @canvas.load_gradebook course
+      @canvas.set_assign_grade_policy_manual @ungraded_assignment
+      @canvas.hide_assignment_grades @graded_assignment
     end
+
+    it('offers the user an un-mute all checkbox') { @e_grades_export_page.wait_for_un_mute_cbx(@driver, course) }
+    it('shows the user the muted assignment with hidden grades') { expect(@e_grades_export_page.muted_assignment_titles).to include(@graded_assignment.title) }
+    it('shows the user the muted assignment with a manual grading policy') { expect(@e_grades_export_page.muted_assignment_titles).to include(@ungraded_assignment.title) }
 
     it('offers a "How to mute assignments in Gradebook" link') { expect(@e_grades_export_page.how_to_mute_link_element.when_present Utils.medium_wait).to be_truthy }
     it('offers a "See in Gradebook" link') { expect(@e_grades_export_page.see_gradebook_button_element.when_present Utils.medium_wait).to be_truthy }

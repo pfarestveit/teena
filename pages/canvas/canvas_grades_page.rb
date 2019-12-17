@@ -18,9 +18,11 @@ module Page
       logger.info "Making sure grading scheme is disabled for course ID #{course.site_id}"
       navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/settings"
       set_grading_scheme_cbx_element.when_present Utils.medium_wait
+      scroll_to_bottom
       if set_grading_scheme_cbx_checked?
-        wait_for_update_and_click_js set_grading_scheme_cbx_element
-        wait_for_update_and_click_js update_course_button_element
+        wait_for_update_and_click set_grading_scheme_cbx_element
+        sleep 1
+        wait_for_update_and_click update_course_button_element
         update_course_success_element.when_visible Utils.medium_wait
       else
         logger.info 'Grading scheme already disabled'
@@ -49,7 +51,8 @@ module Page
     button(:gradebook_settings_button, id: 'gradebook-settings-button')
     div(:grade_posting_policy_tab, xpath: '//div[text()="Grade Posting Policy"]')
     checkbox(:gradebook_include_ungraded, xpath: '//span[text()="Automatically apply grade for missing submissions"]/ancestor::label/preceding-sibling::input')
-    text_field(:gradebook_manual_posting_input, xpath: '//input[@name="postPolicy"][@value="manual"]')
+    paragraph(:gradebook_manual_posting_msg, xpath: '//p[contains(text(), "While the grades for an assignment are set to manual")]')
+    text_field(:gradebook_manual_posting_input, xpath: '//input[@name="postPolicy"][@value="manual"]/following-sibling::label/span')
     button(:gradebook_settings_update_button, id: 'gradebook-settings-update-button')
 
     # Clicks the gradebook settings button
@@ -66,21 +69,21 @@ module Page
       gradebook_include_ungraded_checked?
     end
 
-    # Ensures that an assignment is muted on a course site
+    # Ensures that new assignments will have a manual grading policy
     # @param course [Course]
     def set_grade_policy_manual(course)
       logger.info "Setting manual posting policy for course ID #{course.site_id}"
       load_gradebook course
       click_gradebook_settings
       wait_for_update_and_click grade_posting_policy_tab_element
-      if gradebook_manual_posting_input_element.attribute('tabindex') == '0'
+      gradebook_manual_posting_input_element.when_visible 2
+      if gradebook_manual_posting_msg?
         logger.debug 'Posting policy is already manual'
         hit_escape
       else
         wait_for_update_and_click gradebook_manual_posting_input_element
-        wait_until(1) { gradebook_manual_posting_input_element.attribute('tabindex') == '0' }
-        wait_for_update_and_click gradebook_settings_update_button_element
-        wait_for_flash_msg('Gradebook Settings updated', Utils.short_wait)
+        wait_for_update_and_click_js gradebook_settings_update_button_element
+        wait_for_flash_msg('Gradebook Settings updated', Utils.medium_wait)
       end
     end
 
@@ -92,6 +95,13 @@ module Page
     button(:actions_button, xpath: '//button[contains(., "Actions")]')
     span(:grades_export_button, xpath: '//span[@data-menu-id="export"]')
     text_field(:individual_view_input, xpath: '//input[@value="Individual View"]')
+
+    span(:assignment_hide_grades, xpath: '//span[text()="Hide grades"]')
+    span(:assignment_grades_hidden, xpath: '//span[text()="All grades hidden"]')
+    button(:assignment_hide_grades_hide_button, xpath: '//button[contains(., "Hide")]')
+    span(:assignment_posting_policy, xpath: '//span[text()="Grade Posting Policy"]')
+    text_field(:assignment_manual_posting_input, xpath: '//input[@name="postPolicy"][@value="manual"]/following-sibling::label/span')
+    button(:assignment_posting_policy_save, xpath: '//button[contains(., "Save")]')
 
     div(:total_grade_column, xpath: '//div[contains(@id, "total_grade")]')
     link(:total_grade_menu_link, xpath: '//div[contains(@id, "total_grade")]//button')
@@ -116,6 +126,58 @@ module Page
         logger.error 'E-Grades export button has not appeared, hard-refreshing the page'
         browser.execute_script('location.reload(true);')
         e_grades_export_link_element.when_visible Utils.medium_wait
+      end
+    end
+
+    # Mouses over an assignment's column header to reveal the settings button
+    # @param assignment [Assignment]
+    def mouseover_assignment_header(assignment)
+      xpath = "//div[contains(@id, 'slickgrid') and contains(@id, 'assignment_#{assignment.id}')]"
+      wait_until(Utils.medium_wait) { browser.find_element(xpath: xpath) }
+      mouseover(browser, browser.find_element(xpath: xpath))
+    end
+
+    # Returns the settings button for a given assignment
+    # @param assignment [Assignment]
+    # @return [PageObject::Elements::Button]
+    def assignment_settings_button(assignment)
+      button_element(xpath: "//a[contains(@href, '/assignments/#{assignment.id}')]/ancestor::div[contains(@class, 'Gradebook__ColumnHeaderContent')]//button")
+    end
+
+    # Sets a manual grading policy on a given assignment
+    # @param assignment [Assignment]
+    def set_assign_grade_policy_manual(assignment)
+      logger.info "Setting grade posting policy to manual on assignment #{assignment.id}"
+      mouseover_assignment_header assignment
+      wait_for_load_and_click assignment_settings_button(assignment)
+      wait_for_update_and_click assignment_posting_policy_element
+      if assignment_manual_posting_input_element.attribute('tabindex') == '0'
+        logger.debug 'Posting policy is already manual'
+        hit_escape
+      else
+        wait_for_update_and_click assignment_manual_posting_input_element
+        wait_for_update_and_click assignment_posting_policy_save_element
+        wait_for_flash_msg('Success!', Utils.short_wait)
+      end
+    end
+
+    # Hides the grades for a given assignment
+    # @param assignment [Assignment]
+    def hide_assignment_grades(assignment)
+      logger.info "Hiding posted grades on assignment #{assignment.id}"
+      mouseover_assignment_header assignment
+      wait_for_load_and_click assignment_settings_button(assignment)
+      wait_until(Utils.medium_wait, 'Found neither the "hide" element nor the "hidden" element') do
+        assignment_hide_grades? || assignment_grades_hidden?
+      end
+      if assignment_grades_hidden?
+        logger.debug 'Grades are already hidden'
+        hit_escape
+      else
+        wait_for_update_and_click assignment_hide_grades_element
+        sleep Utils.click_wait
+        wait_for_update_and_click assignment_hide_grades_hide_button_element
+        wait_for_flash_msg('Success!', Utils.medium_wait)
       end
     end
 
