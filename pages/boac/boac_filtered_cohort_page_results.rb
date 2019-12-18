@@ -169,6 +169,18 @@ module BOACFilteredCohortPageResults
     test.searchable_data.select { |u| u[:underrepresented_minority] }
   end
 
+  # Returns the student hashes that match a visa type filter
+  # @param test [BOACTestConfig]
+  # @param search_criteria [CohortFilter]
+  # @return [Array<Hash>]
+  def matching_visa_type_students(test, search_criteria)
+    students = []
+    search_criteria.visa_type.each do |visa|
+      students << test.searchable_data.select { |u| search_criteria.visa_type_per_code(u[:visa_type]) == visa }
+    end
+    students.flatten
+  end
+
   # Returns the student hashes that match a set of academic plan filters
   # @param test [BOACTestConfig]
   # @param search_criteria [CohortFilter]
@@ -304,6 +316,7 @@ module BOACFilteredCohortPageResults
     matches << matching_ethnicity_students(test, search_criteria) if search_criteria.ethnicity&.any?
     matches << matching_gender_students(test, search_criteria) if search_criteria.gender&.any?
     matches << matching_minority_students(test) if search_criteria.underrepresented_minority
+    matches << matching_visa_type_students(test, search_criteria) if search_criteria.visa_type&.any?
     matches << matching_acad_plan_students(test, search_criteria) if search_criteria.cohort_owner_academic_plans&.any?
     matches << matching_asc_inactive_students(test)if search_criteria.asc_inactive
     matches << matching_asc_intensive_students(test) if search_criteria.asc_intensive

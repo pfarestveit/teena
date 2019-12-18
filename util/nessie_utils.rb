@@ -297,6 +297,8 @@ class NessieUtils < Utils
                     student.student_academic_status.gpa AS gpa,
                     student.student_academic_status.level AS level_code,
                     student.student_majors.major AS majors,
+                    student.visas.visa_status AS visa_status,
+                    student.visas.visa_type AS visa_type,
                     current_term.enrolled_units AS units_in_progress,
                     current_term.midpoint_deficient_grade AS mid_point_deficient,
                     previous_term.term_gpa AS gpa_last_term,
@@ -320,6 +322,8 @@ class NessieUtils < Utils
                ON student.student_academic_status.sid = student.student_profiles.sid
              LEFT JOIN student.student_majors
                ON student.student_academic_status.sid = student.student_majors.sid
+             LEFT JOIN student.visas
+               ON student.student_academic_status.sid = student.visas.sid
              LEFT JOIN boac_advising_asc.students
                ON student.student_academic_status.sid = boac_advising_asc.students.sid
              LEFT JOIN boac_advising_coe.students
@@ -334,7 +338,7 @@ class NessieUtils < Utils
                  AND previous_term.term_id = '#{BOACUtils.previous_term_code}'
              GROUP BY student_academic_status.uid, student_academic_status.sid, student_academic_status.first_name,
                       student_academic_status.last_name, student.student_profiles.profile, student.student_academic_status.gpa,
-                      student.student_academic_status.level, student.student_majors.major, current_term.enrolled_units,
+                      student.student_academic_status.level, student.student_majors.major, student.visas.visa_type, student.visas.visa_status, current_term.enrolled_units,
                       current_term.midpoint_deficient_grade, previous_term.term_gpa, boac_advising_asc.students.intensive,
                       boac_advising_coe.students.advisor_ldap_uid, boac_advising_coe.students.gender, boac_advising_coe.students.ethnicity,
                       boac_advising_coe.students.minority, boac_advising_coe.students.did_prep, boac_advising_coe.students.prep_eligible,
@@ -398,6 +402,7 @@ class NessieUtils < Utils
         :underrepresented_minority => (demographics && demographics['underrepresented']),
         :units_in_progress => units_in_progress,
         :units_completed => cumulative_units,
+        :visa_type => (v[0]['visa_type'] if v[0]['visa_status'] == 'G'),
         :asc_active => asc_active,
         :asc_intensive => (v[0]['intensive_asc'] == 't'),
         :asc_sports => squad_names,

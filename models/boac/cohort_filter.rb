@@ -25,7 +25,8 @@ class CohortFilter
                 :mid_point_deficient,
                 :transfer_student,
                 :underrepresented_minority,
-                :units_completed
+                :units_completed,
+                :visa_type
 
 
   # Sets cohort filters based on test data
@@ -46,6 +47,7 @@ class CohortFilter
     @ethnicity = (test_data['ethnicities'] && test_data['ethnicities'].map { |e| e['ethnicity'] })
     @gender = (test_data['genders'] && test_data['genders'].map { |g| g['gender'] })
     @underrepresented_minority = test_data['underrepresented_minority']
+    @visa_type = (test_data['visa_types'] && test_data['visa_types'].map { |v| v['visa_type'] })
     @last_name = (test_data['last_initials'] && test_data['last_initials'].map { |l| l['last_initial'] })
 
     # My Students
@@ -130,6 +132,22 @@ class CohortFilter
         'Other Asian'
       else
         logger.warn "Unrecognized Ethnicity (COE): '#{code}'" if code && !code.empty? && code != 'Z'
+    end
+  end
+
+  # Visa type translations
+  # @param code [String]
+  # @return [String]
+  def visa_type_per_code(code)
+    case code
+      when 'F1'
+        'F-1 International Student'
+      when 'J1'
+        'J-1 International Student'
+      when 'PR'
+        'Permanent Resident'
+      else
+        'Other'
     end
   end
 
