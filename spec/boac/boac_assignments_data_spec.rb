@@ -87,7 +87,7 @@ describe 'BOAC assignment analytics' do
                   @canvas_assignments_page.stop_masquerading(@driver) if @canvas_assignments_page.stop_masquerading_link?
                   @e_grades_page.resolve_all_issues(@driver, course)
                   @canvas_assignments_page.masquerade_as(@driver, student)
-                  ui_assignments = @canvas_assignments_page.get_assignments(@driver, course, student, @canvas_discussions_page)
+                  ui_assignments = @canvas_assignments_page.get_student_view_assignments(@driver, course, student, @canvas_discussions_page)
                   nessie_assignments = NessieUtils.get_assignments(student, course)
 
                   if ui_assignments.any?

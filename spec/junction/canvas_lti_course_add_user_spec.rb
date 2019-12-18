@@ -78,7 +78,7 @@ describe 'bCourses Find a Person to Add', order: :defined do
 
     it 'allows the user to search by name' do
       @course_add_user_page.search('Bear', 'Last Name, First Name')
-      @course_add_user_page.wait_until(Utils.medium_wait) { @course_add_user_page.name_results(@driver).include? 'Oski Bear' }
+      @course_add_user_page.wait_until(Utils.medium_wait) { @course_add_user_page.uid_results(@driver).include? "#{Utils.oski_uid}" }
     end
 
     it 'notifies the user if a name search produces no results' do
@@ -120,7 +120,7 @@ describe 'bCourses Find a Person to Add', order: :defined do
 
     it 'offers the right course site sections' do
       @course_add_user_page.search('Bear', 'Last Name, First Name')
-      @course_add_user_page.wait_until(Utils.medium_wait) { @course_add_user_page.name_results(@driver).include? 'Oski Bear' }
+      @course_add_user_page.wait_until(Utils.medium_wait) { @course_add_user_page.uid_results(@driver).include? "#{Utils.oski_uid}" }
       expect(@course_add_user_page.course_section_options.length).to eql(sections_for_site.length)
     end
   end
