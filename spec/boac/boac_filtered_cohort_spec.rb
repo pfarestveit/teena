@@ -541,6 +541,18 @@ describe 'BOAC', order: :defined do
       @cohort_page.verify_filters_present test.default_cohort
     end
 
+    it 'allows the advisor to edit a Visa Type filter' do
+      test.default_cohort.search_criteria.visa_type = ['Permanent Resident']
+      @cohort_page.edit_filter_and_confirm('Visa Type', test.default_cohort.search_criteria.visa_type.first)
+      @cohort_page.verify_filters_present test.default_cohort
+    end
+
+    it 'allows the advisor to remove a Visa Type filter' do
+      test.default_cohort.search_criteria.visa_type = []
+      @cohort_page.remove_filter_of_type 'Visa Type'
+      @cohort_page.verify_filters_present test.default_cohort
+    end
+
     it 'allows the advisor to edit a Gender filter' do
       test.default_cohort.search_criteria.gender = ['Female']
       @cohort_page.edit_filter_and_confirm('Gender', test.default_cohort.search_criteria.gender.first)

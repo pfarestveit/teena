@@ -208,6 +208,7 @@ class BOACTestConfig < TestConfig
         :last_name => [JSON.parse("{\"min\": \"A\", \"max\": \"Z\"}")],
         :underrepresented_minority => true,
         :ethnicity => ['Puerto Rican'],
+        :visa_type => ['Other'],
         :asc_inactive => true,
         :asc_intensive => true,
         :asc_team => [Squad::MCR],

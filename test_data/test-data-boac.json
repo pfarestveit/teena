@@ -1,6 +1,15 @@
 {
     "filters": [
         {
+            "visa_types": [
+                {"visa_type":  "F-1 International Student"},
+                {"visa_type":  "J-1 International Student"}
+            ],
+            "ethnicities": [
+                {"ethnicity":  "Other Spanish-American / Latino"}
+            ]
+        },
+        {
             "entering_terms": [
                 {"entering_term": "2138"},
                 {"entering_term": "2148"}

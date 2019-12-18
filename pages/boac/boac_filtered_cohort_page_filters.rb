@@ -136,6 +136,7 @@ module BOACFilteredCohortPageFilters
     cohort.search_criteria.cohort_owner_academic_plans.each { |e| select_new_filter('cohortOwnerAcademicPlans', e) } if cohort.search_criteria.cohort_owner_academic_plans
     select_new_filter 'underrepresented' if cohort.search_criteria.underrepresented_minority
     cohort.search_criteria.ethnicity.each { |e| select_new_filter('ethnicities', e) } if cohort.search_criteria.ethnicity
+    cohort.search_criteria.visa_type.each { |v| select_new_filter('visaTypes', v) } if cohort.search_criteria.visa_type
 
     # CoE
     cohort.search_criteria.coe_advisor.each { |a| select_new_filter('coeAdvisorLdapUids', a) } if cohort.search_criteria.coe_advisor
@@ -230,6 +231,7 @@ module BOACFilteredCohortPageFilters
         filters.ethnicity.each { |e| existing_filter_element('Ethnicity', e).exists? } if filters.ethnicity&.any?
         filters.gender.each { |g| existing_filter_element('Gender', g).exists? } if filters.gender&.any?
         existing_filter_element('Underrepresented Minority').exists? if filters.underrepresented_minority
+        filters.visa_type.each { |v| existing_filter_element('Visa Type', v).exists? } if filters.visa_type&.any?
 
         existing_filter_element('Inactive (ASC)').exists? if filters.asc_inactive
         existing_filter_element('Intensive').exists? if filters.asc_intensive
