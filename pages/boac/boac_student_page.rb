@@ -39,6 +39,7 @@ class BOACStudentPage
   elements(:college, :div, xpath: '//div[@id="student-bio-majors"]//div[@class="text-muted"]')
   elements(:discontinued_major, :div, xpath: '//div[@id="student-details-discontinued-majors"]//div[@class="font-weight-bolder"]')
   elements(:discontinued_college, :div, xpath: '//div[@id="student-details-discontinued-majors"]//div[@class="text-muted"]')
+  elements(:discontinued_minor, :div, xpath: '//div[@id="student-details-discontinued-minors"]//div[@class="font-weight-bolder"]')
   div(:level, xpath: '//div[@id="student-bio-level"]/div')
   div(:transfer, id: 'student-profile-transfer')
   div(:terms_in_attendance, id: 'student-bio-terms-in-attendance')
@@ -86,6 +87,7 @@ class BOACStudentPage
       :majors_discontinued => (discontinued_major_elements.map { |m| m.text.gsub('Major', '').strip }),
       :colleges_discontinued => (discontinued_college_elements.map { |c| c.text.strip }).reject(&:empty?),
       :minors => (minor_elements.map { |m| m.text.strip }),
+      :minors_discontinued => (discontinued_minor_elements.map { |m| m.text.strip }),
       :level => (level.gsub("Level\n",'') if level?),
       :transfer => (transfer.strip if transfer?),
       :terms_in_attendance => (terms_in_attendance if terms_in_attendance?),
