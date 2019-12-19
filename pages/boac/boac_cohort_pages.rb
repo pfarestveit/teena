@@ -226,6 +226,12 @@ module BOACCohortPages
     sort_by 'GPA (Cumulative)'
   end
 
+  # Sorts cohort search results by a given previous term
+  # @param term_code [String]
+  def sort_by_last_term_gpa(term_code)
+    sort_by "term_gpa_#{term_code}"
+  end
+
   # Sorts cohort search results by level
   def sort_by_level
     sort_by 'Level'

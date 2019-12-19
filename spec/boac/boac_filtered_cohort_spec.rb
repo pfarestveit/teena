@@ -96,6 +96,32 @@ describe 'BOAC', order: :defined do
         end
       end
 
+      it "sorts by GPA (term #{BOACUtils.previous_term_code}) all the students who match #{cohort.search_criteria.list_filters}" do
+        term = BOACUtils.previous_term_code
+        if (0..1) === cohort.member_data.length
+          logger.warn "Skipping sort-by-term-#{term}-GPA test since there are no results or only one result"
+        else
+          @cohort_page.sort_by_last_term_gpa term
+          expected_results = @cohort_page.expected_sids_by_gpa_last_term cohort.member_data
+          visible_results = @cohort_page.visible_sids
+          @cohort_page.verify_list_view_sorting(expected_results, visible_results)
+          @cohort_page.wait_until(1, "Expected #{expected_results} but got #{visible_results}") { visible_results == expected_results }
+        end
+      end
+
+      it "sorts by GPA (#{BOACUtils.previous_term_code BOACUtils.previous_term_code}) all the students who match #{cohort.search_criteria.list_filters}" do
+        term = BOACUtils.previous_term_code BOACUtils.previous_term_code
+        if (0..1) === cohort.member_data.length
+          logger.warn "Skipping sort-by-term-#{term}-GPA test since there are no results or only one result"
+        else
+          @cohort_page.sort_by_last_term_gpa term
+          expected_results = @cohort_page.expected_sids_by_gpa_last_last_term cohort.member_data
+          visible_results = @cohort_page.visible_sids
+          @cohort_page.verify_list_view_sorting(expected_results, visible_results)
+          @cohort_page.wait_until(1, "Expected #{expected_results} but got #{visible_results}") { visible_results == expected_results }
+        end
+      end
+
       it "sorts by Level all the students who match #{cohort.search_criteria.list_filters}" do
         if (0..1) === cohort.member_data.length
           logger.warn 'Skipping sort-by-level test since there are no results or only one result'
@@ -385,7 +411,7 @@ describe 'BOAC', order: :defined do
 
       it 'an error prompts for logical numeric input' do
         @cohort_page.choose_new_filter_sub_option(filter_name, {'min' => '4', 'max' => '0'})
-        @cohort_page.gpa_filter_logical_error_element.when_visible 1
+        @cohort_page.gpa_filter_logical_error_element.when_visible 3
       end
 
       it 'an error prompts for numeric input from 0 to 4' do

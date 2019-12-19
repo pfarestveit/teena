@@ -34,9 +34,11 @@ class BOACUtils < Utils
   end
 
   # Returns the previous BOAC semester code
-  def self.previous_term_code
-    current_code = @config['term_code'].to_i
-    previous_code = current_code - (if (current_code % 10 == 2) then 4 else 3 end)
+  # @param code [String]
+  # @return [String]
+  def self.previous_term_code(code = nil)
+    current_code = code ? code.to_i : @config['term_code'].to_i
+    previous_code = current_code - ((current_code % 10 == 2) ? 4 : 3)
     previous_code.to_s
   end
 
