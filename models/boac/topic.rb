@@ -66,7 +66,6 @@ class Topic
       READING_AND_COMP = new('Reading & Composition', true, false),
       READMISSION = new('Readmission', true, true),
       READMISSION_AFTER_DISMISSAL = new('Readmission After Dismissal', true, false),
-      READMISSION_WITHDRAWAL = new('Readmission, Withdrawal', false, true),
       REFER_TO_ACAD_DEPT = new('Refer to Academic Department', true, false),
       REFER_TO_CAREER_CENTER = new('Refer to Career Center', true, false),
       REFER_TO_RESOURCES = new('Refer to Resources', true, false),
