@@ -20,10 +20,16 @@ module Page
       set_grading_scheme_cbx_element.when_present Utils.medium_wait
       scroll_to_bottom
       if set_grading_scheme_cbx_checked?
-        wait_for_update_and_click set_grading_scheme_cbx_element
-        sleep 1
-        wait_for_update_and_click update_course_button_element
-        update_course_success_element.when_visible Utils.medium_wait
+        begin
+          wait_for_update_and_click set_grading_scheme_cbx_element
+          sleep 1
+          wait_for_update_and_click update_course_button_element
+          update_course_success_element.when_visible Utils.medium_wait
+        rescue => e
+          logger.error e.message
+          wait_for_update_and_click update_course_button_element
+          update_course_success_element.when_visible Utils.medium_wait
+        end
       else
         logger.info 'Grading scheme already disabled'
       end
