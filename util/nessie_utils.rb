@@ -301,7 +301,16 @@ class NessieUtils < Utils
                     student.visas.visa_type AS visa_type,
                     current_term.enrolled_units AS units_in_progress,
                     current_term.midpoint_deficient_grade AS mid_point_deficient,
-                    previous_term.term_gpa AS gpa_last_term,
+                    (SELECT student.student_term_gpas.gpa
+                     FROM student.student_term_gpas
+                     WHERE student.student_term_gpas.sid = student_academic_status.sid
+                       AND student.student_term_gpas.term_id = '#{previous_term_code = BOACUtils.previous_term_code}'
+                       AND student.student_term_gpas.units_taken_for_gpa != '0.0') AS gpa_last_term,
+                    (SELECT student.student_term_gpas.gpa
+                     FROM student.student_term_gpas
+                     WHERE student.student_term_gpas.sid = student_academic_status.sid
+                       AND student.student_term_gpas.term_id = '#{BOACUtils.previous_term_code previous_term_code}'
+                       AND student.student_term_gpas.units_taken_for_gpa != '0.0') AS gpa_last_last_term,
                     (ARRAY_AGG (boac_advising_asc.students.group_code || ',' || boac_advising_asc.students.active))
                       AS group_codes_with_status,
                     boac_advising_asc.students.intensive AS intensive_asc,
@@ -333,13 +342,12 @@ class NessieUtils < Utils
              LEFT JOIN student.student_enrollment_terms current_term
                ON student.student_academic_status.sid = current_term.sid
                  AND current_term.term_id = '#{BOACUtils.term_code}'
-             LEFT JOIN student.student_enrollment_terms previous_term
-               ON student.student_academic_status.sid = previous_term.sid
-                 AND previous_term.term_id = '#{BOACUtils.previous_term_code}'
+             LEFT JOIN student.student_term_gpas
+               ON student.student_academic_status.sid = student.student_term_gpas.sid
              GROUP BY student_academic_status.uid, student_academic_status.sid, student_academic_status.first_name,
                       student_academic_status.last_name, student.student_profiles.profile, student.student_academic_status.gpa,
                       student.student_academic_status.level, student.student_majors.major, student.visas.visa_type, student.visas.visa_status, current_term.enrolled_units,
-                      current_term.midpoint_deficient_grade, previous_term.term_gpa, boac_advising_asc.students.intensive,
+                      current_term.midpoint_deficient_grade, gpa_last_term, gpa_last_last_term, boac_advising_asc.students.intensive,
                       boac_advising_coe.students.advisor_ldap_uid, boac_advising_coe.students.gender, boac_advising_coe.students.ethnicity,
                       boac_advising_coe.students.minority, boac_advising_coe.students.did_prep, boac_advising_coe.students.prep_eligible,
                       boac_advising_coe.students.did_tprep, boac_advising_coe.students.tprep_eligible, boac_advising_coe.students.probation,
@@ -395,6 +403,7 @@ class NessieUtils < Utils
         :gender => (demographics && demographics['gender']),
         :gpa => v[0]['gpa'],
         :gpa_last_term => v[0]['gpa_last_term'],
+        :gpa_last_last_term => v[0]['gpa_last_last_term'],
         :level => level,
         :major => (v.map { |h| h['majors'] }).uniq.compact,
         :mid_point_deficient => (v[0]['mid_point_deficient'] == 't'),
