@@ -59,7 +59,7 @@ class BOACTestConfig < TestConfig
 
     dept_id = BOACUtils.get_dept_id @dept
     BOACUtils.convert_user_to_advisor(@dept, dept_id, @advisor)
-    BOACUtils.convert_user_to_available_drop_in(@dept, dept_id, @drop_in_advisor)
+    BOACUtils.convert_user_to_unavailable_drop_in(@dept, dept_id, @drop_in_advisor)
     BOACUtils.convert_user_to_scheduler(@dept, dept_id, @drop_in_scheduler)
     logger.warn "Advisor-only UID #{@advisor.uid}, drop-in advisor UID #{@drop_in_advisor.uid}, scheduler UID #{@drop_in_scheduler.uid}"
   end

@@ -666,9 +666,9 @@ class BOACUtils < Utils
   # @param dept [BOACDepartments]
   # @param dept_id [String]
   # @param user [BOACUser]
-  def self.convert_user_to_available_drop_in(dept, dept_id, user)
+  def self.convert_user_to_unavailable_drop_in(dept, dept_id, user)
     logger.info "Converting UID #{user.uid} into an drop-in advisor in dept #{dept.code} ID #{dept_id}"
-    role = AdvisorRole.new(is_advisor: true, is_available: true, is_director: false, is_scheduler: false, is_drop_in_advisor: true)
+    role = AdvisorRole.new(is_advisor: true, is_available: false, is_director: false, is_scheduler: false, is_drop_in_advisor: true)
     convert_user_to_role(dept, dept_id, user, role)
   end
 
@@ -824,6 +824,7 @@ class BOACUtils < Utils
     appt.id = results[0]['id']
     appt.created_date = Time.parse(results[0]['created_at'].to_s).utc.localtime
     logger.info "Appointment ID is #{appt.id}"
+    appt.inspect
   end
 
   def self.delete_appts(appts)

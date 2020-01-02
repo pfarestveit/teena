@@ -124,6 +124,7 @@ module BOACApptIntakeDesk
   ### CREATE NEW DROP-IN APPOINTMENT ###
 
   text_field(:student_name_input, id: 'appointment-student-input')
+  div(:student_double_booking_msg, xpath: '//div[contains(., "This student is already in the Drop-In Waitlist.")]')
   select_list(:reserve_advisor_select, id: 'create-modal-advisor-select')
   elements(:reserve_advisor_option, :option, xpath: '//select[@id="create-modal-advisor-select"]/option')
   div(:no_advisors_msg, xpath: '//div[contains(text(), "Sorry, no advisors are on duty.")]')
@@ -154,6 +155,7 @@ module BOACApptIntakeDesk
     set_new_appt_id appt
     appt.created_date = Time.now
     appt.status = AppointmentStatus::WAITING
+    appt.inspect
   end
 
   # Sets the ID of a newly created drop-in appointment
