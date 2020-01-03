@@ -26,6 +26,7 @@ describe 'The BOAC passenger manifest' do
     )
     # Hard delete the add/edit user in case it's still lying around from a previous test run
     BOACUtils.hard_delete_auth_user @add_edit_user
+    auth_users.delete_if { |u| u.uid == @add_edit_user.uid }
 
     @driver = Utils.launch_browser
     @homepage = BOACHomePage.new @driver
@@ -251,6 +252,12 @@ describe 'The BOAC passenger manifest' do
       @admin_page.add_user @add_edit_user
       @admin_page.search_for_advisor @add_edit_user
       @admin_page.wait_until(Utils.short_wait) { @admin_page.list_view_uids.include? @add_edit_user.uid.to_s }
+    end
+
+    it 'prevents an admin adding an existing user' do
+      @admin_page.click_add_user
+      @admin_page.enter_new_user_data @add_edit_user
+      @admin_page.dupe_user_el(@add_edit_user).when_visible Utils.short_wait
     end
   end
 

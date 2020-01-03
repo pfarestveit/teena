@@ -383,7 +383,7 @@ class NessieUtils < Utils
       demographics = profile && profile['demographics']
 
       # Determine if the student is ASC active in any sport
-      group_codes_with_status = v[0]['group_codes_with_status'] && v[0]['group_codes_with_status'].delete("{}").split("\"").reject(&:empty?)
+      group_codes_with_status = v[0]['group_codes_with_status'] && (v[0]['group_codes_with_status'].delete("{}").split("\"").reject { |i| i == ',' || i.empty? })
       asc_active = (group_codes_with_status && (group_codes_with_status.reject { |c| c.split(',')[1] == 'false' }).any?)
 
       # Get the squad names to use as search criteria if the students are athletes

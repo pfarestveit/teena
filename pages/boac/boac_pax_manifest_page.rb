@@ -52,6 +52,7 @@ class BOACPaxManifestPage
   def set_first_auto_suggest(element, name)
     wait_for_element_and_type(element, name)
     sleep Utils.click_wait
+    wait_until(2) { auto_suggest_option_elements.any? }
     link_element = auto_suggest_option_elements.first
     wait_for_load_and_click link_element
   end
@@ -163,6 +164,13 @@ class BOACPaxManifestPage
   button(:save_user_button, id: 'save-changes-to-user-profile')
   button(:cancel_user_button, id: 'delete-cancel')
 
+  # Returns the element containing a duplicate user error
+  # @param user [BOACUser]
+  # @return [PageObject::Elements::Div]
+  def dupe_user_el(user)
+    div_element(xpath: "//div[contains(text(), 'User with UID #{user.uid} is already in the BOA database.')]")
+  end
+
   # Returns the (WebDriver) element for the is-admin checkbox
   # @return [Selenium::WebDriver::Element]
   def is_admin_cbx
@@ -271,15 +279,21 @@ class BOACPaxManifestPage
     end
   end
 
+  # Enters new user data and clicks the save button
+  # @param user [BOACUser]
+  def enter_new_user_data(user)
+    wait_for_element_and_type(add_user_uid_input_element, user.uid)
+    set_user_level_flags user
+    add_user_dept_roles user
+    wait_for_update_and_click save_user_button_element
+  end
+
   # Adds a given user
   # @param user [BOACUser]
   def add_user(user)
     logger.info "Adding UID #{user.uid}"
     click_add_user
-    wait_for_element_and_type(add_user_uid_input_element, user.uid)
-    set_user_level_flags user
-    add_user_dept_roles user
-    wait_for_update_and_click save_user_button_element
+    enter_new_user_data user
     save_user_button_element.when_not_present Utils.short_wait
   end
 

@@ -11,7 +11,7 @@ describe 'BOA note templates' do
     @student = @test.students.last
     @user_templates = NoteTemplate.get_user_note_templates @test.advisor
     logger.debug "User templates are #{@user_templates.map &:id}"
-    @template_1 = NoteTemplate.new(title: (("Template #{@test.id}" * 15)[0..254]))
+    @template_1 = NoteTemplate.new(title: "Template #{@test.id}")
     @template_2 = NoteTemplate.new(title: "Batch template #{@test.id}")
     @attachments = @test.attachments.sort_by(&:file_size).delete_if { |a| a.file_size > 20000000 }
     @attachments = @attachments.last 5
