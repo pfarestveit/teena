@@ -119,7 +119,7 @@ class BOACStudentPage
   # Returns the visible team information
   # @return [Array<String>]
   def sports
-    squad_elements.map { |el| el.attribute('innerText') }
+    squad_elements.map { |el| el.attribute('innerText').strip }
   end
 
   # TIMELINE

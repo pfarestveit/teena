@@ -15,7 +15,11 @@ describe 'BOA' do
       a.advisor_roles.find { |r| r.dept == @test.dept && r.is_drop_in_advisor }
     end
 
-    @students = @test.students.shuffle[0..9]
+    @students = @test.students.shuffle[0..7]
+    inactive_sid = (NessieUtils.hist_profile_sids_of_career_status('Inactive') - BOACUtils.manual_advisee_sids).first
+    @inactive_student = NessieUtils.get_hist_student inactive_sid
+    completed_sid = (NessieUtils.hist_profile_sids_of_career_status('Completed') - BOACUtils.manual_advisee_sids).first
+    @completed_student = NessieUtils.get_hist_student completed_sid
 
     @appts = []
     @appt_0 = Appointment.new(student: @students[0], topics: [Topic::COURSE_ADD, Topic::COURSE_DROP], detail: "Drop-in advisor appointment creation #{@test.id}")
@@ -26,8 +30,8 @@ describe 'BOA' do
     @appt_5 = Appointment.new(student: @students[5], topics: [Topic::WITHDRAWAL], detail: "Drop-in advisor waiting list cancel #{@test.id}")
     @appt_6 = Appointment.new(student: @students[6], topics: [Topic::OTHER], detail: "Drop-in advisor student page cancel #{@test.id}")
     @appt_7 = Appointment.new(student: @students[7], topics: [Topic::COURSE_ADD, Topic::COURSE_DROP], detail: "Scheduler no-reservation appointment creation #{@test.id} detail")
-    @appt_8 = Appointment.new(student: @students[8], reserve_advisor: @test.drop_in_advisor, topics: [Topic::COURSE_ADD], detail: "Scheduler reservation appointment creation #{@test.id} detail")
-    @appt_9 = Appointment.new(student: @students[9], detail: 'Some detail')
+    @appt_8 = Appointment.new(student: @inactive_student, reserve_advisor: @test.drop_in_advisor, topics: [Topic::COURSE_ADD], detail: "Scheduler reservation appointment creation #{@test.id} detail")
+    @appt_9 = Appointment.new(student: @completed_student, detail: 'Some detail')
 
     @driver_scheduler = Utils.launch_browser
     @scheduler_homepage = BOACHomePage.new @driver_scheduler

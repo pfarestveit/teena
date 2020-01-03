@@ -105,9 +105,10 @@ describe 'BOAC' do
                   it("shows the body as the subject on #{test_case}") { expect(visible_collapsed_note_data[:subject].gsub(/\W/, '') == note.body.gsub(/\W/, '')).to be true }
                   it("shows no body on #{test_case}") { expect(visible_expanded_note_data[:body].strip.empty?).to be true }
                 else
-                  subj_prefix = expected_ei_notes.include?(note) ? 'CentersforEducationalEquityandExcellenceAdvisor' : 'AthleticStudyCenterAdvisor'
-                  expected_subj = ("#{subj_prefix}#{note.advisor.first_name}#{note.advisor.last_name}").downcase
-                  it("shows the advisor as part of the subject on #{test_case}") { expect(visible_collapsed_note_data[:category].gsub(/\W/, '').downcase).to include(expected_subj) }
+                  subj_dept = expected_ei_notes.include?(note) ? 'Centers for Educational Equity and Excellence advisor' : 'Athletic Study Center advisor'
+                  it("shows the department as part of the subject on #{test_case}") { expect(visible_collapsed_note_data[:category]).to include(subj_dept) }
+                  it("shows the advisor first name as part of the subject on #{test_case}") { expect(expect(visible_collapsed_note_data[:category].downcase).to include(note.advisor.first_name.downcase)) }
+                  it("shows the advisor last name as part of the subject on #{test_case}") { expect(expect(visible_collapsed_note_data[:category].downcase).to include(note.advisor.last_name.downcase)) }
                   it("shows no body on #{test_case}") { expect(visible_expanded_note_data[:body].strip.empty?).to be true }
                 end
 
@@ -129,9 +130,9 @@ describe 'BOAC' do
 
                 else
                   if note.advisor.last_name && !note.advisor.last_name.empty?
-                    it("shows no advisor on #{test_case}") { expect(visible_expanded_note_data[:advisor]).to be_nil }
+                    it("shows no advisor on #{test_case}") { expect(visible_expanded_note_data[:advisor]).not_to be_nil }
                   else
-                    it("shows Graduate Intern on #{test_case}") { expect(visible_expanded_note_data[:advisor]).to eql('Graduate Intern') }
+                    it("shows Graduate Intern or Peer Advisor on #{test_case}") { expect(['Graduate Intern', 'Peer Advisor']).to include(visible_expanded_note_data[:advisor]) }
                   end
                 end
 

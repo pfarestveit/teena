@@ -41,7 +41,7 @@ describe 'BOA non-current students' do
 
   it('include some with an Active academic career status') { expect(NessieUtils.hist_career_status_count 'Active').to be > 0 }
   it('include some with an Inactive academic career status') { expect(NessieUtils.hist_career_status_count 'Inactive').to be > 0 }
-  it('include some with an Completed academic career status') { expect(NessieUtils.hist_career_status_count 'Inactive').to be > 0 }
+  it('include some with a Completed academic career status') { expect(NessieUtils.hist_career_status_count 'Inactive').to be > 0 }
   it('include none with an unexpected academic career status') { expect(NessieUtils.unexpected_hist_career_status_count).to be_zero }
 
   it('include some with an Active program status') { expect(NessieUtils.hist_prog_status_count 'Active').to be > 0 }
@@ -57,7 +57,7 @@ describe 'BOA non-current students' do
 
   context 'when on the manually added advisee list' do
 
-    it('have completed data') { expect(BOACUtils.deluxe_manual_advisee_sids - (@test.searchable_data.map { |d| d[:sid] })).to be_empty }
+    it('have completed data') { expect(BOACUtils.deluxe_manual_advisee_sids & (@test.searchable_data.map { |d| d[:sid] })).not_to be_empty }
   end
 
   context 'when inactive' do
