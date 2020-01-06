@@ -41,6 +41,7 @@ describe 'BOA' do
     @advisor_homepage = BOACHomePage.new @driver_advisor
     @advisor_appt_desk = BOACApptIntakeDeskPage.new @driver_advisor
     @advisor_student_page = BOACStudentPage.new @driver_advisor
+    @search_results_page = BOACSearchResultsPage.new @driver_advisor
   end
 
   after(:all) do
@@ -245,7 +246,7 @@ describe 'BOA' do
         @scheduler_intake_desk.add_reasons(@appt_9, [Topic::OTHER])
         expect(@scheduler_intake_desk.make_appt_button_element.disabled?).to be true
         @scheduler_intake_desk.enter_detail @appt_9
-        expect(@scheduler_intake_desk.make_appt_button_element.disabled?).to be false
+        @scheduler_intake_desk.wait_until(Utils.short_wait) { !@scheduler_intake_desk.make_appt_button_element.disabled? }
       end
 
       it 'allows a scheduler to create a new unreserved appointment' do
@@ -329,7 +330,7 @@ describe 'BOA' do
         @advisor_homepage.add_reasons(appt, [Topic::OTHER])
         expect(@advisor_homepage.make_appt_button_element.disabled?).to be true
         @advisor_homepage.enter_detail appt
-        expect(@advisor_homepage.make_appt_button_element.disabled?).to be false
+        @advisor_homepage.wait_until(Utils.short_wait) { !@advisor_homepage.make_appt_button_element.disabled? }
       end
 
       it 'allows a drop-in advisor to create a new appointment' do
@@ -348,6 +349,27 @@ describe 'BOA' do
         @advisor_homepage.choose_student @appt_0.student
         @advisor_homepage.student_double_booking_msg_element.when_visible 3
       end
+    end
+  end
+
+  describe 'appointment search' do
+
+    before(:all) do
+      @advisor_homepage.hit_escape
+      @advisor_homepage.expand_search_options
+      @advisor_homepage.uncheck_include_students_cbx
+      @advisor_homepage.uncheck_include_classes_cbx
+    end
+
+    it 'can find a newly created appointment by its description' do
+      @advisor_homepage.type_note_appt_string_and_enter @appt_0.detail
+      @search_results_page.wait_for_appt_search_result_rows
+      expect(@search_results_page.appt_link(@appt_0).exists?).to be true
+    end
+
+    it 'cannot find a deleted appointment by its description' do
+      @advisor_homepage.type_note_appt_string_and_enter @appt_7.detail
+      expect(@search_results_page.appt_results_count).to be_zero
     end
   end
 
@@ -400,7 +422,7 @@ describe 'BOA' do
     context 'on the waiting list' do
 
       before(:all) do
-        @advisor_homepage.refresh
+        @advisor_homepage.load_page
         @advisor_homepage.wait_until(Utils.short_wait) { @scheduler_homepage.visible_appt_ids.any? }
         @visible_list_view_appt_data = @advisor_homepage.visible_list_view_appt_data @appt_1
       end
@@ -420,7 +442,7 @@ describe 'BOA' do
       it 'allow the drop-in advisor to un-reserve an appointment' do
         @advisor_homepage.hit_escape
         @advisor_homepage.click_unreserve_appt_button @appt_1
-        @advisor_homepage.reserved_for_el(@appt_1).when_not_present 3
+        @advisor_homepage.wait_for_poller { !@advisor_homepage.reserved_for_el(@appt_1).exists? }
         @appt_1.reserve_advisor = nil
       end
 
@@ -555,7 +577,7 @@ describe 'BOA' do
       end
 
       it 'allows the drop-in advisor to edit additional info' do
-        @appt_1.detail = "#{@appt_1.detail} - edited by drop-in advisor"
+        @appt_1.detail = "#{@appt_1.detail} - edited by advisor"
         @advisor_homepage.enter_detail @appt_1
       end
 
@@ -563,6 +585,22 @@ describe 'BOA' do
         @advisor_homepage.click_details_update_button
         @advisor_homepage.wait_until(Utils.short_wait) { @advisor_homepage.visible_list_view_appt_data(@appt_1)[:topics] == (@appt_1.topics.map { |t| t.name.downcase }.sort) }
       end
+    end
+  end
+
+  describe 'appointment search' do
+
+    before(:all) do
+      @advisor_homepage.hit_escape
+      @advisor_homepage.expand_search_options
+      @advisor_homepage.uncheck_include_students_cbx
+      @advisor_homepage.uncheck_include_classes_cbx
+    end
+
+    it 'can find a newly updated appointment by its description' do
+      @advisor_homepage.type_note_appt_string_and_enter @appt_1.detail
+      @search_results_page.wait_for_appt_search_result_rows
+      expect(@search_results_page.appt_link(@appt_1).exists?).to be true
     end
   end
 
@@ -807,6 +845,22 @@ describe 'BOA' do
     end
   end
 
+  describe 'appointment search' do
+
+    before(:all) do
+      @advisor_homepage.hit_escape
+      @advisor_homepage.expand_search_options
+      @advisor_homepage.uncheck_include_students_cbx
+      @advisor_homepage.uncheck_include_classes_cbx
+    end
+
+    it 'can find a cancelled appointment by its cancellation detail' do
+      @advisor_homepage.type_note_appt_string_and_enter @appt_4.cancel_detail
+      @search_results_page.wait_for_appt_search_result_rows
+      expect(@search_results_page.appt_link(@appt_4).exists?).to be true
+    end
+  end
+
   describe 'intake desk appointments' do
 
     it 'shows today\'s pending appointments sorted by creation time' do
@@ -855,7 +909,7 @@ describe 'BOA' do
 
       @advisor_homepage.click_student_link pending_appt
       @advisor_student_page.show_appts
-      @student_appts = BOACUtils.get_student_appts(student).reject &:deleted_date
+      @student_appts = BOACUtils.get_student_appts(student, @test.students).reject &:deleted_date
     end
 
     it 'shows all non-deleted appointments sorted by creation time' do

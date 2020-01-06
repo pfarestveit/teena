@@ -145,7 +145,7 @@ describe 'A notes-only BOA user' do
       end
 
       it('sees no courses') do
-        @homepage.search_non_note 'Math'
+        @homepage.type_non_note_string_and_enter 'Math'
         expect(@search_results_page.student_search_results_count).to be_nonzero
         expect(@search_results_page.note_results_count).to be_nonzero
         expect(@search_results_page.class_results_count_element).not_to be_visible

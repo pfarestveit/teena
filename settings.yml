@@ -67,8 +67,9 @@ boac:
   notes_batch_students_count: 3
   notes_batch_students_per_group_count: 3
   notes_max_users: 5
-  notes_search_word_count: 7
+  search_max_searches: 10
   search_max_users: 20
+  search_word_count: 7
   sis_data_max_users: 100
   service_announcement: 'A service announcement'
 

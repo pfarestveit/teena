@@ -81,6 +81,16 @@ class BOACUtils < Utils
     @config['no_activity_alert_threshold']
   end
 
+  # Returns the maximum number of note or appointment searches to execute for a given student
+  def self.search_max_searches
+    @config['search_max_searches']
+  end
+
+  # The number of words to use in a note or appointment search string
+  def self.search_word_count
+    @config['search_word_count']
+  end
+
   # Logs error, prints stack trace, and saves a screenshot when running headlessly
   def self.log_error_and_screenshot(driver, error, unique_id)
     log_error error
@@ -109,7 +119,6 @@ class BOACUtils < Utils
 
   def self.generate_note_search_query(student, note, opts={})
     note_test_case = "UID #{student.uid} note ID #{note.id}"
-    notes_search_word_count = BOACUtils.config['notes_search_word_count']
 
     if (note.source_body_empty || !note.body || note.body.empty?)
       if (!note.subject || note.subject.empty?)
@@ -126,10 +135,21 @@ class BOACUtils < Utils
     end
 
     query_words = note_text.split(/[\n ]+/)
-    search_string = query_words[0..(notes_search_word_count-1)].join(' ')
+    search_string = query_words[0..(search_word_count-1)].join(' ')
     {
       :note => note,
       :test_case => note_test_case,
+      :string => search_string
+    }
+  end
+
+  def self.generate_appt_search_query(student, appt)
+    test_case = "UID #{student.uid} appointment ID #{appt.id}"
+    # If the detail is too short, then searches are useless
+    search_string = appt.detail.split[0..(search_word_count - 1)].join(' ') if appt.detail.length >= 3
+    {
+      :appt => appt,
+      :test_case => test_case,
       :string => search_string
     }
   end
@@ -754,8 +774,9 @@ class BOACUtils < Utils
   # Returns all of a given students's appointments
   # @param student [BOACUser]
   # @return [Array<Appointment>]
-  def self.get_student_appts(student)
+  def self.get_student_appts(student, all_students)
     query = "SELECT appointments.id AS id,
+                    appointments.student_sid AS student_sid,
                     appointments.advisor_uid AS advisor_uid,
                     appointments.advisor_name AS advisor_full_name,
                     appointments.advisor_dept_codes AS advisor_dept_codes,
@@ -780,17 +801,27 @@ class BOACUtils < Utils
                 type, created_date, deleted_date, detail, status, status_date, cancel_reason,
                 cancel_detail;"
     results = query_pg_db(boac_db_credentials, query)
-    result_to_appts(results, [student])
+    result_to_appts(results, all_students)
+  end
+
+  # Returns the students who have BOA appointments
+  # @param all_students [Array<BOACUser>]
+  # @return [Array<BOACUser>]
+  def self.get_students_with_appts(all_students)
+    query = 'SELECT DISTINCT student_sid FROM appointments WHERE deleted_at IS NULL ORDER BY student_sid ASC;'
+    results = query_pg_db(boac_db_credentials, query)
+    sids = results.map { |r| r['student_sid'] }
+    all_students.select { |s| sids.include? s.sis_id }
   end
 
   # Converts the results of an appointment query to an array of appointments
   # @param results [PG::Result]
-  # @param students [Array<BOACUser>]
+  # @param student [Array<BOACUser>]
   # @return [Array<Appointment>]
-  def self.result_to_appts(results, students)
+  def self.result_to_appts(results, all_students)
     results.map do |r|
-      status = r['status'] && AppointmentStatus::STATUSES.find { |s| s.name.downcase == r['status'].downcase }
-      student = students.find { |s| s.sis_id == r['student_sid'] }
+      status = r['status'] && AppointmentStatus::STATUSES.find { |s| s.code == r['status'].downcase }
+      student = all_students.find { |s| s.sis_id == r['student_sid'] }
       topics = Topic::TOPICS.select { |t| r['topics'].include? t.name }
       if r['advisor_uid']
         advisor_depts = BOACDepartments::DEPARTMENTS.select { |d| r['advisor_dept_codes'].include? d.code }

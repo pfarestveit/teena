@@ -195,6 +195,7 @@ module BOACPages
   text_area(:note_date_from, id: 'search-options-note-filters-last-updated-from')
   text_area(:note_date_to, id: 'search-options-note-filters-last-updated-to')
   text_area(:search_input, id: 'search-students-input')
+  button(:search_button, xpath: '//button[contains(text(), "Search")]')
 
   # Expands the sidebar advanced search
   def expand_search_options
@@ -212,8 +213,15 @@ module BOACPages
   # Collapses the sidebar advanced search notes subpanel
   def collapse_search_options_notes_subpanel
     expand_search_options
+    hit_escape
     wait_for_update_and_click search_options_note_filters_toggle_button_element if search_options_note_filters_subpanel_element.visible?
     sleep 1
+  end
+
+  # Collapses and expands the options sub-panel in order to clear previous input
+  def reset_search_options_notes_subpanel
+    collapse_search_options_notes_subpanel
+    expand_search_options_notes_subpanel
   end
 
   # Selects the sidebar posted by "anyone" radio button
@@ -234,6 +242,7 @@ module BOACPages
   def set_auto_suggest(element, name)
     wait_for_element_and_type(element, name)
     sleep Utils.click_wait
+    wait_until(2) { auto_suggest_option_elements.any? }
     link_element = auto_suggest_option_elements.find { |el| el.attribute('innerText').downcase.include? name.downcase }
     wait_for_load_and_click link_element
   end
@@ -289,29 +298,42 @@ module BOACPages
     wait_for_element_and_select_js(note_topics_select_element, topic_name)
   end
 
-  # Enters a sidebar search string and hits enter to execute the search
+  # Enters a sidebar search string
   # @param string [String]
-  def search(string)
+  def enter_search_string(string)
     sleep 1
     search_input_element.when_visible Utils.short_wait
     search_input_element.clear
-    self.search_input = string
-    search_input_element.send_keys :enter
+    (self.search_input = string) if string
+  end
+
+  # Enters a sidebar search string and hits enter to execute the search
+  # @param string [String]
+  def enter_string_and_hit_enter(string)
+    enter_search_string string
+    hit_enter
     wait_for_spinner
+  end
+
+  # Clicks the sidebar search button
+  def click_search_button
+    logger.info 'Clicking search button'
+    wait_for_update_and_click search_button_element
   end
 
   # Searches for a string using the sidebar search input and logs the search string. Not to be used for note searches.
   # @param string [String]
-  def search_non_note(string)
+  def type_non_note_string_and_enter(string)
     logger.info "Searching for '#{string}'"
-    search string
+    enter_string_and_hit_enter string
   end
 
   # Searches for a string using the sidebar search input without logging the search string.  To be used for note searches.
   # @param string [String]
-  def search_note(string)
-    logger.info 'Searching for a string within a note'
-    search string
+  def type_note_appt_string_and_enter(string)
+    logger.info 'Searching for a string within a note or appointment'
+    logger.debug "String is '#{string}'"
+    enter_string_and_hit_enter string
   end
 
   ### STUDENT ###

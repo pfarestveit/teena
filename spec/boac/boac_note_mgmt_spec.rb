@@ -177,21 +177,21 @@ else
 
         shared_examples 'searching for your own note' do
           it 'can find a note by subject' do
-            @student_page.search_note note_1.subject
+            @student_page.type_note_appt_string_and_enter note_1.subject
             @search_results_page.wait_for_note_search_result_rows
             expect(@search_results_page.note_link(note_1).exists?).to be true
           end
 
           it 'can find a note by body' do
             unless "#{@driver.browser}" == 'firefox'
-              @student_page.search_note note_2.body
+              @student_page.type_note_appt_string_and_enter note_2.body
               @search_results_page.wait_for_note_search_result_rows
               expect(@search_results_page.note_link(note_2).exists?).to be true
             end
           end
 
           it 'can find a note with special characters' do
-            @student_page.search_note note_3.subject
+            @student_page.type_note_appt_string_and_enter note_3.subject
             @search_results_page.wait_for_note_search_result_rows
             expect(@search_results_page.note_link(note_3).exists?).to be true
           end
@@ -374,7 +374,7 @@ else
       context 'searching for an edited note' do
 
         it 'can find a note by edited content' do
-          @student_page.search_note note_1.subject
+          @student_page.type_note_appt_string_and_enter note_1.subject
           @search_results_page.wait_for_note_search_result_rows
           expect(@search_results_page.note_link(note_1).exists?).to be true
         end
@@ -403,7 +403,7 @@ else
       describe 'when searching for "anyone"' do
         before { @student_page.select_notes_posted_by_anyone }
         it 'can find the other user\'s note' do
-          @student_page.search_note note_1.subject
+          @student_page.type_note_appt_string_and_enter note_1.subject
           @search_results_page.wait_for_note_search_result_rows
           expect(@search_results_page.note_link(note_1).exists?).to be true
         end
@@ -413,7 +413,7 @@ else
         before { @student_page.select_notes_posted_by_you }
         after { @student_page.select_notes_posted_by_anyone }
         it 'cannot find the other user\'s note' do
-          @student_page.search_note note_1.subject
+          @student_page.type_note_appt_string_and_enter note_1.subject
           expect(@search_results_page.note_results_count).to be_zero
         end
       end
@@ -483,7 +483,7 @@ else
         it 'cannot find a deleted note' do
           logger.info "Searching for deleted note ID #{note.id} by subject '#{note.subject}'"
           @homepage.load_page
-          @student_page.search_note note.subject
+          @student_page.type_note_appt_string_and_enter note.subject
           expect(@search_results_page.note_results_count).to be_zero
         end
 
