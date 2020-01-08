@@ -82,10 +82,17 @@ class BOACTestConfig < TestConfig
   # Basic settings for department, advisor, and student population under test. Specifying a department will override the
   # department in the settings file.
   # @param dept [BOACDepartments]
-  def set_global_configs(dept = nil)
+  def set_base_configs(dept = nil)
     set_dept dept
     set_advisor
     set_students
+  end
+
+  # Basic settings for department, advisor, and student population under test, plus consuming the searchable student data for filtered cohorts.
+  # Specifying a department will override the department in the settings file.
+  # @param dept [BOACDepartments]
+  def set_base_configs_plus_searchable_data(dept = nil)
+    set_base_configs dept
     set_student_searchable_data @students
   end
 
@@ -110,9 +117,11 @@ class BOACTestConfig < TestConfig
   def set_test_students(config)
     @test_students = if (uids = ENV['UIDS'])
                        @students.select { |s| uids.split.include? s.uid }
-                     else
+                     elsif @cohort_members
                        BOACUtils.shuffle_max_users ? @cohort_members.shuffle! : @cohort_members.sort_by(&:last_name)
                        @cohort_members[0..(config - 1)]
+                     else
+                       @students.shuffle[0..(config - 1)]
                      end
     logger.warn "Test UIDs: #{@test_students.map &:uid}"
   end
@@ -162,7 +171,7 @@ class BOACTestConfig < TestConfig
 
   # Config for assignments testing
   def assignments
-    set_global_configs
+    set_base_configs_plus_searchable_data
     set_default_cohort
     set_test_students CONFIG['assignments_max_users']
     @term = CONFIG['assignments_term']
@@ -170,14 +179,14 @@ class BOACTestConfig < TestConfig
 
   # Config for class page testing
   def class_pages
-    set_global_configs
+    set_base_configs_plus_searchable_data
     set_default_cohort
     set_test_students CONFIG['class_page_max_users']
   end
 
   # Config for curated group testing
   def curated_groups
-    set_global_configs
+    set_base_configs_plus_searchable_data
     set_default_cohort
     set_test_students 50
   end
@@ -191,7 +200,7 @@ class BOACTestConfig < TestConfig
 
   # Config for filtered cohort testing
   def filtered_cohorts
-    set_global_configs BOACDepartments::ADMIN
+    set_base_configs_plus_searchable_data BOACDepartments::ADMIN
     set_search_cohorts
 
     # Set a default cohort with all possible filters to exercise editing and removing filters
@@ -235,19 +244,19 @@ class BOACTestConfig < TestConfig
 
   # Config for non-current student testing
   def inactive_students
-    set_global_configs
+    set_base_configs_plus_searchable_data
   end
 
   # Config for last activity testing
   def last_activity
-    set_global_configs
+    set_base_configs_plus_searchable_data
     set_default_cohort
     set_test_students CONFIG['last_activity_max_users']
   end
 
   # Config for advising note content testing
   def note_content
-    set_global_configs
+    set_base_configs_plus_searchable_data
     set_default_cohort
     @test_students = if (uids = ENV['UIDS'])
                        @students.select { |s| uids.split.include? s.uid.to_s }
@@ -269,7 +278,7 @@ class BOACTestConfig < TestConfig
 
   # Config for page navigation testing
   def navigation
-    set_global_configs
+    set_base_configs_plus_searchable_data
     set_default_cohort
     set_test_students CONFIG['class_page_max_users']
   end
@@ -277,33 +286,55 @@ class BOACTestConfig < TestConfig
   # Config for note management testing (create, edit, delete)
   def note_management
     set_note_attachments
-    set_global_configs
+    set_base_configs_plus_searchable_data
   end
 
   # Config for testing batch note creation
   def batch_note_management
     set_note_attachments
-    set_global_configs
+    set_base_configs_plus_searchable_data
     set_default_cohort
   end
 
   # Config for testing note templates
   def note_templates
-    set_global_configs BOACDepartments::L_AND_S
+    set_base_configs_plus_searchable_data BOACDepartments::L_AND_S
     set_default_cohort
     set_note_attachments
   end
 
-  # Config for user search testing
-  def search
-    set_global_configs
-    set_default_cohort
+  # Config for appointment search tests
+  def search_appointments
+    set_base_configs
+    @test_students = if (uids = ENV['UIDS'])
+                       @students.select { |s| uids.split.include? s.uid }
+                     else
+                       BOACUtils.get_students_with_appts(@students).shuffle[0..(CONFIG['search_max_users'] - 1)]
+                     end
+    logger.warn "Test UIDS: #{@test_students.map &:uid}"
+  end
+
+  # Config for class search tests
+  def search_classes
+    set_base_configs
+    set_test_students CONFIG['search_max_users']
+  end
+
+  # Config for note search tests
+  def search_notes
+    set_base_configs
+    set_test_students CONFIG['search_max_users']
+  end
+
+  # Config for student search tests
+  def search_students
+    set_base_configs
     set_test_students CONFIG['search_max_users']
   end
 
   # Config for SIS data testing
   def sis_data
-    set_global_configs
+    set_base_configs_plus_searchable_data
     set_default_cohort
     set_test_students CONFIG['sis_data_max_users']
   end
@@ -316,7 +347,7 @@ class BOACTestConfig < TestConfig
 
   # Config for admin user role testing
   def user_role_admin
-    set_global_configs BOACDepartments::ADMIN
+    set_base_configs_plus_searchable_data BOACDepartments::ADMIN
     set_search_cohorts
   end
 

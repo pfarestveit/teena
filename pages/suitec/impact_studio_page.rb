@@ -596,7 +596,7 @@ module Page
       # @param expected_asset_ids [Array<String>]
       # @param show_more_element [PageObject::Elements::Link]
       # @param event [Event]
-      # @param search_filter_blk block that verifies the asset library search filters and results
+      # @param search_filter_blk block that verifies the asset library enter_string_and_hit_enter filters and results
       def verify_show_more(driver, expected_asset_ids, show_more_element, event, &search_filter_blk)
         if expected_asset_ids.length > 4
           sleep 1

@@ -38,7 +38,7 @@ module BOACApptIntakeDesk
   select_list(:topic_select, id: 'add-topic-select-list')
   elements(:topic_option, :option, xpath: '//select[@id="add-topic-select-list"]/option')
   elements(:topic_pill, :div, xpath: '//div[contains(@id, "topic-label-")]')
-  text_area(:addl_info_text_area, id: 'appointment-details')
+  text_area(:addl_info_text_area, xpath: '//div[@role="textbox"]')
 
   # Returns the UIDs of available advisors shown as appointment options
   # @return [Array<String>]
@@ -140,8 +140,9 @@ module BOACApptIntakeDesk
   # Selects a drop-in appointment student
   # @param student [BOACUser]
   def choose_student(student)
-    logger.info "Selecting student UID #{student.uid}"
-    set_auto_suggest(student_name_input_element, student.full_name)
+    logger.info "Selecting student UID #{student.uid}, SID #{student.sis_id}"
+    input = student.full_name || student.sis_id
+    set_auto_suggest(student_name_input_element, input)
   end
 
   # Combines methods to create an appointment once the modal is open

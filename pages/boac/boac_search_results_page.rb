@@ -190,6 +190,76 @@ class BOACSearchResultsPage
     wait_for_update_and_click note_link(note)
   end
 
+  # APPOINTMENTS
+
+  h2(:appt_results_count_heading, id: 'search-results-category-header-appointments')
+  elements(:appt_search_result, :link, xpath: '//div[contains(@id, "appointment-search-result-")]//a')
+
+  # Awaits and returns the number of appointment results returned from a search
+  # @return [Integer]
+  def appt_results_count
+    wait_for_spinner
+    results_count appt_results_count_heading_element
+  end
+
+  # Waits for appointment results to be present
+  def wait_for_appt_search_result_rows
+    wait_until(Utils.short_wait) { appt_search_result_elements.any? }
+  end
+
+  # Checks if a given appointment is among search results.
+  # @param appt [Appointment]
+  # @return [Boolean]
+  def appt_in_search_result?(appt)
+    count = appt_results_count
+    if count.zero?
+      false
+    else
+      verify_block do
+        wait_for_appt_search_result_rows
+        appt_link(appt).when_present 2
+      end
+    end
+  end
+
+  # Returns the data present for a given appointment
+  # @param student [BOACUser]
+  # @param appt [Appointment]
+  # @return [Hash]
+  def appt_result(student, appt)
+    appt_link(appt).when_visible Utils.short_wait
+    sid_el = h3_element(xpath: "//div[@id='appointment-search-result-#{appt.id}']/h3")
+    snippet_el = div_element(id: "appointment-search-result-snippet-#{appt.id}")
+    advisor_el = span_element(id: "appointment-search-result-advisor-#{appt.id}")
+    footer_el = div_element(xpath: "//div[@id='appointment-search-result-#{appt.id}']/div[@class='advising-note-search-result-footer']")
+    {
+        :student_name => (note_link( appt).text.strip if note_link(appt).exists?),
+        :student_sid => (sid_el.text.gsub("#{student.full_name}", '').delete('()').strip if sid_el.exists?),
+        :snippet => (snippet_el.text if snippet_el.exists?),
+        :advisor_name => (advisor_el.text.delete('-').strip if advisor_el.exists?),
+        :date => (footer_el.text.split('-').last.strip if footer_el.exists?)
+    }
+  end
+
+  # Returns the UIDs associated with visible appointment search results
+  # @return [Array<String>]
+  def appt_result_uids
+    appt_search_result_elements.map { |el| el.attribute('href').split('/').last.split('#').first }
+  end
+
+  # Returns the link element for a given appointment
+  # @param appt [Appointment]
+  # @return [PageObject::Elements::Link]
+  def appt_link(appt)
+    link_element(xpath: "//a[contains(@href, '#{appt.id}')]")
+  end
+
+  # Clicks the link element for a given appointment
+  # @param appt [Appointment]
+  def click_appt_link(appt)
+    wait_for_update_and_click appt_link(appt)
+  end
+
   # GROUPS
 
   # Selects the add-to-group checkboxes for a given set of students

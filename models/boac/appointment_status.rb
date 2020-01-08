@@ -1,16 +1,17 @@
 class AppointmentStatus
 
-  attr_reader :name
+  attr_reader :name, :code
 
-  def initialize(name)
+  def initialize(name, code)
     @name = name
+    @code = code
   end
 
   STATUSES = [
-      CANCELED = new('Canceled'),
-      CHECKED_IN = new('Checked in'),
-      RESERVED = new('Reserved'),
-      WAITING = new('Waiting')
+      CANCELED = new('Cancelled', 'cancelled'),
+      CHECKED_IN = new('Checked in', 'checked_in'),
+      RESERVED = new('Reserved', 'reserved'),
+      WAITING = new('Waiting', 'waiting')
   ]
 
 end
