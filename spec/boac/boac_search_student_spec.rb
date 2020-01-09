@@ -24,17 +24,21 @@ describe 'BOAC' do
         complete_first_results = @search_results_page.student_in_search_result?(@driver, student)
         it("finds UID #{student.uid} with the complete first name") { expect(complete_first_results).to be true }
 
-        @homepage.type_non_note_string_and_enter student.first_name[0..2]
-        partial_first_results = @search_results_page.student_in_search_result?(@driver, student)
-        it("finds UID #{student.uid} with a partial first name") { expect(partial_first_results).to be true }
+        unless student.first_name[0..2] == student.first_name
+          @homepage.type_non_note_string_and_enter student.first_name[0..2]
+          partial_first_results = @search_results_page.student_in_search_result?(@driver, student)
+          it("finds UID #{student.uid} with a partial first name") { expect(partial_first_results).to be true }
+        end
 
         @homepage.type_non_note_string_and_enter student.last_name
         complete_last_results = @search_results_page.student_in_search_result?(@driver, student)
         it("finds UID #{student.uid} with the complete last name") { expect(complete_last_results).to be true }
 
-        @homepage.type_non_note_string_and_enter student.last_name[0..2]
-        partial_last_results = @search_results_page.student_in_search_result?(@driver, student)
-        it("finds UID #{student.uid} with a partial last name") { expect(partial_last_results).to be true }
+        unless student.last_name[0..2] == student.last_name
+          @homepage.type_non_note_string_and_enter student.last_name[0..2]
+          partial_last_results = @search_results_page.student_in_search_result?(@driver, student)
+          it("finds UID #{student.uid} with a partial last name") { expect(partial_last_results).to be true }
+        end
 
         @homepage.type_non_note_string_and_enter "#{student.first_name} #{student.last_name}"
         complete_first_last_results = @search_results_page.student_in_search_result?(@driver, student)
@@ -67,6 +71,20 @@ describe 'BOAC' do
         @homepage.type_non_note_string_and_enter student.email[0..4]
         partial_email_results = @search_results_page.student_in_search_result?(@driver, student)
         it("finds UID #{student.uid} with a partial email address") { expect(partial_email_results).to be true }
+
+        @homepage.clear_search_input
+        expected_search_history = [student.email[0..4], student.email, student.sis_id.to_s[0..4], student.sis_id.to_s,
+                                   "#{student.last_name[0..2]}, #{student.first_name[0..2]}"]
+        search_history_right = @homepage.verify_block do
+          @homepage.wait_until(3, "Expected #{expected_search_history}, got #{@homepage.visible_search_history}") do
+            @homepage.visible_search_history == expected_search_history
+          end
+        end
+        it("shows the right search history for advisor UID #{test_config.advisor.uid}") { expect(search_history_right).to be true }
+
+        @homepage.select_history_item @homepage.visible_search_history[4]
+        history_results = @search_results_page.student_in_search_result?(@driver, student)
+        it("allows the advisor to select the fifth tem from search history to execute the search #{expected_search_history[4]}") { expect(history_results).to be true }
 
       rescue => e
         Utils.log_error e

@@ -131,11 +131,10 @@ class BOACUtils < Utils
         note_text = note.subject
       end
     else
-      note_text = note.body
+      note_text = Nokogiri::HTML(note.body).text
     end
 
-    query_words = note_text.split(/[\n ]+/)
-    search_string = query_words[0..(search_word_count-1)].join(' ')
+    search_string = note_text.split[0..(search_word_count-1)].join(' ')
     {
       :note => note,
       :test_case => note_test_case,
@@ -146,7 +145,7 @@ class BOACUtils < Utils
   def self.generate_appt_search_query(student, appt)
     test_case = "UID #{student.uid} appointment ID #{appt.id}"
     # If the detail is too short, then searches are useless
-    search_string = appt.detail.split[0..(search_word_count - 1)].join(' ') if appt.detail.length >= 3
+    search_string = Nokogiri::HTML(appt.detail).text.split[0..(search_word_count - 1)].join(' ') if appt.detail.length >= 3
     {
       :appt => appt,
       :test_case => test_case,
