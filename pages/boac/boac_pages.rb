@@ -195,7 +195,29 @@ module BOACPages
   text_area(:note_date_from, id: 'search-options-note-filters-last-updated-from')
   text_area(:note_date_to, id: 'search-options-note-filters-last-updated-to')
   text_area(:search_input, id: 'search-students-input')
+  elements(:search_history_item, xpath: '//a[contains(@id, "search-students-suggestion-")]')
   button(:search_button, xpath: '//button[contains(text(), "Search")]')
+
+  # Clears the search input such that the full search history will appear
+  def clear_search_input
+    search_input_element.clear
+    click_home
+    wait_for_update_and_click search_input_element
+    sleep Utils.click_wait
+  end
+
+  # Returns the strings in the visible search history list
+  # @return [Array<String>]
+  def visible_search_history
+    search_history_item_elements.map { |el| el.attribute('innerText') }
+  end
+
+  # Clicks an item in the search history list and waits for the resulting search to complete
+  # @param search_string [String]
+  def select_history_item(search_string)
+    wait_for_update_and_click search_history_item_elements.find { |el| el.attribute('innerText') == search_string }
+    wait_for_spinner
+  end
 
   # Expands the sidebar advanced search
   def expand_search_options
@@ -215,7 +237,7 @@ module BOACPages
     expand_search_options
     hit_escape
     wait_for_update_and_click search_options_note_filters_toggle_button_element if search_options_note_filters_subpanel_element.visible?
-    sleep 1
+    sleep Utils.click_wait
   end
 
   # Collapses and expands the options sub-panel in order to clear previous input

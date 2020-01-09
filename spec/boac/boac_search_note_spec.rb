@@ -66,6 +66,8 @@ describe 'BOAC' do
 
       search[:note_searches][0..(BOACUtils.search_max_searches - 1)].each do |note_search|
 
+        logger.info "Beginning note search tests for note ID #{note_search[:note].id}"
+
         begin
           if note_search[:note].source_body_empty || !note_search[:note].body || note_search[:note].body.empty?
             logger.warn "Skipping search test for #{note_search[:test_case]} because the source note body was empty and too many results will be returned."

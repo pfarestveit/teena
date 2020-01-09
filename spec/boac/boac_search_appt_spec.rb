@@ -17,6 +17,7 @@ describe 'BOAC' do
       begin
         appt_searches = []
         expected_boa_appts = BOACUtils.get_student_appts(student, test_config.students)
+        expected_boa_appts.delete_if &:deleted_date
         if expected_boa_appts.any?
           expected_boa_appts.each { |appt| appt_searches << BOACUtils.generate_appt_search_query(student, appt) }
         else

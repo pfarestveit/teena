@@ -10,23 +10,26 @@ class BOACSearchResultsPage
   include BOACGroupModalPages
   include BOACAddGroupSelectorPages
 
+  span(:results_loaded_msg, xpath: '//span[contains(text(), "Search results have loaded.")]')
+
   # The result count displayed following a search
   # @param element [PageObject::Elements::Element]
   # @return [Integer]
   def results_count(element)
-    tries ||= Utils.short_wait
-    begin
-      wait_until(3) { element.visible? || no_results_msg.exists? }
-      if no_results_msg.visible?
-        logger.info 'No results found'
-        0
-      else
-        count = element.text.include?('One') ? 1 : element.text.split(' ').first.delete('+').to_i
-        logger.debug "Results count: #{count}"
-        count
-      end
-    rescue
-      (tries -=1).zero? ? fail : retry
+    sleep Utils.click_wait
+    wait_until(Utils.short_wait) do
+      results_loaded_msg? || no_results_msg.exists?
+    end
+    if no_results_msg.visible?
+      logger.info 'No results found'
+      0
+    elsif results_loaded_msg? && !element.exists?
+      logger.info 'There are some results, but not the right category of results'
+      0
+    else
+      count = element.text.include?('One') ? 1 : element.text.split(' ').first.delete('+').to_i
+      logger.debug "Results count: #{count}"
+      count
     end
   end
 
