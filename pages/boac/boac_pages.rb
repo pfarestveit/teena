@@ -196,6 +196,7 @@ module BOACPages
   text_area(:note_date_to, id: 'search-options-note-filters-last-updated-to')
   text_area(:search_input, id: 'search-students-input')
   elements(:search_history_item, xpath: '//a[contains(@id, "search-students-suggestion-")]')
+  element(:fill_in_field_msg, xpath: '//*[contains(text(), "Please fill out this field.")]')
   button(:search_button, xpath: '//button[contains(text(), "Search")]')
 
   # Clears the search input such that the full search history will appear
@@ -354,7 +355,6 @@ module BOACPages
   # @param string [String]
   def type_note_appt_string_and_enter(string)
     logger.info 'Searching for a string within a note or appointment'
-    logger.debug "String is '#{string}'"
     enter_string_and_hit_enter string
   end
 

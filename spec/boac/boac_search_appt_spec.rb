@@ -143,23 +143,31 @@ describe 'BOAC' do
               # Posted by anyone
               @homepage.select_notes_posted_by_anyone
               @homepage.click_search_button
-              anyone_posted_results_count = @search_results_page.appt_results_count
-
-              if anyone_posted_results_count < 20
-                anyone_posted_match = @search_results_page.appt_in_search_result?(appt_search[:appt])
-                it "returns a result when searching with the first #{search_word_count} words in #{appt_search[:test_case]} and posted by anyone" do
-                  expect(anyone_posted_match).to be true
+              if appt_search[:string].empty?
+                validation_error_present = @homepage.verify_block { @homepage.fill_in_field_msg_element.when_visible 1 }
+                it "requires a non-empty search string when searching for #{appt_search[:test_case]} and posted by anyone" do
+                  expect(validation_error_present).to be true
                 end
               else
-                logger.warn "Skipping a search string + posted-by-anyone test with appointment ID #{appt_search[:appt].id} because there are more than 20 results"
+                anyone_posted_results_count = @search_results_page.appt_results_count
+
+                if anyone_posted_results_count < 20
+                  anyone_posted_match = @search_results_page.appt_in_search_result?(appt_search[:appt])
+                  it "returns a result when searching with the first #{search_word_count} words in #{appt_search[:test_case]} and posted by anyone" do
+                    expect(anyone_posted_match).to be true
+                  end
+                else
+                  logger.warn "Skipping a search string + posted-by-anyone test with appointment ID #{appt_search[:appt].id} because there are more than 20 results"
+                end
               end
 
             else
               logger.info 'Searching for an appointment posted by someone other than the logged in advisor'
 
               # Posted by you
+              @homepage.enter_search_string appt_search[:string]
               @homepage.select_notes_posted_by_you
-              @homepage.type_note_appt_string_and_enter appt_search[:string]
+              @homepage.click_search_button
               you_posted_results_count = @search_results_page.appt_results_count
 
               if you_posted_results_count < 20
@@ -173,16 +181,23 @@ describe 'BOAC' do
 
               # Posted by anyone
               @homepage.select_notes_posted_by_anyone
-              @homepage.click_search_button
-              anyone_posted_results_count = @search_results_page.appt_results_count
-
-              if anyone_posted_results_count < 20
-                anyone_posted_match = @search_results_page.appt_in_search_result?(appt_search[:appt])
-                it "returns a result when searching with the first #{search_word_count} words in #{appt_search[:test_case]} and posted by anyone" do
-                  expect(anyone_posted_match).to be true
+              @homepage.type_note_appt_string_and_enter appt_search[:string]
+              if appt_search[:string].empty?
+                validation_error_present = @homepage.verify_block { @homepage.fill_in_field_msg_element.when_visible 1 }
+                it "requires a non-empty search string when searching for #{appt_search[:test_case]} and posted by anyone" do
+                  expect(validation_error_present).to be true
                 end
               else
-                logger.warn "Skipping a search string + posted-by-anyone test with appointment ID #{appt_search[:appt].id} because there are more than 20 results"
+                anyone_posted_results_count = @search_results_page.appt_results_count
+
+                if anyone_posted_results_count < 20
+                  anyone_posted_match = @search_results_page.appt_in_search_result?(appt_search[:appt])
+                  it "returns a result when searching with the first #{search_word_count} words in #{appt_search[:test_case]} and posted by anyone" do
+                    expect(anyone_posted_match).to be true
+                  end
+                else
+                  logger.warn "Skipping a search string + posted-by-anyone test with appointment ID #{appt_search[:appt].id} because there are more than 20 results"
+                end
               end
             end
 
