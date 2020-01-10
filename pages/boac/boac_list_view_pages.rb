@@ -136,4 +136,12 @@ module BOACListViewPages
     wait_until(0.5, "Mismatches: #{sorting_errors}") { sorting_errors.empty? }
   end
 
+  # Verifies that the visible sequence of SIDs matches the expected sequence
+  # @param expected_sids [Array<String>]
+  def compare_visible_sids_to_expected(expected_sids)
+    visible_results = visible_sids
+    verify_list_view_sorting(expected_sids, visible_results)
+    wait_until(1, "Expected #{expected_sids} but got #{visible_results}") { visible_results == expected_sids }
+  end
+
 end

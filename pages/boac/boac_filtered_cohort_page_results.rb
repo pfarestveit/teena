@@ -359,7 +359,7 @@ module BOACFilteredCohortPageResults
     sorted_results.map { |u| u[:sid] }
   end
 
-  # Returns the sequence of SIDs that should be present when search results are sorted by GPA
+  # Returns the sequence of SIDs that should be present when search results are sorted by GPA, ascending
   # @param expected_results [Array<Hash>]
   # @return [Array<String>]
   def expected_sids_by_gpa(expected_results)
@@ -367,7 +367,18 @@ module BOACFilteredCohortPageResults
     sorted_results.map { |u| u[:sid] }
   end
 
-  # Returns the sequence of SIDs that should be present when search results are sorted by the previous term
+  # Returns the sequence of SIDs that should be present when search results are sorted by GPA, descending
+  # @param expected_results [Array<Hash>]
+  # @return [Array<String>]
+  def expected_sids_by_gpa_desc(expected_results)
+    sorted_results = expected_results.sort do |a, b|
+      [b[:gpa].to_f, a[:last_name_sortable_cohort].downcase, a[:first_name_sortable_cohort].downcase, a[:sid]] <=>
+          [a[:gpa].to_f, b[:last_name_sortable_cohort].downcase, b[:first_name_sortable_cohort].downcase, b[:sid]]
+    end
+    sorted_results.map { |u| u[:sid] }
+  end
+
+  # Returns the sequence of SIDs that should be present when search results are sorted by the previous term GPA, ascending
   # @param expected_results [Array<Hash>]
   # @return [Array<String>]
   def expected_sids_by_gpa_last_term(expected_results)
@@ -380,12 +391,42 @@ module BOACFilteredCohortPageResults
     (results_with_term + results_without_term).map { |u| u[:sid] }
   end
 
-  # Returns the sequence of SIDs that should be present when search results are sorted by the term before the previous term
+  # Returns the sequence of SIDs that should be present when search results are sorted by the previous term GPA, descending
+  # @param expected_results [Array<Hash>]
+  # @return [Array<String>]
+  def expected_sids_by_gpa_last_term_desc(expected_results)
+    results_with_term = expected_results.select { |u| u[:gpa_last_term] }.sort do |a, b|
+      [b[:gpa_last_term], a[:last_name_sortable_cohort].downcase, a[:first_name_sortable_cohort].downcase, a[:sid]] <=>
+          [a[:gpa_last_term], b[:last_name_sortable_cohort].downcase, b[:first_name_sortable_cohort].downcase, b[:sid]]
+    end
+    results_without_term = expected_results.reject { |u| u[:gpa_last_term] }.sort_by do |u|
+      [u[:last_name_sortable_cohort].downcase, u[:first_name_sortable_cohort].downcase, u[:sid]]
+    end
+    (results_with_term + results_without_term).map { |u| u[:sid] }
+  end
+
+  # Returns the sequence of SIDs that should be present when search results are sorted by the term GPA before the previous term,
+  # ascending
   # @param expected_results [Array<Hash>]
   # @return [Array<String>]
   def expected_sids_by_gpa_last_last_term(expected_results)
     results_with_term = expected_results.select { |u| u[:gpa_last_last_term] }.sort_by do |u|
       [u[:gpa_last_last_term], u[:last_name_sortable_cohort].downcase, u[:first_name_sortable_cohort].downcase, u[:sid]]
+    end
+    results_without_term = expected_results.reject { |u| u[:gpa_last_last_term] }.sort_by do |u|
+      [u[:last_name_sortable_cohort].downcase, u[:first_name_sortable_cohort].downcase, u[:sid]]
+    end
+    (results_with_term + results_without_term).map { |u| u[:sid] }
+  end
+
+  # Returns the sequence of SIDs that should be present when search results are sorted by the term GPA before the previous term,
+  # descending
+  # @param expected_results [Array<Hash>]
+  # @return [Array<String>]
+  def expected_sids_by_gpa_last_last_term_desc(expected_results)
+    results_with_term = expected_results.select { |u| u[:gpa_last_last_term] }.sort do |a, b|
+      [b[:gpa_last_last_term], a[:last_name_sortable_cohort].downcase, a[:first_name_sortable_cohort].downcase, a[:sid]] <=>
+          [a[:gpa_last_last_term], b[:last_name_sortable_cohort].downcase, b[:first_name_sortable_cohort].downcase, b[:sid]]
     end
     results_without_term = expected_results.reject { |u| u[:gpa_last_last_term] }.sort_by do |u|
       [u[:last_name_sortable_cohort].downcase, u[:first_name_sortable_cohort].downcase, u[:sid]]
@@ -409,6 +450,8 @@ module BOACFilteredCohortPageResults
     results_by_level.flatten.map { |u| u[:sid] }
   end
 
+  # TODO - terms completed
+
   # Returns the sequence of SIDs that should be present when search results are sorted by major
   # @param expected_results [Array<Hash>]
   # @return [Array<String>]
@@ -431,17 +474,41 @@ module BOACFilteredCohortPageResults
     sorted_results.map { |u| u[:sid] }
   end
 
-  # Returns the sequence of SIDs that should be present when search results are sorted by units in progress
+  # Returns the sequence of SIDs that should be present when search results are sorted by units in progress, ascending
+  # @param expected_results [Array<Hash>]
+  # @return [Array<String>]
   def expected_sids_by_units_in_prog(expected_results)
     sorted_results = expected_results.sort_by { |u| [u[:units_in_progress].to_f, u[:last_name_sortable_cohort].downcase, u[:first_name_sortable_cohort].downcase, u[:sid]] }
     sorted_results.map { |u| u[:sid] }
   end
 
-  # Returns the sequence of SIDs that should be present when search results are sorted by cumulative units
+  # Returns the sequence of SIDs that should be present when search results are sorted by units in progress, descending
+  # @param expected_results [Array<Hash>]
+  # @return [Array<String>]
+  def expected_sids_by_units_in_prog_desc(expected_results)
+    sorted_results = expected_results.sort do |a, b|
+      [b[:units_in_progress].to_f, a[:last_name_sortable_cohort].downcase, a[:first_name_sortable_cohort].downcase, a[:sid]] <=>
+          [a[:units_in_progress].to_f, b[:last_name_sortable_cohort].downcase, b[:first_name_sortable_cohort].downcase, b[:sid]]
+    end
+    sorted_results.map { |u| u[:sid] }
+  end
+
+  # Returns the sequence of SIDs that should be present when search results are sorted by cumulative units, ascending
   # @param expected_results [Array<Hash>]
   # @return [Array<String>]
   def expected_sids_by_units_completed(expected_results)
     sorted_results = expected_results.sort_by { |u| [u[:units_completed].to_f, u[:last_name_sortable_cohort].downcase, u[:first_name_sortable_cohort].downcase, u[:sid]] }
+    sorted_results.map { |u| u[:sid] }
+  end
+
+  # Returns the sequence of SIDs that should be present when search results are sorted by cumulative units, descending
+  # @param expected_results [Array<Hash>]
+  # @return [Array<String>]
+  def expected_sids_by_units_completed_desc(expected_results)
+    sorted_results = expected_results.sort do |a, b|
+      [b[:units_completed].to_f, a[:last_name_sortable_cohort].downcase, a[:first_name_sortable_cohort].downcase, a[:sid]] <=>
+          [a[:units_completed].to_f, b[:last_name_sortable_cohort].downcase, b[:first_name_sortable_cohort].downcase, b[:sid]]
+    end
     sorted_results.map { |u| u[:sid] }
   end
 

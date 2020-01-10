@@ -221,15 +221,26 @@ module BOACCohortPages
     sort_by 'Team'
   end
 
-  # Sorts cohort search results by GPA (Cumulative)
+  # Sorts cohort search results by GPA (Cumulative) ascending
   def sort_by_gpa_cumulative
-    sort_by 'GPA (Cumulative)'
+    sort_by 'GPA (Cumulative - Low/High)'
   end
 
-  # Sorts cohort search results by a given previous term
+  # Sorts cohort search results by GPA (Cumulative) descending
+  def sort_by_gpa_cumulative_desc
+    sort_by 'GPA (Cumulative - High/Low)'
+  end
+
+  # Sorts cohort search results by a given previous term GPA ascending
   # @param term_code [String]
   def sort_by_last_term_gpa(term_code)
     sort_by "term_gpa_#{term_code}"
+  end
+
+  # Sorts cohort search results by a given previous term GPA descending
+  # @param term_code [String]
+  def sort_by_last_term_gpa_desc(term_code)
+    sort_by "term_gpa_#{term_code} desc"
   end
 
   # Sorts cohort search results by level
@@ -247,14 +258,24 @@ module BOACCohortPages
     sort_by 'Entering Term'
   end
 
-  # Sorts cohort search results by units in progress
+  # Sorts cohort search results by units in progress ascending
   def sort_by_units_in_progress
-    sort_by 'Units (In Progress)'
+    sort_by 'Units (In Progress - Low/High)'
   end
 
-  # Sorts cohort search results by units completed
+  # Sorts cohort search results by units in progress descending
+  def sort_by_units_in_progress_desc
+    sort_by 'Units (In Progress - High/Low)'
+  end
+
+  # Sorts cohort search results by units completed ascending
   def sort_by_units_completed
-    sort_by 'Units (Completed)'
+    sort_by 'Units (Completed - Low/High)'
+  end
+
+  # Sorts cohort search results by units completed descending
+  def sort_by_units_completed_desc
+    sort_by 'Units (Completed - High/Low)'
   end
 
 end
