@@ -258,6 +258,11 @@ module BOACCohortPages
     sort_by 'Entering Term'
   end
 
+  # Sorts cohort search results by terms completed
+  def sort_by_terms_completed
+    sort_by 'Terms Completed'
+  end
+
   # Sorts cohort search results by units in progress ascending
   def sort_by_units_in_progress
     sort_by 'Units (In Progress - Low/High)'

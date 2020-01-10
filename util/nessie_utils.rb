@@ -293,6 +293,7 @@ class NessieUtils < Utils
                     student_academic_status.sid AS sid,
                     student_academic_status.first_name AS first_name,
                     student_academic_status.last_name AS last_name,
+                    student_academic_status.terms_in_attendance AS terms_completed,
                     student.student_profiles.profile AS profile,
                     student.student_academic_status.gpa AS gpa,
                     student.student_academic_status.level AS level_code,
@@ -345,7 +346,7 @@ class NessieUtils < Utils
              LEFT JOIN student.student_term_gpas
                ON student.student_academic_status.sid = student.student_term_gpas.sid
              GROUP BY student_academic_status.uid, student_academic_status.sid, student_academic_status.first_name,
-                      student_academic_status.last_name, student.student_profiles.profile, student.student_academic_status.gpa,
+                      student_academic_status.last_name, student_academic_status.terms_completed, student.student_profiles.profile, student.student_academic_status.gpa,
                       student.student_academic_status.level, student.student_majors.major, student.visas.visa_type, student.visas.visa_status, current_term.enrolled_units,
                       current_term.midpoint_deficient_grade, gpa_last_term, gpa_last_last_term, boac_advising_asc.students.intensive,
                       boac_advising_coe.students.advisor_ldap_uid, boac_advising_coe.students.gender, boac_advising_coe.students.ethnicity,
@@ -398,6 +399,7 @@ class NessieUtils < Utils
       student_hashes[k] = {
         :sid => k,
         :entering_term => (sis_profile && sis_profile['matriculation'] && Utils.term_name_to_sis_code(sis_profile['matriculation'])),
+        :terms_completed => (v[0]['terms_completed']),
         :ethnicity => (demographics && demographics['ethnicities']),
         :expected_grad_term => (expected_grad && expected_grad['id'].to_s),
         :gender => (demographics && demographics['gender']),
