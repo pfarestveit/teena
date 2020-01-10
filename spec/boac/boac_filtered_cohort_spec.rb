@@ -163,6 +163,15 @@ describe 'BOAC', order: :defined do
         end
       end
 
+      it "sorts by Terms Completed all the students who match #{cohort.search_criteria.list_filters}" do
+        if (0..1) === cohort.member_data.length
+          logger.warn 'Skipping sort-by-terms-completed test since there are no results or only one result'
+        else
+          @cohort_page.sort_by_terms_completed
+          @cohort_page.compare_visible_sids_to_expected @cohort_page.expected_sids_by_terms_completed(cohort.member_data)
+        end
+      end
+
       it "sorts by Units In Progress ascending all the students who match #{cohort.search_criteria.list_filters}" do
         if (0..1) === cohort.member_data.length
           logger.warn 'Skipping sort-by-units-in-progress ascending test since there are no results or only one result'

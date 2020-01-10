@@ -474,6 +474,17 @@ module BOACFilteredCohortPageResults
     sorted_results.map { |u| u[:sid] }
   end
 
+  # Returns the sequence of SIDs that should be present when search results are sorted by terms completed
+  # @param expected_results [Array<Hash>]
+  # @return [Array<String>]
+  def expected_sids_by_terms_completed(expected_results)
+    sorted_results = expected_results.sort_by do |u|
+      count = u[:terms_completed].nil? ? 0 : u[:terms_completed].to_i
+      [count, u[:last_name_sortable_cohort].downcase, u[:first_name_sortable_cohort].downcase, u[:sid]]
+    end
+    sorted_results.map { |u| u[:sid] }
+  end
+
   # Returns the sequence of SIDs that should be present when search results are sorted by units in progress, ascending
   # @param expected_results [Array<Hash>]
   # @return [Array<String>]
