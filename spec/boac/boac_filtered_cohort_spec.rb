@@ -63,10 +63,7 @@ describe 'BOAC', order: :defined do
           logger.warn 'Skipping sort-by-first-name test since there are no results or only one result'
         else
           @cohort_page.sort_by_first_name
-          expected_results = @cohort_page.expected_sids_by_first_name cohort.member_data
-          visible_results = @cohort_page.visible_sids
-          @cohort_page.verify_list_view_sorting(expected_results, visible_results)
-          @cohort_page.wait_until(1, "Expected #{expected_results} but got #{visible_results}") { visible_results == expected_results }
+          @cohort_page.compare_visible_sids_to_expected @cohort_page.expected_sids_by_first_name(cohort.member_data)
         end
       end
 
@@ -76,49 +73,66 @@ describe 'BOAC', order: :defined do
             logger.warn 'Skipping sort-by-team test since there are no results or only one result'
           else
             @cohort_page.sort_by_team
-            expected_results = @cohort_page.expected_sids_by_team cohort.member_data
-            visible_results = @cohort_page.visible_sids
-            @cohort_page.verify_list_view_sorting(expected_results, visible_results)
-            @cohort_page.wait_until(1, "Expected #{expected_results} but got #{visible_results}") { visible_results == expected_results }
+            @cohort_page.compare_visible_sids_to_expected @cohort_page.expected_sids_by_team(cohort.member_data)
           end
         end
       end
 
-      it "sorts by GPA all the students who match #{cohort.search_criteria.list_filters}" do
+      it "sorts by GPA ascending all the students who match #{cohort.search_criteria.list_filters}" do
         if (0..1) === cohort.member_data.length
           logger.warn 'Skipping sort-by-GPA test since there are no results or only one result'
         else
           @cohort_page.sort_by_gpa_cumulative
-          expected_results = @cohort_page.expected_sids_by_gpa cohort.member_data
-          visible_results = @cohort_page.visible_sids
-          @cohort_page.verify_list_view_sorting(expected_results, visible_results)
-          @cohort_page.wait_until(1, "Expected #{expected_results} but got #{visible_results}") { visible_results == expected_results }
+          @cohort_page.compare_visible_sids_to_expected @cohort_page.expected_sids_by_gpa(cohort.member_data)
         end
       end
 
-      it "sorts by GPA (term #{BOACUtils.previous_term_code}) all the students who match #{cohort.search_criteria.list_filters}" do
+      it "sorts by GPA descending all the students who match #{cohort.search_criteria.list_filters}" do
+        if (0..1) === cohort.member_data.length
+          logger.warn 'Skipping sort-by-GPA-descending test since there are no results or only one result'
+        else
+          @cohort_page.sort_by_gpa_cumulative_desc
+          @cohort_page.compare_visible_sids_to_expected @cohort_page.expected_sids_by_gpa_desc(cohort.member_data)
+        end
+      end
+
+      it "sorts by GPA ascending (term #{BOACUtils.previous_term_code}) all the students who match #{cohort.search_criteria.list_filters}" do
         term = BOACUtils.previous_term_code
         if (0..1) === cohort.member_data.length
-          logger.warn "Skipping sort-by-term-#{term}-GPA test since there are no results or only one result"
+          logger.warn "Skipping sort-by-term-#{term}-GPA ascending test since there are no results or only one result"
         else
           @cohort_page.sort_by_last_term_gpa term
-          expected_results = @cohort_page.expected_sids_by_gpa_last_term cohort.member_data
-          visible_results = @cohort_page.visible_sids
-          @cohort_page.verify_list_view_sorting(expected_results, visible_results)
-          @cohort_page.wait_until(1, "Expected #{expected_results} but got #{visible_results}") { visible_results == expected_results }
+          @cohort_page.compare_visible_sids_to_expected @cohort_page.expected_sids_by_gpa_last_term(cohort.member_data)
         end
       end
 
-      it "sorts by GPA (#{BOACUtils.previous_term_code BOACUtils.previous_term_code}) all the students who match #{cohort.search_criteria.list_filters}" do
+      it "sorts by GPA descending (term #{BOACUtils.previous_term_code}) all the students who match #{cohort.search_criteria.list_filters}" do
+        term = BOACUtils.previous_term_code
+        if (0..1) === cohort.member_data.length
+          logger.warn "Skipping sort-by-term-#{term}-GPA descending test since there are no results or only one result"
+        else
+          @cohort_page.sort_by_last_term_gpa_desc term
+          @cohort_page.compare_visible_sids_to_expected @cohort_page.expected_sids_by_gpa_last_term_desc(cohort.member_data)
+        end
+      end
+
+      it "sorts by GPA ascending (#{BOACUtils.previous_term_code BOACUtils.previous_term_code}) all the students who match #{cohort.search_criteria.list_filters}" do
         term = BOACUtils.previous_term_code BOACUtils.previous_term_code
         if (0..1) === cohort.member_data.length
-          logger.warn "Skipping sort-by-term-#{term}-GPA test since there are no results or only one result"
+          logger.warn "Skipping sort-by-term-#{term}-GPA ascending test since there are no results or only one result"
         else
           @cohort_page.sort_by_last_term_gpa term
-          expected_results = @cohort_page.expected_sids_by_gpa_last_last_term cohort.member_data
-          visible_results = @cohort_page.visible_sids
-          @cohort_page.verify_list_view_sorting(expected_results, visible_results)
-          @cohort_page.wait_until(1, "Expected #{expected_results} but got #{visible_results}") { visible_results == expected_results }
+          @cohort_page.compare_visible_sids_to_expected @cohort_page.expected_sids_by_gpa_last_last_term(cohort.member_data)
+        end
+      end
+
+      it "sorts by GPA descending (#{BOACUtils.previous_term_code BOACUtils.previous_term_code}) all the students who match #{cohort.search_criteria.list_filters}" do
+        term = BOACUtils.previous_term_code BOACUtils.previous_term_code
+        if (0..1) === cohort.member_data.length
+          logger.warn "Skipping sort-by-term-#{term}-GPA descending test since there are no results or only one result"
+        else
+          @cohort_page.sort_by_last_term_gpa_desc term
+          @cohort_page.compare_visible_sids_to_expected @cohort_page.expected_sids_by_gpa_last_last_term_desc(cohort.member_data)
         end
       end
 
@@ -127,10 +141,7 @@ describe 'BOAC', order: :defined do
           logger.warn 'Skipping sort-by-level test since there are no results or only one result'
         else
           @cohort_page.sort_by_level
-          expected_results = @cohort_page.expected_sids_by_level cohort.member_data
-          visible_results = @cohort_page.visible_sids
-          @cohort_page.verify_list_view_sorting(expected_results, visible_results)
-          @cohort_page.wait_until(1, "Expected #{expected_results} but got #{visible_results}") { visible_results == expected_results }
+          @cohort_page.compare_visible_sids_to_expected @cohort_page.expected_sids_by_level(cohort.member_data)
         end
       end
 
@@ -139,10 +150,7 @@ describe 'BOAC', order: :defined do
           logger.warn 'Skipping sort-by-major test since there are no results or only one result'
         else
           @cohort_page.sort_by_major
-          expected_results = @cohort_page.expected_sids_by_major cohort.member_data
-          visible_results = @cohort_page.visible_sids
-          @cohort_page.verify_list_view_sorting(expected_results, visible_results)
-          @cohort_page.wait_until(1, "Expected #{expected_results} but got #{visible_results}") { visible_results == expected_results }
+          @cohort_page.compare_visible_sids_to_expected @cohort_page.expected_sids_by_major(cohort.member_data)
         end
       end
 
@@ -151,34 +159,43 @@ describe 'BOAC', order: :defined do
           logger.warn 'Skipping sort-by-entering-term test since there are no results or only one result'
         else
           @cohort_page.sort_by_entering_term
-          expected_results = @cohort_page.expected_sids_by_matriculation cohort.member_data
-          visible_results = @cohort_page.visible_sids
-          @cohort_page.verify_list_view_sorting(expected_results, visible_results)
-          @cohort_page.wait_until(1, "Expected #{expected_results} but got #{visible_results}") { visible_results == expected_results }
+          @cohort_page.compare_visible_sids_to_expected @cohort_page.expected_sids_by_matriculation(cohort.member_data)
         end
       end
 
-      it "sorts by Units In Progress all the students who match #{cohort.search_criteria.list_filters}" do
+      it "sorts by Units In Progress ascending all the students who match #{cohort.search_criteria.list_filters}" do
         if (0..1) === cohort.member_data.length
-          logger.warn 'Skipping sort-by-units-in-progress test since there are no results or only one result'
+          logger.warn 'Skipping sort-by-units-in-progress ascending test since there are no results or only one result'
         else
           @cohort_page.sort_by_units_in_progress
-          expected_results = @cohort_page.expected_sids_by_units_in_prog cohort.member_data
-          visible_results = @cohort_page.visible_sids
-          @cohort_page.verify_list_view_sorting(expected_results, visible_results)
-          @cohort_page.wait_until(1, "Expected #{expected_results} but got #{visible_results}") { visible_results == expected_results }
+          @cohort_page.compare_visible_sids_to_expected @cohort_page.expected_sids_by_units_in_prog(cohort.member_data)
         end
       end
 
-      it "sorts by Units Completed all the students who match #{cohort.search_criteria.list_filters}" do
+      it "sorts by Units In Progress descending all the students who match #{cohort.search_criteria.list_filters}" do
         if (0..1) === cohort.member_data.length
-          logger.warn 'Skipping sort-by-units-completed test since there are no results or only one result'
+          logger.warn 'Skipping sort-by-units-in-progress descending test since there are no results or only one result'
+        else
+          @cohort_page.sort_by_units_in_progress_desc
+          @cohort_page.compare_visible_sids_to_expected @cohort_page.expected_sids_by_units_in_prog_desc(cohort.member_data)
+        end
+      end
+
+      it "sorts by Units Completed ascending all the students who match #{cohort.search_criteria.list_filters}" do
+        if (0..1) === cohort.member_data.length
+          logger.warn 'Skipping sort-by-units-completed ascending test since there are no results or only one result'
         else
           @cohort_page.sort_by_units_completed
-          expected_results = @cohort_page.expected_sids_by_units_completed cohort.member_data
-          visible_results = @cohort_page.visible_sids
-          @cohort_page.verify_list_view_sorting(expected_results, visible_results)
-          @cohort_page.wait_until(1, "Expected #{expected_results} but got #{visible_results}") { visible_results == expected_results }
+          @cohort_page.compare_visible_sids_to_expected @cohort_page.expected_sids_by_units_completed(cohort.member_data)
+        end
+      end
+
+      it "sorts by Units Completed descending all the students who match #{cohort.search_criteria.list_filters}" do
+        if (0..1) === cohort.member_data.length
+          logger.warn 'Skipping sort-by-units-completed descending test since there are no results or only one result'
+        else
+          @cohort_page.sort_by_units_completed_desc
+          @cohort_page.compare_visible_sids_to_expected @cohort_page.expected_sids_by_units_completed_desc(cohort.member_data)
         end
       end
 
