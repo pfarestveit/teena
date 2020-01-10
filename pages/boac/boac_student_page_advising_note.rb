@@ -17,6 +17,7 @@ module BOACStudentPageAdvisingNote
   button(:toggle_all_notes_button, id: 'toggle-expand-all-notes')
   span(:notes_expanded_msg, xpath: '//span[text()="Collapse all notes"]')
   span(:notes_collapsed_msg, xpath: '//span[text()="Expand all notes"]')
+  link(:notes_download_link, id: 'download-notes-link')
   elements(:note_msg_row, :div, xpath: '//div[contains(@id,"timeline-tab-note-message")]')
 
   # Clicks the Notes tab and expands the list of notes
@@ -388,6 +389,94 @@ module BOACStudentPageAdvisingNote
     add_topics(note, topics)
     click_save_new_note
     set_new_note_id note
+  end
+
+  # Returns the expected file name of a note export zip
+  # @param student [BOACUser]
+  # @return [String]
+  def notes_export_zip_file_name(student)
+    "advising_notes_#{student.first_name.downcase}_#{student.last_name.downcase}_#{Time.now.strftime('%Y%m%d')}.zip"
+  end
+
+  # Returns the expected file name of a note export csv
+  # @param student [BOACUser]
+  # @return [String]
+  def notes_export_csv_file_name(student)
+    notes_export_zip_file_name(student).gsub('zip', 'csv')
+  end
+
+  # Clicks the notes download link and waits for the expected zip file to appear in the configured download dir
+  # @param student [BOACUser]
+  def download_notes(student)
+    logger.info "Downloading notes for UID #{student.uid}"
+    Utils.prepare_download_dir
+    sleep Utils.click_wait
+    wait_for_update_and_click notes_download_link_element
+    wait_until(Utils.medium_wait) { Dir["#{Utils.download_dir}/#{notes_export_zip_file_name student}"].any? }
+  end
+
+  # Returns all the file names within a given zip file
+  # @param student [BOACUser]
+  # @return [Array<String>]
+  def note_export_file_names(student)
+    file_names = []
+    Zip::File.open("#{Utils.download_dir}/#{notes_export_zip_file_name student}") do |zip_file|
+      zip_file.each { |entry| file_names << entry.name }
+    end
+    file_names
+  end
+
+  # Returns the file names that should be present in a note export zip file
+  # @param student [BOACUser]
+  # @param notes [Array<Notes>]
+  # @return [Array<String>]
+  def expected_note_export_file_names(student, notes)
+    names = []
+    names << notes_export_csv_file_name(student)
+    notes.each do |note|
+      note.attachments.each { |attach| names << attach.file_name }
+    end
+    names
+  end
+
+  # Converts a note export CSV file to a CSV table
+  # @param student [BOACUser]
+  def parse_note_export_csv_to_table(student)
+    Zip::File.open("#{Utils.download_dir}/#{notes_export_zip_file_name student}") do |zip_file|
+      zipped_csv = zip_file.find_entry notes_export_csv_file_name(student)
+      file = File.join(Utils.download_dir, notes_export_csv_file_name(student))
+      CSV.open(file, 'wb') do |csv|
+        CSV.parse(zipped_csv.get_input_stream.read).each { |row| csv << row }
+      end
+      CSV.table file
+    end
+  end
+
+  # Returns true if a parsed CSV contains a row with data matching a given note
+  # @param student [BOACUser]
+  # @param note [Note]
+  # @param csv_table [CSV::Table]
+  def verify_note_in_export_csv(student, note, csv_table)
+    wait_until(1, "Couldn't find note ID #{note.id}") do
+      csv_table.find do |r|
+        r[:date_created] == note.created_date.strftime('%Y-%m-%d')
+        r[:student_sid] == student.sis_id.to_i
+        r[:student_name] == student.full_name
+        (r[:author_uid] == note.advisor.uid.to_i) unless (note.advisor.uid == 'UCBCONVERSION')
+        r[:subject] == note.subject
+        Nokogiri::HTML(r[:body]).text == "#{note.body}"
+        if note.topics.any?
+          ((r[:topics].split(';').map(&:strip).map(&:downcase).sort if r[:topics]) == note.topics.map(&:downcase).sort)
+        else
+          !r[:topics]
+        end
+        if note.attachments.any?
+          ((r[:attachments].split(';').map(&:strip).sort if r[:attachments]) == note.attachments.map(&:file_name).sort)
+        else
+          !r[:attachments]
+        end
+      end
+    end
   end
 
 end

@@ -1,6 +1,6 @@
 require_relative '../../util/spec_helper'
 
-class BOACApiNotesAttachmentPage
+class BOACApiNotesPage
 
   include PageObject
   include Logging
@@ -9,10 +9,14 @@ class BOACApiNotesAttachmentPage
   div(:unauth_msg, xpath: '//*[contains(.,"Unauthorized")]')
   div(:not_found_msg, xpath: '//*[contains(.,"Sorry, attachment not available.")]')
 
-  def load_page(attachment_file)
+  def load_attachment_page(attachment_file)
     logger.info "Hitting download endpoint for attachment '#{attachment_file}'"
     navigate_to "#{BOACUtils.base_url}/api/notes/attachment/#{attachment_file}"
     sleep 2
+  end
+
+  def load_download_page(student)
+    navigate_to "#{BOACUtils.api_base_url}/api/notes/download_for_sid/#{student.sis_id}"
   end
 
 end

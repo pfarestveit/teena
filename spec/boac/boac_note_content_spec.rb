@@ -21,7 +21,7 @@ describe 'BOAC' do
     @homepage = BOACHomePage.new @driver
     @student_page = BOACStudentPage.new @driver
     @search_results_page = BOACSearchResultsPage.new @driver
-    @api_notes_attachment_page = BOACApiNotesAttachmentPage.new @driver
+    @api_notes_page = BOACApiNotesPage.new @driver
 
     @homepage.dev_auth test.advisor
     test.test_students.each do |student|
@@ -269,8 +269,8 @@ describe 'BOAC' do
 
         identifier = attach.sis_file_name || attach.id
         Utils.prepare_download_dir
-        @api_notes_attachment_page.load_page identifier
-        no_access = @api_notes_attachment_page.verify_block { @api_notes_attachment_page.unauth_msg_element.when_visible Utils.short_wait }
+        @api_notes_page.load_attachment_page identifier
+        no_access = @api_notes_page.verify_block { @api_notes_page.unauth_msg_element.when_visible Utils.short_wait }
         it("blocks an anonymous user from hitting the attachment download endpoint for #{identifier}") { expect(no_access).to be true }
 
         no_file = Utils.downloads_empty?

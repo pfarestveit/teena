@@ -346,7 +346,7 @@ class NessieUtils < Utils
              LEFT JOIN student.student_term_gpas
                ON student.student_academic_status.sid = student.student_term_gpas.sid
              GROUP BY student_academic_status.uid, student_academic_status.sid, student_academic_status.first_name,
-                      student_academic_status.last_name, student_academic_status.terms_completed, student.student_profiles.profile, student.student_academic_status.gpa,
+                      student_academic_status.last_name, student_academic_status.terms_in_attendance, student.student_profiles.profile, student.student_academic_status.gpa,
                       student.student_academic_status.level, student.student_majors.major, student.visas.visa_type, student.visas.visa_status, current_term.enrolled_units,
                       current_term.midpoint_deficient_grade, gpa_last_term, gpa_last_last_term, boac_advising_asc.students.intensive,
                       boac_advising_coe.students.advisor_ldap_uid, boac_advising_coe.students.gender, boac_advising_coe.students.ethnicity,
@@ -506,7 +506,8 @@ class NessieUtils < Utils
              FROM #{schema}.advising_notes
              LEFT JOIN #{schema}.advising_note_topics
                ON #{schema}.advising_notes.id = #{schema}.advising_note_topics.id
-             WHERE #{schema}.advising_notes.sid = '#{student.sis_id}';"
+             WHERE #{schema}.advising_notes.sid = '#{student.sis_id}'
+              #{+ ' AND advisor_first_name != \'Reception\' AND advisor_last_name != \'Front Desk\'' if schema == NoteSource::E_AND_I.schema};"
 
     results = query_pg_db(nessie_pg_db_credentials, query)
     notes_data = results.group_by { |h1| h1['id'] }.map do |k,v|
@@ -599,7 +600,10 @@ class NessieUtils < Utils
   # @param src [NoteSource]
   # @return [Array<String>]
   def self.get_sids_with_notes_of_src(src)
-    query = "SELECT DISTINCT sid FROM #{src.schema}.advising_notes ORDER BY sid ASC;"
+    query = "SELECT DISTINCT sid
+             FROM #{src.schema}.advising_notes
+             #{+ ' WHERE advisor_first_name != \'Reception\' AND advisor_last_name != \'Front Desk\'' if src == NoteSource::E_AND_I}
+             ORDER BY sid ASC;"
     results = Utils.query_pg_db(nessie_pg_db_credentials, query)
     results.map { |r| r['sid'] }
   end
