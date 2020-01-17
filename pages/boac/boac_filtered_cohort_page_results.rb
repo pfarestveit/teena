@@ -474,15 +474,31 @@ module BOACFilteredCohortPageResults
     sorted_results.map { |u| u[:sid] }
   end
 
-  # Returns the sequence of SIDs that should be present when search results are sorted by terms completed
+  # Returns the sequence of SIDs that should be present when search results are sorted by terms in attendance, ascending
   # @param expected_results [Array<Hash>]
   # @return [Array<String>]
-  def expected_sids_by_terms_completed(expected_results)
-    sorted_results = expected_results.sort_by do |u|
-      count = u[:terms_completed].nil? ? 0 : u[:terms_completed].to_i
-      [count, u[:last_name_sortable_cohort].downcase, u[:first_name_sortable_cohort].downcase, u[:sid]]
+  def expected_sids_by_terms_in_attend(expected_results)
+    results_with_term = expected_results.select { |u| u[:terms_completed] }.sort_by do |u|
+      [u[:terms_completed], u[:last_name_sortable_cohort].downcase, u[:first_name_sortable_cohort].downcase, u[:sid]]
     end
-    sorted_results.map { |u| u[:sid] }
+    results_without_term = expected_results.reject { |u| u[:terms_completed] }.sort_by do |u|
+      [u[:last_name_sortable_cohort].downcase, u[:first_name_sortable_cohort].downcase, u[:sid]]
+    end
+    (results_with_term + results_without_term).map { |u| u[:sid] }
+  end
+
+  # Returns the sequence of SIDs that should be present when search results are sorted by terms in attendance, descending
+  # @param expected_results [Array<Hash>]
+  # @return [Array<String>]
+  def expected_sids_by_terms_in_attend_desc(expected_results)
+    results_with_term = expected_results.select { |u| u[:terms_completed] }.sort do |a, b|
+      [b[:terms_completed], a[:last_name_sortable_cohort].downcase, a[:first_name_sortable_cohort].downcase, a[:sid]] <=>
+          [a[:terms_completed], b[:last_name_sortable_cohort].downcase, b[:first_name_sortable_cohort].downcase, b[:sid]]
+    end
+    results_without_term = expected_results.reject { |u| u[:terms_completed] }.sort_by do |u|
+      [u[:last_name_sortable_cohort].downcase, u[:first_name_sortable_cohort].downcase, u[:sid]]
+    end
+    (results_with_term + results_without_term).map { |u| u[:sid] }
   end
 
   # Returns the sequence of SIDs that should be present when search results are sorted by units in progress, ascending

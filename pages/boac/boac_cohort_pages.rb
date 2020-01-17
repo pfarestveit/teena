@@ -258,9 +258,14 @@ module BOACCohortPages
     sort_by 'Entering Term'
   end
 
-  # Sorts cohort search results by terms completed
-  def sort_by_terms_completed
-    sort_by 'Terms Completed'
+  # Sorts cohort search results by terms in attendance ascending
+  def sort_by_terms_in_attend
+    sort_by 'Terms in Attendance (Low/High)'
+  end
+
+  # Sorts cohort search results by terms in attendance descending
+  def sort_by_terms_in_attend_desc
+    sort_by 'Terms in Attendance (High/Low)'
   end
 
   # Sorts cohort search results by units in progress ascending
