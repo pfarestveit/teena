@@ -114,13 +114,33 @@ class BOACTestConfig < TestConfig
   # Selects only the first n cohort members for testing. If shuffle setting is true, different students will be in each
   # test run; otherwise the same ones.
   # @param config [Integer]
-  def set_test_students(config)
+  def set_test_students(config, opts = {})
     @test_students = if (uids = ENV['UIDS'])
+                       # Running tests against a specific set of students
                        @students.select { |s| uids.split.include? s.uid }
+
                      elsif @cohort_members
+                       # Running tests against a cohort of students (i.e., a list presented in the UI)
                        BOACUtils.shuffle_max_users ? @cohort_members.shuffle! : @cohort_members.sort_by(&:last_name)
                        @cohort_members[0..(config - 1)]
+
+                     elsif opts[:with_notes]
+                       # Running tests against a set of students who represent different note sources
+                       boa_sids = NessieUtils.get_all_sids
+                       asc_note_sids = boa_sids & NessieUtils.get_sids_with_notes_of_src(NoteSource::ASC)
+                       logger.info "There are #{asc_note_sids.length} students with ASC notes"
+                       boa_note_sids = boa_sids & BOACUtils.get_sids_with_notes_of_src_boa
+                       logger.info "There are #{boa_note_sids.length} students with BOA notes"
+                       e_and_i_note_sids = boa_sids & NessieUtils.get_sids_with_notes_of_src(NoteSource::E_AND_I)
+                       logger.info "There are #{e_and_i_note_sids.length} students with E&I notes"
+                       sis_note_sids = boa_sids & NessieUtils.get_sids_with_notes_of_src(NoteSource::SIS)
+                       logger.info "There are #{sis_note_sids.length} students with SIS notes"
+                       [asc_note_sids, boa_note_sids, e_and_i_note_sids, sis_note_sids].each { |s| s.shuffle! } if BOACUtils.shuffle_max_users
+                       test_sids = (asc_note_sids[0..(config - 1)] + boa_note_sids[0..(config - 1)] + e_and_i_note_sids[0..(config - 1)] + sis_note_sids[0..(config - 1)]).uniq
+                       @students.select { |s| test_sids.include? s.sis_id }
+
                      else
+                       # Running tests against a random set of students
                        @students.shuffle[0..(config - 1)]
                      end
     logger.warn "Test UIDs: #{@test_students.map &:uid}"
@@ -171,8 +191,7 @@ class BOACTestConfig < TestConfig
 
   # Config for assignments testing
   def assignments
-    set_base_configs_plus_searchable_data
-    set_default_cohort
+    set_base_configs
     set_test_students CONFIG['assignments_max_users']
     @term = CONFIG['assignments_term']
   end
@@ -180,7 +199,6 @@ class BOACTestConfig < TestConfig
   # Config for class page testing
   def class_pages
     set_base_configs_plus_searchable_data
-    set_default_cohort
     set_test_students CONFIG['class_page_max_users']
   end
 
@@ -249,8 +267,7 @@ class BOACTestConfig < TestConfig
 
   # Config for last activity testing
   def last_activity
-    set_base_configs_plus_searchable_data
-    set_default_cohort
+    set_base_configs
     set_test_students CONFIG['last_activity_max_users']
   end
 
@@ -258,28 +275,13 @@ class BOACTestConfig < TestConfig
   def note_content
     set_base_configs_plus_searchable_data
     set_default_cohort
-    @test_students = if (uids = ENV['UIDS'])
-                       @students.select { |s| uids.split.include? s.uid.to_s }
-                     else
-                       boa_sids = NessieUtils.get_all_sids
-                       asc_note_sids = boa_sids & NessieUtils.get_sids_with_notes_of_src(NoteSource::ASC)
-                       logger.info "There are #{asc_note_sids.length} students with ASC notes"
-                       e_and_i_note_sids = boa_sids & NessieUtils.get_sids_with_notes_of_src(NoteSource::E_AND_I)
-                       logger.info "There are #{e_and_i_note_sids.length} students with E&I notes"
-                       sis_note_sids = boa_sids & NessieUtils.get_sids_with_notes_of_src(NoteSource::SIS)
-                       logger.info "There are #{sis_note_sids.length} students with SIS notes"
-                       [asc_note_sids, e_and_i_note_sids, sis_note_sids].each { |s| s.shuffle! } if BOACUtils.shuffle_max_users
-                       max = CONFIG['notes_max_users']
-                       test_sids = (asc_note_sids[0..(max - 1)] + e_and_i_note_sids[0..(max - 1)] + sis_note_sids[0..(max - 1)]).uniq
-                       @students.select { |s| test_sids.include? s.sis_id }
-                     end
+    set_test_students(CONFIG['notes_max_users'], with_notes: true)
     logger.warn "Test UIDS: #{@test_students.map &:uid}"
   end
 
   # Config for page navigation testing
   def navigation
-    set_base_configs_plus_searchable_data
-    set_default_cohort
+    set_base_configs
     set_test_students CONFIG['class_page_max_users']
   end
 
@@ -334,8 +336,7 @@ class BOACTestConfig < TestConfig
 
   # Config for SIS data testing
   def sis_data
-    set_base_configs_plus_searchable_data
-    set_default_cohort
+    set_base_configs
     set_test_students CONFIG['sis_data_max_users']
   end
 
@@ -371,6 +372,13 @@ class BOACTestConfig < TestConfig
     set_dept BOACDepartments::COE
     set_advisor
     set_students user_role_config.students
+  end
+
+  # Config for director user role testing
+  def user_role_director
+    @advisor = BOACUtils.get_authorized_users.find { |u| u.advisor_roles.find &:is_director }
+    set_students
+    set_test_students(CONFIG['notes_max_users'], with_notes: true)
   end
 
   # Config for L&S user role testing

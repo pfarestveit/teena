@@ -8,6 +8,7 @@ test.note_management
 # TODO - get real array of advisor dept mappings when we have them
 test.advisor.depts = [test.dept.name]
 
+director = BOACUtils.get_authorized_users.find { |a| a.advisor_roles.find &:is_director }
 other_advisor = BOACUtils.get_dept_advisors(test.dept).find { |a| a.uid != test.advisor.uid }
 
 if test.dept == BOACDepartments::ADMIN
@@ -46,7 +47,7 @@ else
       @homepage = BOACHomePage.new @driver
       @student_page = BOACStudentPage.new @driver
       @search_results_page = BOACSearchResultsPage.new @driver
-      @api_notes_attachment_page = BOACApiNotesAttachmentPage.new @driver
+      @api_notes_page = BOACApiNotesPage.new @driver
     end
 
     after(:all) {Utils.quit_browser @driver}
@@ -241,6 +242,14 @@ else
           visible_new_note_ids = @student_page.visible_collapsed_note_ids.keep_if { |id| new_note_ids.include? id }
           expect(visible_new_note_ids).to eql(@student_page.expected_note_id_sort_order notes)
         end
+
+        it('sees no download link') { expect(@student_page.notes_download_link?).to be false }
+
+        it 'cannot hit the download endpoint' do
+          @api_notes_page.load_download_page test_student
+          @api_notes_page.unauth_msg_element.when_visible Utils.short_wait
+          expect(Utils.downloads_empty?).to be true
+        end
       end
 
       context 'editing an existing note' do
@@ -380,8 +389,8 @@ else
         end
 
         it 'cannot download a deleted attachment' do
-          @api_notes_attachment_page.load_page deleted_attachments.first.id
-          @api_notes_attachment_page.not_found_msg_element.when_visible Utils.short_wait
+          @api_notes_page.load_attachment_page deleted_attachments.first.id
+          @api_notes_page.not_found_msg_element.when_visible Utils.short_wait
           expect(Utils.downloads_empty?).to be true
         end
       end
@@ -438,6 +447,22 @@ else
       end
     end
 
+    describe 'director' do
+
+      before do
+        @homepage.dev_auth director
+        @student_page.load_page test_student
+        @student_page.show_notes
+      end
+
+      after do
+        @homepage.load_page
+        @homepage.log_out
+      end
+
+      it('can download notes') { @student_page.notes_download_link_element.when_visible Utils.short_wait }
+    end
+
     describe 'admin' do
 
       before(:all) do
@@ -454,6 +479,8 @@ else
       it('cannot create a note') { expect(@student_page.new_note_button?).to be false }
 
       it('cannot create a batch note') { expect(@student_page.batch_note_button?).to be false }
+
+      it('can download notes') { @student_page.notes_download_link_element.when_visible Utils.short_wait }
 
       notes.each do |note|
         it 'cannot edit a note' do
@@ -492,8 +519,8 @@ else
             note.attachments.each do |attach|
               @homepage.load_page
               id = BOACUtils.get_attachment_id_by_file_name(note, attach)
-              @api_notes_attachment_page.load_page id
-              @api_notes_attachment_page.not_found_msg_element.when_visible Utils.short_wait
+              @api_notes_page.load_attachment_page id
+              @api_notes_page.not_found_msg_element.when_visible Utils.short_wait
               expect(Utils.downloads_empty?).to be true
             end
           end

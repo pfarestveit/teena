@@ -196,7 +196,7 @@ class BOACUtils < Utils
                         AND drop_in_advisors.deleted_at IS NULL) AS is_drop_in_advisor,
               university_dept_members.is_scheduler AS is_scheduler,
               university_depts.dept_code AS dept_code,
-              drop_in_advisors.is_available AS is_available
+              drop_in_advisors.status AS drop_in_status
             FROM authorized_users
             LEFT JOIN university_dept_members
               ON authorized_users.id = university_dept_members.authorized_user_id
@@ -221,7 +221,7 @@ class BOACUtils < Utils
                     dept: (BOACDepartments::DEPARTMENTS.find { |d| d.code == role['dept_code']}),
                     is_advisor: (role['is_advisor'] == 't'),
                     is_automated: (role['is_automated'] && role['is_automated'] == 't'),
-                    is_available: (role['is_available'] && role['is_available'] == 't'),
+                    drop_in_status: (role['drop_in_status'] && role['drop_in_status'] == 't'),
                     is_drop_in_advisor: (role['is_drop_in_advisor'] && role['is_drop_in_advisor'] == 't'),
                     is_director: (role['is_director'] == 't'),
                     is_scheduler: (role['is_scheduler'] == 't')
@@ -505,6 +505,12 @@ class BOACUtils < Utils
       logger.info "Test alert ID #{alert.id}, message '#{alert.message}', user SID #{alert.user.sis_id}"
     end
     alert
+  end
+
+  def self.get_sids_with_notes_of_src_boa
+    query = 'SELECT DISTINCT sid FROM notes;'
+    results = Utils.query_pg_db(boac_db_credentials, query)
+    results.map { |r| r['sid'] }
   end
 
   # Returns a student's advising notes
