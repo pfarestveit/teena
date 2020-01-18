@@ -32,8 +32,6 @@ class BOACTestConfig < TestConfig
         @advisor = BOACUser.new({:uid => Utils.super_admin_uid})
       when BOACDepartments::ASC, BOACDepartments::COE, BOACDepartments::L_AND_S
         @advisor = uid ? (advisors.find { |a| a.uid.to_i == uid }) : advisors.find { |a| a.depts == [@dept.code] }
-        dept_id = BOACUtils.get_dept_id @dept
-        BOACUtils.convert_user_to_advisor(@dept, dept_id, @advisor)
       else
         if block_given?
           @advisor = advisors.find { |a| yield a }
@@ -52,15 +50,16 @@ class BOACTestConfig < TestConfig
   # Sets the three user roles for testing drop-in appointments
   # @param auth_users [Array<BOACUser>]
   def set_drop_in_appt_advisors(auth_users)
-    dept_advisors = auth_users.select { |u| u.depts.include? @dept }
-    @advisor = dept_advisors[0]
-    @drop_in_advisor = dept_advisors[1]
-    @drop_in_scheduler = dept_advisors[2]
+    dept_advisors = auth_users.select { |u| u.depts.include?(@dept) && (u.uid.length > 1)  }
+    @advisor = dept_advisors[3]
+    @advisor.advisor_roles = [AdvisorRole.new(dept: @dept, is_advisor: true)]
 
-    dept_id = BOACUtils.get_dept_id @dept
-    BOACUtils.convert_user_to_advisor(@dept, dept_id, @advisor)
-    BOACUtils.convert_user_to_unavailable_drop_in(@dept, dept_id, @drop_in_advisor)
-    BOACUtils.convert_user_to_scheduler(@dept, dept_id, @drop_in_scheduler)
+    @drop_in_advisor = dept_advisors[4]
+    @drop_in_advisor.advisor_roles = [AdvisorRole.new(dept: @dept, is_drop_in_advisor: true, drop_in_status: AdvisorDropInStatus::OFF_DUTY_NO_WAITLIST)]
+
+    @drop_in_scheduler = dept_advisors[5]
+    @drop_in_scheduler.advisor_roles = [AdvisorRole.new(dept: @dept, is_scheduler: true)]
+
     logger.warn "Advisor-only UID #{@advisor.uid}, drop-in advisor UID #{@drop_in_advisor.uid}, scheduler UID #{@drop_in_scheduler.uid}"
   end
 

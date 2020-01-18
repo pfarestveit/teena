@@ -178,6 +178,45 @@ class BOACUtils < Utils
     query_pg_db_field(boac_db_credentials, query, 'count').first.to_i
   end
 
+  # Creates an admin authorized user
+  # @param user [BOACUser]
+  def self.create_admin_auth_user(user)
+    statement = "INSERT INTO authorized_users (created_at, updated_at, uid, is_admin, in_demo_mode, can_access_canvas_data, created_by, is_blocked)
+                 SELECT now(), now(), '#{user.uid}', true, false, true, '#{Utils.super_admin_uid}', false
+                 WHERE NOT EXISTS (SELECT id FROM authorized_users WHERE uid = '#{user.uid}');"
+    result = query_pg_db(boac_db_credentials, statement)
+    logger.warn "Command status: #{result.cmd_status}. Result status: #{result.result_status}"
+  end
+
+  def self.get_dept_id(dept)
+    statement_0 = "SELECT id FROM university_depts WHERE dept_code = '#{dept.code}';"
+    query_pg_db_field(boac_db_credentials, statement_0, 'id').first
+  end
+
+  def self.soft_delete_auth_user(user)
+    statement = "UPDATE authorized_users SET deleted_at = NOW() WHERE uid = '#{user.uid}';"
+    result = query_pg_db(boac_db_credentials, statement)
+    logger.warn "Command status: #{result.cmd_status}. Result status: #{result.result_status}"
+  end
+
+  def self.restore_auth_user(user)
+    statement = "UPDATE authorized_users SET deleted_at = NULL WHERE uid = '#{user.uid}';"
+    result = query_pg_db(boac_db_credentials, statement)
+    logger.warn "Command status: #{result.cmd_status}. Result status: #{result.result_status}"
+  end
+
+  # Deletes an authorized user
+  # @param user [BOACUser]
+  def self.hard_delete_auth_user(user)
+    statement_1 = "DELETE FROM authorized_users WHERE uid = '#{user.uid}';"
+    result_1 = query_pg_db(boac_db_credentials, statement_1)
+    logger.warn "Command status: #{result_1.cmd_status}. Result status: #{result_1.result_status}"
+
+    statement_2 = "DELETE FROM json_cache WHERE key = 'calnet_user_for_uid_' || '#{user.uid}';"
+    result_2 = query_pg_db(boac_db_credentials, statement_2)
+    logger.warn "Command status: #{result_2.cmd_status}. Result status: #{result_2.result_status}"
+  end
+
   # Returns all authorized users along with any associated department advisor roles
   # @return [Array<BOACUser>]
   def self.get_authorized_users
@@ -221,7 +260,7 @@ class BOACUtils < Utils
                     dept: (BOACDepartments::DEPARTMENTS.find { |d| d.code == role['dept_code']}),
                     is_advisor: (role['is_advisor'] == 't'),
                     is_automated: (role['is_automated'] && role['is_automated'] == 't'),
-                    drop_in_status: (role['drop_in_status'] && role['drop_in_status'] == 't'),
+                    drop_in_status: (role['drop_in_status'] && (AdvisorDropInStatus::STATUSES.find { |s| s.description == role['drop_in_status'] })),
                     is_drop_in_advisor: (role['is_drop_in_advisor'] && role['is_drop_in_advisor'] == 't'),
                     is_director: (role['is_director'] == 't'),
                     is_scheduler: (role['is_scheduler'] == 't')
@@ -603,132 +642,6 @@ class BOACUtils < Utils
   def self.get_attachment_id_by_file_name(note, attachment)
     query = "SELECT * FROM note_attachments WHERE note_id = #{note.id} AND path_to_attachment LIKE '%#{attachment.file_name}';"
     attachment.id = Utils.query_pg_db_field(boac_db_credentials, query, 'id').last
-  end
-
-  ### USERS ###
-
-  # Creates an admin authorized user
-  # @param user [BOACUser]
-  def self.create_admin_auth_user(user)
-    statement = "INSERT INTO authorized_users (created_at, updated_at, uid, is_admin, in_demo_mode, can_access_canvas_data, created_by, is_blocked)
-                 SELECT now(), now(), '#{user.uid}', true, false, true, '#{Utils.super_admin_uid}', false
-                 WHERE NOT EXISTS (SELECT id FROM authorized_users WHERE uid = '#{user.uid}');"
-    result = query_pg_db(boac_db_credentials, statement)
-    logger.warn "Command status: #{result.cmd_status}. Result status: #{result.result_status}"
-  end
-
-  def self.get_dept_id(dept)
-    statement_0 = "SELECT id FROM university_depts WHERE dept_code = '#{dept.code}';"
-    query_pg_db_field(boac_db_credentials, statement_0, 'id').first
-  end
-
-  # Sets a given user to a non-admin, unblocked department role per given attributes
-  # @param dept [BOACDepartments]
-  # @param dept_id [String]
-  # @param user [BOACUser]
-  # @param role [AdvisorRole]
-  def self.convert_user_to_role(dept, dept_id, user, role)
-    statement_0 = "SELECT id FROM authorized_users WHERE uid = '#{user.uid}'"
-    auth_user_id = query_pg_db_field(boac_db_credentials, statement_0, 'id').first
-
-    statement_1 = "UPDATE authorized_users
-                   SET is_admin = FALSE,
-                       in_demo_mode = FALSE,
-                       is_blocked = FALSE
-                   WHERE uid = '#{user.uid}';"
-    result_1 = query_pg_db(boac_db_credentials, statement_1)
-    logger.warn "Authorized users update statuses: '#{result_1.cmd_status}' and '#{result_1.result_status}'"
-
-    statement_2 = "UPDATE university_dept_members
-                   SET is_advisor = #{role.is_advisor ? 'TRUE' : 'FALSE'},
-                       is_director = #{role.is_director ? 'TRUE' : 'FALSE'},
-                       is_scheduler = #{role.is_scheduler ? 'TRUE' : 'FALSE'}
-                   WHERE authorized_user_id = #{auth_user_id}
-                     AND university_dept_id = '#{dept_id}';"
-    result_2 = query_pg_db(boac_db_credentials, statement_2)
-    logger.warn "University dept members update statuses: '#{result_2.cmd_status}' and '#{result_2.result_status}'"
-
-    if role.is_drop_in_advisor
-      statement_3 = "UPDATE drop_in_advisors
-                     SET deleted_at = NULL,
-                         is_available = #{role.is_available ? 'TRUE' : 'FALSE'}
-                     WHERE authorized_user_id = '#{auth_user_id}'
-                     AND dept_code = '#{dept.code}';"
-      statement_4 = "INSERT INTO drop_in_advisors (authorized_user_id, dept_code, is_available, created_at, updated_at, deleted_at)
-                     SELECT #{auth_user_id}, '#{dept.code}', #{role.is_available ? 'TRUE' : 'FALSE'}, NOW(), NOW(), NULL
-                     WHERE NOT EXISTS (SELECT authorized_user_id
-                                       FROM drop_in_advisors
-                                       WHERE authorized_user_id = #{auth_user_id}
-                                         AND dept_code = '#{dept.code}');"
-
-
-      result_3 = query_pg_db(boac_db_credentials, statement_3)
-      logger.warn "Drop-in advisors UPDATE statuses: '#{result_3.cmd_status}' and '#{result_3.result_status}'"
-      result_4 = query_pg_db(boac_db_credentials, statement_4)
-      logger.warn "Drop-in advisors INSERT statuses: '#{result_4.cmd_status}' and '#{result_4.result_status}'"
-
-    else
-      statement_5 = "UPDATE drop_in_advisors
-                     SET deleted_at = NOW()
-                     WHERE authorized_user_id = #{auth_user_id}
-                       AND dept_code = '#{dept.code}';"
-      result_5 = query_pg_db(boac_db_credentials, statement_5)
-      logger.warn "Drop-in advisors UPDATE statuses: '#{result_5.cmd_status}' and '#{result_5.result_status}'"
-    end
-  end
-
-  # Converts a given user to a non-drop-in advisor
-  # @param dept [BOACDepartments]
-  # @param dept_id [String]
-  # @param user [BOACUser]
-  def self.convert_user_to_advisor(dept, dept_id, user)
-    logger.info "Converting UID #{user.uid} into an advisor-only in dept #{dept.code} ID #{dept_id}"
-    role = AdvisorRole.new(is_advisor: true, is_available: false, is_director: false, is_scheduler: false, is_drop_in_advisor: false)
-    convert_user_to_role(dept, dept_id, user, role)
-  end
-
-  # Converts a given user to an available drop-in advisor
-  # @param dept [BOACDepartments]
-  # @param dept_id [String]
-  # @param user [BOACUser]
-  def self.convert_user_to_unavailable_drop_in(dept, dept_id, user)
-    logger.info "Converting UID #{user.uid} into an drop-in advisor in dept #{dept.code} ID #{dept_id}"
-    role = AdvisorRole.new(is_advisor: true, is_available: false, is_director: false, is_scheduler: false, is_drop_in_advisor: true)
-    convert_user_to_role(dept, dept_id, user, role)
-  end
-
-  # Converts a given user to a scheduler
-  # @param dept [BOACDepartments]
-  # @param dept_id [String]
-  # @param user [BOACUser]
-  def self.convert_user_to_scheduler(dept, dept_id, user)
-    logger.info "Converting UID #{user.uid} into a drop-in scheduler in dept #{dept.code} ID #{dept_id}"
-    role = AdvisorRole.new(is_advisor: false, is_director: false, is_scheduler: true, is_drop_in_advisor: false)
-    convert_user_to_role(dept, dept_id, user, role)
-  end
-
-  def self.soft_delete_auth_user(user)
-    statement = "UPDATE authorized_users SET deleted_at = NOW() WHERE uid = '#{user.uid}';"
-    result = query_pg_db(boac_db_credentials, statement)
-    logger.warn "Command status: #{result.cmd_status}. Result status: #{result.result_status}"
-  end
-
-  def self.restore_auth_user(user)
-    statement = "UPDATE authorized_users SET deleted_at = NULL WHERE uid = '#{user.uid}';"
-    result = query_pg_db(boac_db_credentials, statement)
-    logger.warn "Command status: #{result.cmd_status}. Result status: #{result.result_status}"
-  end
-
-  # Deletes an authorized user
-  # @param user [BOACUser]
-  def self.hard_delete_auth_user(user)
-    statement_1 = "DELETE FROM authorized_users WHERE uid = '#{user.uid}';"
-    result_1 = query_pg_db(boac_db_credentials, statement_1)
-    logger.warn "Command status: #{result_1.cmd_status}. Result status: #{result_1.result_status}"
-
-    statement_2 = "DELETE FROM json_cache WHERE key = 'calnet_user_for_uid_' || '#{user.uid}';"
-    result_2 = query_pg_db(boac_db_credentials, statement_2)
-    logger.warn "Command status: #{result_2.cmd_status}. Result status: #{result_2.result_status}"
   end
 
   ### APPOINTMENTS ###
