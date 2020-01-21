@@ -110,6 +110,15 @@ def _row_to_cohort(row):
 
 
 class TestData:
+    drop_in_advisors = BoaRds.fetch("""
+        SELECT au.uid AS uid, dia.dept_code AS dept_code
+        FROM drop_in_advisors dia
+        JOIN authorized_users au
+        ON au.id = dia.authorized_user_id
+        AND au.deleted_at IS NULL
+        AND dia.deleted_at IS NULL
+    """)
+
     students = NessieRds.fetch(f"""
         SELECT sid, uid FROM student.student_academic_status
         ORDER BY last_name
@@ -160,11 +169,13 @@ class BoaTaskSet(TaskSet):
             if path:
                 self.client.get(path)
 
-    def login(self):
+    def login(self, uid=None):
+        if uid is None:
+            uid = self.locust.user['uid']
         self.client.post(
             '/api/auth/dev_auth_login',
             json={
-                'uid': self.locust.user['uid'],
+                'uid': uid,
                 'password': boac_cfg['password'],
             },
         )
@@ -204,6 +215,12 @@ class BoaTaskSet(TaskSet):
         student = sample(TestData.students)
         self.client.get(f"/api/student/by_uid/{student['uid']}", name='/api/student/by_uid/[uid]')
         self.client.get(f"/api/curated_groups/my/{student['sid']}", name='/api/curated_groups/my/[sid]')
+
+    @task(5)
+    def poll_drop_in_waitlist(self):
+        drop_in_advisor = sample(TestData.drop_in_advisors)
+        self.login(drop_in_advisor['uid'])
+        self.client.get(f"/api/appointments/waitlist/{drop_in_advisor['dept_code']}", name='/api/appointments/waitlist/[dept_code]')
 
 
 """
