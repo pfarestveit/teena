@@ -47,9 +47,13 @@ module BOACApptIntakeDesk
       []
     else
       wait_for_update_and_click reserve_advisor_select_element
-      wait_until(1) { reserve_advisor_select_element.options.any? }
+      wait_until(1) { reserve_advisor_option_elements.any? }
       (reserve_advisor_option_elements.map { |el| el.attribute('value') }).delete_if &:empty?
     end
+  end
+
+  def available_appt_advisor_option(advisor)
+    reserve_advisor_option_elements.find { |el| el.attribute('value') == "#{advisor.uid}" }
   end
 
   # Selects an advisor for an appointment
@@ -63,7 +67,7 @@ module BOACApptIntakeDesk
   # @return [Array<String>]
   def available_appt_reasons
     wait_for_update_and_click topic_select_element
-    wait_until(1) { topic_select_element.options.any? }
+    wait_until(1) { topic_option_elements.any? }
     (topic_option_elements.map { |el| el.attribute 'value' }).delete_if &:empty?
   end
 
@@ -177,7 +181,7 @@ module BOACApptIntakeDesk
 
   # Intake desk
 
-  elements(:availability_toggle_button, :button, xpath: '//button[contains(@id, "toggle-drop-in-availability-")]')
+  elements(:availability_toggle_button, :button, xpath: '//div[contains(@id, "toggle-drop-in-status-")]')
 
   # Returns the UIDs of all drop-in advisors shown
   # @return [Array<String>]
@@ -185,66 +189,43 @@ module BOACApptIntakeDesk
     availability_toggle_button_elements.map { |el| el.attribute('id').split('-').last }
   end
 
-  # Returns the button for toggling advisor availability
-  # @return [PageObject::Elements::Button]
-  def toggle_availability_button(advisor)
-    button_element(id: "toggle-drop-in-availability-#{advisor.uid}")
-  end
-
-  # Returns the visible availability status for an advisor
+  # Returns the visible drop-in status for an advisor
   # @param advisor [BOACUser]
-  # @return [Boolean]
-  def advisor_available?(advisor)
-    (el = div_element(xpath: "//button[@id='toggle-drop-in-availability-#{advisor.uid}']/../../div[contains(@class, 'availability-status-active')]")).when_present 2
-    el.text.strip == 'ON DUTY'
+  # @return [AdvisorDropInStatus]
+  def visible_drop_in_status(advisor = nil)
+    el = text_field_element(xpath: "//div[@id='toggle-drop-in-status-#{advisor ? advisor.uid : 'me'}']/label[contains(@class, 'active')]/input")
+    AdvisorDropInStatus::STATUSES.find { |s| s.description == el.attribute('value') }
   end
 
-  # Sets an advisor's availability to true
+  # Sets a given drop-in status for a given advisor
+  # @param advisor_role [AdvisorRole]
+  # @param drop_in_status [AdvisorDropInStatus]
   # @param advisor [BOACUser]
-  def set_advisor_available(advisor)
-    if advisor_available? advisor
-      logger.warn "UID #{advisor.uid} is already available for drop-in appointments"
-    else
-      logger.info "Making UID #{advisor.uid} available for drop-in appointments"
-      wait_for_update_and_click toggle_availability_button(advisor)
-      wait_until(1) { advisor_available? advisor }
-    end
+  def set_drop_in_status(advisor_role, drop_in_status, advisor = nil)
+    el = span_element(xpath: "//input[contains(@id, 'toggle-drop-in-status-#{advisor ? advisor.uid : 'me'}')][@value='#{drop_in_status.description}']/following-sibling::span")
+    wait_for_update_and_click el
+    advisor_role.drop_in_status = drop_in_status
   end
 
-  # Sets an advisor's availability to false
+  # Sets a given advisor's drop-in status to off-duty-waitlist
+  # @param advisor_role [AdvisorRole]
   # @param advisor [BOACUser]
-  def set_advisor_unavailable(advisor)
-    if advisor_available? advisor
-      logger.info "Making UID #{advisor.uid} unavailable for drop-in appointments"
-      wait_for_update_and_click toggle_availability_button(advisor)
-      wait_until(1) { !advisor_available? advisor }
-    else
-      logger.warn "UID #{advisor.uid} is already unavailable for drop-in appointments"
-    end
+  def set_drop_in_off_duty(advisor_role, advisor = nil)
+    set_drop_in_status(advisor_role, AdvisorDropInStatus::OFF_DUTY_WAITLIST, advisor)
   end
 
-  # Waiting list
-
-  button(:availability_toggle_me_button, id: 'toggle-drop-in-availability-me')
-
-  # Returns the visible availability status for a logged-in advisor
-  # @return [Boolean]
-  def self_available?
-    div_element(xpath: '//div[contains(@class, "availability-status-active")]').text.strip == 'ON DUTY'
+  # Sets a given advisor's drop-in status to on-duty-advisor
+  # @param advisor_role [AdvisorRole]
+  # @param advisor [BOACUser]
+  def set_drop_in_advisor_on(advisor_role, advisor = nil)
+    set_drop_in_status(advisor_role, AdvisorDropInStatus::ON_DUTY_ADVISOR, advisor)
   end
 
-  # Sets a logged-in advisor's availability to true
-  def set_self_available
-    logger.info "Making the logged-in advisor available for drop-in appointments"
-    wait_for_update_and_click availability_toggle_me_button_element
-    wait_until(1) { self_available? }
-  end
-
-  # Sets a logged-in advisor's availability to false
-  def set_self_unavailable
-    logger.info "Making the logged-in advisor unavailable for drop-in appointments"
-    wait_for_update_and_click availability_toggle_me_button_element
-    wait_until(1) { !self_available? }
+  # Sets a given advisor's drop-in status to on-duty-supervisor
+  # @param advisor_role [AdvisorRole]
+  # @param advisor [BOACUser]
+  def set_drop_in_supervisor_on(advisor_role, advisor = nil)
+    set_drop_in_status(advisor_role, AdvisorDropInStatus::ON_DUTY_SUPERVISOR, advisor)
   end
 
   ### LIST VIEW OF EXISTING APPOINTMENTS ###
@@ -387,6 +368,13 @@ module BOACApptIntakeDesk
     (check_in_advisor_option_elements.map { |el| el.attribute 'value' }).delete_if &:empty?
   end
 
+  # Returns the check-in advisor option for a given advisor
+  # @param advisor [BOACUser]
+  # @return [PageObject::Elements::Option]
+  def check_in_advisor_option(advisor)
+    check_in_advisor_option_elements.find { |el| el.attribute('value') == "#{advisor.uid}" }
+  end
+
   # Selects a given advisor when checking in an appointment
   # @param advisor [BOACUser]
   def select_check_in_advisor(advisor)
@@ -396,6 +384,7 @@ module BOACApptIntakeDesk
   ### RESERVE / UN-RESERVE ###
 
   select_list(:assign_modal_advisor_select, id: 'assign-modal-advisor-select')
+  elements(:assign_modal_advisor_option, :option, xpath: '//select[@id="assign-modal-advisor-select"]/option')
   button(:assign_modal_assign_button, id: 'btn-appointment-assign')
 
   # Returns the button for assigning an appointment
@@ -411,6 +400,13 @@ module BOACApptIntakeDesk
     logger.info "Clicking reserve button for appointment #{appt.id}"
     click_appt_dropdown_button appt
     wait_for_update_and_click reserve_appt_button(appt)
+  end
+
+  # Returns the assign advisor option for a given advisor
+  # @param advisor [BOACUser]
+  # @return [PageObject::Elements::Option]
+  def reserve_advisor_option(advisor)
+    assign_modal_advisor_option_elements.find { |el| el.attribute('value') == "#{advisor.uid}" }
   end
 
   # Assigns an existing appointment to a given advisor

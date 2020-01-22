@@ -320,4 +320,10 @@ class BOACPaxManifestPage
     sleep 1
   end
 
+  def search_for_and_edit_user(user)
+    search_for_advisor user
+    wait_until(Utils.short_wait) { list_view_uids.include? user.uid.to_s }
+    edit_user user
+  end
+
 end

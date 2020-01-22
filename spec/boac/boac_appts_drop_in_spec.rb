@@ -11,10 +11,6 @@ describe 'BOA' do
     @test = BOACTestConfig.new
     @test.drop_in_appts(authorized_users, dept)
 
-    @drop_in_advisors = authorized_users.select do |a|
-      a.advisor_roles.find { |r| r.dept == @test.dept && r.is_drop_in_advisor }
-    end
-
     @students = @test.students.shuffle[0..7]
     inactive_sid = (NessieUtils.hist_profile_sids_of_career_status('Inactive') - BOACUtils.manual_advisee_sids).first
     @inactive_student = NessieUtils.get_hist_student inactive_sid
@@ -38,10 +34,24 @@ describe 'BOA' do
     @scheduler_intake_desk = BOACApptIntakeDeskPage.new @driver_scheduler
 
     @driver_advisor = Utils.launch_browser
+    @pax_manifest = BOACPaxManifestPage.new @driver_advisor
     @advisor_homepage = BOACHomePage.new @driver_advisor
     @advisor_appt_desk = BOACApptIntakeDeskPage.new @driver_advisor
     @advisor_student_page = BOACStudentPage.new @driver_advisor
     @search_results_page = BOACSearchResultsPage.new @driver_advisor
+
+    # Configure users
+    @advisor_homepage.dev_auth
+    @pax_manifest.load_page
+    @pax_manifest.filter_mode_select_element.when_visible Utils.medium_wait
+    @pax_manifest.search_for_and_edit_user @test.advisor
+    @pax_manifest.search_for_and_edit_user @test.drop_in_advisor
+    @pax_manifest.search_for_and_edit_user @test.drop_in_scheduler
+    @pax_manifest.log_out
+
+    @drop_in_advisors = BOACUtils.get_authorized_users.select do |a|
+      a.advisor_roles.find { |r| r.dept == @test.dept && r.is_drop_in_advisor }
+    end
   end
 
   after(:all) do
@@ -80,9 +90,20 @@ describe 'BOA' do
     before(:all) { @advisor_homepage.dev_auth @test.drop_in_advisor }
     after(:all) { @advisor_homepage.log_out }
 
-    it 'drops the user onto the homepage at login with a waiting list' do
+    it 'drops the user onto the homepage at login with a "Show Drop-in Waitlist" button' do
       expect(@advisor_homepage.title).to include('Home')
+      @advisor_homepage.show_waitlist_button_element.when_visible Utils.short_wait
+      expect(@advisor_homepage.new_appt_button?).to be false
+    end
+
+    it 'allows the user to reveal the drop-in waiting list' do
+      @advisor_homepage.show_drop_in_wait_list
       @advisor_homepage.new_appt_button_element.when_visible Utils.short_wait
+    end
+
+    it 'allows the user to hide the drop-in waiting list' do
+      @advisor_homepage.hide_drop_in_wait_list
+      @advisor_homepage.new_appt_button_element.when_not_visible Utils.short_wait
     end
 
     it 'prevents the user from accessing the department drop-in intake desk' do
@@ -94,6 +115,10 @@ describe 'BOA' do
       @advisor_appt_desk.load_page @other_dept
       @advisor_appt_desk.wait_for_title 'Page not found'
     end
+
+    # TODO - the following:
+    it 'allows the user to remove its drop-in advising role'
+    it 'allows the user to enable its drop-in advising role'
   end
 
   ### PERMISSIONS - NON-DROP-IN ADVISOR
@@ -101,12 +126,13 @@ describe 'BOA' do
   context 'when the user is a non-drop-in advisor' do
 
     before(:all) { @advisor_homepage.dev_auth @test.advisor }
-    after(:all) { @advisor_appt_desk.log_out }
+    after(:all) { @advisor_homepage.log_out }
 
     it 'drops the user onto the homepage at login with no waiting list' do
-      expect(@advisor_appt_desk.title).to include('Home')
+      expect(@advisor_homepage.title).to include('Home')
       sleep 2
-      expect(@advisor_appt_desk.new_appt_button?).to be false
+      expect(@advisor_homepage.show_waitlist_button?).to be false
+      expect(@advisor_homepage.new_appt_button?).to be false
     end
 
     it 'prevents the user from accessing the department drop-in intake desk' do
@@ -125,6 +151,7 @@ describe 'BOA' do
     it 'drops the user onto the homepage at login with no waiting list' do
       expect(@advisor_homepage.title).to include('Home')
       sleep 2
+      expect(@advisor_homepage.show_waitlist_button?).to be false
       expect(@advisor_homepage.new_appt_button?).to be false
     end
 
@@ -145,26 +172,45 @@ describe 'BOA' do
       before(:all) { @scheduler_intake_desk.load_page @test.dept }
       after(:all) { @scheduler_intake_desk.hit_escape }
 
-      it('is shown for only drop-in advisors') do
+      it 'is shown for only drop-in advisors' do
         @scheduler_intake_desk.new_appt_button_element.when_visible Utils.short_wait
         expect(@scheduler_intake_desk.drop_in_advisor_uids.sort).to eql(@drop_in_advisors.map(&:uid).sort)
       end
 
-      it('allows a scheduler to set a drop-in advisor to "unavailable"') { @scheduler_intake_desk.set_advisor_unavailable @test.drop_in_advisor }
+      it 'shows a drop-in advisor\'s status' do
+        expect(@scheduler_intake_desk.visible_drop_in_status(@test.drop_in_advisor)).to eql(@test.drop_in_advisor.advisor_roles.first.drop_in_status)
+      end
+
+      it 'allows a scheduler to set a drop-in advisor to "off-duty"' do
+        @scheduler_intake_desk.set_drop_in_off_duty(@test.drop_in_advisor.advisor_roles.first, @test.drop_in_advisor)
+      end
 
       it 'shows no unavailable advisors when making an appointment with a reservation' do
         @scheduler_intake_desk.click_new_appt
         expect(@scheduler_intake_desk.available_appt_advisor_uids).not_to include(@test.drop_in_advisor.uid)
       end
 
-      it('allows a scheduler to set a drop-in advisor to "available"') do
+      it 'allows a scheduler to set a drop-in advisor to "on-duty advisor"' do
         @scheduler_intake_desk.hit_escape
-        @scheduler_intake_desk.set_advisor_available @test.drop_in_advisor
+        @scheduler_intake_desk.set_drop_in_advisor_on(@test.drop_in_advisor.advisor_roles.first, @test.drop_in_advisor)
       end
 
       it 'shows available advisors when making an appointment with a reservation' do
         @scheduler_intake_desk.click_new_appt
         @scheduler_intake_desk.wait_for_poller { @scheduler_intake_desk.available_appt_advisor_uids.include? @test.drop_in_advisor.uid }
+      end
+
+      it 'allows a scheduler to set a drop-in advisor to "on-duty supervisor"' do
+        @scheduler_intake_desk.hit_escape
+        @scheduler_intake_desk.set_drop_in_supervisor_on(@test.drop_in_advisor.advisor_roles.first, @test.drop_in_advisor)
+      end
+
+      it 'shows the supervisor when making an appointment with a reservation' do
+        @scheduler_intake_desk.click_new_appt
+        @scheduler_intake_desk.wait_for_poller do
+          @scheduler_intake_desk.available_appt_advisor_uids.include? @test.drop_in_advisor.uid
+          @scheduler_intake_desk.available_appt_advisor_option(@test.drop_in_advisor).text.include? '(Supervisor On Call)'
+        end
       end
     end
 
@@ -174,11 +220,29 @@ describe 'BOA' do
 
       it 'is shown for the logged-in drop-in advisor' do
         @advisor_homepage.new_appt_button_element.when_visible Utils.short_wait
-        @advisor_homepage.wait_for_poller { @advisor_homepage.self_available? }
+        expect(@advisor_homepage.visible_drop_in_status @test.drop_in_advisor).to eql(@test.drop_in_advisor.advisor_roles.first.drop_in_status)
       end
 
-      it('allows a drop-in advisor to set itself "unavailable"') { @advisor_homepage.set_self_unavailable }
-      it('allows a drop-in advisor to set itself "available"') { @advisor_homepage.set_self_available }
+      it 'allows a drop-in advisor to set itself "off-duty"' do
+        @advisor_homepage.set_drop_in_off_duty @test.drop_in_advisor.advisor_roles.first
+        @scheduler_intake_desk.wait_for_poller do
+          @scheduler_intake_desk.visible_drop_in_status(@test.drop_in_advisor) == @test.drop_in_advisor.advisor_roles.first.drop_in_status
+        end
+      end
+
+      it 'allows a drop-in advisor to set itself "on-duty advisor"' do
+        @advisor_homepage.set_drop_in_advisor_on @test.drop_in_advisor.advisor_roles.first
+        @scheduler_intake_desk.wait_for_poller do
+          @scheduler_intake_desk.visible_drop_in_status(@test.drop_in_advisor) == @test.drop_in_advisor.advisor_roles.first.drop_in_status
+        end
+      end
+
+      it 'allows a drop-in advisor to set itself "on-duty supervisor"' do
+        @advisor_homepage.set_drop_in_supervisor_on @test.drop_in_advisor.advisor_roles.first
+        @scheduler_intake_desk.wait_for_poller do
+          @scheduler_intake_desk.visible_drop_in_status(@test.drop_in_advisor) == @test.drop_in_advisor.advisor_roles.first.drop_in_status
+        end
+      end
     end
   end
 
@@ -410,7 +474,18 @@ describe 'BOA' do
         @appt_1.reserve_advisor = nil
       end
 
+      it 'show the scheduler the available Supervisors On Call' do
+        @scheduler_intake_desk.hit_escape
+        @scheduler_intake_desk.click_reserve_appt_button @appt_1
+        @scheduler_intake_desk.wait_for_update_and_click @scheduler_intake_desk.assign_modal_advisor_select_element
+        @scheduler_intake_desk.wait_until(Utils.short_wait) do
+          @scheduler_intake_desk.assign_modal_advisor_option_elements.any?
+          @scheduler_intake_desk.reserve_advisor_option(@test.drop_in_advisor).text.include? '(Supervisor On Call)'
+        end
+      end
+
       it 'allows the scheduler to reserve an unreserved appointment' do
+        @scheduler_intake_desk.hit_escape
         @scheduler_intake_desk.reserve_appt_for_advisor(@appt_1, @test.drop_in_advisor)
         @scheduler_intake_desk.wait_for_poller { @scheduler_intake_desk.reserved_for_el(@appt_1).visible? }
         @appt_1.reserve_advisor = @test.drop_in_advisor
@@ -628,6 +703,10 @@ describe 'BOA' do
 
       it 'offers available drop-in advisors as advisor for the appointment' do
         expect(@scheduler_intake_desk.check_in_advisors.sort).to include(@test.drop_in_advisor.uid)
+      end
+
+      it 'shows the Supervisors on Call' do
+        expect(@scheduler_intake_desk.check_in_advisor_option(@test.drop_in_advisor).text).to include('(Supervisor On Call)')
       end
 
       it 'can be done from the intake desk view' do

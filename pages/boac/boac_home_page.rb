@@ -67,7 +67,19 @@ class BOACHomePage
 
   # DROP-IN APPTS
 
+  button(:show_waitlist_button, xpath: '//button[contains(text(), "Show Drop-in Waitlist")]')
+  button(:hide_waitlist_button, xpath: '//button[contains(text(), "Hide Drop-in Waitlist")]')
   button(:new_appt_button, id: 'btn-homepage-create-appointment')
+
+  def show_drop_in_wait_list
+    logger.info 'Clicking "Show Drop-in Waitlist button"'
+    wait_for_update_and_click show_waitlist_button_element
+  end
+
+  def hide_drop_in_wait_list
+    logger.info 'Clicking "Hide Drop-in Waitlist button"'
+    wait_for_update_and_click hide_waitlist_button_element
+  end
 
   # Clicks the button to create a new new drop-in appointment
   def click_new_appt
