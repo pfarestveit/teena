@@ -32,6 +32,7 @@ describe 'BOA' do
     @driver_scheduler = Utils.launch_browser
     @scheduler_homepage = BOACHomePage.new @driver_scheduler
     @scheduler_intake_desk = BOACApptIntakeDeskPage.new @driver_scheduler
+    @scheduler_flight_deck = BOACFlightDeckPage.new @driver_scheduler
 
     @driver_advisor = Utils.launch_browser
     @pax_manifest = BOACPaxManifestPage.new @driver_advisor
@@ -39,6 +40,7 @@ describe 'BOA' do
     @advisor_appt_desk = BOACApptIntakeDeskPage.new @driver_advisor
     @advisor_student_page = BOACStudentPage.new @driver_advisor
     @search_results_page = BOACSearchResultsPage.new @driver_advisor
+    @advisor_flight_deck = BOACFlightDeckPage.new @driver_advisor
 
     # Configure users
     @advisor_homepage.dev_auth
@@ -115,10 +117,6 @@ describe 'BOA' do
       @advisor_appt_desk.load_page @other_dept
       @advisor_appt_desk.wait_for_title 'Page not found'
     end
-
-    # TODO - the following:
-    it 'allows the user to remove its drop-in advising role'
-    it 'allows the user to enable its drop-in advising role'
   end
 
   ### PERMISSIONS - NON-DROP-IN ADVISOR
@@ -466,30 +464,6 @@ describe 'BOA' do
       it('show the student name') { expect(@scheduler_intake_desk.details_student_name).to eql(@appt_1.student.full_name) }
       it('show the appointment reason(s)') { expect(@scheduler_intake_desk.appt_reasons.sort).to eql(@appt_1.topics.map { |t| t.name.downcase }.sort) }
       it('show the arrival time') { expect(@scheduler_intake_desk.modal_created_at).to eql(@scheduler_intake_desk.appt_time_created_format(@appt_1.created_date).strip) }
-
-      it 'allows the scheduler to un-reserve a reserved appointment' do
-        @scheduler_intake_desk.hit_escape
-        @scheduler_intake_desk.click_unreserve_appt_button @appt_1
-        @scheduler_intake_desk.reserved_for_el(@appt_1).when_not_present Utils.short_wait
-        @appt_1.reserve_advisor = nil
-      end
-
-      it 'show the scheduler the available Supervisors On Call' do
-        @scheduler_intake_desk.hit_escape
-        @scheduler_intake_desk.click_reserve_appt_button @appt_1
-        @scheduler_intake_desk.wait_for_update_and_click @scheduler_intake_desk.assign_modal_advisor_select_element
-        @scheduler_intake_desk.wait_until(Utils.short_wait) do
-          @scheduler_intake_desk.assign_modal_advisor_option_elements.any?
-          @scheduler_intake_desk.reserve_advisor_option(@test.drop_in_advisor).text.include? '(Supervisor On Call)'
-        end
-      end
-
-      it 'allows the scheduler to reserve an unreserved appointment' do
-        @scheduler_intake_desk.hit_escape
-        @scheduler_intake_desk.reserve_appt_for_advisor(@appt_1, @test.drop_in_advisor)
-        @scheduler_intake_desk.wait_for_poller { @scheduler_intake_desk.reserved_for_el(@appt_1).visible? }
-        @appt_1.reserve_advisor = @test.drop_in_advisor
-      end
     end
 
     # Drop-in Advisor
@@ -513,20 +487,6 @@ describe 'BOA' do
       it('show the student name') { expect(@advisor_homepage.details_student_name).to eql(@appt_1.student.full_name) }
       it('show the appointment reason(s)') { expect(@advisor_homepage.appt_reasons.sort).to eql(@appt_1.topics.map { |t| t.name.downcase }.sort) }
       it('show the arrival time') { expect(@advisor_homepage.modal_created_at).to eql(@advisor_homepage.appt_time_created_format(@appt_1.created_date).strip) }
-
-      it 'allow the drop-in advisor to un-reserve an appointment' do
-        @advisor_homepage.hit_escape
-        @advisor_homepage.click_unreserve_appt_button @appt_1
-        @advisor_homepage.wait_for_poller { !@advisor_homepage.reserved_for_el(@appt_1).exists? }
-        @appt_1.reserve_advisor = nil
-      end
-
-      it 'allow the drop-in advisor to reserve an appointment' do
-        @advisor_homepage.click_reserve_appt_button @appt_1
-        @advisor_homepage.reserved_for_el(@appt_1).when_visible 3
-        expect(@advisor_homepage.reserved_for_el(@appt_1).text).to eql('Assigned to you')
-        @appt_1.reserve_advisor = @test.drop_in_advisor
-      end
     end
 
     context 'on the student page' do
@@ -562,27 +522,98 @@ describe 'BOA' do
         it('show no appointment advisor') { expect(@visible_expanded_data[:advisor_name]).to be_nil }
         it('show the appointment type') { expect(@visible_expanded_data[:type]).to eql('Drop-in') }
         it('show the appointment reasons') { expect(@visible_expanded_data[:topics]).to eql(@appt_1.topics.map { |t| t.name.upcase }.sort) }
+      end
+    end
+  end
 
-        it 'allow the drop-in advisor to unreserve the appointment' do
-          @advisor_student_page.click_unreserve_appt_button @appt_1
-          @advisor_student_page.reserved_for_el(@appt_1).when_not_present 3
-        end
+  ### DROP-IN APPOINTMENT ASSIGNMENTS
 
-        it 'show Waiting status on the unreserved appointment' do
-          @advisor_student_page.collapse_item @appt_1
-          @advisor_student_page.wait_until(3) { @advisor_student_page.visible_collapsed_appt_data(@appt_1)[:status] == 'WAITING' }
-        end
+  describe 'drop-in appointment assignment' do
 
-        it 'allow the drop-in advisor to reserve the appointment' do
-          @advisor_student_page.expand_item @appt_1
-          @advisor_student_page.click_reserve_appt_button @appt_1
-          @advisor_student_page.reserved_for_el(@appt_1).when_visible 3
-        end
+    # Scheduler
 
-        it 'show Reserved status on the reserved appointment' do
-          @advisor_student_page.collapse_item @appt_1
-          @advisor_student_page.wait_until(3) { @advisor_student_page.visible_collapsed_appt_data(@appt_1)[:status] == 'ASSIGNED' }
-        end
+    context 'on the appointment intake desk' do
+
+      after(:all) { @scheduler_intake_desk.hit_escape }
+
+      it 'allows the scheduler to un-reserve a reserved appointment' do
+        @scheduler_intake_desk.hit_escape
+        @scheduler_intake_desk.click_unreserve_appt_button @appt_1
+        @scheduler_intake_desk.reserved_for_el(@appt_1).when_not_present Utils.short_wait
+        @appt_1.reserve_advisor = nil
+      end
+
+      it 'allows the scheduler to reserve an unreserved appointment' do
+        @scheduler_intake_desk.hit_escape
+        @scheduler_intake_desk.reserve_appt_for_advisor(@appt_1, @test.drop_in_advisor)
+        @scheduler_intake_desk.wait_for_poller { @scheduler_intake_desk.reserved_for_el(@appt_1).visible? }
+        @appt_1.reserve_advisor = @test.drop_in_advisor
+      end
+
+      # TODO - the following
+      it 'triggers a warning if a scheduler tries to set a drop-in advisor with a reserved appointment to "off-duty"'
+      it 'removes a drop-in advisor\'s appointment reservations if a scheduler sets a drop-in advisor to "off-duty"'
+    end
+
+    # Drop-in Advisor
+
+    context 'on the waiting list' do
+
+      before(:all) do
+        @advisor_homepage.load_page
+        @advisor_homepage.wait_until(Utils.short_wait) { @scheduler_homepage.visible_appt_ids.any? }
+        @visible_list_view_appt_data = @advisor_homepage.visible_list_view_appt_data @appt_1
+      end
+
+      after(:all) { @advisor_homepage.hit_escape }
+
+      it 'allow the drop-in advisor to un-reserve an appointment' do
+        @advisor_homepage.hit_escape
+        @advisor_homepage.click_unreserve_appt_button @appt_1
+        @advisor_homepage.wait_for_poller { !@advisor_homepage.reserved_for_el(@appt_1).exists? }
+        @appt_1.reserve_advisor = nil
+      end
+
+      it 'allow the drop-in advisor to reserve an appointment' do
+        @advisor_homepage.click_reserve_appt_button @appt_1
+        @advisor_homepage.reserved_for_el(@appt_1).when_visible 3
+        expect(@advisor_homepage.reserved_for_el(@appt_1).text).to eql('Assigned to you')
+        @appt_1.reserve_advisor = @test.drop_in_advisor
+      end
+
+      # TODO - the following
+      it 'triggers a warning if a drop-in advisor tries to go off-duty with a reserved appointment'
+      it 'removes a drop-in advisor\'s appointment reservations if the advisor goes off-duty'
+    end
+
+    context 'on the student page' do
+
+      before(:all) do
+        @advisor_homepage.click_student_link @appt_1
+        @advisor_student_page.show_appts
+        @advisor_student_page.wait_until(1) { @advisor_student_page.visible_message_ids.include? @appt_1.id }
+        @advisor_student_page.expand_item @appt_1
+      end
+
+      it 'allow the drop-in advisor to unreserve the appointment' do
+        @advisor_student_page.click_unreserve_appt_button @appt_1
+        @advisor_student_page.reserved_for_el(@appt_1).when_not_present 3
+      end
+
+      it 'show Waiting status on the unreserved appointment' do
+        @advisor_student_page.collapse_item @appt_1
+        @advisor_student_page.wait_until(3) { @advisor_student_page.visible_collapsed_appt_data(@appt_1)[:status] == 'WAITING' }
+      end
+
+      it 'allow the drop-in advisor to reserve the appointment' do
+        @advisor_student_page.expand_item @appt_1
+        @advisor_student_page.click_reserve_appt_button @appt_1
+        @advisor_student_page.reserved_for_el(@appt_1).when_visible 3
+      end
+
+      it 'show Reserved status on the reserved appointment' do
+        @advisor_student_page.collapse_item @appt_1
+        @advisor_student_page.wait_until(3) { @advisor_student_page.visible_collapsed_appt_data(@appt_1)[:status] == 'ASSIGNED' }
       end
     end
   end
@@ -993,6 +1024,72 @@ describe 'BOA' do
 
     it 'shows all non-deleted appointments sorted by creation time' do
       expect(@advisor_student_page.visible_collapsed_item_ids('appointment')).to eql(@student_appts.sort_by(&:created_date).reverse.map(&:id).uniq)
+    end
+  end
+
+  describe 'settings page' do
+
+    before(:all) do
+      @reserved_appt = Appointment.new(student: @students[-2], topics: [Topic::COURSE_DROP], detail: "Reserved #{@test.id}", advisor: @test.drop_in_advisor)
+      @advisor_homepage.load_page
+      @advisor_homepage.click_new_appt
+      @advisor_homepage.create_appt @reserved_appt
+    end
+
+    context 'when the user is a scheduler' do
+
+      it 'is not offered in the header' do
+        @scheduler_intake_desk.click_header_dropdown
+        expect(@scheduler_intake_desk.settings_link?).to be false
+      end
+
+      it 'cannot be reached' do
+        @scheduler_flight_deck.load_page
+        @scheduler_flight_deck.wait_for_title 'Not Found'
+      end
+    end
+
+    context 'when the user is a drop-in advisor' do
+
+      before(:all) do
+        @advisor_homepage.click_settings_link
+        @scheduler_intake_desk.load_page @test.dept
+      end
+
+      it 'allows the user to remove its drop-in advising role' do
+        @advisor_flight_deck.disable_drop_in_advising_role @test.drop_in_advisor.advisor_roles.first
+        @scheduler_intake_desk.wait_for_poller { !@scheduler_intake_desk.drop_in_advisor_uids.include?(@test.drop_in_advisor.uid) }
+      end
+
+      it 'removes the user\'s access to the waiting list' do
+        @advisor_homepage.load_page
+        sleep 1
+        expect(@advisor_homepage.show_waitlist_button?).to be false
+        expect(@advisor_homepage.hide_waitlist_button?).to be false
+      end
+
+      it 'removes the user\'s appointment assignments on the waiting list when the drop-in advising role is removed' do
+        @scheduler_intake_desk.wait_for_poller { !@scheduler_intake_desk.visible_list_view_appt_data(@reserved_appt)[:reserved_by] }
+      end
+
+      it 'removes the user\'s appointment assignments on the student page when the drop-in advising role is removed' do
+        @advisor_student_page.load_page @reserved_appt.student
+        @advisor_student_page.show_appts
+        @advisor_student_page.expand_item @reserved_appt
+        expect(@advisor_student_page.visible_expanded_appt_data(@reserved_appt)[:reserve_advisor]).to be_nil
+        expect(@advisor_student_page.check_in_button(@reserved_appt).exists?).to be false
+      end
+
+      it 'allows the user to enable its drop-in advising role' do
+        @advisor_flight_deck.click_settings_link
+        @advisor_flight_deck.enable_drop_in_advising_role @test.drop_in_advisor.advisor_roles.first
+        @scheduler_intake_desk.wait_for_poller { @scheduler_intake_desk.drop_in_advisor_uids.include? @test.drop_in_advisor.uid }
+      end
+
+      it 'restores the user\'s access to the waiting list' do
+        @advisor_homepage.load_page
+        @advisor_homepage.show_waitlist_button_element.when_visible Utils.short_wait
+      end
     end
   end
 end

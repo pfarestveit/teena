@@ -39,13 +39,6 @@ module BOACStudentPageAppointment
     appts_collapsed_msg_element.when_visible 2
   end
 
-  # # Returns the expected sort order of a student's appointments
-  # # @param appts [Array<Appointment>]
-  # # @return [Array<String>]
-  # def expected_appt_id_sort_order(appts)
-  #   (appts.sort_by {|a| [a.updated_date, a.created_date, a.id] }).reverse.map &:id
-  # end
-
   # Returns the visible sequence of appointment ids
   # @return [Array<String>]
   def visible_collapsed_appt_ids

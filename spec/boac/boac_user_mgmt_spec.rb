@@ -198,7 +198,9 @@ describe 'The BOAC passenger manifest' do
         missing_advisors = dept_user_uids - csv_dept_user_uids.compact.uniq
         logger.debug "Unexpected #{dept[:dept].name} advisors: #{unexpected_advisors}" unless unexpected_advisors.empty?
         logger.debug "Missing #{dept[:dept].name} advisors: #{missing_advisors}" unless missing_advisors.empty?
-        expect(csv_dept_user_uids.compact.uniq.sort).to eql(dept_user_uids.sort)
+        @admin_page.wait_until(1, "Unexpected #{dept[:dept].name} advisors: #{unexpected_advisors}. Missing #{dept[:dept].name} advisors: #{missing_advisors}") do
+          csv_dept_user_uids.compact.uniq.sort == dept_user_uids.sort
+        end
       end
     end
 
@@ -390,7 +392,7 @@ describe 'The BOAC passenger manifest' do
         @admin_page.edit_user @add_edit_user
         @admin_page.click_become_user_link_element @add_edit_user
         @homepage.wait_for_title 'Home'
-        @homepage.new_appt_button_element.when_visible Utils.short_wait
+        @homepage.show_waitlist_button_element.when_visible Utils.short_wait
       end
 
       it 'allows an admin to give a user a department director role' do
