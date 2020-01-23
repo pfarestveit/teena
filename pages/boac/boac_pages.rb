@@ -80,6 +80,13 @@ module BOACPages
     wait_for_title 'Passenger Manifest'
   end
 
+  # Clicks the 'Settings' link in the header
+  def click_settings_link
+    click_header_dropdown
+    wait_for_update_and_click settings_link_element
+    wait_for_title 'Flight Deck'
+  end
+
   ### USER LIST SORTING ###
 
   # Sorts a user list by a given option. If a cohort is given, then sorts the user list under the cohort.
