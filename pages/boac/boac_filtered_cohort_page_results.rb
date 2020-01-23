@@ -450,8 +450,6 @@ module BOACFilteredCohortPageResults
     results_by_level.flatten.map { |u| u[:sid] }
   end
 
-  # TODO - terms completed
-
   # Returns the sequence of SIDs that should be present when search results are sorted by major
   # @param expected_results [Array<Hash>]
   # @return [Array<String>]
@@ -468,7 +466,7 @@ module BOACFilteredCohortPageResults
   # @return [Array<String>]
   def expected_sids_by_matriculation(expected_results)
     sorted_results = expected_results.sort_by do |u|
-      term = u[:entering_term].nil? ? '9999' : u[:entering_term]
+      term = u[:entering_term].nil? ? '0' : u[:entering_term]
       [term, u[:last_name_sortable_cohort].downcase, u[:first_name_sortable_cohort].downcase, u[:sid]]
     end
     sorted_results.map { |u| u[:sid] }
@@ -484,7 +482,7 @@ module BOACFilteredCohortPageResults
     results_without_term = expected_results.reject { |u| u[:terms_completed] }.sort_by do |u|
       [u[:last_name_sortable_cohort].downcase, u[:first_name_sortable_cohort].downcase, u[:sid]]
     end
-    (results_with_term + results_without_term).map { |u| u[:sid] }
+    (results_without_term + results_with_term).map { |u| u[:sid] }
   end
 
   # Returns the sequence of SIDs that should be present when search results are sorted by terms in attendance, descending
