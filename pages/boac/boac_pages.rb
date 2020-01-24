@@ -39,6 +39,7 @@ module BOACPages
 
   link(:home_link, xpath: '//a[contains(.,"Home")]')
   button(:header_dropdown, xpath: '//button[contains(@id,"header-dropdown-under-name")]')
+  link(:flight_data_recorder_link, text: 'Flight Data Recorder')
   link(:flight_deck_link, text: 'Flight Deck')
   link(:pax_manifest_link, text: 'Passenger Manifest')
   link(:settings_link, text: 'Settings')
@@ -64,6 +65,12 @@ module BOACPages
     click_header_dropdown
     wait_for_update_and_click log_out_link_element
     wait_for_title 'Welcome'
+  end
+
+  def click_flight_data_recorder_link
+    click_header_dropdown
+    wait_for_update_and_click flight_data_recorder_link_element
+    wait_for_title 'Flight Data Recorder'
   end
 
   # Clicks the 'Flight Deck' link in the header
