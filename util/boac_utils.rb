@@ -242,11 +242,10 @@ class BOACUtils < Utils
               university_dept_members.is_director AS is_director,
               EXISTS (SELECT drop_in_advisors.dept_code
                       FROM drop_in_advisors
-                      WHERE drop_in_advisors.authorized_user_id = authorized_users.id
-                        AND drop_in_advisors.deleted_at IS NULL) AS is_drop_in_advisor,
+                      WHERE drop_in_advisors.authorized_user_id = authorized_users.id) AS is_drop_in_advisor,
               university_dept_members.is_scheduler AS is_scheduler,
               university_depts.dept_code AS dept_code,
-              drop_in_advisors.status AS drop_in_status
+              drop_in_advisors.is_available AS drop_in_available
             FROM authorized_users
             LEFT JOIN university_dept_members
               ON authorized_users.id = university_dept_members.authorized_user_id
@@ -266,12 +265,12 @@ class BOACUtils < Utils
       is_admin = (v[0]['is_admin'] == 't')
       is_blocked = (v[0]['is_blocked'] == 't')
       roles = v.map do |role|
-        AdvisorRole.new(
+        DeptMembership.new(
             {
                     dept: (BOACDepartments::DEPARTMENTS.find { |d| d.code == role['dept_code']}),
                     is_advisor: (role['is_advisor'] == 't'),
                     is_automated: (role['is_automated'] && role['is_automated'] == 't'),
-                    drop_in_status: (role['drop_in_status'] && (AdvisorDropInStatus::STATUSES.find { |s| s.description == role['drop_in_status'] })),
+                    drop_in_available: (role['drop_in_available'] && role['drop_in_available'] == 't'),
                     is_drop_in_advisor: (role['is_drop_in_advisor'] && role['is_drop_in_advisor'] == 't'),
                     is_director: (role['is_director'] == 't'),
                     is_scheduler: (role['is_scheduler'] == 't')
@@ -296,7 +295,7 @@ class BOACUtils < Utils
 
   # Returns all the advisors associated with a department, optionally limited to those with a given role
   # @param dept [BOACDepartments]
-  # @param role [AdvisorRole]
+  # @param role [DeptMembership]
   # @return [Array<BOACUser>]
   def self.get_dept_advisors(dept, role = nil)
     # "Notes Only" isn't a real department and requires special rules.
@@ -316,8 +315,7 @@ class BOACUtils < Utils
               #{' AND EXISTS (SELECT drop_in_advisors.authorized_user_id
                           FROM drop_in_advisors
                           WHERE drop_in_advisors.authorized_user_id = authorized_users.id
-                            AND ud.dept_code = drop_in_advisors.dept_code
-                            AND drop_in_advisors.deleted_at IS NULL) ' if role&.is_drop_in_advisor}
+                            AND ud.dept_code = drop_in_advisors.dept_code) ' if role&.is_drop_in_advisor}
               #{' AND udm.is_scheduler IS TRUE ' if role&.is_scheduler}
             GROUP BY authorized_users.uid, authorized_users.can_access_canvas_data"
     else
@@ -340,8 +338,7 @@ class BOACUtils < Utils
               #{' AND EXISTS (SELECT drop_in_advisors.authorized_user_id
                               FROM drop_in_advisors
                               WHERE drop_in_advisors.authorized_user_id = authorized_users.id
-                                AND drop_in_advisors.dept_code = ud1.dept_code
-                                AND drop_in_advisors.deleted_at IS NULL) ' if role&.is_drop_in_advisor}
+                                AND drop_in_advisors.dept_code = ud1.dept_code) ' if role&.is_drop_in_advisor}
               #{' AND udm1.is_scheduler IS TRUE ' if role&.is_scheduler}
             GROUP BY authorized_users.uid, authorized_users.can_access_canvas_data"
     end

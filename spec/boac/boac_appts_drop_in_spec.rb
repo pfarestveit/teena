@@ -92,20 +92,9 @@ describe 'BOA' do
     before(:all) { @advisor_homepage.dev_auth @test.drop_in_advisor }
     after(:all) { @advisor_homepage.log_out }
 
-    it 'drops the user onto the homepage at login with a "Show Drop-in Waitlist" button' do
+    it 'drops the user onto the homepage at login with a waiting list' do
       expect(@advisor_homepage.title).to include('Home')
-      @advisor_homepage.show_waitlist_button_element.when_visible Utils.short_wait
-      expect(@advisor_homepage.new_appt_button?).to be false
-    end
-
-    it 'allows the user to reveal the drop-in waiting list' do
-      @advisor_homepage.show_drop_in_wait_list
       @advisor_homepage.new_appt_button_element.when_visible Utils.short_wait
-    end
-
-    it 'allows the user to hide the drop-in waiting list' do
-      @advisor_homepage.hide_drop_in_wait_list
-      @advisor_homepage.new_appt_button_element.when_not_visible Utils.short_wait
     end
 
     it 'prevents the user from accessing the department drop-in intake desk' do
@@ -175,40 +164,21 @@ describe 'BOA' do
         expect(@scheduler_intake_desk.drop_in_advisor_uids.sort).to eql(@drop_in_advisors.map(&:uid).sort)
       end
 
-      it 'shows a drop-in advisor\'s status' do
-        expect(@scheduler_intake_desk.visible_drop_in_status(@test.drop_in_advisor)).to eql(@test.drop_in_advisor.advisor_roles.first.drop_in_status)
-      end
-
-      it 'allows a scheduler to set a drop-in advisor to "off-duty"' do
-        @scheduler_intake_desk.set_drop_in_off_duty(@test.drop_in_advisor.advisor_roles.first, @test.drop_in_advisor)
-      end
+      it('allows a scheduler to set a drop-in advisor to "unavailable"') { @scheduler_intake_desk.set_advisor_unavailable @test.drop_in_advisor }
 
       it 'shows no unavailable advisors when making an appointment with a reservation' do
         @scheduler_intake_desk.click_new_appt
         expect(@scheduler_intake_desk.available_appt_advisor_uids).not_to include(@test.drop_in_advisor.uid)
       end
 
-      it 'allows a scheduler to set a drop-in advisor to "on-duty advisor"' do
+      it 'allows a scheduler to set a drop-in advisor to "available"' do
         @scheduler_intake_desk.hit_escape
-        @scheduler_intake_desk.set_drop_in_advisor_on(@test.drop_in_advisor.advisor_roles.first, @test.drop_in_advisor)
+        @scheduler_intake_desk.set_advisor_available @test.drop_in_advisor
       end
 
       it 'shows available advisors when making an appointment with a reservation' do
         @scheduler_intake_desk.click_new_appt
         @scheduler_intake_desk.wait_for_poller { @scheduler_intake_desk.available_appt_advisor_uids.include? @test.drop_in_advisor.uid }
-      end
-
-      it 'allows a scheduler to set a drop-in advisor to "on-duty supervisor"' do
-        @scheduler_intake_desk.hit_escape
-        @scheduler_intake_desk.set_drop_in_supervisor_on(@test.drop_in_advisor.advisor_roles.first, @test.drop_in_advisor)
-      end
-
-      it 'shows the supervisor when making an appointment with a reservation' do
-        @scheduler_intake_desk.click_new_appt
-        @scheduler_intake_desk.wait_for_poller do
-          @scheduler_intake_desk.available_appt_advisor_uids.include? @test.drop_in_advisor.uid
-          @scheduler_intake_desk.available_appt_advisor_option(@test.drop_in_advisor).text.include? '(Supervisor On Call)'
-        end
       end
     end
 
@@ -218,29 +188,11 @@ describe 'BOA' do
 
       it 'is shown for the logged-in drop-in advisor' do
         @advisor_homepage.new_appt_button_element.when_visible Utils.short_wait
-        expect(@advisor_homepage.visible_drop_in_status @test.drop_in_advisor).to eql(@test.drop_in_advisor.advisor_roles.first.drop_in_status)
+        @advisor_homepage.wait_for_poller { @advisor_homepage.self_available? }
       end
 
-      it 'allows a drop-in advisor to set itself "off-duty"' do
-        @advisor_homepage.set_drop_in_off_duty @test.drop_in_advisor.advisor_roles.first
-        @scheduler_intake_desk.wait_for_poller do
-          @scheduler_intake_desk.visible_drop_in_status(@test.drop_in_advisor) == @test.drop_in_advisor.advisor_roles.first.drop_in_status
-        end
-      end
-
-      it 'allows a drop-in advisor to set itself "on-duty advisor"' do
-        @advisor_homepage.set_drop_in_advisor_on @test.drop_in_advisor.advisor_roles.first
-        @scheduler_intake_desk.wait_for_poller do
-          @scheduler_intake_desk.visible_drop_in_status(@test.drop_in_advisor) == @test.drop_in_advisor.advisor_roles.first.drop_in_status
-        end
-      end
-
-      it 'allows a drop-in advisor to set itself "on-duty supervisor"' do
-        @advisor_homepage.set_drop_in_supervisor_on @test.drop_in_advisor.advisor_roles.first
-        @scheduler_intake_desk.wait_for_poller do
-          @scheduler_intake_desk.visible_drop_in_status(@test.drop_in_advisor) == @test.drop_in_advisor.advisor_roles.first.drop_in_status
-        end
-      end
+      it('allows a drop-in advisor to set itself "unavailable"') { @advisor_homepage.set_self_unavailable }
+      it('allows a drop-in advisor to set itself "available"') { @advisor_homepage.set_self_available }
     end
   end
 

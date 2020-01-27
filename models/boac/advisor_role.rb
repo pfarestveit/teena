@@ -1,15 +1,15 @@
 class AdvisorRole
 
-  attr_accessor :dept,
-                :is_automated,
-                :is_advisor,
-                :is_drop_in_advisor,
-                :drop_in_status,
-                :is_director,
-                :is_scheduler
+  attr_accessor :description
 
-  def initialize(data)
-    data.each { |k, v| public_send("#{k}=", v) }
+  def initialize(description)
+    @description = description
   end
+
+  ROLES = [
+      DIRECTOR = new('Director'),
+      ADVISOR = new('Advisor'),
+      SCHEDULER = new('Scheduler')
+  ]
 
 end
