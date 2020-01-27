@@ -13,6 +13,7 @@ class BOACFlightDataRecorderPage
   end
 
   select_list(:dept_select, id: 'available-department-reports')
+  h2(:dept_heading, xpath: '//h2')
   button(:show_hide_report_button, id: 'show-hide-notes-report')
   div(:notes_count_boa, id: 'notes-count-boa')
   div(:notes_count_boa_authors, id: 'notes-count-boa-authors')
@@ -20,11 +21,15 @@ class BOACFlightDataRecorderPage
   div(:notes_count_boa_with_topics, id: 'notes-count-boa-with-topics')
   div(:notes_count_sis, id: 'notes-count-sis')
   div(:notes_count_asc, id: 'notes-count-asc')
+  div(:notes_count_ei, id: 'notes-count-ei')
 
   def select_dept_report(dept)
-    name = dept.export_name || dept.name
-    logger.info "Selecting report for #{name}"
-    wait_for_element_and_select_js(dept_select_element, name)
+    logger.info "Selecting report for #{dept.code}"
+    wait_for_element_and_select_js(dept_select_element, dept.code)
+  end
+
+  def dept_select_option_values
+    dept_select_element.options.map { |el| el.attribute('value') }
   end
 
   def toggle_note_report_visibility
@@ -53,7 +58,18 @@ class BOACFlightDataRecorderPage
     links + non_links
   end
 
+  def advisor_note_count(advisor)
+    row_xpath = if link_element(id: "directory-link-#{advisor.uid}").exists?
+                  "//a[@id='directory-link-#{advisor.uid}']"
+                else
+                  "//span[text()='Name unavailable (UID: #{advisor.uid})']"
+                end
+    div_element(xpath: "#{row_xpath}//ancestor::td/following-sibling::td[@data-label='Notes Created']/div").text
+  end
 
+  def advisor_last_login(advisor)
+    div_element(id: "user-last-login-#{advisor.uid}").attribute('innerText')
+  end
 
 
 end

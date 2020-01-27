@@ -491,6 +491,13 @@ class NessieUtils < Utils
 
   #### NOTES ####
 
+  def self.get_external_note_count(schema)
+    query = "SELECT COUNT(*)
+             FROM #{schema}.advising_notes
+             #{+ ' WHERE advisor_first_name != \'Reception\' AND advisor_last_name != \'Front Desk\'' if schema == NoteSource::E_AND_I.schema};"
+    query_pg_db_field(nessie_pg_db_credentials, query, 'count').first
+  end
+
   # Returns non-BOA advising notes from a given source for a given student
   # @param [String] schema
   # @param [BOACUser] student
