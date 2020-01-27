@@ -15,7 +15,7 @@ class BOACDepartments
       CHEM = new('CDCDN', 'College of Chemistry', nil),
       COE = new('COENG', 'College of Engineering', nil),
       ENV_DESIGN = new('DACED', 'College of Environmental Design', nil),
-      GUEST = new('GUEST', 'Guest Access', nil),
+      GUEST = new('GUEST', 'Guest Access', 'Guest'),
       HAAS = new('BAHSB', 'Haas School of Business', nil),
       L_AND_S = new('QCADV', 'College of Letters & Science', 'L&S College Advising'),
       L_AND_S_MAJ = new('QCADVMAJ', 'Letters & Science Major Advisors', 'L&S Major Advising'),

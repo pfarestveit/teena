@@ -178,6 +178,17 @@ class BOACUtils < Utils
     query_pg_db_field(boac_db_credentials, query, 'count').first.to_i
   end
 
+  def self.get_last_user_logins
+    query = 'SELECT uid, MAX(created_at) FROM user_logins GROUP BY uid;'
+    results = query_pg_db(boac_db_credentials, query)
+    results.map do |r|
+      {
+        uid: r['uid'],
+        date: (Time.parse(r['created_at'].to_s).utc.localtime if r['created_at'])
+      }
+    end
+  end
+
   # Creates an admin authorized user
   # @param user [BOACUser]
   def self.create_admin_auth_user(user)
@@ -544,6 +555,27 @@ class BOACUtils < Utils
       logger.info "Test alert ID #{alert.id}, message '#{alert.message}', user SID #{alert.user.sis_id}"
     end
     alert
+  end
+
+  def self.get_total_note_count
+    query = 'SELECT COUNT(*) FROM notes WHERE deleted_at IS NULL;'
+    Utils.query_pg_db_field(boac_db_credentials, query, 'count').first
+  end
+
+  def self.get_distinct_note_author_count
+    query = 'SELECT COUNT(DISTINCT author_uid) FROM notes WHERE deleted_at IS NULL;'
+    Utils.query_pg_db_field(boac_db_credentials, query, 'count').first
+  end
+
+  def self.get_note_count_per_advisor
+    query = "SELECT author_uid, COUNT(id) FROM notes GROUP BY notes.author_uid;"
+    results = Utils.query_pg_db(boac_db_credentials, query)
+    results.map do |r|
+      {
+        uid: r['author_uid'].to_s,
+        count: int_to_s_with_commas(r['count'])
+      }
+    end
   end
 
   def self.get_sids_with_notes_of_src_boa

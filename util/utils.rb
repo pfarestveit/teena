@@ -443,4 +443,10 @@ class Utils
     driver.save_screenshot File.join(output_dir, "#{unique_id}.png")
   end
 
+  # FORMATTING
+
+  def self.int_to_s_with_commas(int)
+    int.to_s.reverse.scan(/\d{3}|.+/).join(",").reverse
+  end
+
 end
