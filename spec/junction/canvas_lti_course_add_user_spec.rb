@@ -49,7 +49,7 @@ describe 'bCourses Find a Person to Add', order: :defined do
     it 'include a link to a help page on the Everyone tab' do
       @canvas.help_finding_users_link_element.when_visible Utils.short_wait
       sleep 1
-      expect(@canvas.external_link_valid?(@driver, @canvas.help_finding_users_link_element, 'IT - How do I add people to my site?')).to be true
+      expect(@canvas.external_link_valid?(@driver, @canvas.help_finding_users_link_element, 'IT - How do I add users to my course site?')).to be true
     end
 
     it 'include a search by Email Address option' do
