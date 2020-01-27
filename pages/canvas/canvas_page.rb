@@ -23,6 +23,7 @@ module Page
     form(:profile_form, xpath: '//form[@action="/logout"]')
     link(:profile_link, id: 'global_nav_profile_link')
     button(:logout_link, xpath: '//button[contains(.,"Logout")]')
+    link(:policies_link, id: 'global_nav_academic_policies_link')
 
     h1(:unexpected_error_msg, xpath: '//h1[contains(text(),"Unexpected Error")]')
     h2(:unauthorized_msg, xpath: '//h2[contains(text(),"Unauthorized")]')

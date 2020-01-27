@@ -180,6 +180,10 @@ describe 'bCourses Find a Person to Add', order: :defined do
           @course_add_user_page.no_access_msg_element.when_visible Utils.medium_wait
         end
       end
+
+      it "offers #{user.role} an Academic Policies link" do
+        expect(@canvas.external_link_valid?(@driver, @canvas.policies_link_element, 'Academic Accommodations Hub | Executive Vice Chancellor and Provost')).to be true
+      end
     end
   end
 end
