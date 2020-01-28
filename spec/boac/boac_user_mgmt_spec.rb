@@ -17,7 +17,7 @@ describe 'The BOAC passenger manifest' do
         active: true,
         can_access_canvas_data: true,
         advisor_roles: [
-            AdvisorRole.new(
+            DeptMembership.new(
                 dept: BOACDepartments::L_AND_S,
                 is_advisor: true,
                 is_automated: true
@@ -364,7 +364,7 @@ describe 'The BOAC passenger manifest' do
       end
 
       it 'allows an admin to give a user a department membership' do
-        @add_edit_user.advisor_roles << AdvisorRole.new(dept: BOACDepartments::ASC, is_advisor: true)
+        @add_edit_user.advisor_roles << DeptMembership.new(dept: BOACDepartments::ASC, is_advisor: true)
         @admin_page.edit_user @add_edit_user
         @admin_page.click_become_user_link_element @add_edit_user
         @homepage.wait_for_title 'Home'
