@@ -178,13 +178,23 @@ class BOACUtils < Utils
     query_pg_db_field(boac_db_credentials, query, 'count').first.to_i
   end
 
-  def self.get_last_user_logins
-    query = 'SELECT uid, MAX(created_at) FROM user_logins GROUP BY uid;'
+  # Returns all authorized user UIDs, non-deleted note counts, and last logins
+  # @return [Array<Hash>]
+  def self.get_last_login_and_note_count
+    query = 'SELECT authorized_users.uid AS uid,
+	                  COUNT(DISTINCT notes.id) AS note_count,
+	                  MAX(user_logins.created_at) AS last_login
+	           FROM authorized_users
+	           LEFT JOIN notes ON authorized_users.uid = notes.author_uid
+	           LEFT JOIN user_logins ON authorized_users.uid = user_logins.uid
+             WHERE notes.deleted_at IS NULL
+	           GROUP BY authorized_users.uid;'
     results = query_pg_db(boac_db_credentials, query)
     results.map do |r|
       {
         uid: r['uid'],
-        date: (Time.parse(r['created_at'].to_s).utc.localtime if r['created_at'])
+        note_count: r['note_count'],
+        last_login: (Time.parse(r['last_login'].to_s).utc.localtime if r['last_login'])
       }
     end
   end
@@ -554,25 +564,40 @@ class BOACUtils < Utils
     alert
   end
 
+  # Returns the number of non-deleted notes
+  # @return [String]
   def self.get_total_note_count
     query = 'SELECT COUNT(*) FROM notes WHERE deleted_at IS NULL;'
     Utils.query_pg_db_field(boac_db_credentials, query, 'count').first
   end
 
+  # Returns the number of distinct non-deleted note authors
+  # @return [String]
   def self.get_distinct_note_author_count
     query = 'SELECT COUNT(DISTINCT author_uid) FROM notes WHERE deleted_at IS NULL;'
     Utils.query_pg_db_field(boac_db_credentials, query, 'count').first
   end
 
-  def self.get_note_count_per_advisor
-    query = "SELECT author_uid, COUNT(id) FROM notes GROUP BY notes.author_uid;"
-    results = Utils.query_pg_db(boac_db_credentials, query)
-    results.map do |r|
-      {
-        uid: r['author_uid'].to_s,
-        count: int_to_s_with_commas(r['count'])
-      }
-    end
+  # Returns the number of non-deleted notes with non-deleted attachments
+  # @return [String]
+  def self.get_notes_with_attachments_count
+    query = 'SELECT COUNT(DISTINCT note_attachments.note_id)
+             FROM note_attachments
+             JOIN notes ON notes.id = note_attachments.note_id
+             WHERE note_attachments.deleted_at IS NULL
+               AND notes.deleted_at IS NULL;'
+    Utils.query_pg_db_field(boac_db_credentials, query, 'count').first
+  end
+
+  # Returns the number of non-deleted notes with non-deleted topics
+  # @return [String]
+  def self.get_notes_with_topics_count
+    query = 'SELECT COUNT(DISTINCT note_topics.note_id)
+             FROM note_topics
+             JOIN notes ON notes.id = note_topics.note_id
+             WHERE note_topics.deleted_at IS NULL
+               AND notes.deleted_at IS NULL;'
+    Utils.query_pg_db_field(boac_db_credentials, query, 'count').first
   end
 
   def self.get_sids_with_notes_of_src_boa
