@@ -8,7 +8,9 @@ test.note_management
 # TODO - get real array of advisor dept mappings when we have them
 test.advisor.depts = [test.dept.name]
 
-director = BOACUtils.get_authorized_users.find { |a| a.advisor_roles.find &:is_director }
+director = BOACUtils.get_authorized_users.find do |a|
+  a.dept_memberships.find { |m| m.advisor_role == AdvisorRole::DIRECTOR }
+end
 other_advisor = BOACUtils.get_dept_advisors(test.dept).find { |a| a.uid != test.advisor.uid }
 
 if test.dept == BOACDepartments::ADMIN

@@ -16,10 +16,10 @@ describe 'The BOAC passenger manifest' do
         uid: BOACUtils.config['test_add_edit_uid'],
         active: true,
         can_access_canvas_data: true,
-        advisor_roles: [
+        dept_memberships: [
             DeptMembership.new(
                 dept: BOACDepartments::L_AND_S,
-                is_advisor: true,
+                advisor_role: AdvisorRole::ADVISOR,
                 is_automated: true
             )
         ]
@@ -64,14 +64,14 @@ describe 'The BOAC passenger manifest' do
         it("shows the department(s) for UID #{user.uid}") { expect(@admin_page.visible_advisor_depts(user).sort).to eql(user.depts.map(&:name).uniq.sort) }
 
         it "shows the department role(s) for UID #{user.uid}" do
-          user.advisor_roles.each do |dept_role|
-            if dept_role.dept
+          user.dept_memberships.each do |membership|
+            if membership.dept
               expected_roles = []
-              expected_roles << 'Advisor' if dept_role.is_advisor
-              expected_roles << 'Director' if dept_role.is_director
-              expected_roles << 'Scheduler' if dept_role.is_scheduler
-              expected_roles << 'Drop-In Advisor' if dept_role.is_drop_in_advisor
-              visible_dept_roles = @admin_page.visible_dept_roles(user, dept_role.dept.code)
+              expected_roles << 'Advisor' if membership.advisor_role == AdvisorRole::ADVISOR
+              expected_roles << 'Director' if membership.advisor_role == AdvisorRole::DIRECTOR
+              expected_roles << 'Scheduler' if membership.advisor_role == AdvisorRole::SCHEDULER
+              expected_roles << 'Drop-In Advisor' if membership.is_drop_in_advisor
+              visible_dept_roles = @admin_page.visible_dept_roles(user, membership.dept.code)
               visible_roles = visible_dept_roles[/.*\(([^\)]*)/,1]
               actual_roles = visible_roles.split(', ')
               actual_roles.concat(actual_roles.pop.split(' and '))
@@ -102,7 +102,7 @@ describe 'The BOAC passenger manifest' do
 
         it "shows the department membership type(s) for UID #{user.uid}" do
           visible_user_details = @admin_page.get_user_details user
-          user.advisor_roles.each do |dept_role|
+          user.dept_memberships.each do |dept_role|
             if dept_role.dept
               visible_dept = visible_user_details['departments'].find { |d| d['code'] == dept_role.dept.code}
               expect(visible_dept['automateMembership']).to eql(dept_role.is_automated)
@@ -289,19 +289,19 @@ describe 'The BOAC passenger manifest' do
     end
 
     it 'allows an admin to set a user\'s department membership to automated' do
-      @add_edit_user.advisor_roles.first.is_automated = true
+      @add_edit_user.dept_memberships.first.is_automated = true
       @admin_page.edit_user @add_edit_user
       @admin_page.click_edit_user @add_edit_user
-      @admin_page.wait_until(2) { @admin_page.is_automated_dept_cbx @add_edit_user.advisor_roles.first.dept }
-      expect(@admin_page.is_automated_dept_cbx(@add_edit_user.advisor_roles.first.dept).selected?).to be true
+      @admin_page.wait_until(2) { @admin_page.is_automated_dept_cbx @add_edit_user.dept_memberships.first.dept }
+      expect(@admin_page.is_automated_dept_cbx(@add_edit_user.dept_memberships.first.dept).selected?).to be true
     end
 
     it 'allows an admin to set a user\'s department membership to manual' do
-      @add_edit_user.advisor_roles.first.is_automated = false
+      @add_edit_user.dept_memberships.first.is_automated = false
       @admin_page.edit_user @add_edit_user
       @admin_page.click_edit_user @add_edit_user
-      @admin_page.wait_until(2) { @admin_page.is_automated_dept_cbx @add_edit_user.advisor_roles.first.dept }
-      expect(@admin_page.is_automated_dept_cbx(@add_edit_user.advisor_roles.first.dept).selected?).to be false
+      @admin_page.wait_until(2) { @admin_page.is_automated_dept_cbx @add_edit_user.dept_memberships.first.dept }
+      expect(@admin_page.is_automated_dept_cbx(@add_edit_user.dept_memberships.first.dept).selected?).to be false
     end
 
     context 'performing edits' do
@@ -364,7 +364,7 @@ describe 'The BOAC passenger manifest' do
       end
 
       it 'allows an admin to give a user a department membership' do
-        @add_edit_user.advisor_roles << DeptMembership.new(dept: BOACDepartments::ASC, is_advisor: true)
+        @add_edit_user.dept_memberships << DeptMembership.new(dept: BOACDepartments::ASC, advisor_role: AdvisorRole::ADVISOR)
         @admin_page.edit_user @add_edit_user
         @admin_page.click_become_user_link_element @add_edit_user
         @homepage.wait_for_title 'Home'
@@ -375,8 +375,8 @@ describe 'The BOAC passenger manifest' do
       end
 
       it 'allows an admin to remove a user\'s department membership' do
-        asc_role = @add_edit_user.advisor_roles.find { |r| r.dept == BOACDepartments::ASC }
-        @add_edit_user.advisor_roles.delete asc_role
+        asc_role = @add_edit_user.dept_memberships.find { |r| r.dept == BOACDepartments::ASC }
+        @add_edit_user.dept_memberships.delete asc_role
         @admin_page.edit_user @add_edit_user
         @admin_page.click_become_user_link_element @add_edit_user
         @homepage.wait_for_title 'Home'
@@ -386,18 +386,8 @@ describe 'The BOAC passenger manifest' do
         expect(@cohort_page.new_filter_option('groupCodes').visible?).to be false
       end
 
-      it 'allows an admin to give a user a department drop-in advisor role' do
-        @add_edit_user.advisor_roles.first.is_advisor = false
-        @add_edit_user.advisor_roles.first.is_drop_in_advisor = true
-        @admin_page.edit_user @add_edit_user
-        @admin_page.click_become_user_link_element @add_edit_user
-        @homepage.wait_for_title 'Home'
-        @homepage.show_waitlist_button_element.when_visible Utils.short_wait
-      end
-
       it 'allows an admin to give a user a department director role' do
-        @add_edit_user.advisor_roles.first.is_drop_in_advisor = false
-        @add_edit_user.advisor_roles.first.is_director = true
+        @add_edit_user.dept_memberships.first.advisor_role = AdvisorRole::DIRECTOR
         @admin_page.edit_user @add_edit_user
         @admin_page.click_become_user_link_element @add_edit_user
         @homepage.no_filtered_cohorts_msg_element.when_visible Utils.short_wait
@@ -405,8 +395,7 @@ describe 'The BOAC passenger manifest' do
       end
 
       it 'allows an admin to give a user a department scheduler role' do
-        @add_edit_user.advisor_roles.first.is_director = false
-        @add_edit_user.advisor_roles.first.is_scheduler = true
+        @add_edit_user.dept_memberships.first.advisor_role = AdvisorRole::SCHEDULER
         @admin_page.edit_user @add_edit_user
         @admin_page.click_become_user_link_element @add_edit_user
         @intake_desk_page.wait_for_title 'Drop-in Appointments Desk'
@@ -414,8 +403,7 @@ describe 'The BOAC passenger manifest' do
       end
 
       it 'allows an admin to give a user a department advisor role' do
-        @add_edit_user.advisor_roles.first.is_scheduler = false
-        @add_edit_user.advisor_roles.first.is_advisor = true
+        @add_edit_user.dept_memberships.first.advisor_role = AdvisorRole::ADVISOR
         @admin_page.edit_user @add_edit_user
         @admin_page.click_become_user_link_element @add_edit_user
         @homepage.no_filtered_cohorts_msg_element.when_visible Utils.short_wait

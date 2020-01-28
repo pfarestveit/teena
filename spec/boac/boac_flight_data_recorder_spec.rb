@@ -7,10 +7,17 @@ all_users = BOACUtils.get_authorized_users.select &:active
 all_non_admin_users = all_users.reject &:is_admin
 
 admin = all_users.find &:is_admin
-director = all_non_admin_users.find { |u| u.advisor_roles.find &:is_director }
-director_depts = director.advisor_roles.select(&:is_director).map(&:dept)
-advisor = all_non_admin_users.find { |u| u.advisor_roles.select(&:is_advisor).reject(&:is_director).any? }
-scheduler = all_non_admin_users.find { |u| u.advisor_roles.select(&:is_scheduler).reject(&:is_director).reject(&:is_advisor).any? }
+
+director = all_non_admin_users.find { |u| u.dept_memberships.find { |m| m.advisor_role == AdvisorRole::DIRECTOR } }
+director_depts = director.dept_memberships.select { |m| m.advisor_role == AdvisorRole::DIRECTOR }.map(&:dept)
+
+advisor = all_non_admin_users.find do |u|
+  u.dept_memberships.select { |m| m.advisor_role == AdvisorRole::ADVISOR }.reject { |m| m.advisor_role == AdvisorRole::DIRECTOR }.any?
+end
+
+scheduler = all_non_admin_users.find do |u|
+  u.dept_memberships.select { |m| m.advisor_role == AdvisorRole::SCHEDULER }.reject { |m| m.advisor_role == AdvisorRole::DIRECTOR }.reject { |m| m.advisor_role == AdvisorRole::ADVISOR }.any?
+end
 
 logger.warn "Admin UID #{admin.uid}, director UID #{director.uid}, advisor UID #{advisor.uid}, scheduler UID #{scheduler.uid}"
 
@@ -101,16 +108,16 @@ describe 'BOA flight data recorder' do
         end
 
         it "shows the last login date for #{dept.name} UID #{user.uid}" do
-          date = (advisor_data.find { |a| a[:uid] == user.uid.to_s })[:last_login]
-          date = if date
-                   date.strftime('%b %-d, %Y')
+          date = if [admin, director].include? user
+                   Time.now
                  else
-                   '—'
+                   (advisor_data.find { |a| a[:uid] == user.uid.to_s })[:last_login]
                  end
+          date = date ? date.strftime('%b %-d, %Y') : '—'
           expect(@flight_data_recorder.advisor_last_login user).to eql(date)
         end
 
-        user.advisor_roles.each do |role|
+        user.dept_memberships.each do |role|
 
           # TODO - include the full visible role once user roles are sussed out
           it "shows the #{dept.name} UID #{user.uid} department role #{role.inspect}" do
@@ -172,12 +179,12 @@ describe 'BOA flight data recorder' do
         end
 
         it "shows the last login date for #{dept.name} UID #{user.uid}" do
-          date = (advisor_data.find { |a| a[:uid] == user.uid.to_s })[:last_login]
-          date = if date
-                   date.strftime('%b %-d, %Y')
+          date = if [admin, director].include? user
+                   Time.now
                  else
-                   '—'
+                   (advisor_data.find { |a| a[:uid] == user.uid.to_s })[:last_login]
                  end
+          date = date ? date.strftime('%b %-d, %Y') : '—'
           expect(@flight_data_recorder.advisor_last_login user).to eql(date)
         end
       end
