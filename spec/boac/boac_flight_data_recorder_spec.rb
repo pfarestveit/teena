@@ -14,7 +14,7 @@ scheduler = all_non_admin_users.find { |u| u.advisor_roles.select(&:is_scheduler
 
 logger.warn "Admin UID #{admin.uid}, director UID #{director.uid}, advisor UID #{advisor.uid}, scheduler UID #{scheduler.uid}"
 
-advisor_data = BOACUtils.get_note_count_per_advisor.merge! BOACUtils.get_last_user_logins
+advisor_data = BOACUtils.get_last_login_and_note_count
 
 describe 'BOA flight data recorder' do
 
@@ -31,13 +31,14 @@ describe 'BOA flight data recorder' do
     before(:all) do
       @homepage.dev_auth admin
       @homepage.click_flight_data_recorder_link
+      @ttl_note_count = BOACUtils.get_total_note_count
     end
 
     after(:all) { @flight_data_recorder.log_out }
 
     it 'hides the complete notes report by default' do
       @flight_data_recorder.show_hide_report_button_element.when_visible Utils.short_wait
-      expect(@flight_data_recorder.notes_count_boa_authors?).to be false
+      expect(@flight_data_recorder.notes_count_boa_authors_element.visible?).to be false
     end
 
     it 'allows the user to view the complete notes report' do
@@ -60,31 +61,33 @@ describe 'BOA flight data recorder' do
     context 'viewing the created-in-BOA notes report' do
 
       it 'shows the total number of notes' do
-        expect(@flight_data_recorder.notes_count_boa).to eql(Utils.int_to_s_with_commas BOACUtils.get_total_note_count)
+        expect(@flight_data_recorder.boa_note_count).to eql(Utils.int_to_s_with_commas @ttl_note_count)
       end
 
       it 'shows the total distinct note authors' do
         expect(@flight_data_recorder.notes_count_boa_authors).to eql(Utils.int_to_s_with_commas BOACUtils.get_distinct_note_author_count)
       end
 
-      it 'shows the percentage of notes with attachments'
-      it 'shows the percentage of notes with topics'
+      it 'shows the percentage of notes with attachments' do
+        expected = ((BOACUtils.get_notes_with_attachments_count.to_f / @ttl_note_count.to_f) * 100).round(1).to_s
+        expect(@flight_data_recorder.notes_count_boa_with_attachments).to include(expected)
+      end
+
+      it 'shows the percentage of notes with topics' do
+        expected = ((BOACUtils.get_notes_with_topics_count.to_f / @ttl_note_count.to_f) * 100).round(1).to_s
+        expect(@flight_data_recorder.notes_count_boa_with_topics).to include(expected)
+      end
     end
 
     depts.each do |dept|
 
       it "allows the user to filter users by #{dept.name}" do
         @flight_data_recorder.select_dept_report dept
-        @flight_data_recorder.dept_list_header(dept).when_visible Utils.short_wait
-      end
-
-      it "shows the right number of users in #{dept.name}" do
-        @flight_data_recorder.wait_for_user_count(dept, (all_users.select { |u| u.depts.include? dept }.length))
       end
 
       it "shows all the users in #{dept.name}" do
         expected_uids = all_users.select { |u| u.depts.include? dept }.map(&:uid).sort
-        visible_uids = @flight_data_recorder.list_view_uids(dept, expected_uids.length).sort
+        visible_uids = @flight_data_recorder.list_view_uids.sort
         @flight_data_recorder.wait_until(1, "Missing: #{expected_uids - visible_uids}. Unexpected: #{visible_uids - expected_uids}") do
           visible_uids == expected_uids
         end
@@ -93,14 +96,14 @@ describe 'BOA flight data recorder' do
       all_users.select { |u| u.depts.include? dept }.each do |user|
 
         it "shows the total number of BOA notes created by #{dept.name} UID #{user.uid}" do
-          count = (advisor_data.find { |c| c[:uid] == user.uid })[:count]
+          count = (advisor_data.find { |a| a[:uid] == user.uid })[:note_count]
           expect(@flight_data_recorder.advisor_note_count user).to eql(count)
         end
 
         it "shows the last login date for #{dept.name} UID #{user.uid}" do
-          date = (advisor_data.find { |c| c[:uid] == user.uid })[:date]
+          date = (advisor_data.find { |a| a[:uid] == user.uid.to_s })[:last_login]
           date = if date
-                   date.strftime('%b%-m%Y')
+                   date.strftime('%b %-d, %Y')
                  else
                    '—'
                  end
@@ -109,8 +112,10 @@ describe 'BOA flight data recorder' do
 
         user.advisor_roles.each do |role|
 
-          it "shows the #{dept.name} UID #{user.uid} department role #{role.inspect}"
-
+          # TODO - include the full visible role once user roles are sussed out
+          it "shows the #{dept.name} UID #{user.uid} department role #{role.inspect}" do
+            expect(@flight_data_recorder.advisor_role(user, role.dept)).to include(role.dept.name)
+          end
         end
       end
     end
@@ -137,7 +142,7 @@ describe 'BOA flight data recorder' do
 
     it 'hides the complete notes report by default' do
       @flight_data_recorder.show_hide_report_button_element.when_visible Utils.short_wait
-      expect(@flight_data_recorder.notes_count_boa_authors?).to be false
+      expect(@flight_data_recorder.notes_count_boa_authors_element.visible?).to be false
     end
 
     it 'allows the user to view the complete notes report' do
@@ -149,16 +154,11 @@ describe 'BOA flight data recorder' do
 
       it "allows the user to filter users by #{dept.name}" do
         @flight_data_recorder.select_dept_report dept if director_depts.length > 1
-        @flight_data_recorder.dept_list_header(dept).when_visible Utils.short_wait
-      end
-
-      it "shows the right number of users in #{dept.name}" do
-        @flight_data_recorder.wait_for_user_count(dept, (all_users.select { |u| u.depts.include? dept }.length))
       end
 
       it "shows all the users in #{dept.name}" do
         expected_uids = all_users.select { |u| u.depts.include? dept }.map(&:uid).sort
-        visible_uids = @flight_data_recorder.list_view_uids(dept, expected_uids.length).sort
+        visible_uids = @flight_data_recorder.list_view_uids.sort
         @flight_data_recorder.wait_until(1, "Missing: #{expected_uids - visible_uids}. Unexpected: #{visible_uids - expected_uids}") do
           visible_uids == expected_uids
         end
@@ -166,9 +166,20 @@ describe 'BOA flight data recorder' do
 
       all_non_admin_users.select { |u| u.depts.include? dept }.each do |user|
 
-        it "shows the total number of BOA notes created by #{dept.name} UID #{user.uid}"
-        it "shows the last login date for #{dept.name} UID #{user.uid}"
+        it "shows the total number of BOA notes created by #{dept.name} UID #{user.uid}" do
+          count = (advisor_data.find { |a| a[:uid] == user.uid })[:note_count]
+          expect(@flight_data_recorder.advisor_note_count user).to eql(count)
+        end
 
+        it "shows the last login date for #{dept.name} UID #{user.uid}" do
+          date = (advisor_data.find { |a| a[:uid] == user.uid.to_s })[:last_login]
+          date = if date
+                   date.strftime('%b %-d, %Y')
+                 else
+                   '—'
+                 end
+          expect(@flight_data_recorder.advisor_last_login user).to eql(date)
+        end
       end
     end
   end
