@@ -68,7 +68,7 @@ describe 'BOAC', order: :defined do
       end
 
       it "sorts by Team all the students who match #{cohort.search_criteria.list_filters}" do
-        if test.dept == BOACDepartments::ASC
+        if [BOACDepartments::ADMIN, BOACDepartments.ASC].include? test.dept
           if (0..1) === cohort.member_data.length
             logger.warn 'Skipping sort-by-team test since there are no results or only one result'
           else
