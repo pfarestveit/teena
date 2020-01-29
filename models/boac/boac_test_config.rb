@@ -25,7 +25,7 @@ class BOACTestConfig < TestConfig
 
   # Sets the advisor to use for the dept being tested
   def set_advisor(uid = nil)
-    role = DeptMembership.new is_advisor: true
+    role = DeptMembership.new advisor_role: AdvisorRole::ADVISOR
     advisors = BOACUtils.get_dept_advisors(@dept, role)
     case @dept
       when BOACDepartments::ADMIN
@@ -52,13 +52,13 @@ class BOACTestConfig < TestConfig
   def set_drop_in_appt_advisors(auth_users)
     dept_advisors = auth_users.select { |u| u.depts.include?(@dept) && (u.uid.length > 1)  }
     @advisor = dept_advisors[3]
-    @advisor.advisor_roles = [DeptMembership.new(dept: @dept, is_advisor: true)]
+    @advisor.dept_memberships = [DeptMembership.new(dept: @dept, advisor_role: AdvisorRole::ADVISOR)]
 
     @drop_in_advisor = dept_advisors[4]
-    @drop_in_advisor.advisor_roles = [DeptMembership.new(dept: @dept, is_drop_in_advisor: true)]
+    @drop_in_advisor.dept_memberships = [DeptMembership.new(dept: @dept, advisor_role: AdvisorRole::ADVISOR, is_drop_in_advisor: true)]
 
     @drop_in_scheduler = dept_advisors[5]
-    @drop_in_scheduler.advisor_roles = [DeptMembership.new(dept: @dept, is_scheduler: true)]
+    @drop_in_scheduler.dept_memberships = [DeptMembership.new(dept: @dept, advisor_role: AdvisorRole::SCHEDULER)]
 
     logger.warn "Advisor-only UID #{@advisor.uid}, drop-in advisor UID #{@drop_in_advisor.uid}, scheduler UID #{@drop_in_scheduler.uid}"
   end
@@ -375,7 +375,7 @@ class BOACTestConfig < TestConfig
 
   # Config for director user role testing
   def user_role_director
-    @advisor = BOACUtils.get_authorized_users.find { |u| u.advisor_roles.find &:is_director }
+    @advisor = BOACUtils.get_authorized_users.find { |u| u.dept_memberships.find { |m| m.role == AdvisorRole::DIRECTOR } }
     set_students
     set_test_students(CONFIG['notes_max_users'], with_notes: true)
   end

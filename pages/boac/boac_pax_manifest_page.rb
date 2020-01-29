@@ -265,15 +265,15 @@ class BOACPaxManifestPage
   # Adds the department roles associated with a given user
   # @param user [BOACUser]
   def add_user_dept_roles(user)
-    user.advisor_roles.each do |role|
-      logger.info "Adding UID #{user.uid} department role #{role.inspect}"
-      wait_for_element_and_select_js(department_select_element, role.dept.code)
-      wait_for_element_and_select_js(dept_role_select(role.dept), 'Advisor') if role.is_advisor
-      wait_for_element_and_select_js(dept_role_select(role.dept), 'Advisor + Drop-In') if role.is_drop_in_advisor
-      wait_for_element_and_select_js(dept_role_select(role.dept), 'Director') if role.is_director
-      wait_for_element_and_select_js(dept_role_select(role.dept), 'Scheduler') if role.is_scheduler
-      if (role.is_automated && !is_automated_dept_cbx(role.dept).selected?) || (!role.is_automated && is_automated_dept_cbx(role.dept).selected?)
-        execute_script('arguments[0].click();', is_automated_dept_cbx(role.dept))
+    user.dept_memberships.each do |membership|
+      logger.info "Adding UID #{user.uid} department role #{membership.inspect}"
+      wait_for_element_and_select_js(department_select_element, membership.dept.code)
+      wait_for_element_and_select_js(dept_role_select(membership.dept), 'Advisor') if membership.advisor_role == AdvisorRole::ADVISOR
+      wait_for_element_and_select_js(dept_role_select(membership.dept), 'Advisor + Drop-In') if membership.advisor_role == AdvisorRole::ADVISOR && membership.is_drop_in_advisor
+      wait_for_element_and_select_js(dept_role_select(membership.dept), 'Director') if membership.advisor_role == AdvisorRole::DIRECTOR
+      wait_for_element_and_select_js(dept_role_select(membership.dept), 'Scheduler') if membership.advisor_role == AdvisorRole::SCHEDULER
+      if (membership.is_automated && !is_automated_dept_cbx(membership.dept).selected?) || (!membership.is_automated && is_automated_dept_cbx(membership.dept).selected?)
+        execute_script('arguments[0].click();', is_automated_dept_cbx(membership.dept))
         sleep Utils.click_wait
       end
     end
@@ -300,7 +300,7 @@ class BOACPaxManifestPage
   # Edits a given user
   # @param user [BOACUser]
   def edit_user(user)
-    logger.info "Editing UID #{user.uid} with roles #{user.advisor_roles.each &:inspect}"
+    logger.info "Editing UID #{user.uid} with roles #{user.dept_memberships.each &:inspect}"
     click_edit_user user
     admin_cbx_element.when_present Utils.short_wait
     set_user_level_flags user

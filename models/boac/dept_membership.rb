@@ -1,12 +1,11 @@
 class DeptMembership
 
-  attr_accessor :dept,
+  attr_accessor :advisor_role,
+                :dept,
                 :is_automated,
-                :is_advisor,
                 :is_drop_in_advisor,
-                :drop_in_available,
-                :is_director,
-                :is_scheduler
+                :is_drop_in_available,
+                :drop_in_status
 
   def initialize(data)
     data.each { |k, v| public_send("#{k}=", v) }

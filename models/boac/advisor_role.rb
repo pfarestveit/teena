@@ -1,15 +1,17 @@
 class AdvisorRole
 
-  attr_accessor :description
+  attr_accessor :code,
+                :description
 
-  def initialize(description)
+  def initialize(code, description)
+    @code = code
     @description = description
   end
 
   ROLES = [
-      DIRECTOR = new('Director'),
-      ADVISOR = new('Advisor'),
-      SCHEDULER = new('Scheduler')
+      DIRECTOR = new('director', 'Director'),
+      ADVISOR = new('advisor', 'Advisor'),
+      SCHEDULER = new('scheduler', 'Scheduler')
   ]
 
 end

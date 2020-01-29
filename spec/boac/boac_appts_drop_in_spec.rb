@@ -52,7 +52,7 @@ describe 'BOA' do
     @pax_manifest.log_out
 
     @drop_in_advisors = BOACUtils.get_authorized_users.select do |a|
-      a.advisor_roles.find { |r| r.dept == @test.dept && r.is_drop_in_advisor }
+      a.dept_memberships.find { |r| r.dept == @test.dept && r.is_drop_in_advisor }
     end
   end
 
@@ -118,7 +118,6 @@ describe 'BOA' do
     it 'drops the user onto the homepage at login with no waiting list' do
       expect(@advisor_homepage.title).to include('Home')
       sleep 2
-      expect(@advisor_homepage.show_waitlist_button?).to be false
       expect(@advisor_homepage.new_appt_button?).to be false
     end
 
@@ -138,7 +137,6 @@ describe 'BOA' do
     it 'drops the user onto the homepage at login with no waiting list' do
       expect(@advisor_homepage.title).to include('Home')
       sleep 2
-      expect(@advisor_homepage.show_waitlist_button?).to be false
       expect(@advisor_homepage.new_appt_button?).to be false
     end
 
@@ -688,10 +686,6 @@ describe 'BOA' do
         expect(@scheduler_intake_desk.check_in_advisors.sort).to include(@test.drop_in_advisor.uid)
       end
 
-      it 'shows the Supervisors on Call' do
-        expect(@scheduler_intake_desk.check_in_advisor_option(@test.drop_in_advisor).text).to include('(Supervisor On Call)')
-      end
-
       it 'can be done from the intake desk view' do
         @scheduler_intake_desk.select_check_in_advisor @test.drop_in_advisor
         @scheduler_intake_desk.click_modal_check_in_button
@@ -1009,7 +1003,7 @@ describe 'BOA' do
       end
 
       it 'allows the user to remove its drop-in advising role' do
-        @advisor_flight_deck.disable_drop_in_advising_role @test.drop_in_advisor.advisor_roles.first
+        @advisor_flight_deck.disable_drop_in_advising_role @test.drop_in_advisor.dept_memberships.first
         @scheduler_intake_desk.wait_for_poller { !@scheduler_intake_desk.drop_in_advisor_uids.include?(@test.drop_in_advisor.uid) }
       end
 
@@ -1034,7 +1028,7 @@ describe 'BOA' do
 
       it 'allows the user to enable its drop-in advising role' do
         @advisor_flight_deck.click_settings_link
-        @advisor_flight_deck.enable_drop_in_advising_role @test.drop_in_advisor.advisor_roles.first
+        @advisor_flight_deck.enable_drop_in_advising_role @test.drop_in_advisor.dept_memberships.first
         @scheduler_intake_desk.wait_for_poller { @scheduler_intake_desk.drop_in_advisor_uids.include? @test.drop_in_advisor.uid }
       end
 

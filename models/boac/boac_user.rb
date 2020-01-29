@@ -1,7 +1,7 @@
 class BOACUser < User
 
   attr_accessor :active,
-                :advisor_roles,
+                :dept_memberships,
                 :can_access_canvas_data,
                 :depts,
                 :is_admin,
