@@ -53,7 +53,4 @@ describe 'A BOA director' do
       end
     end
   end
-
-  # TODO - Flight Data Recorder
-
 end
