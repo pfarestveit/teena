@@ -433,8 +433,11 @@ module BOACStudentPageAdvisingNote
   def expected_note_export_file_names(student, notes)
     names = []
     names << notes_export_csv_file_name(student)
-    notes.each do |note|
-      note.attachments.each { |attach| names << attach.file_name }
+    notes.map(&:attachments).flatten.group_by(&:file_name).each_value do |dupe_names|
+      dupe_names.each_with_index do |a, i|
+        parts = a.file_name.split('.')
+        names << "#{parts.first}#{ +' (' + i.to_s + ')' unless i.zero?}.#{parts.last}"
+      end
     end
     names
   end
