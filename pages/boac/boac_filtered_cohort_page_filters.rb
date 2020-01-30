@@ -56,6 +56,8 @@ module BOACFilteredCohortPageFilters
         link_element(id: "Major-#{filter_option}")
       when 'cohortOwnerAcademicPlans'
         link_element(id: "My Students-#{filter_option}")
+      when 'curatedGroupIds'
+        link_element(id: "My Curated Groups-#{filter_option}")
       else
         link_element(xpath: "//div[@class=\"filter-row-column-02 mt-1\"]//a[contains(.,\"#{filter_option}\")]")
     end
@@ -137,6 +139,7 @@ module BOACFilteredCohortPageFilters
     select_new_filter 'underrepresented' if cohort.search_criteria.underrepresented_minority
     cohort.search_criteria.ethnicity.each { |e| select_new_filter('ethnicities', e) } if cohort.search_criteria.ethnicity
     cohort.search_criteria.visa_type.each { |v| select_new_filter('visaTypes', v) } if cohort.search_criteria.visa_type
+    cohort.search_criteria.curated_groups.each { |g| select_new_filter('curatedGroupIds', g) } if cohort.search_criteria.curated_groups
 
     # CoE
     cohort.search_criteria.coe_advisor.each { |a| select_new_filter('coeAdvisorLdapUids', a) } if cohort.search_criteria.coe_advisor
@@ -205,7 +208,7 @@ module BOACFilteredCohortPageFilters
       div_element(xpath: "#{filter_option_xpath}[contains(text(),\"#{filter_option}\") and not(contains(.,\"COE\"))]")
 
     else
-      div_element(xpath: "#{filter_option_xpath}[contains(text(),\"#{filter_option}\")]")
+      div_element(xpath: "#{filter_option_xpath}[contains(.,\"#{filter_option}\")]")
     end
   end
 
@@ -244,6 +247,7 @@ module BOACFilteredCohortPageFilters
 
         filters.last_name.each { |n| existing_filter_element('Last Name', n).exists? } if filters.last_name&.any?
         filters.cohort_owner_academic_plans.each { |g| existing_filter_element('My Students', g).exists? } if filters.cohort_owner_academic_plans&.any?
+        # TODO - curated groups
 
         existing_filter_element('Underrepresented Minority').exists? if filters.coe_underrepresented_minority
         filters.coe_prep.each { |p| existing_filter_element('PREP', p).exists? } if filters.coe_prep&.any?
@@ -286,7 +290,7 @@ module BOACFilteredCohortPageFilters
     # All others require a selection
     else
       wait_for_update_and_click button_element(xpath: "#{existing_filter_sub_options_xpath filter_name}//button")
-      (['Entering Term', 'Expected Graduation Term', 'Advisor (COE)'].include? filter_name) ?
+      (['Entering Term', 'Expected Graduation Term', 'Advisor (COE)', 'My Curated Groups'].include? filter_name) ?
           wait_for_update_and_click(link_element(id: "#{filter_name}-#{edited_filter_option}")) :
           wait_for_update_and_click(link_element(xpath: "#{existing_filter_sub_options_xpath filter_name}//span[text()=\"#{edited_filter_option}\"]/.."))
     end

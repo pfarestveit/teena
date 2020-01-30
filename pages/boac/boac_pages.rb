@@ -190,6 +190,16 @@ module BOACPages
     wait_for_update_and_click link
   end
 
+  # Waits for a cohort's member count in the sidebar to match expectations
+  # @param cohort [FilteredCohort]
+  def wait_for_sidebar_cohort_member_count(cohort)
+    logger.debug "Waiting for cohort #{cohort.name} member count of #{cohort.member_data.length}"
+    wait_until(Utils.short_wait) do
+      el = span_element(xpath: "//div[contains(@class, \"sidebar-row-link\")][contains(.,\"#{cohort.name}\")]//span[@class=\"sr-only\"]")
+      el.exists? && el.text.delete(' students').chomp == cohort.member_data.length.to_s
+    end
+  end
+
   ### SIDEBAR - SEARCH ###
 
   button(:search_options_toggle_button, id: 'search-options-panel-toggle')
