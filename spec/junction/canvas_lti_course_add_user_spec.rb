@@ -182,6 +182,7 @@ describe 'bCourses Find a Person to Add', order: :defined do
       end
 
       it "offers #{user.role} an Academic Policies link" do
+        @driver.switch_to.default_content
         expect(@canvas.external_link_valid?(@driver, @canvas.policies_link_element, 'Academic Accommodations Hub | Executive Vice Chancellor and Provost')).to be true
       end
     end
