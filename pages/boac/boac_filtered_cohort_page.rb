@@ -79,7 +79,7 @@ class BOACFilteredCohortPage
 
   # Clicks the button to save a new cohort, which triggers the name input modal
   def click_save_cohort_button_one
-    wait_until(Utils.medium_wait) { save_cohort_button_one_element.enabled? }
+    wait_until(Utils.medium_wait) { save_cohort_button_one_element.visible?; save_cohort_button_one_element.enabled? }
     wait_for_update_and_click save_cohort_button_one_element
   end
 

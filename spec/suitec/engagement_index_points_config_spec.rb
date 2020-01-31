@@ -103,6 +103,7 @@ describe 'Engagement Index points configuration', order: :defined do
   end
 
   it 'allows a teacher to change an activity type point value to a new integer' do
+    @engagement_index.switch_to_canvas_iframe(@driver) unless @engagement_index.points_config_link?
     @engagement_index.click_points_config
     @engagement_index.change_activity_points(@add_asset_activity, (@add_asset_activity.points + 10))
     expect(@engagement_index.activity_points(@add_asset_activity)).to eql(@add_asset_activity.points + 10)

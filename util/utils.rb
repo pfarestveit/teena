@@ -65,6 +65,11 @@ class Utils
         end
         # Works around Chrome 75 'UnknownCommandError' issue.
         options.add_option('w3c', @config['webdriver']['w3c'])
+
+        # Enable Chrome same-site cookie restrictions
+        prefs = {'browser.enabled_labs_experiments': %w(same-site-by-default-cookies@1 cookies-without-same-site-must-be-secure@1)}
+        options.add_option('localState', prefs)
+
         options.add_argument 'headless' if headless?
         prefs = {
             :prompt_for_download => false,

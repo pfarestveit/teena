@@ -76,6 +76,7 @@ class OECDepartments
       HIN_URD = new('HIN-URD', 'South and Southeast Asian Studies', 'S_SEASN', %w(F G), true),
       HISTORY = new('HISTORY', 'History', 'HISTORY', %w(F G), true),
       HMEDSCI = new('HMEDSCI', 'Public Health', 'PB HLTH', nil, false),
+      HUM = new('HUM', 'L and S Arts and Humanities', 'HUM', %w(F G), true),
       HUNGARI = new('HUNGARI', 'Hungarian', 'HUNGARI', %w(F G), true),
       IAS = new('IAS', 'International and Area Studies', 'IAS', %w(F G), true),
       ICELAND = new('ICELAND', 'Icelandic', 'ICELAND', %w(F G), true),

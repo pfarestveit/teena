@@ -223,6 +223,7 @@ describe 'Asset Library', order: :defined do
       @asset_library.toggle_detail_view_item_like student_3_link
 
       # View an asset and like it, then view another
+      sleep 5
       @canvas.masquerade_as(@driver, student_1, @course)
       @asset_library.load_asset_detail(@driver, @asset_library_url, student_3_link)
       @asset_library.toggle_detail_view_item_like student_3_link

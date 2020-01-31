@@ -57,6 +57,7 @@ module Page
   # @param timeout [Fixnum]
   def wait_for_element(element, timeout)
     element.when_present timeout
+    wait_until(timeout) { element.enabled? }
     element.when_visible timeout
     sleep Utils.event_wait
     Utils.log_js_errors browser
