@@ -13,6 +13,7 @@ class CohortFilter
                 :coe_probation,
                 :coe_underrepresented_minority,
                 :cohort_owner_academic_plans,
+                :curated_groups,
                 :entering_terms,
                 :ethnicity,
                 :expected_grad_terms,

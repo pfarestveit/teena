@@ -10,7 +10,6 @@ describe 'BOAC', order: :defined do
 
   before(:all) do
     @driver = Utils.launch_browser test.chrome_profile
-    @analytics_page = BOACApiStudentPage.new @driver
     @homepage = BOACHomePage.new @driver
     @cohort_page = BOACFilteredCohortPage.new(@driver, test.advisor)
     @student_page = BOACStudentPage.new @driver

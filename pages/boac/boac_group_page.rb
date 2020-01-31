@@ -51,6 +51,20 @@ class BOACGroupPage
     groups
   end
 
+  # Returns the link element for a cohort using the group as a filter
+  # @param cohort [FilteredCohort]
+  # @return [PageObject::Elements::Link]
+  def linked_cohort_el(cohort)
+    link_element(xpath: "//a[contains(@id, 'referencing-cohort-')][text()=\"#{cohort.name}\"]")
+  end
+
+  # Returns the element containing the 'NO!' message when attempting to delete a group in use as a cohort filter
+  # @param cohort [FilteredCohort]
+  # @return [PageObject::Elements::Div]
+  def no_deleting_el(cohort)
+    div_element(xpath: "//div[@id='cohort-warning-body'][contains(., \"#{cohort.name}\")]")
+  end
+
   # Renames a group
   # @param group [CuratedGroup]
   # @param new_name [String]

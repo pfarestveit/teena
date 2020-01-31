@@ -259,6 +259,12 @@ class BOACTestConfig < TestConfig
     @default_cohort = FilteredCohort.new({:name => "Default cohort #{@id}", :search_criteria => editing_test_search_criteria})
   end
 
+  # Config for curated-groups-as-cohort-filter testing
+  def filtered_groups
+    set_base_configs_plus_searchable_data
+    set_search_cohorts
+  end
+
   # Config for non-current student testing
   def inactive_students
     set_base_configs_plus_searchable_data

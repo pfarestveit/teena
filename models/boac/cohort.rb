@@ -4,6 +4,7 @@ class Cohort
 
   def initialize(cohort_data)
     cohort_data.each { |k, v| public_send("#{k}=", v) }
+    @members ||= []
   end
 
 end
