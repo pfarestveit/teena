@@ -21,6 +21,7 @@ describe 'BOAC' do
     (group_8 = CuratedGroup.new({:name => "Group 8 #{test.id}"}))
   ]
   other_advisor = BOACUtils.get_admin_users.find { |u| u.uid != test.advisor.uid }
+  pre_existing_cohorts = BOACUtils.get_user_filtered_cohorts test.advisor
   pre_existing_groups = BOACUtils.get_user_curated_groups test.advisor
 
   before(:all) do
@@ -39,8 +40,14 @@ describe 'BOAC' do
     @term = @analytics_page.terms.first
     @course = @analytics_page.courses(@term).first
 
-    # Create a default filtered cohort
+    # Delete all pre-existing cohorts since they might contain group filters and prevent group deletion
     @homepage.load_page
+    pre_existing_cohorts.each do |c|
+      @filtered_page.load_cohort c
+      @filtered_page.delete_cohort c
+    end
+
+    # Create a default filtered cohort
     @filtered_page.search_and_create_new_cohort(test.default_cohort, test) unless test.default_cohort.id
   end
 
