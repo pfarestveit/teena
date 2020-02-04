@@ -32,17 +32,42 @@ describe 'bCourses Find a Person to Add', order: :defined do
 
     @canvas.log_in(@cal_net, Utils.super_admin_username, Utils.super_admin_password)
     @canvas.masquerade_as(@driver, teacher_1)
-
-    @create_course_site_page.provision_course_site(@driver, course, teacher_1, sections_for_site)
-    @canvas.publish_course_site(@driver, course)
   end
 
   after(:all) { Utils.quit_browser @driver }
 
+  describe 'customizations in the footer' do
+
+    it 'include an "About" link' do
+      expect(@canvas.external_link_valid?(@driver, @canvas.about_link_element, 'bCourses | Digital Learning Services')).to be true
+    end
+
+    it 'include a "Privacy Policy" link' do
+      expect(@canvas.external_link_valid?(@driver, @canvas.privacy_policy_link_element, 'Instructure Product Privacy Policy | instructure.com')).to be true
+    end
+
+    it 'include a "Terms of Service" link' do
+      expect(@canvas.external_link_valid?(@driver, @canvas.terms_of_service_link_element, 'Canvas the Learning Management Platform | Instructure')).to be true
+    end
+
+    it 'include a "Data Use & Analytics" link' do
+      expect(@canvas.external_link_valid?(@driver, @canvas.data_use_link_element, 'bCourses Data Use and Analytics | Digital Learning Services')).to be true
+    end
+
+    it 'include a "UC Berkeley Honor Code" link' do
+      expect(@canvas.external_link_valid?(@driver, @canvas.honor_code_link_element, 'Berkeley Honor Code | Center for Teaching & Learning')).to be true
+    end
+
+    it 'include a "Student Resources" link' do
+      expect(@canvas.external_link_valid?(@driver, @canvas.student_resources_link_element, 'Resources | ASUC')).to be true
+    end
+  end
+
   describe 'customizations in Add People' do
 
     before(:all) do
-      @canvas.masquerade_as(@driver, teacher_1, course)
+      @create_course_site_page.provision_course_site(@driver, course, teacher_1, sections_for_site)
+      @canvas.publish_course_site(@driver, course)
       @canvas.load_users_page course
     end
 

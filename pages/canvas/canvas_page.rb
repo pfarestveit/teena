@@ -16,6 +16,13 @@ module Page
     h2(:recent_activity_heading, xpath: '//h2[contains(text(),"Recent Activity")]')
     h3(:project_site_heading, xpath: '//h3[text()="Is bCourses Right For My Project?"]')
 
+    link(:about_link, text: 'About')
+    link(:privacy_policy_link, text: 'Privacy Policy')
+    link(:terms_of_service_link, text: 'Terms of Service')
+    link(:data_use_link, text: 'Data Use & Analytics')
+    link(:honor_code_link, text: 'UC Berkeley Honor Code')
+    link(:student_resources_link, text: 'Student Resources')
+
     button(:submit_button, xpath: '//button[contains(.,"Submit")]')
     button(:save_button, xpath: '//button[text()="Save"]')
     button(:update_course_button, xpath: '//button[contains(.,"Update Course Details")]')
