@@ -189,6 +189,12 @@ describe 'BOA flight data recorder' do
         end
       end
     end
+
+    it 'prevents the user from reaching an unauthorized department\'s data' do
+      dept = (depts - director_depts).first
+      @flight_data_recorder.load_page dept
+      @flight_data_recorder.wait_for_title 'Page not found'
+    end
   end
 
   context 'when the user is an advisor' do

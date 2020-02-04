@@ -74,7 +74,7 @@ describe 'A BOA filtered cohort' do
       @cohort_page.new_filter_sub_option_element('curatedGroupIds', @group_2.id).when_present 1
     end
 
-    test.searches[0..1].each do |cohort|
+    test.searches.each do |cohort|
 
       it "allows the user to filter a group by active students with #{cohort.search_criteria.list_filters}" do
         # Add the groups to the search criteria, and restrict the searchable data to the group members
@@ -246,6 +246,25 @@ describe 'A BOA filtered cohort' do
         @group_page.wait_for_update_and_click @group_page.delete_cohort_button_element
         @group_page.no_deleting_el(@cohorts.last)
       end
+    end
+
+    context 'when another user views a cohort with a group filter' do
+
+      before(:all) do
+        @homepage.hit_escape
+        @homepage.log_out
+        @homepage.dev_auth BOACUser.new(uid: Utils.super_admin_uid)
+      end
+
+      it 'shows the user the filters' do
+        @cohort_page.load_cohort @cohorts.last
+        @cohort_page.show_filters
+        @cohort_page.existing_filter_element('My Curated Groups', @group_1.name).when_visible 1
+        @cohort_page.existing_filter_element('My Curated Groups', @group_2.name).when_visible 1
+
+      end
+
+      it('prevents the user from editing the filters') { expect(@cohort_page.cohort_edit_button_elements.any?).to be false }
     end
   end
 end
