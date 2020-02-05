@@ -65,4 +65,15 @@ describe 'BOAC' do
       @home_page.wait_for_title 'Home'
     end
   end
+
+  context 'when an authorized user\'s session is expired' do
+
+    before { @driver.manage.delete_cookie 'session' }
+
+    it 'forces login' do
+      @home_page.enter_search_string 'foo'
+      @home_page.hit_enter
+      @home_page.sign_in_element.when_visible Utils.short_wait
+    end
+  end
 end
