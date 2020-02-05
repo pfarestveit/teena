@@ -11,7 +11,7 @@ describe 'BOA' do
     @test = BOACTestConfig.new
     @test.drop_in_appts(authorized_users, dept)
 
-    @students = @test.students.shuffle[0..7]
+    @students = @test.students.shuffle[0..20]
     inactive_sid = (NessieUtils.hist_profile_sids_of_career_status('Inactive') - BOACUtils.manual_advisee_sids).first
     @inactive_student = NessieUtils.get_hist_student inactive_sid
     completed_sid = (NessieUtils.hist_profile_sids_of_career_status('Completed') - BOACUtils.manual_advisee_sids).first
@@ -28,6 +28,9 @@ describe 'BOA' do
     @appt_7 = Appointment.new(student: @students[7], topics: [Topic::COURSE_ADD, Topic::COURSE_DROP], detail: "Scheduler no-reservation appointment creation #{@test.id} detail")
     @appt_8 = Appointment.new(student: @inactive_student, reserve_advisor: @test.drop_in_advisor, topics: [Topic::COURSE_ADD], detail: "Scheduler reservation appointment creation #{@test.id} detail")
     @appt_9 = Appointment.new(student: @completed_student, detail: 'Some detail')
+    @appt_10 = Appointment.new(student: @students[8], topics: [Topic::COURSE_DROP], detail: "Reserved 1 #{@test.id}", reserve_advisor: @test.drop_in_advisor)
+    @appt_11 = Appointment.new(student: @students[9], topics: [Topic::COURSE_DROP], detail: "Reserved 2 #{@test.id}", reserve_advisor: @test.drop_in_advisor)
+    @resolved_issue = Appointment.new(student: @students[10], topics: [Topic::COURSE_ADD], detail: "A resolved issue #{@test.id}")
 
     @driver_scheduler = Utils.launch_browser
     @scheduler_homepage = BOACHomePage.new @driver_scheduler
@@ -89,10 +92,18 @@ describe 'BOA' do
 
   context 'when the user is a drop-in advisor' do
 
-    before(:all) { @advisor_homepage.dev_auth @test.drop_in_advisor }
+    before(:all) do
+      @advisor_homepage.dev_auth @test.drop_in_advisor
+      @advisor_flight_deck.load_page
+      @advisor_flight_deck.disable_drop_in_advising_role @test.drop_in_advisor.dept_memberships.first
+      @advisor_flight_deck.enable_drop_in_advising_role @test.drop_in_advisor.dept_memberships.first
+      @drop_in_advisors << @test.drop_in_advisor unless @drop_in_advisors.map(&:uid).include? @test.drop_in_advisor.uid
+    end
+
     after(:all) { @advisor_homepage.log_out }
 
     it 'drops the user onto the homepage at login with a waiting list' do
+      @advisor_homepage.load_page
       expect(@advisor_homepage.title).to include('Home')
       @advisor_homepage.new_appt_button_element.when_visible Utils.short_wait
     end
@@ -194,6 +205,39 @@ describe 'BOA' do
     end
   end
 
+  ### ADVISOR STATUS ###
+
+  describe 'drop-in advisor status' do
+
+    context 'on the intake desk' do
+
+      it 'cannot be set' do
+        expect(@scheduler_intake_desk.status_clear_button?).to be false
+        expect(@scheduler_intake_desk.status_save_button?).to be false
+      end
+    end
+
+    context 'on the waiting list' do
+
+      it 'can be set' do
+        @advisor_homepage.create_status(@test.drop_in_advisor.dept_memberships.first, "#{@test.id} drop-in advisor status")
+        @advisor_homepage.wait_until(2) { @advisor_homepage.status == @test.drop_in_advisor.dept_memberships.first.drop_in_status }
+      end
+
+      it 'updates the intake desk when set' do
+        @scheduler_intake_desk.wait_for_poller { @scheduler_intake_desk.intake_desk_advisor_status(@test.advisor) == @test.advisor.dept_memberships.first.drop_in_status }
+      end
+
+      it 'can be cleared' do
+        @advisor_homepage.clear_status @test.drop_in_advisor.dept_memberships.first
+      end
+
+      it 'updates the intake desk when cleared' do
+        @scheduler_intake_desk.wait_for_poller { @scheduler_intake_desk.intake_desk_advisor_status(@test.advisor) == @test.advisor.dept_memberships.first.drop_in_status }
+      end
+    end
+  end
+
   ### DROP-IN APPOINTMENT CREATION
 
   describe 'drop-in appointment creation' do
@@ -225,14 +269,14 @@ describe 'BOA' do
         @scheduler_intake_desk.add_reasons(appt, [Topic::OTHER])
         @scheduler_intake_desk.enter_detail appt
         expect(@scheduler_intake_desk.make_appt_button_element.disabled?).to be true
-        @scheduler_intake_desk.choose_student @test.students.first
+        @scheduler_intake_desk.choose_appt_student @test.students.first
         expect(@scheduler_intake_desk.make_appt_button_element.disabled?).to be false
       end
 
       it 'requires a scheduler to select a reason for a new appointment' do
         appt = Appointment.new(detail: 'Some detail')
         @scheduler_intake_desk.click_new_appt
-        @scheduler_intake_desk.choose_student @test.students.first
+        @scheduler_intake_desk.choose_appt_student @test.students.first
         @scheduler_intake_desk.enter_detail appt
         expect(@scheduler_intake_desk.make_appt_button_element.disabled?).to be true
         @scheduler_intake_desk.add_reasons(appt,[Topic::OTHER])
@@ -254,7 +298,7 @@ describe 'BOA' do
 
       it 'requires a scheduler to enter details for a new appointment' do
         @scheduler_intake_desk.click_new_appt
-        @scheduler_intake_desk.choose_student @test.students.first
+        @scheduler_intake_desk.choose_appt_student @test.students.first
         @scheduler_intake_desk.add_reasons(@appt_9, [Topic::OTHER])
         expect(@scheduler_intake_desk.make_appt_button_element.disabled?).to be true
         @scheduler_intake_desk.enter_detail @appt_9
@@ -277,7 +321,7 @@ describe 'BOA' do
       it 'prevents a scheduler from creating a new appointment for a student with an existing pending appointment' do
         @scheduler_intake_desk.wait_for_poller { @scheduler_intake_desk.visible_appt_ids.include? @appt_8.id }
         @scheduler_intake_desk.click_new_appt
-        @scheduler_intake_desk.choose_student @appt_8.student
+        @scheduler_intake_desk.choose_appt_student @appt_8.student
         @scheduler_intake_desk.student_double_booking_msg_element.when_visible 3
       end
     end
@@ -313,14 +357,14 @@ describe 'BOA' do
         @advisor_homepage.add_reasons(appt,[Topic::OTHER])
         @advisor_homepage.enter_detail appt
         expect(@advisor_homepage.make_appt_button_element.disabled?).to be true
-        @advisor_homepage.choose_student @test.students.first
+        @advisor_homepage.choose_appt_student @test.students.first
         expect(@advisor_homepage.make_appt_button_element.disabled?).to be false
       end
 
       it 'requires a drop-in advisor to select a reason for a new appointment' do
         appt = Appointment.new(detail: 'Some detail')
         @advisor_homepage.click_new_appt
-        @advisor_homepage.choose_student @test.students.first
+        @advisor_homepage.choose_appt_student @test.students.first
         @advisor_homepage.enter_detail appt
         expect(@advisor_homepage.make_appt_button_element.disabled?).to be true
         @advisor_homepage.add_reasons(appt, [Topic::OTHER])
@@ -338,7 +382,7 @@ describe 'BOA' do
       it 'requires a drop-in advisor to enter details for a new appointment' do
         appt = Appointment.new(detail: 'Some detail')
         @advisor_homepage.click_new_appt
-        @advisor_homepage.choose_student @test.students.first
+        @advisor_homepage.choose_appt_student @test.students.first
         @advisor_homepage.add_reasons(appt, [Topic::OTHER])
         expect(@advisor_homepage.make_appt_button_element.disabled?).to be true
         @advisor_homepage.enter_detail appt
@@ -358,7 +402,7 @@ describe 'BOA' do
 
       it 'prevents a drop-in advisor from creating a new appointment for a student with an existing pending appointment' do
         @advisor_homepage.click_new_appt
-        @advisor_homepage.choose_student @appt_0.student
+        @advisor_homepage.choose_appt_student @appt_0.student
         @advisor_homepage.student_double_booking_msg_element.when_visible 3
       end
     end
@@ -499,10 +543,6 @@ describe 'BOA' do
         @scheduler_intake_desk.wait_for_poller { @scheduler_intake_desk.reserved_for_el(@appt_1).visible? }
         @appt_1.reserve_advisor = @test.drop_in_advisor
       end
-
-      # TODO - the following
-      it 'triggers a warning if a scheduler tries to set a drop-in advisor with a reserved appointment to "off-duty"'
-      it 'removes a drop-in advisor\'s appointment reservations if a scheduler sets a drop-in advisor to "off-duty"'
     end
 
     # Drop-in Advisor
@@ -525,15 +565,11 @@ describe 'BOA' do
       end
 
       it 'allow the drop-in advisor to reserve an appointment' do
-        @advisor_homepage.click_reserve_appt_button @appt_1
+        @advisor_homepage.reserve_appt_for_advisor(@appt_1, @test.drop_in_advisor)
         @advisor_homepage.reserved_for_el(@appt_1).when_visible 3
         expect(@advisor_homepage.reserved_for_el(@appt_1).text).to eql('Assigned to you')
         @appt_1.reserve_advisor = @test.drop_in_advisor
       end
-
-      # TODO - the following
-      it 'triggers a warning if a drop-in advisor tries to go off-duty with a reserved appointment'
-      it 'removes a drop-in advisor\'s appointment reservations if the advisor goes off-duty'
     end
 
     context 'on the student page' do
@@ -557,7 +593,7 @@ describe 'BOA' do
 
       it 'allow the drop-in advisor to reserve the appointment' do
         @advisor_student_page.expand_item @appt_1
-        @advisor_student_page.click_reserve_appt_button @appt_1
+        @advisor_student_page.reserve_appt_for_advisor(@appt_1, @test.drop_in_advisor)
         @advisor_student_page.reserved_for_el(@appt_1).when_visible 3
       end
 
@@ -711,6 +747,7 @@ describe 'BOA' do
 
       it 'can be done from the list view' do
         @advisor_homepage.click_appt_check_in_button @appt_3
+        @advisor_homepage.select_check_in_advisor @test.drop_in_advisor
         @advisor_homepage.click_modal_check_in_button
         @appt_3.status = AppointmentStatus::CHECKED_IN
         @appt_3.advisor = @test.drop_in_advisor
@@ -765,6 +802,7 @@ describe 'BOA' do
 
         it 'can be done' do
           @advisor_student_page.click_check_in_button @appt_3
+          @advisor_student_page.select_check_in_advisor @test.drop_in_advisor
           @advisor_student_page.click_modal_check_in_button
           @advisor_student_page.wait_until(Utils.short_wait) { @advisor_student_page.visible_expanded_appt_data(@appt_3)[:check_in_time] }
           @appt_3.status = AppointmentStatus::CHECKED_IN
@@ -917,6 +955,8 @@ describe 'BOA' do
     end
   end
 
+  ### APPOINTMENT SORTING ###
+
   describe 'intake desk appointments' do
 
     it 'shows today\'s pending appointments sorted by creation time' do
@@ -950,6 +990,7 @@ describe 'BOA' do
       @advisor_homepage.click_new_appt
       @advisor_homepage.create_appt checked_in_appt
       @advisor_homepage.click_appt_check_in_button checked_in_appt
+      @advisor_homepage.select_check_in_advisor @test.drop_in_advisor
       @advisor_homepage.click_modal_check_in_button
 
       @advisor_homepage.click_new_appt
@@ -973,13 +1014,97 @@ describe 'BOA' do
     end
   end
 
+  ### ASSIGNMENTS REMOVED WHEN ADVISOR GOES OFF-DUTY ###
+
+  describe 'drop-in advisor' do
+
+    before(:all) do
+      @advisor_homepage.load_page
+      @advisor_homepage.click_new_appt
+      @advisor_homepage.create_appt @appt_10
+      @advisor_homepage.reserved_for_el(@appt_10).when_visible 2
+    end
+
+    it 'is warned that going off-duty will remove appointment assignments' do
+      @advisor_homepage.click_self_availability_button
+      @advisor_homepage.off_duty_confirm_button_element.when_visible 2
+    end
+
+    it 'can cancel going off-duty and keep appointment assignments' do
+      @advisor_homepage.click_off_duty_cancel
+      @advisor_homepage.reserved_for_el(@appt_10).when_visible 2
+    end
+
+    it 'loses appointment assignments when going off-duty' do
+      @advisor_homepage.click_self_availability_button
+      @advisor_homepage.click_off_duty_confirm
+      @advisor_homepage.wait_for_poller { !@advisor_homepage.reserved_for_el(@appt_10).exists? }
+    end
+
+    it 'can assign an appointment to itself while off-duty' do
+      @advisor_homepage.reserve_appt_for_advisor(@appt_10, @test.drop_in_advisor)
+      @advisor_homepage.wait_for_poller { @advisor_homepage.reserved_for_el(@appt_10).visible? }
+      expect(@advisor_homepage.reserved_for_el(@appt_10).text).to eql('Assigned to you')
+    end
+  end
+
+  describe 'scheduler' do
+
+    before(:all) { @scheduler_intake_desk.set_advisor_available @test.drop_in_advisor }
+
+    it 'is warned that taking an advisor off-duty will remove appointment assignments' do
+      @scheduler_intake_desk.wait_for_poller { @scheduler_intake_desk.reserved_for_el(@appt_10).exists? }
+      @scheduler_intake_desk.click_advisor_availability_toggle @test.drop_in_advisor
+      @scheduler_intake_desk.off_duty_confirm_button_element.when_visible 2
+    end
+
+    it 'can cancel taking an advisor off-duty and keep appointment assignments' do
+      @scheduler_intake_desk.click_off_duty_cancel
+      expect(@scheduler_intake_desk.reserved_for_el(@appt_10).exists?).to be true
+    end
+
+    it 'loses appointment assignments when taking an advisor off-duty' do
+      @scheduler_intake_desk.click_advisor_availability_toggle @test.drop_in_advisor
+      @scheduler_intake_desk.click_off_duty_confirm
+      @scheduler_intake_desk.reserved_for_el(@appt_10).when_not_present 3
+    end
+
+    ### SCHEDULER - LOGGING RESOLVED ISSUE ###
+
+    context 'when logging a resolved issue' do
+
+      before(:all) { @resolved_issue = Appointment.new(student: @students[11], topics: [Topic::COURSE_ADD], detail: "A resolved issue #{@test.id}") }
+
+      it 'creates a checked-in appointment with itself' do
+        @scheduler_intake_desk.log_resolved_issue(@resolved_issue, @test.drop_in_scheduler)
+        expect(@resolved_issue.id).not_to be_nil
+      end
+
+      it 'updates the waiting list with the checked-in appointment' do
+        @advisor_homepage.wait_for_poller do
+          visible_data = @advisor_homepage.visible_list_view_appt_data(@resolved_issue)
+          visible_data[:checked_in_status] && visible_data[:checked_in_status].include?('CHECKED IN')
+        end
+      end
+
+      it 'updates the student page with the checked-in appointment' do
+        @advisor_student_page.load_page @resolved_issue.student
+        @advisor_student_page.show_appts
+        @advisor_student_page.expand_item @resolved_issue
+        visible_data = @advisor_student_page.visible_expanded_appt_data @resolved_issue
+        expect(visible_data[:advisor_role]).to include('Intake Desk')
+      end
+    end
+  end
+
+  ### SETTINGS PAGE - DROP-IN STATUS ###
+
   describe 'settings page' do
 
     before(:all) do
-      @reserved_appt = Appointment.new(student: @students[-2], topics: [Topic::COURSE_DROP], detail: "Reserved #{@test.id}", advisor: @test.drop_in_advisor)
       @advisor_homepage.load_page
       @advisor_homepage.click_new_appt
-      @advisor_homepage.create_appt @reserved_appt
+      @advisor_homepage.create_appt @appt_11
     end
 
     context 'when the user is a scheduler' do
@@ -1010,20 +1135,19 @@ describe 'BOA' do
       it 'removes the user\'s access to the waiting list' do
         @advisor_homepage.load_page
         sleep 1
-        expect(@advisor_homepage.show_waitlist_button?).to be false
-        expect(@advisor_homepage.hide_waitlist_button?).to be false
+        expect(@advisor_homepage.new_appt_button?).to be false
       end
 
       it 'removes the user\'s appointment assignments on the waiting list when the drop-in advising role is removed' do
-        @scheduler_intake_desk.wait_for_poller { !@scheduler_intake_desk.visible_list_view_appt_data(@reserved_appt)[:reserved_by] }
+        @scheduler_intake_desk.wait_for_poller { !@scheduler_intake_desk.visible_list_view_appt_data(@appt_11)[:reserved_by] }
       end
 
       it 'removes the user\'s appointment assignments on the student page when the drop-in advising role is removed' do
-        @advisor_student_page.load_page @reserved_appt.student
+        @advisor_student_page.load_page @appt_11.student
         @advisor_student_page.show_appts
-        @advisor_student_page.expand_item @reserved_appt
-        expect(@advisor_student_page.visible_expanded_appt_data(@reserved_appt)[:reserve_advisor]).to be_nil
-        expect(@advisor_student_page.check_in_button(@reserved_appt).exists?).to be false
+        @advisor_student_page.expand_item @appt_11
+        expect(@advisor_student_page.visible_expanded_appt_data(@appt_11)[:reserve_advisor]).to be_nil
+        expect(@advisor_student_page.check_in_button(@appt_11).exists?).to be false
       end
 
       it 'allows the user to enable its drop-in advising role' do
@@ -1034,7 +1158,7 @@ describe 'BOA' do
 
       it 'restores the user\'s access to the waiting list' do
         @advisor_homepage.load_page
-        @advisor_homepage.show_waitlist_button_element.when_visible Utils.short_wait
+        @advisor_homepage.new_appt_button_element.when_visible Utils.short_wait
       end
     end
   end

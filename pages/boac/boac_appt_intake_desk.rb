@@ -33,6 +33,29 @@ module BOACApptIntakeDesk
     topics.map &:downcase
   end
 
+  ### LOG RESOLVED ISSUE ###
+
+  button(:log_resolved_button, id: 'btn-log-resolved-isse')
+  text_field(:log_resolved_student_input, id: 'log-resolved-issue-student-input')
+  button(:log_resolved_confirm_button, id: 'log-resolved-issue-confirm')
+  button(:log_resolved_cancel_button, id: 'log-resolved-issue-cancel')
+
+  # Creates an appointment via the 'Log Resolved Issue' workflow
+  # @param appt [Appointment]
+  # @param scheduler [BOACUser]
+  def log_resolved_issue(appt, scheduler)
+    logger.info "Scheduler UID #{scheduler.uid} is logging a resolved issue for student #{appt.student.uid}"
+    wait_for_update_and_click log_resolved_button_element
+    set_auto_suggest(log_resolved_student_input_element, appt.student.full_name)
+    add_reasons(appt, appt.topics)
+    enter_detail appt
+    wait_for_update_and_click log_resolved_confirm_button_element
+    set_new_appt_id appt
+    appt.created_date = Time.now
+    appt.status = AppointmentStatus::CHECKED_IN
+    appt.inspect
+  end
+
   ### CREATE DROP-IN / UPDATE DROP-IN SHARED ELEMENTS ###
 
   select_list(:topic_select, id: 'add-topic-select-list')
@@ -61,6 +84,7 @@ module BOACApptIntakeDesk
   def choose_reserve_advisor(advisor)
     logger.info "Reserving appointment for UID #{advisor.uid}"
     wait_for_element_and_select_js(reserve_advisor_select_element, advisor.uid.to_s)
+    sleep 1
   end
 
   # Returns all the available reasons for a new drop-in appointment
@@ -143,7 +167,7 @@ module BOACApptIntakeDesk
 
   # Selects a drop-in appointment student
   # @param student [BOACUser]
-  def choose_student(student)
+  def choose_appt_student(student)
     logger.info "Selecting student UID #{student.uid}, SID #{student.sis_id}"
     input = student.full_name || student.sis_id
     set_auto_suggest(student_name_input_element, input)
@@ -152,7 +176,7 @@ module BOACApptIntakeDesk
   # Combines methods to create an appointment once the modal is open
   # @param appt [Appointment]
   def create_appt(appt)
-    choose_student appt.student
+    choose_appt_student appt.student
     choose_reserve_advisor appt.reserve_advisor if appt.reserve_advisor
     add_reasons(appt, appt.topics)
     enter_detail appt
@@ -177,7 +201,20 @@ module BOACApptIntakeDesk
     fail
   end
 
-  ### ADVISOR AVAILABILITY ###
+  ### ADVISOR AVAILABILITY AND STATUS ###
+
+  button(:off_duty_confirm_button, id: 'are-you-sure-confirm')
+  button(:off_duty_cancel_button, id: 'are-you-sure-cancel')
+
+  # Confirms going off-duty and releasing assignments
+  def click_off_duty_confirm
+    wait_for_update_and_click off_duty_confirm_button_element
+  end
+
+  # Cancels going off-duty and releasing assignments
+  def click_off_duty_cancel
+    wait_for_update_and_click off_duty_cancel_button_element
+  end
 
   # Intake desk
 
@@ -192,7 +229,13 @@ module BOACApptIntakeDesk
   # Returns the UIDs of all drop-in advisors shown
   # @return [Array<String>]
   def drop_in_advisor_uids
-    availability_toggle_button_elements.map { |el| el.attribute('id').split('-').last }
+    tries = 2
+    begin
+      tries -= 1
+      availability_toggle_button_elements.map { |el| el.attribute('id').split('-').last }
+    rescue Selenium::WebDriver::Error::StaleElementReferenceError
+      tries.zero? ? fail : retry
+    end
   end
 
   # Returns the visible availability status for an advisor
@@ -203,6 +246,12 @@ module BOACApptIntakeDesk
     el.text.strip == 'ON DUTY'
   end
 
+  # Clicks the off-duty / on-duty toggle for a given advisor
+  # @param advisor [BOACUser]
+  def click_advisor_availability_toggle(advisor)
+    wait_for_update_and_click toggle_availability_button(advisor)
+  end
+
   # Sets an advisor's availability to true
   # @param advisor [BOACUser]
   def set_advisor_available(advisor)
@@ -210,7 +259,7 @@ module BOACApptIntakeDesk
       logger.warn "UID #{advisor.uid} is already available for drop-in appointments"
     else
       logger.info "Making UID #{advisor.uid} available for drop-in appointments"
-      wait_for_update_and_click toggle_availability_button(advisor)
+      click_advisor_availability_toggle(advisor)
       wait_until(1) { advisor_available? advisor }
     end
   end
@@ -220,7 +269,7 @@ module BOACApptIntakeDesk
   def set_advisor_unavailable(advisor)
     if advisor_available? advisor
       logger.info "Making UID #{advisor.uid} unavailable for drop-in appointments"
-      wait_for_update_and_click toggle_availability_button(advisor)
+      click_advisor_availability_toggle(advisor)
       wait_until(1) { !advisor_available? advisor }
     else
       logger.warn "UID #{advisor.uid} is already unavailable for drop-in appointments"
@@ -230,6 +279,10 @@ module BOACApptIntakeDesk
   # Waiting list
 
   button(:availability_toggle_me_button, id: 'toggle-drop-in-availability-me')
+  div(:status, xpath: '//div[contains(@class, "drop-in-status-text")]')
+  button(:status_clear_button, id: 'drop-in-status-clear')
+  text_field(:status_input, id: 'drop-in-status-input')
+  button(:status_save_button, id: 'drop-in-status-submit')
 
   # Returns the visible availability status for a logged-in advisor
   # @return [Boolean]
@@ -237,18 +290,51 @@ module BOACApptIntakeDesk
     div_element(xpath: '//div[contains(@class, "availability-status-active")]').text.strip == 'ON DUTY'
   end
 
+  # Clicks the off-duty / on-duty toggle for the logged-in advisor
+  def click_self_availability_button
+    logger.info 'Clicking availability toggle'
+    wait_for_update_and_click availability_toggle_me_button_element
+  end
+
   # Sets a logged-in advisor's availability to true
   def set_self_available
     logger.info "Making the logged-in advisor available for drop-in appointments"
-    wait_for_update_and_click availability_toggle_me_button_element
+    click_self_availability_button
     wait_until(1) { self_available? }
   end
 
   # Sets a logged-in advisor's availability to false
   def set_self_unavailable
     logger.info "Making the logged-in advisor unavailable for drop-in appointments"
-    wait_for_update_and_click availability_toggle_me_button_element
+    click_self_availability_button
     wait_until(1) { !self_available? }
+  end
+
+  # Enters and saves a drop-in status
+  # @param dept_membership [DeptMembership]
+  # @param status [String]
+  def create_status(dept_membership, status)
+    logger.info "Setting drop-in advisor status to #{status}"
+    wait_for_element_and_type(status_input_element, status)
+    wait_for_update_and_click status_save_button_element
+    dept_membership.drop_in_status = status
+  end
+
+  # Clears a drop-in status
+  # @param dept_membership [DeptMembership]
+  def clear_status(dept_membership)
+    logger.info 'Clearing drop-in advisor status'
+    wait_for_update_and_click status_clear_button_element
+    status_input_element.when_visible 2
+    dept_membership.drop_in_status = nil
+  end
+
+  # Returns the visible status for a given advisor
+  # @param advisor [BOACUser]
+  # @return [String]
+  def intake_desk_advisor_status(advisor)
+    el = span_element(xpath: "//button[@id='toggle-drop-in-availability-#{advisor.uid}']/../../../../../div//span")
+    el.text if el.exists?
   end
 
   ### LIST VIEW OF EXISTING APPOINTMENTS ###

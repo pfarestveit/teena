@@ -55,7 +55,7 @@ class BOACTestConfig < TestConfig
     @advisor.dept_memberships = [DeptMembership.new(dept: @dept, advisor_role: AdvisorRole::ADVISOR)]
 
     @drop_in_advisor = dept_advisors[4]
-    @drop_in_advisor.dept_memberships = [DeptMembership.new(dept: @dept, advisor_role: AdvisorRole::ADVISOR, is_drop_in_advisor: true)]
+    @drop_in_advisor.dept_memberships = [DeptMembership.new(dept: @dept, advisor_role: AdvisorRole::ADVISOR)]
 
     @drop_in_scheduler = dept_advisors[5]
     @drop_in_scheduler.dept_memberships = [DeptMembership.new(dept: @dept, advisor_role: AdvisorRole::SCHEDULER)]
