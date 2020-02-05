@@ -28,6 +28,13 @@ describe 'A BOA director' do
 
   after(:all) { Utils.quit_browser @driver }
 
+  it 'can enable a drop-in advising role' do
+    @settings_page.load_page
+    @settings_page.enable_drop_in_advising_role(test.advisor.dept_memberships.first)
+    @homepage.load_page
+    @homepage.new_appt_button_element.when_visible Utils.short_wait
+  end
+
   test_cases.each do |test_case|
     it "can download a notes zip file for UID #{test_case[:student].uid}" do
       @student_page.load_page test_case[:student]

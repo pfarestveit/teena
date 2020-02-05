@@ -20,27 +20,28 @@ class BOACFlightDeckPage
   end
 
   def drop_in_advising_enabled?(dept)
+    drop_in_advising_toggle_el(dept).when_visible Utils.short_wait
     span_element(xpath: "//button[@id='toggle-drop-in-advising-#{dept.code}']/span/span").text == 'YES'
   end
 
-  def disable_drop_in_advising_role(advisor_role)
-    if drop_in_advising_enabled? advisor_role.dept
-      logger.info "Drop-in role is enabled in dept #{advisor_role.dept.code}, removing"
-      wait_for_update_and_click drop_in_advising_toggle_el(advisor_role.dept)
+  def disable_drop_in_advising_role(dept_membership)
+    if drop_in_advising_enabled? dept_membership.dept
+      logger.info "Drop-in role is enabled in dept #{dept_membership.dept.code}, removing"
+      wait_for_update_and_click drop_in_advising_toggle_el(dept_membership.dept)
     else
-      logger.info "Drop-in role is already disabled in dept #{advisor_role.dept.code}"
+      logger.info "Drop-in role is already disabled in dept #{dept_membership.dept.code}"
     end
-    advisor_role.is_drop_in_advisor = false
+    dept_membership.is_drop_in_advisor = false
   end
 
-  def enable_drop_in_advising_role(advisor_role)
-    if drop_in_advising_enabled? advisor_role.dept
-      logger.info "Drop-in role is already enabled in dept #{advisor_role.dept.code}"
+  def enable_drop_in_advising_role(dept_membership)
+    if drop_in_advising_enabled? dept_membership.dept
+      logger.info "Drop-in role is already enabled in dept #{dept_membership.dept.code}"
     else
-      logger.info "Drop-in role is disabled in dept #{advisor_role.dept.code}, adding"
-      wait_for_update_and_click drop_in_advising_toggle_el(advisor_role.dept)
+      logger.info "Drop-in role is disabled in dept #{dept_membership.dept.code}, adding"
+      wait_for_update_and_click drop_in_advising_toggle_el(dept_membership.dept)
     end
-    advisor_role.is_drop_in_advisor = true
+    dept_membership.is_drop_in_advisor = true
   end
 
   #### SERVICE ANNOUNCEMENTS ####
