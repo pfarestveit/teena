@@ -51,6 +51,11 @@ class BOACUtils < Utils
     @config['shuffle_max_users']
   end
 
+  # Returns the department code to use for testing drop-in appointments
+  def self.appts_drop_in_dept
+    @config['appts_drop_in_dept']
+  end
+
   # Returns the number of SIDs to add during bulk SID group tests
   def self.group_bulk_sids_max
     @config['group_bulk_sids_max']

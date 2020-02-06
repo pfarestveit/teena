@@ -55,6 +55,7 @@ boac:
   test_add_edit_uid: secret
 
   shuffle_max_users: true
+  appts_drop_in_dept: QCADV
   assignments_max_users: 10
   assignments_term: Spring 2018
   class_page_max_users: 5
