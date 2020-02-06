@@ -51,13 +51,13 @@ class BOACTestConfig < TestConfig
   # @param auth_users [Array<BOACUser>]
   def set_drop_in_appt_advisors(auth_users)
     dept_advisors = auth_users.select { |u| u.depts.include?(@dept) && (u.uid.length > 1)  }
-    @advisor = dept_advisors[3]
+    @advisor = dept_advisors[0]
     @advisor.dept_memberships = [DeptMembership.new(dept: @dept, advisor_role: AdvisorRole::ADVISOR)]
 
-    @drop_in_advisor = dept_advisors[4]
+    @drop_in_advisor = dept_advisors[1]
     @drop_in_advisor.dept_memberships = [DeptMembership.new(dept: @dept, advisor_role: AdvisorRole::ADVISOR)]
 
-    @drop_in_scheduler = dept_advisors[5]
+    @drop_in_scheduler = dept_advisors[2]
     @drop_in_scheduler.dept_memberships = [DeptMembership.new(dept: @dept, advisor_role: AdvisorRole::SCHEDULER)]
 
     logger.warn "Advisor-only UID #{@advisor.uid}, drop-in advisor UID #{@drop_in_advisor.uid}, scheduler UID #{@drop_in_scheduler.uid}"

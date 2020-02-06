@@ -5,7 +5,7 @@ include Logging
 describe 'BOA' do
 
   before(:all) do
-    dept = BOACDepartments::L_AND_S
+    dept = BOACDepartments::DEPARTMENTS.find { |d| d.code == BOACUtils.appts_drop_in_dept }
     @other_dept = BOACDepartments::DEPARTMENTS.find { |d| ![dept, BOACDepartments::ADMIN].include? d }
     authorized_users = BOACUtils.get_authorized_users
     @test = BOACTestConfig.new
@@ -1066,7 +1066,7 @@ describe 'BOA' do
     it 'loses appointment assignments when taking an advisor off-duty' do
       @scheduler_intake_desk.click_advisor_availability_toggle @test.drop_in_advisor
       @scheduler_intake_desk.click_off_duty_confirm
-      @scheduler_intake_desk.reserved_for_el(@appt_10).when_not_present 3
+      @scheduler_intake_desk.wait_for_poller { !@scheduler_intake_desk.reserved_for_el(@appt_10).exists? }
     end
 
     ### SCHEDULER - LOGGING RESOLVED ISSUE ###
