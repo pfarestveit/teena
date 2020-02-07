@@ -117,7 +117,7 @@ describe 'CE3 admit search' do
         link_works = @admit_page.verify_block { @admit_page.sid_element.when_visible Utils.short_wait }
         it("offers links to admit pages for CS ID #{admit.sis_id}") { expect(link_works).to be true }
 
-        @admit_page.go_back @driver
+        @admit_page.go_back
         back_button_works = @search_results_page.verify_block { @search_results_page.admit_in_search_result? admit }
         it("can be reloaded using the Back button on an admit page for CS ID #{admit.sis_id}") { expect(back_button_works).to be true }
 

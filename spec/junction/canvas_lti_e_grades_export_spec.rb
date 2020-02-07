@@ -44,7 +44,7 @@ describe 'bCourses E-Grades Export', order: :defined do
     @driver.manage.delete_all_cookies
 
     @canvas.log_in(@cal_net, Utils.super_admin_username, Utils.super_admin_password)
-    @canvas.masquerade_as(@driver, teacher)
+    @canvas.masquerade_as teacher
 
     # Get a graded assignment already on the site to use for testing hidden grades
     @graded_assignment = @canvas_assignments_page.get_list_view_assignments(course).first
@@ -56,7 +56,7 @@ describe 'bCourses E-Grades Export', order: :defined do
   end
 
   after(:all) do
-    @canvas.stop_masquerading @driver
+    @canvas.stop_masquerading
     assignments = @canvas_assignments_page.get_list_view_assignments course
     @canvas_assignments_page.delete_test_assignments assignments
   ensure
@@ -94,7 +94,7 @@ describe 'bCourses E-Grades Export', order: :defined do
     it('shows the user the muted assignment with a manual grading policy') { expect(@e_grades_export_page.muted_assignment_titles).to include(@ungraded_assignment.title) }
 
     it 'offers a "How to mute/un-mute assignments in Gradebook" link' do
-      expect(@e_grades_export_page.external_link_valid?(@driver, @e_grades_export_page.how_to_mute_link_element, 'How do I mute or unmute an assignment in the Gradebook? | Canvas Instructor Guide | Canvas Guides')).to be true
+      expect(@e_grades_export_page.external_link_valid?(@e_grades_export_page.how_to_mute_link_element, 'How do I mute or unmute an assignment in the Gradebook? | Canvas Instructor Guide | Canvas Guides')).to be true
     end
 
     it 'offers a "See in Gradebook" link' do
@@ -103,7 +103,7 @@ describe 'bCourses E-Grades Export', order: :defined do
     end
 
     it 'offers a "How to set a Grading Scheme" link' do
-      expect(@e_grades_export_page.external_link_valid?(@driver, @e_grades_export_page.how_to_set_scheme_link_element, 'How do I enable a grading scheme for a course? | Canvas Instructor Guide | Canvas Guides')).to be true
+      expect(@e_grades_export_page.external_link_valid?(@e_grades_export_page.how_to_set_scheme_link_element, 'How do I enable a grading scheme for a course? | Canvas Instructor Guide | Canvas Guides')).to be true
     end
 
     it 'offers a "Course Settings" link' do
@@ -325,14 +325,14 @@ describe 'bCourses E-Grades Export', order: :defined do
 
     [lead_ta, ta, designer, reader, student, waitlist, observer].each do |user|
       it "allows a course #{user.role} to access the tool if permitted to do so" do
-        @canvas.masquerade_as(@driver, user, course)
+        @canvas.masquerade_as(user, course)
         logger.debug "Checking a #{user.role}'s access to the tool"
         @e_grades_export_page.load_embedded_tool(@driver, course)
 
         if ['Lead TA', 'TA', 'Reader'].include? user.role
           @canvas.load_gradebook course
           @canvas.click_e_grades_export_button
-          @e_grades_export_page.switch_to_canvas_iframe @driver
+          @e_grades_export_page.switch_to_canvas_iframe
           @e_grades_export_page.not_auth_msg_element.when_visible Utils.medium_wait
 
         elsif ['Designer', 'Student', 'Waitlist Student', 'Observer'].include? user.role

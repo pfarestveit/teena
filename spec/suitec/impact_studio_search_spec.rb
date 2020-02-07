@@ -26,7 +26,7 @@ describe 'Impact Studio', order: :defined do
 
     # Create course site with only the teacher as member initially
     @canvas.log_in(@cal_net, (event.actor = admin).username, Utils.super_admin_password)
-    @canvas.create_generic_course_site(@driver, Utils.canvas_qa_sub_account, @course, [teacher], test_id,
+    @canvas.create_generic_course_site(Utils.canvas_qa_sub_account, @course, [teacher], test_id,
                                        [LtiTools::ENGAGEMENT_INDEX, LtiTools::IMPACT_STUDIO])
     @engagement_index_url = @canvas.click_tool_link(@driver, LtiTools::ENGAGEMENT_INDEX, event)
     @impact_studio_url = @canvas.click_tool_link(@driver, LtiTools::IMPACT_STUDIO, event)
@@ -39,7 +39,7 @@ describe 'Impact Studio', order: :defined do
     context 'and the course site member views its profile' do
 
       before(:all) do
-        @canvas.masquerade_as(@driver, (event.actor = teacher), @course)
+        @canvas.masquerade_as((event.actor = teacher), @course)
         @impact_studio.load_page(@driver, @impact_studio_url, event)
       end
 
@@ -53,7 +53,7 @@ describe 'Impact Studio', order: :defined do
     context 'and an non-member admin views its profile' do
 
       before(:all) do
-        @canvas.stop_masquerading @driver
+        @canvas.stop_masquerading
         event.actor = admin
         @impact_studio.load_page(@driver, @impact_studio_url, event)
       end
@@ -73,7 +73,7 @@ describe 'Impact Studio', order: :defined do
     context 'and a course site member views its profile' do
 
       before(:all) do
-        @canvas.masquerade_as(@driver, (event.actor = student_1), @course)
+        @canvas.masquerade_as((event.actor = student_1), @course)
         @impact_studio.load_page(@driver, @impact_studio_url, event)
       end
 
@@ -87,7 +87,7 @@ describe 'Impact Studio', order: :defined do
     context 'and a course site admin views its profile' do
 
       before(:all) do
-        @canvas.stop_masquerading @driver
+        @canvas.stop_masquerading
         event.actor = admin
         @impact_studio.load_page(@driver, @impact_studio_url, event)
       end
@@ -110,7 +110,7 @@ describe 'Impact Studio', order: :defined do
     context 'and a course site member views its profile' do
 
       before(:all) do
-        @canvas.masquerade_as(@driver, (event.actor = student_2), @course)
+        @canvas.masquerade_as((event.actor = student_2), @course)
         @impact_studio.load_page(@driver, @impact_studio_url, event)
       end
 
@@ -125,7 +125,7 @@ describe 'Impact Studio', order: :defined do
   describe 'search' do
 
     before(:all) do
-      @canvas.masquerade_as(@driver, (event.actor = teacher), @course)
+      @canvas.masquerade_as((event.actor = teacher), @course)
       @impact_studio.load_page(@driver, @impact_studio_url, event)
     end
 
@@ -137,7 +137,7 @@ describe 'Impact Studio', order: :defined do
   describe 'pagination' do
 
     before(:all) do
-      @canvas.masquerade_as(@driver, (event.actor = student_1), @course)
+      @canvas.masquerade_as((event.actor = student_1), @course)
       @impact_studio.load_page(@driver, @impact_studio_url, event)
     end
 

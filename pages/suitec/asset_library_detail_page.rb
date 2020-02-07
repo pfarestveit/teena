@@ -40,7 +40,7 @@ module Page
         # TODO - remove the following line when asset deep links work from the Asset Library
         navigate_to 'https://en.wikipedia.org/wiki/Main_Page'
         navigate_to "#{url}#col_asset=#{asset.id}"
-        switch_to_canvas_iframe driver
+        switch_to_canvas_iframe
         add_event(event, EventType::NAVIGATE)
         add_event(event, EventType::VIEW)
         add_event(event, EventType::LAUNCH_ASSET_LIBRARY)
@@ -125,31 +125,31 @@ module Page
       def preview_generated?(driver, url, asset, user)
         timeout = Utils.medium_wait
         logger.info "Verifying a preview of type '#{asset.preview}' is generated for the asset within #{timeout} seconds"
-        preview_element = case asset.preview
-                            when 'image'
-                              image_element(class: 'preview-image')
-                            when 'pdf_document'
-                              div_element(xpath: '//iframe[@class="preview-document"]')
-                            when 'embeddable_link'
-                              div_element(xpath: "//iframe[contains(@src,'#{asset.url.sub(/https?\:(\/\/)(www.)?/,'')}')]")
-                            when 'non_embeddable_link'
-                              image_element(class: 'preview-image')
-                            when 'embeddable_youtube'
-                              div_element(xpath: '//iframe[contains(@src,"www.youtube.com/embed")]')
-                            when 'embeddable_vimeo'
-                              div_element(xpath: '//iframe[contains(@src,"player.vimeo.com")]')
-                            when 'embeddable_video'
-                              video_element(xpath: '//video')
-                            else
-                                paragraph_element(xpath: '//p[contains(.,"No preview available")]')
-                          end
         load_page(driver, url)
         advanced_search(nil, asset.category, user, asset.type, nil)
         click_asset_link_by_id asset
         verify_block do
-          preparing_preview_element.when_not_present(timeout) if preparing_preview?
+          logger.debug 'Waiting for preparing preview to go away'
           sleep 1
-          preview_element.when_present Utils.short_wait
+          preparing_preview_element.when_not_present(timeout) if preparing_preview?
+          (case asset.preview
+            when 'image'
+              image_element(class: 'preview-image')
+            when 'pdf_document'
+              div_element(xpath: '//iframe[@class="preview-document"]')
+            when 'embeddable_link'
+              div_element(xpath: "//iframe[contains(@src,'#{asset.url.sub(/https?\:(\/\/)(www.)?/,'')}')]")
+            when 'non_embeddable_link'
+              image_element(class: 'preview-image')
+            when 'embeddable_youtube'
+              div_element(xpath: '//iframe[contains(@src,"www.youtube.com/embed")]')
+            when 'embeddable_vimeo'
+              div_element(xpath: '//iframe[contains(@src,"player.vimeo.com")]')
+            when 'embeddable_video'
+              video_element(xpath: '//video')
+            else
+              paragraph_element(xpath: '//p[contains(.,"No preview available")]')
+          end).when_present Utils.short_wait
         end
       end
 
@@ -289,7 +289,7 @@ module Page
         wait_until(Utils.short_wait) { detail_view_asset_likes_count == "#{count.to_i - 1}" }
       end
 
-      button(:detail_view_pin_button, class: 'assetlibrary-item-pin')
+      button(:detail_view_pin_button, xpath: '//button[@id="pin-asset"]')
 
       # Pins a detail view asset
       # @param asset [Asset]
@@ -335,9 +335,8 @@ module Page
       end
 
       # Returns the activity labels on the My Classmates event drops
-      # @param driver [Selenium::WebDriver]
       # @return [Array<String>]
-      def visible_event_drop_count(driver, asset)
+      def visible_event_drop_count(asset)
         # Shift focus to the new comment input so that the event drops will also move into the viewport.
         wait_for_element_and_type_js(text_area_element(id: 'assetlibrary-item-newcomment-body'), ' ')
         sleep 1
@@ -347,7 +346,7 @@ module Page
          wait_for_update_and_click_js button unless button.attribute('disabled')
         end
         sleep 1
-        elements = driver.find_elements(xpath: '//h3[contains(.,"Activity Timeline")]/following-sibling::div[@data-ng-if="assetActivity"]//*[name()="svg"]/*[name()="g"]/*[name()="text"]')
+        elements = div_elements(xpath: '//h3[contains(.,"Activity Timeline")]/following-sibling::div[@data-ng-if="assetActivity"]//*[name()="svg"]/*[name()="g"]/*[name()="text"]')
         labels = elements.map &:text
         visible_event_drop_counts = {
             viewed: activity_type_count(labels, 0),
@@ -386,7 +385,7 @@ module Page
       span(:asset_detail_comment_count, xpath: '//div[@class="assetlibrary-item-metadata"]//span[@data-ng-bind="asset.comment_count | number"]')
       text_area(:comment_input, id: 'assetlibrary-item-newcomment-body')
       button(:comment_add_button, xpath: '//span[text()="Comment"]/..')
-      elements(:comment, :div, :class => 'assetlibrary-item-comment')
+      elements(:comment, :div, xpath: '//div[@data-ng-repeat="comment in asset.comments"]')
 
       # Adds a comment on an asset's detail view
       # @param asset [Asset]
@@ -407,14 +406,14 @@ module Page
       # @param index [Integer]
       # @return [String]
       def comment_body(index)
-        comment_elements[index].paragraph_element.text
+        paragraph_element(xpath: "#{comment_elements[index].locator[:xpath]}[#{index + 1}]//p").text
       end
 
       # Returns the link containing the commenter's name at a given index in the list of comments
       # @param index [Integer]
       # @return [PageObject::Elements::Link]
       def commenter_link(index)
-        comment_elements[index].link_element
+        link_element(xpath: "#{comment_elements[index].locator[:xpath]}[#{index + 1}]//a")
       end
 
       # Returns the text of the link containing the commenter's name at a given index in the list of comments
@@ -451,14 +450,14 @@ module Page
       # @param index [Integer]
       # @return [PageObject::Elements::TextArea]
       def reply_input_element(index)
-        comment_elements[index].text_area_element(id: 'assetlibrary-item-addcomment-body')
+        text_area_element(xpath: "#{comment_elements[index].locator[:xpath]}[#{index + 1}]//textarea[@id='assetlibrary-item-addcomment-body']")
       end
 
       # Returns the 'add' button of a reply at a given index in the list of comments
       # @param index [Integer]
       # @return [PageObject::Elements::Button]
       def reply_add_button_element(index)
-        comment_elements[index].button_element(xpath: '//span[text()="Reply"]/..')
+        button_element(xpath: "#{comment_elements[index].locator[:xpath]}[#{index + 1}]//span[text()='Reply']/..")
       end
 
       # Replies to a comment
@@ -497,7 +496,11 @@ module Page
       # @param index [Integer]
       # @return [PageObject::Elements::TextArea]
       def edit_input_element(index)
-        comment_elements[index].text_area_element(id: 'assetlibrary-item-editcomment-body')
+        text_area_element(xpath: "#{comment_elements[index].locator[:xpath]}[#{index + 1}]//textarea[@id='assetlibrary-item-editcomment-body']")
+      end
+
+      def save_edit_button_element(index)
+        button_element(xpath: "#{comment_elements[index].locator[:xpath]}[#{index + 1}]//button[contains(.,'Save Changes')]")
       end
 
       # Edits a comment
@@ -509,7 +512,7 @@ module Page
         logger.info "Editing comment at index #{index}. New comment is '#{comment.body}'"
         click_edit_button(index)
         wait_for_element_and_type_js(edit_input_element(index), comment.body)
-        wait_for_update_and_click_js comment_elements[index].button_element(xpath: '//button[contains(.,"Save Changes")]')
+        wait_for_update_and_click_js save_edit_button_element(index)
         wait_until(Utils.short_wait) { comment_body(index) == comment.body }
         add_event(event, EventType::MODIFY, asset.id)
         add_event(event, EventType::EDIT_COMMENT, asset.id)
@@ -519,7 +522,7 @@ module Page
       # @param index [Integer]
       # @return [PageObject::Elements::Button]
       def cancel_button_element(index)
-        comment_elements[index].button_element(xpath: '//button[contains(.,"Cancel")]')
+        button_element(xpath: "#{comment_elements[index].locator[:xpath]}[#{index + 1}]//button[contains(.,'Cancel')]")
       end
 
       # Returns the 'delete' comment button at a given index in the list of comments or nil if no button exists

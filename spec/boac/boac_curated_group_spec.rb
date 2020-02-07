@@ -392,7 +392,7 @@ describe 'BOAC' do
           member_sids = group.members.map &:sis_id
           group.member_data = test.searchable_data.select { |data| member_sids.include? data[:sid] }
           @homepage.expand_member_rows group
-          @homepage.verify_member_alerts(@driver, group,test.advisor)
+          @homepage.verify_member_alerts(group, test.advisor)
         end
 
       end

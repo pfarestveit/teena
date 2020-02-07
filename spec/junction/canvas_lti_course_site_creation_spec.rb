@@ -70,8 +70,8 @@ describe 'bCourses course site creation' do
 
         logger.info "Creating a course site for #{site[:course].code} in #{site[:course].term} using the '#{site[:course].create_site_workflow}' workflow"
 
-        @canvas_page.stop_masquerading @driver if @canvas_page.stop_masquerading_link?
-        @canvas_page.masquerade_as(@driver, site[:teacher]) unless %w(uid ccn).include?(site[:course].create_site_workflow)
+        @canvas_page.stop_masquerading if @canvas_page.stop_masquerading_link?
+        @canvas_page.masquerade_as site[:teacher] unless %w(uid ccn).include?(site[:course].create_site_workflow)
 
         # Navigate to Create a Course Site page
         @canvas_page.load_homepage
@@ -84,21 +84,21 @@ describe 'bCourses course site creation' do
 
           @create_course_site_page.maintenance_button_element.when_visible Utils.medium_wait
           short_maintenance_notice = @create_course_site_page.maintenance_button_element.text
-          it ('shows a collapsed maintenance notice') { expect(short_maintenance_notice).to include('From 8 - 9 AM, you may experience delays of up to 10 minutes') }
+          it('shows a collapsed maintenance notice') { expect(short_maintenance_notice).to include('From 8 - 9 AM, you may experience delays of up to 10 minutes') }
 
           @create_course_site_page.maintenance_button
 
           long_maintenance_notice = @create_course_site_page.maintenance_notice
-          it ('shows an expanded maintenance notice') { expect(long_maintenance_notice).to include('bCourses performs scheduled maintenance every day between 8-9AM') }
+          it('shows an expanded maintenance notice') { expect(long_maintenance_notice).to include('bCourses performs scheduled maintenance every day between 8-9AM') }
 
-          bcourses_link_works = @create_course_site_page.external_link_valid?(@driver, @create_course_site_page.bcourses_service_element, 'bCourses | Digital Learning Services')
-          it ('shows a link to the bCourses service page') { expect(bcourses_link_works).to be true }
+          bcourses_link_works = @create_course_site_page.external_link_valid?(@create_course_site_page.bcourses_service_element, 'bCourses | Digital Learning Services')
+          it('shows a link to the bCourses service page') { expect(bcourses_link_works).to be true }
 
-          @canvas_page.switch_to_canvas_iframe @driver
+          @canvas_page.switch_to_canvas_iframe
           @create_course_site_page.click_need_help
 
           help_text = @create_course_site_page.help
-          it ('shows suggestions for creating sites for courses with multiple sections') { expect(help_text).to include('If you have a course with multiple sections, you will need to decide') }
+          it('shows suggestions for creating sites for courses with multiple sections') { expect(help_text).to include('If you have a course with multiple sections, you will need to decide') }
 
           links_tested = true
 
@@ -111,7 +111,7 @@ describe 'bCourses course site creation' do
         (site[:course].create_site_workflow == 'ccn') ?
             expected_section_ids = site[:sections_for_site].map { |section| section.id } :
             expected_section_ids = site[:sections].map { |section| section.id }
-        visible_section_ids = @create_course_site_page.course_section_ids(@driver, site[:course])
+        visible_section_ids = @create_course_site_page.course_section_ids(site[:course])
         it ("offers all the expected sections for #{site[:course].term} #{site[:course].code}") { expect(visible_section_ids.sort!).to eql(expected_section_ids.sort!) }
 
         unless site[:course].create_site_workflow == 'ccn'
@@ -218,8 +218,8 @@ describe 'bCourses course site creation' do
 
         logger.info "Verifying content of #{site[:course].term} #{site[:course].code} site ID #{site[:course].site_id}"
 
-        @canvas_page.masquerade_as(@driver, site[:teacher], site[:course])
-        @canvas_page.publish_course_site(@driver, site[:course])
+        @canvas_page.masquerade_as(site[:teacher], site[:course])
+        @canvas_page.publish_course_site site[:course]
 
         # MEMBERSHIP - check that course site user counts match expectations for each role
 
@@ -261,7 +261,7 @@ describe 'bCourses course site creation' do
 
         # COURSE CAPTURE - check that course captures tool is not added automatically
 
-        @canvas_page.load_course_site(@driver, site[:course])
+        @canvas_page.load_course_site site[:course]
         has_course_captures_link = @course_captures_page.course_captures_link?
         it ("shows no Course Captures tool link in course site navigation for #{site[:course].term} #{site[:course].code} site ID #{site[:course].site_id}") { expect(has_course_captures_link).to be false }
 
@@ -270,7 +270,7 @@ describe 'bCourses course site creation' do
         grade_distribution_hidden = @canvas_page.grade_distribution_hidden? site[:course]
         it("hides grade distribution graphs from students for #{site[:course].term} #{site[:course].code} site ID #{site[:course].site_id}") { expect(grade_distribution_hidden).to be true }
 
-        @canvas_page.stop_masquerading @driver
+        @canvas_page.stop_masquerading
       rescue => e
         it("encountered an error verifying the course site for #{site[:course].code}") { fail }
         Utils.log_error e

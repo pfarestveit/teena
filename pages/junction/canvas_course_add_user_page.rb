@@ -86,31 +86,27 @@ module Page
       # @param option [String]
       def search(text, option)
         logger.info "Searching for string '#{text}' by #{option}"
-        search_type_element.when_visible Utils.short_wait
-        self.search_type = option
+        wait_for_element_and_select_js(search_type_element, option)
         wait_for_element_and_type_js(search_term_element, text)
         wait_for_update_and_click_js search_button_element
       end
 
       # Returns all user names displayed in search results
-      # @param driver [Selenium::WebDriver]
       # @return [Array<String>]
-      def name_results(driver)
-        (driver.find_elements(xpath: '//span[contains(@data-ng-bind,"user.firstName")]').map &:text).to_a
+      def name_results
+        (span_elements(xpath: '//span[contains(@data-ng-bind,"user.firstName")]').map &:text).to_a
       end
 
       # Returns all user UIDs displayed in search results
-      # @param driver [Selenium::WebDriver]
       # @return [Array<String>]
-      def uid_results(driver)
-        (driver.find_elements(xpath: '//span[@data-ng-bind="user.ldapUid"]').map &:text).to_a
+      def uid_results
+        (span_elements(xpath: '//span[@data-ng-bind="user.ldapUid"]').map &:text).to_a
       end
 
       # Returns all user email addresses displayed in search results
-      # @param driver [Selenium::WebDriver]
       # @return [Array<String>]
-      def email_results(driver)
-        (driver.find_elements(xpath: '//td[@data-ng-bind="user.emailAddress"]').map &:text).to_a
+      def email_results
+        (cell_elements(xpath: '//td[@data-ng-bind="user.emailAddress"]').map &:text).to_a
       end
 
       # Returns the checkbox element for selecting a user in search results
@@ -129,10 +125,10 @@ module Page
         user_checkbox(user).when_present Utils.medium_wait
         user_checkbox(user).check
         if section
-          course_section_element.when_visible Utils.short_wait
-          section.sis_id ? self.course_section = section.sis_id : self.course_section = "#{section.course} #{section.label}"
+          option = section.sis_id ? section.sis_id : "#{section.course} #{section.label}"
+          wait_for_element_and_select_js(course_section_element, option)
         end
-        self.user_role = user.role
+        wait_for_element_and_select_js(user_role_element, user.role)
         wait_for_update_and_click_js add_user_button_element
         success_msg_element.when_visible Utils.medium_wait
         add_event(event, EventType::CREATE, user.full_name)

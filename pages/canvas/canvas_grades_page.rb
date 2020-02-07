@@ -121,8 +121,8 @@ module Page
     # @param assignment [Assignment]
     def mouseover_assignment_header(assignment)
       xpath = "//div[contains(@id, 'slickgrid') and contains(@id, 'assignment_#{assignment.id}')]"
-      wait_until(Utils.medium_wait) { browser.find_element(xpath: xpath) }
-      mouseover(browser, browser.find_element(xpath: xpath))
+      wait_until(Utils.medium_wait) { div_element(xpath: xpath).exists? }
+      mouseover(div_element(xpath: xpath))
     end
 
     # Returns the settings button for a given assignment
@@ -246,7 +246,7 @@ module Page
           begin
             logger.debug 'Gradebook totals are not visible, bringing them to the front'
             scroll_to_element total_grade_column_element
-            mouseover(driver, driver.find_element(xpath: '//button[contains(., "Total Options")]'))
+            mouseover(button_element(xpath: '//button[contains(., "Total Options")]'))
             js_click total_grade_menu_link_element
             wait_for_update_and_click total_grade_column_move_front_element
             wait_until(Utils.short_wait) { gradebook_total_elements.any? }

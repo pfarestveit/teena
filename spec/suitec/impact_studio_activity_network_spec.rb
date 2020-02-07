@@ -38,7 +38,7 @@ describe 'Impact Studio Activity Network', :order => :defined do
 
     # Create course site
     @canvas.log_in(@cal_net, Utils.super_admin_username, Utils.super_admin_password)
-    @canvas.create_generic_course_site(@driver, Utils.canvas_qa_sub_account, @course, users, test_id,
+    @canvas.create_generic_course_site(Utils.canvas_qa_sub_account, @course, users, test_id,
                                        [LtiTools::ASSET_LIBRARY, LtiTools::IMPACT_STUDIO, LtiTools::WHITEBOARDS, LtiTools::ENGAGEMENT_INDEX])
     @asset_library_page_url = @canvas.click_tool_link(@driver, LtiTools::ASSET_LIBRARY)
     @impact_studio_page_url = @canvas.click_tool_link(@driver, LtiTools::IMPACT_STUDIO)
@@ -55,15 +55,15 @@ describe 'Impact Studio Activity Network', :order => :defined do
     student3_student2_expected = @impact_studio_page.init_user_interactions
 
     # Create asset, whiteboard, and discussion
-    @canvas.masquerade_as(@driver, student_1, @course)
+    @canvas.masquerade_as(student_1, @course)
     @asset_library_page.load_page(@driver, @asset_library_page_url)
     asset.type == 'File' ? @asset_library_page.upload_file_to_library(asset) : @asset_library_page.add_site(asset)
 
-    @canvas.masquerade_as(@driver, student_3, @course)
+    @canvas.masquerade_as(student_3, @course)
     @whiteboards_page.load_page(@driver, @whiteboards_url)
     @whiteboards_page.create_whiteboard whiteboard
 
-    @canvas.create_course_discussion(@driver, @course, discussion)
+    @canvas.create_course_discussion(@course, discussion)
     @canvas.add_reply(discussion, nil, 'Discussion topic entry')
   end
 
@@ -72,7 +72,7 @@ describe 'Impact Studio Activity Network', :order => :defined do
   context 'when an asset is added to a whiteboard' do
 
     before(:all) do
-      @canvas.masquerade_as(@driver, student_3, @course)
+      @canvas.masquerade_as(student_3, @course)
       @whiteboards_page.load_page(@driver, @whiteboards_url)
       @whiteboards_page.open_whiteboard(@driver, whiteboard)
       @whiteboards_page.add_existing_assets [asset]
@@ -96,7 +96,7 @@ describe 'Impact Studio Activity Network', :order => :defined do
   context 'when a whiteboard is exported to the asset library' do
 
     before(:all) do
-      @canvas.masquerade_as(@driver, student_2, @course)
+      @canvas.masquerade_as(student_2, @course)
       @whiteboards_page.load_page(@driver, @whiteboards_url)
       @whiteboards_page.open_whiteboard(@driver, whiteboard)
       @whiteboard_asset = @whiteboards_page.export_to_asset_library(whiteboard)
@@ -120,7 +120,7 @@ describe 'Impact Studio Activity Network', :order => :defined do
     context 'and then remixed' do
 
       before(:all) do
-        @canvas.masquerade_as(@driver, student_1, @course)
+        @canvas.masquerade_as(student_1, @course)
         @asset_library_page.load_asset_detail(@driver, @asset_library_page_url, @whiteboard_asset)
         student1_student2_expected[:views][:exports] += 1
         student1_student3_expected[:views][:exports] += 1
@@ -149,7 +149,7 @@ describe 'Impact Studio Activity Network', :order => :defined do
   context 'when an asset is liked' do
 
     before(:all) do
-      @canvas.masquerade_as(@driver, student_2, @course)
+      @canvas.masquerade_as(student_2, @course)
       @asset_library_page.load_asset_detail(@driver, @asset_library_page_url, asset)
       student2_student1_expected[:views][:exports] += 1
       student1_student2_expected[:views][:imports] += 1
@@ -173,7 +173,7 @@ describe 'Impact Studio Activity Network', :order => :defined do
   context 'when an asset is unliked' do
 
     before(:all) do
-      @canvas.masquerade_as(@driver, student_2, @course)
+      @canvas.masquerade_as(student_2, @course)
       @asset_library_page.load_asset_detail(@driver, @asset_library_page_url, asset)
       student2_student1_expected[:views][:exports] += 1
       student1_student2_expected[:views][:imports] += 1
@@ -197,7 +197,7 @@ describe 'Impact Studio Activity Network', :order => :defined do
   context 'when an asset receives a comment' do
 
     before(:all) do
-      @canvas.masquerade_as(@driver, student_2, @course)
+      @canvas.masquerade_as(student_2, @course)
       @asset_library_page.load_asset_detail(@driver, @asset_library_page_url, asset)
       student2_student1_expected[:views][:exports] += 1
       student1_student2_expected[:views][:imports] += 1
@@ -221,7 +221,7 @@ describe 'Impact Studio Activity Network', :order => :defined do
   context 'when an asset comment receives a reply' do
 
     before(:all) do
-      @canvas.masquerade_as(@driver, student_3, @course)
+      @canvas.masquerade_as(student_3, @course)
       @asset_library_page.load_asset_detail(@driver, @asset_library_page_url, asset)
       student3_student1_expected[:views][:exports] += 1
       student1_student3_expected[:views][:imports] += 1
@@ -256,7 +256,7 @@ describe 'Impact Studio Activity Network', :order => :defined do
   context 'when an asset comment reply is deleted' do
 
     before(:all) do
-      @canvas.masquerade_as(@driver, student_3, @course)
+      @canvas.masquerade_as(student_3, @course)
       @asset_library_page.load_asset_detail(@driver, @asset_library_page_url, asset)
       student3_student1_expected[:views][:exports] += 1
       student1_student3_expected[:views][:imports] += 1
@@ -291,7 +291,7 @@ describe 'Impact Studio Activity Network', :order => :defined do
   context 'when an asset is pinned' do
 
     before(:all) do
-      @canvas.masquerade_as(@driver, student_2, @course)
+      @canvas.masquerade_as(student_2, @course)
       @asset_library_page.load_asset_detail(@driver, @asset_library_page_url, asset)
         student2_student1_expected[:views][:exports] += 1
         student1_student2_expected[:views][:imports] += 1
@@ -315,7 +315,7 @@ describe 'Impact Studio Activity Network', :order => :defined do
   context 'when an asset is unpinned' do
 
     before(:all) do
-      @canvas.masquerade_as(@driver, student_2, @course)
+      @canvas.masquerade_as(student_2, @course)
       @asset_library_page.load_asset_detail(@driver, @asset_library_page_url, asset)
       student2_student1_expected[:views][:exports] += 1
       student1_student2_expected[:views][:imports] += 1
@@ -337,7 +337,7 @@ describe 'Impact Studio Activity Network', :order => :defined do
   context 'when an asset is re-pinned' do
 
     before(:all) do
-      @canvas.masquerade_as(@driver, student_2, @course)
+      @canvas.masquerade_as(student_2, @course)
       @asset_library_page.load_asset_detail(@driver, @asset_library_page_url, asset)
       student2_student1_expected[:views][:exports] += 1
       student1_student2_expected[:views][:imports] += 1
@@ -359,7 +359,7 @@ describe 'Impact Studio Activity Network', :order => :defined do
   context 'when an asset is deleted' do
 
     before(:all) do
-      @canvas.masquerade_as(@driver, teacher, @course)
+      @canvas.masquerade_as(teacher, @course)
       @asset_library_page.load_asset_detail(@driver, @asset_library_page_url, asset)
       @asset_library_page.delete_asset asset
       student3_student1_expected[:use_assets][:exports] -= 1

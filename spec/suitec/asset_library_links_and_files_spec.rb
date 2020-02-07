@@ -23,8 +23,8 @@ timeout = Utils.short_wait
 
     # Create test course site
     @canvas.log_in(@cal_net, Utils.super_admin_username, Utils.super_admin_password)
-    @canvas.create_generic_course_site(@driver, Utils.canvas_qa_sub_account, @course, [@user], test_id, [LtiTools::ASSET_LIBRARY, LtiTools::ENGAGEMENT_INDEX])
-    @canvas.load_course_site(@driver, @course)
+    @canvas.create_generic_course_site(Utils.canvas_qa_sub_account, @course, [@user], test_id, [LtiTools::ASSET_LIBRARY, LtiTools::ENGAGEMENT_INDEX])
+    @canvas.load_course_site @course
     @asset_library_url = @canvas.click_tool_link(@driver, LtiTools::ASSET_LIBRARY)
     @engagement_index_url = @canvas.click_tool_link(@driver, LtiTools::ENGAGEMENT_INDEX)
 
@@ -33,7 +33,7 @@ timeout = Utils.short_wait
     @asset_library_manage.add_custom_categories(@driver, @asset_library_url, [(@category_1="Category 1 - #{category_id}"), (@category_2="Category 2 - #{category_id}")])
     @asset_library_manage.delete_custom_category @category_2
 
-    @canvas.masquerade_as(@driver, @user, @course)
+    @canvas.masquerade_as(@user, @course)
   end
 
   after(:all) { Utils.quit_browser @driver }

@@ -243,10 +243,9 @@ module BOACCohortPages
   end
 
   # Returns a student's SIS data visible on the cohort page
-  # @param [Selenium::WebDriver]
   # @param student [BOACUser]
   # @return [Hash]
-  def visible_sis_data(driver, student)
+  def visible_sis_data(student)
     #
     # Note: 'row_index' is position of student in list. For each student listed, the page has two hidden span elements
     #       useful in determining (1) 'row_index' if you know the SID, or (2) SID if you know the 'row_index':
@@ -256,17 +255,17 @@ module BOACCohortPages
     #
     wait_until(Utils.medium_wait) { player_link_elements.any? }
     level_el = div_element(xpath: "#{student_row_xpath student}//div[contains(@id,\"student-level\")]")
-    major_els = driver.find_elements(xpath: "#{student_row_xpath student}//span[contains(@id,\"student-major\")]")
+    major_els = span_elements(xpath: "#{student_row_xpath student}//span[contains(@id,\"student-major\")]")
     entered_term_el = div_element(xpath: "#{student_row_xpath student}//div[contains(@id,\"student-matriculation\")]")
     grad_term_el = div_element(xpath: "#{student_row_xpath student}//div[contains(@id,\"student-grad-term\")]")
     graduation_date_el = span_element(xpath: "#{student_row_xpath student}//span[starts-with(text(),\"Graduated\")]")
-    graduation_college_els = driver.find_elements(xpath: "#{student_row_xpath student}//div/span[starts-with(text(),\"Graduated\")]/../following-sibling::div")
-    sports_els = driver.find_elements(xpath: "#{student_row_xpath student}//span[contains(@id,\"student-team\")]")
+    graduation_college_els = div_elements(xpath: "#{student_row_xpath student}//div/span[starts-with(text(),\"Graduated\")]/../following-sibling::div")
+    sports_els = span_elements(xpath: "#{student_row_xpath student}//span[contains(@id,\"student-team\")]")
     gpa_el = span_element(xpath: "#{student_row_xpath student}//span[contains(@id,\"student-cumulative-gpa\")]")
     term_units_el = div_element(xpath: "#{student_row_xpath student}//div[contains(@id,\"student-enrolled-units\")]")
     cumul_units_el = div_element(xpath: "#{student_row_xpath student}//div[contains(@id,\"cumulative-units\")]")
-    class_els = driver.find_elements(xpath: "#{student_row_xpath student}//span[contains(@id,\"student-enrollment-name\")]")
-    waitlisted_class_els = driver.find_elements(xpath: "#{student_row_xpath student}//span[contains(@id,\"-waitlisted-\")]/preceding-sibling::span")
+    class_els = span_elements(xpath: "#{student_row_xpath student}//span[contains(@id,\"student-enrollment-name\")]")
+    waitlisted_class_els = span_elements(xpath: "#{student_row_xpath student}//span[contains(@id,\"-waitlisted-\")]/preceding-sibling::span")
     inactive_el = div_element(xpath: "#{student_row_xpath student}//div[contains(@class,\"student-sid\")]/div[contains(@id,\"-inactive\")]")
     {
       :level => (level_el.text.strip if level_el.exists?),

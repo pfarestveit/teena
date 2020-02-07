@@ -122,7 +122,7 @@ describe 'BOAC' do
                       has_link = (@student_page.note_advisor_el(note).tag_name == 'a')
                       it("offers no link to the Berkeley directory for advisor 'Graduate Intern' on #{test_case}") { expect(has_link).to be false }
                     else
-                      advisor_link_works = @student_page.external_link_valid?(@driver, @student_page.note_advisor_el(note), 'Campus Directory | University of California, Berkeley')
+                      advisor_link_works = @student_page.external_link_valid?(@student_page.note_advisor_el(note), 'Campus Directory | University of California, Berkeley')
                       advisor_link_tested = true
                       it("offers a link to the Berkeley directory for advisor #{note.advisor.uid} on #{test_case}") { expect(advisor_link_works).to be true }
                     end

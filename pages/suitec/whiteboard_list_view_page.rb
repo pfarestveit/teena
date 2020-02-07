@@ -17,9 +17,9 @@ module Page
       # @param event [Event]
       def load_page(driver, url, event = nil)
         navigate_to url
-        wait_until { title == "#{LtiTools::WHITEBOARDS.name}" }
+        wait_until(Utils.medium_wait) { title == "#{LtiTools::WHITEBOARDS.name}" }
         hide_canvas_footer_and_popup
-        switch_to_canvas_iframe driver
+        switch_to_canvas_iframe
         add_event(event, EventType::NAVIGATE)
         add_event(event, EventType::VIEW)
         add_event(event, EventType::LAUNCH_WHITEBOARDS)
@@ -137,7 +137,7 @@ module Page
       # Returns the ID of the first whiteboard in list view by extracting the ID from the whiteboard link href
       # @return [String]
       def get_first_whiteboard_id
-        wait_until { list_view_whiteboard_link_elements.any? }
+        wait_until(Utils.short_wait) { list_view_whiteboard_link_elements.any? }
         href = list_view_whiteboard_link_elements.first.attribute('href')
         whiteboard_url = href.split('?').first
         whiteboard_url.sub("#{SuiteCUtils.suite_c_base_url}/whiteboards/", '')
@@ -156,7 +156,7 @@ module Page
       # Finds a whiteboard link by its ID and then clicks to open it
       # @param whiteboard [Whiteboard]
       def click_whiteboard_link(whiteboard)
-        wait_until { list_view_whiteboard_link_elements.any? }
+        wait_until(Utils.short_wait) { list_view_whiteboard_link_elements.any? }
         wait_for_update_and_click_js (list_view_whiteboard_link_elements.find { |link| link.attribute('href').include?("/whiteboards/#{whiteboard.id}?") })
       end
 
@@ -201,13 +201,9 @@ module Page
             wait_for_element_and_type_js(advanced_search_keyword_input_element, '') :
             wait_for_element_and_type_js(advanced_search_keyword_input_element, string)
         sleep 1
-        if user.nil?
-          self.advanced_search_user_select = 'Collaborator'
-        else
-          logger.debug "User is '#{user.full_name}'"
-          self.advanced_search_user_select = user.full_name
-          sleep 1
-        end
+        option = user.nil? ? 'Collaborator' : user.full_name
+        wait_for_element_and_select_js(advanced_search_user_select_element, option)
+        sleep 1
         inc_deleted ? check_include_deleted_cbx : uncheck_include_deleted_cbx
         wait_for_update_and_click_js advanced_search_button_element
         add_event(event, EventType::SEARCH)

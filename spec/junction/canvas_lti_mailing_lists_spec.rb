@@ -30,22 +30,22 @@ describe 'bCourses Mailgun mailing lists', order: :defined do
 
     # Create three course sites in the Official Courses sub-account
     @canvas_page.log_in(@cal_net_page, Utils.super_admin_username, Utils.super_admin_password)
-    @canvas_page.create_generic_course_site(@driver, Utils.canvas_official_courses_sub_account, course_site_1, users, test_id)
-    @canvas_page.create_generic_course_site(@driver, Utils.canvas_official_courses_sub_account, course_site_2, [teacher], test_id)
-    @canvas_page.create_generic_course_site(@driver, Utils.canvas_official_courses_sub_account, course_site_3, users, test_id)
+    @canvas_page.create_generic_course_site(Utils.canvas_official_courses_sub_account, course_site_1, users, test_id)
+    @canvas_page.create_generic_course_site(Utils.canvas_official_courses_sub_account, course_site_2, [teacher], test_id)
+    @canvas_page.create_generic_course_site(Utils.canvas_official_courses_sub_account, course_site_3, users, test_id)
   end
 
   after(:all) { Utils.quit_browser @driver }
 
   it 'is not added to site navigation by default' do
-    @canvas_page.load_course_site(@driver, course_site_1)
+    @canvas_page.load_course_site course_site_1
     @canvas_page.list_item_element(id: 'section-tabs').when_present Utils.medium_wait
     expect(@mailing_list_page.mailing_list_link?).to be false
   end
 
   users.each do |user|
     it "can be managed by a course #{user.role} if the user has permission to reach the instructor-facing tool" do
-      @canvas_page.masquerade_as(@driver, user, course_site_1)
+      @canvas_page.masquerade_as(user, course_site_1)
       @mailing_list_page.load_embedded_tool(@driver, course_site_1)
       if ['Teacher', 'Lead TA', 'TA', 'Reader'].include? user.role
         logger.debug "Verifying that #{user.role} UID #{user.uid} has access to the instructor-facing mailing list tool"
@@ -57,7 +57,7 @@ describe 'bCourses Mailgun mailing lists', order: :defined do
     end
 
     it "cannot be managed by a course #{user.role} via the admin tool" do
-      @canvas_page.masquerade_as(@driver, user, course_site_1)
+      @canvas_page.masquerade_as(user, course_site_1)
       @mailing_lists_page.load_embedded_tool @driver
       @mailing_lists_page.search_for_list course_site_1.site_id
       logger.debug "Verifying that #{user.role} UID #{user.uid} has no access to the admin mailing lists tool"
@@ -69,7 +69,7 @@ describe 'bCourses Mailgun mailing lists', order: :defined do
 
     before(:all) do
       @driver.switch_to.default_content
-      @canvas_page.stop_masquerading(@driver) if @canvas_page.stop_masquerading_link?
+      @canvas_page.stop_masquerading if @canvas_page.stop_masquerading_link?
       @mailing_lists_page.load_embedded_tool @driver
     end
 
@@ -96,10 +96,10 @@ describe 'bCourses Mailgun mailing lists', order: :defined do
         expect(@mailing_lists_page.site_id).to eql("Site ID: #{course_site_1.site_id}")
       end
 
-      it('shows a link to the course site') { expect(@mailing_lists_page.external_link_valid?(@driver, @mailing_lists_page.view_site_link_element, course_site_1.title)).to be true }
+      it('shows a link to the course site') { expect(@mailing_lists_page.external_link_valid?(@mailing_lists_page.view_site_link_element, course_site_1.title)).to be true }
 
       it('shows a default mailing list name') do
-        @mailing_lists_page.switch_to_canvas_iframe @driver unless "#{@driver.browser}" == 'firefox'
+        @mailing_lists_page.switch_to_canvas_iframe unless "#{@driver.browser}" == 'firefox'
         @mailing_lists_page.wait_until(Utils.short_wait) { @mailing_lists_page.list_name_input == @mailing_lists_page.default_list_name(course_site_1) }
       end
 
@@ -131,6 +131,7 @@ describe 'bCourses Mailgun mailing lists', order: :defined do
       before(:all) do
         @mailing_lists_page.load_embedded_tool @driver
         @mailing_lists_page.search_for_list course_site_1.site_id
+        @mailing_lists_page.list_address_element.when_visible timeout
       end
 
       it('shows the mailing list email address') do
@@ -139,10 +140,10 @@ describe 'bCourses Mailgun mailing lists', order: :defined do
 
       it('shows the membership count') { expect(@mailing_lists_page.list_membership_count).to eql('No members') }
       it('shows the most recent membership update') { expect(@mailing_lists_page.list_update_time).to eql('never') }
-      it('shows a link to the course site') { expect(@mailing_lists_page.external_link_valid?(@driver, @mailing_lists_page.list_site_link_element, course_site_1.title)).to be true }
+      it('shows a link to the course site') { expect(@mailing_lists_page.external_link_valid?(@mailing_lists_page.list_site_link_element, course_site_1.title)).to be true }
 
       it 'shows the course site code, title, and ID' do
-        @canvas_page.switch_to_canvas_iframe @driver unless "#{@driver.browser}" == 'firefox'
+        @canvas_page.switch_to_canvas_iframe unless "#{@driver.browser}" == 'firefox'
         expect(@mailing_lists_page.site_name).to eql("#{@mailing_lists_page.default_list_name course_site_1}@bcourses-mail.berkeley.edu")
         expect(@mailing_lists_page.site_code).to eql(("#{course_site_1.code} #{course_site_1.term}").strip)
         expect(@mailing_lists_page.site_id).to eql("Site ID: #{course_site_1.site_id}")
@@ -165,8 +166,8 @@ describe 'bCourses Mailgun mailing lists', order: :defined do
 
       it 'creates mailing list memberships for users who have been restored to the site' do
         @canvas_page.add_users(course_site_1, [students[0]])
-        @canvas_page.masquerade_as(@driver, students[0], course_site_1)
-        @canvas_page.stop_masquerading @driver
+        @canvas_page.masquerade_as(students[0], course_site_1)
+        @canvas_page.stop_masquerading
         JunctionUtils.clear_cache(@driver, @splash_page, @toolbox_page)
         @mailing_lists_page.load_embedded_tool @driver
         @mailing_lists_page.search_for_list course_site_1.site_id
@@ -191,7 +192,7 @@ describe 'bCourses Mailgun mailing lists', order: :defined do
     before(:all) do
       course_site_2.title = course_site_1.title
       @canvas_page.edit_course_name course_site_2
-      @canvas_page.masquerade_as(@driver, teacher, course_site_3)
+      @canvas_page.masquerade_as(teacher, course_site_3)
       @mailing_list_page.load_embedded_tool(@driver, course_site_3)
     end
 

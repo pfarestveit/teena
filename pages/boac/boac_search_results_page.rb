@@ -98,15 +98,15 @@ class BOACSearchResultsPage
     count = results_count student_results_count_element
     verify_block do
       if count > 50
-        wait_until(2) { all_row_sids(driver).length == 50 }
+        wait_until(2) { all_row_sids.length == 50 }
         logger.warn "Skipping a test with UID #{student.uid} because there are more than 50 results"
         sleep 1
       else
         wait_until(Utils.short_wait) do
-          all_row_sids(driver).length == count
-          all_row_sids(driver).include? student.sis_id.to_s
+          all_row_sids.length == count
+          all_row_sids.include? student.sis_id.to_s
         end
-        visible_row_data = user_row_data(driver, student.sis_id)
+        visible_row_data = user_row_data student.sis_id
         wait_until(2, "Expecting name #{student.last_name}, #{student.first_name}, got #{visible_row_data[:name]}") { visible_row_data[:name] == "#{student.last_name}, #{student.first_name}" }
         wait_until(2) { ![visible_row_data[:major], visible_row_data[:term_units], visible_row_data[:cumulative_units], visible_row_data[:gpa], visible_row_data[:alert_count]].any?(&:empty?) }
       end

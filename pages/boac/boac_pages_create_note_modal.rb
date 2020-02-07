@@ -385,7 +385,7 @@ module BOACPagesCreateNoteModal
   #### TEMPLATES ####
 
   button(:templates_button, id: 'my-templates-button__BV_toggle_')
-  elements(:template_select_option, xpath: '//a[contains(@id, "load-note-template-")]')
+  elements(:template_select_option, :link, xpath: '//a[contains(@id, "load-note-template-")]')
   span(:no_templates_msg, xpath: '//div[contains(text(), "You have no saved templates.")]')
   div(:dupe_template_title_msg, xpath: '//div[contains(text(), "You have an existing template with this name. Please choose a different name.")]')
 

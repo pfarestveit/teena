@@ -33,13 +33,13 @@ describe 'Asset Library', order: :defined do
 
     # Create course site if necessary, disabling the Impact Studio if it is present
     @canvas.log_in(@cal_net, Utils.super_admin_username, Utils.super_admin_password)
-    @canvas.create_generic_course_site(@driver, Utils.canvas_qa_sub_account, @course, users, test_id, [LtiTools::ASSET_LIBRARY, LtiTools::WHITEBOARDS])
+    @canvas.create_generic_course_site(Utils.canvas_qa_sub_account, @course, users, test_id, [LtiTools::ASSET_LIBRARY, LtiTools::WHITEBOARDS])
     @canvas.disable_tool(@course, LtiTools::IMPACT_STUDIO)
     @asset_library_url = @canvas.click_tool_link(@driver, LtiTools::ASSET_LIBRARY)
     @whiteboards_url = @canvas.click_tool_link(@driver, LtiTools::WHITEBOARDS)
 
-    @canvas.masquerade_as(@driver, student_1, @course)
-    @canvas.load_course_site(@driver, @course)
+    @canvas.masquerade_as(student_1, @course)
+    @canvas.load_course_site @course
     @asset_library.load_page(@driver, @asset_library_url)
     student_1_upload.title = "Student 1 upload - #{test_id}"
     @asset_library.upload_file_to_library student_1_upload
@@ -52,7 +52,7 @@ describe 'Asset Library', order: :defined do
 
     users.each do |user|
       it "can be managed by a course #{user.role} if the user has permission to do so" do
-        @canvas.masquerade_as(@driver, user, @course)
+        @canvas.masquerade_as(user, @course)
         @asset_library.load_page(@driver, @asset_library_url)
         @asset_library.search_input_element.when_visible timeout
         (['Teacher', 'Lead TA', 'TA', 'Designer', 'Reader'].include? user.role) ?
@@ -64,7 +64,7 @@ describe 'Asset Library', order: :defined do
     context 'when created' do
 
       before(:all) do
-        @canvas.masquerade_as(@driver, teacher, @course)
+        @canvas.masquerade_as(teacher, @course)
       end
 
       it 'require a title' do
@@ -181,8 +181,8 @@ describe 'Asset Library', order: :defined do
       student_2_upload.title = "Student 2 upload - #{test_id}"
       student_2_upload.category = category_2
       student_2_upload.description = "Description for uploaded file #{test_id}"
-      @canvas.masquerade_as(@driver, student_2, @course)
-      @canvas.load_course_site(@driver, @course)
+      @canvas.masquerade_as(student_2, @course)
+      @canvas.load_course_site @course
       @asset_library.load_page(@driver, @asset_library_url)
       @asset_library.upload_file_to_library student_2_upload
 
@@ -190,8 +190,8 @@ describe 'Asset Library', order: :defined do
       student_3_link.title = "Student 3 link - #{test_id}"
       student_3_link.category = category_2
       student_3_link.description = "#BetterTogether#{test_id}"
-      @canvas.masquerade_as(@driver, student_3, @course)
-      @canvas.load_course_site(@driver, @course)
+      @canvas.masquerade_as(student_3, @course)
+      @canvas.load_course_site @course
       @asset_library.load_page(@driver, @asset_library_url)
       @asset_library.add_site student_3_link
 
@@ -200,7 +200,7 @@ describe 'Asset Library', order: :defined do
       @whiteboards.load_page(@driver, @whiteboards_url)
       @whiteboards.create_and_open_whiteboard(@driver, @whiteboard)
       @whiteboards.add_existing_assets [student_2_upload]
-      @whiteboards.wait_until(timeout) { @whiteboards.open_original_asset_link_element.attribute('href').include? student_2_upload.id }
+      @whiteboards.wait_until(timeout) { @whiteboards.open_original_asset_link_element&.attribute('href').include? student_2_upload.id }
       @whiteboard_asset = @whiteboards.export_to_asset_library @whiteboard
 
       @asset_library.load_page(@driver, @asset_library_url)
@@ -218,13 +218,13 @@ describe 'Asset Library', order: :defined do
       @asset_library.toggle_detail_view_item_like student_2_upload
 
       # View an asset and like it
-      @canvas.masquerade_as(@driver, student_2, @course)
+      @canvas.masquerade_as(student_2, @course)
       @asset_library.load_asset_detail(@driver, @asset_library_url, student_3_link)
       @asset_library.toggle_detail_view_item_like student_3_link
 
       # View an asset and like it, then view another
       sleep 5
-      @canvas.masquerade_as(@driver, student_1, @course)
+      @canvas.masquerade_as(student_1, @course)
       @asset_library.load_asset_detail(@driver, @asset_library_url, student_3_link)
       @asset_library.toggle_detail_view_item_like student_3_link
       @asset_library.load_asset_detail(@driver, @asset_library_url, student_2_upload)
@@ -393,7 +393,7 @@ describe 'Asset Library', order: :defined do
     context 'when there is an Impact Studio' do
 
       before(:all) do
-        @canvas.stop_masquerading @driver
+        @canvas.stop_masquerading
         @canvas.add_suite_c_tool(@course, LtiTools::IMPACT_STUDIO)
         @canvas.click_tool_link(@driver, LtiTools::IMPACT_STUDIO)
         @all_assets = [student_1_upload, student_2_upload, student_3_link, @whiteboard_asset]

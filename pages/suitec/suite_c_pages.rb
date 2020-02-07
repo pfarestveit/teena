@@ -46,7 +46,7 @@ module Page
     # Returns an array of list view asset IDs extracted from the href attributes of the asset links
     # @return [Array<String>]
     def list_view_asset_ids
-      wait_until { list_view_asset_link_elements.any? }
+      wait_until(Utils.short_wait) { list_view_asset_link_elements.any? }
       list_view_asset_link_elements.map do |link|
         query = link.attribute('href').sub("#{SuiteCUtils.suite_c_base_url}/assetlibrary/", '')
         query.include?('?') ? query.split('?').first : query
@@ -70,7 +70,7 @@ module Page
       wait_until(Utils.medium_wait) { title == LtiTools::IMPACT_STUDIO.name }
       add_event(event, EventType::LAUNCH_IMPACT_STUDIO)
       hide_canvas_footer_and_popup
-      switch_to_canvas_iframe driver
+      switch_to_canvas_iframe
     end
 
     # Waits for asset list view to load when a new asset is created, then gets the asset's ID. Requires that the asset have a unique title.
@@ -238,7 +238,7 @@ module Page
     # @param state [String]
     def change_asset_pinned_state(pin_element, state)
       wait_for_load_and_click_js pin_element
-      wait_until(1) { pin_element.span_element(xpath: "//span[text()='#{state}']") }
+      span_element(xpath: "#{pin_element.locator[:xpath]}//span[text()='#{state}']").when_present 1
       sleep 1
     end
 
@@ -291,14 +291,14 @@ module Page
           (wait_for_element_and_select_js(category_select_element, 'Category')) :
           (wait_for_element_and_select_js(category_select_element, category))
       user.nil? ?
-          (self.uploader_select = 'User') :
-          (self.uploader_select = user.full_name)
+          (wait_for_element_and_select_js(uploader_select_element, 'User')) :
+          (wait_for_element_and_select_js(uploader_select_element, user.full_name))
       asset_type.nil? ?
-          (self.asset_type_select = 'Asset type') :
-          (self.asset_type_select = asset_type)
+          (wait_for_element_and_select_js(asset_type_select_element, 'Asset type')) :
+          (wait_for_element_and_select_js(asset_type_select_element, asset_type))
       sort_by.nil? ?
-          (self.sort_by_select = 'Most recent') :
-          (self.sort_by_select = sort_by)
+          (wait_for_element_and_select_js(sort_by_select_element, 'Most recent')) :
+          (wait_for_element_and_select_js(sort_by_select_element, sort_by))
       wait_for_update_and_click advanced_search_submit_element
       add_event(event, EventType::SEARCH)
       add_event(event, EventType::SEARCH_ASSETS, keyword)
@@ -318,7 +318,7 @@ module Page
     # @param driver [Selenium::WebDriver]
     # @param line_node [Integer]
     def mouseover_event_drop(driver, line_node)
-      mouseover(driver, driver.find_element(xpath: "//*[name()='svg']//*[@class='drop-line'][#{line_node}]/*[name()='circle'][last()]"))
+      mouseover(div_element(xpath: "//*[name()='svg']//*[@class='drop-line'][#{line_node}]/*[name()='circle'][last()]"))
     end
 
     # LOOKING FOR COLLABORATORS

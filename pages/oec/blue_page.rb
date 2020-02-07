@@ -409,9 +409,8 @@ module Page
 
     # Verifies the actual number of sections on a form matches the expected number: one for each question category heading
     # plus one for each question, with instructor category questions expected once per instructor.
-    # @param driver [Selenium::WebDriver]
     # @param questions [Array<Hash>]
-    def verify_question_count(driver, questions)
+    def verify_question_count(questions)
       verify_block do
         # Determine the expected number of heading sections
         heading_types = questions.map { |q| q[:category] }
@@ -422,7 +421,7 @@ module Page
         unique_questions = questions.uniq { |q| [q[:question], q[:type]] }
 
         # Account for co-taught course forms showing instructor questions more than once
-        instructor_heading_count = driver.find_elements(:xpath => '//h2[contains(.,"Feedback for ")]').length
+        instructor_heading_count = h2_elements(:xpath => '//h2[contains(.,"Feedback for ")]').length
         logger.debug "The number of instructors on the form is #{instructor_heading_count}"
         instructor_questions = unique_questions.select { |q| q[:category] == 'instructor' }
         (instructor_heading_count - 1).times do

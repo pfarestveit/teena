@@ -83,10 +83,10 @@ describe 'BOAC assignment analytics' do
                   logger.warn "Checking assignment submissions for #{test_case}"
 
                   # Un-mute all assignments so that scores are visible to the student
-                  @canvas_assignments_page.load_course_site(@driver, course)
-                  @canvas_assignments_page.stop_masquerading(@driver) if @canvas_assignments_page.stop_masquerading_link?
+                  @canvas_assignments_page.load_course_site course
+                  @canvas_assignments_page.stop_masquerading if @canvas_assignments_page.stop_masquerading_link?
                   @e_grades_page.resolve_all_issues(@driver, course)
-                  @canvas_assignments_page.masquerade_as(@driver, student)
+                  @canvas_assignments_page.masquerade_as student
                   ui_assignments = @canvas_assignments_page.get_student_view_assignments(@driver, course, student, @canvas_discussions_page)
                   nessie_assignments = NessieUtils.get_assignments(student, course)
 
@@ -120,7 +120,7 @@ describe 'BOAC assignment analytics' do
 
                     logger.warn "Checking current score for #{test_case}"
 
-                    @canvas_grades_page.stop_masquerading(@driver) if @canvas_grades_page.stop_masquerading_link?
+                    @canvas_grades_page.stop_masquerading if @canvas_grades_page.stop_masquerading_link?
                     @canvas_grades_page.load_gradebook course
                     scores = @canvas_grades_page.export_grades course
 

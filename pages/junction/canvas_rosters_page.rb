@@ -45,7 +45,7 @@ module Page
       def click_roster_photos_link(driver)
         logger.info 'Clicking Roster Photos link'
         wait_for_load_and_click_js roster_photos_link_element
-        switch_to_canvas_iframe(driver, JunctionUtils.junction_base_url)
+        switch_to_canvas_iframe JunctionUtils.junction_base_url
       end
 
       # Returns an array of options in the section select
@@ -64,8 +64,7 @@ module Page
       # Selects a section and pauses for DOM update
       # @param section [Section]
       def filter_by_section(section)
-        wait_for_update_and_click_js section_select_element
-        self.section_select = "#{section.course} #{section.label}"
+        wait_for_element_and_select_js(section_select_element, "#{section.course} #{section.label}")
         sleep 1
       end
 
@@ -77,7 +76,7 @@ module Page
         Utils.prepare_download_dir
         wait_for_update_and_click export_roster_link_element
         csv_file_path = "#{Utils.download_dir}/course_#{course.site_id}_rosters.csv"
-        wait_until { Dir[csv_file_path].any? }
+        wait_until(Utils.medium_wait) { Dir[csv_file_path].any? }
         csv = CSV.read(csv_file_path, headers: true)
         sids = []
         csv.each { |r| sids << r['Student ID'] }

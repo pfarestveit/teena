@@ -62,7 +62,7 @@ describe 'bCourses Official Sections tool' do
 
     # Create course sites that don't already exist
     sites_to_create.each do |site|
-      @canvas.masquerade_as(@driver, site[:teacher])
+      @canvas.masquerade_as site[:teacher]
       logger.debug "Sections to be included at site creation are #{site[:sections_for_site].map { |s| s.id }}"
       @create_course_site_page.provision_course_site(@driver, site[:course], site[:teacher], site[:sections_for_site])
     end
@@ -77,9 +77,9 @@ describe 'bCourses Official Sections tool' do
         section_ids_to_add_delete = (sections_to_add_delete.map { |section| section.id }).join(', ')
         logger.debug "Sections to be added and deleted are #{section_ids_to_add_delete}"
 
-        @canvas.stop_masquerading @driver if @canvas.stop_masquerading_link?
-        @canvas.masquerade_as(@driver, site[:teacher])
-        @canvas.publish_course_site(@driver, site[:course])
+        @canvas.stop_masquerading if @canvas.stop_masquerading_link?
+        @canvas.masquerade_as site[:teacher]
+        @canvas.publish_course_site site[:course]
 
         # STATIC VIEW - sections currently in the site
 
@@ -102,7 +102,7 @@ describe 'bCourses Official Sections tool' do
         # EDITING VIEW - NOTICES AND LINKS
 
         @official_sections_page.click_edit_sections
-        logger.debug "There are #{@official_sections_page.available_sections_count(@driver, site[:course])} rows in the available sections table"
+        logger.debug "There are #{@official_sections_page.available_sections_count(site[:course])} rows in the available sections table"
 
         has_maintenance_notice = @official_sections_page.verify_block do
           @official_sections_page.maintenance_notice_button_element.when_present Utils.short_wait
@@ -114,8 +114,8 @@ describe 'bCourses Official Sections tool' do
           @official_sections_page.maintenance_detail_element.when_visible Utils.short_wait
         end
 
-        has_bcourses_service_link = @official_sections_page.external_link_valid?(@driver, @official_sections_page.bcourses_service_link_element, 'bCourses | Digital Learning Services')
-        @official_sections_page.switch_to_canvas_iframe @driver unless @driver.browser.to_s == 'firefox'
+        has_bcourses_service_link = @official_sections_page.external_link_valid?(@official_sections_page.bcourses_service_link_element, 'bCourses | Digital Learning Services')
+        @official_sections_page.switch_to_canvas_iframe unless @driver.browser.to_s == 'firefox'
 
         it("shows a collapsed maintenance notice on course site ID #{site[:course].site_id}") { expect(has_maintenance_notice).to be true }
         it("allows the user to reveal an expanded maintenance notice #{site[:course].site_id}") { expect(has_maintenance_detail).to be true }
@@ -137,7 +137,7 @@ describe 'bCourses Official Sections tool' do
         # EDITING VIEW - THE RIGHT TEST COURSE SECTIONS ARE AVAILABLE TO ADD TO THE COURSE SITE
 
         is_expanded = @official_sections_page.available_sections_table(site[:course].code).exists?
-        available_section_count = @official_sections_page.available_sections_count(@driver, site[:course])
+        available_section_count = @official_sections_page.available_sections_count(site[:course])
         save_button_enabled = @official_sections_page.save_changes_button_element.enabled?
 
         it("shows an expanded view of courses with sections already in course site ID #{site[:course].site_id}") { expect(is_expanded).to be true }
@@ -321,7 +321,7 @@ describe 'bCourses Official Sections tool' do
           student = User.new test_user_data.find { |data| data['role'] == 'Student' }
           waitlist = User.new test_user_data.find { |data| data['role'] == 'Waitlist Student' }
 
-          @canvas.stop_masquerading @driver
+          @canvas.stop_masquerading
           [lead_ta, ta, designer, reader, observer, student, waitlist].each do |user|
             @course_add_user_page.load_embedded_tool(@driver, site[:course])
             @course_add_user_page.search(user.uid, 'CalNet UID')
@@ -330,22 +330,22 @@ describe 'bCourses Official Sections tool' do
 
           # Check each user role's access to the tool
           [lead_ta, ta, designer, reader, observer, student, waitlist].each do |user|
-            @canvas.masquerade_as(@driver, user, site[:course])
+            @canvas.masquerade_as(user, site[:course])
             @official_sections_page.load_embedded_tool(@driver, site[:course])
             if user.role == 'Lead TA'
               has_right_perms = @official_sections_page.verify_block do
-                @official_sections_page.current_sections_table_element.when_visible Utils.medium_wait
+                @official_sections_page.current_sections_table.when_visible Utils.medium_wait
                 @official_sections_page.edit_sections_button_element.when_visible 1
               end
             elsif %w(TA Designer).include? user.role
               has_right_perms = @official_sections_page.verify_block do
-                @official_sections_page.current_sections_table_element.when_visible Utils.medium_wait
+                @official_sections_page.current_sections_table.when_visible Utils.medium_wait
                 @official_sections_page.edit_sections_button_element.when_not_visible 1
               end
             else
               has_right_perms = @official_sections_page.verify_block do
                 @official_sections_page.unexpected_error_element.when_present Utils.medium_wait
-                @official_sections_page.current_sections_table_element.when_not_visible 1
+                @official_sections_page.current_sections_table.when_not_visible 1
               end
             end
 

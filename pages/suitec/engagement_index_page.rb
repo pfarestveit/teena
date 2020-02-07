@@ -17,9 +17,9 @@ module Page
       # @param event [Event]
       def load_page(driver, url, event = nil)
         navigate_to url
-        wait_until { title == "#{LtiTools::ENGAGEMENT_INDEX.name}" }
+        wait_until(Utils.medium_wait) { title == "#{LtiTools::ENGAGEMENT_INDEX.name}" }
         hide_canvas_footer_and_popup
-        switch_to_canvas_iframe driver
+        switch_to_canvas_iframe
         add_event(event, EventType::NAVIGATE)
         add_event(event, EventType::LAUNCH_ENGAGEMENT_INDEX)
       end
@@ -79,6 +79,7 @@ module Page
       # LEADERBOARD
 
       table(:users_table, class: 'leaderboard-list-table')
+      elements(:users_table_row, :row, xpath: '//table[@class="leaderboard-list-table"]//tr')
       link(:sort_by_rank, xpath: '//th[@data-ng-click="sort(\'rank\')"]')
       link(:sort_by_name, xpath: '//th[@data-ng-click="sort(\'canvas_full_name\')"]')
       link(:sort_by_share, xpath: '//th[@data-ng-click="sort(\'share_points\')"]')
@@ -86,7 +87,9 @@ module Page
       link(:sort_by_activity, xpath: '//th[@data-ng-click="sort(\'last_activity\')"]')
       span(:sort_asc, xpath: '//th[contains(@class,"dropup")]/span[@class="caret ng-scope"]')
       elements(:name, :span, xpath: '//span[@data-ng-bind="user.canvas_full_name"]')
+      elements(:rank, :cell, xpath: '//td[@data-ng-bind="user.rank"]')
       elements(:sharing, :span, xpath: '//span[@data-ng-if="user.share_points"]')
+      elements(:points, :cell, xpath: '//td[@data-ng-bind="user.points"]')
       elements(:last_activity, :span, xpath: '//span[@data-ng-if="user.last_activity"]')
 
       # Waits for the leaderboard to load
@@ -137,11 +140,11 @@ module Page
         end
         scroll_to_element user_profile_link(user)
         user_profile_link(user).click
-        wait_until { title == "#{LtiTools::IMPACT_STUDIO.name}" }
+        wait_until(Utils.medium_wait) { title == "#{LtiTools::IMPACT_STUDIO.name}" }
         add_event(event, EventType::LAUNCH_IMPACT_STUDIO)
         add_event(event, EventType::VIEW_PROFILE, user.uid)
         hide_canvas_footer_and_popup
-        switch_to_canvas_iframe driver
+        switch_to_canvas_iframe
       end
 
       # Returns the score of a given user on the leaderboard
@@ -151,15 +154,9 @@ module Page
       # @param event [Event]
       def user_score(driver, url, user, event = nil)
         load_scores(driver, url, event)
-        score = '0'
         search_for_user(user, event)
         sleep 1
-        users_table_element.each do |row|
-          if row[1].text == user.full_name
-            # If the Impact Studio is enabled, then an additional 'Collaborate' column will be present.
-            score = row.columns == 5 ? row[3].text : row[4].text
-          end
-        end
+        score = cell_element(xpath: "//tr[contains(., '#{user.full_name}')]/td[@data-ng-bind='user.points']").text
         logger.debug "#{user.full_name}'s score is currently '#{score}'"
         score
       end
@@ -187,9 +184,7 @@ module Page
       # Returns an array of all user ranks on the leaderboard
       # @return [Array<Integer>]
       def visible_ranks
-        ranks = (users_table_element.map { |row| row[0].text.to_i }).to_a
-        # Drop header row
-        ranks.drop 1 if ranks.any?
+        rank_elements.map(&:text).map &:to_i
       end
 
       # Returns an array of all user names on the leaderboard
@@ -207,9 +202,7 @@ module Page
       # Returns an array of all user point totals on the leaderboard
       # @return [Array<Integer>]
       def visible_points
-        points = (users_table_element.map { |row| row[3].text.to_i }).to_a
-        # Drop header row
-        points.drop 1 if points.any?
+        points_elements.map(&:text).map &:to_i
       end
 
       # Returns an array of all last user activity dates on the leaderboard
@@ -412,7 +405,7 @@ module Page
         # Wait for the file to download and extract the data needed
         date = Time.now.strftime('%Y_%m_%d')
         csv_file_path = "#{Utils.download_dir}/engagement_index_activities_#{course.site_id}_#{date}_*.csv"
-        wait_until { Dir[csv_file_path].any? }
+        wait_until(Utils.medium_wait) { Dir[csv_file_path].any? }
         csv = Dir[csv_file_path].first
         activities = []
         CSV.foreach(csv, { headers: true }) do |column|

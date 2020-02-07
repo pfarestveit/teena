@@ -127,7 +127,7 @@ module Page
       logger.info "Deleting teacher group set '#{group.group_set}'"
       wait_for_load_and_click link_element(xpath: "//a[@title='#{group.group_set}']")
       wait_for_update_and_click link_element(xpath: '//button[@title="Add Group"]/following-sibling::span/a')
-      confirm(true) { wait_for_update_and_click link_element(class: 'delete-category') }
+      alert { wait_for_update_and_click link_element(class: 'delete-category') }
       list_item_element(xpath: '//li[contains(.,"Group set successfully removed")]').when_present Utils.short_wait
     end
 

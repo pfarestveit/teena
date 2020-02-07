@@ -44,16 +44,20 @@ module Page
       # @return [Integer]
       def section_recordings_index(section_code = nil)
         wait_until(Utils.medium_wait) { section_content_elements.any? }
-        (section_content_elements.length > 1) ?
-            section_content_elements.index(div_element(xpath: "//h3[text()='#{section_code}']/..")) : 0
+        section_els = section_content_elements
+        if section_els.length > 1
+          el = section_els.find { |el| el.attribute('innerText').include? section_code }
+          section_els.index el
+        else
+          0
+        end
       end
 
       # Returns an array of links to YouTube recordings in a set of recordings at a given index
-      # @param driver [Selenium::WebDriver]
       # @param index [Integer]
       # @return [Array<Selenium::WebDriver::Element>]
-      def you_tube_recording_elements(driver, index)
-        driver.find_elements(xpath: "//div[@class='cc-table cc-webcast-table ng-scope'][#{index + 1}]/table//a[@data-ng-bind='video.lecture']")
+      def you_tube_recording_elements(index)
+        link_elements(xpath: "//div[@class='cc-table cc-webcast-table ng-scope'][#{index + 1}]/table//a[@data-ng-bind='video.lecture']")
       end
 
       # Returns the 'show more' button element in a set of recordings at a given index

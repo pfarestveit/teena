@@ -104,7 +104,7 @@ module Page
       def select_sections(sections)
         sections.each do |section|
           logger.debug "Selecting section ID #{section.id}"
-          wait_for_update_and_click_js section_checkbox(section.id) unless section_checkbox(section.id).checked?
+          wait_for_update_and_click_js section_checkbox(section.id) unless section_checkbox(section.id).selected?
         end
       end
 
@@ -148,10 +148,9 @@ module Page
       end
 
       # Returns the instructor names for a section
-      # @param driver [Selenium::WebDriver]
       # @param section_id [String]
-      # @return [Array<String>]
-      def section_instructors(driver, section_id)
+      # @return [String]
+      def section_instructors(section_id)
         (e = div_element(xpath: "//input[contains(@id,'#{section_id}')]/../ancestor::tbody//td[contains(@class, 'section-instructors')]/div")).exists? ?
             e.text : ''
       end
@@ -161,7 +160,7 @@ module Page
       # @param course [Course]
       # @return [Array<String>]
       def course_section_ids(driver, course)
-        driver.find_elements(xpath: "//button[contains(.,'#{course.code}')]/following-sibling::div//td[@data-ng-bind='section.ccn']").map &:text
+        cell_elements(xpath: "//button[contains(.,'#{course.code}')]/following-sibling::div//td[@data-ng-bind='section.ccn']").map &:text
       end
 
       # Clicks the 'next' button once it is enabled

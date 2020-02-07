@@ -25,7 +25,7 @@ describe 'A Canvas discussion', order: :defined do
     tools = [LtiTools::ENGAGEMENT_INDEX]
     tools << LtiTools::ASSET_LIBRARY unless course_id.nil?
     @canvas.log_in(@cal_net, Utils.super_admin_username, Utils.super_admin_password)
-    @canvas.create_generic_course_site(@driver, Utils.canvas_qa_sub_account, @course, [@user_1, @user_2], test_id, tools)
+    @canvas.create_generic_course_site(Utils.canvas_qa_sub_account, @course, [@user_1, @user_2], test_id, tools)
     @engagement_index_url = @canvas.click_tool_link(@driver, LtiTools::ENGAGEMENT_INDEX)
     unless course_id.nil?
       @asset_library = Page::SuiteCPages::AssetLibraryListViewPage.new @driver
@@ -38,8 +38,8 @@ describe 'A Canvas discussion', order: :defined do
 
     # User 1 creates a discussion topic, which should earn points
     @discussion = Discussion.new "Discussion Topic #{test_id}"
-    @canvas.masquerade_as(@driver, @user_1)
-    @canvas.create_course_discussion(@driver, @course, @discussion)
+    @canvas.masquerade_as @user_1
+    @canvas.create_course_discussion(@course, @discussion)
     @user_1_expected_score = "#{@user_1_score.to_i + add_topic.points}"
   end
 
@@ -65,7 +65,7 @@ describe 'A Canvas discussion', order: :defined do
       @canvas.add_reply(@discussion, nil, 'Discussion entry by the discussion topic creator')
 
       # User 2 creates an entry on the topic, which should earn points for User 2 only
-      @canvas.masquerade_as(@driver, @user_2, @course)
+      @canvas.masquerade_as(@user_2, @course)
       @canvas.add_reply(@discussion, nil, 'Discussion entry by someone other than the discussion topic creator')
       @user_2_expected_score = "#{@user_2_score.to_i + add_entry.points}"
     end
@@ -129,7 +129,7 @@ describe 'A Canvas discussion', order: :defined do
         @user_2_score = @engagement_index.user_score(@driver, @engagement_index_url, @user_2)
 
         # User 1 replies to own entry, which should earn no points
-        @canvas.masquerade_as(@driver, @user_1)
+        @canvas.masquerade_as @user_1
         @canvas.add_reply(@discussion, 0, 'Reply by the discussion topic creator and also the discussion entry creator')
 
         # User 1 replies to User 2's first entry, which should earn points for both
@@ -170,7 +170,7 @@ describe 'A Canvas discussion', order: :defined do
         @user_2_score = @engagement_index.user_score(@driver, @engagement_index_url, @user_2)
 
         # User 2 replies to own first entry, which should earn no points
-        @canvas.masquerade_as(@driver, @user_2)
+        @canvas.masquerade_as @user_2
         @canvas.add_reply(@discussion, 2, 'Reply by somebody other than the discussion topic creator but who is the discussion entry creator')
 
         # User 2 replies to User 1's entry, which should earn points for both
@@ -259,7 +259,7 @@ describe 'A Canvas discussion', order: :defined do
         @canvas.add_reply(@discussion, 2, 'Reply-to-reply by somebody who created the reply but not the topic or the entry')
 
         # User 1 replies to User 2's first reply to User 1's entry, which should earn points for both
-        @canvas.masquerade_as(@driver, @user_1)
+        @canvas.masquerade_as @user_1
         @canvas.add_reply(@discussion, 2, 'Reply-to-reply by somebody who created the topic and the entry but not the reply')
 
         # Determine expected scores

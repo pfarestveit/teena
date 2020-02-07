@@ -28,7 +28,7 @@ describe 'Canvas assignment sync', order: :defined do
 
     # Create course site if necessary. If an existing site, ensure Canvas sync is enabled.
     @canvas.log_in(@cal_net, Utils.super_admin_username, Utils.super_admin_password)
-    @canvas.create_generic_course_site(@driver, Utils.canvas_qa_sub_account, @course, [@teacher, @student],
+    @canvas.create_generic_course_site(Utils.canvas_qa_sub_account, @course, [@teacher, @student],
                                        test_id, [LtiTools::ASSET_LIBRARY, LtiTools::ENGAGEMENT_INDEX])
     @asset_library_url = @canvas.click_tool_link(@driver, LtiTools::ASSET_LIBRARY)
     @engagement_index_url = @canvas.click_tool_link(@driver, LtiTools::ENGAGEMENT_INDEX)
@@ -43,22 +43,22 @@ describe 'Canvas assignment sync', order: :defined do
     @asset_2.title = @asset_library.get_canvas_submission_title @asset_2
     @asset_2.category = @assignment_2.title
 
-    # Get users' scores before submission
-    @initial_score = @engagement_index.user_score(@driver, @engagement_index_url, @student)
-
     # Teacher creates on non-sync-able assignment and two sync-able assignments and waits for the latter to appear in the Asset Library categories list
-    @canvas.masquerade_as(@driver, @teacher, @course)
-    @canvas.load_course_site(@driver, @course)
+    @canvas.masquerade_as(@teacher, @course)
+    @canvas.load_course_site @course
     @canvas.create_unsyncable_assignment(@course, @unsinkable_assignment)
     @canvas.create_assignment(@course, @assignment_1)
     @canvas.create_assignment(@course, @assignment_2)
     @asset_library_manage.wait_for_canvas_category(@driver, @asset_library_url, @assignment_1)
-    @asset_library_manage.wait_for_canvas_category(@driver, @asset_library_url, @assignment_2)
+
+    # Get users' scores before submission
+    @initial_score = @engagement_index.user_score(@driver, @engagement_index_url, @student)
   end
 
   after(:all) { @driver.quit }
 
   it 'is false by default' do
+    @asset_library_manage.wait_for_canvas_category(@driver, @asset_library_url, @assignment_2)
     expect(@asset_library_manage.assignment_sync_cbx(@assignment_1).checked?).to be false
     expect(@asset_library_manage.assignment_sync_cbx(@assignment_2).checked?).to be false
   end
@@ -77,10 +77,10 @@ describe 'Canvas assignment sync', order: :defined do
       @asset_library_manage.wait_for_canvas_category(@driver, @asset_library_url, poller_assignment)
 
       # Student submits both assignments
-      @canvas.masquerade_as(@driver, @student, @course)
+      @canvas.masquerade_as(@student, @course)
       @canvas.submit_assignment(@assignment_1, @student, @asset_1)
       @canvas.submit_assignment(@assignment_2, @student, @asset_2)
-      @canvas.masquerade_as(@driver, @teacher, @course)
+      @canvas.masquerade_as(@teacher, @course)
     end
 
     it 'adds assignment submission points to the Engagement Index score for both submissions' do

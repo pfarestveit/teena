@@ -48,20 +48,18 @@ class BOACClassListViewPage
   end
 
   # Returns the major(s) displayed for a student
-  # @param driver [Selenium::WebDriver]
   # @param student [BOACUser]
   # @return [Array<String>]
-  def student_majors(driver, student)
-    els = driver.find_elements(xpath: "#{student_xpath student}//div[contains(@id, '-majors')]/div[@class='student-text']")
+  def student_majors( student)
+    els = div_elements(xpath: "#{student_xpath student}//div[contains(@id, '-majors')]/div[@class='student-text']")
     els.map &:text if els.any?
   end
 
   # Returns the sport(s) displayed for a student
-  # @param driver [Selenium::WebDriver]
   # @param student [BOACUser]
   # @return [Array<String>]
-  def student_sports(driver, student)
-    els = driver.find_elements(xpath: "#{student_xpath student}//div[contains(@id, '-teams')]/div[@class='student-text']")
+  def student_sports( student)
+    els = div_elements(xpath: "#{student_xpath student}//div[contains(@id, '-teams')]/div[@class='student-text']")
     els.map { |el| el.text.strip } if els.any?
   end
 
@@ -84,8 +82,8 @@ class BOACClassListViewPage
   # Returns the graduation colleges shown for a student
   # @param student [BOACUser]
   # @return [String]
-  def student_graduation_colleges(driver, student)
-    els = driver.find_elements(xpath: "#{student_xpath student}//div[contains(@id, '-graduated-colleges')]/div[@class='student-text']")
+  def student_graduation_colleges(student)
+    els = div_elements(xpath: "#{student_xpath student}//div[contains(@id, '-graduated-colleges')]/div[@class='student-text']")
     els.map { |el| el.text.strip } if els.any?
   end
 
@@ -106,16 +104,15 @@ class BOACClassListViewPage
   end
 
   # Returns the SIS and sports data shown for a student
-  # @param driver [Selenium::WebDriver]
   # @param student [BOACUser]
   # @return [Hash]
-  def visible_student_sis_data(driver, student)
+  def visible_student_sis_data(student)
     {
       :level => student_level(student),
-      :majors => student_majors(driver, student),
+      :majors => student_majors(student),
       :graduation_date => student_graduation_date(student),
-      :graduation_colleges => student_graduation_colleges(driver, student),
-      :sports => student_sports(driver, student),
+      :graduation_colleges => student_graduation_colleges(student),
+      :sports => student_sports(student),
       :mid_point_grade => student_mid_point_grade(student),
       :grading_basis => student_grading_basis(student),
       :final_grade => student_final_grade(student),
@@ -148,7 +145,7 @@ class BOACClassListViewPage
   # @return [String]
   def assigns_submit_score(student, node)
     score_xpath = "#{assigns_submit_xpath(student, node)}"
-    has_boxplot = verify_block { mouseover(browser, browser.find_element(xpath: "#{score_xpath}#{boxplot_trigger_xpath}")) }
+    has_boxplot = verify_block { mouseover(div_element(xpath: "#{score_xpath}#{boxplot_trigger_xpath}")) }
     el = has_boxplot ?
              div_element(xpath: "#{score_xpath}//div[text()=\"User Score\"]/following-sibling::div") :
              div_element(xpath: "#{score_xpath}//strong")
@@ -161,7 +158,7 @@ class BOACClassListViewPage
   # @return [String]
   def assigns_submit_max(student, node)
     score_xpath = "#{assigns_submit_xpath(student, node)}"
-    has_boxplot = verify_block { mouseover(browser, browser.find_element(xpath: "#{score_xpath}#{boxplot_trigger_xpath}")) }
+    has_boxplot = verify_block { mouseover(div_element(xpath: "#{score_xpath}#{boxplot_trigger_xpath}")) }
     el = has_boxplot ?
              div_element(xpath: "#{score_xpath}//div[text()=\"Maximum\"]/following-sibling::div") :
              span_element(xpath: "#{assigns_submit_xpath(student, node)}//strong/following-sibling::span")
@@ -194,7 +191,7 @@ class BOACClassListViewPage
   # @return [String]
   def assigns_grade_score(driver, student, node)
     score_xpath = "#{assigns_grade_xpath(student, node)}"
-    has_boxplot = verify_block { mouseover(driver, driver.find_element(xpath: "#{score_xpath}#{boxplot_trigger_xpath}")) }
+    has_boxplot = verify_block { mouseover(div_element(xpath: "#{score_xpath}#{boxplot_trigger_xpath}")) }
     el = has_boxplot ?
         div_element(xpath: "#{score_xpath}//div[text()=\"User Score\"]/following-sibling::div") :
         div_element(xpath: "#{score_xpath}//strong")

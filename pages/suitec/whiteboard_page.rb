@@ -34,7 +34,7 @@ module Page
           logger.debug "The browser window count is #{driver.window_handles.length}, and the current window is a whiteboard. Closing it."
           driver.close
           driver.switch_to.window driver.window_handles.first
-          switch_to_canvas_iframe driver if "#{driver.browser}" == 'chrome'
+          switch_to_canvas_iframe if "#{driver.browser}" == 'chrome'
         else
           logger.debug "The browser window count is #{driver.window_handles.length}, and the current window is not a whiteboard. Leaving it open."
         end
@@ -134,7 +134,7 @@ module Page
         add_event(event, EventType::WHITEBOARD_SETTINGS, board)
         add_event(event, EventType::LIST_WHITEBOARDS)
         driver.switch_to.window driver.window_handles.first
-        switch_to_canvas_iframe driver if "#{driver.browser}" == 'chrome'
+        switch_to_canvas_iframe if "#{driver.browser}" == 'chrome'
         add_event(event, EventType::VIEW)
       end
 
@@ -197,7 +197,7 @@ module Page
       def verify_image_download(whiteboard, event = nil)
         logger.info 'Waiting for PNG file to be downloaded from whiteboard'
         expected_file_path = "#{Utils.download_dir}/#{whiteboard.title.gsub(' ', '-')}-#{Time.now.strftime('%Y-%m-%d')}-*.png"
-        wait_until { Dir[expected_file_path].any? }
+        wait_until(Utils.medium_wait) { Dir[expected_file_path].any? }
         logger.debug 'Whiteboard converted to PNG successfully'
         add_event(event, EventType::RETRIEVE, whiteboard.title)
         add_event(event, EventType::EXPORT_WHITEBOARD_IMAGE, whiteboard.id)
@@ -315,7 +315,7 @@ module Page
       def open_original_asset(driver, asset_library, asset, event = nil)
         wait_for_update_and_click open_original_asset_link_element
         driver.switch_to.window driver.window_handles.last
-        wait_until { asset_library.detail_view_asset_title == asset.title }
+        wait_until(Utils.short_wait) { asset_library.detail_view_asset_title == asset.title }
         add_event(event, EventType::VIEW, asset.id)
         add_event(event, EventType::VIEW)
         add_event(event, EventType::OPEN_ASSET_FROM_WHITEBOARD, asset.id)

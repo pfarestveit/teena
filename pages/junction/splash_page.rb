@@ -42,7 +42,7 @@ module Page
         button = basic_auth_log_in_button_element
         button.click
         button.when_not_present timeout=Utils.medium_wait
-        basic_auth_log_in_button_element.when_present timeout
+        sleep 1
         basic_auth_uid_input_element.when_not_visible timeout
       end
 

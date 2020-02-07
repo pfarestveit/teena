@@ -28,10 +28,10 @@ describe 'The Engagement Index', order: :defined do
     @engagement_index = Page::SuiteCPages::EngagementIndexPage.new @driver
 
     @canvas.log_in(@cal_net, (event.actor = admin).username, Utils.super_admin_password)
-    @canvas.create_generic_course_site(@driver, Utils.canvas_qa_sub_account, @course, [teacher, student_1, student_2, student_3, student_4],
+    @canvas.create_generic_course_site(Utils.canvas_qa_sub_account, @course, [teacher, student_1, student_2, student_3, student_4],
                                        Utils.get_test_id, [LtiTools::ASSET_LIBRARY, LtiTools::ENGAGEMENT_INDEX])
 
-    @canvas.load_course_site(@driver, @course)
+    @canvas.load_course_site @course
     @asset_library_url = @canvas.click_tool_link(@driver, LtiTools::ASSET_LIBRARY, event)
     @engagement_index_url = @canvas.click_tool_link(@driver, LtiTools::ENGAGEMENT_INDEX, event)
 
@@ -39,31 +39,31 @@ describe 'The Engagement Index', order: :defined do
     @canvas.disable_tool(@course, LtiTools::IMPACT_STUDIO)
 
     # Add asset to library
-    @canvas.masquerade_as(@driver, (event.actor = student_3), @course)
+    @canvas.masquerade_as((event.actor = student_3), @course)
     @engagement_index.load_page(@driver, @engagement_index_url, event)
     @engagement_index.share_score event
     @asset_library.load_page(@driver, @asset_library_url, event)
     @asset_library.upload_file_to_library(asset, event)
 
     # Comment on the asset
-    @canvas.masquerade_as(@driver, (event.actor = student_1), @course)
+    @canvas.masquerade_as((event.actor = student_1), @course)
     @engagement_index.load_page(@driver, @engagement_index_url, event)
     @engagement_index.un_share_score event
     @asset_library.load_asset_detail(@driver, @asset_library_url, asset, event)
     @asset_library.add_comment(asset, Comment.new(student_1, 'Testing Testing'), event)
 
     # Like the asset
-    @canvas.masquerade_as(@driver, (event.actor = student_2), @course)
+    @canvas.masquerade_as((event.actor = student_2), @course)
     @engagement_index.load_page(@driver, @engagement_index_url, event)
     @engagement_index.un_share_score event
     @asset_library.load_asset_detail(@driver, @asset_library_url, asset, event)
     @asset_library.toggle_detail_view_item_like(asset, event)
 
-    @canvas.masquerade_as(@driver, (event.actor = student_4), @course)
+    @canvas.masquerade_as((event.actor = student_4), @course)
     @engagement_index.load_page(@driver, @engagement_index_url, event)
     @engagement_index.share_score event
 
-    @canvas.masquerade_as(@driver, (event.actor = teacher), @course)
+    @canvas.masquerade_as((event.actor = teacher), @course)
     @engagement_index.load_scores(@driver, @engagement_index_url, event)
   end
 
@@ -151,18 +151,18 @@ describe 'The Engagement Index', order: :defined do
   it 'allows teachers to share their scores with students' do
     @engagement_index.share_score event
     @engagement_index.wait_until(Utils.short_wait) { @engagement_index.sharing_preference(teacher) == 'Yes' }
-    @canvas.masquerade_as(@driver, (event.actor = student_4), @course)
+    @canvas.masquerade_as((event.actor = student_4), @course)
     @engagement_index.load_scores(@driver, @engagement_index_url, event)
     expect(@engagement_index.visible_names).to include(teacher.full_name)
   end
 
   it 'allows teachers to hide their scores from students' do
-    @canvas.masquerade_as(@driver, (event.actor = teacher), @course)
+    @canvas.masquerade_as((event.actor = teacher), @course)
     @engagement_index.load_scores(@driver, @engagement_index_url, event)
     @engagement_index.un_share_score event
     @engagement_index.wait_for_scores event
     @engagement_index.wait_until(Utils.short_wait) { @engagement_index.sharing_preference(teacher) == 'No' }
-    @canvas.masquerade_as(@driver, (event.actor = student_4), @course)
+    @canvas.masquerade_as((event.actor = student_4), @course)
     @engagement_index.load_scores(@driver, @engagement_index_url, event)
     expect(@engagement_index.visible_names).not_to include(teacher.full_name)
   end
@@ -170,7 +170,7 @@ describe 'The Engagement Index', order: :defined do
   # STUDENTS
 
   it 'allows students to share their scores with other students' do
-    @canvas.masquerade_as(@driver, (event.actor = student_1), @course)
+    @canvas.masquerade_as((event.actor = student_1), @course)
     @engagement_index.load_page(@driver, @engagement_index_url, event)
     @engagement_index.share_score event
   end
@@ -224,7 +224,7 @@ describe 'The Engagement Index', order: :defined do
   describe 'Canvas syncing' do
 
     before(:all) do
-      @canvas.stop_masquerading @driver
+      @canvas.stop_masquerading
       event.actor = admin
       @canvas.remove_users_from_course(@course, [teacher, student_4])
     end
@@ -233,7 +233,7 @@ describe 'The Engagement Index', order: :defined do
 
       it "removes #{user.role} UID #{user.uid} from the Engagement Index if the user has been removed from the course site" do
         @canvas.load_homepage
-        @canvas.stop_masquerading(@driver) if @canvas.stop_masquerading_link?
+        @canvas.stop_masquerading if @canvas.stop_masquerading_link?
         @engagement_index.wait_until(Utils.long_wait) do
           @engagement_index.load_scores(@driver, @engagement_index_url, event)
           !@engagement_index.visible_names.include? user.full_name
@@ -241,7 +241,7 @@ describe 'The Engagement Index', order: :defined do
       end
 
       it "prevents #{user.role} UID #{user.uid} from reaching the Engagement Index if the user has been removed from the course site" do
-        @canvas.masquerade_as(@driver, user, @course)
+        @canvas.masquerade_as(user, @course)
         @engagement_index.navigate_to @engagement_index_url
         @canvas.access_denied_msg_element.when_visible Utils.short_wait
       end
@@ -254,7 +254,7 @@ describe 'The Engagement Index', order: :defined do
   describe '"looking for collaborators"' do
 
     before(:all) do
-      @canvas.stop_masquerading @driver
+      @canvas.stop_masquerading
       @canvas.add_suite_c_tool(@course, LtiTools::IMPACT_STUDIO)
       @canvas.click_tool_link(@driver, LtiTools::IMPACT_STUDIO, event)
     end
@@ -262,7 +262,7 @@ describe 'The Engagement Index', order: :defined do
     context 'when the user is not looking' do
 
       before(:all) do
-        @canvas.masquerade_as(@driver, (event.actor = student_1), @course)
+        @canvas.masquerade_as((event.actor = student_1), @course)
         @engagement_index.load_page(@driver, @engagement_index_url, event)
         @engagement_index.share_score event
       end
@@ -278,7 +278,7 @@ describe 'The Engagement Index', order: :defined do
       context 'and another user views the user' do
 
         before(:all) do
-          @canvas.masquerade_as(@driver, (event.actor = student_2), @course)
+          @canvas.masquerade_as((event.actor = student_2), @course)
           @engagement_index.load_page(@driver, @engagement_index_url, event)
           @engagement_index.share_score event
         end
@@ -294,7 +294,7 @@ describe 'The Engagement Index', order: :defined do
     context 'when the user is looking' do
 
       before(:all) do
-        @canvas.masquerade_as(@driver, (event.actor = student_1), @course)
+        @canvas.masquerade_as((event.actor = student_1), @course)
         @engagement_index.load_scores(@driver, @engagement_index_url, event)
       end
 
@@ -307,7 +307,7 @@ describe 'The Engagement Index', order: :defined do
       context 'and another user views the user' do
 
         before(:all) do
-          @canvas.masquerade_as(@driver, (event.actor = student_2), @course)
+          @canvas.masquerade_as((event.actor = student_2), @course)
           @engagement_index.load_scores(@driver, @engagement_index_url, event)
         end
 
@@ -321,7 +321,7 @@ describe 'The Engagement Index', order: :defined do
     context 'when another user clicks a collaborate button' do
 
       before(:all) do
-        @canvas.masquerade_as(@driver, (event.actor = student_2), @course)
+        @canvas.masquerade_as((event.actor = student_2), @course)
         @engagement_index.load_scores(@driver, @engagement_index_url, event)
       end
 

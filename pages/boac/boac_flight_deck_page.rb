@@ -76,6 +76,7 @@ class BOACFlightDeckPage
     tries ||= 2
     begin
       tries -= 1
+      sleep Utils.click_wait
       toggle_service_announcement_checkbox if service_announcement_checkbox_label == 'Post'
       wait_until(Utils.short_wait) { service_announcement_checkbox_label == 'Posted' }
     rescue
@@ -96,8 +97,9 @@ class BOACFlightDeckPage
     tries ||= 2
     begin
       tries -= 1
+      sleep Utils.click_wait
       toggle_service_announcement_checkbox if service_announcement_checkbox_label == 'Posted'
-      wait_until(Utils.short_wait) { service_announcement_checkbox_label_element.text == 'Post' }
+      wait_until(Utils.short_wait) { service_announcement_checkbox_label == 'Post' }
     rescue
       if tries.zero?
         logger.error 'Failed to unpost a service alert'

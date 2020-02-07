@@ -26,7 +26,7 @@ begin
 
       @test_course_identifier = Utils.get_test_id
       @course = Course.new({title: "LRS Assignments Test #{@test_course_identifier}", site_id: course_id})
-      @canvas.create_generic_course_site(@driver, Utils.canvas_qa_sub_account, @course, users, @test_course_identifier)
+      @canvas.create_generic_course_site(Utils.canvas_qa_sub_account, @course, users, @test_course_identifier)
 
       # ASSIGNMENTS
 
@@ -37,18 +37,18 @@ begin
           # Create assignment
           @test_assignment_identifier = Utils.get_test_id
           @assignment = Assignment.new({title: "Submission Assignment #{@test_assignment_identifier}"})
-          @canvas.masquerade_as(@driver, @teacher, @course)
+          @canvas.masquerade_as(@teacher, @course)
           @canvas.create_assignment(@course, @assignment)
-          @canvas.stop_masquerading @driver
+          @canvas.stop_masquerading
 
           @students.each do |student|
             begin
 
               # Submit assignment
-              @canvas.masquerade_as(@driver, student, @course)
+              @canvas.masquerade_as(student, @course)
               @submission = Asset.new student.assets.first
               @canvas.submit_assignment(@assignment, student, @submission)
-              @canvas.stop_masquerading @driver
+              @canvas.stop_masquerading
 
             rescue => e
               # Catch errors related to the student

@@ -31,7 +31,7 @@ describe 'Canvas enrollment events' do
     @course.sections = [@section]
     @course.sis_id = "CRS:#{@course.title.gsub(' ', '-')}"
 
-    @canvas.create_generic_course_site(@driver, Utils.canvas_qa_sub_account, @course, [], test_id, nil, event)
+    @canvas.create_generic_course_site(Utils.canvas_qa_sub_account, @course, [], test_id, nil, event)
     @canvas.add_sis_section_and_ids(@course, @section)
 
     # Admin creates teacher enrollment via Canvas add-user
@@ -48,7 +48,7 @@ describe 'Canvas enrollment events' do
 
     # Teacher creates student enrollment via Find a Person to Add - no events are captured yet
     event.actor = teachers[0]
-    @canvas.masquerade_as(@driver, teachers[0], @course)
+    @canvas.masquerade_as(teachers[0], @course)
     @canvas.load_users_page @course
     @canvas.click_find_person_to_add @driver
     @find_person_to_add.type_non_note_string_and_enter(students[2].uid, 'CalNet UID')
@@ -59,7 +59,7 @@ describe 'Canvas enrollment events' do
 
     # Admin removes teacher and student via SIS import - no events are captured yet
     event.actor = admin
-    @canvas.stop_masquerading @driver
+    @canvas.stop_masquerading
     users_to_remove = [teachers[0], students[0]]
     users_to_remove.each { |u| u.status = 'deleted' }
     enrollments_csv = Utils.create_sis_enrollment_import(@course, @section, users_to_remove)

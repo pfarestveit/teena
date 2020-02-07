@@ -26,7 +26,7 @@ describe 'Junction background tasks' do
       begin
 
         # Open a separate browser tab for each of the test courses
-        window = config.test_course_data.index(data).zero? ? @driver.window_handle : @canvas_page.open_new_window(@driver)
+        window = config.test_course_data.index(data).zero? ? @driver.window_handle : @canvas_page.open_new_window
         course = Course.new data
         test = {
           :course => course,
