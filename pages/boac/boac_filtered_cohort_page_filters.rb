@@ -46,14 +46,20 @@ module BOACFilteredCohortPageFilters
   # @return [PageObject::Elements::Link]
   def new_filter_sub_option_element(filter_key, filter_option)
     case filter_key
+      when 'colleges'
+        link_element(id: "College-#{filter_option}")
       when 'enteringTerms'
         link_element(id: "Entering Term-#{filter_option}")
+      when 'ethnicities'
+        link_element(id: "Ethnicity-#{filter_option}")
       when 'expectedGradTerms'
         link_element(id: "Expected Graduation Term-#{filter_option}")
-      when 'coeAdvisorLdapUids'
-        link_element(id: "Advisor (COE)-#{filter_option}")
+      when 'genders'
+        link_element(id: "Gender-#{filter_option}")
       when 'majors'
         link_element(id: "Major-#{filter_option}")
+      when 'coeAdvisorLdapUids'
+        link_element(id: "Advisor (COE)-#{filter_option}")
       when 'cohortOwnerAcademicPlans'
         link_element(id: "My Students-#{filter_option}")
       when 'curatedGroupIds'
@@ -124,6 +130,7 @@ module BOACFilteredCohortPageFilters
     end
 
     # Global
+    cohort.search_criteria.college.each { |m| select_new_filter('colleges', m) } if cohort.search_criteria.college
     cohort.search_criteria.entering_terms.each { |term| select_new_filter('enteringTerms', term) } if cohort.search_criteria.entering_terms
     cohort.search_criteria.gpa.each { |gpa| select_new_filter('gpaRanges', gpa) } if cohort.search_criteria.gpa
     cohort.search_criteria.gpa_last_term.each { |gpa| select_new_filter('lastTermGpaRanges', gpa) } if cohort.search_criteria.gpa_last_term
@@ -221,6 +228,7 @@ module BOACFilteredCohortPageFilters
       filters = cohort.search_criteria
       wait_until(5) do
 
+        filters.college.each { |m| existing_filter_element('College', m).exists? } if filters.college&.any?
         filters.entering_terms.each { |term| existing_filter_element('Entering Term', term).exists? } if filters.entering_terms&.any?
         filters.expected_grad_terms.each { |t| existing_filter_element('Expected Graduation Term', t).exists? } if filters.expected_grad_terms&.any?
         filters.gpa.each { |g| existing_filter_element('GPA (Cumulative)', g).exists? } if filters.gpa&.any?
@@ -290,9 +298,7 @@ module BOACFilteredCohortPageFilters
     # All others require a selection
     else
       wait_for_update_and_click button_element(xpath: "#{existing_filter_sub_options_xpath filter_name}//button")
-      (['Entering Term', 'Expected Graduation Term', 'Advisor (COE)', 'My Curated Groups'].include? filter_name) ?
-          wait_for_update_and_click(link_element(id: "#{filter_name}-#{edited_filter_option}")) :
-          wait_for_update_and_click(link_element(xpath: "#{existing_filter_sub_options_xpath filter_name}//span[text()=\"#{edited_filter_option}\"]/.."))
+      wait_for_update_and_click(link_element(id: "#{filter_name}-#{edited_filter_option}"))
     end
   end
 

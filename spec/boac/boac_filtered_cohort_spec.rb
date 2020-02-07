@@ -67,7 +67,7 @@ describe 'BOAC', order: :defined do
       end
 
       it "sorts by Team all the students who match #{cohort.search_criteria.list_filters}" do
-        if [BOACDepartments::ADMIN, BOACDepartments.ASC].include? test.dept
+        if [BOACDepartments::ADMIN, BOACDepartments::ASC].include? test.dept
           if (0..1) === cohort.member_data.length
             logger.warn 'Skipping sort-by-team test since there are no results or only one result'
           else
@@ -490,6 +490,18 @@ describe 'BOAC', order: :defined do
   context 'when the advisor edits a cohort\'s search filters' do
 
     before(:all) { @cohort_page.search_and_create_new_cohort(test.default_cohort, test) }
+
+    it 'allows the advisor to edit a College filter' do
+      test.default_cohort.search_criteria.college = ['Undergrad Chemistry']
+      @cohort_page.edit_filter_and_confirm('College', test.default_cohort.search_criteria.college.first)
+      @cohort_page.verify_filters_present test.default_cohort
+    end
+
+    it 'allows the advisor to remove a College filter' do
+      test.default_cohort.search_criteria.college = []
+      @cohort_page.remove_filter_of_type 'College'
+      @cohort_page.verify_filters_present test.default_cohort
+    end
 
     it 'allows the advisor to edit a cumulative GPA filter' do
       test.default_cohort.search_criteria.gpa = [{'min' => '3.00', 'max' => '4'}]

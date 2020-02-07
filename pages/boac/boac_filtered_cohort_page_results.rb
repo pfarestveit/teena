@@ -15,6 +15,16 @@ module BOACFilteredCohortPageResults
 
   ### GLOBAL FILTERS
 
+  # Returns the student hashes that match a set of college filters
+  # @param test [BOACTestConfig]
+  # @param search_criteria [CohortFilter]
+  # @return [Array<Hash>]
+  def matching_college_students(test, search_criteria)
+    students = []
+    students << test.searchable_data.select { |u| (u[:college] & search_criteria.college).any? }
+    students.uniq.flatten.compact
+  end
+
   # Returns the student hashes that match a set of entering term filters
   # @param test [BOACTestConfig]
   # @param search_criteria [CohortFilter]
@@ -303,6 +313,7 @@ module BOACFilteredCohortPageResults
   # @return [Array<Hash>]
   def expected_search_results(test, search_criteria)
     matches = []
+    matches << matching_college_students(test, search_criteria) if search_criteria.college&.any?
     matches << matching_entering_term_students(test, search_criteria) if search_criteria.entering_terms&.any?
     matches << matching_grad_term_students(test, search_criteria) if search_criteria.expected_grad_terms&.any?
     matches << matching_gpa_students(test, search_criteria) if search_criteria.gpa&.any?
