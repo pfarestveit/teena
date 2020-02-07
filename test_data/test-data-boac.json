@@ -1,6 +1,10 @@
 {
     "filters": [
         {
+            "colleges": [
+				{"college": "Undergrad Engineering"},
+				{"college": "Undergrad Letters & Science"}
+			],
             "visa_types": [
                 {"visa_type":  "F-1 International Student"},
                 {"visa_type":  "J-1 International Student"}
