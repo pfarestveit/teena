@@ -13,6 +13,7 @@ class CohortFilter
                 :coe_probation,
                 :coe_underrepresented_minority,
                 :cohort_owner_academic_plans,
+                :college,
                 :curated_groups,
                 :entering_terms,
                 :ethnicity,
@@ -35,6 +36,7 @@ class CohortFilter
   # @param dept [BOACDepartments]
   def set_test_filters(test_data, dept)
     # Global
+    @college = (test_data['colleges'] && test_data['colleges'].map { |t| t['college'] })
     @entering_terms = (test_data['entering_terms'] && test_data['entering_terms'].map { |t| t['entering_term'] })
     @expected_grad_terms = (test_data['expected_grad_terms'] && test_data['expected_grad_terms'].map { |t| t['expected_grad_term'] })
     @gpa = (test_data['gpa_ranges'] && test_data['gpa_ranges'].map { |g| g['gpa_range'] })
