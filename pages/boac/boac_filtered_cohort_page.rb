@@ -27,6 +27,8 @@ class BOACFilteredCohortPage
 
   # COHORT NAVIGATION
 
+  button(:history_button, id: 'show-cohort-history-button')
+
   def filtered_cohort_base_url(id)
     "#{BOACUtils.base_url}/cohort/#{id}"
   end
@@ -68,6 +70,13 @@ class BOACFilteredCohortPage
     cohorts
   end
 
+  # Clicks the History button
+  def click_history
+    logger.info 'Clicking History'
+    wait_for_update_and_click history_button_element
+    wait_until(Utils.short_wait) { button_element(xpath: '//button[contains(text(), "Back to Cohort")]') }
+  end
+
   # COHORT MANAGEMENT
 
   button(:save_cohort_button_one, id: 'save-button')
@@ -75,11 +84,17 @@ class BOACFilteredCohortPage
   button(:save_cohort_button_two, id: 'create-confirm')
   button(:cancel_cohort_button, id: 'create-cancel')
   text_area(:rename_cohort_input, id: 'rename-cohort-input')
+  button(:apply_button, id: 'unsaved-filter-apply')
   elements(:everyone_cohort_link, :link, xpath: '//h1[text()="Everyone\'s Cohorts"]/following-sibling::div//a')
 
   # Clicks the button to save a new cohort, which triggers the name input modal
   def click_save_cohort_button_one
     wait_until(Utils.medium_wait) { save_cohort_button_one_element.visible?; save_cohort_button_one_element.enabled? }
+    wait_for_update_and_click save_cohort_button_one_element
+  end
+
+  def apply_and_save_cohort
+    wait_for_update_and_click apply_button_element
     wait_for_update_and_click save_cohort_button_one_element
   end
 

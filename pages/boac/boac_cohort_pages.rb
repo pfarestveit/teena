@@ -138,7 +138,6 @@ module BOACCohortPages
       parsed_csv.dig(:cumulative_gpa).compact.any?
       parsed_csv.dig(:program_status).compact.any?
     end
-
   end
 
   # LIST VIEW - shared by filtered cohorts and curated groups
