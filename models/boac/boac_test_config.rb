@@ -266,6 +266,11 @@ class BOACTestConfig < TestConfig
     set_search_cohorts
   end
 
+  # Config for filtered cohort history testing
+  def filtered_history
+    set_base_configs_plus_searchable_data
+  end
+
   # Config for non-current student testing
   def inactive_students
     set_base_configs_plus_searchable_data

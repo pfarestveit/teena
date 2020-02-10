@@ -343,6 +343,15 @@ module BOACFilteredCohortPageResults
     matches.any?(&:empty?) ? [] : matches.inject(:'&')
   end
 
+  # Sets a cohort's membership based on expected results, rather than actual results
+  # @param cohort [FilteredCohort]
+  # @param test [BOACTestConfig]
+  # @return [Array<BOACUser>]
+  def set_cohort_members(cohort, test)
+    expected_sids = expected_search_results(test, cohort.search_criteria).map { |k| k[:sid] }
+    cohort.members = test.students.select { |s| expected_sids.include? s.sis_id }
+  end
+
   # Returns the sequence of SIDs that should be present when search results are sorted by first name
   # @param expected_results [Array<Hash>]
   # @return [Array<String>]
