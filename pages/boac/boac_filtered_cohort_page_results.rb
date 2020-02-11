@@ -186,7 +186,11 @@ module BOACFilteredCohortPageResults
   def matching_visa_type_students(test, search_criteria)
     students = []
     search_criteria.visa_type.each do |visa|
-      students << test.searchable_data.select { |u| search_criteria.visa_type_per_code(u[:visa_type]) == visa }
+      if visa == 'All types'
+        students << test.searchable_data.select { |u| u[:visa_type] }
+      else
+        students << test.searchable_data.select { |u| search_criteria.visa_type_per_code(u[:visa_type]) == visa }
+      end
     end
     students.flatten
   end
@@ -373,7 +377,7 @@ module BOACFilteredCohortPageResults
   # @return [Array<String>]
   def expected_sids_by_team(expected_results)
     sorted_results = expected_results.sort_by do |u|
-      team = u[:squad_names].empty? ? 'zzz' : u[:squad_names].sort.first.gsub(' (AA)', '') .gsub(/\W+/, '')
+      team = u[:asc_sports].empty? ? 'zzz' : u[:asc_sports].sort.first.gsub(' (AA)', '') .gsub(/\W+/, '')
       [team, u[:last_name_sortable_cohort].downcase, u[:first_name_sortable_cohort].downcase, u[:sid]]
     end
     sorted_results.map { |u| u[:sid] }
