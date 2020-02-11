@@ -2,6 +2,8 @@ require_relative '../../util/spec_helper'
 
 describe 'BOA cohort history' do
 
+  include Logging
+
   before(:all) do
     @test = BOACTestConfig.new
     @test.filtered_history
@@ -21,6 +23,14 @@ describe 'BOA cohort history' do
     @cohort_history_page = BOACFilteredCohortHistoryPage.new @driver
 
     @homepage.dev_auth @test.advisor
+    BOACUtils.get_user_filtered_cohorts(@test.advisor).each do |c|
+      @cohort_page.load_cohort c
+      @cohort_page.delete_cohort c
+    end
+    BOACUtils.get_user_curated_groups(@test.advisor).each do |g|
+      @group_page.load_page g
+      @group_page.delete_cohort g
+    end
   end
 
   after(:all) { Utils.quit_browser @driver }
@@ -86,7 +96,7 @@ describe 'BOA cohort history' do
       removed_members = @initial_members - @cohort_1.members
       @cohort_1.history += @cohort_history_page.expected_history_entries(added_members, 'ADDED', Time.now)
       @cohort_1.history += @cohort_history_page.expected_history_entries(removed_members, 'REMOVED', Time.now)
-      @cohort_1.history = @cohort_1.history.sort { |s| [s[:sid], s[:status]] }
+      @cohort_1.history = @cohort_1.history.sort_by { |s| [s[:sid], s[:status]] }
       @cohort_page.click_history
     end
 
@@ -109,20 +119,26 @@ describe 'BOA cohort history' do
       @group_page.wait_for_sidebar_group @group
 
       @cohort_3_filters = CohortFilter.new
-      @cohort_3_filters.set_custom_filters curated_groups: [@group.id]
-      @cohort_3 = FilteredCohort.new name: "Cohort 3 #{@test.id}"
+      @cohort_3_filters.set_custom_filters curated_groups: [@group.id.to_s]
+      @cohort_3 = FilteredCohort.new name: "Cohort 3 #{@test.id}", search_criteria: @cohort_3_filters
+
+      # Restrict the searchable data to the group members
+      group_sids = @group.members.map &:sis_id
+      @test.searchable_data = @test.searchable_data.select { |s| group_sids.include? s[:sid] }
+
       @homepage.click_sidebar_create_filtered
       @cohort_page.perform_search @cohort_3
       @cohort_page.create_new_cohort @cohort_3
-      @cohort_page.set_cohort_members(@cohort_3, @test)
-      @cohort_3.history += @cohort_history_page.expected_history_entries(@cohort_3.members, 'ADDED', Time.now)
+      @cohort_3.history += @cohort_history_page.expected_history_entries(@group.members, 'ADDED', Time.now)
+      @cohort_page.load_cohort @cohort_3
       @cohort_page.click_history
 
       @group_page.load_page @group
       added_members = @test.students[20..29]
       @group_page.add_comma_sep_sids_to_existing_grp(added_members, @group)
       @cohort_3.history += @cohort_history_page.expected_history_entries(added_members, 'ADDED', Time.now)
-      @cohort_3.history = @cohort_3.history.sort { |s| [s[:sid], s[:status]] }
+      @cohort_3.history = @cohort_3.history.sort_by { |s| [s[:sid], s[:status]] }
+      @cohort_page.load_cohort @cohort_3
       @cohort_page.click_history
     end
 

@@ -8,7 +8,7 @@ class BOACFilteredCohortHistoryPage
   include BOACPagination
   include Logging
 
-  button(:history_button, xpath: '//button[contains(text(), "Back to Cohort")]')
+  button(:back_to_cohort_button, xpath: '//button[contains(text(), "Back to Cohort")]')
   div(:no_history_msg, id: 'cohort-history-no-events')
   elements(:history_row, :row, xpath: '//table[@id="cohort-history-table"]/tbody/tr')
 
@@ -64,7 +64,7 @@ class BOACFilteredCohortHistoryPage
         visible_entries << visible_row_data
       end
     end
-    visible_entries.flatten.sort_by { |h| h[:sid] }
+    visible_entries.flatten.sort_by { |h| [h[:sid], h[:status]] }
   end
 
   # Returns an array of hashes containing the expected history data for a given set of students with a given status and time
