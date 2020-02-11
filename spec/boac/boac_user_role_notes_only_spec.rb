@@ -165,11 +165,6 @@ describe 'A notes-only BOA user' do
     it('cannot access the flight deck page') { expect(@homepage.flight_deck_link?).to be false }
     it('cannot access the passenger manifest page') { expect(@homepage.pax_manifest_link?).to be false }
 
-    it 'can toggle demo mode' do
-      @settings_page.load_page
-      @settings_page.demo_mode_toggle_element.when_present Utils.short_wait
-    end
-
     it('cannot post status alerts') { expect(@settings_page.status_heading?).to be false }
 
     it 'cannot hit the cachejob page' do

@@ -112,7 +112,7 @@ describe 'The BOAC passenger manifest' do
 
         it "shows a 'become' link if UID #{user.uid} is active" do
           has_become_link = @admin_page.become_user_link_element(user).exists?
-          user.active ? (expect(has_become_link).to be true) : (expect(has_become_link).to be false)
+          (user.active && user.uid != Utils.super_admin_uid) ? (expect(has_become_link).to be true) : (expect(has_become_link).to be false)
         end
       end
     end

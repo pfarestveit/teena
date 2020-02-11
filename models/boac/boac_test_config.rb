@@ -225,25 +225,25 @@ class BOACTestConfig < TestConfig
         :college => ((@dept == BOACDepartments::COE) ? ['Undergrad Engineering'] : ['Undergrad Letters & Science']),
         :gpa => [JSON.parse("{\"min\": \"3.50\", \"max\": \"4\"}")],
         :gpa_last_term => [JSON.parse("{\"min\": \"2\", \"max\": \"3.80\"}")],
-        :level => ['Senior (90+ Units)'],
+        :level => ['Senior (90+ Units)', 'Freshman (0-29 Units)'],
         :units_completed => ['90 - 119'],
-        :major => ((@dept == BOACDepartments::COE) ? ['Electrical Eng & Comp Sci BS'] : ['Letters & Sci Undeclared UG']),
+        :major => ((@dept == BOACDepartments::COE) ? ['Electrical Eng & Comp Sci BS', 'Mechanical Engineering BS'] : ['Asian Studies', 'Letters & Sci Undeclared UG']),
         :transfer_student => true,
         :entering_terms => [CONFIG['term_code']],
         :expected_grad_terms => [CONFIG['term_code']],
-        :gender => ['Male'],
+        :gender => ['Male', 'Decline to State'],
         :last_name => [JSON.parse("{\"min\": \"A\", \"max\": \"Z\"}")],
         :underrepresented_minority => true,
-        :ethnicity => ['Puerto Rican'],
+        :ethnicity => ['Puerto Rican', 'Not Specified'],
         :visa_type => ['Other'],
         :asc_inactive => true,
         :asc_intensive => true,
         :asc_team => [Squad::MCR],
         :coe_advisor => [BOACUtils.get_dept_advisors(BOACDepartments::COE).first.uid.to_s],
-        :coe_ethnicity => ['Chinese / Chinese-American'],
+        :coe_ethnicity => ['Chinese / Chinese-American', 'Vietnamese'],
         :coe_gender => ['Female'],
         :coe_underrepresented_minority => true,
-        :coe_prep => ['PREP'],
+        :coe_prep => ['PREP', 'T-PREP eligible'],
         :coe_inactive => true,
         :coe_probation => true
     }
@@ -387,7 +387,7 @@ class BOACTestConfig < TestConfig
 
   # Config for director user role testing
   def user_role_director
-    @advisor = BOACUtils.get_authorized_users.find { |u| u.dept_memberships.find { |m| m.role == AdvisorRole::DIRECTOR } }
+    @advisor = BOACUtils.get_authorized_users.find { |u| u.dept_memberships.find { |m| m.advisor_role == AdvisorRole::DIRECTOR } }
     set_students
     set_test_students(CONFIG['notes_max_users'], with_notes: true)
   end

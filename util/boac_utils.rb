@@ -243,6 +243,14 @@ class BOACUtils < Utils
     logger.warn "Command status: #{result_2.cmd_status}. Result status: #{result_2.result_status}"
   end
 
+  # Deletes a drop-in-advisor row for a given user
+  # @param user [BOACUser]
+  def self.delete_drop_in_advisor(user)
+    statement  = "DELETE FROM drop_in_advisors WHERE authorized_user_id = (SELECT id from authorized_users WHERE uid = '#{user.uid}');"
+    result = query_pg_db(boac_db_credentials, statement)
+    logger.warn "Command status: #{result.cmd_status}. Result status: #{result.result_status}"
+  end
+
   # Returns all authorized users along with any associated department advisor roles
   # @return [Array<BOACUser>]
   def self.get_authorized_users
@@ -324,7 +332,7 @@ class BOACUtils < Utils
               ON udm.university_dept_id = ud.id
             WHERE authorized_users.deleted_at IS NULL
               AND authorized_users.can_access_canvas_data IS FALSE
-              #{' AND udm.role = ' + membership.advisor_role.code + '\'' if membership&.advisor_role}
+              #{' AND udm.role = \'' + membership.advisor_role.code + '\'' if membership&.advisor_role}
               #{' AND EXISTS (SELECT drop_in_advisors.authorized_user_id
                           FROM drop_in_advisors
                           WHERE drop_in_advisors.authorized_user_id = authorized_users.id

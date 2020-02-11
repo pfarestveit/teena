@@ -7,6 +7,7 @@ class BOACFlightDeckPage
   include Page
   include BOACPages
 
+  h2(:my_profile_heading, xpath: '//h2[text()="My Profile"]')
   checkbox(:demo_mode_toggle, id: 'toggle-demo-mode')
   h2(:status_heading, id: 'system-status-header')
 
@@ -16,7 +17,7 @@ class BOACFlightDeckPage
   end
 
   def drop_in_advising_toggle_el(dept)
-    button_element(xpath: "//button[@id='toggle-drop-in-advising-#{dept.code}']")
+    button_element(xpath: "//button[@id='toggle-drop-in-advising-#{dept.code if dept}']")
   end
 
   def drop_in_advising_enabled?(dept)
@@ -34,12 +35,12 @@ class BOACFlightDeckPage
     dept_membership.is_drop_in_advisor = false
   end
 
-  def enable_drop_in_advising_role(dept_membership)
-    if drop_in_advising_enabled? dept_membership.dept
-      logger.info "Drop-in role is already enabled in dept #{dept_membership.dept.code}"
+  def enable_drop_in_advising_role(dept_membership = nil)
+    if drop_in_advising_enabled?(dept_membership&.dept)
+      logger.info "Drop-in role is already enabled#{ + ' in dept ' + dept_membership.dept.code if dept_membership}"
     else
-      logger.info "Drop-in role is disabled in dept #{dept_membership.dept.code}, adding"
-      wait_for_update_and_click drop_in_advising_toggle_el(dept_membership.dept)
+      logger.info "Drop-in role is disabled#{ + 'in dept ' + dept_membership.dept.code if dept_membership}, adding"
+      wait_for_update_and_click drop_in_advising_toggle_el(dept_membership&.dept)
     end
     dept_membership.is_drop_in_advisor = true
   end

@@ -97,6 +97,7 @@ describe 'BOAC' do
       group_created_from_bulk = CuratedGroup.new({:name => "Group created with bulk SIDs #{test.id}"})
       @group_page.create_group_with_bulk_sids(students, group_created_from_bulk)
       @group_page.wait_for_sidebar_group group_created_from_bulk
+      @group_page.group_name_heading(group_created_from_bulk).when_visible Utils.short_wait
     end
   end
 

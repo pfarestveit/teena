@@ -133,7 +133,7 @@ class Utils
     if "#{driver.browser}" == 'chrome'
       js_log = driver.manage.logs.get(:browser)
       messages = js_log.map &:message
-      messages.each { |msg| logger.error "Possible JS error: #{msg}" unless msg.include?('chrome-search://thumb/') || msg.include?('instructure.com') }
+      messages.each { |msg| logger.error "Possible JS error: #{msg}" unless msg.include?('chrome-search://thumb/') || msg.include?('instructure.com') || msg.include?('/cal1card-data/photos')}
     end
   end
 

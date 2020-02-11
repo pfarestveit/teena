@@ -134,31 +134,36 @@ describe 'A BOA advisor' do
         @cohort_page.wait_until(1) { @cohort_page.new_filter_option_elements.any? &:visible? }
       end
 
+      it('sees a College filter') { expect(@cohort_page.new_filter_option('colleges').visible?).to be true }
       it('sees an Entering Term filter') { expect(@cohort_page.new_filter_option('enteringTerms').visible?).to be true }
       it('sees an Expected Graduation Term filter') { expect(@cohort_page.new_filter_option('expectedGradTerms').visible?).to be true }
-      it('sees a GPA filter') { expect(@cohort_page.new_filter_option('gpaRanges').visible?).to be true }
+      it('sees a GPA (Cumulative) filter') { expect(@cohort_page.new_filter_option('gpaRanges').visible?).to be true }
+      it('sees a GPA (Last Term) filter') { expect(@cohort_page.new_filter_option('lastTermGpaRanges').visible?).to be true }
       it('sees a Level filter') { expect(@cohort_page.new_filter_option('levels').visible?).to be true }
       it('sees a Major filter') { expect(@cohort_page.new_filter_option('majors').visible?).to be true }
+      it('sees a Midpoint Deficient Grade filter') { expect(@cohort_page.new_filter_option('midpointDeficient').visible?).to be true }
       it('sees a Transfer Student filter') { expect(@cohort_page.new_filter_option('transfer').visible?).to be true }
       it('sees a Units Completed filter') { expect(@cohort_page.new_filter_option('unitRanges').visible?).to be true }
 
       it('sees an Ethnicity filter') { expect(@cohort_page.new_filter_option('ethnicities').visible?).to be true }
       it('sees a Gender filter') { expect(@cohort_page.new_filter_option('genders').visible?).to be true }
-      it('sees an Underrepresented Minority filter') { expect(@cohort_page.new_filter_option('underrepresented')) }
+      it('sees an Underrepresented Minority filter') { expect(@cohort_page.new_filter_option('underrepresented').visible?).to be true }
+      it('sees a Visa Type filter') { expect(@cohort_page.new_filter_option('visaTypes').visible?).to be true }
 
-      it('sees an Inactive filter') { expect(@cohort_page.new_filter_option('isInactiveAsc').visible?).to be true }
+      it('sees an Inactive ASC filter') { expect(@cohort_page.new_filter_option('isInactiveAsc').visible?).to be true }
       it('sees an Intensive filter') { expect(@cohort_page.new_filter_option('inIntensiveCohort').visible?).to be true }
       it('sees a Team filter') { expect(@cohort_page.new_filter_option('groupCodes').visible?).to be true }
 
+      it('sees an Advisor (COE) filter') { expect(@cohort_page.new_filter_option('coeAdvisorLdapUids').visible?).to be false }
+      it('sees a Ethnicity (COE) filter') { expect(@cohort_page.new_filter_option('coeEthnicities').visible?).to be false }
+      it('sees a Gender (COE) filter') { expect(@cohort_page.new_filter_option('coeGenders').visible?).to be false }
+      it('sees an Inactive (COE) filter') { expect(@cohort_page.new_filter_option('isInactiveCoe').visible?).to be false }
       it('sees a Last Name filter') { expect(@cohort_page.new_filter_option('lastNameRanges').visible?).to be true }
+      it('sees a My Curated Groups filter') { expect(@cohort_page.new_filter_option('curatedGroupIds').visible?).to be true }
       it('sees a My Students filter') { expect(@cohort_page.new_filter_option('cohortOwnerAcademicPlans').visible?).to be true }
-
-      it('sees no Advisor filter') { expect(@cohort_page.new_filter_option('coeAdvisorLdapUids').exists?).to be false }
-      it('sees no Ethnicity (COE) filter') { expect(@cohort_page.new_filter_option('coeEthnicities').exists?).to be false }
-      it('sees no Gender (COE) filter') { expect(@cohort_page.new_filter_option('coeGenders').exists?).to be false }
-      it('sees no Inactive (COE) filter') { expect(@cohort_page.new_filter_option('isInactiveCoe').exists?).to be false }
-      it('sees no PREP filter') { expect(@cohort_page.new_filter_option('coePrepStatuses').exists?).to be false }
-      it('sees no Probation filter') { expect(@cohort_page.new_filter_option('coeProbation').exists?).to be false }
+      it('sees a PREP filter') { expect(@cohort_page.new_filter_option('coePrepStatuses').visible?).to be false }
+      it('sees a Probation filter') { expect(@cohort_page.new_filter_option('coeProbation').visible?).to be false }
+      it('sees an Underrepresented Minority (COE) filter') { expect(@cohort_page.new_filter_option('coeUnderrepresented').visible?).to be false }
 
       context 'with results' do
 
@@ -189,7 +194,8 @@ describe 'A BOA advisor' do
 
       it 'can toggle demo mode' do
         @settings_page.load_page
-        @settings_page.demo_mode_toggle_element.when_present Utils.short_wait
+        @settings_page.my_profile_heading_element.when_visible Utils.short_wait
+        expect(@settings_page.demo_mode_toggle?).to be false
       end
 
       it('cannot post status alerts') { expect(@settings_page.status_heading?).to be false }
@@ -282,32 +288,36 @@ describe 'A BOA advisor' do
         @cohort_page.wait_until(1) { @cohort_page.new_filter_option_elements.any? &:visible? }
       end
 
+      it('sees a College filter') { expect(@cohort_page.new_filter_option('colleges').visible?).to be true }
       it('sees an Entering Term filter') { expect(@cohort_page.new_filter_option('enteringTerms').visible?).to be true }
       it('sees an Expected Graduation Term filter') { expect(@cohort_page.new_filter_option('expectedGradTerms').visible?).to be true }
-      it('sees a GPA filter') { expect(@cohort_page.new_filter_option('gpaRanges').visible?).to be true }
+      it('sees a GPA (Cumulative) filter') { expect(@cohort_page.new_filter_option('gpaRanges').visible?).to be true }
+      it('sees a GPA (Last Term) filter') { expect(@cohort_page.new_filter_option('lastTermGpaRanges').visible?).to be true }
       it('sees a Level filter') { expect(@cohort_page.new_filter_option('levels').visible?).to be true }
       it('sees a Major filter') { expect(@cohort_page.new_filter_option('majors').visible?).to be true }
+      it('sees a Midpoint Deficient Grade filter') { expect(@cohort_page.new_filter_option('midpointDeficient').visible?).to be true }
       it('sees a Transfer Student filter') { expect(@cohort_page.new_filter_option('transfer').visible?).to be true }
-      it('sees a Units filter') { expect(@cohort_page.new_filter_option('unitRanges').visible?).to be true }
+      it('sees a Units Completed filter') { expect(@cohort_page.new_filter_option('unitRanges').visible?).to be true }
 
       it('sees an Ethnicity filter') { expect(@cohort_page.new_filter_option('ethnicities').visible?).to be true }
       it('sees a Gender filter') { expect(@cohort_page.new_filter_option('genders').visible?).to be true }
-      it('sees an Underrepresented Minority filter') { expect(@cohort_page.new_filter_option('underrepresented')) }
+      it('sees an Underrepresented Minority filter') { expect(@cohort_page.new_filter_option('underrepresented').visible?).to be true }
+      it('sees a Visa Type filter') { expect(@cohort_page.new_filter_option('visaTypes').visible?).to be true }
 
-      it('sees no Inactive (ASC) filter') { expect(@cohort_page.new_filter_option('isInactiveAsc').visible?).to be false }
-      it('sees no Intensive filter') { expect(@cohort_page.new_filter_option('inIntensiveCohort').visible?).to be false }
-      it('sees no Team filter') { expect(@cohort_page.new_filter_option('groupCodes').visible?).to be false }
+      it('sees an Inactive ASC filter') { expect(@cohort_page.new_filter_option('isInactiveAsc').visible?).to be false }
+      it('sees an Intensive filter') { expect(@cohort_page.new_filter_option('inIntensiveCohort').visible?).to be false }
+      it('sees a Team filter') { expect(@cohort_page.new_filter_option('groupCodes').visible?).to be false }
 
-      it('sees a Last Name filter') { expect(@cohort_page.new_filter_option('lastNameRanges').visible?).to be true }
-      it('sees a My Students filter') { expect(@cohort_page.new_filter_option('cohortOwnerAcademicPlans').visible?).to be true }
-
-      it('sees an Advisor filter') { expect(@cohort_page.new_filter_option('coeAdvisorLdapUids').visible?).to be true }
-      it('sees an Ethnicity (COE) filter') { expect(@cohort_page.new_filter_option('coeEthnicities').visible?).to be true }
+      it('sees an Advisor (COE) filter') { expect(@cohort_page.new_filter_option('coeAdvisorLdapUids').visible?).to be true }
+      it('sees a Ethnicity (COE) filter') { expect(@cohort_page.new_filter_option('coeEthnicities').visible?).to be true }
       it('sees a Gender (COE) filter') { expect(@cohort_page.new_filter_option('coeGenders').visible?).to be true }
-      it('sees an Inactive COE filter') { expect(@cohort_page.new_filter_option('isInactiveCoe').exists?).to be true }
+      it('sees an Inactive (COE) filter') { expect(@cohort_page.new_filter_option('isInactiveCoe').visible?).to be true }
+      it('sees a Last Name filter') { expect(@cohort_page.new_filter_option('lastNameRanges').visible?).to be true }
+      it('sees a My Curated Groups filter') { expect(@cohort_page.new_filter_option('curatedGroupIds').visible?).to be true }
+      it('sees a My Students filter') { expect(@cohort_page.new_filter_option('cohortOwnerAcademicPlans').visible?).to be true }
       it('sees a PREP filter') { expect(@cohort_page.new_filter_option('coePrepStatuses').visible?).to be true }
-      it('sees a Probation filter') { expect(@cohort_page.new_filter_option('coeProbation').exists?).to be true }
-      it('sees an Underrepresented Minority (COE) filter') { expect(@cohort_page.new_filter_option('coeUnderrepresented').exists?).to be true }
+      it('sees a Probation filter') { expect(@cohort_page.new_filter_option('coeProbation').visible?).to be true }
+      it('sees an Underrepresented Minority (COE) filter') { expect(@cohort_page.new_filter_option('coeUnderrepresented').visible?).to be true }
     end
 
     context 'looking for admin functions' do
@@ -323,7 +333,8 @@ describe 'A BOA advisor' do
 
       it 'can toggle demo mode' do
         @settings_page.load_page
-        @settings_page.demo_mode_toggle_element.when_present Utils.short_wait
+        @settings_page.my_profile_heading_element.when_visible Utils.short_wait
+        expect(@settings_page.demo_mode_toggle?).to be false
       end
 
       it('cannot post status alerts') { expect(@settings_page.status_heading?).to be false }
@@ -428,31 +439,36 @@ describe 'A BOA advisor' do
         @cohort_page.wait_until(1) { @cohort_page.new_filter_option_elements.any? &:visible? }
       end
 
+      it('sees a College filter') { expect(@cohort_page.new_filter_option('colleges').visible?).to be true }
       it('sees an Entering Term filter') { expect(@cohort_page.new_filter_option('enteringTerms').visible?).to be true }
       it('sees an Expected Graduation Term filter') { expect(@cohort_page.new_filter_option('expectedGradTerms').visible?).to be true }
-      it('sees a GPA filter') { expect(@cohort_page.new_filter_option('gpaRanges').visible?).to be true }
+      it('sees a GPA (Cumulative) filter') { expect(@cohort_page.new_filter_option('gpaRanges').visible?).to be true }
+      it('sees a GPA (Last Term) filter') { expect(@cohort_page.new_filter_option('lastTermGpaRanges').visible?).to be true }
       it('sees a Level filter') { expect(@cohort_page.new_filter_option('levels').visible?).to be true }
       it('sees a Major filter') { expect(@cohort_page.new_filter_option('majors').visible?).to be true }
+      it('sees a Midpoint Deficient Grade filter') { expect(@cohort_page.new_filter_option('midpointDeficient').visible?).to be true }
       it('sees a Transfer Student filter') { expect(@cohort_page.new_filter_option('transfer').visible?).to be true }
       it('sees a Units Completed filter') { expect(@cohort_page.new_filter_option('unitRanges').visible?).to be true }
 
       it('sees an Ethnicity filter') { expect(@cohort_page.new_filter_option('ethnicities').visible?).to be true }
       it('sees a Gender filter') { expect(@cohort_page.new_filter_option('genders').visible?).to be true }
-      it('sees an Underrepresented Minority filter') { expect(@cohort_page.new_filter_option('underrepresented')) }
+      it('sees an Underrepresented Minority filter') { expect(@cohort_page.new_filter_option('underrepresented').visible?).to be true }
+      it('sees a Visa Type filter') { expect(@cohort_page.new_filter_option('visaTypes').visible?).to be true }
 
-      it('sees no Inactive (ASC) filter') { expect(@cohort_page.new_filter_option('isInactiveAsc').visible?).to be false }
-      it('sees no Intensive filter') { expect(@cohort_page.new_filter_option('inIntensiveCohort').visible?).to be false }
-      it('sees no Team filter') { expect(@cohort_page.new_filter_option('groupCodes').visible?).to be false }
+      it('sees an Inactive ASC filter') { expect(@cohort_page.new_filter_option('isInactiveAsc').visible?).to be false }
+      it('sees an Intensive filter') { expect(@cohort_page.new_filter_option('inIntensiveCohort').visible?).to be false }
+      it('sees a Team filter') { expect(@cohort_page.new_filter_option('groupCodes').visible?).to be false }
 
+      it('sees an Advisor (COE) filter') { expect(@cohort_page.new_filter_option('coeAdvisorLdapUids').visible?).to be false }
+      it('sees a Ethnicity (COE) filter') { expect(@cohort_page.new_filter_option('coeEthnicities').visible?).to be false }
+      it('sees a Gender (COE) filter') { expect(@cohort_page.new_filter_option('coeGenders').visible?).to be false }
+      it('sees an Inactive (COE) filter') { expect(@cohort_page.new_filter_option('isInactiveCoe').visible?).to be false }
       it('sees a Last Name filter') { expect(@cohort_page.new_filter_option('lastNameRanges').visible?).to be true }
+      it('sees a My Curated Groups filter') { expect(@cohort_page.new_filter_option('curatedGroupIds').visible?).to be true }
       it('sees a My Students filter') { expect(@cohort_page.new_filter_option('cohortOwnerAcademicPlans').visible?).to be true }
-
-      it('sees no Advisor filter') { expect(@cohort_page.new_filter_option('coeAdvisorLdapUids').exists?).to be false }
-      it('sees no Ethnicity (COE) filter') { expect(@cohort_page.new_filter_option('coeEthnicities').exists?).to be false }
-      it('sees no Gender (COE) filter') { expect(@cohort_page.new_filter_option('coeGenders').exists?).to be false }
-      it('sees no Inactive (COE) filter') { expect(@cohort_page.new_filter_option('isInactiveCoe').exists?).to be false }
-      it('sees no PREP filter') { expect(@cohort_page.new_filter_option('coePrepStatuses').exists?).to be false }
-      it('sees no Probation filter') { expect(@cohort_page.new_filter_option('coeProbation').exists?).to be false }
+      it('sees a PREP filter') { expect(@cohort_page.new_filter_option('coePrepStatuses').visible?).to be false }
+      it('sees a Probation filter') { expect(@cohort_page.new_filter_option('coeProbation').visible?).to be false }
+      it('sees an Underrepresented Minority (COE) filter') { expect(@cohort_page.new_filter_option('coeUnderrepresented').visible?).to be false }
     end
 
     context 'looking for admin functions' do
@@ -468,7 +484,8 @@ describe 'A BOA advisor' do
 
       it 'can toggle demo mode' do
         @settings_page.load_page
-        @settings_page.demo_mode_toggle_element.when_present Utils.short_wait
+        @settings_page.my_profile_heading_element.when_visible Utils.short_wait
+        expect(@settings_page.demo_mode_toggle?).to be false
       end
 
       it('cannot post status alerts') { expect(@settings_page.status_heading?).to be false }
