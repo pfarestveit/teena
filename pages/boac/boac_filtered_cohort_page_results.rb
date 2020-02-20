@@ -146,7 +146,7 @@ module BOACFilteredCohortPageResults
       low_end = range['min'].downcase
       high_end = range['max'].downcase
       students << test.searchable_data.select do |u|
-        u[:last_name_sortable_cohort][0] >= low_end && u[:last_name_sortable_cohort][0] <= high_end
+        u[:last_name_sortable_cohort][0] >= low_end && u[:last_name_sortable_cohort][0] <= high_end unless u[:last_name_sortable_cohort].empty?
       end
     end
     students.flatten
@@ -395,11 +395,14 @@ module BOACFilteredCohortPageResults
   # @param expected_results [Array<Hash>]
   # @return [Array<String>]
   def expected_sids_by_gpa_desc(expected_results)
-    sorted_results = expected_results.sort do |a, b|
+    results_with_gpa = expected_results.select { |u| u[:gpa] }.sort do |a, b|
       [b[:gpa].to_f, a[:last_name_sortable_cohort].downcase, a[:first_name_sortable_cohort].downcase, a[:sid]] <=>
           [a[:gpa].to_f, b[:last_name_sortable_cohort].downcase, b[:first_name_sortable_cohort].downcase, b[:sid]]
     end
-    sorted_results.map { |u| u[:sid] }
+    results_without_gpa = expected_results.reject { |u| u[:gpa] }.sort_by do |u|
+      [u[:last_name_sortable_cohort].downcase, u[:first_name_sortable_cohort].downcase, u[:sid]]
+    end
+    (results_without_gpa + results_with_gpa).map { |u| u[:sid] }
   end
 
   # Returns the sequence of SIDs that should be present when search results are sorted by the previous term GPA, ascending
@@ -535,11 +538,14 @@ module BOACFilteredCohortPageResults
   # @param expected_results [Array<Hash>]
   # @return [Array<String>]
   def expected_sids_by_units_in_prog_desc(expected_results)
-    sorted_results = expected_results.sort do |a, b|
+    results_with_units = expected_results.select { |u| u[:units_in_progress].to_f > 0 }.sort do |a, b|
       [b[:units_in_progress].to_f, a[:last_name_sortable_cohort].downcase, a[:first_name_sortable_cohort].downcase, a[:sid]] <=>
           [a[:units_in_progress].to_f, b[:last_name_sortable_cohort].downcase, b[:first_name_sortable_cohort].downcase, b[:sid]]
     end
-    sorted_results.map { |u| u[:sid] }
+    results_without_units = expected_results.select { |u| u[:units_in_progress].to_f.zero? }.sort_by do |u|
+      [u[:last_name_sortable_cohort].downcase, u[:first_name_sortable_cohort].downcase, u[:sid]]
+    end
+    (results_without_units + results_with_units).map { |u| u[:sid] }
   end
 
   # Returns the sequence of SIDs that should be present when search results are sorted by cumulative units, ascending
@@ -554,11 +560,14 @@ module BOACFilteredCohortPageResults
   # @param expected_results [Array<Hash>]
   # @return [Array<String>]
   def expected_sids_by_units_completed_desc(expected_results)
-    sorted_results = expected_results.sort do |a, b|
+    results_with_units = expected_results.select { |u| u[:units_completed] }.sort do |a, b|
       [b[:units_completed].to_f, a[:last_name_sortable_cohort].downcase, a[:first_name_sortable_cohort].downcase, a[:sid]] <=>
           [a[:units_completed].to_f, b[:last_name_sortable_cohort].downcase, b[:first_name_sortable_cohort].downcase, b[:sid]]
     end
-    sorted_results.map { |u| u[:sid] }
+    results_without_units = expected_results.reject { |u| u[:units_completed] }.sort_by do |u|
+      [u[:last_name_sortable_cohort].downcase, u[:first_name_sortable_cohort].downcase, u[:sid]]
+    end
+    (results_without_units + results_with_units).map { |u| u[:sid] }
   end
 
 end

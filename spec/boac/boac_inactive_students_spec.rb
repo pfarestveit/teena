@@ -64,13 +64,10 @@ describe 'BOA non-current students' do
 
     context 'and searched for' do
 
-      before(:all) do
-        @homepage.load_page
-        @homepage.enter_string_and_hit_enter @inactive_student.sis_id
-      end
+      before(:all) { @homepage.load_page }
 
       it 'can be found by SID' do
-        @homepage.enter_string_and_hit_enter @inactive_student.sis_id
+        @homepage.type_non_note_string_and_enter @inactive_student.sis_id
         expect(@search_results_page.student_in_search_result?(@driver, @inactive_student)).to be true
       end
 
@@ -98,13 +95,10 @@ describe 'BOA non-current students' do
 
     context 'and searched for' do
 
-      before(:all) do
-        @homepage.load_page
-        @homepage.enter_string_and_hit_enter @completed_student.sis_id
-      end
+      before(:all) { @homepage.load_page }
 
       it 'can be found by SID' do
-        @homepage.enter_string_and_hit_enter @completed_student.sis_id
+        @homepage.type_non_note_string_and_enter @completed_student.sis_id
         expect(@search_results_page.student_in_search_result?(@driver, @completed_student)).to be true
       end
 

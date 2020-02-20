@@ -139,6 +139,7 @@ describe 'BOAC' do
             # Posted by
 
             logger.info "Checking filters for #{note_search[:test_case]} posted by UID #{note_search[:note].advisor.uid}"
+            @homepage.reset_search_options_notes_subpanel
 
             if note_search[:note].advisor.uid == test_config.advisor.uid
               logger.info 'Searching for a note posted by the logged in advisor'

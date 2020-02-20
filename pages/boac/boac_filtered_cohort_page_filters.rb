@@ -18,7 +18,7 @@ module BOACFilteredCohortPageFilters
   button(:unsaved_filter_apply_button, id: 'unsaved-filter-apply')
   span(:gpa_filter_range_error, xpath: '//span[text()="GPA must be a number in the range 0 to 4."]')
   span(:gpa_filter_logical_error, xpath: '//span[text()="GPA inputs must be in ascending order."]')
-  span(:last_name_filter_logical_error, xpath: '//span[text()="Letters must be in ascending order."]')
+  span(:last_name_filter_logical_error, xpath: '//span[text()="Requires letters in ascending order."]')
 
   # Clicks the new filter button, making two attempts in case of a DOM update
   def click_new_filter_button
@@ -271,6 +271,8 @@ module BOACFilteredCohortPageFilters
   # EXISTING FILTERED COHORTS - Editing
 
   elements(:cohort_edit_button, :button, xpath: '//button[contains(@id, "edit-added-filter")]')
+  button(:cohort_update_button, xpath: '//button[contains(text(), "Update")]')
+  button(:cohort_update_cancel_button, xpath: '//button[contains(text(), "Cancel")]')
 
   # Returns the XPath to the Edit, Cancel, and Update controls for a filter row
   # @param filter_name [String]
@@ -298,7 +300,11 @@ module BOACFilteredCohortPageFilters
     # All others require a selection
     else
       wait_for_update_and_click button_element(xpath: "#{existing_filter_sub_options_xpath filter_name}//button")
-      wait_for_update_and_click(link_element(id: "#{filter_name}-#{edited_filter_option}"))
+      if ['Entering Term', 'Expected Graduation Term', 'Advisor (COE)'].include? filter_name
+        wait_for_update_and_click link_element(xpath: "//a[contains(@id, \"#{filter_name}\")][contains(@id, \"#{edited_filter_option}\")]")
+      else
+        wait_for_update_and_click link_element(xpath: "//a[contains(@id, \"#{filter_name}\")][contains(., \"#{edited_filter_option}\")]")
+      end
     end
   end
 

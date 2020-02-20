@@ -33,6 +33,13 @@ class BOACGroupPage
     wait_for_title 'Groups'
   end
 
+  # Returns the group page heading
+  # @param group [CuratedGroup]
+  # @return [PageObject::Elements::Heading]
+  def group_name_heading(group)
+    h1_element(xpath: "//h1[@id='curated-group-name'][contains(., \"#{group.name}\")]")
+  end
+
   elements(:everyone_group_link, :link, xpath: '//h1[text()="Everyone\'s Groups"]/following-sibling::div//a')
 
   # Returns all the curated groups displayed on the Everyone's Groups page

@@ -116,7 +116,6 @@ class TestData:
         JOIN authorized_users au
         ON au.id = dia.authorized_user_id
         AND au.deleted_at IS NULL
-        AND dia.deleted_at IS NULL
     """)
 
     students = NessieRds.fetch(f"""

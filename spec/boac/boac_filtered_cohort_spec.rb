@@ -58,8 +58,8 @@ describe 'BOAC', order: :defined do
       end
 
       it "sorts by First Name all the students who match #{cohort.search_criteria.list_filters}" do
-        if (0..1) === cohort.member_data.length
-          logger.warn 'Skipping sort-by-first-name test since there are no results or only one result'
+        if (0..99) === cohort.member_data.length
+          skip
         else
           @cohort_page.sort_by_first_name
           @cohort_page.compare_visible_sids_to_expected @cohort_page.expected_sids_by_first_name(cohort.member_data)
@@ -68,8 +68,8 @@ describe 'BOAC', order: :defined do
 
       it "sorts by Team all the students who match #{cohort.search_criteria.list_filters}" do
         if [BOACDepartments::ADMIN, BOACDepartments::ASC].include? test.dept
-          if (0..1) === cohort.member_data.length
-            logger.warn 'Skipping sort-by-team test since there are no results or only one result'
+          if (0..99) === cohort.member_data.length
+            skip
           else
             @cohort_page.sort_by_team
             @cohort_page.compare_visible_sids_to_expected @cohort_page.expected_sids_by_team(cohort.member_data)
@@ -78,8 +78,8 @@ describe 'BOAC', order: :defined do
       end
 
       it "sorts by GPA ascending all the students who match #{cohort.search_criteria.list_filters}" do
-        if (0..1) === cohort.member_data.length
-          logger.warn 'Skipping sort-by-GPA test since there are no results or only one result'
+        if (0..99) === cohort.member_data.length
+          skip
         else
           @cohort_page.sort_by_gpa_cumulative
           @cohort_page.compare_visible_sids_to_expected @cohort_page.expected_sids_by_gpa(cohort.member_data)
@@ -87,8 +87,8 @@ describe 'BOAC', order: :defined do
       end
 
       it "sorts by GPA descending all the students who match #{cohort.search_criteria.list_filters}" do
-        if (0..1) === cohort.member_data.length
-          logger.warn 'Skipping sort-by-GPA-descending test since there are no results or only one result'
+        if (0..99) === cohort.member_data.length
+          skip
         else
           @cohort_page.sort_by_gpa_cumulative_desc
           @cohort_page.compare_visible_sids_to_expected @cohort_page.expected_sids_by_gpa_desc(cohort.member_data)
@@ -97,8 +97,8 @@ describe 'BOAC', order: :defined do
 
       it "sorts by GPA ascending (term #{BOACUtils.previous_term_code}) all the students who match #{cohort.search_criteria.list_filters}" do
         term = BOACUtils.previous_term_code
-        if (0..1) === cohort.member_data.length
-          logger.warn "Skipping sort-by-term-#{term}-GPA ascending test since there are no results or only one result"
+        if (0..99) === cohort.member_data.length
+          skip
         else
           @cohort_page.sort_by_last_term_gpa term
           @cohort_page.compare_visible_sids_to_expected @cohort_page.expected_sids_by_gpa_last_term(cohort.member_data)
@@ -107,8 +107,8 @@ describe 'BOAC', order: :defined do
 
       it "sorts by GPA descending (term #{BOACUtils.previous_term_code}) all the students who match #{cohort.search_criteria.list_filters}" do
         term = BOACUtils.previous_term_code
-        if (0..1) === cohort.member_data.length
-          logger.warn "Skipping sort-by-term-#{term}-GPA descending test since there are no results or only one result"
+        if (0..99) === cohort.member_data.length
+          skip
         else
           @cohort_page.sort_by_last_term_gpa_desc term
           @cohort_page.compare_visible_sids_to_expected @cohort_page.expected_sids_by_gpa_last_term_desc(cohort.member_data)
@@ -117,8 +117,8 @@ describe 'BOAC', order: :defined do
 
       it "sorts by GPA ascending (#{BOACUtils.previous_term_code BOACUtils.previous_term_code}) all the students who match #{cohort.search_criteria.list_filters}" do
         term = BOACUtils.previous_term_code BOACUtils.previous_term_code
-        if (0..1) === cohort.member_data.length
-          logger.warn "Skipping sort-by-term-#{term}-GPA ascending test since there are no results or only one result"
+        if (0..99) === cohort.member_data.length
+          skip
         else
           @cohort_page.sort_by_last_term_gpa term
           @cohort_page.compare_visible_sids_to_expected @cohort_page.expected_sids_by_gpa_last_last_term(cohort.member_data)
@@ -127,8 +127,8 @@ describe 'BOAC', order: :defined do
 
       it "sorts by GPA descending (#{BOACUtils.previous_term_code BOACUtils.previous_term_code}) all the students who match #{cohort.search_criteria.list_filters}" do
         term = BOACUtils.previous_term_code BOACUtils.previous_term_code
-        if (0..1) === cohort.member_data.length
-          logger.warn "Skipping sort-by-term-#{term}-GPA descending test since there are no results or only one result"
+        if (0..99) === cohort.member_data.length
+          skip
         else
           @cohort_page.sort_by_last_term_gpa_desc term
           @cohort_page.compare_visible_sids_to_expected @cohort_page.expected_sids_by_gpa_last_last_term_desc(cohort.member_data)
@@ -136,8 +136,8 @@ describe 'BOAC', order: :defined do
       end
 
       it "sorts by Level all the students who match #{cohort.search_criteria.list_filters}" do
-        if (0..1) === cohort.member_data.length
-          logger.warn 'Skipping sort-by-level test since there are no results or only one result'
+        if (0..99) === cohort.member_data.length
+          skip
         else
           @cohort_page.sort_by_level
           @cohort_page.compare_visible_sids_to_expected @cohort_page.expected_sids_by_level(cohort.member_data)
@@ -145,8 +145,8 @@ describe 'BOAC', order: :defined do
       end
 
       it "sorts by Major all the students who match #{cohort.search_criteria.list_filters}" do
-        if (0..1) === cohort.member_data.length
-          logger.warn 'Skipping sort-by-major test since there are no results or only one result'
+        if (0..99) === cohort.member_data.length
+          skip
         else
           @cohort_page.sort_by_major
           @cohort_page.compare_visible_sids_to_expected @cohort_page.expected_sids_by_major(cohort.member_data)
@@ -154,8 +154,8 @@ describe 'BOAC', order: :defined do
       end
 
       it "sorts by Entering Term all the students who match #{cohort.search_criteria.list_filters}" do
-        if (0..1) === cohort.member_data.length
-          logger.warn 'Skipping sort-by-entering-term test since there are no results or only one result'
+        if (0..99) === cohort.member_data.length
+          skip
         else
           @cohort_page.sort_by_entering_term
           @cohort_page.compare_visible_sids_to_expected @cohort_page.expected_sids_by_matriculation(cohort.member_data)
@@ -163,8 +163,8 @@ describe 'BOAC', order: :defined do
       end
 
       it "sorts by Terms in Attendance ascending all the students who match #{cohort.search_criteria.list_filters}" do
-        if (0..1) === cohort.member_data.length
-          logger.warn 'Skipping sort-by-terms-completed test since there are no results or only one result'
+        if (0..99) === cohort.member_data.length
+          skip
         else
           @cohort_page.sort_by_terms_in_attend
           @cohort_page.compare_visible_sids_to_expected @cohort_page.expected_sids_by_terms_in_attend(cohort.member_data)
@@ -172,8 +172,8 @@ describe 'BOAC', order: :defined do
       end
 
       it "sorts by Terms in Attendance descending all the students who match #{cohort.search_criteria.list_filters}" do
-        if (0..1) === cohort.member_data.length
-          logger.warn 'Skipping sort-by-terms-completed test since there are no results or only one result'
+        if (0..99) === cohort.member_data.length
+          skip
         else
           @cohort_page.sort_by_terms_in_attend_desc
           @cohort_page.compare_visible_sids_to_expected @cohort_page.expected_sids_by_terms_in_attend_desc(cohort.member_data)
@@ -181,8 +181,8 @@ describe 'BOAC', order: :defined do
       end
 
       it "sorts by Units In Progress ascending all the students who match #{cohort.search_criteria.list_filters}" do
-        if (0..1) === cohort.member_data.length
-          logger.warn 'Skipping sort-by-units-in-progress ascending test since there are no results or only one result'
+        if (0..99) === cohort.member_data.length
+          skip
         else
           @cohort_page.sort_by_units_in_progress
           @cohort_page.compare_visible_sids_to_expected @cohort_page.expected_sids_by_units_in_prog(cohort.member_data)
@@ -190,8 +190,8 @@ describe 'BOAC', order: :defined do
       end
 
       it "sorts by Units In Progress descending all the students who match #{cohort.search_criteria.list_filters}" do
-        if (0..1) === cohort.member_data.length
-          logger.warn 'Skipping sort-by-units-in-progress descending test since there are no results or only one result'
+        if (0..99) === cohort.member_data.length
+          skip
         else
           @cohort_page.sort_by_units_in_progress_desc
           @cohort_page.compare_visible_sids_to_expected @cohort_page.expected_sids_by_units_in_prog_desc(cohort.member_data)
@@ -199,8 +199,8 @@ describe 'BOAC', order: :defined do
       end
 
       it "sorts by Units Completed ascending all the students who match #{cohort.search_criteria.list_filters}" do
-        if (0..1) === cohort.member_data.length
-          logger.warn 'Skipping sort-by-units-completed ascending test since there are no results or only one result'
+        if (0..99) === cohort.member_data.length
+          skip
         else
           @cohort_page.sort_by_units_completed
           @cohort_page.compare_visible_sids_to_expected @cohort_page.expected_sids_by_units_completed(cohort.member_data)
@@ -208,8 +208,8 @@ describe 'BOAC', order: :defined do
       end
 
       it "sorts by Units Completed descending all the students who match #{cohort.search_criteria.list_filters}" do
-        if (0..1) === cohort.member_data.length
-          logger.warn 'Skipping sort-by-units-completed descending test since there are no results or only one result'
+        if (0..99) === cohort.member_data.length
+          skip
         else
           @cohort_page.sort_by_units_completed_desc
           @cohort_page.compare_visible_sids_to_expected @cohort_page.expected_sids_by_units_completed_desc(cohort.member_data)
@@ -491,6 +491,12 @@ describe 'BOAC', order: :defined do
 
     before(:all) { @cohort_page.search_and_create_new_cohort(test.default_cohort, test) }
 
+    before(:each) do
+      if @cohort_page.cohort_update_button?
+        @cohort_page.wait_for_update_and_click @cohort_page.cohort_update_cancel_button_element
+      end
+    end
+
     it 'allows the advisor to edit a College filter' do
       test.default_cohort.search_criteria.college = ['Undergrad Chemistry']
       @cohort_page.edit_filter_and_confirm('College', test.default_cohort.search_criteria.college.first)
@@ -498,7 +504,7 @@ describe 'BOAC', order: :defined do
     end
 
     it 'allows the advisor to remove a College filter' do
-      test.default_cohort.search_criteria.college = []
+      test.default_cohort.search_criteria.college.shift
       @cohort_page.remove_filter_of_type 'College'
       @cohort_page.verify_filters_present test.default_cohort
     end
@@ -510,7 +516,7 @@ describe 'BOAC', order: :defined do
     end
 
     it 'allows the advisor to remove a cumulative GPA filter' do
-      test.default_cohort.search_criteria.gpa = []
+      test.default_cohort.search_criteria.gpa.shift
       @cohort_page.remove_filter_of_type 'GPA (Cumulative)'
       @cohort_page.verify_filters_present test.default_cohort
     end
@@ -522,7 +528,7 @@ describe 'BOAC', order: :defined do
     end
 
     it 'allows the advisor to remove a term GPA filter' do
-      test.default_cohort.search_criteria.gpa_last_term = []
+      test.default_cohort.search_criteria.gpa_last_term.shift
       @cohort_page.remove_filter_of_type 'GPA (Last Term)'
       @cohort_page.verify_filters_present test.default_cohort
     end
@@ -534,7 +540,7 @@ describe 'BOAC', order: :defined do
     end
 
     it 'allows the advisor to remove a Level filter' do
-      test.default_cohort.search_criteria.level = []
+      test.default_cohort.search_criteria.level.shift
       @cohort_page.remove_filter_of_type 'Level'
       @cohort_page.verify_filters_present test.default_cohort
     end
@@ -546,7 +552,7 @@ describe 'BOAC', order: :defined do
     end
 
     it 'allows the advisor to remove a Units Completed filter' do
-      test.default_cohort.search_criteria.units_completed = []
+      test.default_cohort.search_criteria.units_completed.shift
       @cohort_page.remove_filter_of_type 'Units Completed'
       @cohort_page.verify_filters_present test.default_cohort
     end
@@ -558,13 +564,13 @@ describe 'BOAC', order: :defined do
     end
 
     it 'allows the advisor to remove a Major filter' do
-      test.default_cohort.search_criteria.major = []
+      test.default_cohort.search_criteria.major.shift
       @cohort_page.remove_filter_of_type 'Major'
       @cohort_page.verify_filters_present test.default_cohort
     end
 
     it 'allows the advisor to remove a Transfer Student filter' do
-      test.default_cohort.search_criteria.transfer_student = false
+      test.default_cohort.search_criteria.transfer_student = nil
       @cohort_page.remove_filter_of_type 'Transfer Student'
       @cohort_page.verify_filters_present test.default_cohort
     end
@@ -577,7 +583,7 @@ describe 'BOAC', order: :defined do
     end
 
     it 'allows the advisor to remove an Entering Term filter' do
-      test.default_cohort.search_criteria.entering_terms = []
+      test.default_cohort.search_criteria.entering_terms.shift
       @cohort_page.remove_filter_of_type 'Entering Term'
       @cohort_page.verify_filters_present test.default_cohort
     end
@@ -590,13 +596,13 @@ describe 'BOAC', order: :defined do
     end
 
     it 'allows the advisor to remove an Expected Graduation Term filter' do
-      test.default_cohort.search_criteria.expected_grad_terms = []
+      test.default_cohort.search_criteria.expected_grad_terms.shift
       @cohort_page.remove_filter_of_type 'Expected Graduation Term'
       @cohort_page.verify_filters_present test.default_cohort
     end
 
     it 'allows the advisor to remove an Unrepresented Minority filter' do
-      test.default_cohort.search_criteria.underrepresented_minority = false
+      test.default_cohort.search_criteria.underrepresented_minority = nil
       @cohort_page.remove_filter_of_type 'Underrepresented Minority'
       @cohort_page.verify_filters_present test.default_cohort
     end
@@ -608,7 +614,7 @@ describe 'BOAC', order: :defined do
     end
 
     it 'allows the advisor to remove an Ethnicity filter' do
-      test.default_cohort.search_criteria.ethnicity = []
+      test.default_cohort.search_criteria.ethnicity.shift
       @cohort_page.remove_filter_of_type 'Ethnicity'
       @cohort_page.verify_filters_present test.default_cohort
     end
@@ -620,7 +626,7 @@ describe 'BOAC', order: :defined do
     end
 
     it 'allows the advisor to remove a Visa Type filter' do
-      test.default_cohort.search_criteria.visa_type = []
+      test.default_cohort.search_criteria.visa_type.shift
       @cohort_page.remove_filter_of_type 'Visa Type'
       @cohort_page.verify_filters_present test.default_cohort
     end
@@ -632,7 +638,7 @@ describe 'BOAC', order: :defined do
     end
 
     it 'allows the advisor to remove a Gender filter' do
-      test.default_cohort.search_criteria.gender = []
+      test.default_cohort.search_criteria.gender.shift
       @cohort_page.remove_filter_of_type 'Gender'
       @cohort_page.verify_filters_present test.default_cohort
     end
@@ -644,7 +650,7 @@ describe 'BOAC', order: :defined do
     end
 
     it 'allows the advisor to remove an Ethnicity (COE) filter' do
-      test.default_cohort.search_criteria.coe_ethnicity = []
+      test.default_cohort.search_criteria.coe_ethnicity.shift
       @cohort_page.remove_filter_of_type 'Ethnicity (COE)'
       @cohort_page.verify_filters_present test.default_cohort
     end
@@ -656,7 +662,7 @@ describe 'BOAC', order: :defined do
     end
 
     it 'allows the advisor to remove a Gender (COE) filter' do
-      test.default_cohort.search_criteria.coe_gender = []
+      test.default_cohort.search_criteria.coe_gender.shift
       @cohort_page.remove_filter_of_type 'Gender (COE)'
       @cohort_page.verify_filters_present test.default_cohort
     end
@@ -668,7 +674,7 @@ describe 'BOAC', order: :defined do
     end
 
     it 'allows the advisor to remove an Inactive (ASC) filter' do
-      test.default_cohort.search_criteria.asc_inactive = false
+      test.default_cohort.search_criteria.asc_inactive = nil
       @cohort_page.remove_filter_of_type 'Inactive (ASC)'
       @cohort_page.verify_filters_present test.default_cohort
     end
@@ -686,7 +692,7 @@ describe 'BOAC', order: :defined do
     end
 
     it 'allows the advisor to remove a Team filter' do
-      test.default_cohort.search_criteria.asc_team = []
+      test.default_cohort.search_criteria.asc_team.shift
       @cohort_page.remove_filter_of_type 'Team'
       @cohort_page.verify_filters_present test.default_cohort
     end
@@ -698,7 +704,7 @@ describe 'BOAC', order: :defined do
     end
 
     it 'allows the advisor to remove a PREP filter' do
-      test.default_cohort.search_criteria.coe_prep = []
+      test.default_cohort.search_criteria.coe_prep.shift
       @cohort_page.remove_filter_of_type 'PREP'
       @cohort_page.verify_filters_present test.default_cohort
     end
@@ -727,7 +733,7 @@ describe 'BOAC', order: :defined do
 
     it 'allows the advisor to remove a My Students filter' do
       if test.default_cohort.search_criteria.cohort_owner_academic_plans
-        test.default_cohort.search_criteria.cohort_owner_academic_plans = []
+        test.default_cohort.search_criteria.cohort_owner_academic_plans.shift
         @cohort_page.remove_filter_of_type 'My Students'
         @cohort_page.verify_filters_present test.default_cohort
       else
@@ -742,19 +748,19 @@ describe 'BOAC', order: :defined do
     end
 
     it 'allows the advisor to remove an Advisor (COE) filter' do
-      test.default_cohort.search_criteria.coe_advisor = []
+      test.default_cohort.search_criteria.coe_advisor.shift
       @cohort_page.remove_filter_of_type 'Advisor (COE)'
       @cohort_page.verify_filters_present test.default_cohort
     end
 
     it 'allows the advisor to remove an Inactive (CoE) filter' do
-      test.default_cohort.search_criteria.coe_inactive = false
+      test.default_cohort.search_criteria.coe_inactive = nil
       @cohort_page.remove_filter_of_type 'Inactive (COE)'
       @cohort_page.verify_filters_present test.default_cohort
     end
 
     it 'allows the advisor to remove a Probation filter' do
-      test.default_cohort.search_criteria.coe_probation = false
+      test.default_cohort.search_criteria.coe_probation = nil
       @cohort_page.remove_filter_of_type 'Probation'
       @cohort_page.verify_filters_present test.default_cohort
     end

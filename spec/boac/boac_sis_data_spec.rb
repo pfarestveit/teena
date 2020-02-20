@@ -52,14 +52,13 @@ describe 'BOAC' do
         cohort_page_sis_data = @boac_cohort_page.visible_sis_data(@driver, student)
 
         if api_sis_profile_data[:academic_career_status] == 'Completed'
-          it("shows no level for UID #{student.uid} on the #{test.default_cohort.name} page") { expect(cohort_page_sis_data[:level]).to be_nil }
-        elsif api_sis_profile_data[:level]
-          it "shows the level for UID #{student.uid} on the #{test.default_cohort.name} page" do
-            expect(cohort_page_sis_data[:level]).to eql(api_sis_profile_data[:level])
-            expect(cohort_page_sis_data[:level]).not_to be_empty
+          it "shows no level for UID #{student.uid} on the #{test.default_cohort.name} page" do
+            expect(cohort_page_sis_data[:level]).to be_nil
           end
         else
-          it("shows no level for UID #{student.uid} on the #{test.default_cohort.name} page") { expect(cohort_page_sis_data[:level]).to be_empty }
+          it "shows the level for UID #{student.uid} on the #{test.default_cohort.name} page" do
+            expect(cohort_page_sis_data[:level]).to eql(api_sis_profile_data[:level].to_s)
+          end
         end
 
         if api_sis_profile_data[:entered_term]
@@ -235,15 +234,8 @@ describe 'BOAC' do
           end
         end
 
-        if api_sis_profile_data[:academic_career_status] == 'Completed'
-          it("shows no academic level for UID #{student.uid} on the student page") { expect(student_page_sis_data[:level]).to be_nil }
-        elsif api_sis_profile_data[:level]
-          it "shows the academic level for UID #{student.uid} on the student page" do
-            expect(student_page_sis_data[:level]).to eql(api_sis_profile_data[:level])
-            expect(student_page_sis_data[:level]).not_to be_empty
-          end
-        else
-          it("shows no academic level for UID #{student.uid} on the student page") { expect(student_page_sis_data[:level]).to be_empty }
+        it "shows the academic level for UID #{student.uid} on the student page" do
+          expect(student_page_sis_data[:level]).to eql(api_sis_profile_data[:level].to_s)
         end
 
         if api_advisors.any?
@@ -323,8 +315,7 @@ describe 'BOAC' do
           end
         end
 
-        if (api_sis_profile_data[:academic_career_status] != 'Completed' && api_sis_profile_data[:terms_in_attendance] &&
-            !api_sis_profile_data[:terms_in_attendance].empty? && api_sis_profile_data[:level] != 'Graduate')
+        if api_sis_profile_data[:terms_in_attendance] && !api_sis_profile_data[:terms_in_attendance].empty? && api_sis_profile_data[:level] != 'Graduate'
           it "shows the terms in attendance for UID #{student.uid} on the student page" do
             expect(student_page_sis_data[:terms_in_attendance]).to include(api_sis_profile_data[:terms_in_attendance])
           end
@@ -338,7 +329,7 @@ describe 'BOAC' do
             (it("shows Transfer for UID #{student.uid} on the student page") { expect(student_page_sis_data[:transfer]).to eql('Transfer') }) :
             (it("shows no Transfer for UID #{student.uid} on the student page") { expect(student_page_sis_data[:transfer]).to be_nil })
 
-        (api_sis_profile_data[:academic_career_status] == 'Completed' || api_sis_profile_data[:level] == 'Graduate') ?
+        (api_sis_profile_data[:level] == 'Graduate') ?
             (it("shows no expected graduation date for UID #{student.uid} on the #{test.default_cohort.name} page") { expect(student_page_sis_data[:expected_graduation]).to be nil }) :
             (it("shows the expected graduation date for UID #{student.uid} on the #{test.default_cohort.name} page") { expect(student_page_sis_data[:expected_graduation]).to eql(api_sis_profile_data[:expected_grad_term_name]) })
 
@@ -501,6 +492,7 @@ describe 'BOAC' do
 
                     # SECTIONS
 
+                    section_statuses = []
                     api_student_data.sections(course).each do |section|
 
                       begin
@@ -511,16 +503,13 @@ describe 'BOAC' do
 
                         visible_section_sis_data = @boac_student_page.visible_section_sis_data(term_name, course_code, index)
                         visible_section = visible_section_sis_data[:section]
-                        visible_wait_list_status = visible_course_sis_data[:wait_list]
 
                         it "shows the section number for UID #{student.uid} term #{term_name} course #{course_code} section #{component}" do
                           expect(visible_section).not_to be_empty
                           expect(visible_section).to eql("#{section_sis_data[:component]} #{section_sis_data[:number]}")
                         end
 
-                        (section_sis_data[:status] == 'W') ?
-                            (it("shows the wait list status for UID #{student.uid} term #{term_name} course #{course_code}") { expect(visible_wait_list_status).to be true }) :
-                            (it("shows no enrollment status for UID #{student.uid} term #{term_name} course #{course_code}") { expect(visible_wait_list_status).to be false })
+                        section_statuses << section_sis_data[:status]
 
                       rescue => e
                         BOACUtils.log_error_and_screenshot(@driver, e, "#{student.uid}-#{term_name}-#{course_code}-#{section_sis_data[:ccn]}")
@@ -532,6 +521,11 @@ describe 'BOAC' do
                         Utils.add_csv_row(user_course_sis_data, row)
                       end
                     end
+
+                    visible_wait_list_status = visible_course_sis_data[:wait_list]
+                    (section_statuses.include? 'W') ?
+                        (it("shows the wait list status for UID #{student.uid} term #{term_name} course #{course_code}") { expect(visible_wait_list_status).to be true }) :
+                        (it("shows no enrollment status for UID #{student.uid} term #{term_name} course #{course_code}") { expect(visible_wait_list_status).to be false })
 
                   rescue => e
                     BOACUtils.log_error_and_screenshot(@driver, e, "#{student.uid}-#{term_name}-#{course_code}")

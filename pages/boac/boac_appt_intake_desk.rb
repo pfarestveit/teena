@@ -260,7 +260,7 @@ module BOACApptIntakeDesk
     else
       logger.info "Making UID #{advisor.uid} available for drop-in appointments"
       click_advisor_availability_toggle(advisor)
-      wait_until(1) { advisor_available? advisor }
+      wait_until(3) { advisor_available? advisor }
     end
   end
 
@@ -270,7 +270,7 @@ module BOACApptIntakeDesk
     if advisor_available? advisor
       logger.info "Making UID #{advisor.uid} unavailable for drop-in appointments"
       click_advisor_availability_toggle(advisor)
-      wait_until(1) { !advisor_available? advisor }
+      wait_until(3) { !advisor_available? advisor }
     else
       logger.warn "UID #{advisor.uid} is already unavailable for drop-in appointments"
     end
@@ -300,14 +300,14 @@ module BOACApptIntakeDesk
   def set_self_available
     logger.info "Making the logged-in advisor available for drop-in appointments"
     click_self_availability_button
-    wait_until(1) { self_available? }
+    wait_until(3) { self_available? }
   end
 
   # Sets a logged-in advisor's availability to false
   def set_self_unavailable
     logger.info "Making the logged-in advisor unavailable for drop-in appointments"
     click_self_availability_button
-    wait_until(1) { !self_available? }
+    wait_until(3) { !self_available? }
   end
 
   # Enters and saves a drop-in status
@@ -333,7 +333,7 @@ module BOACApptIntakeDesk
   # @param advisor [BOACUser]
   # @return [String]
   def intake_desk_advisor_status(advisor)
-    el = span_element(xpath: "//button[@id='toggle-drop-in-availability-#{advisor.uid}']/../../../../../div//span")
+    el = span_element(xpath: "//button[@id='toggle-drop-in-availability-#{advisor.uid}']/../../../../../div//span[@class='text-muted']")
     el.text if el.exists?
   end
 

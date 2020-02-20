@@ -46,6 +46,7 @@ describe 'BOA' do
     @advisor_flight_deck = BOACFlightDeckPage.new @driver_advisor
 
     # Configure users
+    [@test.advisor, @test.drop_in_advisor].each { |u| BOACUtils.delete_drop_in_advisor u }
     @advisor_homepage.dev_auth
     @pax_manifest.load_page
     @pax_manifest.filter_mode_select_element.when_visible Utils.medium_wait
@@ -220,12 +221,14 @@ describe 'BOA' do
     context 'on the waiting list' do
 
       it 'can be set' do
-        @advisor_homepage.create_status(@test.drop_in_advisor.dept_memberships.first, "#{@test.id} drop-in advisor status")
+        @advisor_homepage.create_status(@test.drop_in_advisor.dept_memberships.first, ("#{@test.id} drop-in advisor status" * 6))
         @advisor_homepage.wait_until(2) { @advisor_homepage.status == @test.drop_in_advisor.dept_memberships.first.drop_in_status }
       end
 
       it 'updates the intake desk when set' do
-        @scheduler_intake_desk.wait_for_poller { @scheduler_intake_desk.intake_desk_advisor_status(@test.advisor) == @test.advisor.dept_memberships.first.drop_in_status }
+        @scheduler_intake_desk.wait_for_poller do
+          @scheduler_intake_desk.intake_desk_advisor_status(@test.drop_in_advisor)&.include? @test.drop_in_advisor.dept_memberships.first.drop_in_status
+        end
       end
 
       it 'can be cleared' do
@@ -280,7 +283,7 @@ describe 'BOA' do
         @scheduler_intake_desk.enter_detail appt
         expect(@scheduler_intake_desk.make_appt_button_element.disabled?).to be true
         @scheduler_intake_desk.add_reasons(appt,[Topic::OTHER])
-        expect(@scheduler_intake_desk.make_appt_button_element.disabled?).to be false
+        @scheduler_intake_desk.wait_until(2) { !@scheduler_intake_desk.make_appt_button_element.disabled? }
       end
 
       it 'allows a scheduler to select an available advisor for a new reserved appointment' do
@@ -302,7 +305,7 @@ describe 'BOA' do
         @scheduler_intake_desk.add_reasons(@appt_9, [Topic::OTHER])
         expect(@scheduler_intake_desk.make_appt_button_element.disabled?).to be true
         @scheduler_intake_desk.enter_detail @appt_9
-        @scheduler_intake_desk.wait_until(Utils.short_wait) { !@scheduler_intake_desk.make_appt_button_element.disabled? }
+        @scheduler_intake_desk.wait_until(3) { !@scheduler_intake_desk.make_appt_button_element.disabled? }
       end
 
       it 'allows a scheduler to create a new unreserved appointment' do
@@ -894,7 +897,9 @@ describe 'BOA' do
       end
 
       it('can be undone') { @advisor_homepage.undo_appt_cancel @appt_5 }
-      it('updates the status of the appointment once undone') { @advisor_homepage.check_in_button(@appt_5).when_visible Utils.short_wait }
+      it('updates the status of the appointment once undone') do
+        @advisor_homepage.wait_for_poller { @advisor_homepage.check_in_button(@appt_5).visible? }
+      end
 
       it 'updates the scheduler appointment desk view dynamically once undone' do
         @scheduler_intake_desk.wait_for_poller { @scheduler_intake_desk.visible_appt_ids.include? @appt_5.id }
