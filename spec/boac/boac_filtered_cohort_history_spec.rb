@@ -41,7 +41,7 @@ describe 'BOA cohort history' do
 
       before(:all) do
         @homepage.click_sidebar_create_filtered
-        @cohort_page.perform_search @cohort_1
+        @cohort_page.perform_student_search @cohort_1
         @cohort_page.create_new_cohort @cohort_1
         @cohort_page.set_cohort_members(@cohort_1, @test)
         @cohort_1.history += @cohort_history_page.expected_history_entries(@cohort_1.members, 'ADDED', Time.now)
@@ -63,7 +63,7 @@ describe 'BOA cohort history' do
 
       before(:all) do
         @homepage.click_sidebar_create_filtered
-        @cohort_page.perform_search @cohort_2
+        @cohort_page.perform_student_search @cohort_2
         @cohort_page.create_new_cohort @cohort_2
         @cohort_page.set_cohort_members(@cohort_2, @test)
         @cohort_2.history += @cohort_history_page.expected_history_entries(@cohort_2.members, 'ADDED', Time.now)
@@ -127,7 +127,7 @@ describe 'BOA cohort history' do
       @test.searchable_data = @test.searchable_data.select { |s| group_sids.include? s[:sid] }
 
       @homepage.click_sidebar_create_filtered
-      @cohort_page.perform_search @cohort_3
+      @cohort_page.perform_student_search @cohort_3
       @cohort_page.create_new_cohort @cohort_3
       @cohort_3.history += @cohort_history_page.expected_history_entries(@group.members, 'ADDED', Time.now)
       @cohort_page.load_cohort @cohort_3

@@ -22,7 +22,7 @@ begin
 
       @homepage.load_page
       @homepage.click_sidebar_create_filtered
-      @cohort_page.perform_search cohort
+      @cohort_page.perform_student_search cohort
 
       # SORTING
 

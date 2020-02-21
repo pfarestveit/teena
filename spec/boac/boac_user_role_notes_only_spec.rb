@@ -119,7 +119,7 @@ describe 'A notes-only BOA user' do
         @cohort_search.set_custom_filters({:major => ['Art BA']})
         @cohort = FilteredCohort.new({:search_criteria => @cohort_search})
 
-        @cohort_page.perform_search @cohort
+        @cohort_page.perform_student_search @cohort
         @cohort_page.wait_until(Utils.short_wait) { @cohort_page.results_count > 0 }
       end
 

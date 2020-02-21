@@ -6,7 +6,7 @@ describe 'BOAC' do
 
   begin
     test = BOACTestConfig.new
-    test.sis_data
+    test.sis_student_data
     alert_students = []
     hold_students = []
 

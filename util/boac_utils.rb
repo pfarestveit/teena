@@ -110,6 +110,10 @@ class BOACUtils < Utils
     File.join(Utils.config_dir, "boac-searchable-data-#{Time.now.strftime('%Y-%m-%d')}.json")
   end
 
+  def self.searchable_admit_data
+    File.join(Utils.config_dir, "boac-searchable-admit-data-#{Time.now.strftime('%Y-%m-%d')}.json")
+  end
+
   # Returns the db credentials for BOAC
   # @return [Hash]
   def self.boac_db_credentials

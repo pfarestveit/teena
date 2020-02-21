@@ -82,7 +82,7 @@ describe 'A BOA filtered cohort' do
         test.searchable_data = group_1_searchable_data + group_2_searchable_data
 
         # Determine which group members should match the other filters
-        cohort.member_data = @cohort_page.expected_search_results(test, cohort.search_criteria)
+        cohort.member_data = @cohort_page.expected_student_search_results(test, cohort.search_criteria)
         expected_results = @cohort_page.expected_sids_by_last_name cohort.member_data
 
         # Get the matching user objects in the groups
@@ -90,7 +90,7 @@ describe 'A BOA filtered cohort' do
         cohort.members = test.students.select { |s| cohort_member_sids.include? s.sis_id }
 
         @cohort_page.click_sidebar_create_filtered
-        @cohort_page.perform_search cohort
+        @cohort_page.perform_student_search cohort
         @cohort_page.wait_for_spinner
         @cohort_page.create_new_cohort cohort
         @cohorts << cohort
@@ -124,7 +124,7 @@ describe 'A BOA filtered cohort' do
           @student_page.load_page student
           @student_page.remove_student_from_grp(student, group)
           test.searchable_data.delete_if { |d| d[:sid] == student.sis_id }
-          @cohorts.last.member_data = @cohort_page.expected_search_results(test, @cohorts.last.search_criteria)
+          @cohorts.last.member_data = @cohort_page.expected_student_search_results(test, @cohorts.last.search_criteria)
           @student_page.wait_for_sidebar_cohort_member_count @cohorts.last
         end
       end
@@ -146,7 +146,7 @@ describe 'A BOA filtered cohort' do
         @group_page.load_page @group_1
         @group_page.add_comma_sep_sids_to_existing_grp([@students_to_add_remove.first], @group_1)
         test.searchable_data << all_searchable_data.find { |d| d[:sid] == @students_to_add_remove.first.sis_id }
-        @cohorts.last.member_data = @cohort_page.expected_search_results(test, @cohorts.last.search_criteria)
+        @cohorts.last.member_data = @cohort_page.expected_student_search_results(test, @cohorts.last.search_criteria)
         @student_page.wait_for_sidebar_cohort_member_count @cohorts.last
       end
 
@@ -167,7 +167,7 @@ describe 'A BOA filtered cohort' do
         @student_page.load_page @students_to_add_remove.last
         @student_page.add_student_to_grp(@students_to_add_remove.last, @group_1)
         test.searchable_data << all_searchable_data.find { |d| d[:sid] == @students_to_add_remove.last.sis_id }
-        @cohorts.last.member_data = @cohort_page.expected_search_results(test, @cohorts.last.search_criteria)
+        @cohorts.last.member_data = @cohort_page.expected_student_search_results(test, @cohorts.last.search_criteria)
         @student_page.wait_for_sidebar_cohort_member_count @cohorts.last
       end
 
@@ -192,7 +192,7 @@ describe 'A BOA filtered cohort' do
         @cohort_page.click_save_cohort_button_one
         @cohorts.last.search_criteria.curated_groups.delete @group_1.id.to_s
         test.searchable_data -= group_1_searchable_data
-        @cohorts.last.member_data = @cohort_page.expected_search_results(test, @cohorts.last.search_criteria)
+        @cohorts.last.member_data = @cohort_page.expected_student_search_results(test, @cohorts.last.search_criteria)
         @cohort_page.wait_for_sidebar_cohort_member_count @cohorts.last
       end
 
@@ -221,7 +221,7 @@ describe 'A BOA filtered cohort' do
         @cohort_page.click_save_cohort_button_one
         @cohorts.last.search_criteria.curated_groups << @group_1.id.to_s
         test.searchable_data += group_1_searchable_data
-        @cohorts.last.member_data = @cohort_page.expected_search_results(test, @cohorts.last.search_criteria)
+        @cohorts.last.member_data = @cohort_page.expected_student_search_results(test, @cohorts.last.search_criteria)
         @cohort_page.wait_for_sidebar_cohort_member_count @cohorts.last
       end
 

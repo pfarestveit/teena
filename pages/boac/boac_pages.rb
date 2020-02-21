@@ -204,6 +204,7 @@ module BOACPages
 
   button(:search_options_toggle_button, id: 'search-options-panel-toggle')
   button(:search_options_note_filters_toggle_button, id: 'search-options-note-filters-toggle')
+  checkbox(:include_admits_cbx, id: 'search-include-admits-checkbox')
   checkbox(:include_students_cbx, id: 'search-include-students-checkbox')
   checkbox(:include_classes_cbx, id: 'search-include-courses-checkbox')
   checkbox(:include_notes_cbx, id: 'search-include-notes-checkbox')

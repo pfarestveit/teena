@@ -268,6 +268,14 @@ class NessieUtils < Utils
     BOACUser.new(sis_id: sid, uid: uid)
   end
 
+  #### ADMITS ####
+
+  def self.get_admits
+    query = 'SELECT cs_empl_id AS sid FROM boac_advising_oua.student_admits ORDER BY sid;'
+    results = Utils.query_pg_db(nessie_pg_db_credentials, query)
+    results.map { |r| BOACUser.new sis_id: r['sid'] }
+  end
+
   #### SEARCHABLE STUDENT DATA ####
 
   # Parses a file containing searchable user data if it exists
@@ -489,6 +497,70 @@ class NessieUtils < Utils
       plan_map[r['academic_plan_code']] = r['academic_plan']
     end
     plan_map
+  end
+
+  #### SEARCHABLE ADMIT DATA ####
+
+  # Obtains searchable admit data and saves it unless it is already saved
+  # @return [Array<Hash>]
+  def self.searchable_admit_data
+    users_data_file = BOACUtils.searchable_admit_data
+    if File.exist? users_data_file
+      JSON.parse(File.read(users_data_file), symbolize_names: true)
+
+    else
+      logger.warn 'Cannot find a searchable admit data file created today, collecting data and writing it to a file for reuse today'
+
+      # Delete older searchable data files before writing the new one
+      Dir.glob("#{Utils.config_dir}/boac-searchable-admit-data*").each { |f| File.delete f }
+
+      query = "SELECT cs_empl_id,
+                      freshman_or_transfer,
+                      current_sir,
+                      college,
+                      xethnic,
+                      hispanic,
+                      urem,
+                      first_generation_student,
+                      application_fee_waiver_flag,
+                      foster_care_flag,
+                      family_is_single_parent,
+                      student_is_single_parent,
+                      family_dependents_num,
+                      student_dependents_num,
+                      reentry_status,
+                      last_school_lcff_plus_flag,
+                      special_program_cep
+               FROM boac_advising_oua.student_admits
+               ORDER BY cs_empl_id;"
+
+      results = query_pg_db(nessie_pg_db_credentials, query)
+      admit_data = results.map do |r|
+        {
+          cs_empl_id: r['cs_empl_id'],
+          freshman_or_transfer: r['freshman_or_transfer'],
+          current_sir: r['current_sir'],
+          college: r['college'],
+          xethnic: r['xethnic'],
+          hispanic: r['hispanic'],
+          urem: r['urem'],
+          first_gen_student: r['first_generation_student'],
+          fee_waiver: r['application_fee_waiver_flag'],
+          foster_care: r['foster_care_flag'],
+          family_single_parent: r['family_is_single_parent'],
+          student_single_parent: r['student_is_single_parent'],
+          family_dependents: r['family_dependents_num'],
+          student_dependents: r['student_dependents_num'],
+          re_entry_status: r['reentry_status'],
+          last_school_lcff_plus_flag: r['last_school_lcff_plus_flag'],
+          special_program_cep: r['special_program_cep']
+        }
+      end
+
+      # Write the data to a file for reuse.
+      File.open(BOACUtils.searchable_data, 'w') { |f| f.write admit_data.to_json }
+      admit_data
+    end
   end
 
   #### NOTES ####
