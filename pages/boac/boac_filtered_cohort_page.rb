@@ -141,7 +141,7 @@ class BOACFilteredCohortPage
   # @param test [BOACTestConfig]
   def search_and_create_new_cohort(cohort, test)
     click_sidebar_create_filtered
-    perform_search cohort
+    perform_student_search cohort
     create_new_cohort cohort
   end
 

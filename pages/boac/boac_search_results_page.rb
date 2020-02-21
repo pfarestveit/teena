@@ -9,6 +9,7 @@ class BOACSearchResultsPage
   include BOACUserListPages
   include BOACGroupModalPages
   include BOACAddGroupSelectorPages
+  include BOACAdmitListPages
 
   span(:results_loaded_msg, xpath: '//span[contains(text(), "Search results have loaded.")]')
 

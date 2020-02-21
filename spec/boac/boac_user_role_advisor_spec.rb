@@ -170,7 +170,7 @@ describe 'A BOA advisor' do
         before(:all) do
           @homepage.load_page
           @homepage.click_sidebar_create_filtered
-          @cohort_page.perform_search @inactive_cohort
+          @cohort_page.perform_student_search @inactive_cohort
         end
 
         it('sees team information') do

@@ -308,14 +308,156 @@ module BOACFilteredCohortPageResults
     students.flatten
   end
 
+  # Returns the admits that match a Freshman or Transfer filter
+  # @param test [BOACTestConfig]
+  # @param search_criteria [CohortFilter]
+  # @return [Array<Hash>]
+  def matching_fresh_or_trans_admits(test, search_criteria)
+    students = []
+    search_criteria.freshman_or_transfer.each do |matric|
+      if matric == 'Freshman'
+        students << test.searchable_data.select { |u| u[:freshman_or_transfer] == 'Freshman' }
+      else
+        students << test.searchable_data.select { |u| u[:freshman_or_transfer] == 'Transfer' }
+      end
+    end
+    students.flatten
+  end
+
+  # Returns the admits that match a Current SIR filter
+  # @param test [BOACTestConfig]
+  # @return [Array<Hash>]
+  def matching_sir_admits(test)
+    test.searchable_data.select { |u| u[:current_sir] }
+  end
+
+  # Returns the admits that match a College filter
+  # @param test [BOACTestConfig]
+  # @param search_criteria [CohortFilter]
+  # @return [Array<Hash>]
+  def matching_college_admits(test, search_criteria)
+    students = []
+    search_criteria.college.each do |college|
+      students << test.searchable_data.select { |u| u[:college] == college }
+    end
+    students.flatten
+  end
+
+  # Returns the admits that match an XEthnic filter
+  # @param test [BOACTestConfig]
+  # @return [Array<Hash>]
+  def matching_xethnic_admits(test)
+    test.searchable_data.select { |u| u[:xethnic] }
+  end
+
+  # Returns the admits that match a Hispanic filter
+  # @param test [BOACTestConfig]
+  # @return [Array<Hash>]
+  def matching_hispanic_admits(test)
+    test.searchable_data.select { |u| u[:hispanic] }
+  end
+
+  # Returns the admits that match a UREM filter
+  # @param test [BOACTestConfig]
+  # @return [Array<Hash>]
+  def matching_urem_admits(test)
+    test.searchable_data.select { |u| u[:urem] }
+  end
+
+  # Returns the admits that match a First Generation Student filter
+  # @param test [BOACTestConfig]
+  # @return [Array<Hash>]
+  def matching_first_gen_admits(test)
+    test.searchable_data.select { |u| u[:first_gen_student] }
+  end
+
+  # Returns the admits that match an Application Fee Waiver filter
+  # @param test [BOACTestConfig]
+  # @return [Array<Hash>]
+  def matching_fee_waiver_admits(test)
+    test.searchable_data.select { |u| u[:matching_fee_waiver_admits] }
+  end
+
+  # Returns the admits that match a Foster Care filter
+  # @param test [BOACTestConfig]
+  # @return [Array<Hash>]
+  def matching_foster_care_admits(test)
+    test.searchable_data.select { |u| u[:foster_care] }
+  end
+
+  # Returns the admits that match a Family Single Parent filter
+  # @param test [BOACTestConfig]
+  # @return [Array<Hash>]
+  def matching_fam_single_parent_admits(test)
+    test.searchable_data.select { |u| u[:family_single_parent] }
+  end
+
+  # Returns the admits that match a Student Single Parent filter
+  # @param test [BOACTestConfig]
+  # @return [Array<Hash>]
+  def matching_stu_single_parent_admits(test)
+    test.searchable_data.select { |u| u[:student_single_parent] }
+  end
+
+  # Returns the admits that match a Family Dependents filter
+  # @param test [BOACTestConfig]
+  # @param search_criteria [CohortFilter]
+  # @return [Array<Hash>]
+  def matching_family_depends_admits(test, search_criteria)
+    students = []
+    search_criteria.family_dependents.each do |depends|
+      range = depends.split(' - ')
+      low_end = range[0].to_i
+      high_end = range[1].to_i
+      students << test.searchable_data.select { |u| (u[:family_dependents].to_i >= low_end) && (u[:family_dependents].to_i < high_end) }
+    end
+    students.flatten
+  end
+
+  # Returns the admits that match a Student Dependents filter
+  # @param test [BOACTestConfig]
+  # @param search_criteria [CohortFilter]
+  # @return [Array<Hash>]
+  def matching_student_depends_admits(test, search_criteria)
+    students = []
+    search_criteria.student_dependents.each do |depends|
+      range = depends.split(' - ')
+      low_end = range[0].to_i
+      high_end = range[1].to_i
+      students << test.searchable_data.select { |u| (u[:student_dependents].to_i >= low_end) && (u[:student_dependents].to_i < high_end) }
+    end
+    students.flatten
+  end
+
+  # Returns the admits that match a Re-entry Status filter
+  # @param test [BOACTestConfig]
+  # @return [Array<Hash>]
+  def matching_re_entry_admits(test)
+    test.searchable_data.select { |u| u[:re_entry_status] }
+  end
+
+  # Returns the admits that match a Last School LCFF+ filter
+  # @param test [BOACTestConfig]
+  # @return [Array<Hash>]
+  def matching_lcff_plus_admits(test)
+    test.searchable_data.select { |u| u[:last_school_lcff_plus] }
+  end
+
+  # Returns the admits that match a Special Program CEP filter
+  # @param test [BOACTestConfig]
+  # @return [Array<Hash>]
+  def matching_special_pgm_cep_admits(test)
+    test.searchable_data.select { |u| u[:special_program_cep] }
+  end
+
   ### EXPECTED RESULTS
 
-    # Filters an array of user data hashes according to search criteria and returns the users that should be present in the UI after
+  # Filters an array of user data hashes according to search criteria and returns the students that should be present in the UI after
   # the search completes
   # @param test [BOACTestConfig]
   # @param search_criteria [CohortFilter]
   # @return [Array<Hash>]
-  def expected_search_results(test, search_criteria)
+  def expected_student_search_results(test, search_criteria)
     matches = []
     matches << matching_college_students(test, search_criteria) if search_criteria.college&.any?
     matches << matching_entering_term_students(test, search_criteria) if search_criteria.entering_terms&.any?
@@ -347,12 +489,38 @@ module BOACFilteredCohortPageResults
     matches.any?(&:empty?) ? [] : matches.inject(:'&')
   end
 
+  # Filters an array of user data hashes according to search criteria and returns the admits that should be present in the UI after
+  # the search completes
+  # @param test [BOACTestConfig]
+  # @param search_criteria [CohortFilter]
+  # @return [Array<Hash>]
+  def expected_admit_search_results(test, search_criteria)
+    matches = []
+    matches << matching_fresh_or_trans_admits(test, search_criteria) if search_criteria.freshman_or_transfer&.any?
+    matches << matching_sir_admits(test) if search_criteria.current_sir
+    matches << matching_college_admits(test, search_criteria) if search_criteria.college&.any?
+    matches << matching_xethnic_admits(test) if search_criteria.xethnic
+    matches << matching_hispanic_admits(test) if search_criteria.hispanic
+    matches << matching_urem_admits(test) if search_criteria.urem
+    matches << matching_first_gen_admits(test) if search_criteria.first_gen_student
+    matches << matching_fee_waiver_admits(test) if search_criteria.fee_waiver
+    matches << matching_foster_care_admits(test) if search_criteria.foster_care
+    matches << matching_fam_single_parent_admits(test) if search_criteria.family_single_parent
+    matches << matching_stu_single_parent_admits(test) if search_criteria.student_single_parent
+    matches << matching_family_depends_admits(test, search_criteria) if search_criteria.family_dependents&.any?
+    matches << matching_student_depends_admits(test, search_criteria) if search_criteria.student_dependents&.any?
+    matches << matching_re_entry_admits(test) if search_criteria.re_entry_status
+    matches << matching_lcff_plus_admits(test) if search_criteria.last_school_lcff_plus
+    matches << matching_special_pgm_cep_admits(test) if search_criteria.special_program_cep
+    matches.any?(&:empty?) ? [] : matches.inject(:'&')
+  end
+
   # Sets a cohort's membership based on expected results, rather than actual results
   # @param cohort [FilteredCohort]
   # @param test [BOACTestConfig]
   # @return [Array<BOACUser>]
   def set_cohort_members(cohort, test)
-    expected_sids = expected_search_results(test, cohort.search_criteria).map { |k| k[:sid] }
+    expected_sids = expected_student_search_results(test, cohort.search_criteria).map { |k| k[:sid] }
     cohort.members = test.students.select { |s| expected_sids.include? s.sis_id }
   end
 

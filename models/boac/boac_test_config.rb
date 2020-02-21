@@ -4,7 +4,8 @@ class BOACTestConfig < TestConfig
 
   CONFIG = BOACUtils.config
 
-  attr_accessor :advisor,
+  attr_accessor :admits,
+                :advisor,
                 :attachments,
                 :cohort_members,
                 :default_cohort,
@@ -69,7 +70,7 @@ class BOACTestConfig < TestConfig
   end
 
   # Returns all searchable student data. Unless a current file containing all student data already exists, obtain
-  # the current data from Redshift.
+  # the current data from RDS.
   # @param all_students [Array<BOACUser>]
   # @return [Array<Hash>]
   def set_student_searchable_data(all_students)
@@ -85,6 +86,18 @@ class BOACTestConfig < TestConfig
     set_dept dept
     set_advisor
     set_students
+  end
+
+  # Sets the complete list of potentially visible admits
+  def set_admits
+    @admits = NessieUtils.get_admits
+  end
+
+  # Returns all searchable admit data. Unless a current file containing all student data already exists, obtain
+  # the current data from RDS.
+  # @return [Array<Hash>]
+  def set_admit_searchable_data
+    @searchable_data = NessieUtils.searchable_admit_data
   end
 
   # Basic settings for department, advisor, and student population under test, plus consuming the searchable student data for filtered cohorts.
@@ -145,20 +158,44 @@ class BOACTestConfig < TestConfig
     logger.warn "Test UIDs: #{@test_students.map &:uid}"
   end
 
+  # Determines the set of admits to use for testing
+  # @param config [Integer]
+  def set_test_admits(config)
+    @test_students = if (sids = ENV('SIDS'))
+                       # Running tests against a specific set of admits
+                       @admits.select { |s| sids.split.include? s.sis_id }
+                     else
+                       # Running tests against a random set of admits
+                       @admits.shuffle[0..(config - 1)]
+                     end
+  end
+
   # Configures a set of cohorts to use for filtered cohort testing. If a test data override file exists in the config override dir,
   # then uses that to create the filters. Otherwise, uses the default test data.
-  def set_search_cohorts
+  def set_search_cohorts(opts = {})
 
     test_data_file_name = 'test-data-boac.json'
     override_test_data = File.exist?(override_path = File.join(Utils.config_dir, test_data_file_name))
     test_data_file = override_test_data ? override_path : File.expand_path("test_data/#{test_data_file_name}", Dir.pwd)
-    test_data = JSON.parse File.read(test_data_file)
+    test_data = (JSON.parse File.read(test_data_file))['filters']
 
-    filters = test_data['filters'].map do |data|
-      filter = CohortFilter.new
-      filter.set_test_filters(data, @dept)
-      filter
+    if opts[:students]
+      filters = test_data['students'].map do |data|
+        filter = CohortFilter.new
+        filter.set_test_filters(data, @dept)
+        filter
+      end
+    elsif opts[:admits]
+      filters = test_data['admits'].map do |data|
+        filter = CohortAdmitFilter.new
+        filter.set_test_filters data
+        filter
+      end
+    else
+      logger.error 'Unable to determine search cohorts'
+      fail
     end
+
     # Get rid of empty filter sets (e.g., filtering only for teams but the advisor is CoE)
     filters.delete_if do |f|
       filter_options = f.instance_variables.map { |variable| f.instance_variable_get variable }
@@ -215,10 +252,18 @@ class BOACTestConfig < TestConfig
     set_students
   end
 
+  # Config for filtered admit cohort testing
+  def filtered_admits
+    set_dept BOACDepartments::ZCEEE
+    set_advisor
+    set_search_cohorts admits: true
+    set_admit_searchable_data
+  end
+
   # Config for filtered cohort testing
   def filtered_cohorts
     set_base_configs_plus_searchable_data BOACDepartments::ADMIN
-    set_search_cohorts
+    set_search_cohorts students: true
 
     # Set a default cohort with all possible filters to exercise editing and removing filters
     filters = {
@@ -263,7 +308,7 @@ class BOACTestConfig < TestConfig
   # Config for curated-groups-as-cohort-filter testing
   def filtered_groups
     set_base_configs_plus_searchable_data
-    set_search_cohorts
+    set_search_cohorts students: true
   end
 
   # Config for filtered cohort history testing
@@ -345,10 +390,17 @@ class BOACTestConfig < TestConfig
     set_test_students CONFIG['search_max_users']
   end
 
-  # Config for SIS data testing
-  def sis_data
+  # Config for SIS student data testing
+  def sis_student_data
     set_base_configs
     set_test_students CONFIG['sis_data_max_users']
+  end
+
+  # Config for SIS admit data testing
+  def sis_admit_data
+    set_base_configs
+    set_admits
+    set_test_admits CONFIG['sis_data_max_users']
   end
 
   # Config for user management tests on the admin page
@@ -360,7 +412,7 @@ class BOACTestConfig < TestConfig
   # Config for admin user role testing
   def user_role_admin
     set_base_configs_plus_searchable_data BOACDepartments::ADMIN
-    set_search_cohorts
+    set_search_cohorts students: true
   end
 
   # Config for advisor user role testing

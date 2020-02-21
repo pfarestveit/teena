@@ -1,136 +1,230 @@
 {
-    "filters": [
-        {
-            "colleges": [
-				{"college": "Undergrad Engineering"},
-				{"college": "Undergrad Letters & Science"}
-			],
-            "visa_types": [
-                {"visa_type":  "F-1 International Student"},
-                {"visa_type":  "J-1 International Student"}
-            ],
-            "ethnicities": [
-                {"ethnicity":  "Other Spanish-American / Latino"}
-            ]
-        },
-        {
-            "visa_types": [
-                {"visa_type":  "All types"}
-            ],
-            "ethnicities": [
-                {"ethnicity":  "Other Spanish-American / Latino"}
-            ]
-        },
-        {
-            "entering_terms": [
-                {"entering_term": "2138"},
-                {"entering_term": "2148"}
-            ]
-        },
-        {
-            "asc_inactive": true,
-            "asc_teams": [
-                {"squad": "Men's Crew"},
-                {"squad": "Women's Crew"}
-            ]
-        },
-        {
-            "asc_intensive": true
-        },
-        {
-            "levels": [
-                {"level":  "Freshman (0-29 Units)"}
-            ],
-            "genders": [
-                {"gender": "Male"}
-            ],
-            "mid_point_deficient": true
-        },
-        {
-            "coe_advisors": [
-                {"advisor": "2322"}
-            ],
-            "coe_ethnicities": [
-                {"ethnicity": "E"}
-            ]
-        },
-        {
-            "coe_genders": [
-                {"gender": "Female"}
-            ],
-            "coe_inactive": true
-        },
-        {
-            "coe_preps": [
-                {"prep": "PREP"},
-                {"prep": "T-PREP"},
-                {"prep": "PREP eligible"},
-                {"prep": "T-PREP eligible"}
-            ],
-            "coe_probation": true,
-            "coe_underrepresented_minority": true
-        },
-        {
-            "levels": [
-                {"level": "Junior (60-89 Units)"},
-                {"level": "Senior (90+ Units)"}
-            ],
-            "ethnicities": [
-                {"ethnicity": "Puerto Rican"}
-            ],
-            "genders": [
-                {"gender": "Male"}
-            ]
-        },
-        {
-            "expected_grad_terms": [
-                {"expected_grad_term": "2198"},
-                {"expected_grad_term": "2202"}
-            ],
-            "gpa_ranges": [
-                {
-                    "gpa_range": {"min": "3.51", "max": "4.000"}
-                },
-                {
-                    "gpa_range": {"min": ".02", "max": "2"}
-                }
-            ],
-            "majors": [
-                {"major": "Chemistry BS"},
-                {"major": "History BA"}
-            ],
-            "units": [
-                {"unit": "120 +"}
-            ]
-        },
-        {
-            "gpa_ranges_last_term": [
-                {
-                    "gpa_range": {"min": "3", "max": "3.5"}
-                },
-                {
-                    "gpa_range": {"min": ".02", "max": "2"}
-                }
-            ],
-            "majors": [
-                {"major": "Physics BA"},
-                {"major": "English BA"}
-            ]
-        },
-        {
-            "majors": [
-                {"major": "Letters & Sci Undeclared UG"}
-            ],
-            "transfer_student": true,
-            "underrepresented_minority": true,
-            "last_initials": [
-                {
-                    "last_initial": {
-                        "min": "B",
-                        "max": "G"
+    "filters": {
+        "students": [
+            {
+                "colleges": [
+                    {
+                        "college": "Undergrad Engineering"
+                    },
+                    {
+                        "college": "Undergrad Letters & Science"
                     }
-                }
-            ]
-        }
-    ]
+                ],
+                "visa_types": [
+                    {
+                        "visa_type": "F-1 International Student"
+                    },
+                    {
+                        "visa_type": "J-1 International Student"
+                    }
+                ],
+                "ethnicities": [
+                    {
+                        "ethnicity": "Other Spanish-American / Latino"
+                    }
+                ]
+            },
+            {
+                "visa_types": [
+                    {
+                        "visa_type": "All types"
+                    }
+                ],
+                "ethnicities": [
+                    {
+                        "ethnicity": "Other Spanish-American / Latino"
+                    }
+                ]
+            },
+            {
+                "entering_terms": [
+                    {
+                        "entering_term": "2138"
+                    },
+                    {
+                        "entering_term": "2148"
+                    }
+                ]
+            },
+            {
+                "asc_inactive": true,
+                "asc_teams": [
+                    {
+                        "squad": "Men's Crew"
+                    },
+                    {
+                        "squad": "Women's Crew"
+                    }
+                ]
+            },
+            {
+                "asc_intensive": true
+            },
+            {
+                "levels": [
+                    {
+                        "level": "Freshman (0-29 Units)"
+                    }
+                ],
+                "genders": [
+                    {
+                        "gender": "Male"
+                    }
+                ],
+                "mid_point_deficient": true
+            },
+            {
+                "coe_advisors": [
+                    {
+                        "advisor": "2322"
+                    }
+                ],
+                "coe_ethnicities": [
+                    {
+                        "ethnicity": "E"
+                    }
+                ]
+            },
+            {
+                "coe_genders": [
+                    {
+                        "gender": "Female"
+                    }
+                ],
+                "coe_inactive": true
+            },
+            {
+                "coe_preps": [
+                    {
+                        "prep": "PREP"
+                    },
+                    {
+                        "prep": "T-PREP"
+                    },
+                    {
+                        "prep": "PREP eligible"
+                    },
+                    {
+                        "prep": "T-PREP eligible"
+                    }
+                ],
+                "coe_probation": true,
+                "coe_underrepresented_minority": true
+            },
+            {
+                "levels": [
+                    {
+                        "level": "Junior (60-89 Units)"
+                    },
+                    {
+                        "level": "Senior (90+ Units)"
+                    }
+                ],
+                "ethnicities": [
+                    {
+                        "ethnicity": "Puerto Rican"
+                    }
+                ],
+                "genders": [
+                    {
+                        "gender": "Male"
+                    }
+                ]
+            },
+            {
+                "expected_grad_terms": [
+                    {
+                        "expected_grad_term": "2198"
+                    },
+                    {
+                        "expected_grad_term": "2202"
+                    }
+                ],
+                "gpa_ranges": [
+                    {
+                        "gpa_range": {
+                            "min": "3.51",
+                            "max": "4.000"
+                        }
+                    },
+                    {
+                        "gpa_range": {
+                            "min": ".02",
+                            "max": "2"
+                        }
+                    }
+                ],
+                "majors": [
+                    {
+                        "major": "Chemistry BS"
+                    },
+                    {
+                        "major": "History BA"
+                    }
+                ],
+                "units": [
+                    {
+                        "unit": "120 +"
+                    }
+                ]
+            },
+            {
+                "gpa_ranges_last_term": [
+                    {
+                        "gpa_range": {
+                            "min": "3",
+                            "max": "3.5"
+                        }
+                    },
+                    {
+                        "gpa_range": {
+                            "min": ".02",
+                            "max": "2"
+                        }
+                    }
+                ],
+                "majors": [
+                    {
+                        "major": "Physics BA"
+                    },
+                    {
+                        "major": "English BA"
+                    }
+                ]
+            },
+            {
+                "majors": [
+                    {
+                        "major": "Letters & Sci Undeclared UG"
+                    }
+                ],
+                "transfer_student": true,
+                "underrepresented_minority": true,
+                "last_initials": [
+                    {
+                        "last_initial": {
+                            "min": "B",
+                            "max": "G"
+                        }
+                    }
+                ]
+            }
+        ],
+        "admits": [
+            {
+                "colleges": [
+                    {
+                        "college": "Letters & Sci Undeclared UG"
+                    }
+                ]
+            },
+            {
+                "freshman_or_transfer": [
+                    {
+                        "fresh_or_trans": "Freshman"
+                    }
+                ]
+            }
+        ]
+    }
 }
