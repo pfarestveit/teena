@@ -407,6 +407,7 @@ class BOACTestConfig < TestConfig
   def user_mgmt
     set_dept BOACDepartments::ADMIN
     set_advisor
+    set_students
   end
 
   # Config for admin user role testing

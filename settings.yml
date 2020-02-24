@@ -53,6 +53,7 @@ boac:
   test_dept: UWASC
   test_default_cohort_major: [History BA]
   test_add_edit_uid: secret
+  test_add_remove_scheduler: secret
 
   shuffle_max_users: true
   appts_drop_in_dept: QCADV

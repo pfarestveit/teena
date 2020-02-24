@@ -31,7 +31,7 @@ class BOACPaxManifestPage
     logger.info 'Downloading BOA users CSV'
     Utils.prepare_download_dir
     wait_for_update_and_click download_users_button_element
-    csv_file_path = "#{Utils.download_dir}/boa_users_#{Date.today.strftime("%Y-%m-%d")}_*.csv"
+    csv_file_path = "#{Utils.download_dir}/boa_users_#{Time.now.utc.strftime("%Y-%m-%d")}_*.csv"
     wait_until(Utils.medium_wait) { Dir[csv_file_path].any? }
     csv = Dir[csv_file_path].first
     CSV.table csv

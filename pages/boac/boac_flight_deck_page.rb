@@ -110,4 +110,53 @@ class BOACFlightDeckPage
     end
   end
 
+  ### SCHEDULERS ###
+
+  text_field(:add_scheduler_input, id: 'add-scheduler-input-input')
+  button(:add_scheduler_button, id: 'add-scheduler-input-add-button')
+  elements(:add_scheduler_option, :link, xpath: '//a[contains(@id, "add-scheduler-input-suggestion-")]')
+  elements(:scheduler_uid, :div, xpath: '//div[@id="scheduler-rows"]/div')
+  button(:confirm_remove_scheduler, id: 'remove-scheduler-confirm')
+  button(:cancel_remove_scheduler, id: 'remove-scheduler-cancel')
+
+  # Adds a scheduler
+  # @param scheduler [BOACUser]
+  def add_scheduler(scheduler)
+    logger.info "Adding scheduler SID #{scheduler.sis_id}"
+    wait_for_element_and_type(add_scheduler_input_element, scheduler.sis_id)
+    sleep Utils.click_wait
+    wait_until(2) { auto_suggest_option_elements.any? }
+    link_element = auto_suggest_option_elements.first
+    wait_for_load_and_click link_element
+    wait_for_update_and_click add_scheduler_button_element
+    sleep 1
+  end
+
+  # Returns the UIDs of the visible schedulers
+  # @return [Array<String>]
+  def visible_scheduler_uids
+    scheduler_uid_elements.map { |el| el.attribute('id').split('-').last }.sort
+  end
+
+  # Clicks the Remove button for a scheduler
+  # @param scheduler [BOACUser]
+  def click_remove_scheduler(scheduler)
+    wait_for_update_and_click button_element(xpath: "//button[@id='scheduler-row-#{scheduler.uid}-remove-button']")
+  end
+
+  # Removes a scheduler
+  # @param scheduler [BOACUser]
+  def remove_scheduler(scheduler)
+    logger.info "Removing scheduler UID #{scheduler.uid}"
+    click_remove_scheduler scheduler
+    wait_for_update_and_click confirm_remove_scheduler_element
+    sleep 1
+    wait_until(Utils.short_wait) { !visible_scheduler_uids.include? scheduler.uid }
+  end
+
+  # Clicks the cancel button when removing a scheduler
+  def click_cancel_remove_scheduler
+    wait_for_update_and_click cancel_remove_scheduler_element
+  end
+
 end

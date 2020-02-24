@@ -203,6 +203,15 @@ describe 'BOA' do
 
       it('allows a drop-in advisor to set itself "unavailable"') { @advisor_homepage.set_self_unavailable }
       it('allows a drop-in advisor to set itself "available"') { @advisor_homepage.set_self_available }
+
+      it 'is shown for only drop-in advisors' do
+        @advisor_homepage.new_appt_button_element.when_visible Utils.short_wait
+        expect(@advisor_homepage.visible_drop_in_advisors_and_status).to eql(BOACUtils.get_drop_in_advisors_and_status(@test.dept))
+      end
+
+      it 'does not allow a drop-in advisor to toggle another advisor\'s availability' do
+        expect(@advisor_homepage.availability_toggle_button_elements.length).to eql(1)
+      end
     end
   end
 
