@@ -106,7 +106,8 @@ module Page
     span(:assignment_grades_hidden, xpath: '//span[text()="All grades hidden"]')
     button(:assignment_hide_grades_hide_button, xpath: '//button[contains(., "Hide")]')
     span(:assignment_posting_policy, xpath: '//span[text()="Grade Posting Policy"]')
-    text_field(:assignment_manual_posting_input, xpath: '//input[@name="postPolicy"][@value="manual"]/following-sibling::label/span')
+    text_field(:assignment_manual_posting_input, xpath: '//input[@name="postPolicy"][@value="manual"]')
+    span(:assignment_manual_posting_radio, xpath: '//input[@name="postPolicy"][@value="manual"]/following-sibling::label/span')
     button(:assignment_posting_policy_save, xpath: '//button[contains(., "Save")]')
 
     div(:total_grade_column, xpath: '//div[contains(@id, "total_grade")]')
@@ -161,7 +162,7 @@ module Page
         logger.debug 'Posting policy is already manual'
         hit_escape
       else
-        wait_for_update_and_click assignment_manual_posting_input_element
+        wait_for_update_and_click assignment_manual_posting_radio_element
         wait_for_update_and_click assignment_posting_policy_save_element
         wait_for_flash_msg('Success!', Utils.short_wait)
       end
