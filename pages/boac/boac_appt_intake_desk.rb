@@ -283,6 +283,8 @@ module BOACApptIntakeDesk
   button(:status_clear_button, id: 'drop-in-status-clear')
   text_field(:status_input, id: 'drop-in-status-input')
   button(:status_save_button, id: 'drop-in-status-submit')
+  elements(:drop_in_advisor, :div, xpath: '//div[@id="on-duty-advisor-list"]/div[contains(@id, "advisor-uid")]/div[contains(@id, "name")]')
+  elements(:drop_in_advisor_status, :div, xpath: '//div[@id="on-duty-advisor-list"]/div[contains(@id, "advisor-uid")]/div[contains(@id, "status")]')
 
   # Returns the visible availability status for a logged-in advisor
   # @return [Boolean]
@@ -335,6 +337,19 @@ module BOACApptIntakeDesk
   def intake_desk_advisor_status(advisor)
     el = span_element(xpath: "//button[@id='toggle-drop-in-availability-#{advisor.uid}']/../../../../../div//span[@class='text-muted']")
     el.text if el.exists?
+  end
+
+  # Returns the UID and status of the drop-in advisors shown on the waiting list
+  # @return [Array<Hash>]
+  def visible_drop_in_advisors_and_status
+    advisors = drop_in_advisor_elements.each_with_index.map do |el, i|
+      status = drop_in_advisor_status_elements[i].attribute('innerText')
+      {
+        uid: "#{el.attribute('id').split('-')[2]}",
+        status: "#{status.strip if status}"
+      }
+    end
+    advisors.sort_by { |h| h[:uid] }
   end
 
   ### LIST VIEW OF EXISTING APPOINTMENTS ###

@@ -855,4 +855,23 @@ class BOACUtils < Utils
     end
   end
 
+  def self.get_drop_in_advisors_and_status(dept)
+    query = "SELECT authorized_users.uid,
+                    drop_in_advisors.status
+             FROM authorized_users
+             JOIN drop_in_advisors ON authorized_users.id = drop_in_advisors.authorized_user_id
+             JOIN university_dept_members ON authorized_users.id = university_dept_members.authorized_user_id
+             JOIN university_depts ON university_dept_members.university_dept_id = university_depts.id
+             WHERE university_depts.dept_code = '#{dept.code}'
+               AND drop_in_advisors.is_available = true;"
+    results = query_pg_db(boac_db_credentials, query)
+    advisors = results.map do |r|
+      status = r['status']
+      {
+        uid: r['uid'],
+        status: "#{status.strip if status}"
+      }
+    end
+    advisors.sort_by { |h| h[:uid] }
+  end
 end
