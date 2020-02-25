@@ -251,6 +251,16 @@ module BOACPages
     include_students_cbx_element.when_visible 1
   end
 
+  # Makes sure the Admitted Students checkbox is selected
+  def include_admits
+    wait_for_update_and_click include_admits_cbx_element unless include_admits_cbx_checked?
+  end
+
+  # Makes sure the Admitted Students checkbox is not selected
+  def exclude_admits
+    wait_for_update_and_click include_admits_cbx_element if include_admits_cbx_checked?
+  end
+
   # Expands the sidebar advanced search notes subpanel
   def expand_search_options_notes_subpanel
     expand_search_options

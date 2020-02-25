@@ -271,9 +271,14 @@ class NessieUtils < Utils
   #### ADMITS ####
 
   def self.get_admits
-    query = 'SELECT cs_empl_id AS sid FROM boac_advising_oua.student_admits ORDER BY sid;'
+    query = 'SELECT cs_empl_id AS sid,
+                    first_name AS first_name,
+                    last_name AS last_name,
+                    campus_email_1 AS email
+             FROM boac_advising_oua.student_admits
+             ORDER BY sid;'
     results = Utils.query_pg_db(nessie_pg_db_credentials, query)
-    results.map { |r| BOACUser.new sis_id: r['sid'] }
+    results.map { |r| BOACUser.new sis_id: r['sid'], first_name: r['first_name'], last_name: r['last_name'], email: r['email'] }
   end
 
   #### SEARCHABLE STUDENT DATA ####
@@ -558,7 +563,7 @@ class NessieUtils < Utils
       end
 
       # Write the data to a file for reuse.
-      File.open(BOACUtils.searchable_data, 'w') { |f| f.write admit_data.to_json }
+      File.open(BOACUtils.searchable_admit_data, 'w') { |f| f.write admit_data.to_json }
       admit_data
     end
   end
