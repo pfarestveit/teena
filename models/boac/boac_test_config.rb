@@ -225,6 +225,14 @@ class BOACTestConfig < TestConfig
 
   ### CONFIGURATION FOR SPECIFIC TEST SCRIPTS ###
 
+  # Config for admit page testing
+  def admit_pages
+    set_dept BOACDepartments::ZCEEE
+    set_advisor
+    set_admits
+    set_test_admits CONFIG['sis_data_max_users']
+  end
+
   # Config for assignments testing
   def assignments
     set_base_configs
