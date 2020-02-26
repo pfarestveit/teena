@@ -40,6 +40,44 @@ class BOACSearchResultsPage
     h1_element(id: 'page-header-no-results')
   end
 
+  # ADMIT SEARCH
+
+  h1(:admit_results_count, xpath: '//h1[@id="admit-results-page-header"]')
+
+  # Returns the result count for an admit search
+  # @return [Integer]
+  def admit_search_results_count
+    results_count student_results_count_element
+  end
+
+  # Checks if a given admit is among search results. If more than 50 results exist, the admit could be among them
+  # but not displayed. In that case, returns true without further tests.
+  # @param admit [BOACUser]
+  # @return [boolean]
+  def admit_in_search_result?(admit)
+    wait_for_spinner
+    count = results_count admit_results_count_element
+    verify_block do
+      if count > 50
+        wait_until(2) { all_row_cs_ids.length == 50 }
+        logger.warn "Skipping a test with CS ID #{admit.sis_id} because there are more than 50 results"
+        sleep 1
+      else
+        wait_until(Utils.short_wait) do
+          all_row_cs_ids.length == count
+          all_row_cs_ids.include? admit.sis_id.to_s
+        end
+      end
+    end
+  end
+
+  # Clicks the search results link for a given admit
+  # @param admit [User]
+  def click_admit_result(admit)
+    wait_for_update_and_click link_element(id: "link-to-admit--#{admit.sis_id}")
+    wait_for_spinner
+  end
+
   # STUDENT SEARCH
 
   h1(:student_results_count, xpath: '//h1[contains(text(),"student")]')

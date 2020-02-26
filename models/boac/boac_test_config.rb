@@ -161,7 +161,7 @@ class BOACTestConfig < TestConfig
   # Determines the set of admits to use for testing
   # @param config [Integer]
   def set_test_admits(config)
-    @test_students = if (sids = ENV('SIDS'))
+    @test_students = if (sids = ENV['SIDS'])
                        # Running tests against a specific set of admits
                        @admits.select { |s| sids.split.include? s.sis_id }
                      else
@@ -359,6 +359,15 @@ class BOACTestConfig < TestConfig
     set_base_configs_plus_searchable_data BOACDepartments::L_AND_S
     set_default_cohort
     set_note_attachments
+  end
+
+  # Config for admit search tests
+  def search_admits
+    set_dept BOACDepartments::ZCEEE
+    set_advisor
+    set_admits
+    set_test_admits CONFIG['search_max_users']
+    set_admit_searchable_data
   end
 
   # Config for appointment search tests
