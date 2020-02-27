@@ -20,7 +20,7 @@ GEM
     mini_portile2 (2.4.0)
     minitest (5.11.3)
     net-http-persistent (2.9.4)
-    nokogiri (1.10.7)
+    nokogiri (1.10.8)
       mini_portile2 (~> 2.4.0)
     openssl (2.1.2)
     page-object (2.0.0)
@@ -64,14 +64,13 @@ PLATFORMS
 
 DEPENDENCIES
   hash-deep-merge (= 0.1.1)
-  nokogiri (= 1.10.7)
+  nokogiri (= 1.10.8)
   openssl (= 2.1.2)
   page-object (~> 2.0.0)
   pg (= 1.1.4)
   rake (= 12.3.1)
   redshift-client (= 0.3.0)
   rspec (= 3.8.0)
-  rubyzip (= 2.0.0)
   selenium-webdriver (= 3.142.6)
 
 BUNDLED WITH
