@@ -281,6 +281,14 @@ class NessieUtils < Utils
     results.map { |r| BOACUser.new sis_id: r['sid'], first_name: r['first_name'], last_name: r['last_name'], email: r['email'] }
   end
 
+  def self.get_admit_page_data
+    query = 'SELECT *
+             FROM boac_advising_oua.student_admits;'
+    results = Utils.query_pg_db(nessie_pg_db_credentials, query)
+    results = results.map { |r| r.transform_keys &:to_sym }
+    results.map { |r| r.transform_values &:to_s }
+  end
+
   #### SEARCHABLE STUDENT DATA ####
 
   # Parses a file containing searchable user data if it exists
