@@ -73,6 +73,12 @@
             "capability": "Screencast"
         },
         {
+            "building": "Davis",
+            "room": "534",
+            "captureAgent": "Davis 534",
+            "capability": "Screencast"
+        },
+        {
             "building": "Donner Lab",
             "room": "155",
             "captureAgent": "Donner Lab 155",
@@ -175,12 +181,6 @@
             "capability": "Screencast"
         },
         {
-            "building": "Hertz",
-            "room": "320",
-            "captureAgent": "Hertz 320",
-            "capability": "Screencast + Video"
-        },
-        {
             "building": "Jacobs Hall",
             "room": "310",
             "captureAgent": "Jacobs Hall 310",
@@ -190,6 +190,12 @@
             "building": "Kroeber",
             "room": "155",
             "captureAgent": "Kroeber 155",
+            "capability": "Screencast"
+        },
+        {
+            "building": "Kroeber",
+            "room": "160",
+            "captureAgent": "Kroeber 160",
             "capability": "Screencast"
         },
         {
@@ -220,6 +226,12 @@
             "building": "LeConte",
             "room": "4",
             "captureAgent": "LeConte 4",
+            "capability": "Screencast"
+        },
+        {
+            "building": "Lewis",
+            "room": "100",
+            "captureAgent": "Lewis 100",
             "capability": "Screencast"
         },
         {
@@ -295,12 +307,6 @@
             "capability": "Screencast"
         },
         {
-            "building": "Pauley Ballroom",
-            "room": "",
-            "captureAgent": "Pauley Ballroom",
-            "capability": "Screencast + Video"
-        },
-        {
             "building": "Pimentel",
             "room": "1",
             "captureAgent": "Pimentel 1",
@@ -347,12 +353,6 @@
             "room": "150",
             "captureAgent": "Wheeler Aud (150)",
             "capability": "Screencast + Video"
-        },
-        {
-            "building": "Wheeler",
-            "room": "123",
-            "captureAgent": "Wheeler 123",
-            "capability": "Screencast"
         },
         {
             "building": "Wurster",
