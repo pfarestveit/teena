@@ -431,8 +431,7 @@ class BOACUtils < Utils
                     cohort_filters.name AS cohort_name,
                     cohort_filters.filter_criteria AS criteria
               FROM cohort_filters
-              JOIN cohort_filter_owners ON cohort_filter_owners.cohort_filter_id = cohort_filters.id
-              JOIN authorized_users ON authorized_users.id = cohort_filter_owners.user_id
+              JOIN authorized_users ON authorized_users.id = cohort_filters.owner_id
               WHERE authorized_users.uid = '#{user.uid}';"
     results = Utils.query_pg_db(boac_db_credentials, query)
     results.map do |r|
@@ -449,9 +448,8 @@ class BOACUtils < Utils
                     cohort_filters.filter_criteria AS criteria,
                     authorized_users.uid AS uid
               FROM cohort_filters
-              JOIN cohort_filter_owners ON cohort_filter_owners.cohort_filter_id = cohort_filters.id
               JOIN authorized_users
-                  ON authorized_users.id = cohort_filter_owners.user_id
+                  ON authorized_users.id = cohort_filters.owner_id
                   AND authorized_users.deleted_at IS NULL
               #{if dept
                  'JOIN university_dept_members ON university_dept_members.authorized_user_id = authorized_users.id

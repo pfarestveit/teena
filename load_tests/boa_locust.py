@@ -131,8 +131,7 @@ class TestData:
     user_cohort_results = BoaRds.fetch("""
         SELECT au.uid AS uid, cf.id AS cohort_id, cf.student_count, cf.filter_criteria
         FROM authorized_users au
-        JOIN cohort_filter_owners cfo on au.id = cfo.user_id
-        JOIN cohort_filters cf on cf.id = cfo.cohort_filter_id
+        JOIN cohort_filters cf on cf.owner_id = au.id
         WHERE au.deleted_at IS NULL
         ORDER BY uid"""
     )
