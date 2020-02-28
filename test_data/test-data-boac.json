@@ -212,18 +212,70 @@
         ],
         "admits": [
             {
+                "freshman_or_transfer": [
+                    {
+                        "fresh_or_trans": "Transfer"
+                    }
+                ],
                 "colleges": [
                     {
-                        "college": "Letters & Sci Undeclared UG"
+                        "college": "Haas School of Business"
+                    },
+                    {
+                        "college": "College of Environmental Design"
                     }
                 ]
             },
             {
-                "freshman_or_transfer": [
+                "current_sir": true,
+                "family_single_parent": true,
+                "hispanic": true
+            },
+            {
+                "family_dependents": [
                     {
-                        "fresh_or_trans": "Freshman"
+                        "num": {
+                            "min": "3",
+                            "max": "4"
+                        }
+                    }
+                ],
+                "xethnic": [
+                    {
+                        "ethnic": "White"
                     }
                 ]
+            },
+            {
+                "urem": true,
+                "foster_care": true
+            },
+            {
+                "student_dependents": [
+                    {
+                        "num": {
+                            "min": "0",
+                            "max": "1"
+                        }
+                    }
+                ],
+                "student_single_parent": true
+            },
+            {
+                "last_school_lcff_plus": true
+            },
+            {
+                "special_program_cep": [
+                    {
+                        "program": "Transfer Alliance Project"
+                    }
+                ],
+                "fee_waiver": true,
+                "re_entry_status": true
+            },
+            {
+                "first_gen_college": true,
+                "foster_care": true
             }
         ]
     }

@@ -59,13 +59,13 @@ class BOACSearchResultsPage
     count = results_count admit_results_count_element
     verify_block do
       if count > 50
-        wait_until(2) { all_row_cs_ids.length == 50 }
+        wait_until(2) { search_result_all_row_cs_ids.length == 50 }
         logger.warn "Skipping a test with CS ID #{admit.sis_id} because there are more than 50 results"
         sleep 1
       else
         wait_until(Utils.short_wait) do
-          all_row_cs_ids.length == count
-          all_row_cs_ids.include? admit.sis_id.to_s
+          search_result_all_row_cs_ids.length == count
+          search_result_all_row_cs_ids.include? admit.sis_id.to_s
         end
       end
     end

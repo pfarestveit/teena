@@ -24,6 +24,91 @@ module BOACCohortPages
   span(:no_access_msg, xpath: '//span[text()="You are unauthorized to access student data managed by other departments"]')
   span(:title_required_msg, xpath: '//span[text()="Required"]')
 
+  button(:save_cohort_button_one, id: 'save-button')
+  text_area(:cohort_name_input, id: 'create-input')
+  button(:save_cohort_button_two, id: 'create-confirm')
+  button(:cancel_cohort_button, id: 'create-cancel')
+  text_area(:rename_cohort_input, id: 'rename-cohort-input')
+  button(:apply_button, id: 'unsaved-filter-apply')
+
+  # Returns the heading for a given cohort page
+  # @param cohort [FilteredCohort]
+  # @return [PageObject::Elements::Span]
+  def cohort_heading(cohort)
+    h1_element(xpath: "//h1[contains(text(),\"#{cohort.name}\")]")
+  end
+
+  # Clicks the button to save a new cohort, which triggers the name input modal
+  def click_save_cohort_button_one
+    wait_until(Utils.medium_wait) { save_cohort_button_one_element.visible?; save_cohort_button_one_element.enabled? }
+    wait_for_update_and_click save_cohort_button_one_element
+  end
+
+  def apply_and_save_cohort
+    wait_for_update_and_click apply_button_element
+    wait_for_update_and_click save_cohort_button_one_element
+  end
+
+  # Enters a cohort name and clicks the Save button
+  # @param cohort [FilteredCohort]
+  def name_cohort(cohort)
+    wait_for_element_and_type(cohort_name_input_element, cohort.name)
+    wait_for_update_and_click save_cohort_button_two_element
+  end
+
+  # Clicks the Save Cohort button, enters a cohort name, and clicks the Save button
+  # @param cohort [FilteredCohort]
+  def save_and_name_cohort(cohort)
+    click_save_cohort_button_one
+    name_cohort cohort
+  end
+
+  # Waits for a cohort page to load and obtains the cohort's ID
+  # @param cohort [FilteredCohort]
+  # @return [Integer]
+  def wait_for_filtered_cohort(cohort)
+    cohort_heading(cohort).when_present Utils.medium_wait
+    BOACUtils.set_filtered_cohort_id cohort
+  end
+
+  # Clicks the Cancel button during cohort creation
+  def cancel_cohort
+    wait_for_update_and_click cancel_cohort_button_element
+    modal_element.when_not_present Utils.short_wait
+  rescue
+    logger.warn 'No cancel button to click'
+  end
+
+  # Creates a new cohort
+  # @param cohort [FilteredCohort]
+  def create_new_cohort(cohort)
+    logger.info "Creating a new cohort named #{cohort.name}"
+    save_and_name_cohort cohort
+    wait_for_filtered_cohort cohort
+  end
+
+  # Combines methods to load the create filtered cohort page, perform a search, and create a filtered cohort
+  # @param cohort [FilteredCohort]
+  # @param test [BOACTestConfig]
+  def search_and_create_new_cohort(cohort, test)
+    click_sidebar_create_filtered
+    perform_student_search cohort
+    create_new_cohort cohort
+  end
+
+  # Renames a cohort
+  # @param cohort [FilteredCohort]
+  # @param new_name [String]
+  def rename_cohort(cohort, new_name)
+    logger.info "Changing the name of cohort ID #{cohort.id} to #{new_name}"
+    load_cohort cohort
+    wait_for_load_and_click rename_cohort_button_element
+    cohort.name = new_name
+    wait_for_element_and_type(rename_cohort_input_element, new_name)
+    wait_for_update_and_click rename_cohort_confirm_button_element
+    h1_element(xpath: "//h1[contains(text(),\"#{cohort.name}\")]").when_present Utils.short_wait
+  end
+
   # Returns the search results count in the page heading
   # @return [Integer]
   def results_count
@@ -201,7 +286,7 @@ module BOACCohortPages
   def sort_by(option)
     logger.info "Sorting by #{option}"
     wait_for_element_and_select_js(cohort_sort_select_element, option)
-    wait_until(2) { player_sid_elements.empty? }
+    sleep 1
     wait_for_spinner
   end
 
@@ -213,6 +298,10 @@ module BOACCohortPages
   # Sorts cohort search results by last name
   def sort_by_last_name
     sort_by 'Last Name'
+  end
+
+  def sort_by_cs_id
+    sort_by 'CS ID'
   end
 
   # Sorts cohort search results by team

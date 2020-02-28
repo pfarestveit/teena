@@ -35,7 +35,7 @@ class BOACAdmitPage
   cell(:residence_country, id: 'admit-permanent-residence-country')
   cell(:visa_status, id: 'admit-non-immigrant-visa-current')
   cell(:visa_planned, id: 'admit-non-immigrant-visa-planned')
-  cell(:first_gen_student, id: 'admit-first-generation-student')
+  cell(:first_gen_college, id: 'admit-first-generation-student')
   cell(:first_gen_college, id: 'admit-first-generation-college')
   cell(:parent_1_educ, id: 'admit-parent-1-education-level')
   cell(:parent_2_educ, id: 'admit-parent-2-education-level')
@@ -96,7 +96,7 @@ class BOACAdmitPage
   # Clicks the student page link
   # @param admit [Hash]
   def click_student_page_link(admit)
-    logger.info "Clicking the student page link for SID #{admit[:cs_empl_id]}"
+    logger.info "Clicking the student page link for SID #{admit[:sid]}"
     wait_for_update_and_click student_page_link(admit)
   end
 

@@ -125,7 +125,7 @@ describe 'The BOA admit page' do
         visible_visa_planned = @admit_page.visa_planned
         it("shows the non-immigrant visa planned status of CS ID #{admit[:cs_empl_id]}") { expect(visible_visa_planned).to eql(admit[:non_immigrant_visa_planned]) }
 
-        visible_first_gen_student = @admit_page.first_gen_student
+        visible_first_gen_student = @admit_page.first_gen_college
         it("shows the first generation student status of CS ID #{admit[:cs_empl_id]}") { expect(visible_first_gen_student).to eql(admit[:first_generation_student]) }
 
         visible_first_gen_college = @admit_page.first_gen_college

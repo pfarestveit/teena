@@ -527,14 +527,16 @@ class NessieUtils < Utils
       # Delete older searchable data files before writing the new one
       Dir.glob("#{Utils.config_dir}/boac-searchable-admit-data*").each { |f| File.delete f }
 
-      query = "SELECT cs_empl_id,
+      query = "SELECT first_name,
+                      last_name,
+                      cs_empl_id,
                       freshman_or_transfer,
                       current_sir,
                       college,
                       xethnic,
                       hispanic,
                       urem,
-                      first_generation_student,
+                      first_generation_college,
                       application_fee_waiver_flag,
                       foster_care_flag,
                       family_is_single_parent,
@@ -550,21 +552,23 @@ class NessieUtils < Utils
       results = query_pg_db(nessie_pg_db_credentials, query)
       admit_data = results.map do |r|
         {
-          cs_empl_id: r['cs_empl_id'],
+          first_name_sortable_cohort: (r['first_name'].split(' ').map { |s| s.gsub(/\W/, '').downcase }).join,
+          last_name_sortable_cohort: (r['last_name'].empty? ? ' ' : (r['last_name'].split(' ').map { |s| s.gsub(/\W/, '').downcase }).join),
+          sid: r['cs_empl_id'],
           freshman_or_transfer: r['freshman_or_transfer'],
-          current_sir: r['current_sir'],
+          current_sir: (r['current_sir'] == 'Yes'),
           college: r['college'],
           xethnic: r['xethnic'],
-          hispanic: r['hispanic'],
-          urem: r['urem'],
-          first_gen_student: r['first_generation_student'],
-          fee_waiver: r['application_fee_waiver_flag'],
-          foster_care: r['foster_care_flag'],
-          family_single_parent: r['family_is_single_parent'],
-          student_single_parent: r['student_is_single_parent'],
+          hispanic: (r['hispanic'] == 'T'),
+          urem: (r['urem'] == 'Yes'),
+          first_gen_college: (r['first_generation_college'] == 'Yes'),
+          fee_waiver: (r['application_fee_waiver_flag'] == 'FeeWaiver'),
+          foster_care: (r['foster_care_flag'] == 'Y'),
+          family_single_parent: (r['family_is_single_parent'] == 'Y'),
+          student_single_parent: (r['student_is_single_parent'] == 'Y'),
           family_dependents: r['family_dependents_num'],
           student_dependents: r['student_dependents_num'],
-          re_entry_status: r['reentry_status'],
+          re_entry_status: (r['reentry_status'] == 'Yes'),
           last_school_lcff_plus_flag: r['last_school_lcff_plus_flag'],
           special_program_cep: r['special_program_cep']
         }

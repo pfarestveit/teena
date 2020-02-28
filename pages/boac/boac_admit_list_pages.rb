@@ -12,8 +12,39 @@ module BOACAdmitListPages
 
   # Returns all the CS IDs visible in a list of admits
   # @return [Array<String>]
-  def all_row_cs_ids
+  def search_result_all_row_cs_ids
     admit_sid_elements.map &:text
+  end
+
+  elements(:admit_filter_sid, :span, xpath: '//span[contains(@id, "-cs-empl-id")]')
+
+  def filter_result_row_cs_ids
+    admit_filter_sid_elements.map &:text
+  end
+
+  def filter_result_all_row_cs_ids(cohort)
+    wait_until(Utils.short_wait) { admit_filter_sid_elements.any? } unless cohort.member_data.length.zero?
+    visible_sids = []
+    sleep 1
+    page_count = list_view_page_count
+    page = 1
+    if page_count == 1
+      logger.debug 'There is 1 page'
+      visible_sids << filter_result_row_cs_ids
+    else
+      logger.debug "There are #{page_count} pages"
+      visible_sids << filter_result_row_cs_ids
+      (page_count - 1).times do
+        start_time = Time.now
+        page += 1
+        wait_for_update_and_click go_to_next_page_link_element
+        wait_until(Utils.medium_wait) { admit_filter_sid_elements.any? }
+        logger.warn "Page #{page} took #{Time.now - start_time} seconds to load" unless page == 1
+        visible_sids << filter_result_row_cs_ids
+      end
+    end
+    visible_sids.flatten
+
   end
 
   # Returns all the data shown in a row for a given admit
