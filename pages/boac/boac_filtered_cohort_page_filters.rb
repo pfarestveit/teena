@@ -95,8 +95,8 @@ module BOACFilteredCohortPageFilters
 
     # Some have no sub-options
     no_options = %w(midpointDeficient transfer underrepresented isInactiveAsc inIntensiveCohort isInactiveCoe coeUnderrepresented coeProbation
-                    sir xEthnicities isHispanic isUrem isFirstGenerationStudent hasFeeWaiver inFosterCare isFamilySingleParent isStudentSingleParent
-                    isReentry)
+                    sir isHispanic isUrem isFirstGenerationCollege hasFeeWaiver inFosterCare isFamilySingleParent isStudentSingleParent
+                    isReentry isLastSchoolLCFF)
     choose_new_filter_sub_option(filter_key, filter_option) unless no_options.include? filter_key
     wait_for_update_and_click unsaved_filter_add_button_element
     unsaved_filter_apply_button_element.when_present Utils.short_wait
@@ -176,10 +176,10 @@ module BOACFilteredCohortPageFilters
     cohort.search_criteria.freshman_or_transfer.each { |f| select_new_filter('freshmanOrTransfer', f) } if cohort.search_criteria.freshman_or_transfer
     select_new_filter 'sir' if cohort.search_criteria.current_sir
     cohort.search_criteria.college.each { |c| select_new_filter('admitColleges', c) } if cohort.search_criteria.college
-    select_new_filter 'xEthnicities' if cohort.search_criteria.xethnic
+    cohort.search_criteria.xethnic.each { |x| select_new_filter('xEthnicities', x) } if cohort.search_criteria.xethnic
     select_new_filter 'isHispanic' if cohort.search_criteria.hispanic
     select_new_filter 'isUrem' if cohort.search_criteria.urem
-    select_new_filter 'isFirstGenerationStudent' if cohort.search_criteria.first_gen_student
+    select_new_filter 'isFirstGenerationCollege' if cohort.search_criteria.first_gen_college
     select_new_filter 'hasFeeWaiver' if cohort.search_criteria.fee_waiver
     select_new_filter 'inFosterCare' if cohort.search_criteria.foster_care
     select_new_filter 'isFamilySingleParent' if cohort.search_criteria.family_single_parent
@@ -188,7 +188,7 @@ module BOACFilteredCohortPageFilters
     cohort.search_criteria.student_dependents.each { |s| select_new_filter('studentDependentRanges', s) } if cohort.search_criteria.student_dependents
     select_new_filter 'isReentry' if cohort.search_criteria.re_entry_status
     select_new_filter 'isLastSchoolLCFF' if cohort.search_criteria.last_school_lcff_plus
-    select_new_filter 'isCEP' if cohort.search_criteria.special_program_cep
+    cohort.search_criteria.special_program_cep.each { |s| select_new_filter('specialProgramCep', s) } if cohort.search_criteria.special_program_cep
 
     execute_search cohort
   end
@@ -236,9 +236,9 @@ module BOACFilteredCohortPageFilters
     filter_option_xpath = "#{existing_filter_xpath filter_name}/following-sibling::div"
 
     if ['Inactive', 'Inactive (ASC)', 'Inactive (COE)', 'Intensive', 'Probation', 'Transfer Student', 'Underrepresented Minority',
-        'Underrepresented Minority (COE)', 'Current SIR', 'XEthnic', 'Hispanic', 'UREM', 'First Generation Student',
-        'Application Fee Waiver', 'Foster Care', 'Family is Single Parent', 'Student is Single Parent', 'Re-entry Status',
-        'Last School LCFF+', 'Special Program CEP'].include? filter_name
+        'Underrepresented Minority (COE)', 'Current SIR', 'Hispanic', 'UREM', 'First Generation College',
+        'Application Fee Waiver', 'Foster Care', 'Family Is Single Parent', 'Student Is Single Parent', 'Re-entry Status',
+        'Last School LCFF+'].include? filter_name
       div_element(xpath: existing_filter_xpath(filter_name))
 
     elsif filter_name == 'Last Name'
@@ -303,22 +303,39 @@ module BOACFilteredCohortPageFilters
   def verify_admit_filters_present(cohort)
     filters = cohort.search_criteria
     verify_filters(cohort) do
-      filters.freshman_or_transfer.each { |f| existing_filter_element('Freshman or Transfer', f).exists? } if filters.freshman_or_transfer&.any?
+      logger.debug 'Checking Freshman / Transfer filter'
+      filters.freshman_or_transfer.each { |f| existing_filter_element('Freshman or Transfer', f).exists? } if filters.freshman_or_transfer
+      logger.debug 'Checking Current SIR filter'
       existing_filter_element('Current SIR').exists? if filters.current_sir
-      filters.college.each { |m| existing_filter_element('College', m).exists? } if filters.college&.any?
-      existing_filter_element('XEthnic').exists? if filters.xethnic
+      logger.debug 'Checking College filter'
+      filters.college.each { |m| existing_filter_element('College', m).exists? } if filters.college
+      logger.debug 'Checking XEthnic filter'
+      filters.xethnic.each { |e| existing_filter_element('XEthnic', e).exists? } if filters.xethnic
+      logger.debug 'Checking Hispanic filter'
       existing_filter_element('Hispanic').exists? if filters.hispanic
+      logger.debug 'Checking UREM filter'
       existing_filter_element('UREM').exists? if filters.urem
-      existing_filter_element('First Generation Student').exists? if filters.first_gen_student
+      logger.debug 'Checking First Generation College filter'
+      existing_filter_element('First Generation College').exists? if filters.first_gen_college
+      logger.debug 'Checking Application Fee Waiver filter'
       existing_filter_element('Application Fee Waiver').exists? if filters.fee_waiver
+      logger.debug 'Checking Foster Care filter'
       existing_filter_element('Foster Care').exists? if filters.foster_care
+      logger.debug 'Checking Family Is Single Parent filter'
       existing_filter_element('Family is Single Parent').exists? if filters.family_single_parent
+      logger.debug 'Checking Student Is Single Parent filter'
       existing_filter_element('Student is Single Parent').exists? if filters.student_single_parent
+      logger.debug 'Checking Family Dependents filter'
       filters.family_dependents.each { |f| existing_filter_element('Family Dependents', f).exists? } if filters.family_dependents
+      logger.debug 'Checking Student Dependents filter'
       filters.student_dependents.each { |f| existing_filter_element('Student Dependents', f).exists? } if filters.student_dependents
+      logger.debug 'Checking Re-entry Status filter'
       existing_filter_element('Re-entry Status').exists? if filters.re_entry_status
+      logger.debug 'Checking Last School LCFF+ filter'
       existing_filter_element('Last School LCFF+').exists? if filters.last_school_lcff_plus
-      existing_filter_element('Special Program CEP').exists? if filters.special_program_cep
+      logger.debug 'Checking Special Program CEP filter'
+      filters.special_program_cep.each { |p| existing_filter_element('Special Program CEP', p).exists? } if filters.special_program_cep
+      logger.debug 'Found \'em all!'
     end
   end
 

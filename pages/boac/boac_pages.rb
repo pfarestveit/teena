@@ -200,6 +200,17 @@ module BOACPages
     end
   end
 
+  ### SIDEBAR - CE3 COHORTS ###
+
+  link(:create_ce3_filtered_link, id: 'admitted-students-cohort-create')
+
+  def click_sidebar_create_ce3_filtered
+    logger.debug 'Clicking sidebar button to create a CE3 cohort'
+    wait_for_load_and_click create_ce3_filtered_link_element
+    wait_for_title 'Create Cohort'
+    sleep 3
+  end
+
   ### SIDEBAR - SEARCH ###
 
   button(:search_options_toggle_button, id: 'search-options-panel-toggle')

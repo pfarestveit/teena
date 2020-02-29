@@ -346,8 +346,12 @@ module BOACFilteredCohortPageResults
   # Returns the admits that match an XEthnic filter
   # @param test [BOACTestConfig]
   # @return [Array<Hash>]
-  def matching_xethnic_admits(test)
-    test.searchable_data.select { |u| u[:xethnic] }
+  def matching_xethnic_admits(test, search_criteria)
+    students = []
+    search_criteria.xethnic.each do |ethnic|
+      students << test.searchable_data.select { |u| u[:xethnic] == ethnic }
+    end
+    students.flatten
   end
 
   # Returns the admits that match a Hispanic filter
@@ -364,18 +368,18 @@ module BOACFilteredCohortPageResults
     test.searchable_data.select { |u| u[:urem] }
   end
 
-  # Returns the admits that match a First Generation Student filter
+  # Returns the admits that match a First Generation College filter
   # @param test [BOACTestConfig]
   # @return [Array<Hash>]
   def matching_first_gen_admits(test)
-    test.searchable_data.select { |u| u[:first_gen_student] }
+    test.searchable_data.select { |u| u[:first_gen_college] }
   end
 
   # Returns the admits that match an Application Fee Waiver filter
   # @param test [BOACTestConfig]
   # @return [Array<Hash>]
   def matching_fee_waiver_admits(test)
-    test.searchable_data.select { |u| u[:matching_fee_waiver_admits] }
+    test.searchable_data.select { |u| u[:fee_waiver] }
   end
 
   # Returns the admits that match a Foster Care filter
@@ -406,10 +410,12 @@ module BOACFilteredCohortPageResults
   def matching_family_depends_admits(test, search_criteria)
     students = []
     search_criteria.family_dependents.each do |depends|
-      range = depends.split(' - ')
-      low_end = range[0].to_i
-      high_end = range[1].to_i
-      students << test.searchable_data.select { |u| (u[:family_dependents].to_i >= low_end) && (u[:family_dependents].to_i < high_end) }
+      min = depends['min'].to_i
+      max = depends['max'].to_i
+      students << test.searchable_data.select do |u|
+        num = u[:family_dependents] ? u[:family_dependents].to_i : 0
+        num >= min && num <= max
+      end
     end
     students.flatten
   end
@@ -421,10 +427,12 @@ module BOACFilteredCohortPageResults
   def matching_student_depends_admits(test, search_criteria)
     students = []
     search_criteria.student_dependents.each do |depends|
-      range = depends.split(' - ')
-      low_end = range[0].to_i
-      high_end = range[1].to_i
-      students << test.searchable_data.select { |u| (u[:student_dependents].to_i >= low_end) && (u[:student_dependents].to_i < high_end) }
+      min = depends['min'].to_i
+      max = depends['max'].to_i
+      students << test.searchable_data.select do |u|
+        num = u[:student_dependents] ? u[:student_dependents].to_i : 0
+        num >= min && num <= max
+      end
     end
     students.flatten
   end
@@ -440,14 +448,18 @@ module BOACFilteredCohortPageResults
   # @param test [BOACTestConfig]
   # @return [Array<Hash>]
   def matching_lcff_plus_admits(test)
-    test.searchable_data.select { |u| u[:last_school_lcff_plus] }
+    test.searchable_data.select { |u| u[:last_school_lcff_plus_flag] && !u[:last_school_lcff_plus_flag].empty? }
   end
 
   # Returns the admits that match a Special Program CEP filter
   # @param test [BOACTestConfig]
   # @return [Array<Hash>]
-  def matching_special_pgm_cep_admits(test)
-    test.searchable_data.select { |u| u[:special_program_cep] }
+  def matching_special_pgm_cep_admits(test, search_criteria)
+    students = []
+    search_criteria.special_program_cep.each do |prog|
+      students << test.searchable_data.select { |u| u[:special_program_cep] == prog }
+    end
+    students.flatten
   end
 
   ### EXPECTED RESULTS
@@ -499,10 +511,10 @@ module BOACFilteredCohortPageResults
     matches << matching_fresh_or_trans_admits(test, search_criteria) if search_criteria.freshman_or_transfer&.any?
     matches << matching_sir_admits(test) if search_criteria.current_sir
     matches << matching_college_admits(test, search_criteria) if search_criteria.college&.any?
-    matches << matching_xethnic_admits(test) if search_criteria.xethnic
+    matches << matching_xethnic_admits(test, search_criteria) if search_criteria.xethnic
     matches << matching_hispanic_admits(test) if search_criteria.hispanic
     matches << matching_urem_admits(test) if search_criteria.urem
-    matches << matching_first_gen_admits(test) if search_criteria.first_gen_student
+    matches << matching_first_gen_admits(test) if search_criteria.first_gen_college
     matches << matching_fee_waiver_admits(test) if search_criteria.fee_waiver
     matches << matching_foster_care_admits(test) if search_criteria.foster_care
     matches << matching_fam_single_parent_admits(test) if search_criteria.family_single_parent
@@ -511,7 +523,7 @@ module BOACFilteredCohortPageResults
     matches << matching_student_depends_admits(test, search_criteria) if search_criteria.student_dependents&.any?
     matches << matching_re_entry_admits(test) if search_criteria.re_entry_status
     matches << matching_lcff_plus_admits(test) if search_criteria.last_school_lcff_plus
-    matches << matching_special_pgm_cep_admits(test) if search_criteria.special_program_cep
+    matches << matching_special_pgm_cep_admits(test, search_criteria) if search_criteria.special_program_cep
     matches.any?(&:empty?) ? [] : matches.inject(:'&')
   end
 

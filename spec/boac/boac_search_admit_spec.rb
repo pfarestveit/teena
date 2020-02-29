@@ -38,7 +38,7 @@ describe 'CE3 admit search' do
     @homepage.wait_for_spinner
     ce3_excluded = @search_results_page.verify_block do
       !@search_results_page.admit_results_count?
-      @search_results_page.all_row_cs_ids.empty?
+      @search_results_page.search_result_all_row_cs_ids.empty?
     end
     it('can be excluded from results') { expect(ce3_excluded).to be true }
 
@@ -91,14 +91,14 @@ describe 'CE3 admit search' do
 
         # VISIBLE ADMIT DATA
 
-        admit_data = test.searchable_data.find { |d| d[:cs_empl_id] == admit.sis_id }
+        admit_data = test.searchable_data.find { |d| d[:sid] == admit.sis_id }
         visible_row_data = @search_results_page.visible_admit_row_data admit
 
         it("shows the name for CS ID #{admit.sis_id}") { expect(visible_row_data[:name]).to include(admit.last_name) }
         it("shows the CS ID for CS ID #{admit.sis_id}") { expect(visible_row_data[:cs_id]).to eql(admit.sis_id) }
         it("shows the CEP status for CS ID #{admit.sis_id}") { expect(visible_row_data[:cep]).to eql(admit_data[:special_program_cep]) }
         it("shows the Re-entry status for CS ID #{admit.sis_id}") { expect(visible_row_data[:re_entry]).to eql(admit_data[:re_entry_status]) }
-        it("shows the 1st Gen Student status for CS ID #{admit.sis_id}") { expect(visible_row_data[:first_gen]).to eql(admit_data[:first_gen_student]) }
+        it("shows the 1st Gen Student status for CS ID #{admit.sis_id}") { expect(visible_row_data[:first_gen]).to eql(admit_data[:first_gen_college]) }
         it("shows the UREM status for CS ID #{admit.sis_id}") { expect(visible_row_data[:urem]).to eql(admit_data[:urem]) }
         it("shows the Fee Waiver status for CS ID #{admit.sis_id}") { expect(visible_row_data[:waiver]).to eql(admit_data[:fee_waiver]) }
         it("shows the Freshman/Transfer status for CS ID #{admit.sis_id}") { expect(visible_row_data[:fresh_trans]).to eql(admit_data[:freshman_or_transfer]) }
