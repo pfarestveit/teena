@@ -5,6 +5,7 @@ class BOACUser < User
                 :can_access_canvas_data,
                 :depts,
                 :is_admin,
-                :is_blocked
+                :is_blocked,
+                :is_sir
 
 end

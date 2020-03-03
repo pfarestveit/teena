@@ -47,7 +47,7 @@ else
       context 'with no cohorts or groups' do
 
         before do
-          pre_existing_cohorts = BOACUtils.get_user_filtered_cohorts test.advisor
+          pre_existing_cohorts = BOACUtils.get_user_filtered_cohorts test.advisor, default: true
           pre_existing_cohorts.each do |c|
             @cohort_page.load_cohort c
             @cohort_page.delete_cohort c
@@ -72,7 +72,7 @@ else
 
           # Create cohort
           @homepage.load_page
-          @cohort_page.search_and_create_new_cohort(test.default_cohort, test)
+          @cohort_page.search_and_create_new_cohort(test.default_cohort, default: true)
           test.default_cohort.members = test.cohort_members
           test.default_cohort.member_count = test.cohort_members.length
           cohorts << test.default_cohort

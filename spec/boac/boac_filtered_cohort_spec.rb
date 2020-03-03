@@ -6,7 +6,7 @@ describe 'BOAC', order: :defined do
 
   test = BOACTestConfig.new
   test.filtered_cohorts
-  pre_existing_cohorts = BOACUtils.get_user_filtered_cohorts test.advisor
+  pre_existing_cohorts = BOACUtils.get_user_filtered_cohorts test.advisor, default: true
 
   before(:all) do
     @driver = Utils.launch_browser test.chrome_profile
@@ -489,7 +489,7 @@ describe 'BOAC', order: :defined do
 
   context 'when the advisor edits a cohort\'s search filters' do
 
-    before(:all) { @cohort_page.search_and_create_new_cohort(test.default_cohort, test) }
+    before(:all) { @cohort_page.search_and_create_new_cohort(test.default_cohort, default: true) }
 
     before(:each) do
       if @cohort_page.cohort_update_button?

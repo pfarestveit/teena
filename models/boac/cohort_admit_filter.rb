@@ -44,4 +44,10 @@ class CohortAdmitFilter
     instance_variables.map { |variable| instance_variable_get variable }
   end
 
+  # Sets cohort filters without using the test data file
+  # @param filters_hash [Hash]
+  def set_custom_filters(filters_hash)
+    filters_hash.each { |k, v| public_send("#{k}=", v) }
+  end
+
 end

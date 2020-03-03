@@ -7,10 +7,9 @@ describe 'An admin using BOAC' do
   test = BOACTestConfig.new
   test.user_role_admin
 
-  non_admin_depts = BOACDepartments::DEPARTMENTS.reject { |d| d == BOACDepartments::ADMIN }
-
-  everyone_cohorts = BOACUtils.get_everyone_filtered_cohorts
+  everyone_cohorts = BOACUtils.get_everyone_filtered_cohorts default: true
   everyone_groups = BOACUtils.get_everyone_curated_groups
+  ce3_cohorts = BOACUtils.get_everyone_filtered_cohorts({admits: true}, BOACDepartments::ZCEEE)
 
   before(:all) do
     @service_announcement = "#{BOACUtils.config['service_announcement']} " * 15
@@ -25,6 +24,8 @@ describe 'An admin using BOAC' do
     @homepage = BOACHomePage.new @driver
     @search_page = BOACSearchResultsPage.new @driver
     @student_page = BOACStudentPage.new @driver
+    @filtered_admit_page = BOACFilteredAdmitsPage.new @driver
+    @admit_page = BOACAdmitPage.new @driver
 
     @homepage.dev_auth test.advisor
   end
@@ -38,7 +39,7 @@ describe 'An admin using BOAC' do
       @homepage.click_view_everyone_cohorts
     end
 
-    it 'sees all filtered cohorts' do
+    it 'sees all default filtered cohorts' do
       expected_cohort_names = everyone_cohorts.map(&:name).sort
       visible_cohort_names = (@filtered_cohort_page.visible_everyone_cohorts.map &:name).sort
       @filtered_cohort_page.wait_until(1, "Expected #{expected_cohort_names}, but got #{visible_cohort_names}") { visible_cohort_names == expected_cohort_names }
@@ -99,6 +100,33 @@ describe 'An admin using BOAC' do
     it('sees an Underrepresented Minority (COE) filter') { expect(@filtered_cohort_page.new_filter_option('coeUnderrepresented').visible?).to be true }
   end
 
+  context 'performing a filtered admit search' do
+
+    before(:all) do
+      @homepage.hit_escape
+      @homepage.click_sidebar_create_ce3_filtered
+      @filtered_admit_page.wait_for_update_and_click @filtered_admit_page.new_filter_button_element
+      @filtered_admit_page.wait_until(1) { @filtered_admit_page.new_filter_option_elements.any? }
+    end
+
+    it('sees a Freshman or Transfer filter') { expect(@filtered_admit_page.new_filter_option('freshmanOrTransfer').visible?).to be true }
+    it('sees a Current SIR filter') { expect(@filtered_admit_page.new_filter_option('sir').visible?).to be true }
+    it('sees a College filter') { expect(@filtered_admit_page.new_filter_option('admitColleges').visible?).to be true }
+    it('sees an XEthnic filter') { expect(@filtered_admit_page.new_filter_option('xEthnicities').visible?).to be true }
+    it('sees a Hispanic filter') { expect(@filtered_admit_page.new_filter_option('isHispanic').visible?).to be true }
+    it('sees a UREM filter') { expect(@filtered_admit_page.new_filter_option('isUrem').visible?).to be true }
+    it('sees a First Generation College filter') { expect(@filtered_admit_page.new_filter_option('isFirstGenerationCollege').visible?).to be true }
+    it('sees an Application Fee Waiver filter') { expect(@filtered_admit_page.new_filter_option('hasFeeWaiver').visible?).to be true }
+    it('sees a Foster Care filter') { expect(@filtered_admit_page.new_filter_option('inFosterCare').visible?).to be true }
+    it('sees a Family Is Single Parent filter') { expect(@filtered_admit_page.new_filter_option('isFamilySingleParent').visible?).to be true }
+    it('sees a Student Is Single Parent filter') { expect(@filtered_admit_page.new_filter_option('isStudentSingleParent').visible?).to be true }
+    it('sees a Family Dependents filter') { expect(@filtered_admit_page.new_filter_option('familyDependentRanges').visible?).to be true }
+    it('sees a Student Dependents filter') { expect(@filtered_admit_page.new_filter_option('studentDependentRanges').visible?).to be true }
+    it('sees a Re-entry Status filter') { expect(@filtered_admit_page.new_filter_option('isReentry').visible?).to be true }
+    it('sees a Last School LCFF+ filter') { expect(@filtered_admit_page.new_filter_option('isLastSchoolLCFF').visible?).to be true }
+    it('sees a Special Program CEP filter') { expect(@filtered_admit_page.new_filter_option('specialProgramCep').visible?).to be true }
+  end
+
   context 'visiting student API pages' do
 
     it 'can see the ASC profile data for an ASC student on the student API page' do
@@ -116,14 +144,17 @@ describe 'An admin using BOAC' do
     end
   end
 
+  context 'navigating directly to a CE3 cohort' do
+
+    it("can reach cohort ID #{ce3_cohorts.first.id}") { @filtered_admit_page.load_cohort ce3_cohorts.first }
+  end
+
   context 'visiting the admin page' do
 
     it 'sees a link to the admin page' do
       @homepage.load_page
       @homepage.click_flight_deck_link
     end
-
-    # TODO - it('can authenticate as one of the authorized users')
 
     it 'can un-post a service alert' do
       @admin_page.unpost_service_announcement

@@ -207,7 +207,7 @@ module BOACPages
   def click_sidebar_create_ce3_filtered
     logger.debug 'Clicking sidebar button to create a CE3 cohort'
     wait_for_load_and_click create_ce3_filtered_link_element
-    wait_for_title 'Create Cohort'
+    h1_element(xpath: '//h1[text()=" Create an admissions cohort "]').when_visible Utils.short_wait
     sleep 3
   end
 

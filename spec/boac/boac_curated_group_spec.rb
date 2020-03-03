@@ -21,7 +21,7 @@ describe 'BOAC' do
     (group_8 = CuratedGroup.new({:name => "Group 8 #{test.id}"}))
   ]
   other_advisor = BOACUtils.get_admin_users.find { |u| u.uid != test.advisor.uid }
-  pre_existing_cohorts = BOACUtils.get_user_filtered_cohorts test.advisor
+  pre_existing_cohorts = BOACUtils.get_user_filtered_cohorts test.advisor, default: true
   pre_existing_groups = BOACUtils.get_user_curated_groups test.advisor
 
   before(:all) do
@@ -48,7 +48,7 @@ describe 'BOAC' do
     end
 
     # Create a default filtered cohort
-    @filtered_page.search_and_create_new_cohort(test.default_cohort, test) unless test.default_cohort.id
+    @filtered_page.search_and_create_new_cohort(test.default_cohort, default: true) unless test.default_cohort.id
   end
 
   after(:all) { Utils.quit_browser @driver }

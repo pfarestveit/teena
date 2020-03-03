@@ -21,6 +21,8 @@ module BOACCohortPages
   button(:export_list_button, id: 'export-student-list-button')
   button(:confirm_export_list_button, id: 'export-list-confirm')
 
+  button(:history_button, id: 'show-cohort-history-button')
+
   span(:no_access_msg, xpath: '//span[text()="You are unauthorized to access student data managed by other departments"]')
   span(:title_required_msg, xpath: '//span[text()="Required"]')
 
@@ -89,10 +91,14 @@ module BOACCohortPages
 
   # Combines methods to load the create filtered cohort page, perform a search, and create a filtered cohort
   # @param cohort [FilteredCohort]
-  # @param test [BOACTestConfig]
-  def search_and_create_new_cohort(cohort, test)
-    click_sidebar_create_filtered
-    perform_student_search cohort
+  def search_and_create_new_cohort(cohort, opts = {})
+    if opts[:default]
+      click_sidebar_create_filtered
+      perform_student_search cohort
+    elsif opts[:admits]
+      click_sidebar_create_ce3_filtered
+      perform_admit_search cohort
+    end
     create_new_cohort cohort
   end
 

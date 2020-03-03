@@ -274,11 +274,12 @@ class NessieUtils < Utils
     query = 'SELECT cs_empl_id AS sid,
                     first_name AS first_name,
                     last_name AS last_name,
-                    campus_email_1 AS email
+                    campus_email_1 AS email,
+                    current_sir AS is_sir
              FROM boac_advising_oua.student_admits
              ORDER BY sid;'
     results = Utils.query_pg_db(nessie_pg_db_credentials, query)
-    results.map { |r| BOACUser.new sis_id: r['sid'], first_name: r['first_name'], last_name: r['last_name'], email: r['email'] }
+    results.map { |r| BOACUser.new sis_id: r['sid'], first_name: r['first_name'], last_name: r['last_name'], email: r['email'], is_sir: (r['is_sir'] == 'Yes') }
   end
 
   def self.get_admit_page_data
@@ -287,6 +288,12 @@ class NessieUtils < Utils
     results = Utils.query_pg_db(nessie_pg_db_credentials, query)
     results = results.map { |r| r.transform_keys &:to_sym }
     results.map { |r| r.transform_values &:to_s }
+  end
+
+  def self.get_admit_data_update_date
+    query = 'SELECT MAX(updated_at) FROM boac_advising_oua.student_admits;'
+    result = query_pg_db_field(nessie_pg_db_credentials, query, 'max').first
+    Time.parse(result).strftime('%b %-d, %Y')
   end
 
   #### SEARCHABLE STUDENT DATA ####
@@ -545,7 +552,8 @@ class NessieUtils < Utils
                       student_dependents_num,
                       reentry_status,
                       last_school_lcff_plus_flag,
-                      special_program_cep
+                      special_program_cep,
+                      residency_category
                FROM boac_advising_oua.student_admits
                ORDER BY cs_empl_id;"
 
@@ -556,21 +564,22 @@ class NessieUtils < Utils
           last_name_sortable_cohort: (r['last_name'].empty? ? ' ' : (r['last_name'].split(' ').map { |s| s.gsub(/\W/, '').downcase }).join),
           sid: r['cs_empl_id'],
           freshman_or_transfer: r['freshman_or_transfer'],
-          current_sir: (r['current_sir'] == 'Yes'),
+          current_sir: r['current_sir'],
           college: r['college'],
           xethnic: r['xethnic'],
-          hispanic: (r['hispanic'] == 'T'),
-          urem: (r['urem'] == 'Yes'),
-          first_gen_college: (r['first_generation_college'] == 'Yes'),
-          fee_waiver: (r['application_fee_waiver_flag'] == 'FeeWaiver'),
-          foster_care: (r['foster_care_flag'] == 'Y'),
-          family_single_parent: (r['family_is_single_parent'] == 'Y'),
-          student_single_parent: (r['student_is_single_parent'] == 'Y'),
+          hispanic: r['hispanic'],
+          urem: r['urem'],
+          first_gen_college: r['first_generation_college'],
+          fee_waiver: r['application_fee_waiver_flag'],
+          foster_care: r['foster_care_flag'],
+          family_single_parent: r['family_is_single_parent'],
+          student_single_parent: r['student_is_single_parent'],
           family_dependents: r['family_dependents_num'],
           student_dependents: r['student_dependents_num'],
-          re_entry_status: (r['reentry_status'] == 'Yes'),
+          re_entry_status: r['reentry_status'],
           last_school_lcff_plus_flag: r['last_school_lcff_plus_flag'],
-          special_program_cep: r['special_program_cep']
+          special_program_cep: r['special_program_cep'],
+          intl: r['residency_category']
         }
       end
 

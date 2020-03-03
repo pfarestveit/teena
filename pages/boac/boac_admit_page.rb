@@ -4,6 +4,7 @@ class BOACAdmitPage
   include PageObject
   include Page
   include BOACPages
+  include BOACAdmitPages
 
   h1(:name, id: 'admit-name-header')
   cell(:uc_cpid, id: 'admit-apply-uc-cpid')
@@ -35,7 +36,7 @@ class BOACAdmitPage
   cell(:residence_country, id: 'admit-permanent-residence-country')
   cell(:visa_status, id: 'admit-non-immigrant-visa-current')
   cell(:visa_planned, id: 'admit-non-immigrant-visa-planned')
-  cell(:first_gen_college, id: 'admit-first-generation-student')
+  cell(:first_gen_student, id: 'admit-first-generation-student')
   cell(:first_gen_college, id: 'admit-first-generation-college')
   cell(:parent_1_educ, id: 'admit-parent-1-education-level')
   cell(:parent_2_educ, id: 'admit-parent-2-education-level')
@@ -70,11 +71,15 @@ class BOACAdmitPage
   cell(:last_school_lcff_plus, id: 'admit-last-school-lcff-plus-flag')
   cell(:special_pgm_cep, id: 'admit-special-program-cep')
 
+  def hit_page_url(admit_csid)
+    navigate_to "#{BOACUtils.base_url}/admit/student/#{admit_csid}"
+  end
+
   # Loads the page for a given admit
   # @param admit_csid [String]
   def load_page(admit_csid)
     logger.info "Loading admit page for CS ID #{admit_csid}"
-    navigate_to "#{BOACUtils.base_url}/admit/student/#{admit_csid}"
+    hit_page_url admit_csid
     wait_for_spinner
     name_element.when_visible Utils.short_wait
   end

@@ -6,6 +6,7 @@ test.admit_pages
 all_admit_data = NessieUtils.get_admit_page_data
 test_sids = test.test_students.map &:sis_id
 admit_data = all_admit_data.select { |d| test_sids.include? d[:cs_empl_id] }
+latest_update_date = NessieUtils.get_admit_data_update_date
 
 describe 'The BOA admit page' do
 
@@ -29,6 +30,9 @@ describe 'The BOA admit page' do
 
       begin
         @admit_page.load_page admit[:cs_empl_id]
+
+        update_date_present = @admit_page.data_update_date_heading(latest_update_date).exists?
+        it("shows the most recent data update date for CS ID #{admit[:cs_empl_id]}") { expect(update_date_present).to be true }
 
         visible_name = @admit_page.name
         expected_name = @admit_page.concatenated_name admit
@@ -125,7 +129,7 @@ describe 'The BOA admit page' do
         visible_visa_planned = @admit_page.visa_planned
         it("shows the non-immigrant visa planned status of CS ID #{admit[:cs_empl_id]}") { expect(visible_visa_planned).to eql(admit[:non_immigrant_visa_planned]) }
 
-        visible_first_gen_student = @admit_page.first_gen_college
+        visible_first_gen_student = @admit_page.first_gen_student
         it("shows the first generation student status of CS ID #{admit[:cs_empl_id]}") { expect(visible_first_gen_student).to eql(admit[:first_generation_student]) }
 
         visible_first_gen_college = @admit_page.first_gen_college

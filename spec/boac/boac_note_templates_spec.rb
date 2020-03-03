@@ -173,7 +173,7 @@ describe 'BOA note templates' do
 
       # Create cohort to add
       @homepage.load_page
-      @cohort_page.search_and_create_new_cohort(@test.default_cohort, @test)
+      @cohort_page.search_and_create_new_cohort(@test.default_cohort, default: true)
       @test.default_cohort.members = @test.cohort_members
 
       # Create group to add
