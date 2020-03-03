@@ -6,7 +6,8 @@ describe 'BOA' do
 
   test = BOACTestConfig.new
   test.filtered_admits
-  existing_cohorts = BOACUtils.get_user_filtered_cohorts test.advisor
+  existing_cohorts = BOACUtils.get_user_filtered_cohorts test.advisor, admits: true
+  latest_update_date = NessieUtils.get_admit_data_update_date
 
   before(:all) do
     @driver = Utils.launch_browser test.chrome_profile
@@ -46,7 +47,18 @@ describe 'BOA' do
         end
       end
 
-      it "sorts by First Name all the students who match #{cohort.search_criteria.inspect}" do
+      it("shows the most recent data update date for #{cohort.search_criteria.inspect}") { @cohort_page.data_update_date_heading(latest_update_date).when_visible Utils.short_wait }
+
+      it "shows the right data for the admits who match #{cohort.search_criteria.inspect}" do
+        failures = []
+        visible_sids = @cohort_page.filter_result_row_cs_ids
+        expected_admit_data = cohort.member_data.select { |d| visible_sids.include? d[:sid] }
+        expected_admit_data.each { |admit| @cohort_page.verify_admit_row_data(admit[:sid], admit, failures) }
+        logger.error "Failures: #{failures}" unless failures.empty?
+        expect(failures).to be_empty
+      end
+
+      it "sorts by First Name all the admits who match #{cohort.search_criteria.inspect}" do
         @cohort_page.sort_by_first_name
         expected_results = @cohort_page.expected_sids_by_first_name(cohort.member_data)
         visible_results = @cohort_page.filter_result_all_row_cs_ids cohort
@@ -54,7 +66,7 @@ describe 'BOA' do
         @cohort_page.wait_until(1, "Expected #{expected_results} but got #{visible_results}") { visible_results == expected_results }
       end
 
-      it "sorts by CS ID all the students who match #{cohort.search_criteria.inspect}" do
+      it "sorts by CS ID all the admits who match #{cohort.search_criteria.inspect}" do
         @cohort_page.sort_by_cs_id
         expected_results = cohort.member_data.map { |u| u[:sid].to_i }.sort
         visible_results = @cohort_page.filter_result_all_row_cs_ids cohort
@@ -69,6 +81,8 @@ describe 'BOA' do
       it("shows the cohort filters for a cohort using #{cohort.search_criteria.inspect}") { @cohort_page.verify_admit_filters_present cohort }
 
       it("shows the cohort member count in the sidebar using #{cohort.search_criteria.inspect}") { @cohort_page.wait_for_sidebar_cohort_member_count cohort }
+
+      it("offers no cohort history button for a cohort using #{cohort.search_criteria.inspect}") { expect(@cohort_page.history_button?).to be false }
 
       # TODO it "allows the advisor to export a non-empty list of students in a cohort using #{cohort.search_criteria.list_filters}"
       # TODO it "allows the advisor to choose columns to include when exporting a cohort using #{cohort.search_criteria.list_filters}"
@@ -101,7 +115,7 @@ describe 'BOA' do
 
         it 'no Add button appears without two valid values' do
           @cohort_page.choose_new_filter_sub_option(filter_name, {'min' => '3.5', 'max' => ''})
-          expect(@cohort_page.depend_char_error_msg_element).to be false
+          expect(@cohort_page.unsaved_filter_add_button?).to be false
         end
       end
 

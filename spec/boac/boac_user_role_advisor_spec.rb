@@ -26,20 +26,32 @@ describe 'A BOA advisor' do
     # Get L&S test data
     @test_l_and_s = BOACTestConfig.new
     @test_l_and_s.user_role_l_and_s @test
-    @l_and_s_cohorts = BOACUtils.get_everyone_filtered_cohorts BOACDepartments::L_AND_S
+    @l_and_s_cohorts = BOACUtils.get_everyone_filtered_cohorts({default: true}, BOACDepartments::L_AND_S)
     @l_and_s_groups = BOACUtils.get_everyone_curated_groups BOACDepartments::L_AND_S
 
-    @admin_cohorts = BOACUtils.get_everyone_filtered_cohorts BOACDepartments::ADMIN
+    @admin_cohorts = BOACUtils.get_everyone_filtered_cohorts({default: true}, BOACDepartments::ADMIN)
     @admin_groups = BOACUtils.get_everyone_curated_groups BOACDepartments::ADMIN
 
     @driver = Utils.launch_browser @test.chrome_profile
     @homepage = BOACHomePage.new @driver
     @student_page = BOACStudentPage.new @driver
     @api_student_page = BOACApiStudentPage.new @driver
+    @admit_page = BOACAdmitPage.new @driver
     @cohort_page = BOACFilteredCohortPage.new(@driver, @test_asc.advisor)
     @group_page = BOACGroupPage.new @driver
+    @search_results_page = BOACSearchResultsPage.new @driver
     @settings_page = BOACFlightDeckPage.new @driver
     @api_admin_page = BOACApiAdminPage.new @driver
+
+    # Get admit data
+    @admit = NessieUtils.get_admits.find { |a| !a.is_sir }
+    ce3_advisor = BOACUtils.get_dept_advisors(BOACDepartments::ZCEEE, DeptMembership.new(advisor_role: AdvisorRole::ADVISOR)).first
+    ce3_cohort_search = CohortAdmitFilter.new
+    ce3_cohort_search.set_custom_filters urem: true
+    @ce3_cohort = FilteredCohort.new search_criteria: ce3_cohort_search, name: "CE3 #{@test.id}"
+    @homepage.dev_auth ce3_advisor
+    @cohort_page.search_and_create_new_cohort(@ce3_cohort, admits: true)
+    @cohort_page.log_out
   end
 
   after(:all) { Utils.quit_browser @driver }
@@ -56,7 +68,7 @@ describe 'A BOA advisor' do
     context 'visiting Everyone\'s Cohorts' do
 
       it 'sees only filtered cohorts created by ASC advisors' do
-        expected = BOACUtils.get_everyone_filtered_cohorts(BOACDepartments::ASC).map(&:id).sort
+        expected = BOACUtils.get_everyone_filtered_cohorts({default: true}, BOACDepartments::ASC).map(&:id).sort
         visible = (@cohort_page.visible_everyone_cohorts.map &:id).sort
         @cohort_page.wait_until(1, "Missing: #{expected - visible}. Unexpected: #{visible - expected}") { visible == expected }
       end
@@ -68,11 +80,13 @@ describe 'A BOA advisor' do
       end
 
       it 'cannot hit a non-ASC filtered cohort URL' do
-        coe_everyone_cohorts = BOACUtils.get_everyone_filtered_cohorts BOACDepartments::COE
+        coe_everyone_cohorts = BOACUtils.get_everyone_filtered_cohorts({default: true}, BOACDepartments::COE)
         coe_everyone_cohorts.any? ?
             @cohort_page.hit_non_auth_cohort(coe_everyone_cohorts.first) :
             logger.warn('Skipping test for ASC access to CoE cohorts because CoE has no cohorts.')
       end
+
+      it('cannot hit a filtered admit cohort URL') { @cohort_page.hit_non_auth_cohort @ce3_cohort }
     end
 
     context 'visiting Everyone\'s Groups' do
@@ -118,6 +132,27 @@ describe 'A BOA advisor' do
         api_page = BOACApiStudentPage.new @driver
         api_page.get_data(@driver, @coe_test_student)
         api_page.coe_profile.each_value { |v| expect(v).to be_nil }
+      end
+    end
+
+    context 'hitting an admit page' do
+
+      it 'sees a 404' do
+        @admit_page.hit_page_url @admit.sis_id
+        @admit_page.wait_for_title 'Page not found'
+      end
+    end
+
+    context 'hitting an admit endpoint' do
+
+      it 'sees no data' do
+        if @admit
+          api_page = BOACApiAdmitPage.new @driver
+          api_page.hit_endpoint @admit
+          expect(api_page.message).to eql('Unauthorized')
+        else
+          skip
+        end
       end
     end
 
@@ -181,6 +216,19 @@ describe 'A BOA advisor' do
       end
     end
 
+    context 'performing a search' do
+
+      it 'sees no Admits option' do
+        @homepage.expand_search_options
+        expect(@homepage.include_admits_cbx?).to be false
+      end
+
+      it 'sees no admit results' do
+        @homepage.enter_string_and_hit_enter @admit.sis_id
+        @search_results_page.no_results_msg.when_visible Utils.short_wait
+      end
+    end
+
     context 'looking for admin functions' do
 
       before(:all) do
@@ -192,7 +240,7 @@ describe 'A BOA advisor' do
       it('cannot access the flight deck page') { expect(@homepage.flight_deck_link?).to be false }
       it('cannot access the passenger manifest page') { expect(@homepage.pax_manifest_link?).to be false }
 
-      it 'can toggle demo mode' do
+      it 'cannot toggle demo mode' do
         @settings_page.load_page
         @settings_page.my_profile_heading_element.when_visible Utils.short_wait
         expect(@settings_page.demo_mode_toggle?).to be false
@@ -219,7 +267,7 @@ describe 'A BOA advisor' do
     context 'visiting Everyone\'s Cohorts' do
 
       it 'sees only filtered cohorts created by CoE advisors' do
-        expected = BOACUtils.get_everyone_filtered_cohorts(BOACDepartments::COE).map(&:id).sort
+        expected = BOACUtils.get_everyone_filtered_cohorts({default: true}, BOACDepartments::COE).map(&:id).sort
         visible = (@cohort_page.visible_everyone_cohorts.map &:id).sort
         @cohort_page.wait_until(1, "Missing: #{expected - visible}. Unexpected: #{visible - expected}") { visible == expected }
       end
@@ -231,11 +279,14 @@ describe 'A BOA advisor' do
       end
 
       it 'cannot hit a non-COE filtered cohort URL' do
-        asc_cohorts = BOACUtils.get_everyone_filtered_cohorts BOACDepartments::ASC
+        asc_cohorts = BOACUtils.get_everyone_filtered_cohorts({default: true}, BOACDepartments::ASC)
         asc_cohorts.any? ?
             @cohort_page.hit_non_auth_cohort(asc_cohorts.first) :
             logger.warn('Skipping test for COE access to ASC cohorts because ASC has no cohorts.')
       end
+
+      it('cannot hit a filtered admit cohort URL') { @cohort_page.hit_non_auth_cohort @ce3_cohort }
+
     end
 
     context 'visiting Everyone\'s Groups' do
@@ -273,6 +324,27 @@ describe 'A BOA advisor' do
 
       it('sees team information') { expect(@student_page.sports.sort).to eql(@asc_test_student_sports.sort) }
       it('sees no ASC Inactive information') { expect(@student_page.inactive_asc_flag?).to be false }
+    end
+
+    context 'hitting an admit page' do
+
+      it 'sees a 404' do
+        @admit_page.hit_page_url @admit.sis_id
+        @admit_page.wait_for_title 'Page not found'
+      end
+    end
+
+    context 'hitting an admit endpoint' do
+
+      it 'sees no data' do
+        if @admit
+          api_page = BOACApiAdmitPage.new @driver
+          api_page.hit_endpoint @admit
+          expect(api_page.message).to eql('Unauthorized')
+        else
+          skip
+        end
+      end
     end
 
     context 'visiting a cohort page' do
@@ -320,6 +392,19 @@ describe 'A BOA advisor' do
       it('sees an Underrepresented Minority (COE) filter') { expect(@cohort_page.new_filter_option('coeUnderrepresented').visible?).to be true }
     end
 
+    context 'performing a search' do
+
+      it 'sees no Admits option' do
+        @homepage.expand_search_options
+        expect(@homepage.include_admits_cbx?).to be false
+      end
+
+      it 'sees no admit results' do
+        @homepage.enter_string_and_hit_enter @admit.sis_id
+        @search_results_page.no_results_msg.when_visible Utils.short_wait
+      end
+    end
+
     context 'looking for admin functions' do
 
       before(:all) do
@@ -331,7 +416,7 @@ describe 'A BOA advisor' do
       it('cannot access the flight deck page') { expect(@homepage.flight_deck_link?).to be false }
       it('cannot access the passenger manifest page') { expect(@homepage.pax_manifest_link?).to be false }
 
-      it 'can toggle demo mode' do
+      it 'cannot toggle demo mode' do
         @settings_page.load_page
         @settings_page.my_profile_heading_element.when_visible Utils.short_wait
         expect(@settings_page.demo_mode_toggle?).to be false
@@ -368,6 +453,8 @@ describe 'A BOA advisor' do
             @cohort_page.hit_non_auth_cohort(@admin_cohorts.first) :
             logger.warn('Skipping test for ASC access to admin cohorts because admins have no cohorts.')
       end
+
+      it('cannot hit a filtered admit cohort URL') { @cohort_page.hit_non_auth_cohort @ce3_cohort }
     end
 
     context 'visiting another user\'s cohort' do
@@ -430,6 +517,27 @@ describe 'A BOA advisor' do
       end
     end
 
+    context 'hitting an admit page' do
+
+      it 'sees a 404' do
+        @admit_page.hit_page_url @admit.sis_id
+        @admit_page.wait_for_title 'Page not found'
+      end
+    end
+
+    context 'hitting an admit endpoint' do
+
+      it 'sees no data' do
+        if @admit
+          api_page = BOACApiAdmitPage.new @driver
+          api_page.hit_endpoint @admit
+          expect(api_page.message).to eql('Unauthorized')
+        else
+          skip
+        end
+      end
+    end
+
     context 'performing a filtered cohort search' do
 
       before(:all) do
@@ -471,6 +579,19 @@ describe 'A BOA advisor' do
       it('sees an Underrepresented Minority (COE) filter') { expect(@cohort_page.new_filter_option('coeUnderrepresented').visible?).to be false }
     end
 
+    context 'performing a search' do
+
+      it 'sees no Admits option' do
+        @homepage.expand_search_options
+        expect(@homepage.include_admits_cbx?).to be false
+      end
+
+      it 'sees no admit results' do
+        @homepage.enter_string_and_hit_enter @admit.sis_id
+        @search_results_page.no_results_msg.when_visible Utils.short_wait
+      end
+    end
+
     context 'looking for admin functions' do
 
       before(:all) do
@@ -482,13 +603,17 @@ describe 'A BOA advisor' do
       it('cannot access the flight deck page') { expect(@homepage.flight_deck_link?).to be false }
       it('cannot access the passenger manifest page') { expect(@homepage.pax_manifest_link?).to be false }
 
-      it 'can toggle demo mode' do
+      it 'cannot toggle demo mode' do
         @settings_page.load_page
         @settings_page.my_profile_heading_element.when_visible Utils.short_wait
         expect(@settings_page.demo_mode_toggle?).to be false
       end
 
-      it('cannot post status alerts') { expect(@settings_page.status_heading?).to be false }
+      it('cannot post status alerts') do
+        @settings_page.load_page
+        @settings_page.my_profile_heading_element.when_visible Utils.short_wait
+        expect(@settings_page.status_heading?).to be false
+      end
 
       it 'cannot hit the cachejob page' do
         @api_admin_page.load_cachejob

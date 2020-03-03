@@ -7,6 +7,7 @@ module BOACAdmitListPages
   include Page
   include BOACPages
   include BOACPagination
+  include BOACAdmitPages
 
   elements(:admit_sid, :span, xpath: '//h1[@id="admit-results-page-header"]/following-sibling::div//span[text()="C S I D"]/following-sibling::span')
 
@@ -48,10 +49,15 @@ module BOACAdmitListPages
   end
 
   # Returns all the data shown in a row for a given admit
-  # @param admit [BOACUser]
+  # @param admit_cs_id [String]
   # @return [Hash]
-  def visible_admit_row_data(admit)
-    row_xpath = "//h1[@id='admit-results-page-header']/following-sibling::div//tr[contains(.,\"#{admit.sis_id}\")]"
+  def visible_admit_row_data(admit_cs_id)
+    search_heading_path = '//h1[@id="admit-results-page-header"]'
+    row_xpath = if h1_element(xpath: search_heading_path).exists?
+                  "#{search_heading_path}/following-sibling::div//tr[contains(.,\"#{admit_cs_id}\")]"
+                else
+                  "//tr[contains(.,\"#{admit_cs_id}\")]"
+                end
     name_el = link_element(xpath: "#{row_xpath}//span[text()='Admitted student name']/following-sibling::a")
     sid_el = span_element(xpath: "#{row_xpath}//span[text()='C S I D']/following-sibling::span")
     sir_el = span_element(xpath: "#{row_xpath}//span[text()='S I R']/following-sibling::span")
@@ -60,7 +66,8 @@ module BOACAdmitListPages
     first_gen_el = span_element(xpath: "#{row_xpath}//span[text()='First generation']/following-sibling::span")
     urem_el = span_element(xpath: "#{row_xpath}//span[text()='U R E M']/following-sibling::span")
     waiver_el = span_element(xpath: "#{row_xpath}//span[text()='Waiver']/following-sibling::span")
-    fresh_trans_el = span_element(xpath: "#{row_xpath}//span[text()='Transfer']/following-sibling::span")
+    fresh_trans_el = span_element(xpath: "#{row_xpath}//span[text()='Freshman or Transfer']/following-sibling::span")
+    intl_el = span_element(xpath: "#{row_xpath}//span[text()='Residency']/following-sibling::span")
     {
       name: (name_el.text if name_el.exists?),
       cs_id: (sid_el.text if sid_el.exists?),
@@ -70,8 +77,36 @@ module BOACAdmitListPages
       first_gen: (first_gen_el.text if first_gen_el.exists?),
       urem: (urem_el.text if urem_el.exists?),
       waiver: (waiver_el.text if waiver_el.exists?),
-      fresh_trans: (fresh_trans_el.text if fresh_trans_el.exists?)
+      fresh_trans: (fresh_trans_el.text if fresh_trans_el.exists?),
+      intl: (intl_el.text if intl_el.exists?)
     }
+  end
+
+  def verify_admit_row_data(admit_cs_id, expected, failures)
+    begin
+      logger.debug "Checking visible data for CS ID #{admit_cs_id}"
+      visible = visible_admit_row_data admit_cs_id
+      visible.delete_if { |k, _| [:name, :cs_id, :sir].include? k }
+      expected_data = {
+        cep: expected[:special_program_cep],
+        re_entry: expected[:re_entry_status],
+        first_gen: expected[:first_gen_college],
+        urem: expected[:urem],
+        waiver: expected[:fee_waiver],
+        fresh_trans: expected[:freshman_or_transfer],
+        intl: expected[:intl]
+      }
+      wait_until(1) { visible[:cep] == "#{expected_data[:cep]}" }
+      wait_until(1) { visible[:re_entry] == "#{expected_data[:re_entry]}" }
+      wait_until(1) { visible[:first_gen] == "#{expected_data[:first_gen]}" }
+      wait_until(1) { visible[:urem] == "#{expected_data[:urem]}" }
+      wait_until(1) { visible[:waiver] == "#{expected_data[:waiver]}" }
+      wait_until(1) { visible[:fresh_trans] == "#{expected_data[:fresh_trans]}" }
+      wait_until(1) { visible[:intl] == "#{expected_data[:intl]}" }
+    rescue
+      logger.error "Expected #{expected_data}, got #{visible}"
+      failures << admit_cs_id
+    end
   end
 
   # Clicks the Name header to sort ascending or descending

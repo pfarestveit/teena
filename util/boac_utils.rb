@@ -426,23 +426,28 @@ class BOACUtils < Utils
   # Returns the filtered cohorts belonging to a given user
   # @param user [BOACUser]
   # @return [Array<FilteredCohort>]
-  def self.get_user_filtered_cohorts(user)
+  def self.get_user_filtered_cohorts(user, opts = {})
     query = "SELECT cohort_filters.id AS cohort_id,
                     cohort_filters.name AS cohort_name,
                     cohort_filters.filter_criteria AS criteria
               FROM cohort_filters
               JOIN authorized_users ON authorized_users.id = cohort_filters.owner_id
-              WHERE authorized_users.uid = '#{user.uid}';"
+              WHERE cohort_filters.domain = #{if opts[:default]
+                                                '\'default\' '
+                                              elsif opts[:admits]
+                                                '\'admitted_students\' '
+                                              end}
+                AND authorized_users.uid = '#{user.uid}';"
     results = Utils.query_pg_db(boac_db_credentials, query)
     results.map do |r|
       FilteredCohort.new({id: r['cohort_id'], name: r['cohort_name'], owner_uid: user.uid})
     end
   end
 
-  # Returns all filtered cohorts. If a department is given, then returns only the cohorts associated with that department.
+  # Returns all (default) filtered cohorts. If a department is given, then returns only the cohorts associated with that department.
   # @param dept [BOACDepartments]
   # @return [Array<FilteredCohort>]
-  def self.get_everyone_filtered_cohorts(dept = nil)
+  def self.get_everyone_filtered_cohorts(opts = {}, dept = nil)
     query = "SELECT cohort_filters.id AS cohort_id,
                     cohort_filters.name AS cohort_name,
                     cohort_filters.filter_criteria AS criteria,
@@ -455,6 +460,11 @@ class BOACUtils < Utils
                  'JOIN university_dept_members ON university_dept_members.authorized_user_id = authorized_users.id
                   JOIN university_depts ON university_depts.id = university_dept_members.university_dept_id
                   WHERE university_depts.dept_code = \'' + dept.code + '\' '
+                end}
+              #{if opts[:default]
+                  (dept ? 'AND ' : 'WHERE ') + 'cohort_filters.domain = \'default\' '
+                elsif opts[:admits]
+                  (dept ? 'AND ' : 'WHERE ') + 'cohort_filters.domain = \'admitted_students\' '
                 end}
               ORDER BY uid, cohort_id ASC;"
     results = Utils.query_pg_db(boac_db_credentials, query)

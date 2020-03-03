@@ -23,7 +23,7 @@ describe 'BOA cohort history' do
     @cohort_history_page = BOACFilteredCohortHistoryPage.new @driver
 
     @homepage.dev_auth @test.advisor
-    BOACUtils.get_user_filtered_cohorts(@test.advisor).each do |c|
+    BOACUtils.get_user_filtered_cohorts(@test.advisor, default: true).each do |c|
       @cohort_page.load_cohort c
       @cohort_page.delete_cohort c
     end

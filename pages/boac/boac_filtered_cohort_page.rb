@@ -20,8 +20,6 @@ class BOACFilteredCohortPage
 
   # COHORT NAVIGATION
 
-  button(:history_button, id: 'show-cohort-history-button')
-
   def filtered_cohort_base_url(id)
     "#{BOACUtils.base_url}/cohort/#{id}"
   end

@@ -3,6 +3,7 @@ require_relative '../../util/spec_helper'
 test = BOACTestConfig.new
 test.search_admits
 auth_users = BOACUtils.get_authorized_users
+latest_update_date = NessieUtils.get_admit_data_update_date
 
 describe 'CE3 admit search' do
 
@@ -92,18 +93,22 @@ describe 'CE3 admit search' do
         # VISIBLE ADMIT DATA
 
         admit_data = test.searchable_data.find { |d| d[:sid] == admit.sis_id }
-        visible_row_data = @search_results_page.visible_admit_row_data admit
+        visible_row_data = @search_results_page.visible_admit_row_data admit.sis_id
 
         it("shows the name for CS ID #{admit.sis_id}") { expect(visible_row_data[:name]).to include(admit.last_name) }
         it("shows the CS ID for CS ID #{admit.sis_id}") { expect(visible_row_data[:cs_id]).to eql(admit.sis_id) }
-        it("shows the CEP status for CS ID #{admit.sis_id}") { expect(visible_row_data[:cep]).to eql(admit_data[:special_program_cep]) }
-        it("shows the Re-entry status for CS ID #{admit.sis_id}") { expect(visible_row_data[:re_entry]).to eql(admit_data[:re_entry_status]) }
-        it("shows the 1st Gen Student status for CS ID #{admit.sis_id}") { expect(visible_row_data[:first_gen]).to eql(admit_data[:first_gen_college]) }
-        it("shows the UREM status for CS ID #{admit.sis_id}") { expect(visible_row_data[:urem]).to eql(admit_data[:urem]) }
-        it("shows the Fee Waiver status for CS ID #{admit.sis_id}") { expect(visible_row_data[:waiver]).to eql(admit_data[:fee_waiver]) }
-        it("shows the Freshman/Transfer status for CS ID #{admit.sis_id}") { expect(visible_row_data[:fresh_trans]).to eql(admit_data[:freshman_or_transfer]) }
-        # TODO it "shows the International status for CS ID #{admit.sis_id}"
+        it("shows the CEP status for CS ID #{admit.sis_id}") { expect(visible_row_data[:cep]).to eql("#{admit_data[:special_program_cep]}") }
+        it("shows the Re-entry status for CS ID #{admit.sis_id}") { expect(visible_row_data[:re_entry]).to eql("#{admit_data[:re_entry_status]}") }
+        it("shows the 1st Gen College status for CS ID #{admit.sis_id}") { expect(visible_row_data[:first_gen]).to eql("#{admit_data[:first_gen_college]}") }
+        it("shows the UREM status for CS ID #{admit.sis_id}") { expect(visible_row_data[:urem]).to eql("#{admit_data[:urem]}") }
+        it("shows the Fee Waiver status for CS ID #{admit.sis_id}") { expect(visible_row_data[:waiver]).to eql("#{admit_data[:fee_waiver]}") }
+        it("shows the Freshman/Transfer status for CS ID #{admit.sis_id}") { expect(visible_row_data[:fresh_trans]).to eql("#{admit_data[:freshman_or_transfer]}") }
+        it("shows the International status for CS ID #{admit.sis_id}") { expect(visible_row_data[:intl]).to eql("#{admit_data[:intl]}") }
 
+        update_date_present = @search_results_page.data_update_date_heading(latest_update_date).exists?
+        it("shows the latest data update date for CS ID #{admit.sis_id}") { expect(update_date_present).to be true }
+
+        it "results can be sorted by last name"
         # TODO Search by first name to generate many results
         # TODO it "results can be sorted by last name, first name, then ID"
         # TODO it "results can be exported"

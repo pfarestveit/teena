@@ -38,7 +38,7 @@ describe 'A BOA filtered cohort' do
 
     @homepage.dev_auth test.advisor
 
-    pre_existing_cohorts = BOACUtils.get_user_filtered_cohorts test.advisor
+    pre_existing_cohorts = BOACUtils.get_user_filtered_cohorts test.advisor, default: true
     pre_existing_cohorts.each { |c| @cohort_page.load_cohort(c); @cohort_page.delete_cohort(c) }
 
     pre_existing_groups = BOACUtils.get_user_curated_groups test.advisor

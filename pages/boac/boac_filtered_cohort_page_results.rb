@@ -328,7 +328,7 @@ module BOACFilteredCohortPageResults
   # @param test [BOACTestConfig]
   # @return [Array<Hash>]
   def matching_sir_admits(test)
-    test.searchable_data.select { |u| u[:current_sir] }
+    test.searchable_data.select { |u| u[:current_sir] == 'Yes' }
   end
 
   # Returns the admits that match a College filter
@@ -358,49 +358,49 @@ module BOACFilteredCohortPageResults
   # @param test [BOACTestConfig]
   # @return [Array<Hash>]
   def matching_hispanic_admits(test)
-    test.searchable_data.select { |u| u[:hispanic] }
+    test.searchable_data.select { |u| u[:hispanic] == 'T' }
   end
 
   # Returns the admits that match a UREM filter
   # @param test [BOACTestConfig]
   # @return [Array<Hash>]
   def matching_urem_admits(test)
-    test.searchable_data.select { |u| u[:urem] }
+    test.searchable_data.select { |u| u[:urem] == 'Yes' }
   end
 
   # Returns the admits that match a First Generation College filter
   # @param test [BOACTestConfig]
   # @return [Array<Hash>]
   def matching_first_gen_admits(test)
-    test.searchable_data.select { |u| u[:first_gen_college] }
+    test.searchable_data.select { |u| u[:first_gen_college] == 'Yes' }
   end
 
   # Returns the admits that match an Application Fee Waiver filter
   # @param test [BOACTestConfig]
   # @return [Array<Hash>]
   def matching_fee_waiver_admits(test)
-    test.searchable_data.select { |u| u[:fee_waiver] }
+    test.searchable_data.select { |u| u[:fee_waiver] == 'FeeWaiver' }
   end
 
   # Returns the admits that match a Foster Care filter
   # @param test [BOACTestConfig]
   # @return [Array<Hash>]
   def matching_foster_care_admits(test)
-    test.searchable_data.select { |u| u[:foster_care] }
+    test.searchable_data.select { |u| u[:foster_care] == 'Y' }
   end
 
   # Returns the admits that match a Family Single Parent filter
   # @param test [BOACTestConfig]
   # @return [Array<Hash>]
   def matching_fam_single_parent_admits(test)
-    test.searchable_data.select { |u| u[:family_single_parent] }
+    test.searchable_data.select { |u| u[:family_single_parent] == 'Y' }
   end
 
   # Returns the admits that match a Student Single Parent filter
   # @param test [BOACTestConfig]
   # @return [Array<Hash>]
   def matching_stu_single_parent_admits(test)
-    test.searchable_data.select { |u| u[:student_single_parent] }
+    test.searchable_data.select { |u| u[:student_single_parent] == 'Y' }
   end
 
   # Returns the admits that match a Family Dependents filter
@@ -441,7 +441,7 @@ module BOACFilteredCohortPageResults
   # @param test [BOACTestConfig]
   # @return [Array<Hash>]
   def matching_re_entry_admits(test)
-    test.searchable_data.select { |u| u[:re_entry_status] }
+    test.searchable_data.select { |u| u[:re_entry_status] == 'Yes' }
   end
 
   # Returns the admits that match a Last School LCFF+ filter
