@@ -14,6 +14,7 @@ describe 'CE3 admit search' do
     @driver = Utils.launch_browser
     @homepage = BOACHomePage.new @driver
     @search_results_page = BOACSearchResultsPage.new @driver
+    @admit_page = BOACAdmitPage.new @driver
 
     advisor = auth_users.find { |u| !u.is_admin && !u.depts.include?(BOACDepartments::ZCEEE) }
     @homepage.dev_auth advisor
@@ -107,6 +108,14 @@ describe 'CE3 admit search' do
 
         update_date_present = @search_results_page.data_update_date_heading(latest_update_date).exists?
         it("shows the latest data update date for CS ID #{admit.sis_id}") { expect(update_date_present).to be true }
+
+        @search_results_page.click_admit_link admit.sis_id
+        link_works = @admit_page.verify_block { @admit_page.sid_element.when_visible Utils.short_wait }
+        it("offers links to admit pages for CS ID #{admit.sis_id}") { expect(link_works).to be true }
+
+        @admit_page.go_back @driver
+        back_button_works = @search_results_page.verify_block { @search_results_page.admit_in_search_result? admit }
+        it("can be reloaded using the Back button on an admit page for CS ID #{admit.sis_id}") { expect(back_button_works).to be true }
 
         it "results can be sorted by last name"
         # TODO Search by first name to generate many results
