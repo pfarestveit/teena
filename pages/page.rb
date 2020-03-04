@@ -325,4 +325,9 @@ module Page
     browser.action.send_keys(:down).perform
   end
 
+  def go_back(driver)
+    sleep Utils.click_wait
+    driver.navigate.back
+  end
+
 end

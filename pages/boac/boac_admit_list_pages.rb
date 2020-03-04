@@ -133,11 +133,10 @@ module BOACAdmitListPages
   end
 
   # Clicks the link to the admit page and waits for the page to load
-  # @param admit [BOACUser]
-  def click_admit_link(admit)
-    logger.info "Clicking the link for CS ID #{admit.sis_id}"
-    wait_for_update_and_click link_element(id: "link-to-admit-#{admit.sis_id}")
-    wait_for_title "#{admit.first_name} #{admit.last_name} | BOA"
+  # @param cs_id [String]
+  def click_admit_link(cs_id)
+    logger.info "Clicking the link for CS ID #{cs_id}"
+    wait_for_update_and_click link_element(id: "link-to-admit-#{cs_id}")
   end
 
 end

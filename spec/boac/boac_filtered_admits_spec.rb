@@ -76,6 +76,18 @@ describe 'BOA' do
 
       it("offers an Export List button for a search #{cohort.search_criteria.inspect}") { expect(@cohort_page.export_list_button?).to be true }
 
+      it "offers links to admit pages for search #{cohort.search_criteria.inspect}" do
+        cs_id = @cohort_page.filter_result_row_cs_ids.first
+        @cohort_page.click_admit_link cs_id
+        @admit_page.sid_element.when_visible Utils.short_wait
+        expect(@admit_page.sid).to eql(cs_id)
+      end
+
+      it "can be reloaded using the Back button on an admit page for search #{cohort.search_criteria.inspect}" do
+        @admit_page.go_back @driver
+        @cohort_page.wait_until(Utils.short_wait) { @cohort_page.wait_for_search_results == cohort.member_data.length }
+      end
+
       it("allows the advisor to create a cohort using #{cohort.search_criteria.inspect}") { @cohort_page.create_new_cohort cohort }
 
       it("shows the cohort filters for a cohort using #{cohort.search_criteria.inspect}") { @cohort_page.verify_admit_filters_present cohort }
@@ -85,7 +97,6 @@ describe 'BOA' do
       it("offers no cohort history button for a cohort using #{cohort.search_criteria.inspect}") { expect(@cohort_page.history_button?).to be false }
 
       # TODO it "allows the advisor to export a non-empty list of students in a cohort using #{cohort.search_criteria.list_filters}"
-      # TODO it "allows the advisor to choose columns to include when exporting a cohort using #{cohort.search_criteria.list_filters}"
     end
 
     context 'when the advisor enters invalid filter input in a Dependents' do
@@ -108,7 +119,7 @@ describe 'BOA' do
           @cohort_page.depend_logic_error_msg_element.when_visible 1
         end
 
-        it 'an error prompts for numeric input from 0 to 4' do
+        it 'an error prompts for non-negative numbers' do
           @cohort_page.choose_new_filter_sub_option(filter_name, {'min' => '-1', 'max' => '5'})
           @cohort_page.depend_char_error_msg_element.when_visible 1
         end
