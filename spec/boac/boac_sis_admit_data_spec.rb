@@ -7,6 +7,7 @@ all_admit_data = NessieUtils.get_admit_page_data
 test_sids = test.test_students.map &:sis_id
 admit_data = all_admit_data.select { |d| test_sids.include? d[:cs_empl_id] }
 latest_update_date = NessieUtils.get_admit_data_update_date
+all_student_sids = NessieUtils.get_all_students.map &:sis_id
 
 describe 'The BOA admit page' do
 
@@ -32,7 +33,11 @@ describe 'The BOA admit page' do
         @admit_page.load_page admit[:cs_empl_id]
 
         update_date_present = @admit_page.data_update_date_heading(latest_update_date).exists?
-        it("shows the most recent data update date for CS ID #{admit[:cs_empl_id]}") { expect(update_date_present).to be true }
+        if Date.parse(latest_update_date) == Date.today
+          it("shows no update date for CS ID #{admit[:cs_empl_id]}") { expect(update_date_present).to be false }
+        else
+          it("shows the most recent data update date for CS ID #{admit[:cs_empl_id]}") { expect(update_date_present).to be true }
+        end
 
         visible_name = @admit_page.name
         expected_name = @admit_page.concatenated_name admit
@@ -88,7 +93,9 @@ describe 'The BOA admit page' do
         it("shows the address street 2 of CS ID #{admit[:cs_empl_id]}") { expect(visible_address_2).to eql(admit[:permanent_street_2]) }
 
         visible_city_etc = @admit_page.address_city_region_postal
-        it("shows the address city / region / post code of CS ID #{admit[:cs_empl_id]}") { expect(visible_city_etc).to eql("#{admit[:permanent_city]}, #{admit[:permanent_region]} #{admit[:permanent_postal]}") }
+        it("shows the address city / region / post code of CS ID #{admit[:cs_empl_id]}") do
+          expect(visible_city_etc).to eql("#{admit[:permanent_city]&.strip}, #{admit[:permanent_region]&.strip} #{admit[:permanent_postal]&.strip}")
+        end
 
         visible_country = @admit_page.address_country
         it("shows the address country of CS ID #{admit[:cs_empl_id]}") { expect(visible_country).to eql(admit[:permanent_country]) }
@@ -128,9 +135,6 @@ describe 'The BOA admit page' do
 
         visible_visa_planned = @admit_page.visa_planned
         it("shows the non-immigrant visa planned status of CS ID #{admit[:cs_empl_id]}") { expect(visible_visa_planned).to eql(admit[:non_immigrant_visa_planned]) }
-
-        visible_first_gen_student = @admit_page.first_gen_student
-        it("shows the first generation student status of CS ID #{admit[:cs_empl_id]}") { expect(visible_first_gen_student).to eql(admit[:first_generation_student]) }
 
         visible_first_gen_college = @admit_page.first_gen_college
         it("shows the first generation college status of CS ID #{admit[:cs_empl_id]}") { expect(visible_first_gen_college).to eql(admit[:first_generation_college]) }
@@ -234,7 +238,7 @@ describe 'The BOA admit page' do
         it("shows the special program CEP status of CS ID #{admit[:cs_empl_id]}") { expect(visible_special_pgm_cep).to eql(admit[:special_program_cep]) }
 
         student_page_link_present = @admit_page.student_page_link(admit).exists?
-        if admit[:current_sir] == 'Yes'
+        if all_student_sids.include? admit[:cs_empl_id]
           it("shows a link to the student page for CS ID #{admit[:cs_empl_id]}") { expect(student_page_link_present).to be true }
         else
           it("shows no link to the student page for CS ID #{admit[:cs_empl_id]}") { expect(student_page_link_present).to be false }

@@ -171,7 +171,28 @@ module BOACFilteredCohortPageFilters
   # @param cohort [FilteredCohort]
   def perform_admit_search(cohort)
 
-    # TODO - check for existence of sub-options before trying to use them in searches
+    if cohort.search_criteria.freshman_or_transfer&.any?
+      click_new_filter_button
+      wait_for_update_and_click new_filter_option('freshmanOrTransfer')
+      wait_for_update_and_click new_filter_sub_option_button
+      sleep Utils.click_wait
+      filters_missing = []
+      cohort.search_criteria.freshman_or_transfer.each { |fresh_trans| filters_missing << fresh_trans unless new_filter_sub_option_element('freshmanOrTransfer', fresh_trans).exists? }
+      logger.debug "The options #{filters_missing} are not present, removing from search criteria" if filters_missing.any?
+      filters_missing.each { |f| cohort.search_criteria.freshman_or_transfer.delete f }
+      wait_for_update_and_click unsaved_filter_cancel_button_element
+    end
+    if cohort.search_criteria.special_program_cep&.any?
+      click_new_filter_button
+      wait_for_update_and_click new_filter_option('specialProgramCep')
+      wait_for_update_and_click new_filter_sub_option_button
+      sleep Utils.click_wait
+      filters_missing = []
+      cohort.search_criteria.special_program_cep.each { |prog| filters_missing << prog unless new_filter_sub_option_element('specialProgramCep', prog).exists? }
+      logger.debug "The options #{filters_missing} are not present, removing from search criteria" if filters_missing.any?
+      filters_missing.each { |f| cohort.search_criteria.special_program_cep.delete f }
+      wait_for_update_and_click unsaved_filter_cancel_button_element
+    end
 
     cohort.search_criteria.freshman_or_transfer.each { |f| select_new_filter('freshmanOrTransfer', f) } if cohort.search_criteria.freshman_or_transfer
     select_new_filter 'sir' if cohort.search_criteria.current_sir

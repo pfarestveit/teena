@@ -219,10 +219,10 @@
                 ],
                 "colleges": [
                     {
-                        "college": "Haas School of Business"
+                        "college": "College of Letters and Science"
                     },
                     {
-                        "college": "College of Environmental Design"
+                        "college": "College of Engineering"
                     }
                 ]
             },
@@ -267,7 +267,7 @@
             {
                 "special_program_cep": [
                     {
-                        "program": "Transfer Alliance Project"
+                        "program": "Destination College"
                     }
                 ],
                 "fee_waiver": true,
