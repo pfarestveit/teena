@@ -107,7 +107,11 @@ describe 'CE3 admit search' do
         it("shows the International status for CS ID #{admit.sis_id}") { expect(visible_row_data[:intl]).to eql("#{admit_data[:intl]}") }
 
         update_date_present = @search_results_page.data_update_date_heading(latest_update_date).exists?
-        it("shows the latest data update date for CS ID #{admit.sis_id}") { expect(update_date_present).to be true }
+        if Date.parse(latest_update_date) == Date.today
+          it("shows no data update date for CS ID #{admit.sis_id}") { expect(update_date_present).to be false }
+        else
+          it("shows the latest data update date for CS ID #{admit.sis_id}") { expect(update_date_present).to be true }
+        end
 
         @search_results_page.click_admit_link admit.sis_id
         link_works = @admit_page.verify_block { @admit_page.sid_element.when_visible Utils.short_wait }

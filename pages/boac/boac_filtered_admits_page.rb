@@ -10,7 +10,7 @@ class BOACFilteredAdmitsPage
   include BOACFilteredCohortPageFilters
   include BOACFilteredCohortPageResults
 
-  span(:depend_char_error_msg, xpath: '//span[text()="Dependents must be a number greater than or equal to 0."]')
+  span(:depend_char_error_msg, xpath: '//span[text()="Dependents must be an integer greater than or equal to 0."]')
   span(:depend_logic_error_msg, xpath: '//span[text()="Dependents inputs must be in ascending order."]')
 
   # Loads the cohort page by the cohort's ID

@@ -47,7 +47,13 @@ describe 'BOA' do
         end
       end
 
-      it("shows the most recent data update date for #{cohort.search_criteria.inspect}") { @cohort_page.data_update_date_heading(latest_update_date).when_visible Utils.short_wait }
+      it("shows the most recent data update date for #{cohort.search_criteria.inspect} if the data is stale") do
+        if Date.parse(latest_update_date) == Date.today
+          expect(@cohort_page.data_update_date_heading(latest_update_date).exists?).to be false
+        else
+          expect(@cohort_page.data_update_date_heading(latest_update_date).exists?).to be true
+        end
+      end
 
       it "shows the right data for the admits who match #{cohort.search_criteria.inspect}" do
         failures = []
@@ -59,33 +65,49 @@ describe 'BOA' do
       end
 
       it "sorts by First Name all the admits who match #{cohort.search_criteria.inspect}" do
-        @cohort_page.sort_by_first_name
-        expected_results = @cohort_page.expected_sids_by_first_name(cohort.member_data)
-        visible_results = @cohort_page.filter_result_all_row_cs_ids cohort
-        @cohort_page.verify_list_view_sorting(expected_results, visible_results)
-        @cohort_page.wait_until(1, "Expected #{expected_results} but got #{visible_results}") { visible_results == expected_results }
+        if cohort.member_data.length.zero?
+          logger.warn 'Skipping sort-by-first-name test since there are no results'
+        else
+          @cohort_page.sort_by_first_name
+          expected_results = @cohort_page.expected_sids_by_first_name(cohort.member_data)
+          visible_results = @cohort_page.filter_result_all_row_cs_ids cohort
+          @cohort_page.verify_list_view_sorting(expected_results, visible_results)
+          @cohort_page.wait_until(1, "Expected #{expected_results} but got #{visible_results}") { visible_results == expected_results }
+        end
       end
 
       it "sorts by CS ID all the admits who match #{cohort.search_criteria.inspect}" do
-        @cohort_page.sort_by_cs_id
-        expected_results = cohort.member_data.map { |u| u[:sid].to_i }.sort
-        visible_results = @cohort_page.filter_result_all_row_cs_ids cohort
-        @cohort_page.verify_list_view_sorting(expected_results, visible_results)
-        @cohort_page.wait_until(1, "Expected #{expected_results} but got #{visible_results}") { visible_results == expected_results }
+        if cohort.member_data.length.zero?
+          logger.warn 'Skipping sort-by-cs-id test since there are no results'
+        else
+          @cohort_page.sort_by_cs_id
+          expected_results = cohort.member_data.map { |u| u[:sid].to_i }.sort
+          visible_results = @cohort_page.filter_result_all_row_cs_ids cohort
+          @cohort_page.verify_list_view_sorting(expected_results, visible_results)
+          @cohort_page.wait_until(1, "Expected #{expected_results} but got #{visible_results}") { visible_results == expected_results }
+        end
       end
 
       it("offers an Export List button for a search #{cohort.search_criteria.inspect}") { expect(@cohort_page.export_list_button?).to be true }
 
       it "offers links to admit pages for search #{cohort.search_criteria.inspect}" do
-        cs_id = @cohort_page.filter_result_row_cs_ids.first
-        @cohort_page.click_admit_link cs_id
-        @admit_page.sid_element.when_visible Utils.short_wait
-        expect(@admit_page.sid).to eql(cs_id)
+        if cohort.member_data.length.zero?
+          logger.warn 'Skipping admit page link test since there are no results'
+        else
+          cs_id = @cohort_page.filter_result_row_cs_ids.first
+          @cohort_page.click_admit_link cs_id
+          @admit_page.sid_element.when_visible Utils.short_wait
+          expect(@admit_page.sid).to eql(cs_id)
+        end
       end
 
       it "can be reloaded using the Back button on an admit page for search #{cohort.search_criteria.inspect}" do
-        @admit_page.go_back @driver
-        @cohort_page.wait_until(Utils.short_wait) { @cohort_page.wait_for_search_results == cohort.member_data.length }
+        if cohort.member_data.length.zero?
+          logger.warn 'Skipping admit page back button test since there are no results'
+        else
+          @admit_page.go_back @driver
+          @cohort_page.wait_until(Utils.short_wait) { @cohort_page.wait_for_search_results == cohort.member_data.length }
+        end
       end
 
       it("allows the advisor to create a cohort using #{cohort.search_criteria.inspect}") { @cohort_page.create_new_cohort cohort }
