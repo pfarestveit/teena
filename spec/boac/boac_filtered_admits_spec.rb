@@ -8,6 +8,7 @@ describe 'BOA' do
   test.filtered_admits
   existing_cohorts = BOACUtils.get_user_filtered_cohorts test.advisor, admits: true
   latest_update_date = NessieUtils.get_admit_data_update_date
+  all_admit_data = NessieUtils.get_admit_page_data
 
   before(:all) do
     @driver = Utils.launch_browser test.chrome_profile
@@ -27,6 +28,12 @@ describe 'BOA' do
   context 'filtered cohort search' do
 
     before(:each) { @cohort_page.cancel_cohort if @cohort_page.cancel_cohort_button? && @cohort_page.cancel_cohort_button_element.visible? }
+
+    context 'default search' do
+
+      # TODO it 'shows all the admits'
+      # TODO it 'allows an export of all admits'
+    end
 
     test.searches.each do |cohort|
 
@@ -110,6 +117,23 @@ describe 'BOA' do
         end
       end
 
+      it "allows the advisor to export a list of admits in a cohort using #{cohort.search_criteria.list_filters}" do
+        cohort.export_csv = @cohort_page.export_student_list cohort
+        @cohort_page.verify_admits_present_in_export(all_admit_data, cohort.member_data, cohort.export_csv)
+      end
+
+      it "allows the advisor to export a list containing no emails for a cohort using #{cohort.search_criteria.list_filters}" do
+        @cohort_page.verify_no_email_in_export cohort.export_csv
+      end
+
+      it "allows the advisor to export a list of admits with all expected data in a cohort using #{cohort.search_criteria.list_filters}" do
+        @cohort_page.verify_mandatory_data_in_export cohort.export_csv
+      end
+
+      it "allows the advisor to export a list of admits with all possible data in a cohort using #{cohort.search_criteria.list_filters}" do
+        @cohort_page.verify_optional_data_in_export cohort.export_csv
+      end
+
       it("allows the advisor to create a cohort using #{cohort.search_criteria.inspect}") { @cohort_page.create_new_cohort cohort }
 
       it("shows the cohort filters for a cohort using #{cohort.search_criteria.inspect}") { @cohort_page.verify_admit_filters_present cohort }
@@ -117,8 +141,6 @@ describe 'BOA' do
       it("shows the cohort member count in the sidebar using #{cohort.search_criteria.inspect}") { @cohort_page.wait_for_sidebar_cohort_member_count cohort }
 
       it("offers no cohort history button for a cohort using #{cohort.search_criteria.inspect}") { expect(@cohort_page.history_button?).to be false }
-
-      # TODO it "allows the advisor to export a non-empty list of students in a cohort using #{cohort.search_criteria.list_filters}"
     end
 
     context 'when the advisor enters invalid filter input in a Dependents' do
