@@ -102,6 +102,22 @@ module BOACFilteredCohortPageFilters
     unsaved_filter_apply_button_element.when_present Utils.short_wait
   end
 
+  # Compares given an array of search criteria with available filter sub-options and returns missing sub-options
+  # @param criteria [Array<String>]
+  # @param key [String]
+  # @return [Array<String>]
+  def unavailable_test_data(criteria, key)
+    click_new_filter_button
+    wait_for_update_and_click new_filter_option key
+    wait_for_update_and_click new_filter_sub_option_button
+    sleep Utils.click_wait
+    missing_options = []
+    criteria.each { |criterion| missing_options << criterion unless new_filter_sub_option_element(key, criterion).exists? }
+    wait_for_update_and_click unsaved_filter_cancel_button_element
+    logger.debug "The options #{missing_options} are not present and will need to be removed from search criteria" if missing_options.any?
+    missing_options
+  end
+
   # Executes a custom student cohort search using search criteria associated with a cohort and stores the result count
   # @param cohort [FilteredCohort]
   def perform_student_search(cohort)
@@ -109,26 +125,13 @@ module BOACFilteredCohortPageFilters
     # The squads and majors lists can change over time. Avoid test failures if the search criteria is out of sync
     # with actual squads or majors. Advisors might also change, but fail if this happens for now.
     if cohort.search_criteria.major&.any?
-      click_new_filter_button
-      wait_for_update_and_click new_filter_option('majors')
-      wait_for_update_and_click new_filter_sub_option_button
-      sleep Utils.click_wait
-      filters_missing = []
-      cohort.search_criteria.major.each { |major| filters_missing << major unless new_filter_sub_option_element('majors', major).exists? }
-      logger.debug "The majors #{filters_missing} are not present, removing from search criteria" if filters_missing.any?
-      filters_missing.each { |f| cohort.search_criteria.major.delete f }
-      wait_for_update_and_click unsaved_filter_cancel_button_element
+      missing_options = unavailable_test_data(cohort.search_criteria.major, 'majors')
+      missing_options.each { |f| cohort.search_criteria.major.delete f }
     end
+
     if cohort.search_criteria.asc_team&.any?
-      wait_for_update_and_click new_filter_button_element
-      wait_for_update_and_click new_filter_option('groupCodes')
-      wait_for_update_and_click new_sub_filter_button_element
-      sleep 2
-      filters_missing = []
-      cohort.search_criteria.asc_team.each { |squad| filters_missing << squad unless new_filter_sub_option_element('groupCodes', squad.name).exists? }
-      logger.debug "The squads #{filters_missing} are not present, removing from search criteria" if filters_missing.any?
-      filters_missing.each { |f| cohort.search_criteria.asc_team.delete f }
-      wait_for_update_and_click unsaved_filter_cancel_button_element
+      missing_options = unavailable_test_data(search_criteria.asc_team, 'groupCodes')
+      missing_options.each { |f| cohort.search_criteria.asc_team.delete f }
     end
 
     # Global
@@ -172,26 +175,18 @@ module BOACFilteredCohortPageFilters
   def perform_admit_search(cohort)
 
     if cohort.search_criteria.freshman_or_transfer&.any?
-      click_new_filter_button
-      wait_for_update_and_click new_filter_option('freshmanOrTransfer')
-      wait_for_update_and_click new_filter_sub_option_button
-      sleep Utils.click_wait
-      filters_missing = []
-      cohort.search_criteria.freshman_or_transfer.each { |fresh_trans| filters_missing << fresh_trans unless new_filter_sub_option_element('freshmanOrTransfer', fresh_trans).exists? }
-      logger.debug "The options #{filters_missing} are not present, removing from search criteria" if filters_missing.any?
-      filters_missing.each { |f| cohort.search_criteria.freshman_or_transfer.delete f }
-      wait_for_update_and_click unsaved_filter_cancel_button_element
+      missing_options = unavailable_test_data(cohort.search_criteria.freshman_or_transfer, 'freshmanOrTransfer')
+      missing_options.each { |f| cohort.search_criteria.freshman_or_transfer.delete f }
     end
+
     if cohort.search_criteria.special_program_cep&.any?
-      click_new_filter_button
-      wait_for_update_and_click new_filter_option('specialProgramCep')
-      wait_for_update_and_click new_filter_sub_option_button
-      sleep Utils.click_wait
-      filters_missing = []
-      cohort.search_criteria.special_program_cep.each { |prog| filters_missing << prog unless new_filter_sub_option_element('specialProgramCep', prog).exists? }
-      logger.debug "The options #{filters_missing} are not present, removing from search criteria" if filters_missing.any?
-      filters_missing.each { |f| cohort.search_criteria.special_program_cep.delete f }
-      wait_for_update_and_click unsaved_filter_cancel_button_element
+      missing_options = unavailable_test_data(cohort.search_criteria.special_program_cep, 'specialProgramCep')
+      missing_options.each { |f| cohort.search_criteria.special_program_cep.delete f }
+    end
+
+    if cohort.search_criteria.residency&.any?
+      missing_options = unavailable_test_data(cohort.search_criteria.residency, 'residencyCategories')
+      missing_options.each { |f| cohort.search_criteria.residency.delete f }
     end
 
     cohort.search_criteria.freshman_or_transfer.each { |f| select_new_filter('freshmanOrTransfer', f) } if cohort.search_criteria.freshman_or_transfer
@@ -202,6 +197,7 @@ module BOACFilteredCohortPageFilters
     select_new_filter 'isUrem' if cohort.search_criteria.urem
     select_new_filter 'isFirstGenerationCollege' if cohort.search_criteria.first_gen_college
     select_new_filter 'hasFeeWaiver' if cohort.search_criteria.fee_waiver
+    cohort.search_criteria.residency.each { |r| select_new_filter('residencyCategories', r) }if cohort.search_criteria.residency
     select_new_filter 'inFosterCare' if cohort.search_criteria.foster_care
     select_new_filter 'isFamilySingleParent' if cohort.search_criteria.family_single_parent
     select_new_filter 'isStudentSingleParent' if cohort.search_criteria.student_single_parent
@@ -340,6 +336,7 @@ module BOACFilteredCohortPageFilters
       existing_filter_element('First Generation College').exists? if filters.first_gen_college
       logger.debug 'Checking Application Fee Waiver filter'
       existing_filter_element('Application Fee Waiver').exists? if filters.fee_waiver
+      filters.residency.each { |r| existing_filter_element('Residency', r).exists? } if filters.residency
       logger.debug 'Checking Foster Care filter'
       existing_filter_element('Foster Care').exists? if filters.foster_care
       logger.debug 'Checking Family Is Single Parent filter'

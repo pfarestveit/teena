@@ -212,6 +212,16 @@
         ],
         "admits": [
             {
+                "residency": [
+                    {
+                        "category": "INT"
+                    },
+                    {
+                        "category": "OOS"
+                    }
+                ]
+            },
+            {
                 "freshman_or_transfer": [
                     {
                         "fresh_or_trans": "Transfer"

@@ -382,6 +382,14 @@ module BOACFilteredCohortPageResults
     test.searchable_data.select { |u| u[:fee_waiver] == 'FeeWaiver' }
   end
 
+  def matching_residency_admits(test, search_criteria)
+    students = []
+    search_criteria.residency.each do |cat|
+      students << test.searchable_data.select { |u| u[:intl] == cat }
+    end
+    students.flatten
+  end
+
   # Returns the admits that match a Foster Care filter
   # @param test [BOACTestConfig]
   # @return [Array<Hash>]
@@ -516,6 +524,7 @@ module BOACFilteredCohortPageResults
     matches << matching_urem_admits(test) if search_criteria.urem
     matches << matching_first_gen_admits(test) if search_criteria.first_gen_college
     matches << matching_fee_waiver_admits(test) if search_criteria.fee_waiver
+    matches << matching_residency_admits(test, search_criteria) if search_criteria.residency&.any?
     matches << matching_foster_care_admits(test) if search_criteria.foster_care
     matches << matching_fam_single_parent_admits(test) if search_criteria.family_single_parent
     matches << matching_stu_single_parent_admits(test) if search_criteria.student_single_parent
