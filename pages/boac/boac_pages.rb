@@ -196,7 +196,7 @@ module BOACPages
     logger.debug "Waiting for cohort #{cohort.name} member count of #{cohort.member_data.length}"
     wait_until(Utils.medium_wait) do
       el = span_element(xpath: "//div[contains(@class, \"sidebar-row-link\")][contains(.,\"#{cohort.name}\")]//span[@class=\"sr-only\"]")
-      el.exists? && el.text.delete(' students').chomp == cohort.member_data.length.to_s
+      el.exists? && el.text.delete(' admitted').delete(' students').chomp == cohort.member_data.length.to_s
     end
   end
 

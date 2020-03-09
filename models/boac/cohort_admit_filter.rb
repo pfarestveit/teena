@@ -11,6 +11,7 @@ class CohortAdmitFilter
                 :hispanic,
                 :last_school_lcff_plus,
                 :re_entry_status,
+                :residency,
                 :special_program_cep,
                 :student_dependents,
                 :student_single_parent,
@@ -31,6 +32,7 @@ class CohortAdmitFilter
     @hispanic = test_data['hispanic']
     @last_school_lcff_plus = test_data['last_school_lcff_plus']
     @re_entry_status = test_data['re_entry_status']
+    @residency = (test_data['residency']&.map { |r| r['category'] })
     @special_program_cep = (test_data['special_program_cep']&.map { |s| s['program'] })
     @student_dependents = (test_data['student_dependents']&.map { |d| d['num'] })
     @student_single_parent = test_data['student_single_parent']
