@@ -29,16 +29,78 @@ describe 'BOA' do
 
     before(:each) { @cohort_page.cancel_cohort if @cohort_page.cancel_cohort_button? && @cohort_page.cancel_cohort_button_element.visible? }
 
-    context 'default search' do
+    describe 'default search' do
 
-      # TODO it 'shows all the admits'
-      # TODO it 'allows an export of all admits'
+      before(:all) do
+        @all_admits = Cohort.new(id: '0', name: 'CE3 Admissions', member_data: test.searchable_data)
+        @cohort_page.click_sidebar_all_admits
+      end
+
+      it 'shows all admits sorted by Last Name' do
+        expected_results = @cohort_page.expected_sids_by_last_name test.searchable_data
+        visible_results = @cohort_page.filter_result_all_row_cs_ids @all_admits
+        @cohort_page.wait_until(1, "Expected but not present: #{expected_results - visible_results}. Present but not expected: #{visible_results - expected_results}") do
+          visible_results.sort == expected_results.sort
+        end
+        @cohort_page.verify_list_view_sorting(expected_results, visible_results)
+      end
+
+      it 'shows the most recent data update date if the data is stale' do
+        if Date.parse(latest_update_date) == Date.today
+          expect(@cohort_page.data_update_date_heading(latest_update_date).exists?).to be false
+        else
+          expect(@cohort_page.data_update_date_heading(latest_update_date).exists?).to be true
+        end
+      end
+
+      it 'shows the right data for a sample of all admits' do
+        failures = []
+        visible_sids = @cohort_page.filter_result_row_cs_ids
+        expected_admit_data = test.searchable_data.select { |d| visible_sids.include? d[:sid] }
+        expected_admit_data.each { |admit| @cohort_page.verify_admit_row_data(admit[:sid], admit, failures) }
+        logger.error "Failures: #{failures}" unless failures.empty?
+        expect(failures).to be_empty
+      end
+
+      it 'sorts all admits by First Name' do
+        @cohort_page.sort_by_first_name
+        expected_results = @cohort_page.expected_sids_by_first_name test.searchable_data
+        visible_results = @cohort_page.filter_result_all_row_cs_ids @all_admits
+        @cohort_page.verify_list_view_sorting(expected_results, visible_results)
+        @cohort_page.wait_until(1, "Expected #{expected_results} but got #{visible_results}") { visible_results == expected_results }
+      end
+
+      it 'sorts all admits by CS ID' do
+        @cohort_page.sort_by_cs_id
+        expected_results = test.searchable_data.map { |u| u[:sid].to_i }.sort
+        visible_results = @cohort_page.filter_result_all_row_cs_ids @all_admits
+        @cohort_page.verify_list_view_sorting(expected_results, visible_results)
+        @cohort_page.wait_until(1, "Expected #{expected_results} but got #{visible_results}") { visible_results == expected_results }
+      end
+
+      it 'allows the advisor to export a list of all admits' do
+        @all_admits.export_csv = @cohort_page.export_student_list @all_admits
+        @cohort_page.verify_admits_present_in_export(all_admit_data, @all_admits.member_data, @all_admits.export_csv)
+      end
+
+      it('allows the advisor to export a list of all admits containing no email addresses') { @cohort_page.verify_no_email_in_export @all_admits.export_csv }
+
+      it('allows the advisor to export a list of all admits with all expected data') { @cohort_page.verify_mandatory_data_in_export @all_admits.export_csv }
+
+      it('allows the advisor to export a list of all admits with all possible data') { @cohort_page.verify_optional_data_in_export @all_admits.export_csv }
     end
 
-    test.searches.each do |cohort|
+    test.searches.each_with_index do |cohort, i|
 
       it "shows all the admits sorted by Last Name who match #{cohort.search_criteria.inspect}" do
-        @cohort_page.click_sidebar_create_ce3_filtered
+        # Follow both paths to create admit cohorts
+        if i.odd?
+          @cohort_page.click_sidebar_create_ce3_filtered
+        else
+          @cohort_page.click_sidebar_all_admits
+          @cohort_page.click_create_cohort
+        end
+
         @cohort_page.perform_admit_search cohort
         cohort.member_data = @cohort_page.expected_admit_search_results(test, cohort.search_criteria)
         expected_results = @cohort_page.expected_sids_by_last_name cohort.member_data
@@ -128,14 +190,6 @@ describe 'BOA' do
 
       it "allows the advisor to export a non-zero list containing no emails for a cohort using #{cohort.search_criteria.list_filters}" do
         cohort.member_data.length.zero? ? skip : @cohort_page.verify_no_email_in_export(cohort.export_csv)
-      end
-
-      it "allows the advisor to export a non-zero list of admits with all expected data in a cohort using #{cohort.search_criteria.list_filters}" do
-        cohort.member_data.length.zero? ? skip : @cohort_page.verify_mandatory_data_in_export(cohort.export_csv)
-      end
-
-      it "allows the advisor to export a non-zero list of admits with all possible data in a cohort using #{cohort.search_criteria.list_filters}" do
-        cohort.member_data.length.zero? ? skip : @cohort_page.verify_optional_data_in_export(cohort.export_csv)
       end
 
       it("allows the advisor to create a cohort using #{cohort.search_criteria.inspect}") { @cohort_page.create_new_cohort cohort }
