@@ -10,6 +10,7 @@ class BOACFilteredAdmitsPage
   include BOACFilteredCohortPageFilters
   include BOACFilteredCohortPageResults
 
+  link(:create_cohort_button, id: 'admitted-students-cohort-show-filters')
   span(:depend_char_error_msg, xpath: '//span[text()="Dependents must be an integer greater than or equal to 0."]')
   span(:depend_logic_error_msg, xpath: '//span[text()="Dependents inputs must be in ascending order."]')
 
@@ -19,6 +20,11 @@ class BOACFilteredAdmitsPage
     logger.info "Loading CE3 cohort '#{cohort.name}'"
     navigate_to "#{BOACUtils.base_url}/cohort/#{cohort.id}"
     wait_for_title cohort.name
+  end
+
+  def click_create_cohort
+    logger.info 'Clicking the Create Cohort button'
+    wait_for_load_and_click create_cohort_button_element
   end
 
   # Adds a column header to an array of errors if no data is found in that column of the CSV export

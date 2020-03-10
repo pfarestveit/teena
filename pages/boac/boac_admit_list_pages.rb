@@ -45,7 +45,6 @@ module BOACAdmitListPages
       end
     end
     visible_sids.flatten
-
   end
 
   # Returns all the data shown in a row for a given admit

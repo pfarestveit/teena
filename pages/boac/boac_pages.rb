@@ -203,6 +203,14 @@ module BOACPages
   ### SIDEBAR - CE3 COHORTS ###
 
   link(:create_ce3_filtered_link, id: 'admitted-students-cohort-create')
+  link(:all_admits_link, id: 'admitted-students-all')
+
+  def click_sidebar_all_admits
+    logger.info 'Clicking sidebar link to view all CE3 admits'
+    wait_for_load_and_click all_admits_link_element
+    wait_for_spinner
+    h1_element(xpath: '//h1[contains(text(), "CE3 Admissions")]').when_visible Utils.short_wait
+  end
 
   def click_sidebar_create_ce3_filtered
     logger.debug 'Clicking sidebar button to create a CE3 cohort'
