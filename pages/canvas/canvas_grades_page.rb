@@ -35,25 +35,6 @@ module Page
       end
     end
 
-    link(:features_tab, id: 'tab-features-link')
-    checkbox(:new_gradebook_toggle, id: 'ff_toggle_new_gradebook')
-    div(:new_gradebook_toggle_switch, xpath: '//div[contains(@class, "new_gradebook")]//div[@class="ic-Super-toggle__switch"]')
-
-    # Ensures the new gradebook is enabled on a given course site
-    # @param course [Course]
-    def set_new_gradebook(course)
-      navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/settings"
-      wait_for_load_and_click features_tab_element
-      new_gradebook_toggle_element.when_present Utils.short_wait
-      if new_gradebook_toggle_checked?
-        logger.info 'New gradebook is already enabled'
-      else
-        logger.info 'Enabling new gradebook'
-        wait_for_update_and_click new_gradebook_toggle_switch_element
-        sleep Utils.click_wait
-      end
-    end
-
     button(:gradebook_settings_button, id: 'gradebook-settings-button')
     div(:grade_posting_policy_tab, xpath: '//div[text()="Grade Posting Policy"]')
     checkbox(:gradebook_include_ungraded, xpath: '//span[text()="Automatically apply grade for missing submissions"]/ancestor::label/preceding-sibling::input')

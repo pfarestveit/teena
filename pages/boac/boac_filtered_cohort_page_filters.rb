@@ -130,7 +130,7 @@ module BOACFilteredCohortPageFilters
     end
 
     if cohort.search_criteria.asc_team&.any?
-      missing_options = unavailable_test_data(search_criteria.asc_team, 'groupCodes')
+      missing_options = unavailable_test_data(cohort.search_criteria.asc_team, 'groupCodes')
       missing_options.each { |f| cohort.search_criteria.asc_team.delete f }
     end
 
@@ -280,38 +280,66 @@ module BOACFilteredCohortPageFilters
   def verify_student_filters_present(cohort)
     filters = cohort.search_criteria
     verify_filters(cohort) do
-      filters.college.each { |m| existing_filter_element('College', m).exists? } if filters.college&.any?
-      filters.entering_terms.each { |term| existing_filter_element('Entering Term', term).exists? } if filters.entering_terms&.any?
-      filters.expected_grad_terms.each { |t| existing_filter_element('Expected Graduation Term', t).exists? } if filters.expected_grad_terms&.any?
-      filters.gpa.each { |g| existing_filter_element('GPA (Cumulative)', g).exists? } if filters.gpa&.any?
-      filters.gpa_last_term.each { |g| existing_filter_element('GPA (Last Term)', g).exists? } if filters.gpa_last_term&.any?
-      filters.level.each { |l| existing_filter_element('Level', l).exists? } if filters.level&.any?
-      filters.major.each { |m| existing_filter_element('Major', m).exists? } if filters.major&.any?
-      existing_filter_element('Midpoint Deficient Grade').exists? if filters.mid_point_deficient
-      existing_filter_element('Transfer Student').exists? if filters.transfer_student
-      filters.units_completed.each { |u| existing_filter_element('Units Completed', u).exists? } if filters.units_completed&.any?
+      wait_until(1) do
+        logger.debug 'Verifying College filter'
+        filters.college.each { |m| existing_filter_element('College', m).exists? } if filters.college&.any?
+        logger.debug 'Verifying Entering Term filter'
+        filters.entering_terms.each { |term| existing_filter_element('Entering Term', term).exists? } if filters.entering_terms&.any?
+        logger.debug 'Verifying Expected Graduation Term filter'
+        filters.expected_grad_terms.each { |t| existing_filter_element('Expected Graduation Term', t).exists? } if filters.expected_grad_terms&.any?
+        logger.debug 'Verifying GPA (Cumulative) filter'
+        filters.gpa.each { |g| existing_filter_element('GPA (Cumulative)', g).exists? } if filters.gpa&.any?
+        logger.debug 'Verifying GPA (Last Term) filter'
+        filters.gpa_last_term.each { |g| existing_filter_element('GPA (Last Term)', g).exists? } if filters.gpa_last_term&.any?
+        logger.debug 'Verifying Level filter'
+        filters.level.each { |l| existing_filter_element('Level', l).exists? } if filters.level&.any?
+        logger.debug 'Verifying Major filter'
+        filters.major.each { |m| existing_filter_element('Major', m).exists? } if filters.major&.any?
+        logger.debug 'Verifying Midpoint Deficient Grade filter'
+        existing_filter_element('Midpoint Deficient Grade').exists? if filters.mid_point_deficient
+        logger.debug 'Verifying Transfer Student filter'
+        existing_filter_element('Transfer Student').exists? if filters.transfer_student
+        logger.debug 'Verifying Units Completed filter'
+        filters.units_completed.each { |u| existing_filter_element('Units Completed', u).exists? } if filters.units_completed&.any?
 
-      filters.ethnicity.each { |e| existing_filter_element('Ethnicity', e).exists? } if filters.ethnicity&.any?
-      filters.gender.each { |g| existing_filter_element('Gender', g).exists? } if filters.gender&.any?
-      existing_filter_element('Underrepresented Minority').exists? if filters.underrepresented_minority
-      filters.visa_type.each { |v| existing_filter_element('Visa Type', v).exists? } if filters.visa_type&.any?
+        logger.debug 'Verifying Ethnicity filter'
+        filters.ethnicity.each { |e| existing_filter_element('Ethnicity', e).exists? } if filters.ethnicity&.any?
+        logger.debug 'Verifying Gender filter'
+        filters.gender.each { |g| existing_filter_element('Gender', g).exists? } if filters.gender&.any?
+        logger.debug 'Verifying Underrepresented Minority filter'
+        existing_filter_element('Underrepresented Minority').exists? if filters.underrepresented_minority
+        logger.debug 'Verifying Visa Type filter'
+        filters.visa_type.each { |v| existing_filter_element('Visa Type', v).exists? } if filters.visa_type&.any?
 
-      existing_filter_element('Inactive (ASC)').exists? if filters.asc_inactive
-      existing_filter_element('Intensive').exists? if filters.asc_intensive
-      filters.asc_team.each { |t| existing_filter_element('Team', t.name).exists? } if filters.asc_team&.any?
+        logger.debug 'Verifying Inactive (ASC) filter'
+        existing_filter_element('Inactive (ASC)').exists? if filters.asc_inactive
+        logger.debug 'Verifying Intensive filter'
+        existing_filter_element('Intensive').exists? if filters.asc_intensive
+        logger.debug 'Verifying Team filter'
+        filters.asc_team.each { |t| existing_filter_element('Team', t.name).exists? } if filters.asc_team&.any?
 
-      # TODO - advisors COE
-      filters.coe_ethnicity.each { |e| existing_filter_element('Ethnicity (COE)', e).exists? } if filters.coe_ethnicity&.any?
-      filters.coe_gender.each { |g| existing_filter_element('Gender (COE)', g).exists? } if filters.coe_gender&.any?
-      existing_filter_element('Inactive (COE)').exists? if filters.coe_inactive
+        # TODO - advisors COE
+        logger.debug 'Verifying Ethnicity (COE) filter'
+        filters.coe_ethnicity.each { |e| existing_filter_element('Ethnicity (COE)', e).exists? } if filters.coe_ethnicity&.any?
+        logger.debug 'Verifying Gender (COE) filter'
+        filters.coe_gender.each { |g| existing_filter_element('Gender (COE)', g).exists? } if filters.coe_gender&.any?
+        logger.debug 'Verifying Inactive (COE) filter'
+        existing_filter_element('Inactive (COE)').exists? if filters.coe_inactive
 
-      filters.last_name.each { |n| existing_filter_element('Last Name', n).exists? } if filters.last_name&.any?
-      filters.cohort_owner_academic_plans.each { |g| existing_filter_element('My Students', g).exists? } if filters.cohort_owner_academic_plans&.any?
-      # TODO - curated groups
+        logger.debug 'Verifying Last Name filter'
+        filters.last_name.each { |n| existing_filter_element('Last Name', n).exists? } if filters.last_name&.any?
+        logger.debug 'Verifying My Students filter'
+        filters.cohort_owner_academic_plans.each { |g| existing_filter_element('My Students', g).exists? } if filters.cohort_owner_academic_plans&.any?
+        # TODO - curated groups
 
-      existing_filter_element('Underrepresented Minority').exists? if filters.coe_underrepresented_minority
-      filters.coe_prep.each { |p| existing_filter_element('PREP', p).exists? } if filters.coe_prep&.any?
-      existing_filter_element('Probation').exists? if filters.coe_probation
+        logger.debug 'Verifying Underrepresented Minority filter (COE)'
+        existing_filter_element('Underrepresented Minority (COE)').exists? if filters.coe_underrepresented_minority
+        logger.debug 'Verifying PREP filter'
+        filters.coe_prep.each { |p| existing_filter_element('PREP', p).exists? } if filters.coe_prep&.any?
+        logger.debug 'Verifying Probation filter'
+        existing_filter_element('Probation').exists? if filters.coe_probation
+        logger.debug 'Found \'em all!'
+      end
     end
   end
 

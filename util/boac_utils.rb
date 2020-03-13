@@ -468,7 +468,7 @@ class BOACUtils < Utils
                 end}
               ORDER BY uid, cohort_id ASC;"
     results = Utils.query_pg_db(boac_db_credentials, query)
-    cohorts = results.map { |r| FilteredCohort.new({id: r['cohort_id'], name: r['cohort_name'].strip, owner_uid: r['uid']}) }
+    cohorts = results.map { |r| FilteredCohort.new({id: r['cohort_id'], name: r['cohort_name'].gsub(/\s+/, ' ').strip, owner_uid: r['uid']}) }
     cohorts.sort_by { |c| [c.owner_uid.to_i, c.id] }
   end
 
@@ -490,7 +490,7 @@ class BOACUtils < Utils
                 end}
               ORDER BY uid, group_id ASC;"
     results = Utils.query_pg_db(boac_db_credentials, query)
-    groups = results.map { |r| CuratedGroup.new({id: r['group_id'], name: r['group_name'].strip, owner_uid: r['uid']}) }
+    groups = results.map { |r| CuratedGroup.new({id: r['group_id'], name: r['group_name'].gsub(/\s+/, ' ').strip, owner_uid: r['uid']}) }
     groups.sort_by { |c| [c.owner_uid.to_i, c.id] }
   end
 
@@ -513,14 +513,21 @@ class BOACUtils < Utils
   # @return [Array<Alert>]
   def self.get_students_alerts(users)
     sids = users.map(&:sis_id).to_s.delete('[]')
-    query = "SELECT id, sid, alert_type, message
+    query = "SELECT id, sid, alert_type, message, created_at, updated_at
               FROM alerts
               WHERE sid IN (#{sids})
                 AND active = true
                 AND key LIKE '#{term_code}%'
                 AND alert_type != 'hold';"
     results = Utils.query_pg_db(boac_db_credentials, query.gsub("\"", '\''))
-    alerts = results.map { |r| Alert.new({id: r['id'], type: r['alert_type'], message: r['message'].gsub("\n", ' ').gsub(/\s+/, ' '), user: BOACUser.new({sis_id: r['sid']})}) }
+    alerts = results.map do |r|
+      date = %w(midterm withdrawal).include?(r['alert_type']) ? r['created_at'] : r['updated_at']
+      Alert.new(id: r['id'],
+                type: r['alert_type'],
+                message: r['message'].gsub("\n", ' ').gsub(/\s+/, ' '),
+                user: BOACUser.new({sis_id: r['sid']}),
+                date: Time.parse(date))
+    end
     alerts.sort_by &:message
   end
 

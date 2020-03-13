@@ -33,6 +33,7 @@ describe 'BOA' do
 
       before(:all) do
         @all_admits = Cohort.new(id: '0', name: 'CE3 Admissions', member_data: test.searchable_data)
+        @homepage.load_page
         @cohort_page.click_sidebar_all_admits
       end
 
@@ -95,8 +96,10 @@ describe 'BOA' do
       it "shows all the admits sorted by Last Name who match #{cohort.search_criteria.inspect}" do
         # Follow both paths to create admit cohorts
         if i.odd?
+          @homepage.load_page
           @cohort_page.click_sidebar_create_ce3_filtered
         else
+          @homepage.load_page
           @cohort_page.click_sidebar_all_admits
           @cohort_page.click_create_cohort
         end
@@ -203,7 +206,10 @@ describe 'BOA' do
 
     context 'when the advisor enters invalid filter input in a Dependents' do
 
-      before(:all) { @homepage.click_sidebar_create_ce3_filtered }
+      before(:all) do
+        @homepage.load_page
+        @homepage.click_sidebar_create_ce3_filtered
+      end
 
       shared_examples 'dependent range validation' do |filter_name|
         before(:all) do
