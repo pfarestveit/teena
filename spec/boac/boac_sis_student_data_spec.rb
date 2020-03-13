@@ -349,15 +349,15 @@ describe 'BOAC' do
         # Alerts
 
         alerts = BOACUtils.get_students_alerts [student]
-        alert_msgs = (alerts.map &:message).sort
+        alert_data = alerts.map { |a| {text: a.message, date: @boac_student_page.expected_item_short_date_format(a.created_date)} }
         dismissed = BOACUtils.get_dismissed_alerts(alerts).map &:message
-        logger.info "UID #{student.uid} alert count is #{alert_msgs.length}, with #{dismissed.length} dismissed"
+        logger.info "UID #{student.uid} alert count is #{alert_data.length}, with #{dismissed.length} dismissed"
 
         if alerts.any?
           alert_students << student
-          visible_alerts = @boac_student_page.visible_alerts.sort
-          logger.debug "UID #{student.uid} alerts are #{alert_msgs}, and visible alerts are #{visible_alerts}"
-          it("has the alert messages for UID #{student.uid} on the student page") { expect(visible_alerts).to eql(alert_msgs) }
+          visible_alerts = @boac_student_page.visible_alerts
+          logger.debug "UID #{student.uid} alerts are #{alert_data}, and visible alerts are #{visible_alerts}"
+          it("has the alert messages for UID #{student.uid} on the student page") { expect(visible_alerts & alert_data).to eql(visible_alerts) }
         end
 
         # Holds
@@ -581,7 +581,7 @@ describe 'BOAC' do
                  student_page_sis_data[:advisor_emails], student_page_sis_data[:entered_term], student_page_sis_data[:intended_majors],
                  student_page_sis_data[:visa], student_page_sis_data[:expected_graduation], student_page_sis_data[:graduation_degree],
                  student_page_sis_data[:graduation_date], student_page_sis_data[:graduation_colleges], student_page_sis_data[:inactive],
-                 alert_msgs, hold_msgs]
+                 alert_data, hold_msgs]
           Utils.add_csv_row(user_profile_sis_data, row)
         end
       end

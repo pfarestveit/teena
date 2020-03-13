@@ -19,7 +19,7 @@ class BOACSearchResultsPage
   def results_count(element)
     sleep Utils.click_wait
     wait_until(Utils.short_wait) do
-      results_loaded_msg? || no_results_msg.exists?
+      h1_element(xpath: '//*[contains(@id, "results") and contains(@class, "header")]').exists? || no_results_msg.exists?
     end
     if no_results_msg.visible?
       logger.info 'No results found'
@@ -223,7 +223,7 @@ class BOACSearchResultsPage
   # @param note [Note]
   # @return [PageObject::Elements::Link]
   def note_link(note)
-    link_element(xpath: "//a[contains(@href, '#{note.id}')]")
+    link_element(xpath: "//a[contains(@href, '#note-#{note.id}')]")
   end
 
   # Clicks the link element for a given note
@@ -275,7 +275,7 @@ class BOACSearchResultsPage
     advisor_el = span_element(id: "appointment-search-result-advisor-#{appt.id}")
     footer_el = div_element(xpath: "//div[@id='appointment-search-result-#{appt.id}']/div[@class='advising-note-search-result-footer']")
     {
-        :student_name => (note_link( appt).text.strip if note_link(appt).exists?),
+        :student_name => (appt_link(appt).text.strip if appt_link(appt).exists?),
         :student_sid => (sid_el.text.gsub("#{student.full_name}", '').delete('()').strip if sid_el.exists?),
         :snippet => (snippet_el.text if snippet_el.exists?),
         :advisor_name => (advisor_el.text.delete('-').strip if advisor_el.exists?),
@@ -293,7 +293,7 @@ class BOACSearchResultsPage
   # @param appt [Appointment]
   # @return [PageObject::Elements::Link]
   def appt_link(appt)
-    link_element(xpath: "//a[contains(@href, '#{appt.id}')]")
+    link_element(xpath: "//a[contains(@href, '#appointment-#{appt.id}')]")
   end
 
   # Clicks the link element for a given appointment

@@ -2,7 +2,7 @@ require_relative '../../util/spec_helper'
 
 test = BOACTestConfig.new
 test.search_admits
-auth_users = BOACUtils.get_authorized_users
+auth_users = BOACUtils.get_authorized_users.select { |a| a.active && !a.is_blocked }
 latest_update_date = NessieUtils.get_admit_data_update_date
 
 describe 'CE3 admit search' do

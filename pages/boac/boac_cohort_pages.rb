@@ -152,7 +152,7 @@ module BOACCohortPages
     wait_for_element(export_list_button_element, Utils.medium_wait)
     wait_until(3) { !export_list_button_element.disabled? }
     wait_for_update_and_click export_list_button_element
-    if cohort.instance_of?(FilteredCohort) && !cohort.search_criteria.instance_of?(CohortAdmitFilter)
+    if (cohort.instance_of?(FilteredCohort) && !cohort.search_criteria.instance_of?(CohortAdmitFilter)) || cohort.instance_of?(CuratedGroup)
       wait_for_update_and_click confirm_export_list_button_element
     end
     csv_file_path = "#{Utils.download_dir}/#{cohort.name + '-' if cohort.id}students-#{Time.now.strftime('%Y-%m-%d')}_*.csv"

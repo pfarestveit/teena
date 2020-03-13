@@ -173,7 +173,9 @@ class BOACStudentPage
 
   button(:alerts_button, id: 'timeline-tab-alert')
   button(:show_hide_alerts_button, id: 'timeline-tab-alert-previous-messages')
-  elements(:alert, :div, xpath: '//div[contains(@id,"timeline-tab-alert-message")]/span[1]')
+  elements(:alert, :row, xpath: '//tr[contains(@id, "permalink-alert-")]')
+  elements(:alert_text, :span, xpath: '//div[contains(@id,"timeline-tab-alert-message")]/span[1]')
+  elements(:alert_date, xpath: '//tr[contains(@id, "permalink-alert-")]//div[contains(@id, "collapsed-alert-")][contains(@id, "-created-at")]')
 
   # Returns an array of visible alert messages
   # @return [Array<String>]
@@ -181,7 +183,9 @@ class BOACStudentPage
     logger.info 'Checking alerts tab'
     wait_for_update_and_click alerts_button_element if alerts_button? && !alerts_button_element.disabled?
     wait_for_update_and_click show_hide_alerts_button_element if show_hide_alerts_button? && show_hide_alerts_button_element.text.include?('Show')
-    alert_elements.map { |a| a.text.strip }
+    alert_elements.each_with_index.map do |_, i|
+      { text: alert_text_elements[i].text.strip, date: alert_date_elements[i].text.gsub('Last updated on', '').strip }
+    end
   end
 
   # Notes - see BOACAdvisingNoteSection

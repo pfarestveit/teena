@@ -121,7 +121,6 @@ describe 'BOAC assignment analytics' do
                     logger.warn "Checking current score for #{test_case}"
 
                     @canvas_grades_page.stop_masquerading(@driver) if @canvas_grades_page.stop_masquerading_link?
-                    @canvas_grades_page.set_new_gradebook course
                     @canvas_grades_page.load_gradebook course
                     scores = @canvas_grades_page.export_grades course
 
