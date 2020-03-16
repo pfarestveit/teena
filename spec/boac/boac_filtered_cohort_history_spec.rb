@@ -136,6 +136,7 @@ describe 'BOA cohort history' do
       @group_page.load_page @group
       added_members = @test.students[20..29]
       @group_page.add_comma_sep_sids_to_existing_grp(added_members, @group)
+      @group_page.wait_for_sidebar_group @group
       @cohort_3.history += @cohort_history_page.expected_history_entries(added_members, 'ADDED', Time.now)
       @cohort_3.history = @cohort_3.history.sort_by { |s| [s[:sid], s[:status]] }
       @cohort_page.load_cohort @cohort_3
