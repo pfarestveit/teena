@@ -349,7 +349,7 @@ describe 'BOAC' do
         # Alerts
 
         alerts = BOACUtils.get_students_alerts [student]
-        alert_data = alerts.map { |a| {text: a.message, date: @boac_student_page.expected_item_short_date_format(a.created_date)} }
+        alert_data = alerts.map { |a| {text: a.message, date: @boac_student_page.expected_item_short_date_format(a.date)} }
         dismissed = BOACUtils.get_dismissed_alerts(alerts).map &:message
         logger.info "UID #{student.uid} alert count is #{alert_data.length}, with #{dismissed.length} dismissed"
 

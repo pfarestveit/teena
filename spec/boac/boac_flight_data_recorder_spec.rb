@@ -108,7 +108,7 @@ describe 'BOA flight data recorder' do
         end
 
         it "shows the last login date for #{dept.name} UID #{user.uid}" do
-          date = if [admin, director].include? user
+          date = if user == admin
                    Time.now
                  else
                    (advisor_data.find { |a| a[:uid] == user.uid.to_s })[:last_login]
