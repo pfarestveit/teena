@@ -47,6 +47,7 @@ describe 'Canvas assignment submission', order: :defined do
 
     # Submit assignment
     submissions = []
+    expected_csv_rows = []
     students.each do |student|
       begin
         name = student.full_name
@@ -89,11 +90,7 @@ describe 'Canvas assignment submission', order: :defined do
 
         it("earns 'Submit an Assignment' points on the Engagement Index for #{student_full_name}") { expect(score_updated).to be true }
 
-        # Check that activity is included in CSV download
-        scores = @engagement_index.download_csv(@driver, @course, @engagement_index_url)
-        expected_row = "#{student_full_name}, submit_assignment, #{Activity::SUBMIT_ASSIGNMENT.points}, #{expected_score}"
-
-        it("shows 'submit_assignment' activity on the CSV export for #{student_full_name}") { expect(scores).to include(expected_row) }
+        expected_csv_rows << "#{student_full_name}, submit_assignment, #{Activity::SUBMIT_ASSIGNMENT.points}, #{expected_score}"
 
         # Check that submission is added to Asset Library with right metadata
         @asset_library.load_page(@driver, @asset_library_url)
@@ -119,6 +116,15 @@ describe 'Canvas assignment submission', order: :defined do
         it("caused an unexpected error checking #{student_full_name}'s submission in SuiteC") { fail }
       end
     end
+
+    # Check that all activity is included in CSV download
+    scores = @engagement_index.download_csv(@driver, @course, @engagement_index_url)
+    expected_csv_rows.each do |row|
+      it("shows #{row} on the CSV export") { expect(scores).to include(row) }
+    end
+
+
+
 
   rescue => e
     # Catch and report errors related to the whole test
