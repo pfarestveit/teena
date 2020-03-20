@@ -56,6 +56,8 @@ module BOACFilteredCohortPageFilters
         link_element(id: "Expected Graduation Term-#{filter_option}")
       when 'genders'
         link_element(id: "Gender-#{filter_option}")
+      when 'intendedMajors'
+        link_element(id: "Intended Major-#{filter_option}")
       when 'majors'
         link_element(id: "Major-#{filter_option}")
       when 'coeAdvisorLdapUids'
@@ -124,6 +126,11 @@ module BOACFilteredCohortPageFilters
 
     # The squads and majors lists can change over time. Avoid test failures if the search criteria is out of sync
     # with actual squads or majors. Advisors might also change, but fail if this happens for now.
+    if cohort.search_criteria.intended_major&.any?
+      missing_options = unavailable_test_data(cohort.search_criteria.intended_major, 'intendedMajors')
+      missing_options.each { |f| cohort.search_criteria.intended_major.delete f }
+    end
+
     if cohort.search_criteria.major&.any?
       missing_options = unavailable_test_data(cohort.search_criteria.major, 'majors')
       missing_options.each { |f| cohort.search_criteria.major.delete f }
@@ -139,6 +146,7 @@ module BOACFilteredCohortPageFilters
     cohort.search_criteria.entering_terms.each { |term| select_new_filter('enteringTerms', term) } if cohort.search_criteria.entering_terms
     cohort.search_criteria.gpa.each { |gpa| select_new_filter('gpaRanges', gpa) } if cohort.search_criteria.gpa
     cohort.search_criteria.gpa_last_term.each { |gpa| select_new_filter('lastTermGpaRanges', gpa) } if cohort.search_criteria.gpa_last_term
+    cohort.search_criteria.intended_major.each { |m| select_new_filter('intendedMajors', m) } if cohort.search_criteria.intended_major
     cohort.search_criteria.level.each { |l| select_new_filter('levels', l) } if cohort.search_criteria.level
     cohort.search_criteria.units_completed.each { |u| select_new_filter('unitRanges', u) } if cohort.search_criteria.units_completed
     cohort.search_criteria.major.each { |m| select_new_filter('majors', m) } if cohort.search_criteria.major
@@ -291,6 +299,8 @@ module BOACFilteredCohortPageFilters
         filters.gpa.each { |g| existing_filter_element('GPA (Cumulative)', g).exists? } if filters.gpa&.any?
         logger.debug 'Verifying GPA (Last Term) filter'
         filters.gpa_last_term.each { |g| existing_filter_element('GPA (Last Term)', g).exists? } if filters.gpa_last_term&.any?
+        logger.debug 'Verifying Intended Major filter'
+        filters.intended_major.each { |m| existing_filter_element('Intended Major', m).exists? } if filters.intended_major&.any?
         logger.debug 'Verifying Level filter'
         filters.level.each { |l| existing_filter_element('Level', l).exists? } if filters.level&.any?
         logger.debug 'Verifying Major filter'

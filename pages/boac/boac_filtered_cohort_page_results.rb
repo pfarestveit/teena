@@ -93,6 +93,16 @@ module BOACFilteredCohortPageResults
     end
   end
 
+  # Returns the student hashes that match a set of intended major filters
+  # @param test [BOACTestConfig]
+  # @param search_criteria [CohortFilter]
+  # @return [Array<Hash>]
+  def matching_intended_major_students(test, search_criteria)
+    students = []
+    students << test.searchable_data.select { |u| (u[:intended_major] & search_criteria.intended_major).any? }
+    students.uniq.flatten.compact
+  end
+
   # Returns the student hashes that match a set of major filters
   # @param test [BOACTestConfig]
   # @param search_criteria [CohortFilter]
@@ -485,6 +495,7 @@ module BOACFilteredCohortPageResults
     matches << matching_gpa_students(test, search_criteria) if search_criteria.gpa&.any?
     matches << matching_gpa_last_term_students(test, search_criteria) if search_criteria.gpa_last_term&.any?
     matches << matching_level_students(test, search_criteria) if search_criteria.level&.any?
+    matches << matching_intended_major_students(test, search_criteria) if search_criteria.intended_major&.any?
     matches << matching_major_students(test, search_criteria) if search_criteria.major&.any?
     matches << matching_mid_point_students(test) if search_criteria.mid_point_deficient
     matches << matching_transfer_students(test) if search_criteria.transfer_student
