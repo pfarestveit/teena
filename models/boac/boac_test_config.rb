@@ -280,6 +280,7 @@ class BOACTestConfig < TestConfig
         :gpa_last_term => [JSON.parse("{\"min\": \"2\", \"max\": \"3.80\"}")],
         :level => ['Senior (90+ Units)', 'Freshman (0-29 Units)'],
         :units_completed => ['90 - 119'],
+        :intended_major => ['English BA'],
         :major => ((@dept == BOACDepartments::COE) ? ['Electrical Eng & Comp Sci BS', 'Mechanical Engineering BS'] : ['Asian Studies', 'Letters & Sci Undeclared UG']),
         :transfer_student => true,
         :entering_terms => [CONFIG['term_code']],

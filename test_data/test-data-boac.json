@@ -2,6 +2,23 @@
     "filters": {
         "students": [
             {
+                "coe_advisors": [
+                    {
+                        "advisor": "2322"
+                    }
+                ],
+                "coe_ethnicities": [
+                    {
+                        "ethnicity": "E"
+                    }
+                ],
+                "intended_major": [
+                    {
+                        "major": "Electrical Eng & Comp Sci BS"
+                    }
+                ]
+            },
+            {
                 "colleges": [
                     {
                         "college": "Undergrad Engineering"
@@ -72,18 +89,6 @@
                     }
                 ],
                 "mid_point_deficient": true
-            },
-            {
-                "coe_advisors": [
-                    {
-                        "advisor": "2322"
-                    }
-                ],
-                "coe_ethnicities": [
-                    {
-                        "ethnicity": "E"
-                    }
-                ]
             },
             {
                 "coe_genders": [
