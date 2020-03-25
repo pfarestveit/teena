@@ -282,6 +282,7 @@ class BOACTestConfig < TestConfig
         :units_completed => ['90 - 119'],
         :intended_major => ['English BA'],
         :major => ((@dept == BOACDepartments::COE) ? ['Electrical Eng & Comp Sci BS', 'Mechanical Engineering BS'] : ['Asian Studies', 'Letters & Sci Undeclared UG']),
+        :minor => ['French UG'],
         :transfer_student => true,
         :entering_terms => [CONFIG['term_code']],
         :expected_grad_terms => [CONFIG['term_code']],

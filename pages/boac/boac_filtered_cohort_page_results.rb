@@ -120,6 +120,16 @@ module BOACFilteredCohortPageResults
     test.searchable_data.select { |u| u[:mid_point_deficient] }
   end
 
+  # Returns the student hashes that match a set of minor filters
+  # @param test [BOACTestConfig]
+  # @param search_criteria [CohortFilter]
+  # @return [Array<Hash>]
+  def matching_minor_students(test, search_criteria)
+    students = []
+    students << test.searchable_data.select { |u| (u[:minor] & search_criteria.minor).any? }
+    students.uniq.flatten.compact
+  end
+
   # Returns the student hashes that match a transfer student filter
   # @param test [BOACTestConfig]
   # @return [Array<Hash>]
@@ -498,6 +508,7 @@ module BOACFilteredCohortPageResults
     matches << matching_intended_major_students(test, search_criteria) if search_criteria.intended_major&.any?
     matches << matching_major_students(test, search_criteria) if search_criteria.major&.any?
     matches << matching_mid_point_students(test) if search_criteria.mid_point_deficient
+    matches << matching_minor_students(test, search_criteria) if search_criteria.minor&.any?
     matches << matching_transfer_students(test) if search_criteria.transfer_student
     matches << matching_units_students(test, search_criteria) if search_criteria.units_completed&.any?
     matches << matching_last_name_students(test, search_criteria) if search_criteria.last_name&.any?

@@ -60,6 +60,8 @@ module BOACFilteredCohortPageFilters
         link_element(id: "Intended Major-#{filter_option}")
       when 'majors'
         link_element(id: "Major-#{filter_option}")
+      when 'minors'
+        link_element(id: "Minor-#{filter_option}")
       when 'coeAdvisorLdapUids'
         link_element(id: "Advisor (COE)-#{filter_option}")
       when 'cohortOwnerAcademicPlans'
@@ -136,6 +138,11 @@ module BOACFilteredCohortPageFilters
       missing_options.each { |f| cohort.search_criteria.major.delete f }
     end
 
+    if cohort.search_criteria.minor&.any?
+      missing_options = unavailable_test_data(cohort.search_criteria.minor, 'minors')
+      missing_options.each { |f| cohort.search_criteria.minor.delete f }
+    end
+
     if cohort.search_criteria.asc_team&.any?
       missing_options = unavailable_test_data(cohort.search_criteria.asc_team, 'groupCodes')
       missing_options.each { |f| cohort.search_criteria.asc_team.delete f }
@@ -151,6 +158,7 @@ module BOACFilteredCohortPageFilters
     cohort.search_criteria.units_completed.each { |u| select_new_filter('unitRanges', u) } if cohort.search_criteria.units_completed
     cohort.search_criteria.major.each { |m| select_new_filter('majors', m) } if cohort.search_criteria.major
     select_new_filter 'midpointDeficient' if cohort.search_criteria.mid_point_deficient
+    cohort.search_criteria.minor.each { |m| select_new_filter('minors', m) } if cohort.search_criteria.minor
     select_new_filter 'transfer' if cohort.search_criteria.transfer_student
     cohort.search_criteria.expected_grad_terms.each { |t| select_new_filter('expectedGradTerms', t) } if cohort.search_criteria.expected_grad_terms
     cohort.search_criteria.last_name.each { |n| select_new_filter('lastNameRanges', n) } if cohort.search_criteria.last_name
@@ -307,6 +315,8 @@ module BOACFilteredCohortPageFilters
         filters.major.each { |m| existing_filter_element('Major', m).exists? } if filters.major&.any?
         logger.debug 'Verifying Midpoint Deficient Grade filter'
         existing_filter_element('Midpoint Deficient Grade').exists? if filters.mid_point_deficient
+        logger.debug 'Verifying Minor filter'
+        filters.minor.each { |m| existing_filter_element('Minor', m).exists? } if filters.minor&.any?
         logger.debug 'Verifying Transfer Student filter'
         existing_filter_element('Transfer Student').exists? if filters.transfer_student
         logger.debug 'Verifying Units Completed filter'
