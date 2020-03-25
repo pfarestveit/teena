@@ -581,6 +581,18 @@ describe 'BOAC', order: :defined do
       @cohort_page.verify_student_filters_present test.default_cohort
     end
 
+    it 'allows the advisor to edit a Minor filter' do
+      test.default_cohort.search_criteria.minor = ['Bioengineering BS']
+      @cohort_page.edit_filter_and_confirm('Minor', test.default_cohort.search_criteria.minor.first)
+      @cohort_page.verify_student_filters_present test.default_cohort
+    end
+
+    it 'allows the advisor to remove a Minor filter' do
+      test.default_cohort.search_criteria.minor.shift
+      @cohort_page.remove_filter_of_type 'Minor'
+      @cohort_page.verify_student_filters_present test.default_cohort
+    end
+
     it 'allows the advisor to remove a Transfer Student filter' do
       test.default_cohort.search_criteria.transfer_student = nil
       @cohort_page.remove_filter_of_type 'Transfer Student'

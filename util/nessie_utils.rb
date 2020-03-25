@@ -326,7 +326,8 @@ class NessieUtils < Utils
                     student.student_academic_status.gpa AS gpa,
                     student.student_academic_status.level AS level_code,
                     student.student_majors.college AS colleges,
-                    student.intended_majors.major as intended_majors,
+                    student.intended_majors.major AS intended_majors,
+                    student.minors.minor AS minors,
                     student.student_majors.major AS majors,
                     student.visas.visa_status AS visa_status,
                     student.visas.visa_type AS visa_type,
@@ -364,6 +365,8 @@ class NessieUtils < Utils
                ON student.student_academic_status.sid = student.student_majors.sid
              LEFT JOIN student.intended_majors
                ON student.student_academic_status.sid = student.intended_majors.sid
+             LEFT JOIN student.minors
+               ON student.student_academic_status.sid = student.minors.sid
              LEFT JOIN student.visas
                ON student.student_academic_status.sid = student.visas.sid
              LEFT JOIN boac_advising_asc.students
@@ -380,7 +383,7 @@ class NessieUtils < Utils
              GROUP BY student_academic_status.uid, student_academic_status.sid, student_academic_status.first_name,
                       student_academic_status.last_name, student_academic_status.terms_in_attendance, student.student_profiles.profile, student.student_academic_status.gpa,
                       student.student_academic_status.level, student.student_majors.college, student.student_majors.major,
-                      student.intended_majors.major, student.visas.visa_type, student.visas.visa_status, current_term.enrolled_units,
+                      student.intended_majors.major, student.minors.minor, student.visas.visa_type, student.visas.visa_status, current_term.enrolled_units,
                       current_term.midpoint_deficient_grade, gpa_last_term, gpa_last_last_term, boac_advising_asc.students.intensive,
                       boac_advising_coe.students.advisor_ldap_uid, boac_advising_coe.students.gender, boac_advising_coe.students.ethnicity,
                       boac_advising_coe.students.minority, boac_advising_coe.students.did_prep, boac_advising_coe.students.prep_eligible,
@@ -444,6 +447,7 @@ class NessieUtils < Utils
         :level => level,
         :major => (v.map { |h| h['majors'] }).uniq.compact,
         :mid_point_deficient => (v[0]['mid_point_deficient'] == 't'),
+        :minor => (v.map { |h| h['minors'] }).uniq.compact,
         :transfer_student => (sis_profile && sis_profile['transfer']),
         :underrepresented_minority => (demographics && demographics['underrepresented']),
         :units_in_progress => units_in_progress,

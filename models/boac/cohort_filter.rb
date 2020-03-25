@@ -26,6 +26,7 @@ class CohortFilter
                 :level,
                 :major,
                 :mid_point_deficient,
+                :minor,
                 :transfer_student,
                 :underrepresented_minority,
                 :units_completed,
@@ -46,6 +47,7 @@ class CohortFilter
     @level = (test_data['levels'] && test_data['levels'].map { |l| l['level'] })
     @major = (test_data['majors'] && test_data['majors'].map { |t| t['major'] })
     @mid_point_deficient = test_data['mid_point_deficient']
+    @minor = (test_data['minors'] && test_data['minors'].map { |t| t['minor'] })
     @transfer_student = test_data['transfer_student']
     @units_completed = (test_data['units'] && test_data['units'].map { |u| u['unit'] })
 
