@@ -31,7 +31,7 @@ describe 'bCourses Find a Person to Add', order: :defined do
     @course_add_user_page = Page::JunctionPages::CanvasCourseAddUserPage.new @driver
 
     @canvas.log_in(@cal_net, Utils.super_admin_username, Utils.super_admin_password)
-    @canvas.masquerade_as(@driver, teacher_1)
+    @canvas.masquerade_as teacher_1
   end
 
   after(:all) { Utils.quit_browser @driver }
@@ -39,27 +39,27 @@ describe 'bCourses Find a Person to Add', order: :defined do
   describe 'customizations in the footer' do
 
     it 'include an "About" link' do
-      expect(@canvas.external_link_valid?(@driver, @canvas.about_link_element, 'bCourses | Digital Learning Services')).to be true
+      expect(@canvas.external_link_valid?(@canvas.about_link_element, 'bCourses | Digital Learning Services')).to be true
     end
 
     it 'include a "Privacy Policy" link' do
-      expect(@canvas.external_link_valid?(@driver, @canvas.privacy_policy_link_element, 'Instructure Product Privacy Policy | instructure.com')).to be true
+      expect(@canvas.external_link_valid?(@canvas.privacy_policy_link_element, 'Instructure Product Privacy Policy | instructure.com')).to be true
     end
 
     it 'include a "Terms of Service" link' do
-      expect(@canvas.external_link_valid?(@driver, @canvas.terms_of_service_link_element, 'Canvas the Learning Management Platform | Instructure')).to be true
+      expect(@canvas.external_link_valid?(@canvas.terms_of_service_link_element, 'Canvas the Learning Management Platform | Instructure')).to be true
     end
 
     it 'include a "Data Use & Analytics" link' do
-      expect(@canvas.external_link_valid?(@driver, @canvas.data_use_link_element, 'bCourses Data Use and Analytics | Digital Learning Services')).to be true
+      expect(@canvas.external_link_valid?(@canvas.data_use_link_element, 'bCourses Data Use and Analytics | Digital Learning Services')).to be true
     end
 
     it 'include a "UC Berkeley Honor Code" link' do
-      expect(@canvas.external_link_valid?(@driver, @canvas.honor_code_link_element, 'Berkeley Honor Code | Center for Teaching & Learning')).to be true
+      expect(@canvas.external_link_valid?(@canvas.honor_code_link_element, 'Berkeley Honor Code | Center for Teaching & Learning')).to be true
     end
 
     it 'include a "Student Resources" link' do
-      expect(@canvas.external_link_valid?(@driver, @canvas.student_resources_link_element, 'Resources | ASUC')).to be true
+      expect(@canvas.external_link_valid?(@canvas.student_resources_link_element, 'Resources | ASUC')).to be true
     end
   end
 
@@ -67,14 +67,14 @@ describe 'bCourses Find a Person to Add', order: :defined do
 
     before(:all) do
       @create_course_site_page.provision_course_site(@driver, course, teacher_1, sections_for_site)
-      @canvas.publish_course_site(@driver, course)
+      @canvas.publish_course_site course
       @canvas.load_users_page course
     end
 
     it 'include a link to a help page on the Everyone tab' do
       @canvas.help_finding_users_link_element.when_visible Utils.short_wait
       sleep 1
-      expect(@canvas.external_link_valid?(@driver, @canvas.help_finding_users_link_element, 'IT - How do I add users to my course site?')).to be true
+      expect(@canvas.external_link_valid?(@canvas.help_finding_users_link_element, 'IT - How do I add users to my course site?')).to be true
     end
 
     it 'include a search by Email Address option' do
@@ -90,7 +90,7 @@ describe 'bCourses Find a Person to Add', order: :defined do
   describe 'search' do
 
     before(:all) do
-      @canvas.masquerade_as(@driver, teacher_1, course)
+      @canvas.masquerade_as(teacher_1, course)
       @canvas.load_users_page course
       @canvas.click_find_person_to_add @driver
     end
@@ -98,12 +98,12 @@ describe 'bCourses Find a Person to Add', order: :defined do
     before(:each) do
       @course_add_user_page.page_heading_element.when_present Utils.short_wait
     rescue
-      @course_add_user_page.switch_to_canvas_iframe @driver
+      @course_add_user_page.switch_to_canvas_iframe
     end
 
     it 'allows the user to search by name' do
       @course_add_user_page.search('Bear', 'Last Name, First Name')
-      @course_add_user_page.wait_until(Utils.medium_wait) { @course_add_user_page.uid_results(@driver).include? "#{Utils.oski_uid}" }
+      @course_add_user_page.wait_until(Utils.medium_wait) { @course_add_user_page.uid_results.include? "#{Utils.oski_uid}" }
     end
 
     it 'notifies the user if a name search produces no results' do
@@ -113,13 +113,13 @@ describe 'bCourses Find a Person to Add', order: :defined do
 
     it 'limits the results of a name search to 20' do
       @course_add_user_page.search('Smith', 'Last Name, First Name')
-      @course_add_user_page.wait_until(Utils.medium_wait) { @course_add_user_page.name_results(@driver).length == 20 }
+      @course_add_user_page.wait_until(Utils.medium_wait) { @course_add_user_page.name_results.length == 20 }
       @course_add_user_page.too_many_results_msg_element.when_visible Utils.medium_wait
     end
 
     it 'allows the user to search by email and limits the results of an email search to 20' do
       @course_add_user_page.search('smith@berkeley', 'Email')
-      @course_add_user_page.wait_until(Utils.medium_wait) { @course_add_user_page.email_results(@driver).length == 20 }
+      @course_add_user_page.wait_until(Utils.medium_wait) { @course_add_user_page.email_results.length == 20 }
       @course_add_user_page.too_many_results_msg_element.when_visible Utils.medium_wait
     end
 
@@ -130,7 +130,7 @@ describe 'bCourses Find a Person to Add', order: :defined do
 
     it 'allows the user to search by UID' do
       @course_add_user_page.search(Utils.oski_uid, 'CalNet UID')
-      @course_add_user_page.wait_until(Utils.medium_wait) { @course_add_user_page.uid_results(@driver).include? "#{Utils.oski_uid}" }
+      @course_add_user_page.wait_until(Utils.medium_wait) { @course_add_user_page.uid_results.include? "#{Utils.oski_uid}" }
     end
 
     it 'notifies the user if a UID search produces no result' do
@@ -145,7 +145,7 @@ describe 'bCourses Find a Person to Add', order: :defined do
 
     it 'offers the right course site sections' do
       @course_add_user_page.search('Bear', 'Last Name, First Name')
-      @course_add_user_page.wait_until(Utils.medium_wait) { @course_add_user_page.uid_results(@driver).include? "#{Utils.oski_uid}" }
+      @course_add_user_page.wait_until(Utils.medium_wait) { @course_add_user_page.uid_results.include? "#{Utils.oski_uid}" }
       expect(@course_add_user_page.course_section_options.length).to eql(sections_for_site.length)
     end
   end
@@ -154,7 +154,7 @@ describe 'bCourses Find a Person to Add', order: :defined do
 
     before(:all) do
       @section_to_test = sections_for_site.first
-      @canvas.masquerade_as(@driver, teacher_1, course)
+      @canvas.masquerade_as(teacher_1, course)
       @canvas.load_users_page course
       @canvas.click_find_person_to_add @driver
       [teacher_2, lead_ta, ta, designer, reader, student, waitlist, observer].each do |user|
@@ -180,14 +180,14 @@ describe 'bCourses Find a Person to Add', order: :defined do
   describe 'user role restrictions' do
 
     before(:all) do
-      @canvas.masquerade_as(@driver, teacher_1, course)
-      @canvas.publish_course_site(@driver, course)
+      @canvas.masquerade_as(teacher_1, course)
+      @canvas.publish_course_site course
     end
 
     [lead_ta, ta, designer, reader, student, waitlist, observer].each do |user|
 
       it "allows a course #{user.role} to access the tool and add a subset of roles to a course site if permitted to do so" do
-        @canvas.masquerade_as(@driver, user, course)
+        @canvas.masquerade_as(user, course)
         if ['Lead TA', 'TA'].include? user.role
           @canvas.load_users_page course
           @canvas.click_find_person_to_add @driver
@@ -208,7 +208,7 @@ describe 'bCourses Find a Person to Add', order: :defined do
 
       it "offers #{user.role} an Academic Policies link" do
         @driver.switch_to.default_content
-        expect(@canvas.external_link_valid?(@driver, @canvas.policies_link_element, 'Academic Accommodations Hub | Executive Vice Chancellor and Provost')).to be true
+        expect(@canvas.external_link_valid?(@canvas.policies_link_element, 'Academic Accommodations Hub | Executive Vice Chancellor and Provost')).to be true
       end
     end
   end

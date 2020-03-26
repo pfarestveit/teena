@@ -34,7 +34,7 @@ describe 'bCourses E-Grades Export' do
         rosters_api.get_feed(@driver, course)
 
         # Disable existing grading scheme in case it is not default, then set default scheme
-        @canvas.masquerade_as(@driver, instructor, course)
+        @canvas.masquerade_as(instructor, course)
         @canvas.disable_grading_scheme course
         @e_grades_export_page.resolve_all_issues(@driver, course)
 

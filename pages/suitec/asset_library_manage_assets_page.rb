@@ -41,7 +41,7 @@ module Page
       # Returns an array of existing custom category titles
       # @return [Array<String>]
       def custom_category_titles
-        custom_categories_list_element.when_visible
+        custom_categories_list_element.when_visible Utils.short_wait
         sleep 1
         custom_category_title_elements.map &:text
       end

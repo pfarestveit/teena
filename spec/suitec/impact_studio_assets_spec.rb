@@ -58,7 +58,7 @@ describe 'The Impact Studio', order: :defined do
 
     # Create course site if necessary
     @canvas.log_in(@cal_net, (event.actor = admin).username, Utils.super_admin_password)
-    @canvas.create_generic_course_site(@driver, Utils.canvas_qa_sub_account, @course, users, test_id,
+    @canvas.create_generic_course_site(Utils.canvas_qa_sub_account, @course, users, test_id,
                                        [LtiTools::ASSET_LIBRARY, LtiTools::ENGAGEMENT_INDEX, LtiTools::IMPACT_STUDIO, LtiTools::WHITEBOARDS])
     @asset_library_url = @canvas.click_tool_link(@driver, LtiTools::ASSET_LIBRARY, event)
     @engagement_index_url = @canvas.click_tool_link(@driver, LtiTools::ENGAGEMENT_INDEX, event)
@@ -68,7 +68,7 @@ describe 'The Impact Studio', order: :defined do
     @engagement_index.wait_for_new_user_sync(@driver, @engagement_index_url, @course, [teacher, student_1, student_2], event)
 
     [student_1, student_2].each do |student|
-      @canvas.masquerade_as(@driver, (event.actor = student), @course)
+      @canvas.masquerade_as((event.actor = student), @course)
       @engagement_index.load_page(@driver, @engagement_index_url, event)
       @engagement_index.share_score event
     end
@@ -81,7 +81,7 @@ describe 'The Impact Studio', order: :defined do
     context 'and a user views its own profile' do
 
       before(:all) do
-        @canvas.masquerade_as(@driver, (event.actor = student_1), @course)
+        @canvas.masquerade_as((event.actor = student_1), @course)
         @impact_studio.load_page(@driver, @impact_studio_url, event)
       end
 
@@ -113,7 +113,7 @@ describe 'The Impact Studio', order: :defined do
 
       before(:all) do
         # Student 1 add asset 1 via impact studio
-        @canvas.masquerade_as(@driver, (event.actor = student_1), @course)
+        @canvas.masquerade_as((event.actor = student_1), @course)
         @impact_studio.load_page(@driver, @impact_studio_url, event)
         @impact_studio.add_site(@driver, asset_1, event)
       end
@@ -178,7 +178,7 @@ describe 'The Impact Studio', order: :defined do
 
       before(:all) do
         # Teacher add asset 5 via impact studio
-        @canvas.masquerade_as(@driver, (event.actor = teacher), @course)
+        @canvas.masquerade_as((event.actor = teacher), @course)
         @impact_studio.load_page(@driver, @impact_studio_url, event)
         @impact_studio.add_file(@driver, asset_5, event)
       end
@@ -192,7 +192,7 @@ describe 'The Impact Studio', order: :defined do
 
       before(:all) do
         # Student 2 add asset 6 via asset library
-        @canvas.masquerade_as(@driver, (event.actor = student_2), @course)
+        @canvas.masquerade_as((event.actor = student_2), @course)
         @asset_library.load_page(@driver, @asset_library_url, event)
         @asset_library.upload_file_to_library(asset_6, event)
       end
@@ -223,7 +223,7 @@ describe 'The Impact Studio', order: :defined do
     context 'and a user views its own profile' do
 
       before(:all) do
-        @canvas.masquerade_as(@driver, (event.actor = student_1), @course)
+        @canvas.masquerade_as((event.actor = student_1), @course)
         @impact_studio.load_page(@driver, @impact_studio_url, event)
       end
 
@@ -267,7 +267,7 @@ describe 'The Impact Studio', order: :defined do
 
       before(:all) do
         # One student uses the other's asset on the shared whiteboard
-        @canvas.masquerade_as(@driver, (event.actor = student_2), @course)
+        @canvas.masquerade_as((event.actor = student_2), @course)
         @whiteboards.load_page(@driver, @whiteboards_url, event)
         @whiteboards.open_whiteboard(@driver, whiteboard, event)
         @whiteboards.add_existing_assets([asset_1], event)
@@ -283,7 +283,7 @@ describe 'The Impact Studio', order: :defined do
       context 'and the asset owner views its own profile' do
 
         before(:all) do
-          @canvas.masquerade_as(@driver, (event.actor = student_1), @course)
+          @canvas.masquerade_as((event.actor = student_1), @course)
           @impact_studio.load_page(@driver, @impact_studio_url, event)
         end
 
@@ -307,7 +307,7 @@ describe 'The Impact Studio', order: :defined do
 
       before(:all) do
         # Teacher views the student's asset
-        @canvas.masquerade_as(@driver, (event.actor = teacher), @course)
+        @canvas.masquerade_as((event.actor = teacher), @course)
         @asset_library.load_asset_detail(@driver, @asset_library_url, asset_3, event)
         asset_3.impact_score += Activity::VIEW_ASSET.impact_points
       end
@@ -319,7 +319,7 @@ describe 'The Impact Studio', order: :defined do
       context 'and the asset owner views its own profile' do
 
         before(:all) do
-          @canvas.masquerade_as(@driver, (event.actor = student_1), @course)
+          @canvas.masquerade_as((event.actor = student_1), @course)
           @impact_studio.load_page(@driver, @impact_studio_url, event)
         end
 
@@ -336,7 +336,7 @@ describe 'The Impact Studio', order: :defined do
 
       before(:all) do
         # Teacher comments on the student's asset
-        @canvas.masquerade_as(@driver, (event.actor = teacher), @course)
+        @canvas.masquerade_as((event.actor = teacher), @course)
 
         @asset_library.load_asset_detail(@driver, @asset_library_url, asset_6, event)
         asset_6.impact_score += Activity::VIEW_ASSET.impact_points
@@ -353,7 +353,7 @@ describe 'The Impact Studio', order: :defined do
       context 'and the asset owner views its own profile' do
 
         before(:all) do
-          @canvas.masquerade_as(@driver, (event.actor = student_2), @course)
+          @canvas.masquerade_as((event.actor = student_2), @course)
           @impact_studio.load_page(@driver, @impact_studio_url, event)
         end
 
@@ -370,7 +370,7 @@ describe 'The Impact Studio', order: :defined do
 
       before(:all) do
         # Teacher replies to comment on the student's asset
-        @canvas.masquerade_as(@driver, (event.actor = teacher), @course)
+        @canvas.masquerade_as((event.actor = teacher), @course)
 
         @asset_library.load_asset_detail(@driver, @asset_library_url, asset_6, event)
         asset_6.impact_score += Activity::VIEW_ASSET.impact_points
@@ -387,7 +387,7 @@ describe 'The Impact Studio', order: :defined do
       context 'and the asset owner views its own profile' do
 
         before(:all) do
-          @canvas.masquerade_as(@driver, (event.actor = student_2), @course)
+          @canvas.masquerade_as((event.actor = student_2), @course)
           @impact_studio.load_page(@driver, @impact_studio_url, event)
         end
 
@@ -404,13 +404,13 @@ describe 'The Impact Studio', order: :defined do
 
       before(:all) do
         # One student likes the teacher's asset
-        @canvas.masquerade_as(@driver, (event.actor = student_1), @course)
+        @canvas.masquerade_as((event.actor = student_1), @course)
 
         @asset_library.load_asset_detail(@driver, @asset_library_url, asset_5, event)
         asset_5.impact_score += Activity::VIEW_ASSET.impact_points
 
         @asset_library.like_asset(asset_5, event)
-        @asset_library.wait_until { @asset_library.detail_view_asset_likes_count == '1' }
+        @asset_library.wait_until(Utils.short_wait) { @asset_library.detail_view_asset_likes_count == '1' }
         asset_5.impact_score += Activity::LIKE.impact_points
       end
 
@@ -421,7 +421,7 @@ describe 'The Impact Studio', order: :defined do
       context 'and the asset owner views its own profile' do
 
         before(:all) do
-          @canvas.masquerade_as(@driver, (event.actor = teacher), @course)
+          @canvas.masquerade_as((event.actor = teacher), @course)
           @impact_studio.load_page(@driver, @impact_studio_url, event)
         end
 
@@ -438,7 +438,7 @@ describe 'The Impact Studio', order: :defined do
 
       before(:all) do
         # Teacher remixes the students' whiteboard
-        @canvas.masquerade_as(@driver, (event.actor = teacher), @course)
+        @canvas.masquerade_as((event.actor = teacher), @course)
 
         @asset_library.load_asset_detail(@driver, @asset_library_url, asset_4, event)
         asset_4.impact_score += Activity::VIEW_ASSET.impact_points
@@ -454,7 +454,7 @@ describe 'The Impact Studio', order: :defined do
       context 'and one whiteboard asset owner views its own profile' do
 
         before(:all) do
-          @canvas.masquerade_as(@driver, (event.actor = student_1), @course)
+          @canvas.masquerade_as((event.actor = student_1), @course)
           @impact_studio.load_page(@driver, @impact_studio_url, event)
         end
 
@@ -469,7 +469,7 @@ describe 'The Impact Studio', order: :defined do
       context 'and another whiteboard asset owner views its own profile' do
 
         before(:all) do
-          @canvas.masquerade_as(@driver, (event.actor = student_2), @course)
+          @canvas.masquerade_as((event.actor = student_2), @course)
           @impact_studio.load_page(@driver, @impact_studio_url, event)
         end
 
@@ -485,7 +485,7 @@ describe 'The Impact Studio', order: :defined do
 
   context 'when assets impact their owners' do
 
-    before(:all) { @canvas.masquerade_as(@driver, (event.actor = student_1), @course) }
+    before(:all) { @canvas.masquerade_as((event.actor = student_1), @course) }
 
     context 'with "view" impact' do
 
@@ -537,7 +537,7 @@ describe 'The Impact Studio', order: :defined do
     context '"comment"' do
 
       before(:all) do
-        @canvas.masquerade_as(@driver, (event.actor = teacher), @course)
+        @canvas.masquerade_as((event.actor = teacher), @course)
 
         @asset_library.load_asset_detail(@driver, @asset_library_url, asset_6, event)
         asset_6.impact_score += Activity::VIEW_ASSET.impact_points
@@ -568,7 +568,7 @@ describe 'The Impact Studio', order: :defined do
     context '"like"' do
 
       before(:all) do
-        @canvas.masquerade_as(@driver, (event.actor = student_1), @course)
+        @canvas.masquerade_as((event.actor = student_1), @course)
 
         @asset_library.load_asset_detail(@driver, @asset_library_url, asset_5, event)
         asset_5.impact_score += Activity::VIEW_ASSET.impact_points
@@ -600,7 +600,7 @@ describe 'The Impact Studio', order: :defined do
   context 'when a user pins assets' do
 
     before(:all) do
-      @canvas.masquerade_as(@driver, (event.actor = student_2), @course)
+      @canvas.masquerade_as((event.actor = student_2), @course)
       @asset_library.load_page(@driver, @asset_library_url, event)
       @asset_library.pin_list_view_asset(asset_6, event)
       @asset_library.pin_list_view_asset(asset_4, event)
@@ -620,7 +620,7 @@ describe 'The Impact Studio', order: :defined do
     context 'and another user views the user\'s profile' do
 
       before(:all) do
-        @canvas.masquerade_as(@driver, (event.actor = student_1), @course)
+        @canvas.masquerade_as((event.actor = student_1), @course)
         @impact_studio.load_page(@driver, @impact_studio_url, event)
         @impact_studio.search_for_user(student_2, event)
       end

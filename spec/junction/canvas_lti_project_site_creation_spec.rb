@@ -24,7 +24,7 @@ describe 'bCourses project site', order: :defined do
     @official_sections_page = Page::JunctionPages::CanvasCourseManageSectionsPage.new @driver
 
     @canvas.log_in(@cal_net, Utils.super_admin_username, Utils.super_admin_password)
-    @canvas.masquerade_as(@driver, teacher)
+    @canvas.masquerade_as teacher
   end
 
   after(:all) { Utils.quit_browser @driver }
@@ -35,7 +35,7 @@ describe 'bCourses project site', order: :defined do
       @site_creation_page.load_embedded_tool(@driver, teacher)
     end
 
-    it('shows a link to project site help') { expect(@site_creation_page.external_link_valid?(@driver, @site_creation_page.projects_learn_more_link_element, 'IT - bDrive vs. Box vs. CalShare vs. bCourses Projects: What\'s the best choice for online collaboration?')).to be true }
+    it('shows a link to project site help') { expect(@site_creation_page.external_link_valid?(@site_creation_page.projects_learn_more_link_element, 'IT - bDrive vs. Box vs. CalShare vs. bCourses Projects: What\'s the best choice for online collaboration?')).to be true }
 
   end
 
@@ -92,7 +92,7 @@ describe 'bCourses project site', order: :defined do
     [ta, staff, student].each do |user|
 
       it "allows #{user.role} UID #{user.uid} to see a Create a Site button if permitted to do so" do
-        @canvas.masquerade_as(@driver, user)
+        @canvas.masquerade_as user
         @canvas.load_homepage
         has_create_site_button = @canvas.verify_block { @canvas.create_site_link_element.when_visible(Utils.short_wait) }
         (%w(TA Staff).include? user.role) ?
@@ -101,7 +101,7 @@ describe 'bCourses project site', order: :defined do
       end
 
       it "allows #{user.role} UID #{user.uid} to navigate to the tool if permitted to do so" do
-        @canvas.masquerade_as(@driver, user)
+        @canvas.masquerade_as user
         @site_creation_page.load_embedded_tool(@driver, user)
 
         case user.role

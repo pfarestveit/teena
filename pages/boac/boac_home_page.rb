@@ -77,11 +77,10 @@ class BOACHomePage
   # GENERIC USER DATA UI
 
   # Returns all the user divs beneath a cohort or group designated by its XPath
-  # @param driver [Selenium::WebDriver]
   # @param xpath [String]
   # @return [Array<Selenium::WebDriver::Element>]
-  def user_rows(driver, xpath)
-    driver.find_elements(xpath: "#{xpath}//tbody/tr")
+  def user_rows(xpath)
+    row_elements(xpath: "#{xpath}//tbody/tr")
   end
 
   # FILTERED COHORTS AND CURATED GROUPS
@@ -138,13 +137,12 @@ class BOACHomePage
   end
 
   # Returns all the user divs beneath a filtered cohort or curated group
-  # @param driver [Selenium::WebDriver]
   # @param cohort [Cohort]
   # @return [Array<Selenium::WebDriver::Element>]
-  def member_rows(driver, cohort)
+  def member_rows(cohort)
     cohort.instance_of?(FilteredCohort) ?
-      user_rows(driver, filtered_cohort_xpath(cohort)) :
-      user_rows(driver, curated_group_xpath(cohort))
+      user_rows(filtered_cohort_xpath(cohort)) :
+      user_rows(curated_group_xpath(cohort))
   end
 
   # Returns the membership count shown for a filtered cohort or curated group
@@ -158,10 +156,9 @@ class BOACHomePage
   end
 
   # Verifies the user + alert data shown for a filtered cohort's or curated group's membership
-  # @param driver [Selenium::WebDriver]
   # @param cohort [Cohort]
   # @param advisor [User]
-  def verify_member_alerts(driver, cohort, advisor)
+  def verify_member_alerts(cohort, advisor)
 
     # Only cohort members with alerts should be shown. Collect the expected alert count for each member, and toss out those with a zero count.
     member_alerts = cohort.members.any? ? BOACUtils.get_un_dismissed_users_alerts(cohort.members, advisor) : []
@@ -178,16 +175,16 @@ class BOACHomePage
 
     # Expand the cohort, and verify that there are only rows for members with alerts
     view_all_members_link(cohort).when_visible Utils.short_wait
-    wait_until(Utils.short_wait, "Expecting cohort #{cohort.name} to have row count of #{cohort.member_data.length}, got #{member_rows(driver, cohort).length}") do
-      member_rows(driver, cohort).length == cohort.member_data.length
+    wait_until(Utils.short_wait, "Expecting cohort #{cohort.name} to have row count of #{cohort.member_data.length}, got #{member_rows(cohort).length}") do
+      member_rows(cohort).length == cohort.member_data.length
     end
 
     # Verify that there is a row for each student with a positive alert count and that the alert count is right
     xpath = cohort.instance_of?(FilteredCohort) ? filtered_cohort_xpath(cohort) : curated_group_xpath(cohort)
     cohort.member_data.each do |member|
       logger.debug "Checking cohort row for SID #{member[:sid]}"
-      wait_until(1, "Expecting SID #{member[:sid]} alert count #{member[:alert_count]}, got #{user_row_data(driver, member[:sid], xpath)[:alert_count]}") do
-        user_row_data(driver, member[:sid], xpath)[:alert_count] == member[:alert_count].to_s
+      wait_until(1, "Expecting SID #{member[:sid]} alert count #{member[:alert_count]}, got #{user_row_data(member[:sid], xpath)[:alert_count]}") do
+        user_row_data(member[:sid], xpath)[:alert_count] == member[:alert_count].to_s
       end
     end
   end

@@ -28,8 +28,8 @@ begin
 
       @test_course_identifier = Utils.get_test_id
       @course = Course.new({title: "LRS Groups Test #{@test_course_identifier}", site_id: course_id})
-      @canvas.stop_masquerading(@driver) if @canvas.stop_masquerading_link?
-      @canvas.create_generic_course_site(@driver, Utils.canvas_qa_sub_account, @course, users, @test_course_identifier)
+      @canvas.stop_masquerading if @canvas.stop_masquerading_link?
+      @canvas.create_generic_course_site(Utils.canvas_qa_sub_account, @course, users, @test_course_identifier)
 
       # TEACHER-CREATED GROUPS
 
@@ -39,11 +39,11 @@ begin
 
           @test_group_identifier = Utils.get_test_id
           @teacher_group = Group.new({title: "Teacher Group #{@test_group_identifier}", members: students, group_set: "Teacher Group Set #{@test_group_identifier}"})
-          @canvas.masquerade_as(@driver, @teacher, @course)
+          @canvas.masquerade_as(@teacher, @course)
           @canvas.instructor_create_grp(@course, @teacher_group)
 
           students.each do |student|
-            @canvas.masquerade_as(@driver, student, @course)
+            @canvas.masquerade_as(student, @course)
             @canvas.student_join_grp(@course, @teacher_group)
           end
 
@@ -54,7 +54,7 @@ begin
             begin
 
               @test_activity_identifier = Utils.get_test_id
-              @canvas.masquerade_as(@driver, @teacher, @course)
+              @canvas.masquerade_as(@teacher, @course)
 
               # Announcement
 
@@ -66,29 +66,29 @@ begin
               @discussion = Discussion.new("Teacher Group Discussion #{@test_activity_identifier}")
               @canvas_discussions_page.create_group_discussion(@teacher_group, @discussion)
               # Student 1 creates an entry on the topic
-              @canvas_discussions_page.masquerade_as(@driver, students[0])
+              @canvas_discussions_page.masquerade_as students[0]
               @canvas_discussions_page.add_reply(@discussion, nil, 'Discussion entry by student 1')
               # Student 2 creates two entries on the topic
-              @canvas_discussions_page.masquerade_as(@driver, students[1])
+              @canvas_discussions_page.masquerade_as students[1]
               @canvas_discussions_page.add_reply(@discussion, nil, 'Discussion entry by student 2')
               @canvas_discussions_page.add_reply(@discussion, nil, 'Discussion entry by student 2')
               # Student 1 replies to User 2's first entry
-              @canvas_discussions_page.masquerade_as(@driver, students[0], @course)
+              @canvas_discussions_page.masquerade_as(students[0], @course)
               @canvas_discussions_page.add_reply(@discussion, 1, 'Reply by student 1')
               # Student 2 replies to User 1's entry
-              @canvas_discussions_page.masquerade_as(@driver, students[1], @course)
+              @canvas_discussions_page.masquerade_as(students[1], @course)
               @canvas_discussions_page.add_reply(@discussion, 0, 'Reply by student 2')
               # Student 1 replies to own entry
-              @canvas_discussions_page.masquerade_as(@driver, students[0], @course)
+              @canvas_discussions_page.masquerade_as(students[0], @course)
               @canvas_discussions_page.add_reply(@discussion, 0, 'Reply by student 1')
               # Student 2 replies to own first entry and to Student 1's reply
-              @canvas_discussions_page.masquerade_as(@driver, students[1], @course)
+              @canvas_discussions_page.masquerade_as(students[1], @course)
               @canvas_discussions_page.add_reply(@discussion, 3, 'Reply by student 2')
               @canvas_discussions_page.add_reply(@discussion, 0, 'Reply by student 2')
 
               # Delete announcement and discussion
 
-              @canvas_discussions_page.masquerade_as(@driver, @teacher, @course)
+              @canvas_discussions_page.masquerade_as(@teacher, @course)
               @canvas_discussions_page.delete_activity(@announcement.title, @announcement.url)
               @canvas_discussions_page.delete_activity(@discussion.title, @discussion.url)
 
@@ -100,12 +100,12 @@ begin
 
           # Student leaves group
 
-          @canvas.masquerade_as(@driver, students[0], @course)
+          @canvas.masquerade_as(students[0], @course)
           @canvas.student_leave_grp(@course, @teacher_group)
 
           # Delete group
 
-          @canvas.masquerade_as(@driver, @teacher, @course)
+          @canvas.masquerade_as(@teacher, @course)
           @canvas.instructor_delete_grp_set(@course, @teacher_group)
 
         rescue => e
@@ -124,7 +124,7 @@ begin
           # The student creating the group does not need to add itself as a member
           @members = students.reject { |s| s == students[0] }
           @student_group = Group.new({title: "Student Group #{@test_group_identifier}", members: @members, group_set: 'Student Groups'})
-          @canvas.masquerade_as(@driver, students[0], @course)
+          @canvas.masquerade_as(students[0], @course)
           @canvas.student_create_grp(@course, @student_group)
 
           # Edit group title
@@ -149,29 +149,29 @@ begin
               @canvas_discussions_page.create_group_discussion(@student_group, @discussion)
 
               # Student 2 creates an entry on the topic
-              @canvas_discussions_page.masquerade_as(@driver, students[1])
+              @canvas_discussions_page.masquerade_as students[1]
               @canvas_discussions_page.add_reply(@discussion, nil, 'Discussion entry by student 2')
               # Student 3 creates two entries on the topic
-              @canvas_discussions_page.masquerade_as(@driver, students[2])
+              @canvas_discussions_page.masquerade_as students[2]
               @canvas_discussions_page.add_reply(@discussion, nil, 'Discussion entry by student 3')
               @canvas_discussions_page.add_reply(@discussion, nil, 'Discussion entry by student 3')
               # Student 2 replies to User 2's first entry
-              @canvas_discussions_page.masquerade_as(@driver, students[1], @course)
+              @canvas_discussions_page.masquerade_as(students[1], @course)
               @canvas_discussions_page.add_reply(@discussion, 1, 'Reply by student 2')
               # Student 3 replies to User 1's entry
-              @canvas_discussions_page.masquerade_as(@driver, students[2], @course)
+              @canvas_discussions_page.masquerade_as(students[2], @course)
               @canvas_discussions_page.add_reply(@discussion, 0, 'Reply by student 3')
               # Student 2 replies to own entry
-              @canvas_discussions_page.masquerade_as(@driver, students[1], @course)
+              @canvas_discussions_page.masquerade_as(students[1], @course)
               @canvas_discussions_page.add_reply(@discussion, 0, 'Reply by student 2')
               # Student 3 replies to own first entry and to Student 2's reply
-              @canvas_discussions_page.masquerade_as(@driver, students[2], @course)
+              @canvas_discussions_page.masquerade_as(students[2], @course)
               @canvas_discussions_page.add_reply(@discussion, 3, 'Reply by student 3')
               @canvas_discussions_page.add_reply(@discussion, 0, 'Reply by student 3')
 
               # Delete announcement and discussion
 
-              @canvas_discussions_page.masquerade_as(@driver, students[0], @course)
+              @canvas_discussions_page.masquerade_as(students[0], @course)
               @canvas_discussions_page.delete_activity(@announcement.title, @announcement.url)
               @canvas_discussions_page.delete_activity(@discussion.title, @discussion.url)
 

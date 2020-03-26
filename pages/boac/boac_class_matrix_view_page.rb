@@ -31,20 +31,18 @@ class BOACClassMatrixViewPage
   end
 
   # Returns the bubble elements in the matrix graphic
-  # @param driver [Selenium::WebDriver]
   # @return [Array<Selenium::WebDriver::Element>]
-  def matrix_bubbles(driver)
-    bubbles = driver.find_elements(xpath: '//*[name()="svg"][@class="matrix-svg"]/*[name()="svg"]//*[name()="circle"]')
+  def matrix_bubbles
+    bubbles = div_elements(xpath: '//*[name()="svg"][@class="matrix-svg"]/*[name()="svg"]//*[name()="circle"]')
     # Don't count the 'average student' bubble
     bubbles.delete_if { |b| b.attribute('style').include? 'avatar_undefined' }
     bubbles
   end
 
   # Returns the number of matrix bubbles, subtracting the 'average' bubble
-  # @param driver [Selenium::WebDriver]
   # @return [Integer]
-  def matrix_bubble_count(driver)
-    matrix_bubbles(driver).length
+  def matrix_bubble_count
+    matrix_bubbles.length
   end
 
   # Whether or not a given student's bubble is expanded
@@ -61,24 +59,22 @@ class BOACClassMatrixViewPage
   end
 
   # Checks whether or not all the list view students are appearing on the matrix view
-  # @param driver [Selenium::WebDriver]
   # @param expected_count [Integer]
   # @return [boolean]
-  def verify_all_students_present(driver, expected_count)
+  def verify_all_students_present(expected_count)
     verify_block do
-      wait_until(Utils.short_wait, "Got #{matrix_bubble_count(driver)} bubbles and #{visible_no_data_uids.length} rows but expected #{expected_count} total") do
-        matrix_bubble_count(driver) + visible_no_data_uids.length == expected_count
+      wait_until(Utils.short_wait, "Got #{matrix_bubble_count} bubbles and #{visible_no_data_uids.length} rows but expected #{expected_count} total") do
+        matrix_bubble_count + visible_no_data_uids.length == expected_count
       end
     end
   end
 
   # Clicks the last user bubble in the matrix graphic
-  # @param [Selenium::WebDriver]
-  def click_last_student_bubble(driver)
-    mouseover(driver, matrix_bubbles(driver).last)
-    uid = driver.find_elements(xpath: '//*[name()="svg"][@class="matrix-svg"]/*[name()="defs"]/*[name()="pattern"]').last.attribute('id').gsub('avatar_', '')
+  def click_last_student_bubble
+    mouseover(matrix_bubbles.last)
+    uid = div_elements(xpath: '//*[name()="svg"][@class="matrix-svg"]/*[name()="defs"]/*[name()="pattern"]').last.attribute('id').gsub('avatar_', '')
     logger.info "Clicking student bubble for UID #{uid}"
-    matrix_bubbles(driver).last.click
+    matrix_bubbles.last.click
     student_name_heading_element.when_visible Utils.medium_wait
   end
 

@@ -35,19 +35,19 @@ describe 'An asset comment', order: :defined do
     @engagement_index = Page::SuiteCPages::EngagementIndexPage.new @driver
 
     @canvas.log_in(@cal_net, (event.actor = admin).username, Utils.super_admin_password)
-    @canvas.create_generic_course_site(@driver, Utils.canvas_qa_sub_account, @course, [@teacher, @asset_uploader, @asset_admirer],
+    @canvas.create_generic_course_site(Utils.canvas_qa_sub_account, @course, [@teacher, @asset_uploader, @asset_admirer],
                                        test_id, [LtiTools::ASSET_LIBRARY, LtiTools::ENGAGEMENT_INDEX])
 
     @asset_library_url = @canvas.click_tool_link(@driver, LtiTools::ASSET_LIBRARY, event)
     @engagement_index_url = @canvas.click_tool_link(@driver, LtiTools::ENGAGEMENT_INDEX, event)
 
     # Upload a new asset for the test
-    @canvas.masquerade_as(@driver, (event.actor = @asset_uploader), @course)
+    @canvas.masquerade_as((event.actor = @asset_uploader), @course)
     @asset_library.load_page(@driver, @asset_library_url, event)
     @asset_library.add_site(@asset, event)
 
     # Get the users' initial scores
-    @canvas.masquerade_as(@driver, (event.actor = @teacher), @course)
+    @canvas.masquerade_as((event.actor = @teacher), @course)
     @uploader_score = @engagement_index.user_score(@driver, @engagement_index_url, @asset_uploader, event)
     @admirer_score = @engagement_index.user_score(@driver, @engagement_index_url, @asset_admirer, event)
   end
@@ -57,7 +57,7 @@ describe 'An asset comment', order: :defined do
   context 'by the asset uploader' do
 
     it 'can be added on the detail view' do
-      @canvas.masquerade_as(@driver, (event.actor = @asset_uploader), @course)
+      @canvas.masquerade_as((event.actor = @asset_uploader), @course)
       @asset_library.load_asset_detail(@driver, @asset_library_url, @asset, event)
       @asset_library.add_comment(@asset, @comment_1_by_uploader, event)
       @asset_library.verify_comments @asset
@@ -74,7 +74,7 @@ describe 'An asset comment', order: :defined do
     end
 
     it 'does not earn commenting points on the engagement index' do
-      @canvas.masquerade_as(@driver, (event.actor = @teacher), @course)
+      @canvas.masquerade_as((event.actor = @teacher), @course)
       expect(@engagement_index.user_score(@driver, @engagement_index_url, @asset_uploader, event)).to eql(@uploader_score)
     end
   end
@@ -82,7 +82,7 @@ describe 'An asset comment', order: :defined do
   context 'by a user who is not the asset creator' do
 
     before(:all) do
-      @canvas.masquerade_as(@driver, (event.actor = @asset_admirer), @course)
+      @canvas.masquerade_as((event.actor = @asset_admirer), @course)
     end
 
     it 'can be added on the detail view' do
@@ -110,7 +110,7 @@ describe 'An asset comment', order: :defined do
     end
 
     it 'earns "Comment" points on the engagement index for the user adding a comment or reply' do
-      @canvas.masquerade_as(@driver, (event.actor = @teacher), @course)
+      @canvas.masquerade_as((event.actor = @teacher), @course)
       expect(@engagement_index.user_score(@driver, @engagement_index_url, @asset_admirer, event)).to eql((@admirer_score.to_i + (Activity::COMMENT.points * 3)).to_s)
     end
 
@@ -137,11 +137,11 @@ describe 'An asset comment', order: :defined do
   context 'by any user' do
 
     it 'can include a link that opens in a new browser window' do
-      @canvas.masquerade_as(@driver, (event.actor = @asset_admirer), @course)
+      @canvas.masquerade_as((event.actor = @asset_admirer), @course)
       @asset_library.load_asset_detail(@driver, @asset_library_url, @asset, event)
       @asset_library.add_comment(@asset, @comment_3_by_viewer, event)
       @asset_library.verify_comments @asset
-      @asset_library.external_link_valid?(@driver, @asset_library.comment_body_link(0, 'google'), 'Google')
+      @asset_library.external_link_valid?(@asset_library.comment_body_link(0, 'google'), 'Google')
     end
 
     it 'cannot be added as a reply to a reply' do
@@ -180,7 +180,7 @@ describe 'An asset comment', order: :defined do
     end
 
     it 'can be done to any comment when the user is a teacher' do
-      @canvas.masquerade_as(@driver, (event.actor = @teacher), @course)
+      @canvas.masquerade_as((event.actor = @teacher), @course)
       @asset_library.load_asset_detail(@driver, @asset_library_url, @asset, event)
       @asset.comments.each { |comment| expect(@asset_library.edit_button_element(@asset.comments.index comment).exists?).to be true }
     end
@@ -203,7 +203,7 @@ describe 'An asset comment', order: :defined do
   describe 'deletion' do
 
     it 'can be done by a student who created the comment' do
-      @canvas.masquerade_as(@driver, (event.actor = @asset_admirer), @course)
+      @canvas.masquerade_as((event.actor = @asset_admirer), @course)
       @asset_library.load_asset_detail(@driver, @asset_library_url, @asset, event)
       @asset_library.delete_comment(@asset, @comment_3_by_viewer, event)
       @asset_library.verify_comments @asset
@@ -218,7 +218,7 @@ describe 'An asset comment', order: :defined do
     end
 
     it 'can be done when the user is a teacher unless the comment has replies' do
-      @canvas.masquerade_as(@driver, (event.actor = @teacher), @course)
+      @canvas.masquerade_as((event.actor = @teacher), @course)
       @asset_library.load_asset_detail(@driver, @asset_library_url, @asset, event)
       @asset_library.wait_until(timeout) { @asset_library.comment_elements.count == 5 }
       expect(@asset_library.delete_button_element(@asset.comments.index @comment_2_by_viewer).exists?).to be false

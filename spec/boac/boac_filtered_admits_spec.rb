@@ -177,7 +177,7 @@ describe 'BOA' do
         if cohort.member_data.length.zero?
           logger.warn 'Skipping admit page back button test since there are no results'
         else
-          @admit_page.go_back @driver
+          @admit_page.go_back
           @cohort_page.wait_until(Utils.short_wait) { @cohort_page.wait_for_search_results == cohort.member_data.length }
         end
       end

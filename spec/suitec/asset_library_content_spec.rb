@@ -20,15 +20,15 @@ describe 'New asset uploads', order: :defined do
     @asset_library = Page::SuiteCPages::AssetLibraryDetailPage.new @driver
 
     @canvas.log_in(@cal_net, Utils.super_admin_username, Utils.super_admin_password)
-    @canvas.create_generic_course_site(@driver, Utils.canvas_qa_sub_account, @course, users, Utils.get_test_id, [LtiTools::ASSET_LIBRARY])
+    @canvas.create_generic_course_site(Utils.canvas_qa_sub_account, @course, users, Utils.get_test_id, [LtiTools::ASSET_LIBRARY])
 
-    @canvas.load_course_site(@driver, @course)
+    @canvas.load_course_site @course
     @asset_library_url = @canvas.click_tool_link(@driver, LtiTools::ASSET_LIBRARY)
 
     users.each do |user|
 
       begin
-        @canvas.masquerade_as(@driver, user, @course)
+        @canvas.masquerade_as(user, @course)
         user_full_name = user.full_name
         user.assets.each do |asset|
 
@@ -98,7 +98,7 @@ describe 'New asset uploads', order: :defined do
         logger.error "#{e.message + "\n"} #{e.backtrace.join("\n ")}"
         it("caused an unexpected error for #{user_full_name}") { fail }
       ensure
-        @canvas.stop_masquerading @driver
+        @canvas.stop_masquerading
       end
     end
 

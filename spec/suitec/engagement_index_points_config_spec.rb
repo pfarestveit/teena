@@ -19,19 +19,19 @@ describe 'Engagement Index points configuration', order: :defined do
     @engagement_index = Page::SuiteCPages::EngagementIndexConfigPage.new @driver
 
     @canvas.log_in(@cal_net, Utils.super_admin_username, Utils.super_admin_password)
-    @canvas.create_generic_course_site(@driver, Utils.canvas_qa_sub_account, @course, [@teacher, @student],
+    @canvas.create_generic_course_site(Utils.canvas_qa_sub_account, @course, [@teacher, @student],
                                        Utils.get_test_id, [LtiTools::ASSET_LIBRARY, LtiTools::ENGAGEMENT_INDEX])
 
-    @canvas.load_course_site(@driver, @course)
+    @canvas.load_course_site @course
     @asset_library_url = @canvas.click_tool_link(@driver, LtiTools::ASSET_LIBRARY)
     @engagement_index_url = @canvas.click_tool_link(@driver, LtiTools::ENGAGEMENT_INDEX)
 
-    @canvas.masquerade_as(@driver, @student, @course)
+    @canvas.masquerade_as(@student, @course)
     @asset_library.load_page(@driver, @asset_library_url)
     @asset_library.upload_file_to_library Asset.new(@student.assets.find { |asset| asset['type'] == 'File' })
     @add_asset_activity = Activity::ADD_ASSET_TO_LIBRARY
 
-    @canvas.masquerade_as(@driver, @teacher, @course)
+    @canvas.masquerade_as(@teacher, @course)
     @engagement_index.load_scores(@driver, @engagement_index_url)
     @engagement_index.click_points_config
   end
@@ -68,7 +68,7 @@ describe 'Engagement Index points configuration', order: :defined do
   end
 
   it 'disabled activities are not visible to a student' do
-    @canvas.masquerade_as(@driver, @student, @course)
+    @canvas.masquerade_as(@student, @course)
     @engagement_index.load_page(@driver, @engagement_index_url)
     @engagement_index.share_score
     @engagement_index.click_points_config
@@ -77,7 +77,7 @@ describe 'Engagement Index points configuration', order: :defined do
   end
 
   it 'allows a teacher to cancel re-enabling a disabled activity type' do
-    @canvas.masquerade_as(@driver, @teacher, @course)
+    @canvas.masquerade_as(@teacher, @course)
     @engagement_index.load_scores(@driver, @engagement_index_url)
     @engagement_index.click_points_config
     @engagement_index.click_edit_points_config
@@ -103,7 +103,7 @@ describe 'Engagement Index points configuration', order: :defined do
   end
 
   it 'allows a teacher to change an activity type point value to a new integer' do
-    @engagement_index.switch_to_canvas_iframe(@driver) unless @engagement_index.points_config_link?
+    @engagement_index.switch_to_canvas_iframe unless @engagement_index.points_config_link?
     @engagement_index.click_points_config
     @engagement_index.change_activity_points(@add_asset_activity, (@add_asset_activity.points + 10))
     expect(@engagement_index.activity_points(@add_asset_activity)).to eql(@add_asset_activity.points + 10)
@@ -120,7 +120,7 @@ describe 'Engagement Index points configuration', order: :defined do
   end
 
   it 'allows a student to view the Points Configuration whether or not they share their scores' do
-    @canvas.masquerade_as(@driver, @student, @course)
+    @canvas.masquerade_as(@student, @course)
     @engagement_index.load_page(@driver, @engagement_index_url)
     expect(@engagement_index.points_config_link?).to be true
     if @engagement_index.share_score_cbx_checked?

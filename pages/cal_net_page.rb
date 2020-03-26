@@ -29,7 +29,6 @@ module Page
         else
           logger.debug 'Waiting for manual login'
           wait_for_element_and_type(username_element, 'PLEASE LOG IN MANUALLY')
-          username_element.flash
         end
       else
         logger.debug "#{username} is logging in"

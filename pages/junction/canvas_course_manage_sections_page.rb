@@ -18,7 +18,7 @@ module Page
       paragraph(:maintenance_detail, xpath: '//p[contains(.,"bCourses performs scheduled maintenance every day between 8-9AM, during which time bCourses user and enrollment information is synchronized with other campus systems. This process may cause delays of up to 10 minutes before your request is completed.")]')
       link(:bcourses_service_link, xpath: '//a[contains(.,"bCourses service page")]')
 
-      table(:current_sections_table, xpath: '//h3[contains(text(),"Sections in this Course Site")]/../../following-sibling::div//table')
+      elements(:current_sections_table_row, :row, xpath: '//h3[contains(text(),"Sections in this Course Site")]/../../following-sibling::div//table//tr')
       button(:save_changes_button, xpath: '//button[contains(text(),"Save Changes")]')
       button(:cancel_button, xpath: '//button[contains(text(),"Cancel")]')
 
@@ -71,8 +71,8 @@ module Page
       # Returns the number of sections currently in the site by counting the 'Sections in this Course Site' table rows minus the heading row
       # @return [Integer]
       def current_sections_count
-        current_sections_table_element.when_visible Utils.short_wait
-        current_sections_table_element.rows - 1
+        wait_until(Utils.short_wait) { current_sections_table_row_elements.any? }
+        current_sections_table_row_elements.length - 1
       end
 
       # Returns the 'Sections in this Course Site' table cell element containing a given section ID
@@ -136,11 +136,10 @@ module Page
       # AVAILABLE SECTIONS
 
       # Returns the number of a given course's sections available to add to a course site by counting the table rows minus the heading row
-      # @param driver [Selenium::WebDriver]
       # @param course [Course]
       # @return [Integer]
-      def available_sections_count(driver, course)
-        driver.find_elements(xpath: "//button[contains(@class,'sections-form-course-button')][contains(.,'#{course.code}')]//following-sibling::div//table/tbody").length
+      def available_sections_count(course)
+        div_elements(xpath: "//button[contains(@class,'sections-form-course-button')][contains(.,'#{course.code}')]//following-sibling::div//table/tbody").length
       end
 
       # Returns a hash of data displayed for a given section ID in a course's available sections table

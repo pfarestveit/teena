@@ -114,7 +114,7 @@ class BOACPaxManifestPage
   # @param user [BOACUser]
   # @return [Array<String>]
   def visible_advisor_depts(user)
-    dept_els = browser.find_elements(xpath: "//span[contains(@id, 'dept-') and contains(@id, '-#{user.uid}')]/span")
+    dept_els = span_elements(xpath: "//span[contains(@id, 'dept-') and contains(@id, '-#{user.uid}')]/span")
     dept_els.map &:text
   end
 

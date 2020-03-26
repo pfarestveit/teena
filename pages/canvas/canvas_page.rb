@@ -64,28 +64,26 @@ module Page
       sleep 1
       wait_for_update_and_click_js profile_form_element
       wait_for_update_and_click_js logout_link_element if logout_link_element.exists?
-      cal_net.username_element.when_visible
+      cal_net.username_element.when_visible Utils.short_wait
       add_event(event, EventType::LOGGED_OUT)
     end
 
     # Masquerades as a user and then loads a course site
-    # @param driver [Selenium::WebDriver]
     # @param user [User]
     # @param course [Course]
-    def masquerade_as(driver, user, course = nil)
+    def masquerade_as(user, course = nil)
       load_homepage
       sleep 2
-      stop_masquerading(driver) if stop_masquerading_link?
+      stop_masquerading if stop_masquerading_link?
       logger.info "Masquerading as #{user.role} UID #{user.uid}, Canvas ID #{user.canvas_id}"
       navigate_to "#{Utils.canvas_base_url}/users/#{user.canvas_id}/masquerade"
       wait_for_update_and_click masquerade_link_element
       stop_masquerading_link_element.when_visible Utils.short_wait
-      load_course_site(driver, course) unless course.nil?
+      load_course_site course unless course.nil?
     end
 
     # Quits masquerading as another user
-    # @param driver [Selenium::WebDriver]
-    def stop_masquerading(driver)
+    def stop_masquerading
       logger.debug 'Ending masquerade'
       load_homepage
       wait_for_load_and_click stop_masquerading_link_element
@@ -132,22 +130,21 @@ module Page
     li(:delete_course_success, xpath: '//li[contains(.,"successfully deleted")]')
 
     # Creates standard Canvas course site in a given sub-account, publishes it, and adds test users.
-    # @param driver [Selenium::WebDriver]
     # @param sub_account [String]
     # @param course [Course]
     # @param test_users [Array<User>]
     # @param test_id [String]
     # @param tools [Array<LtiTools>]
     # @param event [Event]
-    def create_generic_course_site(driver, sub_account, course, test_users, test_id, tools = nil, event = nil)
+    def create_generic_course_site(sub_account, course, test_users, test_id, tools = nil, event = nil)
       if course.site_id.nil?
         load_sub_account sub_account
         wait_for_load_and_click add_new_course_button_element
         course_name_input_element.when_visible Utils.short_wait
         course.title = "QA Test - #{Time.at test_id.to_i}" if course.title.nil?
         course.code = "QA #{Time.at test_id.to_i} LEC001" if course.code.nil?
-        self.course_name_input = "#{course.title}"
-        self.ref_code_input = "#{course.code}"
+        wait_for_element_and_type(course_name_input_element, "#{course.title}")
+        wait_for_element_and_type(ref_code_input_element, "#{course.code}")
         logger.info "Creating a course site named #{course.title} in #{course.term} semester"
         wait_for_update_and_click create_course_button_element
         add_course_success_element.when_visible Utils.medium_wait
@@ -164,7 +161,7 @@ module Page
         course.title = course_title
         course.code = course_code
       end
-      publish_course_site(driver, course)
+      publish_course_site course
       logger.info "Course ID is #{course.site_id}"
       add_users(course, test_users, event)
       if tools
@@ -187,15 +184,14 @@ module Page
       execute_script('arguments[0].style.hidden="hidden";', div_element(id: 'fixed_bottom'))
       retry unless (tries -= 1).zero?
     ensure
-      switch_to_canvas_iframe(driver, JunctionUtils.junction_base_url)
+      switch_to_canvas_iframe JunctionUtils.junction_base_url
     end
 
     # Loads a course site and handles prompts that can appear
-    # @param driver [Selenium::WebDriver]
     # @param course [Course]
-    def load_course_site(driver, course)
+    def load_course_site(course)
       navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}"
-      wait_until { current_url.include? "#{course.site_id}" }
+      wait_until(Utils.medium_wait) { current_url.include? "#{course.site_id}" }
       if updated_terms_heading?
         logger.info 'Accepting terms and conditions'
         terms_cbx_element.when_visible Utils.short_wait
@@ -269,11 +265,10 @@ module Page
     button(:choose_and_publish_button, xpath: '//span[contains(.,"Choose and Publish")]/ancestor::button')
 
     # Publishes a course site
-    # @param driver [Selenium::WebDriver]
     # @param course [Course]
-    def publish_course_site(driver, course)
+    def publish_course_site(course)
       logger.info 'Publishing the course'
-      load_course_site(driver, course)
+      load_course_site course
       published_status_element.when_visible Utils.short_wait
       if published_button?
         logger.debug 'The site is already published'
@@ -305,7 +300,7 @@ module Page
     # @param course [Course]
     def delete_course(driver, course)
       load_homepage
-      stop_masquerading(driver) if stop_masquerading_link?
+      stop_masquerading if stop_masquerading_link?
       navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/confirm_action?event=delete"
       wait_for_load_and_click_js delete_course_button_element
       delete_course_success_element.when_visible Utils.medium_wait
@@ -435,7 +430,7 @@ module Page
       users.each do |user|
         logger.info "Removing #{user.role} UID #{user.uid} from course site ID #{course.site_id}"
         wait_for_update_and_click link_element(xpath: "//tr[@id='user_#{user.canvas_id}']//a[contains(@class,'al-trigger')]")
-        confirm(true) { wait_for_update_and_click_js link_element(xpath: "//tr[@id='user_#{user.canvas_id}']//a[@data-event='removeFromCourse']") }
+        alert { wait_for_update_and_click_js link_element(xpath: "//tr[@id='user_#{user.canvas_id}']//a[@data-event='removeFromCourse']") }
         remove_user_success_element.when_visible Utils.short_wait
         add_event(event, EventType::MODIFY, '"state": "deleted"')
         add_event(event, EventType::MODIFY, user.full_name)
@@ -521,7 +516,7 @@ module Page
       logger.debug 'Clicking Find a Person to Add button'
       wait_for_load_and_click add_people_button_element
       wait_for_load_and_click find_person_to_add_link_element
-      switch_to_canvas_iframe(driver, JunctionUtils.junction_base_url)
+      switch_to_canvas_iframe JunctionUtils.junction_base_url
     end
 
     # Returns the number of users in a course site with a given set of roles, optionally using a non-default Canvas base URL
@@ -732,15 +727,15 @@ module Page
 
           # Enter the tool config
           config_type_element.when_visible Utils.short_wait
-          self.config_type = 'By URL'
+          wait_for_element_and_select_js(config_type_element, 'By URL')
           # Use JS to select the option too since the WebDriver method is not working consistently
           execute_script('document.getElementById("configuration_type_selector").value = "url";')
           sleep 1
           wait_for_update_and_click_js app_name_input_element
-          self.app_name_input = "#{tool.name}"
-          self.key_input = key
-          self.secret_input = secret
-          self.url_input = "#{base_url}#{tool.xml}"
+          wait_for_element_and_type(app_name_input_element, "#{tool.name}")
+          wait_for_element_and_type(key_input_element, key)
+          wait_for_element_and_type(secret_input_element, secret)
+          wait_for_element_and_type(url_input_element, "#{base_url}#{tool.xml}")
           submit_button
           link_element(xpath: "//td[@title='#{tool.name}']").when_present Utils.medium_wait
           enable_tool(course, tool)

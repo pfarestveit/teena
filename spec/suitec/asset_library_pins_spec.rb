@@ -36,22 +36,22 @@ describe 'Asset pinning', order: :defined do
     # Create course site if necessary
     @canvas.log_in(@cal_net, admin.username, Utils.super_admin_password)
     event.actor = admin
-    @canvas.create_generic_course_site(@driver, Utils.canvas_qa_sub_account, @course, users, test_id, [LtiTools::ASSET_LIBRARY, LtiTools::ENGAGEMENT_INDEX])
+    @canvas.create_generic_course_site(Utils.canvas_qa_sub_account, @course, users, test_id, [LtiTools::ASSET_LIBRARY, LtiTools::ENGAGEMENT_INDEX])
     @asset_library_url = @canvas.click_tool_link(@driver, LtiTools::ASSET_LIBRARY, event)
     @engagement_index_url = @canvas.click_tool_link(@driver, LtiTools::ENGAGEMENT_INDEX, event)
     @engagement_index.wait_for_new_user_sync(@driver, @engagement_index_url, @course, users, event)
 
     # Users 1 and 2 upload assets
-    @canvas.masquerade_as(@driver, (event.actor = user_1), @course)
+    @canvas.masquerade_as((event.actor = user_1), @course)
     @asset_library.load_page(@driver, @asset_library_url, event)
     @asset_library.upload_file_to_library(user_1_asset, event)
 
-    @canvas.masquerade_as(@driver, (event.actor = user_2), @course)
+    @canvas.masquerade_as((event.actor = user_2), @course)
     @asset_library.load_page(@driver, @asset_library_url, event)
     @asset_library.upload_file_to_library(user_2_asset, event)
 
     # Get the users' initial scores
-    @canvas.stop_masquerading @driver
+    @canvas.stop_masquerading
     event.actor = admin
     @user_1_score = @engagement_index.user_score(@driver, @engagement_index_url, user_1, event).to_i
     @user_2_score = @engagement_index.user_score(@driver, @engagement_index_url, user_2, event).to_i
@@ -63,7 +63,7 @@ describe 'Asset pinning', order: :defined do
   context 'when a user pins its own asset' do
 
     before(:all) do
-      @canvas.masquerade_as(@driver, (event.actor = user_1), @course)
+      @canvas.masquerade_as((event.actor = user_1), @course)
       @asset_library.load_page(@driver, @asset_library_url, event)
     end
 
@@ -72,7 +72,7 @@ describe 'Asset pinning', order: :defined do
     context 'the Engagement Index' do
 
       before(:all) do
-        @canvas.stop_masquerading @driver
+        @canvas.stop_masquerading
         event.actor = admin
       end
 
@@ -92,7 +92,7 @@ describe 'Asset pinning', order: :defined do
   context 'when a user un-pins its own asset' do
 
     before(:all) do
-      @canvas.masquerade_as(@driver, (event.actor = user_1), @course)
+      @canvas.masquerade_as((event.actor = user_1), @course)
       @asset_library.load_page(@driver, @asset_library_url, event)
     end
 
@@ -106,7 +106,7 @@ describe 'Asset pinning', order: :defined do
     context 'the Engagement Index' do
 
       before(:all) do
-        @canvas.stop_masquerading @driver
+        @canvas.stop_masquerading
         event.actor = admin
       end
 
@@ -126,7 +126,7 @@ describe 'Asset pinning', order: :defined do
   context 'when a user pins another user\'s asset' do
 
     before(:all) do
-      @canvas.masquerade_as(@driver, (event.actor = user_1), @course)
+      @canvas.masquerade_as((event.actor = user_1), @course)
       @asset_library.load_asset_detail(@driver, @asset_library_url, user_2_asset, event)
     end
 
@@ -135,7 +135,7 @@ describe 'Asset pinning', order: :defined do
     context 'the Engagement Index' do
 
       before(:all) do
-        @canvas.stop_masquerading @driver
+        @canvas.stop_masquerading
         event.actor = admin
       end
 
@@ -155,7 +155,7 @@ describe 'Asset pinning', order: :defined do
   context 'when a user unpins another user\'s asset' do
 
     before(:all) do
-      @canvas.masquerade_as(@driver, (event.actor = user_1), @course)
+      @canvas.masquerade_as((event.actor = user_1), @course)
       @asset_library.load_asset_detail(@driver, @asset_library_url, user_2_asset, event)
     end
 
@@ -164,7 +164,7 @@ describe 'Asset pinning', order: :defined do
     context 'the Engagement Index' do
 
       before(:all) do
-        @canvas.stop_masquerading @driver
+        @canvas.stop_masquerading
         event.actor = admin
       end
 
@@ -184,7 +184,7 @@ describe 'Asset pinning', order: :defined do
   context 'when a user re-pins another user\'s asset' do
 
     before(:all) do
-      @canvas.masquerade_as(@driver, (event.actor = user_1), @course)
+      @canvas.masquerade_as((event.actor = user_1), @course)
       @asset_library.load_asset_detail(@driver, @asset_library_url, user_2_asset, event)
     end
 
@@ -193,7 +193,7 @@ describe 'Asset pinning', order: :defined do
     context 'the Engagement Index' do
 
       before(:all) do
-        @canvas.stop_masquerading @driver
+        @canvas.stop_masquerading
         event.actor = admin
       end
 
@@ -213,7 +213,7 @@ describe 'Asset pinning', order: :defined do
   context 'when a user un-re-pins another user\'s asset' do
 
     before(:all) do
-      @canvas.masquerade_as(@driver, (event.actor = user_1), @course)
+      @canvas.masquerade_as((event.actor = user_1), @course)
       @asset_library.load_asset_detail(@driver, @asset_library_url, user_2_asset, event)
     end
 
@@ -222,7 +222,7 @@ describe 'Asset pinning', order: :defined do
     context 'the Engagement Index' do
 
       before(:all) do
-        @canvas.stop_masquerading @driver
+        @canvas.stop_masquerading
         event.actor = admin
       end
 
@@ -242,7 +242,7 @@ describe 'Asset pinning', order: :defined do
   describe 'advanced search' do
 
     before(:all) do
-      @canvas.masquerade_as(@driver, (event.actor = user_3), @course)
+      @canvas.masquerade_as((event.actor = user_3), @course)
       @asset_library.load_page(@driver, @asset_library_url, event)
       @asset_library.upload_file_to_library(user_3_asset, event)
     end
@@ -272,7 +272,7 @@ describe 'Asset pinning', order: :defined do
     context 'when a user searches for the assets that another user has pinned' do
 
       before(:all) do
-        @canvas.masquerade_as(@driver, (event.actor = user_1), @course)
+        @canvas.masquerade_as((event.actor = user_1), @course)
         @asset_library.load_page(@driver, @asset_library_url, event)
         @asset_library.advanced_search(test_id, nil, user_3, nil, 'Pinned', event)
       end
@@ -300,7 +300,7 @@ describe 'Asset pinning', order: :defined do
 
     before(:all) do
       # User 2 pins its own asset then deletes it
-      @canvas.masquerade_as(@driver, (event.actor = user_2), @course)
+      @canvas.masquerade_as((event.actor = user_2), @course)
       @asset_library.load_asset_detail(@driver, @asset_library_url, user_2_asset, event)
       @asset_library.pin_detail_view_asset(user_2_asset, event)
       @asset_library.delete_asset(user_2_asset, event)
@@ -312,7 +312,7 @@ describe 'Asset pinning', order: :defined do
     context 'the Engagement Index' do
 
       before(:all) do
-        @canvas.stop_masquerading @driver
+        @canvas.stop_masquerading
         event.actor = admin
       end
 

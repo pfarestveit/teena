@@ -32,7 +32,7 @@ describe 'Impact Studio', order: :defined do
 
     # Create course site if necessary
     @canvas.log_in(@cal_net, Utils.super_admin_username, Utils.super_admin_password)
-    @canvas.create_generic_course_site(@driver, Utils.canvas_qa_sub_account, @course, users, test_id, [LtiTools::ASSET_LIBRARY, LtiTools::IMPACT_STUDIO, LtiTools::ENGAGEMENT_INDEX])
+    @canvas.create_generic_course_site(Utils.canvas_qa_sub_account, @course, users, test_id, [LtiTools::ASSET_LIBRARY, LtiTools::IMPACT_STUDIO, LtiTools::ENGAGEMENT_INDEX])
     @course.sections = [Section.new({label: @course.title})]
     @asset_library_url = @canvas.click_tool_link(@driver, LtiTools::ASSET_LIBRARY)
     @impact_studio_url = @canvas.click_tool_link(@driver, LtiTools::IMPACT_STUDIO)
@@ -50,7 +50,7 @@ describe 'Impact Studio', order: :defined do
 
       context 'and an instructor' do
 
-        before(:all) { @canvas.masquerade_as(@driver, teacher_viewer, @course) }
+        before(:all) { @canvas.masquerade_as(teacher_viewer, @course) }
 
         context 'views its own Impact Studio profile' do
 
@@ -79,7 +79,7 @@ describe 'Impact Studio', order: :defined do
 
       context 'and a student' do
 
-        before(:all) { @canvas.masquerade_as(@driver, student_viewer, @course) }
+        before(:all) { @canvas.masquerade_as(student_viewer, @course) }
 
         context 'views its own Impact Studio profile' do
 
@@ -110,42 +110,42 @@ describe 'Impact Studio', order: :defined do
     context 'when the Engagement Index is present' do
 
       before(:all) do
-        @canvas.stop_masquerading @driver
+        @canvas.stop_masquerading
         @canvas.add_suite_c_tool(@course, LtiTools::ENGAGEMENT_INDEX)
         @engagement_index_url = @canvas.click_tool_link(@driver, LtiTools::ENGAGEMENT_INDEX)
 
         # One teacher shares score
-        @canvas.masquerade_as(@driver, teacher_share, @course)
+        @canvas.masquerade_as(teacher_share, @course)
         @engagement_index.load_page(@driver, @engagement_index_url)
         @engagement_index.share_score
 
         # Two teachers do not share score
-        @canvas.masquerade_as(@driver, teacher_viewer, @course)
+        @canvas.masquerade_as(teacher_viewer, @course)
         @engagement_index.load_page(@driver, @engagement_index_url)
         @engagement_index.un_share_score
 
-        @canvas.masquerade_as(@driver, teacher_no_share, @course)
+        @canvas.masquerade_as(teacher_no_share, @course)
         @engagement_index.load_page(@driver, @engagement_index_url)
         @engagement_index.un_share_score
 
         # One student shares score
-        @canvas.masquerade_as(@driver, student_share, @course)
+        @canvas.masquerade_as(student_share, @course)
         @engagement_index.load_page(@driver, @engagement_index_url)
         @engagement_index.share_score
 
         # Two students do not share score
-        @canvas.masquerade_as(@driver, student_viewer, @course)
+        @canvas.masquerade_as(student_viewer, @course)
         @engagement_index.load_page(@driver, @engagement_index_url)
         @engagement_index.un_share_score
 
-        @canvas.masquerade_as(@driver, student_no_share, @course)
+        @canvas.masquerade_as(student_no_share, @course)
         @engagement_index.load_page(@driver, @engagement_index_url)
         @engagement_index.un_share_score
       end
 
       context 'and an instructor who has not shared its score' do
 
-        before(:all) { @canvas.masquerade_as(@driver, teacher_viewer, @course) }
+        before(:all) { @canvas.masquerade_as(teacher_viewer, @course) }
 
         context 'views its own Impact Studio profile' do
           before(:all) { @impact_studio.load_page(@driver, @impact_studio_url) }
@@ -213,7 +213,7 @@ describe 'Impact Studio', order: :defined do
       context 'and an instructor who has shared its score' do
 
         before(:all) do
-          @canvas.masquerade_as(@driver, teacher_viewer, @course)
+          @canvas.masquerade_as(teacher_viewer, @course)
           @engagement_index.load_page(@driver, @engagement_index_url)
           @engagement_index.share_score
         end
@@ -283,7 +283,7 @@ describe 'Impact Studio', order: :defined do
 
       context 'and a student who has not shared its score' do
 
-        before(:all) { @canvas.masquerade_as(@driver, student_viewer, @course) }
+        before(:all) { @canvas.masquerade_as(student_viewer, @course) }
 
         context 'views its own Impact Studio profile' do
           before(:all) { @impact_studio.load_page(@driver, @impact_studio_url) }
@@ -399,7 +399,7 @@ describe 'Impact Studio', order: :defined do
   describe 'profile summary' do
 
     before(:all) do
-      @canvas.masquerade_as(@driver, student_viewer, @course)
+      @canvas.masquerade_as(student_viewer, @course)
       @impact_studio.load_page(@driver, @impact_studio_url)
     end
 
@@ -444,7 +444,7 @@ describe 'Impact Studio', order: :defined do
 
       it 'allows the user to edit a description' do
         @impact_studio.edit_profile (desc = 'My personal description!')
-        @impact_studio.wait_until { @impact_studio.profile_desc == desc }
+        @impact_studio.wait_until(Utils.short_wait) { @impact_studio.profile_desc == desc }
       end
 
       it 'allows the user to cancel a description edit' do
@@ -452,23 +452,23 @@ describe 'Impact Studio', order: :defined do
         @impact_studio.click_edit_profile
         @impact_studio.enter_profile_desc 'This is not what I mean!'
         @impact_studio.cancel_profile_edit
-        @impact_studio.wait_until { @impact_studio.profile_desc == desc }
+        @impact_studio.wait_until(Utils.short_wait) { @impact_studio.profile_desc == desc }
       end
 
       it 'allows the user to include a link in a description' do
         @impact_studio.edit_profile "My personal description includes a link to #{link = 'www.google.com'} !"
-        @impact_studio.wait_until { @impact_studio.profile_desc.include? 'My personal description includes a link to' }
-        expect(@impact_studio.external_link_valid?(@driver, @impact_studio.link_element(xpath: "//a[contains(.,'#{link}')]"), 'Google'))
+        @impact_studio.wait_until(Utils.short_wait) { @impact_studio.profile_desc.include? 'My personal description includes a link to' }
+        expect(@impact_studio.external_link_valid?(@impact_studio.link_element(xpath: "//a[contains(.,'#{link}')]"), 'Google'))
       end
 
       it 'allows the user to include a hashtag in a description' do
-        @impact_studio.switch_to_canvas_iframe @driver
+        @impact_studio.switch_to_canvas_iframe
         @impact_studio.edit_profile 'My personal description #BitterTogether'
-        @impact_studio.wait_until { @impact_studio.profile_desc.include? 'My personal description ' }
+        @impact_studio.wait_until(Utils.short_wait) { @impact_studio.profile_desc.include? 'My personal description ' }
         sleep 2
         @impact_studio.link_element(text: '#BitterTogether').click
         @asset_library.wait_until(Utils.short_wait) { @asset_library.title == 'Asset Library' }
-        @asset_library.switch_to_canvas_iframe @driver
+        @asset_library.switch_to_canvas_iframe
         @asset_library.no_search_results_element.when_visible Utils.short_wait
       end
 
@@ -479,7 +479,7 @@ describe 'Impact Studio', order: :defined do
         @impact_studio.char_limit_msg_element.when_visible 1
         @impact_studio.cancel_profile_edit
         @impact_studio.edit_profile (desc = desc[0, 255])
-        @impact_studio.wait_until { @impact_studio.profile_desc == desc }
+        @impact_studio.wait_until(Utils.short_wait) { @impact_studio.profile_desc == desc }
       end
 
       it 'allows the user to remove a description' do
@@ -495,7 +495,7 @@ describe 'Impact Studio', order: :defined do
     context 'when the user is not looking' do
 
       before(:all) do
-        @canvas.masquerade_as(@driver, student_viewer, @course)
+        @canvas.masquerade_as(student_viewer, @course)
         @impact_studio.load_page(@driver, @impact_studio_url)
       end
 
@@ -508,7 +508,7 @@ describe 'Impact Studio', order: :defined do
       context 'and another user views the user' do
 
         before(:all) do
-          @canvas.masquerade_as(@driver, student_share, @course)
+          @canvas.masquerade_as(student_share, @course)
           @impact_studio.load_page(@driver, @impact_studio_url)
           @impact_studio.search_for_user student_viewer
         end
@@ -521,7 +521,7 @@ describe 'Impact Studio', order: :defined do
     context 'when the user is looking' do
 
       before(:all) do
-        @canvas.masquerade_as(@driver, student_viewer, @course)
+        @canvas.masquerade_as(student_viewer, @course)
         @impact_studio.load_page(@driver, @impact_studio_url)
       end
 
@@ -534,7 +534,7 @@ describe 'Impact Studio', order: :defined do
       context 'and another user views the user' do
 
         before(:all) do
-          @canvas.masquerade_as(@driver, student_share, @course)
+          @canvas.masquerade_as(student_share, @course)
           @impact_studio.load_page(@driver, @impact_studio_url)
           @impact_studio.search_for_user student_viewer
         end

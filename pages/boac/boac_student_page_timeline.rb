@@ -28,7 +28,7 @@ module BOACStudentPageTimeline
   # @param item_type [String]
   # @return [Array<String>]
   def visible_collapsed_item_ids(item_type)
-    els = browser.find_elements(xpath: "//div[contains(@id, '#{item_type}-') and contains(@id, '-is-closed')]")
+    els = div_elements(xpath: "//div[contains(@id, '#{item_type}-') and contains(@id, '-is-closed')]")
     els.map do |el|
       parts = el.attribute('id').split('-')
       (parts[2] == 'is') ? parts[1] : parts[1..2].join('-')
@@ -46,7 +46,7 @@ module BOACStudentPageTimeline
   # Returns the visible sequence of message ids, whether or not collapsed
   # @return [Array<String>]
   def visible_message_ids
-    els = browser.find_elements(xpath: '//tr[contains(@class, "message-row")]')
+    els = row_elements(xpath: '//tr[contains(@class, "message-row")]')
     ids = els.map { |el| el.attribute('id').split('-')[2..-1].join('-') }
     logger.debug "Visible message IDs are #{ids}"
     ids

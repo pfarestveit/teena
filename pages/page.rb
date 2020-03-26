@@ -7,16 +7,15 @@ module Page
 
   # Switches browser focus into the Canvas LTI tool iframe. For Junction tests, pass the Junction base URL to verify that the tool
   # is configured with the right Junction environment before proceeding.
-  # @param driver [Selenium::WebDriver]
   # @param url [String]
-  def switch_to_canvas_iframe(driver, url = nil)
+  def switch_to_canvas_iframe(url = nil)
     hide_canvas_footer_and_popup
-    wait_until(Utils.medium_wait) { driver.find_element(id: 'tool_content') }
+    wait_until(Utils.medium_wait) { iframe_element(id: 'tool_content').exists? }
     if url
       wait_until(1, "'#{url}' is not present") { i_frame_form_element? url }
       logger.warn "Found expected iframe base URL #{url}"
     end
-    driver.switch_to.frame driver.find_element(id: 'tool_content')
+    @driver.switch_to.frame iframe_element(id: 'tool_content').selenium_element
   end
 
   # Whether or not an iframe containing a given URL exists
@@ -57,10 +56,10 @@ module Page
   # @param timeout [Fixnum]
   def wait_for_element(element, timeout)
     element.when_present timeout
-    wait_until(timeout) { element.enabled? }
+    # wait_until(timeout) { element.enabled? }
     element.when_visible timeout
     sleep Utils.event_wait
-    Utils.log_js_errors browser
+    Utils.log_js_errors @driver
   end
 
   # Awaits an element for a given timeout then clicks it using WebDriver click method.
@@ -99,11 +98,13 @@ module Page
     js_click element
   end
 
+  div(:canvas_footer, id: 'fixed_bottom')
+
   # Awaits an element for a short time then clicks it using WebDriver. Intended for DOM updates rather than page loads.
   # @param element [PageObject::Elements::Element]
   def wait_for_update_and_click(element)
     # When clicking Canvas elements, the footer might be in the way. Hide it if it exists.
-    execute_script('arguments[0].style.hidden="hidden";', div_element(id: 'fixed_bottom')) if div_element(id: 'fixed_bottom').exists?
+    execute_script('arguments[0].style.hidden="hidden";', canvas_footer_element) if canvas_footer?
     click_element(element, Utils.short_wait)
   end
 
@@ -163,7 +164,7 @@ module Page
     wait_for_update_and_click_js select_element
     wait_until(Utils.short_wait) do
       (select_element.options.map { |o| o.text.strip }).include?(option) ||
-      (select_element.options.map { |o| o.attribute('value') }).include?(option)
+          (select_element.options.map { |o| o.attribute('value') }).include?(option)
     end
     option_to_select = (select_element.options.find { |o| o.text.strip == option || o.attribute('value') == option })
     option_to_select.click
@@ -181,46 +182,44 @@ module Page
   end
 
   # Opens a new browser tab, switches focus to it, and returns its handle
-  # @param driver [Selenium::WebDriver]
   # @return [String]
-  def open_new_window(driver)
-    driver.execute_script('window.open()')
-    driver.switch_to.window driver.window_handles.last
-    driver.window_handle
+  def open_new_window
+    @driver.execute_script('window.open()')
+    @driver.switch_to.window @driver.window_handles.last
+    @driver.window_handle
   end
 
   # Clicks a link that should open in a new browser window and verifies that the expected page title loads on the new window.
-  # @param driver [Selenium::WebDriver]
   # @param link [PageObject::Elements::Element]
   # @param expected_page_title [String]
   # @return [boolean]
-  def external_link_valid?(driver, link, expected_page_title)
+  def external_link_valid?(link, expected_page_title)
     begin
-      original_window = driver.window_handle
+      original_window = @driver.window_handle
       wait_for_load_and_click link
       sleep 2
-      if driver.window_handles.length > 1
-        driver.switch_to.window driver.window_handles.last
-        wait_until(Utils.short_wait) { driver.find_element(xpath: "//title[contains(.,\"#{expected_page_title}\")]") }
+      if @driver.window_handles.length > 1
+        @driver.switch_to.window @driver.window_handles.last
+        wait_until(Utils.short_wait) { title_element(xpath: "//title[contains(.,\"#{expected_page_title}\")]") }
         logger.debug "Found new window with title '#{expected_page_title}'"
         true
       else
         logger.error 'Link did not open in a new window'
-        logger.debug "Expecting page title #{expected_page_title}, but visible page title is #{driver.title}"
+        logger.debug "Expecting page title #{expected_page_title}, but visible page title is #{title}"
         false
       end
     rescue => e
       Utils.log_error e
       false
     ensure
-      if driver.window_handles.length > 1
+      if @driver.window_handles.length > 1
         # Handle any alert that might appear when opening the new window
-        driver.switch_to.alert.accept rescue Selenium::WebDriver::Error::NoSuchAlertError
-        driver.close
+        @driver.switch_to.alert.accept rescue Selenium::WebDriver::Error::NoSuchAlertError
+        @driver.close
         # Handle any alert that might appear when closing the new window
-        driver.switch_to.alert.accept rescue Selenium::WebDriver::Error::NoSuchAlertError
+        @driver.switch_to.alert.accept rescue Selenium::WebDriver::Error::NoSuchAlertError
       end
-      driver.switch_to.window original_window
+      @driver.switch_to.window original_window
     end
   end
 
@@ -232,7 +231,7 @@ module Page
   end
 
   # Uses JavaScript to scroll an element into view. If the attempt fails, it tries once more.
-  # @param element [PageObject::Elements::Element]
+  # @param element [Element]
   def scroll_to_element(element)
     tries ||= 2
     begin
@@ -243,13 +242,12 @@ module Page
   end
 
   # Hovers over an element with optional offsets, pausing to allow any events triggered by the action to occur.
-  # @param driver [Selenium::WebDriver]
-  # @param element [Selenium::WebDriver::Element]
+  # @param element [Element]
   # @param horizontal_offset [Integer]
   # @param vertical_offset [Integer]
-  def mouseover(driver, element, horizontal_offset = nil, vertical_offset = nil)
+  def mouseover(element, horizontal_offset = nil, vertical_offset = nil)
     scroll_to_element element
-    driver.action.move_to(element, horizontal_offset, vertical_offset).perform
+    @driver.action.move_to(element.selenium_element, horizontal_offset, vertical_offset).perform
     sleep Utils.click_wait
   end
 
@@ -290,44 +288,44 @@ module Page
   def alert(&blk)
     yield
     sleep Utils.click_wait
-    browser.switch_to.alert.accept rescue Selenium::WebDriver::Error::NoSuchAlertError
+    @driver.switch_to.alert.accept rescue Selenium::WebDriver::Error::NoSuchAlertError
   end
 
   # Hits the Delete key
   def hit_delete
-    browser.action.send_keys(:delete).perform
+    @driver.action.send_keys(:delete).perform
   end
 
   # Hits the Backspace key
   def hit_backspace
-    browser.action.send_keys(:backspace).perform
+    @driver.action.send_keys(:backspace).perform
   end
 
   def hit_enter
     sleep Utils.click_wait
-    browser.action.send_keys(:enter).perform
+    @driver.action.send_keys(:enter).perform
   end
 
   # Hits the Escape key twice
   def hit_escape
-    browser.action.send_keys(:escape).perform
+    @driver.action.send_keys(:escape).perform
     sleep Utils.click_wait
-    browser.action.send_keys(:escape).perform
+    @driver.action.send_keys(:escape).perform
   end
 
   # Hits the Tab key
   def hit_tab
-    browser.action.send_keys(:tab).perform
+    @driver.action.send_keys(:tab).perform
   end
 
   def arrow_down
     sleep Utils.click_wait
-    browser.action.send_keys(:down).perform
+    @driver.action.send_keys(:down).perform
   end
 
-  def go_back(driver)
+  def go_back
     sleep Utils.click_wait
-    driver.navigate.back
+    @driver.navigate.back
   end
 
 end

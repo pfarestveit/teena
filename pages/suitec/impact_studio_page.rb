@@ -17,9 +17,9 @@ module Page
       # @param event [Event]
       def load_page(driver, url, event = nil)
         navigate_to url
-        wait_until { title == "#{LtiTools::IMPACT_STUDIO.name}" }
+        wait_until(Utils.medium_wait) { title == "#{LtiTools::IMPACT_STUDIO.name}" }
         hide_canvas_footer_and_popup
-        switch_to_canvas_iframe driver
+        switch_to_canvas_iframe
         activity_event_drops_element.when_visible Utils.medium_wait rescue Selenium::WebDriver::Error::StaleElementReferenceError
         add_event(event, EventType::LAUNCH_IMPACT_STUDIO)
       end
@@ -34,7 +34,7 @@ module Page
       span(:char_limit_msg, xpath: '//span[contains(.,"255 character limit")]')
       button(:update_profile_button, xpath: '//button[text()="Update Profile"]')
       link(:cancel_edit_profile, text: 'Cancel')
-      elements(:section, xpath: '//span[@data-ng-repeat="section in user.canvasCourseSections"]')
+      elements(:section, :span, xpath: '//span[@data-ng-repeat="section in user.canvasCourseSections"]')
       span(:last_activity, xpath: '//div[contains(.,"Last activity:")]/span')
       link(:engagement_index_link, xpath: '//div[contains(@class,"profile-summary")]//a[contains(.,"Engagement Index")]')
       link(:turn_on_sharing_link, text: 'Turn on?')
@@ -292,14 +292,13 @@ module Page
       end
 
       # Returns the activity labels on the user event drops
-      # @param driver [Selenium::WebDriver]
       # @return [Array<String>]
-      def visible_event_drop_count(driver)
+      def visible_event_drop_count
         # Pause a couple times to allow a complete DOM update
         sleep 2
         activity_event_drops_element.when_visible Utils.short_wait
         sleep 1
-        elements = driver.find_elements(xpath: '//h3[contains(.,"Activity Timeline")]/following-sibling::div[@class="col-flex"]//*[local-name()="svg"]/*[name()="g"]/*[name()="text"]')
+        elements = div_elements(xpath: '//h3[contains(.,"Activity Timeline")]/following-sibling::div[@class="col-flex"]//*[local-name()="svg"]/*[name()="g"]/*[name()="text"]')
         labels = elements.map &:text
         event_drop_counts = {
           engage_contrib: activity_type_count(labels, 0),
@@ -322,7 +321,7 @@ module Page
         tries ||= SuiteCUtils.poller_retries
         begin
           load_page(driver, studio_url)
-          wait_until(3) { visible_event_drop_count(driver) == expected_event_count }
+          wait_until(3) { visible_event_drop_count == expected_event_count }
         rescue
           if (tries -= 1).zero?
             fail
@@ -427,19 +426,17 @@ module Page
       end
 
       # Given the activity bar's label, returns the elements containing the various activity types
-      # @param driver [Selenium::WebDriver]
       # @param bar_label [String]
       # @return [Array<Selenium::WebDriver::Element>]
-      def activity_bar_elements(driver, bar_label)
-        driver.find_elements(xpath: "//div[contains(@class,'profile-activity-breakdown-label')][contains(text(),'#{bar_label}')]/following-sibling::div/div[@data-ng-repeat='segment in segments']")
+      def activity_bar_elements(bar_label)
+        div_elements(xpath: "//div[contains(@class,'profile-activity-breakdown-label')][contains(text(),'#{bar_label}')]/following-sibling::div/div[@data-ng-repeat='segment in segments']")
       end
 
       # Given the activity bar's label, returns the text shown on each segment of the bar
-      # @param driver [Selenium::WebDriver]
       # @param bar_label [String]
       # @return [Array<String>]
-      def visible_bar_activity(driver, bar_label)
-        activity_bar_elements(driver, bar_label).map &:text
+      def visible_bar_activity(bar_label)
+        activity_bar_elements(bar_label).map &:text
       end
 
       # Given the activity bar's label and a user's or users' bar activities, verifies that the bar activities match those shown in the UI
@@ -450,14 +447,14 @@ module Page
         if bar_activities.any?
           # Check the visible activity on the bar
           expected_bar_activity_desc = bar_activities.map { |k, _| k.to_s }
-          wait_until(Utils.short_wait, "Expected '#{expected_bar_activity_desc}' but got '#{visible_bar_activity(driver, bar_label)}'") do
-            logger.debug "Waiting for '#{bar_label}' '#{expected_bar_activity_desc}', and they are currently '#{visible_bar_activity(driver, bar_label)}'"
-            expected_bar_activity_desc == visible_bar_activity(driver, bar_label)
+          wait_until(Utils.short_wait, "Expected '#{expected_bar_activity_desc}' but got '#{visible_bar_activity(bar_label)}'") do
+            logger.debug "Waiting for '#{bar_label}' '#{expected_bar_activity_desc}', and they are currently '#{visible_bar_activity(bar_label)}'"
+            expected_bar_activity_desc == visible_bar_activity(bar_label)
           end
           # Check the popover for each activity segment
           bar_activities.each_pair do |k, v|
-            segment = activity_bar_elements(driver, bar_label).find { |el| el.text.include? k.to_s }
-            mouseover(driver, segment)
+            segment = activity_bar_elements(bar_label).find { |el| el.text.include? k.to_s }
+            mouseover(segment)
             (activity_count = span_element(xpath: '//div[contains(@class,"profile-activity-breakdown-popover-details")]/span[contains(@data-ng-bind-html, "segment.activityDescription")]/strong')).when_visible 2
             wait_until(2, "Expected '#{k} #{v}' but got '#{activity_count.text}'") do
               logger.debug "Waiting for '#{bar_label}' '#{k}' '#{v}', and it is currently '#{k}' '#{activity_count.text}'"
@@ -566,7 +563,7 @@ module Page
       # @param event [Event]
       def add_site(driver, asset, event = nil)
         wait_for_update_and_click add_site_link_element
-        switch_to_canvas_iframe driver
+        switch_to_canvas_iframe
         add_event(event, EventType::LAUNCH_ASSET_LIBRARY)
         add_event(event, EventType::LIST_ASSETS)
         enter_and_submit_url asset
@@ -581,7 +578,7 @@ module Page
       # @param event [Event]
       def add_file(driver, asset, event = nil)
         wait_for_update_and_click upload_link_element
-        switch_to_canvas_iframe driver
+        switch_to_canvas_iframe
         add_event(event, EventType::LAUNCH_ASSET_LIBRARY)
         add_event(event, EventType::LIST_ASSETS)
         enter_and_upload_file asset
@@ -605,7 +602,7 @@ module Page
           add_event(event, EventType::LAUNCH_ASSET_LIBRARY)
           add_event(event, EventType::SEARCH_ASSETS_DEEP_LINK)
           add_event(event, EventType::LIST_ASSETS)
-          switch_to_canvas_iframe driver
+          switch_to_canvas_iframe
           begin
             return yield
           ensure
@@ -632,7 +629,7 @@ module Page
       def click_user_asset_link(driver, asset, event = nil)
         logger.info "Clicking thumbnail for Asset ID #{asset.id}"
         wait_for_update_and_click link_element(xpath: "//div[@id='user-assets']//ul//a[contains(@href,'_id=#{asset.id}&')]")
-        switch_to_canvas_iframe driver
+        switch_to_canvas_iframe
         add_event(event, EventType::DEEP_LINK_ASSET, asset.id)
         add_event(event, EventType::LAUNCH_ASSET_LIBRARY)
         add_event(event, EventType::LIST_ASSETS)

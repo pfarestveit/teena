@@ -85,13 +85,13 @@ describe 'BOAC' do
                           student_expanded = @class_matrix_page.bubble_expanded? student
                           it("shows the student's bubble expanded in #{class_test_case}") { expect(student_expanded).to be true }
 
-                          all_students_present = @class_matrix_page.verify_all_students_present(@driver, expected_sids.length)
+                          all_students_present = @class_matrix_page.verify_all_students_present expected_sids.length
                           it("shows all the expected matrix view students in #{class_test_case}") { expect(all_students_present).to be true }
 
                           # Visit student. Clicking a matrix bubble will throw an error if another bubble obscures it, so only proceed if the bubble is clickable.
-                          student_page_testable = if @class_matrix_page.matrix_bubbles(@driver).any?
+                          student_page_testable = if @class_matrix_page.matrix_bubbles.any?
                                                     begin
-                                                      @class_matrix_page.click_last_student_bubble @driver
+                                                      @class_matrix_page.click_last_student_bubble
                                                       bubbles_tested << class_test_case
                                                       true
                                                     rescue => e

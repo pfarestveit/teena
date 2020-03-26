@@ -61,7 +61,7 @@ describe 'Blue form fill out tasks' do
                 end
               end
 
-              question_count_right = @blue.verify_question_count(@driver, questions)
+              question_count_right = @blue.verify_question_count questions
               it("show the right question count for #{form}") { expect(question_count_right).to be true }
 
             end

@@ -20,16 +20,16 @@ describe 'Canvas assignment events' do
     @course = Course.new({title: "LRS Assignments Test #{test_id}", site_id: course_id})
     @assignment = Assignment.new({title: "Assignment #{Utils.get_test_id}"})
     @canvas.log_in(@cal_net, Utils.super_admin_username, Utils.super_admin_password)
-    @canvas.create_generic_course_site(@driver, Utils.canvas_qa_sub_account, @course, [@teacher, @student], test_id)
+    @canvas.create_generic_course_site(Utils.canvas_qa_sub_account, @course, [@teacher, @student], test_id)
     # Teacher creates and then edits an assignment
     event.actor = @teacher
-    @canvas.masquerade_as(@driver, @teacher, @course)
+    @canvas.masquerade_as(@teacher, @course)
     @canvas.create_assignment(@course, @assignment, event)
     @canvas.edit_assignment_title(@assignment, event)
 
     # Student submits and then resubmits an assignment
     event.actor = @student
-    @canvas.masquerade_as(@driver, @student, @course)
+    @canvas.masquerade_as(@student, @course)
     initial_submission = Asset.new(@student.assets[0])
     @canvas.submit_assignment(@assignment, @student, initial_submission, event)
     # Pause to create enough distance between submission and resubmission

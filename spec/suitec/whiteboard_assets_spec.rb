@@ -27,9 +27,9 @@ describe 'Whiteboard Add Asset', order: :defined do
 
     # Create test course
     @canvas.log_in(@cal_net, (event.actor = @admin).username, Utils.super_admin_password)
-    @canvas.create_generic_course_site(@driver, Utils.canvas_qa_sub_account, @course, [@student_1, @student_2, @student_3], test_id,
+    @canvas.create_generic_course_site(Utils.canvas_qa_sub_account, @course, [@student_1, @student_2, @student_3], test_id,
                                        [LtiTools::ASSET_LIBRARY, LtiTools::ENGAGEMENT_INDEX, LtiTools::WHITEBOARDS])
-    @canvas.load_course_site(@driver, @course)
+    @canvas.load_course_site @course
     @asset_library_url = @canvas.click_tool_link(@driver, LtiTools::ASSET_LIBRARY, event)
     @engagement_index_url = @canvas.click_tool_link(@driver, LtiTools::ENGAGEMENT_INDEX, event)
     @whiteboards_url = @canvas.click_tool_link(@driver, LtiTools::WHITEBOARDS, event)
@@ -43,10 +43,10 @@ describe 'Whiteboard Add Asset', order: :defined do
 
     # Student 1 create whiteboard, invite Student 2
     @whiteboard = Whiteboard.new({owner: @student_1, title: "Whiteboard #{test_id}", collaborators: [@student_2]})
-    @canvas.masquerade_as(@driver, (event.actor = @student_1), @course)
+    @canvas.masquerade_as((event.actor = @student_1), @course)
     @whiteboards.load_page(@driver, @whiteboards_url, event)
     @whiteboards.create_whiteboard(@whiteboard, event)
-    @canvas.stop_masquerading @driver
+    @canvas.stop_masquerading
   end
 
   after(:all) { @driver.quit }
@@ -58,7 +58,7 @@ describe 'Whiteboard Add Asset', order: :defined do
       @student_1_asset_file = Asset.new(@student_1.assets.find { |asset| asset['type'] == 'File' })
       @student_1_asset_file.title = "#{@student_1.full_name} file #{test_id}"
       @student_1_asset_file.category = @category
-      @canvas.masquerade_as(@driver, (event.actor = @student_1), @course)
+      @canvas.masquerade_as((event.actor = @student_1), @course)
       @asset_library.load_page(@driver, @asset_library_url, event)
       @asset_library.upload_file_to_library(@student_1_asset_file, event)
 
@@ -66,7 +66,7 @@ describe 'Whiteboard Add Asset', order: :defined do
       @student_2_asset_url = Asset.new(@student_2.assets.find { |asset| asset['type'] == 'Link' })
       @student_2_asset_url.title = "#{@student_2.full_name} link #{test_id}"
       @student_2_asset_url.category = @category
-      @canvas.masquerade_as(@driver, (event.actor = @student_2), @course)
+      @canvas.masquerade_as((event.actor = @student_2), @course)
       @asset_library.load_page(@driver, @asset_library_url, event)
       @asset_library.add_site(@student_2_asset_url, event)
 
@@ -74,18 +74,18 @@ describe 'Whiteboard Add Asset', order: :defined do
       @student_3_asset_file = Asset.new(@student_3.assets.find { |asset| asset['type'] == 'File' })
       @student_3_asset_file.title = "#{@student_3.full_name} file #{test_id}"
       @student_3_asset_file.category = @category
-      @canvas.masquerade_as(@driver, (event.actor = @student_3), @course)
+      @canvas.masquerade_as((event.actor = @student_3), @course)
       @asset_library.load_page(@driver, @asset_library_url, event)
       @asset_library.upload_file_to_library(@student_3_asset_file, event)
 
       # Get initial scores
-      @canvas.stop_masquerading @driver
+      @canvas.stop_masquerading
       event.actor = @admin
       @initial_score_stu_1 = @engagement_index.user_score(@driver, @engagement_index_url, @student_1, event)
       @initial_score_stu_2 = @engagement_index.user_score(@driver, @engagement_index_url, @student_2, event)
       @initial_score_stu_3 = @engagement_index.user_score(@driver, @engagement_index_url, @student_3, event)
 
-      @canvas.masquerade_as(@driver, (event.actor = @student_1), @course)
+      @canvas.masquerade_as((event.actor = @student_1), @course)
       @whiteboards.load_page(@driver, @whiteboards_url, event)
       @whiteboards.open_whiteboard(@driver, @whiteboard, event)
     end
@@ -122,7 +122,7 @@ describe 'Whiteboard Add Asset', order: :defined do
 
     it 'earns "Add an asset to a whiteboard" but not "Add a new asset to the Asset Library" points on the Engagement Index for each asset used' do
       @whiteboards.close_whiteboard @driver
-      @canvas.stop_masquerading @driver
+      @canvas.stop_masquerading
       event.actor = @admin
       expect(@engagement_index.user_score(@driver, @engagement_index_url, @student_1, event)).to eql("#{@initial_score_stu_1.to_i + 4}")
     end
@@ -151,7 +151,7 @@ describe 'Whiteboard Add Asset', order: :defined do
       @student_1_asset_long_title = Asset.new((@student_1.assets.select { |asset| asset['type'] == 'File' })[0])
       @student_1_asset_visible = Asset.new((@student_1.assets.select { |asset| asset['type'] == 'File' })[1])
       @student_1_asset_hidden = Asset.new((@student_1.assets.select { |asset| asset['type'] == 'File' })[2])
-      @canvas.masquerade_as(@driver, (event.actor = @student_1), @course)
+      @canvas.masquerade_as((event.actor = @student_1), @course)
     end
 
     before(:each) { @whiteboards.close_whiteboard @driver }
@@ -219,18 +219,18 @@ describe 'Whiteboard Add Asset', order: :defined do
     end
 
     it 'allows a whiteboard collaborator to view a hidden asset deep link' do
-      @canvas.masquerade_as(@driver, (event.actor = @student_2), @course)
+      @canvas.masquerade_as((event.actor = @student_2), @course)
       @asset_library.load_asset_detail(@driver, @asset_library_url, @student_1_asset_hidden, event)
     end
 
     it 'does not allow a user who is not the owner or whiteboard collaborator to view a hidden asset deep link' do
-      @canvas.masquerade_as(@driver, (event.actor = @student_3), @course)
+      @canvas.masquerade_as((event.actor = @student_3), @course)
       visible_to_other = @asset_library.verify_block { @asset_library.load_asset_detail(@driver, @asset_library_url, @student_1_asset_hidden, event) }
       expect(visible_to_other).to be false
     end
 
     it 'earns "Add a new asset to the Asset Library" points on the Engagement Index' do
-      @canvas.stop_masquerading @driver
+      @canvas.stop_masquerading
       event.actor = @admin
       expect(@engagement_index.user_score(@driver, @engagement_index_url, @student_1, event)).to eql("#{@initial_score.to_i + (Activity::ADD_ASSET_TO_LIBRARY.points * 2)}")
     end
@@ -247,7 +247,7 @@ describe 'Whiteboard Add Asset', order: :defined do
 
     before(:all) do
       @initial_score = @engagement_index.user_score(@driver, @engagement_index_url, @student_2, event)
-      @canvas.masquerade_as(@driver, (event.actor = @student_2), @course)
+      @canvas.masquerade_as((event.actor = @student_2), @course)
     end
 
     before(:each) { @whiteboards.close_whiteboard @driver }
@@ -315,7 +315,7 @@ describe 'Whiteboard Add Asset', order: :defined do
     end
 
     it 'earns "Add a new asset to the Asset Library" points on the Engagement Index' do
-      @canvas.stop_masquerading @driver
+      @canvas.stop_masquerading
       event.actor = @admin
       expect(@engagement_index.user_score(@driver, @engagement_index_url, @student_2, event)).to eql("#{@initial_score.to_i + (Activity::ADD_ASSET_TO_LIBRARY.points * 2)}")
     end
@@ -331,17 +331,17 @@ describe 'Whiteboard Add Asset', order: :defined do
   context 'when the asset is hidden from the asset library' do
 
     before(:all) do
-      @canvas.masquerade_as(@driver, (event.actor = @student_1), @course)
+      @canvas.masquerade_as((event.actor = @student_1), @course)
       @whiteboards.load_page(@driver, @whiteboards_url, event)
       @whiteboards.open_whiteboard(@driver, @whiteboard, event)
       @whiteboards.add_collaborator(@whiteboard, @student_3, event)
       @whiteboards.close_whiteboard @driver
-      @canvas.stop_masquerading @driver
+      @canvas.stop_masquerading
 
       @student_3_asset_hidden = Asset.new(@student_3.assets.find { |asset| asset['type'] == 'File' })
       @student_3_asset_hidden.title = "#{test_id} Student 3 file not added to library"
 
-      @canvas.masquerade_as(@driver, (event.actor = @student_3), @course)
+      @canvas.masquerade_as((event.actor = @student_3), @course)
       @whiteboards.load_page(@driver, @whiteboards_url, event)
       @whiteboards.open_whiteboard(@driver, @whiteboard, event)
       @whiteboards.add_asset_exclude_from_library(@student_3_asset_hidden, event)

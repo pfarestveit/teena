@@ -49,7 +49,7 @@ describe 'BOAC' do
         # COHORT PAGE SIS DATA
 
         BOACUtils.shuffle_max_users ? @boac_cohort_page.load_page(test.default_cohort) : @boac_cohort_page.load_cohort(test.default_cohort)
-        cohort_page_sis_data = @boac_cohort_page.visible_sis_data(@driver, student)
+        cohort_page_sis_data = @boac_cohort_page.visible_sis_data student
 
         if api_sis_profile_data[:academic_career_status] == 'Completed'
           it "shows no level for UID #{student.uid} on the #{test.default_cohort.name} page" do

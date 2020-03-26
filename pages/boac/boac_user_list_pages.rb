@@ -8,12 +8,11 @@ module BOACUserListPages
   include BOACPages
 
   # Returns all the SIDs visible in a list. If a cohort is given, then returns the SIDs shown under that cohort.
-  # @param driver [Selenium::WebDriver]
   # @param cohort [Cohort]
-  def all_row_sids(driver, cohort = nil)
+  def all_row_sids(cohort = nil)
     # TODO - account for curated cohorts too
     xpath = filtered_cohort_xpath cohort if cohort && cohort.instance_of?(FilteredCohort)
-    driver.find_elements(xpath: "#{xpath}//span[text()=\"S I D\"]/following-sibling::span").map &:text
+    span_elements(xpath: "#{xpath}//span[text()=\"S I D\"]/following-sibling::span").map &:text
   end
 
   # Returns the XPath to a filtered cohort's div in the main content area on the homepage
@@ -25,15 +24,14 @@ module BOACUserListPages
 
   # Returns the data visible for a user on the search results page or in a filtered or curated cohort on the homepage. If an XPath is included,
   # then returns rows under the associated filtered cohort or curated group.
-  # @param driver [Selenium::WebDriver]
   # @param sid [String]
   # @param cohort_xpath [String]
   # @return [Hash]
-  def user_row_data(driver, sid, cohort_xpath = nil)
+  def user_row_data(sid, cohort_xpath = nil)
     row_xpath = "#{cohort_xpath}//tr[contains(.,\"#{sid}\")]"
     name_el = link_element(xpath: "#{row_xpath}//span[text()=\"Student name\"]/following-sibling::a")
     sid_el = span_element(xpath: "#{row_xpath}//span[text()=\"S I D\"]/following-sibling::span")
-    major_els = driver.find_elements(xpath: "#{row_xpath}//span[text()=\"Major\"]/following-sibling::div")
+    major_els = div_elements(xpath: "#{row_xpath}//span[text()=\"Major\"]/following-sibling::div")
     term_units_el = div_element(xpath: "#{row_xpath}//span[text()=\"Term units\"]/following-sibling::div")
     cumul_units_el = div_element(xpath: "#{row_xpath}//span[text()=\"Units completed\"]/following-sibling::div")
     no_cumul_units_el = span_element(xpath: "#{row_xpath}//span[text()=\"Units completed\"]/following-sibling::div/span")

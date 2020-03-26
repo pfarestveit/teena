@@ -35,11 +35,11 @@ describe 'bCourses Roster Photos' do
     @splash_page.load_page
     @splash_page.basic_auth(teacher_1.uid, @cal_net)
     @canvas.log_in(@cal_net, Utils.super_admin_username, Utils.super_admin_password)
-    @canvas.masquerade_as(@driver, teacher_1)
+    @canvas.masquerade_as teacher_1
 
     # Create test course site
     @create_course_site_page.provision_course_site(@driver, course, teacher_1, sections_for_site)
-    @canvas.publish_course_site(@driver, course)
+    @canvas.publish_course_site course
 
     # Get enrollment totals on site
     @roster_api.get_feed(@driver, course)
@@ -66,7 +66,7 @@ describe 'bCourses Roster Photos' do
   context 'when a Teacher' do
 
     before(:all) do
-      @canvas.load_course_site(@driver, course)
+      @canvas.load_course_site course
       @roster_photos_page.click_roster_photos_link @driver
     end
 
@@ -139,16 +139,16 @@ describe 'bCourses Roster Photos' do
     [lead_ta, ta, designer, reader, student, waitlist, observer].each do |user|
 
       it "allows a course #{user.role} with UID #{user.uid} to access the tool on #{course.code} course site ID #{course.site_id} if permitted to do so" do
-        @canvas.masquerade_as(@driver, user, course)
+        @canvas.masquerade_as user, course
         @canvas.navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/external_tools/#{JunctionUtils.canvas_rosters_tool}"
 
         if ['Lead TA', 'TA'].include? user.role
-          @roster_photos_page.switch_to_canvas_iframe @driver
+          @roster_photos_page.switch_to_canvas_iframe
           @total_user_count.zero? ?
               @roster_photos_page.no_students_msg_element.when_visible(Utils.short_wait) :
               @roster_photos_page.wait_until(Utils.short_wait) { @roster_photos_page.roster_sid_elements.any? }
         elsif ['Designer', 'Reader', 'Observer', 'Student', 'Waitlist Student'].include? user.role
-          @roster_photos_page.switch_to_canvas_iframe @driver
+          @roster_photos_page.switch_to_canvas_iframe
           @roster_photos_page.no_access_msg_element.when_visible Utils.short_wait
         else
           logger.error "Unknown user role '#{user.role}'"

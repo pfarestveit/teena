@@ -175,7 +175,7 @@ class BOACStudentPage
   button(:show_hide_alerts_button, id: 'timeline-tab-alert-previous-messages')
   elements(:alert, :row, xpath: '//tr[contains(@id, "permalink-alert-")]')
   elements(:alert_text, :span, xpath: '//div[contains(@id,"timeline-tab-alert-message")]/span[1]')
-  elements(:alert_date, xpath: '//tr[contains(@id, "permalink-alert-")]//div[contains(@id, "collapsed-alert-")][contains(@id, "-created-at")]')
+  elements(:alert_date, :row, xpath: '//tr[contains(@id, "permalink-alert-")]//div[contains(@id, "collapsed-alert-")][contains(@id, "-created-at")]')
 
   # Returns an array of visible alert messages
   # @return [Array<String>]
@@ -194,7 +194,7 @@ class BOACStudentPage
 
   span(:withdrawal_msg, class: 'red-flag-small')
   button(:view_more_button, :xpath => '//button[contains(.,"Show Previous Semesters")]')
-  elements(:class_page_link, :xpath => '//a[contains(@href, "/course/")]')
+  elements(:class_page_link, :link, :xpath => '//a[contains(@href, "/course/")]')
 
   # Clicks the button to expand previous semester data
   def click_view_previous_semesters
@@ -356,12 +356,11 @@ class BOACStudentPage
   end
 
   # Returns the element that triggers the analytics tooltip for a particular set of analytics data for a given site, for example 'page views'
-  # @param driver [Selenium::WebDriver]
   # @param site_xpath [String]
   # @param label [String]
   # @return [Selenium::WebDriver::Element]
-  def analytics_trigger_element(driver, site_xpath, label)
-    driver.find_element(:xpath => "#{site_analytics_score_xpath(site_xpath, label)}#{boxplot_trigger_xpath}")
+  def analytics_trigger_element(site_xpath, label)
+    div_element(:xpath => "#{site_analytics_score_xpath(site_xpath, label)}#{boxplot_trigger_xpath}")
   end
 
   # Checks the existence of a 'no data' message for a particular set of analytics for a given site, for example 'page views'
@@ -417,12 +416,12 @@ class BOACStudentPage
   def visible_analytics(driver, site_xpath, label, api_analytics)
     # If a boxplot should be present, hover over it to reveal the tooltip detail
     if api_analytics[:graphable]
-      wait_until(Utils.short_wait) { analytics_trigger_element(driver, site_xpath, label) }
-      mouseover(driver, analytics_trigger_element(driver, site_xpath, label))
+      wait_until(Utils.short_wait) { analytics_trigger_element(site_xpath, label) }
+      mouseover(analytics_trigger_element(site_xpath, label))
       logger.debug "Looking for tooltip header at '#{site_analytics_score_xpath(site_xpath, label)}//div[@class='student-chart-tooltip-header']'"
       div_element(:xpath => "#{site_analytics_score_xpath(site_xpath, label)}//div[@class='student-chart-tooltip-header']").when_present Utils.short_wait
     end
-    tool_tip_detail_elements = driver.find_elements(:xpath => "#{site_analytics_score_xpath(site_xpath, label)}//div[@class='student-chart-tooltip-value']")
+    tool_tip_detail_elements = div_elements(:xpath => "#{site_analytics_score_xpath(site_xpath, label)}//div[@class='student-chart-tooltip-value']")
     tool_tip_detail = []
     tool_tip_detail = tool_tip_detail_elements.map &:text if tool_tip_detail_elements.any?
     {

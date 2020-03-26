@@ -18,7 +18,7 @@ module Page
       logger.info "Deleting '#{title}'"
       navigate_to url
       wait_for_load_and_click settings_link_element
-      confirm(true) { wait_for_update_and_click delete_link_element }
+      alert { wait_for_update_and_click delete_link_element }
       list_item_element(xpath: "//li[contains(.,'#{title} deleted successfully')]").when_present Utils.short_wait
     end
 
@@ -83,13 +83,12 @@ module Page
     button(:save_discuss_button, xpath: '//button[text()="Save"][@type="submit"]')
 
     # Creates a discussion on a course site
-    # @param driver [Selenium::WebDriver]
     # @param course [Course]
     # @param discussion [Discussion]
     # @param event [Event]
-    def create_course_discussion(driver, course, discussion, event = nil)
+    def create_course_discussion(course, discussion, event = nil)
       logger.info "Creating discussion topic named '#{discussion.title}'"
-      load_course_site(driver, course)
+      load_course_site course
       navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/discussion_topics"
       enter_and_save_discussion(discussion, event)
     end
@@ -137,7 +136,7 @@ module Page
         wait_for_update_and_click_js primary_post_reply_button_element
       else
         logger.info "Replying to a discussion entry at index #{index} with body '#{reply_body}'"
-        wait_until { secondary_reply_link_elements.any? }
+        wait_until(Utils.short_wait) { secondary_reply_link_elements.any? }
         wait_for_load_and_click_js secondary_reply_link_elements[index]
         wait_for_update_and_click_js secondary_html_editor_link_elements[index]
         wait_until(Utils.short_wait) { secondary_reply_input_elements.any? }

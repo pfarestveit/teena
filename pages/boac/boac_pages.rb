@@ -239,7 +239,7 @@ module BOACPages
   text_area(:note_date_from, id: 'search-options-note-filters-last-updated-from')
   text_area(:note_date_to, id: 'search-options-note-filters-last-updated-to')
   text_area(:search_input, id: 'search-students-input')
-  elements(:search_history_item, xpath: '//a[contains(@id, "search-students-suggestion-")]')
+  elements(:search_history_item, :link, xpath: '//a[contains(@id, "search-students-suggestion-")]')
   element(:fill_in_field_msg, xpath: '//*[contains(text(), "Please fill out this field.")]')
   button(:search_button, xpath: '//button[contains(text(), "Search")]')
 

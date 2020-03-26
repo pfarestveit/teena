@@ -161,7 +161,7 @@ describe 'BOAC' do
                             student_data = all_student_data.find { |d| d[:sid] == classmate.sis_id }
 
                             # Check the student's SIS and ASC data
-                            visible_student_sis_data = @class_page.visible_student_sis_data(@driver, classmate)
+                            visible_student_sis_data = @class_page.visible_student_sis_data classmate
 
                             if student_data[:academic_career_status] == 'Inactive'
                               it "shows #{student_test_case} as inactive" do

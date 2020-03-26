@@ -17,9 +17,9 @@ module Page
       # @param event [Event]
       def load_page(driver, url, event = nil)
         navigate_to url
-        wait_until { title == "#{LtiTools::ASSET_LIBRARY.name}" }
+        wait_until(Utils.medium_wait) { title == "#{LtiTools::ASSET_LIBRARY.name}" }
         hide_canvas_footer_and_popup
-        switch_to_canvas_iframe driver
+        switch_to_canvas_iframe
         add_event(event, EventType::NAVIGATE)
         add_event(event, EventType::VIEW)
         add_event(event, EventType::LAUNCH_ASSET_LIBRARY)
@@ -60,7 +60,7 @@ module Page
         manage_assets_heading_element.when_visible Utils.short_wait
       end
 
-      elements(:list_view_asset, :list_item, class: 'assetlibrary-list-item')
+      elements(:list_view_asset, :list_item, xpath: '//li[contains(@data-ng-repeat,"asset")]')
       elements(:list_view_asset_title, :span, xpath: '//li[contains(@data-ng-repeat,"asset")]//div[@class="col-list-item-metadata"]/div[1]')
       elements(:list_view_asset_owner_name, :element, xpath: '//li[contains(@data-ng-repeat,"asset")]//small')
       elements(:list_view_asset_like_button, :button, xpath: '//button[@data-ng-click="like(asset)"]')
@@ -68,7 +68,7 @@ module Page
       # Returns an array of list view asset titles
       # @return [Array<String>]
       def list_view_asset_titles
-        wait_until { list_view_asset_title_elements.any? }
+        wait_until(Utils.short_wait) { list_view_asset_title_elements.any? }
         list_view_asset_title_elements.map &:text
       end
 
@@ -98,7 +98,7 @@ module Page
       # @param index [Integer]
       # @return [String]
       def list_view_asset_view_count(index)
-        list_view_asset_elements[index].span_element(xpath: '//span[@data-ng-bind="asset.views | number"]').text
+        span_element(xpath: "#{list_view_asset_elements[index].locator[:xpath]}[#{index + 1}]//span[@data-ng-bind='asset.views | number']").text
       end
 
       # Clicks the list view asset link containing a given asset ID
@@ -120,7 +120,7 @@ module Page
       # @param asset [Asset]
       # @return [PageObject::Elements::Button]
       def list_view_pin_element(asset)
-        button_element(id: "iconbar-pin-#{asset.id}")
+        button_element(xpath: "//button[@id='iconbar-pin-#{asset.id}']")
       end
 
       # Pins a list view asset
@@ -143,7 +143,7 @@ module Page
       # @param index [Integer]
       # @return [String]
       def asset_comment_count(index)
-        list_view_asset_elements[index].span_element(xpath: '//span[@data-ng-bind="asset.comment_count | number"]').text
+        span_element(xpath: "#{list_view_asset_elements[index].locator[:xpath]}//span[@data-ng-bind='asset.comment_count | number']").text
       end
 
     end

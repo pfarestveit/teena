@@ -97,8 +97,8 @@ module BOACStudentPageAdvisingNote
   # @param note [Note]
   # @return [Array<Selenium::WebDriver::Element>]
   def note_attachment_els(note)
-    spans = browser.find_elements(xpath: "//li[contains(@id, 'note-#{note.id}-attachment')]//span[contains(@id, '-attachment-')]")
-    links = browser.find_elements(xpath: "//li[contains(@id, 'note-#{note.id}-attachment')]//a[contains(@id, '-attachment-')]")
+    spans = span_elements(xpath: "//li[contains(@id, 'note-#{note.id}-attachment')]//span[contains(@id, '-attachment-')]")
+    links = link_elements(xpath: "//li[contains(@id, 'note-#{note.id}-attachment')]//a[contains(@id, '-attachment-')]")
     spans + links
   end
 

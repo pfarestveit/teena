@@ -25,14 +25,14 @@ describe 'Asset', order: :defined do
     @engagement_index = Page::SuiteCPages::EngagementIndexPage.new @driver
 
     @canvas.log_in(@cal_net, (event.actor = admin).username, Utils.super_admin_password)
-    @canvas.create_generic_course_site(@driver, Utils.canvas_qa_sub_account, @course, [@asset_uploader, @asset_admirer],
+    @canvas.create_generic_course_site(Utils.canvas_qa_sub_account, @course, [@asset_uploader, @asset_admirer],
                                        test_id, [LtiTools::ASSET_LIBRARY, LtiTools::ENGAGEMENT_INDEX])
 
     @asset_library_url = @canvas.click_tool_link(@driver, LtiTools::ASSET_LIBRARY, event)
     @engagement_index_url = @canvas.click_tool_link(@driver, LtiTools::ENGAGEMENT_INDEX, event)
 
     # Upload a new asset for the test
-    @canvas.masquerade_as(@driver, (event.actor = @asset_uploader), @course)
+    @canvas.masquerade_as((event.actor = @asset_uploader), @course)
     @asset_library.load_page(@driver, @asset_library_url, event)
     @asset_library.add_site(@asset, event)
 
@@ -64,7 +64,7 @@ describe 'Asset', order: :defined do
     context 'when the user is not the asset creator' do
 
       before(:all) do
-        @canvas.masquerade_as(@driver, (event.actor = @asset_admirer), @course)
+        @canvas.masquerade_as((event.actor = @asset_admirer), @course)
         @asset_library.load_list_view_asset(@driver, @asset_library_url, @asset, event)
       end
 
@@ -84,9 +84,9 @@ describe 'Asset', order: :defined do
       end
 
       it 'increase the asset\'s total likes' do
-        @asset_library.wait_until { @asset_library.detail_view_asset_likes_count == '0' }
+        @asset_library.wait_until(Utils.short_wait) { @asset_library.detail_view_asset_likes_count == '0' }
         @asset_library.toggle_detail_view_item_like(@asset, event)
-        @asset_library.wait_until { @asset_library.detail_view_asset_likes_count == '1' }
+        @asset_library.wait_until(Utils.short_wait) { @asset_library.detail_view_asset_likes_count == '1' }
       end
 
       it 'earn Engagement Index "like" points for the liker' do
@@ -119,7 +119,7 @@ describe 'Asset', order: :defined do
 
       it 'decrease the asset\'s total likes' do
         @asset_library.toggle_detail_view_item_like(@asset, event)
-        @asset_library.wait_until { @asset_library.detail_view_asset_likes_count == '0' }
+        @asset_library.wait_until(Utils.short_wait) { @asset_library.detail_view_asset_likes_count == '0' }
       end
 
       it 'remove Engagement Index "like" points from the un-liker' do

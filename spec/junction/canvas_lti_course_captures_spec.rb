@@ -28,7 +28,7 @@ describe 'bCourses Course Captures tool' do
           course_sites.each do |course_site|
             course = Course.new({site_id: "#{course_site['site_id']}"})
 
-            @canvas.masquerade_as(@driver, user, course)
+            @canvas.masquerade_as(user, course)
             @course_captures_page.load_embedded_tool(@driver, course)
 
             expected_sections = course_site['sections']
@@ -51,7 +51,7 @@ describe 'bCourses Course Captures tool' do
                   expected_section_code = section['code']
                   expected_video_count = section['video_count']
                   expected_video_id = section['video_id']
-                  visible_video_count = @course_captures_page.you_tube_recording_elements(@driver, index).length
+                  visible_video_count = @course_captures_page.you_tube_recording_elements(index).length
                   visible_section_code = @course_captures_page.section_course_code index
 
                   if expected_sections.length > 1
@@ -64,10 +64,10 @@ describe 'bCourses Course Captures tool' do
 
                   # Verify that the alert message, help page link, and the sample YouTube video ID are present
                   has_you_tube_alert = @course_captures_page.you_tube_alert_elements[index]
-                  has_help_page_link = @course_captures_page.external_link_valid?(@driver, @course_captures_page.help_page_link(index), 'IT - Why are the Course Capture videos showing as private or unavailable?')
-                  @course_captures_page.switch_to_canvas_iframe @driver
-                  has_you_tube_link = @course_captures_page.external_link_valid?(@driver, @course_captures_page.you_tube_link(expected_video_id), 'YouTube')
-                  @course_captures_page.switch_to_canvas_iframe @driver
+                  has_help_page_link = @course_captures_page.external_link_valid?(@course_captures_page.help_page_link(index), 'IT - Why are the Course Capture videos showing as private or unavailable?')
+                  @course_captures_page.switch_to_canvas_iframe
+                  has_you_tube_link = @course_captures_page.external_link_valid?(@course_captures_page.you_tube_link(expected_video_id), 'YouTube')
+                  @course_captures_page.switch_to_canvas_iframe
 
                   it("shows UID #{user.uid} an explanation for viewing the recordings at You Tube on site ID #{course.site_id}") { expect(has_you_tube_alert).to be_truthy }
                   it("shows UID #{user.uid} a 'help page' link on site ID #{course.site_id}") { expect(has_help_page_link).to be true }
@@ -76,8 +76,8 @@ describe 'bCourses Course Captures tool' do
                 end
 
                 # Verify that the 'report a problem' link works
-                has_report_problem_link = @course_captures_page.external_link_valid?(@driver, @course_captures_page.report_problem_element, 'General Support Request or Give Feedback | Educational Technology Services')
-                @course_captures_page.switch_to_canvas_iframe @driver
+                has_report_problem_link = @course_captures_page.external_link_valid?(@course_captures_page.report_problem_element, 'General Support Request or Give Feedback | Educational Technology Services')
+                @course_captures_page.switch_to_canvas_iframe
 
                 it("offers UID #{user.uid} a 'Report a Problem' link on on site ID #{course.site_id}") { expect(has_report_problem_link).to be true }
 

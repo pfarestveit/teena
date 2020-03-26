@@ -22,7 +22,7 @@ module Page
     # @param path [String]
     def load_tool_in_canvas(driver, path)
       navigate_to "#{Utils.canvas_base_url}#{path}"
-      switch_to_canvas_iframe(driver, JunctionUtils.junction_base_url)
+      switch_to_canvas_iframe JunctionUtils.junction_base_url
     end
 
     # Logs the user out if the user is logged in

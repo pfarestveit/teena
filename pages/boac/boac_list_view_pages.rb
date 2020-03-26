@@ -55,8 +55,8 @@ module BOACListViewPages
   # Returns the visible sports shown for a student
   # @param student [BOACUser]
   # @return [Array<String>]
-  def student_sports(driver, student)
-    els = driver.find_elements(xpath: "//div[@id='student-#{student.uid}']//span[contains(@id,\"student-team\")]")
+  def student_sports(student)
+    els = span_elements(xpath: "//div[@id='student-#{student.uid}']//span[contains(@id,\"student-team\")]")
     els && els.map(&:text)
   end
 
