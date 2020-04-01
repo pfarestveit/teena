@@ -112,7 +112,7 @@ describe 'bCourses course site creation' do
             expected_section_ids = site[:sections_for_site].map { |section| section.id } :
             expected_section_ids = site[:sections].map { |section| section.id }
         visible_section_ids = @create_course_site_page.course_section_ids(site[:course])
-        it ("offers all the expected sections for #{site[:course].term} #{site[:course].code}") { expect(visible_section_ids.sort!).to eql(expected_section_ids.sort!) }
+        it("offers all the expected sections for #{site[:course].term} #{site[:course].code}") { expect(visible_section_ids.sort!).to eql(expected_section_ids.sort!) }
 
         unless site[:course].create_site_workflow == 'ccn'
 
@@ -133,7 +133,7 @@ describe 'bCourses course site creation' do
             # Check each section
             site[:academic_data].course_sections(course_data).each do |section_data|
               api_section_data = site[:academic_data].section_data section_data
-              ui_section_data = @create_course_site_page.section_data(@driver, api_section_data[:id])
+              ui_section_data = @create_course_site_page.section_data api_section_data[:id]
 
               it("shows the right section labels for #{api_course_code} section #{api_section_data[:id]}") { expect(ui_section_data[:label]).to eql(api_section_data[:label]) }
               it("shows no blank section labels for #{api_course_code} section #{api_section_data[:id]}") { expect(ui_section_data[:label].empty?).to be false }
@@ -153,11 +153,11 @@ describe 'bCourses course site creation' do
 
         default_name = @create_course_site_page.site_name_input
         expected_name = "#{site[:course].title} (#{site[:course].term})"
-        it ("shows the default site name #{site[:course].title}") { expect(default_name).to eql(expected_name) }
+        it("shows the default site name #{site[:course].title}") { expect(default_name).to eql(expected_name) }
 
         default_abbreviation = @create_course_site_page.site_abbreviation
         expected_abbreviation = site[:course].code
-        it ("shows the default site abbreviation #{site[:course].code}") { expect(default_abbreviation).to include(expected_abbreviation) }
+        it("shows the default site abbreviation #{site[:course].code}") { expect(default_abbreviation).to include(expected_abbreviation) }
 
         requires_name_and_abbreviation = @create_course_site_page.verify_block do
           @create_course_site_page.site_name_input_element.clear
@@ -250,7 +250,7 @@ describe 'bCourses course site creation' do
         # ROSTER PHOTOS - check that roster photos tool shows the right sections
 
         has_roster_photos_link = @roster_photos_page.roster_photos_link?
-        it ("shows a Roster Photos tool link in course site navigation for #{site[:course].term} #{site[:course].code} site ID #{site[:course].site_id}") { expect(has_roster_photos_link).to be true }
+        it("shows a Roster Photos tool link in course site navigation for #{site[:course].term} #{site[:course].code} site ID #{site[:course].site_id}") { expect(has_roster_photos_link).to be true }
 
         @roster_photos_page.load_embedded_tool(@driver, site[:course])
         @roster_photos_page.wait_for_load_and_click_js @roster_photos_page.section_select_element
@@ -263,7 +263,7 @@ describe 'bCourses course site creation' do
 
         @canvas_page.load_course_site site[:course]
         has_course_captures_link = @course_captures_page.course_captures_link?
-        it ("shows no Course Captures tool link in course site navigation for #{site[:course].term} #{site[:course].code} site ID #{site[:course].site_id}") { expect(has_course_captures_link).to be false }
+        it("shows no Course Captures tool link in course site navigation for #{site[:course].term} #{site[:course].code} site ID #{site[:course].site_id}") { expect(has_course_captures_link).to be false }
 
         # GRADES - check that grade distribution is hidden by default
 
