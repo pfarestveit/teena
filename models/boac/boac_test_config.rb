@@ -400,7 +400,7 @@ class BOACTestConfig < TestConfig
   # Config for note search tests
   def search_notes
     set_base_configs
-    set_test_students CONFIG['search_max_users']
+    set_test_students CONFIG['search_max_users'], with_notes: true
   end
 
   # Config for student search tests
