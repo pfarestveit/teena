@@ -147,6 +147,13 @@ module Page
         switch_to_canvas_iframe
       end
 
+      # Returns the element containing a given user's score
+      # @param user [User]
+      # @return [Element]
+      def user_score_el(user)
+        cell_element(xpath: "//tr[contains(., '#{user.full_name}')]/td[@data-ng-bind='user.points']")
+      end
+      
       # Returns the score of a given user on the leaderboard
       # @param driver [Selenium::WebDriver]
       # @param url [String]
@@ -156,7 +163,8 @@ module Page
         load_scores(driver, url, event)
         search_for_user(user, event)
         sleep 1
-        score = cell_element(xpath: "//tr[contains(., '#{user.full_name}')]/td[@data-ng-bind='user.points']").text
+        user_score_el(user).when_visible Utils.medium_wait
+        score = user_score_el(user).text
         logger.debug "#{user.full_name}'s score is currently '#{score}'"
         score
       end

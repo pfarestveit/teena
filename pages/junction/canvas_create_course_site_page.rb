@@ -85,17 +85,16 @@ module Page
       end
 
       # Given a section ID, returns a hash of section data displayed on that row
-      # @param driver [Selenium::WebDriver]
       # @param section_id [String]
       # @return [Hash]
-      def section_data(driver, section_id)
+      def section_data(section_id)
         {
           code: section_course_code(section_id),
           label: section_label(section_id),
           id: section_id,
-          schedules: section_schedules(driver, section_id),
-          locations: section_locations(driver, section_id),
-          instructors: section_instructors(driver, section_id)
+          schedules: section_schedules(section_id),
+          locations: section_locations(section_id),
+          instructors: section_instructors(section_id)
         }
       end
 
@@ -130,19 +129,17 @@ module Page
       end
 
       # Returns the schedules for a section
-      # @param driver [Selenium::WebDriver]
       # @param section_id [String]
       # @return [Array<String>]
-      def section_schedules(driver, section_id)
+      def section_schedules(section_id)
         (e = div_element(xpath: "//input[contains(@id,'#{section_id}')]/../ancestor::tbody//td[contains(@class, 'section-timestamps')]/div")).exists? ?
             e.text : ''
       end
 
       # Returns the locations for a section
-      # @param driver [Selenium::WebDriver]
       # @param section_id [String]
       # @return [Array<String>]
-      def section_locations(driver, section_id)
+      def section_locations(section_id)
         (e = div_element(xpath: "//input[contains(@id,'#{section_id}')]/../ancestor::tbody//td[contains(@class, 'section-locations')]/div")).exists? ?
             e.text : ''
       end
@@ -156,10 +153,9 @@ module Page
       end
 
       # Returns the section IDs displayed under a course
-      # @param driver [Selenium::WebDriver]
       # @param course [Course]
       # @return [Array<String>]
-      def course_section_ids(driver, course)
+      def course_section_ids(course)
         cell_elements(xpath: "//button[contains(.,'#{course.code}')]/following-sibling::div//td[@data-ng-bind='section.ccn']").map &:text
       end
 
