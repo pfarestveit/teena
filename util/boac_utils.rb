@@ -86,6 +86,11 @@ class BOACUtils < Utils
     @config['no_activity_alert_threshold']
   end
 
+  # Returns the maximum number of a student's notes to use in testing note content
+  def self.notes_max_notes
+    @config['notes_max_notes']
+  end
+
   # Returns the maximum number of note or appointment searches to execute for a given student
   def self.search_max_searches
     @config['search_max_searches']

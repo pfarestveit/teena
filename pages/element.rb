@@ -71,6 +71,10 @@ class Element
     @selenium_element.send_keys string
   end
 
+  def tag_name
+    @selenium_element.tag_name
+  end
+
   def text
     @selenium_element.text
   end

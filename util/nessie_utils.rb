@@ -716,9 +716,11 @@ class NessieUtils < Utils
   # @param src [NoteSource]
   # @return [Array<String>]
   def self.get_sids_with_notes_of_src(src)
-    query = "SELECT DISTINCT sid
+    query = "SELECT DISTINCT #{src.schema}.advising_notes.sid
              FROM #{src.schema}.advising_notes
              #{+ ' WHERE advisor_first_name != \'Reception\' AND advisor_last_name != \'Front Desk\'' if src == NoteSource::E_AND_I}
+             #{+ ' INNER JOIN ' + src.schema + '.advising_note_attachments
+                    ON ' + src.schema + '.advising_notes.sid = ' + src.schema + '.advising_note_attachments.sid' if src == NoteSource::SIS}
              ORDER BY sid ASC;"
     results = Utils.query_pg_db(nessie_pg_db_credentials, query)
     results.map { |r| r['sid'] }
