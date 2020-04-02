@@ -78,7 +78,7 @@ class BOACHomePage
 
   # Returns all the user divs beneath a cohort or group designated by its XPath
   # @param xpath [String]
-  # @return [Array<Selenium::WebDriver::Element>]
+  # @return [Array<Element>]
   def user_rows(xpath)
     row_elements(xpath: "#{xpath}//tbody/tr")
   end
@@ -119,7 +119,7 @@ class BOACHomePage
 
   # Returns the link to a filtered cohort or curated group in the main content area of the homepage
   # @param cohort [Cohort]
-  # @return [PageObject::Elements::Link]
+  # @return [Element]
   def view_all_members_link(cohort)
     cohort.instance_of?(FilteredCohort) ?
         link_element(id: "sortable-cohort-#{cohort.id}-view-all") :
@@ -138,7 +138,7 @@ class BOACHomePage
 
   # Returns all the user divs beneath a filtered cohort or curated group
   # @param cohort [Cohort]
-  # @return [Array<Selenium::WebDriver::Element>]
+  # @return [Array<Element>]
   def member_rows(cohort)
     cohort.instance_of?(FilteredCohort) ?
       user_rows(filtered_cohort_xpath(cohort)) :

@@ -47,7 +47,7 @@ class BOACPaxManifestPage
   select_list(:dept_select, id: 'department-select-list')
 
   # Sets text in a given element and waits for and clicks the first auto-suggest result
-  # @param element [PageObject::Element]
+  # @param element [Element]
   # @param name [String]
   def set_first_auto_suggest(element, name)
     wait_for_element_and_type(element, name)
@@ -142,7 +142,7 @@ class BOACPaxManifestPage
 
   # Returns link to dept tab on admin page
   # @param user [BOACUser]
-  # @return [PageObject::Elements::Link]
+  # @return [Element]
   def become_user_link_element(user)
     link_element(id: "become-#{user.uid}")
   end
@@ -166,59 +166,59 @@ class BOACPaxManifestPage
 
   # Returns the element containing a duplicate user error
   # @param user [BOACUser]
-  # @return [PageObject::Elements::Div]
+  # @return [Element]
   def dupe_user_el(user)
     div_element(xpath: "//div[contains(text(), 'User with UID #{user.uid} is already in the BOA database.')]")
   end
 
-  # Returns the (WebDriver) element for the is-admin checkbox
-  # @return [Selenium::WebDriver::Element]
+  # Returns the element for the is-admin checkbox
+  # @return [Element]
   def is_admin_cbx
-    browser.find_element(xpath: '//input[@id="is-admin"]')
+    text_area_element(xpath: '//input[@id="is-admin"]')
   end
 
-  # Returns the (WebDriver) element for the is-blocked checkbox
-  # @return [Selenium::WebDriver::Element]
+  # Returns the element for the is-blocked checkbox
+  # @return [Element]
   def is_blocked_cbx
-    browser.find_element(xpath: '//input[@id="is-blocked"]')
+    text_area_element(xpath: '//input[@id="is-blocked"]')
   end
 
-  # Returns the (WebDriver) element for the can-access-canvas-data checkbox
-  # @return [Selenium::WebDriver::Element]
+  # Returns the element for the can-access-canvas-data checkbox
+  # @return [Element]
   def can_access_canvas_data_cbx
-    browser.find_element(xpath: '//input[@id="can-access-canvas-data"]')
+    text_area_element(xpath: '//input[@id="can-access-canvas-data"]')
   end
 
-  # Returns the (WebDriver) element for the is-deleted checkbox
-  # @return [Selenium::WebDriver::Element]
+  # Returns the element for the is-deleted checkbox
+  # @return [Element]
   def is_deleted_cbx
-    browser.find_element(xpath: '//input[@id="is-deleted"]')
+    text_area_element(xpath: '//input[@id="is-deleted"]')
   end
 
   # Returns the button to remove a department role
   # @param dept [BOACDepartments]
-  # @return [PageObject::Elements::Button]
+  # @return [Element]
   def remove_dept_role_button(dept)
     button_element(id: "remove-department-#{dept.code}")
   end
 
   # Returns the select element for a given department
   # @param dept [BOACDepartments]
-  # @return [PageObject::Elements::SelectList]
+  # @return [Element]
   def dept_role_select(dept)
     select_list_element(id: "select-department-#{dept.code}-role")
   end
 
-  # Returns the (WebDriver) element for whether or not a department role is maintained automatically
+  # Returns the element for whether or not a department role is maintained automatically
   # @param dept [BOACDepartments]
-  # @return [Selenium::WebDriver::Element]
+  # @return [Element]
   def is_automated_dept_cbx(dept)
-    browser.find_element(xpath: "//input[@id='is-automate-membership-#{dept.code}']")
+    text_area_element(xpath: "//input[@id='is-automate-membership-#{dept.code}']")
   end
 
   # Returns the button to open the Edit User modal
   # @param user [BOACUser]
-  # @return [PageObject::Elements::Button]
+  # @return [Element]
   def edit_user_button(user)
     button_element(id: "edit-#{user.uid}")
   end

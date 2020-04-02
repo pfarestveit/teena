@@ -63,7 +63,7 @@ module BOACPagesCreateNoteModal
 
   # Returns a topic pill on an unsaved note or on any template
   # @param topic [Topic]
-  # @return [PageObject::Elements::ListItem]
+  # @return [Element]
   def new_note_unsaved_topic_pill(topic)
     list_item_element(xpath: topic_xpath_unsaved_note(topic))
   end
@@ -71,14 +71,14 @@ module BOACPagesCreateNoteModal
   # Returns a topic pill on a saved note
   # @param note [Note]
   # @param topic [Topic]
-  # @return [PageObject::Element::ListItem]
+  # @return [Element]
   def topic_pill(note, topic)
     list_item_element(xpath: topic_xpath_saved_note(note, topic))
   end
 
   # Returns a topic remove button on an unsaved note or on any template
   # @param topic [Topic]
-  # @return [PageObject::Element::Button]
+  # @return [Element]
   def new_note_unsaved_topic_remove_btn(topic)
     button_element(xpath: "#{topic_xpath_unsaved_note(topic)}//button")
   end
@@ -86,7 +86,7 @@ module BOACPagesCreateNoteModal
   # Returns a topic remove button for a saved note
   # @param note [Note]
   # @param topic [Topic]
-  # @return [PageObject::Element::Button]
+  # @return [Element]
   def topic_remove_button(note, topic)
     button_element(xpath: "#{topic_xpath_saved_note(note, topic)}//button")
   end
@@ -460,7 +460,7 @@ module BOACPagesCreateNoteModal
 
   # Returns the element for selecting a given template
   # @param template [NoteTemplate]
-  # @return [PageObject::Elements::Link]
+  # @return [Element]
   def template_option(template)
     link_element(xpath: "//a[@id=\"load-note-template-#{template.id}\"][@title=\"#{template.title}\"]")
   end

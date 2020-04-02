@@ -29,13 +29,13 @@ module BOACFilteredCohortPageFilters
 
   # Returns a filter option link with the given filter key text as part of the link element id.
   # @param filter_key [String]
-  # @return [PageObject::Elements::Link]
+  # @return [Element]
   def new_filter_option(filter_key)
     link_element(id: "dropdown-primary-menuitem-#{filter_key}-new")
   end
 
   # Returns the Choose button for a new filter sub-option
-  # @return [PageObject::Elements::Button]
+  # @return [Element]
   def new_filter_sub_option_button
     button_element(xpath: '//button[contains(., "Choose...")]')
   end
@@ -43,7 +43,7 @@ module BOACFilteredCohortPageFilters
   # Returns the sub-option link for a new filter
   # @param [String] filter_key
   # @param [String] filter_option
-  # @return [PageObject::Elements::Link]
+  # @return [Element]
   def new_filter_sub_option_element(filter_key, filter_option)
     case filter_key
       when 'colleges'
@@ -264,7 +264,7 @@ module BOACFilteredCohortPageFilters
 
   # Returns the element containing an added cohort filter
   # @param filter_option [String]
-  # @return [PageObject::Elements::Element]
+  # @return [Element]
   def existing_filter_element(filter_name, filter_option = nil)
     filter_option_xpath = "#{existing_filter_xpath filter_name}/following-sibling::div"
 

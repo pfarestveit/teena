@@ -22,7 +22,7 @@ module BOACAddGroupSelectorPages
 
   # Returns a group checkbox
   # @param group [CuratedGroup]
-  # @return [PageObject::Elements::Checkbox]
+  # @return [Element]
   def grp_checkbox(group)
     checkbox_element(id: "curated-group-#{group.id}-checkbox")
   end

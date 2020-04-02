@@ -74,7 +74,7 @@ class BOACFlightDataRecorderPage
   # Returns the element corresponding to a given user's role in a given department
   # @param advisor [BOACUser]
   # @param dept [BOACDepartments]
-  # @return [PageObject::Elements::Span]
+  # @return [Element]
   def advisor_role(advisor, dept)
     span_element(id: "dept-#{dept.code}-#{advisor.uid}").attribute('innerText')
   end

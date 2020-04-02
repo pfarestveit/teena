@@ -92,7 +92,7 @@ class BOACAdmitPage
 
   # Returns the link element for a student page
   # @param admit [Hash]
-  # @return [PageObject::Elements::Link]
+  # @return [Element]
   def student_page_link(admit)
     link_element(xpath: "//a[text()=\"View #{concatenated_name admit}'s profile page\"]")
   end
