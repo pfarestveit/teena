@@ -107,7 +107,7 @@ class BOACStudentPage
 
   # Returns the link to the student overview page in CalCentral
   # @param student [BOACUser]
-  # @return [PageObject::Elements::Link]
+  # @return [Element]
   def calcentral_link(student)
     link_element(xpath: "//a[@href='https://calcentral.berkeley.edu/user/overview/#{student.uid}']")
   end
@@ -236,7 +236,7 @@ class BOACStudentPage
   # Returns the link to a class page
   # @param term_code [String]
   # @param ccn [Integer]
-  # @return [PageObject::Elements::Link]
+  # @return [Element]
   def class_page_link(term_code, ccn)
     link_element(id: "term-#{term_code}-section-#{ccn}")
   end
@@ -292,7 +292,7 @@ class BOACStudentPage
   # @param course_code [String]
   # @param component [String]
   # @param number [String]
-  # @return [PageObject::Elements::Div]
+  # @return [Element]
   def visible_dropped_section_data(term_name, course_code, component, number)
     div_element(:xpath => "#{term_data_xpath term_name}//div[@class='student-course student-course-dropped'][contains(.,\"#{course_code} - #{component} #{number}\")]")
   end
@@ -302,7 +302,7 @@ class BOACStudentPage
   # Returns the button element to expand course data
   # @param term_name [String]
   # @param course_code [String]
-  # @return [PageObject::Elements::Button]
+  # @return [Element]
   def course_expand_toggle(term_name, course_code)
     button_element(:xpath => "#{course_data_xpath(term_name, course_code)}//button")
   end
@@ -358,7 +358,7 @@ class BOACStudentPage
   # Returns the element that triggers the analytics tooltip for a particular set of analytics data for a given site, for example 'page views'
   # @param site_xpath [String]
   # @param label [String]
-  # @return [Selenium::WebDriver::Element]
+  # @return [Element]
   def analytics_trigger_element(site_xpath, label)
     div_element(:xpath => "#{site_analytics_score_xpath(site_xpath, label)}#{boxplot_trigger_xpath}")
   end

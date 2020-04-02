@@ -35,7 +35,7 @@ class BOACSearchResultsPage
   end
 
   # Returns the element containing the 'no results' message for a search
-  # @return [PageObject::Elements::Heading]
+  # @return [Element]
   def no_results_msg
     h1_element(id: 'page-header-no-results')
   end
@@ -221,7 +221,7 @@ class BOACSearchResultsPage
 
   # Returns the link element for a given note
   # @param note [Note]
-  # @return [PageObject::Elements::Link]
+  # @return [Element]
   def note_link(note)
     link_element(xpath: "//a[contains(@href, '#note-#{note.id}')]")
   end
@@ -291,7 +291,7 @@ class BOACSearchResultsPage
 
   # Returns the link element for a given appointment
   # @param appt [Appointment]
-  # @return [PageObject::Elements::Link]
+  # @return [Element]
   def appt_link(appt)
     link_element(xpath: "//a[contains(@href, '#appointment-#{appt.id}')]")
   end

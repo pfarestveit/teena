@@ -35,7 +35,7 @@ module BOACCohortPages
 
   # Returns the heading for a given cohort page
   # @param cohort [FilteredCohort]
-  # @return [PageObject::Elements::Span]
+  # @return [Element]
   def cohort_heading(cohort)
     h1_element(xpath: "//h1[contains(text(),\"#{cohort.name}\")]")
   end

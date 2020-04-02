@@ -61,7 +61,7 @@ module BOACStudentPageAdvisingNote
 
   # Returns the element containing the note's advisor name
   # @param note [Note]
-  # @return [PageObject::Elements::Link]
+  # @return [Element]
   def note_advisor_el(note)
     link_element(id: "note-#{note.id}-author-name")
   end
@@ -88,14 +88,14 @@ module BOACStudentPageAdvisingNote
 
   # Returns the element containing a given attachment name
   # @param attachment_name [String]
-  # @return [PageObject::Elements::Element]
+  # @return [Element]
   def note_attachment_el(note, attachment_name)
     note_attachment_els(note).find { |el| el.text.strip == attachment_name }
   end
 
   # Returns the elements containing both downloadable and non-downloadable note attachments
   # @param note [Note]
-  # @return [Array<Selenium::WebDriver::Element>]
+  # @return [Array<Element>]
   def note_attachment_els(note)
     spans = span_elements(xpath: "//li[contains(@id, 'note-#{note.id}-attachment')]//span[contains(@id, '-attachment-')]")
     links = link_elements(xpath: "//li[contains(@id, 'note-#{note.id}-attachment')]//a[contains(@id, '-attachment-')]")
@@ -150,7 +150,7 @@ module BOACStudentPageAdvisingNote
 
   # Returns the file input for adding an an attachment to an existing note
   # @param note [Note]
-  # @return [PageObject::Elements::TextArea]
+  # @return [Element]
   def existing_note_attachment_input(note)
     text_area_element(xpath: "//div[@id='note-#{note.id}-attachment-dropzone']/input")
   end
@@ -158,7 +158,7 @@ module BOACStudentPageAdvisingNote
   # Returns the delete button for an attachment on an existing note
   # @param note [Note]
   # @param attachment [Attachment]
-  # @return [PageObject::Elements::Button]
+  # @return [Element]
   def existing_note_attachment_delete_button(note, attachment)
     list_item_element(xpath: "//div[@id=\"note-#{note.id}-outer\"]//li[contains(., \"#{attachment.file_name}\")]//button")
   end
@@ -293,14 +293,14 @@ module BOACStudentPageAdvisingNote
 
   # Returns the edit note button element for a given note
   # @param note [Note]
-  # @return [PageObject::Elements::Button]
+  # @return [Element]
   def edit_note_button(note)
     button_element(id: "edit-note-#{note.id}-button")
   end
 
   # Returns the delete note button element for a given note
   # @param note [Note]
-  # @return [PageObject::Elements::Button]
+  # @return [Element]
   def delete_note_button(note)
     button_element(xpath: "//tr[descendant::div/@id=\"note-#{note.id}-is-open\"]//button[@id=\"delete-note-button\"]")
   end

@@ -31,7 +31,7 @@ class BOACClassMatrixViewPage
   end
 
   # Returns the bubble elements in the matrix graphic
-  # @return [Array<Selenium::WebDriver::Element>]
+  # @return [Array<Element>]
   def matrix_bubbles
     bubbles = div_elements(xpath: '//*[name()="svg"][@class="matrix-svg"]/*[name()="svg"]//*[name()="circle"]')
     # Don't count the 'average student' bubble

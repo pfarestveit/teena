@@ -37,7 +37,7 @@ module BOACStudentPageTimeline
 
   # Returns the item element visible when the item is collapsed
   # @param item [Object]
-  # @return [PageObject::Elements::Div]
+  # @return [Element]
   def collapsed_item_el(item)
     type = (item.instance_of?(Note) || item.instance_of?(NoteBatch)) ? 'note' : 'appointment'
     div_element(id: "#{type}-#{item.id}-is-closed")
@@ -54,7 +54,7 @@ module BOACStudentPageTimeline
 
   # Returns the button element for collapsing a given item
   # @param item [Object]
-  # @return [PageObject::Elements::Button]
+  # @return [Element]
   def close_msg_button(item)
     type = (item.instance_of?(Note) || item.instance_of?(NoteBatch)) ? 'note' : 'appointment'
     button_element(xpath: "//tr[@id='permalink-#{type}-#{item.id}']//button[contains(@id, '-close-message')]")

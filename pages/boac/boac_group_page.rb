@@ -35,7 +35,7 @@ class BOACGroupPage
 
   # Returns the group page heading
   # @param group [CuratedGroup]
-  # @return [PageObject::Elements::Heading]
+  # @return [Element]
   def group_name_heading(group)
     h1_element(xpath: "//h1[@id='curated-group-name'][contains(., \"#{group.name}\")]")
   end
@@ -60,14 +60,14 @@ class BOACGroupPage
 
   # Returns the link element for a cohort using the group as a filter
   # @param cohort [FilteredCohort]
-  # @return [PageObject::Elements::Link]
+  # @return [Element]
   def linked_cohort_el(cohort)
     link_element(xpath: "//a[contains(@id, 'referencing-cohort-')][text()=\"#{cohort.name}\"]")
   end
 
   # Returns the element containing the 'NO!' message when attempting to delete a group in use as a cohort filter
   # @param cohort [FilteredCohort]
-  # @return [PageObject::Elements::Div]
+  # @return [Element]
   def no_deleting_el(cohort)
     div_element(xpath: "//div[@id='cohort-warning-body'][contains(., \"#{cohort.name}\")]")
   end

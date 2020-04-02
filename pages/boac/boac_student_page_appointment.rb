@@ -47,7 +47,7 @@ module BOACStudentPageAppointment
 
   # Returns the Check-in button on an expanded appointment
   # @param appt [Appointment]
-  # @return [PageObject::Elements::Button]
+  # @return [Element]
   def check_in_button(appt)
     button_element(id: "appointment-#{appt.id}-dropdown__BV_button_")
   end
@@ -66,7 +66,7 @@ module BOACStudentPageAppointment
 
   # Returns the button for assigning an appointment
   # @param appt [Appointment]
-  # @return [PageObject::Elements::Button]
+  # @return [Element]
   def reserve_appt_button(appt)
     button_element(id: "btn-appointment-#{appt.id}-reserve")
   end
@@ -80,7 +80,7 @@ module BOACStudentPageAppointment
 
   # Returns the button for un-assigning an appointment
   # @param appt [Appointment]
-  # @return [PageObject::Elements::Button]
+  # @return [Element]
   def unreserve_appt_button(appt)
     button_element(id: "btn-appointment-#{appt.id}-unreserve")
   end
@@ -101,7 +101,7 @@ module BOACStudentPageAppointment
 
   # Returns the element containing the appointment advisor name
   # @param appt [Appointment]
-  # @return [PageObject::Elements::Link]
+  # @return [Element]
   def appt_advisor_el(appt)
     link_element(id: "appointment-#{appt.id}-advisor-name")
   end
@@ -140,7 +140,7 @@ module BOACStudentPageAppointment
 
   # Returns the element indicating that an appointment is assigned to an advisor
   # @param appt [Appointment]
-  # @return [PageObject::Elements::Span]
+  # @return [Element]
   def reserved_for_el(appt)
     span_element(id: "appointment-#{appt.id}-assigned-to")
   end

@@ -103,14 +103,14 @@ module BOACApptIntakeDesk
 
   # Returns the element element containing an added appointment reason
   # @param topic [Topic]
-  # @return [PageObject::Elements::ListItem]
+  # @return [Element]
   def appt_reason_pill(topic)
     list_item_element(xpath: "//li[contains(@id, \"appointment-topic\") and contains(., \"#{topic.name}\")]")
   end
 
   # Returns the button for removing an added appointment reason
   # @param topic [Topic]
-  # @return [PageObject::Elements::Button]
+  # @return [Element]
   def appt_reason_remove_button(topic)
     button_element(xpath: "//li[contains(@id, \"appointment-topic\") and contains(., \"#{topic.name}\")]//button[contains(@id, \"remove-appointment-topic-\")]")
   end
@@ -221,7 +221,7 @@ module BOACApptIntakeDesk
   elements(:availability_toggle_button, :button, xpath: '//button[contains(@id, "toggle-drop-in-availability-")]')
 
   # Returns the button for toggling advisor availability
-  # @return [PageObject::Elements::Button]
+  # @return [Element]
   def toggle_availability_button(advisor)
     button_element(id: "toggle-drop-in-availability-#{advisor.uid}")
   end
@@ -359,7 +359,7 @@ module BOACApptIntakeDesk
 
   # Returns the link from a drop-in appointment to a student page
   # @param appt [Appointment]
-  # @return [PageObject::Elements::Link]
+  # @return [Element]
   def student_link_el(appt)
     link_element(xpath: "//a[@id='appointment-#{appt.id}-student-name'][contains(text(), '#{appt.student.full_name}')]")
   end
@@ -381,14 +381,14 @@ module BOACApptIntakeDesk
 
   # Returns the element indicating that an appointment is assigned to an advisor
   # @param appt [Appointment]
-  # @return [PageObject::Elements::Span]
+  # @return [Element]
   def reserved_for_el(appt)
     span_element(id: "assigned-to-#{appt.id}")
   end
 
   # Returns the Undo button for a checked-in appointment
   # @param appt [Appointment]
-  # @return [PageObject::Elements::Button]
+  # @return [Element]
   def check_in_undo_button(appt)
     button_element(xpath: "//div[@id='appointment-#{appt.id}-checked-in']/../preceding-sibling::div/button")
   end
@@ -403,7 +403,7 @@ module BOACApptIntakeDesk
 
   # Returns the Undo button for a canceled appointment
   # @param appt [Appointment]
-  # @return [PageObject::Elements::Button]
+  # @return [Element]
   def cancel_undo_button(appt)
     button_element(xpath: "//div[@id='appointment-#{appt.id}-cancelled']/preceding-sibling::div/button")
   end
@@ -494,7 +494,7 @@ module BOACApptIntakeDesk
 
   # Returns the check-in advisor option for a given advisor
   # @param advisor [BOACUser]
-  # @return [PageObject::Elements::Option]
+  # @return [Element]
   def check_in_advisor_option(advisor)
     check_in_advisor_option_elements.find { |el| el.attribute('value') == "#{advisor.uid}" }
   end
@@ -513,7 +513,7 @@ module BOACApptIntakeDesk
 
   # Returns the button for assigning an appointment
   # @param appt [Appointment]
-  # @return [PageObject::Elements::Button]
+  # @return [Element]
   def reserve_appt_button(appt)
     button_element(id: "btn-appointment-#{appt.id}-reserve")
   end
@@ -528,7 +528,7 @@ module BOACApptIntakeDesk
 
   # Returns the assign advisor option for a given advisor
   # @param advisor [BOACUser]
-  # @return [PageObject::Elements::Option]
+  # @return [Element]
   def reserve_advisor_option(advisor)
     assign_modal_advisor_option_elements.find { |el| el.attribute('value') == "#{advisor.uid}" }
   end
@@ -545,7 +545,7 @@ module BOACApptIntakeDesk
 
   # Returns the button for un-assigning an appointment
   # @param appt [Appointment]
-  # @return [PageObject::Elements::Button]
+  # @return [Element]
   def unreserve_appt_button(appt)
     button_element(id: "btn-appointment-#{appt.id}-unreserve")
   end
