@@ -9,7 +9,7 @@ class NoteSource
   SOURCES = [
       ASC = new('boac_advising_asc'),
       E_AND_I = new('boac_advising_e_i'),
-      SIS = new('boac_advising_notes')
+      SIS = new('sis_advising_notes')
   ]
 
 end

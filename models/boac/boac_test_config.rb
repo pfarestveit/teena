@@ -146,7 +146,7 @@ class BOACTestConfig < TestConfig
                        e_and_i_note_sids = boa_sids & NessieUtils.get_sids_with_notes_of_src(NoteSource::E_AND_I)
                        logger.info "There are #{e_and_i_note_sids.length} students with E&I notes"
                        sis_note_sids = boa_sids & NessieUtils.get_sids_with_notes_of_src(NoteSource::SIS)
-                       logger.info "There are #{sis_note_sids.length} students with SIS notes"
+                       logger.info "There are #{sis_note_sids.length} students with SIS notes that have attachments"
                        [asc_note_sids, boa_note_sids, e_and_i_note_sids, sis_note_sids].each { |s| s.shuffle! } if BOACUtils.shuffle_max_users
                        test_sids = (asc_note_sids[0..(config - 1)] + boa_note_sids[0..(config - 1)] + e_and_i_note_sids[0..(config - 1)] + sis_note_sids[0..(config - 1)]).uniq
                        @students.select { |s| test_sids.include? s.sis_id }
@@ -339,10 +339,8 @@ class BOACTestConfig < TestConfig
 
   # Config for advising note content testing
   def note_content
-    set_base_configs_plus_searchable_data
-    set_default_cohort
-    set_test_students(CONFIG['notes_max_users'], with_notes: true)
-    logger.warn "Test UIDS: #{@test_students.map &:uid}"
+    set_base_configs
+    set_test_students(CONFIG['notes_max_users'], {with_notes: true})
   end
 
   # Config for page navigation testing
@@ -400,7 +398,7 @@ class BOACTestConfig < TestConfig
   # Config for note search tests
   def search_notes
     set_base_configs
-    set_test_students CONFIG['search_max_users'], with_notes: true
+    set_test_students(CONFIG['search_max_users'], {with_notes: true})
   end
 
   # Config for student search tests
