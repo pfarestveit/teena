@@ -56,6 +56,8 @@ module BOACFilteredCohortPageFilters
         link_element(id: "Expected Graduation Term-#{filter_option}")
       when 'genders'
         link_element(id: "Gender-#{filter_option}")
+      when 'groupCodes'
+        link_element(id: "Team-#{filter_option}")
       when 'intendedMajors'
         link_element(id: "Intended Major-#{filter_option}")
       when 'majors'
@@ -181,7 +183,7 @@ module BOACFilteredCohortPageFilters
     # ASC
     select_new_filter 'isInactiveAsc' if cohort.search_criteria.asc_inactive
     select_new_filter 'inIntensiveCohort' if cohort.search_criteria.asc_intensive
-    cohort.search_criteria.asc_team.each { |s| select_new_filter('groupCodes', s.name) } if cohort.search_criteria.asc_team
+    cohort.search_criteria.asc_team.each { |s| select_new_filter('groupCodes', s.code) } if cohort.search_criteria.asc_team
 
     execute_search cohort
   end

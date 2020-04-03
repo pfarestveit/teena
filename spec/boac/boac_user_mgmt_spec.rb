@@ -219,7 +219,7 @@ describe 'The BOAC passenger manifest' do
       titles = []
       emails = []
       departments = []
-      drop_in_advising_flags = []
+      appt_roles = []
       can_access_canvas_data_flags = []
       is_blocked_flags = []
       last_logins = []
@@ -230,7 +230,7 @@ describe 'The BOAC passenger manifest' do
         titles << r[:title] if r[:title]
         emails << r[:email] if r[:email]
         departments << r[:departments] if r[:departments]
-        drop_in_advising_flags << r[:drop_in_advising] if r[:drop_in_advising]
+        appt_roles << r[:appointment_roles] if r[:appointment_roles]
         can_access_canvas_data_flags << r[:can_access_canvas_data]
         is_blocked_flags << r[:is_blocked]
         last_logins << r[:last_login] if r[:last_login]
@@ -242,7 +242,7 @@ describe 'The BOAC passenger manifest' do
       expect(titles).not_to be_empty
       expect(emails).not_to be_empty
       expect(departments).not_to be_empty
-      expect(drop_in_advising_flags).not_to be_empty
+      expect(appt_roles).not_to be_empty
       expect(can_access_canvas_data_flags).not_to be_empty
       expect(is_blocked_flags).not_to be_empty
       expect(last_logins).not_to be_empty

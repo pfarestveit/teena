@@ -14,7 +14,7 @@ describe 'BOA note templates' do
     @template_1 = NoteTemplate.new(title: "Template #{@test.id}")
     @template_2 = NoteTemplate.new(title: "Batch template #{@test.id}")
     @attachments = @test.attachments.sort_by(&:file_size).delete_if { |a| a.file_size > 20000000 }
-    @attachments = @attachments.last 5
+    @attachments = @attachments.first 5
 
     @driver = Utils.launch_browser
     @homepage = BOACHomePage.new @driver

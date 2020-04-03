@@ -697,7 +697,7 @@ describe 'BOAC', order: :defined do
 
     it 'allows the advisor to remove a Probation filter' do
       test.default_cohort.search_criteria.coe_probation = nil
-      @cohort_page.remove_filter_of_type 'Probation'
+      @cohort_page.remove_filter_of_type 'Probation (COE)'
       @cohort_page.verify_student_filters_present test.default_cohort
     end
   end

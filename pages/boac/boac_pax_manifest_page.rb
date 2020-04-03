@@ -52,7 +52,7 @@ class BOACPaxManifestPage
   def set_first_auto_suggest(element, name)
     wait_for_element_and_type(element, name)
     sleep Utils.click_wait
-    wait_until(2) { auto_suggest_option_elements.any? }
+    wait_until(3) { auto_suggest_option_elements.any? }
     link_element = auto_suggest_option_elements.first
     wait_for_load_and_click link_element
   end
