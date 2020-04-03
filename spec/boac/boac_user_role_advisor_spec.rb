@@ -209,7 +209,7 @@ describe 'A BOA advisor' do
         end
 
         it('sees team information') do
-          visible_sports = @cohort_page.student_sports(@driver, @asc_test_student).sort
+          visible_sports = @cohort_page.student_sports(@asc_test_student).sort
           expect(visible_sports).to eql(@asc_test_student_sports.sort)
         end
         it('sees ASC Inactive information') { expect(@cohort_page.student_inactive_asc_flag? @asc_test_student).to be true }
@@ -459,7 +459,7 @@ describe 'A BOA advisor' do
 
     context 'visiting another user\'s cohort' do
 
-      before(:all) { @cohort_page.load_cohort @l_and_s_cohorts.find { |c| c.owner_uid != @test_l_and_s.advisor.uid } }
+      before(:all) { @cohort_page.load_cohort @l_and_s_cohorts.find { |c| ![@test_l_and_s.advisor.uid, '70143'].include? c.owner_uid } }
 
       it('can view the filters') { @cohort_page.show_filters }
       it('cannot edit the filters') { expect(@cohort_page.cohort_edit_button_elements).to be_empty }

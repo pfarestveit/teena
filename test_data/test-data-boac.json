@@ -227,13 +227,16 @@
                 "residency": [
                     {
                         "category": "INT"
-                    },
+                    }
+                ],
+                "colleges": [
                     {
-                        "category": "OOS"
+                        "college": "College of Letters and Science"
                     }
                 ]
             },
             {
+                "current_sir": true,
                 "freshman_or_transfer": [
                     {
                         "fresh_or_trans": "Transfer"
@@ -241,27 +244,14 @@
                 ],
                 "colleges": [
                     {
-                        "college": "College of Letters and Science"
-                    },
-                    {
                         "college": "College of Engineering"
                     }
                 ]
             },
             {
-                "current_sir": true,
+
                 "family_single_parent": true,
-                "hispanic": true
-            },
-            {
-                "family_dependents": [
-                    {
-                        "num": {
-                            "min": "3",
-                            "max": "4"
-                        }
-                    }
-                ],
+                "hispanic": true,
                 "xethnic": [
                     {
                         "ethnic": "White"
@@ -269,8 +259,20 @@
                 ]
             },
             {
-                "urem": true,
-                "foster_care": true
+                "family_dependents": [
+                    {
+                        "num": {
+                            "min": "7",
+                            "max": "8"
+                        }
+                    }
+                ],
+                "urem": true
+            },
+            {
+
+                "foster_care": true,
+                "fee_waiver": true
             },
             {
                 "student_dependents": [
@@ -284,15 +286,14 @@
                 "student_single_parent": true
             },
             {
-                "last_school_lcff_plus": true
-            },
-            {
+                "last_school_lcff_plus": true,
                 "special_program_cep": [
                     {
-                        "program": "Destination College"
+                        "program": "East Bay Consortium"
                     }
-                ],
-                "fee_waiver": true,
+                ]
+            },
+            {
                 "re_entry_status": true
             },
             {

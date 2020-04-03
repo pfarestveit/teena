@@ -37,46 +37,12 @@ describe 'BOA' do
         @cohort_page.click_sidebar_all_admits
       end
 
-      it 'shows all admits sorted by Last Name' do
-        expected_results = @cohort_page.expected_sids_by_last_name test.searchable_data
-        visible_results = @cohort_page.filter_result_all_row_cs_ids @all_admits
-        @cohort_page.wait_until(1, "Expected but not present: #{expected_results - visible_results}. Present but not expected: #{visible_results - expected_results}") do
-          visible_results.sort == expected_results.sort
-        end
-        @cohort_page.verify_list_view_sorting(expected_results, visible_results)
-      end
-
       it 'shows the most recent data update date if the data is stale' do
         if Date.parse(latest_update_date) == Date.today
           expect(@cohort_page.data_update_date_heading(latest_update_date).exists?).to be false
         else
           expect(@cohort_page.data_update_date_heading(latest_update_date).exists?).to be true
         end
-      end
-
-      it 'shows the right data for a sample of all admits' do
-        failures = []
-        visible_sids = @cohort_page.filter_result_row_cs_ids
-        expected_admit_data = test.searchable_data.select { |d| visible_sids.include? d[:sid] }
-        expected_admit_data.each { |admit| @cohort_page.verify_admit_row_data(admit[:sid], admit, failures) }
-        logger.error "Failures: #{failures}" unless failures.empty?
-        expect(failures).to be_empty
-      end
-
-      it 'sorts all admits by First Name' do
-        @cohort_page.sort_by_first_name
-        expected_results = @cohort_page.expected_sids_by_first_name test.searchable_data
-        visible_results = @cohort_page.filter_result_all_row_cs_ids @all_admits
-        @cohort_page.verify_list_view_sorting(expected_results, visible_results)
-        @cohort_page.wait_until(1, "Expected #{expected_results} but got #{visible_results}") { visible_results == expected_results }
-      end
-
-      it 'sorts all admits by CS ID' do
-        @cohort_page.sort_by_cs_id
-        expected_results = test.searchable_data.map { |u| u[:sid].to_i }.sort
-        visible_results = @cohort_page.filter_result_all_row_cs_ids @all_admits
-        @cohort_page.verify_list_view_sorting(expected_results, visible_results)
-        @cohort_page.wait_until(1, "Expected #{expected_results} but got #{visible_results}") { visible_results == expected_results }
       end
 
       it 'allows the advisor to export a list of all admits' do

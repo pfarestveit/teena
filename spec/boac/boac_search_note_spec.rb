@@ -8,6 +8,7 @@ describe 'BOAC' do
 
     test_config = BOACTestConfig.new
     test_config.search_notes
+    max_note_count_per_src = BOACUtils.notes_max_notes - 1
     search_word_count = BOACUtils.search_word_count
 
     @driver = Utils.launch_browser test_config.chrome_profile
@@ -28,20 +29,24 @@ describe 'BOAC' do
         expected_boa_notes = BOACUtils.get_student_notes(student).delete_if &:deleted_date
         expected_ei_notes = NessieUtils.get_e_and_i_notes student
         expected_sis_notes = NessieUtils.get_sis_notes student
-        expected_notes = expected_asc_notes + expected_boa_notes + expected_ei_notes + expected_sis_notes
-        if expected_notes.any?
-          expected_notes.each do |note|
-            if !note.subject.nil? && (note.subject.include? 'QA Test')
-              logger.warn "Skipping note search tests for UID #{student.uid} note ID #{note.id} because it is a testing artifact"
-            else
-              begin
-                if (query = BOACUtils.generate_note_search_query(student, note, skip_empty_body: true))
-                  note_searches << query
-                end
-              rescue => e
-                Utils.log_error e
-                it("hit an error collecting note search tests for UID #{student.uid} note ID #{note.id}") { fail }
+        logger.warn "UID #{student.uid} has #{expected_sis_notes.length} SIS notes, #{expected_asc_notes.length} ASC notes,
+                              #{expected_ei_notes.length} E&I notes, and #{expected_boa_notes.length} BOA notes"
+
+        expected_boa_notes.delete_if { |note| !note.subject.nil? && (note.subject.include? 'QA Test') }
+
+        # Test a representative subset of the total notes
+        test_notes = expected_sis_notes.shuffle[0..max_note_count_per_src] + expected_ei_notes.shuffle[0..max_note_count_per_src] +
+            expected_boa_notes.shuffle[0..max_note_count_per_src] + expected_asc_notes.shuffle[0..max_note_count_per_src]
+
+        if test_notes.any?
+          test_notes.each do |note|
+            begin
+              if (query = BOACUtils.generate_note_search_query(student, note, skip_empty_body: true))
+                note_searches << query
               end
+            rescue => e
+              Utils.log_error e
+              it("hit an error collecting note search tests for UID #{student.uid} note ID #{note.id}") { fail }
             end
           end
         else

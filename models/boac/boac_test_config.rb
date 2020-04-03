@@ -281,7 +281,7 @@ class BOACTestConfig < TestConfig
         :level => ['Senior (90+ Units)', 'Freshman (0-29 Units)'],
         :units_completed => ['90 - 119'],
         :intended_major => ['English BA'],
-        :major => ((@dept == BOACDepartments::COE) ? ['Electrical Eng & Comp Sci BS', 'Mechanical Engineering BS'] : ['Asian Studies', 'Letters & Sci Undeclared UG']),
+        :major => ((@dept == BOACDepartments::COE) ? ['Electrical Eng & Comp Sci BS', 'Mechanical Engineering BS'] : ['Asian Studies BA', 'Letters & Sci Undeclared UG']),
         :minor => ['French UG'],
         :transfer_student => true,
         :entering_terms => [CONFIG['term_code']],

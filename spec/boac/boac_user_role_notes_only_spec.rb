@@ -124,7 +124,7 @@ describe 'A notes-only BOA user' do
       end
 
       it('sees no bCourses data') do
-        expect(row_elements(:xpath => "//th[text()='BCOURSES ACTIVITY']")).to be_empty
+        expect(@cohort_page.row_elements(:xpath => "//th[text()='BCOURSES ACTIVITY']")).to be_empty
       end
     end
   end

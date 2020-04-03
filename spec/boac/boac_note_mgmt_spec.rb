@@ -36,7 +36,7 @@ else
 
   # Get the largest attachments for testing max attachments uploads
   attachments_by_size = test.attachments.sort_by(&:file_size).delete_if { |a| a.file_size > 20000000 }
-  big_attachments = attachments_by_size.last 5
+  big_attachments = attachments_by_size.first 5
 
   deleted_attachments = []
 
