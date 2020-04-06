@@ -118,7 +118,10 @@ module BOACFilteredCohortPageFilters
     wait_for_update_and_click new_filter_sub_option_button
     sleep Utils.click_wait
     missing_options = []
-    criteria.each { |criterion| missing_options << criterion unless new_filter_sub_option_element(key, criterion).exists? }
+    criteria.each do |criterion|
+      criterion = criterion.code if criterion.instance_of? Squad
+      missing_options << criterion unless new_filter_sub_option_element(key, criterion).exists?
+    end
     wait_for_update_and_click unsaved_filter_cancel_button_element
     logger.debug "The options #{missing_options} are not present and will need to be removed from search criteria" if missing_options.any?
     missing_options
