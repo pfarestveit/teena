@@ -110,13 +110,6 @@ def _row_to_cohort(row):
 
 
 class TestData:
-    drop_in_advisors = BoaRds.fetch("""
-        SELECT au.uid AS uid, dia.dept_code AS dept_code
-        FROM drop_in_advisors dia
-        JOIN authorized_users au
-        ON au.id = dia.authorized_user_id
-        AND au.deleted_at IS NULL
-    """)
 
     students = NessieRds.fetch(f"""
         SELECT sid, uid FROM student.student_academic_status
@@ -133,6 +126,7 @@ class TestData:
         FROM authorized_users au
         JOIN cohort_filters cf on cf.owner_id = au.id
         WHERE au.deleted_at IS NULL
+        AND au.is_admin IS TRUE
         ORDER BY uid"""
     )
 
@@ -216,9 +210,7 @@ class BoaTaskSet(TaskSet):
 
     @task(5)
     def poll_drop_in_waitlist(self):
-        drop_in_advisor = sample(TestData.drop_in_advisors)
-        self.login(drop_in_advisor['uid'])
-        self.client.get(f"/api/appointments/waitlist/{drop_in_advisor['dept_code']}", name='/api/appointments/waitlist/[dept_code]')
+        self.client.get('/api/appointments/waitlist/QCADV')
 
 
 """
