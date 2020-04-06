@@ -633,6 +633,18 @@ module Page
       end
     end
 
+    # SETTINGS
+
+    checkbox(:set_grading_scheme_cbx, id: 'course_grading_standard_enabled')
+
+    # Loads the course settings page
+    # @param course [Course]
+    def load_course_settings(course)
+      logger.info "Loading settings page for course ID #{course.site_id}"
+      navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/settings"
+      set_grading_scheme_cbx_element.when_present Utils.medium_wait
+    end
+
     # LTI TOOLS
 
     link(:apps_link, text: 'Apps')
