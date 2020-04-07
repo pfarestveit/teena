@@ -14,17 +14,10 @@ module Page
       link(:back_to_gradebook_link, text: 'Back to Gradebook')
       span(:not_auth_msg, xpath: '//span[contains(.,"You must be a teacher in this bCourses course to export to E-Grades CSV.")]')
 
-      h1(:required_adjustments_heading, xpath: '//h1[text()="Required adjustments before downloading E-Grades"]')
-      h2(:un_mute_assignments_heading, xpath: '//h2[text()="Unmute All Assignments"]')
-      link(:how_to_mute_link, xpath: '//a[contains(.,"How to mute assignments in Gradebook")]')
-      button(:see_gradebook_button, xpath: '//button[contains(.,"See in Gradebook")]')
-      checkbox(:un_mute_all_cbx, id: 'bc-page-course-grade-export-unmute-assignments')
-      elements(:muted_assignment, :span, xpath: '//span[@data-ng-bind="assignment.name"]')
+      link(:how_to_post_grades_link, xpath: '//a[contains(.,"How do I post grades for an assignment?")]')
 
-      h2(:set_grading_scheme_heading, xpath: '//h2[text()="Set Grading Scheme"]')
-      link(:how_to_set_scheme_link, xpath: '//a[contains(.,"How to set a Grading Scheme")]')
-      button(:course_settings_button, xpath: '//button[contains(.,"Course Settings")]')
-      checkbox(:set_scheme_cbx, id: 'bc-page-course-grade-export-enable-grading-scheme')
+      button(:course_settings_button_enabled, xpath: '(//button[contains(.,"Course Settings")])[1]')
+      button(:course_settings_button_disabled, xpath: '(//button[contains(.,"Course Settings")])[2]')
 
       button(:cancel_button, xpath: '//button[contains(.,"Cancel")]')
       button(:continue_button, xpath: '//button[contains(.,"Continue")]')
@@ -47,39 +40,20 @@ module Page
         navigate_to "#{JunctionUtils.junction_base_url}/canvas/course_grade_export/#{course.site_id}"
       end
 
-      # Waits for an un-mute checkbox to appear on the tool. Sometimes there is a lag between muting a Canvas assignment and
-      # seeing the muted assignment on the E-Grades tool, so makes 5 attempts.
-      # @param driver [Selenium::WebDriver]
-      # @param course [Course]
-      def wait_for_un_mute_cbx(driver, course)
-        tries = 5
-        begin
-          load_embedded_tool(driver, course)
-          un_mute_all_cbx_element.when_visible Utils.short_wait
-        rescue => e
-          (tries -= 1).zero? ? Utils.log_error(e) : retry
-        end
+      # Clicks the course settings button that appears when a grading scheme is enabled
+      def click_course_settings_button_enabled
+        wait_for_load_and_click course_settings_button_enabled_element
       end
 
-      # Returns all the visible muted assignment titles
-      # @return [Array<String>]
-      def muted_assignment_titles
-        wait_until(Utils.medium_wait) { muted_assignment_elements.any? }
-        muted_assignment_elements.map &:text
+      # Clicks the course settings button that appears when a grading scheme is not enabled
+      def click_course_settings_button_disabled
+        wait_for_load_and_click course_settings_button_disabled_element
       end
 
-      # Clicks the 'un-mute all assignments' checkbox
-      def click_un_mute_all
-        logger.debug 'Clicking the un-mute checkbox'
-        un_mute_all_cbx_element.when_visible Utils.medium_wait
-        check_un_mute_all_cbx
-      end
-
-      # Clicks the 'set default grading scheme' checkbox
-      def click_set_default_scheme
-        logger.debug 'Clicking the set default scheme checkbox'
-        set_scheme_cbx_element.when_visible Utils.medium_wait
-        wait_for_update_and_click_js set_scheme_cbx_element
+      # Clicks the Cancel button
+      def click_cancel
+        logger.debug 'Clicking cancel'
+        wait_for_load_and_click cancel_button_element
       end
 
       # Clicks the Continue button
@@ -146,6 +120,7 @@ module Page
       def download_current_grades(driver, course, section)
         logger.info "Downloading current grades for #{course.code} #{section.label}"
         load_embedded_tool(driver, course)
+        click_continue
         choose_section section if course.sections.length > 1
         wait_for_load_and_click download_current_grades_element
         file_path = "#{Utils.download_dir}/egrades-current-#{section.id}-#{course.term.gsub(' ', '-')}-*.csv"
@@ -161,6 +136,7 @@ module Page
       def download_final_grades(driver, course, section)
         logger.info "Downloading final grades for #{course.code} #{section.label}"
         load_embedded_tool(driver, course)
+        click_continue
         choose_section section if course.sections.length > 1
         wait_for_load_and_click download_final_grades_element
         file_path = "#{Utils.download_dir}/egrades-final-#{section.id}-#{course.term.gsub(' ', '-')}-*.csv"

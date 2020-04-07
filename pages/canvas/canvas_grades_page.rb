@@ -10,29 +10,40 @@ module Page
 
     # COURSE LEVEL GRADEBOOK-RELATED SETTINGS
 
-    checkbox(:set_grading_scheme_cbx, id: 'course_grading_standard_enabled')
-
     # Ensures that no grading scheme is set on a course site
     # @param course [Course]
     def disable_grading_scheme(course)
       logger.info "Making sure grading scheme is disabled for course ID #{course.site_id}"
-      navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/settings"
-      set_grading_scheme_cbx_element.when_present Utils.medium_wait
+      load_course_settings course
       scroll_to_bottom
-      if set_grading_scheme_cbx_checked?
-        begin
-          wait_for_update_and_click set_grading_scheme_cbx_element
-          sleep 1
-          wait_for_update_and_click update_course_button_element
-          update_course_success_element.when_visible Utils.medium_wait
-        rescue => e
-          logger.error e.message
-          wait_for_update_and_click update_course_button_element
-          update_course_success_element.when_visible Utils.medium_wait
-        end
-      else
-        logger.info 'Grading scheme already disabled'
-      end
+      set_grading_scheme_cbx_checked? ?  toggle_grading_scheme : logger.info('Grading scheme already disabled')
+    end
+
+    # Ensures that a grading scheme is set on a course site
+    # @param course [Course]
+    def enable_grading_scheme(course)
+      logger.info "Making sure grading scheme is enabled for course ID #{course.site_id}"
+      load_course_settings course
+      scroll_to_bottom
+      !set_grading_scheme_cbx_checked? ?  toggle_grading_scheme : logger.info('Grading scheme already enabled')
+    end
+
+    # Clicks the update button and waits for confirmation
+    def update_course_settings
+      wait_for_update_and_click update_course_button_element
+      sleep 1
+      wait_until(Utils.medium_wait) { update_course_button_element.enabled? }
+      update_course_success_element.when_visible Utils.short_wait
+    end
+
+    # Clicks the grading scheme checkbox and awaits confirmation of the update. Sometimes the confirmation does not appear, so
+    # retries once.
+    def toggle_grading_scheme
+      wait_for_update_and_click set_grading_scheme_cbx_element
+      update_course_settings
+    rescue => e
+      logger.error e.message
+      update_course_settings
     end
 
     button(:gradebook_settings_button, id: 'gradebook-settings-button')

@@ -46,9 +46,6 @@ describe 'bCourses E-Grades Export', order: :defined do
     @canvas.log_in(@cal_net, Utils.super_admin_username, Utils.super_admin_password)
     @canvas.masquerade_as teacher
 
-    # Get a graded assignment already on the site to use for testing hidden grades
-    @graded_assignment = @canvas_assignments_page.get_list_view_assignments(course).first
-
     # Create an ungraded assignment to use for testing manual grading policy
     @ungraded_assignment = Assignment.new(title: Utils.get_test_id)
     @canvas.set_grade_policy_manual course
@@ -70,108 +67,53 @@ describe 'bCourses E-Grades Export', order: :defined do
     @e_grades_export_page.wait_until(1, 'Wrong Junction environment is configured') { @e_grades_export_page.i_frame_form_element? JunctionUtils.junction_base_url }
   end
 
-  context 'when no grading scheme is enabled and assignments are muted' do
+  context 'when no grading scheme is enabled and an assignment is un-posted' do
 
-    before(:all) do
-      @canvas.disable_grading_scheme course
-      @canvas.load_gradebook course
-      @canvas.hide_assignment_grades @graded_assignment
-    end
+    before(:all) { @canvas.disable_grading_scheme course }
 
     before(:each) { @e_grades_export_page.load_embedded_tool(@driver, course) }
 
-    it 'prevents the user continuing while both problems remain' do
-      @e_grades_export_page.continue_button_element.when_visible Utils.medium_wait
-      expect(@e_grades_export_page.continue_button_element.attribute('disabled')).to eql('true')
-    end
-
-    it('shows the user the muted assignment with hidden grades') do
-      @e_grades_export_page.wait_until(Utils.short_wait, "Expected #{@e_grades_export_page.muted_assignment_titles} to include #{@graded_assignment.title}") do
-        @e_grades_export_page.muted_assignment_titles.include? @graded_assignment.title
-      end
-    end
-
-    it('shows the user the muted assignment with a manual grading policy') { expect(@e_grades_export_page.muted_assignment_titles).to include(@ungraded_assignment.title) }
-
-    it 'offers a "How to mute/un-mute assignments in Gradebook" link' do
-      expect(@e_grades_export_page.external_link_valid?(@e_grades_export_page.how_to_mute_link_element, 'How do I mute or unmute an assignment in the Gradebook? | Canvas Instructor Guide | Canvas Guides')).to be true
-    end
-
-    it 'offers a "See in Gradebook" link' do
-      @e_grades_export_page.wait_for_load_and_click @e_grades_export_page.see_gradebook_button_element
-      @canvas.wait_until(Utils.medium_wait) { @canvas.current_url == "#{Utils.canvas_base_url}/courses/#{course.site_id}/gradebook" }
-    end
-
-    it 'offers a "How to set a Grading Scheme" link' do
-      expect(@e_grades_export_page.external_link_valid?(@e_grades_export_page.how_to_set_scheme_link_element, 'How do I enable a grading scheme for a course? | Canvas Instructor Guide | Canvas Guides')).to be true
-    end
-
     it 'offers a "Course Settings" link' do
-      @e_grades_export_page.wait_for_load_and_click @e_grades_export_page.course_settings_button_element
+      @e_grades_export_page.click_course_settings_button_disabled
       @canvas.wait_until(Utils.medium_wait) { @canvas.current_url.include? "#{Utils.canvas_base_url}/courses/#{course.site_id}/settings" }
     end
 
+    it 'offers a "How do I post grades for an assignment?" link' do
+      expect(@e_grades_export_page.external_link_valid?(@e_grades_export_page.how_to_post_grades_link_element, 'How do I post grades for an assignment in the G... | Canvas LMS Community')).to be true
+    end
+
     it 'allows the user to Cancel' do
-      @e_grades_export_page.wait_for_load_and_click @e_grades_export_page.cancel_button_element
+      @e_grades_export_page.click_cancel
       @canvas.wait_until(Utils.medium_wait) { @canvas.current_url == "#{Utils.canvas_base_url}/courses/#{course.site_id}/gradebook" }
     end
 
-    it 'prevents the user continuing while only "Unmute All" is checked' do
-      @e_grades_export_page.click_un_mute_all
+    it 'prevents the user continuing' do
+      @e_grades_export_page.continue_button_element.when_visible Utils.medium_wait
       expect(@e_grades_export_page.continue_button_element.attribute('disabled')).to eql('true')
-    end
-
-    it 'prevents the user continuing while only "Enable default" grading scheme is checked' do
-      @e_grades_export_page.click_set_default_scheme
-      expect(@e_grades_export_page.continue_button_element.attribute('disabled')).to eql('true')
-    end
-
-    it 'allows the user to proceed if both "Unmute All" and "Enable default" grading scheme are checked' do
-      @e_grades_export_page.click_un_mute_all
-      @e_grades_export_page.click_set_default_scheme
-      @e_grades_export_page.click_continue
-      @e_grades_export_page.download_final_grades_element.when_visible Utils.medium_wait
     end
   end
 
-  context 'when a grading scheme is enabled but an assignment is muted' do
+  context 'when a grading scheme is enabled and an assignment is un-posted' do
 
-    before(:all) do
-      @canvas.load_gradebook course
-      @canvas.set_assign_grade_policy_manual @ungraded_assignment
-      @canvas.hide_assignment_grades @graded_assignment
+    before(:all) { @canvas.enable_grading_scheme course }
+
+    before(:each) { @e_grades_export_page.load_embedded_tool(@driver, course) }
+
+    it 'offers a "Course Settings" link' do
+      @e_grades_export_page.click_course_settings_button_enabled
+      @canvas.wait_until(Utils.medium_wait) { @canvas.current_url.include? "#{Utils.canvas_base_url}/courses/#{course.site_id}/settings" }
     end
 
-    it('offers the user an un-mute all checkbox') { @e_grades_export_page.wait_for_un_mute_cbx(@driver, course) }
-    it('shows the user the muted assignment with hidden grades') { expect(@e_grades_export_page.muted_assignment_titles).to include(@graded_assignment.title) }
-    it('shows the user the muted assignment with a manual grading policy') { expect(@e_grades_export_page.muted_assignment_titles).to include(@ungraded_assignment.title) }
-
-    it('offers a "How to mute assignments in Gradebook" link') { expect(@e_grades_export_page.how_to_mute_link_element.when_present Utils.medium_wait).to be_truthy }
-    it('offers a "See in Gradebook" link') { expect(@e_grades_export_page.see_gradebook_button_element.when_present Utils.medium_wait).to be_truthy }
-    it('prevents the user continuing while the problem remains') { expect(@e_grades_export_page.continue_button_element.attribute('disabled')).to eql('true') }
-    it('shows no "Set Grading Scheme" elements') { expect(@e_grades_export_page.set_scheme_cbx_element.visible?).to be false }
-
-    it 'allows the user to proceed if "Unmute All" is checked' do
-      @e_grades_export_page.click_un_mute_all
-      @e_grades_export_page.click_continue
-      @e_grades_export_page.download_final_grades_element.when_visible Utils.medium_wait
-    end
-  end
-
-  context 'when no assignment is muted but no grading scheme is enabled' do
-
-    before(:all) do
-      @canvas.disable_grading_scheme course
-      @e_grades_export_page.load_embedded_tool(@driver, course)
+    it 'offers a "How do I post grades for an assignment?" link' do
+      expect(@e_grades_export_page.external_link_valid?(@e_grades_export_page.how_to_post_grades_link_element, 'How do I mute or unmute an assignment in the Gradebook? | Canvas Instructor Guide | Canvas Guides')).to be true
     end
 
-    it('offers a "How to set a Grading Scheme" link') { expect(@e_grades_export_page.how_to_set_scheme_link_element.when_present Utils.medium_wait).to be_truthy }
-    it('offers a "Course Settings" link') { expect(@e_grades_export_page.course_settings_button_element.when_present Utils.medium_wait).to be_truthy }
-    it('prevents the user continuing while the problem remains') { expect(@e_grades_export_page.continue_button_element.attribute('disabled')).to eql('true') }
-    it('shows no "Unmute Assignments" elements') { expect(@e_grades_export_page.un_mute_all_cbx_element.visible?).to be false }
+    it 'allows the user to Cancel' do
+      @e_grades_export_page.click_cancel
+      @canvas.wait_until(Utils.medium_wait) { @canvas.current_url == "#{Utils.canvas_base_url}/courses/#{course.site_id}/gradebook" }
+    end
 
-    it 'allows the user to proceed if "Enable default" grading scheme is checked' do
-      @e_grades_export_page.click_set_default_scheme
+    it 'allows the user to Continue' do
       @e_grades_export_page.click_continue
       @e_grades_export_page.download_final_grades_element.when_visible Utils.medium_wait
     end
@@ -182,9 +124,9 @@ describe 'bCourses E-Grades Export', order: :defined do
 
   context 'when no assignment is muted and a grading scheme is enabled' do
 
-    it 'loads the Download page' do
+    before(:all) do
       @e_grades_export_page.load_embedded_tool(@driver, course)
-      @e_grades_export_page.download_final_grades_element.when_visible Utils.medium_wait
+      @e_grades_export_page.click_continue
     end
 
     it 'allows the user the select any section on the course site' do
