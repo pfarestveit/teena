@@ -22,9 +22,12 @@ module Page
       button(:cancel_button, xpath: '//button[contains(.,"Cancel")]')
       button(:continue_button, xpath: '//button[contains(.,"Continue")]')
 
+      radio_button(:pnp_cutoff_radio, id: 'input-enable-pnp-conversion-true')
+      radio_button(:no_pnp_cutoff_radio, id: 'input-enable-pnp-conversion-false')
+      select_list(:cutoff_select, id: 'select-pnp-grade-cutoff')
       select_list(:sections_select, id: 'course-sections')
-      button(:download_current_grades, xpath: '//button[text()="Download Current Grades"]')
-      button(:download_final_grades, xpath: '//button[text()="Download Final Grades"]')
+      button(:download_current_grades, xpath: '//button[contains(text(), "Download Current Grades")]')
+      button(:download_final_grades, xpath: '//button[contains(text(), "Download Final Grades")]')
       link(:bcourses_to_egrades_link, xpath: '//a[contains(.,"From bCourses to E-Grades")]')
 
       # Loads the LTI tool in the context of a Canvas course site
@@ -62,28 +65,14 @@ module Page
         wait_for_load_and_click_js continue_button_element
       end
 
-      # Un-mutes any muted assignments and sets the default grading scheme
-      # @param driver [Selenium::WebDriver]
-      # @param course [Course]
-      def resolve_all_issues(driver, course)
-        load_embedded_tool(driver, course)
-        tries ||= Utils.medium_wait
-        begin
-          wait_until(1) { download_final_grades_element.visible? || required_adjustments_heading_element.visible? }
-          if download_final_grades_element.visible?
-            logger.debug "No adjustments needed on site #{course.site_id}"
-          else
-            logger.debug "Adjustments needed on site #{course.site_id}"
-            un_mute_all_cbx_element.when_present Utils.short_wait
-            sleep 3
-            click_un_mute_all if un_mute_all_cbx_element.visible?
-            click_set_default_scheme if set_scheme_cbx_element.visible?
-            click_continue
-            logger.debug 'Waiting for download-grades button'
-            download_final_grades_element.when_visible Utils.medium_wait
-          end
-        rescue
-          (tries -= 1).zero? ? fail : retry
+      # Selects a given P/NP grade cutoff
+      def set_cutoff(cutoff)
+        if cutoff
+          logger.info "Setting P/NP cutoff to '#{cutoff}'"
+          wait_for_element_and_select_js(cutoff_select_element, cutoff)
+        else
+          logger.info 'Setting no P/NP cutoff'
+          wait_for_update_and_click no_pnp_cutoff_radio_element
         end
       end
 
@@ -116,11 +105,14 @@ module Page
       # @param driver [Selenium::WebDriver]
       # @param course [Course]
       # @param section [Section]
+      # @param cutoff [String]
       # @return [Array<Hash>]
-      def download_current_grades(driver, course, section)
+      def download_current_grades(driver, course, section, cutoff)
         logger.info "Downloading current grades for #{course.code} #{section.label}"
+        Utils.prepare_download_dir
         load_embedded_tool(driver, course)
         click_continue
+        set_cutoff cutoff
         choose_section section if course.sections.length > 1
         wait_for_load_and_click download_current_grades_element
         file_path = "#{Utils.download_dir}/egrades-current-#{section.id}-#{course.term.gsub(' ', '-')}-*.csv"
@@ -132,11 +124,14 @@ module Page
       # @param driver [Selenium::WebDriver]
       # @param course [Course]
       # @param section [Section]
+      # @param cutoff [String]
       # @return [Array<Hash>]
-      def download_final_grades(driver, course, section)
+      def download_final_grades(driver, course, section, cutoff)
         logger.info "Downloading final grades for #{course.code} #{section.label}"
+        Utils.prepare_download_dir
         load_embedded_tool(driver, course)
         click_continue
+        set_cutoff cutoff
         choose_section section if course.sections.length > 1
         wait_for_load_and_click download_final_grades_element
         file_path = "#{Utils.download_dir}/egrades-final-#{section.id}-#{course.term.gsub(' ', '-')}-*.csv"
