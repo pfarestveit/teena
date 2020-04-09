@@ -265,6 +265,7 @@ class BOACUtils < Utils
   def self.get_authorized_users
     query = "SELECT
               authorized_users.uid AS uid,
+              authorize_users.can_access_advising_data AS can_access_advising_data,
               authorized_users.can_access_canvas_data AS can_access_canvas_data,
               authorized_users.deleted_at AS deleted_at,
               authorized_users.is_admin AS is_admin,
@@ -292,6 +293,7 @@ class BOACUtils < Utils
       logger.info "Getting advisor role(s) for UID #{k}"
       # TODO - clarify the following definition of 'active'
       active = v[0]['deleted_at'].nil?
+      can_access_advising_data = (v[0]['can_access_advising_data'] == 't')
       can_access_canvas_data = (v[0]['can_access_canvas_data'] == 't')
       is_admin = (v[0]['is_admin'] == 't')
       is_blocked = (v[0]['is_blocked'] == 't')
@@ -311,6 +313,7 @@ class BOACUtils < Utils
          {
              uid: k,
              dept_memberships: roles,
+             can_access_advising_data: can_access_advising_data,
              can_access_canvas_data: can_access_canvas_data,
              depts: roles.map(&:dept).compact,
              active: active,
@@ -332,6 +335,7 @@ class BOACUtils < Utils
     if dept == BOACDepartments::NOTES_ONLY
       query = "SELECT
               authorized_users.uid AS uid,
+              authorized_users.can_access_advising_data AS can_access_advising_data,
               authorized_users.can_access_canvas_data AS can_access_canvas_data,
               string_agg(ud.dept_code,',') AS depts
             FROM authorized_users
@@ -346,10 +350,11 @@ class BOACUtils < Utils
                           FROM drop_in_advisors
                           WHERE drop_in_advisors.authorized_user_id = authorized_users.id
                             AND ud.dept_code = drop_in_advisors.dept_code) ' if membership&.is_drop_in_advisor}
-            GROUP BY authorized_users.uid, authorized_users.can_access_canvas_data"
+            GROUP BY authorized_users.uid, authorized_users.can_access_advising_data, authorized_users.can_access_canvas_data"
     else
       query = "SELECT
               authorized_users.uid AS uid,
+              authorized_users.can_access_advising_data AS can_access_advising_data,
               authorized_users.can_access_canvas_data AS can_access_canvas_data,
               string_agg(ud2.dept_code,',') AS depts
             FROM authorized_users
@@ -368,10 +373,17 @@ class BOACUtils < Utils
                               FROM drop_in_advisors
                               WHERE drop_in_advisors.authorized_user_id = authorized_users.id
                                 AND drop_in_advisors.dept_code = ud1.dept_code) ' if membership&.is_drop_in_advisor}
-            GROUP BY authorized_users.uid, authorized_users.can_access_canvas_data"
+            GROUP BY authorized_users.uid, authorized_users.can_access_advising_data, authorized_users.can_access_canvas_data"
     end
     results = query_pg_db(boac_db_credentials, query)
-    results.map { |r| BOACUser.new({uid: r['uid'], can_access_canvas_data: r['can_access_canvas_data'], depts: r['depts'].split(',')}) }
+    results.map do |r|
+      BOACUser.new(
+          uid: r['uid'],
+          can_access_advising_data: (r['can_access_advising_data'] == 't'),
+          can_access_canvas_data: (r['can_access_canvas_data'] == 't'),
+          depts: r['depts'].split(',')
+      )
+    end
   end
 
   # Returns all SIDs in the manual advisee table

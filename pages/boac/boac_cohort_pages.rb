@@ -235,6 +235,8 @@ module BOACCohortPages
 
   # LIST VIEW - shared by filtered cohorts and curated groups
 
+  elements(:site_activity_header, :row, xpath: "//th[text()='BCOURSES ACTIVITY']")
+
   # Returns the XPath to the div containing data for a single student
   # @param student [BOACUser]
   # @return [String]

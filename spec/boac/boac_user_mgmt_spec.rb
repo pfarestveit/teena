@@ -356,6 +356,10 @@ describe 'The BOAC passenger manifest' do
         @class_page.load_page('2198', '21595')
       end
 
+      # TODO
+      it 'allows an admin to prevent a user from viewing notes and appointments'
+      it 'allows an admin to permit a user to view notes and appointments'
+
       it 'allows an admin to delete a user' do
         @add_edit_user.active = false
         @pax_manifest_page.edit_user @add_edit_user

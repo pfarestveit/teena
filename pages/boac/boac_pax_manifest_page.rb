@@ -189,6 +189,8 @@ class BOACPaxManifestPage
     text_area_element(xpath: '//input[@id="can-access-canvas-data"]')
   end
 
+  # TODO - can_access_advising_data_cbx
+
   # Returns the element for the is-deleted checkbox
   # @return [Element]
   def is_deleted_cbx
@@ -260,6 +262,7 @@ class BOACPaxManifestPage
       execute_script('arguments[0].click();', can_access_canvas_data_cbx)
       sleep Utils.click_wait
     end
+    # TODO - can_access_advising_data
   end
 
   # Adds the department roles associated with a given user

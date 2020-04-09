@@ -62,6 +62,7 @@ module BOACPages
   # Clicks the 'Log out' link in the header
   def log_out
     logger.info 'Logging out'
+    navigate_to BOACUtils.base_url unless header_dropdown?
     click_header_dropdown
     wait_for_update_and_click log_out_link_element
     wait_for_title 'Welcome'
