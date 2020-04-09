@@ -10,6 +10,10 @@ module Page
 
     # COURSE LEVEL GRADEBOOK-RELATED SETTINGS
 
+    link(:view_grading_scheme_link, text: 'view grading scheme')
+    link(:select_another_scheme_link, xpath: '//a[@title="Find an Existing Grading Scheme"]')
+    button(:done_button, xpath: '//button[text()="Done"]')
+
     # Ensures that no grading scheme is set on a course site
     # @param course [Course]
     def disable_grading_scheme(course)
@@ -26,6 +30,30 @@ module Page
       load_course_settings course
       scroll_to_bottom
       !set_grading_scheme_cbx_checked? ?  toggle_grading_scheme : logger.info('Grading scheme already enabled')
+    end
+
+    # Sets a given grading scheme on a course site
+    # @param opts [Hash] - :scheme
+    def set_grading_scheme(opts)
+      logger.info "Setting grading scheme to #{opts[:scheme]}"
+      wait_for_update_and_click view_grading_scheme_link_element
+      wait_for_update_and_click select_another_scheme_link_element
+      link_text = case opts[:scheme]
+                    when 'letter-only'
+                      'Letter Grade Scale'
+                    when 'letter'
+                      'Letter Grades with +/-'
+                    when 'pnp'
+                      'Pass/No Pass'
+                    when 'sus'
+                      'Satisfactory/Unsatisfactory'
+                    else
+                      logger.error "Unrecognized grading scheme '#{opts[:scheme]}'"
+                      fail
+                  end
+      wait_for_update_and_click link_element(xpath: "//a[contains(., '#{link_text}')]")
+      wait_for_update_and_click link_element(xpath: "//a[@class='select_grading_standard_link'][contains(., '#{link_text}')]")
+      wait_for_update_and_click_js done_button_element
     end
 
     # Clicks the update button and waits for confirmation
@@ -108,6 +136,7 @@ module Page
 
     elements(:gradebook_student_link, :link, xpath: '//a[contains(@class, "student-grades-link")]')
     elements(:gradebook_total, :span, xpath: '//div[contains(@class, "total_grade")]//span[@class="percentage"]')
+    elements(:gradebook_grade, :span, xpath: '//div[contains(@class, "total_grade")]//span[@class="letter-grade-points"]')
 
     # Loads the Canvas Gradebook, switching to default view if necessary
     # @param course [Course]
@@ -206,54 +235,15 @@ module Page
       wait_for_load_and_click e_grades_export_link_element
     end
 
-    # Given a user and its Gradebook total score, returns the user's UID, SIS ID, and expected grade (based on the default grading scheme)
-    # @param user [User]
-    # @param score [Float]
-    # @return [Hash]
-    def student_and_grade(user, score)
-      grade = case score
-                when 99.9..100
-                  'A+'
-                when 95..99.89
-                  'A'
-                when 90..94.99
-                  'A-'
-                when 87..89.99
-                  'B+'
-                when 83..86.99
-                  'B'
-                when 80..82.99
-                  'B-'
-                when 77..79.99
-                  'C+'
-                when 73..76.99
-                  'C'
-                when 70..72.99
-                  'C-'
-                when 67..69.99
-                  'D+'
-                when 63..66.99
-                  'D'
-                when 60..62.99
-                  'D-'
-                when 0..59.99
-                  'F'
-                else
-                  logger.error "Invalid score '#{score}'"
-                  nil
-              end
-      {uid: user.uid, canvas_id: user.canvas_id, sis_id: user.sis_id, score: score, grade: grade}
-    end
-
     # Returns the Gradebook data for a given user. If the score cannot be found, log an error but do not fail.
-    # @param driver [Selenium::WebDriver]
     # @param user [User]
     # @return [Hash]
-    def student_score(driver, user)
+    def student_score(user)
       begin
         logger.debug "Searching for score for UID #{user.uid}"
         user_search_input_element.when_visible Utils.medium_wait
-        unless gradebook_total_elements.any? &:visible?
+        wait_until(Utils.short_wait) { gradebook_total_elements.any? } rescue logger.error('Timed out waiting for gradebook totals')
+        unless gradebook_total_elements.any?
           begin
             logger.debug 'Gradebook totals are not visible, bringing them to the front'
             scroll_to_element total_grade_column_element
@@ -280,17 +270,14 @@ module Page
           tries.zero? ? fail : retry
         end
         sleep Utils.click_wait
-        score = gradebook_total_elements.first.text.strip.delete('%').to_f
-        # If the score in the UI is zero, the score might not have loaded yet. Retry.
-        score = if score.zero?
-                  logger.debug 'Double-checking a zero score'
-                  wait_for_element_and_type(user_search_input_element, user.uid)
-                  sleep 1
-                  gradebook_total_elements.first.text.strip.delete('%').to_f
-                else
-                  score
-                end
-        student_and_grade(user, score)
+        wait_until(Utils.short_wait) { gradebook_grade_elements.any? }
+        grade = gradebook_grade_elements.first.text
+        {
+            uid: user.uid,
+            canvas_id: user.canvas_id,
+            sis_id: user.sis_id,
+            grade: grade
+        }
       rescue => e
         Utils.log_error e
       end

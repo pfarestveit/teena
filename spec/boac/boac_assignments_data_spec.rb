@@ -82,10 +82,6 @@ describe 'BOAC assignment analytics' do
 
                   logger.warn "Checking assignment submissions for #{test_case}"
 
-                  # Un-mute all assignments so that scores are visible to the student
-                  @canvas_assignments_page.load_course_site course
-                  @canvas_assignments_page.stop_masquerading if @canvas_assignments_page.stop_masquerading_link?
-                  @e_grades_page.resolve_all_issues(@driver, course)
                   @canvas_assignments_page.masquerade_as student
                   ui_assignments = @canvas_assignments_page.get_student_view_assignments(@driver, course, student, @canvas_discussions_page)
                   nessie_assignments = NessieUtils.get_assignments(student, course)
@@ -96,7 +92,9 @@ describe 'BOAC assignment analytics' do
                     ui_assignments.each do |ui|
                       Utils.add_csv_row(user_course_assigns, [student.uid, student.canvas_id, site_id, ui.id, ui.url, ui.due_date, ui.submitted, ui.submission_date, ui.type, ui.on_time])
                       nessie_assign = nessie_assignments.find { |n| n.id == ui.id }
-                      it("has the right assignment submission status for assignment ID #{ui.id} #{test_case}") { expect(nessie_assign.submitted).to eql(ui.submitted) }
+                      if nessie_assign
+                        it("has the right assignment submission status for assignment ID #{ui.id} #{test_case}") { expect(nessie_assign.submitted).to eql(ui.submitted) }
+                      end
                     end
 
                     # Compare the total submitted assignment count in the BOAC API with the same assignment count in the Canvas UI
