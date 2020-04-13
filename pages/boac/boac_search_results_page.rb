@@ -47,7 +47,7 @@ class BOACSearchResultsPage
   # Returns the result count for an admit search
   # @return [Integer]
   def admit_search_results_count
-    results_count student_results_count_element
+    results_count admit_results_count_element
   end
 
   # Checks if a given admit is among search results. If more than 50 results exist, the admit could be among them

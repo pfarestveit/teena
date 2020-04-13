@@ -472,8 +472,8 @@ class BOACTestConfig < TestConfig
 
   def user_role_notes_only
     set_dept BOACDepartments::NOTES_ONLY
-    set_advisor { |advisor| advisor.can_access_canvas_data == 'f' && advisor.depts.length == 1 }
     set_students
+    set_test_students(1, {with_notes: true})
   end
 
 end
