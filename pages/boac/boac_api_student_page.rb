@@ -368,4 +368,16 @@ class BOACApiStudentPage
     site_statistics(analytics(site)['lastActivity']).merge!({:type => 'Last bCourses Activity'})
   end
 
+  def notifications
+    @parsed['notifications']
+  end
+
+  def notes
+    notifications && notifications['note']
+  end
+
+  def appointments
+    notifications && notifications['appointment']
+  end
+
 end

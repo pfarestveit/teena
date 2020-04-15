@@ -125,10 +125,11 @@ class BOACStudentPage
   # TIMELINE
 
   div(:timeline_loaded_msg, xpath: '//div[text()="Academic Timeline has loaded"]')
+  button(:timeline_all_button, id: 'timeline-tab-all')
   button(:show_hide_all_button, id: 'timeline-tab-all-previous-messages')
 
   def wait_for_timeline
-    timeline_loaded_msg_element.when_present Utils.short_wait
+    timeline_all_button_element.when_visible Utils.short_wait
   end
 
   # Requirements

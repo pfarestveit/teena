@@ -26,7 +26,7 @@ describe 'The BOAC passenger manifest' do
     )
 
     # Initialize users for the add/remove scheduler tests
-    @add_remove_advisor = auth_users.find { |u| u.depts == [BOACDepartments::L_AND_S] }
+    @add_remove_advisor = auth_users.find { |u| (u.depts == [BOACDepartments::L_AND_S]) && u.can_access_advising_data }
     @add_remove_scheduler = test.students.find { |s| s.uid == BOACUtils.config['test_add_remove_scheduler'].to_s }
 
     # Hard delete the add/edit user and the add/remove scheduler in case they're still lying around from a previous test run
@@ -41,6 +41,7 @@ describe 'The BOAC passenger manifest' do
     @class_page = BOACClassListViewPage.new @driver
     @cohort_page = BOACFilteredCohortPage.new(@driver, @add_edit_user)
     @intake_desk_page = BOACApptIntakeDeskPage.new @driver
+    @student_page = BOACStudentPage.new @driver
 
     @homepage.dev_auth
     @homepage.click_pax_manifest_link
@@ -314,6 +315,8 @@ describe 'The BOAC passenger manifest' do
 
     context 'performing edits' do
 
+      before(:all) { @student = test.students.sample }
+
       before(:each) do
         @pax_manifest_page.hit_escape
         @pax_manifest_page.log_out if @pax_manifest_page.header_dropdown?
@@ -356,9 +359,29 @@ describe 'The BOAC passenger manifest' do
         @class_page.load_page('2198', '21595')
       end
 
-      # TODO
-      it 'allows an admin to prevent a user from viewing notes and appointments'
-      it 'allows an admin to permit a user to view notes and appointments'
+      it 'allows an admin to prevent a user from viewing notes and appointments' do
+        @add_edit_user.can_access_advising_data = false
+        @pax_manifest_page.edit_user @add_edit_user
+        @pax_manifest_page.click_become_user_link_element @add_edit_user
+        @homepage.wait_for_title 'Home'
+        @student_page.load_page @student
+        @student_page.wait_for_timeline
+        expect(@student_page.new_note_button?).to be false
+        expect(@student_page.notes_button?).to be false
+        expect(@student_page.appts_button?).to be false
+      end
+
+      it 'allows an admin to permit a user to view notes and appointments' do
+        @add_edit_user.can_access_advising_data = true
+        @pax_manifest_page.edit_user @add_edit_user
+        @pax_manifest_page.click_become_user_link_element @add_edit_user
+        @homepage.wait_for_title 'Home'
+        @student_page.load_page @student
+        @student_page.wait_for_timeline
+        expect(@student_page.new_note_button?).to be true
+        expect(@student_page.notes_button?).to be true
+        expect(@student_page.appts_button?).to be true
+      end
 
       it 'allows an admin to delete a user' do
         @add_edit_user.active = false

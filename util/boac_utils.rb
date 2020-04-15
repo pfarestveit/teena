@@ -265,7 +265,7 @@ class BOACUtils < Utils
   def self.get_authorized_users
     query = "SELECT
               authorized_users.uid AS uid,
-              authorize_users.can_access_advising_data AS can_access_advising_data,
+              authorized_users.can_access_advising_data AS can_access_advising_data,
               authorized_users.can_access_canvas_data AS can_access_canvas_data,
               authorized_users.deleted_at AS deleted_at,
               authorized_users.is_admin AS is_admin,
@@ -632,6 +632,14 @@ class BOACUtils < Utils
              WHERE note_attachments.deleted_at IS NULL
                AND notes.deleted_at IS NULL;'
     Utils.query_pg_db_field(boac_db_credentials, query, 'count').first
+  end
+
+  def self.get_note_attachments
+    query = 'SELECT id
+             FROM note_attachments
+             WHERE deleted_at IS NULL;'
+    results = Utils.query_pg_db(boac_db_credentials, query)
+    results.map { |r| Attachment.new(id: r['id']) }
   end
 
   # Returns the number of non-deleted notes with non-deleted topics

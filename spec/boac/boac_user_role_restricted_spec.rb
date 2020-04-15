@@ -22,6 +22,7 @@ describe 'A restricted BOA user' do
     @student_page = BOACStudentPage.new @driver
 
     @api_admin_page = BOACApiAdminPage.new @driver
+    @api_notes_page = BOACApiNotesPage.new @driver
     @api_section_page = BOACApiSectionPage.new @driver
     @api_student_page = BOACApiStudentPage.new @driver
   end
@@ -223,7 +224,12 @@ describe 'A restricted BOA user' do
   describe 'with no-Canvas-data, no-notes, and no-appointments BOA access' do
 
     before(:all) do
-      @test.set_advisor { |advisor| !advisor.can_access_canvas_data && !advisor.can_access_advising_data && advisor.depts.length == 1 }
+      @test.set_advisor do |advisor|
+            advisor.depts.include?(BOACDepartments::L_AND_S) &&
+            advisor.depts.length == 1 &&
+            !advisor.can_access_canvas_data &&
+            !advisor.can_access_advising_data
+      end
       @cohort_page = BOACFilteredCohortPage.new(@driver, @test.advisor)
       @homepage.dev_auth @test.advisor
     end
@@ -241,9 +247,8 @@ describe 'A restricted BOA user' do
       it('sees no New Note button') { expect(@student_page.new_note_button?).to be false }
       it('sees no Notes tab') { expect(@student_page.notes_button?).to be false }
       it('sees no Appointments tab') { expect(@student_page.appts_button?).to be false }
-
-      # TODO
-      it 'cannot download a note attachment'
+      it('cannot see notes data in the API response') { expect(@api_student_page.notes).to be_nil }
+      it('cannot see appointments data in the API response') { expect(@api_student_page.appointments).to be_nil }
 
       it 'cannot expand courses' do
         @api_student_page.terms.each do |term|
@@ -273,6 +278,14 @@ describe 'A restricted BOA user' do
           end
         end
       end
+    end
+
+    it 'cannot download a note attachment' do
+      Utils.prepare_download_dir
+      attachment = BOACUtils.get_note_attachments.sample
+      @api_notes_page.load_attachment_page attachment.id
+      @api_notes_page.unauth_msg_element.when_visible Utils.short_wait
+      expect(Utils.downloads_empty?).to be true
     end
 
     context 'visiting a class page' do
@@ -355,7 +368,7 @@ describe 'A restricted BOA user' do
 
       it('sees no admitted students link') { expect(@homepage.all_admits_link?).to be false }
       it('sees no link to create a CE3 cohort') { expect(@homepage.create_ce3_filtered_link?).to be false }
-      it('sees a batch note button') { expect(@homepage.batch_note_button_element).to be_visible }
+      it('sees no batch note button') { expect(@homepage.batch_note_button_element).not_to be_visible }
     end
 
     context 'performing a search' do
@@ -397,6 +410,9 @@ describe 'A restricted BOA user' do
         @homepage.wait_for_update_and_click @homepage.settings_link_element
         expect(@settings_page.status_heading?).to be false
       end
+
+      it('cannot toggle drop-in advising') { expect(@settings_page.drop_in_advising_toggle_el(@test.advisor.depts.first).exists?).to be false }
+      it('cannot manage drop-in schedulers') { expect(@settings_page.add_scheduler_input?).to be false }
 
       it 'cannot reach the Passenger Manifest' do
         @pax_manifest_page.hit_page_url
