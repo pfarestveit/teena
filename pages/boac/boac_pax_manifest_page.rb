@@ -189,7 +189,11 @@ class BOACPaxManifestPage
     text_area_element(xpath: '//input[@id="can-access-canvas-data"]')
   end
 
-  # TODO - can_access_advising_data_cbx
+  # Returns the element for the can-access-advising-data checkbox
+  # @return [Element]
+  def can_access_advising_data_cbx
+    text_area_element(xpath: '//input[@id="can-access-advising-data"]')
+  end
 
   # Returns the element for the is-deleted checkbox
   # @return [Element]
@@ -262,7 +266,11 @@ class BOACPaxManifestPage
       execute_script('arguments[0].click();', can_access_canvas_data_cbx)
       sleep Utils.click_wait
     end
-    # TODO - can_access_advising_data
+    if (user.can_access_advising_data && !can_access_advising_data_cbx.selected?) || (!user.can_access_advising_data && can_access_advising_data_cbx.selected?)
+      logger.debug 'Clicking can-access-advising-data checkbox'
+      execute_script('arguments[0].click();', can_access_advising_data_cbx)
+      sleep Utils.click_wait
+    end
   end
 
   # Adds the department roles associated with a given user
