@@ -37,6 +37,7 @@ module BOACPages
 
   ### HEADER ###
 
+  div(:banner, xpath: '//div[@role="banner"]')
   link(:home_link, xpath: '//a[contains(.,"Home")]')
   button(:header_dropdown, xpath: '//button[contains(@id,"header-dropdown-under-name")]')
   link(:flight_data_recorder_link, text: 'Flight Data Recorder')
@@ -284,6 +285,7 @@ module BOACPages
   # Expands the sidebar advanced search notes subpanel
   def expand_search_options_notes_subpanel
     expand_search_options
+    wait_for_update_and_click banner_element
     wait_for_update_and_click search_options_note_filters_toggle_button_element unless search_options_note_filters_subpanel_element.visible?
     search_options_note_filters_subpanel_element.when_visible 1
   end
@@ -291,6 +293,7 @@ module BOACPages
   # Collapses the sidebar advanced search notes subpanel
   def collapse_search_options_notes_subpanel
     expand_search_options
+    wait_for_update_and_click banner_element
     hit_escape
     wait_for_update_and_click search_options_note_filters_toggle_button_element if search_options_note_filters_subpanel_element.visible?
     sleep Utils.click_wait
@@ -320,7 +323,7 @@ module BOACPages
   def set_auto_suggest(element, name)
     wait_for_element_and_type(element, name)
     sleep Utils.click_wait
-    wait_until(2) { auto_suggest_option_elements.any? }
+    wait_until(Utils.short_wait) { auto_suggest_option_elements.any? }
     link_element = auto_suggest_option_elements.find { |el| el.attribute('innerText').downcase.include? name.downcase }
     wait_for_load_and_click link_element
   end

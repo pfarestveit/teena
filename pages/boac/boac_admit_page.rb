@@ -94,7 +94,7 @@ class BOACAdmitPage
   # @param admit [Hash]
   # @return [Element]
   def student_page_link(admit)
-    link_element(xpath: "//a[text()=\"View #{concatenated_name admit}'s profile page\"]")
+    link_element(xpath: "//a[contains(., \"View #{concatenated_name admit}'s profile page\")]")
   end
 
   # Clicks the student page link

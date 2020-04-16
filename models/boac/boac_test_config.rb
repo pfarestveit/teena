@@ -151,6 +151,13 @@ class BOACTestConfig < TestConfig
                        test_sids = (asc_note_sids[0..(config - 1)] + boa_note_sids[0..(config - 1)] + e_and_i_note_sids[0..(config - 1)] + sis_note_sids[0..(config - 1)]).uniq
                        @students.select { |s| test_sids.include? s.sis_id }
 
+                     elsif opts[:with_appts]
+                       boa_sids = NessieUtils.get_all_sids
+                       sis_appts_sids = boa_sids & NessieUtils.get_sids_with_sis_appts
+                       logger.info "There are #{sis_appts_sids.length} students with SIS appointments"
+                       sis_appts_sids.shuffle! if BOACUtils.shuffle_max_users
+                       test_sids = sis_appts_sids[0..(config - 1)]
+                       @students.select { |s| test_sids.include? s.sis_id }
                      else
                        # Running tests against a random set of students
                        @students.shuffle[0..(config - 1)]
@@ -231,6 +238,12 @@ class BOACTestConfig < TestConfig
     set_advisor
     set_admits
     set_test_admits CONFIG['sis_data_max_users']
+  end
+
+  # Config for advising note content testing
+  def appts_content
+    set_base_configs
+    set_test_students(CONFIG['notes_max_users'], {with_appts: true})
   end
 
   # Config for assignments testing

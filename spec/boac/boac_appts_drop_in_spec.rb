@@ -1006,6 +1006,10 @@ describe 'BOA' do
       @advisor_homepage.click_appt_check_in_button checked_in_appt
       @advisor_homepage.select_check_in_advisor @test.drop_in_advisor
       @advisor_homepage.click_modal_check_in_button
+      @advisor_homepage.wait_for_poller do
+        visible_data = @advisor_homepage.visible_list_view_appt_data checked_in_appt
+        visible_data[:checked_in_status] && visible_data[:checked_in_status].include?('CHECKED IN')
+      end
 
       @advisor_homepage.click_new_appt
       @advisor_homepage.create_appt canceled_appt
@@ -1014,13 +1018,19 @@ describe 'BOA' do
       @advisor_homepage.select_cancel_reason canceled_appt
       @advisor_homepage.enter_cancel_explanation canceled_appt
       @advisor_homepage.click_cancel_confirm_button
+      @advisor_homepage.wait_for_poller do
+        visible_data = @advisor_homepage.visible_list_view_appt_data canceled_appt
+        visible_data[:canceled_status] && visible_data[:canceled_status].include?('CANCELLED')
+      end
 
       @advisor_homepage.click_new_appt
       @advisor_homepage.create_appt pending_appt
 
       @advisor_homepage.click_student_link pending_appt
       @advisor_student_page.show_appts
-      @student_appts = BOACUtils.get_student_appts(student, @test.students).reject &:deleted_date
+      boa_appts = BOACUtils.get_student_appts(student, @test.students).reject &:deleted_date
+      sis_appts = NessieUtils.get_sis_appts student
+      @student_appts = boa_appts + sis_appts
     end
 
     it 'shows all non-deleted appointments sorted by creation time' do

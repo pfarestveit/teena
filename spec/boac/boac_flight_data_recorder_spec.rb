@@ -50,7 +50,7 @@ describe 'BOA flight data recorder' do
 
     it 'allows the user to view the complete notes report' do
       @flight_data_recorder.toggle_note_report_visibility
-      @flight_data_recorder.notes_count_boa_authors_element.when_visible 1
+      @flight_data_recorder.notes_count_sis_element.when_visible 1
     end
 
     it 'shows the total number of notes imported from the SIS' do

@@ -39,6 +39,20 @@ module BOACStudentPageAdvisingNote
     notes_collapsed_msg_element.when_visible 2
   end
 
+  text_field(:timeline_notes_query_input, id: 'timeline-notes-query-input')
+  div(:timeline_notes_spinner, id: 'timeline-notes-spinner')
+
+  def search_within_timeline_notes(query)
+    wait_for_element_and_type(timeline_notes_query_input_element, query)
+    hit_enter
+    sleep 1
+    timeline_notes_spinner_element.when_not_visible Utils.medium_wait rescue Selenium::WebDriver::Error::StaleElementReferenceError
+  end
+
+  def clear_timeline_notes_search
+    search_within_timeline_notes ''
+  end
+
   # Returns the expected sort order of a student's notes
   # @param notes [Array<Note>]
   # @return [Array<String>]
@@ -66,87 +80,9 @@ module BOACStudentPageAdvisingNote
     link_element(id: "note-#{note.id}-author-name")
   end
 
-  # Search
-
-  text_field(:timeline_notes_query_input, id: 'timeline-notes-query-input')
-  div(:timeline_notes_spinner, id: 'timeline-notes-spinner')
-
-  def search_within_timeline_notes(query)
-    wait_for_element_and_type(timeline_notes_query_input_element, query)
-    hit_enter
-    sleep 1
-    timeline_notes_spinner_element.when_not_visible Utils.medium_wait rescue Selenium::WebDriver::Error::StaleElementReferenceError
-  end
-
-  def clear_timeline_notes_search
-    search_within_timeline_notes ''
-  end
-
   # Attachments
 
   element(:sorry_no_attachment_msg, xpath: '//body[text()="Sorry, attachment not available."]')
-
-  # Returns the element containing a given attachment name
-  # @param attachment_name [String]
-  # @return [Element]
-  def note_attachment_el(note, attachment_name)
-    note_attachment_els(note).find { |el| el.text.strip == attachment_name }
-  end
-
-  # Returns the elements containing both downloadable and non-downloadable note attachments
-  # @param note [Note]
-  # @return [Array<Element>]
-  def note_attachment_els(note)
-    spans = span_elements(xpath: "//li[contains(@id, 'note-#{note.id}-attachment')]//span[contains(@id, '-attachment-')]")
-    links = link_elements(xpath: "//li[contains(@id, 'note-#{note.id}-attachment')]//a[contains(@id, '-attachment-')]")
-    spans + links
-  end
-
-  # Downloads an attachment and returns the file size, deleting the file once downloaded. If the download is not available,
-  # logs a warning and moves on if a SIS note or logs and error and fails if a Boa note.
-  # @param note [Note]
-  # @param attachment [Attachment]
-  # @param student [BOACUser]
-  # @return [Integer]
-  def download_attachment(note, attachment, student=nil)
-    logger.info "Downloading attachment '#{attachment.id}' from note ID #{note.id}"
-    Utils.prepare_download_dir
-    wait_until(Utils.short_wait) { note_attachment_els(note).any? }
-    hide_boac_footer
-    note_attachment_el(note, attachment.file_name).click
-    file_path = "#{Utils.download_dir}/#{attachment.file_name}"
-    wait_until(Utils.medium_wait) { sorry_no_attachment_msg? || Dir[file_path].any?  }
-
-    if sorry_no_attachment_msg?
-      # Get back on the student page for subsequent tests
-      load_page student
-      show_notes
-
-      if attachment.sis_file_name
-        logger.warn "Cannot download SIS note ID #{note.id} attachment ID '#{attachment.id}'"
-        nil
-      else
-        logger.error "Cannot download Boa note ID #{note.id} attachment ID '#{attachment.id}'"
-        fail
-      end
-
-    else
-      file = File.new file_path
-
-      # If the attachment file size is known (i.e., it was uploaded as part of the test), then make sure the download reaches the same size.
-      if attachment.file_size
-        wait_until(Utils.medium_wait) do
-          logger.debug "File size is currently #{file.size}, waiting until it reaches #{attachment.file_size}"
-          file.size == attachment.file_size
-        end
-      end
-      size = file.size
-
-      # Zap the download dir again to make sure no attachment downloads are left behind on the test machine
-      Utils.prepare_download_dir
-      size
-    end
-  end
 
   # Returns the file input for adding an an attachment to an existing note
   # @param note [Note]
@@ -236,7 +172,7 @@ module BOACStudentPageAdvisingNote
       :advisor_depts => advisor_dept_els.map(&:text).sort,
       :topics => topic_els.map(&:text).sort,
       :remove_topics_btns => topic_remove_btn_els,
-      :attachments => (note_attachment_els(note).map { |el| el.attribute('innerText').strip }).sort,
+      :attachments => (item_attachment_els(note).map { |el| el.attribute('innerText').strip }).sort,
       :created_date => (created_el.text.gsub('Created on', '').gsub(/\s+/, ' ').strip if created_el.exists?),
       :updated_date => (updated_el.text.gsub('Last updated on', '').gsub(/\s+/, ' ').strip if updated_el.exists?),
       :permalink_url => (permalink_el.attribute('href') if permalink_el.exists?)

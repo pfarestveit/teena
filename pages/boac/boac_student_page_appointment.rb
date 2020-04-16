@@ -39,6 +39,21 @@ module BOACStudentPageAppointment
     appts_collapsed_msg_element.when_visible 2
   end
 
+  text_field(:timeline_appts_query_input, id: 'timeline-appointments-query-input')
+  div(:timeline_appts_spinner, id: 'timeline-appointments-spinner')
+
+  def search_within_timeline_appts(query)
+    logger.info "Searching for '#{query}'"
+    wait_for_element_and_type(timeline_appts_query_input_element, query)
+    hit_enter
+    sleep 1
+    timeline_appts_spinner_element.when_not_visible Utils.medium_wait rescue Selenium::WebDriver::Error::StaleElementReferenceError
+  end
+
+  def clear_timeline_appts_search
+    search_within_timeline_appts ''
+  end
+
   # Returns the visible sequence of appointment ids
   # @return [Array<String>]
   def visible_collapsed_appt_ids
@@ -106,24 +121,6 @@ module BOACStudentPageAppointment
     link_element(id: "appointment-#{appt.id}-advisor-name")
   end
 
-  # Search
-
-  text_field(:timeline_appts_query_input, id: 'timeline-appointments-query-input')
-  div(:timeline_appts_spinner, id: 'timeline-appointments-spinner')
-
-  def search_within_timeline_appts(query)
-    timeline_appts_query_input_element.when_visible Utils.short_wait
-    timeline_appts_query_input_element.clear
-    self.timeline_appts_query_input = query
-    timeline_appts_query_input_element.send_keys :enter
-    sleep 1
-    timeline_appts_spinner_element.when_not_visible Utils.medium_wait rescue Selenium::WebDriver::Error::StaleElementReferenceError
-  end
-
-  def clear_timeline_appts_search
-    search_within_timeline_appts ''
-  end
-
   # Returns the data visible when an appointment is collapsed
   # @param appt [Appointment]
   # @return [Hash]
@@ -170,6 +167,7 @@ module BOACStudentPageAppointment
         advisor_depts: advisor_dept_els.map(&:text).sort,
         type: (type_el.text if type_el.exists?),
         topics: topic_els.map(&:text).sort,
+        attachments: (item_attachment_els(appt).map { |el| el.attribute('innerText').strip }).sort
     }
   end
 

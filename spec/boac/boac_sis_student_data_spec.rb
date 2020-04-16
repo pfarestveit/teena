@@ -243,7 +243,7 @@ describe 'BOAC' do
             expect(student_page_sis_data[:advisor_plans]).to eq(api_advisors.map { |a| a[:plan] })
           end
           it "shows assigned advisor names for UID #{student.uid} on the student page" do
-            expect(student_page_sis_data[:advisor_names]).to eq(api_advisors.map { |a| a[:name] })
+            expect(student_page_sis_data[:advisor_names]).to eq(api_advisors.map { |a| a[:name]&.strip })
           end
           it "shows assigned advisor emails for UID #{student.uid} on the student page" do
             expect(student_page_sis_data[:advisor_emails]).to eq(api_advisors.map { |a| a[:email] })
@@ -325,7 +325,7 @@ describe 'BOAC' do
           end
         end
 
-        (api_sis_profile_data[:academic_career_status] != 'Completed' && api_sis_profile_data[:transfer]) ?
+        (api_sis_profile_data[:transfer]) ?
             (it("shows Transfer for UID #{student.uid} on the student page") { expect(student_page_sis_data[:transfer]).to eql('Transfer') }) :
             (it("shows no Transfer for UID #{student.uid} on the student page") { expect(student_page_sis_data[:transfer]).to be_nil })
 

@@ -1,4 +1,4 @@
-class Appointment < TimelineRecord
+class Appointment < TimelineNoteAppt
 
   attr_accessor :advisor,
                 :cancel_reason,
@@ -7,7 +7,6 @@ class Appointment < TimelineRecord
                 :reserve_advisor,
                 :status,
                 :status_date,
-                :student,
                 :type
 
   def initialize(data)

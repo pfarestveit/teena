@@ -17,7 +17,7 @@ class BOACFlightDeckPage
   end
 
   def drop_in_advising_toggle_el(dept)
-    button_element(xpath: "//button[@id='toggle-drop-in-advising-#{dept.code if dept}']")
+    button_element(id: "toggle-drop-in-advising-#{dept.code if dept}")
   end
 
   def drop_in_advising_enabled?(dept)
