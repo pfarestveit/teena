@@ -137,11 +137,6 @@ oec:
   sis_id: secret
   email: secret
 
-salesforce:
-  base_url: https://test.salesforce.com
-  username: secret
-  password: secret
-
 suite_c:
   base_url: https://app-qa.ets-berkeley-suitec.net
   lti_key: secret
