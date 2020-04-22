@@ -267,6 +267,7 @@ module Page
         rescue => e
           logger.error e.message
           sleep 1
+          hit_escape # in case a modal has been left open, obscuring the search input
           tries.zero? ? fail : retry
         end
         sleep Utils.click_wait
