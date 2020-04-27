@@ -44,7 +44,8 @@ describe 'A BOA advisor' do
     @api_admin_page = BOACApiAdminPage.new @driver
 
     # Get admit data
-    @admit = NessieUtils.get_admits.find { |a| !a.is_sir }
+    @admit = NessieUtils.get_admits.reverse.find { |a| !a.is_sir }
+    logger.debug "The test admit's SID is #{@admit.sis_id}"
     ce3_advisor = BOACUtils.get_dept_advisors(BOACDepartments::ZCEEE, DeptMembership.new(advisor_role: AdvisorRole::ADVISOR)).first
     ce3_cohort_search = CohortAdmitFilter.new
     ce3_cohort_search.set_custom_filters urem: true

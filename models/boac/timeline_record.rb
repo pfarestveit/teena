@@ -1,7 +1,10 @@
 class TimelineRecord
 
   attr_accessor :id,
-                :topics,
+                :title,
+                :subject,
+                :body,
+                :student,
                 :created_date,
                 :updated_date,
                 :deleted_date

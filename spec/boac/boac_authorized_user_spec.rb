@@ -68,7 +68,7 @@ describe 'BOAC' do
 
   context 'when an authorized user\'s session is expired' do
 
-    before { @driver.manage.delete_cookie 'session' }
+    before { @driver.manage.delete_all_cookies }
 
     it 'forces login' do
       @home_page.enter_search_string 'foo'

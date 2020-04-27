@@ -225,7 +225,7 @@ describe 'A restricted BOA user' do
 
     before(:all) do
       @test.set_advisor do |advisor|
-            advisor.depts.include?(BOACDepartments::L_AND_S) &&
+            advisor.depts.include?(BOACDepartments::L_AND_S.code) &&
             advisor.depts.length == 1 &&
             !advisor.can_access_canvas_data &&
             !advisor.can_access_advising_data
@@ -411,7 +411,11 @@ describe 'A restricted BOA user' do
         expect(@settings_page.status_heading?).to be false
       end
 
-      it('cannot toggle drop-in advising') { expect(@settings_page.drop_in_advising_toggle_el(@test.advisor.depts.first).exists?).to be false }
+      it('cannot toggle drop-in advising') do
+        dept = BOACDepartments::DEPARTMENTS.find { |d| d.code == @test.advisor.depts.first }
+        expect(@settings_page.drop_in_advising_toggle_el(dept).exists?).to be false
+      end
+
       it('cannot manage drop-in schedulers') { expect(@settings_page.add_scheduler_input?).to be false }
 
       it 'cannot reach the Passenger Manifest' do

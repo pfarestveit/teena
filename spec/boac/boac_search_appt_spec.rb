@@ -18,8 +18,10 @@ describe 'BOAC' do
         appt_searches = []
         expected_boa_appts = BOACUtils.get_student_appts(student, test_config.students)
         expected_boa_appts.delete_if &:deleted_date
-        if expected_boa_appts.any?
-          expected_boa_appts.each { |appt| appt_searches << BOACUtils.generate_appt_search_query(student, appt) }
+        expected_sis_appts = NessieUtils.get_sis_appts student
+        expected_appts = expected_boa_appts + expected_sis_appts
+        if expected_appts.any?
+          expected_appts.each { |appt| appt_searches << BOACUtils.generate_appt_search_query(student, appt) }
         else
           logger.warn "Bummer, UID #{student.uid} has no appointments to search for"
         end
@@ -182,7 +184,7 @@ describe 'BOAC' do
               # Posted by anyone
               @homepage.select_notes_posted_by_anyone
               @homepage.type_note_appt_string_and_enter appt_search[:string]
-              if appt_search[:string].empty?
+              if appt_search[:string]&.empty?
                 validation_error_present = @homepage.verify_block { @homepage.fill_in_field_msg_element.when_visible 1 }
                 it "requires a non-empty search string when searching for #{appt_search[:test_case]} and posted by anyone" do
                   expect(validation_error_present).to be true

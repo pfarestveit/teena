@@ -134,8 +134,8 @@ class BOACUtils < Utils
   def self.generate_note_search_query(student, note, opts={})
     note_test_case = "UID #{student.uid} note ID #{note.id}"
 
-    if (note.source_body_empty || !note.body || note.body.empty?)
-      if (!note.subject || note.subject.empty?)
+    if note.source_body_empty || !note.body || note.body.empty?
+      if !note.subject || note.subject.empty?
         logger.warn "Skipping search test for #{note_test_case} because the note has no body or subject."
         return nil
       elsif opts[:skip_empty_body]

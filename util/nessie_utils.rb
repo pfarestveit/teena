@@ -760,6 +760,72 @@ class NessieUtils < Utils
     end
   end
 
+  ### APPOINTMENTS ###
+
+  def self.get_sis_appts(student)
+    query = "SELECT sis_advising_notes.advising_appointments.id AS id,
+                    sis_advising_notes.advising_appointments.note_body AS detail,
+                    sis_advising_notes.advising_appointments.created_by AS advisor_uid,
+                    sis_advising_notes.advising_appointments.advisor_sid AS advisor_sid,
+                    sis_advising_notes.advising_appointments.created_at AS created_date,
+                    sis_advising_notes.advising_appointments.updated_at AS updated_date,
+                    sis_advising_notes.advising_appointment_advisors.first_name AS advisor_first_name,
+                    sis_advising_notes.advising_appointment_advisors.last_name AS advisor_last_name,
+                    sis_advising_notes.advising_note_topics.note_topic AS topic,
+                    sis_advising_notes.advising_note_attachments.sis_file_name AS sis_file_name,
+                    sis_advising_notes.advising_note_attachments.user_file_name AS user_file_name
+             FROM sis_advising_notes.advising_appointments
+             LEFT JOIN sis_advising_notes.advising_appointment_advisors
+               ON sis_advising_notes.advising_appointments.advisor_sid = sis_advising_notes.advising_appointment_advisors.sid
+             LEFT JOIN sis_advising_notes.advising_note_topics
+               ON sis_advising_notes.advising_appointments.id = sis_advising_notes.advising_note_topics.advising_note_id
+             LEFT JOIN sis_advising_notes.advising_note_attachments
+               ON sis_advising_notes.advising_appointments.id = sis_advising_notes.advising_note_attachments.advising_note_id
+             WHERE sis_advising_notes.advising_appointments.sid = '#{student.sis_id}'
+             ORDER BY id ASC;"
+
+    results = query_pg_db(nessie_pg_db_credentials, query)
+    appts_data = results.group_by { |h1| h1['id'] }.map do |k,v|
+      attachment_data = v.map do |r|
+        unless r['sis_file_name'].nil? || r['sis_file_name'].empty?
+          {
+            sis_file_name: r['sis_file_name'],
+            file_name: ((r['advisor_uid'] == 'UCBCONVERSION') ? r['sis_file_name'] : r['user_file_name'])
+          }
+        end
+      end
+      attachments = attachment_data.compact.uniq.map { |d| Attachment.new d }
+      advisor = BOACUser.new(
+          uid: v[0]['advisor_uid'],
+          sis_id: v[0]['created_date'],
+          first_name: v[0]['advisor_first_name'],
+          last_name: v[0]['advisor_last_name']
+      )
+      {
+        id: k,
+        detail: Nokogiri::HTML(v[0]['detail']).text,
+        student: student,
+        advisor: advisor,
+        created_date: Time.parse(v[0]['created_date'].to_s).utc.localtime,
+        attachments: attachments,
+        topics: (v.map { |t| t['topic'].upcase if t['topic'] }).compact.sort
+      }
+    end
+    appts_data.map { |d| Appointment.new d }
+  end
+
+  # Returns all SIDs represented in a given advising note source
+  # @return [Array<String>]
+  def self.get_sids_with_sis_appts
+    query = "SELECT DISTINCT sis_advising_notes.advising_appointments.sid
+             FROM sis_advising_notes.advising_appointments
+             INNER JOIN sis_advising_notes.advising_note_attachments
+               ON sis_advising_notes.advising_note_attachments.sid = sis_advising_notes.advising_appointments.sid
+             ORDER BY sid ASC;"
+    results = Utils.query_pg_db(nessie_pg_db_credentials, query)
+    results.map { |r| r['sid'] }
+  end
+
   #### HOLDS ####
 
   # Returns a student's current holds

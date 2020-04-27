@@ -1,11 +1,8 @@
-class NoteTemplate < TimelineRecord
+class NoteTemplate < TimelineNoteAppt
 
   include Logging
 
-  attr_accessor :title,
-                :subject,
-                :body,
-                :attachments
+  # attr_accessor
 
   def self.get_user_note_templates(user)
     query = "SELECT note_templates.id
