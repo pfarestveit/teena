@@ -86,6 +86,7 @@ class OECDepartments
       ICELAND = new('ICELAND', 'Icelandic', 'ICELAND', %w(F G), true),
       ILA = new('ILA', 'Spanish and Portuguese', 'SPANISH', %w(LANG LECT SEMI WRIT), true),
       IND_ENG = new('IND ENG', 'Industrial Engineering and Operations Research', 'IND ENG', nil, false),
+      INDONES = new('INDONES', 'Indonesian', 'INDONES', %w(F G), true),
       INFO = new('INFO', 'Information', 'INFO', %w(F G), true),
       INTEGBI = new('INTEGBI', 'Integrative Biology', 'INTEGBI', %w(F G), true),
       IRANIAN = new('IRANIAN', 'Iranian', 'IRANIAN', %w(F G), true),
