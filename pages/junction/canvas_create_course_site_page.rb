@@ -196,10 +196,10 @@ module Page
       # @param course [Course]
       # @param user [User]
       # @param sections [Array<Section>]
-      def provision_course_site(driver, course, user, sections)
+      def provision_course_site(driver, course, user, sections, opts={})
         load_embedded_tool(driver, user)
         click_create_course_site
-        course.create_site_workflow = nil
+        course.create_site_workflow = opts[:admin] ? 'ccn' : nil
         search_for_course(course, user, sections)
         expand_available_sections course.code
         select_sections sections

@@ -227,19 +227,46 @@ module Page
 
     link(:course_details_tab, xpath: '//a[contains(.,"Course Details")]')
     text_area(:course_sis_id, id: 'course_sis_source_id')
-    link(:sections_tab, xpath: '//a[contains(.,"Sections")]')
+    link(:sections_tab, xpath: '//a[contains(@href,"#tab-sections")]')
+    elements(:section_data, :span, xpath: '//li[@class="section"]/span[@class="users_count"]')
     text_area(:section_name, id: 'course_section_name')
     button(:add_section_button, xpath: '//button[@title="Add Section"]')
     link(:edit_section_link, class: 'edit_section_link')
     text_area(:section_sis_id, id: 'course_section_sis_source_id')
     button(:update_section_button, xpath: '//button[contains(.,"Update Section")]')
 
+    # Obtains the Canvas SIS ID for the course site
+    # @param course [Course]
+    # @return [String]
+    def set_course_sis_id(course)
+      load_course_settings course
+      course_sis_id_element.when_visible Utils.short_wait
+      course.sis_id = course_sis_id_element.attribute('value')
+      logger.debug "Course SIS ID is #{course.sis_id}"
+      course.sis_id
+    end
+
+    # Obtains the Canvas SIS IDs for the sections on the course site
+    # @param course [Course]
+    def set_section_sis_ids(course)
+      navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/settings#tab-sections"
+      wait_for_load_and_click sections_tab_element
+      wait_until(Utils.short_wait) { section_data_elements.any? }
+      sis_ids = section_data_elements.map do |el|
+        el.when_visible(Utils.short_wait)
+        el.text.split[-2]
+      end
+      course.sections.each do |section|
+        section.sis_id = sis_ids.find { |id| id.include? section.id }
+      end
+    end
+
     # Adds a section to a course site and assigns SIS IDs to both the course and the section
     # @param course [Course]
     # @param section [Section]
     def add_sis_section_and_ids(course, section)
       # Add SIS id to course
-      navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/settings"
+      load_course_settings course
       wait_for_load_and_click course_details_tab_element
       wait_for_element_and_type(course_sis_id_element, course.sis_id)
       wait_for_update_and_click update_course_button_element
@@ -584,6 +611,46 @@ module Page
       total_count
     end
 
+    # @param course [Course]
+    # @param section [Section]
+    def get_users_with_sections(course, section = nil)
+      load_all_students course
+      rows = if section
+               user_row_elements.select { |row| row.text.include? "#{section.course} #{section.label}" }
+             else 
+               user_row_elements
+             end
+      users_with_sections = rows.map do |row|
+        # Get the visible user data
+        canvas_id = row.attribute('id').delete('user_')
+        xpath = "//table[contains(@class, 'roster')]//tr[contains(@id,'user_#{canvas_id}')]"
+        uid = cell_element(xpath: "#{xpath}//td[3]").text.gsub('inactive-', '').strip
+        sid = cell_element(xpath: "#{xpath}//td[4]").text.strip
+        section_codes = span_elements(xpath: "#{xpath}//td[5]/div").map &:text
+        role_strings = div_elements(xpath: "#{xpath}//td[6]/div").map &:text
+
+        # Combine a user object with a section object
+        section_codes.each_with_index.map do |sec, i|
+          section = course.sections.find { |section| "#{section.course} #{section.label}" == sec }
+          role_str = role_strings[i]
+          role = if %w(Teacher TA Student).include? role_str
+                   role_str.downcase
+                 elsif ['Lead TA', 'Waitlist Student'].include? role_str
+                   role_str
+                 else
+                   logger.error "Unrecognized role '#{role_str}'"
+                   nil
+                 end
+          logger.debug "Canvas ID #{canvas_id}, UID #{uid}, role #{role}, section #{section.inspect}"
+          {
+              user: User.new(uid: uid, sis_id: sid, canvas_id: canvas_id, role: role),
+              section: section
+          }
+        end
+      end
+      users_with_sections.flatten
+    end
+
     # Returns all the users on a course site or course site section with a Student or Waitlist Student role. Optionally
     # accepts a Canvas base URL to support BOAC last activity testing in Prod.
     # @param course [Course]
@@ -641,7 +708,7 @@ module Page
     # @param course [Course]
     def load_course_settings(course)
       logger.info "Loading settings page for course ID #{course.site_id}"
-      navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/settings"
+      navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/settings#tab-details"
       set_grading_scheme_cbx_element.when_present Utils.medium_wait
     end
 

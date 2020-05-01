@@ -40,7 +40,7 @@ describe 'Canvas enrollment events' do
     # Admin creates teacher enrollment and student enrollment via SIS import - no events are captured yet
     users_to_add = [teachers[1], students[0]]
     users_csv = Utils.create_sis_user_import(users)
-    enrollments_csv = Utils.create_sis_enrollment_import(@course, @section, users_to_add)
+    enrollments_csv = Utils.create_sis_section_enrollment_import(@course, @section, users_to_add)
     @canvas.upload_sis_imports([users_csv, enrollments_csv], users_to_add)
 
     # Admin creates student enrollment via Canvas add-user
@@ -62,7 +62,7 @@ describe 'Canvas enrollment events' do
     @canvas.stop_masquerading
     users_to_remove = [teachers[0], students[0]]
     users_to_remove.each { |u| u.status = 'deleted' }
-    enrollments_csv = Utils.create_sis_enrollment_import(@course, @section, users_to_remove)
+    enrollments_csv = Utils.create_sis_section_enrollment_import(@course, @section, users_to_remove)
     @canvas.upload_sis_imports([enrollments_csv], users_to_remove)
 
     @canvas.wait_for_event
