@@ -288,12 +288,26 @@ class Utils
     csv
   end
 
+  # @param course [Course]
+  # @param users_with_sections [Array<Hash>]
+  # @return [CSV]
+  def self.create_sis_enrollment_import(course, users_with_sections)
+    csv = File.join(initialize_test_output_dir, "enrollments-#{course.code}.csv")
+    CSV.open(csv, 'wb') { |heading| heading << %w(course_id user_id role section_id status) }
+    users_with_sections.each do |user_with_section|
+      user = user_with_section[:user]
+      section = user_with_section[:section]
+      add_csv_row(csv, [course.sis_id, user.sis_id, user.role, section.sis_id, user.status])
+    end
+    csv
+  end
+
   # Creates enrollments CSV for SIS import testing
   # @param course [Course]
   # @param section [Section]
   # @param users [Array<User>]
   # @return [File]
-  def self.create_sis_enrollment_import(course, section, users)
+  def self.create_sis_section_enrollment_import(course, section, users)
     logger.info 'Creating an enrollment CSV for SIS import'
     csv = File.join(initialize_test_output_dir, 'enrollments.csv')
     CSV.open(csv, 'wb') { |heading| heading << %w(course_id user_id role section_id status) }

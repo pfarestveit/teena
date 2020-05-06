@@ -14,12 +14,7 @@ module Page
     h3(:logout_conf_heading, xpath: '//h3[text()="Logout Successful"]')
     span(:access_denied_msg, xpath: '//span[contains(.,"Service access denied due to missing privileges.")]')
 
-    # Logs in to CAS. If no real credentials available in a Settings override, then waits for manual login using a real
-    # person's credentials.
-    # @param username [String]
-    # @param password [String]
-    # @param event [Event]
-    def log_in(username, password, event = nil)
+    def enter_credentials(username, password, event = nil, msg = nil)
       # If no credentials are available, then wait for manual login
       wait_until(Utils.medium_wait) { title.include? 'CAS – Central Authentication Service' }
       if username == 'secret' || password == 'secret'
@@ -28,7 +23,8 @@ module Page
           fail
         else
           logger.debug 'Waiting for manual login'
-          wait_for_element_and_type(username_element, 'PLEASE LOG IN MANUALLY')
+          prompt_for_action msg
+          wait_for_manual_login
         end
       else
         logger.debug "#{username} is logging in"
@@ -38,10 +34,27 @@ module Page
         sleep 2
         add_event(event, EventType::LOGGED_IN)
       end
+    end
+
+    def prompt_for_action(msg)
+      wait_for_element_and_type(username_element, msg)
+    end
+
+    def wait_for_manual_login
       wait_until(Utils.long_wait) do
         # If login is to resolve a Junction session conflict, then logout should occur. Otherwise, expect successful login.
         logout_conf_heading_element.visible? || !title.include?('CAS – Central Authentication Service')
       end
+    end
+
+    # Logs in to CAS. If no real credentials available in a Settings override, then waits for manual login using a real
+    # person's credentials.
+    # @param username [String]
+    # @param password [String]
+    # @param event [Event]
+    def log_in(username, password, event = nil, msg = 'PLEASE LOG IN MANUALLY')
+      enter_credentials(username, password, event, msg)
+      wait_for_manual_login
     end
 
     # Hits the CAS logout URL directly

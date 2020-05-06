@@ -101,6 +101,7 @@ junction:
   background_job_attempts: 500
   background_job_multiplier: 1
   admin_uid: secret
+  sis_update_date: '2020-01-01'
 
 lrs:
   base_url: https://app-qa.ets-berkeley-cloudlrs.net

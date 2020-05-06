@@ -52,12 +52,16 @@ class JunctionUtils < Utils
     @config['background_job_multiplier']
   end
 
+  def self.sis_update_date
+    Time.parse @config['sis_update_date']
+  end
+
   # Sets the site id for a course in the test data for course-driven bCourses tests
   # @param course [Course]
   def self.set_junction_test_course_id(course)
-    logger.info "Updating Junction test data with course site ID #{course.site_id} for #{course.term} #{course.code} teacher UID #{course.teachers.first['uid']}"
+    logger.info "Updating Junction test data with course site ID #{course.site_id} for #{course.term} #{course.code}}"
     parsed = load_junction_test_data
-    course_test_data = parsed['courses'].find { |data| data['code'] == course.code && data['term'] == course.term && data['teachers'].first['uid'] == course.teachers.first['uid'] }
+    course_test_data = parsed['courses'].find { |data| data['code'] == course.code && data['term'] == course.term }
     course_test_data['site_id'] = course.site_id
     course_test_data['site_created_date'] = Date.today.to_s
 
