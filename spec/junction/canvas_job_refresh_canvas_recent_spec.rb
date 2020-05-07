@@ -60,14 +60,14 @@ describe 'bCourses recent enrollment updates' do
 
         students_to_delete = student_enrollments[0..9].map &:dup
         waitlists_to_delete = waitlisted_enrollments[0..9].map &:dup
-        tas_to_delete = ta_enrollments[0..9].map &:dup
+        tas_to_delete = ta_enrollments[0..0].map &:dup
         lead_tas_to_delete = lead_ta_enrollments[0..1].map &:dup
-        teachers_to_delete = teacher_enrollments[0..1].map &:dup
+        teachers_to_delete = teacher_enrollments[0..0].map &:dup
         students_to_convert = student_enrollments[10..19].map &:dup
 
         deletes = [students_to_delete + students_to_convert + waitlists_to_delete + tas_to_delete + lead_tas_to_delete + teachers_to_delete]
         deletes.flatten!
-        logger.debug "#{deletes}"
+        logger.debug "#{deletes.map { |h| {sid: h[:user].sis_id, role: h[:user].role} }}"
         deletes.each { |h| h[:user].status = 'deleted' }
         deletes.each do |delete|
           user = delete[:user]
@@ -86,7 +86,14 @@ describe 'bCourses recent enrollment updates' do
           Utils.add_csv_row(csv, [course.sis_id, user.sis_id, user.role, section.sis_id, user.status])
         end
 
-        #### TODO add manual memberships of all roles
+        # For one of the deletions, add a different user role manually to ensure that the manual role persists after an enrollment update
+        if lead_tas_to_delete[0] && course.sections.length == 1
+          teacher = lead_tas_to_delete[0].dup
+          teacher[:user].role = 'Teacher'
+          @canvas_page.add_users(course, [teacher[:user]])
+          initial_enrollment_data << {sid: teacher[:user].sis_id, role: teacher[:user].role.downcase, section_id: teacher[:section].sis_id}
+        end
+
         @canvas_page.upload_sis_imports([csv], [])
         sites_to_verify << site
       rescue => e
@@ -121,8 +128,13 @@ describe 'bCourses recent enrollment updates' do
       end
       logger.debug "Original site membership: #{site[:enrollment]}"
       logger.debug "Updated site membership: #{updated_enrollment_data}"
-      it("updates the enrollment for site ID #{site[:course].site_id}") do
-        expect(updated_enrollment_data & site[:enrollment]).to eql(site[:enrollment])
+      logger.debug "Current less original: #{updated_enrollment_data - site[:enrollment]}"
+      logger.debug "Original less current: #{site[:enrollment] - updated_enrollment_data}"
+      it("updates the enrollment for site ID #{site[:course].site_id} with no unexpected memberships") do
+        expect(updated_enrollment_data - site[:enrollment]).to be_empty
+      end
+      it("updates the enrollment for site ID #{site[:course].site_id} with no missing memberships") do
+        expect(site[:enrollment] - updated_enrollment_data).to be_empty
       end
     end
   end
