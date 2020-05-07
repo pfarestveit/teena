@@ -569,7 +569,7 @@ module Page
       current_count = enrollment_count_by_roles(course, roles)
       begin
         starting_count = current_count
-        sleep 20
+        sleep Utils.medium_wait
         current_count = enrollment_count_by_roles(course, roles)
       end while current_count != starting_count
       current_count
