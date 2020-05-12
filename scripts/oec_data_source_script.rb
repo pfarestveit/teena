@@ -29,12 +29,12 @@ begin
                    ]
                  elsif args.include? 'haas'
                    [
-                       {src: 'Haas-Courses', file_name: 'Courses_Haas'},
-                       {src: 'Haas-Instructors', file_name: 'Instructors_Haas'},
-                       {src: 'Haas-Students', file_name: 'Students_Haas'},
+                       {src: 'Haas-Courses', file_name: 'Haas Courses'},
+                       {src: 'Haas-Instructors', file_name: 'Haas Instructors'},
+                       {src: 'Haas-Students', file_name: 'Haas Students'},
                        {src: 'Haas-Course_Instructors', file_name: 'Course_Instructors_Haas'},
                        {src: 'Haas-Course_Students', file_name: 'Course_Students_Haas'},
-                       {src: 'Haas-Staff', file_name: 'Staff_Haas'},
+                       {src: 'Haas-Staff', file_name: 'Haas_Staff'},
                    ]
                  elsif args.include? 'extension'
                    [
