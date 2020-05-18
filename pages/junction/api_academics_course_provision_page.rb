@@ -113,7 +113,7 @@ class ApiAcademicsCourseProvisionPage
     primaries = sections.select { |s| s['is_primary_section'] }
     teachers = if primaries.any?
                  primaries.map do |s|
-                   s['instructors'].select { |instructor| %w(PI ICNT).include?(instructor['role']) && instructor['gradeRosterAccess'] != ' ' }
+                   s['instructors'].select { |instructor| %w(PI ICNT TNIC).include?(instructor['role']) && instructor['gradeRosterAccess'] != ' ' }
                  end
                else
                  sections.map { |s| s['instructors'] }
