@@ -132,16 +132,16 @@ module Page
       # @param section_id [String]
       # @return [Array<String>]
       def section_schedules(section_id)
-        (e = div_element(xpath: "//input[contains(@id,'#{section_id}')]/../ancestor::tbody//td[contains(@class, 'section-timestamps')]/div")).exists? ?
-            e.text : ''
+        (e = div_element(xpath: "//input[contains(@id,'#{section_id}')]/../ancestor::tbody//td[contains(@class, 'section-timestamps')]")).exists? ?
+            e.attribute('innerText') : ''
       end
 
       # Returns the locations for a section
       # @param section_id [String]
       # @return [Array<String>]
       def section_locations(section_id)
-        (e = div_element(xpath: "//input[contains(@id,'#{section_id}')]/../ancestor::tbody//td[contains(@class, 'section-locations')]/div")).exists? ?
-            e.text : ''
+        (e = div_element(xpath: "//input[contains(@id,'#{section_id}')]/../ancestor::tbody//td[contains(@class, 'section-locations')]")).exists? ?
+            e.attribute('innerText') : ''
       end
 
       # Returns the instructor names for a section
