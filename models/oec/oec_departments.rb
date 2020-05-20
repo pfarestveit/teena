@@ -159,6 +159,7 @@ class OECDepartments
       TURKISH = new('TURKISH', 'Turkish', 'TURKISH', %w(F G), true),
       UGIS = new('UGIS', 'Undergraduate and Interdisciplinary Studies', 'UGIS', %w(F G), true),
       VIETNMS = new('VIETNMS', 'South and Southeast Asian Studies', 'S_SEASN', %w(F G), true),
+      VIS_STD = new('VIS STD', 'Architecture', 'VIS STD', %w(F G), true),
       YIDDISH = new('YIDDISH', 'German', 'GERMAN', %w(F), true)
   ]
 
