@@ -20,7 +20,7 @@ describe 'bCourses Official Sections tool' do
     @course_add_user_page = Page::JunctionPages::CanvasCourseAddUserPage.new @driver
     @official_sections_page = Page::JunctionPages::CanvasCourseManageSectionsPage.new @driver
 
-    all_test_courses = []
+    sites = []
     sites_to_create = []
 
     # COLLECT SIS DATA FOR ALL TEST COURSES
@@ -40,12 +40,7 @@ describe 'bCourses Official Sections tool' do
         @splash_page.basic_auth(test_course[:teacher].uid, @cal_net)
         test_course[:academic_data] = ApiAcademicsCourseProvisionPage.new @driver
         test_course[:academic_data].get_feed @driver
-        all_test_courses << test_course
-
-        # If a test site was already created for the course today, then reuse that one for the tests
-        unless test_course[:course].site_id && test_course[:course].site_created_date && (test_course[:course].site_created_date == "#{Date.today}")
-          sites_to_create << test_course
-        end
+        sites_to_create << test_course
 
       rescue => e
         it("encountered an error retrieving SIS data for #{test_course[:course].code}") { fail }
@@ -65,11 +60,12 @@ describe 'bCourses Official Sections tool' do
       @canvas.masquerade_as site[:teacher]
       logger.debug "Sections to be included at site creation are #{site[:sections_for_site].map { |s| s.id }}"
       @create_course_site_page.provision_course_site(@driver, site[:course], site[:teacher], site[:sections_for_site])
+      sites << site
     end
 
     # ADD AND REMOVE SECTIONS FOR ALL TEST COURSES
 
-    all_test_courses.each do |site|
+    sites.each do |site|
 
       begin
         logger.info "Test course is #{site[:course].code}"
@@ -309,7 +305,7 @@ describe 'bCourses Official Sections tool' do
 
         # CHECK USER ROLE ACCESS TO THE TOOL FOR ONE COURSE
 
-        if site == all_test_courses.last
+        if site == sites.last
 
           # Load test user data and add each to the site
           test_user_data = JunctionUtils.load_junction_test_user_data.select { |user| user['tests']['official_sections'] }

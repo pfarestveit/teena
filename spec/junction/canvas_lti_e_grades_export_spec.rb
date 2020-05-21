@@ -259,18 +259,11 @@ describe 'bCourses E-Grades Export', order: :defined do
     end
 
     it 'has reasonable grading bases' do
-      expected_grading_bases = %w(GRD EPN)
+      expected_grading_bases = %w(DPN EPN ESU GRD)
       actual_grading_bases = @e_grades.map { |b| b[:grading_basis] }
       logger.debug "Expecting #{expected_grading_bases} and got #{actual_grading_bases.uniq}"
       expect(actual_grading_bases.any? &:empty?).to be false
       expect((actual_grading_bases - expected_grading_bases).any?).to be false
-    end
-
-    it 'includes a comment if the student is taking the class for a letter grade' do
-      @e_grades.each do |g|
-        logger.error "SID #{g[:id]} is missing a Grading Basis comment" if g[:grading_basis] == 'GRD' && g[:comments].nil?
-        (g[:grading_basis] == 'GRD') ? (expect(g[:comments]).to eql('Opted for letter grade')) : ((expect(g[:comments].empty?).to be true))
-      end
     end
   end
 
