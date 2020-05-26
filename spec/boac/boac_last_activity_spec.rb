@@ -15,6 +15,7 @@ describe 'BOAC' do
       test = BOACTestConfig.new
       test.last_activity
       pages_tested = []
+      testable_students = []
 
       # Test Last Activity using the current term rather than past term
       test.term = BOACUtils.term
@@ -70,6 +71,7 @@ describe 'BOAC' do
                     # Only test courses with sites
                     if api_section_page.student_site_ids(visible_classmates.first).any?
 
+                      testable_students << test_student
                       visible_student_data = []
                       all_sites_data = []
 
@@ -342,6 +344,8 @@ describe 'BOAC' do
           it("hit an error with #{test.default_cohort.name} UID #{test_student.uid}") { fail }
         end
       end
+
+      it('has at least one student with Canvas sites') { expect(testable_students).not_to be_empty }
     end
 
   rescue => e
