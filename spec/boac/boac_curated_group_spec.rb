@@ -362,6 +362,7 @@ describe 'BOAC' do
           end
         end
       end
+      logger.warn "Missing SIDs in #{group_4.name}: #{missing_sids}"
       expect(missing_sids).to be_empty
     end
   end
