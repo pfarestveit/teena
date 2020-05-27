@@ -92,8 +92,8 @@ module Page
 
     # ASSIGNMENT SUBMISSION
 
-    link(:submit_assignment_link, text: 'Submit Assignment')
-    link(:resubmit_assignment_link, text: 'Re-submit Assignment')
+    button(:submit_assignment_button, xpath: '//button[text()="Submit Assignment"]')
+    button(:resubmit_assignment_button, xpath: '//button[text()="Re-submit Assignment"]')
     link(:assignment_file_upload_tab, class: 'submit_online_upload_option')
     text_area(:file_upload_input, name: 'attachments[0][uploaded_data]')
     button(:file_upload_submit_button, id: 'submit_file_button')
@@ -130,7 +130,7 @@ module Page
     def submit_assignment(assignment, user, submission, event = nil)
       logger.info "Submitting #{submission.title} for #{user.full_name}"
       navigate_to assignment.url
-      wait_for_load_and_click_js submit_assignment_link_element
+      wait_for_load_and_click_js submit_assignment_button_element
       upload_assignment(submission, event)
       assignment_submission_conf_element.when_visible Utils.long_wait
       (submission.type == 'File') ?
@@ -146,9 +146,9 @@ module Page
     def resubmit_assignment(assignment, user, resubmission, event = nil)
       logger.info "Resubmitting #{resubmission.title} for #{user.full_name}"
       navigate_to assignment.url
-      wait_for_load_and_click_js resubmit_assignment_link_element
+      wait_for_load_and_click_js resubmit_assignment_button_element
       upload_assignment(resubmission, event)
-      resubmit_assignment_link_element.when_visible Utils.long_wait
+      resubmit_assignment_button_element.when_visible Utils.long_wait
       (resubmission.type == 'File') ?
           add_event(event, EventType::MODIFY, 'online_upload') :
           add_event(event, EventType::MODIFY, 'online_url')
