@@ -199,7 +199,7 @@ describe 'The BOAC passenger manifest' do
       it "exports all #{dept[:dept].name} users" do
         dept_user_uids = dept[:advisors].map &:uid
         csv_dept_user_uids = @csv.map do |r|
-          if r[:departments].include? "#{dept[:dept].code}:"
+          if r[:department]&.include? "#{dept[:dept].code}:"
             r[:uid].to_s
           end
         end
@@ -230,7 +230,7 @@ describe 'The BOAC passenger manifest' do
         uids << r[:uid] if r[:uid]
         titles << r[:title] if r[:title]
         emails << r[:email] if r[:email]
-        departments << r[:departments] if r[:departments]
+        departments << r[:department] if r[:department]
         appt_roles << r[:appointment_roles] if r[:appointment_roles]
         can_access_canvas_data_flags << r[:can_access_canvas_data]
         is_blocked_flags << r[:is_blocked]
