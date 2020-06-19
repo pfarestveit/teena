@@ -27,12 +27,14 @@ describe 'BOAC' do
         @student_page.load_page student
         expected_asc_notes = NessieUtils.get_asc_notes student
         expected_boa_notes = BOACUtils.get_student_notes(student).delete_if &:deleted_date
+        expected_data_notes = NessieUtils.get_data_sci_notes student
         expected_ei_notes = NessieUtils.get_e_and_i_notes student
         expected_sis_notes = NessieUtils.get_sis_notes student
         logger.warn "UID #{student.uid} has #{expected_sis_notes.length} SIS notes, #{expected_asc_notes.length} ASC notes,
-                              #{expected_ei_notes.length} E&I notes, and #{expected_boa_notes.length} BOA notes"
+                              #{expected_ei_notes.length} E&I notes, #{expected_boa_notes.length} BOA notes and
+                              #{expected_data_notes.length} Data Science notes"
 
-        expected_notes = expected_sis_notes + expected_ei_notes + expected_boa_notes + expected_asc_notes
+        expected_notes = expected_sis_notes + expected_ei_notes + expected_boa_notes + expected_asc_notes + expected_data_notes
 
         @student_page.show_notes
 
@@ -57,7 +59,8 @@ describe 'BOAC' do
 
         # Test a representative subset of the total notes
         test_notes = expected_sis_notes.shuffle[0..max_note_count_per_src] + expected_ei_notes.shuffle[0..max_note_count_per_src] +
-            expected_boa_notes.shuffle[0..max_note_count_per_src] + expected_asc_notes.shuffle[0..max_note_count_per_src]
+            expected_boa_notes.shuffle[0..max_note_count_per_src] + expected_asc_notes.shuffle[0..max_note_count_per_src] +
+            expected_data_notes.shuffle[0..max_note_count_per_src]
 
         test_notes.each do |note|
 
@@ -99,6 +102,10 @@ describe 'BOAC' do
               elsif expected_sis_notes.include? note
                 it("shows the body as the subject on #{test_case}") { expect(visible_collapsed_note_data[:subject].gsub(/\W/, '') == note.body.gsub(/\W/, '')).to be true }
                 it("shows no body on #{test_case}") { expect(visible_expanded_note_data[:body].strip.empty?).to be true }
+              elsif expected_data_notes.include?(note)
+                if note.body && !note.body.empty?
+                  it("shows the body as the subject on #{test_case}") { expect(visible_collapsed_note_data[:subject].gsub(/\W/, '') == note.body.gsub(/\W/, '')).to be true }
+                end
               else
                 subj_dept = expected_ei_notes.include?(note) ? 'Centers for Educational Equity and Excellence advisor' : 'Athletic Study Center advisor'
                 it("shows the department as part of the subject on #{test_case}") { expect(visible_collapsed_note_data[:category]).to include(subj_dept) }
@@ -113,26 +120,30 @@ describe 'BOAC' do
 
               # Note advisor
 
-              if note.advisor.uid
-                logger.warn "No advisor shown for UID #{note.advisor.uid} on #{test_case}" unless visible_expanded_note_data[:advisor]
+              if note.advisor
+                if note.advisor.uid
+                  logger.warn "No advisor shown for UID #{note.advisor.uid} on #{test_case}" unless visible_expanded_note_data[:advisor]
 
-                if visible_expanded_note_data[:advisor] && !advisor_link_tested
-                  if visible_expanded_note_data[:advisor].include? 'Graduate Intern'
-                    has_link = (@student_page.note_advisor_el(note).tag_name == 'a')
-                    it("offers no link to the Berkeley directory for advisor 'Graduate Intern' on #{test_case}") { expect(has_link).to be false }
+                  if visible_expanded_note_data[:advisor] && !advisor_link_tested
+                    if visible_expanded_note_data[:advisor].include? 'Graduate Intern'
+                      has_link = (@student_page.note_advisor_el(note).tag_name == 'a')
+                      it("offers no link to the Berkeley directory for advisor 'Graduate Intern' on #{test_case}") { expect(has_link).to be false }
+                    else
+                      advisor_link_works = @student_page.external_link_valid?(@student_page.note_advisor_el(note), 'Campus Directory | University of California, Berkeley')
+                      advisor_link_tested = true
+                      it("offers a link to the Berkeley directory for advisor #{note.advisor.uid} on #{test_case}") { expect(advisor_link_works).to be true }
+                    end
+                  end
+
+                else
+                  if note.advisor.last_name && !note.advisor.last_name.empty?
+                    it("shows an advisor on #{test_case}") { expect(visible_expanded_note_data[:advisor]).not_to be_nil }
                   else
-                    advisor_link_works = @student_page.external_link_valid?(@student_page.note_advisor_el(note), 'Campus Directory | University of California, Berkeley')
-                    advisor_link_tested = true
-                    it("offers a link to the Berkeley directory for advisor #{note.advisor.uid} on #{test_case}") { expect(advisor_link_works).to be true }
+                    it("shows Graduate Intern or Peer Advisor on #{test_case}") { expect(['Graduate Intern', 'Peer Advisor']).to include(visible_expanded_note_data[:advisor]) }
                   end
                 end
-
-              else
-                if note.advisor.last_name && !note.advisor.last_name.empty?
-                  it("shows no advisor on #{test_case}") { expect(visible_expanded_note_data[:advisor]).not_to be_nil }
-                else
-                  it("shows Graduate Intern or Peer Advisor on #{test_case}") { expect(['Graduate Intern', 'Peer Advisor']).to include(visible_expanded_note_data[:advisor]) }
-                end
+              elsif expected_data_notes.include? note
+                it("shows an advisor on #{test_case}") { expect(visible_expanded_note_data[:advisor]).not_to be_nil }
               end
 
               # Note topics
@@ -154,7 +165,7 @@ describe 'BOAC' do
                 it("shows no updated date #{note.updated_date} on expanded #{test_case}") { expect(visible_expanded_note_data[:updated_date]).to be_nil }
               end
 
-              expected_create_date_text = (note.advisor.uid == 'UCBCONVERSION') ?
+              expected_create_date_text = (note.advisor&.uid == 'UCBCONVERSION') ?
                   @student_page.expected_item_short_date_format(note.created_date) :
                   @student_page.expected_item_long_date_format(note.created_date)
               it("shows creation date #{expected_create_date_text} on expanded #{test_case}") { expect(visible_expanded_note_data[:created_date]).to eql(expected_create_date_text) }
@@ -231,8 +242,10 @@ describe 'BOAC' do
             Utils.log_error e
             it("hit an error with #{test_case}") { fail }
           ensure
-            row = [student.uid, student.sis_id, note.id, note.created_date, note.updated_date, note.advisor.uid, (visible_expanded_note_data[:advisor] if visible_expanded_note_data),
-                   (visible_expanded_note_data[:advisor_role] if visible_expanded_note_data), (visible_expanded_note_data[:advisor_depts] if visible_expanded_note_data),
+            row = [student.uid, student.sis_id, note.id, note.created_date, note.updated_date, note.advisor&.uid,
+                   (visible_expanded_note_data[:advisor] if visible_expanded_note_data),
+                   (visible_expanded_note_data[:advisor_role] if visible_expanded_note_data),
+                   (visible_expanded_note_data[:advisor_depts] if visible_expanded_note_data),
                    !note.body.nil?, note.topics.length, note.attachments.length]
             Utils.add_csv_row(notes_data, row)
           end

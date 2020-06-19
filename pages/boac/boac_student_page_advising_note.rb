@@ -371,7 +371,7 @@ module BOACStudentPageAdvisingNote
     names << notes_export_csv_file_name(student)
     notes.map(&:attachments).flatten.group_by(&:file_name).each_value do |dupe_names|
       dupe_names.each_with_index do |a, i|
-        parts = a.file_name.split('.')
+        parts = [a.file_name.rpartition('.').first, a.file_name.rpartition('.').last]
         names << "#{parts.first}#{ +' (' + i.to_s + ')' unless i.zero?}.#{parts.last}"
       end
     end
@@ -401,7 +401,9 @@ module BOACStudentPageAdvisingNote
         r[:date_created] == note.created_date.strftime('%Y-%m-%d')
         r[:student_sid] == student.sis_id.to_i
         r[:student_name] == student.full_name
-        (r[:author_uid] == note.advisor.uid.to_i) unless (note.advisor.uid == 'UCBCONVERSION')
+        if note.advisor
+          (r[:author_uid] == note.advisor.uid.to_i) unless (note.advisor.uid == 'UCBCONVERSION')
+        end
         r[:subject] == note.subject
         Nokogiri::HTML(r[:body]).text == "#{note.body}"
         if note.topics.any?

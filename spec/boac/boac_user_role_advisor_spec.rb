@@ -44,7 +44,13 @@ describe 'A BOA advisor' do
     @api_admin_page = BOACApiAdminPage.new @driver
 
     # Get admit data
-    @admit = NessieUtils.get_admits.reverse.find { |a| !a.is_sir }
+    admits = NessieUtils.get_admits
+    no_sir = admits.select { |a| !a.is_sir }
+    @admit = if no_sir.any?
+               no_sir.last
+             else
+               admits.last
+             end
     logger.debug "The test admit's SID is #{@admit.sis_id}"
     ce3_advisor = BOACUtils.get_dept_advisors(BOACDepartments::ZCEEE, DeptMembership.new(advisor_role: AdvisorRole::ADVISOR)).first
     ce3_cohort_search = CohortAdmitFilter.new
@@ -225,8 +231,12 @@ describe 'A BOA advisor' do
       end
 
       it 'sees no admit results' do
-        @homepage.enter_string_and_hit_enter @admit.sis_id
-        @search_results_page.no_results_msg.when_visible Utils.short_wait
+        if @admit.is_sir
+          logger.warn 'Skipping admit search test since all admits have SIR'
+        else
+          @homepage.enter_string_and_hit_enter @admit.sis_id
+          @search_results_page.no_results_msg.when_visible Utils.short_wait
+        end
       end
     end
 
@@ -401,8 +411,12 @@ describe 'A BOA advisor' do
       end
 
       it 'sees no admit results' do
-        @homepage.enter_string_and_hit_enter @admit.sis_id
-        @search_results_page.no_results_msg.when_visible Utils.short_wait
+        if @admit.is_sir
+          logger.warn 'Skipping admit search test since all admits have SIR'
+        else
+          @homepage.enter_string_and_hit_enter @admit.sis_id
+          @search_results_page.no_results_msg.when_visible Utils.short_wait
+        end
       end
     end
 
@@ -588,8 +602,12 @@ describe 'A BOA advisor' do
       end
 
       it 'sees no admit results' do
-        @homepage.enter_string_and_hit_enter @admit.sis_id
-        @search_results_page.no_results_msg.when_visible Utils.short_wait
+        if @admit.is_sir
+          logger.warn 'Skipping admit search test since all admits have SIR'
+        else
+          @homepage.enter_string_and_hit_enter @admit.sis_id
+          @search_results_page.no_results_msg.when_visible Utils.short_wait
+        end
       end
     end
 

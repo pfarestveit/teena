@@ -143,12 +143,15 @@ class BOACTestConfig < TestConfig
                        logger.info "There are #{asc_note_sids.length} students with ASC notes"
                        boa_note_sids = boa_sids & BOACUtils.get_sids_with_notes_of_src_boa
                        logger.info "There are #{boa_note_sids.length} students with BOA notes"
+                       data_note_sids = boa_sids & NessieUtils.get_sids_with_notes_of_src(NoteSource::DATA)
+                       logger.info "There are #{data_note_sids.length} students with Data Science notes"
                        e_and_i_note_sids = boa_sids & NessieUtils.get_sids_with_notes_of_src(NoteSource::E_AND_I)
                        logger.info "There are #{e_and_i_note_sids.length} students with E&I notes"
                        sis_note_sids = boa_sids & NessieUtils.get_sids_with_notes_of_src(NoteSource::SIS)
                        logger.info "There are #{sis_note_sids.length} students with SIS notes that have attachments"
-                       [asc_note_sids, boa_note_sids, e_and_i_note_sids, sis_note_sids].each { |s| s.shuffle! } if BOACUtils.shuffle_max_users
-                       test_sids = (asc_note_sids[0..(config - 1)] + boa_note_sids[0..(config - 1)] + e_and_i_note_sids[0..(config - 1)] + sis_note_sids[0..(config - 1)]).uniq
+                       [asc_note_sids, boa_note_sids, data_note_sids, e_and_i_note_sids, sis_note_sids].each { |s| s.shuffle! } if BOACUtils.shuffle_max_users
+                       range = 0..(config - 1)
+                       test_sids = (asc_note_sids[range] + boa_note_sids[range] + data_note_sids[range] + e_and_i_note_sids[range] + sis_note_sids[range]).uniq
                        @students.select { |s| test_sids.include? s.sis_id }
 
                      elsif opts[:with_appts]

@@ -8,7 +8,8 @@ test_cases = test.test_students.map do |student|
   sis_notes = NessieUtils.get_sis_notes student
   ei_notes = NessieUtils.get_e_and_i_notes student
   asc_notes = NessieUtils.get_asc_notes student
-  {student: student, notes: (boa_notes + sis_notes + ei_notes + asc_notes)}
+  data_sci_notes = NessieUtils.get_data_sci_notes student
+  {student: student, notes: (boa_notes + sis_notes + ei_notes + asc_notes + data_sci_notes)}
 end
 
 describe 'A BOA director' do

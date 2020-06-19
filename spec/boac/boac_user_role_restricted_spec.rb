@@ -225,7 +225,7 @@ describe 'A restricted BOA user' do
 
     before(:all) do
       @test.set_advisor do |advisor|
-            advisor.depts.include?(BOACDepartments::L_AND_S.code) &&
+            advisor.depts.include?(BOACDepartments::OTHER.code) &&
             advisor.depts.length == 1 &&
             !advisor.can_access_canvas_data &&
             !advisor.can_access_advising_data
