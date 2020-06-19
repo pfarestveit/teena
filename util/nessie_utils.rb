@@ -213,6 +213,7 @@ class NessieUtils < Utils
                AND profile NOT LIKE '%\"status\": \"Discontinued\"%'
                AND profile NOT LIKE '%\"status\": \"Dismissed\"%'
                AND profile NOT LIKE '%\"status\": \"Suspended\"%'
+               AND profile NOT LIKE '%\"status\": {\"code\": \"PRO\", \"description\": \"Probation\"}%'
                AND profile NOT LIKE '%\"status\": {\"code\": \"GST\", \"description\": \"Good Standing\"}%'
                AND profile NOT LIKE '%\"status\": {\"code\": \"DIS\", \"description\": \"Dismissed\"}%';"
     result = query_pg_db_field(nessie_pg_db_credentials, query, 'count').last.to_i
@@ -653,6 +654,30 @@ class NessieUtils < Utils
   # @return [Array<Note>]
   def self.get_e_and_i_notes(student)
     get_external_notes('boac_advising_e_i', student)
+  end
+
+  def self.get_data_sci_notes(student)
+    query = "SELECT boac_advising_data_science.advising_notes.id AS id,
+                    boac_advising_data_science.advising_notes.advisor_email AS advisor_email,
+                    boac_advising_data_science.advising_notes.reason_for_appointment AS topics,
+                    boac_advising_data_science.advising_notes.body AS body,
+                    boac_advising_data_science.advising_notes.created_at AS created_date
+             FROM boac_advising_data_science.advising_notes
+             WHERE boac_advising_data_science.advising_notes.sid = '#{student.sis_id}';"
+    results = query_pg_db(nessie_pg_db_credentials, query)
+    notes_data = results.map do |r|
+
+      created_date = Time.parse(r['created_date'].to_s).utc.localtime
+      {
+          id: r['id'],
+          note_source: NoteSource::DATA,
+          body: r['body'],
+          topics: (r['topics'].split(', ').map(&:upcase) if r['topics']).compact.sort,
+          created_date: created_date,
+          updated_date: created_date
+      }
+    end
+    notes_data.map { |d| Note.new d }
   end
 
   # Returns SIS advising notes associated with a given student
