@@ -26,7 +26,7 @@ module Page
     button(:submit_button, xpath: '//button[contains(.,"Submit")]')
     button(:save_button, xpath: '//button[text()="Save"]')
     button(:update_course_button, xpath: '//button[contains(.,"Update Course Details")]')
-    li(:update_course_success, xpath: '//li[contains(.,"successfully updated")]')
+    li(:update_course_success, xpath: '//*[contains(.,"successfully updated")]')
     form(:profile_form, xpath: '//form[@action="/logout"]')
     link(:profile_link, id: 'global_nav_profile_link')
     button(:logout_link, xpath: '//button[contains(.,"Logout")]')

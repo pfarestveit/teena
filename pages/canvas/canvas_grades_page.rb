@@ -59,9 +59,8 @@ module Page
     # Clicks the update button and waits for confirmation
     def update_course_settings
       wait_for_update_and_click update_course_button_element
-      sleep 1
-      wait_until(Utils.medium_wait) { update_course_button_element.enabled? }
-      update_course_success_element.when_visible Utils.short_wait
+      sleep 2
+      update_course_success_element.when_visible Utils.medium_wait
     end
 
     # Clicks the grading scheme checkbox and awaits confirmation of the update. Sometimes the confirmation does not appear, so
