@@ -19,6 +19,7 @@ describe 'bCourses Official Sections tool' do
     @create_course_site_page = Page::JunctionPages::CanvasCreateCourseSitePage.new @driver
     @course_add_user_page = Page::JunctionPages::CanvasCourseAddUserPage.new @driver
     @official_sections_page = Page::JunctionPages::CanvasCourseManageSectionsPage.new @driver
+    @toolbox_page = Page::JunctionPages::MyToolboxPage.new @driver
 
     sites = []
     sites_to_create = []
@@ -181,6 +182,11 @@ describe 'bCourses Official Sections tool' do
             it("shows no blank section labels for #{api_course_code} section #{api_section_data[:id]}") { expect(ui_section_data[:label].empty?).to be false }
             it("shows the right section schedules for #{api_course_code} section #{api_section_data[:id]}") { expect(ui_section_data[:schedules]).to eql(api_section_data[:schedules]) }
             it("shows the right section locations for #{api_course_code} section #{api_section_data[:id]}") { expect(ui_section_data[:locations]).to eql(api_section_data[:locations]) }
+
+            it "shows an expected instruction mode for #{api_course_code} section #{api_section_data[:id]}" do
+              mode = ui_section_data[:label].split('(').last.gsub(')', '')
+              expect(['In Person', 'Online', 'Hybrid', 'Flexible', 'Remote']).to include(mode)
+            end
 
             test_output_row = [site[:teacher].uid, site[:course].term, api_section_data[:code], api_section_data[:label], api_section_data[:id],
                                api_section_data[:schedules], api_section_data[:locations], api_section_data[:instructors]]
@@ -354,6 +360,42 @@ describe 'bCourses Official Sections tool' do
         logger.error "#{e.message}#{"\n"}#{e.backtrace.join("\n")}"
       end
     end
+
+    # SECTION NAME UPDATES
+
+    site = sites.first
+    section = (site[:sections] - site[:sections_for_site]).first
+    @canvas.stop_masquerading
+
+    # Create and upload SIS import with a fake section name
+    @canvas.set_course_sis_id site[:course]
+    section_id = "SEC:#{JunctionUtils.term_code}-#{section.id}"
+    section_name = "#{site[:course].code} FAKE LABEL"
+    csv = File.join(Utils.initialize_test_output_dir, "section-#{site[:course].code}.csv")
+    CSV.open(csv, 'wb') { |heading| heading << %w(section_id course_id name status start_date end_date) }
+    Utils.add_csv_row(csv, [section_id, site[:course].sis_id, section_name, 'active', nil, nil ])
+    @canvas.upload_sis_imports([csv], [])
+    JunctionUtils.clear_cache(@driver, @splash_page, @toolbox_page)
+
+    # Verify the tool warns of section name mismatch
+    @canvas.masquerade_as site[:teacher]
+    @official_sections_page.load_embedded_tool(@driver, site[:course])
+    @official_sections_page.current_sections_table.when_visible Utils.long_wait
+    @official_sections_page.click_edit_sections
+    update_msg_present = @official_sections_page.section_name_msg_element.when_visible(Utils.short_wait)
+    it "shows a section name mismatch message for section #{section.id} on course site #{site[:course].site_id}" do
+      expect(update_msg_present).to be_truthy
+    end
+
+    # Update the section and verify the tool no longer complains of mismatch
+    @official_sections_page.click_update_section section
+    @official_sections_page.save_changes_and_wait_for_success
+    @official_sections_page.click_edit_sections
+    update_msg_still_present = @official_sections_page.section_name_msg?
+    it "shows no section name mismatch message for updated section #{section.id} on course site #{site[:course].site_id}" do
+      expect(update_msg_still_present).to be false
+    end
+
   rescue => e
     it('encountered an error') { fail }
     logger.error "#{e.message}#{"\n"}#{e.backtrace.join("\n")}"
