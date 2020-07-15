@@ -337,6 +337,7 @@ module Page
     # COURSE USERS
 
     select_list(:enrollment_roles, name: 'enrollment_role_id')
+    elements(:section_label, :div, xpath: '//div[@class="section"]')
     link(:add_people_button, id: 'addUsers')
     link(:help_finding_users_link, id: 'add-people-help')
     link(:find_person_to_add_link, xpath: '//a[contains(.,"Find a Person to Add")]')
@@ -379,6 +380,13 @@ module Page
       users.each do |user|
         wait_until(Utils.short_wait) { cell_element(xpath: "//tr[contains(@id,'#{user.canvas_id}')]").exists? }
       end
+    end
+
+    # Returns all the visible instruction modes in section labels
+    # @return [Array<String>]
+    def visible_instruction_modes
+      modes = section_label_elements.map { |el| el.text.split('(').last.gsub(')', '') }
+      modes.uniq
     end
 
     # Adds a collection of users to a course site with the role associated with the user

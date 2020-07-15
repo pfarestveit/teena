@@ -47,6 +47,10 @@ class JunctionUtils < Utils
     @config['background_job_attempts']
   end
 
+  def self.term_code
+    @config['term']
+  end
+
   # The number of times to multiply the test data when testing background tasks
   def self.background_job_multiplier
     @config['background_job_multiplier']

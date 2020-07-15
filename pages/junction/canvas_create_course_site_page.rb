@@ -16,6 +16,7 @@ module Page
       link(:bcourses_service, xpath: '//a[contains(text(),"bCourses service page")]')
       button(:need_help, xpath: '//button[contains(.,"Need help deciding which official sections to select")]')
       div(:help, id: 'section-selection-help')
+      link(:instr_mode_link, xpath: '//a[contains(text(), "Learn more about instruction modes in bCourses.")]')
 
       button(:switch_mode, class: 'bc-page-create-course-site-admin-mode-switch')
 

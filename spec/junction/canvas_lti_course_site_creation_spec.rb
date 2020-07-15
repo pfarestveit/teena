@@ -100,6 +100,11 @@ describe 'bCourses course site creation' do
           help_text = @create_course_site_page.help
           it('shows suggestions for creating sites for courses with multiple sections') { expect(help_text).to include('If you have a course with multiple sections, you will need to decide') }
 
+          mode_link_works = @create_course_site_page.external_link_valid?(@create_course_site_page.instr_mode_link_element, 'IT - How do I create Course Site?')
+          it('shows an instruction mode link') { expect(mode_link_works).to be true }
+
+          @canvas_page.switch_to_canvas_iframe
+
           links_tested = true
 
         end
@@ -246,6 +251,12 @@ describe 'bCourses course site creation' do
         it("results in the right course site membership counts for #{site[:course].term} #{site[:course].code} site ID #{site[:course].site_id}") { expect(actual_enrollment_counts).to eql(expected_enrollment_counts) }
         it("results in no missing student enrollments for #{site[:course].term} #{site[:course].code} site ID #{site[:course].site_id}") { expect(expected_student_uids - actual_student_uids).to be_empty }
         it("results in no unexpected student enrollments for #{site[:course].term} #{site[:course].code} site ID #{site[:course].site_id}") { expect(actual_student_uids - expected_student_uids).to be_empty }
+
+        visible_modes = @canvas_page.visible_instruction_modes
+        it "shows the instruction mode for sections in #{site[:course].term} #{site[:course].code} site ID #{site[:course].site_id}" do
+          expect(visible_modes).not_to be_empty
+          expect(visible_modes - ['In Person', 'Online', 'Hybrid', 'Flexible', 'Remote']).to be_empty
+        end
 
         # ROSTER PHOTOS - check that roster photos tool shows the right sections
 

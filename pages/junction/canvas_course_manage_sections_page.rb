@@ -17,6 +17,7 @@ module Page
       button(:maintenance_notice_button, xpath: '//button[contains(.,"From 8 - 9 AM, you may experience delays of up to 10 minutes")]')
       paragraph(:maintenance_detail, xpath: '//p[contains(.,"bCourses performs scheduled maintenance every day between 8-9AM, during which time bCourses user and enrollment information is synchronized with other campus systems. This process may cause delays of up to 10 minutes before your request is completed.")]')
       link(:bcourses_service_link, xpath: '//a[contains(.,"bCourses service page")]')
+      div(:section_name_msg, xpath: '//div[@class="bc-template-sections-table-sites-container"][contains(., "The section name in bCourses no longer matches the Student Information System.")]')
 
       elements(:current_sections_table_row, :row, xpath: '//h3[contains(text(),"Sections in this Course Site")]/../../following-sibling::div//table//tr')
       button(:save_changes_button, xpath: '//button[contains(text(),"Save Changes")]')
@@ -54,6 +55,12 @@ module Page
         wait_for_update_and_click_js save_changes_button_element
       end
 
+      def save_changes_and_wait_for_success
+        click_save_changes
+        updating_sections_msg_element.when_visible Utils.short_wait
+        sections_updated_msg_element.when_visible Utils.long_wait
+      end
+
       # Closes the 'success' message after sections are updated
       def close_section_update_success
         logger.debug 'Closing the section update success message'
@@ -62,10 +69,18 @@ module Page
 
       # CURRENT SECTIONS
 
+      def current_sections_table_xpath
+        '//h3[contains(text(), "Sections in this Course Site")]/../../following-sibling::div//table'
+      end
+
+      def current_section_id_cell_xpath(section)
+        "#{current_sections_table_xpath}//td[contains(.,'#{section.id}')]"
+      end
+
       # Returns the table element containing sections currently in the site
       # @return [PageObject::Elements::Table]
       def current_sections_table
-        table_element(xpath: "//h3[contains(text(),'Sections in this Course Site')]/../../following-sibling::div//table")
+        table_element(xpath: current_sections_table_xpath)
       end
 
       # Returns the number of sections currently in the site by counting the 'Sections in this Course Site' table rows minus the heading row
@@ -79,28 +94,43 @@ module Page
       # @param section [Section]
       # @return [PageObject::Elements::TableCell]
       def current_section_id_element(section)
-        cell_element(xpath: "//h3[contains(text(),'Sections in this Course Site')]/../../following-sibling::div//table//td[contains(.,'#{section.id}')]")
+        cell_element(xpath: current_section_id_cell_xpath(section))
       end
 
       # Returns the course code displayed for a given section in the 'Sections in this Course Site' table
       # @param section [Section]
       # @return [String]
       def current_section_course(section)
-        cell_element(xpath: "//h3[contains(text(),'Sections in this Course Site')]/../../following-sibling::div//table//td[contains(.,'#{section.id}')]/preceding-sibling::td[contains(@class,'course-code')]").text
+        cell_element(xpath: "#{current_section_id_cell_xpath(section)}/preceding-sibling::td[contains(@class,'course-code')]").text
       end
 
       # Returns the label displayed for a given section in the 'Sections in this Course Site' table
       # @param section [Section]
       # @return [String]
       def current_section_label(section)
-        cell_element(xpath: "//h3[contains(text(),'Sections in this Course Site')]/../../following-sibling::div//table//td[contains(.,'#{section.id}')]/preceding-sibling::td[contains(@class,'section-label')]").text
+        cell_element(xpath: "#{current_section_id_cell_xpath(section)}/preceding-sibling::td[contains(@class,'section-label')]").text
+      end
+
+      # Returns the Update button element for a given section in the 'Sections in this Course Site' table
+      # @param section [Section]
+      # @return [PageObject::Elements::Button]
+      def section_update_button(section)
+        button_element(xpath: "#{current_section_id_cell_xpath(section)}/following-sibling::td[contains(@class,'section-action-option')]//button[contains(.,'Update')]")
+      end
+
+      # Clicks the Update button for a given section in the 'Sections in this Course Site' table and pauses to allow the DOM to update
+      # @param section [Section]
+      def click_update_section(section)
+        logger.debug "Clicking update button for section #{section.id}"
+        wait_for_update_and_click_js section_update_button(section)
+        sleep 1
       end
 
       # Returns the Delete button element for a given section in the 'Sections in this Course Site' table
       # @param section [Section]
       # @return [PageObject::Elements::Button]
       def section_delete_button(section)
-        button_element(xpath: "//h3[contains(text(),'Sections in this Course Site')]/../../following-sibling::div//table//td[contains(.,'#{section.id}')]/following-sibling::td[contains(@class,'section-action-option')]//button[contains(.,'Delete')]")
+        button_element(xpath: "#{current_section_id_cell_xpath(section)}/following-sibling::td[contains(@class,'section-action-option')]//button[contains(.,'Delete')]")
       end
 
       # Clicks the Delete button for a given section in the 'Sections in this Course Site' table and pauses to allow the DOM to update
@@ -122,7 +152,7 @@ module Page
       # @param section [Section]
       # @return [PageObject::Elements::Button]
       def section_undo_add_button(section)
-        button_element(xpath: "//h3[contains(text(),'Sections in this Course Site')]/../../following-sibling::div//table//td[contains(.,'#{section.id}')]/following-sibling::td[contains(@class,'section-action-option')]//button[contains(.,'Undo Add')]")
+        button_element(xpath: "#{current_section_id_cell_xpath(section)}/following-sibling::td[contains(@class,'section-action-option')]//button[contains(.,'Undo Add')]")
       end
 
       # Clicks the Undo Add button for a given section in the 'Sections in this Course Site' table and pauses to allow the DOM to update
@@ -135,11 +165,19 @@ module Page
 
       # AVAILABLE SECTIONS
 
+      def available_sections_table_xpath(course_code)
+        "//button[contains(@class,'sections-form-course-button')][contains(.,'#{course_code}')]//following-sibling::div//table"
+      end
+
+      def available_section_cell_xpath(course_code, section_id)
+        "#{available_sections_table_xpath(course_code)}//td[contains(.,'#{section_id}')]"
+      end
+
       # Returns the number of a given course's sections available to add to a course site by counting the table rows minus the heading row
       # @param course [Course]
       # @return [Integer]
       def available_sections_count(course)
-        div_elements(xpath: "//button[contains(@class,'sections-form-course-button')][contains(.,'#{course.code}')]//following-sibling::div//table/tbody").length
+        div_elements(xpath: "#{available_sections_table_xpath(course.code)}/tbody").length
       end
 
       # Returns a hash of data displayed for a given section ID in a course's available sections table
@@ -160,7 +198,7 @@ module Page
       # @param section_id [String]
       # @return [PageObject::Elements::TableCell]
       def available_section_id_element(course_code, section_id)
-        cell_element(xpath: "//button[contains(@class,'sections-form-course-button')][contains(.,'#{course_code}')]//following-sibling::div//table//td[contains(.,'#{section_id}')]")
+        cell_element(xpath: "#{available_sections_table_xpath(course_code)}//td[contains(.,'#{section_id}')]")
       end
 
       # Returns the course code displayed for a given section in a course's available sections
@@ -168,7 +206,7 @@ module Page
       # @param section_id [String]
       # @return [String]
       def available_section_course(course_code, section_id)
-        cell_element(xpath: "//button[contains(@class,'sections-form-course-button')][contains(.,'#{course_code}')]//following-sibling::div//table//td[contains(.,'#{section_id}')]/preceding-sibling::td[contains(@class,'course-code')]").text
+        cell_element(xpath: "#{available_section_cell_xpath(course_code, section_id)}/preceding-sibling::td[contains(@class,'course-code')]").text
       end
 
       # Returns the label displayed for a given section in a course's available sections
@@ -176,7 +214,7 @@ module Page
       # @param section_id [String]
       # @return [String]
       def available_section_label(course_code, section_id)
-        cell_element(xpath: "//button[contains(@class,'sections-form-course-button')][contains(.,'#{course_code}')]//following-sibling::div//table//td[contains(.,'#{section_id}')]/preceding-sibling::td[contains(@class,'section-label')]").text
+        cell_element(xpath: "#{available_section_cell_xpath(course_code, section_id)}/preceding-sibling::td[contains(@class,'section-label')]").text
       end
 
       # Returns the schedules displayed for a given section in a course's available sections
@@ -184,7 +222,7 @@ module Page
       # @param section_id [String]
       # @return [String]
       def available_section_schedules(course_code, section_id)
-        cell_element(xpath: "//button[contains(@class,'sections-form-course-button')][contains(.,'#{course_code}')]//following-sibling::div//table//td[contains(.,'#{section_id}')]/following-sibling::td[contains(@class,'section-timestamps')]").text
+        cell_element(xpath: "#{available_section_cell_xpath(course_code, section_id)}/following-sibling::td[contains(@class,'section-timestamps')]").text
       end
 
       # Returns the locations displayed for a given section in a course's available sections
@@ -192,7 +230,7 @@ module Page
       # @param section_id [String]
       # @return [String]
       def available_section_locations(course_code, section_id)
-        cell_element(xpath: "//button[contains(@class,'sections-form-course-button')][contains(.,'#{course_code}')]//following-sibling::div//table//td[contains(.,'#{section_id}')]/following-sibling::td[contains(@class,'section-locations')]").text
+        cell_element(xpath: "#{available_section_cell_xpath(course_code, section_id)}/following-sibling::td[contains(@class,'section-locations')]").text
       end
 
       # Returns the instructors displayed for a given section in a course's available sections
@@ -200,7 +238,7 @@ module Page
       # @param section_id [String]
       # @return [String]
       def available_section_instructors(course_code, section_id)
-        cell_element(xpath: "//button[contains(@class,'sections-form-course-button')][contains(.,'#{course_code}')]//following-sibling::div//table//td[contains(.,'#{section_id}')]/following-sibling::td[contains(@class,'section-instructors')]").text
+        cell_element(xpath: "#{available_section_cell_xpath(course_code, section_id)}/following-sibling::td[contains(@class,'section-instructors')]").text
       end
 
       # Returns the Add button for a given section in a course's available sections table
@@ -208,7 +246,7 @@ module Page
       # @param section [Section]
       # @return [PageObject::Elements::Button]
       def section_add_button(course, section)
-        button_element(xpath: "//button[contains(@class,'sections-form-course-button')][contains(.,'#{course.code}')]//following-sibling::div//table//td[contains(.,'#{section.id}')]/following-sibling::td[contains(@class,'section-action-option')]//button[contains(.,'Add')]")
+        button_element(xpath: "#{available_section_cell_xpath(course.code, section.id)}/following-sibling::td[contains(@class,'section-action-option')]//button[contains(.,'Add')]")
       end
 
       # Clicks the Add button for a given section in a course's available sections table and pauses to allow the DOM to update
@@ -233,7 +271,7 @@ module Page
       # @param section [Section]
       # @return [PageObject::Elements::Div]
       def section_added_element(course, section)
-        div_element(xpath: "//button[contains(@class,'sections-form-course-button')][contains(.,'#{course.code}')]//following-sibling::div//table//td[contains(.,'#{section.id}')]/following-sibling::td[contains(@class,'section-action-option')]//div[contains(.,'Added')]")
+        div_element(xpath: "#{available_section_cell_xpath(course.code, section.id)}/following-sibling::td[contains(@class,'section-action-option')]//div[contains(.,'Added')]")
       end
 
       # Returns the Undo Delete button for a given section in a course's available sections table
@@ -241,7 +279,7 @@ module Page
       # @param section [Section]
       # @return [PageObject::Elements::Button]
       def section_undo_delete_button(course, section)
-        button_element(xpath: "//button[contains(@class,'sections-form-course-button')][contains(.,'#{course.code}')]//following-sibling::div//table//td[contains(.,'#{section.id}')]/following-sibling::td[contains(@class,'section-action-option')]//button[contains(.,'Undo Delete')]")
+        button_element(xpath: "#{available_section_cell_xpath(course.code, section.id)}/following-sibling::td[contains(@class,'section-action-option')]//button[contains(.,'Undo Delete')]")
       end
 
       # Clicks the Undo Delete button for a given section in a course's available sections table and pauses to allow the DOM to update
