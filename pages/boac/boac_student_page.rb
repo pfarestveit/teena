@@ -35,6 +35,7 @@ class BOACStudentPage
   div(:inactive_asc_flag, id: 'student-bio-inactive-asc')
   div(:inactive_coe_flag, id: 'student-bio-inactive-coe')
   elements(:major, :div, xpath: '//div[@id="student-bio-majors"]//div[@class="font-weight-bolder"]')
+  elements(:sub_plan, :div, xpath: '//div[@id="student-bio-subplans"]/div')
   elements(:minor, :div, xpath: '//div[@id="student-bio-minors"]//div[@class="font-weight-bolder"]')
   elements(:college, :div, xpath: '//div[@id="student-bio-majors"]//div[@class="text-muted"]')
   elements(:discontinued_major, :div, xpath: '//div[@id="student-details-discontinued-majors"]//div[@class="font-weight-bolder"]')
@@ -86,6 +87,7 @@ class BOACStudentPage
       :colleges => (college_elements.map { |c| c.text.strip }).reject(&:empty?),
       :majors_discontinued => (discontinued_major_elements.map { |m| m.text.gsub('Major', '').strip }),
       :colleges_discontinued => (discontinued_college_elements.map { |c| c.text.strip }).reject(&:empty?),
+      :sub_plans => (sub_plan_elements.map { |m| m.text.strip }),
       :minors => (minor_elements.map { |m| m.text.strip }),
       :minors_discontinued => (discontinued_minor_elements.map { |m| m.text.strip }),
       :level => (level.gsub("Level\n",'') if level?),

@@ -111,6 +111,10 @@ describe 'BOAC' do
           it("shows no majors for UID #{student.uid} on the #{test.default_cohort.name} page") { expect(cohort_page_sis_data[:majors]).to be_nil }
         end
 
+        it "shows the sub-plans for UID #{student.uid} on the #{test.default_cohort.name} page" do
+          expect(cohort_page_sis_data[:sub_plans]).to eql(api_sis_profile_data[:sub_plans])
+        end
+
         if api_sis_profile_data[:academic_career_status] == 'Completed'
           it "shows no expected graduation term for UID #{student.uid} on the #{test.default_cohort.name} page" do
             expect(cohort_page_sis_data[:grad_term]).to be_nil
