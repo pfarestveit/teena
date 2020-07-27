@@ -127,6 +127,10 @@ class BOACApiStudentPage
     end
   end
 
+  def sub_plans
+    sis_profile && sis_profile['subplans']
+  end
+
   def minors
     if sis_profile && sis_profile['plansMinor']
       sis_profile['plansMinor'].map do |p|
