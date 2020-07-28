@@ -699,7 +699,7 @@ module Page
         file_input_element.when_visible Utils.short_wait
         file_input_element.send_keys csv
         wait_for_update_and_click upload_button_element
-        import_success_msg_element.when_present Utils.medium_wait
+        import_success_msg_element.when_present Utils.long_wait
       end
       users.each do |u|
         (u.status == 'active') ?
