@@ -36,10 +36,10 @@
                 ],
                 "visa_types": [
                     {
-                        "visa_type": "F-1 International Student"
+                        "visa_type": "F1"
                     },
                     {
-                        "visa_type": "J-1 International Student"
+                        "visa_type": "J1"
                     }
                 ],
                 "ethnicities": [
@@ -87,7 +87,7 @@
             {
                 "levels": [
                     {
-                        "level": "Freshman (0-29 Units)"
+                        "level": "10"
                     }
                 ],
                 "genders": [
@@ -100,7 +100,7 @@
             {
                 "coe_genders": [
                     {
-                        "gender": "Female"
+                        "gender": "F"
                     }
                 ],
                 "coe_inactive": true
@@ -126,10 +126,10 @@
             {
                 "levels": [
                     {
-                        "level": "Junior (60-89 Units)"
+                        "level": "30"
                     },
                     {
-                        "level": "Senior (90+ Units)"
+                        "level": "40"
                     }
                 ],
                 "ethnicities": [

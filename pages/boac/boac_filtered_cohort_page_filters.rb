@@ -45,6 +45,22 @@ module BOACFilteredCohortPageFilters
   # @param [String] filter_option
   # @return [Element]
   def new_filter_sub_option_element(filter_key, filter_option)
+    filter_option = case filter_key
+                      when 'coeEthnicities'
+                        CohortFilter.coe_ethnicity_per_code filter_option
+                      when 'coeGenders'
+                        CohortFilter.coe_gender_per_code filter_option
+                      when 'visaTypes'
+                        if filter_option == 'All types'
+                          filter_option
+                        else
+                          CohortFilter.visa_type_per_code filter_option
+                        end
+                      when 'levels'
+                        CohortFilter.level_per_code filter_option
+                      else
+                        filter_option
+                    end
     case filter_key
       when 'colleges'
         link_element(id: "College-#{filter_option}")
@@ -83,11 +99,12 @@ module BOACFilteredCohortPageFilters
     if %w(gpaRanges lastTermGpaRanges lastNameRanges familyDependentRanges studentDependentRanges).include? filter_key
       wait_for_element_and_type(filter_range_min_input_element, filter_option['min'])
       wait_for_element_and_type(filter_range_max_input_element, filter_option['max'])
+      wait_for_update_and_click filter_range_min_input_element
 
     # All others require a selection
     else
       wait_for_update_and_click new_sub_filter_button_element
-      wait_for_update_and_click new_filter_sub_option_element(filter_key, filter_option)
+      wait_for_update_and_click_js new_filter_sub_option_element(filter_key, filter_option)
     end
   end
 
@@ -262,9 +279,12 @@ module BOACFilteredCohortPageFilters
   # @param filter_name [String]
   # @return [String]
   def existing_filter_xpath(filter_name)
-    (['Ethnicity', 'Gender', 'Underrepresented Minority'].include? filter_name) ?
-        "//div[contains(@class,\"filter-row\")]/div[contains(.,\"#{filter_name}\") and not(contains(.,\"COE\"))]" :
-        "//div[contains(@class,\"filter-row\")]/div[contains(.,\"#{filter_name}\")]"
+    if ['Ethnicity', 'Gender', 'Underrepresented Minority'].include? filter_name
+      "//div[contains(@class,\"filter-row\")]/div[contains(.,\"#{filter_name}\") and not(contains(.,\"COE\"))]"
+    elsif filter_name == 'Major'
+      "//div[contains(@class,\"filter-row\")]/div[contains(.,\"#{filter_name}\") and not(contains(.,\"Intended\"))]"
+    end
+      "//div[contains(@class,\"filter-row\")]/div[contains(.,\"#{filter_name}\")]"
   end
 
   # Returns the element containing an added cohort filter

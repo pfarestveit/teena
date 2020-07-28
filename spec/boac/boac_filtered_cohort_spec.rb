@@ -40,21 +40,24 @@ describe 'BOAC', order: :defined do
     before(:each) { @cohort_page.cancel_cohort if @cohort_page.cancel_cohort_button? && @cohort_page.cancel_cohort_button_element.visible? }
 
     test.searches.each do |cohort|
-
       it "shows all the students sorted by Last Name who match #{cohort.search_criteria.list_filters}" do
         @cohort_page.click_sidebar_create_filtered
         @cohort_page.perform_student_search cohort
-        cohort.member_data = @cohort_page.expected_student_search_results(test, cohort.search_criteria)
-        expected_results = @cohort_page.expected_sids_by_last_name cohort.member_data
-        if cohort.member_data.length.zero?
+        @cohort_page.set_cohort_members(cohort, test)
+        expected = NessieFilterUtils.cohort_by_last_name(test, cohort.search_criteria)
+        if cohort.members.empty?
           @cohort_page.wait_until(Utils.short_wait) { @cohort_page.results_count == 0 }
         else
-          visible_results = @cohort_page.visible_sids
-          @cohort_page.wait_until(1, "Expected but not present: #{expected_results - visible_results}. Present but not expected: #{visible_results - expected_results}") do
-            visible_results.sort == expected_results.sort
+          visible = @cohort_page.visible_sids
+          @cohort_page.wait_until(1, "Missing: #{expected - visible}. Unexpected: #{visible - expected}") do
+            visible.sort == expected.sort
           end
-          @cohort_page.verify_list_view_sorting(expected_results, visible_results)
+          @cohort_page.verify_list_view_sorting(expected, visible)
         end
+      end
+
+      it "shows me a query for #{cohort.search_criteria.list_filters}" do
+        NessieFilterUtils.cohort_by_level(test, cohort.search_criteria)
       end
 
       it("offers an Export List button for a search #{cohort.search_criteria.list_filters}") { expect(@cohort_page.export_list_button?).to be true }
@@ -64,18 +67,18 @@ describe 'BOAC', order: :defined do
       it("shows the cohort filters for a cohort using #{cohort.search_criteria.list_filters}") { @cohort_page.verify_student_filters_present cohort }
 
       it "allows the advisor to export a non-empty list of students in a cohort using #{cohort.search_criteria.list_filters}" do
-        if cohort.member_data.any?
+        if cohort.members.any?
           parsed_csv = @cohort_page.export_student_list cohort
-          @cohort_page.verify_student_list_default_export(cohort.member_data, parsed_csv)
+          @cohort_page.verify_student_list_default_export(cohort.members, parsed_csv)
         else
           expect(@cohort_page.export_list_button_element.disabled?).to be true
         end
       end
 
       it "allows the advisor to choose columns to include when exporting a cohort using #{cohort.search_criteria.list_filters}" do
-        if cohort.member_data.any?
+        if cohort.members.any?
           parsed_csv = @cohort_page.export_custom_student_list cohort
-          @cohort_page.verify_student_list_custom_export(cohort.member_data, parsed_csv)
+          @cohort_page.verify_student_list_custom_export(cohort.members, parsed_csv)
         else
           expect(@cohort_page.export_list_button_element.disabled?).to be true
         end
@@ -87,247 +90,292 @@ describe 'BOAC', order: :defined do
       end
 
       it "shows the filtered cohort member count with criteria #{cohort.search_criteria.list_filters}" do
-        @homepage.wait_until(Utils.short_wait, "Expected #{cohort.member_data.length} but got #{@homepage.member_count(cohort)}") { @homepage.member_count(cohort) == cohort.member_data.length }
-      end
-    end
-
-    context 'sorting' do
-
-      before(:all) do
-        # For sorting tests, pick the most populous cohort
-        @cohort = test.searches.select(&:member_count).sort_by(&:member_count).last
-        @cohort_page.load_cohort @cohort
-      end
-
-      it "sorts by First Name" do
-        @cohort_page.sort_by_first_name
-        @cohort_page.compare_visible_sids_to_expected @cohort_page.expected_sids_by_first_name(@cohort.member_data)
-      end
-
-      it "sorts by Team" do
-        if [BOACDepartments::ADMIN, BOACDepartments::ASC].include? test.dept
-          @cohort_page.sort_by_team
-          @cohort_page.compare_visible_sids_to_expected @cohort_page.expected_sids_by_team(@cohort.member_data)
+        @homepage.wait_until(Utils.short_wait, "Expected #{cohort.members.length} but got #{@homepage.member_count(cohort)}") do
+          @homepage.member_count(cohort) == cohort.members.length
         end
       end
+    end
+  end
 
-      it "sorts by GPA ascending" do
-        @cohort_page.sort_by_gpa_cumulative
-        @cohort_page.compare_visible_sids_to_expected @cohort_page.expected_sids_by_gpa(@cohort.member_data)
-      end
+  context 'sorting' do
 
-      it "sorts by GPA descending" do
-        @cohort_page.sort_by_gpa_cumulative_desc
-        @cohort_page.compare_visible_sids_to_expected @cohort_page.expected_sids_by_gpa_desc(@cohort.member_data)
-      end
+    before(:all) do
+      # For sorting tests, pick the most populous cohort
+      @cohort = test.searches.select(&:member_count).sort_by(&:member_count).last
+      @cohort_page.load_cohort @cohort
+    end
 
-      it "sorts by GPA ascending (term #{BOACUtils.previous_term_code})" do
-        term = BOACUtils.previous_term_code
-        @cohort_page.sort_by_last_term_gpa term
-        @cohort_page.compare_visible_sids_to_expected @cohort_page.expected_sids_by_gpa_last_term(@cohort.member_data)
-      end
+    it "sorts by First Name" do
+      @cohort_page.sort_by_first_name
+      expected = NessieFilterUtils.cohort_by_first_name(test, @cohort.search_criteria)
+      @cohort_page.compare_visible_sids_to_expected expected
+    end
 
-      it "sorts by GPA descending (term #{BOACUtils.previous_term_code})" do
-        term = BOACUtils.previous_term_code
-        @cohort_page.sort_by_last_term_gpa_desc term
-        @cohort_page.compare_visible_sids_to_expected @cohort_page.expected_sids_by_gpa_last_term_desc(@cohort.member_data)
-      end
-
-      it "sorts by GPA ascending (#{BOACUtils.previous_term_code BOACUtils.previous_term_code})" do
-        term = BOACUtils.previous_term_code BOACUtils.previous_term_code
-        @cohort_page.sort_by_last_term_gpa term
-        @cohort_page.compare_visible_sids_to_expected @cohort_page.expected_sids_by_gpa_last_last_term(@cohort.member_data)
-      end
-
-      it "sorts by GPA descending (#{BOACUtils.previous_term_code BOACUtils.previous_term_code})" do
-        term = BOACUtils.previous_term_code BOACUtils.previous_term_code
-        @cohort_page.sort_by_last_term_gpa_desc term
-        @cohort_page.compare_visible_sids_to_expected @cohort_page.expected_sids_by_gpa_last_last_term_desc(@cohort.member_data)
-      end
-
-      it "sorts by Level" do
-        @cohort_page.sort_by_level
-        @cohort_page.compare_visible_sids_to_expected @cohort_page.expected_sids_by_level(@cohort.member_data)
-      end
-
-      it "sorts by Major" do
-        @cohort_page.sort_by_major
-        @cohort_page.compare_visible_sids_to_expected @cohort_page.expected_sids_by_major(@cohort.member_data)
-      end
-
-      it "sorts by Entering Term" do
-        @cohort_page.sort_by_entering_term
-        @cohort_page.compare_visible_sids_to_expected @cohort_page.expected_sids_by_matriculation(@cohort.member_data)
-      end
-
-      it "sorts by Terms in Attendance ascending" do
-        @cohort_page.sort_by_terms_in_attend
-        @cohort_page.compare_visible_sids_to_expected @cohort_page.expected_sids_by_terms_in_attend(@cohort.member_data)
-      end
-
-      it "sorts by Terms in Attendance descending" do
-        @cohort_page.sort_by_terms_in_attend_desc
-        @cohort_page.compare_visible_sids_to_expected @cohort_page.expected_sids_by_terms_in_attend_desc(@cohort.member_data)
-      end
-
-      it "sorts by Units In Progress ascending" do
-        @cohort_page.sort_by_units_in_progress
-        @cohort_page.compare_visible_sids_to_expected @cohort_page.expected_sids_by_units_in_prog(@cohort.member_data)
-      end
-
-      it "sorts by Units In Progress descending" do
-        @cohort_page.sort_by_units_in_progress_desc
-        @cohort_page.compare_visible_sids_to_expected @cohort_page.expected_sids_by_units_in_prog_desc(@cohort.member_data)
-      end
-
-      it "sorts by Units Completed ascending" do
-        @cohort_page.sort_by_units_completed
-        @cohort_page.compare_visible_sids_to_expected @cohort_page.expected_sids_by_units_completed(@cohort.member_data)
-      end
-
-      it "sorts by Units Completed descending" do
-        @cohort_page.sort_by_units_completed_desc
-        @cohort_page.compare_visible_sids_to_expected @cohort_page.expected_sids_by_units_completed_desc(@cohort.member_data)
-      end
-
-      ##########
-
-      it "shows the first 50 filtered cohort members who have alerts on the homepage" do
-        @homepage.load_page
-        expected_sids_by_name = @homepage.expected_sids_by_name @cohort.member_data
-        @cohort.members = test.students.select { |u| expected_sids_by_name.include? u.sis_id }
-        @homepage.expand_member_rows @cohort
-        @homepage.verify_member_alerts(@cohort, test.advisor)
-      end
-
-      it "by default sorts by alert count descending the first 50 cohort members who have alerts on the homepage" do
-        expected_sequence = @homepage.expected_sids_by_alerts_desc @cohort.member_data
-        @homepage.wait_until(1, "Expected #{expected_sequence}, but got #{@homepage.all_row_sids @cohort}") { @homepage.all_row_sids(@cohort) == expected_sequence }
-      end
-
-      it "allows the advisor to sort by alert count ascending the first 50 cohort members who have alerts on the homepage" do
-        expected_sequence = @homepage.expected_sids_by_alerts @cohort.member_data
-        @homepage.sort_by_alert_count @cohort
-        @homepage.wait_until(1, "Expected #{expected_sequence}, but got #{@homepage.all_row_sids @cohort}") { @homepage.all_row_sids(@cohort) == expected_sequence }
-      end
-
-      it "allows the advisor to sort by name ascending cohort the first 50 members who have alerts on the homepage" do
-        expected_sequence = @homepage.expected_sids_by_name @cohort.member_data
-        @homepage.sort_by_name @cohort
-        @homepage.wait_until(1, "Expected #{expected_sequence}, but got #{@homepage.all_row_sids @cohort}") { @homepage.all_row_sids(@cohort) == expected_sequence }
-      end
-
-      it "allows the advisor to sort by name descending the first 50 cohort members who have alerts on the homepage" do
-        expected_sequence = @homepage.expected_sids_by_name_desc @cohort.member_data
-        @homepage.sort_by_name @cohort
-        @homepage.wait_until(1, "Expected #{expected_sequence}, but got #{@homepage.all_row_sids @cohort}") { @homepage.all_row_sids(@cohort) == expected_sequence }
-      end
-
-      it "allows the advisor to sort by SID ascending the first 50 cohort members who have alerts on the homepage" do
-        expected_sequence = @homepage.expected_sids_by_sid @cohort.member_data
-        @homepage.sort_by_sid @cohort
-        @homepage.wait_until(1, "Expected #{expected_sequence}, but got #{@homepage.all_row_sids @cohort}") { @homepage.all_row_sids(@cohort) == expected_sequence }
-      end
-
-      it "allows the advisor to sort by SID descending the first 50 cohort members who have alerts on the homepage" do
-        expected_sequence = @homepage.expected_sids_by_sid(@cohort.member_data).reverse
-        @homepage.sort_by_sid @cohort
-        @homepage.wait_until(1, "Expected #{expected_sequence}, but got #{@homepage.all_row_sids @cohort}") { @homepage.all_row_sids(@cohort) == expected_sequence }
-      end
-
-      it "allows the advisor to sort by major ascending the first 50 cohort members who have alerts on the homepage" do
-        expected_sequence = @homepage.expected_sids_by_major @cohort.member_data
-        @homepage.sort_by_major @cohort
-        @homepage.wait_until(1, "Expected #{expected_sequence}, but got #{@homepage.all_row_sids @cohort}") { @homepage.all_row_sids(@cohort) == expected_sequence }
-      end
-
-      it "allows the advisor to sort by major descending the first 50 cohort members who have alerts on the homepage" do
-        expected_sequence = @homepage.expected_sids_by_major_desc @cohort.member_data
-        @homepage.sort_by_major @cohort
-        @homepage.wait_until(1, "Expected #{expected_sequence}, but got #{@homepage.all_row_sids @cohort}") { @homepage.all_row_sids(@cohort) == expected_sequence }
-      end
-
-      it "allows the advisor to sort by expected grad date ascending the first 50 cohort members who have alerts on the homepage" do
-        expected_sequence = @homepage.expected_sids_by_grad_term @cohort.member_data
-        @homepage.sort_by_expected_grad @cohort
-        @homepage.wait_until(1, "Expected #{expected_sequence}, but got #{@homepage.all_row_sids @cohort}") { @homepage.all_row_sids(@cohort) == expected_sequence }
-      end
-
-      it "allows the advisor to sort by expected grad date descending the first 50 cohort members who have alerts on the homepage" do
-        expected_sequence = @homepage.expected_sids_by_grad_term_desc @cohort.member_data
-        @homepage.sort_by_expected_grad @cohort
-        @homepage.wait_until(1, "Expected #{expected_sequence}, but got #{@homepage.all_row_sids @cohort}") { @homepage.all_row_sids(@cohort) == expected_sequence }
-      end
-
-      it "allows the advisor to sort by term units ascending the first 50 cohort members who have alerts on the homepage" do
-        # Scrape the visible term units since it's not stored in the cohort member data
-        @cohort.member_data.each { |d| d.merge!({:term_units => @homepage.user_row_data(d[:sid], @homepage.filtered_cohort_xpath(@cohort))[:term_units]}) }
-        expected_sequence = @homepage.expected_sids_by_term_units @cohort.member_data
-        @homepage.sort_by_term_units @cohort
-        @homepage.wait_until(1, "Expected #{expected_sequence}, but got #{@homepage.all_row_sids @cohort}") { @homepage.all_row_sids(@cohort) == expected_sequence }
-      end
-
-      it "allows the advisor to sort by term units descending the first 50 cohort members who have alerts on the homepage" do
-        expected_sequence = @homepage.expected_sids_by_term_units_desc @cohort.member_data
-        @homepage.sort_by_term_units @cohort
-        @homepage.wait_until(1, "Expected #{expected_sequence}, but got #{@homepage.all_row_sids @cohort}") { @homepage.all_row_sids(@cohort) == expected_sequence }
-      end
-
-      it "allows the advisor to sort by cumulative units ascending the first 50 cohort members who have alerts on the homepage" do
-        expected_sequence = @homepage.expected_sids_by_units_cum @cohort.member_data
-        @homepage.sort_by_cumul_units @cohort
-        @homepage.wait_until(1, "Expected #{expected_sequence}, but got #{@homepage.all_row_sids @cohort}") { @homepage.all_row_sids(@cohort) == expected_sequence }
-      end
-
-      it "allows the advisor to sort by cumulative descending the first 50 cohort members who have alerts on the homepage" do
-        expected_sequence = @homepage.expected_sids_by_units_cum_desc @cohort.member_data
-        @homepage.sort_by_cumul_units @cohort
-        @homepage.wait_until(1, "Expected #{expected_sequence}, but got #{@homepage.all_row_sids @cohort}") { @homepage.all_row_sids(@cohort) == expected_sequence }
-      end
-
-      it "allows the advisor to sort by GPA ascending the first 50 cohort members who have alerts on the homepage" do
-        expected_sequence = @homepage.expected_sids_by_gpa @cohort.member_data
-        @homepage.sort_by_gpa @cohort
-        @homepage.wait_until(1, "Expected #{expected_sequence}, but got #{@homepage.all_row_sids @cohort}") { @homepage.all_row_sids(@cohort) == expected_sequence }
-      end
-
-      it "allows the advisor to sort by GPA descending the first 50 cohort members who have alerts on the homepage" do
-        expected_sequence = @homepage.expected_sids_by_gpa_desc @cohort.member_data
-        @homepage.sort_by_gpa @cohort
-        @homepage.wait_until(1, "Expected #{expected_sequence}, but got #{@homepage.all_row_sids @cohort}") { @homepage.all_row_sids(@cohort) == expected_sequence }
-      end
-
-      it "offers a link to the filtered cohort" do
-        @homepage.click_filtered_cohort @cohort
-        @cohort_page.cohort_heading(@cohort).when_visible Utils.medium_wait
+    it "sorts by Team" do
+      if [BOACDepartments::ADMIN, BOACDepartments::ASC].include? test.dept
+        @cohort_page.sort_by_team
+        expected = NessieFilterUtils.cohort_by_team(test, @cohort.search_criteria)
+        @cohort_page.compare_visible_sids_to_expected expected
       end
     end
 
-    it 'requires a title' do
-      @homepage.click_sidebar_create_filtered
-      @cohort_page.perform_student_search test.searches.first
-      @cohort_page.click_save_cohort_button_one
-      expect(@cohort_page.save_cohort_button_two_element.disabled?).to be true
+    it "sorts by GPA ascending" do
+      @cohort_page.sort_by_gpa_cumulative
+      expected = NessieFilterUtils.cohort_by_gpa_asc(test, @cohort.search_criteria)
+      @cohort_page.compare_visible_sids_to_expected expected
     end
 
-    it 'truncates a title over 255 characters' do
-      cohort = FilteredCohort.new({name: "#{test.id}#{'A loooooong title ' * 15}?"})
+    it "sorts by GPA descending" do
+      @cohort_page.sort_by_gpa_cumulative_desc
+      expected = NessieFilterUtils.cohort_by_gpa_desc(test, @cohort.search_criteria)
+      @cohort_page.compare_visible_sids_to_expected expected
+    end
+
+    it "sorts by GPA ascending (term #{BOACUtils.previous_term_code})" do
+      term = BOACUtils.previous_term_code
+      @cohort_page.sort_by_last_term_gpa term
+      expected = NessieFilterUtils.cohort_by_gpa_last_term_asc(test, @cohort.search_criteria)
+      @cohort_page.compare_visible_sids_to_expected expected
+    end
+
+    it "sorts by GPA descending (term #{BOACUtils.previous_term_code})" do
+      term = BOACUtils.previous_term_code
+      @cohort_page.sort_by_last_term_gpa_desc term
+      expected = NessieFilterUtils.cohort_by_gpa_last_term_desc(test, @cohort.search_criteria)
+      @cohort_page.compare_visible_sids_to_expected expected
+    end
+
+    it "sorts by GPA ascending (#{BOACUtils.previous_term_code BOACUtils.previous_term_code})" do
+      term = BOACUtils.previous_term_code BOACUtils.previous_term_code
+      @cohort_page.sort_by_last_term_gpa term
+      expected = NessieFilterUtils.cohort_by_gpa_last_last_term_asc(test, @cohort.search_criteria)
+      @cohort_page.compare_visible_sids_to_expected expected
+    end
+
+    it "sorts by GPA descending (#{BOACUtils.previous_term_code BOACUtils.previous_term_code})" do
+      term = BOACUtils.previous_term_code BOACUtils.previous_term_code
+      @cohort_page.sort_by_last_term_gpa_desc term
+      expected = NessieFilterUtils.cohort_by_gpa_last_last_term_desc(test, @cohort.search_criteria)
+      @cohort_page.compare_visible_sids_to_expected expected
+    end
+
+    it "sorts by Level" do
+      @cohort_page.sort_by_level
+      expected = NessieFilterUtils.cohort_by_level(test, @cohort.search_criteria)
+      @cohort_page.compare_visible_sids_to_expected expected
+    end
+
+    it "sorts by Major" do
+      @cohort_page.sort_by_major
+      expected = NessieFilterUtils.cohort_by_major(test, @cohort.search_criteria)
+      @cohort_page.compare_visible_sids_to_expected expected
+    end
+
+    it "sorts by Entering Term" do
+      @cohort_page.sort_by_entering_term
+      expected = NessieFilterUtils.cohort_by_matriculation(test, @cohort.search_criteria)
+      @cohort_page.compare_visible_sids_to_expected expected
+    end
+
+    it "sorts by Terms in Attendance ascending" do
+      @cohort_page.sort_by_terms_in_attend
+      expected = NessieFilterUtils.cohort_by_terms_in_attend_asc(test, @cohort.search_criteria)
+      @cohort_page.compare_visible_sids_to_expected expected
+    end
+
+    it "sorts by Terms in Attendance descending" do
+      @cohort_page.sort_by_terms_in_attend_desc
+      expected = NessieFilterUtils.cohort_by_terms_in_attend_desc(test, @cohort.search_criteria)
+      @cohort_page.compare_visible_sids_to_expected expected
+    end
+
+    it "sorts by Units In Progress ascending" do
+      @cohort_page.sort_by_units_in_progress
+      expected = NessieFilterUtils.cohort_by_units_in_prog_asc(test, @cohort.search_criteria)
+      @cohort_page.compare_visible_sids_to_expected expected
+    end
+
+    it "sorts by Units In Progress descending" do
+      @cohort_page.sort_by_units_in_progress_desc
+      expected = NessieFilterUtils.cohort_by_units_in_prog_desc(test, @cohort.search_criteria)
+      @cohort_page.compare_visible_sids_to_expected expected
+    end
+
+    it "sorts by Units Completed ascending" do
+      @cohort_page.sort_by_units_completed
+      expected = NessieFilterUtils.cohort_by_units_complete_asc(test, @cohort.search_criteria)
+      @cohort_page.compare_visible_sids_to_expected expected
+    end
+
+    it "sorts by Units Completed descending" do
+      @cohort_page.sort_by_units_completed_desc
+      expected = NessieFilterUtils.cohort_by_units_complete_desc(test, @cohort.search_criteria)
+      @cohort_page.compare_visible_sids_to_expected expected
+    end
+
+    ### HOMEPAGE COHORTS ###
+
+    it "shows the first 50 filtered cohort members who have alerts on the homepage" do
       @homepage.load_page
-      @homepage.click_sidebar_create_filtered
-      @cohort_page.perform_student_search test.searches.first
-      @cohort_page.save_and_name_cohort cohort
-      cohort.name = cohort.name[0..254]
-      @cohort_page.wait_for_filtered_cohort cohort
-      test.searches << cohort
+      @homepage.expand_member_rows @cohort
+      @homepage.verify_member_alerts(@cohort, test.advisor)
     end
 
-    it 'requires that a title be unique among the user\'s existing cohorts' do
-      cohort = FilteredCohort.new({name: test.searches.first.name})
-      @cohort_page.click_sidebar_create_filtered
-      @cohort_page.perform_student_search test.searches.first
-      @cohort_page.save_and_name_cohort cohort
-      @cohort_page.dupe_filtered_name_msg_element.when_visible Utils.short_wait
+    it "by default sorts by alert count descending the first 50 cohort members who have alerts on the homepage" do
+      expected_sequence = @homepage.expected_sids_by_alerts_desc @cohort.members
+      @homepage.wait_until(1, "Expected #{expected_sequence}, but got #{@homepage.all_row_sids @cohort}") do
+        @homepage.all_row_sids(@cohort) == expected_sequence
+      end
     end
+
+    it "allows the advisor to sort by alert count ascending the first 50 cohort members who have alerts on the homepage" do
+      expected_sequence = @homepage.expected_sids_by_alerts @cohort.members
+      @homepage.sort_by_alert_count @cohort
+      @homepage.wait_until(1, "Expected #{expected_sequence}, but got #{@homepage.all_row_sids @cohort}") { @homepage.all_row_sids(@cohort) == expected_sequence }
+    end
+
+    it "allows the advisor to sort by name ascending cohort the first 50 members who have alerts on the homepage" do
+      expected_sequence = NessieFilterUtils.list_by_last_name_asc @cohort.members.map &:sis_id
+      @homepage.sort_by_name @cohort
+      @homepage.wait_until(1, "Expected #{expected_sequence}, but got #{@homepage.all_row_sids @cohort}") do
+        @homepage.all_row_sids(@cohort) == expected_sequence
+      end
+    end
+
+    it "allows the advisor to sort by name descending the first 50 cohort members who have alerts on the homepage" do
+      expected_sequence = NessieFilterUtils.list_by_last_name_desc @cohort.members.map &:sis_id
+      @homepage.sort_by_name @cohort
+      @homepage.wait_until(1, "Expected #{expected_sequence}, but got #{@homepage.all_row_sids @cohort}") do
+        @homepage.all_row_sids(@cohort) == expected_sequence
+      end
+    end
+
+    it "allows the advisor to sort by SID ascending the first 50 cohort members who have alerts on the homepage" do
+      expected_sequence = @cohort.members.map(&:sis_id).sort
+      @homepage.sort_by_sid @cohort
+      @homepage.wait_until(1, "Expected #{expected_sequence}, but got #{@homepage.all_row_sids @cohort}") do
+        @homepage.all_row_sids(@cohort) == expected_sequence
+      end
+    end
+
+    it "allows the advisor to sort by SID descending the first 50 cohort members who have alerts on the homepage" do
+      expected_sequence = @cohort.members.map(&:sis_id).sort.reverse
+      @homepage.sort_by_sid @cohort
+      @homepage.wait_until(1, "Expected #{expected_sequence}, but got #{@homepage.all_row_sids @cohort}") do
+        @homepage.all_row_sids(@cohort) == expected_sequence
+      end
+    end
+
+    it "allows the advisor to sort by major ascending the first 50 cohort members who have alerts on the homepage" do
+      expected_sequence = NessieFilterUtils.list_by_major_asc @cohort.members.map &:sis_id
+      @homepage.sort_by_major @cohort
+      @homepage.wait_until(1, "Expected #{expected_sequence}, but got #{@homepage.all_row_sids @cohort}") do
+        @homepage.all_row_sids(@cohort) == expected_sequence
+      end
+    end
+
+    it "allows the advisor to sort by major descending the first 50 cohort members who have alerts on the homepage" do
+      expected_sequence = NessieFilterUtils.list_by_major_desc @cohort.members.map &:sis_id
+      @homepage.sort_by_major @cohort
+      @homepage.wait_until(1, "Expected #{expected_sequence}, but got #{@homepage.all_row_sids @cohort}") do
+        @homepage.all_row_sids(@cohort) == expected_sequence
+      end
+    end
+
+    it "allows the advisor to sort by expected grad date ascending the first 50 cohort members who have alerts on the homepage" do
+      expected_sequence = NessieFilterUtils.list_by_grad_term_asc @cohort.members.map &:sis_id
+      @homepage.sort_by_expected_grad @cohort
+      @homepage.wait_until(1, "Expected #{expected_sequence}, but got #{@homepage.all_row_sids @cohort}") do
+        @homepage.all_row_sids(@cohort) == expected_sequence
+      end
+    end
+
+    it "allows the advisor to sort by expected grad date descending the first 50 cohort members who have alerts on the homepage" do
+      expected_sequence = NessieFilterUtils.list_by_grad_term_desc @cohort.members.map &:sis_id
+      @homepage.sort_by_expected_grad @cohort
+      @homepage.wait_until(1, "Expected #{expected_sequence}, but got #{@homepage.all_row_sids @cohort}") do
+        @homepage.all_row_sids(@cohort) == expected_sequence
+      end
+    end
+
+    it "allows the advisor to sort by term units ascending the first 50 cohort members who have alerts on the homepage" do
+      expected_sequence = NessieFilterUtils.list_by_units_in_prog_asc @cohort.members.map &:sis_id
+      @homepage.sort_by_term_units @cohort
+      @homepage.wait_until(1, "Expected #{expected_sequence}, but got #{@homepage.all_row_sids @cohort}") do
+        @homepage.all_row_sids(@cohort) == expected_sequence
+      end
+    end
+
+    it "allows the advisor to sort by term units descending the first 50 cohort members who have alerts on the homepage" do
+      expected_sequence = NessieFilterUtils.list_by_units_in_prog_desc @cohort.members.map &:sis_id
+      @homepage.sort_by_term_units @cohort
+      @homepage.wait_until(1, "Expected #{expected_sequence}, but got #{@homepage.all_row_sids @cohort}") do
+        @homepage.all_row_sids(@cohort) == expected_sequence
+      end
+    end
+
+    it "allows the advisor to sort by cumulative units ascending the first 50 cohort members who have alerts on the homepage" do
+      expected_sequence = NessieFilterUtils.list_by_units_complete_asc @cohort.members.map &:sis_id
+      @homepage.sort_by_cumul_units @cohort
+      @homepage.wait_until(1, "Expected #{expected_sequence}, but got #{@homepage.all_row_sids @cohort}") do
+        @homepage.all_row_sids(@cohort) == expected_sequence
+      end
+    end
+
+    it "allows the advisor to sort by cumulative descending the first 50 cohort members who have alerts on the homepage" do
+      expected_sequence = NessieFilterUtils.list_by_units_complete_desc @cohort.members.map &:sis_id
+      @homepage.sort_by_cumul_units @cohort
+      @homepage.wait_until(1, "Expected #{expected_sequence}, but got #{@homepage.all_row_sids @cohort}") do
+        @homepage.all_row_sids(@cohort) == expected_sequence
+      end
+    end
+
+    it "allows the advisor to sort by GPA ascending the first 50 cohort members who have alerts on the homepage" do
+      expected_sequence = NessieFilterUtils.list_by_gpa_asc @cohort.members.map &:sis_id
+      @homepage.sort_by_gpa @cohort
+      @homepage.wait_until(1, "Expected #{expected_sequence}, but got #{@homepage.all_row_sids @cohort}") do
+        @homepage.all_row_sids(@cohort) == expected_sequence
+      end
+    end
+
+    it "allows the advisor to sort by GPA descending the first 50 cohort members who have alerts on the homepage" do
+      expected_sequence = NessieFilterUtils.list_by_gpa_desc @cohort.members.map &:sis_id
+      @homepage.sort_by_gpa @cohort
+      @homepage.wait_until(1, "Expected #{expected_sequence}, but got #{@homepage.all_row_sids @cohort}") do
+        @homepage.all_row_sids(@cohort) == expected_sequence
+      end
+    end
+
+    it "offers a link to the filtered cohort" do
+      @homepage.click_filtered_cohort @cohort
+      @cohort_page.cohort_heading(@cohort).when_visible Utils.medium_wait
+    end
+  end
+
+  it 'requires a title' do
+    @homepage.click_sidebar_create_filtered
+    @cohort_page.perform_student_search test.searches.first
+    @cohort_page.click_save_cohort_button_one
+    expect(@cohort_page.save_cohort_button_two_element.disabled?).to be true
+  end
+
+  it 'truncates a title over 255 characters' do
+    cohort = FilteredCohort.new({name: "#{test.id}#{'A loooooong title ' * 15}?"})
+    @homepage.load_page
+    @homepage.click_sidebar_create_filtered
+    @cohort_page.perform_student_search test.searches.first
+    @cohort_page.save_and_name_cohort cohort
+    cohort.name = cohort.name[0..254]
+    @cohort_page.wait_for_filtered_cohort cohort
+    test.searches << cohort
+  end
+
+  it 'requires that a title be unique among the user\'s existing cohorts' do
+    cohort = FilteredCohort.new({name: test.searches.first.name})
+    @cohort_page.click_sidebar_create_filtered
+    @cohort_page.perform_student_search test.searches.first
+    @cohort_page.save_and_name_cohort cohort
+    @cohort_page.dupe_filtered_name_msg_element.when_visible Utils.short_wait
   end
 
   context 'when the advisor views its cohorts' do
@@ -336,7 +384,9 @@ describe 'BOAC', order: :defined do
       test.searches.flatten!
       @homepage.load_page
       @homepage.wait_until(Utils.short_wait) { @homepage.filtered_cohorts.any? }
-      @homepage.wait_until(1, "Expected #{(test.searches.map &:name).sort}, but got #{@homepage.filtered_cohorts.sort}") { @homepage.filtered_cohorts.sort == (test.searches.map &:name).sort }
+      @homepage.wait_until(1, "Expected #{(test.searches.map &:name).sort}, but got #{@homepage.filtered_cohorts.sort}") do
+        @homepage.filtered_cohorts.sort == (test.searches.map &:name).sort
+      end
     end
   end
 
@@ -494,7 +544,7 @@ describe 'BOAC', order: :defined do
     end
 
     it 'allows the advisor to edit a Minor filter' do
-      test.default_cohort.search_criteria.minor = ['Bioengineering BS']
+      test.default_cohort.search_criteria.minor = ['History UG']
       @cohort_page.edit_filter_and_confirm('Minor', test.default_cohort.search_criteria.minor.first)
       @cohort_page.verify_student_filters_present test.default_cohort
     end
@@ -697,8 +747,7 @@ describe 'BOAC', order: :defined do
 
     it 'allows the advisor to remove a Probation filter' do
       test.default_cohort.search_criteria.coe_probation = nil
-      @cohort_page.remove_filter_of_type 'Probation (COE)'
-      @cohort_page.verify_student_filters_present test.default_cohort
+      @cohort_page.remove_filter_of_type 'Probation'
     end
   end
 

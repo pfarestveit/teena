@@ -286,7 +286,7 @@ class BOACTestConfig < TestConfig
 
   # Config for filtered cohort testing
   def filtered_cohorts
-    set_base_configs_plus_searchable_data BOACDepartments::ADMIN
+    set_base_configs BOACDepartments::ADMIN
     set_search_cohorts students: true
 
     # Set a default cohort with all possible filters to exercise editing and removing filters
@@ -294,7 +294,7 @@ class BOACTestConfig < TestConfig
         :college => ((@dept == BOACDepartments::COE) ? ['Undergrad Engineering'] : ['Undergrad Letters & Science']),
         :gpa => [JSON.parse("{\"min\": \"3.50\", \"max\": \"4\"}")],
         :gpa_last_term => [JSON.parse("{\"min\": \"2\", \"max\": \"3.80\"}")],
-        :level => ['Senior (90+ Units)', 'Freshman (0-29 Units)'],
+        :level => %w(40 10),
         :units_completed => ['90 - 119'],
         :intended_major => ['English BA'],
         :major => ((@dept == BOACDepartments::COE) ? ['Electrical Eng & Comp Sci BS', 'Mechanical Engineering BS'] : ['Asian Studies BA', 'Letters & Sci Undeclared UG']),
@@ -311,7 +311,7 @@ class BOACTestConfig < TestConfig
         :asc_intensive => true,
         :asc_team => [Squad::MCR],
         :coe_advisor => [BOACUtils.get_dept_advisors(BOACDepartments::COE).first.uid.to_s],
-        :coe_ethnicity => ['Chinese / Chinese-American', 'Vietnamese'],
+        :coe_ethnicity => %w(H V),
         :coe_gender => ['Female'],
         :coe_underrepresented_minority => true,
         :coe_prep => ['PREP', 'T-PREP eligible'],
@@ -333,7 +333,7 @@ class BOACTestConfig < TestConfig
 
   # Config for curated-groups-as-cohort-filter testing
   def filtered_groups
-    set_base_configs_plus_searchable_data
+    set_base_configs
     set_search_cohorts students: true
   end
 

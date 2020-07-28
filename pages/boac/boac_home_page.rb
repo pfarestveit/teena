@@ -157,34 +157,33 @@ class BOACHomePage
 
   # Verifies the user + alert data shown for a filtered cohort's or curated group's membership
   # @param cohort [Cohort]
-  # @param advisor [User]
+  # @param advisor [BOACUser]
   def verify_member_alerts(cohort, advisor)
 
     # Only cohort members with alerts should be shown. Collect the expected alert count for each member, and toss out those with a zero count.
     member_alerts = cohort.members.any? ? BOACUtils.get_un_dismissed_users_alerts(cohort.members, advisor) : []
-    cohort.member_data.keep_if do |member|
-      alert_count = member_alerts.count { |a| a.user.sis_id == member[:sid] }
-      logger.debug "SID #{member[:sid]} has alert count #{alert_count}" unless alert_count.zero?
-      member.merge!(:alert_count => alert_count)
-      member[:alert_count].to_i > 0
+    cohort.members.keep_if do |member|
+      member.alert_count = member_alerts.count { |a| a.user.sis_id == member.sis_id }
+      logger.debug "SID #{member.sis_id} has alert count #{member.alert_count}" unless member.alert_count.zero?
+      member.alert_count.to_i > 0
     end
 
     # Only cohort members with the highest alert counts should be shown, to a maximum of 50 members
-    cohort.member_data = cohort.member_data.sort { |a, b| [b[:alert_count], a[:sid]] <=> [a[:alert_count], b[:sid]] }
-    cohort.member_data = cohort.member_data[0..49]
+    cohort.members = cohort.members.sort { |a, b| [b.alert_count, a.sis_id] <=> [a.alert_count, b.sis_id] }
+    cohort.members = cohort.members[0..49]
 
     # Expand the cohort, and verify that there are only rows for members with alerts
     view_all_members_link(cohort).when_visible Utils.short_wait
-    wait_until(Utils.short_wait, "Expecting cohort #{cohort.name} to have row count of #{cohort.member_data.length}, got #{member_rows(cohort).length}") do
-      member_rows(cohort).length == cohort.member_data.length
+    wait_until(Utils.short_wait, "Expecting cohort #{cohort.name} to have row count of #{cohort.members.length}, got #{member_rows(cohort).length}") do
+      member_rows(cohort).length == cohort.members.length
     end
 
     # Verify that there is a row for each student with a positive alert count and that the alert count is right
     xpath = cohort.instance_of?(FilteredCohort) ? filtered_cohort_xpath(cohort) : curated_group_xpath(cohort)
-    cohort.member_data.each do |member|
-      logger.debug "Checking cohort row for SID #{member[:sid]}"
-      wait_until(1, "Expecting SID #{member[:sid]} alert count #{member[:alert_count]}, got #{user_row_data(member[:sid], xpath)[:alert_count]}") do
-        user_row_data(member[:sid], xpath)[:alert_count] == member[:alert_count].to_s
+    cohort.members.each do |member|
+      logger.debug "Checking cohort row for SID #{member.sis_id}"
+      wait_until(1, "Expecting SID #{member.sis_id} alert count #{member.alert_count}, got #{user_row_data(member.sis_id, xpath)[:alert_count]}") do
+        user_row_data(member.sis_id, xpath)[:alert_count] == member.alert_count.to_s
       end
     end
   end
