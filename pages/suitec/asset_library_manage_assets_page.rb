@@ -179,7 +179,8 @@ module Page
         advanced_search(asset.title, nil, user, asset.type, nil)
         verify_first_asset(user, asset)
         true
-      rescue
+      rescue => e
+        Utils.log_error e
         logger.debug "The migrated asset has not yet appeared, will retry in #{Utils.short_wait} seconds"
         retry unless (tries -= 1).zero?
         false
