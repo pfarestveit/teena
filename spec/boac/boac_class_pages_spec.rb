@@ -58,7 +58,10 @@ describe 'BOAC' do
 
                         # Check that a class page link is present if the section is primary
                         @student_page.load_page student
-                        @student_page.click_view_previous_semesters if terms.length > 1
+                        if terms.length > 1 && api_user_page.term_id(terms.last).to_s != BOACUtils.term_code.to_s
+                          @student_page.click_view_previous_semesters
+                        end
+
                         class_page_link_present = @student_page.verify_block { @student_page.class_page_link(term_id, section_data[:ccn]).when_present 1 }
                         section_data[:primary] ?
                             it("shows a class page link for #{class_test_case}") { expect(class_page_link_present).to be true } :

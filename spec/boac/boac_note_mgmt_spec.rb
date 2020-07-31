@@ -36,7 +36,7 @@ else
 
   # Get the largest attachments for testing max attachments uploads
   attachments_by_size = test.attachments.sort_by(&:file_size).delete_if { |a| a.file_size > 20000000 }
-  big_attachments = attachments_by_size.first 5
+  big_attachments = attachments_by_size.first 10
 
   deleted_attachments = []
 
@@ -121,7 +121,7 @@ else
           @student_page.verify_note note_5
         end
 
-        it 'can create a note with a maximum of 5 attachments' do
+        it 'can create a note with a maximum of 10 attachments' do
           note_6.subject = "Note 6 subject #{Utils.get_test_id}"
           @student_page.click_create_new_note
           @student_page.enter_new_note_subject note_6
@@ -286,7 +286,7 @@ else
           @student_page.verify_note note_4
         end
 
-        it 'can add up to a maximum of 5 attachments' do
+        it 'can add up to a maximum of 10 attachments' do
           @student_page.expand_item note_6
           expect(@student_page.existing_note_attachment_input(note_6).exists?).to be false
         end
@@ -305,6 +305,7 @@ else
           @student_page.click_edit_note_button note_7
           @student_page.add_topics(note_7, [Topic::LATE_ENROLLMENT, Topic::RETROACTIVE_ADD])
           @student_page.click_save_note_edit
+          @student_page.edit_note_save_button_element.when_not_present Utils.short_wait
           note_7.updated_date = Time.now
           @student_page.verify_note note_7
         end
@@ -314,6 +315,7 @@ else
           @student_page.click_edit_note_button note_8
           @student_page.remove_topics(note_8, [Topic::EAP, Topic::PASS_NO_PASS])
           @student_page.click_save_note_edit
+          @student_page.edit_note_save_button_element.when_not_present Utils.short_wait
           note_8.updated_date = Time.now
           @student_page.verify_note note_8
         end

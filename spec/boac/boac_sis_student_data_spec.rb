@@ -250,7 +250,7 @@ describe 'BOAC' do
             expect(student_page_sis_data[:advisor_names]).to eq(api_advisors.map { |a| a[:name]&.strip })
           end
           it "shows assigned advisor emails for UID #{student.uid} on the student page" do
-            expect(student_page_sis_data[:advisor_emails]).to eq(api_advisors.map { |a| a[:email] })
+            expect(student_page_sis_data[:advisor_emails]).to eq(api_advisors.map { |a| "#{a[:email]}" })
           end
         else
           it("shows no assigned advisors for UID #{student.uid} on the student page") do
@@ -392,7 +392,7 @@ describe 'BOAC' do
 
         terms = api_student_data.terms
         if terms.any?
-          if terms.length > 1
+          if terms.length > 1 && api_student_data.term_id(terms.last).to_s != BOACUtils.term_code.to_s
             @boac_student_page.click_view_previous_semesters
           else
             has_view_more_button = @boac_student_page.view_more_button_element.visible?
