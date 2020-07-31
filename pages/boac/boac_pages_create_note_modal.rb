@@ -143,13 +143,13 @@ module BOACPagesCreateNoteModal
   # @param note [NoteTemplate]
   # @param attachments [Array<Attachment>]
   def add_attachments_to_new_note(note, attachments)
-    attachments.each do |attach|
-      logger.debug "Adding attachment '#{attach.file_name}' to an unsaved note"
-      new_note_attach_input_element.send_keys Utils.asset_file_path(attach.file_name)
-      new_note_attachment_delete_button(attach).when_present Utils.short_wait
-      sleep Utils.click_wait
-      note.attachments << attach
-    end
+    files = attachments.map { |file| Utils.asset_file_path file.file_name }.join("\n")
+    logger.debug "Adding attachments '#{files}' to an unsaved note"
+    new_note_attach_input_element.send_keys files
+    new_note_attachment_delete_button(attachments.last).when_present Utils.short_wait
+    sleep Utils.click_wait
+    note.attachments << attachments
+    note.attachments.flatten!
   end
 
   # Removes attachments from an unsaved note
@@ -356,7 +356,7 @@ module BOACPagesCreateNoteModal
     add_curated_groups_to_batch(note_batch, curated_groups)
     enter_new_note_subject note_batch
     enter_note_body note_batch
-    add_attachments_to_new_note(note_batch, attachments) if attachments
+    add_attachments_to_new_note(note_batch, attachments) if attachments&.any?
     add_topics(note_batch, topics) if topics
     click_save_new_note
     # Give a moment

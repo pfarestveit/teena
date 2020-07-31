@@ -459,7 +459,9 @@ module BOACPages
     wait_until(Utils.long_wait) { note.id = BOACUtils.get_note_ids_by_subject(note.subject, student).first }
     logger.debug "Note ID is #{note.id}"
     logger.warn "Note was created in #{Time.now - start_time} seconds"
+    start_time = Time.now
     new_note_subject_input_element.when_not_visible Utils.short_wait rescue Selenium::WebDriver::Error::StaleElementReferenceError
+    logger.warn "Note input form took #{Time.now - start_time} seconds to go away"
     note.created_date = note.updated_date = Time.now
     note.id
   rescue

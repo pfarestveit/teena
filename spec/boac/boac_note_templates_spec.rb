@@ -14,7 +14,7 @@ describe 'BOA note templates' do
     @template_1 = NoteTemplate.new(title: "Template #{@test.id}")
     @template_2 = NoteTemplate.new(title: "Batch template #{@test.id}")
     @attachments = @test.attachments.sort_by(&:file_size).delete_if { |a| a.file_size > 20000000 }
-    @attachments = @attachments.first 5
+    @attachments = @attachments.first 10
 
     @driver = Utils.launch_browser
     @homepage = BOACHomePage.new @driver
@@ -65,7 +65,7 @@ describe 'BOA note templates' do
       it 'can be created' do
         @student_page.enter_note_body @note
         @student_page.add_topics(@note, [Topic::ACADEMIC_PROGRESS_RPT, Topic::DEGREE_CHECK])
-        @student_page.add_attachments_to_new_note(@note, @attachments)
+        @student_page.add_attachments_to_new_note(@note, @attachments.first(6))
         @student_page.create_template(@template_1, @note)
       end
 
@@ -116,9 +116,8 @@ describe 'BOA note templates' do
         topics_to_remove = @template_1.topics - new_topics
         topics_to_add = new_topics - @template_1.topics
 
-        new_attachments = @attachments.first(1) + @attachments.last(4)
-        attachments_to_remove = @template_1.attachments - new_attachments
-        attachments_to_add = new_attachments - @template_1.attachments
+        attachments_to_remove = @template_1.attachments
+        attachments_to_add = @attachments.last 4
 
         @student_page.click_edit_template @template_1
         @student_page.enter_new_note_subject @template_1
@@ -206,7 +205,7 @@ describe 'BOA note templates' do
         @homepage.add_curated_groups_to_batch(@note_batch, [@group])
         @homepage.enter_note_body @note_batch
         @homepage.add_topics(@note_batch, [Topic::ACADEMIC_PROGRESS_RPT, Topic::DEGREE_CHECK])
-        @homepage.add_attachments_to_new_note(@note_batch, @attachments)
+        @homepage.add_attachments_to_new_note(@note_batch, @attachments.first(6))
         @homepage.create_template(@template_2, @note_batch)
       end
 
@@ -261,9 +260,8 @@ describe 'BOA note templates' do
         topics_to_remove = @template_2.topics - new_topics
         topics_to_add = new_topics - @template_2.topics
 
-        new_attachments = @attachments.first(1) + @attachments.last(4)
-        attachments_to_remove = @template_2.attachments - new_attachments
-        attachments_to_add = new_attachments - @template_2.attachments
+        attachments_to_remove = @template_2.attachments
+        attachments_to_add = @attachments.last 4
 
         @homepage.click_edit_template @template_2
         @homepage.enter_new_note_subject @template_2

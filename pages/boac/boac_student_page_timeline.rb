@@ -69,7 +69,9 @@ module BOACStudentPageTimeline
   # @return [Hash]
   def visible_collapsed_item_data(item)
     type = item_type item
+    div_element(id: "#{type}-#{item.id}-is-closed").when_visible Utils.short_wait
     subject_el = div_element(id: "#{type}-#{item.id}-is-closed")
+    div_element(id: "collapsed-#{type}-#{item.id}-created-at").when_visible Utils.short_wait
     date_el = div_element(id: "collapsed-#{type}-#{item.id}-created-at")
     {
         :subject => (subject_el.attribute('innerText').gsub("\n", '') if subject_el.exists?),

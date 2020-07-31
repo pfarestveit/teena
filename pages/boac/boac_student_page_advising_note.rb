@@ -185,6 +185,7 @@ module BOACStudentPageAdvisingNote
     logger.debug "Verifying visible data for note ID #{note.id}"
 
     # Verify data visible when note is collapsed
+
     collapsed_item_el(note).when_present Utils.medium_wait
     collapse_item note
     visible_data = visible_collapsed_item_data note
@@ -256,6 +257,7 @@ module BOACStudentPageAdvisingNote
     click_edit_note_button note
     enter_edit_note_subject note
     click_save_note_edit
+    edit_note_save_button_element.when_not_present Utils.short_wait
     collapsed_item_el(note).when_visible Utils.short_wait
     note.updated_date = Time.now
   end
@@ -321,7 +323,7 @@ module BOACStudentPageAdvisingNote
     click_create_new_note
     enter_new_note_subject note
     enter_note_body note
-    add_attachments_to_new_note(note, attachments)
+    add_attachments_to_new_note(note, attachments) if attachments&.any?
     add_topics(note, topics)
     click_save_new_note
     set_new_note_id note
