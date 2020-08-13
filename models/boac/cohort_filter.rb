@@ -62,7 +62,7 @@ class CohortFilter
 
     # CoE
     @coe_advisor = (test_data['coe_advisors'] && test_data['coe_advisors'].map { |a| a['advisor'] })
-    @coe_ethnicity = (test_data['coe_ethnicities'] && test_data['coe_ethnicities'].map { |e| coe_ethnicity_per_code e['ethnicity'] })
+    @coe_ethnicity = (test_data['coe_ethnicities'] && test_data['coe_ethnicities'].map { |e| e['ethnicity'] })
     @coe_gender = (test_data['coe_genders'] && test_data['coe_genders'].map { |g| g['gender'] })
     @coe_inactive = test_data['coe_inactive']
     @coe_prep = (test_data['coe_preps'] && test_data['coe_preps'].map { |p| p['prep'] })
@@ -98,10 +98,40 @@ class CohortFilter
     instance_variables.map { |variable| instance_variable_get variable }
   end
 
+  def self.coe_gender_per_code(code)
+    case code
+      when 'F'
+        'Female'
+      when 'M'
+        'Male'
+      else
+        logger.error "Unknown COE gender code '#{code}'"
+        nil
+    end
+  end
+
+  def self.level_per_code(code)
+    case code
+      when '10'
+        'Freshman'
+      when '20'
+        'Sophomore'
+      when '30'
+        'Junior'
+      when '40'
+        'Senior'
+      when 'GR'
+        'Graduate'
+      else
+        logger.error "Unknown level code '#{code}'"
+        nil
+    end
+  end
+
   # CoE ethnicity code translations
   # @param code [String]
   # @return [String]
-  def coe_ethnicity_per_code(code)
+  def self.coe_ethnicity_per_code(code)
     case code
       when 'A'
         'African-American / Black'
@@ -145,7 +175,7 @@ class CohortFilter
   # Visa type translations
   # @param code [String]
   # @return [String]
-  def visa_type_per_code(code)
+  def self.visa_type_per_code(code)
     case code
       when 'F1'
         'F-1 International Student'

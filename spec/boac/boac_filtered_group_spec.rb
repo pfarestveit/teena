@@ -5,14 +5,8 @@ test.filtered_groups
 test.students.shuffle!
 
 group_1_students = test.students.first(1000)
-group_1_sids = group_1_students.map &:sis_id
-group_1_searchable_data = test.searchable_data.select { |d| group_1_sids.include? d[:sid] }
-
 group_2_students = test.students.last(1000)
-group_2_sids = group_2_students.map &:sis_id
-group_2_searchable_data = test.searchable_data.select { |d| group_2_sids.include? d[:sid] }
-
-all_searchable_data = group_1_searchable_data + group_2_searchable_data
+all_students = group_1_students + group_2_students
 
 describe 'A BOA filtered cohort' do
 
@@ -79,15 +73,8 @@ describe 'A BOA filtered cohort' do
       it "allows the user to filter a group by active students with #{cohort.search_criteria.list_filters}" do
         # Add the groups to the search criteria, and restrict the searchable data to the group members
         cohort.search_criteria.curated_groups = [@group_1.id.to_s, @group_2.id.to_s]
-        test.searchable_data = group_1_searchable_data + group_2_searchable_data
-
-        # Determine which group members should match the other filters
-        cohort.member_data = @cohort_page.expected_student_search_results(test, cohort.search_criteria)
-        expected_results = @cohort_page.expected_sids_by_last_name cohort.member_data
-
-        # Get the matching user objects in the groups
-        cohort_member_sids = cohort.member_data.map { |d| d[:sid] }
-        cohort.members = test.students.select { |s| cohort_member_sids.include? s.sis_id }
+        @cohort_page.set_cohort_members(cohort, test)
+        expected = cohort.members.map &:sis_id
 
         @cohort_page.click_sidebar_create_filtered
         @cohort_page.perform_student_search cohort
@@ -95,12 +82,12 @@ describe 'A BOA filtered cohort' do
         @cohort_page.create_new_cohort cohort
         @cohorts << cohort
 
-        if cohort.member_data.length.zero?
+        if cohort.members.length.zero?
           @cohort_page.wait_until(Utils.short_wait) { @cohort_page.results_count == 0 }
         else
-          visible_results = @cohort_page.visible_sids
-          @cohort_page.wait_until(1, "Expected but not present: #{expected_results - visible_results}. Present but not expected: #{visible_results - expected_results}") do
-            visible_results.sort == expected_results.sort
+          visible = @cohort_page.visible_sids
+          @cohort_page.wait_until(1, "Missing: #{expected - visible}. Unexpected: #{visible - expected}") do
+            visible.sort == expected.sort
           end
         end
       end
@@ -123,64 +110,64 @@ describe 'A BOA filtered cohort' do
           group = [@group_1, @group_2].find { |g| g.members.include? student }
           @student_page.load_page student
           @student_page.remove_student_from_grp(student, group)
-          test.searchable_data.delete_if { |d| d[:sid] == student.sis_id }
-          @cohorts.last.member_data = @cohort_page.expected_student_search_results(test, @cohorts.last.search_criteria)
+          test.students.delete_if { |s| s.sis_id == student.sis_id }
+          @cohort_page.set_cohort_members(@cohorts.last, test)
           @student_page.wait_for_sidebar_cohort_member_count @cohorts.last
         end
       end
 
       it 'updates the cohort student list when students are removed from the group' do
         @cohort_page.load_cohort @cohorts.last
-        expect(@cohort_page.visible_sids).to eql(@cohort_page.expected_sids_by_last_name @cohorts.last.member_data)
+        expect(@cohort_page.visible_sids).to eql(NessieFilterUtils.cohort_by_last_name(test, @cohorts.last.search_criteria))
       end
 
       it 'updates the cohort member count on the homepage when students are removed from the group' do
         @homepage.load_page
         @homepage.wait_until(Utils.medium_wait) { @homepage.filtered_cohorts.include? @cohorts.last.name }
-        @homepage.wait_until(Utils.short_wait, "Expected #{@cohorts.last.member_data.length} but got #{@homepage.member_count(@cohorts.last)}") do
-          @homepage.member_count(@cohorts.last) == @cohorts.last.member_data.length
+        @homepage.wait_until(Utils.short_wait, "Expected #{@cohorts.last.members.length} but got #{@homepage.member_count(@cohorts.last)}") do
+          @homepage.member_count(@cohorts.last) == @cohorts.last.members.length
         end
       end
 
       it 'updates the cohort member count in the sidebar when students are added to the group via bulk-add' do
         @group_page.load_page @group_1
         @group_page.add_comma_sep_sids_to_existing_grp([@students_to_add_remove.first], @group_1)
-        test.searchable_data << all_searchable_data.find { |d| d[:sid] == @students_to_add_remove.first.sis_id }
-        @cohorts.last.member_data = @cohort_page.expected_student_search_results(test, @cohorts.last.search_criteria)
+        test.students << all_students.find { |s| s.sis_id == @students_to_add_remove.first.sis_id }
+        @cohort_page.set_cohort_members(@cohorts.last, test)
         @student_page.wait_for_sidebar_cohort_member_count @cohorts.last
       end
 
       it 'updates the cohort student list when students are added to the group via bulk-add' do
         @cohort_page.load_cohort @cohorts.last
-        expect(@cohort_page.visible_sids).to eql(@cohort_page.expected_sids_by_last_name @cohorts.last.member_data)
+        expect(@cohort_page.visible_sids).to eql(NessieFilterUtils.cohort_by_last_name(test, @cohorts.last.search_criteria))
       end
 
       it 'updates the cohort member count on the homepage when students are added to the group via bulk-add' do
         @homepage.load_page
         @homepage.wait_until(Utils.medium_wait) { @homepage.filtered_cohorts.include? @cohorts.last.name }
-        @homepage.wait_until(Utils.short_wait, "Expected #{@cohorts.last.member_data.length} but got #{@homepage.member_count(@cohorts.last)}") do
-          @homepage.member_count(@cohorts.last) == @cohorts.last.member_data.length
+        @homepage.wait_until(Utils.short_wait, "Expected #{@cohorts.last.members.length} but got #{@homepage.member_count(@cohorts.last)}") do
+          @homepage.member_count(@cohorts.last) == @cohorts.last.members.length
         end
       end
 
       it 'updates the cohort member count in the sidebar when students are added to the group via a group selector' do
         @student_page.load_page @students_to_add_remove.last
         @student_page.add_student_to_grp(@students_to_add_remove.last, @group_1)
-        test.searchable_data << all_searchable_data.find { |d| d[:sid] == @students_to_add_remove.last.sis_id }
-        @cohorts.last.member_data = @cohort_page.expected_student_search_results(test, @cohorts.last.search_criteria)
+        test.students << all_students.find { |s| s.sis_id == @students_to_add_remove.last.sis_id }
+        @cohort_page.set_cohort_members(@cohorts.last, test)
         @student_page.wait_for_sidebar_cohort_member_count @cohorts.last
       end
 
       it 'updates the cohort student list when students are added to the group via a group selector' do
         @cohort_page.load_cohort @cohorts.last
-        expect(@cohort_page.visible_sids).to eql(@cohort_page.expected_sids_by_last_name @cohorts.last.member_data)
+        expect(@cohort_page.visible_sids).to eql(NessieFilterUtils.cohort_by_last_name(test, @cohorts.last.search_criteria))
       end
 
       it 'updates the cohort member count on the homepage when students are added to the group via a group selector' do
         @homepage.load_page
         @homepage.wait_until(Utils.medium_wait) { @homepage.filtered_cohorts.include? @cohorts.last.name }
-        @homepage.wait_until(Utils.short_wait, "Expected #{@cohorts.last.member_data.length} but got #{@homepage.member_count(@cohorts.last)}") do
-          @homepage.member_count(@cohorts.last) == @cohorts.last.member_data.length
+        @homepage.wait_until(Utils.short_wait, "Expected #{@cohorts.last.members.length} but got #{@homepage.member_count(@cohorts.last)}") do
+          @homepage.member_count(@cohorts.last) == @cohorts.last.members.length
         end
       end
 
@@ -191,20 +178,20 @@ describe 'A BOA filtered cohort' do
         @cohort_page.wait_for_update_and_click @cohort_page.unsaved_filter_apply_button_element
         @cohort_page.click_save_cohort_button_one
         @cohorts.last.search_criteria.curated_groups.delete @group_1.id.to_s
-        test.searchable_data -= group_1_searchable_data
-        @cohorts.last.member_data = @cohort_page.expected_student_search_results(test, @cohorts.last.search_criteria)
+        test.students -= group_1_students
+        @cohort_page.set_cohort_members(@cohorts.last, test)
         @cohort_page.wait_for_sidebar_cohort_member_count @cohorts.last
       end
 
       it 'updates the cohort student list when a group is removed from the cohort' do
-        expect(@cohort_page.visible_sids).to eql(@cohort_page.expected_sids_by_last_name @cohorts.last.member_data)
+        expect(@cohort_page.visible_sids).to eql(NessieFilterUtils.cohort_by_last_name(test, @cohorts.last.search_criteria))
       end
 
       it 'updates the cohort member count on the homepage when a group is removed from the cohort' do
         @homepage.load_page
         @homepage.wait_until(Utils.medium_wait) { @homepage.filtered_cohorts.include? @cohorts.last.name }
-        @homepage.wait_until(Utils.short_wait, "Expected #{@cohorts.last.member_data.length} but got #{@homepage.member_count(@cohorts.last)}") do
-          @homepage.member_count(@cohorts.last) == @cohorts.last.member_data.length
+        @homepage.wait_until(Utils.short_wait, "Expected #{@cohorts.last.members.length} but got #{@homepage.member_count(@cohorts.last)}") do
+          @homepage.member_count(@cohorts.last) == @cohorts.last.members.length
         end
       end
 
@@ -220,20 +207,20 @@ describe 'A BOA filtered cohort' do
         @cohort_page.wait_for_update_and_click @cohort_page.unsaved_filter_apply_button_element
         @cohort_page.click_save_cohort_button_one
         @cohorts.last.search_criteria.curated_groups << @group_1.id.to_s
-        test.searchable_data += group_1_searchable_data
-        @cohorts.last.member_data = @cohort_page.expected_student_search_results(test, @cohorts.last.search_criteria)
+        test.students += group_1_students
+        @cohort_page.set_cohort_members(@cohorts.last, test)
         @cohort_page.wait_for_sidebar_cohort_member_count @cohorts.last
       end
 
       it 'updates the cohort student list when a group is added to the cohort' do
-        expect(@cohort_page.visible_sids).to eql(@cohort_page.expected_sids_by_last_name @cohorts.last.member_data)
+        expect(@cohort_page.visible_sids).to eql(NessieFilterUtils.cohort_by_last_name(test, @cohorts.last.search_criteria))
       end
 
       it 'updates the cohort member count on the homepage when a group is added to the cohort' do
         @homepage.load_page
         @homepage.wait_until(Utils.medium_wait) { @homepage.filtered_cohorts.include? @cohorts.last.name }
-        @homepage.wait_until(Utils.short_wait, "Expected #{@cohorts.last.member_data.length} but got #{@homepage.member_count(@cohorts.last)}") do
-          @homepage.member_count(@cohorts.last) == @cohorts.last.member_data.length
+        @homepage.wait_until(Utils.short_wait, "Expected #{@cohorts.last.members.length} but got #{@homepage.member_count(@cohorts.last)}") do
+          @homepage.member_count(@cohorts.last) == @cohorts.last.members.length
         end
       end
 

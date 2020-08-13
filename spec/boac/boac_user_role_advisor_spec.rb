@@ -207,6 +207,9 @@ describe 'A BOA advisor' do
       it('sees a Probation filter') { expect(@cohort_page.new_filter_option('coeProbation').visible?).to be false }
       it('sees an Underrepresented Minority (COE) filter') { expect(@cohort_page.new_filter_option('coeUnderrepresented').visible?).to be false }
 
+      # TODO - can filter for my students
+      # need a cohort filter with plans
+
       context 'with results' do
 
         before(:all) do
@@ -401,6 +404,10 @@ describe 'A BOA advisor' do
       it('sees a PREP filter') { expect(@cohort_page.new_filter_option('coePrepStatuses').visible?).to be true }
       it('sees a Probation filter') { expect(@cohort_page.new_filter_option('coeProbation').visible?).to be true }
       it('sees an Underrepresented Minority (COE) filter') { expect(@cohort_page.new_filter_option('coeUnderrepresented').visible?).to be true }
+
+      # TODO - can filter for my students
+      # need a cohort filter with plans
+
     end
 
     context 'performing a search' do
@@ -592,6 +599,10 @@ describe 'A BOA advisor' do
       it('sees a PREP filter') { expect(@cohort_page.new_filter_option('coePrepStatuses').visible?).to be false }
       it('sees a Probation filter') { expect(@cohort_page.new_filter_option('coeProbation').visible?).to be false }
       it('sees an Underrepresented Minority (COE) filter') { expect(@cohort_page.new_filter_option('coeUnderrepresented').visible?).to be false }
+
+      # TODO - can filter for my students
+      # need a cohort filter with plans
+
     end
 
     context 'performing a search' do

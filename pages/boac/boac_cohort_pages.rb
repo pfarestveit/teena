@@ -180,30 +180,16 @@ module BOACCohortPages
   end
 
   # Verifies that the filtered cohort or curated group members in a CSV export match the actual members
-  # @param cohort_members [Array<Object>]
+  # @param cohort_members [Array<BOACUser>]
   # @param parsed_csv [CSV::Table]
   def verify_student_list_default_export(cohort_members, parsed_csv)
     wait_until(1, "Expected #{cohort_members.length}, got #{parsed_csv.length}") { parsed_csv.length == cohort_members.length }
-    # Curated groups contain user objects
-    if cohort_members.all? { |m| m.instance_of? BOACUser }
-      cohort_members.each do |stu|
-        wait_until(1, "Unable to find SID #{stu.sis_id}") do
-          parsed_csv.find do |r|
-            (r.dig(:first_name) == stu.first_name) &&
-                (r.dig(:last_name) == stu.last_name) &&
-                (r.dig(:sid) == stu.sis_id.to_i)
-          end
-        end
-      end
-    # Filtered cohorts contain user hashes
-    else
-      cohort_members.each do |stu|
-        wait_until(1, "Unable to find SID #{stu[:sid]}") do
-          parsed_csv.find do |r|
-            (r.dig(:first_name) == stu[:first_name]) &&
-                (r.dig(:last_name) == stu[:last_name]) &&
-                (r.dig(:sid) == stu[:sid].to_i)
-          end
+    cohort_members.each do |stu|
+      wait_until(1, "Unable to find SID #{stu.sis_id}") do
+        parsed_csv.find do |r|
+          (r.dig(:first_name) == stu.first_name) &&
+              (r.dig(:last_name) == stu.last_name) &&
+              (r.dig(:sid) == stu.sis_id.to_i)
         end
       end
     end

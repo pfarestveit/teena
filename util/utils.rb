@@ -133,7 +133,11 @@ class Utils
     if "#{driver.browser}" == 'chrome'
       js_log = driver.manage.logs.get(:browser)
       messages = js_log.map &:message
-      messages.each { |msg| logger.error "Possible JS error: #{msg}" unless msg.include?('chrome-search://thumb/') || msg.include?('instructure.com') || msg.include?('/cal1card-data/photos')}
+      messages.each do |msg|
+        unless msg.include?('chrome-search://thumb/') || msg.include?('instructure.com') || msg.include?('/cal1card-data/photos')
+          logger.error "Possible JS error: #{msg}"
+        end
+      end
     end
   end
 
@@ -387,9 +391,15 @@ class Utils
   # @param query_string [String]
   # @return [PG::Result]
   def self.query_pg_db(db_credentials, query_string)
-    results = []
     begin
-      connection = PG.connect(:host => db_credentials[:host], :port => db_credentials[:port], :dbname => db_credentials[:name], :user => db_credentials[:user], :password => db_credentials[:password])
+      creds = {
+          host: db_credentials[:host],
+          port: db_credentials[:port],
+          dbname: db_credentials[:name],
+          user: db_credentials[:user],
+          password: db_credentials[:password]
+      }
+      connection = PG.connect creds
       logger.debug "Sending query '#{query_string}'"
       start = Time.now
       results = connection.exec query_string
@@ -397,9 +407,9 @@ class Utils
       results
     rescue PG::Error => e
       Utils.log_error e
+      fail
     ensure
       connection.close if connection
-      return results
     end
   end
 
@@ -419,7 +429,14 @@ class Utils
   def self.query_redshift_db(db_credentials, query_string)
     results = []
     begin
-      Redshift::Client.establish_connection({:host => db_credentials[:host], :port => db_credentials[:port], :dbname => db_credentials[:name], :user => db_credentials[:user], :password => db_credentials[:password]})
+      creds = {
+          host: db_credentials[:host],
+          port: db_credentials[:port],
+          dbname: db_credentials[:name],
+          user: db_credentials[:user],
+          password: db_credentials[:password]
+      }
+      Redshift::Client.establish_connection creds
       logger.debug "Sending query '#{query_string}'"
       start = Time.now
       results = Redshift::Client.connection.exec query_string
