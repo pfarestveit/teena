@@ -131,8 +131,7 @@ describe 'BOAC' do
                             student_api.get_data(@driver, student)
                             term = student_api.terms.find { |t| student_api.term_name(t) == term_name }
                             course = student_api.courses(term).find { |c| student_api.course_display_name(c) == course_sis_data[:code] }
-                            student_searchable_data = test.searchable_data.find { |d| student.sis_id == d[:sid] }
-                            student_squad_names = student_searchable_data[:asc_sports].map { |s| s.gsub(' (AA)', '') }
+                            student_squad_names = NessieUtils.get_student_sports student
 
                             # Collect the student data relevant to the class page
                             student_class_page_data = {
@@ -141,7 +140,7 @@ describe 'BOAC' do
                               :majors => student_api.sis_profile_data[:majors],
                               :graduation => student_api.sis_profile_data[:graduation],
                               :academic_career_status => student_api.sis_profile_data[:academic_career_status],
-                              :sports => student_squad_names,
+                              :sports => student_api.asc_teams,
                               :grading_basis => student_api.sis_course_data(course)[:grading_basis],
                               :final_grade => student_api.sis_course_data(course)[:grade],
                               :midpoint_grade => student_api.sis_course_data(course)[:midpoint],

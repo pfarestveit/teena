@@ -37,6 +37,10 @@ class BOACApiStudentPage
     @parsed['athleticsProfile']
   end
 
+  def asc_teams
+    asc_profile && asc_profile['athletics'].map { |a| a['groupName'] }
+  end
+
   # CoE Profile
 
   def coe_profile

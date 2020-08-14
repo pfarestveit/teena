@@ -124,7 +124,7 @@ describe 'BOA cohort history' do
 
       # Restrict the searchable data to the group members
       group_sids = @group.members.map &:sis_id
-      @test.searchable_data = @test.searchable_data.select { |s| group_sids.include? s[:sid] }
+      @test.students.keep_if { |s| group_sids.include? s.sis_id }
 
       @homepage.click_sidebar_create_filtered
       @cohort_page.perform_student_search @cohort_3

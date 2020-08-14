@@ -23,7 +23,7 @@ elsif !other_advisor
 
 else
 
-  test_student = test.students.first
+  test_student = test.students.shuffle.first
   notes = []
   notes << (note_1 = Note.new({:advisor => test.advisor}))
   notes << (note_2 = Note.new({:advisor => test.advisor}))
@@ -59,7 +59,6 @@ else
       before(:all) do
         @homepage.dev_auth test.advisor
         @student_page.load_page test_student
-        @student_page.show_notes
       end
 
       after(:all) do
