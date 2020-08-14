@@ -8,26 +8,11 @@ describe 'A BOA advisor' do
     @test = BOACTestConfig.new
     @test.user_role_advisor
 
-    # Get ASC test data
     @test_asc = BOACTestConfig.new
     @test_asc.user_role_asc @test
-    asc_inactive_student_data = @test.searchable_data.select { |s| s[:asc_sports].any? && !s[:asc_active] }
-    asc_test_student_data = (asc_inactive_student_data.sort_by { |s| s[:last_name_sortable_cohort] }).first
-    @asc_test_student_sports = asc_test_student_data[:asc_sports].map { |s| s.gsub(' (AA)', '') }
-    @asc_test_student = @test.students.find { |s| s.sis_id == asc_test_student_data[:sid] }
 
-    # Get CoE test data
     @test_coe = BOACTestConfig.new
     @test_coe.user_role_coe @test
-    coe_inactive_student_data = @test.searchable_data.select { |s| s[:coe_inactive] }
-    sorted = coe_inactive_student_data.sort_by { |s| s[:last_name_sortable_cohort] }
-    @coe_test_student = @test_coe.students.find { |s| s.sis_id == sorted.first[:sid] }
-
-    # Get L&S test data
-    @test_l_and_s = BOACTestConfig.new
-    @test_l_and_s.user_role_l_and_s @test
-    @l_and_s_cohorts = BOACUtils.get_everyone_filtered_cohorts({default: true}, BOACDepartments::L_AND_S)
-    @l_and_s_groups = BOACUtils.get_everyone_curated_groups BOACDepartments::L_AND_S
 
     @admin_cohorts = BOACUtils.get_everyone_filtered_cohorts({default: true}, BOACDepartments::ADMIN)
     @admin_groups = BOACUtils.get_everyone_curated_groups BOACDepartments::ADMIN
@@ -42,6 +27,30 @@ describe 'A BOA advisor' do
     @search_results_page = BOACSearchResultsPage.new @driver
     @settings_page = BOACFlightDeckPage.new @driver
     @api_admin_page = BOACApiAdminPage.new @driver
+
+    # Get ASC test data
+    filter = CohortFilter.new
+    filter.set_custom_filters asc_inactive: true
+    asc_sids = NessieFilterUtils.get_cohort_result(@test_asc, filter)
+    @asc_test_student = @test.students.find { |s| s.sis_id == asc_sids.first }
+    @homepage.dev_auth @test_asc.advisor
+    api_page = BOACApiStudentPage.new @driver
+    api_page.get_data(@driver, @asc_test_student)
+    @asc_test_student_sports = api_page.asc_teams
+    @homepage.load_page
+    @homepage.log_out
+
+    # Get CoE test data
+    filter = CohortFilter.new
+    filter.set_custom_filters coe_inactive: true
+    coe_sids = NessieFilterUtils.get_cohort_result(@test_coe, filter)
+    @coe_test_student = @test.students.find { |s| s.sis_id == coe_sids.first }
+
+    # Get L&S test data
+    @test_l_and_s = BOACTestConfig.new
+    @test_l_and_s.user_role_l_and_s @test
+    @l_and_s_cohorts = BOACUtils.get_everyone_filtered_cohorts({default: true}, BOACDepartments::L_AND_S)
+    @l_and_s_groups = BOACUtils.get_everyone_curated_groups BOACDepartments::L_AND_S
 
     # Get admit data
     admits = NessieUtils.get_admits

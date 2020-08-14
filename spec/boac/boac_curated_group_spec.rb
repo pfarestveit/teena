@@ -109,8 +109,8 @@ describe 'BOAC' do
 
       # Create a filtered cohort to verify that a group cannot have the same name
       filters = CohortFilter.new
-      filters.set_custom_filters({:level => ['Freshman (0-29 Units)']})
-      @existing_filtered_cohort = FilteredCohort.new({:name => "Existing Filtered Cohort #{test.id}", :search_criteria => filters})
+      filters.set_custom_filters level: ['10']
+      @existing_filtered_cohort = FilteredCohort.new name: "Existing Filtered Cohort #{test.id}", search_criteria: filters
       @group_page.click_sidebar_create_filtered
       @filtered_page.perform_student_search @existing_filtered_cohort
       @filtered_page.create_new_cohort @existing_filtered_cohort
@@ -386,12 +386,12 @@ describe 'BOAC' do
         end
 
         it "shows the group #{group.name} membership count" do
-          @homepage.wait_until(Utils.short_wait, "Expected #{group.members.length} members, but got #{@homepage.member_count(group)}") { @homepage.member_count(group) == group.members.length }
+          @homepage.wait_until(Utils.short_wait, "Expected #{group.members.length} members, but got #{@homepage.member_count(group)}") do
+            @homepage.member_count(group) == group.members.length
+          end
         end
 
         it "shows the group #{group.name} members with alerts" do
-          member_sids = group.members.map &:sis_id
-          group.member_data = test.searchable_data.select { |data| member_sids.include? data[:sid] }
           @homepage.expand_member_rows group
           @homepage.verify_member_alerts(group, test.advisor)
         end

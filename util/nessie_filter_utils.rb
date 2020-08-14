@@ -391,9 +391,9 @@ class NessieFilterUtils < NessieUtils
   def self.cohort_by_team(test, filter)
     sort = {
         table: 'boac_advising_asc.students',
-        col: 'group_name',
+        col: 'team_name',
         nulls: ' NULLS LAST',
-        select: '(ARRAY_AGG (boac_advising_asc.students.group_name))[1] AS team',
+        select: '(ARRAY_AGG (boac_advising_asc.students.team_name))[1] AS team',
         order_by: 'team',
         group_by: false
     }

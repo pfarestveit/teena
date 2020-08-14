@@ -69,16 +69,6 @@ class BOACTestConfig < TestConfig
     @students = students || NessieUtils.get_all_students
   end
 
-  # Returns all searchable student data. Unless a current file containing all student data already exists, obtain
-  # the current data from RDS.
-  # @param all_students [Array<BOACUser>]
-  # @return [Array<Hash>]
-  def set_student_searchable_data(all_students)
-    # Get the searchable data for all students.
-    student_sids = @students.map &:sis_id
-    @searchable_data = NessieUtils.searchable_student_data(all_students).select { |u| student_sids.include? u[:sid] }
-  end
-
   # Basic settings for department, advisor, and student population under test. Specifying a department will override the
   # department in the settings file.
   # @param dept [BOACDepartments]
@@ -100,25 +90,14 @@ class BOACTestConfig < TestConfig
     @searchable_data = NessieUtils.searchable_admit_data
   end
 
-  # Basic settings for department, advisor, and student population under test, plus consuming the searchable student data for filtered cohorts.
-  # Specifying a department will override the department in the settings file.
-  # @param dept [BOACDepartments]
-  def set_base_configs_plus_searchable_data(dept = nil)
-    set_base_configs dept
-    set_student_searchable_data @students
-  end
-
   # Sets a cohort to use as a default group of students for testing
   def set_default_cohort
     @default_cohort = FilteredCohort.new({})
     filter = CohortFilter.new
     filter.major = CONFIG['test_default_cohort_major']
     @default_cohort.search_criteria = filter
-    student_sids = @students.map &:sis_id
-    filtered_searchable_data = @searchable_data.select { |d| (filter.major & d[:major]).any? }
-    filtered_searchable_sids = filtered_searchable_data.map { |d| d[:sid] }
-
-    @cohort_members = @students.select { |s| student_sids.include?(s.sis_id) && filtered_searchable_sids.include?(s.sis_id) }
+    filtered_sids = NessieFilterUtils.get_cohort_result(self, filter)
+    @cohort_members = @students.select { |s| filtered_sids.include? s.sis_id }
     @default_cohort.name = "Cohort #{@id}"
     @default_cohort.member_count = @cohort_members.length
   end
@@ -258,13 +237,13 @@ class BOACTestConfig < TestConfig
 
   # Config for class page testing
   def class_pages
-    set_base_configs_plus_searchable_data
+    set_base_configs
     set_test_students CONFIG['class_page_max_users']
   end
 
   # Config for curated group testing
   def curated_groups
-    set_base_configs_plus_searchable_data
+    set_base_configs
     set_default_cohort
     set_test_students 50
   end
@@ -339,12 +318,12 @@ class BOACTestConfig < TestConfig
 
   # Config for filtered cohort history testing
   def filtered_history
-    set_base_configs_plus_searchable_data
+    set_base_configs
   end
 
   # Config for non-current student testing
   def inactive_students
-    set_base_configs_plus_searchable_data
+    set_base_configs
   end
 
   # Config for last activity testing
@@ -368,19 +347,19 @@ class BOACTestConfig < TestConfig
   # Config for note management testing (create, edit, delete)
   def note_management
     set_note_attachments
-    set_base_configs_plus_searchable_data
+    set_base_configs
   end
 
   # Config for testing batch note creation
   def batch_note_management
     set_note_attachments
-    set_base_configs_plus_searchable_data
+    set_base_configs
     set_default_cohort
   end
 
   # Config for testing note templates
   def note_templates
-    set_base_configs_plus_searchable_data BOACDepartments::L_AND_S
+    set_base_configs BOACDepartments::L_AND_S
     set_default_cohort
     set_note_attachments
   end
@@ -445,14 +424,13 @@ class BOACTestConfig < TestConfig
 
   # Config for admin user role testing
   def user_role_admin
-    set_base_configs_plus_searchable_data BOACDepartments::ADMIN
+    set_base_configs BOACDepartments::ADMIN
     set_search_cohorts students: true
   end
 
   # Config for advisor user role testing
   def user_role_advisor
     set_students
-    set_student_searchable_data @students
   end
 
   # Config for ASC user role testing

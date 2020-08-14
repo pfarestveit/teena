@@ -16,8 +16,10 @@ describe 'BOA non-current students' do
 
     @homepage.dev_auth @test.advisor
 
+    active_sids = @test.students.map &:sis_id
+
     # Get an inactive non-current student who has not yet received the VIP treatment
-    inactive_sid = (NessieUtils.hist_profile_sids_of_career_status('Inactive') - BOACUtils.manual_advisee_sids).first
+    inactive_sid = (NessieUtils.hist_profile_sids_of_career_status('Inactive') - active_sids).first
     @inactive_student = NessieUtils.get_hist_student inactive_sid
     @inactive_api_student_page = BOACApiStudentPage.new @driver
     @inactive_api_student_page.get_data(@driver, @inactive_student)
@@ -26,7 +28,7 @@ describe 'BOA non-current students' do
     @inactive_student_profile[:academic_career_status] == 'Inactive'
 
     # Get a completed non-current student who has not yet received the VIP treatment
-    completed_sid = (NessieUtils.hist_profile_sids_of_career_status('Completed') - BOACUtils.manual_advisee_sids).first
+    completed_sid = (NessieUtils.hist_profile_sids_of_career_status('Completed') - active_sids).first
     @completed_student = NessieUtils.get_hist_student completed_sid
     @completed_api_student_page = BOACApiStudentPage.new @driver
     @completed_api_student_page.get_data(@driver, @completed_student)
@@ -53,11 +55,13 @@ describe 'BOA non-current students' do
   it('include none with an unexpected program status') { expect(NessieUtils.unexpected_hist_prog_status_count).to be_zero }
 
   it('include all those with historical term enrollments') { expect(NessieUtils.hist_enrollment_sids - NessieUtils.hist_profile_sids).to be_empty }
-  it('include some with null academic career status and no historical term enrollments') { expect(NessieUtils.null_hist_career_status_sids - NessieUtils.hist_enrollment_sids).not_to be_empty }
+  it('include some with null academic career status and no historical term enrollments') do
+    expect(NessieUtils.null_hist_career_status_sids - NessieUtils.hist_enrollment_sids).not_to be_empty
+  end
 
   context 'when on the manually added advisee list' do
 
-    it('have completed data') { expect(BOACUtils.deluxe_manual_advisee_sids & (@test.searchable_data.map { |d| d[:sid] })).not_to be_empty }
+    it('have completed data') { expect(BOACUtils.deluxe_manual_advisee_sids & @test.students.map(&:sis_id)).not_to be_empty }
   end
 
   context 'when inactive' do
