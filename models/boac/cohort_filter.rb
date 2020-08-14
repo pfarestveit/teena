@@ -2,7 +2,8 @@ class CohortFilter
 
   include Logging
 
-  attr_accessor :asc_inactive,
+  attr_accessor :academic_standing,
+                :asc_inactive,
                 :asc_intensive,
                 :asc_team,
                 :coe_advisor,
@@ -38,6 +39,7 @@ class CohortFilter
   # @param dept [BOACDepartments]
   def set_test_filters(test_data, dept)
     # Global
+    @academic_standing = (test_data['academic_standings'] && test_data['academic_standings'].map { |a| a['academic_standing'] })
     @college = (test_data['colleges'] && test_data['colleges'].map { |t| t['college'] })
     @entering_terms = (test_data['entering_terms'] && test_data['entering_terms'].map { |t| t['entering_term'] })
     @expected_grad_terms = (test_data['expected_grad_terms'] && test_data['expected_grad_terms'].map { |t| t['expected_grad_term'] })
@@ -96,6 +98,22 @@ class CohortFilter
   # @return [Array<Object>]
   def list_filters
     instance_variables.map { |variable| instance_variable_get variable }
+  end
+
+  def self.academic_standing_per_code(code)
+    case code
+      when 'PRO'
+        'Probation'
+      when 'DIS'
+        'Dismissed'
+      when 'GST'
+        'Good Standing'
+      when 'SUB'
+        'Subject to Dismissal'
+      else
+        logger.error "Unknown academic standing status '#{code}'"
+        nil
+    end
   end
 
   def self.coe_gender_per_code(code)

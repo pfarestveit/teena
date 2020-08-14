@@ -220,6 +220,13 @@
                         }
                     }
                 ]
+            },
+            {
+                "academic_standings": [
+                    {
+                        "academic_standing": "PRO"
+                    }
+                ]
             }
         ],
         "admits": [

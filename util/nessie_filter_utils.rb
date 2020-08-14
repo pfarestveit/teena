@@ -39,6 +39,13 @@ class NessieFilterUtils < NessieUtils
     arr.map {|i| "'#{i}'"}.join(', ')
   end
 
+  def self.academic_standing_cond(filter, conditions_list)
+    if filter.academic_standing&.any?
+      conditions_list << "student.academic_standing.acad_standing_status IN (#{in_op filter.academic_standing})
+         AND student.academic_standing.term_id = '#{BOACUtils.term_code}'"
+    end
+  end
+
   def self.college_cond(filter, conditions_list)
     conditions_list << "student.student_majors.college IN (#{in_op filter.college})" if filter.college&.any?
   end
@@ -190,6 +197,7 @@ class NessieFilterUtils < NessieUtils
     conditions_list = []
 
     # GLOBAL FILTERS
+    academic_standing_cond(filter, conditions_list)
     college_cond(filter, conditions_list)
     entering_term_cond(filter, conditions_list)
     expected_grad_term_cond(filter, conditions_list)
@@ -227,6 +235,9 @@ class NessieFilterUtils < NessieUtils
   def self.filter_join_clauses(filter)
     joins = []
     sid = 'student.student_academic_status.sid'
+
+    acad_standing_join = "LEFT JOIN student.academic_standing ON #{sid} = student.academic_standing.sid"
+    joins << acad_standing_join if filter.academic_standing&.any?
 
     major_join = "LEFT JOIN student.student_majors ON #{sid} = student.student_majors.sid"
     joins << major_join if (filter.college&.any? || filter.major&.any?)

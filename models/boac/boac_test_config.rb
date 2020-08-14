@@ -270,6 +270,7 @@ class BOACTestConfig < TestConfig
 
     # Set a default cohort with all possible filters to exercise editing and removing filters
     filters = {
+        :academic_standing => ['DIS'],
         :college => ((@dept == BOACDepartments::COE) ? ['Undergrad Engineering'] : ['Undergrad Letters & Science']),
         :gpa => [JSON.parse("{\"min\": \"3.50\", \"max\": \"4\"}")],
         :gpa_last_term => [JSON.parse("{\"min\": \"2\", \"max\": \"3.80\"}")],

@@ -62,6 +62,8 @@ module BOACFilteredCohortPageFilters
                         filter_option
                     end
     case filter_key
+      when 'academicStandings'
+        link_element(id: "Academic Standing-#{filter_option}")
       when 'colleges'
         link_element(id: "College-#{filter_option}")
       when 'enteringTerms'
@@ -171,6 +173,7 @@ module BOACFilteredCohortPageFilters
     end
 
     # Global
+    cohort.search_criteria.academic_standing.each { |a| select_new_filter('academicStandings', a) } if cohort.search_criteria.academic_standing
     cohort.search_criteria.college.each { |m| select_new_filter('colleges', m) } if cohort.search_criteria.college
     cohort.search_criteria.entering_terms.each { |term| select_new_filter('enteringTerms', term) } if cohort.search_criteria.entering_terms
     cohort.search_criteria.gpa.each { |gpa| select_new_filter('gpaRanges', gpa) } if cohort.search_criteria.gpa
@@ -322,6 +325,8 @@ module BOACFilteredCohortPageFilters
     filters = cohort.search_criteria
     verify_filters(cohort) do
       wait_until(1) do
+        logger.debug 'Verify Academic Standing filter'
+        filters.academic_standing.each { |a| existing_filter_element('academicStandings', a).exists? } if filters.academic_standing&.any?
         logger.debug 'Verifying College filter'
         filters.college.each { |m| existing_filter_element('College', m).exists? } if filters.college&.any?
         logger.debug 'Verifying Entering Term filter'
