@@ -352,30 +352,33 @@ describe 'BOAC', order: :defined do
     end
   end
 
-  it 'requires a title' do
-    @homepage.click_sidebar_create_filtered
-    @cohort_page.perform_student_search test.searches.first
-    @cohort_page.click_save_cohort_button_one
-    expect(@cohort_page.save_cohort_button_two_element.disabled?).to be true
-  end
+  context 'validation' do
 
-  it 'truncates a title over 255 characters' do
-    cohort = FilteredCohort.new({name: "#{test.id}#{'A loooooong title ' * 15}?"})
-    @homepage.load_page
-    @homepage.click_sidebar_create_filtered
-    @cohort_page.perform_student_search test.searches.first
-    @cohort_page.save_and_name_cohort cohort
-    cohort.name = cohort.name[0..254]
-    @cohort_page.wait_for_filtered_cohort cohort
-    test.searches << cohort
-  end
+    it 'requires a title' do
+      @homepage.click_sidebar_create_filtered
+      @cohort_page.perform_student_search test.searches.first
+      @cohort_page.click_save_cohort_button_one
+      expect(@cohort_page.save_cohort_button_two_element.disabled?).to be true
+    end
 
-  it 'requires that a title be unique among the user\'s existing cohorts' do
-    cohort = FilteredCohort.new({name: test.searches.first.name})
-    @cohort_page.click_sidebar_create_filtered
-    @cohort_page.perform_student_search test.searches.first
-    @cohort_page.save_and_name_cohort cohort
-    @cohort_page.dupe_filtered_name_msg_element.when_visible Utils.short_wait
+    it 'truncates a title over 255 characters' do
+      cohort = FilteredCohort.new({name: "#{test.id}#{'A loooooong title ' * 15}?"})
+      @homepage.load_page
+      @homepage.click_sidebar_create_filtered
+      @cohort_page.perform_student_search test.searches.first
+      @cohort_page.save_and_name_cohort cohort
+      cohort.name = cohort.name[0..254]
+      @cohort_page.wait_for_filtered_cohort cohort
+      test.searches << cohort
+    end
+
+    it 'requires that a title be unique among the user\'s existing cohorts' do
+      cohort = FilteredCohort.new({name: test.searches.first.name})
+      @cohort_page.click_sidebar_create_filtered
+      @cohort_page.perform_student_search test.searches.first
+      @cohort_page.save_and_name_cohort cohort
+      @cohort_page.dupe_filtered_name_msg_element.when_visible Utils.short_wait
+    end
   end
 
   context 'when the advisor views its cohorts' do
@@ -457,6 +460,18 @@ describe 'BOAC', order: :defined do
       if @cohort_page.cohort_update_button?
         @cohort_page.wait_for_update_and_click @cohort_page.cohort_update_cancel_button_element
       end
+    end
+
+    it 'allows the advisor to edit an Academic Standing filter' do
+      test.default_cohort.search_criteria.academic_standing = ['Good Standing']
+      @cohort_page.edit_filter_and_confirm('Academic Standing', test.default_cohort.search_criteria.academic_standing.first)
+      @cohort_page.verify_student_filters_present test.default_cohort
+    end
+
+    it 'allows the advisor to remove an Academic Standing filter' do
+      test.default_cohort.search_criteria.academic_standing.shift
+      @cohort_page.remove_filter_of_type 'Academic Standing'
+      @cohort_page.verify_student_filters_present test.default_cohort
     end
 
     it 'allows the advisor to edit a College filter' do
