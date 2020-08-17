@@ -268,7 +268,8 @@ module BOACCohortPages
       :units_cumulative => (cumul_units_el.text.gsub('No data', '').chomp if cumul_units_el.exists?),
       :classes => class_els.map(&:text),
       :waitlisted_classes => waitlisted_class_els.map(&:text),
-      :inactive => (inactive_el.exists? && inactive_el.text.strip == 'INACTIVE')
+      :inactive => (inactive_el.exists? && inactive_el.text.strip == 'INACTIVE'),
+      :academic_standing => student_academic_standing(student)
     }
   end
 

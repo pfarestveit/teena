@@ -28,6 +28,7 @@ class BOACStudentPage
   div(:preferred_name, :xpath => '//div[@id="student-preferred-name"]/span[2]')
   span(:sid, id: 'student-bio-sid')
   span(:inactive, id: 'student-bio-inactive')
+  span(:academic_standing, id: 'academic-standing-term-latest')
   span(:phone, id: 'student-phone-number')
   link(:email, id: 'student-mailto')
   div(:cumulative_units, xpath: '//div[@id="cumulative-units"]/div')
@@ -103,7 +104,8 @@ class BOACStudentPage
       :advisor_plans => (advisor_plan_elements.map &:text),
       :advisor_names => (advisor_name_elements.map &:text),
       :advisor_emails => (advisor_email_elements.map &:text),
-      :inactive => (inactive_element.exists? && inactive_element.text.strip == 'INACTIVE')
+      :inactive => (inactive_element.exists? && inactive_element.text.strip == 'INACTIVE'),
+      :academic_standing => (academic_standing.strip if academic_standing?)
     }
   end
 
@@ -221,10 +223,12 @@ class BOACStudentPage
     term_units_el = span_element(xpath: "#{term_data_xpath term_name}/following-sibling::div[@class=\"student-course-heading student-course\"]//div[@class=\"student-course-heading-units-total\"]/span")
     term_units_min_el = span_element(id: "term-#{term_id}-min-units")
     term_units_max_el = span_element(id: "term-#{term_id}-max-units")
+    term_academic_standing_el = span_element(id: "academic-standing-term-#{term_id}")
     {
       :term_units => (term_units_el.text.split[1] if term_units_el.exists?),
       :term_units_min => (term_units_min_el.text if term_units_min_el.exists?),
-      :term_units_max => (term_units_max_el.text if term_units_max_el.exists?)
+      :term_units_max => (term_units_max_el.text if term_units_max_el.exists?),
+      :academic_standing => (term_academic_standing_el.text.strip if term_academic_standing_el.exists?)
     }
   end
 

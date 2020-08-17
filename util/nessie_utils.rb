@@ -665,4 +665,19 @@ class NessieUtils < Utils
     end
   end
 
+  # Returns all SIDs with a given academic standing in a given term
+  # @param standing [AcademicStanding]
+  # @param term_id [String]
+  # @return [Array<String>]
+  def self.get_sids_with_standing(standing, term_id)
+    sql = "SELECT DISTINCT student.academic_standing.sid
+           FROM student.academic_standing
+           WHERE student.academic_standing.acad_standing_status = '#{standing.code}'
+             AND student.academic_standing.term_id = '#{term_id}';"
+    results = Utils.query_pg_db(nessie_pg_db_credentials, sql)
+    sids = results.map { |r| r['sid'] }
+    logger.info "There are #{sids.length} students with academic standing '#{standing.descrip}' in term #{term_id}"
+    sids
+  end
+
 end
