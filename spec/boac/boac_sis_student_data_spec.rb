@@ -45,6 +45,7 @@ describe 'BOAC' do
         api_student_data = BOACApiStudentPage.new @driver
         api_student_data.get_data(@driver, student)
         api_sis_profile_data = api_student_data.sis_profile_data
+        academic_standing = api_student_data.academic_standing
 
         # COHORT PAGE SIS DATA
 
@@ -92,6 +93,25 @@ describe 'BOAC' do
         end
 
         # TODO - shows withdrawal indicator if withdrawn
+
+        if academic_standing&.any?
+          current_standing = academic_standing.find { |s| s.term_id == BOACUtils.term_code.to_s }
+          if current_standing
+            if current_standing.code == 'GST'
+              it "shows no academic standing for UID #{student.uid} on the #{test.default_cohort.name} page" do
+                expect(cohort_page_sis_data[:academic_standing]).to be_nil
+              end
+            else
+              it "shows the academic standing '#{current_standing.descrip}' for UID #{student.uid} on the #{test.default_cohort.name} page" do
+                expect(cohort_page_sis_data[:academic_standing]).to eql(current_standing.descrip)
+              end
+            end
+          else
+            it "shows no academic standing for UID #{student.uid} on the #{test.default_cohort.name} page" do
+              expect(cohort_page_sis_data[:academic_standing]).to be_nil
+            end
+          end
+        end
 
         active_major_feed, inactive_major_feed = api_sis_profile_data[:majors].compact.partition { |m| m[:active] }
         active_majors = active_major_feed.map { |m| m[:major] }
@@ -319,6 +339,22 @@ describe 'BOAC' do
           end
         end
 
+        if current_standing
+          if current_standing.code == 'GST'
+            it "shows no academic standing for UID #{student.uid} on the student page" do
+              expect(student_page_sis_data[:academic_standing]).to be_nil
+            end
+          else
+            it "shows the academic standing '#{current_standing.descrip}' for UID #{student.uid} on the student page" do
+              expect(student_page_sis_data[:academic_standing]).to eql(current_standing.descrip)
+            end
+          end
+        else
+          it "shows no academic standing for UID #{student.uid} on the student page" do
+            expect(student_page_sis_data[:academic_standing]).to be_nil
+          end
+        end
+
         if api_sis_profile_data[:terms_in_attendance] && !api_sis_profile_data[:terms_in_attendance].empty? && api_sis_profile_data[:level] != 'Graduate'
           it "shows the terms in attendance for UID #{student.uid} on the student page" do
             expect(student_page_sis_data[:terms_in_attendance]).to include(api_sis_profile_data[:terms_in_attendance])
@@ -356,12 +392,31 @@ describe 'BOAC' do
         alert_data = alerts.map { |a| {text: a.message, date: @boac_student_page.expected_item_short_date_format(a.date)} }
         dismissed = BOACUtils.get_dismissed_alerts(alerts).map &:message
         logger.info "UID #{student.uid} alert count is #{alert_data.length}, with #{dismissed.length} dismissed"
+        visible_alerts = @boac_student_page.visible_alerts
 
         if alerts.any?
           alert_students << student
-          visible_alerts = @boac_student_page.visible_alerts
           logger.debug "UID #{student.uid} alerts are #{alert_data}, and visible alerts are #{visible_alerts}"
           it("has the alert messages for UID #{student.uid} on the student page") { expect(visible_alerts & alert_data).to eql(visible_alerts) }
+        end
+
+        visible_alert_text = visible_alerts.map { |a| a[:text] }
+        if current_standing
+          if current_standing.code == 'GST'
+            it "shows no academic standing alert for UID #{student.uid} on the student page" do
+              expect(visible_alert_text).not_to include("Student's academic standing is '#{current_standing.descrip}'.")
+            end
+          else
+            it "shows an academic standing alert '#{current_standing.descrip}' for UID #{student.uid} on the student page" do
+              expect(visible_alert_text).to include("Student's academic standing is '#{current_standing.descrip}'.")
+            end
+          end
+        else
+          it "shows no academic standing alert for UID #{student.uid} on the student page" do
+            visible_alert_text.each do |alert|
+              expect(alert).not_to include("Student's academic standing is")
+            end
+          end
         end
 
         # Holds
@@ -405,35 +460,55 @@ describe 'BOAC' do
               term_id = api_student_data.term_id term
               term_name = api_student_data.term_name term
               logger.info "Checking #{term_name}"
+              visible_term_data = @boac_student_page.visible_term_data(term_id, term_name)
 
               # TERM UNITS
 
-              visible_term_units_data = @boac_student_page.visible_term_data(term_id, term_name)
-
               if api_student_data.term_units(term) && api_student_data.term_units(term).to_i.zero?
-                it("shows no term units total for UID #{student.uid} term #{term_name}") { expect(visible_term_units_data[:term_units]).to be_nil }
+                it("shows no term units total for UID #{student.uid} term #{term_name}") { expect(visible_term_data[:term_units]).to be_nil }
               else
-                it("shows the term units total for UID #{student.uid} term #{term_name}") { expect(visible_term_units_data[:term_units]).to eql(api_student_data.term_units term) }
+                it("shows the term units total for UID #{student.uid} term #{term_name}") { expect(visible_term_data[:term_units]).to eql(api_student_data.term_units term) }
               end
 
               if api_sis_profile_data[:term_units_min]
                 if api_sis_profile_data[:term_units_min].zero? || term != api_student_data.current_term
-                  it("shows no term units minimum for UID #{student.uid} term #{term_name}") { expect(visible_term_units_data[:term_units_min]).to be_nil }
+                  it("shows no term units minimum for UID #{student.uid} term #{term_name}") { expect(visible_term_data[:term_units_min]).to be_nil }
                 else
-                  it("shows the term units minimum for UID #{student.uid} term #{term_name}") { expect(visible_term_units_data[:term_units_min]).to eql(api_sis_profile_data[:term_units_min].to_s) }
+                  it("shows the term units minimum for UID #{student.uid} term #{term_name}") { expect(visible_term_data[:term_units_min]).to eql(api_sis_profile_data[:term_units_min].to_s) }
                 end
               else
-                it("shows no term units minimum for UID #{student.uid} term #{term_name}") { expect(visible_term_units_data[:term_units_min]).to be_nil }
+                it("shows no term units minimum for UID #{student.uid} term #{term_name}") { expect(visible_term_data[:term_units_min]).to be_nil }
               end
 
               if api_sis_profile_data[:term_units_max]
                 if api_sis_profile_data[:term_units_max].zero? || term != api_student_data.current_term
-                  it("shows no term units maximum for UID #{student.uid} term #{term_name}") { expect(visible_term_units_data[:term_units_max]).to be_nil }
+                  it("shows no term units maximum for UID #{student.uid} term #{term_name}") { expect(visible_term_data[:term_units_max]).to be_nil }
                 else
-                  it("shows the term units maximum for UID #{student.uid} term #{term_name}") { expect(visible_term_units_data[:term_units_max]).to eql(api_sis_profile_data[:term_units_max].to_s) }
+                  it("shows the term units maximum for UID #{student.uid} term #{term_name}") { expect(visible_term_data[:term_units_max]).to eql(api_sis_profile_data[:term_units_max].to_s) }
                 end
               else
-                it("shows no term units maximum for UID #{student.uid} term #{term_name}") { expect(visible_term_units_data[:term_units_max]).to be_nil }
+                it("shows no term units maximum for UID #{student.uid} term #{term_name}") { expect(visible_term_data[:term_units_max]).to be_nil }
+              end
+
+              # ACADEMIC STANDING
+
+              if academic_standing&.any?
+                term_standing = academic_standing.find { |s| s.term_id.to_s == term_id.to_s }
+                if term_standing
+                  if term_standing.code == 'GST'
+                    it "shows no academic standing for UID #{student.uid} term #{term_name} on the student page" do
+                      expect(visible_term_data[:academic_standing]).to be_nil
+                    end
+                  else
+                    it "shows the academic standing '#{term_standing.descrip}' for UID #{student.uid} term #{term_name} on the student page" do
+                      expect(visible_term_data[:academic_standing]).to eql(term_standing.descrip)
+                    end
+                  end
+                else
+                  it "shows no academic standing for UID #{student.uid} term #{term_name} on the student page" do
+                    expect(visible_term_data[:academic_standing]).to be_nil
+                  end
+                end
               end
 
               # COURSES

@@ -141,8 +141,16 @@ class BOACTestConfig < TestConfig
                        test_sids = sis_appts_sids[0..(config - 1)]
                        @students.select { |s| test_sids.include? s.sis_id }
                      else
-                       # Running tests against a random set of students
-                       @students.shuffle[0..(config - 1)]
+                       # Running tests against a random set of students, plus optional selected students
+                       students = @students.shuffle[0..(config - 1)]
+                       if opts[:with_standing]
+                         test_sids = []
+                         AcademicStanding::STATUSES.each { |s| test_sids << NessieUtils.get_sids_with_standing(s, BOACUtils.term_code).first }
+                         test_sids = test_sids.compact & NessieUtils.get_all_sids
+                         test_students = @students.select { |s| test_sids.include? s.sis_id }
+                         students = students + test_students
+                       end
+                       students.uniq
                      end
     logger.warn "Test UIDs: #{@test_students.map &:uid}"
   end
@@ -406,7 +414,7 @@ class BOACTestConfig < TestConfig
   # Config for SIS student data testing
   def sis_student_data
     set_base_configs
-    set_test_students CONFIG['sis_data_max_users']
+    set_test_students(CONFIG['sis_data_max_users'], with_standing: true)
   end
 
   # Config for SIS admit data testing

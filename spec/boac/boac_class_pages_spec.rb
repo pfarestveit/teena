@@ -131,7 +131,6 @@ describe 'BOAC' do
                             student_api.get_data(@driver, student)
                             term = student_api.terms.find { |t| student_api.term_name(t) == term_name }
                             course = student_api.courses(term).find { |c| student_api.course_display_name(c) == course_sis_data[:code] }
-                            student_squad_names = NessieUtils.get_student_sports student
 
                             # Collect the student data relevant to the class page
                             student_class_page_data = {
@@ -200,7 +199,7 @@ describe 'BOAC' do
                               it("shows the right level for #{student_test_case}") { expect(visible_student_sis_data[:level]).to eql(student_data[:level]) }
                             end
 
-                            if student_data[:sports].any? && test.dept == BOACDepartments::ASC
+                            if student_data[:sports]&.any? && test.dept == BOACDepartments::ASC
                               sports = student_data[:sports].map { |s| s.gsub(' (AA)', '') }
                               it("shows the right sports for #{student_test_case}") { expect(visible_student_sis_data[:sports]).to eql(sports.sort) }
                             end

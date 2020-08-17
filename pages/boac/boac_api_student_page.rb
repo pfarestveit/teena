@@ -159,6 +159,16 @@ class BOACApiStudentPage
     }
   end
 
+  def academic_standing
+    @parsed && @parsed['academicStanding']&.map do |st|
+      AcademicStanding.new({
+                               code: st['status'],
+                               descrip: (AcademicStanding::STATUSES.find { |s| s.code == st['status'] }).descrip,
+                               term_id: st['termId']
+                           })
+    end
+  end
+
   def degree_progress
     progress = sis_profile['degreeProgress']
     progress && progress['requirements'] && {
