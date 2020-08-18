@@ -17,7 +17,6 @@ class BOACHomePage
   div(:copyright_year_login, class: 'copyright')
   div(:not_auth_msg, xpath: '//div[contains(., "Sorry, you are not registered to use BOA.")]')
   div(:deleted_msg, xpath: '//div[contains(., "Sorry, user is not authorized to use BOA.")]')
-  div(:footer_warning, id: 'fixed-warning-on-all-pages')
 
   # Loads the home page
   def load_page
@@ -50,7 +49,7 @@ class BOACHomePage
     logger.info "Logging in #{('UID ' + user.uid.to_s + ' ') if user}using developer auth"
     start = Time.now
     load_page
-    footer_warning_element.when_visible Utils.short_wait
+    copyright_year_login_element.when_visible Utils.short_wait
     scroll_to_bottom
     wait_for_element_and_type(dev_auth_uid_input_element, (user ? user.uid : Utils.super_admin_uid))
     logger.warn "Took #{Time.now - start - Utils.click_wait} seconds for dev auth input to become available"
