@@ -247,6 +247,7 @@ else
         it('sees no download link') { expect(@student_page.notes_download_link?).to be false }
 
         it 'cannot hit the download endpoint' do
+          Utils.prepare_download_dir
           @api_notes_page.load_download_page test_student
           @api_notes_page.unauth_msg_element.when_visible Utils.short_wait
           expect(Utils.downloads_empty?).to be true
@@ -392,6 +393,7 @@ else
         end
 
         it 'cannot download a deleted attachment' do
+          Utils.prepare_download_dir
           @api_notes_page.load_attachment_page deleted_attachments.first.id
           @api_notes_page.not_found_msg_element.when_visible Utils.short_wait
           expect(Utils.downloads_empty?).to be true
@@ -520,6 +522,7 @@ else
         it 'cannot download a deleted note\'s attachments' do
           if note.attachments.any?
             note.attachments.each do |attach|
+              Utils.prepare_download_dir
               @homepage.load_page
               id = BOACUtils.get_attachment_id_by_file_name(note, attach)
               @api_notes_page.load_attachment_page id

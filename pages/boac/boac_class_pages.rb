@@ -76,12 +76,12 @@ module BOACClassPages
     el.text if el.exists? && !el.text.empty?
   end
 
-  # Returns the location shown for a course meeting at a given node
+  # Returns the location and instruction mode shown for a course meeting at a given node
   # @param index [Integer]
   # @return [Array<String>]
   def meeting_location(index)
     el = div_element(xpath: "#{meeting_schedule_xpath index}//div[3]")
-    el.text if el.exists? && !el.text.empty?
+    el.attribute('innerText') if el.exists? && !el.attribute('innerText').empty?
   end
 
   # Returns the meeting data shown for a course meeting at a given node

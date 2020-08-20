@@ -21,11 +21,12 @@ end
 
 logger.warn "Admin UID #{admin.uid}, director UID #{director.uid}, advisor UID #{advisor.uid}, scheduler UID #{scheduler.uid}"
 
-advisor_data = BOACUtils.get_last_login_and_note_count
+
 
 describe 'BOA flight data recorder' do
 
   before(:all) do
+    @advisor_data = BOACUtils.get_last_login_and_note_count
     @driver = Utils.launch_browser
     @homepage = BOACHomePage.new @driver
     @flight_data_recorder = BOACFlightDataRecorderPage.new @driver
@@ -103,7 +104,7 @@ describe 'BOA flight data recorder' do
       all_users.select { |u| u.depts.include? dept }.each do |user|
 
         it "shows the total number of BOA notes created by #{dept.name} UID #{user.uid}" do
-          count = (advisor_data.find { |a| a[:uid] == user.uid })[:note_count]
+          count = (@advisor_data.find { |a| a[:uid] == user.uid })[:note_count]
           expect(@flight_data_recorder.advisor_note_count user).to eql(count)
         end
 
@@ -111,7 +112,7 @@ describe 'BOA flight data recorder' do
           date = if user == admin
                    Time.now
                  else
-                   (advisor_data.find { |a| a[:uid] == user.uid.to_s })[:last_login]
+                   (@advisor_data.find { |a| a[:uid] == user.uid.to_s })[:last_login]
                  end
           date = date ? date.strftime('%b %-d, %Y') : '—'
           expect(@flight_data_recorder.advisor_last_login user).to eql(date)
@@ -174,7 +175,7 @@ describe 'BOA flight data recorder' do
       all_non_admin_users.select { |u| u.depts.include? dept }.each do |user|
 
         it "shows the total number of BOA notes created by #{dept.name} UID #{user.uid}" do
-          count = (advisor_data.find { |a| a[:uid] == user.uid })[:note_count]
+          count = (@advisor_data.find { |a| a[:uid] == user.uid })[:note_count]
           expect(@flight_data_recorder.advisor_note_count user).to eql(count)
         end
 
@@ -182,7 +183,7 @@ describe 'BOA flight data recorder' do
           date = if [admin, director].include? user
                    Time.now
                  else
-                   (advisor_data.find { |a| a[:uid] == user.uid.to_s })[:last_login]
+                   (@advisor_data.find { |a| a[:uid] == user.uid.to_s })[:last_login]
                  end
           date = date ? date.strftime('%b %-d, %Y') : '—'
           expect(@flight_data_recorder.advisor_last_login user).to eql(date)

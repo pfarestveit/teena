@@ -93,12 +93,13 @@ describe 'BOAC' do
                           api_section_page.meetings.each do |meet|
                             index = api_section_page.meetings.index meet
                             visible_meeting_data = @class_page.visible_meeting_data index
+                            expected_location = "#{meet[:location]}#{' ' if meet[:location] && meet[:mode]}#{('— ' + meet[:mode]) if meet[:mode]}"
                             it("shows the right instructors for meeting #{index} for #{class_test_case}") { expect(visible_meeting_data[:instructors]).to eql(meet[:instructors]) }
                             it("shows the right days for meeting #{index} for #{class_test_case}") { expect(visible_meeting_data[:days]).to eql(meet[:days]) }
                             it("shows the right time for meeting #{index} for #{class_test_case}") { expect(visible_meeting_data[:time]).to eql(meet[:time]) }
-                            it("shows the right location for meeting #{index} for #{class_test_case}") { expect(visible_meeting_data[:location]).to eql(meet[:location]) }
+                            it("shows the right location for meeting #{index} for #{class_test_case}") { expect(visible_meeting_data[:location]).to eql(expected_location) }
 
-                            Utils.add_csv_row(meetings_csv, [term_name, section_course_code, meet[:instructors], meet[:days], meet[:time], meet[:location]])
+                            Utils.add_csv_row(meetings_csv, [term_name, section_course_code, meet[:instructors], meet[:days], meet[:time], expected_location])
                           end
 
                           # STUDENT DATA
@@ -131,6 +132,9 @@ describe 'BOAC' do
                             student_api.get_data(@driver, student)
                             term = student_api.terms.find { |t| student_api.term_name(t) == term_name }
                             course = student_api.courses(term).find { |c| student_api.course_display_name(c) == course_sis_data[:code] }
+                            unless course
+                              logger.warn "No matching student course for UID #{student.uid} #{course_sis_data[:code]}"
+                            end
 
                             # Collect the student data relevant to the class page
                             student_class_page_data = {
