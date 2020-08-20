@@ -278,7 +278,9 @@ class NessieFilterUtils < NessieUtils
       joins << coe_join
     end
 
-    joins.uniq.compact.join(" \n")
+    joins.uniq!
+    joins.compact!
+    joins.join(" \n")
   end
 
   def self.join(filter_joins, sort=nil)
@@ -402,9 +404,9 @@ class NessieFilterUtils < NessieUtils
   def self.cohort_by_team(test, filter)
     sort = {
         table: 'boac_advising_asc.students',
-        col: 'team_name',
+        col: 'group_name',
         nulls: ' NULLS LAST',
-        select: '(ARRAY_AGG (boac_advising_asc.students.team_name))[1] AS team',
+        select: '(ARRAY_AGG (boac_advising_asc.students.group_name))[1] AS team',
         order_by: 'team',
         group_by: false
     }
@@ -427,7 +429,7 @@ class NessieFilterUtils < NessieUtils
   end
 
   def self.cohort_by_gpa_desc(test, filter)
-    sort = cohort_by_gpa_sort.merge!({direction: ' DESC', nulls: ' NULLS LAST'})
+    sort = cohort_by_gpa_sort.merge!({direction: ' DESC', nulls: ' NULLS FIRST'})
     get_cohort_result(test, filter, sort)
   end
 
@@ -529,7 +531,7 @@ class NessieFilterUtils < NessieUtils
   end
 
   def self.cohort_by_units_complete_desc(test, filter)
-    sort = cohort_by_units_complete_sort.merge!({direction: ' DESC', nulls: ' NULLS LAST'})
+    sort = cohort_by_units_complete_sort.merge!({direction: ' DESC', nulls: ' NULLS FIRST'})
     get_cohort_result(test, filter, sort)
   end
 

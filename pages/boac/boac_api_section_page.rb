@@ -22,7 +22,8 @@ class BOACApiSectionPage
         :instructors => (meet['instructors'].map { |i| i.gsub(/\s+/, ' ') }),
         :days => meet['days'],
         :time => meet['time'],
-        :location => (meet['location'] && meet['location'].gsub(/\s+/, ' '))
+        :location => (meet['location'] && meet['location'].gsub(/\s+/, ' ')),
+        :mode => meet['instructionModeName']
       }
     end
   end
