@@ -100,22 +100,6 @@ class CohortFilter
     instance_variables.map { |variable| instance_variable_get variable }
   end
 
-  def self.academic_standing_per_code(code)
-    case code
-      when 'PRO'
-        'Probation'
-      when 'DIS'
-        'Dismissed'
-      when 'GST'
-        'Good Standing'
-      when 'SUB'
-        'Subject to Dismissal'
-      else
-        logger.error "Unknown academic standing status '#{code}'"
-        nil
-    end
-  end
-
   def self.coe_gender_per_code(code)
     case code
       when 'F'

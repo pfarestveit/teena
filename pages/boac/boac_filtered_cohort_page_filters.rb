@@ -492,6 +492,7 @@ module BOACFilteredCohortPageFilters
   # @param filter_key [String]
   # @param new_filter_option [String]
   def edit_filter_of_type(filter_key, new_filter_option)
+    logger.debug "#{filter_controls_xpath filter_key}//button[contains(.,'Edit')]"
     wait_for_update_and_click button_element(xpath: "#{filter_controls_xpath filter_key}//button[contains(.,'Edit')]")
     choose_edit_filter_sub_option(filter_key, new_filter_option)
   end
@@ -526,6 +527,7 @@ module BOACFilteredCohortPageFilters
   def remove_filter_of_type(filter_name)
     logger.info "Removing '#{filter_name}'"
     row_count = cohort_filter_row_elements.length
+    logger.debug "#{filter_controls_xpath filter_name}//button[contains(.,'Remove')]"
     wait_for_update_and_click button_element(xpath: "#{filter_controls_xpath filter_name}//button[contains(.,'Remove')]")
     wait_until(Utils.short_wait) { cohort_filter_row_elements.length == row_count - 1 }
   end

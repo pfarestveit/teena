@@ -41,8 +41,12 @@ class NessieFilterUtils < NessieUtils
 
   def self.academic_standing_cond(filter, conditions_list)
     if filter.academic_standing&.any?
-      conditions_list << "student.academic_standing.acad_standing_status IN (#{in_op filter.academic_standing})
-         AND student.academic_standing.term_id = '#{BOACUtils.term_code}'"
+      cond = []
+      filter.academic_standing.each do |term_standing|
+        s = term_standing.split(':')
+        cond << "(student.academic_standing.term_id = '#{s[0]}' AND student.academic_standing.acad_standing_status = '#{s[1]}')"
+      end
+      conditions_list << cond.join(' OR ')
     end
   end
 
@@ -380,7 +384,7 @@ class NessieFilterUtils < NessieUtils
         table: 'student.student_majors',
         col: 'major',
         nulls: ' NULLS FIRST',
-        select: '(ARRAY_AGG(student.student_majors.major))[1] AS major',
+        select: '(ARRAY_AGG(student.student_majors.major ORDER BY student.student_majors.major))[1] AS major',
         order_by: 'major',
         group_by: false
     }
@@ -406,7 +410,7 @@ class NessieFilterUtils < NessieUtils
         table: 'boac_advising_asc.students',
         col: 'group_name',
         nulls: ' NULLS LAST',
-        select: '(ARRAY_AGG (boac_advising_asc.students.group_name))[1] AS team',
+        select: '(ARRAY_AGG (boac_advising_asc.students.group_name ORDER BY boac_advising_asc.students.group_name))[1] AS team',
         order_by: 'team',
         group_by: false
     }

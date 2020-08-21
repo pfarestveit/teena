@@ -95,21 +95,19 @@ describe 'BOAC' do
         # TODO - shows withdrawal indicator if withdrawn
 
         if academic_standing&.any?
-          current_standing = academic_standing.find { |s| s.term_id == BOACUtils.term_code.to_s }
-          if current_standing
-            if current_standing.code == 'GST'
-              it "shows no academic standing for UID #{student.uid} on the #{test.default_cohort.name} page" do
-                expect(cohort_page_sis_data[:academic_standing]).to be_nil
-              end
-            else
-              it "shows the academic standing '#{current_standing.descrip}' for UID #{student.uid} on the #{test.default_cohort.name} page" do
-                expect(cohort_page_sis_data[:academic_standing]).to eql(current_standing.descrip)
-              end
-            end
-          else
+          latest_standing = academic_standing.first
+          if latest_standing.code == 'GST'
             it "shows no academic standing for UID #{student.uid} on the #{test.default_cohort.name} page" do
               expect(cohort_page_sis_data[:academic_standing]).to be_nil
             end
+          else
+            it "shows the academic standing '#{latest_standing.descrip}' for UID #{student.uid} on the #{test.default_cohort.name} page" do
+              expect(cohort_page_sis_data[:academic_standing]).to eql(latest_standing.descrip)
+            end
+          end
+        else
+          it "shows no academic standing for UID #{student.uid} on the #{test.default_cohort.name} page" do
+            expect(cohort_page_sis_data[:academic_standing]).to be_nil
           end
         end
 
@@ -339,14 +337,14 @@ describe 'BOAC' do
           end
         end
 
-        if current_standing
-          if current_standing.code == 'GST'
+        if latest_standing
+          if latest_standing.code == 'GST'
             it "shows no academic standing for UID #{student.uid} on the student page" do
               expect(student_page_sis_data[:academic_standing]).to be_nil
             end
           else
-            it "shows the academic standing '#{current_standing.descrip}' for UID #{student.uid} on the student page" do
-              expect(student_page_sis_data[:academic_standing]).to eql(current_standing.descrip)
+            it "shows the academic standing '#{latest_standing.descrip}' for UID #{student.uid} on the student page" do
+              expect(student_page_sis_data[:academic_standing]).to eql(latest_standing.descrip)
             end
           end
         else
@@ -401,14 +399,14 @@ describe 'BOAC' do
         end
 
         visible_alert_text = visible_alerts.map { |a| a[:text] }
-        if current_standing
-          if current_standing.code == 'GST'
+        if latest_standing&.term_id == BOACUtils.term_code.to_s
+          if latest_standing.code == 'GST'
             it "shows no academic standing alert for UID #{student.uid} on the student page" do
-              expect(visible_alert_text).not_to include("Student's academic standing is '#{current_standing.descrip}'.")
+              expect(visible_alert_text).not_to include("Student's academic standing is '#{latest_standing.descrip}'.")
             end
           else
-            it "shows an academic standing alert '#{current_standing.descrip}' for UID #{student.uid} on the student page" do
-              expect(visible_alert_text).to include("Student's academic standing is '#{current_standing.descrip}'.")
+            it "shows an academic standing alert '#{latest_standing.descrip}' for UID #{student.uid} on the student page" do
+              expect(visible_alert_text).to include("Student's academic standing is '#{latest_standing.descrip}'.")
             end
           end
         else
