@@ -170,7 +170,7 @@ module BOACCohortPages
     wait_until(3) { !export_list_button_element.disabled? }
     wait_for_update_and_click export_list_button_element
     14.times do |idx|
-      (el = checkbox_element(id: "csv-column-options__BV_option_#{idx}_")).when_present Utils.short_wait
+      (el = checkbox_element(id: "csv-column-options_BV_option_#{idx}")).when_present Utils.short_wait
       js_click el
     end
     wait_for_update_and_click confirm_export_list_button_element

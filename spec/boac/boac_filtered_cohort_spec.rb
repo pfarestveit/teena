@@ -534,18 +534,6 @@ describe 'BOAC', order: :defined do
       @cohort_page.verify_student_filters_present test.default_cohort
     end
 
-    it 'allows the advisor to edit a Major filter' do
-      test.default_cohort.search_criteria.major = ['Bioengineering BS']
-      @cohort_page.edit_filter_and_confirm('Major', test.default_cohort.search_criteria.major.first)
-      @cohort_page.verify_student_filters_present test.default_cohort
-    end
-
-    it 'allows the advisor to remove a Major filter' do
-      test.default_cohort.search_criteria.major.shift
-      @cohort_page.remove_filter_of_type 'Major'
-      @cohort_page.verify_student_filters_present test.default_cohort
-    end
-
     it 'allows the advisor to edit an Intended Major filter' do
       test.default_cohort.search_criteria.intended_major = ['History BA']
       @cohort_page.edit_filter_and_confirm('Intended Major', test.default_cohort.search_criteria.intended_major.first)
@@ -555,6 +543,18 @@ describe 'BOAC', order: :defined do
     it 'allows the advisor to remove an Intended Major filter' do
       test.default_cohort.search_criteria.intended_major.shift
       @cohort_page.remove_filter_of_type 'Intended Major'
+      @cohort_page.verify_student_filters_present test.default_cohort
+    end
+
+    it 'allows the advisor to edit a Major filter' do
+      test.default_cohort.search_criteria.major = ['Bioengineering BS']
+      @cohort_page.edit_filter_and_confirm('Major', test.default_cohort.search_criteria.major.first)
+      @cohort_page.verify_student_filters_present test.default_cohort
+    end
+
+    it 'allows the advisor to remove a Major filter' do
+      test.default_cohort.search_criteria.major.shift
+      @cohort_page.remove_filter_of_type 'Major'
       @cohort_page.verify_student_filters_present test.default_cohort
     end
 

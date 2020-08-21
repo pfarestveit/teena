@@ -224,7 +224,10 @@
             {
                 "academic_standings": [
                     {
-                        "academic_standing": "PRO"
+                        "academic_standing": "2202:PRO"
+                    },
+                    {
+                        "academic_standing": "2198:DIS"
                     }
                 ]
             }
