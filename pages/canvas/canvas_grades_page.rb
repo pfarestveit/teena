@@ -234,6 +234,21 @@ module Page
       wait_for_load_and_click e_grades_export_link_element
     end
 
+    def search_for_gradebook_student(user)
+      # Try to find the user row a few times since stale element reference errors may occur
+      tries ||= 5
+      begin
+        tries -= 1
+        wait_for_element_and_type(user_search_input_element, user.uid)
+        wait_until(2) { gradebook_student_link_elements.first.attribute('data-student_id') == "#{user.canvas_id}" }
+      rescue => e
+        logger.error e.message
+        sleep 1
+        hit_escape # in case a modal has been left open, obscuring the search input
+        tries.zero? ? fail : retry
+      end
+    end
+
     # Returns the Gradebook data for a given user. If the score cannot be found, log an error but do not fail.
     # @param user [User]
     # @return [Hash]
@@ -257,18 +272,7 @@ module Page
           end
         end
 
-        # Try to find the user row a few times since stale element reference errors may occur
-        tries ||= 5
-        begin
-          tries -= 1
-          wait_for_element_and_type(user_search_input_element, user.uid)
-          wait_until(2) { gradebook_student_link_elements.first.attribute('data-student_id') == "#{user.canvas_id}" }
-        rescue => e
-          logger.error e.message
-          sleep 1
-          hit_escape # in case a modal has been left open, obscuring the search input
-          tries.zero? ? fail : retry
-        end
+        search_for_gradebook_student user
         sleep Utils.click_wait
         wait_until(Utils.short_wait) { gradebook_grade_elements.any? }
         grade = gradebook_grade_elements.first.text
@@ -281,6 +285,93 @@ module Page
       rescue => e
         Utils.log_error e
       end
+    end
+
+    # FINAL GRADE OVERRIDES
+
+    link(:features_tab, id: 'tab-features-link')
+    checkbox(:grade_override_toggle, id: 'ff_toggle_final_grades_override')
+    div(:grade_override_toggle_switch, xpath: '//div[contains(@class, "final_grades_override")]//div[@class="ic-Super-toggle__switch"]')
+
+    div(:adv_gradebook_settings_tab, xpath: '//div[text()="Advanced"]')
+    checkbox(:allow_grade_override_cbx, xpath: '//label[contains(., "Allow final grade override")]/preceding-sibling::input')
+    button(:update_gradebook_settings, id: 'gradebook-settings-update-button')
+
+    div(:grade_override_cell, xpath: '//div[contains(@class, "total-grade-override") and contains(@class, "slick-cell")]/div')
+    text_field(:grade_override_input, xpath: '//div[contains(@class, "total-grade-override")]//input')
+    elements(:grid_row_cell, :div, xpath: '//div[@id="gradebook_grid"]//div[contains(@class, "first-row")]/div')
+
+    # Ensures the final grade override is enabled on a given course site
+    def enable_final_grade_override(course)
+      load_course_settings course
+      wait_for_load_and_click features_tab_element
+      grade_override_toggle_element.when_present Utils.short_wait
+      if grade_override_toggle_checked?
+        logger.info 'Final grade override is already enabled'
+      else
+        logger.info 'Enabling final grade override'
+        wait_for_update_and_click grade_override_toggle_switch_element
+        sleep Utils.click_wait
+      end
+    end
+
+    # Clicks the settings icon and switches to advanced settings
+    def open_gradebook_adv_settings
+      click_gradebook_settings
+      wait_for_update_and_click adv_gradebook_settings_tab_element
+      allow_grade_override_cbx_element.when_visible 1
+    end
+
+    # Clicks the allow-override checkbox and saves
+    def toggle_allow_grade_override
+      js_click allow_grade_override_cbx_element
+      wait_for_update_and_click update_gradebook_settings_element
+      flash_msg_element.when_visible Utils.short_wait
+      wait_until(1) { flash_msg_element.attribute('innerText').include? 'Gradebook Settings updated' }
+    end
+
+    # Ensures that allow-override is selected on the gradebook
+    def allow_grade_override
+      open_gradebook_adv_settings
+      if allow_grade_override_cbx_checked?
+        logger.info 'Final grade override is already allowed'
+        hit_escape
+        allow_grade_override_cbx_element.when_not_present 1
+      else
+        logger.info 'Allowing final grade override'
+        toggle_allow_grade_override
+      end
+    end
+
+    # Ensures that allow-override is not selected on the gradebook
+    def disallow_grade_override
+      open_gradebook_adv_settings
+      if allow_grade_override_cbx_checked?
+        logger.info 'Disallowing final grade override'
+        toggle_allow_grade_override
+      else
+        logger.info 'Final grade override is already disallowed'
+        hit_escape
+        allow_grade_override_cbx_element.when_not_present 1
+      end
+    end
+
+    # Enters a given override grade for a given student
+    def enter_override_grade(course, student, grade)
+      logger.info "Entering override grade '#{grade}' for UID #{student.uid}"
+      load_gradebook course
+      allow_grade_override
+      search_for_gradebook_student student
+      3.times do
+        visible_els = grid_row_cell_elements
+        scroll_to_element visible_els.last
+      end
+      sleep 1
+      wait_for_update_and_click grade_override_cell_element
+      wait_for_element_and_type(grade_override_input_element, grade)
+      sleep Utils.click_wait
+      hit_enter
+      sleep Utils.click_wait
     end
 
   end

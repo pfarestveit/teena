@@ -107,7 +107,7 @@ module Page
       # @param section [Section]
       # @param cutoff [String]
       # @return [Array<Hash>]
-      def download_current_grades(driver, course, section, cutoff)
+      def download_current_grades(driver, course, section, cutoff = nil)
         logger.info "Downloading current grades for #{course.code} #{section.label}"
         Utils.prepare_download_dir
         load_embedded_tool(driver, course)
@@ -126,7 +126,7 @@ module Page
       # @param section [Section]
       # @param cutoff [String]
       # @return [Array<Hash>]
-      def download_final_grades(driver, course, section, cutoff)
+      def download_final_grades(driver, course, section, cutoff = nil)
         logger.info "Downloading final grades for #{course.code} #{section.label}"
         Utils.prepare_download_dir
         load_embedded_tool(driver, course)
