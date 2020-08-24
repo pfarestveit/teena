@@ -6,17 +6,13 @@ test.students.shuffle!
 
 group_1_students = test.students.first(1000)
 group_2_students = test.students.last(1000)
-all_students = group_1_students + group_2_students
+test.students = group_1_students + group_2_students
 
 describe 'A BOA filtered cohort' do
 
   include Logging
 
   before(:all) do
-
-    @all_student_searchable_data = []
-    @all_student_searchable_data << test.searchable_data
-    @all_student_searchable_data.flatten!
 
     @students_to_add_remove = []
     @cohorts = []
@@ -56,8 +52,6 @@ describe 'A BOA filtered cohort' do
       @group_page.create_group_with_bulk_sids(group_1_students, @group_1)
       @group_page.click_sidebar_create_curated_group
       @group_page.create_group_with_bulk_sids(group_2_students, @group_2)
-
-
     end
 
     it 'shows the user\'s own groups as filter options' do
@@ -118,7 +112,7 @@ describe 'A BOA filtered cohort' do
 
       it 'updates the cohort student list when students are removed from the group' do
         @cohort_page.load_cohort @cohorts.last
-        expect(@cohort_page.visible_sids).to eql(NessieFilterUtils.cohort_by_last_name(test, @cohorts.last.search_criteria))
+        expect(@cohort_page.visible_sids.sort).to eql(@cohorts.last.members.map(&:sis_id).sort)
       end
 
       it 'updates the cohort member count on the homepage when students are removed from the group' do
@@ -132,14 +126,14 @@ describe 'A BOA filtered cohort' do
       it 'updates the cohort member count in the sidebar when students are added to the group via bulk-add' do
         @group_page.load_page @group_1
         @group_page.add_comma_sep_sids_to_existing_grp([@students_to_add_remove.first], @group_1)
-        test.students << all_students.find { |s| s.sis_id == @students_to_add_remove.first.sis_id }
+        test.students << @students_to_add_remove.first
         @cohort_page.set_cohort_members(@cohorts.last, test)
         @student_page.wait_for_sidebar_cohort_member_count @cohorts.last
       end
 
       it 'updates the cohort student list when students are added to the group via bulk-add' do
         @cohort_page.load_cohort @cohorts.last
-        expect(@cohort_page.visible_sids).to eql(NessieFilterUtils.cohort_by_last_name(test, @cohorts.last.search_criteria))
+        expect(@cohort_page.visible_sids.sort).to eql(@cohorts.last.members.map(&:sis_id).sort)
       end
 
       it 'updates the cohort member count on the homepage when students are added to the group via bulk-add' do
@@ -153,14 +147,14 @@ describe 'A BOA filtered cohort' do
       it 'updates the cohort member count in the sidebar when students are added to the group via a group selector' do
         @student_page.load_page @students_to_add_remove.last
         @student_page.add_student_to_grp(@students_to_add_remove.last, @group_1)
-        test.students << all_students.find { |s| s.sis_id == @students_to_add_remove.last.sis_id }
+        test.students << @students_to_add_remove.last
         @cohort_page.set_cohort_members(@cohorts.last, test)
         @student_page.wait_for_sidebar_cohort_member_count @cohorts.last
       end
 
       it 'updates the cohort student list when students are added to the group via a group selector' do
         @cohort_page.load_cohort @cohorts.last
-        expect(@cohort_page.visible_sids).to eql(NessieFilterUtils.cohort_by_last_name(test, @cohorts.last.search_criteria))
+        expect(@cohort_page.visible_sids.sort).to eql(@cohorts.last.members.map(&:sis_id).sort)
       end
 
       it 'updates the cohort member count on the homepage when students are added to the group via a group selector' do
@@ -184,7 +178,7 @@ describe 'A BOA filtered cohort' do
       end
 
       it 'updates the cohort student list when a group is removed from the cohort' do
-        expect(@cohort_page.visible_sids).to eql(NessieFilterUtils.cohort_by_last_name(test, @cohorts.last.search_criteria))
+        expect(@cohort_page.visible_sids.sort).to eql(@cohorts.last.members.map(&:sis_id).sort)
       end
 
       it 'updates the cohort member count on the homepage when a group is removed from the cohort' do
@@ -213,7 +207,7 @@ describe 'A BOA filtered cohort' do
       end
 
       it 'updates the cohort student list when a group is added to the cohort' do
-        expect(@cohort_page.visible_sids).to eql(NessieFilterUtils.cohort_by_last_name(test, @cohorts.last.search_criteria))
+        expect(@cohort_page.visible_sids.sort).to eql(@cohorts.last.members.map(&:sis_id).sort)
       end
 
       it 'updates the cohort member count on the homepage when a group is added to the cohort' do
@@ -248,7 +242,6 @@ describe 'A BOA filtered cohort' do
         @cohort_page.show_filters
         @cohort_page.existing_filter_element('My Curated Groups', @group_1.name).when_visible 1
         @cohort_page.existing_filter_element('My Curated Groups', @group_2.name).when_visible 1
-
       end
 
       it('prevents the user from editing the filters') { expect(@cohort_page.cohort_edit_button_elements.any?).to be false }

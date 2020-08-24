@@ -46,7 +46,7 @@ else
 
       context 'with no cohorts or groups' do
 
-        before do
+        before(:all) do
           pre_existing_cohorts = BOACUtils.get_user_filtered_cohorts test.advisor, default: true
           pre_existing_cohorts.each do |c|
             @cohort_page.load_cohort c
@@ -96,6 +96,7 @@ else
         end
 
         it 'can cancel an unsaved batch of notes' do
+          @homepage.hit_escape
           @homepage.click_create_note_batch
           @homepage.wait_for_element_and_type(@homepage.note_body_text_area_elements[0], 'Discard me!')
           @homepage.click_cancel_new_note

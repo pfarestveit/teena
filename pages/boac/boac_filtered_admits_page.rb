@@ -134,7 +134,7 @@ class BOACFilteredAdmitsPage
     check_export_for_data(parsed_csv, :permanent_residence_country, warnings)
     check_export_for_data(parsed_csv, :non_immigrant_visa_current, warnings)
     check_export_for_data(parsed_csv, :non_immigrant_visa_planned, warnings)
-    wait_until(1, "Expected optional data columns with no data #{warnings} to be empty") { warnings.empty? }
+    wait_until(1, "Expected no empty optional data columns, but #{warnings} are empty") { warnings.empty? }
   end
 
 end

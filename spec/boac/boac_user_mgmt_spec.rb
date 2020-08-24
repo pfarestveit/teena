@@ -79,7 +79,7 @@ describe 'The BOAC passenger manifest' do
               expected_roles << 'Advisor' if membership.advisor_role == AdvisorRole::ADVISOR
               expected_roles << 'Director' if membership.advisor_role == AdvisorRole::DIRECTOR
               expected_roles << 'Scheduler' if membership.advisor_role == AdvisorRole::SCHEDULER
-              expected_roles << 'Drop-In Advisor' if membership.is_drop_in_advisor
+              expected_roles << 'Drop-in Advisor' if membership.is_drop_in_advisor
               visible_dept_roles = @pax_manifest_page.visible_dept_roles(user, membership.dept.code)
               visible_roles = visible_dept_roles[/.*\(([^\)]*)/,1]
               actual_roles = visible_roles.split(', ')
