@@ -50,6 +50,7 @@ class OECDepartments
       CY_PLAN = new('CY PLAN', 'City and Regional Planning', 'CY PLAN', %w(F G), true),
       CZECH = new('CZECH', 'Czech', 'CZECH', %w(F G), true),
       CYBER = new('CYBER', 'Information and Cybersecurity', 'CYBER', %w(F G), true),
+      DANISH = new('DANISH', 'Danish', 'DANISH', %w(F G), true),
       DATASCI = new('DATASCI', 'Information', 'DATASCI', nil, true),
       DES_INV = new('DES INV', 'Engineering', 'ENGIN', nil, false),
       DEV_ENG = new('DEV ENG', 'Civil and Environmental Engineering', 'CIV ENG', nil, false),

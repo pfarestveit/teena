@@ -339,7 +339,6 @@ class NessieFilterUtils < NessieUtils
   ### QUERIES - COHORT LIST VIEW ###
   ##################################
 
-  # @param filter [CohortFilter]
   def self.get_cohort_result(test, filter, sort=nil)
     sql = "#{select_from sort}
            #{join(filter_join_clauses(filter), sort)}
@@ -659,7 +658,6 @@ class NessieFilterUtils < NessieUtils
     {
         table: 'student.student_enrollment_terms',
         col: 'enrolled_units',
-        nulls: ' NULLS FIRST',
         select: units_in_prog_sub_query,
         term_id: BOACUtils.term_code,
         order_by: 'units_in_progress',
@@ -668,12 +666,12 @@ class NessieFilterUtils < NessieUtils
   end
 
   def self.list_by_units_in_prog_asc(sids)
-    sort = list_by_units_in_prog_sort.merge!({direction: ' ASC'})
+    sort = list_by_units_in_prog_sort.merge!({nulls: ' NULLS FIRST', direction: ' ASC'})
     get_list_result(sids, sort)
   end
 
   def self.list_by_units_in_prog_desc(sids)
-    sort = list_by_units_in_prog_sort.merge!({direction: ' DESC'})
+    sort = list_by_units_in_prog_sort.merge!({nulls: ' NULLS LAST', direction: ' DESC'})
     get_list_result(sids, sort)
   end
 

@@ -43,7 +43,7 @@ module BOACPages
   link(:flight_data_recorder_link, text: 'Flight Data Recorder')
   link(:flight_deck_link, text: 'Flight Deck')
   link(:pax_manifest_link, text: 'Passenger Manifest')
-  link(:settings_link, text: 'Settings')
+  link(:settings_link, text: 'Profile')
   link(:log_out_link, text: 'Log Out')
   link(:feedback_link, text: 'Feedback/Help')
   div(:modal, class: 'modal-content')
@@ -93,7 +93,7 @@ module BOACPages
   def click_settings_link
     click_header_dropdown
     wait_for_update_and_click settings_link_element
-    wait_for_title 'Flight Deck'
+    wait_for_title 'Profile'
   end
 
   ### USER LIST SORTING ###
@@ -195,10 +195,10 @@ module BOACPages
   # Waits for a cohort's member count in the sidebar to match expectations
   # @param cohort [FilteredCohort]
   def wait_for_sidebar_cohort_member_count(cohort)
-    logger.debug "Waiting for cohort #{cohort.name} member count of #{cohort.member_data.length}"
+    logger.debug "Waiting for cohort #{cohort.name} member count of #{cohort.members.length}"
     wait_until(Utils.medium_wait) do
       el = span_element(xpath: "//div[contains(@class, \"sidebar-row-link\")][contains(.,\"#{cohort.name}\")]//span[@class=\"sr-only\"]")
-      el.exists? && el.text.delete(' admitted').delete(' students').chomp == cohort.member_data.length.to_s
+      el.exists? && el.text.delete(' admitted').delete(' students').chomp == cohort.members.length.to_s
     end
   end
 

@@ -102,7 +102,7 @@ describe 'BOAC' do
             end
           else
             it "shows the academic standing '#{latest_standing.descrip}' for UID #{student.uid} on the #{test.default_cohort.name} page" do
-              expect(cohort_page_sis_data[:academic_standing]).to eql(latest_standing.descrip)
+              expect(cohort_page_sis_data[:academic_standing]).to eql("#{latest_standing.descrip} (#{latest_standing.term_name})")
             end
           end
         else
@@ -344,7 +344,7 @@ describe 'BOAC' do
             end
           else
             it "shows the academic standing '#{latest_standing.descrip}' for UID #{student.uid} on the student page" do
-              expect(student_page_sis_data[:academic_standing]).to eql(latest_standing.descrip)
+              expect(student_page_sis_data[:academic_standing]).to eql("#{latest_standing.descrip} (#{latest_standing.term_name})")
             end
           end
         else
@@ -499,7 +499,7 @@ describe 'BOAC' do
                     end
                   else
                     it "shows the academic standing '#{term_standing.descrip}' for UID #{student.uid} term #{term_name} on the student page" do
-                      expect(visible_term_data[:academic_standing]).to eql(term_standing.descrip)
+                      expect(visible_term_data[:academic_standing]).to eql("#{term_standing.descrip} (#{term_standing.term_name})")
                     end
                   end
                 else
