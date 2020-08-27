@@ -95,7 +95,7 @@ describe 'BOA' do
 
     before(:all) do
       @advisor_homepage.dev_auth @test.drop_in_advisor
-      @advisor_flight_deck.load_page
+      @advisor_flight_deck.load_advisor_page
       @advisor_flight_deck.disable_drop_in_advising_role @test.drop_in_advisor.dept_memberships.first
       @advisor_flight_deck.enable_drop_in_advising_role @test.drop_in_advisor.dept_memberships.first
       @drop_in_advisors << @test.drop_in_advisor unless @drop_in_advisors.map(&:uid).include? @test.drop_in_advisor.uid
@@ -1133,12 +1133,12 @@ describe 'BOA' do
 
     context 'when the user is a scheduler' do
 
-      it 'is not offered in the header' do
+      it 'is offered in the header' do
         @scheduler_intake_desk.click_header_dropdown
         expect(@scheduler_intake_desk.settings_link?).to be false
       end
 
-      it 'cannot be reached' do
+      it 'cannot be reached in its admin flavor' do
         @scheduler_flight_deck.load_page
         @scheduler_flight_deck.wait_for_title 'Not Found'
       end

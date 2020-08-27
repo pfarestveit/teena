@@ -7,13 +7,17 @@ class BOACFlightDeckPage
   include Page
   include BOACPages
 
-  h2(:my_profile_heading, xpath: '//h2[text()="My Profile"]')
+  h1(:my_profile_heading, xpath: '//h1[text()="Profile"]')
   checkbox(:demo_mode_toggle, id: 'toggle-demo-mode')
   h2(:status_heading, id: 'system-status-header')
 
   # Loads the admin page
   def load_page
     navigate_to "#{BOACUtils.base_url}/admin"
+  end
+
+  def load_advisor_page
+    navigate_to "#{BOACUtils.base_url}/profile"
   end
 
   def drop_in_advising_toggle_el(dept)
@@ -159,6 +163,160 @@ class BOACFlightDeckPage
   # Clicks the cancel button when removing a scheduler
   def click_cancel_remove_scheduler
     wait_for_update_and_click cancel_remove_scheduler_element
+  end
+
+  ### TOPICS ###
+
+  text_field(:topic_search_input, id: 'filter-topics')
+  button(:topic_search_clear_button, xpath: '//button[text()="Clear"]')
+  button(:topic_create_button, id: 'new-note-button')
+  text_field(:topic_name_input, id: 'topic-label')
+  checkbox(:topic_in_notes_cbx, id: 'topic-available-in-notes')
+  checkbox(:topic_in_appts_cbx, id: 'topic-available-in-appointments')
+  button(:topic_save_button, id: 'topic-save')
+  button(:topic_cancel_button, id: 'cancel')
+
+  def label_validation_error
+    div_element(id: 'topic-label-error').attribute('innerText')
+  end
+
+  def label_length_validation
+    span_element(id: 'input-live-help').attribute('innerText')
+  end
+
+  def topic_row_xpath(topic)
+    "//h2[text()=\"Manage Topics\"]/following-sibling::div//tbody//td[text()=\"#{topic.name}\"]/.."
+  end
+
+  def topic_row(topic)
+    row_element(xpath: topic_row_xpath(topic))
+  end
+
+  def topic_deleted?(topic)
+    cell_element(xpath: "#{topic_row_xpath topic}/td[2]").text == 'Yes'
+  end
+
+  def topic_in_notes(topic)
+    cell_element(xpath: "#{topic_row_xpath topic}/td[3]").attribute('innerText').strip
+  end
+
+  def topic_in_notes_count(topic)
+    cell_element(xpath: "#{topic_row_xpath topic}/td[4]").text
+  end
+
+  def topic_in_appts(topic)
+    cell_element(xpath: "#{topic_row_xpath topic}/td[5]").attribute('innerText').strip
+  end
+
+  def topic_in_appts_count(topic)
+    cell_element(xpath: "#{topic_row_xpath topic}/td[6]").text
+  end
+
+  def topic_edit_button(topic)
+    cell_element(xpath: "#{topic_row_xpath topic}/td[7]//button[contains(., 'Edit')]")
+  end
+
+  def topic_delete_button(topic)
+    cell_element(xpath: "#{topic_row_xpath topic}/td[7]//button[contains(., 'Delete')]")
+  end
+
+  def topic_undelete_button(topic)
+    cell_element(xpath: "#{topic_row_xpath topic}/td[7]//button[contains(., 'Un-delete')]")
+  end
+
+  def click_create_topic
+    logger.info 'Clicking the Create topic button'
+    wait_for_load_and_click topic_create_button_element
+  end
+
+  def click_edit_topic(topic)
+    logger.info "Clicking the edit button for topic '#{topic.name}'"
+    wait_for_update_and_click topic_edit_button(topic)
+  end
+
+  def click_save_topic
+    logger.info 'Clicking the Save topic button'
+    wait_for_update_and_click topic_save_button_element
+  end
+
+  def click_cancel_topic
+    logger.info 'Clicking the Cancel topic button'
+    wait_for_update_and_click topic_cancel_button_element
+    topic_name_input_element.when_not_present 1
+  end
+
+  def delete_topic(topic)
+    logger.info "Clicking the delete button for topic '#{topic.name}'"
+    wait_for_update_and_click topic_delete_button(topic)
+    wait_for_update_and_click confirm_delete_or_discard_button_element
+    confirm_delete_or_discard_button_element.when_not_present 1
+  end
+
+  def undelete_topic(topic)
+    logger.info "Clicking the undelete button for topic '#{topic.name}'"
+    wait_for_update_and_click topic_undelete_button(topic)
+    sleep 1
+    topic_undelete_button(topic).when_not_present 1
+  end
+
+  def enter_topic_label(label)
+    logger.info "Entering topic label '#{label}'"
+    wait_for_element_and_type(topic_name_input_element, label)
+  end
+
+  def toggle_topic_in_notes
+    js_click topic_in_notes_cbx_element
+  end
+
+  def check_topic_in_notes
+    toggle_topic_in_notes unless topic_in_notes_cbx_element.selected?
+  end
+
+  def uncheck_topic_in_notes
+    toggle_topic_in_notes if topic_in_notes_cbx_element.selected?
+  end
+
+  def toggle_topic_in_appts
+    js_click topic_in_appts_cbx_element
+  end
+
+  def check_topic_in_appts
+    toggle_topic_in_appts unless topic_in_appts_cbx_element.selected?
+  end
+
+  def uncheck_topic_in_appts
+    toggle_topic_in_appts if topic_in_appts_cbx_element.selected?
+  end
+
+  def create_topic(topic)
+    click_create_topic
+    enter_topic_label topic.name
+    check_topic_in_notes if topic.for_notes
+    check_topic_in_appts if topic.for_appts
+    click_save_topic
+    set_new_topic_id topic
+  end
+
+  def edit_topic(topic)
+    click_edit_topic topic
+    topic.for_notes ? check_topic_in_notes : uncheck_topic_in_notes
+    topic.for_appts ? check_topic_in_appts : uncheck_topic_in_appts
+    click_save_topic
+  end
+
+  def set_new_topic_id(topic)
+    start_time = Time.now
+    wait_until(Utils.short_wait) { BOACUtils.get_topic_id topic }
+    logger.warn "Topic #{topic.id} was created in #{Time.now - start_time} seconds"
+  rescue
+    logger.debug 'Timed out waiting for topic ID'
+    fail
+  end
+
+  def search_for_topic(topic)
+    logger.info "Searching for topic '#{topic.name}'"
+    wait_for_element_and_type(topic_search_input_element, topic.name)
+    sleep Utils.click_wait
   end
 
 end

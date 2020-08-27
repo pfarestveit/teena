@@ -48,6 +48,7 @@ module BOACPages
   link(:feedback_link, text: 'Feedback/Help')
   div(:modal, class: 'modal-content')
   h1(:student_name_heading, id: 'student-name-header')
+  button(:confirm_delete_or_discard_button, id: 'are-you-sure-confirm')
 
   # Clicks the 'Home' link in the header
   def click_home

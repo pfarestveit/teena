@@ -28,7 +28,7 @@ class BOACStudentPage
   div(:preferred_name, :xpath => '//div[@id="student-preferred-name"]/span[2]')
   span(:sid, id: 'student-bio-sid')
   span(:inactive, id: 'student-bio-inactive')
-  span(:academic_standing, id: 'academic-standing-term-latest')
+  span(:academic_standing, xpath: '//span[contains(@id, "academic-standing-term-")]')
   span(:phone, id: 'student-phone-number')
   link(:email, id: 'student-mailto')
   div(:cumulative_units, xpath: '//div[@id="cumulative-units"]/div')

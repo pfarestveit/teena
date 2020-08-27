@@ -28,4 +28,9 @@ class NoteTemplate < TimelineNoteAppt
     result.first if result
   end
 
+  def hard_delete_template
+    sql = "DELETE FROM note_templates WHERE id = '#{@id}'"
+    Utils.query_pg_db(BOACUtils.boac_db_credentials, sql)
+  end
+
 end

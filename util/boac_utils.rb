@@ -377,11 +377,15 @@ class BOACUtils < Utils
     end
     results = query_pg_db(boac_db_credentials, query)
     results.map do |r|
+      dept_memberships = r['depts'].split(',').map do |code|
+        DeptMembership.new(dept: (BOACDepartments::DEPARTMENTS.find { |d| d.code == code }))
+      end
       BOACUser.new(
           uid: r['uid'],
           can_access_advising_data: (r['can_access_advising_data'] == 't'),
           can_access_canvas_data: (r['can_access_canvas_data'] == 't'),
-          depts: r['depts'].split(',')
+          depts: r['depts'].split(','),
+          dept_memberships: dept_memberships
       )
     end
   end
@@ -914,4 +918,17 @@ class BOACUtils < Utils
     end
     advisors.sort_by { |h| h[:uid] }
   end
+
+  ### TOPICS/REASONS ###
+
+  def self.get_topic_id(topic)
+    sql = "SELECT id FROM topics WHERE topic = '#{topic.name}'"
+    topic.id = query_pg_db_field(boac_db_credentials, sql, 'id').last
+  end
+
+  def self.hard_delete_topic(topic)
+    sql = "DELETE FROM topics WHERE id = '#{topic.id}'"
+    query_pg_db(boac_db_credentials, sql)
+  end
+
 end

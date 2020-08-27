@@ -72,6 +72,7 @@ describe 'BOA' do
 
         @cohort_page.perform_admit_search cohort
         cohort.member_data = @cohort_page.expected_admit_search_results(test, cohort.search_criteria)
+        cohort.members = cohort.member_data.map { |d| BOACUser.new(sis_id: d['sid']) }
         expected_results = @cohort_page.expected_sids_by_last_name cohort.member_data
         if cohort.member_data.length.zero?
           @cohort_page.wait_until(Utils.short_wait) { @cohort_page.results_count == 0 }

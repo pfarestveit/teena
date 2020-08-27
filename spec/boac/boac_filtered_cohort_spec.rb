@@ -60,29 +60,14 @@ describe 'BOAC', order: :defined do
         NessieFilterUtils.cohort_by_level(test, cohort.search_criteria)
       end
 
-      it("offers an Export List button for a search #{cohort.search_criteria.list_filters}") { expect(@cohort_page.export_list_button?).to be true }
+      it "shows an Export List button for search #{cohort.search_criteria.list_filters}" do
+        button_enabled = @cohort_page.export_list_button_element.enabled?
+        cohort.members.any? ? (expect(button_enabled).to be true) : (expect(button_enabled).to be false)
+      end
 
       it("allows the advisor to create a cohort using #{cohort.search_criteria.list_filters}") { @cohort_page.create_new_cohort cohort }
 
       it("shows the cohort filters for a cohort using #{cohort.search_criteria.list_filters}") { @cohort_page.verify_student_filters_present cohort }
-
-      it "allows the advisor to export a non-empty list of students in a cohort using #{cohort.search_criteria.list_filters}" do
-        if cohort.members.any?
-          parsed_csv = @cohort_page.export_student_list cohort
-          @cohort_page.verify_student_list_default_export(cohort.members, parsed_csv)
-        else
-          expect(@cohort_page.export_list_button_element.disabled?).to be true
-        end
-      end
-
-      it "allows the advisor to choose columns to include when exporting a cohort using #{cohort.search_criteria.list_filters}" do
-        if cohort.members.any?
-          parsed_csv = @cohort_page.export_custom_student_list cohort
-          @cohort_page.verify_student_list_custom_export(cohort.members, parsed_csv)
-        else
-          expect(@cohort_page.export_list_button_element.disabled?).to be true
-        end
-      end
 
       it "shows the filtered cohort on the homepage with criteria #{cohort.search_criteria.list_filters}" do
         @homepage.load_page
@@ -94,6 +79,25 @@ describe 'BOAC', order: :defined do
           @homepage.member_count(cohort) == cohort.members.length
         end
       end
+    end
+  end
+
+  context 'export' do
+
+    before(:all) do
+      # For export tests, pick the most populous cohort
+      @cohort = test.searches.select(&:member_count).sort_by(&:member_count).last
+      @cohort_page.load_cohort @cohort
+    end
+
+    it "allows the advisor to export a non-empty list of students in a cohort" do
+      parsed_csv = @cohort_page.export_student_list @cohort
+      @cohort_page.verify_student_list_default_export(@cohort.members, parsed_csv)
+    end
+
+    it "allows the advisor to choose columns to include when exporting a cohort" do
+      parsed_csv = @cohort_page.export_custom_student_list @cohort
+      @cohort_page.verify_student_list_custom_export(@cohort.members, parsed_csv)
     end
   end
 
