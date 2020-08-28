@@ -164,7 +164,8 @@ class BOACApiStudentPage
       AcademicStanding.new({
                                code: st['status'],
                                descrip: (AcademicStanding::STATUSES.find { |s| s.code == st['status'] }).descrip,
-                               term_id: st['termId']
+                               term_id: st['termId'],
+                               term_name: st['termName']
                            })
     end
   end

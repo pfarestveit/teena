@@ -493,6 +493,7 @@ module BOACFilteredCohortPageFilters
   # @param new_filter_option [String]
   def edit_filter_of_type(filter_key, new_filter_option)
     logger.debug "#{filter_controls_xpath filter_key}//button[contains(.,'Edit')]"
+    sleep Utils.click_wait
     wait_for_update_and_click button_element(xpath: "#{filter_controls_xpath filter_key}//button[contains(.,'Edit')]")
     choose_edit_filter_sub_option(filter_key, new_filter_option)
   end
@@ -510,7 +511,7 @@ module BOACFilteredCohortPageFilters
   def confirm_filter_edit(filter_name)
     el = button_element(xpath: "#{filter_controls_xpath filter_name}//button[contains(.,'Update')]")
     wait_for_update_and_click el
-    el.when_not_present 1
+    el.when_not_present 2
   end
 
   # Saves an edit to the first filter of a given type

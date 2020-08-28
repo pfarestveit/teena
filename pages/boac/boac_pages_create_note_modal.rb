@@ -43,6 +43,7 @@ module BOACPagesCreateNoteModal
   def topic_options
     wait_for_update_and_click add_topic_select_element
     wait_until(1) { add_topic_select_element.options.any? }
+    sleep Utils.click_wait
     (topic_option_elements.map { |el| el.attribute 'value' }).delete_if &:empty?
   end
 
@@ -180,7 +181,6 @@ module BOACPagesCreateNoteModal
 
   button(:new_note_modal_cancel_button, id: 'cancel-new-note-modal')
   button(:new_note_cancel_button, id: 'create-note-cancel')
-  button(:confirm_delete_or_discard_button, id: 'are-you-sure-confirm')
   button(:cancel_delete_or_discard_button, id: 'are-you-sure-cancel')
 
   # Clicks the cancel new note button when the new note modal is in reduced size

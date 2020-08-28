@@ -264,7 +264,7 @@ describe 'A BOA advisor' do
       it('cannot access the passenger manifest page') { expect(@homepage.pax_manifest_link?).to be false }
 
       it 'cannot toggle demo mode' do
-        @settings_page.load_page
+        @settings_page.load_advisor_page
         @settings_page.my_profile_heading_element.when_visible Utils.short_wait
         expect(@settings_page.demo_mode_toggle?).to be false
       end
@@ -448,7 +448,7 @@ describe 'A BOA advisor' do
       it('cannot access the passenger manifest page') { expect(@homepage.pax_manifest_link?).to be false }
 
       it 'cannot toggle demo mode' do
-        @settings_page.load_page
+        @settings_page.load_advisor_page
         @settings_page.my_profile_heading_element.when_visible Utils.short_wait
         expect(@settings_page.demo_mode_toggle?).to be false
       end
@@ -643,13 +643,13 @@ describe 'A BOA advisor' do
       it('cannot access the passenger manifest page') { expect(@homepage.pax_manifest_link?).to be false }
 
       it 'cannot toggle demo mode' do
-        @settings_page.load_page
+        @settings_page.load_advisor_page
         @settings_page.my_profile_heading_element.when_visible Utils.short_wait
         expect(@settings_page.demo_mode_toggle?).to be false
       end
 
       it('cannot post status alerts') do
-        @settings_page.load_page
+        @settings_page.load_advisor_page
         @settings_page.my_profile_heading_element.when_visible Utils.short_wait
         expect(@settings_page.status_heading?).to be false
       end

@@ -205,7 +205,7 @@ describe 'BOAC' do
         it("delivers no file to an anonymous user when hitting the attachment download endpoint for #{identifier}") { expect(no_file).to be true }
       end
     else
-      it('found no downloadable attachments') { fail }
+      it('found no downloadable attachments') { fail } unless test.test_students.empty?
     end
 
   rescue => e

@@ -424,6 +424,10 @@ class BOACTestConfig < TestConfig
     set_test_admits CONFIG['sis_data_max_users']
   end
 
+  def topic_mgmt
+    set_base_configs BOACDepartments::L_AND_S
+  end
+
   # Config for user management tests on the admin page
   def user_mgmt
     set_dept BOACDepartments::ADMIN

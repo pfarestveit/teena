@@ -592,9 +592,9 @@ class NessieFilterUtils < NessieUtils
     {
         table: 'student.student_majors',
         col: 'major',
-        select: '(ARRAY_AGG(student.student_majors.major))[1] AS major',
+        select: '(ARRAY_AGG(student.student_majors.major ORDER BY student.student_majors.major))[1] AS major',
         order_by: 'major',
-        group_by: true
+        group_by: false
     }
   end
 

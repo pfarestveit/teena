@@ -1,11 +1,12 @@
 class Topic
 
-  attr_accessor :name, :for_notes, :for_appts
+  attr_accessor :name, :for_notes, :for_appts, :id
 
-  def initialize(name, for_notes, for_appts)
+  def initialize(name, for_notes, for_appts, id=nil)
     @name = name
     @for_notes = for_notes
     @for_appts = for_appts
+    @id = id
   end
 
   TOPICS = [
