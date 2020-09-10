@@ -196,7 +196,7 @@ module Page
   def external_link_valid?(link, expected_page_title)
     begin
       original_window = @driver.window_handle
-      wait_for_load_and_click link
+      wait_for_load_and_click_js link
       sleep 2
       if @driver.window_handles.length > 1
         @driver.switch_to.window @driver.window_handles.last

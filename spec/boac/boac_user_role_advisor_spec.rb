@@ -216,9 +216,6 @@ describe 'A BOA advisor' do
       it('sees a Probation filter') { expect(@cohort_page.new_filter_option('coeProbation').visible?).to be false }
       it('sees an Underrepresented Minority (COE) filter') { expect(@cohort_page.new_filter_option('coeUnderrepresented').visible?).to be false }
 
-      # TODO - can filter for my students
-      # need a cohort filter with plans
-
       context 'with results' do
 
         before(:all) do
@@ -414,9 +411,6 @@ describe 'A BOA advisor' do
       it('sees a Probation filter') { expect(@cohort_page.new_filter_option('coeProbation').visible?).to be true }
       it('sees an Underrepresented Minority (COE) filter') { expect(@cohort_page.new_filter_option('coeUnderrepresented').visible?).to be true }
 
-      # TODO - can filter for my students
-      # need a cohort filter with plans
-
     end
 
     context 'performing a search' do
@@ -609,9 +603,6 @@ describe 'A BOA advisor' do
       it('sees a Probation filter') { expect(@cohort_page.new_filter_option('coeProbation').visible?).to be false }
       it('sees an Underrepresented Minority (COE) filter') { expect(@cohort_page.new_filter_option('coeUnderrepresented').visible?).to be false }
 
-      # TODO - can filter for my students
-      # need a cohort filter with plans
-
     end
 
     context 'performing a search' do
@@ -658,6 +649,64 @@ describe 'A BOA advisor' do
         @api_admin_page.load_cachejob
         @api_admin_page.unauth_msg_element.when_visible Utils.medium_wait
       end
+    end
+  end
+
+  context 'with assigned students' do
+
+    before(:all) do
+      plan = '25000U'
+      @test.advisor = NessieUtils.get_my_students_test_advisor plan
+      my_students_filter = CohortFilter.new
+      my_students_filter.set_custom_filters cohort_owner_academic_plans: [plan]
+      @my_students_cohort = FilteredCohort.new(search_criteria: my_students_filter, name: "My Students cohort #{@test.id}")
+
+      @homepage.load_page
+      @homepage.log_out
+      @homepage.dev_auth @test.advisor
+    end
+
+    it 'can perform a cohort search for My Students' do
+      @homepage.click_sidebar_create_filtered
+      @cohort_page.perform_student_search @my_students_cohort
+      @cohort_page.set_cohort_members(@my_students_cohort, @test)
+      expected = @my_students_cohort.members.map &:sis_id
+      visible = @cohort_page.visible_sids
+      @cohort_page.wait_until(1, "Missing: #{expected - visible}. Unexpected: #{visible - expected}") do
+        visible.sort == expected.sort
+      end
+    end
+
+    it 'can export a My Students cohort with default columns' do
+      parsed_csv = @cohort_page.export_student_list @my_students_cohort
+      @cohort_page.verify_student_list_default_export(@my_students_cohort.members, parsed_csv)
+    end
+
+    it 'can export a My Students cohort with custom columns' do
+      parsed_csv = @cohort_page.export_custom_student_list @my_students_cohort
+      @cohort_page.verify_student_list_custom_export(@my_students_cohort.members, parsed_csv)
+    end
+
+    it 'has a My Students cohort visible to others' do
+      @cohort_page.create_new_cohort @my_students_cohort
+      @cohort_page.log_out
+      @homepage.dev_auth
+      @cohort_page.load_cohort @my_students_cohort
+      expected = @my_students_cohort.members.map &:sis_id
+      visible = @cohort_page.visible_sids
+      @cohort_page.wait_until(1, "Missing: #{expected - visible}. Unexpected: #{visible - expected}") do
+        visible.sort == expected.sort
+      end
+    end
+
+    it 'has a My Students cohort that can be exported with default columns by another user' do
+      parsed_csv = @cohort_page.export_student_list @my_students_cohort
+      @cohort_page.verify_student_list_default_export(@my_students_cohort.members, parsed_csv)
+    end
+
+    it 'has a My Students cohort that can be exported with custom columns by another user' do
+      parsed_csv = @cohort_page.export_custom_student_list @my_students_cohort
+      @cohort_page.verify_student_list_custom_export(@my_students_cohort.members, parsed_csv)
     end
   end
 end

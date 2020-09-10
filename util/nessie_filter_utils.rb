@@ -167,9 +167,9 @@ class NessieFilterUtils < NessieUtils
 
   def self.my_students_cond(filter, conditions_list, test)
     if filter.cohort_owner_academic_plans&.any?
-      conditions_list << "boac_advisor.advisor_students.advisor_sid = #{test.advisor.sis_id}"
+      conditions_list << "boac_advisor.advisor_students.advisor_sid = '#{test.advisor.sis_id}'"
       unless filter.cohort_owner_academic_plans.include? 'All'
-        conditions_list << "boac_advisor.advisor_students.academic_plan_code IN (#{in_op filter.cohort_owner_academic_plans.join(', ')})"
+        conditions_list << "boac_advisor.advisor_students.academic_plan_code IN (#{in_op filter.cohort_owner_academic_plans})"
       end
     end
   end

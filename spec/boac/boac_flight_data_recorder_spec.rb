@@ -7,20 +7,21 @@ all_users = BOACUtils.get_authorized_users.select &:active
 all_non_admin_users = all_users.reject &:is_admin
 
 admin = all_users.find &:is_admin
+logger.warn "Admin UID #{admin.uid}"
 
 director = all_non_admin_users.find { |u| u.dept_memberships.find { |m| m.advisor_role == AdvisorRole::DIRECTOR } }
 director_depts = director.dept_memberships.select { |m| m.advisor_role == AdvisorRole::DIRECTOR }.map(&:dept)
+logger.warn "Director UID #{director.uid}"
 
 advisor = all_non_admin_users.find do |u|
   u.dept_memberships.select { |m| m.advisor_role == AdvisorRole::ADVISOR }.reject { |m| m.advisor_role == AdvisorRole::DIRECTOR }.any?
 end
+logger.warn "Advisor UID #{advisor.uid}"
 
 scheduler = all_non_admin_users.find do |u|
   u.dept_memberships.select { |m| m.advisor_role == AdvisorRole::SCHEDULER }.reject { |m| m.advisor_role == AdvisorRole::DIRECTOR }.reject { |m| m.advisor_role == AdvisorRole::ADVISOR }.any?
 end
-
-logger.warn "Admin UID #{admin.uid}, director UID #{director.uid}, advisor UID #{advisor.uid}, scheduler UID #{scheduler.uid}"
-
+logger.warn "Scheduler UID #{scheduler.uid}"
 
 
 describe 'BOA flight data recorder' do
