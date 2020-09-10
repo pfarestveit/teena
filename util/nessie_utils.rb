@@ -680,4 +680,21 @@ class NessieUtils < Utils
     sids
   end
 
+  ### ADVISORS ###
+
+  def self.get_my_students_test_advisor(academic_plan_code)
+    sql = "SELECT DISTINCT boac_advisor.advisor_students.advisor_sid AS sid,
+	                COUNT(boac_advisor.advisor_students.student_uid) AS count,
+	                boac_advisor.advisor_roles.uid AS uid
+           FROM boac_advisor.advisor_students
+           JOIN boac_advisor.advisor_roles
+	           ON boac_advisor.advisor_students.advisor_sid = boac_advisor.advisor_roles.sid
+           WHERE boac_advisor.advisor_students.academic_plan_code = '#{academic_plan_code}'
+           GROUP BY boac_advisor.advisor_students.advisor_sid, boac_advisor.advisor_roles.uid
+           HAVING COUNT(boac_advisor.advisor_students.student_uid) > 200
+           ORDER BY count ASC LIMIT 1;"
+    results = Utils.query_pg_db(nessie_pg_db_credentials, sql)
+    results.map { |r| BOACUser.new sis_id: r['sid'], uid: r['uid'] }.first
+  end
+
 end
