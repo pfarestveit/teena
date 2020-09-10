@@ -4,10 +4,11 @@ describe 'bCourses Course Captures tool' do
 
   include Logging
 
-  begin
+  test = JunctionTestConfig.new
+  tests = test.course_capture
+  logger.debug "There are #{tests.length} tests"
 
-    # The test data file should contain data variations such as cross-listings and courses with multiple primary sections
-    test_user_data = JunctionUtils.load_junction_test_user_data.select { |user| user['tests']['course_capture'] }
+  begin
 
     @driver = Utils.launch_browser
     @course_captures_page = Page::JunctionPages::CanvasCourseCapturesPage.new @driver
@@ -15,7 +16,8 @@ describe 'bCourses Course Captures tool' do
     @canvas = Page::CanvasPage.new @driver
     @canvas.log_in(@cal_net, Utils.super_admin_username, Utils.super_admin_password)
 
-    test_user_data.each do |data|
+    # The test data file should contain data variations such as cross-listings and courses with multiple primary sections
+    tests.each do |data|
 
       begin
 
@@ -62,7 +64,7 @@ describe 'bCourses Course Captures tool' do
                     it("shows UID #{user.uid} no section code on site ID #{course.site_id}") { expect(visible_section_code).to be nil }
                   end
 
-                  if data == test_user_data.first
+                  if data == tests.first
 
                     # Verify that the alert message, help page link, and the sample YouTube video ID are present
                     has_you_tube_alert = @course_captures_page.you_tube_alert_elements[index]

@@ -324,6 +324,7 @@ module Page
   end
 
   def go_back
+    logger.debug 'Clicking Back button'
     sleep Utils.click_wait
     @driver.navigate.back
   end

@@ -6,8 +6,8 @@ describe 'bCourses E-Grades Export' do
 
   begin
 
-    test_courses_data = JunctionUtils.load_junction_test_course_data.select { |course| course['tests']['e_grades_api'] }
-    courses = test_courses_data.map { |c| Course.new c }
+    test = JunctionTestConfig.new
+    test.e_grades_api
     letter_grades = %w(A+ A A- B+ B B- C+ C C- D+ D D- F)
 
     # If using Chrome, use a new Chrome profile
@@ -22,13 +22,14 @@ describe 'bCourses E-Grades Export' do
 
     @canvas.log_in(@cal_net, Utils.super_admin_username, Utils.super_admin_password)
 
-    courses.each_with_index do |course, i|
+    test.courses.each_with_index do |course, i|
 
       begin
 
         # Get SIS roster
-        instructor = User.new course.teachers.first
-        primary_section = Section.new course.sections.first
+        test.set_sis_teacher course
+        instructor = test.set_sis_teacher course
+        primary_section = test.set_course_sections(course).first
         @splash_page.load_page
         @splash_page.basic_auth(instructor.uid, @cal_net)
         rosters_api = ApiAcademicsRosterPage.new @driver

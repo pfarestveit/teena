@@ -4,23 +4,16 @@ describe 'bCourses Find a Person to Add', order: :defined do
 
   include Logging
 
-  # Load test course data
-  test_course_data = JunctionUtils.load_junction_test_course_data.find { |course| course['tests']['course_add_user'] }
-  course = Course.new test_course_data
-  teacher_1 = User.new course.teachers.first
-  sections = course.sections.map { |section_data| Section.new section_data }
-  sections_for_site = sections.select { |section| section.include_in_site }
+  test = JunctionTestConfig.new
+  test.add_user
 
-  # Load test user data
-  test_user_data = JunctionUtils.load_junction_test_user_data.select { |user| user['tests']['course_add_user'] }
-  teacher_2 = User.new test_user_data.find { |data| data['role'] == 'Teacher' }
-  lead_ta = User.new test_user_data.find { |data| data['role'] == 'Lead TA' }
-  ta = User.new test_user_data.find { |data| data['role'] == 'TA' }
-  designer = User.new test_user_data.find { |data| data['role'] == 'Designer' }
-  observer = User.new test_user_data.find { |data| data['role'] == 'Observer' }
-  reader = User.new test_user_data.find { |data| data['role'] == 'Reader' }
-  student = User.new test_user_data.find { |data| data['role'] == 'Student' }
-  waitlist = User.new test_user_data.find { |data| data['role'] == 'Waitlist Student' }
+  # Load test course data
+  test = JunctionTestConfig.new
+  test.add_user
+  course = test.courses.first
+  sections = test.set_course_sections(course).select(&:include_in_site)
+  sis_teacher = test.set_sis_teacher course
+  users_to_add = [test.manual_teacher, test.lead_ta, test.ta, test.designer, test.reader, test.observer, test.students.first, test.wait_list_student]
 
   before(:all) do
     @driver = Utils.launch_browser
@@ -31,7 +24,7 @@ describe 'bCourses Find a Person to Add', order: :defined do
     @course_add_user_page = Page::JunctionPages::CanvasCourseAddUserPage.new @driver
 
     @canvas.log_in(@cal_net, Utils.super_admin_username, Utils.super_admin_password)
-    @canvas.masquerade_as teacher_1
+    @canvas.masquerade_as sis_teacher
   end
 
   after(:all) { Utils.quit_browser @driver }
@@ -67,7 +60,7 @@ describe 'bCourses Find a Person to Add', order: :defined do
   describe 'customizations in Add People' do
 
     before(:all) do
-      @create_course_site_page.provision_course_site(@driver, course, teacher_1, sections_for_site)
+      @create_course_site_page.provision_course_site(@driver, course, sis_teacher, sections)
       @canvas.publish_course_site course
       @canvas.load_users_page course
     end
@@ -91,7 +84,7 @@ describe 'bCourses Find a Person to Add', order: :defined do
   describe 'search' do
 
     before(:all) do
-      @canvas.masquerade_as(teacher_1, course)
+      @canvas.masquerade_as(sis_teacher, course)
       @canvas.load_users_page course
       @canvas.click_find_person_to_add @driver
     end
@@ -147,18 +140,18 @@ describe 'bCourses Find a Person to Add', order: :defined do
     it 'offers the right course site sections' do
       @course_add_user_page.search('Bear', 'Last Name, First Name')
       @course_add_user_page.wait_until(Utils.medium_wait) { @course_add_user_page.uid_results.include? "#{Utils.oski_uid}" }
-      expect(@course_add_user_page.course_section_options.length).to eql(sections_for_site.length)
+      expect(@course_add_user_page.course_section_options.length).to eql(sections.length)
     end
   end
 
   describe 'import users to course site' do
 
     before(:all) do
-      @section_to_test = sections_for_site.first
-      @canvas.masquerade_as(teacher_1, course)
+      @section_to_test = sections.first
+      @canvas.masquerade_as(sis_teacher, course)
       @canvas.load_users_page course
       @canvas.click_find_person_to_add @driver
-      [teacher_2, lead_ta, ta, designer, reader, student, waitlist, observer].each do |user|
+      users_to_add.each do |user|
         @course_add_user_page.search(user.uid, 'CalNet UID')
         @course_add_user_page.add_user_by_uid(user, @section_to_test)
       end
@@ -166,12 +159,12 @@ describe 'bCourses Find a Person to Add', order: :defined do
       @canvas.load_all_students course
     end
 
-    [teacher_2, lead_ta, ta, designer, reader, student, waitlist, observer].each do |user|
+    users_to_add.each do |user|
       it "shows an added #{user.role} user in the course site roster" do
         @canvas.search_user_by_canvas_id user
         @canvas.wait_until(Utils.medium_wait) { @canvas.roster_user? user.canvas_id }
-        expect(@canvas.roster_user_sections(user.canvas_id)).to include("#{@section_to_test.course} #{@section_to_test.label}") unless user.role == 'Observer'
-        (user.role == 'Observer') ?
+        expect(@canvas.roster_user_sections(user.canvas_id)).to include("#{@section_to_test.course} #{@section_to_test.label}") unless user == test.observer
+        (user == test.observer) ?
             (expect(@canvas.roster_user_roles(user.canvas_id)).to include('Observing: nobody')) :
             (expect(@canvas.roster_user_roles(user.canvas_id)).to include(user.role))
       end
@@ -181,27 +174,27 @@ describe 'bCourses Find a Person to Add', order: :defined do
   describe 'user role restrictions' do
 
     before(:all) do
-      @canvas.masquerade_as(teacher_1, course)
+      @canvas.masquerade_as(sis_teacher, course)
       @canvas.publish_course_site course
     end
 
-    [lead_ta, ta, designer, reader, student, waitlist, observer].each do |user|
+    users_to_add.each do |user|
 
       it "allows a course #{user.role} to access the tool and add a subset of roles to a course site if permitted to do so" do
         @canvas.masquerade_as(user, course)
-        if ['Lead TA', 'TA'].include? user.role
+        if [test.lead_ta, test.ta].include? user
           @canvas.load_users_page course
           @canvas.click_find_person_to_add @driver
           @course_add_user_page.search('Oski', 'Last Name, First Name')
           @course_add_user_page.wait_until(Utils.medium_wait) { @course_add_user_page.user_role_options == ['Student', 'Waitlist Student', 'Observer'] }
-        elsif user.role == 'Designer'
+        elsif user == test.designer
           @canvas.load_users_page course
           @canvas.click_find_person_to_add @driver
           @course_add_user_page.no_access_msg_element.when_visible Utils.medium_wait
-        elsif user.role == 'Reader'
+        elsif user == test.reader
           @course_add_user_page.load_embedded_tool(@driver, course)
           @course_add_user_page.no_sections_msg_element.when_visible Utils.medium_wait
-        elsif ['Student', 'Waitlist Student', 'Observer'].include? user.role
+        elsif [test.students.first, test.wait_list_student, test.observer].include? user.role
           @course_add_user_page.load_embedded_tool(@driver, course)
           @course_add_user_page.no_access_msg_element.when_visible Utils.medium_wait
         end

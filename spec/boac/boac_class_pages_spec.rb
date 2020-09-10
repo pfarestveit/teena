@@ -93,7 +93,7 @@ describe 'BOAC' do
                           api_section_page.meetings.each do |meet|
                             index = api_section_page.meetings.index meet
                             visible_meeting_data = @class_page.visible_meeting_data index
-                            expected_location = "#{meet[:location]}#{' ' if meet[:location] && meet[:mode]}#{('— ' + meet[:mode]) if meet[:mode]}"
+                            expected_location = "#{meet[:location]}#{' — ' if meet[:location] && meet[:mode]}#{meet[:mode]}"
                             it("shows the right instructors for meeting #{index} for #{class_test_case}") { expect(visible_meeting_data[:instructors]).to eql(meet[:instructors]) }
                             it("shows the right days for meeting #{index} for #{class_test_case}") { expect(visible_meeting_data[:days]).to eql(meet[:days]) }
                             it("shows the right time for meeting #{index} for #{class_test_case}") { expect(visible_meeting_data[:time]).to eql(meet[:time]) }

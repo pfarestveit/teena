@@ -4,24 +4,15 @@ describe 'bCourses E-Grades Export', order: :defined do
 
   include Logging
 
-  # Load test course data
-  test_course_data = JunctionUtils.load_junction_test_course_data.find { |course| course['tests']['e_grades_export'] }
-  course = Course.new test_course_data
-  teacher = User.new course.teachers.first
-  sections = course.sections.map { |section_data| Section.new section_data }
-  sections_for_site = sections.select { |section| section.include_in_site }
-  primary_section = sections_for_site.first
-  secondary_section = sections_for_site.last if sections_for_site.length > 1
+  test = JunctionTestConfig.new
+  test.e_grades_export
 
-  # Load test user data
-  test_user_data = JunctionUtils.load_junction_test_user_data.select { |user| user['tests']['e_grades_export'] }
-  lead_ta = User.new test_user_data.find { |data| data['role'] == 'Lead TA' }
-  ta = User.new test_user_data.find { |data| data['role'] == 'TA' }
-  designer = User.new test_user_data.find { |data| data['role'] == 'Designer' }
-  observer = User.new test_user_data.find { |data| data['role'] == 'Observer' }
-  reader = User.new test_user_data.find { |data| data['role'] == 'Reader' }
-  student = User.new test_user_data.find { |data| data['role'] == 'Student' }
-  waitlist = User.new test_user_data.find { |data| data['role'] == 'Waitlist Student' }
+  course = test.courses.first
+  sections = test.set_course_sections(course).select(&:include_in_site)
+  teacher = test.set_sis_teacher course
+  non_teachers = [test.lead_ta, test.ta, test.designer, test.reader, test.observer, test.students.first, test.wait_list_student]
+  primary_section = sections.first
+  secondary_section = sections.last if sections.length > 1
 
   before(:all) do
     @driver = Utils.launch_browser
@@ -349,26 +340,26 @@ describe 'bCourses E-Grades Export', order: :defined do
   describe 'user role restrictions' do
 
     before(:all) do
-      [lead_ta, ta, designer, reader, student, waitlist, observer].each do |user|
+      non_teachers.each do |user|
         @course_add_user_page.load_embedded_tool(@driver, course)
         @course_add_user_page.search(user.uid, 'CalNet UID')
         @course_add_user_page.add_user_by_uid(user, primary_section)
       end
     end
 
-    [lead_ta, ta, designer, reader, student, waitlist, observer].each do |user|
+    non_teachers.each do |user|
       it "allows a course #{user.role} to access the tool if permitted to do so" do
         @canvas.masquerade_as(user, course)
         logger.debug "Checking a #{user.role}'s access to the tool"
         @e_grades_export_page.load_embedded_tool(@driver, course)
 
-        if ['Lead TA', 'TA', 'Reader'].include? user.role
+        if [test.lead_ta, test.ta, test.reader].include? user
           @canvas.load_gradebook course
           @canvas.click_e_grades_export_button
           @e_grades_export_page.switch_to_canvas_iframe
           @e_grades_export_page.not_auth_msg_element.when_visible Utils.medium_wait
 
-        elsif ['Designer', 'Student', 'Waitlist Student', 'Observer'].include? user.role
+        elsif [test.designer, test.students.first, test.wait_list_student, test.observer].include? user
           @e_grades_export_page.load_embedded_tool(@driver, course)
           @e_grades_export_page.not_auth_msg_element.when_visible Utils.medium_wait
         end

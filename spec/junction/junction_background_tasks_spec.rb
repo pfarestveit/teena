@@ -8,7 +8,7 @@ describe 'Junction background tasks' do
 
     config = JunctionTestConfig.new
     config.background_jobs_load_test
-    test_data = config.test_course_data.dup * JunctionUtils.background_job_multiplier
+    courses = config.courses.dup * JunctionUtils.background_job_multiplier
     @driver = Utils.launch_browser
 
     @splash_page = Page::JunctionPages::SplashPage.new @driver
@@ -21,17 +21,16 @@ describe 'Junction background tasks' do
     @canvas_page.log_in(@cal_net_page, Utils.super_admin_username, Utils.super_admin_password)
     @splash_page.basic_auth config.admin.uid
 
-    tests = test_data.map do |data|
+    tests = config.courses.map do |course|
 
       begin
 
         # Open a separate browser tab for each of the test courses
-        window = config.test_course_data.index(data).zero? ? @driver.window_handle : @canvas_page.open_new_window
-        course = Course.new data
+        window = config.courses.index(course).zero? ? @driver.window_handle : @canvas_page.open_new_window
         test = {
           :course => course,
-          :teacher => User.new(course.teachers.first),
-          :sections => (course.sections.map { |section| Section.new section }),
+          :teacher => config.set_sis_teacher(course),
+          :sections => config.set_course_sections(course),
           :window => window
         }
 
