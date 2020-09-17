@@ -4,18 +4,15 @@ describe 'bCourses Mailgun mailing lists', order: :defined do
 
   include Logging
 
-  test_id = "#{Utils.get_test_id}"
+  test = JunctionTestConfig.new
+  test.mailing_lists
   timeout = Utils.short_wait
 
-  course_site_1 = Course.new({title: "QA Mailing List 1 #{test_id}", code: "QA admin #{test_id}"})
-  course_site_2 = Course.new({title: "QA Mailing List 2 #{test_id}", code: "QA admin #{test_id}"})
-  course_site_3 = Course.new({title: "QA Mailing List 3 #{test_id}", code: "QA instructor #{test_id}"})
+  course_site_1 = Course.new({title: "QA Mailing List 1 #{test.id}", code: "QA admin #{test.id}"})
+  course_site_2 = Course.new({title: "QA Mailing List 2 #{test.id}", code: "QA admin #{test.id}"})
+  course_site_3 = Course.new({title: "QA Mailing List 3 #{test.id}", code: "QA instructor #{test.id}"})
 
-  # Load test user data
-  user_test_data = JunctionUtils.load_junction_test_user_data.select { |data| data['tests']['mailing_lists'] }
-  users = user_test_data.map { |data| User.new(data) if ['Teacher', 'Designer', 'Lead TA', 'TA', 'Observer', 'Reader', 'Student'].include? data['role'] }.compact
-  teacher = users.find { |user| user.role == 'Teacher' }
-  students = users.select { |user| user.role == 'Student' }
+  users = [test.manual_teacher, test.designer, test.lead_ta, test.ta, test.observer, test.reader, test.students].flatten
 
   before(:all) do
     @driver = Utils.launch_browser
@@ -30,9 +27,9 @@ describe 'bCourses Mailgun mailing lists', order: :defined do
 
     # Create three course sites in the Official Courses sub-account
     @canvas_page.log_in(@cal_net_page, Utils.super_admin_username, Utils.super_admin_password)
-    @canvas_page.create_generic_course_site(Utils.canvas_official_courses_sub_account, course_site_1, users, test_id)
-    @canvas_page.create_generic_course_site(Utils.canvas_official_courses_sub_account, course_site_2, [teacher], test_id)
-    @canvas_page.create_generic_course_site(Utils.canvas_official_courses_sub_account, course_site_3, users, test_id)
+    @canvas_page.create_generic_course_site(Utils.canvas_official_courses_sub_account, course_site_1, users, test.id)
+    @canvas_page.create_generic_course_site(Utils.canvas_official_courses_sub_account, course_site_2, [test.manual_teacher], test.id)
+    @canvas_page.create_generic_course_site(Utils.canvas_official_courses_sub_account, course_site_3, users, test.id)
   end
 
   after(:all) { Utils.quit_browser @driver }
@@ -47,7 +44,7 @@ describe 'bCourses Mailgun mailing lists', order: :defined do
     it "can be managed by a course #{user.role} if the user has permission to reach the instructor-facing tool" do
       @canvas_page.masquerade_as(user, course_site_1)
       @mailing_list_page.load_embedded_tool(@driver, course_site_1)
-      if ['Teacher', 'Lead TA', 'TA', 'Reader'].include? user.role
+      if [test.manual_teacher, test.lead_ta, test.ta, test.reader].include? user
         logger.debug "Verifying that #{user.role} UID #{user.uid} has access to the instructor-facing mailing list tool"
         @mailing_list_page.create_list_button_element.when_present(Utils.medium_wait)
       else
@@ -156,7 +153,7 @@ describe 'bCourses Mailgun mailing lists', order: :defined do
       end
 
       it 'deletes mailing list memberships for users who have been removed from the site' do
-        @canvas_page.remove_users_from_course(course_site_1, [students[0]])
+        @canvas_page.remove_users_from_course(course_site_1, [test.students[0]])
         JunctionUtils.clear_cache(@driver, @splash_page, @toolbox_page)
         @mailing_lists_page.load_embedded_tool @driver
         @mailing_lists_page.search_for_list course_site_1.site_id
@@ -165,8 +162,8 @@ describe 'bCourses Mailgun mailing lists', order: :defined do
       end
 
       it 'creates mailing list memberships for users who have been restored to the site' do
-        @canvas_page.add_users(course_site_1, [students[0]])
-        @canvas_page.masquerade_as(students[0], course_site_1)
+        @canvas_page.add_users(course_site_1, [test.students[0]])
+        @canvas_page.masquerade_as(test.students[0], course_site_1)
         @canvas_page.stop_masquerading
         JunctionUtils.clear_cache(@driver, @splash_page, @toolbox_page)
         @mailing_lists_page.load_embedded_tool @driver
@@ -176,8 +173,8 @@ describe 'bCourses Mailgun mailing lists', order: :defined do
       end
 
       it 'does not create mailing list memberships for site members with the same email addresses as existing mailing list members' do
-        students[1].email = students[0].email
-        @canvas_page.activate_user_and_reset_email [students[1]]
+        test.students[1].email = test.students[0].email
+        @canvas_page.activate_user_and_reset_email [test.students[1]]
         JunctionUtils.clear_cache(@driver, @splash_page, @toolbox_page)
         @mailing_lists_page.load_embedded_tool @driver
         @mailing_lists_page.search_for_list course_site_1.site_id
@@ -192,7 +189,7 @@ describe 'bCourses Mailgun mailing lists', order: :defined do
     before(:all) do
       course_site_2.title = course_site_1.title
       @canvas_page.edit_course_name course_site_2
-      @canvas_page.masquerade_as(teacher, course_site_3)
+      @canvas_page.masquerade_as(test.manual_teacher, course_site_3)
       @mailing_list_page.load_embedded_tool(@driver, course_site_3)
     end
 

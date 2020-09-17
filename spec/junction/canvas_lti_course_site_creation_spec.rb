@@ -4,11 +4,12 @@ describe 'bCourses course site creation' do
 
   include Logging
 
+  test = JunctionTestConfig.new
+  test.course_site_creation
   links_tested = false
 
   begin
     @driver = Utils.launch_browser
-    test_output = JunctionUtils.initialize_junction_test_output(self, ['Term', 'Course', 'Instructor', 'Site ID', 'Teachers', 'Lead TAs', 'TAs', 'Students', 'Waitlist Students'])
 
     @splash_page = Page::JunctionPages::SplashPage.new @driver
     @cal_net_page = Page::CalNetPage.new @driver
@@ -18,27 +19,26 @@ describe 'bCourses course site creation' do
     @roster_photos_page = Page::JunctionPages::CanvasRostersPage.new @driver
     @course_captures_page = Page::JunctionPages::CanvasCourseCapturesPage.new @driver
 
-    test_data = JunctionUtils.load_junction_test_course_data.select { |course| course['tests']['create_course_site'] }
     all_test_courses = []
     sites_created = []
     sites_to_create = []
 
     # OBTAIN SIS DATA FOR ALL TEST COURSES
 
-    test_data.each do |data|
+    test.courses.each do |course|
 
       begin
-        course = Course.new data
-        teacher = User.new(course.teachers.first)
-        sections = course.sections.map { |section_data| Section.new section_data }
-        sections_for_site = sections.select { |section| section.include_in_site }
-        site_abbreviation = nil
-        academic_data = ApiAcademicsCourseProvisionPage.new @driver
-        roster_data = ApiAcademicsRosterPage.new @driver
+        sections = test.set_course_sections course
 
-        test_course = {:course => course, :teacher => teacher, :sections => sections, :sections_for_site => sections_for_site,
-                       :site_abbreviation => site_abbreviation, :academic_data => academic_data, :roster_data => roster_data,
-                       :test_data => data}
+        test_course = {
+            course: course,
+            teacher: test.set_sis_teacher(course),
+            sections: sections,
+            sections_for_site: sections.select(&:include_in_site),
+            site_abbreviation: nil,
+            academic_data: ApiAcademicsCourseProvisionPage.new(@driver),
+            roster_data: ApiAcademicsRosterPage.new(@driver)
+        }
 
         @splash_page.load_page
         @splash_page.basic_auth(test_course[:teacher].uid, @cal_net_page)
@@ -46,9 +46,11 @@ describe 'bCourses course site creation' do
         all_test_courses << test_course
 
         # If a test site was already created for the course today, then skip the site creation steps and just verify the site content
-        (test_course[:course].site_id && test_course[:course].site_created_date && (test_course[:course].site_created_date == "#{Date.today}")) ?
-            sites_created << test_course :
-            sites_to_create << test_course
+        if (test_course[:course].site_id && test_course[:course].site_created_date && (test_course[:course].site_created_date == "#{Date.today}"))
+          sites_created << test_course
+        else
+          sites_to_create << test_course
+        end
 
       rescue => e
         it("encountered an error retrieving SIS data for #{test_course[:course].code}") { fail }
@@ -218,8 +220,6 @@ describe 'bCourses course site creation' do
 
       begin
         section_ids = site[:sections_for_site].map { |s| s.id }
-        expected_enrollment_counts = []
-        actual_enrollment_counts = []
 
         logger.info "Verifying content of #{site[:course].term} #{site[:course].code} site ID #{site[:course].site_id}"
 
@@ -285,9 +285,6 @@ describe 'bCourses course site creation' do
       rescue => e
         it("encountered an error verifying the course site for #{site[:course].code}") { fail }
         Utils.log_error e
-      ensure
-        Utils.add_csv_row(test_output, [site[:course].term, site[:course].code, site[:teacher].uid, site[:course].site_id, expected_teacher_count, expected_lead_ta_count,
-                                        expected_ta_count, expected_student_count, expected_waitlist_count])
       end
     end
 

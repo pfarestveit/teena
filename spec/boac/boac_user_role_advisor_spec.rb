@@ -661,8 +661,6 @@ describe 'A BOA advisor' do
       my_students_filter.set_custom_filters cohort_owner_academic_plans: [plan]
       @my_students_cohort = FilteredCohort.new(search_criteria: my_students_filter, name: "My Students cohort #{@test.id}")
 
-      @homepage.load_page
-      @homepage.log_out
       @homepage.dev_auth @test.advisor
     end
 

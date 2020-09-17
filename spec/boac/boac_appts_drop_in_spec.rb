@@ -1135,7 +1135,7 @@ describe 'BOA' do
 
       it 'is offered in the header' do
         @scheduler_intake_desk.click_header_dropdown
-        expect(@scheduler_intake_desk.settings_link?).to be false
+        expect(@scheduler_intake_desk.settings_link?).to be true
       end
 
       it 'cannot be reached in its admin flavor' do

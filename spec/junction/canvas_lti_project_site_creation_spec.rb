@@ -4,12 +4,8 @@ describe 'bCourses project site', order: :defined do
 
   include Logging
 
-  # Load test user data
-  test_user_data = JunctionUtils.load_junction_test_user_data.select { |u| u['tests']['create_project_site'] }
-  teacher = User.new test_user_data.find { |u| u['role'] == 'Teacher' }
-  ta = User.new test_user_data.find { |u| u['role'] == 'TA' }
-  staff = User.new test_user_data.find { |u| u['role'] == 'Staff' }
-  student = User.new test_user_data.find { |u| u['role'] == 'Student' }
+  test = JunctionTestConfig.new
+  test.projects
   project = Course.new({})
 
   before(:all) do
@@ -24,7 +20,7 @@ describe 'bCourses project site', order: :defined do
     @official_sections_page = Page::JunctionPages::CanvasCourseManageSectionsPage.new @driver
 
     @canvas.log_in(@cal_net, Utils.super_admin_username, Utils.super_admin_password)
-    @canvas.masquerade_as teacher
+    @canvas.masquerade_as test.manual_teacher
   end
 
   after(:all) { Utils.quit_browser @driver }
@@ -32,24 +28,27 @@ describe 'bCourses project site', order: :defined do
   describe 'information' do
 
     before(:all) do
-      @site_creation_page.load_embedded_tool(@driver, teacher)
+      @site_creation_page.load_embedded_tool(@driver, test.manual_teacher)
     end
 
-    it('shows a link to project site help') { expect(@site_creation_page.external_link_valid?(@site_creation_page.projects_learn_more_link_element, 'IT - bDrive vs. Box vs. CalShare vs. bCourses Projects: What\'s the best choice for online collaboration?')).to be true }
+    it('shows a link to project site help') do
+      title = 'IT - bDrive vs. Box vs. CalShare vs. bCourses Projects: What\'s the best choice for online collaboration?'
+      expect(@site_creation_page.external_link_valid?(@site_creation_page.projects_learn_more_link_element, title)).to be true
+    end
 
   end
 
   describe 'creation' do
 
     it 'requires that a site name be no more than 255 characters' do
-      @site_creation_page.load_embedded_tool(@driver, teacher)
+      @site_creation_page.load_embedded_tool(@driver, test.manual_teacher)
       @site_creation_page.click_create_project_site
       @create_project_site_page.create_project_site "#{'A loooooong title' * 15}?"
       @create_project_site_page.name_too_long_msg_element.when_present Utils.short_wait
     end
 
     it 'allows a user to create a project site' do
-      @site_creation_page.load_embedded_tool(@driver, teacher)
+      @site_creation_page.load_embedded_tool(@driver, test.manual_teacher)
       @site_creation_page.click_create_project_site
       @create_project_site_page.create_project_site (project.title = "QA Project Site #{Time.now}")
       @canvas.wait_until(Utils.medium_wait) { @canvas.current_url.include? "#{Utils.canvas_base_url}/courses" }
@@ -89,7 +88,7 @@ describe 'bCourses project site', order: :defined do
 
   describe 'user role restrictions' do
 
-    [ta, staff, student].each do |user|
+    [test.ta, test.staff, test.students.first].each do |user|
 
       it "allows #{user.role} UID #{user.uid} to see a Create a Site button if permitted to do so" do
         @canvas.masquerade_as user

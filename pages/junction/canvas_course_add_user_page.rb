@@ -86,6 +86,7 @@ module Page
       # @param option [String]
       def search(text, option)
         logger.info "Searching for string '#{text}' by #{option}"
+        search_type_element.when_visible Utils.medium_wait
         wait_for_element_and_select_js(search_type_element, option)
         wait_for_element_and_type_js(search_term_element, text)
         wait_for_update_and_click_js search_button_element

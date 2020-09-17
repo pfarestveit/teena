@@ -4,12 +4,10 @@ describe 'bCourses Official Sections tool' do
 
   include Logging
 
-  begin
+  test = JunctionTestConfig.new
+  test.official_sections
 
-    # Load test course data
-    test_data = JunctionUtils.load_junction_test_course_data.select { |course| course['tests']['official_sections'] }
-    test_output = JunctionUtils.initialize_junction_test_output(self, ['UID', 'Semester', 'Course', 'Section Label', 'Section CCN',
-                                                             'Section Schedules', 'Section Locations', 'Section Instructors'])
+  begin
 
     @driver = Utils.launch_browser
     @cal_net = Page::CalNetPage.new @driver
@@ -26,20 +24,22 @@ describe 'bCourses Official Sections tool' do
 
     # COLLECT SIS DATA FOR ALL TEST COURSES
 
-    test_data.each do |data|
+    test.courses.each do |course|
 
       begin
-        course = Course.new data
-        teacher = User.new(course.teachers.first)
-        sections = course.sections.map { |section_data| Section.new section_data }
-        sections_for_site = sections.select { |section| section.include_in_site }
+        sections = test.set_course_sections course
 
-        test_course = {:course => course, :teacher => teacher, :sections => sections, :sections_for_site => sections_for_site,
-                       :site_abbreviation => nil, :academic_data => nil}
+        test_course = {
+            course: course,
+            teacher: test.set_sis_teacher(course),
+            sections: sections,
+            sections_for_site: sections.select(&:include_in_site),
+            site_abbreviation: nil,
+            academic_data: ApiAcademicsCourseProvisionPage.new(@driver)
+        }
 
         @splash_page.load_page
         @splash_page.basic_auth(test_course[:teacher].uid, @cal_net)
-        test_course[:academic_data] = ApiAcademicsCourseProvisionPage.new @driver
         test_course[:academic_data].get_feed @driver
         sites_to_create << test_course
 
@@ -187,10 +187,6 @@ describe 'bCourses Official Sections tool' do
               mode = ui_section_data[:label].split('(').last.gsub(')', '')
               expect(['In Person', 'Online', 'Hybrid', 'Flexible', 'Remote']).to include(mode)
             end
-
-            test_output_row = [site[:teacher].uid, site[:course].term, api_section_data[:code], api_section_data[:label], api_section_data[:id],
-                               api_section_data[:schedules], api_section_data[:locations], api_section_data[:instructors]]
-            Utils.add_csv_row(test_output, test_output_row)
           end
 
           ui_sections_collapsed = @official_sections_page.collapse_available_sections api_course_code
@@ -313,33 +309,25 @@ describe 'bCourses Official Sections tool' do
 
         if site == sites.last
 
-          # Load test user data and add each to the site
-          test_user_data = JunctionUtils.load_junction_test_user_data.select { |user| user['tests']['official_sections'] }
-          lead_ta = User.new test_user_data.find { |data| data['role'] == 'Lead TA' }
-          ta = User.new test_user_data.find { |data| data['role'] == 'TA' }
-          designer = User.new test_user_data.find { |data| data['role'] == 'Designer' }
-          observer = User.new test_user_data.find { |data| data['role'] == 'Observer' }
-          reader = User.new test_user_data.find { |data| data['role'] == 'Reader' }
-          student = User.new test_user_data.find { |data| data['role'] == 'Student' }
-          waitlist = User.new test_user_data.find { |data| data['role'] == 'Waitlist Student' }
-
           @canvas.stop_masquerading
-          [lead_ta, ta, designer, reader, observer, student, waitlist].each do |user|
+
+          user_roles = [test.lead_ta, test.ta, test.designer, test.reader, test.observer, test.students.first, test.wait_list_student]
+          user_roles.each do |user|
             @course_add_user_page.load_embedded_tool(@driver, site[:course])
             @course_add_user_page.search(user.uid, 'CalNet UID')
             @course_add_user_page.add_user_by_uid(user, site[:sections_for_site].first)
           end
 
           # Check each user role's access to the tool
-          [lead_ta, ta, designer, reader, observer, student, waitlist].each do |user|
+          user_roles.each do |user|
             @canvas.masquerade_as(user, site[:course])
             @official_sections_page.load_embedded_tool(@driver, site[:course])
-            if user.role == 'Lead TA'
+            if user == test.lead_ta
               has_right_perms = @official_sections_page.verify_block do
                 @official_sections_page.current_sections_table.when_visible Utils.medium_wait
                 @official_sections_page.edit_sections_button_element.when_visible 1
               end
-            elsif %w(TA Designer).include? user.role
+            elsif [test.ta, test.designer].include? user
               has_right_perms = @official_sections_page.verify_block do
                 @official_sections_page.current_sections_table.when_visible Utils.medium_wait
                 @official_sections_page.edit_sections_button_element.when_not_visible 1
