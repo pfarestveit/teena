@@ -110,6 +110,7 @@ module Page
     # COURSE SITE SETUP
 
     link(:create_site_link, xpath: '//a[contains(text(),"Create a Site")]')
+    link(:create_site_settings_link, xpath: '//div[contains(@class, "profile-tray")]//a[contains(text(),"Create a Site")]')
 
     button(:add_new_course_button, xpath: '//button[@aria-label="Create new course"]')
     text_area(:course_name_input, xpath: '(//form[@aria-label="Add a New Course"]//input)[1]')
@@ -128,6 +129,14 @@ module Page
 
     button(:delete_course_button, xpath: '//button[text()="Delete Course"]')
     li(:delete_course_success, xpath: '//li[contains(.,"successfully deleted")]')
+
+    def click_create_site_settings_link
+      wait_for_update_and_click_js profile_link_element
+      sleep 1
+      wait_for_update_and_click_js profile_form_element
+      wait_for_update_and_click create_site_settings_link_element
+      switch_to_canvas_iframe
+    end
 
     # Creates standard Canvas course site in a given sub-account, publishes it, and adds test users.
     # @param sub_account [String]
