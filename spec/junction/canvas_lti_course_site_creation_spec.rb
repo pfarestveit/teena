@@ -288,6 +288,22 @@ describe 'bCourses course site creation' do
       end
     end
 
+    # VERIFY ACCESS TO TOOL FOR USER ROLES
+
+    @canvas_page.masquerade_as test.students.first
+    student_has_button = @canvas_page.verify_block { @canvas_page.create_site_link_element.when_visible Utils.short_wait }
+    @canvas_page.click_create_site_settings_link
+    student_access_blocked = @create_course_site_page.verify_block { @create_course_site_page.no_access_msg_element.when_visible Utils.short_wait }
+    it('offers no Create a Site button to a student') { expect(student_has_button).to be false }
+    it('denies a student access to the tool') { expect(student_access_blocked).to be true }
+
+    @canvas_page.masquerade_as test.ta
+    ta_has_button = @canvas_page.verify_block { @canvas_page.create_site_link_element.when_visible Utils.short_wait }
+    @canvas_page.click_create_site_settings_link
+    ta_access_permitted = @create_course_site_page.verify_block { @create_course_site_page.create_course_site_link_element.when_visible Utils.short_wait }
+    it('offers a Create a Site button to a TA') { expect(ta_has_button).to be true }
+    it('permits a TA access to the tool') { expect(ta_access_permitted).to be true }
+
   rescue => e
     it('encountered an error') { fail }
     Utils.log_error e

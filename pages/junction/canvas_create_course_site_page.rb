@@ -39,6 +39,8 @@ module Page
       button(:create_site_button, xpath: '//button[text()="Create Course Site"]')
       button(:go_back_button, xpath: '//button[text()="Go Back"]')
 
+      paragraph(:no_access_msg, xpath: '//p[text()="This feature is only available to faculty and staff."]')
+
       # Loads the LTI tool in the Junction context
       def load_standalone_tool
         logger.info 'Loading standalone version of Create Course Site tool'
