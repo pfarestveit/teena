@@ -28,7 +28,7 @@ describe 'bCourses project site', order: :defined do
   describe 'information' do
 
     before(:all) do
-      @site_creation_page.load_embedded_tool(@driver, test.manual_teacher)
+      @site_creation_page.load_embedded_tool test.manual_teacher
     end
 
     it('shows a link to project site help') do
@@ -41,14 +41,14 @@ describe 'bCourses project site', order: :defined do
   describe 'creation' do
 
     it 'requires that a site name be no more than 255 characters' do
-      @site_creation_page.load_embedded_tool(@driver, test.manual_teacher)
+      @site_creation_page.load_embedded_tool test.manual_teacher
       @site_creation_page.click_create_project_site
       @create_project_site_page.create_project_site "#{'A loooooong title' * 15}?"
       @create_project_site_page.name_too_long_msg_element.when_present Utils.short_wait
     end
 
     it 'allows a user to create a project site' do
-      @site_creation_page.load_embedded_tool(@driver, test.manual_teacher)
+      @site_creation_page.load_embedded_tool test.manual_teacher
       @site_creation_page.click_create_project_site
       @create_project_site_page.create_project_site (project.title = "QA Project Site #{Time.now}")
       @canvas.wait_until(Utils.medium_wait) { @canvas.current_url.include? "#{Utils.canvas_base_url}/courses" }
@@ -78,7 +78,7 @@ describe 'bCourses project site', order: :defined do
 
       it "include '#{user_role}' in the Find a Person to Add tool" do
         user = User.new({uid: Utils.oski_uid, role: user_role})
-        @find_person_to_add_page.load_embedded_tool(@driver, project)
+        @find_person_to_add_page.load_embedded_tool project
         @find_person_to_add_page.search(Utils.oski_uid, 'CalNet UID')
         @find_person_to_add_page.add_user_by_uid user
         @find_person_to_add_page.success_msg_element.when_visible Utils.short_wait
@@ -101,7 +101,7 @@ describe 'bCourses project site', order: :defined do
 
       it "allows #{user.role} UID #{user.uid} to navigate to the tool if permitted to do so" do
         @canvas.masquerade_as user
-        @site_creation_page.load_embedded_tool(@driver, user)
+        @site_creation_page.load_embedded_tool user
 
         case user.role
           when 'TA'

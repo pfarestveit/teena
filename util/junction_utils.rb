@@ -139,4 +139,8 @@ class JunctionUtils < Utils
     Utils.config['canvas']['e_grades_export_tool']
   end
 
+  def self.user_prov_tool
+    Utils.config['canvas']['user_prov_tool']
+  end
+
 end

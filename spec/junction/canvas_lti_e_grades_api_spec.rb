@@ -61,8 +61,8 @@ describe 'bCourses E-Grades Export' do
           # Get grades in export CSV
           cutoff = i.even? ? 'C-' : 'A'
           e_grades = grades_are_final ?
-                         @e_grades_export_page.download_final_grades(@driver, course, primary_section, cutoff) :
-                         @e_grades_export_page.download_current_grades(@driver, course, primary_section, cutoff)
+                         @e_grades_export_page.download_final_grades(course, primary_section, cutoff) :
+                         @e_grades_export_page.download_current_grades(course, primary_section, cutoff)
 
           if gradebook_grades.any?
             # Match the grade for each student
@@ -126,8 +126,8 @@ describe 'bCourses E-Grades Export' do
           # Get grades in export CSV
           cutoff = nil
           e_grades = grades_are_final ?
-                         @e_grades_export_page.download_final_grades(@driver, course, primary_section, cutoff) :
-                         @e_grades_export_page.download_current_grades(@driver, course, primary_section, cutoff)
+                         @e_grades_export_page.download_final_grades(course, primary_section, cutoff) :
+                         @e_grades_export_page.download_current_grades(course, primary_section, cutoff)
 
           if gradebook_grades.any?
             # Match the grade for each student

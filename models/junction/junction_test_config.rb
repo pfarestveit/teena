@@ -83,6 +83,11 @@ class JunctionTestConfig < TestConfig
     set_manual_users test
   end
 
+  def user_prov
+    set_global_configs
+    set_manual_users 'user_prov'
+  end
+
   def set_global_configs
     @base_url = CONFIG['base_url']
     @admin = User.new({uid: CONFIG['admin_uid']})

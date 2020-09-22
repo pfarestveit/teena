@@ -73,7 +73,7 @@ describe 'bCourses E-Grades Export', order: :defined do
 
     before(:all) { @canvas.disable_grading_scheme course }
 
-    before(:each) { @e_grades_export_page.load_embedded_tool(@driver, course) }
+    before(:each) { @e_grades_export_page.load_embedded_tool course }
 
     it 'offers a "Course Settings" link' do
       @e_grades_export_page.click_course_settings_button_disabled
@@ -100,7 +100,7 @@ describe 'bCourses E-Grades Export', order: :defined do
 
     before(:all) { @canvas.enable_grading_scheme course }
 
-    before(:each) { @e_grades_export_page.load_embedded_tool(@driver, course) }
+    before(:each) { @e_grades_export_page.load_embedded_tool course }
 
     it 'offers a "Course Settings" link' do
       @e_grades_export_page.click_course_settings_button_enabled
@@ -129,7 +129,7 @@ describe 'bCourses E-Grades Export', order: :defined do
   context 'when no assignment is muted and a grading scheme is enabled' do
 
     before(:all) do
-      @e_grades_export_page.load_embedded_tool(@driver, course)
+      @e_grades_export_page.load_embedded_tool course
       @e_grades_export_page.click_continue
     end
 
@@ -148,7 +148,7 @@ describe 'bCourses E-Grades Export', order: :defined do
     shared_examples 'CSV downloads' do |cutoff|
 
       it 'allows the user to download current grades for a primary section' do
-        csv = @e_grades_export_page.download_current_grades(@driver, course, primary_section, cutoff)
+        csv = @e_grades_export_page.download_current_grades(course, primary_section, cutoff)
         if @current_semester && course.term == @current_semester_name
           expect(csv.any?).to be true
         else
@@ -162,7 +162,7 @@ describe 'bCourses E-Grades Export', order: :defined do
 
       it 'allows the user to download current grades for a secondary section' do
         if secondary_section
-          csv = @e_grades_export_page.download_current_grades(@driver, course, secondary_section, cutoff)
+          csv = @e_grades_export_page.download_current_grades(course, secondary_section, cutoff)
           if @current_semester && course.term == @current_semester_name
             expect(csv.any?).to be true
           else
@@ -176,7 +176,7 @@ describe 'bCourses E-Grades Export', order: :defined do
       end
 
       it 'allows the user to download final grades for a primary section' do
-        csv = @e_grades_export_page.download_final_grades(@driver, course, primary_section, cutoff)
+        csv = @e_grades_export_page.download_final_grades(course, primary_section, cutoff)
         if @current_semester && course.term == @current_semester_name
           expect(csv.any?).to be true
         else
@@ -190,7 +190,7 @@ describe 'bCourses E-Grades Export', order: :defined do
 
       it 'allows the user to download final grades for a secondary section' do
         if secondary_section
-          csv = @e_grades_export_page.download_final_grades(@driver, course, secondary_section, cutoff)
+          csv = @e_grades_export_page.download_final_grades(course, secondary_section, cutoff)
           if @current_semester && course.term == @current_semester_name
             expect(csv.any?).to be true
           else
@@ -222,7 +222,7 @@ describe 'bCourses E-Grades Export', order: :defined do
     before(:all) do
       section_name = "#{primary_section.course} #{primary_section.label}"
       @roster_students = @rosters_api.section_students section_name
-      @e_grades = @e_grades_export_page.download_final_grades(@driver, course, primary_section, 'C-')
+      @e_grades = @e_grades_export_page.download_final_grades(course, primary_section, 'C-')
     end
 
     it 'has the right column headers' do
@@ -305,13 +305,13 @@ describe 'bCourses E-Grades Export', order: :defined do
       end
 
       it 'downloads the override grade rather than the calculated grade in current grades' do
-        e_grades = @e_grades_export_page.download_current_grades(@driver, course, primary_section)
+        e_grades = @e_grades_export_page.download_current_grades(course, primary_section)
         e_grades_row = e_grades.find { |r| r[:id] == @test_student.sis_id }
         expect(e_grades_row[:grade]).to eql(@override_grade)
       end
 
       it 'downloads the override grade rather than the calculated grade in final grades' do
-        e_grades = @e_grades_export_page.download_final_grades(@driver, course, primary_section)
+        e_grades = @e_grades_export_page.download_final_grades(course, primary_section)
         e_grades_row = e_grades.find { |r| r[:id] == @test_student.sis_id }
         expect(e_grades_row[:grade]).to eql(@override_grade)
       end
@@ -326,9 +326,9 @@ describe 'bCourses E-Grades Export', order: :defined do
 
       it 'downloads the calculated grade rather than the override grade' do
         e_grades = if @grades_are_final
-                     @e_grades_export_page.download_final_grades(@driver, course, primary_section)
+                     @e_grades_export_page.download_final_grades(course, primary_section)
                    else
-                     @e_grades_export_page.download_current_grades(@driver, course, primary_section)
+                     @e_grades_export_page.download_current_grades(course, primary_section)
                    end
 
         e_grades_row = e_grades.find { |r| r[:id] == @test_student.sis_id }
@@ -341,7 +341,7 @@ describe 'bCourses E-Grades Export', order: :defined do
 
     before(:all) do
       non_teachers.each do |user|
-        @course_add_user_page.load_embedded_tool(@driver, course)
+        @course_add_user_page.load_embedded_tool course
         @course_add_user_page.search(user.uid, 'CalNet UID')
         @course_add_user_page.add_user_by_uid(user, primary_section)
       end
@@ -351,7 +351,7 @@ describe 'bCourses E-Grades Export', order: :defined do
       it "allows a course #{user.role} to access the tool if permitted to do so" do
         @canvas.masquerade_as(user, course)
         logger.debug "Checking a #{user.role}'s access to the tool"
-        @e_grades_export_page.load_embedded_tool(@driver, course)
+        @e_grades_export_page.load_embedded_tool course
 
         if [test.lead_ta, test.ta, test.reader].include? user
           @canvas.load_gradebook course
@@ -360,7 +360,7 @@ describe 'bCourses E-Grades Export', order: :defined do
           @e_grades_export_page.not_auth_msg_element.when_visible Utils.medium_wait
 
         elsif [test.designer, test.students.first, test.wait_list_student, test.observer].include? user
-          @e_grades_export_page.load_embedded_tool(@driver, course)
+          @e_grades_export_page.load_embedded_tool course
           @e_grades_export_page.not_auth_msg_element.when_visible Utils.medium_wait
         end
       end

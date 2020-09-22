@@ -30,10 +30,9 @@ module Page
       h1(:unexpected_error, xpath: '//h1[contains(text(),"Unexpected Error")]')
 
       # Loads the Official Sections LTI tool within a course site
-      # @param driver [Selenium::WebDriver]
       # @param course [Course]
-      def load_embedded_tool(driver, course)
-        load_tool_in_canvas(driver, "/courses/#{course.site_id}/external_tools/#{JunctionUtils.canvas_official_sections_tool}")
+      def load_embedded_tool(course)
+        load_tool_in_canvas"/courses/#{course.site_id}/external_tools/#{JunctionUtils.canvas_official_sections_tool}"
       end
 
       # Loads the standalone version of the Official Sections tool

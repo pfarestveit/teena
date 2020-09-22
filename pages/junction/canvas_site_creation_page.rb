@@ -23,11 +23,10 @@ module Page
       link(:projects_learn_more_link, xpath: '//a[contains(., "more about collaboration tools available at UC Berkeley.")]')
 
       # Loads the LTI tool in the context of a Canvas course site
-      # @param driver [Selenium::WebDriver]
       # @param user [User]
-      def load_embedded_tool(driver, user)
+      def load_embedded_tool(user)
         logger.info 'Loading embedded version of Create Course Site tool'
-        load_tool_in_canvas(driver, "/users/#{user.canvas_id}/external_tools/#{JunctionUtils.canvas_create_site_tool}")
+        load_tool_in_canvas"/users/#{user.canvas_id}/external_tools/#{JunctionUtils.canvas_create_site_tool}"
       end
 
       # Loads standalone site creation page

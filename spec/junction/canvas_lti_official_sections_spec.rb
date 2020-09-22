@@ -60,7 +60,7 @@ describe 'bCourses Official Sections tool' do
     sites_to_create.each do |site|
       @canvas.masquerade_as site[:teacher]
       logger.debug "Sections to be included at site creation are #{site[:sections_for_site].map { |s| s.id }}"
-      @create_course_site_page.provision_course_site(@driver, site[:course], site[:teacher], site[:sections_for_site])
+      @create_course_site_page.provision_course_site(site[:course], site[:teacher], site[:sections_for_site])
       sites << site
     end
 
@@ -80,7 +80,7 @@ describe 'bCourses Official Sections tool' do
 
         # STATIC VIEW - sections currently in the site
 
-        @official_sections_page.load_embedded_tool(@driver, site[:course])
+        @official_sections_page.load_embedded_tool site[:course]
         @official_sections_page.current_sections_table.when_visible Utils.medium_wait
 
         static_view_sections_count = @official_sections_page.current_sections_count
@@ -239,7 +239,7 @@ describe 'bCourses Official Sections tool' do
 
         # ADDING SECTIONS
 
-        @official_sections_page.load_embedded_tool(@driver, site[:course])
+        @official_sections_page.load_embedded_tool site[:course]
         @official_sections_page.click_edit_sections
         @official_sections_page.add_sections(site[:course], sections_to_add_delete)
 
@@ -262,7 +262,7 @@ describe 'bCourses Official Sections tool' do
         end
 
         # Check that sections present on Find a Person to Add tool are updated immediately
-        @course_add_user_page.load_embedded_tool(@driver, site[:course])
+        @course_add_user_page.load_embedded_tool site[:course]
         @course_add_user_page.search(Utils.oski_uid, 'CalNet UID')
         ttl_user_sections_with_adds = @course_add_user_page.verify_block do
           @course_add_user_page.wait_until(Utils.medium_wait) { @course_add_user_page.course_section_options.length == site[:sections].length }
@@ -273,7 +273,7 @@ describe 'bCourses Official Sections tool' do
 
         # DELETING SECTIONS
 
-        @official_sections_page.load_embedded_tool(@driver, site[:course])
+        @official_sections_page.load_embedded_tool site[:course]
         @official_sections_page.click_edit_sections
         @official_sections_page.delete_sections sections_to_add_delete
 
@@ -296,7 +296,7 @@ describe 'bCourses Official Sections tool' do
         end
 
         # Check that sections present on Find a Person to Add tool are updated immediately
-        @course_add_user_page.load_embedded_tool(@driver, site[:course])
+        @course_add_user_page.load_embedded_tool site[:course]
         @course_add_user_page.search(Utils.oski_uid, 'CalNet UID')
         ttl_user_sections_with_deletes = @course_add_user_page.verify_block do
           @course_add_user_page.wait_until(Utils.medium_wait) { @course_add_user_page.course_section_options.length == site[:sections_for_site].length }
@@ -313,7 +313,7 @@ describe 'bCourses Official Sections tool' do
 
           user_roles = [test.lead_ta, test.ta, test.designer, test.reader, test.observer, test.students.first, test.wait_list_student]
           user_roles.each do |user|
-            @course_add_user_page.load_embedded_tool(@driver, site[:course])
+            @course_add_user_page.load_embedded_tool site[:course]
             @course_add_user_page.search(user.uid, 'CalNet UID')
             @course_add_user_page.add_user_by_uid(user, site[:sections_for_site].first)
           end
@@ -321,7 +321,7 @@ describe 'bCourses Official Sections tool' do
           # Check each user role's access to the tool
           user_roles.each do |user|
             @canvas.masquerade_as(user, site[:course])
-            @official_sections_page.load_embedded_tool(@driver, site[:course])
+            @official_sections_page.load_embedded_tool site[:course]
             if user == test.lead_ta
               has_right_perms = @official_sections_page.verify_block do
                 @official_sections_page.current_sections_table.when_visible Utils.medium_wait
@@ -367,7 +367,7 @@ describe 'bCourses Official Sections tool' do
 
     # Verify the tool warns of section name mismatch
     @canvas.masquerade_as site[:teacher]
-    @official_sections_page.load_embedded_tool(@driver, site[:course])
+    @official_sections_page.load_embedded_tool site[:course]
     @official_sections_page.current_sections_table.when_visible Utils.long_wait
     @official_sections_page.click_edit_sections
     update_msg_present = @official_sections_page.section_name_msg_element.when_visible(Utils.short_wait)

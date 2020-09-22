@@ -263,7 +263,7 @@ describe 'bCourses course site creation' do
         has_roster_photos_link = @roster_photos_page.roster_photos_link?
         it("shows a Roster Photos tool link in course site navigation for #{site[:course].term} #{site[:course].code} site ID #{site[:course].site_id}") { expect(has_roster_photos_link).to be true }
 
-        @roster_photos_page.load_embedded_tool(@driver, site[:course])
+        @roster_photos_page.load_embedded_tool site[:course]
         @roster_photos_page.wait_for_load_and_click_js @roster_photos_page.section_select_element
 
         expected_sections_on_site = (site[:sections_for_site].map { |section| "#{section.course} #{section.label}" })

@@ -26,11 +26,10 @@ module Page
       elements(:roster_sid, :span, xpath: '//ul[@class="cc-page-roster-photos-list"]/li//span[@data-ng-bind="student.student_id"]')
 
       # Loads the LTI tool in the context of a Canvas course site
-      # @param driver [Selenium::WebDriver]
       # @param course [Course]
-      def load_embedded_tool(driver, course)
+      def load_embedded_tool(course)
         logger.info 'Loading embedded version of Roster Photos tool'
-        load_tool_in_canvas(driver, "/courses/#{course.site_id}/external_tools/#{JunctionUtils.canvas_rosters_tool}")
+        load_tool_in_canvas"/courses/#{course.site_id}/external_tools/#{JunctionUtils.canvas_rosters_tool}"
       end
 
       # Loads the LTI tool in the Junction context

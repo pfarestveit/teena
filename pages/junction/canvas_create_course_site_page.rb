@@ -195,12 +195,11 @@ module Page
       end
 
       # Combines methods to search for a course, select sections, and create a new site
-      # @param driver [Selenium::WebDriver]
       # @param course [Course]
       # @param user [User]
       # @param sections [Array<Section>]
-      def provision_course_site(driver, course, user, sections, opts={})
-        load_embedded_tool(driver, user)
+      def provision_course_site(course, user, sections, opts={})
+        load_embedded_tool user
         click_create_course_site
         course.create_site_workflow = opts[:admin] ? 'ccn' : nil
         search_for_course(course, user, sections)

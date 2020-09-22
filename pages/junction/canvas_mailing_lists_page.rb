@@ -41,10 +41,9 @@ module Page
       div(:member_added_msg, xpath: '//div[contains(.,"added.")]')
 
       # Loads the admin Mailing Lists LTI tool within the admin sub-account
-      # @param driver [Selenium::WebDriver]
-      def load_embedded_tool(driver)
+      def load_embedded_tool
         logger.info 'Loading embedded admin Mailing Lists tool'
-        load_tool_in_canvas(driver, "/accounts/#{Utils.canvas_admin_sub_account}/external_tools/#{JunctionUtils.canvas_mailing_lists_tool}")
+        load_tool_in_canvas"/accounts/#{Utils.canvas_admin_sub_account}/external_tools/#{JunctionUtils.canvas_mailing_lists_tool}"
       end
 
       # Loads the standalone version of the admin Mailing Lists tool

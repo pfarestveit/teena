@@ -34,7 +34,7 @@ describe 'bCourses recent enrollment updates' do
     course_sites.each do |site|
       begin
         course = site[:course]
-        @create_course_site_page.provision_course_site(@driver, course, @admin, course.sections, {admin: true})
+        @create_course_site_page.provision_course_site(course, @admin, course.sections, {admin: true})
         @canvas_page.set_course_sis_id course
         @canvas_page.set_section_sis_ids course
         @canvas_page.load_users_page course

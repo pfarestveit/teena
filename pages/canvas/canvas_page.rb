@@ -22,6 +22,7 @@ module Page
     link(:data_use_link, text: 'Data Use & Analytics')
     link(:honor_code_link, text: 'UC Berkeley Honor Code')
     link(:student_resources_link, text: 'Student Resources')
+    link(:user_prov_link, text: 'User Provisioning')
 
     button(:submit_button, xpath: '//button[contains(.,"Submit")]')
     button(:save_button, xpath: '//button[text()="Save"]')
@@ -94,6 +95,12 @@ module Page
     def load_sub_account(sub_account)
       logger.debug "Loading sub-account #{sub_account}"
       navigate_to "#{Utils.canvas_base_url}/accounts/#{sub_account}"
+    end
+
+    def click_user_prov
+      logger.info 'Clicking the link to the User Provisioning tool'
+      wait_for_load_and_click user_prov_link_element
+      switch_to_canvas_iframe
     end
 
     # Clicks the 'save and publish' button using JavaScript rather than WebDriver

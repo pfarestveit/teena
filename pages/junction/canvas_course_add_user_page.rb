@@ -43,11 +43,10 @@ module Page
       button(:start_over_button, xpath: '//button[text()="Start Over"]')
 
       # Loads the LTI tool in the context of a Canvas course site
-      # @param driver [Selenium::WebDriver]
       # @param course [Course]
-      def load_embedded_tool(driver, course)
+      def load_embedded_tool(course)
         logger.info 'Loading embedded version of Find a Person to Add tool'
-        load_tool_in_canvas(driver, "/courses/#{course.site_id}/external_tools/#{JunctionUtils.canvas_course_add_user_tool}")
+        load_tool_in_canvas("/courses/#{course.site_id}/external_tools/#{JunctionUtils.canvas_course_add_user_tool}")
       end
 
       # Loads the LTI tool in the Junction context

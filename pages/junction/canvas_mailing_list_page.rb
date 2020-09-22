@@ -18,11 +18,10 @@ module Page
       div(:list_dupe_email_msg, xpath: '//div[contains(.,"is already in use by another Mailing List.")]')
 
       # Loads the instructor Mailing List LTI tool in a course site
-      # @param driver [Selenium::WebDriver]
       # @param course [Course]
-      def load_embedded_tool(driver, course)
+      def load_embedded_tool(course)
         logger.info "Loading embedded instructor Mailing List tool for course ID #{course.site_id}"
-        load_tool_in_canvas(driver, "/courses/#{course.site_id}/external_tools/#{JunctionUtils.canvas_mailing_list_tool}")
+        load_tool_in_canvas"/courses/#{course.site_id}/external_tools/#{JunctionUtils.canvas_mailing_list_tool}"
       end
 
       # Loads the standalone version of the instructor Mailing List tool
