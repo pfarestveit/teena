@@ -29,7 +29,7 @@ class ApiAcademicsRosterPage
   end
 
   def waitlisted_students
-    students.select { |student| student['enroll_status'] == 'W' }
+    students.select { |student| student['waitlist_position'] }
   end
 
   def section_students(section_name)

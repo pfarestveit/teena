@@ -31,10 +31,9 @@ module Page
       link(:bcourses_to_egrades_link, xpath: '//a[contains(.,"From bCourses to E-Grades")]')
 
       # Loads the LTI tool in the context of a Canvas course site
-      # @param driver [Selenium::WebDriver]
       # @param course [Course]
-      def load_embedded_tool(driver, course)
-        load_tool_in_canvas(driver, "/courses/#{course.site_id}/external_tools/#{JunctionUtils.canvas_e_grades_export_tool}")
+      def load_embedded_tool(course)
+        load_tool_in_canvas "/courses/#{course.site_id}/external_tools/#{JunctionUtils.canvas_e_grades_export_tool}"
       end
 
       # Loads the LTI tool in the Junction context
@@ -102,15 +101,14 @@ module Page
       end
 
       # Downloads current grades for a given section
-      # @param driver [Selenium::WebDriver]
       # @param course [Course]
       # @param section [Section]
       # @param cutoff [String]
       # @return [Array<Hash>]
-      def download_current_grades(driver, course, section, cutoff = nil)
+      def download_current_grades(course, section, cutoff = nil)
         logger.info "Downloading current grades for #{course.code} #{section.label}"
         Utils.prepare_download_dir
-        load_embedded_tool(driver, course)
+        load_embedded_tool course
         click_continue
         set_cutoff cutoff
         choose_section section if course.sections.length > 1
@@ -121,15 +119,14 @@ module Page
       end
 
       # Downloads final grades for a given section
-      # @param driver [Selenium::WebDriver]
       # @param course [Course]
       # @param section [Section]
       # @param cutoff [String]
       # @return [Array<Hash>]
-      def download_final_grades(driver, course, section, cutoff = nil)
+      def download_final_grades(course, section, cutoff = nil)
         logger.info "Downloading final grades for #{course.code} #{section.label}"
         Utils.prepare_download_dir
-        load_embedded_tool(driver, course)
+        load_embedded_tool course
         click_continue
         set_cutoff cutoff
         choose_section section if course.sections.length > 1

@@ -60,7 +60,7 @@ describe 'bCourses Find a Person to Add', order: :defined do
   describe 'customizations in Add People' do
 
     before(:all) do
-      @create_course_site_page.provision_course_site(@driver, course, sis_teacher, sections)
+      @create_course_site_page.provision_course_site(course, sis_teacher, sections)
       @canvas.publish_course_site course
       @canvas.load_users_page course
     end
@@ -192,10 +192,10 @@ describe 'bCourses Find a Person to Add', order: :defined do
           @canvas.click_find_person_to_add @driver
           @course_add_user_page.no_access_msg_element.when_visible Utils.medium_wait
         elsif user == test.reader
-          @course_add_user_page.load_embedded_tool(@driver, course)
+          @course_add_user_page.load_embedded_tool course
           @course_add_user_page.no_sections_msg_element.when_visible Utils.medium_wait
         elsif [test.students.first, test.wait_list_student, test.observer].include? user.role
-          @course_add_user_page.load_embedded_tool(@driver, course)
+          @course_add_user_page.load_embedded_tool course
           @course_add_user_page.no_access_msg_element.when_visible Utils.medium_wait
         end
       end

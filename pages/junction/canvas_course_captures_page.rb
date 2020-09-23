@@ -18,11 +18,10 @@ module Page
       link(:report_problem, xpath: '//a[contains(text(),"Report a problem")]')
 
       # Loads the course capture LTI tool within a course site
-      # @param driver [Selenium::WebDriver]
       # @param course [Course]
-      def load_embedded_tool(driver, course)
+      def load_embedded_tool(course)
         logger.info "Loading course capture tool on site ID #{course.site_id}"
-        load_tool_in_canvas(driver, "/courses/#{course.site_id}/external_tools/#{JunctionUtils.canvas_course_captures_tool}")
+        load_tool_in_canvas"/courses/#{course.site_id}/external_tools/#{JunctionUtils.canvas_course_captures_tool}"
       end
 
       # Loads the standalone version of the course capture tool

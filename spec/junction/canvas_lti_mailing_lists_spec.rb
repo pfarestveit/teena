@@ -43,7 +43,7 @@ describe 'bCourses Mailgun mailing lists', order: :defined do
   users.each do |user|
     it "can be managed by a course #{user.role} if the user has permission to reach the instructor-facing tool" do
       @canvas_page.masquerade_as(user, course_site_1)
-      @mailing_list_page.load_embedded_tool(@driver, course_site_1)
+      @mailing_list_page.load_embedded_tool course_site_1
       if [test.manual_teacher, test.lead_ta, test.ta, test.reader].include? user
         logger.debug "Verifying that #{user.role} UID #{user.uid} has access to the instructor-facing mailing list tool"
         @mailing_list_page.create_list_button_element.when_present(Utils.medium_wait)
@@ -55,7 +55,7 @@ describe 'bCourses Mailgun mailing lists', order: :defined do
 
     it "cannot be managed by a course #{user.role} via the admin tool" do
       @canvas_page.masquerade_as(user, course_site_1)
-      @mailing_lists_page.load_embedded_tool @driver
+      @mailing_lists_page.load_embedded_tool
       @mailing_lists_page.search_for_list course_site_1.site_id
       logger.debug "Verifying that #{user.role} UID #{user.uid} has no access to the admin mailing lists tool"
       @canvas_page.unexpected_error_msg_element.when_visible Utils.medium_wait
@@ -67,7 +67,7 @@ describe 'bCourses Mailgun mailing lists', order: :defined do
     before(:all) do
       @driver.switch_to.default_content
       @canvas_page.stop_masquerading if @canvas_page.stop_masquerading_link?
-      @mailing_lists_page.load_embedded_tool @driver
+      @mailing_lists_page.load_embedded_tool
     end
 
     context 'when creating a list' do
@@ -126,7 +126,7 @@ describe 'bCourses Mailgun mailing lists', order: :defined do
     context 'when viewing a list' do
 
       before(:all) do
-        @mailing_lists_page.load_embedded_tool @driver
+        @mailing_lists_page.load_embedded_tool
         @mailing_lists_page.search_for_list course_site_1.site_id
         @mailing_lists_page.list_address_element.when_visible timeout
       end
@@ -155,7 +155,7 @@ describe 'bCourses Mailgun mailing lists', order: :defined do
       it 'deletes mailing list memberships for users who have been removed from the site' do
         @canvas_page.remove_users_from_course(course_site_1, [test.students[0]])
         JunctionUtils.clear_cache(@driver, @splash_page, @toolbox_page)
-        @mailing_lists_page.load_embedded_tool @driver
+        @mailing_lists_page.load_embedded_tool
         @mailing_lists_page.search_for_list course_site_1.site_id
         @mailing_lists_page.click_update_memberships
         @mailing_lists_page.wait_until(timeout) { @mailing_lists_page.list_membership_count == "#{users.length - 1} members" }
@@ -166,7 +166,7 @@ describe 'bCourses Mailgun mailing lists', order: :defined do
         @canvas_page.masquerade_as(test.students[0], course_site_1)
         @canvas_page.stop_masquerading
         JunctionUtils.clear_cache(@driver, @splash_page, @toolbox_page)
-        @mailing_lists_page.load_embedded_tool @driver
+        @mailing_lists_page.load_embedded_tool
         @mailing_lists_page.search_for_list course_site_1.site_id
         @mailing_lists_page.click_update_memberships
         @mailing_lists_page.wait_until(timeout) { @mailing_lists_page.list_membership_count == "#{users.length} members" }
@@ -176,7 +176,7 @@ describe 'bCourses Mailgun mailing lists', order: :defined do
         test.students[1].email = test.students[0].email
         @canvas_page.activate_user_and_reset_email [test.students[1]]
         JunctionUtils.clear_cache(@driver, @splash_page, @toolbox_page)
-        @mailing_lists_page.load_embedded_tool @driver
+        @mailing_lists_page.load_embedded_tool
         @mailing_lists_page.search_for_list course_site_1.site_id
         @mailing_lists_page.click_update_memberships
         @mailing_lists_page.wait_until(timeout) { @mailing_lists_page.list_membership_count == "#{users.length - 1} members" }
@@ -190,7 +190,7 @@ describe 'bCourses Mailgun mailing lists', order: :defined do
       course_site_2.title = course_site_1.title
       @canvas_page.edit_course_name course_site_2
       @canvas_page.masquerade_as(test.manual_teacher, course_site_3)
-      @mailing_list_page.load_embedded_tool(@driver, course_site_3)
+      @mailing_list_page.load_embedded_tool course_site_3
     end
 
     context 'when no mailing list exists' do
@@ -204,7 +204,7 @@ describe 'bCourses Mailgun mailing lists', order: :defined do
       end
 
       it 'will not create a mailing list for a course site with the same course code and term as an existing list' do
-        @mailing_list_page.load_embedded_tool(@driver, course_site_2)
+        @mailing_list_page.load_embedded_tool course_site_2
         @mailing_list_page.list_dupe_error_msg_element.when_present timeout
         expect(@mailing_list_page.list_dupe_email_msg).to include(@mailing_lists_page.default_list_name course_site_2)
       end
@@ -213,7 +213,7 @@ describe 'bCourses Mailgun mailing lists', order: :defined do
     context 'when a mailing list exists' do
 
       it 'shows the mailing list email address' do
-        @mailing_list_page.load_embedded_tool(@driver, course_site_3)
+        @mailing_list_page.load_embedded_tool course_site_3
         @mailing_list_page.list_address_element.when_present timeout
         expect(@mailing_list_page.list_address).to include("#{@mailing_lists_page.default_list_name course_site_3}@bcourses-mail.berkeley.edu")
       end

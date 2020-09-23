@@ -29,7 +29,7 @@ describe 'bCourses Roster Photos' do
     @canvas.masquerade_as teacher
 
     # Create test course site
-    @create_course_site_page.provision_course_site(@driver, course, teacher, sections)
+    @create_course_site_page.provision_course_site(course, teacher, sections)
     @canvas.publish_course_site course
 
     # Get enrollment totals on site
@@ -116,7 +116,7 @@ describe 'bCourses Roster Photos' do
     end
 
     it "shows UID #{teacher.uid} a photo print button on #{course.code} course site ID #{course.site_id}" do
-      @roster_photos_page.load_embedded_tool(@driver, course)
+      @roster_photos_page.load_embedded_tool course
       @roster_photos_page.print_roster_link_element.when_visible Utils.medium_wait
     end
 

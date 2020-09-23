@@ -94,6 +94,7 @@ canvas:
   mailing_lists_tool: secret
   mailing_list_tool: secret
   e_grades_export_tool: secret
+  user_prov_tool: secret
 
 junction:
   base_url: https://junction-qa.berkeley.edu

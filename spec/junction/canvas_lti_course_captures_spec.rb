@@ -31,7 +31,7 @@ describe 'bCourses Course Captures tool' do
             course = Course.new({site_id: "#{course_site['site_id']}"})
 
             @canvas.masquerade_as(user, course)
-            @course_captures_page.load_embedded_tool(@driver, course)
+            @course_captures_page.load_embedded_tool course
 
             expected_sections = course_site['sections']
 
