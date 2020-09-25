@@ -1,5 +1,7 @@
 require_relative '../../util/spec_helper'
 
+# Prior to running, backdate last sync dates in Junction db to JunctionUtils.sis_update_date
+
 describe 'bCourses recent enrollment updates' do
 
   include Logging
@@ -9,13 +11,11 @@ describe 'bCourses recent enrollment updates' do
     @driver = Utils.launch_browser
     @splash_page = Page::JunctionPages::SplashPage.new @driver
     @cal_net_page = Page::CalNetPage.new @driver
-    @ccadmin_page = CCAdminPage.new @driver
     @create_course_site_page = Page::JunctionPages::CanvasCreateCourseSitePage.new @driver
     @canvas_page = Page::CanvasPage.new @driver
 
     test_data = JunctionUtils.load_junction_test_course_data.select { |course| course['tests']['recent_update'] }
     roles = ['Teacher', 'Lead TA', 'TA', 'Student', 'Waitlist Student']
-    last_sis_update = JunctionUtils.sis_update_date
     @admin = User.new username: Utils.super_admin_username, canvas_id: Utils.super_admin_canvas_id
     sites_to_verify = []
 
@@ -28,8 +28,6 @@ describe 'bCourses recent enrollment updates' do
 
     logger.debug "There are #{course_sites.length} test courses"
     @canvas_page.log_in(@cal_net_page, Utils.super_admin_username, Utils.super_admin_password)
-    @ccadmin_page.load_page(@cal_net_page, Utils.super_admin_username, Utils.super_admin_password)
-    @ccadmin_page.edit_canvas_sync last_sis_update
 
     course_sites.each do |site|
       begin

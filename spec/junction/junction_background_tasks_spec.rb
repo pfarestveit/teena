@@ -21,7 +21,7 @@ describe 'Junction background tasks' do
     @canvas_page.log_in(@cal_net_page, Utils.super_admin_username, Utils.super_admin_password)
     @splash_page.basic_auth config.admin.uid
 
-    tests = config.courses.map do |course|
+    tests = courses.map do |course|
 
       begin
 
