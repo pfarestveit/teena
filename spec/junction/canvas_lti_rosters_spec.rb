@@ -1,5 +1,7 @@
 require_relative '../../util/spec_helper'
 
+standalone = ENV['STANDALONE']
+
 describe 'bCourses Roster Photos' do
 
   include Logging
@@ -25,30 +27,40 @@ describe 'bCourses Roster Photos' do
     # Authenticate
     @splash_page.load_page
     @splash_page.basic_auth(teacher.uid, @cal_net)
-    @canvas.log_in(@cal_net, Utils.super_admin_username, Utils.super_admin_password)
-    @canvas.masquerade_as teacher
+    unless standalone
+      @canvas.log_in(@cal_net, Utils.super_admin_username, Utils.super_admin_password)
+      @canvas.masquerade_as teacher
+    end
 
     # Create test course site
-    @create_course_site_page.provision_course_site(course, teacher, sections)
-    @canvas.publish_course_site course
+    @create_course_site_page.provision_course_site(course, teacher, sections, {standalone: standalone})
+    @create_course_site_page.wait_for_standalone_site_id(course, teacher, @splash_page) if standalone
+    @canvas.publish_course_site course unless standalone
 
     # Get enrollment totals on site
     @roster_api.get_feed(@driver, course)
-    user_counts = @canvas.wait_for_enrollment_import(course, ['Student', 'Waitlist Student'])
-    @student_count = user_counts[0][:count]
-    @waitlist_count = user_counts[1][:count]
     @expected_sids = @roster_api.student_ids(@roster_api.students).sort
-    @canvas.load_users_page course
-    @canvas.click_find_person_to_add @driver
 
+    if standalone
+      @student_count = @roster_api.students.length
+      @waitlist_count = @roster_api.waitlisted_students.length
+    else
+      user_counts = @canvas.wait_for_enrollment_import(course, ['Student', 'Waitlist Student']) unless standalone
+      @student_count = user_counts[0][:count]
+      @waitlist_count = user_counts[1][:count]
+    end
     @total_user_count = @student_count + @waitlist_count
     logger.info "There are #{@student_count} enrolled students and #{@waitlist_count} waitlisted students, for a total of #{@total_user_count}"
     logger.warn 'There are no students on this site' if @total_user_count.zero?
 
-    # Add remaining user roles
-    non_teachers.each do |user|
-      @course_add_user_page.search(user.uid, 'CalNet UID')
-      @course_add_user_page.add_user_by_uid(user, sections.first)
+    unless standalone
+      # Add remaining user roles
+      @canvas.load_users_page course
+      @canvas.click_find_person_to_add @driver
+      non_teachers.each do |user|
+        @course_add_user_page.search(user.uid, 'CalNet UID')
+        @course_add_user_page.add_user_by_uid(user, sections.first)
+      end
     end
   end
 
@@ -57,12 +69,16 @@ describe 'bCourses Roster Photos' do
   context 'when a Teacher' do
 
     before(:all) do
-      @canvas.load_course_site course
-      @roster_photos_page.click_roster_photos_link @driver
+      if standalone
+        @roster_photos_page.load_standalone_tool course
+      else
+        @canvas.load_course_site course
+        @roster_photos_page.click_roster_photos_link @driver
+      end
     end
 
     it "shows UID #{teacher.uid} all students and waitlisted students on #{course.code} course site ID #{course.site_id}" do
-      @roster_photos_page.wait_until(Utils.medium_wait, "Expected but not present: #{@expected_sids - @roster_photos_page.all_sids.sort}. Present but not expected: #{@roster_photos_page.all_sids.sort - @expected_sids}.
+      @roster_photos_page.wait_until(Utils.medium_wait, "Missing: #{@expected_sids - @roster_photos_page.all_sids.sort}. Unexpected: #{@roster_photos_page.all_sids.sort - @expected_sids}.
       Expected #{@expected_sids} but got #{@roster_photos_page.all_sids.sort}") do
         @roster_photos_page.all_sids.length == @total_user_count
         @roster_photos_page.all_sids.sort == @expected_sids
@@ -116,7 +132,7 @@ describe 'bCourses Roster Photos' do
     end
 
     it "shows UID #{teacher.uid} a photo print button on #{course.code} course site ID #{course.site_id}" do
-      @roster_photos_page.load_embedded_tool course
+      standalone ? @roster_photos_page.load_standalone_tool(course) : @roster_photos_page.load_embedded_tool(course)
       @roster_photos_page.print_roster_link_element.when_visible Utils.medium_wait
     end
 
@@ -125,22 +141,25 @@ describe 'bCourses Roster Photos' do
     end
   end
 
-  context 'when not a Teacher' do
+  unless standalone
 
-    non_teachers.each do |user|
+    context 'when not a Teacher' do
 
-      it "allows a course #{user.role} with UID #{user.uid} to access the tool on #{course.code} course site ID #{course.site_id} if permitted to do so" do
-        @canvas.masquerade_as user, course
-        @canvas.navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/external_tools/#{JunctionUtils.canvas_rosters_tool}"
+      non_teachers.each do |user|
 
-        if [test.lead_ta, test.ta].include? user
-          @roster_photos_page.switch_to_canvas_iframe
-          @total_user_count.zero? ?
-              @roster_photos_page.no_students_msg_element.when_visible(Utils.short_wait) :
-              @roster_photos_page.wait_until(Utils.short_wait) { @roster_photos_page.roster_sid_elements.any? }
-        else
-          @roster_photos_page.switch_to_canvas_iframe
-          @roster_photos_page.no_access_msg_element.when_visible Utils.short_wait
+        it "allows a course #{user.role} with UID #{user.uid} to access the tool on #{course.code} course site ID #{course.site_id} if permitted to do so" do
+          @canvas.masquerade_as user, course
+          @canvas.navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/external_tools/#{JunctionUtils.canvas_rosters_tool}"
+
+          if [test.lead_ta, test.ta].include? user
+            @roster_photos_page.switch_to_canvas_iframe
+            @total_user_count.zero? ?
+                @roster_photos_page.no_students_msg_element.when_visible(Utils.short_wait) :
+                @roster_photos_page.wait_until(Utils.short_wait) { @roster_photos_page.roster_sid_elements.any? }
+          else
+            @roster_photos_page.switch_to_canvas_iframe
+            @roster_photos_page.no_access_msg_element.when_visible Utils.short_wait
+          end
         end
       end
     end

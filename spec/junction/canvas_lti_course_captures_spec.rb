@@ -1,5 +1,7 @@
 require_relative '../../util/spec_helper'
 
+standalone = ENV['STANDALONE']
+
 describe 'bCourses Course Captures tool' do
 
   include Logging
@@ -11,10 +13,11 @@ describe 'bCourses Course Captures tool' do
   begin
 
     @driver = Utils.launch_browser
+    @splash_page = Page::JunctionPages::SplashPage.new @driver
     @course_captures_page = Page::JunctionPages::CanvasCourseCapturesPage.new @driver
     @cal_net = Page::CalNetPage.new @driver
     @canvas = Page::CanvasPage.new @driver
-    @canvas.log_in(@cal_net, Utils.super_admin_username, Utils.super_admin_password)
+    @canvas.log_in(@cal_net, Utils.super_admin_username, Utils.super_admin_password) unless standalone
 
     # The test data file should contain data variations such as cross-listings and courses with multiple primary sections
     tests.each do |data|
@@ -26,12 +29,17 @@ describe 'bCourses Course Captures tool' do
 
         if (course_sites = data['tests']['course_capture'])
 
+          if standalone
+            @splash_page.load_page
+            @splash_page.basic_auth user.uid
+          else
+            @canvas.masquerade_as(user, course)
+          end
+
           # Verify each Canvas site ID in the test data
           course_sites.each do |course_site|
             course = Course.new({site_id: "#{course_site['site_id']}"})
-
-            @canvas.masquerade_as(user, course)
-            @course_captures_page.load_embedded_tool course
+            standalone ? @course_captures_page.load_standalone_tool(course) : @course_captures_page.load_embedded_tool(course)
 
             expected_sections = course_site['sections']
 
@@ -69,9 +77,9 @@ describe 'bCourses Course Captures tool' do
                     # Verify that the alert message, help page link, and the sample YouTube video ID are present
                     has_you_tube_alert = @course_captures_page.you_tube_alert_elements[index]
                     has_help_page_link = @course_captures_page.external_link_valid?(@course_captures_page.help_page_link(index), 'IT - Why are the Course Capture videos showing as private or unavailable?')
-                    @course_captures_page.switch_to_canvas_iframe
+                    @course_captures_page.switch_to_canvas_iframe unless standalone
                     has_you_tube_link = @course_captures_page.external_link_valid?(@course_captures_page.you_tube_link(expected_video_id), 'YouTube')
-                    @course_captures_page.switch_to_canvas_iframe
+                    @course_captures_page.switch_to_canvas_iframe unless standalone
 
                     it("shows UID #{user.uid} an explanation for viewing the recordings at You Tube on site ID #{course.site_id}") { expect(has_you_tube_alert).to be_truthy }
                     it("shows UID #{user.uid} a 'help page' link on site ID #{course.site_id}") { expect(has_help_page_link).to be true }
@@ -79,7 +87,7 @@ describe 'bCourses Course Captures tool' do
 
                     # Verify that the 'report a problem' link works
                     has_report_problem_link = @course_captures_page.external_link_valid?(@course_captures_page.report_problem_element, 'General Support Request or Give Feedback | Educational Technology Services')
-                    @course_captures_page.switch_to_canvas_iframe
+                    @course_captures_page.switch_to_canvas_iframe unless standalone
 
                     it("offers UID #{user.uid} a 'Report a Problem' link on on site ID #{course.site_id}") { expect(has_report_problem_link).to be true }
                   end
@@ -92,6 +100,11 @@ describe 'bCourses Course Captures tool' do
       rescue => e
         it("encountered an error with UID #{user.uid}") { fail }
         logger.error "#{e.message}#{"\n"}#{e.backtrace.join("\n")}"
+      ensure
+        if standalone
+          @splash_page.load_page
+          @splash_page.log_out @splash_page
+        end
       end
     end
 

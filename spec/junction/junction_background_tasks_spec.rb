@@ -2,6 +2,8 @@ require_relative '../../util/spec_helper'
 
 describe 'Junction background tasks' do
 
+  standalone = ENV['STANDALONE']
+
   begin
 
     include Logging
@@ -18,7 +20,11 @@ describe 'Junction background tasks' do
     @canvas_page = Page::CanvasPage.new @driver
 
     # Log in to both Canvas and Junction
-    @canvas_page.log_in(@cal_net_page, Utils.super_admin_username, Utils.super_admin_password)
+    if standalone
+      @canvas_page.log_in(@cal_net_page, Utils.ets_qa_username, Utils.ets_qa_password)
+    else
+      @canvas_page.log_in(@cal_net_page, Utils.super_admin_username, Utils.super_admin_password)
+    end
     @splash_page.basic_auth config.admin.uid
 
     tests = courses.map do |course|
