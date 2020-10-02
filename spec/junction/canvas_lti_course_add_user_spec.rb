@@ -1,5 +1,7 @@
 require_relative '../../util/spec_helper'
 
+standalone = ENV['STANDALONE']
+
 describe 'bCourses Find a Person to Add', order: :defined do
 
   include Logging
@@ -23,8 +25,14 @@ describe 'bCourses Find a Person to Add', order: :defined do
     @create_course_site_page = Page::JunctionPages::CanvasCreateCourseSitePage.new @driver
     @course_add_user_page = Page::JunctionPages::CanvasCourseAddUserPage.new @driver
 
-    @canvas.log_in(@cal_net, Utils.super_admin_username, Utils.super_admin_password)
-    @canvas.masquerade_as sis_teacher
+    if standalone
+      @splash_page.load_page
+      @splash_page.basic_auth sis_teacher.uid
+      @canvas.log_in(@cal_net, Utils.ets_qa_username, Utils.ets_qa_password)
+    else
+      @canvas.log_in(@cal_net, Utils.super_admin_username, Utils.super_admin_password)
+      @canvas.masquerade_as sis_teacher
+    end
   end
 
   after(:all) { Utils.quit_browser @driver }
@@ -60,33 +68,61 @@ describe 'bCourses Find a Person to Add', order: :defined do
   describe 'customizations in Add People' do
 
     before(:all) do
-      @create_course_site_page.provision_course_site(course, sis_teacher, sections)
-      @canvas.publish_course_site course
-      @canvas.load_users_page course
+      @create_course_site_page.provision_course_site(course, sis_teacher, sections, {standalone: standalone})
+      if standalone
+        @create_course_site_page.wait_for_standalone_site_id(course, sis_teacher, @splash_page)
+      else
+        @canvas.publish_course_site course
+        @canvas.load_users_page course
+      end
     end
 
     it 'include a link to a help page on the Everyone tab' do
-      @canvas.help_finding_users_link_element.when_visible Utils.short_wait
-      sleep 1
-      expect(@canvas.external_link_valid?(@canvas.help_finding_users_link_element, 'IT - How do I add users to my course site?')).to be true
+      if standalone
+        skip 'Skipping test since in standalone mode'
+      else
+        @canvas.help_finding_users_link_element.when_visible Utils.short_wait
+        sleep 1
+        expect(@canvas.external_link_valid?(@canvas.help_finding_users_link_element, 'IT - How do I add users to my course site?')).to be true
+      end
     end
 
     it 'include a search by Email Address option' do
-      @canvas.wait_for_load_and_click_js @canvas.add_people_button_element
-      @canvas.find_person_to_add_link_element.when_visible Utils.short_wait
-      expect(@canvas.add_user_by_email?).to be true
+      if standalone
+        skip 'Skipping test since in standalone mode'
+      else
+        @canvas.wait_for_load_and_click_js @canvas.add_people_button_element
+        @canvas.find_person_to_add_link_element.when_visible Utils.short_wait
+        expect(@canvas.add_user_by_email?).to be true
+      end
     end
 
-    it('include a search by Berkeley UID option') { expect(@canvas.add_user_by_uid?).to be true }
-    it('include a search by Student ID option') { expect(@canvas.add_user_by_sid?).to be true }
+    it('include a search by Berkeley UID option') do
+      if standalone
+        skip 'Skipping test since in standalone mode'
+      else
+        expect(@canvas.add_user_by_uid?).to be true
+      end
+    end
+
+    it('include a search by Student ID option') do
+      if standalone
+        skip 'Skipping test since in standalone mode'
+      else
+        expect(@canvas.add_user_by_sid?).to be true
+      end
+    end
   end
 
   describe 'search' do
 
     before(:all) do
-      @canvas.masquerade_as(sis_teacher, course)
-      @canvas.load_users_page course
-      @canvas.click_find_person_to_add @driver
+      if standalone
+        @course_add_user_page.load_standalone_tool course
+      else
+        @canvas.load_users_page course
+        @canvas.click_find_person_to_add @driver
+      end
     end
 
     before(:each) do
@@ -144,65 +180,68 @@ describe 'bCourses Find a Person to Add', order: :defined do
     end
   end
 
-  describe 'import users to course site' do
+  unless standalone
 
-    before(:all) do
-      @section_to_test = sections.first
-      @canvas.masquerade_as(sis_teacher, course)
-      @canvas.load_users_page course
-      @canvas.click_find_person_to_add @driver
+    describe 'import users to course site' do
+
+      before(:all) do
+        @section_to_test = sections.first
+        @canvas.masquerade_as(sis_teacher, course)
+        @canvas.load_users_page course
+        @canvas.click_find_person_to_add @driver
+        users_to_add.each do |user|
+          @course_add_user_page.search(user.uid, 'CalNet UID')
+          @course_add_user_page.add_user_by_uid(user, @section_to_test)
+        end
+        @canvas.load_users_page course
+        @canvas.load_all_students course
+      end
+
       users_to_add.each do |user|
-        @course_add_user_page.search(user.uid, 'CalNet UID')
-        @course_add_user_page.add_user_by_uid(user, @section_to_test)
-      end
-      @canvas.load_users_page course
-      @canvas.load_all_students course
-    end
-
-    users_to_add.each do |user|
-      it "shows an added #{user.role} user in the course site roster" do
-        @canvas.search_user_by_canvas_id user
-        @canvas.wait_until(Utils.medium_wait) { @canvas.roster_user? user.canvas_id }
-        expect(@canvas.roster_user_sections(user.canvas_id)).to include("#{@section_to_test.course} #{@section_to_test.label}") unless user == test.observer
-        (user == test.observer) ?
-            (expect(@canvas.roster_user_roles(user.canvas_id)).to include('Observing: nobody')) :
-            (expect(@canvas.roster_user_roles(user.canvas_id)).to include(user.role))
-      end
-    end
-  end
-
-  describe 'user role restrictions' do
-
-    before(:all) do
-      @canvas.masquerade_as(sis_teacher, course)
-      @canvas.publish_course_site course
-    end
-
-    users_to_add.each do |user|
-
-      it "allows a course #{user.role} to access the tool and add a subset of roles to a course site if permitted to do so" do
-        @canvas.masquerade_as(user, course)
-        if [test.lead_ta, test.ta].include? user
-          @canvas.load_users_page course
-          @canvas.click_find_person_to_add @driver
-          @course_add_user_page.search('Oski', 'Last Name, First Name')
-          @course_add_user_page.wait_until(Utils.medium_wait) { @course_add_user_page.user_role_options == ['Student', 'Waitlist Student', 'Observer'] }
-        elsif user == test.designer
-          @canvas.load_users_page course
-          @canvas.click_find_person_to_add @driver
-          @course_add_user_page.no_access_msg_element.when_visible Utils.medium_wait
-        elsif user == test.reader
-          @course_add_user_page.load_embedded_tool course
-          @course_add_user_page.no_sections_msg_element.when_visible Utils.medium_wait
-        elsif [test.students.first, test.wait_list_student, test.observer].include? user.role
-          @course_add_user_page.load_embedded_tool course
-          @course_add_user_page.no_access_msg_element.when_visible Utils.medium_wait
+        it "shows an added #{user.role} user in the course site roster" do
+          @canvas.search_user_by_canvas_id user
+          @canvas.wait_until(Utils.medium_wait) { @canvas.roster_user? user.canvas_id }
+          expect(@canvas.roster_user_sections(user.canvas_id)).to include("#{@section_to_test.course} #{@section_to_test.label}") unless user == test.observer
+          (user == test.observer) ?
+              (expect(@canvas.roster_user_roles(user.canvas_id)).to include('Observing: nobody')) :
+              (expect(@canvas.roster_user_roles(user.canvas_id)).to include(user.role))
         end
       end
+    end
 
-      it "offers #{user.role} an Academic Policies link" do
-        @driver.switch_to.default_content
-        expect(@canvas.external_link_valid?(@canvas.policies_link_element, 'Academic Accommodations Hub | Executive Vice Chancellor and Provost')).to be true
+    describe 'user role restrictions' do
+
+      before(:all) do
+        @canvas.masquerade_as(sis_teacher, course)
+        @canvas.publish_course_site course
+      end
+
+      users_to_add.each do |user|
+
+        it "allows a course #{user.role} to access the tool and add a subset of roles to a course site if permitted to do so" do
+          @canvas.masquerade_as(user, course)
+          if [test.lead_ta, test.ta].include? user
+            @canvas.load_users_page course
+            @canvas.click_find_person_to_add @driver
+            @course_add_user_page.search('Oski', 'Last Name, First Name')
+            @course_add_user_page.wait_until(Utils.medium_wait) { @course_add_user_page.user_role_options == ['Student', 'Waitlist Student', 'Observer'] }
+          elsif user == test.designer
+            @canvas.load_users_page course
+            @canvas.click_find_person_to_add @driver
+            @course_add_user_page.no_access_msg_element.when_visible Utils.medium_wait
+          elsif user == test.reader
+            @course_add_user_page.load_embedded_tool course
+            @course_add_user_page.no_sections_msg_element.when_visible Utils.medium_wait
+          elsif [test.students.first, test.wait_list_student, test.observer].include? user.role
+            @course_add_user_page.load_embedded_tool course
+            @course_add_user_page.no_access_msg_element.when_visible Utils.medium_wait
+          end
+        end
+
+        it "offers #{user.role} an Academic Policies link" do
+          @driver.switch_to.default_content
+          expect(@canvas.external_link_valid?(@canvas.policies_link_element, 'Academic Accommodations Hub | Executive Vice Chancellor and Provost')).to be true
+        end
       end
     end
   end

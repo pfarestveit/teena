@@ -76,15 +76,14 @@ class JunctionUtils < Utils
   # Authenticates in Junction as an admin and expires all cache
   # @param driver [Selenium::WebDriver]
   # @param splash_page [Page::JunctionPages::SplashPage]
-  # @param my_toolbox_page [Page::JunctionPages::MyToolboxPage]
-  def self.clear_cache(driver, splash_page, my_toolbox_page)
+  def self.clear_cache(driver, splash_page)
     splash_page.load_page
     splash_page.basic_auth @config['admin_uid']
     driver.get("#{junction_base_url}/api/cache/clear")
     sleep 3
-    my_toolbox_page.load_page
-    my_toolbox_page.toggle_footer_link_element.when_visible Utils.long_wait
-    my_toolbox_page.log_out splash_page
+    splash_page.load_page
+    splash_page.toggle_footer_link_element.when_visible Utils.long_wait
+    splash_page.log_out splash_page
   end
 
   # Creates CSV for data generated during Junction test runs

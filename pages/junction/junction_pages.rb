@@ -24,11 +24,11 @@ module Page
       switch_to_canvas_iframe JunctionUtils.junction_base_url
     end
 
-    # Logs the user out if the user is logged in
+    # Logs the user out
     # @param splash_page [Page::JunctionPages::SplashPage]
     def log_out(splash_page)
       toggle_footer_link_element.when_visible Utils.medium_wait
-      wait_for_update_and_click(log_out_link_element) if title.include? 'Toolbox'
+      wait_for_update_and_click log_out_link_element unless title.include? 'Home'
       splash_page.sign_in_element.when_visible Utils.medium_wait
     end
 

@@ -41,12 +41,6 @@ module Page
 
       paragraph(:no_access_msg, xpath: '//p[text()="This feature is only available to faculty and staff."]')
 
-      # Loads the LTI tool in the Junction context
-      def load_standalone_tool
-        logger.info 'Loading standalone version of Create Course Site tool'
-        navigate_to "#{JunctionUtils.junction_base_url}/canvas/create_course_site"
-      end
-
       # Clicks the button for the test course's term. Uses JavaScript rather than WebDriver
       # @param course [Course]
       def choose_term(course)
@@ -59,7 +53,7 @@ module Page
       # @param course [Course]
       # @param instructor [User]
       # @param sections [Array<Section>]
-      def search_for_course(course, instructor, sections)
+      def search_for_course(course, instructor, sections=nil)
         logger.debug "Searching for #{course.code} in #{course.term}"
         if course.create_site_workflow == 'uid'
           logger.debug "Searching by instructor UID #{instructor.uid}"
@@ -194,21 +188,54 @@ module Page
         JunctionUtils.set_junction_test_course_id course
       end
 
+      def wait_for_progress_bar
+        bar = div_element(xpath: '//div[@role="progressbar"]')
+        bar.when_visible Utils.medium_wait
+        logger.info 'Waiting for progress bar to complete'
+        bar.when_not_visible Utils.long_wait
+      end
+
+      def wait_for_standalone_site_id(course, user, splash_page)
+        wait_for_progress_bar
+        course.create_site_workflow = 'self'
+        tries = Utils.short_wait
+        begin
+          JunctionUtils.clear_cache(@driver, splash_page)
+          splash_page.basic_auth user.uid
+          load_standalone_tool
+          click_create_course_site
+          search_for_course(course, user)
+          expand_available_sections course.code
+          link = link_element(xpath: "//a[contains(text(), '#{course.title}')]")
+          course.site_id = link.attribute('href').gsub("#{Utils.canvas_base_url}/courses/", '')
+          logger.info "Course site ID is #{course.site_id}"
+          JunctionUtils.set_junction_test_course_id course
+        rescue
+          logger.warn "UID #{user.uid} is not yet associated with the site"
+          if (tries -= 1).zero?
+            fail
+          else
+            sleep Utils.short_wait
+            retry
+          end
+        end
+      end
+
       # Combines methods to search for a course, select sections, and create a new site
       # @param course [Course]
       # @param user [User]
       # @param sections [Array<Section>]
       def provision_course_site(course, user, sections, opts={})
-        load_embedded_tool user
+        opts[:standalone] ? load_standalone_tool : load_embedded_tool(user)
         click_create_course_site
         course.create_site_workflow = opts[:admin] ? 'ccn' : nil
         search_for_course(course, user, sections)
         expand_available_sections course.code
         select_sections sections
         click_next
-        enter_site_titles course
+        course.title = enter_site_titles course
         click_create_site
-        wait_for_site_id course
+        wait_for_site_id(course) unless opts[:standalone]
       end
 
     end

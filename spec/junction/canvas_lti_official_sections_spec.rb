@@ -2,6 +2,8 @@ require_relative '../../util/spec_helper'
 
 describe 'bCourses Official Sections tool' do
 
+  standalone = ENV['STANDALONE']
+
   include Logging
 
   test = JunctionTestConfig.new
@@ -17,7 +19,6 @@ describe 'bCourses Official Sections tool' do
     @create_course_site_page = Page::JunctionPages::CanvasCreateCourseSitePage.new @driver
     @course_add_user_page = Page::JunctionPages::CanvasCourseAddUserPage.new @driver
     @official_sections_page = Page::JunctionPages::CanvasCourseManageSectionsPage.new @driver
-    @toolbox_page = Page::JunctionPages::MyToolboxPage.new @driver
 
     sites = []
     sites_to_create = []
@@ -52,16 +53,19 @@ describe 'bCourses Official Sections tool' do
       end
     end
 
-    # Authenticate in Canvas
-    @canvas.load_homepage
-    @canvas.log_in(@cal_net, Utils.super_admin_username, Utils.super_admin_password)
+    unless standalone
+      @canvas.load_homepage
+      @canvas.log_in(@cal_net, Utils.super_admin_username, Utils.super_admin_password)
+    end
 
     # Create course sites that don't already exist
     sites_to_create.each do |site|
-      @canvas.masquerade_as site[:teacher]
+      standalone ? @splash_page.basic_auth(site[:teacher].uid) : @canvas.masquerade_as(site[:teacher])
       logger.debug "Sections to be included at site creation are #{site[:sections_for_site].map { |s| s.id }}"
-      @create_course_site_page.provision_course_site(site[:course], site[:teacher], site[:sections_for_site])
+      @create_course_site_page.provision_course_site(site[:course], site[:teacher], site[:sections_for_site], {standalone: standalone})
+      @create_course_site_page.wait_for_standalone_site_id(site[:course], site[:teacher], @splash_page) if standalone
       sites << site
+      @create_course_site_page.log_out @splash_page if standalone
     end
 
     # ADD AND REMOVE SECTIONS FOR ALL TEST COURSES
@@ -74,13 +78,17 @@ describe 'bCourses Official Sections tool' do
         section_ids_to_add_delete = (sections_to_add_delete.map { |section| section.id }).join(', ')
         logger.debug "Sections to be added and deleted are #{section_ids_to_add_delete}"
 
-        @canvas.stop_masquerading if @canvas.stop_masquerading_link?
-        @canvas.masquerade_as site[:teacher]
-        @canvas.publish_course_site site[:course]
+        if standalone
+          @splash_page.basic_auth site[:teacher].uid
+          @official_sections_page.load_standalone_tool site[:course]
+        else
+          @canvas.masquerade_as site[:teacher]
+          @canvas.publish_course_site site[:course]
+          @official_sections_page.load_embedded_tool site[:course]
+        end
 
         # STATIC VIEW - sections currently in the site
 
-        @official_sections_page.load_embedded_tool site[:course]
         @official_sections_page.current_sections_table.when_visible Utils.medium_wait
 
         static_view_sections_count = @official_sections_page.current_sections_count
@@ -112,7 +120,7 @@ describe 'bCourses Official Sections tool' do
         end
 
         has_bcourses_service_link = @official_sections_page.external_link_valid?(@official_sections_page.bcourses_service_link_element, 'bCourses | Digital Learning Services')
-        @official_sections_page.switch_to_canvas_iframe unless @driver.browser.to_s == 'firefox'
+        @official_sections_page.switch_to_canvas_iframe unless standalone || @driver.browser.to_s == 'firefox'
 
         it("shows a collapsed maintenance notice on course site ID #{site[:course].site_id}") { expect(has_maintenance_notice).to be true }
         it("allows the user to reveal an expanded maintenance notice #{site[:course].site_id}") { expect(has_maintenance_detail).to be true }
@@ -239,7 +247,7 @@ describe 'bCourses Official Sections tool' do
 
         # ADDING SECTIONS
 
-        @official_sections_page.load_embedded_tool site[:course]
+        standalone ? @official_sections_page.load_standalone_tool(site[:course]) : @official_sections_page.load_embedded_tool(site[:course])
         @official_sections_page.click_edit_sections
         @official_sections_page.add_sections(site[:course], sections_to_add_delete)
 
@@ -262,7 +270,7 @@ describe 'bCourses Official Sections tool' do
         end
 
         # Check that sections present on Find a Person to Add tool are updated immediately
-        @course_add_user_page.load_embedded_tool site[:course]
+        standalone ? @course_add_user_page.load_standalone_tool(site[:course]) : @course_add_user_page.load_embedded_tool(site[:course])
         @course_add_user_page.search(Utils.oski_uid, 'CalNet UID')
         ttl_user_sections_with_adds = @course_add_user_page.verify_block do
           @course_add_user_page.wait_until(Utils.medium_wait) { @course_add_user_page.course_section_options.length == site[:sections].length }
@@ -273,7 +281,7 @@ describe 'bCourses Official Sections tool' do
 
         # DELETING SECTIONS
 
-        @official_sections_page.load_embedded_tool site[:course]
+        standalone ? @official_sections_page.load_standalone_tool(site[:course]) : @official_sections_page.load_embedded_tool(site[:course])
         @official_sections_page.click_edit_sections
         @official_sections_page.delete_sections sections_to_add_delete
 
@@ -296,7 +304,7 @@ describe 'bCourses Official Sections tool' do
         end
 
         # Check that sections present on Find a Person to Add tool are updated immediately
-        @course_add_user_page.load_embedded_tool site[:course]
+        standalone ? @course_add_user_page.load_standalone_tool(site[:course]) : @course_add_user_page.load_embedded_tool(site[:course])
         @course_add_user_page.search(Utils.oski_uid, 'CalNet UID')
         ttl_user_sections_with_deletes = @course_add_user_page.verify_block do
           @course_add_user_page.wait_until(Utils.medium_wait) { @course_add_user_page.course_section_options.length == site[:sections_for_site].length }
@@ -307,7 +315,7 @@ describe 'bCourses Official Sections tool' do
 
         # CHECK USER ROLE ACCESS TO THE TOOL FOR ONE COURSE
 
-        if site == sites.last
+        if site == sites.last && !standalone
 
           @canvas.stop_masquerading
 
@@ -346,42 +354,46 @@ describe 'bCourses Official Sections tool' do
       rescue => e
         it("encountered an error for #{site[:course].code}") { fail }
         logger.error "#{e.message}#{"\n"}#{e.backtrace.join("\n")}"
+      ensure
+        @splash_page.log_out @splash_page if standalone
       end
     end
 
     # SECTION NAME UPDATES
 
-    site = sites.first
-    section = (site[:sections] - site[:sections_for_site]).first
-    @canvas.stop_masquerading
+    unless standalone
+      site = sites.first
+      section = (site[:sections] - site[:sections_for_site]).first
+      @canvas.stop_masquerading
 
-    # Create and upload SIS import with a fake section name
-    @canvas.set_course_sis_id site[:course]
-    section_id = "SEC:#{JunctionUtils.term_code}-#{section.id}"
-    section_name = "#{site[:course].code} FAKE LABEL"
-    csv = File.join(Utils.initialize_test_output_dir, "section-#{site[:course].code}.csv")
-    CSV.open(csv, 'wb') { |heading| heading << %w(section_id course_id name status start_date end_date) }
-    Utils.add_csv_row(csv, [section_id, site[:course].sis_id, section_name, 'active', nil, nil ])
-    @canvas.upload_sis_imports([csv], [])
-    JunctionUtils.clear_cache(@driver, @splash_page, @toolbox_page)
+      # Create and upload SIS import with a fake section name
+      @canvas.set_course_sis_id site[:course]
+      section_id = "SEC:#{JunctionUtils.term_code}-#{section.id}"
+      section_name = "#{site[:course].code} FAKE LABEL"
+      csv = File.join(Utils.initialize_test_output_dir, "section-#{site[:course].code}.csv")
+      CSV.open(csv, 'wb') { |heading| heading << %w(section_id course_id name status start_date end_date) }
+      Utils.add_csv_row(csv, [section_id, site[:course].sis_id, section_name, 'active', nil, nil ])
+      @canvas.upload_sis_imports([csv], [])
+      JunctionUtils.clear_cache(@driver, @splash_page)
 
-    # Verify the tool warns of section name mismatch
-    @canvas.masquerade_as site[:teacher]
-    @official_sections_page.load_embedded_tool site[:course]
-    @official_sections_page.current_sections_table.when_visible Utils.long_wait
-    @official_sections_page.click_edit_sections
-    update_msg_present = @official_sections_page.section_name_msg_element.when_visible(Utils.short_wait)
-    it "shows a section name mismatch message for section #{section.id} on course site #{site[:course].site_id}" do
-      expect(update_msg_present).to be_truthy
-    end
+      # Verify the tool warns of section name mismatch
+      @canvas.masquerade_as site[:teacher]
+      @official_sections_page.load_embedded_tool site[:course]
+      @official_sections_page.current_sections_table.when_visible Utils.long_wait
+      @official_sections_page.click_edit_sections
+      update_msg_present = @official_sections_page.section_name_msg_element.when_visible(Utils.short_wait)
+      it "shows a section name mismatch message for section #{section.id} on course site #{site[:course].site_id}" do
+        expect(update_msg_present).to be_truthy
+      end
 
-    # Update the section and verify the tool no longer complains of mismatch
-    @official_sections_page.click_update_section section
-    @official_sections_page.save_changes_and_wait_for_success
-    @official_sections_page.click_edit_sections
-    update_msg_still_present = @official_sections_page.section_name_msg?
-    it "shows no section name mismatch message for updated section #{section.id} on course site #{site[:course].site_id}" do
-      expect(update_msg_still_present).to be false
+      # Update the section and verify the tool no longer complains of mismatch
+      @official_sections_page.click_update_section section
+      @official_sections_page.save_changes_and_wait_for_success
+      @official_sections_page.click_edit_sections
+      update_msg_still_present = @official_sections_page.section_name_msg?
+      it "shows no section name mismatch message for updated section #{section.id} on course site #{site[:course].site_id}" do
+        expect(update_msg_still_present).to be false
+      end
     end
 
   rescue => e
