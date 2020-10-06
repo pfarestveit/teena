@@ -33,7 +33,7 @@ describe 'bCourses Course Captures tool' do
             @splash_page.load_page
             @splash_page.basic_auth user.uid
           else
-            @canvas.masquerade_as(user, course)
+            @canvas.masquerade_as user
           end
 
           # Verify each Canvas site ID in the test data

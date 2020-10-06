@@ -34,6 +34,7 @@ describe 'A Canvas discussion', order: :defined do
     end
 
     # Get current score
+    @engagement_index.wait_for_new_user_sync(@driver, @engagement_index_url, @course, [@user_1, @user_2])
     @user_1_score = @engagement_index.user_score(@driver, @engagement_index_url, @user_1)
 
     # User 1 creates a discussion topic, which should earn points
