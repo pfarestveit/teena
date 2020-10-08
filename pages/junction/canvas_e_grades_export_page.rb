@@ -12,12 +12,11 @@ module Page
       include JunctionPages
 
       link(:back_to_gradebook_link, text: 'Back to Gradebook')
-      span(:not_auth_msg, xpath: '//span[contains(.,"You must be a teacher in this bCourses course to export to E-Grades CSV.")]')
+      paragraph(:not_auth_msg, xpath: '//p[contains(.,"You must be a teacher in this bCourses course to export to E-Grades CSV.")]')
 
       link(:how_to_post_grades_link, xpath: '//a[contains(.,"How do I post grades for an assignment?")]')
 
-      button(:course_settings_button_enabled, xpath: '(//button[contains(.,"Course Settings")])[1]')
-      button(:course_settings_button_disabled, xpath: '(//button[contains(.,"Course Settings")])[2]')
+      button(:course_settings_button, xpath: '//button[contains(text(),"Course Settings")]')
 
       button(:cancel_button, xpath: '//button[contains(.,"Cancel")]')
       button(:continue_button, xpath: '//button[contains(.,"Continue")]')
@@ -42,14 +41,8 @@ module Page
         navigate_to "#{JunctionUtils.junction_base_url}/canvas/course_grade_export/#{course.site_id}"
       end
 
-      # Clicks the course settings button that appears when a grading scheme is enabled
-      def click_course_settings_button_enabled
-        wait_for_load_and_click course_settings_button_enabled_element
-      end
-
-      # Clicks the course settings button that appears when a grading scheme is not enabled
-      def click_course_settings_button_disabled
-        wait_for_load_and_click course_settings_button_disabled_element
+      def click_course_settings_button
+        wait_for_load_and_click course_settings_button_element
       end
 
       # Clicks the Cancel button

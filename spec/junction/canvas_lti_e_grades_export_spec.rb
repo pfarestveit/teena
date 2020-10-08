@@ -78,7 +78,7 @@ unless ENV['STANDALONE']
       before(:each) { @e_grades_export_page.load_embedded_tool course }
 
       it 'offers a "Course Settings" link' do
-        @e_grades_export_page.click_course_settings_button_disabled
+        @e_grades_export_page.click_course_settings_button
         @canvas.wait_until(Utils.medium_wait) { @canvas.current_url.include? "#{Utils.canvas_base_url}/courses/#{course.site_id}/settings" }
       end
 
@@ -105,7 +105,7 @@ unless ENV['STANDALONE']
       before(:each) { @e_grades_export_page.load_embedded_tool course }
 
       it 'offers a "Course Settings" link' do
-        @e_grades_export_page.click_course_settings_button_enabled
+        @e_grades_export_page.click_course_settings_button
         @canvas.wait_until(Utils.medium_wait) { @canvas.current_url.include? "#{Utils.canvas_base_url}/courses/#{course.site_id}/settings" }
       end
 

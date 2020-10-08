@@ -117,13 +117,13 @@ describe 'bCourses project site', order: :defined do
             when 'TA'
               logger.debug "Verifying that #{user.role} UID #{user.uid} has access to the project site UI"
               @site_creation_page.create_course_site_link_element.when_present Utils.medium_wait
-              expect(@site_creation_page.create_course_site_link_element.attribute('aria-disabled')).to eql('false')
+              expect(@site_creation_page.create_course_site_link_element.attribute('disabled')).to be_nil
               @site_creation_page.click_create_project_site
               expect(@create_project_site_page.site_name_input_element.when_present Utils.short_wait).to be_truthy
             when 'Staff'
               logger.debug "Verifying that #{user.role} UID #{user.uid} has access to the project site UI but not the course site UI"
               @site_creation_page.create_course_site_link_element.when_present Utils.medium_wait
-              expect(@site_creation_page.create_course_site_link_element.attribute('aria-disabled')).to eql('true')
+              expect(@site_creation_page.create_course_site_link_element.attribute('disabled')).to eql('true')
               @site_creation_page.click_create_project_site
               expect(@create_project_site_page.site_name_input_element.when_present Utils.short_wait).to be_truthy
             else

@@ -12,8 +12,8 @@ module Page
       include JunctionPages
 
       link(:course_captures_link, text: 'Course Captures')
-      elements(:section_content, :div, class: 'cc-webcast-table')
-      elements(:section_code, :h3, xpath: '//h3[@data-ng-if="media.length > 1"]')
+      elements(:section_content, :div, xpath: '//div[contains(@class, "cc-webcast-table")]')
+      elements(:section_code, :h3, xpath: '//h3')
       elements(:you_tube_alert, :div, xpath: '//div[contains(.,"Log in to YouTube with your bConnected account to watch the videos below.")]')
       link(:report_problem, xpath: '//a[contains(text(),"Report a problem")]')
 
@@ -56,20 +56,7 @@ module Page
       # @param index [Integer]
       # @return [Array<Selenium::WebDriver::Element>]
       def you_tube_recording_elements(index)
-        link_elements(xpath: "//div[@class='cc-table cc-webcast-table ng-scope'][#{index + 1}]/table//a[@data-ng-bind='video.lecture']")
-      end
-
-      # Returns the 'show more' button element in a set of recordings at a given index
-      # @param index [Integer]
-      # @return [PageObject::Elements::Button]
-      def show_more_button(index)
-        button_element(xpath: "//div[@class='cc-table cc-webcast-table ng-scope'][#{index + 1}]//div[@data-cc-show-more-list='section.videos']/button")
-      end
-
-      # Clicks the 'show more' button at a given index until the button disappears
-      # @param index [Integer]
-      def show_all_recordings(index)
-        wait_for_update_and_click_js show_more_button(index) while show_more_button(index).exists?
+        link_elements(xpath: "//div[contains(@class, 'cc-webcast-table')][#{index + 1}]/table//a")
       end
 
       # Returns the link element whose href attribute includes a given YouTube video ID
@@ -83,7 +70,7 @@ module Page
       # @param index [Integer]
       # @return [PageObject::Elements::Link]
       def help_page_link(index)
-        link_element(xpath: "//div[@class='cc-table cc-webcast-table ng-scope'][#{index + 1}]//a[contains(.,'help page')]")
+        link_element(xpath: "//div[contains(@class, 'cc-webcast-table')][#{index + 1}]//a[contains(.,'help page')]")
       end
 
     end

@@ -83,7 +83,7 @@ class JunctionUtils < Utils
     sleep 3
     splash_page.load_page
     splash_page.toggle_footer_link_element.when_visible Utils.long_wait
-    splash_page.log_out splash_page
+    splash_page.log_out
   end
 
   # Creates CSV for data generated during Junction test runs

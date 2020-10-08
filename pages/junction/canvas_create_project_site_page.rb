@@ -14,7 +14,7 @@ module Page
       text_area(:site_name_input, id: 'bc-page-create-project-site-name')
       button(:create_site_button, xpath: '//button[contains(.,"Create a Project Site")]')
       button(:cancel_button, xpath: '//button[contains(.,"Cancel")]')
-      paragraph(:name_too_long_msg, xpath: '//p[contains(.,"Project site name must be no more than 255 characters in length")]')
+      paragraph(:name_too_long_msg, xpath: '//span[text()="Project site name must be no more than 255 characters in length"]')
 
       # Loads the LTI tool in the Junction context
       def load_standalone_tool

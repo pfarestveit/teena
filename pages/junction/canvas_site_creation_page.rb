@@ -11,15 +11,16 @@ module Page
       include Page
       include JunctionPages
 
-      h2(:page_heading, xpath: '//h2[text()="Create a Site"]')
+      # This was an h2 before... should it still be?
+      h2(:page_heading, xpath: '//h1[text()="Create a Site"]')
       paragraph(:access_denied, xpath: '//p[contains(.,"This feature is only available to faculty and staff.")]')
 
-      link(:create_course_site_link, text: 'Create a Course Site')
-      paragraph(:course_sites_text, xpath: '//p[contains(text(),"Set up course sites to communicate with and manage the work of students enrolled in your classes.")]')
-      paragraph(:no_course_sites_text, xpath: '//p[contains(text(),"It appears that you do not have permissions to create a Course Site in the current or upcoming terms.")]')
+      link(:create_course_site_link, id: 'create-course-site')
+      paragraph(:course_sites_text, xpath: '//div[contains(text(),"Set up course sites to communicate with and manage the work of students enrolled in your classes.")]')
+      paragraph(:no_course_sites_text, xpath: '//div[contains(text(),"It appears that you do not have permissions to create a Course Site in the current or upcoming terms.")]')
       link(:bcourses_support_link, xpath: '//a[contains(text(),"bCourses support")]')
 
-      link(:create_project_site_link, text: 'Create a Project Site')
+      link(:create_project_site_link, id: 'create-project-site')
       link(:projects_learn_more_link, xpath: '//a[contains(., "more about collaboration tools available at UC Berkeley.")]')
 
       # Loads the LTI tool in the context of a Canvas course site
