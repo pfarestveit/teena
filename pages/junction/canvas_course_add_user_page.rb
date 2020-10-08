@@ -11,7 +11,7 @@ module Page
       include Page
       include JunctionPages
 
-      button(:maintenance_button, class: 'bc-template-canvas-maintenance-notice-button')
+      button(:maintenance_button, xpath: '//button[contains(@class, "bc-template-canvas-maintenance-notice-button")]')
       span(:maintenance_notice, class: 'bc-template-canvas-maintenance-notice-text')
       paragraph(:maintenance_detail, xpath: '//div[@id="maintenance-details"]//p')
       link(:bcourses_service_link, xpath: '//a[contains(text(),"bCourses service page")]')
@@ -23,7 +23,7 @@ module Page
       div(:no_results_msg, xpath: '//div[contains(text(),"Your search did not match any users with a CalNet ID.")]')
       div(:too_many_results_msg, xpath: '//div[contains(.,"Please refine your search to limit the number of results.")]')
       div(:blank_search_msg, xpath: '//div[contains(text(),"You did not enter any search terms. Please try again.")]')
-      div(:success_msg, xpath: '//div[@data-ng-show="additionSuccessMessage"]')
+      div(:success_msg, xpath: '//div[@class="bc-alert bc-alert-success bc-page-course-add-user-alert"]')
 
       text_area(:search_term, id: 'search-text')
       select_list(:search_type, id: 'search-type')
@@ -39,8 +39,8 @@ module Page
 
       select_list(:user_role, id: 'user-role')
       select_list(:course_section, id: 'course-section')
-      button(:add_user_button, xpath: '//button[text()="Add User"]')
-      button(:start_over_button, xpath: '//button[text()="Start Over"]')
+      button(:add_user_button, xpath: '//button[contains(text(), "Add User")]')
+      button(:start_over_button, xpath: '//button[contains(text(), "Start Over")]')
 
       # Loads the LTI tool in the context of a Canvas course site
       # @param course [Course]

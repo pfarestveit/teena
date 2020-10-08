@@ -11,7 +11,7 @@ module Page
 
       link(:mailing_list_link, text: 'Mailing List')
       div(:no_list_msg, xpath: '//div[contains(.,"No Mailing List has yet been created for this site.")]')
-      button(:create_list_button, xpath: '//button[@data-ng-click="createMailingList()"]')
+      button(:create_list_button, id: 'btn-create-mailing-list')
       div(:list_created_msg, xpath: '//div[contains(.,"A Mailing List has been created")]')
       div(:list_address, xpath: '//div[contains(.,"A Mailing List has been created")]/strong')
       div(:list_dupe_error_msg, xpath: '//div[contains(.,"A Mailing List cannot be created for the site")]')

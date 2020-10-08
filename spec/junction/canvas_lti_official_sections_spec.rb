@@ -49,7 +49,7 @@ describe 'bCourses Official Sections tool' do
         Utils.log_error e
       ensure
         @splash_page.load_page
-        @splash_page.log_out @splash_page
+        @splash_page.log_out
       end
     end
 
@@ -65,7 +65,7 @@ describe 'bCourses Official Sections tool' do
       @create_course_site_page.provision_course_site(site[:course], site[:teacher], site[:sections_for_site], {standalone: standalone})
       @create_course_site_page.wait_for_standalone_site_id(site[:course], site[:teacher], @splash_page) if standalone
       sites << site
-      @create_course_site_page.log_out @splash_page if standalone
+      @create_course_site_page.log_out if standalone
     end
 
     # ADD AND REMOVE SECTIONS FOR ALL TEST COURSES
@@ -355,7 +355,7 @@ describe 'bCourses Official Sections tool' do
         it("encountered an error for #{site[:course].code}") { fail }
         logger.error "#{e.message}#{"\n"}#{e.backtrace.join("\n")}"
       ensure
-        @splash_page.log_out @splash_page if standalone
+        @splash_page.log_out if standalone
       end
     end
 

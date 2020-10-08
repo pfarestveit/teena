@@ -57,7 +57,6 @@ describe 'bCourses Course Captures tool' do
                   index = @course_captures_page.section_recordings_index section['code']
 
                   # Verify that the number of recordings and the section information matches expectations
-                  @course_captures_page.show_all_recordings index
                   expected_section_code = section['code']
                   expected_video_count = section['video_count']
                   expected_video_id = section['video_id']
@@ -103,7 +102,7 @@ describe 'bCourses Course Captures tool' do
       ensure
         if standalone
           @splash_page.load_page
-          @splash_page.log_out @splash_page
+          @splash_page.log_out
         end
       end
     end

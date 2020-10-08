@@ -11,7 +11,7 @@ module Page
       include Page
       include JunctionPages
 
-      button(:sign_in, xpath: '//button[@data-ng-click="api.user.signIn()"]')
+      button(:sign_in, id: 'sign-in-button')
 
       # Loads the Junction splash page
       def load_page
@@ -26,7 +26,7 @@ module Page
         load_page
         scroll_to_bottom
         begin
-          wait_for_update_and_click toggle_footer_link_element
+          log_out if log_out_link?
         rescue
           logger.warn 'Session conflict, CAS page loaded'
           cal_net.log_out
@@ -34,7 +34,6 @@ module Page
           wait_until(Utils.short_wait) { text.include? 'redirectUrl' }
           load_page
           scroll_to_bottom
-          wait_for_update_and_click toggle_footer_link_element
         end
         wait_for_element_and_type_js(basic_auth_uid_input_element, uid)
         wait_for_element_and_type_js(basic_auth_password_input_element, JunctionUtils.junction_basic_auth_password)

@@ -11,33 +11,33 @@ module Page
       include Page
       include JunctionPages
 
-      button(:maintenance_button, class: 'bc-template-canvas-maintenance-notice-button')
+      button(:maintenance_button, xpath: '//button[contains(@class, "bc-template-canvas-maintenance-notice-button")]')
       div(:maintenance_notice, class: 'bc-template-canvas-maintenance-notice-details')
       link(:bcourses_service, xpath: '//a[contains(text(),"bCourses service page")]')
       button(:need_help, xpath: '//button[contains(.,"Need help deciding which official sections to select")]')
       div(:help, id: 'section-selection-help')
       link(:instr_mode_link, xpath: '//a[contains(text(), "Learn more about instruction modes in bCourses.")]')
 
-      button(:switch_mode, class: 'bc-page-create-course-site-admin-mode-switch')
+      button(:switch_mode, xpath: '//button[contains(@class, "bc-page-create-course-site-admin-mode-switch")]')
 
-      span(:switch_to_instructor, xpath: '//span[contains(.,"Switch to acting as instructor")]')
-      button(:as_instructor_button, xpath: '//button[text()="As instructor"]')
+      button(:switch_to_instructor, xpath: '//button[contains(.,"Switch to acting as instructor")]')
+      button(:as_instructor_button, id: 'sections-by-uid-button')
       text_area(:instructor_uid, id: 'instructor-uid')
 
-      span(:switch_to_ccn, xpath: '//span[contains(.,"Switch to CCN input")]')
-      button(:review_ccns_button, xpath: '//button[text()="Review matching CCNs"]')
+      button(:switch_to_ccn, xpath: '//button[contains(.,"Switch to CCN input")]')
+      button(:review_ccns_button, xpath: '//button[contains(text(), "Review matching CCNs")]')
       text_area(:ccn_list, id: 'bc-page-create-course-site-ccn-list')
 
-      button(:next_button, xpath: '//button[text()="Next"]')
-      link(:cancel_link, text: 'Cancel')
+      button(:next_button, xpath: '//button[contains(text(), "Next")]')
+      button(:cancel_button, xpath: '//button[contains(text(), "Cancel")]')
 
       text_area(:site_name_input, id: 'siteName')
       text_area(:site_abbreviation, id: 'siteAbbreviation')
       div(:site_name_error, xpath: '//div[contains(.,"Please fill out a site name.")]')
       div(:site_abbreviation_error, xpath: '//div[contains(.,"Please fill out a site abbreviation.")]')
 
-      button(:create_site_button, xpath: '//button[text()="Create Course Site"]')
-      button(:go_back_button, xpath: '//button[text()="Go Back"]')
+      button(:create_site_button, xpath: '//button[contains(text(), "Create Course Site")]')
+      button(:go_back_button, xpath: '//button[contains(text(), "Go Back")]')
 
       paragraph(:no_access_msg, xpath: '//p[text()="This feature is only available to faculty and staff."]')
 

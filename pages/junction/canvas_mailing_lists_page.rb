@@ -11,30 +11,30 @@ module Page
 
       # Search
       text_area(:site_id_input, id: 'bc-page-site-mailing-list-site-id')
-      button(:get_list_button, xpath: '//button[@data-ng-click="findSiteMailingList()"]')
+      button(:get_list_button, id: 'btn-get-mailing-list')
       div(:bad_input_msg, xpath: '//div[contains(.,"Canvas site ID must be a numeric string.")]')
       div(:not_found_msg, xpath: '//div[contains(.,"No bCourses site with ID")]')
 
       # Create list
-      span(:site_name, xpath: '//div[@class="bc-page-site-mailing-list-info-box"]/h2/span')
-      div(:site_code, xpath: '//div[@class="bc-page-site-mailing-list-info-box"]//div[@data-ng-bind="canvasSite.codeAndTerm"]')
-      div(:site_id, xpath: '//div[@class="bc-page-site-mailing-list-info-box"]//div[@data-ng-bind="canvasSite.codeAndTerm"]/following-sibling::div')
+      span(:site_name, xpath: '//h2[@id="mailing-list-details-header"]/span')
+      div(:site_code, id: 'mailing-list-canvas-code-and-term')
+      div(:site_id, id: 'mailing-list-canvas-course-id')
       link(:view_site_link, xpath: '//a[contains(.,"View course site")]')
       text_area(:list_name_input, id: 'mailingListName')
-      button(:register_list_button, xpath: '//button[@data-ng-click="registerMailingList()"]')
+      button(:register_list_button, id: 'btn-create-mailing-list')
       div(:list_name_error_msg, xpath: '//div[contains(.,"List name may contain only lowercase, numeric, underscore and hyphen characters.")]')
       div(:list_creation_error_msg, xpath: '//div[contains(.,"A Mailing List cannot be created for the site)]')
       div(:list_name_taken_error_msg, xpath: '//div[contains(.,"is already in use by another Mailing List.")]')
 
       # View list
-      span(:list_address, xpath: '//div[@class="bc-page-site-mailing-list-info-box"]/h2/span')
-      div(:list_membership_count, xpath: '//div[@class="bc-page-site-mailing-list-info-box"]//div[contains(@count,"mailingList.membersCount")]')
-      div(:list_update_time, xpath: '//div[@class="bc-page-site-mailing-list-info-box"]//div[contains(.,"Membership last updated")]/strong')
-      link(:list_site_link, xpath: '//div[@class="bc-page-site-mailing-list-info-box"]//div[contains(.,"Course site:")]/a')
+      span(:list_address, xpath: '//h2[@id="mailing-list-details-header"]/span')
+      div(:list_membership_count, id: 'mailing-list-member-count')
+      div(:list_update_time, id: 'mailing-list-membership-last-updated')
+      link(:list_site_link, id: 'mailing-list-court-site-name')
 
       # Update membership
-      button(:cancel_button, xpath: '//button[contains(.,"Cancel")]')
-      button(:update_membership_button, xpath: '//button[@data-ng-click="populateMailingList()"]')
+      button(:cancel_button, id: 'btn-cancel')
+      button(:update_membership_button, id: 'btn-populate-mailing-list')
       div(:membership_updated_msg, xpath: '//div[contains(.,"Memberships were successfully updated.")]')
       div(:no_membership_change_msg, xpath: '//div[contains(.,"No changes in membership were found.")]')
       div(:member_removed_msg, xpath: '//div[contains(.,"removed.")]')

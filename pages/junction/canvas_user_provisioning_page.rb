@@ -6,8 +6,8 @@ class CanvasUserProvisioningPage
   include JunctionPages
 
   text_area(:uid_input, id: 'cc-page-user-provision-uid-list')
-  button(:import_button, xpath: '//button[text()="Import Users"]')
-  div(:success_msg, xpath: '//div[@class="cc-page-user-provision-feedback"]/div[contains(., "Success : The users specified were imported into bCourses.")]')
+  button(:import_button, xpath: '//button[contains(text(), "Import Users")]')
+  div(:success_msg, xpath: '//div[contains(., "Success : The users specified were imported into bCourses.")]')
   div(:error_msg, xpath: '//div[@class="cc-page-user-provision-feedback"]//strong[contains(., "Error :")]')
   div(:non_numeric_msg, xpath: '//small[contains(., "The following items in your list are not numeric:")]')
   div(:max_input_msg, xpath: '//small[contains(., "Maximum IDs: 200.")]')

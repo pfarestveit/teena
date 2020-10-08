@@ -59,7 +59,7 @@ describe 'bCourses course site creation' do
         Utils.log_error e
       ensure
         @splash_page.load_page
-        @splash_page.log_out @splash_page
+        @splash_page.log_out
       end
     end
 
@@ -206,7 +206,7 @@ describe 'bCourses course site creation' do
       ensure
         if standalone
           @splash_page.load_page
-          @splash_page.log_out @splash_page
+          @splash_page.log_out
         end
       end
     end
@@ -225,7 +225,7 @@ describe 'bCourses course site creation' do
           site[:roster_data].get_feed(@driver, site[:course])
         ensure
           @splash_page.load_page
-          @splash_page.log_out @splash_page
+          @splash_page.log_out
         end
       end
 
