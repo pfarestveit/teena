@@ -24,9 +24,9 @@ module Page
       def available_sections_course_title(course_code)
         logger.debug "Looking for the course title for course code #{course_code}"
         begin
-          span_element(xpath: "//span[contains(.,'#{course_code}')]/following-sibling::span[contains(@data-ng-if, 'course.title')]").when_visible Utils.short_wait
-          title = span_element(xpath: "//span[contains(.,'#{course_code}')]/following-sibling::span[contains(@data-ng-if, 'course.title')]").text
-          title && title[2..-1]
+          el = span_element(xpath: "//h3[contains(., '#{course_code}:')]/span")
+          el.when_visible Utils.short_wait
+          el.text[2..-1]
         rescue
           ''
         end
@@ -36,7 +36,7 @@ module Page
       # @param course_code [String]
       # @return [PageObject::Elements::Table]
       def available_sections_table(course_code)
-        table_element(xpath: "//button[contains(.,'#{course_code}')]//following-sibling::div//table")
+        table_element(xpath: "//div[contains(@id, '#{course_code.downcase.gsub(' ', '-')}-')]//table")
       end
 
       # Expands the table of available sections in a course

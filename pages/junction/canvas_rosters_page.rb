@@ -21,9 +21,9 @@ module Page
       paragraph(:no_access_msg, xpath: '//p[contains(.,"You must be a teacher in this bCourses course to view official student rosters.")]')
       paragraph(:no_students_msg, xpath: '//p[contains(.,"Students have not yet signed up for this class.")]')
 
-      elements(:roster_photo, :image, xpath: '//ul[@class="cc-page-roster-photos-list"]/li//img')
-      elements(:roster_photo_placeholder, :span, xpath: '//ul[@class="cc-page-roster-photos-list"]/li//span[text()="No Official Photo is Available"]')
-      elements(:roster_sid, :span, xpath: '//ul[@class="cc-page-roster-photos-list"]/li//span[@data-ng-bind="student.student_id"]')
+      elements(:roster_photo, :image, xpath: '//div[@class="cc-page-roster"]//img[contains(@src, "/photo/")]')
+      elements(:roster_photo_placeholder, :image, xpath: '//div[@class="cc-page-roster"]//img[contains(@src, "photo_unavailable")]')
+      elements(:roster_sid, :span, xpath: '//div[@class="cc-page-roster"]//div[contains(@id, "student-id")]')
 
       # Loads the LTI tool in the context of a Canvas course site
       # @param course [Course]
@@ -85,7 +85,7 @@ module Page
       # Returns an array of all SIDs visible on the page
       # @return [Array<String>]
       def all_sids
-        roster_sid_elements.map &:text
+        roster_sid_elements.map { |el| el.attribute('id').gsub('student-id-', '') }
       end
 
     end
