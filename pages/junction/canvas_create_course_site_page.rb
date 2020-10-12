@@ -18,6 +18,8 @@ module Page
       div(:help, id: 'section-selection-help')
       link(:instr_mode_link, xpath: '//a[contains(text(), "Learn more about instruction modes in bCourses.")]')
 
+      div(:progress_bar, xpath: '//div[@role="progressbar"]')
+
       button(:switch_mode, xpath: '//button[contains(@class, "bc-page-create-course-site-admin-mode-switch")]')
 
       button(:switch_to_instructor, xpath: '//button[contains(.,"Switch to acting as instructor")]')
@@ -45,7 +47,7 @@ module Page
       # @param course [Course]
       def choose_term(course)
         button_element(xpath: "//label[contains(.,'#{course.term}')]/preceding-sibling::input").when_visible Utils.long_wait
-        wait_for_update_and_click_js button_element(xpath: "//label[contains(.,'#{course.term}')]/preceding-sibling::input")
+        wait_for_update_and_click button_element(xpath: "//label[contains(.,'#{course.term}')]/preceding-sibling::input")
       end
 
       # Searches for a course by instructor UID, by section ID list, or by neither depending on the workflow associated
@@ -58,8 +60,8 @@ module Page
         if course.create_site_workflow == 'uid'
           logger.debug "Searching by instructor UID #{instructor.uid}"
           switch_mode unless switch_to_ccn?
-          wait_for_element_and_type_js(instructor_uid_element, instructor.uid)
-          wait_for_update_and_click_js as_instructor_button_element
+          wait_for_element_and_type(instructor_uid_element, instructor.uid)
+          wait_for_update_and_click as_instructor_button_element
           choose_term course
         elsif course.create_site_workflow == 'ccn'
           logger.debug 'Searching by CCN list'
@@ -68,8 +70,8 @@ module Page
           sleep 1
           ccn_list = sections.map &:id
           logger.debug "CCN list is '#{ccn_list}'"
-          wait_for_element_and_type_js(ccn_list_element, ccn_list.join(', '))
-          wait_for_update_and_click_js review_ccns_button_element
+          wait_for_element_and_type(ccn_list_element, ccn_list.join(', '))
+          wait_for_update_and_click review_ccns_button_element
         else
           logger.debug 'Searching as the instructor'
           choose_term course
@@ -100,66 +102,78 @@ module Page
       def select_sections(sections)
         sections.each do |section|
           logger.debug "Selecting section ID #{section.id}"
-          wait_for_update_and_click_js section_checkbox(section.id) unless section_checkbox(section.id).selected?
+          wait_for_update_and_click section_checkbox(section.id) unless section_checkbox(section.id).selected?
         end
+      end
+
+      def section_cbx_xpath(section_id)
+        "//input[@value='#{section_id}']/following-sibling::label"
       end
 
       # Returns the checkbox for a given section
       # @param section_id [String]
       # @return [PageObject::Elements::CheckBox]
       def section_checkbox(section_id)
-        checkbox_element(xpath: "//input[contains(@id,'#{section_id}')]")
+        checkbox_element(xpath: section_cbx_xpath(section_id))
       end
 
       # Returns the course code for a section
       # @param section_id [String]
-      # @return [String]
       def section_course_code(section_id)
-        span_element(xpath: "//input[contains(@id,'#{section_id}')]/ancestor::tbody//td[contains(@class, 'course-code')]/span").text
+        div_element(xpath: "#{section_cbx_xpath(section_id)}/ancestor::tbody//td[contains(@class, 'course-code')]/div").text.strip
       end
 
       # Returns the label for a section
       # @param section_id [String]
       # @return [String]
       def section_label(section_id)
-        label_element(xpath: "//label[@for='cc-template-canvas-manage-sections-checkbox-#{section_id}']").text
+        label_element(xpath: "//label[@for='cc-template-canvas-manage-sections-checkbox-#{section_id}']").text.strip
       end
 
       # Returns the schedules for a section
       # @param section_id [String]
-      # @return [Array<String>]
+      # @return [String]
       def section_schedules(section_id)
-        (e = div_element(xpath: "//input[contains(@id,'#{section_id}')]/../ancestor::tbody//td[contains(@class, 'section-timestamps')]")).exists? ?
-            e.attribute('innerText') : ''
+        if (e = div_element(xpath: "#{section_cbx_xpath(section_id)}/../ancestor::tbody//td[contains(@class, 'section-timestamps')]")).exists?
+          e.attribute('innerText')
+        else
+          ''
+        end
       end
 
       # Returns the locations for a section
       # @param section_id [String]
-      # @return [Array<String>]
+      # @return [String]
       def section_locations(section_id)
-        (e = div_element(xpath: "//input[contains(@id,'#{section_id}')]/../ancestor::tbody//td[contains(@class, 'section-locations')]")).exists? ?
-            e.attribute('innerText') : ''
+        if (e = div_element(xpath: "#{section_cbx_xpath(section_id)}/../ancestor::tbody//td[contains(@class, 'section-locations')]")).exists?
+          e.attribute('innerText')
+        else
+          ''
+        end
       end
 
       # Returns the instructor names for a section
       # @param section_id [String]
       # @return [String]
       def section_instructors(section_id)
-        (e = div_element(xpath: "//input[contains(@id,'#{section_id}')]/../ancestor::tbody//td[contains(@class, 'section-instructors')]/div")).exists? ?
-            e.text : ''
+        if (e = div_element(xpath: "#{section_cbx_xpath(section_id)}/../ancestor::tbody//td[contains(@class, 'section-instructors')]/div")).exists?
+          e.text
+        else
+          ''
+        end
       end
 
       # Returns the section IDs displayed under a course
       # @param course [Course]
       # @return [Array<String>]
       def course_section_ids(course)
-        cell_elements(xpath: "//button[contains(.,'#{course.code}')]/following-sibling::div//td[@data-ng-bind='section.ccn']").map &:text
+        cell_elements(xpath: "//button[contains(.,'#{course.code}')]/following-sibling::div//table//input").map { |el| el.attribute('value') }
       end
 
       # Clicks the 'next' button once it is enabled
       def click_next
         wait_until(Utils.short_wait) { !next_button_element.attribute('disabled') }
-        wait_for_update_and_click_js next_button_element
+        wait_for_update_and_click next_button_element
         site_name_input_element.when_visible Utils.medium_wait
       end
 
@@ -168,14 +182,14 @@ module Page
       # @return [String]
       def enter_site_titles(course)
         site_abbreviation = "QA bCourses Test #{Utils.get_test_id}"
-        wait_for_element_and_type_js(site_name_input_element, "#{site_abbreviation} - #{course.code}")
-        wait_for_element_and_type_js(site_abbreviation_element, site_abbreviation)
+        wait_for_element_and_type(site_name_input_element, "#{site_abbreviation} - #{course.code}")
+        wait_for_element_and_type(site_abbreviation_element, site_abbreviation)
         site_abbreviation
       end
 
       # Clicks the final create site button
       def click_create_site
-        wait_for_update_and_click_js create_site_button_element
+        wait_for_update_and_click create_site_button_element
       end
 
       # Waits for a newly created course site to load, sets the site ID for a course, and then writes the site ID to the
@@ -189,10 +203,9 @@ module Page
       end
 
       def wait_for_progress_bar
-        bar = div_element(xpath: '//div[@role="progressbar"]')
-        bar.when_visible Utils.medium_wait
+        progress_bar_element.when_visible Utils.medium_wait
         logger.info 'Waiting for progress bar to complete'
-        bar.when_not_visible Utils.long_wait
+        progress_bar_element.when_not_visible Utils.long_wait
       end
 
       def wait_for_standalone_site_id(course, user, splash_page)
