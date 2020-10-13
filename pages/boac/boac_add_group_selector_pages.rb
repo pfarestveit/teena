@@ -7,7 +7,7 @@ module BOACAddGroupSelectorPages
   include Page
   include BOACPages
 
-  button(:selector_create_grp_button, id: 'create-curated-group')
+  link(:selector_create_grp_button, id: 'create-curated-group')
   checkbox(:add_all_to_grp_checkbox, id: 'add-all-to-curated-group')
   elements(:add_individual_to_grp_checkbox, :checkbox, xpath: "//input[contains(@id,'curated-group-checkbox')]")
   button(:add_to_grp_button, id: 'add-to-curated-group')
