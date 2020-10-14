@@ -9,9 +9,10 @@ module Page
     include Page
 
     # Header
-    link(:log_out_link, id: 'log-out')
+    button(:log_out_link, id: 'log-out')
 
     # Footer
+    h4(:build_summary_heading, xpath: '//h4[text()="Build Summary"]')
     div(:toggle_footer_link, id: 'toggle-show-dev-auth')
     text_field(:basic_auth_uid_input, id: 'basic-auth-uid')
     text_field(:basic_auth_password_input, id: 'basic-auth-password')
@@ -26,7 +27,7 @@ module Page
 
     # Logs the user out
     def log_out
-      toggle_footer_link_element.when_visible Utils.medium_wait
+      build_summary_heading_element.when_visible Utils.medium_wait
       wait_for_update_and_click log_out_link_element unless title.include? 'Home'
       log_out_link_element.when_not_present Utils.short_wait
     end

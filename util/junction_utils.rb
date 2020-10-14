@@ -78,11 +78,11 @@ class JunctionUtils < Utils
   # @param splash_page [Page::JunctionPages::SplashPage]
   def self.clear_cache(driver, splash_page)
     splash_page.load_page
+    splash_page.log_out
     splash_page.basic_auth @config['admin_uid']
     driver.get("#{junction_base_url}/api/cache/clear")
     sleep 3
     splash_page.load_page
-    splash_page.toggle_footer_link_element.when_visible Utils.long_wait
     splash_page.log_out
   end
 

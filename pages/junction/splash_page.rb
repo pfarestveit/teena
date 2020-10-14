@@ -24,6 +24,7 @@ module Page
       def basic_auth(uid, cal_net = nil)
         logger.info "Logging in as #{uid} using basic auth"
         load_page
+        build_summary_heading_element.when_visible Utils.medium_wait
         scroll_to_bottom
         begin
           log_out if log_out_link?
@@ -42,25 +43,11 @@ module Page
         button.click
         button.when_not_present timeout=Utils.medium_wait
         sleep 1
-        basic_auth_uid_input_element.when_not_visible timeout
       end
 
       # Clicks the sign in button on the splash page
       def click_sign_in_button
         wait_for_load_and_click sign_in_element
-      end
-
-      # Loads the splash page, clicks the sign in button, authenticates in CalNet, and arrives on My Toolbox
-      # @param driver [Selenium::WebDriver]
-      # @param cal_net_page [Page::CalNetPage]
-      # @param username [String]
-      # @param password [String]
-      # @return [JunctionPages::MyToolboxPage]
-      def log_in_to_dashboard(driver, cal_net_page, username, password)
-        load_page
-        click_sign_in_button
-        cal_net_page.log_in(username, password)
-        JunctionPages::MyToolboxPage.new driver
       end
 
     end

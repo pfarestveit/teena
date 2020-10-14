@@ -40,8 +40,7 @@ module Page
       end
 
       # Clicks the sidebar Roster Photos link and shifts focus to the tool
-      # @param driver [Selenium::WebDriver]
-      def click_roster_photos_link(driver)
+      def click_roster_photos_link
         logger.info 'Clicking Roster Photos link'
         wait_for_load_and_click_js roster_photos_link_element
         switch_to_canvas_iframe JunctionUtils.junction_base_url
