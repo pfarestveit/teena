@@ -73,7 +73,7 @@ describe 'bCourses Roster Photos' do
         @roster_photos_page.load_standalone_tool course
       else
         @canvas.load_course_site course
-        @roster_photos_page.click_roster_photos_link @driver
+        @roster_photos_page.click_roster_photos_link
       end
     end
 

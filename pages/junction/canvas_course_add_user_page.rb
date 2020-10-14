@@ -36,6 +36,9 @@ module Page
       link(:bcourses_help_link, xpath: '//a[contains(text(),"bCourses help page")]')
 
       table(:results_table, xpath: '//h2[text()="User Search Results"]/following-sibling::div//table')
+      elements(:result_name, :span, xpath: '//h2[text()="User Search Results"]/following-sibling::div//tbody/tr/td[2]')
+      elements(:result_uid, :span, xpath: '//h2[text()="User Search Results"]/following-sibling::div//tbody/tr/td[3]')
+      elements(:result_email, :span, xpath: '//h2[text()="User Search Results"]/following-sibling::div//tbody/tr/td[4]')
 
       select_list(:user_role, id: 'user-role')
       select_list(:course_section, id: 'course-section')
@@ -58,25 +61,25 @@ module Page
 
       # Expands the maintenance notice and confirms its visibility
       def expand_maintenance_notice
-        wait_for_load_and_click_js maintenance_button_element
+        wait_for_load_and_click maintenance_button_element
         maintenance_detail_element.when_visible Utils.short_wait
       end
 
       # Hides the maintenance notice and confirms it invisibility
       def hide_maintenance_notice
-        wait_for_load_and_click_js maintenance_button_element
+        wait_for_load_and_click maintenance_button_element
         maintenance_detail_element.when_not_visible Utils.short_wait
       end
 
       # Expands the help notice and confirms its visibility
       def expand_help_notice
-        wait_for_load_and_click_js need_help_button_element
+        wait_for_load_and_click need_help_button_element
         help_notice_element.when_visible Utils.short_wait
       end
 
       # Hides the help notice and confirms its invisibility
       def hide_help_notice
-        wait_for_load_and_click_js need_help_button_element
+        wait_for_load_and_click need_help_button_element
         help_notice_element.when_not_visible Utils.short_wait
       end
 
@@ -87,26 +90,26 @@ module Page
         logger.info "Searching for string '#{text}' by #{option}"
         search_type_element.when_visible Utils.medium_wait
         wait_for_element_and_select_js(search_type_element, option)
-        wait_for_element_and_type_js(search_term_element, text)
-        wait_for_update_and_click_js search_button_element
+        wait_for_element_and_type(search_term_element, text)
+        wait_for_update_and_click search_button_element
       end
 
       # Returns all user names displayed in search results
       # @return [Array<String>]
       def name_results
-        (span_elements(xpath: '//span[contains(@data-ng-bind,"user.firstName")]').map &:text).to_a
+        result_name_elements.map(&:text).map &:strip
       end
 
       # Returns all user UIDs displayed in search results
       # @return [Array<String>]
       def uid_results
-        (span_elements(xpath: '//span[@data-ng-bind="user.ldapUid"]').map &:text).to_a
+        result_uid_elements.map(&:text).map &:strip
       end
 
       # Returns all user email addresses displayed in search results
       # @return [Array<String>]
       def email_results
-        (cell_elements(xpath: '//td[@data-ng-bind="user.emailAddress"]').map &:text).to_a
+        result_email_elements.map(&:text).map &:strip
       end
 
       # Returns the checkbox element for selecting a user in search results
@@ -129,7 +132,7 @@ module Page
           wait_for_element_and_select_js(course_section_element, option)
         end
         wait_for_element_and_select_js(user_role_element, user.role)
-        wait_for_update_and_click_js add_user_button_element
+        wait_for_update_and_click add_user_button_element
         success_msg_element.when_visible Utils.medium_wait
         add_event(event, EventType::CREATE, user.full_name)
       end

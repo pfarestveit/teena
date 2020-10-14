@@ -46,8 +46,8 @@ module Page
       # Clicks the button for the test course's term. Uses JavaScript rather than WebDriver
       # @param course [Course]
       def choose_term(course)
-        button_element(xpath: "//label[contains(.,'#{course.term}')]/preceding-sibling::input").when_visible Utils.long_wait
-        wait_for_update_and_click button_element(xpath: "//label[contains(.,'#{course.term}')]/preceding-sibling::input")
+        button_element(xpath: "//label[contains(.,'#{course.term}')]/..").when_visible Utils.long_wait
+        wait_for_update_and_click button_element(xpath: "//label[contains(.,'#{course.term}')]/..")
       end
 
       # Searches for a course by instructor UID, by section ID list, or by neither depending on the workflow associated
@@ -102,12 +102,13 @@ module Page
       def select_sections(sections)
         sections.each do |section|
           logger.debug "Selecting section ID #{section.id}"
-          wait_for_update_and_click section_checkbox(section.id) unless section_checkbox(section.id).selected?
+          section_checkbox(section.id).when_present Utils.short_wait
+          js_click section_checkbox(section.id) unless section_checkbox(section.id).selected?
         end
       end
 
       def section_cbx_xpath(section_id)
-        "//input[@value='#{section_id}']/following-sibling::label"
+        "//input[@value='#{section_id}']"
       end
 
       # Returns the checkbox for a given section
@@ -223,7 +224,8 @@ module Page
           course.site_id = link.attribute('href').gsub("#{Utils.canvas_base_url}/courses/", '')
           logger.info "Course site ID is #{course.site_id}"
           JunctionUtils.set_junction_test_course_id course
-        rescue
+        rescue => e
+          Utils.log_error e
           logger.warn "UID #{user.uid} is not yet associated with the site"
           if (tries -= 1).zero?
             fail
