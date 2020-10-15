@@ -18,7 +18,7 @@ module Page
 
       h1(:page_heading, xpath: '//h1[text()="Find a Person to Add"]')
 
-      span(:no_access_msg, xpath: '//span[text()="You must be a teacher in this bCourses course to import users."]')
+      div(:no_access_msg, xpath: '//div[contains(text(), "Authorization check failed.")]')
       span(:no_sections_msg, xpath: '//span[text()="Course sections failed to load"]')
       div(:no_results_msg, xpath: '//div[contains(text(),"Your search did not match any users with a CalNet ID.")]')
       div(:too_many_results_msg, xpath: '//div[contains(.,"Please refine your search to limit the number of results.")]')

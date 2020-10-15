@@ -128,7 +128,7 @@ module Page
       # @param section_id [String]
       # @return [String]
       def section_label(section_id)
-        label_element(xpath: "//label[@for='cc-template-canvas-manage-sections-checkbox-#{section_id}']").text.strip
+        label_element(xpath: "(//label[@for='cc-template-canvas-manage-sections-checkbox-#{section_id}'])[2]").text.strip
       end
 
       # Returns the schedules for a section
@@ -168,7 +168,7 @@ module Page
       # @param course [Course]
       # @return [Array<String>]
       def course_section_ids(course)
-        cell_elements(xpath: "//button[contains(.,'#{course.code}')]/following-sibling::div//table//input").map { |el| el.attribute('value') }
+        cell_elements(xpath: "//li[contains(., \"#{course.code}: #{course.title}\")]//tbody/tr/td[4]").map &:text
       end
 
       # Clicks the 'next' button once it is enabled
@@ -176,6 +176,11 @@ module Page
         wait_until(Utils.short_wait) { !next_button_element.attribute('disabled') }
         wait_for_update_and_click next_button_element
         site_name_input_element.when_visible Utils.medium_wait
+      end
+
+      def click_cancel
+        logger.debug 'Clicking cancel button'
+        wait_for_update_and_click cancel_button_element
       end
 
       # Enters a unique course site name and abbreviation and returns the abbreviation
@@ -191,6 +196,11 @@ module Page
       # Clicks the final create site button
       def click_create_site
         wait_for_update_and_click create_site_button_element
+      end
+
+      def click_go_back
+        logger.debug 'Clicking go-back button'
+        wait_for_update_and_click go_back_button_element
       end
 
       # Waits for a newly created course site to load, sets the site ID for a course, and then writes the site ID to the

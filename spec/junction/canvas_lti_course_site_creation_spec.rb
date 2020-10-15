@@ -86,6 +86,13 @@ describe 'bCourses course site creation' do
         end
 
         @site_creation_page.click_create_course_site
+
+        if site == sites_to_create.first
+          @create_course_site_page.click_cancel
+          cancel_works = @site_creation_page.verify_block { @site_creation_page.click_create_course_site }
+          it('allows a user to cancel course site creation') { expect(cancel_works).to be true }
+        end
+
         @create_course_site_page.search_for_course(site[:course], site[:teacher], site[:sections_for_site])
 
         # Verify page content and external links for one of the courses
@@ -164,6 +171,12 @@ describe 'bCourses course site creation' do
         @create_course_site_page.expand_available_sections site[:course].code
         @create_course_site_page.select_sections site[:sections_for_site]
         @create_course_site_page.click_next
+
+        if site == sites_to_create.first
+          @create_course_site_page.click_go_back
+          go_back_works = @create_course_site_page.verify_block { @create_course_site_page.click_next }
+          it('allows the user to go back to the initial course site creation page') { expect(go_back_works).to be true }
+        end
 
         default_name = @create_course_site_page.site_name_input
         expected_name = "#{site[:course].title} (#{site[:course].term})"
