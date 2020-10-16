@@ -99,18 +99,18 @@ describe 'bCourses Roster Photos' do
     end
 
     it "shows UID #{teacher.uid} all sections by default on #{course.code} course site ID #{course.site_id}" do
-      expected_section_codes = (sections.map { |section| "#{section.course} #{section.label}" }) << 'All Sections'
+      expected_section_codes = (sections.map { |section| "#{section.course} #{section.label}" }) << 'All sections'
       actual_section_codes = @roster_photos_page.section_select_options
       expect(actual_section_codes).to eql(expected_section_codes.sort)
     end
 
     it "allows UID #{teacher.uid} to filter by string on #{course.code} course site ID #{course.site_id}" do
       if @student_count > 0 || @waitlist_count > 0
-        sid = @roster_photos_page.roster_sid_elements.last.text
+        sid = @roster_photos_page.roster_sid_elements.last.text.gsub('Student:', '').strip
         @roster_photos_page.filter_by_string sid
         @roster_photos_page.wait_until(Utils.short_wait) do
           @roster_photos_page.roster_sid_elements.length == 1
-          @roster_photos_page.roster_sid_elements.first.text == sid
+          @roster_photos_page.roster_sid_elements.first.text.gsub('Student:', '').strip == sid
         end
       end
     end

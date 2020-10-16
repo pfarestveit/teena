@@ -138,7 +138,7 @@ unless ENV['STANDALONE']
 
         it('shows the membership count') { expect(@mailing_lists_page.list_membership_count).to eql('No members') }
         it('shows the most recent membership update') { expect(@mailing_lists_page.list_update_time).to eql('never') }
-        # it('shows a link to the course site') { expect(@mailing_lists_page.external_link_valid?(@mailing_lists_page.list_site_link_element, course_site_1.title)).to be true }
+        it('shows a link to the course site') { expect(@mailing_lists_page.external_link_valid?(@mailing_lists_page.list_site_link_element, course_site_1.title)).to be true }
 
         it 'shows the course site code, title, and ID' do
           @canvas_page.switch_to_canvas_iframe unless "#{@driver.browser}" == 'firefox'

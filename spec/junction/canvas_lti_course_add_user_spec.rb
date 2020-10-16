@@ -224,15 +224,13 @@ describe 'bCourses Find a Person to Add', order: :defined do
             @canvas.load_users_page course
             @canvas.click_find_person_to_add @driver
             @course_add_user_page.search('Oski', 'Last Name, First Name')
-            @course_add_user_page.wait_until(Utils.medium_wait) { @course_add_user_page.user_role_options == ['Student', 'Waitlist Student', 'Observer'] }
+            @course_add_user_page.user_role_element.when_visible Utils.short_wait
+            @course_add_user_page.wait_until(Utils.medium_wait) { @course_add_user_page.user_role_options.map(&:strip) == ['Student', 'Waitlist Student', 'Observer'] }
           elsif user == test.designer
             @canvas.load_users_page course
             @canvas.click_find_person_to_add @driver
             @course_add_user_page.no_access_msg_element.when_visible Utils.medium_wait
-          elsif user == test.reader
-            @course_add_user_page.load_embedded_tool course
-            @course_add_user_page.no_sections_msg_element.when_visible Utils.medium_wait
-          elsif [test.students.first, test.wait_list_student, test.observer].include? user.role
+          elsif [test.observer, test.reader, test.students.first, test.wait_list_student].include? user
             @course_add_user_page.load_embedded_tool course
             @course_add_user_page.no_access_msg_element.when_visible Utils.medium_wait
           end
