@@ -23,6 +23,10 @@ class JunctionUtils < Utils
     @config['basic_auth_password']
   end
 
+  def self.junction_oec_user_uid
+    @config['oec_uid']
+  end
+
   def self.junction_test_data_file
     File.join(Utils.config_dir, 'test-data-bcourses.json')
   end
