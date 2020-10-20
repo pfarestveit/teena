@@ -146,6 +146,15 @@ describe 'BOAC' do
                 it("shows an advisor on #{test_case}") { expect(visible_expanded_note_data[:advisor]).not_to be_nil }
               end
 
+              # Note source
+
+              if note.note_source
+                shows_src = visible_expanded_note_data[:note_src] == "(note imported from #{note.note_source.name})"
+                it("shows the note source '#{note.note_source.name}' on #{test_case}") { expect(shows_src).to be true }
+              else
+                it("shows no note source for BOA #{test_case}") { expect(visible_expanded_note_data[:note_src]).to be_nil }
+              end
+
               # Note topics
 
               if note.topics.any?

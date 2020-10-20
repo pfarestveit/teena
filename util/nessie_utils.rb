@@ -403,22 +403,22 @@ class NessieUtils < Utils
   end
 
   # Returns non-BOA advising notes from a given source for a given student
-  # @param [String] schema
+  # @param [NoteSource] source
   # @param [BOACUser] student
   # @return[Array<Note>]
-  def self.get_external_notes(schema, student)
-    query = "SELECT #{schema}.advising_notes.id AS id,
-                    #{schema}.advising_notes.advisor_uid AS advisor_uid,
-                    #{schema}.advising_notes.advisor_first_name AS advisor_first_name,
-                    #{schema}.advising_notes.advisor_last_name AS advisor_last_name,
-                    #{schema}.advising_notes.created_at AS created_date,
-                    #{schema}.advising_notes.updated_at AS updated_date,
-                    #{schema}.advising_note_topics.topic AS topic
-             FROM #{schema}.advising_notes
-             LEFT JOIN #{schema}.advising_note_topics
-               ON #{schema}.advising_notes.id = #{schema}.advising_note_topics.id
-             WHERE #{schema}.advising_notes.sid = '#{student.sis_id}'
-              #{+ ' AND advisor_first_name != \'Reception\' AND advisor_last_name != \'Front Desk\'' if schema == NoteSource::E_AND_I.schema};"
+  def self.get_external_notes(source, student)
+    query = "SELECT #{source.schema}.advising_notes.id AS id,
+                    #{source.schema}.advising_notes.advisor_uid AS advisor_uid,
+                    #{source.schema}.advising_notes.advisor_first_name AS advisor_first_name,
+                    #{source.schema}.advising_notes.advisor_last_name AS advisor_last_name,
+                    #{source.schema}.advising_notes.created_at AS created_date,
+                    #{source.schema}.advising_notes.updated_at AS updated_date,
+                    #{source.schema}.advising_note_topics.topic AS topic
+             FROM #{source.schema}.advising_notes
+             LEFT JOIN #{source.schema}.advising_note_topics
+               ON #{source.schema}.advising_notes.id = #{source.schema}.advising_note_topics.id
+             WHERE #{source.schema}.advising_notes.sid = '#{student.sis_id}'
+              #{+ ' AND advisor_first_name != \'Reception\' AND advisor_last_name != \'Front Desk\'' if source == NoteSource::E_AND_I};"
 
     results = query_pg_db(nessie_pg_db_credentials, query)
     notes_data = results.group_by { |h1| h1['id'] }.map do |k,v|
@@ -428,7 +428,8 @@ class NessieUtils < Utils
             :advisor => BOACUser.new({:uid => v[0]['advisor_uid'], :first_name => "#{v[0]['advisor_first_name']}", :last_name => "#{v[0]['advisor_last_name']}"}),
             :created_date => Time.parse(v[0]['created_date'].to_s).utc.localtime,
             :updated_date => Time.parse(v[0]['updated_date'].to_s).utc.localtime,
-            :topics => (v.map { |t| t['topic'].upcase if t['topic'] }).compact.sort
+            :topics => (v.map { |t| t['topic'].upcase if t['topic'] }).compact.sort,
+            :note_source => source
         }
       end
     end
@@ -440,14 +441,14 @@ class NessieUtils < Utils
   # @param [BOACUser] student
   # @return [Array<Note>]
   def self.get_asc_notes(student)
-    get_external_notes('boac_advising_asc', student)
+    get_external_notes(NoteSource::ASC, student)
   end
 
   # Returns E&I advising notes associated with a given student
   # @param [BOACUser] student
   # @return [Array<Note>]
   def self.get_e_and_i_notes(student)
-    get_external_notes('boac_advising_e_i', student)
+    get_external_notes(NoteSource::E_AND_I, student)
   end
 
   def self.get_data_sci_notes(student)
@@ -525,7 +526,8 @@ class NessieUtils < Utils
         :created_date => Time.parse(created_date.to_s).utc.localtime,
         :updated_date => Time.parse(updated_date.to_s).utc.localtime,
         :topics => (v.map { |t| t['topic'].upcase if t['topic'] }).compact.sort,
-        :attachments => attachments
+        :attachments => attachments,
+        :note_source => NoteSource::SIS
       }
     end
     notes_data.map { |d| Note.new d }

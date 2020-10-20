@@ -153,6 +153,7 @@ module BOACStudentPageAdvisingNote
     body_el = span_element(id: "note-#{note.id}-message-open")
     advisor_role_el = span_element(id: "note-#{note.id}-author-role")
     advisor_dept_els = span_elements(xpath: "//span[contains(@id, 'note-#{note.id}-author-dept-')]")
+    note_src_el = span_element(xpath: "//tr[@id='permalink-note-#{note.id}']//span[contains(text(), 'note imported from')]")
     topic_els = topic_elements.select { |el| el.attribute('id').include? "note-#{note.id}-topic-" }
     topic_remove_btn_els = topic_remove_btn_elements.select { |el| el.attribute('id').include? "remove-note-#{note.id}-topic" }
     created_el = div_element(id: "expanded-note-#{note.id}-created-at")
@@ -170,6 +171,7 @@ module BOACStudentPageAdvisingNote
       :advisor => (note_advisor_el(note).text if note_advisor_el(note).exists?),
       :advisor_role => (advisor_role_el.text if advisor_role_el.exists?),
       :advisor_depts => advisor_dept_els.map(&:text).sort,
+      :note_src => (note_src_el.text if note_src_el.exists?),
       :topics => topic_els.map(&:text).sort,
       :remove_topics_btns => topic_remove_btn_els,
       :attachments => (item_attachment_els(note).map { |el| el.attribute('innerText').strip }).sort,
