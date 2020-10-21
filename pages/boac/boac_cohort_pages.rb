@@ -309,24 +309,24 @@ module BOACCohortPages
 
   # Sorts cohort search results by GPA (Cumulative) ascending
   def sort_by_gpa_cumulative
-    sort_by 'GPA (Cumulative - Low/High)'
+    sort_by 'Cumulative, ascending'
   end
 
   # Sorts cohort search results by GPA (Cumulative) descending
   def sort_by_gpa_cumulative_desc
-    sort_by 'GPA (Cumulative - High/Low)'
+    sort_by 'Cumulative, descending'
   end
 
   # Sorts cohort search results by a given previous term GPA ascending
   # @param term_code [String]
   def sort_by_last_term_gpa(term_code)
-    sort_by "term_gpa_#{term_code}"
+    sort_by "#{Utils.sis_code_to_term_name(term_code)}, ascending"
   end
 
   # Sorts cohort search results by a given previous term GPA descending
   # @param term_code [String]
   def sort_by_last_term_gpa_desc(term_code)
-    sort_by "term_gpa_#{term_code} desc"
+    sort_by "#{Utils.sis_code_to_term_name(term_code)}, descending"
   end
 
   # Sorts cohort search results by level
@@ -346,32 +346,32 @@ module BOACCohortPages
 
   # Sorts cohort search results by terms in attendance ascending
   def sort_by_terms_in_attend
-    sort_by 'Terms in Attendance (Low/High)'
+    sort_by 'Terms in Attendance, ascending'
   end
 
   # Sorts cohort search results by terms in attendance descending
   def sort_by_terms_in_attend_desc
-    sort_by 'Terms in Attendance (High/Low)'
+    sort_by 'Terms in Attendance, descending'
   end
 
   # Sorts cohort search results by units in progress ascending
   def sort_by_units_in_progress
-    sort_by 'Units (In Progress - Low/High)'
+    sort_by 'In Progress, ascending'
   end
 
   # Sorts cohort search results by units in progress descending
   def sort_by_units_in_progress_desc
-    sort_by 'Units (In Progress - High/Low)'
+    sort_by 'In Progress, descending'
   end
 
   # Sorts cohort search results by units completed ascending
   def sort_by_units_completed
-    sort_by 'Units (Completed - Low/High)'
+    sort_by 'Completed, ascending'
   end
 
   # Sorts cohort search results by units completed descending
   def sort_by_units_completed_desc
-    sort_by 'Units (Completed - High/Low)'
+    sort_by 'Completed, descending'
   end
 
 end
