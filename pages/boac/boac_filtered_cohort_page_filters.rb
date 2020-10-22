@@ -101,7 +101,6 @@ module BOACFilteredCohortPageFilters
     if %w(gpaRanges lastTermGpaRanges lastNameRanges familyDependentRanges studentDependentRanges).include? filter_key
       wait_for_element_and_type(filter_range_min_input_element, filter_option['min'])
       wait_for_element_and_type(filter_range_max_input_element, filter_option['max'])
-      wait_for_update_and_click filter_range_min_input_element
 
     # All others require a selection
     else
