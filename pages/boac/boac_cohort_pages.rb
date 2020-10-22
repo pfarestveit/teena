@@ -169,7 +169,7 @@ module BOACCohortPages
     wait_for_element(export_list_button_element, Utils.medium_wait)
     wait_until(3) { !export_list_button_element.disabled? }
     wait_for_update_and_click export_list_button_element
-    15.times do |idx|
+    16.times do |idx|
       (el = checkbox_element(id: "csv-column-options_BV_option_#{idx}")).when_present Utils.short_wait
       js_click el
     end
@@ -185,19 +185,13 @@ module BOACCohortPages
   def verify_student_list_default_export(cohort_members, parsed_csv)
     wait_until(1, "Expected #{cohort_members.length}, got #{parsed_csv.length}") { parsed_csv.length == cohort_members.length }
     cohort_members.each do |stu|
-      wait_until(1, "Unable to find SID #{stu.sis_id}") do
-        parsed_csv.find do |r|
-          (r.dig(:first_name) == stu.first_name) &&
-              (r.dig(:last_name) == stu.last_name) &&
-              (r.dig(:sid) == stu.sis_id.to_i)
-        end
+      row = parsed_csv.find { |r| r[:sid] == stu.sis_id.to_i }
+      wait_until(1, "SID '#{stu.sis_id}' row data ain't right") do
+        row[:first_name] == stu.first_name
+        row[:last_name] == stu.last_name
+        !row[:email].empty?
+        !row[:phone].to_s.empty?
       end
-    end
-    # Make sure there's some phone / email data
-    wait_until(1) do
-      parsed_csv.by_col!
-      parsed_csv.dig(:email).compact.any?
-      parsed_csv.dig(:phone).compact.any?
     end
   end
 
@@ -218,6 +212,7 @@ module BOACCohortPages
       parsed_csv.dig(:term_gpa).compact.any?
       parsed_csv.dig(:cumulative_gpa).compact.any?
       parsed_csv.dig(:program_status).compact.any?
+      parsed_csv.dig(:transfer).compact.any?
     end
   end
 
@@ -277,25 +272,25 @@ module BOACCohortPages
 
   # SORTING
 
-  select_list(:cohort_sort_select, id: 'students-sort-by')
+  button(:cohort_sort_button, id: 'students-sort-by__BV_toggle_')
 
   # Sorts cohort search results by a given option
   # @param option [String]
   def sort_by(option)
     logger.info "Sorting by #{option}"
-    wait_for_element_and_select_js(cohort_sort_select_element, option)
-    sleep 1
+    wait_for_update_and_click cohort_sort_button_element
+    wait_for_update_and_click button_element(id: "sort-by-option-#{option}")
     wait_for_spinner
   end
 
   # Sorts cohort search results by first name
   def sort_by_first_name
-    sort_by 'First Name'
+    sort_by 'first_name'
   end
 
   # Sorts cohort search results by last name
   def sort_by_last_name
-    sort_by 'Last Name'
+    sort_by 'last_name'
   end
 
   def sort_by_cs_id
@@ -304,74 +299,74 @@ module BOACCohortPages
 
   # Sorts cohort search results by team
   def sort_by_team
-    sort_by 'Team'
+    sort_by 'group_name'
   end
 
   # Sorts cohort search results by GPA (Cumulative) ascending
   def sort_by_gpa_cumulative
-    sort_by 'Cumulative, ascending'
+    sort_by 'gpa'
   end
 
   # Sorts cohort search results by GPA (Cumulative) descending
   def sort_by_gpa_cumulative_desc
-    sort_by 'Cumulative, descending'
+    sort_by 'gpa desc'
   end
 
   # Sorts cohort search results by a given previous term GPA ascending
   # @param term_code [String]
   def sort_by_last_term_gpa(term_code)
-    sort_by "#{Utils.sis_code_to_term_name(term_code)}, ascending"
+    sort_by "term_gpa_#{term_code}"
   end
 
   # Sorts cohort search results by a given previous term GPA descending
   # @param term_code [String]
   def sort_by_last_term_gpa_desc(term_code)
-    sort_by "#{Utils.sis_code_to_term_name(term_code)}, descending"
+    sort_by "term_gpa_#{term_code} desc"
   end
 
   # Sorts cohort search results by level
   def sort_by_level
-    sort_by 'Level'
+    sort_by 'level'
   end
 
   # Sorts cohort search results by major
   def sort_by_major
-    sort_by 'Major'
+    sort_by 'major'
   end
 
   # Sorts cohort search results by entering term
   def sort_by_entering_term
-    sort_by 'Entering Term'
+    sort_by 'entering_term'
   end
 
   # Sorts cohort search results by terms in attendance ascending
   def sort_by_terms_in_attend
-    sort_by 'Terms in Attendance, ascending'
+    sort_by 'terms_in_attendance'
   end
 
   # Sorts cohort search results by terms in attendance descending
   def sort_by_terms_in_attend_desc
-    sort_by 'Terms in Attendance, descending'
+    sort_by 'terms_in_attendance desc'
   end
 
   # Sorts cohort search results by units in progress ascending
   def sort_by_units_in_progress
-    sort_by 'In Progress, ascending'
+    sort_by 'enrolled_units'
   end
 
   # Sorts cohort search results by units in progress descending
   def sort_by_units_in_progress_desc
-    sort_by 'In Progress, descending'
+    sort_by 'enrolled_units desc'
   end
 
   # Sorts cohort search results by units completed ascending
   def sort_by_units_completed
-    sort_by 'Completed, ascending'
+    sort_by 'units'
   end
 
   # Sorts cohort search results by units completed descending
   def sort_by_units_completed_desc
-    sort_by 'Completed, descending'
+    sort_by 'units desc'
   end
 
 end

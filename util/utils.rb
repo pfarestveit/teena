@@ -470,22 +470,6 @@ class Utils
     year_code + season_code
   end
 
-  def self.sis_code_to_term_name(term_code)
-    year = "#{term_code[0]}0#{term_code[1..2]}"
-    season = case term_code[3]
-               when '2'
-                 'Spring'
-               when '5'
-                 'Summer'
-               when '8'
-                 'Fall'
-               else
-                 logger.error "Unknown term season '#{term_code[3]}'"
-                 fail
-             end
-    "#{season} #{year}"
-  end
-
   # SCREENSHOTS
 
   def self.save_screenshot(driver, unique_id)

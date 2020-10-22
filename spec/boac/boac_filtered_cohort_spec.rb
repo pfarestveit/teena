@@ -414,7 +414,7 @@ describe 'BOAC', order: :defined do
 
       it 'an error prompts for logical numeric input' do
         @cohort_page.choose_new_filter_sub_option(filter_name, {'min' => '4', 'max' => '0'})
-        @cohort_page.gpa_filter_logical_error_element.when_visible 3
+        @cohort_page.gpa_filter_logical_error_element.when_visible 1
       end
 
       it 'an error prompts for numeric input from 0 to 4' do

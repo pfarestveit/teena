@@ -146,10 +146,10 @@
             {
                 "expected_grad_terms": [
                     {
-                        "expected_grad_term": "2198"
+                        "expected_grad_term": "2208"
                     },
                     {
-                        "expected_grad_term": "2202"
+                        "expected_grad_term": "2212"
                     }
                 ],
                 "gpa_ranges": [
