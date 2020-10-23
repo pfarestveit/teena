@@ -7,11 +7,11 @@ module BOACPagination
   include Page
   include BOACPages
 
-  link(:page_one_link, xpath: '//button[@aria-label="Go to page 1"]')
-  link(:go_to_first_page_link, xpath: '//button[@aria-label="Go to first page"]')
-  link(:go_to_next_page_link, xpath: '//button[@aria-label="Go to next page"]')
-  link(:go_to_last_page_link, xpath: '//button[@aria-label="Go to last page"]')
-  elements(:go_to_page_link, :link, xpath: '//button[contains(@aria-label,"Go to page")]')
+  link(:page_one_link, xpath: '(//div[@id="pagination-widget-outer"])[1]//button[@aria-label="Go to page 1"]')
+  link(:go_to_first_page_link, xpath: '(//div[@id="pagination-widget-outer"])[1]//button[@aria-label="Go to first page"]')
+  link(:go_to_next_page_link, xpath: '(//div[@id="pagination-widget-outer"])[1]//button[@aria-label="Go to next page"]')
+  link(:go_to_last_page_link, xpath: '(//div[@id="pagination-widget-outer"])[1]//button[@aria-label="Go to last page"]')
+  elements(:go_to_page_link, :link, xpath: '(//div[@id="pagination-widget-outer"])[1]//button[contains(@aria-label,"Go to page")]')
 
   # Clicks the go-to-first-page link and waits till page one is loaded
   def go_to_first_page

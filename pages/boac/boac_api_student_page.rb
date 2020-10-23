@@ -174,10 +174,10 @@ class BOACApiStudentPage
     progress = sis_profile['degreeProgress']
     progress && progress['requirements'] && {
       :date => progress['reportDate'],
-      :writing => progress['requirements']['entryLevelWriting']['status'],
-      :cultures => progress['requirements']['americanCultures']['status'],
-      :history => progress['requirements']['americanHistory']['status'],
-      :institutions => progress['requirements']['americanInstitutions']['status']
+      :writing => "#{progress['requirements']['entryLevelWriting']['name']} #{progress['requirements']['entryLevelWriting']['status']}",
+      :cultures => "#{progress['requirements']['americanCultures']['name']} #{progress['requirements']['americanCultures']['status']}",
+      :history => "#{progress['requirements']['americanHistory']['name']} #{progress['requirements']['americanHistory']['status']}",
+      :institutions => "#{progress['requirements']['americanInstitutions']['name']} #{progress['requirements']['americanInstitutions']['status']}"
     }
   end
 

@@ -262,13 +262,13 @@ describe 'BOAC' do
 
         if api_advisors.any?
           it "shows assigned advisor plans for UID #{student.uid} on the student page" do
-            expect(student_page_sis_data[:advisor_plans]).to eq(api_advisors.map { |a| a[:plan] })
+            expect(student_page_sis_data[:advisor_plans].sort).to eq(api_advisors.map { |a| a[:plan] }.sort)
           end
           it "shows assigned advisor names for UID #{student.uid} on the student page" do
-            expect(student_page_sis_data[:advisor_names]).to eq(api_advisors.map { |a| a[:name]&.strip })
+            expect(student_page_sis_data[:advisor_names].sort).to eq(api_advisors.map { |a| a[:name]&.strip }.sort)
           end
           it "shows assigned advisor emails for UID #{student.uid} on the student page" do
-            expect(student_page_sis_data[:advisor_emails]).to eq(api_advisors.map { |a| "#{a[:email]}" })
+            expect(student_page_sis_data[:advisor_emails].sort).to eq(api_advisors.map { |a| "#{a[:email]}" }.sort)
           end
         else
           it("shows no assigned advisors for UID #{student.uid} on the student page") do
@@ -579,7 +579,7 @@ describe 'BOAC' do
                         component = section_sis_data[:component]
 
                         visible_section_sis_data = @boac_student_page.visible_section_sis_data(term_name, course_code, index)
-                        visible_section = visible_section_sis_data[:section]
+                        visible_section = visible_section_sis_data[:section].split("\n").last
 
                         it "shows the section number for UID #{student.uid} term #{term_name} course #{course_code} section #{component}" do
                           expect(visible_section).not_to be_empty
