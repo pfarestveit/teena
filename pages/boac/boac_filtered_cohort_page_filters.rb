@@ -9,7 +9,7 @@ module BOACFilteredCohortPageFilters
   # NEW FILTERED COHORTS
 
   button(:new_filter_button, xpath: '//button[starts-with(@id, \'new-filter-button\')]')
-  button(:new_sub_filter_button, xpath: '//div[contains(@id,"filter-row-dropdown-secondary")]//button')
+  button(:new_sub_filter_button, xpath: '//button[starts-with(@id, \'filter-row-dropdown-secondary\')]')
   elements(:new_filter_option, :link, class: 'dropdown-item')
   text_field(:filter_range_min_input, id: 'filter-range-min')
   text_field(:filter_range_max_input, id: 'filter-range-max')
@@ -31,7 +31,7 @@ module BOACFilteredCohortPageFilters
   # @param filter_key [String]
   # @return [Element]
   def new_filter_option(filter_key)
-    link_element(id: "dropdown-primary-menuitem-#{filter_key}-new")
+    button(id: "dropdown-primary-menuitem-#{filter_key}-new")
   end
 
   # Returns the Choose button for a new filter sub-option
