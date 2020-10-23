@@ -38,13 +38,23 @@ module BOACUserListPages
     gpa_el = div_element(xpath: "#{row_xpath}//span[text()=\"GPA\"]/following-sibling::div")
     no_gpa_el = span_element(xpath: "#{row_xpath}//span[text()=\"GPA\"]/following-sibling::div/span")
     alerts_el = div_element(xpath: "#{row_xpath}//span[text()=\"Issue count\"]/following-sibling::div")
+    units = if cumul_units_el.exists?
+              cumul_units_el.text
+            elsif no_cumul_units_el.exists?
+              no_cumul_units_el.text
+            end
+    gpa = if gpa_el.exists?
+            gpa_el.text
+          elsif no_gpa_el.exists?
+            no_gpa_el.text
+          end
     {
         :name => (name_el.text if name_el.exists?),
         :sid => (sid_el.text if sid_el.exists?),
         :major => major_els.map(&:text),
         :term_units => (term_units_el.text if term_units_el.exists?),
-        :cumulative_units => (cumul_units_el.exists? ? cumul_units_el.text : no_cumul_units_el.text),
-        :gpa => (gpa_el.exists? ? gpa_el.text : no_gpa_el.text),
+        :cumulative_units => units,
+        :gpa => gpa,
         :alert_count => (alerts_el.text if alerts_el.exists?)
     }
   end

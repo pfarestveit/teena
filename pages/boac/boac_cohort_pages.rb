@@ -129,7 +129,7 @@ module BOACCohortPages
     logger.info "Deleting a cohort named #{cohort.name}"
     wait_for_load_and_click delete_cohort_button_element
     wait_for_update_and_click confirm_delete_button_element
-    wait_until(Utils.short_wait) { current_url == "#{BOACUtils.base_url}/home" }
+    wait_until(Utils.short_wait) { current_url.include? "#{BOACUtils.base_url}/home" }
     sleep Utils.click_wait
   end
 
@@ -294,7 +294,7 @@ module BOACCohortPages
   end
 
   def sort_by_cs_id
-    sort_by 'CS ID'
+    sort_by 'cs_empl_id'
   end
 
   # Sorts cohort search results by team

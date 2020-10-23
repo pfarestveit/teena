@@ -152,10 +152,10 @@ class BOACStudentPage
     wait_for_update_and_click reqts_button_element if reqts_button? && !reqts_button_element.disabled?
     wait_for_update_and_click show_hide_reqts_button_element if show_hide_reqts_button? && show_hide_reqts_button_element.text.include?('Show')
     {
-      :reqt_writing => (writing_reqt.gsub('Entry Level Writing', '').strip if writing_reqt_element.exists?),
-      :reqt_history => (history_reqt.gsub('American History', '').strip if history_reqt_element.exists?),
-      :reqt_institutions => (institutions_reqt.gsub('American Institutions', '').strip if institutions_reqt_element.exists?),
-      :reqt_cultures => (cultures_reqt.gsub('American Cultures', '').strip if cultures_reqt_element.exists?)
+      :reqt_writing => (writing_reqt if writing_reqt_element.exists?),
+      :reqt_history => (history_reqt if history_reqt_element.exists?),
+      :reqt_institutions => (institutions_reqt if institutions_reqt_element.exists?),
+      :reqt_cultures => (cultures_reqt if cultures_reqt_element.exists?)
     }
   end
 

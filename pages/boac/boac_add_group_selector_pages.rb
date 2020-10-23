@@ -23,22 +23,22 @@ module BOACAddGroupSelectorPages
   # Returns a group checkbox
   # @param group [CuratedGroup]
   # @return [Element]
-  def grp_checkbox(group)
-    checkbox_element(id: "curated-group-#{group.id}-checkbox")
+  def grp_checkbox_link(group)
+    link_element(xpath: "//input[@id='curated-group-#{group.id}-checkbox']/../..")
   end
 
   # Checks or un-checks a group checkbox
   # @param group [CuratedGroup]
   def check_grp(group)
-    wait_for_update_and_click grp_checkbox(group)
+    wait_for_update_and_click grp_checkbox_link(group)
   end
 
   # Returns the state of a group checkbox
   # @param group [CuratedGroup]
   # @return [boolean]
   def grp_selected?(group)
-    grp_checkbox(group).when_visible Utils.short_wait
-    grp_checkbox(group).attribute('aria-label') == 'Checked'
+    grp_checkbox_link(group).when_visible Utils.short_wait
+    grp_checkbox_link(group).attribute('innerText').include? 'is selected'
   end
 
   # Clicks the button to create a new group
