@@ -130,8 +130,8 @@ class BOACHomePage
   def expand_member_rows(cohort)
     unless view_all_members_link(cohort).visible?
       cohort.instance_of?(FilteredCohort) ?
-          wait_for_update_and_click_js(link_element(id: "sortable-cohort-#{cohort.id}-toggle")) :
-          wait_for_update_and_click_js(link_element(id: "sortable-curated-#{cohort.id}-toggle"))
+          wait_for_update_and_click_js(button_element(id: "sortable-cohort-#{cohort.id}-toggle")) :
+          wait_for_update_and_click_js(button_element(id: "sortable-curated-#{cohort.id}-toggle"))
     end
   end
 
