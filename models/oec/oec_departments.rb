@@ -16,7 +16,7 @@ class OECDepartments
       AFRICAM = new('AFRICAM', 'African American Studies', 'AFRICAM', %w(F G), true),
       AFRIKANS = new('AFRKANS', 'German', 'GERMAN', %w(F), true),
       AGR_CHM = new('AGR CHM', 'Plant Biology', 'PLANTBI', nil, true),
-      AMERSTD = new('AMERSTD', 'Undergraduate and Interdisciplinary Studies', 'UGIS', %w(F G), true),
+      AMERSTD = new('AMERSTD', 'American Studies', 'AMERSTD', %w(F G), true),
       ANTHRO = new('ANTHRO', 'Anthropology', 'ANTHRO', %w(F G), true),
       A_RESEC = new('A,RESEC', 'Agricultural and Resource Economics', 'A_RESEC', %w(F G), true),
       ARABIC = new('ARABIC', 'Arabic', 'ARABIC', %w(F G), true),
