@@ -42,7 +42,9 @@ describe 'An admin using BOAC' do
     it 'sees all default filtered cohorts' do
       expected_cohort_names = everyone_cohorts.map(&:name).sort
       visible_cohort_names = (@filtered_cohort_page.visible_everyone_cohorts.map &:name).sort
-      @filtered_cohort_page.wait_until(1, "Expected #{expected_cohort_names}, but got #{visible_cohort_names}") { visible_cohort_names == expected_cohort_names }
+      @filtered_cohort_page.wait_until(1, "Expected #{expected_cohort_names}, but got #{visible_cohort_names}") do
+        visible_cohort_names == expected_cohort_names
+      end
     end
   end
 

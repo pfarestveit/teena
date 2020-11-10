@@ -70,6 +70,6 @@ class BOACFilteredCohortPage
 
   # COHORT MANAGEMENT
 
-  elements(:everyone_cohort_link, :link, xpath: '//h1[text()="Everyone\'s Cohorts"]/following-sibling::div//a')
+  elements(:everyone_cohort_link, :link, xpath: '//h1[text()=" Everyone\'s Cohorts "]/following-sibling::div//a')
 
 end

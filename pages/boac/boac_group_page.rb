@@ -40,7 +40,7 @@ class BOACGroupPage
     h1_element(xpath: "//h1[@id='curated-group-name'][contains(., \"#{group.name}\")]")
   end
 
-  elements(:everyone_group_link, :link, xpath: '//h1[text()="Everyone\'s Groups"]/following-sibling::div//a')
+  elements(:everyone_group_link, :link, xpath: '//h1[text()=" Everyone\'s Groups "]/following-sibling::div//a')
 
   # Returns all the curated groups displayed on the Everyone's Groups page
   # @return [Array<CuratedGroup>]
@@ -49,7 +49,9 @@ class BOACGroupPage
     wait_for_spinner
     begin
       wait_until(Utils.short_wait) { everyone_group_link_elements.any? }
-      groups = everyone_group_link_elements.map { |link| CuratedGroup.new({id: link.attribute('href').gsub("#{BOACUtils.base_url}/curated/", ''), name: link.text}) }
+      groups = everyone_group_link_elements.map do |link|
+        CuratedGroup.new({id: link.attribute('href').gsub("#{BOACUtils.base_url}/curated/", ''), name: link.text})
+      end
     rescue
       groups = []
     end

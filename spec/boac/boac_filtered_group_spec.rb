@@ -41,7 +41,7 @@ describe 'A BOA filtered cohort' do
       @homepage.click_sidebar_create_filtered
       @cohort_page.click_new_filter_button
       @cohort_page.new_filter_option('curatedGroupIds').when_visible 1
-      expect(@cohort_page.new_filter_option('curatedGroupIds').attribute('class')).to eql('dropdown-item disabled')
+      expect(@cohort_page.new_filter_option('curatedGroupIds').attribute('disabled')).to eql('true')
     end
   end
 

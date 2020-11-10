@@ -98,7 +98,7 @@ else
         it 'can cancel an unsaved batch of notes' do
           @homepage.hit_escape
           @homepage.click_create_note_batch
-          @homepage.wait_for_element_and_type(@homepage.note_body_text_area_elements[0], 'Discard me!')
+          @homepage.wait_for_element_and_type(@homepage.note_body_text_area_elements[1], 'Discard me!')
           @homepage.click_cancel_new_note
           @homepage.confirm_delete_or_discard
           @homepage.wait_until(1) { @homepage.note_body_text_area_elements.empty? }
