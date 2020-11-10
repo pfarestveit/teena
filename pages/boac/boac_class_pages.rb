@@ -29,7 +29,7 @@ module BOACClassPages
   end
 
   h1(:course_code, id: 'course-header')
-  div(:course_details, class: 'course-details-section')
+  div(:course_details, xpath: '//h2[text()="Details"]/..')
   div(:course_title, class: 'course-section-title')
   div(:term_name, class: 'course-term-name')
 
@@ -52,7 +52,7 @@ module BOACClassPages
   # @param index [Integer]
   # @return [Array<String>]
   def meeting_instructors(index)
-    el = span_element(:class => 'course-details-instructors')
+    el = div_element(xpath: '//span[@class="course-instructors-header"]/..')
     (el.exists? && !el.text.empty?) ? (el.text.gsub('Instructor:', '').gsub('Instructors:', '').strip.split(', ')) : []
   end
 

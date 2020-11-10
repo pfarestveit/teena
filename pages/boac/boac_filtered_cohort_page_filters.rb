@@ -31,7 +31,7 @@ module BOACFilteredCohortPageFilters
   # @param filter_key [String]
   # @return [Element]
   def new_filter_option(filter_key)
-    button(id: "dropdown-primary-menuitem-#{filter_key}-new")
+    button_element(id: "dropdown-primary-menuitem-#{filter_key}-new")
   end
 
   # Returns the Choose button for a new filter sub-option
@@ -48,8 +48,6 @@ module BOACFilteredCohortPageFilters
     filter_option = case filter_key
                       when 'coeEthnicities'
                         CohortFilter.coe_ethnicity_per_code filter_option
-                      when 'coeGenders'
-                        CohortFilter.coe_gender_per_code filter_option
                       when 'visaTypes'
                         if filter_option == 'All types'
                           filter_option
@@ -89,7 +87,7 @@ module BOACFilteredCohortPageFilters
       when 'curatedGroupIds'
         link_element(id: "My Curated Groups-#{filter_option}")
       else
-        link_element(xpath: "//div[@class=\"filter-row-column-02 mt-1\"]//a[contains(.,\"#{filter_option}\")]")
+        link_element(xpath: "//div[@class=\"filter-row-column-02 mt-1\"]//button[contains(.,\"#{filter_option}\")]")
     end
   end
 
@@ -105,7 +103,7 @@ module BOACFilteredCohortPageFilters
     # All others require a selection
     else
       wait_for_update_and_click new_sub_filter_button_element
-      wait_for_update_and_click_js new_filter_sub_option_element(filter_key, filter_option)
+      wait_for_update_and_click new_filter_sub_option_element(filter_key, filter_option)
     end
   end
 
@@ -140,6 +138,7 @@ module BOACFilteredCohortPageFilters
       criterion = criterion.code if criterion.instance_of? Squad
       missing_options << criterion unless new_filter_sub_option_element(key, criterion).exists?
     end
+    hit_escape
     wait_for_update_and_click unsaved_filter_cancel_button_element
     logger.debug "The options #{missing_options} are not present and will need to be removed from search criteria" if missing_options.any?
     missing_options
@@ -480,9 +479,9 @@ module BOACFilteredCohortPageFilters
     else
       wait_for_update_and_click button_element(xpath: "#{existing_filter_sub_options_xpath filter_name}//button")
       if ['Entering Term', 'Expected Graduation Term', 'Advisor (COE)'].include? filter_name
-        wait_for_update_and_click link_element(xpath: "//a[contains(@id, \"#{filter_name}\")][contains(@id, \"#{edited_filter_option}\")]")
+        wait_for_update_and_click link_element(xpath: "//button[contains(@id, \"#{filter_name}\")][contains(@id, \"#{edited_filter_option}\")]")
       else
-        wait_for_update_and_click link_element(xpath: "//a[contains(@id, \"#{filter_name}\")][contains(., \"#{edited_filter_option}\")]")
+        wait_for_update_and_click link_element(xpath: "//button[contains(@id, \"#{filter_name}\")][contains(., \"#{edited_filter_option}\")]")
       end
     end
   end

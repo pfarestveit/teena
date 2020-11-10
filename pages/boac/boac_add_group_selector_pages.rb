@@ -8,8 +8,9 @@ module BOACAddGroupSelectorPages
   include BOACPages
 
   link(:selector_create_grp_button, id: 'create-curated-group')
-  checkbox(:add_all_to_grp_checkbox, id: 'add-all-to-curated-group')
-  elements(:add_individual_to_grp_checkbox, :checkbox, xpath: "//input[contains(@id,'curated-group-checkbox')]")
+  checkbox(:add_all_to_grp_checkbox, xpath: '//input[@id="add-all-to-curated-group"]/..')
+  elements(:add_individual_to_grp_checkbox, :checkbox, xpath: "//input[contains(@id,'curated-group-checkbox')]/..")
+  elements(:add_individual_to_grp_input, :text_field, xpath: "//input[contains(@id,'curated-group-checkbox')]")
   button(:add_to_grp_button, id: 'add-to-curated-group')
   button(:students_added_to_grp_conf, id: 'add-to-curated-group-confirmation')
   button(:student_added_to_grp_conf, id: 'added-to-curated-group')
@@ -118,7 +119,7 @@ module BOACAddGroupSelectorPages
   # @param students [Array<User>]
   def select_students_to_add(students)
     logger.debug "Selecting UIDs: #{students.map &:uid}"
-    students.each { |s| wait_for_update_and_click checkbox_element(id: "student-#{s.sis_id}-curated-group-checkbox") }
+    students.each { |s| wait_for_update_and_click checkbox_element(xpath: "//input[@id='student-#{s.sis_id}-curated-group-checkbox']/..") }
   end
 
   # Selects and adds multiple students to an existing group on the cohort and class page list views
@@ -147,7 +148,7 @@ module BOACAddGroupSelectorPages
 
     # Don't try to add users to the group if they're already in the group
     group_sids = group.members.map &:sis_id
-    visible_sids = add_individual_to_grp_checkbox_elements.map { |el| el.attribute('id').split('-')[1] }
+    visible_sids = add_individual_to_grp_input_elements.map { |el| el.attribute('id').split('-')[1] }
     sids_to_add = visible_sids - group_sids
     students_to_add = all_students.select { |student| sids_to_add.include? student.sis_id }
     add_students_to_grp(students_to_add, group)

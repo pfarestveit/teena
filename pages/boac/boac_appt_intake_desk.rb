@@ -61,7 +61,7 @@ module BOACApptIntakeDesk
   select_list(:topic_select, id: 'add-topic-select-list')
   elements(:topic_option, :option, xpath: '//select[@id="add-topic-select-list"]/option')
   elements(:topic_pill, :div, xpath: '//div[contains(@id, "topic-label-")]')
-  text_area(:addl_info_text_area, xpath: '//div[@role="textbox"]')
+  elements(:addl_info_text_area, :text_area, xpath: '//div[@role="textbox"]')
 
   # Returns the UIDs of available advisors shown as appointment options
   # @return [Array<String>]
@@ -146,7 +146,7 @@ module BOACApptIntakeDesk
   # @param appt [Appointment]
   def enter_detail(appt)
     logger.info "Entering appointment detail '#{appt.detail}'"
-    wait_for_textbox_and_type(addl_info_text_area_element, appt.detail)
+    wait_for_textbox_and_type(addl_info_text_area_elements[1], appt.detail)
   end
 
   ### CREATE NEW DROP-IN APPOINTMENT ###

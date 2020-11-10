@@ -42,7 +42,7 @@ class BOACSearchResultsPage
 
   # ADMIT SEARCH
 
-  h1(:admit_results_count, xpath: '//h1[@id="admit-results-page-header"]')
+  h2(:admit_results_count, xpath: '//h2[@id="admit-results-page-header"]')
 
   # Returns the result count for an admit search
   # @return [Integer]
@@ -80,7 +80,7 @@ class BOACSearchResultsPage
 
   # STUDENT SEARCH
 
-  h1(:student_results_count, xpath: '//h1[contains(text(),"student")]')
+  h2(:student_results_count, id: 'student-results-page-header')
 
   # Returns the result count for a student search
   # @return [Integer]
@@ -308,7 +308,7 @@ class BOACSearchResultsPage
   # @param students [Array<User>]
   def select_students_to_add(students)
     logger.info "Adding student UIDs: #{students.map &:sis_id}"
-    students.each { |s| wait_for_update_and_click checkbox_element(id: "student-#{s.sis_id}-curated-group-checkbox") }
+    students.each { |s| wait_for_update_and_click checkbox_element(xpath: "//input[@id='student-#{s.sis_id}-curated-group-checkbox']/..") }
   end
 
   # Adds a given set of students to an existing group
@@ -333,7 +333,7 @@ class BOACSearchResultsPage
     wait_until(Utils.short_wait) { add_individual_to_grp_checkbox_elements.any? &:visible? }
     wait_for_update_and_click add_all_to_grp_checkbox_element
     logger.debug "There are #{add_individual_to_grp_checkbox_elements.length} individual checkboxes"
-    visible_sids = add_individual_to_grp_checkbox_elements.map { |el| el.attribute('id').split('-')[1] }
+    visible_sids = add_individual_to_grp_input_elements.map { |el| el.attribute('id').split('-')[1] }
     students = all_students.select { |student| visible_sids.include? student.sis_id }
     add_students_to_grp(students, group)
   end

@@ -49,6 +49,7 @@ class BOACClassMatrixViewPage
   # @param student [BOACUser]
   # @return [Boolean]
   def bubble_expanded?(student)
+    sleep 1
     h4_element(xpath: "//h4[text()='#{student.full_name}']").visible?
   end
 

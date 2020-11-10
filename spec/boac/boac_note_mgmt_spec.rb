@@ -77,7 +77,7 @@ else
         it 'can cancel an unsaved new note' do
           @student_page.click_cancel_new_note
           @student_page.click_create_new_note
-          @student_page.wait_for_element_and_type(@student_page.note_body_text_area_elements[0], 'An edit to forget')
+          @student_page.wait_for_element_and_type(@student_page.note_body_text_area_elements[1], 'An edit to forget')
           @student_page.click_cancel_new_note
           @student_page.confirm_delete_or_discard
           @student_page.wait_until(1) { @student_page.note_body_text_area_elements.empty? }
@@ -175,6 +175,7 @@ else
           @student_page.expand_search_options
           @student_page.uncheck_include_students_cbx
           @student_page.uncheck_include_classes_cbx
+          sleep Utils.short_wait
         end
 
         shared_examples 'searching for your own note' do
@@ -333,7 +334,7 @@ else
         it 'can cancel the edit' do
           @student_page.expand_item note_2
           @student_page.click_edit_note_button note_2
-          @student_page.wait_for_element_and_type(@student_page.note_body_text_area_elements[0], 'An edit to forget')
+          @student_page.wait_for_element_and_type(@student_page.note_body_text_area_elements[1], 'An edit to forget')
           @student_page.click_cancel_note_edit
           @student_page.confirm_delete_or_discard
           @student_page.verify_note note_2

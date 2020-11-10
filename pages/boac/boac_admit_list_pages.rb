@@ -9,7 +9,7 @@ module BOACAdmitListPages
   include BOACPagination
   include BOACAdmitPages
 
-  elements(:admit_sid, :span, xpath: '//h1[@id="admit-results-page-header"]/following-sibling::div//span[text()="C S I D"]/following-sibling::span')
+  elements(:admit_sid, :span, xpath: '//h2[@id="admit-results-page-header"]/following-sibling::div//span[text()="C S I D"]/following-sibling::span')
 
   # Returns all the CS IDs visible in a list of admits
   # @return [Array<String>]

@@ -9,6 +9,7 @@ describe 'The BOAC passenger manifest' do
   auth_users = BOACUtils.get_authorized_users
   non_admin_depts = BOACDepartments::DEPARTMENTS - [BOACDepartments::ADMIN, BOACDepartments::NOTES_ONLY]
   dept_advisors = non_admin_depts.map { |dept| {:dept => dept, :advisors => BOACUtils.get_dept_advisors(dept)} }
+  dept_advisors.keep_if { |a| a[:advisors].any? }
 
   before(:all) do
     # Initialize a user for the add/edit user tests
@@ -131,16 +132,15 @@ describe 'The BOAC passenger manifest' do
     before { @pax_manifest_page.select_filter_mode }
 
     it 'shows all departments' do
-      expected_options = ['All'] + non_admin_depts.map(&:name).sort
+      expected_options = ['All'] + (dept_advisors.map { |a| a[:dept].name }).sort
       expect(@pax_manifest_page.dept_select_options).to eql(expected_options)
     end
 
-    non_admin_depts.each do |dept|
-      it "shows all the advisors in #{dept.name}" do
-        logger.info "Checking advisor list for #{dept.name}"
-        dept_advisors = auth_users.select { |u| u.depts.include? dept }
-        @pax_manifest_page.select_dept dept
-        expected_uids = dept_advisors.map(&:uid).sort
+    dept_advisors.each do |dept|
+      it "shows all the advisors in #{dept[:dept].name}" do
+        logger.info "Checking advisor list for #{dept[:dept].name}"
+        @pax_manifest_page.select_dept dept[:dept]
+        expected_uids = dept[:advisors].map(&:uid).sort
         @pax_manifest_page.wait_for_advisor_list
         visible_uids = @pax_manifest_page.list_view_uids.sort
         @pax_manifest_page.wait_until(1, "Expected but not present: #{expected_uids - visible_uids}, present but not expected: #{visible_uids - expected_uids}") do

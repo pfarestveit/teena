@@ -171,7 +171,7 @@ describe 'BOA' do
       it("offers no cohort history button for a cohort using #{cohort.search_criteria.inspect}") { expect(@cohort_page.history_button?).to be false }
     end
 
-    context 'when the advisor enters invalid filter input in a Dependents' do
+    context 'when the advisor enters invalid filter input' do
 
       before(:all) do
         @homepage.load_page

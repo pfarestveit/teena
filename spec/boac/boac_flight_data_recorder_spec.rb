@@ -3,6 +3,7 @@ require_relative '../../util/spec_helper'
 include Logging
 
 depts = BOACDepartments::DEPARTMENTS - [BOACDepartments::ADMIN, BOACDepartments::NOTES_ONLY]
+depts.keep_if { |dept| BOACUtils.get_dept_advisors(dept).any? }
 all_users = BOACUtils.get_authorized_users.select &:active
 all_non_admin_users = all_users.reject &:is_admin
 

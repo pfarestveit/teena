@@ -27,7 +27,7 @@ module BOACPagesCreateNoteModal
   # @param note [NoteTemplate]
   def enter_note_body(note)
     logger.debug "Entering note body '#{note.body}'"
-    wait_for_textbox_and_type(note_body_text_area_elements[0], note.body)
+    wait_for_textbox_and_type(note_body_text_area_elements[1], note.body)
   end
 
 

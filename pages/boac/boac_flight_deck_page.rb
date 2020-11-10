@@ -53,7 +53,7 @@ class BOACFlightDeckPage
 
   checkbox(:post_service_announcement_checkbox, id: 'checkbox-publish-service-announcement')
   h2(:edit_service_announcement, id: 'edit-service-announcement')
-  text_area(:update_service_announcement, xpath: '//div[@role="textbox"]')
+  text_area(:update_service_announcement, xpath: '(//div[@role="textbox"])[2]')
   button(:update_service_announcement_button, id: 'button-update-service-announcement')
   span(:service_announcement_banner, id: 'service-announcement-banner')
   span(:service_announcement_checkbox_label, id: 'checkbox-service-announcement-label')

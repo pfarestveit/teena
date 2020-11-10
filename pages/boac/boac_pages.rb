@@ -352,6 +352,7 @@ module BOACPages
     from_date = date ? date.strftime('%m/%d/%Y') : ''
     logger.debug "Entering note date from '#{from_date}'"
     wait_for_element_and_type(note_date_from_element, from_date)
+    hit_escape
   end
 
   # Sets the "Last updated > To" notes search option
@@ -361,6 +362,7 @@ module BOACPages
     to_date = date ? date.strftime('%m/%d/%Y') : ''
     logger.debug "Entering note date to '#{to_date}'"
     wait_for_element_and_type(note_date_to_element, to_date)
+    hit_escape
   end
 
   # Sets both "Last updated" notes search options

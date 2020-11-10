@@ -8,7 +8,7 @@ module BOACListViewPages
   include BOACPages
   include BOACPagination
 
-  elements(:player_link, :a, xpath: '//a[contains(@href, "/student/")]')
+  elements(:player_link, :link, xpath: '//a[contains(@href, "/student/")]')
   elements(:player_name, :h3, xpath: '//h3[contains(@class, "student-name")]')
   elements(:player_sid, :span, xpath: '//div[contains(@id, "student-sid")]')
 
