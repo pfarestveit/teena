@@ -199,7 +199,9 @@ module BOACStudentPageAdvisingNote
     expand_item note
     visible_data.merge!(visible_expanded_note_data note)
     wait_until(1, "Expected '#{note.body}', got '#{visible_data[:body]}'") { visible_data[:body] == "#{note.body}" }
-    wait_until(1, 'Expected non-blank advisor name') { !visible_data[:advisor].empty? }
+    wait_until(1, "Expected '#{note.advisor.full_name.downcase}', got '#{visible_data[:advisor].downcase}'") do
+      visible_data[:advisor].downcase == note.advisor.full_name.downcase
+    end
     wait_until(1, 'Expected non-blank advisor role') { !visible_data[:advisor_role].empty? }
     wait_until(1) { !visible_data[:advisor_depts].any?(&:empty?) }
 

@@ -159,8 +159,8 @@ describe 'BOAC' do
                             all_student_data << student_class_page_data
                           end
 
-                          @class_page.load_page(term_id, section_data[:ccn], student)
                           expected_students.each do |classmate|
+                            @class_page.load_page(term_id, section_data[:ccn], student)
                             logger.info "Checking SIS data for UID #{classmate.uid}"
                             student_test_case = "UID #{classmate.uid} #{class_test_case}"
                             student_data = all_student_data.find { |d| d[:sid] == classmate.sis_id }
@@ -242,7 +242,7 @@ describe 'BOAC' do
                             student_data[:sites].each do |site|
                               site_test_case = "#{student_test_case} site ID #{site[:site_id]}"
                               index = student_data[:sites].index site
-                              visible_site_data = @class_page.visible_assigns_data(@driver, classmate, index)
+                              visible_site_data = @class_page.visible_assigns_data(classmate, index)
                               logger.debug "Checking #{site_test_case} at node #{index + 1}, code #{site[:site_code]}"
 
                               if site[:nessie_assigns_submitted][:score].empty?
@@ -254,7 +254,6 @@ describe 'BOAC' do
                                 else
                                   it("shows the assignments submitted count for #{site_test_case}") { expect(visible_site_data[:assigns_submitted]).to eql(site[:nessie_assigns_submitted][:score]) }
                                 end
-                                it("shows the assignments submitted max for #{site_test_case}") { expect(visible_site_data[:assigns_submitted_max]).to eql(site[:nessie_assigns_submitted][:max]) }
                               end
 
                               # Currently no grades data is shown unless it can produce a boxplot

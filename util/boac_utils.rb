@@ -390,6 +390,17 @@ class BOACUtils < Utils
     end
   end
 
+  def self.set_advisor_data(advisor)
+    query = "SELECT sid, author_name
+              FROM notes
+              WHERE author_uid = '#{advisor.uid}';"
+    results = Utils.query_pg_db(boac_db_credentials, query)
+    if results.any?
+      advisor.sis_id = results[0]['sid']
+      advisor.full_name = results[0]['author_name']
+    end
+  end
+
   # Returns all SIDs in the manual advisee table
   # @return [Array[<String>]]
   def self.manual_advisee_sids

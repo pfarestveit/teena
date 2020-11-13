@@ -357,6 +357,7 @@ class BOACTestConfig < TestConfig
   def note_management
     set_note_attachments
     set_base_configs
+    BOACUtils.set_advisor_data @advisor
   end
 
   # Config for testing batch note creation
@@ -364,6 +365,7 @@ class BOACTestConfig < TestConfig
     set_note_attachments
     set_base_configs
     set_default_cohort
+    BOACUtils.set_advisor_data @advisor
   end
 
   # Config for testing note templates
@@ -371,6 +373,7 @@ class BOACTestConfig < TestConfig
     set_base_configs BOACDepartments::L_AND_S
     set_default_cohort
     set_note_attachments
+    BOACUtils.set_advisor_data @advisor
   end
 
   # Config for admit search tests

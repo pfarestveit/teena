@@ -51,7 +51,7 @@ describe 'BOA note templates' do
 
     context 'when an advisor creates a new template' do
 
-      before(:all) { @note = Note.new(subject: "Note student-page-create #{@test.id}") }
+      before(:all) { @note = Note.new(subject: "Note student-page-create #{@test.id}", advisor: @test.advisor) }
 
       it('require a note subject') { expect(@student_page.create_template_button_element.disabled?).to be true }
 
@@ -98,7 +98,7 @@ describe 'BOA note templates' do
     context 'when an advisor edits an existing template' do
 
       before(:all) do
-        @note = Note.new(subject: "Note student-page-edit #{@test.id}")
+        @note = Note.new(subject: "Note student-page-edit #{@test.id}", advisor: @test.advisor)
         @student_page.load_page @student
         @student_page.click_create_new_note
       end
@@ -186,7 +186,7 @@ describe 'BOA note templates' do
     context 'when an advisor creates a new template' do
 
       before(:all) do
-        @note_batch = NoteBatch.new(subject: "Note batch-create #{@test.id}", body: "Body #{@test.id}")
+        @note_batch = NoteBatch.new(subject: "Note batch-create #{@test.id}", body: "Body #{@test.id}", advisor: @test.advisor)
         @homepage.click_create_note_batch
       end
 
@@ -240,7 +240,7 @@ describe 'BOA note templates' do
     context 'when an advisor edits an existing template' do
 
       before(:all) do
-        @note_batch = NoteBatch.new(subject: "Note batch edit #{@test.id}")
+        @note_batch = NoteBatch.new(subject: "Note batch edit #{@test.id}", advisor: @test.advisor)
         @homepage.click_create_note_batch
         @homepage.add_students_to_batch(@note_batch, @students)
         @homepage.add_cohorts_to_batch(@note_batch, [@test.default_cohort])
