@@ -84,9 +84,9 @@ class BOACHomePage
 
   # FILTERED COHORTS AND CURATED GROUPS
 
-  elements(:filtered_cohort, :span, xpath: '//div[contains(@id,"sortable-cohort")]//h2/span[2]')
+  elements(:filtered_cohort, :span, xpath: '//div[contains(@id,"sortable-cohort")]//h3/span[2]')
   h1(:no_filtered_cohorts_msg, id: 'no-cohorts-header')
-  elements(:curated_group, :span, xpath: '//div[contains(@id,"sortable-curated")]//h2/span[2]')
+  elements(:curated_group, :span, xpath: '//div[contains(@id,"sortable-curated")]//h3/span[2]')
 
   # Returns the names of filtered cohorts shown on the homepage
   # @return [Array<String>]
@@ -150,7 +150,7 @@ class BOACHomePage
   def member_count(cohort)
     el = cohort.instance_of?(FilteredCohort) ?
         span_element(id: "sortable-cohort-#{cohort.id}-total-student-count") :
-        span_element(xpath: "#{curated_group_xpath(cohort)}//h2/span[3]")
+        span_element(xpath: "#{curated_group_xpath(cohort)}//h3/span[3]")
     el.text.to_i if el.exists?
   end
 

@@ -147,24 +147,9 @@ class BOACClassListViewPage
     score_xpath = "#{assigns_submit_xpath(student, node)}"
     has_boxplot = verify_block { mouseover(div_element(xpath: "#{score_xpath}#{boxplot_trigger_xpath}")) }
     el = has_boxplot ?
-             div_element(xpath: "#{score_xpath}//div[text()=\"User Score\"]/following-sibling::div") :
+             div_element(xpath: '//div[@class="highcharts-tooltip-container"]//div[text()="User Score"]/following-sibling::div') :
              div_element(xpath: "#{score_xpath}//strong")
-    el.text if el.exists?
-  end
-
-  # Returns a student's max-assignments-submitted count for a site at a given node
-  # @param student [BOACUser]
-  # @param node [Integer]
-  # @return [String]
-  def assigns_submit_max(student, node)
-    score_xpath = "#{assigns_submit_xpath(student, node)}"
-    has_boxplot = verify_block { mouseover(div_element(xpath: "#{score_xpath}#{boxplot_trigger_xpath}")) }
-    el = has_boxplot ?
-             div_element(xpath: "#{score_xpath}//div[text()=\"Maximum\"]/following-sibling::div") :
-             span_element(xpath: "#{assigns_submit_xpath(student, node)}//strong/following-sibling::span")
-    if el.exists?
-      el.text.include?(' ') ? el.text.split(' ')[1].delete(')') : el.text
-    end
+    el.text.split(' ').last if el.exists?
   end
 
   # Returns the 'No Data' message shown for a student's assignment-submitted count for a site at a given node
@@ -185,17 +170,16 @@ class BOACClassListViewPage
   end
 
   # Returns the student's assignment total score for a site at a given node. If a boxplot exists, mouses over it to reveal the score.
-  # @param driver [Selenium::WebDriver]
   # @param student [BOACUser]
   # @param node [Integer]
   # @return [String]
-  def assigns_grade_score(driver, student, node)
+  def assigns_grade_score(student, node)
     score_xpath = "#{assigns_grade_xpath(student, node)}"
     has_boxplot = verify_block { mouseover(div_element(xpath: "#{score_xpath}#{boxplot_trigger_xpath}")) }
     el = has_boxplot ?
-        div_element(xpath: "#{score_xpath}//div[text()=\"User Score\"]/following-sibling::div") :
-        div_element(xpath: "#{score_xpath}//strong")
-    el.text if el.exists?
+             div_element(xpath: "#{score_xpath}//div[contains(text(), \"User score\")]") :
+             div_element(xpath: "#{score_xpath}//strong")
+    el.text.split.last if el.exists?
   end
 
   # Returns a student's assignment total score No Data message for a site at a given node
@@ -208,18 +192,16 @@ class BOACClassListViewPage
   end
 
   # Returns a student's visible analytics data for a site at a given index
-  # @param driver [Selenium::WebDriver]
   # @param student [BOACUser]
   # @param index [Integer]
   # @return [Hash]
-  def visible_assigns_data(driver, student, index)
+  def visible_assigns_data(student, index)
     node = index + 1
     {
       :site_code => site_code(student, node),
       :assigns_submitted => assigns_submit_score(student, node),
-      :assigns_submitted_max => assigns_submit_max(student, node),
       :assigns_submit_no_data => assigns_submit_no_data(student, node),
-      :assigns_grade => assigns_grade_score(driver, student, node),
+      :assigns_grade => assigns_grade_score(student, node),
       :assigns_grade_no_data => assigns_grade_no_data(student, node)
     }
   end
