@@ -12,6 +12,7 @@ module Page
     button(:log_out_link, id: 'log-out')
 
     # Footer
+    button(:stop_viewing_as_button, id: 'stop-viewing-as')
     h4(:build_summary_heading, xpath: '//h4[text()="Build Summary"]')
     div(:toggle_footer_link, id: 'toggle-show-dev-auth')
     text_field(:basic_auth_uid_input, id: 'basic-auth-uid')
@@ -30,6 +31,12 @@ module Page
       build_summary_heading_element.when_visible Utils.medium_wait
       wait_for_update_and_click log_out_link_element unless title.include? 'Home'
       log_out_link_element.when_not_present Utils.short_wait
+    end
+
+    def stop_viewing_as
+      logger.info 'Clicking stop-view-as'
+      wait_for_load_and_click stop_viewing_as_button_element
+      stop_viewing_as_button_element.when_not_present Utils.short_wait
     end
 
   end
