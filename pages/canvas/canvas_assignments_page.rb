@@ -312,9 +312,8 @@ module Page
     def delete_test_assignments(assignments)
       test_assignments = assignments.select { |a| a.title.include? Utils.get_test_id.gsub(/\d+/, '') }
       test_assignments.each do |a|
-        navigate_to "#{a.url}/edit"
-        wait_for_update_and_click manage_assignment_link_element
-        alert { wait_for_update_and_click delete_assignment_link_element }
+        wait_for_update_and_click div_element(xpath: "//button[@id='assign_#{a.id}_manage_link']/..")
+        alert { wait_for_update_and_click_js link_element(id: "assignment_#{a.id}_settings_delete_item") }
         sleep Utils.short_wait
       end
     end
