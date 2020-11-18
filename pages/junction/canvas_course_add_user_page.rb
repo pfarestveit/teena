@@ -36,9 +36,9 @@ module Page
       link(:bcourses_help_link, xpath: '//a[contains(text(),"bCourses help page")]')
 
       table(:results_table, xpath: '//h2[text()="User Search Results"]/following-sibling::div//table')
-      elements(:result_name, :span, xpath: '//h2[text()="User Search Results"]/following-sibling::div//tbody/tr/td[2]')
-      elements(:result_uid, :span, xpath: '//h2[text()="User Search Results"]/following-sibling::div//tbody/tr/td[3]')
-      elements(:result_email, :span, xpath: '//h2[text()="User Search Results"]/following-sibling::div//tbody/tr/td[4]')
+      elements(:result_name, :span, xpath: '//td[contains(@id, "bc-user-search-result-row-name")]')
+      elements(:result_uid, :span, xpath: '//td[contains(@id, "bc-user-search-result-row-ldap-uid")]')
+      elements(:result_email, :span, xpath: '//td[contains(@id, "bc-user-search-result-row-email")]')
 
       select_list(:user_role, id: 'user-role')
       select_list(:course_section, id: 'course-section')
@@ -116,7 +116,7 @@ module Page
       # @param user [User]
       # @return [PageObject::Elements::Checkbox]
       def user_checkbox(user)
-        checkbox_element(xpath: "//span[contains(.,'#{user.uid}')]/ancestor::tr//input[@name='selectedUser']")
+        checkbox_element(xpath: "//td[contains(.,'#{user.uid}')]/ancestor::tr//input[@name='selectedUser']")
       end
 
       # Selects a user, a course section, and a user role; clicks the add button; and waits for the success message

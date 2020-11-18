@@ -24,7 +24,7 @@ module Page
       def available_sections_course_title(course_code)
         logger.debug "Looking for the course title for course code #{course_code}"
         begin
-          el = span_element(xpath: "//h3[contains(., '#{course_code}:')]/span")
+          el = span_element(xpath: "//h3[contains(., '#{course_code}')]/span")
           el.when_visible Utils.short_wait
           el.text[2..-1]
         rescue

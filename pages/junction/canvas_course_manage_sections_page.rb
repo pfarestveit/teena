@@ -24,10 +24,10 @@ module Page
       button(:cancel_button, xpath: '//button[contains(text(),"Cancel")]')
 
       h2(:updating_sections_msg, xpath: '//h2[contains(text(),"Updating Official Sections in Course Site")]')
-      span(:sections_updated_msg, xpath: '//span[contains(text(),"The sections in this course site have been updated successfully.")]')
+      div(:sections_updated_msg, xpath: '//div[contains(text(),"The sections in this course site have been updated successfully.")]')
       button(:update_msg_close_button, xpath: '//button[@aria-controls="bc-page-course-official-sections-job-status-notice"]')
 
-      h1(:unexpected_error, xpath: '//h1[contains(text(),"Unexpected Error")]')
+      h1(:unexpected_error, xpath: '//h1[contains(text(),"Error")]')
 
       # Loads the Official Sections LTI tool within a course site
       # @param course [Course]
