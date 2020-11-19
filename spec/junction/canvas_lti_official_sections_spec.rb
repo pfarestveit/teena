@@ -277,7 +277,24 @@ describe 'bCourses Official Sections tool' do
         end
         it("shows the right number of current sections on Find a Person to Add when sections #{section_ids_to_add_delete} have been added to course site #{site[:course].site_id}") { expect(ttl_user_sections_with_adds).to be true }
 
-        # TODO - SECTIONS ADDED TO E-GRADES EXPORT TOOL
+        # Check that the site enrollment is updated with section members
+        unless standalone
+          enrollments_added = @canvas.verify_block do
+            tries = 5
+            begin
+              tries -= 1
+              sleep Utils.short_wait
+              @canvas.load_users_page site[:course]
+              @canvas.load_all_students site[:course]
+              visible_sections = @canvas.section_label_elements.map(&:text).uniq
+              added_sections = sections_to_add_delete.map { |s| "#{s.course} #{s.label}" }
+              @canvas.wait_until(1) { (visible_sections & added_sections).any? }
+            rescue
+              tries.zero? ? fail : retry
+            end
+          end
+          it("adds the sections #{section_ids_to_add_delete} to the site #{site[:course].site_id}") { expect(enrollments_added).to be true }
+        end
 
         # DELETING SECTIONS
 
@@ -311,7 +328,24 @@ describe 'bCourses Official Sections tool' do
         end
         it("shows the right number of current sections on Find a Person to Add when sections #{section_ids_to_add_delete} have been removed from course site #{site[:course].site_id}") { expect(ttl_user_sections_with_deletes).to be true }
 
-        # TODO - SECTIONS REMOVED FROM E-GRADES EXPORT TOOL
+        # Check that the site enrollment is updated
+        unless standalone
+          enrollments_deleted = @canvas.verify_block do
+            tries = Utils.short_wait
+            begin
+              tries -= 1
+              sleep Utils.short_wait
+              @canvas.load_users_page site[:course]
+              @canvas.load_all_students site[:course]
+              visible_sections = @canvas.section_label_elements.map(&:text).uniq
+              deleted_sections = sections_to_add_delete.map { |s| "#{s.course} #{s.label}" }
+              @canvas.wait_until(1) { (visible_sections & deleted_sections).empty? }
+            rescue
+              tries.zero? ? fail : retry
+            end
+          end
+          it("removes the sections #{section_ids_to_add_delete} from the site #{site[:course].site_id}") { expect(enrollments_deleted).to be true }
+        end
 
         # CHECK USER ROLE ACCESS TO THE TOOL FOR ONE COURSE
 

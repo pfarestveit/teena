@@ -50,7 +50,7 @@ unless ENV['STANDALONE']
           @mailing_list_page.create_list_button_element.when_present(Utils.medium_wait)
         else
           logger.debug "Verifying that #{user.role} UID #{user.uid} has no access to the instructor-facing mailing list tool"
-          @canvas_page.unexpected_error_msg_element.when_visible(Utils.medium_wait)
+          @mailing_list_page.unexpected_error_element.when_visible(Utils.medium_wait)
         end
       end
 
@@ -59,7 +59,7 @@ unless ENV['STANDALONE']
         @mailing_lists_page.load_embedded_tool
         @mailing_lists_page.search_for_list course_site_1.site_id
         logger.debug "Verifying that #{user.role} UID #{user.uid} has no access to the admin mailing lists tool"
-        @canvas_page.unexpected_error_msg_element.when_visible Utils.medium_wait
+        @mailing_lists_page.unexpected_error_element.when_visible Utils.medium_wait
       end
     end
 
@@ -150,7 +150,7 @@ unless ENV['STANDALONE']
         it 'creates mailing list memberships for users who are members of the site' do
           @mailing_lists_page.click_update_memberships
           @mailing_lists_page.wait_until(timeout) { @mailing_lists_page.list_membership_count.include? "#{users.length}" }
-          expect(@mailing_lists_page.list_update_time).to include(Time.now.strftime '%-m/%-d/%y')
+          expect(@mailing_lists_page.list_update_time).to include(Time.now.strftime '%b %-d, %Y')
         end
 
         it 'deletes mailing list memberships for users who have been removed from the site' do
