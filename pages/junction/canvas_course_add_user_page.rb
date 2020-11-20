@@ -22,7 +22,7 @@ module Page
       span(:no_sections_msg, xpath: '//span[text()="Course sections failed to load"]')
       div(:no_results_msg, xpath: '//div[contains(text(),"Your search did not match any users with a CalNet ID.")]')
       div(:too_many_results_msg, xpath: '//div[contains(.,"Please refine your search to limit the number of results.")]')
-      div(:blank_search_msg, xpath: '//div[contains(text(),"You did not enter any search terms. Please try again.")]')
+      div(:blank_search_msg, xpath: '//div[contains(text(),"You did not enter any search terms.  Please try again.")]')
       div(:success_msg, xpath: '//div[@class="bc-alert bc-alert-success bc-page-course-add-user-alert"]')
 
       text_area(:search_term, id: 'search-text')

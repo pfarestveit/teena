@@ -169,7 +169,7 @@ describe 'bCourses Find a Person to Add', order: :defined do
     end
 
     it 'requires that a search term be entered' do
-      @course_add_user_page.search('', 'Last Name, First Name')
+      @course_add_user_page.search(' ', 'Last Name, First Name')
       @course_add_user_page.blank_search_msg_element.when_visible Utils.medium_wait
     end
 

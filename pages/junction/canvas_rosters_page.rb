@@ -61,6 +61,7 @@ module Page
       # Enters a string in the search input and pauses for DOM update
       # @param string [String]
       def filter_by_string(string)
+        logger.debug "Filtering roster by '#{string}'"
         wait_for_element_and_type_js(search_input_element, string)
         sleep 1
       end
