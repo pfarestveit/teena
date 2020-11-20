@@ -11,6 +11,8 @@ module Page
     # Header
     button(:log_out_link, id: 'log-out')
 
+    h1(:unexpected_error, xpath: '//h1[contains(text(),"Error")]')
+
     # Footer
     button(:stop_viewing_as_button, id: 'stop-viewing-as')
     h4(:build_summary_heading, xpath: '//h4[text()="Build Summary"]')

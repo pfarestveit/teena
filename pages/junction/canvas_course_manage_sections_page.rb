@@ -27,8 +27,6 @@ module Page
       div(:sections_updated_msg, xpath: '//div[contains(text(),"The sections in this course site have been updated successfully.")]')
       button(:update_msg_close_button, xpath: '//button[@aria-controls="bc-page-course-official-sections-job-status-notice"]')
 
-      h1(:unexpected_error, xpath: '//h1[contains(text(),"Error")]')
-
       # Loads the Official Sections LTI tool within a course site
       # @param course [Course]
       def load_embedded_tool(course)
