@@ -62,4 +62,15 @@ class ApiAcademicsRosterPage
     end
   end
 
+  def all_student_data
+    students.map do |stu|
+      {
+          sid: stu['student_id'],
+          name: "#{stu['last_name']}, #{stu['first_name']}",
+          email: stu['email'],
+          sections: (stu['sections'].map { |sec| "#{sec['name']} (#{sec['ccn']})" })
+      }
+    end
+  end
+
 end
