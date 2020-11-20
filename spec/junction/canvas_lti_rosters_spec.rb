@@ -39,6 +39,7 @@ describe 'bCourses Roster Photos' do
 
     # Get enrollment totals on site
     @roster_api.get_feed(@driver, course)
+    @api_students = @roster_api.all_student_data
     @expected_sids = @roster_api.student_ids(@roster_api.students).sort
 
     if standalone
@@ -138,6 +139,33 @@ describe 'bCourses Roster Photos' do
 
     it "shows UID #{teacher.uid} a 'no students enrolled' message on #{course.code} course site ID #{course.site_id}" do
       expect(@roster_photos_page.no_students_msg?).to be true if @total_user_count.zero?
+    end
+
+    it "allows UID #{teacher.uid} to switch to a list view of #{course.code} site ID #{course.site_id} sorted by last name" do
+      @roster_photos_page.set_list_view
+      @api_students.sort_by! { |h| [h[:name].split(',').first, h[:sid]] }
+      ui_students = @roster_photos_page.list_view_student_data
+      @roster_photos_page.wait_until(1, "Missing #{@api_students - ui_students}, Unexpected #{ui_students - @api_students}") do
+        ui_students == @api_students
+      end
+    end
+
+    it "allows UID #{teacher.uid} to sort list view of #{course.code} site ID #{course.site_id} by SID" do
+      @roster_photos_page.sort_list_by_sid
+      @api_students.sort_by! { |h| h[:sid] }
+      ui_students = @roster_photos_page.list_view_student_data
+      @roster_photos_page.wait_until(1, "Missing #{@api_students - ui_students}, Unexpected #{ui_students - @api_students}") do
+        ui_students == @api_students
+      end
+    end
+
+    it "allows UID #{teacher.uid} to sort list view of #{course.code} site ID #{course.site_id} by email" do
+      @roster_photos_page.sort_list_by_email
+      @api_students.sort_by! { |h| h[:email] }
+      ui_students = @roster_photos_page.list_view_student_data
+      @roster_photos_page.wait_until(1, "Missing #{@api_students - ui_students}, Unexpected #{ui_students - @api_students}") do
+        ui_students == @api_students
+      end
     end
   end
 
