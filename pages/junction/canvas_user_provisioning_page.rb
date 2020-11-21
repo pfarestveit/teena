@@ -19,7 +19,7 @@ class CanvasUserProvisioningPage
 
   def load_standalone_tool
     logger.info 'Loading standalone version of the User Provisioning tool'
-    navigate_to "#{JunctionUtils.junction_base_url}/"
+    navigate_to "#{JunctionUtils.junction_base_url}/canvas/embedded/user_provision"
   end
 
   def enter_uids_and_submit(uids_string)
