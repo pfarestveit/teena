@@ -118,7 +118,7 @@ module BOACFilteredCohortPageFilters
     # Some have no sub-options
     no_options = %w(midpointDeficient transfer underrepresented isInactiveAsc inIntensiveCohort isInactiveCoe coeUnderrepresented coeProbation
                     sir isHispanic isUrem isFirstGenerationCollege hasFeeWaiver inFosterCare isFamilySingleParent isStudentSingleParent
-                    isReentry isLastSchoolLCFF)
+                    isReentry isLastSchoolLCFF studentHolds)
     choose_new_filter_sub_option(filter_key, filter_option) unless no_options.include? filter_key
     wait_for_update_and_click unsaved_filter_add_button_element
     unsaved_filter_apply_button_element.when_present Utils.short_wait
@@ -176,6 +176,7 @@ module BOACFilteredCohortPageFilters
     cohort.search_criteria.entering_terms.each { |term| select_new_filter('enteringTerms', term) } if cohort.search_criteria.entering_terms
     cohort.search_criteria.gpa.each { |gpa| select_new_filter('gpaRanges', gpa) } if cohort.search_criteria.gpa
     cohort.search_criteria.gpa_last_term.each { |gpa| select_new_filter('lastTermGpaRanges', gpa) } if cohort.search_criteria.gpa_last_term
+    select_new_filter 'studentHolds' if cohort.search_criteria.holds
     cohort.search_criteria.intended_major.each { |m| select_new_filter('intendedMajors', m) } if cohort.search_criteria.intended_major
     cohort.search_criteria.level.each { |l| select_new_filter('levels', l) } if cohort.search_criteria.level
     cohort.search_criteria.units_completed.each { |u| select_new_filter('unitRanges', u) } if cohort.search_criteria.units_completed
@@ -295,7 +296,7 @@ module BOACFilteredCohortPageFilters
     filter_option_xpath = "#{existing_filter_xpath filter_name}/following-sibling::div"
 
     if ['Inactive', 'Inactive (ASC)', 'Inactive (COE)', 'Intensive', 'Probation', 'Transfer Student', 'Underrepresented Minority',
-        'Underrepresented Minority (COE)', 'Current SIR', 'Hispanic', 'UREM', 'First Generation College',
+        'Underrepresented Minority (COE)', 'Current SIR', 'Hispanic', 'UREM', 'First Generation College', 'Holds',
         'Application Fee Waiver', 'Foster Care', 'Family Is Single Parent', 'Student Is Single Parent', 'Re-entry Status',
         'Last School LCFF+'].include? filter_name
       div_element(xpath: existing_filter_xpath(filter_name))
@@ -333,6 +334,8 @@ module BOACFilteredCohortPageFilters
         filters.expected_grad_terms.each { |t| existing_filter_element('Expected Graduation Term', t).exists? } if filters.expected_grad_terms&.any?
         logger.debug 'Verifying GPA (Cumulative) filter'
         filters.gpa.each { |g| existing_filter_element('GPA (Cumulative)', g).exists? } if filters.gpa&.any?
+        logger.debug 'Verifying Holds filter'
+        existing_filter_element('Holds').exists? if filters.holds
         logger.debug 'Verifying GPA (Last Term) filter'
         filters.gpa_last_term.each { |g| existing_filter_element('GPA (Last Term)', g).exists? } if filters.gpa_last_term&.any?
         logger.debug 'Verifying Intended Major filter'

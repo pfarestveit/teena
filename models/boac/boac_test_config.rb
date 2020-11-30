@@ -284,6 +284,7 @@ class BOACTestConfig < TestConfig
         :gpa_last_term => [JSON.parse("{\"min\": \"2\", \"max\": \"3.80\"}")],
         :level => %w(40 10),
         :units_completed => ['90 - 119'],
+        :holds => true,
         :intended_major => ['English BA'],
         :major => ['Electrical Eng & Comp Sci BS', 'Letters & Sci Undeclared UG'],
         :minor => ['French UG'],

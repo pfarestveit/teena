@@ -516,6 +516,12 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
         @cohort_page.verify_student_filters_present test.default_cohort
       end
 
+      it 'allows the advisor to remove a Holds filter' do
+        test.default_cohort.search_criteria.holds = nil
+        @cohort_page.remove_filter_of_type 'Holds'
+        @cohort_page.verify_student_filters_present test.default_cohort
+      end
+
       it 'allows the advisor to edit a Level filter' do
         test.default_cohort.search_criteria.level = ['Junior (60-89 Units)']
         @cohort_page.edit_filter_and_confirm('Level', test.default_cohort.search_criteria.level.first)

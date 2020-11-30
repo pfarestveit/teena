@@ -22,6 +22,7 @@ class CohortFilter
                 :gender,
                 :gpa,
                 :gpa_last_term,
+                :holds,
                 :intended_major,
                 :last_name,
                 :level,
@@ -45,6 +46,7 @@ class CohortFilter
     @expected_grad_terms = (test_data['expected_grad_terms'] && test_data['expected_grad_terms'].map { |t| t['expected_grad_term'] })
     @gpa = (test_data['gpa_ranges'] && test_data['gpa_ranges'].map { |g| g['gpa_range'] })
     @gpa_last_term = (test_data['gpa_ranges_last_term'] && test_data['gpa_ranges_last_term'].map { |g| g['gpa_range'] })
+    @holds = test_data['holds']
     @intended_major = (test_data['intended_major'] && test_data['intended_major'].map { |m| m['major'] })
     @level = (test_data['levels'] && test_data['levels'].map { |l| l['level'] })
     @major = (test_data['majors'] && test_data['majors'].map { |t| t['major'] })

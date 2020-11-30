@@ -243,6 +243,9 @@ class NessieFilterUtils < NessieUtils
     acad_standing_join = "LEFT JOIN student.academic_standing ON #{sid} = student.academic_standing.sid"
     joins << acad_standing_join if filter.academic_standing&.any?
 
+    holds_join = "JOIN student.student_holds ON #{sid} = student.student_holds.sid"
+    joins << holds_join if filter.holds
+
     major_join = "LEFT JOIN student.student_majors ON #{sid} = student.student_majors.sid"
     joins << major_join if (filter.college&.any? || filter.major&.any?)
 
