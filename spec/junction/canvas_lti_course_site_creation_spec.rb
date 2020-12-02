@@ -328,7 +328,7 @@ describe 'bCourses course site creation' do
       @canvas_page.click_create_site_settings_link
       student_access_blocked = @create_course_site_page.verify_block do
         @create_course_site_page.create_course_site_link_element.when_present Utils.short_wait
-        @create_course_site_page.wait_until(1) { @create_course_site_page.create_course_site_link_element.attribute('disabled') }
+        @create_course_site_page.wait_until(1) { @create_course_site_page.create_course_site_link_element.attribute('disabled') == 'true' }
       end
       it('offers no Create a Site button to a student') { expect(student_has_button).to be false }
       it('denies a student access to the tool') { expect(student_access_blocked).to be true }
