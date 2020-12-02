@@ -20,7 +20,7 @@ module Page
 
       div(:progress_bar, xpath: '//div[@role="progressbar"]')
 
-      button(:switch_mode, xpath: '//button[contains(@class, "bc-page-create-course-site-admin-mode-switch")]')
+      button(:switch_mode, id: 'toggle-admin-mode-button')
 
       button(:switch_to_instructor, xpath: '//button[contains(.,"Switch to acting as instructor")]')
       button(:as_instructor_button, id: 'sections-by-uid-button')
@@ -59,12 +59,14 @@ module Page
         logger.debug "Searching for #{course.code} in #{course.term}"
         if course.create_site_workflow == 'uid'
           logger.debug "Searching by instructor UID #{instructor.uid}"
+          switch_mode_element.when_visible Utils.short_wait
           switch_mode unless switch_to_ccn?
           wait_for_element_and_type(instructor_uid_element, instructor.uid)
           wait_for_update_and_click as_instructor_button_element
           choose_term course
         elsif course.create_site_workflow == 'ccn'
           logger.debug 'Searching by CCN list'
+          switch_mode_element.when_visible Utils.short_wait
           switch_mode unless switch_to_instructor?
           choose_term course
           sleep 1
@@ -121,7 +123,7 @@ module Page
       # Returns the course code for a section
       # @param section_id [String]
       def section_course_code(section_id)
-        div_element(xpath: "#{section_cbx_xpath(section_id)}/ancestor::tbody//td[contains(@class, 'course-code')]/div").text.strip
+        div_element(xpath: "#{section_cbx_xpath(section_id)}/ancestor::tbody//td[contains(@class, 'course-code')]").text.strip
       end
 
       # Returns the label for a section

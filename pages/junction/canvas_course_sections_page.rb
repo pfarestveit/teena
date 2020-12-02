@@ -47,6 +47,7 @@ module Page
         else
           wait_for_update_and_click_js available_sections_form_button(course_code)
           available_sections_table(course_code).when_visible Utils.short_wait
+          sleep Utils.click_wait
         end
       end
 

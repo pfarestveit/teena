@@ -81,13 +81,15 @@ describe 'bCourses course site creation' do
           @site_creation_page.load_standalone_tool
         else
           @canvas_page.load_homepage
+          @canvas_page.create_site_link_element.when_present Utils.short_wait
+          @canvas_page.stop_masquerading if @canvas_page.stop_masquerading_link?
           @canvas_page.masquerade_as site[:teacher] unless %w(uid ccn).include?(site[:course].create_site_workflow)
           @canvas_page.click_create_site @driver
         end
 
         @site_creation_page.click_create_course_site
 
-        if site == sites_to_create.first
+        if site[:course].create_site_workflow == 'self'
           @create_course_site_page.click_cancel
           cancel_works = @site_creation_page.verify_block { @site_creation_page.click_create_course_site }
           it('allows a user to cancel course site creation') { expect(cancel_works).to be true }
@@ -324,7 +326,10 @@ describe 'bCourses course site creation' do
       @canvas_page.masquerade_as test.students.first
       student_has_button = @canvas_page.verify_block { @canvas_page.create_site_link_element.when_visible Utils.short_wait }
       @canvas_page.click_create_site_settings_link
-      student_access_blocked = @create_course_site_page.verify_block { @create_course_site_page.no_access_msg_element.when_visible Utils.short_wait }
+      student_access_blocked = @create_course_site_page.verify_block do
+        @create_course_site_page.create_course_site_link_element.when_present Utils.short_wait
+        @create_course_site_page.wait_until(1) { @create_course_site_page.create_course_site_link_element.attribute('disabled') }
+      end
       it('offers no Create a Site button to a student') { expect(student_has_button).to be false }
       it('denies a student access to the tool') { expect(student_access_blocked).to be true }
 

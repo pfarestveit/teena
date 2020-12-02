@@ -107,11 +107,11 @@ describe 'bCourses Roster Photos' do
 
     it "allows UID #{teacher.uid} to filter by string on #{course.code} course site ID #{course.site_id}" do
       if @student_count > 0 || @waitlist_count > 0
-        sid = @roster_photos_page.roster_sid_elements.last.text.gsub('Student:', '').strip
+        sid = @roster_photos_page.roster_sid_elements.last.text.gsub('Student ID:', '').strip
         @roster_photos_page.filter_by_string sid
         @roster_photos_page.wait_until(Utils.short_wait) do
           @roster_photos_page.roster_sid_elements.length == 1
-          @roster_photos_page.roster_sid_elements.first.text.gsub('Student:', '').strip == sid
+          @roster_photos_page.roster_sid_elements.first.text.gsub('Student ID:', '').strip == sid
         end
       end
     end
