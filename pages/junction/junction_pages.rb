@@ -30,8 +30,7 @@ module Page
 
     # Logs the user out
     def log_out
-      build_summary_heading_element.when_visible Utils.medium_wait
-      wait_for_update_and_click log_out_link_element unless title.include? 'Home'
+      wait_for_update_and_click log_out_link_element unless title.include? 'Welcome. Please log in. | bCourses Support'
       log_out_link_element.when_not_present Utils.short_wait
     end
 
