@@ -51,6 +51,7 @@ class OECDepartments
       CZECH = new('CZECH', 'Slavic Languages and Literatures', 'CZECH', %w(F G), true),
       CYBER = new('CYBER', 'Information', 'CYBER', %w(F G), true),
       DANISH = new('DANISH', 'Scandinavian', 'DANISH', %w(F G), true),
+      DATA = new('DATA', 'Computing, Data Science, and Society', 'DATA', %w(F G), true),
       DATASCI = new('DATASCI', 'Information', 'DATASCI', nil, true),
       DES_INV = new('DES INV', 'Engineering', 'ENGIN', nil, false),
       DEV_ENG = new('DEV ENG', 'Civil and Environmental Engineering', 'CIV ENG', nil, false),
