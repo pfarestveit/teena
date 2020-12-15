@@ -5,6 +5,15 @@ module Page
   include PageObject
   include Logging
 
+  def switch_to_frame(id)
+    iframe_element(id: id).when_present Utils.short_wait
+    @driver.switch_to.frame iframe_element(id: id).selenium_element.attribute('id')
+  end
+
+  def switch_to_main_content
+    @driver.switch_to.default_content
+  end
+
   # Switches browser focus into the Canvas LTI tool iframe. For Junction tests, pass the Junction base URL to verify that the tool
   # is configured with the right Junction environment before proceeding.
   # @param url [String]
@@ -15,7 +24,7 @@ module Page
       wait_until(1, "'#{url}' is not present") { i_frame_form_element? url }
       logger.warn "Found expected iframe base URL #{url}"
     end
-    @driver.switch_to.frame iframe_element(id: 'tool_content').selenium_element
+    switch_to_frame 'tool_content'
   end
 
   # Whether or not an iframe containing a given URL exists

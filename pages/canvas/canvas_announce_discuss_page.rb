@@ -73,13 +73,12 @@ module Page
     elements(:discussion_reply_author, :link, xpath: '//ul[@class="discussion-entries"]/li//h2[@class="discussion-title"]/a')
     elements(:discussion_page_link, :link, xpath: '//div[@class="discussion-page-nav"]//a')
     link(:primary_reply_link, xpath: '//article[@id="discussion_topic"]//a[@data-event="addReply"]')
-    link(:primary_html_editor_link, xpath: '//article[@id="discussion_topic"]//a[contains(.,"HTML Editor")]')
-    text_area(:primary_reply_input, xpath: '//article[@id="discussion_topic"]//textarea[@class="reply-textarea"]')
     button(:primary_post_reply_button, xpath: '//article[@id="discussion_topic"]//button[contains(.,"Post Reply")]')
+    iframe(:primary_reply_iframe, xpath: '//iframe[contains(@id, "root_reply_message_for_")]')
     elements(:secondary_reply_link, :link, xpath: '//li[contains(@class,"entry")]//span[text()="Reply"]/..')
-    elements(:secondary_html_editor_link, :link, xpath: '//li[contains(@class,"entry")]//a[contains(.,"HTML Editor")]')
-    elements(:secondary_reply_input, :text_area, xpath: '//li[contains(@class,"entry")]//textarea[@class="reply-textarea"]')
     elements(:secondary_post_reply_button, :button, xpath: '//li[contains(@class,"entry")]//button[contains(.,"Post Reply")]')
+    iframe(:secondary_reply_iframe, xpath: '//iframe[contains(@id, "reply_message_for")]')
+    button(:reply_prompt_dismiss_button, xpath: '//button[contains(., "No")]')
     button(:save_discuss_button, xpath: '//button[text()="Save"][@type="submit"]')
 
     # Creates a discussion on a course site
@@ -127,23 +126,26 @@ module Page
     # @param event [Event]
     def add_reply(discussion, index, reply_body, event = nil)
       navigate_to discussion.url
+      hide_canvas_footer_and_popup
       if index.nil?
         logger.info "Creating new discussion entry with body '#{reply_body}'"
-        wait_for_load_and_click primary_reply_link_element
-        wait_for_update_and_click_js primary_html_editor_link_element
-        wait_for_element_and_type_js(primary_reply_input_element, reply_body)
+        wait_for_load_and_click_js primary_reply_link_element
         replies = discussion_reply_elements.length
-        wait_for_update_and_click_js primary_post_reply_button_element
+        switch_to_frame primary_reply_iframe_element.attribute('id')
+        wait_for_element_and_type_js(paragraph_element(xpath: '//p'), reply_body)
+        switch_to_main_content
+        reply_prompt_dismiss_button_element.click if reply_prompt_dismiss_button_element.exists?
+        wait_for_load_and_click_js primary_post_reply_button_element
       else
         logger.info "Replying to a discussion entry at index #{index} with body '#{reply_body}'"
         wait_until(Utils.short_wait) { secondary_reply_link_elements.any? }
-        wait_for_load_and_click_js secondary_reply_link_elements[index]
-        wait_for_update_and_click_js secondary_html_editor_link_elements[index]
-        wait_until(Utils.short_wait) { secondary_reply_input_elements.any? }
-        wait_for_element_and_type_js(secondary_reply_input_elements[index], reply_body)
         replies = discussion_reply_elements.length
-        hide_canvas_footer_and_popup
-        wait_for_update_and_click_js secondary_post_reply_button_elements[index]
+        wait_for_load_and_click_js secondary_reply_link_elements[index]
+        switch_to_frame secondary_reply_iframe_element.attribute('id')
+        wait_for_element_and_type_js(paragraph_element(xpath: '//p'), reply_body)
+        switch_to_main_content
+        reply_prompt_dismiss_button_element.click if reply_prompt_dismiss_button_element.exists?
+        wait_for_load_and_click_js secondary_post_reply_button_elements[index]
       end
       add_event(event, EventType::POST, reply_body)
       wait_until(Utils.short_wait) { discussion_reply_elements.length == replies + 1 }
