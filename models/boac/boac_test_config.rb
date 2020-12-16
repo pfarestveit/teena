@@ -302,6 +302,7 @@ class BOACTestConfig < TestConfig
         :coe_advisor => [BOACUtils.get_dept_advisors(BOACDepartments::COE).first.uid.to_s],
         :coe_ethnicity => %w(H V),
         :coe_gender => ['Female'],
+        :coe_grading_basis_epn => [CONFIG['term_code']],
         :coe_underrepresented_minority => true,
         :coe_prep => ['PREP', 'T-PREP eligible'],
         :coe_inactive => true,
