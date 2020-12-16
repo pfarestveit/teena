@@ -9,6 +9,7 @@ class CohortFilter
                 :coe_advisor,
                 :coe_ethnicity,
                 :coe_gender,
+                :coe_grading_basis_epn,
                 :coe_inactive,
                 :coe_prep,
                 :coe_probation,
@@ -68,6 +69,7 @@ class CohortFilter
     @coe_advisor = (test_data['coe_advisors'] && test_data['coe_advisors'].map { |a| a['advisor'] })
     @coe_ethnicity = (test_data['coe_ethnicities'] && test_data['coe_ethnicities'].map { |e| e['ethnicity'] })
     @coe_gender = (test_data['coe_genders'] && test_data['coe_genders'].map { |g| g['gender'] })
+    @coe_grading_basis_epn = (test_data['coe_grading_basis_epn'] && test_data['coe_grading_basis_epn'].map { |b| b['term'] })
     @coe_inactive = test_data['coe_inactive']
     @coe_prep = (test_data['coe_preps'] && test_data['coe_preps'].map { |p| p['prep'] })
     @coe_probation = test_data['coe_probation']
@@ -83,6 +85,7 @@ class CohortFilter
       @coe_advisor = nil
       @coe_ethnicity = nil
       @coe_gender = nil
+      @coe_grading_basis_epn = nil
       @coe_underrepresented_minority = nil
       @coe_prep = nil
       @coe_inactive = nil

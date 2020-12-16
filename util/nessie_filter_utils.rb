@@ -187,6 +187,13 @@ class NessieFilterUtils < NessieUtils
     conditions_list << "boac_advising_coe.students.status IN ('D', 'P', 'U', 'W', 'X', 'Z')" if filter.coe_inactive
     conditions_list << "boac_advising_coe.students.probation IS TRUE" if filter.coe_probation
     conditions_list << "boac_advising_coe.students.minority IS TRUE" if filter.coe_underrepresented_minority
+
+    if filter.coe_grading_basis_epn&.any?
+      epn_conditions = "student.student_enrollment_terms.term_id IN (#{in_op(filter.coe_grading_basis_epn)})
+                          AND student.student_enrollment_terms.enrollment_term LIKE '%\"gradingBasis\": \"EPN\"%'"
+      conditions_list << epn_conditions
+    end
+
     prep_conditions = []
     prep_conditions << "boac_advising_coe.students.did_prep IS TRUE" if filter.coe_prep&.include? 'PREP'
     prep_conditions << "boac_advising_coe.students.prep_eligible IS TRUE" if filter.coe_prep&.include? 'PREP eligible'
@@ -278,12 +285,15 @@ class NessieFilterUtils < NessieUtils
     asc_join = "LEFT JOIN boac_advising_asc.students ON #{sid} = boac_advising_asc.students.sid"
     joins << asc_join if (filter.asc_inactive || filter.asc_intensive || filter.asc_team&.any?)
 
-    coe_join = "LEFT JOIN boac_advising_coe.students ON #{sid} = boac_advising_coe.students.sid"
+    coe_join = "#{filter.coe_grading_basis_epn&.any? ? 'RIGHT' : 'LEFT'} JOIN boac_advising_coe.students ON #{sid} = boac_advising_coe.students.sid"
     if filter.coe_advisor&.any? || filter.coe_ethnicity&.any? || filter.coe_gender&.any? || filter.coe_inactive ||
         filter.coe_prep&.include?('PREP') || filter.coe_prep&.include?('PREP eligible') || filter.coe_prep&.include?('T-PREP') ||
-        filter.coe_prep&.include?('T-PREP eligible') || filter.coe_probation || filter.coe_underrepresented_minority
+        filter.coe_prep&.include?('T-PREP eligible') || filter.coe_probation || filter.coe_underrepresented_minority ||
+        filter.coe_grading_basis_epn&.any?
       joins << coe_join
     end
+    coe_epn_join = "LEFT JOIN student.student_enrollment_terms ON #{sid} = student.student_enrollment_terms.sid"
+    joins << coe_epn_join if filter.coe_grading_basis_epn&.any? && !filter.mid_point_deficient
 
     joins.uniq!
     joins.compact!

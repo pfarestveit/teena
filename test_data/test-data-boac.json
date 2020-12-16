@@ -2,6 +2,13 @@
     "filters": {
         "students": [
             {
+                "coe_grading_basis_epn": [
+                    {
+                        "term": "2212"
+                    }
+                ]
+            },
+            {
                 "minors": [
                     {
                         "minor": "History UG"

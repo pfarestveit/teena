@@ -548,7 +548,7 @@ class BOACUtils < Utils
     query = "SELECT id, sid, alert_type, message, created_at, updated_at
               FROM alerts
               WHERE sid IN (#{sids})
-                AND active = true
+                AND deleted_at IS NULL
                 AND key LIKE '#{term_code}%'
                 AND alert_type != 'hold';"
     results = Utils.query_pg_db(boac_db_credentials, query.gsub("\"", '\''))
