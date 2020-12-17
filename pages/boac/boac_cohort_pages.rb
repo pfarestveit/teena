@@ -169,7 +169,7 @@ module BOACCohortPages
     wait_for_element(export_list_button_element, Utils.medium_wait)
     wait_until(3) { !export_list_button_element.disabled? }
     wait_for_update_and_click export_list_button_element
-    16.times do |idx|
+    17.times do |idx|
       (el = checkbox_element(id: "csv-column-options_BV_option_#{idx}")).when_present Utils.short_wait
       js_click el
     end
@@ -213,6 +213,7 @@ module BOACCohortPages
       parsed_csv.dig(:cumulative_gpa).compact.any?
       parsed_csv.dig(:program_status).compact.any?
       parsed_csv.dig(:transfer).compact.any?
+      parsed_csv.dig(:intended_major).compact.any?
     end
   end
 

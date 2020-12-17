@@ -540,6 +540,14 @@ class BOACUtils < Utils
 
   # DATABASE - ALERTS, HOLDS, NOTES
 
+  def self.get_alert_count_per_range(from_date, to_date)
+    sql = "SELECT COUNT(*)
+           FROM alerts
+           WHERE created_at >= '#{from_date.strftime('%Y-%m-%d')}'
+             AND created_at < '#{(to_date + 1).strftime('%Y-%m-%d')}';"
+    Utils.query_pg_db_field(boac_db_credentials, sql, 'count').first.to_i
+  end
+
   # Given a set of students, returns all their active alerts in the current term
   # @param users [Array<BOACUser>]
   # @return [Array<Alert>]

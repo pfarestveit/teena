@@ -180,7 +180,25 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
         @admin_page.update_service_announcement @service_announcement
         @admin_page.wait_until(Utils.short_wait) { @admin_page.service_announcement_banner == @service_announcement }
       end
-    end
 
+      context 'and exporting alerts' do
+
+        before(:all) do
+          @from_date = Date.today - 30
+          @to_date = Date.today
+          @csv = @admin_page.export_alerts(@from_date, @to_date)
+        end
+
+        it 'receives the right number of alerts' do
+          expected = BOACUtils.get_alert_count_per_range(@from_date, @to_date)
+          actual = @csv.length
+          expect(actual).to eql(expected)
+        end
+
+        it 'receives the right alert data' do
+          expect(@csv.headers).to eql(%i(sid term key type is_active active_duration_hours created_at deleted_at))
+        end
+      end
+    end
   end
 end
