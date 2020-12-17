@@ -198,21 +198,26 @@ class BOACStudentPage
   # COURSES
 
   span(:withdrawal_msg, class: 'red-flag-small')
-  button(:view_more_button, :xpath => '//button[contains(.,"Show Previous Semesters")]')
   elements(:class_page_link, :link, :xpath => '//a[contains(@href, "/course/")]')
-
-  # Clicks the button to expand previous semester data
-  def click_view_previous_semesters
-    logger.debug 'Expanding previous semesters'
-    scroll_to_bottom
-    wait_for_load_and_click view_more_button_element
-  end
 
   # Returns the XPath to a semester's courses
   # @param [String] term_name
   # @return [String]
   def term_data_xpath(term_name)
-    "//h3[text()=\"#{term_name}\"]"
+    "//h3[text()='#{term_name}']"
+  end
+
+  def term_data_heading(term_name)
+    h3_element(xpath: term_data_xpath(term_name))
+  end
+
+  def academic_year_expand_button(term_name)
+    button_element(xpath: "#{term_data_xpath term_name}/ancestor::div[contains(@id, 'academic-year')]/preceding-sibling::button")
+  end
+
+  def expand_term_row(term_name)
+    logger.info "Expanding row containing #{term_name}"
+    wait_for_update_and_click academic_year_expand_button term_name
   end
 
   # Returns the total term units and min/max override units shown for a given term
@@ -220,7 +225,8 @@ class BOACStudentPage
   # @param term_name [String]
   # @return [Hash]
   def visible_term_data(term_id, term_name)
-    term_units_el = span_element(xpath: "#{term_data_xpath term_name}/following-sibling::div[@class=\"student-course-heading student-course\"]//div[@class=\"student-course-heading-units-total\"]/span")
+    term_units_el = span_element(xpath: "#{term_data_xpath term_name}/..//div[@class='student-course-heading student-course']//div[@class='student-course-heading-units-total']")
+    term_units_el.when_visible 1
     term_units_min_el = span_element(id: "term-#{term_id}-min-units")
     term_units_max_el = span_element(id: "term-#{term_id}-max-units")
     term_academic_standing_el = span_element(id: "academic-standing-term-#{term_id}")
