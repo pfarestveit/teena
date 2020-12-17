@@ -451,19 +451,15 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
 
           terms = api_student_data.terms
           if terms.any?
-            if terms.length > 1 && api_student_data.term_id(terms.last).to_s != BOACUtils.term_code.to_s
-              @boac_student_page.click_view_previous_semesters
-            else
-              has_view_more_button = @boac_student_page.view_more_button_element.visible?
-              it("shows no View Previous Semesters button for UID #{student.uid} on the student page") { expect(has_view_more_button).to be false }
-            end
-
             terms.each do |term|
 
               begin
                 term_id = api_student_data.term_id term
                 term_name = api_student_data.term_name term
                 logger.info "Checking #{term_name}"
+
+                @boac_student_page.expand_term_row term_name unless @boac_student_page.term_data_heading(term_name).visible?
+
                 visible_term_data = @boac_student_page.visible_term_data(term_id, term_name)
 
                 # TERM UNITS
