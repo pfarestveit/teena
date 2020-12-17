@@ -319,4 +319,27 @@ class BOACFlightDeckPage
     sleep Utils.click_wait
   end
 
+  # EXPORTS
+
+  text_field(:alerts_from_input, id: 'alerts-log-export-from-date')
+  text_field(:alerts_to_input, id: 'alerts-log-export-to-date')
+  button(:alerts_export_button, id: 'alerts-log-export-submit')
+
+  def export_alerts(from_date, to_date)
+    Utils.prepare_download_dir
+    from_str = from_date.strftime('%m/%d/%Y')
+    to_str = to_date.strftime('%m/%d/%Y')
+    logger.info "Exporting alerts from #{from_str} to #{to_str}"
+    wait_for_element_and_type(alerts_from_input_element, from_str)
+    wait_for_element_and_type(alerts_to_input_element, to_str)
+    wait_for_update_and_click alerts_export_button_element
+    parts = from_str.split('/')
+    from_file_str = "#{parts[0]}-#{parts[1]}_#{parts[2]}"
+    parts = to_str.split('/')
+    to_file_str = "#{parts[0]}-#{parts[1]}_#{parts[2]}"
+    csv_file_path = "#{Utils.download_dir}/boa-alerts-#{from_file_str}-to-#{to_file_str}.csv"
+    wait_until(30) { Dir[csv_file_path].any? }
+    CSV.table Dir[csv_file_path].first
+  end
+
 end
