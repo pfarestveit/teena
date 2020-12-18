@@ -46,7 +46,6 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
         before(:all) do
           @api_student_page.get_data(@driver, @test_student)
           @student_page.load_page @test_student
-          @student_page.click_view_previous_semesters if @api_student_page.terms.length > 1
         end
 
         it('sees a New Note button') { expect(@student_page.new_note_button_element).to be_visible }
@@ -61,6 +60,8 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
         it 'cannot expand courses' do
           @api_student_page.terms.each do |term|
             term['enrollments'].each do |course|
+              term_name = @api_student_page.term_name term
+              @student_page.expand_term_row term_name unless @student_page.term_data_heading(term_name).visible?
               course['sections'].each do |section|
                 expect(@student_page.course_expand_toggle(term['termId'], section['ccn'])).not_to be_visible
               end
@@ -71,6 +72,8 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
         it 'sees no links to course pages' do
           @api_student_page.terms.each do |term|
             term['enrollments'].each do |course|
+              term_name = @api_student_page.term_name term
+              @student_page.expand_term_row term_name unless @student_page.term_data_heading(term_name).visible?
               course['sections'].each do |section|
                 expect(@student_page.class_page_link(term['termId'], section['ccn'])).not_to be_visible
               end
@@ -90,9 +93,12 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
 
       context 'visiting a class page' do
 
-        it 'sees a 404 page' do
+        it 'sees an infinite spinner' do
           @class_page.hit_class_page_url('2178', '13826')
-          @class_page.wait_for_title 'Page not found'
+          @class_page.spinner_element.when_visible Utils.short_wait
+          errors = Utils.log_js_errors @driver
+          not_auth = errors.find { |e| e.include? 'Failed to load resource: the server responded with a status of 403' }
+          expect(not_auth).to be_truthy
         end
 
         it 'is forbidden' do
@@ -243,7 +249,6 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
         before(:all) do
           @api_student_page.get_data(@driver, @test_student)
           @student_page.load_page @test_student
-          @student_page.click_view_previous_semesters if @api_student_page.terms.length > 1
         end
 
         it('sees no New Note button') { expect(@student_page.new_note_button?).to be false }
@@ -255,6 +260,8 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
         it 'cannot expand courses' do
           @api_student_page.terms.each do |term|
             term['enrollments'].each do |course|
+              term_name = @api_student_page.term_name term
+              @student_page.expand_term_row term_name unless @student_page.term_data_heading(term_name).visible?
               course['sections'].each do |section|
                 expect(@student_page.course_expand_toggle(term['termId'], section['ccn'])).not_to be_visible
               end
@@ -265,6 +272,8 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
         it 'sees no links to course pages' do
           @api_student_page.terms.each do |term|
             term['enrollments'].each do |course|
+              term_name = @api_student_page.term_name term
+              @student_page.expand_term_row term_name unless @student_page.term_data_heading(term_name).visible?
               course['sections'].each do |section|
                 expect(@student_page.class_page_link(term['termId'], section['ccn'])).not_to be_visible
               end
@@ -292,9 +301,12 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
 
       context 'visiting a class page' do
 
-        it 'sees a 404 page' do
+        it 'sees an infinite spinner' do
           @class_page.hit_class_page_url('2178', '13826')
-          @class_page.wait_for_title 'Page not found'
+          @class_page.spinner_element.when_visible Utils.short_wait
+          errors = Utils.log_js_errors @driver
+          not_auth = errors.find { |e| e.include? 'Failed to load resource: the server responded with a status of 403' }
+          expect(not_auth).to be_truthy
         end
 
         it 'is forbidden' do

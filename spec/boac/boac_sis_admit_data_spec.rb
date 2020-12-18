@@ -96,7 +96,8 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
 
           visible_city_etc = @admit_page.address_city_region_postal
           it("shows the address city / region / post code of CS ID #{admit[:cs_empl_id]}") do
-            expect(visible_city_etc).to eql("#{admit[:permanent_city]&.strip}, #{+admit[:permanent_region].strip + ' ' if admit[:permanent_region]}#{admit[:permanent_postal]&.strip}")
+            expected = "#{admit[:permanent_city]&.strip}, #{+admit[:permanent_region].strip + ' ' if admit[:permanent_region]}#{admit[:permanent_postal]&.strip}"
+            expect(visible_city_etc).to eql(expected.gsub('  ', ' '))
           end
 
           visible_country = @admit_page.address_country

@@ -350,7 +350,10 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
           @pax_manifest_page.click_become_user_link_element @add_edit_user
           @homepage.wait_for_title 'Home'
           @class_page.hit_class_page_url('2198', '21595')
-          @class_page.wait_for_title 'Page not found'
+          @class_page.spinner_element.when_visible Utils.short_wait
+          errors = Utils.log_js_errors @driver
+          not_auth = errors.find { |e| e.include? 'Failed to load resource: the server responded with a status of 403' }
+          expect(not_auth).to be_truthy
         end
 
         it 'allows an admin to permit a user to view Canvas data' do

@@ -155,14 +155,6 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
             @student_page.verify_note note_7
           end
 
-          it 'is offered a list of note topics' do
-            @student_page.click_create_new_note
-            expected_topics = Topic::TOPICS.select(&:for_notes).map &:name
-            @student_page.wait_until(1, "Expected #{expected_topics}, got #{@student_page.topic_options}") do
-              @student_page.topic_options == expected_topics
-            end
-          end
-
           it 'can create a note with topics' do
             note_8.subject = "Note 8 subject #{Utils.get_test_id}"
             @student_page.load_page test_student
