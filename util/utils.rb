@@ -138,6 +138,7 @@ class Utils
           logger.error "Possible JS error: #{msg}"
         end
       end
+      return messages
     end
   end
 

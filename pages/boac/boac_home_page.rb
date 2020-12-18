@@ -84,15 +84,15 @@ class BOACHomePage
 
   # FILTERED COHORTS AND CURATED GROUPS
 
-  elements(:filtered_cohort, :span, xpath: '//div[contains(@id,"sortable-cohort")]//h3/span[2]')
+  elements(:filtered_cohort, :span, xpath: '//div[contains(@id,"sortable-cohort")]//h3')
   h1(:no_filtered_cohorts_msg, id: 'no-cohorts-header')
-  elements(:curated_group, :span, xpath: '//div[contains(@id,"sortable-curated")]//h3/span[2]')
+  elements(:curated_group, :span, xpath: '//div[contains(@id,"sortable-curated")]//h3')
 
   # Returns the names of filtered cohorts shown on the homepage
   # @return [Array<String>]
   def filtered_cohorts
     wait_until(Utils.medium_wait) { filtered_cohort_elements.any? }
-    filtered_cohort_elements.map &:text
+    filtered_cohort_elements.map { |el| el.text.gsub('Show details for cohort', '').gsub(/(\()\d*(\nstudents\n)(\))/, '').strip }
   end
 
   # Returns the XPath to a filtered cohort's div in the main content area on the homepage
@@ -106,10 +106,10 @@ class BOACHomePage
   # @return [Array<String>]
   def curated_groups
     wait_until(Utils.medium_wait) { curated_group_elements.any? }
-    curated_group_elements.map &:text
+    curated_group_elements.map { |el| el.text.gsub('Show details for curated group', '').gsub(/(\()\d*(\nstudents\n)(\))/, '').strip }
   end
 
-  # Returns the XPath to a curated group's div in the main content area on the homepage
+    # Returns the XPath to a curated group's div in the main content area on the homepage
   # @param group [CuratedGroup]
   # @return [String]
   def curated_group_xpath(group)
