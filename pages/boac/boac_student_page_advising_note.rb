@@ -243,7 +243,7 @@ module BOACStudentPageAdvisingNote
   # @param note [Note]
   # @return [Element]
   def delete_note_button(note)
-    button_element(xpath: "//tr[descendant::div/@id=\"note-#{note.id}-is-open\"]//button[@id=\"delete-note-button\"]")
+    button_element(id: "delete-note-button-#{note.id}")
   end
 
   # Clicks the edit button for a given note
