@@ -112,7 +112,7 @@ describe 'bCourses course site creation' do
           bcourses_link_works = @create_course_site_page.external_link_valid?(@create_course_site_page.bcourses_service_element, 'bCourses | Digital Learning Services')
           it('shows a link to the bCourses service page') { expect(bcourses_link_works).to be true }
 
-          @canvas_page.switch_to_canvas_iframe unless standalone
+          @canvas_page.switch_to_canvas_iframe unless standalone || "#{@driver.browser}" == 'firefox'
           @create_course_site_page.click_need_help
 
           help_text = @create_course_site_page.help
@@ -121,7 +121,7 @@ describe 'bCourses course site creation' do
           mode_link_works = @create_course_site_page.external_link_valid?(@create_course_site_page.instr_mode_link_element, 'IT - How do I create Course Site?')
           it('shows an instruction mode link') { expect(mode_link_works).to be true }
 
-          @canvas_page.switch_to_canvas_iframe unless standalone
+          @canvas_page.switch_to_canvas_iframe unless standalone || "#{@driver.browser}" == 'firefox'
 
           links_tested = true
 

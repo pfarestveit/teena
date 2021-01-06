@@ -87,6 +87,7 @@ class Utils
         profile['browser.helperApps.alwaysAsk.force'] = false
         # Turn off Firefox's pretty JSON since it prevents parsing JSON strings in the browser.
         profile['devtools.jsonview.enabled'] = false
+        profile['pdfjs.diabled'] = true
         options = Selenium::WebDriver::Firefox::Options.new(:profile => profile)
         options.add_argument '-headless' if headless?
         Selenium::WebDriver.for :firefox, :options => options
