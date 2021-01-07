@@ -52,36 +52,6 @@ class OecUtils
     File.join(ENV['HOME'], "/OEC/#{@config['oec']['term']}")
   end
 
-  # Returns departments that should be included in a given supervisors file but are missing
-  # @param file_name [String]
-  # @return [Array<String>]
-  def self.missing_supervisor_depts(file_name)
-    initial_csv = CSV.read(file_name, headers: true)
-    depts_present = []
-    initial_csv.each do |r|
-      1.upto(10) { |i| depts_present << r["DEPT_NAME_#{i}"] if r["DEPT_NAME_#{i}"]}
-    end
-    depts_present.uniq!
-    depts_needed = OECDepartments::DEPARTMENTS.map { |d| d.form_code }
-    depts_needed.compact!
-    depts_needed.uniq!
-    depts_missing = depts_needed - depts_present
-    logger.debug "Departments missing: #{depts_missing}"
-    depts_missing
-  end
-
-  # Returns departments that are missing from the supervisors override file, which will end up missing in the merged file too.
-  # @return [Array<String>]
-  def self.missing_supervisor_override_depts
-    missing_supervisor_depts File.join("#{term_folder}", 'Overrides/supervisors.csv')
-  end
-
-  # Returns departments that are missing from the merged supervisors file, which will cause validation errors.
-  # @return [Array<String>]
-  def self.missing_supervisor_merged_depts
-    missing_supervisor_depts File.join("#{term_folder}", 'Step 3 preflight merge/Merged supervisor confirmations.csv')
-  end
-
   # Edits data in the merged course confirmations file to maximize the number of rows where 'evaluate' can be set to 'yes' and pass
   # validation. Not intended to replicate edits by department admins, only to maximize the data that can reasonably be included in
   # validation and publishing.
@@ -109,8 +79,8 @@ class OecUtils
           r['EMAIL_ADDRESS'] = user[:email]
         end
 
-        # Exclude room shares and instructors without email (adjusting the data is complicated) and one-day modular courses (not evaluated anyway)
-        unless r['EMAIL_ADDRESS'].nil? || (r['CROSS_LISTED_FLAG'] == 'RM SHARE') || (r['START_DATE'] == r['END_DATE'])
+        # Exclude instructors without email (adjusting the data is complicated) and one-day modular courses (not evaluated anyway)
+        unless r['EMAIL_ADDRESS'].nil? || (r['START_DATE'] == r['END_DATE'])
 
           # Make sure the right department forms are set. FSSEM and BIOLOGY follow their own rules, so ignore them.
           unless r['DEPT_FORM'].nil? || r['DEPT_FORM'] == 'FSSEM' || r['DEPT_NAME'] == 'BIOLOGY' || r['DEPT_FORM'] == 'CALTEACH'
