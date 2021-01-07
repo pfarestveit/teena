@@ -6,7 +6,6 @@ require_relative '../util/spec_helper'
 
 begin
 
-  OecUtils.missing_supervisor_merged_depts
   OecUtils.prepare_merged_confirmations
 
 end
