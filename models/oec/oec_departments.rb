@@ -53,6 +53,7 @@ class OECDepartments
       DANISH = new('DANISH', 'Scandinavian', 'DANISH', %w(F G), true),
       DATA = new('DATA', 'Computing, Data Science, and Society', 'DATA', %w(F G), true),
       DATASCI = new('DATASCI', 'Information', 'DATASCI', nil, true),
+      DEMOG = new('DEMOG', 'Demography', 'DEMOG', %w(F G), true),
       DES_INV = new('DES INV', 'Engineering', 'ENGIN', nil, false),
       DEV_ENG = new('DEV ENG', 'Civil and Environmental Engineering', 'CIV ENG', nil, false),
       DEV_STD = new('DEV STD', 'International and Area Studies', 'IAS', %w(F G), true),
