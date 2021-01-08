@@ -405,7 +405,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
 
       shared_examples 'GPA range validation' do |filter_name|
         before(:all) do
-          @cohort_page.click_new_filter_button
+          @cohort_page.click_new_filter_select
           @cohort_page.wait_for_update_and_click @cohort_page.new_filter_option filter_name
         end
 
@@ -442,7 +442,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
 
         before(:all) do
           @cohort_page.unsaved_filter_cancel_button
-          @cohort_page.click_new_filter_button
+          @cohort_page.click_new_filter_select
           @cohort_page.wait_for_update_and_click @cohort_page.new_filter_option 'lastNameRanges'
         end
 

@@ -409,7 +409,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
           @pax_manifest_page.click_become_user_link_element @add_edit_user
           @homepage.wait_for_title 'Home'
           @homepage.click_sidebar_create_filtered
-          @cohort_page.click_new_filter_button
+          @cohort_page.click_new_filter_select
           @cohort_page.wait_until(1) { @cohort_page.new_filter_option_elements.any? &:visible? }
           expect(@cohort_page.new_filter_option('groupCodes').visible?).to be true
         end
@@ -421,7 +421,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
           @pax_manifest_page.click_become_user_link_element @add_edit_user
           @homepage.wait_for_title 'Home'
           @homepage.click_sidebar_create_filtered
-          @cohort_page.click_new_filter_button
+          @cohort_page.click_new_filter_select
           @cohort_page.wait_until(1) { @cohort_page.new_filter_option_elements.any? &:visible? }
           expect(@cohort_page.new_filter_option('groupCodes').visible?).to be false
         end

@@ -182,7 +182,7 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
 
         shared_examples 'dependent range validation' do |filter_name|
           before(:all) do
-            @cohort_page.click_new_filter_button
+            @cohort_page.click_new_filter_select
             @cohort_page.wait_for_update_and_click @cohort_page.new_filter_option filter_name
           end
 

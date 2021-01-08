@@ -113,7 +113,7 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
 
           @homepage.load_page
           @homepage.click_sidebar_create_filtered
-          @cohort_page.click_new_filter_button
+          @cohort_page.click_new_filter_select
           @cohort_page.wait_until(1) { @cohort_page.new_filter_option_elements.any? &:visible? }
         end
 
@@ -321,7 +321,7 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
 
           @homepage.load_page
           @homepage.click_sidebar_create_filtered
-          @cohort_page.click_new_filter_button
+          @cohort_page.click_new_filter_select
           @cohort_page.wait_until(1) { @cohort_page.new_filter_option_elements.any? &:visible? }
         end
 
