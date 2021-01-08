@@ -68,7 +68,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
 
       before(:all) do
         @homepage.click_sidebar_create_filtered
-        @filtered_cohort_page.wait_for_update_and_click @filtered_cohort_page.new_filter_button_element
+        @filtered_cohort_page.wait_for_update_and_click @filtered_cohort_page.new_filter_select_element
         @filtered_cohort_page.wait_until(1) { @filtered_cohort_page.new_filter_option_elements.any? &:visible? }
       end
 
@@ -109,7 +109,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
       before(:all) do
         @homepage.hit_escape
         @homepage.click_sidebar_create_ce3_filtered
-        @filtered_admit_page.wait_for_update_and_click @filtered_admit_page.new_filter_button_element
+        @filtered_admit_page.wait_for_update_and_click @filtered_admit_page.new_filter_select_element
         @filtered_admit_page.wait_until(1) { @filtered_admit_page.new_filter_option_elements.any? }
       end
 

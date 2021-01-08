@@ -8,8 +8,8 @@ module BOACFilteredCohortPageFilters
 
   # NEW FILTERED COHORTS
 
-  button(:new_filter_button, xpath: '//button[starts-with(@id, \'new-filter-button\')]')
-  button(:new_sub_filter_button, xpath: '//button[starts-with(@id, \'filter-row-dropdown-secondary\')]')
+  select_list(:new_filter_select, xpath: '//select[starts-with(@id, \'new-filter-button\')]')
+  select_list(:new_sub_filter_select, xpath: '//select[starts-with(@id, \'filter-row-dropdown-secondary\')]')
   elements(:new_filter_option, :link, class: 'dropdown-item')
   text_field(:filter_range_min_input, id: 'filter-range-min')
   text_field(:filter_range_max_input, id: 'filter-range-max')
@@ -21,22 +21,24 @@ module BOACFilteredCohortPageFilters
   span(:last_name_filter_logical_error, xpath: '//span[text()="Requires letters in ascending order."]')
 
   # Clicks the new filter button, making two attempts in case of a DOM update
-  def click_new_filter_button
-    wait_for_update_and_click new_filter_button_element
+  def click_new_filter_select
+    wait_for_update_and_click new_filter_select_element
   rescue Selenium::WebDriver::Error::StaleElementReferenceError
-    wait_for_update_and_click new_filter_button_element
+    wait_for_update_and_click new_filter_select_element
   end
 
   # Returns a filter option link with the given filter key text as part of the link element id.
   # @param filter_key [String]
   # @return [Element]
   def new_filter_option(filter_key)
+    # TODO: These are now 'option' elements.
     button_element(id: "dropdown-primary-menuitem-#{filter_key}-new")
   end
 
   # Returns the Choose button for a new filter sub-option
   # @return [Element]
   def new_filter_sub_option_button
+    # TODO: Convert to 'option' element.
     button_element(xpath: '//button[contains(., "Choose...")]')
   end
 
@@ -59,6 +61,7 @@ module BOACFilteredCohortPageFilters
                       else
                         filter_option
                     end
+    # TODO: These should be referenced as 'option' elements.
     case filter_key
       when 'academicStandings'
         link_element(id: "Academic Standing-#{filter_option}")
@@ -104,7 +107,7 @@ module BOACFilteredCohortPageFilters
 
     # All others require a selection
     else
-      wait_for_update_and_click new_sub_filter_button_element
+      wait_for_update_and_click new_sub_filter_select_element
       wait_for_update_and_click new_filter_sub_option_element(filter_key, filter_option)
     end
   end
@@ -114,7 +117,7 @@ module BOACFilteredCohortPageFilters
   # @param filter_option [String]
   def select_new_filter(filter_key, filter_option = nil)
     logger.info "Selecting #{filter_key} #{filter_option}"
-    click_new_filter_button
+    click_new_filter_select
     wait_for_update_and_click new_filter_option(filter_key)
 
     # Some have no sub-options
@@ -131,7 +134,7 @@ module BOACFilteredCohortPageFilters
   # @param key [String]
   # @return [Array<String>]
   def unavailable_test_data(criteria, key)
-    click_new_filter_button
+    click_new_filter_select
     wait_for_update_and_click new_filter_option key
     wait_for_update_and_click new_filter_sub_option_button
     sleep Utils.click_wait

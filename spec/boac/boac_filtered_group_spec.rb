@@ -41,7 +41,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
 
       it 'offers no group filter options' do
         @homepage.click_sidebar_create_filtered
-        @cohort_page.click_new_filter_button
+        @cohort_page.click_new_filter_select
         @cohort_page.new_filter_option('curatedGroupIds').when_visible 1
         expect(@cohort_page.new_filter_option('curatedGroupIds').attribute('disabled')).to eql('true')
       end
@@ -58,7 +58,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
 
       it 'shows the user\'s own groups as filter options' do
         @group_page.click_sidebar_create_filtered
-        @cohort_page.click_new_filter_button
+        @cohort_page.click_new_filter_select
         @cohort_page.wait_for_update_and_click @cohort_page.new_filter_option('curatedGroupIds')
         @cohort_page.new_filter_sub_option_element('curatedGroupIds', @group_1.id).when_present 1
         @cohort_page.new_filter_sub_option_element('curatedGroupIds', @group_2.id).when_present 1
