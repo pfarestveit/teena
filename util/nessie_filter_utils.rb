@@ -43,7 +43,7 @@ class NessieFilterUtils < NessieUtils
     if filter.academic_standing&.any?
       cond = []
       filter.academic_standing.each do |term_standing|
-        s = term_standing.split(':')
+        s = term_standing.split('-')
         cond << "(student.academic_standing.term_id = '#{s[0]}' AND student.academic_standing.acad_standing_status = '#{s[1]}')"
       end
       conditions_list << cond.join(' OR ')

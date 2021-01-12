@@ -212,10 +212,12 @@ class BOACStudentPage
   end
 
   def academic_year_expand_button(term_name)
-    button_element(xpath: "#{term_data_xpath term_name}/ancestor::div[contains(@id, 'academic-year')]/preceding-sibling::button")
+    term_name = term_name.downcase
+    id_term = term_name.include?('spring') ? "summer-#{term_name.split.last}" : term_name.split.join('-')
+    button_element(xpath: "//button[contains(@id, '#{id_term}')]")
   end
 
-  def expand_term_row(term_name)
+  def expand_academic_year(term_name)
     logger.info "Expanding row containing #{term_name}"
     wait_for_update_and_click academic_year_expand_button term_name
   end

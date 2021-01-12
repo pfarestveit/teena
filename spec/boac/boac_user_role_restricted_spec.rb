@@ -61,7 +61,7 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
           @api_student_page.terms.each do |term|
             term['enrollments'].each do |course|
               term_name = @api_student_page.term_name term
-              @student_page.expand_term_row term_name unless @student_page.term_data_heading(term_name).visible?
+              @student_page.expand_academic_year term_name unless @student_page.term_data_heading(term_name).visible?
               course['sections'].each do |section|
                 expect(@student_page.course_expand_toggle(term['termId'], section['ccn'])).not_to be_visible
               end
@@ -73,7 +73,7 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
           @api_student_page.terms.each do |term|
             term['enrollments'].each do |course|
               term_name = @api_student_page.term_name term
-              @student_page.expand_term_row term_name unless @student_page.term_data_heading(term_name).visible?
+              @student_page.expand_academic_year term_name unless @student_page.term_data_heading(term_name).visible?
               course['sections'].each do |section|
                 expect(@student_page.class_page_link(term['termId'], section['ccn'])).not_to be_visible
               end
@@ -95,10 +95,8 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
 
         it 'sees an infinite spinner' do
           @class_page.hit_class_page_url('2178', '13826')
-          @class_page.spinner_element.when_visible Utils.short_wait
-          errors = Utils.log_js_errors @driver
-          not_auth = errors.find { |e| e.include? 'Failed to load resource: the server responded with a status of 403' }
-          expect(not_auth).to be_truthy
+          expected_error = 'Failed to load resource: the server responded with a status of 403 ()'
+          @class_page.wait_until(Utils.short_wait) { Utils.console_error_present?(@driver, expected_error) }
         end
 
         it 'is forbidden' do
@@ -113,34 +111,40 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
 
           @homepage.load_page
           @homepage.click_sidebar_create_filtered
-          @cohort_page.click_new_filter_select
-          @cohort_page.wait_until(1) { @cohort_page.new_filter_option_elements.any? &:visible? }
+          @opts = @cohort_page.filter_options
         end
 
-        it('sees an Expected Graduation Term filter') { expect(@cohort_page.new_filter_option('expectedGradTerms').visible?).to be true }
-        it('sees a GPA filter') { expect(@cohort_page.new_filter_option('gpaRanges').visible?).to be true }
-        it('sees a Level filter') { expect(@cohort_page.new_filter_option('levels').visible?).to be true }
-        it('sees a Major filter') { expect(@cohort_page.new_filter_option('majors').visible?).to be true }
-        it('sees a Transfer Student filter') { expect(@cohort_page.new_filter_option('transfer').visible?).to be true }
-        it('sees a Units Completed filter') { expect(@cohort_page.new_filter_option('unitRanges').visible?).to be true }
+        it('sees a College filter') { expect(@opts).to include('College') }
+        it('sees an Entering Term filter') { expect(@opts).to include('Entering Term') }
+        it('sees an Expected Graduation Term filter') { expect(@opts).to include('Expected Graduation Term') }
+        it('sees a GPA (Cumulative) filter') { expect(@opts).to include('GPA (Cumulative)') }
+        it('sees a GPA (Last Term) filter') { expect(@opts).to include('GPA (Last Term)') }
+        it('sees a Level filter') { expect(@opts).to include('Level') }
+        it('sees a Major filter') { expect(@opts).to include('Major') }
+        it('sees a Midpoint Deficient Grade filter') { expect(@opts).to include('Midpoint Deficient Grade') }
+        it('sees a Transfer Student filter') { expect(@opts).to include 'Transfer Student' }
+        it('sees a Units Completed filter') { expect(@opts).to include 'Units Completed' }
 
-        it('sees an Ethnicity filter') { expect(@cohort_page.new_filter_option('ethnicities').visible?).to be true }
-        it('sees a Gender filter') { expect(@cohort_page.new_filter_option('genders').visible?).to be true }
-        it('sees an Underrepresented Minority filter') { expect(@cohort_page.new_filter_option('underrepresented')) }
+        it('sees an Ethnicity filter') { expect(@opts).to include('Ethnicity') }
+        it('sees a Gender filter') { expect(@opts).to include('Gender') }
+        it('sees an Underrepresented Minority filter') { expect(@opts).to include('Underrepresented Minority') }
+        it('sees a Visa Type filter') { expect(@opts).to include('Visa Type') }
 
-        it('sees no Inactive (ASC) filter') { expect(@cohort_page.new_filter_option('isInactiveAsc').visible?).to be false }
-        it('sees no Intensive filter') { expect(@cohort_page.new_filter_option('inIntensiveCohort').visible?).to be false }
-        it('sees no Team filter') { expect(@cohort_page.new_filter_option('groupCodes').visible?).to be false }
+        it('sees no Inactive ASC filter') { expect(@opts).not_to include('Inactive (ASC)') }
+        it('sees no Intensive filter') { expect(@opts).not_to include('Intensive') }
+        it('sees no Team filter') { expect(@opts).not_to include('Team') }
 
-        it('sees a Last Name filter') { expect(@cohort_page.new_filter_option('lastNameRanges').visible?).to be true }
-        it('sees a My Students filter') { expect(@cohort_page.new_filter_option('cohortOwnerAcademicPlans').visible?).to be true }
-
-        it('sees no Advisor filter') { expect(@cohort_page.new_filter_option('coeAdvisorLdapUids').exists?).to be false }
-        it('sees no Ethnicity (COE) filter') { expect(@cohort_page.new_filter_option('coeEthnicities').exists?).to be false }
-        it('sees no Gender (COE) filter') { expect(@cohort_page.new_filter_option('coeGenders').exists?).to be false }
-        it('sees no Inactive (COE) filter') { expect(@cohort_page.new_filter_option('isInactiveCoe').exists?).to be false }
-        it('sees no PREP filter') { expect(@cohort_page.new_filter_option('coePrepStatuses').exists?).to be false }
-        it('sees no Probation filter') { expect(@cohort_page.new_filter_option('coeProbation').exists?).to be false }
+        it('sees no Advisor (COE) filter') { expect(@opts).not_to include('Advisor (COE)') }
+        it('sees no Ethnicity (COE) filter') { expect(@opts).not_to include('Ethnicity (COE)') }
+        it('sees no Gender (COE) filter') { expect(@opts).not_to include('Gender (COE)') }
+        it('sees no Grading Basis EPN (COE) filter') { expect(@opts).not_to include('Grading Basis EPN (COE)') }
+        it('sees no Inactive (COE) filter') { expect(@opts).not_to include('Inactive (COE)') }
+        it('sees a Last Name filter') { expect(@opts).to include('Last Name') }
+        it('sees a My Curated Groups filter') { expect(@opts).to include('My Curated Groups') }
+        it('sees a My Students filter') { expect(@opts).to include('My Students') }
+        it('sees no PREP filter') { expect(@opts).not_to include('PREP') }
+        it('sees no Probation filter') { expect(@opts).not_to include('Probation') }
+        it('sees no Underrepresented Minority (COE) filter') { expect(@opts).not_to include('Underrepresented Minority (COE)') }
 
         context 'with results' do
 
@@ -261,7 +265,7 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
           @api_student_page.terms.each do |term|
             term['enrollments'].each do |course|
               term_name = @api_student_page.term_name term
-              @student_page.expand_term_row term_name unless @student_page.term_data_heading(term_name).visible?
+              @student_page.expand_academic_year term_name unless @student_page.term_data_heading(term_name).visible?
               course['sections'].each do |section|
                 expect(@student_page.course_expand_toggle(term['termId'], section['ccn'])).not_to be_visible
               end
@@ -273,7 +277,7 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
           @api_student_page.terms.each do |term|
             term['enrollments'].each do |course|
               term_name = @api_student_page.term_name term
-              @student_page.expand_term_row term_name unless @student_page.term_data_heading(term_name).visible?
+              @student_page.expand_academic_year term_name unless @student_page.term_data_heading(term_name).visible?
               course['sections'].each do |section|
                 expect(@student_page.class_page_link(term['termId'], section['ccn'])).not_to be_visible
               end
@@ -303,10 +307,8 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
 
         it 'sees an infinite spinner' do
           @class_page.hit_class_page_url('2178', '13826')
-          @class_page.spinner_element.when_visible Utils.short_wait
-          errors = Utils.log_js_errors @driver
-          not_auth = errors.find { |e| e.include? 'Failed to load resource: the server responded with a status of 403' }
-          expect(not_auth).to be_truthy
+          expected_error = 'Failed to load resource: the server responded with a status of 403 ()'
+          @class_page.wait_until(Utils.short_wait) { Utils.console_error_present?(@driver, expected_error) }
         end
 
         it 'is forbidden' do
@@ -321,34 +323,40 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
 
           @homepage.load_page
           @homepage.click_sidebar_create_filtered
-          @cohort_page.click_new_filter_select
-          @cohort_page.wait_until(1) { @cohort_page.new_filter_option_elements.any? &:visible? }
+          @opts = @cohort_page.filter_options
         end
 
-        it('sees an Expected Graduation Term filter') { expect(@cohort_page.new_filter_option('expectedGradTerms').visible?).to be true }
-        it('sees a GPA filter') { expect(@cohort_page.new_filter_option('gpaRanges').visible?).to be true }
-        it('sees a Level filter') { expect(@cohort_page.new_filter_option('levels').visible?).to be true }
-        it('sees a Major filter') { expect(@cohort_page.new_filter_option('majors').visible?).to be true }
-        it('sees a Transfer Student filter') { expect(@cohort_page.new_filter_option('transfer').visible?).to be true }
-        it('sees a Units Completed filter') { expect(@cohort_page.new_filter_option('unitRanges').visible?).to be true }
+        it('sees a College filter') { expect(@opts).to include('College') }
+        it('sees an Entering Term filter') { expect(@opts).to include('Entering Term') }
+        it('sees an Expected Graduation Term filter') { expect(@opts).to include('Expected Graduation Term') }
+        it('sees a GPA (Cumulative) filter') { expect(@opts).to include('GPA (Cumulative)') }
+        it('sees a GPA (Last Term) filter') { expect(@opts).to include('GPA (Last Term)') }
+        it('sees a Level filter') { expect(@opts).to include('Level') }
+        it('sees a Major filter') { expect(@opts).to include('Major') }
+        it('sees a Midpoint Deficient Grade filter') { expect(@opts).to include('Midpoint Deficient Grade') }
+        it('sees a Transfer Student filter') { expect(@opts).to include 'Transfer Student' }
+        it('sees a Units Completed filter') { expect(@opts).to include 'Units Completed' }
 
-        it('sees an Ethnicity filter') { expect(@cohort_page.new_filter_option('ethnicities').visible?).to be true }
-        it('sees a Gender filter') { expect(@cohort_page.new_filter_option('genders').visible?).to be true }
-        it('sees an Underrepresented Minority filter') { expect(@cohort_page.new_filter_option('underrepresented')) }
+        it('sees an Ethnicity filter') { expect(@opts).to include('Ethnicity') }
+        it('sees a Gender filter') { expect(@opts).to include('Gender') }
+        it('sees an Underrepresented Minority filter') { expect(@opts).to include('Underrepresented Minority') }
+        it('sees a Visa Type filter') { expect(@opts).to include('Visa Type') }
 
-        it('sees no Inactive (ASC) filter') { expect(@cohort_page.new_filter_option('isInactiveAsc').visible?).to be false }
-        it('sees no Intensive filter') { expect(@cohort_page.new_filter_option('inIntensiveCohort').visible?).to be false }
-        it('sees no Team filter') { expect(@cohort_page.new_filter_option('groupCodes').visible?).to be false }
+        it('sees no Inactive ASC filter') { expect(@opts).not_to include('Inactive (ASC)') }
+        it('sees no Intensive filter') { expect(@opts).not_to include('Intensive') }
+        it('sees no Team filter') { expect(@opts).not_to include('Team') }
 
-        it('sees a Last Name filter') { expect(@cohort_page.new_filter_option('lastNameRanges').visible?).to be true }
-        it('sees a My Students filter') { expect(@cohort_page.new_filter_option('cohortOwnerAcademicPlans').visible?).to be true }
-
-        it('sees no Advisor filter') { expect(@cohort_page.new_filter_option('coeAdvisorLdapUids').exists?).to be false }
-        it('sees no Ethnicity (COE) filter') { expect(@cohort_page.new_filter_option('coeEthnicities').exists?).to be false }
-        it('sees no Gender (COE) filter') { expect(@cohort_page.new_filter_option('coeGenders').exists?).to be false }
-        it('sees no Inactive (COE) filter') { expect(@cohort_page.new_filter_option('isInactiveCoe').exists?).to be false }
-        it('sees no PREP filter') { expect(@cohort_page.new_filter_option('coePrepStatuses').exists?).to be false }
-        it('sees no Probation filter') { expect(@cohort_page.new_filter_option('coeProbation').exists?).to be false }
+        it('sees no Advisor (COE) filter') { expect(@opts).not_to include('Advisor (COE)') }
+        it('sees no Ethnicity (COE) filter') { expect(@opts).not_to include('Ethnicity (COE)') }
+        it('sees no Gender (COE) filter') { expect(@opts).not_to include('Gender (COE)') }
+        it('sees no Grading Basis EPN (COE) filter') { expect(@opts).not_to include('Grading Basis EPN (COE)') }
+        it('sees no Inactive (COE) filter') { expect(@opts).not_to include('Inactive (COE)') }
+        it('sees a Last Name filter') { expect(@opts).to include('Last Name') }
+        it('sees a My Curated Groups filter') { expect(@opts).to include('My Curated Groups') }
+        it('sees a My Students filter') { expect(@opts).to include('My Students') }
+        it('sees no PREP filter') { expect(@opts).not_to include('PREP') }
+        it('sees no Probation filter') { expect(@opts).not_to include('Probation') }
+        it('sees no Underrepresented Minority (COE) filter') { expect(@opts).not_to include('Underrepresented Minority (COE)') }
 
         context 'with results' do
 

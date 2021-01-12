@@ -91,7 +91,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
         @cohort_1.search_criteria.gender = ['Male']
         @cohort_page.load_cohort @cohort_1
         @cohort_page.show_filters
-        @cohort_page.edit_filter_and_confirm('Gender', @cohort_1.search_criteria.gender.first)
+        @cohort_page.edit_filter('Gender', @cohort_1.search_criteria.gender.first)
         @cohort_page.apply_and_save_cohort
         @cohort_page.set_cohort_members(@cohort_1, @test)
         added_members = @cohort_1.members - @initial_members

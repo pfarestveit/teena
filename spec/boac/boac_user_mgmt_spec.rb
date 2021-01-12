@@ -63,7 +63,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
     end
 
     context 'in user search mode' do
-      auth_users.select { |u| u.uid.length == 7 }.shuffle.last(25).each do |user|
+      auth_users.reject { |u| u.uid == Utils.super_admin_uid }.select { |u| u.uid.length == 7 }.shuffle.last(25).each do |user|
         context "searching for UID #{user.uid}" do
           before(:all) do
             @pax_manifest_page.search_for_advisor user
@@ -350,10 +350,8 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
           @pax_manifest_page.click_become_user_link_element @add_edit_user
           @homepage.wait_for_title 'Home'
           @class_page.hit_class_page_url('2198', '21595')
-          @class_page.spinner_element.when_visible Utils.short_wait
-          errors = Utils.log_js_errors @driver
-          not_auth = errors.find { |e| e.include? 'Failed to load resource: the server responded with a status of 403' }
-          expect(not_auth).to be_truthy
+          expected_error = 'Failed to load resource: the server responded with a status of 403 ()'
+          @class_page.wait_until(Utils.short_wait) { Utils.console_error_present?(@driver, expected_error) }
         end
 
         it 'allows an admin to permit a user to view Canvas data' do
@@ -409,9 +407,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
           @pax_manifest_page.click_become_user_link_element @add_edit_user
           @homepage.wait_for_title 'Home'
           @homepage.click_sidebar_create_filtered
-          @cohort_page.click_new_filter_select
-          @cohort_page.wait_until(1) { @cohort_page.new_filter_option_elements.any? &:visible? }
-          expect(@cohort_page.new_filter_option('groupCodes').visible?).to be true
+          expect(@cohort_page.filter_options).to include('Team')
         end
 
         it 'allows an admin to remove a user\'s department membership' do
@@ -421,9 +417,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
           @pax_manifest_page.click_become_user_link_element @add_edit_user
           @homepage.wait_for_title 'Home'
           @homepage.click_sidebar_create_filtered
-          @cohort_page.click_new_filter_select
-          @cohort_page.wait_until(1) { @cohort_page.new_filter_option_elements.any? &:visible? }
-          expect(@cohort_page.new_filter_option('groupCodes').visible?).to be false
+          expect(@cohort_page.filter_options).not_to include('Team')
         end
 
         it 'allows an admin to give a user a department director role' do

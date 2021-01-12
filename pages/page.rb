@@ -166,17 +166,21 @@ module Page
     element.send_keys text
   end
 
+  def matching_option(select_element, option)
+    select_element.options.find do |o|
+      o.text.strip == option ||
+        o.attribute('value') == option ||
+        o.attribute('id').include?(option.downcase)
+    end
+  end
+
   # Awaits a select element for a short time, clicks it using JavaScript, waits for a certain option to appear, and selects that option.
   # @param select_element [PageObject::Elements::SelectList]
   # @param option [String]
   def wait_for_element_and_select_js(select_element, option)
-    wait_for_update_and_click_js select_element
-    wait_until(Utils.short_wait) do
-      (select_element.options.map { |o| o.text.strip }).include?(option) ||
-          (select_element.options.map { |o| o.attribute('value') }).include?(option)
-    end
-    option_to_select = (select_element.options.find { |o| o.text.strip == option || o.attribute('value') == option })
-    option_to_select.click
+    wait_for_update_and_click select_element
+    sleep Utils.click_wait
+    matching_option(select_element, option).click
   end
 
   # Returns true if a code block completes without error.

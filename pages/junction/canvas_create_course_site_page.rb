@@ -218,7 +218,7 @@ module Page
       def wait_for_progress_bar
         progress_bar_element.when_visible Utils.medium_wait
         logger.info 'Waiting for progress bar to complete'
-        progress_bar_element.when_not_visible Utils.long_wait
+        progress_bar_element.when_not_visible Utils.long_wait rescue Selenium::WebDriver::Error::StaleElementReferenceError
       end
 
       def wait_for_standalone_site_id(course, user, splash_page)
