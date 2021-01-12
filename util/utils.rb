@@ -143,6 +143,12 @@ class Utils
     end
   end
 
+  def self.console_error_present?(driver, error_string)
+    js_log = driver.manage.logs.get(:browser)
+    messages = js_log.map &:message
+    messages.select { |msg| msg.include? error_string }.any?
+  end
+
   # TIMEOUTS
 
   # How long to wait before clicking an element. Used to slow down or speed up test execution.

@@ -458,7 +458,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
                 term_name = api_student_data.term_name term
                 logger.info "Checking #{term_name}"
 
-                @boac_student_page.expand_term_row term_name unless @boac_student_page.term_data_heading(term_name).visible?
+                @boac_student_page.expand_academic_year term_name unless @boac_student_page.term_data_heading(term_name).visible?
 
                 visible_term_data = @boac_student_page.visible_term_data(term_id, term_name)
 

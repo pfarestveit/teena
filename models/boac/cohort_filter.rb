@@ -120,13 +120,13 @@ class CohortFilter
   def self.level_per_code(code)
     case code
       when '10'
-        'Freshman'
+        'Freshman (0-29 Units)'
       when '20'
-        'Sophomore'
+        'Sophomore (30-59 Units)'
       when '30'
-        'Junior'
+        'Junior (60-89 Units)'
       when '40'
-        'Senior'
+        'Senior (90+ Units)'
       when 'GR'
         'Graduate'
       else

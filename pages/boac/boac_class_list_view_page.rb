@@ -147,7 +147,7 @@ class BOACClassListViewPage
     score_xpath = "#{assigns_submit_xpath(student, node)}"
     has_boxplot = verify_block { mouseover(div_element(xpath: "#{score_xpath}#{boxplot_trigger_xpath}")) }
     el = has_boxplot ?
-             div_element(xpath: '//div[@class="highcharts-tooltip-container"]//div[text()="User Score"]/following-sibling::div') :
+             div_element(xpath: '//div[@class="highcharts-tooltip-container"][last()]//div[text()="User Score"]/following-sibling::div') :
              div_element(xpath: "#{score_xpath}//strong")
     el.text.split(' ').last if el.exists?
   end

@@ -8,11 +8,12 @@ module BOACFilteredCohortPageFilters
 
   # NEW FILTERED COHORTS
 
-  select_list(:new_filter_select, xpath: '//select[starts-with(@id, \'new-filter-button\')]')
-  select_list(:new_sub_filter_select, xpath: '//select[starts-with(@id, \'filter-row-dropdown-secondary\')]')
-  elements(:new_filter_option, :link, class: 'dropdown-item')
-  text_field(:filter_range_min_input, id: 'filter-range-min')
-  text_field(:filter_range_max_input, id: 'filter-range-max')
+  select_list(:new_filter_select, id: 'filter-select-primary-new')
+  elements(:new_filter_option, :option, xpath: '//option[starts-with(@id, "primary-")]')
+  select_list(:new_sub_filter_select, xpath: '//select[contains(@id, "filter-select-secondary-")]')
+  elements(:new_sub_filter_option, :option, xpath: '//option[starts-with(@id, "secondary-")]')
+  text_field(:filter_range_min_input, xpath: '//input[contains(@id, "filter-range-min")]')
+  text_field(:filter_range_max_input, xpath: '//input[contains(@id, "filter-range-max")]')
   button(:unsaved_filter_add_button, id: 'unsaved-filter-add')
   button(:unsaved_filter_cancel_button, id: 'unsaved-filter-reset')
   button(:unsaved_filter_apply_button, id: 'unsaved-filter-apply')
@@ -27,121 +28,77 @@ module BOACFilteredCohortPageFilters
     wait_for_update_and_click new_filter_select_element
   end
 
-  # Returns a filter option link with the given filter key text as part of the link element id.
-  # @param filter_key [String]
-  # @return [Element]
-  def new_filter_option(filter_key)
-    # TODO: These are now 'option' elements.
-    button_element(id: "dropdown-primary-menuitem-#{filter_key}-new")
+  def filter_options
+    wait_until(Utils.short_wait) { new_filter_option_elements.any? }
+    new_filter_option_elements.map { |el| el.text.strip }
   end
 
-  # Returns the Choose button for a new filter sub-option
-  # @return [Element]
-  def new_filter_sub_option_button
-    # TODO: Convert to 'option' element.
-    button_element(xpath: '//button[contains(., "Choose...")]')
+  def select_new_filter_option(filter_option)
+    logger.info "Selecting filter '#{filter_option}'"
+    wait_for_element_and_select_js(new_filter_select_element, filter_option)
   end
 
-  # Returns the sub-option link for a new filter
-  # @param [String] filter_key
-  # @param [String] filter_option
-  # @return [Element]
-  def new_filter_sub_option_element(filter_key, filter_option)
-    filter_option = case filter_key
-                      when 'coeEthnicities'
-                        CohortFilter.coe_ethnicity_per_code filter_option
-                      when 'visaTypes'
-                        if filter_option == 'All types'
-                          filter_option
-                        else
-                          CohortFilter.visa_type_per_code filter_option
-                        end
-                      when 'levels'
-                        CohortFilter.level_per_code filter_option
-                      else
-                        filter_option
-                    end
-    # TODO: These should be referenced as 'option' elements.
-    case filter_key
-      when 'academicStandings'
-        link_element(id: "Academic Standing-#{filter_option}")
-      when 'colleges'
-        link_element(id: "College-#{filter_option}")
-      when 'enteringTerms'
-        link_element(id: "Entering Term-#{filter_option}")
-      when 'ethnicities'
-        link_element(id: "Ethnicity-#{filter_option}")
-      when 'expectedGradTerms'
-        link_element(id: "Expected Graduation Term-#{filter_option}")
-      when 'genders'
-        link_element(id: "Gender-#{filter_option}")
-      when 'groupCodes'
-        link_element(id: "Team-#{filter_option}")
-      when 'intendedMajors'
-        link_element(id: "Intended Major-#{filter_option}")
-      when 'majors'
-        link_element(id: "Major-#{filter_option}")
-      when 'minors'
-        link_element(id: "Minor-#{filter_option}")
-      when 'coeAdvisorLdapUids'
-        link_element(id: "Advisor (COE)-#{filter_option}")
-      when 'coeEpn'
-        link_element(id: "EPN Grading Option (COE)-#{filter_option}")
-      when 'cohortOwnerAcademicPlans'
-        link_element(id: "My Students-#{filter_option}")
-      when 'curatedGroupIds'
-        link_element(id: "My Curated Groups-#{filter_option}")
+  def filter_sub_option_identifier(filter_option, filter_sub_option)
+    case filter_option
+    when 'Ethnicity (COE)'
+      CohortFilter.coe_ethnicity_per_code filter_sub_option
+    when 'Gender (COE)'
+      CohortFilter.coe_gender_per_code filter_sub_option
+    when 'Visa Type'
+      if filter_sub_option == 'All types'
+        filter_sub_option
       else
-        link_element(xpath: "//div[@class=\"filter-row-column-02 mt-1\"]//button[contains(.,\"#{filter_option}\")]")
+        CohortFilter.visa_type_per_code filter_sub_option
+      end
+    when 'Level'
+      CohortFilter.level_per_code filter_sub_option
+    else
+      filter_sub_option
     end
   end
 
-  # Selects a sub-category for a filter type that offers sub-categories
-  # @param filter_key [String]
-  # @param filter_option [Object]
-  def choose_new_filter_sub_option(filter_key, filter_option)
+  def select_new_filter_sub_option(filter_option, filter_sub_option)
+    filter_sub_option = filter_sub_option_identifier(filter_option, filter_sub_option)
+    logger.info "Selecting sub-option '#{filter_sub_option}'"
     # GPA and Last Name require input
-    if %w(gpaRanges lastTermGpaRanges lastNameRanges familyDependentRanges studentDependentRanges).include? filter_key
-      wait_for_element_and_type(filter_range_min_input_element, filter_option['min'])
-      wait_for_element_and_type(filter_range_max_input_element, filter_option['max'])
+    if ['GPA (Cumulative)', 'GPA (Last Term)', 'Last Name', 'Family Dependents', 'Student Dependents'].include? filter_option
+      wait_for_element_and_type(filter_range_min_input_element, filter_sub_option['min'])
+      wait_for_element_and_type(filter_range_max_input_element, filter_sub_option['max'])
 
     # All others require a selection
     else
-      wait_for_update_and_click new_sub_filter_select_element
-      wait_for_update_and_click new_filter_sub_option_element(filter_key, filter_option)
+      wait_for_element_and_select_js(new_sub_filter_select_element, filter_sub_option)
     end
   end
 
   # Selects, adds, and applies a filter
-  # @param filter_key [String]
   # @param filter_option [String]
-  def select_new_filter(filter_key, filter_option = nil)
-    logger.info "Selecting #{filter_key} #{filter_option}"
-    click_new_filter_select
-    wait_for_update_and_click new_filter_option(filter_key)
-
+  # @param filter_sub_option [String]
+  def select_new_filter(filter_option, filter_sub_option = nil)
+    select_new_filter_option filter_option
     # Some have no sub-options
-    no_options = %w(midpointDeficient transfer underrepresented isInactiveAsc inIntensiveCohort isInactiveCoe coeUnderrepresented coeProbation
-                    sir isHispanic isUrem isFirstGenerationCollege hasFeeWaiver inFosterCare isFamilySingleParent isStudentSingleParent
-                    isReentry isLastSchoolLCFF studentHolds)
-    choose_new_filter_sub_option(filter_key, filter_option) unless no_options.include? filter_key
+    no_options = ['Midpoint Deficient Grade', 'Transfer Student', 'Underrepresented Minority', 'Inactive (ASC)', 'Intensive',
+                  'Inactive (COE)', 'Underrepresented Minority (COE)', 'Probation', 'Current SIR', 'Hispanic', 'UREM',
+                  'First Generation College', 'Application Fee Waiver', 'Foster Care', 'Family Is Single Parent',
+                  'Student Is Single Parent', 'Re-entry Status', 'Last School LCFF+', 'Holds']
+    select_new_filter_sub_option(filter_option, filter_sub_option) unless no_options.include? filter_option
     wait_for_update_and_click unsaved_filter_add_button_element
     unsaved_filter_apply_button_element.when_present Utils.short_wait
   end
 
   # Compares given an array of search criteria with available filter sub-options and returns missing sub-options
   # @param criteria [Array<String>]
-  # @param key [String]
+  # @param filter_option [String]
   # @return [Array<String>]
-  def unavailable_test_data(criteria, key)
-    click_new_filter_select
-    wait_for_update_and_click new_filter_option key
-    wait_for_update_and_click new_filter_sub_option_button
+  def unavailable_test_data(criteria, filter_option)
+    select_new_filter_option filter_option
     sleep Utils.click_wait
     missing_options = []
     criteria.each do |criterion|
       criterion = criterion.code if criterion.instance_of? Squad
-      missing_options << criterion unless new_filter_sub_option_element(key, criterion).exists?
+      criterion = filter_sub_option_identifier(filter_option, criterion)
+      expected_opt = filter_sub_option_identifier(filter_option, criterion)
+      missing_options << criterion unless matching_option(new_sub_filter_select_element, expected_opt)
     end
     hit_escape
     wait_for_update_and_click unsaved_filter_cancel_button_element
@@ -156,62 +113,62 @@ module BOACFilteredCohortPageFilters
     # The squads and majors lists can change over time. Avoid test failures if the search criteria is out of sync
     # with actual squads or majors. Advisors might also change, but fail if this happens for now.
     if cohort.search_criteria.intended_major&.any?
-      missing_options = unavailable_test_data(cohort.search_criteria.intended_major, 'intendedMajors')
+      missing_options = unavailable_test_data(cohort.search_criteria.intended_major, 'Intended Major')
       missing_options.each { |f| cohort.search_criteria.intended_major.delete f }
     end
 
     if cohort.search_criteria.major&.any?
-      missing_options = unavailable_test_data(cohort.search_criteria.major, 'majors')
+      missing_options = unavailable_test_data(cohort.search_criteria.major, 'Major')
       missing_options.each { |f| cohort.search_criteria.major.delete f }
     end
 
     if cohort.search_criteria.minor&.any?
-      missing_options = unavailable_test_data(cohort.search_criteria.minor, 'minors')
+      missing_options = unavailable_test_data(cohort.search_criteria.minor, 'Minor')
       missing_options.each { |f| cohort.search_criteria.minor.delete f }
     end
 
     if cohort.search_criteria.asc_team&.any?
-      missing_options = unavailable_test_data(cohort.search_criteria.asc_team, 'groupCodes')
+      missing_options = unavailable_test_data(cohort.search_criteria.asc_team, 'Team')
       missing_options.each { |f| cohort.search_criteria.asc_team.delete f }
     end
 
     # Global
-    cohort.search_criteria.academic_standing.each { |a| select_new_filter('academicStandings', a) } if cohort.search_criteria.academic_standing
-    cohort.search_criteria.college.each { |m| select_new_filter('colleges', m) } if cohort.search_criteria.college
-    cohort.search_criteria.entering_terms.each { |term| select_new_filter('enteringTerms', term) } if cohort.search_criteria.entering_terms
-    cohort.search_criteria.gpa.each { |gpa| select_new_filter('gpaRanges', gpa) } if cohort.search_criteria.gpa
-    cohort.search_criteria.gpa_last_term.each { |gpa| select_new_filter('lastTermGpaRanges', gpa) } if cohort.search_criteria.gpa_last_term
-    select_new_filter 'studentHolds' if cohort.search_criteria.holds
-    cohort.search_criteria.intended_major.each { |m| select_new_filter('intendedMajors', m) } if cohort.search_criteria.intended_major
-    cohort.search_criteria.level.each { |l| select_new_filter('levels', l) } if cohort.search_criteria.level
-    cohort.search_criteria.units_completed.each { |u| select_new_filter('unitRanges', u) } if cohort.search_criteria.units_completed
-    cohort.search_criteria.major.each { |m| select_new_filter('majors', m) } if cohort.search_criteria.major
-    select_new_filter 'midpointDeficient' if cohort.search_criteria.mid_point_deficient
-    cohort.search_criteria.minor.each { |m| select_new_filter('minors', m) } if cohort.search_criteria.minor
-    select_new_filter 'transfer' if cohort.search_criteria.transfer_student
-    cohort.search_criteria.expected_grad_terms.each { |t| select_new_filter('expectedGradTerms', t) } if cohort.search_criteria.expected_grad_terms
-    cohort.search_criteria.last_name.each { |n| select_new_filter('lastNameRanges', n) } if cohort.search_criteria.last_name
-    cohort.search_criteria.gender.each { |g| select_new_filter('genders', g) } if cohort.search_criteria.gender
-    cohort.search_criteria.cohort_owner_academic_plans.each { |e| select_new_filter('cohortOwnerAcademicPlans', e) } if cohort.search_criteria.cohort_owner_academic_plans
-    select_new_filter 'underrepresented' if cohort.search_criteria.underrepresented_minority
-    cohort.search_criteria.ethnicity.each { |e| select_new_filter('ethnicities', e) } if cohort.search_criteria.ethnicity
-    cohort.search_criteria.visa_type.each { |v| select_new_filter('visaTypes', v) } if cohort.search_criteria.visa_type
-    cohort.search_criteria.curated_groups.each { |g| select_new_filter('curatedGroupIds', g) } if cohort.search_criteria.curated_groups
+    cohort.search_criteria.academic_standing.each { |a| select_new_filter('Academic Standing', a) } if cohort.search_criteria.academic_standing
+    cohort.search_criteria.college.each { |m| select_new_filter('College', m) } if cohort.search_criteria.college
+    cohort.search_criteria.entering_terms.each { |term| select_new_filter('Entering Term', term.to_s) } if cohort.search_criteria.entering_terms
+    cohort.search_criteria.gpa.each { |gpa| select_new_filter('GPA (Cumulative)', gpa) } if cohort.search_criteria.gpa
+    cohort.search_criteria.gpa_last_term.each { |gpa| select_new_filter('GPA (Last Term)', gpa) } if cohort.search_criteria.gpa_last_term
+    select_new_filter 'Holds' if cohort.search_criteria.holds
+    cohort.search_criteria.intended_major.each { |m| select_new_filter('Intended Major', m) } if cohort.search_criteria.intended_major
+    cohort.search_criteria.level.each { |l| select_new_filter('Level', l) } if cohort.search_criteria.level
+    cohort.search_criteria.units_completed.each { |u| select_new_filter('Units Completed', u) } if cohort.search_criteria.units_completed
+    cohort.search_criteria.major.each { |m| select_new_filter('Major', m) } if cohort.search_criteria.major
+    select_new_filter 'Midpoint Deficient Grade' if cohort.search_criteria.mid_point_deficient
+    cohort.search_criteria.minor.each { |m| select_new_filter('Minor', m) } if cohort.search_criteria.minor
+    select_new_filter 'Transfer Student' if cohort.search_criteria.transfer_student
+    cohort.search_criteria.expected_grad_terms.each { |t| select_new_filter('Expected Graduation Term', t.to_s) } if cohort.search_criteria.expected_grad_terms
+    cohort.search_criteria.last_name.each { |n| select_new_filter('Last Name', n) } if cohort.search_criteria.last_name
+    cohort.search_criteria.gender.each { |g| select_new_filter('Gender', g) } if cohort.search_criteria.gender
+    cohort.search_criteria.cohort_owner_academic_plans.each { |e| select_new_filter('My Students', e) } if cohort.search_criteria.cohort_owner_academic_plans
+    select_new_filter 'Underrepresented Minority' if cohort.search_criteria.underrepresented_minority
+    cohort.search_criteria.ethnicity.each { |e| select_new_filter('Ethnicity', e) } if cohort.search_criteria.ethnicity
+    cohort.search_criteria.visa_type.each { |v| select_new_filter('Visa Type', v) } if cohort.search_criteria.visa_type
+    cohort.search_criteria.curated_groups.each { |g| select_new_filter('My Curated Groups', g) } if cohort.search_criteria.curated_groups
 
     # CoE
-    cohort.search_criteria.coe_advisor.each { |a| select_new_filter('coeAdvisorLdapUids', a) } if cohort.search_criteria.coe_advisor
-    cohort.search_criteria.coe_ethnicity.each { |e| select_new_filter('coeEthnicities', e) } if cohort.search_criteria.coe_ethnicity
-    select_new_filter 'coeUnderrepresented' if cohort.search_criteria.coe_underrepresented_minority
-    cohort.search_criteria.coe_gender.each { |g| select_new_filter('coeGenders', g) } if cohort.search_criteria.coe_gender
-    cohort.search_criteria.coe_grading_basis_epn.each { |g| select_new_filter('coeEpn', g) } if cohort.search_criteria.coe_grading_basis_epn
-    cohort.search_criteria.coe_prep.each { |p| select_new_filter('coePrepStatuses', p) } if cohort.search_criteria.coe_prep
-    select_new_filter 'coeProbation' if cohort.search_criteria.coe_probation
-    select_new_filter 'isInactiveCoe' if cohort.search_criteria.coe_inactive
+    cohort.search_criteria.coe_advisor.each { |a| select_new_filter('Advisor (COE)', a) } if cohort.search_criteria.coe_advisor
+    cohort.search_criteria.coe_ethnicity.each { |e| select_new_filter('Ethnicity (COE)', e) } if cohort.search_criteria.coe_ethnicity
+    select_new_filter 'Underrepresented Minority (COE)' if cohort.search_criteria.coe_underrepresented_minority
+    cohort.search_criteria.coe_gender.each { |g| select_new_filter('Gender (COE)', g) } if cohort.search_criteria.coe_gender
+    cohort.search_criteria.coe_grading_basis_epn.each { |g| select_new_filter('EPN Grading Option (COE)', g.to_s) } if cohort.search_criteria.coe_grading_basis_epn
+    cohort.search_criteria.coe_prep.each { |p| select_new_filter('PREP', p) } if cohort.search_criteria.coe_prep
+    select_new_filter 'Probation' if cohort.search_criteria.coe_probation
+    select_new_filter 'Inactive (COE)' if cohort.search_criteria.coe_inactive
 
     # ASC
-    select_new_filter 'isInactiveAsc' if cohort.search_criteria.asc_inactive
-    select_new_filter 'inIntensiveCohort' if cohort.search_criteria.asc_intensive
-    cohort.search_criteria.asc_team.each { |s| select_new_filter('groupCodes', s.code) } if cohort.search_criteria.asc_team
+    select_new_filter 'Inactive (ASC)' if cohort.search_criteria.asc_inactive
+    select_new_filter 'Intensive' if cohort.search_criteria.asc_intensive
+    cohort.search_criteria.asc_team.each { |s| select_new_filter('Team', s.name) } if cohort.search_criteria.asc_team
 
     execute_search cohort
   end
@@ -221,37 +178,37 @@ module BOACFilteredCohortPageFilters
   def perform_admit_search(cohort)
 
     if cohort.search_criteria.freshman_or_transfer&.any?
-      missing_options = unavailable_test_data(cohort.search_criteria.freshman_or_transfer, 'freshmanOrTransfer')
+      missing_options = unavailable_test_data(cohort.search_criteria.freshman_or_transfer, 'Freshman or Transfer')
       missing_options.each { |f| cohort.search_criteria.freshman_or_transfer.delete f }
     end
 
     if cohort.search_criteria.special_program_cep&.any?
-      missing_options = unavailable_test_data(cohort.search_criteria.special_program_cep, 'specialProgramCep')
+      missing_options = unavailable_test_data(cohort.search_criteria.special_program_cep, 'Special Program CEP')
       missing_options.each { |f| cohort.search_criteria.special_program_cep.delete f }
     end
 
     if cohort.search_criteria.residency&.any?
-      missing_options = unavailable_test_data(cohort.search_criteria.residency, 'residencyCategories')
+      missing_options = unavailable_test_data(cohort.search_criteria.residency, 'Residency')
       missing_options.each { |f| cohort.search_criteria.residency.delete f }
     end
 
-    cohort.search_criteria.freshman_or_transfer.each { |f| select_new_filter('freshmanOrTransfer', f) } if cohort.search_criteria.freshman_or_transfer
-    select_new_filter 'sir' if cohort.search_criteria.current_sir
-    cohort.search_criteria.college.each { |c| select_new_filter('admitColleges', c) } if cohort.search_criteria.college
-    cohort.search_criteria.xethnic.each { |x| select_new_filter('xEthnicities', x) } if cohort.search_criteria.xethnic
-    select_new_filter 'isHispanic' if cohort.search_criteria.hispanic
-    select_new_filter 'isUrem' if cohort.search_criteria.urem
-    select_new_filter 'isFirstGenerationCollege' if cohort.search_criteria.first_gen_college
-    select_new_filter 'hasFeeWaiver' if cohort.search_criteria.fee_waiver
-    cohort.search_criteria.residency.each { |r| select_new_filter('residencyCategories', r) }if cohort.search_criteria.residency
-    select_new_filter 'inFosterCare' if cohort.search_criteria.foster_care
-    select_new_filter 'isFamilySingleParent' if cohort.search_criteria.family_single_parent
-    select_new_filter 'isStudentSingleParent' if cohort.search_criteria.student_single_parent
-    cohort.search_criteria.family_dependents.each { |f| select_new_filter('familyDependentRanges', f) } if cohort.search_criteria.family_dependents
-    cohort.search_criteria.student_dependents.each { |s| select_new_filter('studentDependentRanges', s) } if cohort.search_criteria.student_dependents
-    select_new_filter 'isReentry' if cohort.search_criteria.re_entry_status
-    select_new_filter 'isLastSchoolLCFF' if cohort.search_criteria.last_school_lcff_plus
-    cohort.search_criteria.special_program_cep.each { |s| select_new_filter('specialProgramCep', s) } if cohort.search_criteria.special_program_cep
+    cohort.search_criteria.freshman_or_transfer.each { |f| select_new_filter('Freshman or Transfer', f) } if cohort.search_criteria.freshman_or_transfer
+    select_new_filter 'Current SIR' if cohort.search_criteria.current_sir
+    cohort.search_criteria.college.each { |c| select_new_filter('College', c) } if cohort.search_criteria.college
+    cohort.search_criteria.xethnic.each { |x| select_new_filter('XEthnic', x) } if cohort.search_criteria.xethnic
+    select_new_filter 'Hispanic' if cohort.search_criteria.hispanic
+    select_new_filter 'UREM' if cohort.search_criteria.urem
+    select_new_filter 'First Generation College' if cohort.search_criteria.first_gen_college
+    select_new_filter 'Application Fee Waiver' if cohort.search_criteria.fee_waiver
+    cohort.search_criteria.residency.each { |r| select_new_filter('Residency', r) } if cohort.search_criteria.residency
+    select_new_filter 'Foster Care' if cohort.search_criteria.foster_care
+    select_new_filter 'Family Is Single Parent' if cohort.search_criteria.family_single_parent
+    select_new_filter 'Student Is Single Parent' if cohort.search_criteria.student_single_parent
+    cohort.search_criteria.family_dependents.each { |f| select_new_filter('Family Dependents', f) } if cohort.search_criteria.family_dependents
+    cohort.search_criteria.student_dependents.each { |s| select_new_filter('Student Dependents', s) } if cohort.search_criteria.student_dependents
+    select_new_filter 'Re-entry Status' if cohort.search_criteria.re_entry_status
+    select_new_filter 'Last School LCFF+' if cohort.search_criteria.last_school_lcff_plus
+    cohort.search_criteria.special_program_cep.each { |s| select_new_filter('Special Program CEP', s) } if cohort.search_criteria.special_program_cep
 
     execute_search cohort
   end
@@ -291,8 +248,9 @@ module BOACFilteredCohortPageFilters
       "//div[contains(@class,\"filter-row\")]/div[contains(.,\"#{filter_name}\") and not(contains(.,\"COE\"))]"
     elsif filter_name == 'Major'
       "//div[contains(@class,\"filter-row\")]/div[contains(.,\"#{filter_name}\") and not(contains(.,\"Intended\"))]"
-    end
+    else
       "//div[contains(@class,\"filter-row\")]/div[contains(.,\"#{filter_name}\")]"
+    end
   end
 
   # Returns the element containing an added cohort filter
@@ -463,82 +421,38 @@ module BOACFilteredCohortPageFilters
   button(:cohort_update_button, xpath: '//button[contains(text(), "Update")]')
   button(:cohort_update_cancel_button, xpath: '//button[contains(text(), "Cancel")]')
 
-  # Returns the XPath to the Edit, Cancel, and Update controls for a filter row
-  # @param filter_name [String]
-  # @return [String]
-  def filter_controls_xpath(filter_name)
-    "#{existing_filter_xpath filter_name}/following-sibling::div[2]"
+  def filter_controls_xpath(filter_option)
+    "#{existing_filter_xpath filter_option}/following-sibling::div[2]"
   end
 
-  # Returns the XPath for an existing filter sub-option
-  # @param [String] filter_name
-  # @return [String]
-  def existing_filter_sub_options_xpath(filter_name)
-    "#{existing_filter_xpath filter_name}/following-sibling::div"
+  def filter_edit_button(filter_option)
+    button_element(xpath: "#{filter_controls_xpath filter_option}//button[contains(.,'Edit')]")
   end
 
-  # Clicks a sub-option when editing an existing filter
-  # @param [String] filter_name
-  # @param [String] edited_filter_option
-  def choose_edit_filter_sub_option(filter_name, edited_filter_option)
-    # Last Name requires input
-    if ['GPA (Cumulative)', 'GPA (Last Term)', 'Last Name', 'Family Dependents', 'Student Dependents'].include? filter_name
-      wait_for_element_and_type(text_area_element(xpath: "//input[contains(@id, 'filter-range-min-')]"), edited_filter_option['min'])
-      wait_for_element_and_type(text_area_element(xpath: "//input[contains(@id, 'filter-range-max-')]"), edited_filter_option['max'])
-
-    # All others require a selection
-    else
-      wait_for_update_and_click button_element(xpath: "#{existing_filter_sub_options_xpath filter_name}//button")
-      if ['Entering Term', 'Expected Graduation Term', 'Advisor (COE)'].include? filter_name
-        wait_for_update_and_click link_element(xpath: "//button[contains(@id, \"#{filter_name}\")][contains(@id, \"#{edited_filter_option}\")]")
-      else
-        wait_for_update_and_click link_element(xpath: "//button[contains(@id, \"#{filter_name}\")][contains(., \"#{edited_filter_option}\")]")
-      end
-    end
+  def filter_edit_cancel_button(filter_option)
+    button_element(xpath: "#{filter_controls_xpath filter_option}//button[contains(.,'Cancel')]")
   end
 
-  # Edits the first filter of a given type
-  # @param filter_key [String]
-  # @param new_filter_option [String]
-  def edit_filter_of_type(filter_key, new_filter_option)
-    logger.debug "#{filter_controls_xpath filter_key}//button[contains(.,'Edit')]"
-    sleep Utils.click_wait
-    wait_for_update_and_click button_element(xpath: "#{filter_controls_xpath filter_key}//button[contains(.,'Edit')]")
-    choose_edit_filter_sub_option(filter_key, new_filter_option)
+  def filter_edit_update_button(filter_option)
+    button_element(xpath: "#{filter_controls_xpath filter_option}//button[contains(.,'Update')]")
   end
 
-  # Clicks the cancel button for the first filter of a given type that is in edit mode
-  # @param filter_name [String]
-  def cancel_filter_edit(filter_name)
-    el = button_element(xpath: "#{filter_controls_xpath filter_name}//button[contains(.,'Cancel')]")
-    wait_for_update_and_click el
-    el.when_not_present 1
+  def filter_remove_button(filter_option)
+    button_element(xpath: "#{filter_controls_xpath filter_option}//button[contains(.,'Remove')]")
   end
 
-  # Clicks the update button for the first filter of a given type that is in edit mode
-  # @param filter_name [String]
-  def confirm_filter_edit(filter_name)
-    el = button_element(xpath: "#{filter_controls_xpath filter_name}//button[contains(.,'Update')]")
-    wait_for_update_and_click el
-    el.when_not_present 2
+  def edit_filter(filter_option, filter_sub_option)
+    logger.info "Changing '#{filter_option}' to '#{filter_sub_option}'"
+    wait_for_update_and_click filter_edit_button(filter_option)
+    select_new_filter_sub_option(filter_option, filter_sub_option)
+    wait_for_update_and_click filter_edit_update_button(filter_option)
+    filter_edit_update_button(filter_option).when_not_present 2
   end
 
-  # Saves an edit to the first filter of a given type
-  # @param filter_name [String]
-  # @param filter_option [String]
-  def edit_filter_and_confirm(filter_name, filter_option)
-    logger.info "Changing '#{filter_name}' to '#{filter_option}'"
-    edit_filter_of_type(filter_name, filter_option)
-    confirm_filter_edit(filter_name)
-  end
-
-  # Removes the first filter of a given type
-  # @param filter_name [String]
-  def remove_filter_of_type(filter_name)
-    logger.info "Removing '#{filter_name}'"
+  def remove_filter_of_type(filter_option)
+    logger.info "Removing '#{filter_option}'"
     row_count = cohort_filter_row_elements.length
-    logger.debug "#{filter_controls_xpath filter_name}//button[contains(.,'Remove')]"
-    wait_for_update_and_click button_element(xpath: "#{filter_controls_xpath filter_name}//button[contains(.,'Remove')]")
+    wait_for_update_and_click filter_remove_button(filter_option)
     wait_until(Utils.short_wait) { cohort_filter_row_elements.length == row_count - 1 }
   end
 

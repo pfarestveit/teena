@@ -404,55 +404,52 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
       before(:all) { @homepage.click_sidebar_create_filtered }
 
       shared_examples 'GPA range validation' do |filter_name|
-        before(:all) do
-          @cohort_page.click_new_filter_select
-          @cohort_page.wait_for_update_and_click @cohort_page.new_filter_option filter_name
-        end
+
+        before(:all) { @cohort_page.select_new_filter_option filter_name }
 
         it 'an error prompts for numeric input' do
-          @cohort_page.choose_new_filter_sub_option(filter_name, {'min' => 'A', 'max' => ''})
+          @cohort_page.select_new_filter_sub_option(filter_name, {'min' => 'A', 'max' => ''})
           @cohort_page.gpa_filter_range_error_element.when_visible 1
         end
 
         it 'an error prompts for logical numeric input' do
-          @cohort_page.choose_new_filter_sub_option(filter_name, {'min' => '4', 'max' => '0'})
+          @cohort_page.select_new_filter_sub_option(filter_name, {'min' => '4', 'max' => '0'})
           @cohort_page.gpa_filter_logical_error_element.when_visible 1
         end
 
         it 'an error prompts for numeric input from 0 to 4' do
-          @cohort_page.choose_new_filter_sub_option(filter_name, {'min' => '-1', 'max' => '5'})
+          @cohort_page.select_new_filter_sub_option(filter_name, {'min' => '-1', 'max' => '5'})
           @cohort_page.gpa_filter_range_error_element.when_visible 1
         end
 
         it 'no Add button appears without two valid values' do
-          @cohort_page.choose_new_filter_sub_option(filter_name, {'min' => '3.5', 'max' => ''})
+          @cohort_page.select_new_filter_sub_option(filter_name, {'min' => '3.5', 'max' => ''})
           expect(@cohort_page.unsaved_filter_add_button?).to be false
         end
       end
 
       context 'in the cumulative GPA filter' do
-        include_examples 'GPA range validation', 'gpaRanges'
+        include_examples 'GPA range validation', 'GPA (Cumulative)'
       end
 
       context 'in the term GPA filter' do
-        include_examples 'GPA range validation', 'lastTermGpaRanges'
+        include_examples 'GPA range validation', 'GPA (Last Term)'
       end
 
       context 'in the Last Name filter' do
 
         before(:all) do
           @cohort_page.unsaved_filter_cancel_button
-          @cohort_page.click_new_filter_select
-          @cohort_page.wait_for_update_and_click @cohort_page.new_filter_option 'lastNameRanges'
+          @cohort_page.select_new_filter_option 'Last Name'
         end
 
         it 'an error prompts for logical input' do
-          @cohort_page.choose_new_filter_sub_option('lastNameRanges', {'min' => 'Z', 'max' => 'A'})
+          @cohort_page.select_new_filter_sub_option('Last Name', {'min' => 'Z', 'max' => 'A'})
           @cohort_page.last_name_filter_logical_error_element.when_visible 1
         end
 
         it 'no Add button appears without two valid values' do
-          @cohort_page.choose_new_filter_sub_option('lastNameRanges', {'min' => 'P', 'max' => ''})
+          @cohort_page.select_new_filter_sub_option('Last Name', {'min' => 'P', 'max' => ''})
           expect(@cohort_page.unsaved_filter_add_button?).to be false
         end
       end
@@ -470,7 +467,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
 
       it 'allows the advisor to edit an Academic Standing filter' do
         test.default_cohort.search_criteria.academic_standing = ['Good Standing']
-        @cohort_page.edit_filter_and_confirm('Academic Standing', test.default_cohort.search_criteria.academic_standing.first)
+        @cohort_page.edit_filter('Academic Standing', test.default_cohort.search_criteria.academic_standing.first)
         @cohort_page.verify_student_filters_present test.default_cohort
       end
 
@@ -482,7 +479,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
 
       it 'allows the advisor to edit a College filter' do
         test.default_cohort.search_criteria.college = ['Undergrad Chemistry']
-        @cohort_page.edit_filter_and_confirm('College', test.default_cohort.search_criteria.college.first)
+        @cohort_page.edit_filter('College', test.default_cohort.search_criteria.college.first)
         @cohort_page.verify_student_filters_present test.default_cohort
       end
 
@@ -494,7 +491,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
 
       it 'allows the advisor to edit a cumulative GPA filter' do
         test.default_cohort.search_criteria.gpa = [{'min' => '3.00', 'max' => '4'}]
-        @cohort_page.edit_filter_and_confirm('GPA (Cumulative)', test.default_cohort.search_criteria.gpa.first)
+        @cohort_page.edit_filter('GPA (Cumulative)', test.default_cohort.search_criteria.gpa.first)
         @cohort_page.verify_student_filters_present test.default_cohort
       end
 
@@ -506,7 +503,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
 
       it 'allows the advisor to edit a term GPA filter' do
         test.default_cohort.search_criteria.gpa_last_term = [{'min' => '2', 'max' => '3.80'}]
-        @cohort_page.edit_filter_and_confirm('GPA (Last Term)', test.default_cohort.search_criteria.gpa_last_term.first)
+        @cohort_page.edit_filter('GPA (Last Term)', test.default_cohort.search_criteria.gpa_last_term.first)
         @cohort_page.verify_student_filters_present test.default_cohort
       end
 
@@ -523,8 +520,8 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
       end
 
       it 'allows the advisor to edit a Level filter' do
-        test.default_cohort.search_criteria.level = ['Junior (60-89 Units)']
-        @cohort_page.edit_filter_and_confirm('Level', test.default_cohort.search_criteria.level.first)
+        test.default_cohort.search_criteria.level = ['30']
+        @cohort_page.edit_filter('Level', test.default_cohort.search_criteria.level.first)
         @cohort_page.verify_student_filters_present test.default_cohort
       end
 
@@ -536,7 +533,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
 
       it 'allows the advisor to edit a Units Completed filter' do
         test.default_cohort.search_criteria.units_completed = ['60 - 89']
-        @cohort_page.edit_filter_and_confirm('Units Completed', test.default_cohort.search_criteria.units_completed.first)
+        @cohort_page.edit_filter('Units Completed', test.default_cohort.search_criteria.units_completed.first)
         @cohort_page.verify_student_filters_present test.default_cohort
       end
 
@@ -548,7 +545,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
 
       it 'allows the advisor to edit an Intended Major filter' do
         test.default_cohort.search_criteria.intended_major = ['History BA']
-        @cohort_page.edit_filter_and_confirm('Intended Major', test.default_cohort.search_criteria.intended_major.first)
+        @cohort_page.edit_filter('Intended Major', test.default_cohort.search_criteria.intended_major.first)
         @cohort_page.verify_student_filters_present test.default_cohort
       end
 
@@ -560,7 +557,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
 
       it 'allows the advisor to edit a Major filter' do
         test.default_cohort.search_criteria.major = ['Bioengineering BS']
-        @cohort_page.edit_filter_and_confirm('Major', test.default_cohort.search_criteria.major.first)
+        @cohort_page.edit_filter('Major', test.default_cohort.search_criteria.major.first)
         @cohort_page.verify_student_filters_present test.default_cohort
       end
 
@@ -572,7 +569,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
 
       it 'allows the advisor to edit a Minor filter' do
         test.default_cohort.search_criteria.minor = ['History UG']
-        @cohort_page.edit_filter_and_confirm('Minor', test.default_cohort.search_criteria.minor.first)
+        @cohort_page.edit_filter('Minor', test.default_cohort.search_criteria.minor.first)
         @cohort_page.verify_student_filters_present test.default_cohort
       end
 
@@ -591,7 +588,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
       it 'allows the advisor to edit an Entering Term filter' do
         new_term_id = (test.default_cohort.search_criteria.entering_terms.first.to_i - 10).to_s
         test.default_cohort.search_criteria.entering_terms = [new_term_id]
-        @cohort_page.edit_filter_and_confirm('Entering Term', test.default_cohort.search_criteria.entering_terms.first)
+        @cohort_page.edit_filter('Entering Term', test.default_cohort.search_criteria.entering_terms.first)
         @cohort_page.verify_student_filters_present test.default_cohort
       end
 
@@ -604,7 +601,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
       it 'allows the advisor to edit an Expected Graduation Term filter' do
         new_term_id = (test.default_cohort.search_criteria.expected_grad_terms.first.to_i + 10).to_s
         test.default_cohort.search_criteria.expected_grad_terms = [new_term_id]
-        @cohort_page.edit_filter_and_confirm('Expected Graduation Term', test.default_cohort.search_criteria.expected_grad_terms.first)
+        @cohort_page.edit_filter('Expected Graduation Term', test.default_cohort.search_criteria.expected_grad_terms.first)
         @cohort_page.verify_student_filters_present test.default_cohort
       end
 
@@ -622,7 +619,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
 
       it 'allows the advisor to edit an Ethnicity filter' do
         test.default_cohort.search_criteria.ethnicity = ['Thai']
-        @cohort_page.edit_filter_and_confirm('Ethnicity', test.default_cohort.search_criteria.ethnicity.first)
+        @cohort_page.edit_filter('Ethnicity', test.default_cohort.search_criteria.ethnicity.first)
         @cohort_page.verify_student_filters_present test.default_cohort
       end
 
@@ -634,7 +631,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
 
       it 'allows the advisor to edit a Visa Type filter' do
         test.default_cohort.search_criteria.visa_type = ['Permanent Resident']
-        @cohort_page.edit_filter_and_confirm('Visa Type', test.default_cohort.search_criteria.visa_type.first)
+        @cohort_page.edit_filter('Visa Type', test.default_cohort.search_criteria.visa_type.first)
         @cohort_page.verify_student_filters_present test.default_cohort
       end
 
@@ -646,7 +643,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
 
       it 'allows the advisor to edit a Gender filter' do
         test.default_cohort.search_criteria.gender = ['Female']
-        @cohort_page.edit_filter_and_confirm('Gender', test.default_cohort.search_criteria.gender.first)
+        @cohort_page.edit_filter('Gender', test.default_cohort.search_criteria.gender.first)
         @cohort_page.verify_student_filters_present test.default_cohort
       end
 
@@ -657,8 +654,8 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
       end
 
       it 'allows the advisor to edit an Ethnicity (COE) filter' do
-        test.default_cohort.search_criteria.coe_ethnicity = ['Mexican / Mexican-American / Chicano']
-        @cohort_page.edit_filter_and_confirm('Ethnicity (COE)', test.default_cohort.search_criteria.coe_ethnicity.first)
+        test.default_cohort.search_criteria.coe_ethnicity = ['E']
+        @cohort_page.edit_filter('Ethnicity (COE)', test.default_cohort.search_criteria.coe_ethnicity.first)
         @cohort_page.verify_student_filters_present test.default_cohort
       end
 
@@ -669,8 +666,8 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
       end
 
       it 'allows the advisor to edit a Gender (COE) filter' do
-        test.default_cohort.search_criteria.coe_gender = ['Male']
-        @cohort_page.edit_filter_and_confirm('Gender (COE)', test.default_cohort.search_criteria.coe_gender.first)
+        test.default_cohort.search_criteria.coe_gender = ['M']
+        @cohort_page.edit_filter('Gender (COE)', test.default_cohort.search_criteria.coe_gender.first)
         @cohort_page.verify_student_filters_present test.default_cohort
       end
 
@@ -700,7 +697,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
 
       it 'allows the advisor to edit a Team filter' do
         test.default_cohort.search_criteria.asc_team = [Squad::WCR]
-        @cohort_page.edit_filter_and_confirm('Team', test.default_cohort.search_criteria.asc_team.first.name)
+        @cohort_page.edit_filter('Team', test.default_cohort.search_criteria.asc_team.first.name)
         @cohort_page.verify_student_filters_present test.default_cohort
       end
 
@@ -712,7 +709,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
 
       it 'allows the advisor to edit a PREP filter' do
         test.default_cohort.search_criteria.coe_prep = ['T-PREP']
-        @cohort_page.edit_filter_and_confirm('PREP', test.default_cohort.search_criteria.coe_prep.first)
+        @cohort_page.edit_filter('PREP', test.default_cohort.search_criteria.coe_prep.first)
         @cohort_page.verify_student_filters_present test.default_cohort
       end
 
@@ -724,7 +721,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
 
       it 'allows the advisor to edit a Last Name filter' do
         test.default_cohort.search_criteria.last_name = [{'min' => 'B', 'max' => 'Y'}]
-        @cohort_page.edit_filter_and_confirm('Last Name', test.default_cohort.search_criteria.last_name.first)
+        @cohort_page.edit_filter('Last Name', test.default_cohort.search_criteria.last_name.first)
         @cohort_page.verify_student_filters_present test.default_cohort
       end
 
@@ -737,7 +734,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
       it 'allows the advisor to edit a My Students filter' do
         if test.default_cohort.search_criteria.cohort_owner_academic_plans
           test.default_cohort.search_criteria.cohort_owner_academic_plans = ['*']
-          @cohort_page.edit_filter_and_confirm('My Students', '*')
+          @cohort_page.edit_filter('My Students', '*')
           @cohort_page.verify_student_filters_present test.default_cohort
         else
           logger.warn 'Skipping test for editing My Students since the filter is not available to the user'
@@ -756,7 +753,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
 
       it 'allows the advisor to edit an Advisor (COE) filter' do
         test.default_cohort.search_criteria.coe_advisor = [BOACUtils.get_dept_advisors(BOACDepartments::COE).last.uid.to_s]
-        @cohort_page.edit_filter_and_confirm('Advisor (COE)', test.default_cohort.search_criteria.coe_advisor.first)
+        @cohort_page.edit_filter('Advisor (COE)', test.default_cohort.search_criteria.coe_advisor.first)
         @cohort_page.verify_student_filters_present test.default_cohort
       end
 
