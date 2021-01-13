@@ -440,7 +440,7 @@ module BOACApptIntakeDesk
 
   ### SHARED MODAL UI (check-in and details) ###
 
-  h3(:modal_student_name, id: 'appointment-check-in-student')
+  h3(:modal_student_name, id: 'modal-header')
   span(:modal_created_at, id: 'appointment-created-at')
   button(:modal_close_button, id: 'btn-appointment-close')
 
@@ -461,7 +461,7 @@ module BOACApptIntakeDesk
   ### CHECK-IN MODAL ###
 
   button(:modal_check_in_button, id: 'btn-appointment-check-in')
-  h3(:check_in_student_name, id: '//div[@id="advising-appointment-check-in"]//h3')
+  h3(:check_in_student_name, id: 'modal-header')
   span(:modal_topics, id: 'appointment-topics')
   span(:modal_details, id: 'appointment-details')
   select_list(:check_in_advisor_select, id: 'checkin-modal-advisor-select')
@@ -560,7 +560,7 @@ module BOACApptIntakeDesk
 
   ### DETAILS (UPDATE) MODAL ###
 
-  h3(:details_student_name, id: 'appointment-check-in-student')
+  h3(:details_student_name, id: 'modal-header')
   button(:details_update_button, id: 'btn-appointment-details-update')
   button(:details_close_button, id: 'btn-appointment-cancel')
 
