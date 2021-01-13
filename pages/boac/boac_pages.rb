@@ -38,7 +38,7 @@ module BOACPages
   ### HEADER ###
 
   div(:banner, xpath: '//div[@role="banner"]')
-  link(:home_link, xpath: '//a[contains(.,"Home")]')
+  link(:home_link, xpath: '//a[contains(.,"Online Advising")]')
   button(:header_dropdown, xpath: '//button[contains(@id,"header-dropdown-under-name")]')
   link(:flight_data_recorder_link, text: 'Flight Data Recorder')
   link(:flight_deck_link, text: 'Flight Deck')
@@ -166,8 +166,6 @@ module BOACPages
   link(:create_filtered_cohort_link, id: 'cohort-create')
   link(:view_everyone_cohorts_link, id: 'cohorts-all')
   link(:team_list_link, id: 'sidebar-teams-link')
-  link(:intensive_cohort_link, text: 'Intensive Students')
-  link(:inactive_cohort_link, text: 'Inactive Students')
   elements(:filtered_cohort_link, :link, xpath: '//div[contains(@class,"sidebar-row-link")]//a[contains(@id,"sidebar-filtered-cohort")][contains(@href,"/cohort/")]')
   div(:dupe_filtered_name_msg, xpath: '//div[contains(text(), "You have an existing cohort with this name. Please choose a different name.")]')
 
@@ -244,7 +242,7 @@ module BOACPages
   text_area(:search_input, id: 'search-students-input')
   elements(:search_history_item, :link, xpath: '//a[contains(@id, "search-students-suggestion-")]')
   element(:fill_in_field_msg, xpath: '//*[contains(text(), "Please fill out this field.")]')
-  button(:search_button, xpath: '//button[contains(text(), "Search")]')
+  button(:search_button, id: 'go-search')
 
   # Clears the search input such that the full search history will appear
   def clear_search_input

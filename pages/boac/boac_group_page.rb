@@ -84,7 +84,7 @@ class BOACGroupPage
     group.name = new_name
     wait_for_element_and_type(rename_group_input_element, new_name)
     wait_for_update_and_click rename_cohort_confirm_button_element
-    span_element(xpath: "//span[text()=\"#{group.name}\"]").when_present Utils.short_wait
+    cohort_heading(group).when_present Utils.short_wait
   end
 
   # Removes a student from a group

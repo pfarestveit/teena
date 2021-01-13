@@ -130,9 +130,9 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
         it('sees an Underrepresented Minority filter') { expect(@opts).to include('Underrepresented Minority') }
         it('sees a Visa Type filter') { expect(@opts).to include('Visa Type') }
 
-        it('sees no Inactive ASC filter') { expect(@opts).not_to include('Inactive (ASC)') }
-        it('sees no Intensive filter') { expect(@opts).not_to include('Intensive') }
-        it('sees no Team filter') { expect(@opts).not_to include('Team') }
+        it('sees no Inactive (ASC) filter') { expect(@opts).not_to include('Inactive (ASC)') }
+        it('sees no Intensive (ASC) filter') { expect(@opts).not_to include('Intensive (ASC)') }
+        it('sees no Team (ASC) filter') { expect(@opts).not_to include('Team (ASC)') }
 
         it('sees no Advisor (COE) filter') { expect(@opts).not_to include('Advisor (COE)') }
         it('sees no Ethnicity (COE) filter') { expect(@opts).not_to include('Ethnicity (COE)') }
@@ -142,8 +142,8 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
         it('sees a Last Name filter') { expect(@opts).to include('Last Name') }
         it('sees a My Curated Groups filter') { expect(@opts).to include('My Curated Groups') }
         it('sees a My Students filter') { expect(@opts).to include('My Students') }
-        it('sees no PREP filter') { expect(@opts).not_to include('PREP') }
-        it('sees no Probation filter') { expect(@opts).not_to include('Probation') }
+        it('sees no PREP (COE) filter') { expect(@opts).not_to include('PREP (COE)') }
+        it('sees no Probation (COE) filter') { expect(@opts).not_to include('Probation (COE)') }
         it('sees no Underrepresented Minority (COE) filter') { expect(@opts).not_to include('Underrepresented Minority (COE)') }
 
         context 'with results' do
@@ -342,9 +342,9 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
         it('sees an Underrepresented Minority filter') { expect(@opts).to include('Underrepresented Minority') }
         it('sees a Visa Type filter') { expect(@opts).to include('Visa Type') }
 
-        it('sees no Inactive ASC filter') { expect(@opts).not_to include('Inactive (ASC)') }
-        it('sees no Intensive filter') { expect(@opts).not_to include('Intensive') }
-        it('sees no Team filter') { expect(@opts).not_to include('Team') }
+        it('sees no Inactive (ASC) filter') { expect(@opts).not_to include('Inactive (ASC)') }
+        it('sees no Intensive (ASC) filter') { expect(@opts).not_to include('Intensive (ASC)') }
+        it('sees no Team (ASC) filter') { expect(@opts).not_to include('Team (ASC)') }
 
         it('sees no Advisor (COE) filter') { expect(@opts).not_to include('Advisor (COE)') }
         it('sees no Ethnicity (COE) filter') { expect(@opts).not_to include('Ethnicity (COE)') }
@@ -354,8 +354,8 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
         it('sees a Last Name filter') { expect(@opts).to include('Last Name') }
         it('sees a My Curated Groups filter') { expect(@opts).to include('My Curated Groups') }
         it('sees a My Students filter') { expect(@opts).to include('My Students') }
-        it('sees no PREP filter') { expect(@opts).not_to include('PREP') }
-        it('sees no Probation filter') { expect(@opts).not_to include('Probation') }
+        it('sees no PREP (COE) filter') { expect(@opts).not_to include('PREP (COE)') }
+        it('sees no Probation (COE) filter') { expect(@opts).not_to include('Probation (COE)') }
         it('sees no Underrepresented Minority (COE) filter') { expect(@opts).not_to include('Underrepresented Minority (COE)') }
 
         context 'with results' do

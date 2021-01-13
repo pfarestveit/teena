@@ -150,7 +150,7 @@ class BOACHomePage
   def member_count(cohort)
     el = cohort.instance_of?(FilteredCohort) ?
         span_element(id: "sortable-cohort-#{cohort.id}-total-student-count") :
-        span_element(xpath: "#{curated_group_xpath(cohort)}//h3/span[3]")
+        span_element(xpath: "#{curated_group_xpath(cohort)}//h3/span[2]")
     el.text.to_i if el.exists?
   end
 

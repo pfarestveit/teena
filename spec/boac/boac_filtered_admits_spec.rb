@@ -131,6 +131,19 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
 
         it("offers an Export List button for a search #{cohort.search_criteria.inspect}") { expect(@cohort_page.export_list_button?).to be true }
 
+        it "allows the advisor to export a non-zero list of admits in a cohort using #{cohort.search_criteria.list_filters}" do
+          if cohort.member_data.length.zero?
+            expect(@cohort_page.export_list_button_element.disabled?).to be true
+          else
+            cohort.export_csv = @cohort_page.export_student_list cohort
+            @cohort_page.verify_admits_present_in_export(all_admit_data, cohort.member_data, cohort.export_csv)
+          end
+        end
+
+        it "allows the advisor to export a non-zero list containing no emails for a cohort using #{cohort.search_criteria.list_filters}" do
+          cohort.member_data.length.zero? ? skip : @cohort_page.verify_no_email_in_export(cohort.export_csv)
+        end
+
         it "offers links to admit pages for search #{cohort.search_criteria.inspect}" do
           if cohort.member_data.length.zero?
             logger.warn 'Skipping admit page link test since there are no results'
@@ -151,24 +164,11 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
           end
         end
 
-        it "allows the advisor to export a non-zero list of admits in a cohort using #{cohort.search_criteria.list_filters}" do
-          if cohort.member_data.length.zero?
-            expect(@cohort_page.export_list_button_element.disabled?).to be true
-          else
-            cohort.export_csv = @cohort_page.export_student_list cohort
-            @cohort_page.verify_admits_present_in_export(all_admit_data, cohort.member_data, cohort.export_csv)
-          end
-        end
-
-        it "allows the advisor to export a non-zero list containing no emails for a cohort using #{cohort.search_criteria.list_filters}" do
-          cohort.member_data.length.zero? ? skip : @cohort_page.verify_no_email_in_export(cohort.export_csv)
-        end
-
         it("allows the advisor to create a cohort using #{cohort.search_criteria.inspect}") { @cohort_page.create_new_cohort cohort }
 
-        it("shows the cohort filters for a cohort using #{cohort.search_criteria.inspect}") { @cohort_page.verify_admit_filters_present cohort }
+        it("shows the cohort filters for a cohort using #{cohort.search_criteria.inspect}") { @cohort_page.verify_admit_filters_present cohort if cohort.id}
 
-        it("shows the cohort member count in the sidebar using #{cohort.search_criteria.inspect}") { @cohort_page.wait_for_sidebar_cohort_member_count cohort }
+        it("shows the cohort member count in the sidebar using #{cohort.search_criteria.inspect}") { @cohort_page.wait_for_sidebar_cohort_member_count cohort if cohort.id }
 
         it("offers no cohort history button for a cohort using #{cohort.search_criteria.inspect}") { expect(@cohort_page.history_button?).to be false }
       end
@@ -206,11 +206,11 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
         end
 
         context 'in the Family Dependents filter' do
-          include_examples 'dependent range validation', 'familyDependentRanges'
+          include_examples 'dependent range validation', 'Family Dependents'
         end
 
         context 'in the Student Dependents filter' do
-          include_examples 'dependent range validation', 'studentDependentRanges'
+          include_examples 'dependent range validation', 'Family Dependents'
         end
       end
     end

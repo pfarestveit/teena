@@ -231,7 +231,7 @@ module BOACPagesCreateNoteModal
   end
 
   def cohort_remove_button(cohort)
-    button_element(xpath: "//button[@aria-label=\"Remove cohort #{cohort.name}\"]")
+    button_element(xpath: "//span[contains(@id, 'batch-note-cohort-')][text()='#{cohort.name}']/following-sibling::button[contains(@id, 'remove-cohort-from-batch')]")
   end
 
   def curated_group_dropdown_element(group)
@@ -243,7 +243,7 @@ module BOACPagesCreateNoteModal
   end
 
   def curated_group_remove_button(group)
-    button_element(xpath: "//button[@aria-label=\"Remove curated #{group.name}\"]")
+    button_element(xpath: "//span[contains(@id, 'batch-note-curated-')][text()='#{group.name}']/following-sibling::button[contains(@id, 'remove-curated-from-batch')]")
   end
 
   # Adds a given set of students to a batch note
@@ -255,7 +255,7 @@ module BOACPagesCreateNoteModal
       wait_for_element_and_type(batch_note_add_student_input_element, "#{student.first_name} #{student.last_name} #{student.sis_id}")
       sleep Utils.click_wait
       wait_until(3) { auto_suggest_option_elements.any? }
-      student_link_element = auto_suggest_option_elements.find { |el| el.attribute('innerText') == "#{student.full_name} (#{student.sis_id})" }
+      student_link_element = auto_suggest_option_elements.find { |el| el.text == "#{student.full_name} (#{student.sis_id})" }
       wait_for_update_and_click student_link_element
       added_student_element(student).when_present 1
       note_batch.students << student

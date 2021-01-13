@@ -689,33 +689,33 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
         @cohort_page.verify_student_filters_present test.default_cohort
       end
 
-      it 'allows the advisor to remove an Intensive filter' do
+      it 'allows the advisor to remove an Intensive (ASC) filter' do
         test.default_cohort.search_criteria.asc_intensive = false
-        @cohort_page.remove_filter_of_type 'Intensive'
+        @cohort_page.remove_filter_of_type 'Intensive (ASC)'
         @cohort_page.verify_student_filters_present test.default_cohort
       end
 
-      it 'allows the advisor to edit a Team filter' do
+      it 'allows the advisor to edit a Team (ASC) filter' do
         test.default_cohort.search_criteria.asc_team = [Squad::WCR]
-        @cohort_page.edit_filter('Team', test.default_cohort.search_criteria.asc_team.first.name)
+        @cohort_page.edit_filter('Team (ASC)', test.default_cohort.search_criteria.asc_team.first.name)
         @cohort_page.verify_student_filters_present test.default_cohort
       end
 
-      it 'allows the advisor to remove a Team filter' do
+      it 'allows the advisor to remove a Team (ASC) filter' do
         test.default_cohort.search_criteria.asc_team.shift
-        @cohort_page.remove_filter_of_type 'Team'
+        @cohort_page.remove_filter_of_type 'Team (ASC)'
         @cohort_page.verify_student_filters_present test.default_cohort
       end
 
-      it 'allows the advisor to edit a PREP filter' do
+      it 'allows the advisor to edit a PREP (COE) filter' do
         test.default_cohort.search_criteria.coe_prep = ['T-PREP']
-        @cohort_page.edit_filter('PREP', test.default_cohort.search_criteria.coe_prep.first)
+        @cohort_page.edit_filter('PREP (COE)', test.default_cohort.search_criteria.coe_prep.first)
         @cohort_page.verify_student_filters_present test.default_cohort
       end
 
-      it 'allows the advisor to remove a PREP filter' do
+      it 'allows the advisor to remove a PREP (COE) filter' do
         test.default_cohort.search_criteria.coe_prep.shift
-        @cohort_page.remove_filter_of_type 'PREP'
+        @cohort_page.remove_filter_of_type 'PREP (COE)'
         @cohort_page.verify_student_filters_present test.default_cohort
       end
 
@@ -769,9 +769,9 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
         @cohort_page.verify_student_filters_present test.default_cohort
       end
 
-      it 'allows the advisor to remove a Probation filter' do
+      it 'allows the advisor to remove a Probation (COE) filter' do
         test.default_cohort.search_criteria.coe_probation = nil
-        @cohort_page.remove_filter_of_type 'Probation'
+        @cohort_page.remove_filter_of_type 'Probation (COE)'
       end
     end
 

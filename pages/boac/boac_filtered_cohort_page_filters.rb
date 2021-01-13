@@ -77,8 +77,8 @@ module BOACFilteredCohortPageFilters
   def select_new_filter(filter_option, filter_sub_option = nil)
     select_new_filter_option filter_option
     # Some have no sub-options
-    no_options = ['Midpoint Deficient Grade', 'Transfer Student', 'Underrepresented Minority', 'Inactive (ASC)', 'Intensive',
-                  'Inactive (COE)', 'Underrepresented Minority (COE)', 'Probation', 'Current SIR', 'Hispanic', 'UREM',
+    no_options = ['Midpoint Deficient Grade', 'Transfer Student', 'Underrepresented Minority', 'Inactive (ASC)', 'Intensive (ASC)',
+                  'Inactive (COE)', 'Underrepresented Minority (COE)', 'Probation (COE)', 'Current SIR', 'Hispanic', 'UREM',
                   'First Generation College', 'Application Fee Waiver', 'Foster Care', 'Family Is Single Parent',
                   'Student Is Single Parent', 'Re-entry Status', 'Last School LCFF+', 'Holds']
     select_new_filter_sub_option(filter_option, filter_sub_option) unless no_options.include? filter_option
@@ -161,14 +161,14 @@ module BOACFilteredCohortPageFilters
     select_new_filter 'Underrepresented Minority (COE)' if cohort.search_criteria.coe_underrepresented_minority
     cohort.search_criteria.coe_gender.each { |g| select_new_filter('Gender (COE)', g) } if cohort.search_criteria.coe_gender
     cohort.search_criteria.coe_grading_basis_epn.each { |g| select_new_filter('EPN Grading Option (COE)', g.to_s) } if cohort.search_criteria.coe_grading_basis_epn
-    cohort.search_criteria.coe_prep.each { |p| select_new_filter('PREP', p) } if cohort.search_criteria.coe_prep
-    select_new_filter 'Probation' if cohort.search_criteria.coe_probation
+    cohort.search_criteria.coe_prep.each { |p| select_new_filter('PREP (COE)', p) } if cohort.search_criteria.coe_prep
+    select_new_filter 'Probation (COE)' if cohort.search_criteria.coe_probation
     select_new_filter 'Inactive (COE)' if cohort.search_criteria.coe_inactive
 
     # ASC
     select_new_filter 'Inactive (ASC)' if cohort.search_criteria.asc_inactive
-    select_new_filter 'Intensive' if cohort.search_criteria.asc_intensive
-    cohort.search_criteria.asc_team.each { |s| select_new_filter('Team', s.name) } if cohort.search_criteria.asc_team
+    select_new_filter 'Intensive (ASC)' if cohort.search_criteria.asc_intensive
+    cohort.search_criteria.asc_team.each { |s| select_new_filter('Team (ASC)', s.name) } if cohort.search_criteria.asc_team
 
     execute_search cohort
   end
@@ -259,7 +259,7 @@ module BOACFilteredCohortPageFilters
   def existing_filter_element(filter_name, filter_option = nil)
     filter_option_xpath = "#{existing_filter_xpath filter_name}/following-sibling::div"
 
-    if ['Inactive', 'Inactive (ASC)', 'Inactive (COE)', 'Intensive', 'Probation', 'Transfer Student', 'Underrepresented Minority',
+    if ['Inactive', 'Inactive (ASC)', 'Inactive (COE)', 'Intensive (ASC)', 'Probation (COE)', 'Transfer Student', 'Underrepresented Minority',
         'Underrepresented Minority (COE)', 'Current SIR', 'Hispanic', 'UREM', 'First Generation College', 'Holds',
         'Application Fee Waiver', 'Foster Care', 'Family Is Single Parent', 'Student Is Single Parent', 'Re-entry Status',
         'Last School LCFF+'].include? filter_name
@@ -328,10 +328,10 @@ module BOACFilteredCohortPageFilters
 
         logger.debug 'Verifying Inactive (ASC) filter'
         existing_filter_element('Inactive (ASC)').exists? if filters.asc_inactive
-        logger.debug 'Verifying Intensive filter'
-        existing_filter_element('Intensive').exists? if filters.asc_intensive
-        logger.debug 'Verifying Team filter'
-        filters.asc_team.each { |t| existing_filter_element('Team', t.name).exists? } if filters.asc_team&.any?
+        logger.debug 'Verifying Intensive (ASC) filter'
+        existing_filter_element('Intensive (ASC)').exists? if filters.asc_intensive
+        logger.debug 'Verifying Team (ASC) filter'
+        filters.asc_team.each { |t| existing_filter_element('Team (ASC)', t.name).exists? } if filters.asc_team&.any?
 
         # TODO - advisors COE
         logger.debug 'Verifying Ethnicity (COE) filter'
@@ -351,10 +351,10 @@ module BOACFilteredCohortPageFilters
 
         logger.debug 'Verifying Underrepresented Minority filter (COE)'
         existing_filter_element('Underrepresented Minority (COE)').exists? if filters.coe_underrepresented_minority
-        logger.debug 'Verifying PREP filter'
-        filters.coe_prep.each { |p| existing_filter_element('PREP', p).exists? } if filters.coe_prep&.any?
-        logger.debug 'Verifying Probation filter'
-        existing_filter_element('Probation').exists? if filters.coe_probation
+        logger.debug 'Verifying PREP (COE) filter'
+        filters.coe_prep.each { |p| existing_filter_element('PREP (COE)', p).exists? } if filters.coe_prep&.any?
+        logger.debug 'Verifying Probation (COE) filter'
+        existing_filter_element('Probation (COE)').exists? if filters.coe_probation
         logger.debug 'Found \'em all!'
       end
     end

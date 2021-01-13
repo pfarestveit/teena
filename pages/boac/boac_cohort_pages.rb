@@ -34,7 +34,7 @@ module BOACCohortPages
   button(:apply_button, id: 'unsaved-filter-apply')
 
   # Returns the heading for a given cohort page
-  # @param cohort [FilteredCohort]
+  # @param cohort [Cohort]
   # @return [Element]
   def cohort_heading(cohort)
     h1_element(xpath: "//h1[contains(text(),\"#{cohort.name}\")]")
