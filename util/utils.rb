@@ -70,12 +70,9 @@ class Utils
         prefs = {'browser.enabled_labs_experiments': %w(same-site-by-default-cookies@1 cookies-without-same-site-must-be-secure@1)}
         options.add_option('localState', prefs)
 
-        options.add_argument 'headless' if headless?
-        prefs = {
-            :prompt_for_download => false,
-            :default_directory => Utils.download_dir
-        }
-        options.add_preference(:download, prefs)
+        options.headless! if headless?
+        options.add_preference('download.prompt_for_download', false)
+        options.add_preference('download.default_directory', Utils.download_dir)
         Selenium::WebDriver.for :chrome, :options => options
 
       when 'firefox'
