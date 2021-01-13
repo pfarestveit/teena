@@ -170,7 +170,7 @@ module Page
     select_element.options.find do |o|
       o.text.strip == option ||
         o.attribute('value') == option ||
-        o.attribute('id').include?(option.downcase)
+        o.attribute('id').include?("-#{option.downcase}")
     end
   end
 

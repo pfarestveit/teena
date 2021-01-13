@@ -42,7 +42,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
       it 'offers no group filter options' do
         @homepage.click_sidebar_create_filtered
         @cohort_page.new_filter_select_element.when_visible Utils.short_wait
-        opt = @cohort_page.new_filter_option_elements.find { |el| el.text == 'My Curated Groups' }
+        opt = @cohort_page.new_filter_option_elements.find { |el| el.text.strip == 'My Curated Groups' }
         expect(opt.attribute('disabled')).to eql('true')
       end
     end
@@ -60,7 +60,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
         @group_page.click_sidebar_create_filtered
         @cohort_page.select_new_filter_option 'My Curated Groups'
         @cohort_page.wait_until(1) do
-          opts = @cohort_page.new_sub_filter_option_elements.map &:text
+          opts = @cohort_page.new_sub_filter_option_elements.map { |el| el.text.strip }
           opts.include? @group_1.name
           opts.include? @group_2.name
         end
@@ -201,7 +201,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
         it 'updates the cohort member count in the sidebar when a group is added to the cohort' do
           @cohort_page.load_cohort @cohorts.last
           @cohort_page.show_filters
-          @cohort_page.select_new_filter('curatedGroupIds', @group_1.id.to_s)
+          @cohort_page.select_new_filter('My Curated Groups', @group_1.id.to_s)
           @cohort_page.wait_for_update_and_click @cohort_page.unsaved_filter_apply_button_element
           @cohort_page.click_save_cohort_button_one
           @cohorts.last.search_criteria.curated_groups << @group_1.id.to_s

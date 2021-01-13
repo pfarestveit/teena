@@ -87,11 +87,11 @@ module BOACAdmitListPages
       visible = visible_admit_row_data admit_cs_id
       visible.delete_if { |k, _| [:name, :cs_id, :sir].include? k }
       expected_data = {
-        cep: expected[:special_program_cep],
+        cep: (expected[:special_program_cep].empty? ? 'No data' : expected[:special_program_cep]),
         re_entry: expected[:re_entry_status],
-        first_gen: expected[:first_gen_college],
+        first_gen: (expected[:first_gen_college].empty? ? "—\nNo data" : expected[:first_gen_college]),
         urem: expected[:urem],
-        waiver: expected[:fee_waiver],
+        waiver: (expected[:fee_waiver].empty? ? "—\nNo data" : expected[:fee_waiver]),
         fresh_trans: expected[:freshman_or_transfer],
         intl: expected[:intl]
       }

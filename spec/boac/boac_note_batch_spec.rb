@@ -97,14 +97,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
             expect(@homepage.new_note_save_button_element.disabled?).to be true
           end
 
-          it 'can cancel an unsaved batch of notes' do
-            @homepage.hit_escape
-            @homepage.click_create_note_batch
-            @homepage.wait_for_element_and_type(@homepage.note_body_text_area_elements[1], 'Discard me!')
-            @homepage.click_cancel_new_note
-            @homepage.confirm_delete_or_discard
-            @homepage.wait_until(1) { @homepage.note_body_text_area_elements.empty? }
-          end
+          it('can cancel an unsaved batch of notes') { @homepage.click_cancel_new_note }
 
           it 'can add students' do
             @homepage.click_create_note_batch
