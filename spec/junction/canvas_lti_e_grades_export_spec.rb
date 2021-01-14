@@ -49,9 +49,6 @@ unless ENV['STANDALONE']
       @ungraded_assignment = Assignment.new(title: Utils.get_test_id)
       @canvas.set_grade_policy_manual course
       @canvas_assignments_page.create_assignment(course, @ungraded_assignment)
-
-      # Ensure final grade override feature is enabled on the course for override tests
-      @canvas.enable_final_grade_override course
     end
 
     after(:all) do

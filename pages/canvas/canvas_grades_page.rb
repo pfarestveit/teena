@@ -301,20 +301,6 @@ module Page
     text_field(:grade_override_input, xpath: '//div[contains(@class, "total-grade-override")]//input')
     elements(:grid_row_cell, :div, xpath: '//div[@id="gradebook_grid"]//div[contains(@class, "first-row")]/div')
 
-    # Ensures the final grade override is enabled on a given course site
-    def enable_final_grade_override(course)
-      load_course_settings course
-      wait_for_load_and_click features_tab_element
-      grade_override_toggle_element.when_present Utils.short_wait
-      if grade_override_toggle_checked?
-        logger.info 'Final grade override is already enabled'
-      else
-        logger.info 'Enabling final grade override'
-        wait_for_update_and_click grade_override_toggle_switch_element
-        sleep Utils.click_wait
-      end
-    end
-
     # Clicks the settings icon and switches to advanced settings
     def open_gradebook_adv_settings
       click_gradebook_settings
