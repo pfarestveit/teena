@@ -82,8 +82,8 @@ class BOACStudentPage
       :email => (email_element.text if email?),
       :email_alternate => (alternate_email.strip if alternate_email?),
       :phone => (phone if phone?),
-      :cumulative_units => (cumulative_units.gsub("UNITS COMPLETED\n",'').gsub("\nNo data", '') if cumulative_units?),
-      :cumulative_gpa => (cumulative_gpa.gsub("CUMULATIVE GPA\n",'').gsub("\nNo data", '').strip if cumulative_gpa?),
+      :cumulative_units => (cumulative_units.gsub("UNITS COMPLETED\n", '').gsub("\nNo data", '') if cumulative_units?),
+      :cumulative_gpa => (cumulative_gpa.gsub("CUMULATIVE GPA\n", '').gsub("\nNo data", '').strip if cumulative_gpa?),
       :majors => (major_elements.map { |m| m.text.gsub('Major', '').strip }),
       :colleges => (college_elements.map { |c| c.text.strip }).reject(&:empty?),
       :majors_discontinued => (discontinued_major_elements.map { |m| m.text.gsub('Major', '').strip }),
@@ -91,13 +91,13 @@ class BOACStudentPage
       :sub_plans => (sub_plan_elements.map { |m| m.text.strip }),
       :minors => (minor_elements.map { |m| m.text.strip }),
       :minors_discontinued => (discontinued_minor_elements.map { |m| m.text.strip }),
-      :level => (level.gsub("Level\n",'') if level?),
+      :level => (level.gsub("Level\n", '') if level?),
       :transfer => (transfer.strip if transfer?),
       :terms_in_attendance => (terms_in_attendance if terms_in_attendance?),
       :visa => (visa.strip if visa?),
       :entered_term => (entered_term.gsub('Entered', '').strip if entered_term?),
       :intended_majors => (intended_major_elements.map { |m| m.text.strip }),
-      :expected_graduation => (expected_graduation.gsub('Expected graduation','').strip if expected_graduation?),
+      :expected_graduation => (expected_graduation.gsub('Expected graduation', '').strip if expected_graduation?),
       :graduation_degree => (degree_type_element.text if degree_type_element.exists?),
       :graduation_date => (degree_date_element.text if degree_date_element.exists?),
       :graduation_colleges => (degree_college_elements.map &:text if degree_college_elements.any?),
@@ -198,11 +198,7 @@ class BOACStudentPage
   # COURSES
 
   span(:withdrawal_msg, class: 'red-flag-small')
-  elements(:class_page_link, :link, :xpath => '//a[contains(@href, "/course/")]')
 
-  # Returns the XPath to a semester's courses
-  # @param [String] term_name
-  # @return [String]
   def term_data_xpath(term_name)
     "//h3[text()='#{term_name}']"
   end
@@ -211,54 +207,69 @@ class BOACStudentPage
     h3_element(xpath: term_data_xpath(term_name))
   end
 
-  def academic_year_expand_button(term_name)
-    term_name = term_name.downcase
-    id_term = term_name.include?('spring') ? "summer-#{term_name.split.last}" : term_name.split.join('-')
-    button_element(xpath: "//button[contains(@id, '#{id_term}')]")
-  end
-
   def expand_academic_year(term_name)
     logger.info "Expanding row containing #{term_name}"
-    wait_for_update_and_click academic_year_expand_button term_name
+    year = term_name.split.last
+    year = term_name.split.last.to_i + 1 if term_name.include? 'Fall'
+    wait_for_update_and_click button_element(id: "academic-year-#{year}-toggle")
   end
 
-  # Returns the total term units and min/max override units shown for a given term
-  # @param term_id [Integer]
-  # @param term_name [String]
-  # @return [Hash]
-  def visible_term_data(term_id, term_name)
-    term_units_el = span_element(xpath: "#{term_data_xpath term_name}/..//div[@class='student-course-heading student-course']//div[@class='student-course-heading-units-total']")
+  def visible_term_data(term_id)
+    term_units_el = div_element(id: "term-#{term_id}-units")
     term_units_el.when_visible 1
-    term_units_min_el = span_element(id: "term-#{term_id}-min-units")
-    term_units_max_el = span_element(id: "term-#{term_id}-max-units")
+    term_gpa_el = div_element(id: "term-#{term_id}-gpa")
+    term_units_min_el = div_element(id: "term-#{term_id}-min-units")
+    term_units_max_el = div_element(id: "term-#{term_id}-max-units")
     term_academic_standing_el = span_element(id: "academic-standing-term-#{term_id}")
     {
-      :term_units => (term_units_el.text.split[1] if term_units_el.exists?),
-      :term_units_min => (term_units_min_el.text if term_units_min_el.exists?),
-      :term_units_max => (term_units_max_el.text if term_units_max_el.exists?),
-      :academic_standing => (term_academic_standing_el.text.strip if term_academic_standing_el.exists?)
+      term_units: (term_units_el.text.split.last if term_units_el.exists?),
+      term_gpa: (term_gpa_el.text.split.last if term_gpa_el.exists?),
+      term_units_min: (term_units_min_el.text.split.last if term_units_min_el.exists?),
+      term_units_max: (term_units_max_el.text.split.last if term_units_max_el.exists?),
+      academic_standing: (term_academic_standing_el.text.strip if term_academic_standing_el.exists?)
     }
   end
 
-  # Returns the XPath to the SIS data shown for a given course in a term
-  # @param term_name [String]
-  # @param course_code [String]
-  # @return [String]
-  def course_data_xpath(term_name, course_code)
-    "#{term_data_xpath term_name}/following-sibling::div[contains(., \"#{course_code}\")]"
+  def collapsed_course_data_xpath(term_name, course_code, i)
+    "#{term_data_xpath term_name}/../following-sibling::div//div[@class='student-course-row'][contains(., \"#{course_code}\")]"
   end
 
-  # Returns the link to a class page
-  # @param term_code [String]
-  # @param ccn [Integer]
-  # @return [Element]
+  def visible_collapsed_course_data(term_id, i)
+    code_el = span_element(id: "term-#{term_id}-course-#{i}-name")
+    wait_list_el = div_element(xpath: "//button[@id='term-#{term_id}-course-#{i}-toggle']/following-sibling::div[contains(@id, 'waitlisted-for')")
+    mid_point_grade_el = span_element(id: "term-#{term_id}-course-#{i}-midterm-grade")
+    final_grade_el = span_element(id: "term-#{term_id}-course-#{i}-final-grade")
+    units_el = span_element(id: "term-#{term_id}-course-#{i}-units")
+    {
+      code: (code_el.text if code_el.exists?),
+      wait_list: (wait_list_el.text.strip if wait_list_el.exists?),
+      mid_point_grade: (mid_point_grade_el.text.gsub('No data', '') if mid_point_grade_el.exists?),
+      final_grade: (final_grade_el.text if final_grade_el.exists?),
+      units: (units_el.text if units_el.exists?)
+    }
+  end
+
+  def expand_course_data(term_id, i)
+    toggle = button_element(:xpath => "//button[@id='term-#{term_id}-course-#{i}-toggle']")
+    wait_for_update_and_click toggle
+  end
+
+  def visible_expanded_course_data(term_id, i)
+    title_el = div_element(id: "term-#{term_id}-course-#{i}-title")
+    title_el.when_visible 1
+    code_el = div_element(id: "term-#{term_id}-course-#{i}-details-name")
+    section_els = span_elements(xpath: "//div[@id='term-#{term_id}-course-#{i}-details']/div[@class='student-course-sections']/span")
+    {
+      code: (code_el.text if code_el.exists?),
+      sections: (section_els.map { |el| el.text.split("\n").last.gsub(' |', '') } if section_els.any?),
+      title: (title_el.text if title_el.exists?)
+    }
+  end
+
   def class_page_link(term_code, ccn)
     link_element(id: "term-#{term_code}-section-#{ccn}")
   end
 
-  # Clicks the class page link for a given section
-  # @param term_code [String]
-  # @param ccn [Integer]
   def click_class_page_link(term_code, ccn)
     logger.info "Clicking link for term #{term_code} section #{ccn}"
     start = Time.now
@@ -268,166 +279,67 @@ class BOACStudentPage
     logger.warn "Took #{Time.now - start} seconds for the term #{term_code} section #{ccn} page to load"
   end
 
-  # Returns the SIS data shown for a course with a given course code
-  # @param term_name [String]
-  # @param course_code [String]
-  # @return [Hash]
-  def visible_course_sis_data(term_name, course_code)
-    course_xpath = course_data_xpath(term_name, course_code)
-    title_xpath = "#{course_xpath}//div[@class='student-course-name']"
-    units_xpath = "#{course_xpath}//div[@class='student-course-heading-units']"
-    grading_basis_xpath = "#{course_xpath}//div[contains(text(),'Final:')]/span"
-    mid_point_grade_xpath = "#{course_xpath}//div[contains(text(),'Mid:')]/span"
-    grade_xpath = "#{course_xpath}//div[contains(text(),'Final:')]/span"
-    wait_list_xpath = "#{course_xpath}//span[contains(@id,'waitlisted-for')]"
-    {
-      :title => (h4_element(:xpath => title_xpath).text if h4_element(:xpath => title_xpath).exists?),
-      :units_completed => (div_element(:xpath => units_xpath).text.delete('Units').strip if div_element(:xpath => units_xpath).exists?),
-      :grading_basis => (span_element(:xpath => grading_basis_xpath).text if span_element(:xpath => grading_basis_xpath).exists?),
-      :mid_point_grade => (span_element(:xpath => mid_point_grade_xpath).text.gsub("\n", '') if span_element(:xpath => mid_point_grade_xpath).exists?),
-      :grade => (span_element(:xpath => grade_xpath).text if span_element(:xpath => grade_xpath).exists?),
-      :wait_list => span_element(:xpath => wait_list_xpath).exists?
-    }
-  end
-
-  # Returns the SIS data shown for a given section in a course at a specific index
-  # @param term_name [String]
-  # @param course_code [String]
-  # @param index [Integer]
-  # @return [Hash]
   def visible_section_sis_data(term_name, course_code, index)
-    section_xpath = "#{course_data_xpath(term_name, course_code)}//div[@class='student-course-sections']/span[#{index + 1}]"
+    section_xpath = "#{collapsed_course_data_xpath(term_name, course_code)}//div[@class='student-course-sections']/span[#{index + 1}]"
     {
-     :section => (span_element(:xpath => section_xpath).text.delete('(|)').strip if span_element(:xpath => section_xpath).exists?)
+      :section => (span_element(:xpath => section_xpath).text.delete('(|)').strip if span_element(:xpath => section_xpath).exists?)
     }
   end
 
-  # Returns the element containing a dropped section
-  # @param term_name [String]
-  # @param course_code [String]
-  # @param component [String]
-  # @param number [String]
-  # @return [Element]
   def visible_dropped_section_data(term_name, course_code, component, number)
     div_element(:xpath => "#{term_data_xpath term_name}//div[@class='student-course student-course-dropped'][contains(.,\"#{course_code} - #{component} #{number}\")]")
   end
 
   # COURSE SITES
 
-  # Returns the button element to expand course data
-  # @param term_name [String]
-  # @param course_code [String]
-  # @return [Element]
-  def course_expand_toggle(term_name, course_code)
-    button_element(:xpath => "#{course_data_xpath(term_name, course_code)}//button")
-  end
-
-  # Expands course data
-  # @param term_name [String]
-  # @param course_code [String]
-  def expand_course_data(term_name, course_code)
-    wait_for_update_and_click course_expand_toggle(term_name, course_code)
-  end
-
-  # Returns the XPath to a course site associated with a course in a term
-  # @param term_name [String]
-  # @param course_code [String]
-  # @param index [Integer]
-  # @return [String]
   def course_site_xpath(term_name, course_code, index)
-    "#{course_data_xpath(term_name, course_code)}//div[@class='student-bcourses-wrapper'][#{index + 1}]"
+    "#{collapsed_course_data_xpath(term_name, course_code)}//div[@class='student-bcourses-wrapper'][#{index + 1}]"
   end
 
-  # Returns the XPath to a course site in a term not matched to a SIS enrollment
-  # @param term_name [String]
-  # @param site_code [String]
-  # @return [String]
   def unmatched_site_xpath(term_name, site_code)
     "#{term_data_xpath term_name}//h4[text()=\"#{site_code}\"]/ancestor::div[@class='student-course']//div[@class='student-bcourses-wrapper']"
   end
 
-  # Returns the XPath to the user percentile analytics data for a given category, for example 'page views'
-  # @param site_xpath [String]
-  # @param label [String]
-  # @return [String]
   def site_analytics_percentile_xpath(site_xpath, label)
     "#{site_xpath}//th[contains(text(),'#{label}')]/following-sibling::td[1]"
   end
 
-  # Returns the XPath to the detailed score and percentile analytics data for a given category, for example 'page views'
-  # @param site_xpath [String]
-  # @param label [String]
-  # @return [String]
   def site_analytics_score_xpath(site_xpath, label)
     "#{site_xpath}//th[contains(text(),'#{label}')]/following-sibling::td[2]"
   end
 
-  # Returns the XPath to the boxplot graph for a particular set of analytics data for a given site, for example 'page views'
-  # @param site_xpath [String]
-  # @param label [String]
-  # @return [String]
   def site_boxplot_xpath(site_xpath, label)
     "#{site_analytics_score_xpath(site_xpath, label)}#{boxplot_xpath}"
   end
 
-  # Returns the element that triggers the analytics tooltip for a particular set of analytics data for a given site, for example 'page views'
-  # @param site_xpath [String]
-  # @param label [String]
-  # @return [Element]
   def analytics_trigger_element(site_xpath, label)
     div_element(:xpath => "#{site_analytics_score_xpath(site_xpath, label)}#{boxplot_trigger_xpath}")
   end
 
-  # Checks the existence of a 'no data' message for a particular set of analytics for a given site, for example 'page views'
-  # @param site_xpath [String]
-  # @param label [String]
-  # @return [boolean]
   def no_data?(site_xpath, label)
     cell_element(:xpath => "#{site_analytics_score_xpath(site_xpath, label)}[contains(.,'No Data')]").exists?
   end
 
-  # Returns the user's percentile displayed for a particular set of analytics data for a given site
-  # @param site_xpath [String]
-  # @param label [String]
-  # @return [String]
   def perc_round(site_xpath, label)
     logger.debug "Hitting XPath: #{site_analytics_percentile_xpath(site_xpath, label)}"
     cell_element(:xpath => "#{site_analytics_percentile_xpath(site_xpath, label)}//strong").text
   end
 
-  # When a boxplot is shown for a set of analytics, returns the user score shown on the tooltip
-  # @param site_xpath [String]
-  # @param label [String]
-  # @return [String]
   def graphable_user_score(site_xpath, label)
     el = div_element(:xpath => "#{site_analytics_score_xpath(site_xpath, label)}//div[@class='student-chart-tooltip-header']/div[2]")
     el.text if el.exists?
   end
 
-  # When no boxplot is shown for a set of analytics, returns the user score shown
-  # @param site_xpath [String]
-  # @param label [String]
-  # @return [String]
   def non_graphable_user_score(site_xpath, label)
     el = cell_element(:xpath => "#{site_analytics_score_xpath(site_xpath, label)}/strong")
     el.text if el.exists?
   end
 
-  # When no boxplot is shown for a set of analytics, returns the maximum score shown
-  # @param site_xpath [String]
-  # @param label [String]
-  # @return [String]
   def non_graphable_maximum(site_xpath, label)
     el = cell_element(:xpath => "#{site_analytics_score_xpath(site_xpath, label)}/span/span")
     el.text if el.exists?
   end
 
-  # Returns all the analytics data shown for a given category, whether with boxplot or without
-  # @param driver [Selenium::WebDriver]
-  # @param site_xpath [String]
-  # @param label [String]
-  # @param api_analytics [Hash]
-  # @return [Hash]
   def visible_analytics(driver, site_xpath, label, api_analytics)
     # If a boxplot should be present, hover over it to reveal the tooltip detail
     if api_analytics[:graphable]
@@ -450,29 +362,14 @@ class BOACStudentPage
     }
   end
 
-  # Returns the assignments-submitted analytics data shown for a given site
-  # @param driver [Selenium::WebDriver]
-  # @param site_xpath [String]
-  # @param api_analytics [Hash]
-  # @return [Hash]
   def visible_assignment_analytics(driver, site_xpath, api_analytics)
     visible_analytics(driver, site_xpath, 'Assignments Submitted', api_analytics)
   end
 
-  # Returns the assignments-grades analytics data shown for a given site
-  # @param driver [Selenium::WebDriver]
-  # @param site_xpath [String]
-  # @param api_analytics [Hash]
-  # @return [Hash]
   def visible_grades_analytics(driver, site_xpath, api_analytics)
     visible_analytics(driver, site_xpath, 'Assignment Grades', api_analytics)
   end
 
-  # Returns the last activity data shown for a given site
-  # @param term_name [String]
-  # @param course_code [String]
-  # @param index [Integer]
-  # @return [String]
   def visible_last_activity(term_name, course_code, index)
     xpath = "#{course_site_xpath(term_name, course_code, index)}//th[contains(.,\"Last bCourses Activity\")]/following-sibling::td/div"
     div_element(:xpath => xpath).when_visible(Utils.click_wait)
