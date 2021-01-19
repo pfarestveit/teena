@@ -302,14 +302,6 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
           @scheduler_intake_desk.wait_until(1) { @scheduler_intake_desk.available_appt_advisor_uids.sort.include? @test.drop_in_advisor.uid }
         end
 
-        it 'shows a scheduler the right reasons for a new appointment' do
-          @scheduler_intake_desk.click_new_appt
-          expected_topics = Topic::TOPICS.select(&:for_appts).map &:name
-          @scheduler_intake_desk.wait_until(1, "Expected #{expected_topics}, got #{@scheduler_intake_desk.available_appt_reasons}") do
-            @scheduler_intake_desk.available_appt_reasons == expected_topics
-          end
-        end
-
         it 'requires a scheduler to enter details for a new appointment' do
           @scheduler_intake_desk.click_new_appt
           @scheduler_intake_desk.choose_appt_student @test.students.first
@@ -383,14 +375,6 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
           expect(@advisor_homepage.make_appt_button_element.disabled?).to be true
           @advisor_homepage.add_reasons(appt, [Topic::OTHER])
           expect(@advisor_homepage.make_appt_button_element.disabled?).to be false
-        end
-
-        it 'shows a drop-in advisor the right reasons for a new appointment' do
-          @advisor_homepage.click_new_appt
-          expected_topics = Topic::TOPICS.select(&:for_appts).map &:name
-          @advisor_homepage.wait_until(1, "Expected #{expected_topics}, got #{@advisor_homepage.available_appt_reasons}") do
-            @advisor_homepage.available_appt_reasons == expected_topics
-          end
         end
 
         it 'requires a drop-in advisor to enter details for a new appointment' do

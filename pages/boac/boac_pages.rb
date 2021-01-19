@@ -240,28 +240,34 @@ module BOACPages
   text_area(:note_date_from, id: 'search-options-note-filters-last-updated-from')
   text_area(:note_date_to, id: 'search-options-note-filters-last-updated-to')
   text_area(:search_input, id: 'search-students-input')
-  elements(:search_history_item, :link, xpath: '//a[contains(@id, "search-students-suggestion-")]')
+  elements(:search_history_item, :link, xpath: '//li[@class="autocomplete-result"]')
   element(:fill_in_field_msg, xpath: '//*[contains(text(), "Please fill out this field.")]')
   button(:search_button, id: 'go-search')
 
+  def clear_input(element)
+    element.when_visible Utils.short_wait
+    element.click
+    50.times { hit_backspace; hit_delete }
+  end
+
   # Clears the search input such that the full search history will appear
   def clear_search_input
-    search_input_element.clear
-    click_home
-    wait_for_update_and_click search_input_element
+    clear_input search_input_element
     sleep Utils.click_wait
   end
 
   # Returns the strings in the visible search history list
   # @return [Array<String>]
   def visible_search_history
-    search_history_item_elements.map { |el| el.attribute('innerText') }
+    sleep 1
+    search_history_item_elements.map { |el| el.text.strip }
   end
 
   # Clicks an item in the search history list and waits for the resulting search to complete
   # @param search_string [String]
   def select_history_item(search_string)
-    wait_for_update_and_click search_history_item_elements.find { |el| el.attribute('innerText') == search_string }
+    sleep 1
+    search_history_item_elements.find { |el| el.text.strip == search_string }.click
     wait_for_spinner
   end
 
@@ -349,8 +355,9 @@ module BOACPages
     expand_search_options_notes_subpanel
     from_date = date ? date.strftime('%m/%d/%Y') : ''
     logger.debug "Entering note date from '#{from_date}'"
-    wait_for_element_and_type(note_date_from_element, from_date)
-    hit_escape
+    clear_input note_date_from_element
+    note_date_from_element.send_keys from_date
+    3.times { hit_tab }
   end
 
   # Sets the "Last updated > To" notes search option
@@ -359,8 +366,9 @@ module BOACPages
     expand_search_options_notes_subpanel
     to_date = date ? date.strftime('%m/%d/%Y') : ''
     logger.debug "Entering note date to '#{to_date}'"
-    wait_for_element_and_type(note_date_to_element, to_date)
-    hit_escape
+    clear_input note_date_to_element
+    note_date_to_element.send_keys to_date
+    3.times { hit_tab }
   end
 
   # Sets both "Last updated" notes search options
@@ -384,8 +392,7 @@ module BOACPages
   # @param string [String]
   def enter_search_string(string)
     sleep 1
-    search_input_element.when_visible Utils.short_wait
-    search_input_element.clear
+    clear_input search_input_element
     (self.search_input = string) if string
   end
 

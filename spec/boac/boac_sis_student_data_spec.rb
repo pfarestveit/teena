@@ -460,7 +460,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
 
                 @boac_student_page.expand_academic_year term_name unless @boac_student_page.term_data_heading(term_name).visible?
 
-                visible_term_data = @boac_student_page.visible_term_data(term_id, term_name)
+                visible_term_data = @boac_student_page.visible_term_data term_id
 
                 # TERM UNITS
 
@@ -516,7 +516,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
                 term_section_ccns = []
 
                 if api_student_data.courses(term).any?
-                  api_student_data.courses(term).each do |course|
+                  api_student_data.courses(term).each_with_index do |course, i|
 
                     begin
                       course_sis_data = api_student_data.sis_course_data course
@@ -524,52 +524,59 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
 
                       logger.info "Checking course #{course_code}"
 
-                      @boac_student_page.expand_course_data(term_name, course_code)
+                      collapsed_course_data = @boac_student_page.visible_collapsed_course_data(term_id, i)
 
-                      visible_course_sis_data = @boac_student_page.visible_course_sis_data(term_name, course_code)
-                      visible_course_title = visible_course_sis_data[:title]
-                      visible_units = visible_course_sis_data[:units_completed]
-                      visible_grading_basis = visible_course_sis_data[:grading_basis]
-                      visible_midpoint = visible_course_sis_data[:mid_point_grade]
-                      visible_grade = visible_course_sis_data[:grade]
-
-                      it "shows the course title for UID #{student.uid} term #{term_name} course #{course_code}" do
-                        expect(visible_course_title).not_to be_empty
-                        expect(visible_course_title).to eql(course_sis_data[:title])
+                      it "shows the course code for UID #{student.uid} term #{term_name} course #{course_code}" do
+                        expect(collapsed_course_data[:code]).not_to be_empty
+                        expect(collapsed_course_data[:code]).to eql(course_sis_data[:code])
                       end
 
-                      it "shows the units for UID #{student.uid} term #{term_name} course #{course_code}" do
-                        expect(visible_units).not_to be_empty
-                        expect(visible_units).to eql(course_sis_data[:units_completed])
-                      end
+                      # TODO - wait list
 
                       if course_sis_data[:grade].empty?
                         if course_sis_data[:grading_basis] == 'NON'
                           it "shows no grade and no grading basis for UID #{student.uid} term #{term_name} course #{course_code}" do
-                            expect(visible_grade).to be_empty
-                            expect(visible_grading_basis).to be_nil
+                            expect(collapsed_course_data[:final_grade]).to be_empty
                           end
                         else
-                          it("shows the grading basis for UID #{student.uid} term #{term_name} course #{course_code}") { expect(visible_grading_basis).to eql(course_sis_data[:grading_basis]) }
-                        end
-                      else
-                        it("shows the grade for UID #{student.uid} term #{term_name} course #{course_code}") { expect(visible_grade).to eql(course_sis_data[:grade]) }
-                      end
-
-                      if term_name == BOACUtils.term
-                        if course_sis_data[:midpoint]
-                          it "shows the midpoint grade for UID #{student.uid} term #{term_name} course #{course_code}" do
-                            expect(visible_midpoint).not_to be_empty
-                            expect(visible_midpoint).to eql(course_sis_data[:midpoint])
+                          it "shows the grading basis for UID #{student.uid} term #{term_name} course #{course_code}" do
+                            expect(collapsed_course_data[:final_grade]).to eql(course_sis_data[:grading_basis])
                           end
-                        else
-                          it("shows no midpoint grade for UID #{student.uid} term #{term_name} course #{course_code}") { expect(visible_midpoint).to include('No data') }
                         end
                       else
-                        it("shows no midpoint grade for UID #{student.uid} term #{term_name} course #{course_code}") { expect(visible_midpoint).to be_nil }
+                        it "shows the grade for UID #{student.uid} term #{term_name} course #{course_code}" do
+                          expect(collapsed_course_data[:final_grade]).to eql(course_sis_data[:grade])
+                        end
                       end
 
-                      # SECTIONS
+                      if course_sis_data[:midpoint]
+                        it "shows the midpoint grade for UID #{student.uid} term #{term_name} course #{course_code}" do
+                          expect(collapsed_course_data[:mid_point_grade]).not_to be_empty
+                          expect(collapsed_course_data[:mid_point_grade]).to eql(course_sis_data[:midpoint])
+                        end
+                      else
+                        it("shows no midpoint grade for UID #{student.uid} term #{term_name} course #{course_code}") do
+                          expect(collapsed_course_data[:mid_point_grade]).to eql("\n—")
+                        end
+                      end
+
+                      it "shows the units for UID #{student.uid} term #{term_name} course #{course_code}" do
+                        expect(collapsed_course_data[:units]).not_to be_empty
+                        expect(collapsed_course_data[:units]).to eql(course_sis_data[:units_completed])
+                      end
+
+                      @boac_student_page.expand_course_data(term_id, i)
+                      expanded_course_data = @boac_student_page.visible_expanded_course_data(term_id, i)
+
+                      it "shows the expanded course code for UID #{student.uid} term #{term_name} course #{course_code}" do
+                        expect(expanded_course_data[:code]).not_to be_empty
+                        expect(expanded_course_data[:code]).to eql(course_sis_data[:code])
+                      end
+
+                      it "shows the expanded course title for UID #{student.uid} term #{term_name} course #{course_code}" do
+                        expect(expanded_course_data[:title]).not_to be_empty
+                        expect(expanded_course_data[:title]).to eql(course_sis_data[:title])
+                      end
 
                       section_statuses = []
                       api_student_data.sections(course).each do |section|
@@ -580,12 +587,9 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
                           term_section_ccns << section_sis_data[:ccn]
                           component = section_sis_data[:component]
 
-                          visible_section_sis_data = @boac_student_page.visible_section_sis_data(term_name, course_code, index)
-                          visible_section = visible_section_sis_data[:section].split("\n").last
-
                           it "shows the section number for UID #{student.uid} term #{term_name} course #{course_code} section #{component}" do
-                            expect(visible_section).not_to be_empty
-                            expect(visible_section).to eql("#{section_sis_data[:component]} #{section_sis_data[:number]}")
+                            expect(expanded_course_data[:sections]).not_to be_empty
+                            expect(expanded_course_data[:sections]).to include("#{section_sis_data[:component]} #{section_sis_data[:number]}")
                           end
 
                           section_statuses << section_sis_data[:status]
@@ -601,10 +605,15 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
                         end
                       end
 
-                      visible_wait_list_status = visible_course_sis_data[:wait_list]
-                      (section_statuses.include? 'W') ?
-                          (it("shows the wait list status for UID #{student.uid} term #{term_name} course #{course_code}") { expect(visible_wait_list_status).to be true }) :
-                          (it("shows no enrollment status for UID #{student.uid} term #{term_name} course #{course_code}") { expect(visible_wait_list_status).to be false })
+                      if section_statuses.include? 'W'
+                        it "shows the wait list status for UID #{student.uid} term #{term_name} course #{course_code}" do
+                          expect(collapsed_course_data[:wait_list]).to eql('WAITLISTED')
+                        end
+                      else
+                        it "shows no enrollment status for UID #{student.uid} term #{term_name} course #{course_code}" do
+                          expect(collapsed_course_data[:wait_list]).to be_nil
+                        end
+                      end
 
                     rescue => e
                       BOACUtils.log_error_and_screenshot(@driver, e, "#{student.uid}-#{term_name}-#{course_code}")
