@@ -14,6 +14,7 @@ require 'yaml'
 
 require_relative '../logging'
 require_relative '../models/user'
+require_relative '../models/email'
 require_relative '../models/test_config'
 require_relative '../models/boac/boac_user'
 require_relative '../models/boac/timeline_record'

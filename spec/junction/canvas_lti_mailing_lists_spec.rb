@@ -200,7 +200,6 @@ unless ENV['STANDALONE']
 
         it 'allows the user to create a mailing list with a default list name' do
           @mailing_list_page.create_list
-          @mailing_list_page.list_created_msg_element.when_present timeout
           expect(@mailing_list_page.list_address).to eql("#{@mailing_lists_page.default_list_name course_site_3}@bcourses-mail.berkeley.edu")
         end
 
