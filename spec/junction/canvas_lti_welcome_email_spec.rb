@@ -47,7 +47,7 @@ unless ENV['STANDALONE']
       end
 
       it('is not possible with an empty subject or body') do
-        @mailing_list.switch_to_canvas_iframe if @canvas1.iframe_element(id: 'tool_content').exists?
+        @mailing_list.switch_to_canvas_iframe if @canvas1.canvas_iframe?
         expect(@mailing_list.email_save_button_element.disabled?).to be true
       end
 
