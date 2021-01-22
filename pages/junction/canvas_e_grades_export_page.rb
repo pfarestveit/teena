@@ -16,7 +16,7 @@ module Page
 
       link(:how_to_post_grades_link, xpath: '//a[contains(.,"How do I post grades for an assignment?")]')
 
-      button(:course_settings_button, xpath: '//button[contains(text(),"Course Settings")]')
+      link(:course_settings_button, text: 'Course Settings')
 
       button(:cancel_button, xpath: '//button[contains(.,"Cancel")]')
       button(:continue_button, xpath: '//button[contains(.,"Continue")]')

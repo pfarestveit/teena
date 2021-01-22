@@ -233,6 +233,7 @@ module Page
         @driver.switch_to.alert.accept rescue Selenium::WebDriver::Error::NoSuchAlertError
       end
       @driver.switch_to.window original_window
+      switch_to_canvas_iframe if iframe_element(id: 'tool_content').exists?
     end
   end
 

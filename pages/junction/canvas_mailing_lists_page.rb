@@ -86,6 +86,7 @@ module Page
       # Clicks the 'update memberships' button
       def click_update_memberships
         wait_for_update_and_click update_membership_button_element
+        membership_updated_msg_element.when_visible Utils.short_wait
       end
 
       # Clicks the 'cancel' button
