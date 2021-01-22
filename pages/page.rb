@@ -5,6 +5,8 @@ module Page
   include PageObject
   include Logging
 
+  iframe(:canvas_iframe, id: 'tool_content')
+
   def switch_to_frame(id)
     iframe_element(id: id).when_present Utils.short_wait
     @driver.switch_to.frame iframe_element(id: id).selenium_element.attribute('id')
@@ -19,7 +21,7 @@ module Page
   # @param url [String]
   def switch_to_canvas_iframe(url = nil)
     hide_canvas_footer_and_popup
-    wait_until(Utils.medium_wait) { iframe_element(id: 'tool_content').exists? }
+    canvas_iframe_element.when_present Utils.medium_wait
     if url
       wait_until(1, "'#{url}' is not present") { i_frame_form_element? url }
       logger.warn "Found expected iframe base URL #{url}"
@@ -233,7 +235,6 @@ module Page
         @driver.switch_to.alert.accept rescue Selenium::WebDriver::Error::NoSuchAlertError
       end
       @driver.switch_to.window original_window
-      switch_to_canvas_iframe if iframe_element(id: 'tool_content').exists?
     end
   end
 
