@@ -407,7 +407,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
           @pax_manifest_page.click_become_user_link_element @add_edit_user
           @homepage.wait_for_title 'Home'
           @homepage.click_sidebar_create_filtered
-          expect(@cohort_page.filter_options).to include('Team')
+          expect(@cohort_page.filter_options).to include('Team (ASC)')
         end
 
         it 'allows an admin to remove a user\'s department membership' do

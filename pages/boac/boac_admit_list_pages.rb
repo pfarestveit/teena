@@ -59,25 +59,25 @@ module BOACAdmitListPages
                 end
     name_el = link_element(xpath: "#{row_xpath}//span[text()='Admitted student name']/following-sibling::a")
     sid_el = span_element(xpath: "#{row_xpath}//span[text()='C S I D']/following-sibling::span")
-    sir_el = span_element(xpath: "#{row_xpath}//span[text()='S I R']/following-sibling::span")
-    cep_el = span_element(xpath: "#{row_xpath}//span[text()='C E P']/following-sibling::span")
-    re_entry_el = span_element(xpath: "#{row_xpath}//span[text()='Re-entry']/following-sibling::span")
-    first_gen_el = span_element(xpath: "#{row_xpath}//span[text()='First generation']/following-sibling::span")
-    urem_el = span_element(xpath: "#{row_xpath}//span[text()='U R E M']/following-sibling::span")
-    waiver_el = span_element(xpath: "#{row_xpath}//span[text()='Waiver']/following-sibling::span")
-    fresh_trans_el = span_element(xpath: "#{row_xpath}//span[text()='Freshman or Transfer']/following-sibling::span")
-    intl_el = span_element(xpath: "#{row_xpath}//span[text()='Residency']/following-sibling::span")
+    sir_el = span_element(xpath: "#{row_xpath}//span[text()='S I R']/..")
+    cep_el = span_element(xpath: "#{row_xpath}//span[text()='C E P']/..")
+    re_entry_el = span_element(xpath: "#{row_xpath}//span[text()='Re-entry']/..")
+    first_gen_el = span_element(xpath: "#{row_xpath}//span[text()='First generation']/..")
+    urem_el = span_element(xpath: "#{row_xpath}//span[text()='U R E M']/..")
+    waiver_el = span_element(xpath: "#{row_xpath}//span[text()='Waiver']/..")
+    fresh_trans_el = span_element(xpath: "#{row_xpath}//span[text()='Freshman or Transfer']/..")
+    intl_el = span_element(xpath: "#{row_xpath}//span[text()='Residency']/..")
     {
       name: (name_el.text if name_el.exists?),
       cs_id: (sid_el.text if sid_el.exists?),
-      sir: (sir_el.text if sir_el.exists?),
-      cep: (cep_el.text if cep_el.exists?),
-      re_entry: (re_entry_el.text if re_entry_el.exists?),
-      first_gen: (first_gen_el.text if first_gen_el.exists?),
-      urem: (urem_el.text if urem_el.exists?),
-      waiver: (waiver_el.text if waiver_el.exists?),
-      fresh_trans: (fresh_trans_el.text if fresh_trans_el.exists?),
-      intl: (intl_el.text if intl_el.exists?)
+      sir: (sir_el.text.gsub('S I R', '').strip if sir_el.exists?),
+      cep: (cep_el.text.gsub('C E P', '').strip if cep_el.exists?),
+      re_entry: (re_entry_el.text.gsub('Re-entry', '').strip if re_entry_el.exists?),
+      first_gen: (first_gen_el.text.gsub('First generation', '').strip if first_gen_el.exists?),
+      urem: (urem_el.text.gsub('U R E M', '').strip if urem_el.exists?),
+      waiver: (waiver_el.text.gsub("Waiver", '').strip if waiver_el.exists?),
+      fresh_trans: (fresh_trans_el.text.gsub('Freshman or Transfer', '').strip if fresh_trans_el.exists?),
+      intl: (intl_el.text.gsub('Residency', '').strip if intl_el.exists?)
     }
   end
 

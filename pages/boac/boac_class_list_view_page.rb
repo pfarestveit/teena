@@ -145,9 +145,11 @@ class BOACClassListViewPage
   # @return [String]
   def assigns_submit_score(student, node)
     score_xpath = "#{assigns_submit_xpath(student, node)}"
+    logger.debug "Checking assignment submission score at XPath '#{score_xpath}#{boxplot_trigger_xpath}'"
     has_boxplot = verify_block { mouseover(div_element(xpath: "#{score_xpath}#{boxplot_trigger_xpath}")) }
+    logger.debug "Has-boxplot is #{has_boxplot}"
     el = has_boxplot ?
-             div_element(xpath: '//div[@class="highcharts-tooltip-container"][last()]//div[text()="User Score"]/following-sibling::div') :
+             div_element(xpath: '//div[@class="highcharts-tooltip-container"][last()]//div[contains(text(), "User Score")]/following-sibling::div') :
              div_element(xpath: "#{score_xpath}//strong")
     el.text.split(' ').last if el.exists?
   end

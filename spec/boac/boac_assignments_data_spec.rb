@@ -50,6 +50,7 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
           if term
             begin
 
+              term_id = Utils.term_name_to_sis_code term
               # Collect all the Canvas sites in the term, matched and unmatched
               term_sites = []
               term_sites << boac_api_page.unmatched_sites(term).map { |s| {:data => s} }
@@ -57,8 +58,10 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
               courses = boac_api_page.courses term
               if courses.any?
                 courses.each do |course|
+                  primary = boac_api_page.sections(course).find { |sec| boac_api_page.sis_section_data(sec)[:primary] }
+                  ccn = boac_api_page.sis_section_data(primary)[:ccn]
                   course_sites = boac_api_page.course_sites course
-                  term_sites << course_sites.map { |s| {:data => s, :index => course_sites.index(s)} }
+                  term_sites << course_sites.map { |s| {:ccn => ccn, :data => s, :index => course_sites.index(s)} }
                 end
               end
 
@@ -145,11 +148,11 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
                   if BOACUtils.tooltips
 
                     @boac_student_page.load_page student
-                    @boac_student_page.click_view_previous_semesters if test.term != BOACUtils.term
+                    @boac_student_page.expand_academic_year term
 
                     # Find the site in the UI differently if it's matched versus unmatched
                     site_code ?
-                        (analytics_xpath = @boac_student_page.course_site_xpath(test.term, site_code, site[:index])) :
+                        (analytics_xpath = @boac_student_page.course_site_xpath(term_id, site[:ccn], site[:index])) :
                         (analytics_xpath = @boac_student_page.unmatched_site_xpath(test.term, site_code))
 
                     # TODO - check Assignments Submitted once boxplots return

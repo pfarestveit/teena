@@ -69,7 +69,7 @@ class BOACApiStudentPage
       :preferred_name => (sis_profile && sis_profile['preferredName']),
       :email => (sis_profile && sis_profile['emailAddress']),
       :email_alternate => (sis_profile && sis_profile['emailAddressAlternate']),
-      :phone => (sis_profile && sis_profile['phoneNumber'].to_s),
+      :phone => (sis_profile && (sis_profile['phoneNumber'].to_s if sis_profile['phoneNumber'])),
       :term_units => (sis_profile && ((current_term ? formatted_units(current_term['enrolledUnits']) : '0') if terms.any?)),
       :term_units_min => (sis_profile && sis_profile['currentTerm'] && sis_profile['currentTerm']['unitsMinOverride']),
       :term_units_max => (sis_profile && sis_profile['currentTerm'] && sis_profile['currentTerm']['unitsMaxOverride']),
@@ -109,8 +109,9 @@ class BOACApiStudentPage
       {
         date: sis_profile['degree']['dateAwarded'],
         degree: sis_profile['degree']['description'],
-        colleges: (sis_profile['degree']['plans'].map { |p| p['group'] }).uniq,
-        majors: sis_profile['degree']['plans'].map { |p| p['plan'] }
+        colleges: (sis_profile['degree']['plans'].map { |p| p['group'].to_s }).uniq,
+        majors: (sis_profile['degree']['plans'].map { |p| p['plan'] if p['type'] == 'MAJ' }).compact,
+        minors: (sis_profile['degree']['plans'].map { |p| p['plan'].gsub('Minor in ', '') if p['type'] == 'MIN'}).compact
       }
     end
   end

@@ -56,7 +56,8 @@ class BOACStudentPage
   div(:degree_date, id: 'student-bio-degree-date')
   div(:alternate_email, id: 'student-profile-other-email')
   div(:additional_information_outer, id: 'additional-information-outer')
-  elements(:degree_college, :div, xpath: '//div[@id="student-bio-degree-date"]//following-sibling::div')
+  elements(:degree_college, :div, xpath: '//div[@id="student-bio-degree-date"]//following-sibling::div[@class="student-text"]')
+  elements(:degree_minor, :div, xpath: '//h3[text()="Minor"]/following-sibling::div/div[@id="student-bio-degree-type"]')
 
   # Expand personal details tab on student page profile
   def expand_personal_details
@@ -98,7 +99,8 @@ class BOACStudentPage
       :entered_term => (entered_term.gsub('Entered', '').strip if entered_term?),
       :intended_majors => (intended_major_elements.map { |m| m.text.strip }),
       :expected_graduation => (expected_graduation.gsub('Expected graduation', '').strip if expected_graduation?),
-      :graduation_degree => (degree_type_element.text if degree_type_element.exists?),
+      :graduation_degree => (degree_type_element.attribute('innerText') if degree_type_element.exists?),
+      :graduation_minor => (degree_minor_elements.map { |el| el.text.gsub('UG', '').strip }),
       :graduation_date => (degree_date_element.text if degree_date_element.exists?),
       :graduation_colleges => (degree_college_elements.map &:text if degree_college_elements.any?),
       :advisor_plans => (advisor_plan_elements.map &:text),
@@ -197,7 +199,7 @@ class BOACStudentPage
 
   # COURSES
 
-  span(:withdrawal_msg, class: 'red-flag-small')
+  span(:withdrawal_msg, xpath: '//span[contains(@id, "withdrawal-term-")]')
 
   def term_data_xpath(term_name)
     "//h3[text()='#{term_name}']"
@@ -208,10 +210,14 @@ class BOACStudentPage
   end
 
   def expand_academic_year(term_name)
-    logger.info "Expanding row containing #{term_name}"
-    year = term_name.split.last
-    year = term_name.split.last.to_i + 1 if term_name.include? 'Fall'
-    wait_for_update_and_click button_element(id: "academic-year-#{year}-toggle")
+    if term_data_heading(term_name).visible?
+      logger.info "Row containing #{term_name} is already expanded"
+    else
+      logger.info "Expanding row containing #{term_name}"
+      year = term_name.split.last
+      year = term_name.split.last.to_i + 1 if term_name.include? 'Fall'
+      wait_for_update_and_click button_element(id: "academic-year-#{year}-toggle")
+    end
   end
 
   def visible_term_data(term_id)
@@ -230,13 +236,9 @@ class BOACStudentPage
     }
   end
 
-  def collapsed_course_data_xpath(term_name, course_code, i)
-    "#{term_data_xpath term_name}/../following-sibling::div//div[@class='student-course-row'][contains(., \"#{course_code}\")]"
-  end
-
   def visible_collapsed_course_data(term_id, i)
     code_el = span_element(id: "term-#{term_id}-course-#{i}-name")
-    wait_list_el = div_element(xpath: "//button[@id='term-#{term_id}-course-#{i}-toggle']/following-sibling::div[contains(@id, 'waitlisted-for')")
+    wait_list_el = div_element(xpath: "//button[@id='term-#{term_id}-course-#{i}-toggle']/following-sibling::div[contains(@id, 'waitlisted-for')]")
     mid_point_grade_el = span_element(id: "term-#{term_id}-course-#{i}-midterm-grade")
     final_grade_el = span_element(id: "term-#{term_id}-course-#{i}-final-grade")
     units_el = span_element(id: "term-#{term_id}-course-#{i}-units")
@@ -249,9 +251,17 @@ class BOACStudentPage
     }
   end
 
+  def course_expand_toggle(term_id, i)
+    button_element(:xpath => "//button[@id='term-#{term_id}-course-#{i}-toggle']")
+  end
+
   def expand_course_data(term_id, i)
-    toggle = button_element(:xpath => "//button[@id='term-#{term_id}-course-#{i}-toggle']")
-    wait_for_update_and_click toggle
+    wait_for_update_and_click course_expand_toggle(term_id, i)
+  end
+
+  def expand_course_data_by_ccn(term_id, ccn)
+    btn = button_element(xpath: "//a[@id='term-#{term_id}-section-#{ccn}']/ancestor::div[@class='student-course']")
+    wait_for_update_and_click btn
   end
 
   def visible_expanded_course_data(term_id, i)
@@ -266,24 +276,22 @@ class BOACStudentPage
     }
   end
 
+  elements(:class_page_link, :link, xpath: '//a[contains(@href, "/course/")]')
+
   def class_page_link(term_code, ccn)
     link_element(id: "term-#{term_code}-section-#{ccn}")
   end
 
   def click_class_page_link(term_code, ccn)
     logger.info "Clicking link for term #{term_code} section #{ccn}"
+    xpath = "//a[contains(@href, '/course/#{term_code}/#{ccn}')]/ancestor::div[@class='student-course']/div[1]"
+    i = div_element(xpath: xpath).attribute('id').split('-').last
+    expand_course_data(term_code, i)
     start = Time.now
     wait_for_load_and_click class_page_link(term_code, ccn)
     wait_for_spinner
     div_element(:class => 'course-column-schedule').when_visible Utils.short_wait
     logger.warn "Took #{Time.now - start} seconds for the term #{term_code} section #{ccn} page to load"
-  end
-
-  def visible_section_sis_data(term_name, course_code, index)
-    section_xpath = "#{collapsed_course_data_xpath(term_name, course_code)}//div[@class='student-course-sections']/span[#{index + 1}]"
-    {
-      :section => (span_element(:xpath => section_xpath).text.delete('(|)').strip if span_element(:xpath => section_xpath).exists?)
-    }
   end
 
   def visible_dropped_section_data(term_name, course_code, component, number)
@@ -292,8 +300,8 @@ class BOACStudentPage
 
   # COURSE SITES
 
-  def course_site_xpath(term_name, course_code, index)
-    "#{collapsed_course_data_xpath(term_name, course_code)}//div[@class='student-bcourses-wrapper'][#{index + 1}]"
+  def course_site_xpath(term_id, ccn, index)
+    "//a[@id='term-#{term_id}-section-#{ccn}']/ancestor::div[contains(@class, 'student-course-expanded')]//div[@class='student-bcourses-wrapper'][#{index + 1}]"
   end
 
   def unmatched_site_xpath(term_name, site_code)
@@ -370,8 +378,9 @@ class BOACStudentPage
     visible_analytics(driver, site_xpath, 'Assignment Grades', api_analytics)
   end
 
-  def visible_last_activity(term_name, course_code, index)
-    xpath = "#{course_site_xpath(term_name, course_code, index)}//th[contains(.,\"Last bCourses Activity\")]/following-sibling::td/div"
+  def visible_last_activity(term_id, ccn, index)
+    xpath = "#{course_site_xpath(term_id, ccn, index)}//th[contains(.,\"Last bCourses Activity\")]/following-sibling::td/div"
+    logger.debug "Checking for last activity at '#{xpath}'"
     div_element(:xpath => xpath).when_visible(Utils.click_wait)
     text = div_element(:xpath => xpath).text.strip
     {

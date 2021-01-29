@@ -104,8 +104,8 @@ class BOACGroupPage
   button(:add_students_button, id: 'bulk-add-sids-button')
   text_area(:create_group_textarea_sids, id: 'curated-group-bulk-add-sids')
   button(:add_sids_to_group_button, id: 'btn-curated-group-bulk-add-sids')
-  span(:sids_bad_format_error_msg, xpath: '//span[contains(text(), "SIDs must be separated by commas, line breaks, or tabs.")]')
-  span(:sids_not_found_error_msg, xpath: '//span[contains(text(), "not found")]')
+  div(:sids_bad_format_error_msg, xpath: '//div[contains(text(), "SIDs must be separated by commas, line breaks, or tabs.")]')
+  div(:sids_not_found_error_msg, xpath: '//div[contains(text(), "not found")]')
 
   # Clicks the Add Students button on a curated group page
   def click_add_students_button
