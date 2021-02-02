@@ -24,6 +24,7 @@ module Page
     link(:honor_code_link, text: 'UC Berkeley Honor Code')
     link(:student_resources_link, text: 'Student Resources')
     link(:user_prov_link, text: 'User Provisioning')
+    link(:conf_tool_link, text: 'Conferences')
 
     button(:submit_button, xpath: '//button[contains(.,"Submit")]')
     button(:save_button, xpath: '//button[text()="Save"]')
