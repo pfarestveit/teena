@@ -29,7 +29,6 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
           terms = api_user_page.terms
           if terms.any?
             @student_page.load_page student
-            @student_page.click_view_previous_semesters if terms.length > 1
             logger.debug "There are #{terms.length} terms"
             logger.debug "The first term is #{api_user_page.term_name terms.first}"
 
@@ -38,6 +37,7 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
 
               term_name = api_user_page.term_name term
               term_id = api_user_page.term_id term
+              @student_page.expand_academic_year term_name
               logger.info "Checking term #{term_name}"
 
               courses = api_user_page.courses term
@@ -57,7 +57,7 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
                       logger.info "Checking #{class_test_case}"
 
                       @student_page.load_page student
-                      @student_page.click_view_previous_semesters if terms.length > 1
+                      @student_page.expand_academic_year term_name
                       if @student_page.class_page_link(term_id, section_data[:ccn]).exists? && !pages_tested.include?("#{term_id} #{section_data[:ccn]}")
                         @student_page.click_class_page_link(term_id, section_data[:ccn])
                         pages_tested << "#{term_id} #{section_data[:ccn]}"
@@ -80,9 +80,7 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
 
                         # CLASS PAGE - Matrix View
 
-                        if @class_matrix_page.matrix_view_button_element.attribute 'disabled'
-                          logger.warn "Skipping matrix view testing since there is no matrix view for #{class_test_case}"
-                        else
+                        if @class_matrix_page.matrix_view_button?
 
                           @class_list_page.click_matrix_view
                           @class_matrix_page.wait_for_matrix
@@ -118,6 +116,8 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
                           else
                             logger.warn "Skipping matrix to student page tests because the bubbles are all bunched up for #{class_test_case}"
                           end
+                        else
+                          logger.warn "Skipping matrix view testing since there is no matrix view for #{class_test_case}"
                         end
                       end
                     rescue => e

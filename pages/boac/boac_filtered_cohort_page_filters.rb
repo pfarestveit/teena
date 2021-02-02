@@ -128,7 +128,7 @@ module BOACFilteredCohortPageFilters
     end
 
     if cohort.search_criteria.asc_team&.any?
-      missing_options = unavailable_test_data(cohort.search_criteria.asc_team, 'Team')
+      missing_options = unavailable_test_data(cohort.search_criteria.asc_team, 'Team (ASC)')
       missing_options.each { |f| cohort.search_criteria.asc_team.delete f }
     end
 

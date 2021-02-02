@@ -57,25 +57,14 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
           expect(@student_page.note_msg_row_elements.any?).to be true
         end
 
-        it 'cannot expand courses' do
+        it 'cannot view course site details' do
           @api_student_page.terms.each do |term|
             term['enrollments'].each do |course|
               term_name = @api_student_page.term_name term
               @student_page.expand_academic_year term_name unless @student_page.term_data_heading(term_name).visible?
-              course['sections'].each do |section|
-                expect(@student_page.course_expand_toggle(term['termId'], section['ccn'])).not_to be_visible
-              end
-            end
-          end
-        end
-
-        it 'sees no links to course pages' do
-          @api_student_page.terms.each do |term|
-            term['enrollments'].each do |course|
-              term_name = @api_student_page.term_name term
-              @student_page.expand_academic_year term_name unless @student_page.term_data_heading(term_name).visible?
-              course['sections'].each do |section|
-                expect(@student_page.class_page_link(term['termId'], section['ccn'])).not_to be_visible
+              course['sections'].each_with_index do |section, i|
+                @student_page.expand_course_data(term['termId'], i)
+                expect(@student_page.class_page_link(term['termId'], section['ccn']).exists?).to be false
               end
             end
           end
@@ -137,7 +126,7 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
         it('sees no Advisor (COE) filter') { expect(@opts).not_to include('Advisor (COE)') }
         it('sees no Ethnicity (COE) filter') { expect(@opts).not_to include('Ethnicity (COE)') }
         it('sees no Gender (COE) filter') { expect(@opts).not_to include('Gender (COE)') }
-        it('sees no Grading Basis EPN (COE) filter') { expect(@opts).not_to include('Grading Basis EPN (COE)') }
+        it('sees no EPN Grading Option (COE) filter') { expect(@opts).not_to include('Grading Basis EPN (COE)') }
         it('sees no Inactive (COE) filter') { expect(@opts).not_to include('Inactive (COE)') }
         it('sees a Last Name filter') { expect(@opts).to include('Last Name') }
         it('sees a My Curated Groups filter') { expect(@opts).to include('My Curated Groups') }
@@ -261,25 +250,14 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
         it('cannot see notes data in the API response') { expect(@api_student_page.notes).to be_nil }
         it('cannot see appointments data in the API response') { expect(@api_student_page.appointments).to be_nil }
 
-        it 'cannot expand courses' do
+        it 'cannot view course site details' do
           @api_student_page.terms.each do |term|
             term['enrollments'].each do |course|
               term_name = @api_student_page.term_name term
               @student_page.expand_academic_year term_name unless @student_page.term_data_heading(term_name).visible?
-              course['sections'].each do |section|
-                expect(@student_page.course_expand_toggle(term['termId'], section['ccn'])).not_to be_visible
-              end
-            end
-          end
-        end
-
-        it 'sees no links to course pages' do
-          @api_student_page.terms.each do |term|
-            term['enrollments'].each do |course|
-              term_name = @api_student_page.term_name term
-              @student_page.expand_academic_year term_name unless @student_page.term_data_heading(term_name).visible?
-              course['sections'].each do |section|
-                expect(@student_page.class_page_link(term['termId'], section['ccn'])).not_to be_visible
+              course['sections'].each_with_index do |section, i|
+                @student_page.expand_course_data(term['termId'], i)
+                expect(@student_page.class_page_link(term['termId'], section['ccn']).exists?).to be false
               end
             end
           end
@@ -349,7 +327,7 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
         it('sees no Advisor (COE) filter') { expect(@opts).not_to include('Advisor (COE)') }
         it('sees no Ethnicity (COE) filter') { expect(@opts).not_to include('Ethnicity (COE)') }
         it('sees no Gender (COE) filter') { expect(@opts).not_to include('Gender (COE)') }
-        it('sees no Grading Basis EPN (COE) filter') { expect(@opts).not_to include('Grading Basis EPN (COE)') }
+        it('sees no EPN Grading Option (COE) filter') { expect(@opts).not_to include('Grading Basis EPN (COE)') }
         it('sees no Inactive (COE) filter') { expect(@opts).not_to include('Inactive (COE)') }
         it('sees a Last Name filter') { expect(@opts).to include('Last Name') }
         it('sees a My Curated Groups filter') { expect(@opts).to include('My Curated Groups') }

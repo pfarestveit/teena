@@ -13,7 +13,7 @@ class BOACFlightDataRecorderPage
   select_list(:dept_select, id: 'available-department-reports')
   h2(:dept_heading, xpath: '(//h2)[2]')
   button(:show_hide_report_button, id: 'show-hide-notes-report')
-  h3(:notes_count_boa, xpath: '//h3[contains(text(), " notes have been created in BOA.")]')
+  h3(:notes_count_boa, xpath: '//h3[contains(text(), " notes have been created in BOA")]')
   div(:notes_count_boa_authors, id: 'notes-count-boa-authors')
   div(:notes_count_boa_with_attachments, id: 'notes-count-boa-with-attachments')
   div(:notes_count_boa_with_topics, id: 'notes-count-boa-with-topics')
@@ -24,7 +24,7 @@ class BOACFlightDataRecorderPage
   # Returns the total BOA note count
   # @return [String]
   def boa_note_count
-    notes_count_boa_element.text.gsub('A total of ', '').gsub(' notes have been created in BOA.', '')
+    notes_count_boa_element.text.gsub('notes have been created in BOA', '').strip
   end
 
   # Filters the advisor report by a given department

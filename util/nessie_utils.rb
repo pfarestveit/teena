@@ -374,7 +374,7 @@ class NessieUtils < Utils
           hispanic: r['hispanic'],
           urem: r['urem'],
           first_gen_college: r['first_generation_college'],
-          fee_waiver: r['application_fee_waiver_flag'],
+          fee_waiver: (r['application_fee_waiver_flag'] && r['application_fee_waiver_flag'].gsub('Waiver', '')),
           foster_care: r['foster_care_flag'],
           family_single_parent: r['family_is_single_parent'],
           student_single_parent: r['student_is_single_parent'],

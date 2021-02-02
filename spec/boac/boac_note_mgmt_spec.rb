@@ -508,10 +508,12 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
 
         notes.each do |note|
           it 'cannot find a deleted note' do
-            logger.info "Searching for deleted note ID #{note.id} by subject '#{note.subject}'"
-            @homepage.load_page
-            @student_page.type_note_appt_string_and_enter note.subject
-            expect(@search_results_page.note_results_count).to be_zero
+            unless note == notes.last
+              logger.info "Searching for deleted note ID #{note.id} by subject '#{note.subject}'"
+              @homepage.load_page
+              @student_page.type_note_appt_string_and_enter note.subject
+              expect(@search_results_page.note_results_count).to be_zero
+            end
           end
 
           it 'cannot download a deleted note\'s attachments' do

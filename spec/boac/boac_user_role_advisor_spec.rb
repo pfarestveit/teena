@@ -209,7 +209,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
         it('sees no Advisor (COE) filter') { expect(@opts).not_to include('Advisor (COE)') }
         it('sees no Ethnicity (COE) filter') { expect(@opts).not_to include('Ethnicity (COE)') }
         it('sees no Gender (COE) filter') { expect(@opts).not_to include('Gender (COE)') }
-        it('sees no Grading Basis EPN (COE) filter') { expect(@opts).not_to include('Grading Basis EPN (COE)') }
+        it('sees no EPN Grading Option (COE) filter') { expect(@opts).not_to include('Grading Basis EPN (COE)') }
         it('sees no Inactive (COE) filter') { expect(@opts).not_to include('Inactive (COE)') }
         it('sees a Last Name filter') { expect(@opts).to include('Last Name') }
         it('sees a My Curated Groups filter') { expect(@opts).to include('My Curated Groups') }
@@ -262,10 +262,10 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
         it('cannot access the flight deck page') { expect(@homepage.flight_deck_link?).to be false }
         it('cannot access the passenger manifest page') { expect(@homepage.pax_manifest_link?).to be false }
 
-        it 'cannot toggle demo mode' do
+        it 'can toggle demo mode' do
           @settings_page.load_advisor_page
           @settings_page.my_profile_heading_element.when_visible Utils.short_wait
-          expect(@settings_page.demo_mode_toggle?).to be false
+          expect(@settings_page.demo_mode_toggle?).to be true
         end
 
         it('cannot post status alerts') { expect(@settings_page.status_heading?).to be false }
@@ -404,7 +404,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
         it('sees an Advisor (COE) filter') { expect(@opts).to include('Advisor (COE)') }
         it('sees an Ethnicity (COE) filter') { expect(@opts).to include('Ethnicity (COE)') }
         it('sees a Gender (COE) filter') { expect(@opts).to include('Gender (COE)') }
-        it('sees a Grading Basis EPN (COE) filter') { expect(@opts).to include('Grading Basis EPN (COE)') }
+        it('sees an EPN Grading Option (COE) filter') { expect(@opts).to include('EPN Grading Option (COE)') }
         it('sees an Inactive (COE) filter') { expect(@opts).to include('Inactive (COE)') }
         it('sees a Last Name filter') { expect(@opts).to include('Last Name') }
         it('sees a My Curated Groups filter') { expect(@opts).to include('My Curated Groups') }
@@ -443,10 +443,10 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
         it('cannot access the flight deck page') { expect(@homepage.flight_deck_link?).to be false }
         it('cannot access the passenger manifest page') { expect(@homepage.pax_manifest_link?).to be false }
 
-        it 'cannot toggle demo mode' do
+        it 'can toggle demo mode' do
           @settings_page.load_advisor_page
           @settings_page.my_profile_heading_element.when_visible Utils.short_wait
-          expect(@settings_page.demo_mode_toggle?).to be false
+          expect(@settings_page.demo_mode_toggle?).to be true
         end
 
         it('cannot post status alerts') { expect(@settings_page.status_heading?).to be false }
@@ -596,7 +596,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
         it('sees no Advisor (COE) filter') { expect(@opts).not_to include('Advisor (COE)') }
         it('sees no Ethnicity (COE) filter') { expect(@opts).not_to include('Ethnicity (COE)') }
         it('sees no Gender (COE) filter') { expect(@opts).not_to include('Gender (COE)') }
-        it('sees no Grading Basis EPN (COE) filter') { expect(@opts).not_to include('Grading Basis EPN (COE)') }
+        it('sees no EPN Grading Option (COE) filter') { expect(@opts).not_to include('Grading Basis EPN (COE)') }
         it('sees no Inactive (COE) filter') { expect(@opts).not_to include('Inactive (COE)') }
         it('sees a Last Name filter') { expect(@opts).to include('Last Name') }
         it('sees a My Curated Groups filter') { expect(@opts).to include('My Curated Groups') }
@@ -635,10 +635,10 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
         it('cannot access the flight deck page') { expect(@homepage.flight_deck_link?).to be false }
         it('cannot access the passenger manifest page') { expect(@homepage.pax_manifest_link?).to be false }
 
-        it 'cannot toggle demo mode' do
+        it 'can toggle demo mode' do
           @settings_page.load_advisor_page
           @settings_page.my_profile_heading_element.when_visible Utils.short_wait
-          expect(@settings_page.demo_mode_toggle?).to be false
+          expect(@settings_page.demo_mode_toggle?).to be true
         end
 
         it('cannot post status alerts') do

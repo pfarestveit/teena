@@ -86,7 +86,7 @@ module BOACFilteredCohortPageResults
   # @param test [BOACTestConfig]
   # @return [Array<Hash>]
   def matching_fee_waiver_admits(test)
-    test.searchable_data.select { |u| u[:fee_waiver] == 'FeeWaiver' }
+    test.searchable_data.select { |u| u[:fee_waiver] == 'Fee' }
   end
 
   def matching_residency_admits(test, search_criteria)

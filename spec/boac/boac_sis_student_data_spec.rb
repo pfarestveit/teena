@@ -313,13 +313,17 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
 
           if api_sis_profile_data[:academic_career_status] == 'Completed'
             it "shows the right degree for UID #{student.uid} on the student page" do
-              expect(student_page_sis_data[:graduation_degree]).to eql(api_sis_profile_data[:graduation][:degree] + ' in ' + api_sis_profile_data[:graduation][:majors].join(', '))
+              expected = (api_sis_profile_data[:graduation][:degree] + ' in ' + api_sis_profile_data[:graduation][:majors].join(', ')).strip
+              expect(student_page_sis_data[:graduation_degree]).to eql(expected)
             end
             it "shows the right graduation date for UID #{student.uid} on the student page" do
               expect(student_page_sis_data[:graduation_date]).to eql('Awarded ' + Date.parse(api_sis_profile_data[:graduation][:date]).strftime('%b %e, %Y'))
             end
             it "shows the right graduation colleges for UID #{student.uid} on the student page" do
               expect(student_page_sis_data[:graduation_colleges]).to eql(api_sis_profile_data[:graduation][:colleges])
+            end
+            it "shows the right graduation minors for UID #{student.uid} on the student page" do
+              expect(student_page_sis_data[:graduation_minor]).to eql(api_sis_profile_data[:graduation][:minors])
             end
           else
             it "shows no graduation degree for UID #{student.uid} on the student page" do
@@ -346,7 +350,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
           if latest_standing
             if latest_standing.code == 'GST'
               it "shows no academic standing for UID #{student.uid} on the student page" do
-                expect(student_page_sis_data[:academic_standing]).to be_nil
+                expect(student_page_sis_data[:academic_standing].to_s).to be_empty
               end
             else
               it "shows the academic standing '#{latest_standing.descrip}' for UID #{student.uid} on the student page" do
@@ -458,7 +462,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
                 term_name = api_student_data.term_name term
                 logger.info "Checking #{term_name}"
 
-                @boac_student_page.expand_academic_year term_name unless @boac_student_page.term_data_heading(term_name).visible?
+                @boac_student_page.expand_academic_year term_name
 
                 visible_term_data = @boac_student_page.visible_term_data term_id
 

@@ -112,23 +112,31 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
                         visible_student_data.each do |d|
                           @student_page.load_page d[:student]
                           @student_page.scroll_to_bottom
-                          @student_page.expand_course_data(test.term, d[:course_code])
+                          @student_page.expand_academic_year test.term
+                          @student_page.expand_course_data_by_ccn(Utils.term_name_to_sis_code(test.term), section_data[:ccn])
                           d[:sites].each do |s|
-                            s.merge!(:last_activity_student_page => @student_page.visible_last_activity(test.term, d[:course_code], d[:sites].index(s)))
+                            s.merge!(:last_activity_student_page => @student_page.visible_last_activity(term_id, section_data[:ccn], d[:sites].index(s)))
                           end
                         end
 
                         # Load each course site, and collect the last activity shown for every student visible in BOAC
                         site_ids.each do |site_id|
                           all_site_students = @canvas_page.get_students(Course.new({:site_id => site_id}), nil, 'https://bcourses.berkeley.edu')
+                          missing_students = []
                           visible_student_data.each do |student_data|
                             if (student_data[:sites].map { |s| s[:site_id] }).include? site_id
                               matching_student = all_site_students.find { |s| s.uid == student_data[:student].uid }
-                              student_data[:student].canvas_id = matching_student.canvas_id
-                              student_last_activity = @canvas_page.roster_user_last_activity student_data[:student].uid
-                              site_to_update = student_data[:sites].find { |site| site[:site_id] == site_id }
-                              site_to_update.merge!(:last_activity_canvas => (Time.parse(student_last_activity).utc if student_last_activity))
+                              if matching_student
+                                student_data[:student].canvas_id = matching_student.canvas_id
+                                student_last_activity = @canvas_page.roster_user_last_activity student_data[:student].uid
+                                site_to_update = student_data[:sites].find { |site| site[:site_id] == site_id }
+                                site_to_update.merge!(:last_activity_canvas => (Time.parse(student_last_activity).utc if student_last_activity))
+                              else
+                                logger.warn "UID #{student_data[:student].uid} has no matching Canvas student on the site"
+                                missing_students << student_data
+                              end
                             end
+                            visible_student_data -= missing_students
                           end
 
                           # Collect the last activity shown for students not visible in BOAC
