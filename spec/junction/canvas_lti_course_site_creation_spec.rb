@@ -210,10 +210,13 @@ describe 'bCourses course site creation' do
 
         it("redirects to the #{site[:course].term} #{site[:course].code} course site in Canvas when finished") { expect(site[:course].site_id).not_to be_nil }
 
-        # If site creation succeeded, store the site info for the rest of the tests
-        site[:course].site_id ?
-            (sites_created << site) :
-            logger.error("Timed out before the #{site[:course].term} #{site[:course].code} course site was created, or another error occurred")
+        # If site creation succeeded, store the site info for the rest of the tests. If site created via CCN workflow, skip it
+        # since there might be a delay adding the instructor to the site
+        if site[:course].site_id && site[:course].create_site_workflow != 'ccn'
+          sites_created << site
+        else
+          logger.error "Timed out before the #{site[:course].term} #{site[:course].code} course site was created, or another error occurred"
+        end
 
       rescue => e
         it("encountered an error creating the course site for #{site[:course].code}") { fail }
