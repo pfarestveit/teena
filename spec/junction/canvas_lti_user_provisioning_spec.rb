@@ -18,7 +18,7 @@ describe 'User Provisioning' do
     if standalone
       @splash_page.basic_auth test.admin.uid
     else
-      @canvas.log_in(@cal_net, test.admin.username, Utils.super_admin_password)
+      @canvas.log_in(@cal_net, Utils.super_admin_username, Utils.super_admin_password)
     end
   end
 

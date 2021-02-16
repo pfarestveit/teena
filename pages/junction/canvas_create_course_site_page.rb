@@ -182,7 +182,7 @@ module Page
 
       def click_cancel
         logger.debug 'Clicking cancel button'
-        wait_for_update_and_click cancel_button_element
+        wait_for_update_and_click_js cancel_button_element
       end
 
       # Enters a unique course site name and abbreviation and returns the abbreviation

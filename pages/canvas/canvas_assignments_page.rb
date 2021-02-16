@@ -95,7 +95,7 @@ module Page
     button(:submit_assignment_button, xpath: '//button[text()="Submit Assignment"]')
     button(:resubmit_assignment_button, xpath: '//button[text()="Re-submit Assignment"]')
     link(:assignment_file_upload_tab, class: 'submit_online_upload_option')
-    text_area(:file_upload_input, name: 'attachments[0][uploaded_data]')
+    text_field(:file_upload_input, name: 'attachments[-1][uploaded_data]')
     button(:file_upload_submit_button, id: 'submit_file_button')
     link(:assignment_site_url_tab, class: 'submit_online_url_option')
     text_area(:url_upload_input, id: 'submission_url')

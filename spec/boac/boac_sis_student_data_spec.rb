@@ -469,7 +469,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
                 # TERM UNITS
 
                 if api_student_data.term_units(term) && api_student_data.term_units(term).to_i.zero?
-                  it("shows no term units total for UID #{student.uid} term #{term_name}") { expect(visible_term_data[:term_units]).to be_nil }
+                  it("shows no term units total for UID #{student.uid} term #{term_name}") { expect(visible_term_data[:term_units]).to eql('—') }
                 else
                   it("shows the term units total for UID #{student.uid} term #{term_name}") { expect(visible_term_data[:term_units]).to eql(api_student_data.term_units term) }
                 end
