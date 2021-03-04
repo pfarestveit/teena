@@ -126,7 +126,7 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
         it('sees no Advisor (COE) filter') { expect(@opts).not_to include('Advisor (COE)') }
         it('sees no Ethnicity (COE) filter') { expect(@opts).not_to include('Ethnicity (COE)') }
         it('sees no Gender (COE) filter') { expect(@opts).not_to include('Gender (COE)') }
-        it('sees no EPN Grading Option (COE) filter') { expect(@opts).not_to include('Grading Basis EPN (COE)') }
+        it('sees no EPN Grading Option (COE) filter') { expect(@opts).not_to include('EPN/CPN Grading Option (COE)') }
         it('sees no Inactive (COE) filter') { expect(@opts).not_to include('Inactive (COE)') }
         it('sees a Last Name filter') { expect(@opts).to include('Last Name') }
         it('sees a My Curated Groups filter') { expect(@opts).to include('My Curated Groups') }
@@ -327,7 +327,7 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
         it('sees no Advisor (COE) filter') { expect(@opts).not_to include('Advisor (COE)') }
         it('sees no Ethnicity (COE) filter') { expect(@opts).not_to include('Ethnicity (COE)') }
         it('sees no Gender (COE) filter') { expect(@opts).not_to include('Gender (COE)') }
-        it('sees no EPN Grading Option (COE) filter') { expect(@opts).not_to include('Grading Basis EPN (COE)') }
+        it('sees no EPN Grading Option (COE) filter') { expect(@opts).not_to include('EPN/CPN Grading Option (COE)') }
         it('sees no Inactive (COE) filter') { expect(@opts).not_to include('Inactive (COE)') }
         it('sees a Last Name filter') { expect(@opts).to include('Last Name') }
         it('sees a My Curated Groups filter') { expect(@opts).to include('My Curated Groups') }

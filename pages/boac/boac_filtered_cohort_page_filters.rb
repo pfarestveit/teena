@@ -160,7 +160,7 @@ module BOACFilteredCohortPageFilters
     cohort.search_criteria.coe_ethnicity.each { |e| select_new_filter('Ethnicity (COE)', e) } if cohort.search_criteria.coe_ethnicity
     select_new_filter 'Underrepresented Minority (COE)' if cohort.search_criteria.coe_underrepresented_minority
     cohort.search_criteria.coe_gender.each { |g| select_new_filter('Gender (COE)', g) } if cohort.search_criteria.coe_gender
-    cohort.search_criteria.coe_grading_basis_epn.each { |g| select_new_filter('EPN Grading Option (COE)', g.to_s) } if cohort.search_criteria.coe_grading_basis_epn
+    cohort.search_criteria.coe_grading_basis_epn.each { |g| select_new_filter('EPN/CPN Grading Option (COE)', g.to_s) } if cohort.search_criteria.coe_grading_basis_epn
     cohort.search_criteria.coe_prep.each { |p| select_new_filter('PREP (COE)', p) } if cohort.search_criteria.coe_prep
     select_new_filter 'Probation (COE)' if cohort.search_criteria.coe_probation
     select_new_filter 'Inactive (COE)' if cohort.search_criteria.coe_inactive
@@ -339,7 +339,7 @@ module BOACFilteredCohortPageFilters
         logger.debug 'Verifying Gender (COE) filter'
         filters.coe_gender.each { |g| existing_filter_element('Gender (COE)', g).exists? } if filters.coe_gender&.any?
         logger.debug 'Verifying Grading Basis EPN (COE) filter'
-        filters.coe_grading_basis_epn.each { |g| existing_filter_element('Grading Option EPN (COE)', g).exists? } if filters.coe_grading_basis_epn&.any?
+        filters.coe_grading_basis_epn.each { |g| existing_filter_element('EPN/CPN Grading Option (COE)', g).exists? } if filters.coe_grading_basis_epn&.any?
         logger.debug 'Verifying Inactive (COE) filter'
         existing_filter_element('Inactive (COE)').exists? if filters.coe_inactive
 
