@@ -190,7 +190,8 @@ class NessieFilterUtils < NessieUtils
 
     if filter.coe_grading_basis_epn&.any?
       epn_conditions = "student.student_enrollment_terms.term_id IN (#{in_op(filter.coe_grading_basis_epn)})
-                          AND student.student_enrollment_terms.enrollment_term LIKE '%\"gradingBasis\": \"EPN\"%'"
+                          AND (student.student_enrollment_terms.enrollment_term LIKE '%\"gradingBasis\": \"EPN\"%'
+                            OR student.student_enrollment_terms.enrollment_term LIKE '%\"gradingBasis\": \"CPN\"%')"
       conditions_list << epn_conditions
     end
 
