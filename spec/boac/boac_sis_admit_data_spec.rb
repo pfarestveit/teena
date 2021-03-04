@@ -103,9 +103,6 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
           visible_country = @admit_page.address_country
           it("shows the address country of CS ID #{admit[:cs_empl_id]}") { expect(visible_country).to eql(admit[:permanent_country]) }
 
-          visible_sex = @admit_page.sex
-          it("shows the sex of CS ID #{admit[:cs_empl_id]}") { expect(visible_sex).to eql(admit[:sex]) }
-
           visible_gender_id = @admit_page.gender_identity
           it("shows the gender identity of CS ID #{admit[:cs_empl_id]}") { expect(visible_gender_id).to eql(admit[:gender_identity]) }
 
@@ -159,39 +156,6 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
 
           visible_gpa_transfer = @admit_page.gpa_transfer
           it("shows the transfer GPA of CS ID #{admit[:cs_empl_id]}") { expect(visible_gpa_transfer).to eql(admit[:transfer_gpa]) }
-
-          visible_act_composite = @admit_page.act_composite
-          it("shows the ACT composite score of CS ID #{admit[:cs_empl_id]}") { expect(visible_act_composite).to eql(admit[:act_composite]) }
-
-          visible_act_math = @admit_page.act_math
-          it("shows the ACT math score of CS ID #{admit[:cs_empl_id]}") { expect(visible_act_math).to eql(admit[:act_math]) }
-
-          visible_act_english = @admit_page.act_english
-          it("shows the ACT English score of CS ID #{admit[:cs_empl_id]}") { expect(visible_act_english).to eql(admit[:act_english]) }
-
-          visible_act_reading = @admit_page.act_reading
-          it("shows the ACT reading score of CS ID #{admit[:cs_empl_id]}") { expect(visible_act_reading).to eql(admit[:act_reading]) }
-
-          visible_act_writing = @admit_page.act_writing
-          it("shows the ACT writing score of CS ID #{admit[:cs_empl_id]}") { expect(visible_act_writing).to eql(admit[:act_writing]) }
-
-          visible_sat_total = @admit_page.sat_total
-          it("shows the SAT total score of CS ID #{admit[:cs_empl_id]}") { expect(visible_sat_total).to eql(admit[:sat_total]) }
-
-          visible_sat_evidence = @admit_page.sat_evidence
-          it("shows the SAT evidence-based reading and writing section score of CS ID #{admit[:cs_empl_id]}") { expect(visible_sat_evidence).to eql(admit[:sat_r_evidence_based_rw_section]) }
-
-          visible_sat_math = @admit_page.sat_math
-          it("shows the SAT math score of CS ID #{admit[:cs_empl_id]}") { expect(visible_sat_math).to eql(admit[:sat_r_math_section]) }
-
-          visible_sat_reading = @admit_page.sat_reading
-          it("shows the SAT essay-reading score of CS ID #{admit[:cs_empl_id]}") { expect(visible_sat_reading).to eql(admit[:sat_r_essay_reading]) }
-
-          visible_sat_analysis = @admit_page.sat_analysis
-          it("shows the SAT essay-analysis score of CS ID #{admit[:cs_empl_id]}") { expect(visible_sat_analysis).to eql(admit[:sat_r_essay_analysis]) }
-
-          visible_sat_writing = @admit_page.sat_writing
-          it("shows the SAT writing score of CS ID #{admit[:cs_empl_id]}") { expect(visible_sat_writing).to eql(admit[:sat_r_essay_writing]) }
 
           visible_fee_waiver = @admit_page.fee_waiver
           it("shows the application fee waiver status of CS ID #{admit[:cs_empl_id]}") { expect(visible_fee_waiver).to eql(admit[:application_fee_waiver_flag]) }
