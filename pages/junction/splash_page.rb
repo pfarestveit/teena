@@ -50,6 +50,32 @@ module Page
         wait_for_load_and_click sign_in_element
       end
 
+      def resolve_lti_session_conflict(cal_net_page)
+        load_page
+        logger.warn 'Resolving any LTI session conflicts'
+        wait_until(Utils.short_wait) do
+          basic_auth_uid_input? || cal_net_page.username? || log_out_link?
+          if cal_net_page.username?
+            logger.debug 'CAS login page loaded, entering credentials'
+            cal_net_page.enter_credentials(Utils.super_admin_username, Utils.super_admin_password)
+            wait_until(Utils.short_wait) do
+              cal_net_page.logout_conf_heading? || log_out_link?
+              if log_out_link?
+                logger.debug 'Logged in to Junction, logging out'
+                log_out
+              else
+                logger.debug 'Logged out of CAS'
+              end
+            end
+          elsif log_out_link?
+            logger.debug 'Junction page loaded, logging out'
+            log_out
+          else
+            logger.debug 'Basic auth is already present'
+          end
+        end
+      end
+
     end
   end
 end

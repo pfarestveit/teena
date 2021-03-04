@@ -12,6 +12,7 @@ module Page
     button(:log_out_link, id: 'log-out')
 
     h1(:unexpected_error, xpath: '//h1[contains(text(),"Error")]')
+    h1(:denied_msg, xpath: '//h1[contains(., "denied")]')
 
     # Footer
     button(:stop_viewing_as_button, id: 'stop-viewing-as')

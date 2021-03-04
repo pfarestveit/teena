@@ -45,7 +45,7 @@ describe 'The Junction Toolbox' do
     it 'offers a dropdown with all expected OEC tasks' do
       tasks = ['Term setup',
                'SIS data import',
-               'Create confirmation sheeets',
+               'Create confirmation sheets',
                'Diff confirmation sheets',
                'Merge confirmation sheets',
                'Validate confirmed data',
