@@ -210,9 +210,7 @@ describe 'bCourses course site creation' do
 
         it("redirects to the #{site[:course].term} #{site[:course].code} course site in Canvas when finished") { expect(site[:course].site_id).not_to be_nil }
 
-        # If site creation succeeded, store the site info for the rest of the tests. If site created via CCN workflow, skip it
-        # since there might be a delay adding the instructor to the site
-        if site[:course].site_id && site[:course].create_site_workflow != 'ccn'
+        if site[:course].site_id
           sites_created << site
         else
           logger.error "Timed out before the #{site[:course].term} #{site[:course].code} course site was created, or another error occurred"
@@ -234,13 +232,22 @@ describe 'bCourses course site creation' do
     unless standalone
 
       @canvas_page.log_out(@driver, @cal_net_page)
+      @splash_page.resolve_lti_session_conflict @cal_net_page
 
       sites_created.each do |site|
 
+        # If instructor is not yet added to site, retry until it is
+        tries = Utils.short_wait
         begin
-          @splash_page.load_page
+          tries -= 1
           @splash_page.basic_auth(site[:teacher].uid, @cal_net_page)
           site[:roster_data].get_feed(@driver, site[:course])
+        rescue => e
+          logger.error e.message
+          if @splash_page.denied_msg? && !tries.zero?
+            JunctionUtils.clear_cache(@driver, @splash_page)
+            retry
+          end
         ensure
           @splash_page.load_page
           @splash_page.log_out
