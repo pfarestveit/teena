@@ -79,7 +79,7 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
           if cohort.member_data.length.zero?
             @cohort_page.wait_until(Utils.short_wait) { @cohort_page.results_count == 0 }
           else
-            @cohort_page.sort_by_last_name
+            @cohort_page.sort_by_last_name unless cohort.member_data.length == 1
             visible_results = @cohort_page.filter_result_all_row_cs_ids cohort
             @cohort_page.wait_until(1, "Expected but not present: #{expected_results - visible_results}. Present but not expected: #{visible_results - expected_results}") do
               visible_results.sort == expected_results.sort
@@ -106,8 +106,8 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
         end
 
         it "sorts by First Name all the admits who match #{cohort.search_criteria.inspect}" do
-          if cohort.member_data.length.zero?
-            logger.warn 'Skipping sort-by-first-name test since there are no results'
+          if [0, 1].include? cohort.member_data.length
+            logger.warn 'Skipping sort-by-first-name test since there are no results or one result'
           else
             @cohort_page.sort_by_first_name
             expected_results = @cohort_page.expected_sids_by_first_name(cohort.member_data)
@@ -118,8 +118,8 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
         end
 
         it "sorts by CS ID all the admits who match #{cohort.search_criteria.inspect}" do
-          if cohort.member_data.length.zero?
-            logger.warn 'Skipping sort-by-cs-id test since there are no results'
+          if [0, 1].include? cohort.member_data.length
+            logger.warn 'Skipping sort-by-cs-id test since there are no results or one result'
           else
             @cohort_page.sort_by_cs_id
             expected_results = cohort.member_data.map { |u| u[:sid].to_i }.sort

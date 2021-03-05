@@ -407,7 +407,7 @@ module BOACPages
   # Clicks the sidebar search button
   def click_search_button
     logger.info 'Clicking search button'
-    wait_for_update_and_click search_button_element
+    wait_for_update_and_click_js search_button_element
   end
 
   # Searches for a string using the sidebar search input and logs the search string. Not to be used for note searches.

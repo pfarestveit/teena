@@ -70,7 +70,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
         sids = @filtered_page.list_view_sids
         visible_members = test.students.select { |m| sids.include? m.sis_id }
         group_created_from_filter = CuratedGroup.new({:name => "Group created from filtered cohort #{test.id}"})
-        @filtered_page.select_and_add_students_to_new_grp(visible_members, group_created_from_filter)
+        @filtered_page.select_and_add_students_to_new_grp(visible_members.last(10), group_created_from_filter)
       end
 
       it 'can be done using the class page list view group selector' do
@@ -78,7 +78,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
         sids = @class_page.class_list_view_sids
         visible_members = test.students.select { |m| sids.include? m.sis_id }
         group_created_from_class = CuratedGroup.new({:name => "Group created from class page #{test.id}"})
-        @class_page.select_and_add_students_to_new_grp(visible_members, group_created_from_class)
+        @class_page.select_and_add_students_to_new_grp(visible_members.first(10), group_created_from_class)
       end
 
       it 'can be done using the user search results group selector' do
@@ -94,7 +94,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
       end
 
       it 'can be done using bulk SIDs feature' do
-        students = test.students.first(10)
+        students = test.students.first(52)
         @homepage.click_sidebar_create_curated_group
         group_created_from_bulk = CuratedGroup.new({:name => "Group created with bulk SIDs #{test.id}"})
         @group_page.create_group_with_bulk_sids(students, group_created_from_bulk)
@@ -369,6 +369,32 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
       end
     end
 
+    describe 'group membership' do
+
+      advisor_groups.each do |group|
+
+        it "can be exported for group #{group.name}" do
+          if Utils.headless?
+            logger.warn "Skipping group export test for #{group.name} because the browser is headless"
+          else
+            @group_page.load_page group
+            csv = @group_page.export_student_list group
+            @group_page.verify_student_list_default_export(group.members, csv)
+          end
+        end
+
+        it "can be exported with custom columns for group #{group.name}" do
+          if Utils.headless?
+            logger.warn "Skipping group export test for #{group.name} because the browser is headless"
+          else
+            @group_page.load_page group
+            csv = @group_page.export_custom_student_list group
+            @group_page.verify_student_list_custom_export(group.members, csv)
+          end
+        end
+      end
+    end
+
     describe 'groups' do
 
       it 'can be renamed' do
@@ -396,33 +422,6 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
           it "shows the group #{group.name} members with alerts" do
             @homepage.expand_member_rows group
             @homepage.verify_member_alerts(group, test.advisor)
-          end
-
-        end
-      end
-    end
-
-    describe 'group membership' do
-
-      advisor_groups.each do |group|
-
-        it "can be exported for group #{group.name}" do
-          if Utils.headless?
-            logger.warn "Skipping group export test for #{group.name} because the browser is headless"
-          else
-            @group_page.load_page group
-            csv = @group_page.export_student_list group
-            @group_page.verify_student_list_default_export(group.members, csv)
-          end
-        end
-
-        it "can be exported with custom columns for group #{group.name}" do
-          if Utils.headless?
-            logger.warn "Skipping group export test for #{group.name} because the browser is headless"
-          else
-            @group_page.load_page group
-            csv = @group_page.export_custom_student_list group
-            @group_page.verify_student_list_custom_export(group.members, csv)
           end
         end
       end
