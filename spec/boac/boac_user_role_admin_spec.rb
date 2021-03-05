@@ -34,6 +34,14 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
 
     after(:all) { Utils.quit_browser @driver }
 
+    context 'visiting the header Profile' do
+
+      it 'sees a Degree Checks link' do
+        @homepage.click_header_dropdown
+        @homepage.degree_checks_link_element.when_visible(1)
+      end
+    end
+
     context 'visiting Everyone\'s Cohorts' do
 
       before(:all) do
