@@ -259,6 +259,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
         end
 
         it('can access the settings page') { expect(@homepage.settings_link?).to be true }
+        it('cannot access the degree check page') { expect(@homepage.degree_checks_link?).to be false }
         it('cannot access the flight deck page') { expect(@homepage.flight_deck_link?).to be false }
         it('cannot access the passenger manifest page') { expect(@homepage.pax_manifest_link?).to be false }
 
@@ -440,6 +441,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
         end
 
         it('can access the settings page') { expect(@homepage.settings_link?).to be true }
+        it('can access the degree check page') { expect(@homepage.degree_checks_link?).to be true }
         it('cannot access the flight deck page') { expect(@homepage.flight_deck_link?).to be false }
         it('cannot access the passenger manifest page') { expect(@homepage.pax_manifest_link?).to be false }
 
@@ -632,6 +634,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
         end
 
         it('can access the settings page') { expect(@homepage.settings_link?).to be true }
+        it('cannot access the degree check page') { expect(@homepage.degree_checks_link?).to be false }
         it('cannot access the flight deck page') { expect(@homepage.flight_deck_link?).to be false }
         it('cannot access the passenger manifest page') { expect(@homepage.pax_manifest_link?).to be false }
 

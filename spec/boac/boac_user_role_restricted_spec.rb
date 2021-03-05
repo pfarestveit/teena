@@ -201,6 +201,7 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
         end
 
         it('can see a Settings link') { expect(@homepage.settings_link?).to be true }
+        it('cannot see a Degree Checks link') { expect(@homepage.degree_checks_link?).to be false }
         it('cannot see a Flight Deck link') { expect(@homepage.flight_deck_link?).to be false }
         it('cannot see a Flight Data Recorder link') { expect(@homepage.flight_data_recorder_link?).to be false }
         it('cannot see a Passenger Manifest link') { expect(@homepage.pax_manifest_link?).to be false }
@@ -402,6 +403,7 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
         end
 
         it('can see a Settings link') { expect(@homepage.settings_link?).to be true }
+        it('cannot see a Degree Checks link') { expect(@homepage.degree_checks_link?).to be false }
         it('cannot see a Flight Deck link') { expect(@homepage.flight_deck_link?).to be false }
         it('cannot see a Flight Data Recorder link') { expect(@homepage.flight_data_recorder_link?).to be false }
         it('cannot see a Passenger Manifest link') { expect(@homepage.pax_manifest_link?).to be false }

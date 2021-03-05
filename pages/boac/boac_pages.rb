@@ -43,6 +43,7 @@ module BOACPages
   link(:flight_data_recorder_link, text: 'Flight Data Recorder')
   link(:flight_deck_link, text: 'Flight Deck')
   link(:pax_manifest_link, text: 'Passenger Manifest')
+  link(:degree_checks_link, text: 'Degree Checks')
   link(:settings_link, text: 'Profile')
   link(:log_out_link, text: 'Log Out')
   link(:feedback_link, text: 'Feedback/Help')
@@ -81,6 +82,12 @@ module BOACPages
     click_header_dropdown
     wait_for_update_and_click flight_deck_link_element
     wait_for_title 'Flight Deck'
+  end
+
+  def click_degree_checks_link
+    click_header_dropdown
+    wait_for_update_and_click degree_checks_link_element
+    wait_for_title 'Managing Degree Checks'
   end
 
   # Clicks the 'Passenger Manifest' link in the header
