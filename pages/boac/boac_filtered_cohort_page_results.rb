@@ -163,7 +163,7 @@ module BOACFilteredCohortPageResults
   # @param test [BOACTestConfig]
   # @return [Array<Hash>]
   def matching_lcff_plus_admits(test)
-    test.searchable_data.select { |u| u[:last_school_lcff_plus_flag] && !u[:last_school_lcff_plus_flag].empty? }
+    test.searchable_data.select { |u| u[:last_school_lcff_plus_flag] && u[:last_school_lcff_plus_flag] == '1' }
   end
 
   # Returns the admits that match a Special Program CEP filter
@@ -202,7 +202,7 @@ module BOACFilteredCohortPageResults
     matches << matching_student_depends_admits(test, search_criteria) if search_criteria.student_dependents&.any?
     matches << matching_re_entry_admits(test) if search_criteria.re_entry_status
     matches << matching_lcff_plus_admits(test) if search_criteria.last_school_lcff_plus
-    matches << matching_special_pgm_cep_admits(test, search_criteria) if search_criteria.special_program_cep
+    matches << matching_special_pgm_cep_admits(test, search_criteria) if search_criteria.special_program_cep&.any?
     matches.any?(&:empty?) ? [] : matches.inject(:'&')
   end
 

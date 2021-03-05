@@ -48,9 +48,9 @@ class Utils
   # is false, a new profile will be used.
   # @param profile [String]
   # @return [Selenium::WebDriver]
-  def self.launch_browser(profile = nil)
+  def self.launch_browser(profile = nil, driver = nil)
     driver_config = @config['webdriver']
-    browser = driver_config['browser']
+    browser = driver || driver_config['browser']
     logger.info "Launching #{browser.capitalize}#{(' using profile at ' + profile) if profile}"
 
     # When launching browser, select the profile to use, tweak profile settings to facilitate file downloads, and launch in headless mode if desired.
