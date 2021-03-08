@@ -108,18 +108,20 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
         all_users.select { |u| u.depts.include? dept }.each do |user|
 
           it "shows the total number of BOA notes created by #{dept.name} UID #{user.uid}" do
-            count = (@advisor_data.find { |a| a[:uid] == user.uid })[:note_count]
+            adv = @advisor_data.find { |a| a[:uid] == user.uid }
+            count = adv ? adv[:note_count] : '0'
             expect(@flight_data_recorder.advisor_note_count user).to eql(count)
           end
 
           it "shows the last login date for #{dept.name} UID #{user.uid}" do
+            adv = @advisor_data.find { |a| a[:uid] == user.uid }
             date = if user == admin
                      Time.now
-                   else
-                     (@advisor_data.find { |a| a[:uid] == user.uid.to_s })[:last_login]
+                   elsif adv
+                     adv[:last_login]
                    end
             date = date ? date.strftime('%b %-d, %Y') : '—'
-            expect(@flight_data_recorder.advisor_last_login user).to eql(date)
+            expect(@flight_data_recorder.advisor_last_login user).to eql(date) if adv
           end
 
           user.dept_memberships.each do |role|
@@ -179,18 +181,20 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
         all_non_admin_users.select { |u| u.depts.include? dept }.each do |user|
 
           it "shows the total number of BOA notes created by #{dept.name} UID #{user.uid}" do
-            count = (@advisor_data.find { |a| a[:uid] == user.uid })[:note_count]
+            adv = @advisor_data.find { |a| a[:uid] == user.uid }
+            count = adv ? adv[:note_count] : '0'
             expect(@flight_data_recorder.advisor_note_count user).to eql(count)
           end
 
           it "shows the last login date for #{dept.name} UID #{user.uid}" do
+            adv = @advisor_data.find { |a| a[:uid] == user.uid }
             date = if [admin, director].include? user
                      Time.now
-                   else
-                     (@advisor_data.find { |a| a[:uid] == user.uid.to_s })[:last_login]
+                   elsif adv
+                     adv[:last_login]
                    end
             date = date ? date.strftime('%b %-d, %Y') : '—'
-            expect(@flight_data_recorder.advisor_last_login user).to eql(date)
+            expect(@flight_data_recorder.advisor_last_login user).to eql(date) if adv
           end
         end
       end

@@ -179,14 +179,13 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
 
       context 'when the advisor enters invalid filter input' do
 
-        before(:all) do
-          @homepage.load_page
-          @homepage.click_sidebar_create_ce3_filtered
-        end
-
         shared_examples 'dependent range validation' do |filter_name|
 
-          before(:all) { @cohort_page.select_new_filter_option filter_name }
+          before(:each) do
+            @homepage.load_page
+            @homepage.click_sidebar_create_ce3_filtered
+            @cohort_page.select_new_filter_option filter_name
+          end
 
           it 'an error prompts for numeric input' do
             @cohort_page.select_new_filter_sub_option(filter_name, {'min' => 'A', 'max' => ''})
