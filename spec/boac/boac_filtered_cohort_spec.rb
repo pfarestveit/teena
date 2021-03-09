@@ -393,19 +393,21 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
         test.searches.flatten!
         @homepage.load_page
         @homepage.wait_until(Utils.short_wait) { @homepage.filtered_cohorts.any? }
-        @homepage.wait_until(1, "Expected #{(test.searches.map &:name).sort}, but got #{@homepage.filtered_cohorts.sort}") do
-          @homepage.filtered_cohorts.sort == (test.searches.map &:name).sort
+        expected = (test.searches.map &:name).sort
+        @homepage.wait_until(1, "Missing #{expected - @homepage.filtered_cohorts.sort}, unexpected #{@homepage.filtered_cohorts.sort - expected}") do
+          @homepage.filtered_cohorts.sort == expected
         end
       end
     end
 
     context 'when the advisor enters invalid filter input' do
 
-      before(:all) { @homepage.click_sidebar_create_filtered }
-
       shared_examples 'GPA range validation' do |filter_name|
 
-        before(:all) { @cohort_page.select_new_filter_option filter_name }
+        before(:each) do
+          @homepage.click_sidebar_create_filtered
+          @cohort_page.select_new_filter_option filter_name
+        end
 
         it 'an error prompts for numeric input' do
           @cohort_page.select_new_filter_sub_option(filter_name, {'min' => 'A', 'max' => ''})

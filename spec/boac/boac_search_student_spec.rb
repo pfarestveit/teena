@@ -77,12 +77,8 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
           @homepage.clear_search_input
           expected_search_history = [student.email[0..4], student.email, student.sis_id.to_s[0..4], student.sis_id.to_s,
                                      "#{student.last_name[0..2]}, #{student.first_name[0..2]}"]
-          search_history_right = @homepage.verify_block do
-            @homepage.wait_until(3, "Expected #{expected_search_history}, got #{@homepage.visible_search_history}") do
-              @homepage.visible_search_history == expected_search_history
-            end
-          end
-          it("shows the right search history for advisor UID #{test_config.advisor.uid}") { expect(search_history_right).to be true }
+          visible_search_history = @homepage.visible_search_history
+          it("shows the right search history for advisor UID #{test_config.advisor.uid}") { expect(visible_search_history).to eql(expected_search_history) }
 
           @homepage.select_history_item @homepage.visible_search_history[4]
           history_results = @search_results_page.student_in_search_result?(@driver, student)

@@ -1090,13 +1090,6 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
           expect(@resolved_issue.id).not_to be_nil
         end
 
-        it 'updates the waiting list with the checked-in appointment' do
-          @advisor_homepage.wait_for_poller do
-            visible_data = @advisor_homepage.visible_list_view_appt_data(@resolved_issue)
-            visible_data[:checked_in_status] && visible_data[:checked_in_status].include?('CHECKED IN')
-          end
-        end
-
         it 'updates the student page with the checked-in appointment' do
           @advisor_student_page.load_page @resolved_issue.student
           @advisor_student_page.show_appts

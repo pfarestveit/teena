@@ -302,8 +302,11 @@ class NessieFilterUtils < NessieUtils
   end
 
   def self.join(filter_joins, sort=nil)
-    unless sort && sort[:table] == 'student.student_academic_status'
-      filter_joins << " LEFT JOIN #{sort[:table]} ON student.student_academic_status.sid = #{sort[:table]}.sid" if sort
+    if sort
+      join = "LEFT JOIN #{sort[:table]} ON student.student_academic_status.sid = #{sort[:table]}.sid"
+      unless sort[:table] == 'student.student_academic_status' || filter_joins.include?(join)
+        filter_joins << " #{join}"
+      end
     end
     filter_joins
   end
