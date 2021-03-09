@@ -319,11 +319,11 @@ describe 'bCourses course site creation' do
           has_course_captures_link = @course_captures_page.course_captures_link?
           it("shows no Course Captures tool link in course site navigation for #{site[:course].term} #{site[:course].code} site ID #{site[:course].site_id}") { expect(has_course_captures_link).to be false }
 
-          # CONFERENCES TOOL - verify it's not in sidebar
+          # CONFERENCES TOOL - verify it's hidden
 
-          has_conf_nav_item = @canvas_page.conf_tool_link?
+          conf_nav_hidden = @canvas_page.conf_tool_link_element.attribute('title') == 'Disabled. Not visible to students'
           it "shows no Conferences tool link in course site navigation for #{site[:course].term} #{site[:course].code} site ID #{site[:course].site_id}" do
-            expect(has_conf_nav_item).to be false
+            expect(conf_nav_hidden).to be true
           end
 
           # GRADES - check that grade distribution is hidden by default

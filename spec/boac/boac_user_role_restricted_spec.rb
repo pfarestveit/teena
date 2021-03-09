@@ -59,13 +59,12 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
 
         it 'cannot view course site details' do
           @api_student_page.terms.each do |term|
-            term['enrollments'].each do |course|
-              term_name = @api_student_page.term_name term
-              @student_page.expand_academic_year term_name unless @student_page.term_data_heading(term_name).visible?
-              course['sections'].each_with_index do |section, i|
-                @student_page.expand_course_data(term['termId'], i)
-                expect(@student_page.class_page_link(term['termId'], section['ccn']).exists?).to be false
-              end
+            term_name = @api_student_page.term_name term
+            @student_page.expand_academic_year term_name unless @student_page.term_data_heading(term_name).visible?
+            term['enrollments'].each_with_index do |course, i|
+              section = course['sections'].find { |s| s['primary'] }
+              @student_page.expand_course_data(term['termId'], i)
+              expect(@student_page.class_page_link(term['termId'], section['ccn']).exists?).to be false
             end
           end
         end
@@ -256,7 +255,8 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
             term['enrollments'].each do |course|
               term_name = @api_student_page.term_name term
               @student_page.expand_academic_year term_name unless @student_page.term_data_heading(term_name).visible?
-              course['sections'].each_with_index do |section, i|
+              term['enrollments'].each_with_index do |course, i|
+                section = course['sections'].find { |s| s['primary'] }
                 @student_page.expand_course_data(term['termId'], i)
                 expect(@student_page.class_page_link(term['termId'], section['ccn']).exists?).to be false
               end

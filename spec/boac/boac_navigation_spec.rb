@@ -109,10 +109,6 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
                             matrix_to_student = @student_page.verify_block { @student_page.sid_element.when_visible Utils.short_wait }
                             it("links student pages from the matrix view of #{class_test_case}") { expect(matrix_to_student).to be true }
 
-                            # Back to matrix view
-                            @driver.navigate.back
-                            student_to_matrix = @class_matrix_page.verify_block { @class_matrix_page.wait_for_matrix }
-                            it("returns to the matrix view of #{class_test_case}") { expect(student_to_matrix).to be_truthy }
                           else
                             logger.warn "Skipping matrix to student page tests because the bubbles are all bunched up for #{class_test_case}"
                           end

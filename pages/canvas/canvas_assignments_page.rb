@@ -95,7 +95,8 @@ module Page
     button(:submit_assignment_button, xpath: '//button[text()="Submit Assignment"]')
     button(:resubmit_assignment_button, xpath: '//button[text()="Re-submit Assignment"]')
     link(:assignment_file_upload_tab, class: 'submit_online_upload_option')
-    text_field(:file_upload_input, name: 'attachments[-1][uploaded_data]')
+    button(:upload_file_button, xpath: '//button[contains(., "Upload File")]')
+    text_field(:file_upload_input, name: 'attachments[0][uploaded_data]')
     button(:file_upload_submit_button, id: 'submit_file_button')
     link(:assignment_site_url_tab, class: 'submit_online_url_option')
     text_area(:url_upload_input, id: 'submission_url')
@@ -108,6 +109,7 @@ module Page
     def upload_assignment(submission, event = nil)
       case submission.type
         when 'File'
+          wait_for_update_and_click upload_file_button_element
           file_upload_input_element.when_visible Utils.short_wait
           self.file_upload_input_element.send_keys SuiteCUtils.asset_file_path(submission.file_name)
           wait_for_update_and_click_js file_upload_submit_button_element
