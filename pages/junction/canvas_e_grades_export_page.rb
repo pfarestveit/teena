@@ -71,7 +71,9 @@ module Page
       # Selects a section for which to download the E-Grades CSV and preps the download dir to receive the file
       # @param section [Section]
       def choose_section(section)
-        section_name = "#{section.course} #{section.label}"
+        # Parenthetical in section labels isn't shown on e-grades tool
+        label = section.label.include?('(') ? section.label.split[0..-2].join(' ') : section.label
+        section_name = "#{section.course} #{label}"
         Utils.prepare_download_dir
         wait_for_element_and_select_js(sections_select_element, section_name)
       end

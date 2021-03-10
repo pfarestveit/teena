@@ -68,7 +68,6 @@ describe 'bCourses project site', order: :defined do
       it('redirects to a custom project homepage') { @canvas.project_site_heading_element.when_visible Utils.short_wait }
       it('does not add the Roster Photos tool') { expect(@roster_photos_page.roster_photos_link?).to be false }
       it('does not add the Official Sections tool') { expect(@official_sections_page.official_sections_link?).to be false }
-      it('does not add the Conferences tool') { expect(@canvas.conf_tool_link?).to be false }
     end
   end
 

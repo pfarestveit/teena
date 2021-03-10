@@ -23,7 +23,7 @@ class OECDepartments
       ARCH = new('ARCH', 'Architecture', 'ARCH', %w(F G), true),
       ARMENI = new('ARMENI', 'Slavic Languages and Literatures', 'ARMENI', %w(F G), true),
       ART = new('ART', 'Art Practice', 'ART', %w(F G), true),
-      ASIANST = new('ASIANST', 'International and Area Studies', 'IAS', %w(F G), true),
+      ASIANST = new('ASIANST', 'International and Area Studies', 'EA LANG', %w(F G), true),
       AST = new('AST', 'Engineering', 'ENGIN', nil, false),
       ASTRON = new('ASTRON', 'Astronomy', 'ASTRON', %w(F G), true),
       BANGLA = new('BANGLA', 'South and Southeast Asian Studies', 'S_SEASN', %w(F G), true),

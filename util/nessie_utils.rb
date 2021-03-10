@@ -182,7 +182,8 @@ class NessieUtils < Utils
                AND profile NOT LIKE '%\"academicCareerStatus\": \"Active\"%'
                AND profile NOT LIKE '%\"academicCareerStatus\": \"Inactive\"%'
                AND profile NOT LIKE '%\"academicCareerStatus\": \"Completed\"%'
-               AND profile NOT LIKE '%\"academicCareerStatus\": \"Created In Error\"%';"
+               AND profile NOT LIKE '%\"academicCareerStatus\": \"Created In Error\"%'
+               AND profile NOT LIKE'%\"academicCareerStatus\": null%';"
     result = query_pg_db_field(nessie_pg_db_credentials, query, 'count').last.to_i
     logger.info "Count of historical students with unexpected academic career status is #{result}"
     result

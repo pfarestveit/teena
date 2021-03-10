@@ -348,7 +348,7 @@ module Page
       load_gradebook course
       allow_grade_override
       search_for_gradebook_student student
-      3.times do
+      15.times do
         visible_els = grid_row_cell_elements
         scroll_to_element visible_els.last
       end
