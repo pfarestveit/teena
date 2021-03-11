@@ -97,7 +97,7 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
                               it("shows the right instructors for meeting #{index} for #{class_test_case}") { expect(visible_meeting_data[:instructors]).to eql(meet[:instructors]) }
                               it("shows the right days for meeting #{index} for #{class_test_case}") { expect(visible_meeting_data[:days]).to eql(meet[:days]) }
                               it("shows the right time for meeting #{index} for #{class_test_case}") { expect(visible_meeting_data[:time]).to eql(meet[:time]) }
-                              it("shows the right location for meeting #{index} for #{class_test_case}") { expect(visible_meeting_data[:location]).to eql(expected_location) }
+                              it("shows the right location for meeting #{index} for #{class_test_case}") { expect(visible_meeting_data[:location].to_s).to eql(expected_location) }
 
                               Utils.add_csv_row(meetings_csv, [term_name, section_course_code, meet[:instructors], meet[:days], meet[:time], expected_location])
                             end

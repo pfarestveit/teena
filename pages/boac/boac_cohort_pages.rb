@@ -186,7 +186,7 @@ module BOACCohortPages
     wait_until(1, "Expected #{cohort_members.length}, got #{parsed_csv.length}") { parsed_csv.length == cohort_members.length }
     cohort_members.each do |stu|
       row = parsed_csv.find { |r| r[:sid] == stu.sis_id.to_i }
-      wait_until(1, "SID '#{stu.sis_id}' row data ain't right") do
+      wait_until(1, "SID '#{stu.sis_id}' either has a name mismatch or an empty phone or email") do
         row[:first_name] == stu.first_name
         row[:last_name] == stu.last_name
         !row[:email].empty?

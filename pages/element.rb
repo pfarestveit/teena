@@ -58,6 +58,10 @@ class Element
     @selenium_element.flash
   end
 
+  def location
+    @selenium_element.location
+  end
+
   def options
     sel = Selenium::WebDriver::Support::Select.new @selenium_element
     sel.options
