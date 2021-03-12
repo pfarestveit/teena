@@ -50,7 +50,7 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
           if term
             begin
 
-              term_id = Utils.term_name_to_sis_code term
+              term_id = Utils.term_name_to_sis_code  boac_api_page.term_name(term)
               # Collect all the Canvas sites in the term, matched and unmatched
               term_sites = []
               term_sites << boac_api_page.unmatched_sites(term).map { |s| {:data => s} }
