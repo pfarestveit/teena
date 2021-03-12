@@ -28,7 +28,7 @@ class BOACStudentPage
   div(:preferred_name, :xpath => '//div[@id="student-preferred-name"]/span[2]')
   span(:sid, id: 'student-bio-sid')
   span(:inactive, id: 'student-bio-inactive')
-  span(:academic_standing, xpath: '//span[contains(@id, "academic-standing-term-")]')
+  span(:academic_standing, xpath: '//h2[text()="Profile"]/following-sibling::div[@class="student-academic-standing"]/span[contains(@id, "academic-standing-term-")]')
   span(:phone, id: 'student-phone-number')
   link(:email, id: 'student-mailto')
   div(:cumulative_units, xpath: '//div[@id="cumulative-units"]/div')
@@ -57,7 +57,7 @@ class BOACStudentPage
   div(:alternate_email, id: 'student-profile-other-email')
   div(:additional_information_outer, id: 'additional-information-outer')
   elements(:degree_college, :div, xpath: '//div[@id="student-bio-degree-date"]//following-sibling::div[@class="student-text"]')
-  elements(:degree_minor, :div, xpath: '//h3[text()="Minor"]/following-sibling::div/div[@id="student-bio-degree-type"]')
+  elements(:degree_minor, :div, xpath: '//h3[contains(text(), "Minor")]/following-sibling::div/div[@id="student-bio-degree-type"]')
 
   # Expand personal details tab on student page profile
   def expand_personal_details

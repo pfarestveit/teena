@@ -213,6 +213,7 @@ class NessieUtils < Utils
                AND profile NOT LIKE '%\"status\": \"Deceased\"%'
                AND profile NOT LIKE '%\"status\": \"Discontinued\"%'
                AND profile NOT LIKE '%\"status\": \"Dismissed\"%'
+               AND profile NOT LIKE '%\"status\": \"Leave of Absence\"%'
                AND profile NOT LIKE '%\"status\": \"Suspended\"%'
                AND profile NOT LIKE '%\"status\": {\"code\": \"PRO\", \"description\": \"Probation\"}%'
                AND profile NOT LIKE '%\"status\": {\"code\": \"GST\", \"description\": \"Good Standing\"}%'
