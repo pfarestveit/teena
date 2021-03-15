@@ -142,6 +142,15 @@ oec:
   sis_id: secret
   email: secret
 
+squiggy:
+  base_url: tbd
+  password: secret
+  db_host: secret
+  db_port: secret
+  db_name: secret
+  db_user: secret
+  db_password: secret
+
 suite_c:
   base_url: https://app-qa.ets-berkeley-suitec.net
   lti_key: secret
