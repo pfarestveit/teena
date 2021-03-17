@@ -32,8 +32,8 @@ describe 'The Engagement Index', order: :defined do
                                        Utils.get_test_id, [LtiTools::ASSET_LIBRARY, LtiTools::ENGAGEMENT_INDEX])
 
     @canvas.load_course_site @course
-    @asset_library_url = @canvas.click_tool_link(@driver, LtiTools::ASSET_LIBRARY, event)
-    @engagement_index_url = @canvas.click_tool_link(@driver, LtiTools::ENGAGEMENT_INDEX, event)
+    @asset_library_url = @canvas.click_tool_link(LtiTools::ASSET_LIBRARY, event)
+    @engagement_index_url = @canvas.click_tool_link(LtiTools::ENGAGEMENT_INDEX, event)
 
     # Make sure the Impact Studio is not enabled on the course site
     @canvas.disable_tool(@course, LtiTools::IMPACT_STUDIO)
@@ -256,7 +256,7 @@ describe 'The Engagement Index', order: :defined do
     before(:all) do
       @canvas.stop_masquerading
       @canvas.add_suite_c_tool(@course, LtiTools::IMPACT_STUDIO)
-      @canvas.click_tool_link(@driver, LtiTools::IMPACT_STUDIO, event)
+      @canvas.click_tool_link(LtiTools::IMPACT_STUDIO, event)
     end
 
     context 'when the user is not looking' do

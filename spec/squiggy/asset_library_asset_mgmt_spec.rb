@@ -1,4 +1,23 @@
+require_relative '../../util/spec_helper'
+
 describe 'Asset' do
+
+  before(:all) do
+    @test = SquiggyTestConfig.new 'asset_mgmt'
+    @driver = Utils.launch_browser
+    @canvas = Page::CanvasPage.new @driver
+    @cal_net= Page::CalNetPage.new @driver
+    @assets_list = SquiggyAssetLibraryListViewPage.new @driver
+    @asset_detail = SquiggyAssetLibraryDetailPage.new @driver
+    @manage_assets = SquiggyAssetLibraryManageAssetsPage.new @driver
+
+    @canvas.log_in(@cal_net, @test.admin.username, Utils.super_admin_password)
+    @canvas.create_squiggy_course @test
+
+    @canvas.masquerade_as(@test.course.teachers.first, @test.course)
+  end
+
+  after(:all) { Utils.quit_browser @driver }
 
   describe 'metadata edits' do
     it 'are not allowed if the user is a student who is not the asset creator'

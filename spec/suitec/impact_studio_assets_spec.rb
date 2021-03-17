@@ -60,10 +60,10 @@ describe 'The Impact Studio', order: :defined do
     @canvas.log_in(@cal_net, (event.actor = admin).username, Utils.super_admin_password)
     @canvas.create_generic_course_site(Utils.canvas_qa_sub_account, @course, users, test_id,
                                        [LtiTools::ASSET_LIBRARY, LtiTools::ENGAGEMENT_INDEX, LtiTools::IMPACT_STUDIO, LtiTools::WHITEBOARDS])
-    @asset_library_url = @canvas.click_tool_link(@driver, LtiTools::ASSET_LIBRARY, event)
-    @engagement_index_url = @canvas.click_tool_link(@driver, LtiTools::ENGAGEMENT_INDEX, event)
-    @impact_studio_url = @canvas.click_tool_link(@driver, LtiTools::IMPACT_STUDIO, event)
-    @whiteboards_url = @canvas.click_tool_link(@driver, LtiTools::WHITEBOARDS, event)
+    @asset_library_url = @canvas.click_tool_link(LtiTools::ASSET_LIBRARY, event)
+    @engagement_index_url = @canvas.click_tool_link(LtiTools::ENGAGEMENT_INDEX, event)
+    @impact_studio_url = @canvas.click_tool_link(LtiTools::IMPACT_STUDIO, event)
+    @whiteboards_url = @canvas.click_tool_link(LtiTools::WHITEBOARDS, event)
 
     @engagement_index.wait_for_new_user_sync(@driver, @engagement_index_url, @course, [teacher, student_1, student_2], event)
 

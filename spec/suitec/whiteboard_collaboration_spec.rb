@@ -45,11 +45,11 @@ describe 'Whiteboard', order: :defined do
     @canvas_driver_1.log_in(@cal_net_driver_1, admin.username, Utils.super_admin_password)
     event_driver_1.actor = admin
     @canvas_driver_1.create_generic_course_site(Utils.canvas_qa_sub_account, course, users, test_id, tools)
-    @whiteboards_url = @canvas_driver_1.click_tool_link(@driver_1, LtiTools::WHITEBOARDS, event_driver_1)
-    @engagement_index_url = @canvas_driver_1.click_tool_link(@driver_1, LtiTools::ENGAGEMENT_INDEX, event_driver_1)
+    @whiteboards_url = @canvas_driver_1.click_tool_link(LtiTools::WHITEBOARDS, event_driver_1)
+    @engagement_index_url = @canvas_driver_1.click_tool_link(LtiTools::ENGAGEMENT_INDEX, event_driver_1)
     if course_id
       @asset_library = Page::SuiteCPages::AssetLibraryDetailPage.new @driver_1
-      @asset_library_url = @canvas_driver_1.click_tool_link(@driver_1, LtiTools::ASSET_LIBRARY, event_driver_1)
+      @asset_library_url = @canvas_driver_1.click_tool_link(LtiTools::ASSET_LIBRARY, event_driver_1)
       @asset_library.ensure_canvas_sync(@driver_1, @asset_library_url, event_driver_1)
     end
 
@@ -338,7 +338,7 @@ describe 'Whiteboard', order: :defined do
       @whiteboards_driver_3 = Page::SuiteCPages::WhiteboardPage.new @driver_3
       @canvas_driver_3.log_in(@cal_net_driver_3, admin.username, Utils.super_admin_password)
       event_driver_3.actor = admin
-      @engagement_index_url = @canvas_driver_1.click_tool_link(@driver_1, LtiTools::ENGAGEMENT_INDEX, event_driver_3)
+      @engagement_index_url = @canvas_driver_1.click_tool_link(LtiTools::ENGAGEMENT_INDEX, event_driver_3)
       @engagement_index_driver_1 = Page::SuiteCPages::EngagementIndexPage.new @driver_1
     end
 

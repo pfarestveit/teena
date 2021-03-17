@@ -1,4 +1,26 @@
+require_relative '../../util/spec_helper'
+
 describe 'A Canvas discussion' do
+
+  before(:all) do
+    @test = SquiggyTestConfig.new 'canvas_discussions'
+
+    @driver = Utils.launch_browser
+    @canvas = Page::CanvasAnnounceDiscussPage.new @driver
+    @cal_net = Page::CalNetPage.new @driver
+    @engagement_index = SquiggyEngagementIndexPage.new @driver
+
+    @canvas.log_in(@cal_net, @test.admin.username, Utils.super_admin_password)
+    @canvas.create_squiggy_course @test
+
+    # Wait for user sync, get user scores
+
+    @discussion = Discussion.new "#{@test.course.title} Discussion"
+    @canvas.masquerade_as @test.teachers.first
+    @canvas.create_course_discussion(@test.course, @discussion)
+  end
+
+  after(:all) { @driver.quit }
 
   it 'earns Discussion Topic Engagement Index points for the discussion creator'
   it 'adds discussion-topic activity to the CSV export for the discussion creator'

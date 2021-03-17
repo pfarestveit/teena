@@ -33,9 +33,9 @@ describe 'Whiteboard', order: :defined do
     @canvas.create_generic_course_site(Utils.canvas_qa_sub_account, @course, [@teacher, @student_1, @student_2, @student_3],
                                        test_id, [LtiTools::ASSET_LIBRARY, LtiTools::ENGAGEMENT_INDEX, LtiTools::WHITEBOARDS])
 
-    @asset_library_url = @canvas.click_tool_link(@driver, LtiTools::ASSET_LIBRARY, event)
-    @engagement_index_url = @canvas.click_tool_link(@driver, LtiTools::ENGAGEMENT_INDEX, event)
-    @whiteboards_url = @canvas.click_tool_link(@driver, LtiTools::WHITEBOARDS, event)
+    @asset_library_url = @canvas.click_tool_link(LtiTools::ASSET_LIBRARY, event)
+    @engagement_index_url = @canvas.click_tool_link(LtiTools::ENGAGEMENT_INDEX, event)
+    @whiteboards_url = @canvas.click_tool_link(LtiTools::WHITEBOARDS, event)
   end
 
   after(:all) { @driver.quit }

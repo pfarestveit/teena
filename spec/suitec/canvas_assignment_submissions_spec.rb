@@ -28,8 +28,8 @@ describe 'Canvas assignment submission', order: :defined do
     # Create course site if necessary. If an existing site, then ensure Canvas sync is enabled.
     @canvas.log_in(@cal_net, Utils.super_admin_username, Utils.super_admin_password)
     @canvas.create_generic_course_site(Utils.canvas_qa_sub_account, @course, users, test_id, [LtiTools::ASSET_LIBRARY, LtiTools::ENGAGEMENT_INDEX])
-    @asset_library_url = @canvas.click_tool_link(@driver, LtiTools::ASSET_LIBRARY)
-    @engagement_index_url = @canvas.click_tool_link(@driver, LtiTools::ENGAGEMENT_INDEX)
+    @asset_library_url = @canvas.click_tool_link LtiTools::ASSET_LIBRARY
+    @engagement_index_url = @canvas.click_tool_link LtiTools::ENGAGEMENT_INDEX
     @asset_library.ensure_canvas_sync(@driver, @asset_library_url) unless course_id.nil?
 
     # Create assignment

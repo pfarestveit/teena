@@ -1,4 +1,26 @@
+require_relative '../../util/spec_helper'
+
 describe 'Engagement Index points configuration' do
+
+  before(:all) do
+    @test = SquiggyTestConfig.new 'engagement_config'
+    @driver = Utils.launch_browser
+    @canvas = Page::CanvasPage.new @driver
+    @cal_net= Page::CalNetPage.new @driver
+    @assets_list = SquiggyAssetLibraryListViewPage.new @driver
+    @asset_detail = SquiggyAssetLibraryDetailPage.new @driver
+    @engagement_index = SquiggyEngagementIndexPage.new @driver
+    @engagement_config = SquiggyPointsConfigPage.new @driver
+
+    @canvas.log_in(@cal_net, @test.admin.username, Utils.super_admin_password)
+    @canvas.create_squiggy_course @test
+
+    @canvas.masquerade_as(@test.course.students.first, @test.course)
+
+    # TODO - upload an asset
+  end
+
+  after(:all) { Utils.quit_browser @driver }
 
   SquiggyActivity::ACTIVITIES.each do |squigtivity|
     it "by default shows '#{squigtivity.title}' worth default points"

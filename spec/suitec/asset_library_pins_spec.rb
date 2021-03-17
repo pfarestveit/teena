@@ -37,8 +37,8 @@ describe 'Asset pinning', order: :defined do
     @canvas.log_in(@cal_net, admin.username, Utils.super_admin_password)
     event.actor = admin
     @canvas.create_generic_course_site(Utils.canvas_qa_sub_account, @course, users, test_id, [LtiTools::ASSET_LIBRARY, LtiTools::ENGAGEMENT_INDEX])
-    @asset_library_url = @canvas.click_tool_link(@driver, LtiTools::ASSET_LIBRARY, event)
-    @engagement_index_url = @canvas.click_tool_link(@driver, LtiTools::ENGAGEMENT_INDEX, event)
+    @asset_library_url = @canvas.click_tool_link(LtiTools::ASSET_LIBRARY, event)
+    @engagement_index_url = @canvas.click_tool_link(LtiTools::ENGAGEMENT_INDEX, event)
     @engagement_index.wait_for_new_user_sync(@driver, @engagement_index_url, @course, users, event)
 
     # Users 1 and 2 upload assets

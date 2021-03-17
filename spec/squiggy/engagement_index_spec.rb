@@ -1,4 +1,27 @@
+require_relative '../../util/spec_helper'
+
 describe 'The Engagement Index' do
+
+  before(:all) do
+    @test = SquiggyTestConfig.new 'engagement_index'
+    @driver = Utils.launch_browser
+    @canvas = Page::CanvasPage.new @driver
+    @cal_net= Page::CalNetPage.new @driver
+    @assets_list = SquiggyAssetLibraryListViewPage.new @driver
+    @asset_detail = SquiggyAssetLibraryDetailPage.new @driver
+    @engagement_index = SquiggyEngagementIndexPage.new @driver
+
+    @canvas.log_in(@cal_net, @test.admin.username, Utils.super_admin_password)
+    @canvas.create_squiggy_course @test
+
+    @canvas.masquerade_as(@test.course.students.first, @test.course)
+
+    # TODO - upload an asset
+    # TODO - comment on the asset
+    # TODO - like the asset
+  end
+
+  after(:all) { Utils.quit_browser @driver }
 
   it 'is sorted by "Rank" descending by default'
   it 'can be sorted by "Rank" ascending'

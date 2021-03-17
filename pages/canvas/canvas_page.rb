@@ -147,6 +147,29 @@ module Page
       switch_to_canvas_iframe
     end
 
+    def create_squiggy_course(test)
+      if test.course.site_id.nil?
+        logger.info "Creating a Squiggy course site named #{test.course.title}"
+        load_sub_account Utils.canvas_qa_sub_account
+        wait_for_load_and_click add_new_course_button_element
+        course_name_input_element.when_visible Utils.short_wait
+        wait_for_element_and_type(course_name_input_element, "#{test.course.title}")
+        wait_for_element_and_type(ref_code_input_element, "#{test.course.code}")
+        wait_for_update_and_click create_course_button_element
+        add_course_success_element.when_visible Utils.medium_wait
+        test.course.site_id = search_for_course(test.course, Utils.canvas_qa_sub_account)
+      else
+        navigate_to "#{Utils.canvas_base_url}/courses/#{test.course.site_id}/settings"
+        course_details_link_element.when_visible Utils.medium_wait
+        test.course.title = course_title
+        test.course.code = course_code
+      end
+      logger.info "Course site ID is #{test.course.site_id}"
+      publish_course_site test.course
+      add_users(test.course, test.course.roster)
+      add_squiggy_tools test
+    end
+
     # Creates standard Canvas course site in a given sub-account, publishes it, and adds test users.
     # @param sub_account [String]
     # @param course [Course]
@@ -463,9 +486,7 @@ module Page
     # @param course [Course]
     # @param tool [LtiTools]
     # @param base_url [String]
-    # @param key [String]
-    # @param secret [String]
-    def add_lti_tool(course, tool, base_url, key, secret)
+    def add_lti_tool(course, tool, base_url, credentials)
       logger.info "Adding and/or enabling #{tool.name}"
       load_tools_config_page course
       wait_for_update_and_click navigation_link_element
@@ -490,8 +511,8 @@ module Page
           sleep 1
           wait_for_update_and_click_js app_name_input_element
           wait_for_element_and_type(app_name_input_element, "#{tool.name}")
-          wait_for_element_and_type(key_input_element, key)
-          wait_for_element_and_type(secret_input_element, secret)
+          wait_for_element_and_type(key_input_element, credentials[:key])
+          wait_for_element_and_type(secret_input_element, credentials[:secret])
           wait_for_element_and_type(url_input_element, "#{base_url}#{tool.xml}")
           submit_button
           link_element(xpath: "//td[@title='#{tool.name}']").when_present Utils.medium_wait
@@ -507,13 +528,46 @@ module Page
       add_lti_tool(course, tool, SuiteCUtils.suite_c_base_url, SuiteCUtils.lti_credentials[:key], SuiteCUtils.lti_credentials[:secret])
     end
 
+    def add_squiggy_tools(test)
+      creds = SquiggyUtils.lti_credentials
+      test.course.lti_tools.each do |tool|
+        logger.info "Adding and/or enabling #{tool.name}"
+        load_tools_config_page test.course
+        wait_for_update_and_click navigation_link_element
+        hide_canvas_footer_and_popup
+        if verify_block { link_element(xpath: "//ul[@id='nav_enabled_list']/li[contains(.,'#{tool.name}')]//a").when_present 2 }
+          logger.debug "#{tool.name} is already installed and enabled, skipping"
+        else
+          if link_element(xpath: "//ul[@id='nav_disabled_list']/li[contains(.,'#{tool.name}')]//a").exists?
+            logger.debug "#{tool.name} is already installed but disabled, enabling"
+            enable_tool(test.course, tool)
+            pause_for_poller
+          else
+            logger.debug "#{tool.name} is not installed, installing and enabling"
+            wait_for_update_and_click apps_link_element
+            wait_for_update_and_click add_app_link_element
+            wait_for_element_and_select_js(config_type_element, 'By URL')
+            execute_script('document.getElementById("configuration_type_selector").value = "url";')
+            sleep 1
+            wait_for_update_and_click_js app_name_input_element
+            wait_for_element_and_type(app_name_input_element, "#{tool.name}")
+            wait_for_element_and_type(key_input_element, creds[:key])
+            wait_for_element_and_type(secret_input_element, creds[:secret])
+            wait_for_element_and_type(url_input_element, "#{SquiggyUtils.base_url}#{tool.xml}")
+            wait_for_update_and_click submit_button
+            link_element(xpath: "//td[@title='#{tool.name}']").when_present Utils.medium_wait
+            enable_tool(test.course, tool)
+          end
+        end
+      end
+    end
+
     # Clicks the navigation link for a tool and returns the tool's URL. Optionally records an analytics event.
-    # @param driver [Selenium::WebDriver]
     # @param tool [LtiTools]
     # @param event [Event]
     # @return [String]
-    def click_tool_link(driver, tool, event = nil)
-      driver.switch_to.default_content
+    def click_tool_link(tool, event = nil)
+      switch_to_main_content
       hide_canvas_footer_and_popup
       wait_for_update_and_click_js tool_nav_link(tool)
       wait_until(Utils.medium_wait) { title == "#{tool.name}" }
