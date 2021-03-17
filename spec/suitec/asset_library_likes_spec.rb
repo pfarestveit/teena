@@ -28,8 +28,8 @@ describe 'Asset', order: :defined do
     @canvas.create_generic_course_site(Utils.canvas_qa_sub_account, @course, [@asset_uploader, @asset_admirer],
                                        test_id, [LtiTools::ASSET_LIBRARY, LtiTools::ENGAGEMENT_INDEX])
 
-    @asset_library_url = @canvas.click_tool_link(@driver, LtiTools::ASSET_LIBRARY, event)
-    @engagement_index_url = @canvas.click_tool_link(@driver, LtiTools::ENGAGEMENT_INDEX, event)
+    @asset_library_url = @canvas.click_tool_link(LtiTools::ASSET_LIBRARY, event)
+    @engagement_index_url = @canvas.click_tool_link(LtiTools::ENGAGEMENT_INDEX, event)
 
     # Upload a new asset for the test
     @canvas.masquerade_as((event.actor = @asset_uploader), @course)

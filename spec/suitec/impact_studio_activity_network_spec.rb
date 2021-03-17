@@ -40,10 +40,10 @@ describe 'Impact Studio Activity Network', :order => :defined do
     @canvas.log_in(@cal_net, Utils.super_admin_username, Utils.super_admin_password)
     @canvas.create_generic_course_site(Utils.canvas_qa_sub_account, @course, users, test_id,
                                        [LtiTools::ASSET_LIBRARY, LtiTools::IMPACT_STUDIO, LtiTools::WHITEBOARDS, LtiTools::ENGAGEMENT_INDEX])
-    @asset_library_page_url = @canvas.click_tool_link(@driver, LtiTools::ASSET_LIBRARY)
-    @impact_studio_page_url = @canvas.click_tool_link(@driver, LtiTools::IMPACT_STUDIO)
-    @whiteboards_url = @canvas.click_tool_link(@driver, LtiTools::WHITEBOARDS)
-    @engagement_index_url = @canvas.click_tool_link(@driver, LtiTools::ENGAGEMENT_INDEX)
+    @asset_library_page_url = @canvas.click_tool_link LtiTools::ASSET_LIBRARY
+    @impact_studio_page_url = @canvas.click_tool_link LtiTools::IMPACT_STUDIO
+    @whiteboards_url = @canvas.click_tool_link LtiTools::WHITEBOARDS
+    @engagement_index_url = @canvas.click_tool_link LtiTools::ENGAGEMENT_INDEX
     @engagement_index_page.wait_for_new_user_sync(@driver, @engagement_index_url, @course, users)
 
     # Initialize expected user interactions

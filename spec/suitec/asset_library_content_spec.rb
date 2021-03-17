@@ -23,7 +23,7 @@ describe 'New asset uploads', order: :defined do
     @canvas.create_generic_course_site(Utils.canvas_qa_sub_account, @course, users, Utils.get_test_id, [LtiTools::ASSET_LIBRARY])
 
     @canvas.load_course_site @course
-    @asset_library_url = @canvas.click_tool_link(@driver, LtiTools::ASSET_LIBRARY)
+    @asset_library_url = @canvas.click_tool_link LtiTools::ASSET_LIBRARY
 
     users.each do |user|
 

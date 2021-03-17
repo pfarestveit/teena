@@ -28,8 +28,8 @@ describe 'Impact Studio', order: :defined do
     @canvas.log_in(@cal_net, (event.actor = admin).username, Utils.super_admin_password)
     @canvas.create_generic_course_site(Utils.canvas_qa_sub_account, @course, [teacher], test_id,
                                        [LtiTools::ENGAGEMENT_INDEX, LtiTools::IMPACT_STUDIO])
-    @engagement_index_url = @canvas.click_tool_link(@driver, LtiTools::ENGAGEMENT_INDEX, event)
-    @impact_studio_url = @canvas.click_tool_link(@driver, LtiTools::IMPACT_STUDIO, event)
+    @engagement_index_url = @canvas.click_tool_link(LtiTools::ENGAGEMENT_INDEX, event)
+    @impact_studio_url = @canvas.click_tool_link(LtiTools::IMPACT_STUDIO, event)
   end
 
   after(:all) { Utils.quit_browser @driver }

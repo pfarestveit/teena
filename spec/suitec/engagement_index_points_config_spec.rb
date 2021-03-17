@@ -23,8 +23,8 @@ describe 'Engagement Index points configuration', order: :defined do
                                        Utils.get_test_id, [LtiTools::ASSET_LIBRARY, LtiTools::ENGAGEMENT_INDEX])
 
     @canvas.load_course_site @course
-    @asset_library_url = @canvas.click_tool_link(@driver, LtiTools::ASSET_LIBRARY)
-    @engagement_index_url = @canvas.click_tool_link(@driver, LtiTools::ENGAGEMENT_INDEX)
+    @asset_library_url = @canvas.click_tool_link LtiTools::ASSET_LIBRARY
+    @engagement_index_url = @canvas.click_tool_link LtiTools::ENGAGEMENT_INDEX
 
     @canvas.masquerade_as(@student, @course)
     @asset_library.load_page(@driver, @asset_library_url)

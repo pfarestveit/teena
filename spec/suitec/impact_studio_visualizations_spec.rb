@@ -46,10 +46,10 @@ describe 'The Impact Studio', order: :defined do
     @canvas.log_in(@cal_net, Utils.super_admin_username, Utils.super_admin_password)
     @canvas.create_generic_course_site(Utils.canvas_qa_sub_account, @course, users, test_id,
                                        [LtiTools::ASSET_LIBRARY, LtiTools::ENGAGEMENT_INDEX, LtiTools::IMPACT_STUDIO, LtiTools::WHITEBOARDS])
-    @asset_library_url = @canvas.click_tool_link(@driver, LtiTools::ASSET_LIBRARY)
-    @engagement_index_url = @canvas.click_tool_link(@driver, LtiTools::ENGAGEMENT_INDEX)
-    @impact_studio_url = @canvas.click_tool_link(@driver, LtiTools::IMPACT_STUDIO)
-    @whiteboards_url = @canvas.click_tool_link(@driver, LtiTools::WHITEBOARDS)
+    @asset_library_url = @canvas.click_tool_link LtiTools::ASSET_LIBRARY
+    @engagement_index_url = @canvas.click_tool_link LtiTools::ENGAGEMENT_INDEX
+    @impact_studio_url = @canvas.click_tool_link LtiTools::IMPACT_STUDIO
+    @whiteboards_url = @canvas.click_tool_link LtiTools::WHITEBOARDS
 
     # Initialize user activity hashes to store activity data
     student_1_activities = @impact_studio.init_user_activities

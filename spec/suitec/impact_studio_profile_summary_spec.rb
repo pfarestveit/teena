@@ -34,9 +34,9 @@ describe 'Impact Studio', order: :defined do
     @canvas.log_in(@cal_net, Utils.super_admin_username, Utils.super_admin_password)
     @canvas.create_generic_course_site(Utils.canvas_qa_sub_account, @course, users, test_id, [LtiTools::ASSET_LIBRARY, LtiTools::IMPACT_STUDIO, LtiTools::ENGAGEMENT_INDEX])
     @course.sections = [Section.new({label: @course.title})]
-    @asset_library_url = @canvas.click_tool_link(@driver, LtiTools::ASSET_LIBRARY)
-    @impact_studio_url = @canvas.click_tool_link(@driver, LtiTools::IMPACT_STUDIO)
-    @engagement_index_url = @canvas.click_tool_link(@driver, LtiTools::ENGAGEMENT_INDEX)
+    @asset_library_url = @canvas.click_tool_link LtiTools::ASSET_LIBRARY
+    @impact_studio_url = @canvas.click_tool_link LtiTools::IMPACT_STUDIO
+    @engagement_index_url = @canvas.click_tool_link LtiTools::ENGAGEMENT_INDEX
     @engagement_index.wait_for_new_user_sync(@driver, @engagement_index_url, @course, users)
   end
 
@@ -112,7 +112,7 @@ describe 'Impact Studio', order: :defined do
       before(:all) do
         @canvas.stop_masquerading
         @canvas.add_suite_c_tool(@course, LtiTools::ENGAGEMENT_INDEX)
-        @engagement_index_url = @canvas.click_tool_link(@driver, LtiTools::ENGAGEMENT_INDEX)
+        @engagement_index_url = @canvas.click_tool_link LtiTools::ENGAGEMENT_INDEX
 
         # One teacher shares score
         @canvas.masquerade_as(teacher_share, @course)

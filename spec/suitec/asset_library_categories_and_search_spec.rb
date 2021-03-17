@@ -35,8 +35,8 @@ describe 'Asset Library', order: :defined do
     @canvas.log_in(@cal_net, Utils.super_admin_username, Utils.super_admin_password)
     @canvas.create_generic_course_site(Utils.canvas_qa_sub_account, @course, users, test_id, [LtiTools::ASSET_LIBRARY, LtiTools::WHITEBOARDS])
     @canvas.disable_tool(@course, LtiTools::IMPACT_STUDIO)
-    @asset_library_url = @canvas.click_tool_link(@driver, LtiTools::ASSET_LIBRARY)
-    @whiteboards_url = @canvas.click_tool_link(@driver, LtiTools::WHITEBOARDS)
+    @asset_library_url = @canvas.click_tool_link LtiTools::ASSET_LIBRARY
+    @whiteboards_url = @canvas.click_tool_link LtiTools::WHITEBOARDS
 
     @canvas.masquerade_as(student_1, @course)
     @canvas.load_course_site @course
@@ -395,7 +395,7 @@ describe 'Asset Library', order: :defined do
       before(:all) do
         @canvas.stop_masquerading
         @canvas.add_suite_c_tool(@course, LtiTools::IMPACT_STUDIO)
-        @canvas.click_tool_link(@driver, LtiTools::IMPACT_STUDIO)
+        @canvas.click_tool_link LtiTools::IMPACT_STUDIO
         @all_assets = [student_1_upload, student_2_upload, student_3_link, @whiteboard_asset]
         @all_assets.each { |asset| asset.impact_score = SuiteCUtils.get_asset_impact_score(asset) }
         @asset_library.load_page(@driver, @asset_library_url)

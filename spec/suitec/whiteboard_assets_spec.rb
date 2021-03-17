@@ -30,9 +30,9 @@ describe 'Whiteboard Add Asset', order: :defined do
     @canvas.create_generic_course_site(Utils.canvas_qa_sub_account, @course, [@student_1, @student_2, @student_3], test_id,
                                        [LtiTools::ASSET_LIBRARY, LtiTools::ENGAGEMENT_INDEX, LtiTools::WHITEBOARDS])
     @canvas.load_course_site @course
-    @asset_library_url = @canvas.click_tool_link(@driver, LtiTools::ASSET_LIBRARY, event)
-    @engagement_index_url = @canvas.click_tool_link(@driver, LtiTools::ENGAGEMENT_INDEX, event)
-    @whiteboards_url = @canvas.click_tool_link(@driver, LtiTools::WHITEBOARDS, event)
+    @asset_library_url = @canvas.click_tool_link(LtiTools::ASSET_LIBRARY, event)
+    @engagement_index_url = @canvas.click_tool_link(LtiTools::ENGAGEMENT_INDEX, event)
+    @whiteboards_url = @canvas.click_tool_link(LtiTools::WHITEBOARDS, event)
     @asset_library_manage.add_custom_categories(@driver, @asset_library_url, [(@category = "Category #{test_id}")], event)
 
     # Set "whiteboard add asset" points to non-zero value

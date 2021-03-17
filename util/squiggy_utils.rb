@@ -26,9 +26,11 @@ class SquiggyUtils < Utils
     }
   end
 
-  def SquiggyUtils.load_test_data
-    test_users = File.join(Utils.config_dir, 'test-data-suitec.json')
-    JSON.parse(File.read(test_users))['users']
+  def self.lti_credentials
+    {
+      key: squiggy_config['lti_key'],
+      secret: squiggy_config['lti_secret']
+    }
   end
 
 end

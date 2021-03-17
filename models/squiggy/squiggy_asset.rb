@@ -6,6 +6,7 @@ class SquiggyAsset
                 :description,
                 :file_name,
                 :preview_type,
+                :size,
                 :title,
                 :url
 

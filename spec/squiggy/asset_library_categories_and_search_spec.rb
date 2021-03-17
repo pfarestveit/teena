@@ -1,10 +1,26 @@
+require_relative '../../util/spec_helper'
+
 describe 'Asset Library' do
 
-  users = []
+  test = SquiggyTestConfig.new 'asset_search'
+
+  before(:all) do
+    @driver = Utils.launch_browser
+    @canvas = Page::CanvasPage.new @driver
+    @cal_net = Page::CalNetPage.new @driver
+    @assets_list = SquiggyAssetLibraryListViewPage.new @driver
+    @asset_detail = SquiggyAssetLibraryDetailPage.new @driver
+    @manage_assets = SquiggyAssetLibraryManageAssetsPage.new @driver
+
+    @canvas.log_in(@cal_net, test.admin.username, Utils.super_admin_password)
+    @canvas.create_squiggy_course test
+  end
+
+  after(:all) { @driver.quit }
 
   describe 'categories' do
 
-    users.each do |user|
+    test.course.roster.each do |user|
       it "can be managed by a course #{user.role} if the user has permission to do so"
     end
 

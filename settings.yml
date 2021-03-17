@@ -145,6 +145,8 @@ oec:
 squiggy:
   base_url: tbd
   password: secret
+  lti_key: secret
+  lti_secret: secret
   db_host: secret
   db_port: secret
   db_name: secret

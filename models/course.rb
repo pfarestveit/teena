@@ -6,7 +6,6 @@ class Course
                 :sis_id,
                 :sections,
                 :teachers,
-                :gsis,
                 :site_id,
                 :site_created_date,
                 :tests,
