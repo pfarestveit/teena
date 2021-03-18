@@ -26,11 +26,25 @@ class SquiggyUtils < Utils
     }
   end
 
-  def self.lti_credentials
+  def SquiggyUtils.lti_credentials
     {
       key: squiggy_config['lti_key'],
       secret: squiggy_config['lti_secret']
     }
+  end
+
+  def SquiggyUtils.set_asset_id(asset)
+    query = "SELECT id FROM assets WHERE title = '#{asset.title}'"
+    id = Utils.query_pg_db_field(db_credentials, query, 'id').first
+    logger.info "Asset ID is #{id}"
+    asset.id = id.to_s
+  end
+
+  def SquiggyUtils.set_comment_id(comment)
+    query = "SELECT id FROM comments WHERE body = '#{comment.body}'"
+    id = Utils.query_pg_db_field(db_credentials, query, 'id').first
+    logger.info "Comment ID is #{id}"
+    comment.id = id.to_s
   end
 
 end

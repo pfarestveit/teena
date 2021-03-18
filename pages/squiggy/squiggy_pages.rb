@@ -16,6 +16,13 @@ module SquiggyPages
     50.times { hit_backspace; hit_delete }
   end
 
+  def enter_squiggy_text(el, str)
+    logger.info "Entering '#{str}'"
+    wait_for_element(el, Utils.short_wait)
+    clear_input el
+    el.send_keys str
+  end
+
   # FAKE SELECT ELEMENTS
 
   elements(:menu_option, :div, xpath: '//div[@role="option"]')
@@ -36,7 +43,7 @@ module SquiggyPages
     end
   end
 
-  def select_menu_option(option_str)
+  def select_squiggy_option(option_str)
     scroll_to_menu_option option_str
     js_click menu_option_el(option_str)
   end

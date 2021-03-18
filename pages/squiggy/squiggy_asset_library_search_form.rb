@@ -40,28 +40,28 @@ module SquiggyAssetLibrarySearchForm
   def select_adv_search_category(category)
     logger.info "Selecting advanced search category '#{category}'"
     wait_for_update_and_click_js adv_search_categories_input_element
-    select_menu_option category
+    select_squiggy_option category
     sleep 1
   end
 
   def select_adv_search_asset_type(type)
     logger.info "Selecting asset type '#{type}'"
     wait_for_update_and_click_js adv_search_asset_types_input_element
-    select_menu_option type
+    select_squiggy_option type
     sleep 1
   end
 
   def select_adv_search_asset_owner(owner)
     logger.info "Selecting asset owner '#{owner}'"
     wait_for_update_and_click_js adv_search_asset_owners_input_element
-    select_menu_option owner
+    select_squiggy_option owner
     sleep 1
   end
 
   def select_adv_search_sorting(sort)
     logger.info "Selecting search results sort-by '#{sort}'"
     wait_for_update_and_click_js adv_search_sorting_input_element
-    select_menu_option sort
+    select_squiggy_option sort
     sleep 1
   end
 
