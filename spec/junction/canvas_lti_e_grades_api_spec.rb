@@ -97,8 +97,8 @@ unless ENV['STANDALONE']
                     end
 
                     expected_comment = case e_grades_row[:grading_basis]
-                                       when 'GRD'
-                                         'Opted for letter grade'
+                                       when 'CPN', 'DPN', 'EPN', 'PNP'
+                                         'P/NP grade'
                                        when 'ESU', 'SUS'
                                          'S/U grade'
                                        when 'CNC'
@@ -148,8 +148,8 @@ unless ENV['STANDALONE']
                     end
 
                     expected_comment = case e_grades_row[:grading_basis]
-                                       when 'GRD'
-                                         'Opted for letter grade'
+                                       when 'CPN', 'DPN', 'EPN', 'PNP'
+                                         'P/NP grade'
                                        when 'ESU', 'SUS'
                                          'S/U grade'
                                        when 'CNC'
