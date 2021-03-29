@@ -33,28 +33,28 @@ class SquiggyAssetLibraryDetailPage
   end
 
   def preview_generated?(asset)
-    logger.info "Verifying a preview of type '#{asset.preview_type}' is generated for the asset within #{Utils.short_wait} seconds"
+    logger.info "Verifying a preview of type '#{asset.preview_type}' is generated for the asset within #{Utils.short_wait * 2} seconds"
     verify_block do
       logger.debug 'Waiting for preparing preview to go away'
       # TODO - wait for spinner or whatever it is
       (
         case asset.preview_type
         when 'image'
-          # some kind of image
+          image_element(class: 'preview-image')
         when 'pdf_document'
-          # some kind of embedded pdf
+          div_element(xpath: '//iframe[@class="preview-document"]')
         when 'embeddable_link'
-          # some king of embedded page
+          div_element(xpath: "//iframe[contains(@src,'#{asset.url.sub(/https?\:(\/\/)(www.)?/, '')}')]")
         when 'non_embeddable_link'
-          # some kind of image
+          image_element(class: 'preview-image')
         when 'embeddable_youtube'
-          # some kind of embedded video
+          div_element(xpath: '//iframe[contains(@src,"www.youtube.com/embed")]')
         when 'embeddable_vimeo'
-          # some kind of embedded video
+          div_element(xpath: '//iframe[contains(@src,"player.vimeo.com")]')
         when 'embeddable_video'
-          # some kind of embedded video
+          video_element(xpath: '//video')
         else
-          # some kind of "sorry" message
+          paragraph_element(xpath: '//p[contains(.,"No preview available")]')
         end).when_present Utils.short_wait
     end
   end
@@ -76,10 +76,9 @@ class SquiggyAssetLibraryDetailPage
       download_file_name = Dir.entries("#{Utils.download_dir}").last
       logger.debug "Downloaded file name is '#{download_file_name}'"
       download_file = File.new File.join(Utils.download_dir, download_file_name)
-      asset_file = File.new SuiteCUtils.asset_file_path(asset.file_name)
       wait_until(Utils.medium_wait) do
-        logger.debug "The downloaded file size is currently #{download_file.size}, waiting for it to reach #{asset_file.size}"
-        download_file.size == asset_file.size
+        logger.debug "The downloaded file size is currently #{download_file.size}, waiting for it to reach #{asset.size}"
+        download_file.size == asset.size
       end
       download_file_name
     end

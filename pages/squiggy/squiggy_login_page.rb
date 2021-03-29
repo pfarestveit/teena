@@ -10,7 +10,7 @@ class SquiggyLoginPage
 
   def load_page
     logger.info 'Hello!  Loading the Squiggy login page'
-    navigate_to "#{SquiggyUtils.base_url}"
+    navigate_to "#{SquiggyUtils.base_url}/squiggy"
   end
 
   def log_in(uid, password)

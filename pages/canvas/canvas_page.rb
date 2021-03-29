@@ -554,12 +554,14 @@ module Page
             wait_for_element_and_type(key_input_element, creds[:key])
             wait_for_element_and_type(secret_input_element, creds[:secret])
             wait_for_element_and_type(url_input_element, "#{SquiggyUtils.base_url}#{tool.xml}")
-            wait_for_update_and_click submit_button
+            submit_button
             link_element(xpath: "//td[@title='#{tool.name}']").when_present Utils.medium_wait
             enable_tool(test.course, tool)
           end
         end
       end
+      test.course.asset_library_url = click_tool_link SquiggyTool::ASSET_LIBRARY
+      test.course.engagement_index_url = click_tool_link SquiggyTool::ENGAGEMENT_INDEX
     end
 
     # Clicks the navigation link for a tool and returns the tool's URL. Optionally records an analytics event.
