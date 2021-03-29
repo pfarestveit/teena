@@ -1,5 +1,5 @@
 locustio==0.14.6
 psycopg2-binary==2.7.7
 pyquery==1.2.4
-pyyaml==5.1.2
+pyyaml==5.4
 greenlet==0.4.16
