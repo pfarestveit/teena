@@ -92,7 +92,7 @@ module Page
 
     # ASSIGNMENT SUBMISSION
 
-    button(:submit_assignment_button, xpath: '//button[text()="Submit Assignment"]')
+    button(:submit_assignment_button, xpath: '//button[text()="Start Assignment"]')
     button(:resubmit_assignment_button, xpath: '//button[text()="Re-submit Assignment"]')
     link(:assignment_file_upload_tab, class: 'submit_online_upload_option')
     button(:upload_file_button, xpath: '//button[contains(., "Upload File")]')

@@ -525,7 +525,7 @@ module Page
     # @param course [Course]
     # @param tool [LtiTools]
     def add_suite_c_tool(course, tool)
-      add_lti_tool(course, tool, SuiteCUtils.suite_c_base_url, SuiteCUtils.lti_credentials[:key], SuiteCUtils.lti_credentials[:secret])
+      add_lti_tool(course, tool, SuiteCUtils.suite_c_base_url, SuiteCUtils.lti_credentials)
     end
 
     def add_squiggy_tools(test)
