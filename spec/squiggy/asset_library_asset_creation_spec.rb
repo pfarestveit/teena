@@ -1,10 +1,10 @@
 require_relative '../../util/spec_helper'
 
-describe 'New assets' do
+describe 'New asset' do
 
   begin
-
     @test = SquiggyTestConfig.new 'asset_creation'
+    @test.course.site_id = ENV['COURSE_ID']
     @driver = Utils.launch_browser
     @canvas = Page::CanvasPage.new @driver
     @cal_net = Page::CalNetPage.new @driver
@@ -13,30 +13,63 @@ describe 'New assets' do
     @manage_assets = SquiggyAssetLibraryManageAssetsPage.new @driver
 
     @canvas.log_in(@cal_net, @test.admin.username, Utils.super_admin_password)
-    @canvas.create_squiggy_course test
-
-    @canvas.masquerade_as(@test.course.teachers.first, @test.course)
+    @canvas.create_squiggy_course @test
 
     @test.students.each do |student|
       begin
+        @canvas.masquerade_as(student, @test.course)
+        @assets_list.load_page @test
+
         student.assets.each do |asset|
           begin
-
-            if asset.file_name && asset.size > 10
-              it "do not permit files over 10MB to be uploaded to the Asset Library for #{student.full_name} uploading #{asset.title}"
-
+            if asset.file_name
+              if asset.size > 10
+                @assets_list.click_upload_file_link
+                @assets_list.enter_file_path_for_upload asset.file_name
+                asset_rejected = @assets_list.verify_block { @assets_list.upload_error_element.when_visible Utils.short_wait }
+                it "do not permit files over 10MB to be uploaded to the Asset Library for #{student.full_name} uploading #{asset.title}" do
+                  expect(asset_rejected).to be true
+                end
+              else
+                @assets_list.upload_file_to_library asset
+              end
             else
-              it 'appear in Asset Library search results'
-              it 'appear in the Asset Library list view with the right title'
-              it 'appear in the Asset Library list view with the right owner'
-              it 'appear in the Asset Library detail view with the right title'
-              it 'appear in the Asset Library detail view with the right owner'
-              it 'appear in the Asset Library detail view with the right description'
-              it 'appear in the Asset Library detail view with the right categories'
-              it 'appear in the Asset Library detail view with the right source'
-              it 'appear in the Asset Library detail view with the right preview type'
-              it 'can be downloaded from the Asset Library detail view' if asset.file_name
-              it 'cannot be downloaded from the Asset Library detail view' if asset.url
+              @assets_list.add_site asset
+            end
+
+            @assets_list.wait_for_assets
+            visible_asset = @assets_list.visible_list_view_asset_data asset
+
+            it("#{asset.title} belonging to #{student.full_name} has the right list view title") { expect(visible_asset[:title]).to eql(asset.title) }
+            it("#{asset.title} belonging to #{student.full_name} has the right list view owner") { expect(visible_asset[:owner]).to eql(student.full_name) }
+
+            @assets_list.click_asset_link asset
+            visible_detail = @asset_detail.visible_asset_metadata
+            preview_generated = @asset_detail.preview_generated? asset
+            asset_downloadable = @asset_detail.verify_block { @asset_detail.download_asset asset }
+            has_download_button = @asset_detail.download_button?
+
+            it("#{asset.title} belonging to #{student.full_name} has the right detail view title") { expect(visible_detail[:title]).to eql(asset.title) }
+            it("#{asset.title} belonging to #{student.full_name} has the right detail view owner") { expect(visible_detail[:owner]).to eql(student.full_name) }
+            it("#{asset.title} belonging to #{student.full_name} has the right detail view description") { expect(visible_detail[:description]).to eql(asset.description) }
+            it("#{asset.title} belonging to #{student.full_name} has the right detail view preview type") { expect(preview_generated).to be true }
+
+            it "#{asset.title} belonging to #{student.full_name} has the right detail view category" do
+              # TODO
+            end
+
+            it "#{asset.title} belonging to #{student.full_name} has the right detail view source" do
+              # TODO
+            end
+
+            if asset.file_name
+              it "#{asset.title} belonging to #{student.full_name} can be downloaded from the Asset Library detail view" do
+                expect(asset_downloadable).to be true
+              end
+            else
+              it "#{asset.title} belonging to #{student.full_name} cannot be downloaded from the Asset Library detail view" do
+                expect(has_download_button).to be false
+              end
             end
 
           rescue => e

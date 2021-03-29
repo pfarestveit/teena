@@ -8,8 +8,8 @@ class SquiggyTool
   end
 
   TOOLS = [
-    ASSET_LIBRARY = new('Asset Library', '/lti/assetlibrary.xml'),
-    ENGAGEMENT_INDEX = new('Engagement Index', '/lti/engagementindex.xml')
+    ASSET_LIBRARY = new('Asset Library', '/lti/cartridge/asset_library.xml'),
+    ENGAGEMENT_INDEX = new('Engagement Index', '/lti/cartridge/engagement_index.xml')
   ]
 
 end
