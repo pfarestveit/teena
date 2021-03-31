@@ -21,40 +21,43 @@ class SquiggyAssetLibraryDetailPage
   end
 
   def visible_asset_metadata
+    asset_title_element.when_visible Utils.short_wait
     {
-      title: (asset_title if asset_title?),
-      owner: (owner_name if owner_name?),
-      like_count: (like_count if like_count?),
-      view_count: (view_count if view_count?),
-      comment_count: (comment_count if comment_count?),
+      title: asset_title,
+      owner: owner_name,
+      like_count: like_count,
+      view_count: view_count,
+      comment_count: comment_count,
       description: (description.strip if description?)
       # TODO category
     }
   end
 
+  # PREVIEW
+
+    div(:preparing_preview_msg, xpath: '//div[contains(text(), "Preparing a preview")]')
+
   def preview_generated?(asset)
-    logger.info "Verifying a preview of type '#{asset.preview_type}' is generated for the asset within #{Utils.short_wait * 2} seconds"
+    logger.info "Verifying a preview of type '#{asset.preview_type}' is generated for the asset within #{Utils.medium_wait} seconds"
     verify_block do
-      logger.debug 'Waiting for preparing preview to go away'
-      # TODO - wait for spinner or whatever it is
+      if preparing_preview_msg?
+        logger.debug 'Waiting for preparing preview to go away'
+        preparing_preview_msg_element.when_not_present Utils.medium_wait
+        logger.debug 'Preview prepared'
+      end
+      preview_xpath = "//div[@class='assetlibrary-item-preview']"
       (
         case asset.preview_type
-        when 'image'
-          image_element(class: 'preview-image')
+        when 'image', 'non_embeddable_link'
+          div_element(xpath: "#{preview_xpath}//div[contains(@class, 'v-image')]")
         when 'pdf_document'
           div_element(xpath: '//iframe[@class="preview-document"]')
-        when 'embeddable_link'
-          div_element(xpath: "//iframe[contains(@src,'#{asset.url.sub(/https?\:(\/\/)(www.)?/, '')}')]")
-        when 'non_embeddable_link'
-          image_element(class: 'preview-image')
-        when 'embeddable_youtube'
-          div_element(xpath: '//iframe[contains(@src,"www.youtube.com/embed")]')
-        when 'embeddable_vimeo'
-          div_element(xpath: '//iframe[contains(@src,"player.vimeo.com")]')
+        when 'embeddable_link', 'embeddable_youtube', 'embeddable_vimeo'
+          div_element(xpath: "#{preview_xpath}//iframe[contains(@src,'#{asset.url.sub(/https?\:(\/\/)(www.)?/, '')}')]")
         when 'embeddable_video'
           video_element(xpath: '//video')
         else
-          paragraph_element(xpath: '//p[contains(.,"No preview available")]')
+          div_element(xpath: '//div[contains(text(),"No preview available")]')
         end).when_present Utils.short_wait
     end
   end
@@ -70,7 +73,7 @@ class SquiggyAssetLibraryDetailPage
   def download_asset(asset)
     logger.info "Downloading asset ID #{asset.id}"
     Utils.prepare_download_dir
-    wait_for_load_and_click download_asset_link_element
+    wait_for_load_and_click download_button_element
     wait_until(Utils.medium_wait) do
       Dir.entries("#{Utils.download_dir}").length == 3
       download_file_name = Dir.entries("#{Utils.download_dir}").last

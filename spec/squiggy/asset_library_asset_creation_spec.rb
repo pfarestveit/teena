@@ -1,5 +1,7 @@
 require_relative '../../util/spec_helper'
 
+include Logging
+
 describe 'New asset' do
 
   begin
@@ -22,19 +24,21 @@ describe 'New asset' do
 
         student.assets.each do |asset|
           begin
+            @asset_detail.click_back_to_asset_library if @asset_detail.back_to_asset_library_button?
+
             if asset.file_name
               if asset.size > 10
-                @assets_list.click_upload_file_link
-                @assets_list.enter_file_path_for_upload asset.file_name
+                @assets_list.click_upload_file_button
+                @assets_list.enter_file_path_for_upload asset
                 asset_rejected = @assets_list.verify_block { @assets_list.upload_error_element.when_visible Utils.short_wait }
-                it "do not permit files over 10MB to be uploaded to the Asset Library for #{student.full_name} uploading #{asset.title}" do
+                it "#{asset.title} belonging to #{student.full_name} cannot be uploaded to the Asset Library because it is over 10MB" do
                   expect(asset_rejected).to be true
                 end
               else
-                @assets_list.upload_file_to_library asset
+                @assets_list.upload_file_asset asset
               end
             else
-              @assets_list.add_site asset
+              @assets_list.add_link_asset asset
             end
 
             @assets_list.wait_for_assets
@@ -51,7 +55,7 @@ describe 'New asset' do
 
             it("#{asset.title} belonging to #{student.full_name} has the right detail view title") { expect(visible_detail[:title]).to eql(asset.title) }
             it("#{asset.title} belonging to #{student.full_name} has the right detail view owner") { expect(visible_detail[:owner]).to eql(student.full_name) }
-            it("#{asset.title} belonging to #{student.full_name} has the right detail view description") { expect(visible_detail[:description]).to eql(asset.description) }
+            it("#{asset.title} belonging to #{student.full_name} has the right detail view description") { expect(visible_detail[:description]).to eql(asset.description.to_s) }
             it("#{asset.title} belonging to #{student.full_name} has the right detail view preview type") { expect(preview_generated).to be true }
 
             it "#{asset.title} belonging to #{student.full_name} has the right detail view category" do
