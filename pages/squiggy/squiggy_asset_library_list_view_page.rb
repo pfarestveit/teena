@@ -17,6 +17,7 @@ class SquiggyAssetLibraryListViewPage
   def upload_file_asset(asset)
     click_upload_file_button
     enter_and_upload_file asset
+    get_asset_id asset
   end
 
   ### ADDING LINKS
@@ -32,6 +33,7 @@ class SquiggyAssetLibraryListViewPage
     enter_url asset
     enter_asset_metadata asset
     click_save_link_button
+    get_asset_id asset
   end
 
   # MANAGE ASSETS
@@ -54,8 +56,13 @@ class SquiggyAssetLibraryListViewPage
   end
 
   def wait_for_assets
-    wait_until(Utils.short_wait) { asset_elements.any? }
+    wait_until(Utils.medium_wait) { asset_elements.any? }
     sleep Utils.click_wait
+  end
+
+  def get_asset_id(asset)
+    wait_for_assets
+    SquiggyUtils.set_asset_id asset
   end
 
   def asset_xpath(asset)
@@ -63,7 +70,7 @@ class SquiggyAssetLibraryListViewPage
   end
 
   def asset_el(asset)
-    div_element(asset_xpath asset)
+    div_element(xpath: asset_xpath(asset))
   end
 
   def canvas_submission_title(asset)
@@ -82,6 +89,7 @@ class SquiggyAssetLibraryListViewPage
 
   def visible_list_view_asset_data(asset)
     xpath = asset_xpath(asset)
+    asset_el(asset).when_visible Utils.short_wait
     title_el = div_element(xpath: "#{xpath}//div[contains(@class, \"asset-metadata\")]/div[1]")
     owner_el = div_element(xpath: "#{xpath}//div[contains(@class, \"asset-metadata\")]/div[2]")
     view_count_el = div_element(xpath: "#{xpath}//*[@data-icon='eye']/..")

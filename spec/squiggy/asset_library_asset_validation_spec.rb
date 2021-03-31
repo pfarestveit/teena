@@ -23,11 +23,11 @@ describe 'Asset Library' do
 
   describe 'links' do
     it 'can be added with title, category, and description'
-    it 'earn "Add a new asset to the Asset Library" points on the Engagement Index'
-    it 'add "add_asset" activity to the CSV export'
     it 'can be added with title and category only'
     it 'can be added with title only'
     it 'can be added with title and description only'
+    it 'earn "Add a new asset to the Asset Library" points on the Engagement Index'
+    it 'add "add_asset" activity to the CSV export'
     it 'require that the user enter a URL'
     it 'require that the user enter a valid URL'
     it 'require that the user enter a title'
@@ -39,11 +39,11 @@ describe 'Asset Library' do
 
   describe 'files' do
     it 'can be added with title, category, and description'
-    it 'earn "Add a new asset to the Asset Library" points on the Engagement Index'
-    it 'add "add_asset" activity to the CSV export'
     it 'can be added with title and category only'
     it 'can be added with title only'
     it 'can be added with title and description only'
+    it 'earn "Add a new asset to the Asset Library" points on the Engagement Index'
+    it 'add "add_asset" activity to the CSV export'
     it 'require that the user enter a title'
     it 'limit a title to 255 characters'
     it 'do not have a default category'
