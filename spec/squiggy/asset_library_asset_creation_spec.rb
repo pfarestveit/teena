@@ -27,7 +27,7 @@ describe 'New asset' do
             @asset_detail.click_back_to_asset_library if @asset_detail.back_to_asset_library_button?
 
             if asset.file_name
-              if asset.size > 10
+              if asset.size.to_f / 1024000 > 10
                 @assets_list.click_upload_file_button
                 @assets_list.enter_file_path_for_upload asset
                 asset_rejected = @assets_list.verify_block { @assets_list.upload_error_element.when_visible Utils.short_wait }
@@ -50,7 +50,7 @@ describe 'New asset' do
             @assets_list.click_asset_link asset
             visible_detail = @asset_detail.visible_asset_metadata
             preview_generated = @asset_detail.preview_generated? asset
-            asset_downloadable = @asset_detail.verify_block { @asset_detail.download_asset asset }
+            asset_downloadable = @asset_detail.verify_block { @asset_detail.download_asset asset } if asset.file_name
             has_download_button = @asset_detail.download_button?
 
             it("#{asset.title} belonging to #{student.full_name} has the right detail view title") { expect(visible_detail[:title]).to eql(asset.title) }

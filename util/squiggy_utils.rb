@@ -40,11 +40,4 @@ class SquiggyUtils < Utils
     asset.id = id.to_s
   end
 
-  def SquiggyUtils.set_comment_id(comment)
-    query = "SELECT id FROM comments WHERE body = '#{comment.body}'"
-    id = Utils.query_pg_db_field(db_credentials, query, 'id').first
-    logger.info "Comment ID is #{id}"
-    comment.id = id.to_s
-  end
-
 end

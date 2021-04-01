@@ -56,7 +56,9 @@ class SquiggyAssetLibraryListViewPage
   end
 
   def wait_for_assets
+    start = Time.now
     wait_until(Utils.medium_wait) { asset_elements.any? }
+    logger.warn "PERF - took #{Time.now - start} seconds for assets to appear"
     sleep Utils.click_wait
   end
 
@@ -89,7 +91,13 @@ class SquiggyAssetLibraryListViewPage
 
   def visible_list_view_asset_data(asset)
     xpath = asset_xpath(asset)
+    start = Time.now
     asset_el(asset).when_visible Utils.short_wait
+    logger.warn "PERF - took #{Time.now - start} seconds for asset element to become visible"
+    start = Time.now
+    thumbnail_el = div_element(xpath: "#{xpath}//div[contains(@style, \"background-image\")]")
+    thumbnail_el.when_visible Utils.short_wait
+    logger.warn "PERF - took #{Time.now - start} seconds for asset thumbnail to become visible"
     title_el = div_element(xpath: "#{xpath}//div[contains(@class, \"asset-metadata\")]/div[1]")
     owner_el = div_element(xpath: "#{xpath}//div[contains(@class, \"asset-metadata\")]/div[2]")
     view_count_el = div_element(xpath: "#{xpath}//*[@data-icon='eye']/..")
@@ -98,9 +106,9 @@ class SquiggyAssetLibraryListViewPage
     {
       title: (title_el.text if title_el.exists?),
       owner: (owner_el.text.gsub('by', '').strip if owner_el.exists?),
-      view_count: (view_count_el.text.strip.to_i if view_count_el.exists?),
-      like_count: (like_count_el.text.strip.to_i if like_count_el.exists?),
-      comment_count: (comment_count_el.text.strip.to_i if comment_count_el.exists?)
+      view_count: (view_count_el.text.strip if view_count_el.exists?),
+      like_count: (like_count_el.text.strip if like_count_el.exists?),
+      comment_count: (comment_count_el.text.strip if comment_count_el.exists?)
     }
   end
 
