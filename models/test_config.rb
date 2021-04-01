@@ -73,7 +73,7 @@ class TestConfig
   end
 
   def set_teachers(test)
-    @students = test_specific_user_data(test).select { |d| d['role'] == 'Student' }.map { |d| User.new d }
+    @teachers = test_specific_user_data(test).select { |d| d['role'] == 'Teacher' }.map { |d| User.new d }
   end
 
   def set_wait_list_student(test)

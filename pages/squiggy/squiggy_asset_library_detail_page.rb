@@ -41,9 +41,10 @@ class SquiggyAssetLibraryDetailPage
     logger.info "Verifying a preview of type '#{asset.preview_type}' is generated for the asset within #{Utils.medium_wait} seconds"
     verify_block do
       if preparing_preview_msg?
+        start = Time.now
         logger.debug 'Waiting for preparing preview to go away'
         preparing_preview_msg_element.when_not_present Utils.medium_wait
-        logger.debug 'Preview prepared'
+        logger.debug "PERF - Preview prepared in #{Time.now - start} seconds"
       end
       preview_xpath = "//div[@class='assetlibrary-item-preview']"
       (
@@ -76,7 +77,7 @@ class SquiggyAssetLibraryDetailPage
     wait_for_load_and_click download_button_element
     wait_until(Utils.medium_wait) do
       Dir.entries("#{Utils.download_dir}").length == 3
-      download_file_name = Dir.entries("#{Utils.download_dir}").last
+      download_file_name = Dir.entries("#{Utils.download_dir}").find { |f| !%w(. ..).include? f }
       logger.debug "Downloaded file name is '#{download_file_name}'"
       download_file = File.new File.join(Utils.download_dir, download_file_name)
       wait_until(Utils.medium_wait) do
@@ -117,20 +118,23 @@ class SquiggyAssetLibraryDetailPage
     div_element(id: "comment-#{comment.id}-body")
   end
 
-  def add_comment(asset, comment)
+  def add_comment(comment)
     logger.info "Adding the comment '#{comment.body}'"
     scroll_to_bottom
     enter_squiggy_text(comment_input_element, comment.body)
     wait_until(Utils.short_wait) { comment_add_button_element.enabled? }
     wait_for_update_and_click comment_add_button_element
     comment_el_by_body(comment).when_visible Utils.short_wait
-    SquiggyUtils.set_comment_id comment
+    comment.set_comment_id
+    visible_comment comment
   end
 
   def visible_comment(comment)
+    body_el = div_element(id: "comment-#{comment.id}-body")
+    commenter_el = div_element(id: "comment-#{comment.id}-user-name")
     {
-      # TODO - body
-      # TODO - commenter name
+      body: (body_el.text.strip if body_el.exists?),
+      commenter: (commenter_el.text.strip if commenter_el.exists?)
     }
   end
 
@@ -147,20 +151,34 @@ class SquiggyAssetLibraryDetailPage
   end
 
   def click_reply_button(comment)
-    wait_for_update_and_click reply_button_element(comment)
+    wait_for_update_and_click_js reply_button_el(comment)
   end
 
   def reply_input_el(comment)
     text_area_element(id: "reply-to-comment-#{comment.id}-body-textarea")
   end
 
-  def reply_to_comment(asset, comment, reply_comment)
+  def reply_cancel_button
+    button_element(xpath: '//button[contains(., "Cancel")]')
+  end
+
+  def reply_save_button
+    button_element(xpath: '//button[contains(., "Reply")]')
+  end
+
+  def reply_to_comment(comment, reply_comment)
     logger.info "Replying '#{reply_comment.body}'"
     click_reply_button comment
     enter_squiggy_text(reply_input_el(comment), reply_comment.body)
-    wait_for_update_and_click comment_add_button_element
+    wait_for_update_and_click_js reply_save_button
     comment_el_by_body(reply_comment).when_visible Utils.short_wait
-    SquiggyUtils.set_comment_id reply_comment
+    reply_comment.set_comment_id
+  end
+
+  def click_cancel_reply(comment)
+    logger.info 'Clicking reply Cancel button'
+    wait_for_update_and_click reply_cancel_button
+    reply_input_el(comment).when_not_present 1
   end
 
   # EDIT COMMENT / REPLY

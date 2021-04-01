@@ -3,8 +3,7 @@ class SquiggyTestConfig < TestConfig
   include Logging
 
   attr_accessor :base_url,
-                :course,
-                :teachers
+                :course
 
   CONFIG = SquiggyUtils.config
 
@@ -22,7 +21,7 @@ class SquiggyTestConfig < TestConfig
         asset = SquiggyAsset.new a
         asset.title = "#{asset.title} #{id}"
         if asset.file_name
-          asset.size = File.size(File.join(Utils.config_dir, "assets/#{asset.file_name}")).to_f / 1024000
+          asset.size = File.size(File.join(Utils.config_dir, "assets/#{asset.file_name}"))
         end
         asset
       end
