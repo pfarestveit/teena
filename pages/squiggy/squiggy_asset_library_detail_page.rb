@@ -104,7 +104,7 @@ class SquiggyAssetLibraryDetailPage
   # ADD COMMENT
 
   text_area(:comment_input, id: 'comment-body-textarea')
-  button(:comment_add_button, id: 'save-comment-btn')
+  button(:comment_add_button, id: 'create-comment-btn')
 
   def comment_el_by_id(comment)
     div_element(id: "comment-#{comment.id}")
@@ -159,11 +159,11 @@ class SquiggyAssetLibraryDetailPage
   end
 
   def reply_cancel_button
-    button_element(xpath: '//button[contains(., "Cancel")]')
+    button_element(id: 'cancel-reply-btn')
   end
 
   def reply_save_button
-    button_element(xpath: '//button[contains(., "Reply")]')
+    button_element(id: 'save-reply-btn')
   end
 
   def reply_to_comment(comment, reply_comment)
@@ -183,38 +183,48 @@ class SquiggyAssetLibraryDetailPage
 
   # EDIT COMMENT / REPLY
 
-  def edit_button_element(comment)
+  def edit_button(comment)
     button_element(id: "edit-comment-#{comment.id}-btn")
-  rescue Selenium::WebDriver::Error::NoSuchElementError
-    nil
+  end
+
+  def cancel_edit_button
+    button_element(id: 'cancel-comment-edit-btn')
+  end
+
+  def save_edit_button
+    button_element(id: 'save-comment-btn')
   end
 
   def click_edit_button(comment)
-    wait_for_load_and_click edit_button_element(comment)
+    wait_for_load_and_click edit_button(comment)
   end
 
-  def edit_comment(asset, comment)
+  def edit_comment_text_area(comment)
+    text_area_element(id: "comment-#{comment.id}-body-textarea")
+  end
+
+  def click_cancel_edit_button
+    wait_for_update_and_click cancel_edit_button
+    cancel_edit_button.when_not_present 1
+  end
+
+  def edit_comment(comment)
     logger.info "Editing comment id #{comment.id}. New comment is '#{comment.body}'"
     click_edit_button comment
-    enter_squiggy_text(comment_input_element, comment.body)
-    wait_for_update_and_click_js save_edit_button_element(index)
-    wait_until(Utils.short_wait) { comment_body(index) == comment.body }
-    add_event(event, EventType::MODIFY, asset.id)
-    add_event(event, EventType::EDIT_COMMENT, asset.id)
+    enter_squiggy_text(edit_comment_text_area(comment), comment.body)
+    wait_for_update_and_click save_edit_button
+    comment_el_by_body(comment).when_visible Utils.short_wait
   end
 
   # DELETE COMMENT
 
-  def delete_button_element(comment)
+  def delete_comment_button(comment)
     button_element(id: "delete-comment-#{comment.id}-btn")
-  rescue Selenium::WebDriver::Error::NoSuchElementError
-    nil
   end
 
-  def delete_comment(asset, comment)
-    alert { wait_for_load_and_click delete_button_element(comment) }
-    asset.comments.delete comment
-    sleep Utils.click_wait
+  def delete_comment(comment)
+    alert { wait_for_load_and_click delete_comment_button(comment) }
+    comment_el_by_id(comment).when_not_present Utils.short_wait
   end
 
 end
