@@ -183,19 +183,60 @@ describe 'Asset' do
     end
 
     describe 'edit' do
-      it 'can be done by the user who created the comment'
-      it 'cannot be done by a user who did not create the comment'
-      it 'can be done to any comment when the user is a teacher'
-      it 'can be canceled'
-      it 'does not alter existing engagement scores'
+
+      it 'can be done by the user who created the comment' do
+        @comment_1_by_uploader.body = "#{@comment_1_by_uploader.body} - EDITED"
+        @canvas.masquerade_as(@student_1, @test.course)
+        @assets_list.load_page @test
+        @assets_list.click_asset_link @asset
+        @asset_detail.edit_comment @comment_1_by_uploader
+      end
+
+      it('cannot be done by a user who did not create the comment') do
+        expect(@asset_detail.edit_button(@comment_2_by_viewer).exists?).to be false
+      end
+
+      it 'can be done to any comment when the user is a teacher' do
+        @comment_2_by_viewer.body = "#{@comment_2_by_viewer.body} - EDITED"
+        @canvas.masquerade_as(@test.teachers.first, @test.course)
+        @assets_list.load_page @test
+        @assets_list.click_asset_link @asset
+        @asset_detail.edit_comment @comment_2_by_viewer
+      end
+
+      it 'can be canceled' do
+        @asset_detail.click_edit_button @comment_2_by_viewer
+        @asset_detail.click_cancel_edit_button
+      end
+
+      # TODO it 'does not alter existing engagement scores'
     end
 
     describe 'deletion' do
-      it 'can be done by a student who created the comment'
-      it 'cannot be done by a student who did not create the comment'
-      it 'can be done by a teacher if the comment has no replies'
-      it 'cannot be done by a teacher if the comment has replies'
-      it 'removes engagement index points earned for the comment'
+
+      it 'can be done by a student who created the comment' do
+        @canvas.masquerade_as(@student_1, @test.course)
+        @assets_list.load_page @test
+        @assets_list.click_asset_link @asset
+        @asset_detail.delete_comment @comment_1_reply_by_uploader
+      end
+
+      it 'cannot be done by a student who did not create the comment' do
+        expect(@asset_detail.delete_comment_button(@comment_1_reply_by_viewer).exists?).to be false
+      end
+
+      it 'can be done by a teacher if the comment has no replies' do
+        @canvas.masquerade_as(@test.teachers.first, @test.course)
+        @assets_list.load_page @test
+        @assets_list.click_asset_link @asset
+        @asset_detail.delete_comment @comment_3_by_viewer
+      end
+
+      it 'cannot be done by a teacher if the comment has replies' do
+        expect(@asset_detail.delete_comment_button(@comment_1_by_uploader).exists?).to be false
+      end
+
+      # TODO it 'removes engagement index points earned for the comment'
     end
   end
 
