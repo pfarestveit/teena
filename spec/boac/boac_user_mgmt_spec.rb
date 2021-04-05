@@ -389,6 +389,11 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
         it 'allows an admin to delete a user' do
           @add_edit_user.active = false
           @pax_manifest_page.edit_user @add_edit_user
+          @pax_manifest_page.click_edit_user @add_edit_user
+          @pax_manifest_page.is_deleted_cbx.when_present 2
+          expect(@pax_manifest_page.is_deleted_cbx.selected?).to be true
+          expect(@pax_manifest_page.is_blocked_cbx.selected?).to be false
+          @pax_manifest_page.hit_escape
           @pax_manifest_page.log_out
           @homepage.enter_dev_auth_creds @add_edit_user
           @homepage.deleted_msg_element.when_visible Utils.short_wait
@@ -397,6 +402,11 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
         it 'allows an admin to un-delete a user' do
           @add_edit_user.active = true
           @pax_manifest_page.edit_user @add_edit_user
+          @pax_manifest_page.click_edit_user @add_edit_user
+          @pax_manifest_page.is_deleted_cbx.when_present 2
+          expect(@pax_manifest_page.is_deleted_cbx.selected?).to be false
+          expect(@pax_manifest_page.is_blocked_cbx.selected?).to be false
+          @pax_manifest_page.hit_escape
           @pax_manifest_page.log_out
           @homepage.dev_auth @add_edit_user
         end
