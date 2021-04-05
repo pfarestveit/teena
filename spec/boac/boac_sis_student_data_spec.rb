@@ -535,8 +535,6 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
                         expect(collapsed_course_data[:code]).to eql(course_sis_data[:code])
                       end
 
-                      # TODO - wait list
-
                       if course_sis_data[:grade].empty?
                         if course_sis_data[:grading_basis] == 'NON'
                           it "shows no grade and no grading basis for UID #{student.uid} term #{term_name} course #{course_code}" do
@@ -637,9 +635,9 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
                 if drops
                   drops.each do |drop|
                     visible_drop = @boac_student_page.visible_dropped_section_data(term_name, drop[:title], drop[:component], drop[:number])
-                    (term_name == BOACUtils.term) ?
-                        (it("shows dropped section #{drop[:title]} #{drop[:component]} #{drop[:number]} for UID #{student.uid} in #{term_name}") { expect(visible_drop).to be_truthy }) :
-                        (it("shows no dropped section #{drop[:title]} #{drop[:component]} #{drop[:number]} for UID #{student.uid} in past term #{term_name}") { expect(visible_drop).to be_falsey })
+                    it "shows dropped section #{drop[:title]} #{drop[:component]} #{drop[:number]} for UID #{student.uid} in #{term_name}" do
+                      expect(visible_drop).to be_truthy
+                    end
 
                     row = [student.uid, term_name, nil, nil, drop[:title], nil, nil, drop[:number], nil, nil, nil, 'D']
                     Utils.add_csv_row(user_course_sis_data, row)
@@ -648,7 +646,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
 
               rescue => e
                 BOACUtils.log_error_and_screenshot(@driver, e, "#{student.uid}-#{term_name}")
-                it("encountered an error for UID #{student.uid} term #{term_name}") { fail }
+                it("encountered an error for UID #{student.uid} term #{term_name}") { fail "#{e.message + "\n"} #{e.backtrace.join("\n ")}" }
               end
             end
 
@@ -658,7 +656,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
 
         rescue => e
           BOACUtils.log_error_and_screenshot(@driver, e, "#{student.uid}")
-          it("encountered an error for UID #{student.uid}") { fail }
+          it("encountered an error for UID #{student.uid}") { fail "#{e.message + "\n"} #{e.backtrace.join("\n ")}" }
         ensure
           if student_page_sis_data
             row = [student.uid, student_page_sis_data[:name], student_page_sis_data[:preferred_name], student_page_sis_data[:email],
@@ -684,7 +682,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
 
     rescue => e
       Utils.log_error e
-      it('encountered an error') { fail }
+      it('encountered an error') { fail "#{e.message + "\n"} #{e.backtrace.join("\n ")}" }
     ensure
       Utils.quit_browser @driver
     end
