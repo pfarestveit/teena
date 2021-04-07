@@ -70,9 +70,6 @@ class BOACApiStudentPage
       :email => (sis_profile && sis_profile['emailAddress']),
       :email_alternate => (sis_profile && sis_profile['emailAddressAlternate']),
       :phone => (sis_profile && (sis_profile['phoneNumber'].to_s if sis_profile['phoneNumber'])),
-      :term_units => (sis_profile && ((current_term ? formatted_units(current_term['enrolledUnits']) : '0') if terms.any?)),
-      :term_units_min => (sis_profile && sis_profile['currentTerm'] && sis_profile['currentTerm']['unitsMinOverride']),
-      :term_units_max => (sis_profile && sis_profile['currentTerm'] && sis_profile['currentTerm']['unitsMaxOverride']),
       :cumulative_units => (sis_profile && ((!sis_profile['cumulativeUnits'] || sis_profile['cumulativeUnits'].zero?) ? '--' : formatted_units(sis_profile['cumulativeUnits']))),
       :cumulative_gpa => (sis_profile && (sis_profile['cumulativeGPA'].nil? ? '--' : (sprintf '%.3f', sis_profile['cumulativeGPA']).to_s)),
       :majors => majors,
@@ -238,6 +235,10 @@ class BOACApiStudentPage
     formatted_units term['enrolledUnits']
   end
 
+  def term_gpa(term)
+    term['termGpa'] && term['termGpa']['gpa']
+  end
+
   def courses(term)
     term['enrollments']
   end
@@ -273,25 +274,21 @@ class BOACApiStudentPage
   end
 
   # Courses that are dropped don't display on the cohort page.
-  def current_non_dropped_course_codes
+  def current_non_dropped_course_codes(term)
     courses = []
-    if (term = current_term)
-      courses(term).each do |c|
-        if sections(c).find { |s| %w(E W).include? sis_section_data(s)[:status] }
-          courses << sis_course_data(c)[:code]
-        end
+    courses(term).each do |c|
+      if sections(c).find { |s| %w(E W).include? sis_section_data(s)[:status] }
+        courses << sis_course_data(c)[:code]
       end
     end
     courses
   end
 
-  def current_waitlisted_course_codes
+  def current_waitlisted_course_codes(term)
     courses = []
-    if (term = current_term)
-      courses(term).each do |c|
-        if sections(c).find { |s| sis_section_data(s)[:status] == 'W' }
-          courses << sis_course_data(c)[:code]
-        end
+    courses(term).each do |c|
+      if sections(c).find { |s| sis_section_data(s)[:status] == 'W' }
+        courses << sis_course_data(c)[:code]
       end
     end
     courses
@@ -386,6 +383,23 @@ class BOACApiStudentPage
   # @return [Hash]
   def nessie_last_activity(site)
     site_statistics(analytics(site)['lastActivity']).merge!({:type => 'Last bCourses Activity'})
+  end
+
+  def last_activity_day(site)
+    epoch = site_statistics(analytics(site)['lastActivity'])[:score]
+    if epoch.empty? || epoch.to_i.zero?
+      'Never'
+    else
+      time = Time.strptime(epoch, '%s').getlocal
+      date = Date.parse time.to_s
+      if date == Date.today
+        'Today'
+      elsif  date == Date.today - 1
+        'Yesterday'
+      else
+        "#{(Date.today - date).to_i} days ago"
+      end
+    end
   end
 
   def notifications

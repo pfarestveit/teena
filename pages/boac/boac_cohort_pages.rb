@@ -219,7 +219,14 @@ module BOACCohortPages
 
   # LIST VIEW - shared by filtered cohorts and curated groups
 
+  button(:term_select_button, id: 'students-term-select__BV_toggle_')
   elements(:site_activity_header, :row, xpath: "//th[text()='BCOURSES ACTIVITY']")
+
+  def select_term(term_id)
+    logger.info "Selecting term ID #{term_id}"
+    wait_for_update_and_click_js term_select_button_element
+    wait_for_update_and_click_js button_element(id: "term-select-option-#{term_id}")
+  end
 
   # Returns the XPath to the div containing data for a single student
   # @param student [BOACUser]
@@ -228,17 +235,14 @@ module BOACCohortPages
     "//div[@id=\"student-#{student.uid}\"]"
   end
 
+  def scroll_to_student(student)
+    scroll_to_element row_element(xpath: student_row_xpath(student))
+  end
+
   # Returns a student's SIS data visible on the cohort page
   # @param student [BOACUser]
   # @return [Hash]
   def visible_sis_data(student)
-    #
-    # Note: 'row_index' is position of student in list. For each student listed, the page has two hidden span elements
-    #       useful in determining (1) 'row_index' if you know the SID, or (2) SID if you know the 'row_index':
-    #
-    #          <span id="row-index-of-{student.sid}">{{ rowIndex }}</span>
-    #          <span id="student-sid-of-row-{rowIndex}">{{ student.sid }}</span>
-    #
     wait_until(Utils.medium_wait) { player_link_elements.any? }
     level_el = div_element(xpath: "#{student_row_xpath student}//div[contains(@id,\"student-level\")]")
     major_els = span_elements(xpath: "#{student_row_xpath student}//span[contains(@id,\"student-major\")]")
@@ -248,7 +252,6 @@ module BOACCohortPages
     graduation_college_els = div_elements(xpath: "#{student_row_xpath student}//div/span[starts-with(text(),\"Graduated\")]/../following-sibling::div")
     sports_els = span_elements(xpath: "#{student_row_xpath student}//span[contains(@id,\"student-team\")]")
     gpa_el = span_element(xpath: "#{student_row_xpath student}//span[contains(@id,\"student-cumulative-gpa\")]")
-    term_units_el = div_element(xpath: "#{student_row_xpath student}//div[contains(@id,\"student-enrolled-units\")]")
     cumul_units_el = div_element(xpath: "#{student_row_xpath student}//div[contains(@id,\"cumulative-units\")]")
     class_els = span_elements(xpath: "#{student_row_xpath student}//span[contains(@id,\"student-enrollment-name\")]")
     waitlisted_class_els = span_elements(xpath: "#{student_row_xpath student}//span[contains(@id,\"-waitlisted-\")]/preceding-sibling::span")
@@ -262,13 +265,35 @@ module BOACCohortPages
       :graduation_colleges => (graduation_college_els.map &:text if graduation_college_els.any?),
       :sports => (sports_els.map &:text if sports_els.any?),
       :gpa => (gpa_el.text.gsub('No data', '').chomp if gpa_el.exists?),
-      :term_units => (term_units_el.text if term_units_el.exists?),
       :units_cumulative => (cumul_units_el.text.gsub('No data', '').chomp if cumul_units_el.exists?),
       :classes => class_els.map(&:text),
       :waitlisted_classes => waitlisted_class_els.map(&:text),
       :inactive => (inactive_el.exists? && inactive_el.text.strip == 'INACTIVE'),
       :academic_standing => student_academic_standing(student)
     }
+  end
+
+  def visible_term_units(student)
+    term_units_el = div_element(xpath: "#{student_row_xpath student}//div[contains(@id,\"student-enrolled-units\")]")
+    term_units_el.text if term_units_el.exists?
+  end
+
+  def visible_courses_data(student)
+    wait_until(Utils.medium_wait) { player_link_elements.any? }
+    row_xpath = "#{student_row_xpath student}//table[@class=\"cohort-course-activity-table\"]/tr"
+    row_els = row_elements(xpath: row_xpath)
+    rows_data = []
+    row_els.each_with_index do |_, i|
+      unless i.zero?
+        rows_data << {
+          course_code: cell_element(xpath: "#{row_xpath}[#{i + 1}]/td[1]").attribute('innerText'),
+          activity: cell_element(xpath: "#{row_xpath}[#{i + 1}]/td[2]").attribute('innerText'),
+          mid_grade: cell_element(xpath: "#{row_xpath}[#{i + 1}]/td[3]").attribute('innerText'),
+          final_grade: cell_element(xpath: "#{row_xpath}[#{i + 1}]/td[4]").attribute('innerText')
+        }
+      end
+    end
+    rows_data
   end
 
   # SORTING
