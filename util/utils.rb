@@ -491,6 +491,34 @@ class Utils
     "#{season} #{term_id[0]}0#{term_id[1..2]}"
   end
 
+  def self.next_term_code(term_id)
+    d1 = '2'
+    d2_3 = (term_id[-1] == '8' ? (term_id[1..2].to_i + 1).to_s : term_id[1..2])
+    d4 = case term_id[3]
+         when '2'
+           '5'
+         when '5'
+           '8'
+         else
+           '2'
+         end
+    "#{d1}#{d2_3}#{d4}"
+  end
+
+  def self.previous_term_code(term_id)
+    d1 = '2'
+    d2_3 = (term_id[-1] == '2') ? (term_id[1..2].to_i - 1).to_s : term_id[1..2]
+    d4 = case term_id[3]
+         when '8'
+           '5'
+         when '5'
+           '2'
+         else
+           '8'
+         end
+    "#{d1}#{d2_3}#{d4}"
+  end
+
   # SCREENSHOTS
 
   def self.save_screenshot(driver, unique_id)

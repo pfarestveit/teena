@@ -150,27 +150,149 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
             expect(cohort_page_sis_data[:gpa]).not_to be_empty
           end
 
-          if api_sis_profile_data[:term_units]
-            it "shows the units in progress for UID #{student.uid} on the #{test.default_cohort.name} page" do
-              expect(cohort_page_sis_data[:term_units]).to eql(api_sis_profile_data[:term_units])
-              expect(cohort_page_sis_data[:term_units]).not_to be_empty
-            end
-          else
-            it("shows no units in progress for UID #{student.uid} on the #{test.default_cohort.name} page") { expect(cohort_page_sis_data[:term_units]).to eql('0') }
+          it "shows the most recent term GPA for UID #{student.uid} on the #{test.default_cohort.name} page" do
+            # TODO
           end
 
-          if api_sis_profile_data[:cumulative_units]
-            it "shows the total units for UID #{student.uid} on the #{test.default_cohort.name} page" do
-              expect(cohort_page_sis_data[:units_cumulative]).to eql(api_sis_profile_data[:cumulative_units])
-              expect(cohort_page_sis_data[:units_cumulative]).not_to be_empty
+          # TERM SELECTION
+
+          student_terms = api_student_data.terms
+
+          current_term = BOACUtils.term_code.to_s
+          previous_term = Utils.previous_term_code current_term
+          past_term = Utils.previous_term_code previous_term
+          next_term = Utils.next_term_code current_term
+          future_term = Utils.next_term_code next_term
+
+          [current_term, past_term, previous_term, next_term, future_term].each do |term|
+            begin
+              logger.info "Checking SIS profile data for term #{term}"
+
+              term_name = Utils.sis_code_to_term_name term
+
+              unless term == current_term
+                @boac_cohort_page.select_term term
+                @boac_cohort_page.wait_for_student_list
+              end
+
+              # TAKE SCREENSHOT FOR TESTING
+              @boac_cohort_page.scroll_to_student student
+              Utils.save_screenshot(@driver, "#{student.uid} #{term}")
+
+              visible_course_data = @boac_cohort_page.visible_courses_data student
+              student_term = student_terms.find { |t| api_student_data.term_id(t) == term }
+
+              if student_term
+
+                # Cumulative units
+
+                if student_term == api_student_data.current_term
+                  if api_sis_profile_data[:cumulative_units]
+                    it "shows the total units for UID #{student.uid} term #{term_name} on the #{test.default_cohort.name} page " do
+                      expect(cohort_page_sis_data[:units_cumulative]).to eql(api_sis_profile_data[:cumulative_units])
+                      expect(cohort_page_sis_data[:units_cumulative]).not_to be_empty
+                    end
+                  else
+                    it "shows no total units for UID #{student.uid} term #{term_name} on the #{test.default_cohort.name} page" do
+                      expect(cohort_page_sis_data[:units_cumulative]).to eql('0')
+                    end
+                  end
+                else
+                  it "shows no total units for UID #{student.uid} term #{term_name} on the #{test.default_cohort.name} page" do
+                    expect(cohort_page_sis_data[:units_cumulative]).to be_nil
+                  end
+                end
+
+                # Term units
+
+                visible_units = @boac_cohort_page.visible_term_units student
+                if api_student_data.term_units(student_term)
+                  it "shows the units in progress for UID #{student.uid} term #{term_name} on the #{test.default_cohort.name} page" do
+                    expect(visible_units).to eql(api_student_data.term_units(student_term))
+                    expect(visible_units).not_to be_empty
+                  end
+                else
+                  it("shows no units in progress for UID #{student.uid} term #{term_name} on the #{test.default_cohort.name} page") do
+                    expect(visible_units).to eql('0')
+                  end
+                end
+
+                # Course data
+
+                courses = api_student_data.courses student_term
+
+                logger.debug "Visible: #{visible_course_data}"
+
+                if courses.any?
+                  courses.each_with_index do |course, i|
+
+                    begin
+                      course_sis_data = api_student_data.sis_course_data course
+                      course_code = course_sis_data[:code]
+
+                      logger.info "Checking course #{course_code}"
+
+                      it "shows the list view course code for UID #{student.uid} term #{term_name} course #{course_code}" do
+                        expect(visible_course_data[i][:course_code]).to include(course_code)
+                      end
+
+                      if course_sis_data[:grade].empty?
+                        if course_sis_data[:grading_basis] == 'NON'
+                          it "shows no list view grade and no grading basis for UID #{student.uid} term #{term_name} course #{course_code}" do
+                            expect(visible_course_data[i][:final_grade]).to include('No data')
+                          end
+                        else
+                          it "shows the list view grading basis for UID #{student.uid} term #{term_name} course #{course_code}" do
+                            expect(visible_course_data[i][:final_grade]).to eql(course_sis_data[:grading_basis])
+                          end
+                        end
+                      else
+                        it "shows the list view grade for UID #{student.uid} term #{term_name} course #{course_code}" do
+                          expect(visible_course_data[i][:final_grade]).to eql(course_sis_data[:grade])
+                        end
+                      end
+
+                      if course_sis_data[:midpoint]
+                        it "shows the list view midpoint grade for UID #{student.uid} term #{term_name} course #{course_code}" do
+                          expect(visible_course_data[i][:mid_grade]).to eql(course_sis_data[:midpoint])
+                        end
+                      else
+                        it("shows no list view midpoint grade for UID #{student.uid} term #{term_name} course #{course_code}") do
+                          expect(visible_course_data[i][:mid_grade]).to include('No data')
+                        end
+                      end
+
+                      sites = api_student_data.course_sites(course)
+                      if sites.any?
+                        site_data = sites.map { |s| api_student_data.last_activity_day s }
+                        site_data.each do |d|
+                          it "shows the list view bCourses activity #{d} for UID #{student.uid} term #{term_name} course #{course_code}" do
+                            expect(visible_course_data[i][:activity]).to include(d)
+                          end
+                        end
+                      else
+                        it "shows the list view bCourses activity 'no data' for UID #{student.uid} term #{term_name} course #{course_code}" do
+                          expect(visible_course_data[i][:activity]).to include('No data')
+                        end
+                      end
+
+                    rescue => e
+                      BOACUtils.log_error_and_screenshot(@driver, e, "#{student.uid}-#{term_name}-#{course_code}")
+                      it("encountered an error for UID #{student.uid} term #{term_name} course #{course_code}") { fail }
+                    end
+                  end
+                else
+                  it "shows a no-enrollments message for UID #{student.uid} term #{term_name}" do
+                    expect(visible_course_data.first[:course_code]).to include("No #{term_name} enrollments")
+                  end
+                end
+              else
+                it "shows a no-enrollments message for UID #{student.uid} term #{term}" do
+                  expect(visible_course_data.first[:course_code]).to include("No #{term_name} enrollments")
+                end
+              end
             end
-          else
-            it("shows no total units for UID #{student.uid} on the #{test.default_cohort.name} page") { expect(cohort_page_sis_data[:units_cumulative]).to eql('0') }
           end
-
-          it("shows the current term course codes for UID #{student.uid} on the #{test.default_cohort.name} page") { expect(cohort_page_sis_data[:classes]).to eql(api_student_data.current_non_dropped_course_codes) }
-
-          it("shows waitlisted indicators, if any, for UID #{student.uid} on the #{test.default_cohort.name} page") { expect(cohort_page_sis_data[:waitlisted_classes]).to eql(api_student_data.current_waitlisted_course_codes) }
 
           # STUDENT PAGE SIS DATA
 
@@ -453,9 +575,8 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
 
           # TERMS
 
-          terms = api_student_data.terms
-          if terms.any?
-            terms.each do |term|
+          if student_terms.any?
+            student_terms.each do |term|
 
               begin
                 term_id = api_student_data.term_id term
@@ -472,26 +593,6 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
                   it("shows no term units total for UID #{student.uid} term #{term_name}") { expect(visible_term_data[:term_units]).to eql('—') }
                 else
                   it("shows the term units total for UID #{student.uid} term #{term_name}") { expect(visible_term_data[:term_units]).to eql(api_student_data.term_units term) }
-                end
-
-                if api_sis_profile_data[:term_units_min]
-                  if api_sis_profile_data[:term_units_min].zero? || term != api_student_data.current_term
-                    it("shows no term units minimum for UID #{student.uid} term #{term_name}") { expect(visible_term_data[:term_units_min]).to be_nil }
-                  else
-                    it("shows the term units minimum for UID #{student.uid} term #{term_name}") { expect(visible_term_data[:term_units_min]).to eql(api_sis_profile_data[:term_units_min].to_s) }
-                  end
-                else
-                  it("shows no term units minimum for UID #{student.uid} term #{term_name}") { expect(visible_term_data[:term_units_min]).to be_nil }
-                end
-
-                if api_sis_profile_data[:term_units_max]
-                  if api_sis_profile_data[:term_units_max].zero? || term != api_student_data.current_term
-                    it("shows no term units maximum for UID #{student.uid} term #{term_name}") { expect(visible_term_data[:term_units_max]).to be_nil }
-                  else
-                    it("shows the term units maximum for UID #{student.uid} term #{term_name}") { expect(visible_term_data[:term_units_max]).to eql(api_sis_profile_data[:term_units_max].to_s) }
-                  end
-                else
-                  it("shows no term units maximum for UID #{student.uid} term #{term_name}") { expect(visible_term_data[:term_units_max]).to be_nil }
                 end
 
                 # ACADEMIC STANDING
@@ -519,8 +620,9 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
 
                 term_section_ccns = []
 
-                if api_student_data.courses(term).any?
-                  api_student_data.courses(term).each_with_index do |course, i|
+                courses = api_student_data.courses term
+                if courses.any?
+                  courses.each_with_index do |course, i|
 
                     begin
                       course_sis_data = api_student_data.sis_course_data course
