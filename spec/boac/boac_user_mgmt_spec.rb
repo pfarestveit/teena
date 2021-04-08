@@ -276,7 +276,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
 
     context 'in user edit mode' do
 
-      before(:each) { @pax_manifest_page.hit_escape }
+      before(:each) { @pax_manifest_page.click_cancel_button if @pax_manifest_page.cancel_user_button? }
 
       it 'allows an admin to cancel an edit' do
         @pax_manifest_page.click_edit_user @add_edit_user

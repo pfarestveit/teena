@@ -57,6 +57,13 @@ class BOACFlightDeckPage
   button(:update_service_announcement_button, id: 'button-update-service-announcement')
   span(:service_announcement_banner, id: 'service-announcement-banner')
   span(:service_announcement_checkbox_label, id: 'checkbox-service-announcement-label')
+  button(:dismiss_announcement_button, id: 'dismiss-service-announcement')
+
+  def dismiss_announcement
+    logger.info 'Dismissing service alert'
+    wait_for_update_and_click dismiss_announcement_button_element
+    service_announcement_banner_element.when_not_present 1
+  end
 
   # Updates service announcement without touching the 'Post' checkbox
   # @param announcement [String]

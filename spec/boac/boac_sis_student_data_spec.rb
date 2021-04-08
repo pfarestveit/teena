@@ -175,10 +175,6 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
                 @boac_cohort_page.wait_for_student_list
               end
 
-              # TAKE SCREENSHOT FOR TESTING
-              @boac_cohort_page.scroll_to_student student
-              Utils.save_screenshot(@driver, "#{student.uid} #{term}")
-
               visible_course_data = @boac_cohort_page.visible_courses_data student
               student_term = student_terms.find { |t| api_student_data.term_id(t) == term }
 
@@ -186,20 +182,21 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
 
                 # Cumulative units
 
+                visible_cumul_units = @boac_cohort_page.visible_cumul_units student
                 if student_term == api_student_data.current_term
                   if api_sis_profile_data[:cumulative_units]
                     it "shows the total units for UID #{student.uid} term #{term_name} on the #{test.default_cohort.name} page " do
-                      expect(cohort_page_sis_data[:units_cumulative]).to eql(api_sis_profile_data[:cumulative_units])
-                      expect(cohort_page_sis_data[:units_cumulative]).not_to be_empty
+                      expect(visible_cumul_units).to eql(api_sis_profile_data[:cumulative_units])
+                      expect(visible_cumul_units).not_to be_empty
                     end
                   else
                     it "shows no total units for UID #{student.uid} term #{term_name} on the #{test.default_cohort.name} page" do
-                      expect(cohort_page_sis_data[:units_cumulative]).to eql('0')
+                      expect(visible_cumul_units).to eql('0')
                     end
                   end
                 else
                   it "shows no total units for UID #{student.uid} term #{term_name} on the #{test.default_cohort.name} page" do
-                    expect(cohort_page_sis_data[:units_cumulative]).to be_nil
+                    expect(visible_cumul_units).to be_nil
                   end
                 end
 
@@ -250,11 +247,29 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
                         it "shows the list view grade for UID #{student.uid} term #{term_name} course #{course_code}" do
                           expect(visible_course_data[i][:final_grade]).to eql(course_sis_data[:grade])
                         end
+                        if %w(D+ D D- F NP RD I).include? course_sis_data[:grade]
+                          it "shows an alert for the list view grade for UID #{student.uid} term #{term_name} course #{course_code}" do
+                            expect(visible_course_data[i][:final_flag]).to be true
+                          end
+                        else
+                          it "shows no alert for the list view grade for UID #{student.uid} term #{term_name} course #{course_code}" do
+                            expect(visible_course_data[i][:final_flag]).to be false
+                          end
+                        end
                       end
 
                       if course_sis_data[:midpoint]
                         it "shows the list view midpoint grade for UID #{student.uid} term #{term_name} course #{course_code}" do
                           expect(visible_course_data[i][:mid_grade]).to eql(course_sis_data[:midpoint])
+                        end
+                        if %w(D+ D D- F NP RD I).include? course_sis_data[:midpoint]
+                          it "shows an alert for the list view midpoint grade for UID #{student.uid} term #{term_name} course #{course_code}" do
+                            expect(visible_course_data[i][:mid_flag]).to be true
+                          end
+                        else
+                          it "shows no alert for the list view midpoint grade for UID #{student.uid} term #{term_name} course #{course_code}" do
+                            expect(visible_course_data[i][:mid_flag]).to be false
+                          end
                         end
                       else
                         it("shows no list view midpoint grade for UID #{student.uid} term #{term_name} course #{course_code}") do
@@ -651,6 +666,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
                         it "shows the grade for UID #{student.uid} term #{term_name} course #{course_code}" do
                           expect(collapsed_course_data[:final_grade]).to eql(course_sis_data[:grade])
                         end
+                        # TODO sad grade flag
                       end
 
                       if course_sis_data[:midpoint]
@@ -658,6 +674,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
                           expect(collapsed_course_data[:mid_point_grade]).not_to be_empty
                           expect(collapsed_course_data[:mid_point_grade]).to eql(course_sis_data[:midpoint])
                         end
+                        # TODO sad grade flag
                       else
                         it("shows no midpoint grade for UID #{student.uid} term #{term_name} course #{course_code}") do
                           expect(collapsed_course_data[:mid_point_grade]).to eql("\n—")

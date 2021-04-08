@@ -46,7 +46,7 @@ module BOACStudentPageAdvisingNote
     wait_for_element_and_type(timeline_notes_query_input_element, query)
     hit_enter
     sleep 1
-    timeline_notes_spinner_element.when_not_visible Utils.medium_wait rescue Selenium::WebDriver::Error::StaleElementReferenceError
+    timeline_notes_spinner_element.when_not_present Utils.short_wait
   end
 
   def clear_timeline_notes_search

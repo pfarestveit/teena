@@ -252,7 +252,6 @@ module BOACCohortPages
     graduation_college_els = div_elements(xpath: "#{student_row_xpath student}//div/span[starts-with(text(),\"Graduated\")]/../following-sibling::div")
     sports_els = span_elements(xpath: "#{student_row_xpath student}//span[contains(@id,\"student-team\")]")
     gpa_el = span_element(xpath: "#{student_row_xpath student}//span[contains(@id,\"student-cumulative-gpa\")]")
-    cumul_units_el = div_element(xpath: "#{student_row_xpath student}//div[contains(@id,\"cumulative-units\")]")
     class_els = span_elements(xpath: "#{student_row_xpath student}//span[contains(@id,\"student-enrollment-name\")]")
     waitlisted_class_els = span_elements(xpath: "#{student_row_xpath student}//span[contains(@id,\"-waitlisted-\")]/preceding-sibling::span")
     inactive_el = div_element(xpath: "#{student_row_xpath student}//div[contains(@class,\"student-sid\")]/div[contains(@id,\"-inactive\")]")
@@ -265,7 +264,6 @@ module BOACCohortPages
       :graduation_colleges => (graduation_college_els.map &:text if graduation_college_els.any?),
       :sports => (sports_els.map &:text if sports_els.any?),
       :gpa => (gpa_el.text.gsub('No data', '').chomp if gpa_el.exists?),
-      :units_cumulative => (cumul_units_el.text.gsub('No data', '').chomp if cumul_units_el.exists?),
       :classes => class_els.map(&:text),
       :waitlisted_classes => waitlisted_class_els.map(&:text),
       :inactive => (inactive_el.exists? && inactive_el.text.strip == 'INACTIVE'),
@@ -278,6 +276,11 @@ module BOACCohortPages
     term_units_el.text if term_units_el.exists?
   end
 
+  def visible_cumul_units(student)
+    cumul_units_el = div_element(xpath: "#{student_row_xpath student}//div[contains(@id,\"cumulative-units\")]")
+    cumul_units_el.text.gsub('No data', '').chomp if cumul_units_el.exists?
+  end
+
   def visible_courses_data(student)
     wait_until(Utils.medium_wait) { player_link_elements.any? }
     row_xpath = "#{student_row_xpath student}//table[@class=\"cohort-course-activity-table\"]/tr"
@@ -285,11 +288,15 @@ module BOACCohortPages
     rows_data = []
     row_els.each_with_index do |_, i|
       unless i.zero?
+        mid_flag_el = div_element(xpath: "#{row_xpath}[#{i + 1}]/td[3]/*[name()=\"svg\"][@data-icon=\"exclamation-triangle\"]")
+        final_flag_el = div_element(xpath: "#{row_xpath}[#{i + 1}]/td[4]/*[name()=\"svg\"][@data-icon=\"exclamation-triangle\"]")
         rows_data << {
           course_code: cell_element(xpath: "#{row_xpath}[#{i + 1}]/td[1]").attribute('innerText'),
           activity: cell_element(xpath: "#{row_xpath}[#{i + 1}]/td[2]").attribute('innerText'),
           mid_grade: cell_element(xpath: "#{row_xpath}[#{i + 1}]/td[3]").attribute('innerText'),
-          final_grade: cell_element(xpath: "#{row_xpath}[#{i + 1}]/td[4]").attribute('innerText')
+          mid_flag: mid_flag_el.exists?,
+          final_grade: cell_element(xpath: "#{row_xpath}[#{i + 1}]/td[4]").attribute('innerText'),
+          final_flag: final_flag_el.exists?
         }
       end
     end
