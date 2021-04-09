@@ -188,6 +188,8 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
         @admin_page.wait_until(Utils.short_wait) { @admin_page.service_announcement_banner == @service_announcement }
       end
 
+      it('can dismiss a service alert') { @admin_page.dismiss_announcement }
+
       context 'and exporting alerts' do
 
         before(:all) do
