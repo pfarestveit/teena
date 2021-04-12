@@ -1,9 +1,9 @@
-class DegreeCheck
+class DegreeColumnReqt
 
   attr_accessor :id,
                 :name,
-                :created_date,
-                :updated_date
+                :desc,
+                :column_index
 
   def initialize(test_data)
     test_data.each { |k, v| public_send("#{k}=", v) }

@@ -159,6 +159,7 @@ class BOACPaxManifestPage
   button(:add_user_button, id: 'add-new-user-btn')
   text_field(:add_user_uid_input, id: 'uid-input')
   checkbox(:admin_cbx, id: 'is-admin')
+  select_list(:deg_prog_select, id: 'degree-progress-permission-select')
   elements(:remove_dept_button, :button, xpath: '//button[contains(@id, "remove-department-")]')
   select_list(:department_select, id: 'department-select-list')
   button(:save_user_button, id: 'save-changes-to-user-profile')
@@ -174,31 +175,31 @@ class BOACPaxManifestPage
   # Returns the element for the is-admin checkbox
   # @return [Element]
   def is_admin_cbx
-    text_area_element(xpath: '//input[@id="is-admin"]')
+    text_area_element(id: 'is-admin')
   end
 
   # Returns the element for the is-blocked checkbox
   # @return [Element]
   def is_blocked_cbx
-    text_area_element(xpath: '//input[@id="is-blocked"]')
+    text_area_element(id: 'is-blocked')
   end
 
   # Returns the element for the can-access-canvas-data checkbox
   # @return [Element]
   def can_access_canvas_data_cbx
-    text_area_element(xpath: '//input[@id="can-access-canvas-data"]')
+    text_area_element(id: 'can-access-canvas-data')
   end
 
   # Returns the element for the can-access-advising-data checkbox
   # @return [Element]
   def can_access_advising_data_cbx
-    text_area_element(xpath: '//input[@id="can-access-advising-data"]')
+    text_area_element(id: 'can-access-advising-data')
   end
 
   # Returns the element for the is-deleted checkbox
   # @return [Element]
   def is_deleted_cbx
-    text_area_element(xpath: '//input[@id="is-deleted"]')
+    text_area_element(id: 'is-deleted')
   end
 
   # Returns the button to remove a department role
@@ -271,6 +272,8 @@ class BOACPaxManifestPage
       execute_script('arguments[0].click();', can_access_advising_data_cbx)
       sleep Utils.click_wait
     end
+    deg_prog_option = user.degree_progress_perm ? user.degree_progress_perm.desc : 'Select...'
+    wait_for_element_and_select_js(deg_prog_select_element, deg_prog_option)
   end
 
   # Adds the department roles associated with a given user
@@ -310,7 +313,7 @@ class BOACPaxManifestPage
   # Edits a given user
   # @param user [BOACUser]
   def edit_user(user)
-    logger.info "Editing UID #{user.uid} with roles #{user.dept_memberships.each &:inspect}"
+    logger.info "Editing UID #{user.uid} with attributes #{user.inspect}"
     click_edit_user user
     admin_cbx_element.when_present Utils.short_wait
     set_user_level_flags user

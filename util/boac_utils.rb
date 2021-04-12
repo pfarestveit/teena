@@ -382,6 +382,7 @@ class BOACUtils < Utils
       end
       BOACUser.new(
           uid: r['uid'],
+          active: true,
           can_access_advising_data: (r['can_access_advising_data'] == 't'),
           can_access_canvas_data: (r['can_access_canvas_data'] == 't'),
           depts: r['depts'].split(','),
