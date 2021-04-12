@@ -83,6 +83,10 @@ class Element
     @selenium_element.text
   end
 
+  def value
+    @selenium_element.attribute('value')
+  end
+
   def visible?
     exists? && @selenium_element.displayed?
   end

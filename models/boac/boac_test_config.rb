@@ -12,6 +12,7 @@ class BOACTestConfig < TestConfig
                 :dept,
                 :drop_in_advisor,
                 :drop_in_scheduler,
+                :read_only_advisor,
                 :test_students,
                 :searchable_data,
                 :searches,
@@ -62,6 +63,13 @@ class BOACTestConfig < TestConfig
     @drop_in_scheduler.dept_memberships = [DeptMembership.new(dept: @dept, advisor_role: AdvisorRole::SCHEDULER)]
 
     logger.warn "Advisor-only UID #{@advisor.uid}, drop-in advisor UID #{@drop_in_advisor.uid}, scheduler UID #{@drop_in_scheduler.uid}"
+  end
+
+  def set_read_only_advisor
+    dept_advisors = BOACUtils.get_dept_advisors(@dept).select { |u| u.uid.length > 1 }
+    @read_only_advisor = dept_advisors.find { |a| a.uid != @advisor.uid }
+    @read_only_advisor.dept_memberships = [DeptMembership.new(dept: @dept, advisor_role: AdvisorRole::ADVISOR)]
+    @read_only_advisor.degree_progress_perm = DegreeProgressPerm::READ
   end
 
   # Sets the complete list of potentially visible students
@@ -254,6 +262,13 @@ class BOACTestConfig < TestConfig
     set_base_configs
     set_default_cohort
     set_test_students 50
+  end
+
+  def degree_progress
+    set_base_configs BOACDepartments::COE
+    @advisor.degree_progress_perm = DegreeProgressPerm::WRITE
+    @advisor.dept_memberships = [DeptMembership.new(dept: @dept, advisor_role: AdvisorRole::ADVISOR)]
+    set_read_only_advisor
   end
 
   # Config for drop-in appointment testing
