@@ -43,6 +43,11 @@ class BOACDegreeCheckMgmtPage
     Date.parse(str, '%B %-d, %Y')
   end
 
+  def click_degree_link(degree_check)
+    logger.info "Clicking the link for '#{degree_check.name}'"
+    wait_for_update_and_click degree_check_link(degree_check)
+  end
+
   # RENAME
 
   text_field(:rename_degree_name_input, id: 'rename-template-input')
