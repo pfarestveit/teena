@@ -5,7 +5,7 @@ include Logging
 test = BOACTestConfig.new
 test.degree_progress
 
-str_multiplier = ENV['STR_MULT'].to_i || 1
+str_multiplier = (ENV['STR_MULT'] || 1).to_i
 
 degree = DegreeProgressTemplate.new name: ("Teena Template #{test.id}" * str_multiplier)
 
@@ -99,18 +99,6 @@ describe 'A BOA degree check template' do
         expect(@degree_template_page.unit_req_create_button_element.enabled?).to be false
       end
 
-      it 'requires a numeric unit count' do
-        # TODO - expect a validation error
-        @degree_template_page.enter_unit_req_num 'foo'
-        expect(@degree_template_page.unit_req_num_input_element.value).to be_empty
-      end
-
-      it 'requires a positive unit count' do
-        # TODO - expect a validation error
-        @degree_template_page.enter_unit_req_num '-10'
-        expect(@degree_template_page.unit_req_num_input_element.value).to be_empty
-      end
-
       it 'can be canceled' do
         @degree_template_page.click_cancel_unit_req
         @degree_template_page.unit_reqs_empty_msg_element.when_visible 1
@@ -149,18 +137,6 @@ describe 'A BOA degree check template' do
         expect(@degree_template_page.unit_req_save_button_element.enabled?).to be false
       end
 
-      it 'requires a numeric unit count' do
-        # TODO - expect a validation error
-        @degree_template_page.enter_unit_req_num 'foo'
-        expect(@degree_template_page.unit_req_num_input_element.value).to be_empty
-      end
-
-      it 'requires a positive unit count' do
-        # TODO - expect a validation error
-        @degree_template_page.enter_unit_req_num '-10'
-        expect(@degree_template_page.unit_req_num_input_element.value).to be_empty
-      end
-
       it 'can be canceled' do
         @degree_template_page.click_cancel_unit_req
         @degree_template_page.visible_unit_req_name(units_req_2)
@@ -168,7 +144,7 @@ describe 'A BOA degree check template' do
 
       it 'can be saved' do
         units_req_2.name = "EDITED #{units_req_2.name}"
-        units_req_2.unit_count = "#{units_req_2.unit_count}0"
+        units_req_2.unit_count = "#{units_req_2.unit_count.to_i - 1}"
         @degree_template_page.edit_unit_req units_req_2
         expect(@degree_template_page.visible_unit_req_name units_req_2).to eql(units_req_2.name)
         expect(@degree_template_page.visible_unit_req_num units_req_2).to eql(units_req_2.unit_count)

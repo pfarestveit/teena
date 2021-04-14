@@ -319,5 +319,204 @@
                 "foster_care": true
             }
         ]
-    }
+    },
+    "degree_checks": [
+        {
+            "name": "Teena Template",
+            "unit_reqts": [
+                {
+                    "name": "Engineering Units",
+                    "unit_count": "48"
+                },
+                {
+                    "name": "Upper Division Topics Units",
+                    "unit_count": "36"
+                },
+                {
+                    "name": "Upper Division BioE Units",
+                    "unit_count": "24"
+                }
+            ],
+            "categories": [
+                {
+                    "name": "Lower Division Requirements",
+                    "desc": "",
+                    "column_index": 0,
+                    "sub_categories": [
+                        {
+                            "name": "Math",
+                            "courses": [
+                                {
+                                    "name": "1A",
+                                    "units": "4"
+                                },
+                                {
+                                    "name": "1B",
+                                    "units": "4"
+                                },
+                                {
+                                    "name": "53",
+                                    "units": "4"
+                                },
+                                {
+                                    "name": "54",
+                                    "units": "4"
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Physics",
+                            "courses": [
+                                {
+                                    "name": "7A",
+                                    "units": "4"
+                                },
+                                {
+                                    "name": "7B",
+                                    "units": "4"
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Chemistry",
+                            "courses": [
+                                {
+                                    "name": "1A/1AL or 4A",
+                                    "units": "5"
+                                },
+                                {
+                                    "name": "3A/3AL or 12A",
+                                    "units": "5"
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Engineering",
+                            "desc": "*Junior transfer admits are exempt from BIO 10",
+                            "courses": [
+                                {
+                                    "name": "BioE 10*",
+                                    "units": "4"
+                                },
+                                {
+                                    "name": "BioE 11",
+                                    "units": "3"
+                                },
+                                {
+                                    "name": "Engin 7 or CS 61A",
+                                    "units": "4"
+                                },
+                                {
+                                    "name": "BioE 26",
+                                    "units": "1"
+                                },
+                                {
+                                    "name": "BioE 25",
+                                    "units": "1"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "name": "UC Campus Requirements",
+                    "desc": "American History, American Institutions, and American Cultures courses can also count as H/SS courses.",
+                    "column_index": 0,
+                    "courses": [
+                        {
+                            "name": "Entry Level Writing"
+                        },
+                        {
+                            "name": "American History"
+                        },
+                        {
+                            "name": "American Institutions"
+                        },
+                        {
+                            "name": "American Cultures"
+                        }
+                    ]
+                },
+                {
+                    "name": "Upper Division Requirements",
+                    "desc": "(36 total units minimum)",
+                    "column_index": 1,
+                    "sub_categories": [
+                        {
+                            "name": "BioE Upper Division courses (24 units minimum)",
+                            "desc": "*Approved course lists available at engineering.berkeley.edu/guide. A maximum of 8 units of research can be used to fulfill the 36 units of Technical Topic Electives. Only 4 of those units can be part of the 24 units of BioE upper division.",
+                            "courses": [
+                                {
+                                    "name": "BioE Lab Course *"
+                                },
+                                {
+                                    "name": "BioE Fundamentals *"
+                                },
+                                {
+                                    "name": "BioE Fundamentals *"
+                                },
+                                {
+                                    "name": "BioE Design Project or Research *"
+                                },
+                                {
+                                    "name": "BioE Upper Division Elective"
+                                },
+                                {
+                                    "name": "BioE Upper Division Elective"
+                                },
+                                {
+                                    "name": "BioE Upper Division Elective"
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Technical Topics",
+                            "desc": "(12 upper division units minimum)",
+                            "courses": [
+                                {
+                                    "name": "Technical Topics (upper division)"
+                                },
+                                {
+                                    "name": "Technical Topics (upper division)"
+                                },
+                                {
+                                    "name": "Technical Topics (upper division)"
+                                },
+                                {
+                                    "name": "Technical Topics (upper division)"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "name": "Humanities/Social Sciences",
+                    "desc": "engineering.berkeley.edu/hss",
+                    "column_index": 2,
+                    "courses": [
+                        {
+                            "name": "R&C A"
+                        },
+                        {
+                            "name": "R&C B"
+                        },
+                        {
+                            "name": "UD 1"
+                        },
+                        {
+                            "name": "UD 2"
+                        }
+                    ]
+                },
+                {
+                    "name": "Ethics Requirement",
+                    "column_index": 2
+                },
+                {
+                    "name": "Additional Courses",
+                    "column_index": 2
+                }
+            ]
+        }
+    ]
 }

@@ -17,7 +17,7 @@ class BOACDegreeCheckTemplatePage
   text_field(:unit_req_name_input, id: 'unit-requirement-name-input')
   text_field(:unit_req_num_input, id: 'unit-requirement-min-units-input')
   button(:unit_req_create_button, id: 'create-unit-requirement-btn')
-  button(:unit_req_cancel_button, id: 'create-appointment-cancel')
+  button(:unit_req_cancel_button, id: 'cancel-create-unit-requirement-btn')
 
   def click_add_unit_req
     logger.info 'Clicking the add unit req button'

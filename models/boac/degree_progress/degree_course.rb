@@ -1,10 +1,15 @@
-class DegreeCourse < DegreeColumnReqt
+class DegreeCourse
 
-  attr_accessor :units,
+  attr_accessor :id,
+                :name,
+                :units,
                 :units_reqts,
-                :parent_category,
                 :grade,
                 :term,
                 :note
+
+  def initialize(test_data)
+    test_data.each { |k, v| public_send("#{k}=", v) }
+  end
 
 end
