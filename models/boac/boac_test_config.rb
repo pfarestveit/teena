@@ -9,6 +9,7 @@ class BOACTestConfig < TestConfig
                 :attachments,
                 :cohort_members,
                 :default_cohort,
+                :degree_templates,
                 :dept,
                 :drop_in_advisor,
                 :drop_in_scheduler,
@@ -175,14 +176,18 @@ class BOACTestConfig < TestConfig
                      end
   end
 
+  def get_test_data
+    test_data_file_name = 'test-data-boac.json'
+    override_test_data = File.exist?(override_path = File.join(Utils.config_dir, test_data_file_name))
+    test_data_file = override_test_data ? override_path : File.expand_path("test_data/#{test_data_file_name}", Dir.pwd)
+    JSON.parse File.read(test_data_file)
+  end
+
   # Configures a set of cohorts to use for filtered cohort testing. If a test data override file exists in the config override dir,
   # then uses that to create the filters. Otherwise, uses the default test data.
   def set_search_cohorts(opts = {})
 
-    test_data_file_name = 'test-data-boac.json'
-    override_test_data = File.exist?(override_path = File.join(Utils.config_dir, test_data_file_name))
-    test_data_file = override_test_data ? override_path : File.expand_path("test_data/#{test_data_file_name}", Dir.pwd)
-    test_data = (JSON.parse File.read(test_data_file))['filters']
+    test_data = get_test_data['filters']
 
     if opts[:students]
       filters = test_data['students'].map do |data|
@@ -208,6 +213,15 @@ class BOACTestConfig < TestConfig
       filter_options.empty?
     end
     @searches = filters.map { |c| FilteredCohort.new({:name => "Test Cohort #{filters.index c} #{@id}", :search_criteria => c}) }
+  end
+
+  def set_degree_templates
+    test_data = get_test_data['degree_checks']
+    @degree_templates = test_data.map do |data|
+      template = DegreeProgressTemplate.new data
+      template.set_template_content @id
+      template
+    end
   end
 
   def set_note_attachments
@@ -269,6 +283,7 @@ class BOACTestConfig < TestConfig
     @advisor.degree_progress_perm = DegreeProgressPerm::WRITE
     @advisor.dept_memberships = [DeptMembership.new(dept: @dept, advisor_role: AdvisorRole::ADVISOR)]
     set_read_only_advisor
+    set_degree_templates
   end
 
   # Config for drop-in appointment testing
