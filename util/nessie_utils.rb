@@ -453,7 +453,7 @@ class NessieUtils < Utils
                     boac_advising_asc.advising_notes.body AS body,
                     ARRAY_AGG (boac_advising_asc.advising_note_topics.topic) AS topics
              FROM boac_advising_asc.advising_notes
-             JOIN boac_advising_asc.advising_note_topics
+             LEFT JOIN boac_advising_asc.advising_note_topics
                ON boac_advising_asc.advising_notes.id = boac_advising_asc.advising_note_topics.id
              WHERE boac_advising_asc.advising_notes.sid = '#{student.sis_id}'
              GROUP BY advising_notes.id, created_date, advisor_uid, subject, body;"
