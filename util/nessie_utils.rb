@@ -443,7 +443,33 @@ class NessieUtils < Utils
   # @param [BOACUser] student
   # @return [Array<Note>]
   def self.get_asc_notes(student)
-    get_external_notes(NoteSource::ASC, student)
+    query = "SELECT boac_advising_asc.advising_notes.id AS id,
+                    boac_advising_asc.advising_notes.created_at AS created_date,
+                    boac_advising_asc.advising_notes.updated_at AS updated_date,
+                    boac_advising_asc.advising_notes.advisor_uid AS advisor_uid,
+                    boac_advising_asc.advising_notes.advisor_first_name AS advisor_first_name,
+                    boac_advising_asc.advising_notes.advisor_last_name AS advisor_last_name,
+                    boac_advising_asc.advising_notes.subject AS subject,
+                    boac_advising_asc.advising_notes.body AS body,
+                    ARRAY_AGG (boac_advising_asc.advising_note_topics.topic) AS topics
+             FROM boac_advising_asc.advising_notes
+             JOIN boac_advising_asc.advising_note_topics
+               ON boac_advising_asc.advising_notes.id = boac_advising_asc.advising_note_topics.id
+             WHERE boac_advising_asc.advising_notes.sid = '#{student.sis_id}'
+             GROUP BY advising_notes.id, created_date, advisor_uid, subject, body;"
+    results = query_pg_db(nessie_pg_db_credentials, query)
+
+    results.map do |r|
+      Note.new id: r['id'],
+               advisor: BOACUser.new(uid: r['advisor_uid'], first_name: r['advisor_first_name'], last_name: r['advisor_last_name']),
+               subject: r['subject'],
+               body: r['body'],
+               topics: (r['topics'].delete('{"}').split(',').sort if r['topics']),
+               student: student,
+               created_date: Time.parse(r['created_date']).utc.localtime,
+               updated_date: Time.parse(r['updated_date']).utc.localtime,
+               note_source: NoteSource::ASC
+    end
   end
 
   # Returns E&I advising notes associated with a given student

@@ -95,7 +95,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
                 @student_page.expand_item note
                 visible_expanded_note_data = @student_page.visible_expanded_note_data note
 
-                # Note subject and body (NB: migrated SIS notes have no subject, so the body is shown as the subject; migrated ASC notes have no subject
+                # Note subject and body (NB: migrated SIS notes have no subject, so the body is shown as the subject; older migrated ASC notes have no subject
                 # or body, so the general topic is shown as the subject)
 
                 if note.subject
@@ -108,6 +108,8 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
                   if note.body && !note.body.empty?
                     it("shows the body as the subject on #{test_case}") { expect(visible_collapsed_note_data[:subject].gsub(/\W/, '') == note.body.gsub(/\W/, '')).to be true }
                   end
+                elsif expected_asc_notes.include?(note) && note.body
+                  it("shows the body as the subject on #{test_case}") { expect(visible_collapsed_note_data[:subject].gsub(/\W/, '') == note.body.gsub(/\W/, '')).to be true }
                 else
                   subj_dept = expected_ei_notes.include?(note) ? 'Centers for Educational Equity and Excellence advisor' : 'Athletic Study Center advisor'
                   it("shows the department as part of the subject on #{test_case}") { expect(visible_collapsed_note_data[:category]).to include(subj_dept) }
