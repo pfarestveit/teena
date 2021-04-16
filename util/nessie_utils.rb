@@ -464,7 +464,7 @@ class NessieUtils < Utils
                advisor: BOACUser.new(uid: r['advisor_uid'], first_name: r['advisor_first_name'], last_name: r['advisor_last_name']),
                subject: r['subject'],
                body: r['body'],
-               topics: (r['topics'].delete('{"}').split(',').sort if r['topics']),
+               topics: (r['topics'].delete('{"}').gsub('NULL', '').split(',').sort if r['topics']),
                student: student,
                created_date: Time.parse(r['created_date']).utc.localtime,
                updated_date: Time.parse(r['updated_date']).utc.localtime,
