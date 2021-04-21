@@ -9,11 +9,43 @@ str_multiplier = (ENV['STR_MULT'] || 1).to_i
 
 degree = DegreeProgressTemplate.new name: ("Teena Template #{test.id}" * str_multiplier)
 
-units_req_1 = DegreeUnitReqt.new name: ("Engineering Units #{test.id}" * str_multiplier), unit_count: '48'
-units_req_2 = DegreeUnitReqt.new name: ("Upper Division Topics Units #{test.id}" * str_multiplier), unit_count: '36'
-units_req_3 = DegreeUnitReqt.new name: ("Upper Division BioE Units #{test.id}" * str_multiplier), unit_count: '24'
+### Unit requirements
+units_req_1 = DegreeUnitReqt.new name: ("Unit Requirement 1 #{test.id}" * str_multiplier), unit_count: '48'
+units_req_2 = DegreeUnitReqt.new name: ("Unit Requirement 2 #{test.id}" * str_multiplier), unit_count: '36'
+units_req_3 = DegreeUnitReqt.new name: ("Unit Requirement 3 #{test.id}" * str_multiplier), unit_count: '24'
 
-describe 'A BOA degree check template' do
+### Top category column requirements
+req_category_1 = DegreeReqtCategory.new name: ("Category 1 #{test.id}" * str_multiplier),
+                                        desc: ("Category 1 Description #{test.id}" * str_multiplier),
+                                        column_num: 1
+req_cat_course = DegreeCourse.new name: "CAT 1 #{test.id}",
+                                  units: '5-6',
+                                  units_reqts: [units_req_2],
+                                  parent: req_category_1
+req_category_1.courses = [req_cat_course]
+
+req_category_2 = DegreeReqtCategory.new name: "Category 2 #{test.id}",
+                                        column_num: 1
+
+### Subcategory column requirements
+req_sub_category_1 = DegreeReqtCategory.new name: ("Subcategory 1.1 #{test.id}" * str_multiplier),
+                                            desc: ("Subcategory 1.1 Description #{test.id}" * str_multiplier),
+                                            parent: req_category_1
+req_sub_cat_course_1 = DegreeCourse.new name: "SUBCAT 1 #{test.id}",
+                                        units: '4',
+                                        units_reqts: [units_req_2],
+                                        parent: req_sub_category_1
+req_sub_cat_course_2 = DegreeCourse.new name: "SUBCAT 2 #{test.id}",
+                                        units: '4',
+                                        units_reqts: [units_req_2],
+                                        parent: req_sub_category_1
+req_category_1.sub_categories = [req_sub_category_1]
+req_sub_category_1.courses = [req_sub_cat_course_1]
+
+req_sub_category_2 = DegreeReqtCategory.new name: "Subcategory 1.2 #{test.id}",
+                                            parent: req_category_1
+
+describe 'A BOA degree check template', order: :defined do
 
   before(:all) do
     @driver = Utils.launch_browser
@@ -74,7 +106,7 @@ describe 'A BOA degree check template' do
     end
   end
 
-  context 'unit requirements' do
+  context 'unit requirement' do
 
     before(:all) do
       @degree_templates_mgmt_page.click_degree_checks_link
@@ -153,8 +185,450 @@ describe 'A BOA degree check template' do
 
     context 'when deleted' do
 
-      # TODO
+      it 'can have the deletion canceled' do
+        @degree_template_page.click_delete_unit_req units_req_1
+        @degree_template_page.click_cancel_delete
+      end
 
+      it 'is no longer displayed in the list of existing unit requirements' do
+        @degree_template_page.click_delete_unit_req units_req_1
+        @degree_template_page.click_confirm_delete
+        @degree_template_page.unit_req_name_el(units_req_1).when_not_present Utils.short_wait
+      end
+    end
+  end
+
+  context 'column requirement' do
+
+    it 'requires a type selection' do
+      @degree_template_page.click_add_col_req_button 1
+      @degree_template_page.col_req_create_button_element.when_visible 1
+      expect(@degree_template_page.col_req_create_button_element.enabled?).to be false
+    end
+
+    it 'allows only a category selection if no category exists in the column yet' do
+      subcat_opt = @degree_template_page.col_req_type_options.find { |el| el.text == 'Subcategory' }
+      expect(subcat_opt.enabled?).to be false
+      course_opt = @degree_template_page.col_req_type_options.find { |el| el.text == 'Course' }
+      expect(course_opt.enabled?).to be false
+    end
+
+    context 'category' do
+
+      context 'when created' do
+
+        it 'requires a name' do
+          @degree_template_page.select_col_req_type 'Category'
+          expect(@degree_template_page.col_req_create_button_element.enabled?).to be false
+        end
+
+        it 'allows a maximum of 255 characters in a name' do
+          name = req_category_1.name * 10
+          @degree_template_page.enter_col_req_name name
+          expect(@degree_template_page.col_req_name_input_element.value).to eql(name[0..254])
+        end
+
+        it('does not require a description') { expect(@degree_template_page.col_req_create_button_element.enabled?).to be true }
+        it('allows a description') { @degree_template_page.enter_col_req_desc req_category_1.desc }
+        it('can be canceled') { @degree_template_page.click_cancel_col_req }
+        it('can be saved') { @degree_template_page.create_col_req req_category_1 }
+        it('shows the right name') { expect(@degree_template_page.visible_cat_name req_category_1).to eql(req_category_1.name) }
+        it('shows the right description') { expect(@degree_template_page.visible_cat_desc req_category_1).to eql(req_category_1.desc) }
+      end
+
+      context 'subcategory' do
+
+        context 'when created' do
+
+          it 'requires a name' do
+            @degree_template_page.click_add_col_req_button 1
+            @degree_template_page.select_col_req_type 'Subcategory'
+            expect(@degree_template_page.col_req_create_button_element.enabled?).to be false
+          end
+
+          it 'allows a maximum of 255 characters in a name' do
+            name = req_sub_category_1.name * 10
+            @degree_template_page.enter_col_req_name name
+            expect(@degree_template_page.col_req_name_input_element.value).to eql(name[0..254])
+          end
+
+          it('requires a parent category') { expect(@degree_template_page.col_req_create_button_element.enabled?).to be false }
+          it('allows a parent category selection') { @degree_template_page.select_col_req_parent req_category_1 }
+          it('does not require a description') { expect(@degree_template_page.col_req_create_button_element.enabled?).to be true }
+          it('allows a description') { @degree_template_page.enter_col_req_desc req_sub_category_1.desc }
+          it('can be canceled') { @degree_template_page.click_cancel_col_req }
+          it('can be saved') { @degree_template_page.create_col_req req_sub_category_1 }
+          it('shows the right name') { expect(@degree_template_page.visible_cat_name req_sub_category_1).to eql(req_sub_category_1.name) }
+          it('shows the right description') { expect(@degree_template_page.visible_cat_desc req_sub_category_1).to eql(req_sub_category_1.desc) }
+
+          it 'does not offer subcategories as parents' do
+            @degree_template_page.click_add_col_req_button 1
+            @degree_template_page.select_col_req_type 'Subcategory'
+            option = @degree_template_page.col_req_parent_options.find { |el| el.text == req_sub_category_1.name }
+            expect(option.enabled?).to be false
+          end
+        end
+
+        context 'course' do
+
+          context 'when added' do
+
+            it 'requires a name' do
+              @degree_template_page.click_cancel_col_req
+              @degree_template_page.click_add_col_req_button 1
+              @degree_template_page.select_col_req_type 'Course'
+              expect(@degree_template_page.col_req_create_button_element.enabled?).to be false
+            end
+
+            it 'allows a maximum of 255 characters in a name' do
+              name = req_sub_cat_course_1.name * 10
+              @degree_template_page.enter_col_req_name name
+              expect(@degree_template_page.col_req_name_input_element.value).to eql(name[0..254])
+            end
+
+            it('requires a parent category') { expect(@degree_template_page.col_req_create_button_element.enabled?).to be false }
+            it('allows a parent category selection') { @degree_template_page.select_col_req_parent req_sub_category_1 }
+            it('does not offer a description input') { expect(@degree_template_page.col_req_desc_input?).to be false }
+            it('does not require units') { expect(@degree_template_page.col_req_create_button_element.enabled?).to be true }
+
+            it 'requires numeric units' do
+              @degree_template_page.enter_col_req_units '4A'
+              @degree_template_page.col_req_course_units_error_msg_element.when_visible 1
+            end
+
+            it 'allows a maximum of 3 characters in units' do
+              @degree_template_page.enter_col_req_units '1000'
+              expect(@degree_template_page.col_req_course_units_input_element.value).to eql('100')
+            end
+
+            it('allows a range of units') { @degree_template_page.enter_col_req_units '4-5' }
+            it('does not require a requirement fulfillment selection') { expect(@degree_template_page.col_req_create_button_element.enabled?).to be true }
+
+            it 'allows a requirement fulfillment selection' do
+              @degree_template_page.select_col_req_unit_req req_sub_cat_course_1.units_reqts.first.name
+              @degree_template_page.col_req_unit_req_remove_button(0).when_visible 1
+            end
+
+            it('can be canceled') { @degree_template_page.click_cancel_col_req }
+            it('can be saved') { @degree_template_page.create_col_req req_sub_cat_course_1 }
+
+            it 'shows the right name' do
+              expect(@degree_template_page.visible_course_name req_sub_cat_course_1).to eql(req_sub_cat_course_1.name)
+            end
+
+            it 'shows the right units' do
+              expect(@degree_template_page.visible_course_units req_sub_cat_course_1).to eql(req_sub_cat_course_1.units)
+            end
+
+            it 'shows the right unit requirements' do
+              expect(@degree_template_page.visible_course_fulfillment req_sub_cat_course_1).to include(req_sub_cat_course_1.units_reqts.first.name)
+            end
+          end
+
+          context 'when edited' do
+
+            it 'requires a name' do
+              @degree_template_page.click_edit_cat req_sub_cat_course_1
+              @degree_template_page.enter_col_req_name ''
+              expect(@degree_template_page.col_req_create_button_element.enabled?).to be false
+            end
+
+            it 'requires a parent category' do
+              @degree_template_page.enter_col_req_name req_sub_cat_course_1.name
+              @degree_template_page.select_col_req_parent
+              expect(@degree_template_page.col_req_create_button_element.enabled?).to be false
+            end
+
+            it('does not offer a description input') { expect(@degree_template_page.col_req_desc_input?).to be false }
+
+            it 'does not require units' do
+              @degree_template_page.select_col_req_parent req_sub_category_1
+              @degree_template_page.enter_col_req_units ''
+              expect(@degree_template_page.col_req_create_button_element.enabled?).to be true
+            end
+
+            it 'does not require a requirement fulfillment selection' do
+              @degree_template_page.remove_col_req_unit_req 0
+              expect(@degree_template_page.col_req_create_button_element.enabled?).to be true
+            end
+
+            it('can be canceled') { @degree_template_page.click_cancel_col_req }
+
+            it 'can be saved' do
+              req_sub_cat_course_1.name = "EDITED #{req_sub_cat_course_1.name}"
+              req_sub_cat_course_1.parent = req_category_1
+              req_sub_cat_course_1.units = ''
+              req_sub_cat_course_1.units_reqts = [units_req_3]
+              @degree_template_page.click_edit_cat req_sub_cat_course_1
+              @degree_template_page.enter_col_req_metadata req_sub_cat_course_1
+              @degree_template_page.save_col_req
+            end
+
+            it 'shows the right name' do
+              expect(@degree_template_page.visible_course_name req_sub_cat_course_1).to eql(req_sub_cat_course_1.name)
+            end
+
+            it 'shows the right units' do
+              expect(@degree_template_page.visible_course_units req_sub_cat_course_1).to eql('—')
+            end
+
+            it 'shows the right unit requirements' do
+              expect(@degree_template_page.visible_course_fulfillment req_sub_cat_course_1).to include(req_sub_cat_course_1.units_reqts.first.name)
+            end
+          end
+
+          context 'when deleted' do
+
+            it 'can have the deletion canceled' do
+              @degree_template_page.click_delete_cat req_sub_cat_course_1
+              @degree_template_page.click_cancel_delete
+            end
+
+            it 'is removed from the column' do
+              @degree_template_page.click_delete_cat req_sub_cat_course_1
+              @degree_template_page.click_confirm_delete
+              @degree_template_page.cat_name_el(req_sub_cat_course_1).when_not_present 2
+            end
+          end
+        end
+
+        context 'when edited' do
+
+          before(:all) do
+            @degree_template_page.create_col_req req_category_2
+            @degree_template_page.create_col_req req_sub_cat_course_2
+            req_sub_category_1.courses << req_sub_cat_course_2
+          end
+
+          it 'requires a name' do
+            @degree_template_page.click_edit_cat req_sub_category_1
+            @degree_template_page.enter_col_req_name ''
+            expect(@degree_template_page.col_req_create_button_element.enabled?).to be false
+          end
+
+          it 'requires a parent category' do
+            @degree_template_page.enter_col_req_name req_sub_category_1.name
+            @degree_template_page.select_col_req_parent
+            expect(@degree_template_page.col_req_create_button_element.enabled?).to be false
+          end
+
+          it 'does not require a description' do
+            @degree_template_page.select_col_req_parent req_category_1
+            @degree_template_page.enter_col_req_desc ''
+            expect(@degree_template_page.col_req_create_button_element.enabled?).to be true
+          end
+
+          it('can be canceled') { @degree_template_page.click_cancel_col_req }
+
+          it 'can be saved' do
+            req_sub_category_1.name = "EDITED #{req_sub_category_1.name}"
+            req_sub_category_1.parent = req_category_2
+            @degree_template_page.click_edit_cat req_sub_category_1
+            @degree_template_page.enter_col_req_metadata req_sub_category_1
+            @degree_template_page.save_col_req
+          end
+
+          it 'shows the right name' do
+            expect(@degree_template_page.visible_cat_name req_sub_category_1).to eql(req_sub_category_1.name)
+          end
+
+          it 'shows the right description' do
+            expect(@degree_template_page.visible_cat_desc req_sub_category_1).to eql(req_sub_category_1.desc)
+          end
+
+          it 'applies edits to subcategory courses' do
+            expect(@degree_template_page.visible_course_name req_sub_cat_course_2).to eql(req_sub_cat_course_2.name)
+          end
+        end
+
+        context 'when deleted' do
+
+          it 'can have the deletion canceled' do
+            @degree_template_page.click_delete_cat req_sub_category_1
+            @degree_template_page.click_cancel_delete
+          end
+
+          it 'is removed from the column' do
+            @degree_template_page.click_delete_cat req_sub_category_1
+            @degree_template_page.click_confirm_delete
+            @degree_template_page.cat_name_el(req_sub_category_1).when_not_present 2
+          end
+        end
+      end
+
+      context 'course' do
+
+        context 'when added' do
+
+          it 'requires a name' do
+            @degree_template_page.click_add_col_req_button 1
+            @degree_template_page.select_col_req_type 'Course'
+            expect(@degree_template_page.col_req_create_button_element.enabled?).to be false
+          end
+
+          it 'allows a maximum of 255 characters in a name' do
+            name = req_cat_course.name * 10
+            @degree_template_page.enter_col_req_name name
+            expect(@degree_template_page.col_req_name_input_element.value).to eql(name[0..254])
+          end
+
+          it('requires a parent category') { expect(@degree_template_page.col_req_create_button_element.enabled?).to be false }
+          it('allows a parent category selection') { @degree_template_page.select_col_req_parent req_category_1 }
+          it('does not offer a description input') { expect(@degree_template_page.col_req_desc_input?).to be false }
+          it('does not require units') { expect(@degree_template_page.col_req_create_button_element.enabled?).to be true }
+
+          it 'requires numeric units' do
+            @degree_template_page.enter_col_req_units '4A'
+            @degree_template_page.col_req_course_units_error_msg_element.when_visible 1
+          end
+
+          it 'allows a maximum of 3 characters in units' do
+            @degree_template_page.enter_col_req_units '1000'
+            expect(@degree_template_page.col_req_course_units_input_element.value).to eql('100')
+          end
+
+          it('allows a range of units') { @degree_template_page.enter_col_req_units '4-5' }
+          it('does not require a requirement fulfillment selection') { expect(@degree_template_page.col_req_create_button_element.enabled?).to be true }
+
+          it 'allows a requirement fulfillment selection' do
+            @degree_template_page.select_col_req_unit_req req_cat_course.units_reqts.first.name
+            @degree_template_page.col_req_unit_req_remove_button(0).when_visible 1
+          end
+
+          it('can be canceled') { @degree_template_page.click_cancel_col_req }
+          it('can be saved') { @degree_template_page.create_col_req req_cat_course }
+
+          it 'shows the right name' do
+            expect(@degree_template_page.visible_course_name req_cat_course).to eql(req_cat_course.name)
+          end
+
+          it 'shows the right units' do
+            expect(@degree_template_page.visible_course_units req_cat_course).to eql(req_cat_course.units)
+          end
+
+          it 'shows the right unit requirements' do
+            expect(@degree_template_page.visible_course_fulfillment req_cat_course).to include(req_cat_course.units_reqts.first.name)
+          end
+        end
+
+        context 'when edited' do
+
+          before(:all) do
+            @degree_template_page.create_col_req req_sub_category_2
+            req_category_1.sub_categories << req_sub_category_2
+          end
+
+          it 'requires a name' do
+            @degree_template_page.click_edit_cat req_cat_course
+            @degree_template_page.enter_col_req_name ''
+            expect(@degree_template_page.col_req_create_button_element.enabled?).to be false
+          end
+
+          it 'requires a parent category' do
+            @degree_template_page.enter_col_req_name req_cat_course.name
+            @degree_template_page.select_col_req_parent
+            expect(@degree_template_page.col_req_create_button_element.enabled?).to be false
+          end
+
+          it('does not offer a description input') { expect(@degree_template_page.col_req_desc_input?).to be false }
+
+          it 'does not require units' do
+            @degree_template_page.select_col_req_parent req_category_1
+            @degree_template_page.enter_col_req_units ''
+            expect(@degree_template_page.col_req_create_button_element.enabled?).to be true
+          end
+
+          it 'does not require a requirement fulfillment selection' do
+            @degree_template_page.remove_col_req_unit_req 0
+            expect(@degree_template_page.col_req_create_button_element.enabled?).to be true
+          end
+
+          it('can be canceled') { @degree_template_page.click_cancel_col_req }
+
+          it 'can be saved' do
+            req_cat_course.name = "EDITED #{req_cat_course.name}"
+            req_cat_course.parent = req_sub_category_2
+            req_cat_course.units = '12'
+            req_cat_course.units_reqts = [units_req_3]
+            @degree_template_page.click_edit_cat req_cat_course
+            @degree_template_page.enter_col_req_metadata req_cat_course
+            @degree_template_page.save_col_req
+          end
+
+          it 'shows the right name' do
+            expect(@degree_template_page.visible_course_name req_cat_course).to eql(req_cat_course.name)
+          end
+
+          it 'shows the right units' do
+            expect(@degree_template_page.visible_course_units req_cat_course).to eql(req_cat_course.units)
+          end
+
+          it 'shows the right unit requirements' do
+            expect(@degree_template_page.visible_course_fulfillment req_cat_course).to include(req_cat_course.units_reqts.first.name)
+          end
+        end
+
+        context 'when deleted' do
+
+          it 'can have the deletion canceled' do
+            @degree_template_page.click_delete_cat req_cat_course
+            @degree_template_page.click_cancel_delete
+          end
+
+          it 'is removed from the column' do
+            @degree_template_page.click_delete_cat req_cat_course
+            @degree_template_page.click_confirm_delete
+            @degree_template_page.cat_name_el(req_cat_course).when_not_present 2
+          end
+        end
+      end
+
+      context 'when edited' do
+
+        it 'requires a name' do
+          @degree_template_page.click_edit_cat req_category_1
+          @degree_template_page.enter_col_req_name ''
+          expect(@degree_template_page.col_req_create_button_element.enabled?).to be false
+        end
+
+        it 'does not require a description' do
+          @degree_template_page.enter_col_req_name req_category_1.name
+          @degree_template_page.enter_col_req_desc ''
+          expect(@degree_template_page.col_req_create_button_element.enabled?).to be true
+        end
+
+        it('can be canceled') { @degree_template_page.click_cancel_col_req }
+
+        it 'can be saved' do
+          req_category_1.name = "EDITED #{req_category_1.name}"
+          req_category_1.desc = "EDITED #{req_category_1.desc}"
+          @degree_template_page.click_edit_cat req_category_1
+          @degree_template_page.enter_col_req_metadata req_category_1
+          @degree_template_page.save_col_req
+        end
+
+        it 'shows the right name' do
+          expect(@degree_template_page.visible_cat_name req_category_1).to eql(req_category_1.name)
+        end
+
+        it 'shows the right description' do
+          expect(@degree_template_page.visible_cat_desc req_category_1).to eql(req_category_1.desc)
+        end
+      end
+
+      context 'when deleted' do
+
+        it 'can have the deletion canceled' do
+          @degree_template_page.click_delete_cat req_category_1
+          @degree_template_page.click_cancel_delete
+        end
+
+        it 'is removed from the column' do
+          @degree_template_page.click_delete_cat req_category_1
+          @degree_template_page.click_confirm_delete
+          @degree_template_page.cat_name_el(req_category_1).when_not_present 2
+        end
+      end
     end
   end
 
@@ -213,7 +687,8 @@ describe 'A BOA degree check template' do
       @degree_templates_mgmt_page.degree_check_link(@degree_copy).when_visible Utils.short_wait
     end
 
-    # TODO verify all the copy content once the feature is built
+    # TODO it 'includes all the data present in the original template'
+
   end
 
   context 'when deleted' do
@@ -221,7 +696,6 @@ describe 'A BOA degree check template' do
     it 'can have the deletion canceled' do
       @degree_templates_mgmt_page.click_delete_degree degree
       @degree_templates_mgmt_page.click_cancel_delete
-      @degree_templates_mgmt_page.confirm_delete_or_discard_button_element.when_not_present 1
     end
 
     it 'is no longer displayed in the list of existing degrees' do

@@ -341,7 +341,7 @@
                 {
                     "name": "Lower Division Requirements",
                     "desc": "",
-                    "column_index": 0,
+                    "column_num": 1,
                     "sub_categories": [
                         {
                             "name": "Math",
@@ -421,7 +421,7 @@
                 {
                     "name": "UC Campus Requirements",
                     "desc": "American History, American Institutions, and American Cultures courses can also count as H/SS courses.",
-                    "column_index": 0,
+                    "column_num": 1,
                     "courses": [
                         {
                             "name": "Entry Level Writing"
@@ -440,7 +440,7 @@
                 {
                     "name": "Upper Division Requirements",
                     "desc": "(36 total units minimum)",
-                    "column_index": 1,
+                    "column_num": 2,
                     "sub_categories": [
                         {
                             "name": "BioE Upper Division courses (24 units minimum)",
@@ -492,7 +492,7 @@
                 {
                     "name": "Humanities/Social Sciences",
                     "desc": "engineering.berkeley.edu/hss",
-                    "column_index": 2,
+                    "column_num": 3,
                     "courses": [
                         {
                             "name": "R&C A"
@@ -510,11 +510,11 @@
                 },
                 {
                     "name": "Ethics Requirement",
-                    "column_index": 2
+                    "column_num": 3
                 },
                 {
                     "name": "Additional Courses",
-                    "column_index": 2
+                    "column_num": 3
                 }
             ]
         }
