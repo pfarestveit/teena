@@ -30,7 +30,7 @@ class DegreeProgressTemplate
     @categories = @categories && @categories.map do |cat|
       DegreeReqtCategory.new name: "#{cat['name']} #{test_id}",
                              desc: cat['desc'],
-                             column_index: cat['column_index'],
+                             column_num: cat['column_num'],
                              courses: (cat['courses'] && (cat['courses'].map do |course|
                                DegreeCourse.new name: course['name'],
                                                 units: course['units'],
@@ -45,6 +45,18 @@ class DegreeProgressTemplate
                                                                          units_reqts: sub_course['units_reqts']
                                                       end))
                              end))
+    end
+
+    if @categories
+      @categories.each do |cat|
+        cat.courses.each { |course| course.parent = cat } if cat.courses
+        if cat.sub_categories
+          cat.sub_categories.each do |sub_cat|
+            sub_cat.parent = cat
+            sub_cat.courses.each { |course| course.parent = sub_cat } if sub_cat.courses
+          end
+        end
+      end
     end
   end
 

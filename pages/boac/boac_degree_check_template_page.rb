@@ -62,10 +62,14 @@ class BOACDegreeCheckTemplatePage
   def unit_req_row_xpath(req)
     "//table[@id=\"unit-requirements-table\"]//tr[contains(., \"#{req.name}\")]"
   end
-  
+
+  def unit_req_name_el(req)
+    cell_element(xpath: "#{unit_req_row_xpath(req)}/td[1]")
+  end
+
   def visible_unit_req_name(req)
-    (unit_req_name_el = cell_element(xpath: "#{unit_req_row_xpath(req)}/td[1]")).when_visible Utils.short_wait
-    unit_req_name_el.text
+    unit_req_name_el(req).when_visible Utils.short_wait
+    unit_req_name_el(req).text
   end
 
   def visible_unit_req_num(req)
@@ -110,6 +114,208 @@ class BOACDegreeCheckTemplatePage
     wait_for_update_and_click unit_req_delete_button(req)
   end
 
-  # TODO - deletion workflow when UI is ready
+  def click_confirm_delete
+    logger.info 'Clicking the delete confirm button'
+    wait_for_update_and_click confirm_delete_or_discard_button_element
+  end
+
+  def click_cancel_delete
+    logger.info 'Clicking delete cancel button'
+    wait_for_update_and_click cancel_delete_or_discard_button_element
+    confirm_delete_or_discard_button_element.when_not_present 1
+  end
+
+  # COLUMN
+
+  # Create
+
+  select_list(:col_req_type_select, xpath: '//select[contains(@id, "add-category-select")]')
+  text_field(:col_req_name_input, xpath: '//input[contains(@id, "name-input")]')
+  text_area(:col_req_desc_input, xpath: '//textarea[contains(@id, "description-input")]')
+  select_list(:col_req_parent_select, xpath: '//select[contains(@id, "parent-category-select")]')
+  text_field(:col_req_course_units_input, xpath: '//input[contains(@id, "course-units-input")]')
+  span(:col_req_course_units_error_msg, xpath: '//span[text()=" Number or numerical range required "]')
+  select_list(:col_req_course_units_req_select, xpath: '//select[contains(@id, "unit-requirement-select")]')
+  button(:col_req_create_button, xpath: '//button[contains(@id, "create-requirement-btn")]')
+  button(:col_req_cancel_create_button, xpath: '//button[contains(@id, "cancel-create-requirement-btn")]')
+
+  def add_col_req_button(col_num)
+    button_element(id: "column-#{col_num}-create-btn")
+  end
+
+  def click_add_col_req_button(col_num)
+    logger.info "Clicking the add button for column #{col_num}"
+    wait_for_update_and_click add_col_req_button(col_num)
+  end
+
+  def col_req_type_options
+    wait_until(1) { col_req_type_select_element.options&.any? }
+    col_req_type_select_element.options
+  end
+
+  def select_col_req_type(type)
+    logger.info "Selecting column requirement type '#{type}'"
+    wait_for_element_and_select_js(col_req_type_select_element, type)
+  end
+
+  def enter_col_req_name(name)
+    logger.info "Entering column requirement name '#{name}'"
+    wait_for_element_and_type(col_req_name_input_element, name)
+  end
+
+  def enter_col_req_desc(desc)
+    logger.info "Entering column requirement description '#{desc}'"
+    wait_for_textbox_and_type(col_req_desc_input_element, desc)
+  end
+
+  def col_req_parent_options
+    wait_until(1) { col_req_parent_select_element.options&.any? }
+    col_req_parent_select_element.options
+  end
+
+  def select_col_req_parent(parent = nil)
+    if parent
+      logger.info "Selecting column requirement parent '#{parent.name}'"
+      wait_for_element_and_select_js(col_req_parent_select_element, parent.name)
+    else
+      wait_for_element_and_select_js(col_req_parent_select_element, col_req_parent_options.first)
+    end
+  end
+
+  def col_req_unit_req_remove_button(idx)
+    button_element(xpath: "//button[contains(@id, 'unit-requirement-remove-#{idx}')]")
+  end
+
+  def select_col_req_unit_req(unit_req)
+    logger.info "Selecting column requirement unit fulfillment '#{unit_req}'"
+    wait_for_element_and_select_js(col_req_course_units_req_select_element, unit_req)
+  end
+
+  def remove_col_req_unit_req(idx)
+    logger.info "Removing unit fulfillment at index #{idx}"
+    wait_for_update_and_click col_req_unit_req_remove_button(idx)
+    col_req_unit_req_remove_button(idx).when_not_present 2
+  end
+
+  def enter_col_req_units(units)
+    logger.info "Entering column requirement units '#{units}'"
+    wait_for_element_and_type(col_req_course_units_input_element, units)
+  end
+
+  def click_create_col_req
+    logger.info 'Clicking the create column requirement button'
+    wait_for_update_and_click col_req_create_button_element
+  end
+
+  def click_cancel_col_req
+    logger.info 'Clicking the cancel column requirement button'
+    wait_for_update_and_click col_req_cancel_create_button_element
+    col_req_cancel_create_button_element.when_not_present 1
+  end
+
+  def enter_col_req_metadata(req)
+    enter_col_req_name req.name
+    enter_col_req_desc req.desc if req.instance_of? DegreeReqtCategory
+    select_col_req_parent req.parent if req.parent
+    if req.instance_of? DegreeCourse
+      enter_col_req_units req.units if req.units
+      req.units_reqts&.each { |u_req| select_col_req_unit_req u_req.name }
+    end
+  end
+
+  def save_col_req
+    click_create_col_req
+    col_req_create_button_element.when_not_present Utils.short_wait
+    sleep 1
+  end
+
+  def create_col_req(req)
+    if req.instance_of? DegreeReqtCategory
+      click_add_col_req_button req.column_num
+      if req.parent
+        select_col_req_type 'Subcategory'
+      else
+        select_col_req_type 'Category'
+      end
+    else
+      click_add_col_req_button req.parent.column_num
+      select_col_req_type 'Course'
+    end
+    enter_col_req_metadata req
+    save_col_req
+    req.set_id
+  end
+
+  # View
+
+  def top_cat_xpath(cat)
+    "//div[@id='column-#{cat.column_num}-category-#{cat.id}']"
+  end
+
+  def subcat_xpath(subcat)
+    "#{top_cat_xpath subcat.parent}//div[@id='column-#{subcat.parent.column_num}-category-#{subcat.parent.id}-subcategories']"
+  end
+
+  def cat_xpath(cat)
+    cat.parent ? "#{subcat_xpath(cat)}" : "#{top_cat_xpath(cat)}"
+  end
+
+  def cat_name_el(cat)
+    xpath = cat.parent ? "#{subcat_xpath(cat)}//h3" : "#{top_cat_xpath(cat)}//h2"
+    span_element(xpath: xpath)
+  end
+
+  def visible_cat_name(cat)
+    cat_name_el(cat).text if cat_name_el(cat).exists?
+  end
+
+  def visible_cat_desc(cat)
+    desc_el = div_element(xpath: "#{cat_xpath(cat)}/div/div[2]")
+    desc_el.text.strip if desc_el.exists?
+  end
+
+  def course_xpath(course)
+    "//table[@id='column-#{course.parent.column_num}-courses-of-category-#{course.parent.id}']//tr[@id='course-#{course.id}-table-row']"
+  end
+
+  def visible_course_name(course)
+    name_el = cell_element(xpath: "#{course_xpath course}/td[1]")
+    name_el.text if name_el.exists?
+  end
+
+  def visible_course_units(course)
+    units_el = span_element(xpath: "#{course_xpath course}/td[2]/span")
+    units_el.text if units_el.exists?
+  end
+
+  def visible_course_fulfillment(course)
+    fulfillment_el = cell_element(xpath: "#{course_xpath course}/td[3]")
+    fulfillment_el.text.strip if fulfillment_el.exists?
+  end
+
+  # Edit
+
+  def cat_edit_button(cat)
+    col = cat.parent ? cat.parent.column_num : cat.column_num
+    button_element(id: "column-#{col}-edit-category-#{cat.id}-btn")
+  end
+
+  def click_edit_cat(cat)
+    logger.info "Clicking the edit button for category ID #{cat.id}"
+    wait_for_update_and_click cat_edit_button(cat)
+  end
+
+  # Delete
+
+  def cat_delete_button(cat)
+    col = cat.parent ? cat.parent.column_num : cat.column_num
+    type = cat.instance_of?(DegreeCourse) ? 'course' : 'category'
+    button_element(id: "column-#{col}-delete-#{type}-#{cat.id}-btn")
+  end
+
+  def click_delete_cat(cat)
+    logger.info "Clicking the delete button for category ID #{cat.id}"
+    wait_for_update_and_click cat_delete_button(cat)
+  end
 
 end

@@ -156,6 +156,7 @@ module Page
     sleep Utils.click_wait
     element.attribute('innerText').length.times { hit_delete; hit_backspace }
     element.value.length.times { hit_delete; hit_backspace }
+    element.click
     element.send_keys text
   end
 
@@ -183,7 +184,11 @@ module Page
   def wait_for_element_and_select_js(select_element, option)
     wait_for_update_and_click select_element
     sleep Utils.click_wait
-    matching_option(select_element, option).click
+    if option.instance_of? Selenium::WebDriver::Element
+      option.click
+    else
+      matching_option(select_element, option).click
+    end
   end
 
   # Returns true if a code block completes without error.
