@@ -1,5 +1,7 @@
 class DegreeUnitReqt
 
+  include Logging
+
   attr_accessor :id,
                 :name,
                 :unit_count

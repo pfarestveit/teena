@@ -1,5 +1,7 @@
 class DegreeProgressTemplate
 
+  include Logging
+
   attr_accessor :id,
                 :name,
                 :unit_reqts,
@@ -23,26 +25,29 @@ class DegreeProgressTemplate
     @name = "#{@name} #{test_id}"
 
     @unit_reqts = @unit_reqts && @unit_reqts.map do |units|
-      DegreeUnitReqt.new name: "#{units['name']} #{test_id}",
+      DegreeUnitReqt.new name: "#{units['name']}",
                          unit_count: units['unit_count']
     end
 
     @categories = @categories && @categories.map do |cat|
-      DegreeReqtCategory.new name: "#{cat['name']} #{test_id}",
+      DegreeReqtCategory.new name: "#{cat['name']}",
                              desc: cat['desc'],
                              column_num: cat['column_num'],
                              courses: (cat['courses'] && (cat['courses'].map do |course|
                                DegreeCourse.new name: course['name'],
+                                                column_num: cat['column_num'],
                                                 units: course['units'],
-                                                units_reqts: course['units_reqts']
+                                                units_reqts: (course['units_reqts']&.map { |r| @unit_reqts.find { |u| u.name == r['reqt'] } })
                              end)),
                              sub_categories: (cat['sub_categories'] && (cat['sub_categories'].map do |sub|
-                               DegreeReqtCategory.new name: "#{sub['name']} #{test_id}",
+                               DegreeReqtCategory.new name: "#{sub['name']}",
                                                       desc: sub['desc'],
+                                                      column_num: cat['column_num'],
                                                       courses: (sub['courses'] && (sub['courses'].map do |sub_course|
                                                         DegreeCourse.new name: sub_course['name'],
+                                                                         column_num: cat['column_num'],
                                                                          units: sub_course['units'],
-                                                                         units_reqts: sub_course['units_reqts']
+                                                                         units_reqts: (sub_course['units_reqts']&.map { |r| @unit_reqts.find { |u| u.name == r['reqt'] } })
                                                       end))
                              end))
     end

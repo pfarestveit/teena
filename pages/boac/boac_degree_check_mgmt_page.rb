@@ -27,6 +27,12 @@ class BOACDegreeCheckMgmtPage
     wait_for_update_and_click create_degree_save_button_element
   end
 
+  def create_new_degree(template)
+    click_create_degree
+    enter_degree_name template.name
+    click_save_new_degree
+  end
+
   # LIST
 
   def degree_check_row_xpath(degree_check)
