@@ -230,15 +230,10 @@ class BOACDegreeCheckTemplatePage
   end
 
   def create_col_req(req)
+    click_add_col_req_button req.column_num
     if req.instance_of? DegreeReqtCategory
-      click_add_col_req_button req.column_num
-      if req.parent
-        select_col_req_type 'Subcategory'
-      else
-        select_col_req_type 'Category'
-      end
+      req.parent ? select_col_req_type('Subcategory') : select_col_req_type('Category')
     else
-      click_add_col_req_button req.parent.column_num
       select_col_req_type 'Course'
     end
     enter_col_req_metadata req
@@ -316,6 +311,20 @@ class BOACDegreeCheckTemplatePage
   def click_delete_cat(cat)
     logger.info "Clicking the delete button for category ID #{cat.id}"
     wait_for_update_and_click cat_delete_button(cat)
+  end
+
+  def complete_template(template)
+    template_heading(template).when_visible Utils.short_wait
+    template.set_new_template_id
+    template.unit_reqts&.each { |u| create_unit_req u }
+    template.categories&.each do |cat|
+      create_col_req cat
+      cat.courses&.each { |course| create_col_req course }
+      cat.sub_categories&.each do |subcat|
+        create_col_req subcat
+        subcat.courses&.each { |course| create_col_req course }
+      end
+    end
   end
 
 end

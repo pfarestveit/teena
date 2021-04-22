@@ -1,6 +1,9 @@
 class DegreeCourse
 
+  include Logging
+
   attr_accessor :id,
+                :column_num,
                 :name,
                 :units,
                 :units_reqts,

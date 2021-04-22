@@ -1,5 +1,7 @@
 class DegreeReqtCategory
 
+  include Logging
+
   attr_accessor :id,
                 :name,
                 :desc,
