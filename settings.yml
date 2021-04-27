@@ -52,6 +52,7 @@ boac:
 
   test_dept: UWASC
   test_default_cohort_major: [History BA]
+  test_degree_progress_major: [Bioengineering BS]
   test_add_edit_uid: secret
   test_add_remove_scheduler: secret
 
@@ -62,6 +63,7 @@ boac:
   class_page_max_users: 5
   class_page_max_classmates: 10
   class_page_max_size: 500
+  degree_templates_max: 11
   group_bulk_sids_max: 200
   last_activity_max_users: 3
   last_activity_context: false

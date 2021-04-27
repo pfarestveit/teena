@@ -339,4 +339,13 @@ class BOACPaxManifestPage
     edit_user user
   end
 
+  def set_deg_prog_perm(user, dept, perm)
+    unless user.degree_progress_perm == perm
+      search_for_advisor user
+      user.dept_memberships = [DeptMembership.new(dept: dept, advisor_role: AdvisorRole::ADVISOR)]
+      user.degree_progress_perm = perm
+      edit_user user
+    end
+  end
+
 end

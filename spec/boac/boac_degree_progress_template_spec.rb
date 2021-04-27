@@ -54,13 +54,13 @@ describe 'A BOA degree check template', order: :defined do
     @degree_templates_mgmt_page = BOACDegreeCheckMgmtPage.new @driver
     @degree_template_page = BOACDegreeCheckTemplatePage.new @driver
 
-    @homepage.dev_auth
-    @pax_manifest.load_page
-    @pax_manifest.search_for_advisor test.advisor
-    @pax_manifest.edit_user test.advisor
-    @pax_manifest.search_for_advisor test.read_only_advisor
-    @pax_manifest.edit_user test.read_only_advisor
-    @pax_manifest.log_out
+    unless test.advisor.degree_progress_perm == DegreeProgressPerm::WRITE && test.read_only_advisor.degree_progress_perm == DegreeProgressPerm::READ
+      @homepage.dev_auth
+      @pax_manifest.load_page
+      @pax_manifest.set_deg_prog_perm(test.advisor, BOACDepartments::COE, DegreeProgressPerm::WRITE)
+      @pax_manifest.set_deg_prog_perm(test.read_only_advisor, BOACDepartments::COE, DegreeProgressPerm::READ)
+      @pax_manifest.log_out
+    end
 
     @homepage.dev_auth test.advisor
     @homepage.click_degree_checks_link
@@ -702,6 +702,119 @@ describe 'A BOA degree check template', order: :defined do
       @degree_templates_mgmt_page.click_delete_degree degree
       @degree_templates_mgmt_page.click_confirm_delete
       @degree_templates_mgmt_page.degree_check_link(degree).when_not_present Utils.short_wait
+    end
+  end
+
+  # TESTS FOR REALISTIC TEMPLATE CREATION
+
+  test.degree_templates[0..(BOACUtils.degree_templates_max - 1)].each do |template|
+
+    it "template for #{template.name} can be created" do
+      @homepage.click_degree_checks_link
+      @degree_templates_mgmt_page.create_new_degree template
+      @degree_template_page.complete_template template
+    end
+
+    template.unit_reqts&.each do |u_req|
+      it "shows units requirement #{u_req.name} name" do
+        @degree_template_page.wait_until(1, "Expected #{u_req.name}, got #{@degree_template_page.visible_unit_req_name u_req}") do
+          @degree_template_page.visible_unit_req_name(u_req) == u_req.name
+        end
+      end
+
+      it "shows units requirement #{u_req.name} unit count #{u_req.unit_count}" do
+        @degree_template_page.wait_until(1, "Expected #{u_req.unit_count}, got #{@degree_template_page.visible_unit_req_num u_req}") do
+          @degree_template_page.visible_unit_req_num(u_req) == u_req.unit_count
+        end
+      end
+    end
+
+    template.categories&.each do |cat|
+      it "shows category #{cat.id} name #{cat.name}" do
+        @degree_template_page.wait_until(1, "Expected #{cat.name}, got #{@degree_template_page.visible_cat_name cat}") do
+          @degree_template_page.visible_cat_name(cat) == cat.name
+        end
+      end
+
+      it "shows category #{cat.name} description #{cat.desc}" do
+        if cat.desc
+          @degree_template_page.wait_until(1, "Expected #{cat.desc}, got #{@degree_template_page.visible_cat_desc cat}") do
+            @degree_template_page.visible_cat_desc(cat) == cat.desc
+          end
+        end
+      end
+
+      cat.sub_categories&.each do |sub_cat|
+        it "shows subcategory #{sub_cat.name} name" do
+          @degree_template_page.wait_until(1, "Expected #{sub_cat.name}, got #{@degree_template_page.visible_cat_name(sub_cat)}") do
+            @degree_template_page.visible_cat_name(sub_cat) == sub_cat.name
+          end
+        end
+
+        it "shows subcategory #{sub_cat.name} description #{sub_cat.desc}" do
+          if sub_cat.desc
+            @degree_template_page.wait_until(1, "Expected #{sub_cat.desc}, got #{@degree_template_page.visible_cat_desc(sub_cat)}") do
+              @degree_template_page.visible_cat_desc(sub_cat) == sub_cat.desc
+            end
+          end
+        end
+
+        sub_cat.courses&.each do |course|
+          it "shows subcategory #{sub_cat.name} course #{course.name} name" do
+            @degree_template_page.wait_until(1, "Expected #{course.name}, got #{@degree_template_page.visible_course_name course}") do
+              @degree_template_page.visible_course_name(course) == course.name
+            end
+          end
+
+          it "shows subcategory #{sub_cat.name} course #{course.name} units #{course.units}" do
+            @degree_template_page.wait_until(1, "Expected #{course.units}, got #{@degree_template_page.visible_course_units course}") do
+              course.units ? (@degree_template_page.visible_course_units(course) == course.units) : (@degree_template_page.visible_course_units(course) == '—')
+            end
+          end
+
+          it "shows subcategory #{sub_cat.name} course #{course.name} units requirements #{course.units_reqts}" do
+            if course.units_reqts&.any?
+              course.units_reqts.each do |u_req|
+                @degree_template_page.wait_until(1, "Expected #{u_req.name}, got #{@degree_template_page.visible_course_fulfillment course}") do
+                  @degree_template_page.visible_course_fulfillment(course).include? u_req.name
+                end
+              end
+            else
+              @degree_template_page.wait_until(1, "Expected —, got #{@degree_template_page.visible_course_fulfillment course}") do
+                @degree_template_page.visible_course_fulfillment(course) == '—'
+              end
+            end
+          end
+        end
+      end
+
+      cat.courses&.each do |course|
+        it "shows category #{cat.name} course #{course.name} name" do
+          @degree_template_page.wait_until(1, "Expected #{course.name}, got #{@degree_template_page.visible_course_name course}") do
+            @degree_template_page.visible_course_name(course) == course.name
+          end
+        end
+
+        it "shows category #{cat.name} course #{course.name} units #{course.units}" do
+          @degree_template_page.wait_until(1, "Expected #{course.units}, got #{@degree_template_page.visible_course_units course}") do
+            course.units ? (@degree_template_page.visible_course_units(course) == course.units) : (@degree_template_page.visible_course_units(course) == '—')
+          end
+        end
+
+        it "shows category #{cat.name} course #{course.name} units requirements #{course.units_reqts}" do
+          if course.units_reqts&.any?
+            course.units_reqts.each do |u_req|
+              @degree_template_page.wait_until(1, "Expected #{u_req.name}, got #{@degree_template_page.visible_course_fulfillment course}") do
+                @degree_template_page.visible_course_fulfillment(course).include? u_req.name
+              end
+            end
+          else
+            @degree_template_page.wait_until(1, "Expected —, got #{@degree_template_page.visible_course_fulfillment course}") do
+              @degree_template_page.visible_course_fulfillment(course) == '—'
+            end
+          end
+        end
+      end
     end
   end
 end

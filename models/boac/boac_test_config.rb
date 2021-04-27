@@ -69,8 +69,6 @@ class BOACTestConfig < TestConfig
   def set_read_only_advisor
     dept_advisors = BOACUtils.get_dept_advisors(@dept).select { |u| u.uid.length > 1 }
     @read_only_advisor = dept_advisors.find { |a| a.uid != @advisor.uid }
-    @read_only_advisor.dept_memberships = [DeptMembership.new(dept: @dept, advisor_role: AdvisorRole::ADVISOR)]
-    @read_only_advisor.degree_progress_perm = DegreeProgressPerm::READ
   end
 
   # Sets the complete list of potentially visible students
@@ -100,10 +98,12 @@ class BOACTestConfig < TestConfig
   end
 
   # Sets a cohort to use as a default group of students for testing
-  def set_default_cohort
+  def set_default_cohort(filter = nil)
     @default_cohort = FilteredCohort.new({})
-    filter = CohortFilter.new
-    filter.major = CONFIG['test_default_cohort_major']
+    unless filter
+      filter = CohortFilter.new
+      filter.major = CONFIG['test_default_cohort_major']
+    end
     @default_cohort.search_criteria = filter
     filtered_sids = NessieFilterUtils.get_cohort_result(self, filter)
     @cohort_members = @students.select { |s| filtered_sids.include? s.sis_id }
@@ -280,8 +280,10 @@ class BOACTestConfig < TestConfig
 
   def degree_progress
     set_base_configs BOACDepartments::COE
-    @advisor.degree_progress_perm = DegreeProgressPerm::WRITE
-    @advisor.dept_memberships = [DeptMembership.new(dept: @dept, advisor_role: AdvisorRole::ADVISOR)]
+    filter = CohortFilter.new
+    filter.major = BOACUtils.degree_major
+    filter.units_completed = ['90 - 119']
+    set_default_cohort filter
     set_read_only_advisor
     set_degree_templates
   end

@@ -112,7 +112,7 @@ class NessieFilterUtils < NessieUtils
         if range.include? '+'
           "student.student_academic_status.units >= 120"
         else
-          range = range.split('-').strip
+          range = range.split('-').map &:strip
           "(student.student_academic_status.units BETWEEN #{range[0]} AND #{range[1]})"
         end
       end

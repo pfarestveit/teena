@@ -15,8 +15,8 @@ class DegreeReqtCategory
     @column_num = @parent.column_num if @parent
   end
 
-  def set_id
-    query = "SELECT id FROM degree_progress_categories WHERE name = '#{@name}';"
+  def set_id(template_id)
+    query = "SELECT id FROM degree_progress_categories WHERE name = '#{@name}' AND template_id = '#{template_id}';"
     @id = Utils.query_pg_db_field(BOACUtils.boac_db_credentials, query, 'id').first
     logger.debug "Category ID is #{@id}"
   end
