@@ -199,7 +199,13 @@ class BOACStudentPage
 
   # COURSES
 
+  button(:degree_checks_button, id: 'view-degree-check-btn')
   span(:withdrawal_msg, xpath: '//span[contains(@id, "withdrawal-term-")]')
+
+  def click_degree_checks_button
+    logger.info 'Clicking the degree checks button'
+    wait_for_update_and_click degree_checks_button_element
+  end
 
   def term_data_xpath(term_name)
     "//h3[text()='#{term_name}']"

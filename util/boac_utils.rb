@@ -56,6 +56,14 @@ class BOACUtils < Utils
     @config['appts_drop_in_dept']
   end
 
+  def self.degree_major
+    @config['test_degree_progress_major']
+  end
+
+  def self.degree_templates_max
+    @config['degree_templates_max']
+  end
+
   # Returns the number of SIDs to add during bulk SID group tests
   def self.group_bulk_sids_max
     @config['group_bulk_sids_max']
@@ -270,6 +278,7 @@ class BOACUtils < Utils
               authorized_users.deleted_at AS deleted_at,
               authorized_users.is_admin AS is_admin,
               authorized_users.is_blocked AS is_blocked,
+              authorized_users.degree_progress_permission AS deg_prog_perm,
               university_dept_members.automate_membership AS is_automated,
               university_dept_members.role AS advisor_role,
               EXISTS (SELECT drop_in_advisors.dept_code
@@ -297,6 +306,11 @@ class BOACUtils < Utils
       can_access_canvas_data = (v[0]['can_access_canvas_data'] == 't')
       is_admin = (v[0]['is_admin'] == 't')
       is_blocked = (v[0]['is_blocked'] == 't')
+      degree_progress_perm = case v[0]['deg_prog_perm']
+                             when 'read' then DegreeProgressPerm::READ
+                             when 'read_write' then DegreeProgressPerm::WRITE
+                             else nil
+                             end
       roles = v.map do |role|
         DeptMembership.new(
             {
@@ -315,6 +329,7 @@ class BOACUtils < Utils
              dept_memberships: roles,
              can_access_advising_data: can_access_advising_data,
              can_access_canvas_data: can_access_canvas_data,
+             degree_progress_perm: degree_progress_perm,
              depts: roles.map(&:dept).compact,
              active: active,
              is_admin: is_admin,
@@ -337,6 +352,7 @@ class BOACUtils < Utils
               authorized_users.uid AS uid,
               authorized_users.can_access_advising_data AS can_access_advising_data,
               authorized_users.can_access_canvas_data AS can_access_canvas_data,
+              authorized_users.degree_progress_permission AS deg_prog_perm,
               string_agg(ud.dept_code,',') AS depts
             FROM authorized_users
             JOIN university_dept_members udm
@@ -350,12 +366,14 @@ class BOACUtils < Utils
                           FROM drop_in_advisors
                           WHERE drop_in_advisors.authorized_user_id = authorized_users.id
                             AND ud.dept_code = drop_in_advisors.dept_code) ' if membership&.is_drop_in_advisor}
-            GROUP BY authorized_users.uid, authorized_users.can_access_advising_data, authorized_users.can_access_canvas_data"
+            GROUP BY authorized_users.uid, authorized_users.can_access_advising_data, authorized_users.can_access_canvas_data
+                     authorized_users.degree_progress_permission"
     else
       query = "SELECT
               authorized_users.uid AS uid,
               authorized_users.can_access_advising_data AS can_access_advising_data,
               authorized_users.can_access_canvas_data AS can_access_canvas_data,
+              authorized_users.degree_progress_permission AS deg_prog_perm,
               string_agg(ud2.dept_code,',') AS depts
             FROM authorized_users
             JOIN university_dept_members udm1
@@ -373,18 +391,25 @@ class BOACUtils < Utils
                               FROM drop_in_advisors
                               WHERE drop_in_advisors.authorized_user_id = authorized_users.id
                                 AND drop_in_advisors.dept_code = ud1.dept_code) ' if membership&.is_drop_in_advisor}
-            GROUP BY authorized_users.uid, authorized_users.can_access_advising_data, authorized_users.can_access_canvas_data"
+            GROUP BY authorized_users.uid, authorized_users.can_access_advising_data, authorized_users.can_access_canvas_data,
+                     authorized_users.degree_progress_permission"
     end
     results = query_pg_db(boac_db_credentials, query)
     results.map do |r|
       dept_memberships = r['depts'].split(',').map do |code|
         DeptMembership.new(dept: (BOACDepartments::DEPARTMENTS.find { |d| d.code == code }))
       end
+      degree_progress_perm = case r['deg_prog_perm']
+                             when 'read' then DegreeProgressPerm::READ
+                             when 'read_write' then DegreeProgressPerm::WRITE
+                             else nil
+                             end
       BOACUser.new(
           uid: r['uid'],
           active: true,
           can_access_advising_data: (r['can_access_advising_data'] == 't'),
           can_access_canvas_data: (r['can_access_canvas_data'] == 't'),
+          degree_progress_perm: degree_progress_perm,
           depts: r['depts'].split(','),
           dept_memberships: dept_memberships
       )

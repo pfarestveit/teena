@@ -320,7 +320,7 @@
     },
     "degree_checks": [
         {
-            "name": "Bioengineering 2020",
+            "name": "Bioengineering BS 2020",
             "unit_reqts": [
                 {
                     "name": "Engineering Units",
@@ -584,7 +584,7 @@
             ]
         },
         {
-            "name": "Civil Engineering 2020",
+            "name": "Civil Engineering BS 2020",
             "unit_reqts": [
                 {
                     "name": "Upper Division Technical",
@@ -769,7 +769,7 @@
             ]
         },
         {
-            "name": "EECS 2020",
+            "name": "Electrical Eng & Comp Sci BS 2020",
             "unit_reqts": [
                 {
                     "name": "EECS",
@@ -969,7 +969,7 @@
             ]
         },
         {
-            "name": "Energy Engineering 2020",
+            "name": "Energy Engineering BS 2020",
             "unit_reqts": [],
             "categories": [
                 {
@@ -1148,7 +1148,7 @@
             ]
         },
         {
-            "name": "Engineering Math and Statistics 2020",
+            "name": "Eng Math & Statistics BS 2020",
             "unit_reqts": [],
             "categories": [
                 {
@@ -1300,7 +1300,7 @@
             ]
         },
         {
-            "name": "Engineering Physics 2020",
+            "name": "Engineering Physics BS 2020",
             "unit_reqts": [
                 {
                     "name": "Upper Division Engin Units",
@@ -1482,7 +1482,7 @@
             ]
         },
         {
-            "name": "Environmental Engineering Science 2020",
+            "name": "Environmental Eng Science BS 2020",
             "unit_reqts": [],
             "categories": [
                 {
@@ -1636,7 +1636,7 @@
             ]
         },
         {
-            "name": "Industrial Engineering and Operations Research 2020",
+            "name": "Industrial Eng & Ops Rsch BS 2020",
             "unit_reqts": [],
             "categories": [
                 {
@@ -1793,7 +1793,7 @@
             ]
         },
         {
-            "name": "Materials Science and Engineering 2020",
+            "name": "Materials Science & Eng BS 2020",
             "unit_reqts": [],
             "categories": [
                 {
@@ -1969,7 +1969,7 @@
             ]
         },
         {
-            "name": "Mechanical Engineering 2020",
+            "name": "Mechanical Engineering BS 2020",
             "unit_reqts": [],
             "categories": [
                 {
@@ -2147,7 +2147,7 @@
             ]
         },
         {
-            "name": "Nuclear Engineering 2020",
+            "name": "Nuclear Engineering BS 2020",
             "unit_reqts": [],
             "categories": [
                 {

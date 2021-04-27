@@ -44,7 +44,7 @@ class BOACDegreeCheckTemplatePage
     wait_for_update_and_click unit_req_cancel_button_element
   end
 
-  def create_unit_req(req)
+  def create_unit_req(req, template)
     req.name = req.name[0..254]
     click_add_unit_req
     enter_unit_req_name req.name
@@ -52,7 +52,7 @@ class BOACDegreeCheckTemplatePage
     click_create_unit_req
     unit_req_create_button_element.when_not_present Utils.short_wait
     sleep Utils.click_wait
-    req.set_id
+    req.set_id template.id
   end
 
   # List
@@ -133,7 +133,7 @@ class BOACDegreeCheckTemplatePage
   text_field(:col_req_name_input, xpath: '//input[contains(@id, "name-input")]')
   text_area(:col_req_desc_input, xpath: '//textarea[contains(@id, "description-input")]')
   select_list(:col_req_parent_select, xpath: '//select[contains(@id, "parent-category-select")]')
-  text_field(:col_req_course_units_input, xpath: '//input[contains(@id, "course-units-input")]')
+  text_field(:col_req_course_units_input, xpath: '//input[contains(@id, "units-input")]')
   span(:col_req_course_units_error_msg, xpath: '//span[text()=" Number or numerical range required "]')
   select_list(:col_req_course_units_req_select, xpath: '//select[contains(@id, "unit-requirement-select")]')
   button(:col_req_create_button, xpath: '//button[contains(@id, "create-requirement-btn")]')
@@ -229,16 +229,16 @@ class BOACDegreeCheckTemplatePage
     sleep 1
   end
 
-  def create_col_req(req)
+  def create_col_req(req, template)
     click_add_col_req_button req.column_num
     if req.instance_of? DegreeReqtCategory
       req.parent ? select_col_req_type('Subcategory') : select_col_req_type('Category')
     else
-      select_col_req_type 'Course'
+      select_col_req_type 'Course Requirement'
     end
     enter_col_req_metadata req
     save_col_req
-    req.set_id
+    req.set_id template.id
   end
 
   # View
@@ -248,7 +248,7 @@ class BOACDegreeCheckTemplatePage
   end
 
   def subcat_xpath(subcat)
-    "#{top_cat_xpath subcat.parent}//div[@id='column-#{subcat.parent.column_num}-category-#{subcat.parent.id}-subcategories']"
+    "//div[@id='column-#{subcat.parent.column_num}-subcategory-#{subcat.id}']"
   end
 
   def cat_xpath(cat)
@@ -257,7 +257,7 @@ class BOACDegreeCheckTemplatePage
 
   def cat_name_el(cat)
     xpath = cat.parent ? "#{subcat_xpath(cat)}//h3" : "#{top_cat_xpath(cat)}//h2"
-    span_element(xpath: xpath)
+    h2_element(xpath: xpath)
   end
 
   def visible_cat_name(cat)
@@ -265,7 +265,7 @@ class BOACDegreeCheckTemplatePage
   end
 
   def visible_cat_desc(cat)
-    desc_el = div_element(xpath: "#{cat_xpath(cat)}/div/div[2]")
+    desc_el = div_element(xpath: "#{cat_xpath(cat)}/div/div/following-sibling::div")
     desc_el.text.strip if desc_el.exists?
   end
 
@@ -316,13 +316,13 @@ class BOACDegreeCheckTemplatePage
   def complete_template(template)
     template_heading(template).when_visible Utils.short_wait
     template.set_new_template_id
-    template.unit_reqts&.each { |u| create_unit_req u }
+    template.unit_reqts&.each { |u| create_unit_req(u, template) }
     template.categories&.each do |cat|
-      create_col_req cat
-      cat.courses&.each { |course| create_col_req course }
+      create_col_req(cat, template)
+      cat.courses&.each { |course| create_col_req(course, template) }
       cat.sub_categories&.each do |subcat|
-        create_col_req subcat
-        subcat.courses&.each { |course| create_col_req course }
+        create_col_req(subcat, template)
+        subcat.courses&.each { |course| create_col_req(course, template) }
       end
     end
   end
