@@ -133,7 +133,7 @@ class BOACDegreeCheckTemplatePage
   text_field(:col_req_name_input, xpath: '//input[contains(@id, "name-input")]')
   text_area(:col_req_desc_input, xpath: '//textarea[contains(@id, "description-input")]')
   select_list(:col_req_parent_select, xpath: '//select[contains(@id, "parent-category-select")]')
-  text_field(:col_req_course_units_input, xpath: '//input[contains(@id, "course-units-input")]')
+  text_field(:col_req_course_units_input, xpath: '//input[contains(@id, "units-input")]')
   span(:col_req_course_units_error_msg, xpath: '//span[text()=" Number or numerical range required "]')
   select_list(:col_req_course_units_req_select, xpath: '//select[contains(@id, "unit-requirement-select")]')
   button(:col_req_create_button, xpath: '//button[contains(@id, "create-requirement-btn")]')
