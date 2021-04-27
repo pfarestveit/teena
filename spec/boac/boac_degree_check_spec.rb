@@ -38,77 +38,106 @@ describe 'A BOA degree check' do
 
   after(:all) { Utils.quit_browser @driver }
 
-  it 'can be selected from a list of degree check templates' do
-    @degree_check_create_page.load_page @student
-    @degree_check_create_page.select_template template
-  end
+  context 'when created' do
 
-  it 'can be canceled' do
-    @degree_check_create_page.click_cancel_degree
-    @student_page.toggle_personal_details_element.when_visible Utils.short_wait
-  end
+    it 'can be selected from a list of degree check templates' do
+      @degree_check_create_page.load_page @student
+      @degree_check_create_page.select_template template
+    end
 
-  it 'can be created' do
-    @degree_check_create_page.load_page @student
-    @degree_check_create_page.create_new_degree_check(@degree_check)
-  end
+    it 'can be canceled' do
+      @degree_check_create_page.click_cancel_degree
+      @student_page.toggle_personal_details_element.when_visible Utils.short_wait
+    end
 
-  template.unit_reqts&.each do |u_req|
-    it "shows units requirement #{u_req.name} name" do
-      @degree_check_page.wait_until(1, "Expected #{u_req.name}, got #{@degree_check_page.visible_unit_req_name u_req}") do
-        @degree_check_page.visible_unit_req_name(u_req) == u_req.name
+    it 'can be created' do
+      @degree_check_create_page.load_page @student
+      @degree_check_create_page.create_new_degree_check(@degree_check)
+    end
+
+    template.unit_reqts&.each do |u_req|
+      it "shows units requirement #{u_req.name} name" do
+        @degree_check_page.wait_until(1, "Expected #{u_req.name}, got #{@degree_check_page.visible_unit_req_name u_req}") do
+          @degree_check_page.visible_unit_req_name(u_req) == u_req.name
+        end
+      end
+
+      it "shows units requirement #{u_req.name} unit count #{u_req.unit_count}" do
+        @degree_check_page.wait_until(1, "Expected #{u_req.unit_count}, got #{@degree_check_page.visible_unit_req_num u_req}") do
+          @degree_check_page.visible_unit_req_num(u_req) == u_req.unit_count
+        end
       end
     end
 
-    it "shows units requirement #{u_req.name} unit count #{u_req.unit_count}" do
-      @degree_check_page.wait_until(1, "Expected #{u_req.unit_count}, got #{@degree_check_page.visible_unit_req_num u_req}") do
-        @degree_check_page.visible_unit_req_num(u_req) == u_req.unit_count
+    template.categories&.each do |cat|
+      it "shows category #{cat.id} name #{cat.name}" do
+        @degree_check_page.wait_until(1, "Expected #{cat.name}, got #{@degree_check_page.visible_cat_name cat}") do
+          @degree_check_page.visible_cat_name(cat) == cat.name
+        end
       end
-    end
-  end
 
-  template.categories&.each do |cat|
-    it "shows category #{cat.id} name #{cat.name}" do
-      @degree_check_page.wait_until(1, "Expected #{cat.name}, got #{@degree_check_page.visible_cat_name cat}") do
-        @degree_check_page.visible_cat_name(cat) == cat.name
-      end
-    end
-
-    it "shows category #{cat.name} description #{cat.desc}" do
-      if cat.desc
+      it "shows category #{cat.name} description #{cat.desc}" do
         @degree_check_page.wait_until(1, "Expected #{cat.desc}, got #{@degree_check_page.visible_cat_desc cat}") do
-          @degree_check_page.visible_cat_desc(cat) == cat.desc
-        end
-      end
-    end
-
-    cat.sub_categories&.each do |sub_cat|
-      it "shows subcategory #{sub_cat.name} name" do
-        @degree_check_page.wait_until(1, "Expected #{sub_cat.name}, got #{@degree_check_page.visible_cat_name(sub_cat)}") do
-          @degree_check_page.visible_cat_name(sub_cat) == sub_cat.name
+          "#{@degree_check_page.visible_cat_desc(cat)}" == "#{cat.desc}"
         end
       end
 
-      it "shows subcategory #{sub_cat.name} description #{sub_cat.desc}" do
-        @degree_check_page.wait_until(1, "Expected #{sub_cat.desc}, got #{@degree_check_page.visible_cat_desc(sub_cat)}") do
-          @degree_check_page.visible_cat_desc(sub_cat) == sub_cat.desc
+      cat.sub_categories&.each do |sub_cat|
+        it "shows subcategory #{sub_cat.name} name" do
+          @degree_check_page.wait_until(1, "Expected #{sub_cat.name}, got #{@degree_check_page.visible_cat_name(sub_cat)}") do
+            @degree_check_page.visible_cat_name(sub_cat) == sub_cat.name
+          end
+        end
+
+        it "shows subcategory #{sub_cat.name} description #{sub_cat.desc}" do
+          @degree_check_page.wait_until(1, "Expected #{sub_cat.desc}, got #{@degree_check_page.visible_cat_desc(sub_cat)}") do
+            @degree_check_page.visible_cat_desc(sub_cat) == sub_cat.desc
+          end
+        end
+
+        sub_cat.courses&.each do |course|
+          it "shows subcategory #{sub_cat.name} course #{course.name} name" do
+            @degree_check_page.wait_until(1, "Expected #{course.name}, got #{@degree_check_page.visible_course_name course}") do
+              @degree_check_page.visible_course_name(course) == course.name
+            end
+          end
+
+          it "shows subcategory #{sub_cat.name} course #{course.name} units #{course.units}" do
+            @degree_check_page.wait_until(1, "Expected #{course.units}, got #{@degree_check_page.visible_course_units course}") do
+              course.units ? (@degree_check_page.visible_course_units(course) == course.units) : (@degree_check_page.visible_course_units(course) == '—')
+            end
+          end
+
+          it "shows subcategory #{sub_cat.name} course #{course.name} units requirements #{course.units_reqts}" do
+            if course.units_reqts&.any?
+              course.units_reqts.each do |u_req|
+                @degree_check_page.wait_until(1, "Expected #{u_req.name}, got #{@degree_check_page.visible_course_fulfillment course}") do
+                  @degree_check_page.visible_course_fulfillment(course).include? u_req.name
+                end
+              end
+            else
+              @degree_check_page.wait_until(1, "Expected —, got #{@degree_check_page.visible_course_fulfillment course}") do
+                @degree_check_page.visible_course_fulfillment(course) == '—'
+              end
+            end
+          end
         end
       end
 
-      sub_cat.courses&.each do |course|
-        it "shows subcategory #{sub_cat.name} course #{course.name} name" do
+      cat.courses&.each do |course|
+        it "shows category #{cat.name} course #{course.name} name" do
           @degree_check_page.wait_until(1, "Expected #{course.name}, got #{@degree_check_page.visible_course_name course}") do
             @degree_check_page.visible_course_name(course) == course.name
           end
         end
 
-        it "shows subcategory #{sub_cat.name} course #{course.name} units #{course.units}" do
+        it "shows category #{cat.name} course #{course.name} units #{course.units}" do
           @degree_check_page.wait_until(1, "Expected #{course.units}, got #{@degree_check_page.visible_course_units course}") do
             course.units ? (@degree_check_page.visible_course_units(course) == course.units) : (@degree_check_page.visible_course_units(course) == '—')
           end
         end
 
-        it "shows subcategory #{sub_cat.name} course #{course.name} units requirements #{course.units_reqts}" do
+        it "shows category #{cat.name} course #{course.name} units requirements #{course.units_reqts}" do
           if course.units_reqts&.any?
             course.units_reqts.each do |u_req|
               @degree_check_page.wait_until(1, "Expected #{u_req.name}, got #{@degree_check_page.visible_course_fulfillment course}") do
@@ -123,33 +152,25 @@ describe 'A BOA degree check' do
         end
       end
     end
-
-    cat.courses&.each do |course|
-      it "shows category #{cat.name} course #{course.name} name" do
-        @degree_check_page.wait_until(1, "Expected #{course.name}, got #{@degree_check_page.visible_course_name course}") do
-          @degree_check_page.visible_course_name(course) == course.name
-        end
-      end
-
-      it "shows category #{cat.name} course #{course.name} units #{course.units}" do
-        @degree_check_page.wait_until(1, "Expected #{course.units}, got #{@degree_check_page.visible_course_units course}") do
-          course.units ? (@degree_check_page.visible_course_units(course) == course.units) : (@degree_check_page.visible_course_units(course) == '—')
-        end
-      end
-
-      it "shows category #{cat.name} course #{course.name} units requirements #{course.units_reqts}" do
-        if course.units_reqts&.any?
-          course.units_reqts.each do |u_req|
-            @degree_check_page.wait_until(1, "Expected #{u_req.name}, got #{@degree_check_page.visible_course_fulfillment course}") do
-              @degree_check_page.visible_course_fulfillment(course).include? u_req.name
-            end
-          end
-        else
-          @degree_check_page.wait_until(1, "Expected —, got #{@degree_check_page.visible_course_fulfillment course}") do
-            @degree_check_page.visible_course_fulfillment(course) == '—'
-          end
-        end
-      end
-    end
   end
+
+  context 'note section' do
+
+    before(:all) { @note_str = "Teena wuz here #{test.id} " * 10 }
+
+    it('shows a no-notes message if no note exists') { expect(@degree_check_page.no_notes_msg.strip).to eql('There currently are no degree notes for this student.') }
+    it('offers a create button for a note') { @degree_check_page.click_create_or_edit_note }
+    it('allows the user to cancel a note') { @degree_check_page.click_cancel_note }
+    it('allows the user to save a note') { @degree_check_page.create_or_edit_note @note_str }
+    it('shows the note content') { expect(@degree_check_page.visible_note_body).to eql(@note_str.strip) }
+    it('shows the note creating advisor') { expect(@degree_check_page.note_update_advisor).not_to be_empty }
+    it('shows the note creation date') { expect(@degree_check_page.note_update_date).to eql(Date.today.strftime('%b %-d, %Y')) }
+    it('offers an edit button for a note') { @degree_check_page.click_create_or_edit_note }
+    it('allows the user to cancel a note edit') { @degree_check_page.click_cancel_note }
+    it('allows the user to save a note edit') { @degree_check_page.create_or_edit_note("EDITED - #{@note_str}") }
+    it('shows the edited note content') { expect(@degree_check_page.visible_note_body).to eql("EDITED - #{@note_str}".strip) }
+    it('shows the note edit advisor') { expect(@degree_check_page.note_update_advisor).not_to be_empty }
+    it('shows the note edit date') { expect(@degree_check_page.note_update_date).to eql(Date.today.strftime('%b %-d, %Y')) }
+  end
+
 end
