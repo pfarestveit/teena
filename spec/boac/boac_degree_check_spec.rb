@@ -9,15 +9,13 @@ template = test.degree_templates.find { |t| t.name.include? BOACUtils.degree_maj
 describe 'A BOA degree check' do
 
   before(:all) do
-    @student = test.cohort_members.shuffle.first
-    @degree_check = DegreeProgressChecklist.new(template, @student)
-
     @driver = Utils.launch_browser
     @homepage = BOACHomePage.new @driver
     @pax_manifest = BOACPaxManifestPage.new @driver
     @degree_templates_mgmt_page = BOACDegreeCheckMgmtPage.new @driver
     @degree_template_page = BOACDegreeCheckTemplatePage.new @driver
     @student_page = BOACStudentPage.new @driver
+    @student_api_page = BOACApiStudentPage.new @driver
     @degree_check_create_page = BOACDegreeCheckCreatePage.new @driver
     @degree_check_page = BOACDegreeCheckPage.new @driver
 
@@ -33,6 +31,12 @@ describe 'A BOA degree check' do
     @homepage.click_degree_checks_link
     @degree_templates_mgmt_page.create_new_degree template
     @degree_template_page.complete_template template
+
+    @student = test.cohort_members.shuffle.first
+    @degree_check = DegreeProgressChecklist.new(template, @student)
+    @student_api_page.get_data(@driver, @student)
+    @unassigned_courses = @student_api_page.degree_progress_courses
+
     @student_page.load_page @student
   end
 
@@ -173,4 +177,39 @@ describe 'A BOA degree check' do
     it('shows the note edit date') { expect(@degree_check_page.note_update_date).to eql(Date.today.strftime('%b %-d, %Y')) }
   end
 
+  context 'unassigned courses' do
+
+    it 'show the right courses' do
+      expect(@degree_check_page.unassigned_course_ccns).to eql(@unassigned_courses.map { |c| "#{c.term_id}-#{c.ccn}" })
+    end
+
+    it 'show the right course name on each row' do
+      @unassigned_courses.each do |course|
+        logger.debug "Checking for #{course.name}"
+        expect(@degree_check_page.unassigned_course_code(course)).to eql(course.name)
+      end
+    end
+
+    it 'show the right course units on each row' do
+      @unassigned_courses.each do |course|
+        logger.debug "Checking for #{course.units}"
+        expect(@degree_check_page.unassigned_course_units(course)).to eql(course.units)
+      end
+    end
+
+    it 'show the right course grade on each row' do
+      @unassigned_courses.each do |course|
+        logger.debug "Checking for #{course.grade}"
+        expect(@degree_check_page.unassigned_course_grade(course)).to eql(course.grade)
+      end
+    end
+
+    it 'show the right course term on each row' do
+      @unassigned_courses.each do |course|
+        term = Utils.sis_code_to_term_name(course.term_id)
+        logger.debug "Checking for #{term}"
+        expect(@degree_check_page.unassigned_course_term(course)).to eql(term)
+      end
+    end
+  end
 end

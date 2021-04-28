@@ -4,13 +4,15 @@ class DegreeCourse
 
   attr_accessor :id,
                 :column_num,
+                :ccn,
                 :name,
                 :units,
                 :units_reqts,
                 :grade,
-                :term,
+                :term_id,
                 :note,
-                :parent
+                :parent,
+                :assignment
 
   def initialize(test_data)
     test_data.each { |k, v| public_send("#{k}=", v) }

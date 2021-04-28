@@ -298,6 +298,10 @@ class BOACApiStudentPage
     sections(course).map { |s| sis_section_data(s)[:ccn] }
   end
 
+  def course_primary_section(course)
+    sections(course).find { |s| sis_section_data(s)[:primary] }
+  end
+
   def dropped_sections(term)
     sections = term['droppedSections']
     sections && sections.map do |section|
@@ -412,6 +416,27 @@ class BOACApiStudentPage
 
   def appointments
     notifications && notifications['appointment']
+  end
+
+  # DEGREE PROGRESS
+
+  def degree_progress_courses
+    courses = []
+    terms.each do |term|
+      term_id = term_id term
+      courses(term).each do |course|
+        if course['grade'] && !course['grade'].empty?
+          data = sis_course_data course
+          primary_section = sis_section_data course_primary_section(course)
+          courses << DegreeCourse.new(ccn: primary_section[:ccn],
+                                      term_id: term_id,
+                                      name: "#{data[:code]} #{primary_section[:component]} #{primary_section[:number]}",
+                                      units: data[:units_completed],
+                                      grade: data[:grade].gsub('−', '-'))
+        end
+      end
+    end
+    courses
   end
 
 end
