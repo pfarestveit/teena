@@ -274,12 +274,12 @@ class BOACDegreeCheckTemplatePage
   end
 
   def visible_course_name(course)
-    name_el = cell_element(xpath: "#{course_xpath course}/td[1]")
+    name_el = cell_element(xpath: "#{course_xpath course}/td[contains(@class, 'table-cell-course')]")
     name_el.text if name_el.exists?
   end
 
   def visible_course_units(course)
-    units_el = span_element(xpath: "#{course_xpath course}/td[2]/span")
+    units_el = span_element(xpath: "#{course_xpath course}/td[contains(@class, 'table-cell-units')]/span")
     units_el.text if units_el.exists?
   end
 

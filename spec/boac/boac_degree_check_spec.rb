@@ -32,7 +32,7 @@ describe 'A BOA degree check' do
     @degree_templates_mgmt_page.create_new_degree template
     @degree_template_page.complete_template template
 
-    @student = test.cohort_members.shuffle.first
+    @student = ENV['UIDS'] ? (test.students.find { |s| s.uid == ENV['UIDS'] }) : test.cohort_members.shuffle.first
     @degree_check = DegreeProgressChecklist.new(template, @student)
     @student_api_page.get_data(@driver, @student)
     @unassigned_courses = @student_api_page.degree_progress_courses
@@ -209,6 +209,43 @@ describe 'A BOA degree check' do
         term = Utils.sis_code_to_term_name(course.term_id)
         logger.debug "Checking for #{term}"
         expect(@degree_check_page.unassigned_course_term(course)).to eql(term)
+      end
+    end
+
+    context 'course' do
+
+      before(:all) do
+        @course_reqt = @degree_check.categories.find { |cat| cat.courses&.any? }.courses.first
+        @course_to_assign = @unassigned_courses.first
+      end
+
+      context 'when assigned to a course requirement' do
+
+        it 'updates the requirement row with the course name' do
+          @degree_check_page.assign_course(@course_to_assign, @course_reqt)
+        end
+
+        it 'updates the requirement row with the course units' do
+          expect(@degree_check_page.visible_course_units(@course_reqt)).to eql(@course_to_assign.units)
+        end
+
+        it 'removes the course from the unassigned courses list' do
+          expect(@degree_check_page.unassigned_course_ccns).not_to include("#{@course_to_assign.term_id}-#{@course_to_assign.ccn}")
+        end
+
+        it 'prevents another course being assigned to the same requirement' do
+          @degree_check_page.click_unassigned_course_select @unassigned_courses.last
+          expect(@degree_check_page.unassigned_course_option(@unassigned_courses.last, @course_reqt).attribute('aria-disabled')).to eql('true')
+        end
+
+        # TODO it 'updates the requirement row with the course grade'
+        # TODO it 'updates the requirement row with the course note'
+        # TODO it 'shows the requirement row\'s pre-existing unit fulfillment(s)'
+
+        # TODO it 'allows the user to edit the course units'
+        # TODO it 'shows an indicator if the user has edited the course units'
+        # TODO it 'allows the user to edit the course unit fulfillment(s)'
+        # TODO it 'shows an indicator if the user has edited the course unit fulfillment(s)'
       end
     end
   end
