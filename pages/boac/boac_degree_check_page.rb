@@ -100,10 +100,19 @@ class BOACDegreeCheckPage < BOACDegreeCheckTemplatePage
     button_element(xpath: "#{unassigned_course_row_xpath course}/td[7]/button")
   end
 
+  def click_unassigned_course_select(course)
+    wait_for_update_and_click unassigned_course_select(course)
+  end
+
+  def unassigned_course_options(course)
+    link_elements(xpath: "#{unassigned_course_row_xpath course}/td[1]//a").map { |el| el.text.strip }
+  end
+
   def assign_course(course, destination)
     logger.info "Assigning course #{course.name}, #{course.term_id}-#{course.ccn} to #{destination.name}"
-    wait_for_update_and_click unassigned_course_select(course)
+    click_unassigned_course_select course
     wait_for_update_and_click unassigned_course_option(course, destination)
+    sleep Utils.click_wait
     destination.assignment = course
     # TODO - moving course to category rather than course row
     wait_until(2) { visible_course_name(destination) == destination.assignment.name }
