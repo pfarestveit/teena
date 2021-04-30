@@ -81,8 +81,10 @@ describe 'A BOA degree check' do
       end
 
       it "shows category #{cat.name} description #{cat.desc}" do
-        @degree_check_page.wait_until(1, "Expected #{cat.desc}, got #{@degree_check_page.visible_cat_desc cat}") do
-          "#{@degree_check_page.visible_cat_desc(cat)}" == "#{cat.desc}"
+        if cat.desc && !cat.desc.empty?
+          @degree_check_page.wait_until(1, "Expected #{cat.desc}, got #{@degree_check_page.visible_cat_desc cat}") do
+            "#{@degree_check_page.visible_cat_desc(cat)}" == "#{cat.desc}"
+          end
         end
       end
 
@@ -99,58 +101,58 @@ describe 'A BOA degree check' do
           end
         end
 
-        sub_cat.courses&.each do |course|
+        sub_cat.course_reqs&.each do |course|
           it "shows subcategory #{sub_cat.name} course #{course.name} name" do
-            @degree_check_page.wait_until(1, "Expected #{course.name}, got #{@degree_check_page.visible_course_name course}") do
-              @degree_check_page.visible_course_name(course) == course.name
+            @degree_check_page.wait_until(1, "Expected #{course.name}, got #{@degree_check_page.visible_course_req_name course}") do
+              @degree_check_page.visible_course_req_name(course) == course.name
             end
           end
 
           it "shows subcategory #{sub_cat.name} course #{course.name} units #{course.units}" do
-            @degree_check_page.wait_until(1, "Expected #{course.units}, got #{@degree_check_page.visible_course_units course}") do
-              course.units ? (@degree_check_page.visible_course_units(course) == course.units) : (@degree_check_page.visible_course_units(course) == '—')
+            @degree_check_page.wait_until(1, "Expected #{course.units}, got #{@degree_check_page.visible_course_req_units course}") do
+              course.units ? (@degree_check_page.visible_course_req_units(course) == course.units) : (@degree_check_page.visible_course_req_units(course) == '—')
             end
           end
 
           it "shows subcategory #{sub_cat.name} course #{course.name} units requirements #{course.units_reqts}" do
             if course.units_reqts&.any?
               course.units_reqts.each do |u_req|
-                @degree_check_page.wait_until(1, "Expected #{u_req.name}, got #{@degree_check_page.visible_course_fulfillment course}") do
-                  @degree_check_page.visible_course_fulfillment(course).include? u_req.name
+                @degree_check_page.wait_until(1, "Expected #{u_req.name}, got #{@degree_check_page.visible_course_req_fulfillment course}") do
+                  @degree_check_page.visible_course_req_fulfillment(course).include? u_req.name
                 end
               end
             else
-              @degree_check_page.wait_until(1, "Expected —, got #{@degree_check_page.visible_course_fulfillment course}") do
-                @degree_check_page.visible_course_fulfillment(course) == '—'
+              @degree_check_page.wait_until(1, "Expected —, got #{@degree_check_page.visible_course_req_fulfillment course}") do
+                @degree_check_page.visible_course_req_fulfillment(course) == '—'
               end
             end
           end
         end
       end
 
-      cat.courses&.each do |course|
+      cat.course_reqs&.each do |course|
         it "shows category #{cat.name} course #{course.name} name" do
-          @degree_check_page.wait_until(1, "Expected #{course.name}, got #{@degree_check_page.visible_course_name course}") do
-            @degree_check_page.visible_course_name(course) == course.name
+          @degree_check_page.wait_until(1, "Expected #{course.name}, got #{@degree_check_page.visible_course_req_name course}") do
+            @degree_check_page.visible_course_req_name(course) == course.name
           end
         end
 
         it "shows category #{cat.name} course #{course.name} units #{course.units}" do
-          @degree_check_page.wait_until(1, "Expected #{course.units}, got #{@degree_check_page.visible_course_units course}") do
-            course.units ? (@degree_check_page.visible_course_units(course) == course.units) : (@degree_check_page.visible_course_units(course) == '—')
+          @degree_check_page.wait_until(1, "Expected #{course.units}, got #{@degree_check_page.visible_course_req_units course}") do
+            course.units ? (@degree_check_page.visible_course_req_units(course) == course.units) : (@degree_check_page.visible_course_req_units(course) == '—')
           end
         end
 
         it "shows category #{cat.name} course #{course.name} units requirements #{course.units_reqts}" do
           if course.units_reqts&.any?
             course.units_reqts.each do |u_req|
-              @degree_check_page.wait_until(1, "Expected #{u_req.name}, got #{@degree_check_page.visible_course_fulfillment course}") do
-                @degree_check_page.visible_course_fulfillment(course).include? u_req.name
+              @degree_check_page.wait_until(1, "Expected #{u_req.name}, got #{@degree_check_page.visible_course_req_fulfillment course}") do
+                @degree_check_page.visible_course_req_fulfillment(course).include? u_req.name
               end
             end
           else
-            @degree_check_page.wait_until(1, "Expected —, got #{@degree_check_page.visible_course_fulfillment course}") do
-              @degree_check_page.visible_course_fulfillment(course) == '—'
+            @degree_check_page.wait_until(1, "Expected —, got #{@degree_check_page.visible_course_req_fulfillment course}") do
+              @degree_check_page.visible_course_req_fulfillment(course) == '—'
             end
           end
         end
@@ -180,27 +182,27 @@ describe 'A BOA degree check' do
   context 'unassigned courses' do
 
     it 'show the right courses' do
-      expect(@degree_check_page.unassigned_course_ccns).to eql(@unassigned_courses.map { |c| "#{c.term_id}-#{c.ccn}" })
+      expect(@degree_check_page.unassigned_compl_course_ccns).to eql(@unassigned_courses.map { |c| "#{c.term_id}-#{c.ccn}" })
     end
 
     it 'show the right course name on each row' do
       @unassigned_courses.each do |course|
         logger.debug "Checking for #{course.name}"
-        expect(@degree_check_page.unassigned_course_code(course)).to eql(course.name)
+        expect(@degree_check_page.unassigned_compl_course_code(course)).to eql(course.name)
       end
     end
 
     it 'show the right course units on each row' do
       @unassigned_courses.each do |course|
         logger.debug "Checking for #{course.units}"
-        expect(@degree_check_page.unassigned_course_units(course)).to eql(course.units)
+        expect(@degree_check_page.unassigned_compl_course_units(course)).to eql(course.units)
       end
     end
 
     it 'show the right course grade on each row' do
       @unassigned_courses.each do |course|
         logger.debug "Checking for #{course.grade}"
-        expect(@degree_check_page.unassigned_course_grade(course)).to eql(course.grade)
+        expect(@degree_check_page.unassigned_compl_course_grade(course)).to eql(course.grade)
       end
     end
 
@@ -208,34 +210,36 @@ describe 'A BOA degree check' do
       @unassigned_courses.each do |course|
         term = Utils.sis_code_to_term_name(course.term_id)
         logger.debug "Checking for #{term}"
-        expect(@degree_check_page.unassigned_course_term(course)).to eql(term)
+        expect(@degree_check_page.unassigned_compl_course_term(course)).to eql(term)
       end
     end
 
     context 'course' do
 
       before(:all) do
-        @course_reqt = @degree_check.categories.find { |cat| cat.courses&.any? }.courses.first
-        @course_to_assign = @unassigned_courses.first
+        cats_with_courses = @degree_check.categories.select { |cat| cat.course_reqs&.any? }
+        @course_req_1 = cats_with_courses.first.course_reqs.first
+        @course_req_2 = cats_with_courses.last.course_reqs.last
+        @completed_course = @unassigned_courses.first
       end
 
       context 'when assigned to a course requirement' do
 
         it 'updates the requirement row with the course name' do
-          @degree_check_page.assign_course(@course_to_assign, @course_reqt)
+          @degree_check_page.assign_completed_course(@completed_course, @course_req_1)
         end
 
         it 'updates the requirement row with the course units' do
-          expect(@degree_check_page.visible_course_units(@course_reqt)).to eql(@course_to_assign.units)
+          expect(@degree_check_page.visible_course_req_units(@course_req_1)).to eql(@completed_course.units)
         end
 
         it 'removes the course from the unassigned courses list' do
-          expect(@degree_check_page.unassigned_course_ccns).not_to include("#{@course_to_assign.term_id}-#{@course_to_assign.ccn}")
+          expect(@degree_check_page.unassigned_compl_course_ccns).not_to include("#{@completed_course.term_id}-#{@completed_course.ccn}")
         end
 
         it 'prevents another course being assigned to the same requirement' do
-          @degree_check_page.click_unassigned_course_select @unassigned_courses.last
-          expect(@degree_check_page.unassigned_course_option(@unassigned_courses.last, @course_reqt).attribute('aria-disabled')).to eql('true')
+          @degree_check_page.click_unassigned_compl_course_select @unassigned_courses.last
+          expect(@degree_check_page.unassigned_compl_course_req_option(@unassigned_courses.last, @course_req_1).attribute('aria-disabled')).to eql('true')
         end
 
         # TODO it 'updates the requirement row with the course grade'
@@ -246,6 +250,52 @@ describe 'A BOA degree check' do
         # TODO it 'shows an indicator if the user has edited the course units'
         # TODO it 'allows the user to edit the course unit fulfillment(s)'
         # TODO it 'shows an indicator if the user has edited the course unit fulfillment(s)'
+      end
+
+      context 'when unassigned from a course requirement' do
+
+        it 'reverts the requirement row course name' do
+          @degree_check_page.unassign_compl_course(@completed_course, @course_req_1)
+        end
+
+        it 'reverts the requirement row course units' do
+          if @course_req_1.units
+            (@degree_template_page.visible_course_req_units(@course_req_1) == @course_req_1.units)
+          else
+            (@degree_template_page.visible_course_req_units(@course_req_1) == '—')
+          end
+        end
+
+        # TODO it 'removes the requirement row course grade'
+        # TODO it 'removes the requirement row course note'
+        # TODO it 'reverts the requirement row course units'
+        # TODO it 'reverts the requirement row unit fufillment(s)'
+
+        it 'restores the course to the unassigned courses list' do
+          expect(@degree_check_page.unassigned_compl_course_row_el(@completed_course).exists?).to be true
+        end
+      end
+
+      context 'when reassigned from one course requirement to another' do
+
+        before(:all) { @degree_check_page.assign_completed_course(@completed_course, @course_req_1) }
+
+        it 'updates the requirement row with the course name' do
+          @degree_check_page.reassign_compl_course(@completed_course, @course_req_1, @course_req_2)
+        end
+
+        it 'updates the requirement row with the course units' do
+          expect(@degree_check_page.visible_course_req_units(@course_req_2)).to eql(@completed_course.units)
+        end
+
+        it 'removes the course from the unassigned courses list' do
+          expect(@degree_check_page.unassigned_compl_course_ccns).not_to include("#{@completed_course.term_id}-#{@completed_course.ccn}")
+        end
+
+        it 'prevents another course being assigned to the same requirement' do
+          @degree_check_page.click_unassigned_compl_course_select @unassigned_courses.last
+          expect(@degree_check_page.unassigned_compl_course_req_option(@unassigned_courses.last, @course_req_2).attribute('aria-disabled')).to eql('true')
+        end
       end
     end
   end

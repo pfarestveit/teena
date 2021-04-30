@@ -33,8 +33,8 @@ class DegreeProgressTemplate
       DegreeReqtCategory.new name: "#{cat['name']} #{test_id}",
                              desc: cat['desc'],
                              column_num: cat['column_num'],
-                             courses: (cat['courses'] && (cat['courses'].map do |course|
-                               DegreeCourse.new name: "#{course['name']} #{test_id}",
+                             course_reqs: (cat['courses'] && (cat['courses'].map do |course|
+                               DegreeReqtCourse.new name: "#{course['name']} #{test_id}",
                                                 column_num: cat['column_num'],
                                                 units: course['units'],
                                                 units_reqts: (course['units_reqts']&.map do |r|
@@ -45,8 +45,8 @@ class DegreeProgressTemplate
                                DegreeReqtCategory.new name: "#{sub['name']} #{test_id}",
                                                       desc: sub['desc'],
                                                       column_num: cat['column_num'],
-                                                      courses: (sub['courses'] && (sub['courses'].map do |sub_course|
-                                                        DegreeCourse.new name: "#{sub_course['name']} #{test_id}",
+                                                      course_reqs: (sub['courses'] && (sub['courses'].map do |sub_course|
+                                                        DegreeReqtCourse.new name: "#{sub_course['name']} #{test_id}",
                                                                          column_num: cat['column_num'],
                                                                          units: sub_course['units'],
                                                                          units_reqts: (sub_course['units_reqts']&.map do |r|
@@ -58,11 +58,11 @@ class DegreeProgressTemplate
 
     if @categories
       @categories.each do |cat|
-        cat.courses.each { |course| course.parent = cat } if cat.courses
+        cat.course_reqs.each { |course| course.parent = cat } if cat.course_reqs
         if cat.sub_categories
           cat.sub_categories.each do |sub_cat|
             sub_cat.parent = cat
-            sub_cat.courses.each { |course| course.parent = sub_cat } if sub_cat.courses
+            sub_cat.course_reqs.each { |course| course.parent = sub_cat } if sub_cat.course_reqs
           end
         end
       end

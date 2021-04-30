@@ -428,7 +428,7 @@ class BOACApiStudentPage
         if course['grade'] && !course['grade'].empty?
           data = sis_course_data course
           primary_section = sis_section_data course_primary_section(course)
-          courses << DegreeCourse.new(ccn: primary_section[:ccn],
+          courses << DegreeCompletedCourse.new(ccn: primary_section[:ccn],
                                       term_id: term_id,
                                       name: "#{data[:code]} #{primary_section[:component]} #{primary_section[:number]}",
                                       units: data[:units_completed],

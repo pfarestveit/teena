@@ -217,7 +217,7 @@ class BOACDegreeCheckTemplatePage
     enter_col_req_name req.name
     enter_col_req_desc req.desc if req.instance_of? DegreeReqtCategory
     select_col_req_parent req.parent if req.parent
-    if req.instance_of? DegreeCourse
+    if req.instance_of? DegreeReqtCourse
       enter_col_req_units req.units if req.units
       req.units_reqts&.each { |u_req| select_col_req_unit_req u_req.name }
     end
@@ -269,22 +269,22 @@ class BOACDegreeCheckTemplatePage
     desc_el.text.strip if desc_el.exists?
   end
 
-  def course_xpath(course)
+  def course_req_xpath(course)
     "//table[@id='column-#{course.parent.column_num}-courses-of-category-#{course.parent.id}']//tr[@id='course-#{course.id}-table-row']"
   end
 
-  def visible_course_name(course)
-    name_el = cell_element(xpath: "#{course_xpath course}/td[contains(@class, 'table-cell-course')]")
+  def visible_course_req_name(course)
+    name_el = cell_element(xpath: "#{course_req_xpath course}/td[contains(@class, 'table-cell-course')]")
     name_el.text if name_el.exists?
   end
 
-  def visible_course_units(course)
-    units_el = span_element(xpath: "#{course_xpath course}/td[contains(@class, 'table-cell-units')]/span")
+  def visible_course_req_units(course)
+    units_el = span_element(xpath: "#{course_req_xpath course}/td[contains(@class, 'table-cell-units')]/span")
     units_el.text if units_el.exists?
   end
 
-  def visible_course_fulfillment(course)
-    fulfillment_el = cell_element(xpath: "#{course_xpath course}/td[3]")
+  def visible_course_req_fulfillment(course)
+    fulfillment_el = cell_element(xpath: "#{course_req_xpath course}/td[3]")
     fulfillment_el.text.strip if fulfillment_el.exists?
   end
 
@@ -319,10 +319,10 @@ class BOACDegreeCheckTemplatePage
     template.unit_reqts&.each { |u| create_unit_req(u, template) }
     template.categories&.each do |cat|
       create_col_req(cat, template)
-      cat.courses&.each { |course| create_col_req(course, template) }
+      cat.course_reqs&.each { |course| create_col_req(course, template) }
       cat.sub_categories&.each do |subcat|
         create_col_req(subcat, template)
-        subcat.courses&.each { |course| create_col_req(course, template) }
+        subcat.course_reqs&.each { |course| create_col_req(course, template) }
       end
     end
   end

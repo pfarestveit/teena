@@ -6,7 +6,7 @@ class DegreeReqtCategory
                 :name,
                 :desc,
                 :column_num,
-                :courses,
+                :course_reqs,
                 :parent,
                 :sub_categories
 
