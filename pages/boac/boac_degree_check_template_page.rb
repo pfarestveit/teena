@@ -136,6 +136,7 @@ class BOACDegreeCheckTemplatePage
   text_field(:col_req_course_units_input, xpath: '//input[contains(@id, "units-input")]')
   span(:col_req_course_units_error_msg, xpath: '//span[text()=" Number or numerical range required "]')
   select_list(:col_req_course_units_req_select, xpath: '//select[contains(@id, "unit-requirement-select")]')
+  elements(:col_req_course_units_req_remove_button, :button, xpath: '//button[contains(@id, "unit-requirement-remove")]')
   button(:col_req_create_button, xpath: '//button[contains(@id, "create-requirement-btn")]')
   button(:col_req_cancel_create_button, xpath: '//button[contains(@id, "cancel-create-requirement-btn")]')
 
