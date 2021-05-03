@@ -21,10 +21,10 @@ class DegreeProgressChecklist < DegreeProgressTemplate
     @unit_reqts && @unit_reqts.each { |units| units.set_id @id }
     @categories && categories.each do |cat|
       cat.set_id @id
-      cat.courses && cat.courses.each { |course| course.set_id @id }
+      cat.course_reqs && cat.course_reqs.each { |course| course.set_id @id }
       cat.sub_categories && cat.sub_categories.each do |sub|
         sub.set_id @id
-        sub.courses && sub.courses.each { |course| course.set_id @id }
+        sub.course_reqs && sub.course_reqs.each { |course| course.set_id @id }
       end
     end
   end

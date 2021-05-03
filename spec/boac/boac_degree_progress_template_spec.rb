@@ -22,7 +22,7 @@ req_cat_course = DegreeCourse.new name: "CAT 1 #{test.id}",
                                   units: '5-6',
                                   units_reqts: [units_req_2],
                                   parent: req_category_1
-req_category_1.courses = [req_cat_course]
+req_category_1.course_reqs = [req_cat_course]
 
 req_category_2 = DegreeReqtCategory.new name: "Category 2 #{test.id}",
                                         column_num: 1
@@ -40,7 +40,7 @@ req_sub_cat_course_2 = DegreeCourse.new name: "SUBCAT 2 #{test.id}",
                                         units_reqts: [units_req_2],
                                         parent: req_sub_category_1
 req_category_1.sub_categories = [req_sub_category_1]
-req_sub_category_1.courses = [req_sub_cat_course_1]
+req_sub_category_1.course_reqs = [req_sub_cat_course_1]
 
 req_sub_category_2 = DegreeReqtCategory.new name: "Subcategory 1.2 #{test.id}",
                                             parent: req_category_1
@@ -313,15 +313,15 @@ describe 'A BOA degree check template', order: :defined do
             it('can be saved') { @degree_template_page.create_col_req req_sub_cat_course_1 }
 
             it 'shows the right name' do
-              expect(@degree_template_page.visible_course_name req_sub_cat_course_1).to eql(req_sub_cat_course_1.name)
+              expect(@degree_template_page.visible_course_req_name req_sub_cat_course_1).to eql(req_sub_cat_course_1.name)
             end
 
             it 'shows the right units' do
-              expect(@degree_template_page.visible_course_units req_sub_cat_course_1).to eql(req_sub_cat_course_1.units)
+              expect(@degree_template_page.visible_course_req_units req_sub_cat_course_1).to eql(req_sub_cat_course_1.units)
             end
 
             it 'shows the right unit requirements' do
-              expect(@degree_template_page.visible_course_fulfillment req_sub_cat_course_1).to include(req_sub_cat_course_1.units_reqts.first.name)
+              expect(@degree_template_page.visible_course_req_fulfillment req_sub_cat_course_1).to include(req_sub_cat_course_1.units_reqts.first.name)
             end
           end
 
@@ -365,15 +365,15 @@ describe 'A BOA degree check template', order: :defined do
             end
 
             it 'shows the right name' do
-              expect(@degree_template_page.visible_course_name req_sub_cat_course_1).to eql(req_sub_cat_course_1.name)
+              expect(@degree_template_page.visible_course_req_name req_sub_cat_course_1).to eql(req_sub_cat_course_1.name)
             end
 
             it 'shows the right units' do
-              expect(@degree_template_page.visible_course_units req_sub_cat_course_1).to eql('—')
+              expect(@degree_template_page.visible_course_req_units req_sub_cat_course_1).to eql('—')
             end
 
             it 'shows the right unit requirements' do
-              expect(@degree_template_page.visible_course_fulfillment req_sub_cat_course_1).to include(req_sub_cat_course_1.units_reqts.first.name)
+              expect(@degree_template_page.visible_course_req_fulfillment req_sub_cat_course_1).to include(req_sub_cat_course_1.units_reqts.first.name)
             end
           end
 
@@ -397,7 +397,7 @@ describe 'A BOA degree check template', order: :defined do
           before(:all) do
             @degree_template_page.create_col_req req_category_2
             @degree_template_page.create_col_req req_sub_cat_course_2
-            req_sub_category_1.courses << req_sub_cat_course_2
+            req_sub_category_1.course_reqs << req_sub_cat_course_2
           end
 
           it 'requires a name' do
@@ -437,7 +437,7 @@ describe 'A BOA degree check template', order: :defined do
           end
 
           it 'applies edits to subcategory courses' do
-            expect(@degree_template_page.visible_course_name req_sub_cat_course_2).to eql(req_sub_cat_course_2.name)
+            expect(@degree_template_page.visible_course_req_name req_sub_cat_course_2).to eql(req_sub_cat_course_2.name)
           end
         end
 
@@ -499,15 +499,15 @@ describe 'A BOA degree check template', order: :defined do
           it('can be saved') { @degree_template_page.create_col_req req_cat_course }
 
           it 'shows the right name' do
-            expect(@degree_template_page.visible_course_name req_cat_course).to eql(req_cat_course.name)
+            expect(@degree_template_page.visible_course_req_name req_cat_course).to eql(req_cat_course.name)
           end
 
           it 'shows the right units' do
-            expect(@degree_template_page.visible_course_units req_cat_course).to eql(req_cat_course.units)
+            expect(@degree_template_page.visible_course_req_units req_cat_course).to eql(req_cat_course.units)
           end
 
           it 'shows the right unit requirements' do
-            expect(@degree_template_page.visible_course_fulfillment req_cat_course).to include(req_cat_course.units_reqts.first.name)
+            expect(@degree_template_page.visible_course_req_fulfillment req_cat_course).to include(req_cat_course.units_reqts.first.name)
           end
         end
 
@@ -556,15 +556,15 @@ describe 'A BOA degree check template', order: :defined do
           end
 
           it 'shows the right name' do
-            expect(@degree_template_page.visible_course_name req_cat_course).to eql(req_cat_course.name)
+            expect(@degree_template_page.visible_course_req_name req_cat_course).to eql(req_cat_course.name)
           end
 
           it 'shows the right units' do
-            expect(@degree_template_page.visible_course_units req_cat_course).to eql(req_cat_course.units)
+            expect(@degree_template_page.visible_course_req_units req_cat_course).to eql(req_cat_course.units)
           end
 
           it 'shows the right unit requirements' do
-            expect(@degree_template_page.visible_course_fulfillment req_cat_course).to include(req_cat_course.units_reqts.first.name)
+            expect(@degree_template_page.visible_course_req_fulfillment req_cat_course).to include(req_cat_course.units_reqts.first.name)
           end
         end
 
@@ -759,58 +759,58 @@ describe 'A BOA degree check template', order: :defined do
           end
         end
 
-        sub_cat.courses&.each do |course|
+        sub_cat.course_reqs&.each do |course|
           it "shows subcategory #{sub_cat.name} course #{course.name} name" do
-            @degree_template_page.wait_until(1, "Expected #{course.name}, got #{@degree_template_page.visible_course_name course}") do
-              @degree_template_page.visible_course_name(course) == course.name
+            @degree_template_page.wait_until(1, "Expected #{course.name}, got #{@degree_template_page.visible_course_req_name course}") do
+              @degree_template_page.visible_course_req_name(course) == course.name
             end
           end
 
           it "shows subcategory #{sub_cat.name} course #{course.name} units #{course.units}" do
-            @degree_template_page.wait_until(1, "Expected #{course.units}, got #{@degree_template_page.visible_course_units course}") do
-              course.units ? (@degree_template_page.visible_course_units(course) == course.units) : (@degree_template_page.visible_course_units(course) == '—')
+            @degree_template_page.wait_until(1, "Expected #{course.units}, got #{@degree_template_page.visible_course_req_units course}") do
+              course.units ? (@degree_template_page.visible_course_req_units(course) == course.units) : (@degree_template_page.visible_course_req_units(course) == '—')
             end
           end
 
           it "shows subcategory #{sub_cat.name} course #{course.name} units requirements #{course.units_reqts}" do
             if course.units_reqts&.any?
               course.units_reqts.each do |u_req|
-                @degree_template_page.wait_until(1, "Expected #{u_req.name}, got #{@degree_template_page.visible_course_fulfillment course}") do
-                  @degree_template_page.visible_course_fulfillment(course).include? u_req.name
+                @degree_template_page.wait_until(1, "Expected #{u_req.name}, got #{@degree_template_page.visible_course_req_fulfillment course}") do
+                  @degree_template_page.visible_course_req_fulfillment(course).include? u_req.name
                 end
               end
             else
-              @degree_template_page.wait_until(1, "Expected —, got #{@degree_template_page.visible_course_fulfillment course}") do
-                @degree_template_page.visible_course_fulfillment(course) == '—'
+              @degree_template_page.wait_until(1, "Expected —, got #{@degree_template_page.visible_course_req_fulfillment course}") do
+                @degree_template_page.visible_course_req_fulfillment(course) == '—'
               end
             end
           end
         end
       end
 
-      cat.courses&.each do |course|
+      cat.course_reqs&.each do |course|
         it "shows category #{cat.name} course #{course.name} name" do
-          @degree_template_page.wait_until(1, "Expected #{course.name}, got #{@degree_template_page.visible_course_name course}") do
-            @degree_template_page.visible_course_name(course) == course.name
+          @degree_template_page.wait_until(1, "Expected #{course.name}, got #{@degree_template_page.visible_course_req_name course}") do
+            @degree_template_page.visible_course_req_name(course) == course.name
           end
         end
 
         it "shows category #{cat.name} course #{course.name} units #{course.units}" do
-          @degree_template_page.wait_until(1, "Expected #{course.units}, got #{@degree_template_page.visible_course_units course}") do
-            course.units ? (@degree_template_page.visible_course_units(course) == course.units) : (@degree_template_page.visible_course_units(course) == '—')
+          @degree_template_page.wait_until(1, "Expected #{course.units}, got #{@degree_template_page.visible_course_req_units course}") do
+            course.units ? (@degree_template_page.visible_course_req_units(course) == course.units) : (@degree_template_page.visible_course_req_units(course) == '—')
           end
         end
 
         it "shows category #{cat.name} course #{course.name} units requirements #{course.units_reqts}" do
           if course.units_reqts&.any?
             course.units_reqts.each do |u_req|
-              @degree_template_page.wait_until(1, "Expected #{u_req.name}, got #{@degree_template_page.visible_course_fulfillment course}") do
-                @degree_template_page.visible_course_fulfillment(course).include? u_req.name
+              @degree_template_page.wait_until(1, "Expected #{u_req.name}, got #{@degree_template_page.visible_course_req_fulfillment course}") do
+                @degree_template_page.visible_course_req_fulfillment(course).include? u_req.name
               end
             end
           else
-            @degree_template_page.wait_until(1, "Expected —, got #{@degree_template_page.visible_course_fulfillment course}") do
-              @degree_template_page.visible_course_fulfillment(course) == '—'
+            @degree_template_page.wait_until(1, "Expected —, got #{@degree_template_page.visible_course_req_fulfillment course}") do
+              @degree_template_page.visible_course_req_fulfillment(course) == '—'
             end
           end
         end
