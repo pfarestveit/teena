@@ -182,27 +182,27 @@ describe 'A BOA degree check' do
   context 'unassigned courses' do
 
     it 'show the right courses' do
-      expect(@degree_check_page.unassigned_compl_course_ccns).to eql(@unassigned_courses.map { |c| "#{c.term_id}-#{c.ccn}" })
+      expect(@degree_check_page.unassigned_course_ccns).to eql(@unassigned_courses.map { |c| "#{c.term_id}-#{c.ccn}" })
     end
 
     it 'show the right course name on each row' do
       @unassigned_courses.each do |course|
         logger.debug "Checking for #{course.name}"
-        expect(@degree_check_page.unassigned_compl_course_code(course)).to eql(course.name)
+        expect(@degree_check_page.unassigned_course_code(course)).to eql(course.name)
       end
     end
 
     it 'show the right course units on each row' do
       @unassigned_courses.each do |course|
         logger.debug "Checking for #{course.units}"
-        expect(@degree_check_page.unassigned_compl_course_units(course)).to eql(course.units)
+        expect(@degree_check_page.unassigned_course_units(course)).to eql(course.units)
       end
     end
 
     it 'show the right course grade on each row' do
       @unassigned_courses.each do |course|
         logger.debug "Checking for #{course.grade}"
-        expect(@degree_check_page.unassigned_compl_course_grade(course)).to eql(course.grade)
+        expect(@degree_check_page.unassigned_course_grade(course)).to eql(course.grade)
       end
     end
 
@@ -210,7 +210,7 @@ describe 'A BOA degree check' do
       @unassigned_courses.each do |course|
         term = Utils.sis_code_to_term_name(course.term_id)
         logger.debug "Checking for #{term}"
-        expect(@degree_check_page.unassigned_compl_course_term(course)).to eql(term)
+        expect(@degree_check_page.unassigned_course_term(course)).to eql(term)
       end
     end
 
@@ -223,9 +223,51 @@ describe 'A BOA degree check' do
         @completed_course = @unassigned_courses.first
       end
 
+      context 'edits' do
+
+        it 'can be canceled' do
+          @degree_check_page.click_edit_unassigned_course @completed_course
+          @degree_check_page.click_cancel_unassigned_course_edit
+        end
+
+        it 'allows a user to add a note' do
+          @completed_course.note = "Teena wuz here #{test.id}" * 10
+          @degree_check_page.edit_unassigned_course @completed_course
+          expect(@degree_check_page.unassigned_course_note @completed_course).to eql(@completed_course.note)
+        end
+
+        it 'allows a user to edit a note' do
+          @completed_course.note = "EDITED - #{@completed_course.note}"
+          @degree_check_page.edit_unassigned_course @completed_course
+          expect(@degree_check_page.unassigned_course_note @completed_course).to eql(@completed_course.note)
+        end
+
+        # TODO it 'allows a user to remove a note' do
+        #   @completed_course.note = ''
+        #   @degree_check_page.edit_unassigned_course @completed_course
+        #   expect(@degree_check_page.unassigned_course_note @completed_course).to eql(@completed_course.note)
+        # end
+
+        it 'allows a user to change units to another integer' do
+          @completed_course.units = '6'
+          @completed_course.note = 'foo' # TODO remove this
+          @degree_check_page.edit_unassigned_course @completed_course
+          expect(@degree_check_page.unassigned_course_units @completed_course).to eql(@completed_course.units)
+        end
+
+        # TODO it 'does not allow a user to change units to a non-integer'
+
+        it 'does not allow a user to remove all units' do
+          @degree_check_page.click_edit_unassigned_course @completed_course
+          @degree_check_page.enter_unassigned_course_units ''
+          expect(@degree_check_page.unassigned_course_update_button_element.enabled?).to be false
+        end
+      end
+
       context 'when assigned to a course requirement' do
 
         it 'updates the requirement row with the course name' do
+          @degree_check_page.click_cancel_unassigned_course_edit
           @degree_check_page.assign_completed_course(@completed_course, @course_req_1)
         end
 
@@ -234,28 +276,44 @@ describe 'A BOA degree check' do
         end
 
         it 'removes the course from the unassigned courses list' do
-          expect(@degree_check_page.unassigned_compl_course_ccns).not_to include("#{@completed_course.term_id}-#{@completed_course.ccn}")
+          expect(@degree_check_page.unassigned_course_ccns).not_to include("#{@completed_course.term_id}-#{@completed_course.ccn}")
         end
 
         it 'prevents another course being assigned to the same requirement' do
-          @degree_check_page.click_unassigned_compl_course_select @unassigned_courses.last
-          expect(@degree_check_page.unassigned_compl_course_req_option(@unassigned_courses.last, @course_req_1).attribute('aria-disabled')).to eql('true')
+          @degree_check_page.click_unassigned_course_select @unassigned_courses.last
+          expect(@degree_check_page.unassigned_course_req_option(@unassigned_courses.last, @course_req_1).attribute('aria-disabled')).to eql('true')
         end
 
         # TODO it 'updates the requirement row with the course grade'
         # TODO it 'updates the requirement row with the course note'
         # TODO it 'shows the requirement row\'s pre-existing unit fulfillment(s)'
 
-        # TODO it 'allows the user to edit the course units'
-        # TODO it 'shows an indicator if the user has edited the course units'
-        # TODO it 'allows the user to edit the course unit fulfillment(s)'
-        # TODO it 'shows an indicator if the user has edited the course unit fulfillment(s)'
+        context 'and edited' do
+
+          it 'can be canceled' do
+            @degree_check_page.click_edit_cat @course_req_1
+            @degree_check_page.click_cancel_col_req
+          end
+
+          it 'allows a user to add a note'
+          it 'allows a user to edit a note'
+          it 'allows a user to remove a note'
+
+          it 'allows a user to change units to another integer'
+          it 'does not allow a user to change units to a non-integer'
+          it 'does not allow a user to remove all units'
+          # TODO it 'shows an indicator if the user has edited the course units'
+
+          # TODO it 'allows the user to edit the course unit fulfillment(s)'
+          # TODO it 'shows an indicator if the user has edited the course unit fulfillment(s)'
+        end
+
       end
 
       context 'when unassigned from a course requirement' do
 
         it 'reverts the requirement row course name' do
-          @degree_check_page.unassign_compl_course(@completed_course, @course_req_1)
+          @degree_check_page.unassign_course(@completed_course, @course_req_1)
         end
 
         it 'reverts the requirement row course units' do
@@ -272,7 +330,7 @@ describe 'A BOA degree check' do
         # TODO it 'reverts the requirement row unit fufillment(s)'
 
         it 'restores the course to the unassigned courses list' do
-          expect(@degree_check_page.unassigned_compl_course_row_el(@completed_course).exists?).to be true
+          expect(@degree_check_page.unassigned_course_row_el(@completed_course).exists?).to be true
         end
       end
 
@@ -281,7 +339,7 @@ describe 'A BOA degree check' do
         before(:all) { @degree_check_page.assign_completed_course(@completed_course, @course_req_1) }
 
         it 'updates the requirement row with the course name' do
-          @degree_check_page.reassign_compl_course(@completed_course, @course_req_1, @course_req_2)
+          @degree_check_page.reassign_course(@completed_course, @course_req_1, @course_req_2)
         end
 
         it 'updates the requirement row with the course units' do
@@ -289,12 +347,12 @@ describe 'A BOA degree check' do
         end
 
         it 'removes the course from the unassigned courses list' do
-          expect(@degree_check_page.unassigned_compl_course_ccns).not_to include("#{@completed_course.term_id}-#{@completed_course.ccn}")
+          expect(@degree_check_page.unassigned_course_ccns).not_to include("#{@completed_course.term_id}-#{@completed_course.ccn}")
         end
 
         it 'prevents another course being assigned to the same requirement' do
-          @degree_check_page.click_unassigned_compl_course_select @unassigned_courses.last
-          expect(@degree_check_page.unassigned_compl_course_req_option(@unassigned_courses.last, @course_req_2).attribute('aria-disabled')).to eql('true')
+          @degree_check_page.click_unassigned_course_select @unassigned_courses.last
+          expect(@degree_check_page.unassigned_course_req_option(@unassigned_courses.last, @course_req_2).attribute('aria-disabled')).to eql('true')
         end
       end
     end
