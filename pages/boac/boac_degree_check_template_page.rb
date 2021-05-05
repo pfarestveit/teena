@@ -134,6 +134,9 @@ class BOACDegreeCheckTemplatePage
   text_area(:col_req_desc_input, xpath: '//textarea[contains(@id, "description-input")]')
   select_list(:col_req_parent_select, xpath: '//select[contains(@id, "parent-category-select")]')
   text_field(:col_req_course_units_input, xpath: '//input[contains(@id, "units-input")]')
+  button(:unit_req_range_toggle, id: 'show-upper-units-input')
+  text_field(:unit_req_num_input_0, id: 'lower-units-input')
+  text_field(:unit_req_num_input_1, id: 'upper-units-input')
   span(:col_req_course_units_error_msg, xpath: '//span[text()=" Number or numerical range required "]')
   select_list(:col_req_course_units_req_select, xpath: '//select[contains(@id, "unit-requirement-select")]')
   elements(:col_req_course_units_req_remove_button, :button, xpath: '//button[contains(@id, "unit-requirement-remove")]')
@@ -200,7 +203,14 @@ class BOACDegreeCheckTemplatePage
 
   def enter_col_req_units(units)
     logger.info "Entering column requirement units '#{units}'"
-    wait_for_element_and_type(col_req_course_units_input_element, units)
+    if units.include? '-'
+      range = units.split('-')
+      wait_for_update_and_click unit_req_range_toggle_element
+      wait_for_element_and_type(unit_req_num_input_0_element, range[0])
+      wait_for_element_and_type(unit_req_num_input_1_element, range[1])
+    else
+      wait_for_element_and_type(unit_req_num_input_0_element, units)
+    end
   end
 
   def click_create_col_req
@@ -271,17 +281,22 @@ class BOACDegreeCheckTemplatePage
   end
 
   def course_req_xpath(course)
-    "//table[@id='column-#{course.parent.column_num}-courses-of-category-#{course.parent.id}']//tr[@id='course-#{course.id}-table-row']"
+    "//table[@id='column-#{course.parent.column_num}-courses-of-category-#{course.parent.id}']//tr[contains(@id, 'course-#{course.id}-table-row')]"
   end
 
   def visible_course_req_name(course)
-    name_el = cell_element(xpath: "#{course_req_xpath course}/td[contains(@class, 'table-cell-course')]")
+    name_el = cell_element(xpath: "#{course_req_xpath course}/td/span")
     name_el.text if name_el.exists?
   end
 
   def visible_course_req_units(course)
-    units_el = span_element(xpath: "#{course_req_xpath course}/td[contains(@class, 'table-cell-units')]/span")
+    units_el = span_element(xpath: "#{course_req_xpath course}/td[2]/span")
     units_el.text if units_el.exists?
+  end
+
+  def visible_course_req_note(course)
+    note_el = cell_element(xpath: "#{course_req_xpath course}/td[5]")
+    note_el.text.strip if note_el.exists?
   end
 
   def visible_course_req_fulfillment(course)
