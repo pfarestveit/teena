@@ -44,22 +44,22 @@ unless ENV['STANDALONE']
     users.each do |user|
       it "can be managed by a course #{user.role} if the user has permission to reach the instructor-facing tool" do
         @canvas_page.masquerade_as(user, course_site_1)
-        @mailing_list_page.load_embedded_tool course_site_1
-        if [test.manual_teacher, test.lead_ta, test.ta, test.reader].include? user
+        @mailing_list_page.hit_embedded_tool_url course_site_1
+        if [test.manual_teacher, test.lead_ta, test.ta, test.designer, test.reader].include? user
           logger.debug "Verifying that #{user.role} UID #{user.uid} has access to the instructor-facing mailing list tool"
+          @mailing_list_page.switch_to_canvas_iframe
           @mailing_list_page.create_list_button_element.when_present(Utils.medium_wait)
         else
           logger.debug "Verifying that #{user.role} UID #{user.uid} has no access to the instructor-facing mailing list tool"
-          @mailing_list_page.unexpected_error_element.when_visible(Utils.medium_wait)
+          @canvas_page.access_denied_msg_element.when_visible Utils.short_wait
         end
       end
 
       it "cannot be managed by a course #{user.role} via the admin tool" do
-        @canvas_page.masquerade_as(user, course_site_1)
-        @mailing_lists_page.load_embedded_tool
-        @mailing_lists_page.search_for_list course_site_1.site_id
         logger.debug "Verifying that #{user.role} UID #{user.uid} has no access to the admin mailing lists tool"
-        @mailing_lists_page.unexpected_error_element.when_visible Utils.medium_wait
+        @canvas_page.masquerade_as(user, course_site_1)
+        @mailing_lists_page.hit_embedded_tool_url
+        @canvas_page.access_denied_msg_element.when_visible Utils.short_wait
       end
     end
 

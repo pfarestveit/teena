@@ -350,22 +350,27 @@ unless ENV['STANDALONE']
         end
       end
 
-      non_teachers.each do |user|
-        it "allows a course #{user.role} to access the tool if permitted to do so" do
+      [test.lead_ta, test.ta, test.reader].each do |user|
+        it "denies #{user.role} #{user.uid} access to the tool" do
           @canvas.masquerade_as(user, course)
-          logger.debug "Checking a #{user.role}'s access to the tool"
-          @e_grades_export_page.load_embedded_tool course
+          @canvas.load_gradebook course
+          @canvas.click_e_grades_export_button
+          @e_grades_export_page.switch_to_canvas_iframe
+          @e_grades_export_page.not_auth_msg_element.when_visible Utils.medium_wait
+        end
+      end
 
-          if [test.lead_ta, test.ta, test.reader].include? user
-            @canvas.load_gradebook course
-            @canvas.click_e_grades_export_button
-            @e_grades_export_page.switch_to_canvas_iframe
-            @e_grades_export_page.not_auth_msg_element.when_visible Utils.medium_wait
+      it "denies #{test.designer.role} #{test.designer.uid} access to the tool" do
+        @canvas.masquerade_as(test.designer, course)
+        @e_grades_export_page.load_embedded_tool course
+        @e_grades_export_page.not_auth_msg_element.when_visible Utils.medium_wait
+      end
 
-          elsif [test.designer, test.students.first, test.wait_list_student, test.observer].include? user
-            @e_grades_export_page.load_embedded_tool course
-            @e_grades_export_page.not_auth_msg_element.when_visible Utils.medium_wait
-          end
+      [test.observer, test.students.first, test.wait_list_student].each do |user|
+        it "denies #{user.role} #{user.uid} access to the tool" do
+          @canvas.masquerade_as(user, course)
+          @e_grades_export_page.hit_embedded_tool_url course
+          @canvas.access_denied_msg_element.when_visible Utils.short_wait
         end
       end
     end

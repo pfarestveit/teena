@@ -27,10 +27,18 @@ module Page
       div(:sections_updated_msg, xpath: '//div[contains(text(),"The sections in this course site have been updated successfully.")]')
       button(:update_msg_close_button, xpath: '//button[@aria-controls="bc-page-course-official-sections-job-status-notice"]')
 
+      def embedded_tool_path(course)
+        "/courses/#{course.site_id}/external_tools/#{JunctionUtils.canvas_official_sections_tool}"
+      end
+
+      def hit_embedded_tool_url(course)
+        navigate_to "#{Utils.canvas_base_url}#{embedded_tool_path course}"
+      end
+
       # Loads the Official Sections LTI tool within a course site
       # @param course [Course]
       def load_embedded_tool(course)
-        load_tool_in_canvas"/courses/#{course.site_id}/external_tools/#{JunctionUtils.canvas_official_sections_tool}"
+        load_tool_in_canvas embedded_tool_path(course)
       end
 
       # Loads the standalone version of the Official Sections tool

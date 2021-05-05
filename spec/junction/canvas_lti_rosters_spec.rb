@@ -145,21 +145,31 @@ describe 'bCourses Roster Photos' do
 
     context 'when not a Teacher' do
 
-      non_teachers.each do |user|
-
-        it "allows a course #{user.role} with UID #{user.uid} to access the tool on #{course.code} course site ID #{course.site_id} if permitted to do so" do
-          @canvas.masquerade_as user, course
-          @canvas.navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/external_tools/#{JunctionUtils.canvas_rosters_tool}"
-
-          if [test.lead_ta, test.ta].include? user
-            @roster_photos_page.switch_to_canvas_iframe
-            @total_user_count.zero? ?
-                @roster_photos_page.no_students_msg_element.when_visible(Utils.short_wait) :
-                @roster_photos_page.wait_until(Utils.short_wait) { @roster_photos_page.roster_sid_elements.any? }
+      [test.lead_ta, test.ta].each do |user|
+        it "permits #{user.role} #{user.uid} access to the tool" do
+          @canvas.masquerade_as(user, course)
+          @roster_photos_page.load_embedded_tool course
+          if @total_user_count.zero?
+            @roster_photos_page.no_students_msg_element.when_visible(Utils.short_wait)
           else
-            @roster_photos_page.switch_to_canvas_iframe
-            @roster_photos_page.no_access_msg_element.when_visible Utils.short_wait
+            @roster_photos_page.wait_until(Utils.short_wait) { @roster_photos_page.roster_sid_elements.any? }
           end
+        end
+      end
+
+      [test.reader, test.designer].each do |user|
+        it "denies #{user.role} #{user.uid} access to the tool" do
+          @canvas.masquerade_as(user, course)
+          @roster_photos_page.load_embedded_tool course
+          @roster_photos_page.no_access_msg_element.when_visible Utils.short_wait
+        end
+      end
+
+      [test.observer, test.students.first, test.wait_list_student].each do |user|
+        it "denies #{user.role} #{user.uid} access to the tool" do
+          @canvas.masquerade_as(user, course)
+          @roster_photos_page.hit_embedded_tool_url course
+          @canvas.access_denied_msg_element.when_visible Utils.short_wait
         end
       end
     end

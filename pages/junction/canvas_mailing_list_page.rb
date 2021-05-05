@@ -17,11 +17,19 @@ module Page
       div(:list_dupe_error_msg, xpath: '//div[contains(.,"A Mailing List cannot be created for the site")]')
       div(:list_dupe_email_msg, xpath: '//div[contains(.,"is already in use by another Mailing List.")]')
 
+      def embedded_tool_path(course)
+        "/courses/#{course.site_id}/external_tools/#{JunctionUtils.canvas_mailing_list_tool}"
+      end
+
+      def hit_embedded_tool_url(course)
+        navigate_to "#{Utils.canvas_base_url}#{embedded_tool_path course}"
+      end
+
       # Loads the instructor Mailing List LTI tool in a course site
       # @param course [Course]
       def load_embedded_tool(course)
         logger.info "Loading embedded instructor Mailing List tool for course ID #{course.site_id}"
-        load_tool_in_canvas"/courses/#{course.site_id}/external_tools/#{JunctionUtils.canvas_mailing_list_tool}"
+        load_tool_in_canvas embedded_tool_path(course)
       end
 
       # Loads the standalone version of the instructor Mailing List tool
