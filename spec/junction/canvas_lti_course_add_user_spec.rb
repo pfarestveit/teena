@@ -216,28 +216,48 @@ describe 'bCourses Find a Person to Add', order: :defined do
         @canvas.publish_course_site course
       end
 
-      users_to_add.each do |user|
+      # Check each user role's access to the tool
 
-        it "allows a course #{user.role} to access the tool and add a subset of roles to a course site if permitted to do so" do
+      [test.lead_ta, test.ta].each do |user|
+        it "allows #{user.role} #{user.uid} access to the tool with limited roles" do
           @canvas.masquerade_as(user, course)
-          if [test.lead_ta, test.ta].include? user
-            @canvas.load_users_page course
-            @canvas.click_find_person_to_add @driver
-            @course_add_user_page.search('Oski', 'Last Name, First Name')
-            @course_add_user_page.user_role_element.when_visible Utils.short_wait
-            @course_add_user_page.wait_until(Utils.medium_wait) { @course_add_user_page.user_role_options.map(&:strip) == ['Student', 'Waitlist Student', 'Observer'] }
-          elsif user == test.designer
-            @canvas.load_users_page course
-            @canvas.click_find_person_to_add @driver
-            @course_add_user_page.no_access_msg_element.when_visible Utils.medium_wait
-          elsif [test.observer, test.reader, test.students.first, test.wait_list_student].include? user
-            @course_add_user_page.load_embedded_tool course
-            @course_add_user_page.no_access_msg_element.when_visible Utils.medium_wait
+          @canvas.load_users_page course
+          @canvas.click_find_person_to_add @driver
+          @course_add_user_page.search('Oski', 'Last Name, First Name')
+          @course_add_user_page.user_role_element.when_visible Utils.short_wait
+          @course_add_user_page.wait_until(Utils.medium_wait) do
+            @course_add_user_page.user_role_options.map(&:strip) == ['Student', 'Waitlist Student', 'Observer']
           end
         end
 
         it "offers #{user.role} an Academic Policies link" do
-          @driver.switch_to.default_content
+          @canvas.switch_to_main_content
+          expect(@canvas.external_link_valid?(@canvas.policies_link_element, 'Academic Accommodations Hub | Executive Vice Chancellor and Provost')).to be true
+        end
+      end
+
+      [test.designer, test.reader].each do |user|
+        it "denies #{user.role} #{user.uid} access to the tool" do
+          @canvas.masquerade_as(user, course)
+          @course_add_user_page.load_embedded_tool course
+          @course_add_user_page.no_access_msg_element.when_visible Utils.medium_wait
+        end
+
+        it "offers #{user.role} an Academic Policies link" do
+          @canvas.switch_to_main_content
+          expect(@canvas.external_link_valid?(@canvas.policies_link_element, 'Academic Accommodations Hub | Executive Vice Chancellor and Provost')).to be true
+        end
+      end
+
+      [test.observer, test.students.first, test.wait_list_student].each do |user|
+        it "denies #{user.role} #{user.uid} access to the tool" do
+          @canvas.masquerade_as(user, course)
+          @course_add_user_page.hit_embedded_tool_url course
+          @canvas.access_denied_msg_element.when_visible Utils.short_wait
+        end
+
+        it "offers #{user.role} an Academic Policies link" do
+          @canvas.switch_to_main_content
           expect(@canvas.external_link_valid?(@canvas.policies_link_element, 'Academic Accommodations Hub | Executive Vice Chancellor and Provost')).to be true
         end
       end

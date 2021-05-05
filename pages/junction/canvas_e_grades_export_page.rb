@@ -29,10 +29,18 @@ module Page
       button(:download_final_grades, xpath: '//button[contains(text(), "Download Final Grades")]')
       link(:bcourses_to_egrades_link, xpath: '//a[contains(.,"From bCourses to E-Grades")]')
 
+      def embedded_tool_path(course)
+        "/courses/#{course.site_id}/external_tools/#{JunctionUtils.canvas_e_grades_export_tool}"
+      end
+
+      def hit_embedded_tool_url(course)
+        navigate_to "#{Utils.canvas_base_url}#{embedded_tool_path course}"
+      end
+
       # Loads the LTI tool in the context of a Canvas course site
       # @param course [Course]
       def load_embedded_tool(course)
-        load_tool_in_canvas "/courses/#{course.site_id}/external_tools/#{JunctionUtils.canvas_e_grades_export_tool}"
+        load_tool_in_canvas embedded_tool_path(course)
       end
 
       # Loads the LTI tool in the Junction context

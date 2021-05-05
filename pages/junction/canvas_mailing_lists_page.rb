@@ -40,10 +40,18 @@ module Page
       div(:member_removed_msg, xpath: '//div[contains(.,"removed.")]')
       div(:member_added_msg, xpath: '//div[contains(.,"added.")]')
 
+      def embedded_tool_path
+        "/accounts/#{Utils.canvas_admin_sub_account}/external_tools/#{JunctionUtils.canvas_mailing_lists_tool}"
+      end
+
+      def hit_embedded_tool_url
+        navigate_to "#{Utils.canvas_base_url}#{embedded_tool_path}"
+      end
+
       # Loads the admin Mailing Lists LTI tool within the admin sub-account
       def load_embedded_tool
         logger.info 'Loading embedded admin Mailing Lists tool'
-        load_tool_in_canvas"/accounts/#{Utils.canvas_admin_sub_account}/external_tools/#{JunctionUtils.canvas_mailing_lists_tool}"
+        load_tool_in_canvas embedded_tool_path
       end
 
       # Loads the standalone version of the admin Mailing Lists tool
