@@ -201,6 +201,7 @@ class BOACStudentPage
 
   button(:degree_checks_button, id: 'view-degree-check-btn')
   span(:withdrawal_msg, xpath: '//span[contains(@id, "withdrawal-term-")]')
+  button(:toggle_collapse_all_years, id: 'toggle-collapse-all-years')
 
   def click_degree_checks_button
     logger.info 'Clicking the degree checks button'
@@ -213,6 +214,10 @@ class BOACStudentPage
 
   def term_data_heading(term_name)
     h3_element(xpath: term_data_xpath(term_name))
+  end
+
+  def click_expand_collapse_years_toggle
+    wait_for_update_and_click toggle_collapse_all_years_element
   end
 
   def expand_academic_year(term_name)

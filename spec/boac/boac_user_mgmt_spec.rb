@@ -84,8 +84,8 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
                 expected_roles << 'Scheduler' if membership.advisor_role == AdvisorRole::SCHEDULER
                 expected_roles << 'Drop-in Advisor' if membership.is_drop_in_advisor
                 visible_dept_roles = @pax_manifest_page.visible_dept_roles(user, membership.dept.code)
-                visible_roles = visible_dept_roles[/.*\(([^\)]*)/, 1]
-                actual_roles = visible_roles.split(', ')
+                visible_roles = visible_dept_roles.split(' — ').last
+                actual_roles = visible_roles.split(' and ')
                 actual_roles.concat(actual_roles.pop.split(' and '))
                 expect(actual_roles).to eql(expected_roles)
               end
@@ -275,6 +275,11 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
     end
 
     context 'in user edit mode' do
+
+      before(:all) do
+        @pax_manifest_page.load_page
+        @pax_manifest_page.search_for_advisor @add_edit_user
+      end
 
       before(:each) { @pax_manifest_page.click_cancel_button if @pax_manifest_page.cancel_user_button? }
 

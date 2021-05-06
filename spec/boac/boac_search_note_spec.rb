@@ -43,7 +43,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
           test_notes = expected_sis_notes.shuffle[range] + expected_ei_notes.shuffle[range] + expected_boa_notes.shuffle[range] +
               expected_asc_notes.shuffle[range] + expected_data_notes.shuffle[range]
 
-          logger.info "Test note sources: #{test_notes.map { |n| n.note_source.name }}"
+          logger.info "Test note sources: #{test_notes.map { |n| n.note_source ? n.note_source.name : 'BOA' }}"
 
           if test_notes.any?
             test_notes.each do |note|
