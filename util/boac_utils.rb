@@ -366,7 +366,7 @@ class BOACUtils < Utils
                           FROM drop_in_advisors
                           WHERE drop_in_advisors.authorized_user_id = authorized_users.id
                             AND ud.dept_code = drop_in_advisors.dept_code) ' if membership&.is_drop_in_advisor}
-            GROUP BY authorized_users.uid, authorized_users.can_access_advising_data, authorized_users.can_access_canvas_data
+            GROUP BY authorized_users.uid, authorized_users.can_access_advising_data, authorized_users.can_access_canvas_data,
                      authorized_users.degree_progress_permission"
     else
       query = "SELECT

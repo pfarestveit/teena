@@ -155,7 +155,7 @@ module Page
     wait_for_update_and_click element
     sleep Utils.click_wait
     element.attribute('innerText').length.times { hit_delete; hit_backspace }
-    element.value.length.times { hit_delete; hit_backspace }
+    element.value.length.times { hit_delete; hit_backspace } if element.value
     element.click
     element.send_keys text
   end

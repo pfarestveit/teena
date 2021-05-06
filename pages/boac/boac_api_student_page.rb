@@ -267,7 +267,7 @@ class BOACApiStudentPage
       :code => course_display_name(course),
       :title => course['title'].gsub(/\s+/, ' '),
       :units_completed => (course['units'].floor == course['units'] ? course['units'].floor.to_s : course['units'].to_s),
-      :midpoint => course['midtermGrade'],
+      :midpoint => (course['midtermGrade'] && course['midtermGrade'].gsub('-','−')),
       :grade => (course['grade'] && course['grade'].gsub('-','−')),
       :grading_basis => course['gradingBasis']
     }

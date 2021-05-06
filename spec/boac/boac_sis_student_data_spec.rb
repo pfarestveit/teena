@@ -591,6 +591,21 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
           # TERMS
 
           if student_terms.any?
+
+            if @boac_student_page.toggle_collapse_all_years?
+              @boac_student_page.click_expand_collapse_years_toggle
+              terms_visible = @boac_student_page.verify_block do
+                student_terms.each { |term| @boac_student_page.term_data_heading(api_student_data.term_name term).when_visible 1 }
+              end
+              it('allows the user to expand all terms') { expect(terms_visible).to be true }
+
+              @boac_student_page.click_expand_collapse_years_toggle
+              terms_hidden = @boac_student_page.verify_block do
+                student_terms.each { |term| @boac_student_page.term_data_heading(api_student_data.term_name term).when_not_visible 1 }
+              end
+              it('allows the user to collapse all terms') { expect(terms_hidden).to be true }
+            end
+
             student_terms.each do |term|
 
               begin
