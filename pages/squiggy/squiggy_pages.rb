@@ -8,7 +8,7 @@ module SquiggyPages
 
   def click_back_to_asset_library
     logger.debug 'Clicking Back to Asset Library button'
-    wait_for_update_and_click back_to_asset_library_button_element
+    2.times { wait_for_update_and_click back_to_asset_library_button_element }
   end
 
   def clear_input(input_el)

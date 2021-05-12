@@ -161,7 +161,6 @@ require_relative '../pages/squiggy/squiggy_asset_library_list_view_page'
 require_relative '../pages/squiggy/squiggy_asset_library_detail_page'
 require_relative '../pages/squiggy/squiggy_asset_library_manage_assets_page'
 require_relative '../pages/squiggy/squiggy_engagement_index_page'
-require_relative '../pages/squiggy/squiggy_points_config_page'
 
 require_relative '../pages/suitec/suite_c_pages'
 require_relative '../pages/suitec/asset_library_list_view_page'
