@@ -49,7 +49,7 @@ describe 'Engagement Index points configuration' do
   end
 
   it 'subtracts points retroactively for a disabled activity' do
-    @engagement_index.click_back_to_index @test
+    @engagement_index.click_back_to_index
     expect(@engagement_index.user_score(@test, @student)).to eql('0')
   end
 
@@ -83,7 +83,7 @@ describe 'Engagement Index points configuration' do
   end
 
   it 'adds points retroactively for a re-enabled activity' do
-    @engagement_index.click_back_to_index @test
+    @engagement_index.click_back_to_index
     expect(@engagement_index.user_score(@test, @student)).to eql(@add_asset_activity.points.to_s)
   end
 
@@ -101,7 +101,7 @@ describe 'Engagement Index points configuration' do
   end
 
   it 'allows a teacher to recalculate points retroactively when changing activity type point values' do
-    @engagement_index.click_back_to_index @test
+    @engagement_index.click_back_to_index
     expect(@engagement_index.user_score(@test, @student)).to eql(@add_asset_activity.points.to_s)
   end
 
@@ -114,16 +114,14 @@ describe 'Engagement Index points configuration' do
   it 'allows a student to view the Points Configuration whether or not they share their scores' do
     @canvas.masquerade_as(@student, @test.course)
     @engagement_index.load_page @test
-    @engagement_index.points_config_link_element.when_visible Utils.short_wait
+    @engagement_index.points_config_button_element.when_visible Utils.short_wait
     if @engagement_index.share_score_cbx_checked?
-      @engagement_index.uncheck_share_score_cbx
-      @engagement_index.users_table_element.when_not_present Utils.short_wait
-      expect(@engagement_index.points_config_link?).to be true
+      @engagement_index.un_share_score
+      @engagement_index.users_table_element.when_not_present 2
     else
-      @engagement_index.check_share_score_cbx
-      @engagement_index.users_table_element.when_visible Utils.short_wait
-      expect(@engagement_index.points_config_link?).to be true
+      @engagement_index.share_score
     end
+    expect(@engagement_index.points_config_button?).to be true
   end
 
   it 'shows a student no editing interface' do

@@ -15,6 +15,16 @@ class SquiggyAssetLibraryDetailPage
   div(:description, xpath: '//h3[text()="Description"]/..')
   # TODO - category
 
+  def load_asset_detail(test, asset)
+    navigate_to "#{test.course.asset_library_url}#suitec_assetId=#{asset.id}"
+    switch_to_canvas_iframe
+    wait_for_asset_detail asset
+  end
+
+  def wait_for_asset_detail(asset)
+    wait_until(Utils.short_wait) { asset_title.include? "#{asset.title}" }
+  end
+
   def wait_for_asset_and_get_id(asset)
     asset_title_element.when_visible Utils.medium_wait
     asset.id = SquiggyUtils.set_asset_id asset
@@ -100,6 +110,10 @@ class SquiggyAssetLibraryDetailPage
     wait_for_update_and_click delete_confirm_button_element
     delete_asset_button_element.when_not_visible Utils.short_wait rescue Selenium::WebDriver::Error::StaleElementReferenceError
   end
+
+  # LIKE
+
+  # TODO
 
   # ADD COMMENT
 

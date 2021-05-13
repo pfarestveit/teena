@@ -154,64 +154,80 @@ class SquiggyEngagementIndexPage
     last_activity_els.map { |date| Date.strptime(date.text, '%m/%d/%Y, %l:%M:%S %p') }
   end
 
+  def sorted_asc?(el)
+    el.attribute('aria-sort') == 'ascending'
+  end
+
+  def sorted_desc?(el)
+    el.attribute('aria-sort') == 'descending'
+  end
+
+  def sort_asc(sort_el)
+    tries = 3
+    until sorted_asc?(sort_el) || tries.zero?
+      tries -= 1
+      sort_el.click
+    end
+    fail unless sorted_asc? sort_el
+  end
+
+  def sort_desc(sort_el)
+    tries = 3
+    until sorted_desc?(sort_el) || tries.zero?
+      tries -= 1
+      sort_el.click
+    end
+    fail unless sorted_desc? sort_el
+  end
+
   def sort_by_rank_asc
     logger.info 'Sorting by "Rank" ascending'
-    wait_for_update_and_click sort_by_rank_element
-    sort_by_rank unless sort_asc?
+    sort_asc sort_by_rank_element
   end
 
   def sort_by_rank_desc
     logger.info 'Sorting by "Rank" descending'
-    wait_for_update_and_click sort_by_rank_element
-    sort_by_rank if sort_asc?
+    sort_desc sort_by_rank_element
   end
 
   def sort_by_name_asc
     logger.info 'Sorting by "Name" ascending'
-    wait_for_update_and_click sort_by_name_element
-    sort_by_name unless sort_asc?
+    sort_asc sort_by_name_element
   end
 
   def sort_by_name_desc
     logger.info 'Sorting by "Name" descending'
-    wait_for_update_and_click sort_by_name_element
-    sort_by_name if sort_asc?
+    sort_desc sort_by_name_element
   end
 
   def sort_by_share_asc
     logger.info 'Sorting by "Share" ascending'
-    wait_for_update_and_click sort_by_share_element
-    sort_by_share unless sort_asc?
+    sort_asc sort_by_share_element
   end
 
   def sort_by_share_desc
     logger.info 'Sorting by "Share" descending'
-    wait_for_update_and_click sort_by_share_element
-    sort_by_share if sort_asc?
+    sort_desc sort_by_share_element
   end
 
   def sort_by_points_asc
     logger.info 'Sorting by "Points" ascending'
-    wait_for_update_and_click sort_by_points_element
-    sort_by_points unless sort_asc?
+    sort_asc sort_by_points_element
   end
 
   def sort_by_points_desc
     logger.info 'Sorting by "Points" descending'
-    wait_for_update_and_click sort_by_points_element
-    sort_by_points if sort_asc?
+    sort_desc sort_by_points_element
   end
 
   def sort_by_activity_asc
     logger.info 'Sorting by "Last Activity" ascending'
-    wait_for_update_and_click sort_by_activity_element
-    sort_by_activity unless sort_asc?
+    sort_asc sort_by_activity_element
   end
 
   def sort_by_activity_desc
     logger.info 'Sorting by "Last Activity" descending'
-    wait_for_update_and_click sort_by_activity_element
-    sort_by_activity if sort_asc?
+    sort_desc sort_by_activity_element
   end
 
   # SHARING
@@ -234,7 +250,6 @@ class SquiggyEngagementIndexPage
     logger.info 'Un-sharing score'
     share_score_cbx_checked? ? js_click(share_score_cbx_element) : logger.warn('Score is already un-shared')
     continue_button if continue_button?
-    users_table_element.when_not_present 2
   end
 
   def sharing_preference(user)
@@ -277,13 +292,13 @@ class SquiggyEngagementIndexPage
 
   # View
 
-  link(:points_config_link, id: 'points-configuration-btn')
-  link(:back_to_engagement_index, xpath: '//a[contains(.,"Back to Engagement Index")]')
+  button(:points_config_button, id: 'points-configuration-btn')
+  button(:back_to_engagement_index, id: 'back-to-engagement-index-btn')
   elements(:enabled_activity_title, :cell, xpath: '//table[@id="enabled-activities-table"]//td[@class="activity-title"]')
   elements(:disabled_activity_title, :cell, xpath: '//table[@id="disabled-activities-table"]//td[@class="activity-title"]')
 
   def click_points_config
-    wait_for_update_and_click points_config_link_element
+    wait_for_update_and_click points_config_button_element
     wait_until(Utils.short_wait) { enabled_activity_title_elements.any? }
     sleep 1
   end
@@ -368,9 +383,8 @@ class SquiggyEngagementIndexPage
     activity.points = new_points
   end
 
-  def click_back_to_index(course)
-    load_page course
-    # TODO wait_for_update_and_click back_to_engagement_index_element
+  def click_back_to_index
+    wait_for_update_and_click back_to_engagement_index_element
   end
 
 end
