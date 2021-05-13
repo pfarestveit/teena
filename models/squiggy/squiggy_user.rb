@@ -1,10 +1,12 @@
 class SquiggyUser < User
 
   attr_accessor :squiggy_id,
-                :assets
+                :assets,
+                :score
 
   def initialize(test_data)
-    test_data.each { |k, v| public_send("#{k}=", v) }
+    super
+    @score ||= 0
   end
 
 end

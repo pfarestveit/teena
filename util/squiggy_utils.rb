@@ -33,6 +33,10 @@ class SquiggyUtils < Utils
     }
   end
 
+  def self.poller_retries
+    @config['squiggy']['poller_retries']
+  end
+
   def SquiggyUtils.set_asset_id(asset)
     query = "SELECT id FROM assets WHERE title = '#{asset.title}'"
     id = Utils.query_pg_db_field(db_credentials, query, 'id').first

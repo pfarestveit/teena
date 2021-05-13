@@ -39,58 +39,65 @@ class TestConfig
     @test_user_data.select { |u| u['tests'][test] }
   end
 
-  def set_user_of_role(test, role)
+  def set_user_of_role(test, role, user_klass = nil)
     user_data = test_specific_user_data(test).find { |d| d['role'] == role }
+    if user_data
+      user_klass ? user_klass.new(user_data) : User.new(user_data)
+    end
     User.new user_data if user_data
   end
 
-  def set_designer(test)
-    @designer = set_user_of_role(test, 'Designer')
+  def set_designer(test, user_klass = nil)
+    @designer = set_user_of_role(test, 'Designer', user_klass)
   end
 
-  def set_lead_ta(test)
-    @lead_ta = set_user_of_role(test, 'Lead TA')
+  def set_lead_ta(test, user_klass = nil)
+    @lead_ta = set_user_of_role(test, 'Lead TA', user_klass)
   end
 
-  def set_observer(test)
-    @observer = set_user_of_role(test, 'Observer')
+  def set_observer(test, user_klass = nil)
+    @observer = set_user_of_role(test, 'Observer', user_klass)
   end
 
-  def set_reader(test)
-    @reader = set_user_of_role(test, 'Reader')
+  def set_reader(test, user_klass = nil)
+    @reader = set_user_of_role(test, 'Reader', user_klass)
   end
 
-  def set_staff(test)
-    @staff = set_user_of_role(test, 'Staff')
+  def set_staff(test, user_klass = nil)
+    @staff = set_user_of_role(test, 'Staff', user_klass)
   end
 
-  def set_students(test)
-    @students = test_specific_user_data(test).select { |d| d['role'] == 'Student' }.map { |d| User.new d }
+  def set_students(test, user_klass = nil)
+    @students = test_specific_user_data(test).select { |d| d['role'] == 'Student' }.map do |d|
+      user_klass ? user_klass.new(d) : User.new(d)
+    end
   end
 
-  def set_ta(test)
-    @ta = set_user_of_role(test, 'TA')
+  def set_ta(test, user_klass = nil)
+    @ta = set_user_of_role(test, 'TA', user_klass)
   end
 
-  def set_teachers(test)
-    @teachers = test_specific_user_data(test).select { |d| d['role'] == 'Teacher' }.map { |d| User.new d }
+  def set_teachers(test, user_klass = nil)
+    @teachers = test_specific_user_data(test).select { |d| d['role'] == 'Teacher' }.map do |d|
+      user_klass ? user_klass.new(d) : User.new(d)
+    end
   end
 
-  def set_wait_list_student(test)
-    @wait_list_student = set_user_of_role(test, 'Waitlist Student')
+  def set_wait_list_student(test, user_klass = nil)
+    @wait_list_student = set_user_of_role(test, 'Waitlist Student', user_klass)
   end
 
-  def set_test_users(test)
+  def set_test_users(test, user_klass = nil)
     roster = []
-    roster << set_designer(test)
-    roster << set_lead_ta(test)
-    roster << set_observer(test)
-    roster << set_reader(test)
-    roster << set_staff(test)
-    roster << set_students(test)
-    roster << set_ta(test)
-    roster << set_teachers(test)
-    roster << set_wait_list_student(test)
+    roster << set_designer(test, user_klass)
+    roster << set_lead_ta(test, user_klass)
+    roster << set_observer(test, user_klass)
+    roster << set_reader(test, user_klass)
+    roster << set_staff(test, user_klass)
+    roster << set_students(test, user_klass)
+    roster << set_ta(test, user_klass)
+    roster << set_teachers(test, user_klass)
+    roster << set_wait_list_student(test, user_klass)
     roster.flatten.compact
   end
 
