@@ -130,6 +130,7 @@ module Page
       if index.nil?
         logger.info "Creating new discussion entry with body '#{reply_body}'"
         wait_for_load_and_click_js primary_reply_link_element
+        primary_reply_iframe_element.when_present 1
         replies = discussion_reply_elements.length
         switch_to_frame primary_reply_iframe_element.attribute('id')
         wait_for_element_and_type_js(paragraph_element(xpath: '//p'), reply_body)

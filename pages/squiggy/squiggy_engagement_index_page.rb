@@ -114,19 +114,20 @@ class SquiggyEngagementIndexPage
     search_for_user user
     sleep 1
     user_score_el(user).when_visible Utils.medium_wait
-    score = user_score_el(user).text
+    score = user_score_el(user).text.to_i
     logger.debug "#{user.full_name}'s score is currently '#{score}'"
     score
   end
 
   def user_score_updated?(test, user, expected_score, retries = nil)
-    tries ||= (retries ? retries : SuiteCUtils.poller_retries)
+    tries ||= (retries ? retries : SquiggyUtils.poller_retries)
     logger.info("Checking if #{user.full_name} has an updated score of #{expected_score}")
     load_scores test
-    wait_until(3) { user_score(url, user) == expected_score }
+    wait_until(3) { user_score(test, user) == expected_score }
+    user.score = expected_score
     true
-  rescue
-    logger.warn 'Score is not yet updated, retrying'
+  rescue => e
+    logger.error "#{e.message}. Score is not yet updated, retrying"
     sleep Utils.short_wait
     retry unless (tries -= 1).zero?
     false
