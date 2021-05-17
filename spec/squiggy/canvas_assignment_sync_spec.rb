@@ -21,9 +21,9 @@ describe 'Canvas assignment sync' do
     # Get two file assets for the user
     @student = @test.students.first
     @assets = @student.assets.select &:file_name
-    @assets[0].title = @asset_library.get_canvas_submission_title @assets[0]
+    @assets[0].title = @assets_list.get_canvas_submission_title @assets[0]
     @assets[0].category = @assignment_1.title
-    @assets[1].title = @asset_library.get_canvas_submission_title @assets[1]
+    @assets[1].title = @assets_list.get_canvas_submission_title @assets[1]
     @assets[1].category = @assignment_2.title
 
     # Teacher creates on non-sync-able assignment and two sync-able assignments and waits for the latter

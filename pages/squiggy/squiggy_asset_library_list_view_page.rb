@@ -117,4 +117,52 @@ class SquiggyAssetLibraryListViewPage
     wait_for_update_and_click asset_el(asset)
   end
 
+  # SEARCH / FILTER
+
+  text_area(:search_input, id: 'basic-search-input')
+  button(:search_button, id: 'search-btn')
+
+  button(:advanced_search_button, id: 'search-assets-btn')
+  text_area(:keyword_search_input, id: 'adv-search-keywords-input')
+  select_list(:category_select, id: 'adv-search-categories-select')
+  select_list(:uploader_select, id: 'adv-search-user-select')
+  select_list(:asset_type_select, id: 'adv-search-asset-types-select')
+  select_list(:sort_by_select, id: 'adv-search-order-by-option-selected')
+  button(:advanced_search_submit, id: 'adv-search-btn')
+  button(:cancel_advanced_search, id: 'cancel-adv-search-btn')
+
+  def simple_search(keyword)
+    logger.info "Performing simple search of asset library by keyword '#{keyword}'"
+    wait_for_update_and_click(cancel_advanced_search_element) if cancel_advanced_search?
+    search_input_element.when_visible Utils.short_wait
+    search_input_element.clear
+    search_input_element.send_keys(keyword) unless keyword.nil?
+    wait_for_update_and_click search_button_element
+  end
+
+  def open_advanced_search
+    wait_for_load_and_click_js advanced_search_button_element unless keyword_search_input_element.visible?
+  end
+
+  def advanced_search(keyword, category, user, asset_type, sort_by)
+    logger.info "Performing advanced search by keyword '#{keyword}', category '#{category}', user '#{user && user.full_name}', asset type '#{asset_type}', sort by '#{sort_by}'."
+    open_advanced_search
+    keyword.nil? ?
+      wait_for_element_and_type(keyword_search_input_element, '') :
+      wait_for_element_and_type(keyword_search_input_element, keyword)
+    category.nil? ?
+      (wait_for_element_and_select_js(category_select_element, 'Category')) :
+      (wait_for_element_and_select_js(category_select_element, category))
+    user.nil? ?
+      (wait_for_element_and_select_js(uploader_select_element, 'User')) :
+      (wait_for_element_and_select_js(uploader_select_element, user.full_name))
+    asset_type.nil? ?
+      (wait_for_element_and_select_js(asset_type_select_element, 'Asset type')) :
+      (wait_for_element_and_select_js(asset_type_select_element, asset_type))
+    sort_by.nil? ?
+      (wait_for_element_and_select_js(sort_by_select_element, 'Most recent')) :
+      (wait_for_element_and_select_js(sort_by_select_element, sort_by))
+    wait_for_update_and_click advanced_search_submit_element
+  end
+
 end

@@ -30,6 +30,14 @@ class SquiggyAssetLibraryDetailPage
     asset.id = SquiggyUtils.set_asset_id asset
   end
 
+  def category_el(asset)
+    link_element(text: asset.category)
+  end
+
+  def source_el(asset)
+    link_element(text: asset.url)
+  end
+
   def visible_asset_metadata
     asset_title_element.when_visible Utils.short_wait
     {
