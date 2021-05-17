@@ -1,6 +1,7 @@
 class SquiggyAsset
 
   attr_accessor :id,
+                :owner,
                 :category,
                 :comments,
                 :description,
