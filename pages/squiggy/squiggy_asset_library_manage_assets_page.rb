@@ -37,6 +37,7 @@ class SquiggyAssetLibraryManageAssetsPage < SquiggyAssetLibraryListViewPage
     load_page test
     click_manage_assets_link
     wait_until(3) { canvas_category_elements.any? && (canvas_category_title_elements.map &:text).include?(assignment.title) }
+    SquiggyUtils.set_assignment_id assignment
     logger.debug 'The assignment category has appeared'
   rescue => e
     if (tries -= 1).zero?
@@ -49,22 +50,22 @@ class SquiggyAssetLibraryManageAssetsPage < SquiggyAssetLibraryListViewPage
   end
 
   def assignment_sync_cbx(assignment)
-    checkbox_element(xpath: "//div[@role=\"option\"][contains(., \"#{assignment.title}\")]//div[contains(@class, \"v-input--checkbox\")]")
+    checkbox_element(id: "category-#{assignment.squiggy_id}-sync-checkbox")
   end
 
   def enable_assignment_sync(assignment)
     logger.info "Enabling Canvas assignment sync for #{assignment.title}"
-    assignment_sync_cbx(assignment).when_visible Utils.short_wait
+    assignment_sync_cbx(assignment).when_present Utils.short_wait
     assignment_sync_cbx(assignment).checked? ?
       logger.debug('Assignment sync is already enabled') :
-      wait_for_update_and_click_js(assignment_sync_cbx assignment)
+      js_click(assignment_sync_cbx assignment)
   end
 
   def disable_assignment_sync(assignment)
     logger.info "Disabling Canvas assignment sync for #{assignment.title}"
-    assignment_sync_cbx(assignment).when_visible Utils.short_wait
+    assignment_sync_cbx(assignment).when_present Utils.short_wait
     assignment_sync_cbx(assignment).checked? ?
-      wait_for_update_and_click_js(assignment_sync_cbx assignment) :
+      js_click(assignment_sync_cbx assignment) :
       logger.debug('Assignment sync is already disabled')
   end
 

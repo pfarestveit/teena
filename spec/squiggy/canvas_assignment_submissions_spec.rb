@@ -2,6 +2,8 @@ require_relative '../../util/spec_helper'
 
 describe 'Canvas assignment submissions' do
 
+  include Logging
+
   begin
 
     @test = SquiggyTestConfig.new 'canvas_submissions'
@@ -17,7 +19,7 @@ describe 'Canvas assignment submissions' do
     @canvas.log_in(@cal_net, @test.admin.username, Utils.super_admin_password)
     @canvas.create_squiggy_course @test
 
-    @assignment = Assignment.new title: "#{@test.course.title} Assignment"
+    @assignment = Assignment.new title: "#{@test.course.title} Assignment #{@test.id}"
     @canvas.masquerade_as(@test.teachers.first, @test.course)
     @canvas.create_assignment(@test.course, @assignment)
 
@@ -48,19 +50,20 @@ describe 'Canvas assignment submissions' do
       begin
         asset.description = nil
         asset.category = @assignment.title
+        type = asset.file_name ? 'File' : 'Link'
 
         # Activity points
-        expected_score = asset.owner.score + Activity::SUBMIT_ASSIGNMENT.points
+        expected_score = asset.owner.score + SquiggyActivity::SUBMIT_ASSIGNMENT.points
         logger.debug "Checking submission for #{asset.owner.full_name} who uploaded #{asset.title} and should now have a score of #{expected_score}"
-        score_updated = @engagement_index.user_score_updated?(@test, asset.owner, "#{expected_score}")
+        score_updated = @engagement_index.user_score_updated?(@test, asset.owner, expected_score)
         it("earns 'Submit an Assignment' points on the Engagement Index for #{asset.owner.full_name}") do
           expect(score_updated).to be true
         end
 
         # Check that submission is added to Asset Library with right metadata
         @assets_list.load_page @test
-        @assets_list.advanced_search(nil, asset.category, asset.owner, asset.type, nil)
-        @assets_list.wait_until(Utils.short_wait) { @assets_list.list_view_asset_elements.length == 1 }
+        SquiggyUtils.set_asset_id(asset, @assignment.id)
+        @assets_list.advanced_search(nil, asset.category, asset.owner, type, nil)
         visible_asset = @assets_list.visible_list_view_asset_data asset
 
         it "#{asset.title} belonging to #{asset.owner.full_name} has the right list view title" do
@@ -71,7 +74,7 @@ describe 'Canvas assignment submissions' do
         end
 
         @assets_list.click_asset_link asset
-        visible_detail = @asset_detail.visible_asset_metadata
+        visible_detail = @asset_detail.visible_asset_metadata asset
         source_shown = @asset_detail.source_el(asset).exists?
         category_shown = @asset_detail.category_el(asset).exists?
         preview_generated = @asset_detail.preview_generated? asset
@@ -94,17 +97,14 @@ describe 'Canvas assignment submissions' do
         it "#{asset.title} belonging to #{asset.owner.full_name} has the right detail view source" do
           expect(source_shown).to be true
         end
-        it "generate the expected asset preview for #{asset.owner.full_name} uploading #{asset.title}" do
-          expect(preview_generated).to be true
-        end
 
-        if asset.type == 'File'
+        if asset.file_name
           asset_downloadable = @asset_detail.verify_block { @asset_detail.download_asset asset }
           it("can be downloaded by #{asset.owner.full_name} from the #{asset.title} asset detail page") do
             expect(asset_downloadable).to be true
           end
         else
-          has_download_button = @asset_detail.download_asset_link?
+          has_download_button = @asset_detail.download_button?
           it("cannot be downloaded by #{asset.owner.full_name} from the #{asset.title} detail page") do
             expect(has_download_button).to be false
           end

@@ -37,11 +37,18 @@ class SquiggyUtils < Utils
     @config['squiggy']['poller_retries']
   end
 
-  def SquiggyUtils.set_asset_id(asset)
-    query = "SELECT id FROM assets WHERE title = '#{asset.title}'"
+  def SquiggyUtils.set_asset_id(asset, assignment_id = nil)
+    query = "SELECT id FROM assets WHERE title = '#{asset.title}'#{ + ' AND canvas_assignment_id = \'' + assignment_id + '\'' if assignment_id}"
     id = Utils.query_pg_db_field(db_credentials, query, 'id').first
     logger.info "Asset ID is #{id}"
     asset.id = id.to_s
+  end
+
+  def SquiggyUtils.set_assignment_id(assignment)
+    query = "SELECT id FROM categories WHERE canvas_assignment_name = '#{assignment.title}'"
+    id = Utils.query_pg_db_field(db_credentials, query, 'id').first
+    logger.info "Squiggy's assignment ID is #{id}"
+    assignment.squiggy_id = id.to_s
   end
 
 end
