@@ -77,7 +77,7 @@ class SquiggyAssetLibraryListViewPage
 
   def canvas_submission_title(asset)
     # For Canvas submissions, the file name or the URL are used as the asset title
-    asset.title = (asset.type == 'File') ? asset.file_name.sub(/\..*/, '') : asset.url
+    asset.title = asset.file_name || asset.url
   end
 
   def load_list_view_asset(test, asset)
@@ -92,11 +92,11 @@ class SquiggyAssetLibraryListViewPage
   def visible_list_view_asset_data(asset)
     xpath = asset_xpath(asset)
     start = Time.now
-    asset_el(asset).when_visible Utils.short_wait
+    asset_el(asset).when_present Utils.short_wait
     logger.warn "PERF - took #{Time.now - start} seconds for asset element to become visible"
     start = Time.now
     thumbnail_el = div_element(xpath: "#{xpath}//div[contains(@style, \"background-image\")]")
-    thumbnail_el.when_visible Utils.short_wait
+    thumbnail_el.when_present Utils.short_wait
     logger.warn "PERF - took #{Time.now - start} seconds for asset thumbnail to become visible"
     title_el = div_element(xpath: "#{xpath}//div[contains(@class, \"asset-metadata\")]/div[1]")
     owner_el = div_element(xpath: "#{xpath}//div[contains(@class, \"asset-metadata\")]/div[2]")
@@ -131,6 +131,14 @@ class SquiggyAssetLibraryListViewPage
   button(:advanced_search_submit, id: 'adv-search-btn')
   button(:cancel_advanced_search, id: 'cancel-adv-search-btn')
 
+  def parameter_option(option)
+    span_element(xpath: "//span[text()=\"#{option}\"]")
+  end
+
+  def parameter_clear_button(parameter)
+    button_element(xpath: "//label[text()='#{parameter}']/following-sibling::div[@class='v-input__append-inner']//button")
+  end
+
   def simple_search(keyword)
     logger.info "Performing simple search of asset library by keyword '#{keyword}'"
     wait_for_update_and_click(cancel_advanced_search_element) if cancel_advanced_search?
@@ -141,27 +149,49 @@ class SquiggyAssetLibraryListViewPage
   end
 
   def open_advanced_search
-    wait_for_load_and_click_js advanced_search_button_element unless keyword_search_input_element.visible?
+    if keyword_search_input_element.visible?
+      logger.debug 'Advanced search input is already visible'
+    else
+      wait_for_load_and_click advanced_search_button_element
+    end
   end
 
   def advanced_search(keyword, category, user, asset_type, sort_by)
     logger.info "Performing advanced search by keyword '#{keyword}', category '#{category}', user '#{user && user.full_name}', asset type '#{asset_type}', sort by '#{sort_by}'."
     open_advanced_search
-    keyword.nil? ?
-      wait_for_element_and_type(keyword_search_input_element, '') :
+    if keyword
       wait_for_element_and_type(keyword_search_input_element, keyword)
-    category.nil? ?
-      (wait_for_element_and_select_js(category_select_element, 'Category')) :
-      (wait_for_element_and_select_js(category_select_element, category))
-    user.nil? ?
-      (wait_for_element_and_select_js(uploader_select_element, 'User')) :
-      (wait_for_element_and_select_js(uploader_select_element, user.full_name))
-    asset_type.nil? ?
-      (wait_for_element_and_select_js(asset_type_select_element, 'Asset type')) :
-      (wait_for_element_and_select_js(asset_type_select_element, asset_type))
-    sort_by.nil? ?
-      (wait_for_element_and_select_js(sort_by_select_element, 'Most recent')) :
-      (wait_for_element_and_select_js(sort_by_select_element, sort_by))
+    else
+      wait_for_element_and_type(keyword_search_input_element, '')
+    end
+
+    if category
+      wait_for_update_and_click_js category_select_element
+      wait_for_update_and_click_js parameter_option(category)
+    else
+      js_click(parameter_clear_button('Category')) if parameter_clear_button('Category').visible?
+    end
+
+    if user
+      wait_for_update_and_click_js uploader_select_element
+      wait_for_update_and_click_js parameter_option(user.full_name)
+    else
+      js_click(parameter_clear_button('User')) if parameter_clear_button('User').visible?
+    end
+
+    if asset_type
+      wait_for_update_and_click_js asset_type_select_element
+      wait_for_update_and_click_js parameter_option(asset_type)
+    else
+      js_click(parameter_clear_button('Asset type')) if parameter_clear_button('Asset type').visible?
+    end
+
+    wait_for_update_and_click_js sort_by_select_element
+    if sort_by
+      wait_for_update_and_click_js parameter_option(sort_by)
+    else
+      wait_for_update_and_click_js parameter_option('Most recent')
+    end
     wait_for_update_and_click advanced_search_submit_element
   end
 

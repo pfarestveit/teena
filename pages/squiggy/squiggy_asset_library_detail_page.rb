@@ -1,4 +1,4 @@
-class SquiggyAssetLibraryDetailPage
+class SquiggyAssetLibraryDetailPage < SquiggyAssetLibraryListViewPage
 
   include PageObject
   include Page
@@ -7,7 +7,6 @@ class SquiggyAssetLibraryDetailPage
 
   h2(:asset_title, id: 'asset.title')
   div(:asset_preview, xpath: '//div[starts-with(@id, "asset-preview-image-")]')
-  span(:owner_name, xpath: '//span[starts-with(@id, "by-user-")]')
   button(:like_button, id: 'like-asset-btn')
   span(:like_count, id: 'asset-like-count')
   span(:view_count, id: 'asset-view-count')
@@ -30,6 +29,10 @@ class SquiggyAssetLibraryDetailPage
     asset.id = SquiggyUtils.set_asset_id asset
   end
 
+  def owner_el(asset)
+    link_element(xpath: "//a[contains(text(), '#{asset.owner.full_name}')]")
+  end
+
   def category_el(asset)
     link_element(text: asset.category)
   end
@@ -38,14 +41,14 @@ class SquiggyAssetLibraryDetailPage
     link_element(text: asset.url)
   end
 
-  def visible_asset_metadata
+  def visible_asset_metadata(asset)
     asset_title_element.when_visible Utils.short_wait
     {
-      title: asset_title,
-      owner: owner_name,
-      like_count: like_count,
-      view_count: view_count,
-      comment_count: comment_count,
+      title: (asset_title if asset_title?),
+      owner: (owner_el(asset).text.strip if owner_el(asset).exists?),
+      like_count: (like_count if like_count?),
+      view_count: (view_count if view_count?),
+      comment_count: (comment_count if comment_count?),
       description: (description.strip if description?)
       # TODO category
     }
@@ -72,7 +75,7 @@ class SquiggyAssetLibraryDetailPage
         when 'pdf_document'
           div_element(xpath: '//iframe[@class="preview-document"]')
         when 'embeddable_link', 'embeddable_youtube', 'embeddable_vimeo'
-          div_element(xpath: "#{preview_xpath}//iframe[contains(@src,'#{asset.url.sub(/https?\:(\/\/)(www.)?/, '')}')]")
+          div_element(xpath: "#{preview_xpath}//iframe[contains(@src,'#{asset.url.sub(/https?\:(\/\/)(www.)?/, '').split('/').first}')]")
         when 'embeddable_video'
           video_element(xpath: '//video')
         else

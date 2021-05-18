@@ -1,6 +1,6 @@
 class Assignment
 
-  attr_accessor :id, :type, :title, :url, :due_date, :submitted, :submission_date, :on_time, :graded
+  attr_accessor :id, :type, :title, :url, :due_date, :submitted, :submission_date, :on_time, :graded, :squiggy_id
 
   def initialize(test_data)
     test_data.each { |k, v| public_send("#{k}=", v) }

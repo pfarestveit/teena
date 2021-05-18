@@ -107,20 +107,17 @@ module Page
     # @param submission [Asset]
     # @param event [Event]
     def upload_assignment(submission, event = nil)
-      case submission.type
-        when 'File'
-          wait_for_update_and_click upload_file_button_element
-          file_upload_input_element.when_visible Utils.short_wait
-          self.file_upload_input_element.send_keys SuiteCUtils.asset_file_path(submission.file_name)
-          wait_for_update_and_click_js file_upload_submit_button_element
-          add_event(event, EventType::CREATE, submission.file_name)
-        when 'Link'
-          wait_for_update_and_click_js assignment_site_url_tab_element
-          url_upload_input_element.when_visible Utils.short_wait
-          self.url_upload_input = submission.url
-          wait_for_update_and_click_js url_upload_submit_button_element
-        else
-          logger.error 'Unsupported submission type in test data'
+      if submission.file_name
+        wait_for_update_and_click upload_file_button_element
+        file_upload_input_element.when_visible Utils.short_wait
+        self.file_upload_input_element.send_keys SuiteCUtils.asset_file_path(submission.file_name)
+        wait_for_update_and_click_js file_upload_submit_button_element
+        add_event(event, EventType::CREATE, submission.file_name)
+      else
+        wait_for_update_and_click_js assignment_site_url_tab_element
+        url_upload_input_element.when_visible Utils.short_wait
+        self.url_upload_input = submission.url
+        wait_for_update_and_click_js url_upload_submit_button_element
       end
     end
 
@@ -135,7 +132,7 @@ module Page
       wait_for_load_and_click_js submit_assignment_button_element
       upload_assignment(submission, event)
       assignment_submission_conf_element.when_visible Utils.long_wait
-      (submission.type == 'File') ?
+      (submission.file_name) ?
           add_event(event, EventType::SUBMITTED, 'online_upload') :
           add_event(event, EventType::SUBMITTED, 'online_url')
     end
