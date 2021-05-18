@@ -369,8 +369,8 @@ unless ENV['STANDALONE']
       [test.observer, test.students.first, test.wait_list_student].each do |user|
         it "denies #{user.role} #{user.uid} access to the tool" do
           @canvas.masquerade_as(user, course)
-          @e_grades_export_page.hit_embedded_tool_url course
-          @canvas.access_denied_msg_element.when_visible Utils.short_wait
+          @e_grades_export_page.load_embedded_tool course
+          @e_grades_export_page.not_auth_msg_element.when_visible Utils.medium_wait
         end
       end
     end

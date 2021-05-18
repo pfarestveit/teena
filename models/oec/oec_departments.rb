@@ -61,6 +61,7 @@ class OECDepartments
       DUTCH = new('DUTCH', 'German', 'GERMAN', %w(F), true),
       EA_LANG = new('EA LANG', 'East Asian Languages and Cultures', 'EA LANG', %w(F G), true),
       ECON = new('ECON', 'Economics', 'ECON', %w(F G), true),
+      EDSTEM = new('EDSTEM', 'CalTeach', 'CALTEACH', %w(F G), true),
       EDUC = new('EDUC', 'Education', 'EDUC', %w(F G), true),
       EECS = new('EECS', 'Electrical Engineering and Computer Sciences', 'EL ENG', nil, false),
       EGYPT = new('EGYPT', 'Near Eastern Studies', 'EGYPT', %w(F G), true),

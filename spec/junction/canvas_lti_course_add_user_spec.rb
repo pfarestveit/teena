@@ -252,8 +252,8 @@ describe 'bCourses Find a Person to Add', order: :defined do
       [test.observer, test.students.first, test.wait_list_student].each do |user|
         it "denies #{user.role} #{user.uid} access to the tool" do
           @canvas.masquerade_as(user, course)
-          @course_add_user_page.hit_embedded_tool_url course
-          @canvas.access_denied_msg_element.when_visible Utils.short_wait
+          @course_add_user_page.load_embedded_tool course
+          @course_add_user_page.no_access_msg_element.when_visible Utils.medium_wait
         end
 
         it "offers #{user.role} an Academic Policies link" do
