@@ -204,6 +204,7 @@ unless ENV['STANDALONE']
         end
 
         it 'will not create a mailing list for a course site with the same course code and term as an existing list' do
+          @canvas_page.load_course_site course_site_2
           @mailing_list_page.load_embedded_tool course_site_2
           @mailing_list_page.list_dupe_error_msg_element.when_present timeout
           expect(@mailing_list_page.list_dupe_email_msg).to include(@mailing_lists_page.default_list_name course_site_2)

@@ -240,6 +240,7 @@ module Page
         submit_button
       end
       div_element(id: 'content').when_present Utils.medium_wait
+      sleep 1
       if accept_course_invite?
         logger.info 'Accepting course invite'
         accept_course_invite
