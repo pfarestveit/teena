@@ -132,7 +132,11 @@ class Utils
       js_log = driver.manage.logs.get(:browser)
       messages = js_log.map &:message
       messages.each do |msg|
-        unless msg.include?('chrome-search://thumb/') || msg.include?('instructure.com') || msg.include?('/cal1card-data/photos')
+        unless msg.include?('chrome-search://thumb/') ||
+          msg.include?('instructure.com') ||
+          msg.include?('cal1card-data/photos') ||
+          msg.include?('prod.ally') ||
+          msg.include?('cloudfront.net')
           logger.error "Possible JS error: #{msg}"
         end
       end
