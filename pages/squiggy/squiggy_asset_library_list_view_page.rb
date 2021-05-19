@@ -99,6 +99,7 @@ class SquiggyAssetLibraryListViewPage
     thumbnail_el.when_present Utils.short_wait
     logger.warn "PERF - took #{Time.now - start} seconds for asset thumbnail to become visible"
     title_el = div_element(xpath: "#{xpath}//div[contains(@class, \"asset-metadata\")]/div[1]")
+    wait_until(2) { title_el.text }
     owner_el = div_element(xpath: "#{xpath}//div[contains(@class, \"asset-metadata\")]/div[2]")
     view_count_el = div_element(xpath: "#{xpath}//*[@data-icon='eye']/..")
     like_count_el = div_element(xpath: "#{xpath}//*[@data-icon='thumbs-up']/..")
@@ -149,11 +150,32 @@ class SquiggyAssetLibraryListViewPage
   end
 
   def open_advanced_search
+    sleep Utils.click_wait
     if keyword_search_input_element.visible?
       logger.debug 'Advanced search input is already visible'
     else
       wait_for_load_and_click advanced_search_button_element
     end
+  end
+
+  def click_category_select
+    category_select_element.when_present 2
+    js_click category_select_element
+  end
+
+  def click_uploader_select
+    uploader_select_element.when_present 2
+    js_click uploader_select_element
+  end
+
+  def click_asset_type_select
+    asset_type_select_element.when_present 2
+    js_click asset_type_select_element
+  end
+
+  def click_sort_by_select
+    sort_by_select_element.when_present 2
+    js_click sort_by_select_element
   end
 
   def advanced_search(keyword, category, user, asset_type, sort_by)
@@ -166,27 +188,27 @@ class SquiggyAssetLibraryListViewPage
     end
 
     if category
-      wait_for_update_and_click_js category_select_element
+      click_category_select
       wait_for_update_and_click_js parameter_option(category)
     else
       js_click(parameter_clear_button('Category')) if parameter_clear_button('Category').visible?
     end
 
     if user
-      wait_for_update_and_click_js uploader_select_element
+      click_uploader_select
       wait_for_update_and_click_js parameter_option(user.full_name)
     else
       js_click(parameter_clear_button('User')) if parameter_clear_button('User').visible?
     end
 
     if asset_type
-      wait_for_update_and_click_js asset_type_select_element
+      click_asset_type_select
       wait_for_update_and_click_js parameter_option(asset_type)
     else
       js_click(parameter_clear_button('Asset type')) if parameter_clear_button('Asset type').visible?
     end
 
-    wait_for_update_and_click_js sort_by_select_element
+    click_sort_by_select
     if sort_by
       wait_for_update_and_click_js parameter_option(sort_by)
     else

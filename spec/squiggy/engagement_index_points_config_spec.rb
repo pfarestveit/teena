@@ -50,7 +50,7 @@ describe 'Engagement Index points configuration' do
 
   it 'subtracts points retroactively for a disabled activity' do
     @engagement_index.click_back_to_index
-    expect(@engagement_index.user_score(@test, @student)).to eql('0')
+    expect(@engagement_index.user_score(@test, @student)).to eql(0)
   end
 
   it 'removes a disabled activity from the CSV export' do
@@ -84,7 +84,7 @@ describe 'Engagement Index points configuration' do
 
   it 'adds points retroactively for a re-enabled activity' do
     @engagement_index.click_back_to_index
-    expect(@engagement_index.user_score(@test, @student)).to eql(@add_asset_activity.points.to_s)
+    expect(@engagement_index.user_score(@test, @student)).to eql(@add_asset_activity.points)
   end
 
   it 'adds a re-enabled activity to the CSV export' do
@@ -102,7 +102,7 @@ describe 'Engagement Index points configuration' do
 
   it 'allows a teacher to recalculate points retroactively when changing activity type point values' do
     @engagement_index.click_back_to_index
-    expect(@engagement_index.user_score(@test, @student)).to eql(@add_asset_activity.points.to_s)
+    expect(@engagement_index.user_score(@test, @student)).to eql(@add_asset_activity.points)
   end
 
   it 'recalculates activity points on the CSV export when changing activity type point values' do
