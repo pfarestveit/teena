@@ -1,4 +1,4 @@
-class BOACDegreeCheckTemplatePage
+class BOACDegreeTemplatePage
 
   include PageObject
   include Page
@@ -137,7 +137,7 @@ class BOACDegreeCheckTemplatePage
   button(:unit_req_range_toggle, id: 'show-upper-units-input')
   text_field(:unit_req_num_input_0, id: 'lower-units-input')
   text_field(:unit_req_num_input_1, id: 'upper-units-input')
-  span(:col_req_course_units_error_msg, xpath: '//span[text()=" Number or numerical range required "]')
+  span(:col_req_course_units_error_msg, xpath: '//span[text()=" Invalid "]')
   select_list(:col_req_course_units_req_select, xpath: '//select[contains(@id, "unit-requirement-select")]')
   elements(:col_req_course_units_req_remove_button, :button, xpath: '//button[contains(@id, "unit-requirement-remove")]')
   button(:col_req_create_button, xpath: '//button[contains(@id, "create-requirement-btn")]')
@@ -305,6 +305,9 @@ class BOACDegreeCheckTemplatePage
   end
 
   # Edit
+
+  elements(:cat_edit_button, :button, xpath: '//button[contains(@id, "-edit-category-")]')
+  elements(:cat_delete_button, :button, xpath: '//button[contains(@id, "-delete-category-")]')
 
   def cat_edit_button(cat)
     col = cat.parent ? cat.parent.column_num : cat.column_num

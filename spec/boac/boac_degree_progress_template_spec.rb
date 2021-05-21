@@ -51,8 +51,8 @@ describe 'A BOA degree check template', order: :defined do
     @driver = Utils.launch_browser
     @homepage = BOACHomePage.new @driver
     @pax_manifest = BOACPaxManifestPage.new @driver
-    @degree_templates_mgmt_page = BOACDegreeCheckMgmtPage.new @driver
-    @degree_template_page = BOACDegreeCheckTemplatePage.new @driver
+    @degree_templates_mgmt_page = BOACDegreeTemplateMgmtPage.new @driver
+    @degree_template_page = BOACDegreeTemplatePage.new @driver
 
     unless test.advisor.degree_progress_perm == DegreeProgressPerm::WRITE && test.read_only_advisor.degree_progress_perm == DegreeProgressPerm::READ
       @homepage.dev_auth

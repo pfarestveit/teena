@@ -6,6 +6,7 @@ class DegreeProgressTemplate
                 :name,
                 :unit_reqts,
                 :categories,
+                :updated_by,
                 :created_date,
                 :updated_date,
                 :deleted_date
