@@ -976,4 +976,38 @@ class BOACUtils < Utils
     query_pg_db(boac_db_credentials, sql)
   end
 
+  ### DEGREE CHECKS
+
+  def self.get_degree_templates
+    query = "SELECT degree_progress_templates.id,
+                    degree_progress_templates.degree_name,
+                    degree_progress_templates.created_at
+               FROM degree_progress_templates
+           ORDER BY degree_progress_templates.id ASC;"
+    results = Utils.query_pg_db(BOACUtils.boac_db_credentials, query)
+    templates = results.map do |r|
+      DegreeProgressTemplate.new id r['id'], name: r['degree_name'], created_date: Time.parse(r['created_at'])
+    end
+    logger.info "All template IDs: #{templates.map &:id}"
+    templates
+  end
+
+  def self.get_student_degrees(student)
+    query = "SELECT degree_progress_templates.id,
+                    degree_progress_templates.degree_name,
+	                  degree_progress_templates.updated_at,
+	                  authorized_users.uid
+               FROM degree_progress_templates
+               JOIN authorized_users
+                 ON authorized_users.id = degree_progress_templates.updated_by
+              WHERE student_sid = '#{student.sis_id}'
+           ORDER BY degree_progress_templates.updated_at DESC;"
+    results = Utils.query_pg_db(BOACUtils.boac_db_credentials, query)
+    degrees = results.map do |r|
+      DegreeProgressTemplate.new id: r['id'], name: r['degree_name'], updated_by: r['uid'], updated_date: Time.parse(r['updated_at'])
+    end
+    logger.info "SID #{student.sis_id} degree IDs: #{degrees.map &:id}"
+    degrees
+  end
+
 end

@@ -1,22 +1,49 @@
-class BOACDegreeCheckPage < BOACDegreeCheckTemplatePage
+class BOACDegreeCheckPage < BOACDegreeTemplatePage
 
   include PageObject
   include Page
   include Logging
   include BOACPages
 
+  def degree_check_heading(degree)
+    h2_element(xpath: "//h2[text()=\"#{degree.name}\"]")
+  end
+
   div(:last_updated_msg, xpath: '//div[contains(text(), "Last updated by")]')
+  link(:create_new_degree_link, id: 'create-new-degree')
+  link(:view_degree_history_link, id: 'view-degree-history')
+
+  def click_create_new_degree
+    logger.info 'Clicking create-new-degree link'
+    wait_for_update_and_click create_new_degree_link_element
+  end
+
+  def click_view_degree_history
+    logger.info 'Clicking view-degree-history link'
+    wait_for_update_and_click view_degree_history_link_element
+  end
 
   # NOTES
 
   button(:create_or_edit_note_button, id: 'create-degree-note-btn')
   button(:print_note_toggle, id: 'degree-note-print-toggle')
+  div(:print_note_toggle_label, class: 'toggle-label')
   span(:note_update_advisor, id: 'degree-note-updated-by')
   span(:note_update_date, xpath: '//h3[text()="Degree Notes"]/following-sibling::div/div/span[2]/span')
   text_area(:note_input, id: 'degree-note-input')
   button(:save_note_button, id: 'save-degree-note-btn')
   button(:cancel_note_button, id: 'cancel-degree-note-btn')
   paragraph(:note_body, id: 'degree-note-body')
+
+  def click_print_note_toggle
+    print_note_toggle_element.when_present Utils.short_wait
+    js_click print_note_toggle_element
+    sleep Utils.click_wait
+  end
+
+  def print_note_selected_option
+    print_note_toggle_label.strip
+  end
 
   def click_create_or_edit_note
     wait_for_update_and_click create_or_edit_note_button_element
@@ -45,6 +72,13 @@ class BOACDegreeCheckPage < BOACDegreeCheckTemplatePage
   def visible_note_body
     note_body_element.when_visible Utils.short_wait
     note_body
+  end
+
+  # COURSE REQUIREMENTS
+
+  def visible_course_req_grade(req_course)
+    grade_el = cell_element(xpath: "#{course_req_xpath req_course}/td[4]/span")
+    grade_el.text.strip if grade_el.exists?
   end
 
   # UNASSIGNED (COMPLETED) COURSES
@@ -107,6 +141,16 @@ class BOACDegreeCheckPage < BOACDegreeCheckTemplatePage
     units_el.text if units_el.exists?
   end
 
+  def visible_assigned_course_fulfill_flag(course)
+    flag_el = span_element(xpath: "#{assigned_course_xpath course}/td[contains(@class, 'td-units')]//title")
+    flag_el.text if flag_el.exists?
+  end
+
+  def visible_assigned_course_grade(course)
+    grade_el = cell_element(xpath: "#{assigned_course_xpath course}/td[contains(@class, 'td-grade')]")
+    grade_el.text.strip if grade_el.exists?
+  end
+
   def visible_assigned_course_note(course)
     note_el = cell_element(xpath: "#{assigned_course_xpath course}/td[contains(@class, 'td-note')]")
     note_el.text.strip if note_el.exists?
@@ -118,6 +162,8 @@ class BOACDegreeCheckPage < BOACDegreeCheckTemplatePage
   end
 
   # COURSE ASSIGNMENT
+
+  elements(:assign_course_button, :button, xpath: '//button[contains(@id, "assign-course-")]')
 
   def unassigned_course_select(course)
     button_element(xpath: "#{unassigned_course_row_xpath course}/td[1]//button")
@@ -253,5 +299,9 @@ class BOACDegreeCheckPage < BOACDegreeCheckTemplatePage
     click_save_course_edit
     course_update_button_element.when_not_present Utils.short_wait
   end
+
+  # COURSE COPY
+
+  elements(:copy_course_button, :button, xpath: '//button[contains(@id, "-add-course-to-category-")]')
 
 end

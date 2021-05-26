@@ -280,11 +280,13 @@ class BOACTestConfig < TestConfig
 
   def degree_progress
     set_base_configs BOACDepartments::COE
+    NessieUtils.set_advisor_data @advisor
     filter = CohortFilter.new
     filter.major = BOACUtils.degree_major
     filter.units_completed = ['90 - 119']
     set_default_cohort filter
     set_read_only_advisor
+    NessieUtils.set_advisor_data @read_only_advisor
     set_degree_templates
   end
 

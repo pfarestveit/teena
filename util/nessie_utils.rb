@@ -609,6 +609,14 @@ class NessieUtils < Utils
     end
   end
 
+  def self.set_advisor_data(advisor)
+    data = get_advising_note_author advisor.uid
+    advisor.sis_id = data[:sid]
+    advisor.first_name = data[:first_name]
+    advisor.last_name = data[:last_name]
+    advisor.full_name = "#{advisor.first_name} #{advisor.last_name}"
+  end
+
   ### APPOINTMENTS ###
 
   def self.get_sis_appts(student)
