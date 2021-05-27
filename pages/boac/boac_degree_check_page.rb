@@ -76,9 +76,32 @@ class BOACDegreeCheckPage < BOACDegreeTemplatePage
 
   # COURSE REQUIREMENTS
 
-  def visible_course_req_grade(req_course)
-    grade_el = cell_element(xpath: "#{course_req_xpath req_course}/td[4]/span")
+  def course_req_menu?(course)
+    cell_element(xpath: "#{course_req_xpath course}/td[@class='td-course-assignment-menu']").exists?
+  end
+
+  def visible_course_req_name(course)
+    node = course_req_menu?(course) ? '2' : '1'
+    name_el = cell_element(xpath: "#{course_req_xpath course}/td[#{node}]//div")
+    name_el.text if name_el.exists?
+  end
+
+  def visible_course_req_units(course)
+    node = course_req_menu?(course) ? '3' : '2'
+    units_el = span_element(xpath: "#{course_req_xpath course}/td[#{node}]/span")
+    units_el.text if units_el.exists?
+  end
+
+  def visible_course_req_grade(course)
+    node = course_req_menu?(course) ? '4' : '3'
+    grade_el = cell_element(xpath: "#{course_req_xpath course}/td[#{node}]/span")
     grade_el.text.strip if grade_el.exists?
+  end
+
+  def visible_course_req_note(course)
+    node = course_req_menu?(course) ? '5' : '4'
+    note_el = cell_element(xpath: "#{course_req_xpath course}/td[#{node}]/span")
+    note_el.text.strip if note_el.exists?
   end
 
   # UNASSIGNED (COMPLETED) COURSES
@@ -131,6 +154,10 @@ class BOACDegreeCheckPage < BOACDegreeTemplatePage
     "//table[@id='column-#{course.req_course.parent.column_num}-courses-of-category-#{course.req_course.parent.id}']//tr[contains(.,\"#{course.name}\")]"
   end
 
+  def assigned_course_row(course)
+    row_element(xpath: assigned_course_xpath(course))
+  end
+
   def visible_assigned_course_name(course)
     name_el = cell_element(xpath: "#{assigned_course_xpath course}/td[2]")
     name_el.text if name_el.exists?
@@ -166,7 +193,7 @@ class BOACDegreeCheckPage < BOACDegreeTemplatePage
   elements(:assign_course_button, :button, xpath: '//button[contains(@id, "assign-course-")]')
 
   def unassigned_course_select(course)
-    button_element(xpath: "#{unassigned_course_row_xpath course}/td[1]//button")
+    button_element(xpath: "#{unassigned_course_row_xpath course}/td[1]//div[contains(@id, 'assign-course-')]")
   end
 
   def click_unassigned_course_select(course)
@@ -186,48 +213,76 @@ class BOACDegreeCheckPage < BOACDegreeTemplatePage
     click_unassigned_course_select completed_course
     wait_for_update_and_click unassigned_course_req_option(completed_course, req)
     sleep Utils.click_wait
+
+    # If course is assigned to a cat, create a dummy course reqt within the cat
     course_req = req.instance_of?(DegreeReqtCourse) ? req : DegreeReqtCourse.new(parent: req)
+    req.course_reqs << course_req unless req.instance_of?(DegreeReqtCourse)
     course_req.completed_course = completed_course
     completed_course.req_course = course_req
+
     wait_until(2) { visible_assigned_course_name(completed_course) == completed_course.name }
   end
 
   def assigned_course_select(course)
-    button_element(xpath: "#{assigned_course_xpath course}/td[1]//button")
+    button_element(xpath: "#{assigned_course_xpath course}/td[1]//div[contains(@id, 'assign-course-')]")
   end
 
   def assigned_course_req_option(completed_course, req = nil)
-    link_text = req ? req.name : '-- Unassign --'
-    link_element(xpath: "#{assigned_course_xpath completed_course}/td[1]//a[text()=\" #{link_text} \"]")
+    if req
+      link_element(xpath: "#{assigned_course_xpath completed_course}/td[1]//a[text()=\" #{req.name} \"]")
+    else
+      link_element(id: '`assign-course-to-option-null`')
+    end
   end
 
   def unassign_course(completed_course, req)
     logger.info "Un-assigning course #{completed_course.name}, #{completed_course.term_id}-#{completed_course.ccn} from #{req.name}"
+    assignment_el = assigned_course_row completed_course
     wait_for_update_and_click assigned_course_select(completed_course)
     wait_for_update_and_click assigned_course_req_option(completed_course)
     sleep Utils.click_wait
-    req.completed_course = nil
-    completed_course.req_course = nil
+
+    # If course was assigned to course reqt, verify the reqt row reverts to template version
     if req.instance_of? DegreeReqtCourse
+      req.completed_course = nil
+      logger.debug "Checking requirement name at XPath #{course_req_xpath req}/td[2]//div"
       wait_until(2, "Expected '#{visible_course_req_name(req)}' to be '#{req.name}'") { visible_course_req_name(req) == req.name }
+
+    # If course was assigned to a cat, verify the cat's dummy course row is gone
     else
-      wait_until(2) { !visible_assigned_course_name(completed_course) }
+      req.course_reqs.delete completed_course.req_course
+      assignment_el.when_not_present 2
     end
+    completed_course.req_course = nil
   end
 
   def reassign_course(completed_course, old_req, new_req)
-    logger.info "Reassigning course #{completed_course.name}, #{completed_course.term_id}-#{completed_course.ccn} from #{completed_course.req_course.name} to #{new_req.name}"
+    logger.info "Reassigning course #{completed_course.name}, #{completed_course.term_id}-#{completed_course.ccn} from #{old_req.name} to #{new_req.name}"
+    assignment_el = assigned_course_row completed_course
     wait_for_update_and_click assigned_course_select(completed_course)
     wait_for_update_and_click assigned_course_req_option(completed_course, new_req)
     sleep Utils.click_wait
-    old_req.completed_course = nil
-    new_req.completed_course = completed_course
-    completed_course.req_course = new_req
+
+    # Detach the course from the old course reqt, dummy or otherwise
+    old_course_req = old_req.instance_of?(DegreeReqtCourse) ? old_req : completed_course.req_course
+    old_req.course_reqs.delete old_course_req if old_req.instance_of?(DegreeReqtCategory)
+    old_course_req.completed_course = nil
+
+    # Attach the course to the new course reqt, dummy or otherwise
+    new_course_req = new_req.instance_of?(DegreeReqtCourse) ? new_req : DegreeReqtCourse.new(parent: new_req)
+    new_req.course_reqs << new_course_req if new_req.instance_of? DegreeReqtCategory
+    new_course_req.completed_course = completed_course
+
+    completed_course.req_course = new_course_req
+
     if old_req.instance_of? DegreeReqtCourse
       wait_until(2, "Expected '#{visible_course_req_name(old_req)}' to be '#{old_req.name}'") do
         visible_course_req_name(old_req) == old_req.name
       end
+    else
+      assignment_el.when_not_present 2
     end
+
     wait_until(2, "Expected '#{visible_assigned_course_name(completed_course)}' to be '#{completed_course.name}'") do
       visible_assigned_course_name(completed_course) == completed_course.name
     end
@@ -241,7 +296,7 @@ class BOACDegreeCheckPage < BOACDegreeTemplatePage
   button(:course_cancel_button, id: 'cancel-update-note-btn')
 
   def unassigned_course_edit_button(course)
-    button_element(xpath: "#{unassigned_course_row_xpath course}/td[7]/button")
+    button_element(xpath: "#{unassigned_course_row_xpath course}/td[7]//button")
   end
 
   def click_edit_unassigned_course(course)

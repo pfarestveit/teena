@@ -4,11 +4,48 @@ include Logging
 
 test = BOACTestConfig.new
 test.degree_progress
-template = test.degree_templates.find { |t| t.name.include? BOACUtils.degree_major.first }
+template = test.degree_templates.find { |t| t.name.include? 'Course Workflows' }
 
 describe 'A BOA degree check course' do
 
   before(:all) do
+
+    # TEST DATA
+
+    @student = ENV['UIDS'] ? (test.students.find { |s| s.uid == ENV['UIDS'] }) : test.cohort_members.shuffle.first
+    @degree_check = DegreeProgressChecklist.new(template, @student)
+
+    # Top level categories with course requirements
+    @cats_with_courses = @degree_check.categories.select { |cat| cat.course_reqs.any? }
+    @course_req_1 = @cats_with_courses.first.course_reqs.first
+    @course_req_2 = @cats_with_courses.last.course_reqs.last
+    logger.debug "Top level category course reqs '#{@course_req_1.name}' and '#{@course_req_2.name}'"
+
+    # Top level category with no subcategories or course requirements
+    @cat_no_subs_no_courses = @degree_check.categories.find { |cat| !cat.sub_categories && cat.course_reqs.empty? }
+    logger.debug "Top level category with no subcategories and no courses '#{@cat_no_subs_no_courses.name}'"
+
+    # Top level category with no subcategories but with course requirement
+    @cat_with_courses_no_subs = @degree_check.categories.find { |cat| !cat.sub_categories && cat.course_reqs.any? }
+    logger.debug "Top level category with no subcategories but with courses '#{@cat_with_courses_no_subs.name}'"
+
+    # Top level category with a subcategory
+    cats_with_subs = @degree_check.categories.select { |cat| cat.sub_categories&.any? }
+    @cat_with_subs = cats_with_subs.first
+    logger.debug "Top level category with subcategory '#{@cat_with_subs.name}'"
+
+    # Subcategory with no course requirement
+    cats_with_subs.find do |cat|
+      @sub_cat_no_courses = cat.sub_categories.find { |sub| sub.course_reqs.empty? }
+    end
+    logger.debug "Subcategory with no courses '#{@sub_cat_no_courses.name}'"
+
+    # Subcategory with course requirements
+    cats_with_subs.find do |cat|
+      @sub_cat_with_courses = cat.sub_categories.find { |sub| sub.course_reqs.any? }
+    end
+    logger.debug "Subcategory with courses '#{@sub_cat_with_courses.name}'"
+
     @driver = Utils.launch_browser
     @homepage = BOACHomePage.new @driver
     @pax_manifest = BOACPaxManifestPage.new @driver
@@ -26,35 +63,22 @@ describe 'A BOA degree check course' do
       @pax_manifest.log_out
     end
 
+    # Create template
     @homepage.dev_auth test.advisor
     @homepage.click_degree_checks_link
     @degree_templates_mgmt_page.create_new_degree template
     @degree_template_page.complete_template template
 
-    @student = ENV['UIDS'] ? (test.students.find { |s| s.uid == ENV['UIDS'] }) : test.cohort_members.shuffle.first
-    @degree_check = DegreeProgressChecklist.new(template, @student)
+    # Find student course data
     @student_api_page.get_data(@driver, @student)
     @unassigned_courses = @student_api_page.degree_progress_courses
-    @completed_course = @unassigned_courses.first
+    @completed_course_0 = @unassigned_courses.first
+    @completed_course_1 = @unassigned_courses[1]
+    @completed_course_2 = @unassigned_courses[2]
+    @completed_course_3 = @unassigned_courses[3]
+    @completed_course_4 = @unassigned_courses[4]
 
-    # TEST DATA
-
-    # Top level categories with course requirements
-    @cats_with_courses = @degree_check.categories.select { |cat| cat.course_reqs&.any? }
-    @course_req_1 = @cats_with_courses.first.course_reqs.first
-    @course_req_2 = @cats_with_courses.last.course_reqs.last
-
-    # Top level category with a subcategory
-    cats_with_subs = @degree_check.categories.select { |cat| cat.sub_categories&.any? }
-    @cat_with_subs = cats_with_subs.first
-
-    # Top level category with no subcategories or course requirements
-    @cat_no_subs_no_courses = @degree_check.categories.find { |cat| !cat.sub_categories && !cat.course_reqs }
-
-    # Subcategory with course requirements
-    cat_with_sub_and_courses = cats_with_subs.find { |cat| cat.sub_categories.find { |sub| sub.course_reqs&.any? } }
-    @sub_cat_with_courses = cat_with_sub_and_courses.sub_categories.find { |sub| sub.course_reqs&.any? }
-
+    # Create student degree check
     @degree_check_create_page.load_page @student
     @degree_check_create_page.create_new_degree_check(@degree_check)
   end
@@ -98,51 +122,63 @@ describe 'A BOA degree check course' do
 
     context 'and edited' do
 
+      after(:each) { @degree_check_page.click_cancel_course_edit if @degree_check_page.course_cancel_button? }
+
       it 'can be canceled' do
-        @degree_check_page.click_edit_unassigned_course @completed_course
+        @degree_check_page.click_edit_unassigned_course @completed_course_0
         @degree_check_page.click_cancel_course_edit
       end
 
       it 'allows a user to add a note' do
-        @completed_course.note = "Teena wuz here #{test.id}" * 10
-        @degree_check_page.edit_unassigned_course @completed_course
-        expect(@degree_check_page.unassigned_course_note @completed_course).to eql(@completed_course.note)
+        @completed_course_0.note = "Teena wuz here #{test.id}" * 10
+        @degree_check_page.edit_unassigned_course @completed_course_0
+        expect(@degree_check_page.unassigned_course_note @completed_course_0).to eql(@completed_course_0.note)
       end
 
       it 'allows a user to edit a note' do
-        @completed_course.note = "EDITED - #{@completed_course.note}"
-        @degree_check_page.edit_unassigned_course @completed_course
-        expect(@degree_check_page.unassigned_course_note @completed_course).to eql(@completed_course.note)
+        @completed_course_0.note = "EDITED - #{@completed_course_0.note}"
+        @degree_check_page.edit_unassigned_course @completed_course_0
+        expect(@degree_check_page.unassigned_course_note @completed_course_0).to eql(@completed_course_0.note)
       end
 
       it 'allows a user to remove a note' do
-        @completed_course.note = ''
-        @degree_check_page.edit_unassigned_course @completed_course
-        expect(@degree_check_page.unassigned_course_note @completed_course).to eql('—')
+        @completed_course_0.note = ''
+        @degree_check_page.edit_unassigned_course @completed_course_0
+        expect(@degree_check_page.unassigned_course_note @completed_course_0).to eql('—')
       end
 
       it 'allows a user to change units to another integer' do
-        @completed_course.units = '6'
-        @degree_check_page.edit_unassigned_course @completed_course
-        expect(@degree_check_page.unassigned_course_units @completed_course).to eql(@completed_course.units)
+        @completed_course_0.units = (@completed_course_0.units.to_i + 1).to_s
+        @degree_check_page.edit_unassigned_course @completed_course_0
+        expect(@degree_check_page.unassigned_course_units @completed_course_0).to eql(@completed_course_0.units)
       end
 
-      it 'does not allow a user to change units to a non-integer number' do
-        @degree_check_page.click_edit_unassigned_course @completed_course
-        @degree_check_page.enter_course_units '9.5'
+      # TODO it 'shows an indicator if the user has edited the course units'
+
+      it 'does not allow a user to change units to a non-number' do
+        @degree_check_page.click_edit_unassigned_course @completed_course_0
+        @degree_check_page.enter_course_units 'A'
         @degree_check_page.col_req_course_units_error_msg_element.when_visible 1
         expect(@degree_check_page.course_update_button_element.enabled?).to be false
       end
 
-      it 'does not allow a user to change units to a integer greater than a single digit' do
-        @degree_check_page.enter_course_units '10'
+      it 'allows a user to change units to a decimal number' do
+        @completed_course_0.units = (@completed_course_0.units.to_i + 0.5).to_s
+        @degree_check_page.edit_unassigned_course @completed_course_0
+        expect(@degree_check_page.unassigned_course_units @completed_course_0).to eql(@completed_course_0.units)
+      end
+
+      it 'does not allow a user to change units to a integer greater than two digits' do
+        @degree_check_page.click_edit_unassigned_course @completed_course_0
+        @degree_check_page.enter_course_units '100'
         @degree_check_page.col_req_course_units_error_msg_element.when_visible 1
         expect(@degree_check_page.course_update_button_element.enabled?).to be false
       end
 
       it 'does not allow a user to remove all units' do
+        @degree_check_page.click_edit_unassigned_course @completed_course_0
         @degree_check_page.enter_course_units ''
-        expect(@degree_check_page.course_update_button_element.enabled?).to be false
+        expect(@degree_check_page.course_update_button_element.attribute('disabled')).to eql('disabled')
       end
     end
   end
@@ -150,29 +186,28 @@ describe 'A BOA degree check course' do
   context 'when assigned to a course requirement' do
 
     before(:all) do
-      @degree_check_page.click_cancel_course_edit
-      @completed_course.note = "Teena wuz here again #{test.id}" * 10
-      @degree_check_page.edit_unassigned_course @completed_course
+      @completed_course_0.note = "Teena wuz here again #{test.id}" * 10
+      @degree_check_page.edit_unassigned_course @completed_course_0
     end
 
     it 'updates the requirement row with the course name' do
-      @degree_check_page.assign_completed_course(@completed_course, @course_req_1)
+      @degree_check_page.assign_completed_course(@completed_course_0, @course_req_1)
     end
 
     it 'updates the requirement row with the course units' do
-      expect(@degree_check_page.visible_assigned_course_units(@completed_course)).to eql(@completed_course.units)
+      expect(@degree_check_page.visible_assigned_course_units(@completed_course_0)).to eql(@completed_course_0.units)
     end
 
     it 'updates the requirement row with the course grade' do
-      expect(@degree_check_page.visible_assigned_course_grade(@completed_course)).to eql(@completed_course.grade)
+      expect(@degree_check_page.visible_assigned_course_grade(@completed_course_0)).to eql(@completed_course_0.grade)
     end
 
     it 'updates the requirement row with the course note' do
-      expect(@degree_check_page.visible_assigned_course_note(@completed_course)).to eql(@completed_course.note)
+      expect(@degree_check_page.visible_assigned_course_note(@completed_course_0)).to eql(@completed_course_0.note)
     end
 
     it 'removes the course from the unassigned courses list' do
-      expect(@degree_check_page.unassigned_course_ccns).not_to include("#{@completed_course.term_id}-#{@completed_course.ccn}")
+      expect(@degree_check_page.unassigned_course_ccns).not_to include("#{@completed_course_0.term_id}-#{@completed_course_0.ccn}")
     end
 
     it 'prevents another course being assigned to the same requirement' do
@@ -182,53 +217,63 @@ describe 'A BOA degree check course' do
 
     context 'and edited' do
 
+      after(:each) { @degree_check_page.click_cancel_course_edit if @degree_check_page.course_cancel_button? }
+
       it 'can be canceled' do
-        @degree_check_page.click_edit_cat @completed_course.req_course
+        @degree_check_page.click_edit_cat @completed_course_0.req_course
         @degree_check_page.click_cancel_course_edit
       end
 
       it 'allows a user to remove a note' do
-        @completed_course.note = ''
-        @degree_check_page.edit_assigned_course @completed_course
-        expect(@degree_check_page.visible_assigned_course_note(@completed_course).to_s).to eql(@completed_course.note)
+        @completed_course_0.note = ''
+        @degree_check_page.edit_assigned_course @completed_course_0
+        expect(@degree_check_page.visible_assigned_course_note(@completed_course_0).to_s).to eql(@completed_course_0.note)
       end
 
       it 'allows a user to add a note' do
-        @completed_course.note = "Nota bene #{test.id}"
-        @degree_check_page.edit_assigned_course @completed_course
-        expect(@degree_check_page.visible_assigned_course_note @completed_course).to eql(@completed_course.note)
+        @completed_course_0.note = "Nota bene #{test.id}"
+        @degree_check_page.edit_assigned_course @completed_course_0
+        expect(@degree_check_page.visible_assigned_course_note @completed_course_0).to eql(@completed_course_0.note)
       end
 
       it 'allows a user to edit a note' do
-        @completed_course.note = "EDITED - #{@completed_course.note}"
-        @degree_check_page.edit_assigned_course @completed_course
-        expect(@degree_check_page.visible_assigned_course_note @completed_course).to eql(@completed_course.note)
+        @completed_course_0.note = "EDITED - #{@completed_course_0.note}"
+        @degree_check_page.edit_assigned_course @completed_course_0
+        expect(@degree_check_page.visible_assigned_course_note @completed_course_0).to eql(@completed_course_0.note)
       end
 
       it 'allows a user to change units to another integer' do
-        @completed_course.units = '1'
-        @degree_check_page.edit_assigned_course @completed_course
-        expect(@degree_check_page.visible_assigned_course_units @completed_course).to eql(@completed_course.units)
+        @completed_course_0.units = (@completed_course_0.units.to_i + 1).to_s
+        @degree_check_page.edit_assigned_course @completed_course_0
+        expect(@degree_check_page.visible_assigned_course_units @completed_course_0).to eql(@completed_course_0.units)
+      end
+
+      it 'allows a user to change units to a decimal number' do
+        @completed_course_0.units = (@completed_course_0.units.to_f + 0.5).to_s
+        @degree_check_page.edit_assigned_course @completed_course_0
+        expect(@degree_check_page.visible_assigned_course_units @completed_course_0).to eql(@completed_course_0.units)
       end
 
       # TODO it 'shows an indicator if the user has edited the course units'
 
-      it 'does not allow a user to change units to a non-integer number' do
-        @degree_check_page.click_edit_assigned_course @completed_course
-        @degree_check_page.enter_course_units '9.5'
+      it 'does not allow a user to change units to a non-number' do
+        @degree_check_page.click_edit_assigned_course @completed_course_0
+        @degree_check_page.enter_course_units 'A'
         @degree_check_page.col_req_course_units_error_msg_element.when_visible 1
         expect(@degree_check_page.course_update_button_element.enabled?).to be false
       end
 
-      it 'does not allow a user to change units to a integer greater than a single digit' do
-        @degree_check_page.enter_course_units '10'
+      it 'does not allow a user to change units to a integer greater than two digits' do
+        @degree_check_page.click_edit_assigned_course @completed_course_0
+        @degree_check_page.enter_course_units '100'
         @degree_check_page.col_req_course_units_error_msg_element.when_visible 1
         expect(@degree_check_page.course_update_button_element.enabled?).to be false
       end
 
       it 'does not allow a user to remove all units' do
+        @degree_check_page.click_edit_assigned_course @completed_course_0
         @degree_check_page.enter_course_units ''
-        expect(@degree_check_page.course_update_button_element.enabled?).to be false
+        expect(@degree_check_page.course_update_button_element.attribute('disabled')).to eql('disabled')
       end
     end
   end
@@ -236,7 +281,7 @@ describe 'A BOA degree check course' do
   context 'when unassigned from a course requirement' do
 
     it 'reverts the requirement row course name' do
-      @degree_check_page.unassign_course(@completed_course, @course_req_1)
+      @degree_check_page.unassign_course(@completed_course_0, @course_req_1)
     end
 
     it 'reverts the requirement row course units' do
@@ -252,81 +297,112 @@ describe 'A BOA degree check course' do
     end
 
     it 'restores the course to the unassigned courses list' do
-      expect(@degree_check_page.unassigned_course_row_el(@completed_course).exists?).to be true
+      expect(@degree_check_page.unassigned_course_row_el(@completed_course_0).exists?).to be true
     end
   end
 
   context 'when reassigned from one course requirement to another' do
 
-    before(:all) { @degree_check_page.assign_completed_course(@completed_course, @course_req_1) }
+    before(:all) { @degree_check_page.assign_completed_course(@completed_course_0, @course_req_1) }
 
     it 'updates the requirement row with the course name' do
-      @degree_check_page.reassign_course(@completed_course, @course_req_1, @course_req_2)
+      @degree_check_page.reassign_course(@completed_course_0, @course_req_1, @course_req_2)
     end
 
     it 'updates the requirement row with the course units' do
-      expect(@degree_check_page.visible_assigned_course_units(@completed_course)).to eql(@completed_course.units)
+      expect(@degree_check_page.visible_assigned_course_units(@completed_course_0)).to eql(@completed_course_0.units)
     end
 
     it 'removes the course from the unassigned courses list' do
-      expect(@degree_check_page.unassigned_course_ccns).not_to include("#{@completed_course.term_id}-#{@completed_course.ccn}")
-    end
-
-    it 'prevents another course being assigned to the same requirement' do
-      @degree_check_page.click_unassigned_course_select @unassigned_courses.last
-      expect(@degree_check_page.unassigned_course_req_option(@unassigned_courses.last, @course_req_2).attribute('aria-disabled')).to eql('true')
+      expect(@degree_check_page.unassigned_course_ccns).not_to include("#{@completed_course_0.term_id}-#{@completed_course_0.ccn}")
     end
   end
 
   context 'when assigned to a category' do
 
     before(:all) do
-      @completed_course_top_cat = @unassigned_courses[1]
-      @completed_course_sub_cat = @unassigned_courses[2]
-
-      @completed_course_sub_cat.note = "Teena wuz here too #{test.id}"
-      @degree_check_page.edit_unassigned_course @completed_course_sub_cat
+      @completed_course_1.note = "Teena wuz here too #{test.id}"
+      # TODO - edit units too
+      @degree_check_page.edit_unassigned_course @completed_course_1
     end
 
     it 'creates a new course row when the category has no subcategory and no course' do
-        @degree_check_page.assign_completed_course(@completed_course_top_cat, @cat_no_subs_no_courses)
-        expect(@degree_check_page.visible_assigned_course_units @completed_course_top_cat).to eql(@completed_course_top_cat.units)
-        expect(@degree_check_page.visible_assigned_course_grade @completed_course_top_cat).to eql(@completed_course_top_cat.grade)
-        # TODO it 'shows the course note on the requirement row'
-        expect(@degree_check_page.unassigned_course_ccns).not_to include("#{@completed_course_top_cat.term_id}-#{@completed_course_top_cat.ccn}")
+        @degree_check_page.assign_completed_course(@completed_course_1, @cat_no_subs_no_courses)
+        expect(@degree_check_page.visible_assigned_course_units @completed_course_1).to eql(@completed_course_1.units)
+        expect(@degree_check_page.visible_assigned_course_grade @completed_course_1).to eql(@completed_course_1.grade)
+        expect(@degree_check_page.visible_assigned_course_note @completed_course_1).to eql(@completed_course_1.note.to_s)
+        expect(@degree_check_page.unassigned_course_ccns).not_to include("#{@completed_course_1.term_id}-#{@completed_course_1.ccn}")
     end
 
-    it 'creates a new course row when the category has no subcategory but does have a course'
+    it 'creates a new course row when the category has no subcategory but does have a course' do
+      @degree_check_page.assign_completed_course(@completed_course_2, @cat_with_courses_no_subs)
+      expect(@degree_check_page.visible_assigned_course_units @completed_course_2).to eql(@completed_course_2.units)
+      expect(@degree_check_page.visible_assigned_course_grade @completed_course_2).to eql(@completed_course_2.grade)
+      expect(@degree_check_page.visible_assigned_course_note @completed_course_2).to eql(@completed_course_2.note.to_s)
+      expect(@degree_check_page.unassigned_course_ccns).not_to include("#{@completed_course_2.term_id}-#{@completed_course_2.ccn}")
+    end
 
     it 'cannot be added to a category with a subcategory' do
-      @degree_check_page.click_unassigned_course_select @completed_course_sub_cat
-      el = @degree_check_page.unassigned_course_option_els(@completed_course_sub_cat).find { |el| el.text.strip == @cat_with_subs.name }
+      @degree_check_page.click_unassigned_course_select @completed_course_3
+      @degree_check_page.wait_until(2) { @degree_check_page.unassigned_course_option_els(@completed_course_3).any? }
+      el = @degree_check_page.unassigned_course_option_els(@completed_course_3).find { |el| el.text.strip == @cat_with_subs.name }
       expect(el.attribute('aria-disabled')).to eql('true')
     end
 
     it 'creates a new course row when the category is a subcategory without courses' do
-        @degree_check_page.assign_completed_course(@completed_course_sub_cat, @sub_cat_with_courses)
-        expect(@degree_check_page.visible_assigned_course_units @completed_course_sub_cat).to eql(@completed_course_sub_cat.units)
-        expect(@degree_check_page.visible_assigned_course_grade @completed_course_sub_cat).to eql(@completed_course_sub_cat.grade)
-        # TODO it 'shows the course note on the requirement row'
-        expect(@degree_check_page.unassigned_course_ccns).not_to include("#{@completed_course_sub_cat.term_id}-#{@completed_course_sub_cat.ccn}")
+      @degree_check_page.hit_escape
+      @degree_check_page.assign_completed_course(@completed_course_3, @sub_cat_no_courses)
+      expect(@degree_check_page.visible_assigned_course_units @completed_course_3).to eql(@completed_course_3.units)
+      expect(@degree_check_page.visible_assigned_course_grade @completed_course_3).to eql(@completed_course_3.grade)
+      expect(@degree_check_page.visible_assigned_course_note @completed_course_3).to eql(@completed_course_3.note.to_s)
+      expect(@degree_check_page.unassigned_course_ccns).not_to include("#{@completed_course_3.term_id}-#{@completed_course_3.ccn}")
     end
 
-    it 'creates a new course row when the category is a subcategory with courses'
+    it 'creates a new course row when the category is a subcategory with courses' do
+      @degree_check_page.assign_completed_course(@completed_course_4, @sub_cat_with_courses)
+      expect(@degree_check_page.visible_assigned_course_units @completed_course_4).to eql(@completed_course_4.units)
+      expect(@degree_check_page.visible_assigned_course_grade @completed_course_4).to eql(@completed_course_4.grade)
+      expect(@degree_check_page.visible_assigned_course_note @completed_course_4).to eql(@completed_course_4.note.to_s)
+      expect(@degree_check_page.unassigned_course_ccns).not_to include("#{@completed_course_4.term_id}-#{@completed_course_4.ccn}")
+    end
   end
 
   context 'when reassigned' do
-    it 'can be moved from a category to a subcategory'
-    it 'can be moved from a subcategory to category'
-    it 'can be moved from a category to a course requirement'
-    it 'can be moved from a course requirement to a subcategory'
-    it 'can be moved from a subcategory to a course requirement'
-    it 'can be moved from a course requirement to a category'
+
+    it 'can be moved from a category to a subcategory' do
+      @degree_check_page.reassign_course(@completed_course_1, @cat_no_subs_no_courses, @sub_cat_no_courses)
+    end
+
+    it 'can be moved from a subcategory to category' do
+      @degree_check_page.reassign_course(@completed_course_1, @sub_cat_no_courses, @cat_no_subs_no_courses)
+    end
+
+    it 'can be moved from a category to a course requirement' do
+      @degree_check_page.reassign_course(@completed_course_1, @cat_no_subs_no_courses, @course_req_1)
+    end
+
+    it 'can be moved from a course requirement to a subcategory' do
+      @degree_check_page.reassign_course(@completed_course_1, @course_req_1, @sub_cat_with_courses)
+    end
+
+    it 'can be moved from a subcategory to a course requirement' do
+      @degree_check_page.reassign_course(@completed_course_1, @sub_cat_with_courses, @course_req_1)
+    end
+
+    it 'can be moved from a course requirement to a category' do
+      @degree_check_page.reassign_course(@completed_course_1, @course_req_1, @cat_no_subs_no_courses)
+    end
   end
 
   context 'when unassigned from a category' do
-    it 'deletes the row from the category'
-    it 'restores the course to the unassigned courses list'
+
+    it 'deletes the row from the category' do
+      @degree_check_page.unassign_course(@completed_course_1, @cat_no_subs_no_courses)
+    end
+
+    it 'restores the course to the unassigned courses list' do
+      expect(@degree_check_page.unassigned_course_ccns).to include("#{@completed_course_1.term_id}-#{@completed_course_1.ccn}")
+    end
   end
 
   context 'when copied' do
@@ -334,7 +410,7 @@ describe 'A BOA degree check course' do
     it 'must already be assigned elsewhere'
 
     context 'to a category' do
-      before(:all) # edit the units and note
+      #before(:all) # edit the units and note
       it 'creates a row with the course name'
       it 'creates a row with the unedited course units'
       it 'creates a row with the course grade'
@@ -345,7 +421,7 @@ describe 'A BOA degree check course' do
     end
 
     context 'to a subcategory' do
-      before(:all) # edit the units and note
+      #before(:all) # edit the units and note
       it 'creates a row with the course name'
       it 'creates a row with the unedited course units'
       it 'creates a row with the course grade'
@@ -356,7 +432,7 @@ describe 'A BOA degree check course' do
     end
 
     context 'to a course requirement' do
-      before(:all) # edit the units and note
+      #before(:all) # edit the units and note
       it 'creates a row with the course name'
       it 'creates a row with the unedited course units'
       it 'creates a row with the course grade'

@@ -135,7 +135,7 @@ class BOACDegreeTemplatePage
   select_list(:col_req_parent_select, xpath: '//select[contains(@id, "parent-category-select")]')
   text_field(:col_req_course_units_input, xpath: '//input[contains(@id, "units-input")]')
   button(:unit_req_range_toggle, id: 'show-upper-units-input')
-  text_field(:unit_req_num_input_0, id: 'lower-units-input')
+  text_field(:unit_req_num_input_0, id: 'units-input')
   text_field(:unit_req_num_input_1, id: 'upper-units-input')
   span(:col_req_course_units_error_msg, xpath: '//span[text()=" Invalid "]')
   select_list(:col_req_course_units_req_select, xpath: '//select[contains(@id, "unit-requirement-select")]')
@@ -285,18 +285,13 @@ class BOACDegreeTemplatePage
   end
 
   def visible_course_req_name(course)
-    name_el = cell_element(xpath: "#{course_req_xpath course}/td/span")
+    name_el = cell_element(xpath: "#{course_req_xpath course}/td[1]//div")
     name_el.text if name_el.exists?
   end
 
   def visible_course_req_units(course)
     units_el = span_element(xpath: "#{course_req_xpath course}/td[2]/span")
     units_el.text if units_el.exists?
-  end
-
-  def visible_course_req_note(course)
-    note_el = cell_element(xpath: "#{course_req_xpath course}/td[5]")
-    note_el.text.strip if note_el.exists?
   end
 
   def visible_course_req_fulfillment(course)

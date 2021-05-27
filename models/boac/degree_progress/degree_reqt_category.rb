@@ -13,6 +13,7 @@ class DegreeReqtCategory
   def initialize(test_data)
     test_data.each { |k, v| public_send("#{k}=", v) }
     @column_num = @parent.column_num if @parent
+    @course_reqs ||= []
   end
 
   def set_id(template_id)
