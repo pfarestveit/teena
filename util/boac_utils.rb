@@ -983,10 +983,12 @@ class BOACUtils < Utils
                     degree_progress_templates.degree_name,
                     degree_progress_templates.created_at
                FROM degree_progress_templates
+              WHERE degree_progress_templates.deleted_at IS NULL
+                AND degree_progress_templates.student_sid IS NULL
            ORDER BY degree_progress_templates.id ASC;"
     results = Utils.query_pg_db(BOACUtils.boac_db_credentials, query)
     templates = results.map do |r|
-      DegreeProgressTemplate.new id r['id'], name: r['degree_name'], created_date: Time.parse(r['created_at'])
+      DegreeProgressTemplate.new id: r['id'], name: r['degree_name'], created_date: Time.parse(r['created_at'])
     end
     logger.info "All template IDs: #{templates.map &:id}"
     templates

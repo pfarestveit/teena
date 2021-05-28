@@ -4,7 +4,7 @@ include Logging
 
 test = BOACTestConfig.new
 test.degree_progress
-template = test.degree_templates.find { |t| t.name.include? BOACUtils.degree_major.first }
+template = test.degree_templates.find { |t| t.name.include? 'Course Workflows' }
 
 describe 'A BOA degree check' do
 
@@ -103,7 +103,7 @@ describe 'A BOA degree check' do
           end
         end
 
-        sub_cat.course_reqs&.each do |req_course|
+        sub_cat.course_reqs.each do |req_course|
           it "shows subcategory #{sub_cat.name} course #{req_course.name} name" do
             @degree_check_page.wait_until(1, "Expected #{req_course.name}, got #{@degree_check_page.visible_course_req_name req_course}") do
               @degree_check_page.visible_course_req_name(req_course) == req_course.name
@@ -118,7 +118,7 @@ describe 'A BOA degree check' do
         end
       end
 
-      cat.course_reqs&.each do |course|
+      cat.course_reqs.each do |course|
         it "shows category #{cat.name} course #{course.name} name" do
           @degree_check_page.wait_until(1, "Expected #{course.name}, got #{@degree_check_page.visible_course_req_name course}") do
             @degree_check_page.visible_course_req_name(course) == course.name
@@ -144,8 +144,8 @@ describe 'A BOA degree check' do
     it('shows the note creation date') { expect(@degree_check_page.note_update_date).to include('today') }
     it('offers an edit button for a note') { @degree_check_page.click_create_or_edit_note }
     it('allows the user to cancel a note edit') { @degree_check_page.click_cancel_note }
-    it('allows the user to save a note edit') { @degree_check_page.create_or_edit_note(@note_str = "EDITED - #{@note_str}") }
-    it('shows the edited note content') { expect(@degree_check_page.visible_note_body).to eql(@note_str.strip) }
+    it('allows the user to save a note edit') { @degree_check_page.create_or_edit_note("EDITED - #{@note_str}") }
+    it('shows the edited note content') { expect(@degree_check_page.visible_note_body).to eql("EDITED - #{@note_str}".strip) }
     it('shows the note edit advisor') { expect(@degree_check_page.note_update_advisor).to eql(test.advisor.full_name) }
     it('shows the note edit date') { expect(@degree_check_page.note_update_date).to include('today') }
   end
@@ -202,6 +202,7 @@ describe 'A BOA degree check' do
     before(:all) do
       @degree_check_history_page.log_out
       @templates = BOACUtils.get_degree_templates
+      @templates.sort_by! &:name
       @homepage.dev_auth test.read_only_advisor
     end
 
@@ -222,7 +223,7 @@ describe 'A BOA degree check' do
 
     it 'cannot edit a degree template' do
       expect(@degree_template_page.unit_req_add_button?).to be false
-      expect(@degree_template_page.add_col_req_button 1).to be false
+      expect(@degree_template_page.add_col_req_button(1).exists?).to be false
       expect(@degree_template_page.cat_edit_button_elements).to be_empty
       expect(@degree_template_page.cat_delete_button_elements).to be_empty
     end
@@ -233,13 +234,7 @@ describe 'A BOA degree check' do
       @degree_check_page.degree_check_heading(@degree_check).when_visible Utils.short_wait
     end
 
-    it 'can edit degree notes' do
-      @degree_check_page.create_or_edit_note(@note_str = "READ ONLY - #{@note_str}")
-      expect(@degree_check_page.visible_note_body).to eql(@note_str.strip)
-      expect(@degree_check_page.note_update_advisor).to eql(test.read_only_advisor.full_name)
-      expect(@degree_check_page.note_update_date).to include('today')
-    end
-
+    it('cannot edit degree notes') { expect(@degree_check_page.create_or_edit_note_button?).to be false }
     it 'can print a degree check with notes' # TODO download file and verify name
     it 'can print a degree check without notes' # TODO download file and verify name
     it('cannot create a new degree check') { expect(@degree_check_page.create_new_degree_link?).to be false }

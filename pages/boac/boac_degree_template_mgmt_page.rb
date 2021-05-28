@@ -35,14 +35,14 @@ class BOACDegreeTemplateMgmtPage
 
   # LIST
 
-  elements(:template_link, :link, xpath: '//a[contains(@id, "degree-check-"]')
+  elements(:template_link, :link, xpath: '//a[contains(@id, "degree-check-") and not(contains(@id, "print"))]')
 
   def visible_template_names
     template_link_elements.map &:text
   end
 
   def visible_template_create_dates
-    div_elements(xpath: '//td[@data-label="Created"]//div').map { |el| el.text.strip }
+    div_elements(xpath: '//td[@data-label="Created"]/div/div').map { |el| el.text.strip }
   end
 
   def degree_check_row_xpath(degree_check)
