@@ -23,7 +23,6 @@ describe 'bCourses project site', order: :defined do
 
     if standalone
       @canvas.log_in(@cal_net, Utils.ets_qa_username, Utils.ets_qa_password)
-      @splash_page.basic_auth test.manual_teacher.uid
     else
       @canvas.log_in(@cal_net, Utils.super_admin_username, Utils.super_admin_password)
       @canvas.masquerade_as test.manual_teacher

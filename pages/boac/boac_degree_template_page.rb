@@ -138,6 +138,7 @@ class BOACDegreeTemplatePage
   text_field(:unit_req_num_input_0, id: 'units-input')
   text_field(:unit_req_num_input_1, id: 'upper-units-input')
   span(:col_req_course_units_error_msg, xpath: '//span[text()=" Invalid "]')
+  span(:col_req_course_units_required_msg, xpath: '//span[text()=" Required "]')
   select_list(:col_req_course_units_req_select, xpath: '//select[contains(@id, "unit-requirement-select")]')
   elements(:col_req_course_units_req_remove_button, :button, xpath: '//button[contains(@id, "unit-requirement-remove")]')
   button(:col_req_create_button, xpath: '//button[contains(@id, "create-requirement-btn")]')
