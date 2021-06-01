@@ -28,7 +28,6 @@ describe 'bCourses Find a Person to Add', order: :defined do
     if standalone
       @splash_page.load_page
       @splash_page.basic_auth sis_teacher.uid
-      @canvas.log_in(@cal_net, Utils.ets_qa_username, Utils.ets_qa_password)
     else
       @canvas.log_in(@cal_net, Utils.super_admin_username, Utils.super_admin_password)
       @canvas.masquerade_as sis_teacher
@@ -37,31 +36,33 @@ describe 'bCourses Find a Person to Add', order: :defined do
 
   after(:all) { Utils.quit_browser @driver }
 
-  describe 'customizations in the footer' do
+  unless standalone
+    describe 'customizations in the footer' do
 
-    it 'include an "About" link' do
-      @canvas.scroll_to_bottom
-      expect(@canvas.external_link_valid?(@canvas.about_link_element, 'bCourses | Digital Learning Services')).to be true
-    end
+      it 'include an "About" link' do
+        @canvas.scroll_to_bottom
+        expect(@canvas.external_link_valid?(@canvas.about_link_element, 'bCourses | Digital Learning Services')).to be true
+      end
 
-    it 'include a "Privacy Policy" link' do
-      expect(@canvas.external_link_valid?(@canvas.privacy_policy_link_element, 'Instructure Product Privacy Policy | instructure.com')).to be true
-    end
+      it 'include a "Privacy Policy" link' do
+        expect(@canvas.external_link_valid?(@canvas.privacy_policy_link_element, 'Instructure Product Privacy Policy | instructure.com')).to be true
+      end
 
-    it 'include a "Terms of Service" link' do
-      expect(@canvas.external_link_valid?(@canvas.terms_of_service_link_element, 'Canvas the Learning Management Platform | Instructure')).to be true
-    end
+      it 'include a "Terms of Service" link' do
+        expect(@canvas.external_link_valid?(@canvas.terms_of_service_link_element, 'Canvas the Learning Management Platform | Instructure')).to be true
+      end
 
-    it 'include a "Data Use & Analytics" link' do
-      expect(@canvas.external_link_valid?(@canvas.data_use_link_element, 'bCourses Data Use and Analytics | Digital Learning Services')).to be true
-    end
+      it 'include a "Data Use & Analytics" link' do
+        expect(@canvas.external_link_valid?(@canvas.data_use_link_element, 'bCourses Data Use and Analytics | Digital Learning Services')).to be true
+      end
 
-    it 'include a "UC Berkeley Honor Code" link' do
-      expect(@canvas.external_link_valid?(@canvas.honor_code_link_element, 'Berkeley Honor Code | Center for Teaching & Learning')).to be true
-    end
+      it 'include a "UC Berkeley Honor Code" link' do
+        expect(@canvas.external_link_valid?(@canvas.honor_code_link_element, 'Berkeley Honor Code | Center for Teaching & Learning')).to be true
+      end
 
-    it 'include a "Student Resources" link' do
-      expect(@canvas.external_link_valid?(@canvas.student_resources_link_element, 'Resources | ASUC')).to be true
+      it 'include a "Student Resources" link' do
+        expect(@canvas.external_link_valid?(@canvas.student_resources_link_element, 'Resources | ASUC')).to be true
+      end
     end
   end
 

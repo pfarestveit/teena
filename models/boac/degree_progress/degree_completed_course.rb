@@ -4,6 +4,14 @@ class DegreeCompletedCourse < DegreeCourse
                 :req_course,
                 :grade,
                 :note,
-                :term_id
+                :term_id,
+                :units_orig,
+                :course_copies,
+                :course_orig
+
+  def initialize(test_data)
+    super
+    @course_copies ||= []
+  end
 
 end

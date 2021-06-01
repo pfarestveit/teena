@@ -432,11 +432,12 @@ class BOACApiStudentPage
                                       term_id: term_id,
                                       name: "#{data[:code]} #{primary_section[:component]} #{primary_section[:number]}",
                                       units: data[:units_completed],
+                                      units_orig: data[:units_completed],
                                       grade: data[:grade].gsub('−', '-'))
         end
       end
     end
-    courses
+    courses.sort_by &:name
   end
 
 end

@@ -145,7 +145,7 @@ module Page
     wait_for_update_and_click element
     sleep Utils.click_wait
     element.clear
-    element.send_keys text
+    element.send_keys text unless text.to_s.empty?
   end
 
   # Awaits a textbox element, clicks it, removes existing text, and sends new text.
