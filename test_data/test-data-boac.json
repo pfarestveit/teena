@@ -2,9 +2,9 @@
     "filters": {
         "students": [
             {
-                "coe_grading_basis_epn": [
+                "grading_basis_epn": [
                     {
-                        "term": "2212"
+                        "term": "2218"
                     }
                 ],
                 "majors": [
