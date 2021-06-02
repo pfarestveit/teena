@@ -81,6 +81,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
 
       it('sees a College filter') { expect(@student_opts).to include('College') }
       it('sees an Entering Term filter') { expect(@student_opts).to include('Entering Term') }
+      it('sees an EPN Grading Option filter') { expect(@student_opts).to include('EPN/CPN Grading Option') }
       it('sees an Expected Graduation Term filter') { expect(@student_opts).to include('Expected Graduation Term') }
       it('sees a GPA (Cumulative) filter') { expect(@student_opts).to include('GPA (Cumulative)') }
       it('sees a GPA (Last Term) filter') { expect(@student_opts).to include('GPA (Last Term)') }
@@ -102,7 +103,6 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
       it('sees an Advisor (COE) filter') { expect(@student_opts).to include('Advisor (COE)') }
       it('sees an Ethnicity (COE) filter') { expect(@student_opts).to include('Ethnicity (COE)') }
       it('sees a Gender (COE) filter') { expect(@student_opts).to include('Gender (COE)') }
-      it('sees an EPN Grading Option (COE) filter') { expect(@student_opts).to include('EPN/CPN Grading Option (COE)') }
       it('sees an Inactive (COE) filter') { expect(@student_opts).to include('Inactive (COE)') }
       it('sees a Last Name filter') { expect(@student_opts).to include('Last Name') }
       it('sees a My Curated Groups filter') { expect(@student_opts).to include('My Curated Groups') }

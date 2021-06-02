@@ -9,7 +9,6 @@ class CohortFilter
                 :coe_advisor,
                 :coe_ethnicity,
                 :coe_gender,
-                :coe_grading_basis_epn,
                 :coe_inactive,
                 :coe_prep,
                 :coe_probation,
@@ -23,6 +22,7 @@ class CohortFilter
                 :gender,
                 :gpa,
                 :gpa_last_term,
+                :grading_basis_epn,
                 :holds,
                 :intended_major,
                 :last_name,
@@ -47,6 +47,7 @@ class CohortFilter
     @expected_grad_terms = (test_data['expected_grad_terms'] && test_data['expected_grad_terms'].map { |t| t['expected_grad_term'] })
     @gpa = (test_data['gpa_ranges'] && test_data['gpa_ranges'].map { |g| g['gpa_range'] })
     @gpa_last_term = (test_data['gpa_ranges_last_term'] && test_data['gpa_ranges_last_term'].map { |g| g['gpa_range'] })
+    @grading_basis_epn = (test_data['grading_basis_epn'] && test_data['grading_basis_epn'].map { |b| b['term'] })
     @holds = test_data['holds']
     @intended_major = (test_data['intended_major'] && test_data['intended_major'].map { |m| m['major'] })
     @level = (test_data['levels'] && test_data['levels'].map { |l| l['level'] })
@@ -69,7 +70,6 @@ class CohortFilter
     @coe_advisor = (test_data['coe_advisors'] && test_data['coe_advisors'].map { |a| a['advisor'] })
     @coe_ethnicity = (test_data['coe_ethnicities'] && test_data['coe_ethnicities'].map { |e| e['ethnicity'] })
     @coe_gender = (test_data['coe_genders'] && test_data['coe_genders'].map { |g| g['gender'] })
-    @coe_grading_basis_epn = (test_data['coe_grading_basis_epn'] && test_data['coe_grading_basis_epn'].map { |b| b['term'] })
     @coe_inactive = test_data['coe_inactive']
     @coe_prep = (test_data['coe_preps'] && test_data['coe_preps'].map { |p| p['prep'] })
     @coe_probation = test_data['coe_probation']
@@ -85,7 +85,6 @@ class CohortFilter
       @coe_advisor = nil
       @coe_ethnicity = nil
       @coe_gender = nil
-      @coe_grading_basis_epn = nil
       @coe_underrepresented_minority = nil
       @coe_prep = nil
       @coe_inactive = nil

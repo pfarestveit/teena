@@ -138,6 +138,7 @@ module BOACFilteredCohortPageFilters
     cohort.search_criteria.entering_terms.each { |term| select_new_filter('Entering Term', term.to_s) } if cohort.search_criteria.entering_terms
     cohort.search_criteria.gpa.each { |gpa| select_new_filter('GPA (Cumulative)', gpa) } if cohort.search_criteria.gpa
     cohort.search_criteria.gpa_last_term.each { |gpa| select_new_filter('GPA (Last Term)', gpa) } if cohort.search_criteria.gpa_last_term
+    cohort.search_criteria.grading_basis_epn.each { |g| select_new_filter('EPN/CPN Grading Option', g.to_s) } if cohort.search_criteria.grading_basis_epn
     select_new_filter 'Holds' if cohort.search_criteria.holds
     cohort.search_criteria.intended_major.each { |m| select_new_filter('Intended Major', m) } if cohort.search_criteria.intended_major
     cohort.search_criteria.level.each { |l| select_new_filter('Level', l) } if cohort.search_criteria.level
@@ -160,7 +161,6 @@ module BOACFilteredCohortPageFilters
     cohort.search_criteria.coe_ethnicity.each { |e| select_new_filter('Ethnicity (COE)', e) } if cohort.search_criteria.coe_ethnicity
     select_new_filter 'Underrepresented Minority (COE)' if cohort.search_criteria.coe_underrepresented_minority
     cohort.search_criteria.coe_gender.each { |g| select_new_filter('Gender (COE)', g) } if cohort.search_criteria.coe_gender
-    cohort.search_criteria.coe_grading_basis_epn.each { |g| select_new_filter('EPN/CPN Grading Option (COE)', g.to_s) } if cohort.search_criteria.coe_grading_basis_epn
     cohort.search_criteria.coe_prep.each { |p| select_new_filter('PREP (COE)', p) } if cohort.search_criteria.coe_prep
     select_new_filter 'Probation (COE)' if cohort.search_criteria.coe_probation
     select_new_filter 'Inactive (COE)' if cohort.search_criteria.coe_inactive
@@ -302,6 +302,8 @@ module BOACFilteredCohortPageFilters
         existing_filter_element('Holds').exists? if filters.holds
         logger.debug 'Verifying GPA (Last Term) filter'
         filters.gpa_last_term.each { |g| existing_filter_element('GPA (Last Term)', g).exists? } if filters.gpa_last_term&.any?
+        logger.debug 'Verifying Grading Basis EPN filter'
+        filters.grading_basis_epn.each { |g| existing_filter_element('EPN/CPN Grading Option', g).exists? } if filters.grading_basis_epn&.any?
         logger.debug 'Verifying Intended Major filter'
         filters.intended_major.each { |m| existing_filter_element('Intended Major', m).exists? } if filters.intended_major&.any?
         logger.debug 'Verifying Level filter'
@@ -338,8 +340,6 @@ module BOACFilteredCohortPageFilters
         filters.coe_ethnicity.each { |e| existing_filter_element('Ethnicity (COE)', e).exists? } if filters.coe_ethnicity&.any?
         logger.debug 'Verifying Gender (COE) filter'
         filters.coe_gender.each { |g| existing_filter_element('Gender (COE)', g).exists? } if filters.coe_gender&.any?
-        logger.debug 'Verifying Grading Basis EPN (COE) filter'
-        filters.coe_grading_basis_epn.each { |g| existing_filter_element('EPN/CPN Grading Option (COE)', g).exists? } if filters.coe_grading_basis_epn&.any?
         logger.debug 'Verifying Inactive (COE) filter'
         existing_filter_element('Inactive (COE)').exists? if filters.coe_inactive
 

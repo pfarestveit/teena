@@ -188,6 +188,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
 
         it('sees a College filter') { expect(@opts).to include('College') }
         it('sees an Entering Term filter') { expect(@opts).to include('Entering Term') }
+        it('sees an EPN Grading Option filter') { expect(@opts).to include('EPN/CPN Grading Option') }
         it('sees an Expected Graduation Term filter') { expect(@opts).to include('Expected Graduation Term') }
         it('sees a GPA (Cumulative) filter') { expect(@opts).to include('GPA (Cumulative)') }
         it('sees a GPA (Last Term) filter') { expect(@opts).to include('GPA (Last Term)') }
@@ -209,7 +210,6 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
         it('sees no Advisor (COE) filter') { expect(@opts).not_to include('Advisor (COE)') }
         it('sees no Ethnicity (COE) filter') { expect(@opts).not_to include('Ethnicity (COE)') }
         it('sees no Gender (COE) filter') { expect(@opts).not_to include('Gender (COE)') }
-        it('sees no EPN Grading Option (COE) filter') { expect(@opts).not_to include('EPN/CPN Grading Option (COE)') }
         it('sees no Inactive (COE) filter') { expect(@opts).not_to include('Inactive (COE)') }
         it('sees a Last Name filter') { expect(@opts).to include('Last Name') }
         it('sees a My Curated Groups filter') { expect(@opts).to include('My Curated Groups') }
@@ -384,6 +384,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
 
         it('sees a College filter') { expect(@opts).to include('College') }
         it('sees an Entering Term filter') { expect(@opts).to include('Entering Term') }
+        it('sees an EPN Grading Option filter') { expect(@opts).to include('EPN/CPN Grading Option') }
         it('sees an Expected Graduation Term filter') { expect(@opts).to include('Expected Graduation Term') }
         it('sees a GPA (Cumulative) filter') { expect(@opts).to include('GPA (Cumulative)') }
         it('sees a GPA (Last Term) filter') { expect(@opts).to include('GPA (Last Term)') }
@@ -405,7 +406,6 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
         it('sees an Advisor (COE) filter') { expect(@opts).to include('Advisor (COE)') }
         it('sees an Ethnicity (COE) filter') { expect(@opts).to include('Ethnicity (COE)') }
         it('sees a Gender (COE) filter') { expect(@opts).to include('Gender (COE)') }
-        it('sees an EPN Grading Option (COE) filter') { expect(@opts).to include('EPN/CPN Grading Option (COE)') }
         it('sees an Inactive (COE) filter') { expect(@opts).to include('Inactive (COE)') }
         it('sees a Last Name filter') { expect(@opts).to include('Last Name') }
         it('sees a My Curated Groups filter') { expect(@opts).to include('My Curated Groups') }
@@ -577,6 +577,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
 
         it('sees a College filter') { expect(@opts).to include('College') }
         it('sees an Entering Term filter') { expect(@opts).to include('Entering Term') }
+        it('sees an EPN Grading Option filter') { expect(@opts).to include('Grading Option EPN') }
         it('sees an Expected Graduation Term filter') { expect(@opts).to include('Expected Graduation Term') }
         it('sees a GPA (Cumulative) filter') { expect(@opts).to include('GPA (Cumulative)') }
         it('sees a GPA (Last Term) filter') { expect(@opts).to include('GPA (Last Term)') }
@@ -598,7 +599,6 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
         it('sees no Advisor (COE) filter') { expect(@opts).not_to include('Advisor (COE)') }
         it('sees no Ethnicity (COE) filter') { expect(@opts).not_to include('Ethnicity (COE)') }
         it('sees no Gender (COE) filter') { expect(@opts).not_to include('Gender (COE)') }
-        it('sees no EPN Grading Option (COE) filter') { expect(@opts).not_to include('Grading Option EPN (COE)') }
         it('sees no Inactive (COE) filter') { expect(@opts).not_to include('Inactive (COE)') }
         it('sees a Last Name filter') { expect(@opts).to include('Last Name') }
         it('sees a My Curated Groups filter') { expect(@opts).to include('My Curated Groups') }

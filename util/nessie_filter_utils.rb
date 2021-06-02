@@ -81,6 +81,15 @@ class NessieFilterUtils < NessieUtils
     end
   end
 
+  def self.grading_basis_epn_cond(filter, conditions_list)
+    if filter.grading_basis_epn&.any?
+      epn_conditions = "student.student_enrollment_terms.term_id IN (#{in_op(filter.grading_basis_epn)})
+                          AND (student.student_enrollment_terms.enrollment_term LIKE '%\"gradingBasis\": \"EPN\"%'
+                            OR student.student_enrollment_terms.enrollment_term LIKE '%\"gradingBasis\": \"CPN\"%')"
+      conditions_list << epn_conditions
+    end
+  end
+
   def self.intended_major_cond(filter, conditions_list)
     conditions_list << "student.intended_majors.major IN (#{in_op filter.intended_major})" if filter.intended_major&.any?
   end
@@ -188,13 +197,6 @@ class NessieFilterUtils < NessieUtils
     conditions_list << "boac_advising_coe.students.probation IS TRUE" if filter.coe_probation
     conditions_list << "boac_advising_coe.students.minority IS TRUE" if filter.coe_underrepresented_minority
 
-    if filter.coe_grading_basis_epn&.any?
-      epn_conditions = "student.student_enrollment_terms.term_id IN (#{in_op(filter.coe_grading_basis_epn)})
-                          AND (student.student_enrollment_terms.enrollment_term LIKE '%\"gradingBasis\": \"EPN\"%'
-                            OR student.student_enrollment_terms.enrollment_term LIKE '%\"gradingBasis\": \"CPN\"%')"
-      conditions_list << epn_conditions
-    end
-
     prep_conditions = []
     prep_conditions << "boac_advising_coe.students.did_prep IS TRUE" if filter.coe_prep&.include? 'PREP'
     prep_conditions << "boac_advising_coe.students.prep_eligible IS TRUE" if filter.coe_prep&.include? 'PREP eligible'
@@ -215,6 +217,7 @@ class NessieFilterUtils < NessieUtils
     expected_grad_term_cond(filter, conditions_list)
     gpa_cond(filter, conditions_list)
     gpa_last_term_cond(filter, conditions_list)
+    grading_basis_epn_cond(filter, conditions_list)
     intended_major_cond(filter, conditions_list)
     last_name_cond(filter, conditions_list)
     level_cond(filter, conditions_list)
@@ -251,6 +254,9 @@ class NessieFilterUtils < NessieUtils
     acad_standing_join = "LEFT JOIN student.academic_standing ON #{sid} = student.academic_standing.sid"
     joins << acad_standing_join if filter.academic_standing&.any?
 
+    epn_join = "LEFT JOIN student.student_enrollment_terms ON #{sid} = student.student_enrollment_terms.sid"
+    joins << epn_join if filter.grading_basis_epn&.any? && !filter.mid_point_deficient
+
     holds_join = "JOIN student.student_holds ON #{sid} = student.student_holds.sid"
     joins << holds_join if filter.holds
 
@@ -286,15 +292,12 @@ class NessieFilterUtils < NessieUtils
     asc_join = "LEFT JOIN boac_advising_asc.students ON #{sid} = boac_advising_asc.students.sid"
     joins << asc_join if (filter.asc_inactive || filter.asc_intensive || filter.asc_team&.any?)
 
-    coe_join = "#{filter.coe_grading_basis_epn&.any? ? 'RIGHT' : 'LEFT'} JOIN boac_advising_coe.students ON #{sid} = boac_advising_coe.students.sid"
+    coe_join = "LEFT JOIN boac_advising_coe.students ON #{sid} = boac_advising_coe.students.sid"
     if filter.coe_advisor&.any? || filter.coe_ethnicity&.any? || filter.coe_gender&.any? || filter.coe_inactive ||
         filter.coe_prep&.include?('PREP') || filter.coe_prep&.include?('PREP eligible') || filter.coe_prep&.include?('T-PREP') ||
-        filter.coe_prep&.include?('T-PREP eligible') || filter.coe_probation || filter.coe_underrepresented_minority ||
-        filter.coe_grading_basis_epn&.any?
+        filter.coe_prep&.include?('T-PREP eligible') || filter.coe_probation || filter.coe_underrepresented_minority
       joins << coe_join
     end
-    coe_epn_join = "LEFT JOIN student.student_enrollment_terms ON #{sid} = student.student_enrollment_terms.sid"
-    joins << coe_epn_join if filter.coe_grading_basis_epn&.any? && !filter.mid_point_deficient
 
     joins.uniq!
     joins.compact!
