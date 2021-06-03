@@ -343,7 +343,7 @@ module BOACApptIntakeDesk
   # @return [Array<Hash>]
   def visible_drop_in_advisors_and_status
     advisors = drop_in_advisor_elements.each_with_index.map do |el, i|
-      status = drop_in_advisor_status_elements[i].attribute('innerText')
+      status = drop_in_advisor_status_elements[i].text
       {
         uid: "#{el.attribute('id').split('-')[2]}",
         status: "#{status.strip if status}"

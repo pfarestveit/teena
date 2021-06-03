@@ -54,7 +54,7 @@ module BOACListViewPages
 
   def student_academic_standing(student)
     el = div_element(xpath: "//div[@id='student-#{student.uid}']//div[@class='student-academic-standing']")
-    el.attribute('innerText').strip if el.exists?
+    el.text.strip if el.exists?
   end
 
   # Returns the visible sports shown for a student

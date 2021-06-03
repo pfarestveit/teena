@@ -154,7 +154,7 @@ module Page
   def wait_for_textbox_and_type(element, text)
     wait_for_update_and_click element
     sleep Utils.click_wait
-    element.attribute('innerText').length.times { hit_delete; hit_backspace }
+    element.text.length.times { hit_delete; hit_backspace } if element.text
     element.value.length.times { hit_delete; hit_backspace } if element.value
     element.click
     element.send_keys text
@@ -174,7 +174,7 @@ module Page
     select_element.options.find do |o|
       o.text.strip == option ||
         o.attribute('value') == option ||
-        o.attribute('id').include?("-#{option.downcase}")
+        o.attribute('id')&.include?("-#{option.downcase}")
     end
   end
 

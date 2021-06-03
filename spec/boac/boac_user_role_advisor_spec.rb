@@ -577,7 +577,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
 
         it('sees a College filter') { expect(@opts).to include('College') }
         it('sees an Entering Term filter') { expect(@opts).to include('Entering Term') }
-        it('sees an EPN Grading Option filter') { expect(@opts).to include('Grading Option EPN') }
+        it('sees an EPN/CPN Grading Option filter') { expect(@opts).to include('EPN/CPN Grading Option') }
         it('sees an Expected Graduation Term filter') { expect(@opts).to include('Expected Graduation Term') }
         it('sees a GPA (Cumulative) filter') { expect(@opts).to include('GPA (Cumulative)') }
         it('sees a GPA (Last Term) filter') { expect(@opts).to include('GPA (Last Term)') }

@@ -81,7 +81,7 @@ module BOACClassPages
   # @return [Array<String>]
   def meeting_location(index)
     el = div_element(xpath: "#{meeting_schedule_xpath index}//div[3]")
-    el.attribute('innerText') if el.exists? && !el.attribute('innerText').empty?
+    el.text if el.exists? && !el.text.empty?
   end
 
   # Returns the meeting data shown for a course meeting at a given node

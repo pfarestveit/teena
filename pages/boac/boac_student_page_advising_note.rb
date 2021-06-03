@@ -139,9 +139,9 @@ module BOACStudentPageAdvisingNote
     category_el = span_element(id: "note-#{note.id}-category-closed")
     date_el = div_element(id: "collapsed-note-#{note.id}-created-at")
     {
-      subject: (subject_el.attribute('innerText') if subject_el.exists?),
+      subject: (subject_el.text if subject_el.exists?),
       category: (category_el.text if category_el.exists?),
-      created_date: (date_el.attribute('innerText').gsub('Last updated on', '').strip if date_el.exists?)
+      created_date: (date_el.text.gsub('Last updated on', '').strip if date_el.exists?)
     }
   end
 
@@ -161,7 +161,7 @@ module BOACStudentPageAdvisingNote
     permalink_el = link_element(id: "advising-note-permalink-#{note.id}")
     # The body text area contains formatting elements even without text, so account for that when getting the element's text
     body_text = if body_el.exists?
-                  text = body_el.attribute('innerText')
+                  text = body_el.text
                   text.gsub(/\W/, '').gsub('&nbsp;', '').empty? ? '' : text
                 else
                   ''
@@ -174,10 +174,10 @@ module BOACStudentPageAdvisingNote
       :note_src => (note_src_el.text if note_src_el.exists?),
       :topics => topic_els.map(&:text).sort,
       :remove_topics_btns => topic_remove_btn_els,
-      :attachments => (item_attachment_els(note).map { |el| el.attribute('innerText').strip }).sort,
+      :attachments => (item_attachment_els(note).map { |el| el.text.strip }).sort,
       :created_date => (created_el.text.gsub('Created on', '').gsub(/\s+/, ' ').strip if created_el.exists?),
       :updated_date => (updated_el.text.gsub('Last updated on', '').gsub(/\s+/, ' ').strip if updated_el.exists?),
-      :permalink_url => (permalink_el.attribute('href') if permalink_el.exists?)
+      :permalink_url => ("#{BOACUtils.base_url}#{permalink_el.attribute('href')}" if permalink_el.exists?)
     }
   end
 

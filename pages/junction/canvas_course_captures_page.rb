@@ -45,7 +45,7 @@ module Page
         wait_until(Utils.medium_wait) { section_content_elements.any? }
         section_els = section_content_elements
         if section_els.length > 1
-          el = section_els.find { |el| el.attribute('innerText').include? section_code }
+          el = section_els.find { |el| el.text.include? section_code }
           section_els.index el
         else
           0

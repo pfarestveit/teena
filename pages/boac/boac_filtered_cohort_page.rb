@@ -52,7 +52,7 @@ class BOACFilteredCohortPage
     wait_for_spinner
     begin
       wait_until(Utils.short_wait) { everyone_cohort_link_elements.any? }
-      cohorts = everyone_cohort_link_elements.map { |link| FilteredCohort.new({id: link.attribute('href').gsub("#{BOACUtils.base_url}/cohort/", ''), name: link.text}) }
+      cohorts = everyone_cohort_link_elements.map { |link| FilteredCohort.new({id: link.attribute('href').gsub('/cohort/', ''), name: link.text}) }
     rescue
       cohorts = []
     end

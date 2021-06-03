@@ -337,7 +337,7 @@ module BOACPages
     wait_for_element_and_type(element, name)
     sleep Utils.click_wait
     wait_until(Utils.short_wait) { auto_suggest_option_elements.any? }
-    link_element = auto_suggest_option_elements.find { |el| el.attribute('innerText').downcase.include? name.downcase }
+    link_element = auto_suggest_option_elements.find { |el| el.text.downcase.include? name.downcase }
     wait_for_load_and_click link_element
   end
 

@@ -291,11 +291,11 @@ module BOACCohortPages
         mid_flag_el = div_element(xpath: "#{row_xpath}[#{i + 1}]/td[3]/*[name()=\"svg\"][@data-icon=\"exclamation-triangle\"]")
         final_flag_el = div_element(xpath: "#{row_xpath}[#{i + 1}]/td[4]/*[name()=\"svg\"][@data-icon=\"exclamation-triangle\"]")
         rows_data << {
-          course_code: cell_element(xpath: "#{row_xpath}[#{i + 1}]/td[1]").attribute('innerText'),
-          activity: cell_element(xpath: "#{row_xpath}[#{i + 1}]/td[2]").attribute('innerText'),
-          mid_grade: cell_element(xpath: "#{row_xpath}[#{i + 1}]/td[3]").attribute('innerText'),
+          course_code: cell_element(xpath: "#{row_xpath}[#{i + 1}]/td[1]").text,
+          activity: cell_element(xpath: "#{row_xpath}[#{i + 1}]/td[2]").text,
+          mid_grade: cell_element(xpath: "#{row_xpath}[#{i + 1}]/td[3]").text,
           mid_flag: mid_flag_el.exists?,
-          final_grade: cell_element(xpath: "#{row_xpath}[#{i + 1}]/td[4]").attribute('innerText'),
+          final_grade: cell_element(xpath: "#{row_xpath}[#{i + 1}]/td[4]").text,
           final_flag: final_flag_el.exists?
         }
       end

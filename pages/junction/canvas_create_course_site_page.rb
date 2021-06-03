@@ -138,7 +138,7 @@ module Page
       # @return [String]
       def section_schedules(section_id)
         if (e = div_element(xpath: "#{section_cbx_xpath(section_id)}/../ancestor::tbody//td[contains(@class, 'section-timestamps')]")).exists?
-          e.attribute('innerText')
+          e.text
         else
           ''
         end
@@ -149,7 +149,7 @@ module Page
       # @return [String]
       def section_locations(section_id)
         if (e = div_element(xpath: "#{section_cbx_xpath(section_id)}/../ancestor::tbody//td[contains(@class, 'section-locations')]")).exists?
-          e.attribute('innerText')
+          e.text
         else
           ''
         end

@@ -145,7 +145,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
         @student_page.click_add_to_grp_button
         @student_page.click_create_new_grp
         @student_page.enter_group_name @new_group
-        expect(@student_page.grp_name_input).to eql(@new_group.name[0..254])
+        @student_page.no_chars_left_msg_element.when_present 1
       end
 
       it 'must not match a non-deleted group belonging to the same advisor' do

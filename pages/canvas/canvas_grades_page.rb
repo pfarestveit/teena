@@ -313,7 +313,7 @@ module Page
       js_click allow_grade_override_cbx_element
       wait_for_update_and_click update_gradebook_settings_element
       flash_msg_element.when_visible Utils.short_wait
-      wait_until(1) { flash_msg_element.attribute('innerText').include? 'Gradebook Settings updated' }
+      wait_until(1) { flash_msg_element.text.include? 'Gradebook Settings updated' }
     end
 
     # Ensures that allow-override is selected on the gradebook
