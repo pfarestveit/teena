@@ -131,7 +131,7 @@ module BOACStudentPageAppointment
     {
         detail: (detail_el.text if detail_el.exists?),
         status: (status_el.text if status_el.exists?),
-        created_date: (date_el.attribute('innerText').gsub('Last updated on', '').strip if date_el.exists?)
+        created_date: (date_el.text.gsub('Last updated on', '').strip if date_el.exists?)
     }
   end
 
@@ -157,8 +157,8 @@ module BOACStudentPageAppointment
     topic_els = topic_elements.select { |el| el.attribute('id').include? "appointment-#{appt.id}-topic-" }
     {
         detail: (details_el.text if details_el.exists?),
-        created_date: (date_el.attribute('innerText').gsub('Appointment date', '').strip if date_el.exists?),
-        reserve_advisor: (reserved_for_el(appt).attribute('innerText').strip if reserved_for_el(appt).exists?),
+        created_date: (date_el.text.gsub('Appointment date', '').strip if date_el.exists?),
+        reserve_advisor: (reserved_for_el(appt).text.strip if reserved_for_el(appt).exists?),
         check_in_time: (check_in_time_el.text if check_in_time_el.exists?),
         cancel_reason: (cancel_reason_el.text if cancel_reason_el.exists?),
         cancel_addl_info: (cancel_addl_info_el.text if cancel_addl_info_el.exists?),
@@ -167,7 +167,7 @@ module BOACStudentPageAppointment
         advisor_depts: advisor_dept_els.map(&:text).sort,
         type: (type_el.text if type_el.exists?),
         topics: topic_els.map(&:text).sort,
-        attachments: (item_attachment_els(appt).map { |el| el.attribute('innerText').strip }).sort
+        attachments: (item_attachment_els(appt).map { |el| el.text.strip }).sort
     }
   end
 

@@ -76,7 +76,7 @@ class BOACFlightDataRecorderPage
   # @param dept [BOACDepartments]
   # @return [Element]
   def advisor_role(advisor, dept)
-    span_element(id: "dept-#{dept.code}-#{advisor.uid}").attribute('innerText')
+    span_element(id: "dept-#{dept.code}-#{advisor.uid}").text
   end
 
   # Returns the visible note count for a given advisor
@@ -95,7 +95,7 @@ class BOACFlightDataRecorderPage
   # @param advisor [BOACUser]
   # @return [String]
   def advisor_last_login(advisor)
-    div_element(id: "user-last-login-#{advisor.uid}").attribute('innerText')
+    div_element(id: "user-last-login-#{advisor.uid}").text
   end
 
 end

@@ -74,7 +74,7 @@ module BOACStudentPageTimeline
     div_element(id: "collapsed-#{type}-#{item.id}-created-at").when_visible Utils.short_wait
     date_el = div_element(id: "collapsed-#{type}-#{item.id}-created-at")
     {
-        :subject => (subject_el.attribute('innerText').gsub("\n", '') if subject_el.exists?),
+        :subject => (subject_el.text.gsub("\n", '') if subject_el.exists?),
         :date => (date_el.text.gsub(/\s+/, ' ') if date_el.exists?)
     }
   end

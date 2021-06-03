@@ -99,7 +99,7 @@ class BOACStudentPage
       :entered_term => (entered_term.gsub('Entered', '').strip if entered_term?),
       :intended_majors => (intended_major_elements.map { |m| m.text.strip }),
       :expected_graduation => (expected_graduation.gsub('Expected graduation', '').strip if expected_graduation?),
-      :graduation_degree => (degree_type_element.attribute('innerText') if degree_type_element.exists?),
+      :graduation_degree => (degree_type_element.text if degree_type_element.exists?),
       :graduation_minor => (degree_minor_elements.map { |el| el.text.gsub('UG', '').strip }),
       :graduation_date => (degree_date_element.text if degree_date_element.exists?),
       :graduation_colleges => (degree_college_elements.map &:text if degree_college_elements.any?),
@@ -125,7 +125,7 @@ class BOACStudentPage
   # Returns the visible team information
   # @return [Array<String>]
   def sports
-    squad_elements.map { |el| el.attribute('innerText').strip }
+    squad_elements.map { |el| el.text.strip }
   end
 
   # TIMELINE

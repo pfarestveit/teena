@@ -50,7 +50,7 @@ class BOACGroupPage
     begin
       wait_until(Utils.short_wait) { everyone_group_link_elements.any? }
       groups = everyone_group_link_elements.map do |link|
-        CuratedGroup.new({id: link.attribute('href').gsub("#{BOACUtils.base_url}/curated/", ''), name: link.text})
+        CuratedGroup.new({id: link.attribute('href').gsub('/curated/', ''), name: link.text})
       end
     rescue
       groups = []

@@ -39,7 +39,7 @@ module BOACAddGroupSelectorPages
   # @return [boolean]
   def grp_selected?(group)
     grp_checkbox_link(group).when_visible Utils.short_wait
-    grp_checkbox_link(group).attribute('innerText').include? 'is selected'
+    grp_checkbox_link(group).text.include? 'is selected'
   end
 
   # Clicks the button to create a new group

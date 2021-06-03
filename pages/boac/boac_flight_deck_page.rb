@@ -184,11 +184,11 @@ class BOACFlightDeckPage
   button(:topic_cancel_button, id: 'cancel')
 
   def label_validation_error
-    div_element(id: 'topic-label-error').attribute('innerText')
+    div_element(id: 'topic-label-error').text
   end
 
   def label_length_validation
-    span_element(id: 'input-live-help').attribute('innerText')
+    span_element(id: 'input-live-help').text
   end
 
   def topic_row_xpath(topic)
@@ -204,7 +204,7 @@ class BOACFlightDeckPage
   end
 
   def topic_in_notes(topic)
-    cell_element(xpath: "#{topic_row_xpath topic}/td[3]").attribute('innerText').strip
+    cell_element(xpath: "#{topic_row_xpath topic}/td[3]").text.strip
   end
 
   def topic_in_notes_count(topic)
@@ -212,7 +212,7 @@ class BOACFlightDeckPage
   end
 
   def topic_in_appts(topic)
-    cell_element(xpath: "#{topic_row_xpath topic}/td[5]").attribute('innerText').strip
+    cell_element(xpath: "#{topic_row_xpath topic}/td[5]").text.strip
   end
 
   def topic_in_appts_count(topic)
