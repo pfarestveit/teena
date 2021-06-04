@@ -272,6 +272,17 @@ module Page
     sleep 1
   end
 
+  def drag_and_drop(from_el, to_el)
+    logger.info "Dragging and dropping from #{from_el.locator} to #{to_el.locator}"
+    sleep Utils.click_wait
+    browser.action.click_and_hold(from_el.selenium_element).perform
+    sleep 1
+    browser.action.move_to(to_el.selenium_element).perform
+    sleep 1
+    browser.action.release.perform
+    sleep 1
+  end
+
   # Pauses to allow the Canvas poller to complete any active cycle
   def pause_for_poller
     logger.info "Waiting for the Canvas poller for #{wait = SuiteCUtils.canvas_poller_wait} seconds"

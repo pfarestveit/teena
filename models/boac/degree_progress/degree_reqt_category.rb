@@ -8,7 +8,8 @@ class DegreeReqtCategory
                 :column_num,
                 :course_reqs,
                 :parent,
-                :sub_categories
+                :sub_categories,
+                :units_reqts
 
   def initialize(test_data)
     test_data.each { |k, v| public_send("#{k}=", v) }

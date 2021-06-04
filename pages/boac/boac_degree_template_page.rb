@@ -139,6 +139,7 @@ class BOACDegreeTemplatePage
   text_field(:unit_req_num_input_1, id: 'upper-units-input')
   span(:col_req_course_units_error_msg, xpath: '//span[text()=" Invalid "]')
   span(:col_req_course_units_required_msg, xpath: '//span[text()=" Required "]')
+  elements(:col_req_course_units_req_pill, :div, xpath: '//div[contains(@class, "pill-unit-requirement")]')
   select_list(:col_req_course_units_req_select, xpath: '//select[contains(@id, "unit-requirement-select")]')
   elements(:col_req_course_units_req_remove_button, :button, xpath: '//button[contains(@id, "unit-requirement-remove")]')
   button(:col_req_create_button, xpath: '//button[contains(@id, "create-requirement-btn")]')
@@ -185,6 +186,10 @@ class BOACDegreeTemplatePage
     else
       wait_for_element_and_select_js(col_req_parent_select_element, col_req_parent_options.first)
     end
+  end
+
+  def col_req_unit_req_pill(unit_req)
+    div_element(xpath: "//div[contains(@class, \"pill-unit-requirement\")]/div[contains(text(), \"#{unit_req.name}\")]")
   end
 
   def col_req_unit_req_remove_button(idx)
@@ -259,6 +264,10 @@ class BOACDegreeTemplatePage
     "//div[@id='column-#{cat.column_num}-category-#{cat.id}']"
   end
 
+  def cat_drop_zone_el(cat)
+    div_element(xpath: "#{cat_xpath cat}//div[@id='drop-zone-category']")
+  end
+
   def subcat_xpath(subcat)
     "//div[@id='column-#{subcat.parent.column_num}-subcategory-#{subcat.id}']"
   end
@@ -283,6 +292,10 @@ class BOACDegreeTemplatePage
 
   def course_req_xpath(course)
     "//table[@id='column-#{course.parent.column_num}-courses-of-category-#{course.parent.id}']//tr[contains(@id, 'course-#{course.id}-table-row')]"
+  end
+
+  def course_req_row(course)
+    row_element(xpath: course_req_xpath(course))
   end
 
   def visible_course_req_name(course)
