@@ -325,6 +325,175 @@
     },
     "degree_checks": [
         {
+            "name": "Course Workflows",
+            "unit_reqts": [
+                {
+                    "name": "Unit Req 1",
+                    "unit_count": "12"
+                },
+                {
+                    "name": "Unit Req 2",
+                    "unit_count": "49"
+                }
+            ],
+            "categories": [
+                {
+                    "name": "TopCat 1: -UR, +SC, -C",
+                    "desc": "",
+                    "column_num": 1,
+                    "unit_reqts": [],
+                    "sub_categories": [
+                        {
+                            "name": "SubCat 1.1: -UR, +C",
+                            "unit_reqts": [],
+                            "courses": [
+                                {
+                                    "name": "Course 1.1.1: -UR, +U",
+                                    "units": "4"
+                                },
+                                {
+                                    "name": "Course 1.1.2: +UR, +U",
+                                    "units": "4",
+                                    "unit_reqts": [
+                                        {
+                                            "reqt": "Unit Req 2"
+                                        }
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            "name": "SubCat 1.2: +UR, +C",
+                            "unit_reqts": [
+                                {
+                                    "reqt": "Unit Req 1"
+                                }
+                            ],
+                            "courses": [
+                                {
+                                    "name": "Course 1.2.1: -UR, +U",
+                                    "units": "4"
+                                },
+                                {
+                                    "name": "Course 1.2.2: -UR, +U",
+                                    "units": "3"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "name": "TopCat 2: -UR, -SC, +C",
+                    "column_num": 1,
+                    "courses": [
+                        {
+                            "name": "Course 2.1: -UR, -U"
+                        },
+                        {
+                            "name": "Course 2.2: -UR, -U"
+                        }
+                    ]
+                },
+                {
+                    "name": "TopCat 3: -UR, +SC, -C",
+                    "column_num": 2,
+                    "sub_categories": [
+                        {
+                            "name": "SubCat 3.1: -UR, -C"
+                        }
+                    ]
+                },
+                {
+                    "name": "TopCat 4: -UR, -SC, +C",
+                    "column_num": 3,
+                    "courses": [
+                        {
+                            "name": "Course 4.1: -U, -UR"
+                        },
+                        {
+                            "name": "Course 4.2: -U, -UR"
+                        }
+                    ]
+                },
+                {
+                    "name": "TopCat 5: -UR, -SC, -C",
+                    "column_num": 3
+                }
+            ]
+        },
+        {
+            "name": "Unit Fulfillment",
+            "unit_reqts": [
+                {
+                    "name": "Unit Req 0",
+                    "unit_count": "12"
+                },
+                {
+                    "name": "Unit Req 1",
+                    "unit_count": "49"
+                },
+                {
+                    "name": "Unit Req 2",
+                    "unit_count": "5"
+                }
+            ],
+            "categories": [
+                {
+                    "name": "TopCat 0",
+                    "desc": "Top level category c UF",
+                    "column_num": 1,
+                    "unit_reqts": [
+                        {
+                            "reqt": "Unit Req 0"
+                        }
+                    ]
+                },
+                {
+                    "name": "TopCat 1",
+                    "desc": "Top level category c unit fulfillment",
+                    "column_num": 2,
+                    "unit_reqts": [
+                        {
+                            "reqt": "Unit Req 1"
+                        }
+                    ],
+                    "sub_categories": [
+                        {
+                            "name": "SubCat",
+                            "desc": "Subcategory s UF",
+                            "courses": [
+                                {
+                                    "name": "Course s UF",
+                                    "units": "4"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "name": "TopCat 2",
+                    "desc": "Top level category s UF",
+                    "column_num": 2
+                },
+                {
+                    "name": "TopCat 3",
+                    "desc": "Top level category s UF",
+                    "column_num": 3,
+                    "sub_categories": [
+                        {
+                            "name": "SubCat",
+                            "desc": "Subcategory c UF",
+                            "unit_reqts": [
+                                {
+                                    "reqt": "Unit Reqt 1"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
             "name": "Bioengineering BS 2020",
             "unit_reqts": [
                 {

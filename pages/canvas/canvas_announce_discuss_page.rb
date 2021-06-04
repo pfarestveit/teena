@@ -130,7 +130,7 @@ module Page
       if index.nil?
         logger.info "Creating new discussion entry with body '#{reply_body}'"
         wait_for_load_and_click_js primary_reply_link_element
-        primary_reply_iframe_element.when_present 1
+        primary_reply_iframe_element.when_present Utils.short_wait
         replies = discussion_reply_elements.length
         switch_to_frame primary_reply_iframe_element.attribute('id')
         wait_for_element_and_type_js(paragraph_element(xpath: '//p'), reply_body)
@@ -142,6 +142,7 @@ module Page
         wait_until(Utils.short_wait) { secondary_reply_link_elements.any? }
         replies = discussion_reply_elements.length
         wait_for_load_and_click_js secondary_reply_link_elements[index]
+        secondary_reply_iframe_element.when_present Utils.short_wait
         switch_to_frame secondary_reply_iframe_element.attribute('id')
         wait_for_element_and_type_js(paragraph_element(xpath: '//p'), reply_body)
         switch_to_main_content

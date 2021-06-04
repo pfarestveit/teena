@@ -106,6 +106,8 @@ class BOACDegreeCheckPage < BOACDegreeTemplatePage
 
   # UNASSIGNED (COMPLETED) COURSES
 
+  div(:unassigned_drop_zone, id: 'drop-zone-unassigned-courses')
+
   def unassigned_course_ccns
     els = row_elements(xpath: '//tr[contains(@id, "unassigned-course-")]')
     els.map { |el| el.attribute('id').split('-')[2..3].join('-') }
@@ -190,7 +192,7 @@ class BOACDegreeCheckPage < BOACDegreeTemplatePage
     flag_el.exists? && hover_el.exists?
   end
 
-  def visible_assigned_course_fulfill_flag(course)
+  def visible_assigned_course_fulfill_flag?(course)
     flag_el = span_element(xpath: "#{assigned_course_xpath course}/td[contains(@class, 'td-units')]//title")
     flag_el.text if flag_el.exists?
   end
@@ -205,13 +207,23 @@ class BOACDegreeCheckPage < BOACDegreeTemplatePage
     note_el.text.strip if note_el.exists?
   end
 
-  def visible_assigned_course_fulfillment(course)
-    fulfillment_el = cell_element(xpath: "#{assigned_course_xpath course}/td[3]")
-    fulfillment_el.text.strip if fulfillment_el.exists?
-  end
-
   def visible_assigned_course_delete_button(course)
     button_element(xpath: "#{assigned_course_xpath course}/td[6]//button[contains(@id, 'delete')]")
+  end
+
+  def verify_assigned_course_fulfillment(course)
+    click_edit_assigned_course course
+    col_req_course_units_req_select_element.when_present 1
+    if course.unit_reqts&.any?
+      wait_until(1, "Expected #{course.unit_reqts.length} reqts, got #{col_req_course_units_req_pill_elements.length}") do
+        col_req_course_units_req_pill_elements.length == course.unit_reqts.length
+      end
+      course.unit_reqts.each { |req| col_req_unit_req_pill(req).when_present 1 }
+    else
+      wait_until(1, "Expected no reqts, got #{col_req_course_units_req_pill_elements.length}") do
+        col_req_course_units_req_pill_elements.empty?
+      end
+    end
   end
 
   def click_assigned_course_delete(course)
@@ -245,19 +257,26 @@ class BOACDegreeCheckPage < BOACDegreeTemplatePage
     unassigned_course_option_els(course).map { |el| el.text.strip }
   end
 
-  def assign_completed_course(completed_course, req)
+  def assign_completed_course(completed_course, req, opts = nil)
     logger.info "Assigning course #{completed_course.name}, #{completed_course.term_id}-#{completed_course.ccn} to #{req.name}"
-    click_unassigned_course_select completed_course
-    wait_for_update_and_click unassigned_course_req_option(completed_course, req)
+
+    if opts[:drag]
+      target = req.instance_of?(DegreeReqtCourse) ? course_req_row(req) : cat_drop_zone_el(req)
+      drag_and_drop(unassigned_course_row_el(completed_course), target)
+    else
+      click_unassigned_course_select completed_course
+      wait_for_update_and_click unassigned_course_req_option(completed_course, req)
+    end
     sleep Utils.click_wait
 
     # If course is assigned to a cat, create a dummy course reqt within the cat
-    course_req = req.instance_of?(DegreeReqtCourse) ? req : DegreeReqtCourse.new(parent: req)
+    course_req = req.instance_of?(DegreeReqtCourse) ? req : DegreeReqtCourse.new(parent: req, units_reqts: req.units_reqts)
     req.course_reqs << course_req unless req.instance_of?(DegreeReqtCourse)
     course_req.completed_course = completed_course
     completed_course.req_course = course_req
+    completed_course.units_reqts = course_req.units_reqts
 
-    wait_until(2) { visible_assigned_course_name(completed_course) == completed_course.name }
+    wait_until(20) { visible_assigned_course_name(completed_course) == completed_course.name }
   end
 
   def assigned_course_select(course)
@@ -272,11 +291,16 @@ class BOACDegreeCheckPage < BOACDegreeTemplatePage
     end
   end
 
-  def unassign_course(completed_course, req)
+  def unassign_course(completed_course, req, opts = nil)
     logger.info "Un-assigning course #{completed_course.name}, #{completed_course.term_id}-#{completed_course.ccn} from #{req.name}"
     assignment_el = assigned_course_row completed_course
-    wait_for_update_and_click assigned_course_select(completed_course)
-    wait_for_update_and_click assigned_course_req_option(completed_course)
+
+    if opts[:drag]
+      drag_and_drop(assignment_el, unassigned_drop_zone_element)
+    else
+      wait_for_update_and_click assigned_course_select(completed_course)
+      wait_for_update_and_click assigned_course_req_option(completed_course)
+    end
     sleep Utils.click_wait
 
     # If course was assigned to course reqt, verify the reqt row reverts to template version
@@ -291,13 +315,20 @@ class BOACDegreeCheckPage < BOACDegreeTemplatePage
       assignment_el.when_not_present 2
     end
     completed_course.req_course = nil
+    completed_course.units_reqts = []
   end
 
-  def reassign_course(completed_course, old_req, new_req)
+  def reassign_course(completed_course, old_req, new_req, opts = nil)
     logger.info "Reassigning course #{completed_course.name}, #{completed_course.term_id}-#{completed_course.ccn} from #{old_req.name} to #{new_req.name}"
     row_count = category_courses(old_req).length if old_req.instance_of? DegreeReqtCategory
-    wait_for_update_and_click assigned_course_select(completed_course)
-    wait_for_update_and_click assigned_course_req_option(completed_course, new_req)
+
+    if opts[:drag]
+      target = new_req.instance_of?(DegreeReqtCourse) ? course_req_row(new_req) : cat_drop_zone_el(new_req)
+      drag_and_drop(assigned_course_row(completed_course), target)
+    else
+      wait_for_update_and_click assigned_course_select(completed_course)
+      wait_for_update_and_click assigned_course_req_option(completed_course, new_req)
+    end
     sleep Utils.click_wait
 
     # Detach the course from the old course reqt, dummy or otherwise
@@ -306,11 +337,12 @@ class BOACDegreeCheckPage < BOACDegreeTemplatePage
     old_course_req.completed_course = nil
 
     # Attach the course to the new course reqt, dummy or otherwise
-    new_course_req = new_req.instance_of?(DegreeReqtCourse) ? new_req : DegreeReqtCourse.new(parent: new_req)
+    new_course_req = new_req.instance_of?(DegreeReqtCourse) ? new_req : DegreeReqtCourse.new(parent: new_req, units_reqts: new_req.units_reqts)
     new_req.course_reqs << new_course_req if new_req.instance_of? DegreeReqtCategory
     new_course_req.completed_course = completed_course
 
     completed_course.req_course = new_course_req
+    completed_course.units_reqts = new_course_req.units_reqts
 
     if old_req.instance_of? DegreeReqtCourse
       wait_until(2, "Expected '#{visible_course_req_name(old_req)}' to be '#{old_req.name}'") do
