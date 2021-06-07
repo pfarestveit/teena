@@ -9,6 +9,11 @@ class BOACDegreeCheckPage < BOACDegreeTemplatePage
     h2_element(xpath: "//h2[text()=\"#{degree.name}\"]")
   end
 
+  def load_page(degree)
+    logger.info "Loading degree check #{degree.id}"
+    navigate_to "#{BOACUtils.base_url}/student/degree/#{degree.id}"
+  end
+
   div(:last_updated_msg, xpath: '//div[contains(text(), "Last updated by")]')
   link(:create_new_degree_link, id: 'create-new-degree')
   link(:view_degree_history_link, id: 'view-degree-history')

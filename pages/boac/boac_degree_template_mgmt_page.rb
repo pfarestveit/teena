@@ -8,6 +8,7 @@ class BOACDegreeTemplateMgmtPage
   # CREATE
 
   link(:create_degree_check_link, id: 'degree-check-create-link')
+  link(:batch_degree_check_link, id: 'degree-check-batch-link')
   button(:create_degree_save_button, id: 'start-degree-btn')
   text_field(:create_degree_name_input, id: 'create-degree-input')
   span(:dupe_name_msg, xpath: '//span[contains(., " already exists. Please choose a different name.")]')
@@ -31,6 +32,11 @@ class BOACDegreeTemplateMgmtPage
     click_create_degree
     enter_degree_name template.name
     click_save_new_degree
+  end
+
+  def click_batch_degree_checks
+    logger.info 'Clicking the link to create batch degree checks'
+    wait_for_update_and_click batch_degree_check_link_element
   end
 
   # LIST

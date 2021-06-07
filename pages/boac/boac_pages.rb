@@ -485,4 +485,12 @@ module BOACPages
     fail
   end
 
+  def set_new_degree_id(degree, student)
+    start_time = Time.now
+    wait_until(Utils.medium_wait) { sleep Utils.click_wait; degree.id = BOACUtils.get_degree_id_by_name(degree, student).first }
+    logger.warn "Degree #{degree.id} was created within #{Time.now - start_time} seconds"
+    degree.id
+  rescue
+    fail "Timed out waiting for SID #{student.sis_id} degree '#{degree.name}'"
+  end
 end
