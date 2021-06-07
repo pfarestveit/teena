@@ -14,6 +14,8 @@ class BOACDegreeCheckPage < BOACDegreeTemplatePage
     navigate_to "#{BOACUtils.base_url}/student/degree/#{degree.id}"
   end
 
+  div(:template_updated_msg, xpath: '//div[contains(., "Please update below if necessary")]')
+  link(:template_link, id: 'original degree template')
   div(:last_updated_msg, xpath: '//div[contains(text(), "Last updated by")]')
   link(:create_new_degree_link, id: 'create-new-degree')
   link(:view_degree_history_link, id: 'view-degree-history')

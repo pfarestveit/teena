@@ -134,6 +134,26 @@ describe 'A BOA degree check' do
     end
   end
 
+  context 'when its parent template has been edited' do
+
+    before(:all) do
+      new_req = DegreeUnitReqt.new name: "Another Unit Reqt #{test.id}",
+                                   unit_count: '12'
+      @degree_check_page.click_degree_checks_link
+      @degree_templates_mgmt_page.click_degree_link template
+      @degree_template_page.create_unit_req(new_req, template)
+    end
+
+    it 'shows an updated-template message' do
+      @degree_check_page.load_page @degree_check
+      @degree_check_page.template_updated_msg_element.when_present Utils.short_wait
+    end
+
+    it 'offers a link to the parent' do
+      expect(@degree_check_page.external_link_valid?(@degree_check_page.template_link_element, template.name)).to be true
+    end
+  end
+
   describe 'note section' do
 
     it('offers a create button for a note') { @degree_check_page.click_create_or_edit_note }
