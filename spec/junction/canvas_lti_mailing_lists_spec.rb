@@ -98,7 +98,7 @@ unless ENV['STANDALONE']
 
         it('shows a default mailing list name') do
           @mailing_lists_page.switch_to_canvas_iframe unless "#{@driver.browser}" == 'firefox'
-          @mailing_lists_page.wait_until(Utils.short_wait) { @mailing_lists_page.list_name_input == @mailing_lists_page.default_list_name(course_site_1) }
+          @mailing_lists_page.wait_until(Utils.short_wait) { @mailing_lists_page.list_name_input_element.value == @mailing_lists_page.default_list_name(course_site_1) }
         end
 
         it 'requires a non-default mailing list name have no spaces' do

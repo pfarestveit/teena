@@ -89,13 +89,14 @@ describe 'A BOA degree check' do
       end
 
       it 'updates the unit fulfillment totals' do
-        # TODO
+        expect(@degree_check_page.units_added_to_unit_req?(@degree_check.unit_reqts[0], @course)).to be true
       end
 
       it 'can have unit fulfillment edited and totals updated' do
         @course.units_reqts = [@degree_check.unit_reqts[2]]
         @degree_check_page.edit_assigned_course @course
-        # TODO - totals updated
+        expect(@degree_check_page.units_added_to_unit_req?(@degree_check.unit_reqts[2], @course)).to be true
+        expect(@degree_check_page.units_removed_from_unit_req?(@degree_check.unit_reqts[0], @course)).to be true
       end
 
       it 'shows an indicator if its unit fulfillment has been edited' do
@@ -105,7 +106,9 @@ describe 'A BOA degree check' do
       it 'can have unit fulfillment added and totals updated' do
         @course.units_reqts = @degree_check.unit_reqts
         @degree_check_page.edit_assigned_course @course
-        # TODO - totals updated
+        expect(@degree_check_page.units_added_to_unit_req?(@degree_check.unit_reqts[0], @course)).to be true
+        expect(@degree_check_page.units_added_to_unit_req?(@degree_check.unit_reqts[1], @course)).to be true
+        expect(@degree_check_page.units_added_to_unit_req?(@degree_check.unit_reqts[2], @course)).to be true
       end
 
       it 'shows an indicator if its unit fulfillment has been added' do
@@ -113,9 +116,11 @@ describe 'A BOA degree check' do
       end
 
       it 'can have unit fulfillment removed and totals updated' do
-        @course.units.reqts = []
+        @course.units.reqts = [@degree_check.unit_reqts[1]]
         @degree_check_page.edit_assigned_course @course
-        # TODO - totals updated
+        expect(@degree_check_page.units_removed_from_unit_req?(@degree_check.unit_reqts[0], @course)).to be true
+        expect(@degree_check_page.units_removed_from_unit_req?(@degree_check.unit_reqts[1], @course)).to be false
+        expect(@degree_check_page.units_removed_from_unit_req?(@degree_check.unit_reqts[2], @course)).to be true
       end
 
       it 'shows an indicator if its unit fulfillment has been removed' do
@@ -126,10 +131,9 @@ describe 'A BOA degree check' do
     context 'that is unassigned from a category' do
 
       before(:all) { @degree_check_page.unassign_course(@course, @cat_0, { drag: true }) }
-      before(:each) { @degree_check_page.click_cancel_course_edit if @degree_check_page.course_cancel_button? }
 
       it 'updates the unit fulfillment totals' do
-        # TODO
+        expect(@degree_check_page.units_removed_from_unit_req?(@degree_check.unit_reqts[1], @course)).to be true
       end
     end
 
@@ -147,13 +151,13 @@ describe 'A BOA degree check' do
       end
 
       it 'updates the unit fulfillment totals' do
-        # TODO
+        expect(@degree_check_page.units_added_to_unit_req?(@degree_check.unit_reqts[1], @course)).to be true
       end
 
       it 'can have unit fulfillment removed and totals updated' do
         @course.units_reqts = []
         @degree_check_page.edit_assigned_course @course
-        # TODO - totals updated
+        expect(@degree_check_page.units_removed_from_unit_req?(@degree_check.unit_reqts[1], @course)).to be true
       end
 
       it 'shows an indicator if its unit fulfillment has been removed' do
@@ -163,7 +167,10 @@ describe 'A BOA degree check' do
       it 'can have unit fulfillment added and totals updated' do
         @course.units_reqts = @degree_check.unit_reqts
         @degree_check_page.edit_assigned_course @course
-        # TODO - totals updated
+        expect(@degree_check_page.units_added_to_unit_req?(@degree_check.unit_reqts[0], @course)).to be true
+        expect(@degree_check_page.units_added_to_unit_req?(@degree_check.unit_reqts[1], @course)).to be true
+        expect(@degree_check_page.units_added_to_unit_req?(@degree_check.unit_reqts[2], @course)).to be true
+
       end
 
       it 'shows an indicator if its unit fulfillment has been added' do
@@ -173,7 +180,9 @@ describe 'A BOA degree check' do
       it 'can have unit fulfillment edited and totals updated' do
         @course.units_reqts = [@degree_check.unit_reqts[2]]
         @degree_check_page.edit_assigned_course @course
-        # TODO - totals updated
+        expect(@degree_check_page.units_removed_from_unit_req?(@degree_check.unit_reqts[0], @course)).to be true
+        expect(@degree_check_page.units_removed_from_unit_req?(@degree_check.unit_reqts[1], @course)).to be true
+        expect(@degree_check_page.units_removed_from_unit_req?(@degree_check.unit_reqts[2], @course)).to be false
       end
 
       it 'shows an indicator if its unit fulfillment has been edited' do
@@ -195,13 +204,15 @@ describe 'A BOA degree check' do
       end
 
       it 'updates the unit fulfillment totals' do
-        # TODO
+        expect(@degree_check_page.units_added_to_unit_req?(@degree_check.unit_reqts[1], @course)).to be true
+        expect(@degree_check_page.units_removed_from_unit_req?(@degree_check.unit_reqts[2], @course)).to be true
       end
 
       it 'can have unit fulfillment edited and totals updated' do
         @course.units_reqts = [@degree_check.unit_reqts[0]]
         @degree_check_page.edit_assigned_course @course
-        # TODO - totals updated
+        expect(@degree_check_page.units_added_to_unit_req?(@degree_check.unit_reqts[0], @course)).to be true
+        expect(@degree_check_page.units_removed_from_unit_req?(@degree_check.unit_reqts[1], @course)).to be true
       end
 
       it 'shows an indicator if its unit fulfillment has been edited' do
@@ -211,7 +222,7 @@ describe 'A BOA degree check' do
       it 'can have unit fulfillment removed and totals updated' do
         @course.units.reqts = []
         @degree_check_page.edit_assigned_course @course
-        # TODO - totals updated
+        expect(@degree_check_page.units_removed_from_unit_req?(@degree_check.unit_reqts[0], @course)).to be true
       end
 
       it 'shows an indicator if its unit fulfillment has been removed' do
@@ -221,7 +232,9 @@ describe 'A BOA degree check' do
       it 'can have unit fulfillment added and totals updated' do
         @course.units_reqts = @degree_check.unit_reqts
         @degree_check_page.edit_assigned_course @course
-        # TODO - totals updated
+        expect(@degree_check_page.units_added_to_unit_req?(@degree_check.unit_reqts[0], @course)).to be true
+        expect(@degree_check_page.units_added_to_unit_req?(@degree_check.unit_reqts[1], @course)).to be true
+        expect(@degree_check_page.units_added_to_unit_req?(@degree_check.unit_reqts[2], @course)).to be true
       end
 
       it 'shows an indicator if its unit fulfillment has been added' do
@@ -249,14 +262,16 @@ describe 'A BOA degree check' do
         expect(@degree_check_page.visible_assigned_course_fulfill_flag? @course_copy).to be false
       end
 
-      it 'updates the unit fulfillment totals' do
-        # TODO
+      it 'makes no update to the unit fulfillment totals' do
+        expect(@degree_check_page.units_added_to_unit_req?(@degree_check.unit_reqts[0], @course)).to be false
+        expect(@degree_check_page.units_added_to_unit_req?(@degree_check.unit_reqts[1], @course)).to be false
+        expect(@degree_check_page.units_added_to_unit_req?(@degree_check.unit_reqts[2], @course)).to be false
       end
 
       it 'can have unit fulfillment edited and totals updated' do
         @course_copy.units_reqts = [@degree_check.unit_reqts[2]]
         @degree_check_page.edit_assigned_course @course_copy
-        # TODO - totals updated
+        expect(@degree_check_page.units_added_to_unit_req?(@degree_check.unit_reqts[2], @course)).to be true
       end
 
       it 'shows an indicator if its unit fulfillment has been edited' do
@@ -266,7 +281,8 @@ describe 'A BOA degree check' do
       it 'can have unit fulfillment added and totals updated' do
         @course_copy.units_reqts = @degree_check.unit_reqts
         @degree_check_page.edit_assigned_course @course_copy
-        # TODO - totals updated
+        expect(@degree_check_page.units_added_to_unit_req?(@degree_check.unit_reqts[0], @course)).to be true
+        expect(@degree_check_page.units_added_to_unit_req?(@degree_check.unit_reqts[1], @course)).to be true
       end
 
       it 'shows an indicator if its unit fulfillment has been added' do
@@ -276,7 +292,9 @@ describe 'A BOA degree check' do
       it 'can have unit fulfillment removed and totals updated' do
         @course_copy.units.reqts = []
         @degree_check_page.edit_assigned_course @course_copy
-        # TODO - totals updated
+        expect(@degree_check_page.units_removed_from_unit_req?(@degree_check.unit_reqts[0], @course)).to be true
+        expect(@degree_check_page.units_removed_from_unit_req?(@degree_check.unit_reqts[1], @course)).to be true
+        expect(@degree_check_page.units_removed_from_unit_req?(@degree_check.unit_reqts[2], @course)).to be true
       end
 
       it 'shows no indicator that its unit fulfillment differs from the category\'s' do
@@ -300,13 +318,14 @@ describe 'A BOA degree check' do
       end
 
       it 'updates the unit fulfillment totals' do
-        # TODO
+        expect(@degree_check_page.units_added_to_unit_req?(@degree_check.unit_reqts[1], @course)).to be true
       end
 
       it 'can have unit fulfillment edited and totals updated' do
         @course_copy.units_reqts = [@degree_check.unit_reqts[0]]
         @degree_check_page.edit_assigned_course @course_copy
-        # TODO - totals updated
+        expect(@degree_check_page.units_added_to_unit_req?(@degree_check.unit_reqts[0], @course)).to be true
+        expect(@degree_check_page.units_removed_from_unit_req?(@degree_check.unit_reqts[1], @course)).to be true
       end
 
       it 'shows an indicator if its unit fulfillment has been edited' do
@@ -316,7 +335,7 @@ describe 'A BOA degree check' do
       it 'can have unit fulfillment removed and totals updated' do
         @course_copy.units.reqts = []
         @degree_check_page.edit_assigned_course @course_copy
-        # TODO - totals updated
+        expect(@degree_check_page.units_removed_from_unit_req?(@degree_check.unit_reqts[0], @course)).to be true
       end
 
       it 'shows an indicator if its unit fulfillment has been removed' do
@@ -326,7 +345,9 @@ describe 'A BOA degree check' do
       it 'can have unit fulfillment added and totals updated' do
         @course_copy.units_reqts = @degree_check.unit_reqts
         @degree_check_page.edit_assigned_course @course_copy
-        # TODO - totals updated
+        expect(@degree_check_page.units_added_to_unit_req?(@degree_check.unit_reqts[0], @course)).to be true
+        expect(@degree_check_page.units_added_to_unit_req?(@degree_check.unit_reqts[1], @course)).to be true
+        expect(@degree_check_page.units_added_to_unit_req?(@degree_check.unit_reqts[2], @course)).to be true
       end
 
       it 'shows an indicator if its unit fulfillment has been added' do
@@ -338,7 +359,9 @@ describe 'A BOA degree check' do
         before(:all) { @degree_check_page.delete_assigned_course @course_copy }
 
         it 'updates the unit fulfillment totals' do
-          # TODO
+          expect(@degree_check_page.units_removed_from_unit_req?(@degree_check.unit_reqts[0], @course)).to be true
+          expect(@degree_check_page.units_removed_from_unit_req?(@degree_check.unit_reqts[1], @course)).to be true
+          expect(@degree_check_page.units_removed_from_unit_req?(@degree_check.unit_reqts[2], @course)).to be true
         end
       end
     end

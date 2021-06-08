@@ -81,6 +81,35 @@ class BOACDegreeCheckPage < BOACDegreeTemplatePage
     note_body
   end
 
+  # UNIT REQUIREMENTS
+
+  def visible_unit_req_completed(req)
+    (unit_completed_el = cell_element(xpath: "#{unit_req_row_xpath(req)}/td[3]")).when_visible Utils.short_wait
+    unit_completed_el.text
+  end
+
+  def units_added_to_unit_req?(req, course)
+    expected = "#{req.units_completed + course.units}"
+    verify_block do
+      wait_for_unit_req_update(req, expected)
+      req.units_completed += course.units
+    end
+  end
+
+  def units_removed_from_unit_req?(req, course)
+    expected = "#{req.units_completed - course.units}"
+    verify_block do
+      wait_for_unit_req_update(req, expected)
+      req.units_completed -= course.units
+    end
+  end
+
+  def wait_for_unit_req_update(req, expected)
+    wait_until(3, "Expecting '#{expected}', got '#{visible_unit_req_completed(req)}'") do
+      visible_unit_req_completed(req) == expected
+    end
+  end
+
   # COURSE REQUIREMENTS
 
   def course_req_menu?(course)

@@ -8,6 +8,7 @@ class DegreeProgressChecklist < DegreeProgressTemplate
   def initialize(template, student)
     @name = template.name.dup
     @unit_reqts = template.unit_reqts.dup
+    @unit_reqts.each { |req| req.units_completed = 0 }
     @categories = template.categories.dup
     @student = student
   end
