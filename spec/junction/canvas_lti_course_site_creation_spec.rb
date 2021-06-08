@@ -180,11 +180,11 @@ describe 'bCourses course site creation' do
           it('allows the user to go back to the initial course site creation page') { expect(go_back_works).to be true }
         end
 
-        default_name = @create_course_site_page.site_name_input
+        default_name = @create_course_site_page.site_name_input_element.value
         expected_name = "#{site[:course].title} (#{site[:course].term})"
         it("shows the default site name #{site[:course].title}") { expect(default_name).to eql(expected_name) }
 
-        default_abbreviation = @create_course_site_page.site_abbreviation
+        default_abbreviation = @create_course_site_page.site_abbreviation_element.value
         expected_abbreviation = site[:course].code
         it("shows the default site abbreviation #{site[:course].code}") { expect(default_abbreviation).to include(expected_abbreviation) }
 

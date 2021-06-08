@@ -33,8 +33,8 @@ module Page
       button(:next_button, xpath: '//button[contains(text(), "Next")]')
       button(:cancel_button, xpath: '//button[contains(text(), "Cancel")]')
 
-      text_area(:site_name_input, id: 'siteName')
-      text_area(:site_abbreviation, id: 'siteAbbreviation')
+      text_field(:site_name_input, id: 'siteName')
+      text_field(:site_abbreviation, id: 'siteAbbreviation')
       div(:site_name_error, xpath: '//div[contains(.,"Please fill out a site name.")]')
       div(:site_abbreviation_error, xpath: '//div[contains(.,"Please fill out a site abbreviation.")]')
 
