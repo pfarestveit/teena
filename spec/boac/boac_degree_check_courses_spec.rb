@@ -80,7 +80,11 @@ describe 'A BOA degree check course' do
   context 'when unassigned' do
 
     it 'appears in the unassigned section' do
-      expect(@degree_check_page.unassigned_course_ccns).to eql(@unassigned_courses.map { |c| "#{c.term_id}-#{c.ccn}" })
+      expected = @unassigned_courses.map { |c| "#{c.term_id}-#{c.ccn}" }
+      actual = @degree_check_page.unassigned_course_ccns
+      @degree_check_page.wait_until(1, "Missing: #{expected - actual}. Unexpected: #{actual - expected}") do
+        actual.sort == expected.sort
+      end
     end
 
     it 'shows the right course name' do
@@ -168,14 +172,6 @@ describe 'A BOA degree check course' do
         @degree_check_page.col_req_course_units_error_msg_element.when_visible 1
         expect(@degree_check_page.course_update_button_element.enabled?).to be false
       end
-
-      it 'does not allow a user to remove all units' do
-        @degree_check_page.click_edit_unassigned_course @completed_course_0
-        @degree_check_page.enter_course_units ''
-        @degree_check_page.hit_tab
-        @degree_check_page.col_req_course_units_required_msg_element.when_visible 1
-        expect(@degree_check_page.course_update_button_element.enabled?).to be false
-      end
     end
   end
 
@@ -191,15 +187,15 @@ describe 'A BOA degree check course' do
     end
 
     it 'updates the requirement row with the course units' do
-      expect(@degree_check_page.visible_assigned_course_units(@completed_course_0)).to eql(@completed_course_0.units)
+      expect(@degree_check_page.assigned_course_units(@completed_course_0)).to eql(@completed_course_0.units)
     end
 
     it 'updates the requirement row with the course grade' do
-      expect(@degree_check_page.visible_assigned_course_grade(@completed_course_0)).to eql(@completed_course_0.grade)
+      expect(@degree_check_page.assigned_course_grade(@completed_course_0)).to eql(@completed_course_0.grade)
     end
 
     it 'updates the requirement row with the course note' do
-      expect(@degree_check_page.visible_assigned_course_note(@completed_course_0)).to eql(@completed_course_0.note)
+      expect(@degree_check_page.assigned_course_note(@completed_course_0)).to eql(@completed_course_0.note)
     end
 
     it 'removes the course from the unassigned courses list' do
@@ -224,35 +220,35 @@ describe 'A BOA degree check course' do
       it 'allows a user to remove a note' do
         @completed_course_0.note = ''
         @degree_check_page.edit_assigned_course @completed_course_0
-        expect(@degree_check_page.visible_assigned_course_note(@completed_course_0).to_s).to eql(@completed_course_0.note)
+        expect(@degree_check_page.assigned_course_note(@completed_course_0).to_s).to eql(@completed_course_0.note)
       end
 
       it 'allows a user to add a note' do
         @completed_course_0.note = "Nota bene #{test.id}"
         @degree_check_page.edit_assigned_course @completed_course_0
-        expect(@degree_check_page.visible_assigned_course_note @completed_course_0).to eql(@completed_course_0.note)
+        expect(@degree_check_page.assigned_course_note @completed_course_0).to eql(@completed_course_0.note)
       end
 
       it 'allows a user to edit a note' do
         @completed_course_0.note = "EDITED - #{@completed_course_0.note}"
         @degree_check_page.edit_assigned_course @completed_course_0
-        expect(@degree_check_page.visible_assigned_course_note @completed_course_0).to eql(@completed_course_0.note)
+        expect(@degree_check_page.assigned_course_note @completed_course_0).to eql(@completed_course_0.note)
       end
 
       it 'allows a user to change units to another integer' do
         @completed_course_0.units = (@completed_course_0.units.to_i + 1).to_s
         @degree_check_page.edit_assigned_course @completed_course_0
-        expect(@degree_check_page.visible_assigned_course_units @completed_course_0).to eql(@completed_course_0.units)
+        expect(@degree_check_page.assigned_course_units @completed_course_0).to eql(@completed_course_0.units)
       end
 
       it 'allows a user to change units to a decimal number' do
         @completed_course_0.units = (@completed_course_0.units.to_f + 0.5).to_s
         @degree_check_page.edit_assigned_course @completed_course_0
-        expect(@degree_check_page.visible_assigned_course_units @completed_course_0).to eql(@completed_course_0.units)
+        expect(@degree_check_page.assigned_course_units @completed_course_0).to eql(@completed_course_0.units)
       end
 
       it 'shows an indicator if the user has edited the course units' do
-        expect(@degree_check_page.visible_assigned_course_units_flag? @completed_course_0).to be true
+        expect(@degree_check_page.assigned_course_units_flag? @completed_course_0).to be true
       end
 
       it 'does not allow a user to change units to a non-number' do
@@ -266,14 +262,6 @@ describe 'A BOA degree check course' do
         @degree_check_page.click_edit_assigned_course @completed_course_0
         @degree_check_page.enter_course_units '100'
         @degree_check_page.col_req_course_units_error_msg_element.when_visible 1
-        expect(@degree_check_page.course_update_button_element.enabled?).to be false
-      end
-
-      it 'does not allow a user to remove all units' do
-        @degree_check_page.click_edit_assigned_course @completed_course_0
-        @degree_check_page.enter_course_units ''
-        @degree_check_page.hit_tab
-        @degree_check_page.col_req_course_units_required_msg_element.when_visible 1
         expect(@degree_check_page.course_update_button_element.enabled?).to be false
       end
     end
@@ -298,7 +286,55 @@ describe 'A BOA degree check course' do
     end
 
     it 'restores the course to the unassigned courses list' do
-      expect(@degree_check_page.unassigned_course_row_el(@completed_course_0).exists?).to be true
+      expect(@degree_check_page.unassigned_course_row(@completed_course_0).exists?).to be true
+    end
+  end
+
+  context 'when sent to the junk drawer' do
+
+    it 'shows the right course name' do
+      @degree_check_page.wish_to_cornfield @completed_course_0
+    end
+
+    it 'shows the right course units' do
+      expect(@degree_check_page.junk_course_units(@completed_course_0)).to eql(@completed_course_0.units.to_s)
+    end
+
+    it 'shows the right course grade' do
+      expect(@degree_check_page.junk_course_grade(@completed_course_0)).to eql(@completed_course_0.grade)
+    end
+
+    it 'can be edited but canceled' do
+      @degree_check_page.click_edit_junk_course @completed_course_0
+      @degree_check_page.click_cancel_course_edit
+    end
+
+    it 'allows a user to add a note' do
+      @completed_course_0.note = "This course no longer sparks joy #{test.id}"
+      @degree_check_page.edit_junk_course @completed_course_0
+      expect(@degree_check_page.junk_course_note @completed_course_0).to eql(@completed_course_0.note)
+    end
+
+    it 'allows a user to change units to another integer' do
+      @completed_course_0.units = 6
+      @degree_check_page.edit_junk_course @completed_course_0
+      expect(@degree_check_page.junk_course_units @completed_course_0).to eql(@completed_course_0.units.to_s)
+    end
+
+    it 'shows an indicator if the user has edited the course units' do
+      expect(@degree_check_page.junk_course_units_flag? @completed_course_0).to be true
+    end
+
+    it 'can be assigned to a course requirement' do
+      @degree_check_page.assign_completed_course(@completed_course_0, @course_req_1)
+    end
+
+    it 'can be returned to the junk drawer from a course requirement' do
+      @degree_check_page.wish_to_cornfield(@completed_course_0, @course_req_1)
+    end
+
+    it 'can be unassigned from the junk drawer' do
+      @degree_check_page.unassign_course(@completed_course_0)
     end
   end
 
@@ -311,7 +347,7 @@ describe 'A BOA degree check course' do
     end
 
     it 'updates the requirement row with the course units' do
-      expect(@degree_check_page.visible_assigned_course_units(@completed_course_0)).to eql(@completed_course_0.units)
+      expect(@degree_check_page.assigned_course_units(@completed_course_0)).to eql(@completed_course_0.units.to_s)
     end
 
     it 'removes the course from the unassigned courses list' do
@@ -329,17 +365,17 @@ describe 'A BOA degree check course' do
 
     it 'creates a new course row when the category has no subcategory and no course' do
       @degree_check_page.assign_completed_course(@completed_course_1, @cat_no_subs_no_courses)
-      expect(@degree_check_page.visible_assigned_course_units @completed_course_1).to eql(@completed_course_1.units)
-      expect(@degree_check_page.visible_assigned_course_grade @completed_course_1).to eql(@completed_course_1.grade)
-      expect(@degree_check_page.visible_assigned_course_note @completed_course_1).to eql(@completed_course_1.note.to_s)
+      expect(@degree_check_page.assigned_course_units @completed_course_1).to eql(@completed_course_1.units)
+      expect(@degree_check_page.assigned_course_grade @completed_course_1).to eql(@completed_course_1.grade)
+      expect(@degree_check_page.assigned_course_note @completed_course_1).to eql(@completed_course_1.note.to_s)
       expect(@degree_check_page.unassigned_course_ccns).not_to include("#{@completed_course_1.term_id}-#{@completed_course_1.ccn}")
     end
 
     it 'creates a new course row when the category has no subcategory but does have a course' do
       @degree_check_page.assign_completed_course(@completed_course_2, @cat_with_courses_no_subs)
-      expect(@degree_check_page.visible_assigned_course_units @completed_course_2).to eql(@completed_course_2.units)
-      expect(@degree_check_page.visible_assigned_course_grade @completed_course_2).to eql(@completed_course_2.grade)
-      expect(@degree_check_page.visible_assigned_course_note @completed_course_2).to eql(@completed_course_2.note.to_s)
+      expect(@degree_check_page.assigned_course_units @completed_course_2).to eql(@completed_course_2.units)
+      expect(@degree_check_page.assigned_course_grade @completed_course_2).to eql(@completed_course_2.grade)
+      expect(@degree_check_page.assigned_course_note @completed_course_2).to eql(@completed_course_2.note.to_s)
       expect(@degree_check_page.unassigned_course_ccns).not_to include("#{@completed_course_2.term_id}-#{@completed_course_2.ccn}")
     end
 
@@ -353,17 +389,17 @@ describe 'A BOA degree check course' do
     it 'creates a new course row when the category is a subcategory without courses' do
       @degree_check_page.hit_escape
       @degree_check_page.assign_completed_course(@completed_course_3, @sub_cat_no_courses)
-      expect(@degree_check_page.visible_assigned_course_units @completed_course_3).to eql(@completed_course_3.units)
-      expect(@degree_check_page.visible_assigned_course_grade @completed_course_3).to eql(@completed_course_3.grade)
-      expect(@degree_check_page.visible_assigned_course_note @completed_course_3).to eql(@completed_course_3.note.to_s)
+      expect(@degree_check_page.assigned_course_units @completed_course_3).to eql(@completed_course_3.units)
+      expect(@degree_check_page.assigned_course_grade @completed_course_3).to eql(@completed_course_3.grade)
+      expect(@degree_check_page.assigned_course_note @completed_course_3).to eql(@completed_course_3.note.to_s)
       expect(@degree_check_page.unassigned_course_ccns).not_to include("#{@completed_course_3.term_id}-#{@completed_course_3.ccn}")
     end
 
     it 'creates a new course row when the category is a subcategory with courses' do
       @degree_check_page.assign_completed_course(@completed_course_4, @sub_cat_with_courses)
-      expect(@degree_check_page.visible_assigned_course_units @completed_course_4).to eql(@completed_course_4.units)
-      expect(@degree_check_page.visible_assigned_course_grade @completed_course_4).to eql(@completed_course_4.grade)
-      expect(@degree_check_page.visible_assigned_course_note @completed_course_4).to eql(@completed_course_4.note.to_s)
+      expect(@degree_check_page.assigned_course_units @completed_course_4).to eql(@completed_course_4.units)
+      expect(@degree_check_page.assigned_course_grade @completed_course_4).to eql(@completed_course_4.grade)
+      expect(@degree_check_page.assigned_course_note @completed_course_4).to eql(@completed_course_4.note.to_s)
       expect(@degree_check_page.unassigned_course_ccns).not_to include("#{@completed_course_4.term_id}-#{@completed_course_4.ccn}")
     end
   end
@@ -408,141 +444,143 @@ describe 'A BOA degree check course' do
 
   context 'when copied' do
 
-    it 'must already be assigned elsewhere' do
+    it 'must already be assigned elsewhere but not in the same category' do
       @degree_check_page.click_copy_course_button @cat_with_courses_no_subs
-      expected = [@completed_course_0, @completed_course_2, @completed_course_3, @completed_course_4]
+      expected = [@completed_course_0, @completed_course_3, @completed_course_4].map &:name
       actual = @degree_check_page.copy_course_options
-      logger.debug ""
-      expect(actual).to eql(expected.sort_by &:name)
+      expect(actual).to eql(expected.sort)
     end
 
     context 'to a category' do
       before(:all) do
         @completed_course_4.units = @completed_course_4.units.to_i + 1
         @completed_course_4.note = 'I\'ll give you fish, I\'ll give you candy'
+        @degree_check_page.hit_escape
+        @degree_check_page.click_cancel_course_copy
         @degree_check_page.edit_assigned_course @completed_course_4
+        @cat_copy = @degree_check_page.copy_course(@completed_course_4, @cat_no_subs_no_courses)
       end
 
-      it('creates a row with the course name') { @degree_check_page.copy_course(@completed_course_4, @cat_no_subs_no_courses) }
-
       it 'creates a row with the unedited course units' do
-        expect(@degree_check_page.visible_assigned_course_units @completed_course_4.course_copies.last).to eql(@completed_course_4.course_copies.last.units.to_s)
+        expect(@degree_check_page.assigned_course_units @cat_copy).to eql(@cat_copy.units.to_s)
       end
 
       it 'creates a row with the course grade' do
-        expect(@degree_check_page.visible_assigned_course_grade @completed_course_4.course_copies.last).to eql(@completed_course_4.course_copies.last.grade)
+        expect(@degree_check_page.assigned_course_grade @cat_copy).to eql(@cat_copy.grade)
       end
 
       it 'creates a row with the an unedited course note' do
-        expect(@degree_check_page.visible_assigned_course_note @completed_course_4.course_copies.last).to eql(@completed_course_4.course_copies.last.note.to_s)
+        expect(@degree_check_page.assigned_course_note @cat_copy).to eql(@cat_copy.note.to_s)
       end
 
       it 'displays an icon identifying itself as a copy' do
-        expect(@degree_check_page.visible_assigned_course_copy_flag? @completed_course_4.course_copies.last).to be true
+        expect(@degree_check_page.assigned_course_copy_flag? @cat_copy).to be true
       end
 
       it 'offers a delete button' do
-        expect(@degree_check_page.visible_assigned_course_delete_button(@completed_course_4.course_copies.last).exists?).to be true
+        expect(@degree_check_page.assigned_course_delete_button(@cat_copy).exists?).to be true
       end
 
-      it 'cannot be reassigned' do
-        expect(@degree_check_page.assigned_course_select(@completed_course_4.course_copies.last).exists?).to be false
+      it 'can be reassigned' do
+        expect(@degree_check_page.assigned_course_select(@cat_copy).exists?).to be true
       end
+
+      # TODO - reassign it
     end
 
     context 'to a subcategory' do
 
-      it 'creates a row with the course name' do
-        @degree_check_page.copy_course(@completed_course_4, @sub_cat_no_courses)
-      end
+      before(:all) { @sub_cat_copy = @degree_check_page.copy_course(@completed_course_4, @sub_cat_no_courses) }
 
       it 'creates a row with the unedited course units' do
-        expect(@degree_check_page.visible_assigned_course_units @completed_course_4.course_copies.last).to eql(@completed_course_4.course_copies.last.units.to_s)
+        expect(@degree_check_page.assigned_course_units @sub_cat_copy).to eql(@sub_cat_copy.units.to_s)
       end
 
       it 'creates a row with the course grade' do
-        expect(@degree_check_page.visible_assigned_course_grade @completed_course_4.course_copies.last).to eql(@completed_course_4.course_copies.last.grade)
+        expect(@degree_check_page.assigned_course_grade @sub_cat_copy).to eql(@sub_cat_copy.grade)
       end
 
       it 'creates a row with the an unedited course note' do
-        expect(@degree_check_page.visible_assigned_course_note @completed_course_4.course_copies.last).to eql(@completed_course_4.course_copies.last.note.to_s)
+        expect(@degree_check_page.assigned_course_note @sub_cat_copy).to eql(@sub_cat_copy.note.to_s)
       end
 
       it 'displays an icon identifying itself as a copy' do
-        expect(@degree_check_page.visible_assigned_course_copy_flag? @completed_course_4.course_copies.last).to be true
+        expect(@degree_check_page.assigned_course_copy_flag? @sub_cat_copy).to be true
       end
 
       it 'offers a delete button' do
-        expect(@degree_check_page.visible_assigned_course_delete_button(@completed_course_4.course_copies.last).exists?).to be true
+        expect(@degree_check_page.assigned_course_delete_button(@sub_cat_copy).exists?).to be true
       end
 
-      it 'cannot be reassigned' do
-        expect(@degree_check_page.assigned_course_select(@completed_course_4.course_copies.last).exists?).to be false
-      end
-    end
-
-    context 'and edited' do
-
-      it 'can be canceled' do
-        @degree_check_page.click_edit_assigned_course @completed_course_4.course_copies.last
-        @degree_check_page.click_cancel_course_edit
+      it 'can be reassigned' do
+        expect(@degree_check_page.assigned_course_select(@sub_cat_copy).exists?).to be true
       end
 
-      it 'allows a user to add a note' do
-        @completed_course_4.course_copies.last.note = "I believe you, Mr Wilson"
-        @degree_check_page.edit_assigned_course @completed_course_4.course_copies.last
-        expect(@degree_check_page.visible_assigned_course_note @completed_course_4.course_copies.last).to eql(@completed_course_4.course_copies.last.note)
+      # TODO - reassign it
+
+      context 'and edited' do
+
+        it 'can be canceled' do
+          @degree_check_page.click_edit_assigned_course @sub_cat_copy
+          @degree_check_page.click_cancel_course_edit
+        end
+
+        it 'allows a user to add a note' do
+          @sub_cat_copy.note = "I believe you, Mr Wilson"
+          @degree_check_page.edit_assigned_course @sub_cat_copy
+          expect(@degree_check_page.assigned_course_note @sub_cat_copy).to eql(@sub_cat_copy.note)
+        end
+
+        it 'allows a user to edit a note' do
+          @sub_cat_copy.note = "I believe you anyway"
+          @degree_check_page.edit_assigned_course @sub_cat_copy
+          expect(@degree_check_page.assigned_course_note @sub_cat_copy).to eql(@sub_cat_copy.note)
+        end
+
+        it 'allows a user to remove a note' do
+          @sub_cat_copy.note = nil
+          @degree_check_page.edit_assigned_course @sub_cat_copy
+          expect(@degree_check_page.assigned_course_note @sub_cat_copy).to eql(@sub_cat_copy.note.to_s)
+        end
+
+        it 'allows a user to change units to another integer' do
+          @sub_cat_copy.units = 9
+          @degree_check_page.edit_assigned_course @sub_cat_copy
+          expect(@degree_check_page.assigned_course_units @sub_cat_copy).to eql(@sub_cat_copy.units.to_s)
+        end
+
+        it 'does not affect the original course row' do
+          expect(@degree_check_page.assigned_course_note @completed_course_4).to eql(@completed_course_4.note.to_s)
+          expect(@degree_check_page.assigned_course_units @completed_course_4).to eql(@completed_course_4.units.to_s)
+        end
       end
 
-      it 'allows a user to edit a note' do
-        @completed_course_4.course_copies.last.note = "I believe you anyway"
-        @degree_check_page.edit_assigned_course @completed_course_4.course_copies.last
-        expect(@degree_check_page.visible_assigned_course_note @completed_course_4.course_copies.last).to eql(@completed_course_4.course_copies.last.note)
+      context 'and deleted' do
+
+        it 'can be canceled' do
+          @degree_check_page.click_assigned_course_delete @sub_cat_copy
+          @degree_check_page.wait_for_update_and_click @degree_check_page.cancel_delete_or_discard_button_element
+        end
+
+        it 'can be deleted' do
+          @degree_check_page.delete_assigned_course @sub_cat_copy
+        end
+
+        it 'does not affect the original course row' do
+          expect(@degree_check_page.assigned_course_name @completed_course_4).to eql(@completed_course_4.name)
+        end
       end
 
-      it 'allows a user to remove a note' do
-        @completed_course_4.course_copies.last.note = nil
-        @degree_check_page.edit_assigned_course @completed_course_4.course_copies.last
-        expect(@degree_check_page.visible_assigned_course_note @completed_course_4.course_copies.last).to eql(@completed_course_4.course_copies.last.note.to_s)
-      end
+      context 'and its original is unassigned' do
 
-      it 'allows a user to change units to another integer' do
-        @completed_course_4.course_copies.last.units = '9'
-        @degree_check_page.edit_assigned_course @completed_course_4.course_copies.last
-        expect(@degree_check_page.visible_assigned_course_units @completed_course_4.course_copies.last).to eql(@completed_course_4.course_copies.last.units)
-      end
+        before(:all) do
+          @degree_check_page.copy_course(@completed_course_4, @sub_cat_no_courses)
+          @degree_check_page.unassign_course(@completed_course_4, @sub_cat_with_courses)
+        end
 
-      it 'does not affect the original course row' do
-        expect(@degree_check_page.visible_assigned_course_note @completed_course_4).to eql(@completed_course_4.note.to_s)
-        expect(@degree_check_page.visible_assigned_course_units @completed_course_4).to eql(@completed_course_4.units)
-      end
-    end
-
-    context 'and deleted' do
-
-      it 'can be canceled' do
-        @degree_check_page.click_assigned_course_delete @completed_course_4.course_copies.last
-        @degree_check_page.wait_for_update_and_click @degree_check_page.cancel_delete_or_discard_button_element
-      end
-
-      it 'can be deleted' do
-        @degree_check_page.delete_assigned_course @completed_course_4.course_copies.last
-      end
-
-      it 'does not affect the original course row' do
-        expect(@degree_check_page.visible_assigned_course_name @completed_course_4).to eql(@completed_course_4.name)
-      end
-    end
-
-    context 'and its original is unassigned' do
-
-      before(:all) do
-        @degree_check_page.copy_course(@completed_course_4, @sub_cat_no_courses)
-        @degree_check_page.unassign_course(@completed_course_4, @sub_cat_with_courses)
-      end
-
-      it 'is deleted automatically' do
-        expect(@degree_check_page.assigned_course_row(@completed_course_4.course_copies.last).exists?).to be false
+        it 'is deleted automatically' do
+          expect(@degree_check_page.assigned_course_row(@sub_cat_copy).exists?).to be false
+        end
       end
     end
   end

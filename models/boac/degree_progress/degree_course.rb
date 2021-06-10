@@ -4,6 +4,7 @@ class DegreeCourse
 
   attr_accessor :id,
                 :column_num,
+                :junk,
                 :name,
                 :units,
                 :units_reqts
