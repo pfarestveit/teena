@@ -320,7 +320,8 @@ class BOACDegreeTemplatePage
 
   def cat_edit_button(cat)
     col = cat.parent ? cat.parent.column_num : cat.column_num
-    button_element(id: "column-#{col}-edit-category-#{cat.id}-btn")
+    id = (cat.instance_of?(DegreeReqtCourse) && cat.dummy) ? cat.parent.id : cat.id
+    button_element(id: "column-#{col}-edit-category-#{id}-btn")
   end
 
   def click_edit_cat(cat)
