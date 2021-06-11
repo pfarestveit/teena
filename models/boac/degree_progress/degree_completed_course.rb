@@ -1,11 +1,13 @@
 class DegreeCompletedCourse < DegreeCourse
 
   attr_accessor :ccn,
-                :req_course,
+                :term_id,
                 :grade,
                 :note,
-                :term_id,
                 :units_orig,
+                :degree_check,
+                :junk,
+                :req_course,
                 :course_copies,
                 :course_orig
 

@@ -36,8 +36,6 @@ describe 'A BOA degree check' do
     @student = ENV['UIDS'] ? (test.students.find { |s| s.uid == ENV['UIDS'] }) : test.cohort_members.shuffle.first
     @degree_check = DegreeProgressChecklist.new(template, @student)
     @note_str = "Teena wuz here #{test.id} " * 10
-    @student_api_page.get_data(@driver, @student)
-    @unassigned_courses = @student_api_page.degree_progress_courses
 
     @student_page.load_page @student
   end

@@ -459,11 +459,11 @@
                     ],
                     "sub_categories": [
                         {
-                            "name": "SubCat",
+                            "name": "SubCat 1",
                             "desc": "Subcategory s UF",
                             "courses": [
                                 {
-                                    "name": "Course s UF",
+                                    "name": "Course 1 s UF",
                                     "units": "4"
                                 }
                             ]
@@ -481,11 +481,11 @@
                     "column_num": 3,
                     "sub_categories": [
                         {
-                            "name": "SubCat",
+                            "name": "SubCat 3",
                             "desc": "Subcategory c UF",
                             "unit_reqts": [
                                 {
-                                    "reqt": "Unit Reqt 1"
+                                    "reqt": "Unit Req 1"
                                 }
                             ]
                         }

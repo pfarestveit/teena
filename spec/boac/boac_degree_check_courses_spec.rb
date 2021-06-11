@@ -59,20 +59,21 @@ describe 'A BOA degree check course' do
     @degree_templates_mgmt_page.create_new_degree template
     @degree_template_page.complete_template template
 
+    # Create student degree check
+    @degree_check_create_page.load_page @student
+    @degree_check_create_page.create_new_degree_check(@degree_check)
+
     # Find student course data
     @student_api_page.get_data(@driver, @student)
-    @unassigned_courses = @student_api_page.degree_progress_courses
+    @unassigned_courses = @student_api_page.degree_progress_courses @degree_check
     @completed_course_0 = @unassigned_courses[0]
     @completed_course_1 = @unassigned_courses[1]
     @completed_course_2 = @unassigned_courses[2]
     @completed_course_3 = @unassigned_courses[3]
     @completed_course_4 = @unassigned_courses[4]
-
     logger.info "Completed courses: #{@unassigned_courses[0..4].map &:name}"
 
-    # Create student degree check
-    @degree_check_create_page.load_page @student
-    @degree_check_create_page.create_new_degree_check(@degree_check)
+    @degree_check_page.load_page @degree_check
   end
 
   after(:all) { Utils.quit_browser @driver }
@@ -80,6 +81,7 @@ describe 'A BOA degree check course' do
   context 'when unassigned' do
 
     it 'appears in the unassigned section' do
+      @degree_check_page.wait_until(Utils.short_wait) { @degree_check_page.unassigned_course_elements.any? }
       expected = @unassigned_courses.map { |c| "#{c.term_id}-#{c.ccn}" }
       actual = @degree_check_page.unassigned_course_ccns
       @degree_check_page.wait_until(1, "Missing: #{expected - actual}. Unexpected: #{actual - expected}") do

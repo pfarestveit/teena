@@ -18,7 +18,7 @@ units_req_3 = DegreeUnitReqt.new name: ("Unit Requirement 3 #{test.id}" * str_mu
 req_category_1 = DegreeReqtCategory.new name: ("Category 1 #{test.id}" * str_multiplier),
                                         desc: ("Category 1 Description #{test.id}" * str_multiplier),
                                         column_num: 1
-req_cat_course = DegreeCourse.new name: "CAT 1 #{test.id}",
+req_cat_course = DegreeReqtCourse.new name: "CAT 1 #{test.id}",
                                   units: '5-6',
                                   units_reqts: [units_req_2],
                                   parent: req_category_1
@@ -31,11 +31,11 @@ req_category_2 = DegreeReqtCategory.new name: "Category 2 #{test.id}",
 req_sub_category_1 = DegreeReqtCategory.new name: ("Subcategory 1.1 #{test.id}" * str_multiplier),
                                             desc: ("Subcategory 1.1 Description #{test.id}" * str_multiplier),
                                             parent: req_category_1
-req_sub_cat_course_1 = DegreeCourse.new name: "SUBCAT 1 #{test.id}",
+req_sub_cat_course_1 = DegreeReqtCourse.new name: "SUBCAT 1 #{test.id}",
                                         units: '4',
                                         units_reqts: [units_req_2],
                                         parent: req_sub_category_1
-req_sub_cat_course_2 = DegreeCourse.new name: "SUBCAT 2 #{test.id}",
+req_sub_cat_course_2 = DegreeReqtCourse.new name: "SUBCAT 2 #{test.id}",
                                         units: '4',
                                         units_reqts: [units_req_2],
                                         parent: req_sub_category_1
@@ -71,6 +71,7 @@ describe 'A BOA degree check template', order: :defined do
   context 'when created' do
 
     it 'requires a name' do
+      @homepage.click_degree_checks_link
       @degree_templates_mgmt_page.click_create_degree
       @degree_templates_mgmt_page.create_degree_save_button_element.when_present Utils.short_wait
       expect(@degree_templates_mgmt_page.create_degree_save_button_element.enabled?).to be false
@@ -138,7 +139,7 @@ describe 'A BOA degree check template', order: :defined do
 
       [units_req_1, units_req_2, units_req_3].each do |req|
 
-        it("'#{req.name}' can be saved") { @degree_template_page.create_unit_req req }
+        it("'#{req.name}' can be saved") { @degree_template_page.create_unit_req(req, degree) }
 
         it "'#{req.name}' shows the right name in the list of existing unit requirements" do
           expect(@degree_template_page.visible_unit_req_name req).to eql(req.name)
@@ -306,7 +307,7 @@ describe 'A BOA degree check template', order: :defined do
 
             it 'allows a requirement fulfillment selection' do
               @degree_template_page.select_col_req_unit_req req_sub_cat_course_1.units_reqts.first.name
-              @degree_template_page.col_req_unit_req_remove_button(0).when_visible 1
+              @degree_template_page.col_req_unit_req_remove_button(req_sub_cat_course_1.units_reqts.first).when_visible 1
             end
 
             it('can be canceled') { @degree_template_page.click_cancel_col_req }
@@ -492,7 +493,7 @@ describe 'A BOA degree check template', order: :defined do
 
           it 'allows a requirement fulfillment selection' do
             @degree_template_page.select_col_req_unit_req req_cat_course.units_reqts.first.name
-            @degree_template_page.col_req_unit_req_remove_button(0).when_visible 1
+            @degree_template_page.col_req_unit_req_remove_button(req_sub_cat_course_1.units_reqts.first).when_visible 1
           end
 
           it('can be canceled') { @degree_template_page.click_cancel_col_req }

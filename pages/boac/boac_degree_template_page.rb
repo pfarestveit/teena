@@ -188,12 +188,16 @@ class BOACDegreeTemplatePage
     end
   end
 
-  def col_req_unit_req_pill(unit_req)
-    div_element(xpath: "//div[contains(@class, \"pill-unit-requirement\")]/div[contains(text(), \"#{unit_req.name}\")]")
+  def col_req_unit_req_pill_xpath(unit_req)
+    "//div[contains(@class, \"pill-unit-requirement\")]/div[contains(text(), \"#{unit_req.name}\")]"
   end
 
-  def col_req_unit_req_remove_button(idx)
-    button_element(xpath: "//button[contains(@id, 'unit-requirement-remove-#{idx}')]")
+  def col_req_unit_req_pill(unit_req)
+    div_element(xpath: col_req_unit_req_pill_xpath(unit_req))
+  end
+
+  def col_req_unit_req_remove_button(unit_req)
+    button_element(xpath: "#{col_req_unit_req_pill_xpath(unit_req)}/following-sibling::div/button")
   end
 
   def select_col_req_unit_req(unit_req)
@@ -201,10 +205,10 @@ class BOACDegreeTemplatePage
     wait_for_element_and_select_js(col_req_course_units_req_select_element, unit_req)
   end
 
-  def remove_col_req_unit_req(idx)
-    logger.info "Removing unit fulfillment at index #{idx}"
-    wait_for_update_and_click col_req_unit_req_remove_button(idx)
-    col_req_unit_req_remove_button(idx).when_not_present 2
+  def remove_col_req_unit_req(unit_req)
+    logger.info "Removing unit fulfillment #{unit_req.name}"
+    wait_for_update_and_click col_req_unit_req_remove_button(unit_req)
+    col_req_unit_req_remove_button(unit_req).when_not_present 2
   end
 
   def enter_col_req_units(units)
@@ -234,10 +238,8 @@ class BOACDegreeTemplatePage
     enter_col_req_name req.name
     enter_col_req_desc req.desc if req.instance_of? DegreeReqtCategory
     select_col_req_parent req.parent if req.parent
-    if req.instance_of? DegreeReqtCourse
-      enter_col_req_units req.units if req.units
-      req.units_reqts&.each { |u_req| select_col_req_unit_req u_req.name }
-    end
+    enter_col_req_units req.units if req.instance_of?(DegreeReqtCourse) && req.units
+    req.units_reqts&.each { |u_req| select_col_req_unit_req u_req.name }
   end
 
   def save_col_req
@@ -286,7 +288,7 @@ class BOACDegreeTemplatePage
   end
 
   def visible_cat_desc(cat)
-    desc_el = div_element(xpath: "#{cat_xpath(cat)}/div/div/following-sibling::div")
+    desc_el = div_element(xpath: "#{cat_xpath(cat)}//div[@id='category-header-description']")
     desc_el.text.strip if desc_el.exists?
   end
 
