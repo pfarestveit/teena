@@ -89,24 +89,24 @@ class BOACDegreeCheckPage < BOACDegreeTemplatePage
   end
 
   def units_added_to_unit_req?(req, course)
-    expected = "#{req.units_completed + course.units}"
+    expected = "#{req.units_completed + course.units.to_i}"
     verify_block do
       wait_for_unit_req_update(req, expected)
-      req.units_completed += course.units
+      req.units_completed += course.units.to_i
     end
   end
 
   def units_removed_from_unit_req?(req, course)
-    expected = "#{req.units_completed - course.units}"
+    expected = "#{req.units_completed - course.units.to_i}"
     verify_block do
       wait_for_unit_req_update(req, expected)
-      req.units_completed -= course.units
+      req.units_completed -= course.units.to_i
     end
   end
 
   def wait_for_unit_req_update(req, expected)
     wait_until(3, "Expecting '#{expected}', got '#{visible_unit_req_completed(req)}'") do
-      visible_unit_req_completed(req) == expected
+      visible_unit_req_completed(req) == expected.to_s
     end
   end
 
@@ -142,12 +142,12 @@ class BOACDegreeCheckPage < BOACDegreeTemplatePage
 
   # UNASSIGNED (COMPLETED) COURSES
 
+  elements(:unassigned_course, :row, xpath: '//tr[contains(@id, "unassigned-course-")]')
   div(:unassigned_drop_zone, id: 'drop-zone-unassigned-courses')
   link(:unassigned_option, id: 'assign-course-to-option-null')
 
   def unassigned_course_ccns
-    els = row_elements(xpath: '//tr[contains(@id, "unassigned-course-")]')
-    els.map { |el| el.attribute('id').split('-')[2..3].join('-') }
+    unassigned_course_elements.map { |el| el.attribute('id').split('-')[2..3].join('-') }
   end
 
   def unassigned_course_row_xpath(course)
@@ -297,8 +297,8 @@ class BOACDegreeCheckPage < BOACDegreeTemplatePage
   end
 
   def assigned_course_fulfill_flag?(course)
-    flag_el = span_element(xpath: "#{assigned_course_xpath course}/td[contains(@class, 'td-units')]//title")
-    flag_el.text if flag_el.exists?
+    flag_el = span_element(xpath: "#{assigned_course_xpath course}/td[contains(@class, 'td-units')]//*[name()='title']")
+    flag_el.exists?
   end
 
   def assigned_course_grade(course)
@@ -318,11 +318,11 @@ class BOACDegreeCheckPage < BOACDegreeTemplatePage
   def verify_assigned_course_fulfillment(course)
     click_edit_assigned_course course
     col_req_course_units_req_select_element.when_present 1
-    if course.unit_reqts&.any?
-      wait_until(1, "Expected #{course.unit_reqts.length} reqts, got #{col_req_course_units_req_pill_elements.length}") do
-        col_req_course_units_req_pill_elements.length == course.unit_reqts.length
+    if course.units_reqts&.any?
+      wait_until(1, "Expected #{course.units_reqts.length} reqts, got #{col_req_course_units_req_pill_elements.length}") do
+        col_req_course_units_req_pill_elements.length == course.units_reqts.length
       end
-      course.unit_reqts.each { |req| col_req_unit_req_pill(req).when_present 1 }
+      course.units_reqts.each { |req| col_req_unit_req_pill(req).when_present 1 }
     else
       wait_until(1, "Expected no reqts, got #{col_req_course_units_req_pill_elements.length}") do
         col_req_course_units_req_pill_elements.empty?
@@ -342,6 +342,8 @@ class BOACDegreeCheckPage < BOACDegreeTemplatePage
   end
 
   # COURSE ASSIGNMENT
+
+  elements(:assign_course_button, :button, xpath: '//button[contains(@id, "assign-course-")]')
 
   def assign_completed_course(completed_course, req, opts = nil)
     logger.info "Assigning course #{completed_course.name}, #{completed_course.term_id}-#{completed_course.ccn} to #{req.name}"
@@ -363,12 +365,20 @@ class BOACDegreeCheckPage < BOACDegreeTemplatePage
     completed_course.junk = false
 
     # If course is assigned to a cat, create a dummy course reqt within the cat
-    course_req = req.instance_of?(DegreeReqtCourse) ? req : DegreeReqtCourse.new(parent: req, units_reqts: req.units_reqts, dummy: true)
+    course_req = if req.instance_of?(DegreeReqtCourse)
+                   req
+                 else
+                   DegreeReqtCourse.new parent: req,
+                                        units_reqts: req.units_reqts,
+                                        dummy: true
+                 end
     req.course_reqs << course_req unless req.instance_of?(DegreeReqtCourse)
     course_req.completed_course = completed_course
     completed_course.req_course = course_req
     completed_course.units_reqts = course_req.units_reqts
-    wait_until(2) { assigned_course_name(completed_course) == completed_course.name }
+    wait_until(2, "Expected '#{completed_course.name}', got '#{assigned_course_name(completed_course)}'") do
+      assigned_course_name(completed_course) == completed_course.name
+    end
   end
 
   def assigned_course_select(course)
@@ -435,7 +445,13 @@ class BOACDegreeCheckPage < BOACDegreeTemplatePage
     old_course_req.completed_course = nil
 
     # Attach the course to the new course reqt, dummy or otherwise
-    new_course_req = new_req.instance_of?(DegreeReqtCourse) ? new_req : DegreeReqtCourse.new(parent: new_req, units_reqts: new_req.units_reqts, dummy: true)
+    new_course_req = if new_req.instance_of?(DegreeReqtCourse)
+                       new_req
+                     else
+                       DegreeReqtCourse.new parent: new_req,
+                                            units_reqts: new_req.units_reqts,
+                                            dummy: true
+                     end
     new_req.course_reqs << new_course_req if new_req.instance_of? DegreeReqtCategory
     new_course_req.completed_course = completed_course
 
@@ -516,7 +532,7 @@ class BOACDegreeCheckPage < BOACDegreeTemplatePage
   end
 
   def assigned_course_edit_button(course)
-    cat_edit_button(course.req_course)
+    button_element(xpath: "#{assigned_course_xpath course}/td[last()]//button[contains(@id, 'edit')]")
   end
 
   def click_edit_assigned_course(course)
@@ -530,7 +546,10 @@ class BOACDegreeCheckPage < BOACDegreeTemplatePage
   end
 
   def select_assigned_course_unit_req(course)
-    col_req_course_units_req_remove_button_elements.each_with_index { |_, i| remove_col_req_unit_req i }
+    col_req_course_units_req_remove_button_elements.length.times do
+      col_req_course_units_req_remove_button_elements.first.click
+      sleep 1
+    end
     course.units_reqts&.each { |u_req| select_col_req_unit_req u_req.name }
   end
 
@@ -614,12 +633,14 @@ class BOACDegreeCheckPage < BOACDegreeTemplatePage
                                      name: course.name.to_s,
                                      grade: course.grade.to_s,
                                      units: course.units.to_i,
-                                     units_reqts: [],
+                                     units_reqts: destination_req.units_reqts,
                                      note: nil
     course.course_copies << copy
     wait_until(2, "Expected '#{copy.name}', got '#{assigned_course_name(copy)}'") do
       assigned_course_name(copy).include? copy.name
     end
+    dummy_req.completed_course = copy
+    dummy_req.set_dummy_reqt_id
     copy
   end
 

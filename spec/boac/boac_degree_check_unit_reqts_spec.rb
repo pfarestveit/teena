@@ -36,16 +36,9 @@ describe 'A BOA degree check' do
     @degree_templates_mgmt_page.create_new_degree template
     @degree_template_page.complete_template template
 
-    # Find student course data
-    @student_api_page.get_data(@driver, @student)
-    @unassigned_courses = @student_api_page.degree_progress_courses
-    logger.info "Completed courses: #{@unassigned_courses[0..4].map &:name}"
-
     # Create student degree check
     @degree_check_create_page.load_page @student
     @degree_check_create_page.create_new_degree_check(@degree_check)
-
-    @course = @unassigned_courses[0]
 
     @cat_0 = @degree_check.categories[0]
 
@@ -58,6 +51,14 @@ describe 'A BOA degree check' do
     @cat_3 = @degree_check.categories[3]
     @sub_cat_3 = @cat_3.sub_categories[0]
     @req_course_3 = @sub_cat_3.course_reqs[0]
+
+    # Find student course data
+    @student_api_page.get_data(@driver, @student)
+    @unassigned_courses = @student_api_page.degree_progress_courses @degree_check
+    logger.info "Completed courses: #{@unassigned_courses[0..4].map &:name}"
+    @course = @unassigned_courses[0]
+
+    @degree_check_page.load_page @degree_check
   end
 
   describe 'unassigned course' do
@@ -71,13 +72,11 @@ describe 'A BOA degree check' do
 
   describe 'course' do
 
-    before(:all) do
-      @degree_check_page.click_cancel_course_edit if @degree_check_page.course_cancel_button?
-    end
+    before(:all) { @degree_check_page.click_cancel_course_edit if @degree_check_page.course_cancel_button? }
 
     context 'that is assigned to a category with unit fulfillment' do
 
-      before(:all) { @degree_check_page.assign_completed_course(@course, @cat_0, { drag: true }) }
+      before(:all) { @degree_check_page.assign_completed_course(@course, @cat_0, { drag: false }) }
       before(:each) { @degree_check_page.click_cancel_course_edit if @degree_check_page.course_cancel_button? }
 
       it 'inherits the category\'s unit fulfillment' do
@@ -108,7 +107,7 @@ describe 'A BOA degree check' do
         @degree_check_page.edit_assigned_course @course
         expect(@degree_check_page.units_added_to_unit_req?(@degree_check.unit_reqts[0], @course)).to be true
         expect(@degree_check_page.units_added_to_unit_req?(@degree_check.unit_reqts[1], @course)).to be true
-        expect(@degree_check_page.units_added_to_unit_req?(@degree_check.unit_reqts[2], @course)).to be true
+        expect(@degree_check_page.units_added_to_unit_req?(@degree_check.unit_reqts[2], @course)).to be false
       end
 
       it 'shows an indicator if its unit fulfillment has been added' do
@@ -116,7 +115,7 @@ describe 'A BOA degree check' do
       end
 
       it 'can have unit fulfillment removed and totals updated' do
-        @course.units.reqts = [@degree_check.unit_reqts[1]]
+        @course.units_reqts = [@degree_check.unit_reqts[1]]
         @degree_check_page.edit_assigned_course @course
         expect(@degree_check_page.units_removed_from_unit_req?(@degree_check.unit_reqts[0], @course)).to be true
         expect(@degree_check_page.units_removed_from_unit_req?(@degree_check.unit_reqts[1], @course)).to be false
@@ -130,7 +129,7 @@ describe 'A BOA degree check' do
 
     context 'that is unassigned from a category' do
 
-      before(:all) { @degree_check_page.unassign_course(@course, @cat_0, { drag: true }) }
+      before(:all) { @degree_check_page.unassign_course(@course, @cat_0, { drag: false }) }
 
       it 'updates the unit fulfillment totals' do
         expect(@degree_check_page.units_removed_from_unit_req?(@degree_check.unit_reqts[1], @course)).to be true
@@ -139,7 +138,7 @@ describe 'A BOA degree check' do
 
     context 'that is assigned to a subcategory that inherits unit fulfillment from a category' do
 
-      before(:all) { @degree_check_page.assign_completed_course(@course, @sub_cat_1, { drag: true }) }
+      before(:all) { @degree_check_page.assign_completed_course(@course, @sub_cat_1, { drag: false }) }
       before(:each) { @degree_check_page.click_cancel_course_edit if @degree_check_page.course_cancel_button? }
 
       it 'shows the subcategory\'s parent\'s unit fulfillment rather than its own' do
@@ -161,7 +160,7 @@ describe 'A BOA degree check' do
       end
 
       it 'shows an indicator if its unit fulfillment has been removed' do
-        expect(@degree_check_page.assigned_course_fulfill_flag? @course).to be true
+        expect(@degree_check_page.assigned_course_fulfill_flag? @course).to be false
       end
 
       it 'can have unit fulfillment added and totals updated' do
@@ -192,7 +191,7 @@ describe 'A BOA degree check' do
 
     context 'that is reassigned to a course requirement that inherits unit fulfillment' do
 
-      before(:all) { @degree_check_page.assign_completed_course(@course, @req_course_1, { drag: true }) }
+      before(:all) { @degree_check_page.reassign_course(@course, @sub_cat_1, @req_course_1, { drag: false }) }
       before(:each) { @degree_check_page.click_cancel_course_edit if @degree_check_page.course_cancel_button? }
 
       it 'shows the course requirements\'s unit fulfillment rather than its own' do
@@ -220,13 +219,13 @@ describe 'A BOA degree check' do
       end
 
       it 'can have unit fulfillment removed and totals updated' do
-        @course.units.reqts = []
+        @course.units_reqts = []
         @degree_check_page.edit_assigned_course @course
         expect(@degree_check_page.units_removed_from_unit_req?(@degree_check.unit_reqts[0], @course)).to be true
       end
 
       it 'shows an indicator if its unit fulfillment has been removed' do
-        expect(@degree_check_page.assigned_course_fulfill_flag? @course).to be true
+        expect(@degree_check_page.assigned_course_fulfill_flag? @course).to be false
       end
 
       it 'can have unit fulfillment added and totals updated' do
@@ -247,11 +246,7 @@ describe 'A BOA degree check' do
 
     context 'that is assigned to a category without unit fulfillment' do
 
-      before(:all) do
-        @degree_check_page.copy_course(@course, @cat_2)
-        @course_copy = @course.course_copies[0]
-      end
-
+      before(:all) { @course_copy = @degree_check_page.copy_course(@course, @cat_2) }
       before(:each) { @degree_check_page.click_cancel_course_edit if @degree_check_page.course_cancel_button? }
 
       it 'shows the category\'s unit fulfillment' do
@@ -290,7 +285,7 @@ describe 'A BOA degree check' do
       end
 
       it 'can have unit fulfillment removed and totals updated' do
-        @course_copy.units.reqts = []
+        @course_copy.units_reqts = []
         @degree_check_page.edit_assigned_course @course_copy
         expect(@degree_check_page.units_removed_from_unit_req?(@degree_check.unit_reqts[0], @course)).to be true
         expect(@degree_check_page.units_removed_from_unit_req?(@degree_check.unit_reqts[1], @course)).to be true
@@ -308,6 +303,8 @@ describe 'A BOA degree check' do
         @degree_check_page.copy_course(@course, @sub_cat_3)
         @course_copy = @course.course_copies[1]
       end
+
+      before(:each) { @degree_check_page.click_cancel_course_edit if @degree_check_page.course_cancel_button? }
 
       it 'shows the subcategory\'s unit fulfillment' do
         @degree_check_page.verify_assigned_course_fulfillment @course_copy
@@ -333,13 +330,13 @@ describe 'A BOA degree check' do
       end
 
       it 'can have unit fulfillment removed and totals updated' do
-        @course_copy.units.reqts = []
+        @course_copy.units_reqts = []
         @degree_check_page.edit_assigned_course @course_copy
         expect(@degree_check_page.units_removed_from_unit_req?(@degree_check.unit_reqts[0], @course)).to be true
       end
 
       it 'shows an indicator if its unit fulfillment has been removed' do
-        expect(@degree_check_page.assigned_course_fulfill_flag? @course_copy).to be true
+        expect(@degree_check_page.assigned_course_fulfill_flag? @course_copy).to be false
       end
 
       it 'can have unit fulfillment added and totals updated' do
