@@ -15,6 +15,10 @@ class SquiggyAssetLibraryDetailPage < SquiggyAssetLibraryListViewPage
   # TODO - category
 
   def load_asset_detail(test, asset)
+    logger.info "Hitting asset detail at '#{test.course.asset_library_url}#suitec_assetId=#{asset.id}'"
+    # TODO - remove this dupe nav
+    navigate_to "#{test.course.asset_library_url}#suitec_assetId=#{asset.id}"
+    sleep 3
     navigate_to "#{test.course.asset_library_url}#suitec_assetId=#{asset.id}"
     switch_to_canvas_iframe
     wait_for_asset_detail asset
@@ -124,7 +128,14 @@ class SquiggyAssetLibraryDetailPage < SquiggyAssetLibraryListViewPage
 
   # LIKE
 
-  # TODO
+  button(:like_button, id: 'like-asset-btn')
+
+  def click_like_button
+    logger.info 'Clicking the like button'
+    scroll_to_bottom
+    wait_for_update_and_click like_button_element
+    sleep Utils.click_wait
+  end
 
   # ADD COMMENT
 
@@ -136,7 +147,7 @@ class SquiggyAssetLibraryDetailPage < SquiggyAssetLibraryListViewPage
   end
 
   def comment_el_by_body(comment)
-    div_element(xpath: "//div[contains(text(), '#{comment.body}')]")
+    div_element(xpath: "//div[contains(text(), '#{comment.body.split.first}')]")
   end
 
   def comment_body_el(comment)
@@ -198,6 +209,7 @@ class SquiggyAssetLibraryDetailPage < SquiggyAssetLibraryListViewPage
     wait_for_update_and_click_js reply_save_button
     comment_el_by_body(reply_comment).when_visible Utils.short_wait
     reply_comment.set_comment_id
+    visible_comment reply_comment
   end
 
   def click_cancel_reply(comment)
@@ -221,7 +233,7 @@ class SquiggyAssetLibraryDetailPage < SquiggyAssetLibraryListViewPage
   end
 
   def click_edit_button(comment)
-    wait_for_load_and_click edit_button(comment)
+    wait_for_update_and_click edit_button(comment)
   end
 
   def edit_comment_text_area(comment)
@@ -235,6 +247,7 @@ class SquiggyAssetLibraryDetailPage < SquiggyAssetLibraryListViewPage
 
   def edit_comment(comment)
     logger.info "Editing comment id #{comment.id}. New comment is '#{comment.body}'"
+    scroll_to_bottom
     click_edit_button comment
     enter_squiggy_text(edit_comment_text_area(comment), comment.body)
     wait_for_update_and_click save_edit_button
@@ -248,7 +261,9 @@ class SquiggyAssetLibraryDetailPage < SquiggyAssetLibraryListViewPage
   end
 
   def delete_comment(comment)
-    alert { wait_for_load_and_click delete_comment_button(comment) }
+    scroll_to_bottom
+    wait_for_update_and_click delete_comment_button(comment)
+    wait_for_update_and_click delete_confirm_button_element
     comment_el_by_id(comment).when_not_present Utils.short_wait
   end
 
