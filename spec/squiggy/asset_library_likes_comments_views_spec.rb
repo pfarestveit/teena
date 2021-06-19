@@ -1,6 +1,6 @@
 require_relative '../../util/spec_helper'
 
-describe 'Asset' do
+describe 'An asset' do
 
   before(:all) do
     @test = SquiggyTestConfig.new 'asset_reactions'
@@ -11,22 +11,23 @@ describe 'Asset' do
     @assets_list = SquiggyAssetLibraryListViewPage.new @driver
     @asset_detail = SquiggyAssetLibraryDetailPage.new @driver
     @manage_assets = SquiggyAssetLibraryManageAssetsPage.new @driver
+    @engagement_index = SquiggyEngagementIndexPage.new @driver
 
     @canvas.log_in(@cal_net, @test.admin.username, Utils.super_admin_password)
     @canvas.create_squiggy_course @test
 
-    @canvas.masquerade_as(@test.teachers.first, @test.course)
-
+    @teacher = @test.teachers.first
     @student_1 = @test.students[0]
     @student_2 = @test.students[1]
     @asset = @student_1.assets.find &:file_name
-    @comment_1_by_uploader = SquiggyComment.new user: @student_1, body: "#{@test.id} Uploader makes Comment 1"
-    @comment_1_reply_by_uploader = SquiggyComment.new user: @student_1, body: "#{@test.id} Uploader replies to own Comment 1"
-    @comment_1_reply_by_viewer = SquiggyComment.new user: @student_2, body: "#{@test.id} Viewer replies to uploader\'s Comment 1"
-    @comment_2_by_viewer = SquiggyComment.new user: @student_2, body: "#{@test.id} Viewer makes Comment 2"
-    @comment_2_reply_by_viewer = SquiggyComment.new user: @student_2, body: "#{@test.id} Viewer replies to own Comment 2"
+    @comment_1_by_uploader = SquiggyComment.new user: @student_1
+    @comment_1_reply_by_uploader = SquiggyComment.new user: @student_1
+    @comment_1_reply_by_viewer = SquiggyComment.new user: @student_2
+    @comment_2_by_viewer = SquiggyComment.new user: @student_2
+    @comment_2_reply_by_viewer = SquiggyComment.new user: @student_2
+    @comment_3_by_viewer = SquiggyComment.new user: @student_2
     @comment_link = 'www.google.com'
-    @comment_3_by_viewer = SquiggyComment.new user: @student_2, body: "#{@test.id} Viewer makes Comment 3 with link to #{@comment_link}"
+    @comment_3_by_viewer.body += " #{@comment_link}"
     @date = Date.today.strftime('%B %-d, %Y')
 
     # Upload a new asset for the test
@@ -37,144 +38,390 @@ describe 'Asset' do
 
   after(:all) { Utils.quit_browser @driver }
 
-  describe 'likes' do
+  describe 'view count' do
 
-    context 'when the user is the asset creator' do
-      it 'cannot be added on the list view'
-      it 'cannot be added on the detail view'
+    it 'is not incremented when viewed by the asset creator' do
+      @asset_detail.load_asset_detail(@test, @asset)
+      expect(@asset_detail.visible_asset_metadata(@asset)[:view_count]).to eql('0')
     end
 
-    context 'when the user is not the asset creator' do
-      it 'cannot be added on the list view'
+    it 'is incremented when viewed by a user other than the asset creator' do
+      @canvas.masquerade_as(@student_2, @test.course)
+      @asset_detail.load_asset_detail(@test, @asset)
+      expect(@asset_detail.visible_asset_metadata(@asset)[:view_count]).to eql('1')
+      @asset_detail.click_back_to_asset_library
+      expect(@assets_list.visible_list_view_asset_data(@asset)[:view_count]).to eql('1')
     end
 
-    context 'when added on the detail view' do
-      it 'increase the asset\'s total likes'
-      it 'earn Engagement Index "like" points for the liker'
-      it 'earn Engagement Index "get_like" points for the asset creator'
-      it 'add the liker\'s "like" activity to the activities csv'
-      it 'add the asset creator\'s "get_like" activity to the activities csv'
-    end
-
-    context 'when removed on the detail view' do
-      it 'decrease the asset\'s total likes'
-      it 'remove Engagement Index "like" points from the un-liker'
-      it 'remove Engagement Index "get_like" points from the asset creator'
-      it 'remove the un-liker\'s "like" activity from the activities csv'
-      it 'remove the asset creator\'s "get_like" activity from the activities csv'
+    it 'is incremented when viewed again by a user other than the asset creator' do
+      @asset_detail.load_asset_detail(@test, @asset)
+      expect(@asset_detail.visible_asset_metadata(@asset)[:view_count]).to eql('2')
+      @asset_detail.click_back_to_asset_library
+      expect(@assets_list.visible_list_view_asset_data(@asset)[:view_count]).to eql('2')
     end
   end
 
-  describe 'comments' do
+  describe 'like' do
+
+    it 'cannot be added by the asset creator' do
+      @canvas.masquerade_as(@student_1, @test.course)
+      @asset_detail.load_asset_detail(@test, @asset)
+      expect(@asset_detail.like_button?).to be false
+    end
+
+    context 'when added' do
+
+      before(:all) do
+        @canvas.stop_masquerading
+        @student_1.score = @engagement_index.user_score(@test, @student_1)
+        @student_2.score = @engagement_index.user_score(@test, @student_2)
+
+        @canvas.masquerade_as(@student_2, @test.course)
+        @asset_detail.load_asset_detail(@test, @asset)
+        @asset_detail.click_like_button
+      end
+
+      it('increases the asset\'s total likes') { expect(@asset_detail.visible_asset_metadata(@asset)[:like_count]).to eql('1') }
+
+      it 'earns Engagement Index "like" points for the liker' do
+        @canvas.stop_masquerading
+        expect(@engagement_index.user_score(@test, @student_2)).to eql(@student_2.score + SquiggyActivity::LIKE.points)
+      end
+
+      it 'earns Engagement Index "get_like" points for the asset creator' do
+        expect(@engagement_index.user_score(@test, @student_1)).to eql(@student_1.score + SquiggyActivity::GET_LIKE.points)
+      end
+
+      it 'adds the liker\'s "like" activity  and the likee\'s "liked" activity to the activities csv' do
+        csv = @engagement_index.download_csv @test
+        give = csv.find do |r|
+          r[:user_name] == @student_2.full_name &&
+            r[:action] == SquiggyActivity::LIKE.type &&
+            r[:score] == SquiggyActivity::LIKE.points &&
+            r[:running_total] == (@student_2.score + SquiggyActivity::LIKE.points)
+        end
+        get = csv.find do |r|
+          r[:user_name] == @student_1.full_name &&
+            r[:action] == SquiggyActivity::GET_LIKE.type &&
+            r[:score] == SquiggyActivity::GET_LIKE.points &&
+            r[:running_total] == (@student_1.score + SquiggyActivity::GET_LIKE.points)
+        end
+        expect(give).to be_truthy
+        expect(get).to be_truthy
+      end
+    end
+
+    context 'when removed' do
+
+      before(:all) do
+        @canvas.masquerade_as(@student_2, @test.course)
+        @assets_list.load_page @test
+        @assets_list.click_asset_link @asset
+        @asset_detail.click_like_button
+      end
+
+      it('decreases the asset\'s total likes') { expect(@asset_detail.visible_asset_metadata(@asset)[:like_count]).to eql('0') }
+
+      it 'removes Engagement Index "like" points from the un-liker' do
+        @canvas.stop_masquerading
+        expect(@engagement_index.user_score(@test, @student_2)).to eql(@student_2.score)
+      end
+
+      it 'removes Engagement Index "get_like" points from the asset creator' do
+        expect(@engagement_index.user_score(@test, @student_1)).to eql(@student_1.score)
+      end
+
+      it 'removes the liker\'s "like" activity  and the likee\'s "liked" activity from the activities csv' do
+        csv = @engagement_index.download_csv @test
+        give = csv.find do |r|
+          r[:user_name] == @student_2.full_name &&
+            r[:action] == SquiggyActivity::LIKE.type &&
+            r[:score] == SquiggyActivity::LIKE.points &&
+            r[:running_total] == (@student_2.score + SquiggyActivity::LIKE.points)
+        end
+        get = csv.find do |r|
+          r[:user_name] == @student_1.full_name &&
+            r[:action] == SquiggyActivity::GET_LIKE.type &&
+            r[:score] == SquiggyActivity::GET_LIKE.points &&
+            r[:running_total] == (@student_1.score + SquiggyActivity::GET_LIKE.points)
+        end
+        expect(give).to be_falsey
+        expect(get).to be_falsey
+      end
+    end
+  end
+
+  describe 'comment' do
 
     context 'by the asset uploader' do
-
-      before(:all) { @canvas.masquerade_as(@student_1, @test.course) }
 
       context 'added as a top level comment' do
 
         before(:all) do
+          @student_1.score = @engagement_index.user_score(@test, @student_1)
+
+          @canvas.masquerade_as(@student_1, @test.course)
           @assets_list.load_page @test
           @assets_list.click_asset_link @asset
-          # TODO - load asset detail to verify bookmark-able
           @visible_comment = @asset_detail.add_comment @comment_1_by_uploader
         end
 
-        it('show the commenter name') { expect(@visible_comment[:commenter]).to eql("#{@student_1.full_name} on #{@date}") }
-        it('show the comment body') { expect(@visible_comment[:body]).to eql(@comment_1_by_uploader.body) }
-        it('increment the comment count on the detail view') { expect(@asset_detail.visible_asset_metadata[:comment_count]).to eql(1.to_s) }
-        it 'increment the comment count on the list view' do
+        it('shows the commenter name') { expect(@visible_comment[:commenter]).to eql("#{@student_1.full_name} on #{@date}") }
+        it('shows the comment body') { expect(@visible_comment[:body]).to eql(@comment_1_by_uploader.body) }
+        it('increments the comment count on the detail view') { expect(@asset_detail.visible_asset_metadata(@asset)[:comment_count]).to eql(1.to_s) }
+        it 'increments the comment count on the list view' do
           @asset_detail.click_back_to_asset_library
           expect(@assets_list.visible_list_view_asset_data(@asset)[:comment_count]).to eql(1.to_s)
+        end
+
+        it 'earns no points for the commenter' do
+          @canvas.stop_masquerading
+          expect(@engagement_index.user_score(@test, @student_1)).to eql(@student_1.score)
         end
       end
 
       context 'added as a reply to the user\'s own comment' do
 
         before(:all) do
-          @assets_list.click_asset_link @asset
+          @student_1.score = @engagement_index.user_score(@test, @student_1)
+
+          @canvas.masquerade_as(@student_1, @test.course)
+          @asset_detail.load_asset_detail(@test, @asset)
           @visible_comment = @asset_detail.reply_to_comment(@comment_1_by_uploader, @comment_1_reply_by_uploader)
         end
 
-        it('show the commenter name') { expect(@visible_comment[:commenter]).to eql("#{@student_1.full_name} on #{@date}") }
-        it('show the comment body') { expect(@visible_comment[:body]).to eql(@comment_1_reply_by_uploader.body) }
-        it('increment the comment count on the detail view') { expect(@asset_detail.visible_asset_metadata[:comment_count]).to eql(2.to_s) }
-        it 'increment the comment count on the list view' do
+        it('shows the commenter name') { expect(@visible_comment[:commenter]).to eql("#{@student_1.full_name} on #{@date}") }
+        it('shows the comment body') { expect(@visible_comment[:body]).to eql(@comment_1_reply_by_uploader.body) }
+        it('increments the comment count on the detail view') { expect(@asset_detail.visible_asset_metadata(@asset)[:comment_count]).to eql(2.to_s) }
+        it 'increments the comment count on the list view' do
           @asset_detail.click_back_to_asset_library
           expect(@assets_list.visible_list_view_asset_data(@asset)[:comment_count]).to eql(2.to_s)
         end
-      end
 
-      # TODO it 'does not earn commenting points on the engagement index'
+        it 'does not earn commenting points on the engagement index' do
+          @canvas.stop_masquerading
+          expect(@engagement_index.user_score(@test, @student_1)).to eql(@student_1.score)
+        end
+      end
     end
 
     context 'by a user who is not the asset creator' do
 
-      before(:all) { @canvas.masquerade_as(@student_2, @test.course) }
-
       context 'added as a top level comment' do
 
         before(:all) do
+          @student_1.score = @engagement_index.user_score(@test, @student_1)
+          @student_2.score = @engagement_index.user_score(@test, @student_2)
+
+          @canvas.masquerade_as(@student_2, @test.course)
+          @assets_list.load_page @test
           @assets_list.click_asset_link @asset
           @visible_comment = @asset_detail.add_comment @comment_2_by_viewer
         end
 
-        it('show the commenter name') { expect(@visible_comment[:commenter]).to eql("#{@student_2.full_name} on #{@date}") }
-        it('show the comment body') { expect(@visible_comment[:body]).to eql(@comment_2_by_viewer.body) }
-        it('increment the comment count on the detail view') { expect(@asset_detail.visible_asset_metadata[:comment_count]).to eql(3.to_s) }
-        it 'increment the comment count on the list view' do
+        it('shows the commenter name') { expect(@visible_comment[:commenter]).to eql("#{@student_2.full_name} on #{@date}") }
+        it('shows the comment body') { expect(@visible_comment[:body]).to eql(@comment_2_by_viewer.body) }
+        it('increments the comment count on the detail view') { expect(@asset_detail.visible_asset_metadata(@asset)[:comment_count]).to eql(3.to_s) }
+        it 'increments the comment count on the list view' do
           @asset_detail.click_back_to_asset_library
           expect(@assets_list.visible_list_view_asset_data(@asset)[:comment_count]).to eql(3.to_s)
+        end
+
+        it 'adds Engagement Index "comment" points for the commenter' do
+          @canvas.stop_masquerading
+          expect(@engagement_index.user_score(@test, @student_2)).to eql(@student_2.score + SquiggyActivity::COMMENT.points)
+        end
+
+        it 'adds Engagement Index "get_comment" points from the asset creator' do
+          expect(@engagement_index.user_score(@test, @student_1)).to eql(@student_1.score + SquiggyActivity::GET_COMMENT.points)
+        end
+
+        it 'adds the commenter\'s "comment" activity  and the commentee\'s "get comment" activity to the activities csv' do
+          csv = @engagement_index.download_csv @test
+          give = csv.find do |r|
+            r[:user_name] == @student_2.full_name &&
+              r[:action] == SquiggyActivity::COMMENT.type &&
+              r[:score] == SquiggyActivity::COMMENT.points &&
+              r[:running_total] == (@student_2.score + SquiggyActivity::COMMENT.points)
+          end
+          get = csv.find do |r|
+            r[:user_name] == @student_1.full_name &&
+              r[:action] == SquiggyActivity::GET_COMMENT.type &&
+              r[:score] == SquiggyActivity::GET_COMMENT.points &&
+              r[:running_total] == (@student_1.score + SquiggyActivity::GET_COMMENT.points)
+          end
+          expect(give).to be_truthy
+          expect(get).to be_truthy
         end
       end
 
       context 'added as a reply to the user\'s own comment' do
 
         before(:all) do
+          @student_1.score = @engagement_index.user_score(@test, @student_1)
+          @student_2.score = @engagement_index.user_score(@test, @student_2)
+
+          @canvas.masquerade_as(@student_2, @test.course)
+          @assets_list.load_page @test
           @assets_list.click_asset_link @asset
           @visible_comment = @asset_detail.reply_to_comment(@comment_2_by_viewer, @comment_2_reply_by_viewer)
         end
 
-        it('show the commenter name') { expect(@visible_comment[:commenter]).to eql("#{@student_2.full_name} on #{@date}") }
-        it('show the comment body') { expect(@visible_comment[:body]).to eql(@comment_2_reply_by_viewer.body) }
-        it('increment the comment count on the detail view') { expect(@asset_detail.visible_asset_metadata[:comment_count]).to eql(4.to_s) }
-        it 'increment the comment count on the list view' do
+        it('shows the commenter name') { expect(@visible_comment[:commenter]).to eql("#{@student_2.full_name} on #{@date}") }
+        it('shows the comment body') { expect(@visible_comment[:body]).to eql(@comment_2_reply_by_viewer.body) }
+        it('increments the comment count on the detail view') { expect(@asset_detail.visible_asset_metadata(@asset)[:comment_count]).to eql(4.to_s) }
+        it 'increments the comment count on the list view' do
           @asset_detail.click_back_to_asset_library
           expect(@assets_list.visible_list_view_asset_data(@asset)[:comment_count]).to eql(4.to_s)
+        end
+
+        it 'adds Engagement Index "comment" points for the commenter' do
+          @canvas.stop_masquerading
+          expect(@engagement_index.user_score(@test, @student_2)).to eql(@student_2.score + SquiggyActivity::COMMENT.points)
+        end
+
+        it 'adds Engagement Index "get_comment" points for the asset creator' do
+          expect(@engagement_index.user_score(@test, @student_1)).to eql(@student_1.score + SquiggyActivity::GET_COMMENT.points)
+        end
+
+        it 'adds the commenter\'s "comment" activity  and the commentee\'s "get comment" activity to the activities csv' do
+          csv = @engagement_index.download_csv @test
+          give = csv.find do |r|
+            r[:user_name] == @student_2.full_name &&
+              r[:action] == SquiggyActivity::COMMENT.type &&
+              r[:score] == SquiggyActivity::COMMENT.points &&
+              r[:running_total] == (@student_2.score + SquiggyActivity::COMMENT.points)
+          end
+          get = csv.find do |r|
+            r[:user_name] == @student_1.full_name &&
+              r[:action] == SquiggyActivity::GET_COMMENT.type &&
+              r[:score] == SquiggyActivity::GET_COMMENT.points &&
+              r[:running_total] == (@student_1.score + SquiggyActivity::GET_COMMENT.points)
+          end
+          expect(give).to be_truthy
+          expect(get).to be_truthy
         end
       end
 
       context 'added as a reply to another user\'s comment' do
 
         before(:all) do
+          @student_1.score = @engagement_index.user_score(@test, @student_1)
+          @student_2.score = @engagement_index.user_score(@test, @student_2)
+
+          @canvas.masquerade_as(@student_2, @test.course)
+          @assets_list.load_page @test
           @assets_list.click_asset_link @asset
           @visible_comment = @asset_detail.reply_to_comment(@comment_1_by_uploader, @comment_1_reply_by_viewer)
         end
 
-        it('show the commenter name') { expect(@visible_comment[:commenter]).to eql("#{@student_2.full_name} on #{@date}") }
-        it('show the comment body') { expect(@visible_comment[:body]).to eql(@comment_1_reply_by_viewer.body) }
-        it('increment the comment count on the detail view') { expect(@asset_detail.visible_asset_metadata[:comment_count]).to eql(5.to_s) }
-        it 'increment the comment count on the list view' do
+        it('shows the commenter name') { expect(@visible_comment[:commenter]).to eql("#{@student_2.full_name} on #{@date}") }
+        it('shows the comment body') { expect(@visible_comment[:body]).to eql(@comment_1_reply_by_viewer.body) }
+        it('increments the comment count on the detail view') { expect(@asset_detail.visible_asset_metadata(@asset)[:comment_count]).to eql(5.to_s) }
+        it 'increments the comment count on the list view' do
           @asset_detail.click_back_to_asset_library
           expect(@assets_list.visible_list_view_asset_data(@asset)[:comment_count]).to eql(5.to_s)
         end
-      end
 
-      # TODO it 'earns "Comment" points on the engagement index for the user adding a comment or reply'
-      # TODO it 'earns "Receive a Comment" points on the engagement index for the user receiving the comment or reply'
-      # TODO it 'shows "Comment" activity on the CSV export for the user adding the comment or reply'
-      # TODO it 'shows "Receive a Comment" activity on the CSV export for the user receiving the comment or reply'
+        it 'adds Engagement Index "comment" points for the replier' do
+          @canvas.stop_masquerading
+          expect(@engagement_index.user_score(@test, @student_2)).to eql(@student_2.score + SquiggyActivity::COMMENT.points)
+        end
+
+        it 'adds Engagement Index "get_comment_reply" points for the asset creator' do
+          expect(@engagement_index.user_score(@test, @student_1)).to eql(@student_1.score + SquiggyActivity::GET_COMMENT_REPLY.points)
+        end
+
+        it 'adds the commenter\'s "comment" activity  and the commentee\'s "get comment reply" activity to the activities csv' do
+          csv = @engagement_index.download_csv @test
+          give = csv.find do |r|
+            r[:user_name] == @student_2.full_name &&
+              r[:action] == SquiggyActivity::COMMENT.type &&
+              r[:score] == SquiggyActivity::COMMENT.points &&
+              r[:running_total] == (@student_2.score + SquiggyActivity::COMMENT.points)
+          end
+          get = csv.find do |r|
+            r[:user_name] == @student_1.full_name &&
+              r[:action] == SquiggyActivity::GET_COMMENT_REPLY.type &&
+              r[:score] == SquiggyActivity::GET_COMMENT_REPLY.points &&
+              r[:running_total] == (@student_1.score + SquiggyActivity::GET_COMMENT_REPLY.points)
+          end
+          expect(give).to be_truthy
+          expect(get).to be_truthy
+        end
+      end
     end
 
-    context 'by any user' do
+    describe 'deleting' do
+
+      before(:all) do
+        @student_1.score = @engagement_index.user_score(@test, @student_1)
+        @student_2.score = @engagement_index.user_score(@test, @student_2)
+      end
+
+      it 'can be done by a student who created the comment' do
+        @canvas.masquerade_as(@student_2, @test.course)
+        @assets_list.load_page @test
+        @assets_list.click_asset_link @asset
+        @asset_detail.delete_comment @comment_1_reply_by_viewer
+      end
+
+      it 'cannot be done by a student who did not create the comment' do
+        expect(@asset_detail.delete_comment_button(@comment_1_reply_by_uploader).exists?).to be false
+      end
+
+      it 'removes engagement index points earned for the comment' do
+        @canvas.masquerade_as(@test.teachers.first, @test.course)
+        expect(@engagement_index.user_score(@test, @student_2)).to eql(@student_2.score - SquiggyActivity::COMMENT.points)
+      end
+
+      it 'removes Engagement Index "get_comment_reply" points for the asset creator' do
+        expect(@engagement_index.user_score(@test, @student_1)).to eql(@student_1.score - SquiggyActivity::GET_COMMENT_REPLY.points)
+      end
+
+      it 'removes the commenter\'s "comment" activity  and the commentee\'s "get comment reply" activity to the activities csv' do
+        csv = @engagement_index.download_csv @test
+        give = csv.find do |r|
+          r[:user_name] == @student_2.full_name &&
+            r[:action] == SquiggyActivity::COMMENT.type &&
+            r[:score] == SquiggyActivity::COMMENT.points &&
+            r[:running_total] == @student_2.score
+        end
+        get = csv.find do |r|
+          r[:user_name] == @student_1.full_name &&
+            r[:action] == SquiggyActivity::GET_COMMENT_REPLY.type &&
+            r[:score] == SquiggyActivity::GET_COMMENT_REPLY.points &&
+            r[:running_total] == @student_1.score
+        end
+        expect(give).to be_falsey
+        expect(get).to be_falsey
+      end
+
+      it 'can be done by a teacher if the comment has no replies' do
+        @assets_list.load_page @test
+        @assets_list.click_asset_link @asset
+        @asset_detail.delete_comment @comment_3_by_viewer
+      end
+
+      it 'cannot be done by a teacher if the comment has replies' do
+        expect(@asset_detail.delete_comment_button(@comment_1_by_uploader).exists?).to be false
+      end
+    end
+
+    describe 'adding by any user' do
+
+      before(:all) { @canvas.masquerade_as(@teacher, @test.course) }
 
       it 'can include a link that opens in a new browser window' do
-        @assets_list.click_asset_link @asset
+        @asset_detail.load_asset_detail(@test, @asset)
         @asset_detail.add_comment @comment_3_by_viewer
         expect(@asset_detail.external_link_valid?(@asset_detail.link_element(text: @comment_link), 'Google')).to be true
       end
 
-      it('cannot be added as a reply to a reply') { expect(@asset_detail.reply_button_el @comment_1_reply_by_uploader).to be_nil }
+      it 'cannot be added as a reply to a reply' do
+        @canvas.switch_to_canvas_iframe
+        expect((@asset_detail.reply_button_el @comment_1_reply_by_uploader).exists?).to be false
+      end
 
       it 'can be canceled when a reply' do
         @asset_detail.click_reply_button @comment_3_by_viewer
@@ -182,7 +429,7 @@ describe 'Asset' do
       end
     end
 
-    describe 'edit' do
+    describe 'editing' do
 
       it 'can be done by the user who created the comment' do
         @comment_1_by_uploader.body = "#{@comment_1_by_uploader.body} - EDITED"
@@ -208,39 +455,6 @@ describe 'Asset' do
         @asset_detail.click_edit_button @comment_2_by_viewer
         @asset_detail.click_cancel_edit_button
       end
-
-      # TODO it 'does not alter existing engagement scores'
     end
-
-    describe 'deletion' do
-
-      it 'can be done by a student who created the comment' do
-        @canvas.masquerade_as(@student_1, @test.course)
-        @assets_list.load_page @test
-        @assets_list.click_asset_link @asset
-        @asset_detail.delete_comment @comment_1_reply_by_uploader
-      end
-
-      it 'cannot be done by a student who did not create the comment' do
-        expect(@asset_detail.delete_comment_button(@comment_1_reply_by_viewer).exists?).to be false
-      end
-
-      it 'can be done by a teacher if the comment has no replies' do
-        @canvas.masquerade_as(@test.teachers.first, @test.course)
-        @assets_list.load_page @test
-        @assets_list.click_asset_link @asset
-        @asset_detail.delete_comment @comment_3_by_viewer
-      end
-
-      it 'cannot be done by a teacher if the comment has replies' do
-        expect(@asset_detail.delete_comment_button(@comment_1_by_uploader).exists?).to be false
-      end
-
-      # TODO it 'removes engagement index points earned for the comment'
-    end
-  end
-
-  describe 'views' do
-    it 'are only incremented when viewed by users other than the asset creator'
   end
 end

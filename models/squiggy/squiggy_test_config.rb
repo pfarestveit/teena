@@ -20,6 +20,7 @@ class SquiggyTestConfig < TestConfig
       member.assets = member.assets.map do |a|
         asset = SquiggyAsset.new a
         asset.title = "#{asset.title} #{id}"
+        asset.owner = member
         if asset.file_name
           asset.size = File.size(File.join(Utils.config_dir, "assets/#{asset.file_name}"))
         end

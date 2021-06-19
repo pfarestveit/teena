@@ -9,6 +9,8 @@ class SquiggyComment
 
   def initialize(comment_data)
     comment_data.each { |k, v| public_send("#{k}=", v) }
+    sleep(1)
+    @body ||= Time.now.to_i.to_s
   end
 
   def set_comment_id
