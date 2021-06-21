@@ -7,10 +7,12 @@ class SquiggyAssetLibraryManageAssetsPage < SquiggyAssetLibraryListViewPage
 
   h2(:manage_assets_heading, xpath: '//h2[text()="Manage Assets"]')
 
+  # CUSTOM CATEGORIES
+
+  # Create
+
   text_field(:add_category_input, id: 'add-category-input')
   button(:add_category_button, id: 'add-category-btn')
-  elements(:category_title, :div, class: 'v-list-item__title')
-  elements(:category_usage_count, :div, class: 'v-list-item__subtitle')
 
   def enter_category_name(name)
     wait_for_element_and_type(add_category_input_element, name)
@@ -20,10 +22,61 @@ class SquiggyAssetLibraryManageAssetsPage < SquiggyAssetLibraryListViewPage
     wait_for_update_and_click add_category_button_element
   end
 
-  def create_new_category(name)
-    logger.info "Creating a new category called '#{name}'"
-    enter_category_name name
+  def create_new_category(category)
+    logger.info "Creating a new category called '#{category.name}'"
+    enter_category_name category.name
     click_add_category_button
+    category.set_id
+  end
+
+  # View
+
+  elements(:category_title, :div, class: 'v-list-item__title')
+  elements(:category_usage_count, :div, class: 'v-list-item__subtitle')
+
+  def category_row(category)
+    category_title_elements.find { |el| el.text == category.name }
+  end
+
+  # Edit
+
+  def edit_category_button(category)
+    button_element(id: "edit-category-#{category.id}-btn")
+  end
+
+  def edit_category_input(category)
+    text_field_element(id: "edit-category-#{category.id}-input")
+  end
+
+  def edit_category_save_button(category)
+    button_element(id: "edit-category-#{category.id}-save")
+  end
+
+  def edit_category_cancel_button(category)
+    button_element(id: "edit-category-#{category.id}-cancel")
+  end
+
+  def edit_category(category)
+    logger.info "Editing category with new name '#{category.name}'"
+    wait_for_update_and_click edit_category_button(category)
+    wait_for_element_and_type(edit_category_input(category), category.name)
+    wait_for_update_and_click edit_category_save_button(category)
+  end
+
+  # Delete
+
+  button(:confirm_delete_button, id: 'confirm-delete-btn')
+  button(:cancel_delete_button, id: 'cancel-delete-btn')
+
+  def delete_category_button(category)
+    button_element(id: "delete-category-#{category.id}-btn")
+  end
+
+  def delete_category(category)
+    logger.info "Deleting category named '#{category.name}'"
+    wait_for_update_and_click delete_category_button(category)
+    wait_for_update_and_click confirm_delete_button_element
+    category_row(category).when_not_present 2
   end
 
   # CANVAS CATEGORIES
