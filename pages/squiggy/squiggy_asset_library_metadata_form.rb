@@ -30,6 +30,11 @@ module SquiggyAssetLibraryMetadataForm
     click_add_files_button
   end
 
+  def click_cancel_file_button
+    logger.info 'Clicking cancel upload button'
+    wait_for_update_and_click cancel_file_button_element
+  end
+
   # URL
 
   text_field(:url_input, id: 'asset-url-input')
@@ -37,7 +42,7 @@ module SquiggyAssetLibraryMetadataForm
   button(:cancel_link_button, id: 'add-link-cancel-btn')
 
   def enter_url(asset)
-    logger.info "Entering URL '#{asset.inspect}'"
+    logger.info "Entering URL '#{asset.url}'"
     wait_for_element_and_type(url_input_element, asset.url.to_s)
   end
 
@@ -54,13 +59,18 @@ module SquiggyAssetLibraryMetadataForm
   text_field(:title_input, id: 'asset-title-input')
   text_field(:category_input, id: 'asset-category-select')
   text_area(:description_input, id: 'asset-description-textarea')
+  div(:title_too_long_msg, xpath: '//div[text()="Title must be 255 characters or less"]')
+
+  def click_category_select
+    wait_for_update_and_click_js category_input_element
+  end
 
   def enter_asset_metadata(asset)
     logger.info "Entering title '#{asset.title}', category '#{asset.category}', and description '#{asset.description}'"
     enter_squiggy_text(title_input_element, asset.title.to_s)
     enter_squiggy_text(description_input_element, asset.description.to_s)
     if asset.category
-      wait_for_update_and_click_js category_input_element unless asset.category.nil?
+      click_category_select unless asset.category.nil?
       select_squiggy_option asset.category
     end
   end

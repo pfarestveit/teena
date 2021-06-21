@@ -15,6 +15,7 @@ class SquiggyAssetLibraryListViewPage
   end
 
   def upload_file_asset(asset)
+    logger.info "Uploading asset with file name '#{asset.file_name}'"
     click_upload_file_button
     enter_and_upload_file asset
     get_asset_id asset
@@ -29,6 +30,7 @@ class SquiggyAssetLibraryListViewPage
   end
 
   def add_link_asset(asset)
+    logger.info "Adding asset with URL '#{asset.url}'"
     click_add_url_button
     enter_url asset
     enter_asset_metadata asset
