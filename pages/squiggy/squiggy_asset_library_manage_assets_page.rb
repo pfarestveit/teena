@@ -35,7 +35,11 @@ class SquiggyAssetLibraryManageAssetsPage < SquiggyAssetLibraryListViewPage
   elements(:category_usage_count, :div, class: 'v-list-item__subtitle')
 
   def category_row(category)
-    category_title_elements.find { |el| el.text == category.name }
+    div_element(xpath: "//div[@class='v-list-item__title'][text()='#{category.name}']")
+  end
+
+  def category_usage(category)
+    div_element(id: "category-#{category.id}-asset-count").text.strip
   end
 
   # Edit
@@ -48,6 +52,10 @@ class SquiggyAssetLibraryManageAssetsPage < SquiggyAssetLibraryListViewPage
     text_field_element(id: "edit-category-#{category.id}-input")
   end
 
+  def edit_category_clear_button(category)
+    button_element(xpath: "//input[@id='edit-category-#{category.id}-input']/../following-sibling::div//button")
+  end
+
   def edit_category_save_button(category)
     button_element(id: "edit-category-#{category.id}-save")
   end
@@ -56,11 +64,21 @@ class SquiggyAssetLibraryManageAssetsPage < SquiggyAssetLibraryListViewPage
     button_element(id: "edit-category-#{category.id}-cancel")
   end
 
+  def click_edit_category(category)
+    wait_for_update_and_click edit_category_button(category)
+  end
+
+  def click_cancel_category_edit(category)
+    wait_for_update_and_click edit_category_cancel_button(category)
+    edit_category_cancel_button(category).when_not_present 2
+  end
+
   def edit_category(category)
     logger.info "Editing category with new name '#{category.name}'"
-    wait_for_update_and_click edit_category_button(category)
-    wait_for_element_and_type(edit_category_input(category), category.name)
+    click_edit_category category
+    wait_for_textbox_and_type(edit_category_input(category), category.name)
     wait_for_update_and_click edit_category_save_button(category)
+    edit_category_save_button(category).when_not_present 2
   end
 
   # Delete
@@ -76,20 +94,23 @@ class SquiggyAssetLibraryManageAssetsPage < SquiggyAssetLibraryListViewPage
     logger.info "Deleting category named '#{category.name}'"
     wait_for_update_and_click delete_category_button(category)
     wait_for_update_and_click confirm_delete_button_element
+    sleep 1
     category_row(category).when_not_present 2
   end
 
   # CANVAS CATEGORIES
 
-  elements(:canvas_category, :div, xpath: '//h3[text()="Assignments"]/../following-sibling::div//div[@role="option"]')
-  elements(:canvas_category_title, :div, xpath: '//h3[text()="Assignments"]/../following-sibling::div//div[@role="option"]//div[@class="v-list-item__title"]')
+  elements(:canvas_category, :div, xpath: '//h3[text()="Assignments"]/following-sibling::div//div[@role="option"]')
+  elements(:canvas_category_title, :div, xpath: '//h3[text()="Assignments"]/following-sibling::div//div[@role="option"]//div[@class="v-list-item__title"]')
 
   def wait_for_canvas_category(test, assignment)
     logger.info "Checking if the Canvas assignment #{assignment.title} has appeared on the Manage Categories page yet"
     tries ||= SquiggyUtils.poller_retries
     load_page test
     click_manage_assets_link
-    wait_until(3) { canvas_category_elements.any? && (canvas_category_title_elements.map &:text).include?(assignment.title) }
+    wait_until(3) do
+      canvas_category_elements.any? && (canvas_category_title_elements.map { |el| el.text.strip }).include?(assignment.title)
+    end
     SquiggyUtils.set_assignment_id assignment
     logger.debug 'The assignment category has appeared'
   rescue => e

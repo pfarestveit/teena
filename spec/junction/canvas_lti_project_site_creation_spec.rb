@@ -56,7 +56,7 @@ describe 'bCourses project site', order: :defined do
     it 'allows a user to create a project site' do
       @site_creation_page.load_embedded_tool test.manual_teacher
       @site_creation_page.click_create_project_site
-      @create_project_site_page.create_project_site (project.title = "QA Project Site #{Time.now}")
+      @create_project_site_page.create_project_site(project.title = "QA Project Site #{Time.now}")
       @canvas.wait_until(Utils.medium_wait) { @canvas.current_url.include? "#{Utils.canvas_base_url}/courses" }
       project.site_id = @canvas.current_url.delete "#{Utils.canvas_base_url}/courses/"
       logger.info "Project site ID is #{project.site_id}"
@@ -67,11 +67,6 @@ describe 'bCourses project site', order: :defined do
       it('redirects to a custom project homepage') { @canvas.project_site_heading_element.when_visible Utils.short_wait }
       it('does not add the Roster Photos tool') { expect(@roster_photos_page.roster_photos_link?).to be false }
       it('does not add the Official Sections tool') { expect(@official_sections_page.official_sections_link?).to be false }
-
-      it('shows no Conferences tool link in project site navigation') do
-        conf_nav_hidden = @canvas.conf_tool_link_element.attribute('title') == 'Disabled. Not visible to students'
-        expect(conf_nav_hidden).to be true
-      end
     end
   end
 
@@ -120,20 +115,15 @@ describe 'bCourses project site', order: :defined do
           case user.role
             when 'TA'
               logger.debug "Verifying that #{user.role} UID #{user.uid} has access to the project site UI"
-              @site_creation_page.create_course_site_link_element.when_present Utils.medium_wait
-              expect(@site_creation_page.create_course_site_link_element.attribute('disabled')).to be_nil
               @site_creation_page.click_create_project_site
               expect(@create_project_site_page.site_name_input_element.when_present Utils.short_wait).to be_truthy
             when 'Staff'
               logger.debug "Verifying that #{user.role} UID #{user.uid} has access to the project site UI but not the course site UI"
-              @site_creation_page.create_course_site_link_element.when_present Utils.medium_wait
-              expect(@site_creation_page.create_course_site_link_element.attribute('disabled')).to eql('true')
               @site_creation_page.click_create_project_site
               expect(@create_project_site_page.site_name_input_element.when_present Utils.short_wait).to be_truthy
             else
               logger.debug "Verifying that #{user.role} UID #{user.uid} has access to neither the course nor the project site UIs"
               @site_creation_page.create_course_site_link_element.when_present Utils.short_wait
-              expect(@site_creation_page.create_course_site_link_element.attribute('disabled')).to eql('true')
               expect(@site_creation_page.create_project_site_link_element.attribute('disabled')).to eql('true')
           end
         end

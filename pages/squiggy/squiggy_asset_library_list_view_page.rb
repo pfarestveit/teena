@@ -64,6 +64,11 @@ class SquiggyAssetLibraryListViewPage
     sleep Utils.click_wait
   end
 
+  def visible_asset_ids
+    els = div_elements(xpath: '//div[contains(@class, "v-card")][contains(@id, "asset-")]')
+    els.map { |el| el.attribute('id').split('-').last }
+  end
+
   def get_asset_id(asset)
     wait_for_assets
     SquiggyUtils.set_asset_id asset
@@ -127,12 +132,26 @@ class SquiggyAssetLibraryListViewPage
 
   button(:advanced_search_button, id: 'search-assets-btn')
   text_area(:keyword_search_input, id: 'adv-search-keywords-input')
+  button(:keyword_clear_button, xpath: '//input[@id="adv-search-keywords-input"]/../following-sibling::div//button')
+
   select_list(:category_select, id: 'adv-search-categories-select')
+  button(:category_clear_button, xpath: '//input[@id="adv-search-categories-select"]/../following-sibling::div//button')
+
   select_list(:uploader_select, id: 'adv-search-user-select')
+  div(:selected_user, id: 'adv-search-user-option-selected')
+  button(:user_clear_button, xpath: '//input[@id="adv-search-user-select"]/../following-sibling::div//button')
+
   select_list(:asset_type_select, id: 'adv-search-asset-types-select')
+  div(:selected_asset_type, id: 'adv-search-asset-types-option-selected')
+  button(:asset_type_clear_button, xpath: '//input[@id="adv-search-asset-types-select"]/../following-sibling::div//button')
+
   select_list(:sort_by_select, id: 'adv-search-order-by-option-selected')
+  div(:selected_sort, id: 'adv-search-order-by-option-selected')
+
   button(:advanced_search_submit, id: 'adv-search-btn')
   button(:cancel_advanced_search, id: 'cancel-adv-search-btn')
+
+  span(:no_results_msg, xpath: '//span[text()="No matching assets found"]')
 
   def parameter_option(option)
     span_element(xpath: "//span[text()=\"#{option}\"]")
@@ -144,10 +163,8 @@ class SquiggyAssetLibraryListViewPage
 
   def simple_search(keyword)
     logger.info "Performing simple search of asset library by keyword '#{keyword}'"
-    wait_for_update_and_click(cancel_advanced_search_element) if cancel_advanced_search?
-    search_input_element.when_visible Utils.short_wait
-    search_input_element.clear
-    search_input_element.send_keys(keyword) unless keyword.nil?
+    click_cancel_advanced_search if cancel_advanced_search?
+    wait_for_element_and_type(search_input_element, keyword)
     wait_for_update_and_click search_button_element
   end
 
@@ -160,7 +177,11 @@ class SquiggyAssetLibraryListViewPage
     end
   end
 
-  def click_category_select
+  def click_cancel_advanced_search
+    wait_for_update_and_click cancel_advanced_search_element
+  end
+
+  def click_category_search_select
     category_select_element.when_present 2
     js_click category_select_element
   end
@@ -175,9 +196,17 @@ class SquiggyAssetLibraryListViewPage
     js_click asset_type_select_element
   end
 
+  def asset_type_options
+    span_elements(xpath: '//span[contains(@id, "adv-search-asset-types-option")]').map &:text
+  end
+
   def click_sort_by_select
     sort_by_select_element.when_present 2
     js_click sort_by_select_element
+  end
+
+  def sort_by_options
+    span_elements(xpath: '//span[contains(@id, "adv-search-order-by-option")]').map &:text
   end
 
   def advanced_search(keyword, category, user, asset_type, sort_by)
@@ -190,7 +219,7 @@ class SquiggyAssetLibraryListViewPage
     end
 
     if category
-      click_category_select
+      click_category_search_select
       wait_for_update_and_click_js parameter_option(category)
     else
       js_click(parameter_clear_button('Category')) if parameter_clear_button('Category').visible?
@@ -217,6 +246,15 @@ class SquiggyAssetLibraryListViewPage
       wait_for_update_and_click_js parameter_option('Most recent')
     end
     wait_for_update_and_click advanced_search_submit_element
+  end
+
+  def wait_for_asset_results(assets)
+    expected = assets.map &:id
+    wait_until(3) { visible_asset_ids == expected }
+  end
+
+  def wait_for_no_results
+    no_results_msg_element.when_visible 3
   end
 
 end

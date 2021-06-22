@@ -26,6 +26,7 @@ module SquiggyPages
   # FAKE SELECT ELEMENTS
 
   elements(:menu_option, :div, xpath: '//div[@role="option"]')
+  button(:null_option, xpath: '//button[@aria-label="clear icon"]')
 
   def menu_option_el(option_str)
     div_element(xpath: "//div[@role=\"option\"][contains(., \"#{option_str}\")]")
@@ -44,8 +45,12 @@ module SquiggyPages
   end
 
   def select_squiggy_option(option_str)
-    scroll_to_menu_option option_str
     js_click menu_option_el(option_str)
+    sleep Utils.click_wait
+  end
+
+  def click_clear_button
+    wait_for_update_and_click null_option_element
   end
 
 end

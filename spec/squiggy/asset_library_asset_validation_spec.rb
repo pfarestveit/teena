@@ -30,7 +30,13 @@ describe 'Asset Library' do
     @manage_assets.delete_category @cat_1
   end
 
-  after(:all) { Utils.quit_browser @driver }
+  after(:all) do
+    @assets_list.load_page @test
+    @assets_list.click_manage_assets_link
+    @manage_assets.delete_category @cat_0
+  ensure
+    Utils.quit_browser @driver
+  end
 
   describe 'links' do
 
@@ -52,7 +58,7 @@ describe 'Asset Library' do
     end
 
     it 'earn "Add a new asset to the Asset Library" points on the Engagement Index' do
-      expect(@engagement_index.user_score(@test, @teacher)).to eql(@teacher.score + SquiggyActivity::ADD_ASSET_TO_LIBRARY.points)
+      expect(@engagement_index.user_score(@test, @teacher)).to eql(@initial_score + SquiggyActivity::ADD_ASSET_TO_LIBRARY.points)
     end
 
     it 'add "add_asset" activity to the CSV export' do
@@ -127,7 +133,7 @@ describe 'Asset Library' do
     end
 
     it 'limit a title to 255 characters' do
-      @asset.title = "#{'A loooooong title' * 15}?"
+      @asset.title = "#{'A loooooong title' * 16}?"
       @asset.description = nil
       @asset.category = nil
       @asset.url = @url
@@ -141,7 +147,7 @@ describe 'Asset Library' do
     it 'can have only non-deleted categories' do
       @assets_list.click_cancel_link_button
       @assets_list.click_add_url_button
-      @assets_list.click_category_select
+      @assets_list.click_category_asset_select
       expect(@assets_list.menu_option_el(@cat_1.name).exists?).to be false
     end
   end
@@ -165,7 +171,7 @@ describe 'Asset Library' do
     end
 
     it 'earn "Add a new asset to the Asset Library" points on the Engagement Index' do
-      expect(@engagement_index.user_score(@test, @teacher)).to eql(@teacher.score + SquiggyActivity::ADD_ASSET_TO_LIBRARY.points)
+      expect(@engagement_index.user_score(@test, @teacher)).to eql(@initial_score + SquiggyActivity::ADD_ASSET_TO_LIBRARY.points)
     end
 
     it 'add "add_asset" activity to the CSV export' do
@@ -211,11 +217,11 @@ describe 'Asset Library' do
       @assets_list.click_upload_file_button
       @assets_list.enter_file_path_for_upload @asset
       @assets_list.enter_asset_metadata @asset
-      expect(@assets_list.save_link_button_element.enabled?).to be false
+      expect(@assets_list.save_file_button_element.enabled?).to be false
     end
 
     it 'limit a title to 255 characters' do
-      @asset.title = "#{'A loooooong title' * 15}?"
+      @asset.title = "#{'A loooooong title' * 16}?"
       @asset.description = nil
       @asset.category = nil
       @assets_list.click_cancel_file_button
@@ -229,7 +235,7 @@ describe 'Asset Library' do
       @assets_list.click_cancel_file_button
       @assets_list.click_upload_file_button
       @assets_list.enter_file_path_for_upload @asset
-      @assets_list.click_category_select
+      @assets_list.click_category_asset_select
       expect(@assets_list.menu_option_el(@cat_1.name).exists?).to be false
     end
   end
