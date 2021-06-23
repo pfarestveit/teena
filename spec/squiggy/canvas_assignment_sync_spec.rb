@@ -107,7 +107,7 @@ describe 'Canvas assignment sync' do
     it 'does not show the Assignment 2 submission in the Asset Library' do
       @asset_library.load_page @test
       @asset_library.open_advanced_search
-      @asset_library.click_category_select
+      @asset_library.click_category_search_select
       expect(@asset_library.parameter_option(@assignment_2.title).exists?).to be false
     end
   end
@@ -150,7 +150,7 @@ describe 'Canvas assignment sync' do
     it 'hides the Assignment 1 submission in the Asset Library' do
       @asset_library.load_page @test
       @asset_library.open_advanced_search
-      @asset_library.click_category_select
+      @asset_library.click_category_search_select
       expect(@asset_library.parameter_option(@assignment_1.title).exists?).to be false
     end
 

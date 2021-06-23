@@ -76,7 +76,7 @@ describe 'Canvas assignment submissions' do
         @assets_list.click_asset_link asset
         visible_detail = @asset_detail.visible_asset_metadata asset
         source_shown = @asset_detail.source_el(asset).exists?
-        category_shown = @asset_detail.category_el(asset).exists?
+        category_shown = @asset_detail.category_el_by_text(asset).exists?
         preview_generated = @asset_detail.preview_generated? asset
 
         it "#{asset.title} belonging to #{asset.owner.full_name} has the right detail view title" do

@@ -456,5 +456,7 @@ describe 'An asset' do
         @asset_detail.click_cancel_edit_button
       end
     end
+
+    # TODO it 'lets a user click a commenter name to view the asset gallery filtered by the commenter\'s submissions'
   end
 end

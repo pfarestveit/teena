@@ -17,7 +17,7 @@ class SquiggyTestConfig < TestConfig
     set_test_user_data File.join(Utils.config_dir, 'test-data-squiggy.json')
     @course.roster = set_test_users(test_name, SquiggyUser)
     @course.roster.each do |member|
-      member.assets = member.assets.map do |a|
+      member.assets = member.assets&.map do |a|
         asset = SquiggyAsset.new a
         asset.title = "#{asset.title} #{id}"
         asset.owner = member

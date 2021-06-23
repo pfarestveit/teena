@@ -37,12 +37,22 @@ class SquiggyAssetLibraryDetailPage < SquiggyAssetLibraryListViewPage
     link_element(xpath: "//a[contains(text(), '#{asset.owner.full_name}')]")
   end
 
-  def category_el(asset)
-    link_element(text: asset.category)
+  def category_el_by_text(asset)
+    link_element(xpath: "//a[contains(text(), #{asset.category.name})]")
   end
 
   def source_el(asset)
     link_element(text: asset.url)
+  end
+
+  def category_el_by_id(category)
+    link_element(id: "link-to-assets-of-category-#{category.id}")
+  end
+
+  def click_category_link(category)
+    logger.info "Clicking link to category '#{category.name}'"
+    scroll_to_bottom
+    wait_for_update_and_click category_el_by_id(category)
   end
 
   def visible_asset_metadata(asset)
@@ -53,8 +63,8 @@ class SquiggyAssetLibraryDetailPage < SquiggyAssetLibraryListViewPage
       like_count: (like_count if like_count?),
       view_count: (view_count if view_count?),
       comment_count: (comment_count if comment_count?),
-      description: (description.strip if description?)
-      # TODO category
+      description: (description.strip if description?),
+      category: (category_el_by_id(asset.category).text.strip if category_el_by_id(asset.category).exists?)
     }
   end
 
@@ -91,6 +101,22 @@ class SquiggyAssetLibraryDetailPage < SquiggyAssetLibraryListViewPage
   # EDIT DETAILS
 
   button(:edit_details_button, id: 'edit-asset-details-btn')
+  button(:save_asset_edit_button, id: 'confirm-save-asset-btn')
+  button(:cancel_asset_edit_button, id: 'cancel-save-asset-btn')
+
+  def click_cancel_button
+    wait_for_update_and_click save_asset_edit_button_element
+  end
+
+  def click_save_or_confirm_button
+    wait_for_update_and_click cancel_asset_edit_button_element
+  end
+
+  def edit_asset_details(asset)
+    wait_for_update_and_click edit_details_button_element
+    enter_asset_metadata asset
+    click_save_or_confirm_button
+  end
 
   # DOWNLOAD ASSET
 

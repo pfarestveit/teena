@@ -61,8 +61,15 @@ module SquiggyAssetLibraryMetadataForm
   text_area(:description_input, id: 'asset-description-textarea')
   div(:title_too_long_msg, xpath: '//div[text()="Title must be 255 characters or less"]')
 
-  def click_category_select
-    wait_for_update_and_click_js category_input_element
+  div(:selected_category, id: 'adv-search-categories-option-selected')
+
+  def click_category_asset_select
+    category_input_element.when_present Utils.short_wait
+    js_click category_input_element
+  end
+
+  def category_clear_button
+    button_element(xpath: '//input[@id="asset-category-select"]/../following-sibling::div//button')
   end
 
   def enter_asset_metadata(asset)
@@ -70,8 +77,10 @@ module SquiggyAssetLibraryMetadataForm
     enter_squiggy_text(title_input_element, asset.title.to_s)
     enter_squiggy_text(description_input_element, asset.description.to_s)
     if asset.category
-      click_category_select unless asset.category.nil?
-      select_squiggy_option asset.category
+      click_category_asset_select
+      select_squiggy_option(asset.category.name)
+    else
+      wait_for_update_and_click(category_clear_button) if selected_category?
     end
   end
 
