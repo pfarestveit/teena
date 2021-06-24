@@ -6,6 +6,11 @@ class SquiggyAssetLibraryListViewPage
   include SquiggyAssetLibrarySearchForm
   include SquiggyAssetLibraryMetadataForm
 
+  def create_asset(test, asset)
+    load_page test
+    asset.file_name ? upload_file_asset(asset) : add_link_asset(asset)
+  end
+
   ### UPLOADING FILES
 
   button(:upload_button, id: 'go-upload-asset-btn')
@@ -101,18 +106,15 @@ class SquiggyAssetLibraryListViewPage
     start = Time.now
     asset_el(asset).when_present Utils.short_wait
     logger.warn "PERF - took #{Time.now - start} seconds for asset element to become visible"
-    start = Time.now
-    thumbnail_el = div_element(xpath: "#{xpath}//div[contains(@style, \"background-image\")]")
-    thumbnail_el.when_present Utils.short_wait
-    logger.warn "PERF - took #{Time.now - start} seconds for asset thumbnail to become visible"
     title_el = div_element(xpath: "#{xpath}//div[contains(@class, \"asset-metadata\")]/div[1]")
-    wait_until(2) { title_el.text }
     owner_el = div_element(xpath: "#{xpath}//div[contains(@class, \"asset-metadata\")]/div[2]")
     view_count_el = div_element(xpath: "#{xpath}//*[@data-icon='eye']/..")
     like_count_el = div_element(xpath: "#{xpath}//*[@data-icon='thumbs-up']/..")
     comment_count_el = div_element(xpath: "#{xpath}//*[@data-icon='comment']/..")
+    title_el.when_visible Utils.short_wait
+    owner_el.when_visible Utils.short_wait
     {
-      title: (title_el.text if title_el.exists?),
+      title: (title_el.text.strip if title_el.exists?),
       owner: (owner_el.text.gsub('by', '').strip if owner_el.exists?),
       view_count: (view_count_el.text.strip if view_count_el.exists?),
       like_count: (like_count_el.text.strip if like_count_el.exists?),
@@ -210,7 +212,7 @@ class SquiggyAssetLibraryListViewPage
   end
 
   def advanced_search(keyword, category, user, asset_type, sort_by)
-    logger.info "Performing advanced search by keyword '#{keyword}', category '#{category}', user '#{user && user.full_name}', asset type '#{asset_type}', sort by '#{sort_by}'."
+    logger.info "Performing advanced search by keyword '#{keyword}', category '#{category.name}', user '#{user && user.full_name}', asset type '#{asset_type}', sort by '#{sort_by}'."
     open_advanced_search
     if keyword
       wait_for_element_and_type(keyword_search_input_element, keyword)
@@ -220,7 +222,7 @@ class SquiggyAssetLibraryListViewPage
 
     if category
       click_category_search_select
-      wait_for_update_and_click_js parameter_option(category)
+      wait_for_update_and_click_js parameter_option(category.name)
     else
       js_click(parameter_clear_button('Category')) if parameter_clear_button('Category').visible?
     end
@@ -257,4 +259,24 @@ class SquiggyAssetLibraryListViewPage
     no_results_msg_element.when_visible 3
   end
 
+  # CANVAS SYNC
+
+  button(:resume_sync_button, xpath: '//button[contains(.,"Resume syncing")]')
+  div(:resume_sync_success, xpath: '//div[text()=" Syncing has been resumed for this course. There may be a short delay before SuiteC tools are updated. "]')
+
+  def ensure_canvas_sync(test, canvas_assign_page)
+
+    add_link_button_element.when_visible Utils.short_wait
+    if resume_sync_button?
+      assign = Assignment.new title: 'resume sync'
+      canvas_assign_page.load_page test.course
+      canvas_assign_page.create_assignment(test.course, assign)
+      load_page test
+      logger.info 'Resuming syncing for the course'
+      wait_for_update_and_click resume_sync_button_element
+      resume_sync_success_element.when_visible Utils.short_wait
+    else
+      logger.info 'Syncing is still enabled for this course site'
+    end
+  end
 end

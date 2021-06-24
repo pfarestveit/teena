@@ -561,8 +561,12 @@ module Page
           end
         end
       end
-      test.course.asset_library_url = click_tool_link SquiggyTool::ASSET_LIBRARY
       test.course.engagement_index_url = click_tool_link SquiggyTool::ENGAGEMENT_INDEX
+      test.course.asset_library_url = click_tool_link SquiggyTool::ASSET_LIBRARY
+      asset_library = SquiggyAssetLibraryListViewPage.new @driver
+      canvas_assigns_page = CanvasAssignmentsPage.new @driver
+      switch_to_canvas_iframe
+      asset_library.ensure_canvas_sync(test, canvas_assigns_page)
     end
 
     # Clicks the navigation link for a tool and returns the tool's URL. Optionally records an analytics event.
