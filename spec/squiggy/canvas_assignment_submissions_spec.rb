@@ -25,6 +25,8 @@ describe 'Canvas assignment submissions' do
 
     # Enable Canvas assignment sync
     @manage_assets.wait_for_canvas_category(@test, @assignment)
+    @category = SquiggyCategory.new @assignment.title
+    @category.id = @assignment.squiggy_id
     @manage_assets.enable_assignment_sync @assignment
     @canvas.stop_masquerading
 
@@ -46,10 +48,11 @@ describe 'Canvas assignment submissions' do
       end
     end
 
+
     submissions.each do |asset|
       begin
         asset.description = nil
-        asset.category = @assignment.title
+        asset.category = @category
         type = asset.file_name ? 'File' : 'Link'
 
         # Activity points
@@ -76,7 +79,7 @@ describe 'Canvas assignment submissions' do
         @assets_list.click_asset_link asset
         visible_detail = @asset_detail.visible_asset_metadata asset
         source_shown = @asset_detail.source_el(asset).exists?
-        category_shown = @asset_detail.category_el_by_text(asset).exists?
+        category_shown = @asset_detail.category_el_by_id(asset.category).exists?
         preview_generated = @asset_detail.preview_generated? asset
 
         it "#{asset.title} belonging to #{asset.owner.full_name} has the right detail view title" do
@@ -94,16 +97,19 @@ describe 'Canvas assignment submissions' do
         it "#{asset.title} belonging to #{asset.owner.full_name} has the right detail view category" do
           expect(category_shown).to be true
         end
-        it "#{asset.title} belonging to #{asset.owner.full_name} has the right detail view source" do
-          expect(source_shown).to be true
-        end
 
         if asset.file_name
+          it "#{asset.title} belonging to #{asset.owner.full_name} has the right detail view source" do
+            expect(source_shown).to be false
+          end
           asset_downloadable = @asset_detail.verify_block { @asset_detail.download_asset asset }
           it("can be downloaded by #{asset.owner.full_name} from the #{asset.title} asset detail page") do
             expect(asset_downloadable).to be true
           end
         else
+          it "#{asset.title} belonging to #{asset.owner.full_name} has the right detail view source" do
+            expect(source_shown).to be true
+          end
           has_download_button = @asset_detail.download_button?
           it("cannot be downloaded by #{asset.owner.full_name} from the #{asset.title} detail page") do
             expect(has_download_button).to be false

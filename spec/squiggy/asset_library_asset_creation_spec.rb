@@ -48,7 +48,7 @@ describe 'New asset' do
             it("#{asset.title} belonging to #{student.full_name} has the right list view owner") { expect(visible_asset[:owner]).to eql(student.full_name) }
 
             @assets_list.click_asset_link asset
-            visible_detail = @asset_detail.visible_asset_metadata
+            visible_detail = @asset_detail.visible_asset_metadata asset
             preview_generated = @asset_detail.preview_generated? asset
             asset_downloadable = @asset_detail.verify_block { @asset_detail.download_asset asset } if asset.file_name
             has_download_button = @asset_detail.download_button?

@@ -73,6 +73,7 @@ class Utils
         options.headless! if headless?
         options.add_preference('download.prompt_for_download', false)
         options.add_preference('download.default_directory', Utils.download_dir)
+        options.add_preference('profile.default_content_setting_values.automatic_downloads', 1)
         Selenium::WebDriver.for :chrome, :options => options
 
       when 'firefox'

@@ -16,9 +16,6 @@ class SquiggyAssetLibraryDetailPage < SquiggyAssetLibraryListViewPage
 
   def load_asset_detail(test, asset)
     logger.info "Hitting asset detail at '#{test.course.asset_library_url}#suitec_assetId=#{asset.id}'"
-    # TODO - remove this dupe nav
-    navigate_to "#{test.course.asset_library_url}#suitec_assetId=#{asset.id}"
-    sleep 3
     navigate_to "#{test.course.asset_library_url}#suitec_assetId=#{asset.id}"
     switch_to_canvas_iframe
     wait_for_asset_detail asset
@@ -26,6 +23,7 @@ class SquiggyAssetLibraryDetailPage < SquiggyAssetLibraryListViewPage
 
   def wait_for_asset_detail(asset)
     wait_until(Utils.short_wait) { asset_title.include? "#{asset.title}" }
+    sleep 1
   end
 
   def wait_for_asset_and_get_id(asset)
@@ -38,6 +36,7 @@ class SquiggyAssetLibraryDetailPage < SquiggyAssetLibraryListViewPage
   end
 
   def category_el_by_text(asset)
+    logger.debug "Looking for element at XPath //a[contains(text(), #{asset.category.name})]"
     link_element(xpath: "//a[contains(text(), #{asset.category.name})]")
   end
 
@@ -55,16 +54,26 @@ class SquiggyAssetLibraryDetailPage < SquiggyAssetLibraryListViewPage
     wait_for_update_and_click category_el_by_id(category)
   end
 
+  def no_category_el
+    div_element(xpath: '//div[text()=" Categories: "]/following-sibling::div/div[text()=" — "]')
+  end
+
   def visible_asset_metadata(asset)
     asset_title_element.when_visible Utils.short_wait
+    owner_el(asset).when_visible Utils.short_wait
+    expected_cat = if asset.category
+                     category_el_by_id(asset.category).text.strip if category_el_by_id(asset.category).exists?
+                   else
+                     no_category_el.exists?
+                   end
     {
-      title: (asset_title if asset_title?),
-      owner: (owner_el(asset).text.strip if owner_el(asset).exists?),
+      title: asset_title,
+      owner: owner_el(asset).text.strip,
       like_count: (like_count if like_count?),
       view_count: (view_count if view_count?),
       comment_count: (comment_count if comment_count?),
       description: (description.strip if description?),
-      category: (category_el_by_id(asset.category).text.strip if category_el_by_id(asset.category).exists?)
+      category: expected_cat
     }
   end
 
@@ -105,17 +114,17 @@ class SquiggyAssetLibraryDetailPage < SquiggyAssetLibraryListViewPage
   button(:cancel_asset_edit_button, id: 'cancel-save-asset-btn')
 
   def click_cancel_button
-    wait_for_update_and_click save_asset_edit_button_element
+    wait_for_update_and_click cancel_asset_edit_button_element
   end
 
-  def click_save_or_confirm_button
-    wait_for_update_and_click cancel_asset_edit_button_element
+  def click_save_button
+    wait_for_update_and_click save_asset_edit_button_element
   end
 
   def edit_asset_details(asset)
     wait_for_update_and_click edit_details_button_element
     enter_asset_metadata asset
-    click_save_or_confirm_button
+    click_save_button
   end
 
   # DOWNLOAD ASSET

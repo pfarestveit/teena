@@ -1,7 +1,6 @@
 require_relative '../../util/spec_helper'
 
 test = SquiggyTestConfig.new 'engagement_index'
-test.course.site_id = ENV['COURSE_ID']
 teacher = test.teachers.first
 student_0 = test.students[0]
 student_1 = test.students[1]

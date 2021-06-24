@@ -4,7 +4,6 @@ describe 'Engagement Index points configuration' do
 
   before(:all) do
     @test = SquiggyTestConfig.new 'engagement_config'
-    @test.course.site_id = ENV['COURSE_ID']
     @driver = Utils.launch_browser
     @canvas = Page::CanvasPage.new @driver
     @cal_net= Page::CalNetPage.new @driver
