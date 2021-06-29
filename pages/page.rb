@@ -67,7 +67,6 @@ module Page
   # @param timeout [Fixnum]
   def wait_for_element(element, timeout)
     element.when_present timeout
-    # wait_until(timeout) { element.enabled? }
     element.when_visible timeout
     sleep Utils.event_wait
     Utils.log_js_errors @driver
@@ -281,6 +280,10 @@ module Page
     sleep 1
     browser.action.release.perform
     sleep 1
+  end
+
+  def active_element
+    browser.switch_to.active_element.tag
   end
 
   # Pauses to allow the Canvas poller to complete any active cycle

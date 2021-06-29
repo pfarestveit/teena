@@ -67,7 +67,7 @@ describe 'Asset Library' do
         r[:user_name] == @teacher.full_name &&
           r[:action] == SquiggyActivity::ADD_ASSET_TO_LIBRARY.type &&
           r[:score] == SquiggyActivity::ADD_ASSET_TO_LIBRARY.points &&
-          r[:running_total] == (@teacher.score + SquiggyActivity::ADD_ASSET_TO_LIBRARY.points)
+          r[:running_total] == (@initial_score + SquiggyActivity::ADD_ASSET_TO_LIBRARY.points)
       end
       expect(activity).to be_truthy
     end
@@ -180,7 +180,7 @@ describe 'Asset Library' do
         r[:user_name] == @teacher.full_name &&
           r[:action] == SquiggyActivity::ADD_ASSET_TO_LIBRARY.type &&
           r[:score] == SquiggyActivity::ADD_ASSET_TO_LIBRARY.points &&
-          r[:running_total] == (@teacher.score + SquiggyActivity::ADD_ASSET_TO_LIBRARY.points)
+          r[:running_total] == (@initial_score + SquiggyActivity::ADD_ASSET_TO_LIBRARY.points)
       end
       expect(activity).to be_truthy
     end

@@ -41,7 +41,8 @@ describe 'An asset' do
   describe 'view count' do
 
     it 'is not incremented when viewed by the asset creator' do
-      @asset_detail.load_asset_detail(@test, @asset)
+      @assets_list.load_page @test
+      @assets_list.click_asset_link @asset
       expect(@asset_detail.visible_asset_metadata(@asset)[:view_count]).to eql('0')
     end
 
@@ -54,7 +55,7 @@ describe 'An asset' do
     end
 
     it 'is incremented when viewed again by a user other than the asset creator' do
-      @asset_detail.load_asset_detail(@test, @asset)
+      @assets_list.click_asset_link @asset
       expect(@asset_detail.visible_asset_metadata(@asset)[:view_count]).to eql('2')
       @asset_detail.click_back_to_asset_library
       expect(@assets_list.visible_list_view_asset_data(@asset)[:view_count]).to eql('2')
@@ -65,7 +66,9 @@ describe 'An asset' do
 
     it 'cannot be added by the asset creator' do
       @canvas.masquerade_as(@student_1, @test.course)
-      @asset_detail.load_asset_detail(@test, @asset)
+      @assets_list.load_page @test
+      @assets_list.click_asset_link @asset
+      @asset_detail.wait_for_asset_detail
       expect(@asset_detail.like_button?).to be false
     end
 
@@ -328,8 +331,9 @@ describe 'An asset' do
           expect(@engagement_index.user_score(@test, @student_2)).to eql(@student_2.score + SquiggyActivity::COMMENT.points)
         end
 
-        it 'adds Engagement Index "get_comment_reply" points for the asset creator' do
-          expect(@engagement_index.user_score(@test, @student_1)).to eql(@student_1.score + SquiggyActivity::GET_COMMENT_REPLY.points)
+        it 'adds Engagement Index "get_comment" and "get_comment_reply" points for the asset creator' do
+          expected = @student_1.score + SquiggyActivity::GET_COMMENT.points + SquiggyActivity::GET_COMMENT_REPLY.points
+          expect(@engagement_index.user_score(@test, @student_1)).to eql(expected)
         end
 
         it 'adds the commenter\'s "comment" activity  and the commentee\'s "get comment reply" activity to the activities csv' do
@@ -340,17 +344,74 @@ describe 'An asset' do
               r[:score] == SquiggyActivity::COMMENT.points &&
               r[:running_total] == (@student_2.score + SquiggyActivity::COMMENT.points)
           end
-          get = csv.find do |r|
+          get_1 = csv.find do |r|
+            r[:user_name] == @student_1.full_name &&
+              r[:action] == SquiggyActivity::GET_COMMENT.type &&
+              r[:score] == SquiggyActivity::GET_COMMENT.points &&
+              r[:running_total] == (@student_1.score + SquiggyActivity::GET_COMMENT.points)
+          end
+          get_2 = csv.find do |r|
             r[:user_name] == @student_1.full_name &&
               r[:action] == SquiggyActivity::GET_COMMENT_REPLY.type &&
               r[:score] == SquiggyActivity::GET_COMMENT_REPLY.points &&
-              r[:running_total] == (@student_1.score + SquiggyActivity::GET_COMMENT_REPLY.points)
+              r[:running_total] == (@student_1.score + SquiggyActivity::GET_COMMENT.points + SquiggyActivity::GET_COMMENT_REPLY.points)
           end
           expect(give).to be_truthy
-          expect(get).to be_truthy
+          expect(get_2).to be_truthy
         end
       end
     end
+
+    describe 'adding by any user' do
+
+      before(:all) { @canvas.masquerade_as(@student_2, @test.course) }
+
+      it 'can include a link that opens in a new browser window' do
+        @asset_detail.load_asset_detail(@test, @asset)
+        @asset_detail.add_comment @comment_3_by_viewer
+        expect(@asset_detail.external_link_valid?(@asset_detail.link_element(text: @comment_link), 'Google')).to be true
+      end
+
+      it 'cannot be added as a reply to a reply' do
+        @canvas.switch_to_canvas_iframe
+        expect((@asset_detail.reply_button_el @comment_1_reply_by_uploader).exists?).to be false
+      end
+
+      it 'can be canceled when a reply' do
+        @asset_detail.click_reply_button @comment_3_by_viewer
+        @asset_detail.click_cancel_reply @comment_3_by_viewer
+      end
+    end
+
+    describe 'editing' do
+
+      it 'can be done by the user who created the comment' do
+        @comment_1_by_uploader.body = "#{@comment_1_by_uploader.body} - EDITED"
+        @canvas.masquerade_as(@student_1, @test.course)
+        @assets_list.load_page @test
+        @assets_list.click_asset_link @asset
+        @asset_detail.edit_comment @comment_1_by_uploader
+      end
+
+      it('cannot be done by a user who did not create the comment') do
+        expect(@asset_detail.edit_button(@comment_2_by_viewer).exists?).to be false
+      end
+
+      it 'can be done to any comment when the user is a teacher' do
+        @comment_2_by_viewer.body = "#{@comment_2_by_viewer.body} - EDITED"
+        @canvas.masquerade_as(@test.teachers.first, @test.course)
+        @assets_list.load_page @test
+        @assets_list.click_asset_link @asset
+        @asset_detail.edit_comment @comment_2_by_viewer
+      end
+
+      it 'can be canceled' do
+        @asset_detail.click_edit_button @comment_2_by_viewer
+        @asset_detail.click_cancel_edit_button
+      end
+    end
+
+    # TODO it 'lets a user click a commenter name to view the asset gallery filtered by the commenter\'s submissions'
 
     describe 'deleting' do
 
@@ -407,56 +468,5 @@ describe 'An asset' do
         expect(@asset_detail.delete_comment_button(@comment_1_by_uploader).exists?).to be false
       end
     end
-
-    describe 'adding by any user' do
-
-      before(:all) { @canvas.masquerade_as(@teacher, @test.course) }
-
-      it 'can include a link that opens in a new browser window' do
-        @asset_detail.load_asset_detail(@test, @asset)
-        @asset_detail.add_comment @comment_3_by_viewer
-        expect(@asset_detail.external_link_valid?(@asset_detail.link_element(text: @comment_link), 'Google')).to be true
-      end
-
-      it 'cannot be added as a reply to a reply' do
-        @canvas.switch_to_canvas_iframe
-        expect((@asset_detail.reply_button_el @comment_1_reply_by_uploader).exists?).to be false
-      end
-
-      it 'can be canceled when a reply' do
-        @asset_detail.click_reply_button @comment_3_by_viewer
-        @asset_detail.click_cancel_reply @comment_3_by_viewer
-      end
-    end
-
-    describe 'editing' do
-
-      it 'can be done by the user who created the comment' do
-        @comment_1_by_uploader.body = "#{@comment_1_by_uploader.body} - EDITED"
-        @canvas.masquerade_as(@student_1, @test.course)
-        @assets_list.load_page @test
-        @assets_list.click_asset_link @asset
-        @asset_detail.edit_comment @comment_1_by_uploader
-      end
-
-      it('cannot be done by a user who did not create the comment') do
-        expect(@asset_detail.edit_button(@comment_2_by_viewer).exists?).to be false
-      end
-
-      it 'can be done to any comment when the user is a teacher' do
-        @comment_2_by_viewer.body = "#{@comment_2_by_viewer.body} - EDITED"
-        @canvas.masquerade_as(@test.teachers.first, @test.course)
-        @assets_list.load_page @test
-        @assets_list.click_asset_link @asset
-        @asset_detail.edit_comment @comment_2_by_viewer
-      end
-
-      it 'can be canceled' do
-        @asset_detail.click_edit_button @comment_2_by_viewer
-        @asset_detail.click_cancel_edit_button
-      end
-    end
-
-    # TODO it 'lets a user click a commenter name to view the asset gallery filtered by the commenter\'s submissions'
   end
 end
