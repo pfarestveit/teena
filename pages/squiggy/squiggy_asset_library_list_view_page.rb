@@ -111,8 +111,8 @@ class SquiggyAssetLibraryListViewPage
     view_count_el = div_element(xpath: "#{xpath}//*[@data-icon='eye']/..")
     like_count_el = div_element(xpath: "#{xpath}//*[@data-icon='thumbs-up']/..")
     comment_count_el = div_element(xpath: "#{xpath}//*[@data-icon='comment']/..")
-    title_el.when_visible Utils.short_wait
-    owner_el.when_visible Utils.short_wait
+    wait_for_element(title_el, Utils.short_wait)
+    wait_for_element(owner_el, Utils.short_wait)
     {
       title: (title_el.text.strip if title_el.exists?),
       owner: (owner_el.text.gsub('by', '').strip if owner_el.exists?),
@@ -166,7 +166,7 @@ class SquiggyAssetLibraryListViewPage
   def simple_search(keyword)
     logger.info "Performing simple search of asset library by keyword '#{keyword}'"
     click_cancel_advanced_search if cancel_advanced_search?
-    wait_for_element_and_type(search_input_element, keyword)
+    wait_for_textbox_and_type(search_input_element, keyword)
     wait_for_update_and_click search_button_element
   end
 
@@ -212,12 +212,12 @@ class SquiggyAssetLibraryListViewPage
   end
 
   def advanced_search(keyword, category, user, asset_type, sort_by)
-    logger.info "Performing advanced search by keyword '#{keyword}', category '#{category.name}', user '#{user && user.full_name}', asset type '#{asset_type}', sort by '#{sort_by}'."
+    logger.info "Performing advanced search by keyword '#{keyword}', category '#{category.name if category}', user '#{user && user.full_name}', asset type '#{asset_type}', sort by '#{sort_by}'."
     open_advanced_search
     if keyword
-      wait_for_element_and_type(keyword_search_input_element, keyword)
+      wait_for_textbox_and_type(keyword_search_input_element, keyword)
     else
-      wait_for_element_and_type(keyword_search_input_element, '')
+      wait_for_textbox_and_type(keyword_search_input_element, '')
     end
 
     if category

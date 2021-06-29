@@ -84,7 +84,8 @@ describe 'Asset Library' do
 
       it 'can be added to existing assets' do
         @student_1_upload.category = @cat_1
-        @asset_detail.load_asset_detail(test, @student_1_upload)
+        @manage_assets.click_back_to_asset_library
+        @assets_list.click_asset_link @student_1_upload
         @asset_detail.edit_asset_details @student_1_upload
         expect(@asset_detail.visible_asset_metadata(@student_1_upload)[:category]).to eql(@cat_1.name)
       end
@@ -98,7 +99,8 @@ describe 'Asset Library' do
       end
 
       it 'appear on the asset detail of associated assets as links to the asset library filtered for that category' do
-        @asset_detail.load_asset_detail(test, @student_1_upload)
+        @assets_list.load_page test
+        @assets_list.click_asset_link @student_1_upload
         @asset_detail.click_category_link @cat_1
         @assets_list.selected_category_element.when_present Utils.short_wait
         @assets_list.wait_until(Utils.short_wait) { @assets_list.selected_category == @cat_1.name }
@@ -130,7 +132,8 @@ describe 'Asset Library' do
         @manage_assets.click_cancel_category_edit @cat_1
         @cat_1.name = "#{@cat_1.name} EDITED"
         @manage_assets.edit_category @cat_1
-        @asset_detail.load_asset_detail(test, @student_1_upload)
+        @manage_assets.click_back_to_asset_library
+        @assets_list.click_asset_link @student_1_upload
         expect(@asset_detail.visible_asset_metadata(@student_1_upload)[:category]).to eql(@cat_1.name)
       end
     end
@@ -170,22 +173,25 @@ describe 'Asset Library' do
 
       @student_3_link.category = @cat_2
       @student_3_link.description = "Link #MakeOurDreamsComeTrue#{test.id}"
-      @canvas.masquerade_as(@student_3, @test.course)
+      @canvas.masquerade_as(@student_3, test.course)
       @assets_list.load_page test
       @assets_list.add_link_asset @student_3_link
 
-      @asset_detail.load_asset_detail(test, @student_2_upload)
-      @asset_detail.add_comment Comment.new(@student_3, '#BooBooKitty')
+      @assets_list.click_asset_link @student_2_upload
+      @asset_detail.add_comment SquiggyComment.new user: @student_3, body: '#BooBooKitty'
       @asset_detail.click_like_button
 
       @canvas.masquerade_as(@student_2, test.course)
-      @asset_detail.load_asset_detail(test, @student_3_link)
+      @assets_list.load_page test
+      @assets_list.click_asset_link @student_3_link
       @asset_detail.click_like_button
 
       @canvas.masquerade_as(@student_1, test.course)
-      @asset_detail.load_asset_detail(test, @student_3_link)
+      @assets_list.load_page test
+      @assets_list.click_asset_link @student_3_link
       @asset_detail.click_like_button
-      @asset_detail.load_asset_detail(test, @student_2_upload)
+      @asset_detail.click_back_to_asset_library
+      @assets_list.click_asset_link @student_2_upload
       @asset_detail.click_back_to_asset_library
     end
 
@@ -301,12 +307,14 @@ describe 'Asset Library' do
 
     it 'allows sorting by "Most recent", "Most likes", "Most views", "Most comments"' do
       @assets_list.click_sort_by_select
-      expect(@assets_list.sort_by_options).to eql(['Most recent', 'Most likes', 'Most views', 'Most comments'])
+      @assets_list.wait_until(2) { @assets_list.sort_by_options.any? }
+      @assets_list.wait_until(3) { @assets_list.sort_by_options == ['Most recent', 'Most likes', 'Most views', 'Most comments'] }
     end
 
     it 'allows searching by asset type "File", "Link"' do
       @assets_list.click_asset_type_select
-      expect(@assets_list.asset_type_options).to eql(%w(File Link))
+      @assets_list.wait_until(2) { @assets_list.asset_type_options.any? }
+      @assets_list.wait_until(3) { @assets_list.asset_type_options == %w(File Link) }
     end
   end
 end

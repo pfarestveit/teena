@@ -18,16 +18,17 @@ class SquiggyAssetLibraryDetailPage < SquiggyAssetLibraryListViewPage
     logger.info "Hitting asset detail at '#{test.course.asset_library_url}#suitec_assetId=#{asset.id}'"
     navigate_to "#{test.course.asset_library_url}#suitec_assetId=#{asset.id}"
     switch_to_canvas_iframe
-    wait_for_asset_detail asset
+    sleep 1
+    wait_for_asset_detail
   end
 
-  def wait_for_asset_detail(asset)
-    wait_until(Utils.short_wait) { asset_title.include? "#{asset.title}" }
+  def wait_for_asset_detail
+    wait_for_element(asset_title_element, Utils.short_wait)
     sleep 1
   end
 
   def wait_for_asset_and_get_id(asset)
-    asset_title_element.when_visible Utils.medium_wait
+    wait_for_element(asset_title_element, Utils.medium_wait)
     asset.id = SquiggyUtils.set_asset_id asset
   end
 
@@ -59,7 +60,7 @@ class SquiggyAssetLibraryDetailPage < SquiggyAssetLibraryListViewPage
   end
 
   def visible_asset_metadata(asset)
-    asset_title_element.when_visible Utils.short_wait
+    wait_for_element(asset_title_element, Utils.short_wait)
     owner_el(asset).when_visible Utils.short_wait
     expected_cat = if asset.category
                      category_el_by_id(asset.category).text.strip if category_el_by_id(asset.category).exists?
@@ -239,6 +240,7 @@ class SquiggyAssetLibraryDetailPage < SquiggyAssetLibraryListViewPage
 
   def reply_to_comment(comment, reply_comment)
     logger.info "Replying '#{reply_comment.body}'"
+    scroll_to_bottom
     click_reply_button comment
     enter_squiggy_text(reply_input_el(comment), reply_comment.body)
     wait_for_update_and_click_js reply_save_button
@@ -292,6 +294,7 @@ class SquiggyAssetLibraryDetailPage < SquiggyAssetLibraryListViewPage
   # DELETE COMMENT
 
   def delete_comment_button(comment)
+    logger.debug "Looking for comment delete button at delete-comment-#{comment.id}-btn"
     button_element(id: "delete-comment-#{comment.id}-btn")
   end
 
