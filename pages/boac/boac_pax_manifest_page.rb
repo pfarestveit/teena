@@ -272,6 +272,12 @@ class BOACPaxManifestPage
       execute_script('arguments[0].click();', can_access_advising_data_cbx)
       sleep Utils.click_wait
     end
+    if user.depts&.include? BOACDepartments::COE
+      select_deg_prog_option user
+    end
+  end
+
+  def select_deg_prog_option(user)
     deg_prog_option = user.degree_progress_perm ? user.degree_progress_perm.desc : 'Select...'
     wait_for_element_and_select_js(deg_prog_select_element, deg_prog_option)
   end
@@ -327,6 +333,7 @@ class BOACPaxManifestPage
       el.when_not_present 2
     end
     add_user_dept_roles user
+    select_deg_prog_option(user) if user.degree_progress_perm
     wait_for_update_and_click save_user_button_element
     save_user_button_element.when_not_present Utils.short_wait
     # Pause a moment to let the DOM update

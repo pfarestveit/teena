@@ -19,6 +19,7 @@ describe 'A BOA degree check' do
     @degree_check_create_page = BOACDegreeCheckCreatePage.new @driver
     @degree_check_page = BOACDegreeCheckPage.new @driver
     @degree_check_history_page = BOACDegreeCheckHistoryPage.new @driver
+    logger.warn "Read/write advisor is UID #{test.advisor.uid}, and read-only advisor is UID #{test.read_only_advisor.uid}"
 
     unless test.advisor.degree_progress_perm == DegreeProgressPerm::WRITE && test.read_only_advisor.degree_progress_perm == DegreeProgressPerm::READ
       @homepage.dev_auth
@@ -158,7 +159,7 @@ describe 'A BOA degree check' do
     it('allows the user to cancel a note') { @degree_check_page.click_cancel_note }
     it('allows the user to save a note') { @degree_check_page.create_or_edit_note @note_str }
     it('shows the note content') { expect(@degree_check_page.visible_note_body).to eql(@note_str.strip) }
-    it('shows the note creating advisor') { expect(@degree_check_page.note_update_advisor).to eql(test.advisor.full_name) }
+    it('shows the note creating advisor') { expect(@degree_check_page.visible_note_update_advisor).to eql(test.advisor.full_name) }
     it('shows the note creation date') { expect(@degree_check_page.note_update_date).to include('today') }
     it('offers an edit button for a note') { @degree_check_page.click_create_or_edit_note }
     it('allows the user to cancel a note edit') { @degree_check_page.click_cancel_note }

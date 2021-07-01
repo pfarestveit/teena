@@ -238,6 +238,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
 
       it 'can be added on class page list view using individual selections' do
         @student_page.load_page test_student
+        @student_page.expand_academic_year @analytics_page.term_name(@term)
         @student_page.click_class_page_link(@analytics_page.term_id(@term), @analytics_page.course_section_ccns(@course).first)
         @class_page.select_and_add_students_to_grp([test_student], group_6)
         @group_page.load_page group_6

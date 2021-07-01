@@ -177,7 +177,7 @@ module BOACStudentPageAdvisingNote
       :attachments => (item_attachment_els(note).map { |el| el.text.strip }).sort,
       :created_date => (created_el.text.gsub('Created on', '').gsub(/\s+/, ' ').strip if created_el.exists?),
       :updated_date => (updated_el.text.gsub('Last updated on', '').gsub(/\s+/, ' ').strip if updated_el.exists?),
-      :permalink_url => ("#{BOACUtils.base_url}#{permalink_el.attribute('href')}" if permalink_el.exists?)
+      :permalink_url => (permalink_el.attribute('href') if permalink_el.exists?)
     }
   end
 

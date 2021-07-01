@@ -15,7 +15,7 @@ class BOACDegreeCheckPage < BOACDegreeTemplatePage
   end
 
   div(:template_updated_msg, xpath: '//div[contains(., "Please update below if necessary")]')
-  link(:template_link, id: 'original degree template')
+  link(:template_link, id: 'original-degree-template')
   div(:last_updated_msg, xpath: '//div[contains(text(), "Last updated by")]')
   link(:create_new_degree_link, id: 'create-new-degree')
   link(:view_degree_history_link, id: 'view-degree-history')
@@ -79,6 +79,11 @@ class BOACDegreeCheckPage < BOACDegreeTemplatePage
   def visible_note_body
     note_body_element.when_visible Utils.short_wait
     note_body
+  end
+
+  def visible_note_update_advisor
+    note_update_advisor_element.when_visible Utils.short_wait
+    note_update_advisor
   end
 
   # UNIT REQUIREMENTS
@@ -416,7 +421,7 @@ class BOACDegreeCheckPage < BOACDegreeTemplatePage
           visible_course_req_name(req) == req.name
         end
       else
-        assignment_el.when_not_present 2
+        assigned_course_row(completed_course).when_not_present Utils.short_wait
         req.course_reqs.delete completed_course.req_course
       end
       completed_course.req_course = nil
@@ -459,14 +464,14 @@ class BOACDegreeCheckPage < BOACDegreeTemplatePage
     completed_course.units_reqts = new_course_req.units_reqts
 
     if old_req.instance_of? DegreeReqtCourse
-      wait_until(2, "Expected '#{visible_course_req_name(old_req)}' to be '#{old_req.name}'") do
+      wait_until(Utils.short_wait, "Expected '#{visible_course_req_name(old_req)}' to be '#{old_req.name}'") do
         visible_course_req_name(old_req) == old_req.name
       end
     else
-      wait_until(1) { category_courses(old_req).length == row_count - 1 }
+      wait_until(Utils.short_wait) { category_courses(old_req).length == row_count - 1 }
     end
 
-    wait_until(2, "Expected '#{assigned_course_name(completed_course)}' to be '#{completed_course.name}'") do
+    wait_until(Utils.short_wait, "Expected '#{assigned_course_name(completed_course)}' to be '#{completed_course.name}'") do
       assigned_course_name(completed_course) == completed_course.name
     end
   end

@@ -6,8 +6,6 @@ test = BOACTestConfig.new
 test.degree_progress
 
 students = test.students.last BOACUtils.config['notes_batch_students_count']
-students_manual = students[0..1]
-students_bulk = students[2..-1]
 cohorts = []
 curated_groups = []
 curated_group_members = test.students.shuffle.last BOACUtils.config['notes_batch_curated_group_count']
@@ -92,13 +90,7 @@ describe 'A BOA degree check batch' do
         @degree_templates_mgmt_page.click_batch_degree_checks
       end
 
-      it 'can add students individually' do
-        students_manual.each { |student| @degree_batch_page.add_student_to_batch(batch_degree_check_1, student) }
-      end
-
-      it 'can add students via bulk SID entry' do
-        @degree_batch_page.add_sids_to_batch(batch_degree_check_1, students_bulk)
-      end
+      it('can add students via bulk SID entry') { @degree_batch_page.add_sids_to_batch(batch_degree_check_1, students) }
 
       it('can add cohorts') { @degree_batch_page.add_cohorts_to_batch(batch_degree_check_1, cohorts) }
 
@@ -113,8 +105,7 @@ describe 'A BOA degree check batch' do
       it('can select a degree template') { @degree_batch_page.select_degree degree_template }
 
       it 'sees how many degree checks will be created' do
-        students_manual.each { |student| @degree_batch_page.add_student_to_batch(batch_degree_check_1, student) }
-        @degree_batch_page.add_sids_to_batch(batch_degree_check_1, students_bulk)
+        @degree_batch_page.add_sids_to_batch(batch_degree_check_1, students)
         @degree_batch_page.add_cohorts_to_batch(batch_degree_check_1, cohorts)
         @degree_batch_page.add_curated_groups_to_batch(batch_degree_check_1, curated_groups)
         expected_student_count = @batch_1_expected_students.length
@@ -124,14 +115,19 @@ describe 'A BOA degree check batch' do
 
       it 'can save a new degree check' do
         @degree_batch_page.click_save_batch_degree_check
-        @degree_templates_mgmt_page.batch_degree_check_link_element.when_present Utils.short_wait
+        expected_student_count = @batch_1_expected_students.length
+        expected_msg = "Degree check #{degree_template.name} added to #{expected_student_count} student profiles"
+        @degree_templates_mgmt_page.batch_success_msg_element.when_visible Utils.medium_wait
+        expect(@degree_templates_mgmt_page.batch_success_msg).to include(expected_msg)
+        @degree_templates_mgmt_page.batch_degree_check_link_element.when_present Utils.long_wait
       end
 
       it 'creates degree checks for all the right students' do
         expected_sids = @batch_1_expected_students.map(&:sis_id).sort
         name = batch_degree_check_1.template.name
         @homepage.wait_until(Utils.short_wait,
-                             "Missing: #{expected_sids - BOACUtils.get_degree_sids_by_degree_name(name)}, Unexpected: #{BOACUtils.get_degree_sids_by_degree_name(name) - expected_sids}") do
+                             "Missing: #{expected_sids - BOACUtils.get_degree_sids_by_degree_name(name)},
+                                   Unexpected: #{BOACUtils.get_degree_sids_by_degree_name(name) - expected_sids}") do
           BOACUtils.get_degree_sids_by_degree_name(name) == expected_sids
         end
       end
@@ -220,7 +216,7 @@ describe 'A BOA degree check batch' do
         student = @batch_1_expected_students.first
         @degree_check_page.click_degree_checks_link
         @degree_templates_mgmt_page.click_batch_degree_checks
-        @degree_batch_page.add_student_to_batch(batch_degree_check_1, student)
+        @degree_batch_page.add_sids_to_batch(batch_degree_check_1, [student])
         @degree_batch_page.select_degree batch_degree_check_1.template
         @degree_batch_page.dupe_degree_check_msg_element.when_present Utils.short_wait
       end

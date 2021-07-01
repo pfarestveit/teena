@@ -34,7 +34,11 @@ class BOACTestConfig < TestConfig
       when BOACDepartments::ADMIN
         @advisor = BOACUser.new({:uid => Utils.super_admin_uid})
       when BOACDepartments::ASC, BOACDepartments::COE, BOACDepartments::L_AND_S
-        @advisor = uid ? (advisors.find { |a| a.uid.to_i == uid }) : advisors.find { |a| a.depts == [@dept.code] }
+        @advisor = if uid
+                     (advisors.find { |a| (a.uid.to_i == uid) && NessieUtils.get_advising_note_author(a.uid)})
+                   else
+                     advisors.find { |a| (a.depts == [@dept.code]) && NessieUtils.get_advising_note_author(a.uid) }
+                   end
       else
         if block_given?
           @advisor = advisors.find { |a| yield a }
@@ -68,7 +72,7 @@ class BOACTestConfig < TestConfig
 
   def set_read_only_advisor
     dept_advisors = BOACUtils.get_dept_advisors(@dept).select { |u| u.uid.length > 1 }
-    @read_only_advisor = dept_advisors.find { |a| a.uid != @advisor.uid }
+    @read_only_advisor = dept_advisors.find { |a| (a.uid.to_s != @advisor.uid.to_s) && NessieUtils.get_advising_note_author(a.uid) }
   end
 
   # Sets the complete list of potentially visible students

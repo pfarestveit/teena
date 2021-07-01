@@ -77,7 +77,7 @@ class BOACDegreeTemplateMgmtPage
   button(:rename_degree_cancel_button, id: 'rename-cancel-btn')
 
   def degree_check_rename_button(degree_check)
-    button_element(xpath: "#{degree_check_row_xpath degree_check}//button[text()=' Rename ']")
+    button_element(xpath: "#{degree_check_row_xpath degree_check}//button[contains(@id, '-rename-btn')]")
   end
 
   def click_rename_button(degree_check)
@@ -107,7 +107,7 @@ class BOACDegreeTemplateMgmtPage
   button(:copy_degree_cancel_button, id: 'clone-cancel')
 
   def degree_check_copy_button(degree_check)
-    button_element(xpath: "#{degree_check_row_xpath degree_check}//button[text()=' Copy ']")
+    button_element(xpath: "#{degree_check_row_xpath degree_check}//button[contains(@id, '-copy-btn')]")
   end
 
   def click_copy_button(degree_check)
@@ -133,7 +133,7 @@ class BOACDegreeTemplateMgmtPage
   # DELETE
 
   def degree_check_delete_button(degree_check)
-    button_element(xpath: "#{degree_check_row_xpath degree_check}//button[text()=' Delete ']")
+    button_element(xpath: "#{degree_check_row_xpath degree_check}//button[contains(@id, '-delete-btn')]")
   end
 
   def click_delete_degree(degree_check)
@@ -156,5 +156,9 @@ class BOACDegreeTemplateMgmtPage
   def degree_check_print_button(degree_check)
     button_element(xpath: "#{degree_check_row_xpath degree_check}//button[text()=' Print ']")
   end
+
+  # BATCH SUCCESS
+
+  div(:batch_success_msg, id: 'alert-batch-created')
 
 end

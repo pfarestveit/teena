@@ -160,7 +160,7 @@ describe 'A BOA degree check' do
       end
 
       it 'shows an indicator if its unit fulfillment has been removed' do
-        expect(@degree_check_page.assigned_course_fulfill_flag? @course).to be false
+        expect(@degree_check_page.assigned_course_fulfill_flag? @course).to be true
       end
 
       it 'can have unit fulfillment added and totals updated' do
@@ -225,7 +225,7 @@ describe 'A BOA degree check' do
       end
 
       it 'shows an indicator if its unit fulfillment has been removed' do
-        expect(@degree_check_page.assigned_course_fulfill_flag? @course).to be false
+        expect(@degree_check_page.assigned_course_fulfill_flag? @course).to be true
       end
 
       it 'can have unit fulfillment added and totals updated' do
@@ -336,7 +336,7 @@ describe 'A BOA degree check' do
       end
 
       it 'shows an indicator if its unit fulfillment has been removed' do
-        expect(@degree_check_page.assigned_course_fulfill_flag? @course_copy).to be false
+        expect(@degree_check_page.assigned_course_fulfill_flag? @course_copy).to be true
       end
 
       it 'can have unit fulfillment added and totals updated' do
