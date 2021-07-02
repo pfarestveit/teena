@@ -169,7 +169,7 @@ module BOACCohortPages
     wait_for_element(export_list_button_element, Utils.medium_wait)
     wait_until(3) { !export_list_button_element.disabled? }
     wait_for_update_and_click export_list_button_element
-    17.times do |idx|
+    18.times do |idx|
       (el = checkbox_element(id: "csv-column-options_BV_option_#{idx}")).when_present Utils.short_wait
       js_click el
     end
@@ -200,6 +200,8 @@ module BOACCohortPages
   # @param parsed_csv [CSV::Table]
   def verify_student_list_custom_export(cohort_members, parsed_csv)
     wait_until(1, "Expected #{cohort_members.length}, got #{parsed_csv.length}") { parsed_csv.length == cohort_members.length }
+    prev_term_code = BOACUtils.previous_term_code
+    prev_prev_term_code = BOACUtils.previous_term_code prev_term_code
     wait_until(1) do
       parsed_csv.by_col!
       parsed_csv.dig(:majors).compact.any?
@@ -209,7 +211,8 @@ module BOACCohortPages
       parsed_csv.dig(:terms_in_attendance).compact.any?
       parsed_csv.dig(:expected_graduation_date).compact.any?
       parsed_csv.dig(:units_completed).compact.any?
-      parsed_csv.dig(:term_gpa).compact.any?
+      parsed_csv.dig("term_gpa_#{prev_term_code}".to_sym).compact.any?
+      parsed_csv.dig("term_gpa_#{prev_prev_term_code}".to_sym).compact.any?
       parsed_csv.dig(:cumulative_gpa).compact.any?
       parsed_csv.dig(:program_status).compact.any?
       parsed_csv.dig(:transfer).compact.any?

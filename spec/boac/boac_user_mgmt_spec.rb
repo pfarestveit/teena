@@ -160,6 +160,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
       end
 
       it 'shows some advisor department titles' do
+        sleep 2
         visible_dept_titles = @pax_manifest_page.advisor_dept_elements.map &:text
         visible_dept_titles.keep_if { |t| !t.empty? }
         expect(visible_dept_titles).not_to be_empty

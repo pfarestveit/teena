@@ -1018,7 +1018,7 @@ class BOACUtils < Utils
              WHERE degree_name = '#{degree_name}'
                AND student_sid IS NOT NULL
              ORDER BY student_sid ASC;"
-    sids = Utils.query_pg_db(boac_db_credentials, query).map { |r| r['student_sid'] }
+    sids = Utils.query_pg_db(boac_db_credentials, query).map { |r| r['student_sid'].to_s }
     logger.debug "Degree SIDs are #{sids}"
     sids
   end

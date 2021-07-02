@@ -7,8 +7,8 @@ class BOACDegreeCheckBatchPage
 
   # Students
 
-  text_field(:student_input, id: 'degree-check-add-student-input')
-  button(:student_add_button, id: 'degree-check-add-student-add-button')
+  text_area(:student_input, id: 'degree-check-add-student')
+  button(:student_add_button, id: 'degree-check-add-sids-btn')
 
   def added_student_element(student)
     span_element(xpath: "//span[contains(text(), '#{student.sis_id}')]")
@@ -18,21 +18,10 @@ class BOACDegreeCheckBatchPage
     button_element(xpath: "//span[contains(text(), '#{student.sis_id}')]/following-sibling::button")
   end
 
-  def add_student_to_batch(degree_batch, student)
-    logger.debug "Find student SID '#{student.sis_id}' then add to batch degree"
-    wait_for_element_and_type(student_input_element, "#{student.sis_id}")
-    sleep Utils.click_wait
-    wait_until(3) { auto_suggest_option_elements.any? }
-    student_link_element = auto_suggest_option_elements.find { |el| el.text == "#{student.full_name} (#{student.sis_id})" }
-    wait_for_update_and_click student_link_element
-    added_student_element(student).when_present 1
-    degree_batch.students << student
-  end
-
   def add_sids_to_batch(degree_batch, students)
     sids = students.map &:sis_id
     logger.debug "Adding SIDs #{sids} to batch degree"
-    wait_for_element_and_type(student_input_element, sids.join(', '))
+    wait_for_textbox_and_type(student_input_element, sids.join(', '))
     wait_for_update_and_click student_add_button_element
     students.each do |student|
       logger.debug "Checking for SID '#{student.full_name} (#{student.sis_id})'"

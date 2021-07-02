@@ -117,6 +117,7 @@ class BOACDegreeTemplatePage
   def click_confirm_delete
     logger.info 'Clicking the delete confirm button'
     wait_for_update_and_click confirm_delete_or_discard_button_element
+    sleep 2
   end
 
   def click_cancel_delete
@@ -219,7 +220,8 @@ class BOACDegreeTemplatePage
       wait_for_element_and_type(unit_req_num_input_0_element, range[0])
       wait_for_element_and_type(unit_req_num_input_1_element, range[1])
     else
-      wait_for_element_and_type(unit_req_num_input_0_element, units)
+      wait_for_update_and_click unit_req_range_toggle_element if unit_req_num_input_1?
+      wait_for_textbox_and_type(unit_req_num_input_0_element, units)
     end
   end
 
@@ -249,6 +251,9 @@ class BOACDegreeTemplatePage
   end
 
   def create_col_req(req, template)
+    unless req.column_num
+      req.column_num = req.parent.column_num || req.parent.parent.column_num
+    end
     click_add_col_req_button req.column_num
     if req.instance_of? DegreeReqtCategory
       req.parent ? select_col_req_type('Subcategory') : select_col_req_type('Category')
@@ -279,12 +284,12 @@ class BOACDegreeTemplatePage
   end
 
   def cat_name_el(cat)
-    xpath = cat.parent ? "#{subcat_xpath(cat)}//h3" : "#{top_cat_xpath(cat)}//h2"
+    xpath = cat.parent ? "#{subcat_xpath(cat)}//h5" : "#{top_cat_xpath(cat)}//h4"
     h2_element(xpath: xpath)
   end
 
   def visible_cat_name(cat)
-    cat_name_el(cat).text if cat_name_el(cat).exists?
+    cat_name_el(cat).text.strip if cat_name_el(cat).exists?
   end
 
   def visible_cat_desc(cat)
@@ -302,7 +307,7 @@ class BOACDegreeTemplatePage
 
   def visible_course_req_name(course)
     name_el = cell_element(xpath: "#{course_req_xpath course}/td[1]//div")
-    name_el.text if name_el.exists?
+    name_el.text.strip if name_el.exists?
   end
 
   def visible_course_req_units(course)

@@ -215,7 +215,7 @@ describe 'A BOA degree check course' do
       after(:each) { @degree_check_page.click_cancel_course_edit if @degree_check_page.course_cancel_button? }
 
       it 'can be canceled' do
-        @degree_check_page.click_edit_cat @completed_course_0.req_course
+        @degree_check_page.click_edit_assigned_course @completed_course_0
         @degree_check_page.click_cancel_course_edit
       end
 
@@ -384,7 +384,7 @@ describe 'A BOA degree check course' do
     it 'cannot be added to a category with a subcategory' do
       @degree_check_page.click_unassigned_course_select @completed_course_3
       @degree_check_page.wait_until(2) { @degree_check_page.unassigned_course_option_els(@completed_course_3).any? }
-      el = @degree_check_page.unassigned_course_option_els(@completed_course_3).find { |el| el.text.strip == @cat_with_subs.name }
+      el = @degree_check_page.unassigned_course_option_els(@completed_course_3).find { |el| el.attribute('id') == "assign-course-to-option-#{@cat_with_subs.id}" }
       expect(el.attribute('aria-disabled')).to eql('true')
     end
 
