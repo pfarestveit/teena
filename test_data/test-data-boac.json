@@ -76,9 +76,6 @@
                 "entering_terms": [
                     {
                         "entering_term": "2158"
-                    },
-                    {
-                        "entering_term": "2168"
                     }
                 ],
                 "holds": true
@@ -762,7 +759,7 @@
             "unit_reqts": [
                 {
                     "name": "Upper Division Technical",
-                    "unit_count": ""
+                    "unit_count": "12"
                 }
             ],
             "categories": [
