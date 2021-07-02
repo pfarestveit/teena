@@ -590,7 +590,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
       it 'allows the advisor to edit an Entering Term filter' do
         new_term_id = (test.default_cohort.search_criteria.entering_terms.first.to_i - 10).to_s
         test.default_cohort.search_criteria.entering_terms = [new_term_id]
-        @cohort_page.edit_filter('Entering Term', test.default_cohort.search_criteria.entering_terms.first)
+        @cohort_page.edit_filter('Entering Term', 'Fall 2013')
         @cohort_page.verify_student_filters_present test.default_cohort
       end
 

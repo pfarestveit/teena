@@ -52,6 +52,8 @@ module BOACFilteredCohortPageFilters
       end
     when 'Level'
       CohortFilter.level_per_code filter_sub_option
+    when 'Entering Term'
+      filter_sub_option.split.reverse.join(' ')
     else
       filter_sub_option
     end
