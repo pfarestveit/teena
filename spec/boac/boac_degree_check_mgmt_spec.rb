@@ -225,11 +225,22 @@ describe 'A BOA degree check' do
       @homepage.dev_auth test.read_only_advisor
     end
 
-    it 'can view a list of all degree templates' do
+    it 'can view a list of all degree template names' do
       @homepage.click_degree_checks_link
       @degree_templates_mgmt_page.wait_until(Utils.short_wait) { @degree_templates_mgmt_page.template_link_elements.any? }
-      expect(@degree_templates_mgmt_page.visible_template_names).to eql(@templates.map &:name)
-      expect(@degree_templates_mgmt_page.visible_template_create_dates).to eql(@templates.map { |t| t.created_date.strftime('%b %-d, %Y') })
+      expected = @templates.map &:name
+      visible = @degree_templates_mgmt_page.visible_template_names
+      @degree_templates_mgmt_page.wait_until(1, "Missing #{expected - visible}, Unexpected #{visible - expected}") do
+        expected.sort == visible.sort
+      end
+    end
+
+    it 'can view a list of all degree template dates' do
+      expected = @templates.map { |t| t.created_date.strftime('%b %-d, %Y') }
+      visible = @degree_templates_mgmt_page.visible_template_create_dates
+      @degree_templates_mgmt_page.wait_until(1, "Missing #{expected - visible}, Unexpected #{visible - expected}") do
+        expected.sort == visible.sort
+      end
     end
 
     it 'can print a degree template' # TODO download file and verify name
