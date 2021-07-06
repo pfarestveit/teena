@@ -391,9 +391,11 @@ describe 'bCourses Official Sections tool' do
           [test.observer, test.students.first, test.wait_list_student].each do |user|
             has_no_perms = @canvas.verify_block do
               @canvas.masquerade_as(user, site[:course])
-              @official_sections_page.load_embedded_tool site[:course]
-              @official_sections_page.unexpected_error_element.when_present Utils.medium_wait
-              @official_sections_page.current_sections_table.when_not_visible 1
+              @official_sections_page.hit_embedded_tool_url site[:course]
+              @canvas.access_denied_msg_element.when_present Utils.short_wait
+            rescue
+              @official_sections_page.switch_to_canvas_iframe
+              @official_sections_page.unexpected_error_element.when_present Utils.short_wait
             end
             it("denies #{user.role} #{user.uid} access to the tool") { expect(has_no_perms).to be true }
           end

@@ -168,7 +168,10 @@ describe 'bCourses Roster Photos' do
       [test.observer, test.students.first, test.wait_list_student].each do |user|
         it "denies #{user.role} #{user.uid} access to the tool" do
           @canvas.masquerade_as(user, course)
-          @roster_photos_page.load_embedded_tool course
+          @roster_photos_page.hit_embedded_tool_url course
+          @canvas.access_denied_msg_element.when_present Utils.short_wait
+        rescue
+          @roster_photos_page.switch_to_canvas_iframe
           @roster_photos_page.no_access_msg_element.when_visible Utils.short_wait
         end
       end
