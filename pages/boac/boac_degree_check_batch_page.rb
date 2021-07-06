@@ -41,19 +41,19 @@ class BOACDegreeCheckBatchPage
 
   # Cohorts
 
-  button(:select_cohort_button, id: 'batch-degree check-cohort__BV_toggle_')
-  elements(:select_cohort_link, :link, xpath: '//a[contains(@id, "batch-degree check-cohort-option-")]"')
+  button(:select_cohort_button, id: 'batch-degree-check-cohort__BV_toggle_')
+  elements(:select_cohort_link, :link, xpath: '//a[contains(@id, "batch-degree-check-cohort-option-")]"')
 
   def cohort_option(cohort)
-    link_element(id: "batch-degree check-cohort-option-#{cohort.id}")
+    link_element(id: "batch-degree-check-cohort-option-#{cohort.id}")
   end
 
   def added_cohort_element(cohort)
-    span_element(xpath: "//span[contains(@id, \"batch-degree check-cohort\")][text()=\"#{cohort.name}\"]")
+    span_element(xpath: "//span[contains(@id, \"batch-degree-check-cohort\")][text()=\"#{cohort.name}\"]")
   end
 
   def cohort_remove_button(cohort)
-    button_element(xpath: "//span[contains(@id, 'batch-degree check-cohort')][text()='#{cohort.name}']/following-sibling::button")
+    button_element(xpath: "//span[contains(@id, 'batch-degree-check-cohort')][text()='#{cohort.name}']/following-sibling::button")
   end
 
   def add_cohorts_to_batch(degree_batch, cohorts)
@@ -77,19 +77,19 @@ class BOACDegreeCheckBatchPage
 
   # Groups
 
-  button(:select_group_button, id: 'batch-degree check-curated__BV_toggle_')
-  elements(:select_group_link, :link, xpath: '//a[contains(@id, "batch-degree check-curated-option-")]"')
+  button(:select_group_button, id: 'batch-degree-check-curated__BV_toggle_')
+  elements(:select_group_link, :link, xpath: '//a[contains(@id, "batch-degree-check-curated-option-")]"')
 
   def group_option(group)
-    link_element(id: "batch-degree check-curated-option-#{group.id}")
+    link_element(id: "batch-degree-check-curated-option-#{group.id}")
   end
 
   def added_group_element(group)
-    span_element(xpath: "//span[contains(@id, \"batch-degree check-curated\")][text()=\"#{group.name}\"]")
+    span_element(xpath: "//span[contains(@id, \"batch-degree-check-curated\")][text()=\"#{group.name}\"]")
   end
 
   def group_remove_button(group)
-    button_element(xpath: "//span[contains(@id, 'batch-degree check-curated')][text()='#{group.name}']/following-sibling::button")
+    button_element(xpath: "//span[contains(@id, 'batch-degree-check-curated')][text()='#{group.name}']/following-sibling::button")
   end
 
   def add_curated_groups_to_batch(degree_batch, groups)
