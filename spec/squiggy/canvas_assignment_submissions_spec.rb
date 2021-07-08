@@ -35,7 +35,6 @@ describe 'Canvas assignment submissions' do
     @test.students.each do |student|
       begin
         asset = student.assets.first
-        asset.title = @assets_list.canvas_submission_title asset
         asset.owner = student
         student.score = @engagement_index.user_score(@test, student)
 
@@ -51,6 +50,7 @@ describe 'Canvas assignment submissions' do
 
     submissions.each do |asset|
       begin
+        asset.title = @assets_list.canvas_submission_title asset
         asset.description = nil
         asset.category = @category
         type = asset.file_name ? 'File' : 'Link'

@@ -103,7 +103,7 @@ class Element
 
   def when_visible(timeout)
     wait = Selenium::WebDriver::Wait.new timeout: timeout
-    wait.until { exists? && visible? }
+    wait.until { visible? }
   end
 
   def when_not_visible(timeout)

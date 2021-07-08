@@ -28,9 +28,10 @@ describe 'Asset Library' do
   end
 
   after(:all) do
-    @assets_list.load_page @test
+    @canvas.stop_masquerading
+    @assets_list.load_page test
     @assets_list.click_manage_assets_link
-    @manage_assets.delete_category @cat_0
+    @manage_assets.delete_category @cat_2
   ensure
     @driver.quit
   end
@@ -72,10 +73,15 @@ describe 'Asset Library' do
       end
 
       it 'require a title under 256 characters' do
-        # TODO
+        long_title = 'A loooooong title ' * 15
+        @manage_assets.enter_category_name long_title
+        @manage_assets.name_too_long_msg_element.when_visible 1
+        expect(@manage_assets.add_category_button_element.enabled?).to be false
       end
 
       it 'are added to the list of available categories' do
+        @assets_list.load_page test
+        @assets_list.click_manage_assets_link
         @manage_assets.create_new_category @cat_1
         @manage_assets.create_new_category @cat_2
         @manage_assets.category_row(@cat_1).when_visible 1
@@ -252,7 +258,7 @@ describe 'Asset Library' do
 
     it 'lets a user perform an advanced search by keyword and type, sorted by Most Recent' do
       @assets_list.advanced_search(test.id, nil, nil, 'File', nil)
-      @assets_list.wait_for_asset_results [@student_2_upload]
+      @assets_list.wait_for_asset_results [@student_2_upload, @student_1_upload]
     end
 
     it 'returns a no results message for an advanced search by a hashtag in a comment, sorted by Most Recent' do
@@ -287,7 +293,7 @@ describe 'Asset Library' do
 
     it 'lets a user perform an advanced search by keyword, sorted by Most Views' do
       @assets_list.advanced_search(test.id, nil, nil, nil, 'Most views')
-      @assets_list.wait_for_asset_results [@student_1_upload, @student_2_upload, @student_3_link]
+      @assets_list.wait_for_asset_results [@student_1_upload, @student_3_link, @student_2_upload]
     end
 
     it 'lets a user perform an advanced search by keyword and uploader, sorted by Most Likes' do

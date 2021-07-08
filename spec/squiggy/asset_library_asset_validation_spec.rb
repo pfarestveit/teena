@@ -5,7 +5,7 @@ include Logging
 describe 'Asset Library' do
 
   before(:all) do
-    @test = SquiggyTestConfig.new 'asset_creation'
+    @test = SquiggyTestConfig.new 'asset_mgmt'
     @test.course.site_id = ENV['COURSE_ID']
     @driver = Utils.launch_browser
     @canvas = Page::CanvasPage.new @driver
@@ -41,7 +41,7 @@ describe 'Asset Library' do
   describe 'links' do
 
     before(:all) do
-      @asset = @teacher.assets.find { |a| a.url }
+      @asset = @teacher.assets.find &:url
       @title = @asset.title
       @desc = "Description - #{@test.id}"
       @url = @asset.url
@@ -155,7 +155,7 @@ describe 'Asset Library' do
   describe 'files' do
 
     before(:all) do
-      @asset = @teacher.assets.find { |a| a.file_name }
+      @asset = @teacher.assets.find &:file_name
       @title = @asset.title
       @desc = "Description - #{@test.id}"
       @initial_score = @engagement_index.user_score(@test, @teacher)
