@@ -106,6 +106,7 @@ class SquiggyAssetLibraryListViewPage
     start = Time.now
     asset_el(asset).when_present Utils.short_wait
     logger.warn "PERF - took #{Time.now - start} seconds for asset element to become visible"
+    sleep 1
     title_el = div_element(xpath: "#{xpath}//div[contains(@class, \"asset-metadata\")]/div[1]")
     owner_el = div_element(xpath: "#{xpath}//div[contains(@class, \"asset-metadata\")]/div[2]")
     view_count_el = div_element(xpath: "#{xpath}//*[@data-icon='eye']/..")
@@ -193,6 +194,14 @@ class SquiggyAssetLibraryListViewPage
     js_click uploader_select_element
   end
 
+  def asset_uploader_options
+    span_elements(xpath: '//span[contains(@id, "adv-search-user-option")]').map &:text
+  end
+
+  def asset_uploader_selected
+    div_element(id: 'adv-search-user-option-selected').text
+  end
+
   def click_asset_type_select
     asset_type_select_element.when_present 2
     js_click asset_type_select_element
@@ -251,8 +260,9 @@ class SquiggyAssetLibraryListViewPage
   end
 
   def wait_for_asset_results(assets)
+    sleep 1
     expected = assets.map &:id
-    wait_until(3) { visible_asset_ids == expected }
+    wait_until(3, "Expected #{expected}, got #{visible_asset_ids}") { visible_asset_ids == expected }
   end
 
   def wait_for_no_results
@@ -265,7 +275,6 @@ class SquiggyAssetLibraryListViewPage
   div(:resume_sync_success, xpath: '//div[text()=" Syncing has been resumed for this course. There may be a short delay before SuiteC tools are updated. "]')
 
   def ensure_canvas_sync(test, canvas_assign_page)
-
     add_link_button_element.when_visible Utils.short_wait
     if resume_sync_button?
       assign = Assignment.new title: 'resume sync'

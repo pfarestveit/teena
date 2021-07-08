@@ -194,10 +194,18 @@ describe 'The Engagement Index' do
         @canvas.access_denied_msg_element.when_visible Utils.short_wait
       end
 
-      # TODO it "removes #{user.role} UID #{user.uid} from the Asset Library if the user has been removed from the course site"
+      it "prevents #{user.role} UID #{user.uid} from reaching the Asset Library if the user has been removed from the course site" do
+        @assets_list.navigate_to test.course.asset_library_url
+        @canvas.access_denied_msg_element.when_visible Utils.short_wait
+      end
 
-      # TODO it "prevents #{user.role} UID #{user.uid} from reaching the Asset Library if the user has been removed from the course site"
-
+      it "removes #{user.role} UID #{user.uid} from the Asset Library if the user has been removed from the course site" do
+        @canvas.stop_masquerading
+        @assets_list.load_page test
+        @assets_list.expand_adv_search
+        @assets_list.click_uploader_select
+        expect(@assets_list.asset_uploader_options).not_to include(user.full_name)
+      end
     end
   end
 end

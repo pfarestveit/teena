@@ -411,7 +411,11 @@ describe 'An asset' do
       end
     end
 
-    # TODO it 'lets a user click a commenter name to view the asset gallery filtered by the commenter\'s submissions'
+    it 'lets a user click a commenter name to view the asset gallery filtered by the commenter\'s submissions' do
+      @asset_detail.click_commenter_link @comment_1_by_uploader
+      @assets_list.wait_for_assets
+      expect(@assets_list.asset_uploader_selected).to eql(@student_1.full_name)
+    end
 
     describe 'deleting' do
 

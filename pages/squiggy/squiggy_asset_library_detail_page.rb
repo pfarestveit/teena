@@ -74,6 +74,7 @@ class SquiggyAssetLibraryDetailPage < SquiggyAssetLibraryListViewPage
       view_count: (view_count if view_count?),
       comment_count: (comment_count if comment_count?),
       description: (description.strip if description?),
+      source: (source_el(asset).exists?),
       category: expected_cat
     }
   end
@@ -88,8 +89,10 @@ class SquiggyAssetLibraryDetailPage < SquiggyAssetLibraryListViewPage
       if preparing_preview_msg?
         start = Time.now
         logger.debug 'Waiting for preparing preview to go away'
-        preparing_preview_msg_element.when_not_present Utils.medium_wait
+        wait_until(Utils.short_wait) { !preparing_preview_msg? }
         logger.debug "PERF - Preview prepared in #{Time.now - start} seconds"
+      else
+        logger.debug 'Preview spinner not present'
       end
       preview_xpath = "//div[@class='assetlibrary-item-preview']"
       (
@@ -104,7 +107,7 @@ class SquiggyAssetLibraryDetailPage < SquiggyAssetLibraryListViewPage
           video_element(xpath: '//video')
         else
           div_element(xpath: '//div[contains(text(),"No preview available")]')
-        end).when_present Utils.short_wait
+        end).when_present 3
     end
   end
 
@@ -169,7 +172,7 @@ class SquiggyAssetLibraryDetailPage < SquiggyAssetLibraryListViewPage
   def click_like_button
     logger.info 'Clicking the like button'
     scroll_to_bottom
-    wait_for_update_and_click like_button_element
+    wait_for_update_and_click_js like_button_element
     sleep Utils.click_wait
   end
 
@@ -211,7 +214,12 @@ class SquiggyAssetLibraryDetailPage < SquiggyAssetLibraryListViewPage
   end
 
   def commenter_link(comment)
-    # TODO
+    link_element(xpath: "//div[@id='comment-#{comment.id}-user-name']//a")
+  end
+
+  def click_commenter_link(comment)
+    logger.info "Clicking the link for comment #{comment.id} #{comment.user.full_name}"
+    wait_for_update_and_click commenter_link(comment)
   end
 
   # REPLY TO COMMENT
@@ -300,7 +308,7 @@ class SquiggyAssetLibraryDetailPage < SquiggyAssetLibraryListViewPage
 
   def delete_comment(comment)
     scroll_to_bottom
-    wait_for_update_and_click delete_comment_button(comment)
+    wait_for_update_and_click_js delete_comment_button(comment)
     wait_for_update_and_click delete_confirm_button_element
     comment_el_by_id(comment).when_not_present Utils.short_wait
   end

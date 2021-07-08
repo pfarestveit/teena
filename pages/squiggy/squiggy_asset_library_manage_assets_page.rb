@@ -13,6 +13,7 @@ class SquiggyAssetLibraryManageAssetsPage < SquiggyAssetLibraryListViewPage
 
   text_field(:add_category_input, id: 'add-category-input')
   button(:add_category_button, id: 'add-category-btn')
+  div(:name_too_long_msg, xpath: '//div[text()="Category name must be 255 characters or less"]')
 
   def enter_category_name(name)
     wait_for_element_and_type(add_category_input_element, name)

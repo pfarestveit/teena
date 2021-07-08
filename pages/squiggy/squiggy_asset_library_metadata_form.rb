@@ -10,6 +10,7 @@ module SquiggyAssetLibraryMetadataForm
   text_field(:file_input, xpath: '//input[@type="file"]')
   button(:save_file_button, id: 'upload-file-btn')
   button(:cancel_file_button, id: 'upload-file-cancel-btn')
+  span(:upload_error, xpath: '//span[contains(text(), "Files can be maximum 10MB in size.")]')
 
   def enter_file_path_for_upload(asset)
     logger.info "Uploading #{asset.file_name}"

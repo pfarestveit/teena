@@ -17,8 +17,10 @@ describe 'Canvas assignment sync' do
     @canvas.log_in(@cal_net, @test.admin.username, Utils.super_admin_password)
     @canvas.create_squiggy_course @test
 
-    @assignment_1 = Assignment.new({title: "Submission Assignment 1 #{@test.id}"})
-    @assignment_2 = Assignment.new({title: "Submission Assignment 2 #{@test.id}"})
+    @assignment_1 = Assignment.new title: "Submission Assignment 1 #{@test.id}"
+    @category_1 = SquiggyCategory.new @assignment_1.title
+    @assignment_2 = Assignment.new title: "Submission Assignment 2 #{@test.id}"
+    @category_2 = SquiggyCategory.new @assignment_2.title
     @unsinkable_assignment = Assignment.new({title: "Unsinkable Assignment #{@test.id}"})
 
     # Get two file assets for the user
@@ -100,7 +102,7 @@ describe 'Canvas assignment sync' do
     it 'shows the Assignment 1 submission in the Asset Library' do
       @asset_library.load_page @test
       SquiggyUtils.set_asset_id(@asset_1, @assignment_1.id)
-      @asset_library.advanced_search(nil, @assignment_1.title, @student, nil, nil)
+      @asset_library.advanced_search(nil, @category_1, @student, nil, nil)
       expect(@asset_library.visible_list_view_asset_data(@asset_1)[:title]).to eql(@asset_1.title)
     end
 
@@ -157,7 +159,7 @@ describe 'Canvas assignment sync' do
     it 'shows the Assignment 2 submission in the Asset Library' do
       @asset_library.load_page @test
       SquiggyUtils.set_asset_id(@asset_2, @assignment_2.id)
-      @asset_library.advanced_search(nil, @assignment_2.title, @student, nil, nil)
+      @asset_library.advanced_search(nil, @category_2, @student, nil, nil)
       expect(@asset_library.visible_list_view_asset_data(@asset_2)[:title]).to eql(@asset_2.title)
     end
   end

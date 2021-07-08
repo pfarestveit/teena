@@ -24,6 +24,7 @@ describe 'New asset' do
 
         student.assets.each do |asset|
           begin
+            asset_rejected = false
             @asset_detail.click_back_to_asset_library if @asset_detail.back_to_asset_library_button?
 
             if asset.file_name
@@ -41,38 +42,39 @@ describe 'New asset' do
               @assets_list.add_link_asset asset
             end
 
-            @assets_list.wait_for_assets
-            visible_asset = @assets_list.visible_list_view_asset_data asset
+            unless asset_rejected
+              @assets_list.wait_for_assets
+              visible_asset = @assets_list.visible_list_view_asset_data asset
 
-            it("#{asset.title} belonging to #{student.full_name} has the right list view title") { expect(visible_asset[:title]).to eql(asset.title) }
-            it("#{asset.title} belonging to #{student.full_name} has the right list view owner") { expect(visible_asset[:owner]).to eql(student.full_name) }
+              it("#{asset.title} belonging to #{student.full_name} has the right list view title") { expect(visible_asset[:title]).to eql(asset.title) }
+              it("#{asset.title} belonging to #{student.full_name} has the right list view owner") { expect(visible_asset[:owner]).to eql(student.full_name) }
 
-            @assets_list.click_asset_link asset
-            visible_detail = @asset_detail.visible_asset_metadata asset
-            preview_generated = @asset_detail.preview_generated? asset
-            asset_downloadable = @asset_detail.verify_block { @asset_detail.download_asset asset } if asset.file_name
-            has_download_button = @asset_detail.download_button?
+              @assets_list.click_asset_link asset
+              visible_detail = @asset_detail.visible_asset_metadata asset
+              preview_generated = @asset_detail.preview_generated? asset
+              asset_downloadable = @asset_detail.verify_block { @asset_detail.download_asset asset } if asset.file_name
+              has_download_button = @asset_detail.download_button?
 
-            it("#{asset.title} belonging to #{student.full_name} has the right detail view title") { expect(visible_detail[:title]).to eql(asset.title) }
-            it("#{asset.title} belonging to #{student.full_name} has the right detail view owner") { expect(visible_detail[:owner]).to eql(student.full_name) }
-            it("#{asset.title} belonging to #{student.full_name} has the right detail view description") { expect(visible_detail[:description]).to eql(asset.description.to_s) }
-            it("#{asset.title} belonging to #{student.full_name} has the right detail view preview type") { expect(preview_generated).to be true }
+              it("#{asset.title} belonging to #{student.full_name} has the right detail view title") { expect(visible_detail[:title]).to eql(asset.title) }
+              it("#{asset.title} belonging to #{student.full_name} has the right detail view owner") { expect(visible_detail[:owner]).to eql(student.full_name) }
+              it("#{asset.title} belonging to #{student.full_name} has the right detail view description") { expect(visible_detail[:description]).to eql(asset.description.to_s) }
+              it("#{asset.title} belonging to #{student.full_name} has the right detail view preview type") { expect(preview_generated).to be true }
+              it("#{asset.title} belonging to #{student.full_name} has the right detail view category") { expect(visible_detail[:category]).to be true }
 
-            it "#{asset.title} belonging to #{student.full_name} has the right detail view category" do
-              # TODO
-            end
-
-            it "#{asset.title} belonging to #{student.full_name} has the right detail view source" do
-              # TODO
-            end
-
-            if asset.file_name
-              it "#{asset.title} belonging to #{student.full_name} can be downloaded from the Asset Library detail view" do
-                expect(asset_downloadable).to be true
-              end
-            else
-              it "#{asset.title} belonging to #{student.full_name} cannot be downloaded from the Asset Library detail view" do
-                expect(has_download_button).to be false
+              if asset.file_name
+                it "#{asset.title} belonging to #{student.full_name} can be downloaded from the Asset Library detail view" do
+                  expect(asset_downloadable).to be true
+                end
+                it "#{asset.title} belonging to #{student.full_name} has no detail view source" do
+                  expect(visible_detail[:source]).to be false
+                end
+              else
+                it "#{asset.title} belonging to #{student.full_name} cannot be downloaded from the Asset Library detail view" do
+                  expect(has_download_button).to be false
+                end
+                it "#{asset.title} belonging to #{student.full_name} has the right detail view source" do
+                  expect(visible_detail[:source]).to be true
+                end
               end
             end
 
