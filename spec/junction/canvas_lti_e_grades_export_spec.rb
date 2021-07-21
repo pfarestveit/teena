@@ -289,7 +289,7 @@ unless ENV['STANDALONE']
           user.sis_id.nil? ? nil : @canvas.student_score(user)
         end
         gradebook_grade_data.compact!
-        test_data = gradebook_grade_data.first
+        test_data = gradebook_grade_data.find { |d| d.instance_of? Hash }
         logger.debug "Test data: #{test_data}"
 
         @test_student = BOACUser.new(uid: test_data[:uid],

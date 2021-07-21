@@ -7,7 +7,6 @@ describe 'Canvas assignment submissions' do
   begin
 
     @test = SquiggyTestConfig.new 'canvas_submissions'
-    @test.course.site_id = ENV['COURSE_ID']
     @driver = Utils.launch_browser
     @canvas = Page::CanvasAssignmentsPage.new @driver
     @cal_net= Page::CalNetPage.new @driver

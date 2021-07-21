@@ -357,6 +357,7 @@ describe 'An asset' do
               r[:running_total] == (@student_1.score + SquiggyActivity::GET_COMMENT.points + SquiggyActivity::GET_COMMENT_REPLY.points)
           end
           expect(give).to be_truthy
+          expect(get_1).to be_truthy
           expect(get_2).to be_truthy
         end
       end
@@ -380,6 +381,12 @@ describe 'An asset' do
       it 'can be canceled when a reply' do
         @asset_detail.click_reply_button @comment_3_by_viewer
         @asset_detail.click_cancel_reply @comment_3_by_viewer
+      end
+
+      it 'lets a user click a commenter name to view the asset gallery filtered by the commenter\'s submissions' do
+        @asset_detail.click_commenter_link @comment_1_by_uploader
+        @assets_list.wait_for_assets
+        expect(@assets_list.asset_uploader_selected).to eql(@student_1.full_name)
       end
     end
 
@@ -409,12 +416,6 @@ describe 'An asset' do
         @asset_detail.click_edit_button @comment_2_by_viewer
         @asset_detail.click_cancel_edit_button
       end
-    end
-
-    it 'lets a user click a commenter name to view the asset gallery filtered by the commenter\'s submissions' do
-      @asset_detail.click_commenter_link @comment_1_by_uploader
-      @assets_list.wait_for_assets
-      expect(@assets_list.asset_uploader_selected).to eql(@student_1.full_name)
     end
 
     describe 'deleting' do

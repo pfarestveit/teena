@@ -89,7 +89,7 @@ class SquiggyAssetLibraryDetailPage < SquiggyAssetLibraryListViewPage
       if preparing_preview_msg?
         start = Time.now
         logger.debug 'Waiting for preparing preview to go away'
-        wait_until(Utils.short_wait) { !preparing_preview_msg? }
+        wait_until(Utils.medium_wait) { !preparing_preview_msg? }
         logger.debug "PERF - Preview prepared in #{Time.now - start} seconds"
       else
         logger.debug 'Preview spinner not present'

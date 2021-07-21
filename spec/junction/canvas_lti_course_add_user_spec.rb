@@ -63,6 +63,16 @@ describe 'bCourses Find a Person to Add', order: :defined do
       it 'include a "Student Resources" link' do
         expect(@canvas.external_link_valid?(@canvas.student_resources_link_element, 'Resources | ASUC')).to be true
       end
+
+      it 'include an "Accessibility" link' do
+        title = 'UC Berkeley Web Accessibility | Disability Access & Compliance'
+        expect(@canvas.external_link_valid?(@canvas.accessibility_link_element, title)).to be true
+      end
+
+      it 'include a "Nondiscrimination" link' do
+        title = 'Nondiscrimination Policy Statement | Office for the Prevention of Harassment & Discrimination'
+        expect(@canvas.external_link_valid?(@canvas.nondiscrimination_link_element, title)).to be true
+      end
     end
   end
 

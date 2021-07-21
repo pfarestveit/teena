@@ -11,11 +11,13 @@ begin
   # These tasks will run all test scripts for a given service, unless SCRIPTS is included. If a SCRIPTS string is included, then
   # it will run only scripts whose file names include the string.
 
-  task default: :boac
-  RSpec::Core::RakeTask.new(:boac) do |t|
-    t.pattern = ENV['SCRIPTS'] ? "spec/boac/*#{ENV['SCRIPTS']}*" : 'spec/boac/*'
-    t.rspec_opts = opts
+  def run_specs(task, dir_str, opts)
+    task.pattern = ENV['SCRIPTS'] ? "spec/#{dir_str}/*#{ENV['SCRIPTS']}*" : "spec/#{dir_str}/*"
+    task.rspec_opts = opts
   end
+
+  task default: :boac
+  RSpec::Core::RakeTask.new(:boac) { |t| run_specs(t, 'boac', opts) }
 
   task default: :junction
   RSpec::Core::RakeTask.new(:junction) do |t|
@@ -24,15 +26,12 @@ begin
   end
 
   task default: :oec
-  RSpec::Core::RakeTask.new(:oec) do |t|
-    t.pattern = ENV['SCRIPTS'] ? "spec/oec/*#{ENV['SCRIPTS']}*" : 'spec/oec/*'
-    t.rspec_opts = opts
-  end
+  RSpec::Core::RakeTask.new(:oec) { |t| run_specs(t, 'oec', opts) }
+
+  task default: :squiggy
+  RSpec::Core::RakeTask.new(:squiggy) { |t| run_specs(t, 'squiggy', opts) }
 
   task default: :suitec
-  RSpec::Core::RakeTask.new(:suitec) do |t|
-    t.pattern = ENV['SCRIPTS'] ? "spec/suitec/*#{ENV['SCRIPTS']}*" : 'spec/suitec/*'
-    t.rspec_opts = opts
-  end
+  RSpec::Core::RakeTask.new(:suitec) { |t| run_specs(t, 'suitec', opts) }
 
 end
