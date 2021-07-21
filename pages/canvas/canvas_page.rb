@@ -18,6 +18,8 @@ module Page
     h3(:project_site_heading, xpath: '//h3[text()="Is bCourses Right For My Project?"]')
 
     link(:about_link, text: 'About')
+    link(:accessibility_link, text: 'Accessibility')
+    link(:nondiscrimination_link, text: 'Nondiscrimination')
     link(:privacy_policy_link, text: 'Privacy Policy')
     link(:terms_of_service_link, text: 'Terms of Service')
     link(:data_use_link, text: 'Data Use & Analytics')

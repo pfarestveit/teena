@@ -6,7 +6,6 @@ describe 'Canvas assignment sync' do
 
   before(:all) do
     @test = SquiggyTestConfig.new 'canvas_sync'
-    @test.course.site_id = ENV['COURSE_ID']
     @driver = Utils.launch_browser
     @canvas = Page::CanvasAssignmentsPage.new @driver
     @cal_net= Page::CalNetPage.new @driver

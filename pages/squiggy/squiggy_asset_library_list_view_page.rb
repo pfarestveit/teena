@@ -199,7 +199,8 @@ class SquiggyAssetLibraryListViewPage
   end
 
   def asset_uploader_selected
-    div_element(id: 'adv-search-user-option-selected').text
+    selected_user_element.when_present Utils.short_wait
+    selected_user
   end
 
   def click_asset_type_select

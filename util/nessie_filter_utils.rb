@@ -520,7 +520,7 @@ class NessieFilterUtils < NessieUtils
     {
         table: 'student.student_enrollment_terms',
         col: 'enrolled_units',
-        nulls: ' NULLS FIRST',
+        nulls: ' NULLS LAST',
         select: units_in_prog_sub_query,
         term_id: BOACUtils.term_code,
         order_by: 'units_in_progress',
