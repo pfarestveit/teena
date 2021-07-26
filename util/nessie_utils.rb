@@ -404,41 +404,6 @@ class NessieUtils < Utils
     query_pg_db_field(nessie_pg_db_credentials, query, 'count').first
   end
 
-  # Returns non-BOA advising notes from a given source for a given student
-  # @param [NoteSource] source
-  # @param [BOACUser] student
-  # @return[Array<Note>]
-  def self.get_external_notes(source, student)
-    query = "SELECT #{source.schema}.advising_notes.id AS id,
-                    #{source.schema}.advising_notes.advisor_uid AS advisor_uid,
-                    #{source.schema}.advising_notes.advisor_first_name AS advisor_first_name,
-                    #{source.schema}.advising_notes.advisor_last_name AS advisor_last_name,
-                    #{source.schema}.advising_notes.created_at AS created_date,
-                    #{source.schema}.advising_notes.updated_at AS updated_date,
-                    #{source.schema}.advising_note_topics.topic AS topic
-             FROM #{source.schema}.advising_notes
-             LEFT JOIN #{source.schema}.advising_note_topics
-               ON #{source.schema}.advising_notes.id = #{source.schema}.advising_note_topics.id
-             WHERE #{source.schema}.advising_notes.sid = '#{student.sis_id}'
-              #{+ ' AND advisor_first_name != \'Reception\' AND advisor_last_name != \'Front Desk\'' if source == NoteSource::E_AND_I};"
-
-    results = query_pg_db(nessie_pg_db_credentials, query)
-    notes_data = results.group_by { |h1| h1['id'] }.map do |k,v|
-      unless v[0]['advisor_first_name'] == 'Reception' && v[0]['advisor_last_name'] == 'Front Desk'
-        {
-            :id => k,
-            :advisor => BOACUser.new({:uid => v[0]['advisor_uid'], :first_name => "#{v[0]['advisor_first_name']}", :last_name => "#{v[0]['advisor_last_name']}"}),
-            :created_date => Time.parse(v[0]['created_date'].to_s).utc.localtime,
-            :updated_date => Time.parse(v[0]['updated_date'].to_s).utc.localtime,
-            :topics => (v.map { |t| t['topic'].upcase if t['topic'] }).compact.sort,
-            :note_source => source
-        }
-      end
-    end
-
-    notes_data.compact.map { |d| Note.new d }
-  end
-
   # Returns ASC advising notes associated with a given student
   # @param [BOACUser] student
   # @return [Array<Note>]
@@ -476,7 +441,38 @@ class NessieUtils < Utils
   # @param [BOACUser] student
   # @return [Array<Note>]
   def self.get_e_and_i_notes(student)
-    get_external_notes(NoteSource::E_AND_I, student)
+    query = "SELECT boac_advising_e_i.advising_notes.id AS id,
+                    boac_advising_e_i.advising_notes.advisor_uid AS advisor_uid,
+                    boac_advising_e_i.advising_notes.advisor_first_name AS advisor_first_name,
+                    boac_advising_e_i.advising_notes.advisor_last_name AS advisor_last_name,
+                    boac_advising_e_i.advising_notes.overview AS subject,
+                    boac_advising_e_i.advising_notes.note AS body,
+                    boac_advising_e_i.advising_notes.created_at AS created_date,
+                    boac_advising_e_i.advising_notes.updated_at AS updated_date,
+                    boac_advising_e_i.advising_note_topics.topic AS topic
+             FROM boac_advising_e_i.advising_notes
+             LEFT JOIN boac_advising_e_i.advising_note_topics
+               ON boac_advising_e_i.advising_notes.id = boac_advising_e_i.advising_note_topics.id
+             WHERE boac_advising_e_i.advising_notes.sid = '#{student.sis_id}'
+               AND advisor_first_name != 'Reception' AND advisor_last_name != 'Front Desk';"
+
+    results = query_pg_db(nessie_pg_db_credentials, query)
+    notes_data = results.group_by { |h1| h1['id'] }.map do |k,v|
+      unless v[0]['advisor_first_name'] == 'Reception' && v[0]['advisor_last_name'] == 'Front Desk'
+        {
+          id: k,
+          advisor: BOACUser.new(uid: v[0]['advisor_uid'], first_name: "#{v[0]['advisor_first_name']}", last_name: "#{v[0]['advisor_last_name']}"),
+          subject: v[0]['subject'],
+          body: v[0]['body'].to_s,
+          created_date: Time.parse(v[0]['created_date'].to_s).utc.localtime,
+          updated_date: Time.parse(v[0]['updated_date'].to_s).utc.localtime,
+          topics: (v.map { |t| t['topic'].upcase if t['topic'] }).compact.sort,
+          note_source: NoteSource::E_AND_I
+        }
+      end
+    end
+
+    notes_data.compact.map { |d| Note.new d }
   end
 
   def self.get_data_sci_notes(student)
