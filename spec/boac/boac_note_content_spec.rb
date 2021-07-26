@@ -102,9 +102,9 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
 
                 if note.subject
                   it("shows the subject on #{test_case}") { expect(visible_collapsed_note_data[:subject] == note.subject.strip).to be true }
-                  it("shows the body on #{test_case}") { expect(visible_expanded_note_data[:body].strip).to eql(note.body.strip) }
+                  it("shows the body on #{test_case}") { expect(visible_expanded_note_data[:body].strip.gsub(/\W/, '')).to eql(note.body.strip.gsub(/\W/, '')) }
                 elsif expected_sis_notes.include? note
-                  it("shows the body as the subject on #{test_case}") { expect(visible_collapsed_note_data[:subject].gsub(/\W/, '') == note.body.gsub(/\W/, '')).to be true }
+                  it("shows the body as the subject on #{test_case}") { expect(visible_collapsed_note_data[:subject].gsub(/\W/, '')).to eql(note.body.gsub(/\W/, '')) }
                   it("shows no body on #{test_case}") { expect(visible_expanded_note_data[:body].strip.empty?).to be true }
                 elsif expected_data_notes.include?(note)
                   if note.body && !note.body.empty?
@@ -113,14 +113,17 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
                 elsif expected_asc_notes.include?(note) && note.body
                   it("shows the body as the subject on #{test_case}") { expect(visible_collapsed_note_data[:subject].gsub(/\W/, '') == note.body.gsub(/\W/, '')).to be true }
                 else
-                  subj_dept = expected_ei_notes.include?(note) ? 'Centers for Educational Equity and Excellence advisor' : 'Athletic Study Center advisor'
-                  it("shows the department as part of the subject on #{test_case}") { expect(visible_collapsed_note_data[:category]).to include(subj_dept) }
+                  it("shows the department as part of the subject on #{test_case}") { expect(visible_collapsed_note_data[:category]).to include('Athletic Study Center advisor') }
                   it("shows the advisor first name as part of the subject on #{test_case}") do
                     expect(expect(visible_collapsed_note_data[:category].downcase).to include(note.advisor.first_name.downcase))
                   end
                   it("shows the advisor last name as part of the subject on #{test_case}") do
                     expect(expect(visible_collapsed_note_data[:category].downcase).to include(note.advisor.last_name.downcase))
                   end
+                  it("shows no body on #{test_case}") { expect(visible_expanded_note_data[:body].strip.empty?).to be true }
+                end
+
+                if expected_ei_notes.include? note
                   it("shows no body on #{test_case}") { expect(visible_expanded_note_data[:body].strip.empty?).to be true }
                 end
 

@@ -254,7 +254,8 @@ module BOACPages
 
   def clear_input(element)
     element.when_visible Utils.short_wait
-    element.click
+    hit_forward_slash
+    sleep 1
     50.times { hit_backspace; hit_delete }
   end
 
