@@ -143,7 +143,7 @@ describe 'A BOA degree check' do
       @degree_template_page.create_unit_req(new_req, template)
     end
 
-    it 'shows an updated-template message' do
+    it 'shows an updated-template message on the degree check page' do
       @degree_check_page.load_page @degree_check
       @degree_check_page.template_updated_msg_element.when_present Utils.short_wait
     end
@@ -151,9 +151,16 @@ describe 'A BOA degree check' do
     it 'offers a link to the parent' do
       expect(@degree_check_page.external_link_valid?(@degree_check_page.template_link_element, template.name)).to be true
     end
+
+    it 'shows an updated-template message on the degree history page' do
+      @degree_check_page.click_view_degree_history
+      @degree_check_history_page.template_updated_alert(@degree_check).when_present Utils.short_wait
+    end
   end
 
   describe 'note section' do
+
+    before(:all) { @degree_check_page.load_page @degree_check }
 
     it('offers a create button for a note') { @degree_check_page.click_create_or_edit_note }
     it('allows the user to cancel a note') { @degree_check_page.click_cancel_note }

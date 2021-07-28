@@ -256,7 +256,7 @@ module BOACPages
     element.when_visible Utils.short_wait
     hit_forward_slash
     sleep 1
-    50.times { hit_backspace; hit_delete }
+    clear_input_value element
   end
 
   # Clears the search input such that the full search history will appear
@@ -364,9 +364,10 @@ module BOACPages
     expand_search_options_notes_subpanel
     from_date = date ? date.strftime('%m/%d/%Y') : ''
     logger.debug "Entering note date from '#{from_date}'"
-    clear_input note_date_from_element
+    wait_for_update_and_click note_date_from_element
+    50.times { hit_backspace; hit_delete }
     note_date_from_element.send_keys from_date
-    3.times { hit_tab }
+    4.times { hit_tab }
   end
 
   # Sets the "Last updated > To" notes search option
@@ -375,9 +376,10 @@ module BOACPages
     expand_search_options_notes_subpanel
     to_date = date ? date.strftime('%m/%d/%Y') : ''
     logger.debug "Entering note date to '#{to_date}'"
-    clear_input note_date_to_element
+    wait_for_update_and_click note_date_to_element
+    50.times { hit_backspace; hit_delete }
     note_date_to_element.send_keys to_date
-    3.times { hit_tab }
+    4.times { hit_tab }
   end
 
   # Sets both "Last updated" notes search options

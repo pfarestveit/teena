@@ -50,6 +50,7 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
       test.test_students.each do |admit|
 
         begin
+          @homepage.load_page
 
           # SEARCHES
 

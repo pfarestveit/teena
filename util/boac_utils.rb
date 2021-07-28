@@ -1031,5 +1031,14 @@ class BOACUtils < Utils
     Utils.query_pg_db_field(boac_db_credentials, query, 'id')
   end
 
+  def self.set_degree_manual_course_id(degree, course)
+    query = "SELECT id
+             FROM degree_progress_courses
+             WHERE degree_check_id = '#{degree.id}'
+               AND display_name = '#{course.name}';"
+    id = Utils.query_pg_db_field(boac_db_credentials, query, 'id').first
+    logger.debug "Manual course '#{course.name}' id is #{id}"
+    course.id = id
+  end
 
 end

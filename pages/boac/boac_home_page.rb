@@ -92,7 +92,7 @@ class BOACHomePage
   # @return [Array<String>]
   def filtered_cohorts
     wait_until(Utils.medium_wait) { filtered_cohort_elements.any? }
-    filtered_cohort_elements.map { |el| el.text.gsub('Show details for cohort', '').gsub(/(\()\d*(\nstudents\n)(\))/, '').strip }
+    filtered_cohort_elements.map { |el| el.text.gsub('Show details for cohort', '').split('(').first.strip }
   end
 
   # Returns the XPath to a filtered cohort's div in the main content area on the homepage
@@ -106,7 +106,7 @@ class BOACHomePage
   # @return [Array<String>]
   def curated_groups
     wait_until(Utils.medium_wait) { curated_group_elements.any? }
-    curated_group_elements.map { |el| el.text.gsub('Show details for curated group', '').gsub(/(\()\d*(\nstudents\n)(\))/, '').strip }
+    curated_group_elements.map { |el| el.text.gsub('Show details for curated group', '').split('(').first.strip }
   end
 
     # Returns the XPath to a curated group's div in the main content area on the homepage

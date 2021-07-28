@@ -145,65 +145,68 @@ class BOACDegreeCheckPage < BOACDegreeTemplatePage
     note_el.text.strip if note_el.exists?
   end
 
-  # UNASSIGNED (COMPLETED) COURSES
+  # UNASSIGNED COURSES
 
   elements(:unassigned_course, :row, xpath: '//tr[contains(@id, "unassigned-course-")]')
   div(:unassigned_drop_zone, id: 'drop-zone-unassigned-courses')
   link(:unassigned_option, id: 'assign-course-to-option-null')
 
   def unassigned_course_ccns
-    unassigned_course_elements.map { |el| el.attribute('id').split('-')[2..3].join('-') }
+    ids = unassigned_course_elements.map { |el| el.attribute('id') }
+    ids.delete_if { |id| id.include? '-manually-created' }
+    ids.map { |id| id.split('-')[2..3].join('-') }
   end
 
-  def unassigned_course_row_xpath(course)
-    "//tr[@id='unassigned-course-#{course.term_id}-#{course.ccn}']"
+  def unassigned_course_xpath(course)
+    str = course.manual ? "#{course.id}-manually-created" : "#{course.term_id}-#{course.ccn}"
+    "//tr[@id='unassigned-course-#{str}']"
   end
 
   def unassigned_course_row(course)
-    row_element(xpath: unassigned_course_row_xpath(course))
+    row_element(xpath: unassigned_course_xpath(course))
   end
 
   def unassigned_course_req_option(completed_course, req)
-    link_element(xpath: "#{unassigned_course_row_xpath completed_course}/td[1]//a[text()=\" #{req.name} \"]")
+    link_element(xpath: "#{unassigned_course_xpath completed_course}/td[1]//a[text()=\" #{req.name} \"]")
   end
 
   def unassigned_course_code(course)
-    code_el = cell_element(xpath: "#{unassigned_course_row_xpath course}/td[2]")
+    code_el = cell_element(xpath: "#{unassigned_course_xpath course}/td[2]")
     code_el.text.strip if code_el.exists?
   end
 
   def unassigned_course_units(course)
-    units_el = span_element(xpath: "#{unassigned_course_row_xpath course}/td[3]/span")
+    units_el = span_element(xpath: "#{unassigned_course_xpath course}/td[3]/span")
     units_el.text if units_el.exists?
   end
 
   def unassigned_course_units_flag?(course)
-    flag_el = div_element(xpath: "#{unassigned_course_row_xpath course}/td[3]/*[name()='svg']")
-    hover_el = span_element(xpath: "#{unassigned_course_row_xpath course}/td[3]/span[contains(text(), 'updated from')]")
+    flag_el = div_element(xpath: "#{unassigned_course_xpath course}/td[3]/*[name()='svg']")
+    hover_el = span_element(xpath: "#{unassigned_course_xpath course}/td[3]/span[contains(text(), 'updated from')]")
     flag_el.exists? && hover_el.exists?
   end
 
   def unassigned_course_grade(course)
-    grade_el = cell_element(xpath: "#{unassigned_course_row_xpath course}/td[4]")
+    grade_el = cell_element(xpath: "#{unassigned_course_xpath course}/td[4]")
     grade_el.text.strip if grade_el.exists?
   end
 
   def unassigned_course_term(course)
-    term_el = cell_element(xpath: "#{unassigned_course_row_xpath course}/td[5]")
+    term_el = cell_element(xpath: "#{unassigned_course_xpath course}/td[5]")
     term_el.text.strip if term_el.exists?
   end
 
   def unassigned_course_note(course)
-    note_el = cell_element(xpath: "#{unassigned_course_row_xpath course}/td[6]")
+    note_el = cell_element(xpath: "#{unassigned_course_xpath course}/td[6]")
     note_el.text.strip if note_el.exists?
   end
 
   def click_unassigned_course_select(course)
-    wait_for_update_and_click button_element(xpath: "#{unassigned_course_row_xpath course}/td[1]//div[contains(@id, 'assign-course-')]")
+    wait_for_update_and_click button_element(xpath: "#{unassigned_course_xpath course}/td[1]//div[contains(@id, 'assign-course-')]")
   end
 
   def unassigned_course_option_els(course)
-    link_elements(xpath: "#{unassigned_course_row_xpath course}/td[1]//a")
+    link_elements(xpath: "#{unassigned_course_xpath course}/td[1]//a")
   end
 
   def unassigned_course_options(course)
@@ -219,46 +222,47 @@ class BOACDegreeCheckPage < BOACDegreeTemplatePage
   div(:junk_drop_zone, id: 'drop-zone-ignored-courses')
   link(:junk_option, id: 'course-to-option-ignore')
 
-  def junk_course_row_xpath(course)
-    "//tr[@id='ignored-course-#{course.term_id}-#{course.ccn}']"
+  def junk_course_xpath(course)
+    str = course.manual ? "#{course.id}-manually-created" : "#{course.term_id}-#{course.ccn}"
+    "//tr[@id='ignored-course-#{str}']"
   end
 
   def junk_course_row(course)
-    row_element(xpath: junk_course_row_xpath(course))
+    row_element(xpath: junk_course_xpath(course))
   end
 
   def junk_course_req_option(completed_course, req)
-    link_element(xpath: "#{junk_course_row_xpath completed_course}/td[1]//a[text()=\" #{req.name} \"]")
+    link_element(xpath: "#{junk_course_xpath completed_course}/td[1]//a[text()=\" #{req.name} \"]")
   end
 
   def junk_course_code(course)
-    code_el = cell_element(xpath: "#{junk_course_row_xpath course}/td[2]")
+    code_el = cell_element(xpath: "#{junk_course_xpath course}/td[2]")
     code_el.text.strip if code_el.exists?
   end
 
   def junk_course_units(course)
-    units_el = span_element(xpath: "#{junk_course_row_xpath course}/td[3]/span")
+    units_el = span_element(xpath: "#{junk_course_xpath course}/td[3]/span")
     units_el.text if units_el.exists?
   end
 
   def junk_course_units_flag?(course)
-    flag_el = div_element(xpath: "#{junk_course_row_xpath course}/td[3]/*[name()='svg']")
-    hover_el = span_element(xpath: "#{junk_course_row_xpath course}/td[3]/span[contains(text(), 'updated from')]")
+    flag_el = div_element(xpath: "#{junk_course_xpath course}/td[3]/*[name()='svg']")
+    hover_el = span_element(xpath: "#{junk_course_xpath course}/td[3]/span[contains(text(), 'updated from')]")
     flag_el.exists? && hover_el.exists?
   end
 
   def junk_course_grade(course)
-    grade_el = cell_element(xpath: "#{junk_course_row_xpath course}/td[4]")
+    grade_el = cell_element(xpath: "#{junk_course_xpath course}/td[4]")
     grade_el.text.strip if grade_el.exists?
   end
 
   def junk_course_note(course)
-    note_el = cell_element(xpath: "#{junk_course_row_xpath course}/td[5]")
+    note_el = cell_element(xpath: "#{junk_course_xpath course}/td[5]")
     note_el.text.strip if note_el.exists?
   end
 
   def click_junk_course_select(course)
-    wait_for_update_and_click button_element(xpath: "#{junk_course_row_xpath course}/td[1]//div[contains(@id, 'assign-course-')]")
+    wait_for_update_and_click button_element(xpath: "#{junk_course_xpath course}/td[1]//div[contains(@id, 'assign-course-')]")
   end
 
   def click_junk_option
@@ -272,7 +276,9 @@ class BOACDegreeCheckPage < BOACDegreeTemplatePage
   end
 
   def assigned_course_xpath(course)
-    "//table[@id='column-#{course.req_course.parent.column_num}-courses-of-category-#{course.req_course.parent.id}']//tr[contains(.,\"#{course.name}\")]"
+    path = "//table[@id='column-#{course.req_course.parent.column_num}-courses-of-category-#{course.req_course.parent.id}']//tr[contains(.,\"#{course.name}\")]"
+    logger.debug "Assigned course XPath for #{course.name} is #{path}"
+    path
   end
 
   def assigned_course_row(course)
@@ -316,10 +322,6 @@ class BOACDegreeCheckPage < BOACDegreeTemplatePage
     note_el.text.strip if note_el.exists?
   end
 
-  def assigned_course_delete_button(course)
-    button_element(xpath: "#{assigned_course_xpath course}/td[6]//button[contains(@id, 'delete')]")
-  end
-
   def verify_assigned_course_fulfillment(course)
     click_edit_assigned_course course
     col_req_course_units_req_select_element.when_present 1
@@ -333,17 +335,6 @@ class BOACDegreeCheckPage < BOACDegreeTemplatePage
         col_req_course_units_req_pill_elements.empty?
       end
     end
-  end
-
-  def click_assigned_course_delete(course)
-    wait_for_update_and_click assigned_course_delete_button(course)
-  end
-
-  def delete_assigned_course(course)
-    logger.info "Deleting #{course.name}"
-    click_assigned_course_delete course
-    wait_for_update_and_click confirm_delete_or_discard_button_element
-    assigned_course_row(course).when_not_present Utils.short_wait
   end
 
   # COURSE ASSIGNMENT
@@ -513,44 +504,39 @@ class BOACDegreeCheckPage < BOACDegreeTemplatePage
     end
   end
 
-  # COURSE EDITS
+  # COURSE CREATE / EDIT / DELETE
 
+  button(:create_course_button, id: 'create-course-button')
+  text_field(:course_name_input, id: 'course-name-input')
   text_field(:course_units_input, id: 'course-units-input')
+  text_field(:course_grade_input, id: 'course-grade-input')
+  button(:course_color_button, xpath: '//button[contains(@id, "color-code-select")]')
+  select_list(:course_color_select, id: 'color-code-select')
   text_area(:course_note_input, id: 'course-note-textarea')
+
+  button(:create_course_save_button, id: 'create-course-save-btn')
+  button(:create_course_cancel_button, id: 'create-course-cancel-btn')
   button(:course_update_button, id: 'update-note-btn')
   button(:course_cancel_button, id: 'cancel-update-note-btn')
 
-  def unassigned_course_edit_button(course)
-    button_element(xpath: "#{unassigned_course_row_xpath course}/td[7]//button")
-  end
+  # Any
 
-  def click_edit_unassigned_course(course)
-    wait_for_update_and_click unassigned_course_edit_button(course)
-  end
-
-  def junk_course_edit_button(course)
-    button_element(xpath: "#{junk_course_row_xpath course}/td[6]//button")
-  end
-
-  def click_edit_junk_course(course)
-    wait_for_update_and_click junk_course_edit_button(course)
-  end
-
-  def assigned_course_edit_button(course)
-    button_element(xpath: "#{assigned_course_xpath course}/td[last()]//button[contains(@id, 'edit')]")
-  end
-
-  def click_edit_assigned_course(course)
-    logger.info "Clicking the edit button for course #{course.name} category ID #{course.req_course.id}"
-    wait_for_update_and_click assigned_course_edit_button(course)
+  def enter_course_name(name)
+    logger.info "Entering course name '#{name}'"
+    wait_for_element_and_type(course_name_input_element, name)
   end
 
   def enter_course_units(units)
     logger.info "Entering units value '#{units}'"
-    wait_for_element_and_type(course_units_input_element, units)
+    wait_for_textbox_and_type(course_units_input_element, units)
   end
 
-  def select_assigned_course_unit_req(course)
+  def enter_course_grade(grade)
+    logger.info "Entering grade '#{grade}'"
+    wait_for_textbox_and_type(course_grade_input_element, grade)
+  end
+
+  def select_course_unit_req(course)
     col_req_course_units_req_remove_button_elements.length.times do
       col_req_course_units_req_remove_button_elements.first.click
       sleep 1
@@ -558,9 +544,27 @@ class BOACDegreeCheckPage < BOACDegreeTemplatePage
     course.units_reqts&.each { |u_req| select_col_req_unit_req u_req.name }
   end
 
+  def select_color_option(color)
+    logger.info "Setting color to '#{color}'"
+    unless course_color_button_element.attribute('class').include? "border-color-#{color}"
+      wait_for_update_and_click course_color_button_element
+      id = color ? "color-code-#{color}-option" : 'border-color-none'
+      wait_for_update_and_click link_element(id: id)
+    end
+  end
+
   def enter_course_note(note)
     logger.info "Entering note value '#{note}'"
     wait_for_element_and_type(course_note_input_element, note)
+  end
+
+  def click_create_course
+    wait_for_update_and_click create_course_button_element
+  end
+
+  def click_cancel_course_create
+    wait_for_update_and_click create_course_cancel_button_element
+    create_course_cancel_button_element.when_not_present 2
   end
 
   def click_cancel_course_edit
@@ -573,29 +577,141 @@ class BOACDegreeCheckPage < BOACDegreeTemplatePage
     course_update_button_element.when_not_present Utils.short_wait
   end
 
+  def create_manual_course(degree, course)
+    click_create_course
+    enter_course_name course.name
+    enter_course_units course.units
+    enter_course_grade course.grade
+    select_color_option course.color
+    select_course_unit_req course
+    enter_course_note course.note
+    wait_for_update_and_click create_course_save_button_element
+    create_course_save_button_element.when_not_present Utils.short_wait
+    BOACUtils.set_degree_manual_course_id(degree, course)
+  end
+
+  # Edit unassigned
+
+  def unassigned_course_edit_button(course)
+    button_element(xpath: "#{unassigned_course_xpath course}/td[7]//button[contains(@id, 'edit')]")
+  end
+
+  def click_edit_unassigned_course(course)
+    wait_for_update_and_click unassigned_course_edit_button(course)
+  end
+
   def edit_unassigned_course(course)
-    logger.info "Editing #{course.term_id} #{course.name}"
+    logger.info "Editing unassigned course #{course.name}#{ + ' ' + course.term_id if course.term_id}"
     click_edit_unassigned_course course
     enter_course_units course.units
     enter_course_note course.note
+    if course.manual
+      enter_course_name course.name
+      enter_course_grade course.grade
+      select_color_option course.color
+      # TODO select_assigned_course_unit_req course
+    end
     click_save_course_edit
+  end
+
+  # Edit junk
+
+  def junk_course_edit_button(course)
+    button_element(xpath: "#{junk_course_xpath course}/td[6]//button[contains(@id, 'edit')]")
+  end
+
+  def click_edit_junk_course(course)
+    wait_for_update_and_click junk_course_edit_button(course)
   end
 
   def edit_junk_course(course)
-    logger.info "Editing #{course.term_id} #{course.name}"
+    logger.info "Editing junk course #{course.name}#{ + ' ' + course.term_id if course.term_id}"
     click_edit_junk_course course
     enter_course_units course.units
     enter_course_note course.note
+    if course.manual
+      enter_course_name course.name
+      enter_course_grade course.grade
+      select_color_option course.color
+      # TODO select_assigned_course_unit_req course
+    end
     click_save_course_edit
   end
 
+  # Edit assigned
+
+  def assigned_course_edit_button(course)
+    button_element(xpath: "#{assigned_course_xpath course}/td[last()]//button[contains(@id, 'edit')]")
+  end
+
+  def click_edit_assigned_course(course)
+    logger.info "Clicking the edit button for course #{course.name} category ID #{course.req_course.id}"
+    wait_for_update_and_click assigned_course_edit_button(course)
+  end
+
   def edit_assigned_course(course)
-    logger.info "Editing #{course.term_id} #{course.name}"
+    logger.info "Editing assigned course #{course.name}#{ + ' ' + course.term_id if course.term_id}"
     click_edit_assigned_course course
     enter_course_units course.units
-    select_assigned_course_unit_req course
+    select_course_unit_req course
     enter_course_note course.note
+    if course.manual
+      enter_course_name course.name
+      enter_course_grade course.grade
+      select_color_option course.color
+    end
     click_save_course_edit
+  end
+
+  # Delete unassigned
+
+  def unassigned_course_delete_button(course)
+    button_element(xpath: "#{unassigned_course_xpath course}/td[7]//button[contains(@id, 'delete')]")
+  end
+
+  def click_delete_unassigned_course(course)
+    wait_for_update_and_click unassigned_course_delete_button(course)
+  end
+
+  def delete_unassigned_course(course)
+    logger.info "Deleting unassigned course #{course.name}#{ + ' ' + course.term_id if course.term_id}"
+    click_delete_unassigned_course course
+    wait_for_update_and_click confirm_delete_or_discard_button_element
+    unassigned_course_row(course).when_not_present Utils.short_wait
+  end
+
+  # Delete junk
+
+  def junk_course_delete_button(course)
+    button_element(xpath: "#{junk_course_xpath course}/td[6]//button[contains(@id, 'delete')]")
+  end
+
+  def click_delete_junk_course(course)
+    wait_for_update_and_click junk_course_delete_button(course)
+  end
+
+  def delete_junk_course(course)
+    logger.info "Deleting junk course #{course.name}#{ + ' ' + course.term_id if course.term_id}"
+    click_delete_junk_course course
+    wait_for_update_and_click confirm_delete_or_discard_button_element
+    junk_course_row(course).when_not_present Utils.short_wait
+  end
+
+  # Delete assigned
+
+  def assigned_course_delete_button(course)
+    button_element(xpath: "#{assigned_course_xpath course}/td[6]//button[contains(@id, 'delete')]")
+  end
+
+  def click_delete_assigned_course(course)
+    wait_for_update_and_click assigned_course_delete_button(course)
+  end
+
+  def delete_assigned_course(course)
+    logger.info "Deleting assigned course #{course.name}#{ + ' ' + course.term_id if course.term_id}"
+    click_delete_assigned_course course
+    wait_for_update_and_click confirm_delete_or_discard_button_element
+    assigned_course_row(course).when_not_present Utils.short_wait
   end
 
   # COURSE COPY

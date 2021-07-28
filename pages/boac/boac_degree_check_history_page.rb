@@ -19,4 +19,8 @@ class BOACDegreeCheckHistoryPage
     div_element(xpath: "//a[@id='degree-check-#{degree.id}-link']/ancestor::tr/td[3]//div").text.strip
   end
 
+  def template_updated_alert(degree)
+    div_element(xpath: "//tr[contains(., \"#{degree.name}\")]/td[contains(., 'Revisions to the original degree template have been made since the creation of this degree check.')]")
+  end
+
 end
