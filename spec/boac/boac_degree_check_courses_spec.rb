@@ -421,11 +421,11 @@ describe 'A BOA degree check course' do
     end
 
     it 'can be moved from a course requirement to a subcategory' do
-      @degree_check_page.reassign_course(@completed_course_1, @course_req_1, @sub_cat_with_courses)
+      @degree_check_page.reassign_course(@completed_course_1, @course_req_1, @sub_cat_no_courses)
     end
 
     it 'can be moved from a subcategory to a course requirement' do
-      @degree_check_page.reassign_course(@completed_course_1, @sub_cat_with_courses, @course_req_1)
+      @degree_check_page.reassign_course(@completed_course_1, @sub_cat_no_courses, @course_req_1)
     end
 
     it 'can be moved from a course requirement to a category' do
@@ -560,7 +560,7 @@ describe 'A BOA degree check course' do
       context 'and deleted' do
 
         it 'can be canceled' do
-          @degree_check_page.click_assigned_course_delete @sub_cat_copy
+          @degree_check_page.click_delete_assigned_course @sub_cat_copy
           @degree_check_page.wait_for_update_and_click @degree_check_page.cancel_delete_or_discard_button_element
         end
 

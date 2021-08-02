@@ -147,14 +147,18 @@ module Page
     element.send_keys text unless text.to_s.empty?
   end
 
+  def clear_input_value(element)
+    element.text.length.times { hit_delete; hit_backspace } if element.text
+    element.value.length.times { hit_delete; hit_backspace } if element.value
+  end
+
   # Awaits a textbox element, clicks it, removes existing text, and sends new text.
   # @param element [PageObject::Elements::Element]
   # @param text [String]
   def wait_for_textbox_and_type(element, text)
     wait_for_update_and_click element
     sleep Utils.click_wait
-    element.text.length.times { hit_delete; hit_backspace } if element.text
-    element.value.length.times { hit_delete; hit_backspace } if element.value
+    clear_input_value element
     element.click
     element.send_keys text
   end

@@ -16,7 +16,7 @@ units_req_3 = DegreeUnitReqt.new name: ("Unit Requirement 3 #{test.id}" * str_mu
 
 ### Top category column requirements
 req_category_1 = DegreeReqtCategory.new name: ("Category 1 #{test.id}" * str_multiplier),
-                                        desc: ("Category 1 Description #{test.id}" * str_multiplier),
+                                        desc: ("Category 1 Description \n#{test.id}" * str_multiplier),
                                         column_num: 1
 req_cat_course = DegreeReqtCourse.new name: "CAT 1 #{test.id}",
                                       units: '5-6',
@@ -29,7 +29,7 @@ req_category_2 = DegreeReqtCategory.new name: "Category 2 #{test.id}",
 
 ### Subcategory column requirements
 req_sub_category_1 = DegreeReqtCategory.new name: ("Subcategory 1.1 #{test.id}" * str_multiplier),
-                                            desc: ("Subcategory 1.1 Description #{test.id}" * str_multiplier),
+                                            desc: ("Subcategory 1.1 Description \n\n#{test.id}" * str_multiplier),
                                             parent: req_category_1
 req_sub_cat_course_1 = DegreeReqtCourse.new name: "SUBCAT 1 #{test.id}",
                                             units: '4',

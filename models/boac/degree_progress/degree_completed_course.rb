@@ -9,7 +9,9 @@ class DegreeCompletedCourse < DegreeCourse
                 :junk,
                 :req_course,
                 :course_copies,
-                :course_orig
+                :course_orig,
+                :manual,
+                :color
 
   def initialize(test_data)
     super

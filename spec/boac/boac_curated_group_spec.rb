@@ -411,7 +411,9 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
 
           it "shows the group named #{group.name}" do
             @homepage.load_page
-            @homepage.wait_until(Utils.medium_wait) { @homepage.curated_groups.include? group.name }
+            @homepage.wait_until(Utils.medium_wait, "Expected #{@homepage.curated_groups} to include #{group.name}") do
+              @homepage.curated_groups.include? group.name
+            end
           end
 
           it "shows the group #{group.name} membership count" do
