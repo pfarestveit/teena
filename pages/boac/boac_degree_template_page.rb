@@ -293,7 +293,7 @@ class BOACDegreeTemplatePage
   end
 
   def visible_cat_desc(cat)
-    desc_el = div_element(xpath: "#{cat_xpath(cat)}//div[@id='category-header-description']")
+    desc_el = div_element(xpath: "#{cat_xpath(cat)}/div/div/div[@id='category-header-description']")
     desc_el.text.strip if desc_el.exists?
   end
 
@@ -305,12 +305,12 @@ class BOACDegreeTemplatePage
     row_element(xpath: course_req_xpath(course))
   end
 
-  def visible_course_req_name(course)
+  def visible_template_course_req_name(course)
     name_el = cell_element(xpath: "#{course_req_xpath course}/td[1]//div")
     name_el.text.strip if name_el.exists?
   end
 
-  def visible_course_req_units(course)
+  def visible_template_course_req_units(course)
     units_el = span_element(xpath: "#{course_req_xpath course}/td[2]/span")
     units_el.text if units_el.exists?
   end

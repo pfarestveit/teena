@@ -315,14 +315,17 @@ describe 'A manual BOA degree check course' do
 
     it 'can be deleted from the unassigned list' do
       @degree_check_page.delete_unassigned_course @manual_course_1
+      expect(@degree_check_page.unassigned_course_row(@manual_course_1).exists?).to be false
     end
 
     it 'can be deleted from the junk drawer' do
       @degree_check_page.delete_junk_course @manual_course_2
+      expect(@degree_check_page.junk_course_row(@manual_course_2).exists?).to be false
     end
 
     it 'can be deleted from a requirement' do
       @degree_check_page.delete_assigned_course @manual_course_3
+      expect(@degree_check_page.assigned_course_row(@manual_course_3).exists?).to be false
     end
   end
 
