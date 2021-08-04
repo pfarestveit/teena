@@ -983,14 +983,14 @@
                         },
                         {
                             "name": "Natural Science (3 courses)",
-                            "desc": "±Physics 5A+7B does not fulfill requirement •One course from: Astro 7A, 7B; Bio\n1A+1AL, 1B, Chem 1A+1AL, 1B, 3A+3AL, 3B+3BL 4A, 4B; MCB 32+32L; Phys 7C, 5C+5CL; upper div 3+ unit course in Astro, Chem, EPS, IB, MCB, Physics, PMB. See list of excluded courses at engineering.berkeley.edu/guide-eecs.",
+                            "desc": "±Physics 5A+7B does not fulfill requirement •One course from: Astro 7A, 7B; Bio 1A+1AL, 1B, Chem 1A+1AL, 1B, 3A+3AL, 3B+3BL 4A, 4B; MCB 32+32L; Phys 7C, 5C+5CL; upper div 3+ unit course in Astro, Chem, EPS, IB, MCB, Physics, PMB. See list of excluded courses at engineering.berkeley.edu/guide-eecs.",
                             "courses": [
                                 {
-                                    "name": "Physics 7A\nor 5A",
+                                    "name": "Physics 7A or 5A",
                                     "units": "3-4"
                                 },
                                 {
-                                    "name": "Physics 7B±\nor 5B+5BL",
+                                    "name": "Physics 7B± or 5B+5BL",
                                     "units": "4-5"
                                 },
                                 {
@@ -1076,7 +1076,7 @@
                     "sub_categories": [
                         {
                             "name": "EECS (minimum 20 units)",
-                            "desc": "Count toward the required 40 units of engineering. See list of excluded courses at engineering.berkeley.edu/guide-eecs \n #One course from: EE C128, 130, 140, 143, 192; CS 160, 161, 162, 164, 169 (all versions), 182 (all versions), 184, 186; EECS C106A, C106B, 149, 151+151LA, 151+151LB",
+                            "desc": "Count toward the required 40 units of engineering. See list of excluded courses at engineering.berkeley.edu/guide-eecs #One course from: EE C128, 130, 140, 143, 192; CS 160, 161, 162, 164, 169 (all versions), 182 (all versions), 184, 186; EECS C106A, C106B, 149, 151+151LA, 151+151LB",
                             "courses": [
                                 {
                                     "name": "Design Course#",
@@ -1129,7 +1129,7 @@
                 },
                 {
                     "name": "Ethics Requirement",
-                    "desc": "One course from: BioE 100*;\nCS 195, H195; Data C104*; Engin 125*, 157AC*, 185*; Ene,Res C100*; History C184D*, IAS 157AC*; Info 88A, ISF 100D*, 100G*, NwMedia 151AC*, PubPol C184*, STS C104D*\n *May also count as H/SS course",
+                    "desc": "One course from: BioE 100*; CS 195, H195; Data C104*; Engin 125*, 157AC*, 185*; Ene,Res C100*; History C184D*, IAS 157AC*; Info 88A, ISF 100D*, 100G*, NwMedia 151AC*, PubPol C184*, STS C104D* *May also count as H/SS course",
                     "column_num": 3,
                     "courses": [
                         {
@@ -1192,7 +1192,7 @@
                         },
                         {
                             "name": "Engineering",
-                            "desc": "┼Junior transfer admits may fulfill this requirement with a course equivalent to CS 61B if completed prior to transfer.\n#Engin 93is not required for junior transfer admits.",
+                            "desc": "┼Junior transfer admits may fulfill this requirement with a course equivalent to CS 61B if completed prior to transfer.#Engin 93is not required for junior transfer admits.",
                             "courses": [
                                 {
                                     "name": "Engin 7 or CS 61A┼",
@@ -1423,7 +1423,7 @@
                         },
                         {
                             "name": "Math/Stat Technical Electives (3 courses)",
-                            "desc": "(One math course from list below, one stat course from list below, and one additional course from either math or stat list\nMath list: any upper division Math course {except C103, 125A, 135, 160, any course numbered 191 or higher}, Engin 117\nStat list: 135, 150, 151A, 152, 153, 154, 157, 158)"
+                            "desc": "(One math course from list below, one stat course from list below, and one additional course from either math or stat listMath list: any upper division Math course {except C103, 125A, 135, 160, any course numbered 191 or higher}, Engin 117Stat list: 135, 150, 151A, 152, 153, 154, 157, 158)"
                         },
                         {
                             "name": "Engineering Technical Electives (16 units)"
@@ -1549,7 +1549,7 @@
                         },
                         {
                             "name": "Lower Division Technical Electives",
-                            "desc": "(3 courses chosen from: Astro 7A, 7B;\nBio 1A+1AL, 1B; Chem 1B, 3A+3AL, 4B; CS 70; MSE 45 [+ 45L recommended]; EECS 16A, 16B; ME C85/CE C30)"
+                            "desc": "(3 courses chosen from: Astro 7A, 7B; Bio 1A+1AL, 1B; Chem 1B, 3A+3AL, 4B; CS 70; MSE 45 [+ 45L recommended]; EECS 16A, 16B; ME C85/CE C30)"
                         }
                     ]
                 },
@@ -1561,23 +1561,23 @@
                             "name": "Math/Engineering/Physics",
                             "courses": [
                                 {
-                                    "name": "Math 104+185\nor\nMath 121A+121B",
+                                    "name": "Math 104+185 or Math 121A+121B",
                                     "units": "4"
                                 },
                                 {
-                                    "name": "Math 104+185\nor\nMath 121A+121B",
+                                    "name": "Math 104+185 or Math 121A+121B",
                                     "units": "4"
                                 },
                                 {
-                                    "name": "ME 104 or\nPhys 105",
+                                    "name": "ME 104 or Phys 105",
                                     "units": "3-4"
                                 },
                                 {
-                                    "name": "EE 117+118 or\nPhys 110A+110B",
+                                    "name": "EE 117+118 or Phys 110A+110B",
                                     "units": "4"
                                 },
                                 {
-                                    "name": "EE 117+118 or\nPhys 110A+110B",
+                                    "name": "EE 117+118 or Phys 110A+110B",
                                     "units": "3-4"
                                 },
                                 {
@@ -1589,15 +1589,15 @@
                                     "units": "4"
                                 },
                                 {
-                                    "name": "NE 104 or\nPhys 111A or\nEE 143",
+                                    "name": "NE 104 or Phys 111A orEE 143",
                                     "units": "3-4"
                                 },
                                 {
-                                    "name": "Phys 112\nor Engin 40",
+                                    "name": "Phys 112 or Engin 40",
                                     "units": "4"
                                 },
                                 {
-                                    "name": "Phys 141A\nor MSE 111",
+                                    "name": "Phys 141A or MSE 111",
                                     "units": "4"
                                 },
                                 {
@@ -2265,7 +2265,7 @@
                         },
                         {
                             "name": "Technical Electives (15 units)",
-                            "desc": "12 units must be upper division and 9 units must be from ME sponsored courses. One course must be a design course chosen from:\nEngin 128; ME 101, 110, C117, 119,\n130, 135, 146, 165, C176, C178\nOne course must be a quantitative science course chosen from:\nEngin 117, 150, 177; ME 120, 131, C134, 136, C180\nAll design and quantitative science courses listed above count toward the 9 units of upper division ME courses. Other approved quantitative science courses (that do not count toward the 9 units of upper division ME courses) are listed here: http://www.me.berkeley.edu/undergraduate/ course-information/quantitative-science\nOf the remaining units, up to 3 may be lower division.",
+                            "desc": "12 units must be upper division and 9 units must be from ME sponsored courses. One course must be a design course chosen from: Engin 128; ME 101, 110, C117, 119,130, 135, 146, 165, C176, C178One course must be a quantitative science course chosen from:Engin 117, 150, 177; ME 120, 131, C134, 136, C180All design and quantitative science courses listed above count toward the 9 units of upper division ME courses. Other approved quantitative science courses (that do not count toward the 9 units of upper division ME courses) are listed here: http://www.me.berkeley.edu/undergraduate/ course-information/quantitative-scienceOf the remaining units, up to 3 may be lower division.",
                             "courses": [
                                 {
                                     "name": "Design"
@@ -2400,7 +2400,7 @@
                         },
                         {
                             "name": "Technical Electives (29 units)",
-                            "desc": "(Must include 17 units of upper division NE courses. The remaining 12 units must be in engineering and science of which 9 units must be upper division.)\n┼Junior transfer admits are exempt from the Freshman Seminar and 3 units of NE Technical Electives (must complete 26 units and include at least 14 units upper division NE)."
+                            "desc": "(Must include 17 units of upper division NE courses. The remaining 12 units must be in engineering and science of which 9 units must be upper division.) ┼Junior transfer admits are exempt from the Freshman Seminar and 3 units of NE Technical Electives (must complete 26 units and include at least 14 units upper division NE)."
                         }
                     ]
                 },

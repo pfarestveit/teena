@@ -118,7 +118,7 @@ class BOACDegreeCheckPage < BOACDegreeTemplatePage
   # COURSE REQUIREMENTS
 
   def course_req_menu?(course)
-    cell_element(xpath: "#{course_req_xpath course}/td[@class='td-course-assignment-menu']").exists?
+    cell_element(xpath: "#{course_req_xpath course}/td[contains(@class, 'td-course-assignment-menu')]").exists?
   end
 
   def visible_course_req_name(course)
@@ -276,9 +276,7 @@ class BOACDegreeCheckPage < BOACDegreeTemplatePage
   end
 
   def assigned_course_xpath(course)
-    path = "//table[@id='column-#{course.req_course.parent.column_num}-courses-of-category-#{course.req_course.parent.id}']//tr[contains(.,\"#{course.name}\")]"
-    logger.debug "Assigned course XPath for #{course.name} is #{path}"
-    path
+    "//table[@id='column-#{course.req_course.parent.column_num}-courses-of-category-#{course.req_course.parent.id}']//tr[contains(.,\"#{course.name}\")]"
   end
 
   def assigned_course_row(course)
@@ -313,7 +311,7 @@ class BOACDegreeCheckPage < BOACDegreeTemplatePage
   end
 
   def assigned_course_grade(course)
-    grade_el = cell_element(xpath: "#{assigned_course_xpath course}/td[contains(@class, 'td-grade')]")
+    grade_el = cell_element(xpath: "#{assigned_course_xpath course}/td[contains(@class, 'td-grade')]/span")
     grade_el.text.strip if grade_el.exists?
   end
 
@@ -661,6 +659,7 @@ class BOACDegreeCheckPage < BOACDegreeTemplatePage
       select_color_option course.color
     end
     click_save_course_edit
+    sleep Utils.click_wait
   end
 
   # Delete unassigned
@@ -677,7 +676,7 @@ class BOACDegreeCheckPage < BOACDegreeTemplatePage
     logger.info "Deleting unassigned course #{course.name}#{ + ' ' + course.term_id if course.term_id}"
     click_delete_unassigned_course course
     wait_for_update_and_click confirm_delete_or_discard_button_element
-    unassigned_course_row(course).when_not_present Utils.short_wait
+    sleep 1
   end
 
   # Delete junk
@@ -694,7 +693,7 @@ class BOACDegreeCheckPage < BOACDegreeTemplatePage
     logger.info "Deleting junk course #{course.name}#{ + ' ' + course.term_id if course.term_id}"
     click_delete_junk_course course
     wait_for_update_and_click confirm_delete_or_discard_button_element
-    junk_course_row(course).when_not_present Utils.short_wait
+    sleep 1
   end
 
   # Delete assigned
@@ -711,7 +710,7 @@ class BOACDegreeCheckPage < BOACDegreeTemplatePage
     logger.info "Deleting assigned course #{course.name}#{ + ' ' + course.term_id if course.term_id}"
     click_delete_assigned_course course
     wait_for_update_and_click confirm_delete_or_discard_button_element
-    assigned_course_row(course).when_not_present Utils.short_wait
+    sleep 1
   end
 
   # COURSE COPY
@@ -755,7 +754,8 @@ class BOACDegreeCheckPage < BOACDegreeTemplatePage
                                      grade: course.grade.to_s,
                                      units: course.units.to_i,
                                      units_reqts: destination_req.units_reqts,
-                                     note: nil
+                                     note: nil,
+                                     manual: (true if course.manual)
     course.course_copies << copy
     wait_until(2, "Expected '#{copy.name}', got '#{assigned_course_name(copy)}'") do
       assigned_course_name(copy).include? copy.name

@@ -144,6 +144,7 @@ class BOACDegreeTemplateMgmtPage
   def click_confirm_delete
     logger.info 'Clicking the delete confirm button'
     wait_for_update_and_click confirm_delete_or_discard_button_element
+    sleep 1
   end
 
   def click_cancel_delete
