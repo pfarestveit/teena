@@ -155,7 +155,7 @@ module BOACPages
   # @param group [CuratedGroup]
   def wait_for_sidebar_group_member_count(group)
     logger.debug "Waiting for group #{group.name} member count of #{group.members.length}"
-    wait_until(Utils.short_wait) do
+    wait_until(Utils.medium_wait) do
       el = span_element(xpath: "//div[contains(@class, \"sidebar-row-link\")][contains(.,\"#{group.name}\")]//span[@class=\"sr-only\"]")
       el.exists? && el.text.delete(' students').chomp == group.members.length.to_s
     end
