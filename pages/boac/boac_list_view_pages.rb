@@ -89,7 +89,7 @@ module BOACListViewPages
       (page_count - 1).times do
         start_time = Time.now
         page += 1
-        wait_for_update_and_click go_to_next_page_link_element
+        wait_for_load_and_click go_to_next_page_link_element
         wait_until(Utils.medium_wait) { player_link_elements.any? }
         logger.warn "Page #{page} took #{Time.now - start_time} seconds to load" unless page == 1
         visible_sids << list_view_sids
