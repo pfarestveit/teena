@@ -80,7 +80,7 @@ class BOACStudentPage
     {
       :name => (student_name_heading if student_name_heading?),
       :preferred_name => (preferred_name if preferred_name?),
-      :email => (email_element.text if email?),
+      :email => (email_element.text.split[3] if email?),
       :email_alternate => (alternate_email.strip if alternate_email?),
       :phone => (phone if phone?),
       :cumulative_units => (cumulative_units.gsub("UNITS COMPLETED\n", '').gsub("\nNo data", '') if cumulative_units?),

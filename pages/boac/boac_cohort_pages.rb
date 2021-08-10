@@ -258,6 +258,7 @@ module BOACCohortPages
     class_els = span_elements(xpath: "#{student_row_xpath student}//span[contains(@id,\"student-enrollment-name\")]")
     waitlisted_class_els = span_elements(xpath: "#{student_row_xpath student}//span[contains(@id,\"-waitlisted-\")]/preceding-sibling::span")
     inactive_el = div_element(xpath: "#{student_row_xpath student}//div[contains(@class,\"student-sid\")]/div[contains(@id,\"-inactive\")]")
+    cxl_el = span_element(xpath: "#{student_row_xpath student}//div[contains(@id, \"withdrawal-cancel\")]/span")
     {
       :level => (level_el.text.strip if level_el.exists?),
       :majors => (major_els.map &:text if major_els.any?),
@@ -270,7 +271,8 @@ module BOACCohortPages
       :classes => class_els.map(&:text),
       :waitlisted_classes => waitlisted_class_els.map(&:text),
       :inactive => (inactive_el.exists? && inactive_el.text.strip == 'INACTIVE'),
-      :academic_standing => student_academic_standing(student)
+      :academic_standing => student_academic_standing(student),
+      :cxl_msg => (cxl_el.text.strip if cxl_el.exists?)
     }
   end
 
