@@ -65,7 +65,9 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
           end
 
           if api_sis_profile_data[:entered_term]
-            it("shows the matriculation term for UID #{student.uid} on the #{test.default_cohort.name} page") { expect(cohort_page_sis_data[:entered_term]).to eql(api_sis_profile_data[:entered_term]) }
+            it "shows the matriculation term for UID #{student.uid} on the #{test.default_cohort.name} page" do
+              expect(cohort_page_sis_data[:entered_term]).to eql(api_sis_profile_data[:entered_term])
+            end
           end
 
           if api_sis_profile_data[:academic_career_status] == 'Completed'
@@ -94,7 +96,21 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
             end
           end
 
-          # TODO - shows withdrawal indicator if withdrawn
+          withdrawal = api_sis_profile_data[:withdrawal]
+          if withdrawal
+            cohort_page_sis_data[:cxl_msg]
+            it "shows withdrawal information for UID #{student.uid} on the #{test.default_cohort.name} page" do
+              expect(cohort_page_sis_data[:cxl_msg]).not_to be_nil
+            end
+            if cohort_page_sis_data[:cxl_msg]
+              it "shows the withdrawal type for UID #{student.uid} on the #{test.default_cohort.name} page" do
+                expect(cohort_page_sis_data[:cxl_msg]).to include(withdrawal[:desc])
+              end
+              it "shows the withdrawal date for UID #{student.uid} on the #{test.default_cohort.name} page" do
+                expect(cohort_page_sis_data[:cxl_msg]).to include(withdrawal[:date])
+              end
+            end
+          end
 
           if academic_standing&.any?
             latest_standing = academic_standing.first
@@ -320,10 +336,12 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
 
           student_page_sis_data = @boac_student_page.visible_sis_data
 
-          it("shows the name for UID #{student.uid} on the student page") { expect(student_page_sis_data[:name]).to eql(student.full_name.split(',').reverse.join(' ').strip) }
+          it "shows the name for UID #{student.uid} on the student page" do
+            expect(student_page_sis_data[:name]).to eql(student.full_name.split(',').reverse.join(' ').strip)
+          end
 
           it "shows the email for UID #{student.uid} on the student page" do
-            expect(student_page_sis_data[:email]).to include(api_sis_profile_data[:email])
+            expect(student_page_sis_data[:email]).to eql(api_sis_profile_data[:email])
             expect(student_page_sis_data[:email]).not_to be_empty
           end
 
@@ -343,7 +361,9 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
               expect(student_page_sis_data[:cumulative_units]).not_to be_empty
             end
           else
-            it("shows no total units for UID #{student.uid} on the student page") { expect(student_page_sis_data[:cumulative_units]).to eql('--') }
+            it "shows no total units for UID #{student.uid} on the student page" do
+              expect(student_page_sis_data[:cumulative_units]).to eql('--')
+            end
           end
 
           it "shows the phone for UID #{student.uid} on the student page" do
@@ -361,8 +381,12 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
               expect(student_page_sis_data[:colleges]).to eql(active_colleges)
             end
           else
-            it("shows no active majors for UID #{student.uid} on the student page") { expect(student_page_sis_data[:majors]).to be_empty }
-            it("shows no colleges for UID #{student.uid} on the student page") { expect(student_page_sis_data[:colleges].all?(&:empty?)).to be true }
+            it "shows no active majors for UID #{student.uid} on the student page" do
+              expect(student_page_sis_data[:majors]).to be_empty
+            end
+            it "shows no colleges for UID #{student.uid} on the student page" do
+              expect(student_page_sis_data[:colleges].all?(&:empty?)).to be true
+            end
           end
 
           if api_sis_profile_data[:academic_career_status] != 'Completed' && inactive_majors.any?
@@ -371,8 +395,12 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
               expect(student_page_sis_data[:colleges_discontinued]).to eql(inactive_colleges)
             end
           else
-            it("shows no discontinued majors for UID #{student.uid} on the student page") { expect(student_page_sis_data[:majors_discontinued]).to be_empty }
-            it("shows no discontinued colleges for UID #{student.uid} on the student page") { expect(student_page_sis_data[:colleges_discontinued].all?(&:empty?)).to be true }
+            it "shows no discontinued majors for UID #{student.uid} on the student page" do
+              expect(student_page_sis_data[:majors_discontinued]).to be_empty
+            end
+            it "shows no discontinued colleges for UID #{student.uid} on the student page" do
+              expect(student_page_sis_data[:colleges_discontinued].all?(&:empty?)).to be true
+            end
           end
 
           if api_sis_profile_data[:academic_career_status] != 'Completed' && active_minors.any?
@@ -510,26 +538,48 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
             end
           end
 
-          (api_sis_profile_data[:transfer]) ?
-              (it("shows Transfer for UID #{student.uid} on the student page") { expect(student_page_sis_data[:transfer]).to eql('Transfer') }) :
-              (it("shows no Transfer for UID #{student.uid} on the student page") { expect(student_page_sis_data[:transfer]).to be_nil })
+          if api_sis_profile_data[:transfer]
+            it "shows Transfer for UID #{student.uid} on the student page" do
+              expect(student_page_sis_data[:transfer]).to eql('Transfer')
+            end
+          else
+            it "shows no Transfer for UID #{student.uid} on the student page" do
+              expect(student_page_sis_data[:transfer]).to be_nil
+            end
+          end
 
-          (api_sis_profile_data[:level] == 'Graduate') ?
-              (it("shows no expected graduation date for UID #{student.uid} on the #{test.default_cohort.name} page") { expect(student_page_sis_data[:expected_graduation]).to be nil }) :
-              (it("shows the expected graduation date for UID #{student.uid} on the #{test.default_cohort.name} page") { expect(student_page_sis_data[:expected_graduation]).to eql(api_sis_profile_data[:expected_grad_term_name]) })
+          if api_sis_profile_data[:level] == 'Graduate'
+            it "shows no expected graduation date for UID #{student.uid} on the #{test.default_cohort.name} page" do
+              expect(student_page_sis_data[:expected_graduation]).to be nil
+            end
+          else
+            it "shows the expected graduation date for UID #{student.uid} on the #{test.default_cohort.name} page" do
+              expect(student_page_sis_data[:expected_graduation]).to eql(api_sis_profile_data[:expected_grad_term_name])
+            end
+          end
 
           has_calcentral_link = @boac_student_page.calcentral_link(student).exists?
-          it("shows a link to the student overview page in CalCentral on the student page for UID #{student.uid}") { expect(has_calcentral_link).to be true }
+          it "shows a link to the student overview page in CalCentral on the student page for UID #{student.uid}" do
+            expect(has_calcentral_link).to be true
+          end
 
           # TIMELINE
 
           # Requirements
 
           student_page_reqts = @boac_student_page.visible_requirements
-          it("shows the Entry Level Writing Requirement for UID #{student.uid} on the student page") { expect(student_page_reqts[:reqt_writing]).to eql(api_sis_profile_data[:reqt_writing]) }
-          it("shows the American History Requirement for UID #{student.uid} on the student page") { expect(student_page_reqts[:reqt_history]).to eql(api_sis_profile_data[:reqt_history]) }
-          it("shows the American Institutions Requirement for UID #{student.uid} on the student page") { expect(student_page_reqts[:reqt_institutions]).to eql(api_sis_profile_data[:reqt_institutions]) }
-          it("shows the American Cultures Requirement for UID #{student.uid} on the student page") { expect(student_page_reqts[:reqt_cultures]).to eql(api_sis_profile_data[:reqt_cultures]) }
+          it "shows the Entry Level Writing Requirement for UID #{student.uid} on the student page" do
+            expect(student_page_reqts[:reqt_writing]).to eql(api_sis_profile_data[:reqt_writing])
+          end
+          it "shows the American History Requirement for UID #{student.uid} on the student page" do
+            expect(student_page_reqts[:reqt_history]).to eql(api_sis_profile_data[:reqt_history])
+          end
+          it "shows the American Institutions Requirement for UID #{student.uid} on the student page" do
+            expect(student_page_reqts[:reqt_institutions]).to eql(api_sis_profile_data[:reqt_institutions])
+          end
+          it "shows the American Cultures Requirement for UID #{student.uid} on the student page" do
+            expect(student_page_reqts[:reqt_cultures]).to eql(api_sis_profile_data[:reqt_cultures])
+          end
 
           # Alerts
 
@@ -577,7 +627,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
             it("has the hold messages for UID #{student.uid} on the student page") { expect(visible_holds).to eql(hold_msgs) }
           end
 
-          if (withdrawal = api_sis_profile_data[:withdrawal])
+          if withdrawal
             withdrawal_msg_present = @boac_student_page.withdrawal_msg?
             it("shows withdrawal information for UID #{student.uid} on the student page") { expect(withdrawal_msg_present).to be true }
             if withdrawal_msg_present
