@@ -35,7 +35,7 @@ module BOACStudentPageTimeline
     els = div_elements(xpath: "//div[contains(@id, '#{item_type}-') and contains(@id, '-is-closed')]")
     els.map do |el|
       parts = el.attribute('id').split('-')
-      (parts[2] == 'is') ? parts[1] : parts[1..2].join('-')
+      (parts[2] == 'is') ? parts[1] : parts[1..-3].join('-')
     end
   end
 
@@ -69,9 +69,8 @@ module BOACStudentPageTimeline
   # @return [Hash]
   def visible_collapsed_item_data(item)
     type = item_type item
-    div_element(id: "#{type}-#{item.id}-is-closed").when_visible Utils.short_wait
-    subject_el = div_element(id: "#{type}-#{item.id}-is-closed")
     div_element(id: "collapsed-#{type}-#{item.id}-created-at").when_visible Utils.short_wait
+    subject_el = div_element(id: "#{type}-#{item.id}-is-closed")
     date_el = div_element(id: "collapsed-#{type}-#{item.id}-created-at")
     {
         :subject => (subject_el.text.gsub("\n", '') if subject_el.exists?),

@@ -43,7 +43,7 @@ module BOACStudentPageAppointment
   div(:timeline_appts_spinner, id: 'timeline-appointments-spinner')
 
   def search_within_timeline_appts(query)
-    logger.info "Searching for '#{query}'"
+    query.empty? ? logger.info('Clearing search input') : logger.info("Searching for '#{query}'")
     wait_for_element_and_type(timeline_appts_query_input_element, query)
     hit_enter
     sleep 1
@@ -131,7 +131,7 @@ module BOACStudentPageAppointment
     {
         detail: (detail_el.text if detail_el.exists?),
         status: (status_el.text if status_el.exists?),
-        created_date: (date_el.text.gsub('Last updated on', '').strip if date_el.exists?)
+        created_date: (date_el.text.gsub('Last updated on', '').gsub('Appointment date', '').strip if date_el.exists?)
     }
   end
 
@@ -148,6 +148,7 @@ module BOACStudentPageAppointment
   def visible_expanded_appt_data(appt)
     details_el = span_element(id: "appointment-#{appt.id}-details")
     date_el = div_element(id: "expanded-appointment-#{appt.id}-created-at")
+    time_range_el = div_element(id: "expanded-appointment-#{appt.id}-appt-time-range")
     check_in_time_el = span_element(id: "appointment-#{appt.id}-checked-in-at")
     cancel_reason_el = span_element(id: "appointment-#{appt.id}-cancel-reason")
     cancel_addl_info_el = span_element(id: "appointment-#{appt.id}-cancel-explained")
@@ -158,6 +159,7 @@ module BOACStudentPageAppointment
     {
         detail: (details_el.text if details_el.exists?),
         created_date: (date_el.text.gsub('Appointment date', '').strip if date_el.exists?),
+        time_range: (time_range_el.text.strip if time_range_el.exists?),
         reserve_advisor: (reserved_for_el(appt).text.strip if reserved_for_el(appt).exists?),
         check_in_time: (check_in_time_el.text if check_in_time_el.exists?),
         cancel_reason: (cancel_reason_el.text if cancel_reason_el.exists?),

@@ -656,7 +656,7 @@ class NessieUtils < Utils
       )
       {
         id: k,
-        detail: Nokogiri::HTML(v[0]['detail']).text,
+        detail: Nokogiri::HTML(v[0]['detail']).text.strip.gsub(/\s+/, ' '),
         student: student,
         advisor: advisor,
         created_date: Time.parse(v[0]['created_date'].to_s).utc.localtime,
@@ -677,6 +677,48 @@ class NessieUtils < Utils
              ORDER BY sid ASC;"
     results = Utils.query_pg_db(nessie_pg_db_credentials, query)
     results.map { |r| r['sid'] }
+  end
+
+  def self.get_ycbm_appts(student)
+    query = "SELECT boac_advising_appointments.ycbm_advising_appointments.id AS id,
+                    boac_advising_appointments.ycbm_advising_appointments.appointment_type AS type,
+                    boac_advising_appointments.ycbm_advising_appointments.title AS title,
+                    boac_advising_appointments.ycbm_advising_appointments.details AS detail,
+                    boac_advising_appointments.ycbm_advising_appointments.advisor_name AS advisor_name,
+                    boac_advising_appointments.ycbm_advising_appointments.starts_at AS start_time,
+                    boac_advising_appointments.ycbm_advising_appointments.ends_at AS end_time,
+                    boac_advising_appointments.ycbm_advising_appointments.cancelled AS cancelled,
+                    boac_advising_appointments.ycbm_advising_appointments.cancellation_reason AS cancel_reason
+             FROM boac_advising_appointments.ycbm_advising_appointments
+             WHERE boac_advising_appointments.ycbm_advising_appointments.student_sid = '#{student.sis_id}'
+             ORDER BY start_time ASC;"
+
+    results = query_pg_db(nessie_pg_db_credentials, query)
+    appt_data = results.group_by { |h1| h1['id'] }.map do |k,v|
+      advisor = BOACUser.new full_name: v[0]['advisor_name']
+      {
+        id: k,
+        type: v[0]['type'].to_s.strip,
+        title: v[0]['title'].to_s.strip.gsub(/\s+/, ' '),
+        detail: Nokogiri::HTML(v[0]['detail']).text.strip.gsub(/\s+/, ' '),
+        student: student,
+        advisor: advisor,
+        created_date: Time.parse(v[0]['start_time'].to_s).utc.localtime,
+        start_time: Time.parse(v[0]['start_time'].to_s).utc.localtime,
+        end_time: Time.parse(v[0]['end_time'].to_s).utc.localtime,
+        status: (AppointmentStatus::CANCELED if v[0]['cancelled'] == 't'),
+        cancel_reason: v[0]['cancel_reason'].to_s.strip
+      }
+    end
+    appt_data.map { |d| Appointment.new d }
+  end
+
+  def self.get_sids_with_ycbm_appts
+    query = "SELECT DISTINCT student_sid
+             FROM boac_advising_appointments.ycbm_advising_appointments
+             WHERE student_uid IS NOT NULL"
+    results = Utils.query_pg_db(nessie_pg_db_credentials, query)
+    results.map { |r| r['student_sid'] }
   end
 
   #### HOLDS ####
