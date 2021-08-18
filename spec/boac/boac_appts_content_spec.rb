@@ -29,9 +29,10 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
           @student_page.load_page student
           expected_boa_appts = BOACUtils.get_student_appts(student, test.students).delete_if &:deleted_date
           expected_sis_appts = NessieUtils.get_sis_appts student
-          logger.warn "UID #{student.uid} has #{expected_sis_appts.length} SIS appointments and #{expected_boa_appts.length} BOA appointments"
+          expected_ycbm_appts = NessieUtils.get_ycbm_appts student
+          logger.warn "UID #{student.uid} has #{expected_sis_appts.length} SIS appts, #{expected_boa_appts.length} BOA appts, and #{expected_ycbm_appts.length} YCBM appts"
 
-          expected_appts = expected_sis_appts + expected_boa_appts
+          expected_appts = expected_sis_appts + expected_boa_appts + expected_ycbm_appts
 
           @student_page.show_appts
 
@@ -55,7 +56,7 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
           end
 
           # Test a representative subset of the total appts
-          test_appts = expected_sis_appts.shuffle[0..max_appt_count_per_src]
+          test_appts = expected_sis_appts.shuffle[0..max_appt_count_per_src] + expected_ycbm_appts.shuffle[0..max_appt_count_per_src]
 
           test_appts.each do |appt|
 
@@ -67,6 +68,13 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
 
               @student_page.show_appts
               visible_collapsed_appt_data = @student_page.visible_collapsed_appt_data appt
+
+              # Appointment title
+              if appt.title
+                it("shows the title on collapsed #{test_case}") { expect(visible_collapsed_appt_data[:detail]).to eql(appt.title) }
+              else
+                it("shows the detail on collapsed #{test_case}") { expect(visible_collapsed_appt_data[:detail]).to eql(appt.detail) }
+              end
 
               # Appointment date
 
@@ -80,6 +88,13 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
               visible_expanded_appt_data = @student_page.visible_expanded_appt_data appt
               it("shows the detail on #{test_case}") { expect(visible_expanded_appt_data[:detail].gsub(/\W/, '')).to eql(appt.detail.gsub(/\W/, '')) }
 
+              # Appointment times
+
+              if appt.start_time
+                expected_times = "#{appt.start_time.strftime('%-l:%M%P')}-#{appt.end_time.strftime('%-l:%M%P')}"
+                it("shows the time range on #{test_case}") { expect(visible_expanded_appt_data[:time_range]).to eql(expected_times) }
+              end
+
               # Appointment advisor
 
               if appt.advisor.uid
@@ -90,6 +105,10 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
                   advisor_link_tested = true
                   it("offers a link to the Berkeley directory for advisor #{appt.advisor.uid} on #{test_case}") { expect(advisor_link_works).to be true }
                 end
+
+              # YCBM appts
+              elsif appt.advisor.full_name
+                it("shows the advisor on #{test_case}") { expect(visible_expanded_appt_data[:advisor_name]).to eql(appt.advisor.full_name) }
 
               else
                 if appt.advisor.last_name && !appt.advisor.last_name.empty?
@@ -114,7 +133,7 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
 
               # Appointment attachments
 
-              if appt.attachments.any?
+              if appt.attachments&.any?
                 non_deleted_attachments = appt.attachments.reject &:deleted_at
                 attachment_file_names = non_deleted_attachments.map &:file_name
                 it("shows the right attachment file names on #{test_case}") { expect(visible_expanded_appt_data[:attachments].sort).to eql(attachment_file_names.sort) }
@@ -155,7 +174,7 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
 
               query = BOACUtils.generate_appt_search_query(student, appt)
 
-              if query
+              if query[:string]
                 @student_page.show_appts
                 initial_msg_count = @student_page.visible_message_ids.length
                 @student_page.search_within_timeline_appts(query[:string])
@@ -176,7 +195,7 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
                      (visible_expanded_appt_data[:advisor] if visible_expanded_appt_data),
                      (visible_expanded_appt_data[:advisor_role] if visible_expanded_appt_data),
                      (visible_expanded_appt_data[:advisor_depts] if visible_expanded_appt_data),
-                     !appt.body.nil?, appt.topics.length, appt.attachments.length]
+                     !appt.body.nil?, appt.topics&.length, appt.attachments&.length]
               Utils.add_csv_row(appts_data, row)
             end
           end

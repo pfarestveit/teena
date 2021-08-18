@@ -150,8 +150,10 @@ class BOACTestConfig < TestConfig
                        boa_sids = NessieUtils.get_all_sids
                        sis_appts_sids = boa_sids & NessieUtils.get_sids_with_sis_appts
                        logger.info "There are #{sis_appts_sids.length} students with SIS appointments"
-                       sis_appts_sids.shuffle! if BOACUtils.shuffle_max_users
-                       test_sids = sis_appts_sids[0..(config - 1)]
+                       ycbm_appts_sids = boa_sids & NessieUtils.get_sids_with_ycbm_appts
+                       logger.info "There are #{ycbm_appts_sids.length} students with YCBM appointments"
+                       [sis_appts_sids, ycbm_appts_sids].each { |a| a.shuffle! } if BOACUtils.shuffle_max_users
+                       test_sids = (sis_appts_sids[0..(config - 1)] + ycbm_appts_sids[0..(config - 1)]).uniq
                        @students.select { |s| test_sids.include? s.sis_id }
                      else
                        # Running tests against a random set of students, plus optional selected students

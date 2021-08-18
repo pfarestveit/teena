@@ -7,6 +7,8 @@ class Appointment < TimelineNoteAppt
                 :reserve_advisor,
                 :status,
                 :status_date,
+                :start_time,
+                :end_time,
                 :type
 
   def initialize(data)
