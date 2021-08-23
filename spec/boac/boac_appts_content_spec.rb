@@ -12,6 +12,8 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
       downloadable_attachments = []
       advisor_link_tested = false
       max_appt_count_per_src = BOACUtils.notes_max_notes - 1
+      sis_appts = []
+      ycbm_appts = []
 
       appts_data_heading = %w(UID SID NoteId Created Updated CreatedBy Advisor AdvisorRole AdvisorDepts HasBody Topics Attachments)
       appts_data = Utils.create_test_output_csv('boac-appts.csv', appts_data_heading)
@@ -33,6 +35,8 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
           logger.warn "UID #{student.uid} has #{expected_sis_appts.length} SIS appts, #{expected_boa_appts.length} BOA appts, and #{expected_ycbm_appts.length} YCBM appts"
 
           expected_appts = expected_sis_appts + expected_boa_appts + expected_ycbm_appts
+          sis_appts += expected_sis_appts
+          ycbm_appts += expected_ycbm_appts
 
           @student_page.show_appts
 
@@ -70,26 +74,60 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
               visible_collapsed_appt_data = @student_page.visible_collapsed_appt_data appt
 
               # Appointment title
-              if appt.title
+
+              if appt.source == TimelineRecordSource::YCBM
+                it("has a title for #{test_case}") { expect(appt.title).not_to be_nil; expect(appt.title).not_to be_empty }
                 it("shows the title on collapsed #{test_case}") { expect(visible_collapsed_appt_data[:detail]).to eql(appt.title) }
-              else
-                it("shows the detail on collapsed #{test_case}") { expect(visible_collapsed_appt_data[:detail]).to eql(appt.detail) }
+              end
+              if appt.source == TimelineRecordSource::SIS
+                if appt.detail && !appt.detail.empty?
+                  it("shows the detail on collapsed #{test_case}") { expect(visible_collapsed_appt_data[:detail].gsub(/\W/, '')).to eql(appt.detail.gsub(/\W/, '')) }
+                else
+                  it("shows a placeholder title on collapsed #{test_case}") { expect(visible_collapsed_appt_data[:detail]).to include('Imported SIS Appt') }
+                end
+              end
+
+              # Appointment status
+
+              if appt.status == AppointmentStatus::CANCELED
+                it("shows canceled status on collapsed #{test_case}") { expect(visible_collapsed_appt_data[:status]).to eql(appt.status.name.upcase) }
               end
 
               # Appointment date
 
-              expected_date_text = "Appointment date #{@student_page.expected_item_short_date_format appt.created_date}"
-              visible_date = @student_page.visible_collapsed_item_data(appt)[:date]
-              it("shows '#{expected_date_text}' on collapsed #{test_case}") { expect(visible_date).to eql(expected_date_text) }
+              if appt.source == TimelineRecordSource::SIS
+                it("has an updated date for #{test_case}") { expect(appt.updated_date).not_to be_nil }
+                collapsed_date = @student_page.expected_item_short_date_format appt.updated_date
+                it("shows '#{collapsed_date}' on collapsed #{test_case}") { expect(visible_collapsed_appt_data[:created_date]).to eql(collapsed_date) }
+              elsif appt.source == TimelineRecordSource::YCBM
+                collapsed_date = @student_page.expected_item_short_date_format appt.created_date
+                it("shows '#{collapsed_date}' on collapsed #{test_case}") { expect(visible_collapsed_appt_data[:created_date]).to eql(collapsed_date) }
+              end
 
               # EXPANDED APPOINTMENT
 
               @student_page.expand_item appt
               visible_expanded_appt_data = @student_page.visible_expanded_appt_data appt
-              it("shows the detail on #{test_case}") { expect(visible_expanded_appt_data[:detail].gsub(/\W/, '')).to eql(appt.detail.gsub(/\W/, '')) }
+
+              # Appointment detail
+
+              it("shows the detail on expanded #{test_case}") { expect(visible_expanded_appt_data[:detail].gsub(/\W/, '')).to eql(appt.detail.gsub(/\W/, '')) }
+
+              # Appointment date
+
+              it("has a created date for #{test_case}") { expect(appt.created_date).not_to be_nil }
+              expanded_date = @student_page.expected_item_short_date_format appt.created_date
+              it("shows '#{expanded_date}' on expanded #{test_case}") { expect(visible_expanded_appt_data[:created_date]).to eql(expanded_date) }
 
               # Appointment times
 
+              if appt.source == TimelineRecordSource::YCBM
+                it("has a start time for #{test_case}") { expect(appt.start_time).not_to be_nil }
+                it("has an end time for #{test_case}") { expect(appt.end_time).not_to be_nil }
+              else
+                it("has no start time for #{test_case}") { expect(appt.start_time).to be_nil }
+                it("has no end time for #{test_case}") { expect(appt.end_time).to be_nil }
+              end
               if appt.start_time
                 expected_times = "#{appt.start_time.strftime('%-l:%M%P')}-#{appt.end_time.strftime('%-l:%M%P')}"
                 it("shows the time range on #{test_case}") { expect(visible_expanded_appt_data[:time_range]).to eql(expected_times) }
@@ -106,7 +144,6 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
                   it("offers a link to the Berkeley directory for advisor #{appt.advisor.uid} on #{test_case}") { expect(advisor_link_works).to be true }
                 end
 
-              # YCBM appts
               elsif appt.advisor.full_name
                 it("shows the advisor on #{test_case}") { expect(visible_expanded_appt_data[:advisor_name]).to eql(appt.advisor.full_name) }
 
@@ -114,6 +151,21 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
                 if appt.advisor.last_name && !appt.advisor.last_name.empty?
                   it("shows an advisor on #{test_case}") { expect(visible_expanded_appt_data[:advisor]).not_to be_nil }
                 end
+              end
+
+              # Appointment cancellation
+              if appt.status == AppointmentStatus::CANCELED
+                it("shows the cancel reason on #{test_case}") { expect(visible_expanded_appt_data[:cancel_reason].gsub(/\W/, '')).to eql(appt.cancel_reason.gsub(/\W/, '')) }
+              else
+                it("shows no cancel reason on #{test_case}") { expect(visible_expanded_appt_data[:cancel_reason]).to be_nil }
+              end
+
+              # Appointment type
+
+              if appt.type && !appt.type.empty?
+                it("shows the appointment type on #{test_case}") { expect(visible_expanded_appt_data[:type]).to eql(appt.type) }
+              else
+                it("shows no appointment type on #{test_case}") { expect(visible_expanded_appt_data[:type].to_s).to be_empty }
               end
 
               # Appointment topics
@@ -209,6 +261,9 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
         end
       end
 
+      it('has some SIS appointments') { expect(sis_appts.any?).to be true }
+      it('has some YCBM appointments') { expect(ycbm_appts.any?).to be true }
+
       if downloadable_attachments.any?
 
         @homepage.load_page
@@ -226,7 +281,7 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
           it("delivers no file to an anonymous user when hitting the attachment download endpoint for #{identifier}") { expect(no_file).to be true }
         end
       else
-        it('found no downloadable attachments') { fail } unless test.test_students.empty?
+        it('found no downloadable SIS appointment attachments') { fail } unless test.test_students.empty?
       end
 
     rescue => e

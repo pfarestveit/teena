@@ -36,7 +36,7 @@ req_sub_cat_course_1 = DegreeReqtCourse.new name: "SUBCAT 1 #{test.id}",
                                             units_reqts: [units_req_2],
                                             parent: req_sub_category_1
 req_sub_cat_course_2 = DegreeReqtCourse.new name: "SUBCAT 2 #{test.id}",
-                                            units: '4',
+                                            units: '4.57',
                                             units_reqts: [units_req_2],
                                             parent: req_sub_category_1
 req_category_1.sub_categories = [req_sub_category_1]
@@ -297,9 +297,9 @@ describe 'A BOA degree check template', order: :defined do
               @degree_template_page.col_req_course_units_error_msg_element.when_visible 1
             end
 
-            it 'allows a maximum of 3 characters in units' do
-              @degree_template_page.enter_col_req_units '1000'
-              expect(@degree_template_page.col_req_course_units_input_element.value).to eql('100')
+            it 'allows a maximum of 4 characters in units' do
+              @degree_template_page.enter_col_req_units '3.351'
+              expect(@degree_template_page.col_req_course_units_input_element.value).to eql('3.35')
             end
 
             it('allows a range of units') { @degree_template_page.enter_col_req_units '4-5' }
@@ -484,9 +484,9 @@ describe 'A BOA degree check template', order: :defined do
             @degree_template_page.col_req_course_units_error_msg_element.when_visible 1
           end
 
-          it 'allows a maximum of 3 characters in units' do
-            @degree_template_page.enter_col_req_units '1000'
-            expect(@degree_template_page.col_req_course_units_input_element.value).to eql('100')
+          it 'allows a maximum of 4 characters in units' do
+            @degree_template_page.enter_col_req_units '3.351'
+            expect(@degree_template_page.col_req_course_units_input_element.value).to eql('3.35')
           end
 
           it('allows a range of units') { @degree_template_page.enter_col_req_units '4-5' }

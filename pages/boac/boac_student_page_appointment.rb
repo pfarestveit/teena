@@ -129,8 +129,8 @@ module BOACStudentPageAppointment
     status_el = div_element(xpath: "//div[starts-with(@id, 'collapsed-appointment-#{appt.id}-status-')]")
     date_el = div_element(id: "collapsed-appointment-#{appt.id}-created-at")
     {
-        detail: (detail_el.text if detail_el.exists?),
-        status: (status_el.text if status_el.exists?),
+        detail: (detail_el.attribute('innerText').strip if detail_el.exists?),
+        status: (status_el.text.strip if status_el.exists?),
         created_date: (date_el.text.gsub('Last updated on', '').gsub('Appointment date', '').strip if date_el.exists?)
     }
   end
@@ -157,7 +157,7 @@ module BOACStudentPageAppointment
     type_el = div_element(id: "appointment-#{appt.id}-type")
     topic_els = topic_elements.select { |el| el.attribute('id').include? "appointment-#{appt.id}-topic-" }
     {
-        detail: (details_el.text if details_el.exists?),
+        detail: (details_el.attribute('innerText').strip if details_el.exists?),
         created_date: (date_el.text.gsub('Appointment date', '').strip if date_el.exists?),
         time_range: (time_range_el.text.strip if time_range_el.exists?),
         reserve_advisor: (reserved_for_el(appt).text.strip if reserved_for_el(appt).exists?),
@@ -167,7 +167,7 @@ module BOACStudentPageAppointment
         advisor_name: (appt_advisor_el(appt).text if appt_advisor_el(appt).exists?),
         advisor_role: (advisor_role_el.text if advisor_role_el.exists?),
         advisor_depts: advisor_dept_els.map(&:text).sort,
-        type: (type_el.text if type_el.exists?),
+        type: (type_el.text.strip if type_el.exists?),
         topics: topic_els.map(&:text).sort,
         attachments: (item_attachment_els(appt).map { |el| el.text.strip }).sort
     }

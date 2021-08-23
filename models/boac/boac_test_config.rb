@@ -131,15 +131,15 @@ class BOACTestConfig < TestConfig
                      elsif opts[:with_notes]
                        # Running tests against a set of students who represent different note sources
                        boa_sids = NessieUtils.get_all_sids
-                       asc_note_sids = boa_sids & NessieUtils.get_sids_with_notes_of_src(NoteSource::ASC)
+                       asc_note_sids = boa_sids & NessieUtils.get_sids_with_notes_of_src(TimelineRecordSource::ASC)
                        logger.info "There are #{asc_note_sids.length} students with ASC notes"
                        boa_note_sids = boa_sids & BOACUtils.get_sids_with_notes_of_src_boa
                        logger.info "There are #{boa_note_sids.length} students with BOA notes"
-                       data_note_sids = boa_sids & NessieUtils.get_sids_with_notes_of_src(NoteSource::DATA)
+                       data_note_sids = boa_sids & NessieUtils.get_sids_with_notes_of_src(TimelineRecordSource::DATA)
                        logger.info "There are #{data_note_sids.length} students with Data Science notes"
-                       e_and_i_note_sids = boa_sids & NessieUtils.get_sids_with_notes_of_src(NoteSource::E_AND_I)
+                       e_and_i_note_sids = boa_sids & NessieUtils.get_sids_with_notes_of_src(TimelineRecordSource::E_AND_I)
                        logger.info "There are #{e_and_i_note_sids.length} students with E&I notes"
-                       sis_note_sids = boa_sids & NessieUtils.get_sids_with_notes_of_src(NoteSource::SIS)
+                       sis_note_sids = boa_sids & NessieUtils.get_sids_with_notes_of_src(TimelineRecordSource::SIS)
                        logger.info "There are #{sis_note_sids.length} students with SIS notes that have attachments"
                        [asc_note_sids, boa_note_sids, data_note_sids, e_and_i_note_sids, sis_note_sids].each { |s| s.shuffle! } if BOACUtils.shuffle_max_users
                        range = 0..(config - 1)
