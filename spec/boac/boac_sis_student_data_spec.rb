@@ -6,7 +6,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
 
   describe 'BOAC' do
 
-      begin
+    begin
       test = BOACTestConfig.new
       test.sis_student_data
       alert_students = []

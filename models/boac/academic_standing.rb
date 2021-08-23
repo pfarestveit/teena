@@ -1,6 +1,6 @@
 class AcademicStanding
 
-  attr_accessor :code, :descrip, :term_id, :term_name
+  attr_accessor :code, :descrip, :term_id, :term_name, :date
 
   def initialize(data)
     data.each { |k, v| public_send("#{k}=", v) }

@@ -121,7 +121,8 @@ class BOACTestConfig < TestConfig
   def set_test_students(config, opts = {})
     @test_students = if (uids = ENV['UIDS'])
                        # Running tests against a specific set of students
-                       @students.select { |s| uids.split.include? s.uid }
+                       uids = uids.split
+                       @students.select { |s| uids.include? s.uid }
 
                      elsif @cohort_members
                        # Running tests against a cohort of students (i.e., a list presented in the UI)
