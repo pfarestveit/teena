@@ -45,7 +45,7 @@ describe 'A manual BOA degree check course' do
                                                  note: "Course level note #{test.id}"
     @manual_course_1 = DegreeCompletedCourse.new manual: true,
                                                  name: "TEENA 1A #{test.id}",
-                                                 units: '4'
+                                                 units: '4.35'
     @manual_course_2 = DegreeCompletedCourse.new manual: true,
                                                  name: "TEENA 1B #{test.id}",
                                                  units: '4'
@@ -237,7 +237,7 @@ describe 'A manual BOA degree check course' do
       end
 
       it 'allows a user to edit the units' do
-        @manual_course_0.units = '0.5'
+        @manual_course_0.units = '0.35'
         @degree_check_page.edit_assigned_course @manual_course_0
         expect(@degree_check_page.assigned_course_units @manual_course_0).to eql(@manual_course_0.units)
       end

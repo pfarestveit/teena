@@ -8,7 +8,8 @@ class AppointmentStatus
   end
 
   STATUSES = [
-      CANCELED = new('Cancelled', 'cancelled'),
+      CANCELED = new('Canceled', 'canceled'),
+      CANCELLED = new('Cancelled', 'cancelled'),
       CHECKED_IN = new('Checked in', 'checked_in'),
       RESERVED = new('Reserved', 'reserved'),
       WAITING = new('Waiting', 'waiting')

@@ -849,7 +849,7 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
 
         it 'can be done' do
           @scheduler_intake_desk.click_cancel_confirm_button
-          @appt_4.status = AppointmentStatus::CANCELED
+          @appt_4.status = AppointmentStatus::CANCELLED
         end
 
         it 'removes the appointment from the list' do
@@ -877,7 +877,7 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
 
         it 'can be done' do
           @advisor_homepage.click_cancel_confirm_button
-          @appt_5.status = AppointmentStatus::CANCELED
+          @appt_5.status = AppointmentStatus::CANCELLED
         end
 
         it 'updates the appointment status on the waiting list' do
@@ -930,7 +930,7 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
             visible_data[:cancel_reason] == @appt_6.cancel_reason
             visible_data[:cancel_addl_info] == @appt_6.cancel_detail
           end
-          @appt_6.status = AppointmentStatus::CANCELED
+          @appt_6.status = AppointmentStatus::CANCELLED
         end
 
         it 'updates the scheduler appointment desk view dynamically' do
@@ -973,7 +973,7 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
       end
 
       it 'shows all today\'s appointments sorted by creation time, with canceled and checked-in segregated at the bottom' do
-        non_pending_appts = @appts.select { |a| [AppointmentStatus::CANCELED, AppointmentStatus::CHECKED_IN].include? a.status }.sort_by(&:created_date)
+        non_pending_appts = @appts.select { |a| [AppointmentStatus::CANCELLED, AppointmentStatus::CHECKED_IN].include? a.status }.sort_by(&:created_date)
         pending_appts = (@appts - non_pending_appts).sort_by(&:created_date)
         @advisor_homepage.wait_for_poller { @advisor_homepage.visible_appt_ids == ((pending_appts + non_pending_appts).map(&:id)) }
       end

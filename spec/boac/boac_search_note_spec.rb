@@ -124,7 +124,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
               note_topics = all_topics.select { |topic_name| note_search[:note].topics.include? topic_name.upcase }
               non_note_topics = all_topics - note_topics
 
-              if [NoteSource::ASC, NoteSource::DATA].include? note_search[:note].note_source
+              if [TimelineRecordSource::ASC, TimelineRecordSource::DATA].include? note_search[:note].note_source
                 logger.warn 'Skipping search by topic since note source is ASC or Data Science, and they cannot be searched by topic'
               else
                 note_topics.each do |note_topic|
