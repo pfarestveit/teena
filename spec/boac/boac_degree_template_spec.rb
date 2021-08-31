@@ -29,7 +29,7 @@ req_category_2 = DegreeReqtCategory.new name: "Category 2 #{test.id}",
 
 ### Subcategory column requirements
 req_sub_category_1 = DegreeReqtCategory.new name: ("Subcategory 1.1 #{test.id}" * str_multiplier),
-                                            desc: ("Subcategory 1.1 Description #{test.id}" * str_multiplier),
+                                            desc: ("Subcategory 1.1 Description www.teenamarieofficial.com #{test.id}" * str_multiplier),
                                             parent: req_category_1
 req_sub_cat_course_1 = DegreeReqtCourse.new name: "SUBCAT 1 #{test.id}",
                                             units: '4',
@@ -260,7 +260,11 @@ describe 'A BOA degree check template', order: :defined do
           it('can be canceled') { @degree_template_page.click_cancel_col_req }
           it('can be saved') { @degree_template_page.create_col_req(req_sub_category_1, degree) }
           it('shows the right name') { expect(@degree_template_page.visible_cat_name req_sub_category_1).to eql(req_sub_category_1.name) }
-          it('shows the right description') { expect(@degree_template_page.visible_cat_desc req_sub_category_1).to eql(req_sub_category_1.desc) }
+
+          it 'supports external links in descriptions' do
+            link = @degree_template_page.link_element(text: 'https://www.teenamarieofficial.com/')
+            expect(@degree_template_page.external_link_valid?(link, 'Teena Marie: Beautiful | Official Teena Marie Website')).to be true
+          end
 
           it 'does not offer subcategories as parents' do
             @degree_template_page.click_add_col_req_button 1

@@ -768,7 +768,6 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
                       api_student_data.sections(course).each do |section|
 
                         begin
-                          index = api_student_data.sections(course).index section
                           section_sis_data = api_student_data.sis_section_data section
                           term_section_ccns << section_sis_data[:ccn]
                           component = section_sis_data[:component]
@@ -818,12 +817,17 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
                 drops = api_student_data.dropped_sections term
                 if drops
                   drops.each do |drop|
-                    visible_drop = @boac_student_page.visible_dropped_section_data(term_name, drop[:title], drop[:component], drop[:number])
+                    visible_drop = @boac_student_page.visible_dropped_section_data(term_id, drop[:title], drop[:component], drop[:number])
                     it "shows dropped section #{drop[:title]} #{drop[:component]} #{drop[:number]} for UID #{student.uid} in #{term_name}" do
-                      expect(visible_drop).to be_truthy
+                      expect(visible_drop).to include("#{drop[:title]} - #{drop[:component]} #{drop[:number]}")
                     end
 
-                    row = [student.uid, term_name, nil, nil, drop[:title], nil, nil, drop[:number], nil, nil, nil, 'D']
+                    if drop[:date]
+                      it "shows the drop date for section #{drop[:title]} #{drop[:component]} #{drop[:number]} for UID #{student.uid} in #{term_name}" do
+                        expect(visible_drop).to include(Date.parse(drop[:date]).strftime('%b %-d, %Y'))
+                      end
+                    end
+                    row = [student.uid, term_name, nil, nil, drop[:title], nil, nil, drop[:number], nil, nil, nil, "D #{drop[:date]}"]
                     Utils.add_csv_row(user_course_sis_data, row)
                   end
                 end

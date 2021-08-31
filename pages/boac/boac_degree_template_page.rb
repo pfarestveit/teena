@@ -284,7 +284,7 @@ class BOACDegreeTemplatePage
   end
 
   def cat_name_el(cat)
-    xpath = cat.parent ? "#{subcat_xpath(cat)}//h5" : "#{top_cat_xpath(cat)}//h4"
+    xpath = cat.parent ? "#{subcat_xpath(cat)}//h4" : "#{top_cat_xpath(cat)}//h3"
     h2_element(xpath: xpath)
   end
 

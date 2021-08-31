@@ -117,6 +117,10 @@ class BOACDegreeCheckPage < BOACDegreeTemplatePage
 
   # COURSE REQUIREMENTS
 
+  checkbox(:big_dot_cbx, id: 'recommended-course-checkbox')
+  button(:save_edit_req_button, id: 'update-requirement-btn')
+  button(:cancel_edit_req_button, id: 'cancel-edit-requirement-btn')
+
   def course_req_menu?(course)
     cell_element(xpath: "#{course_req_xpath course}/td[contains(@class, 'td-course-assignment-menu')]").exists?
   end
@@ -143,6 +147,24 @@ class BOACDegreeCheckPage < BOACDegreeTemplatePage
     node = course_req_menu?(course) ? '5' : '4'
     note_el = cell_element(xpath: "#{course_req_xpath course}/td[#{node}]/span")
     note_el.text.strip if note_el.exists?
+  end
+
+  def click_edit_course_req(course)
+    click_edit_cat(course)
+  end
+
+  def toggle_course_req_dot
+    wait_for_update_and_click big_dot_cbx_element
+  end
+
+  def click_save_req_edit
+    wait_for_update_and_click save_edit_req_button_element
+    save_edit_req_button_element.when_not_present Utils.short_wait
+    sleep Utils.click_wait
+  end
+
+  def is_recommended?(course)
+    element(xpath: "//*[@id='category-#{course.id}-is-recommended']").exists?
   end
 
   # UNASSIGNED COURSES

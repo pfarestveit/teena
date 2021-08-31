@@ -103,10 +103,10 @@ describe 'A manual BOA degree check course' do
       expect(@degree_check_page.create_course_save_button_element.enabled?).to be false
     end
 
-    it 'requires units' do
+    it 'does not require units' do
       @degree_check_page.enter_course_units ''
       @degree_check_page.enter_course_name @manual_course_0.name
-      expect(@degree_check_page.create_course_save_button_element.enabled?).to be false
+      expect(@degree_check_page.create_course_save_button_element.enabled?).to be true
     end
 
     it 'can be saved' do
@@ -146,11 +146,11 @@ describe 'A manual BOA degree check course' do
       expect(@degree_check_page.course_update_button_element.enabled?).to be false
     end
 
-    it 'requires units' do
+    it 'does not require units' do
       @degree_check_page.click_edit_unassigned_course @manual_course_0
       @degree_check_page.enter_course_name @manual_course_0.name
       @degree_check_page.enter_course_units ''
-      expect(@degree_check_page.course_update_button_element.enabled?).to be false
+      expect(@degree_check_page.course_update_button_element.enabled?).to be true
     end
 
     it 'allows a user to edit the name' do
@@ -160,9 +160,9 @@ describe 'A manual BOA degree check course' do
     end
 
     it 'allows a user to edit the units' do
-      @manual_course_0.units = '8'
+      @manual_course_0.units = ''
       @degree_check_page.edit_unassigned_course @manual_course_0
-      expect(@degree_check_page.unassigned_course_units @manual_course_0).to eql(@manual_course_0.units)
+      expect(@degree_check_page.unassigned_course_units @manual_course_0).to eql('—')
     end
 
     it 'allows a user to edit the grade' do
@@ -195,7 +195,7 @@ describe 'A manual BOA degree check course' do
     end
 
     it 'updates the requirement row with the course units' do
-      expect(@degree_check_page.assigned_course_units @manual_course_0).to eql(@manual_course_0.units)
+      expect(@degree_check_page.assigned_course_units @manual_course_0).to eql('—')
     end
 
     it 'updates the requirement row with the course grade' do
@@ -221,11 +221,11 @@ describe 'A manual BOA degree check course' do
         expect(@degree_check_page.course_update_button_element.enabled?).to be false
       end
 
-      it 'requires units' do
+      it 'does not require units' do
         @degree_check_page.click_edit_assigned_course @manual_course_0
         @degree_check_page.enter_course_name @manual_course_0.name
         @degree_check_page.enter_course_units ''
-        expect(@degree_check_page.course_update_button_element.enabled?).to be false
+        expect(@degree_check_page.course_update_button_element.enabled?).to be true
       end
 
       it 'allows a user to edit the name' do
@@ -419,9 +419,9 @@ describe 'A manual BOA degree check course' do
         end
 
         it 'allows a user to edit the units' do
-          @sub_cat_copy.units = '1'
+          @sub_cat_copy.units = ''
           @degree_check_page.edit_assigned_course @sub_cat_copy
-          expect(@degree_check_page.assigned_course_units @sub_cat_copy).to eql(@sub_cat_copy.units)
+          expect(@degree_check_page.assigned_course_units @sub_cat_copy).to eql('—')
         end
 
         it 'allows a user to edit the grade' do

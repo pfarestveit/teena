@@ -305,8 +305,9 @@ class BOACStudentPage
     logger.warn "Took #{Time.now - start} seconds for the term #{term_code} section #{ccn} page to load"
   end
 
-  def visible_dropped_section_data(term_name, course_code, component, number)
-    div_element(:xpath => "#{term_data_xpath term_name}//div[@class='student-course student-course-dropped'][contains(.,\"#{course_code} - #{component} #{number}\")]")
+  def visible_dropped_section_data(term_id, course_code, component, number)
+    drop_el = div_element(:xpath => "//div[contains(@id, 'term-#{term_id}-dropped-course')][contains(.,\"#{course_code} - #{component} #{number}\")]")
+    drop_el.text if drop_el.exists?
   end
 
   # COURSE SITES

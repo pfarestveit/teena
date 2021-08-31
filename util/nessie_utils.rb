@@ -659,7 +659,7 @@ class NessieUtils < Utils
       )
       {
         id: k,
-        detail: Nokogiri::HTML(v[0]['detail']).text.strip,
+        detail: Nokogiri::HTML(v[0]['detail']).text.strip.gsub('&Tab;', ''),
         student: student,
         advisor: advisor,
         created_date: Time.parse(created_date.to_s).utc.localtime,

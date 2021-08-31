@@ -308,7 +308,8 @@ class BOACApiStudentPage
       {
         :title => section['displayName'],
         :component => section['component'],
-        :number => section['number']
+        :number => section['sectionNumber'],
+        :date => section['dropDate']
       }
     end
   end
@@ -432,7 +433,7 @@ class BOACApiStudentPage
             courses << DegreeCompletedCourse.new(ccn: primary_section[:ccn],
                                                  degree_check: degree_check,
                                                  term_id: term_id,
-                                                 name: "#{data[:code]} #{primary_section[:component]} #{primary_section[:number]}",
+                                                 name: data[:code],
                                                  units: data[:units_completed],
                                                  units_orig: data[:units_completed],
                                                  grade: data[:grade].gsub('−', '-'))

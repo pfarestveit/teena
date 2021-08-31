@@ -491,11 +491,11 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
 
         context 'when collapsed' do
 
-          before(:all) { @visible_collapsed_date = @advisor_student_page.visible_collapsed_appt_data @appt_1 }
+          before(:all) { @visible_collapsed_data = @advisor_student_page.visible_collapsed_appt_data @appt_1 }
 
-          it('show the appointment detail') { expect(@visible_collapsed_date[:detail]).to eql(@appt_1.detail) }
-          it('show the appointment status') { expect(@visible_collapsed_date[:status]).to eql('ASSIGNED') }
-          it('show the appointment date') { expect(@visible_collapsed_date[:created_date].split("\n")[1]).to eql(@advisor_student_page.expected_item_short_date_format(@appt_1.created_date)) }
+          it('show the appointment detail') { expect(@visible_collapsed_data[:detail]).to eql(@appt_1.detail) }
+          it('show the appointment status') { expect(@visible_collapsed_data[:status]).to eql('ASSIGNED') }
+          it('show the appointment date') { expect(@visible_collapsed_data[:created_date].split("\n")[1]).to eql(@advisor_student_page.expected_item_short_date_format(@appt_1.created_date)) }
         end
 
         context 'when expanded' do

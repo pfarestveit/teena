@@ -278,7 +278,7 @@ class BOACSearchResultsPage
         :student_name => (appt_link(appt).text.strip if appt_link(appt).exists?),
         :student_sid => (sid_el.text.gsub("#{student.full_name}", '').delete('()').strip if sid_el.exists?),
         :snippet => (snippet_el.text if snippet_el.exists?),
-        :advisor_name => (advisor_el.text.delete('-').strip if advisor_el.exists?),
+        :advisor_name => (advisor_el.text.strip if advisor_el.exists?),
         :date => (footer_el.text.split('-').last.strip if footer_el.exists?)
     }
   end

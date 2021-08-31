@@ -430,11 +430,7 @@ class BOACTestConfig < TestConfig
   # Config for appointment search tests
   def search_appointments
     set_base_configs
-    @test_students = if (uids = ENV['UIDS'])
-                       @students.select { |s| uids.split.include? s.uid }
-                     else
-                       BOACUtils.get_students_with_appts(@students).shuffle[0..(CONFIG['search_max_users'] - 1)]
-                     end
+    set_test_students(CONFIG['search_max_users'], {with_appts: true})
     logger.warn "Test UIDS: #{@test_students.map &:uid}"
   end
 
