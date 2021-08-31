@@ -83,6 +83,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
                 expected_roles << 'Director' if membership.advisor_role == AdvisorRole::DIRECTOR
                 expected_roles << 'Scheduler' if membership.advisor_role == AdvisorRole::SCHEDULER
                 expected_roles << 'Drop-in Advisor' if membership.is_drop_in_advisor
+                expected_roles << user.degree_progress_perm.user_perm if user.degree_progress_perm
                 visible_dept_roles = @pax_manifest_page.visible_dept_roles(user, membership.dept.code)
                 visible_roles = visible_dept_roles.split(' — ').last
                 actual_roles = visible_roles.split(' and ')

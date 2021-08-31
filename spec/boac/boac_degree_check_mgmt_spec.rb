@@ -45,7 +45,13 @@ describe 'A BOA degree' do
       @pax_manifest.log_out
     end
 
+    # Find student course data
     @homepage.dev_auth test.advisor
+    @student_api_page.get_data(@driver, @student)
+    @unassigned_courses = @student_api_page.degree_progress_courses @degree_check
+    @completed_course_0 = @unassigned_courses[0]
+
+    @homepage.load_page
     @homepage.click_degree_checks_link
     @degree_templates_mgmt_page.create_new_degree template
     @degree_template_page.complete_template template
@@ -147,6 +153,118 @@ describe 'A BOA degree' do
               course.units ? (@degree_check_page.visible_course_req_units(course) == course.units) : (@degree_check_page.visible_course_req_units(course) == '—')
             end
           end
+        end
+      end
+    end
+
+    context 'when a course requirement is edited' do
+
+      before(:all) { @reqt = template.categories.first.course_reqs.first }
+
+      it 'allows a big dot to be added' do
+        @degree_check_page.click_edit_course_req @reqt
+        @degree_check_page.toggle_course_req_dot
+        @degree_check_page.click_save_req_edit
+        expect(@degree_check_page.is_recommended? @reqt).to be true
+      end
+
+      it 'allows a big dot to be removed' do
+        @degree_check_page.click_edit_course_req @reqt
+        @degree_check_page.toggle_course_req_dot
+        @degree_check_page.click_save_req_edit
+        expect(@degree_check_page.is_recommended? @reqt).to be false
+      end
+
+      it 'allows units (range) to be added' do
+        @degree_check_page.click_edit_course_req @reqt
+        @degree_check_page.enter_col_req_units '4-5'
+        @degree_check_page.click_save_req_edit
+        expect(@degree_check_page.visible_course_req_units @reqt).to eql('4-5')
+      end
+
+      it 'allows units to be removed' do
+        @degree_check_page.click_edit_course_req @reqt
+        @degree_check_page.enter_col_req_units ''
+        @degree_check_page.click_save_req_edit
+        expect(@degree_check_page.visible_course_req_units @reqt).to eql('—')
+      end
+
+      it 'allows a grade to be added' do
+        @degree_check_page.click_edit_course_req @reqt
+        @degree_check_page.enter_course_grade '>B'
+        @degree_check_page.click_save_req_edit
+        expect(@degree_check_page.visible_course_req_grade @reqt).to eql('>B')
+      end
+
+      it 'allows a grade to be removed' do
+        @degree_check_page.click_edit_course_req @reqt
+        @degree_check_page.enter_course_grade ''
+        @degree_check_page.click_save_req_edit
+        expect(@degree_check_page.visible_course_req_grade(@reqt).to_s).to be_empty
+      end
+
+      it 'allows a note to be added' do
+        @degree_check_page.click_edit_course_req @reqt
+        @degree_check_page.enter_course_note 'affen schlafen in lederhosen'
+        @degree_check_page.click_save_req_edit
+        expect(@degree_check_page.visible_course_req_note(@reqt)).to eql('affen schlafen in lederhosen')
+      end
+
+      it 'allows a note to be removed' do
+        @degree_check_page.click_edit_course_req @reqt
+        @degree_check_page.enter_course_note ''
+        @degree_check_page.click_save_req_edit
+        expect(@degree_check_page.visible_course_req_note(@reqt).to_s).to be_empty
+      end
+
+      context 'and a completed course is assigned' do
+
+        before(:all) do
+          @degree_check_page.click_edit_course_req @reqt
+          @degree_check_page.toggle_course_req_dot
+          @degree_check_page.enter_col_req_units '4-5'
+          @degree_check_page.enter_course_grade '>B'
+          @degree_check_page.enter_course_note 'affen schlafen in lederhosen'
+          @degree_check_page.click_save_req_edit
+
+          @degree_check_page.assign_completed_course(@completed_course_0, @reqt)
+        end
+
+        it 'overwrites a big dot' do
+          expect(@degree_check_page.is_recommended? @completed_course_0).to be false
+        end
+
+        it 'overwrites requirement units' do
+          expect(@degree_check_page.visible_course_req_units @completed_course_0).to eql(@completed_course_0.units)
+        end
+
+        it 'overwrites a requirement grade' do
+          expect(@degree_check_page.visible_course_req_grade @completed_course_0).to eql(@completed_course_0.grade)
+        end
+
+        it 'overwrites a requirement note' do
+          expect(@degree_check_page.visible_course_req_note(@completed_course_0).to_s).to be_empty
+        end
+      end
+
+      context 'and a completed course is unassigned' do
+
+        before(:all) { @degree_check_page.unassign_course(@completed_course_0, @reqt) }
+
+        it 'restores a big dot' do
+          expect(@degree_check_page.is_recommended? @reqt).to be true
+        end
+
+        it 'restores requirement units' do
+          expect(@degree_check_page.visible_course_req_units @reqt).to eql('4-5')
+        end
+
+        it 'restores a requirement grade' do
+          expect(@degree_check_page.visible_course_req_grade @reqt).to eql('>B')
+        end
+
+        it 'restores a requirement note' do
+          expect(@degree_check_page.visible_course_req_note @reqt).to eql('affen schlafen in lederhosen')
         end
       end
     end

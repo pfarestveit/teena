@@ -249,7 +249,7 @@ module BOACPages
   text_area(:note_date_to, id: 'search-options-note-filters-last-updated-to')
   text_area(:search_input, id: 'search-students-input')
   elements(:search_history_item, :link, xpath: '//li[@class="autocomplete-result"]')
-  element(:fill_in_field_msg, xpath: '//*[contains(text(), "Please fill out this field.")]')
+  element(:fill_in_field_msg, xpath: '//span[contains(text(), "Search input is required")]')
   button(:search_button, id: 'go-search')
 
   def clear_input(element)
@@ -402,6 +402,7 @@ module BOACPages
   # Enters a sidebar search string
   # @param string [String]
   def enter_search_string(string)
+    logger.debug "Searching for '#{string}'"
     sleep 1
     clear_input search_input_element
     (self.search_input = string) if string

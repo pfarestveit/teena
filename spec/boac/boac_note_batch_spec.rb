@@ -124,7 +124,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
             @homepage.add_cohorts_to_batch(batch_note_1, cohorts)
             @homepage.add_curated_groups_to_batch(batch_note_1, curated_groups)
             expected_student_count = @batch_1_expected_students.length
-            @homepage.wait_until(1, "Expected #{expected_student_count} notes, got #{@homepage.batch_note_student_count_alert}") do
+            @homepage.wait_until(3, "Expected #{expected_student_count} notes, got #{@homepage.batch_note_student_count_alert}") do
               @homepage.batch_note_student_count_alert.include? "Note will be added to #{expected_student_count}"
             end
           end

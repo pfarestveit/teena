@@ -790,7 +790,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
     context 'when the advisor deletes a cohort and tries to navigate to the deleted cohort' do
 
       before(:all) do
-        @cohort_page.load_cohort test.searches.first
+        @cohort_page.navigate_to "#{BOACUtils.base_url}/cohort/#{test.searches.first.id}"
         @cohort_page.delete_cohort test.searches.first
       end
 

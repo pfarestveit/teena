@@ -98,7 +98,11 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
             appt_topics.each do |appt_topic|
               topic = Topic::TOPICS.find { |t| t.name == appt_topic }
               @homepage.select_note_topic topic
-              @homepage.type_note_appt_string_and_enter appt_search[:string]
+              if appt_search[:string].to_s.empty?
+                @homepage.click_search_button
+              else
+                @homepage.type_note_appt_string_and_enter appt_search[:string]
+              end
               topic_results_count = @search_results_page.appt_results_count
 
               if topic_results_count < 20
@@ -147,7 +151,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
                 # Posted by anyone
                 @homepage.select_notes_posted_by_anyone
                 @homepage.click_search_button
-                if appt_search[:string].empty?
+                if appt_search[:string].to_s.empty?
                   validation_error_present = @homepage.verify_block { @homepage.fill_in_field_msg_element.when_visible 1 }
                   it "requires a non-empty search string when searching for #{appt_search[:test_case]} and posted by anyone" do
                     expect(validation_error_present).to be true
@@ -185,8 +189,9 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
 
                 # Posted by anyone
                 @homepage.select_notes_posted_by_anyone
-                @homepage.type_note_appt_string_and_enter appt_search[:string]
-                if appt_search[:string]&.empty?
+                @homepage.enter_search_string appt_search[:string]
+                @homepage.click_search_button
+                if appt_search[:string].to_s.empty?
                   validation_error_present = @homepage.verify_block { @homepage.fill_in_field_msg_element.when_visible 1 }
                   it "requires a non-empty search string when searching for #{appt_search[:test_case]} and posted by anyone" do
                     expect(validation_error_present).to be true
@@ -196,7 +201,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
 
                   if anyone_posted_results_count < 20
                     anyone_posted_match = @search_results_page.appt_in_search_result?(appt_search[:appt])
-                    it "returns a result when searching with the first #{search_word_count} words in #{appt_search[:test_case]} and posted by anyone" do
+                    it "returns a result when searching with the first #{search_word_count} words '#{appt_search[:string]}' in #{appt_search[:test_case]} and posted by anyone" do
                       expect(anyone_posted_match).to be true
                     end
                   else
@@ -211,7 +216,11 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
 
                 @homepage.reset_search_options_notes_subpanel
                 @homepage.set_notes_author(author_name = "#{author[:first_name]} #{author[:last_name]}")
-                @homepage.type_note_appt_string_and_enter appt_search[:string]
+                if appt_search[:string].to_s.empty?
+                  @homepage.click_search_button
+                else
+                  @homepage.type_note_appt_string_and_enter appt_search[:string]
+                end
                 author_results_count = @search_results_page.appt_results_count
 
                 if author_results_count < 20
@@ -252,7 +261,11 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
 
             @homepage.reset_search_options_notes_subpanel
             @homepage.set_notes_student search[:student]
-            @homepage.type_note_appt_string_and_enter appt_search[:string]
+            if appt_search[:string].to_s.empty?
+              @homepage.click_search_button
+            else
+              @homepage.type_note_appt_string_and_enter appt_search[:string] unless appt_search[:string].to_s.empty?
+            end
             student_results_count = @search_results_page.appt_results_count
 
             if student_results_count < 20
@@ -271,7 +284,11 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
 
             @homepage.reset_search_options_notes_subpanel
             @homepage.set_notes_date_range(appt_date, appt_date + 1)
-            @homepage.type_note_appt_string_and_enter appt_search[:string]
+            if appt_search[:string].to_s.empty?
+              @homepage.click_search_button
+            else
+              @homepage.type_note_appt_string_and_enter appt_search[:string]
+            end
             range_start_results_count = @search_results_page.appt_results_count
 
             if range_start_results_count < 20

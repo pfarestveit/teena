@@ -21,7 +21,6 @@ describe 'bCourses course site creation' do
     @roster_photos_page = Page::JunctionPages::CanvasRostersPage.new @driver
     @course_captures_page = Page::JunctionPages::CanvasCourseCapturesPage.new @driver
 
-    all_test_courses = []
     sites_created = []
     sites_to_create = []
 
@@ -45,14 +44,7 @@ describe 'bCourses course site creation' do
         @splash_page.load_page
         @splash_page.basic_auth(test_course[:teacher].uid, @cal_net_page)
         test_course[:academic_data].get_feed @driver
-        all_test_courses << test_course
-
-        # If a test site was already created for the course today, then skip the site creation steps and just verify the site content
-        if test_course[:course].site_id && (test_course[:course].site_created_date&.== "#{Date.today}")
-          sites_created << test_course
-        else
-          sites_to_create << test_course
-        end
+        sites_to_create << test_course
 
       rescue => e
         it("encountered an error retrieving SIS data for #{test_course[:course].code}") { fail }
