@@ -107,8 +107,8 @@ class SquiggyAssetLibraryListViewPage
     asset_el(asset).when_present Utils.short_wait
     logger.warn "PERF - took #{Time.now - start} seconds for asset element to become visible"
     sleep 1
-    title_el = div_element(xpath: "#{xpath}//div[contains(@class, \"asset-metadata\")]/div[1]")
-    owner_el = div_element(xpath: "#{xpath}//div[contains(@class, \"asset-metadata\")]/div[2]")
+    title_el = div_element(xpath: "#{xpath}//div[contains(@class, 'asset-metadata')]/div[1]")
+    owner_el = div_element(xpath: "#{xpath}//div[contains(@class, 'asset-metadata')]/div[2]")
     view_count_el = div_element(xpath: "#{xpath}//*[@data-icon='eye']/..")
     like_count_el = div_element(xpath: "#{xpath}//*[@data-icon='thumbs-up']/..")
     comment_count_el = div_element(xpath: "#{xpath}//*[@data-icon='comment']/..")

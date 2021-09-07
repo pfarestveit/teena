@@ -90,7 +90,7 @@ module Page
     # @return [Boolean]
     def grades_final?
       click_gradebook_settings
-      gradebook_include_ungraded_element.when_present Utils.short_wait
+      gradebook_include_ungraded_element.when_present Utils.medium_wait
       gradebook_include_ungraded_checked?
     end
 
@@ -100,7 +100,7 @@ module Page
       logger.info "Setting manual posting policy for course ID #{course.site_id}"
       load_gradebook course
       click_gradebook_settings
-      wait_for_update_and_click grade_posting_policy_tab_element
+      wait_for_load_and_click grade_posting_policy_tab_element
       gradebook_manual_posting_input_element.when_visible 2
       if gradebook_manual_posting_msg?
         logger.debug 'Posting policy is already manual'

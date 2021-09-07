@@ -70,6 +70,7 @@ module PageObject
      text_area
      text_field
      title
+     video
   ).each do |tag|
     send(:define_method, "#{tag}_element") do |*args|
       locator = args.first
@@ -216,6 +217,10 @@ module PageObject
     end
 
     def unordered_list(name, locator)
+      text_element(name, locator)
+    end
+
+    def video(name, locator)
       text_element(name, locator)
     end
 
