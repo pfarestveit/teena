@@ -78,7 +78,7 @@ class BOACApiStudentPage
       :transfer => (sis_profile && (sis_profile['transfer'])),
       :terms_in_attendance => (sis_profile && sis_profile['termsInAttendance'].to_s),
       :entered_term => (sis_profile && sis_profile['matriculation']),
-      :intended_majors => (((sis_profile && sis_profile['intendedMajors'] && sis_profile['intendedMajors']) || []).map { |m| m['description'] }),
+      :intended_majors => (((sis_profile && sis_profile['intendedMajors'] && sis_profile['intendedMajors']) || []).map { |m| m['description'] }).reject(&:empty?),
       :expected_grad_term_id => (sis_profile && sis_profile['expectedGraduationTerm'] && sis_profile['expectedGraduationTerm']['id']),
       :expected_grad_term_name => (sis_profile && sis_profile['expectedGraduationTerm'] && sis_profile['expectedGraduationTerm']['name']),
       :withdrawal => (sis_profile && withdrawal),
@@ -158,13 +158,17 @@ class BOACApiStudentPage
   end
 
   def academic_standing
-    @parsed && @parsed['academicStanding']&.map do |st|
+    standing = @parsed && @parsed['academicStanding']&.map do |st|
       AcademicStanding.new({
                                code: st['status'],
                                descrip: (AcademicStanding::STATUSES.find { |s| s.code == st['status'] }).descrip,
                                term_id: st['termId'],
-                               term_name: st['termName']
+                               term_name: st['termName'],
+                               date: st['actionDate']
                            })
+    end
+    if standing
+      standing.group_by { |s| s.term_id }.transform_values { |v| v.sort_by(&:date).last }.values
     end
   end
 
