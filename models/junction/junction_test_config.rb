@@ -17,6 +17,7 @@ class JunctionTestConfig < TestConfig
     set_courses test
     set_sis_teacher @courses.first
     set_manual_users test
+    @courses.each { |c| c.create_site_workflow = 'self' }
   end
 
   def background_jobs_load_test
@@ -60,6 +61,7 @@ class JunctionTestConfig < TestConfig
     set_global_configs
     set_courses test
     set_manual_users test
+    @courses.each { |c| c.create_site_workflow = 'self' }
   end
 
   def projects
@@ -72,6 +74,7 @@ class JunctionTestConfig < TestConfig
     set_global_configs
     set_courses test
     set_manual_users test
+    @courses.each { |c| c.create_site_workflow = 'self' }
   end
 
   def user_prov

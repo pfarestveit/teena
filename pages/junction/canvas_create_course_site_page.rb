@@ -255,7 +255,7 @@ module Page
       def provision_course_site(course, user, sections, opts={})
         opts[:standalone] ? load_standalone_tool : load_embedded_tool(user)
         click_create_course_site
-        course.create_site_workflow = opts[:admin] ? 'ccn' : nil
+        course.create_site_workflow = 'ccn' if opts[:admin]
         search_for_course(course, user, sections)
         expand_available_sections course.code
         select_sections sections

@@ -106,8 +106,14 @@ junction:
   background_job_multiplier: 1
   admin_uid: secret
   oec_uid: secret
-  term: '2020-C'
+  term_name: 'Fall 2021'
+  term: '2021-D'
   sis_update_date: '2020-01-01'
+  db_host: secret
+  db_port: secret
+  db_name: secret
+  db_user: secret
+  db_password: secret
 
 lrs:
   base_url: https://app-qa.ets-berkeley-cloudlrs.net

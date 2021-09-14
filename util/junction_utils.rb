@@ -51,6 +51,10 @@ class JunctionUtils < Utils
     @config['background_job_attempts']
   end
 
+  def self.term_name
+    @config['term_name']
+  end
+
   def self.term_code
     @config['term']
   end
@@ -148,6 +152,23 @@ class JunctionUtils < Utils
 
   def self.user_prov_tool
     Utils.config['canvas']['user_prov_tool']
+  end
+
+  def self.db_credentials
+    {
+      host: @config['db_host'],
+      port: @config['db_port'],
+      name: @config['db_name'],
+      user: @config['db_user'],
+      password: @config['db_password']
+    }
+  end
+
+  def self.drop_existing_mailing_lists
+    sql_1 = 'DELETE FROM canvas_site_mailing_lists'
+    sql_2 = 'DELETE FROM canvas_site_mailing_list_members'
+    Utils.query_pg_db(db_credentials, sql_1)
+    Utils.query_pg_db(db_credentials, sql_2)
   end
 
 end

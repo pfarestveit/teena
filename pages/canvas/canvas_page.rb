@@ -126,7 +126,7 @@ module Page
     button(:add_new_course_button, xpath: '//button[@aria-label="Create new course"]')
     text_area(:course_name_input, xpath: '(//form[@aria-label="Add a New Course"]//input)[1]')
     text_area(:ref_code_input, xpath: '(//form[@aria-label="Add a New Course"]//input)[2]')
-    select_list(:term, xpath:'//span[text()="Enrollment Term"]/parent::span/parent::span/following-sibling::span//select')
+    select_list(:term, id: 'course_enrollment_term_id')
     button(:create_course_button, xpath: '//button[contains(.,"Add Course")]')
 
     span(:course_site_heading, xpath: '//li[contains(@id,"crumb_course_")]//span')
@@ -346,11 +346,8 @@ module Page
       else
         logger.debug 'The site is unpublished, publishing'
         wait_for_update_and_click publish_button_element
-        # Junction test courses from SIS data always have a term and have the site's front page set during creation. Other
-        # test courses never have a term and need to set the site's front page while publishing.
-        if course.term.nil?
-          activity_stream_radio_element.when_visible Utils.short_wait
-          select_activity_stream_radio
+        unless course.create_site_workflow
+          wait_for_update_and_click activity_stream_radio_element
           wait_for_update_and_click choose_and_publish_button_element
         end
         published_button_element.when_present Utils.medium_wait
@@ -602,6 +599,25 @@ module Page
 
     text_area(:message_addressee, name: 'recipients[]')
     text_area(:message_input, name: 'body')
+
+    # FILES
+
+    link(:files_link, text: 'Files')
+    button(:access_toggle, xpath: '//button[@aria-label="Notice to Instructors for Making Course Materials Accessible"]')
+    link(:access_basics_link, xpath: '//a[contains(., "Accessibility Basics for bCourses")]')
+    link(:access_checker_link, xpath: '//a[contains(., "How do I use the Accessibility Checker")]')
+    link(:access_dsp_link, xpath: '//a[contains(., "How to improve the accessibility of your online content")]')
+    link(:access_sensus_link, xpath: '//a[contains(., "SensusAccess Conversion")]')
+    link(:access_ally_link, xpath: '//a[contains(., "Ally in bCourses Service Page")]')
+
+    def click_files_tab
+      logger.info 'Clicking Files tab'
+      wait_for_update_and_click files_link_element
+    end
+
+    def toggle_access_links
+      wait_for_update_and_click access_toggle_element
+    end
 
   end
 end

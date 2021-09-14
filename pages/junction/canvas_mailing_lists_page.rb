@@ -79,7 +79,7 @@ module Page
       # @param course [Course]
       def default_list_name(course)
         part = course.title
-        course.term.nil? ? (part = "#{part} list") : (part = "#{part} #{course.term[0..1]} #{course.term[-2..-1]}")
+        course.term.nil? ? (part = "#{part} list") : (part = "#{part} #{course.term[0..1]}#{course.term[-2..-1]}")
         part.downcase.gsub(/[ :]/, '-')
       end
 
