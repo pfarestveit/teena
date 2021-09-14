@@ -251,7 +251,7 @@ describe 'bCourses course site creation' do
       @canvas_page.load_homepage
       @canvas_page.log_in(@cal_net_page, Utils.super_admin_username, Utils.super_admin_password) if @cal_net_page.username?
 
-      sites_created.each do |site|
+      sites_created.each_with_index do |site, i|
 
         begin
           section_ids = site[:sections_for_site].map { |s| s.id }
@@ -322,6 +322,38 @@ describe 'bCourses course site creation' do
 
           grade_distribution_hidden = @canvas_page.grade_distribution_hidden? site[:course]
           it("hides grade distribution graphs from students for #{site[:course].term} #{site[:course].code} site ID #{site[:course].site_id}") { expect(grade_distribution_hidden).to be true }
+
+          # FILES - accessibility links
+
+          if i.zero?
+            @canvas_page.click_files_tab
+            @canvas_page.toggle_access_links
+
+            basics_link = @canvas_page.external_link_valid?(@canvas_page.access_basics_link_element, 'A11y Basics')
+            it "shows an Accessibility Basics for bCourses link for #{site[:course].term} #{site[:course].code} site ID #{site[:course].site_id}" do
+              expect(basics_link).to be true
+            end
+
+            access_checker = @canvas_page.external_link_valid?(@canvas_page.access_checker_link_element, 'How do I use the Accessibility Checker in the Rich')
+            it "shows a How Do I Use the Accessibility Checker link for #{site[:course].term} #{site[:course].code} site ID #{site[:course].site_id}" do
+              expect(access_checker).to be true
+            end
+
+            dsp_link = @canvas_page.external_link_valid?(@canvas_page.access_dsp_link_element, 'Creating Accessible Content')
+            it "shows a DSP link for #{site[:course].term} #{site[:course].code} site ID #{site[:course].site_id}" do
+              expect(dsp_link).to be true
+            end
+
+            sensus_link = @canvas_page.external_link_valid?(@canvas_page.access_sensus_link_element, 'SensusAccess Conversion')
+            it "shows a SensusAccess link for #{site[:course].term} #{site[:course].code} site ID #{site[:course].site_id}" do
+              expect(sensus_link).to be true
+            end
+
+            ally_link = @canvas_page.external_link_valid?(@canvas_page.access_ally_link_element, 'Ally in bCourses')
+            it "shows an Ally in bCourses link for #{site[:course].term} #{site[:course].code} site ID #{site[:course].site_id}" do
+              expect(ally_link).to be true
+            end
+          end
 
           @canvas_page.stop_masquerading
         rescue => e

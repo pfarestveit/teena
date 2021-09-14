@@ -41,7 +41,7 @@ class OECDepartments
       CHM_ENG = new('CHM ENG','Chemical and Biomolecular Engineering', 'CHM ENG', %w(F G), true),
       CIV_ENG = new('CIV ENG', 'Civil and Environmental Engineering', 'CIV ENG', nil, false),
       CLASSIC = new('CLASSIC', 'Ancient Greek & Roman Studies', 'CLASSIC', %w(F G), true),
-      CMPBIO = new('CMPBIO', 'Bioengineering', 'CMPBIO', nil, true),
+      CMPBIO = new('CMPBIO', 'Bioengineering', 'CMPBIO', nil, false),
       COG_SCI = new('COG SCI', 'International and Area Studies', 'IAS', %w(F G), true),
       COLWRIT = new('COLWRIT', 'College Writing', 'COLWRIT', %w(F G), true),
       COM_LIT = new('COM LIT', 'Comparative Literature', 'COM LIT', %w(G), true),

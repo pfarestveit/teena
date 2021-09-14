@@ -89,8 +89,9 @@ module Page
     # Returns whether or not ungraded assignments are included in grades
     # @return [Boolean]
     def grades_final?
+      sleep Utils.click_wait
       click_gradebook_settings
-      gradebook_include_ungraded_element.when_present Utils.medium_wait
+      gradebook_include_ungraded_element.when_present Utils.short_wait
       gradebook_include_ungraded_checked?
     end
 

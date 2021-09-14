@@ -9,9 +9,11 @@ unless ENV['STANDALONE']
     test = JunctionTestConfig.new
     test.mailing_lists
     timeout = Utils.short_wait
+    # For good measure, wipe any old mailing list test data that's lying around
+    JunctionUtils.drop_existing_mailing_lists
 
-    course_site_1 = Course.new({title: "QA Mailing List 1 #{test.id}", code: "QA admin #{test.id}"})
-    course_site_2 = Course.new({title: "QA Mailing List 2 #{test.id}", code: "QA admin #{test.id}"})
+    course_site_1 = Course.new({title: "QA Mailing List 1 #{test.id}", code: "QA admin #{test.id}", term: JunctionUtils.term_name})
+    course_site_2 = Course.new({title: "QA Mailing List 2 #{test.id}", code: "QA admin #{test.id}", term: JunctionUtils.term_name})
     course_site_3 = Course.new({title: "QA Mailing List 3 #{test.id}", code: "QA instructor #{test.id}"})
 
     users = [test.manual_teacher, test.designer, test.lead_ta, test.ta, test.observer, test.reader, test.students].flatten
@@ -99,7 +101,7 @@ unless ENV['STANDALONE']
 
         it 'shows the course site code, title, and ID' do
           expect(@mailing_lists_page.site_name).to eql(course_site_1.title)
-          expect(@mailing_lists_page.site_code).to eql(("#{course_site_1.code} #{course_site_1.term}").strip)
+          expect(@mailing_lists_page.site_code).to eql(("#{course_site_1.code}, #{course_site_1.term}").strip)
           expect(@mailing_lists_page.site_id).to eql("Site ID: #{course_site_1.site_id}")
         end
 
@@ -152,7 +154,7 @@ unless ENV['STANDALONE']
         it 'shows the course site code, title, and ID' do
           @canvas_page.switch_to_canvas_iframe unless "#{@driver.browser}" == 'firefox'
           expect(@mailing_lists_page.site_name).to eql("#{@mailing_lists_page.default_list_name course_site_1}@bcourses-mail.berkeley.edu")
-          expect(@mailing_lists_page.site_code).to eql(("#{course_site_1.code} #{course_site_1.term}").strip)
+          expect(@mailing_lists_page.site_code).to eql(("#{course_site_1.code}, #{course_site_1.term}").strip)
           expect(@mailing_lists_page.site_id).to eql("Site ID: #{course_site_1.site_id}")
         end
 
