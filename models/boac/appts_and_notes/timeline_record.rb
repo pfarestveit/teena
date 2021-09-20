@@ -1,6 +1,7 @@
 class TimelineRecord
 
   attr_accessor :id,
+                :source,
                 :title,
                 :subject,
                 :body,

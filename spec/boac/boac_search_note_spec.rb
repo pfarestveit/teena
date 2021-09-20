@@ -43,7 +43,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
           test_notes = expected_sis_notes.shuffle[range] + expected_ei_notes.shuffle[range] + expected_boa_notes.shuffle[range] +
               expected_asc_notes.shuffle[range] + expected_data_notes.shuffle[range]
 
-          logger.info "Test note sources: #{test_notes.map { |n| n.note_source ? n.note_source.name : 'BOA' }}"
+          logger.info "Test note sources: #{test_notes.map { |n| n.source ? n.source.name : 'BOA' }}"
 
           if test_notes.any?
             test_notes.each do |note|
@@ -124,7 +124,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
               note_topics = all_topics.select { |topic_name| note_search[:note].topics.include? topic_name.upcase }
               non_note_topics = all_topics - note_topics
 
-              if [TimelineRecordSource::ASC, TimelineRecordSource::DATA].include? note_search[:note].note_source
+              if [TimelineRecordSource::ASC, TimelineRecordSource::DATA].include? note_search[:note].source
                 logger.warn 'Skipping search by topic since note source is ASC or Data Science, and they cannot be searched by topic'
               else
                 note_topics.each do |note_topic|
