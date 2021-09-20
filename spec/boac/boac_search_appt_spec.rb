@@ -12,7 +12,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
       test_config.search_appointments
       search_word_count = BOACUtils.search_word_count
       student_searches = []
-      all_advising_note_authors = NessieUtils.get_all_advising_note_authors
+      all_advising_note_authors = NessieTimelineUtils.get_all_advising_note_authors
 
       test_config.test_students.each do |student|
 
@@ -20,7 +20,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
           appt_searches = []
           expected_boa_appts = BOACUtils.get_student_appts(student, test_config.students)
           expected_boa_appts.delete_if &:deleted_date
-          expected_sis_appts = NessieUtils.get_sis_appts student
+          expected_sis_appts = NessieTimelineUtils.get_sis_appts student
           expected_appts = expected_boa_appts + expected_sis_appts
           if expected_appts.any?
             expected_appts.each { |appt| appt_searches << BOACUtils.generate_appt_search_query(student, appt) }
@@ -212,7 +212,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
 
               # Advisor (the user who met with the student rather than the user who created the appointment)
 
-              if (author = NessieUtils.get_advising_note_author(appt_search[:appt].advisor.uid))
+              if (author = NessieTimelineUtils.get_advising_note_author(appt_search[:appt].advisor.uid))
 
                 @homepage.reset_search_options_notes_subpanel
                 @homepage.set_notes_author(author_name = "#{author[:first_name]} #{author[:last_name]}")

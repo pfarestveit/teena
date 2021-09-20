@@ -35,9 +35,9 @@ class BOACTestConfig < TestConfig
         @advisor = BOACUser.new({:uid => Utils.super_admin_uid})
       when BOACDepartments::ASC, BOACDepartments::COE, BOACDepartments::L_AND_S
         @advisor = if uid
-                     (advisors.find { |a| (a.uid.to_i == uid) && NessieUtils.get_advising_note_author(a.uid)})
+                     (advisors.find { |a| (a.uid.to_i == uid) && NessieTimelineUtils.get_advising_note_author(a.uid)})
                    else
-                     advisors.find { |a| (a.depts == [@dept.code]) && NessieUtils.get_advising_note_author(a.uid) }
+                     advisors.find { |a| (a.depts == [@dept.code]) && NessieTimelineUtils.get_advising_note_author(a.uid) }
                    end
       else
         if block_given?
@@ -46,7 +46,7 @@ class BOACTestConfig < TestConfig
           @advisor = advisors.find { |a| a.depts == [@dept.code] }
         end
     end
-    if uid && (user_data = NessieUtils.get_advising_note_author(uid))
+    if uid && (user_data = NessieTimelineUtils.get_advising_note_author(uid))
       @advisor.sis_id = user_data[:sid]
       @advisor.first_name = user_data[:first_name]
       @advisor.last_name = user_data[:last_name]
@@ -72,7 +72,7 @@ class BOACTestConfig < TestConfig
 
   def set_read_only_advisor
     dept_advisors = BOACUtils.get_dept_advisors(@dept).select { |u| u.uid.length > 1 }
-    @read_only_advisor = dept_advisors.find { |a| (a.uid.to_s != @advisor.uid.to_s) && NessieUtils.get_advising_note_author(a.uid) }
+    @read_only_advisor = dept_advisors.find { |a| (a.uid.to_s != @advisor.uid.to_s) && NessieTimelineUtils.get_advising_note_author(a.uid) }
   end
 
   # Sets the complete list of potentially visible students
@@ -132,26 +132,29 @@ class BOACTestConfig < TestConfig
                      elsif opts[:with_notes]
                        # Running tests against a set of students who represent different note sources
                        boa_sids = NessieUtils.get_all_sids
-                       asc_note_sids = boa_sids & NessieUtils.get_sids_with_notes_of_src(TimelineRecordSource::ASC)
+                       asc_note_sids = boa_sids & NessieTimelineUtils.get_sids_with_notes_of_src(TimelineRecordSource::ASC)
                        logger.info "There are #{asc_note_sids.length} students with ASC notes"
                        boa_note_sids = boa_sids & BOACUtils.get_sids_with_notes_of_src_boa
                        logger.info "There are #{boa_note_sids.length} students with BOA notes"
-                       data_note_sids = boa_sids & NessieUtils.get_sids_with_notes_of_src(TimelineRecordSource::DATA)
+                       data_note_sids = boa_sids & NessieTimelineUtils.get_sids_with_notes_of_src(TimelineRecordSource::DATA)
                        logger.info "There are #{data_note_sids.length} students with Data Science notes"
-                       e_and_i_note_sids = boa_sids & NessieUtils.get_sids_with_notes_of_src(TimelineRecordSource::E_AND_I)
+                       e_and_i_note_sids = boa_sids & NessieTimelineUtils.get_sids_with_notes_of_src(TimelineRecordSource::E_AND_I)
                        logger.info "There are #{e_and_i_note_sids.length} students with E&I notes"
-                       sis_note_sids = boa_sids & NessieUtils.get_sids_with_notes_of_src(TimelineRecordSource::SIS)
+                       e_form_sids = boa_sids & NessieTimelineUtils.get_sids_with_e_forms
+                       logger.info "There are #{e_form_sids.length} students with eForms"
+                       sis_note_sids = boa_sids & NessieTimelineUtils.get_sids_with_notes_of_src(TimelineRecordSource::SIS)
                        logger.info "There are #{sis_note_sids.length} students with SIS notes that have attachments"
                        [asc_note_sids, boa_note_sids, data_note_sids, e_and_i_note_sids, sis_note_sids].each { |s| s.shuffle! } if BOACUtils.shuffle_max_users
                        range = 0..(config - 1)
-                       test_sids = (asc_note_sids[range] + boa_note_sids[range] + data_note_sids[range] + e_and_i_note_sids[range] + sis_note_sids[range]).uniq
+                       test_sids = (asc_note_sids[range] + boa_note_sids[range] + data_note_sids[range] +
+                         e_and_i_note_sids[range] + e_form_sids[range] + sis_note_sids[range]).uniq
                        @students.select { |s| test_sids.include? s.sis_id }
 
                      elsif opts[:with_appts]
                        boa_sids = NessieUtils.get_all_sids
-                       sis_appts_sids = boa_sids & NessieUtils.get_sids_with_sis_appts
+                       sis_appts_sids = boa_sids & NessieTimelineUtils.get_sids_with_sis_appts
                        logger.info "There are #{sis_appts_sids.length} students with SIS appointments"
-                       ycbm_appts_sids = boa_sids & NessieUtils.get_sids_with_ycbm_appts
+                       ycbm_appts_sids = boa_sids & NessieTimelineUtils.get_sids_with_ycbm_appts
                        logger.info "There are #{ycbm_appts_sids.length} students with YCBM appointments"
                        [sis_appts_sids, ycbm_appts_sids].each { |a| a.shuffle! } if BOACUtils.shuffle_max_users
                        test_sids = (sis_appts_sids[0..(config - 1)] + ycbm_appts_sids[0..(config - 1)]).uniq
@@ -287,13 +290,13 @@ class BOACTestConfig < TestConfig
 
   def degree_progress
     set_base_configs BOACDepartments::COE
-    NessieUtils.set_advisor_data @advisor
+    NessieTimelineUtils.set_advisor_data @advisor
     filter = CohortFilter.new
     filter.major = BOACUtils.degree_major
     filter.units_completed = ['90 - 119']
     set_default_cohort filter
     set_read_only_advisor
-    NessieUtils.set_advisor_data @read_only_advisor
+    NessieTimelineUtils.set_advisor_data @read_only_advisor
     set_degree_templates
   end
 

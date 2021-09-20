@@ -181,6 +181,34 @@ module BOACStudentPageAdvisingNote
     }
   end
 
+  def e_form_data_el(e_form, label)
+    div_element(xpath: "//tr[@id='permalink-note-eform-#{e_form.id}']//dt[text()='#{label}']/following-sibling::dd")
+  end
+
+  def visible_expanded_e_form_data(e_form)
+    sleep 1
+    created_el = div_element(id: "expanded-note-eform-#{e_form.id}-created-at")
+    updated_el = div_element(id: "expanded-note-eform-#{e_form.id}-updated-at")
+    term_el = e_form_data_el(e_form, 'Term')
+    course_el = e_form_data_el(e_form, 'Course')
+    action_el = e_form_data_el(e_form, 'Late Action')
+    form_id_el = e_form_data_el(e_form, 'Form ID')
+    date_init_el = e_form_data_el(e_form, 'Date Initiated')
+    status_el = e_form_data_el(e_form, 'Form Status')
+    date_final_el = e_form_data_el(e_form, 'Final Date & Time Stamp')
+    {
+      created_date: (created_el.text if created_el.exists?),
+      updated_date: (updated_el.text if updated_el.exists?),
+      term: (term_el.text if term_el.exists?),
+      course: (course_el.text if course_el.exists?),
+      action: (action_el.text if action_el.exists?),
+      form_id: (form_id_el.text if form_id_el.exists?),
+      date_initiated: (date_init_el.text if date_init_el.exists?),
+      status: (status_el.text if status_el.exists?),
+      date_finalized: (date_final_el.text if date_final_el.exists?)
+    }
+  end
+
   # Verifies the visible content of a note
   # @param note [Note]
   def verify_note(note)

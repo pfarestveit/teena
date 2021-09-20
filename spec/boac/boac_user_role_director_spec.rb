@@ -7,10 +7,10 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
 
   test_cases = test.test_students.map do |student|
     boa_notes = BOACUtils.get_student_notes student
-    sis_notes = NessieUtils.get_sis_notes student
-    ei_notes = NessieUtils.get_e_and_i_notes student
-    asc_notes = NessieUtils.get_asc_notes student
-    data_sci_notes = NessieUtils.get_data_sci_notes student
+    sis_notes = NessieTimelineUtils.get_sis_notes student
+    ei_notes = NessieTimelineUtils.get_e_and_i_notes student
+    asc_notes = NessieTimelineUtils.get_asc_notes student
+    data_sci_notes = NessieTimelineUtils.get_data_sci_notes student
     {student: student, notes: (boa_notes + sis_notes + ei_notes + asc_notes + data_sci_notes)}
   end
 

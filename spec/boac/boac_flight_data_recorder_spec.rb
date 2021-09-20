@@ -59,15 +59,15 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
       end
 
       it 'shows the total number of notes imported from the SIS' do
-        expect(@flight_data_recorder.notes_count_sis).to eql(Utils.int_to_s_with_commas NessieUtils.get_external_note_count('sis_advising_notes'))
+        expect(@flight_data_recorder.notes_count_sis).to eql(Utils.int_to_s_with_commas NessieTimelineUtils.get_external_note_count('sis_advising_notes'))
       end
 
       it 'shows the total number of notes imported from the ASC' do
-        expect(@flight_data_recorder.notes_count_asc).to eql(Utils.int_to_s_with_commas NessieUtils.get_external_note_count('boac_advising_asc'))
+        expect(@flight_data_recorder.notes_count_asc).to eql(Utils.int_to_s_with_commas NessieTimelineUtils.get_external_note_count('boac_advising_asc'))
       end
 
       it 'shows the total number of notes imported from the CEEE' do
-        expect(@flight_data_recorder.notes_count_ei).to eql(Utils.int_to_s_with_commas NessieUtils.get_external_note_count('boac_advising_e_i'))
+        expect(@flight_data_recorder.notes_count_ei).to eql(Utils.int_to_s_with_commas NessieTimelineUtils.get_external_note_count('boac_advising_e_i'))
       end
 
       context 'viewing the created-in-BOA notes report' do
