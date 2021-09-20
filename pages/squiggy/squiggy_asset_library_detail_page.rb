@@ -52,7 +52,7 @@ class SquiggyAssetLibraryDetailPage < SquiggyAssetLibraryListViewPage
   def click_category_link(category)
     logger.info "Clicking link to category '#{category.name}'"
     scroll_to_bottom
-    wait_for_update_and_click category_el_by_id(category)
+    wait_for_update_and_click_js category_el_by_id(category)
   end
 
   def no_category_el

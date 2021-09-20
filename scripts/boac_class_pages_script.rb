@@ -5,7 +5,11 @@ include Logging
 begin
 
   test = BOACTestConfig.new
-  test.class_pages
+  if BOACUtils.base_url.include? 'boa-'
+    test.sis_student_data
+  else
+    test.test_students = ENV['UIDS'].split.map { |u| BOACUser.new uid: u }
+  end
 
   courses_heading = %w(Term Course Title Format Units)
   courses_csv = Utils.create_test_output_csv('boac-class-page-courses.csv', courses_heading)
@@ -27,12 +31,13 @@ begin
   if BOACUtils.base_url.include? 'boa-'
     @homepage.dev_auth test.advisor
   else
-    @cal_net = CalNetPage.new @driver
+    @cal_net = Page::CalNetPage.new @driver
     @homepage.log_in(Utils.super_admin_username, Utils.super_admin_password, @cal_net)
   end
   test.test_students.each do |student|
     begin
 
+      sleep 3 unless BOACUtils.base_url.include? 'boa-'
       api_user_page = BOACApiStudentPage.new @driver
       api_user_page.get_data(@driver, student)
 
@@ -58,7 +63,9 @@ begin
                     begin
 
                       api_section = api_user_page.sis_section_data section
+
                       api_section_page = BOACApiSectionPage.new @driver
+                      sleep 3 unless BOACUtils.base_url.include? 'boa-'
                       api_section_page.get_data(@driver, term_id, api_section[:ccn])
                       test_case = "term #{term_name} course #{api_course[:code]} section #{api_section[:component]} #{api_section[:number]} #{api_section[:ccn]}"
                       logger.info "Checking #{test_case}"
@@ -96,6 +103,7 @@ begin
                         expected_students.each do |student|
 
                           # Load the student's data and find the matching course
+                          sleep 3 unless BOACUtils.base_url.include? 'boa-'
                           student_api = BOACApiStudentPage.new @driver
                           student_api.get_data(@driver, student)
                           term = student_api.terms.find { |t| student_api.term_name(t) == term_name }
@@ -159,33 +167,33 @@ begin
 
                     rescue => e
                       BOACUtils.log_error_and_screenshot(@driver, e, "#{student.uid}-#{term_name}-#{api_course[:code]}")
-                      it("test hit an error with UID #{student.uid} term #{term_name} course #{api_course[:code]}") { fail }
+                      logger.error "test hit an error with UID #{student.uid} term #{term_name} course #{api_course[:code]}"
                     end
                   end
                 end
 
               rescue => e
                 BOACUtils.log_error_and_screenshot(@driver, e, "#{student.uid}-#{term_name}-#{api_course[:code]}")
-                it("test hit an error with UID #{student.uid} term #{term_name} course #{api_course[:code]}") { fail }
+                logger.error "test hit an error with UID #{student.uid} term #{term_name} course #{api_course[:code]}"
               end
             end
 
           rescue => e
             BOACUtils.log_error_and_screenshot(@driver, e, "#{student.uid}-#{term_name}")
-            it("test hit an error with UID #{student.uid} term #{term_name}") { fail }
+            logger.error "test hit an error with UID #{student.uid} term #{term_name}"
           end
         end
       end
 
     rescue => e
       BOACUtils.log_error_and_screenshot(@driver, e, "#{student.uid}")
-      it("test hit an error with UID #{student.uid}") { fail }
+      logger.error "test hit an error with UID #{student.uid}"
     end
   end
 
 rescue => e
   Utils.log_error e
-  it('test hit an error') { fail }
+  logger.error 'test hit an error'
 ensure
   Utils.quit_browser @driver
 end

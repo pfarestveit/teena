@@ -4,7 +4,11 @@ include Logging
 
 begin
   test = BOACTestConfig.new
-  test.sis_student_data
+  if BOACUtils.base_url.include? 'boa-'
+    test.sis_student_data
+  else
+    test.test_students = ENV['UIDS'].split.map { |u| BOACUser.new uid: u }
+  end
 
   profile_data_heading = %w(UID MajorsIntend NonActive)
   profile_csv = Utils.create_test_output_csv('boac-sis-profiles.csv', profile_data_heading)
@@ -18,16 +22,17 @@ begin
   @driver = Utils.launch_browser test.chrome_profile
   @boac_homepage = BOACHomePage.new @driver
   if BOACUtils.base_url.include? 'boa-'
-    @homepage.dev_auth test.advisor
+    @boac_homepage.dev_auth test.advisor
   else
-    @cal_net = CalNetPage.new @driver
-    @homepage.log_in(Utils.super_admin_username, Utils.super_admin_password, @cal_net)
+    @cal_net = Page::CalNetPage.new @driver
+    @boac_homepage.log_in(Utils.super_admin_username, Utils.super_admin_password, @cal_net)
   end
 
   test.test_students.sort_by! &:uid
   test.test_students.each do |student|
 
     begin
+      sleep 3 unless BOACUtils.base_url.include? 'boa-'
       api_student_data = BOACApiStudentPage.new @driver
       api_student_data.get_data(@driver, student)
       api_sis_profile_data = api_student_data.sis_profile_data
@@ -72,9 +77,12 @@ begin
 
                     rescue => e
                       BOACUtils.log_error e
-                      it("encountered an error for UID #{student.uid} term #{term_name} course #{course_code} section #{section_sis_data[:ccn]}") { fail }
+                      logger.error "encountered an error for UID #{student.uid} term #{term_name} course #{course_code} section #{section_sis_data[:ccn]}"
+                      logger.error "#{e.message + "\n"} #{e.backtrace.join("\n ")}"
                     ensure
-                      unless ['Fall 2021', 'Summer 2021', 'Spring 2021'].include? term_name
+                      unless [BOACUtils.term,
+                              BOACUtils.sis_code_to_term_name(BOACUtils.previous_term_code),
+                              BOACUtils.sis_code_to_term_name(BOACUtils.previous_term_code BOACUtils.previous_term_code)].include? term_name
                         row = [student.uid,
                                term_name,
                                section_sis_data[:ccn],
@@ -92,7 +100,8 @@ begin
 
                 rescue => e
                   BOACUtils.log_error e
-                  it("encountered an error for UID #{student.uid} term #{term_name} course #{course_code}") { fail }
+                  logger.error "encountered an error for UID #{student.uid} term #{term_name} course #{course_code}"
+                  logger.error "#{e.message + "\n"} #{e.backtrace.join("\n ")}"
                 end
               end
 
@@ -103,25 +112,28 @@ begin
             drops = api_student_data.dropped_sections term
             if drops
               drops.each do |drop|
-                row = [student.uid,
-                       term_name,
-                       nil,
-                       "#{drop[:component]} #{drop[:number]}",
-                       nil,
-                       nil,
-                       nil,
-                       nil,
-                       nil,
-                       'D',
-                       drop[:date]
-                ]
-                Utils.add_csv_row(courses_csv, row)
-              end
+                unless term_name == BOACUtils.term
+                  row = [student.uid,
+                         term_name,
+                         nil,
+                         "#{drop[:component]} #{drop[:number]}",
+                         nil,
+                         nil,
+                         nil,
+                         nil,
+                         nil,
+                         'D',
+                         nil
+                  ]
+                  Utils.add_csv_row(courses_csv, row)
+                end
+             end
             end
 
           rescue => e
             BOACUtils.log_error e
-            it("encountered an error for UID #{student.uid} term #{term_name}") { fail "#{e.message + "\n"} #{e.backtrace.join("\n ")}" }
+            logger.error "encountered an error for UID #{student.uid} term #{term_name}"
+            logger.error "#{e.message + "\n"} #{e.backtrace.join("\n ")}"
           end
         end
 
@@ -131,7 +143,8 @@ begin
 
     rescue => e
       BOACUtils.log_error e
-      it("encountered an error for UID #{student.uid}") { fail "#{e.message + "\n"} #{e.backtrace.join("\n ")}" }
+      logger.error "encountered an error for UID #{student.uid}"
+      logger.error "#{e.message + "\n"} #{e.backtrace.join("\n ")}"
     ensure
       row = [
         student.uid,
@@ -144,7 +157,8 @@ begin
 
 rescue => e
   Utils.log_error e
-  it('encountered an error') { fail "#{e.message + "\n"} #{e.backtrace.join("\n ")}" }
+  logger.error 'encountered an error'
+  logger.error "#{e.message + "\n"} #{e.backtrace.join("\n ")}"
 ensure
   Utils.quit_browser @driver
 end

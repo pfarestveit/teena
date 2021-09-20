@@ -21,17 +21,17 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
       # COLLECT DATA TO DRIVE SEARCH TESTS
 
       student_searches = []
-      all_advising_note_authors = NessieUtils.get_all_advising_note_authors
+      all_advising_note_authors = NessieTimelineUtils.get_all_advising_note_authors
 
       test_config.test_students.each do |student|
 
         begin
           note_searches = []
-          expected_asc_notes = NessieUtils.get_asc_notes student
+          expected_asc_notes = NessieTimelineUtils.get_asc_notes student
           expected_boa_notes = BOACUtils.get_student_notes(student).delete_if &:deleted_date
-          expected_data_notes = NessieUtils.get_data_sci_notes student
-          expected_ei_notes = NessieUtils.get_e_and_i_notes student
-          expected_sis_notes = NessieUtils.get_sis_notes student
+          expected_data_notes = NessieTimelineUtils.get_data_sci_notes student
+          expected_ei_notes = NessieTimelineUtils.get_e_and_i_notes student
+          expected_sis_notes = NessieTimelineUtils.get_sis_notes student
           logger.warn "UID #{student.uid} has #{expected_sis_notes.length} SIS notes, #{expected_asc_notes.length} ASC notes,
                               #{expected_ei_notes.length} E&I notes, #{expected_data_notes.length} Data Science notes,
                               and #{expected_boa_notes.length} BOA notes"
@@ -227,7 +227,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
 
                     # Posted by advisor name
 
-                    if (author = NessieUtils.get_advising_note_author(note_search[:note].advisor.uid))
+                    if (author = NessieTimelineUtils.get_advising_note_author(note_search[:note].advisor.uid))
 
                       author_name = "#{author[:first_name]} #{author[:last_name]}"
                       @homepage.reset_search_options_notes_subpanel

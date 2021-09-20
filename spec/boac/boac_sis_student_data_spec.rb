@@ -616,7 +616,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
 
           # Holds
 
-          holds = NessieUtils.get_student_holds student
+          holds = NessieTimelineUtils.get_student_holds student
           hold_msgs = (holds.map { |h| h.message.gsub(/\W/, '') }).sort
           logger.info "UID #{student.uid} hold count is #{hold_msgs.length}"
 

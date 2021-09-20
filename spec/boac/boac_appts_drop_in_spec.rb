@@ -1015,7 +1015,7 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
         @advisor_homepage.click_student_link pending_appt
         @advisor_student_page.show_appts
         boa_appts = BOACUtils.get_student_appts(student, @test.students).reject &:deleted_date
-        sis_appts = NessieUtils.get_sis_appts student
+        sis_appts = NessieTimelineUtils.get_sis_appts student
         @student_appts = boa_appts + sis_appts
       end
 
