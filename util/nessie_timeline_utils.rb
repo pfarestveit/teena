@@ -6,7 +6,7 @@ class NessieTimelineUtils < NessieUtils
     query = "SELECT COUNT(*)
              FROM #{schema}.advising_notes
              #{+' WHERE advisor_first_name != \'Reception\' AND advisor_last_name != \'Front Desk\'' if schema == TimelineRecordSource::E_AND_I.note_schema};"
-    query_pg_db_field(nessie_pg_db_credentials, query, 'count').first
+    query_pg_db_field(NessieUtils.nessie_pg_db_credentials, query, 'count').first
   end
 
   # Returns ASC advising notes associated with a given student
@@ -27,7 +27,7 @@ class NessieTimelineUtils < NessieUtils
                ON boac_advising_asc.advising_notes.id = boac_advising_asc.advising_note_topics.id
              WHERE boac_advising_asc.advising_notes.sid = '#{student.sis_id}'
              GROUP BY advising_notes.id, created_date, advisor_uid, subject, body;"
-    results = query_pg_db(nessie_pg_db_credentials, query)
+    results = query_pg_db(NessieUtils.nessie_pg_db_credentials, query)
 
     results.map do |r|
       Note.new id: r['id'],
@@ -38,7 +38,7 @@ class NessieTimelineUtils < NessieUtils
                student: student,
                created_date: Time.parse(r['created_date']).utc.localtime,
                updated_date: Time.parse(r['updated_date']).utc.localtime,
-               note_source: TimelineRecordSource::ASC
+               source: TimelineRecordSource::ASC
     end
   end
 
@@ -61,7 +61,7 @@ class NessieTimelineUtils < NessieUtils
              WHERE boac_advising_e_i.advising_notes.sid = '#{student.sis_id}'
                AND advisor_first_name != 'Reception' AND advisor_last_name != 'Front Desk';"
 
-    results = query_pg_db(nessie_pg_db_credentials, query)
+    results = query_pg_db(NessieUtils.nessie_pg_db_credentials, query)
     notes_data = results.group_by { |h1| h1['id'] }.map do |k, v|
       unless v[0]['advisor_first_name'] == 'Reception' && v[0]['advisor_last_name'] == 'Front Desk'
         {
@@ -72,7 +72,7 @@ class NessieTimelineUtils < NessieUtils
           created_date: Time.parse(v[0]['created_date'].to_s).utc.localtime,
           updated_date: Time.parse(v[0]['updated_date'].to_s).utc.localtime,
           topics: (v.map { |t| t['topic'].upcase if t['topic'] }).compact.sort,
-          note_source: TimelineRecordSource::E_AND_I
+          source: TimelineRecordSource::E_AND_I
         }
       end
     end
@@ -88,13 +88,13 @@ class NessieTimelineUtils < NessieUtils
                     boac_advising_data_science.advising_notes.created_at AS created_date
              FROM boac_advising_data_science.advising_notes
              WHERE boac_advising_data_science.advising_notes.sid = '#{student.sis_id}';"
-    results = query_pg_db(nessie_pg_db_credentials, query)
+    results = query_pg_db(NessieUtils.nessie_pg_db_credentials, query)
     notes_data = results.map do |r|
 
       created_date = Time.parse(r['created_date'].to_s).utc.localtime
       {
         id: r['id'],
-        note_source: TimelineRecordSource::DATA,
+        source: TimelineRecordSource::DATA,
         body: r['body'],
         topics: (r['topics'].split(', ').map(&:upcase) if r['topics']).compact.sort,
         created_date: created_date,
@@ -126,7 +126,7 @@ class NessieTimelineUtils < NessieUtils
               ON sis_advising_notes.advising_notes.id = sis_advising_notes.advising_note_attachments.advising_note_id
             WHERE sis_advising_notes.advising_notes.sid = '#{student.sis_id}';"
 
-    results = query_pg_db(nessie_pg_db_credentials, query)
+    results = query_pg_db(NessieUtils.nessie_pg_db_credentials, query)
     notes_data = results.group_by { |h1| h1['id'] }.map do |k, v|
       # If the note has no body, concatenate the category and subcategory as the body
       source_body_empty = (v[0]['body'].nil? || v[0]['body'].strip.empty?)
@@ -156,7 +156,7 @@ class NessieTimelineUtils < NessieUtils
         :updated_date => Time.parse(updated_date.to_s).utc.localtime,
         :topics => (v.map { |t| t['topic'].upcase if t['topic'] }).compact.sort,
         :attachments => attachments,
-        :note_source => TimelineRecordSource::SIS
+        :source => TimelineRecordSource::SIS
       }
     end
     notes_data.map { |d| Note.new d }
@@ -172,7 +172,7 @@ class NessieTimelineUtils < NessieUtils
     #{+' INNER JOIN ' + src.note_schema + '.advising_note_attachments
                     ON ' + src.note_schema + '.advising_notes.sid = ' + src.note_schema + '.advising_note_attachments.sid' if src == TimelineRecordSource::SIS}
              ORDER BY sid ASC;"
-    results = Utils.query_pg_db(nessie_pg_db_credentials, query)
+    results = Utils.query_pg_db(NessieUtils.nessie_pg_db_credentials, query)
     results.map { |r| r['sid'] }
   end
 
@@ -182,7 +182,7 @@ class NessieTimelineUtils < NessieUtils
   def self.get_all_advising_note_authors
     query = "SELECT uid, sid, first_name, last_name
               FROM boac_advising_notes.advising_note_authors;"
-    results = Utils.query_pg_db(nessie_pg_db_credentials, query)
+    results = Utils.query_pg_db(NessieUtils.nessie_pg_db_credentials, query)
     results.map do |r|
       {
         :uid => r['uid'],
@@ -285,7 +285,7 @@ class NessieTimelineUtils < NessieUtils
              INNER JOIN sis_advising_notes.advising_note_attachments
                ON sis_advising_notes.advising_note_attachments.sid = sis_advising_notes.advising_appointments.sid
              ORDER BY sid ASC;"
-    results = Utils.query_pg_db(nessie_pg_db_credentials, query)
+    results = Utils.query_pg_db(NessieUtils.nessie_pg_db_credentials, query)
     results.map { |r| r['sid'] }
   end
 
@@ -328,7 +328,7 @@ class NessieTimelineUtils < NessieUtils
     query = "SELECT DISTINCT student_sid
              FROM boac_advising_appointments.ycbm_advising_appointments
              WHERE student_uid IS NOT NULL"
-    results = Utils.query_pg_db(nessie_pg_db_credentials, query)
+    results = Utils.query_pg_db(NessieUtils.nessie_pg_db_credentials, query)
     results.map { |r| r['student_sid'] }
   end
 
@@ -341,7 +341,7 @@ class NessieTimelineUtils < NessieUtils
     query = "SELECT sid, feed
               FROM student.student_holds
               WHERE sid = '#{student.sis_id}';"
-    results = Utils.query_pg_db(nessie_pg_db_credentials, query)
+    results = Utils.query_pg_db(NessieUtils.nessie_pg_db_credentials, query)
     results.map do |r|
       feed = JSON.parse r['feed']
       alert_data = {
@@ -360,6 +360,7 @@ class NessieTimelineUtils < NessieUtils
                     section_id,
                     course_display_name,
                     course_title,
+                    section_num,
                     created_at,
                     updated_at,
                     eform_id,
@@ -369,8 +370,8 @@ class NessieTimelineUtils < NessieUtils
                     requested_grading_basis_description
     FROM sis_advising_notes.student_late_drop_eforms
     WHERE sid = '#{student.sis_id}'"
-    results = query_pg_db(nessie_pg_db_credentials, query)
-    e_forms = results.map do |r|
+    results = query_pg_db(NessieUtils.nessie_pg_db_credentials, query)
+    results.map do |r|
       req_action = r['requested_action']
       action = if req_action == 'Late Grading Basis Change'
                  "#{req_action} from #{r['grading_basis_description']} to #{r['requested_grading_basis_description']}"
@@ -378,6 +379,7 @@ class NessieTimelineUtils < NessieUtils
                  req_action
                end
       TimelineEForm.new id: r['id'],
+                        source: TimelineRecordSource::E_FORM,
                         term: sis_code_to_term_name(r['term_id']),
                         course: "#{r['section_id']} #{r['course_display_name']} - #{r['course_title']} #{r['section_num']}",
                         created_date: Time.parse(r['created_at'].to_s).utc.localtime,
@@ -386,14 +388,12 @@ class NessieTimelineUtils < NessieUtils
                         form_id: r['eform_id'],
                         status: r['eform_status']
     end
-    logger.debug "#{e_forms.map &:inspect}"
-    e_forms
   end
 
   def self.get_sids_with_e_forms
     query = "SELECT DISTINCT sid
              FROM sis_advising_notes.student_late_drop_eforms"
-    results = Utils.query_pg_db(nessie_pg_db_credentials, query)
+    results = Utils.query_pg_db(NessieUtils.nessie_pg_db_credentials, query)
     results.map { |r| r['sid'] }
   end
 

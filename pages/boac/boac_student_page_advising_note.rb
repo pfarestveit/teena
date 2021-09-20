@@ -182,23 +182,23 @@ module BOACStudentPageAdvisingNote
   end
 
   def e_form_data_el(e_form, label)
-    div_element(xpath: "//tr[@id='permalink-note-eform-#{e_form.id}']//dt[text()='#{label}']/following-sibling::dd")
+    div_element(xpath: "//tr[@id='permalink-note-#{e_form.id}']//dt[text()='#{label}']/following-sibling::dd")
   end
 
   def visible_expanded_e_form_data(e_form)
     sleep 1
-    created_el = div_element(id: "expanded-note-eform-#{e_form.id}-created-at")
-    updated_el = div_element(id: "expanded-note-eform-#{e_form.id}-updated-at")
+    created_el = div_element(id: "expanded-note-#{e_form.id}-created-at")
+    updated_el = div_element(id: "expanded-note-#{e_form.id}-updated-at")
     term_el = e_form_data_el(e_form, 'Term')
     course_el = e_form_data_el(e_form, 'Course')
     action_el = e_form_data_el(e_form, 'Late Action')
     form_id_el = e_form_data_el(e_form, 'Form ID')
     date_init_el = e_form_data_el(e_form, 'Date Initiated')
-    status_el = e_form_data_el(e_form, 'Form Status')
+    status_el = e_form_data_el(e_form, 'Form Status ')
     date_final_el = e_form_data_el(e_form, 'Final Date & Time Stamp')
     {
-      created_date: (created_el.text if created_el.exists?),
-      updated_date: (updated_el.text if updated_el.exists?),
+      created_date: (created_el.text.gsub('Created on', '').gsub(/\s+/, ' ').strip if created_el.exists?),
+      updated_date: (updated_el.text.gsub('Last updated on', '').gsub(/\s+/, ' ').strip if updated_el.exists?),
       term: (term_el.text if term_el.exists?),
       course: (course_el.text if course_el.exists?),
       action: (action_el.text if action_el.exists?),

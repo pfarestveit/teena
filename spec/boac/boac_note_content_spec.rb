@@ -13,9 +13,6 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
       advisor_link_tested = false
       max_note_count_per_src = BOACUtils.notes_max_notes - 1
 
-      notes_data_heading = %w(UID SID NoteId Created Updated CreatedBy Advisor AdvisorRole AdvisorDepts HasBody Topics Attachments)
-      notes_data = Utils.create_test_output_csv('boac-notes.csv', notes_data_heading)
-
       @driver = Utils.launch_browser
       @homepage = BOACHomePage.new @driver
       @student_page = BOACStudentPage.new @driver
@@ -35,7 +32,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
           expected_sis_notes = NessieTimelineUtils.get_sis_notes student
           logger.warn "UID #{student.uid} has #{expected_sis_notes.length} SIS notes, #{expected_asc_notes.length} ASC notes,
                               #{expected_ei_notes.length} E&I notes, #{expected_boa_notes.length} BOA notes,
-                              #{expected_e_forms.lenth} eForms, and #{expected_data_notes.length} Data Science notes"
+                              #{expected_e_forms.length} eForms, and #{expected_data_notes.length} Data Science notes"
 
           expected_notes = expected_sis_notes + expected_ei_notes + expected_boa_notes + expected_asc_notes +
             expected_e_forms + expected_data_notes
@@ -66,7 +63,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
             expected_boa_notes.shuffle[0..max_note_count_per_src] + expected_asc_notes.shuffle[0..max_note_count_per_src] +
             expected_data_notes.shuffle[0..max_note_count_per_src] + expected_e_forms.shuffle[0..max_note_count_per_src]
 
-          logger.info "Test note sources: #{test_notes.map { |n| n.note_source ? n.note_source.name : 'BOA' }}"
+          logger.info "Test note sources: #{test_notes.map { |n| n.source ? n.source.name : 'BOA' }}"
 
           test_notes.each do |note|
 
@@ -88,7 +85,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
 
                 updated_date_expected = note.updated_date &&
                   note.updated_date.strftime('%b %-d, %Y %l:%M%P') != note.created_date.strftime('%b %-d, %Y %l:%M%P') &&
-                  note.advisor.uid != 'UCBCONVERSION'
+                  (!note.instance_of?(TimelineEForm) && note.advisor.uid != 'UCBCONVERSION')
                 expected_date = updated_date_expected ? note.updated_date : note.created_date
                 expected_date_text = "Last updated on #{@student_page.expected_item_short_date_format expected_date}"
                 visible_date = @student_page.visible_collapsed_item_data(note)[:date]
@@ -98,13 +95,13 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
 
                 @student_page.expand_item note
 
-                if expected_e_forms.include? note
+                if note.source == TimelineRecordSource::E_FORM
                   visible_e_form_data = @student_page.visible_expanded_e_form_data note
                   expected_subj = "eForm: L&S Late Change of Schedule Request — #{note.status}"
                   expected_created_date = @student_page.expected_item_short_date_format note.created_date
                   expected_updated_date = @student_page.expected_item_long_date_format note.updated_date
                   expected_initiated_date = note.created_date.strftime('%m/%d/%Y')
-                  expected_final_date = note.updated_date.strftime('')
+                  expected_final_date = note.updated_date.strftime('%m/%d/%Y %-l:%M:%S%P')
                   it("shows the subject on #{test_case}") { expect(visible_collapsed_note_data[:subject]).to eql(expected_subj) }
                   it("shows the created date on #{test_case}") { expect(visible_e_form_data[:created_date]).to eql(expected_created_date) }
                   it("shows the updated date on #{test_case}") { expect(visible_e_form_data[:updated_date]).to eql(expected_updated_date) }
@@ -178,9 +175,9 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
 
                   # Note source
 
-                  if note.note_source
-                    shows_src = visible_expanded_note_data[:note_src] == "(note imported from #{note.note_source.name})"
-                    it("shows the note source '#{note.note_source.name}' on #{test_case}") { expect(shows_src).to be true }
+                  if note.source
+                    shows_src = visible_expanded_note_data[:note_src] == "(note imported from #{note.source.name})"
+                    it("shows the note source '#{note.source.name}' on #{test_case}") { expect(shows_src).to be true }
                   else
                     it("shows no note source for BOA #{test_case}") { expect(visible_expanded_note_data[:note_src]).to be_nil }
                   end
@@ -281,13 +278,6 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
             rescue => e
               Utils.log_error e
               it("hit an error with #{test_case}") { fail }
-            ensure
-              row = [student.uid, student.sis_id, note.id, note.created_date, note.updated_date, note.advisor&.uid,
-                     (visible_expanded_note_data[:advisor] if visible_expanded_note_data),
-                     (visible_expanded_note_data[:advisor_role] if visible_expanded_note_data),
-                     (visible_expanded_note_data[:advisor_depts] if visible_expanded_note_data),
-                     !note.body.nil?, note.topics.length, note.attachments.length]
-              Utils.add_csv_row(notes_data, row)
             end
           end
 
