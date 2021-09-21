@@ -107,6 +107,7 @@ class BOACGroupPage
   button(:add_sids_to_group_button, id: 'btn-curated-group-bulk-add-sids')
   div(:sids_bad_format_error_msg, xpath: '//div[contains(text(), "SIDs must be separated by commas, line breaks, or tabs.")]')
   div(:sids_not_found_error_msg, xpath: '//div[contains(text(), "not found")]')
+  button(:remove_invalid_sids_button, id: 'remove-invalid-sids-btn')
 
   # Clicks the Add Students button on a curated group page
   def click_add_students_button
@@ -123,6 +124,13 @@ class BOACGroupPage
   # Clicks the button to add entered SIDs to a curated group
   def click_add_sids_to_group_button
     wait_for_update_and_click add_sids_to_group_button_element
+  end
+
+  def click_remove_invalid_sids
+    logger.info 'Clicking button to remove invalid SIDs'
+    wait_for_update_and_click remove_invalid_sids_button_element
+    # Sometimes it's hidden, sometimes it goes away
+    remove_invalid_sids_button_element.when_not_visible Utils.short_wait rescue Selenium::WebDriver::Error::StaleElementReferenceError
   end
 
   # Creates a group with list of SIDs

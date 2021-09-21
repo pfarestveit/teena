@@ -217,6 +217,12 @@ describe 'A BOA degree' do
         expect(@degree_check_page.visible_course_req_note(@reqt).to_s).to be_empty
       end
 
+      it 'allows a color to be added' do
+        @degree_check_page.click_edit_course_req @reqt
+        @degree_check_page.select_color_option 'red'
+        @degree_check_page.click_save_req_edit
+      end
+
       context 'and a completed course is assigned' do
 
         before(:all) do

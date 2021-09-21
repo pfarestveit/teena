@@ -82,6 +82,7 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
                             it("shows the right course title for #{class_test_case}") { expect(visible_course_data[:title]).to eql(course_sis_data[:title]) }
                             it("shows the right section format for #{class_test_case}") { expect(visible_course_data[:format]).to eql(section_data[:component]) }
                             it("shows the right section number for #{class_test_case}") { expect(visible_course_data[:number]).to eql(section_data[:number]) }
+                            it("shows the right ccn for #{class_test_case}") { expect(visible_course_data[:ccn]).to eql(section_data[:ccn]) }
                             it("shows no empty course data for #{class_test_case}") do
                               expect(visible_course_data.values.all?).to be true
                               expect(visible_course_data.values.any? &:empty?).to be false
