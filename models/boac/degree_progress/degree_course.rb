@@ -3,6 +3,7 @@ class DegreeCourse
   include Logging
 
   attr_accessor :id,
+                :color,
                 :column_num,
                 :name,
                 :units,

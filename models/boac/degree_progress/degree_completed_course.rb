@@ -10,8 +10,7 @@ class DegreeCompletedCourse < DegreeCourse
                 :req_course,
                 :course_copies,
                 :course_orig,
-                :manual,
-                :color
+                :manual
 
   def initialize(test_data)
     super

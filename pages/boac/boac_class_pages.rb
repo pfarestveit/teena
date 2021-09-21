@@ -32,6 +32,7 @@ module BOACClassPages
   div(:course_details, xpath: '//h2[text()="Details"]/..')
   div(:course_title, class: 'course-section-title')
   div(:term_name, class: 'course-term-name')
+  div(:ccn, id: 'course-class-number')
 
   # Returns the course data shown in the left header pane plus term
   # @return [Hash]
@@ -42,7 +43,8 @@ module BOACClassPages
       :number => (course_details.split(' ')[2] if course_details?),
       :units_completed => (course_details.split(' ')[4] if course_details?),
       :title => (course_title.strip if course_title?),
-      :term => (term_name if term_name?)
+      :term => (term_name if term_name?),
+      :ccn => (ccn.split.last if ccn?)
     }
   end
 

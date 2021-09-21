@@ -206,8 +206,7 @@ describe 'A BOA degree check course' do
 
     it 'prevents another course being assigned to the same requirement' do
       @degree_check_page.click_unassigned_course_select @unassigned_courses.last
-      @degree_check_page.unassigned_course_req_option(@unassigned_courses.last, @course_req_1).when_visible 1
-      expect(@degree_check_page.unassigned_course_req_option(@unassigned_courses.last, @course_req_1).attribute('aria-disabled')).to eql('true')
+      expect(@degree_check_page.unassigned_course_req_option(@unassigned_courses.last, @course_req_1).exists?).to be false
     end
 
     context 'and edited' do
