@@ -184,7 +184,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
                     expect(you_posted_match).to be_falsey
                   end
                 else
-                  logger.warn "Skipping a search string + posted-by-you test with appointment ID #{appt_search[:note].id} because there are more than 20 results"
+                  logger.warn "Skipping a search string + posted-by-you test with appointment ID #{appt_search[:appt].id} because there are more than 20 results"
                 end
 
                 # Posted by anyone
@@ -341,6 +341,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
 
           rescue => e
             Utils.log_error e
+            Utils.save_screenshot(@driver, "#{Time.now.to_i.to_s}")
             it("hit an error executing an appointment search test for #{appt_search[:test_case]}") { fail }
           end
         end

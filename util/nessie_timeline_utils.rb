@@ -242,7 +242,7 @@ class NessieTimelineUtils < NessieUtils
              WHERE sis_advising_notes.advising_appointments.sid = '#{student.sis_id}'
              ORDER BY id ASC;"
 
-    results = query_pg_db(nessie_pg_db_credentials, query)
+    results = query_pg_db(NessieUtils.nessie_pg_db_credentials, query)
     appts_data = results.group_by { |h1| h1['id'] }.map do |k, v|
       attachment_data = v.map do |r|
         unless r['sis_file_name'].nil? || r['sis_file_name'].empty?
@@ -303,7 +303,7 @@ class NessieTimelineUtils < NessieUtils
              WHERE boac_advising_appointments.ycbm_advising_appointments.student_sid = '#{student.sis_id}'
              ORDER BY start_time ASC;"
 
-    results = query_pg_db(nessie_pg_db_credentials, query)
+    results = query_pg_db(NessieUtils.nessie_pg_db_credentials, query)
     appt_data = results.group_by { |h1| h1['id'] }.map do |k, v|
       advisor = BOACUser.new full_name: v[0]['advisor_name']
       {

@@ -54,7 +54,7 @@ module BOACClassPages
   # @param index [Integer]
   # @return [Array<String>]
   def meeting_instructors(index)
-    el = div_element(xpath: '//span[@class="course-instructors-header"]/..')
+    el = div_element(xpath: '//span[contains(@id, "instructors-")]/..')
     (el.exists? && !el.text.empty?) ? (el.text.gsub('Instructor:', '').gsub('Instructors:', '').strip.split(', ')) : []
   end
 

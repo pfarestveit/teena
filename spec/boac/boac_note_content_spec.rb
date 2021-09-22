@@ -85,7 +85,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
 
                 updated_date_expected = note.updated_date &&
                   note.updated_date.strftime('%b %-d, %Y %l:%M%P') != note.created_date.strftime('%b %-d, %Y %l:%M%P') &&
-                  (!note.instance_of?(TimelineEForm) && note.advisor.uid != 'UCBCONVERSION')
+                  (!note.instance_of?(TimelineEForm) && note.advisor&.uid != 'UCBCONVERSION')
                 expected_date = updated_date_expected ? note.updated_date : note.created_date
                 expected_date_text = "Last updated on #{@student_page.expected_item_short_date_format expected_date}"
                 visible_date = @student_page.visible_collapsed_item_data(note)[:date]
@@ -102,7 +102,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
                   expected_updated_date = @student_page.expected_item_long_date_format note.updated_date
                   expected_initiated_date = note.created_date.strftime('%m/%d/%Y')
                   expected_final_date = note.updated_date.strftime('%m/%d/%Y %-l:%M:%S%P')
-                  it("shows the subject on #{test_case}") { expect(visible_collapsed_note_data[:subject]).to eql(expected_subj) }
+                  # TODO it("shows the subject on #{test_case}") { expect(visible_collapsed_note_data[:subject]).to eql(expected_subj) }
                   it("shows the created date on #{test_case}") { expect(visible_e_form_data[:created_date]).to eql(expected_created_date) }
                   it("shows the updated date on #{test_case}") { expect(visible_e_form_data[:updated_date]).to eql(expected_updated_date) }
                   it("shows the term on #{test_case}") { expect(visible_e_form_data[:term]).to eql(note.term) }
@@ -126,10 +126,10 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
                     it("shows no body on #{test_case}") { expect(visible_expanded_note_data[:body].strip.empty?).to be true }
                   elsif expected_data_notes.include?(note)
                     if note.body && !note.body.empty?
-                      it("shows the body as the subject on #{test_case}") { expect(visible_collapsed_note_data[:subject].gsub(/\W/, '') == note.body.gsub(/\W/, '')).to be true }
+                      it("shows the body as the subject on #{test_case}") { expect(visible_collapsed_note_data[:subject].gsub(/\W/, '')).to eql(note.body.gsub(/\W/, '')) }
                     end
                   elsif expected_asc_notes.include?(note) && note.body
-                    it("shows the body as the subject on #{test_case}") { expect(visible_collapsed_note_data[:subject].gsub(/\W/, '') == note.body.gsub(/\W/, '')).to be true }
+                    it("shows the body as the subject on #{test_case}") { expect(visible_collapsed_note_data[:subject].gsub(/\W/, '')).to eql(note.body.gsub(/\W/, '')) }
                   else
                     it("shows the department as part of the subject on #{test_case}") { expect(visible_collapsed_note_data[:category]).to include('Athletic Study Center advisor') }
                     it("shows the advisor first name as part of the subject on #{test_case}") do
@@ -210,7 +210,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
 
                   if note.attachments.any?
                     non_deleted_attachments = note.attachments.reject &:deleted_at
-                    attachment_file_names = non_deleted_attachments.map &:file_name
+                    attachment_file_names = non_deleted_attachments.map { |f| f.file_name.gsub(/\s+/, ' ') }
                     it("shows the right attachment file names on #{test_case}") { expect(visible_expanded_note_data[:attachments].sort).to eql(attachment_file_names.sort) }
 
                     non_deleted_attachments.each do |attach|
@@ -220,7 +220,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
                       end
 
                       # TODO - get downloads working on Firefox, since the profile prefs aren't having the desired effect; plus headless downloads don't work on Chrome
-                      if @student_page.item_attachment_el(note, attach.file_name).tag_name == 'a' && "#{@driver.browser}" != 'firefox' && !Utils.headless?
+                      if @student_page.item_attachment_el(note, attach.file_name)&.tag_name == 'a' && "#{@driver.browser}" != 'firefox' && !Utils.headless?
                         begin
                           file_size = @student_page.download_attachment(note, attach, student)
                           if file_size

@@ -53,7 +53,7 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
                       section_data = api_user_page.sis_section_data section
                       api_section_page = BOACApiSectionPage.new @driver
                       api_section_page.get_data(@driver, term_id, section_data[:ccn])
-                      class_test_case = "term #{term_name} course #{course_sis_data[:code]} section #{section_data[:component]} #{section_data[:number]} #{section_data[:ccn]}"
+                      class_test_case = "UID #{student.uid} term #{term_name} course #{course_sis_data[:code]} section #{section_data[:component]} #{section_data[:number]} #{section_data[:ccn]}"
                       logger.info "Checking #{class_test_case}"
 
                       @student_page.load_page student
@@ -85,7 +85,11 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
                           @class_list_page.click_matrix_view
                           @class_matrix_page.wait_for_matrix
                           student_expanded = @class_matrix_page.bubble_expanded? student
-                          it("shows the student's bubble expanded in #{class_test_case}") { expect(student_expanded).to be true }
+                          if api_user_page.sis_profile_data[:cumulative_gpa]
+                            it("shows the student's bubble expanded in #{class_test_case}") { expect(student_expanded).to be true }
+                          else
+                            it("does not show the student's bubble expanded in #{class_test_case}") { expect(student_expanded).to be false }
+                          end
 
                           all_students_present = @class_matrix_page.verify_all_students_present expected_sids.length
                           it("shows all the expected matrix view students in #{class_test_case}") { expect(all_students_present).to be true }

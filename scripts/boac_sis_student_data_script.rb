@@ -10,7 +10,10 @@ begin
     test.test_students = ENV['UIDS'].split.map { |u| BOACUser.new uid: u }
   end
 
-  profile_data_heading = %w(UID MajorsIntend NonActive)
+  profile_data_heading = %w(UID Name PreferredName Email EmailAlt Phone Units GPA Level Transfer Colleges Majors
+                            CollegesDisc MajorsDisc Minors MinorsDisc Terms Writing History Institutions Cultures
+                            Advisors EnteredTerm MajorsIntend Visa GradExpect GradDegree GradDate GradColleges Inactive
+                            Alerts Holds)
   profile_csv = Utils.create_test_output_csv('boac-sis-profiles.csv', profile_data_heading)
 
   standing_heading = %w(UID Term Standing)
@@ -18,6 +21,12 @@ begin
 
   course_data_heading = %w(UID Term SectionCcn SectionCode Primary? Midpoint Grade GradingBasis Units EnrollmentStatus DropDate)
   courses_csv = Utils.create_test_output_csv('boac-sis-courses.csv', course_data_heading)
+
+  notes_heading = %w(UID ID AdvisorUID AdvisorName AdvisorEmail AdvisorDepts Subj Body Topics Attach Created Updated)
+  notes_csv = Utils.create_test_output_csv('boac-sis-notes.csv', notes_heading)
+
+  appts_heading = %w(UID ID AdvisorUID AdvisorName AdvisorDepts Subj Detail Attach Created Updated)
+  appts_csv = Utils.create_test_output_csv('boac-sis-appts.csv', appts_heading)
 
   @driver = Utils.launch_browser test.chrome_profile
   @boac_homepage = BOACHomePage.new @driver
@@ -35,9 +44,25 @@ begin
       sleep 3 unless BOACUtils.base_url.include? 'boa-'
       api_student_data = BOACApiStudentPage.new @driver
       api_student_data.get_data(@driver, student)
+
       api_sis_profile_data = api_student_data.sis_profile_data
+      graduation = api_student_data.graduation
       academic_standing = api_student_data.academic_standing
+      visa = api_student_data.visa
+      advisors = api_student_data.advisors
       non_active = %w(Completed Inactive).include?(api_sis_profile_data[:academic_career_status]) || api_sis_profile_data[:withdrawal]
+
+      active_major_feed, inactive_major_feed = api_sis_profile_data[:majors].compact.partition { |m| m[:active] }
+      active_majors = active_major_feed.map { |m| m[:major] }
+      active_colleges = active_major_feed.map { |m| m[:college] }.compact
+      inactive_majors = inactive_major_feed.map { |m| m[:major] }
+      inactive_colleges = inactive_major_feed.map { |m| m[:college] }.compact
+      active_minor_feed, inactive_minor_feed = api_sis_profile_data[:minors].partition { |m| m[:active] }
+      active_minors = active_minor_feed.map { |m| m[:minor] }
+      inactive_minors = inactive_minor_feed.map { |m| m[:minor] }
+
+      notes = api_student_data.notes
+      appts = api_student_data.appointments
 
       student_terms = api_student_data.terms
       if student_terms.any?
@@ -86,6 +111,7 @@ begin
                         row = [student.uid,
                                term_name,
                                section_sis_data[:ccn],
+                               course_sis_data[:code].delete('&, '),
                                "#{section_sis_data[:component]} #{section_sis_data[:number]}",
                                section_sis_data[:primary],
                                course_sis_data[:midpoint],
@@ -148,10 +174,75 @@ begin
     ensure
       row = [
         student.uid,
+        api_sis_profile_data[:name],
+        api_sis_profile_data[:preferred_name],
+        api_sis_profile_data[:email],
+        api_sis_profile_data[:email_alternate],
+        api_sis_profile_data[:phone],
+        api_sis_profile_data[:cumulative_units],
+        api_sis_profile_data[:cumulative_gpa],
+        api_sis_profile_data[:level],
+        api_sis_profile_data[:transfer],
+        active_colleges,
+        active_majors,
+        inactive_colleges,
+        inactive_majors,
+        active_minors,
+        inactive_minors,
+        api_sis_profile_data[:terms_in_attendance],
+        api_sis_profile_data[:reqt_writing],
+        api_sis_profile_data[:reqt_history],
+        api_sis_profile_data[:reqt_institutions],
+        api_sis_profile_data[:reqt_cultures],
+        advisors,
+        api_sis_profile_data[:entered_term],
         api_sis_profile_data[:intended_majors],
+        visa,
+        api_sis_profile_data[:expected_grad_term_id],
+        (graduation && graduation[:degree]),
+        (graduation && graduation[:date]),
+        (graduation && graduation[:colleges]),
         non_active
       ]
       Utils.add_csv_row(profile_csv, row)
+
+      notes&.map do |n|
+        if n.id.include?('-') && !n.id.include?('eform')
+          row = [
+            student.uid,
+            n.id,
+            n.advisor&.uid,
+            n.advisor&.full_name,
+            n.advisor&.email,
+            n.advisor&.depts,
+            n.subject,
+            n.body,
+            n.topics,
+            n.attachments,
+            n.created_date,
+            n.updated_date
+          ]
+          Utils.add_csv_row(notes_csv, row)
+        end
+      end
+
+      appts&.map do |a|
+        if a.id.include?('-') && !a.subject.include?('L&S Advising Appt:')
+          row = [
+            student.uid,
+            a.id,
+            a.advisor&.uid,
+            a.advisor&.full_name,
+            a.advisor&.depts,
+            a.subject,
+            a.detail,
+            a.attachments,
+            a.created_date,
+            a.updated_date
+          ]
+          Utils.add_csv_row(appts_csv, row)
+        end
+      end
     end
   end
 

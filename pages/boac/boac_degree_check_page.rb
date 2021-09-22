@@ -154,7 +154,7 @@ class BOACDegreeCheckPage < BOACDegreeTemplatePage
   end
 
   def toggle_course_req_dot
-    wait_for_update_and_click big_dot_cbx_element
+    js_click big_dot_cbx_element
   end
 
   def click_save_req_edit
@@ -163,8 +163,8 @@ class BOACDegreeCheckPage < BOACDegreeTemplatePage
     sleep Utils.click_wait
   end
 
-  def is_recommended?(course)
-    element(xpath: "//*[@id='category-#{course.id}-is-recommended']").exists?
+  def is_recommended(course)
+    div_element(xpath: "//*[@id='category-#{course.id}-is-recommended']")
   end
 
   # UNASSIGNED COURSES
@@ -429,7 +429,7 @@ class BOACDegreeCheckPage < BOACDegreeTemplatePage
       if req.instance_of? DegreeReqtCourse
         req.completed_course = nil
         wait_until(2, "Expected '#{visible_course_req_name(req)}' to be '#{req.name}'") do
-          visible_course_req_name(req) == req.name
+          visible_course_req_name(req).include? req.name
         end
       else
         assigned_course_row(completed_course).when_not_present Utils.short_wait
@@ -785,6 +785,23 @@ class BOACDegreeCheckPage < BOACDegreeTemplatePage
     dummy_req.completed_course = copy
     dummy_req.set_dummy_reqt_id
     copy
+  end
+
+  # COURSE REQT EDITS
+
+  text_field(:grade_input, id: 'grade-input')
+  text_area(:recommended_note_textarea, id: 'recommendation-note-textarea')
+
+  def enter_reqt_grade(grade)
+    wait_for_element_and_type(grade_input_element, grade)
+  end
+
+  def edit_course_reqt(reqt)
+    enter_col_req_units reqt.units
+  end
+
+  def enter_recommended_note(note)
+    wait_for_textbox_and_type(recommended_note_textarea_element, note)
   end
 
 end

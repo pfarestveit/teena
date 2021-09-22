@@ -262,7 +262,7 @@ describe 'A BOA degree check template', order: :defined do
           it('shows the right name') { expect(@degree_template_page.visible_cat_name req_sub_category_1).to eql(req_sub_category_1.name) }
 
           it 'supports external links in descriptions' do
-            link = @degree_template_page.link_element(text: 'https://www.teenamarieofficial.com/')
+            link = @degree_template_page.link_element(text: 'www.teenamarieofficial.com')
             expect(@degree_template_page.external_link_valid?(link, 'Teena Marie: Beautiful | Official Teena Marie Website')).to be true
           end
 
