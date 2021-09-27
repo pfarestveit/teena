@@ -257,7 +257,7 @@ class BOACApiStudentPage
 
   def sis_section_data(section)
     {
-      :ccn => section['ccn'],
+      :ccn => section['ccn'].to_s,
       :number => "#{section['sectionNumber']}",
       :component => section['component'],
       :units_completed => (section['units'].floor == section['units'] ? section['units'].floor.to_s : section['units'].to_s),
@@ -411,18 +411,6 @@ class BOACApiStudentPage
     end
   end
 
-  def notifications
-    @parsed['notifications']
-  end
-
-  def notes
-    notifications && notifications['note']
-  end
-
-  def appointments
-    notifications && notifications['appointment']
-  end
-
   # DEGREE PROGRESS
 
   def degree_progress_courses(degree_check)
@@ -446,6 +434,52 @@ class BOACApiStudentPage
       end
     end
     courses.sort_by &:name
+  end
+
+  # TIMELINE
+
+  def notifications
+    @parsed['notifications']
+  end
+
+  def notes
+    notifications && notifications['note']&.map do |n|
+
+      advisor = n['author'] && BOACUser.new(
+        uid: n['author']['uid'],
+        full_name: n['author']['name'],
+        email: n['author']['email'],
+        depts: (n['author']['departments'].map { |d| d['name']})
+      )
+
+      Note.new id: n['id'].to_s,
+               advisor: advisor,
+               subject: n['subject'].to_s,
+               body: n['body'].to_s,
+               topics: (n['topics'] && n['topics'].sort),
+               attachments: (n['attachments'] && n['attachments'].map{ |f| f['filename'] || f['sisFilename'] }.compact),
+               created_date: n['createdAt'],
+               updated_date: n['updatedAt']
+    end
+  end
+
+  def appointments
+    notifications && notifications['appointment']&.map do |a|
+
+      advisor = a['advisor'] && BOACUser.new(
+        uid: a['advisor']['uid'],
+        full_name: a['advisor']['name'],
+        depts: a['advisor']['departments']
+      )
+
+      Appointment.new id: a['id'].to_s,
+                      advisor: advisor,
+                      subject: a['appointmentTitle'].to_s,
+                      detail: a['details'].to_s,
+                      attachments: (a['attachments'] && a['attachments'].map{ |f| f['filename'] || f['sisFilename'] }.compact),
+                      created_date: a['createdAt'],
+                      updated_date: a['updatedAt']
+    end
   end
 
 end

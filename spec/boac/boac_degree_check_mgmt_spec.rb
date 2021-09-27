@@ -45,6 +45,10 @@ describe 'A BOA degree' do
       @pax_manifest.log_out
     end
 
+    @student = ENV['UIDS'] ? (test.students.find { |s| s.uid == ENV['UIDS'] }) : batch_students.shuffle.first
+    @degree_check = DegreeProgressChecklist.new(template, @student)
+    @note_str = "Teena wuz here #{test.id} " * 10
+
     # Find student course data
     @homepage.dev_auth test.advisor
     @student_api_page.get_data(@driver, @student)
@@ -55,10 +59,6 @@ describe 'A BOA degree' do
     @homepage.click_degree_checks_link
     @degree_templates_mgmt_page.create_new_degree template
     @degree_template_page.complete_template template
-
-    @student = ENV['UIDS'] ? (test.students.find { |s| s.uid == ENV['UIDS'] }) : batch_students.shuffle.first
-    @degree_check = DegreeProgressChecklist.new(template, @student)
-    @note_str = "Teena wuz here #{test.id} " * 10
 
     @student_page.load_page @student
   end
@@ -159,20 +159,20 @@ describe 'A BOA degree' do
 
     context 'when a course requirement is edited' do
 
-      before(:all) { @reqt = template.categories.first.course_reqs.first }
+      before(:all) { @reqt = template.categories.find {|cat| cat.course_reqs.any? }.course_reqs.first }
 
       it 'allows a big dot to be added' do
         @degree_check_page.click_edit_course_req @reqt
         @degree_check_page.toggle_course_req_dot
         @degree_check_page.click_save_req_edit
-        expect(@degree_check_page.is_recommended? @reqt).to be true
+        @degree_check_page.is_recommended(@reqt).when_present Utils.short_wait
       end
 
       it 'allows a big dot to be removed' do
         @degree_check_page.click_edit_course_req @reqt
         @degree_check_page.toggle_course_req_dot
         @degree_check_page.click_save_req_edit
-        expect(@degree_check_page.is_recommended? @reqt).to be false
+        @degree_check_page.is_recommended(@reqt).when_not_present Utils.short_wait
       end
 
       it 'allows units (range) to be added' do
@@ -191,28 +191,28 @@ describe 'A BOA degree' do
 
       it 'allows a grade to be added' do
         @degree_check_page.click_edit_course_req @reqt
-        @degree_check_page.enter_course_grade '>B'
+        @degree_check_page.enter_reqt_grade '>B'
         @degree_check_page.click_save_req_edit
         expect(@degree_check_page.visible_course_req_grade @reqt).to eql('>B')
       end
 
       it 'allows a grade to be removed' do
         @degree_check_page.click_edit_course_req @reqt
-        @degree_check_page.enter_course_grade ''
+        @degree_check_page.enter_reqt_grade ''
         @degree_check_page.click_save_req_edit
         expect(@degree_check_page.visible_course_req_grade(@reqt).to_s).to be_empty
       end
 
       it 'allows a note to be added' do
         @degree_check_page.click_edit_course_req @reqt
-        @degree_check_page.enter_course_note 'affen schlafen in lederhosen'
+        @degree_check_page.enter_recommended_note 'affen schlafen in lederhosen'
         @degree_check_page.click_save_req_edit
         expect(@degree_check_page.visible_course_req_note(@reqt)).to eql('affen schlafen in lederhosen')
       end
 
       it 'allows a note to be removed' do
         @degree_check_page.click_edit_course_req @reqt
-        @degree_check_page.enter_course_note ''
+        @degree_check_page.enter_recommended_note ''
         @degree_check_page.click_save_req_edit
         expect(@degree_check_page.visible_course_req_note(@reqt).to_s).to be_empty
       end
@@ -229,27 +229,27 @@ describe 'A BOA degree' do
           @degree_check_page.click_edit_course_req @reqt
           @degree_check_page.toggle_course_req_dot
           @degree_check_page.enter_col_req_units '4-5'
-          @degree_check_page.enter_course_grade '>B'
-          @degree_check_page.enter_course_note 'affen schlafen in lederhosen'
+          @degree_check_page.enter_reqt_grade '>B'
+          @degree_check_page.enter_recommended_note 'affen schlafen in lederhosen'
           @degree_check_page.click_save_req_edit
 
           @degree_check_page.assign_completed_course(@completed_course_0, @reqt)
         end
 
         it 'overwrites a big dot' do
-          expect(@degree_check_page.is_recommended? @completed_course_0).to be false
+          @degree_check_page.is_recommended(@reqt).when_not_present Utils.short_wait
         end
 
         it 'overwrites requirement units' do
-          expect(@degree_check_page.visible_course_req_units @completed_course_0).to eql(@completed_course_0.units)
+          expect(@degree_check_page.assigned_course_units @completed_course_0).to eql(@completed_course_0.units)
         end
 
         it 'overwrites a requirement grade' do
-          expect(@degree_check_page.visible_course_req_grade @completed_course_0).to eql(@completed_course_0.grade)
+          expect(@degree_check_page.assigned_course_grade @completed_course_0).to eql(@completed_course_0.grade)
         end
 
         it 'overwrites a requirement note' do
-          expect(@degree_check_page.visible_course_req_note(@completed_course_0).to_s).to be_empty
+          expect(@degree_check_page.assigned_course_note(@completed_course_0).to_s).to be_empty
         end
       end
 
@@ -258,7 +258,7 @@ describe 'A BOA degree' do
         before(:all) { @degree_check_page.unassign_course(@completed_course_0, @reqt) }
 
         it 'restores a big dot' do
-          expect(@degree_check_page.is_recommended? @reqt).to be true
+          @degree_check_page.is_recommended(@reqt).when_present Utils.short_wait
         end
 
         it 'restores requirement units' do
@@ -435,11 +435,17 @@ describe 'A BOA degree' do
         end
 
         it 'can view a list of student degree check updated dates' do
-          expect(@degree_check_history_page.visible_degree_update_dates).to eql(@degrees.map { |d| d.updated_date.strftime('%b %-d, %Y') })
+          expected = @degrees.map { |d| d.updated_date.strftime('%b %-d, %Y') }
+          @degree_check_history_page.wait_until(2, "Expected #{expected}, got #{@degree_check_history_page.visible_degree_update_dates}") do
+            @degree_check_history_page.visible_degree_update_dates == expected
+          end
         end
 
         it 'can view a student degree check updated-by advisor' do
-          expect(@degree_check_history_page.visible_degree_updated_by(@degree_check)).to eql(test.advisor.full_name)
+          expected = test.advisor.full_name
+          @degree_check_history_page.wait_until(2, "Expected #{expected}, got #{@degree_check_history_page.visible_degree_updated_by(@degree_check)}") do
+            @degree_check_history_page.visible_degree_updated_by(@degree_check) == expected
+          end
         end
 
         it('sees no create-new-degree button') { expect(@degree_check_history_page.create_new_degree_link?).to be false }

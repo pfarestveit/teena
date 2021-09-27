@@ -11,7 +11,8 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
     ei_notes = NessieTimelineUtils.get_e_and_i_notes student
     asc_notes = NessieTimelineUtils.get_asc_notes student
     data_sci_notes = NessieTimelineUtils.get_data_sci_notes student
-    {student: student, notes: (boa_notes + sis_notes + ei_notes + asc_notes + data_sci_notes)}
+    e_form_notes = NessieTimelineUtils.get_e_form_notes student
+    {student: student, notes: (boa_notes + sis_notes + ei_notes + asc_notes + data_sci_notes + e_form_notes)}
   end
 
   describe 'A BOA director' do

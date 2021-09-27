@@ -837,7 +837,7 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
           @scheduler_intake_desk.click_appt_dropdown_button @appt_4
           @scheduler_intake_desk.click_cancel_appt_button @appt_4
           expect(@scheduler_intake_desk.cancel_confirm_button_element.disabled?).to be true
-          @appt_4.cancel_reason = 'Cancelled by student'
+          @appt_4.cancel_reason = 'Canceled by student'
           @scheduler_intake_desk.select_cancel_reason @appt_4
           expect(@scheduler_intake_desk.cancel_confirm_button_element.disabled?).to be false
         end
@@ -865,7 +865,7 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
           @advisor_homepage.click_appt_dropdown_button @appt_5
           @advisor_homepage.click_cancel_appt_button @appt_5
           expect(@advisor_homepage.cancel_confirm_button_element.disabled?).to be true
-          @appt_5.cancel_reason = 'Cancelled by department/advisor'
+          @appt_5.cancel_reason = 'Canceled by department/advisor'
           @advisor_homepage.select_cancel_reason @appt_5
           expect(@advisor_homepage.cancel_confirm_button_element.disabled?).to be false
         end
@@ -883,7 +883,7 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
         it 'updates the appointment status on the waiting list' do
           @advisor_homepage.wait_until(Utils.short_wait) do
             visible_data = @advisor_homepage.visible_list_view_appt_data @appt_5
-            visible_data[:canceled_status] && visible_data[:canceled_status].include?('CANCELLED')
+            visible_data[:canceled_status] && visible_data[:canceled_status].include?('CANCELED')
           end
         end
 
@@ -913,7 +913,7 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
           @advisor_student_page.click_appt_dropdown_button @appt_6
           @advisor_student_page.click_cancel_appt_button @appt_6
           expect(@advisor_student_page.cancel_confirm_button_element.disabled?).to be true
-          @appt_6.cancel_reason = 'Cancelled by student'
+          @appt_6.cancel_reason = 'Canceled by student'
           @advisor_student_page.select_cancel_reason @appt_6
           expect(@advisor_student_page.cancel_confirm_button_element.disabled?).to be false
         end
@@ -984,7 +984,7 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
       before(:all) do
         student = @students.last
         checked_in_appt = Appointment.new(student: student, topics: [Topic::COURSE_ADD], detail: "Checked-in #{@test.id}")
-        canceled_appt = Appointment.new(student: student, topics: [Topic::COURSE_ADD], detail: "Canceled #{@test.id}", cancel_reason: 'Cancelled by student', cancel_detail: 'Foo')
+        canceled_appt = Appointment.new(student: student, topics: [Topic::COURSE_ADD], detail: "Canceled #{@test.id}", cancel_reason: 'Canceled by student', cancel_detail: 'Foo')
         pending_appt = Appointment.new(student: student, topics: [Topic::COURSE_ADD], detail: "Pending #{@test.id}")
 
         @advisor_homepage.click_new_appt
@@ -1006,7 +1006,7 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
         @advisor_homepage.click_cancel_confirm_button
         @advisor_homepage.wait_for_poller do
           visible_data = @advisor_homepage.visible_list_view_appt_data canceled_appt
-          visible_data[:canceled_status] && visible_data[:canceled_status].include?('CANCELLED')
+          visible_data[:canceled_status] && visible_data[:canceled_status].include?('CANCELED')
         end
 
         @advisor_homepage.click_new_appt

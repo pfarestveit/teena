@@ -57,7 +57,7 @@ module BOACStudentPageAdvisingNote
   # @param notes [Array<Note>]
   # @return [Array<String>]
   def expected_note_id_sort_order(notes)
-    (notes.sort_by {|n| [n.created_date, n.id] }).reverse.map &:id
+    (notes.sort_by { |n| [n.created_date, n.id] }).reverse.map &:id
   end
 
   # Returns the visible sequence of note ids
@@ -403,10 +403,14 @@ module BOACStudentPageAdvisingNote
   def expected_note_export_file_names(student, notes)
     names = []
     names << notes_export_csv_file_name(student)
-    notes.map(&:attachments).flatten.group_by(&:file_name).each_value do |dupe_names|
-      dupe_names.each_with_index do |a, i|
-        parts = [a.file_name.rpartition('.').first, a.file_name.rpartition('.').last]
-        names << "#{parts.first}#{ +' (' + i.to_s + ')' unless i.zero?}.#{parts.last}"
+    notes.map do |n|
+      unless n.instance_of? TimelineEForm
+        n.attachments.flatten.group_by(&:file_name).each_value do |dupe_names|
+          dupe_names.each_with_index do |a, i|
+            parts = [a.file_name.rpartition('.').first, a.file_name.rpartition('.').last]
+            names << "#{parts.first}#{ +' (' + i.to_s + ')' unless i.zero?}.#{parts.last}"
+          end
+        end
       end
     end
     names
@@ -431,25 +435,39 @@ module BOACStudentPageAdvisingNote
   # @param csv_table [CSV::Table]
   def verify_note_in_export_csv(student, note, csv_table)
     wait_until(1, "Couldn't find note ID #{note.id}") do
-      csv_table.find do |r|
-        r[:date_created] == note.created_date.strftime('%Y-%m-%d')
-        r[:student_sid] == student.sis_id.to_i
-        r[:student_name] == student.full_name
-        if note.advisor
-          (r[:author_uid] == note.advisor.uid.to_i) unless (note.advisor.uid == 'UCBCONVERSION')
+      begin
+        csv_table.find do |r|
+          r[:date_created] == note.created_date.strftime('%Y-%m-%d')
+          r[:student_sid] == student.sis_id.to_i
+          r[:student_name] == student.full_name
+
+          if note.instance_of? TimelineEForm
+            r[:late_change_request_action] == note.action if note.action
+            r[:late_change_request_status] == note.status if note.status
+            r[:late_change_request_term] == note.term if note.term
+            r[:late_change_request_course] == note.course
+
+          else
+            if note.advisor
+              (r[:author_uid] == note.advisor.uid.to_i) unless (note.advisor.uid == 'UCBCONVERSION')
+            end
+            r[:subject] == note.subject if note.subject
+            Nokogiri::HTML(r[:body]).text == "#{note.body}" if note.body
+            if note.topics&.any?
+              ((r[:topics].split(';').map(&:strip).map(&:downcase).sort if r[:topics]) == note.topics.map(&:downcase).sort)
+            else
+              !r[:topics]
+            end
+            if note.attachments&.any?
+              ((r[:attachments].split(';').map(&:strip).sort if r[:attachments]) == note.attachments.map(&:file_name).sort)
+            else
+              !r[:attachments]
+            end
+          end
         end
-        r[:subject] == note.subject
-        Nokogiri::HTML(r[:body]).text == "#{note.body}"
-        if note.topics.any?
-          ((r[:topics].split(';').map(&:strip).map(&:downcase).sort if r[:topics]) == note.topics.map(&:downcase).sort)
-        else
-          !r[:topics]
-        end
-        if note.attachments.any?
-          ((r[:attachments].split(';').map(&:strip).sort if r[:attachments]) == note.attachments.map(&:file_name).sort)
-        else
-          !r[:attachments]
-        end
+      rescue => e
+        logger.error "#{e.message}\n#{e.backtrace}"
+        fail
       end
     end
   end

@@ -11,7 +11,7 @@ class BOACSearchResultsPage
   include BOACAddGroupSelectorPages
   include BOACAdmitListPages
 
-  span(:results_loaded_msg, xpath: '//span[contains(text(), "Search results have loaded.")]')
+  span(:results_loaded_msg, xpath: '//h1[text()="Search Results"]')
 
   # The result count displayed following a search
   # @param element [PageObject::Elements::Element]

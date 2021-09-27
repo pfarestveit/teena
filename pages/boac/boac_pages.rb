@@ -254,7 +254,8 @@ module BOACPages
 
   def clear_input(element)
     element.when_visible Utils.short_wait
-    hit_forward_slash
+    hit_escape
+    element.click
     sleep 1
     clear_input_value element
   end
