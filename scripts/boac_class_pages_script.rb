@@ -48,7 +48,7 @@ begin
 
             term_name = api_user_page.term_name term
             term_id = api_user_page.term_id term
-            unless ['Fall 2021', 'Summer 2021', 'Spring 2021'].include? term_name
+            unless term_name == BOACUtils.term
 
               logger.info "Checking term #{term_name}"
 

@@ -116,7 +116,7 @@ module Page
 
     # GRADEBOOK UI
 
-    text_area(:user_search_input, class: 'search-query')
+    text_area(:user_search_input, xpath: '//input[@placeholder="Search Students"]')
     link(:e_grades_export_link, xpath: '//a[contains(.,"E-Grades")]')
     button(:actions_button, xpath: '//button[contains(., "Actions")]')
     span(:grades_export_button, xpath: '//span[@data-menu-id="export"]')
@@ -240,7 +240,7 @@ module Page
       tries ||= 5
       begin
         tries -= 1
-        wait_for_element_and_type(user_search_input_element, user.uid)
+        wait_for_textbox_and_type(user_search_input_element, user.uid)
         wait_until(2) { gradebook_student_link_elements.first.attribute('data-student_id') == "#{user.canvas_id}" }
       rescue => e
         logger.error e.message

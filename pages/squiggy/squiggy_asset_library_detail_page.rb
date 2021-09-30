@@ -81,7 +81,8 @@ class SquiggyAssetLibraryDetailPage < SquiggyAssetLibraryListViewPage
 
   # PREVIEW
 
-    div(:preparing_preview_msg, xpath: '//div[contains(text(), "Preparing a preview")]')
+  button(:regenerate_preview_button, id: 'refresh-asset-preview-btn')
+  div(:preparing_preview_msg, xpath: '//div[contains(text(), "Preparing a preview")]')
 
   def preview_generated?(asset)
     logger.info "Verifying a preview of type '#{asset.preview_type}' is generated for the asset within #{Utils.medium_wait} seconds"
@@ -109,6 +110,11 @@ class SquiggyAssetLibraryDetailPage < SquiggyAssetLibraryListViewPage
           div_element(xpath: '//div[contains(text(),"No preview available")]')
         end).when_present 3
     end
+  end
+
+  def click_regenerate_preview
+    logger.info 'Clicking the regenerate preview button'
+    wait_for_update_and_click regenerate_preview_button_element
   end
 
   # EDIT DETAILS
@@ -278,7 +284,7 @@ class SquiggyAssetLibraryDetailPage < SquiggyAssetLibraryListViewPage
   end
 
   def click_edit_button(comment)
-    wait_for_update_and_click edit_button(comment)
+    wait_for_update_and_click_js edit_button(comment)
   end
 
   def edit_comment_text_area(comment)

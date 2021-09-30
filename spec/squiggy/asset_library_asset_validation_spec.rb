@@ -120,12 +120,25 @@ describe 'Asset Library' do
       expect(@assets_list.url_input_element.value).to eql("http://#{@asset.url}")
     end
 
+    it 'require that a Jamboard URL be publicly shared' do
+      @asset.title = 'Bad Jam'
+      @asset.description = nil
+      @asset.category = nil
+      @asset.url = 'https://jamboard.google.com/d/1V8mwl3eH_XlNHOE3hQf8f--U_mGAs5BhsJLwifoi9tI'
+      @assets_list.click_cancel_link_button
+      @assets_list.click_add_url_button
+      @assets_list.enter_url @asset
+      @assets_list.enter_asset_metadata @asset
+      @assets_list.click_save_link_button
+      @assets_list.bad_jam_error_msg_element.when_visible Utils.short_wait
+    end
+
     it 'require that the user enter a title' do
       @asset.title = nil
       @asset.description = nil
       @asset.category = nil
       @asset.url = @url
-      @assets_list.click_cancel_link_button
+      @assets_list.click_back_button
       @assets_list.click_add_url_button
       @assets_list.enter_url @asset
       @assets_list.enter_asset_metadata @asset

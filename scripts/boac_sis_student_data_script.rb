@@ -105,9 +105,7 @@ begin
                       logger.error "encountered an error for UID #{student.uid} term #{term_name} course #{course_code} section #{section_sis_data[:ccn]}"
                       logger.error "#{e.message + "\n"} #{e.backtrace.join("\n ")}"
                     ensure
-                      unless [BOACUtils.term,
-                              BOACUtils.sis_code_to_term_name(BOACUtils.previous_term_code),
-                              BOACUtils.sis_code_to_term_name(BOACUtils.previous_term_code BOACUtils.previous_term_code)].include? term_name
+                      unless term_name == BOACUtils.term
                         row = [student.uid,
                                term_name,
                                section_sis_data[:ccn],
