@@ -29,6 +29,7 @@ class SquiggyAssetLibraryListViewPage
   ### ADDING LINKS
 
   button(:add_link_button, id: 'go-add-link-asset-btn')
+  span(:bad_jam_error_msg, xpath: "//span[text()='In order to add a Google Jamboard to the Asset Library, sharing must be set to \"Anyone with the link.\"']")
 
   def click_add_url_button
     wait_for_update_and_click_js add_link_button_element

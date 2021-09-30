@@ -4,7 +4,13 @@ module SquiggyPages
   include Page
   include Logging
 
+  button(:go_back_button, id: 'go-back-btn')
   button(:back_to_asset_library_button, id: 'asset-library-btn')
+
+  def click_back_button
+    logger.info 'Clicking back from error message'
+    wait_for_update_and_click go_back_button_element
+  end
 
   def click_back_to_asset_library
     logger.debug 'Clicking Back to Asset Library button'

@@ -76,6 +76,18 @@ describe 'New asset' do
                   expect(visible_detail[:source]).to be true
                 end
               end
+
+              if asset.url&.include? 'jamboard.google.com'
+                sleep 2
+                re_preview_button = @asset_detail.verify_block do
+                  @asset_detail.click_regenerate_preview
+                  @asset_detail.preparing_preview_msg_element.when_visible Utils.short_wait
+                end
+                it("#{asset.title} belonging to #{student.full_name} offers a regenerate-preview button") { expect(re_preview_button).to be true }
+
+                preview_regenerated = @asset_detail.preview_generated? asset
+                it("#{asset.title} belonging to #{student.full_name} regenerates the right detail view preview type") { expect(preview_regenerated).to be true }
+              end
             end
 
           rescue => e

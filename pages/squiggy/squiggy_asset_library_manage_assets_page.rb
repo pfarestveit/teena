@@ -25,6 +25,7 @@ class SquiggyAssetLibraryManageAssetsPage < SquiggyAssetLibraryListViewPage
 
   def create_new_category(category)
     logger.info "Creating a new category called '#{category.name}'"
+    sleep 1
     enter_category_name category.name
     click_add_category_button
     category.set_id
