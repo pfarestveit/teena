@@ -31,7 +31,4 @@ begin
   task default: :squiggy
   RSpec::Core::RakeTask.new(:squiggy) { |t| run_specs(t, 'squiggy', opts) }
 
-  task default: :suitec
-  RSpec::Core::RakeTask.new(:suitec) { |t| run_specs(t, 'suitec', opts) }
-
 end
