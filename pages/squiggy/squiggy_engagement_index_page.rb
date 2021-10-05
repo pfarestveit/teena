@@ -19,7 +19,7 @@ class SquiggyEngagementIndexPage
   div(:user_info_boxplot, id: 'engagement-userinfo-boxplot')
 
   def wait_for_poller_sync(&blk)
-    tries ||= SuiteCUtils.poller_retries
+    tries ||= SquiggyUtils.poller_retries
     begin
       return yield
     end

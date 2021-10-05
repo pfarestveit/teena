@@ -243,6 +243,10 @@ class BOACApiStudentPage
     term['termGpa'] && term['termGpa']['gpa']
   end
 
+  def term_gpa_units(term)
+    term['termGpa'] && term['termGpa']['unitsTakenForGpa']
+  end
+
   def courses(term)
     term['enrollments']
   end
@@ -316,6 +320,18 @@ class BOACApiStudentPage
         :date => section['dropDate']
       }
     end
+  end
+
+  # REGISTRATIONS
+
+  def term_registration
+    registration = sis_profile['currentRegistration']
+    registration && {
+      term_id: registration['term']['id'],
+      career: registration['academicCareer']['code'],
+      begin_term: (registration['academicLevels']&.find { |l| l['type']['code'] == 'BOT' })['level']['description'],
+      end_term: (registration['academicLevels']&.find { |l| l['type']['code'] == 'EOT' })['level']['description']
+    } unless registration.empty?
   end
 
   # COURSE SITES
@@ -440,6 +456,14 @@ class BOACApiStudentPage
 
   def notifications
     @parsed['notifications']
+  end
+
+  def alerts
+    notifications && notifications['alert']&.map { |a| a['message'] }
+  end
+
+  def holds
+    notifications && notifications['hold']&.map { |h| h['message'] }
   end
 
   def notes

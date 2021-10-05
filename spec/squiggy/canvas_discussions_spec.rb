@@ -2,9 +2,9 @@ require_relative '../../util/spec_helper'
 
 describe 'A Canvas discussion' do
 
-  add_topic = Activity::ADD_DISCUSSION_TOPIC
-  add_entry = Activity::ADD_DISCUSSION_ENTRY
-  get_reply = Activity::GET_DISCUSSION_REPLY
+  add_topic = SquiggyActivity::ADD_DISCUSSION_TOPIC
+  add_entry = SquiggyActivity::ADD_DISCUSSION_ENTRY
+  get_reply = SquiggyActivity::GET_DISCUSSION_REPLY
 
   before(:all) do
     @test = SquiggyTestConfig.new 'canvas_discussions'

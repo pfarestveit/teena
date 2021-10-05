@@ -77,16 +77,24 @@ describe 'New asset' do
                 end
               end
 
-              if asset.url&.include? 'jamboard.google.com'
-                sleep 2
-                re_preview_button = @asset_detail.verify_block do
-                  @asset_detail.click_regenerate_preview
-                  @asset_detail.preparing_preview_msg_element.when_visible Utils.short_wait
-                end
-                it("#{asset.title} belonging to #{student.full_name} offers a regenerate-preview button") { expect(re_preview_button).to be true }
+              regen_button = @asset_detail.regenerate_preview_button?
+              if asset.url
+                it("#{asset.title} belonging to #{student.full_name} offers a regenerate-preview button") { expect(regen_button).to be true }
 
-                preview_regenerated = @asset_detail.preview_generated? asset
-                it("#{asset.title} belonging to #{student.full_name} regenerates the right detail view preview type") { expect(preview_regenerated).to be true }
+                if asset.url.include? 'jamboard.google.com'
+                  preview_triggered = @asset_detail.verify_block do
+                    sleep 2
+                    @asset_detail.click_regenerate_preview
+                    @asset_detail.preparing_preview_msg_element.when_visible Utils.short_wait
+                  end
+                  it("#{asset.title} belonging to #{student.full_name} can trigger a preview refresh") { expect(preview_triggered).to be true }
+
+                  preview_regenerated = @asset_detail.preview_generated? asset
+                  it("#{asset.title} belonging to #{student.full_name} regenerates the right detail view preview type") { expect(preview_regenerated).to be true }
+                end
+
+              else
+                it("#{asset.title} belonging to #{student.full_name} offers no regenerate-preview button") { expect(regen_button).to be false }
               end
             end
 
