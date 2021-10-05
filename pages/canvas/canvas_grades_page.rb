@@ -83,6 +83,7 @@ module Page
     # Clicks the gradebook settings button
     def click_gradebook_settings
       logger.debug 'Clicking gradebook settings'
+      sleep 2
       wait_for_load_and_click gradebook_settings_button_element
     end
 
@@ -91,7 +92,7 @@ module Page
     def grades_final?
       sleep Utils.click_wait
       click_gradebook_settings
-      gradebook_include_ungraded_element.when_present Utils.short_wait
+      gradebook_include_ungraded_element.when_present Utils.medium_wait
       gradebook_include_ungraded_checked?
     end
 

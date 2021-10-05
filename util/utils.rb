@@ -344,7 +344,8 @@ class Utils
 
   # Logs an error message and its stacktrace
   # @param e [Exception]
-  def self.log_error(e)
+  def self.log_error(e, msg=nil)
+    logger.error msg if msg
     logger.error "#{e.message + "\n"} #{e.backtrace.join("\n ")}"
   end
 

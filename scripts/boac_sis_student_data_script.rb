@@ -10,17 +10,46 @@ begin
     test.test_students = ENV['UIDS'].split.map { |u| BOACUser.new uid: u }
   end
 
-  profile_data_heading = %w(UID Name PreferredName Email EmailAlt Phone Units GPA Level Transfer Colleges Majors
-                            CollegesDisc MajorsDisc Minors MinorsDisc Terms Writing History Institutions Cultures
-                            Advisors EnteredTerm MajorsIntend Visa GradExpect GradDegree GradDate GradColleges Inactive
-                            Alerts Holds)
-  profile_csv = Utils.create_test_output_csv('boac-sis-profiles.csv', profile_data_heading)
+  def parse_date(date_str)
+    if date_str && !date_str.empty?
+      form = date_str.include?('/') ? '%-m/%-d/%y' : nil
+      form ? DateTime.strptime(date_str, form).to_s : DateTime.parse(date_str).to_s
+    end
+  end
 
-  standing_heading = %w(UID Term Standing)
-  standing_csv = Utils.create_test_output_csv('boac-standing.csv', standing_heading)
+  def parse_reqt(name, text)
+    if text
+      if BOACUtils.base_url.include? 'boa-'
+        text.split(')').last.strip
+      else
+        text.gsub(name, '').strip
+      end
+    end
+  end
+
+  profile_data_heading = %w(UID Name PreferredName Email EmailAlt Phone Units GPA Level Transfer Terms Advisors EnteredTerm Visa )
+  profile_csv = Utils.create_test_output_csv('boac-profiles.csv', profile_data_heading)
+
+  profile_plans_heading = %w(UID Colleges Majors CollegesDisc MajorsDisc Minors MinorsDisc MajorsIntend)
+  profile_plans_csv = Utils.create_test_output_csv('boac-plans.csv', profile_plans_heading)
+
+  profile_reg_heading = %w(UID Term Career Begin End)
+  profile_reg_csv = Utils.create_test_output_csv('boac-reg.csv', profile_reg_heading)
+
+  profile_grad_heading = %w(UID GradExpect GradDegree GradDate GradColleges Inactive)
+  profile_grad_csv = Utils.create_test_output_csv('boac-grad.csv', profile_grad_heading)
+
+  profile_reqts_heading = %w(UID Writing History Institutions Cultures)
+  profile_reqts_csv = Utils.create_test_output_csv('boac-reqts.csv', profile_reqts_heading)
+
+  alerts_holds_heading = %w(UID Alerts Holds)
+  alerts_holds_csv = Utils.create_test_output_csv('boac-alerts-holds.csv', alerts_holds_heading)
+
+  standing_gpa_heading = %w(UID Term Standing TermGPA GPAUnits)
+  standing_gpa_csv = Utils.create_test_output_csv('boac-standing-gpa.csv', standing_gpa_heading)
 
   course_data_heading = %w(UID Term SectionCcn SectionCode Primary? Midpoint Grade GradingBasis Units EnrollmentStatus DropDate)
-  courses_csv = Utils.create_test_output_csv('boac-sis-courses.csv', course_data_heading)
+  courses_csv = Utils.create_test_output_csv('boac-courses.csv', course_data_heading)
 
   notes_heading = %w(UID ID AdvisorUID AdvisorName AdvisorEmail AdvisorDepts Subj Body Topics Attach Created Updated)
   notes_csv = Utils.create_test_output_csv('boac-sis-notes.csv', notes_heading)
@@ -61,6 +90,8 @@ begin
       active_minors = active_minor_feed.map { |m| m[:minor] }
       inactive_minors = inactive_minor_feed.map { |m| m[:minor] }
 
+      registration = api_student_data.term_registration
+
       notes = api_student_data.notes
       appts = api_student_data.appointments
 
@@ -73,17 +104,15 @@ begin
             term_section_ccns = []
             logger.info "Checking #{term_name}"
 
-            if academic_standing&.any?
-              term_standing = academic_standing.find { |s| s.term_id.to_s == term_id.to_s }
-              if term_standing
-                row = [
-                  student.uid,
-                  term_standing.term_name,
-                  term_standing.descrip
-                ]
-                Utils.add_csv_row(standing_csv, row)
-              end
-            end
+            term_standing = academic_standing.find { |s| s.term_id.to_s == term_id.to_s } if academic_standing&.any?
+            row = [
+              student.uid,
+              term_name,
+              term_standing&.descrip,
+              api_student_data.term_gpa(term),
+              api_student_data.term_gpa_units(term)
+            ]
+            Utils.add_csv_row(standing_gpa_csv, row)
 
             courses = api_student_data.courses term
             if courses.any?
@@ -101,9 +130,7 @@ begin
                       section_statuses << section_sis_data[:status]
 
                     rescue => e
-                      BOACUtils.log_error e
-                      logger.error "encountered an error for UID #{student.uid} term #{term_name} course #{course_code} section #{section_sis_data[:ccn]}"
-                      logger.error "#{e.message + "\n"} #{e.backtrace.join("\n ")}"
+                      BOACUtils.log_error(e, "encountered an error for UID #{student.uid} term #{term_name} course #{course_code} section #{section_sis_data[:ccn]}")
                     ensure
                       unless term_name == BOACUtils.term
                         row = [student.uid,
@@ -123,9 +150,7 @@ begin
                   end
 
                 rescue => e
-                  BOACUtils.log_error e
-                  logger.error "encountered an error for UID #{student.uid} term #{term_name} course #{course_code}"
-                  logger.error "#{e.message + "\n"} #{e.backtrace.join("\n ")}"
+                  BOACUtils.log_error(e, "encountered an error for UID #{student.uid} term #{term_name} course #{course_code}")
                 end
               end
 
@@ -155,9 +180,7 @@ begin
             end
 
           rescue => e
-            BOACUtils.log_error e
-            logger.error "encountered an error for UID #{student.uid} term #{term_name}"
-            logger.error "#{e.message + "\n"} #{e.backtrace.join("\n ")}"
+            BOACUtils.log_error(e, "encountered an error for UID #{student.uid} term #{term_name}")
           end
         end
 
@@ -166,9 +189,7 @@ begin
       end
 
     rescue => e
-      BOACUtils.log_error e
-      logger.error "encountered an error for UID #{student.uid}"
-      logger.error "#{e.message + "\n"} #{e.backtrace.join("\n ")}"
+      BOACUtils.log_error(e, "encountered an error for UID #{student.uid}")
     ensure
       row = [
         student.uid,
@@ -181,44 +202,77 @@ begin
         api_sis_profile_data[:cumulative_gpa],
         api_sis_profile_data[:level],
         api_sis_profile_data[:transfer],
+        api_sis_profile_data[:terms_in_attendance],
+        advisors,
+        api_sis_profile_data[:entered_term],
+        visa
+      ]
+      Utils.add_csv_row(profile_csv, row)
+
+      row = [
+        student.uid,
         active_colleges,
         active_majors,
         inactive_colleges,
         inactive_majors,
         active_minors,
         inactive_minors,
-        api_sis_profile_data[:terms_in_attendance],
-        api_sis_profile_data[:reqt_writing],
-        api_sis_profile_data[:reqt_history],
-        api_sis_profile_data[:reqt_institutions],
-        api_sis_profile_data[:reqt_cultures],
-        advisors,
-        api_sis_profile_data[:entered_term],
-        api_sis_profile_data[:intended_majors],
-        visa,
+        api_sis_profile_data[:intended_majors]
+      ]
+      Utils.add_csv_row(profile_plans_csv, row)
+
+      row = [
+        student.uid,
+        (registration[:term_id] if registration),
+        (registration[:career] if registration),
+        (registration[:begin_term] if registration),
+        (registration[:end_term] if registration)
+      ]
+      Utils.add_csv_row(profile_reg_csv, row)
+
+      row = [
+        student.uid,
+        parse_reqt('Entry Level Writing', api_sis_profile_data[:reqt_writing]),
+        parse_reqt('American History', api_sis_profile_data[:reqt_history]),
+        parse_reqt('American Institutions', api_sis_profile_data[:reqt_institutions]),
+        parse_reqt('American Cultures', api_sis_profile_data[:reqt_cultures])
+      ]
+      Utils.add_csv_row(profile_reqts_csv, row)
+
+      row = [
+        student.uid,
         api_sis_profile_data[:expected_grad_term_id],
         (graduation && graduation[:degree]),
         (graduation && graduation[:date]),
         (graduation && graduation[:colleges]),
         non_active
       ]
-      Utils.add_csv_row(profile_csv, row)
+      Utils.add_csv_row(profile_grad_csv, row)
+
+      row = [
+        student.uid,
+        api_student_data.alerts,
+        api_student_data.holds
+      ]
+      Utils.add_csv_row(alerts_holds_csv, row)
 
       notes&.map do |n|
         if n.id.include?('-') && !n.id.include?('eform')
+          body = (n.body && Nokogiri::HTML(n.body).text.gsub('&Tab;', '').gsub(/\s+/, ''))
+          body = body[1..-2] if body[0] == '"' && body[-1] == '"'
           row = [
             student.uid,
             n.id,
-            n.advisor&.uid,
-            n.advisor&.full_name,
-            n.advisor&.email,
+            n.advisor&.uid.to_s,
+            n.advisor&.full_name.to_s,
+            n.advisor&.email.to_s,
             n.advisor&.depts,
-            n.subject,
-            n.body,
+            n.subject.to_s,
+            body.to_s,
             n.topics,
             n.attachments,
-            n.created_date,
-            n.updated_date
+            parse_date(n.created_date),
+            parse_date(n.updated_date)
           ]
           Utils.add_csv_row(notes_csv, row)
         end
@@ -226,17 +280,19 @@ begin
 
       appts&.map do |a|
         if a.id.include?('-') && !a.subject.include?('L&S Advising Appt:')
+          detail = (a.detail && Nokogiri::HTML(a.detail).text.gsub('&Tab;', '').gsub(/\s+/, ''))
+          detail = detail[1..-2] if detail[0] == '"' && detail[-1] == '"'
           row = [
             student.uid,
             a.id,
-            a.advisor&.uid,
-            a.advisor&.full_name,
+            a.advisor&.uid.to_s,
+            a.advisor&.full_name.to_s,
             a.advisor&.depts,
-            a.subject,
-            a.detail,
+            a.subject.to_s,
+            detail.to_s,
             a.attachments,
-            a.created_date,
-            a.updated_date
+            parse_date(a.created_date),
+            parse_date(a.updated_date)
           ]
           Utils.add_csv_row(appts_csv, row)
         end
@@ -246,8 +302,6 @@ begin
 
 rescue => e
   Utils.log_error e
-  logger.error 'encountered an error'
-  logger.error "#{e.message + "\n"} #{e.backtrace.join("\n ")}"
 ensure
   Utils.quit_browser @driver
 end
