@@ -16,10 +16,12 @@ begin
   logger.warn "There are #{unique_to_2.length} rows in CSV_2 that are not in CSV_1"
 
   CSV.open("#{Utils.initialize_test_output_dir}/unique-to-csv-1-#{csv_1_path.split('/').last}", 'w') do |csv|
+    csv << csv_1.first
     unique_to_1.each { |row| csv << row }
   end
 
   CSV.open("#{Utils.initialize_test_output_dir}/unique-to-csv-2-#{csv_2_path.split('/').last}", 'w') do |csv|
+    csv << csv_2.first
     unique_to_2.each { |row| csv << row }
   end
 
