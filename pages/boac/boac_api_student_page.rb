@@ -331,7 +331,7 @@ class BOACApiStudentPage
       career: registration['academicCareer']['code'],
       begin_term: (registration['academicLevels']&.find { |l| l['type']['code'] == 'BOT' })['level']['description'],
       end_term: (registration['academicLevels']&.find { |l| l['type']['code'] == 'EOT' })['level']['description']
-    } unless registration.empty?
+    } unless registration&.empty?
   end
 
   # COURSE SITES
@@ -458,8 +458,12 @@ class BOACApiStudentPage
     @parsed['notifications']
   end
 
-  def alerts
-    notifications && notifications['alert']&.map { |a| a['message'] }
+  def alerts(opts=nil)
+    alerts = notifications && notifications['alert']&.map { |a| a['message'] }
+    if alerts && opts && opts[:exclude_canvas]
+      alerts.delete_if { |a| a.include? 'activity!' }
+    end
+    alerts
   end
 
   def holds
