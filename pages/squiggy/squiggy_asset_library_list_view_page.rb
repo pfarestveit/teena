@@ -49,7 +49,9 @@ class SquiggyAssetLibraryListViewPage
   button(:manage_assets_button, id: 'manage-assets-btn')
 
   def click_manage_assets_link
-    wait_for_load_and_click_js manage_assets_button_element
+    manage_assets_button_element.when_visible Utils.short_wait
+    sleep 1
+    manage_assets_button_element.click
   end
 
   # LIST VIEW ASSETS

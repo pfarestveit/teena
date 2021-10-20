@@ -286,6 +286,7 @@ unless ENV['STANDALONE']
         # Get actual grade data for one student
         gradebook_grade_data = students.map do |user|
           user.sis_id = @rosters_api.sid_from_uid user.uid
+          user.full_name = @rosters_api.name_from_uid user.uid
           user.sis_id.nil? ? nil : @canvas.student_score(user)
         end
         gradebook_grade_data.compact!

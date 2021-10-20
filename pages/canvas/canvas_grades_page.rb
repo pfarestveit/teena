@@ -80,11 +80,16 @@ module Page
     text_field(:gradebook_manual_posting_input, xpath: '//input[@name="postPolicy"][@value="manual"]/following-sibling::label/span')
     button(:gradebook_settings_update_button, id: 'gradebook-settings-update-button')
 
-    # Clicks the gradebook settings button
+    # Clicks the gradebook settings button, which can be a fickle button
     def click_gradebook_settings
-      logger.debug 'Clicking gradebook settings'
-      sleep 2
-      wait_for_load_and_click gradebook_settings_button_element
+      tries = 3
+      begin
+        logger.debug 'Clicking gradebook settings'
+        wait_for_load_and_click gradebook_settings_button_element
+        grade_posting_policy_tab_element.when_visible Utils.short_wait
+      rescue
+        retry unless (tries -= 1).zero?
+      end
     end
 
     # Returns whether or not ungraded assignments are included in grades
@@ -102,7 +107,7 @@ module Page
       logger.info "Setting manual posting policy for course ID #{course.site_id}"
       load_gradebook course
       click_gradebook_settings
-      wait_for_load_and_click grade_posting_policy_tab_element
+      wait_for_update_and_click grade_posting_policy_tab_element
       gradebook_manual_posting_input_element.when_visible 2
       if gradebook_manual_posting_msg?
         logger.debug 'Posting policy is already manual'
@@ -241,7 +246,11 @@ module Page
       tries ||= 5
       begin
         tries -= 1
-        wait_for_textbox_and_type(user_search_input_element, user.uid)
+        wait_for_element(user_search_input_element, Utils.medium_wait)
+        remove_button = button_element(xpath: '//button[contains(@title, "Remove ")]')
+        remove_button.click if remove_button.exists?
+        wait_for_textbox_and_type(user_search_input_element, user.full_name)
+        hit_enter
         wait_until(2) { gradebook_student_link_elements.first.attribute('data-student_id') == "#{user.canvas_id}" }
       rescue => e
         logger.error e.message

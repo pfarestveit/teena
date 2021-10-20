@@ -65,7 +65,7 @@ class BOACApiStudentPage
 
   def sis_profile_data
     {
-      :name => (sis_profile && sis_profile['name']),
+      :name => (sis_profile && sis_profile['primaryName']),
       :preferred_name => (sis_profile && sis_profile['preferredName']),
       :email => (sis_profile && sis_profile['emailAddress']),
       :email_alternate => (sis_profile && sis_profile['emailAddressAlternate']),
@@ -102,7 +102,7 @@ class BOACApiStudentPage
   end
 
   def graduation
-    if sis_profile['degree']
+    if sis_profile && sis_profile['degree']
       {
         date: sis_profile['degree']['dateAwarded'],
         degree: sis_profile['degree']['description'],
@@ -186,21 +186,17 @@ class BOACApiStudentPage
   # Demographics
 
   def demographics
-    @parsed && @parsed['demographics']
-  end
-
-  def demographics_data
-    {
-      visa: visa
-    }
-  end
-
-
-  def visa
-    if (visa_feed = (demographics && demographics['visa']))
+    data = @parsed && @parsed['demographics']
+    if data
       {
-        status: visa_feed['status'],
-        type: visa_feed['type']
+        gender: data['gender'],
+        ethnicities: data['ethnicities'],
+        nationalities: data['nationalities'],
+        underrepresented: data['underrepresented'],
+        visa: (data['visa'] && {
+          status: data['visa']['status'],
+          type: data['visa']['type']
+        })
       }
     end
   end
@@ -212,6 +208,7 @@ class BOACApiStudentPage
       {
         email: a['email'],
         name: "#{a['firstName']} #{a['lastName']}",
+        role: a['role'],
         plan: a['plan']
       }
     end
