@@ -332,7 +332,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
           @boac_student_page.expand_personal_details
 
           api_advisors = api_student_data.advisors
-          api_demographics = api_student_data.demographics_data
+          api_demographics = api_student_data.demographics
 
           student_page_sis_data = @boac_student_page.visible_sis_data
 

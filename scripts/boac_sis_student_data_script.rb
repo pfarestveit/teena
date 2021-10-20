@@ -33,17 +33,23 @@ begin
              'prod'
            end
 
-  profile_data_heading = %w(UID Name PreferredName Email EmailAlt Phone Visa )
+  profile_data_heading = %w(UID Name PreferredName Email EmailAlt Phone)
   profile_csv = Utils.create_test_output_csv("boac-profiles-#{suffix}.csv", profile_data_heading)
+
+  profile_demo_heading = %w(UID Gender Ethnicities Nationalities VisaType VisaStatus)
+  profile_demo_csv = Utils.create_test_output_csv("boac-demographics-#{suffix}.csv", profile_demo_heading)
 
   profile_acad_heading = %w(UID Units GPA Level Transfer Terms EnteredTerm)
   profile_acad_csv = Utils.create_test_output_csv("boac-acad-profiles-#{suffix}.csv", profile_acad_heading)
 
-  profile_advisors_heading = %w(UID Advisor Email Plan)
+  profile_advisors_heading = %w(UID Advisor Email Role Plan)
   profile_advisors_csv = Utils.create_test_output_csv("boac-advisors-#{suffix}.csv", profile_advisors_heading)
 
-  profile_plans_heading = %w(UID Colleges Majors CollegesDisc MajorsDisc Minors MinorsDisc MajorsIntend SubPlans)
+  profile_plans_heading = %w(UID Colleges Majors Minors MajorsIntend SubPlans)
   profile_plans_csv = Utils.create_test_output_csv("boac-plans-#{suffix}.csv", profile_plans_heading)
+
+  profile_plans_disc_heading = %w(UID CollegesDisc MajorsDisc MinorsDisc)
+  profile_plans_disc_csv = Utils.create_test_output_csv("boac-plans-disc-#{suffix}.csv", profile_plans_disc_heading)
 
   profile_reg_heading = %w(UID Term Career Begin End)
   profile_reg_csv = Utils.create_test_output_csv("boac-reg-#{suffix}.csv", profile_reg_heading)
@@ -89,7 +95,7 @@ begin
       api_sis_profile_data = api_student_data.sis_profile_data
       graduation = api_student_data.graduation
       academic_standing = api_student_data.academic_standing
-      visa = api_student_data.visa
+      demographics = api_student_data.demographics
       advisors = api_student_data.advisors
       non_active = %w(Completed Inactive).include?(api_sis_profile_data[:academic_career_status]) || api_sis_profile_data[:withdrawal]
 
@@ -178,7 +184,7 @@ begin
                 unless term_name == BOACUtils.term
                   row = [student.uid,
                          term_name,
-                         nil,
+                         drop[:date],
                          "#{drop[:component]} #{drop[:number]}",
                          nil,
                          nil,
@@ -211,10 +217,19 @@ begin
         api_sis_profile_data[:preferred_name],
         api_sis_profile_data[:email],
         api_sis_profile_data[:email_alternate],
-        api_sis_profile_data[:phone],
-        visa
+        api_sis_profile_data[:phone]
       ]
       Utils.add_csv_row(profile_csv, row)
+
+      row = [
+        student.uid,
+        (demographics && demographics[:gender]),
+        (demographics && demographics[:ethnicities]),
+        (demographics && demographics[:nationalities]),
+        (demographics && demographics[:visa] && demographics[:visa][:type]),
+        (demographics && demographics[:visa] && demographics[:visa][:status])
+      ]
+      Utils.add_csv_row(profile_demo_csv, row)
 
       row = [
         student.uid,
@@ -232,6 +247,7 @@ begin
           student.uid,
           adv[:name],
           adv[:email],
+          adv[:role],
           adv[:plan]
         ]
         Utils.add_csv_row(profile_advisors_csv, row)
@@ -241,14 +257,19 @@ begin
         student.uid,
         active_colleges,
         active_majors,
-        inactive_colleges,
-        inactive_majors,
         active_minors,
-        inactive_minors,
         api_sis_profile_data[:intended_majors],
         api_student_data.sub_plans
       ]
       Utils.add_csv_row(profile_plans_csv, row)
+
+      row = [
+        student.uid,
+        inactive_colleges,
+        inactive_majors,
+        inactive_minors
+      ]
+      Utils.add_csv_row(profile_plans_disc_csv, row)
 
       row = [
         student.uid,

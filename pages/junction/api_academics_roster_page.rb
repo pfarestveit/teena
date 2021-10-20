@@ -62,4 +62,11 @@ class ApiAcademicsRosterPage
     end
   end
 
+  def name_from_uid(uid)
+    student = students.find { |s| s['id'] == uid }
+    "#{student['first_name']} #{student['last_name']}"
+  rescue
+    logger.warn "There is no UID #{uid} on the course SIS roster"
+  end
+
 end

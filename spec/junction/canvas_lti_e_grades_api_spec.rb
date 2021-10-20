@@ -53,6 +53,7 @@ unless ENV['STANDALONE']
             @canvas.hit_escape
             gradebook_grades = students.map do |user|
               user.sis_id = rosters_api.sid_from_uid user.uid
+              user.full_name = rosters_api.name_from_uid user.uid
               @canvas.student_score user unless user.sis_id.nil?
             end
             gradebook_grades.compact!
