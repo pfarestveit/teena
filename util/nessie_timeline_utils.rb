@@ -306,6 +306,8 @@ class NessieTimelineUtils < NessieUtils
     results = query_pg_db(NessieUtils.nessie_pg_db_credentials, query)
     appt_data = results.group_by { |h1| h1['id'] }.map do |k, v|
       advisor = BOACUser.new full_name: v[0]['advisor_name']
+      cancel_reason = v[0]['cancel_reason'].to_s.strip
+      cancel_reason = 'Canceled' if cancel_reason.empty?
       {
         id: k,
         type: v[0]['type'].to_s.strip,
@@ -317,7 +319,7 @@ class NessieTimelineUtils < NessieUtils
         start_time: Time.parse(v[0]['start_time'].to_s).utc.localtime,
         end_time: Time.parse(v[0]['end_time'].to_s).utc.localtime,
         status: (AppointmentStatus::CANCELED if v[0]['cancelled'] == 't'),
-        cancel_reason: v[0]['cancel_reason'].to_s.strip,
+        cancel_reason: cancel_reason,
         source: TimelineRecordSource::YCBM
       }
     end

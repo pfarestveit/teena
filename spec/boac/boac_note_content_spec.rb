@@ -102,7 +102,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
                   expected_updated_date = @student_page.expected_item_long_date_format note.updated_date
                   expected_initiated_date = note.created_date.strftime('%m/%d/%Y')
                   expected_final_date = note.updated_date.strftime('%m/%d/%Y %-l:%M:%S%P')
-                  # TODO it("shows the subject on #{test_case}") { expect(visible_collapsed_note_data[:subject]).to eql(expected_subj) }
+                  it("shows the subject on #{test_case}") { expect(visible_collapsed_note_data[:subject]).to eql(expected_subj) }
                   it("shows the created date on #{test_case}") { expect(visible_e_form_data[:created_date]).to eql(expected_created_date) }
                   it("shows the updated date on #{test_case}") { expect(visible_e_form_data[:updated_date]).to eql(expected_updated_date) }
                   it("shows the term on #{test_case}") { expect(visible_e_form_data[:term]).to eql(note.term) }

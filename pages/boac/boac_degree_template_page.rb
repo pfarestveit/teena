@@ -265,6 +265,13 @@ class BOACDegreeTemplatePage
     req.set_id template.id
   end
 
+  def add_campus_reqts(col_num)
+    click_add_col_req_button col_num
+    select_col_req_type 'Campus Requirements'
+    save_col_req
+    campus_reqt_row('Entry Level Writing').when_visible Utils.short_wait
+  end
+
   # View
 
   def top_cat_xpath(cat)
@@ -320,6 +327,24 @@ class BOACDegreeTemplatePage
     fulfillment_el.text.strip if fulfillment_el.exists?
   end
 
+  def campus_reqts_xpath(col_num)
+    "//div[contains(@id, 'column-#{col_num}-category')][contains(., 'Campus Requirements')]"
+  end
+
+  def campus_reqts_desc(col_num)
+    el = span_element(xpath: "#{campus_reqts_xpath col_num}//div[@id='category-header-description']")
+    el.when_present 2
+    el.text
+  end
+
+  def campus_reqt_row_xpath(reqt_name)
+    "//tr[contains(., '#{reqt_name}')]"
+  end
+
+  def campus_reqt_row(reqt_name)
+    row_element(xpath: campus_reqt_row_xpath(reqt_name))
+  end
+
   # Edit
 
   elements(:cat_edit_button, :button, xpath: '//button[contains(@id, "-edit-category-")]')
@@ -336,6 +361,13 @@ class BOACDegreeTemplatePage
     wait_for_update_and_click cat_edit_button(cat)
   end
 
+  def edit_campus_reqts_desc(col_num, new_desc)
+    logger.debug "Changing Campus Requirements description to '#{new_desc}'"
+    wait_for_update_and_click button_element(xpath: "#{campus_reqts_xpath col_num}//button[contains(@id, 'edit')]")
+    enter_col_req_desc new_desc
+    click_create_col_req
+  end
+
   # Delete
 
   def cat_delete_button(cat)
@@ -347,6 +379,12 @@ class BOACDegreeTemplatePage
   def click_delete_cat(cat)
     logger.info "Clicking the delete button for category ID #{cat.id}"
     wait_for_update_and_click cat_delete_button(cat)
+  end
+
+  def delete_campus_reqts(col_num)
+    logger.debug 'Deleting Campus Requirements'
+    wait_for_update_and_click button_element(xpath: "#{campus_reqts_xpath col_num}//button[contains(@id, 'delete')]")
+    click_confirm_delete
   end
 
   def complete_template(template)
@@ -361,6 +399,7 @@ class BOACDegreeTemplatePage
         subcat.course_reqs&.each { |course| create_col_req(course, template) }
       end
     end
+    add_campus_reqts 3
   end
 
 end

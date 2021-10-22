@@ -188,6 +188,10 @@ class BOACDegreeCheckPage < BOACDegreeTemplatePage
     row_element(xpath: unassigned_course_xpath(course))
   end
 
+  def unassigned_course_req_options(completed_course)
+    link_elements(xpath: "#{unassigned_course_xpath completed_course}/td[1]//a").map &:text
+  end
+
   def unassigned_course_req_option(completed_course, req)
     link_element(xpath: "#{unassigned_course_xpath completed_course}/td[1]//a[text()=\" #{req.name} \"]")
   end
@@ -802,6 +806,38 @@ class BOACDegreeCheckPage < BOACDegreeTemplatePage
 
   def enter_recommended_note(note)
     wait_for_textbox_and_type(recommended_note_textarea_element, note)
+  end
+
+  # CAMPUS REQUIREMENTS
+
+  def campus_reqt_cbx(reqt_name)
+    checkbox_element(xpath: "#{campus_reqt_row_xpath reqt_name}//input[contains(@id, 'satisfy-checkbox')]")
+  end
+
+  def click_campus_reqt_cbx(reqt_name)
+    logger.info "Clicking satisfied checkbox for '#{reqt_name}'"
+    campus_reqt_cbx(reqt_name).when_present Utils.short_wait
+    js_click campus_reqt_cbx(reqt_name)
+    sleep Utils.click_wait
+  end
+
+  def campus_reqt_satisfied?(reqt_name)
+    campus_reqt_cbx(reqt_name).selected?
+  end
+
+  def campus_reqt_selectable?(reqt_name)
+    campus_reqt_cbx(reqt_name).enabled?
+  end
+
+  def campus_reqt_edit_button(reqt_name)
+    button_element(xpath: "#{campus_reqt_row_xpath reqt_name}//button")
+  end
+
+  def enter_campus_reqt_note(reqt_name, note)
+    logger.info "Entering Campus Requirement note '#{note}'"
+    wait_for_update_and_click campus_reqt_edit_button(reqt_name)
+    enter_recommended_note(note)
+    click_save_req_edit
   end
 
 end
