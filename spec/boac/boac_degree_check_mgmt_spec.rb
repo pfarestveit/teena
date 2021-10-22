@@ -318,6 +318,23 @@ describe 'A BOA degree' do
       it('shows the note edit date') { expect(@degree_check_page.note_update_date).to include('today') }
     end
 
+    describe 'campus requirements' do
+
+      it 'can be selected' do
+        @degree_check_page.click_campus_reqt_cbx 'American History'
+        expect(@degree_check_page.campus_reqt_satisfied? 'American History').to be true
+      end
+
+      it 'can be deselected' do
+        @degree_check_page.click_campus_reqt_cbx 'American History'
+        expect(@degree_check_page.campus_reqt_satisfied? 'American History').to be false
+      end
+
+      it 'can include a note' do
+        @degree_check_page.enter_campus_reqt_note('American History', "#{test.id} note")
+      end
+    end
+
     describe 'create button' do
 
       it 'allows the user to create a newer degree check' do
@@ -421,6 +438,7 @@ describe 'A BOA degree' do
       it('cannot edit courses') { expect(@degree_check_page.cat_edit_button_elements).to be_empty }
       it('cannot copy courses') { expect(@degree_check_page.copy_course_button_elements).to be_empty }
       it('cannot drag and drop courses') # TODO
+      it('cannot click campus requirements checkboxes') { expect(@degree_check_page.campus_reqt_selectable? 'American History').to be false }
 
       context 'on the degree history page' do
 

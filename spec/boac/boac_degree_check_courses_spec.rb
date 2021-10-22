@@ -209,6 +209,14 @@ describe 'A BOA degree check course' do
       expect(@degree_check_page.unassigned_course_req_option(@unassigned_courses.last, @course_req_1).exists?).to be false
     end
 
+    it 'cannot by assigned to a campus requirement' do
+      opts = @degree_check_page.unassigned_course_req_options(@unassigned_courses.last)
+      reqts = ['Entry Level Writing', 'American History', 'American Institutions', 'American Cultures']
+      opts.each do |o|
+        expect(reqts.any? { |reqt| o.include?(reqt) }).to be false
+      end
+    end
+
     context 'and edited' do
 
       after(:each) { @degree_check_page.click_cancel_course_edit if @degree_check_page.course_cancel_button? }

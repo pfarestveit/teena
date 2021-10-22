@@ -636,6 +636,69 @@ describe 'A BOA degree check template', order: :defined do
         end
       end
     end
+
+    context 'campus requirements' do
+
+      before(:all) { @default_desc = 'American History, American Institutions, and American Cultures courses can also count as H/SS courses.' }
+
+      context 'when not already added' do
+
+        it 'can be selected' do
+          @degree_template_page.click_add_col_req_button 3
+          @degree_template_page.select_col_req_type 'Campus Requirements'
+        end
+
+        it 'has a default description' do
+          @degree_template_page.col_req_desc_input_element.when_present 2
+          expect(@degree_template_page.col_req_desc_input_element.attribute('value')).to eql(@default_desc)
+        end
+
+        it('has no name input') { expect(@degree_template_page.col_req_name_input?).to be false }
+        it('has no units input') { expect(@degree_template_page.col_req_course_units_input?).to be false }
+        it('has no unit reqt selection') { expect(@degree_template_page.col_req_course_units_req_select?).to be false }
+        it('has no location selection') { expect(@degree_template_page.col_req_parent_select?).to be false }
+
+        it 'can be added' do
+          @degree_template_page.save_col_req
+          @degree_template_page.campus_reqt_row('Entry Level Writing').when_visible Utils.short_wait
+          expect(@degree_template_page.campus_reqt_row('American History').visible?).to be true
+          expect(@degree_template_page.campus_reqt_row('American Institutions').visible?).to be true
+          expect(@degree_template_page.campus_reqt_row('American Cultures').visible?).to be true
+        end
+      end
+
+      context 'when already added' do
+
+        it 'cannot be selected' do
+          @degree_template_page.click_add_col_req_button 1
+          opt = @degree_template_page.col_req_type_options.find { |o| o.attribute('value') == 'Campus Requirements' }
+          logger.debug "Campus Reqts option enabled is #{opt.enabled?}"
+          logger.debug "Campus Reqts option attribute disabled is #{opt.attribute('disabled')}"
+          expect(opt.enabled?).to be false
+        end
+      end
+
+      context 'once added' do
+
+        before(:all) { @degree_template_page.click_cancel_col_req }
+
+        it('shows the description') { expect(@degree_template_page.campus_reqts_desc 3).to eql(@default_desc) }
+
+        it 'allows description edits' do
+          new_desc = "EDITED #{@default_desc}"
+          @degree_template_page.edit_campus_reqts_desc(3, new_desc)
+          expect(@degree_template_page.campus_reqts_desc 3).to eql(new_desc)
+        end
+
+        it 'can be deleted' do
+          @degree_template_page.delete_campus_reqts 3
+          @degree_template_page.campus_reqt_row('Entry Level Writing').when_not_present Utils.short_wait
+          expect(@degree_template_page.campus_reqt_row('American History').exists?).to be false
+          expect(@degree_template_page.campus_reqt_row('American Institutions').exists?).to be false
+          expect(@degree_template_page.campus_reqt_row('American Cultures').exists?).to be false
+        end
+      end
+    end
   end
 
   context 'when renamed' do

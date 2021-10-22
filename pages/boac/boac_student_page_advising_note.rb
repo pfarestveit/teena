@@ -405,6 +405,7 @@ module BOACStudentPageAdvisingNote
     names << notes_export_csv_file_name(student)
     notes.map do |n|
       unless n.instance_of? TimelineEForm
+        n.attachments.delete_if &:deleted_at
         n.attachments.flatten.group_by(&:file_name).each_value do |dupe_names|
           dupe_names.each_with_index do |a, i|
             parts = [a.file_name.rpartition('.').first, a.file_name.rpartition('.').last]
@@ -452,7 +453,6 @@ module BOACStudentPageAdvisingNote
               (r[:author_uid] == note.advisor.uid.to_i) unless (note.advisor.uid == 'UCBCONVERSION')
             end
             r[:subject] == note.subject if note.subject
-            Nokogiri::HTML(r[:body]).text == "#{note.body}" if note.body
             if note.topics&.any?
               ((r[:topics].split(';').map(&:strip).map(&:downcase).sort if r[:topics]) == note.topics.map(&:downcase).sort)
             else
