@@ -73,7 +73,7 @@ unless ENV['STANDALONE']
                 begin
 
                   # If an error occurred fetching a grade, then the row might cause an error in the test
-                  e_grades_row = e_grades.find { |e_grade| e_grade[:id] == gradebook_row[:sis_id] if gradebook_row.instance_of? Hash }
+                  e_grades_row = e_grades.find { |e_grade| e_grade[:id] == gradebook_row[:student].sis_id if gradebook_row.instance_of? Hash }
                   if e_grades_row && gradebook_row[:grade]
 
                     expected_grade = if %w(letter letter-only).include? scheme
@@ -92,7 +92,7 @@ unless ENV['STANDALONE']
                                      end
 
 
-                    it "shows the grade '#{expected_grade}' for UID #{gradebook_row[:uid]} in #{course.term} #{course.code}
+                    it "shows the grade '#{expected_grade}' for UID #{gradebook_row[:student].uid} in #{course.term} #{course.code}
                         site #{course.site_id} with grading scheme #{scheme} and a P/NP cutoff of #{cutoff}" do
                       expect(e_grades_row[:grade]).to eql(expected_grade)
                     end
@@ -107,7 +107,7 @@ unless ENV['STANDALONE']
                                        else
                                          ''
                                        end
-                    it "shows the comment '#{expected_comment}' for UID #{gradebook_row[:uid]} in #{course.term} #{course.code}
+                    it "shows the comment '#{expected_comment}' for UID #{gradebook_row[:student].uid} in #{course.term} #{course.code}
                         site #{course.site_id} with grading scheme #{scheme} and a P/NP cutoff of #{cutoff}" do
                       expect(e_grades_row[:comments]).to eql(expected_comment)
                     end
@@ -138,12 +138,12 @@ unless ENV['STANDALONE']
                 begin
 
                   # If an error occurred fetching a grade, then the row might cause an error in the test
-                  e_grades_row = e_grades.find { |e_grade| e_grade[:id] == gradebook_row[:sis_id] if gradebook_row.instance_of? Hash }
+                  e_grades_row = e_grades.find { |e_grade| e_grade[:id] == gradebook_row[:student].sis_id if gradebook_row.instance_of? Hash }
                   if e_grades_row && gradebook_row[:grade]
 
                     expected_grade = gradebook_row[:grade]
 
-                    it "shows the grade '#{expected_grade}' for UID #{gradebook_row[:uid]} in #{course.term} #{course.code}
+                    it "shows the grade '#{expected_grade}' for UID #{gradebook_row[:student].uid} in #{course.term} #{course.code}
                         site #{course.site_id} with grading scheme #{scheme} and no P/NP cutoff" do
                       expect(e_grades_row[:grade]).to eql(expected_grade)
                     end
@@ -158,7 +158,7 @@ unless ENV['STANDALONE']
                                        else
                                          ''
                                        end
-                    it "shows the comment '#{expected_comment}' for UID #{gradebook_row[:uid]} in #{course.term} #{course.code}
+                    it "shows the comment '#{expected_comment}' for UID #{gradebook_row[:student].uid} in #{course.term} #{course.code}
                         site #{course.site_id} with grading scheme #{scheme} and no P/NP cutoff" do
                       expect(e_grades_row[:comments]).to eql(expected_comment)
                     end
