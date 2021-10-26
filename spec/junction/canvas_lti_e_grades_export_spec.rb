@@ -293,9 +293,7 @@ unless ENV['STANDALONE']
         test_data = gradebook_grade_data.find { |d| d.instance_of? Hash }
         logger.debug "Test data: #{test_data}"
 
-        @test_student = BOACUser.new(uid: test_data[:uid],
-                                     sis_id: test_data[:sis_id],
-                                     canvas_id: test_data[:canvas_id])
+        @test_student = test_data[:student]
         @test_grade = test_data[:grade]
         @override_grade = %w(A A- B+ B B- C+ C C- D+ D D- F).find { |g| g != @test_grade }
       end

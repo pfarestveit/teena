@@ -288,9 +288,7 @@ module Page
         wait_until(Utils.short_wait) { gradebook_grade_elements.any? }
         grade = gradebook_grade_elements.first.text
         {
-            uid: user.uid,
-            canvas_id: user.canvas_id,
-            sis_id: user.sis_id,
+            student: user,
             grade: grade
         }
       rescue => e
