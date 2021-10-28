@@ -113,6 +113,18 @@ class BOACApiStudentPage
     end
   end
 
+  def graduations
+    sis_profile && sis_profile['degrees']&.map do | deg|
+      {
+        date: deg['dateAwarded'],
+        degree: deg['description'],
+        colleges: (deg['plans'].map { |p| p['group'].to_s }).uniq,
+        majors: (deg['plans'].map { |p| p['plan'] if p['type'] == 'MAJ' }).compact,
+        minors: (deg['plans'].map { |p| p['plan'].gsub('Minor in ', '') if p['type'] == 'MIN'}).compact
+      }
+    end
+  end
+
   def majors
     if sis_profile && sis_profile['plans']
       majors = sis_profile['plans'].map do |p|
