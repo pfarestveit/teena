@@ -418,12 +418,15 @@ module Page
     link(:apps_link, text: 'Apps')
     link(:navigation_link, text: 'Navigation')
     link(:view_apps_link, text: 'View App Configurations')
-    link(:add_app_link, class: 'add_tool_link')
+    link(:add_app_link, xpath: '//a[contains(@class, "add_tool_link")]')
     select_list(:config_type, id: 'configuration_type_selector')
     text_area(:app_name_input, xpath: '//input[@placeholder="Name"]')
     text_area(:key_input, xpath: '//input[@placeholder="Consumer Key"]')
     text_area(:secret_input, xpath: '//input[@placeholder="Shared Secret"]')
     text_area(:url_input, xpath: '//input[@placeholder="Config URL"]')
+    link(:app_placements_button, text: 'Placements')
+    button(:activate_navigation_button, xpath: '//span[text()="Course Navigation"]/following-sibling::span//button')
+    button(:close_placements_button, xpath: '//span[@aria-label="App Placements"]//button[contains(., "Close")]')
 
     # Returns the link element for the configured LTI tool on the course site sidebar
     # @param tool [LtiTools]
@@ -544,18 +547,24 @@ module Page
             pause_for_poller
           else
             logger.debug "#{tool.name} is not installed, installing and enabling"
+
+            # Configure tool
             wait_for_update_and_click apps_link_element
             wait_for_update_and_click add_app_link_element
             wait_for_element_and_select_js(config_type_element, 'By URL')
-            execute_script('document.getElementById("configuration_type_selector").value = "url";')
-            sleep 1
-            wait_for_update_and_click_js app_name_input_element
             wait_for_element_and_type(app_name_input_element, "#{tool.name}")
             wait_for_element_and_type(key_input_element, creds[:key])
             wait_for_element_and_type(secret_input_element, creds[:secret])
             wait_for_element_and_type(url_input_element, "#{SquiggyUtils.base_url}#{tool.xml}")
             submit_button
             link_element(xpath: "//td[@title='#{tool.name}']").when_present Utils.medium_wait
+
+            # Enable tool placement in sidebar navigation
+            wait_for_update_and_click_js button_element(xpath: "//tr[contains(., '#{tool.name}')]//button")
+            wait_for_update_and_click_js app_placements_button_element
+            wait_for_update_and_click_js activate_navigation_button_element
+            wait_for_update_and_click_js close_placements_button_element
+            sleep 1
             enable_tool(test.course, tool)
           end
         end
