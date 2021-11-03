@@ -15,10 +15,14 @@ class SquiggyAssetLibraryDetailPage < SquiggyAssetLibraryListViewPage
   # TODO - category
 
   def load_asset_detail(test, asset)
-    logger.info "Hitting asset detail at '#{test.course.asset_library_url}#suitec_assetId=#{asset.id}'"
-    navigate_to "#{test.course.asset_library_url}#suitec_assetId=#{asset.id}"
-    switch_to_canvas_iframe
-    sleep 1
+    # TODO - reinstate this when asset deep links work again
+    # logger.info "Hitting asset detail at '#{test.course.asset_library_url}#suitec_assetId=#{asset.id}'"
+    # navigate_to "#{test.course.asset_library_url}#suitec_assetId=#{asset.id}"
+    # switch_to_canvas_iframe
+    # sleep 1
+
+    load_list_view_asset(test, asset)
+    click_asset_link asset
     wait_for_asset_detail
   end
 

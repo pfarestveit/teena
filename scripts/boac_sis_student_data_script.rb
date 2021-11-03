@@ -39,7 +39,7 @@ begin
   profile_demo_heading = %w(UID Gender Ethnicities Nationalities VisaType VisaStatus)
   profile_demo_csv = Utils.create_test_output_csv("boac-demographics-#{suffix}.csv", profile_demo_heading)
 
-  profile_acad_heading = %w(UID Units GPA Level Transfer Terms EnteredTerm)
+  profile_acad_heading = %w(UID Units GPA Level Terms EnteredTerm)
   profile_acad_csv = Utils.create_test_output_csv("boac-acad-profiles-#{suffix}.csv", profile_acad_heading)
 
   profile_advisors_heading = %w(UID Advisor Email Role Plan)
@@ -51,16 +51,13 @@ begin
   profile_plans_disc_heading = %w(UID CollegesDisc MajorsDisc MinorsDisc)
   profile_plans_disc_csv = Utils.create_test_output_csv("boac-plans-disc-#{suffix}.csv", profile_plans_disc_heading)
 
-  profile_reg_heading = %w(UID Term Career Begin End)
-  profile_reg_csv = Utils.create_test_output_csv("boac-reg-#{suffix}.csv", profile_reg_heading)
-
   profile_grad_heading = %w(UID GradExpect GradDegree GradDate GradColleges Inactive)
   profile_grad_csv = Utils.create_test_output_csv("boac-grad-#{suffix}.csv", profile_grad_heading)
 
   profile_reqts_heading = %w(UID Writing History Institutions Cultures)
   profile_reqts_csv = Utils.create_test_output_csv("boac-reqts-#{suffix}.csv", profile_reqts_heading)
 
-  alerts_holds_heading = %w(UID Alerts Holds)
+  alerts_holds_heading = %w(UID AlertHold)
   alerts_holds_csv = Utils.create_test_output_csv("boac-alerts-holds-#{suffix}.csv", alerts_holds_heading)
 
   standing_gpa_heading = %w(UID Term Standing TermGPA GPAUnits)
@@ -94,6 +91,7 @@ begin
 
       api_sis_profile_data = api_student_data.sis_profile_data
       graduation = api_student_data.graduation
+      graduations = api_student_data.graduations
       academic_standing = api_student_data.academic_standing
       demographics = api_student_data.demographics
       advisors = api_student_data.advisors
@@ -107,8 +105,6 @@ begin
       active_minor_feed, inactive_minor_feed = api_sis_profile_data[:minors].partition { |m| m[:active] }
       active_minors = active_minor_feed.map { |m| m[:minor] }
       inactive_minors = inactive_minor_feed.map { |m| m[:minor] }
-
-      registration = api_student_data.term_registration
 
       notes = api_student_data.notes
       appts = api_student_data.appointments
@@ -196,7 +192,7 @@ begin
                   ]
                   Utils.add_csv_row(courses_csv, row)
                 end
-             end
+              end
             end
 
           rescue => e
@@ -236,7 +232,6 @@ begin
         api_sis_profile_data[:cumulative_units],
         api_sis_profile_data[:cumulative_gpa],
         api_sis_profile_data[:level],
-        api_sis_profile_data[:transfer],
         api_sis_profile_data[:terms_in_attendance],
         api_sis_profile_data[:entered_term]
       ]
@@ -273,15 +268,6 @@ begin
 
       row = [
         student.uid,
-        (registration[:term_id] if registration),
-        (registration[:career] if registration),
-        (registration[:begin_term] if registration),
-        (registration[:end_term] if registration)
-      ]
-      Utils.add_csv_row(profile_reg_csv, row)
-
-      row = [
-        student.uid,
         parse_reqt('Entry Level Writing', api_sis_profile_data[:reqt_writing]),
         parse_reqt('American History', api_sis_profile_data[:reqt_history]),
         parse_reqt('American Institutions', api_sis_profile_data[:reqt_institutions]),
@@ -289,22 +275,45 @@ begin
       ]
       Utils.add_csv_row(profile_reqts_csv, row)
 
-      row = [
-        student.uid,
-        api_sis_profile_data[:expected_grad_term_id],
-        (graduation && graduation[:degree]),
-        (graduation && graduation[:date]),
-        (graduation && graduation[:colleges]),
-        non_active
-      ]
-      Utils.add_csv_row(profile_grad_csv, row)
+      if BOACUtils.base_url.include? 'dev'
+        graduations&.each do |grad|
+          row = [
+            student.uid,
+            api_sis_profile_data[:expected_grad_term_id],
+            grad[:degree],
+            grad[:date],
+            grad[:colleges],
+            non_active
+          ]
+          Utils.add_csv_row(profile_grad_csv, row)
+        end
+      else
+        row = [
+          student.uid,
+          api_sis_profile_data[:expected_grad_term_id],
+          (graduation && graduation[:degree]),
+          (graduation && graduation[:date]),
+          (graduation && graduation[:colleges]),
+          non_active
+        ]
+        Utils.add_csv_row(profile_grad_csv, row)
+      end
 
-      row = [
-        student.uid,
-        api_student_data.alerts(exclude_canvas: true),
-        api_student_data.holds
-      ]
-      Utils.add_csv_row(alerts_holds_csv, row)
+      api_student_data.alerts(exclude_canvas: true)&.each do |al|
+        row = [
+          student.uid,
+          al
+        ]
+        Utils.add_csv_row(alerts_holds_csv, row)
+      end
+
+      api_student_data.holds&.each do |ho|
+        row = [
+          student.uid,
+          ho
+        ]
+        Utils.add_csv_row(alerts_holds_csv, row)
+      end
 
       notes&.map do |n|
         if n.id.include?('-') && !n.id.include?('eform')
