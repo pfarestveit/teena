@@ -42,7 +42,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
       it "receives the right note export files for UID #{test_case[:student].uid}" do
         expected_files = @student_page.expected_note_export_file_names(test_case[:student], test_case[:notes]).sort
         actual_files = @student_page.note_export_file_names(test_case[:student]).sort
-        expect(actual_files).to eql(expected_files)
+        @student_page.wait_until(1, "Expected #{expected_files}, got #{actual_files}") { actual_files == expected_files }
       end
 
       it "receives a CSV containing the right number of notes for UID #{test_case[:student].uid}" do

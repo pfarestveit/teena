@@ -70,19 +70,25 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
             end
           end
 
-          if api_sis_profile_data[:academic_career_status] == 'Completed'
+          if api_sis_profile_data[:academic_career_status] == 'Completed' && api_sis_profile_data[:graduations]&.any?
+            # Show only the most recent degree data on list view
+            grad = api_sis_profile_data[:graduations].max { |a,b| a[:date] <=> b[:date] }
             it "shows the right graduation date for UID #{student.uid} on the #{test.default_cohort.name} page" do
-              expect(cohort_page_sis_data[:graduation_date]).to eql('Graduated ' + Date.parse(api_sis_profile_data[:graduation][:date]).strftime('%b %e, %Y'))
+              expect(cohort_page_sis_data[:graduation]).to include(grad[:date].strftime('%b %e, %Y'))
             end
-            it "shows the right graduation colleges for UID #{student.uid} on the #{test.default_cohort.name} page" do
-              expect(cohort_page_sis_data[:graduation_colleges]).to eql(api_sis_profile_data[:graduation][:colleges])
+            grad[:majors].each do |maj|
+              it "shows the right graduation majors for UID #{student.uid} on the #{test.default_cohort.name} page" do
+                expect(cohort_page_sis_data[:graduation]).to include(maj[:plan])
+              end
+            end
+            grad[:minors].each do |min|
+              it "shows no graduation minors for UID #{student.uid} on the #{test.default_cohort.name} page" do
+                expect(cohort_page_sis_data[:graduation]).not_to include(min[:plan])
+              end
             end
           else
-            it "shows no graduation date for UID #{student.uid} on the #{test.default_cohort.name} page" do
-              expect(cohort_page_sis_data[:graduation_date]).to be_nil
-            end
-            it "shows no graduation colleges for UID #{student.uid} on the #{test.default_cohort.name} page" do
-              expect(cohort_page_sis_data[:graduation_colleges]).to be_nil
+            it "shows no graduation data for UID #{student.uid} on the #{test.default_cohort.name} page" do
+              expect(cohort_page_sis_data[:graduation]).to be_nil
             end
           end
 
@@ -477,28 +483,29 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
           end
 
           if api_sis_profile_data[:academic_career_status] == 'Completed'
-            it "shows the right degree for UID #{student.uid} on the student page" do
-              expected = (api_sis_profile_data[:graduation][:degree] + ' in ' + api_sis_profile_data[:graduation][:majors].join(', ')).strip
-              expect(student_page_sis_data[:graduation_degree]).to eql(expected)
-            end
-            it "shows the right graduation date for UID #{student.uid} on the student page" do
-              expect(student_page_sis_data[:graduation_date]).to eql('Awarded ' + Date.parse(api_sis_profile_data[:graduation][:date]).strftime('%b %e, %Y'))
-            end
-            it "shows the right graduation colleges for UID #{student.uid} on the student page" do
-              expect(student_page_sis_data[:graduation_colleges]).to eql(api_sis_profile_data[:graduation][:colleges])
-            end
-            it "shows the right graduation minors for UID #{student.uid} on the student page" do
-              expect(student_page_sis_data[:graduation_minor]).to eql(api_sis_profile_data[:graduation][:minors])
-            end
-          else
-            it "shows no graduation degree for UID #{student.uid} on the student page" do
-              expect(student_page_sis_data[:graduation_date]).to be_nil
-            end
-            it "shows no graduation date for UID #{student.uid} on the student page" do
-              expect(student_page_sis_data[:graduation_date]).to be_nil
-            end
-            it "shows no graduation colleges for UID #{student.uid} on the student page" do
-              expect(student_page_sis_data[:graduation_colleges]).to be_nil
+            api_sis_profile_data[:graduations].each do |grad|
+              grad[:majors].each do |maj|
+                visible_degree = @boac_student_page.visible_degree maj[:plan]
+                it "shows the degree '#{maj[:plan]}' for UID #{student.uid} on the student page" do
+                  expect(visible_degree[:deg_type]).to include(maj[:plan])
+                end
+                it "shows the date for degree '#{maj[:plan]}' for UID #{student.uid} on the student page" do
+                  expect(visible_degree[:deg_date]).to eql('Awarded ' + grad[:date].strftime('%b %e, %Y'))
+                end
+                it "shows the right college for degree '#{maj[:plan]}' for UID #{student.uid} on the student page" do
+                  expect(visible_degree[:deg_college]).to eql(maj[:college])
+                end
+              end
+
+              grad[:minors].each do |min|
+                visible_minor = @boac_student_page.visible_degree_minor min[:plan]
+                it "shows the degree minor '#{min[:plan]}' for UID #{student.uid} on the student page" do
+                  expect(visible_minor[:min_type]).to include(min[:plan])
+                end
+                it "shows the date for degree minor '#{min[:plan]}' for UID #{student.uid} on the student page" do
+                  expect(visible_minor[:min_date]).to eql('Awarded ' + grad[:date].strftime('%b %e, %Y'))
+                end
+              end
             end
           end
 
@@ -854,8 +861,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
                    student_page_sis_data[:colleges_discontinued], student_page_sis_data[:majors_discontinued],
                    student_page_sis_data[:minors], student_page_sis_data[:minors_discontinued],
                    student_page_sis_data[:terms_in_attendance],
-                   student_page_reqts[:reqt_writing], student_page_reqts[:reqt_history], student_page_reqts[:reqt_institutions],
-                   student_page_reqts[:reqt_cultures], student_page_sis_data[:advisor_plans], student_page_sis_data[:advisor_names],
+                   student_page_sis_data[:advisor_plans], student_page_sis_data[:advisor_names],
                    student_page_sis_data[:advisor_emails], student_page_sis_data[:entered_term], student_page_sis_data[:intended_majors],
                    student_page_sis_data[:visa], student_page_sis_data[:expected_graduation], student_page_sis_data[:graduation_degree],
                    student_page_sis_data[:graduation_date], student_page_sis_data[:graduation_colleges], student_page_sis_data[:inactive],

@@ -165,7 +165,7 @@ unless ENV['DEPS']
         end
 
         it 'allows a user to change units to a decimal number' do
-          @completed_course_0.units = (@completed_course_0.units.to_i + 0.53).to_s
+          @completed_course_0.units = (@completed_course_0.units.to_i + 0.53).round(2).to_s
           @degree_check_page.edit_unassigned_course @completed_course_0
           expect(@degree_check_page.unassigned_course_units @completed_course_0).to eql(@completed_course_0.units)
         end

@@ -322,7 +322,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
             @student_page.edit_note_button(note_2).when_visible 1
             @student_page.click_edit_note_button note_1
             expect(@student_page.edit_note_button(note_2).exists?).to be false
-            expect(@student_page.new_note_button_element.disabled?).to be true
+            @student_page.wait_until(1) { @student_page.new_note_button_element.disabled? }
           end
 
           it 'can cancel the edit' do

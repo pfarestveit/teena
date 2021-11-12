@@ -57,7 +57,7 @@ class BOACTestConfig < TestConfig
   # Sets the three user roles for testing drop-in appointments
   # @param auth_users [Array<BOACUser>]
   def set_drop_in_appt_advisors(auth_users)
-    dept_advisors = auth_users.select { |u| u.depts.include?(@dept) && (u.uid.length > 1)  }
+    dept_advisors = auth_users.select { |u| u.depts.include?(@dept) && (u.uid.length > 1) && (!u.degree_progress_perm) }
     @advisor = dept_advisors[0]
     @advisor.dept_memberships = [DeptMembership.new(dept: @dept, advisor_role: AdvisorRole::ADVISOR)]
 

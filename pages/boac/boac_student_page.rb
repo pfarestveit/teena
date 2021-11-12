@@ -52,12 +52,8 @@ class BOACStudentPage
   elements(:advisor_email, :div, xpath: '//div[@id="student-profile-advisors"]//div[contains(@id,"-email")]')
   elements(:intended_major, :div, xpath: '//div[@id="student-details-intended-majors"]/div')
   div(:expected_graduation, id: 'student-bio-expected-graduation')
-  div(:degree_type, id: 'student-bio-degree-type')
-  div(:degree_date, id: 'student-bio-degree-date')
   div(:alternate_email, id: 'student-profile-other-email')
-  div(:additional_information_outer, id: 'additional-information-outer')
-  elements(:degree_college, :div, xpath: '//div[@id="student-bio-degree-date"]//following-sibling::div[@class="student-text"]')
-  elements(:degree_minor, :div, xpath: '//h3[contains(text(), "Minor")]/following-sibling::div/div[@id="student-bio-degree-type"]')
+  div(:additional_information_outer, xpath: '//h3[text()=" Advisor(s) "]')
 
   # Expand personal details tab on student page profile
   def expand_personal_details
@@ -99,15 +95,34 @@ class BOACStudentPage
       :entered_term => (entered_term.gsub('Entered', '').strip if entered_term?),
       :intended_majors => (intended_major_elements.map { |m| m.text.strip }),
       :expected_graduation => (expected_graduation.gsub('Expected graduation', '').strip if expected_graduation?),
-      :graduation_degree => (degree_type_element.text if degree_type_element.exists?),
-      :graduation_minor => (degree_minor_elements.map { |el| el.text.gsub('UG', '').strip }),
-      :graduation_date => (degree_date_element.text if degree_date_element.exists?),
-      :graduation_colleges => (degree_college_elements.map &:text if degree_college_elements.any?),
       :advisor_plans => (advisor_plan_elements.map &:text),
       :advisor_names => (advisor_name_elements.map &:text),
       :advisor_emails => (advisor_email_elements.map &:text),
       :inactive => (inactive_element.exists? && inactive_element.text.strip == 'INACTIVE'),
       :academic_standing => (academic_standing.strip if academic_standing?)
+    }
+  end
+
+  def visible_degree(field)
+    xpath = "//h3[contains(text(), \"Degree\")]/following-sibling::div[contains(., \"#{field}\")]"
+    deg_type_el = div_element(xpath: "#{xpath}/div[1]")
+    deg_date_el = div_element(xpath: "#{xpath}/div[2]")
+    deg_college_el = div_element(xpath: "#{xpath}/div[3]")
+    logger.debug "Degree college XPath is '#{xpath}/div[3]'"
+    {
+      deg_type: (deg_type_el.text.strip if deg_type_el.exists?),
+      deg_date: (deg_date_el.text if deg_date_el.exists?),
+      deg_college: (deg_college_el.text if deg_college_el.exists?)
+    }
+  end
+
+  def visible_degree_minor(field)
+    xpath = "//h3[contains(text(), \"Minor\")]/following-sibling::"
+    min_type_el = div_element(xpath: "#{xpath}div[contains(., \"#{field}\")]/div")
+    min_date_el = span_element(xpath: "#{xpath}span")
+    {
+      min_type: (min_type_el.text.strip if min_type_el.exists?),
+      min_date: (min_date_el.text if min_date_el.exists?)
     }
   end
 

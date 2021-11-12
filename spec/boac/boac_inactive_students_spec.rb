@@ -124,9 +124,7 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
         it('show no email') { expect(@visible_profile_data[:email]).to be_nil }
         it('show no phone') { expect(@visible_profile_data[:phone]).to be_nil }
         it('show a GPA if one exists') { expect(@visible_profile_data[:cumulative_gpa]).to eql(@completed_student_profile[:cumulative_gpa]) }
-        it('show a degree') { expect(@visible_profile_data[:graduation_degree]).to include(@completed_student_profile[:graduation][:majors].join(', ')) }
-        it('show a graduation date') { expect(@visible_profile_data[:graduation_date]).to eql('Awarded ' + Date.parse(@completed_student_profile[:graduation][:date]).strftime('%b %e, %Y')) }
-        it('show a graduation colleges') { expect(@visible_profile_data[:graduation_colleges]).to eql(@completed_student_profile[:graduation][:colleges]) }
+        # TODO - add degree tests back once we're showing all degrees
         it('offer no class page links') { expect(@student_page.class_page_link_elements).to be_empty }
       end
     end
