@@ -82,7 +82,6 @@ class BOACApiStudentPage
       :expected_grad_term_id => (sis_profile && sis_profile['expectedGraduationTerm'] && sis_profile['expectedGraduationTerm']['id']),
       :expected_grad_term_name => (sis_profile && sis_profile['expectedGraduationTerm'] && sis_profile['expectedGraduationTerm']['name']),
       :withdrawal => (sis_profile && withdrawal),
-      :graduation => (sis_profile && graduation),
       :academic_career_status => (sis_profile && sis_profile['academicCareerStatus']),
       :reqt_writing => (sis_profile && degree_progress && degree_progress[:writing]),
       :reqt_history => (sis_profile && degree_progress && degree_progress[:history]),
@@ -101,26 +100,26 @@ class BOACApiStudentPage
     end
   end
 
-  def graduation
-    if sis_profile && sis_profile['degree']
-      {
-        date: sis_profile['degree']['dateAwarded'],
-        degree: sis_profile['degree']['description'],
-        colleges: (sis_profile['degree']['plans'].map { |p| p['group'].to_s }).uniq,
-        majors: (sis_profile['degree']['plans'].map { |p| p['plan'] if p['type'] == 'MAJ' }).compact,
-        minors: (sis_profile['degree']['plans'].map { |p| p['plan'].gsub('Minor in ', '') if p['type'] == 'MIN'}).compact
-      }
-    end
-  end
-
   def graduations
     sis_profile && sis_profile['degrees']&.map do | deg|
       {
-        date: deg['dateAwarded'],
+        date: Time.parse(deg['dateAwarded']),
         degree: deg['description'],
-        colleges: (deg['plans'].map { |p| p['group'].to_s }).uniq,
-        majors: (deg['plans'].map { |p| p['plan'] if p['type'] == 'MAJ' }).compact,
-        minors: (deg['plans'].map { |p| p['plan'].gsub('Minor in ', '') if p['type'] == 'MIN'}).compact
+        majors: (deg['plans'].map do |p|
+          if p['type'] == 'MAJ'
+            {
+              college: p['group'],
+              plan: p['plan']
+            }
+          end
+        end).compact,
+        minors: (deg['plans'].map do |p|
+          if p['type'] == 'MIN'
+            {
+              plan: p['plan'].gsub('Minor in ', '')
+            }
+          end
+        end).compact
       }
     end
   end

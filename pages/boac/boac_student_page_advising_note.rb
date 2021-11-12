@@ -403,15 +403,18 @@ module BOACStudentPageAdvisingNote
   def expected_note_export_file_names(student, notes)
     names = []
     names << notes_export_csv_file_name(student)
+    attachments = []
     notes.map do |n|
       unless n.instance_of? TimelineEForm
         n.attachments.delete_if &:deleted_at
-        n.attachments.flatten.group_by(&:file_name).each_value do |dupe_names|
-          dupe_names.each_with_index do |a, i|
-            parts = [a.file_name.rpartition('.').first, a.file_name.rpartition('.').last]
-            names << "#{parts.first}#{ +' (' + i.to_s + ')' unless i.zero?}.#{parts.last}"
-          end
-        end
+        attachments += n.attachments
+      end
+    end
+    attachments.flatten!
+    attachments.group_by(&:file_name).each_value do |dupe_names|
+      dupe_names.each_with_index do |a, i|
+        parts = [a.file_name.rpartition('.').first, a.file_name.rpartition('.').last]
+        names << "#{parts.first}#{ +' (' + i.to_s + ')' unless i.zero?}.#{parts.last}"
       end
     end
     names

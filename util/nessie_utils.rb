@@ -208,6 +208,7 @@ class NessieUtils < Utils
              FROM student.student_profiles_hist_enr
              WHERE profile LIKE '%\"status\": %'
                AND profile NOT LIKE '%\"status\": \"Active\"%'
+               AND profile NOT LIKE '%\"status\": \"Admitted\"%'
                AND profile NOT LIKE '%\"status\": \"Cancelled\"%'
                AND profile NOT LIKE '%\"status\": \"Completed Program\"%'
                AND profile NOT LIKE '%\"status\": \"Deceased\"%'

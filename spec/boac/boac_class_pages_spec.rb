@@ -145,7 +145,7 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
                                   :sid => student.sis_id,
                                   :level => (student_api.sis_profile_data[:level].nil? ? '' : student_api.sis_profile_data[:level]),
                                   :majors => student_api.sis_profile_data[:majors],
-                                  :graduation => student_api.sis_profile_data[:graduation],
+                                  :graduation => student_api.graduations,
                                   :academic_career_status => student_api.sis_profile_data[:academic_career_status],
                                   :sports => student_api.asc_teams,
                                   :grading_basis => student_api.sis_course_data(course)[:grading_basis],
@@ -194,14 +194,17 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
                                   end
                                 end
 
-                                if student_data[:academic_career_status] == 'Completed'
+                                if student_data[:academic_career_status] == 'Completed' && student_data[:graduation]&.any?
+                                  # Show only the most recent degree data on list view
+                                  grad = student_data[:graduation].max { |a,b| a[:date] <=> b[:date] }
                                   it("shows the right graduation date for #{student_test_case}") do
-                                    expect(visible_student_sis_data[:graduation_date]).not_to be_nil
-                                    expect(visible_student_sis_data[:graduation_date]).to eql('Graduated ' + Date.parse(student_data[:graduation][:date]).strftime('%b %e, %Y'))
+                                    expect(visible_student_sis_data[:graduation]).to include(grad[:date].strftime('%b %e, %Y'))
                                   end
-                                  it("shows the right graduation colleges for #{student_test_case}") do
-                                    expect(visible_student_sis_data[:graduation_colleges]).not_to be_empty
-                                    expect(visible_student_sis_data[:graduation_colleges]).to eql(student_data[:graduation][:colleges])
+                                  grad[:majors].each do |maj|
+                                    it("shows the right graduation degrees for #{student_test_case}") do
+                                      expect(visible_student_sis_data[:graduation]).not_to be_nil
+                                      expect(visible_student_sis_data[:graduation]).to include(maj[:plan])
+                                    end
                                   end
                                 else
                                   it("shows the right level for #{student_test_case}") { expect(visible_student_sis_data[:level]).to eql(student_data[:level]) }

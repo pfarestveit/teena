@@ -90,9 +90,9 @@ class BOACClassListViewPage
   # Returns the graduation date shown for a student
   # @param student [BOACUser]
   # @return [String]
-  def student_graduation_date(student)
-    el = span_element(xpath: "#{student_xpath student}//div[contains(@id, '-graduated-date')]/span[@class='student-text']")
-    el.text if el.exists?
+  def student_graduation(student)
+    el = span_element(xpath: "#{student_xpath student}//div[starts-with(text(),\" Graduated\")]")
+    el.text.gsub('Graduated', '').strip if el.exists?
   end
 
   # Returns the final grade shown for a student
@@ -110,8 +110,7 @@ class BOACClassListViewPage
     {
       :level => student_level(student),
       :majors => student_majors(student),
-      :graduation_date => student_graduation_date(student),
-      :graduation_colleges => student_graduation_colleges(student),
+      :graduation => student_graduation(student),
       :sports => student_sports(student),
       :mid_point_grade => student_mid_point_grade(student),
       :grading_basis => student_grading_basis(student),

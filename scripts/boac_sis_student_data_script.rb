@@ -19,7 +19,7 @@ begin
 
   def parse_reqt(name, text)
     if text
-      if BOACUtils.base_url.include? 'boa-dev'
+      if BOACUtils.base_url.include? 'boa-'
         text.split(')').last.strip
       else
         text.gsub(name, '').strip
@@ -39,7 +39,7 @@ begin
   profile_demo_heading = %w(UID Gender Ethnicities Nationalities VisaType VisaStatus)
   profile_demo_csv = Utils.create_test_output_csv("boac-demographics-#{suffix}.csv", profile_demo_heading)
 
-  profile_acad_heading = %w(UID Units GPA Level Terms EnteredTerm)
+  profile_acad_heading = %w(UID Units GPA Level)
   profile_acad_csv = Utils.create_test_output_csv("boac-acad-profiles-#{suffix}.csv", profile_acad_heading)
 
   profile_advisors_heading = %w(UID Advisor Email Role Plan)
@@ -50,9 +50,6 @@ begin
 
   profile_plans_disc_heading = %w(UID CollegesDisc MajorsDisc MinorsDisc)
   profile_plans_disc_csv = Utils.create_test_output_csv("boac-plans-disc-#{suffix}.csv", profile_plans_disc_heading)
-
-  profile_grad_heading = %w(UID GradExpect GradDegree GradDate GradColleges Inactive)
-  profile_grad_csv = Utils.create_test_output_csv("boac-grad-#{suffix}.csv", profile_grad_heading)
 
   profile_reqts_heading = %w(UID Writing History Institutions Cultures)
   profile_reqts_csv = Utils.create_test_output_csv("boac-reqts-#{suffix}.csv", profile_reqts_heading)
@@ -90,7 +87,6 @@ begin
       api_student_data.get_data(@driver, student)
 
       api_sis_profile_data = api_student_data.sis_profile_data
-      graduation = api_student_data.graduation
       graduations = api_student_data.graduations
       academic_standing = api_student_data.academic_standing
       demographics = api_student_data.demographics
@@ -174,27 +170,6 @@ begin
               logger.warn "No course data in #{term_name}"
             end
 
-            drops = api_student_data.dropped_sections term
-            if drops
-              drops.each do |drop|
-                unless term_name == BOACUtils.term
-                  row = [student.uid,
-                         term_name,
-                         drop[:date],
-                         "#{drop[:component]} #{drop[:number]}",
-                         nil,
-                         nil,
-                         nil,
-                         nil,
-                         nil,
-                         'D',
-                         nil
-                  ]
-                  Utils.add_csv_row(courses_csv, row)
-                end
-              end
-            end
-
           rescue => e
             BOACUtils.log_error(e, "encountered an error for UID #{student.uid} term #{term_name}")
           end
@@ -231,9 +206,7 @@ begin
         student.uid,
         api_sis_profile_data[:cumulative_units],
         api_sis_profile_data[:cumulative_gpa],
-        api_sis_profile_data[:level],
-        api_sis_profile_data[:terms_in_attendance],
-        api_sis_profile_data[:entered_term]
+        api_sis_profile_data[:level]
       ]
       Utils.add_csv_row(profile_acad_csv, row)
 
@@ -274,30 +247,6 @@ begin
         parse_reqt('American Cultures', api_sis_profile_data[:reqt_cultures])
       ]
       Utils.add_csv_row(profile_reqts_csv, row)
-
-      if BOACUtils.base_url.include? 'dev'
-        graduations&.each do |grad|
-          row = [
-            student.uid,
-            api_sis_profile_data[:expected_grad_term_id],
-            grad[:degree],
-            grad[:date],
-            grad[:colleges],
-            non_active
-          ]
-          Utils.add_csv_row(profile_grad_csv, row)
-        end
-      else
-        row = [
-          student.uid,
-          api_sis_profile_data[:expected_grad_term_id],
-          (graduation && graduation[:degree]),
-          (graduation && graduation[:date]),
-          (graduation && graduation[:colleges]),
-          non_active
-        ]
-        Utils.add_csv_row(profile_grad_csv, row)
-      end
 
       api_student_data.alerts(exclude_canvas: true)&.each do |al|
         row = [
