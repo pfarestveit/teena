@@ -74,7 +74,7 @@ module Page
     end
 
     button(:gradebook_settings_button, id: 'gradebook-settings-button')
-    div(:grade_posting_policy_tab, xpath: '//div[text()="Grade Posting Policy"]')
+    div(:grade_posting_policy_tab, id: 'tab-tab-panel-post')
     checkbox(:gradebook_include_ungraded, xpath: '//span[text()="Automatically apply grade for missing submissions"]/ancestor::label/preceding-sibling::input')
     paragraph(:gradebook_manual_posting_msg, xpath: '//p[contains(text(), "While the grades for an assignment are set to manual")]')
     text_field(:gradebook_manual_posting_input, xpath: '//input[@name="postPolicy"][@value="manual"]/following-sibling::label/span')
@@ -107,6 +107,7 @@ module Page
       logger.info "Setting manual posting policy for course ID #{course.site_id}"
       load_gradebook course
       click_gradebook_settings
+      sleep 1
       wait_for_update_and_click grade_posting_policy_tab_element
       gradebook_manual_posting_input_element.when_visible 2
       if gradebook_manual_posting_msg?
@@ -302,7 +303,7 @@ module Page
     checkbox(:grade_override_toggle, id: 'ff_toggle_final_grades_override')
     div(:grade_override_toggle_switch, xpath: '//div[contains(@class, "final_grades_override")]//div[@class="ic-Super-toggle__switch"]')
 
-    div(:adv_gradebook_settings_tab, xpath: '//div[text()="Advanced"]')
+    div(:adv_gradebook_settings_tab, id: 'tab-tab-panel-advanced')
     checkbox(:allow_grade_override_cbx, xpath: '//label[contains(., "Allow final grade override")]/preceding-sibling::input')
     button(:update_gradebook_settings, id: 'gradebook-settings-update-button')
 

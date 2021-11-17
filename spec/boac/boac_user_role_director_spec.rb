@@ -40,7 +40,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
       end
 
       it "receives the right note export files for UID #{test_case[:student].uid}" do
-        expected_files = @student_page.expected_note_export_file_names(test_case[:student], test_case[:notes]).sort
+        expected_files = @student_page.expected_note_export_file_names(test_case[:student], test_case[:notes], test.advisor).sort
         actual_files = @student_page.note_export_file_names(test_case[:student]).sort
         @student_page.wait_until(1, "Expected #{expected_files}, got #{actual_files}") { actual_files == expected_files }
       end
@@ -53,7 +53,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
 
       test_case[:notes].each do |note|
         it "receives a CSV containing the right data for UID #{test_case[:student].uid} note ID #{note.id}" do
-          @student_page.verify_note_in_export_csv(test_case[:student], note, test_case[:csv])
+          @student_page.verify_note_in_export_csv(test_case[:student], note, test_case[:csv], test.advisor)
         end
       end
     end

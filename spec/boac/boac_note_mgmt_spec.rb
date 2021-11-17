@@ -88,21 +88,21 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
           it 'can create a note with a subject' do
             note_1.subject = "Note 1 subject #{Utils.get_test_id}"
             @student_page.create_note(note_1, [], [])
-            @student_page.verify_note note_1
+            @student_page.verify_note(note_1, test.advisor)
           end
 
           it 'can create a note with a subject and a body' do
             note_2.subject = "Note 2 subject #{Utils.get_test_id}"
             note_2.body = "Note 2 body #{test.id}" unless "#{@driver.browser}" == 'firefox'
             @student_page.create_note(note_2, [], [])
-            @student_page.verify_note note_2
+            @student_page.verify_note(note_2, test.advisor)
           end
 
           it 'can create a long note with special characters' do
             note_3.subject = "Σημείωση θέμα 3 #{Utils.get_test_id}"
             note_3.body = 'ノート本体4' * 100 unless "#{@driver.browser}" == 'firefox'
             @student_page.create_note(note_3, [], [])
-            @student_page.verify_note note_3
+            @student_page.verify_note(note_3, test.advisor)
           end
 
           it 'can add and remove attachments before saving' do
@@ -113,13 +113,13 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
             @student_page.remove_attachments_from_new_note(note_4, test.attachments[0..1])
             @student_page.click_save_new_note
             @student_page.set_new_note_id note_4
-            @student_page.verify_note note_4
+            @student_page.verify_note(note_4, test.advisor)
           end
 
           it 'can create a note with attachments' do
             note_5.subject = "Note 5 subject #{Utils.get_test_id}"
             @student_page.create_note(note_5, [], test.attachments[0..1])
-            @student_page.verify_note note_5
+            @student_page.verify_note(note_5, test.advisor)
           end
 
           it 'can create a note with a maximum of 10 attachments' do
@@ -131,7 +131,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
             @student_page.click_save_new_note
             @student_page.set_new_note_id note_6
             @student_page.collapsed_item_el(note_6).when_visible Utils.short_wait
-            @student_page.verify_note note_6
+            @student_page.verify_note(note_6, test.advisor)
           end
 
           it 'cannot create a note with an individual attachment larger than 20MB' do
@@ -152,14 +152,14 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
             @student_page.remove_topics(note_7, note_topics)
             @student_page.click_save_new_note
             @student_page.set_new_note_id note_7
-            @student_page.verify_note note_7
+            @student_page.verify_note(note_7, test.advisor)
           end
 
           it 'can create a note with topics' do
             note_8.subject = "Note 8 subject #{Utils.get_test_id}"
             @student_page.load_page test_student
             @student_page.create_note(note_8, [Topic::EAP, Topic::SAT_ACAD_PROGRESS_APPEAL, Topic::PASS_NO_PASS, Topic::PROBATION], [])
-            @student_page.verify_note note_8
+            @student_page.verify_note(note_8, test.advisor)
           end
         end
 
@@ -266,19 +266,19 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
             @student_page.confirm_delete_or_discard
             @student_page.wait_until(1) { @student_page.note_body_text_area_elements.empty? }
             note_1.subject = original_subject
-            @student_page.verify_note note_1
+            @student_page.verify_note(note_1, test.advisor)
           end
 
           it 'can change the subject' do
             note_1.subject = "#{note_1.subject} - EDITED"
             @student_page.edit_note_subject_and_save note_1
-            @student_page.verify_note note_1
+            @student_page.verify_note(note_1, test.advisor)
           end
 
           it 'can add attachments' do
             @student_page.expand_item note_4
             @student_page.add_attachments_to_existing_note(note_4, test.attachments[5..6])
-            @student_page.verify_note note_4
+            @student_page.verify_note(note_4, test.advisor)
           end
 
           it 'can add up to a maximum of 10 attachments' do
@@ -292,7 +292,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
             attach_to_delete.id = BOACUtils.get_attachment_id_by_file_name(note_5, attach_to_delete)
             deleted_attachments << attach_to_delete
             @student_page.remove_attachments_from_existing_note(note_5, [note_5.attachments.first])
-            @student_page.verify_note note_5
+            @student_page.verify_note(note_5, test.advisor)
           end
 
           it 'can add topics' do
@@ -302,7 +302,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
             @student_page.click_save_note_edit
             @student_page.edit_note_save_button_element.when_not_present Utils.short_wait
             note_7.updated_date = Time.now
-            @student_page.verify_note note_7
+            @student_page.verify_note(note_7, test.advisor)
           end
 
           it 'can remove topics' do
@@ -312,7 +312,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
             @student_page.click_save_note_edit
             @student_page.edit_note_save_button_element.when_not_present Utils.short_wait
             note_8.updated_date = Time.now
-            @student_page.verify_note note_8
+            @student_page.verify_note(note_8, test.advisor)
           end
 
           it 'can only create or edit one note at a time' do
@@ -331,7 +331,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
             @student_page.wait_for_element_and_type(@student_page.note_body_text_area_elements[1], 'An edit to forget')
             @student_page.click_cancel_note_edit
             @student_page.confirm_delete_or_discard
-            @student_page.verify_note note_2
+            @student_page.verify_note(note_2, test.advisor)
           end
 
           it 'cannot remove the subject' do

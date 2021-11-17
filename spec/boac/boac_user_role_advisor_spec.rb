@@ -9,6 +9,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
     before(:all) do
       @test = BOACTestConfig.new
       @test.user_role_advisor
+      @test.students.shuffle!
 
       @test_asc = BOACTestConfig.new
       @test_asc.user_role_asc @test
@@ -20,15 +21,17 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
       @admin_groups = BOACUtils.get_everyone_curated_groups BOACDepartments::ADMIN
 
       @driver = Utils.launch_browser @test.chrome_profile
-      @homepage = BOACHomePage.new @driver
-      @student_page = BOACStudentPage.new @driver
-      @api_student_page = BOACApiStudentPage.new @driver
       @admit_page = BOACAdmitPage.new @driver
+      @api_admin_page = BOACApiAdminPage.new @driver
+      @api_notes_page = BOACApiNotesPage.new @driver
+      @api_student_page = BOACApiStudentPage.new @driver
       @cohort_page = BOACFilteredCohortPage.new(@driver, @test_asc.advisor)
       @group_page = BOACGroupPage.new @driver
+      @homepage = BOACHomePage.new @driver
+      @pax_manifest_page = BOACPaxManifestPage.new @driver
       @search_results_page = BOACSearchResultsPage.new @driver
       @settings_page = BOACFlightDeckPage.new @driver
-      @api_admin_page = BOACApiAdminPage.new @driver
+      @student_page = BOACStudentPage.new @driver
 
       # Get ASC test data
       filter = CohortFilter.new
@@ -63,11 +66,11 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
                  admits.last
                end
       logger.debug "The test admit's SID is #{@admit.sis_id}"
-      ce3_advisor = BOACUtils.get_dept_advisors(BOACDepartments::ZCEEE, DeptMembership.new(advisor_role: AdvisorRole::ADVISOR)).first
+      @ce3_advisor = BOACUtils.get_dept_advisors(BOACDepartments::ZCEEE, DeptMembership.new(advisor_role: AdvisorRole::ADVISOR)).first
       ce3_cohort_search = CohortAdmitFilter.new
       ce3_cohort_search.set_custom_filters urem: true
       @ce3_cohort = FilteredCohort.new search_criteria: ce3_cohort_search, name: "CE3 #{@test.id}"
-      @homepage.dev_auth ce3_advisor
+      @homepage.dev_auth @ce3_advisor
       @cohort_page.search_and_create_new_cohort(@ce3_cohort, admits: true)
       @cohort_page.log_out
     end
@@ -710,6 +713,279 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
       it 'has a My Students cohort that can be exported with custom columns by another user' do
         parsed_csv = @cohort_page.export_custom_student_list @my_students_cohort
         @cohort_page.verify_student_list_custom_export(@my_students_cohort.members, parsed_csv)
+      end
+    end
+
+    context 'note' do
+
+      before(:all) do
+        @student = @test.students.last
+        @topics = [Topic::COURSE_ADD, Topic::COURSE_DROP]
+        @attachments = @test.attachments[0..1]
+
+        @note_1 = Note.new student: @student,
+                           advisor: @ce3_advisor,
+                           subject: "Note 1 #{@test.id}",
+                           body: "Note 1 body #{@test.id}"
+
+        @note_2 = Note.new student: @student,
+                           advisor: @ce3_advisor,
+                           subject: "Note 2 #{@test.id}",
+                           body: "Note 2 body #{@test.id}"
+
+        @note_3 = Note.new student: @student,
+                           advisor: @test_l_and_s.advisor,
+                           subject: "Note 3 #{@test.id}",
+                           body: "Note 3 body #{@test.id}"
+      end
+
+      context 'when created by a CE3 advisor' do
+
+        before(:all) do
+          @homepage.log_out
+          @homepage.dev_auth @ce3_advisor
+          @student_page.load_page @student
+        end
+
+        it 'can be set to private' do
+          @note_1.is_private = true
+          @student_page.create_note(@note_1, @topics, @attachments)
+          expect(BOACUtils.is_note_private? @note_1).to be true
+        end
+
+        it 'can be set to non-private' do
+          @note_2.is_private = false
+          @student_page.create_note(@note_2, @topics, @attachments)
+          expect(BOACUtils.is_note_private? @note_2).to be false
+        end
+
+        context 'as part of a batch' do
+
+          before(:all) do
+            @batch_1 = NoteBatch.new advisor: @ce3_advisor,
+                                     subject: "Batch 1 #{@test.id}",
+                                     is_private: true
+
+            @batch_2 = NoteBatch.new advisor: @ce3_advisor,
+                                     subject: "Batch 2 #{@test.id}",
+                                     is_private: false
+          end
+
+          it 'can be set to private' do
+            @homepage.create_batch_of_notes(@batch_1, [], [], @test.students[0..1], [], [])
+            @test.students[0..1].each do |student|
+              id = @student_page.set_new_note_id(@batch_1, student)
+              note = Note.new id: id
+              expect(BOACUtils.is_note_private? note).to be true
+            end
+          end
+
+          it 'can be set to non-private' do
+            @homepage.create_batch_of_notes(@batch_2, [], [], @test.students[2..3], [], [])
+            @test.students[2..3].each do |student|
+              id = @student_page.set_new_note_id(@batch_2, student)
+              note = Note.new id: id
+              expect(BOACUtils.is_note_private? note).to be false
+            end
+          end
+        end
+      end
+
+      context 'when created by a non-CE3 advisor' do
+
+        before(:all) do
+          @homepage.log_out
+          @homepage.dev_auth @test_l_and_s.advisor
+          @student_page.load_page @student
+        end
+
+        it 'is automatically non-private' do
+          @student_page.create_note(@note_3, @topics, @attachments)
+          expect(BOACUtils.is_note_private? @note_3).to be false
+        end
+      end
+
+      context 'when private' do
+
+        context 'and viewed by a CE3 advisor' do
+
+          before(:all) do
+            @homepage.log_out
+            @homepage.dev_auth @ce3_advisor
+            @student_page.load_page @student
+          end
+
+          it('shows the complete note including private data') { @student_page.verify_note(@note_1, @ce3_advisor) }
+
+          it 'allows the advisor to download the note attachments' do
+            if Utils.headless?
+              logger.warn 'Skipping attachment download tests in headless mode'
+              skip
+            else
+              @note_1.attachments.each { |attach| @student_page.download_attachment(@note_1, attach) }
+            end
+          end
+        end
+
+        context 'and viewed by a non-CE3 advisor' do
+
+          before(:all) do
+            @homepage.log_out
+            @homepage.dev_auth @test_l_and_s.advisor
+            @student_page.load_page @student
+          end
+
+          it('shows the partial note excluding private data') { @student_page.verify_note(@note_1, @test_l_and_s.advisor) }
+
+          it 'blocks API access to note body and attachment file names' do
+            @api_student_page.get_data(@driver, @student)
+            note = @api_student_page.notes.find { |n| n.id == @note_1.id }
+            expect(note.body).to be_empty
+            expect(note.attachments).to be_empty
+          end
+
+          it 'blocks API access to note attachment downloads' do
+            notes = BOACUtils.get_student_notes @student
+            note = notes.find { |n| n.id == @note_1.id }
+            Utils.prepare_download_dir
+            @api_notes_page.load_attachment_page note.attachments.first.id
+            @api_notes_page.unauth_msg_element.when_visible Utils.short_wait
+            expect(Utils.downloads_empty?).to be true
+          end
+        end
+
+        context 'and searched' do
+
+          before(:all) do
+            @homepage.log_out
+            @homepage.dev_auth @ce3_advisor
+          end
+
+          it 'cannot be searched by body' do
+            @homepage.type_non_note_string_and_enter @note_1.body
+            expect(@search_results_page.note_results_count).to be_zero
+          end
+
+          it 'cannot be searched by subject' do
+            @homepage.type_non_note_string_and_enter @note_1.subject
+            expect(@search_results_page.note_results_count).to be_zero
+          end
+
+          it 'cannot be searched by date' do
+            @homepage.reset_search_options_notes_subpanel
+            @homepage.set_notes_student @student
+            @homepage.set_notes_date_from Date.today
+            @homepage.click_search_button
+            expect(@search_results_page.note_in_search_result? @note_1).to be false
+          end
+        end
+
+        context 'and downloaded by a non-CE3 director' do
+
+          before(:all) do
+            @homepage.log_out
+            @homepage.dev_auth
+            @test_l_and_s.advisor.dept_memberships = [
+              (DeptMembership.new dept: BOACDepartments::L_AND_S,
+                                  advisor_role: AdvisorRole::DIRECTOR,
+                                  is_automated: true)
+            ]
+            @pax_manifest_page.load_page
+            @pax_manifest_page.search_for_advisor @test_l_and_s.advisor
+            @pax_manifest_page.edit_user @test_l_and_s.advisor
+            @homepage.log_out
+
+            @homepage.dev_auth @test_l_and_s.advisor
+            @student_page.load_page @student
+            @student_page.show_notes
+            @student_page.download_notes @student
+          end
+
+          it 'does not include the note body' do
+            csv = @student_page.parse_note_export_csv_to_table @student
+            @student_page.verify_note_in_export_csv(@student, @note_1, csv, @test_l_and_s.advisor)
+          end
+
+          it 'does not include the note attachment files' do
+            private_file_names = @note_2.attachments.map &:file_name
+            downloaded_file_names = @student_page.note_export_file_names(@student).sort
+            expect(downloaded_file_names & private_file_names).to be_empty
+          end
+        end
+      end
+
+      context 'when edited' do
+
+        before(:all) do
+          @homepage.log_out
+          @homepage.dev_auth @ce3_advisor
+          @student_page.load_page @student
+        end
+
+        it 'can be set to private' do
+          @note_2.is_private = true
+          @student_page.expand_item @note_2
+          @student_page.click_edit_note_button @note_2
+          @student_page.set_note_privacy @note_2
+          @student_page.save_note_edit @note_2
+          expect(BOACUtils.is_note_private? @note_2).to be true
+        end
+
+        it 'can be set to non-private' do
+          @note_1.is_private = false
+          @student_page.expand_item @note_1
+          @student_page.click_edit_note_button @note_1
+          @student_page.set_note_privacy @note_1
+          @student_page.save_note_edit @note_1
+          expect(BOACUtils.is_note_private? @note_1).to be false
+        end
+
+        context 'and converted to private' do
+
+          it 'cannot be searched by body' do
+            @homepage.type_non_note_string_and_enter @note_2.body
+            expect(@search_results_page.note_results_count).to be_zero
+          end
+
+          it 'cannot be searched by subject' do
+            @homepage.type_non_note_string_and_enter @note_2.subject
+            expect(@search_results_page.note_results_count).to be_zero
+          end
+
+          it 'cannot be searched by date' do
+            @homepage.reset_search_options_notes_subpanel
+            @homepage.set_notes_student @student
+            @homepage.set_notes_date_from Date.today
+            @homepage.click_search_button
+            expect(@search_results_page.note_in_search_result? @note_2).to be false
+          end
+        end
+      end
+
+      context 'and the advisor loses access to private notes' do
+
+        before(:all) do
+          @homepage.log_out
+          @homepage.dev_auth
+          @ce3_advisor.dept_memberships = [
+            (DeptMembership.new dept: BOACDepartments::L_AND_S,
+                                advisor_role: AdvisorRole::ADVISOR,
+                                is_automated: true)
+          ]
+          @pax_manifest_page.load_page
+          @pax_manifest_page.search_for_advisor @ce3_advisor
+          @pax_manifest_page.edit_user @ce3_advisor
+          @homepage.log_out
+
+          @homepage.dev_auth @ce3_advisor
+          @student_page.load_page @student
+        end
+
+        it 'does not allow the advisor to edit their private notes' do
+          @student_page.show_notes
+          @student_page.expand_item @note_2
+          expect(@student_page.edit_note_button(@note_2).exists?).to be false
+        end
       end
     end
   end

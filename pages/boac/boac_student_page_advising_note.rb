@@ -211,7 +211,7 @@ module BOACStudentPageAdvisingNote
 
   # Verifies the visible content of a note
   # @param note [Note]
-  def verify_note(note)
+  def verify_note(note, viewer)
     logger.debug "Verifying visible data for note ID #{note.id}"
 
     # Verify data visible when note is collapsed
@@ -224,11 +224,15 @@ module BOACStudentPageAdvisingNote
     wait_until(1, "Expected '#{expected_short_updated_date}', got #{visible_data[:date]}") { visible_data[:date] == expected_short_updated_date }
 
     # Verify data visible when note is expanded
+
     expand_item note
     visible_data.merge!(visible_expanded_note_data note)
-    wait_until(1, "Expected '#{note.body}', got '#{visible_data[:body]}'") { visible_data[:body] == "#{note.body}" }
-    wait_until(1, "Expected '#{note.advisor.full_name.downcase}', got '#{visible_data[:advisor].downcase}'") do
-      visible_data[:advisor].downcase == note.advisor.full_name.downcase
+    if note.advisor.full_name
+      wait_until(1, "Expected '#{note.advisor.full_name.downcase}', got '#{visible_data[:advisor].downcase}'") do
+        visible_data[:advisor].downcase == note.advisor.full_name.downcase
+      end
+    else
+      wait_until(1, 'Expected non-blank advisor name') { !visible_data[:advisor].empty? }
     end
     wait_until(1, 'Expected non-blank advisor role') { !visible_data[:advisor_role].empty? }
     wait_until(1) { !visible_data[:advisor_depts].any?(&:empty?) }
@@ -237,11 +241,6 @@ module BOACStudentPageAdvisingNote
     note_topics = (note.topics.map { |t| t.name.upcase }).sort
     wait_until(1, "Expected '#{note_topics}', got #{visible_data[:topics]}") { visible_data[:topics] == note_topics }
     wait_until(1, "Expected no remove-topic buttons, got #{visible_data[:remove_topics_btns].length}") { visible_data[:remove_topics_btns].length.zero? }
-
-    # Attachments
-    non_deleted_attachments = note.attachments.reject &:deleted_at
-    expected_file_names = non_deleted_attachments.map &:file_name
-    wait_until(1, "Expected '#{expected_file_names.sort}', got #{visible_data[:attachments].sort}") { visible_data[:attachments].sort == expected_file_names.sort }
 
     # Check visible timestamps within 1 minute to avoid failures caused by a 1 second diff
     expected_long_created_date = "Created on #{expected_item_long_date_format note.created_date}"
@@ -254,6 +253,28 @@ module BOACStudentPageAdvisingNote
       wait_until(1, "Expected '#{expected_long_updated_date}', got #{visible_data[:updated_date]}") do
         Time.parse(visible_data[:updated_date]) <= Time.parse(expected_long_updated_date) + 60
         Time.parse(visible_data[:updated_date]) >= Time.parse(expected_long_updated_date) - 60
+      end
+    end
+
+    # Body and attachments - private versus non-private
+
+    if note.is_private && !viewer.is_admin && !viewer.depts.include?(BOACDepartments::ZCEEE.code)
+      # Body should be hidden
+      wait_until(1, "Expected no body, got '#{visible_data[:body]}'") { visible_data[:body].empty? }
+      # Attachments should be hidden
+      wait_until(1, "Expected no attachments, got #{visible_data[:attachments].sort}") do
+        visible_data[:attachments].empty?
+      end
+    else
+      # Body should be visible
+      wait_until(1, "Expected '#{note.body}', got '#{visible_data[:body]}'") do
+        visible_data[:body] == "#{note.body}"
+      end
+      # Attachments should be visible
+      non_deleted_attachments = note.attachments.reject &:deleted_at
+      expected_file_names = non_deleted_attachments.map &:file_name
+      wait_until(1, "Expected '#{expected_file_names.sort}', got #{visible_data[:attachments].sort}") do
+        visible_data[:attachments].sort == expected_file_names.sort
       end
     end
   end
@@ -281,6 +302,13 @@ module BOACStudentPageAdvisingNote
     wait_for_update_and_click edit_note_button(note)
   end
 
+  def save_note_edit(note)
+    click_save_note_edit
+    edit_note_save_button_element.when_not_present Utils.short_wait
+    collapsed_item_el(note).when_visible Utils.short_wait
+    note.updated_date = Time.now
+  end
+
   # Edits an existing note's subject and updated date
   # @param note [Note]
   def edit_note_subject_and_save(note)
@@ -288,10 +316,7 @@ module BOACStudentPageAdvisingNote
     expand_item note
     click_edit_note_button note
     enter_edit_note_subject note
-    click_save_note_edit
-    edit_note_save_button_element.when_not_present Utils.short_wait
-    collapsed_item_el(note).when_visible Utils.short_wait
-    note.updated_date = Time.now
+    save_note_edit note
   end
 
   # Deletes a note and sets the deleted date
@@ -357,6 +382,7 @@ module BOACStudentPageAdvisingNote
     enter_note_body note
     add_attachments_to_new_note(note, attachments) if attachments&.any?
     add_topics(note, topics)
+    set_note_privacy note
     click_save_new_note
     set_new_note_id note
   end
@@ -400,12 +426,12 @@ module BOACStudentPageAdvisingNote
   # @param student [BOACUser]
   # @param notes [Array<Notes>]
   # @return [Array<String>]
-  def expected_note_export_file_names(student, notes)
+  def expected_note_export_file_names(student, notes, downloader)
     names = []
     names << notes_export_csv_file_name(student)
     attachments = []
     notes.map do |n|
-      unless n.instance_of? TimelineEForm
+      unless n.instance_of?(TimelineEForm) || (n.is_private && !downloader.is_admin && !downloader.depts.include?(BOACDepartments::ZCEEE.code))
         n.attachments.delete_if &:deleted_at
         attachments += n.attachments
       end
@@ -437,7 +463,7 @@ module BOACStudentPageAdvisingNote
   # @param student [BOACUser]
   # @param note [Note]
   # @param csv_table [CSV::Table]
-  def verify_note_in_export_csv(student, note, csv_table)
+  def verify_note_in_export_csv(student, note, csv_table, downloader)
     wait_until(1, "Couldn't find note ID #{note.id}") do
       begin
         csv_table.find do |r|
@@ -455,12 +481,20 @@ module BOACStudentPageAdvisingNote
             if note.advisor
               (r[:author_uid] == note.advisor.uid.to_i) unless (note.advisor.uid == 'UCBCONVERSION')
             end
+
             r[:subject] == note.subject if note.subject
+
+            if !note.body || (note.is_private && !downloader.is_admin && !downloader.depts.include?(BOACDepartments::ZCEEE.code))
+              !r[:body]
+            end
+
             if note.topics&.any?
-              ((r[:topics].split(';').map(&:strip).map(&:downcase).sort if r[:topics]) == note.topics.map(&:downcase).sort)
+              expected_topics = note.topics.map { |t| t.name.downcase }.sort
+              ((r[:topics].split(';').map(&:strip).map(&:downcase).sort if r[:topics]) == expected_topics)
             else
               !r[:topics]
             end
+
             if note.attachments&.any?
               ((r[:attachments].split(';').map(&:strip).sort if r[:attachments]) == note.attachments.map(&:file_name).sort)
             else
