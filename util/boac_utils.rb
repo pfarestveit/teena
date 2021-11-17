@@ -740,7 +740,8 @@ class BOACUtils < Utils
             :advisor => BOACUser.new(advisor_data),
             :created_date => Time.parse(r['created_at'].to_s).utc.localtime,
             :updated_date => Time.parse(r['updated_at'].to_s).utc.localtime,
-            :deleted_date => (Time.parse(r['deleted_at'].to_s) if r['deleted_at'])
+            :deleted_date => (Time.parse(r['deleted_at'].to_s) if r['deleted_at']),
+            :is_private => r['is_private']
         }
 
         attachments = attach_results.select { |a| a['note_id'] == note_data[:id] }.map do |a|
@@ -798,6 +799,13 @@ class BOACUtils < Utils
   def self.get_attachment_id_by_file_name(note, attachment)
     query = "SELECT * FROM note_attachments WHERE note_id = #{note.id} AND path_to_attachment LIKE '%#{attachment.file_name}';"
     attachment.id = Utils.query_pg_db_field(boac_db_credentials, query, 'id').last
+  end
+
+  def self.is_note_private?(note)
+    query = "SELECT is_private FROM notes WHERE id = '#{note.id}'"
+    result = Utils.query_pg_db_field(boac_db_credentials, query, 'is_private').last
+    logger.debug "Result is '#{result}'"
+    result == 't'
   end
 
   ### APPOINTMENTS ###

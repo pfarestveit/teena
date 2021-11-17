@@ -166,6 +166,25 @@ module BOACPagesCreateNoteModal
     end
   end
 
+  # CE3 Restricted
+
+  radio_button(:universal_radio, xpath: '//input[@id="note-is-not-private-radio-button"]/..')
+  radio_button(:private_radio, xpath: '//input[@id="note-is-private-radio-button"]/..')
+
+  def set_note_privacy(note)
+    if note.advisor&.dept_memberships.find { |m| m.dept == BOACDepartments::ZCEEE }
+      if note.is_private
+        logger.info 'Setting note to private'
+        wait_for_update_and_click private_radio_element
+      else
+        logger.info 'Setting note to non-private'
+        wait_for_update_and_click universal_radio_element
+      end
+    else
+      logger.info "Note author not with CE3, so privacy defaults to #{note.is_private}"
+    end
+  end
+
   # Save
 
   button(:new_note_save_button, id: 'create-note-button')
@@ -358,6 +377,7 @@ module BOACPagesCreateNoteModal
     enter_note_body note_batch
     add_attachments_to_new_note(note_batch, attachments) if attachments&.any?
     add_topics(note_batch, topics) if topics
+    set_note_privacy note_batch
     click_save_new_note
     # Give a moment
     sleep Utils.click_wait

@@ -389,7 +389,7 @@ class BOACTestConfig < TestConfig
 
   # Config for advising note content testing
   def note_content
-    set_base_configs
+    set_base_configs BOACDepartments::L_AND_S
     set_test_students(CONFIG['notes_max_users'], {with_notes: true})
   end
 
@@ -402,14 +402,14 @@ class BOACTestConfig < TestConfig
   # Config for note management testing (create, edit, delete)
   def note_management
     set_note_attachments
-    set_base_configs
+    set_base_configs BOACDepartments::L_AND_S
     BOACUtils.set_advisor_data @advisor
   end
 
   # Config for testing batch note creation
   def batch_note_management
     set_note_attachments
-    set_base_configs
+    set_base_configs BOACDepartments::L_AND_S
     set_default_cohort
     BOACUtils.set_advisor_data @advisor
   end
@@ -488,6 +488,7 @@ class BOACTestConfig < TestConfig
 
   # Config for advisor user role testing
   def user_role_advisor
+    set_note_attachments
     set_students
   end
 
@@ -495,6 +496,12 @@ class BOACTestConfig < TestConfig
   # @param user_role_config [BOACTestConfig]
   def user_role_asc(user_role_config)
     set_dept BOACDepartments::ASC
+    set_advisor
+    set_students user_role_config.students
+  end
+
+  def user_role_ce3(user_role_config)
+    set_dept BOACDepartments::ZCEEE
     set_advisor
     set_students user_role_config.students
   end

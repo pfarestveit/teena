@@ -93,7 +93,7 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
           @student_page.click_cancel_template
           @student_page.click_save_new_note
           @student_page.set_new_note_id(@note, @student)
-          @student_page.verify_note @note
+          @student_page.verify_note(@note, @test.advisor)
         end
       end
 
@@ -135,7 +135,7 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
           @student_page.apply_template(@template_1, @note)
           @student_page.click_save_new_note
           @student_page.set_new_note_id(@note, @student)
-          @student_page.verify_note @note
+          @student_page.verify_note(@note, @test.advisor)
         end
 
         it 'can be renamed but cancelled' do
@@ -235,7 +235,7 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
           batch_student = @homepage.unique_students_in_batch(@students, [@test.default_cohort], [@group]).first
           @student_page.set_new_note_id(@note_batch, batch_student)
           @student_page.load_page batch_student
-          @student_page.verify_note @note_batch
+          @student_page.verify_note(@note_batch, @test.advisor)
         end
       end
 
@@ -281,7 +281,7 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
           batch_student = @homepage.unique_students_in_batch(@students, [@test.default_cohort], [@group]).first
           @student_page.set_new_note_id(@note_batch, batch_student)
           @student_page.load_page batch_student
-          @student_page.verify_note @note_batch
+          @student_page.verify_note(@note_batch, @test.advisor)
         end
 
         it 'can be renamed but cancelled' do

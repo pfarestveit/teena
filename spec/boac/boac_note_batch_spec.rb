@@ -148,7 +148,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
               @student_page.set_new_note_id(batch_note_1, student)
               @student_page.load_page student
               @student_page.expand_item batch_note_1
-              @student_page.verify_note batch_note_1
+              @student_page.verify_note(batch_note_1, test.advisor)
             end
           end
 
