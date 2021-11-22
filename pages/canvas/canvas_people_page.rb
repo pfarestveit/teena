@@ -268,21 +268,20 @@ module CanvasPeoplePage
     total_count = counts[0][:count] + counts[1][:count]
     logger.debug "Trying to load #{total_count} students and wait list students"
     wait_until(Utils.short_wait) { user_row_elements.any? }
-    initial_count = user_row_elements.length
     scroll_to_bottom
-    if initial_count >= total_count
+    if user_row_elements.length >= total_count
       logger.debug 'All users are currently visible'
     else
       begin
         tries ||= Utils.canvas_enrollment_retries
-        new_initial_count = user_row_elements.length
-        logger.debug "There are now #{new_initial_count} user rows"
+        new_count = user_row_elements.length
+        logger.debug "There are now #{new_count} user rows"
         scroll_to_bottom
-        wait_until(Utils.short_wait) { user_row_elements.length > new_initial_count }
-        wait_until(Utils.click_wait) { (student_enrollment_row_elements.length + waitlist_enrollment_row_elements.length) == total_count }
+        wait_until(Utils.short_wait) { user_row_elements.length > new_count }
+        wait_until(Utils.click_wait) { (student_enrollment_row_elements.length + waitlist_enrollment_row_elements.length) >= total_count }
       rescue
-        if (tries -= 1).zero?
-          logger.error "Site role dropdown says #{total_count} students but got #{(student_enrollment_row_elements.length + waitlist_enrollment_row_elements.length)} rows"
+        if (tries -= 1).zero? || (user_row_elements.length == new_count)
+          logger.error "Site role dropdown says #{total_count} students but got #{student_enrollment_row_elements.length + waitlist_enrollment_row_elements.length} rows"
         else
           retry
         end

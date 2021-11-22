@@ -57,14 +57,11 @@ class Utils
     driver = case browser
 
       when 'chrome'
-        options = {w3c: false}
-        options = Selenium::WebDriver::Chrome::Options.new(:options => options)
+        options = Selenium::WebDriver::Chrome::Options.new
         if @config['webdriver']['chrome_profile']
           profile_dir = (profile ? profile : File.join(@config_dir, 'chrome-profile'))
           options.add_argument("user-data-dir=#{profile_dir}")
         end
-        # Works around Chrome 75 'UnknownCommandError' issue.
-        options.add_option('w3c', @config['webdriver']['w3c'])
 
         # Enable Chrome same-site cookie restrictions
         prefs = {'browser.enabled_labs_experiments': %w(same-site-by-default-cookies@1 cookies-without-same-site-must-be-secure@1)}
@@ -74,7 +71,7 @@ class Utils
         options.add_preference('download.prompt_for_download', false)
         options.add_preference('download.default_directory', Utils.download_dir)
         options.add_preference('profile.default_content_setting_values.automatic_downloads', 1)
-        Selenium::WebDriver.for :chrome, :options => options
+        Selenium::WebDriver.for :chrome, capabilities: options
 
       when 'firefox'
         profile = Selenium::WebDriver::Firefox::Profile.new
@@ -86,12 +83,10 @@ class Utils
         # Turn off Firefox's pretty JSON since it prevents parsing JSON strings in the browser.
         profile['devtools.jsonview.enabled'] = false
         profile['pdfjs.diabled'] = true
-        options = Selenium::WebDriver::Firefox::Options.new(:profile => profile)
+        options = Selenium::WebDriver::Firefox::Options.new
+        options.profile = profile
         options.add_argument '-headless' if headless?
-        Selenium::WebDriver.for :firefox, :options => options
-
-      when 'safari'
-        Selenium::WebDriver.for :safari
+        Selenium::WebDriver.for :firefox, capabilities: options
 
       else
         logger.error 'Designated WebDriver is not supported'
