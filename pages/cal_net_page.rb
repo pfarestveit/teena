@@ -14,6 +14,10 @@ module Page
     h3(:logout_conf_heading, xpath: '//h3[text()="Logout Successful"]')
     span(:access_denied_msg, xpath: '//span[contains(.,"Service access denied due to missing privileges.")]')
 
+    iframe(:duo_frame, xpath: '//div[@id="duo_iframe"]/iframe')
+    checkbox(:remember_me, name: 'dampen_choice')
+    button(:send_push, xpath: '//button[text()="Send Me a Push "]')
+
     def enter_credentials(username, password, event = nil, msg = nil)
       # If no credentials are available, then wait for manual login
       wait_until(Utils.medium_wait) { title.include? 'CAS – Central Authentication Service' }
@@ -32,6 +36,11 @@ module Page
         wait_for_element_and_type(password_element, password)
         wait_for_update_and_click sign_in_button_element
         sleep 2
+        if duo_frame?
+          @driver.switch_to.frame duo_frame_element.selenium_element
+          remember_me_element.click unless remember_me_checked?
+          send_push
+        end
         add_event(event, EventType::LOGGED_IN)
       end
     end

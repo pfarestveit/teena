@@ -314,14 +314,15 @@ module Page
     # Clicks the settings icon and switches to advanced settings
     def open_gradebook_adv_settings
       click_gradebook_settings
-      wait_for_update_and_click adv_gradebook_settings_tab_element
+      sleep 1
+      adv_gradebook_settings_tab_element.click
       allow_grade_override_cbx_element.when_visible 1
     end
 
     # Clicks the allow-override checkbox and saves
     def toggle_allow_grade_override
       js_click allow_grade_override_cbx_element
-      wait_for_update_and_click update_gradebook_settings_element
+      wait_for_update_and_click_js update_gradebook_settings_element
       flash_msg_element.when_visible Utils.short_wait
       wait_until(1) { flash_msg_element.text.include? 'Gradebook Settings updated' }
     end
