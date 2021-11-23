@@ -279,6 +279,16 @@ module BOACCohortPages
     term_units_el.text if term_units_el.exists?
   end
 
+  def visible_term_units_max(student)
+    el = span_element(xpath: "#{student_row_xpath student}//span[contains(@id,\"student-max-units\")]")
+    el.text if el.exists?
+  end
+
+  def visible_term_units_min(student)
+    el = span_element(xpath: "#{student_row_xpath student}//span[contains(@id,\"student-min-units\")]")
+    el.text if el.exists?
+  end
+
   def visible_cumul_units(student)
     cumul_units_el = div_element(xpath: "#{student_row_xpath student}//div[contains(@id,\"cumulative-units\")]")
     cumul_units_el.text.gsub('No data', '').chomp if cumul_units_el.exists?
