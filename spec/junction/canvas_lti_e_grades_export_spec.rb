@@ -369,10 +369,7 @@ unless ENV['STANDALONE']
         it "denies #{user.role} #{user.uid} access to the tool" do
           @canvas.masquerade_as(user, course)
           @e_grades_export_page.hit_embedded_tool_url course
-          @canvas.access_denied_msg_element.when_present Utils.short_wait
-        rescue
-          @e_grades_export_page.switch_to_canvas_iframe
-          @e_grades_export_page.not_auth_msg_element.when_visible Utils.medium_wait
+          @canvas.wait_for_error(@canvas.access_denied_msg_element, @e_grades_export_page.not_auth_msg_element)
         end
       end
     end

@@ -52,13 +52,8 @@ unless ENV['STANDALONE']
           @mailing_list_page.switch_to_canvas_iframe
           @mailing_list_page.create_list_button_element.when_present(Utils.medium_wait)
         else
-          begin
-            logger.debug "Verifying that #{user.role} UID #{user.uid} has no access to the instructor-facing mailing list tool"
-            @canvas_page.access_denied_msg_element.when_visible Utils.short_wait
-          rescue
-            @mailing_list_page.switch_to_canvas_iframe
-            @mailing_list_page.unexpected_error_element.when_visible Utils.short_wait
-          end
+          logger.debug "Verifying that #{user.role} UID #{user.uid} has no access to the instructor-facing mailing list tool"
+          @canvas_page.wait_for_error(@canvas_page.access_denied_msg_element, @mailing_list_page.unexpected_error_element)
         end
       end
 

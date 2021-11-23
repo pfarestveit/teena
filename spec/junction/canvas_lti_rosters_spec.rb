@@ -45,7 +45,7 @@ describe 'bCourses Roster Photos' do
       @student_count = @roster_api.students.length
       @waitlist_count = @roster_api.waitlisted_students.length
     else
-      user_counts = @canvas.wait_for_enrollment_import(course, ['Student', 'Waitlist Student']) unless standalone
+      user_counts = @canvas.wait_for_enrollment_import(course, ['Student', 'Waitlist Student'])
       @student_count = user_counts[0][:count]
       @waitlist_count = user_counts[1][:count]
     end
@@ -169,10 +169,7 @@ describe 'bCourses Roster Photos' do
         it "denies #{user.role} #{user.uid} access to the tool" do
           @canvas.masquerade_as(user, course)
           @roster_photos_page.hit_embedded_tool_url course
-          @canvas.access_denied_msg_element.when_present Utils.short_wait
-        rescue
-          @roster_photos_page.switch_to_canvas_iframe
-          @roster_photos_page.no_access_msg_element.when_visible Utils.short_wait
+          @canvas.wait_for_error(@canvas.access_denied_msg_element, @roster_photos_page.no_access_msg_element)
         end
       end
     end
