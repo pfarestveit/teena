@@ -264,10 +264,7 @@ describe 'bCourses Find a Person to Add', order: :defined do
         it "denies #{user.role} #{user.uid} access to the tool" do
           @canvas.masquerade_as(user, course)
           @course_add_user_page.hit_embedded_tool_url course
-          @canvas.access_denied_msg_element.when_present Utils.short_wait
-        rescue
-          @course_add_user_page.switch_to_canvas_iframe
-          @course_add_user_page.no_access_msg_element.when_visible Utils.short_wait
+          @canvas.wait_for_error(@canvas.access_denied_msg_element, @course_add_user_page.no_access_msg_element)
         end
 
         it "offers #{user.role} an Academic Policies link" do

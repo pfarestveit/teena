@@ -100,8 +100,6 @@ unless ENV['STANDALONE']
         @mailing_list.load_embedded_tool @course
         csv = @mailing_list.download_csv
         expect(csv[:email_address].sort).to eql(@site_members.map(&:email).sort)
-
-        # TODO verify email received
       end
 
       it 'is sent to new members of the site' do
@@ -121,14 +119,7 @@ unless ENV['STANDALONE']
         @mailing_list.load_embedded_tool @course
         csv = @mailing_list.download_csv
         expect(csv[:email_address].sort).to eql(@site_members.map(&:email).sort)
-
-        # TODO verify email received
       end
-
-      it 'is not sent to members of the site who have already received it' do
-        # TODO verify no dupe emails received
-      end
-
     end
 
     context 'when paused' do

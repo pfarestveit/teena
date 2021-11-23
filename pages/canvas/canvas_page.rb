@@ -118,6 +118,21 @@ module Page
       wait_until(1) { flash_msg.include? text }
     end
 
+    def wait_for_error(canvas_msg_el, junction_msg_el)
+      tries ||= Utils.short_wait
+      wait_until(2) do
+        (switch_to_canvas_iframe; junction_msg_el.exists?) || (switch_to_main_content; canvas_msg_el.exists?)
+      end
+    rescue
+      if tries -= 1.zero?
+        fail("Found neither Canvas nor Junction error")
+      else
+        retry
+      end
+    ensure
+      switch_to_main_content
+    end
+
     # COURSE SITE SETUP
 
     link(:create_site_link, xpath: '//a[contains(text(),"Create a Site")]')
