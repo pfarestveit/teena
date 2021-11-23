@@ -247,6 +247,14 @@ class BOACApiStudentPage
     formatted_units term['enrolledUnits']
   end
 
+  def term_units_max(term)
+    term['maxTermUnitsAllowed']
+  end
+
+  def term_units_min(term)
+    term['minTermUnitsAllowed']
+  end
+
   def term_gpa(term)
     term['termGpa'] && term['termGpa']['gpa']
   end
