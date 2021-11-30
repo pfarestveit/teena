@@ -1,12 +1,14 @@
 class NoteBatch < Note
 
-  attr_accessor :students, :cohorts, :curated_groups
+  attr_accessor :cohorts,
+                :curated_groups,
+                :students
 
   def initialize(note_data)
     super note_data
-    @students ||= []
     @cohorts ||= []
     @curated_groups ||= []
+    @students ||= []
   end
 
 end

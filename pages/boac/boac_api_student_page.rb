@@ -243,16 +243,28 @@ class BOACApiStudentPage
     terms.find { |t| term_name(t) == BOACUtils.term }
   end
 
+  def term_units_float(term)
+    term['enrolledUnits'].to_f.to_s
+  end
+
   def term_units(term)
     formatted_units term['enrolledUnits']
   end
 
+  def term_units_max_float(term)
+    term['maxTermUnitsAllowed'].to_f.to_s
+  end
+
   def term_units_max(term)
-    term['maxTermUnitsAllowed']
+    formatted_units term['maxTermUnitsAllowed']
+  end
+
+  def term_units_min_float(term)
+    term['minTermUnitsAllowed'].to_f.to_s
   end
 
   def term_units_min(term)
-    term['minTermUnitsAllowed']
+    formatted_units term['minTermUnitsAllowed']
   end
 
   def term_gpa(term)
@@ -290,6 +302,7 @@ class BOACApiStudentPage
     {
       :code => course_display_name(course),
       :title => course['title'].gsub(/\s+/, ' '),
+      :units_completed_float => course['units'].to_f.to_s,
       :units_completed => (course['units'].floor == course['units'] ? course['units'].floor.to_s : course['units'].to_s),
       :midpoint => (course['midtermGrade'] && course['midtermGrade'].gsub('-','−')),
       :grade => (course['grade'] && course['grade'].gsub('-','−')),

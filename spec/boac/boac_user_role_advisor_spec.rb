@@ -66,7 +66,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
                  admits.last
                end
       logger.debug "The test admit's SID is #{@admit.sis_id}"
-      @ce3_advisor = BOACUtils.get_dept_advisors(BOACDepartments::ZCEEE, DeptMembership.new(advisor_role: AdvisorRole::ADVISOR)).first
+      @ce3_advisor = BOACUtils.get_dept_advisors(BOACDepartments::ZCEEE, DeptMembership.new(advisor_role: AdvisorRole::ADVISOR)).last
       ce3_cohort_search = CohortAdmitFilter.new
       ce3_cohort_search.set_custom_filters urem: true
       @ce3_cohort = FilteredCohort.new search_criteria: ce3_cohort_search, name: "CE3 #{@test.id}"
@@ -755,7 +755,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
 
         it 'can be set to non-private' do
           @note_2.is_private = false
-          @student_page.create_note(@note_2, @topics, @attachments)
+          @student_page.create_note(@note_2, @topics, [])
           expect(BOACUtils.is_note_private? @note_2).to be false
         end
 
@@ -789,6 +789,83 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
             end
           end
         end
+
+        context 'from a template' do
+
+          before(:all) do
+            @ce3_template = NoteTemplate.new title: "CE3 template #{@test.id}"
+          end
+
+          context 'that is private' do
+
+            before(:all) do
+              note = Note.new subject: "CE3 template subject #{@test.id}",
+                              advisor: @ce3_advisor,
+                              is_private: true
+              @student_page.load_page @test.students[0]
+              @student_page.click_create_new_note
+              @student_page.enter_new_note_subject note
+              @student_page.set_note_privacy note
+              @student_page.create_template(@ce3_template, note)
+            end
+
+            it 'can be set to private' do
+              note = Note.new subject: @ce3_template.subject
+              @student_page.load_page @test.students[0]
+              @student_page.click_create_new_note
+              @student_page.select_and_apply_template(@ce3_template, note)
+              @student_page.click_save_new_note
+              @student_page.set_new_note_id(note, @test.students[0])
+              expect(BOACUtils.is_note_private? note).to be true
+            end
+
+            it 'can be set to non-private' do
+              note = Note.new subject: @ce3_template.subject
+              @student_page.load_page @test.students[1]
+              @student_page.click_create_new_note
+              @student_page.select_and_apply_template(@ce3_template, note)
+              note.is_private = false
+              @student_page.set_note_privacy note
+              @student_page.click_save_new_note
+              @student_page.set_new_note_id(note, @test.students[1])
+              expect(BOACUtils.is_note_private? note).to be false
+            end
+          end
+
+          context 'that is not private' do
+
+            before(:all) do
+              @student_page.load_page @test.students[2]
+              @student_page.click_create_new_note
+              @student_page.click_edit_template @ce3_template
+              @ce3_template.is_private = false
+              @student_page.set_note_privacy @ce3_template
+              @student_page.click_update_template
+            end
+
+            it 'can be set to private' do
+              note = Note.new subject: @ce3_template.subject
+              @student_page.select_and_apply_template(@ce3_template, note)
+              note.is_private = true
+              @student_page.set_note_privacy note
+              @student_page.click_save_new_note
+              @student_page.set_new_note_id(note, @test.students[2])
+              expect(BOACUtils.is_note_private? note).to be true
+            end
+
+            it 'can be set to non-private' do
+              note = Note.new subject: @ce3_template.subject
+              @student_page.load_page @test.students[3]
+              @student_page.click_create_new_note
+              @student_page.select_and_apply_template(@ce3_template, note)
+              note.is_private = false
+              @student_page.set_note_privacy note
+              @student_page.click_save_new_note
+              @student_page.set_new_note_id(note, @test.students[3])
+              expect(BOACUtils.is_note_private? note).to be false
+            end
+          end
+        end
       end
 
       context 'when created by a non-CE3 advisor' do
@@ -796,12 +873,37 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
         before(:all) do
           @homepage.log_out
           @homepage.dev_auth @test_l_and_s.advisor
-          @student_page.load_page @student
+          @student_page.load_page @test.students[4]
         end
 
         it 'is automatically non-private' do
-          @student_page.create_note(@note_3, @topics, @attachments)
+          @student_page.create_note(@note_3, @topics, [])
           expect(BOACUtils.is_note_private? @note_3).to be false
+        end
+
+        context 'from a template' do
+
+          before(:all) do
+            @non_ce3_template = NoteTemplate.new title: "Non-CE3 template #{@test.id}"
+            @non_ce3_note = Note.new subject: "Non-CE3 template subject #{@test.id}",
+                            advisor: @test_l_and_s.advisor
+            @student_page.load_page @test.students[5]
+            @student_page.click_create_new_note
+            @student_page.enter_new_note_subject @non_ce3_note
+            @student_page.create_template(@non_ce3_template, @non_ce3_note)
+          end
+
+          it 'does not offer a private option' do
+            @student_page.select_and_apply_template(@non_ce3_template, @non_ce3_note)
+            @student_page.new_note_save_button_element.when_visible 2
+            expect(@student_page.private_radio?).to be false
+          end
+
+          it 'is automatically non-private' do
+            @student_page.click_save_new_note
+            @student_page.set_new_note_id(@non_ce3_note, @test.students[5])
+            expect(BOACUtils.is_note_private? @non_ce3_note).to be false
+          end
         end
       end
 

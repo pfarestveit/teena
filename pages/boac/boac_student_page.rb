@@ -250,8 +250,8 @@ class BOACStudentPage
     term_units_el = div_element(id: "term-#{term_id}-units")
     term_units_el.when_visible 1
     term_gpa_el = div_element(id: "term-#{term_id}-gpa")
-    term_units_min_el = div_element(xpath: "//div[@id='term-#{term_id}-units-allowed']//div[text()='Exception Min Units: ']/following-sibling::div")
-    term_units_max_el = div_element(xpath: "//div[@id='term-#{term_id}-units-allowed']//div[text()='Exception Max Units: ']/following-sibling::div")
+    term_units_min_el = div_element(id: "term-#{term_id}-min-units")
+    term_units_max_el = div_element(id: "term-#{term_id}-max-units")
     term_academic_standing_el = span_element(id: "academic-standing-term-#{term_id}")
     {
       term_units: (term_units_el.text.split.last if term_units_el.exists?),

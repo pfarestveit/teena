@@ -167,6 +167,15 @@ class BOACDegreeCheckPage < BOACDegreeTemplatePage
     div_element(xpath: "//*[@id='category-#{course.id}-is-recommended']")
   end
 
+  # COMPLETED COURSES
+
+  button(:hide_note_button, xpath: '//tr[contains(., "Hide note")]//button')
+
+  def click_hide_note
+    wait_for_update_and_click hide_note_button_element
+    hide_note_button_element.when_not_present 1
+  end
+
   # UNASSIGNED COURSES
 
   elements(:unassigned_course, :row, xpath: '//tr[contains(@id, "unassigned-course-")]')
@@ -225,6 +234,11 @@ class BOACDegreeCheckPage < BOACDegreeTemplatePage
   def unassigned_course_note(course)
     note_el = cell_element(xpath: "#{unassigned_course_xpath course}/td[6]")
     note_el.text.strip if note_el.exists?
+  end
+
+  def expand_unassigned_course_note(course)
+    wait_for_update_and_click link_element(xpath: "#{unassigned_course_xpath course}/td[6]//a")
+    hide_note_button_element.when_visible 1
   end
 
   def click_unassigned_course_select(course)
@@ -287,6 +301,11 @@ class BOACDegreeCheckPage < BOACDegreeTemplatePage
     note_el.text.strip if note_el.exists?
   end
 
+  def expand_junk_course_note(course)
+    wait_for_update_and_click link_element(xpath: "#{junk_course_xpath course}/td[5]//a")
+    hide_note_button_element.when_visible 1
+  end
+
   def click_junk_course_select(course)
     wait_for_update_and_click button_element(xpath: "#{junk_course_xpath course}/td[1]//div[contains(@id, 'assign-course-')]")
   end
@@ -344,6 +363,11 @@ class BOACDegreeCheckPage < BOACDegreeTemplatePage
   def assigned_course_note(course)
     note_el = cell_element(xpath: "#{assigned_course_xpath course}/td[contains(@class, 'td-note')]")
     note_el.text.strip if note_el.exists?
+  end
+
+  def expand_assigned_course_note(course)
+    wait_for_update_and_click link_element(xpath: "#{assigned_course_xpath course}/td[contains(@class, 'td-note')]//a")
+    hide_note_button_element.when_visible 1
   end
 
   def verify_assigned_course_fulfillment(course)

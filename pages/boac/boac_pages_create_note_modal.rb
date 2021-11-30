@@ -453,6 +453,8 @@ module BOACPagesCreateNoteModal
     template.body = note.body
     template.topics = note.topics
     template.attachments = note.attachments
+    template.advisor = note.advisor
+    template.is_private = note.is_private
   end
 
   # Waits for a template record to be created and sets its ID
@@ -493,6 +495,13 @@ module BOACPagesCreateNoteModal
     note.body = template.body
     note.topics = template.topics
     note.attachments = template.attachments
+    note.advisor ||= template.advisor
+  end
+
+  def select_and_apply_template(template, note)
+    click_templates_button
+    wait_for_update_and_click template_option(template)
+    apply_template(template, note)
   end
 
   # Edit
