@@ -495,10 +495,10 @@ module BOACStudentPageAdvisingNote
               !r[:topics]
             end
 
-            if note.attachments&.any?
-              ((r[:attachments].split(';').map(&:strip).sort if r[:attachments]) == note.attachments.map(&:file_name).sort)
-            else
+            if note.attachments&.empty? || (note.is_private && !downloader.is_admin && !downloader.depts.include?(BOACDepartments::ZCEEE.code))
               !r[:attachments]
+            else
+              ((r[:attachments].split(';').map(&:strip).sort if r[:attachments]) == note.attachments.map(&:file_name).sort)
             end
           end
         end

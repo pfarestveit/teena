@@ -1,14 +1,9 @@
 class Note < NoteTemplate
 
-  attr_accessor :source_body_empty,
-                :advisor,
-                :is_private
+  attr_accessor :source_body_empty
 
   def initialize(note_data)
-    note_data.each { |k, v| public_send("#{k}=", v) }
-    @topics ||= []
-    @attachments ||= []
-    @is_private ||= false
+    super note_data
   end
 
 end

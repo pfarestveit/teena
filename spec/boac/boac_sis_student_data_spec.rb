@@ -237,9 +237,9 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
                 end
 
                 visible_max_units = @boac_cohort_page.visible_term_units_max student
-                if api_student_data.term_units_max(student_term) && api_student_data.term_units_max(student_term) != 20.5
+                if api_student_data.term_units_max(student_term) && api_student_data.term_units_max_float(student_term) != '20.5'
                   it "shows the term max units on list view for UID #{student.uid} term #{term_name}" do
-                    expect(visible_max_units).to eql(api_student_data.term_units_max(student_term).to_s)
+                    expect(visible_max_units).to eql(api_student_data.term_units_max(student_term))
                   end
                 else
                   it "shows no term max units on list view for UID #{student.uid} term #{term_name}" do
@@ -248,9 +248,9 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
                 end
 
                 visible_min_units = @boac_cohort_page.visible_term_units_min student
-                if api_student_data.term_units_min(student_term) && api_student_data.term_units_min(student_term) != 0.5
+                if api_student_data.term_units_min(student_term) && api_student_data.term_units_min_float(student_term) != '0.5'
                   it "shows the term min units on list view for UID #{student.uid} term #{term_name}" do
-                    expect(visible_min_units).to eql(api_student_data.term_units_min(student_term).to_s)
+                    expect(visible_min_units).to eql(api_student_data.term_units_min(student_term))
                   end
                 else
                   it "shows no term min units on list view for UID #{student.uid} term #{term_name}" do
@@ -306,7 +306,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
                         it "shows the list view midpoint grade for UID #{student.uid} term #{term_name} course #{course_code}" do
                           expect(visible_course_data[i][:mid_grade]).to eql(course_sis_data[:midpoint])
                         end
-                        if %w(D+ D D- F NP RD I).include? course_sis_data[:midpoint]
+                        if %w(D+ D D− F NP RD I).include? course_sis_data[:midpoint]
                           it "shows an alert for the list view midpoint grade for UID #{student.uid} term #{term_name} course #{course_code}" do
                             expect(visible_course_data[i][:mid_flag]).to be true
                           end
@@ -704,13 +704,13 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
                   end
                 else
                   it "shows the term units total for UID #{student.uid} term #{term_name}" do
-                    expect(visible_term_data[:term_units]).to eql(api_student_data.term_units term)
+                    expect(visible_term_data[:term_units]).to eql(api_student_data.term_units_float term)
                   end
                 end
 
-                if api_student_data.term_units_max(term) && api_student_data.term_units_max(term) != 20.5
+                if api_student_data.term_units_max(term) && api_student_data.term_units_max(term) != '20.5'
                   it "shows the term max units on the student page for UID #{student.uid} term #{term_name}" do
-                    expect(visible_term_data[:term_units_max]).to eql(api_student_data.term_units_max(term).to_s)
+                    expect(visible_term_data[:term_units_max]).to eql(api_student_data.term_units_max_float term)
                   end
                 else
                   it "shows no term max units on the student page for UID #{student.uid} term #{term_name}" do
@@ -718,9 +718,9 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
                   end
                 end
 
-                if api_student_data.term_units_min(term) && api_student_data.term_units_min(term) != 0.5
+                if api_student_data.term_units_min(term) && api_student_data.term_units_min(term) != '0.5'
                   it "shows the term min units on the student page for UID #{student.uid} term #{term_name}" do
-                    expect(visible_term_data[:term_units_min]).to eql(api_student_data.term_units_min(term).to_s)
+                    expect(visible_term_data[:term_units_min]).to eql(api_student_data.term_units_min_float term)
                   end
                 else
                   it "shows no term min units on the student page for UID #{student.uid} term #{term_name}" do
@@ -801,7 +801,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
 
                       it "shows the units for UID #{student.uid} term #{term_name} course #{course_code}" do
                         expect(collapsed_course_data[:units]).not_to be_empty
-                        expect(collapsed_course_data[:units]).to eql(course_sis_data[:units_completed])
+                        expect(collapsed_course_data[:units]).to eql(course_sis_data[:units_completed_float])
                       end
 
                       @boac_student_page.expand_course_data(term_id, i)

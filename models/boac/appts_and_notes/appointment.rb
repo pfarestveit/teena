@@ -1,7 +1,6 @@
 class Appointment < TimelineNoteAppt
 
-  attr_accessor :advisor,
-                :cancel_reason,
+  attr_accessor :cancel_reason,
                 :cancel_detail,
                 :detail,
                 :reserve_advisor,

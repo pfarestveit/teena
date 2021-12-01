@@ -280,12 +280,12 @@ module BOACCohortPages
   end
 
   def visible_term_units_max(student)
-    el = span_element(xpath: "#{student_row_xpath student}//span[contains(@id,\"student-max-units\")]")
+    el = span_element(xpath: "#{student_row_xpath student}//div[contains(@id,\"student-max-units\")]")
     el.text if el.exists?
   end
 
   def visible_term_units_min(student)
-    el = span_element(xpath: "#{student_row_xpath student}//span[contains(@id,\"student-min-units\")]")
+    el = span_element(xpath: "#{student_row_xpath student}//div[contains(@id,\"student-min-units\")]")
     el.text if el.exists?
   end
 

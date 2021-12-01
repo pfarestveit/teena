@@ -135,6 +135,9 @@ unless ENV['DEPS']
           expect(@degree_check_page.unassigned_course_note @completed_course_0).to eql(@completed_course_0.note)
         end
 
+        it('allows a user to expand a note') { @degree_check_page.expand_unassigned_course_note @completed_course_0 }
+        it('allows a user to hide a note') { @degree_check_page.click_hide_note }
+
         it 'allows a user to edit a note' do
           @completed_course_0.note = "EDITED - #{@completed_course_0.note}"
           @degree_check_page.edit_unassigned_course @completed_course_0
@@ -231,7 +234,7 @@ unless ENV['DEPS']
         it 'allows a user to remove a note' do
           @completed_course_0.note = ''
           @degree_check_page.edit_assigned_course @completed_course_0
-          expect(@degree_check_page.assigned_course_note(@completed_course_0).to_s).to eql(@completed_course_0.note)
+          expect(@degree_check_page.assigned_course_note(@completed_course_0).to_s).to eql('—')
         end
 
         it 'allows a user to add a note' do
@@ -239,6 +242,9 @@ unless ENV['DEPS']
           @degree_check_page.edit_assigned_course @completed_course_0
           expect(@degree_check_page.assigned_course_note @completed_course_0).to eql(@completed_course_0.note)
         end
+
+        it('allows a user to expand a note') { @degree_check_page.expand_assigned_course_note @completed_course_0 }
+        it('allows a user to hide a note') { @degree_check_page.click_hide_note }
 
         it 'allows a user to edit a note' do
           @completed_course_0.note = "EDITED - #{@completed_course_0.note}"
@@ -293,7 +299,7 @@ unless ENV['DEPS']
       end
 
       it 'removes the requirement row course note' do
-        expect(@degree_check_page.visible_course_req_note @course_req_1).to be_empty
+        expect(@degree_check_page.visible_course_req_note @course_req_1).to be_nil
       end
 
       it 'restores the course to the unassigned courses list' do
@@ -325,6 +331,9 @@ unless ENV['DEPS']
         @degree_check_page.edit_junk_course @completed_course_0
         expect(@degree_check_page.junk_course_note @completed_course_0).to eql(@completed_course_0.note)
       end
+
+      it('allows a user to expand a note') { @degree_check_page.expand_junk_course_note @completed_course_0 }
+      it('allows a user to hide a note') { @degree_check_page.click_hide_note }
 
       it 'allows a user to change units to another integer' do
         @completed_course_0.units = 6
@@ -386,7 +395,7 @@ unless ENV['DEPS']
         @degree_check_page.assign_completed_course(@completed_course_2, @cat_with_courses_no_subs)
         expect(@degree_check_page.assigned_course_units @completed_course_2).to eql(@completed_course_2.units)
         expect(@degree_check_page.assigned_course_grade @completed_course_2).to eql(@completed_course_2.grade)
-        expect(@degree_check_page.assigned_course_note @completed_course_2).to eql(@completed_course_2.note.to_s)
+        expect(@degree_check_page.assigned_course_note @completed_course_2).to eql('—')
         expect(@degree_check_page.unassigned_course_ccns).not_to include("#{@completed_course_2.term_id}-#{@completed_course_2.ccn}")
       end
 
@@ -402,7 +411,7 @@ unless ENV['DEPS']
         @degree_check_page.assign_completed_course(@completed_course_3, @sub_cat_no_courses)
         expect(@degree_check_page.assigned_course_units @completed_course_3).to eql(@completed_course_3.units)
         expect(@degree_check_page.assigned_course_grade @completed_course_3).to eql(@completed_course_3.grade)
-        expect(@degree_check_page.assigned_course_note @completed_course_3).to eql(@completed_course_3.note.to_s)
+        expect(@degree_check_page.assigned_course_note @completed_course_3).to eql('—')
         expect(@degree_check_page.unassigned_course_ccns).not_to include("#{@completed_course_3.term_id}-#{@completed_course_3.ccn}")
       end
 
@@ -410,7 +419,7 @@ unless ENV['DEPS']
         @degree_check_page.assign_completed_course(@completed_course_4, @sub_cat_with_courses)
         expect(@degree_check_page.assigned_course_units @completed_course_4).to eql(@completed_course_4.units)
         expect(@degree_check_page.assigned_course_grade @completed_course_4).to eql(@completed_course_4.grade)
-        expect(@degree_check_page.assigned_course_note @completed_course_4).to eql(@completed_course_4.note.to_s)
+        expect(@degree_check_page.assigned_course_note @completed_course_4).to eql('—')
         expect(@degree_check_page.unassigned_course_ccns).not_to include("#{@completed_course_4.term_id}-#{@completed_course_4.ccn}")
       end
     end
@@ -481,7 +490,7 @@ unless ENV['DEPS']
         end
 
         it 'creates a row with the an unedited course note' do
-          expect(@degree_check_page.assigned_course_note @cat_copy).to eql(@cat_copy.note.to_s)
+          expect(@degree_check_page.assigned_course_note @cat_copy).to eql('—')
         end
 
         it 'displays an icon identifying itself as a copy' do
@@ -512,7 +521,7 @@ unless ENV['DEPS']
         end
 
         it 'creates a row with the an unedited course note' do
-          expect(@degree_check_page.assigned_course_note @sub_cat_copy).to eql(@sub_cat_copy.note.to_s)
+          expect(@degree_check_page.assigned_course_note @sub_cat_copy).to eql('—')
         end
 
         it 'displays an icon identifying itself as a copy' do
@@ -549,9 +558,9 @@ unless ENV['DEPS']
           end
 
           it 'allows a user to remove a note' do
-            @sub_cat_copy.note = nil
+            @sub_cat_copy.note = ''
             @degree_check_page.edit_assigned_course @sub_cat_copy
-            expect(@degree_check_page.assigned_course_note @sub_cat_copy).to eql(@sub_cat_copy.note.to_s)
+            expect(@degree_check_page.assigned_course_note @sub_cat_copy).to eql('—')
           end
 
           it 'allows a user to change units to another integer' do

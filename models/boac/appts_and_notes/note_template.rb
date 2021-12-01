@@ -2,7 +2,14 @@ class NoteTemplate < TimelineNoteAppt
 
   include Logging
 
-  # attr_accessor
+  attr_accessor :is_private
+
+  def initialize(template_data)
+    template_data.each { |k, v| public_send("#{k}=", v) }
+    @is_private ||= false
+    @topics ||= []
+    @attachments ||= []
+  end
 
   def self.get_user_note_templates(user)
     query = "SELECT note_templates.id
@@ -11,13 +18,7 @@ class NoteTemplate < TimelineNoteAppt
              WHERE authorized_users.uid = '#{user.uid}'
                AND note_templates.deleted_at IS NULL;"
     ids = Utils.query_pg_db_field(BOACUtils.boac_db_credentials, query, 'id').map &:to_i
-    ids.map { |id| NoteTemplate.new(id: id)}
-  end
-
-  def initialize(data)
-    data.each { |k, v| public_send("#{k}=", v) }
-    @topics ||= []
-    @attachments ||= []
+    ids.map { |id| NoteTemplate.new(id: id) }
   end
 
   # Sets and returns a note template ID
