@@ -28,15 +28,15 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
         begin
           note_searches = []
           expected_asc_notes = NessieTimelineUtils.get_asc_notes student
-          expected_boa_notes = BOACUtils.get_student_notes(student).delete_if &:deleted_date
+          expected_boa_notes = BOACUtils.get_student_notes(student).delete_if do |n|
+            n.deleted_date || n.is_private || (!n.subject.nil? && (n.subject.include? 'QA Test'))
+          end
           expected_data_notes = NessieTimelineUtils.get_data_sci_notes student
           expected_ei_notes = NessieTimelineUtils.get_e_and_i_notes student
           expected_sis_notes = NessieTimelineUtils.get_sis_notes student
           logger.warn "UID #{student.uid} has #{expected_sis_notes.length} SIS notes, #{expected_asc_notes.length} ASC notes,
                               #{expected_ei_notes.length} E&I notes, #{expected_data_notes.length} Data Science notes,
-                              and #{expected_boa_notes.length} BOA notes"
-
-          expected_boa_notes.delete_if { |note| !note.subject.nil? && (note.subject.include? 'QA Test') }
+                              and #{expected_boa_notes.length} testable BOA notes"
 
           # Test a representative subset of the total notes
           range = 0..max_note_count_per_src

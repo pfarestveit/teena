@@ -495,6 +495,7 @@ module BOACPagesCreateNoteModal
     note.body = template.body
     note.topics = template.topics
     note.attachments = template.attachments
+    note.is_private = template.is_private
     note.advisor ||= template.advisor
   end
 

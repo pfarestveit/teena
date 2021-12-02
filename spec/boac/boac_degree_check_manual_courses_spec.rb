@@ -178,9 +178,9 @@ unless ENV['DEPS']
         @degree_check_page.edit_unassigned_course @manual_course_0
       end
 
-      it 'allows a user to edit the unit fulfillment' do
-        @manual_course_0.units_reqts = [@degree_check.unit_reqts[0], @degree_check.unit_reqts[1]]
-        @degree_check_page.edit_unassigned_course @manual_course_0
+      it 'does not allow a user to edit the unit fulfillment' do
+        @degree_check_page.click_edit_unassigned_course @manual_course_0
+        expect(@degree_check_page.col_req_course_units_req_select?).to be false
       end
 
       it 'allows a user to edit the note' do
@@ -361,7 +361,7 @@ unless ENV['DEPS']
         end
 
         it 'shows the copied course note' do
-          expect(@degree_check_page.assigned_course_note @cat_copy).to eql(@cat_copy.note.to_s)
+          expect(@degree_check_page.assigned_course_note @cat_copy).to eql( @cat_copy.note || '—')
         end
 
         it 'displays an icon identifying itself as a copy' do
@@ -390,7 +390,7 @@ unless ENV['DEPS']
         end
 
         it 'creates a row with the course note' do
-          expect(@degree_check_page.assigned_course_note @sub_cat_copy).to eql(@sub_cat_copy.note.to_s)
+          expect(@degree_check_page.assigned_course_note @sub_cat_copy).to eql(@sub_cat_copy.note || '—')
         end
 
         it 'displays an icon identifying itself as a copy' do
@@ -451,7 +451,7 @@ unless ENV['DEPS']
           it 'does not affect the original course row' do
             expect(@degree_check_page.assigned_course_name @manual_course_4).to eql(@manual_course_4.name)
             expect(@degree_check_page.assigned_course_units @manual_course_4).to eql(@manual_course_4.units.to_s)
-            expect(@degree_check_page.assigned_course_note @manual_course_4).to eql(@manual_course_4.note.to_s)
+            expect(@degree_check_page.assigned_course_note @manual_course_4).to eql(@manual_course_4.note || '—')
             expect(@degree_check_page.assigned_course_grade @manual_course_4).to eql(@manual_course_4.grade.to_s)
           end
         end
