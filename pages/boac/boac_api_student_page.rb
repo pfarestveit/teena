@@ -70,7 +70,7 @@ class BOACApiStudentPage
       :email => (sis_profile && sis_profile['emailAddress']),
       :email_alternate => (sis_profile && sis_profile['emailAddressAlternate']),
       :phone => (sis_profile && (sis_profile['phoneNumber'].to_s if sis_profile['phoneNumber'])),
-      :cumulative_units => (sis_profile && ((!sis_profile['cumulativeUnits'] || sis_profile['cumulativeUnits'].zero?) ? '--' : formatted_units(sis_profile['cumulativeUnits']))),
+      :cumulative_units => (sis_profile && formatted_units(sis_profile['cumulativeUnits'])),
       :cumulative_gpa => (sis_profile && (sis_profile['cumulativeGPA'].nil? ? '--' : (sprintf '%.3f', sis_profile['cumulativeGPA']).to_s)),
       :majors => majors,
       :minors => minors,
@@ -95,7 +95,7 @@ class BOACApiStudentPage
       if units_as_num.zero?
         '0'
       else
-        (units_as_num == units_as_num.floor) ? units_as_num.floor.to_s : units_as_num.to_s
+        (units_as_num == units_as_num.floor) ? units_as_num.floor.to_s : units_as_num.floor(3).to_s
       end
     end
   end

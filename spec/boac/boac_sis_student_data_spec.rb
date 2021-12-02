@@ -205,8 +205,9 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
                 # Cumulative units
 
                 visible_cumul_units = @boac_cohort_page.visible_cumul_units student
+
                 if student_term == api_student_data.current_term
-                  if api_sis_profile_data[:cumulative_units]
+                  if api_sis_profile_data[:cumulative_units] && !api_sis_profile_data[:cumulative_units].to_i.zero?
                     it "shows the total units for UID #{student.uid} term #{term_name} on the #{test.default_cohort.name} page " do
                       expect(visible_cumul_units).to eql(api_sis_profile_data[:cumulative_units])
                       expect(visible_cumul_units).not_to be_empty
@@ -383,7 +384,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
             end
           end
 
-          if api_sis_profile_data[:cumulative_units]
+          if api_sis_profile_data[:cumulative_units] && !api_sis_profile_data[:cumulative_units].to_i.zero?
             it "shows the total units for UID #{student.uid} on the student page" do
               expect(student_page_sis_data[:cumulative_units]).to eql(api_sis_profile_data[:cumulative_units])
               expect(student_page_sis_data[:cumulative_units]).not_to be_empty

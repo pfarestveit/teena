@@ -321,7 +321,7 @@ class BOACDegreeCheckPage < BOACDegreeTemplatePage
   end
 
   def assigned_course_xpath(course)
-    "//table[@id='column-#{course.req_course.parent.column_num}-courses-of-category-#{course.req_course.parent.id}']//tr[contains(.,\"#{course.name}\")]"
+    "//table[@id='column-#{course.req_course.parent.column_num}-courses-of-category-#{course.req_course.parent.id}']//tr[contains(.,\" #{course.name} \")]"
   end
 
   def assigned_course_row(course)
@@ -631,7 +631,6 @@ class BOACDegreeCheckPage < BOACDegreeTemplatePage
     enter_course_units course.units
     enter_course_grade course.grade
     select_color_option course.color
-    select_course_unit_req course
     enter_course_note course.note
     wait_for_update_and_click create_course_save_button_element
     create_course_save_button_element.when_not_present Utils.short_wait
@@ -657,7 +656,6 @@ class BOACDegreeCheckPage < BOACDegreeTemplatePage
       enter_course_name course.name
       enter_course_grade course.grade
       select_color_option course.color
-      # TODO select_assigned_course_unit_req course
     end
     click_save_course_edit
   end

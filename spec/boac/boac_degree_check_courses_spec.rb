@@ -282,6 +282,17 @@ unless ENV['DEPS']
           expect(@degree_check_page.course_update_button_element.enabled?).to be false
         end
       end
+
+      context 'and the course grade has been updated' do
+
+        before { BOACUtils.update_degree_course_grade(@completed_course_0, @student, 'F+') }
+
+        it 'shows the most current SIS grade' do
+          @degree_check_page.load_page @degree_check
+          @degree_check_page.assigned_course_row(@completed_course_0).when_visible Utils.short_wait
+          expect(@degree_check_page.assigned_course_grade(@completed_course_0)).to eql(@completed_course_0.grade)
+        end
+      end
     end
 
     context 'when unassigned from a course requirement' do
@@ -572,6 +583,17 @@ unless ENV['DEPS']
           it 'does not affect the original course row' do
             expect(@degree_check_page.assigned_course_note @completed_course_4).to eql(@completed_course_4.note.to_s)
             expect(@degree_check_page.assigned_course_units @completed_course_4).to eql(@completed_course_4.units.to_s)
+          end
+        end
+
+        context 'and the course copy grade has been updated' do
+
+          before { BOACUtils.update_degree_course_grade(@completed_course_4, @student, 'F+') }
+
+          it 'shows the most current SIS grade' do
+            @degree_check_page.load_page @degree_check
+            @degree_check_page.assigned_course_row(@sub_cat_copy).when_visible Utils.short_wait
+            expect(@degree_check_page.assigned_course_grade(@sub_cat_copy)).to eql(@completed_course_4.grade)
           end
         end
 
