@@ -325,7 +325,7 @@ module BOACCohortPages
   def sort_by(option)
     logger.info "Sorting by #{option}"
     wait_for_update_and_click cohort_sort_button_element
-    wait_for_update_and_click button_element(id: "sort-by-option-#{option}")
+    wait_for_update_and_click button_element(xpath: "//button[@id='sort-by-option-#{option}']")
     wait_for_spinner
   end
 

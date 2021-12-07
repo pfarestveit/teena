@@ -385,23 +385,15 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
       advisor_groups.each do |group|
 
         it "can be exported for group #{group.name}" do
-          if Utils.headless?
-            logger.warn "Skipping group export test for #{group.name} because the browser is headless"
-          else
-            @group_page.load_page group
-            csv = @group_page.export_student_list group
-            @group_page.verify_student_list_default_export(group.members, csv)
-          end
+          @group_page.load_page group
+          csv = @group_page.export_student_list group
+          @group_page.verify_student_list_default_export(group.members, csv)
         end
 
         it "can be exported with custom columns for group #{group.name}" do
-          if Utils.headless?
-            logger.warn "Skipping group export test for #{group.name} because the browser is headless"
-          else
-            @group_page.load_page group
-            csv = @group_page.export_custom_student_list group
-            @group_page.verify_student_list_custom_export(group.members, csv)
-          end
+          @group_page.load_page group
+          csv = @group_page.export_custom_student_list group
+          @group_page.verify_student_list_custom_export(group.members, csv)
         end
       end
     end

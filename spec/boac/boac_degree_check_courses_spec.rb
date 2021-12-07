@@ -98,21 +98,21 @@ unless ENV['DEPS']
         end
       end
 
-      it 'show the right course units' do
+      it 'shows the right course units' do
         @unassigned_courses.each do |course|
           logger.debug "Checking for #{course.units}"
           expect(@degree_check_page.unassigned_course_units(course)).to eql(course.units)
         end
       end
 
-      it 'show the right course grade' do
+      it 'shows the right course grade' do
         @unassigned_courses.each do |course|
           logger.debug "Checking for #{course.grade}"
           expect(@degree_check_page.unassigned_course_grade(course)).to eql(course.grade)
         end
       end
 
-      it 'show the right course term' do
+      it 'shows the right course term' do
         @unassigned_courses.each do |course|
           term = Utils.sis_code_to_term_name(course.term_id)
           logger.debug "Checking for #{term}"

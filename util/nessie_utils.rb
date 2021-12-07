@@ -396,8 +396,8 @@ class NessieUtils < Utils
 	           ON boac_advisor.advisor_students.advisor_sid = boac_advisor.advisor_roles.sid
            WHERE boac_advisor.advisor_students.academic_plan_code = '#{academic_plan_code}'
            GROUP BY boac_advisor.advisor_students.advisor_sid, boac_advisor.advisor_roles.uid
-           HAVING COUNT(boac_advisor.advisor_students.student_uid) > 200
-           ORDER BY count ASC LIMIT 1;"
+           HAVING COUNT(boac_advisor.advisor_students.student_uid) > 75
+           ORDER BY count DESC LIMIT 1;"
     results = Utils.query_pg_db(nessie_pg_db_credentials, sql)
     results.map { |r| BOACUser.new sis_id: r['sid'], uid: r['uid'] }.first
   end

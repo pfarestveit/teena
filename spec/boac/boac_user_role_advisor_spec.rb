@@ -920,12 +920,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
           it('shows the complete note including private data') { @student_page.verify_note(@note_1, @ce3_advisor) }
 
           it 'allows the advisor to download the note attachments' do
-            if Utils.headless?
-              logger.warn 'Skipping attachment download tests in headless mode'
-              skip
-            else
-              @note_1.attachments.each { |attach| @student_page.download_attachment(@note_1, attach) }
-            end
+            @note_1.attachments.each { |attach| @student_page.download_attachment(@note_1, attach) }
           end
         end
 

@@ -145,7 +145,7 @@ class BOACDegreeCheckPage < BOACDegreeTemplatePage
 
   def visible_course_req_note(course)
     node = course_req_menu?(course) ? '5' : '4'
-    note_el = cell_element(xpath: "#{course_req_xpath course}/td[#{node}]/span")
+    note_el = cell_element(xpath: "#{course_req_xpath course}/td[#{node}]//a")
     note_el.text.strip if note_el.exists?
   end
 

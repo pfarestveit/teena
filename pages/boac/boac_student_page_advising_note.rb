@@ -489,7 +489,7 @@ module BOACStudentPageAdvisingNote
             end
 
             if note.topics&.any?
-              expected_topics = note.topics.map { |t| t.name.downcase }.sort
+              expected_topics = note.topics.map { |t| t.instance_of?(Topic) ? t.name.downcase : t.downcase }.sort
               ((r[:topics].split(';').map(&:strip).map(&:downcase).sort if r[:topics]) == expected_topics)
             else
               !r[:topics]

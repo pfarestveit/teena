@@ -213,6 +213,7 @@ module BOACFilteredCohortPageResults
   def set_cohort_members(cohort, test)
     expected_sids = NessieFilterUtils.cohort_by_last_name(test, cohort.search_criteria)
     cohort.members = test.students.select { |u| expected_sids.include? u.sis_id }
+    expected_sids
   end
 
   # Returns the sequence of SIDs that should be present when search results are sorted by first name

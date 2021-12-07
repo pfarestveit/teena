@@ -215,12 +215,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
           end
 
           it 'can download note attachments' do
-            if Utils.headless?
-              logger.warn 'Skipping attachment download tests in headless mode'
-              skip
-            else
-              note_5.attachments.each { |attach| @student_page.download_attachment(note_5, attach) }
-            end
+            note_5.attachments.each { |attach| @student_page.download_attachment(note_5, attach) }
           end
 
           it 'can visit the note permalink' do
@@ -438,12 +433,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
         end
 
         it 'can download non-deleted attachments' do
-          if Utils.headless?
-            logger.warn 'Skipping attachment download tests in headless mode'
-            skip
-          else
-            note_5.attachments.reject(&:deleted_at).each { |attach| @student_page.download_attachment(note_5, attach) }
-          end
+          note_5.attachments.reject(&:deleted_at).each { |attach| @student_page.download_attachment(note_5, attach) }
         end
       end
 
