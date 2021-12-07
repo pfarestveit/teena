@@ -196,7 +196,7 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
                     it("shows no delete button for imported #{test_case}") { expect(has_delete_button).to be false }
                   end
 
-                  if @student_page.item_attachment_el(appt, attach.file_name).tag_name == 'a' && "#{@driver.browser}" != 'firefox' && !Utils.headless?
+                  if @student_page.item_attachment_el(appt, attach.file_name).tag_name == 'a' && "#{@driver.browser}" != 'firefox'
                     begin
                       file_size = @student_page.download_attachment(appt, attach, student)
                       if file_size

@@ -219,8 +219,8 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
                         it("shows no delete button for imported #{test_case}") { expect(has_delete_button).to be false }
                       end
 
-                      # TODO - get downloads working on Firefox, since the profile prefs aren't having the desired effect; plus headless downloads don't work on Chrome
-                      if @student_page.item_attachment_el(note, attach.file_name)&.tag_name == 'a' && "#{@driver.browser}" != 'firefox' && !Utils.headless?
+                      # TODO - get downloads working on Firefox, since the profile prefs aren't having the desired effect
+                      if @student_page.item_attachment_el(note, attach.file_name)&.tag_name == 'a' && "#{@driver.browser}" != 'firefox'
                         begin
                           file_size = @student_page.download_attachment(note, attach, student)
                           if file_size

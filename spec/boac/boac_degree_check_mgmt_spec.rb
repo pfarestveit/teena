@@ -251,7 +251,7 @@ unless ENV['DEPS']
           end
 
           it 'overwrites a requirement note' do
-            expect(@degree_check_page.assigned_course_note(@completed_course_0).to_s).to be_empty
+            expect(@degree_check_page.assigned_course_note(@completed_course_0).to_s).to eql('—')
           end
         end
 

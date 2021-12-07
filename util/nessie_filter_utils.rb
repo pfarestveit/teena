@@ -549,12 +549,12 @@ class NessieFilterUtils < NessieUtils
   end
 
   def self.cohort_by_units_complete_asc(test, filter)
-    sort = cohort_by_units_complete_sort.merge!({direction: ' ASC', nulls: ' NULLS FIRST'})
+    sort = cohort_by_units_complete_sort.merge!({direction: ' ASC', nulls: ' NULLS LAST'})
     get_cohort_result(test, filter, sort)
   end
 
   def self.cohort_by_units_complete_desc(test, filter)
-    sort = cohort_by_units_complete_sort.merge!({direction: ' DESC', nulls: ' NULLS FIRST'})
+    sort = cohort_by_units_complete_sort.merge!({direction: ' DESC', nulls: ' NULLS LAST'})
     get_cohort_result(test, filter, sort)
   end
 
@@ -657,18 +657,17 @@ class NessieFilterUtils < NessieUtils
     {
         table: 'student.student_academic_status',
         col: 'gpa',
-        nulls: ' NULLS FIRST',
         group_by: true
     }
   end
 
   def self.list_by_gpa_asc(sids)
-    sort = list_by_gpa_sort.merge!({direction: ' ASC'})
+    sort = list_by_gpa_sort.merge!({nulls: ' NULLS FIRST', direction: ' ASC'})
     get_list_result(sids, sort)
   end
 
   def self.list_by_gpa_desc(sids)
-    sort = list_by_gpa_sort.merge!({direction: ' DESC'})
+    sort = list_by_gpa_sort.merge!({nulls: ' NULLS LAST',direction: ' DESC'})
     get_list_result(sids, sort)
   end
 
@@ -701,18 +700,17 @@ class NessieFilterUtils < NessieUtils
     {
         table: 'student.student_academic_status',
         col: 'units',
-        nulls: ' NULLS FIRST',
         group_by: true
     }
   end
 
   def self.list_by_units_complete_asc(sids)
-    sort = list_by_units_complete_sort.merge!({direction: ' ASC'})
+    sort = list_by_units_complete_sort.merge!({nulls: ' NULLS FIRST', direction: ' ASC'})
     get_list_result(sids, sort)
   end
 
   def self.list_by_units_complete_desc(sids)
-    sort = list_by_units_complete_sort.merge!({direction: ' DESC'})
+    sort = list_by_units_complete_sort.merge!({nulls: ' NULLS LAST', direction: ' DESC'})
     get_list_result(sids, sort)
   end
 
