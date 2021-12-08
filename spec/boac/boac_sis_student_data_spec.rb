@@ -24,7 +24,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
 
       @driver = Utils.launch_browser test.chrome_profile
       @boac_homepage = BOACHomePage.new @driver
-      @boac_cohort_page = BOACUtils.shuffle_max_users ? BOACGroupPage.new(@driver) : BOACFilteredCohortPage.new(@driver, test.advisor)
+      @boac_cohort_page = BOACGroupPage.new @driver
       @boac_student_page = BOACStudentPage.new @driver
       @boac_admin_page = BOACFlightDeckPage.new @driver
       @boac_search_page = BOACSearchResultsPage.new @driver
@@ -51,7 +51,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
 
           # COHORT PAGE SIS DATA
 
-          BOACUtils.shuffle_max_users ? @boac_cohort_page.load_page(test.default_cohort) : @boac_cohort_page.load_cohort(test.default_cohort)
+          @boac_cohort_page.load_page test.default_cohort
           cohort_page_sis_data = @boac_cohort_page.visible_sis_data student
 
           if api_sis_profile_data[:academic_career_status] == 'Completed'

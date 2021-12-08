@@ -126,7 +126,7 @@ class BOACTestConfig < TestConfig
 
                      elsif @cohort_members
                        # Running tests against a cohort of students (i.e., a list presented in the UI)
-                       BOACUtils.shuffle_max_users ? @cohort_members.shuffle! : @cohort_members.sort_by(&:last_name)
+                       @cohort_members.shuffle!
                        @cohort_members[0..(config - 1)]
 
                      elsif opts[:with_notes]
@@ -144,7 +144,7 @@ class BOACTestConfig < TestConfig
                        logger.info "There are #{e_form_sids.length} students with eForms"
                        sis_note_sids = boa_sids & NessieTimelineUtils.get_sids_with_notes_of_src(TimelineRecordSource::SIS)
                        logger.info "There are #{sis_note_sids.length} students with SIS notes that have attachments"
-                       [asc_note_sids, boa_note_sids, data_note_sids, e_and_i_note_sids, sis_note_sids].each { |s| s.shuffle! } if BOACUtils.shuffle_max_users
+                       [asc_note_sids, boa_note_sids, data_note_sids, e_and_i_note_sids, sis_note_sids].each &:shuffle!
                        range = 0..(config - 1)
                        test_sids = (asc_note_sids[range] + boa_note_sids[range] + data_note_sids[range] +
                          e_and_i_note_sids[range] + e_form_sids[range] + sis_note_sids[range]).uniq
@@ -156,7 +156,7 @@ class BOACTestConfig < TestConfig
                        logger.info "There are #{sis_appts_sids.length} students with SIS appointments"
                        ycbm_appts_sids = boa_sids & NessieTimelineUtils.get_sids_with_ycbm_appts
                        logger.info "There are #{ycbm_appts_sids.length} students with YCBM appointments"
-                       [sis_appts_sids, ycbm_appts_sids].each { |a| a.shuffle! } if BOACUtils.shuffle_max_users
+                       [sis_appts_sids, ycbm_appts_sids].each &:shuffle!
                        test_sids = (sis_appts_sids[0..(config - 1)] + ycbm_appts_sids[0..(config - 1)]).uniq
                        @students.select { |s| test_sids.include? s.sis_id }
                      else
