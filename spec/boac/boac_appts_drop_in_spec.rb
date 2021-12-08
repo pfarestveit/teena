@@ -7,7 +7,7 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
   describe 'BOA' do
 
     before(:all) do
-      dept = BOACDepartments::DEPARTMENTS.find { |d| d.code == BOACUtils.appts_drop_in_dept }
+      dept = BOACDepartments::L_AND_S
       @other_dept = BOACDepartments::DEPARTMENTS.find { |d| ![dept, BOACDepartments::ADMIN].include? d }
       authorized_users = BOACUtils.get_authorized_users
       @test = BOACTestConfig.new
