@@ -172,7 +172,7 @@ module BOACPagesCreateNoteModal
   radio_button(:private_radio, xpath: '//input[@id="note-is-private-radio-button"]/..')
 
   def set_note_privacy(note)
-    if note.advisor&.dept_memberships.find { |m| m.dept == BOACDepartments::ZCEEE }
+    if note.advisor&.dept_memberships&.find { |m| m.dept == BOACDepartments::ZCEEE } || note.advisor&.depts&.include?(BOACDepartments::ZCEEE)
       if note.is_private
         logger.info 'Setting note to private'
         wait_for_update_and_click private_radio_element

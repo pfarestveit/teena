@@ -338,9 +338,12 @@ module BOACPages
   def set_auto_suggest(element, name)
     wait_for_element_and_type(element, name)
     sleep Utils.click_wait
-    wait_until(Utils.short_wait) { auto_suggest_option_elements.any? }
-    link_element = auto_suggest_option_elements.find { |el| el.text.downcase.include? name.downcase }
-    wait_for_load_and_click link_element
+    wait_until(Utils.short_wait) do
+      auto_suggest_option_elements.any?
+      auto_suggest_option_elements.find { |el| el.text.downcase.include? name.downcase }
+    end
+    el = auto_suggest_option_elements.find { |el| el.text.downcase.include? name.downcase }
+    el.click
   end
 
   # Sets the "Advisor" notes search option

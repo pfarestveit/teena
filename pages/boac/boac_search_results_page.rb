@@ -21,6 +21,7 @@ class BOACSearchResultsPage
     wait_until(Utils.short_wait) do
       h1_element(xpath: '//*[contains(@id, "results") and contains(@class, "header")]').exists? || no_results_msg.exists?
     end
+    sleep 1
     if no_results_msg.visible?
       logger.info 'No results found'
       0

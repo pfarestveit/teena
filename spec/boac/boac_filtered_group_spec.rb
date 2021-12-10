@@ -71,7 +71,8 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
         it "allows the user to filter a group by active students with #{cohort.search_criteria.list_filters}" do
           # Add the groups to the search criteria, and restrict the searchable data to the group members
           cohort.search_criteria.curated_groups = [@group_1.id.to_s, @group_2.id.to_s]
-          expected = @cohort_page.set_cohort_members(cohort, test)
+          @cohort_page.set_cohort_members(cohort, test)
+          expected = cohort.members.map &:sis_id
 
           @cohort_page.click_sidebar_create_filtered
           @cohort_page.perform_student_search cohort

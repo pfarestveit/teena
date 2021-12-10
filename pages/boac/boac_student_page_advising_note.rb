@@ -431,7 +431,7 @@ module BOACStudentPageAdvisingNote
     names << notes_export_csv_file_name(student)
     attachments = []
     notes.map do |n|
-      unless n.instance_of?(TimelineEForm) || (n.is_private && !downloader.is_admin && !downloader.depts.include?(BOACDepartments::ZCEEE.code))
+      unless n.instance_of?(TimelineEForm) || (n.is_private && !downloader.is_admin && !downloader.depts.include?(BOACDepartments::ZCEEE))
         n.attachments.delete_if &:deleted_at
         attachments += n.attachments
       end

@@ -1,6 +1,6 @@
 class DegreeProgressPerm
 
-  attr_reader :desc
+  attr_reader :desc, :user_perm
 
   def initialize(desc, user_perm)
     @desc = desc

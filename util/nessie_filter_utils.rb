@@ -24,11 +24,18 @@ class NessieFilterUtils < NessieUtils
         AND student.student_term_gpas.units_taken_for_gpa != '0.0') AS gpa_last_term"
   end
 
-  def self.units_in_prog_sub_query
+  def self.cohort_units_in_prog_sub_query
     "(SELECT student.student_enrollment_terms.enrolled_units
       FROM student.student_enrollment_terms
       WHERE student.student_enrollment_terms.sid = student_academic_status.sid
         AND student.student_enrollment_terms.term_id = '#{BOACUtils.term_code}') AS units_in_progress"
+  end
+
+  def self.user_list_units_in_prog_sub_query
+    "COALESCE((SELECT student.student_enrollment_terms.enrolled_units
+               FROM student.student_enrollment_terms
+               WHERE student.student_enrollment_terms.sid = student_academic_status.sid
+                 AND student.student_enrollment_terms.term_id = '#{BOACUtils.term_code}'), 0) AS units_in_progress"
   end
 
   #############
@@ -521,7 +528,7 @@ class NessieFilterUtils < NessieUtils
         table: 'student.student_enrollment_terms',
         col: 'enrolled_units',
         nulls: ' NULLS LAST',
-        select: units_in_prog_sub_query,
+        select: cohort_units_in_prog_sub_query,
         term_id: BOACUtils.term_code,
         order_by: 'units_in_progress',
         group_by: true
@@ -677,7 +684,7 @@ class NessieFilterUtils < NessieUtils
     {
         table: 'student.student_enrollment_terms',
         col: 'enrolled_units',
-        select: units_in_prog_sub_query,
+        select: user_list_units_in_prog_sub_query,
         term_id: BOACUtils.term_code,
         order_by: 'units_in_progress',
         group_by: true
