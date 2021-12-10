@@ -728,7 +728,7 @@ class BOACUtils < Utils
             :created_date => Time.parse(r['created_at'].to_s).utc.localtime,
             :updated_date => Time.parse(r['updated_at'].to_s).utc.localtime,
             :deleted_date => (Time.parse(r['deleted_at'].to_s) if r['deleted_at']),
-            :is_private => r['is_private']
+            :is_private => (r['is_private'] == 't')
         }
 
         attachments = attach_results.select { |a| a['note_id'] == note_data[:id] }.map do |a|

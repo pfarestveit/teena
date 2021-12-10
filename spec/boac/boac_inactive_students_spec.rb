@@ -90,8 +90,7 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
 
         it('show a name') { expect(@visible_profile_data[:name]).to eql(@inactive_student.full_name) }
         it('show an inactive indicator') { expect(@visible_profile_data[:inactive]).to be true }
-        it('show no email') { expect(@visible_profile_data[:email]).to be_nil }
-        it('show no phone') { expect(@visible_profile_data[:phone]).to be_nil }
+        it('show no phone') { expect(@visible_profile_data[:phone]).to be_empty }
         it('show a GPA if one exists') { expect(@visible_profile_data[:cumulative_gpa]).to eql(@inactive_student_profile[:cumulative_gpa]) }
         it('offer no class page links') { expect(@student_page.class_page_link_elements).to be_empty }
       end
@@ -121,10 +120,8 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
 
         it('show a name') { expect(@visible_profile_data[:name]).to eql(@completed_student.full_name) }
         it('show no inactive indicator') { expect(@visible_profile_data[:inactive]).to be false }
-        it('show no email') { expect(@visible_profile_data[:email]).to be_nil }
-        it('show no phone') { expect(@visible_profile_data[:phone]).to be_nil }
+        it('show no phone') { expect(@visible_profile_data[:phone]).to be_empty }
         it('show a GPA if one exists') { expect(@visible_profile_data[:cumulative_gpa]).to eql(@completed_student_profile[:cumulative_gpa]) }
-        # TODO - add degree tests back once we're showing all degrees
         it('offer no class page links') { expect(@student_page.class_page_link_elements).to be_empty }
       end
     end

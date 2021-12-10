@@ -372,11 +372,17 @@ unless ENV['DEPS']
         end
 
         it 'shows all degree check updated dates' do
-          expect(@degree_check_history_page.visible_degree_update_dates).to eql(@degrees.map { |d| d.updated_date.strftime('%b %-d, %Y') })
+          expected = @degrees.map { |d| d.updated_date.strftime('%b %-d, %Y') }
+          @degree_check_history_page.wait_until(1, "Expected '#{expected}' got '#{@degree_check_history_page.visible_degree_update_dates}'") do
+            @degree_check_history_page.visible_degree_update_dates == expected
+          end
         end
 
         it 'shows the updated by advisor' do
-          expect(@degree_check_history_page.visible_degree_updated_by(@degree_check)).to eql(test.advisor.full_name)
+          expected = test.advisor.full_name
+          @degree_check_history_page.wait_until(1, "Expected '#{expected}' got '#{@degree_check_history_page.visible_degree_updated_by(@degree_check)}'") do
+            @degree_check_history_page.visible_degree_updated_by(@degree_check) == expected
+          end
         end
 
         it 'offers a create-new-degree button' do

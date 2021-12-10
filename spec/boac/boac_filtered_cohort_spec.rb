@@ -45,7 +45,8 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
         it "shows all the students sorted by Last Name who match #{cohort.search_criteria.list_filters}" do
           @cohort_page.click_sidebar_create_filtered
           @cohort_page.perform_student_search cohort
-          expected = @cohort_page.set_cohort_members(cohort, test)
+          @cohort_page.set_cohort_members(cohort, test)
+          expected = NessieFilterUtils.cohort_by_last_name(test, cohort.search_criteria)
           if cohort.members.empty?
             @cohort_page.wait_until(Utils.short_wait) { @cohort_page.results_count == 0 }
           else
