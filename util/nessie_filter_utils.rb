@@ -10,16 +10,16 @@ class NessieFilterUtils < NessieUtils
     if sort && (sort[:col] != 'first_name')
       select =  sort[:select] || "#{sort[:table]}.#{sort[:col]}"
     end
-    "SELECT DISTINCT student.student_academic_status.sid,
-                     LOWER(student.student_academic_status.last_name),
-                     LOWER(student.student_academic_status.first_name)#{+ ', ' + select if select}
-     FROM student.student_academic_status"
+    "SELECT DISTINCT student.student_profile_index.sid,
+                     LOWER(student.student_profile_index.last_name),
+                     LOWER(student.student_profile_index.first_name)#{+ ', ' + select if select}
+     FROM student.student_profile_index"
   end
 
   def self.previous_term_gpa_sub_query(term)
     "(SELECT student.student_term_gpas.gpa
       FROM student.student_term_gpas
-      WHERE student.student_term_gpas.sid = student_academic_status.sid
+      WHERE student.student_term_gpas.sid = student_profile_index.sid
         AND student.student_term_gpas.term_id = '#{term}'
         AND student.student_term_gpas.units_taken_for_gpa != '0.0') AS gpa_last_term"
   end
@@ -27,14 +27,14 @@ class NessieFilterUtils < NessieUtils
   def self.cohort_units_in_prog_sub_query
     "(SELECT student.student_enrollment_terms.enrolled_units
       FROM student.student_enrollment_terms
-      WHERE student.student_enrollment_terms.sid = student_academic_status.sid
+      WHERE student.student_enrollment_terms.sid = student_profile_index.sid
         AND student.student_enrollment_terms.term_id = '#{BOACUtils.term_code}') AS units_in_progress"
   end
 
   def self.user_list_units_in_prog_sub_query
     "COALESCE((SELECT student.student_enrollment_terms.enrolled_units
                FROM student.student_enrollment_terms
-               WHERE student.student_enrollment_terms.sid = student_academic_status.sid
+               WHERE student.student_enrollment_terms.sid = student_profile_index.sid
                  AND student.student_enrollment_terms.term_id = '#{BOACUtils.term_code}'), 0) AS units_in_progress"
   end
 
@@ -62,16 +62,16 @@ class NessieFilterUtils < NessieUtils
   end
 
   def self.entering_term_cond(filter, conditions_list)
-    conditions_list << "student.student_academic_status.entering_term IN (#{in_op filter.entering_terms})" if filter.entering_terms&.any?
+    conditions_list << "student.student_profile_index.entering_term IN (#{in_op filter.entering_terms})" if filter.entering_terms&.any?
   end
 
   def self.expected_grad_term_cond(filter, conditions_list)
-    conditions_list << "student.student_academic_status.expected_grad_term IN (#{in_op filter.expected_grad_terms})" if filter.expected_grad_terms&.any?
+    conditions_list << "student.student_profile_index.expected_grad_term IN (#{in_op filter.expected_grad_terms})" if filter.expected_grad_terms&.any?
   end
 
   def self.gpa_cond(filter, conditions_list)
     if filter.gpa&.any?
-      ranges = filter.gpa.map { |range| "(student.student_academic_status.gpa BETWEEN #{range['min']} AND #{range['max']})" }
+      ranges = filter.gpa.map { |range| "(student.student_profile_index.gpa BETWEEN #{range['min']} AND #{range['max']})" }
       conditions_list << "(#{ranges.join(' OR ')})"
     end
   end
@@ -102,7 +102,7 @@ class NessieFilterUtils < NessieUtils
   end
 
   def self.level_cond(filter, conditions_list)
-    conditions_list << "student.student_academic_status.level IN (#{in_op filter.level})" if filter.level&.any?
+    conditions_list << "student.student_profile_index.level IN (#{in_op filter.level})" if filter.level&.any?
   end
 
   def self.major_cond(filter, conditions_list)
@@ -119,17 +119,17 @@ class NessieFilterUtils < NessieUtils
   end
 
   def self.transfer_cond(filter, conditions_list)
-    conditions_list << "student.student_academic_status.transfer IS TRUE" if filter.transfer_student
+    conditions_list << "student.student_profile_index.transfer IS TRUE" if filter.transfer_student
   end
 
   def self.units_completed_cond(filter, conditions_list)
     if filter.units_completed&.any?
       ranges = filter.units_completed.map do |range|
         if range.include? '+'
-          "student.student_academic_status.units >= 120"
+          "student.student_profile_index.units >= 120"
         else
           range = range.split('-').map &:strip
-          "(student.student_academic_status.units BETWEEN #{range[0]} AND #{range[1]}.999)"
+          "(student.student_profile_index.units BETWEEN #{range[0]} AND #{range[1]}.999)"
         end
       end
       conditions_list << "(#{ranges.join(' OR ')})"
@@ -172,9 +172,9 @@ class NessieFilterUtils < NessieUtils
     if filter.last_name&.any?
       ranges = filter.last_name.map do |range|
         if range['min'] == range['max']
-          "LOWER(student.student_academic_status.last_name) LIKE '#{range['min']}'%"
+          "LOWER(student.student_profile_index.last_name) LIKE '#{range['min']}'%"
         else
-          "LOWER(student.student_academic_status.last_name) BETWEEN '#{range['min']}' AND '#{range['max']}zz'"
+          "LOWER(student.student_profile_index.last_name) BETWEEN '#{range['min']}' AND '#{range['max']}zz'"
         end
       end
       conditions_list << "(#{ranges.join(' OR ')})"
@@ -214,7 +214,7 @@ class NessieFilterUtils < NessieUtils
   end
 
   def self.where(test, filter)
-    clause = 'WHERE '
+    clause = 'WHERE student.student_profile_index.hist_enr IS FALSE AND '
     conditions_list = []
 
     # GLOBAL FILTERS
@@ -256,7 +256,7 @@ class NessieFilterUtils < NessieUtils
 
   def self.filter_join_clauses(filter)
     joins = []
-    sid = 'student.student_academic_status.sid'
+    sid = 'student.student_profile_index.sid'
 
     acad_standing_join = "LEFT JOIN student.academic_standing ON #{sid} = student.academic_standing.sid"
     joins << acad_standing_join if filter.academic_standing&.any?
@@ -313,8 +313,8 @@ class NessieFilterUtils < NessieUtils
 
   def self.join(filter_joins, sort=nil)
     if sort
-      join = "LEFT JOIN #{sort[:table]} ON student.student_academic_status.sid = #{sort[:table]}.sid"
-      unless sort[:table] == 'student.student_academic_status' || filter_joins.include?(join)
+      join = "LEFT JOIN #{sort[:table]} ON student.student_profile_index.sid = #{sort[:table]}.sid"
+      unless sort[:table] == 'student.student_profile_index' || filter_joins.include?(join)
         filter_joins << " #{join}"
       end
     end
@@ -329,9 +329,9 @@ class NessieFilterUtils < NessieUtils
     if sort && (sort[:col] != 'first_name')
       group_by = "#{sort[:table]}.#{sort[:col]}" if sort[:group_by]
     end
-    "GROUP BY student.student_academic_status.sid,
-             student.student_academic_status.last_name,
-             student.student_academic_status.first_name#{ + ', ' + group_by if group_by}"
+    "GROUP BY student.student_profile_index.sid,
+             student.student_profile_index.last_name,
+             student.student_profile_index.first_name#{ + ', ' + group_by if group_by}"
   end
 
   ################
@@ -339,17 +339,17 @@ class NessieFilterUtils < NessieUtils
   ################
 
   def self.default_sort
-    'LOWER(student.student_academic_status.last_name),
-     LOWER(student.student_academic_status.first_name),
-     student.student_academic_status.sid ASC'
+    'LOWER(student.student_profile_index.last_name),
+     LOWER(student.student_profile_index.first_name),
+     student.student_profile_index.sid ASC'
   end
 
   def self.order_by(sort)
     if sort
       if sort[:col] == 'first_name'
-        'ORDER BY LOWER(student.student_academic_status.first_name),
-                  LOWER(student.student_academic_status.last_name),
-                  student.student_academic_status.sid'
+        'ORDER BY LOWER(student.student_profile_index.first_name),
+                  LOWER(student.student_profile_index.last_name),
+                  student.student_profile_index.sid'
       elsif sort[:order_by]
         "ORDER BY #{sort[:order_by]}#{sort[:direction]}#{sort[:nulls]},
                   #{default_sort}"
@@ -386,7 +386,7 @@ class NessieFilterUtils < NessieUtils
 
   def self.cohort_by_first_name(test, filter)
     sort = {
-        table: 'student.student_academic_status',
+        table: 'student.student_profile_index',
         col: 'first_name'
     }
     get_cohort_result(test, filter, sort)
@@ -396,7 +396,7 @@ class NessieFilterUtils < NessieUtils
 
   def self.cohort_by_level(test, filter)
     sort = {
-        table: 'student.student_academic_status',
+        table: 'student.student_profile_index',
         col: 'level',
         group_by: true
     }
@@ -421,7 +421,7 @@ class NessieFilterUtils < NessieUtils
 
   def self.cohort_by_matriculation(test, filter)
     sort = {
-        table: 'student.student_academic_status',
+        table: 'student.student_profile_index',
         col: 'entering_term',
         nulls: ' NULLS LAST',
         group_by: true
@@ -447,7 +447,7 @@ class NessieFilterUtils < NessieUtils
 
   def self.cohort_by_gpa_sort
     {
-        table: 'student.student_academic_status',
+        table: 'student.student_profile_index',
         col: 'gpa',
         group_by: true
     }
@@ -504,7 +504,7 @@ class NessieFilterUtils < NessieUtils
 
   def self.cohort_by_terms_in_attend_sort
     {
-        table: 'student.student_academic_status',
+        table: 'student.student_profile_index',
         col: 'terms_in_attendance',
         nulls: ' NULLS LAST',
         group_by: true
@@ -549,7 +549,7 @@ class NessieFilterUtils < NessieUtils
 
   def self.cohort_by_units_complete_sort
     {
-        table: 'student.student_academic_status',
+        table: 'student.student_profile_index',
         col: 'units',
         group_by: true
     }
@@ -572,9 +572,9 @@ class NessieFilterUtils < NessieUtils
   def self.order_by_list(sort)
     if sort
       if sort[:col] == 'last_name'
-        "ORDER BY LOWER(student.student_academic_status.last_name)#{sort[:direction]}#{sort[:nulls]},
-                  LOWER(student.student_academic_status.first_name),
-                  student.student_academic_status.sid"
+        "ORDER BY LOWER(student.student_profile_index.last_name)#{sort[:direction]}#{sort[:nulls]},
+                  LOWER(student.student_profile_index.first_name),
+                  student.student_profile_index.sid"
       elsif sort[:order_by]
         "ORDER BY #{sort[:order_by]}#{sort[:direction]}#{sort[:nulls]},
                   #{default_sort}"
@@ -591,7 +591,7 @@ class NessieFilterUtils < NessieUtils
     sid_list = sids.map {|i| "'#{i}'"}.join(', ')
     sql = "#{select_from sort}
            #{join('', sort)}
-           WHERE student.student_academic_status.sid IN (#{sid_list})
+           WHERE student.student_profile_index.sid IN (#{sid_list})
            #{group_by sort}
            #{order_by_list sort}"
     result = NessieUtils.query_pg_db(NessieUtils.nessie_pg_db_credentials, sql)
@@ -606,7 +606,7 @@ class NessieFilterUtils < NessieUtils
 
   def self.list_by_last_name_desc(sids)
     sort = {
-        table: 'student.student_academic_status',
+        table: 'student.student_profile_index',
         col: 'last_name',
         direction: ' DESC'
     }
@@ -639,10 +639,10 @@ class NessieFilterUtils < NessieUtils
 
   def self.list_by_grad_term_sort
     {
-        table: 'student.student_academic_status',
+        table: 'student.student_profile_index',
         col: 'expected_grad_term',
         nulls: ' NULLS FIRST',
-        select: 'student.student_academic_status.expected_grad_term AS term',
+        select: 'student.student_profile_index.expected_grad_term AS term',
         order_by: 'term',
         group_by: true
     }
@@ -662,7 +662,7 @@ class NessieFilterUtils < NessieUtils
 
   def self.list_by_gpa_sort
     {
-        table: 'student.student_academic_status',
+        table: 'student.student_profile_index',
         col: 'gpa',
         group_by: true
     }
@@ -705,7 +705,7 @@ class NessieFilterUtils < NessieUtils
 
   def self.list_by_units_complete_sort
     {
-        table: 'student.student_academic_status',
+        table: 'student.student_profile_index',
         col: 'units',
         group_by: true
     }

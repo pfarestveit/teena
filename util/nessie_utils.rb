@@ -82,12 +82,13 @@ class NessieUtils < Utils
   # Returns an array of students who have current academic status
   # @return [Array<BOACUser>]
   def self.get_all_students
-    query = 'SELECT student_academic_status.uid AS uid,
-                    student_academic_status.sid AS sid,
-                    student_academic_status.first_name AS first_name,
-                    student_academic_status.last_name AS last_name,
-                    student_academic_status.email_address AS email
-             FROM student.student_academic_status
+    query = 'SELECT student_profile_index.uid AS uid,
+                    student_profile_index.sid AS sid,
+                    student_profile_index.first_name AS first_name,
+                    student_profile_index.last_name AS last_name,
+                    student_profile_index.email_address AS email
+             FROM student.student_profile_index
+             WHERE student_profile_index.hist_enr IS FALSE
              ORDER BY uid;'
     results = Utils.query_pg_db(nessie_pg_db_credentials, query)
 
@@ -107,7 +108,7 @@ class NessieUtils < Utils
   # Returns all SIDs present on the student_academic_status table
   # @return [Array<String>]
   def self.get_all_sids
-    query = 'SELECT sid FROM student.student_academic_status ORDER BY sid ASC;'
+    query = 'SELECT sid FROM student.student_profile_index ORDER BY sid ASC;'
     results = Utils.query_pg_db(nessie_pg_db_credentials, query)
     results.map { |r| r['sid'] }
   end
