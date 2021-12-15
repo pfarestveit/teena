@@ -24,18 +24,18 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
 
       @driver = Utils.launch_browser test.chrome_profile
       @boac_homepage = BOACHomePage.new @driver
-      @boac_cohort_page = BOACGroupPage.new @driver
+      @boac_cohort_page = BOACGroupStudentsPage.new @driver
       @boac_student_page = BOACStudentPage.new @driver
       @boac_admin_page = BOACFlightDeckPage.new @driver
       @boac_search_page = BOACSearchResultsPage.new @driver
 
       @boac_homepage.dev_auth test.advisor
 
-      if @boac_cohort_page.instance_of? BOACFilteredCohortPage
+      if @boac_cohort_page.instance_of? BOACFilteredStudentsPage
         @boac_cohort_page.search_and_create_new_cohort(test.default_cohort, default: true)
       else
         test.default_cohort = CuratedGroup.new(:name => "Group #{test.id}")
-        @boac_homepage.click_sidebar_create_curated_group
+        @boac_homepage.click_sidebar_create_student_group
         @boac_cohort_page.create_group_with_bulk_sids(test.test_students, test.default_cohort)
       end
 

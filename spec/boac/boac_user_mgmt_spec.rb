@@ -42,7 +42,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
       @admin_page = BOACFlightDeckPage.new @driver
       @pax_manifest_page = BOACPaxManifestPage.new @driver
       @class_page = BOACClassListViewPage.new @driver
-      @cohort_page = BOACFilteredCohortPage.new(@driver, @add_edit_user)
+      @cohort_page = BOACFilteredStudentsPage.new(@driver, @add_edit_user)
       @intake_desk_page = BOACApptIntakeDeskPage.new @driver
       @student_page = BOACStudentPage.new @driver
 

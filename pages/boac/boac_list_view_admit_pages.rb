@@ -1,6 +1,4 @@
-require_relative '../../util/spec_helper'
-
-module BOACAdmitListPages
+module BOACListViewAdmitPages
 
   include Logging
   include PageObject
@@ -9,47 +7,10 @@ module BOACAdmitListPages
   include BOACPagination
   include BOACAdmitPages
 
-  elements(:admit_sid, :span, xpath: '//h2[@id="admit-results-page-header"]/following-sibling::div//span[text()="C S I D"]/following-sibling::span')
-
-  # Returns all the CS IDs visible in a list of admits
-  # @return [Array<String>]
-  def search_result_all_row_cs_ids
-    admit_sid_elements.map &:text
+  def admit_row_xpath(admit)
+    "//tr[@id=\"admit-#{admit.sis_id}\"]"
   end
 
-  elements(:admit_filter_sid, :span, xpath: '//span[contains(@id, "-cs-empl-id")]')
-
-  def filter_result_row_cs_ids
-    admit_filter_sid_elements.map &:text
-  end
-
-  def filter_result_all_row_cs_ids(cohort)
-    wait_until(Utils.short_wait) { admit_filter_sid_elements.any? } unless cohort.member_data.length.zero?
-    visible_sids = []
-    sleep 1
-    page_count = list_view_page_count
-    page = 1
-    if page_count == 1
-      logger.debug 'There is 1 page'
-      visible_sids << filter_result_row_cs_ids
-    else
-      logger.debug "There are #{page_count} pages"
-      visible_sids << filter_result_row_cs_ids
-      (page_count - 1).times do
-        start_time = Time.now
-        page += 1
-        wait_for_update_and_click go_to_next_page_link_element
-        wait_until(Utils.medium_wait) { admit_filter_sid_elements.any? }
-        logger.warn "Page #{page} took #{Time.now - start_time} seconds to load" unless page == 1
-        visible_sids << filter_result_row_cs_ids
-      end
-    end
-    visible_sids.flatten
-  end
-
-  # Returns all the data shown in a row for a given admit
-  # @param admit_cs_id [String]
-  # @return [Hash]
   def visible_admit_row_data(admit_cs_id)
     search_heading_path = '//h1[@id="admit-results-page-header"]'
     row_xpath = if h1_element(xpath: search_heading_path).exists?
@@ -108,22 +69,15 @@ module BOACAdmitListPages
     end
   end
 
-  # Clicks the Name header to sort ascending or descending
   def sort_by_name
     sort_by_option 'Name'
   end
 
-  # Returns the sequence of SIDs that should be present when sorted by last name ascending
-  # @param admit_data [Array<Hash>]
-  # @return [Array<String>]
   def expected_cs_ids_by_name_asc(admit_data)
     sorted_admits = admit_data.sort_by { |u| [u[:last_name_sortable_user_list].downcase, u[:first_name_sortable_user_list].downcase, u[:sid]] }
     sorted_admits.map { |u| u[:sid] }
   end
 
-  # Returns the sequence of SIDs that should be present when sorted by last name descending
-  # @param admit_data [Array<Hash>]
-  # @return [Array<String>]
   def expected_cs_ids_by_name_desc(admit_data)
     sorted_admits = admit_data.sort do |a, b|
       [b[:last_name_sortable_user_list].downcase, a[:first_name_sortable_user_list], a[:sid]] <=> [a[:last_name_sortable_user_list].downcase, b[:first_name_sortable_user_list], b[:sid]]
@@ -131,11 +85,72 @@ module BOACAdmitListPages
     sorted_admits.map { |u| u[:sid] }
   end
 
-  # Clicks the link to the admit page and waits for the page to load
-  # @param cs_id [String]
   def click_admit_link(cs_id)
     logger.info "Clicking the link for CS ID #{cs_id}"
     wait_for_update_and_click link_element(id: "link-to-admit-#{cs_id}")
+  end
+
+  # LIST VIEW - SEARCH RESULTS
+
+  elements(:admit_search_results_sid, :span, xpath: '//h2[@id="admit-results-page-header"]/following-sibling::div//span[text()="C S I D"]/following-sibling::span')
+
+  def search_result_all_row_cs_ids
+    admit_search_results_sid_elements.map &:text
+  end
+
+  # LIST VIEW - COHORT/GROUP
+
+  elements(:admit_cohort_sid, :span, xpath: '//span[contains(@id, "-cs-empl-id")]')
+
+  def admit_cohort_row_sids
+    admit_cohort_sid_elements.map &:text
+  end
+
+  def wait_for_admit_cohort_sids
+    wait_until(Utils.short_wait) { admit_cohort_sid_elements.any? }
+  end
+
+  def list_view_admit_sids(cohort)
+    wait_for_admit_cohort_sids unless cohort.member_data&.length&.zero? || cohort.members&.length&.zero?
+    visible_sids = []
+    sleep 1
+    page_count = list_view_page_count
+    page = 1
+    if page_count == 1
+      logger.debug 'There is 1 page'
+      visible_sids << admit_cohort_row_sids
+    else
+      logger.debug "There are #{page_count} pages"
+      visible_sids << admit_cohort_row_sids
+      (page_count - 1).times do
+        start_time = Time.now
+        page += 1
+        wait_for_update_and_click go_to_next_page_link_element
+        wait_until(Utils.medium_wait) { admit_sid_elements.any? }
+        logger.warn "Page #{page} took #{Time.now - start_time} seconds to load" unless page == 1
+        visible_sids << admit_cohort_row_sids
+      end
+    end
+    visible_sids.flatten
+  end
+
+  # ADMIT ADD-TO-GRP
+
+  elements(:admit_row_cbx, :checkbox, xpath: '//input[contains(@id, "-admissions-group-checkbox")]')
+
+  def admit_row_cbx_sids
+    admit_row_cbx_elements.map { |el| el.attribute('id').split('-')[1] }
+  end
+
+  def wait_for_admit_checkboxes
+    wait_until(Utils.short_wait) { admit_row_cbx_elements.any? }
+  end
+
+  def admits_available_to_add_to_grp(test, group)
+    group_sids = group.members.map &:sis_id
+    wait_for_admit_checkboxes
+    visible_sids = admit_row_cbx_sids - group_sids
+    test.admits.select { |m| visible_sids.include? m.sis_id }
   end
 
 end

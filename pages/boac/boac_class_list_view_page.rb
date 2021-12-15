@@ -6,10 +6,10 @@ class BOACClassListViewPage
   include Logging
   include Page
   include BOACPages
-  include BOACListViewPages
+  include BOACListViewStudentPages
   include BOACClassPages
   include BOACGroupModalPages
-  include BOACAddGroupSelectorPages
+  include BOACGroupAddSelectorPages
 
   elements(:student_link, :link, xpath: '//tr//a[contains(@href, "/student/")]')
   elements(:student_sid, :div, xpath: '//div[@class="student-sid"]')

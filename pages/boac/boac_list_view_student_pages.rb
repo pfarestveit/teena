@@ -1,6 +1,4 @@
-require_relative '../../util/spec_helper'
-
-module BOACListViewPages
+module BOACListViewStudentPages
 
   include PageObject
   include Logging

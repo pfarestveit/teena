@@ -119,22 +119,36 @@ module BOACPages
   ### SIDEBAR - GROUPS ###
 
   link(:create_curated_group_link, id: 'create-curated-group-from-sidebar')
+  link(:create_admit_group_link, id: 'create-admissions-group-from-sidebar')
   link(:view_everyone_groups_link, id: 'groups-all')
-  elements(:sidebar_group_link, :link, xpath: '//a[contains(@id,"sidebar-curated-group")]')
+  elements(:sidebar_group_link, :link, xpath: '//a[contains(@id, "sidebar-curated-group")]')
+  elements(:sidebar_admit_group_link, :link, xpath: '//a[contains(@id, "sidebar-admissions-group")]')
 
   # Clicks link to create new curated group
-  def click_sidebar_create_curated_group
+  def click_sidebar_create_student_group
     logger.debug 'Clicking sidebar button to create a curated group'
     wait_for_load_and_click create_curated_group_link_element
     wait_for_title 'Create Curated Group'
-    sleep 3
+    sleep 2
+  end
+
+  def click_sidebar_create_admit_group
+    logger.info 'Clicking sidebar button to create an admit group'
+    wait_for_load_and_click create_admit_group_link_element
+    wait_for_title 'Create Curated Group'
+    sleep 2
   end
 
   # Returns the names of all the groups in the sidebar
   # @return [Array<String>]
-  def sidebar_groups
+  def sidebar_student_groups
     sleep Utils.click_wait
     sidebar_group_link_elements.map &:text
+  end
+
+  def sidebar_admit_groups
+    sleep Utils.click_wait
+    sidebar_admit_group_link_elements.map &:text
   end
 
   # Clicks the sidebar link to view all curated groups
@@ -147,7 +161,8 @@ module BOACPages
   # Clicks the sidebar link for a curated group
   # @param group [CuratedGroup]
   def click_sidebar_group_link(group)
-    link = sidebar_group_link_elements.find { |el| el.text == group.name }
+    els = group.ce3 ? sidebar_admit_group_link_elements : sidebar_group_link_elements
+    link = els.find { |el| el.text == group.name }
     wait_for_update_and_click link
   end
 
@@ -164,8 +179,12 @@ module BOACPages
   # Waits for a group to appear in the sidebar with the right member count and obtains the group's ID
   # @param group [CuratedGroup]
   def wait_for_sidebar_group(group)
-    wait_until(Utils.short_wait) { sidebar_groups.include? group.name }
-    wait_for_sidebar_group_member_count group
+    if group.ce3
+      wait_until(Utils.short_wait) { sidebar_admit_groups.include? group.name }
+    else
+      wait_until(Utils.short_wait) { sidebar_student_groups.include? group.name }
+      wait_for_sidebar_group_member_count group
+    end
     BOACUtils.set_curated_group_id group unless group.id
   end
 
@@ -501,4 +520,26 @@ module BOACPages
   rescue
     fail "Timed out waiting for SID #{student.sis_id} degree '#{degree.name}'"
   end
+
+  elements(:everyone_group_link, :link, xpath: '//h1[text()="Everyone\'s Groups"]/../..//a')
+
+  # Returns all the curated groups displayed on the Everyone's Groups page
+  # @return [Array<CuratedGroup>]
+  def visible_everyone_groups
+    click_view_everyone_groups
+    wait_for_spinner
+    begin
+      wait_until(Utils.short_wait) { everyone_group_link_elements.any? }
+      groups = everyone_group_link_elements.map do |link|
+        CuratedGroup.new id: link.attribute('href').gsub("#{BOACUtils.base_url}/curated/", ''),
+                         name: link.text
+      end
+    rescue
+      groups = []
+    end
+    groups.flatten!
+    logger.info "Visible Everyone's Groups are #{groups.map &:name}"
+    groups
+  end
+
 end

@@ -21,8 +21,8 @@ unless ENV['DEPS']
     before(:all) do
       @driver = Utils.launch_browser
       @homepage = BOACHomePage.new @driver
-      @cohort_page = BOACFilteredCohortPage.new(@driver, test.advisor)
-      @curated_group_page = BOACGroupPage.new @driver
+      @cohort_page = BOACFilteredStudentsPage.new(@driver, test.advisor)
+      @curated_group_page = BOACGroupStudentsPage.new @driver
 
       @degree_templates_mgmt_page = BOACDegreeTemplateMgmtPage.new @driver
       @degree_template_page = BOACDegreeTemplatePage.new @driver
@@ -533,7 +533,7 @@ unless ENV['DEPS']
 
             # Create curated_groups
             [curated_group_1, curated_group_2].each do |curated_group|
-              @homepage.click_sidebar_create_curated_group
+              @homepage.click_sidebar_create_student_group
               @curated_group_page.create_group_with_bulk_sids(curated_group_members, curated_group)
               @curated_group_page.wait_for_sidebar_group curated_group
               curated_groups << curated_group

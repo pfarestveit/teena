@@ -1,6 +1,6 @@
 require_relative '../../util/spec_helper'
 
-class BOACFilteredCohortHistoryPage
+class BOACFilteredStudentsHistoryPage
 
   include PageObject
   include Page

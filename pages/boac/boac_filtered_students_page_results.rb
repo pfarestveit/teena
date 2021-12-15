@@ -1,6 +1,6 @@
 require_relative '../../util/spec_helper'
 
-module BOACFilteredCohortPageResults
+module BOACFilteredStudentsPageResults
 
   include PageObject
   include Logging

@@ -43,7 +43,7 @@ class BOACTestConfig < TestConfig
         if block_given?
           @advisor = advisors.find { |a| yield a }
         else
-          @advisor = advisors.find { |a| a.depts == [@dept.code] }
+          @advisor = advisors.reverse.find { |a| a.depts == [@dept.code] }
         end
     end
     if uid && (user_data = NessieTimelineUtils.get_advising_note_author(uid))
@@ -279,6 +279,14 @@ class BOACTestConfig < TestConfig
   def class_pages
     set_base_configs
     set_test_students CONFIG['class_page_max_users']
+  end
+
+  def curated_admits
+    set_dept BOACDepartments::ZCEEE
+    set_advisor
+    set_admits
+    set_search_cohorts admits: true
+    set_admit_searchable_data
   end
 
   # Config for curated group testing

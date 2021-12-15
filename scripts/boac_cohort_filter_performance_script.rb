@@ -11,8 +11,8 @@ begin
 
   @driver = Utils.launch_browser
   @analytics_page = BOACApiStudentPage.new @driver
-  @homepage = Page::BOACPages::BOACUserListPages::BOACHomePage.new @driver
-  @cohort_page = Page::BOACPages::BOACCohortPages::BOACFilteredCohortPage.new(@driver, test.advisor)
+  @homepage = BOACHomePage.new @driver
+  @cohort_page = BOACFilteredStudentsPage.new(@driver, test.advisor)
   @homepage.dev_auth test.advisor
 
   test.searches.each do |cohort|

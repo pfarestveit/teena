@@ -20,9 +20,9 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
 
       @driver = Utils.launch_browser
       @homepage = BOACHomePage.new @driver
-      @cohort_page = BOACFilteredCohortPage.new(@driver, @test.advisor)
-      @group_page = BOACGroupPage.new @driver
-      @cohort_history_page = BOACFilteredCohortHistoryPage.new @driver
+      @cohort_page = BOACFilteredStudentsPage.new(@driver, @test.advisor)
+      @group_page = BOACGroupStudentsPage.new @driver
+      @cohort_history_page = BOACFilteredStudentsHistoryPage.new @driver
 
       @homepage.dev_auth @test.advisor
       BOACUtils.get_user_filtered_cohorts(@test.advisor, default: true).each do |c|
@@ -116,7 +116,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
 
       before(:all) do
         @group = CuratedGroup.new name: "Group #{@test.id}"
-        @cohort_page.click_sidebar_create_curated_group
+        @cohort_page.click_sidebar_create_student_group
         @group_page.create_group_with_bulk_sids(@test.students[0..19], @group)
         @group_page.wait_for_sidebar_group @group
 

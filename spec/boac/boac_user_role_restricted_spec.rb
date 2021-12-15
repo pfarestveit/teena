@@ -17,7 +17,7 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
       @class_page = BOACClassListViewPage.new @driver
       @flight_data_recorder = BOACFlightDataRecorderPage.new @driver
       @flight_deck_page = BOACFlightDeckPage.new @driver
-      @group_page = BOACGroupPage.new @driver
+      @group_page = BOACGroupStudentsPage.new @driver
       @pax_manifest_page = BOACPaxManifestPage.new @driver
       @search_results_page = BOACSearchResultsPage.new @driver
       @settings_page = BOACFlightDeckPage.new @driver
@@ -35,7 +35,7 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
 
       before(:all) do
         @test.set_advisor { |advisor| !advisor.can_access_canvas_data && advisor.can_access_advising_data && advisor.depts.length == 1 }
-        @cohort_page = BOACFilteredCohortPage.new(@driver, @test.advisor)
+        @cohort_page = BOACFilteredStudentsPage.new(@driver, @test.advisor)
         @homepage.dev_auth @test.advisor
       end
 
@@ -95,7 +95,7 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
 
       context 'visiting a cohort page' do
         before(:all) do
-          @cohort_page = BOACFilteredCohortPage.new(@driver, @test.advisor)
+          @cohort_page = BOACFilteredStudentsPage.new(@driver, @test.advisor)
 
           @homepage.load_page
           @homepage.click_sidebar_create_filtered
@@ -155,7 +155,7 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
 
         before(:all) do
           @group_no_canvas = CuratedGroup.new(name: "Group #{@test.id}")
-          @homepage.click_sidebar_create_curated_group
+          @homepage.click_sidebar_create_student_group
           @group_page.create_group_with_bulk_sids(@test.test_students, @group_no_canvas)
         end
 
@@ -231,7 +231,7 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
               !advisor.can_access_canvas_data &&
               !advisor.can_access_advising_data
         end
-        @cohort_page = BOACFilteredCohortPage.new(@driver, @test.advisor)
+        @cohort_page = BOACFilteredStudentsPage.new(@driver, @test.advisor)
         @homepage.dev_auth @test.advisor
       end
 
@@ -298,7 +298,7 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
 
       context 'visiting a cohort page' do
         before(:all) do
-          @cohort_page = BOACFilteredCohortPage.new(@driver, @test.advisor)
+          @cohort_page = BOACFilteredStudentsPage.new(@driver, @test.advisor)
 
           @homepage.load_page
           @homepage.click_sidebar_create_filtered
@@ -358,7 +358,7 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
 
         before(:all) do
           @group_no_canvas = CuratedGroup.new(name: "Group #{@test.id}")
-          @homepage.click_sidebar_create_curated_group
+          @homepage.click_sidebar_create_student_group
           @group_page.create_group_with_bulk_sids(@test.test_students, @group_no_canvas)
         end
 

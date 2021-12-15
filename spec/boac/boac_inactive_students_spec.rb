@@ -12,8 +12,8 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
       @homepage = BOACHomePage.new @driver
       @search_results_page = BOACSearchResultsPage.new @driver
       @student_page = BOACStudentPage.new @driver
-      @group_page = BOACGroupPage.new @driver
-      @cohort_page = BOACFilteredCohortPage.new(@driver, @test.advisor)
+      @group_page = BOACGroupStudentsPage.new @driver
+      @cohort_page = BOACFilteredStudentsPage.new(@driver, @test.advisor)
       @api_student_page = BOACApiStudentPage.new @driver
 
       @homepage.dev_auth @test.advisor
@@ -131,7 +131,7 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
       before(:all) { @group = CuratedGroup.new(name: "Non-current group #{@test.id}") }
 
       it 'can be added to a new group' do
-        @homepage.click_sidebar_create_curated_group
+        @homepage.click_sidebar_create_student_group
         @group_page.create_group_with_bulk_sids([@inactive_student], @group)
         @group_page.wait_for_sidebar_group @group
       end
