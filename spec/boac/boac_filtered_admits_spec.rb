@@ -80,7 +80,7 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
             @cohort_page.wait_until(Utils.short_wait) { @cohort_page.results_count == 0 }
           else
             @cohort_page.sort_by_last_name unless cohort.member_data.length == 1
-            visible_results = @cohort_page.filter_result_all_row_cs_ids cohort
+            visible_results = @cohort_page.list_view_admit_sids cohort
             @cohort_page.wait_until(1, "Expected but not present: #{expected_results - visible_results}. Present but not expected: #{visible_results - expected_results}") do
               visible_results.sort == expected_results.sort
             end
@@ -98,7 +98,7 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
 
         it "shows the right data for the admits who match #{cohort.search_criteria.inspect}" do
           failures = []
-          visible_sids = @cohort_page.filter_result_row_cs_ids
+          visible_sids = @cohort_page.admit_cohort_row_sids
           expected_admit_data = cohort.member_data.select { |d| visible_sids.include? d[:sid] }
           expected_admit_data.each { |admit| @cohort_page.verify_admit_row_data(admit[:sid], admit, failures) }
           logger.error "Failures: #{failures}" unless failures.empty?
@@ -111,7 +111,7 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
           else
             @cohort_page.sort_by_first_name
             expected_results = @cohort_page.expected_sids_by_first_name(cohort.member_data)
-            visible_results = @cohort_page.filter_result_all_row_cs_ids cohort
+            visible_results = @cohort_page.list_view_admit_sids cohort
             @cohort_page.verify_list_view_sorting(expected_results, visible_results)
             @cohort_page.wait_until(1, "Expected #{expected_results} but got #{visible_results}") { visible_results == expected_results }
           end
@@ -123,7 +123,7 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
           else
             @cohort_page.sort_by_cs_id
             expected_results = cohort.member_data.map { |u| u[:sid].to_i }.sort
-            visible_results = @cohort_page.filter_result_all_row_cs_ids cohort
+            visible_results = @cohort_page.list_view_admit_sids cohort
             @cohort_page.verify_list_view_sorting(expected_results, visible_results)
             @cohort_page.wait_until(1, "Expected #{expected_results} but got #{visible_results}") { visible_results == expected_results }
           end
@@ -135,7 +135,7 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
           if cohort.member_data.length.zero?
             expect(@cohort_page.export_list_button_element.disabled?).to be true
           else
-            cohort.export_csv = @cohort_page.export_student_list cohort
+            cohort.export_csv = @cohort_page.export_admit_list cohort
             @cohort_page.verify_admits_present_in_export(all_admit_data, cohort.member_data, cohort.export_csv)
           end
         end
@@ -150,7 +150,7 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
           elsif cohort == test.searches.last
             logger.warn 'Skipping a problematic test'
           else
-            cs_id = @cohort_page.filter_result_row_cs_ids.first
+            cs_id = @cohort_page.admit_cohort_row_sids.first
             @cohort_page.click_admit_link cs_id
             @admit_page.sid_element.when_visible Utils.short_wait
             expect(@admit_page.sid).to eql(cs_id)

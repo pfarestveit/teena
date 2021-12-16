@@ -13,7 +13,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
     before(:all) do
       @driver = Utils.launch_browser test.chrome_profile
       @homepage = BOACHomePage.new @driver
-      @cohort_page = BOACFilteredCohortPage.new(@driver, test.advisor)
+      @cohort_page = BOACFilteredStudentsPage.new(@driver, test.advisor)
       @student_page = BOACStudentPage.new @driver
 
       @homepage.dev_auth test.advisor

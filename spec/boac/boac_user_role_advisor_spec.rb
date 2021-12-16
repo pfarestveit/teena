@@ -25,8 +25,8 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
       @api_admin_page = BOACApiAdminPage.new @driver
       @api_notes_page = BOACApiNotesPage.new @driver
       @api_student_page = BOACApiStudentPage.new @driver
-      @cohort_page = BOACFilteredCohortPage.new(@driver, @test_asc.advisor)
-      @group_page = BOACGroupPage.new @driver
+      @cohort_page = BOACFilteredStudentsPage.new(@driver, @test_asc.advisor)
+      @group_page = BOACGroupStudentsPage.new @driver
       @homepage = BOACHomePage.new @driver
       @pax_manifest_page = BOACPaxManifestPage.new @driver
       @search_results_page = BOACSearchResultsPage.new @driver

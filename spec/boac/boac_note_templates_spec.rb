@@ -21,8 +21,8 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
       @driver = Utils.launch_browser
       @homepage = BOACHomePage.new @driver
       @student_page = BOACStudentPage.new @driver
-      @cohort_page = BOACFilteredCohortPage.new(@driver, @test.advisor)
-      @curated_group_page = BOACGroupPage.new @driver
+      @cohort_page = BOACFilteredStudentsPage.new(@driver, @test.advisor)
+      @curated_group_page = BOACGroupStudentsPage.new @driver
 
       @homepage.dev_auth @test.advisor
     end
@@ -180,7 +180,7 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
         # Create group to add
         group_members = @test.students.shuffle.last BOACUtils.config['notes_batch_curated_group_count']
         @group = CuratedGroup.new(name: "Group 1 - #{@test.id}")
-        @homepage.click_sidebar_create_curated_group
+        @homepage.click_sidebar_create_student_group
         @curated_group_page.create_group_with_bulk_sids(group_members, @group)
         @curated_group_page.wait_for_sidebar_group @group
       end

@@ -8,8 +8,8 @@ class BOACSearchResultsPage
   include BOACPages
   include BOACUserListPages
   include BOACGroupModalPages
-  include BOACAddGroupSelectorPages
-  include BOACAdmitListPages
+  include BOACGroupAddSelectorPages
+  include BOACListViewAdmitPages
 
   span(:results_loaded_msg, xpath: '//h1[text()="Search Results"]')
 

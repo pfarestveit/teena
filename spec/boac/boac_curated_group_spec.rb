@@ -30,8 +30,8 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
       @driver = Utils.launch_browser test.chrome_profile
       @analytics_page = BOACApiStudentPage.new @driver
       @homepage = BOACHomePage.new @driver
-      @group_page = BOACGroupPage.new @driver
-      @filtered_page = BOACFilteredCohortPage.new(@driver, test.advisor)
+      @group_page = BOACGroupStudentsPage.new @driver
+      @filtered_page = BOACFilteredStudentsPage.new(@driver, test.advisor)
       @student_page = BOACStudentPage.new @driver
       @class_page = BOACClassListViewPage.new @driver
       @search_page = BOACSearchResultsPage.new @driver
@@ -95,7 +95,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
 
       it 'can be done using bulk SIDs feature' do
         students = test.students.first(52)
-        @homepage.click_sidebar_create_curated_group
+        @homepage.click_sidebar_create_student_group
         group_created_from_bulk = CuratedGroup.new({:name => "Group created with bulk SIDs #{test.id}"})
         @group_page.create_group_with_bulk_sids(students, group_created_from_bulk)
         @group_page.wait_for_sidebar_group group_created_from_bulk
@@ -321,14 +321,14 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
       before(:each) { @group_page.load_page group_4 }
 
       it 'rejects malformed input' do
-        @group_page.click_add_students_button
+        @group_page.click_add_sids_button
         @group_page.enter_sid_list 'nullum magnum ingenium sine mixtura dementiae fuit'
         @group_page.click_add_sids_to_group_button
         @group_page.click_remove_invalid_sids
       end
 
       it 'rejects SIDs that do not match any Boa student SIDs' do
-        @group_page.click_add_students_button
+        @group_page.click_add_sids_button
         @group_page.enter_sid_list '9999999990, 9999999991'
         @group_page.click_add_sids_to_group_button
         @group_page.click_remove_invalid_sids
@@ -337,7 +337,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
       it 'allows the user to remove rejected SIDs automatically if there are more than 15' do
         a = [test.students.last.sis_id]
         16.times { |i| a << "99999999#{10 + i}" }
-        @group_page.click_add_students_button
+        @group_page.click_add_sids_button
         @group_page.enter_sid_list a.join(', ')
         @group_page.click_add_sids_to_group_button
         @group_page.click_remove_invalid_sids
@@ -411,7 +411,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
 
         advisor_groups.each do |group|
 
-          it "shows the group named #{group.name}" do
+          it "shows the group name #{group.name}" do
             @homepage.load_page
             @homepage.wait_until(Utils.medium_wait, "Expected #{@homepage.curated_groups} to include #{group.name}") do
               @homepage.curated_groups.include? group.name
@@ -439,7 +439,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
         @homepage.dev_auth other_advisor
       end
 
-      it('does not appear in another user\'s sidebar') { expect(@homepage.sidebar_groups & advisor_groups.map(&:name)).to be_empty }
+      it('does not appear in another user\'s sidebar') { expect(@homepage.sidebar_student_groups & advisor_groups.map(&:name)).to be_empty }
 
     end
   end

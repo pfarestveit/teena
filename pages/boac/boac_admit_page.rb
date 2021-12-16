@@ -5,6 +5,8 @@ class BOACAdmitPage
   include Page
   include BOACPages
   include BOACAdmitPages
+  include BOACGroupAddSelectorPages
+  include BOACGroupModalPages
 
   h1(:name, id: 'admit-name-header')
   cell(:uc_cpid, id: 'admit-apply-uc-cpid')

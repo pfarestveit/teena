@@ -1,17 +1,16 @@
 require_relative '../../util/spec_helper'
 
-class BOACFilteredCohortPage
+class BOACFilteredStudentsPage
 
   include PageObject
   include Logging
   include Page
   include BOACPages
-  include BOACListViewPages
-  include BOACCohortPages
-  include BOACFilteredCohortPageFilters
-  include BOACFilteredCohortPageResults
+  include BOACCohortStudentPages
+  include BOACFilteredStudentsPageFilters
+  include BOACFilteredStudentsPageResults
   include BOACGroupModalPages
-  include BOACAddGroupSelectorPages
+  include BOACGroupAddSelectorPages
 
   def initialize(driver, advisor)
     super driver

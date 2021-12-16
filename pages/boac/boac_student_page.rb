@@ -6,7 +6,7 @@ class BOACStudentPage
   include Logging
   include Page
   include BOACPages
-  include BOACAddGroupSelectorPages
+  include BOACGroupAddSelectorPages
   include BOACGroupModalPages
   include BOACStudentPageAdvisingNote
   include BOACStudentPageAppointment

@@ -24,8 +24,8 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
 
       @driver = Utils.launch_browser
       @homepage = BOACHomePage.new @driver
-      @group_page = BOACGroupPage.new @driver
-      @cohort_page = BOACFilteredCohortPage.new(@driver, test.advisor)
+      @group_page = BOACGroupStudentsPage.new @driver
+      @cohort_page = BOACFilteredStudentsPage.new(@driver, test.advisor)
       @student_page = BOACStudentPage.new @driver
 
       @homepage.dev_auth test.advisor
@@ -50,9 +50,9 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
     context 'when a user has groups' do
 
       before(:all) do
-        @cohort_page.click_sidebar_create_curated_group
+        @cohort_page.click_sidebar_create_student_group
         @group_page.create_group_with_bulk_sids(group_1_students, @group_1)
-        @group_page.click_sidebar_create_curated_group
+        @group_page.click_sidebar_create_student_group
         @group_page.create_group_with_bulk_sids(group_2_students, @group_2)
       end
 
