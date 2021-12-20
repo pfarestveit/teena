@@ -154,14 +154,7 @@
                 ]
             },
             {
-                "expected_grad_terms": [
-                    {
-                        "expected_grad_term": "2208"
-                    },
-                    {
-                        "expected_grad_term": "2212"
-                    }
-                ],
+                "expected_grad_terms": true,
                 "gpa_ranges": [
                     {
                         "gpa_range": {
@@ -238,6 +231,34 @@
                     },
                     {
                         "academic_standing": "2198-DIS"
+                    }
+                ],
+                "career_statuses": [
+                    {
+                        "career_status": "Inactive"
+                    },
+                    {
+                        "career_status": "Active"
+                    }
+                ]
+            },
+            {
+                "career_statuses": [
+                    {
+                        "career_status": "Inactive"
+                    }
+                ],
+                "degree_terms": [
+                    {
+                        "degree_term": "2025"
+                    },
+                    {
+                        "degree_term": "2022"
+                    }
+                ],
+                "degrees_awarded": [
+                    {
+                        "degree_awarded": "Physics BA"
                     }
                 ]
             }

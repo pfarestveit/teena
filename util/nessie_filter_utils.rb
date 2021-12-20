@@ -53,12 +53,28 @@ class NessieFilterUtils < NessieUtils
         s = term_standing.split('-')
         cond << "(student.academic_standing.term_id = '#{s[0]}' AND student.academic_standing.acad_standing_status = '#{s[1]}')"
       end
-      conditions_list << cond.join(' OR ')
+      conditions_list << "(#{cond.join(' OR ')})"
+    end
+  end
+
+  def self.career_status_cond(filter, conditions_list)
+    if filter.career_statuses&.any?
+      statuses = filter.career_statuses.map &:downcase
+      statuses += %w(completed NULL) if statuses.include? 'inactive'
+      conditions_list << "student.student_profile_index.academic_career_status IN(#{in_op statuses})" if filter.career_statuses&.any?
     end
   end
 
   def self.college_cond(filter, conditions_list)
     conditions_list << "student.student_majors.college IN (#{in_op filter.college})" if filter.college&.any?
+  end
+
+  def self.degree_awarded_cond(filter, conditions_list)
+    conditions_list << "student.student_degrees.plan IN (#{in_op filter.degrees_awarded})" if filter.degrees_awarded&.any?
+  end
+
+  def self.degree_term_cond(filter, conditions_list)
+    conditions_list << "student.student_degrees.term_id IN (#{in_op filter.degree_terms})" if filter.degree_terms&.any?
   end
 
   def self.entering_term_cond(filter, conditions_list)
@@ -214,12 +230,15 @@ class NessieFilterUtils < NessieUtils
   end
 
   def self.where(test, filter)
-    clause = 'WHERE student.student_profile_index.hist_enr IS FALSE AND '
+    clause = "WHERE #{+ 'student.student_profile_index.academic_career_status = \'active\' AND ' unless filter.career_statuses&.any?}"
     conditions_list = []
 
     # GLOBAL FILTERS
     academic_standing_cond(filter, conditions_list)
+    career_status_cond(filter, conditions_list)
     college_cond(filter, conditions_list)
+    degree_awarded_cond(filter, conditions_list)
+    degree_term_cond(filter, conditions_list)
     entering_term_cond(filter, conditions_list)
     expected_grad_term_cond(filter, conditions_list)
     gpa_cond(filter, conditions_list)
@@ -260,6 +279,9 @@ class NessieFilterUtils < NessieUtils
 
     acad_standing_join = "LEFT JOIN student.academic_standing ON #{sid} = student.academic_standing.sid"
     joins << acad_standing_join if filter.academic_standing&.any?
+
+    degree_join = "LEFT JOIN student.student_degrees ON #{sid} = student.student_degrees.sid"
+    joins << degree_join if (filter.degrees_awarded&.any? || filter.degree_terms&.any?)
 
     epn_join = "LEFT JOIN student.student_enrollment_terms ON #{sid} = student.student_enrollment_terms.sid"
     joins << epn_join if filter.grading_basis_epn&.any? && !filter.mid_point_deficient

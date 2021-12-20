@@ -76,17 +76,18 @@ class BOACTestConfig < TestConfig
   end
 
   # Sets the complete list of potentially visible students
-  def set_students(students = nil)
+  def set_students(students = nil, opts = nil)
     @students = students || NessieUtils.get_all_students
+    @students.keep_if { |s| s.status == 'active' } unless opts && opts[:include_inactive]
   end
 
   # Basic settings for department, advisor, and student population under test. Specifying a department will override the
   # department in the settings file.
   # @param dept [BOACDepartments]
-  def set_base_configs(dept = nil)
+  def set_base_configs(dept = nil, opts = nil)
     set_dept dept
     set_advisor
-    set_students
+    set_students(nil, opts)
   end
 
   # Sets the complete list of potentially visible admits
@@ -325,7 +326,7 @@ class BOACTestConfig < TestConfig
 
   # Config for filtered cohort testing
   def filtered_cohorts
-    set_base_configs BOACDepartments::ADMIN
+    set_base_configs(BOACDepartments::ADMIN, {include_inactive: true})
     set_search_cohorts students: true
 
     # Set a default cohort with all possible filters to exercise editing and removing filters
@@ -353,7 +354,7 @@ class BOACTestConfig < TestConfig
         :asc_intensive => true,
         :asc_team => [Squad::MCR],
         :coe_advisor => [BOACUtils.get_dept_advisors(BOACDepartments::COE).first.uid.to_s],
-        :coe_ethnicity => %w(H V),
+        :coe_ethnicity => %w(E I),
         :coe_gender => ['F'],
         :coe_underrepresented_minority => true,
         :coe_prep => ['PREP', 'T-PREP eligible'],
@@ -375,17 +376,12 @@ class BOACTestConfig < TestConfig
 
   # Config for curated-groups-as-cohort-filter testing
   def filtered_groups
-    set_base_configs
+    set_base_configs(nil, {include_inactive: true})
     set_search_cohorts students: true
   end
 
   # Config for filtered cohort history testing
   def filtered_history
-    set_base_configs
-  end
-
-  # Config for non-current student testing
-  def inactive_students
     set_base_configs
   end
 

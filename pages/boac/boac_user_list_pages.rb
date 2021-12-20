@@ -11,8 +11,8 @@ module BOACUserListPages
   # @param cohort [Cohort]
   def all_row_sids(cohort = nil)
     # TODO - account for curated cohorts too
-    xpath = filtered_cohort_xpath cohort if cohort && cohort.instance_of?(FilteredCohort)
-    span_elements(xpath: "#{xpath}//span[text()=\"S I D\"]/following-sibling::span").map &:text
+    xpath = filtered_cohort_xpath cohort if cohort&.instance_of?(FilteredCohort)
+    span_elements(xpath: "#{xpath}//span[text()=\"S I D \"]/following-sibling::span").map &:text
   end
 
   # Returns the XPath to a filtered cohort's div in the main content area on the homepage
@@ -30,7 +30,7 @@ module BOACUserListPages
   def user_row_data(sid, cohort_xpath = nil)
     row_xpath = "#{cohort_xpath}//tr[contains(.,\"#{sid}\")]"
     name_el = link_element(xpath: "#{row_xpath}//span[text()=\"Student name\"]/following-sibling::a")
-    sid_el = span_element(xpath: "#{row_xpath}//span[text()=\"S I D\"]/following-sibling::span")
+    sid_el = span_element(xpath: "#{row_xpath}//span[text()=\"S I D \"]/following-sibling::span")
     major_els = div_elements(xpath: "#{row_xpath}//span[text()=\"Major\"]/following-sibling::div")
     term_units_el = div_element(xpath: "#{row_xpath}//span[text()=\"Term units\"]/following-sibling::div")
     cumul_units_el = div_element(xpath: "#{row_xpath}//span[text()=\"Units completed\"]/following-sibling::div")
