@@ -126,7 +126,7 @@ module BOACListViewAdmitPages
         start_time = Time.now
         page += 1
         wait_for_update_and_click go_to_next_page_link_element
-        wait_until(Utils.medium_wait) { admit_sid_elements.any? }
+        wait_until(Utils.medium_wait) { admit_cohort_sid_elements.any? }
         logger.warn "Page #{page} took #{Time.now - start_time} seconds to load" unless page == 1
         visible_sids << admit_cohort_row_sids
       end

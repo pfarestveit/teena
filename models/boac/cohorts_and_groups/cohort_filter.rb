@@ -6,6 +6,7 @@ class CohortFilter
                 :asc_inactive,
                 :asc_intensive,
                 :asc_team,
+                :career_statuses,
                 :coe_advisor,
                 :coe_ethnicity,
                 :coe_gender,
@@ -16,6 +17,8 @@ class CohortFilter
                 :cohort_owner_academic_plans,
                 :college,
                 :curated_groups,
+                :degree_terms,
+                :degrees_awarded,
                 :entering_terms,
                 :ethnicity,
                 :expected_grad_terms,
@@ -42,9 +45,12 @@ class CohortFilter
   def set_test_filters(test_data, dept)
     # Global
     @academic_standing = (test_data['academic_standings'] && test_data['academic_standings'].map { |a| a['academic_standing'] })
+    @career_statuses = (test_data['career_statuses']&.map { |c| c['career_status'] })
     @college = (test_data['colleges'] && test_data['colleges'].map { |t| t['college'] })
+    @degrees_awarded = (test_data['degrees_awarded']&.map { |d| d['degree_awarded'] })
+    @degree_terms = (test_data['degree_terms']&.map { |t| t['degree_term'] })
     @entering_terms = (test_data['entering_terms'] && test_data['entering_terms'].map { |t| t['entering_term'] })
-    @expected_grad_terms = (test_data['expected_grad_terms'] && test_data['expected_grad_terms'].map { |t| t['expected_grad_term'] })
+    @expected_grad_terms = ([BOACUtils.previous_term_code(BOACUtils.term_code), BOACUtils.term_code] if test_data['expected_grad_terms'])
     @gpa = (test_data['gpa_ranges'] && test_data['gpa_ranges'].map { |g| g['gpa_range'] })
     @gpa_last_term = (test_data['gpa_ranges_last_term'] && test_data['gpa_ranges_last_term'].map { |g| g['gpa_range'] })
     @grading_basis_epn = (test_data['grading_basis_epn'] && test_data['grading_basis_epn'].map { |b| b['term'] })

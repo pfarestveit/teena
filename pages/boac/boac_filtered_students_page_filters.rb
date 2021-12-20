@@ -136,7 +136,10 @@ module BOACFilteredStudentsPageFilters
 
     # Global
     cohort.search_criteria.academic_standing.each { |a| select_new_filter('Academic Standing', a) } if cohort.search_criteria.academic_standing
+    cohort.search_criteria.career_statuses.each { |s| select_new_filter('Career Status', s) } if cohort.search_criteria.career_statuses
     cohort.search_criteria.college.each { |m| select_new_filter('College', m) } if cohort.search_criteria.college
+    cohort.search_criteria.degrees_awarded.each { |d| select_new_filter('Degree Awarded', d) } if cohort.search_criteria.degrees_awarded
+    cohort.search_criteria.degree_terms.each { |t| select_new_filter('Degree Term', t.to_s) } if cohort.search_criteria.degree_terms
     cohort.search_criteria.entering_terms.each { |term| select_new_filter('Entering Term', term.to_s) } if cohort.search_criteria.entering_terms
     cohort.search_criteria.gpa.each { |gpa| select_new_filter('GPA (Cumulative)', gpa) } if cohort.search_criteria.gpa
     cohort.search_criteria.gpa_last_term.each { |gpa| select_new_filter('GPA (Last Term)', gpa) } if cohort.search_criteria.gpa_last_term
@@ -294,6 +297,12 @@ module BOACFilteredStudentsPageFilters
         filters.academic_standing.each { |a| existing_filter_element('academicStandings', a).exists? } if filters.academic_standing&.any?
         logger.debug 'Verifying College filter'
         filters.college.each { |m| existing_filter_element('College', m).exists? } if filters.college&.any?
+        logger.debug 'Verifying Career Status'
+        filters.career_statuses.each { |s| existing_filter_element('Career Status', s).exists? } if filters.career_statuses&.any?
+        logger.debug 'Verifying Degree Awarded'
+        filters.degrees_awarded.each { |d| existing_filter_element('Degree Awarded', d).exists? } if filters.degrees_awarded&.any?
+        logger.debug 'Verifying Degree Term'
+        filters.degree_terms.each { |t| existing_filter_element('Degree Term', t).exists? } if filters.degree_terms&.any?
         logger.debug 'Verifying Entering Term filter'
         filters.entering_terms.each { |term| existing_filter_element('Entering Term', term).exists? } if filters.entering_terms&.any?
         logger.debug 'Verifying Expected Graduation Term filter'

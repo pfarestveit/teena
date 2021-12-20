@@ -79,16 +79,14 @@ class NessieUtils < Utils
 
   #### ALL STUDENTS ####
 
-  # Returns an array of students who have current academic status
-  # @return [Array<BOACUser>]
   def self.get_all_students
     query = 'SELECT student_profile_index.uid AS uid,
                     student_profile_index.sid AS sid,
                     student_profile_index.first_name AS first_name,
                     student_profile_index.last_name AS last_name,
-                    student_profile_index.email_address AS email
+                    student_profile_index.email_address AS email,
+                    student_profile_index.academic_career_status AS status
              FROM student.student_profile_index
-             WHERE student_profile_index.hist_enr IS FALSE
              ORDER BY uid;'
     results = Utils.query_pg_db(nessie_pg_db_credentials, query)
 
@@ -96,6 +94,7 @@ class NessieUtils < Utils
       attributes = {
         :uid => r['uid'],
         :sis_id => r['sid'],
+        :status => r['status'],
         :first_name => r['first_name'],
         :last_name => r['last_name'],
         :full_name => "#{r['first_name']} #{r['last_name']}",
