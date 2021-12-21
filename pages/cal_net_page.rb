@@ -12,6 +12,7 @@ module Page
     text_field(:password, id: 'password')
     text_area(:sign_in_button, xpath: '//input[@value="Sign In"]')
     h3(:logout_conf_heading, xpath: '//h3[text()="Logout Successful"]')
+    span(:invalid_credentials, xpath: '//span[contains(text(), "Invalid credentials.")]')
     span(:access_denied_msg, xpath: '//span[contains(.,"Service access denied due to missing privileges.")]')
 
     iframe(:duo_frame, xpath: '//div[@id="duo_iframe"]/iframe')
@@ -40,6 +41,8 @@ module Page
           @driver.switch_to.frame duo_frame_element.selenium_element
           remember_me_element.click unless remember_me_checked?
           send_push
+        elsif invalid_credentials?
+          fail('Invalid credentials')
         end
         add_event(event, EventType::LOGGED_IN)
       end

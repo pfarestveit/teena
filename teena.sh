@@ -12,33 +12,28 @@ echo "------------------------"; echo
 
 PS3=$'\nWhich tool are you testing? '
 
-options=("Boa" "OEC" "Junction" "SuiteC")
+options=("BOA" "Junction" "SuiteC")
 
 tool_being_tested=''
 
 select opt in "${options[@]}"
 do
     case ${opt} in
-        "Boa")
+        "BOA")
             tool_being_tested='boac'
             friendly_tool_name=${options[0]}
             test_dept=$(grep '^  test_dept' "${HOME}/.webdriver-config/settings.yml" | awk '{print $NF}')
             echo; echo "Boa will be tested with test_dept: ${test_dept}"; echo
             break
             ;;
-        "OEC")
-            tool_being_tested='oec'
+        "Junction")
+            tool_being_tested='junction'
             friendly_tool_name=${options[1]}
             break
             ;;
-        "Junction")
-            tool_being_tested='junction'
-            friendly_tool_name=${options[2]}
-            break
-            ;;
         "SuiteC")
-            tool_being_tested='suitec'
-            friendly_tool_name=${options[3]}
+            tool_being_tested='squiggy'
+            friendly_tool_name=${options[2]}
             break
             ;;
         *)
@@ -67,6 +62,19 @@ read arbitrary_keyword
 
 echo; echo
 
+echo
+echo "Enter your username. Hit return to skip."
+echo
+printf "    > "
+
+read username
+
+echo
+echo "Enter your password. Hit return to skip."
+echo
+printf "    > "
+
+read -s password
 
 DATE=$(date '+%Y-%m-%d-%H%M%S')
 
@@ -77,11 +85,11 @@ summary="${tool_being_tested}-v${version}-${test_suite:-'all'}-${suffix}"
 if [[ -z "${test_suite}" ]] ; then
     echo; echo "Running ALL tests of ${friendly_tool_name} v${version}"
     echo
-    rake VERSION="${summary}" "${tool_being_tested}"
+    rake VERSION="${summary}" USER="${username}" PASS="${password}" "${tool_being_tested}"
 else
     echo; echo "Running '${test_suite}' tests of ${friendly_tool_name} v${version}"
     echo
-    rake SCRIPTS="${test_suite}" VERSION="${summary}" "${tool_being_tested}"
+    rake SCRIPTS="${test_suite}" VERSION="${summary}" USER="${username}" PASS="${password}" "${tool_being_tested}"
 fi
 
 echo
