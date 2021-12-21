@@ -1001,7 +1001,7 @@ class BOACUtils < Utils
            ORDER BY degree_progress_templates.updated_at DESC;"
     results = Utils.query_pg_db(BOACUtils.boac_db_credentials, query)
     degrees = results.map do |r|
-      DegreeProgressTemplate.new id: r['id'], name: r['degree_name'], updated_by: r['uid'], updated_date: Time.parse(r['updated_at'])
+      DegreeProgressTemplate.new id: r['id'], name: r['degree_name'], updated_by: r['uid'], updated_date: Time.parse(r['updated_at']).localtime
     end
     logger.info "SID #{student.sis_id} degree IDs: #{degrees.map &:id}"
     degrees

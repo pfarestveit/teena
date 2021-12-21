@@ -28,8 +28,14 @@ class ApiAcademicsRosterPage
     students.select { |student| student['enroll_status'] == 'E' }
   end
 
+  # Students who are waitlisted, including those who might be partially enrolled
   def waitlisted_students
     students.select { |student| student['waitlist_position'] }
+  end
+
+  # Students who are only waitlisted
+  def waitlist_only_students
+    students.select { |student| student['enroll_status'] == 'W' }
   end
 
   def section_students(section_name)
