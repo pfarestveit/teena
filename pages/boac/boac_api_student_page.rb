@@ -95,7 +95,7 @@ class BOACApiStudentPage
       if units_as_num.zero?
         '0'
       else
-        (units_as_num.floor == units_as_num) ? units_as_num :  (sprintf '%.3f', units_as_num).to_f.to_s
+        (units_as_num.floor == units_as_num) ? units_as_num.floor.to_s : (sprintf '%.3f', units_as_num).to_f.to_s
       end
     end
   end

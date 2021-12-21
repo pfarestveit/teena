@@ -41,8 +41,8 @@ describe 'bCourses Roster Photos' do
     @roster_api.get_feed(@driver, course)
     @expected_sids = @roster_api.student_ids(@roster_api.students).sort
 
-    @student_count = @roster_api.students.length
-    @waitlist_count = @roster_api.waitlisted_students.length
+    @student_count = @roster_api.enrolled_students.length
+    @waitlist_count = @roster_api.waitlist_only_students.length
     @total_user_count = @student_count + @waitlist_count
     logger.info "There are #{@student_count} enrolled students and #{@waitlist_count} waitlisted students, for a total of #{@total_user_count}"
     logger.warn 'There are no students on this site' if @total_user_count.zero?
