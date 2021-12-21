@@ -355,11 +355,11 @@ class Utils
   # TEST ACCOUNTS
 
   def self.super_admin_username
-    @config['users']['super_admin_username']
+    (ENV['USER'] && !ENV['USER'].empty?) ? ENV['USER'] : @config['users']['super_admin_username']
   end
 
   def self.super_admin_password
-    @config['users']['super_admin_password']
+    (ENV['PASS'] && !ENV['PASS'].empty?) ? ENV['PASS'] : @config['users']['super_admin_password']
   end
 
   def self.super_admin_uid

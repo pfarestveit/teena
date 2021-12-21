@@ -88,7 +88,7 @@ module BOACPages
   def click_degree_checks_link
     click_header_dropdown
     wait_for_update_and_click degree_checks_link_element
-    wait_for_title 'Managing Degree Checks'
+    wait_for_title 'Manage Degree Checks'
   end
 
   # Clicks the 'Passenger Manifest' link in the header
