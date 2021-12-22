@@ -10,12 +10,6 @@ class OecUtils
     (args && args.include?('qa')) ? 'https://course-evaluations-qa.berkeley.edu' : 'https://course-evaluations.berkeley.edu'
   end
 
-  # Returns the name of the Blue project containing the evaluation forms being tested
-  # @return [String]
-  def self.blue_project_title
-    @config['oec']['blue_project_title']
-  end
-
   def self.create_results_file
     output_dir = File.join(ENV['HOME'], 'selenium-files')
     output_file = 'data_source_update_results.log'
@@ -112,82 +106,4 @@ class OecUtils
       end
     end
   end
-
-  # Selects the OEC departments whose evaluations are managed by ETS and returns a set of department form codes and evaluation types
-  # @return [Array<Hash>]
-  def self.get_forms
-    participating_depts = OECDepartments::DEPARTMENTS.select { |d| d.ets_managed }
-    forms_and_types = []
-    participating_depts.each do |dept|
-      if dept.eval_types
-        # If both eval types and catalog IDs exist, then expect forms with only the eval types and forms with both the eval types and the catalog IDs.
-        # Otherwise, just expect the eval types.
-        forms_and_types << dept.eval_types.map { |eval| {:dept_code => dept.form_code, :eval_type => eval} }
-        forms_and_types << dept.eval_types.map { |eval| {:dept_code => dept.form_code, :eval_type => eval, :catalog_ids => dept.catalog_ids} } if dept.catalog_ids
-      else
-        # If no eval types exist but catalog IDs exist, then expect forms with and without the catalog IDs
-        forms_and_types << {:dept_code => dept.form_code}
-        forms_and_types << {:dept_code => dept.form_code, :catalog_ids => dept.catalog_ids} if dept.catalog_ids
-      end
-    end
-    forms = forms_and_types.flatten.uniq
-    logger.debug "Forms are #{forms}"
-    forms
-  end
-
-  # Parses the question bank file as a table. NB the CSV must be UTF-8 encoded.
-  # @return [Array<Array>]
-  def self.open_question_bank
-    file = File.join(Utils.config_dir, 'oec-question-bank.csv')
-    CSV.table file
-  end
-
-  # Compares the expected list of evaluation forms to the forms defined in the question bank.
-  # @param csv [CSV::Table]
-  # @return [boolean]
-  def self.verify_all_forms_present(csv)
-    expected_forms = get_forms.map { |f| get_form_code(f).gsub(/\W/, '').gsub('_', '').gsub('&', '') }
-    expected_forms.each { |f| logger.info "Expecting a form for #{f}" }
-    bank_forms = csv.headers[7..-1].map { |h| h.to_s.gsub(/\W/, '').gsub('_', '').upcase }
-    expected_forms.each { |f| logger.info "Question bank has a form for #{f}" }
-    logger.warn "Expected evaluation forms that are not in the question bank: #{expected_forms - bank_forms}"
-    logger.warn "Evaluation forms in the question bank items that are unexpected: #{bank_forms - expected_forms}"
-    bank_forms.sort == expected_forms.sort
-  end
-
-  # Converts a question bank row to a hash
-  # @param row [Array<String>]
-  # @return [Hash]
-  def self.question_row_to_hash(row)
-    {
-      :category => row[:category],
-      :question => row[:question],
-      :type => row[:type],
-      :options => row[:options] && (row[:options].split(' , ').map &:strip),
-      :sub_question => row[:sub_question],
-      :sub_type => row[:sub_type],
-      :sub_options => row[:sub_options] && (row[:sub_options].split(' , '))
-    }
-  end
-
-  # Returns the form code string that should be in the CSV header row
-  # @param form [Hash]
-  # @return [String]
-  def self.get_form_code(form)
-    "#{form[:dept_code]}#{'_' + form[:eval_type] if form[:eval_type]}#{'_' + form[:catalog_ids].first if form[:catalog_ids]}"
-  end
-
-  # Returns all the questions applicable to a given department form code and evaluation type
-  # @param question_bank_csv [CSV]
-  # @param form [Hash]
-  # @return [Array<Hash>]
-  def self.get_form_questions(question_bank_csv, form)
-    # The form codes are headers in the question bank. When the CSV is read, the headers are converted to symbols.
-    form_code_to_sym = get_form_code(form).downcase.gsub(' ', '_').gsub('&', '').delete(',').to_sym
-    # Questions applicable to a form code have 'Y' under the header symbol
-    questions = []
-    question_bank_csv.each { |r| questions << OecUtils.question_row_to_hash(r) if r[form_code_to_sym] == 'Y' }
-    questions
-  end
-
 end
