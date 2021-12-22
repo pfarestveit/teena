@@ -6,6 +6,7 @@ class BOACFilteredAdmitsPage
   include Page
   include BOACPages
   include BOACListViewAdmitPages
+  include BOACCohortPages
   include BOACCohortAdmitPages
   include BOACFilteredStudentsPageFilters
   include BOACFilteredStudentsPageResults

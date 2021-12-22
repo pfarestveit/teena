@@ -61,7 +61,7 @@ class BOACHomePage
   # @param user [User]
   def dev_auth(user = nil)
     enter_dev_auth_creds user
-    wait_until(Utils.medium_wait) { ['Home | BOA', 'Drop-in Appointments Desk | BOA'].include? title }
+    wait_until(Utils.medium_wait) { ['Home | BOA', 'Drop-In Advisor Home | BOA', 'Drop-in Appointments Desk | BOA'].include? title }
   end
 
   # DROP-IN APPTS

@@ -382,19 +382,16 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
 
     describe 'group membership' do
 
-      advisor_groups.each do |group|
+      before(:all) { @group_page.load_page group_4 }
 
-        it "can be exported for group #{group.name}" do
-          @group_page.load_page group
-          csv = @group_page.export_student_list group
-          @group_page.verify_student_list_default_export(group.members, csv)
-        end
+      it "can be exported for group #{group_4.name}" do
+        csv = @group_page.export_student_list group_4
+        @group_page.verify_student_list_default_export(group_4.members, csv)
+      end
 
-        it "can be exported with custom columns for group #{group.name}" do
-          @group_page.load_page group
-          csv = @group_page.export_custom_student_list group
-          @group_page.verify_student_list_custom_export(group.members, csv)
-        end
+      it "can be exported with custom columns for group #{group_4.name}" do
+        csv = @group_page.export_custom_student_list group_4
+        @group_page.verify_student_list_custom_export(group_4.members, csv)
       end
     end
 

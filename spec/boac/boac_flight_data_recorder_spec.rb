@@ -238,7 +238,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
 
       it 'prevents the user hitting the page' do
         @flight_data_recorder.load_page scheduler.depts.first
-        @flight_data_recorder.wait_for_title 'Not Found'
+        @flight_data_recorder.wait_for_title 'Page Not Found'
       end
 
       it 'offers no link in the header' do

@@ -59,7 +59,7 @@ module BOACPages
 
   # Clicks the header name button to reveal additional links
   def click_header_dropdown
-    sleep 2
+    sleep 1
     wait_for_update_and_click header_dropdown_element
   end
 
@@ -102,7 +102,7 @@ module BOACPages
   def click_settings_link
     click_header_dropdown
     wait_for_update_and_click settings_link_element
-    wait_for_title 'Profile'
+    wait_until(Utils.medium_wait) { title.include? 'Profile | BOA' }
   end
 
   ### USER LIST SORTING ###
@@ -114,6 +114,22 @@ module BOACPages
     logger.info "Sorting by #{option}"
     xpath = filtered_cohort_xpath cohort if cohort && cohort.instance_of?(FilteredCohort)
     wait_for_update_and_click row_element(xpath: "#{xpath}//th[contains(.,\"#{option}\")]")
+  end
+
+  def verify_list_view_sorting(expected_sids, visible_sids)
+    # Only compare sort order for SIDs that are both expected and visible
+    unless expected_sids.sort == visible_sids.sort
+      expected_sids.keep_if { |e| visible_sids.include? e }
+      visible_sids.keep_if { |v| expected_sids.include? v }
+    end
+
+    # Collect any mismatches
+    sorting_errors = []
+    visible_sids.each do |v|
+      e = expected_sids[visible_sids.index v]
+      sorting_errors << "Expected #{e}, got #{v}" unless v == e
+    end
+    wait_until(0.5, "Mismatches: #{sorting_errors}") { sorting_errors.empty? }
   end
 
   ### SIDEBAR - GROUPS ###
@@ -201,7 +217,7 @@ module BOACPages
     logger.debug 'Clicking sidebar button to create a filtered cohort'
     wait_for_load_and_click create_filtered_cohort_link_element
     wait_for_title 'Create Cohort'
-    sleep 3
+    sleep Utils.click_wait
   end
 
   # Clicks the button to view all custom cohorts

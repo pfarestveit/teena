@@ -63,7 +63,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
     end
 
     context 'in user search mode' do
-      auth_users.reject { |u| u.uid == Utils.super_admin_uid }.select { |u| u.uid.length == 7 }.shuffle.last(25).each do |user|
+      auth_users.reject { |u| u.uid == Utils.super_admin_uid }.select { |u| u.uid.length == 7 }.shuffle.last(5).each do |user|
         context "searching for UID #{user.uid}" do
           before(:all) do
             @pax_manifest_page.search_for_advisor user
@@ -139,16 +139,15 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
         expect(@pax_manifest_page.dept_select_options).to eql(expected_options)
       end
 
-      dept_advisors.each do |dept|
-        it "shows all the advisors in #{dept[:dept].name}" do
-          logger.info "Checking advisor list for #{dept[:dept].name}"
-          @pax_manifest_page.select_dept dept[:dept]
-          expected_uids = dept[:advisors].map(&:uid).sort
-          @pax_manifest_page.wait_for_advisor_list
-          visible_uids = @pax_manifest_page.list_view_uids.sort
-          @pax_manifest_page.wait_until(1, "Expected but not present: #{expected_uids - visible_uids}, present but not expected: #{visible_uids - expected_uids}") do
-            visible_uids == expected_uids
-          end
+      it 'shows all the advisors in a given department' do
+        dept = dept_advisors.first
+        logger.info "Checking advisor list for #{dept[:dept].name}"
+        @pax_manifest_page.select_dept dept[:dept]
+        expected_uids = dept[:advisors].map(&:uid).sort
+        @pax_manifest_page.wait_for_advisor_list
+        visible_uids = @pax_manifest_page.list_view_uids.sort
+        @pax_manifest_page.wait_until(1, "Expected but not present: #{expected_uids - visible_uids}, present but not expected: #{visible_uids - expected_uids}") do
+          visible_uids == expected_uids
         end
       end
 
@@ -172,17 +171,12 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
         visible_emails.keep_if { |e| !e.empty? }
         expect(visible_emails).not_to be_empty
       end
-
-      # TODO it 'allows an admin to sort users by Last Name ascending'
-      # TODO it 'allows an admin to sort users by Last Name descending'
-      # TODO it 'allows an admin to sort users by Last Login ascending'
-      # TODO it 'allows an admin to sort users by Last Login descending'
     end
 
     context 'in BOA Admin mode' do
       before { @pax_manifest_page.select_admin_mode }
 
-      it "shows all the admins" do
+      it 'shows all the admins' do
         dept = BOACDepartments::ADMIN
         logger.info "Checking users list for #{dept.name}"
         admin_users = auth_users.select { |u| u.is_admin }

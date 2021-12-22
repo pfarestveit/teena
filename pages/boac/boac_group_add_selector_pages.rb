@@ -19,7 +19,7 @@ module BOACGroupAddSelectorPages
   button(:add_to_grp_button, id: 'add-to-curated-group')
   button(:student_added_to_grp_conf, id: 'added-to-curated-group')
   button(:students_added_to_grp_conf, id: 'add-to-curated-group-confirmation')
-  elements(:add_individual_to_grp_checkbox, :checkbox, xpath: "//input[contains(@id,'curated-group-checkbox')]/..")
+  elements(:add_individual_to_grp_checkbox, :checkbox, xpath: "//input[contains(@id,'curated-group-checkbox')]")
   elements(:add_individual_to_grp_input, :text_field, xpath: "//input[contains(@id,'curated-group-checkbox')]")
 
   def click_add_to_grp_button

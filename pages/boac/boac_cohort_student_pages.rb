@@ -11,8 +11,6 @@ module BOACCohortStudentPages
 
   button(:confirm_export_list_button, id: 'export-list-confirm')
 
-  button(:history_button, id: 'show-cohort-history-button')
-
   span(:no_access_msg, xpath: '//span[text()="You are unauthorized to access student data managed by other departments"]')
   span(:title_required_msg, xpath: '//span[text()="Required"]')
 
