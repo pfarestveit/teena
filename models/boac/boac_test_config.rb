@@ -103,11 +103,15 @@ class BOACTestConfig < TestConfig
   end
 
   # Sets a cohort to use as a default group of students for testing
-  def set_default_cohort(filter = nil)
+  def set_default_cohort(filter = nil, opts = nil)
     @default_cohort = FilteredCohort.new({})
     unless filter
       filter = CohortFilter.new
       filter.major = CONFIG['test_default_cohort_major']
+      if opts && opts[:include_inactive]
+        filter.career_statuses = %w(Active Inactive)
+        filter.degrees_awarded = CONFIG['test_default_cohort_major']
+      end
     end
     @default_cohort.search_criteria = filter
     filtered_sids = NessieFilterUtils.get_cohort_result(self, filter)
@@ -293,7 +297,7 @@ class BOACTestConfig < TestConfig
   # Config for curated group testing
   def curated_groups
     set_base_configs
-    set_default_cohort
+    set_default_cohort(nil, {include_inactive: true})
     set_test_students 50
   end
 

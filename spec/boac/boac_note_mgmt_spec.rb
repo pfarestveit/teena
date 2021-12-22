@@ -472,18 +472,16 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
 
         it('can download notes') { @student_page.notes_download_link_element.when_visible Utils.short_wait }
 
-        notes.each do |note|
-          it 'cannot edit a note' do
-            @student_page.expand_item note
-            expect(@student_page.edit_note_button(note).exists?).to be false
-          end
+        it 'cannot edit a note' do
+          @student_page.expand_item note_5
+          expect(@student_page.edit_note_button(note_5).exists?).to be false
+        end
 
-          it 'can delete a note' do
-            @student_page.delete_note note
-            @student_page.collapsed_item_el(note).when_not_visible Utils.short_wait
-            deleted = BOACUtils.get_note_delete_status note
-            expect(deleted).to_not be_nil
-          end
+        it 'can delete a note' do
+          @student_page.delete_note note_5
+          @student_page.collapsed_item_el(note_5).when_not_visible Utils.short_wait
+          deleted = BOACUtils.get_note_delete_status note_5
+          expect(deleted).to_not be_nil
         end
       end
 
@@ -496,27 +494,21 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
           @student_page.uncheck_include_classes_cbx
         end
 
-        notes.each do |note|
-          it 'cannot find a deleted note' do
-            unless note == notes.last
-              logger.info "Searching for deleted note ID #{note.id} by subject '#{note.subject}'"
-              @homepage.load_page
-              @student_page.type_note_appt_string_and_enter note.subject
-              expect(@search_results_page.note_results_count).to be_zero
-            end
-          end
+        it 'cannot find a deleted note' do
+          logger.info "Searching for deleted note ID #{note_5.id} by subject '#{note_5.subject}'"
+          @homepage.load_page
+          @student_page.type_note_appt_string_and_enter note_5.subject
+          expect(@search_results_page.note_results_count).to be_zero
+        end
 
-          it 'cannot download a deleted note\'s attachments' do
-            if note.attachments.any?
-              note.attachments.each do |attach|
-                Utils.prepare_download_dir
-                @homepage.load_page
-                id = BOACUtils.get_attachment_id_by_file_name(note, attach)
-                @api_notes_page.load_attachment_page id
-                @api_notes_page.not_found_msg_element.when_visible Utils.short_wait
-                expect(Utils.downloads_empty?).to be true
-              end
-            end
+        it 'cannot download a deleted note\'s attachments' do
+          note_5.attachments.each do |attach|
+            Utils.prepare_download_dir
+            @homepage.load_page
+            id = BOACUtils.get_attachment_id_by_file_name(note_5, attach)
+            @api_notes_page.load_attachment_page id
+            @api_notes_page.not_found_msg_element.when_visible Utils.short_wait
+            expect(Utils.downloads_empty?).to be true
           end
         end
       end

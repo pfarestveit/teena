@@ -234,46 +234,41 @@ describe 'BOAC' do
 
   describe 'admit group membership' do
 
-    advisor_groups.each do |group|
+    before(:all) { @group = advisor_groups.sort_by { |g| g.members.length }.last }
 
-      it 'appears in Everyone\'s Groups' do
-        visible = (@group_page.visible_everyone_groups.map &:name).sort
-        expect(visible).to include(group.name)
+    it 'appears in Everyone\'s Groups' do
+      visible = (@group_page.visible_everyone_groups.map &:name).sort
+      expect(visible).to include(@group.name)
+    end
+
+    it 'shows the most recent data update date if the data is stale' do
+      @group_page.load_page @group
+      if Date.parse(latest_update_date) == Date.today
+        expect(@group_page.data_update_date_heading(latest_update_date).exists?).to be false
+      else
+        expect(@group_page.data_update_date_heading(latest_update_date).exists?).to be true
       end
+    end
 
-      it "shows the most recent data update date for group #{group.name} if the data is stale" do
-        @group_page.load_page group
-        if Date.parse(latest_update_date) == Date.today
-          expect(@group_page.data_update_date_heading(latest_update_date).exists?).to be false
-        else
-          expect(@group_page.data_update_date_heading(latest_update_date).exists?).to be true
-        end
-      end
+    it 'shows the right data for the admits' do
+      failures = []
+      visible_sids = @group_page.admit_cohort_row_sids
 
-      it "shows the right data for the admits in group #{group.name}" do
-        failures = []
-        visible_sids = @group_page.admit_cohort_row_sids
+      group_sids = @group.members.map &:sis_id
+      @group.member_data = test.searchable_data.select { |d| group_sids.include? d[:sid] }
+      expected_admit_data = @group.member_data.select { |d| visible_sids.include? d[:sid] }
 
-        group_sids = group.members.map &:sis_id
-        group.member_data = test.searchable_data.select { |d| group_sids.include? d[:sid] }
-        expected_admit_data = group.member_data.select { |d| visible_sids.include? d[:sid] }
+      expected_admit_data.each { |admit| @group_page.verify_admit_row_data(admit[:sid], admit, failures) }
+      expect(failures).to be_empty
+    end
 
-        expected_admit_data.each { |admit| @group_page.verify_admit_row_data(admit[:sid], admit, failures) }
-        expect(failures).to be_empty
-      end
+    it 'can be exported' do
+      @group.export_csv = @group_page.export_admit_list @group
+      @group_page.verify_admits_present_in_export(all_admit_data, @group.member_data, @group.export_csv)
+    end
 
-      it "can be exported for group #{group.name}" do
-        if group.member_data.length.zero?
-          expect(@group_page.export_list_button_element.disabled?).to be true
-        else
-          group.export_csv = @group_page.export_admit_list group
-          @group_page.verify_admits_present_in_export(all_admit_data, group.member_data, group.export_csv)
-        end
-      end
-
-      it "can be exported with no email addresses for group #{group.name}" do
-        group.member_data.length.zero? ? skip : @group_page.verify_no_email_in_export(group.export_csv)
-      end
+    it 'can be exported with no email addresses' do
+      @group_page.verify_no_email_in_export(@group.export_csv)
     end
   end
 

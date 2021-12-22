@@ -7,6 +7,7 @@ module BOACCohortPages
 
   h1(:results, xpath: '//h1')
   button(:export_list_button, id: 'export-student-list-button')
+  button(:history_button, id: 'show-cohort-history-button')
 
   def cohort_heading(cohort)
     h1_element(xpath: "//h1[contains(text(),\"#{cohort.name}\")]")

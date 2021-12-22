@@ -48,7 +48,7 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
         end
 
         it 'allows the advisor to export a list of all admits' do
-          @all_admits.export_csv = @cohort_page.export_student_list @all_admits
+          @all_admits.export_csv = @cohort_page.export_admit_list @all_admits
           @cohort_page.verify_admits_present_in_export(all_admit_data, @all_admits.member_data, @all_admits.export_csv)
         end
 
@@ -81,7 +81,7 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
           else
             @cohort_page.sort_by_last_name unless cohort.member_data.length == 1
             visible_results = @cohort_page.list_view_admit_sids cohort
-            @cohort_page.wait_until(1, "Expected but not present: #{expected_results - visible_results}. Present but not expected: #{visible_results - expected_results}") do
+            @cohort_page.wait_until(1, "Missing: #{expected_results - visible_results}. Unexpected: #{visible_results - expected_results}") do
               visible_results.sort == expected_results.sort
             end
             @cohort_page.verify_list_view_sorting(expected_results, visible_results)
@@ -105,68 +105,7 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
           expect(failures).to be_empty
         end
 
-        it "sorts by First Name all the admits who match #{cohort.search_criteria.inspect}" do
-          if [0, 1].include? cohort.member_data.length
-            logger.warn 'Skipping sort-by-first-name test since there are no results or one result'
-          else
-            @cohort_page.sort_by_first_name
-            expected_results = @cohort_page.expected_sids_by_first_name(cohort.member_data)
-            visible_results = @cohort_page.list_view_admit_sids cohort
-            @cohort_page.verify_list_view_sorting(expected_results, visible_results)
-            @cohort_page.wait_until(1, "Expected #{expected_results} but got #{visible_results}") { visible_results == expected_results }
-          end
-        end
-
-        it "sorts by CS ID all the admits who match #{cohort.search_criteria.inspect}" do
-          if [0, 1].include? cohort.member_data.length
-            logger.warn 'Skipping sort-by-cs-id test since there are no results or one result'
-          else
-            @cohort_page.sort_by_cs_id
-            expected_results = cohort.member_data.map { |u| u[:sid].to_i }.sort
-            visible_results = @cohort_page.list_view_admit_sids cohort
-            @cohort_page.verify_list_view_sorting(expected_results, visible_results)
-            @cohort_page.wait_until(1, "Expected #{expected_results} but got #{visible_results}") { visible_results == expected_results }
-          end
-        end
-
         it("offers an Export List button for a search #{cohort.search_criteria.inspect}") { expect(@cohort_page.export_list_button?).to be true }
-
-        it "allows the advisor to export a non-zero list of admits in a cohort using #{cohort.search_criteria.list_filters}" do
-          if cohort.member_data.length.zero?
-            expect(@cohort_page.export_list_button_element.disabled?).to be true
-          else
-            cohort.export_csv = @cohort_page.export_admit_list cohort
-            @cohort_page.verify_admits_present_in_export(all_admit_data, cohort.member_data, cohort.export_csv)
-          end
-        end
-
-        it "allows the advisor to export a non-zero list containing no emails for a cohort using #{cohort.search_criteria.list_filters}" do
-          cohort.member_data.length.zero? ? skip : @cohort_page.verify_no_email_in_export(cohort.export_csv)
-        end
-
-        it "offers links to admit pages for search #{cohort.search_criteria.inspect}" do
-          if cohort.member_data.length.zero?
-            logger.warn 'Skipping admit page link test since there are no results'
-          elsif cohort == test.searches.last
-            logger.warn 'Skipping a problematic test'
-          else
-            cs_id = @cohort_page.admit_cohort_row_sids.first
-            @cohort_page.click_admit_link cs_id
-            @admit_page.sid_element.when_visible Utils.short_wait
-            expect(@admit_page.sid).to eql(cs_id)
-          end
-        end
-
-        it "can be reloaded using the Back button on an admit page for search #{cohort.search_criteria.inspect}" do
-          if cohort.member_data.length.zero?
-            logger.warn 'Skipping admit page back button test since there are no results'
-          elsif cohort == test.searches.last
-            logger.warn 'Skipping a problematic test'
-          else
-            @admit_page.go_back
-            @cohort_page.wait_until(Utils.short_wait) { @cohort_page.wait_for_search_results == cohort.member_data.length }
-          end
-        end
 
         it("allows the advisor to create a cohort using #{cohort.search_criteria.inspect}") { @cohort_page.create_new_cohort cohort }
 
@@ -175,6 +114,46 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
         it("shows the cohort member count in the sidebar using #{cohort.search_criteria.inspect}") { @cohort_page.wait_for_sidebar_cohort_member_count cohort if cohort.id }
 
         it("offers no cohort history button for a cohort using #{cohort.search_criteria.inspect}") { expect(@cohort_page.history_button?).to be false }
+      end
+
+      describe 'admit cohorts' do
+
+        before(:all) do
+          @cohort = test.searches.sort_by { |c| c.members.length }.last
+          @cohort_page.load_cohort @cohort
+        end
+
+        it 'can be sorted by First Name' do
+          @cohort_page.sort_by_first_name
+          expected_results = @cohort_page.expected_sids_by_first_name(@cohort.member_data)
+          visible_results = @cohort_page.list_view_admit_sids @cohort
+          @cohort_page.verify_list_view_sorting(expected_results, visible_results)
+          @cohort_page.wait_until(1, "Expected #{expected_results} but got #{visible_results}") { visible_results == expected_results }
+        end
+
+        it 'can be sorted by CS ID' do
+          @cohort_page.sort_by_cs_id
+          expected_results = @cohort.member_data.map { |u| u[:sid].to_i }.sort
+          visible_results = @cohort_page.list_view_admit_sids @cohort
+          @cohort_page.verify_list_view_sorting(expected_results, visible_results)
+          @cohort_page.wait_until(1, "Expected #{expected_results} but got #{visible_results}") { visible_results == expected_results }
+        end
+
+        it 'allow the advisor to export a non-zero list of admits in a cohort' do
+          @cohort.export_csv = @cohort_page.export_admit_list @cohort
+          @cohort_page.verify_admits_present_in_export(all_admit_data, @cohort.member_data, @cohort.export_csv)
+        end
+
+        it 'allow the advisor to export a non-zero list containing no emails for a cohort' do
+          @cohort_page.verify_no_email_in_export(@cohort.export_csv)
+        end
+
+        it 'offer links to admit pages' do
+          cs_id = @cohort_page.admit_cohort_row_sids.first
+          @cohort_page.click_admit_link cs_id
+          @admit_page.sid_element.when_visible Utils.short_wait
+          expect(@admit_page.sid).to eql(cs_id)
+        end
       end
 
       context 'when the advisor enters invalid filter input' do
