@@ -331,7 +331,7 @@ class BOACSearchResultsPage
   # Adds all the students on a page to a group
   # @param group [CuratedGroup]
   def select_and_add_all_students_to_grp(all_students, group)
-    wait_until(Utils.short_wait) { add_individual_to_grp_checkbox_elements.any? &:visible? }
+    wait_until(Utils.short_wait) { add_individual_to_grp_checkbox_elements.any? }
     wait_for_update_and_click add_all_to_grp_checkbox_element
     logger.debug "There are #{add_individual_to_grp_checkbox_elements.length} individual checkboxes"
     visible_sids = add_individual_to_grp_input_elements.map { |el| el.attribute('id').split('-')[1] }

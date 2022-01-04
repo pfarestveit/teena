@@ -59,7 +59,7 @@ module BOACGroupAddSelectorPages
     logger.info "Adding SIDs #{students.map &:sis_id} to group #{group.name} ID #{group.id}"
     click_add_to_grp_button
     check_grp group
-    students_added_to_grp_conf_element.when_visible Utils.short_wait
+    students_added_to_grp_conf_element.when_present Utils.short_wait
     group.members << students
     group.members.flatten!
     wait_for_sidebar_group group
@@ -89,7 +89,7 @@ module BOACGroupAddSelectorPages
     click_add_to_grp_button
     click_create_new_grp
     name_and_save_group group
-    students_added_to_grp_conf_element.when_visible Utils.short_wait
+    students_added_to_grp_conf_element.when_present Utils.short_wait
     group.members << students
     group.members.flatten!
     wait_for_sidebar_group group
@@ -106,7 +106,7 @@ module BOACGroupAddSelectorPages
   end
 
   def select_and_add_all_students_to_grp(all_students, group)
-    wait_until(Utils.short_wait) { add_individual_to_grp_checkbox_elements.any? &:visible? }
+    wait_until(Utils.short_wait) { add_individual_to_grp_checkbox_elements.any? }
     wait_for_update_and_click add_all_to_grp_checkbox_element
     logger.debug "There are #{add_individual_to_grp_checkbox_elements.length} individual checkboxes"
     # Don't try to add users to the group if they're already in the group

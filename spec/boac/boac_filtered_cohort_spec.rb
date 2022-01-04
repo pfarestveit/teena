@@ -42,7 +42,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
       before(:each) { @cohort_page.cancel_cohort if @cohort_page.cancel_cohort_button? && @cohort_page.cancel_cohort_button_element.visible? }
 
       test.searches.each do |cohort|
-        it "shows all the students sorted by Last Name who match #{cohort.search_criteria.list_filters}" do
+        it "shows all the students sorted by Last Name who match #{cohort.search_criteria.inspect}" do
           @cohort_page.click_sidebar_create_filtered
           @cohort_page.perform_student_search cohort
           @cohort_page.set_cohort_members(cohort, test)
@@ -58,21 +58,21 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
           end
         end
 
-        it "shows an Export List button for search #{cohort.search_criteria.list_filters}" do
+        it "shows an Export List button for search #{cohort.search_criteria.inspect}" do
           button_enabled = @cohort_page.export_list_button_element.enabled?
           cohort.members.any? ? (expect(button_enabled).to be true) : (expect(button_enabled).to be false)
         end
 
-        it("allows the advisor to create a cohort using #{cohort.search_criteria.list_filters}") { @cohort_page.create_new_cohort cohort }
+        it("allows the advisor to create a cohort using #{cohort.search_criteria.inspect}") { @cohort_page.create_new_cohort cohort }
 
-        it("shows the cohort filters for a cohort using #{cohort.search_criteria.list_filters}") { @cohort_page.verify_student_filters_present cohort }
+        it("shows the cohort filters for a cohort using #{cohort.search_criteria.inspect}") { @cohort_page.verify_student_filters_present cohort }
 
-        it "shows the filtered cohort on the homepage with criteria #{cohort.search_criteria.list_filters}" do
+        it "shows the filtered cohort on the homepage with criteria #{cohort.search_criteria.inspect}" do
           @homepage.load_page
           @homepage.wait_until(Utils.medium_wait) { @homepage.filtered_cohorts.include? cohort.name }
         end
 
-        it "shows the filtered cohort member count with criteria #{cohort.search_criteria.list_filters}" do
+        it "shows the filtered cohort member count with criteria #{cohort.search_criteria.inspect}" do
           @homepage.wait_until(Utils.short_wait, "Expected #{cohort.members.length} but got #{@homepage.member_count(cohort)}") do
             @homepage.member_count(cohort) == cohort.members.length
           end
@@ -147,14 +147,14 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
         @cohort_page.compare_visible_sids_to_expected expected
       end
 
-      it "sorts by GPA ascending (#{BOACUtils.previous_term_code BOACUtils.previous_term_code})" do
+      it "sorts by GPA ascending (term #{BOACUtils.previous_term_code BOACUtils.previous_term_code})" do
         term = BOACUtils.previous_term_code BOACUtils.previous_term_code
         @cohort_page.sort_by_last_term_gpa term
         expected = NessieFilterUtils.cohort_by_gpa_last_last_term_asc(test, @cohort.search_criteria)
         @cohort_page.compare_visible_sids_to_expected expected
       end
 
-      it "sorts by GPA descending (#{BOACUtils.previous_term_code BOACUtils.previous_term_code})" do
+      it "sorts by GPA descending (term #{BOACUtils.previous_term_code BOACUtils.previous_term_code})" do
         term = BOACUtils.previous_term_code BOACUtils.previous_term_code
         @cohort_page.sort_by_last_term_gpa_desc term
         expected = NessieFilterUtils.cohort_by_gpa_last_last_term_desc(test, @cohort.search_criteria)
