@@ -107,10 +107,9 @@ class BOACTestConfig < TestConfig
     @default_cohort = FilteredCohort.new({})
     unless filter
       filter = CohortFilter.new
-      filter.major = CONFIG['test_default_cohort_major']
+      filter.intended_major = CONFIG['test_default_cohort_major']
       if opts && opts[:include_inactive]
         filter.career_statuses = %w(Active Inactive)
-        filter.degrees_awarded = CONFIG['test_default_cohort_major']
       end
     end
     @default_cohort.search_criteria = filter
@@ -128,11 +127,6 @@ class BOACTestConfig < TestConfig
                        # Running tests against a specific set of students
                        uids = uids.split
                        @students.select { |s| uids.include? s.uid }
-
-                     elsif @cohort_members
-                       # Running tests against a cohort of students (i.e., a list presented in the UI)
-                       @cohort_members.shuffle!
-                       @cohort_members[0..(config - 1)]
 
                      elsif opts[:with_notes]
                        # Running tests against a set of students who represent different note sources
@@ -156,6 +150,7 @@ class BOACTestConfig < TestConfig
                        @students.select { |s| test_sids.include? s.sis_id }
 
                      elsif opts[:with_appts]
+                       # Running tests against a set of students who represent different appt sources
                        boa_sids = NessieUtils.get_all_sids
                        sis_appts_sids = boa_sids & NessieTimelineUtils.get_sids_with_sis_appts
                        logger.info "There are #{sis_appts_sids.length} students with SIS appointments"
@@ -164,6 +159,12 @@ class BOACTestConfig < TestConfig
                        [sis_appts_sids, ycbm_appts_sids].each &:shuffle!
                        test_sids = (sis_appts_sids[0..(config - 1)] + ycbm_appts_sids[0..(config - 1)]).uniq
                        @students.select { |s| test_sids.include? s.sis_id }
+
+                     elsif @cohort_members
+                       # Running tests against a cohort of students (i.e., a list presented in the UI)
+                       @cohort_members.shuffle!
+                       @cohort_members[0..(config - 1)]
+
                      else
                        # Running tests against a random set of students, plus optional selected students
                        students = @students.shuffle[0..(config - 1)]
@@ -282,7 +283,7 @@ class BOACTestConfig < TestConfig
 
   # Config for class page testing
   def class_pages
-    set_base_configs
+    set_base_configs(nil, {include_inactive: true})
     set_test_students CONFIG['class_page_max_users']
   end
 
@@ -296,7 +297,7 @@ class BOACTestConfig < TestConfig
 
   # Config for curated group testing
   def curated_groups
-    set_base_configs
+    set_base_configs(nil, {include_inactive: true})
     set_default_cohort(nil, {include_inactive: true})
     set_test_students 50
   end
