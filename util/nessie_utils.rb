@@ -150,89 +150,6 @@ class NessieUtils < Utils
 
   #### HISTORICAL STUDENTS ####
 
-  # Returns the number of non-current students with a given academic career status
-  # @param status [String]
-  # @return [Integer]
-  def self.hist_career_status_count(status)
-    query = "SELECT COUNT(*)
-             FROM student.student_profiles_hist_enr
-             WHERE profile LIKE '%\"academicCareerStatus\": \"#{status}\"%';"
-    result = query_pg_db_field(nessie_pg_db_credentials, query, 'count').last.to_i
-    logger.info "Count of historical students with academic career status '#{status}' is #{result}"
-    result
-  end
-
-  # Returns the number of non-current students with a null academic career status
-  # @return [Integer]
-  def self.null_hist_career_status_count
-    query = "SELECT COUNT(*)
-             FROM student.student_profiles_hist_enr
-             WHERE profile NOT LIKE '%\"academicCareerStatus\": %';"
-    result = query_pg_db_field(nessie_pg_db_credentials, query, 'count').last.to_i
-    logger.info "Count of historical students with NULL academic career status is #{result}"
-    result
-  end
-
-  # Returns the number of non-current students with an unexpected academic career status
-  # @return [Integer]
-  def self.unexpected_hist_career_status_count
-    query = "SELECT COUNT(*)
-             FROM student.student_profiles_hist_enr
-             WHERE profile LIKE '%\"academicCareerStatus\": %'
-               AND profile NOT LIKE '%\"academicCareerStatus\": \"Active\"%'
-               AND profile NOT LIKE '%\"academicCareerStatus\": \"Inactive\"%'
-               AND profile NOT LIKE '%\"academicCareerStatus\": \"Completed\"%'
-               AND profile NOT LIKE '%\"academicCareerStatus\": \"Created In Error\"%'
-               AND profile NOT LIKE'%\"academicCareerStatus\": null%';"
-    result = query_pg_db_field(nessie_pg_db_credentials, query, 'count').last.to_i
-    logger.info "Count of historical students with unexpected academic career status is #{result}"
-    result
-  end
-
-  # Returns the number of non-current students with a given program status
-  # @param status [String]
-  # @return [Integer]
-  def self.hist_prog_status_count(status)
-    query = "SELECT COUNT(*)
-             FROM student.student_profiles_hist_enr
-             WHERE profile LIKE '%\"status\": \"#{status}\"%';"
-    result = query_pg_db_field(nessie_pg_db_credentials, query, 'count').last.to_i
-    logger.info "Count of historical students with academic program status '#{status}' is #{result}"
-    result
-  end
-
-  # Returns the number of non-current students with an unexpected program status
-  # @return [Integer]
-  def self.unexpected_hist_prog_status_count
-    query = "SELECT COUNT(*)
-             FROM student.student_profiles_hist_enr
-             WHERE profile LIKE '%\"status\": %'
-               AND profile NOT LIKE '%\"status\": \"Active\"%'
-               AND profile NOT LIKE '%\"status\": \"Admitted\"%'
-               AND profile NOT LIKE '%\"status\": \"Cancelled\"%'
-               AND profile NOT LIKE '%\"status\": \"Completed Program\"%'
-               AND profile NOT LIKE '%\"status\": \"Deceased\"%'
-               AND profile NOT LIKE '%\"status\": \"Discontinued\"%'
-               AND profile NOT LIKE '%\"status\": \"Dismissed\"%'
-               AND profile NOT LIKE '%\"status\": \"Leave of Absence\"%'
-               AND profile NOT LIKE '%\"status\": \"Suspended\"%'
-               AND profile NOT LIKE '%\"status\": {\"code\": \"PRO\", \"description\": \"Probation\"}%'
-               AND profile NOT LIKE '%\"status\": {\"code\": \"GST\", \"description\": \"Good Standing\"}%'
-               AND profile NOT LIKE '%\"status\": {\"code\": \"DIS\", \"description\": \"Dismissed\"}%';"
-    result = query_pg_db_field(nessie_pg_db_credentials, query, 'count').last.to_i
-    logger.info "Count of historical students with unexpected academic program status is #{result}"
-    result
-  end
-
-  # Returns the SIDs of non-current students in the profiles table
-  # @return [Array<String>]
-  def self.hist_profile_sids
-    query = 'SELECT sid
-             FROM student.student_profiles_hist_enr
-             ORDER BY sid ASC;'
-    query_pg_db(nessie_pg_db_credentials, query).map { |r| r['sid'] }
-  end
-
   # Returns the SIDs of non-current students with a given academic career status
   # @param status [String]
   # @return [Array<String>]
@@ -240,24 +157,6 @@ class NessieUtils < Utils
     query = "SELECT sid
              FROM student.student_profiles_hist_enr
              WHERE profile LIKE '%\"academicCareerStatus\": \"#{status}\"%';"
-    query_pg_db(nessie_pg_db_credentials, query).map { |r| r['sid'] }
-  end
-
-  # Returns the SIDs of non-current students with null academic career status
-  # @return [Array<String>]
-  def self.null_hist_career_status_sids
-    query = "SELECT sid
-             FROM student.student_profiles_hist_enr
-             WHERE profile NOT LIKE '%\"academicCareerStatus\": %';"
-    query_pg_db(nessie_pg_db_credentials, query).map { |r| r['sid'] }
-  end
-
-  # Returns the SIDs of non-current students in the enrollments table
-  # @return [Array<String>]
-  def self.hist_enrollment_sids
-    query = 'SELECT DISTINCT sid
-             FROM student.student_enrollment_terms_hist_enr
-             ORDER BY sid ASC;'
     query_pg_db(nessie_pg_db_credentials, query).map { |r| r['sid'] }
   end
 

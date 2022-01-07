@@ -104,6 +104,28 @@ class NessieTimelineUtils < NessieUtils
     notes_data.map { |d| Note.new d }
   end
 
+  def self.get_history_notes(student)
+    sql = "SELECT boac_advising_history_dept.advising_notes.id AS id,
+                  boac_advising_history_dept.advising_notes.advisor_uid AS advisor_uid,
+                  boac_advising_history_dept.advising_notes.note AS body
+             FROM boac_advising_history_dept.advising_notes
+            WHERE boac_advising_history_dept.advising_notes.sid = '#{student.sis_id}'"
+
+    results = query_pg_db(NessieUtils.nessie_pg_db_credentials, sql)
+    notes_data = results.map do |r|
+      {
+        id: r['id'],
+        source: TimelineRecordSource::HISTORY,
+        body: r['body'],
+        advisor: (BOACUser.new uid: r['advisor_uid']),
+        # TODO real created_date, updated_date
+        created_date: Time.now,
+        updated_date: Time.now
+      }
+    end
+    notes_data.map { |d| Note.new d }
+  end
+
   # Returns SIS advising notes associated with a given student
   # @param student [BOACUser]
   # @return [Array<Note>]

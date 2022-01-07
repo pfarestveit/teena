@@ -158,7 +158,10 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
 
         it 'updates the cohort student list when students are added to the group via a group selector' do
           @cohort_page.load_cohort @cohorts.last
-          expect(@cohort_page.visible_sids.sort).to eql(@cohorts.last.members.map(&:sis_id).sort)
+          expected = @cohorts.last.members.map(&:sis_id).sort
+          @cohort_page.wait_until(1, "Missing #{expected - @cohort_page.visible_sids.sort}, unexpected #{@cohort_page.visible_sids.sort - expected}") do
+            @cohort_page.visible_sids.sort == expected
+          end
         end
 
         it 'updates the cohort member count on the homepage when students are added to the group via a group selector' do
@@ -211,7 +214,10 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
         end
 
         it 'updates the cohort student list when a group is added to the cohort' do
-          expect(@cohort_page.visible_sids.sort).to eql(@cohorts.last.members.map(&:sis_id).sort)
+          expected = @cohorts.last.members.map(&:sis_id).sort
+          @cohort_page.wait_until(1, "Missing #{expected - @cohort_page.visible_sids.sort}, unexpected #{@cohort_page.visible_sids.sort - expected}") do
+            @cohort_page.visible_sids.sort == expected
+          end
         end
 
         it 'updates the cohort member count on the homepage when a group is added to the cohort' do
