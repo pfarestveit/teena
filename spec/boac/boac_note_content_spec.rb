@@ -29,10 +29,12 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
           expected_data_notes = NessieTimelineUtils.get_data_sci_notes student
           expected_e_forms = NessieTimelineUtils.get_e_form_notes student
           expected_ei_notes = NessieTimelineUtils.get_e_and_i_notes student
+          expected_history_notes = NessieTimelineUtils.get_history_notes student
           expected_sis_notes = NessieTimelineUtils.get_sis_notes student
           logger.warn "UID #{student.uid} has #{expected_sis_notes.length} SIS notes, #{expected_asc_notes.length} ASC notes,
                               #{expected_ei_notes.length} E&I notes, #{expected_boa_notes.length} BOA notes,
-                              #{expected_e_forms.length} eForms, and #{expected_data_notes.length} Data Science notes"
+                              #{expected_e_forms.length} eForms, #{expected_data_notes.length} Data Science notes,
+                              and #{expected_history_notes.length} History notes."
 
           expected_notes = expected_sis_notes + expected_ei_notes + expected_boa_notes + expected_asc_notes +
             expected_e_forms + expected_data_notes
@@ -61,7 +63,8 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
           # Test a representative subset of the total notes
           test_notes = expected_sis_notes.shuffle[0..max_note_count_per_src] + expected_ei_notes.shuffle[0..max_note_count_per_src] +
             expected_boa_notes.shuffle[0..max_note_count_per_src] + expected_asc_notes.shuffle[0..max_note_count_per_src] +
-            expected_data_notes.shuffle[0..max_note_count_per_src] + expected_e_forms.shuffle[0..max_note_count_per_src]
+            expected_data_notes.shuffle[0..max_note_count_per_src] + expected_e_forms.shuffle[0..max_note_count_per_src] +
+            expected_history_notes.shuffle[0..max_note_count_per_src]
 
           logger.info "Test note sources: #{test_notes.map { |n| n.source ? n.source.name : 'BOA' }}"
 
@@ -115,13 +118,13 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
                 else
                   visible_expanded_note_data = @student_page.visible_expanded_note_data note
 
-                  # Note subject and body (NB: migrated SIS notes have no subject, so the body is shown as the subject; older migrated ASC notes have no subject
-                  # or body, so the general topic is shown as the subject)
+                  # Note subject and body (NB: migrated SIS notes and History notes have no subject, so the body is shown as the subject;
+                  # older migrated ASC notes have no subject or body, so the general topic is shown as the subject)
 
                   if note.subject
                     it("shows the subject on #{test_case}") { expect(visible_collapsed_note_data[:subject] == note.subject.strip).to be true }
                     it("shows the body on #{test_case}") { expect(visible_expanded_note_data[:body].strip.gsub(/\W/, '')).to eql(note.body.strip.gsub(/\W/, '')) }
-                  elsif expected_sis_notes.include? note
+                  elsif expected_sis_notes.include?(note) || expected_history_notes.include?(note)
                     it("shows the body as the subject on #{test_case}") { expect(visible_collapsed_note_data[:subject].gsub(/\W/, '')).to eql(note.body.gsub(/\W/, '')) }
                     it("shows no body on #{test_case}") { expect(visible_expanded_note_data[:body].strip.empty?).to be true }
                   elsif expected_data_notes.include?(note)

@@ -141,12 +141,14 @@ class BOACTestConfig < TestConfig
                        logger.info "There are #{e_and_i_note_sids.length} students with E&I notes"
                        e_form_sids = boa_sids & NessieTimelineUtils.get_sids_with_e_forms
                        logger.info "There are #{e_form_sids.length} students with eForms"
+                       history_sids = boa_sids & NessieTimelineUtils.get_sids_with_notes_of_src(TimelineRecordSource::HISTORY)
+                       logger.info "There are #{history_sids.length} students with History notes"
                        sis_note_sids = boa_sids & NessieTimelineUtils.get_sids_with_notes_of_src(TimelineRecordSource::SIS)
                        logger.info "There are #{sis_note_sids.length} students with SIS notes that have attachments"
-                       [asc_note_sids, boa_note_sids, data_note_sids, e_and_i_note_sids, sis_note_sids].each &:shuffle!
+                       [asc_note_sids, boa_note_sids, data_note_sids, e_and_i_note_sids, history_sids, sis_note_sids].each &:shuffle!
                        range = 0..(config - 1)
                        test_sids = (asc_note_sids[range] + boa_note_sids[range] + data_note_sids[range] +
-                         e_and_i_note_sids[range] + e_form_sids[range] + sis_note_sids[range]).uniq
+                         e_and_i_note_sids[range] + e_form_sids[range] + history_sids[range] + sis_note_sids[range]).uniq
                        @students.select { |s| test_sids.include? s.sis_id }
 
                      elsif opts[:with_appts]

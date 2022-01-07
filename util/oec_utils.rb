@@ -74,7 +74,7 @@ class OecUtils
         end
 
         # Exclude instructors without email (adjusting the data is complicated) and one-day modular courses (not evaluated anyway)
-        unless r['EMAIL_ADDRESS'].nil? || (r['START_DATE'] == r['END_DATE'])
+        unless r['EMAIL_ADDRESS'].nil? || (r['START_DATE'] == r['END_DATE'])  || (r['CROSS_LISTED_FLAG'] == 'RM SHARE')
 
           # Make sure the right department forms are set. FSSEM and BIOLOGY follow their own rules, so ignore them.
           unless r['DEPT_FORM'].nil? || r['DEPT_FORM'] == 'FSSEM' || r['DEPT_NAME'] == 'BIOLOGY' || r['DEPT_FORM'] == 'CALTEACH'
