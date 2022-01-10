@@ -169,18 +169,16 @@ class BOACApiStudentPage
   end
 
   def academic_standing
-    standing = @parsed && @parsed['academicStanding']&.map do |st|
-      AcademicStanding.new({
-                               code: st['status'],
-                               descrip: (AcademicStanding::STATUSES.find { |s| s.code == st['status'] }).descrip,
-                               term_id: st['termId'],
-                               term_name: st['termName'],
-                               date: st['actionDate']
-                           })
+    standing = terms&.map do |t|
+      term_standing = t['academicStanding']
+      if term_standing
+        AcademicStanding.new code: term_standing['status'].to_s,
+                             descrip: (AcademicStanding::STATUSES.find { |s| s.code == term_standing['status'] })&.descrip,
+                             term_id: term_standing['termId'],
+                             term_name: term_name(t)
+      end
     end
-    if standing
-      standing.group_by { |s| s.term_id }.transform_values { |v| v.sort_by(&:date).last }.values
-    end
+    standing.compact if standing
   end
 
   def degree_progress

@@ -108,7 +108,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
 
           if academic_standing&.any?
             latest_standing = academic_standing.first
-            if latest_standing.code == 'GST'
+            if latest_standing&.code == 'GST' || latest_standing.code&.empty?
               it("shows no academic standing for #{test_case}") { expect(cohort_page_sis_data[:academic_standing]).to be_nil }
             else
               it "shows the academic standing '#{latest_standing.descrip}' for #{test_case}" do
@@ -484,7 +484,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
         if academic_standing&.any?
           latest_standing = academic_standing.first
           if latest_standing
-            if latest_standing.code == 'GST'
+            if latest_standing.code == 'GST' || latest_standing.code&.empty?
               it("shows no academic standing #{test_case}") { expect(student_page_sis_data[:academic_standing].to_s).to be_empty }
             else
               it "shows the academic standing '#{latest_standing.descrip}' for #{test_case}" do
@@ -559,7 +559,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
 
         visible_alert_text = visible_alerts.map { |a| a[:text] }
         if latest_standing&.term_id == BOACUtils.term_code.to_s
-          if latest_standing.code == 'GST'
+          if latest_standing.code == 'GST' || latest_standing.code&.empty?
             it "shows no academic standing alert for #{test_case}" do
               expect(visible_alert_text).not_to include("Student's academic standing is '#{latest_standing.descrip}'.")
             end
@@ -662,8 +662,8 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
 
               if academic_standing&.any?
                 term_standing = academic_standing.find { |s| s.term_id.to_s == term_id.to_s }
-                if term_standing
-                  if term_standing.code == 'GST'
+                if term_standing&.code
+                  if term_standing.code == 'GST' || term_standing.code&.empty?
                     it("shows no academic standing for #{test_case}") { expect(visible_term_data[:academic_standing]).to be_nil }
                   else
                     it "shows the academic standing '#{term_standing.descrip}' for #{test_case}" do
