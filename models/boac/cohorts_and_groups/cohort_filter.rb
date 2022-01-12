@@ -103,10 +103,6 @@ class CohortFilter
       @asc_team = nil
     end
 
-    unless @career_statuses&.any?
-      @career_statuses = ['Active']
-    end
-
     if @grading_basis_epn&.any?
       @grading_basis_epn = [BOACUtils.term_code.to_s]
     end

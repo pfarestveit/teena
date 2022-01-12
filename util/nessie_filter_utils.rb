@@ -60,7 +60,7 @@ class NessieFilterUtils < NessieUtils
   def self.career_status_cond(filter, conditions_list)
     if filter.career_statuses&.any?
       statuses = filter.career_statuses.map &:downcase
-      statuses += %w(completed NULL) if statuses.include? 'inactive'
+      statuses << 'NULL' if statuses.include? 'inactive'
       conditions_list << "student.student_profile_index.academic_career_status IN(#{in_op statuses})" if filter.career_statuses&.any?
     end
   end
@@ -230,7 +230,8 @@ class NessieFilterUtils < NessieUtils
   end
 
   def self.where(test, filter)
-    clause = "WHERE #{+ 'student.student_profile_index.academic_career_status = \'active\' AND ' unless filter.career_statuses&.any?}"
+    active_cond = 'student.student_profile_index.academic_career_status = \'active\' AND '
+    clause = "WHERE #{+ active_cond unless filter.career_statuses&.any? || filter.degrees_awarded&.any? || filter.degree_terms&.any?}"
     conditions_list = []
 
     # GLOBAL FILTERS
