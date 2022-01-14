@@ -147,8 +147,15 @@ class BOACTestConfig < TestConfig
                        logger.info "There are #{sis_note_sids.length} students with SIS notes that have attachments"
                        [asc_note_sids, boa_note_sids, data_note_sids, e_and_i_note_sids, history_sids, sis_note_sids].each &:shuffle!
                        range = 0..(config - 1)
-                       test_sids = (asc_note_sids[range] + boa_note_sids[range] + data_note_sids[range] +
-                         e_and_i_note_sids[range] + e_form_sids[range] + history_sids[range] + sis_note_sids[range]).uniq
+                       test_sids = (
+                         asc_note_sids[range] +
+                         boa_note_sids[range] +
+                         data_note_sids[range] +
+                         e_and_i_note_sids[range] +
+                         e_form_sids[range] +
+                         history_sids[range] +
+                         sis_note_sids[range]
+                       ).uniq
                        @students.select { |s| test_sids.include? s.sis_id }
 
                      elsif opts[:with_appts]

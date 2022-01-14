@@ -107,7 +107,8 @@ class NessieTimelineUtils < NessieUtils
   def self.get_history_notes(student)
     sql = "SELECT boac_advising_history_dept.advising_notes.id AS id,
                   boac_advising_history_dept.advising_notes.advisor_uid AS advisor_uid,
-                  boac_advising_history_dept.advising_notes.note AS body
+                  boac_advising_history_dept.advising_notes.note AS body,
+                  boac_advising_history_dept.advising_notes.created_at AS created_date
              FROM boac_advising_history_dept.advising_notes
             WHERE boac_advising_history_dept.advising_notes.sid = '#{student.sis_id}'"
 
@@ -118,9 +119,8 @@ class NessieTimelineUtils < NessieUtils
         source: TimelineRecordSource::HISTORY,
         body: r['body'],
         advisor: (BOACUser.new uid: r['advisor_uid']),
-        # TODO real created_date, updated_date
-        created_date: Time.now,
-        updated_date: Time.now
+        created_date: Time.parse(r['created_date']).localtime,
+        updated_date: Time.parse(r['created_date']).localtime
       }
     end
     notes_data.map { |d| Note.new d }

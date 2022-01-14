@@ -28,9 +28,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
         begin
           note_searches = []
           expected_asc_notes = NessieTimelineUtils.get_asc_notes student
-          expected_boa_notes = BOACUtils.get_student_notes(student).delete_if do |n|
-            n.deleted_date || n.is_private || (!n.subject.nil? && (n.subject.include? 'QA Test'))
-          end
+          expected_boa_notes = BOACUtils.get_student_notes student
           expected_data_notes = NessieTimelineUtils.get_data_sci_notes student
           expected_ei_notes = NessieTimelineUtils.get_e_and_i_notes student
           expected_history_notes = NessieTimelineUtils.get_history_notes student
@@ -41,10 +39,14 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
 
           # Test a representative subset of the total notes
           range = 0..max_note_count_per_src
-          test_notes = expected_sis_notes.shuffle[range] + expected_ei_notes.shuffle[range] + expected_boa_notes.shuffle[range] +
-              expected_asc_notes.shuffle[range] + expected_data_notes.shuffle[range] + expected_history_notes.shuffle[range]
+          test_notes = expected_sis_notes.shuffle[range] +
+            expected_asc_notes.shuffle[range] +
+            expected_boa_notes.shuffle[range] +
+            expected_data_notes.shuffle[range] +
+            expected_ei_notes.shuffle[range] +
+            expected_history_notes.shuffle[range]
 
-          logger.info "Test note sources: #{test_notes.map { |n| n.source ? n.source.name : 'BOA' }}"
+          logger.info "Test notes are #{test_notes.map { |n| n.id + ' of source ' +  (n.source ? n.source.name : 'BOA') }}"
 
           if test_notes.any?
             test_notes.each do |note|
@@ -76,8 +78,9 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
       student_searches.each do |search|
 
         logger.info "Beginning note search tests for UID #{search[:student].uid}"
+        logger.info "Searchable notes are #{search[:note_searches].map { |s| s[:note].id + ' of source ' + (s[:note].source ? s[:note].source.name : 'BOA') }}"
 
-        search[:note_searches][0..(BOACUtils.search_max_searches - 1)].each do |note_search|
+        search[:note_searches].each do |note_search|
 
           logger.info "Beginning note search tests for note ID #{note_search[:note].id}"
 

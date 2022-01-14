@@ -690,7 +690,11 @@ class BOACUtils < Utils
   end
 
   def self.get_sids_with_notes_of_src_boa
-    query = 'SELECT DISTINCT sid FROM notes;'
+    query = "SELECT DISTINCT sid
+             FROM notes
+             WHERE body NOT LIKE '%QA Test%'
+               AND deleted_at IS NULL
+               AND is_private IS FALSE"
     results = Utils.query_pg_db(boac_db_credentials, query)
     results.map { |r| r['sid'] }
   end
