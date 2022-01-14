@@ -25,7 +25,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
         begin
           @student_page.load_page student
           expected_asc_notes = NessieTimelineUtils.get_asc_notes student
-          expected_boa_notes = BOACUtils.get_student_notes(student).delete_if &:deleted_date
+          expected_boa_notes = BOACUtils.get_student_notes student
           expected_data_notes = NessieTimelineUtils.get_data_sci_notes student
           expected_e_forms = NessieTimelineUtils.get_e_form_notes student
           expected_ei_notes = NessieTimelineUtils.get_e_and_i_notes student
@@ -36,8 +36,13 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
                               #{expected_e_forms.length} eForms, #{expected_data_notes.length} Data Science notes,
                               and #{expected_history_notes.length} History notes."
 
-          expected_notes = expected_sis_notes + expected_ei_notes + expected_boa_notes + expected_asc_notes +
-            expected_e_forms + expected_data_notes
+          expected_notes = expected_sis_notes +
+            expected_boa_notes +
+            expected_asc_notes +
+            expected_e_forms +
+            expected_ei_notes +
+            expected_data_notes +
+            expected_history_notes
 
           @student_page.show_notes
 
@@ -61,12 +66,15 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
           end
 
           # Test a representative subset of the total notes
-          test_notes = expected_sis_notes.shuffle[0..max_note_count_per_src] + expected_ei_notes.shuffle[0..max_note_count_per_src] +
-            expected_boa_notes.shuffle[0..max_note_count_per_src] + expected_asc_notes.shuffle[0..max_note_count_per_src] +
-            expected_data_notes.shuffle[0..max_note_count_per_src] + expected_e_forms.shuffle[0..max_note_count_per_src] +
+          test_notes = expected_sis_notes.shuffle[0..max_note_count_per_src] +
+            expected_asc_notes.shuffle[0..max_note_count_per_src] +
+            expected_boa_notes.shuffle[0..max_note_count_per_src] +
+            expected_data_notes.shuffle[0..max_note_count_per_src] +
+            expected_e_forms.shuffle[0..max_note_count_per_src] +
+            expected_ei_notes.shuffle[0..max_note_count_per_src] +
             expected_history_notes.shuffle[0..max_note_count_per_src]
 
-          logger.info "Test note sources: #{test_notes.map { |n| n.source ? n.source.name : 'BOA' }}"
+          logger.info "Test notes are #{test_notes.map { |n| n.id + ' of source ' +  (n.source ? n.source.name : 'BOA') }}"
 
           test_notes.each do |note|
 
@@ -309,8 +317,6 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
           no_file = Utils.downloads_empty?
           it("delivers no file to an anonymous user when hitting the attachment download endpoint for #{identifier}") { expect(no_file).to be true }
         end
-      elsif Utils.headless?
-        it('unable to verify attachment downloads since the browser is headless') { fail }
       else
         it('found no downloadable attachments') { fail }
       end
