@@ -346,7 +346,6 @@ module BOACFilteredStudentsPageFilters
         logger.debug 'Verifying Team (ASC) filter'
         filters.asc_team.each { |t| existing_filter_element('Team (ASC)', t.name).exists? } if filters.asc_team&.any?
 
-        # TODO - advisors COE
         logger.debug 'Verifying Ethnicity (COE) filter'
         filters.coe_ethnicity.each { |e| existing_filter_element('Ethnicity (COE)', e).exists? } if filters.coe_ethnicity&.any?
         logger.debug 'Verifying Gender (COE) filter'
@@ -358,7 +357,6 @@ module BOACFilteredStudentsPageFilters
         filters.last_name.each { |n| existing_filter_element('Last Name', n).exists? } if filters.last_name&.any?
         logger.debug 'Verifying My Students filter'
         filters.cohort_owner_academic_plans.each { |g| existing_filter_element('My Students', g).exists? } if filters.cohort_owner_academic_plans&.any?
-        # TODO - curated groups
 
         logger.debug 'Verifying Underrepresented Minority filter (COE)'
         existing_filter_element('Underrepresented Minority (COE)').exists? if filters.coe_underrepresented_minority

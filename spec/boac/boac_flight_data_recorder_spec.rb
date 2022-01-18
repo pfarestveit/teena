@@ -126,7 +126,6 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
 
           user.dept_memberships.each do |role|
 
-            # TODO - include the full visible role once user roles are sussed out
             it "shows the #{dept.name} UID #{user.uid} department role #{role.inspect}" do
               expect(@flight_data_recorder.advisor_role(user, role.dept)).to include(role.dept.name)
             end

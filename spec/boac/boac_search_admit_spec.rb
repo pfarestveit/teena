@@ -124,14 +124,6 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
           back_button_works = @search_results_page.verify_block { @search_results_page.admit_in_search_result? admit }
           it("can be reloaded using the Back button on an admit page for CS ID #{admit.sis_id}") { expect(back_button_works).to be true }
 
-          it "results can be sorted by last name"
-          # TODO Search by first name to generate many results
-          # TODO it "results can be sorted by last name, first name, then ID"
-          # TODO it "results can be exported"
-
-          # TODO admit_link_works = @search_results_page.click_admit_result admit
-          # TODO it("includes a link to the admit page for CS ID #{admit.sis_id}") { expect(admit_link_works).to be true }
-
         rescue => e
           Utils.log_error e
           it("test hit an error with admit CS ID #{admit.sis_id}") { fail }

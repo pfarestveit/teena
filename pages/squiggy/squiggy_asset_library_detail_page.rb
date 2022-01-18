@@ -12,7 +12,6 @@ class SquiggyAssetLibraryDetailPage < SquiggyAssetLibraryListViewPage
   span(:view_count, id: 'asset-view-count')
   span(:comment_count, id: 'asset-comment-count')
   div(:description, xpath: '//h3[text()="Description"]/..')
-  # TODO - category
 
   def load_asset_detail(test, asset)
     # TODO - reinstate this when asset deep links work again

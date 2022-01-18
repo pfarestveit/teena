@@ -757,9 +757,6 @@ unless ENV['DEPS']
         @degree_templates_mgmt_page.click_save_copy
         @degree_templates_mgmt_page.degree_check_link(@degree_copy).when_visible Utils.short_wait
       end
-
-      # TODO it 'includes all the data present in the original template'
-
     end
 
     context 'when deleted' do

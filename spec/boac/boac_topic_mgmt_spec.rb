@@ -349,8 +349,5 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
         expect(@search_results.appt_in_search_result? @appt).to be true
       end
     end
-
-    # TODO - sorting columns
-
   end
 end

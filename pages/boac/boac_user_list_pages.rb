@@ -10,7 +10,6 @@ module BOACUserListPages
   # Returns all the SIDs visible in a list. If a cohort is given, then returns the SIDs shown under that cohort.
   # @param cohort [Cohort]
   def all_row_sids(cohort = nil)
-    # TODO - account for curated cohorts too
     xpath = filtered_cohort_xpath cohort if cohort&.instance_of?(FilteredCohort)
     span_elements(xpath: "#{xpath}//span[text()=\"S I D \"]/following-sibling::span").map &:text
   end
