@@ -67,7 +67,7 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
 
                       # Get all the students in the course who will be visible in BOAC
                       api_section_page = BOACApiSectionPage.new @driver
-                      api_section_page.get_data(@driver, term_id, section_data[:ccn])
+                      api_section_page.get_data(term_id, section_data[:ccn])
                       visible_classmates = test.students.select { |s| api_section_page.student_uids.include? s.uid }
 
                       # Only test courses with sites

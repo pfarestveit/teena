@@ -266,6 +266,7 @@ class BOACUtils < Utils
               authorized_users.is_admin AS is_admin,
               authorized_users.is_blocked AS is_blocked,
               authorized_users.degree_progress_permission AS deg_prog_perm,
+              authorized_users.automate_degree_progress_permission AS deg_prog_automated,
               university_dept_members.automate_membership AS is_automated,
               university_dept_members.role AS advisor_role,
               EXISTS (SELECT drop_in_advisors.dept_code
@@ -297,6 +298,7 @@ class BOACUtils < Utils
                              when 'read_write' then DegreeProgressPerm::WRITE
                              else nil
                              end
+      degree_progress_automated = v[0]['deg_prog_automated']
       roles = v.map do |role|
         DeptMembership.new(
             {
@@ -316,6 +318,7 @@ class BOACUtils < Utils
              can_access_advising_data: can_access_advising_data,
              can_access_canvas_data: can_access_canvas_data,
              degree_progress_perm: degree_progress_perm,
+             degree_progress_automated: degree_progress_automated,
              depts: roles.map(&:dept).compact,
              active: active,
              is_admin: is_admin,

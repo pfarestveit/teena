@@ -162,6 +162,7 @@ class BOACPaxManifestPage
   select_list(:deg_prog_select, id: 'degree-progress-permission-select')
   elements(:remove_dept_button, :button, xpath: '//button[contains(@id, "remove-department-")]')
   select_list(:department_select, id: 'department-select-list')
+  checkbox(:automate_deg_prog_cbx, id: 'automate-degree-progress-permission')
   button(:save_user_button, id: 'save-changes-to-user-profile')
   button(:cancel_user_button, id: 'delete-cancel')
 
@@ -282,6 +283,11 @@ class BOACPaxManifestPage
     wait_for_element_and_select_js(deg_prog_select_element, deg_prog_option)
   end
 
+  def click_automate_deg_prog
+    automate_deg_prog_cbx_element.when_present Utils.short_wait
+    execute_script('arguments[0].click();', automate_deg_prog_cbx_element)
+  end
+
   # Adds the department roles associated with a given user
   # @param user [BOACUser]
   def add_user_dept_roles(user)
@@ -296,6 +302,12 @@ class BOACPaxManifestPage
         sleep Utils.click_wait
       end
     end
+  end
+
+  def save_user
+    wait_for_update_and_click save_user_button_element
+    save_user_button_element.when_not_present Utils.short_wait
+    sleep 1
   end
 
   # Enters new user data and clicks the save button
@@ -334,10 +346,7 @@ class BOACPaxManifestPage
     end
     add_user_dept_roles user
     select_deg_prog_option(user) if user.degree_progress_perm
-    wait_for_update_and_click save_user_button_element
-    save_user_button_element.when_not_present Utils.short_wait
-    # Pause a moment to let the DOM update
-    sleep 1
+    save_user
   end
 
   def search_for_and_edit_user(user)

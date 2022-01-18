@@ -41,7 +41,7 @@ describe 'bCourses Official Sections tool' do
 
         @splash_page.load_page
         @splash_page.basic_auth(test_course[:teacher].uid, @cal_net)
-        test_course[:academic_data].get_feed @driver
+        test_course[:academic_data].get_feed
         sites_to_create << test_course
 
       rescue => e

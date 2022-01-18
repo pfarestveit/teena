@@ -68,7 +68,7 @@ begin
 
                         api_section_page = BOACApiSectionPage.new @driver
                         sleep 3 unless BOACUtils.base_url.include? 'boa-'
-                        api_section_page.get_data(@driver, term_id, api_section[:ccn])
+                        api_section_page.get_data(term_id, api_section[:ccn])
                         test_case = "term #{term_name} course #{api_course[:code]} section #{api_section[:component]} #{api_section[:number]} #{api_section[:ccn]}"
                         logger.info "Checking #{test_case}"
 
