@@ -87,8 +87,6 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
         @scheduler_intake_desk.navigate_to "#{BOACUtils.base_url}/student/#{@students.first.uid}"
         @scheduler_intake_desk.wait_for_title 'Not Found'
       end
-
-      # TODO user cannot get to any boa API endpoints other than drop-in endpoints
     end
 
     ### PERMISSIONS - DROP-IN ADVISOR

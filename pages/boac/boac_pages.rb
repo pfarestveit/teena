@@ -481,7 +481,7 @@ module BOACPages
   # @param uid [String]
   # @return [String]
   def path_to_student_view(uid)
-    # TODO: If user is in demo-mode this method should return: /student/#{Base64.encode64(uid)}
+    # If user is in demo-mode this method should return: /student/#{Base64.encode64(uid)}
     "/student/#{uid}"
   end
 

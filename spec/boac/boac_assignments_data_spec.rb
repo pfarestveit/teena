@@ -155,7 +155,6 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
                         (analytics_xpath = @boac_student_page.course_site_xpath(term_id, site[:ccn], site[:index])) :
                         (analytics_xpath = @boac_student_page.unmatched_site_xpath(test.term, site_code))
 
-                    # TODO - check Assignments Submitted once boxplots return
                     [boac_api_grades].each do |analytics|
 
                       if analytics[:perc_round].nil?

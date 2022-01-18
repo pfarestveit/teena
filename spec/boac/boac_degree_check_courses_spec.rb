@@ -390,7 +390,6 @@ unless ENV['DEPS']
 
       before(:all) do
         @completed_course_1.note = "Teena wuz here too #{test.id}"
-        # TODO - edit units too
         @degree_check_page.edit_unassigned_course @completed_course_1
       end
 
@@ -515,8 +514,6 @@ unless ENV['DEPS']
         it 'can be reassigned' do
           expect(@degree_check_page.assigned_course_select(@cat_copy).exists?).to be true
         end
-
-        # TODO - reassign it
       end
 
       context 'to a subcategory' do
@@ -546,8 +543,6 @@ unless ENV['DEPS']
         it 'can be reassigned' do
           expect(@degree_check_page.assigned_course_select(@sub_cat_copy).exists?).to be true
         end
-
-        # TODO - reassign it
 
         context 'and edited' do
 

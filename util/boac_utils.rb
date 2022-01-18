@@ -287,7 +287,6 @@ class BOACUtils < Utils
 
     advisors = results.group_by { |r1| r1['uid'] }.map do |k,v|
       logger.info "Getting advisor role(s) for UID #{k}"
-      # TODO - clarify the following definition of 'active'
       active = v[0]['deleted_at'].nil?
       can_access_advising_data = (v[0]['can_access_advising_data'] == 't')
       can_access_canvas_data = (v[0]['can_access_canvas_data'] == 't')

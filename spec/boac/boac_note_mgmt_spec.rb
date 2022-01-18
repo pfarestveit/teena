@@ -6,8 +6,6 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
 
   test = BOACTestConfig.new
   test.note_management
-
-  # TODO - get real array of advisor dept mappings when we have them
   test.advisor.depts = [test.dept.name]
 
   director = BOACUtils.get_authorized_users.find do |a|

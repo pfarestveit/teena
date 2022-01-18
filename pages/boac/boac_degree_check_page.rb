@@ -679,7 +679,6 @@ class BOACDegreeCheckPage < BOACDegreeTemplatePage
       enter_course_name course.name
       enter_course_grade course.grade
       select_color_option course.color
-      # TODO select_assigned_course_unit_req course
     end
     click_save_course_edit
   end

@@ -7,7 +7,6 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
   test = BOACTestConfig.new
   test.batch_note_management
 
-  # TODO - get real array of advisor dept mappings when we have them
   test.advisor.depts = [test.dept.name]
 
   if test.dept == BOACDepartments::ADMIN

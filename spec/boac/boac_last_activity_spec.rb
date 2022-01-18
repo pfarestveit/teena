@@ -245,7 +245,6 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
                                 it("shows 'never' Last Activity in the BOAC student page for #{test_case}") { expect(student_site[:last_activity_student_page][:days]).to include('never') }
 
                                 # Note if the site could trigger a 'no activity' alert
-                                # TODO - account for 'start of session'
                                 student_site.merge!(:no_activity_alert => true) if total_logins.to_f / site[:last_activity_dates].length.to_f >= 0.8
 
                               else
