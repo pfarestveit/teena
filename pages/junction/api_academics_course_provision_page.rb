@@ -4,12 +4,12 @@ class ApiAcademicsCourseProvisionPage
 
   include PageObject
   include Logging
+  include Page
 
-  def get_feed(driver)
+  def get_feed
     logger.info 'Parsing data from /api/academics/canvas/course_provision'
     navigate_to "#{JunctionUtils.junction_base_url}/api/academics/canvas/course_provision"
-    wait_until(Utils.long_wait) { driver.find_element(xpath: '//pre') }
-    @parsed = JSON.parse driver.find_element(xpath: '//pre').text
+    parse_json
   end
 
   # SEMESTERS

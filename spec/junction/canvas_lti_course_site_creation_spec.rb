@@ -43,7 +43,7 @@ describe 'bCourses course site creation' do
 
         @splash_page.load_page
         @splash_page.basic_auth(test_course[:teacher].uid, @cal_net_page)
-        test_course[:academic_data].get_feed @driver
+        test_course[:academic_data].get_feed
         sites_to_create << test_course
 
       rescue => e
@@ -233,7 +233,7 @@ describe 'bCourses course site creation' do
         begin
           tries -= 1
           @splash_page.basic_auth(site[:teacher].uid, @cal_net_page)
-          site[:roster_data].get_feed(@driver, site[:course])
+          site[:roster_data].get_feed(site[:course])
         rescue => e
           logger.error e.message
           if @splash_page.denied_msg? && !tries.zero?

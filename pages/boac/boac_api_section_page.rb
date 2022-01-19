@@ -4,12 +4,12 @@ class BOACApiSectionPage
 
   include PageObject
   include Logging
+  include Page
 
-  def get_data(driver, term_id, ccn)
+  def get_data(term_id, ccn)
     logger.info "Getting data for section #{ccn}"
     navigate_to "#{BOACUtils.api_base_url}/api/section/#{term_id}/#{ccn}"
-    wait_until(Utils.long_wait) { driver.find_element(xpath: '//pre') }
-    @parsed = JSON.parse driver.find_element(xpath: '//pre').text
+    parse_json
   end
 
   def course_code

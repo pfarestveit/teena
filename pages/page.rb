@@ -5,6 +5,11 @@ module Page
   include PageObject
   include Logging
 
+  def parse_json
+    wait_until(Utils.long_wait) { browser.find_element(xpath: '//pre') }
+    @parsed = JSON.parse browser.find_element(xpath: '//pre').text
+  end
+
   iframe(:canvas_iframe, id: 'tool_content')
 
   def switch_to_frame(id)

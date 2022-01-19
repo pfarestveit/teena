@@ -40,7 +40,7 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
 
                       begin
                         api_section_page = BOACApiSectionPage.new @driver
-                        api_section_page.get_data(@driver, term_id, section_data[:ccn])
+                        api_section_page.get_data(term_id, section_data[:ccn])
 
                         section_test_case = "course #{course_sis_data[:code]} section #{section_data[:component]} #{section_data[:number]} #{section_data[:ccn]}"
                         course_code = api_section_page.course_code

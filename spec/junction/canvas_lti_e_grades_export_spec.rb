@@ -31,7 +31,7 @@ unless ENV['STANDALONE']
       @splash_page.load_page
       @splash_page.basic_auth(teacher.uid, @cal_net)
       @rosters_api.get_feed(@driver, course)
-      @academics_api.get_feed(@driver)
+      @academics_api.get_feed
 
       @prim_sec_sids = @rosters_api.student_ids(@rosters_api.section_students("#{primary_section.course} #{primary_section.label}"))
       if secondary_section

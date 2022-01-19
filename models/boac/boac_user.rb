@@ -3,6 +3,7 @@ class BOACUser < User
   attr_accessor :active,
                 :alert_count,
                 :degree_progress_perm,
+                :degree_progress_automated,
                 :dept_memberships,
                 :can_access_advising_data,
                 :can_access_canvas_data,

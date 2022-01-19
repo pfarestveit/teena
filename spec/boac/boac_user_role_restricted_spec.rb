@@ -88,7 +88,7 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
         end
 
         it 'is forbidden' do
-          @api_section_page.get_data(@driver, '2178', '13826')
+          @api_section_page.get_data('2178', '13826')
           expect(@api_section_page).to be_unauthorized
         end
       end
@@ -291,7 +291,7 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
         end
 
         it 'is forbidden' do
-          @api_section_page.get_data(@driver, '2178', '13826')
+          @api_section_page.get_data('2178', '13826')
           expect(@api_section_page).to be_unauthorized
         end
       end
