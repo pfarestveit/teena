@@ -6,13 +6,14 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
   test.user_role_director
 
   test_cases = test.test_students.map do |student|
-    boa_notes = BOACUtils.get_student_notes student
-    sis_notes = NessieTimelineUtils.get_sis_notes student
-    ei_notes = NessieTimelineUtils.get_e_and_i_notes student
     asc_notes = NessieTimelineUtils.get_asc_notes student
+    boa_notes = BOACUtils.get_student_notes student
     data_sci_notes = NessieTimelineUtils.get_data_sci_notes student
     e_form_notes = NessieTimelineUtils.get_e_form_notes student
-    {student: student, notes: (boa_notes + sis_notes + ei_notes + asc_notes + data_sci_notes + e_form_notes)}
+    ei_notes = NessieTimelineUtils.get_e_and_i_notes student
+    history_notes = NessieTimelineUtils.get_history_notes student
+    sis_notes = NessieTimelineUtils.get_sis_notes student
+    {student: student, notes: (asc_notes + boa_notes + data_sci_notes + e_form_notes + ei_notes + history_notes + sis_notes)}
   end
 
   describe 'A BOA director' do

@@ -9,7 +9,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
     test = BOACTestConfig.new
     test.user_role_admin
 
-    everyone_cohorts = BOACUtils.get_everyone_filtered_cohorts default: true
+    everyone_cohorts = BOACUtils.get_everyone_filtered_cohorts
     everyone_groups = BOACUtils.get_everyone_curated_groups
     ce3_cohorts = BOACUtils.get_everyone_filtered_cohorts({admits: true}, BOACDepartments::ZCEEE)
 
@@ -44,10 +44,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
 
     context 'visiting Everyone\'s Cohorts' do
 
-      before(:all) do
-        @homepage.load_page
-        @homepage.click_view_everyone_cohorts
-      end
+      before(:all) { @homepage.load_page }
 
       it 'sees all default filtered cohorts' do
         expected_cohort_names = everyone_cohorts.map(&:name).sort

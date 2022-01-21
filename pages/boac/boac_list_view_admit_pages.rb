@@ -19,7 +19,7 @@ module BOACListViewAdmitPages
                   "//tr[contains(.,\"#{admit_cs_id}\")]"
                 end
     name_el = link_element(xpath: "#{row_xpath}//span[text()='Admitted student name']/following-sibling::a")
-    sid_el = span_element(xpath: "#{row_xpath}//span[text()='C S I D']/following-sibling::span")
+    sid_el = span_element(xpath: "#{row_xpath}//span[text()='C S I D ']/following-sibling::span")
     sir_el = span_element(xpath: "#{row_xpath}//span[text()='S I R']/..")
     cep_el = span_element(xpath: "#{row_xpath}//span[text()='C E P']/..")
     re_entry_el = span_element(xpath: "#{row_xpath}//span[text()='Re-entry']/..")
@@ -92,7 +92,7 @@ module BOACListViewAdmitPages
 
   # LIST VIEW - SEARCH RESULTS
 
-  elements(:admit_search_results_sid, :span, xpath: '//h2[@id="admit-results-page-header"]/following-sibling::div//span[text()="C S I D"]/following-sibling::span')
+  elements(:admit_search_results_sid, :span, xpath: '//h2[@id="admit-results-page-header"]/..//span[text()="C S I D "]/following-sibling::span')
 
   def search_result_all_row_cs_ids
     admit_search_results_sid_elements.map &:text

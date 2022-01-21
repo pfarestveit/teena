@@ -216,7 +216,7 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
                                 end
 
                                 if student_data[:grading_basis] == 'NON' || !student_data[:final_grade].empty?
-                                  it("shows no grading basis for #{student_test_case}") { expect(visible_student_sis_data[:grading_basis]).to be_nil }
+                                  it("shows no grading basis for #{student_test_case}") { expect(visible_student_sis_data[:grading_basis].to_s).to be_empty }
                                 else
                                   it "shows the grading basis for #{student_test_case}" do
                                     expect(visible_student_sis_data[:grading_basis]).not_to be_empty

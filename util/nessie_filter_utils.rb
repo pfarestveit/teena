@@ -334,9 +334,10 @@ class NessieFilterUtils < NessieUtils
     joins.join(" \n")
   end
 
-  def self.join(filter_joins, sort=nil)
+  def self.join(filter_joins, sort=nil, opts=nil)
     if sort
-      join = "LEFT JOIN #{sort[:table]} ON student.student_profile_index.sid = #{sort[:table]}.sid"
+      active_clause = 'AND student.student_profile_index.academic_career_status = \'active\''
+      join = "LEFT JOIN #{sort[:table]} ON student.student_profile_index.sid = #{sort[:table]}.sid #{+ active_clause if opts && opts[:active]}"
       unless sort[:table] == 'student.student_profile_index' || filter_joins.include?(join)
         filter_joins << " #{join}"
       end
@@ -610,10 +611,10 @@ class NessieFilterUtils < NessieUtils
     end
   end
 
-  def self.get_list_result(sids, sort=nil)
+  def self.get_list_result(sids, sort=nil, opts=nil)
     sid_list = sids.map {|i| "'#{i}'"}.join(', ')
     sql = "#{select_from sort}
-           #{join('', sort)}
+           #{join('', sort, opts)}
            WHERE student.student_profile_index.sid IN (#{sid_list})
            #{group_by sort}
            #{order_by_list sort}"
@@ -650,12 +651,12 @@ class NessieFilterUtils < NessieUtils
 
   def self.list_by_major_asc(sids)
     sort = list_by_major_sort.merge!({nulls: ' NULLS FIRST',direction: ' ASC'})
-    get_list_result(sids, sort)
+    get_list_result(sids, sort, {active: true})
   end
 
   def self.list_by_major_desc(sids)
     sort = list_by_major_sort.merge!({nulls: ' NULLS LAST',direction: ' DESC'})
-    get_list_result(sids, sort)
+    get_list_result(sids, sort, {active: true})
   end
 
   # Grad term

@@ -174,6 +174,9 @@ class BOACTestConfig < TestConfig
                        @cohort_members.shuffle!
                        @cohort_members[0..(config - 1)]
 
+                     elsif !opts[:include_inactive]
+                       @students.select { |s| s.status == 'active' }[0..(config - 1)]
+
                      else
                        # Running tests against a random set of students, plus optional selected students
                        students = @students.shuffle[0..(config - 1)]
@@ -292,8 +295,9 @@ class BOACTestConfig < TestConfig
 
   # Config for class page testing
   def class_pages
-    set_base_configs(nil, {include_inactive: true})
-    set_test_students CONFIG['class_page_max_users']
+    set_base_configs(nil, {include_inactive: true, with_standing: true})
+    set_test_students(CONFIG['class_page_max_users'], {include_inactive: false})
+    logger.debug "Test students: #{@test_students.map &:inspect}"
   end
 
   def curated_admits

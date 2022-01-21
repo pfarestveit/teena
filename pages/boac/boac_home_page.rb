@@ -40,7 +40,6 @@ class BOACHomePage
     click_sign_in_button
     cal_net.log_in(username, password)
     wait_for_title 'Home'
-    wait_until(Utils.short_wait) { copyright_year_footer.include? Time.now.strftime('%Y') }
   end
 
   # Enters dev auth credentials and attempts to log in, without verifying that the login is successful

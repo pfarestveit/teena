@@ -80,12 +80,12 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
 
       it 'prevents the user from accessing a drop-in intake desk belonging to another department' do
         @scheduler_intake_desk.load_page @other_dept
-        @scheduler_intake_desk.wait_for_title 'Not Found'
+        @scheduler_intake_desk.wait_for_title 'Page Not Found'
       end
 
       it 'prevents the user from accessing a page other than the drop-in intake desk' do
         @scheduler_intake_desk.navigate_to "#{BOACUtils.base_url}/student/#{@students.first.uid}"
-        @scheduler_intake_desk.wait_for_title 'Not Found'
+        @scheduler_intake_desk.wait_for_title 'Page Not Found'
       end
     end
 
