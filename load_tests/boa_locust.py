@@ -112,7 +112,7 @@ def _row_to_cohort(row):
 class TestData:
 
     students = NessieRds.fetch(f"""
-        SELECT sid, uid FROM student.student_academic_status
+        SELECT sid, uid FROM student.student_profile_index
         ORDER BY last_name
         OFFSET {random.randint(0,30000)}
         LIMIT 50
@@ -177,8 +177,8 @@ class BoaTaskSet(TaskSet):
 
     @task(1)
     def load_home_page(self):
-        self.client.get('/api/cohorts/my')
-        self.client.get('/api/curated_groups/my')
+        self.client.get('/api/cohorts/all')
+        self.client.get('/api/curated_groups/all')
         self.client.get('/api/service_announcement')
         self.client.get('/api/note_templates/my')
         self.client.get('/api/topics/all?includeDeleted=false')
@@ -206,7 +206,6 @@ class BoaTaskSet(TaskSet):
     def load_student_page(self):
         student = sample(TestData.students)
         self.client.get(f"/api/student/by_uid/{student['uid']}", name='/api/student/by_uid/[uid]')
-        self.client.get(f"/api/curated_groups/my/{student['sid']}", name='/api/curated_groups/my/[sid]')
 
     @task(5)
     def poll_drop_in_waitlist(self):
