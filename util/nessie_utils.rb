@@ -148,29 +148,6 @@ class NessieUtils < Utils
     all_coe_students.select { |s| result.include? s.sis_id }
   end
 
-  #### HISTORICAL STUDENTS ####
-
-  # Returns the SIDs of non-current students with a given academic career status
-  # @param status [String]
-  # @return [Array<String>]
-  def self.hist_profile_sids_of_career_status(status)
-    query = "SELECT sid
-             FROM student.student_profiles_hist_enr
-             WHERE profile LIKE '%\"academicCareerStatus\": \"#{status}\"%';"
-    query_pg_db(nessie_pg_db_credentials, query).map { |r| r['sid'] }
-  end
-
-  # Returns a non-current student with a given SID
-  # @param sid [String]
-  # @return [BOACUser]
-  def self.get_hist_student(sid)
-    query = "SELECT uid
-             FROM student.student_profiles_hist_enr
-             WHERE sid = '#{sid}';"
-    uid = query_pg_db_field(nessie_pg_db_credentials, query, 'uid').last
-    BOACUser.new(sis_id: sid, uid: uid)
-  end
-
   #### ADMITS ####
 
   def self.get_admits
