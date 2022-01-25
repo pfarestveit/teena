@@ -14,11 +14,6 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
       @test.drop_in_appts(authorized_users, dept)
 
       @students = @test.students.shuffle[0..20]
-      inactive_sid = (NessieUtils.hist_profile_sids_of_career_status('Inactive') - BOACUtils.manual_advisee_sids).first
-      @inactive_student = NessieUtils.get_hist_student inactive_sid
-      completed_sid = (NessieUtils.hist_profile_sids_of_career_status('Completed') - BOACUtils.manual_advisee_sids).first
-      @completed_student = NessieUtils.get_hist_student completed_sid
-
       @appts = []
       @appt_0 = Appointment.new(student: @students[0], topics: [Topic::COURSE_ADD, Topic::COURSE_DROP], detail: "Drop-in advisor appointment creation #{@test.id}")
       @appt_1 = Appointment.new(student: @students[1], reserve_advisor: @test.drop_in_advisor, topics: [Topic::RETROACTIVE_ADD, Topic::RETROACTIVE_DROP], detail: "Drop-in appointment details #{@test.id}")
@@ -28,11 +23,11 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
       @appt_5 = Appointment.new(student: @students[5], topics: [Topic::WITHDRAWAL], detail: "Drop-in advisor waiting list cancel #{@test.id}")
       @appt_6 = Appointment.new(student: @students[6], topics: [Topic::OTHER], detail: "Drop-in advisor student page cancel #{@test.id}")
       @appt_7 = Appointment.new(student: @students[7], topics: [Topic::COURSE_ADD, Topic::COURSE_DROP], detail: "Scheduler no-reservation appointment creation #{@test.id} detail")
-      @appt_8 = Appointment.new(student: @inactive_student, reserve_advisor: @test.drop_in_advisor, topics: [Topic::COURSE_ADD], detail: "Scheduler reservation appointment creation #{@test.id} detail")
-      @appt_9 = Appointment.new(student: @completed_student, detail: 'Some detail')
-      @appt_10 = Appointment.new(student: @students[8], topics: [Topic::COURSE_DROP], detail: "Reserved 1 #{@test.id}", reserve_advisor: @test.drop_in_advisor)
-      @appt_11 = Appointment.new(student: @students[9], topics: [Topic::COURSE_DROP], detail: "Reserved 2 #{@test.id}", reserve_advisor: @test.drop_in_advisor)
-      @resolved_issue = Appointment.new(student: @students[10], topics: [Topic::COURSE_ADD], detail: "A resolved issue #{@test.id}")
+      @appt_8 = Appointment.new(student: @students[8], reserve_advisor: @test.drop_in_advisor, topics: [Topic::COURSE_ADD], detail: "Scheduler reservation appointment creation #{@test.id} detail")
+      @appt_9 = Appointment.new(student: @students[9], detail: 'Some detail')
+      @appt_10 = Appointment.new(student: @students[10], topics: [Topic::COURSE_DROP], detail: "Reserved 1 #{@test.id}", reserve_advisor: @test.drop_in_advisor)
+      @appt_11 = Appointment.new(student: @students[11], topics: [Topic::COURSE_DROP], detail: "Reserved 2 #{@test.id}", reserve_advisor: @test.drop_in_advisor)
+      @resolved_issue = Appointment.new(student: @students[12], topics: [Topic::COURSE_ADD], detail: "A resolved issue #{@test.id}")
 
       @driver_scheduler = Utils.launch_browser
       @scheduler_homepage = BOACHomePage.new @driver_scheduler

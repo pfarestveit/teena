@@ -38,7 +38,7 @@ describe 'bCourses Roster Photos' do
     @canvas.publish_course_site course unless standalone
 
     # Get enrollment totals on site
-    @roster_api.get_feed(@driver, course)
+    @roster_api.get_feed course
     @expected_sids = @roster_api.student_ids(@roster_api.students).sort
 
     @student_count = @roster_api.enrolled_students.length

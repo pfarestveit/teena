@@ -35,7 +35,7 @@ unless ENV['STANDALONE']
           @splash_page.load_page
           @splash_page.basic_auth(instructor.uid, @cal_net)
           rosters_api = ApiAcademicsRosterPage.new @driver
-          rosters_api.get_feed(@driver, course)
+          rosters_api.get_feed course
 
           # Disable existing grading scheme in case it is not default, then set default scheme
           @canvas.masquerade_as(instructor, course)
