@@ -5,7 +5,7 @@ class SquiggyAssetLibraryDetailPage < SquiggyAssetLibraryListViewPage
   include Logging
   include SquiggyAssetLibraryMetadataForm
 
-  h2(:asset_title, id: 'asset.title')
+  h2(:asset_title, id: 'asset-title')
   div(:asset_preview, xpath: '//div[starts-with(@id, "asset-preview-image-")]')
   button(:like_button, id: 'like-asset-btn')
   span(:like_count, id: 'asset-like-count')
