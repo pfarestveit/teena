@@ -44,6 +44,100 @@ class SquiggyAssetLibraryListViewPage
     get_asset_id asset
   end
 
+  # BIZMARKLET
+
+  link(:add_assets_easily_link, id: 'link-to-bookmarklet-start')
+  div(:no_eligible_images_msg, xpath: '//div[contains(text(), "The current page has no images of sufficient size for the Asset Library.")]')
+  button(:next_steps_button, id: 'go-to-next-step-btn')
+  link(:bizmarklet_link, xpath: '//a[contains(@class, "bookmarklet")]')
+  radio_button(:bizmarklet_add_page_button, id: 'entire-page-as-asset-radio')
+  radio_button(:bizmarklet_add_items_button, id: 'selected-items-from-page-radio')
+  button(:bizmarklet_select_all_button, id: 'select-all-images-btn')
+  elements(:bizmarklet_asset_title_input, :text_field, xpath: '//input[contains(@id, "add-asset-title-input-"]')
+  elements(:bizmarklet_asset_desc_input, :text_area, xpath: '//textarea[contains(@id, "asset-description-textarea-")]')
+
+  button(:bizmarklet_next_button, id: 'go-next-btn')
+  button(:bizmarklet_previous_button, id: 'go-previous-btn')
+  button(:bizmarklet_save_button, id: 'done-btn')
+  button(:bizmarklet_cancel_button, id: 'cancel-btn')
+  button(:bizmarklet_close_button, id: 'close-btn')
+  span(:bizmarklet_success_msg, xpath: '//span[text()=" Success! "]')
+
+  def select_images_cbx(idx)
+    text_field_element(id: "image-checkbox-#{idx}")
+  end
+
+  def asset_titles_input(idx)
+    text_field_element(id: "asset-title-input-#{idx}")
+  end
+
+  def asset_categories_input(idx)
+    text_field_element(id: "asset-category-select-#{idx}-select")
+  end
+
+  def asset_descrips_input(idx)
+    text_area_element(id: "asset-description-textarea-#{idx}")
+  end
+
+  def get_bizmarklet
+    wait_for_update_and_click add_assets_easily_link_element
+    wait_for_update_and_click next_steps_button_element
+    sleep 1
+    wait_for_update_and_click next_steps_button_element
+    sleep 1
+    bizmarklet_link_element.when_present Utils.short_wait
+    bizmarklet_link_element.attribute('href').gsub('javascript:(() => ', '')[0..-4].gsub('%20', ' ').gsub('%27', "'")
+  end
+
+  def launch_bizmarklet(js)
+    sleep 1
+    original_window = @driver.window_handle
+    execute_script(js)
+    wait_until(Utils.short_wait) { @driver.window_handles.length > 1 }
+    @driver.switch_to.window @driver.window_handles.last
+    original_window
+  end
+
+  def cancel_bizmarklet(original_window)
+    wait_for_update_and_click bizmarklet_cancel_button_element
+    @driver.switch_to.window original_window
+  end
+
+  def close_bookmarklet(original_window)
+    wait_for_update_and_click bizmarklet_close_button_element
+    @driver.switch_to.window original_window
+  end
+
+  def click_bizmarklet_add_items
+    js_click bizmarklet_add_items_button_element
+  end
+
+  def select_bizmarklet_items(assets)
+    assets.each_with_index { |_, idx| js_click select_images_cbx(idx) }
+  end
+
+  def click_bizmarklet_next_button
+    wait_for_update_and_click bizmarklet_next_button_element
+  end
+
+  def save_bizmarklet_assets
+    wait_for_update_and_click bizmarklet_save_button_element
+    bizmarklet_success_msg_element.when_visible Utils.short_wait
+  end
+
+  def enter_bizmarklet_items_metadata(assets)
+    assets.each_with_index do |asset, idx|
+      enter_squiggy_text(asset_titles_input(idx), asset.title.to_s)
+      scroll_to_bottom
+      enter_squiggy_text(asset_descrips_input(idx), asset.description.to_s)
+      if asset.category
+        asset_categories_input(idx).when_present Utils.short_wait
+        js_click asset_categories_input(idx)
+        select_squiggy_option asset.category.name
+      end
+    end
+  end
+
   # MANAGE ASSETS
 
   button(:manage_assets_button, id: 'manage-assets-btn')
