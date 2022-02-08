@@ -35,6 +35,10 @@ class Element
     !@selenium_element.enabled?
   end
 
+  def disabled_attribute
+    @selenium_element.attribute('disabled')
+  end
+
   def enabled?
     @selenium_element.enabled?
   end
@@ -92,6 +96,7 @@ class Element
   end
 
   def when_present(timeout)
+    logger.debug "Waiting for element at #{@locator}"
     wait = Selenium::WebDriver::Wait.new timeout: timeout
     wait.until { exists? }
   end
