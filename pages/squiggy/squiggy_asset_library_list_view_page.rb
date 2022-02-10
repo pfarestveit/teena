@@ -128,6 +128,8 @@ class SquiggyAssetLibraryListViewPage
   def enter_bizmarklet_items_metadata(assets)
     assets.each_with_index do |asset, idx|
       enter_squiggy_text(asset_titles_input(idx), asset.title.to_s)
+      sleep Utils.click_wait
+      asset.title = asset_titles_input(idx).value
       scroll_to_bottom
       enter_squiggy_text(asset_descrips_input(idx), asset.description.to_s)
       if asset.category

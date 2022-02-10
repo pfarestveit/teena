@@ -223,7 +223,7 @@ describe 'bCourses course site creation' do
 
     unless standalone
 
-      @canvas_page.log_out(@driver, @cal_net_page)
+      @canvas_page.log_out @cal_net_page
       @splash_page.resolve_lti_session_conflict @cal_net_page
 
       sites_created.each do |site|

@@ -60,11 +60,10 @@ module Page
     end
 
     # Shifts to default content, logs out, and waits for CalNet logout confirmation
-    # @param driver [Selenium::WebDriver]
     # @param cal_net [Page::CalNetPage]
     # @param event [Event]
-    def log_out(driver, cal_net, event = nil)
-      driver.switch_to.default_content
+    def log_out(cal_net, event = nil)
+      @driver.switch_to.default_content
       wait_for_update_and_click_js profile_link_element
       sleep 1
       wait_for_update_and_click_js profile_form_element

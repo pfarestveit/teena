@@ -102,7 +102,7 @@ unless ENV['STANDALONE']
         end
       end
 
-      @canvas_page.log_out(@driver, @cal_net_page)
+      @canvas_page.log_out @cal_net_page
       @canvas_page.load_homepage
       @cal_net_page.prompt_for_action 'RUN EXPORT AND REFRESH SCRIPTS MANUALLY'
       @cal_net_page.wait_for_manual_login
