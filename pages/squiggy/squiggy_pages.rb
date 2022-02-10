@@ -59,4 +59,8 @@ module SquiggyPages
     wait_for_update_and_click null_option_element
   end
 
+  # ERROR
+
+  span(:lenny_and_squiggy, id: 'error-message')
+
 end
