@@ -61,6 +61,6 @@ module SquiggyPages
 
   # ERROR
 
-  span(:lenny_and_squiggy, id: 'error-message')
+  span(:lenny_and_squiggy, id: 'unauthorized-message')
 
 end
