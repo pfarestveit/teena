@@ -169,6 +169,7 @@ describe 'The Asset Library bookmarklet' do
       @assets_list.navigate_to 'https://www.berkeley.edu/'
       @assets_list.launch_bizmarklet @bizmarklet
       @assets_list.lenny_and_squiggy_element.when_visible Utils.short_wait
+      expect(@assets_list.lenny_and_squiggy).to include('Sorry, you are no longer a member')
     end
   end
 end
