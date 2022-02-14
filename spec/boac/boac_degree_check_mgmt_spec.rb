@@ -302,6 +302,14 @@ unless ENV['DEPS']
         end
       end
 
+      describe 'student page link' do
+
+        it 'opens in a new tab' do
+          @student_page.load_page @student
+          @student_page.click_degree_checks_button
+        end
+      end
+
       describe 'note section' do
 
         before(:all) { @degree_check_page.load_page @degree_check }
