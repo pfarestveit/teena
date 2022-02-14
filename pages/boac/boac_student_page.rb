@@ -214,13 +214,16 @@ class BOACStudentPage
 
   # COURSES
 
-  button(:degree_checks_button, id: 'view-degree-check-btn')
+  link(:degree_checks_link, id: 'view-degree-checks-link')
   span(:withdrawal_msg, xpath: '//span[contains(@id, "withdrawal-term-")]')
   button(:toggle_collapse_all_years, id: 'toggle-collapse-all-years')
 
   def click_degree_checks_button
-    logger.info 'Clicking the degree checks button'
-    wait_for_update_and_click degree_checks_button_element
+    logger.info 'Clicking the degree checks link'
+    wait_for_update_and_click degree_checks_link_element
+    wait_until(2) { @driver.window_handles.length > 1 }
+    @driver.close
+    @driver.switch_to.window @driver.window_handles.first
   end
 
   def term_data_xpath(term_name)
