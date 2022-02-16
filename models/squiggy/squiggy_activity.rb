@@ -26,6 +26,13 @@ class SquiggyActivity
     GET_DISCUSSION_REPLY = new('get_discussion_entry_reply', 'Receive a reply on an entry in Discussions', 1),
 
     ADD_ASSET_TO_LIBRARY = new('asset_add', 'Add a new asset to the Asset Library', 5),
+    ADD_ASSET_TO_WHITEBOARD = new('whiteboard_add_asset', 'Add an asset to a whiteboard',  8),
+    GET_ADD_ASSET_TO_WHITEBOARD = new('get_whiteboard_add_asset', 'Have one\'s asset added to a whiteboard', 0),
+
+    REMIX_WHITEBOARD = new('remix_whiteboard', 'Remix a whiteboard', 0),
+    GET_REMIX_WHITEBOARD = new('get_remix_whiteboard', 'Have one\'s whiteboard remixed', 0),
+
+    EXPORT_WHITEBOARD = new('export_whiteboard', 'Export a whiteboard to the Asset Library', 10),
 
     SUBMIT_ASSIGNMENT = new('assignment_submit', 'Submit a new assignment in Assignments', 20)
   ]
