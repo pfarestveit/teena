@@ -485,6 +485,49 @@ unless ENV['DEPS']
           it('sees no create-new-degree button') { expect(@degree_check_history_page.create_new_degree_link?).to be false }
         end
       end
+
+      describe 'when the advisor who created the check is deleted' do
+
+        before(:all) do
+          @degree_check_history_page.log_out
+          @homepage.dev_auth
+          test.advisor.active = false
+          test.advisor.dept_memberships = [
+            DeptMembership.new(
+              dept: BOACDepartments::COE,
+              advisor_role: AdvisorRole::ADVISOR,
+              is_automated: true
+            )
+          ]
+          @pax_manifest.load_page
+          @pax_manifest.search_for_advisor test.advisor
+          @pax_manifest.edit_user test.advisor
+          @pax_manifest.log_out
+          @homepage.enter_dev_auth_creds test.advisor
+          @homepage.deleted_msg_element.when_visible Utils.short_wait
+          @homepage.dev_auth test.read_only_advisor
+        end
+
+        after(:all) do
+          @degree_check_history_page.log_out
+          @homepage.dev_auth
+          test.advisor.active = true
+          @pax_manifest.load_page
+          @pax_manifest.search_for_advisor test.advisor
+          @pax_manifest.edit_user test.advisor
+          @pax_manifest.log_out
+        end
+
+        it 'still allows other advisors to reach the degree check' do
+          @degree_check_page.load_page @degree_check
+          @degree_check_page.note_body_element.when_visible Utils.short_wait
+        end
+
+        it 'still allows other advisor to reach the degree history' do
+          @degree_check_page.click_view_degree_history
+          @degree_check_history_page.template_updated_alert(@degree_check).when_present Utils.short_wait
+        end
+      end
     end
 
     describe 'batch' do
@@ -492,7 +535,6 @@ unless ENV['DEPS']
       describe 'advisor' do
 
         before(:all) do
-          @degree_check_history_page.log_out
           @homepage.dev_auth test.advisor
         end
 

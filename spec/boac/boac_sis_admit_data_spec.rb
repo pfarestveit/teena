@@ -214,7 +214,7 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
           if student_page_link_present
             student_page_link_works = @admit_page.verify_block do
               @admit_page.click_student_page_link admit
-              @student_page.wait_until(Utils.short_wait) { @student_page.sid == "SID #{admit[:cs_empl_id]}" }
+              @student_page.wait_until(Utils.short_wait) { @student_page.sid.include? "SID #{admit[:cs_empl_id]}" }
             end
             it("links to the student page for CS ID #{admit[:cs_empl_id]}") { expect(student_page_link_works).to be true }
           end

@@ -55,13 +55,15 @@ module BOACCohortStudentPages
   # @param parsed_csv [CSV::Table]
   def verify_student_list_default_export(cohort_members, parsed_csv)
     wait_until(1, "Expected #{cohort_members.length}, got #{parsed_csv.length}") { parsed_csv.length == cohort_members.length }
+    wait_until(1) do
+      parsed_csv.dig(:email).compact.any?
+      parsed_csv.dig(:phone).compact.any?
+    end
     cohort_members.each do |stu|
       row = parsed_csv.find { |r| r[:sid] == stu.sis_id.to_i }
       wait_until(1, "SID '#{stu.sis_id}' either has a name mismatch or an empty phone or email") do
         row[:first_name] == stu.first_name
         row[:last_name] == stu.last_name
-        !row[:email].empty?
-        !row[:phone].to_s.empty?
       end
     end
   end
