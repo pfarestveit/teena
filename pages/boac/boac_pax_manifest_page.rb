@@ -99,7 +99,7 @@ class BOACPaxManifestPage
   # Waits briefly for at least one advisor row element to be present
   def wait_for_advisor_list
     sleep 1
-    wait_until(Utils.short_wait) { advisor_uid_elements.any? }
+    wait_until(Utils.medium_wait) { advisor_uid_elements.any? }
   rescue
     logger.warn 'There are no advisors listed.'
   end

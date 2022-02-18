@@ -76,7 +76,6 @@ module BOACCohortAdmitPages
     parsed_csv.by_col!
     warnings = []
     check_export_for_data(parsed_csv, :uid, warnings)
-    check_export_for_data(parsed_csv, :gender_identity, warnings)
     check_export_for_data(parsed_csv, :permanent_street_2, warnings)
     check_export_for_data(parsed_csv, :first_generation_college, warnings)
     check_export_for_data(parsed_csv, :transfer_gpa, warnings)

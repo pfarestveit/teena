@@ -280,8 +280,6 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
           no_file = Utils.downloads_empty?
           it("delivers no file to an anonymous user when hitting the attachment download endpoint for #{identifier}") { expect(no_file).to be true }
         end
-      else
-        it('found no downloadable SIS appointment attachments') { fail } unless test.test_students.empty?
       end
 
     rescue => e
