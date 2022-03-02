@@ -10,6 +10,7 @@ class User
                 :last_name,
                 :full_name,
                 :email,
+                :assets,
                 :tests
 
   def initialize(test_data)

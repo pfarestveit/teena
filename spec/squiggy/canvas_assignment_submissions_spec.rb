@@ -77,7 +77,7 @@ describe 'Canvas assignment submissions' do
 
         @assets_list.click_asset_link asset
         visible_detail = @asset_detail.visible_asset_metadata asset
-        source_shown = @asset_detail.source_el(asset).exists?
+        source_shown = @asset_detail.source?
         category_shown = @asset_detail.category_el_by_id(asset.category).exists?
         preview_generated = @asset_detail.preview_generated? asset
 

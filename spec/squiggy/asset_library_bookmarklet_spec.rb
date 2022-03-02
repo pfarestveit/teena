@@ -85,7 +85,7 @@ describe 'The Asset Library bookmarklet' do
       @assets_list.load_page @test
       @assets_list.get_asset_id @link_asset
       @assets_list.click_asset_link @link_asset
-      expect(@asset_detail.visible_asset_metadata(@link_asset)[:source]).to be true
+      expect(@asset_detail.visible_asset_metadata(@link_asset)[:source_exists]).to be true
       expect(@asset_detail.download_button?).to be false
     end
   end
@@ -157,7 +157,7 @@ describe 'The Asset Library bookmarklet' do
     before(:all) do
       @canvas.log_in(@cal_net, @test.admin.username, Utils.super_admin_password)
       @canvas.remove_users_from_course(@test.course, [@student])
-      @engagement_index.wait_until(Utils.medium_wait) do
+      @engagement_index.wait_until(Utils.long_wait) do
         sleep 10
         @engagement_index.load_scores @test
         !@engagement_index.visible_names.include? @student.full_name

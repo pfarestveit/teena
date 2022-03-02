@@ -81,7 +81,7 @@ module Page
       stop_masquerading if stop_masquerading_link?
       logger.info "Masquerading as #{user.role} UID #{user.uid}, Canvas ID #{user.canvas_id}"
       navigate_to "#{Utils.canvas_base_url}/users/#{user.canvas_id}/masquerade"
-      wait_for_update_and_click masquerade_link_element
+      wait_for_load_and_click masquerade_link_element
       stop_masquerading_link_element.when_visible Utils.short_wait
       load_course_site course unless course.nil?
     end
