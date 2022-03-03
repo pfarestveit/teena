@@ -271,6 +271,10 @@ describe 'bCourses Find a Person to Add', order: :defined do
           @canvas.switch_to_main_content
           expect(@canvas.external_link_valid?(@canvas.policies_link_element, 'Academic Accommodations Hub | Executive Vice Chancellor and Provost')).to be true
         end
+
+        it "offers #{user.role} a Mental Health Resources link" do
+          expect(@canvas.external_link_valid?(@canvas.mental_health_link_element, 'Mental Health | University Health Services')).to be true
+        end
       end
     end
   end
