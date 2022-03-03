@@ -12,6 +12,7 @@ class SquiggyAssetLibraryDetailPage < SquiggyAssetLibraryListViewPage
   span(:view_count, id: 'asset-view-count')
   span(:comment_count, id: 'asset-comment-count')
   div(:description, xpath: '//h3[text()="Description"]/..')
+  div(:source, xpath: '//div[contains(text(), "Source:")]')
 
   def load_asset_detail(test, asset)
     # TODO - reinstate this when asset deep links work again
@@ -77,7 +78,8 @@ class SquiggyAssetLibraryDetailPage < SquiggyAssetLibraryListViewPage
       view_count: (view_count if view_count?),
       comment_count: (comment_count if comment_count?),
       description: (description.strip if description?),
-      source: (source_el(asset).exists?),
+      source: source_el(asset),
+      source_exists: source?,
       category: expected_cat
     }
   end

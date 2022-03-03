@@ -10,7 +10,6 @@ describe 'An asset' do
     @cal_net= Page::CalNetPage.new @driver
     @assets_list = SquiggyAssetLibraryListViewPage.new @driver
     @asset_detail = SquiggyAssetLibraryDetailPage.new @driver
-    @manage_assets = SquiggyAssetLibraryManageAssetsPage.new @driver
     @engagement_index = SquiggyEngagementIndexPage.new @driver
 
     @canvas.log_in(@cal_net, @test.admin.username, Utils.super_admin_password)

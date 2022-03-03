@@ -66,14 +66,14 @@ describe 'New asset' do
                   expect(asset_downloadable).to be true
                 end
                 it "#{asset.title} belonging to #{student.full_name} has no detail view source" do
-                  expect(visible_detail[:source]).to be false
+                  expect(visible_detail[:source_exists]).to be false
                 end
               else
                 it "#{asset.title} belonging to #{student.full_name} cannot be downloaded from the Asset Library detail view" do
                   expect(has_download_button).to be false
                 end
                 it "#{asset.title} belonging to #{student.full_name} has the right detail view source" do
-                  expect(visible_detail[:source]).to be true
+                  expect(visible_detail[:source]).to be_truthy
                 end
               end
 

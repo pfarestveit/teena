@@ -21,7 +21,7 @@ module Page
 
     def enter_credentials(username, password, event = nil, msg = nil)
       # If no credentials are available, then wait for manual login
-      wait_until(Utils.medium_wait) { title.include? 'CAS – Central Authentication Service' }
+      wait_until(Utils.medium_wait) { title.include? 'Central Authentication Service' }
       if username == 'secret' || password == 'secret'
         if Utils.config['webdriver']['headless']
           logger.error 'Browser is running in headless mode, manual login is not supported'
@@ -55,7 +55,7 @@ module Page
     def wait_for_manual_login
       wait_until(Utils.long_wait) do
         # If login is to resolve a Junction session conflict, then logout should occur. Otherwise, expect successful login.
-        logout_conf_heading_element.visible? || !title.include?('CAS – Central Authentication Service')
+        logout_conf_heading_element.visible? || !title.include?('Central Authentication Service')
       end
     end
 
