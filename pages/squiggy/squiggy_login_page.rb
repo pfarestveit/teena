@@ -4,7 +4,7 @@ class SquiggyLoginPage
   include Page
   include Logging
 
-  text_field(:user_id_input, id: 'uid-input')
+  text_field(:user_id_input, id: 'user-id-input')
   text_field(:password_input, id: 'password-input')
   button(:log_in_button, id: 'btn-dev-auth-login')
 
