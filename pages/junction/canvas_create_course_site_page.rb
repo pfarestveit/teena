@@ -190,6 +190,7 @@ module Page
       # @return [String]
       def enter_site_titles(course)
         site_abbreviation = "QA bCourses Test #{Utils.get_test_id}"
+        sleep 2
         wait_for_element_and_type(site_name_input_element, "#{site_abbreviation} - #{course.code}")
         wait_for_element_and_type(site_abbreviation_element, site_abbreviation)
         site_abbreviation

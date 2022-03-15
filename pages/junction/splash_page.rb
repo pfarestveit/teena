@@ -53,7 +53,7 @@ module Page
       def resolve_lti_session_conflict(cal_net_page)
         load_page
         logger.warn 'Resolving any LTI session conflicts'
-        wait_until(Utils.short_wait) do
+        wait_until(Utils.long_wait) do
           basic_auth_uid_input? || cal_net_page.username? || log_out_link?
           if cal_net_page.username?
             logger.debug 'CAS login page loaded, entering credentials'

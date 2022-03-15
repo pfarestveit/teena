@@ -265,11 +265,11 @@ unless ENV['STANDALONE']
       end
 
       it 'has reasonable grading bases' do
-        expected_grading_bases = %w(CPN DPN EPN ESU GRD)
+        expected_grading_bases = %w(CPN DPN EPN ESU FRZ GRD)
         actual_grading_bases = @e_grades.map { |b| b[:grading_basis] }
         logger.debug "Expecting #{expected_grading_bases} and got #{actual_grading_bases.uniq}"
         expect(actual_grading_bases.any? &:empty?).to be false
-        expect((actual_grading_bases - expected_grading_bases).any?).to be false
+        expect(actual_grading_bases - expected_grading_bases).to be_empty
       end
     end
 

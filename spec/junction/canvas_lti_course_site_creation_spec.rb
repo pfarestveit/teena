@@ -73,7 +73,7 @@ describe 'bCourses course site creation' do
           @site_creation_page.load_standalone_tool
         else
           @canvas_page.load_homepage
-          @canvas_page.create_site_link_element.when_present Utils.short_wait
+          @canvas_page.create_site_link_element.when_present Utils.medium_wait
           @canvas_page.stop_masquerading if @canvas_page.stop_masquerading_link?
           @canvas_page.masquerade_as site[:teacher] unless %w(uid ccn).include?(site[:course].create_site_workflow)
           @canvas_page.click_create_site @driver
