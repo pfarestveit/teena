@@ -11,13 +11,11 @@ module Page
     text_field(:username, id: 'username')
     text_field(:password, id: 'password')
     text_area(:sign_in_button, xpath: '//input[@value="Sign In"]')
-    h3(:logout_conf_heading, xpath: '//h3[text()="Logout Successful"]')
-    span(:invalid_credentials, xpath: '//span[contains(text(), "Invalid credentials.")]')
+    h3(:logout_conf_heading, xpath: '//h3[text()="Logout successful"]')
+    h1(:duo_notice, xpath: '//h1[text()="Check for a Duo Push"]')
+    button(:duo_trust_browser_button, id: 'trust-browser-button')
+    span(:invalid_credentials, xpath: '//span[contains(text(), "invalid credentials")]')
     span(:access_denied_msg, xpath: '//span[contains(.,"Service access denied due to missing privileges.")]')
-
-    iframe(:duo_frame, xpath: '//div[@id="duo_iframe"]/iframe')
-    checkbox(:remember_me, name: 'dampen_choice')
-    button(:send_push, xpath: '//button[text()="Send Me a Push "]')
 
     def enter_credentials(username, password, event = nil, msg = nil)
       # If no credentials are available, then wait for manual login
@@ -36,11 +34,13 @@ module Page
         wait_for_element_and_type(username_element, username)
         wait_for_element_and_type(password_element, password)
         wait_for_update_and_click sign_in_button_element
-        sleep 2
-        if duo_frame?
-          @driver.switch_to.frame duo_frame_element.selenium_element
-          remember_me_element.click unless remember_me_checked?
-          send_push
+        wait_until(Utils.long_wait) do
+          duo_trust_browser_button? ||
+            invalid_credentials? ||
+            (!title.include?('Central Authentication Service') && !current_url.include?('duosecurity'))
+        end
+        if duo_trust_browser_button?
+          duo_trust_browser_button
         elsif invalid_credentials?
           fail('Invalid credentials')
         end
@@ -55,7 +55,8 @@ module Page
     def wait_for_manual_login
       wait_until(Utils.long_wait) do
         # If login is to resolve a Junction session conflict, then logout should occur. Otherwise, expect successful login.
-        logout_conf_heading_element.visible? || !title.include?('Central Authentication Service')
+        logout_conf_heading_element.visible? ||
+          (!title.include?('Central Authentication Service') && !current_url.include?('duosecurity'))
       end
     end
 

@@ -435,10 +435,10 @@ module Page
     link(:view_apps_link, text: 'View App Configurations')
     link(:add_app_link, xpath: '//a[contains(@class, "add_tool_link")]')
     select_list(:config_type, id: 'configuration_type_selector')
-    text_area(:app_name_input, xpath: '//input[@placeholder="Name"]')
-    text_area(:key_input, xpath: '//input[@placeholder="Consumer Key"]')
-    text_area(:secret_input, xpath: '//input[@placeholder="Shared Secret"]')
-    text_area(:url_input, xpath: '//input[@placeholder="Config URL"]')
+    text_area(:app_name_input, xpath: '//div[@class="ConfigurationFormUrl"]/div//input')
+    text_area(:key_input, xpath: '(//div[@class="ConfigurationFormUrl"]/div[2]//input)[1]')
+    text_area(:secret_input, xpath: '(//div[@class="ConfigurationFormUrl"]/div[2]//input)[2]')
+    text_area(:url_input, xpath: '//div[@class="ConfigurationFormUrl"]/div[3]//input')
     link(:app_placements_button, text: 'Placements')
     button(:activate_navigation_button, xpath: '//span[text()="Course Navigation"]/following-sibling::span//button')
     button(:close_placements_button, xpath: '//span[@aria-label="App Placements"]//button[contains(., "Close")]')
@@ -567,6 +567,7 @@ module Page
             wait_for_update_and_click apps_link_element
             wait_for_update_and_click add_app_link_element
             wait_for_element_and_select_js(config_type_element, 'By URL')
+            sleep 1
             wait_for_element_and_type(app_name_input_element, "#{tool.name}")
             wait_for_element_and_type(key_input_element, creds[:key])
             wait_for_element_and_type(secret_input_element, creds[:secret])
