@@ -44,7 +44,6 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
       @pax_manifest_page = BOACPaxManifestPage.new @driver
       @class_page = BOACClassListViewPage.new @driver
       @cohort_page = BOACFilteredStudentsPage.new(@driver, @add_edit_user)
-      @intake_desk_page = BOACApptIntakeDeskPage.new @driver
       @student_page = BOACStudentPage.new @driver
 
       @homepage.dev_auth
@@ -82,8 +81,6 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
                 expected_roles = []
                 expected_roles << 'Advisor' if membership.advisor_role == AdvisorRole::ADVISOR
                 expected_roles << 'Director' if membership.advisor_role == AdvisorRole::DIRECTOR
-                expected_roles << 'Scheduler' if membership.advisor_role == AdvisorRole::SCHEDULER
-                expected_roles << 'Drop-in Advisor' if membership.is_drop_in_advisor
                 expected_roles << user.degree_progress_perm.user_perm if user.degree_progress_perm
                 visible_dept_roles = @pax_manifest_page.visible_dept_roles(user, membership.dept.code)
                 visible_roles = visible_dept_roles.split(' — ').last
@@ -437,15 +434,6 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
           @pax_manifest_page.edit_user @add_edit_user
           @pax_manifest_page.click_become_user_link_element @add_edit_user
           @homepage.no_filtered_cohorts_msg_element.when_visible Utils.short_wait
-          expect(@homepage.new_appt_button?).to be false
-        end
-
-        it 'allows an admin to give a user a department scheduler role' do
-          @add_edit_user.dept_memberships.first.advisor_role = AdvisorRole::SCHEDULER
-          @pax_manifest_page.edit_user @add_edit_user
-          @pax_manifest_page.click_become_user_link_element @add_edit_user
-          @intake_desk_page.wait_for_title 'Drop-in Appointments Desk'
-          @intake_desk_page.new_appt_button_element.when_visible Utils.short_wait
         end
 
         it 'allows an admin to give a user a department advisor role' do
@@ -453,7 +441,6 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
           @pax_manifest_page.edit_user @add_edit_user
           @pax_manifest_page.click_become_user_link_element @add_edit_user
           @homepage.no_filtered_cohorts_msg_element.when_visible Utils.short_wait
-          expect(@homepage.new_appt_button?).to be false
         end
       end
     end
@@ -496,54 +483,6 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
         @pax_manifest_page.automate_deg_prog_cbx_element.when_present Utils.short_wait
         expect(@pax_manifest_page.automate_deg_prog_cbx_element.selected?).to be true
         expect(@pax_manifest_page.deg_prog_select).to eql(@orig_perm.desc)
-      end
-    end
-
-    context 'in scheduler adding mode' do
-
-      it 'allows an advisor to add a scheduler' do
-        @homepage.log_out
-        @homepage.dev_auth @add_remove_advisor
-        @homepage.click_settings_link
-        @admin_page.add_scheduler @add_remove_scheduler
-        @admin_page.wait_until(Utils.short_wait) { @admin_page.visible_scheduler_uids.include? @add_remove_scheduler.uid }
-      end
-
-      it 'allows a newly created scheduler to reach the intake desk' do
-        @homepage.log_out
-        @homepage.dev_auth @add_remove_scheduler
-        @intake_desk_page.new_appt_button_element.when_visible Utils.short_wait
-        expect(@intake_desk_page.title).to include('Drop-in Appointments Desk')
-      end
-    end
-
-    context 'in scheduler removing mode' do
-
-      it 'allows an advisor to cancel removing a scheduler' do
-        @homepage.log_out
-        @homepage.dev_auth @add_remove_advisor
-        @homepage.click_settings_link
-        @admin_page.click_remove_scheduler @add_remove_scheduler
-        @admin_page.click_cancel_remove_scheduler
-        @admin_page.wait_until(Utils.short_wait) { @admin_page.visible_scheduler_uids.include? @add_remove_scheduler.uid }
-      end
-
-      it 'allows an advisor to remove a scheduler' do
-        @admin_page.remove_scheduler @add_remove_scheduler
-        @admin_page.wait_until(Utils.short_wait) { !@admin_page.visible_scheduler_uids.include? @add_remove_scheduler.uid }
-      end
-
-      it 'prevents a removed scheduler from logging in' do
-        @admin_page.log_out
-        @homepage.enter_dev_auth_creds @add_remove_scheduler
-        @homepage.deleted_msg_element.when_visible Utils.short_wait
-      end
-
-      it 'allows an advisor to re-add a removed scheduler' do
-        @homepage.dev_auth @add_remove_advisor
-        @homepage.click_settings_link
-        @admin_page.add_scheduler @add_remove_scheduler
-        @admin_page.wait_until(Utils.short_wait) { @admin_page.visible_scheduler_uids.include? @add_remove_scheduler.uid }
       end
     end
   end

@@ -18,10 +18,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
 
         begin
           appt_searches = []
-          expected_boa_appts = BOACUtils.get_student_appts(student, test_config.students)
-          expected_boa_appts.delete_if &:deleted_date
-          expected_sis_appts = NessieTimelineUtils.get_sis_appts student
-          expected_appts = expected_boa_appts + expected_sis_appts
+          expected_appts = NessieTimelineUtils.get_sis_appts student
           if expected_appts.any?
             expected_appts.each { |appt| appt_searches << BOACUtils.generate_appt_search_query(student, appt) }
           else

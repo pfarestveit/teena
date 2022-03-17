@@ -7,7 +7,6 @@ class BOACHomePage
   include Page
   include BOACPages
   include BOACPagesCreateNoteModal
-  include BOACApptIntakeDesk
   include BOACUserListPages
 
   button(:sign_in, id: 'sign-in')
@@ -61,15 +60,6 @@ class BOACHomePage
   def dev_auth(user = nil)
     enter_dev_auth_creds user
     wait_until(Utils.medium_wait) { ['Home | BOA', 'Drop-In Advisor Home | BOA', 'Drop-in Appointments Desk | BOA'].include? title }
-  end
-
-  # DROP-IN APPTS
-
-  button(:new_appt_button, id: 'btn-homepage-create-appointment')
-
-  # Clicks the button to create a new new drop-in appointment
-  def click_new_appt
-    wait_for_update_and_click new_appt_button_element
   end
 
   # GENERIC USER DATA UI

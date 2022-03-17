@@ -8,7 +8,6 @@ module BOACStudentPageAdvisingNote
   include BOACPages
   include BOACPagesCreateNoteModal
   include BOACStudentPageTimeline
-  include BOACApptIntakeDesk
 
   #### EXISTING NOTES ####
 

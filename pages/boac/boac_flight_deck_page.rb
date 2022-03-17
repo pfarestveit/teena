@@ -20,35 +20,6 @@ class BOACFlightDeckPage
     navigate_to "#{BOACUtils.base_url}/profile"
   end
 
-  def drop_in_advising_toggle_el(dept)
-    button_element(id: "toggle-drop-in-advising-#{dept.code if dept}")
-  end
-
-  def drop_in_advising_enabled?(dept)
-    drop_in_advising_toggle_el(dept).when_visible Utils.short_wait
-    span_element(xpath: "//button[@id='toggle-drop-in-advising-#{dept.code}']/span/span").text == 'YES'
-  end
-
-  def disable_drop_in_advising_role(dept_membership)
-    if drop_in_advising_enabled? dept_membership.dept
-      logger.info "Drop-in role is enabled in dept #{dept_membership.dept.code}, removing"
-      wait_for_update_and_click drop_in_advising_toggle_el(dept_membership.dept)
-    else
-      logger.info "Drop-in role is already disabled in dept #{dept_membership.dept.code}"
-    end
-    dept_membership.is_drop_in_advisor = false
-  end
-
-  def enable_drop_in_advising_role(dept_membership = nil)
-    if drop_in_advising_enabled?(dept_membership&.dept)
-      logger.info "Drop-in role is already enabled#{ + ' in dept ' + dept_membership.dept.code if dept_membership}"
-    else
-      logger.info "Drop-in role is disabled#{ + 'in dept ' + dept_membership.dept.code if dept_membership}, adding"
-      wait_for_update_and_click drop_in_advising_toggle_el(dept_membership&.dept)
-    end
-    dept_membership.is_drop_in_advisor = true
-  end
-
   #### SERVICE ANNOUNCEMENTS ####
 
   checkbox(:post_service_announcement_checkbox, id: 'checkbox-publish-service-announcement')
@@ -123,55 +94,6 @@ class BOACFlightDeckPage
     end
   end
 
-  ### SCHEDULERS ###
-
-  text_field(:add_scheduler_input, id: 'add-scheduler-input-input')
-  button(:add_scheduler_button, id: 'add-scheduler-input-add-button')
-  elements(:add_scheduler_option, :link, xpath: '//a[contains(@id, "add-scheduler-input-suggestion-")]')
-  elements(:scheduler_uid, :div, xpath: '//div[@id="scheduler-rows"]/div')
-  button(:confirm_remove_scheduler, id: 'remove-scheduler-confirm')
-  button(:cancel_remove_scheduler, id: 'remove-scheduler-cancel')
-
-  # Adds a scheduler
-  # @param scheduler [BOACUser]
-  def add_scheduler(scheduler)
-    logger.info "Adding scheduler SID #{scheduler.sis_id}"
-    wait_for_element_and_type(add_scheduler_input_element, scheduler.sis_id)
-    sleep Utils.click_wait
-    wait_until(Utils.short_wait) { auto_suggest_option_elements.any? }
-    link_element = auto_suggest_option_elements.first
-    wait_for_load_and_click link_element
-    wait_for_update_and_click add_scheduler_button_element
-    sleep 1
-  end
-
-  # Returns the UIDs of the visible schedulers
-  # @return [Array<String>]
-  def visible_scheduler_uids
-    scheduler_uid_elements.map { |el| el.attribute('id').split('-').last }.sort
-  end
-
-  # Clicks the Remove button for a scheduler
-  # @param scheduler [BOACUser]
-  def click_remove_scheduler(scheduler)
-    wait_for_update_and_click button_element(xpath: "//button[@id='scheduler-row-#{scheduler.uid}-remove-button']")
-  end
-
-  # Removes a scheduler
-  # @param scheduler [BOACUser]
-  def remove_scheduler(scheduler)
-    logger.info "Removing scheduler UID #{scheduler.uid}"
-    click_remove_scheduler scheduler
-    wait_for_update_and_click confirm_remove_scheduler_element
-    sleep 1
-    wait_until(Utils.short_wait) { !visible_scheduler_uids.include? scheduler.uid }
-  end
-
-  # Clicks the cancel button when removing a scheduler
-  def click_cancel_remove_scheduler
-    wait_for_update_and_click cancel_remove_scheduler_element
-  end
-
   ### TOPICS ###
 
   text_field(:topic_search_input, id: 'filter-topics')
@@ -179,7 +101,6 @@ class BOACFlightDeckPage
   button(:topic_create_button, id: 'new-note-button')
   text_field(:topic_name_input, id: 'topic-label')
   checkbox(:topic_in_notes_cbx, id: 'topic-available-in-notes')
-  checkbox(:topic_in_appts_cbx, id: 'topic-available-in-appointments')
   button(:topic_save_button, id: 'topic-save')
   button(:topic_cancel_button, id: 'cancel')
 

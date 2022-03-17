@@ -29,12 +29,11 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
 
         begin
           @student_page.load_page student
-          expected_boa_appts = BOACUtils.get_student_appts(student, test.students).delete_if &:deleted_date
           expected_sis_appts = NessieTimelineUtils.get_sis_appts student
           expected_ycbm_appts = NessieTimelineUtils.get_ycbm_appts student
-          logger.warn "UID #{student.uid} has #{expected_sis_appts.length} SIS appts, #{expected_boa_appts.length} BOA appts, and #{expected_ycbm_appts.length} YCBM appts"
+          logger.warn "UID #{student.uid} has #{expected_sis_appts.length} SIS appts and #{expected_ycbm_appts.length} YCBM appts"
 
-          expected_appts = expected_sis_appts + expected_boa_appts + expected_ycbm_appts
+          expected_appts = expected_sis_appts + expected_ycbm_appts
           sis_appts += expected_sis_appts
           ycbm_appts += expected_ycbm_appts
 

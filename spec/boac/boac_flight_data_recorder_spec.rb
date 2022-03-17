@@ -21,12 +21,6 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
   end
   logger.warn "Advisor UID #{advisor.uid}"
 
-  scheduler = all_non_admin_users.find do |u|
-    u.dept_memberships.select { |m| m.advisor_role == AdvisorRole::SCHEDULER }.reject { |m| m.advisor_role == AdvisorRole::DIRECTOR }.reject { |m| m.advisor_role == AdvisorRole::ADVISOR }.any?
-  end
-  logger.warn "Scheduler UID #{scheduler.uid}"
-
-
   describe 'BOA flight data recorder' do
 
     before(:all) do
@@ -217,27 +211,6 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
       it 'prevents the user hitting the page' do
         @flight_data_recorder.load_page advisor.depts.first
         @flight_data_recorder.wait_for_title 'Page not found'
-      end
-
-      it 'offers no link in the header' do
-        @homepage.click_header_dropdown
-        expect(@homepage.flight_data_recorder_link?).to be false
-      end
-
-    end
-
-    context 'when the user is a scheduler' do
-
-      before(:all) { @homepage.dev_auth scheduler }
-
-      after(:all) do
-        @flight_data_recorder.hit_escape
-        @flight_data_recorder.log_out
-      end
-
-      it 'prevents the user hitting the page' do
-        @flight_data_recorder.load_page scheduler.depts.first
-        @flight_data_recorder.wait_for_title 'Page Not Found'
       end
 
       it 'offers no link in the header' do

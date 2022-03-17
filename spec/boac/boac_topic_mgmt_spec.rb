@@ -12,7 +12,6 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
       @student = @test.students.shuffle.first
       @topic = Topic.new("Topic test #{@test.id}", true, true)
       @note = Note.new student: @student, subject: "Topic test #{@test.id}"
-      @appt = Appointment.new advisor: @test.advisor, student: @student, detail: "Topic test #{@test.id}", topics: [@topic]
       @template = NoteTemplate.new(title: "Template #{@test.id}", subject: 'Template subj', body: 'Template body')
 
       @homepage = BOACHomePage.new @driver
@@ -33,7 +32,7 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
 
     context 'creation' do
 
-      it 'requires a label and note and/or appointment selection' do
+      it 'requires a label and note selection' do
         @flight_deck.click_create_topic
         expect(@flight_deck.topic_save_button_element.enabled?).to be false
         @flight_deck.enter_topic_label 'foo'
@@ -42,8 +41,6 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
         expect(@flight_deck.topic_save_button_element.enabled?).to be true
         @flight_deck.uncheck_topic_in_notes
         expect(@flight_deck.topic_save_button_element.enabled?).to be false
-        @flight_deck.check_topic_in_appts
-        expect(@flight_deck.topic_save_button_element.enabled?).to be true
       end
 
       it 'requires a unique label' do
@@ -71,8 +68,6 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
         expect(@flight_deck.topic_deleted? @topic).to be false
         expect(@flight_deck.topic_in_notes @topic).to eql('Yes')
         expect(@flight_deck.topic_in_notes_count @topic).to eql('0')
-        expect(@flight_deck.topic_in_appts @topic).to eql('Yes')
-        expect(@flight_deck.topic_in_appts_count @topic).to eql('0')
       end
     end
 
@@ -83,20 +78,17 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
         @flight_deck.click_cancel_topic
       end
 
-      it 'requires note and/or appointment selection' do
+      it 'requires note selection' do
         @flight_deck.click_edit_topic @topic
         @flight_deck.uncheck_topic_in_notes
         @flight_deck.uncheck_topic_in_appts
         expect(@flight_deck.topic_save_button_element.enabled?).to be false
         @flight_deck.check_topic_in_notes
         expect(@flight_deck.topic_save_button_element.enabled?).to be true
-        @flight_deck.uncheck_topic_in_notes
-        @flight_deck.check_topic_in_appts
-        expect(@flight_deck.topic_save_button_element.enabled?).to be true
       end
     end
 
-    context 'when it is available to both notes and appointments' do
+    context 'when it is available to notes' do
 
       before(:all) do
         @flight_deck.hit_escape
@@ -127,12 +119,6 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
         expect(@student_page.topic_options).to include(@topic.name)
       end
 
-      it 'can be selected for a drop-in appointment' do
-        @homepage.load_page
-        @homepage.click_new_appt
-        expect(@homepage.available_appt_reasons).to include(@topic.name)
-      end
-
       it 'is returned in search results for any notes that include the topic' do
         @student_page.load_page @student
         @student_page.create_note(@note, [@topic], nil)
@@ -142,23 +128,12 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
         expect(@search_results.note_in_search_result? @note).to be true
       end
 
-      it 'is returned in search results for any appointments that include the topic' do
-        @homepage.load_page
-        @homepage.click_new_appt
-        @homepage.create_appt @appt
-        @student_page.expand_search_options_notes_subpanel
-        @student_page.select_note_topic @topic
-        @student_page.click_search_button
-        expect(@search_results.appt_in_search_result? @appt).to be true
-      end
-
-      it 'shows its usage in both notes and appointments' do
+      it 'shows its usage in notes' do
         @search_results.log_out
         @homepage.dev_auth
         @homepage.click_flight_deck_link
         @flight_deck.search_for_topic @topic
         expect(@flight_deck.topic_in_notes_count @topic).to eql('1')
-        expect(@flight_deck.topic_in_appts_count @topic).to eql('1')
       end
     end
 
@@ -189,87 +164,20 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
         expect(@student_page.topic_options).to include(@topic.name)
       end
 
-      it 'cannot be selected for a drop-in appointment' do
-        @homepage.load_page
-        @homepage.click_new_appt
-        expect(@homepage.available_appt_reasons).not_to include(@topic.name)
-      end
-
       it 'is returned in search results for any notes that include the topic' do
-        @homepage.hit_escape
-        @student_page.expand_search_options_notes_subpanel
-        @student_page.select_note_topic @topic
-        @student_page.click_search_button
+        @homepage.load_page
+        @homepage.expand_search_options_notes_subpanel
+        @homepage.select_note_topic @topic
+        @homepage.click_search_button
         expect(@search_results.note_in_search_result? @note).to be true
       end
 
-      it 'is returned in search results for any appointments that include the topic' do
-        expect(@search_results.appt_in_search_result? @appt).to be true
-      end
-
-      it 'shows its usage in both notes and appointments' do
+      it 'shows its usage in notes' do
         @search_results.log_out
         @homepage.dev_auth
         @homepage.click_flight_deck_link
         @flight_deck.search_for_topic @topic
         expect(@flight_deck.topic_in_notes_count @topic).to eql('1')
-        expect(@flight_deck.topic_in_appts_count @topic).to eql('1')
-      end
-    end
-
-    context 'when it is available to appointments only' do
-
-      before(:all) do
-        @topic.for_appts = true
-        @topic.for_notes = false
-        @flight_deck.edit_topic @topic
-        @flight_deck.log_out
-        @homepage.dev_auth @test.advisor
-      end
-
-      it 'cannot be selected for an individual note' do
-        @student_page.load_page @student
-        @student_page.click_create_new_note
-        expect(@student_page.topic_options).not_to include(@topic.name)
-      end
-
-      it 'cannot be selected for a batch note' do
-        @student_page.hit_escape
-        @student_page.click_create_note_batch
-        expect(@student_page.topic_options).not_to include(@topic.name)
-      end
-
-      it 'cannot be selected for a note template' do
-        @student_page.click_templates_button
-        @student_page.click_edit_template @template
-        expect(@student_page.topic_options).not_to include(@topic.name)
-      end
-
-      it 'can be selected for a drop-in appointment' do
-        @homepage.load_page
-        @homepage.click_new_appt
-        expect(@homepage.available_appt_reasons).to include(@topic.name)
-      end
-
-      it 'is returned in search results for any notes that include the topic' do
-        @homepage.hit_escape
-        @student_page.expand_search_options_notes_subpanel
-        @student_page.select_note_topic @topic
-        @student_page.click_search_button
-        expect(@search_results.note_in_search_result? @note).to be true
-      end
-
-      it 'is returned in search results for any appointments that include the topic' do
-        expect(@search_results.appt_in_search_result? @appt).to be true
-      end
-
-      it 'shows its usage in both notes and appointments' do
-        @search_results.log_out
-        @homepage.dev_auth
-        @homepage.click_flight_deck_link
-        @flight_deck.search_for_topic @topic
-        expect(@flight_deck.topic_in_notes_count @topic).to eql('1')
-        expect(@flight_deck.topic_in_appts_count @topic).to eql('1')
       end
     end
 
@@ -279,14 +187,12 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
 
       it('shows as deleted on the Flight Deck') { expect(@flight_deck.topic_deleted? @topic).to be true }
 
-      it 'shows null availability in both notes and appointments' do
+      it 'shows null availability in notes' do
         expect(@flight_deck.topic_in_notes @topic).to eql('—')
-        expect(@flight_deck.topic_in_appts @topic).to eql('—')
       end
 
-      it 'shows its usage in both notes and appointments' do
+      it 'shows its usage in notes' do
         expect(@flight_deck.topic_in_notes_count @topic).to eql('1')
-        expect(@flight_deck.topic_in_appts_count @topic).to eql('1')
       end
 
       it 'cannot be selected for an individual note' do
@@ -309,22 +215,12 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
         expect(@student_page.topic_options).not_to include(@topic.name)
       end
 
-      it 'cannot be selected for a drop-in appointment' do
-        @homepage.load_page
-        @homepage.click_new_appt
-        expect(@homepage.available_appt_reasons).not_to include(@topic.name)
-      end
-
       it 'is returned in search results for any notes that include the topic' do
-        @homepage.hit_escape
-        @student_page.expand_search_options_notes_subpanel
-        @student_page.select_note_topic @topic
-        @student_page.click_search_button
+        @homepage.load_page
+        @homepage.expand_search_options_notes_subpanel
+        @homepage.select_note_topic @topic
+        @homepage.click_search_button
         expect(@search_results.note_in_search_result? @note).to be true
-      end
-
-      it 'is returned in search results for any appointments that include the topic' do
-        expect(@search_results.appt_in_search_result? @appt).to be true
       end
     end
 
@@ -343,10 +239,6 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
         @student_page.select_note_topic @topic
         @student_page.click_search_button
         expect(@search_results.note_in_search_result? @note).to be true
-      end
-
-      it 'is returned in search results for any appointments that include the topic' do
-        expect(@search_results.appt_in_search_result? @appt).to be true
       end
     end
   end
