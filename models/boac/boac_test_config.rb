@@ -11,8 +11,6 @@ class BOACTestConfig < TestConfig
                 :default_cohort,
                 :degree_templates,
                 :dept,
-                :drop_in_advisor,
-                :drop_in_scheduler,
                 :read_only_advisor,
                 :test_students,
                 :searchable_data,
@@ -52,22 +50,6 @@ class BOACTestConfig < TestConfig
       @advisor.last_name = user_data[:last_name]
     end
     logger.warn "Advisor is UID #{@advisor.uid}"
-  end
-
-  # Sets the three user roles for testing drop-in appointments
-  # @param auth_users [Array<BOACUser>]
-  def set_drop_in_appt_advisors(auth_users)
-    dept_advisors = auth_users.select { |u| u.depts.include?(@dept) && (u.uid.length > 1) && (!u.degree_progress_perm) }
-    @advisor = dept_advisors[0]
-    @advisor.dept_memberships = [DeptMembership.new(dept: @dept, advisor_role: AdvisorRole::ADVISOR)]
-
-    @drop_in_advisor = dept_advisors[1]
-    @drop_in_advisor.dept_memberships = [DeptMembership.new(dept: @dept, advisor_role: AdvisorRole::ADVISOR)]
-
-    @drop_in_scheduler = dept_advisors[2]
-    @drop_in_scheduler.dept_memberships = [DeptMembership.new(dept: @dept, advisor_role: AdvisorRole::SCHEDULER)]
-
-    logger.warn "Advisor-only UID #{@advisor.uid}, drop-in advisor UID #{@drop_in_advisor.uid}, scheduler UID #{@drop_in_scheduler.uid}"
   end
 
   def set_read_only_advisor
@@ -166,6 +148,9 @@ class BOACTestConfig < TestConfig
                        ycbm_appts_sids = boa_sids & NessieTimelineUtils.get_sids_with_ycbm_appts
                        logger.info "There are #{ycbm_appts_sids.length} students with YCBM appointments"
                        [sis_appts_sids, ycbm_appts_sids].each &:shuffle!
+                       all_sids = @students.map &:sis_id
+                       sis_appts_sids = sis_appts_sids & all_sids
+                       ycbm_appts_sids = sis_appts_sids & all_sids
                        test_sids = (sis_appts_sids[0..(config - 1)] + ycbm_appts_sids[0..(config - 1)]).uniq
                        @students.select { |s| test_sids.include? s.sis_id }
 
@@ -325,13 +310,6 @@ class BOACTestConfig < TestConfig
     set_read_only_advisor
     NessieTimelineUtils.set_advisor_data @read_only_advisor
     set_degree_templates
-  end
-
-  # Config for drop-in appointment testing
-  def drop_in_appts(auth_users, dept)
-    set_dept dept
-    set_drop_in_appt_advisors auth_users
-    set_students
   end
 
   # Config for filtered admit cohort testing

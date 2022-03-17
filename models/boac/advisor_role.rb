@@ -10,8 +10,7 @@ class AdvisorRole
 
   ROLES = [
       DIRECTOR = new('director', 'Director'),
-      ADVISOR = new('advisor', 'Advisor'),
-      SCHEDULER = new('scheduler', 'Scheduler')
+      ADVISOR = new('advisor', 'Advisor')
   ]
 
 end

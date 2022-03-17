@@ -3,7 +3,6 @@ class Appointment < TimelineNoteAppt
   attr_accessor :cancel_reason,
                 :cancel_detail,
                 :detail,
-                :reserve_advisor,
                 :status,
                 :status_date,
                 :start_time,

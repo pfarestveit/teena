@@ -413,13 +413,6 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
           expect(@settings_page.status_heading?).to be false
         end
 
-        it('cannot toggle drop-in advising') do
-          dept = BOACDepartments::DEPARTMENTS.find { |d| d.code == @test.advisor.depts.first }
-          expect(@settings_page.drop_in_advising_toggle_el(dept).exists?).to be false
-        end
-
-        it('cannot manage drop-in schedulers') { expect(@settings_page.add_scheduler_input?).to be false }
-
         it 'cannot reach the Passenger Manifest' do
           @pax_manifest_page.hit_page_url
           @pax_manifest_page.wait_for_title 'Page not found'

@@ -297,7 +297,6 @@ class BOACPaxManifestPage
       wait_for_element_and_select_js(department_select_element, membership.dept.code)
       wait_for_element_and_select_js(dept_role_select(membership.dept), 'Advisor') if membership.advisor_role == AdvisorRole::ADVISOR
       wait_for_element_and_select_js(dept_role_select(membership.dept), 'Director') if membership.advisor_role == AdvisorRole::DIRECTOR
-      wait_for_element_and_select_js(dept_role_select(membership.dept), 'Scheduler') if membership.advisor_role == AdvisorRole::SCHEDULER
       if (membership.is_automated && !is_automated_dept_cbx(membership.dept).selected?) || (!membership.is_automated && is_automated_dept_cbx(membership.dept).selected?)
         execute_script('arguments[0].click();', is_automated_dept_cbx(membership.dept))
         sleep Utils.click_wait
