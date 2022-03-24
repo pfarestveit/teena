@@ -67,7 +67,7 @@ echo "Enter your username. Hit return to skip."
 echo
 printf "    > "
 
-read username
+read -s username
 
 echo
 echo "Enter your password. Hit return to skip."

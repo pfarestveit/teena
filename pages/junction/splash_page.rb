@@ -24,6 +24,8 @@ module Page
       def basic_auth(uid, cal_net = nil)
         logger.info "Logging in as #{uid} using basic auth"
         load_page
+        sleep 3
+        load_page
         build_summary_heading_element.when_visible Utils.medium_wait
         scroll_to_bottom
         begin

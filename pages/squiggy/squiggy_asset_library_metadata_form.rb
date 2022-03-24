@@ -47,6 +47,12 @@ module SquiggyAssetLibraryMetadataForm
     wait_for_element_and_type(url_input_element, asset.url.to_s)
   end
 
+  def enter_and_submit_url(asset)
+    enter_url asset
+    enter_asset_metadata asset
+    click_save_link_button
+  end
+
   def click_save_link_button
     wait_for_update_and_click_js save_link_button_element
   end

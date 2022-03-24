@@ -4,7 +4,8 @@ class SquiggyCourse < Course
                 :engagement_index_url,
                 :lti_tools,
                 :roster,
-                :squiggy_id
+                :squiggy_id,
+                :whiteboards_url
 
   def initialize(test_data)
     test_data.each { |k, v| public_send("#{k}=", v) }
