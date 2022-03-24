@@ -169,11 +169,11 @@ class SquiggyAssetLibraryDetailPage < SquiggyAssetLibraryListViewPage
   button(:delete_confirm_button, id: 'confirm-delete-btn')
   button(:delete_cancel_button, id: 'cancel-delete-btn')
 
-  def delete_asset(asset)
-    logger.info "Deleting asset ID #{asset.id}"
+  def delete_asset(asset = nil)
+    logger.info "Deleting asset#{(' ID ' + asset.id) if asset}"
     wait_for_update_and_click delete_button_element
     wait_for_update_and_click delete_confirm_button_element
-    delete_asset_button_element.when_not_visible Utils.short_wait rescue Selenium::WebDriver::Error::StaleElementReferenceError
+    delete_asset_button_element.when_not_present Utils.short_wait
   end
 
   # LIKE
@@ -324,4 +324,20 @@ class SquiggyAssetLibraryDetailPage < SquiggyAssetLibraryListViewPage
     comment_el_by_id(comment).when_not_present Utils.short_wait
   end
 
+  # REMIX
+
+  button(:remix_button, xpath: 'TODO')
+  link(:remixed_board_link, xpath: 'TODO')
+
+  def click_remix
+    wait_for_update_and_click remix_button_element
+    id = get_whiteboard_id remixed_board_link_element
+    title = remixed_board_link_element.text.delete('\"')
+    SquiggyWhiteboard.new id: id, title: title
+  end
+
+  def open_remixed_board(whiteboard)
+    wait_for_update_and_click remixed_board_link_element
+    shift_to_whiteboard_window whiteboard
+  end
 end

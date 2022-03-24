@@ -192,9 +192,8 @@ module Page
     # @param course [Course]
     # @param test_users [Array<User>]
     # @param test_id [String]
-    # @param tools [Array<LtiTools>]
     # @param event [Event]
-    def create_generic_course_site(sub_account, course, test_users, test_id, tools = nil, event = nil)
+    def create_generic_course_site(sub_account, course, test_users, test_id, event = nil)
       if course.site_id.nil?
         load_sub_account sub_account
         wait_for_load_and_click add_new_course_button_element
@@ -222,14 +221,6 @@ module Page
       publish_course_site course
       logger.info "Course ID is #{course.site_id}"
       add_users(course, test_users, event)
-      if tools
-        tools.each do |tool|
-          unless tool_nav_link(tool).exists?
-            add_suite_c_tool(course, tool) if [LtiTools::ASSET_LIBRARY, LtiTools::ENGAGEMENT_INDEX, LtiTools::WHITEBOARDS, LtiTools::IMPACT_STUDIO].include? tool
-          end
-          disable_tool(course, tool) unless tools.include? tool
-        end
-      end
     end
 
     # Clicks the 'create a site' button for the Junction LTI tool. If the click fails, the button could be behind a footer.
@@ -443,9 +434,6 @@ module Page
     button(:activate_navigation_button, xpath: '//span[text()="Course Navigation"]/following-sibling::span//button')
     button(:close_placements_button, xpath: '//span[@aria-label="App Placements"]//button[contains(., "Close")]')
 
-    # Returns the link element for the configured LTI tool on the course site sidebar
-    # @param tool [LtiTools]
-    # @return [PageObject::Elements::Link]
     def tool_nav_link(tool)
       link_element(xpath: "//ul[@id='section-tabs']//a[text()='#{tool.name}']")
     end
@@ -466,7 +454,6 @@ module Page
 
     # Enables an LTI tool that is already installed
     # @param course [Course]
-    # @param tool [LtiTools]
     def enable_tool(course, tool)
       load_navigation_page course
       wait_for_update_and_click link_element(xpath: "//ul[@id='nav_disabled_list']/li[contains(.,'#{tool.name}')]//a")
@@ -478,7 +465,6 @@ module Page
 
     # Disables an LTI tool that is already installed
     # @param course [Course]
-    # @param tool [LtiTools]
     def disable_tool(course, tool)
       logger.info "Disabling #{tool.name}"
       load_navigation_page course
@@ -497,53 +483,6 @@ module Page
           logger.debug "#{tool.name} is not installed, skipping"
         end
       end
-    end
-
-    # Adds an LTI tool to a course site. If the tool is installed and enabled, skips it. If the tool is installed by disabled, enables
-    # it. Otherwise, installs and enables it.
-    # @param course [Course]
-    # @param tool [LtiTools]
-    # @param base_url [String]
-    def add_lti_tool(course, tool, base_url, credentials)
-      logger.info "Adding and/or enabling #{tool.name}"
-      load_tools_config_page course
-      wait_for_update_and_click navigation_link_element
-      hide_canvas_footer_and_popup
-      if verify_block { link_element(xpath: "//ul[@id='nav_enabled_list']/li[contains(.,'#{tool.name}')]//a").when_present 2 }
-        logger.debug "#{tool.name} is already installed and enabled, skipping"
-      else
-        if link_element(xpath: "//ul[@id='nav_disabled_list']/li[contains(.,'#{tool.name}')]//a").exists?
-          logger.debug "#{tool.name} is already installed but disabled, enabling"
-          enable_tool(course, tool)
-          pause_for_poller
-        else
-          logger.debug "#{tool.name} is not installed, installing and enabling"
-          wait_for_update_and_click apps_link_element
-          wait_for_update_and_click add_app_link_element
-
-          # Enter the tool config
-          config_type_element.when_visible Utils.short_wait
-          wait_for_element_and_select_js(config_type_element, 'By URL')
-          # Use JS to select the option too since the WebDriver method is not working consistently
-          execute_script('document.getElementById("configuration_type_selector").value = "url";')
-          sleep 1
-          wait_for_update_and_click_js app_name_input_element
-          wait_for_element_and_type(app_name_input_element, "#{tool.name}")
-          wait_for_element_and_type(key_input_element, credentials[:key])
-          wait_for_element_and_type(secret_input_element, credentials[:secret])
-          wait_for_element_and_type(url_input_element, "#{base_url}#{tool.xml}")
-          submit_button
-          link_element(xpath: "//td[@title='#{tool.name}']").when_present Utils.medium_wait
-          enable_tool(course, tool)
-        end
-      end
-    end
-
-    # Adds a SuiteC LTI tool to a course site
-    # @param course [Course]
-    # @param tool [LtiTools]
-    def add_suite_c_tool(course, tool)
-      add_lti_tool(course, tool, SuiteCUtils.suite_c_base_url, SuiteCUtils.lti_credentials)
     end
 
     def add_squiggy_tools(test)
@@ -587,6 +526,7 @@ module Page
       end
       test.course.engagement_index_url = click_tool_link SquiggyTool::ENGAGEMENT_INDEX
       test.course.asset_library_url = click_tool_link SquiggyTool::ASSET_LIBRARY
+      test.course.whiteboards_url = click_tool_link SquiggyTool::WHITEBOARDS
       asset_library = SquiggyAssetLibraryListViewPage.new @driver
       canvas_assigns_page = CanvasAssignmentsPage.new @driver
       switch_to_canvas_iframe
@@ -594,7 +534,6 @@ module Page
     end
 
     # Clicks the navigation link for a tool and returns the tool's URL. Optionally records an analytics event.
-    # @param tool [LtiTools]
     # @param event [Event]
     # @return [String]
     def click_tool_link(tool, event = nil)

@@ -63,4 +63,28 @@ module SquiggyPages
 
   span(:lenny_and_squiggy, id: 'unauthorized-message')
 
+  # WHITEBOARDS
+
+  button(:cancel_asset_button, xpath: 'TODO')
+  button(:close_modal_button, xpath: 'TODO')
+
+  def click_cancel_button
+    wait_for_update_and_click_js cancel_asset_button_element
+  end
+
+  def click_close_modal_button
+    wait_for_update_and_click_js close_modal_button_element
+  end
+
+  def get_whiteboard_id(link_element)
+    link_element.when_present Utils.short_wait
+    partial_url = link_element.attribute('href').split('?').first
+    partial_url.sub("#{SquiggyUtils.base_url}/whiteboards/", '')
+  end
+
+  def shift_to_whiteboard_window(whiteboard)
+    wait_until(Utils.short_wait) { window_count > 1 }
+    switch_to_last_window
+    wait_until(Utils.medium_wait) { title.include? whiteboard.title }
+  end
 end

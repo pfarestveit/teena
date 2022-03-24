@@ -7,7 +7,7 @@ class SquiggyEngagementIndexPage
 
   def load_page(test)
     navigate_to test.course.engagement_index_url
-    wait_until(Utils.medium_wait) { title == "#{LtiTools::ENGAGEMENT_INDEX.name}" }
+    wait_until(Utils.medium_wait) { title == "#{SquiggyTool::ENGAGEMENT_INDEX.name}" }
     hide_canvas_footer_and_popup
     switch_to_canvas_iframe
   end
@@ -286,6 +286,17 @@ class SquiggyEngagementIndexPage
     end
     browser.switch_to.window window
     csv
+  end
+
+  def csv_activity_row(csv, activity, user, previous_total_score)
+    row = csv.find do |r|
+      r[:user_name] == user.full_name &&
+        r[:action] == activity.type &&
+        r[:score] == activity.points &&
+        r[:running_total] == (previous_total_score + activity.points)
+    end
+    previous_total_score += activity.points if row
+    row
   end
 
   # POINTS CONFIG

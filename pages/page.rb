@@ -21,6 +21,22 @@ module Page
     @driver.switch_to.default_content
   end
 
+  def switch_to_window(index)
+    @driver.switch_to.window @driver.window_handles[index]
+  end
+
+  def switch_to_first_window
+    @driver.switch_to.window @driver.window_handles.first
+  end
+
+  def switch_to_last_window
+    @driver.switch_to.window @driver.window_handles.last
+  end
+
+  def window_count
+    @driver.window_handles.length
+  end
+
   # Switches browser focus into the Canvas LTI tool iframe. For Junction tests, pass the Junction base URL to verify that the tool
   # is configured with the right Junction environment before proceeding.
   # @param url [String]
