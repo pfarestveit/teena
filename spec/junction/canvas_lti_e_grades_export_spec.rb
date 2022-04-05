@@ -33,9 +33,9 @@ unless ENV['STANDALONE']
       @rosters_api.get_feed course
       @academics_api.get_feed
 
-      @prim_sec_sids = @rosters_api.student_ids(@rosters_api.section_students("#{primary_section.course} #{primary_section.label}"))
+      @prim_sec_sids = @rosters_api.student_ids(@rosters_api.section_students(primary_section.id))
       if secondary_section
-        @sec_sec_sids = @rosters_api.student_ids(@rosters_api.section_students("#{secondary_section.course} #{secondary_section.label}"))
+        @sec_sec_sids = @rosters_api.student_ids(@rosters_api.section_students(secondary_section.id))
       end
 
       @current_semester = @academics_api.current_semester @academics_api.all_teaching_semesters
@@ -135,7 +135,7 @@ unless ENV['STANDALONE']
       it 'allows the user the select any section on the course site' do
         # Parenthetical in section labels isn't shown on e-grades tool
         expected_options = @rosters_api.section_names.map do |n|
-          n.include?('(') ? n.split[0..-2].join(' ') : n
+          n.include?('(') ? n.split(' (').first : n
         end
         visible_options = @e_grades_export_page.sections_select_options.map(&:strip)
         if expected_options.length > 1
@@ -223,8 +223,8 @@ unless ENV['STANDALONE']
     describe 'CSV export' do
 
       before(:all) do
-        section_name = "#{primary_section.course} #{primary_section.label}"
-        @roster_students = @rosters_api.section_students section_name
+        ccn = primary_section.id.to_s
+        @roster_students = @rosters_api.section_students ccn
         @e_grades = @e_grades_export_page.download_final_grades(course, primary_section, 'C-')
       end
 
@@ -342,10 +342,11 @@ unless ENV['STANDALONE']
     describe 'user role restrictions' do
 
       before(:all) do
+        @primary_sec_opt = @rosters_api.section_names.find { |n| n.include? primary_section.label }
         non_teachers.each do |user|
           @course_add_user_page.load_embedded_tool course
           @course_add_user_page.search(user.uid, 'CalNet UID')
-          @course_add_user_page.add_user_by_uid(user, primary_section)
+          @course_add_user_page.add_user_by_uid(user, @primary_sec_opt)
         end
       end
 

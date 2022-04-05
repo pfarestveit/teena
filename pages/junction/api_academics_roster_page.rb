@@ -38,10 +38,10 @@ class ApiAcademicsRosterPage
     students.select { |student| student['enroll_status'] == 'W' }
   end
 
-  def section_students(section_name)
+  def section_students(section_ccn)
     students.select do |student|
-      student_section_names = student['sections'].map { |section| section['name'] }
-      student_section_names.include? section_name
+      student_section_ccns = student['sections'].map { |section| section['ccn'] }
+      student_section_ccns.include? section_ccn
     end
   end
 
