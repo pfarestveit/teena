@@ -132,11 +132,15 @@ module Page
       # @param section [Section]
       # @param event [Event]
       def add_user_by_uid(user, section = nil, event = nil)
-        logger.info "Adding UID #{user.uid} with role '#{user.role}'%s" % (" to section '#{section.course} #{section.label}'" if section)
+        logger.info "Adding UID #{user.uid} with role '#{user.role}'"
         user_checkbox(user).when_present Utils.medium_wait
         user_checkbox(user).check
         if section
-          option = section.sis_id ? section.sis_id : "#{section.course} #{section.label}"
+          if section.instance_of? Section
+            option = section.sis_id ? section.sis_id : "#{section.course} #{section.label}"
+          else
+            option = section
+          end
           wait_for_element_and_select_js(course_section_element, option)
         end
         wait_for_element_and_select_js(user_role_element, user.role)

@@ -111,7 +111,7 @@ describe 'bCourses Roster Photos' do
 
     sections.each do |section|
       it "allows UID #{teacher.uid} to filter by section #{section.label} on #{course.code} course site ID #{course.site_id}" do
-        section_students = @roster_api.section_students("#{section.course} #{section.label}")
+        section_students = @roster_api.section_students(section.id)
         logger.debug "Expecting #{section_students.length} students in section #{section.label}"
         @roster_photos_page.filter_by_string ''
         @roster_photos_page.filter_by_section section

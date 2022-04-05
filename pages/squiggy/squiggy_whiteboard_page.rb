@@ -193,7 +193,7 @@ class SquiggyWhiteboardPage < SquiggyWhiteboardsPage
   def add_asset_exclude_from_library(asset)
     click_add_new_asset asset
     (asset.file_name) ? enter_and_upload_file(asset) : enter_and_submit_url(asset)
-    asset.visible? = false
+    asset.visible = false
     open_original_asset_link_element.when_visible Utils.medium_wait
     asset.id = SquiggyUtils.set_asset_id asset
   end

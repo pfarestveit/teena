@@ -10,7 +10,7 @@ class SquiggyAsset
                 :size,
                 :title,
                 :url,
-                :visible?
+                :visible
 
   def initialize(asset_data)
     asset_data.each { |k, v| public_send("#{k}=", v) }
