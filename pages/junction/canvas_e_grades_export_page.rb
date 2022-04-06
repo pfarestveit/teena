@@ -80,7 +80,7 @@ module Page
       # @param section [Section]
       def choose_section(section)
         # Parenthetical in section labels isn't shown on e-grades tool
-        label = section.label.include?('(') ? section.label.split(' (').first.strip : section.label
+        label = section.label.include?('(') ? section.label.split(' (').first : section.label
         section_name = "#{section.course} #{label}"
         Utils.prepare_download_dir
         wait_for_element_and_select_js(sections_select_element, section_name)

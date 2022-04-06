@@ -223,6 +223,8 @@ describe 'bCourses Find a Person to Add', order: :defined do
     describe 'user role restrictions' do
 
       before(:all) do
+        @policies_heading = 'Academic Accommodations Hub | Executive Vice Chancellor and Provost'
+        @mental_health_heading = 'Mental Health | University Health Services'
         @canvas.masquerade_as(sis_teacher, course)
         @canvas.publish_course_site course
       end
@@ -243,7 +245,7 @@ describe 'bCourses Find a Person to Add', order: :defined do
 
         it "offers #{user.role} an Academic Policies link" do
           @canvas.switch_to_main_content
-          expect(@canvas.external_link_valid?(@canvas.policies_link_element, 'Academic Accommodations Hub | Executive Vice Chancellor and Provost')).to be true
+          expect(@canvas.external_link_valid?(@canvas.policies_link_element, @policies_heading)).to be true
         end
       end
 
@@ -256,12 +258,13 @@ describe 'bCourses Find a Person to Add', order: :defined do
 
         it "offers #{user.role} an Academic Policies link" do
           @canvas.switch_to_main_content
-          expect(@canvas.external_link_valid?(@canvas.policies_link_element, 'Academic Accommodations Hub | Executive Vice Chancellor and Provost')).to be true
+          expect(@canvas.external_link_valid?(@canvas.policies_link_element, @policies_heading)).to be true
         end
       end
 
       [test.observer, test.students.first, test.wait_list_student].each do |user|
         it "denies #{user.role} #{user.uid} access to the tool" do
+          Utils.set_default_window_size @driver
           @canvas.masquerade_as(user, course)
           @course_add_user_page.hit_embedded_tool_url course
           @canvas.wait_for_error(@canvas.access_denied_msg_element, @course_add_user_page.no_access_msg_element)
@@ -269,11 +272,21 @@ describe 'bCourses Find a Person to Add', order: :defined do
 
         it "offers #{user.role} an Academic Policies link" do
           @canvas.switch_to_main_content
-          expect(@canvas.external_link_valid?(@canvas.policies_link_element, 'Academic Accommodations Hub | Executive Vice Chancellor and Provost')).to be true
+          expect(@canvas.external_link_valid?(@canvas.policies_link_element, @policies_heading)).to be true
         end
 
         it "offers #{user.role} a Mental Health Resources link" do
-          expect(@canvas.external_link_valid?(@canvas.mental_health_link_element, 'Mental Health | University Health Services')).to be true
+          expect(@canvas.external_link_valid?(@canvas.mental_health_link_element, @mental_health_heading)).to be true
+        end
+
+        it "offers #{user.role} an Academic Policies link in reduced viewport" do
+          Utils.set_reduced_window_size @driver
+          @canvas.expand_mobile_menu
+          expect(@canvas.external_link_valid?(@canvas.policies_responsive_link_element, @policies_heading)).to be true
+        end
+
+        it "offers #{user.role} a Mental Health Resources link" do
+          expect(@canvas.external_link_valid?(@canvas.mental_health_responsive_link_element, @mental_health_heading)).to be true
         end
       end
     end

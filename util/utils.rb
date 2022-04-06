@@ -92,9 +92,17 @@ class Utils
         logger.error 'Designated WebDriver is not supported'
         nil
     end
-    headless? ? driver.manage.window.resize_to(1600,900) : driver.manage.window.maximize
+    set_default_window_size driver
     Selenium::WebDriver.logger.level = :error
     driver
+  end
+
+  def self.set_default_window_size(driver)
+    headless? ? driver.manage.window.resize_to(1600,900) : driver.manage.window.maximize
+  end
+
+  def self.set_reduced_window_size(driver)
+    driver.manage.window.resize_to(500, 700)
   end
 
   def self.use_optional_chrome_profile?

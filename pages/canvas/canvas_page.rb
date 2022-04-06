@@ -9,6 +9,8 @@ module Page
     include Page
     include CanvasPeoplePage
 
+    button(:hamburger_button, xpath: '//button[contains(@class, "mobile-header-hamburger")]')
+
     h2(:updated_terms_heading, xpath: '//h2[contains(text(),"Updated Terms of Use")]')
     checkbox(:terms_cbx, name: 'user[terms_of_use]')
     button(:accept_course_invite, name: 'accept')
@@ -36,7 +38,9 @@ module Page
     link(:profile_link, id: 'global_nav_profile_link')
     button(:logout_link, xpath: '//button[contains(.,"Logout")]')
     link(:policies_link, id: 'global_nav_academic_policies_link')
+    link(:policies_responsive_link, id: 'global_nav_academic_policies_link_responsive')
     link(:mental_health_link, id: 'global_nav_mental_health_resources_link')
+    link(:mental_health_responsive_link, id: 'global_nav_mental_health_resources_link_responsive')
 
     h1(:unexpected_error_msg, xpath: '//h1[contains(text(),"Unexpected Error")]')
     h2(:unauthorized_msg, xpath: '//h2[contains(text(),"Unauthorized")]')
@@ -90,7 +94,7 @@ module Page
     # Quits masquerading as another user
     def stop_masquerading
       logger.debug 'Ending masquerade'
-      load_homepage
+      load_homepage unless stop_masquerading_link?
       wait_for_load_and_click stop_masquerading_link_element
       stop_masquerading_link_element.when_not_visible(Utils.medium_wait) rescue Selenium::WebDriver::Error::StaleElementReferenceError
     end
@@ -99,6 +103,11 @@ module Page
     def load_sub_account(sub_account)
       logger.debug "Loading sub-account #{sub_account}"
       navigate_to "#{Utils.canvas_base_url}/accounts/#{sub_account}"
+    end
+
+    def expand_mobile_menu
+      logger.info 'Clicking the hamburger to reveal the menu'
+      wait_for_update_and_click hamburger_button_element
     end
 
     def click_user_prov
