@@ -342,11 +342,11 @@ unless ENV['STANDALONE']
     describe 'user role restrictions' do
 
       before(:all) do
-        @primary_sec_opt = @rosters_api.section_names.find { |n| n.include? primary_section.label }
+        primary_sec_opt = @rosters_api.section_names.find { |n| n.include? primary_section.label }
         non_teachers.each do |user|
           @course_add_user_page.load_embedded_tool course
           @course_add_user_page.search(user.uid, 'CalNet UID')
-          @course_add_user_page.add_user_by_uid(user, @primary_sec_opt)
+          @course_add_user_page.add_user_by_uid(user, primary_sec_opt)
         end
       end
 

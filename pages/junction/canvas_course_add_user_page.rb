@@ -136,11 +136,11 @@ module Page
         user_checkbox(user).when_present Utils.medium_wait
         user_checkbox(user).check
         if section
-          if section.instance_of? Section
-            option = section.sis_id ? section.sis_id : "#{section.course} #{section.label}"
-          else
-            option = section
-          end
+          option = if section.instance_of? Section
+                     section.sis_id ? section.sis_id : "#{section.course} #{section.label}"
+                   else
+                     section
+                   end
           wait_for_element_and_select_js(course_section_element, option)
         end
         wait_for_element_and_select_js(user_role_element, user.role)
