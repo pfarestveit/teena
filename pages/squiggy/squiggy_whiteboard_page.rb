@@ -4,13 +4,12 @@ class SquiggyWhiteboardPage < SquiggyWhiteboardsPage
   include Logging
   include Page
   include SquiggyPages
+  include SquiggyWhiteboardEditForm
   include SquiggyAssetLibraryMetadataForm
   include SquiggyAssetLibrarySearchForm
 
-  def hit_whiteboard_url(test, whiteboard)
-    path = "#{SquiggyUtils.base_url}/whiteboards/#{whiteboard.id}"
-    params = "?api_domain=#{Utils.canvas_base_url[8..-1]}&course_id=#{test.course.site_id}&tool_url=#{test.course.whiteboards_url}"
-    url = path + params
+  def hit_whiteboard_url(whiteboard)
+    url = "#{SquiggyUtils.base_url}/whiteboards/#{whiteboard.id}"
     logger.debug "Hitting URL '#{url}'"
     navigate_to url
   end
@@ -18,7 +17,7 @@ class SquiggyWhiteboardPage < SquiggyWhiteboardsPage
   def close_whiteboard
     sleep 1
     count = window_count
-    if (count > 1) && current_url.include?("#{SquiggyUtils.base_url}/whiteboards")
+    if (count > 1) && current_url.include?("#{SquiggyUtils.base_url}/whiteboard/")
       logger.debug "The browser window count is #{count}, and the current window is a whiteboard. Closing it."
       @driver.close
       switch_to_first_window
@@ -30,13 +29,7 @@ class SquiggyWhiteboardPage < SquiggyWhiteboardsPage
 
   # EDIT WHITEBOARD
 
-  button(:settings_button, xpath: 'TODO')
-  text_area(:edit_title_input, id: 'TODO')
-  elements(:collaborator_name, :span, xpath: 'TODO')
-  div(:collaborator_list, xpath: 'TODO')
-  elements(:remove_collaborator_button, :button, xpath: 'TODO')
-  button(:cancel_edit, xpath: 'TODO')
-  button(:save_edit, xpath: 'TODO')
+  button(:settings_button, id: 'toolbar-settings')
 
   def click_settings_button
     wait_for_update_and_click_js settings_button_element
@@ -44,36 +37,25 @@ class SquiggyWhiteboardPage < SquiggyWhiteboardsPage
 
   def edit_whiteboard_title(whiteboard)
     click_settings_button
-    wait_for_element_and_type_js(edit_title_input_element, whiteboard.title)
-    wait_for_update_and_click_js save_edit_element
+    enter_whiteboard_title whiteboard.title
+    save_whiteboard
   end
 
-  def add_collaborator(whiteboard, user)
+  def add_collaborator(user)
     click_settings_button
-    wait_for_update_and_click edit_title_input_element
-    wait_for_update_and_click_js collaborator_list_element
-    sleep 1
-    wait_for_update_and_click collaborator_option_link(user)
-    wait_until(Utils.short_wait) { collaborator_name user }
-    wait_for_update_and_click edit_title_input_element
-    wait_for_update_and_click save_edit_element
-    save_edit_element.when_not_visible Utils.short_wait rescue Selenium::WebDriver::Error::NoSuchAlertError
+    enter_whiteboard_collaborator user
+    save_whiteboard
   end
 
   def remove_collaborator(user)
     click_settings_button
-    logger.debug "Clicking the remove button for #{user.full_name}"
-    wait_for_update_and_click button_element(xpath: 'TODO')
-    collaborator_name(user).when_not_visible Utils.short_wait
-    # An alert can appear, but only if the user removes itself
-    alert { wait_for_update_and_click save_edit_element } rescue Selenium::WebDriver::Error::NoSuchAlertError
+    click_remove_collaborator user
+    save_whiteboard
   end
 
   def verify_collaborators(users)
     click_settings_button
-    users.flatten.each do |user|
-      wait_until(Utils.short_wait) { collaborator_name user }
-    end
+    users.flatten.each { |user| collaborator_name(user).when_visible Utils.short_wait }
   end
 
   # DELETE/RESTORE WHITEBOARD
@@ -154,10 +136,10 @@ class SquiggyWhiteboardPage < SquiggyWhiteboardsPage
 
   # ASSETS ON WHITEBOARD
 
-  button(:add_asset_button, xpath: 'TODO')
-  button(:use_existing_button, xpath: 'TODO')
-  button(:upload_new_button, xpath: 'TODO')
-  button(:add_link_button, xpath: 'TODO')
+  button(:add_asset_button, id: 'toolbar-add-asset')
+  button(:use_existing_button, id: 'toolbar-add-existing-assets')
+  button(:upload_new_button, id: 'toolbar-upload-new-asset')
+  button(:add_link_button, id: 'toolbar-asset-add-link')
   button(:add_selected_button, xpath: 'TODO')
   checkbox(:add_file_to_library_cbx, xpath: 'TODO')
   checkbox(:add_link_to_library_cbx, xpath: 'TODO')
@@ -234,24 +216,22 @@ class SquiggyWhiteboardPage < SquiggyWhiteboardsPage
 
   # COLLABORATORS
 
-  button(:collaborators_button, class: 'TODO')
-  div(:collaborators_pane, id: 'TODO')
-  elements(:collaborator, :div, xpath: 'TODO')
+  div(:collaborators_pane, xpath: '//nav')
+  elements(:collaborator, :span, xpath: '//nav//div[contains(@class, "v-list-item__content")]')
 
   def show_collaborators_pane
-    wait_for_update_and_click_js collaborators_button_element unless collaborators_button_element.attribute('class').include?('active')
+    mouseover collaborators_pane_element
   end
 
   def hide_collaborators_pane
-    wait_for_update_and_click_js collaborators_button_element
-    collaborators_button if collaborators_pane_element.visible?
+    mouseover settings_button_element
   end
 
   def collaborator(user)
-    div_element(xpath: 'TODO')
+    div_element(xpath: "//nav//div[contains(@class, \"v-list-item__content\")][contains(., #{user.full_name})]")
   end
 
   def collaborator_online?(user)
-    image_element(xpath: 'TODO').exists?
+    collaborator(user).text.include? 'is online'
   end
 end

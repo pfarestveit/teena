@@ -45,14 +45,12 @@ describe 'Whiteboard' do
 
     it 'requires a title' do
       @whiteboards.click_add_whiteboard
-      @whiteboards.click_create_whiteboard
       @whiteboards.title_req_msg_element.when_visible Utils.short_wait
     end
 
     it 'permits a title with 255 characters maximum' do
       @whiteboards.click_add_whiteboard
       @whiteboards.enter_whiteboard_title "#{'A loooooong title' * 15}?"
-      @whiteboards.click_create_whiteboard
       @whiteboards.title_max_length_msg_element.when_visible Utils.short_wait
     end
 
