@@ -49,7 +49,7 @@ describe 'Whiteboard' do
 
     after(:each) { @whiteboards_driver_1.close_whiteboard @driver_1 }
 
-    [teacher, test.lead_ta, test.ta, test.designer, test.observer].each do |user|
+    [teacher, test.lead_ta, test.ta, test.designer, test.reader].each do |user|
 
       it "allows a course #{user.role} to search for whiteboards" do
         @canvas_driver_1.masquerade_as(user, test.course)
