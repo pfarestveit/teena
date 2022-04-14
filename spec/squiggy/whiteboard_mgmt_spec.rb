@@ -45,7 +45,8 @@ describe 'Whiteboard' do
 
     it 'requires a title' do
       @whiteboards.click_add_whiteboard
-      @whiteboards.title_req_msg_element.when_visible Utils.short_wait
+      @whiteboards.save_whiteboard_button_element.when_present Utils.short_wait
+      expect(@whiteboards.save_whiteboard_button_element.enabled?).to be false
     end
 
     it 'permits a title with 255 characters maximum' do

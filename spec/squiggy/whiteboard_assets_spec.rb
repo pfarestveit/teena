@@ -154,9 +154,8 @@ describe 'Whiteboard Add Asset' do
       @whiteboards.open_whiteboard @whiteboard
       @whiteboards.click_add_new_asset @student_1_asset_no_title
       @whiteboards.enter_file_path_for_upload @student_1_asset_no_title.file_name
-      @whiteboards.enter_file_metadata @student_1_asset_no_title
-      @whiteboards.click_add_files_button
-      @whiteboards.wait_until(Utils.short_wait) { @whiteboards.missing_title_error_elements.any? }
+      @whiteboards.enter_asset_metadata @student_1_asset_no_title
+      expect(@whiteboards.save_file_button_element.enabled?).to be false
     end
 
     it 'requires an asset title of 255 characters maximum' do
@@ -167,8 +166,7 @@ describe 'Whiteboard Add Asset' do
       # More than 255 chars is rejected
       @whiteboards.click_add_new_asset @student_1_asset_long_title
       @whiteboards.enter_file_path_for_upload @student_1_asset_long_title.file_name
-      @whiteboards.enter_file_metadata @student_1_asset_long_title
-      @whiteboards.click_add_files_button
+      @whiteboards.enter_asset_metadata @student_1_asset_long_title
       @whiteboards.wait_until(Utils.short_wait) { @whiteboards.long_title_error_elements.any? }
       @whiteboards.click_cancel_button
 
@@ -188,7 +186,7 @@ describe 'Whiteboard Add Asset' do
       # Asset appears in the library
       @whiteboards.close_whiteboard
       @asset_library.load_page @test
-      @asset_library.verify_first_asset(@student_1, @student_1_asset_visible)
+      @asset_library.asset_el(@student_1_asset_visible).when_present Utils.short_wait
     end
 
     it 'allows the user to exclude the upload from the asset library' do
@@ -249,9 +247,8 @@ describe 'Whiteboard Add Asset' do
       @whiteboards.load_page @test
       @whiteboards.open_whiteboard @whiteboard
       @whiteboards.click_add_new_asset student_2_asset_no_title
-      @whiteboards.enter_url_metadata student_2_asset_no_title
-      @whiteboards.click_add_url_button
-      @whiteboards.wait_until(Utils.short_wait) { @whiteboards.missing_title_error_elements.any? }
+      @whiteboards.enter_asset_metadata student_2_asset_no_title
+      expect(@whiteboards.save_link_button_element.enabled?).to be false
     end
 
     it 'requires an asset title of 255 characters maximum' do
@@ -262,9 +259,8 @@ describe 'Whiteboard Add Asset' do
 
       # More than 255 chars is rejected
       @whiteboards.click_add_new_asset student_2_asset_long_title
-      @whiteboards.enter_url_metadata student_2_asset_long_title
-      @whiteboards.click_add_url_button
-      @whiteboards.wait_until(Utils.short_wait) { @whiteboards.long_title_error_elements.any? }
+      @whiteboards.enter_asset_metadata student_2_asset_long_title
+      @whiteboards.title_too_long_msg_element.when_visible 2
       @whiteboards.click_cancel_button
 
       # Exactly 255 chars is accepted and asset is created
@@ -284,7 +280,7 @@ describe 'Whiteboard Add Asset' do
       # Asset appears in the library
       @whiteboards.close_whiteboard
       @asset_library.load_page @test
-      @asset_library.verify_first_asset(@student_2, student_2_asset_visible)
+      @asset_library.asset_el(student_2_asset_visible).when_present Utils.short_wait
     end
 
     it 'allows the user to exclude the site from the asset library' do
@@ -325,7 +321,7 @@ describe 'Whiteboard Add Asset' do
       @canvas.masquerade_as(@student_1, @test.course)
       @whiteboards.load_page @test
       @whiteboards.open_whiteboard @whiteboard
-      @whiteboards.add_collaborator(@whiteboard, @student_3)
+      @whiteboards.add_collaborator @student_3
       @whiteboards.close_whiteboard
       @canvas.stop_masquerading
 
@@ -341,8 +337,9 @@ describe 'Whiteboard Add Asset' do
 
     it 'allows the user to comment on it via the whiteboard' do
       comment = Comment.new(@student_3, 'Comment on a hidden asset')
-      @asset_library.add_comment(@student_3_asset_hidden, comment)
-      @asset_library.verify_comments @student_3_asset_hidden
+      visible_comment = @asset_library.add_comment(@student_3_asset_hidden, comment)
+      expect(visible_comment[:commenter]).to include(@student_3.full_name)
+      expect(visible_comment[:body]).to eql(comment.body)
     end
 
     it 'allows the user to edit its metadata via the whiteboard' do

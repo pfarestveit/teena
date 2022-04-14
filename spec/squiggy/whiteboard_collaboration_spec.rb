@@ -47,7 +47,7 @@ describe 'Whiteboard' do
 
   describe 'access' do
 
-    after(:each) { @whiteboards_driver_1.close_whiteboard @driver_1 }
+    after(:each) { @whiteboards_driver_1.close_whiteboard }
 
     [teacher, test.lead_ta, test.ta, test.designer, test.reader].each do |user|
 

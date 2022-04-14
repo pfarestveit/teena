@@ -65,6 +65,7 @@ require_relative '../models/squiggy/squiggy_comment'
 require_relative '../models/squiggy/squiggy_tool'
 require_relative '../models/squiggy/squiggy_user'
 require_relative '../models/squiggy/squiggy_course'
+require_relative '../models/squiggy/squiggy_whiteboard'
 
 require_relative 'utils'
 require_relative 'boac_utils'

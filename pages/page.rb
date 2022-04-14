@@ -124,8 +124,9 @@ module Page
   # @param element [PageObject::Elements::Element]
   # @param timeout [Fixnum]
   def click_element_js(element, timeout)
-    wait_for_element(element, timeout)
-    sleep Utils.click_wait
+    element.when_present timeout
+    sleep Utils.event_wait
+    Utils.log_js_errors @driver
     js_click element
   end
 
