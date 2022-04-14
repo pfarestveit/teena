@@ -5,7 +5,7 @@ module SquiggyWhiteboardEditForm
   include Page
   include SquiggyPages
 
-  text_area(:title_input, id: 'whiteboard-title-input')
+  text_field(:whiteboard_title_input, id: 'whiteboard-title-input')
   elements(:collaborator_name, :span, xpath: '//span[@class="v-chip__content"]')
   text_area(:collaborators_input, id: 'whiteboard-users-select')
   elements(:remove_collaborator_button, :button, xpath: '//span[@class="v-chip__content"]/button')
@@ -17,7 +17,7 @@ module SquiggyWhiteboardEditForm
   button(:save_edit, id: 'save-btn')
 
   def enter_whiteboard_title(title)
-    wait_for_element_and_type_js(title_input_element, title)
+    wait_for_element_and_type_js(whiteboard_title_input_element, title)
   end
 
   def collaborator_option_link(user)
@@ -36,7 +36,7 @@ module SquiggyWhiteboardEditForm
 
   def save_whiteboard
     wait_for_update_and_click_js save_whiteboard_button_element
-    save_whiteboard_element.when_not_present Utils.short_wait
+    save_whiteboard_button_element.when_not_present Utils.short_wait
   end
 
   def click_remove_collaborator(user)

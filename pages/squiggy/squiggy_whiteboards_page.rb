@@ -4,6 +4,7 @@ class SquiggyWhiteboardsPage
   include Logging
   include Page
   include SquiggyPages
+  include SquiggyAssetLibraryMetadataForm
   include SquiggyWhiteboardEditForm
 
   def load_page(test)
