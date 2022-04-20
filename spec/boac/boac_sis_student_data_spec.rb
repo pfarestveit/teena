@@ -520,6 +520,11 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
           end
         end
 
+        has_perceptive_link = @boac_student_page.perceptive_link.exists?
+        it "shows a link to image now documents on the student page for #{test_case}" do
+          expect(has_perceptive_link).to be true
+        end
+
         has_calcentral_link = @boac_student_page.calcentral_link(student_data[:student]).exists?
         it "shows a link to the student overview page in CalCentral on the student page for #{test_case}" do
           expect(has_calcentral_link).to be true
@@ -801,6 +806,10 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
               else
                 logger.warn "No course data in #{term_name}"
               end
+
+              # UNMATCHED SITES
+
+              it("shows no unmatched course sites for #{test_case}") { expect(student_data[:api].unmatched_sites term).to be_nil }
 
               # DROPPED SECTIONS
 

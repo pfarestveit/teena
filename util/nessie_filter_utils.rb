@@ -46,6 +46,10 @@ class NessieFilterUtils < NessieUtils
     arr.map {|i| "'#{i}'"}.join(', ')
   end
 
+  def self.academic_division_cond(filter, conditions_list)
+    conditions_list << "student.student_majors.division IN(#{in_op filter.academic_divisions})" if filter.academic_divisions&.any?
+  end
+
   def self.academic_standing_cond(filter, conditions_list)
     if filter.academic_standing&.any?
       cond = []
@@ -61,7 +65,7 @@ class NessieFilterUtils < NessieUtils
     if filter.career_statuses&.any?
       statuses = filter.career_statuses.map &:downcase
       statuses << 'NULL' if statuses.include? 'inactive'
-      conditions_list << "student.student_profile_index.academic_career_status IN(#{in_op statuses})" if filter.career_statuses&.any?
+      conditions_list << "student.student_profile_index.academic_career_status IN(#{in_op statuses})"
     end
   end
 
@@ -235,6 +239,7 @@ class NessieFilterUtils < NessieUtils
     conditions_list = []
 
     # GLOBAL FILTERS
+    academic_division_cond(filter, conditions_list)
     academic_standing_cond(filter, conditions_list)
     career_status_cond(filter, conditions_list)
     college_cond(filter, conditions_list)
