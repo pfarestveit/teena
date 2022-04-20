@@ -267,7 +267,6 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
                                   if site[:nessie_grades][:score].empty?
                                     it("shows a 'No Data' assignments score for #{site_test_case}") { expect(visible_site_data[:assigns_grade_no_data]).to be_truthy }
                                   else
-                                    # TODO - BOAC-2754
                                     expected_score = site[:nessie_grades][:score]
                                     if expected_score == '0'
                                       it("shows the null or zero assignments score for #{site_test_case}") { expect(%w(0 --)).to include(visible_site_data[:assigns_grade]) }

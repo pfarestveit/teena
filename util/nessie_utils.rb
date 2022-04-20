@@ -4,16 +4,6 @@ class NessieUtils < Utils
 
   @config = Utils.config['nessie']
 
-  def self.nessie_redshift_db_credentials
-    {
-      :host => @config['redshift_db_host'],
-      :port => @config['redshift_db_port'],
-      :name => @config['redshift_db_name'],
-      :user => @config['redshift_db_user'],
-      :password => @config['redshift_db_password']
-    }
-  end
-
   def self.nessie_pg_db_credentials
     {
       :host => @config['pg_db_host'],
@@ -22,59 +12,6 @@ class NessieUtils < Utils
       :user => @config['pg_db_user'],
       :password => @config['pg_db_password']
     }
-  end
-
-  # The number of hours that synced Canvas data is behind actual site usage data
-  def self.canvas_data_lag_hours
-    @config['canvas_data_lag_hours']
-  end
-
-  # Whether or not to test Caliper last activity data
-  def self.include_caliper_tests
-    @config['include_caliper_tests']
-  end
-
-  # The number of seconds that is the max acceptable diff between last activity shown in Canvas vs Caliper
-  def self.caliper_time_margin
-    @config['caliper_time_margin']
-  end
-
-  # Whether or not to include L&S students and advisors
-  def self.include_l_and_s?
-    @config['include_l_and_s']
-  end
-
-  #### ASSIGNMENTS ####
-
-  # Returns the assignments associated with a user in a course site
-  # @param user [User]
-  # @param course [Course]
-  # @return [Array<Assignment>]
-  def self.get_assignments(user, course)
-    query = "SELECT assignment_id, due_at, submitted_at, assignment_status
-              FROM boac_analytics.assignment_submissions_scores
-              WHERE course_id = #{course.site_id}
-                AND canvas_user_id = #{user.canvas_id}
-              ORDER BY assignment_id;"
-    results = query_redshift_db(nessie_redshift_db_credentials, query)
-    results.map do |r|
-      submitted = %w(on_time late submitted graded).include? r['assignment_status']
-      Assignment.new({:id => r['assignment_id'], :due_date => r['due_at'], :submission_date => r['submitted_at'], :submitted => submitted})
-    end
-  end
-
-  # Returns the Caliper last activity metric for a user in a course site
-  # @param user [BOACUser]
-  # @param site_id [String]
-  # @return [Time]
-  def self.get_caliper_last_activity(user, site_id)
-    query = "SELECT last_activity
-              FROM lrs_caliper_analytics.last_activity_caliper
-              WHERE canvas_course_id = #{site_id}
-                AND canvas_user_id = #{user.canvas_id};"
-    results = query_redshift_db(nessie_redshift_db_credentials, query)
-    activities = results.map { |r| Time.parse(r['last_activity'][0..18] += ' UTC') }
-    activities.max
   end
 
   #### ALL STUDENTS ####
