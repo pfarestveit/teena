@@ -45,9 +45,6 @@ boac:
   db_name: secret
   db_user: secret
   db_password: secret
-  tooltips: true
-  nessie_scores: true
-  nessie_assignments: true
 
   test_dept: UWASC
   test_default_cohort_major: [History BA]
@@ -55,15 +52,10 @@ boac:
   test_add_edit_uid: secret
   test_add_remove_scheduler: secret
 
-  assignments_max_users: 10
-  assignments_term: Spring 2018
   class_page_max_users: 5
   class_page_max_classmates: 10
   class_page_max_size: 500
   group_bulk_sids_max: 200
-  last_activity_max_users: 3
-  last_activity_context: false
-  no_activity_alert_threshold: 14
   notes_batch_curated_group_count: 2
   notes_batch_students_count: 3
   notes_batch_students_per_group_count: 3
@@ -127,15 +119,6 @@ nessie:
   pg_db_name: secret
   pg_db_user: secret
   pg_db_password: secret
-  redshift_db_host: secret
-  redshift_db_port: secret
-  redshift_db_name: secret
-  redshift_db_user: secret
-  redshift_db_password: secret
-  canvas_data_lag_hours: 24
-  include_caliper_tests: false
-  caliper_time_margin: 120
-  include_l_and_s: false
 
 oec:
   term: 2018-C

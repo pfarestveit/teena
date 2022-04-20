@@ -436,34 +436,6 @@ class Utils
     results.field_values(field)
   end
 
-  # Queries Redshift and returns results
-  # @param db_credentials [Hash]
-  # @param query_string [String]
-  # @return [PG::Result]
-  def self.query_redshift_db(db_credentials, query_string)
-    results = []
-    begin
-      creds = {
-          host: db_credentials[:host],
-          port: db_credentials[:port],
-          dbname: db_credentials[:name],
-          user: db_credentials[:user],
-          password: db_credentials[:password]
-      }
-      Redshift::Client.establish_connection creds
-      logger.debug "Sending query '#{query_string}'"
-      start = Time.now
-      results = Redshift::Client.connection.exec query_string
-      logger.info "Query took #{Time.now - start} seconds"
-      results
-    rescue Redshift::Client::RedshiftClientError => e
-      Utils.log_error e
-    ensure
-      Redshift::Client.disconnect if Redshift::Client.connected?
-      results
-    end
-  end
-
   # Converts term name to the SIS code for the term
   # @param term_name [String]
   # @return [String]

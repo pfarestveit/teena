@@ -56,31 +56,6 @@ class BOACUtils < Utils
     @config['group_bulk_sids_max']
   end
 
-  # Whether or not to check tooltips during tests. Checking tooltips slows down test execution.
-  def self.tooltips
-    @config['tooltips']
-  end
-
-  # Whether or not to check Nessie assignment scores during tests.
-  def self.nessie_scores
-    @config['nessie_scores']
-  end
-
-  # Whether or not to check Nessie assignments submission counts during tests.
-  def self.nessie_assignments
-    @config['nessie_assignments']
-  end
-
-  # Whether or not to compare student data to fellow cohort members in Canvas prod
-  def self.last_activity_context
-    @config['last_activity_context']
-  end
-
-  # Returns the number of days into a session before activity alerts are generated
-  def self.no_activity_alert_threshold
-    @config['no_activity_alert_threshold']
-  end
-
   # Returns the maximum number of a student's notes to use in testing note content
   def self.notes_max_notes
     @config['notes_max_notes']
