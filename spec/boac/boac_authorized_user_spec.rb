@@ -10,8 +10,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
       @auth_user = BOACUser.new({:uid => Utils.super_admin_uid, :username => Utils.super_admin_username})
       @initial_logins = BOACUtils.get_user_login_count @auth_user
 
-      # Force Firefox as the browser, since cookie deletion ain't working with Chromedriver
-      @driver = Utils.launch_browser(nil, 'firefox')
+      @driver = Utils.launch_browser
       @home_page = BOACHomePage.new @driver
       @cal_net_page = Page::CalNetPage.new @driver
     end

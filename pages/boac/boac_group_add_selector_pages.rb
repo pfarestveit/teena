@@ -59,7 +59,7 @@ module BOACGroupAddSelectorPages
     logger.info "Adding SIDs #{students.map &:sis_id} to group #{group.name} ID #{group.id}"
     click_add_to_grp_button
     check_grp group
-    students_added_to_grp_conf_element.when_present Utils.short_wait
+    sleep 1
     group.members << students
     group.members.flatten!
     wait_for_sidebar_group group

@@ -199,6 +199,7 @@ module BOACPages
       wait_until(Utils.short_wait) { sidebar_admit_groups.include? group.name }
     else
       wait_until(Utils.medium_wait) { sidebar_student_groups.include? group.name }
+      navigate_to current_url
       wait_for_sidebar_group_member_count group
     end
     BOACUtils.set_curated_group_id group unless group.id

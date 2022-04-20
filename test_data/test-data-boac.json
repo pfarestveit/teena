@@ -78,6 +78,14 @@
                 ]
             },
             {
+                "academic_divs": [
+                    {
+                        "academic_div": "L&S Social Sciences Division"
+                    },
+                    {
+                        "academic_div": "School of Public Health"
+                    }
+                ],
                 "entering_terms": [
                     {
                         "entering_term": "2158"

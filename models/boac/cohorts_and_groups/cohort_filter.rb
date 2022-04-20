@@ -2,7 +2,8 @@ class CohortFilter
 
   include Logging
 
-  attr_accessor :academic_standing,
+  attr_accessor :academic_divisions,
+                :academic_standing,
                 :asc_inactive,
                 :asc_intensive,
                 :asc_team,
@@ -44,6 +45,7 @@ class CohortFilter
   # @param dept [BOACDepartments]
   def set_test_filters(test_data, dept)
     # Global
+    @academic_divisions = (test_data['academic_divs'] && test_data['academic_divs'].map { |a| a['academic_div'] })
     @academic_standing = (test_data['academic_standings'] && test_data['academic_standings'].map { |a| a['academic_standing'] })
     @career_statuses = (test_data['career_statuses']&.map { |c| c['career_status'] })
     @college = (test_data['colleges'] && test_data['colleges'].map { |t| t['college'] })
