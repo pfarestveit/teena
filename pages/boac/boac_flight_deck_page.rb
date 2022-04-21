@@ -132,14 +132,6 @@ class BOACFlightDeckPage
     cell_element(xpath: "#{topic_row_xpath topic}/td[4]").text
   end
 
-  def topic_in_appts(topic)
-    cell_element(xpath: "#{topic_row_xpath topic}/td[5]").text.strip
-  end
-
-  def topic_in_appts_count(topic)
-    cell_element(xpath: "#{topic_row_xpath topic}/td[6]").text
-  end
-
   def topic_edit_button(topic)
     cell_element(xpath: "#{topic_row_xpath topic}/td[7]//button[contains(., 'Edit')]")
   end
@@ -204,23 +196,10 @@ class BOACFlightDeckPage
     toggle_topic_in_notes if topic_in_notes_cbx_element.selected?
   end
 
-  def toggle_topic_in_appts
-    js_click topic_in_appts_cbx_element
-  end
-
-  def check_topic_in_appts
-    toggle_topic_in_appts unless topic_in_appts_cbx_element.selected?
-  end
-
-  def uncheck_topic_in_appts
-    toggle_topic_in_appts if topic_in_appts_cbx_element.selected?
-  end
-
   def create_topic(topic)
     click_create_topic
     enter_topic_label topic.name
     check_topic_in_notes if topic.for_notes
-    check_topic_in_appts if topic.for_appts
     click_save_topic
     set_new_topic_id topic
   end
@@ -228,7 +207,6 @@ class BOACFlightDeckPage
   def edit_topic(topic)
     click_edit_topic topic
     topic.for_notes ? check_topic_in_notes : uncheck_topic_in_notes
-    topic.for_appts ? check_topic_in_appts : uncheck_topic_in_appts
     click_save_topic
   end
 

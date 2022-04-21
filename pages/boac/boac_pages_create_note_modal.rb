@@ -273,7 +273,7 @@ module BOACPagesCreateNoteModal
       logger.debug "Find student SID '#{student.sis_id}' then add to batch note '#{note_batch.subject}'."
       wait_for_element_and_type(batch_note_add_student_input_element, "#{student.first_name} #{student.last_name} #{student.sis_id}")
       sleep Utils.click_wait
-      wait_until(3) { auto_suggest_option_elements.any? }
+      wait_until(Utils.short_wait) { auto_suggest_option_elements.any? }
       student_link_element = auto_suggest_option_elements.find { |el| el.text == "#{student.full_name} (#{student.sis_id})" }
       wait_for_update_and_click student_link_element
       added_student_element(student).when_present 1

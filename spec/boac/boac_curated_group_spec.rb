@@ -8,7 +8,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
 
     test = BOACTestConfig.new
     test.curated_groups
-    test_student = test.cohort_members[1]
+    test_student = test.cohort_members.sort_by(&:uid).first
     logger.debug "Test student is UID #{test_student.uid} SID #{test_student.sis_id}"
 
     # Initialize groups to be used later in the tests

@@ -524,10 +524,15 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
         it "shows a link to image now documents on the student page for #{test_case}" do
           expect(has_perceptive_link).to be true
         end
-
         has_calcentral_link = @boac_student_page.calcentral_link(student_data[:student]).exists?
-        it "shows a link to the student overview page in CalCentral on the student page for #{test_case}" do
-          expect(has_calcentral_link).to be true
+        if student_data[:student].status == 'inactive'
+          it "shows no link to the student overview page in CalCentral on the student page for #{test_case}" do
+            expect(has_calcentral_link).to be false
+          end
+        else
+          it "shows a link to the student overview page in CalCentral on the student page for #{test_case}" do
+            expect(has_calcentral_link).to be true
+          end
         end
 
         # TIMELINE
