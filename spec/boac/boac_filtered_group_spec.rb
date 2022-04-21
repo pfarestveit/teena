@@ -110,6 +110,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
             @student_page.remove_student_from_grp(student, group)
             test.students.delete_if { |s| s.sis_id == student.sis_id }
             @cohort_page.set_cohort_members(@cohorts.last, test)
+            @homepage.load_page
             @student_page.wait_for_sidebar_cohort_member_count @cohorts.last
           end
         end
@@ -132,6 +133,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
           @group_page.add_comma_sep_sids_to_existing_grp([@students_to_add_remove.first], @group_1)
           test.students << @students_to_add_remove.first
           @cohort_page.set_cohort_members(@cohorts.last, test)
+          @homepage.load_page
           @student_page.wait_for_sidebar_cohort_member_count @cohorts.last
         end
 
@@ -153,6 +155,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
           @student_page.add_student_to_grp(@students_to_add_remove.last, @group_1)
           test.students << @students_to_add_remove.last
           @cohort_page.set_cohort_members(@cohorts.last, test)
+          @homepage.load_page
           @student_page.wait_for_sidebar_cohort_member_count @cohorts.last
         end
 
@@ -181,10 +184,12 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
           @cohorts.last.search_criteria.curated_groups.delete @group_1.id.to_s
           test.students -= group_1_students
           @cohort_page.set_cohort_members(@cohorts.last, test)
+          @homepage.load_page
           @cohort_page.wait_for_sidebar_cohort_member_count @cohorts.last
         end
 
         it 'updates the cohort student list when a group is removed from the cohort' do
+          @cohort_page.load_cohort @cohorts.last
           expect(@cohort_page.visible_sids.sort).to eql(@cohorts.last.members.map(&:sis_id).sort)
         end
 
@@ -210,10 +215,12 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
           @cohorts.last.search_criteria.curated_groups << @group_1.id.to_s
           test.students += group_1_students
           @cohort_page.set_cohort_members(@cohorts.last, test)
+          @homepage.load_page
           @cohort_page.wait_for_sidebar_cohort_member_count @cohorts.last
         end
 
         it 'updates the cohort student list when a group is added to the cohort' do
+          @cohort_page.load_cohort @cohorts.last
           expected = @cohorts.last.members.map(&:sis_id).sort
           @cohort_page.wait_until(1, "Missing #{expected - @cohort_page.visible_sids.sort}, unexpected #{@cohort_page.visible_sids.sort - expected}") do
             @cohort_page.visible_sids.sort == expected

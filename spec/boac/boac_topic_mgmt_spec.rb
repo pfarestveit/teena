@@ -81,7 +81,6 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
       it 'requires note selection' do
         @flight_deck.click_edit_topic @topic
         @flight_deck.uncheck_topic_in_notes
-        @flight_deck.uncheck_topic_in_appts
         expect(@flight_deck.topic_save_button_element.enabled?).to be false
         @flight_deck.check_topic_in_notes
         expect(@flight_deck.topic_save_button_element.enabled?).to be true
@@ -94,8 +93,6 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
         @flight_deck.hit_escape
         @flight_deck.log_out
         @homepage.dev_auth @test.advisor
-        @homepage.click_settings_link
-        @flight_deck.enable_drop_in_advising_role(@test.advisor.dept_memberships.find { |m| m.dept == @test.dept })
         @homepage.click_create_note_batch
         @homepage.enter_new_note_subject @note
         @homepage.create_template(@template, @note)

@@ -127,7 +127,7 @@ class BOACStudentPage
   end
 
   def perceptive_link
-    link_element(text: 'Perceptive Content (Image Now) documents ')
+    link_element(xpath: '//a[contains(text(), "Perceptive Content (Image Now) documents")]')
   end
 
   # Returns the link to the student overview page in CalCentral

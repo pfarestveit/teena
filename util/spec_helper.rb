@@ -8,7 +8,6 @@ require 'nokogiri'
 require 'selenium-webdriver'
 require 'fileutils'
 require 'pg'
-require 'redshift/client'
 require 'time'
 require 'yaml'
 

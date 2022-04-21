@@ -50,21 +50,20 @@ boac:
   test_default_cohort_major: [History BA]
   test_degree_progress_major: [Bioengineering BS]
   test_add_edit_uid: secret
-  test_add_remove_scheduler: secret
 
-  class_page_max_users: 5
-  class_page_max_classmates: 10
-  class_page_max_size: 500
+  class_page_max_users: 1
+  class_page_max_classmates: 3
+  class_page_max_size: 200
   group_bulk_sids_max: 200
   notes_batch_curated_group_count: 2
   notes_batch_students_count: 3
   notes_batch_students_per_group_count: 3
-  notes_max_notes: 5
-  notes_max_users: 5
-  search_max_searches: 10
-  search_max_users: 20
-  search_word_count: 7
-  sis_data_max_users: 100
+  notes_max_notes: 2
+  notes_max_users: 1
+  search_max_searches: 2
+  search_max_users: 1
+  search_word_count: 4
+  sis_data_max_users: 10
   service_announcement: 'A service announcement'
 
 cal_net:

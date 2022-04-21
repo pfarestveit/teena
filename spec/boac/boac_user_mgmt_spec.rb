@@ -30,12 +30,10 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
 
       # Initialize users for the add/remove scheduler tests
       @add_remove_advisor = auth_users.find { |u| (u.depts == [BOACDepartments::L_AND_S]) && u.can_access_advising_data }
-      @add_remove_scheduler = test.students.find { |s| s.uid == BOACUtils.config['test_add_remove_scheduler'].to_s }
 
       # Hard delete the add/edit user and the add/remove scheduler in case they're still lying around from a previous test run
       BOACUtils.hard_delete_auth_user @add_edit_user
-      BOACUtils.hard_delete_auth_user @add_remove_scheduler
-      auth_users.delete_if { |u| u.uid == @add_edit_user.uid || u.sis_id == @add_remove_scheduler.sis_id }
+      auth_users.delete_if { |u| u.uid == @add_edit_user.uid }
 
       @driver = Utils.launch_browser
       @homepage = BOACHomePage.new @driver
@@ -52,7 +50,6 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
     end
 
     after(:all) do
-      BOACUtils.hard_delete_auth_user @add_remove_scheduler
       BOACUtils.hard_delete_auth_user @add_edit_user
       Utils.quit_browser @driver
     end

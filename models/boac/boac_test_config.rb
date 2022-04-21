@@ -164,7 +164,8 @@ class BOACTestConfig < TestConfig
 
                      else
                        # Running tests against a random set of students, plus optional selected students
-                       students = @students.shuffle[0..(config - 1)]
+                       students_by_status = @students.partition { |s| s.status == 'active' }.each(&:shuffle!)
+                       students = students_by_status[0][0..(config - 1)] + students_by_status[1][0..(config - 1)]
                        if opts[:with_standing]
                          test_sids = []
                          AcademicStanding::STATUSES.each { |s| test_sids << NessieUtils.get_sids_with_standing(s, BOACUtils.term_code).first }
@@ -459,7 +460,7 @@ class BOACTestConfig < TestConfig
   # Config for SIS student data testing
   def sis_student_data
     set_base_configs
-    set_test_students(CONFIG['sis_data_max_users'], with_standing: true)
+    set_test_students(CONFIG['sis_data_max_users'], {with_standing: true, include_inactive: true})
   end
 
   # Config for SIS admit data testing
