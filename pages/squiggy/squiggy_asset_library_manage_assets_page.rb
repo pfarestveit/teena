@@ -85,9 +85,6 @@ class SquiggyAssetLibraryManageAssetsPage < SquiggyAssetLibraryListViewPage
 
   # Delete
 
-  button(:confirm_delete_button, id: 'confirm-delete-btn')
-  button(:cancel_delete_button, id: 'cancel-delete-btn')
-
   def delete_category_button(category)
     button_element(id: "delete-category-#{category.id}-btn")
   end
