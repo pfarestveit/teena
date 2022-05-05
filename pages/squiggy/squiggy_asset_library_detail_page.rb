@@ -165,14 +165,10 @@ class SquiggyAssetLibraryDetailPage < SquiggyAssetLibraryListViewPage
 
   # DELETE ASSET
 
-  button(:delete_button, id: 'delete-asset-btn')
-  button(:delete_confirm_button, id: 'confirm-delete-btn')
-  button(:delete_cancel_button, id: 'cancel-delete-btn')
-
   def delete_asset(asset = nil)
     logger.info "Deleting asset#{(' ID ' + asset.id) if asset}"
     wait_for_update_and_click delete_button_element
-    wait_for_update_and_click delete_confirm_button_element
+    wait_for_update_and_click confirm_delete_button_element
     delete_asset_button_element.when_not_present Utils.short_wait
   end
 

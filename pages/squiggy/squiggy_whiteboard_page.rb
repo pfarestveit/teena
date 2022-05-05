@@ -21,7 +21,7 @@ class SquiggyWhiteboardPage < SquiggyWhiteboardsPage
       logger.debug "The browser window count is #{count}, and the current window is a whiteboard. Closing it."
       @driver.close
       switch_to_first_window
-      switch_to_canvas_iframe if "#{@driver.browser}" == 'chrome'
+      switch_to_canvas_iframe if canvas_iframe?
     else
       logger.debug "The browser window count is #{count}, and the current window is not a whiteboard. Leaving it open."
     end
@@ -29,7 +29,24 @@ class SquiggyWhiteboardPage < SquiggyWhiteboardsPage
 
   # EDIT WHITEBOARD
 
+  button(:toggle_toolbar_button, id: 'collapse-and-expand-the-app-bar')
   button(:settings_button, id: 'toolbar-settings')
+
+  def collapse_toolbar
+    if upload_new_button?
+      wait_for_update_and_click toggle_toolbar_button_element
+    else
+      logger.debug 'Toolbar is already collapsed'
+    end
+  end
+
+  def expand_toolbar
+    if upload_new_button?
+      logger.debug 'Toolbar is already expanded'
+    else
+      wait_for_update_and_click toggle_toolbar_button_element
+    end
+  end
 
   def click_settings_button
     wait_for_update_and_click_js settings_button_element
@@ -60,39 +77,33 @@ class SquiggyWhiteboardPage < SquiggyWhiteboardsPage
 
   # DELETE/RESTORE WHITEBOARD
 
-  button(:delete_button, xpath: 'TODO')
-  button(:restore_button, xpath: 'TODO')
-  span(:restored_msg, xpath: 'TODO')
+  button(:delete_button, id: 'delete-whiteboard-btn')
+  button(:restore_button, id: 'restore-whiteboard-btn')
 
   def delete_whiteboard
     logger.info "Deleting whiteboard #{title}"
     click_settings_button
-    wait_for_update_and_click_js delete_button_element
-    @driver.switch_to.alert.accept
-    # Two alerts will appear if the user is an admin
-    @driver.switch_to.alert.accept rescue Selenium::WebDriver::Error::StaleElementReferenceError
-    switch_to_first_window
+    wait_for_update_and_click delete_button_element
+    wait_for_update_and_click confirm_delete_button_element
+    close_whiteboard
     switch_to_canvas_iframe if "#{@driver.browser}" == 'chrome'
   end
 
   def restore_whiteboard
     logger.info 'Restoring whiteboard'
-    wait_for_update_and_click_js restore_button_element
-    restored_msg_element.when_present Utils.short_wait
+    wait_for_update_and_click restore_button_element
+    upload_new_button_element.when_visible Utils.short_wait
   end
 
   # WHITEBOARD EXPORT
 
-  button(:export_button, xpath: 'TODO')
-  button(:export_to_library_button, xpath: 'TODO')
-  h2(:export_heading, xpath: 'TODO')
-  div(:export_not_ready_msg, xpath: 'TODO')
-  div(:export_not_possible_msg, xpath: 'TODO')
-  text_area(:export_title_input, id: 'TODO')
-  button(:export_confirm_button, xpath: 'TODO')
-  button(:export_cancel_button, xpath: 'TODO')
+  button(:export_button, id: 'toolbar-export')
+  button(:export_to_library_button, id: 'toolbar-export-to-asset-library-btn')
+  h2(:export_heading, xpath: '//h2[text()="Export to Asset Library"]')
+  div(:export_not_possible_msg, xpath: '//div[text()="Whiteboard cannot be exported yet, assets are still processing. Try again soon."]')
+  text_field(:export_title_input, id: 'asset-title-input')
   span(:export_success_msg, xpath: 'TODO')
-  button(:download_as_image_button, xpath: 'TODO')
+  button(:download_as_image_button, id: 'toolbar-download-as-image-btn')
 
   def click_export_button
     logger.debug 'Clicking whiteboard export button'
@@ -104,7 +115,7 @@ class SquiggyWhiteboardPage < SquiggyWhiteboardsPage
     logger.debug 'Exporting whiteboard to asset library'
     wait_for_update_and_click export_to_library_button_element
     wait_until(Utils.short_wait) { export_title_input == whiteboard.title }
-    wait_for_update_and_click_js export_confirm_button_element
+    wait_for_update_and_click_js save_button_element
     export_title_input_element.when_not_present Utils.medium_wait
     export_success_msg_element.when_visible Utils.short_wait
     asset = SquiggyAsset.new(
@@ -144,9 +155,9 @@ class SquiggyWhiteboardPage < SquiggyWhiteboardsPage
   checkbox(:add_file_to_library_cbx, xpath: 'TODO')
   checkbox(:add_link_to_library_cbx, xpath: 'TODO')
 
-  link(:open_original_asset_link, xpath: 'TODO')
+  link(:open_original_asset_link, id: 'open-asset-btn')
   button(:close_original_asset_button, xpath: 'TODO')
-  button(:delete_asset_button, xpath: 'TODO')
+  button(:delete_asset_button, id: 'delete-btn')
 
   def click_add_existing_asset
     wait_for_update_and_click add_asset_button_element unless use_existing_button_element.visible?
@@ -155,8 +166,8 @@ class SquiggyWhiteboardPage < SquiggyWhiteboardsPage
 
   def add_existing_assets(assets)
     click_add_existing_asset
-    assets.each { |asset| wait_for_update_and_click text_area_element(xpath: 'TODO') }
-    wait_for_update_and_click_js add_selected_button_element
+    assets.each { |asset| wait_for_update_and_click text_field_element(id: "input-#{asset.id}") }
+    wait_for_update_and_click add_selected_button_element
     add_selected_button_element.when_not_visible Utils.short_wait
   end
 
@@ -216,8 +227,8 @@ class SquiggyWhiteboardPage < SquiggyWhiteboardsPage
 
   # COLLABORATORS
 
-  div(:collaborators_pane, xpath: '//nav')
-  elements(:collaborator, :span, xpath: '//nav//div[contains(@class, "v-list-item__content")]')
+  button(:collaborator_head, id: 'show-whiteboard-collaborators-btn')
+  div(:collaborators_msg, xpath: '//div[@role="menu"]//div[contains(@id, "list-item-")][1]')
 
   def show_collaborators_pane
     mouseover collaborators_pane_element
@@ -228,10 +239,10 @@ class SquiggyWhiteboardPage < SquiggyWhiteboardsPage
   end
 
   def collaborator(user)
-    div_element(xpath: "//nav//div[contains(@class, \"v-list-item__content\")][contains(., #{user.full_name})]")
+    div_element(xpath: "//div[@role=\"menu\"]//span[contains(text(), \"#{user.full_name}\")]")
   end
 
   def collaborator_online?(user)
-    collaborator(user).text.include? 'is online'
+    collaborator(user).attribute('innerText').include? 'is online'
   end
 end

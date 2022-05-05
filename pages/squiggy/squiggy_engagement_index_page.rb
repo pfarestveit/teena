@@ -331,7 +331,6 @@ class SquiggyEngagementIndexPage
   button(:edit_points_config_button, id: 'edit-btn')
   elements(:activity_edit, :text_field, xpath: '//input[contains(@id, "points-edit-")]')
   button(:cancel_button, id: 'cancel-edit-btn')
-  button(:save_button, id: 'save-btn')
 
   def points_input(activity)
     text_field_element(id: "points-edit-#{activity.type}")

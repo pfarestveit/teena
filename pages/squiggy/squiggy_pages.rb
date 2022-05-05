@@ -6,6 +6,10 @@ module SquiggyPages
 
   button(:go_back_button, id: 'go-back-btn')
   button(:back_to_asset_library_button, id: 'asset-library-btn')
+  button(:save_button, id: 'save-btn')
+  button(:cancel_button, id: 'cancel-btn')
+  button(:confirm_delete_button, id: 'confirm-delete-btn')
+  button(:cancel_delete_button, id: 'cancel-delete-btn')
 
   def click_back_button
     logger.info 'Clicking back from error message'

@@ -59,7 +59,6 @@ class SquiggyAssetLibraryListViewPage
   button(:bizmarklet_next_button, id: 'go-next-btn')
   button(:bizmarklet_previous_button, id: 'go-previous-btn')
   button(:bizmarklet_save_button, id: 'done-btn')
-  button(:bizmarklet_cancel_button, id: 'cancel-btn')
   button(:bizmarklet_close_button, id: 'close-btn')
   span(:bizmarklet_success_msg, xpath: '//span[text()=" Success! "]')
 
@@ -99,7 +98,7 @@ class SquiggyAssetLibraryListViewPage
   end
 
   def cancel_bizmarklet(original_window)
-    wait_for_update_and_click bizmarklet_cancel_button_element
+    wait_for_update_and_click cancel_button_element
     @driver.switch_to.window original_window
   end
 
