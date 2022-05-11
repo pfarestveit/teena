@@ -20,8 +20,12 @@ module SquiggyWhiteboardEditForm
     menu_option_el(user.full_name)
   end
 
+  def collaborator_xpath(user)
+    "//span[@class=\"v-chip__content\"][contains(text(), \"#{user.full_name}\")]"
+  end
+
   def collaborator_name(user)
-    span_element(xpath: "//span[@class=\"v-chip__content\"][contains(text(), \"#{user.full_name}\")]")
+    span_element(xpath: collaborator_xpath(user))
   end
 
   def enter_whiteboard_collaborator(user)
@@ -37,8 +41,8 @@ module SquiggyWhiteboardEditForm
 
   def click_remove_collaborator(user)
     logger.debug "Clicking the remove button for #{user.full_name}"
-    wait_for_update_and_click button_element(xpath: 'TODO')
-    collaborator_name(user).when_not_visible Utils.short_wait
+    wait_for_update_and_click button_element(xpath: "#{collaborator_xpath(user)}/button")
+    collaborator_name(user).when_not_present Utils.short_wait
   end
 
 end

@@ -151,8 +151,6 @@ class SquiggyAssetLibraryListViewPage
 
   # LIST VIEW ASSETS
 
-  elements(:asset, :div, xpath: '//div[starts-with(@id, "asset-")]')
-
   def load_page(test)
     navigate_to test.course.asset_library_url
     wait_until(Utils.medium_wait) { title == SquiggyTool::ASSET_LIBRARY.name }

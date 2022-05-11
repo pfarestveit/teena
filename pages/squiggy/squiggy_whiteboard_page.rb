@@ -19,7 +19,7 @@ class SquiggyWhiteboardPage < SquiggyWhiteboardsPage
     count = window_count
     if (count > 1) && current_url.include?("#{SquiggyUtils.base_url}/whiteboard/")
       logger.debug "The browser window count is #{count}, and the current window is a whiteboard. Closing it."
-      @driver.close
+      close_current_window
       switch_to_first_window
       switch_to_canvas_iframe if canvas_iframe?
     else
@@ -152,11 +152,8 @@ class SquiggyWhiteboardPage < SquiggyWhiteboardsPage
   button(:upload_new_button, id: 'toolbar-upload-new-asset')
   button(:add_link_button, id: 'toolbar-asset-add-link')
   button(:add_selected_button, xpath: 'TODO')
-  checkbox(:add_file_to_library_cbx, xpath: 'TODO')
-  checkbox(:add_link_to_library_cbx, xpath: 'TODO')
-
+  checkbox(:add_to_library_cbx, id: 'asset-visible-checkbox')
   link(:open_original_asset_link, id: 'open-asset-btn')
-  button(:close_original_asset_button, xpath: 'TODO')
   button(:delete_asset_button, id: 'delete-btn')
 
   def click_add_existing_asset
@@ -166,9 +163,9 @@ class SquiggyWhiteboardPage < SquiggyWhiteboardsPage
 
   def add_existing_assets(assets)
     click_add_existing_asset
-    assets.each { |asset| wait_for_update_and_click text_field_element(id: "input-#{asset.id}") }
-    wait_for_update_and_click add_selected_button_element
-    add_selected_button_element.when_not_visible Utils.short_wait
+    assets.each { |asset| wait_for_update_and_click text_field_element(id: "asset-#{asset.id}") }
+    wait_for_update_and_click save_button_element
+    save_button_element.when_not_present Utils.short_wait
   end
 
   def click_add_new_asset(asset)
@@ -196,12 +193,12 @@ class SquiggyWhiteboardPage < SquiggyWhiteboardsPage
     if asset.type == 'File'
       enter_file_path_for_upload asset.file_name
       enter_asset_metadata(asset)
-      check_add_file_to_library_cbx
+      check_add_to_library_cbx
       click_add_files_button
     else
       enter_url asset
       enter_asset_metadata asset
-      check_add_link_to_library_cbx
+      check_add_to_library_cbx
       click_add_url_button
     end
     open_original_asset_link_element.when_visible Utils.medium_wait
@@ -219,7 +216,7 @@ class SquiggyWhiteboardPage < SquiggyWhiteboardsPage
   end
 
   def close_original_asset
-    wait_for_update_and_click_js close_original_asset_button_element
+    close_current_window
     # Three windows should be open, but check how many just in case
     handle = (window_count == 2) ? 1 : 0
     switch_to_window handle
@@ -230,11 +227,11 @@ class SquiggyWhiteboardPage < SquiggyWhiteboardsPage
   button(:collaborator_head, id: 'show-whiteboard-collaborators-btn')
   div(:collaborators_msg, xpath: '//div[@role="menu"]//div[contains(@id, "list-item-")][1]')
 
-  def show_collaborators_pane
-    mouseover collaborators_pane_element
+  def show_collaborators
+    mouseover collaborator_head_element
   end
 
-  def hide_collaborators_pane
+  def hide_collaborators
     mouseover settings_button_element
   end
 

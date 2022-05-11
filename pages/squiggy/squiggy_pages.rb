@@ -10,6 +10,7 @@ module SquiggyPages
   button(:cancel_button, id: 'cancel-btn')
   button(:confirm_delete_button, id: 'confirm-delete-btn')
   button(:cancel_delete_button, id: 'cancel-delete-btn')
+  elements(:asset, :div, xpath: '//div[starts-with(@id, "asset-")]')
 
   def click_back_button
     logger.info 'Clicking back from error message'
@@ -22,6 +23,8 @@ module SquiggyPages
   end
 
   def clear_input(input_el)
+    input_el.click
+    sleep Utils.click_wait
     input_el.click
     50.times { hit_backspace; hit_delete }
   end
@@ -73,7 +76,7 @@ module SquiggyPages
   button(:close_modal_button, xpath: 'TODO')
 
   def click_cancel_button
-    wait_for_update_and_click_js cancel_asset_button_element
+    wait_for_update_and_click_js cancel_button_element
   end
 
   def click_close_modal_button

@@ -37,7 +37,8 @@ module Page
         wait_until(Utils.long_wait) do
           duo_trust_browser_button? ||
             invalid_credentials? ||
-            (!title.include?('Central Authentication Service') && !current_url.include?('duosecurity'))
+            (!title.include?('Central Authentication Service') && !current_url.include?('duosecurity')) ||
+              logout_conf_heading_element.visible?
         end
         if duo_trust_browser_button?
           duo_trust_browser_button

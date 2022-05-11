@@ -41,7 +41,7 @@ describe 'bCourses Find a Person to Add', order: :defined do
 
       it 'include an "About" link' do
         @canvas.scroll_to_bottom
-        expect(@canvas.external_link_valid?(@canvas.about_link_element, 'bCourses | Digital Learning Services')).to be true
+        expect(@canvas.external_link_valid?(@canvas.about_link_element, 'bCourses | Research, Teaching, and Learning')).to be true
       end
 
       it 'include a "Privacy Policy" link' do

@@ -17,6 +17,10 @@ module Page
     @driver.switch_to.frame iframe_element(id: id).selenium_element.attribute('id')
   end
 
+  def close_current_window
+    @driver.close
+  end
+
   def switch_to_main_content
     @driver.switch_to.default_content
   end
@@ -246,7 +250,7 @@ module Page
       sleep 2
       if @driver.window_handles.length > 1
         @driver.switch_to.window @driver.window_handles.last
-        wait_until(Utils.short_wait) { title_element(xpath: "//title[contains(.,\"#{expected_page_title}\")]") }
+        wait_until(Utils.short_wait) { title_element(xpath: "//title[contains(.,\"#{expected_page_title}\")]").exists? }
         logger.debug "Found new window with title '#{expected_page_title}'"
         true
       else
