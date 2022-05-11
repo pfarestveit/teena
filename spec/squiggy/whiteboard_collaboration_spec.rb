@@ -134,7 +134,7 @@ describe 'Whiteboard' do
     it "allows #{student_1.full_name} to see a list of all whiteboard members" do
       @whiteboards_driver_1.load_page test
       @whiteboards_driver_1.open_whiteboard @whiteboard_1
-      @whiteboards_driver_1.show_collaborators_pane
+      @whiteboards_driver_1.show_collaborators
       @whiteboards_driver_1.wait_until(timeout) do
         @whiteboards_driver_1.collaborator student_1
         @whiteboards_driver_1.collaborator student_2
@@ -174,12 +174,12 @@ describe 'Whiteboard' do
     end
 
     it "allows #{student_1.full_name} to close the collaborators pane" do
-      @whiteboards_driver_1.hide_collaborators_pane
+      @whiteboards_driver_1.hide_collaborators
       @whiteboards_driver_1.wait_until(timeout) { !@whiteboards_driver_1.collaborator_elements.any?(&:visible?) }
     end
 
     it "allows #{student_1.full_name} to reopen the collaborators pane" do
-      @whiteboards_driver_1.show_collaborators_pane
+      @whiteboards_driver_1.show_collaborators
       @whiteboards_driver_1.wait_until(timeout) { @whiteboards_driver_1.collaborator_elements.any? &:visible? }
     end
   end
@@ -195,7 +195,7 @@ describe 'Whiteboard' do
       @whiteboards_driver_1.add_collaborator(@whiteboard_1, teacher)
       @whiteboards_driver_1.close_whiteboard
       @whiteboards_driver_1.open_whiteboard @whiteboard_1
-      @whiteboards_driver_1.show_collaborators_pane
+      @whiteboards_driver_1.show_collaborators
       @whiteboards_driver_1.collaborator(teacher).when_visible timeout
     end
 
@@ -203,7 +203,7 @@ describe 'Whiteboard' do
       @whiteboards_driver_1.remove_collaborator student_3
       @whiteboards_driver_1.close_whiteboard
       @whiteboards_driver_1.open_whiteboard @whiteboard_1
-      @whiteboards_driver_1.show_collaborators_pane
+      @whiteboards_driver_1.show_collaborators
       @whiteboards_driver_1.collaborator(student_3).when_not_present timeout
     end
 

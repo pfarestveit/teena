@@ -4,6 +4,7 @@ describe 'Whiteboard Add Asset' do
 
   before(:all) do
     @test = SquiggyTestConfig.new 'whiteboard_assets'
+    @test.course.site_id = ENV['COURSE_ID']
     @student_1 = @test.students[0]
     @student_2 = @test.students[1]
     @student_3 = @test.students[2]
@@ -47,7 +48,7 @@ describe 'Whiteboard Add Asset' do
 
     before(:all) do
       # Student 1 add file to asset library
-      @student_1_file = SquiggyAsset.new @student_1.assets.find(&:file_name)
+      @student_1_file = @student_1.assets.find &:file_name
       @student_1_file.title = "#{@student_1.full_name} file #{@test.id}"
       @student_1_file.category = @category
       @canvas.masquerade_as(@student_1, @test.course)
@@ -55,7 +56,7 @@ describe 'Whiteboard Add Asset' do
       @assets_list.upload_file_asset @student_1_file
 
       # Student 2 add URL to asset library
-      @student_2_url = SquiggyAsset.new @student_2.assets.find(&:url)
+      @student_2_url = @student_2.assets.find &:url
       @student_2_url.title = "#{@student_2.full_name} link #{@test.id}"
       @student_2_url.category = @category
       @canvas.masquerade_as(@student_2, @test.course)
@@ -63,12 +64,12 @@ describe 'Whiteboard Add Asset' do
       @assets_list.add_link_asset @student_2_url
 
       # Student 3 add file to asset library
-      @student_3_file = SquiggyAsset.new @student_3.assets.find(&:file_name)
+      @student_3_file = @student_3.assets.find &:file_name
       @student_3_file.title = "#{@student_3.full_name} file #{@test.id}"
       @student_3_file.category = @category
       @canvas.masquerade_as(@student_3, @test.course)
-      @asset_library.load_page @test
-      @asset_library.upload_file_asset @student_3_file
+      @assets_list.load_page @test
+      @assets_list.upload_file_asset @student_3_file
 
       # Get initial scores
       @canvas.stop_masquerading
@@ -85,13 +86,13 @@ describe 'Whiteboard Add Asset' do
 
     it 'allows the user to cancel adding assets' do
       @whiteboards.click_add_existing_asset
-      @whiteboards.wait_until(Utils.short_wait) { @whiteboards.list_view_asset_elements.any? }
-      expect(@whiteboards.add_selected_button_element.attribute 'disabled').to eql('true')
+      @whiteboards.wait_until(Utils.short_wait) { @whiteboards.asset_elements.any? }
+      expect(@whiteboards.save_button_element.attribute 'disabled').to eql('true')
       @whiteboards.click_cancel_button
-      @whiteboards.wait_until(Utils.short_wait) { @whiteboards.list_view_asset_elements.empty? }
+      @whiteboards.wait_until(Utils.short_wait) { @whiteboards.asset_elements.empty? }
     end
 
-    it 'allows the user to add the its own assets' do
+    it 'allows the user to add its own assets' do
       @whiteboards.add_existing_assets [@student_1_file]
       @whiteboards.wait_until(Utils.short_wait) do
         @whiteboards.open_original_asset_link_element.attribute('href').include? @student_1_file.id
@@ -139,10 +140,10 @@ describe 'Whiteboard Add Asset' do
 
     before(:all) do
       @initial_score = @engagement_index.user_score(@test, @student_1)
-      @student_1_asset_no_title = SquiggyAsset.new @student_1.assets.find(&:file_name)
-      @student_1_asset_long_title = SquiggyAsset.new @student_1.assets.select(&:file_name)[0]
-      @student_1_asset_visible = SquiggyAsset.new @student_1.assets.select(&:file_name)[1]
-      @student_1_asset_hidden = SquiggyAsset.new @student_1.assets.select(&:file_name)[2]
+      @student_1_asset_no_title = @student_1.assets.find &:file_name
+      @student_1_asset_long_title = @student_1.assets.select(&:file_name)[0]
+      @student_1_asset_visible = @student_1.assets.select(&:file_name)[1]
+      @student_1_asset_hidden = @student_1.assets.select(&:file_name)[2]
       @canvas.masquerade_as(@student_1, @test.course)
     end
 
@@ -185,8 +186,8 @@ describe 'Whiteboard Add Asset' do
 
       # Asset appears in the library
       @whiteboards.close_whiteboard
-      @asset_library.load_page @test
-      @asset_library.asset_el(@student_1_asset_visible).when_present Utils.short_wait
+      @assets_list.load_page @test
+      @assets_list.asset_el(@student_1_asset_visible).when_present Utils.short_wait
     end
 
     it 'allows the user to exclude the upload from the asset library' do
@@ -197,19 +198,19 @@ describe 'Whiteboard Add Asset' do
       expect(@student_1_asset_hidden.id).not_to be_nil
 
       # Asset is not searchable
-      @asset_library.load_page @test
-      @asset_library.advanced_search(@student_1_asset_hidden.title, nil, @student_1, 'File', nil, event)
-      @asset_library.no_search_results_element.when_visible Utils.short_wait
+      @assets_list.load_page @test
+      @assets_list.advanced_search(@student_1_asset_hidden.title, nil, @student_1, 'File', nil, event)
+      @assets_list.no_search_results_element.when_visible Utils.short_wait
     end
 
     it 'allows the asset owner to view a hidden asset deep link' do
       @whiteboards.close_whiteboard
-      @asset_library.load_asset_detail(@test, @student_1_asset_hidden)
+      @asset_detail.load_asset_detail(@test, @student_1_asset_hidden)
     end
 
     it 'allows a whiteboard collaborator to view a hidden asset deep link' do
       @canvas.masquerade_as(@student_2, @test.course)
-      @asset_library.load_asset_detail(@test, @student_1_asset_hidden)
+      @asset_detail.load_asset_detail(@test, @student_1_asset_hidden)
     end
 
     it 'does not allow a user who is not the owner or whiteboard collaborator to view a hidden asset deep link' do
@@ -242,7 +243,7 @@ describe 'Whiteboard Add Asset' do
     before(:each) { @whiteboards.close_whiteboard }
 
     it 'requires an asset title' do
-      student_2_asset_no_title = SquiggyAsset.new @student_2.assets.find(&:url)
+      student_2_asset_no_title = @student_2.assets.find &:url
       student_2_asset_no_title.title = nil
       @whiteboards.load_page @test
       @whiteboards.open_whiteboard @whiteboard
@@ -252,7 +253,7 @@ describe 'Whiteboard Add Asset' do
     end
 
     it 'requires an asset title of 255 characters maximum' do
-      student_2_asset_long_title = SquiggyAsset.new @student_2.assets.find(&:url)
+      student_2_asset_long_title = @student_2.assets.find &:url
       student_2_asset_long_title.title = "Link #{@test.id} #{'A loooooong title' * 15}"
       @whiteboards.load_page @test
       @whiteboards.open_whiteboard @whiteboard
@@ -270,7 +271,7 @@ describe 'Whiteboard Add Asset' do
     end
 
     it 'allows the user to add the site to the asset library' do
-      student_2_asset_visible = SquiggyAsset.new @student_2.assets.find(&:url)
+      student_2_asset_visible = @student_2.assets.find &:url
       student_2_asset_visible.title = "#{@test.id} Student 2 link added to library"
       @whiteboards.load_page @test
       @whiteboards.open_whiteboard @whiteboard
@@ -279,12 +280,12 @@ describe 'Whiteboard Add Asset' do
 
       # Asset appears in the library
       @whiteboards.close_whiteboard
-      @asset_library.load_page @test
-      @asset_library.asset_el(student_2_asset_visible).when_present Utils.short_wait
+      @assets_list.load_page @test
+      @assets_list.asset_el(student_2_asset_visible).when_present Utils.short_wait
     end
 
     it 'allows the user to exclude the site from the asset library' do
-      student_2_asset_hidden = SquiggyAsset.new @student_2.assets.find(&:url)
+      student_2_asset_hidden = @student_2.assets.find &:url
       student_2_asset_hidden.title = "#{@test.id} Student 2 link not added to library"
       @whiteboards.load_page @test
       @whiteboards.open_whiteboard @whiteboard
@@ -293,12 +294,12 @@ describe 'Whiteboard Add Asset' do
 
       # Asset is reachable via deep link
       @whiteboards.close_whiteboard
-      @asset_library.load_asset_detail(@test, student_2_asset_hidden)
+      @asset_detail.load_asset_detail(@test, student_2_asset_hidden)
 
       # Asset is not searchable
-      @asset_library.load_page @test
-      @asset_library.advanced_search(student_2_asset_hidden.title, nil, @student_2, 'Link', nil, event)
-      @asset_library.no_search_results_element.when_visible Utils.short_wait
+      @assets_list.load_page @test
+      @assets_list.advanced_search(student_2_asset_hidden.title, nil, @student_2, 'Link', nil, event)
+      @assets_list.no_search_results_element.when_visible Utils.short_wait
     end
 
     it 'earns "Add a new asset to the Asset Library" points on the Engagement Index' do
@@ -325,7 +326,7 @@ describe 'Whiteboard Add Asset' do
       @whiteboards.close_whiteboard
       @canvas.stop_masquerading
 
-      @student_3_asset_hidden = SquiggyAsset.new @student_3.assets.find(&:file_name)
+      @student_3_asset_hidden = @student_3.assets.find &:file_name
       @student_3_asset_hidden.title = "#{@test.id} Student 3 file not added to library"
 
       @canvas.masquerade_as(@student_3, @test.course)
@@ -344,11 +345,11 @@ describe 'Whiteboard Add Asset' do
 
     it 'allows the user to edit its metadata via the whiteboard' do
       @student_3_asset_hidden.title = "#{@student_3_asset_hidden.title} - edited"
-      @asset_library.edit_asset_details @student_3_asset_hidden
+      @asset_detail.edit_asset_details @student_3_asset_hidden
     end
 
     it 'does not allow a student user to delete it via the whiteboard' do
-      expect(@asset_library.delete_asset_button?).to be false
+      expect(@asset_detail.delete_asset_button?).to be false
     end
   end
 end

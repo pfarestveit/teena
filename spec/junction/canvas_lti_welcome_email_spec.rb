@@ -43,7 +43,8 @@ unless ENV['STANDALONE']
       end
 
       it 'includes a link to more information' do
-        expect(@mailing_list.external_link_valid?(@mailing_list.welcome_email_link_element, 'Service at UC Berkeley')).to be true
+        title = 'IT - bCourses Mailing List - Welcome Email'
+        expect(@mailing_list.external_link_valid?(@mailing_list.welcome_email_link_element, title)).to be true
       end
 
       it('is not possible with an empty subject or body') do
