@@ -172,7 +172,7 @@ class SquiggyAssetLibraryListViewPage
 
   def get_asset_id(asset)
     wait_for_assets
-    SquiggyUtils.set_asset_id asset
+    wait_until(Utils.short_wait) { !SquiggyUtils.set_asset_id(asset).empty? }
   end
 
   def asset_xpath(asset)

@@ -67,6 +67,7 @@ module SquiggyAssetLibraryMetadataForm
   text_field(:category_input, id: 'asset-category-select')
   text_area(:description_input, id: 'asset-description-textarea')
   div(:title_too_long_msg, xpath: '//div[text()="Title must be 255 characters or less"]')
+  span(:title_length_at_max_msg, xpath: '//span[text()="(0 remaining)"]')
 
   div(:selected_category, id: 'adv-search-categories-option-selected')
 

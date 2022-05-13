@@ -8,6 +8,8 @@ class SquiggyWhiteboardPage < SquiggyWhiteboardsPage
   include SquiggyAssetLibraryMetadataForm
   include SquiggyAssetLibrarySearchForm
 
+  div(:page_not_found, id: 'page-not-found')
+
   def hit_whiteboard_url(whiteboard)
     url = "#{SquiggyUtils.base_url}/whiteboards/#{whiteboard.id}"
     logger.debug "Hitting URL '#{url}'"
@@ -152,7 +154,7 @@ class SquiggyWhiteboardPage < SquiggyWhiteboardsPage
   button(:upload_new_button, id: 'toolbar-upload-new-asset')
   button(:add_link_button, id: 'toolbar-asset-add-link')
   button(:add_selected_button, xpath: 'TODO')
-  checkbox(:add_to_library_cbx, id: 'asset-visible-checkbox')
+  checkbox(:add_to_library_cbx, xpath: '//input[@id="asset-visible-checkbox"]/following-sibling::div')
   link(:open_original_asset_link, id: 'open-asset-btn')
   button(:delete_asset_button, id: 'delete-btn')
 
@@ -169,20 +171,25 @@ class SquiggyWhiteboardPage < SquiggyWhiteboardsPage
   end
 
   def click_add_new_asset(asset)
-    click_close_modal_button if close_modal_button?
-    click_cancel_button if cancel_asset_button?
-    if asset.type == 'File'
-      wait_for_update_and_click_js add_asset_button_element unless upload_new_button?
-      wait_for_update_and_click_js upload_new_button_element
+    hit_escape
+    if asset.file_name
+      wait_for_update_and_click add_asset_button_element unless upload_new_button?
+      wait_for_update_and_click upload_new_button_element
     else
-      wait_for_update_and_click_js add_asset_button_element unless add_link_button?
-      wait_for_update_and_click_js add_link_button_element
+      wait_for_update_and_click add_asset_button_element unless add_link_button?
+      wait_for_update_and_click add_link_button_element
     end
   end
 
   def add_asset_exclude_from_library(asset)
     click_add_new_asset asset
-    (asset.file_name) ? enter_and_upload_file(asset) : enter_and_submit_url(asset)
+    if asset.file_name
+      enter_and_upload_file asset
+    else
+      enter_url asset
+      enter_asset_metadata asset
+      save_button_element.click
+    end
     asset.visible = false
     open_original_asset_link_element.when_visible Utils.medium_wait
     asset.id = SquiggyUtils.set_asset_id asset
@@ -190,8 +197,8 @@ class SquiggyWhiteboardPage < SquiggyWhiteboardsPage
 
   def add_asset_include_in_library(asset)
     click_add_new_asset asset
-    if asset.type == 'File'
-      enter_file_path_for_upload asset.file_name
+    if asset.file_name
+      enter_file_path_for_upload asset
       enter_asset_metadata(asset)
       check_add_to_library_cbx
       click_add_files_button
@@ -199,7 +206,7 @@ class SquiggyWhiteboardPage < SquiggyWhiteboardsPage
       enter_url asset
       enter_asset_metadata asset
       check_add_to_library_cbx
-      click_add_url_button
+      save_button_element.click
     end
     open_original_asset_link_element.when_visible Utils.medium_wait
     asset.id = SquiggyUtils.set_asset_id asset
