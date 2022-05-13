@@ -1,5 +1,7 @@
 require_relative '../../util/spec_helper'
 
+include Logging
+
 describe 'Whiteboard Add Asset' do
 
   before(:all) do
@@ -82,7 +84,7 @@ describe 'Whiteboard Add Asset' do
       @whiteboards.open_whiteboard @whiteboard
     end
 
-    before(:each) { @whiteboards.click_cancel_button if @whiteboards.cancel_asset_button? }
+    before(:each) { @whiteboards.click_cancel_button if @whiteboards.cancel_button? }
 
     it 'allows the user to cancel adding assets' do
       @whiteboards.click_add_existing_asset
@@ -116,14 +118,15 @@ describe 'Whiteboard Add Asset' do
     it 'allows the user to add multiple assets at once' do
       @whiteboards.add_existing_assets [@student_1_file, @student_2_url, @student_3_file]
       @whiteboards.wait_until(Utils.short_wait) do
-        @whiteboards.open_original_asset_link_element.attribute('href').include?(@student_1_file.id || @student_2_url.id || @student_3_file.id)
+        href = @whiteboards.open_original_asset_link_element.attribute('href')
+        href.include?(@student_1_file.id) || href.include?(@student_2_url.id) || href.include?(@student_3_file.id)
       end
     end
 
     it 'earns "Add an asset to a whiteboard" but not "Add a new asset to the Asset Library" points on the Engagement Index for each asset used' do
-      @whiteboards.close_whiteboard @driver
+      @whiteboards.close_whiteboard
       @canvas.stop_masquerading
-      expect(@engagement_index.user_score(@test, @student_1)).to eql("#{@initial_score_stu_1.to_i + 4}")
+      expect(@engagement_index.user_score(@test, @student_1)).to eql(@initial_score_stu_1.to_i + 4)
     end
 
     it 'shows "add_asset_to_whiteboard" but not "add_asset" activity on the CSV export for each asset belonging to another user' do
@@ -154,7 +157,7 @@ describe 'Whiteboard Add Asset' do
       @whiteboards.load_page @test
       @whiteboards.open_whiteboard @whiteboard
       @whiteboards.click_add_new_asset @student_1_asset_no_title
-      @whiteboards.enter_file_path_for_upload @student_1_asset_no_title.file_name
+      @whiteboards.enter_file_path_for_upload @student_1_asset_no_title
       @whiteboards.enter_asset_metadata @student_1_asset_no_title
       expect(@whiteboards.save_file_button_element.enabled?).to be false
     end
@@ -166,10 +169,10 @@ describe 'Whiteboard Add Asset' do
 
       # More than 255 chars is rejected
       @whiteboards.click_add_new_asset @student_1_asset_long_title
-      @whiteboards.enter_file_path_for_upload @student_1_asset_long_title.file_name
+      @whiteboards.enter_file_path_for_upload @student_1_asset_long_title
       @whiteboards.enter_asset_metadata @student_1_asset_long_title
-      @whiteboards.wait_until(Utils.short_wait) { @whiteboards.long_title_error_elements.any? }
-      @whiteboards.click_cancel_button
+      @whiteboards.title_length_at_max_msg_element.when_visible 2
+      @whiteboards.hit_escape
 
       # Exactly 255 chars is accepted and asset is created
       @student_1_asset_long_title.title = @student_1_asset_long_title.title[0, 255]
@@ -199,8 +202,8 @@ describe 'Whiteboard Add Asset' do
 
       # Asset is not searchable
       @assets_list.load_page @test
-      @assets_list.advanced_search(@student_1_asset_hidden.title, nil, @student_1, 'File', nil, event)
-      @assets_list.no_search_results_element.when_visible Utils.short_wait
+      @assets_list.advanced_search(@student_1_asset_hidden.title, nil, @student_1, 'File', nil)
+      @assets_list.no_results_msg_element.when_visible Utils.short_wait
     end
 
     it 'allows the asset owner to view a hidden asset deep link' do
@@ -215,13 +218,13 @@ describe 'Whiteboard Add Asset' do
 
     it 'does not allow a user who is not the owner or whiteboard collaborator to view a hidden asset deep link' do
       @canvas.masquerade_as(@student_3, @test.course)
-      visible_to_other = @asset_library.verify_block { @asset_library.load_asset_detail(@test, @student_1_asset_hidden) }
+      visible_to_other = @assets_list.verify_block { @asset_library.load_asset_detail(@test, @student_1_asset_hidden) }
       expect(visible_to_other).to be false
     end
 
     it 'earns "Add a new asset to the Asset Library" points on the Engagement Index' do
       @canvas.stop_masquerading
-      expect(@engagement_index.user_score(@test, @student_1)).to eql("#{@initial_score.to_i + (SquiggyActivity::ADD_ASSET_TO_LIBRARY.points * 2)}")
+      expect(@engagement_index.user_score(@test, @student_1)).to eql(@initial_score.to_i + (SquiggyActivity::ADD_ASSET_TO_LIBRARY.points * 2))
     end
 
     it 'shows "add_asset" activity on the CSV export' do
@@ -249,7 +252,7 @@ describe 'Whiteboard Add Asset' do
       @whiteboards.open_whiteboard @whiteboard
       @whiteboards.click_add_new_asset student_2_asset_no_title
       @whiteboards.enter_asset_metadata student_2_asset_no_title
-      expect(@whiteboards.save_link_button_element.enabled?).to be false
+      expect(@whiteboards.save_button_element.enabled?).to be false
     end
 
     it 'requires an asset title of 255 characters maximum' do
@@ -261,8 +264,8 @@ describe 'Whiteboard Add Asset' do
       # More than 255 chars is rejected
       @whiteboards.click_add_new_asset student_2_asset_long_title
       @whiteboards.enter_asset_metadata student_2_asset_long_title
-      @whiteboards.title_too_long_msg_element.when_visible 2
-      @whiteboards.click_cancel_button
+      @whiteboards.title_length_at_max_msg_element.when_visible 2
+      @whiteboards.click_cancel_link_button
 
       # Exactly 255 chars is accepted and asset is created
       student_2_asset_long_title.title = student_2_asset_long_title.title[0, 255]
@@ -298,13 +301,13 @@ describe 'Whiteboard Add Asset' do
 
       # Asset is not searchable
       @assets_list.load_page @test
-      @assets_list.advanced_search(student_2_asset_hidden.title, nil, @student_2, 'Link', nil, event)
-      @assets_list.no_search_results_element.when_visible Utils.short_wait
+      @assets_list.advanced_search(student_2_asset_hidden.title, nil, @student_2, 'Link', nil)
+      @assets_list.no_results_msg_element.when_visible Utils.short_wait
     end
 
     it 'earns "Add a new asset to the Asset Library" points on the Engagement Index' do
       @canvas.stop_masquerading
-      expect(@engagement_index.user_score(@test, @student_2)).to eql("#{@initial_score.to_i + (SquiggyActivity::ADD_ASSET_TO_LIBRARY.points * 2)}")
+      expect(@engagement_index.user_score(@test, @student_2)).to eql(@initial_score.to_i + (SquiggyActivity::ADD_ASSET_TO_LIBRARY.points * 2))
     end
 
     it 'shows "add_asset" activity on the CSV export' do

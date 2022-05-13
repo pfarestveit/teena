@@ -39,20 +39,16 @@ describe 'Whiteboard' do
       @whiteboards.load_page @test
     end
 
-    it 'shows a create-your-first-whiteboard link if the user has no existing whiteboards' do
-      @whiteboards.create_first_whiteboard_link_element.when_visible Utils.short_wait
-    end
-
     it 'requires a title' do
       @whiteboards.click_add_whiteboard
       @whiteboards.save_whiteboard_button_element.when_present Utils.short_wait
-      expect(@whiteboards.save_whiteboard_button_element.enabled?).to be false
+      expect(@whiteboards.save_button_element.enabled?).to be false
     end
 
     it 'permits a title with 255 characters maximum' do
       @whiteboards.click_add_whiteboard
       @whiteboards.enter_whiteboard_title "#{'A loooooong title' * 15}?"
-      @whiteboards.title_max_length_msg_element.when_visible Utils.short_wait
+      @whiteboards.title_length_at_max_msg_element.when_visible 2
     end
 
     it 'can be done with the owner as the only member' do

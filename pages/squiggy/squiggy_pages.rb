@@ -23,6 +23,7 @@ module SquiggyPages
   end
 
   def clear_input(input_el)
+    sleep Utils.click_wait
     input_el.click
     sleep Utils.click_wait
     input_el.click
@@ -72,11 +73,19 @@ module SquiggyPages
 
   # WHITEBOARDS
 
-  button(:cancel_asset_button, xpath: 'TODO')
+  button(:cancel_asset_upload_button, id: 'upload-file-cancel-btn')
   button(:close_modal_button, xpath: 'TODO')
 
+  def click_cancel_upload_button
+    wait_for_update_and_click cancel_asset_upload_button_element
+  end
+
+  def click_cancel_link_button
+    wait_for_update_and_click cancel_button_element
+  end
+
   def click_cancel_button
-    wait_for_update_and_click_js cancel_button_element
+    wait_for_update_and_click cancel_button_element
   end
 
   def click_close_modal_button

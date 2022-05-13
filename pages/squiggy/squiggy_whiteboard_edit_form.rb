@@ -13,7 +13,7 @@ module SquiggyWhiteboardEditForm
   div(:no_collaborators_msg, xpath: 'TODO')
 
   def enter_whiteboard_title(title)
-    wait_for_element_and_type_js(whiteboard_title_input_element, title)
+    enter_squiggy_text(whiteboard_title_input_element, title)
   end
 
   def collaborator_option_link(user)
@@ -36,7 +36,7 @@ module SquiggyWhiteboardEditForm
 
   def save_whiteboard
     wait_for_update_and_click_js save_button_element
-    save_button_element.when_not_present Utils.short_wait
+    save_button_element.when_not_visible Utils.short_wait
   end
 
   def click_remove_collaborator(user)

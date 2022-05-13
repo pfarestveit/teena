@@ -2,6 +2,8 @@ require_relative '../../util/spec_helper'
 
 describe 'Whiteboard' do
 
+  include Logging
+
   test = SquiggyTestConfig.new 'whiteboard_collaboration'
   test.course.site_id = ENV['COURSE_ID']
   timeout = Utils.short_wait
@@ -52,6 +54,7 @@ describe 'Whiteboard' do
     [teacher, test.lead_ta, test.ta, test.designer, test.reader].each do |user|
 
       it "allows a course #{user.role} to search for whiteboards" do
+        @whiteboards_driver_1.close_whiteboard
         @canvas_driver_1.masquerade_as(user, test.course)
         @whiteboards_driver_1.load_page test
         @whiteboards_driver_1.simple_search test.id
@@ -61,21 +64,17 @@ describe 'Whiteboard' do
         end
       end
 
-      it "allows a course #{user.role} to view any whiteboard and its membership" do
+      it "allows a course #{user.role} to view any whiteboard and its membership with a delete button" do
         @whiteboards_driver_1.open_whiteboard @whiteboard_3
         @whiteboards_driver_1.verify_collaborators [@whiteboard_3.owner, @whiteboard_3.collaborators]
-      end
-
-      it "allows a course #{user.role} to delete any whiteboard" do
-        has_delete_button = @whiteboards_driver_1.verify_block { @whiteboards_driver_1.delete_button_element.when_visible timeout }
-        @whiteboards_driver_1.close_whiteboard
-        expect(has_delete_button).to be true
+        expect(@whiteboards_driver_1.delete_button?).to be true
       end
     end
 
     [test.observer, student_1].each do |user|
 
       it "does not allow a course #{user.role} to search for whiteboards" do
+        @whiteboards_driver_1.close_whiteboard
         @canvas_driver_1.masquerade_as(user, test.course)
         @whiteboards_driver_1.load_page test
         has_access = @whiteboards_driver_1.verify_block { @whiteboards_driver_1.simple_search_input_element.when_visible 2 }
@@ -83,7 +82,7 @@ describe 'Whiteboard' do
       end
 
       it "does not allow a course #{user.role} to open foreign whiteboards" do
-        @whiteboards_driver_1.hit_whiteboard_url(test, @whiteboard_3)
+        @whiteboards_driver_1.hit_whiteboard_url @whiteboard_3
         has_access = @whiteboards_driver_1.verify_block { @whiteboards_driver_1.settings_button_element.when_visible 2 }
         expect(has_access).to be false
       end
@@ -108,7 +107,7 @@ describe 'Whiteboard' do
           @whiteboards_driver_1.list_view_whiteboard_title_elements.length == 2 ||
             @whiteboards_driver_1.list_view_whiteboard_title_elements[2].text != @whiteboard_3.title
         end
-        @whiteboards_driver_1.hit_whiteboard_url(test, @whiteboard_3)
+        @whiteboards_driver_1.hit_whiteboard_url @whiteboard_3
         has_access = @whiteboards_driver_1.verify_block { @whiteboards_driver_1.settings_button_element.when_visible 2 }
         expect(has_access).to be false
       end
@@ -154,14 +153,14 @@ describe 'Whiteboard' do
     it "allows #{student_1.full_name} to see which members have just come online" do
       @whiteboards_driver_2.open_whiteboard @whiteboard_1
       actual_online_time = Time.now
-      @whiteboards_driver_1.wait_until(Utils.medium_wait) { @whiteboards_driver_1.collaborator_online? student_3 }
+      @whiteboards_driver_1.wait_until(Utils.short_wait) { @whiteboards_driver_1.collaborator_online? student_3 }
       logger.warn "It took #{Time.now - actual_online_time} seconds for the user to appear online"
     end
 
     it "allows #{student_1.full_name} to see which members have just gone offline" do
       @whiteboards_driver_2.close_whiteboard
       actual_offline_time = Time.now
-      @whiteboards_driver_1.wait_until(Utils.long_wait) { !@whiteboards_driver_1.collaborator_online? student_3 }
+      @whiteboards_driver_1.wait_until(Utils.short_wait) { !@whiteboards_driver_1.collaborator_online? student_3 }
       logger.warn "It took #{Time.now - actual_offline_time} seconds for the user to go offline"
     end
 
@@ -175,12 +174,12 @@ describe 'Whiteboard' do
 
     it "allows #{student_1.full_name} to close the collaborators pane" do
       @whiteboards_driver_1.hide_collaborators
-      @whiteboards_driver_1.wait_until(timeout) { !@whiteboards_driver_1.collaborator_elements.any?(&:visible?) }
+      @whiteboards_driver_1.collaborator(student_1).when_not_visible 1
     end
 
     it "allows #{student_1.full_name} to reopen the collaborators pane" do
       @whiteboards_driver_1.show_collaborators
-      @whiteboards_driver_1.wait_until(timeout) { @whiteboards_driver_1.collaborator_elements.any? &:visible? }
+      @whiteboards_driver_1.collaborator(student_1).when_visible 1
     end
   end
 
@@ -192,7 +191,7 @@ describe 'Whiteboard' do
     end
 
     it "allows #{student_1.full_name} to add a member" do
-      @whiteboards_driver_1.add_collaborator(@whiteboard_1, teacher)
+      @whiteboards_driver_1.add_collaborator teacher
       @whiteboards_driver_1.close_whiteboard
       @whiteboards_driver_1.open_whiteboard @whiteboard_1
       @whiteboards_driver_1.show_collaborators
@@ -210,7 +209,7 @@ describe 'Whiteboard' do
     it "allows #{student_1.full_name} to delete its own membership" do
       @whiteboards_driver_1.remove_collaborator student_1
       @whiteboards_driver_1.switch_to_first_window
-      @whiteboards_driver_1.hit_whiteboard_url(test.course, @whiteboard_1)
+      @whiteboards_driver_1.hit_whiteboard_url @whiteboard_1
       has_access = @whiteboards_driver_1.verify_block { @whiteboards_driver_1.settings_button_element.when_visible 2 }
       expect(has_access).to be false
     end
@@ -237,7 +236,7 @@ describe 'Whiteboard' do
 
       it "removes #{user.role} UID #{user.uid} from all whiteboards if the user has been removed from the course site" do
         [@whiteboard_1, @whiteboard_2, @whiteboard_3].each do |whiteboard|
-          @whiteboards_driver_1.hit_whiteboard_url(test, whiteboard)
+          @whiteboards_driver_1.hit_whiteboard_url whiteboard
           @whiteboards_driver_1.click_settings_button
           # TODO wait for collaborators pane to be visible
           @whiteboards_driver_1.collaborator_name(user).when_not_present 1
@@ -247,8 +246,8 @@ describe 'Whiteboard' do
       it "prevents #{user.role} UID #{user.uid} from reaching any whiteboards if the user has been removed from the course site" do
         @canvas_driver_3.masquerade_as(user, test.course)
         [@whiteboard_1, @whiteboard_2, @whiteboard_3].each do |whiteboard|
-          @whiteboards_driver_3.hit_whiteboard_url(test, whiteboard)
-          @whiteboards_driver_3.launch_failure_element.when_visible timeout
+          @whiteboards_driver_3.hit_whiteboard_url whiteboard
+          @whiteboards_driver_3.page_not_found_element.when_visible timeout
         end
       end
     end
