@@ -75,7 +75,8 @@ describe 'bCourses Course Captures tool' do
 
                     # Verify that the alert message, help page link, and the sample YouTube video ID are present
                     has_you_tube_alert = @course_captures_page.you_tube_alert_elements[index]
-                    has_help_page_link = @course_captures_page.external_link_valid?(@course_captures_page.help_page_link(index), 'IT - Why are the Course Capture videos showing as private or unavailable?')
+                    help_msg = 'IT - Pre-Fall 2021 Only: Why are the Course Capture videos showing as private or unavailable on YouTube?'
+                    has_help_page_link = @course_captures_page.external_link_valid?(@course_captures_page.help_page_link(index), help_msg)
                     @course_captures_page.switch_to_canvas_iframe unless standalone || "#{@driver.browser}" == 'firefox'
                     has_you_tube_link = @course_captures_page.external_link_valid?(@course_captures_page.you_tube_link(expected_video_id), 'YouTube')
                     @course_captures_page.switch_to_canvas_iframe unless standalone || "#{@driver.browser}" == 'firefox'
@@ -85,7 +86,8 @@ describe 'bCourses Course Captures tool' do
                     it("shows UID #{user.uid} a valid link to YouTube video ID #{expected_video_id} on site ID #{course.site_id}") { expect(has_you_tube_link).to be true }
 
                     # Verify that the 'report a problem' link works
-                    has_report_problem_link = @course_captures_page.external_link_valid?(@course_captures_page.report_problem_element, 'General Support Request or Give Feedback | Educational Technology Services')
+                    support_msg = 'General Support Request or Give Feedback | Educational Technology Services'
+                    has_report_problem_link = @course_captures_page.external_link_valid?(@course_captures_page.report_problem_element, support_msg)
                     @course_captures_page.switch_to_canvas_iframe unless standalone || "#{@driver.browser}" == 'firefox'
 
                     it("offers UID #{user.uid} a 'Report a Problem' link on on site ID #{course.site_id}") { expect(has_report_problem_link).to be true }

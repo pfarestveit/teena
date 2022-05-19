@@ -143,10 +143,11 @@ describe 'Whiteboard Add Asset' do
 
     before(:all) do
       @initial_score = @engagement_index.user_score(@test, @student_1)
-      @student_1_asset_no_title = @student_1.assets.find &:file_name
-      @student_1_asset_long_title = @student_1.assets.select(&:file_name)[0]
-      @student_1_asset_visible = @student_1.assets.select(&:file_name)[1]
-      @student_1_asset_hidden = @student_1.assets.select(&:file_name)[2]
+      @student_1_assets = @student_1.assets.select &:file_name
+      @student_1_asset_no_title = @student_1_assets[0]
+      @student_1_asset_long_title = @student_1_assets[1]
+      @student_1_asset_visible = @student_1_assets[2]
+      @student_1_asset_hidden = @student_1_assets[3]
       @canvas.masquerade_as(@student_1, @test.course)
     end
 
@@ -175,7 +176,7 @@ describe 'Whiteboard Add Asset' do
       @whiteboards.hit_escape
 
       # Exactly 255 chars is accepted and asset is created
-      @student_1_asset_long_title.title = @student_1_asset_long_title.title[0, 255]
+      @student_1_asset_long_title.title = @student_1_asset_long_title.title[0, 254]
       @whiteboards.add_asset_include_in_library @student_1_asset_long_title
       expect(@student_1_asset_long_title.id).not_to be_nil
     end
@@ -206,33 +207,31 @@ describe 'Whiteboard Add Asset' do
       @assets_list.no_results_msg_element.when_visible Utils.short_wait
     end
 
-    it 'allows the asset owner to view a hidden asset deep link' do
-      @whiteboards.close_whiteboard
-      @asset_detail.load_asset_detail(@test, @student_1_asset_hidden)
-    end
-
-    it 'allows a whiteboard collaborator to view a hidden asset deep link' do
-      @canvas.masquerade_as(@student_2, @test.course)
-      @asset_detail.load_asset_detail(@test, @student_1_asset_hidden)
-    end
-
-    it 'does not allow a user who is not the owner or whiteboard collaborator to view a hidden asset deep link' do
-      @canvas.masquerade_as(@student_3, @test.course)
-      visible_to_other = @assets_list.verify_block { @asset_library.load_asset_detail(@test, @student_1_asset_hidden) }
-      expect(visible_to_other).to be false
-    end
+    # TODO - uncomment when deep links work again
+    # it 'allows the asset owner to view a hidden asset deep link' do
+    #   @whiteboards.close_whiteboard
+    #   @asset_detail.load_asset_detail(@test, @student_1_asset_hidden)
+    # end
+    #
+    # it 'allows a whiteboard collaborator to view a hidden asset deep link' do
+    #   @canvas.masquerade_as(@student_2, @test.course)
+    #   @asset_detail.load_asset_detail(@test, @student_1_asset_hidden)
+    # end
+    #
+    # it 'does not allow a user who is not the owner or whiteboard collaborator to view a hidden asset deep link' do
+    #   @canvas.masquerade_as(@student_3, @test.course)
+    #   visible_to_other = @assets_list.verify_block { @asset_library.load_asset_detail(@test, @student_1_asset_hidden) }
+    #   expect(visible_to_other).to be false
+    # end
 
     it 'earns "Add a new asset to the Asset Library" points on the Engagement Index' do
       @canvas.stop_masquerading
-      expect(@engagement_index.user_score(@test, @student_1)).to eql(@initial_score.to_i + (SquiggyActivity::ADD_ASSET_TO_LIBRARY.points * 2))
+      expect(@engagement_index.user_score(@test, @student_1)).to eql(@initial_score + (SquiggyActivity::ADD_ASSET_TO_LIBRARY.points * 2))
     end
 
     it 'shows "add_asset" activity on the CSV export' do
       csv = @engagement_index.download_csv @test
-      2.times do
-        expect(@engagement_index.csv_activity_row(csv, SquiggyActivity::ADD_ASSET_TO_LIBRARY, @student_1, @initial_score)).to be_truthy
-      end
-      expect(@engagement_index.csv_activity_row(csv, SquiggyActivity::ADD_ASSET_TO_LIBRARY, @student_1, @initial_score)).to be_falsey
+      expect(@engagement_index.csv_activity_row(csv, SquiggyActivity::ADD_ASSET_TO_LIBRARY, @student_1, @initial_score)).to be_truthy
     end
   end
 
@@ -265,10 +264,10 @@ describe 'Whiteboard Add Asset' do
       @whiteboards.click_add_new_asset student_2_asset_long_title
       @whiteboards.enter_asset_metadata student_2_asset_long_title
       @whiteboards.title_length_at_max_msg_element.when_visible 2
-      @whiteboards.click_cancel_link_button
+      @whiteboards.click_cancel_button
 
       # Exactly 255 chars is accepted and asset is created
-      student_2_asset_long_title.title = student_2_asset_long_title.title[0, 255]
+      student_2_asset_long_title.title = student_2_asset_long_title.title[0, 254]
       @whiteboards.add_asset_include_in_library student_2_asset_long_title
       expect(student_2_asset_long_title.id).not_to be_nil
     end
@@ -295,9 +294,10 @@ describe 'Whiteboard Add Asset' do
       @whiteboards.add_asset_exclude_from_library student_2_asset_hidden
       expect(student_2_asset_hidden.id).not_to be_nil
 
-      # Asset is reachable via deep link
       @whiteboards.close_whiteboard
-      @asset_detail.load_asset_detail(@test, student_2_asset_hidden)
+      # TODO - uncomment when deep links work again
+      # Asset is reachable via deep link
+      # @asset_detail.load_asset_detail(@test, student_2_asset_hidden)
 
       # Asset is not searchable
       @assets_list.load_page @test

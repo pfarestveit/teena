@@ -95,7 +95,7 @@ module SquiggyPages
   def get_whiteboard_id(link_element)
     link_element.when_present Utils.short_wait
     partial_url = link_element.attribute('href').split('?').first
-    partial_url.sub("#{SquiggyUtils.base_url}/whiteboards/", '')
+    partial_url.split('/').last
   end
 
   def shift_to_whiteboard_window(whiteboard)

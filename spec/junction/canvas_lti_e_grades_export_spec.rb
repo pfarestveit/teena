@@ -80,7 +80,7 @@ unless ENV['STANDALONE']
       end
 
       it 'offers a "How do I post grades for an assignment?" link' do
-        title = 'How do I post grades for an assignment in the G... | Canvas LMS Community'
+        title = 'How do I post grades for an assignment'
         expect(@e_grades_export_page.external_link_valid?(@e_grades_export_page.how_to_post_grades_link_element, title)).to be true
       end
 
@@ -107,7 +107,7 @@ unless ENV['STANDALONE']
       end
 
       it 'offers a "How do I post grades for an assignment?" link' do
-        title = 'How do I mute or unmute an assignment in the Gradebook? | Canvas Instructor Guide | Canvas Guides'
+        title = 'How do I post grades for an assignment'
         expect(@e_grades_export_page.external_link_valid?(@e_grades_export_page.how_to_post_grades_link_element, title)).to be true
       end
 

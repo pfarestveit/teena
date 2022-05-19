@@ -36,7 +36,6 @@ module SquiggyWhiteboardEditForm
 
   def save_whiteboard
     wait_for_update_and_click_js save_button_element
-    save_button_element.when_not_visible Utils.short_wait
   end
 
   def click_remove_collaborator(user)
