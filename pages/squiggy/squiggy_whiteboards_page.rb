@@ -85,34 +85,36 @@ class SquiggyWhiteboardsPage
   button(:adv_search_keyword_clear_button, xpath: '//input[@id="adv-search-keywords-input"]/../..//button')
   text_field(:adv_search_user_input, id: 'adv-search-user-select')
   button(:adv_search_user_clear_button, xpath: '//label[text()="Collaborator"]/..//button')
-  checkbox(:include_deleted_cbx, id: 'include-deleted-checkbox')
+  div(:include_deleted_cbx, xpath: '//input[@id="include-deleted-checkbox"]/following-sibling::div')
   button(:adv_search_button, id: 'adv-search-btn')
   button(:cancel_adv_search_button, id: 'cancel-adv-search-btn')
+  button(:reset_adv_search_button, id: 'reset-adv-search-btn')
   span(:no_results_msg, xpath: '//span[text()="No matching whiteboards found"]')
 
   def simple_search(string)
     logger.info "Performing simple search for '#{string}'"
     cancel_adv_search_button if cancel_adv_search_button_element.visible?
     wait_for_element_and_type_js(simple_search_input_element, string)
-    wait_for_update_and_click_js simple_search_button_element
+    wait_for_update_and_click simple_search_button_element
   end
 
   def advanced_search(string, user, inc_deleted)
     logger.info 'Performing advanced search'
+    wait_until(Utils.short_wait) { simple_search_button? || open_adv_search_button? || adv_search_button? }
     open_adv_search_button unless adv_search_keyword_input_element.visible?
+    reset_adv_search_button if reset_adv_search_button?
 
-    wait_for_update_and_click_js adv_search_keyword_clear_button_element if adv_search_keyword_clear_button?
     if string
-      wait_for_element_and_type_js(adv_search_keyword_input_element, string)
+      enter_squiggy_text(adv_search_keyword_input_element, string)
     end
 
-    wait_for_update_and_click_js adv_search_user_clear_button_element if adv_search_user_clear_button?
     if user
       wait_for_update_and_click_js adv_search_user_input_element
       select_squiggy_option user.full_name
     end
 
-    inc_deleted ? check_include_deleted_cbx : uncheck_include_deleted_cbx
-    wait_for_update_and_click_js advanced_search_button_element
+    include_deleted_cbx_element.click if inc_deleted
+    wait_for_update_and_click adv_search_button_element
+    Utils.save_screenshot(@driver, "#{Time.now}")
   end
 end

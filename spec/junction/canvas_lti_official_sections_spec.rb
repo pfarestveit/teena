@@ -194,7 +194,7 @@ describe 'bCourses Official Sections tool' do
 
             it "shows an expected instruction mode for #{api_course_code} section #{api_section_data[:id]}" do
               mode = ui_section_data[:label].split('(').last.gsub(')', '')
-              expect(['In Person', 'Online', 'Hybrid', 'Flexible', 'Remote']).to include(mode)
+              expect(['In Person', 'Online', 'Hybrid', 'Flexible', 'Remote', 'Web-based']).to include(mode)
             end
           end
 

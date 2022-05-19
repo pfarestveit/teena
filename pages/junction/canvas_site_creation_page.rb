@@ -21,7 +21,8 @@ module Page
       link(:bcourses_support_link, xpath: '//a[contains(text(),"bCourses support")]')
 
       link(:create_project_site_link, id: 'create-project-site')
-      link(:projects_learn_more_link, xpath: '//a[contains(., "more about collaboration tools available at UC Berkeley.")]')
+      link(:project_help_link, id: 'bcourses-project-sites-service-page')
+      link(:projects_learn_more_link, id: 'berkeley-collaboration-services-information')
 
       # Loads the LTI tool in the context of a Canvas course site
       # @param user [User]

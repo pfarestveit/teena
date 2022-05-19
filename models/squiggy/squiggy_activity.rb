@@ -32,7 +32,7 @@ class SquiggyActivity
     REMIX_WHITEBOARD = new('remix_whiteboard', 'Remix a whiteboard', 0),
     GET_REMIX_WHITEBOARD = new('get_remix_whiteboard', 'Have one\'s whiteboard remixed', 0),
 
-    EXPORT_WHITEBOARD = new('export_whiteboard', 'Export a whiteboard to the Asset Library', 10),
+    EXPORT_WHITEBOARD = new('whiteboard_export', 'Export a whiteboard to the Asset Library', 10),
 
     SUBMIT_ASSIGNMENT = new('assignment_submit', 'Submit a new assignment in Assignments', 20)
   ]

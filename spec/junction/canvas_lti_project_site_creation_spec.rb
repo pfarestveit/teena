@@ -37,8 +37,14 @@ describe 'bCourses project site', order: :defined do
       standalone ? @site_creation_page.load_standalone_tool : @site_creation_page.load_embedded_tool(test.manual_teacher)
     end
 
-    it('shows a link to project site help') do
-      title = 'IT - bDrive vs. Box vs. CalShare vs. bCourses Projects: What\'s the best choice for online collaboration?'
+    it 'shows a link to project site help' do
+      title = 'bCourses Project Sites | Research, Teaching, and Learning'
+      expect(@site_creation_page.external_link_valid?(@site_creation_page.project_help_link_element, title)).to be true
+    end
+
+    it 'shows a link to info about other collaboration tools' do
+      @site_creation_page.switch_to_canvas_iframe
+      title = 'Collaboration Services | bConnected'
       expect(@site_creation_page.external_link_valid?(@site_creation_page.projects_learn_more_link_element, title)).to be true
     end
 

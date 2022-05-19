@@ -228,6 +228,7 @@ describe 'Whiteboard' do
       @cal_net_driver_3 = Page::CalNetPage.new @driver_3
       @whiteboards_driver_3 = SquiggyWhiteboardPage.new @driver_3
       @canvas_driver_3.log_in(@cal_net_driver_3, test.admin.username, Utils.super_admin_password)
+      @whiteboards_driver_1.load_page test
     end
 
     after(:all) { @driver_3.quit }
@@ -236,7 +237,8 @@ describe 'Whiteboard' do
 
       it "removes #{user.role} UID #{user.uid} from all whiteboards if the user has been removed from the course site" do
         [@whiteboard_1, @whiteboard_2, @whiteboard_3].each do |whiteboard|
-          @whiteboards_driver_1.hit_whiteboard_url whiteboard
+          @whiteboards_driver_1.close_whiteboard
+          @whiteboards_driver_1.open_whiteboard whiteboard
           @whiteboards_driver_1.click_settings_button
           # TODO wait for collaborators pane to be visible
           @whiteboards_driver_1.collaborator_name(user).when_not_present 1

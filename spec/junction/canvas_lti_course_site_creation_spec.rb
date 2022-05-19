@@ -101,7 +101,7 @@ describe 'bCourses course site creation' do
           long_maintenance_notice = @create_course_site_page.maintenance_notice
           it('shows an expanded maintenance notice') { expect(long_maintenance_notice).to include('bCourses performs scheduled maintenance every day between 8-9AM') }
 
-          bcourses_link_works = @create_course_site_page.external_link_valid?(@create_course_site_page.bcourses_service_element, 'bCourses | Digital Learning Services')
+          bcourses_link_works = @create_course_site_page.external_link_valid?(@create_course_site_page.bcourses_service_element, 'bCourses | Research, Teaching, and Learning')
           it('shows a link to the bCourses service page') { expect(bcourses_link_works).to be true }
 
           @canvas_page.switch_to_canvas_iframe unless standalone || "#{@driver.browser}" == 'firefox'
@@ -110,7 +110,7 @@ describe 'bCourses course site creation' do
           help_text = @create_course_site_page.help
           it('shows suggestions for creating sites for courses with multiple sections') { expect(help_text).to include('If you have a course with multiple sections, you will need to decide') }
 
-          mode_link_works = @create_course_site_page.external_link_valid?(@create_course_site_page.instr_mode_link_element, 'IT - How do I create Course Site?')
+          mode_link_works = @create_course_site_page.external_link_valid?(@create_course_site_page.instr_mode_link_element, 'IT - How do I create a Course Site?')
           it('shows an instruction mode link') { expect(mode_link_works).to be true }
 
           @canvas_page.switch_to_canvas_iframe unless standalone || "#{@driver.browser}" == 'firefox'
@@ -290,7 +290,7 @@ describe 'bCourses course site creation' do
           visible_modes = @canvas_page.visible_instruction_modes
           it "shows the instruction mode for sections in #{site[:course].term} #{site[:course].code} site ID #{site[:course].site_id}" do
             expect(visible_modes).not_to be_empty
-            expect(visible_modes - ['In Person', 'Online', 'Hybrid', 'Flexible', 'Remote']).to be_empty
+            expect(visible_modes - ['In Person', 'Online', 'Hybrid', 'Flexible', 'Remote', 'Web-based']).to be_empty
           end
 
           # ROSTER PHOTOS - check that roster photos tool shows the right sections

@@ -16,14 +16,14 @@ class SquiggyAssetLibraryDetailPage < SquiggyAssetLibraryListViewPage
 
   def load_asset_detail(test, asset)
     # TODO - reinstate this when asset deep links work again
-    logger.info "Hitting asset detail at '#{test.course.asset_library_url}#suitec_assetId=#{asset.id}'"
-    navigate_to "#{test.course.asset_library_url}#suitec_assetId=#{asset.id}"
-    switch_to_canvas_iframe
-    sleep 1
+    # logger.info "Hitting asset detail at '#{test.course.asset_library_url}#suitec_assetId=#{asset.id}'"
+    # navigate_to "#{test.course.asset_library_url}#suitec_assetId=#{asset.id}"
+    # switch_to_canvas_iframe
+    # sleep 1
 
-    # load_list_view_asset(test, asset)
-    # click_asset_link asset
-    # wait_for_asset_detail
+    load_list_view_asset(test, asset)
+    click_asset_link asset
+    wait_for_asset_detail
   end
 
   def wait_for_asset_detail
@@ -165,11 +165,13 @@ class SquiggyAssetLibraryDetailPage < SquiggyAssetLibraryListViewPage
 
   # DELETE ASSET
 
+  button(:delete_button, id: 'delete-asset-btn')
+
   def delete_asset(asset = nil)
     logger.info "Deleting asset#{(' ID ' + asset.id) if asset}"
     wait_for_update_and_click delete_button_element
     wait_for_update_and_click confirm_delete_button_element
-    delete_asset_button_element.when_not_present Utils.short_wait
+    delete_button_element.when_not_present Utils.short_wait
   end
 
   # LIKE
@@ -322,18 +324,32 @@ class SquiggyAssetLibraryDetailPage < SquiggyAssetLibraryListViewPage
 
   # REMIX
 
-  button(:remix_button, xpath: 'TODO')
-  link(:remixed_board_link, xpath: 'TODO')
+  button(:remix_button, id: 'remix-asset-whiteboard-btn')
+  link(:remixed_board_link, id: 'link-to-whiteboard')
+  h2(:remixed_board_title, id: 'whiteboard-title')
 
   def click_remix
     wait_for_update_and_click remix_button_element
-    id = get_whiteboard_id remixed_board_link_element
-    title = remixed_board_link_element.text.delete('\"')
-    SquiggyWhiteboard.new id: id, title: title
+    SquiggyWhiteboard.new id: get_whiteboard_id(remixed_board_link_element), title: remixed_board_title
   end
 
   def open_remixed_board(whiteboard)
     wait_for_update_and_click remixed_board_link_element
     shift_to_whiteboard_window whiteboard
   end
+
+  # WHITEBOARDS
+
+  elements(:used_in_link, :link, xpath: '//a[contains(@id, "asset-used-in-")]')
+
+  def detail_view_whiteboards_list
+    used_in_link_elements.map { |el| el.text.strip }
+  end
+
+  def click_whiteboard_usage_link(whiteboard)
+    wait_for_update_and_click link_element(id: "asset-used-in-#{whiteboard.id}")
+    wait_for_asset_detail
+    wait_until(Utils.short_wait) { asset_title == whiteboard.title }
+  end
+
 end

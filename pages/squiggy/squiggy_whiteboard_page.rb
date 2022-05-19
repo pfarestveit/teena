@@ -82,17 +82,25 @@ class SquiggyWhiteboardPage < SquiggyWhiteboardsPage
   button(:delete_button, id: 'delete-whiteboard-btn')
   button(:restore_button, id: 'restore-whiteboard-btn')
 
+  def delete_whiteboard_with_tab_close
+    initial_window_count = window_count
+    delete_whiteboard
+    wait_until(Utils.short_wait) { window_count == (initial_window_count - 1) }
+    switch_to_first_window
+    switch_to_canvas_iframe if canvas_iframe?
+  end
+
   def delete_whiteboard
     logger.info "Deleting whiteboard #{title}"
     click_settings_button
     wait_for_update_and_click delete_button_element
     wait_for_update_and_click confirm_delete_button_element
-    close_whiteboard
-    switch_to_canvas_iframe if "#{@driver.browser}" == 'chrome'
+    sleep Utils.click_wait
   end
 
   def restore_whiteboard
     logger.info 'Restoring whiteboard'
+    click_settings_button
     wait_for_update_and_click restore_button_element
     upload_new_button_element.when_visible Utils.short_wait
   end
@@ -103,9 +111,11 @@ class SquiggyWhiteboardPage < SquiggyWhiteboardsPage
   button(:export_to_library_button, id: 'toolbar-export-to-asset-library-btn')
   h2(:export_heading, xpath: '//h2[text()="Export to Asset Library"]')
   div(:export_not_possible_msg, xpath: '//div[text()="Whiteboard cannot be exported yet, assets are still processing. Try again soon."]')
+  div(:export_no_empty_board_msg, xpath: '//div[contains(text(), "When this whiteboard has one or more elements")]')
   text_field(:export_title_input, id: 'asset-title-input')
-  span(:export_success_msg, xpath: 'TODO')
+  span(:export_success_msg, xpath: '//h2[contains(text(), "Congratulations!")]')
   button(:download_as_image_button, id: 'toolbar-download-as-image-btn')
+  link(:exported_asset_link, id: 'link-to-asset')
 
   def click_export_button
     logger.debug 'Clicking whiteboard export button'
@@ -121,12 +131,19 @@ class SquiggyWhiteboardPage < SquiggyWhiteboardsPage
     export_title_input_element.when_not_present Utils.medium_wait
     export_success_msg_element.when_visible Utils.short_wait
     asset = SquiggyAsset.new(
-      type: 'Whiteboard',
       title: whiteboard.title,
-      preview: 'image'
+      preview_type: 'image'
     )
     asset.id = SquiggyUtils.set_asset_id asset
     whiteboard.asset_exports << asset
+  end
+
+  def click_export_link
+    logger.info 'Clicking link to exported whiteboard asset'
+    wait_for_update_and_click exported_asset_link_element
+    sleep Utils.click_wait
+    switch_to_last_window
+    switch_to_canvas_iframe
   end
 
   def download_as_image
@@ -138,7 +155,7 @@ class SquiggyWhiteboardPage < SquiggyWhiteboardsPage
 
   def verify_image_download(whiteboard)
     logger.info 'Waiting for PNG file to be downloaded from whiteboard'
-    expected_file_path = "#{Utils.download_dir}/#{whiteboard.title.gsub(' ', '-')}-#{Time.now.strftime('%Y-%m-%d')}-*.png"
+    expected_file_path = "#{Utils.download_dir}/#{whiteboard.title.gsub(' ', '_')}_#{Time.now.strftime('%Y-%m-%d')}*.png"
     wait_until(Utils.medium_wait) { Dir[expected_file_path].any? }
     logger.debug 'Whiteboard converted to PNG successfully'
     true
@@ -149,12 +166,14 @@ class SquiggyWhiteboardPage < SquiggyWhiteboardsPage
 
   # ASSETS ON WHITEBOARD
 
+  div(:whiteboard_container, id: 'whiteboard-viewport')
   button(:add_asset_button, id: 'toolbar-add-asset')
   button(:use_existing_button, id: 'toolbar-add-existing-assets')
   button(:upload_new_button, id: 'toolbar-upload-new-asset')
   button(:add_link_button, id: 'toolbar-asset-add-link')
   button(:add_selected_button, xpath: 'TODO')
   checkbox(:add_to_library_cbx, xpath: '//input[@id="asset-visible-checkbox"]/following-sibling::div')
+  button(:upload_file_button, id: 'upload-file-btn')
   link(:open_original_asset_link, id: 'open-asset-btn')
   button(:delete_asset_button, id: 'delete-btn')
 
@@ -184,7 +203,9 @@ class SquiggyWhiteboardPage < SquiggyWhiteboardsPage
   def add_asset_exclude_from_library(asset)
     click_add_new_asset asset
     if asset.file_name
-      enter_and_upload_file asset
+      enter_file_path_for_upload asset
+      enter_asset_metadata asset
+      upload_file_button
     else
       enter_url asset
       enter_asset_metadata asset
@@ -201,7 +222,7 @@ class SquiggyWhiteboardPage < SquiggyWhiteboardsPage
       enter_file_path_for_upload asset
       enter_asset_metadata(asset)
       check_add_to_library_cbx
-      click_add_files_button
+      upload_file_button
     else
       enter_url asset
       enter_asset_metadata asset
@@ -217,6 +238,8 @@ class SquiggyWhiteboardPage < SquiggyWhiteboardsPage
   end
 
   def open_original_asset(asset_library, asset)
+    whiteboard_container_element.when_present Utils.short_wait
+    js_click whiteboard_container_element
     wait_for_update_and_click open_original_asset_link_element
     switch_to_last_window
     wait_until(Utils.short_wait) { asset_library.detail_view_asset_title == asset.title }

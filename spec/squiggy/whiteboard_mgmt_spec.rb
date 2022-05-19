@@ -41,7 +41,7 @@ describe 'Whiteboard' do
 
     it 'requires a title' do
       @whiteboards.click_add_whiteboard
-      @whiteboards.save_whiteboard_button_element.when_present Utils.short_wait
+      @whiteboards.save_button_element.when_present Utils.short_wait
       expect(@whiteboards.save_button_element.enabled?).to be false
     end
 
@@ -85,7 +85,7 @@ describe 'Whiteboard' do
     end
 
     it 'shows the edited whiteboard title' do
-      @whiteboards.wait_until(Utils.short_wait) { @whiteboards.title == @whiteboard.title }
+      @whiteboards.wait_until(Utils.short_wait) { @whiteboards.title.include? @whiteboard.title }
     end
 
     it 'shows the edited whiteboard title in list view' do
@@ -120,8 +120,7 @@ describe 'Whiteboard' do
       @canvas.masquerade_as(@student_2, @test.course)
       @whiteboards.load_page @test
       @whiteboards.open_whiteboard @whiteboard_delete_1
-      @whiteboards.delete_whiteboard
-      expect(@whiteboards.window_count).to eql(1)
+      @whiteboards.delete_whiteboard_with_tab_close
       expect(@whiteboards.visible_whiteboard_titles).not_to include(@whiteboard_delete_1.title)
     end
 
@@ -130,7 +129,7 @@ describe 'Whiteboard' do
       @whiteboards.load_page @test
       @whiteboards.open_whiteboard @whiteboard_delete_2
       @whiteboards.delete_whiteboard
-      expect(@whiteboards.window_count).to eql(1)
+      @whiteboards.close_whiteboard
       expect(@whiteboards.visible_whiteboard_titles).not_to include(@whiteboard_delete_2.title)
     end
 
@@ -141,7 +140,9 @@ describe 'Whiteboard' do
       @whiteboards.close_whiteboard
       @whiteboards.advanced_search(@whiteboard_delete_2.title, @student_1, false)
       @whiteboards.wait_until(Utils.short_wait) { @whiteboards.visible_whiteboard_titles == [@whiteboard_delete_2.title] }
+    end
 
+    it 'makes the whiteboard visible to students again when the delete is reversed' do
       # Student can now see board again
       @canvas.masquerade_as(@student_1, @test.course)
       @whiteboards.load_page @test
@@ -209,13 +210,13 @@ describe 'Whiteboard' do
     end
 
     it 'allows a teacher to perform an advanced search by title that returns no results' do
-      @whiteboards.advanced_search('bar', nil, false, event)
+      @whiteboards.advanced_search('bar', nil, false)
       @whiteboards.wait_until(Utils.short_wait) { @whiteboards.list_view_whiteboard_elements.empty? }
       @whiteboards.wait_until(Utils.short_wait) { @whiteboards.no_results_msg? }
     end
 
     it 'allows a teacher to perform an advanced search by collaborator that returns results' do
-      @whiteboards.advanced_search(nil, @student_1, false, event)
+      @whiteboards.advanced_search(nil, @student_1, false)
       # Search could return whiteboards from other test runs, so just verify that those from this run are present too
       @whiteboards.wait_until(Utils.short_wait) { @whiteboards.list_view_whiteboard_elements.length > 3 }
       @whiteboards.wait_until(Utils.short_wait) { (@whiteboards.visible_whiteboard_titles & [@whiteboard_1.title, @whiteboard_2.title, @whiteboard_3.title]).length == 2 }
@@ -253,7 +254,7 @@ describe 'Whiteboard' do
       @whiteboard = SquiggyWhiteboard.new(
         owner: @student_1,
         title: "Whiteboard Export #{Time.now.to_i}",
-        collaborators: []
+        collaborators: [@student_2]
       )
 
       # Upload assets to be used on whiteboard
@@ -265,12 +266,14 @@ describe 'Whiteboard' do
 
       # Get current score
       @canvas.masquerade_as(@teacher, @test.course)
-      @initial_score = @engagement_index.user_score(@test, @student_1)
+      @initial_score_1 = @engagement_index.user_score(@test, @student_1)
+      @initial_score_2 = @engagement_index.user_score(@test, @student_2)
 
       # Get configured activity points to determine expected score
       @engagement_index.click_points_config
-      @export_board_points = "#{@engagement_index.activity_points SquiggyActivity::EXPORT_WHITEBOARD}"
-      @score_after_export = @initial_score + @export_board_points
+      @export_board_points = @engagement_index.activity_points SquiggyActivity::EXPORT_WHITEBOARD
+      @score_1_after_export = @initial_score_1 + @export_board_points
+      @score_2_after_export = @initial_score_2 + @export_board_points
 
       # Create a whiteboard for tests
       @canvas.masquerade_as(@student_1, @test.course)
@@ -278,24 +281,28 @@ describe 'Whiteboard' do
       @whiteboards.create_and_open_whiteboard @whiteboard
     end
 
-    after(:each) { @whiteboards.close_whiteboard }
-
     it 'is not possible if the whiteboard has no assets' do
       @whiteboards.click_export_button
-      @whiteboards.export_to_library_button_element.when_visible 2
-      expect(@whiteboards.export_to_library_button_element.attribute('disabled')).to eql('true')
-      expect(@whiteboards.download_as_image_button_element.attribute('disabled')).to eql('true')
+      expect(@whiteboards.export_to_library_button?).to be false
+      expect(@whiteboards.download_as_image_button?).to be false
     end
 
     it 'as a new asset is possible if the whiteboard has assets' do
+      @whiteboards.close_whiteboard
       @whiteboards.open_whiteboard @whiteboard
-      @whiteboards.add_existing_assets @assets
+      @whiteboards.add_existing_assets @student_1.assets
       @whiteboards.open_original_asset_link_element.when_visible Utils.long_wait
       @whiteboards.export_to_asset_library @whiteboard
     end
 
+    it 'shows a success message and link to the new asset' do
+      @whiteboards.click_export_link
+      asset = @whiteboard.asset_exports.first
+      @asset_library.wait_for_asset_detail
+      expect(@asset_library.asset_title).to eql(asset.title)
+    end
+
     it 'as a new asset allows a user to remix the whiteboard' do
-      @asset_library.load_asset_detail(@test, @whiteboard.asset_exports.first)
       remix = @asset_library.click_remix
       expect(remix.title).to eql(@whiteboard.title)
       @asset_library.open_remixed_board remix
@@ -303,13 +310,28 @@ describe 'Whiteboard' do
     end
 
     it 'as a new asset earns "Export a whiteboard to the Asset Library" points' do
+      @whiteboards.close_whiteboard
       @canvas.masquerade_as(@teacher, @test.course)
-      expect(@engagement_index.user_score(@test, @student_1)).to eql("#{@score_after_export}")
+      expect(@engagement_index.user_score(@test, @student_1)).to eql(@score_1_after_export)
+      expect(@engagement_index.user_score(@test, @student_2)).to eql(@score_2_after_export)
     end
 
-    it 'as a new asset shows "export_whiteboard" activity on the CSV export' do
-      scores = @engagement_index.download_csv @test
-      expect(scores).to include("#{@student_1.full_name}, #{Activity::EXPORT_WHITEBOARD.type}, #{@export_board_points}, #{@score_after_export}")
+    it 'as a new asset shows "export_whiteboard" activity for all collaborators on the CSV export' do
+      csv = @engagement_index.download_csv @test
+      row_1 = csv.find do |r|
+        r[:user_name] == @student_1.full_name &&
+            r[:action] == SquiggyActivity::EXPORT_WHITEBOARD.type &&
+            r[:score] == SquiggyActivity::EXPORT_WHITEBOARD.points &&
+            r[:running_total] == @score_1_after_export
+      end
+      row_2 = csv.find do |r|
+        r[:user_name] == @student_1.full_name &&
+            r[:action] == SquiggyActivity::EXPORT_WHITEBOARD.type &&
+            r[:score] == SquiggyActivity::EXPORT_WHITEBOARD.points &&
+            r[:running_total] == @score_1_after_export
+      end
+      expect(row_1).to be_truthy
+      expect(row_2).to be_truthy
     end
 
     it 'as a PNG download is possible if the whiteboard has assets' do
@@ -321,8 +343,10 @@ describe 'Whiteboard' do
     end
 
     it 'as a PNG download earns no "Export a whiteboard to the Asset Library" points' do
+      @whiteboards.close_whiteboard
       @canvas.masquerade_as(@teacher, @test.course)
-      expect(@engagement_index.user_score(@test, @student_1)).to eql("#{@score_after_export}")
+      expect(@engagement_index.user_score(@test, @student_1)).to eql(@score_1_after_export)
+      expect(@engagement_index.user_score(@test, @student_2)).to eql(@score_2_after_export)
     end
   end
 
@@ -356,6 +380,7 @@ describe 'Whiteboard' do
         @whiteboards.load_page @test
         @whiteboards.create_and_open_whiteboard board
         @whiteboards.add_existing_assets [@asset]
+        sleep 1
         @whiteboards.close_whiteboard
       end
 
@@ -366,10 +391,8 @@ describe 'Whiteboard' do
         @whiteboards.close_whiteboard
       end
 
-      # Delete the resulting asset for one of the boards
-      @asset_library.load_page @test
-      @asset_library.wait_until(Utils.medium_wait) { @asset_library.list_view_asset_link_elements.any? }
-      @asset_library.wait_for_load_and_click_js @asset_library.list_view_asset_link_elements.first
+      # Delete the export for one of the boards
+      @asset_library.load_asset_detail(@test, @whiteboard_deleted.asset_exports.first)
       @asset_library.delete_asset
 
       # Load the asset's detail
@@ -389,7 +412,7 @@ describe 'Whiteboard' do
     end
 
     it 'links to the whiteboard asset detail' do
-      @asset_library.click_whiteboard_usage_link(@whiteboard_exported, event)
+      @asset_library.click_whiteboard_usage_link(@whiteboard_exported)
     end
   end
 end
