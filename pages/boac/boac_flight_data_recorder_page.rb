@@ -56,7 +56,7 @@ class BOACFlightDataRecorderPage
     tries = 2
     begin
       tries -= 1
-      wait_until(Utils.short_wait) { advisor_link_elements.any? }
+      wait_until(Utils.medium_wait) { advisor_link_elements.any? }
       links = advisor_link_elements.map { |el| el.attribute('id').split('-').last }
       non_links = advisor_non_link_elements.map { |el| el.text.split.last.delete(")") }
       links + non_links

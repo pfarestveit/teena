@@ -342,7 +342,9 @@ class NessieFilterUtils < NessieUtils
   def self.join(filter_joins, sort=nil, opts=nil)
     if sort
       active_clause = 'AND student.student_profile_index.academic_career_status = \'active\''
-      join = "LEFT JOIN #{sort[:table]} ON student.student_profile_index.sid = #{sort[:table]}.sid #{+ active_clause if opts && opts[:active]}"
+      join = "LEFT JOIN #{sort[:table]} ON student.student_profile_index.sid = #{sort[:table]}.sid"
+      join = (filter_joins.include? join) ? '' : join
+      join = "#{join} #{+ active_clause if opts && opts[:active]}"
       unless sort[:table] == 'student.student_profile_index' || filter_joins.include?(join)
         filter_joins << " #{join}"
       end
