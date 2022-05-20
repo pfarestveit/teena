@@ -16,7 +16,6 @@ class BOACStudentPage
   def load_page(user)
     logger.info "Loading student page for UID #{user.uid}"
     navigate_to "#{BOACUtils.base_url}#{path_to_student_view(user.uid)}"
-    wait_for_title "#{user.full_name}"
     wait_for_spinner
   end
 
@@ -57,6 +56,7 @@ class BOACStudentPage
 
   # Expand personal details tab on student page profile
   def expand_personal_details
+    toggle_personal_details_element.when_present Utils.medium_wait
     if personal_details_expanded?
       logger.debug "Personal details tab is already expanded"
     else

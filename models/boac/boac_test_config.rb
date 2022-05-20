@@ -340,7 +340,7 @@ class BOACTestConfig < TestConfig
         :major => ['Electrical Eng & Comp Sci BS', 'Letters & Sci Undeclared UG'],
         :minor => ['French UG'],
         :transfer_student => true,
-        :entering_terms => [CONFIG['assignments_term']],
+        :entering_terms => [BOACUtils.term],
         :expected_grad_terms => [CONFIG['term_code']],
         :gender => ['Male', 'Decline to State'],
         :last_name => [JSON.parse("{\"min\": \"A\", \"max\": \"Z\"}")],

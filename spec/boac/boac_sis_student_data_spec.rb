@@ -311,7 +311,6 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
         test_case = "UID #{student_data[:student].uid} on the student page"
         @boac_cohort_page.load_page test.default_cohort
         @boac_cohort_page.click_student_link student_data[:student]
-        @boac_student_page.wait_for_title student_data[:student].full_name
         @boac_student_page.expand_personal_details
 
         api_sis_profile_data = student_data[:api].sis_profile_data
