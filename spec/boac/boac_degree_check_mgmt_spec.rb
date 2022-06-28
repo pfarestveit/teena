@@ -318,13 +318,13 @@ unless ENV['DEPS']
         it('allows the user to cancel a note') { @degree_check_page.click_cancel_note }
         it('allows the user to save a note') { @degree_check_page.create_or_edit_note @note_str }
         it('shows the note content') { expect(@degree_check_page.visible_note_body).to eql(@note_str.strip) }
-        it('shows the note creating advisor') { expect(@degree_check_page.visible_note_update_advisor).to eql(test.advisor.full_name) }
+        it('shows the note creating advisor') { expect(@degree_check_page.visible_note_update_advisor).to include(test.advisor.full_name) }
         it('shows the note creation date') { expect(@degree_check_page.note_update_date).to include('today') }
         it('offers an edit button for a note') { @degree_check_page.click_create_or_edit_note }
         it('allows the user to cancel a note edit') { @degree_check_page.click_cancel_note }
         it('allows the user to save a note edit') { @degree_check_page.create_or_edit_note("EDITED - #{@note_str}") }
         it('shows the edited note content') { expect(@degree_check_page.visible_note_body).to eql("EDITED - #{@note_str}".strip) }
-        it('shows the note edit advisor') { expect(@degree_check_page.note_update_advisor).to eql(test.advisor.full_name) }
+        it('shows the note edit advisor') { expect(@degree_check_page.note_update_advisor).to include(test.advisor.full_name) }
         it('shows the note edit date') { expect(@degree_check_page.note_update_date).to include('today') }
       end
 
@@ -389,7 +389,7 @@ unless ENV['DEPS']
         it 'shows the updated by advisor' do
           expected = test.advisor.full_name
           @degree_check_history_page.wait_until(1, "Expected '#{expected}' got '#{@degree_check_history_page.visible_degree_updated_by(@degree_check)}'") do
-            @degree_check_history_page.visible_degree_updated_by(@degree_check) == expected
+            @degree_check_history_page.visible_degree_updated_by(@degree_check).include? expected
           end
         end
 
@@ -478,7 +478,7 @@ unless ENV['DEPS']
           it 'can view a student degree check updated-by advisor' do
             expected = test.advisor.full_name
             @degree_check_history_page.wait_until(2, "Expected #{expected}, got #{@degree_check_history_page.visible_degree_updated_by(@degree_check)}") do
-              @degree_check_history_page.visible_degree_updated_by(@degree_check) == expected
+              @degree_check_history_page.visible_degree_updated_by(@degree_check).include? expected
             end
           end
 

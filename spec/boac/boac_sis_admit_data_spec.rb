@@ -89,10 +89,14 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
           it("shows the mobile phone of CS ID #{admit[:cs_empl_id]}") { expect(visible_mobile).to eql(admit[:mobile]) }
 
           visible_address_1 = @admit_page.address_street_1
-          it("shows the address street 1 of CS ID #{admit[:cs_empl_id]}") { expect(visible_address_1).to eql(admit[:permanent_street_1]) }
+          it "shows the address street 1 of CS ID #{admit[:cs_empl_id]}"  do
+            expect(visible_address_1).to eql(admit[:permanent_street_1].gsub('  ', ' '))
+          end
 
           visible_address_2 = @admit_page.address_street_2
-          it("shows the address street 2 of CS ID #{admit[:cs_empl_id]}") { expect(visible_address_2).to eql(admit[:permanent_street_2]) }
+          it "shows the address street 2 of CS ID #{admit[:cs_empl_id]}" do
+            expect(visible_address_2).to eql(admit[:permanent_street_2].gsub('  ', ' '))
+          end
 
           visible_city_etc = @admit_page.address_city_region_postal
           it("shows the address city / region / post code of CS ID #{admit[:cs_empl_id]}") do

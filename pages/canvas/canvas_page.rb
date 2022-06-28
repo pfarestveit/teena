@@ -433,7 +433,7 @@ module Page
     link(:apps_link, text: 'Apps')
     link(:navigation_link, text: 'Navigation')
     link(:view_apps_link, text: 'View App Configurations')
-    link(:add_app_link, xpath: '//a[contains(@class, "add_tool_link")]')
+    link(:add_app_link, xpath: '//button[contains(., "Add App")]')
     select_list(:config_type, id: 'configuration_type_selector')
     text_area(:app_name_input, xpath: '//div[@class="ConfigurationFormUrl"]/div//input')
     text_area(:key_input, xpath: '(//div[@class="ConfigurationFormUrl"]/div[2]//input)[1]')
@@ -451,6 +451,10 @@ module Page
     # @param course [Course]
     def load_tools_config_page(course)
       navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/settings/configurations"
+    end
+
+    def load_tools_adding_page(course)
+      navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/settings/configurations#tab-tools"
     end
 
     # Loads the site navigation page
@@ -512,6 +516,7 @@ module Page
             logger.debug "#{tool.name} is not installed, installing and enabling"
 
             # Configure tool
+            load_tools_adding_page test.course
             wait_for_update_and_click apps_link_element
             wait_for_update_and_click add_app_link_element
             wait_for_element_and_select_js(config_type_element, 'By URL')

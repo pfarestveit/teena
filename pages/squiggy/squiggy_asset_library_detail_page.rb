@@ -346,8 +346,8 @@ class SquiggyAssetLibraryDetailPage < SquiggyAssetLibraryListViewPage
     used_in_link_elements.map { |el| el.text.strip }
   end
 
-  def click_whiteboard_usage_link(whiteboard)
-    wait_for_update_and_click link_element(id: "asset-used-in-#{whiteboard.id}")
+  def click_whiteboard_usage_link(whiteboard, asset)
+    wait_for_update_and_click link_element(id: "asset-used-in-#{asset.id}")
     wait_for_asset_detail
     wait_until(Utils.short_wait) { asset_title == whiteboard.title }
   end
