@@ -295,9 +295,10 @@ describe 'Whiteboard' do
       @whiteboards.export_to_asset_library @whiteboard
     end
 
-    it 'shows a success message and link to the new asset' do
+    it 'shows a success message and link to the new asset and links to the collaborators' do
       @whiteboards.click_export_link
       asset = @whiteboard.asset_exports.first
+      # TODO - verify links to collaborators
       @asset_library.wait_for_asset_detail
       expect(@asset_library.asset_title).to eql(asset.title)
     end
@@ -412,7 +413,7 @@ describe 'Whiteboard' do
     end
 
     it 'links to the whiteboard asset detail' do
-      @asset_library.click_whiteboard_usage_link(@whiteboard_exported)
+      @asset_library.click_whiteboard_usage_link(@whiteboard_exported, @whiteboard_exported.asset_exports.first)
     end
   end
 end

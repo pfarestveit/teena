@@ -242,7 +242,9 @@ class SquiggyWhiteboardPage < SquiggyWhiteboardsPage
     js_click whiteboard_container_element
     wait_for_update_and_click open_original_asset_link_element
     switch_to_last_window
-    wait_until(Utils.short_wait) { asset_library.detail_view_asset_title == asset.title }
+    switch_to_canvas_iframe
+    asset_library.asset_title_element.when_visible Utils.short_wait
+    wait_until(Utils.short_wait) { asset_library.asset_title == asset.title }
   end
 
   def close_original_asset
@@ -255,7 +257,7 @@ class SquiggyWhiteboardPage < SquiggyWhiteboardsPage
   # COLLABORATORS
 
   button(:collaborator_head, id: 'show-whiteboard-collaborators-btn')
-  div(:collaborators_msg, xpath: '//div[@role="menu"]//div[contains(@id, "list-item-")][1]')
+  div(:collaborators_msg, xpath: '//h2[text()="Collaborators"]/../following-sibling::div[contains(@id, "list-item-")][1]')
 
   def show_collaborators
     mouseover collaborator_head_element
@@ -266,7 +268,7 @@ class SquiggyWhiteboardPage < SquiggyWhiteboardsPage
   end
 
   def collaborator(user)
-    div_element(xpath: "//div[@role=\"menu\"]//span[contains(text(), \"#{user.full_name}\")]")
+    div_element(xpath: "//h2[text()=\"Collaborators\"]/../following-sibling::div[contains(., \"#{user.full_name}\")]")
   end
 
   def collaborator_online?(user)

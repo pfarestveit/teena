@@ -135,9 +135,9 @@ describe 'Whiteboard' do
       @whiteboards_driver_1.open_whiteboard @whiteboard_1
       @whiteboards_driver_1.show_collaborators
       @whiteboards_driver_1.wait_until(timeout) do
-        @whiteboards_driver_1.collaborator student_1
-        @whiteboards_driver_1.collaborator student_2
-        @whiteboards_driver_1.collaborator student_3
+        @whiteboards_driver_1.collaborator(student_1).visible?
+        @whiteboards_driver_1.collaborator(student_2).visible?
+        @whiteboards_driver_1.collaborator(student_3).visible?
       end
     end
 
@@ -160,7 +160,7 @@ describe 'Whiteboard' do
     it "allows #{student_1.full_name} to see which members have just gone offline" do
       @whiteboards_driver_2.close_whiteboard
       actual_offline_time = Time.now
-      @whiteboards_driver_1.wait_until(Utils.short_wait) { !@whiteboards_driver_1.collaborator_online? student_3 }
+      @whiteboards_driver_1.wait_until(130) { !@whiteboards_driver_1.collaborator_online? student_3 }
       logger.warn "It took #{Time.now - actual_offline_time} seconds for the user to go offline"
     end
 

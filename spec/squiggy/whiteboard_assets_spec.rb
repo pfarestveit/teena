@@ -312,10 +312,7 @@ describe 'Whiteboard Add Asset' do
 
     it 'shows "add_asset" activity on the CSV export' do
       csv = @engagement_index.download_csv @test
-      2.times do
-        expect(@engagement_index.csv_activity_row(csv, SquiggyActivity::ADD_ASSET_TO_LIBRARY, @student_2, @initial_score)).to be_truthy
-      end
-      expect(@engagement_index.csv_activity_row(csv, SquiggyActivity::ADD_ASSET_TO_LIBRARY, @student_2, @initial_score)).to be_falsey
+      expect(@engagement_index.csv_activity_row(csv, SquiggyActivity::ADD_ASSET_TO_LIBRARY, @student_2, @initial_score)).to be_truthy
     end
   end
 
@@ -336,12 +333,12 @@ describe 'Whiteboard Add Asset' do
       @whiteboards.load_page @test
       @whiteboards.open_whiteboard @whiteboard
       @whiteboards.add_asset_exclude_from_library @student_3_asset_hidden
-      @whiteboards.open_original_asset(@test, @student_3_asset_hidden)
+      @whiteboards.open_original_asset(@asset_detail, @student_3_asset_hidden)
     end
 
     it 'allows the user to comment on it via the whiteboard' do
-      comment = Comment.new(@student_3, 'Comment on a hidden asset')
-      visible_comment = @asset_library.add_comment(@student_3_asset_hidden, comment)
+      comment = SquiggyComment.new user: @student_3, body: "Comment #{@test.id} on a hidden asset"
+      visible_comment = @asset_detail.add_comment comment
       expect(visible_comment[:commenter]).to include(@student_3.full_name)
       expect(visible_comment[:body]).to eql(comment.body)
     end
@@ -351,8 +348,6 @@ describe 'Whiteboard Add Asset' do
       @asset_detail.edit_asset_details @student_3_asset_hidden
     end
 
-    it 'does not allow a student user to delete it via the whiteboard' do
-      expect(@asset_detail.delete_asset_button?).to be false
-    end
+    it('does not allow a student user to delete it via the whiteboard') { expect(@asset_detail.delete_button?).to be false }
   end
 end
