@@ -45,7 +45,7 @@ describe 'bCourses Find a Person to Add', order: :defined do
       end
 
       it 'include a "Privacy Policy" link' do
-        expect(@canvas.external_link_valid?(@canvas.privacy_policy_link_element, 'Instructure Product Privacy Policy | Instructure')).to be true
+        expect(@canvas.external_link_valid?(@canvas.privacy_policy_link_element, 'Product Privacy | Policy | Instructure')).to be true
       end
 
       it 'include a "Terms of Service" link' do
