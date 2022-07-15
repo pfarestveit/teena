@@ -217,140 +217,182 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
 
       ### HOMEPAGE COHORTS ###
 
-      it "shows the first 50 filtered cohort members who have alerts on the homepage" do
-        @homepage.load_page
-        @homepage.expand_member_rows @cohort
-        @homepage.verify_member_alerts(@cohort, test.advisor)
-      end
+      context 'on the homepage' do
 
-      it "by default sorts by alert count descending the first 50 cohort members who have alerts on the homepage" do
-        expected_sequence = @homepage.expected_sids_by_alerts_desc @cohort.members
-        @homepage.wait_until(1, "Expected #{expected_sequence}, but got #{@homepage.all_row_sids @cohort}") do
-          @homepage.all_row_sids(@cohort) == expected_sequence
+        before(:all) do
+          @cohort_alerts = BOACUtils.get_un_dismissed_users_alerts(@cohort.members, test.advisor)
+          @cohort_alerts.each { |a| logger.debug "Alert: #{a}" }
         end
-      end
 
-      it "allows the advisor to sort by alert count ascending the first 50 cohort members who have alerts on the homepage" do
-        expected_sequence = @homepage.expected_sids_by_alerts @cohort.members
-        @homepage.sort_by_alert_count @cohort
-        @homepage.wait_until(1, "Expected #{expected_sequence}, but got #{@homepage.all_row_sids @cohort}") { @homepage.all_row_sids(@cohort) == expected_sequence }
-      end
-
-      it "allows the advisor to sort by name ascending cohort the first 50 members who have alerts on the homepage" do
-        expected_sequence = NessieFilterUtils.list_by_last_name_asc @cohort.members.map &:sis_id
-        @homepage.sort_by_name @cohort
-        @homepage.wait_until(1, "Expected #{expected_sequence}, but got #{@homepage.all_row_sids @cohort}") do
-          @homepage.all_row_sids(@cohort) == expected_sequence
+        it "offers a link to the filtered cohort" do
+          @homepage.load_page
+          @homepage.expand_member_rows @cohort
+          @homepage.click_filtered_cohort @cohort
+          @cohort_page.cohort_heading(@cohort).when_visible Utils.medium_wait
         end
-      end
 
-      it "allows the advisor to sort by name descending the first 50 cohort members who have alerts on the homepage" do
-        expected_sequence = NessieFilterUtils.list_by_last_name_desc @cohort.members.map &:sis_id
-        @homepage.sort_by_name @cohort
-        @homepage.wait_until(1, "Expected #{expected_sequence}, but got #{@homepage.all_row_sids @cohort}") do
-          @homepage.all_row_sids(@cohort) == expected_sequence
+        it "shows the first 50 filtered cohort members who have alerts on the homepage" do
+          @homepage.load_page
+          @homepage.expand_member_rows @cohort
+          @homepage.verify_member_alerts(@cohort, test.advisor)
         end
-      end
 
-      it "allows the advisor to sort by SID ascending the first 50 cohort members who have alerts on the homepage" do
-        expected_sequence = @cohort.members.map(&:sis_id).sort
-        @homepage.sort_by_sid @cohort
-        @homepage.wait_until(1, "Expected #{expected_sequence}, but got #{@homepage.all_row_sids @cohort}") do
-          @homepage.all_row_sids(@cohort) == expected_sequence
+        it "by default sorts by alert count descending the first 50 cohort members who have alerts on the homepage" do
+          if @cohort_alerts.any?
+            expected_sequence = @homepage.expected_sids_by_alerts_desc @cohort.members
+            @homepage.wait_until(1, "Expected #{expected_sequence}, but got #{@homepage.all_row_sids @cohort}") do
+              @homepage.all_row_sids(@cohort) == expected_sequence
+            end
+          end
         end
-      end
 
-      it "allows the advisor to sort by SID descending the first 50 cohort members who have alerts on the homepage" do
-        expected_sequence = @cohort.members.map(&:sis_id).sort.reverse
-        @homepage.sort_by_sid @cohort
-        @homepage.wait_until(1, "Expected #{expected_sequence}, but got #{@homepage.all_row_sids @cohort}") do
-          @homepage.all_row_sids(@cohort) == expected_sequence
+        it "allows the advisor to sort by alert count ascending the first 50 cohort members who have alerts on the homepage" do
+          if @cohort_alerts.any?
+            expected_sequence = @homepage.expected_sids_by_alerts @cohort.members
+            @homepage.sort_by_alert_count @cohort
+            @homepage.wait_until(1, "Expected #{expected_sequence}, but got #{@homepage.all_row_sids @cohort}") { @homepage.all_row_sids(@cohort) == expected_sequence }
+          end
         end
-      end
 
-      it "allows the advisor to sort by major ascending the first 50 cohort members who have alerts on the homepage" do
-        expected_sequence = NessieFilterUtils.list_by_major_asc @cohort.members.map &:sis_id
-        @homepage.sort_by_major @cohort
-        @homepage.wait_until(1, "Expected #{expected_sequence}, but got #{@homepage.all_row_sids @cohort}") do
-          @homepage.all_row_sids(@cohort) == expected_sequence
+        it "allows the advisor to sort by name ascending cohort the first 50 members who have alerts on the homepage" do
+          if @cohort_alerts.any?
+            expected_sequence = NessieFilterUtils.list_by_last_name_asc @cohort.members.map &:sis_id
+            @homepage.sort_by_name @cohort
+            @homepage.wait_until(1, "Expected #{expected_sequence}, but got #{@homepage.all_row_sids @cohort}") do
+              @homepage.all_row_sids(@cohort) == expected_sequence
+            end
+          end
         end
-      end
 
-      it "allows the advisor to sort by major descending the first 50 cohort members who have alerts on the homepage" do
-        expected_sequence = NessieFilterUtils.list_by_major_desc @cohort.members.map &:sis_id
-        @homepage.sort_by_major @cohort
-        @homepage.wait_until(1, "Expected #{expected_sequence}, but got #{@homepage.all_row_sids @cohort}") do
-          @homepage.all_row_sids(@cohort) == expected_sequence
+        it "allows the advisor to sort by name descending the first 50 cohort members who have alerts on the homepage" do
+          if @cohort_alerts.any?
+            expected_sequence = NessieFilterUtils.list_by_last_name_desc @cohort.members.map &:sis_id
+            @homepage.sort_by_name @cohort
+            @homepage.wait_until(1, "Expected #{expected_sequence}, but got #{@homepage.all_row_sids @cohort}") do
+              @homepage.all_row_sids(@cohort) == expected_sequence
+            end
+          end
         end
-      end
 
-      it "allows the advisor to sort by expected grad date ascending the first 50 cohort members who have alerts on the homepage" do
-        expected_sequence = NessieFilterUtils.list_by_grad_term_asc @cohort.members.map &:sis_id
-        @homepage.sort_by_expected_grad @cohort
-        @homepage.wait_until(1, "Expected #{expected_sequence}, but got #{@homepage.all_row_sids @cohort}") do
-          @homepage.all_row_sids(@cohort) == expected_sequence
+        it "allows the advisor to sort by SID ascending the first 50 cohort members who have alerts on the homepage" do
+          if @cohort_alerts.any?
+            expected_sequence = @cohort.members.map(&:sis_id).sort
+            @homepage.sort_by_sid @cohort
+            @homepage.wait_until(1, "Expected #{expected_sequence}, but got #{@homepage.all_row_sids @cohort}") do
+              @homepage.all_row_sids(@cohort) == expected_sequence
+            end
+          end
         end
-      end
 
-      it "allows the advisor to sort by expected grad date descending the first 50 cohort members who have alerts on the homepage" do
-        expected_sequence = NessieFilterUtils.list_by_grad_term_desc @cohort.members.map &:sis_id
-        @homepage.sort_by_expected_grad @cohort
-        @homepage.wait_until(1, "Expected #{expected_sequence}, but got #{@homepage.all_row_sids @cohort}") do
-          @homepage.all_row_sids(@cohort) == expected_sequence
+        it "allows the advisor to sort by SID descending the first 50 cohort members who have alerts on the homepage" do
+          if @cohort_alerts.any?
+            expected_sequence = @cohort.members.map(&:sis_id).sort.reverse
+            @homepage.sort_by_sid @cohort
+            @homepage.wait_until(1, "Expected #{expected_sequence}, but got #{@homepage.all_row_sids @cohort}") do
+              @homepage.all_row_sids(@cohort) == expected_sequence
+            end
+          end
         end
-      end
 
-      it "allows the advisor to sort by term units ascending the first 50 cohort members who have alerts on the homepage" do
-        expected_sequence = NessieFilterUtils.list_by_units_in_prog_asc @cohort.members.map &:sis_id
-        @homepage.sort_by_term_units @cohort
-        @homepage.wait_until(1, "Expected #{expected_sequence}, but got #{@homepage.all_row_sids @cohort}") do
-          @homepage.all_row_sids(@cohort) == expected_sequence
+        it "allows the advisor to sort by major ascending the first 50 cohort members who have alerts on the homepage" do
+          if @cohort_alerts.any?
+            expected_sequence = NessieFilterUtils.list_by_major_asc @cohort.members.map &:sis_id
+            @homepage.sort_by_major @cohort
+            @homepage.wait_until(1, "Expected #{expected_sequence}, but got #{@homepage.all_row_sids @cohort}") do
+              @homepage.all_row_sids(@cohort) == expected_sequence
+            end
+          end
         end
-      end
 
-      it "allows the advisor to sort by term units descending the first 50 cohort members who have alerts on the homepage" do
-        expected_sequence = NessieFilterUtils.list_by_units_in_prog_desc @cohort.members.map &:sis_id
-        @homepage.sort_by_term_units @cohort
-        @homepage.wait_until(1, "Expected #{expected_sequence}, but got #{@homepage.all_row_sids @cohort}") do
-          @homepage.all_row_sids(@cohort) == expected_sequence
+        it "allows the advisor to sort by major descending the first 50 cohort members who have alerts on the homepage" do
+          if @cohort_alerts.any?
+            expected_sequence = NessieFilterUtils.list_by_major_desc @cohort.members.map &:sis_id
+            @homepage.sort_by_major @cohort
+            @homepage.wait_until(1, "Expected #{expected_sequence}, but got #{@homepage.all_row_sids @cohort}") do
+              @homepage.all_row_sids(@cohort) == expected_sequence
+            end
+          end
         end
-      end
 
-      it "allows the advisor to sort by cumulative units ascending the first 50 cohort members who have alerts on the homepage" do
-        expected_sequence = NessieFilterUtils.list_by_units_complete_asc @cohort.members.map &:sis_id
-        @homepage.sort_by_cumul_units @cohort
-        @homepage.wait_until(1, "Expected #{expected_sequence}, but got #{@homepage.all_row_sids @cohort}") do
-          @homepage.all_row_sids(@cohort) == expected_sequence
+        it "allows the advisor to sort by expected grad date ascending the first 50 cohort members who have alerts on the homepage" do
+          if @cohort_alerts.any?
+            expected_sequence = NessieFilterUtils.list_by_grad_term_asc @cohort.members.map &:sis_id
+            @homepage.sort_by_expected_grad @cohort
+            @homepage.wait_until(1, "Expected #{expected_sequence}, but got #{@homepage.all_row_sids @cohort}") do
+              @homepage.all_row_sids(@cohort) == expected_sequence
+            end
+          end
         end
-      end
 
-      it "allows the advisor to sort by cumulative descending the first 50 cohort members who have alerts on the homepage" do
-        expected_sequence = NessieFilterUtils.list_by_units_complete_desc @cohort.members.map &:sis_id
-        @homepage.sort_by_cumul_units @cohort
-        @homepage.wait_until(1, "Expected #{expected_sequence}, but got #{@homepage.all_row_sids @cohort}") do
-          @homepage.all_row_sids(@cohort) == expected_sequence
+        it "allows the advisor to sort by expected grad date descending the first 50 cohort members who have alerts on the homepage" do
+          if @cohort_alerts.any?
+            expected_sequence = NessieFilterUtils.list_by_grad_term_desc @cohort.members.map &:sis_id
+            @homepage.sort_by_expected_grad @cohort
+            @homepage.wait_until(1, "Expected #{expected_sequence}, but got #{@homepage.all_row_sids @cohort}") do
+              @homepage.all_row_sids(@cohort) == expected_sequence
+            end
+          end
         end
-      end
 
-      it "allows the advisor to sort by GPA ascending the first 50 cohort members who have alerts on the homepage" do
-        expected_sequence = NessieFilterUtils.list_by_gpa_asc @cohort.members.map &:sis_id
-        @homepage.sort_by_gpa @cohort
-        @homepage.wait_until(1, "Expected #{expected_sequence}, but got #{@homepage.all_row_sids @cohort}") do
-          @homepage.all_row_sids(@cohort) == expected_sequence
+        it "allows the advisor to sort by term units ascending the first 50 cohort members who have alerts on the homepage" do
+          if @cohort_alerts.any?
+            expected_sequence = NessieFilterUtils.list_by_units_in_prog_asc @cohort.members.map &:sis_id
+            @homepage.sort_by_term_units @cohort
+            @homepage.wait_until(1, "Expected #{expected_sequence}, but got #{@homepage.all_row_sids @cohort}") do
+              @homepage.all_row_sids(@cohort) == expected_sequence
+            end
+          end
         end
-      end
 
-      it "allows the advisor to sort by GPA descending the first 50 cohort members who have alerts on the homepage" do
-        expected_sequence = NessieFilterUtils.list_by_gpa_desc @cohort.members.map &:sis_id
-        @homepage.sort_by_gpa @cohort
-        @homepage.wait_until(1, "Expected #{expected_sequence}, but got #{@homepage.all_row_sids @cohort}") do
-          @homepage.all_row_sids(@cohort) == expected_sequence
+        it "allows the advisor to sort by term units descending the first 50 cohort members who have alerts on the homepage" do
+          if @cohort_alerts.any?
+            expected_sequence = NessieFilterUtils.list_by_units_in_prog_desc @cohort.members.map &:sis_id
+            @homepage.sort_by_term_units @cohort
+            @homepage.wait_until(1, "Expected #{expected_sequence}, but got #{@homepage.all_row_sids @cohort}") do
+              @homepage.all_row_sids(@cohort) == expected_sequence
+            end
+          end
         end
-      end
 
-      it "offers a link to the filtered cohort" do
-        @homepage.click_filtered_cohort @cohort
-        @cohort_page.cohort_heading(@cohort).when_visible Utils.medium_wait
+        it "allows the advisor to sort by cumulative units ascending the first 50 cohort members who have alerts on the homepage" do
+          if @cohort_alerts.any?
+            expected_sequence = NessieFilterUtils.list_by_units_complete_asc @cohort.members.map &:sis_id
+            @homepage.sort_by_cumul_units @cohort
+            @homepage.wait_until(1, "Expected #{expected_sequence}, but got #{@homepage.all_row_sids @cohort}") do
+              @homepage.all_row_sids(@cohort) == expected_sequence
+            end
+          end
+        end
+
+        it "allows the advisor to sort by cumulative descending the first 50 cohort members who have alerts on the homepage" do
+          if @cohort_alerts.any?
+            expected_sequence = NessieFilterUtils.list_by_units_complete_desc @cohort.members.map &:sis_id
+            @homepage.sort_by_cumul_units @cohort
+            @homepage.wait_until(1, "Expected #{expected_sequence}, but got #{@homepage.all_row_sids @cohort}") do
+              @homepage.all_row_sids(@cohort) == expected_sequence
+            end
+          end
+        end
+
+        it "allows the advisor to sort by GPA ascending the first 50 cohort members who have alerts on the homepage" do
+          if @cohort_alerts.any?
+            expected_sequence = NessieFilterUtils.list_by_gpa_asc @cohort.members.map &:sis_id
+            @homepage.sort_by_gpa @cohort
+            @homepage.wait_until(1, "Expected #{expected_sequence}, but got #{@homepage.all_row_sids @cohort}") do
+              @homepage.all_row_sids(@cohort) == expected_sequence
+            end
+          end
+        end
+
+        it "allows the advisor to sort by GPA descending the first 50 cohort members who have alerts on the homepage" do
+          if @cohort_alerts.any?
+            expected_sequence = NessieFilterUtils.list_by_gpa_desc @cohort.members.map &:sis_id
+            @homepage.sort_by_gpa @cohort
+            @homepage.wait_until(1, "Expected #{expected_sequence}, but got #{@homepage.all_row_sids @cohort}") do
+              @homepage.all_row_sids(@cohort) == expected_sequence
+            end
+          end
+        end
       end
     end
 

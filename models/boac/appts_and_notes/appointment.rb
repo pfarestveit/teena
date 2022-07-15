@@ -6,8 +6,7 @@ class Appointment < TimelineNoteAppt
                 :status,
                 :status_date,
                 :start_time,
-                :end_time,
-                :type
+                :end_time
 
   def initialize(data)
     data.each { |k, v| public_send("#{k}=", v) }

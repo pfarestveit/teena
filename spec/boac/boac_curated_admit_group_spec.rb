@@ -203,9 +203,9 @@ describe 'BOAC' do
       @group_page.click_remove_invalid_sids
     end
 
-    it 'allows the user to remove rejected SIDs automatically if there are more than 15' do
+    it 'allows the user to remove rejected SIDs automatically' do
       a = [test.admits.last.sis_id]
-      16.times { |i| a << "99999999#{10 + i}" }
+      2.times { |i| a << "99999999#{10 + i}" }
       @group_page.click_add_sids_button
       @group_page.enter_sid_list a.join(', ')
       @group_page.click_add_sids_to_group_button

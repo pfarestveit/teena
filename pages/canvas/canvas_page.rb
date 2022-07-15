@@ -66,15 +66,13 @@ module Page
 
     # Shifts to default content, logs out, and waits for CalNet logout confirmation
     # @param cal_net [Page::CalNetPage]
-    # @param event [Event]
-    def log_out(cal_net, event = nil)
+    def log_out(cal_net)
       @driver.switch_to.default_content
       wait_for_update_and_click_js profile_link_element
       sleep 1
       wait_for_update_and_click_js profile_form_element
       wait_for_update_and_click_js logout_link_element if logout_link_element.exists?
       cal_net.username_element.when_visible Utils.short_wait
-      add_event(event, EventType::LOGGED_OUT)
     end
 
     # Masquerades as a user and then loads a course site
@@ -107,7 +105,7 @@ module Page
 
     def expand_mobile_menu
       logger.info 'Clicking the hamburger to reveal the menu'
-      wait_for_update_and_click hamburger_button_element
+      wait_for_update_and_click_js hamburger_button_element
     end
 
     def click_user_prov
@@ -375,7 +373,7 @@ module Page
       navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/settings"
       wait_for_element_and_type(text_area_element(id: 'course_name'), course.title)
       wait_for_update_and_click button_element(xpath: '//button[contains(.,"Update Course Details")]')
-      list_item_element(xpath: '//li[contains(.,"Course was successfully updated")]').when_present Utils.short_wait
+      list_item_element(xpath: '//*[contains(.,"Course was successfully updated")]').when_present Utils.short_wait
     end
 
     # Deletes a course site
@@ -399,8 +397,7 @@ module Page
     # Uploads CSVs on the SIS Import page
     # @param files [Array<String>]
     # @param users [Array<User>]
-    # @param event [Event]
-    def upload_sis_imports(files, users, event = nil)
+    def upload_sis_imports(files, users)
       files.each do |csv|
         logger.info "Uploading a SIS import CSV at #{csv}"
         navigate_to "#{Utils.canvas_base_url}/accounts/#{Utils.canvas_uc_berkeley_sub_account}/sis_import"
@@ -408,11 +405,6 @@ module Page
         file_input_element.send_keys csv
         wait_for_update_and_click upload_button_element
         import_success_msg_element.when_present Utils.long_wait
-      end
-      users.each do |u|
-        (u.status == 'active') ?
-            add_event(event, EventType::CREATE, u.full_name) :
-            add_event(event, EventType::MODIFY, u.full_name)
       end
     end
 
@@ -548,16 +540,13 @@ module Page
     end
 
     # Clicks the navigation link for a tool and returns the tool's URL. Optionally records an analytics event.
-    # @param event [Event]
     # @return [String]
-    def click_tool_link(tool, event = nil)
+    def click_tool_link(tool)
       switch_to_main_content
       hide_canvas_footer_and_popup
       wait_for_update_and_click_js tool_nav_link(tool)
       wait_until(Utils.medium_wait) { title == "#{tool.name}" }
       logger.info "#{tool.name} URL is #{url = current_url}"
-      add_event(event, EventType::NAVIGATE)
-      add_event(event, EventType::VIEW)
       url.delete '#'
     end
 

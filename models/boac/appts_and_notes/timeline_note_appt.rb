@@ -2,6 +2,7 @@ class TimelineNoteAppt < TimelineRecord
 
   attr_accessor :advisor,
                 :attachments,
-                :topics
+                :topics,
+                :type
 
 end
