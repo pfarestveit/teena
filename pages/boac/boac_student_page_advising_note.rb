@@ -56,7 +56,7 @@ module BOACStudentPageAdvisingNote
   # @param notes [Array<Note>]
   # @return [Array<String>]
   def expected_note_id_sort_order(notes)
-    (notes.sort_by { |n| [n.created_date, n.id] }).reverse.map &:id
+    (notes.sort_by {  |n| [(n.set_date || n.created_date), n.id] }).reverse.map &:id
   end
 
   # Returns the visible sequence of note ids
@@ -157,7 +157,9 @@ module BOACStudentPageAdvisingNote
     topic_remove_btn_els = topic_remove_btn_elements.select { |el| el.attribute('id').include? "remove-note-#{note.id}-topic" }
     created_el = div_element(id: "expanded-note-#{note.id}-created-at")
     updated_el = div_element(id: "expanded-note-#{note.id}-updated-at")
+    set_date_el = div_element(id: "expanded-note-#{note.id}-set-date")
     permalink_el = link_element(id: "advising-note-permalink-#{note.id}")
+    contact_type_el = div_element(id: "note-#{note.id}-contact-type")
     # The body text area contains formatting elements even without text, so account for that when getting the element's text
     body_text = if body_el.exists?
                   text = body_el.text
@@ -176,7 +178,9 @@ module BOACStudentPageAdvisingNote
       :attachments => (item_attachment_els(note).map { |el| el.text.strip }).sort,
       :created_date => (created_el.text.gsub('Created on', '').gsub(/\s+/, ' ').strip if created_el.exists?),
       :updated_date => (updated_el.text.gsub('Last updated on', '').gsub(/\s+/, ' ').strip if updated_el.exists?),
-      :permalink_url => (permalink_el.attribute('href') if permalink_el.exists?)
+      :set_date => (set_date_el.text.gsub(/\s+/, ' ').strip if set_date_el.exists?),
+      :permalink_url => (permalink_el.attribute('href') if permalink_el.exists?),
+      :contact_type => (contact_type_el.text if contact_type_el.exists?)
     }
   end
 
@@ -216,9 +220,11 @@ module BOACStudentPageAdvisingNote
     # Verify data visible when note is collapsed
 
     collapsed_item_el(note).when_present Utils.medium_wait
+    sleep 1
     collapse_item note
     visible_data = visible_collapsed_item_data note
-    expected_short_updated_date = "Last updated on #{expected_item_short_date_format note.updated_date}"
+    date = note.set_date || note.updated_date
+    expected_short_updated_date = "Last updated on #{expected_item_short_date_format date}"
     wait_until(1, "Expected '#{note.subject}', got #{visible_data[:subject]}") { visible_data[:subject] == note.subject }
     wait_until(1, "Expected '#{expected_short_updated_date}', got #{visible_data[:date]}") { visible_data[:date] == expected_short_updated_date }
 
@@ -241,6 +247,11 @@ module BOACStudentPageAdvisingNote
     wait_until(1, "Expected '#{note_topics}', got #{visible_data[:topics]}") { visible_data[:topics] == note_topics }
     wait_until(1, "Expected no remove-topic buttons, got #{visible_data[:remove_topics_btns].length}") { visible_data[:remove_topics_btns].length.zero? }
 
+    # Contact Type
+    wait_until(1, "Expected '#{note.type}', got #{visible_data[:contact_type]}") do
+      note.type ? (visible_data[:contact_type] == note.type) : !visible_data[:contact_type]
+    end
+
     # Check visible timestamps within 1 minute to avoid failures caused by a 1 second diff
     expected_long_created_date = "Created on #{expected_item_long_date_format note.created_date}"
     wait_until(1, "Expected '#{expected_long_created_date}', got #{visible_data[:created_date]}") do
@@ -253,6 +264,10 @@ module BOACStudentPageAdvisingNote
         Time.parse(visible_data[:updated_date]) <= Time.parse(expected_long_updated_date) + 60
         Time.parse(visible_data[:updated_date]) >= Time.parse(expected_long_updated_date) - 60
       end
+    end
+    expected_set_date = note.set_date ? "#{expected_item_short_date_format note.set_date}" : nil
+    wait_until(1, "Expected set date '#{expected_set_date}', got #{visible_data[:set_date]}") do
+      visible_data[:set_date] == expected_set_date
     end
 
     # Body and attachments - private versus non-private
@@ -340,6 +355,29 @@ module BOACStudentPageAdvisingNote
     wait_for_element_and_type(edit_note_subject_input_element, note.subject)
   end
 
+  # Contact Type
+
+  def contact_type_radio(note)
+    radio_button_element(xpath: "//input[@type='radio'][@value='#{note.type}']")
+  end
+
+  def select_contact_type(note)
+    logger.debug "Selecting contact type '#{note.type}'"
+    js_click contact_type_radio(note)
+  end
+
+  # Set Date
+
+  text_field(:set_date_input, id: 'manually-set-date-input')
+
+  def enter_set_date(note)
+    logger.debug "Entering edited note set date '#{note.set_date}'"
+    wait_for_update_and_click set_date_input_element
+    50.times { hit_backspace; hit_delete }
+    set_date_input_element.send_keys note.set_date.strftime('%m/%d/%Y') if note.set_date
+    3.times { hit_tab }
+  end
+
   # Save
 
   button(:edit_note_save_button, id: 'save-note-button')
@@ -382,6 +420,8 @@ module BOACStudentPageAdvisingNote
     add_attachments_to_new_note(note, attachments) if attachments&.any?
     add_topics(note, topics)
     set_note_privacy note
+    enter_set_date note if note.set_date
+    select_contact_type note if note.type
     click_save_new_note
     set_new_note_id note
   end

@@ -96,9 +96,11 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
             @student_page.verify_note(note_2, test.advisor)
           end
 
-          it 'can create a long note with special characters' do
+          it 'can create a note with contact type and set date' do
             note_3.subject = "Σημείωση θέμα 3 #{Utils.get_test_id}"
             note_3.body = 'ノート本体4' * 100 unless "#{@driver.browser}" == 'firefox'
+            note_3.type = 'In-person same day'
+            note_3.set_date = Time.now - 86400
             @student_page.create_note(note_3, [], [])
             @student_page.verify_note(note_3, test.advisor)
           end
@@ -271,6 +273,42 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
           it 'can add attachments' do
             @student_page.expand_item note_4
             @student_page.add_attachments_to_existing_note(note_4, test.attachments[5..6])
+            @student_page.verify_note(note_4, test.advisor)
+          end
+
+          it 'can edit contact type' do
+            note_4.type = 'Phone'
+            @student_page.expand_item note_4
+            @student_page.click_edit_note_button note_4
+            @student_page.select_contact_type note_4
+            @student_page.save_note_edit note_4
+            @student_page.verify_note(note_4, test.advisor)
+          end
+
+          it 'can remove contact type' do
+            note_4.type = nil
+            @student_page.expand_item note_4
+            @student_page.click_edit_note_button note_4
+            @student_page.select_contact_type note_4
+            @student_page.save_note_edit note_4
+            @student_page.verify_note(note_4, test.advisor)
+          end
+
+          it 'can edit set date' do
+            note_4.set_date = Time.now - 604800
+            @student_page.expand_item note_4
+            @student_page.click_edit_note_button note_4
+            @student_page.enter_set_date note_4
+            @student_page.save_note_edit note_4
+            @student_page.verify_note(note_4, test.advisor)
+          end
+
+          it 'can remove set date' do
+            note_4.set_date = nil
+            @student_page.expand_item note_4
+            @student_page.click_edit_note_button note_4
+            @student_page.enter_set_date note_4
+            @student_page.save_note_edit note_4
             @student_page.verify_note(note_4, test.advisor)
           end
 

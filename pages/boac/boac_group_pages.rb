@@ -51,7 +51,7 @@ module BOACGroupPages
 
   def click_remove_invalid_sids
     logger.info 'Clicking button to remove invalid SIDs'
-    wait_for_update_and_click remove_invalid_sids_button_element
+    wait_for_load_and_click remove_invalid_sids_button_element
     # Sometimes it's hidden, sometimes it goes away
     remove_invalid_sids_button_element.when_not_visible Utils.short_wait rescue Selenium::WebDriver::Error::StaleElementReferenceError
   end

@@ -22,7 +22,7 @@ module CanvasPeoplePage
   select_list(:user_section, id: 'peoplesearch_select_section')
   button(:next_button, id: 'addpeople_next')
   div(:users_ready_to_add_msg, xpath: '//div[contains(text(),"The following users are ready to be added to the course.")]')
-  li(:remove_user_success, xpath: '//li[contains(.,"User successfully removed")]')
+  li(:remove_user_success, xpath: '//*[contains(.,"User successfully removed")]')
   button(:done_button, xpath: '//button[contains(.,"Done")]')
   td(:default_email, xpath: '//th[text()="Default Email:"]/following-sibling::td')
   link(:edit_user_link, xpath: '//a[@class="edit_user_link"]')
@@ -129,8 +129,7 @@ module CanvasPeoplePage
   # Removes users from a course site
   # @param course [Course]
   # @param users [Array<User>]
-  # @param event [Event]
-  def remove_users_from_course(course, users, event = nil)
+  def remove_users_from_course(course, users)
     load_users_page course
     hide_canvas_footer_and_popup
     wait_for_users users
@@ -138,9 +137,7 @@ module CanvasPeoplePage
       logger.info "Removing #{user.role} UID #{user.uid} from course site ID #{course.site_id}"
       wait_for_update_and_click link_element(xpath: "//tr[@id='user_#{user.canvas_id}']//a[contains(@class,'al-trigger')]")
       alert { wait_for_update_and_click_js link_element(xpath: "//tr[@id='user_#{user.canvas_id}']//a[@data-event='removeFromCourse']") }
-      remove_user_success_element.when_visible Utils.short_wait
-      add_event(event, EventType::MODIFY, '"state": "deleted"')
-      add_event(event, EventType::MODIFY, user.full_name)
+      remove_user_success_element.when_present Utils.short_wait
     end
   end
 
