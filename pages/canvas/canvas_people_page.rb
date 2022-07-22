@@ -11,7 +11,6 @@ module CanvasPeoplePage
   select_list(:enrollment_roles, name: 'enrollment_role_id')
   elements(:section_label, :div, xpath: '//div[@class="section"]')
   link(:add_people_button, id: 'addUsers')
-  link(:help_finding_users_link, id: 'add-people-help')
   link(:find_person_to_add_link, xpath: '//a[contains(.,"Find a Person to Add")]')
   checkbox(:add_user_by_email, xpath: '//span[contains(text(),"Email Address")]/..')
   checkbox(:add_user_by_uid, xpath: '//span[contains(text(),"Berkeley UID")]/..')

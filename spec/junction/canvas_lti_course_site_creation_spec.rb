@@ -344,7 +344,7 @@ describe 'bCourses course site creation' do
               expect(dsp_link).to be true
             end
 
-            sensus_link = @canvas_page.external_link_valid?(@canvas_page.access_sensus_link_element, 'SensusAccess Conversion')
+            sensus_link = @canvas_page.external_link_valid?(@canvas_page.access_sensus_link_element, 'SensusAccess')
             it "shows a SensusAccess link for #{site[:course].term} #{site[:course].code} site ID #{site[:course].site_id}" do
               expect(sensus_link).to be true
             end
