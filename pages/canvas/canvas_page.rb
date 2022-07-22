@@ -243,6 +243,12 @@ module Page
       switch_to_canvas_iframe JunctionUtils.junction_base_url
     end
 
+    def accept_invite
+      logger.info 'Accepting course invite'
+      accept_course_invite
+      accept_course_invite_element.when_not_visible Utils.medium_wait
+    end
+
     # Loads a course site and handles prompts that can appear
     # @param course [Course]
     def load_course_site(course)
@@ -257,9 +263,12 @@ module Page
       div_element(id: 'content').when_present Utils.medium_wait
       sleep 1
       if accept_course_invite?
-        logger.info 'Accepting course invite'
-        accept_course_invite
-        accept_course_invite_element.when_not_visible Utils.medium_wait
+        accept_invite
+      else
+        navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/discussion_topics"
+        sleep 1
+        accept_invite if accept_course_invite?
+        go_back
       end
     end
 

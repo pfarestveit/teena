@@ -88,16 +88,6 @@ describe 'bCourses Find a Person to Add', order: :defined do
       end
     end
 
-    it 'include a link to a help page on the Everyone tab' do
-      if standalone
-        skip 'Skipping test since in standalone mode'
-      else
-        @canvas.help_finding_users_link_element.when_visible Utils.short_wait
-        sleep 1
-        expect(@canvas.external_link_valid?(@canvas.help_finding_users_link_element, 'IT - How do I add users to my course site?')).to be true
-      end
-    end
-
     it 'include a search by Email Address option' do
       if standalone
         skip 'Skipping test since in standalone mode'
