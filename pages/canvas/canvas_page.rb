@@ -264,11 +264,6 @@ module Page
       sleep 1
       if accept_course_invite?
         accept_invite
-      else
-        navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/discussion_topics"
-        sleep 1
-        accept_invite if accept_course_invite?
-        go_back
       end
     end
 

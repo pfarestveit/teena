@@ -19,11 +19,11 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
     batch_notes << (batch_note_1 = NoteBatch.new({advisor: test.advisor, subject: "Batch note 1 subject #{Utils.get_test_id}"}))
     batch_notes << (batch_note_2 = NoteBatch.new({advisor: test.advisor, subject: "Batch note 2 subject #{Utils.get_test_id}"}))
 
+    test.students.shuffle!
     students = test.students.first BOACUtils.config['notes_batch_students_count']
-    bulk_students = test.students.last BOACUtils.group_bulk_sids_max
     cohorts = []
     curated_groups = []
-    curated_group_members = test.students.shuffle.last BOACUtils.config['notes_batch_curated_group_count']
+    curated_group_members = test.students.last BOACUtils.config['notes_batch_curated_group_count']
     curated_group_1 = CuratedGroup.new({:name => "Group 1 - #{test.id}"})
     curated_group_2 = CuratedGroup.new({:name => "Group 2 - #{test.id}"})
 
@@ -71,6 +71,8 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
         context 'creating a new batch of notes' do
 
           before(:all) do
+            bulk_batch_students = test.students.first(BOACUtils.group_bulk_sids_max)
+            @bulk_batches = bulk_batch_students.each_slice((bulk_batch_students.size / 2.0).round).to_a
 
             # Create cohort
             @homepage.load_page
@@ -87,7 +89,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
               curated_groups << curated_group
             end
 
-            @batch_1_expected_students = @homepage.unique_students_in_batch((students + bulk_students), cohorts, curated_groups)
+            @batch_1_expected_students = @homepage.unique_students_in_batch(students, cohorts, curated_groups)
             logger.debug "Expected batch SIDs #{(@batch_1_expected_students.map &:sis_id).sort}"
           end
 
@@ -99,24 +101,23 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
 
           it('can cancel an unsaved batch of notes') { @homepage.click_cancel_new_note }
 
-          it 'can add students' do
+          it 'can add a batch of comma-separated student SIDs' do
             @homepage.click_create_note_batch
-            @homepage.add_students_to_batch(batch_note_1, students)
+            @homepage.add_comma_sep_sids_to_batch @bulk_batches[0]
           end
 
-          it 'can add a batch of student SIDs' do
-            # TODO - enter comma-separated SIDs, plus fake ones
-            # TODO - verify fake ones removed
+          it('can add a batch of space-separated student SIDs') { @homepage.add_space_sep_sids_to_batch @bulk_batches[1] }
+
+          it 'can add cohorts' do
+            @homepage.click_cancel_new_note
+            @homepage.click_create_note_batch
+            @homepage.add_cohorts_to_batch(batch_note_1, cohorts)
           end
 
-          it('can add cohorts') { @homepage.add_cohorts_to_batch(batch_note_1, cohorts) }
-
+          it('can add students') { @homepage.add_students_to_batch(batch_note_1, students) }
           it('can add groups') { @homepage.add_curated_groups_to_batch(batch_note_1, curated_groups) }
-
-          it('can remove students') { @homepage.remove_students_from_batch(batch_note_1, (students + bulk_students)) }
-
+          it('can remove students') { @homepage.remove_students_from_batch(batch_note_1, students) }
           it('can remove cohorts') { @homepage.remove_cohorts_from_batch(batch_note_1, cohorts) }
-
           it('can remove groups') { @homepage.remove_groups_from_batch(batch_note_1, curated_groups) }
 
           it 'requires at least one student' do
@@ -125,12 +126,12 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
           end
 
           it 'sees how many notes will be created' do
-            @homepage.add_students_to_batch(batch_note_1, students)
-            # TODO add bulk SID students
+            @homepage.add_space_sep_sids_to_batch students
+            students.each { |s| @homepage.append_student_to_batch(batch_note_1, s) }
             @homepage.add_cohorts_to_batch(batch_note_1, cohorts)
             @homepage.add_curated_groups_to_batch(batch_note_1, curated_groups)
             expected_student_count = @batch_1_expected_students.length
-            @homepage.wait_until(3, "Expected #{expected_student_count} notes, got #{@homepage.batch_note_student_count_alert}") do
+            @homepage.wait_until(Utils.short_wait, "Expected #{expected_student_count} notes, got #{@homepage.batch_note_student_count_alert}") do
               @homepage.batch_note_student_count_alert.include? "Note will be added to #{expected_student_count}"
             end
           end
@@ -144,13 +145,17 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
 
           it 'creates notes for all the right students' do
             expected_sids = @batch_1_expected_students.map(&:sis_id).sort
-            @homepage.wait_until(Utils.short_wait, "Expected by not present: #{expected_sids - BOACUtils.get_note_sids_by_subject(batch_note_1)}, present but not expected: #{BOACUtils.get_note_sids_by_subject(batch_note_1) - expected_sids}") do
-              BOACUtils.get_note_sids_by_subject(batch_note_1) == expected_sids
+            actual_sids = BOACUtils.get_note_sids_by_subject batch_note_1
+            missing = expected_sids - actual_sids
+            unexpected = actual_sids - expected_sids
+            @homepage.wait_until(Utils.short_wait, "Missing: #{missing}, unexpected: #{unexpected}") do
+              missing.empty?
+              unexpected.empty?
             end
           end
 
           it 'creates notes with the right content for each student' do
-            @homepage.unique_students_in_batch((students + bulk_students), cohorts, curated_groups).first(5).each do |student|
+            @homepage.unique_students_in_batch(students, cohorts, curated_groups).first(5).each do |student|
               @student_page.set_new_note_id(batch_note_1, student)
               @student_page.load_page student
               @student_page.expand_item batch_note_1
@@ -170,7 +175,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
         context 'searching for newly created batch notes' do
 
           it 'can find them by student and subject' do
-            student = @homepage.unique_students_in_batch((students + bulk_students), cohorts, curated_groups).last
+            student = @homepage.unique_students_in_batch(students, cohorts, curated_groups).last
             @homepage.set_new_note_id(batch_note_1, student)
             @homepage.set_notes_student student
             @homepage.enter_string_and_hit_enter batch_note_1.subject

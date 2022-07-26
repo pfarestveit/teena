@@ -40,11 +40,6 @@ module BOACGroupPages
     wait_for_update_and_click add_students_button_element
   end
 
-  def enter_sid_list(sids)
-    logger.info "Entering SIDs to add to group: '#{sids}'"
-    wait_for_element_and_type(create_group_textarea_sids_element, sids)
-  end
-
   def click_add_sids_to_group_button
     wait_for_update_and_click add_sids_to_group_button_element
   end
@@ -57,7 +52,7 @@ module BOACGroupPages
   end
 
   def create_group_with_bulk_sids(members, group)
-    enter_sid_list members.map(&:sis_id).join(', ')
+    enter_sid_list(create_group_textarea_sids_element, members.map(&:sis_id).join(', '))
     click_add_sids_to_group_button
     name_and_save_group(group)
     group.members << members
@@ -68,7 +63,7 @@ module BOACGroupPages
 
   def add_comma_sep_sids_to_existing_grp(members, group)
     click_add_sids_button
-    enter_sid_list members.map(&:sis_id).join(', ')
+    enter_sid_list(create_group_textarea_sids_element, members)
     click_add_sids_to_group_button
     group.members << members
     group.members.flatten!
@@ -77,7 +72,7 @@ module BOACGroupPages
 
   def add_line_sep_sids_to_existing_grp(members, group)
     click_add_sids_button
-    enter_sid_list members.map(&:sis_id).join("\n")
+    enter_sid_list(create_group_textarea_sids_element, members.map(&:sis_id).join("\n"))
     click_add_sids_to_group_button
     group.members << members
     group.members.flatten!
@@ -86,7 +81,7 @@ module BOACGroupPages
 
   def add_space_sep_sids_to_existing_grp(members, group)
     click_add_sids_button
-    enter_sid_list members.map(&:sis_id).join(' ')
+    enter_sid_list(create_group_textarea_sids_element, members.map(&:sis_id).join(' '))
     click_add_sids_to_group_button
     group.members << members
     group.members.flatten!
