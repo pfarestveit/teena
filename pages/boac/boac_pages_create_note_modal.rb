@@ -226,6 +226,7 @@ module BOACPagesCreateNoteModal
   #### CREATE NOTE, BATCH ####
 
   text_area(:batch_note_add_student_input, id: 'create-note-add-student-input')
+  button(:batch_note_add_students_button, id: 'create-note-add-student-add-button')
   span(:batch_note_alert_no_students_per_cohorts, id: 'no-students-per-cohorts-alert')
   span(:batch_note_no_students_per_curated_groups, id: 'no-students-per-curated-groups-alert')
   span(:batch_note_no_students, id: 'no-students-alert')
@@ -265,20 +266,42 @@ module BOACPagesCreateNoteModal
     button_element(xpath: "//span[contains(@id, 'batch-note-curated-')][text()='#{group.name}']/following-sibling::button[contains(@id, 'remove-curated-from-batch')]")
   end
 
+  def add_comma_sep_sids_to_batch(students)
+    enter_comma_sep_sids(batch_note_add_student_input_element, students)
+    wait_for_update_and_click batch_note_add_students_button_element
+    students.each { |s| added_student_element(s).when_present 1 }
+  end
+
+  def add_line_sep_sids_to_batch(students)
+    enter_line_sep_sids(batch_note_add_student_input_element, students)
+    wait_for_update_and_click batch_note_add_students_button_element
+    students.each { |s| added_student_element(s).when_present 1 }
+  end
+
+  def add_space_sep_sids_to_batch(students)
+    enter_space_sep_sids(batch_note_add_student_input_element, students)
+    wait_for_update_and_click batch_note_add_students_button_element
+    students.each { |s| added_student_element(s).when_present 1 }
+  end
+
   # Adds a given set of students to a batch note
   # @param note_batch [NoteBatch]
   # @param students [Array<BOACUser>]
   def add_students_to_batch(note_batch, students)
     students.each do |student|
       logger.debug "Find student SID '#{student.sis_id}' then add to batch note '#{note_batch.subject}'."
-      wait_for_element_and_type(batch_note_add_student_input_element, "#{student.first_name} #{student.last_name} #{student.sis_id}")
+      wait_for_element_and_type(batch_note_add_student_input_element, "#{student.sis_id}")
       sleep Utils.click_wait
       wait_until(Utils.short_wait) { auto_suggest_option_elements.any? }
       student_link_element = auto_suggest_option_elements.find { |el| el.text == "#{student.full_name} (#{student.sis_id})" }
       wait_for_update_and_click student_link_element
-      added_student_element(student).when_present 1
-      note_batch.students << student
+      append_student_to_batch(note_batch, student)
     end
+  end
+
+  def append_student_to_batch(note_batch, student)
+    added_student_element(student).when_present 1
+    note_batch.students << student
   end
 
   # Removes a given set of students from a batch note

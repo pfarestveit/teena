@@ -562,4 +562,23 @@ module BOACPages
     groups
   end
 
+  # SID LIST ENTRY
+
+  def enter_sid_list(el, sids)
+    logger.info "Entering SIDs: '#{sids}'"
+    wait_for_element_and_type(el, sids)
+  end
+
+  def enter_comma_sep_sids(el, students)
+    enter_sid_list(el, students.map(&:sis_id).join(', '))
+  end
+
+  def enter_line_sep_sids(el, students)
+    enter_sid_list(el, students.map(&:sis_id).join("\n"))
+  end
+
+  def enter_space_sep_sids(el, students)
+    enter_sid_list(el, students.map(&:sis_id).join(' '))
+  end
+
 end
