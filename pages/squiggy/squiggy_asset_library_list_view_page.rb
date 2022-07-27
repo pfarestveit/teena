@@ -3,6 +3,7 @@ class SquiggyAssetLibraryListViewPage
   include PageObject
   include Page
   include Logging
+  include SquiggyPages
   include SquiggyAssetLibrarySearchForm
   include SquiggyAssetLibraryMetadataForm
 
@@ -295,7 +296,7 @@ class SquiggyAssetLibraryListViewPage
   end
 
   def asset_uploader_selected
-    selected_user_element.when_present Utils.short_wait
+    wait_until(Utils.short_wait) { selected_user? && !selected_user.empty? }
     selected_user
   end
 

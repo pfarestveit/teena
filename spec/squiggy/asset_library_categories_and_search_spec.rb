@@ -317,10 +317,10 @@ describe 'Asset Library' do
       @assets_list.wait_until(3) { @assets_list.sort_by_options == ['Most recent', 'Most likes', 'Most views', 'Most comments'] }
     end
 
-    it 'allows searching by asset type "File", "Link"' do
+    it 'allows searching by asset type "File", "Link", "Whiteboard"' do
       @assets_list.click_asset_type_select
       @assets_list.wait_until(2) { @assets_list.asset_type_options.any? }
-      @assets_list.wait_until(3) { @assets_list.asset_type_options == %w(File Link) }
+      @assets_list.wait_until(3) { @assets_list.asset_type_options == %w(File Link Whiteboard) }
     end
   end
 end
