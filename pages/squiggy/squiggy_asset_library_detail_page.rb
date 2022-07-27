@@ -11,7 +11,7 @@ class SquiggyAssetLibraryDetailPage < SquiggyAssetLibraryListViewPage
   span(:like_count, id: 'asset-like-count')
   span(:view_count, id: 'asset-view-count')
   span(:comment_count, id: 'asset-comment-count')
-  div(:description, xpath: '//h3[text()="Description"]/..')
+  div(:description, id: 'asset-description')
   div(:source, xpath: '//div[contains(text(), "Source:")]')
 
   def load_asset_detail(test, asset)
@@ -318,7 +318,7 @@ class SquiggyAssetLibraryDetailPage < SquiggyAssetLibraryListViewPage
   def delete_comment(comment)
     scroll_to_bottom
     wait_for_update_and_click_js delete_comment_button(comment)
-    wait_for_update_and_click delete_confirm_button_element
+    wait_for_update_and_click confirm_delete_button_element
     comment_el_by_id(comment).when_not_present Utils.short_wait
   end
 

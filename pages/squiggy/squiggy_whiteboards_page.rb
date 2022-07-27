@@ -73,7 +73,7 @@ class SquiggyWhiteboardsPage
   end
 
   def click_whiteboard(whiteboard)
-    wait_for_update_and_click_js whiteboard_element(whiteboard)
+    wait_for_update_and_click whiteboard_element(whiteboard)
   end
 
   # SEARCH
