@@ -121,6 +121,8 @@ describe 'Whiteboard' do
       @whiteboards.load_page @test
       @whiteboards.open_whiteboard @whiteboard_delete_1
       @whiteboards.delete_whiteboard_with_tab_close
+      @whiteboards.load_page @test
+      @whiteboards.wait_until(Utils.short_wait) { @whiteboards.visible_whiteboard_titles&.any? }
       expect(@whiteboards.visible_whiteboard_titles).not_to include(@whiteboard_delete_1.title)
     end
 
@@ -130,6 +132,8 @@ describe 'Whiteboard' do
       @whiteboards.open_whiteboard @whiteboard_delete_2
       @whiteboards.delete_whiteboard
       @whiteboards.close_whiteboard
+      @whiteboards.load_page @test
+      @whiteboards.wait_until(Utils.short_wait) { @whiteboards.visible_whiteboard_titles&.any? }
       expect(@whiteboards.visible_whiteboard_titles).not_to include(@whiteboard_delete_2.title)
     end
 

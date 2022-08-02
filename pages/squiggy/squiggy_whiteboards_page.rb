@@ -94,6 +94,7 @@ class SquiggyWhiteboardsPage
   def simple_search(string)
     logger.info "Performing simple search for '#{string}'"
     cancel_adv_search_button if cancel_adv_search_button_element.visible?
+    sleep Utils.click_wait
     wait_for_element_and_type_js(simple_search_input_element, string)
     wait_for_update_and_click simple_search_button_element
   end
