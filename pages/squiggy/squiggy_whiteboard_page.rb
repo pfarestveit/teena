@@ -185,7 +185,7 @@ class SquiggyWhiteboardPage < SquiggyWhiteboardsPage
   def add_existing_assets(assets)
     click_add_existing_asset
     assets.each { |asset| wait_for_update_and_click text_field_element(id: "asset-#{asset.id}") }
-    wait_for_update_and_click_js save_button_element
+    wait_for_update_and_click save_button_element
     save_button_element.when_not_present Utils.short_wait
   end
 
