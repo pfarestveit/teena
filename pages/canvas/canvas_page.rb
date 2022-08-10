@@ -264,6 +264,8 @@ module Page
       sleep 1
       if accept_course_invite?
         accept_invite
+        sleep 1
+        flash_msg_element.when_not_present Utils.short_wait
       end
     end
 

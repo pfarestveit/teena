@@ -18,6 +18,12 @@ describe 'Whiteboard' do
 
     @canvas.log_in(@cal_net, @test.admin.username, Utils.super_admin_password)
     @canvas.create_squiggy_course @test
+
+    # Set "whiteboard remix" points to non-zero value
+    @engagement_index.load_scores @test
+    @engagement_index.click_points_config
+    @engagement_index.change_activity_points(SquiggyActivity::REMIX_WHITEBOARD, 1)
+    @engagement_index.change_activity_points(SquiggyActivity::GET_REMIX_WHITEBOARD, 1)
   end
 
   after(:all) { @driver.quit }
@@ -272,6 +278,7 @@ describe 'Whiteboard' do
       @canvas.masquerade_as(@teacher, @test.course)
       @initial_score_1 = @engagement_index.user_score(@test, @student_1)
       @initial_score_2 = @engagement_index.user_score(@test, @student_2)
+      @initial_score_3 = @engagement_index.user_score(@test, @student_3)
 
       # Get configured activity points to determine expected score
       @engagement_index.click_points_config
@@ -305,13 +312,6 @@ describe 'Whiteboard' do
       # TODO - verify links to collaborators
       @asset_library.wait_for_asset_detail
       expect(@asset_library.asset_title).to eql(asset.title)
-    end
-
-    it 'as a new asset allows a user to remix the whiteboard' do
-      remix = @asset_library.click_remix
-      expect(remix.title).to eql(@whiteboard.title)
-      @asset_library.open_remixed_board remix
-      @whiteboards.verify_collaborators [@student_1]
     end
 
     it 'as a new asset earns "Export a whiteboard to the Asset Library" points' do
@@ -353,13 +353,67 @@ describe 'Whiteboard' do
       expect(@engagement_index.user_score(@test, @student_1)).to eql(@score_1_after_export)
       expect(@engagement_index.user_score(@test, @student_2)).to eql(@score_2_after_export)
     end
+
+    context 'when remixed' do
+
+      before(:all) do
+        @canvas.masquerade_as(@student_3, @test.course)
+        @asset_library.load_asset_detail(@test, @whiteboard.asset_exports.first)
+        @remix = @asset_library.click_remix
+
+        remix_pts = SquiggyActivity::REMIX_WHITEBOARD.points
+        @score_3_after_remix = @initial_score_3 + remix_pts
+
+        get_remix_pts = SquiggyActivity::GET_REMIX_WHITEBOARD.points
+        @score_1_after_remix = @score_1_after_export + get_remix_pts
+        @score_2_after_remix = @score_2_after_export + get_remix_pts
+      end
+
+      it 'creates a new whiteboard' do
+        expect(@remix.title).to eql(@whiteboard.title)
+        @asset_library.open_remixed_board @remix
+        @whiteboards.verify_collaborators [@student_3]
+      end
+
+      it 'earns "Remix Whiteboard" points' do
+        @whiteboards.close_whiteboard
+        @canvas.masquerade_as(@teacher, @test.course)
+        expect(@engagement_index.user_score(@test, @student_1)).to eql(@score_1_after_remix)
+        expect(@engagement_index.user_score(@test, @student_2)).to eql(@score_2_after_remix)
+        expect(@engagement_index.user_score(@test, @student_3)).to eql(@score_3_after_remix)
+      end
+
+      it 'shows remix and get_remix activity for all collaborators on the CSV export' do
+        csv = @engagement_index.download_csv @test
+        row_1 = csv.find do |r|
+          r[:user_name] == @student_1.full_name &&
+            r[:action] == SquiggyActivity::GET_REMIX_WHITEBOARD.type &&
+            r[:score] == SquiggyActivity::GET_REMIX_WHITEBOARD.points &&
+            r[:running_total] == @score_1_after_remix
+        end
+        row_2 = csv.find do |r|
+          r[:user_name] == @student_2.full_name &&
+            r[:action] == SquiggyActivity::GET_REMIX_WHITEBOARD.type &&
+            r[:score] == SquiggyActivity::GET_REMIX_WHITEBOARD.points &&
+            r[:running_total] == @score_2_after_remix
+        end
+        row_3 = csv.find do |r|
+          r[:user_name] == @student_3.full_name &&
+            r[:action] == SquiggyActivity::REMIX_WHITEBOARD.type &&
+            r[:score] == SquiggyActivity::REMIX_WHITEBOARD.points &&
+            r[:running_total] == @score_3_after_remix
+        end
+        expect(row_1).to be_truthy
+        expect(row_2).to be_truthy
+        expect(row_3).to be_truthy
+      end
+    end
   end
 
   describe 'asset detail' do
 
     before(:all) do
       asset_detail_test_id = Time.now.to_i
-      @canvas.masquerade_as(@teacher, @test.course)
       @asset = @teacher.assets.find &:file_name
       @asset_library.load_page @test
       @asset_library.upload_file_asset @asset

@@ -51,13 +51,14 @@ describe 'New asset' do
 
               @assets_list.click_asset_link asset
               visible_detail = @asset_detail.visible_asset_metadata asset
+              expected_desc = asset.description || '—'
               preview_generated = @asset_detail.preview_generated? asset
               asset_downloadable = @asset_detail.verify_block { @asset_detail.download_asset asset } if asset.file_name
               has_download_button = @asset_detail.download_button?
 
               it("#{asset.title} belonging to #{student.full_name} has the right detail view title") { expect(visible_detail[:title]).to eql(asset.title) }
               it("#{asset.title} belonging to #{student.full_name} has the right detail view owner") { expect(visible_detail[:owner]).to eql(student.full_name) }
-              it("#{asset.title} belonging to #{student.full_name} has the right detail view description") { expect(visible_detail[:description]).to eql(asset.description.to_s) }
+              it("#{asset.title} belonging to #{student.full_name} has the right detail view description") { expect(visible_detail[:description]).to eql(expected_desc) }
               it("#{asset.title} belonging to #{student.full_name} has the right detail view preview type") { expect(preview_generated).to be true }
               it("#{asset.title} belonging to #{student.full_name} has the right detail view category") { expect(visible_detail[:category]).to be true }
 
