@@ -29,8 +29,8 @@ class SquiggyActivity
     ADD_ASSET_TO_WHITEBOARD = new('whiteboard_add_asset', 'Add an asset to a whiteboard',  8),
     GET_ADD_ASSET_TO_WHITEBOARD = new('get_whiteboard_add_asset', 'Have one\'s asset added to a whiteboard', 0),
 
-    REMIX_WHITEBOARD = new('remix_whiteboard', 'Remix a whiteboard', 0),
-    GET_REMIX_WHITEBOARD = new('get_remix_whiteboard', 'Have one\'s whiteboard remixed', 0),
+    REMIX_WHITEBOARD = new('whiteboard_remix', 'Remix a whiteboard', 0),
+    GET_REMIX_WHITEBOARD = new('get_whiteboard_remix', 'Have one\'s whiteboard remixed', 0),
 
     EXPORT_WHITEBOARD = new('whiteboard_export', 'Export a whiteboard to the Asset Library', 10),
 
