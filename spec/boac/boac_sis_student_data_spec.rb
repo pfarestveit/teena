@@ -424,6 +424,12 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
           end
         end
 
+        if api_sis_profile_data[:academic_career] && api_sis_profile_data[:academic_career] != 'UGRD'
+          it "shows no intended majors for non-undergrad #{test_case}" do
+            expect(student_page_sis_data[:intended_majors]).to be_empty
+          end
+        end
+
         if api_sis_profile_data[:intended_majors].any?
           it "shows intended majors for #{test_case}" do
             expect(student_page_sis_data[:intended_majors]).to eql(api_sis_profile_data[:intended_majors])
