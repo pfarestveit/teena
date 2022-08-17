@@ -82,6 +82,7 @@ class BOACApiStudentPage
       :expected_grad_term_id => (sis_profile && sis_profile['expectedGraduationTerm'] && sis_profile['expectedGraduationTerm']['id']),
       :expected_grad_term_name => (sis_profile && sis_profile['expectedGraduationTerm'] && sis_profile['expectedGraduationTerm']['name']),
       :withdrawal => (sis_profile && withdrawal),
+      :academic_career => (sis_profile && sis_profile['academicCareer']),
       :academic_career_status => (sis_profile && sis_profile['academicCareerStatus']),
       :reqt_writing => (sis_profile && degree_progress && degree_progress[:writing]),
       :reqt_history => (sis_profile && degree_progress && degree_progress[:history]),

@@ -2,6 +2,13 @@
     "filters": {
         "students": [
             {
+                "graduate_plans": [
+                    {
+                        "graduate_plan": "History PhD"
+                    }
+                ]
+            },
+            {
                 "grading_basis_epn": [
                     {
                         "term": true

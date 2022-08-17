@@ -27,6 +27,7 @@ class CohortFilter
                 :gpa,
                 :gpa_last_term,
                 :grading_basis_epn,
+                :graduate_plans,
                 :holds,
                 :intended_major,
                 :last_name,
@@ -56,6 +57,7 @@ class CohortFilter
     @gpa = (test_data['gpa_ranges'] && test_data['gpa_ranges'].map { |g| g['gpa_range'] })
     @gpa_last_term = (test_data['gpa_ranges_last_term'] && test_data['gpa_ranges_last_term'].map { |g| g['gpa_range'] })
     @grading_basis_epn = (test_data['grading_basis_epn'] && test_data['grading_basis_epn'].map { |b| b['term'] })
+    @graduate_plans = (test_data['graduate_plans']&.map { |p| p['graduate_plan'] })
     @holds = test_data['holds']
     @intended_major = (test_data['intended_major'] && test_data['intended_major'].map { |m| m['major'] })
     @level = (test_data['levels'] && test_data['levels'].map { |l| l['level'] })

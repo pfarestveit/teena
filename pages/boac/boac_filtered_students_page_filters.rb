@@ -145,6 +145,7 @@ module BOACFilteredStudentsPageFilters
     cohort.search_criteria.gpa.each { |gpa| select_new_filter('GPA (Cumulative)', gpa) } if cohort.search_criteria.gpa
     cohort.search_criteria.gpa_last_term.each { |gpa| select_new_filter('GPA (Last Term)', gpa) } if cohort.search_criteria.gpa_last_term
     cohort.search_criteria.grading_basis_epn.each { |g| select_new_filter('EPN/CPN Grading Option', g.to_s) } if cohort.search_criteria.grading_basis_epn
+    cohort.search_criteria.graduate_plans.each { |g| select_new_filter('Graduate Plan', g) } if cohort.search_criteria.graduate_plans
     select_new_filter 'Holds' if cohort.search_criteria.holds
     cohort.search_criteria.intended_major.each { |m| select_new_filter('Intended Major', m) } if cohort.search_criteria.intended_major
     cohort.search_criteria.level.each { |l| select_new_filter('Level', l) } if cohort.search_criteria.level
@@ -310,6 +311,8 @@ module BOACFilteredStudentsPageFilters
         filters.expected_grad_terms.each { |t| existing_filter_element('Expected Graduation Term', t).exists? } if filters.expected_grad_terms&.any?
         logger.debug 'Verifying GPA (Cumulative) filter'
         filters.gpa.each { |g| existing_filter_element('GPA (Cumulative)', g).exists? } if filters.gpa&.any?
+        logger.debug 'Verifying Graduate Plans filter'
+        filters.graduate_plans.each { |g| existing_filter_element('Graduate Plans', g).exists? } if filters.graduate_plans&.any?
         logger.debug 'Verifying Holds filter'
         existing_filter_element('Holds').exists? if filters.holds
         logger.debug 'Verifying GPA (Last Term) filter'

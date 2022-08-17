@@ -126,7 +126,10 @@ class NessieFilterUtils < NessieUtils
   end
 
   def self.major_cond(filter, conditions_list)
-    conditions_list << "student.student_majors.major IN (#{in_op filter.major})" if filter.major&.any?
+    majors = []
+    majors += filter.major if filter.major
+    majors += filter.graduate_plans if filter.graduate_plans
+    conditions_list << "student.student_majors.major IN (#{in_op majors})" if majors.any?
   end
 
   def self.minor_cond(filter, conditions_list)
@@ -296,7 +299,7 @@ class NessieFilterUtils < NessieUtils
     joins << holds_join if filter.holds
 
     major_join = "LEFT JOIN student.student_majors ON #{sid} = student.student_majors.sid"
-    joins << major_join if (filter.college&.any? || filter.major&.any? || filter.academic_divisions&.any?)
+    joins << major_join if (filter.college&.any? || filter.major&.any? || filter.academic_divisions&.any? || filter.graduate_plans&.any?)
 
     intended_major_join = "LEFT JOIN student.intended_majors ON #{sid} = student.intended_majors.sid"
     joins << intended_major_join if filter.intended_major&.any?
