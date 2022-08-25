@@ -426,6 +426,20 @@ module Page
       set_grading_scheme_cbx_element.when_present Utils.medium_wait
     end
 
+    button(:official_sections_notice, xpath: '//button[contains(., "Need Help Adding a Section/Roster?")]')
+    link(:official_sections_help_link, text: 'add or delete a course roster from your bCourses site')
+
+    def load_course_sections(course)
+      logger.info "Loading sections settings page for course ID #{course.site_id}"
+      navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/settings#tab-sections"
+      official_sections_notice_element.when_present Utils.medium_wait
+    end
+
+    def expand_official_sections_notice
+      logger.info 'Expanding official sections notice'
+      wait_for_update_and_click official_sections_notice_element
+    end
+
     # LTI TOOLS
 
     link(:apps_link, text: 'Apps')
