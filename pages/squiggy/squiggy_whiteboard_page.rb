@@ -146,6 +146,17 @@ class SquiggyWhiteboardPage < SquiggyWhiteboardsPage
     switch_to_canvas_iframe
   end
 
+  def export_owner_link(user)
+    link_element(xpath: "//a[text()=\" #{user.full_name} \"]")
+  end
+
+  def click_export_owner_link(user)
+    logger.info "Clicking asset export link for #{user.full_name}"
+    wait_for_update_and_click export_owner_link(user)
+    switch_to_last_window
+    switch_to_canvas_iframe
+  end
+
   def download_as_image
     Utils.prepare_download_dir
     click_export_button

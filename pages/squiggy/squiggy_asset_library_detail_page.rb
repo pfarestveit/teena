@@ -4,6 +4,7 @@ class SquiggyAssetLibraryDetailPage < SquiggyAssetLibraryListViewPage
   include Page
   include Logging
   include SquiggyAssetLibraryMetadataForm
+  include SquiggyWhiteboardEditForm
 
   h2(:asset_title, id: 'asset-title')
   div(:asset_preview, xpath: '//div[starts-with(@id, "asset-preview-image-")]')
@@ -327,9 +328,12 @@ class SquiggyAssetLibraryDetailPage < SquiggyAssetLibraryListViewPage
   button(:remix_button, id: 'remix-asset-whiteboard-btn')
   link(:remixed_board_link, id: 'link-to-whiteboard')
   h2(:remixed_board_title, id: 'whiteboard-title')
+  button(:remix_save_button, id: 'remix-btn')
 
-  def click_remix
+  def remix(title)
     wait_for_update_and_click remix_button_element
+    enter_whiteboard_title title
+    wait_for_update_and_click remix_save_button_element
     SquiggyWhiteboard.new id: get_whiteboard_id(remixed_board_link_element), title: remixed_board_title
   end
 
