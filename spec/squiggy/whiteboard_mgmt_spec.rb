@@ -306,16 +306,29 @@ describe 'Whiteboard' do
       @whiteboards.export_to_asset_library @whiteboard
     end
 
-    it 'shows a success message and link to the new asset and links to the collaborators' do
+    it 'shows a link to the new asset' do
       @whiteboards.click_export_link
       asset = @whiteboard.asset_exports.first
-      # TODO - verify links to collaborators
       @asset_library.wait_for_asset_detail
       expect(@asset_library.asset_title).to eql(asset.title)
     end
 
+    it 'shows links to the collaborators' do
+      @asset_library.close_current_window
+      @asset_library.switch_to_last_window
+      expect(@whiteboards.export_owner_link(@whiteboard.owner).exists?).to be true
+      expect(@whiteboards.export_owner_link(@whiteboard.collaborators.first).exists?).to be true
+    end
+
+    it 'offers a collaborator link that opens in a new window' do
+      @whiteboards.click_export_owner_link @whiteboard.collaborators.first
+      @asset_library.wait_for_assets
+      expect(@asset_library.asset_uploader_selected).to eql(@whiteboard.collaborators.first.full_name)
+    end
+
     it 'as a new asset earns "Export a whiteboard to the Asset Library" points' do
-      @whiteboards.close_whiteboard
+      @whiteboards.close_current_window
+      @whiteboards.switch_to_first_window
       @canvas.masquerade_as(@teacher, @test.course)
       expect(@engagement_index.user_score(@test, @student_1)).to eql(@score_1_after_export)
       expect(@engagement_index.user_score(@test, @student_2)).to eql(@score_2_after_export)
@@ -359,7 +372,6 @@ describe 'Whiteboard' do
       before(:all) do
         @canvas.masquerade_as(@student_3, @test.course)
         @asset_library.load_asset_detail(@test, @whiteboard.asset_exports.first)
-        @remix = @asset_library.click_remix
 
         remix_pts = SquiggyActivity::REMIX_WHITEBOARD.points
         @score_3_after_remix = @initial_score_3 + remix_pts
@@ -370,8 +382,8 @@ describe 'Whiteboard' do
       end
 
       it 'creates a new whiteboard' do
-        expect(@remix.title).to eql(@whiteboard.title)
-        @asset_library.open_remixed_board @remix
+        remix = @asset_library.remix "Remix #{@test.id}"
+        @asset_library.open_remixed_board remix
         @whiteboards.verify_collaborators [@student_3]
       end
 
