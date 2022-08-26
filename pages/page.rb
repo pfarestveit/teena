@@ -260,6 +260,7 @@ module Page
       end
     rescue => e
       Utils.log_error e
+      logger.debug "Expecting page title #{expected_page_title}, but visible page title is #{title}"
       false
     ensure
       if @driver.window_handles.length > 1

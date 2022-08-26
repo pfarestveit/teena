@@ -427,7 +427,7 @@ module Page
     end
 
     button(:official_sections_notice, xpath: '//button[contains(., "Need Help Adding a Section/Roster?")]')
-    link(:official_sections_help_link, text: 'add or delete a course roster from your bCourses site')
+    link(:official_sections_help_link, xpath: '//a[contains(., "add or delete a course roster from your bCourses site")]')
 
     def load_course_sections(course)
       logger.info "Loading sections settings page for course ID #{course.site_id}"
