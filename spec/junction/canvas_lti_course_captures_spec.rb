@@ -86,7 +86,7 @@ describe 'bCourses Course Captures tool' do
                     it("shows UID #{user.uid} a valid link to YouTube video ID #{expected_video_id} on site ID #{course.site_id}") { expect(has_you_tube_link).to be true }
 
                     # Verify that the 'report a problem' link works
-                    support_msg = 'CAS | Central Authentication Service'
+                    support_msg = 'CAS - Central Authentication Service'
                     has_report_problem_link = @course_captures_page.external_link_valid?(@course_captures_page.report_problem_element, support_msg)
                     @course_captures_page.switch_to_canvas_iframe unless standalone || "#{@driver.browser}" == 'firefox'
 
