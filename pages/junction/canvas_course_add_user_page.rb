@@ -127,11 +127,7 @@ module Page
         checkbox_element(xpath: "//td[contains(.,'#{user.uid}')]/ancestor::tr//input[@name='selectedUser']")
       end
 
-      # Selects a user, a course section, and a user role; clicks the add button; and waits for the success message
-      # @param user [User]
-      # @param section [Section]
-      # @param event [Event]
-      def add_user_by_uid(user, section = nil, event = nil)
+      def add_user_by_uid(user, section = nil)
         logger.info "Adding UID #{user.uid} with role '#{user.role}'"
         user_checkbox(user).when_present Utils.medium_wait
         user_checkbox(user).check
@@ -146,7 +142,6 @@ module Page
         wait_for_element_and_select_js(user_role_element, user.role)
         wait_for_update_and_click add_user_button_element
         success_msg_element.when_visible Utils.medium_wait
-        add_event(event, EventType::CREATE, user.full_name)
       end
 
     end

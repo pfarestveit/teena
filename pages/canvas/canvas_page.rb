@@ -160,9 +160,6 @@ module Page
     text_area(:course_title, id: 'course_name')
     text_area(:course_code, id: 'course_course_code')
 
-    button(:delete_course_button, xpath: '//button[text()="Delete Course"]')
-    li(:delete_course_success, xpath: '//li[contains(.,"successfully deleted")]')
-
     def click_create_site_settings_link
       wait_for_update_and_click_js profile_link_element
       sleep 1
@@ -194,13 +191,7 @@ module Page
       add_squiggy_tools test
     end
 
-    # Creates standard Canvas course site in a given sub-account, publishes it, and adds test users.
-    # @param sub_account [String]
-    # @param course [Course]
-    # @param test_users [Array<User>]
-    # @param test_id [String]
-    # @param event [Event]
-    def create_generic_course_site(sub_account, course, test_users, test_id, event = nil)
+    def create_generic_course_site(sub_account, course, test_users, test_id)
       if course.site_id.nil?
         load_sub_account sub_account
         wait_for_load_and_click add_new_course_button_element
@@ -227,13 +218,10 @@ module Page
       end
       publish_course_site course
       logger.info "Course ID is #{course.site_id}"
-      add_users(course, test_users, event)
+      add_users(course, test_users)
     end
 
-    # Clicks the 'create a site' button for the Junction LTI tool. If the click fails, the button could be behind a footer.
-    # Retries after hiding the footer.
-    # @param driver [Selenium::WebDriver]
-    def click_create_site(driver)
+    def click_create_site
       tries ||= 2
       wait_for_load_and_click create_site_link_element
     rescue
@@ -382,28 +370,13 @@ module Page
       list_item_element(xpath: '//*[contains(.,"Course was successfully updated")]').when_present Utils.short_wait
     end
 
-    # Deletes a course site
-    # @param driver [Selenium::WebDriver]
-    # @param course [Course]
-    def delete_course(driver, course)
-      load_homepage
-      stop_masquerading if stop_masquerading_link?
-      navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/confirm_action?event=delete"
-      wait_for_load_and_click_js delete_course_button_element
-      delete_course_success_element.when_visible Utils.medium_wait
-      logger.info "Course id #{course.site_id} has been deleted"
-    end
-
     # SIS IMPORTS
 
     text_area(:file_input, name: 'attachment')
     button(:upload_button, xpath: '//button[contains(.,"Process Data")]')
     div(:import_success_msg, xpath: '//div[contains(.,"The import is complete and all records were successfully imported.")]')
 
-    # Uploads CSVs on the SIS Import page
-    # @param files [Array<String>]
-    # @param users [Array<User>]
-    def upload_sis_imports(files, users)
+    def upload_sis_imports(files)
       files.each do |csv|
         logger.info "Uploading a SIS import CSV at #{csv}"
         navigate_to "#{Utils.canvas_base_url}/accounts/#{Utils.canvas_uc_berkeley_sub_account}/sis_import"
@@ -559,8 +532,6 @@ module Page
       asset_library.ensure_canvas_sync(test, canvas_assigns_page)
     end
 
-    # Clicks the navigation link for a tool and returns the tool's URL. Optionally records an analytics event.
-    # @return [String]
     def click_tool_link(tool)
       switch_to_main_content
       hide_canvas_footer_and_popup

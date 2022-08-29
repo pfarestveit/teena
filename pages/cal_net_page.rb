@@ -17,7 +17,7 @@ module Page
     span(:invalid_credentials, xpath: '//span[contains(text(), "invalid credentials")]')
     span(:access_denied_msg, xpath: '//span[contains(.,"Service access denied due to missing privileges.")]')
 
-    def enter_credentials(username, password, event = nil, msg = nil)
+    def enter_credentials(username, password, msg=nil)
       # If no credentials are available, then wait for manual login
       wait_until(Utils.medium_wait) { title.include? 'Central Authentication Service' }
       if username == 'secret' || password == 'secret'
@@ -45,7 +45,6 @@ module Page
         elsif invalid_credentials?
           fail('Invalid credentials')
         end
-        add_event(event, EventType::LOGGED_IN)
       end
     end
 
@@ -61,13 +60,8 @@ module Page
       end
     end
 
-    # Logs in to CAS. If no real credentials available in a Settings override, then waits for manual login using a real
-    # person's credentials.
-    # @param username [String]
-    # @param password [String]
-    # @param event [Event]
-    def log_in(username, password, event = nil, msg = 'PLEASE LOG IN MANUALLY')
-      enter_credentials(username, password, event, msg)
+    def log_in(username, password, msg = 'PLEASE LOG IN MANUALLY')
+      enter_credentials(username, password, msg)
       wait_for_manual_login
     end
 

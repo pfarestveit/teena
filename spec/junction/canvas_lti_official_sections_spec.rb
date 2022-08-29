@@ -430,7 +430,7 @@ describe 'bCourses Official Sections tool' do
       csv = File.join(Utils.initialize_test_output_dir, "section-#{site[:course].code}.csv")
       CSV.open(csv, 'wb') { |heading| heading << %w(section_id course_id name status start_date end_date) }
       Utils.add_csv_row(csv, [section_id, site[:course].sis_id, section_name, 'active', nil, nil ])
-      @canvas.upload_sis_imports([csv], [])
+      @canvas.upload_sis_imports([csv])
       JunctionUtils.clear_cache(@driver, @splash_page)
 
       # Verify the tool warns of section name mismatch

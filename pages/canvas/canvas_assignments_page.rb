@@ -52,17 +52,12 @@ module Page
       assignment.url
     end
 
-    # Creates a sync-able assignment on a course site
-    # @param course [Course]
-    # @param assignment [Assignment]
-    # @param event [Event]
-    def create_assignment(course, assignment, event = nil)
+    def create_assignment(course, assignment)
       logger.info "Creating submission assignment named '#{assignment.title}'"
       enter_new_assignment_title(course, assignment)
       check_online_url_cbx
       check_online_upload_cbx
       save_and_publish_assignment assignment
-      add_event(event, EventType::CREATE, assignment.title)
     end
 
     # Creates a non-sync-able assignment on a course site
@@ -78,16 +73,12 @@ module Page
       save_and_publish_assignment assignment
     end
 
-    # Changes an assignment's title
-    # @param assignment [Assignment]
-    # @param event [Event]
-    def edit_assignment_title(assignment, event = nil)
+    def edit_assignment_title(assignment)
       navigate_to assignment.url
       wait_for_load_and_click edit_assignment_link_element
       wait_for_element_and_type(assignment_name_element, (assignment.title = "#{assignment.title} - Edited"))
       wait_for_update_and_click_js save_assignment_button_element
       wait_until(Utils.short_wait) { assignment_title_heading_element.exists? && assignment_title_heading.include?(assignment.title) }
-      add_event(event, EventType::MODIFY, assignment.title)
     end
 
     # ASSIGNMENT SUBMISSION
@@ -103,16 +94,12 @@ module Page
     button(:url_upload_submit_button, xpath: '(//button[@type="submit"])[2]')
     div(:assignment_submission_conf, xpath: '//div[contains(.,"Submitted!")]')
 
-    # Uploads a user's asset as an assignment submission
-    # @param submission [Asset]
-    # @param event [Event]
-    def upload_assignment(submission, event = nil)
+    def upload_assignment(submission)
       if submission.file_name
         wait_for_update_and_click upload_file_button_element
         file_upload_input_element.when_visible Utils.short_wait
         self.file_upload_input_element.send_keys SquiggyUtils.asset_file_path(submission.file_name)
         wait_for_update_and_click_js file_upload_submit_button_element
-        add_event(event, EventType::CREATE, submission.file_name)
       else
         wait_for_update_and_click_js assignment_site_url_tab_element
         url_upload_input_element.when_visible Utils.short_wait
@@ -121,36 +108,19 @@ module Page
       end
     end
 
-    # Navigates to and submits an assignment
-    # @param assignment [Assignment]
-    # @param user [User]
-    # @param submission [Asset]
-    # @param event [Event]
-    def submit_assignment(assignment, user, submission, event = nil)
+    def submit_assignment(assignment, user, submission)
       logger.info "Submitting #{submission.title} for #{user.full_name}"
       navigate_to assignment.url
       wait_for_load_and_click_js submit_assignment_button_element
-      upload_assignment(submission, event)
       assignment_submission_conf_element.when_visible Utils.long_wait
-      (submission.file_name) ?
-          add_event(event, EventType::SUBMITTED, 'online_upload') :
-          add_event(event, EventType::SUBMITTED, 'online_url')
     end
 
-    # Uploads a user's asset as an assignment resubmission
-    # @param assignment [Assignment]
-    # @param user [User]
-    # @param resubmission [Asset]
-    # @param event [Event]
-    def resubmit_assignment(assignment, user, resubmission, event = nil)
+    def resubmit_assignment(assignment, user, resubmission)
       logger.info "Resubmitting #{resubmission.title} for #{user.full_name}"
       navigate_to assignment.url
       wait_for_load_and_click_js resubmit_assignment_button_element
-      upload_assignment(resubmission, event)
+      upload_assignment(resubmission)
       resubmit_assignment_button_element.when_visible Utils.long_wait
-      (resubmission.type == 'File') ?
-          add_event(event, EventType::MODIFY, 'online_upload') :
-          add_event(event, EventType::MODIFY, 'online_url')
     end
 
     # ASSIGNMENT METADATA
@@ -226,81 +196,6 @@ module Page
       navigate_to assign.url
       sleep 1
       h1_element(xpath: '//h1').when_visible Utils.short_wait
-    end
-
-    # Returns all of a student's assignments on a course site
-    # @param driver [Selenium::WebDriver]
-    # @param course [Course]
-    # @param student [User]
-    # @param canvas_discussions [Page::CanvasAnnounceDiscussPage]
-    # @return [Array<Assignment>]
-    def get_student_view_assignments(driver, course, student, canvas_discussions)
-      # Collect all possible info from list view
-      assignments = get_list_view_assignments course
-
-      # Collect all possible info from detail view
-      assignments.each do |assign|
-        begin
-          logger.debug "Checking assignment ID #{assign.id}"
-          load_assignment_detail assign
-
-          # Besides 'Roll Call', assignments can be Canvas assignments, Canvas quizzes, Canvas discussions, or external tools
-          unless assign.type
-            assign.type = if current_url.include? 'quizzes'
-                            'quiz'
-                          elsif current_url.include? 'discussion_topics'
-                            'discussion'
-                          elsif current_url.include? 'assignments'
-                            if verify_block { driver.find_element(id: 'tool_content') }
-                              form_element(id: 'tool_form').attribute('data-tool-id')
-                            else
-                              'assignment'
-                            end
-                          end
-          end
-
-          case assign.type
-
-            when 'assignment'
-              # Assignments submitted via Canvas
-              assign.submission_date = DateTime.parse(assignment_submission_date.gsub('at', '').strip) if assignment_submission_date? && !assignment_submission_date.strip.empty?
-              assign.submitted = true if assign.submission_date
-
-              # Assignments submitted outside Canvas
-              assign.submitted = assignment_submission_details_section? unless assign.submitted
-
-              # If an assignment grade is zero, consider it non-submitted unless there's a submission date
-              if (grade_el = div_element(xpath: '//div[@id="sidebar_content"]//div[@class="module"]/div')).exists?
-                assign.submitted = !grade_el.text.include?(' 0 ') unless assign.submission_date
-              end
-
-            when 'quiz'
-              assign.submitted = quiz_attempt_1_link? unless assign.submitted
-              assign.submitted = quiz_submitted_msg? unless assign.submitted
-              assign.submission_date = DateTime.parse(quiz_submitted_msg.gsub('Submitted', '').gsub('at', '').strip) if quiz_submitted_msg?
-
-            when 'discussion'
-              assign.submitted = (replies = canvas_discussions.discussion_entries(course).select { |d| d[:canvas_id] == student.canvas_id.to_s }).any? unless assign.submitted
-              assign.submission_date = replies.first[:date] if assign.submitted && replies
-
-            else
-              logger.info 'Unable to determine if assignment is submitted'
-          end
-
-          # Assignment timeliness and grading
-          assign.on_time = assign.submission_date && assign.due_date && assign.submission_date < assign.due_date
-          assign.graded = assignment_submission_grade?
-          logger.debug "Assignment ID #{assign.id}, type #{assign.type}, URL #{assign.url}, due date #{assign.due_date}, submitted '#{assign.submitted}', submission date #{assign.submission_date}"
-
-        rescue => e
-          # Some assignment links are dead links
-          Utils.log_error e
-          Utils.save_screenshot(driver, assign.id)
-          fail
-        end
-      end
-
-      assignments
     end
 
     link(:manage_assignment_link, xpath: '//a[contains(., "Manage Assignment")]')
