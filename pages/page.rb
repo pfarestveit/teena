@@ -317,37 +317,8 @@ module Page
     browser.switch_to.active_element.tag
   end
 
-  # Pauses to allow the Canvas poller to complete any active cycle
   def pause_for_poller
-    logger.info "Waiting for the Canvas poller for #{wait = SuiteCUtils.canvas_poller_wait} seconds"
-    sleep wait
-  end
-
-  # Given a unique identifier and event data, adds a row with data about a user action that occurred during a test run, for comparison with
-  # the application's own analytic event tracking.
-  # @param event [Event]
-  # @param event_type [EventType]
-  # @param event_object [String]
-  def add_event(event, event_type, event_object = nil)
-    if event
-      event.object = event_object
-      values = [(event.time_str = Time.now.strftime('%Y-%m-%d %H:%M:%S')), event.actor.uid, (event.action = event_type).desc, event.object]
-      csv = if EventType::CALIPER_EVENT_TYPES.include?(event_type)
-              event.csv = LRSUtils.events_csv event
-            elsif EventType::SUITEC_EVENT_TYPES.include?(event_type)
-              logger.debug "Adding SuiteC event '#{event_type.desc}'"
-              event.csv = SuiteCUtils.script_events_csv event
-            else
-              logger.error 'Event type not recognized'
-            end
-      csv ? Utils.add_csv_row(csv, values, %w(Time Actor Action Object)) : fail
-    end
-  end
-
-  # Pauses to allow enough time for Canvas live events to be consumed and stored in the LRS db
-  def wait_for_event
-    wait = Utils.medium_wait
-    logger.info "Pausing for #{wait} seconds for events to make it from Canvas to the LRS"
+    logger.info "Waiting for the Canvas poller for #{wait = SquiggyUtils.canvas_poller_wait} seconds"
     sleep wait
   end
 

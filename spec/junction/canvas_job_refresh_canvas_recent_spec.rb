@@ -94,7 +94,7 @@ unless ENV['STANDALONE']
             initial_enrollment_data << {sid: teacher[:user].sis_id, role: teacher[:user].role.downcase, section_id: teacher[:section].sis_id}
           end
 
-          @canvas_page.upload_sis_imports([csv], [])
+          @canvas_page.upload_sis_imports([csv])
           sites_to_verify << site
         rescue => e
           Utils.log_error e

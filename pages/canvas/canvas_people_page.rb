@@ -60,12 +60,7 @@ module CanvasPeoplePage
     modes.uniq
   end
 
-  # Adds a collection of users to a course site with the role associated with the user
-  # @param course [Course]
-  # @param test_users [Array<User>]
-  # @param section [Section]
-  # @param event [Event]
-  def add_users(course, test_users, section = nil, event = nil)
+  def add_users(course, test_users, section = nil)
     users_to_add = Array.new test_users
     logger.info "Users needed for the site are #{users_to_add.map { |u| u.uid }}"
 
@@ -115,7 +110,6 @@ module CanvasPeoplePage
           hide_canvas_footer_and_popup
           wait_for_update_and_click_js next_button_element
           wait_for_users users_with_role
-          users_with_role.each { |u| add_event(event, EventType::CREATE, u.full_name) }
         rescue => e
           logger.error "#{e.message}\n#{e.backtrace}"
           logger.warn 'Add User failed, retrying'

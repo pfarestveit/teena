@@ -37,27 +37,19 @@ module Page
       enter_and_save_announcement announcement
     end
 
-    # Creates an announcement in a group within a course site
-    # @param group [Group]
-    # @param announcement [Announcement]
-    # @param event [Event]
-    def create_group_announcement(group, announcement, event = nil)
+    def create_group_announcement(group, announcement)
       logger.info "Creating group announcement: #{announcement.title}"
       navigate_to "#{Utils.canvas_base_url}/groups/#{group.site_id}/discussion_topics/new?is_announcement=true"
-      enter_and_save_announcement(announcement, event)
+      enter_and_save_announcement(announcement)
     end
 
-    # Enters an announcement title and body and saves it
-    # @param announcement [Announcement]
-    # @param event [Event]
-    def enter_and_save_announcement(announcement, event = nil)
+    def enter_and_save_announcement(announcement)
       discussion_title_element.when_present Utils.short_wait
       discussion_title_element.send_keys announcement.title
       html_editor_link if html_editor_link_element.visible?
       wait_for_element_and_type_js(announcement_msg_element, announcement.body)
       wait_for_update_and_click_js save_button_element
       announcement_title_heading_element.when_visible Utils.medium_wait
-      add_event(event, EventType::CREATE, announcement.title)
       announcement.url = current_url
       logger.info "Announcement URL is #{announcement.url}"
     end
@@ -81,50 +73,32 @@ module Page
     button(:reply_prompt_dismiss_button, xpath: '//button[contains(., "No")]')
     button(:save_discuss_button, xpath: '//button[text()="Save"][@type="submit"]')
 
-    # Creates a discussion on a course site
-    # @param course [Course]
-    # @param discussion [Discussion]
-    # @param event [Event]
-    def create_course_discussion(course, discussion, event = nil)
+    def create_course_discussion(course, discussion)
       logger.info "Creating discussion topic named '#{discussion.title}'"
       load_course_site course
       navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/discussion_topics"
-      enter_and_save_discussion(discussion, event)
+      enter_and_save_discussion discussion
     end
 
-    # Creates a discussion on a group site
-    # @param group [Group]
-    # @param discussion [Discussion]
-    # @param event [Event]
-    def create_group_discussion(group, discussion, event = nil)
+    def create_group_discussion(group, discussion)
       logger.info "Creating group discussion topic named '#{discussion.title}'"
       navigate_to "#{Utils.canvas_base_url}/groups/#{group.site_id}/discussion_topics"
-      enter_and_save_discussion(discussion, event)
+      enter_and_save_discussion discussion
     end
 
-    # Enters and saves a discussion topic
-    # @param discussion [Discussion]
-    # @param event [Event]
-    def enter_and_save_discussion(discussion, event = nil)
+    def enter_and_save_discussion(discussion)
       wait_for_load_and_click new_discussion_link_element
       discussion_title_element.when_present Utils.short_wait
       discussion_title_element.send_keys discussion.title
       js_click threaded_discussion_cbx_element
       teacher_role = save_and_publish_button?
       teacher_role ? click_save_and_publish : wait_for_update_and_click(save_discuss_button_element)
-      add_event(event, EventType::CREATE, discussion.title)
       teacher_role ? published_button_element.when_visible(Utils.medium_wait) : subscribed_link_element.when_visible(Utils.medium_wait)
       discussion.url = current_url
       logger.info "Discussion URL is #{discussion.url}"
     end
 
-    # Adds a reply to a discussion.  If an index is given, then adds a reply to an existing reply at that index.  Otherwise,
-    # adds a reply to the topic itself.
-    # @param discussion [Discussion]
-    # @param index [Integer]
-    # @param reply_body [String]
-    # @param event [Event]
-    def add_reply(discussion, index, reply_body, event = nil)
+    def add_reply(discussion, index, reply_body)
       navigate_to discussion.url
       hide_canvas_footer_and_popup
       if index.nil?
@@ -149,7 +123,6 @@ module Page
         reply_prompt_dismiss_button_element.click if reply_prompt_dismiss_button_element.exists?
         wait_for_load_and_click_js secondary_post_reply_button_elements[index]
       end
-      add_event(event, EventType::POST, reply_body)
       wait_until(Utils.short_wait) { discussion_reply_elements.length == replies + 1 }
     end
 
@@ -165,11 +138,7 @@ module Page
       end
     end
 
-    # Given an array of elements containing discussion entry authors, returns the creators' Canvas IDs and entry dates
-    # @param course [Course]
-    # @param author_elements [Array<PageObject::Elements::Link>]
-    # @return [Array[<Hash>]]
-    def get_page_discussion_entries(course, author_elements)
+    def get_page_discussion_entries(author_elements)
       author_elements.map do |el|
         canvas_id = el.attribute('href').split('/users/')[1]
         logger.debug "Found Canvas ID #{canvas_id}"
@@ -181,22 +150,19 @@ module Page
       end
     end
 
-    # Returns all the authors and dates of discussion entries on a course site discussion thread
-    # @param course [Course]
-    # @return [Array<Hash>]
     def discussion_entries(course)
       author_els = wait_for_discussion
 
       # If there are entries, collect those on page one
-      replies = get_page_discussion_entries(course, author_els)
+      replies = get_page_discussion_entries(author_els)
 
       # If there are additional pages, collect those as well
       pages = (discussion_page_link_elements.map &:text).uniq if discussion_page_link_elements.any?
-      if pages && pages.any?
+      if pages&.any?
         pages.each do |page|
           wait_for_update_and_click_js(discussion_page_link_elements.find { |el| el.text == page })
           author_els = wait_for_discussion
-          replies << get_page_discussion_entries(course, author_els)
+          replies << get_page_discussion_entries(author_els)
         end
       end
       replies.flatten

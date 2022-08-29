@@ -56,16 +56,11 @@ module Page
       wait_until(Utils.short_wait) { recent_activity_heading.include? group.title }
     end
 
-    # Joins a group on a course site
-    # @param course [Course]
-    # @param group [Group]
-    # @param event [Event]
-    def student_join_grp(course, group, event = nil)
+    def student_join_grp(course, group)
       load_course_grps course
       logger.info "Joining group '#{group.title}'"
       wait_for_update_and_click link_element(xpath: "//a[contains(@aria-label,'Join group #{group.title}')]")
       list_item_element(xpath: '//li[contains(.,"Joined Group")]').when_present Utils.short_wait
-      add_event(event, EventType::CREATE, group.title)
     end
 
     # Leaves a group on a course site
@@ -91,11 +86,7 @@ module Page
       wait_until(Utils.short_wait) { recent_activity_heading.include? group.title }
     end
 
-    # As an instructor, creates a new group set and a group
-    # @param course [Course]
-    # @param group [Group]
-    # @param event [Event]
-    def instructor_create_grp(course, group, event = nil)
+    def instructor_create_grp(course, group)
       load_course_grps course
 
       # Create new group set
@@ -106,7 +97,6 @@ module Page
       checkbox_element(id: 'enable_self_signup').check
       button_element(id: 'newGroupSubmitButton').click
       link_element(xpath: "//a[@title='#{group.group_set}']").when_present Utils.short_wait
-      add_event(event, EventType::CREATE, group.group_set)
 
       # Create new group within the group set
       logger.info "Creating new group called '#{group.title}'"
@@ -114,7 +104,6 @@ module Page
       wait_for_element_and_type(edit_group_name_input_element, group.title)
       button_element(id: 'groupEditSaveButton').click
       link_element(xpath: "//a[contains(.,'#{group.title}')]").when_present Utils.short_wait
-      add_event(event, EventType::CREATE, group.title)
       (link = link_element(xpath: "//a[contains(.,'#{group.title}')]/../following-sibling::div[contains(@class,'group-actions')]//a")).when_present Utils.short_wait
       logger.info "Group ID is '#{group.site_id = link.attribute('id').split('-')[1]}'"
     end

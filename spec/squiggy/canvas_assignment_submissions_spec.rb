@@ -88,7 +88,8 @@ describe 'Canvas assignment submissions' do
           expect(visible_detail[:owner]).to eql(asset.owner.full_name)
         end
         it "#{asset.title} belonging to #{asset.owner.full_name} has the right detail view description" do
-          expect(visible_detail[:description]).to eql(asset.description.to_s)
+          expected = (asset.description && !asset.description.empty?) ? asset.description : '—'
+          expect(visible_detail[:description]).to eql(expected)
         end
         it "#{asset.title} belonging to #{asset.owner.full_name} has the right detail view preview type" do
           expect(preview_generated).to be true
