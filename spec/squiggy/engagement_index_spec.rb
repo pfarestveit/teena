@@ -19,6 +19,7 @@ describe 'The Engagement Index' do
 
     @canvas.log_in(@cal_net, test.admin.username, Utils.super_admin_password)
     @canvas.create_squiggy_course test
+    @canvas.disable_tool(test.course, SquiggyTool::IMPACT_STUDIO)
     
     @asset = student_2.assets.find &:file_name
     @asset.title = "#{@asset.title} #{test.id}"
@@ -55,6 +56,12 @@ describe 'The Engagement Index' do
   end
 
   after(:all) { Utils.quit_browser @driver }
+
+  [teacher, student_1, student_2, student_3].each do |user|
+    it "offers no #{user.full_name} Impact Studio link for a course site with no Impact Studio" do
+      expect(@engagement_index.user_profile_link(user).exists?).to be false
+    end
+  end
 
   it 'is sorted by "Rank" ascending by default' do
     expect(@engagement_index.visible_ranks).to eql(@engagement_index.visible_ranks.sort)
@@ -205,6 +212,76 @@ describe 'The Engagement Index' do
         @assets_list.expand_adv_search
         @assets_list.click_uploader_select
         expect(@assets_list.asset_uploader_options).not_to include(user.full_name)
+      end
+    end
+  end
+
+  # COLLABORATION
+
+  describe '"looking for collaborators"' do
+
+    before(:all) do
+      @canvas.stop_masquerading
+      @canvas.enable_tool(test.course, SquiggyTool::IMPACT_STUDIO)
+      @canvas.click_tool_link SquiggyTool::IMPACT_STUDIO
+    end
+
+    context 'when the user is not looking' do
+
+      before(:all) do
+        @canvas.masquerade_as(student_1, test.course)
+        @engagement_index.load_page test
+        @engagement_index.share_score
+      end
+
+      context 'and the user views itself' do
+
+        it 'shows the right status on the Engagement Index' do
+          @engagement_index.collaboration_status_element(student_1).when_visible Utils.short_wait
+          expect(@engagement_index.collaboration_status_element(student_1).text).to eql('Not looking')
+        end
+      end
+
+      context 'and another user views the user' do
+
+        before(:all) do
+          @canvas.masquerade_as(student_2, test.course)
+          @engagement_index.load_page test
+          @engagement_index.share_score
+        end
+
+        it 'shows no collaboration elements on the Engagement Index' do
+          @engagement_index.user_profile_link(student_1).when_visible Utils.short_wait
+          expect(@engagement_index.collaboration_status_element(student_1).exists?).to be false
+          expect(@engagement_index.collaboration_button_element(student_1).exists?).to be false
+        end
+      end
+    end
+
+    context 'when the user is looking' do
+
+      before(:all) do
+        @canvas.masquerade_as(student_1, test.course)
+        @engagement_index.load_scores test
+      end
+
+      context 'and the user views itself' do
+
+        it('shows the right status on the Engagement Index') { @engagement_index.set_collaboration_true student_1 }
+
+      end
+
+      context 'and another user views the user' do
+
+        before(:all) do
+          @canvas.masquerade_as(student_2, test.course)
+          @engagement_index.load_scores test
+        end
+
+        it 'shows a collaborate button on the Engagement Index' do
+          @engagement_index.user_profile_link(student_1).when_visible Utils.short_wait
+          expect(@engagement_index.collaboration_button_element(student_1).exists?).to be true
+        end
       end
     end
   end

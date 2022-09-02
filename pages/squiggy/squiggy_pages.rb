@@ -6,6 +6,7 @@ module SquiggyPages
 
   button(:go_back_button, id: 'go-back-btn')
   button(:back_to_asset_library_button, id: 'asset-library-btn')
+  link(:back_to_impact_studio_link, text: 'Back to Impact Studio')
   button(:save_button, id: 'save-btn')
   button(:cancel_button, id: 'cancel-btn')
   button(:confirm_delete_button, id: 'confirm-delete-btn')
@@ -20,6 +21,13 @@ module SquiggyPages
   def click_back_to_asset_library
     logger.debug 'Clicking Back to Asset Library button'
     wait_for_update_and_click back_to_asset_library_button_element
+  end
+
+  def click_back_to_impact_studio
+    wait_for_load_and_click back_to_impact_studio_link_element
+    wait_until(Utils.medium_wait) { title == SquiggyTool::IMPACT_STUDIO.name }
+    hide_canvas_footer_and_popup
+    switch_to_canvas_iframe
   end
 
   def clear_input(input_el)
