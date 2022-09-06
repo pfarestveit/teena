@@ -2,6 +2,7 @@ class SquiggyCourse < Course
 
   attr_accessor :asset_library_url,
                 :engagement_index_url,
+                :impact_studio_url,
                 :lti_tools,
                 :roster,
                 :squiggy_id,

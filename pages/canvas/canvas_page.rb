@@ -524,6 +524,7 @@ module Page
         end
       end
       test.course.engagement_index_url = click_tool_link SquiggyTool::ENGAGEMENT_INDEX
+      test.course.impact_studio_url = click_tool_link SquiggyTool::IMPACT_STUDIO
       test.course.whiteboards_url = click_tool_link SquiggyTool::WHITEBOARDS
       test.course.asset_library_url = click_tool_link SquiggyTool::ASSET_LIBRARY
       asset_library = SquiggyAssetLibraryListViewPage.new @driver

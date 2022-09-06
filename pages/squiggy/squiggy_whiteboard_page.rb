@@ -136,6 +136,7 @@ class SquiggyWhiteboardPage < SquiggyWhiteboardsPage
     )
     asset.id = SquiggyUtils.set_asset_id asset
     whiteboard.asset_exports << asset
+    asset
   end
 
   def click_export_link

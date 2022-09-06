@@ -397,4 +397,65 @@ class SquiggyEngagementIndexPage
     wait_for_update_and_click back_to_engagement_index_element
   end
 
+  # IMPACT STUDIO
+
+  def user_profile_link(user)
+    link_element(xpath: "//a[contains(.,'#{user.full_name}')]")
+  end
+
+  def click_user_dashboard_link(user)
+    logger.info "Clicking the Impact Studio link for UID #{user.uid}"
+    wait_until(Utils.medium_wait) do
+      scroll_to_bottom
+      sleep 1
+      user_profile_link(user).exists?
+    end
+    scroll_to_element user_profile_link(user)
+    user_profile_link(user).click
+    wait_until(Utils.medium_wait) { title == "#{SquiggyTool::IMPACT_STUDIO.name}" }
+    hide_canvas_footer_and_popup
+    switch_to_canvas_iframe
+  end
+
+  def collaboration_status_element(user)
+    # TODO span_element()
+  end
+
+  def collaboration_toggle_element(user)
+    # TODO label_element()
+  end
+
+  def collaboration_button_element(user)
+    # TODO button_element()
+  end
+
+  def set_collaboration_true(user)
+    collaboration_status_element(user).when_visible Utils.short_wait
+    if collaboration_status_element(user).text.include? 'Not'
+      wait_for_update_and_click collaboration_toggle_element(user)
+      sleep 1
+      wait_until(Utils.short_wait) { !collaboration_status_element.text.include?('Not') rescue Selenium::WebDriver::Error::StaleElementReferenceError }
+    else
+      logger.debug '"Looking for collaborators" is already true, doing nothing'
+    end
+  end
+
+  def set_collaboration_false(user)
+    collaboration_status_element(user).when_visible Utils.short_wait
+    if collaboration_status_element(user).text.include? 'Not'
+      logger.debug '"Looking for collaborators" is already false, doing nothing'
+    else
+      wait_for_update_and_click collaboration_toggle_element(user)
+      sleep 1
+      wait_until(Utils.short_wait) { collaboration_status_element.text.include?('Not') rescue Selenium::WebDriver::Error::StaleElementReferenceError }
+    end
+  end
+
+  def click_collaborate_button(user)
+    logger.debug "Clicking 'Collaborate' button for #{user.full_name}"
+    collaboration_button_element(user).when_visible Utils.short_wait
+    scroll_to_element collaboration_button_element(user)
+    wait_for_update_and_click collaboration_button_element(user)
+  end
+
 end
