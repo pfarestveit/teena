@@ -191,14 +191,14 @@ describe 'BOAC' do
     it 'rejects malformed input' do
       @group_page.load_page group_4
       @group_page.click_add_sids_button
-      @group_page.enter_sid_list 'nullum magnum ingenium sine mixtura dementiae fuit'
+      @group_page.enter_sid_list(@group_page.create_group_textarea_sids_element, 'nullum magnum ingenium sine mixtura dementiae fuit')
       @group_page.click_add_sids_to_group_button
       @group_page.click_remove_invalid_sids
     end
 
     it 'rejects SIDs that do not match any BOA admit SIDs' do
       @group_page.click_add_sids_button
-      @group_page.enter_sid_list '9999999990, 9999999991'
+      @group_page.enter_sid_list(@group_page.create_group_textarea_sids_element,  '9999999990, 9999999991')
       @group_page.click_add_sids_to_group_button
       @group_page.click_remove_invalid_sids
     end
@@ -207,7 +207,7 @@ describe 'BOAC' do
       a = [test.admits.last.sis_id]
       2.times { |i| a << "99999999#{10 + i}" }
       @group_page.click_add_sids_button
-      @group_page.enter_sid_list a.join(', ')
+      @group_page.enter_sid_list(@group_page.create_group_textarea_sids_element,  a.join(', '))
       @group_page.click_add_sids_to_group_button
       @group_page.click_remove_invalid_sids
       @group_page.wait_until(2) { @group_page.create_group_textarea_sids_element.attribute('value') == test.admits.last.sis_id }

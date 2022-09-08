@@ -143,15 +143,13 @@ module BOACPages
   # Clicks link to create new curated group
   def click_sidebar_create_student_group
     logger.debug 'Clicking sidebar button to create a curated group'
-    wait_for_load_and_click create_curated_group_link_element
-    wait_for_title 'Create Curated Group'
+    wait_for_load_and_click_js create_curated_group_link_element
     sleep 2
   end
 
   def click_sidebar_create_admit_group
     logger.info 'Clicking sidebar button to create an admit group'
     wait_for_load_and_click create_admit_group_link_element
-    wait_for_title 'Create Curated Group'
     sleep 2
   end
 
@@ -200,7 +198,6 @@ module BOACPages
     else
       wait_until(Utils.medium_wait) do
         sidebar_student_groups.include? group.name
-        current_url.include? '/curated/'
       end
       navigate_to current_url
       wait_for_sidebar_group_member_count group

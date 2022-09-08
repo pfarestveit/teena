@@ -41,12 +41,13 @@ module BOACGroupPages
   end
 
   def click_add_sids_to_group_button
-    wait_for_update_and_click add_sids_to_group_button_element
+    wait_for_load_and_click add_sids_to_group_button_element
   end
 
   def click_remove_invalid_sids
     logger.info 'Clicking button to remove invalid SIDs'
-    wait_for_load_and_click remove_invalid_sids_button_element
+    remove_invalid_sids_button_element.when_present Utils.medium_wait
+    js_click remove_invalid_sids_button_element
     # Sometimes it's hidden, sometimes it goes away
     remove_invalid_sids_button_element.when_not_visible Utils.short_wait rescue Selenium::WebDriver::Error::StaleElementReferenceError
   end
@@ -63,7 +64,7 @@ module BOACGroupPages
 
   def add_comma_sep_sids_to_existing_grp(members, group)
     click_add_sids_button
-    enter_sid_list(create_group_textarea_sids_element, members)
+    enter_sid_list(create_group_textarea_sids_element, members.map(&:sis_id).join(','))
     click_add_sids_to_group_button
     group.members << members
     group.members.flatten!

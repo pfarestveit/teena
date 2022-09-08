@@ -150,7 +150,7 @@ class BOACTestConfig < TestConfig
                        [sis_appts_sids, ycbm_appts_sids].each &:shuffle!
                        all_sids = @students.map &:sis_id
                        sis_appts_sids = sis_appts_sids & all_sids
-                       ycbm_appts_sids = sis_appts_sids & all_sids
+                       ycbm_appts_sids = ycbm_appts_sids & all_sids
                        test_sids = (sis_appts_sids[0..(config - 1)] + ycbm_appts_sids[0..(config - 1)]).uniq
                        @students.select { |s| test_sids.include? s.sis_id }
 

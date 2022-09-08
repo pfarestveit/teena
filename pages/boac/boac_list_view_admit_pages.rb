@@ -107,7 +107,7 @@ module BOACListViewAdmitPages
   end
 
   def wait_for_admit_cohort_sids
-    wait_until(Utils.short_wait) { admit_cohort_sid_elements.any? }
+    wait_until(Utils.medium_wait) { admit_cohort_sid_elements.any? }
   end
 
   def list_view_admit_sids(cohort)
