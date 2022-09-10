@@ -112,6 +112,7 @@ module Page
       logger.info "Submitting #{submission.title} for #{user.full_name}"
       navigate_to assignment.url
       wait_for_load_and_click_js submit_assignment_button_element
+      upload_assignment submission
       assignment_submission_conf_element.when_visible Utils.long_wait
     end
 
