@@ -135,7 +135,7 @@ module Page
       # @param section [Section]
       # @return [PageObject::Elements::Button]
       def section_delete_button(section)
-        button_element(xpath: "#{current_section_id_cell_xpath(section)}/following-sibling::td[contains(@class,'section-action-option')]//button[contains(.,'Delete')]")
+        button_element(xpath: "#{current_section_id_cell_xpath(section)}/following-sibling::td[contains(@class,'section-action-option')]//button[contains(.,'Unlink')]")
       end
 
       # Clicks the Delete button for a given section in the 'Sections in this Course Site' table and pauses to allow the DOM to update
@@ -157,7 +157,7 @@ module Page
       # @param section [Section]
       # @return [PageObject::Elements::Button]
       def section_undo_add_button(section)
-        button_element(xpath: "#{current_section_id_cell_xpath(section)}/following-sibling::td[contains(@class,'section-action-option')]//button[contains(.,'Undo Add')]")
+        button_element(xpath: "#{current_section_id_cell_xpath(section)}/following-sibling::td[contains(@class,'section-action-option')]//button[contains(.,'Undo Link')]")
       end
 
       # Clicks the Undo Add button for a given section in the 'Sections in this Course Site' table and pauses to allow the DOM to update
@@ -251,7 +251,7 @@ module Page
       # @param section [Section]
       # @return [PageObject::Elements::Button]
       def section_add_button(course, section)
-        button_element(xpath: "#{available_section_cell_xpath(course.code, section.id)}/following-sibling::td[contains(@class,'section-action-option')]//button[contains(.,'Add')]")
+        button_element(xpath: "#{available_section_cell_xpath(course.code, section.id)}/following-sibling::td[contains(@class,'section-action-option')]//button[contains(.,'Link')]")
       end
 
       # Clicks the Add button for a given section in a course's available sections table and pauses to allow the DOM to update
@@ -276,7 +276,7 @@ module Page
       # @param section [Section]
       # @return [PageObject::Elements::Div]
       def section_added_element(course, section)
-        div_element(xpath: "#{available_section_cell_xpath(course.code, section.id)}/following-sibling::td[contains(@class,'section-action-option')]//div[contains(.,'Added')]")
+        div_element(xpath: "#{available_section_cell_xpath(course.code, section.id)}/following-sibling::td[contains(@class,'section-action-option')]//div[contains(.,'Linked')]")
       end
 
       # Returns the Undo Delete button for a given section in a course's available sections table
@@ -284,7 +284,7 @@ module Page
       # @param section [Section]
       # @return [PageObject::Elements::Button]
       def section_undo_delete_button(course, section)
-        button_element(xpath: "#{available_section_cell_xpath(course.code, section.id)}/following-sibling::td[contains(@class,'section-action-option')]//button[contains(.,'Undo Delete')]")
+        button_element(xpath: "#{available_section_cell_xpath(course.code, section.id)}/following-sibling::td[contains(@class,'section-action-option')]//button[contains(.,'Undo Unlink')]")
       end
 
       # Clicks the Undo Delete button for a given section in a course's available sections table and pauses to allow the DOM to update
