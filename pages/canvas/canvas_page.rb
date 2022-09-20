@@ -352,7 +352,7 @@ module Page
         logger.debug 'The site is already published'
       else
         logger.debug 'The site is unpublished, publishing'
-        wait_for_update_and_click publish_button_element
+        js_click publish_button_element
         unless course.create_site_workflow
           wait_for_update_and_click activity_stream_radio_element
           wait_for_update_and_click choose_and_publish_button_element
