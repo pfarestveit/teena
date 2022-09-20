@@ -51,13 +51,7 @@ unless ENV['STANDALONE']
       @canvas_assignments_page.create_assignment(course, @ungraded_assignment)
     end
 
-    after(:all) do
-      @canvas.stop_masquerading
-      assignments = @canvas_assignments_page.get_list_view_assignments course
-      @canvas_assignments_page.delete_test_assignments assignments
-    ensure
-      Utils.quit_browser @driver
-    end
+    after(:all) { Utils.quit_browser @driver }
 
     it 'offers an E-Grades Export button on the Gradebook' do
       @canvas.load_gradebook course
