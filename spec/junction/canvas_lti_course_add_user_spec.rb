@@ -94,23 +94,44 @@ describe 'bCourses Find a Person to Add', order: :defined do
       else
         @canvas.wait_for_load_and_click_js @canvas.add_people_button_element
         @canvas.find_person_to_add_link_element.when_visible Utils.short_wait
-        expect(@canvas.add_user_by_email?).to be true
+        expect(@canvas.add_user_by_email_label_element.text).to eql('Email Address')
+        @canvas.wait_for_update_and_click @canvas.add_user_by_email_element
+        @canvas.wait_until(1) do
+          @canvas.user_list_element.attribute('placeholder') == 'student@berkeley.edu, guest@example.com, gsi@berkeley.edu'
+        end
       end
     end
 
-    it('include a search by Berkeley UID option') do
+    it 'include a search by Berkeley UID option' do
       if standalone
         skip 'Skipping test since in standalone mode'
       else
-        expect(@canvas.add_user_by_uid?).to be true
+        expect(@canvas.add_user_by_uid_label_element.text).to eql('Berkeley UID')
+        @canvas.wait_for_update_and_click @canvas.add_user_by_uid_element
+        @canvas.wait_until(1) do
+          @canvas.user_list_element.attribute('placeholder') == '1032343, 11203443'
+        end
       end
     end
 
-    it('include a search by Student ID option') do
+    it 'include a search by Student ID option' do
       if standalone
         skip 'Skipping test since in standalone mode'
       else
-        expect(@canvas.add_user_by_sid?).to be true
+        expect(@canvas.add_user_by_sid_label_element.text).to eql('Student ID')
+        @canvas.wait_for_update_and_click @canvas.add_user_by_sid_element
+        @canvas.wait_until(1) do
+          @canvas.user_list_element.attribute('placeholder') == '25738808, UID:11203443'
+        end
+      end
+    end
+
+    it 'include a how-to link' do
+      if standalone
+        skip 'Skipping test since in standalone mode'
+      else
+        title = 'IT - How do I add users to my course site?'
+        expect(@canvas.external_link_valid?(@canvas.add_user_help_link_element, title)).to be true
       end
     end
   end
@@ -228,7 +249,7 @@ describe 'bCourses Find a Person to Add', order: :defined do
           @canvas.click_find_person_to_add @driver
           @course_add_user_page.search('Oski', 'Last Name, First Name')
           @course_add_user_page.user_role_element.when_visible Utils.short_wait
-          @course_add_user_page.wait_until(Utils.medium_wait) do
+          @course_add_user_page.wait_until(Utils.medium_wait, "Visible #{@course_add_user_page.user_role_options}") do
             @course_add_user_page.user_role_options.map(&:strip) == ['Student', 'Waitlist Student', 'Observer']
           end
         end

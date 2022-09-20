@@ -12,9 +12,13 @@ module CanvasPeoplePage
   elements(:section_label, :div, xpath: '//div[@class="section"]')
   link(:add_people_button, id: 'addUsers')
   link(:find_person_to_add_link, xpath: '//a[contains(.,"Find a Person to Add")]')
-  checkbox(:add_user_by_email, xpath: '//span[contains(text(),"Email Address")]/..')
-  checkbox(:add_user_by_uid, xpath: '//span[contains(text(),"Berkeley UID")]/..')
-  checkbox(:add_user_by_sid, xpath: '//span[contains(text(),"Student ID")]/..')
+  div(:add_user_by_email, xpath: '//input[@id="peoplesearch_radio_cc_path"]/..')
+  element(:add_user_by_email_label, xpath: '//label[@for="peoplesearch_radio_cc_path"]')
+  div(:add_user_by_uid, xpath: '//input[@id="peoplesearch_radio_unique_id"]/..')
+  element(:add_user_by_uid_label, xpath: '//label[@for="peoplesearch_radio_unique_id"]')
+  div(:add_user_by_sid, xpath: '//input[@id="peoplesearch_radio_sis_user_id"]/..')
+  element(:add_user_by_sid_label, xpath: '//label[@for="peoplesearch_radio_sis_user_id"]')
+  link(:add_user_help_link,  text: 'How do I add users to my course site?')
   text_area(:user_list, xpath: '//textarea')
   select_list(:user_role, id: 'peoplesearch_select_role')
   elements(:user_role_option, :span, xpath: '//span[@role="option"]')
@@ -98,9 +102,7 @@ module CanvasPeoplePage
           logger.info "Adding users with role #{user_role}"
           load_users_page course
           wait_for_load_and_click add_people_button_element
-          add_user_by_uid_element.when_visible Utils.short_wait
-          sleep 1
-          check_add_user_by_uid
+          wait_for_update_and_click add_user_by_uid_element
           wait_for_element_and_type_js(user_list_element, users)
           wait_for_update_and_click user_role_element
           wait_for_update_and_click(user_role_option_elements.find { |el| el.text == user_role })
@@ -211,7 +213,8 @@ module CanvasPeoplePage
   # @param driver [Selenium::WebDriver]
   def click_find_person_to_add(driver)
     logger.debug 'Clicking Find a Person to Add button'
-    wait_for_load_and_click add_people_button_element
+    add_people_button_element.when_present Utils.medium_wait
+    js_click add_people_button_element
     wait_for_load_and_click find_person_to_add_link_element
     switch_to_canvas_iframe JunctionUtils.junction_base_url
   end
