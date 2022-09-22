@@ -799,6 +799,17 @@ class BOACUtils < Utils
     course.id = id
   end
 
+  def self.set_degree_sis_course_id(degree, course)
+    query = "SELECT id
+               FROM degree_progress_courses
+              WHERE degree_check_id = '#{degree.id}'
+                AND term_id = '#{course.term_id}'
+                AND section_id = '#{course.ccn}'"
+    id = Utils.query_pg_db_field(boac_db_credentials, query, 'id').first
+    logger.debug "Completed course '#{course.name}' id is #{id}"
+    course.id = id
+  end
+
   def self.update_degree_course_grade(course, student, grade)
     statement = "UPDATE degree_progress_courses
                  SET grade = '#{grade}'

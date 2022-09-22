@@ -134,6 +134,7 @@ class BOACDegreeTemplatePage
   text_field(:col_req_name_input, xpath: '//input[contains(@id, "name-input")]')
   text_area(:col_req_desc_input, xpath: '//textarea[contains(@id, "description-input")]')
   select_list(:col_req_parent_select, xpath: '//select[contains(@id, "parent-category-select")]')
+  checkbox(:col_req_transfer_course_cbx, id: 'is-satisfied-by-transfer-course-checkbox')
   text_field(:col_req_course_units_input, xpath: '//input[contains(@id, "units-input")]')
   button(:unit_req_range_toggle, id: 'show-upper-units-input')
   text_field(:unit_req_num_input_0, id: 'units-input')
@@ -189,6 +190,10 @@ class BOACDegreeTemplatePage
     end
   end
 
+  def click_transfer_course
+    wait_for_update_and_click_js col_req_transfer_course_cbx_element
+  end
+
   def col_req_unit_req_pill_xpath(unit_req)
     "//div[contains(@class, \"pill-unit-requirement\")]/div[contains(text(), \"#{unit_req.name}\")]"
   end
@@ -240,6 +245,7 @@ class BOACDegreeTemplatePage
     enter_col_req_name req.name
     enter_col_req_desc req.desc if req.instance_of? DegreeReqtCategory
     select_col_req_parent req.parent if req.parent
+    click_transfer_course if req.instance_of?(DegreeReqtCourse) && req.transfer_course
     enter_col_req_units req.units if req.instance_of?(DegreeReqtCourse) && req.units
     req.units_reqts&.each { |u_req| select_col_req_unit_req u_req.name }
   end

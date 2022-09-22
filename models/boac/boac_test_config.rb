@@ -59,7 +59,7 @@ class BOACTestConfig < TestConfig
 
   # Sets the complete list of potentially visible students
   def set_students(students = nil, opts = nil)
-    @students = students || NessieUtils.get_all_students
+    @students = students || NessieUtils.get_all_students(opts)
     @students.keep_if { |s| s.status == 'active' } unless opts && opts[:include_inactive]
   end
 
@@ -301,8 +301,8 @@ class BOACTestConfig < TestConfig
     set_test_students 50
   end
 
-  def degree_progress
-    set_base_configs BOACDepartments::COE
+  def degree_progress(opts=nil)
+    set_base_configs(BOACDepartments::COE, opts)
     NessieTimelineUtils.set_advisor_data @advisor
     filter = CohortFilter.new
     filter.major = BOACUtils.degree_major

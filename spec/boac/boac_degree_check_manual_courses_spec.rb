@@ -88,9 +88,40 @@ unless ENV['DEPS']
       @degree_check_create_page.load_page @student
       @degree_check_create_page.create_new_degree_check(@degree_check)
       @degree_check_page.load_page @degree_check
+
+      @transfer_course = @degree_check.completed_courses.find &:transfer_course
     end
 
     after(:all) { Utils.quit_browser @driver }
+
+    context 'when a transfer course' do
+
+      it 'is created automatically when the degree check is created' do
+        @degree_check_page.wait_until(Utils.short_wait) do
+          @degree_check_page.assigned_course_name(@transfer_course) == @transfer_course.name
+        end
+        expect(@degree_check_page.assigned_course_units(@transfer_course)).to eql(@transfer_course.units)
+        expect(@degree_check_page.assigned_course_grade(@transfer_course)).to eql(@transfer_course.grade)
+      end
+
+      it 'can be edited' do
+        @transfer_course.grade = 'A'
+        @transfer_course.note = "Note #{test.id}"
+        @transfer_course.units = '6'
+        @degree_check_page.edit_assigned_course @transfer_course
+        expect(@degree_check_page.assigned_course_grade @transfer_course).to eql(@transfer_course.grade)
+        expect(@degree_check_page.assigned_course_note @transfer_course).to eql(@transfer_course.note)
+        expect(@degree_check_page.assigned_course_units @transfer_course).to eql(@transfer_course.units)
+      end
+
+      it 'is reflected in the unit requirements' do
+        @transfer_course.units_reqts.each do |req|
+          expect(@degree_check_page.unit_req_course_units(req, @transfer_course)).to eql(@transfer_course.units)
+        end
+      end
+
+      it('can be unassigned') { @degree_check_page.unassign_course @transfer_course }
+    end
 
     context 'when created' do
 
