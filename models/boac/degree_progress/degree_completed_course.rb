@@ -10,7 +10,8 @@ class DegreeCompletedCourse < DegreeCourse
                 :req_course,
                 :course_copies,
                 :course_orig,
-                :manual
+                :manual,
+                :waitlisted
 
   def initialize(test_data)
     super

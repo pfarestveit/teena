@@ -115,6 +115,18 @@ class BOACDegreeCheckPage < BOACDegreeTemplatePage
     end
   end
 
+  def unit_req_course?(req, course)
+    row_element(id: "unit-requirement-#{req.id}-course-#{course.id}").exists?
+  end
+
+  def unit_req_course_units(req, course)
+    unless button_element(xpath: "#{unit_req_row_xpath req}//*[name()='svg'][@data-icon='caret-down']").exists?
+      wait_for_update_and_click button_element(id: "unit-requirement-#{req.id}-toggle")
+    end
+    el = cell_element(xpath: "//tr[@id=\"unit-requirement-#{req.id}-course-#{course.id}\"]/td[3]")
+    el.text if el.exists?
+  end
+
   # COURSE REQUIREMENTS
 
   checkbox(:big_dot_cbx, id: 'recommended-course-checkbox')
@@ -129,6 +141,11 @@ class BOACDegreeCheckPage < BOACDegreeTemplatePage
     node = course_req_menu?(course) ? '2' : '1'
     name_el = cell_element(xpath: "#{course_req_xpath course}/td[#{node}]//div")
     name_el.text if name_el.exists?
+  end
+
+  def visible_course_req_name_struck?(course)
+    node = course_req_menu?(course) ? '2' : '1'
+    cell_element(xpath: "#{course_req_xpath course}/td[#{node}]//span").attribute('class').include? 'strikethrough'
   end
 
   def visible_course_req_units(course)
@@ -174,6 +191,32 @@ class BOACDegreeCheckPage < BOACDegreeTemplatePage
   def click_hide_note
     wait_for_update_and_click hide_note_button_element
     hide_note_button_element.when_not_present 1
+  end
+
+  # IN PROGRESS COURSES
+
+  elements(:in_progress_course, :row, xpath: '//tr[contains(@id, "in-progress-courses__row")]')
+
+  def in_progress_course_ccns
+    in_progress_course_elements.map { |el| el.attribute('data-pk') }
+  end
+
+  def in_progress_course_xpath(course)
+    "//tr[@data-pk='#{course.term_id}-#{course.ccn}']"
+  end
+
+  def in_progress_course_row(course)
+    row_element(xpath: in_progress_course_xpath(course))
+  end
+
+  def in_progress_course_code(course)
+    el = cell_element(xpath: "#{in_progress_course_xpath course}/td[1]")
+    el.text.strip if el.exists?
+  end
+
+  def in_progress_course_units(course)
+    el = cell_element(xpath: "#{in_progress_course_xpath course}/td[2]")
+    el.text if el.exists?
   end
 
   # UNASSIGNED COURSES
@@ -814,8 +857,13 @@ class BOACDegreeCheckPage < BOACDegreeTemplatePage
 
   # COURSE REQT EDITS
 
+  checkbox(:ignore_reqt_cbx, id: 'ignored-course-checkbox')
   text_field(:grade_input, id: 'grade-input')
   text_area(:recommended_note_textarea, id: 'recommendation-note-textarea')
+
+  def click_ignore_reqt
+    wait_for_update_and_click_js ignore_reqt_cbx_element
+  end
 
   def enter_reqt_grade(grade)
     wait_for_element_and_type(grade_input_element, grade)

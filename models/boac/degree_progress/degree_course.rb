@@ -6,6 +6,7 @@ class DegreeCourse
                 :color,
                 :column_num,
                 :name,
+                :transfer_course,
                 :units,
                 :units_reqts
 

@@ -10,6 +10,7 @@ class BOACDegreeCheckCreatePage
   button(:cancel_degree_check_button, id: 'cancel-create-degree-check-btn')
 
   def load_page(student)
+    logger.info "Loading degree checks page for UID #{student.uid}"
     navigate_to "#{BOACUtils.base_url}/student/#{student.uid}/degree/create"
   end
 

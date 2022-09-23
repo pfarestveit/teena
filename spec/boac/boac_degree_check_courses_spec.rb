@@ -5,7 +5,7 @@ unless ENV['DEPS']
   include Logging
 
   test = BOACTestConfig.new
-  test.degree_progress
+  test.degree_progress({enrolled: true})
   template = test.degree_templates.find { |t| t.name.include? 'Course Workflows' }
 
   describe 'A BOA degree check course' do
@@ -30,6 +30,7 @@ unless ENV['DEPS']
       cats_with_subs.find do |cat|
         @sub_cat_with_courses = cat.sub_categories.find { |sub| sub.course_reqs.any? }
       end
+      @course_req_3 = @sub_cat_with_courses.course_reqs.last
 
       logger.debug "Top level category course reqs '#{@course_req_1.name}' and '#{@course_req_2.name}'"
       logger.debug "Top level category with no subcategories and no courses '#{@cat_no_subs_no_courses.name}'"
@@ -67,6 +68,7 @@ unless ENV['DEPS']
 
       # Find student course data
       @student_api_page.get_data(@driver, @student)
+      @in_progress_courses = @student_api_page.degree_progress_in_prog_courses @degree_check
       @unassigned_courses = @student_api_page.degree_progress_courses @degree_check
       @completed_course_0 = @unassigned_courses[0]
       @completed_course_1 = @unassigned_courses[1]
@@ -79,6 +81,50 @@ unless ENV['DEPS']
     end
 
     after(:all) { Utils.quit_browser @driver }
+
+    context 'requirement' do
+
+      it 'can be marked ignored or completed' do
+        @degree_check_page.click_edit_course_req @course_req_3
+        @degree_check_page.click_ignore_reqt
+        @degree_check_page.click_save_req_edit
+        expect(@degree_check_page.visible_course_req_name_struck? @course_req_3).to be true
+      end
+
+      it 'can be unmarked ignored or completed' do
+        @degree_check_page.click_edit_course_req @course_req_3
+        @degree_check_page.click_ignore_reqt
+        @degree_check_page.click_save_req_edit
+        expect(@degree_check_page.visible_course_req_name_struck? @course_req_3).to be false
+      end
+    end
+
+    context 'when in progress' do
+
+      it 'appears in the in progress section' do
+        @degree_check_page.wait_until(Utils.short_wait) { @degree_check_page.in_progress_course_elements.any? }
+        expected = @in_progress_courses.map { |c| "#{c.term_id}-#{c.ccn}" }
+        actual = @degree_check_page.in_progress_course_ccns
+        @degree_check_page.wait_until(1, "Missing: #{expected - actual}. Unexpected: #{actual - expected}") do
+          actual.sort == expected.sort
+        end
+      end
+
+      it 'shows the right course name' do
+        @in_progress_courses.each do |course|
+          name = "#{course.name}#{ + '(WAITLISTED)' if course.waitlisted}".gsub(' ', '')
+          logger.debug "Checking for #{course.name}"
+          expect(@degree_check_page.in_progress_course_code(course).gsub(/\s+/, '')).to eql(name)
+        end
+      end
+
+      it 'shows the right course units' do
+        @in_progress_courses.each do |course|
+          logger.debug "Checking for #{course.units}"
+          expect(@degree_check_page.in_progress_course_units(course)).to eql(course.units)
+        end
+      end
+    end
 
     context 'when unassigned' do
 

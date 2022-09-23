@@ -410,6 +410,16 @@
                                 {
                                     "name": "Course 1.2.2: -UR, +U",
                                     "units": "3"
+                                },
+                                {
+                                    "name": "TRANSFER COURSE",
+                                    "transfer_course": true,
+                                    "units": "4",
+                                    "unit_reqts": [
+                                        {
+                                            "reqt": "Unit Req 2"
+                                        }
+                                    ]
                                 }
                             ]
                         }

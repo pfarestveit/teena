@@ -16,15 +16,17 @@ class NessieUtils < Utils
 
   #### ALL STUDENTS ####
 
-  def self.get_all_students
-    query = 'SELECT student_profile_index.uid AS uid,
+  def self.get_all_students(opts=nil)
+    query = "SELECT student_profile_index.uid AS uid,
                     student_profile_index.sid AS sid,
                     student_profile_index.first_name AS first_name,
                     student_profile_index.last_name AS last_name,
                     student_profile_index.email_address AS email,
                     student_profile_index.academic_career_status AS status
-             FROM student.student_profile_index
-             ORDER BY uid;'
+               FROM student.student_profile_index
+         #{+ ' JOIN student.student_enrollment_terms ON student.student_enrollment_terms.sid = student.student_profile_index.sid
+              WHERE student.student_enrollment_terms.term_id = \'' + BOACUtils.term_code.to_s + '\'' if opts && opts[:enrolled]}
+           ORDER BY uid;"
     results = Utils.query_pg_db(nessie_pg_db_credentials, query)
 
     results.map do |r|

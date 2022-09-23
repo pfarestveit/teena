@@ -431,13 +431,6 @@ class BOACApiStudentPage
     site_statistics(analytics(site)['currentScore']).merge!({:type => 'Assignment Grades'})
   end
 
-  # Returns a user's Nessie Last Activity analytics on a course site
-  # @param site [Hash]
-  # @return [Hash]
-  def nessie_last_activity(site)
-    site_statistics(analytics(site)['lastActivity']).merge!({:type => 'Last bCourses Activity'})
-  end
-
   def last_activity_day(site)
     epoch = site_statistics(analytics(site)['lastActivity'])[:score]
     if epoch.empty? || epoch.to_i.zero?
@@ -457,6 +450,23 @@ class BOACApiStudentPage
 
   # DEGREE PROGRESS
 
+  def degree_progress_in_prog_courses(degree_check)
+    courses = []
+    term_id = BOACUtils.term_code
+    courses(current_term).each do |course|
+      data = sis_course_data course
+      primary_section = sis_section_data course_primary_section(course)
+      courses << DegreeCompletedCourse.new(ccn: primary_section[:ccn],
+                                           degree_check: degree_check,
+                                           term_id: term_id,
+                                           name: data[:code],
+                                           units: data[:units_completed],
+                                           units_orig: data[:units_completed],
+                                           waitlisted: (primary_section[:status] == 'W'))
+    end
+    courses.sort_by &:name
+  end
+
   def degree_progress_courses(degree_check)
     courses = []
     terms.each do |term|
@@ -466,13 +476,15 @@ class BOACApiStudentPage
           data = sis_course_data course
           primary_section = sis_section_data course_primary_section(course)
           unless data[:units_completed].to_f.zero?
-            courses << DegreeCompletedCourse.new(ccn: primary_section[:ccn],
-                                                 degree_check: degree_check,
-                                                 term_id: term_id,
-                                                 name: data[:code],
-                                                 units: data[:units_completed],
-                                                 units_orig: data[:units_completed],
-                                                 grade: data[:grade].gsub('−', '-'))
+            course = DegreeCompletedCourse.new(ccn: primary_section[:ccn],
+                                               degree_check: degree_check,
+                                               term_id: term_id,
+                                               name: data[:code],
+                                               units: data[:units_completed],
+                                               units_orig: data[:units_completed],
+                                               grade: data[:grade].gsub('−', '-'))
+            BOACUtils.set_degree_sis_course_id(degree_check, course)
+            courses << course
           end
         end
       end
