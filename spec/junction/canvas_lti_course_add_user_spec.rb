@@ -250,7 +250,12 @@ describe 'bCourses Find a Person to Add', order: :defined do
           @course_add_user_page.search('Oski', 'Last Name, First Name')
           @course_add_user_page.user_role_element.when_visible Utils.short_wait
           @course_add_user_page.wait_until(Utils.medium_wait, "Visible #{@course_add_user_page.user_role_options}") do
-            @course_add_user_page.user_role_options.map(&:strip) == ['Student', 'Waitlist Student', 'Observer']
+            opts = if user == test.lead_ta
+                     ['Student', 'Waitlist Student', 'TA', 'Lead TA', 'Reader', 'Observer']
+                   else
+                     ['Student', 'Waitlist Student', 'Observer']
+                   end
+            @course_add_user_page.user_role_options.map(&:strip) == opts
           end
         end
 

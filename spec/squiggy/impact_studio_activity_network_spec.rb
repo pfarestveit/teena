@@ -82,7 +82,7 @@ describe 'Impact Studio Activity Network' do
     end
 
     it 'the asset owner acquires a "use asset" connection to the asset user' do
-      @impact_studio_page.search_for_user @student_1
+      @impact_studio_page.select_user @student_1
       @impact_studio_page.verify_network_interactions(student1_student3_expected, @student_3)
     end
   end
@@ -107,7 +107,7 @@ describe 'Impact Studio Activity Network' do
     end
 
     it 'a collaborator acquires a "co-creation" connection to the exporter' do
-      @impact_studio_page.search_for_user @student_3
+      @impact_studio_page.select_user @student_3
       @impact_studio_page.verify_network_interactions(student3_student2_expected, @student_2)
     end
 
@@ -134,7 +134,7 @@ describe 'Impact Studio Activity Network' do
       end
 
       it 'the whiteboard asset owners acquire a "view" and "remix" connection to the remixer' do
-        @impact_studio_page.search_for_user @student_2
+        @impact_studio_page.select_user @student_2
         @impact_studio_page.verify_network_interactions(student2_student1_expected, @student_1)
       end
     end
@@ -159,7 +159,7 @@ describe 'Impact Studio Activity Network' do
     end
 
     it 'the asset owner acquires a "view" and "like" connection to the liker' do
-      @impact_studio_page.search_for_user @student_1
+      @impact_studio_page.select_user @student_1
       @impact_studio_page.verify_network_interactions(student1_student2_expected, @student_2)
     end
   end
@@ -183,7 +183,7 @@ describe 'Impact Studio Activity Network' do
     end
 
     it 'the asset owner acquires a "view" connection and loses a "like connection" to the un-liker' do
-      @impact_studio_page.search_for_user @student_1
+      @impact_studio_page.select_user @student_1
       @impact_studio_page.verify_network_interactions(student1_student2_expected, @student_2)
     end
   end
@@ -207,7 +207,7 @@ describe 'Impact Studio Activity Network' do
     end
 
     it 'the asset owner acquires a "view" and "comment" connection to the commenter' do
-      @impact_studio_page.search_for_user @student_1
+      @impact_studio_page.select_user @student_1
       @impact_studio_page.verify_network_interactions(student1_student2_expected, @student_2)
     end
   end
@@ -237,12 +237,12 @@ describe 'Impact Studio Activity Network' do
     end
 
     it 'the asset owner acquires a "view" and "comment" connection to the replier' do
-      @impact_studio_page.search_for_user @student_1
+      @impact_studio_page.select_user @student_1
       @impact_studio_page.verify_network_interactions(student1_student3_expected, @student_3)
     end
 
     it 'the commenter acquires a "comment" connection to the replier' do
-      @impact_studio_page.search_for_user @student_2
+      @impact_studio_page.select_user @student_2
       @impact_studio_page.verify_network_interactions(student2_student3_expected, @student_3)
     end
   end
@@ -272,12 +272,12 @@ describe 'Impact Studio Activity Network' do
     end
 
     it 'the asset owner acquires a "view" connection and loses a "comment" connection to the replier' do
-      @impact_studio_page.search_for_user @student_1
+      @impact_studio_page.select_user @student_1
       @impact_studio_page.verify_network_interactions(student1_student3_expected, @student_3)
     end
 
     it 'the commenter loses a "comment" connection to the replier' do
-      @impact_studio_page.search_for_user @student_2
+      @impact_studio_page.select_user @student_2
       @impact_studio_page.verify_network_interactions(student2_student3_expected, @student_3)
     end
   end
@@ -300,17 +300,17 @@ describe 'Impact Studio Activity Network' do
 
     it 'removes all connections the deleter has to the asset owner through that asset' do
       @impact_studio_page.load_page test
-      @impact_studio_page.search_for_user @student_3
+      @impact_studio_page.select_user @student_3
       @impact_studio_page.verify_network_interactions(student3_student1_expected, @student_1)
     end
 
     it 'removes all connections another user has to the asset owner through that asset' do
-      @impact_studio_page.search_for_user @student_2
+      @impact_studio_page.select_user @student_2
       @impact_studio_page.verify_network_interactions(student2_student1_expected, @student_1)
     end
 
     it 'removes all connections the asset owner has to another users through that asset' do
-      @impact_studio_page.search_for_user @student_1
+      @impact_studio_page.select_user @student_1
       @impact_studio_page.verify_network_interactions(student1_student3_expected, @student_3)
       @impact_studio_page.verify_network_interactions(student1_student2_expected, @student_2)
     end

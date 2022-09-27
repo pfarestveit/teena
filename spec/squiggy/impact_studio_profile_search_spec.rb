@@ -114,7 +114,7 @@ describe 'Impact Studio' do
     end
 
     students.each do |student|
-      it("allows the user to view UID #{student.uid}'s profile") { @impact_studio.search_for_user student }
+      it("allows the user to view UID #{student.uid}'s profile") { @impact_studio.select_user student }
     end
   end
 

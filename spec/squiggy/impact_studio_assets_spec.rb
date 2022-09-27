@@ -4,17 +4,16 @@ describe 'The Impact Studio' do
 
   test = SquiggyTestConfig.new 'studio_assets'
 
-  teacher = test.course.teachers[0]
-  student_1 = test.course.students[0]
-  student_2 = test.course.students[1]
+  teacher = test.teachers[0]
+  student_1 = test.students[0]
+  student_2 = test.students[1]
 
-  # Get test assets
-  whiteboard = Whiteboard.new({ owner: student_1, title: "Whiteboard #{test_id}", collaborators: [student_2] })
+  whiteboard = SquiggyWhiteboard.new({ owner: student_1, title: "Whiteboard #{test.id}", collaborators: [student_2] })
   all_assets = []
   all_assets << (asset_1 = student_1.assets.find &:url)
   all_assets << (asset_2 = student_1.assets.select(&:file_name)[0])
   all_assets << (asset_3 = student_1.assets.select(&:file_name)[1])
-  all_assets << (asset_4 = Asset.new({ title: whiteboard.title, type: 'Whiteboard' }))
+  all_assets << (asset_4 = SquiggyAsset.new title: whiteboard.title)
   all_assets << (asset_5 = teacher.assets.find &:file_name)
   all_assets << (asset_6 = student_2.assets.find &:file_name)
   all_assets << (asset_7 = student_2.assets.find &:url)
@@ -23,11 +22,10 @@ describe 'The Impact Studio' do
   student_2_assets = [asset_7, asset_6, asset_4]
   teacher_assets = [asset_5]
 
-  asset_4_comments = []
   asset_4_comment = SquiggyComment.new user: student_1,
                                        asset: asset_4,
                                        body: 'Impact-free comment'
-  asset_6_comments = []
+
   asset_6_comment = SquiggyComment.new user: teacher,
                                        asset: asset_6,
                                        body: 'This is a comment from Teacher to Student 2'
@@ -66,11 +64,8 @@ describe 'The Impact Studio' do
         @impact_studio.load_page test
       end
 
-      it('shows a "no assets" message under My Assets') { @impact_studio.no_user_assets_msg_element.when_visible Utils.short_wait }
-      it('shows a "no assets" message under Everyone\'s Assets') { @impact_studio.no_everyone_assets_msg_element.when_visible Utils.short_wait }
-      it('offers a Bookmarklet link under My Assets') { expect(@impact_studio.bookmarklet_link?).to be true }
-      it('offers a link to create a new Link asset') { expect(@impact_studio.add_site_link?).to be true }
-      it('offers a link to create a new File asset') { expect(@impact_studio.upload_link?).to be true }
+      it('shows a "no assets" message under My Assets') { @impact_studio.wait_for_no_user_asset_results }
+      it('shows a "no assets" message under Everyone\'s Assets') { @impact_studio.wait_for_no_everyone_asset_results }
     end
 
     context 'and a user views another user\'s profile' do
@@ -80,11 +75,8 @@ describe 'The Impact Studio' do
         @engagement_index.click_user_dashboard_link student_2
       end
 
-      it('shows a "no assets" message under Assets') { @impact_studio.no_user_assets_msg_element.when_visible Utils.short_wait }
+      it('shows a "no assets" message under Assets') { @impact_studio.wait_for_no_user_asset_results }
       it('shows no Everyone\'s Assets UI') { expect(@impact_studio.everyone_assets_heading?).to be false }
-      it('offers no Bookmarklet link under Assets') { expect(@impact_studio.bookmarklet_link?).to be false }
-      it('offers no Add Link link under Assets') { expect(@impact_studio.add_site_link?).to be false }
-      it('offers no Upload link under Assets') { expect(@impact_studio.upload_link?).to be false }
     end
   end
 
@@ -92,28 +84,24 @@ describe 'The Impact Studio' do
 
     before(:all) do
       @canvas.masquerade_as student_1
-      @impact_studio.load_page test
-      @impact_studio.add_site asset_1
-
+      @asset_library.load_page test
+      @asset_library.add_link_asset asset_1
       @whiteboards.load_page test
       @whiteboards.create_and_open_whiteboard whiteboard
       @whiteboards.add_asset_exclude_from_library asset_2
-
       @whiteboards.add_asset_include_in_library asset_3
-
       @whiteboards.export_to_asset_library whiteboard
       asset_4 = whiteboard.asset_exports.first
       @whiteboards.close_whiteboard
 
       @canvas.masquerade_as teacher
-      @impact_studio.load_page test
-      @impact_studio.add_file asset_5
+      @asset_library.load_page test
+      @asset_library.add_link_asset asset_5
 
       @canvas.masquerade_as student_2
       @asset_library.load_page test
       @asset_library.upload_file_asset asset_6
-
-      @asset_library.add_site asset_7
+      @asset_library.add_link_asset asset_7
       @asset_library.load_asset_detail(test, asset_7)
       @asset_library.delete_asset asset_7
     end
@@ -125,25 +113,63 @@ describe 'The Impact Studio' do
         @impact_studio.load_page test
       end
 
-      it 'shows the user\'s non-hidden assets under My Assets > Recent' do
-        @impact_studio.verify_user_recent_assets(student_1_assets, student_1)
+      it 'shows user most recent assets under My Assets' do
+        @impact_studio.wait_for_user_asset_results @impact_studio.assets_most_recent(student_1_assets)
       end
 
-      it 'allows the user to click an asset in My Assets > Recent to view its detail' do
+      it 'allows the user to click an asset in My Assets to view its detail' do
         @impact_studio.click_user_asset_link asset_1
         @asset_library.wait_for_asset_detail
       end
 
       it 'allows the user to return to its own Impact Studio profile from an asset\'s detail' do
-        @asset_library.go_back_to_impact_studio
-        @impact_studio.verify_user_recent_assets(student_1_assets, student_1)
+        @asset_library.click_back_to_impact_studio
+        @impact_studio.wait_for_user_asset_results @impact_studio.assets_most_recent(student_1_assets)
       end
 
-      it 'shows all the most recent assets under Community Assets > Recent' do
-        @impact_studio.verify_all_recent_assets all_assets
+      it 'sorts user assets by most likes' do
+        @impact_studio.sort_user_assets 'Most likes'
+        @impact_studio.wait_for_no_user_asset_results
       end
 
-      # TODO - most viewed, most liked, most commented
+      it 'sorts user assets by most views' do
+        @impact_studio.sort_user_assets 'Most views'
+        @impact_studio.wait_for_no_user_asset_results
+      end
+
+      it 'sorts user assets by most comments' do
+        @impact_studio.sort_user_assets 'Most comments'
+        @impact_studio.wait_for_no_user_asset_results
+      end
+
+      it 'shows everyone most recent non-hidden assets under Community Assets' do
+        @impact_studio.wait_for_everyone_asset_results @impact_studio.assets_most_recent(all_assets)
+      end
+
+      it 'allows the user to click an asset in Everyone\'s Assets to view its detail' do
+        @impact_studio.click_user_asset_link asset_7
+        @asset_library.wait_for_asset_detail
+      end
+
+      it 'allows the user to return to its own Impact Studio profile from asset detail' do
+        @asset_library.click_back_to_impact_studio
+        @impact_studio.wait_for_user_asset_results @impact_studio.assets_most_recent(student_1_assets)
+      end
+
+      it 'sorts everyone assets by most likes' do
+        @impact_studio.sort_everyone_assets 'Most likes'
+        @impact_studio.wait_for_no_everyone_asset_results
+      end
+
+      it 'sorts everyone assets by most views' do
+        @impact_studio.sort_everyone_assets 'Most views'
+        @impact_studio.wait_for_no_everyone_asset_results
+      end
+
+      it 'sorts everyone assets by most comments' do
+        @impact_studio.sort_everyone_assets 'Most comments'
+        @impact_studio.wait_for_no_everyone_asset_results
+      end
     end
 
     context 'and a user views another user\'s profile' do
@@ -153,15 +179,28 @@ describe 'The Impact Studio' do
         @engagement_index.click_user_dashboard_link student_2
       end
 
-      it 'shows the other user\'s non-hidden assets under Assets > Recent' do
-        @impact_studio.verify_user_recent_assets(student_2_assets, student_2)
+      it 'shows the other user most recent assets' do
+        @impact_studio.wait_for_user_asset_results @impact_studio.assets_most_recent(student_2_assets)
       end
 
-      it 'shows no Everyone\'s Assets UI' do
+      it 'sorts user assets by most likes' do
+        @impact_studio.sort_user_assets 'Most likes'
+        @impact_studio.wait_for_no_user_asset_results
+      end
+
+      it 'sorts user assets by most views' do
+        @impact_studio.sort_user_assets 'Most views'
+        @impact_studio.wait_for_no_user_asset_results
+      end
+
+      it 'sorts user assets by most comments' do
+        @impact_studio.sort_user_assets 'Most comments'
+        @impact_studio.wait_for_no_user_asset_results
+      end
+
+      it 'shows no Everyone Assets UI' do
         expect(@impact_studio.everyone_assets_heading?).to be false
       end
-
-      # TODO - most viewed, most liked, most commented
     end
   end
 
@@ -172,6 +211,7 @@ describe 'The Impact Studio' do
       before(:all) do
         @canvas.masquerade_as teacher
         @asset_library.load_asset_detail(test, asset_3)
+        asset_3.count_views += 1
       end
 
       context 'and the asset owner views its own profile' do
@@ -181,15 +221,15 @@ describe 'The Impact Studio' do
           @impact_studio.load_page test
         end
 
-        it 'shows the user\'s non-hidden assets under My Assets > Recent' do
-          @impact_studio.verify_user_recent_assets(student_1_assets, student_1)
+        it 'shows the user most viewed assets' do
+          @impact_studio.sort_user_assets 'Most views'
+          @impact_studio.wait_for_user_asset_results @impact_studio.assets_most_viewed(student_1_assets)
         end
 
-        it 'shows all the most recent assets under Community Assets > Recent' do
-          @impact_studio.verify_all_recent_assets all_assets
+        it 'shows everyone most viewed assets' do
+          @impact_studio.sort_everyone_assets 'Most views'
+          @impact_studio.wait_for_everyone_asset_results @impact_studio.assets_most_viewed(all_assets)
         end
-
-        # TODO - most viewed, most liked, most commented
       end
     end
 
@@ -199,6 +239,8 @@ describe 'The Impact Studio' do
         @canvas.masquerade_as teacher
         @asset_library.load_asset_detail(test, asset_6)
         @asset_library.add_comment asset_6_comment
+        asset_6.count_views += 1
+        asset_6.comments << asset_6_comment
       end
 
       context 'and the asset owner views its own profile' do
@@ -208,15 +250,15 @@ describe 'The Impact Studio' do
           @impact_studio.load_page test
         end
 
-        it 'shows the user\'s non-hidden assets under My Assets > Recent' do
-          @impact_studio.verify_user_recent_assets(student_2_assets, student_2)
+        it 'shows the user most commented assets' do
+          @impact_studio.sort_user_assets 'Most comments'
+          @impact_studio.wait_for_user_asset_results @impact_studio.assets_most_commented(student_2_assets)
         end
 
-        it 'shows all the most recent assets under Community Assets > Recent' do
-          @impact_studio.verify_all_recent_assets all_assets
+        it 'shows everyone most commented assets' do
+          @impact_studio.sort_everyone_assets 'Most comments'
+          @impact_studio.wait_for_everyone_asset_results @impact_studio.assets_most_commented(all_assets)
         end
-
-        # TODO - most viewed, most liked, most commented
       end
     end
 
@@ -226,6 +268,8 @@ describe 'The Impact Studio' do
         @canvas.masquerade_as teacher
         @asset_library.load_asset_detail(test, asset_6)
         @asset_library.reply_to_comment(asset_6_comment, asset_6_reply)
+        asset_6.count_views += 1
+        asset_6.comments << asset_6_reply
       end
 
       context 'and the asset owner views its own profile' do
@@ -235,15 +279,15 @@ describe 'The Impact Studio' do
           @impact_studio.load_page test
         end
 
-        it 'shows the user\'s non-hidden assets under My Assets > Recent' do
-          @impact_studio.verify_user_recent_assets(student_2_assets, student_2)
+        it 'shows the user most commented assets' do
+          @impact_studio.sort_user_assets 'Most comments'
+          @impact_studio.wait_for_user_asset_results @impact_studio.assets_most_commented(student_2_assets)
         end
 
-        it 'shows all the most recent assets under Community Assets > Recent' do
-          @impact_studio.verify_all_recent_assets all_assets
+        it 'shows everyone most commented assets' do
+          @impact_studio.sort_everyone_assets 'Most comments'
+          @impact_studio.wait_for_everyone_asset_results @impact_studio.assets_most_commented(all_assets)
         end
-
-        # TODO - most viewed, most liked, most commented
       end
     end
 
@@ -253,6 +297,8 @@ describe 'The Impact Studio' do
         @canvas.masquerade_as student_1
         @asset_library.load_asset_detail(test, asset_5)
         @asset_library.click_like_button
+        asset_5.count_views += 1
+        asset_5.count_likes += 1
       end
 
       context 'and the asset owner views its own profile' do
@@ -262,15 +308,15 @@ describe 'The Impact Studio' do
           @impact_studio.load_page test
         end
 
-        it 'shows the user\'s non-hidden assets under My Assets > Recent' do
-          @impact_studio.verify_user_recent_assets(teacher_assets, teacher)
+        it 'shows the user most commented assets' do
+          @impact_studio.sort_user_assets 'Most likes'
+          @impact_studio.wait_for_user_asset_results @impact_studio.assets_most_liked(teacher_assets)
         end
 
-        it 'shows all the most recent assets under Community Assets > Recent' do
-          @impact_studio.verify_all_recent_assets all_assets
+        it 'shows everyone most commented assets' do
+          @impact_studio.sort_everyone_assets 'Most likes'
+          @impact_studio.wait_for_everyone_asset_results @impact_studio.assets_most_liked(all_assets)
         end
-
-        # TODO - most viewed, most liked, most commented
       end
     end
   end
@@ -286,7 +332,15 @@ describe 'The Impact Studio' do
         @impact_studio.load_page test
       end
 
-      # TODO - most viewed, most liked, most commented
+      it 'does not alter the user most viewed assets' do
+        @impact_studio.sort_user_assets 'Most views'
+        @impact_studio.wait_for_user_asset_results @impact_studio.assets_most_viewed(student_1_assets)
+      end
+
+      it 'does not alter everyone most viewed assets' do
+        @impact_studio.sort_everyone_assets 'Most views'
+        @impact_studio.wait_for_everyone_asset_results @impact_studio.assets_most_viewed(all_assets)
+      end
     end
 
     context 'with "comment" impact' do
@@ -297,7 +351,15 @@ describe 'The Impact Studio' do
         @impact_studio.load_page test
       end
 
-      # TODO - most viewed, most liked, most commented
+      it 'does not alter the user most commented assets' do
+        @impact_studio.sort_user_assets 'Most comments'
+        @impact_studio.wait_for_user_asset_results @impact_studio.assets_most_commented(student_1_assets)
+      end
+
+      it 'does not alter everyone most commented assets' do
+        @impact_studio.sort_everyone_assets 'Most comments'
+        @impact_studio.wait_for_everyone_asset_results @impact_studio.assets_most_commented(all_assets)
+      end
     end
   end
 
@@ -309,20 +371,21 @@ describe 'The Impact Studio' do
         @canvas.masquerade_as teacher
         @asset_library.load_asset_detail(test, asset_6)
         @asset_library.delete_comment asset_6_reply
+        asset_6.count_views += 1
+        asset_6.comments.delete asset_6_reply
       end
 
-      context 'and the comment deleter views its own profile' do
+      context 'and the comment deleter views the asset owner profile' do
 
-        before(:all) { @impact_studio.load_page test }
+        before(:all) do
+          @impact_studio.load_page test
+          @impact_studio.select_user student_2
+        end
 
-        # TODO - most viewed, most liked, most commented
-      end
-
-      context 'and the comment deleter views the asset owner\'s profile' do
-
-        before(:all) { @impact_studio.search_for_user student_2 }
-
-        # TODO - most viewed, most liked, most commented
+        it 'updates the user most commented assets' do
+          @impact_studio.sort_user_assets 'Most comments'
+          @impact_studio.wait_for_user_asset_results @impact_studio.assets_most_commented(student_2_assets)
+        end
       end
     end
 
@@ -332,20 +395,21 @@ describe 'The Impact Studio' do
         @canvas.masquerade_as student_1
         @asset_library.load_asset_detail(test, asset_5)
         @asset_library.click_like_button
+        asset_5.count_views += 1
+        asset_5.count_likes -= 1
       end
 
-      context 'and the un-liker views its own profile' do
+      context 'and the un-liker views the asset owner profile' do
 
-        before(:all) { @impact_studio.load_page test }
+        before(:all) do
+          @impact_studio.load_page test
+          @impact_studio.select_user teacher
+        end
 
-        # TODO - most viewed, most liked, most commented
-      end
-
-      context 'and the un-liker views the asset owner\'s profile' do
-
-        before(:all) { @impact_studio.search_for_user teacher }
-
-        # TODO - most viewed, most liked, most commented
+        it 'updates the user most commented assets' do
+          @impact_studio.sort_user_assets 'Most likes'
+          @impact_studio.wait_for_user_asset_results @impact_studio.assets_most_liked(teacher_assets)
+        end
       end
     end
   end

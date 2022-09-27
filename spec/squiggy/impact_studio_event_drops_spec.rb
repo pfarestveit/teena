@@ -207,7 +207,7 @@ describe 'The Impact Studio' do
       end
 
       context 'and the asset owner views the other user\'s profile' do
-        before(:all) { @impact_studio.search_for_user student_2 }
+        before(:all) { @impact_studio.select_user student_2 }
         it 'shows a My Contributions "Creations" event' do
           expect(@impact_studio.visible_event_drop_count).to eql(@impact_studio.expected_event_drop_count student_2_activities)
         end
@@ -240,7 +240,7 @@ describe 'The Impact Studio' do
       end
 
       context 'and the asset owner views the other user\'s profile' do
-        before(:all) { @impact_studio.search_for_user teacher }
+        before(:all) { @impact_studio.select_user teacher }
         it 'shows a My Contributions "Engagements" event' do
           expect(@impact_studio.visible_event_drop_count).to eql(@impact_studio.expected_event_drop_count teacher_activities)
         end
@@ -275,7 +275,7 @@ describe 'The Impact Studio' do
       end
 
       context 'and the asset owner views the other user\'s profile' do
-        before(:all) { @impact_studio.search_for_user teacher }
+        before(:all) { @impact_studio.select_user teacher }
         it 'shows My Contributions "Engagement" and "Interaction" events' do
           expect(@impact_studio.visible_event_drop_count).to eql(@impact_studio.expected_event_drop_count teacher_activities)
         end
@@ -310,7 +310,7 @@ describe 'The Impact Studio' do
       end
 
       context 'and the asset owner views the other user\'s profile' do
-        before(:all) { @impact_studio.search_for_user teacher }
+        before(:all) { @impact_studio.select_user teacher }
         it 'shows My Contributions "Engagement" and "Interaction" events' do
           expect(@impact_studio.visible_event_drop_count).to eql(@impact_studio.expected_event_drop_count teacher_activities)
         end
@@ -344,7 +344,7 @@ describe 'The Impact Studio' do
       end
 
       context 'and the asset owner views the other user\'s profile' do
-        before(:all) { @impact_studio.search_for_user student_1 }
+        before(:all) { @impact_studio.select_user student_1 }
         it 'shows My Contributions "Engagement" events' do
           expect(@impact_studio.visible_event_drop_count).to eql(@impact_studio.expected_event_drop_count student_1_activities)
         end
@@ -392,7 +392,7 @@ describe 'The Impact Studio' do
       end
 
       context 'and an asset owner views the remixer\'s profile' do
-        before(:all) { @impact_studio.search_for_user teacher }
+        before(:all) { @impact_studio.select_user teacher }
         it 'shows My Contributions "Engagements" and "Creations" events' do
           expect(@impact_studio.visible_event_drop_count).to eql(@impact_studio.expected_event_drop_count teacher_activities)
         end
@@ -462,7 +462,7 @@ describe 'The Impact Studio' do
       end
 
       context 'and the comment deleter views the asset owner\'s profile' do
-        before(:all) { @impact_studio.search_for_user student_2 }
+        before(:all) { @impact_studio.select_user student_2 }
         it 'adds My Impact "Engagements" and removes "Interactions" events' do
           expect(@impact_studio.visible_event_drop_count).to eql(@impact_studio.expected_event_drop_count student_2_activities)
         end
@@ -492,7 +492,7 @@ describe 'The Impact Studio' do
       end
 
       context 'and the un-liker views the asset owner\'s profile' do
-        before(:all) { @impact_studio.search_for_user teacher }
+        before(:all) { @impact_studio.select_user teacher }
         it 'adds and removes My Impact "Engagements" events' do
           expect(@impact_studio.visible_event_drop_count).to eql(@impact_studio.expected_event_drop_count teacher_activities)
         end
@@ -535,14 +535,14 @@ describe 'The Impact Studio' do
       end
 
       context 'and a user views another users\'s profile' do
-        before(:all) { @impact_studio.search_for_user student_1 }
+        before(:all) { @impact_studio.select_user student_1 }
         it 'removes My Contributions and My Impacts events' do
           expect(@impact_studio.visible_event_drop_count).to eql(@impact_studio.expected_event_drop_count student_1_activities)
         end
       end
 
       context 'and a user views another users\'s profile' do
-        before(:all) { @impact_studio.search_for_user student_2 }
+        before(:all) { @impact_studio.select_user student_2 }
         it 'removes My Contributions and My Impacts events' do
           expect(@impact_studio.visible_event_drop_count).to eql(@impact_studio.expected_event_drop_count student_2_activities)
         end

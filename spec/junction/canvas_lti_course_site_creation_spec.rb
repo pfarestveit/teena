@@ -237,8 +237,12 @@ describe 'bCourses course site creation' do
         rescue => e
           logger.error e.message
           if @splash_page.denied_msg? && !tries.zero?
+            logger.warn 'User not able to access feed, retrying'
             JunctionUtils.clear_cache(@driver, @splash_page)
             retry
+          else
+            logger.warn 'Unexpected error, see screenshot'
+            Utils.save_screenshot(@driver, "Site creation error #{test.id}")
           end
         ensure
           @splash_page.load_page

@@ -68,16 +68,20 @@ class SquiggyEngagementIndexPage
     cell_elements(xpath: "#{users_table_row_xpath}/td[1]/div")
   end
 
-  def sharing_els
+  def collaboration_els
     cell_elements(xpath: "#{users_table_row_xpath}/td[3]/div")
   end
 
-  def points_els
+  def sharing_els
     cell_elements(xpath: "#{users_table_row_xpath}/td[4]/div")
   end
 
+  def points_els
+    cell_elements(xpath: "#{users_table_row_xpath}/td[5]/div")
+  end
+
   def last_activity_els
-    cell_elements(xpath: "#{users_table_row_xpath}/td[5]")
+    cell_elements(xpath: "#{users_table_row_xpath}/td[6]")
   end
 
   def wait_for_scores
@@ -100,12 +104,16 @@ class SquiggyEngagementIndexPage
     wait_for_element_and_type(search_input_element, user.full_name)
   end
 
+  def user_collaboration_el(user)
+    div_element(xpath: "#{user_row_xpath user}/td[3]/div")
+  end
+
   def user_score_el(user)
-    div_element(xpath: "#{user_row_xpath user}/td[4]/div")
+    div_element(xpath: "#{user_row_xpath user}/td[5]/div")
   end
 
   def user_sharing_el(user)
-    div_element(xpath: "#{user_row_xpath user}/td[3]/div")
+    div_element(xpath: "#{user_row_xpath user}/td[4]/div")
   end
 
   def user_score(test, user)
@@ -417,10 +425,6 @@ class SquiggyEngagementIndexPage
     switch_to_canvas_iframe
   end
 
-  def collaboration_status_element(user)
-    # TODO span_element()
-  end
-
   def collaboration_toggle_element(user)
     # TODO label_element()
   end
@@ -430,24 +434,24 @@ class SquiggyEngagementIndexPage
   end
 
   def set_collaboration_true(user)
-    collaboration_status_element(user).when_visible Utils.short_wait
-    if collaboration_status_element(user).text.include? 'Not'
+    user_collaboration_el(user).when_visible Utils.short_wait
+    if user_collaboration_el(user).text.include? 'Not'
       wait_for_update_and_click collaboration_toggle_element(user)
       sleep 1
-      wait_until(Utils.short_wait) { !collaboration_status_element.text.include?('Not') rescue Selenium::WebDriver::Error::StaleElementReferenceError }
+      wait_until(Utils.short_wait) { !user_collaboration_el(user).text.include?('Not') rescue Selenium::WebDriver::Error::StaleElementReferenceError }
     else
       logger.debug '"Looking for collaborators" is already true, doing nothing'
     end
   end
 
   def set_collaboration_false(user)
-    collaboration_status_element(user).when_visible Utils.short_wait
-    if collaboration_status_element(user).text.include? 'Not'
+    user_collaboration_el(user).when_visible Utils.short_wait
+    if user_collaboration_el(user).text.include? 'Not'
       logger.debug '"Looking for collaborators" is already false, doing nothing'
     else
       wait_for_update_and_click collaboration_toggle_element(user)
       sleep 1
-      wait_until(Utils.short_wait) { collaboration_status_element.text.include?('Not') rescue Selenium::WebDriver::Error::StaleElementReferenceError }
+      wait_until(Utils.short_wait) { user_collaboration_el(user).text.include?('Not') rescue Selenium::WebDriver::Error::StaleElementReferenceError }
     end
   end
 
