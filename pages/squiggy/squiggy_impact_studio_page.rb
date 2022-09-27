@@ -15,16 +15,16 @@ class SquiggyImpactStudioPage
 
   # IDENTITY
 
-  # TODO image(:avatar, )
-  # TODO h1(:name, )
-  # TODO div(:profile_desc, )
-  # TODO link(:edit_profile_link, )
-  # TODO text_area(:edit_profile_input, )
+  image(:avatar, class: 'profile-avatar')
+  h1(:name, id: 'profile-header-name')
+  div(:profile_desc, xpath: '//div[@id="profile-personal-description"]/div')
+  button(:edit_profile_button, id: 'profile-personal-description-edit-btn')
+  text_field(:edit_profile_input, id: 'profile-personal-description-input')
   # TODO span(:char_limit_msg, )
-  # TODO button(:update_profile_button, )
-  # TODO link(:cancel_edit_profile, )
+  button(:update_profile_button, id: 'confirm-personal-description-btn')
+  button(:cancel_edit_profile, id: 'cancel-personal-description-btn')
   # TODO elements(:section, :span, )
-  # TODO span(:last_activity, )
+  span(:last_activity, xpath: '//div[@id="profile-last-activity"]/span')
   # TODO link(:engagement_index_link, )
   # TODO link(:turn_on_sharing_link, )
   # TODO div(:engagement_index_score, )
@@ -36,7 +36,7 @@ class SquiggyImpactStudioPage
   end
 
   def click_edit_profile
-    wait_for_update_and_click edit_profile_link_element
+    wait_for_update_and_click edit_profile_button_element
   end
 
   def enter_profile_desc(desc)
@@ -54,9 +54,8 @@ class SquiggyImpactStudioPage
     wait_for_update_and_click update_profile_button_element
   end
 
-  def click_engagement_index(event = nil)
+  def click_engagement_index
     wait_for_update_and_click engagement_index_link_element
-    add_event(event, EventType::LINK_TO_ENGAGEMENT_INDEX)
   end
 
   def click_turn_on
@@ -65,29 +64,24 @@ class SquiggyImpactStudioPage
 
   # LOOKING FOR COLLABORATORS
 
-  # TODO label(:collaboration_toggle, )
-  # TODO span(:collaboration_status, )
-  # TODO button(:collaboration_button, )
+  button(:collaboration_button, id: 'toggle-looking-for-collaborators-btn')
+  div(:collaboration_status, id: 'profile-looking-for-collaborators')
 
   def set_collaboration_true
     logger.info 'Setting "Looking for collaborators" to true'
     collaboration_status_element.when_present Utils.short_wait
     if collaboration_status.include? 'Not'
-      wait_for_update_and_click collaboration_toggle_element
+      wait_for_update_and_click collaboration_button_element
       sleep 1
       wait_until(Utils.short_wait) { !collaboration_status.include?('Not') rescue Selenium::WebDriver::Error::StaleElementReferenceError }
-    else
-      logger.debug('"Looking for collaborators" is already true, doing nothing')
     end
   end
 
   def set_collaboration_false
     logger.info 'Setting "Looking for collaborators" to false'
     collaboration_status_element.when_present Utils.short_wait
-    if collaboration_status.include? 'Not'
-      logger.debug('"Looking for collaborators" is already false, doing nothing')
-    else
-      wait_for_update_and_click collaboration_toggle_element
+    unless collaboration_status.include? 'Not'
+      wait_for_update_and_click collaboration_button_element
       sleep 1
       wait_until(Utils.short_wait) { collaboration_status.include?('Not') rescue Selenium::WebDriver::Error::StaleElementReferenceError }
     end
@@ -100,36 +94,25 @@ class SquiggyImpactStudioPage
 
   # SEARCH
 
-  # TODO text_area(:search_input, )
-  # TODO button(:browse_previous, )
-  # TODO button(:browse_next, )
+  select_list(:user_select, id: 'find-user-select')
+  link(:browse_previous, xpath: '//div[@id="previous-user"]/a')
+  link(:browse_next, xpath: '//div[@id="next-user"]/a')
 
-  def search_for_user(user)
-    logger.info "Searching for #{user.full_name} UID #{user.uid}"
-    tries ||= 2
-    begin
-      wait_for_load_and_click name_element
-      wait_for_element_and_type(search_input_element, user.full_name)
-      (option = list_item_element(xpath: "TODO ...//li[contains(.,'#{user.full_name}')]")).when_present Utils.short_wait
-      option.click
-      wait_until(Utils.medium_wait) { name == user.full_name }
-    rescue
-      (tries -= 1).zero? ? fail : retry
-    end
+  def select_user(user)
+    logger.info "Selecting #{user.full_name}"
+    wait_for_element_and_select_js(user_select_element, user.full_name)
   end
 
-  def browse_next_user(browsed_user)
-    logger.info "Browsing for next user #{browsed_user.full_name}"
-    wait_until(Utils.short_wait) { browse_next_element.text == browsed_user.full_name }
-    browse_next
-    wait_until(Utils.short_wait) { name == browsed_user.full_name }
+  def browse_next_user(user)
+    logger.info "Browsing next user #{user.full_name}"
+    wait_for_load_and_click browse_next_element
+    wait_until(Utils.short_wait) { name == user.full_name }
   end
 
-  def browse_previous_user(browsed_user)
-    logger.info "Browsing for previous user #{browsed_user.full_name}"
-    wait_until(Utils.short_wait) { browse_previous_element.text == browsed_user.full_name }
-    browse_previous
-    wait_until(Utils.short_wait) { name == browsed_user.full_name }
+  def browse_previous_user(user)
+    logger.info "Browsing previous user #{user.full_name}"
+    wait_for_load_and_click browse_previous_element
+    wait_until(Utils.short_wait) { name == user.full_name }
   end
 
   # ACTIVITY
@@ -305,117 +288,104 @@ class SquiggyImpactStudioPage
 
   # ASSETS
 
-  def swim_lane_asset_ids(link_elements)
-    link_elements.map { |link| link.attribute('href').split('?')[1].split('&')[0][4..-1] }
+  def assets_visible_non_deleted(assets)
+    assets.select(&:visible).reject(&:deleted)
   end
 
-  def max_asset_ids(ids)
-    (ids.length > 4) ? ids[0..3] : ids
+  def assets_most_recent(assets)
+    assets_visible_non_deleted(assets).sort_by(&:id).reverse[0..3]
   end
 
-  def recent_studio_asset_ids(assets)
-    max_asset_ids recent_asset_ids(assets)
+  def assets_most_viewed(assets)
+    assets_visible_non_deleted(assets).reject { |a| a.count_views.zero? }.sort_by(&:count_views).reverse[0..3]
   end
 
-  def impactful_studio_asset_ids(assets)
-    max_asset_ids impactful_asset_ids(assets)
+  def assets_most_liked(assets)
+    assets_visible_non_deleted(assets).reject { |a| a.count_likes.zero? }.sort_by(&:count_likes).reverse[0..3]
   end
 
-  def add_site(asset)
-    wait_for_update_and_click add_site_link_element
-    switch_to_canvas_iframe
-    enter_and_submit_url asset
-    wait_for_asset_and_get_id asset
+  def assets_most_commented(assets)
+    assets_visible_non_deleted(assets).reject { |a| a.comments.length.zero? }.sort_by { |a| a.comments.length }.reverse[0..3]
   end
 
-  def add_file(asset)
-    wait_for_update_and_click upload_link_element
-    switch_to_canvas_iframe
-    enter_and_upload_file asset
-    wait_for_asset_and_get_id asset
+  # USER ASSETS
+
+  select_list(:sort_user_assets_select, id: 'user-assets-sort-select')
+  elements(:user_asset, :div, xpath: '//div[@id="user-assets"]//div[starts-with(@id, "asset-")]')
+  div(:no_user_assets_msg, id: 'user-assets-no-assets-msg')
+  link(:user_assets_show_more_link, id: 'user-assets-view-all-link')
+
+  def sort_user_assets(option)
+    logger.info "Sorting user assets by #{option}"
+    wait_for_element_and_select_js(sort_user_assets_select_element, option)
   end
 
-  def verify_show_more(driver, expected_asset_ids, show_more_element, event, &search_filter_blk)
-    if expected_asset_ids.length > 4
-      sleep 1
-      wait_for_update_and_click show_more_element
-      wait_until(Utils.short_wait) { title == 'Asset Library' }
-      switch_to_canvas_iframe
-      begin
-        return yield
-      ensure
-        go_back_to_impact_studio(driver, event)
-      end
-    else
-      show_more_element.when_not_visible Utils.short_wait rescue Selenium::WebDriver::Error::StaleElementReferenceError
-    end
+  def user_asset_xpath(asset)
+    "//div[@id='user-assets']//div[@id='asset-#{asset.id}']"
   end
 
-  # USER ASSETS - mine or another user's
+  def user_asset_ids
+    user_asset_elements.map { |el| el.attribute('id').split('-').last }
+  end
 
-  # TODO button(:user_recent_link, )
-  # TODO link(:user_assets_show_more_link, )
-  # TODO elements(:user_asset_link, :link, )
-  # TODO div(:no_user_assets_msg, )
+  def user_asset_el(asset)
+    div_element(xpath: user_asset_xpath(asset))
+  end
 
   def click_user_asset_link(asset)
     logger.info "Clicking thumbnail for Asset ID #{asset.id}"
-    # TODO wait_for_update_and_click link_element()
+    wait_for_update_and_click user_asset_el(asset)
     switch_to_canvas_iframe
   end
 
-  def verify_user_recent_assets(assets, user)
-    recent_studio_ids = recent_studio_asset_ids assets
-    all_recent_ids = recent_asset_ids assets
-    logger.info "Verifying that user Recent assets are #{recent_studio_ids} on the Impact Studio and #{all_recent_ids} on the Asset Library"
-    if user_recent_link?
-      wait_for_update_and_click_js user_recent_link_element
-    end
-    wait_until(Utils.short_wait, "Expected #{recent_studio_ids}, got #{swim_lane_asset_ids user_asset_link_elements}") do
-      sleep 2
-      swim_lane_asset_ids(user_asset_link_elements) == recent_studio_ids
-    end
-    verify_show_more(recent_studio_ids, user_assets_show_more_link_element) do
-      wait_until(Utils.short_wait, "Expected #{user.full_name}, got #{uploader_select}") do
-        uploader_select == user.full_name
-      end
-      wait_until(Utils.short_wait, "Expected #{all_recent_ids}, got #{list_view_asset_ids}") do
-        list_view_asset_ids == recent_asset_ids(assets)
-      end
-    end
+  def wait_for_user_asset_results(assets)
+    sleep 1
+    expected = assets.map &:id
+    wait_until(Utils.short_wait, "Expected #{expected}, got #{user_asset_ids}") { user_asset_ids == expected }
+  end
+
+  def wait_for_no_user_asset_results
+    no_user_assets_msg_element.when_visible Utils.short_wait
   end
 
   # EVERYONE'S ASSETS
 
-  # TODO h3(:everyone_assets_heading, )
-  # TODO button(:everyone_recent_link, )
-  # TODO div(:no_everyone_assets_msg, )
-  # TODO elements(:everyone_asset_link, :link, )
-  # TODO link(:everyone_assets_show_more_link, )
+  h2(:everyone_assets_heading, xpath: '//h2[text()="Everyone\'s Assets"]')
+  select_list(:sort_everyone_assets_select, id: 'everyones-assets-sort-select')
+  elements(:everyone_asset, :div, xpath: '//div[@id="everyones-assets"]//div[starts-with(@id, "asset-")]')
+  div(:no_everyone_assets_msg, id: 'everyones-assets-no-assets-msg')
+  link(:everyone_assets_show_more_link, id: 'everyones-assets-view-all-link')
 
-  def everyone_assets_pin_element(asset)
-    # TODO button_element()
+  def sort_everyone_assets(option)
+    logger.info "Sorting everyone's assets by #{option}"
+    wait_for_element_and_select_js(sort_everyone_assets_select_element, option)
   end
 
-  def verify_all_recent_assets(assets)
-    recent_studio_ids = recent_studio_asset_ids assets
-    all_recent_ids = recent_asset_ids assets
-    logger.info "Verifying that Everyone's Recent assets are #{recent_studio_ids} on the Impact Studio and #{all_recent_ids} on the Asset Library"
-    if everyone_recent_link?
-      wait_for_update_and_click_js everyone_recent_link_element
-    end
-    wait_until(Utils.short_wait, "Expected #{recent_studio_ids}, got #{swim_lane_asset_ids everyone_asset_link_elements}") do
-      sleep 2
-      swim_lane_asset_ids(everyone_asset_link_elements) == recent_studio_ids
-      recent_studio_ids.empty? ? no_everyone_assets_msg_element.visible? : !no_everyone_assets_msg_element.exists?
-    end
-    verify_show_more(all_recent_ids, everyone_assets_show_more_link_element,) do
-      wait_until(Utils.short_wait, 'Gave up waiting for advanced search button') do
-        advanced_search_button_element.when_visible Utils.short_wait
-      end
-      wait_until(Utils.short_wait, "Expected '#{all_recent_ids[0..9]}', got #{list_view_asset_ids}") do
-        list_view_asset_ids == recent_asset_ids(assets)[0..9]
-      end
-    end
+  def everyone_asset_xpath(asset)
+    "//div[@id='user-assets']//div[@id='asset-#{asset.id}']"
+  end
+
+  def everyone_asset_ids
+    everyone_asset_elements.map { |el| el.attribute('id').split('-').last }
+  end
+
+  def everyone_asset_el(asset)
+    div_element(xpath: everyone_asset_xpath(asset))
+  end
+
+  def click_everyone_asset_link(asset)
+    logger.info "Clicking thumbnail for Asset ID #{asset.id}"
+    wait_for_update_and_click everyone_asset_el(asset)
+    switch_to_canvas_iframe
+  end
+
+  def wait_for_everyone_asset_results(assets)
+    sleep 1
+    expected = assets.map &:id
+    wait_until(Utils.short_wait, "Expected #{expected}, got #{everyone_asset_ids}") { everyone_asset_ids == expected }
+  end
+
+  def wait_for_no_everyone_asset_results
+    no_everyone_assets_msg_element.when_visible Utils.short_wait
   end
 end

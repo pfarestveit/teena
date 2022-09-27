@@ -58,7 +58,7 @@ module Page
 
     # Clicks the update button and waits for confirmation
     def update_course_settings
-      wait_for_update_and_click update_course_button_element
+      wait_for_update_and_click_js update_course_button_element
       sleep 2
       update_course_success_element.when_visible Utils.medium_wait
     end

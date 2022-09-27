@@ -173,6 +173,7 @@ class SquiggyAssetLibraryDetailPage < SquiggyAssetLibraryListViewPage
     wait_for_update_and_click delete_button_element
     wait_for_update_and_click confirm_delete_button_element
     delete_button_element.when_not_present Utils.short_wait
+    asset.deleted = true if asset
   end
 
   # LIKE

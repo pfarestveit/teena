@@ -48,7 +48,7 @@ describe 'Impact Studio' do
         end
 
         context 'views a student\'s Impact Studio profile' do
-          before(:all) { @impact_studio.search_for_user student_viewer }
+          before(:all) { @impact_studio.select_user student_viewer }
           it('shows no Engagement Index link') { expect(@impact_studio.engagement_index_link?).to be false }
           it('shows no score') { expect(@impact_studio.engagement_index_score?).to be false }
           it('shows no rank') { expect(@impact_studio.engagement_index_rank?).to be false }
@@ -71,7 +71,7 @@ describe 'Impact Studio' do
         end
 
         context 'views another student\'s Impact Studio profile' do
-          before(:all) { @impact_studio.search_for_user student_share }
+          before(:all) { @impact_studio.select_user student_share }
           it('shows no Engagement Index link') { expect(@impact_studio.engagement_index_link?).to be false }
           it('shows no score') { expect(@impact_studio.engagement_index_score?).to be false }
           it('shows no rank') { expect(@impact_studio.engagement_index_rank?).to be false }
@@ -254,7 +254,7 @@ describe 'Impact Studio' do
         end
 
         context 'views the Impact Studio profile of an instructor who has not shared its score' do
-          before(:all) { @impact_studio.search_for_user teacher_no_share }
+          before(:all) { @impact_studio.select_user teacher_no_share }
           it('shows no Engagement Index link') { @impact_studio.engagement_index_link_element.when_not_visible 3 }
           it('shows no score') { expect(@impact_studio.engagement_index_score?).to be false }
           it('shows no "turn on" sharing link') { expect(@impact_studio.turn_on_sharing_link?).to be false }
@@ -263,7 +263,7 @@ describe 'Impact Studio' do
         end
 
         context 'views the Impact Studio profile of an instructor who has shared its score' do
-          before(:all) { @impact_studio.search_for_user teacher_share }
+          before(:all) { @impact_studio.select_user teacher_share }
           it('shows no Engagement Index link') { @impact_studio.engagement_index_link_element.when_not_visible 3 }
           it('shows no score') { expect(@impact_studio.engagement_index_score?).to be false }
           it('shows no "turn on" sharing link') { expect(@impact_studio.turn_on_sharing_link?).to be false }
@@ -272,7 +272,7 @@ describe 'Impact Studio' do
         end
 
         context 'views the Impact Studio profile of a student who has not shared its score' do
-          before(:all) { @impact_studio.search_for_user student_no_share }
+          before(:all) { @impact_studio.select_user student_no_share }
           it('shows no Engagement Index link') { @impact_studio.engagement_index_link_element.when_not_visible 3 }
           it('shows no score') { expect(@impact_studio.engagement_index_score?).to be false }
           it('shows no "turn on" sharing link') { expect(@impact_studio.turn_on_sharing_link?).to be false }
@@ -281,7 +281,7 @@ describe 'Impact Studio' do
         end
 
         context 'views the Impact Studio profile of a student who has shared its score' do
-          before(:all) { @impact_studio.search_for_user student_share }
+          before(:all) { @impact_studio.select_user student_share }
           it('shows no Engagement Index link') { @impact_studio.engagement_index_link_element.when_not_visible 3 }
           it('shows no score') { expect(@impact_studio.engagement_index_score?).to be false }
           it('shows no "turn on" sharing link') { expect(@impact_studio.turn_on_sharing_link?).to be false }
@@ -307,7 +307,7 @@ describe 'Impact Studio' do
         end
 
         context 'views the Impact Studio profile of an instructor who has not shared its score' do
-          before(:all) { @impact_studio.search_for_user teacher_no_share }
+          before(:all) { @impact_studio.select_user teacher_no_share }
           it('shows no Engagement Index link') { @impact_studio.engagement_index_link_element.when_not_visible 3 }
           it('shows no score') { expect(@impact_studio.engagement_index_score?).to be false }
           it('shows no "turn on" sharing link') { expect(@impact_studio.turn_on_sharing_link?).to be false }
@@ -316,7 +316,7 @@ describe 'Impact Studio' do
         end
 
         context 'views the Impact Studio profile of an instructor who has shared its score' do
-          before(:all) { @impact_studio.search_for_user teacher_share }
+          before(:all) { @impact_studio.select_user teacher_share }
           it('shows an Engagement Index link') { @impact_studio.engagement_index_link_element.when_visible 3 }
           it('shows a score') { @impact_studio.engagement_index_score_element.when_visible 1 }
           it('shows a rank') { @impact_studio.engagement_index_rank_element.when_visible 1 }
@@ -325,7 +325,7 @@ describe 'Impact Studio' do
         end
 
         context 'views the Impact Studio profile of a student who has not shared its score' do
-          before(:all) { @impact_studio.search_for_user student_no_share }
+          before(:all) { @impact_studio.select_user student_no_share }
           it('shows no Engagement Index link') { @impact_studio.engagement_index_link_element.when_not_visible 3 }
           it('shows no score') { expect(@impact_studio.engagement_index_score?).to be false }
           it('shows no "turn on" sharing link') { expect(@impact_studio.turn_on_sharing_link?).to be false }
@@ -334,7 +334,7 @@ describe 'Impact Studio' do
         end
 
         context 'views the Impact Studio profile of a student who has shared its score' do
-          before(:all) { @impact_studio.search_for_user student_share }
+          before(:all) { @impact_studio.select_user student_share }
           it('shows an Engagement Index link') { @impact_studio.engagement_index_link_element.when_visible 3 }
           it('shows a score') { @impact_studio.engagement_index_score_element.when_visible 1 }
           it('shows a rank') { @impact_studio.engagement_index_rank_element.when_visible 1 }
@@ -356,12 +356,12 @@ describe 'Impact Studio' do
     it('shows the user avatar') { expect(@impact_studio.avatar?).to be true }
 
     it 'shows no sections section when there is no section' do
-      @impact_studio.search_for_user teacher_no_share
+      @impact_studio.select_user teacher_no_share
       expect(@impact_studio.sections).to be_empty
     end
 
     it 'shows the sections when there are sections' do
-      @impact_studio.search_for_user student_no_share
+      @impact_studio.select_user student_no_share
       expect(@impact_studio.sections).to eql(test.course.sections.map &:label)
     end
 
@@ -457,7 +457,7 @@ describe 'Impact Studio' do
         before(:all) do
           @canvas.masquerade_as(student_share, test.course)
           @impact_studio.load_page test
-          @impact_studio.search_for_user student_viewer
+          @impact_studio.select_user student_viewer
         end
 
         it('shows no collaboration element on the Impact Studio') { expect(@impact_studio.collaboration_button?).to be false }
@@ -481,7 +481,7 @@ describe 'Impact Studio' do
         before(:all) do
           @canvas.masquerade_as(student_share, test.course)
           @impact_studio.load_page test
-          @impact_studio.search_for_user student_viewer
+          @impact_studio.select_user student_viewer
         end
 
         it('shows a collaborate button on the Impact Studio') { expect(@impact_studio.collaboration_button?).to be true }
