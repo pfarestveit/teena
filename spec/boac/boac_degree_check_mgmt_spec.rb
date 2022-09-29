@@ -54,8 +54,6 @@ unless ENV['DEPS']
       # Find student course data
       @homepage.dev_auth test.advisor
       @student_api_page.get_data(@driver, @student)
-      @unassigned_courses = @student_api_page.degree_progress_courses @degree_check
-      @completed_course_0 = @unassigned_courses[0]
 
       @homepage.load_page
       @homepage.click_degree_checks_link
@@ -89,7 +87,7 @@ unless ENV['DEPS']
         template.unit_reqts&.each do |u_req|
           it "shows units requirement #{u_req.name} name" do
             @degree_check_page.wait_until(1, "Expected #{u_req.name}, got #{@degree_check_page.visible_unit_req_name u_req}") do
-              @degree_check_page.visible_unit_req_name(u_req) == u_req.name
+              @degree_check_page.visible_unit_req_name(u_req).include? u_req.name
             end
           end
 
@@ -225,54 +223,62 @@ unless ENV['DEPS']
           @degree_check_page.click_save_req_edit
         end
 
-        context 'and a completed course is assigned' do
+        context 'and a completed course' do
 
           before(:all) do
-            @degree_check_page.click_edit_course_req @reqt
-            @degree_check_page.toggle_course_req_dot
-            @degree_check_page.enter_col_req_units '4-5'
-            @degree_check_page.enter_reqt_grade '>B'
-            @degree_check_page.enter_recommended_note 'affen schlafen in lederhosen'
-            @degree_check_page.click_save_req_edit
-
-            @degree_check_page.assign_completed_course(@completed_course_0, @reqt)
+            @unassigned_courses = @student_api_page.degree_progress_courses @degree_check
+            @completed_course_0 = @unassigned_courses[0]
           end
 
-          it 'overwrites a big dot' do
-            @degree_check_page.is_recommended(@reqt).when_not_present Utils.short_wait
+          context 'is assigned' do
+
+            before(:all) do
+              @degree_check_page.click_edit_course_req @reqt
+              @degree_check_page.toggle_course_req_dot
+              @degree_check_page.enter_col_req_units '4-5'
+              @degree_check_page.enter_reqt_grade '>B'
+              @degree_check_page.enter_recommended_note 'affen schlafen in lederhosen'
+              @degree_check_page.click_save_req_edit
+
+              @degree_check_page.assign_completed_course(@completed_course_0, @reqt)
+            end
+
+            it 'overwrites a big dot' do
+              @degree_check_page.is_recommended(@reqt).when_not_present Utils.short_wait
+            end
+
+            it 'overwrites requirement units' do
+              expect(@degree_check_page.assigned_course_units @completed_course_0).to eql(@completed_course_0.units)
+            end
+
+            it 'overwrites a requirement grade' do
+              expect(@degree_check_page.assigned_course_grade @completed_course_0).to eql(@completed_course_0.grade)
+            end
+
+            it 'overwrites a requirement note' do
+              expect(@degree_check_page.assigned_course_note(@completed_course_0).to_s).to eql('—')
+            end
           end
 
-          it 'overwrites requirement units' do
-            expect(@degree_check_page.assigned_course_units @completed_course_0).to eql(@completed_course_0.units)
-          end
+          context 'is unassigned' do
 
-          it 'overwrites a requirement grade' do
-            expect(@degree_check_page.assigned_course_grade @completed_course_0).to eql(@completed_course_0.grade)
-          end
+            before(:all) { @degree_check_page.unassign_course(@completed_course_0, @reqt) }
 
-          it 'overwrites a requirement note' do
-            expect(@degree_check_page.assigned_course_note(@completed_course_0).to_s).to eql('—')
-          end
-        end
+            it 'restores a big dot' do
+              @degree_check_page.is_recommended(@reqt).when_present Utils.short_wait
+            end
 
-        context 'and a completed course is unassigned' do
+            it 'restores requirement units' do
+              expect(@degree_check_page.visible_course_req_units @reqt).to eql('4-5')
+            end
 
-          before(:all) { @degree_check_page.unassign_course(@completed_course_0, @reqt) }
+            it 'restores a requirement grade' do
+              expect(@degree_check_page.visible_course_req_grade @reqt).to eql('>B')
+            end
 
-          it 'restores a big dot' do
-            @degree_check_page.is_recommended(@reqt).when_present Utils.short_wait
-          end
-
-          it 'restores requirement units' do
-            expect(@degree_check_page.visible_course_req_units @reqt).to eql('4-5')
-          end
-
-          it 'restores a requirement grade' do
-            expect(@degree_check_page.visible_course_req_grade @reqt).to eql('>B')
-          end
-
-          it 'restores a requirement note' do
-            expect(@degree_check_page.visible_course_req_note @reqt).to eql('affen schlafen in lederhosen')
+            it 'restores a requirement note' do
+              expect(@degree_check_page.visible_course_req_note @reqt).to eql('affen schlafen in lederhosen')
+            end
           end
         end
       end
@@ -314,15 +320,15 @@ unless ENV['DEPS']
 
         before(:all) { @degree_check_page.load_page @degree_check }
 
-        it('offers a create button for a note') { @degree_check_page.click_create_or_edit_note }
+        it('offers a create button for a note') { @degree_check_page.click_create_degree_note }
         it('allows the user to cancel a note') { @degree_check_page.click_cancel_note }
-        it('allows the user to save a note') { @degree_check_page.create_or_edit_note @note_str }
+        it('allows the user to save a note') { @degree_check_page.create_note @note_str }
         it('shows the note content') { expect(@degree_check_page.visible_note_body).to eql(@note_str.strip) }
         it('shows the note creating advisor') { expect(@degree_check_page.visible_note_update_advisor).to include(test.advisor.full_name) }
         it('shows the note creation date') { expect(@degree_check_page.note_update_date).to include('today') }
-        it('offers an edit button for a note') { @degree_check_page.click_create_or_edit_note }
+        it('offers an edit button for a note') { @degree_check_page.click_edit_degree_note }
         it('allows the user to cancel a note edit') { @degree_check_page.click_cancel_note }
-        it('allows the user to save a note edit') { @degree_check_page.create_or_edit_note("EDITED - #{@note_str}") }
+        it('allows the user to save a note edit') { @degree_check_page.edit_note("EDITED - #{@note_str}") }
         it('shows the edited note content') { expect(@degree_check_page.visible_note_body).to eql("EDITED - #{@note_str}".strip) }
         it('shows the note edit advisor') { expect(@degree_check_page.note_update_advisor).to include(test.advisor.full_name) }
         it('shows the note edit date') { expect(@degree_check_page.note_update_date).to include('today') }
@@ -425,8 +431,6 @@ unless ENV['DEPS']
           end
         end
 
-        it 'can print a degree template' # TODO download file and verify name
-
         it 'can view a degree template' do
           view_template = @templates.first
           @degree_templates_mgmt_page.click_degree_link view_template
@@ -446,14 +450,10 @@ unless ENV['DEPS']
           @degree_check_page.degree_check_heading(@degree_check).when_visible Utils.short_wait
         end
 
-        it('cannot edit degree notes') { expect(@degree_check_page.create_or_edit_note_button?).to be false }
-        it 'can print a degree check with notes' # TODO download file and verify name
-        it 'can print a degree check without notes' # TODO download file and verify name
+        it('cannot edit degree notes') { expect(@degree_check_page.create_note_button?).to be false }
         it('cannot create a new degree check') { expect(@degree_check_page.create_new_degree_link?).to be false }
         it('cannot assign courses') { expect(@degree_check_page.assign_course_button_elements).to be_empty }
         it('cannot edit courses') { expect(@degree_check_page.cat_edit_button_elements).to be_empty }
-        it('cannot copy courses') { expect(@degree_check_page.copy_course_button_elements).to be_empty }
-        it('cannot drag and drop courses') # TODO
         it('cannot click campus requirements checkboxes') { expect(@degree_check_page.campus_reqt_selectable? 'American History').to be false }
 
         context 'on the degree history page' do
@@ -650,7 +650,7 @@ unless ENV['DEPS']
           template.unit_reqts&.each do |u_req|
             it "shows units requirement #{u_req.name} name" do
               @degree_check_page.wait_until(1, "Expected #{u_req.name}, got #{@degree_check_page.visible_unit_req_name u_req}") do
-                @degree_check_page.visible_unit_req_name(u_req) == u_req.name
+                @degree_check_page.visible_unit_req_name(u_req).include? u_req.name
               end
             end
 

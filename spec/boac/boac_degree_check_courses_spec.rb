@@ -520,19 +520,11 @@ unless ENV['DEPS']
 
     context 'when copied' do
 
-      it 'must already be assigned elsewhere but not in the same category' do
-        @degree_check_page.click_copy_course_button @cat_with_courses_no_subs
-        expected = [@completed_course_0, @completed_course_3, @completed_course_4].map &:name
-        actual = @degree_check_page.copy_course_options
-        expect(actual).to eql(expected.sort)
-      end
-
       context 'to a category' do
         before(:all) do
           @completed_course_4.units = @completed_course_4.units.to_i + 1
           @completed_course_4.note = 'I\'ll give you fish, I\'ll give you candy'
           @degree_check_page.hit_escape
-          @degree_check_page.click_cancel_course_copy
           @degree_check_page.edit_assigned_course @completed_course_4
           @cat_copy = @degree_check_page.copy_course(@completed_course_4, @cat_no_subs_no_courses)
         end

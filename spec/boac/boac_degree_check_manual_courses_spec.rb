@@ -90,6 +90,7 @@ unless ENV['DEPS']
       @degree_check_page.load_page @degree_check
 
       @transfer_course = @degree_check.completed_courses.find &:transfer_course
+      BOACUtils.set_degree_manual_course_id(@degree_check, @transfer_course)
     end
 
     after(:all) { Utils.quit_browser @driver }
@@ -116,7 +117,7 @@ unless ENV['DEPS']
 
       it 'is reflected in the unit requirements' do
         @transfer_course.units_reqts.each do |req|
-          expect(@degree_check_page.unit_req_course_units(req, @transfer_course)).to eql(@transfer_course.units)
+          expect(@degree_check_page.unit_req_course_units(req, @transfer_course)).to eql(@transfer_course.units.to_s)
         end
       end
 
@@ -126,12 +127,12 @@ unless ENV['DEPS']
     context 'when created' do
 
       it 'can be canceled' do
-        @degree_check_page.click_create_course
+        @degree_check_page.click_create_course @sub_cat_with_courses
         @degree_check_page.click_cancel_course_create
       end
 
       it 'requires a name' do
-        @degree_check_page.click_create_course
+        @degree_check_page.click_create_course @sub_cat_with_courses
         @degree_check_page.enter_course_units @manual_course_0.units
         expect(@degree_check_page.create_course_save_button_element.enabled?).to be false
       end
@@ -144,23 +145,23 @@ unless ENV['DEPS']
 
       it 'can be saved' do
         @degree_check_page.click_cancel_course_create
-        @degree_check_page.create_manual_course(@degree_check, @manual_course_0)
+        @degree_check_page.create_manual_course(@degree_check, @manual_course_0, @sub_cat_with_courses)
       end
 
       it 'shows the right course name' do
-        expect(@degree_check_page.unassigned_course_code(@manual_course_0)).to eql(@manual_course_0.name)
+        expect(@degree_check_page.assigned_course_name(@manual_course_0)).to eql(@manual_course_0.name)
       end
 
       it 'shows the right course units' do
-        expect(@degree_check_page.unassigned_course_units(@manual_course_0)).to eql(@manual_course_0.units)
+        expect(@degree_check_page.assigned_course_units(@manual_course_0)).to eql(@manual_course_0.units)
       end
 
       it 'shows the right course grade' do
-        expect(@degree_check_page.unassigned_course_grade(@manual_course_0)).to eql(@manual_course_0.grade)
+        expect(@degree_check_page.assigned_course_grade(@manual_course_0)).to eql(@manual_course_0.grade)
       end
 
       it 'shows the right course note' do
-        expect(@degree_check_page.unassigned_course_note(@manual_course_0)).to eql(@manual_course_0.note)
+        expect(@degree_check_page.assigned_course_note(@manual_course_0)).to eql(@manual_course_0.note)
       end
     end
 
@@ -169,140 +170,115 @@ unless ENV['DEPS']
       after(:each) { @degree_check_page.click_cancel_course_edit if @degree_check_page.course_cancel_button? }
 
       it 'can be canceled' do
-        @degree_check_page.click_edit_unassigned_course @manual_course_0
+        @degree_check_page.click_edit_assigned_course @manual_course_0
         @degree_check_page.click_cancel_course_edit
       end
 
       it 'requires a name' do
-        @degree_check_page.click_edit_unassigned_course @manual_course_0
+        @degree_check_page.click_edit_assigned_course @manual_course_0
         @degree_check_page.enter_course_name ''
         expect(@degree_check_page.course_update_button_element.enabled?).to be false
       end
 
       it 'does not require units' do
-        @degree_check_page.click_edit_unassigned_course @manual_course_0
+        @degree_check_page.click_edit_assigned_course @manual_course_0
         @degree_check_page.enter_course_name @manual_course_0.name
         @degree_check_page.enter_course_units ''
         expect(@degree_check_page.course_update_button_element.enabled?).to be true
       end
 
-      it 'allows a user to edit the name' do
-        @manual_course_0.name = "EDITED #{@manual_course_0.name}"
-        @degree_check_page.edit_unassigned_course @manual_course_0
-        expect(@degree_check_page.unassigned_course_code @manual_course_0).to eql(@manual_course_0.name)
-      end
-
       it 'allows a user to edit the units' do
         @manual_course_0.units = ''
-        @degree_check_page.edit_unassigned_course @manual_course_0
-        expect(@degree_check_page.unassigned_course_units @manual_course_0).to eql('—')
+        @degree_check_page.edit_assigned_course @manual_course_0
+        expect(@degree_check_page.assigned_course_units @manual_course_0).to eql('—')
       end
 
       it 'allows a user to edit the grade' do
         @manual_course_0.grade = 'F?'
-        @degree_check_page.edit_unassigned_course @manual_course_0
-        expect(@degree_check_page.unassigned_course_grade @manual_course_0).to eql(@manual_course_0.grade)
+        @degree_check_page.edit_assigned_course @manual_course_0
+        expect(@degree_check_page.assigned_course_grade @manual_course_0).to eql(@manual_course_0.grade)
       end
 
       it 'allows a user to edit the color code' do
         @manual_course_0.color = 'blue'
-        @degree_check_page.edit_unassigned_course @manual_course_0
-      end
-
-      it 'does not allow a user to edit the unit fulfillment' do
-        @degree_check_page.click_edit_unassigned_course @manual_course_0
-        expect(@degree_check_page.col_req_course_units_req_select?).to be false
+        @degree_check_page.edit_assigned_course @manual_course_0
       end
 
       it 'allows a user to edit the note' do
         @manual_course_0.note = "EDITED - #{@manual_course_0.note}"
-        @degree_check_page.edit_unassigned_course @manual_course_0
-        expect(@degree_check_page.unassigned_course_note @manual_course_0).to eql(@manual_course_0.note)
+        @degree_check_page.edit_assigned_course @manual_course_0
+        expect(@degree_check_page.assigned_course_note @manual_course_0).to eql(@manual_course_0.note)
       end
     end
 
-    context 'when assigned to a course requirement' do
+    context 'when unassigned' do
 
-      it 'updates the requirement row with the course name' do
-        @degree_check_page.assign_completed_course(@manual_course_0, @course_req_2)
-      end
-
-      it 'updates the requirement row with the course units' do
-        expect(@degree_check_page.assigned_course_units @manual_course_0).to eql('—')
-      end
-
-      it 'updates the requirement row with the course grade' do
-        expect(@degree_check_page.assigned_course_grade @manual_course_0).to eql(@manual_course_0.grade)
-      end
-
-      it 'updates the requirement row with the course note' do
-        expect(@degree_check_page.assigned_course_note @manual_course_0).to eql(@manual_course_0.note)
-      end
+      before(:all) { @degree_check_page.unassign_course(@manual_course_0, @sub_cat_with_courses) }
 
       context 'and edited' do
 
         after(:each) { @degree_check_page.click_cancel_course_edit if @degree_check_page.course_cancel_button? }
 
         it 'can be canceled' do
-          @degree_check_page.click_edit_assigned_course @manual_course_0
+          @degree_check_page.click_edit_unassigned_course @manual_course_0
           @degree_check_page.click_cancel_course_edit
         end
 
         it 'requires a name' do
-          @degree_check_page.click_edit_assigned_course @manual_course_0
+          @degree_check_page.click_edit_unassigned_course @manual_course_0
           @degree_check_page.enter_course_name ''
           expect(@degree_check_page.course_update_button_element.enabled?).to be false
         end
 
         it 'does not require units' do
-          @degree_check_page.click_edit_assigned_course @manual_course_0
+          @degree_check_page.click_edit_unassigned_course @manual_course_0
           @degree_check_page.enter_course_name @manual_course_0.name
           @degree_check_page.enter_course_units ''
           expect(@degree_check_page.course_update_button_element.enabled?).to be true
         end
 
         it 'allows a user to edit the name' do
-          @degree_check_page.click_edit_assigned_course @manual_course_0
+          @degree_check_page.click_edit_unassigned_course @manual_course_0
           @manual_course_0.name = "AGAIN #{@manual_course_0.name}"
           @degree_check_page.enter_course_name @manual_course_0.name
           @degree_check_page.click_save_course_edit
-          expect(@degree_check_page.assigned_course_name @manual_course_0).to eql(@manual_course_0.name)
+          expect(@degree_check_page.unassigned_course_code @manual_course_0).to eql(@manual_course_0.name)
         end
 
         it 'allows a user to edit the units' do
           @manual_course_0.units = '0.35'
-          @degree_check_page.edit_assigned_course @manual_course_0
-          expect(@degree_check_page.assigned_course_units @manual_course_0).to eql(@manual_course_0.units)
+          @degree_check_page.edit_unassigned_course @manual_course_0
+          expect(@degree_check_page.unassigned_course_units @manual_course_0).to eql(@manual_course_0.units)
         end
 
         it 'allows a user to edit the grade' do
           @manual_course_0.grade = 'C#'
-          @degree_check_page.edit_assigned_course @manual_course_0
-          expect(@degree_check_page.assigned_course_grade @manual_course_0).to eql(@manual_course_0.grade)
+          @degree_check_page.edit_unassigned_course @manual_course_0
+          expect(@degree_check_page.unassigned_course_grade @manual_course_0).to eql(@manual_course_0.grade)
         end
 
         it 'allows a user to edit the color code' do
           @manual_course_0.color = 'purple'
-          @degree_check_page.edit_assigned_course @manual_course_0
+          @degree_check_page.edit_unassigned_course @manual_course_0
         end
 
         it 'allows a user to edit the unit fulfillment' do
           @manual_course_0.units_reqts = [@degree_check.unit_reqts[1]]
-          @degree_check_page.edit_assigned_course @manual_course_0
+          @degree_check_page.edit_unassigned_course @manual_course_0
         end
 
         it 'allows a user to edit the note' do
           @manual_course_0.note = "AGAIN #{@manual_course_0.note}"
-          @degree_check_page.edit_assigned_course @manual_course_0
-          expect(@degree_check_page.assigned_course_note @manual_course_0).to eql(@manual_course_0.note)
+          @degree_check_page.edit_unassigned_course @manual_course_0
+          expect(@degree_check_page.unassigned_course_note @manual_course_0).to eql(@manual_course_0.note)
         end
       end
     end
 
     context 'when assigned' do
 
-      it 'can be moved from a course requirement to a category' do
-        @degree_check_page.reassign_course(@manual_course_0, @course_req_2, @cat_no_subs_no_courses)
+      it 'can be moved to a category' do
+        @degree_check_page.assign_completed_course(@manual_course_0, @cat_no_subs_no_courses)
       end
 
       it 'can be moved from a category to a subcategory' do
@@ -337,13 +313,14 @@ unless ENV['DEPS']
     context 'when deleted' do
 
       before(:all) do
-        @degree_check_page.create_manual_course(@degree_check, @manual_course_1)
+        @degree_check_page.create_manual_course(@degree_check, @manual_course_1, @sub_cat_with_courses)
+        @degree_check_page.unassign_course(@manual_course_1, @sub_cat_with_courses)
 
-        @degree_check_page.create_manual_course(@degree_check, @manual_course_2)
-        @degree_check_page.wish_to_cornfield @manual_course_2
+        @degree_check_page.create_manual_course(@degree_check, @manual_course_2, @sub_cat_with_courses)
+        @degree_check_page.wish_to_cornfield(@manual_course_2, @sub_cat_with_courses)
 
-        @degree_check_page.create_manual_course(@degree_check, @manual_course_3)
-        @degree_check_page.assign_completed_course(@manual_course_3, @course_req_2)
+        @degree_check_page.create_manual_course(@degree_check, @manual_course_3, @sub_cat_with_courses)
+        @degree_check_page.reassign_course(@manual_course_3, @sub_cat_with_courses, @course_req_2)
       end
 
       it 'can be deleted from the unassigned list' do
@@ -365,21 +342,16 @@ unless ENV['DEPS']
     context 'when copied' do
 
       before(:all) do
-        @degree_check_page.create_manual_course(@degree_check, @manual_course_4)
-        @degree_check_page.create_manual_course(@degree_check, @manual_course_5)
-        @degree_check_page.assign_completed_course(@manual_course_4, @cat_no_subs_no_courses)
-        @degree_check_page.assign_completed_course(@manual_course_5, @sub_cat_no_courses)
-      end
-
-      it 'must already be assigned elsewhere but not in the same category' do
-        @degree_check_page.click_copy_course_button @cat_no_subs_no_courses
-        expect(@degree_check_page.copy_course_options).to eql([@manual_course_5.name])
+        @degree_check_page.create_manual_course(@degree_check, @manual_course_4, @sub_cat_with_courses)
+        @degree_check_page.create_manual_course(@degree_check, @manual_course_5, @sub_cat_with_courses)
+        @degree_check_page.reassign_course(@manual_course_4, @sub_cat_with_courses, @cat_no_subs_no_courses)
+        @degree_check_page.reassign_course(@manual_course_5, @sub_cat_with_courses, @sub_cat_no_courses)
       end
 
       context 'to a category' do
 
         before(:all) do
-          @degree_check_page.click_cancel_course_copy
+          @degree_check_page.unassign_course(@manual_course_5, @sub_cat_with_courses)
           @cat_copy = @degree_check_page.copy_course(@manual_course_5, @cat_no_subs_no_courses)
         end
 

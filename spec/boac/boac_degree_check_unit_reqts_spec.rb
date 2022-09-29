@@ -288,32 +288,32 @@ unless ENV['DEPS']
         end
 
         it 'makes no update to the unit fulfillment totals' do
-          expect(@degree_check_page.units_added_to_unit_req?(@degree_check.unit_reqts[0], @course)).to be false
-          expect(@degree_check_page.units_added_to_unit_req?(@degree_check.unit_reqts[1], @course)).to be false
-          expect(@degree_check_page.units_added_to_unit_req?(@degree_check.unit_reqts[2], @course)).to be false
-          expect(@degree_check_page.unit_req_course?(@degree_check.unit_reqts[0], @course)).to be false
-          expect(@degree_check_page.unit_req_course?(@degree_check.unit_reqts[1], @course)).to be false
-          expect(@degree_check_page.unit_req_course?(@degree_check.unit_reqts[2], @course)).to be false
+          expect(@degree_check_page.units_added_to_unit_req?(@degree_check.unit_reqts[0], @course_copy)).to be false
+          expect(@degree_check_page.units_added_to_unit_req?(@degree_check.unit_reqts[1], @course_copy)).to be false
+          expect(@degree_check_page.units_added_to_unit_req?(@degree_check.unit_reqts[2], @course_copy)).to be false
+          expect(@degree_check_page.unit_req_course?(@degree_check.unit_reqts[0], @course_copy)).to be false
+          expect(@degree_check_page.unit_req_course?(@degree_check.unit_reqts[1], @course_copy)).to be false
+          expect(@degree_check_page.unit_req_course?(@degree_check.unit_reqts[2], @course_copy)).to be false
         end
 
         it 'can have unit fulfillment edited and totals updated' do
           @course_copy.units_reqts = [@degree_check.unit_reqts[2]]
           @degree_check_page.edit_assigned_course @course_copy
-          expect(@degree_check_page.units_added_to_unit_req?(@degree_check.unit_reqts[2], @course)).to be true
-          expect(@degree_check_page.unit_req_course_units(@degree_check.unit_reqts[2], @course)).to eql(@course.units)
+          expect(@degree_check_page.units_added_to_unit_req?(@degree_check.unit_reqts[2], @course_copy)).to be true
+          expect(@degree_check_page.unit_req_course_units(@degree_check.unit_reqts[2], @course_copy)).to eql(@course_copy.units.to_s)
         end
 
         it 'shows an indicator if its unit fulfillment has been edited' do
-          expect(@degree_check_page.assigned_course_fulfill_flag? @course).to be true
+          expect(@degree_check_page.assigned_course_fulfill_flag? @course_copy).to be true
         end
 
         it 'can have unit fulfillment added and totals updated' do
           @course_copy.units_reqts = @degree_check.unit_reqts
           @degree_check_page.edit_assigned_course @course_copy
-          expect(@degree_check_page.units_added_to_unit_req?(@degree_check.unit_reqts[0], @course)).to be true
-          expect(@degree_check_page.units_added_to_unit_req?(@degree_check.unit_reqts[1], @course)).to be true
-          expect(@degree_check_page.unit_req_course_units(@degree_check.unit_reqts[0], @course)).to eql(@course.units)
-          expect(@degree_check_page.unit_req_course_units(@degree_check.unit_reqts[1], @course)).to eql(@course.units)
+          expect(@degree_check_page.units_added_to_unit_req?(@degree_check.unit_reqts[0], @course_copy)).to be true
+          expect(@degree_check_page.units_added_to_unit_req?(@degree_check.unit_reqts[1], @course_copy)).to be true
+          expect(@degree_check_page.unit_req_course_units(@degree_check.unit_reqts[0], @course_copy)).to eql(@course_copy.units.to_s)
+          expect(@degree_check_page.unit_req_course_units(@degree_check.unit_reqts[1], @course_copy)).to eql(@course_copy.units.to_s)
         end
 
         it 'shows an indicator if its unit fulfillment has been added' do
@@ -326,9 +326,9 @@ unless ENV['DEPS']
           expect(@degree_check_page.units_removed_from_unit_req?(@degree_check.unit_reqts[0], @course)).to be true
           expect(@degree_check_page.units_removed_from_unit_req?(@degree_check.unit_reqts[1], @course)).to be true
           expect(@degree_check_page.units_removed_from_unit_req?(@degree_check.unit_reqts[2], @course)).to be true
-          expect(@degree_check_page.unit_req_course?(@degree_check.unit_reqts[0], @course)).to be false
-          expect(@degree_check_page.unit_req_course?(@degree_check.unit_reqts[1], @course)).to be false
-          expect(@degree_check_page.unit_req_course?(@degree_check.unit_reqts[2], @course)).to be false
+          expect(@degree_check_page.unit_req_course?(@degree_check.unit_reqts[0], @course_copy)).to be false
+          expect(@degree_check_page.unit_req_course?(@degree_check.unit_reqts[1], @course_copy)).to be false
+          expect(@degree_check_page.unit_req_course?(@degree_check.unit_reqts[2], @course_copy)).to be false
         end
 
         it 'shows no indicator that its unit fulfillment differs from the category\'s' do
@@ -354,17 +354,17 @@ unless ENV['DEPS']
         end
 
         it 'updates the unit fulfillment totals' do
-          expect(@degree_check_page.units_added_to_unit_req?(@degree_check.unit_reqts[1], @course)).to be true
-          expect(@degree_check_page.unit_req_course_units(@degree_check.unit_reqts[1], @course)).to eql(@course.units)
+          expect(@degree_check_page.units_added_to_unit_req?(@degree_check.unit_reqts[1], @course_copy)).to be true
+          expect(@degree_check_page.unit_req_course_units(@degree_check.unit_reqts[1], @course_copy)).to eql(@course_copy.units.to_s)
         end
 
         it 'can have unit fulfillment edited and totals updated' do
           @course_copy.units_reqts = [@degree_check.unit_reqts[0]]
           @degree_check_page.edit_assigned_course @course_copy
-          expect(@degree_check_page.units_added_to_unit_req?(@degree_check.unit_reqts[0], @course)).to be true
-          expect(@degree_check_page.units_removed_from_unit_req?(@degree_check.unit_reqts[1], @course)).to be true
-          expect(@degree_check_page.unit_req_course_units(@degree_check.unit_reqts[0], @course)).to eql(@course.units)
-          expect(@degree_check_page.unit_req_course?(@degree_check.unit_reqts[1], @course)).to be false
+          expect(@degree_check_page.units_added_to_unit_req?(@degree_check.unit_reqts[0], @course_copy)).to be true
+          expect(@degree_check_page.units_removed_from_unit_req?(@degree_check.unit_reqts[1], @course_copy)).to be true
+          expect(@degree_check_page.unit_req_course_units(@degree_check.unit_reqts[0], @course_copy)).to eql(@course_copy.units.to_s)
+          expect(@degree_check_page.unit_req_course?(@degree_check.unit_reqts[1], @course_copy)).to be false
         end
 
         it 'shows an indicator if its unit fulfillment has been edited' do
@@ -374,8 +374,8 @@ unless ENV['DEPS']
         it 'can have unit fulfillment removed and totals updated' do
           @course_copy.units_reqts = []
           @degree_check_page.edit_assigned_course @course_copy
-          expect(@degree_check_page.units_removed_from_unit_req?(@degree_check.unit_reqts[0], @course)).to be true
-          expect(@degree_check_page.unit_req_course?(@degree_check.unit_reqts[0], @course)).to be false
+          expect(@degree_check_page.units_removed_from_unit_req?(@degree_check.unit_reqts[0], @course_copy)).to be true
+          expect(@degree_check_page.unit_req_course?(@degree_check.unit_reqts[0], @course_copy)).to be false
         end
 
         it 'shows an indicator if its unit fulfillment has been removed' do
@@ -385,12 +385,12 @@ unless ENV['DEPS']
         it 'can have unit fulfillment added and totals updated' do
           @course_copy.units_reqts = @degree_check.unit_reqts
           @degree_check_page.edit_assigned_course @course_copy
-          expect(@degree_check_page.units_added_to_unit_req?(@degree_check.unit_reqts[0], @course)).to be true
-          expect(@degree_check_page.units_added_to_unit_req?(@degree_check.unit_reqts[1], @course)).to be true
-          expect(@degree_check_page.units_added_to_unit_req?(@degree_check.unit_reqts[2], @course)).to be true
-          expect(@degree_check_page.unit_req_course_units(@degree_check.unit_reqts[0], @course)).to eql(@course.units)
-          expect(@degree_check_page.unit_req_course_units(@degree_check.unit_reqts[1], @course)).to eql(@course.units)
-          expect(@degree_check_page.unit_req_course_units(@degree_check.unit_reqts[2], @course)).to eql(@course.units)
+          expect(@degree_check_page.units_added_to_unit_req?(@degree_check.unit_reqts[0], @course_copy)).to be true
+          expect(@degree_check_page.units_added_to_unit_req?(@degree_check.unit_reqts[1], @course_copy)).to be true
+          expect(@degree_check_page.units_added_to_unit_req?(@degree_check.unit_reqts[2], @course_copy)).to be true
+          expect(@degree_check_page.unit_req_course_units(@degree_check.unit_reqts[0], @course_copy)).to eql(@course_copy.units.to_s)
+          expect(@degree_check_page.unit_req_course_units(@degree_check.unit_reqts[1], @course_copy)).to eql(@course_copy.units.to_s)
+          expect(@degree_check_page.unit_req_course_units(@degree_check.unit_reqts[2], @course_copy)).to eql(@course_copy.units.to_s)
         end
 
         it 'shows an indicator if its unit fulfillment has been added' do
@@ -402,12 +402,12 @@ unless ENV['DEPS']
           before(:all) { @degree_check_page.delete_assigned_course @course_copy }
 
           it 'updates the unit fulfillment totals' do
-            expect(@degree_check_page.units_removed_from_unit_req?(@degree_check.unit_reqts[0], @course)).to be true
-            expect(@degree_check_page.units_removed_from_unit_req?(@degree_check.unit_reqts[1], @course)).to be true
-            expect(@degree_check_page.units_removed_from_unit_req?(@degree_check.unit_reqts[2], @course)).to be true
-            expect(@degree_check_page.unit_req_course?(@degree_check.unit_reqts[0], @course)).to be false
-            expect(@degree_check_page.unit_req_course?(@degree_check.unit_reqts[1], @course)).to be false
-            expect(@degree_check_page.unit_req_course?(@degree_check.unit_reqts[2], @course)).to be false
+            expect(@degree_check_page.units_removed_from_unit_req?(@degree_check.unit_reqts[0], @course_copy)).to be true
+            expect(@degree_check_page.units_removed_from_unit_req?(@degree_check.unit_reqts[1], @course_copy)).to be true
+            expect(@degree_check_page.units_removed_from_unit_req?(@degree_check.unit_reqts[2], @course_copy)).to be true
+            expect(@degree_check_page.unit_req_course?(@degree_check.unit_reqts[0], @course_copy)).to be false
+            expect(@degree_check_page.unit_req_course?(@degree_check.unit_reqts[1], @course_copy)).to be false
+            expect(@degree_check_page.unit_req_course?(@degree_check.unit_reqts[2], @course_copy)).to be false
           end
         end
       end
