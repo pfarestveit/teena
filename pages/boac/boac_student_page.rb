@@ -107,12 +107,17 @@ class BOACStudentPage
     xpath = "//h3[contains(text(), \"Degree\")]/following-sibling::div[contains(., \"#{field}\")]"
     deg_type_el = div_element(xpath: "#{xpath}/div[1]")
     deg_date_el = div_element(xpath: "#{xpath}/div[2]")
-    deg_college_el = div_element(xpath: "#{xpath}/div[3]")
-    logger.debug "Degree college XPath is '#{xpath}/div[3]'"
+    deg_college_el_1 = div_element(xpath: "#{xpath}/div[4]")
+    deg_college_el_2 = div_element(xpath: "#{xpath}/div[3]")
+    college = if deg_college_el_1.exists?
+                deg_college_el_1.text
+              elsif deg_college_el_2.exists?
+                deg_college_el_2.text
+              end
     {
       deg_type: (deg_type_el.text.strip if deg_type_el.exists?),
       deg_date: (deg_date_el.text if deg_date_el.exists?),
-      deg_college: (deg_college_el.text if deg_college_el.exists?)
+      deg_college: (college)
     }
   end
 
@@ -302,10 +307,12 @@ class BOACStudentPage
     title_el.when_visible 1
     code_el = div_element(id: "term-#{term_id}-course-#{i}-details-name")
     section_els = span_elements(xpath: "//div[@id='term-#{term_id}-course-#{i}-details']/div[@class='student-course-sections']/span")
+    incomplete_grade_alert_el = div_element(xpath: "//div[@id='term-#{term_id}-course-#{i}-details']//div[contains(@id, 'has-incomplete-grade')]")
     {
       code: (code_el.text if code_el.exists?),
       sections: (section_els.map { |el| el.text.split("\n").last.gsub(' |', '') } if section_els.any?),
-      title: (title_el.text if title_el.exists?)
+      title: (title_el.text if title_el.exists?),
+      incomplete_alert: (incomplete_grade_alert_el.text if incomplete_grade_alert_el.exists?)
     }
   end
 

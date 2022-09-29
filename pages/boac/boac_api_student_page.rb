@@ -293,7 +293,10 @@ class BOACApiStudentPage
       :component => section['component'],
       :units_completed => (section['units'].floor == section['units'] ? section['units'].floor.to_s : section['units'].to_s),
       :primary => section['primary'],
-      :status => section['enrollmentStatus']
+      :status => section['enrollmentStatus'],
+      :incomplete_code => section['incompleteStatusCode'],
+      :incomplete_frozen => section['incompleteFrozenFlag'],
+      :incomplete_lapse_date => section['incompleteLapseGradeDate']
     }
   end
 

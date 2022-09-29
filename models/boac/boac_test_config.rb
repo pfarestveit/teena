@@ -105,6 +105,7 @@ class BOACTestConfig < TestConfig
   # test run; otherwise the same ones.
   # @param config [Integer]
   def set_test_students(config, opts = {})
+    all_sids = @students.map &:sis_id
     @test_students = if (uids = ENV['UIDS'])
                        # Running tests against a specific set of students
                        uids = uids.split
@@ -148,7 +149,6 @@ class BOACTestConfig < TestConfig
                        ycbm_appts_sids = boa_sids & NessieTimelineUtils.get_sids_with_ycbm_appts
                        logger.info "There are #{ycbm_appts_sids.length} students with YCBM appointments"
                        [sis_appts_sids, ycbm_appts_sids].each &:shuffle!
-                       all_sids = @students.map &:sis_id
                        sis_appts_sids = sis_appts_sids & all_sids
                        ycbm_appts_sids = ycbm_appts_sids & all_sids
                        test_sids = (sis_appts_sids[0..(config - 1)] + ycbm_appts_sids[0..(config - 1)]).uniq
@@ -166,10 +166,26 @@ class BOACTestConfig < TestConfig
                        # Running tests against a random set of students, plus optional selected students
                        students_by_status = @students.partition { |s| s.status == 'active' }.each(&:shuffle!)
                        students = students_by_status[0][0..(config - 1)] + students_by_status[1][0..(config - 1)]
+                       all_sids
                        if opts[:with_standing]
                          test_sids = []
                          AcademicStanding::STATUSES.each { |s| test_sids << NessieUtils.get_sids_with_standing(s, BOACUtils.term_code).first }
-                         test_sids = test_sids.compact & NessieUtils.get_all_sids
+                         test_sids.compact!
+                         test_students = @students.select { |s| test_sids.include? s.sis_id }
+                         students = students + test_students
+                       end
+                       if opts[:incomplete_grades]
+                         test_sids = []
+                         term_1 = BOACUtils.previous_term_code(BOACUtils.previous_term_code(BOACUtils.previous_term_code))
+                         term_2 = BOACUtils.previous_term_code term_1
+                         term_codes = [term_1, term_2]
+                         IncompleteGrade::STATUSES.each do |s|
+                           sid = NessieUtils.get_sids_with_incomplete(s, term_codes, true).last
+                           test_sids << sid
+                           sid = NessieUtils.get_sids_with_incomplete(s, term_codes, false).last
+                           test_sids << sid
+                         end
+                         test_sids.compact!
                          test_students = @students.select { |s| test_sids.include? s.sis_id }
                          students = students + test_students
                        end
@@ -459,8 +475,8 @@ class BOACTestConfig < TestConfig
 
   # Config for SIS student data testing
   def sis_student_data
-    set_base_configs
-    set_test_students(CONFIG['sis_data_max_users'], {with_standing: true, include_inactive: true})
+    set_base_configs(nil, {include_inactive: true})
+    set_test_students(CONFIG['sis_data_max_users'], {with_standing: true, include_inactive: true, incomplete_grades: true})
   end
 
   # Config for SIS admit data testing
