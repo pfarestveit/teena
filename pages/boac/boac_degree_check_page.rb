@@ -32,11 +32,12 @@ class BOACDegreeCheckPage < BOACDegreeTemplatePage
 
   # NOTES
 
-  button(:create_or_edit_note_button, id: 'create-degree-note-btn')
+  button(:create_note_button, id: 'create-degree-note-btn')
+  button(:edit_note_button, id: 'edit-degree-note-btn')
   button(:print_note_toggle, id: 'degree-note-print-toggle')
   div(:print_note_toggle_label, class: 'toggle-label')
   span(:note_update_advisor, id: 'degree-note-updated-by')
-  span(:note_update_date, xpath: '//h3[text()="Degree Notes"]/following-sibling::div/div/span[2]/span')
+  span(:note_update_date, xpath: '//span[@id="degree-note-updated-by"]/../following-sibling::span/span')
   text_area(:note_input, id: 'degree-note-input')
   button(:save_note_button, id: 'save-degree-note-btn')
   button(:cancel_note_button, id: 'cancel-degree-note-btn')
@@ -52,8 +53,12 @@ class BOACDegreeCheckPage < BOACDegreeTemplatePage
     print_note_toggle_label.strip
   end
 
-  def click_create_or_edit_note
-    wait_for_update_and_click create_or_edit_note_button_element
+  def click_create_degree_note
+    wait_for_update_and_click create_note_button_element
+  end
+
+  def click_edit_degree_note
+    wait_for_update_and_click edit_note_button_element
   end
 
   def enter_note_body(string)
@@ -69,9 +74,16 @@ class BOACDegreeCheckPage < BOACDegreeTemplatePage
     cancel_note_button_element.when_not_present 1
   end
 
-  def create_or_edit_note(string)
+  def create_note(string)
     logger.info "Entering degree note '#{string}'"
-    click_create_or_edit_note
+    click_create_degree_note
+    enter_note_body string
+    click_save_note
+  end
+
+  def edit_note(string)
+    logger.info "Entering degree note '#{string}'"
+    click_edit_degree_note
     enter_note_body string
     click_save_note
   end
@@ -435,19 +447,21 @@ class BOACDegreeCheckPage < BOACDegreeTemplatePage
   def assign_completed_course(completed_course, req, opts = nil)
     logger.info "Assigning course #{completed_course.name}, #{completed_course.term_id}-#{completed_course.ccn} to #{req.name}"
 
-    if opts && opts[:drag]
-      target = req.instance_of?(DegreeReqtCourse) ? course_req_row(req) : cat_drop_zone_el(req)
-      drag_and_drop(unassigned_course_row(completed_course), target)
-    else
-      if completed_course.junk
-        click_junk_course_select completed_course
-        wait_for_update_and_click junk_course_req_option(completed_course, req)
+    unless opts && opts[:manual]
+      if opts && opts[:drag]
+        target = req.instance_of?(DegreeReqtCourse) ? course_req_row(req) : cat_drop_zone_el(req)
+        drag_and_drop(unassigned_course_row(completed_course), target)
       else
-        click_unassigned_course_select completed_course
-        wait_for_update_and_click unassigned_course_req_option(completed_course, req)
+        if completed_course.junk
+          click_junk_course_select completed_course
+          wait_for_update_and_click junk_course_req_option(completed_course, req)
+        else
+          click_unassigned_course_select completed_course
+          wait_for_update_and_click unassigned_course_req_option(completed_course, req)
+        end
       end
+      sleep Utils.click_wait
     end
-    sleep Utils.click_wait
 
     completed_course.junk = false
 
@@ -464,7 +478,7 @@ class BOACDegreeCheckPage < BOACDegreeTemplatePage
     completed_course.req_course = course_req
     completed_course.units_reqts = course_req.units_reqts
     wait_until(2, "Expected '#{completed_course.name}', got '#{assigned_course_name(completed_course)}'") do
-      assigned_course_name(completed_course) == completed_course.name
+      assigned_course_name(completed_course).include? completed_course.name
     end
   end
 
@@ -612,6 +626,10 @@ class BOACDegreeCheckPage < BOACDegreeTemplatePage
 
   # Any
 
+  def create_course_button_element(req)
+    button_element(id: "create-course-under-parent-category-#{req.id}")
+  end
+
   def enter_course_name(name)
     logger.info "Entering course name '#{name}'"
     wait_for_element_and_type(course_name_input_element, name)
@@ -649,8 +667,8 @@ class BOACDegreeCheckPage < BOACDegreeTemplatePage
     wait_for_element_and_type(course_note_input_element, note)
   end
 
-  def click_create_course
-    wait_for_update_and_click create_course_button_element
+  def click_create_course(req)
+    wait_for_update_and_click create_course_button_element(req)
   end
 
   def click_cancel_course_create
@@ -668,8 +686,8 @@ class BOACDegreeCheckPage < BOACDegreeTemplatePage
     course_update_button_element.when_not_present Utils.short_wait
   end
 
-  def create_manual_course(degree, course)
-    click_create_course
+  def create_manual_course(degree, course, req)
+    click_create_course req
     enter_course_name course.name
     enter_course_units course.units
     enter_course_grade course.grade
@@ -677,6 +695,8 @@ class BOACDegreeCheckPage < BOACDegreeTemplatePage
     enter_course_note course.note
     wait_for_update_and_click create_course_save_button_element
     create_course_save_button_element.when_not_present Utils.short_wait
+    assign_completed_course(course, req, {manual: true})
+    course.degree_check = degree
     BOACUtils.set_degree_manual_course_id(degree, course)
   end
 
@@ -805,7 +825,7 @@ class BOACDegreeCheckPage < BOACDegreeTemplatePage
 
   # COURSE COPY
 
-  elements(:copy_course_button, :button, xpath: '//button[contains(@id, "-add-course-to-category-")]')
+  button(:copy_course_button, id: 'duplicate-existing-course')
   select_list(:copy_course_select, id: 'add-course-select')
   button(:copy_course_save_button, id: 'add-course-save-btn')
   button(:copy_course_cancel_button, id: 'add-course-cancel-btn')
@@ -821,8 +841,8 @@ class BOACDegreeCheckPage < BOACDegreeTemplatePage
     opts
   end
 
-  def click_copy_course_button(destination_req)
-    wait_for_update_and_click copy_course_button(destination_req)
+  def click_copy_course_button
+    wait_for_update_and_click copy_course_button_element
   end
 
   def click_cancel_course_copy
@@ -832,21 +852,29 @@ class BOACDegreeCheckPage < BOACDegreeTemplatePage
 
   def copy_course(course, destination_req)
     logger.info "Copying #{course.name} to #{destination_req.name}"
-    click_copy_course_button destination_req
+    click_copy_course_button
     wait_for_element_and_select_js(copy_course_select_element, course.name)
     wait_for_update_and_click copy_course_save_button_element
     sleep Utils.click_wait
     dummy_req = DegreeReqtCourse.new parent: destination_req, dummy: true
     destination_req.course_reqs << dummy_req
     copy = DegreeCompletedCourse.new req_course: dummy_req,
+                                     ccn: course.ccn,
                                      course_orig: course,
                                      name: course.name.to_s,
                                      grade: course.grade.to_s,
+                                     term_id: course.term_id,
                                      units: course.units.to_i,
                                      units_reqts: destination_req.units_reqts,
                                      note: nil,
                                      manual: (true if course.manual)
+    if course.manual
+      BOACUtils.set_degree_manual_course_id(course.degree_check, copy)
+    else
+      BOACUtils.set_degree_sis_course_copy_id(course.degree_check, copy)
+    end
     course.course_copies << copy
+    assign_completed_course(copy, destination_req)
     wait_until(2, "Expected '#{copy.name}', got '#{assigned_course_name(copy)}'") do
       assigned_course_name(copy).include? copy.name
     end

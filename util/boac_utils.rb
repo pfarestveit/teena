@@ -790,7 +790,7 @@ class BOACUtils < Utils
   end
 
   def self.set_degree_manual_course_id(degree, course)
-    query = "SELECT id
+    query = "SELECT max(id) AS id
              FROM degree_progress_courses
              WHERE degree_check_id = '#{degree.id}'
                AND display_name = '#{course.name}';"
@@ -807,6 +807,17 @@ class BOACUtils < Utils
                 AND section_id = '#{course.ccn}'"
     id = Utils.query_pg_db_field(boac_db_credentials, query, 'id').first
     logger.debug "Completed course '#{course.name}' id is #{id}"
+    course.id = id
+  end
+
+  def self.set_degree_sis_course_copy_id(degree, course)
+    query = "SELECT max(id) AS id
+               FROM degree_progress_courses
+              WHERE degree_check_id = '#{degree.id}'
+                AND term_id = '#{course.course_orig.term_id}'
+                AND section_id = '#{course.course_orig.ccn}'"
+    id = Utils.query_pg_db_field(boac_db_credentials, query, 'id').first
+    logger.debug "Completed course '#{course.name}' copy id is #{id}"
     course.id = id
   end
 
