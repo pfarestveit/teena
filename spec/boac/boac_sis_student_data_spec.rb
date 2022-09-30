@@ -11,6 +11,8 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
       test.sis_student_data
       alert_students = []
       hold_students = []
+      image_nows = []
+      calcentrals = []
 
       # Create files for test output
       user_profile_data_heading = %w(UID Name PreferredName Email EmailAlt Phone Units GPA Level Transfer Colleges Majors
@@ -330,7 +332,8 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
         student_page_sis_data = @boac_student_page.visible_sis_data
 
         it "shows the name for #{test_case}" do
-          expect(student_page_sis_data[:name]).to eql(student_data[:student].full_name.split(',').reverse.join(' ').strip)
+          names = student_data[:student].full_name.split
+          names.each { |n| expect(student_page_sis_data[:name]).to include(n) }
         end
 
         it "shows the email for #{test_case}" do
@@ -525,20 +528,8 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
           end
         end
 
-        has_perceptive_link = @boac_student_page.perceptive_link.exists?
-        it "shows a link to image now documents on the student page for #{test_case}" do
-          expect(has_perceptive_link).to be true
-        end
-        has_calcentral_link = @boac_student_page.calcentral_link(student_data[:student]).exists?
-        if student_data[:student].status == 'inactive'
-          it "shows no link to the student overview page in CalCentral on the student page for #{test_case}" do
-            expect(has_calcentral_link).to be false
-          end
-        else
-          it "shows a link to the student overview page in CalCentral on the student page for #{test_case}" do
-            expect(has_calcentral_link).to be true
-          end
-        end
+        image_nows << student_data[:student].uid if @boac_student_page.perceptive_link.exists?
+        calcentrals << student_data[:student].uid if @boac_student_page.calcentral_link(student_data[:student]).exists?
 
         # TIMELINE
 
@@ -759,6 +750,32 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
                       expect(expanded_course_data[:title]).to eql(course_sis_data[:title])
                     end
 
+                    primary_section = student_data[:api].course_primary_section(course)
+                    primary_data = student_data[:api].sis_section_data(primary_section)
+                    if primary_data[:incomplete_code] && !primary_data[:incomplete_code].empty?
+                      lapse_date = primary_data[:incomplete_lapse_date]
+                      lapse_date = lapse_date && DateTime.strptime(lapse_date, "%Y- %m-%d %H:%M:%S").strftime("%b %-d, %Y")
+                      if primary_data[:incomplete_frozen] == 'Y'
+                        it "shows the incomplete grade alert for #{test_case}" do
+                          expect(expanded_course_data[:incomplete_alert]).to include('Frozen incomplete grade will not lapse into a failing grade')
+                        end
+                      elsif primary_data[:incomplete_frozen] == 'N'
+                        if primary_data[:incomplete_code] == 'I'
+                          it "shows the incomplete grade alert for #{test_case}" do
+                            expect(expanded_course_data[:incomplete_alert]).to include("Incomplete grade scheduled to become a failing grade on #{lapse_date}")
+                          end
+                        elsif primary_data[:incomplete_code] == 'L'
+                          it "shows the incomplete grade alert for #{test_case}" do
+                            expect(expanded_course_data[:incomplete_alert]).to include("Formerly an incomplete grade on #{lapse_date}")
+                          end
+                        elsif primary_data[:incomplete_code] == 'R'
+                          it "shows the incomplete grade alert for #{test_case}" do
+                            expect(expanded_course_data[:incomplete_alert]).to include('Formerly an incomplete grade')
+                          end
+                        end
+                      end
+                    end
+
                     section_statuses = []
                     student_data[:api].sections(course).each do |section|
 
@@ -895,6 +912,8 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
 
     it('has at least one student with an alert') { expect(alert_students).not_to be_empty }
     it('has at least one student with a hold') { expect(hold_students).not_to be_empty }
+    it('has at least one student with an Image Now link') { expect(image_nows).not_to be_empty }
+    it('has at least one student with a CalCentral link') { expect(calcentrals).not_to be_empty }
 
   rescue => e
     Utils.log_error e

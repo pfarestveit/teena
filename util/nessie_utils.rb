@@ -200,6 +200,21 @@ class NessieUtils < Utils
     sids
   end
 
+  def self.get_sids_with_incomplete(incomplete, term_ids, frozen)
+    terms = ''
+    term_ids.each { |t| terms << "'#{t}', " }
+    frozen_flag = frozen ? 'Y' : 'N'
+    sql = "SELECT sid
+             FROM student.student_enrollment_terms
+            WHERE term_id IN (#{terms[0..-3]})
+              #{+ 'AND enrollment_term LIKE \'%"incompleteFrozenFlag": "' + frozen_flag + '"%\''}
+              AND enrollment_term LIKE '%\"incompleteStatusCode\": \"#{incomplete.code}\"%'"
+    results = Utils.query_pg_db(nessie_pg_db_credentials, sql)
+    sids = results.map { |r| r['sid'] }
+    logger.info "There are #{sids.length} students with incomplete status #{incomplete.descrip} and frozen #{frozen} in term #{term_ids}"
+    sids
+  end
+
   ### ADVISORS ###
 
   def self.get_my_students_test_advisor(academic_plan_code)
