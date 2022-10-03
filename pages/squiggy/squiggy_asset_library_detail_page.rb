@@ -209,6 +209,7 @@ class SquiggyAssetLibraryDetailPage < SquiggyAssetLibraryListViewPage
     scroll_to_bottom
     enter_squiggy_text(comment_input_element, comment.body)
     wait_until(Utils.short_wait) { comment_add_button_element.enabled? }
+    scroll_to_bottom
     wait_for_update_and_click comment_add_button_element
     comment_el_by_body(comment).when_visible Utils.short_wait
     comment.set_comment_id

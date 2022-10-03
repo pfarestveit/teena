@@ -14,7 +14,7 @@ describe 'The Impact Studio' do
   all_assets << (asset_2 = student_1.assets.select(&:file_name)[0])
   all_assets << (asset_3 = student_1.assets.select(&:file_name)[1])
   all_assets << (asset_4 = SquiggyAsset.new title: whiteboard.title)
-  all_assets << (asset_5 = teacher.assets.find &:file_name)
+  all_assets << (asset_5 = teacher.assets.find &:url)
   all_assets << (asset_6 = student_2.assets.find &:file_name)
   all_assets << (asset_7 = student_2.assets.find &:url)
 
@@ -24,14 +24,14 @@ describe 'The Impact Studio' do
 
   asset_4_comment = SquiggyComment.new user: student_1,
                                        asset: asset_4,
-                                       body: 'Impact-free comment'
+                                       body: "Impact-free comment #{test.id}"
 
   asset_6_comment = SquiggyComment.new user: teacher,
                                        asset: asset_6,
-                                       body: 'This is a comment from Teacher to Student 2'
+                                       body: "This is a comment from Teacher to Student 2 #{test.id}"
   asset_6_reply = SquiggyComment.new user: teacher,
                                      asset: asset_6,
-                                     body: 'This is another comment from Teacher to Student 2'
+                                     body: "This is another comment from Teacher to Student 2 #{test.id}"
 
   before(:all) do
     @driver = Utils.launch_browser
@@ -40,7 +40,7 @@ describe 'The Impact Studio' do
     @asset_library = SquiggyAssetLibraryDetailPage.new @driver
     @engagement_index = SquiggyEngagementIndexPage.new @driver
     @impact_studio = SquiggyImpactStudioPage.new @driver
-    @whiteboards = SquiggyWhiteboardsPage.new @driver
+    @whiteboards = SquiggyWhiteboardPage.new @driver
 
     @canvas.log_in(@cal_net, test.admin.username, Utils.super_admin_password)
     @canvas.create_squiggy_course test
@@ -91,7 +91,7 @@ describe 'The Impact Studio' do
       @whiteboards.add_asset_exclude_from_library asset_2
       @whiteboards.add_asset_include_in_library asset_3
       @whiteboards.export_to_asset_library whiteboard
-      asset_4 = whiteboard.asset_exports.first
+      asset_4.id = whiteboard.asset_exports.first.id
       @whiteboards.close_whiteboard
 
       @canvas.masquerade_as teacher
@@ -147,7 +147,7 @@ describe 'The Impact Studio' do
       end
 
       it 'allows the user to click an asset in Everyone\'s Assets to view its detail' do
-        @impact_studio.click_user_asset_link asset_7
+        @impact_studio.click_user_asset_link asset_3
         @asset_library.wait_for_asset_detail
       end
 
@@ -348,10 +348,11 @@ describe 'The Impact Studio' do
       before(:all) do
         @asset_library.load_asset_detail(test, asset_4)
         @asset_library.add_comment asset_4_comment
+        asset_4.comments << asset_4_comment
         @impact_studio.load_page test
       end
 
-      it 'does not alter the user most commented assets' do
+      it 'updates the user most commented assets' do
         @impact_studio.sort_user_assets 'Most comments'
         @impact_studio.wait_for_user_asset_results @impact_studio.assets_most_commented(student_1_assets)
       end
