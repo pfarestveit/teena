@@ -478,12 +478,12 @@ unless ENV['DEPS']
         context 'and its original is unassigned' do
 
           before(:all) do
-            @degree_check_page.copy_course(@manual_course_4, @sub_cat_no_courses)
+            @copy_no_deleting = @degree_check_page.copy_course(@manual_course_4, @sub_cat_no_courses)
             @degree_check_page.unassign_course(@manual_course_4, @cat_no_subs_no_courses)
           end
 
-          it 'is deleted automatically' do
-            expect(@degree_check_page.assigned_course_row(@sub_cat_copy).exists?).to be false
+          it 'is not deleted automatically' do
+            expect(@degree_check_page.assigned_course_row(@copy_no_deleting).exists?).to be true
           end
         end
       end
