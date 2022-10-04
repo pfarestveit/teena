@@ -425,34 +425,8 @@ class SquiggyEngagementIndexPage
     switch_to_canvas_iframe
   end
 
-  def collaboration_toggle_element(user)
-    # TODO label_element()
-  end
-
   def collaboration_button_element(user)
-    # TODO button_element()
-  end
-
-  def set_collaboration_true(user)
-    user_collaboration_el(user).when_visible Utils.short_wait
-    if user_collaboration_el(user).text.include? 'Not'
-      wait_for_update_and_click collaboration_toggle_element(user)
-      sleep 1
-      wait_until(Utils.short_wait) { !user_collaboration_el(user).text.include?('Not') rescue Selenium::WebDriver::Error::StaleElementReferenceError }
-    else
-      logger.debug '"Looking for collaborators" is already true, doing nothing'
-    end
-  end
-
-  def set_collaboration_false(user)
-    user_collaboration_el(user).when_visible Utils.short_wait
-    if user_collaboration_el(user).text.include? 'Not'
-      logger.debug '"Looking for collaborators" is already false, doing nothing'
-    else
-      wait_for_update_and_click collaboration_toggle_element(user)
-      sleep 1
-      wait_until(Utils.short_wait) { user_collaboration_el(user).text.include?('Not') rescue Selenium::WebDriver::Error::StaleElementReferenceError }
-    end
+    button_element(xpath: "#{user_row_xpath user}/td[3]//button")
   end
 
   def click_collaborate_button(user)

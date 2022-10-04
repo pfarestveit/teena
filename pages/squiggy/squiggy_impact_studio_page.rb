@@ -12,6 +12,16 @@ class SquiggyImpactStudioPage
     switch_to_canvas_iframe
   end
 
+  def wait_for_profile(user)
+    name_element.when_visible Utils.short_wait
+    wait_until(Utils.short_wait) { name == user.full_name }
+  end
+
+  def load_own_profile(test, user)
+    load_page test
+    wait_for_profile user
+  end
+
   # IDENTITY
 
   image(:avatar, class: 'profile-avatar')
@@ -22,16 +32,11 @@ class SquiggyImpactStudioPage
   # TODO span(:char_limit_msg, )
   button(:update_profile_button, id: 'confirm-personal-description-btn')
   button(:cancel_edit_profile, id: 'cancel-personal-description-btn')
-  # TODO elements(:section, :span, )
+  div(:section, id: 'canvas-course-sections')
   span(:last_activity, xpath: '//div[@id="profile-last-activity"]/span')
-  # TODO link(:engagement_index_link, )
-  # TODO link(:turn_on_sharing_link, )
-  # TODO div(:engagement_index_score, )
-  # TODO span(:engagement_index_rank, )
-  # TODO span(:engagement_index_rank_ttl, )
 
   def sections
-    section_elements.map &:text
+    section.strip
   end
 
   def click_edit_profile
@@ -39,7 +44,7 @@ class SquiggyImpactStudioPage
   end
 
   def enter_profile_desc(desc)
-    wait_for_element_and_type(edit_profile_input_element, desc)
+    enter_squiggy_text(edit_profile_input_element, desc)
   end
 
   def cancel_profile_edit
@@ -72,7 +77,7 @@ class SquiggyImpactStudioPage
     if collaboration_status.include? 'Not'
       wait_for_update_and_click collaboration_button_element
       sleep 1
-      wait_until(Utils.short_wait) { !collaboration_status.include?('Not') rescue Selenium::WebDriver::Error::StaleElementReferenceError }
+      wait_until(Utils.short_wait) { !collaboration_status.include? 'Not' }
     end
   end
 
@@ -82,7 +87,7 @@ class SquiggyImpactStudioPage
     unless collaboration_status.include? 'Not'
       wait_for_update_and_click collaboration_button_element
       sleep 1
-      wait_until(Utils.short_wait) { collaboration_status.include?('Not') rescue Selenium::WebDriver::Error::StaleElementReferenceError }
+      wait_until(Utils.short_wait) { collaboration_status.include? 'Not' }
     end
   end
 
@@ -102,18 +107,19 @@ class SquiggyImpactStudioPage
     logger.info "Selecting #{user.full_name}"
     wait_for_element_and_select_js(user_select_element, user.full_name)
     wait_for_update_and_click_js user_select_button_element
+    wait_for_profile user
   end
 
   def browse_next_user(user)
     logger.info "Browsing next user #{user.full_name}"
     wait_for_load_and_click browse_next_element
-    wait_until(Utils.short_wait) { name == user.full_name }
+    wait_for_profile user
   end
 
   def browse_previous_user(user)
     logger.info "Browsing previous user #{user.full_name}"
     wait_for_load_and_click browse_previous_element
-    wait_until(Utils.short_wait) { name == user.full_name }
+    wait_for_profile user
   end
 
   # ACTIVITY
