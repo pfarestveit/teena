@@ -43,6 +43,7 @@ class SquiggyAssetLibraryListViewPage
     enter_asset_metadata asset
     click_save_link_button
     get_asset_id asset
+    SquiggyUtils.set_asset_id asset
   end
 
   # BIZMARKLET

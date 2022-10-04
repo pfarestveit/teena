@@ -5,12 +5,11 @@ class SquiggyImpactStudioPage
   include Page
   include SquiggyPages
 
-  def load_page(url)
-    navigate_to url
+  def load_page(test)
+    navigate_to test.course.impact_studio_url
     wait_until(Utils.medium_wait) { title == "#{SquiggyTool::IMPACT_STUDIO.name}" }
     hide_canvas_footer_and_popup
     switch_to_canvas_iframe
-    activity_event_drops_element.when_visible Utils.medium_wait rescue Selenium::WebDriver::Error::StaleElementReferenceError
   end
 
   # IDENTITY
@@ -95,12 +94,14 @@ class SquiggyImpactStudioPage
   # SEARCH
 
   select_list(:user_select, id: 'find-user-select')
+  button(:user_select_button, id: 'find-user-apply')
   link(:browse_previous, xpath: '//div[@id="previous-user"]/a')
   link(:browse_next, xpath: '//div[@id="next-user"]/a')
 
   def select_user(user)
     logger.info "Selecting #{user.full_name}"
     wait_for_element_and_select_js(user_select_element, user.full_name)
+    wait_for_update_and_click_js user_select_button_element
   end
 
   def browse_next_user(user)
@@ -297,27 +298,30 @@ class SquiggyImpactStudioPage
   end
 
   def assets_most_viewed(assets)
-    assets_visible_non_deleted(assets).reject { |a| a.count_views.zero? }.sort_by(&:count_views).reverse[0..3]
+    assets_visible_non_deleted(assets).reject { |a| a.count_views.zero? }.sort_by { |a| [a.count_views, a.id] }.reverse[0..3]
   end
 
   def assets_most_liked(assets)
-    assets_visible_non_deleted(assets).reject { |a| a.count_likes.zero? }.sort_by(&:count_likes).reverse[0..3]
+    assets_visible_non_deleted(assets).reject { |a| a.count_likes.zero? }.sort_by { |a| [a.count_likes, a.id] }.reverse[0..3]
   end
 
   def assets_most_commented(assets)
-    assets_visible_non_deleted(assets).reject { |a| a.comments.length.zero? }.sort_by { |a| a.comments.length }.reverse[0..3]
+    assets_visible_non_deleted(assets).reject { |a| a.comments.length.zero? }.sort_by { |a| [a.comments.length, a.id] }.reverse[0..3]
   end
 
   # USER ASSETS
 
   select_list(:sort_user_assets_select, id: 'user-assets-sort-select')
+  button(:sort_user_assets_apply_button, id: 'user-assets-sort-apply')
   elements(:user_asset, :div, xpath: '//div[@id="user-assets"]//div[starts-with(@id, "asset-")]')
   div(:no_user_assets_msg, id: 'user-assets-no-assets-msg')
   link(:user_assets_show_more_link, id: 'user-assets-view-all-link')
 
   def sort_user_assets(option)
     logger.info "Sorting user assets by #{option}"
+    scroll_to_bottom
     wait_for_element_and_select_js(sort_user_assets_select_element, option)
+    wait_for_update_and_click_js sort_user_assets_apply_button_element
   end
 
   def user_asset_xpath(asset)
@@ -333,9 +337,9 @@ class SquiggyImpactStudioPage
   end
 
   def click_user_asset_link(asset)
-    logger.info "Clicking thumbnail for Asset ID #{asset.id}"
+    logger.info "Clicking thumbnail for Asset ID #{asset.id} #{asset.title}"
+    scroll_to_bottom
     wait_for_update_and_click user_asset_el(asset)
-    switch_to_canvas_iframe
   end
 
   def wait_for_user_asset_results(assets)
@@ -352,17 +356,20 @@ class SquiggyImpactStudioPage
 
   h2(:everyone_assets_heading, xpath: '//h2[text()="Everyone\'s Assets"]')
   select_list(:sort_everyone_assets_select, id: 'everyones-assets-sort-select')
+  button(:sort_everyone_assets_apply_button, id: 'everyones-assets-sort-apply')
   elements(:everyone_asset, :div, xpath: '//div[@id="everyones-assets"]//div[starts-with(@id, "asset-")]')
   div(:no_everyone_assets_msg, id: 'everyones-assets-no-assets-msg')
   link(:everyone_assets_show_more_link, id: 'everyones-assets-view-all-link')
 
   def sort_everyone_assets(option)
     logger.info "Sorting everyone's assets by #{option}"
+    scroll_to_bottom
     wait_for_element_and_select_js(sort_everyone_assets_select_element, option)
+    wait_for_update_and_click_js sort_everyone_assets_apply_button_element
   end
 
   def everyone_asset_xpath(asset)
-    "//div[@id='user-assets']//div[@id='asset-#{asset.id}']"
+    "//div[@id='everyones-assets']//div[@id='asset-#{asset.id}']"
   end
 
   def everyone_asset_ids
@@ -376,7 +383,6 @@ class SquiggyImpactStudioPage
   def click_everyone_asset_link(asset)
     logger.info "Clicking thumbnail for Asset ID #{asset.id}"
     wait_for_update_and_click everyone_asset_el(asset)
-    switch_to_canvas_iframe
   end
 
   def wait_for_everyone_asset_results(assets)
