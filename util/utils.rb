@@ -138,6 +138,7 @@ class Utils
       messages.each do |msg|
         unless msg.include?('chrome-search://thumb/') ||
           msg.include?('instructure.com') ||
+          msg.include?('loadAllyCustomizations') ||
           msg.include?('cal1card-data/photos') ||
           msg.include?('prod.ally') ||
           msg.include?('cloudfront.net')

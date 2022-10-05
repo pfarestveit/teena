@@ -34,6 +34,7 @@ class SquiggyEngagementIndexPage
       users.each do |u|
         logger.debug "Checking if #{u.full_name} has been added to the course"
         wait_until(1) { visible_names.include? u.full_name }
+        SquiggyUtils.set_user_id(u, test.course)
       end
     end
   end

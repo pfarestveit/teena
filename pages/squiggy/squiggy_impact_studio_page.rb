@@ -162,7 +162,7 @@ class SquiggyImpactStudioPage
 
   # ACTIVITY NETWORK
 
-  # TODO element(:activity_network,
+  element(:activity_network, xpath: '//*[name()="svg"][@id="profile-activity-network"]')
 
   def init_user_interactions
     {
@@ -170,19 +170,26 @@ class SquiggyImpactStudioPage
       likes: { exports: 0, imports: 0 },
       comments: { exports: 0, imports: 0 },
       posts: { exports: 0, imports: 0 },
-      pins: { exports: 0, imports: 0 },
       use_assets: { exports: 0, imports: 0 },
       remixes: { exports: 0, imports: 0 },
       co_creations: { exports: 0, imports: 0 }
     }
   end
 
+  def visible_trade_row_xpath(type)
+    "//table[@class='profile-activity-network-tooltip-table']/tr[contains(., '#{type}')]"
+  end
+
   def visible_exports(type)
-    # TODO cell_element().text.to_i
+    xpath = "#{visible_trade_row_xpath(type)}/td[2]"
+    logger.debug "Checking export at #{xpath}"
+    cell_element(xpath: xpath).text.to_i
   end
 
   def visible_imports(type)
-    # TODO cell_element().text.to_i
+    xpath = "#{visible_trade_row_xpath(type)}/td[5]"
+    logger.debug "Checking import at #{xpath}"
+    cell_element(xpath: xpath).text.to_i
   end
 
   def verify_network_interactions(interactions, user)
@@ -190,16 +197,17 @@ class SquiggyImpactStudioPage
     activity_network_element.when_visible Utils.short_wait
     # Pause to let the bubbles settle down
     sleep 2
-    # TODO node = div_element()
-    driver.action.move_to(node).perform
-    sleep Utils.click_wait
+    xpath = "//*[name()='svg'][@id='profile-activity-network']//*[name()='g'][@class='nodes']/*[name()='g'][@id='profile-activity-network-user-node-#{user.squiggy_id}']"
+    logger.debug "Checking trade balance at #{xpath}"
+    node = @driver.find_element(xpath: xpath)
+    @driver.action.move_to(node).perform
+    sleep 2
     visible_interactions = {
       views: { exports: visible_exports('Views'), imports: visible_imports('Views') },
       likes: { exports: visible_exports('Likes'), imports: visible_imports('Likes') },
       comments: { exports: visible_exports('Comments'), imports: visible_imports('Comments') },
       posts: { exports: visible_exports('Posts'), imports: visible_imports('Posts') },
-      pins: { exports: visible_exports('Pins'), imports: visible_imports('Pins') },
-      use_assets: { exports: visible_exports('Assets Added'), imports: visible_imports('Assets Added') },
+      use_assets: { exports: visible_exports('Assets Added to Whiteboard'), imports: visible_imports('Assets Added to Whiteboard') },
       remixes: { exports: visible_exports('Remixes'), imports: visible_imports('Remixes') },
       co_creations: { exports: visible_exports('Whiteboards Exported'), imports: visible_imports('Whiteboards Exported') }
     }
