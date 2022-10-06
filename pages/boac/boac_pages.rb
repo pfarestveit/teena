@@ -240,8 +240,10 @@ module BOACPages
   def wait_for_sidebar_cohort_member_count(cohort)
     logger.debug "Waiting for cohort #{cohort.name} member count of #{cohort.members.length}"
     wait_until(Utils.medium_wait) do
+      navigate_to current_url
       el = span_element(xpath: "//div[contains(@class, \"sidebar-row-link\")][contains(.,\"#{cohort.name}\")]//span[@class=\"sr-only\"]")
-      el.exists? && el.text.delete(' admitted').delete(' students').chomp == cohort.members.length.to_s
+      el.when_present Utils.short_wait
+      el.text.delete(' admitted').delete(' students').chomp == cohort.members.length.to_s
     end
   end
 

@@ -210,7 +210,6 @@ describe 'BOAC' do
       @group_page.enter_sid_list(@group_page.create_group_textarea_sids_element,  a.join(', '))
       @group_page.click_add_sids_to_group_button
       @group_page.click_remove_invalid_sids
-      @group_page.wait_until(2) { @group_page.create_group_textarea_sids_element.attribute('value') == test.admits.last.sis_id }
     end
 
     it 'allows the user to add large sets of SIDs' do

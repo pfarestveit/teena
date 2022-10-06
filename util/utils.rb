@@ -141,7 +141,8 @@ class Utils
           msg.include?('loadAllyCustomizations') ||
           msg.include?('cal1card-data/photos') ||
           msg.include?('prod.ally') ||
-          msg.include?('cloudfront.net')
+          msg.include?('cloudfront.net') ||
+          msg.include?('Highcharts')
           logger.error "Possible JS error: #{msg}"
         end
       end

@@ -54,8 +54,7 @@ class BOACPaxManifestPage
     sleep Utils.click_wait
     wait_until(Utils.short_wait) { auto_suggest_option_elements.any? }
     sleep 2
-    link_element = auto_suggest_option_elements.first
-    wait_for_load_and_click link_element
+    auto_suggest_option_elements.first.click
   end
 
   # Enters an advisor UID in the user search input

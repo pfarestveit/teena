@@ -109,16 +109,18 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
           end
 
           if academic_standing&.any?
-            latest_standing = academic_standing.first
-            if latest_standing&.code == 'GST' || latest_standing.code&.empty?
-              it("shows no academic standing for #{test_case}") { expect(cohort_page_sis_data[:academic_standing]).to be_nil }
-            else
-              it "shows the academic standing '#{latest_standing.descrip}' for #{test_case}" do
-                expect(cohort_page_sis_data[:academic_standing]).to eql("#{latest_standing.descrip} (#{latest_standing.term_name})")
+            latest_standing = academic_standing.find &:descrip
+            if latest_standing && !latest_standing.code.empty?
+              if latest_standing.code == 'GST'
+                it("shows no academic standing for #{test_case}") { expect(cohort_page_sis_data[:academic_standing]).to be_nil }
+              else
+                it "shows the academic standing '#{latest_standing.descrip}' for #{test_case}" do
+                  expect(cohort_page_sis_data[:academic_standing]).to eql("#{latest_standing.descrip} (#{latest_standing.term_name})")
+                end
               end
+            else
+              it("shows no academic standing for #{test_case}") { expect(cohort_page_sis_data[:academic_standing]).to be_nil }
             end
-          else
-            it("shows no academic standing for #{test_case}") { expect(cohort_page_sis_data[:academic_standing]).to be_nil }
           end
 
           active_major_feed, inactive_major_feed = api_sis_profile_data[:majors].compact.partition { |m| m[:active] }
@@ -490,9 +492,9 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
         end
 
         if academic_standing&.any?
-          latest_standing = academic_standing.first
-          if latest_standing
-            if latest_standing.code == 'GST' || latest_standing.code&.empty?
+          latest_standing = academic_standing.find &:descrip
+          if latest_standing && !latest_standing.code.empty?
+            if latest_standing.code == 'GST'
               it("shows no academic standing #{test_case}") { expect(student_page_sis_data[:academic_standing].to_s).to be_empty }
             else
               it "shows the academic standing '#{latest_standing.descrip}' for #{test_case}" do
@@ -600,7 +602,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
           withdrawal_msg_present = @boac_student_page.withdrawal_msg?
           it("shows withdrawal information for #{test_case}") { expect(withdrawal_msg_present).to be true }
           if withdrawal_msg_present
-            msg = @boac_student_page.withdrawal_msg
+            msg = @boac_student_page.withdrawal_msg_element.attribute('innerText')
             it("shows the withdrawal type for #{test_case}") { expect(msg).to include(withdrawal[:desc]) }
             it("shows the withdrawal reason for #{test_case}") { expect(msg).to include(withdrawal[:reason]) }
             it("shows the withdrawal date for #{test_case}") { expect(msg).to include(withdrawal[:date]) }
