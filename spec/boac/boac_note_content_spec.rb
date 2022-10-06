@@ -207,9 +207,9 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
 
                   if updated_date_expected
                     expected_update_date_text = @student_page.expected_item_long_date_format note.updated_date
-                    it("shows update date #{expected_update_date_text} on expanded #{test_case}") { expect(visible_expanded_note_data[:updated_date]).to eql(expected_update_date_text) }
-                  else
-                    it("shows no updated date #{note.updated_date} on expanded #{test_case}") { expect(visible_expanded_note_data[:updated_date]).to be_nil }
+                    it "shows update date #{expected_update_date_text} on expanded #{test_case}" do
+                      expect(visible_expanded_note_data[:updated_date]).to eql(expected_update_date_text)
+                    end
                   end
 
                   expected_create_date_text = (note.advisor&.uid == 'UCBCONVERSION') ?

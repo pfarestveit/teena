@@ -153,7 +153,7 @@ class BOACClassListViewPage
              div_element(xpath: "#{score_xpath}//strong")
     if has_boxplot
       unless el.exists?
-        logger.warn 'Shake it to the left!'
+        logger.warn 'Slam it to the left!'
         mouseover(div_element(xpath: boxplot_xpath), -15)
       end
       unless el.exists?
