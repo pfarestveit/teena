@@ -236,7 +236,9 @@ describe 'bCourses course site creation' do
           site[:roster_data].get_feed(site[:course])
         rescue => e
           logger.error e.message
-          if @splash_page.denied_msg? && !tries.zero?
+          errors = Utils.get_js_errors @driver
+          denied = errors.find { |e| e.include? 'the server responded with a status of 403' }
+          if (@splash_page.denied_msg? || denied) && !tries.zero?
             logger.warn 'User not able to access feed, retrying'
             JunctionUtils.clear_cache(@driver, @splash_page)
             retry

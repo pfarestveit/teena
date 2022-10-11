@@ -181,28 +181,26 @@ class SquiggyImpactStudioPage
   end
 
   def visible_exports(type)
-    xpath = "#{visible_trade_row_xpath(type)}/td[2]"
-    logger.debug "Checking export at #{xpath}"
-    cell_element(xpath: xpath).text.to_i
+    el = cell_element(xpath: "#{visible_trade_row_xpath(type)}/td[2]")
+    el.when_present Utils.short_wait
+    el.text.to_i
   end
 
   def visible_imports(type)
-    xpath = "#{visible_trade_row_xpath(type)}/td[5]"
-    logger.debug "Checking import at #{xpath}"
-    cell_element(xpath: xpath).text.to_i
+    el = cell_element(xpath: "#{visible_trade_row_xpath(type)}/td[5]")
+    el.when_present Utils.short_wait
+    el.text.to_i
   end
 
-  def verify_network_interactions(interactions, user)
-    logger.debug "Looking for UID #{user.uid} interactions #{interactions}"
+  def get_visible_network_interactions(user)
     activity_network_element.when_visible Utils.short_wait
-    # Pause to let the bubbles settle down
     sleep 2
     xpath = "//*[name()='svg'][@id='profile-activity-network']//*[name()='g'][@class='nodes']/*[name()='g'][@id='profile-activity-network-user-node-#{user.squiggy_id}']"
-    logger.debug "Checking trade balance at #{xpath}"
-    node = @driver.find_element(xpath: xpath)
-    @driver.action.move_to(node).perform
+    el = element_element(xpath: xpath)
+    scroll_to_element el
+    @driver.action.move_to(el.selenium_element).perform
     sleep 2
-    visible_interactions = {
+    {
       views: { exports: visible_exports('Views'), imports: visible_imports('Views') },
       likes: { exports: visible_exports('Likes'), imports: visible_imports('Likes') },
       comments: { exports: visible_exports('Comments'), imports: visible_imports('Comments') },
@@ -211,10 +209,34 @@ class SquiggyImpactStudioPage
       remixes: { exports: visible_exports('Remixes'), imports: visible_imports('Remixes') },
       co_creations: { exports: visible_exports('Whiteboards Exported'), imports: visible_imports('Whiteboards Exported') }
     }
+  end
+
+  def verify_network_interactions(interactions, target_user)
+    logger.info "Looking for UID #{target_user.uid} interactions #{interactions}"
+    visible_interactions = get_visible_network_interactions target_user
     begin
       wait_until(1, "Expected #{interactions}, but got #{visible_interactions}") { visible_interactions == interactions }
     ensure
-      # Overwrite the expected counts with the actual counts to prevent a failure in one script step from cascading to following dependent steps.
+      interactions.merge! visible_interactions unless visible_interactions.nil?
+    end
+  end
+
+  def wait_for_own_profile_canvas_activity(test, user, interactions, target_user)
+    logger.info "Waiting until the Canvas poller updates the activity network trade figures to #{interactions}"
+    tries ||= SquiggyUtils.poller_retries
+    begin
+      load_own_profile(test, user)
+      visible_interactions = get_visible_network_interactions target_user
+      wait_until(1, "Expected #{interactions}, but got #{visible_interactions}") { visible_interactions == interactions }
+    rescue
+      if (tries -= 1).zero?
+        fail
+      else
+        logger.info 'Retrying'
+        sleep Utils.short_wait
+        retry
+      end
+    ensure
       interactions.merge! visible_interactions unless visible_interactions.nil?
     end
   end

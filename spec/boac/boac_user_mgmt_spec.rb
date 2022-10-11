@@ -479,7 +479,7 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
         @pax_manifest_page.click_edit_user @advisor
         @pax_manifest_page.automate_deg_prog_cbx_element.when_present Utils.short_wait
         expect(@pax_manifest_page.automate_deg_prog_cbx_element.selected?).to be false
-        expect(@pax_manifest_page.deg_prog_select).to eql(@advisor.degree_progress_perm.desc)
+        expect(@pax_manifest_page.deg_prog_select).to eql(@orig_perm.desc)
       end
     end
   end
