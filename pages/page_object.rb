@@ -49,6 +49,7 @@ module PageObject
      cell
      checkbox
      div
+     element
      form
      h1
      h2

@@ -41,10 +41,6 @@ describe 'Impact Studio Activity Network' do
                                         collaborators: [@student_2]
     @whiteboards_page.create_whiteboard @whiteboard
 
-    @discussion = Discussion.new "Discussion #{@test.id}"
-    @canvas.create_course_discussion(@test.course, @discussion)
-    @canvas.add_reply(@discussion, nil, 'Discussion topic entry')
-
     @comment = SquiggyComment.new asset: @asset,
                                   body: "Comment #{@test.id}",
                                   user: @student_2
@@ -58,8 +54,6 @@ describe 'Impact Studio Activity Network' do
   context 'when an asset is added to a whiteboard' do
 
     before(:all) do
-      @canvas.masquerade_as(@student_3, @test.course)
-      @whiteboards_page.load_page @test
       @whiteboards_page.open_whiteboard @whiteboard
       @whiteboards_page.add_existing_assets [@asset]
       @whiteboards_page.wait_until(Utils.short_wait) do
@@ -185,7 +179,6 @@ describe 'Impact Studio Activity Network' do
   context 'when an asset receives a comment' do
 
     before(:all) do
-      @canvas.masquerade_as(@student_2, @test.course)
       @asset_library_page.load_asset_detail(@test, @asset)
       @student2_student1_expected[:views][:exports] += 1
       @student1_student2_expected[:views][:imports] += 1
@@ -244,7 +237,6 @@ describe 'Impact Studio Activity Network' do
   context 'when an asset comment reply is deleted' do
 
     before(:all) do
-      @canvas.masquerade_as(@student_3, @test.course)
       @asset_library_page.load_asset_detail(@test, @asset)
       @student3_student1_expected[:views][:exports] += 1
       @student1_student3_expected[:views][:imports] += 1
@@ -310,6 +302,27 @@ describe 'Impact Studio Activity Network' do
     end
   end
 
-  # TODO CANVAS DISCUSSIONS
+  context 'when a discussion reply is added by someone other than the discussion entry creator' do
 
+    before(:all) do
+      @discussion = Discussion.new "Discussion #{@test.id}"
+      @canvas.masquerade_as(@student_3, @test.course)
+      @canvas.create_course_discussion(@test.course, @discussion)
+      @canvas.masquerade_as(@student_1, @test.course)
+      @canvas.add_reply(@discussion, nil, "Discussion entry #{@test.id}")
+      @canvas.masquerade_as(@student_2, @test.course)
+      @canvas.add_reply(@discussion, 0, "Discussion reply #{@test.id}")
+      @student2_student1_expected[:posts][:exports] += 1
+      @student1_student2_expected[:posts][:imports] += 1
+    end
+
+    it 'the reply creator acquires a post connection to the entry creator' do
+      @impact_studio_page.wait_for_own_profile_canvas_activity(@test, @student_2, @student2_student1_expected, @student_1)
+    end
+
+    it 'the entry creator acquires a post connection to the reply creator' do
+      @impact_studio_page.select_user @student_1
+      @impact_studio_page.verify_network_interactions(@student1_student2_expected, @student_2)
+    end
+  end
 end

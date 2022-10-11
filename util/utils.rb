@@ -98,7 +98,7 @@ class Utils
   end
 
   def self.set_default_window_size(driver)
-    headless? ? driver.manage.window.resize_to(1600,900) : driver.manage.window.maximize
+    headless? ? driver.manage.window.resize_to(1920, 1200) : driver.manage.window.maximize
   end
 
   def self.set_reduced_window_size(driver)
@@ -131,10 +131,14 @@ class Utils
     sleep 2
   end
 
+  def self.get_js_errors(driver)
+    js_log = driver.manage.logs.get :browser
+    js_log.map &:message
+  end
+
   def self.log_js_errors(driver)
     if "#{driver.browser}" == 'chrome'
-      js_log = driver.manage.logs.get(:browser)
-      messages = js_log.map &:message
+      messages = get_js_errors driver
       messages.each do |msg|
         unless msg.include?('chrome-search://thumb/') ||
           msg.include?('instructure.com') ||
