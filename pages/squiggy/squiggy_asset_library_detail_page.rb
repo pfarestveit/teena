@@ -7,6 +7,7 @@ class SquiggyAssetLibraryDetailPage < SquiggyAssetLibraryListViewPage
   include SquiggyWhiteboardEditForm
 
   h2(:asset_title, id: 'asset-title')
+  span(:uh_oh, xpath: '//span[text()=" Uh oh! "]')
   div(:asset_preview, xpath: '//div[starts-with(@id, "asset-preview-image-")]')
   button(:like_button, id: 'like-asset-btn')
   span(:like_count, id: 'asset-like-count')
@@ -15,16 +16,23 @@ class SquiggyAssetLibraryDetailPage < SquiggyAssetLibraryListViewPage
   div(:description, id: 'asset-description')
   div(:source, xpath: '//div[contains(text(), "Source:")]')
 
-  def load_asset_detail(test, asset)
-    # TODO - reinstate this when asset deep links work again
-    # logger.info "Hitting asset detail at '#{test.course.asset_library_url}#suitec_assetId=#{asset.id}'"
-    # navigate_to "#{test.course.asset_library_url}#suitec_assetId=#{asset.id}"
-    # switch_to_canvas_iframe
-    # sleep 1
+  def hit_asset_detail(test, asset)
+    navigate_to 'https://www.google.com'
+    text_area_element(name: 'q').when_present Utils.short_wait
+    sleep 2
+    logger.info "Hitting asset detail at '#{test.course.asset_library_url}#suitec_assetId=#{asset.id}'"
+    navigate_to "#{test.course.asset_library_url}#suitec_assetId=#{asset.id}"
+    switch_to_canvas_iframe
+  end
 
-    load_list_view_asset(test, asset)
-    click_asset_link asset
+  def load_asset_detail(test, asset)
+    hit_asset_detail(test, asset)
     wait_for_asset_detail
+  end
+
+  def hit_unavailable_asset(test, asset)
+    hit_asset_detail(test, asset)
+    uh_oh_element.when_visible Utils.short_wait
   end
 
   def wait_for_asset_detail

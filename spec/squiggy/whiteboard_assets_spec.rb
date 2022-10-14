@@ -203,7 +203,7 @@ describe 'Whiteboard Add Asset' do
 
       # Asset is not searchable
       @assets_list.load_page @test
-      @assets_list.advanced_search(@student_1_asset_hidden.title, nil, @student_1, 'File', nil)
+      @assets_list.advanced_search(@student_1_asset_hidden.title, nil, @student_1, 'File', nil, nil)
       @assets_list.no_results_msg_element.when_visible Utils.short_wait
     end
 
@@ -301,7 +301,7 @@ describe 'Whiteboard Add Asset' do
 
       # Asset is not searchable
       @assets_list.load_page @test
-      @assets_list.advanced_search(student_2_asset_hidden.title, nil, @student_2, 'Link', nil)
+      @assets_list.advanced_search(student_2_asset_hidden.title, nil, @student_2, 'Link', nil, nil)
       @assets_list.no_results_msg_element.when_visible Utils.short_wait
     end
 

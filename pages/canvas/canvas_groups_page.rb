@@ -15,15 +15,10 @@ module Page
     text_area(:edit_group_name_input, id: 'group_name')
     button(:save_button, xpath: '//button[contains(.,"Save")]')
 
-    # Loads the groups page on a course site
-    # @param course [Course]
     def load_course_grps(course)
       navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/groups"
     end
 
-    # Creates a new group as a student and populates its members
-    # @param course [Course]
-    # @param group [Group]
     def student_create_grp(course, group)
       load_course_grps course
       logger.info "Student is creating a student group called '#{group.title}' with #{group.members.length} additional members"
@@ -39,16 +34,10 @@ module Page
       logger.info "Group ID is '#{group.site_id = link.attribute('href').split('/').last}'"
     end
 
-    # Returns the 'visit' link for an existing group
-    # @param group [Group]
-    # @return [PageObject::Elements::Link]
     def student_visit_grp_link(group)
       link_element(xpath: "//a[contains(@aria-label,'Visit group #{group.title}')]")
     end
 
-    # Visits a group on a course site as a student
-    # @param course [Course]
-    # @param group [Group]
     def student_visit_grp(course, group)
       load_course_grps course
       logger.info "Visiting group '#{group.title}'"
@@ -63,9 +52,6 @@ module Page
       list_item_element(xpath: '//li[contains(.,"Joined Group")]').when_present Utils.short_wait
     end
 
-    # Leaves a group on a course site
-    # @param course [Course]
-    # @param group [Group]
     def student_leave_grp(course, group)
       load_course_grps course
       logger.info "Leaving group '#{group.title}'"
@@ -73,10 +59,6 @@ module Page
       list_item_element(xpath: '//li[contains(.,"Left Group")]').when_present Utils.short_wait
     end
 
-    # Edits the name of a group on a course site
-    # @param course [Course]
-    # @param group [Group]
-    # @param new_name [String]
     def student_edit_grp_name(course, group, new_name)
       student_visit_grp(course, group)
       logger.debug "Changing group title to '#{group.title = new_name}'"
@@ -108,9 +90,6 @@ module Page
       logger.info "Group ID is '#{group.site_id = link.attribute('id').split('-')[1]}'"
     end
 
-    # Deletes a group set
-    # @param course [Course]
-    # @param group [Group]
     def instructor_delete_grp_set(course, group)
       load_course_grps course
       logger.info "Deleting teacher group set '#{group.group_set}'"

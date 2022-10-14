@@ -121,6 +121,37 @@ module CanvasPeoplePage
     end
   end
 
+  def add_users_by_section(course, users)
+    load_users_page course
+    users.each do |user|
+      user.sections.each do |section|
+        begin
+          tries ||= 3
+          logger.info "Adding UID #{user.uid} to section #{section.sis_id}"
+          wait_for_load_and_click_js add_people_button_element
+          wait_for_update_and_click add_user_by_uid_element
+          wait_for_element_and_type_js(user_list_element, user.uid)
+          wait_for_update_and_click user_role_element
+          wait_for_update_and_click(user_role_option_elements.find { |el| el.text == user.role })
+          wait_for_update_and_click user_section_element
+          wait_for_update_and_click(user_role_option_elements.find { |el| el.text == section.sis_id })
+          wait_for_update_and_click_js next_button_element
+          users_ready_to_add_msg_element.when_visible Utils.medium_wait
+          wait_for_update_and_click_js next_button_element
+          wait_for_users [user]
+        rescue => e
+          logger.error "#{e.message}"
+          logger.warn 'Add User failed, retrying'
+          (tries -= 1).zero? ? fail : retry
+        end
+      end
+    end
+  end
+
+  def click_edit_user(user)
+    wait_for_update_and_click link_element(xpath: "//tr[@id='user_#{user.canvas_id}']//a[contains(@class,'al-trigger')]")
+  end
+
   # Removes users from a course site
   # @param course [Course]
   # @param users [Array<User>]
@@ -130,10 +161,22 @@ module CanvasPeoplePage
     wait_for_users users
     users.each do |user|
       logger.info "Removing #{user.role} UID #{user.uid} from course site ID #{course.site_id}"
-      wait_for_update_and_click link_element(xpath: "//tr[@id='user_#{user.canvas_id}']//a[contains(@class,'al-trigger')]")
+      click_edit_user user
       alert { wait_for_update_and_click_js link_element(xpath: "//tr[@id='user_#{user.canvas_id}']//a[@data-event='removeFromCourse']") }
       remove_user_success_element.when_present Utils.short_wait
     end
+  end
+
+  def remove_user_section(course, user, section)
+    load_users_page course
+    hide_canvas_footer_and_popup
+    wait_for_users [user]
+    click_edit_user user
+    wait_for_update_and_click_js link_element(xpath: "//tr[@id='user_#{user.canvas_id}']//a[@data-event='editSections']")
+    wait_for_update_and_click link_element(xpath: "//a[@title='Remove user from #{section.sis_id}']")
+    wait_for_update_and_click button_element(xpath: '//button[contains(., "Update")]')
+    span_element(xpath: '//span[contains(text(), "Section enrollments successfully updated")]').when_visible Utils.short_wait
+    user.sections.delete section
   end
 
   # Searches for a user by Canvas user ID

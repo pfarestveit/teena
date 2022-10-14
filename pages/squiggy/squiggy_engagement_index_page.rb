@@ -54,6 +54,7 @@ class SquiggyEngagementIndexPage
   text_field(:search_input, xpath: '//label[text()="Search"]/following-sibling::input')
   div(:users_table, id: 'leaderboard')
   elements(:users_table_row, :row, xpath: '//div[@id="leaderboard"]//tbody/tr')
+  link(:sort_by_section, xpath: '//th[contains(., "Course Sections")]')
   link(:sort_by_rank, xpath: '//th[contains(., "Rank")]')
   link(:sort_by_name, xpath: '//th[contains(., "Name")]')
   link(:sort_by_share, xpath: '//th[contains(., "Share")]')
@@ -65,24 +66,33 @@ class SquiggyEngagementIndexPage
     '//div[@id="leaderboard"]//tbody/tr'
   end
 
-  def rank_els
+  def section_els
     cell_elements(xpath: "#{users_table_row_xpath}/td[1]/div")
   end
 
+  def rank_els
+    node = sort_by_section? ? '2' : '1'
+    cell_elements(xpath: "#{users_table_row_xpath}/td[#{node}]/div")
+  end
+
   def collaboration_els
-    cell_elements(xpath: "#{users_table_row_xpath}/td[3]/div")
+    node = sort_by_section? ? '4' : '3'
+    cell_elements(xpath: "#{users_table_row_xpath}/td[#{node}]/div")
   end
 
   def sharing_els
-    cell_elements(xpath: "#{users_table_row_xpath}/td[4]/div")
+    node = sort_by_section? ? '5' : '4'
+    cell_elements(xpath: "#{users_table_row_xpath}/td[#{node}]/div")
   end
 
   def points_els
-    cell_elements(xpath: "#{users_table_row_xpath}/td[5]/div")
+    node = sort_by_section? ? '6' : '5'
+    cell_elements(xpath: "#{users_table_row_xpath}/td[#{node}]/div")
   end
 
   def last_activity_els
-    cell_elements(xpath: "#{users_table_row_xpath}/td[6]")
+    node = sort_by_section? ? '7' : '6'
+    cell_elements(xpath: "#{users_table_row_xpath}/td[#{node}]")
   end
 
   def wait_for_scores
@@ -105,16 +115,39 @@ class SquiggyEngagementIndexPage
     wait_for_element_and_type(search_input_element, user.full_name)
   end
 
+  def user_sections_el(user)
+    div_element(xpath: "#{user_row_xpath user}/td[1]")
+  end
+
+  def wait_for_user_sections(test, user)
+    tries ||= SquiggyUtils.poller_retries
+    logger.info "Checking if #{user.full_name} has updated sections #{user.sections.map &:sis_id}"
+    expected = ''
+    user.sections.each { |s| expected << s }
+    load_scores test
+    wait_until(3) do
+      user_sections_el(user).exists?
+      user_sections_el(user).text == expected
+    end
+  rescue => e
+    logger.error "#{e.message}. Sections not yet updated, retrying"
+    sleep Utils.short_wait
+    (tries -= 1).zero? ? fail : retry
+  end
+
   def user_collaboration_el(user)
-    div_element(xpath: "#{user_row_xpath user}/td[3]/div")
+    node = sort_by_section? ? '4' : '3'
+    div_element(xpath: "#{user_row_xpath user}/td[#{node}]/div")
   end
 
   def user_score_el(user)
-    div_element(xpath: "#{user_row_xpath user}/td[5]/div")
+    node = sort_by_section? ? '6' : '5'
+    div_element(xpath: "#{user_row_xpath user}/td[#{node}]/div")
   end
 
   def user_sharing_el(user)
-    div_element(xpath: "#{user_row_xpath user}/td[4]/div")
+    node = sort_by_section? ? '5' : '4'
+    div_element(xpath: "#{user_row_xpath user}/td[#{node}]/div")
   end
 
   def user_score(test, user)
@@ -142,6 +175,10 @@ class SquiggyEngagementIndexPage
   end
 
   # SORTING
+
+  def visible_sections
+    section_els.map(&:text).delete_if(&:empty?).uniq
+  end
 
   def visible_ranks
     rank_els.map(&:text).map &:to_i
@@ -306,6 +343,10 @@ class SquiggyEngagementIndexPage
     end
     previous_total_score += activity.points if row
     row
+  end
+
+  def csv_sections(csv)
+    csv.map { |row| row[:course_sections] }.compact.uniq
   end
 
   # POINTS CONFIG

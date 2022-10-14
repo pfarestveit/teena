@@ -99,9 +99,15 @@ class SquiggyImpactStudioPage
   # SEARCH
 
   select_list(:user_select, id: 'find-user-select')
+  elements(:user_select_option, :option, '//select[@id="find-user-select"]/option')
   button(:user_select_button, id: 'find-user-apply')
   link(:browse_previous, xpath: '//div[@id="previous-user"]/a')
   link(:browse_next, xpath: '//div[@id="next-user"]/a')
+
+  def visible_user_select_options
+    user_select_element.when_visible Utils.short_wait
+    user_select_options.map &:strip
+  end
 
   def select_user(user)
     logger.info "Selecting #{user.full_name}"
@@ -112,6 +118,7 @@ class SquiggyImpactStudioPage
 
   def browse_next_user(user)
     logger.info "Browsing next user #{user.full_name}"
+    sleep 2
     wait_for_load_and_click browse_next_element
     wait_for_profile user
   end
@@ -192,10 +199,21 @@ class SquiggyImpactStudioPage
     el.text.to_i
   end
 
+  def network_nodes_xpath
+    "//*[name()='svg'][@id='profile-activity-network']//*[name()='g'][@class='nodes']"
+  end
+
+  def visible_network_user_ids
+    xpath = "#{network_nodes_xpath}/*[name()='g'][contains(@id, 'profile-activity-network-user-node-')]"
+    logger.info "Looking for bubble heads at #{xpath}"
+    wait_until(Utils.short_wait) { element_elements(xpath: xpath).any? }
+    element_elements(xpath: xpath).map { |el| el.attribute('id').split('-').last }
+  end
+
   def get_visible_network_interactions(user)
     activity_network_element.when_visible Utils.short_wait
     sleep 2
-    xpath = "//*[name()='svg'][@id='profile-activity-network']//*[name()='g'][@class='nodes']/*[name()='g'][@id='profile-activity-network-user-node-#{user.squiggy_id}']"
+    xpath = "#{network_nodes_xpath}/*[name()='g'][@id='profile-activity-network-user-node-#{user.squiggy_id}']"
     el = element_element(xpath: xpath)
     scroll_to_element el
     @driver.action.move_to(el.selenium_element).perform

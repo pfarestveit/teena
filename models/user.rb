@@ -4,6 +4,7 @@ class User
                 :sis_id,
                 :canvas_id,
                 :role,
+                :sections,
                 :status,
                 :username,
                 :first_name,
@@ -15,6 +16,7 @@ class User
 
   def initialize(test_data)
     test_data.each { |k, v| public_send("#{k}=", v) }
+    @sections ||= []
   end
 
 end

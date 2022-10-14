@@ -28,8 +28,12 @@ module SquiggyWhiteboardEditForm
     span_element(xpath: collaborator_xpath(user))
   end
 
-  def enter_whiteboard_collaborator(user)
+  def click_collaborators_input
     wait_for_update_and_click_js collaborators_input_element
+  end
+
+  def enter_whiteboard_collaborator(user)
+    click_collaborators_input
     select_squiggy_option user.full_name
     collaborator_name(user).when_visible Utils.short_wait
   end
