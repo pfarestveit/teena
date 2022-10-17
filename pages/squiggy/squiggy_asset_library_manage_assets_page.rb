@@ -7,6 +7,22 @@ class SquiggyAssetLibraryManageAssetsPage < SquiggyAssetLibraryListViewPage
 
   h2(:manage_assets_heading, xpath: '//h2[text()="Manage Assets"]')
 
+  # SILOS
+
+  text_field(:silo_cbx, id: 'protect_assets_per_section_checkbox')
+
+  def silo_sections
+    logger.info 'Yes to the silos!'
+    silo_cbx_element.when_present Utils.short_wait
+    js_click silo_cbx_element unless silo_cbx_element.attribute('aria-checked') == 'true'
+  end
+
+  def un_silo_sections
+    logger.info 'No to the silos!'
+    silo_cbx_element.when_present Utils.short_wait
+    js_click silo_cbx_element if silo_cbx_element.attribute('aria-checked') == 'true'
+  end
+
   # CUSTOM CATEGORIES
 
   # Create

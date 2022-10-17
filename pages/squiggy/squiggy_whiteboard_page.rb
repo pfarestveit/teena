@@ -122,16 +122,17 @@ class SquiggyWhiteboardPage < SquiggyWhiteboardsPage
     wait_for_load_and_click export_button_element
   end
 
-  def export_to_asset_library(whiteboard)
+  def export_to_asset_library(whiteboard, new_title=nil)
     click_export_button
     logger.debug 'Exporting whiteboard to asset library'
     wait_for_update_and_click export_to_library_button_element
     wait_until(Utils.short_wait) { export_title_input == whiteboard.title }
+    enter_squiggy_text(export_title_input_element, new_title) if new_title
     wait_for_update_and_click_js save_button_element
     export_title_input_element.when_not_present Utils.medium_wait
     export_success_msg_element.when_visible Utils.short_wait
     asset = SquiggyAsset.new(
-      title: whiteboard.title,
+      title: (new_title || whiteboard.title),
       preview_type: 'image'
     )
     asset.id = SquiggyUtils.set_asset_id asset
@@ -183,6 +184,7 @@ class SquiggyWhiteboardPage < SquiggyWhiteboardsPage
   button(:use_existing_button, id: 'toolbar-add-existing-assets')
   button(:upload_new_button, id: 'toolbar-upload-new-asset')
   button(:add_link_button, id: 'toolbar-asset-add-link')
+  elements(:add_asset_cbx, :text_field, xpath: '//input[contains(@id, "asset-")]')
   button(:add_selected_button, xpath: 'TODO')
   checkbox(:add_to_library_cbx, xpath: '//input[@id="asset-visible-checkbox"]/following-sibling::div')
   button(:upload_file_button, id: 'upload-file-btn')
@@ -199,6 +201,10 @@ class SquiggyWhiteboardPage < SquiggyWhiteboardsPage
     assets.each { |asset| wait_for_update_and_click text_field_element(id: "asset-#{asset.id}") }
     wait_for_update_and_click_js save_button_element
     save_button_element.when_not_present Utils.short_wait
+  end
+
+  def asset_ids_available_to_add
+    add_asset_cbx_elements.map { |el| el.attribute('id').gsub('asset-', '') }
   end
 
   def click_add_new_asset(asset)

@@ -65,7 +65,7 @@ describe 'Canvas assignment submissions' do
         # Check that submission is added to Asset Library with right metadata
         @assets_list.load_page @test
         SquiggyUtils.set_asset_id(asset, @assignment.id)
-        @assets_list.advanced_search(nil, asset.category, asset.owner, type, nil)
+        @assets_list.advanced_search(nil, asset.category, asset.owner, type, nil, nil)
         visible_asset = @assets_list.visible_list_view_asset_data asset
 
         it "#{asset.title} belonging to #{asset.owner.full_name} has the right list view title" do

@@ -186,8 +186,9 @@ module Page
         test.course.code = course_code
       end
       logger.info "Course site ID is #{test.course.site_id}"
+      add_sections(test.course, test.course.sections) if test.course.sections&.any?
       publish_course_site test.course
-      add_users(test.course, test.course.roster)
+      add_users_by_section(test.course, test.course.roster)
       add_squiggy_tools test
     end
 
@@ -312,6 +313,24 @@ module Page
       end
     end
 
+    def add_section(course, section)
+      logger.info "Adding section #{section.sis_id}"
+      load_course_settings course
+      wait_for_update_and_click_js sections_tab_element
+      wait_for_element_and_type(section_name_element, section.sis_id)
+      wait_for_update_and_click add_section_button_element
+      # Add SIS id to section
+      wait_for_update_and_click link_element(text: section.sis_id)
+      wait_for_update_and_click edit_section_link_element
+      wait_for_element_and_type(section_sis_id_element, section.sis_id)
+      wait_for_update_and_click update_section_button_element
+      update_section_button_element.when_not_visible Utils.short_wait
+    end
+
+    def add_sections(course, sections)
+      sections.each { |s| add_section(course, s) }
+    end
+
     # Adds a section to a course site and assigns SIS IDs to both the course and the section
     # @param course [Course]
     # @param section [Section]
@@ -323,15 +342,7 @@ module Page
       wait_for_update_and_click update_course_button_element
       update_course_success_element.when_visible Utils.short_wait
       # Add unique section
-      wait_for_update_and_click_js sections_tab_element
-      wait_for_element_and_type(section_name_element, section.sis_id)
-      wait_for_update_and_click add_section_button_element
-      # Add SIS id to section
-      wait_for_update_and_click link_element(text: section.sis_id)
-      wait_for_update_and_click edit_section_link_element
-      wait_for_element_and_type(section_sis_id_element, section.sis_id)
-      wait_for_update_and_click update_section_button_element
-      update_section_button_element.when_not_visible Utils.short_wait
+      add_section(course, section)
     end
 
     div(:publish_div, id: 'course_status_actions')

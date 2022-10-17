@@ -80,7 +80,7 @@ module SquiggyPages
   # WHITEBOARDS
 
   button(:cancel_asset_upload_button, id: 'upload-file-cancel-btn')
-  button(:close_modal_button, xpath: 'TODO')
+  button(:close_modal_button, id: 'close-btn')
 
   def click_cancel_upload_button
     wait_for_update_and_click cancel_asset_upload_button_element

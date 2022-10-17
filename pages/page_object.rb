@@ -62,6 +62,7 @@ module PageObject
      label
      link
      list_item
+     option
      paragraph
      radio_button
      row

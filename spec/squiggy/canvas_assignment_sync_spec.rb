@@ -101,7 +101,7 @@ describe 'Canvas assignment sync' do
     it 'shows the Assignment 1 submission in the Asset Library' do
       @asset_library.load_page @test
       SquiggyUtils.set_asset_id(@asset_1, @assignment_1.id)
-      @asset_library.advanced_search(nil, @category_1, @student, nil, nil)
+      @asset_library.advanced_search(nil, @category_1, @student, nil, nil, nil)
       expect(@asset_library.visible_list_view_asset_data(@asset_1)[:title]).to eql(@asset_1.title)
     end
 
@@ -158,7 +158,7 @@ describe 'Canvas assignment sync' do
     it 'shows the Assignment 2 submission in the Asset Library' do
       @asset_library.load_page @test
       SquiggyUtils.set_asset_id(@asset_2, @assignment_2.id)
-      @asset_library.advanced_search(nil, @category_2, @student, nil, nil)
+      @asset_library.advanced_search(nil, @category_2, @student, nil, nil, nil)
       expect(@asset_library.visible_list_view_asset_data(@asset_2)[:title]).to eql(@asset_2.title)
     end
   end

@@ -217,97 +217,97 @@ describe 'Asset Library' do
     end
 
     it 'lets a user perform an advanced search by a string in the title, sorted by Most Recent' do
-      @assets_list.advanced_search(@student_3_link.title, nil, nil, nil, 'Most recent')
+      @assets_list.advanced_search(@student_3_link.title, nil, nil, nil, nil, 'Most recent')
       @assets_list.wait_for_asset_results [@student_3_link]
     end
 
     it 'lets a user perform an advanced search by a string in the description, sorted by Most Recent' do
-      @assets_list.advanced_search(@student_2_upload.description, nil, nil, nil, 'Most recent')
+      @assets_list.advanced_search(@student_2_upload.description, nil, nil, nil, nil, 'Most recent')
       @assets_list.wait_for_asset_results [@student_2_upload]
     end
 
     it 'lets a user perform an advanced search by a hashtag in the description, sorted by Most Recent' do
-      @assets_list.advanced_search(@student_3_link.description, nil, nil, nil, 'Most recent')
+      @assets_list.advanced_search(@student_3_link.description, nil, nil, nil, nil, 'Most recent')
       @assets_list.wait_for_asset_results [@student_3_link]
     end
 
     it 'lets a user perform an advanced search by category, sorted by Most Recent' do
-      @assets_list.advanced_search(nil, @cat_2, nil, nil, nil)
+      @assets_list.advanced_search(nil, @cat_2, nil, nil, nil, nil)
       @assets_list.wait_for_asset_results [@student_3_link, @student_2_upload]
     end
 
     it 'lets a user perform an advanced search by category and uploader, sorted by Most Recent' do
-      @assets_list.advanced_search(nil, @cat_2, @student_3, nil, nil)
+      @assets_list.advanced_search(nil, @cat_2, @student_3, nil, nil, nil)
       @assets_list.wait_for_asset_results [@student_3_link]
     end
 
     it 'lets a user perform an advanced search by category and type, sorted by Most Recent' do
-      @assets_list.advanced_search(nil, @cat_2, nil, 'Link', nil)
+      @assets_list.advanced_search(nil, @cat_2, nil, 'Link', nil, nil)
       @assets_list.wait_for_asset_results [@student_3_link]
     end
 
     it 'lets a user perform an advanced search by keyword and category, sorted by Most Recent' do
-      @assets_list.advanced_search('uploaded', @cat_2, nil, nil, nil)
+      @assets_list.advanced_search('uploaded', @cat_2, nil, nil, nil,nil)
       @assets_list.wait_for_asset_results [@student_2_upload]
     end
 
     it 'lets a user perform an advanced search by keyword and uploader, sorted by Most Recent' do
-      @assets_list.advanced_search(test.id, nil, @student_3, nil, nil)
+      @assets_list.advanced_search(test.id, nil, @student_3, nil, nil, nil)
       @assets_list.wait_for_asset_results [@student_3_link]
     end
 
     it 'lets a user perform an advanced search by keyword and type, sorted by Most Recent' do
-      @assets_list.advanced_search(test.id, nil, nil, 'File', nil)
+      @assets_list.advanced_search(test.id, nil, nil, 'File', nil, nil)
       @assets_list.wait_for_asset_results [@student_2_upload, @student_1_upload]
     end
 
     it 'returns a no results message for an advanced search by a hashtag in a comment, sorted by Most Recent' do
-      @assets_list.advanced_search('#BooBooKitty', nil, nil, nil, nil)
+      @assets_list.advanced_search('#BooBooKitty', nil, nil, nil, nil, nil)
       @assets_list.wait_for_no_results
     end
 
     it 'lets a user perform an advanced search by keyword, category, and type, sorted by Most Recent' do
-      @assets_list.advanced_search('Description', @cat_2, nil, 'File', nil)
+      @assets_list.advanced_search('Description', @cat_2, nil, 'File', nil, nil)
       @assets_list.wait_for_asset_results [@student_2_upload]
     end
 
     it 'lets a user perform an advanced search by keyword, uploader, and type, sorted by Most Recent' do
-      @assets_list.advanced_search(test.id, nil, @student_3, 'Link', nil)
+      @assets_list.advanced_search(test.id, nil, @student_3, 'Link', nil, nil)
       @assets_list.wait_for_asset_results [@student_3_link]
     end
 
     it 'lets a user perform an advanced search by keyword, category, uploader, and type, sorted by Most Recent' do
-      @assets_list.advanced_search('for', @cat_2, @student_2, 'File', nil)
+      @assets_list.advanced_search('for', @cat_2, @student_2, 'File', nil, nil)
       @assets_list.wait_for_asset_results [@student_2_upload]
     end
 
     it 'lets a user perform an advanced search by keyword, sorted by Most Likes' do
-      @assets_list.advanced_search(test.id, nil, nil, nil, 'Most likes')
+      @assets_list.advanced_search(test.id, nil, nil, nil, nil, 'Most likes')
       @assets_list.wait_for_asset_results [@student_3_link, @student_2_upload]
     end
 
     it 'lets a user perform an advanced search by keyword, sorted by Most Comments' do
-      @assets_list.advanced_search(test.id, nil, nil, nil, 'Most comments')
+      @assets_list.advanced_search(test.id, nil, nil, nil, nil, 'Most comments')
       @assets_list.wait_for_asset_results [@student_2_upload]
     end
 
     it 'lets a user perform an advanced search by keyword, sorted by Most Views' do
-      @assets_list.advanced_search(test.id, nil, nil, nil, 'Most views')
+      @assets_list.advanced_search(test.id, nil, nil, nil, nil, 'Most views')
       @assets_list.wait_for_asset_results [@student_1_upload, @student_3_link, @student_2_upload]
     end
 
     it 'lets a user perform an advanced search by keyword and uploader, sorted by Most Likes' do
-      @assets_list.advanced_search(test.id, nil, @student_1, nil, 'Most likes')
+      @assets_list.advanced_search(test.id, nil, @student_1, nil, nil, 'Most likes')
       @assets_list.wait_for_no_results
     end
 
     it 'lets a user perform an advanced search by keyword and category, sorted by Most Comments' do
-      @assets_list.advanced_search(test.id, @cat_2, nil, nil, 'Most comments')
+      @assets_list.advanced_search(test.id, @cat_2, nil, nil, nil, 'Most comments')
       @assets_list.wait_for_asset_results [@student_2_upload]
     end
 
     it 'lets a user perform an advanced search by keyword and uploader, sorted by Most Views' do
-      @assets_list.advanced_search(test.id, nil, @student_1, nil, 'Most views')
+      @assets_list.advanced_search(test.id, nil, @student_1, nil, nil, 'Most views')
       @assets_list.wait_for_asset_results [@student_1_upload]
     end
 
