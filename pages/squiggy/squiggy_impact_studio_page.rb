@@ -29,7 +29,7 @@ class SquiggyImpactStudioPage
   div(:profile_desc, xpath: '//div[@id="profile-personal-description"]/div')
   button(:edit_profile_button, id: 'profile-personal-description-edit-btn')
   text_field(:edit_profile_input, id: 'profile-personal-description-input')
-  # TODO span(:char_limit_msg, )
+  div(:char_limit_msg, xpath: '//div[text()="255 / 255"]')
   button(:update_profile_button, id: 'confirm-personal-description-btn')
   button(:cancel_edit_profile, id: 'cancel-personal-description-btn')
   div(:section, id: 'canvas-course-sections')
@@ -170,6 +170,7 @@ class SquiggyImpactStudioPage
   # ACTIVITY NETWORK
 
   element(:activity_network, xpath: '//*[name()="svg"][@id="profile-activity-network"]')
+  div(:no_activity_network, xpath: '//div[text()=" No activity detected in this course. "]')
 
   def init_user_interactions
     {
@@ -261,48 +262,79 @@ class SquiggyImpactStudioPage
 
   # EVENT DROPS
 
-  # TODO element(:activity_event_drops, )
-  # TODO link(:drop_asset_title, )
-  # TODO span(:drop_activity_type, )
-  # TODO link(:drop_activity_user, )
+  div(:no_activity_timeline, id: 'activity-timeline-no-activity-detected')
 
-  def activity_type_count(labels, index)
-    labels[index] && (((type = labels[index]).include? ' (') ? type.split(' ').last.delete('()').to_i : 0)
+  def event_drops_chart_xpath
+    '//div[@id="activity-timeline-chart"]/*[name()="svg"]'
   end
 
-  def mouseover_event_drop(line_node)
-    mouseover(div_element(xpath: "//*[name()='svg']//*[@class='drop-line'][#{line_node}]/*[name()='circle'][last()]"))
+  def event_drops_chart_el
+    div_element(xpath: event_drops_chart_xpath)
   end
 
-  def expected_event_drop_count(activity_count)
-    event_drop_counts = {
-      engage_contrib: (activity_count[:view_asset][:count] + activity_count[:like][:count]),
-      interact_contrib: (activity_count[:comment][:count] + activity_count[:discussion_topic][:count] + activity_count[:discussion_entry][:count]),
-      create_contrib: (activity_count[:add_asset][:count] + activity_count[:export_whiteboard][:count] + activity_count[:whiteboard_add_asset][:count] + activity_count[:remix_whiteboard][:count]),
-      engage_impact: (activity_count[:get_view_asset][:count] + activity_count[:get_like][:count]),
-      interact_impact: (activity_count[:get_comment][:count] + activity_count[:get_discussion_entry_reply][:count] + activity_count[:get_pin_asset][:count]),
-      create_impact: (activity_count[:get_remix_whiteboard][:count] + activity_count[:get_whiteboard_add_asset][:count])
-    }
-    logger.debug "Expected user event drop counts are #{event_drop_counts}"
-    event_drop_counts
+  def wait_for_event_drops_chart
+    sleep 2
+    wait_until(Utils.short_wait) { event_drops_chart_el.exists? || no_activity_timeline_element.exists? }
+    sleep 1
+  end
+
+  def event_drop_activity_label_els
+    element_elements(xpath: "#{event_drops_chart_xpath}//*[name()=\"text\"][@class=\"activity-timeline-label-hoverable\"]")
+  end
+
+  def event_drop_lane_coordinate(line_node)
+    xpath = "#{event_drops_chart_xpath}/*[name()=\"g\"][2]/*[name()=\"g\"][#{line_node}]"
+    element_element(xpath: xpath).attribute('transform').split(',')[1][0..-4]
+  end
+
+  def event_drop_els(line_node)
+    element_elements(xpath: "#{event_drops_chart_xpath}/*[name()=\"g\"][3]/*[name()=\"circle\"][@cy=\"#{event_drop_lane_coordinate line_node}\"]")
+  end
+
+  def verify_event_drop_count(expected)
+    wait_until(1, "Expected #{expected_event_drop_count(expected)}, got #{visible_event_drop_count}") do
+      visible_event_drop_count == expected_event_drop_count(expected)
+    end
+  ensure
+    expected.merge! visible_event_drop_count unless visible_event_drop_count.nil?
+    logger.debug "Expected reset to #{expected}"
   end
 
   def visible_event_drop_count
-    # Pause a couple times to allow a complete DOM update
-    sleep 2
-    activity_event_drops_element.when_visible Utils.short_wait
-    sleep 1
-    # TODO elements = div_elements()
-    labels = elements.map &:text
-    event_drop_counts = {
-      engage_contrib: activity_type_count(labels, 0),
-      interact_contrib: activity_type_count(labels, 1),
-      create_contrib: activity_type_count(labels, 2),
-      engage_impact: activity_type_count(labels, 3),
-      interact_impact: activity_type_count(labels, 4),
-      create_impact: activity_type_count(labels, 5)
-    }
+    wait_for_event_drops_chart
+    event_drop_counts = if event_drops_chart_el.exists?
+                          {
+                            engage_contrib: event_drop_els(1).length,
+                            interact_contrib: event_drop_els(2).length,
+                            create_contrib: event_drop_els(3).length,
+                            engage_impact: event_drop_els(4).length,
+                            interact_impact: event_drop_els(5).length,
+                            create_impact: event_drop_els(6).length
+                          }
+                        else
+                          {
+                            engage_contrib: 0,
+                            interact_contrib: 0,
+                            create_contrib: 0,
+                            engage_impact: 0,
+                            interact_impact: 0,
+                            create_impact: 0
+                          }
+                        end
     logger.debug "Visible user event drop counts are #{event_drop_counts}"
+    event_drop_counts
+  end
+
+  def expected_event_drop_count(activity)
+    event_drop_counts = {
+      engage_contrib: (activity[:asset_view][:count] + activity[:asset_like][:count]),
+      interact_contrib: (activity[:asset_comment][:count] + activity[:discussion_topic][:count] + activity[:discussion_entry][:count]),
+      create_contrib: (activity[:asset_add][:count] + activity[:whiteboard_export][:count] + activity[:whiteboard_add_asset][:count] + activity[:whiteboard_remix][:count]),
+      engage_impact: (activity[:get_asset_view][:count] + activity[:get_asset_like][:count]),
+      interact_impact: (activity[:get_asset_comment][:count] + activity[:get_discussion_entry_reply][:count]),
+      create_impact: (activity[:get_whiteboard_remix][:count] + activity[:get_whiteboard_add_asset][:count])
+    }
+    logger.debug "Expected user event drop counts are #{event_drop_counts}"
     event_drop_counts
   end
 
@@ -322,22 +354,33 @@ class SquiggyImpactStudioPage
     end
   end
 
+  # Event details
+
+  button(:zoom_in_button, id: 'activity-timeline-zoom-in-btn')
+  div(:drop_popover_container, class: 'event-details-popover-container')
+  link(:drop_asset_title, class: 'event-details-popover-title')
+  paragraph(:drop_activity_type, class: 'event-details-popover-description')
+  link(:drop_activity_user, xpath: '//p[@class="event-details-popover-description"]/a')
+
   def verify_latest_event_drop(user, asset, activity, line_node)
-    # Pause to let the activity network settle down
-    activity_network_element.when_visible Utils.short_wait
-    sleep 2
-    mouseover_event_drop(line_node)
-    # TODO wait_until(Utils.short_wait) { @driver.find_element() }
-    unless asset.nil?
-      wait_until(Utils.short_wait, "Expected '#{asset.title}' got '#{drop_asset_title_element.text}'") do
-        drop_asset_title_element.text == asset.title
+    wait_for_event_drops_chart
+    if event_drops_chart_el.exists?
+      scroll_to_element h2_element(xpath: '//h2[text()="Activity Timeline"]')
+      event_drop_els(line_node).last.click
+      drop_popover_container_element.when_present Utils.short_wait
+      unless asset.nil?
+        wait_until(Utils.short_wait, "Expected '#{asset.title}' got '#{drop_asset_title_element.text}'") do
+          drop_asset_title_element.text == asset.title
+        end
       end
-    end
-    wait_until(Utils.short_wait, "Expected '#{activity.impact_type_drop}' got '#{drop_activity_type}'") do
-      drop_activity_type.include? activity.impact_type_drop
-    end
-    wait_until(Utils.short_wait, "Expected '#{user.full_name}', got '#{drop_activity_user_element.text}'") do
-      drop_activity_user_element.text == user.full_name
+      wait_until(Utils.short_wait, "Expected '#{activity.activity_drop}' got '#{drop_activity_type}'") do
+        drop_activity_type.include? activity.activity_drop
+      end
+      wait_until(Utils.short_wait, "Expected '#{user.full_name}', got '#{drop_activity_user_element.text}'") do
+        drop_activity_user_element.text == user.full_name
+      end
+    else
+      fail('No activity timeline is present')
     end
   end
 

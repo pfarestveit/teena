@@ -91,7 +91,7 @@ module SquiggyPages
   end
 
   def click_cancel_button
-    wait_for_update_and_click cancel_button_element
+    wait_for_update_and_click_js cancel_button_element
   end
 
   def click_close_modal_button

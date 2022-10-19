@@ -234,8 +234,6 @@ describe 'Canvas section silo-ing' do
         end
 
         it 'offers all section assets for adding to a whiteboard' do
-          @whiteboards.close_whiteboard
-          @whiteboards.open_whiteboard @section_1_and_2_whiteboard
           @whiteboards.add_existing_assets [@student_3.assets[0]]
           @whiteboards.export_to_asset_library(@section_1_and_2_whiteboard, "#{@section_1_and_2_whiteboard.title} version 2")
           @section_1_assets << @section_1_and_2_whiteboard.asset_exports[1]
@@ -350,7 +348,7 @@ describe 'Canvas section silo-ing' do
     context 'and a student switches sections' do
 
       before(:all) do
-        @canvas.masquerade_as(@student_3)
+        @canvas.masquerade_as @student_3
         @whiteboards.load_page @test
         @whiteboards.create_and_open_whiteboard @section_2_whiteboard
         @whiteboards.close_whiteboard
@@ -389,8 +387,8 @@ describe 'Canvas section silo-ing' do
         it 'can see own whiteboards' do
           @whiteboards.load_page @test
           @whiteboards.wait_until(Utils.short_wait) { @whiteboards.visible_whiteboard_titles.any? }
-          expected = [@section_2_whiteboard, @section_1_and_2_whiteboard].map &:title
-          expect(@whiteboards.visible_whiteboard_titles).to eql(expected)
+          expected = [@section_2_whiteboard, @section_1_and_2_whiteboard].map(&:title).sort
+          expect(@whiteboards.visible_whiteboard_titles.sort).to eql(expected)
         end
 
         it 'loses membership in a whiteboard owned by a student in the former silo' do

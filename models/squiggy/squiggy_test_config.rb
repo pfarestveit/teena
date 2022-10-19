@@ -15,11 +15,11 @@ class SquiggyTestConfig < TestConfig
     @course.lti_tools = SquiggyTool::TOOLS
     section_1 = Section.new label: "WBL 001 #{@id}", sis_id: "WBL 001 #{@id}"
     section_2 = Section.new label: "WBL 002 #{@id}", sis_id: "WBL 002 #{@id}"
-    @test.course.sections = [section_1, section_2]
+    @course.sections = [section_1, section_2]
 
     set_test_user_data File.join(Utils.config_dir, 'test-data-squiggy.json')
     @course.roster = set_test_users(test_name, SquiggyUser)
-    @course.roster.each do |member, i|
+    @course.roster.each_with_index do |member, i|
       member.assets = member.assets&.map do |a|
         asset = SquiggyAsset.new a
         asset.title = "#{asset.title} #{id}"

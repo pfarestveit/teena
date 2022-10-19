@@ -101,7 +101,7 @@ describe 'Impact Studio' do
       end
 
       it 'allows the user to add a maximum of X characters to a description' do
-        desc = "#{'A loooooong title' * 15}?"
+        desc = "#{'A loooooong title' * 15}?"[0..254]
         @impact_studio.load_page test
         @impact_studio.click_edit_profile
         @impact_studio.enter_profile_desc desc

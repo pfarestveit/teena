@@ -193,7 +193,7 @@ class SquiggyWhiteboardPage < SquiggyWhiteboardsPage
 
   def click_add_existing_asset
     wait_for_update_and_click add_asset_button_element unless use_existing_button_element.visible?
-    wait_for_update_and_click use_existing_button_element
+    wait_for_update_and_click_js use_existing_button_element
   end
 
   def add_existing_assets(assets)
