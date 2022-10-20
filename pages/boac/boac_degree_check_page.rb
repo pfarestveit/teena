@@ -853,7 +853,7 @@ class BOACDegreeCheckPage < BOACDegreeTemplatePage
   def copy_course(course, destination_req)
     logger.info "Copying #{course.name} to #{destination_req.name}"
     click_copy_course_button
-    wait_for_element_and_select_js(copy_course_select_element, course.name)
+    wait_for_element_and_select(copy_course_select_element, course.name)
     wait_for_update_and_click copy_course_save_button_element
     sleep Utils.click_wait
     dummy_req = DegreeReqtCourse.new parent: destination_req, dummy: true

@@ -438,7 +438,7 @@ module BOACPages
     expand_search_options_notes_subpanel
     topic_name = topic ? topic.name : 'Any topic'
     logger.debug "Selecting note topic '#{topic_name}'"
-    wait_for_element_and_select_js(note_topics_select_element, topic_name)
+    wait_for_element_and_select(note_topics_select_element, topic_name)
   end
 
   # Enters a sidebar search string

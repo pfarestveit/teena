@@ -207,7 +207,7 @@ module Page
         course.site_id = search_for_course(course, sub_account)
         unless course.term.nil?
           navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/settings"
-          wait_for_element_and_select_js(term_element, course.term)
+          wait_for_element_and_select(term_element, course.term)
           wait_for_update_and_click_js update_course_button_element
           update_course_success_element.when_visible Utils.medium_wait
         end
@@ -515,7 +515,7 @@ module Page
             load_tools_adding_page test.course
             wait_for_update_and_click apps_link_element
             wait_for_update_and_click add_app_link_element
-            wait_for_element_and_select_js(config_type_element, 'By URL')
+            wait_for_element_and_select(config_type_element, 'By URL')
             sleep 1
             wait_for_element_and_type(app_name_input_element, "#{tool.name}")
             wait_for_element_and_type(key_input_element, creds[:key])

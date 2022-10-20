@@ -106,7 +106,7 @@ module CanvasPeoplePage
           wait_for_element_and_type_js(user_list_element, users)
           wait_for_update_and_click user_role_element
           wait_for_update_and_click(user_role_option_elements.find { |el| el.text == user_role })
-          wait_for_element_and_select_js(user_section_element, section.sis_id) if section
+          wait_for_element_and_select(user_section_element, section.sis_id) if section
           wait_for_update_and_click_js next_button_element
           users_ready_to_add_msg_element.when_visible Utils.medium_wait
           hide_canvas_footer_and_popup

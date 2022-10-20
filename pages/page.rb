@@ -210,7 +210,7 @@ module Page
   # Awaits a select element for a short time, clicks it using JavaScript, waits for a certain option to appear, and selects that option.
   # @param select_element [PageObject::Elements::SelectList]
   # @param option [String]
-  def wait_for_element_and_select_js(select_element, option)
+  def wait_for_element_and_select(select_element, option)
     wait_for_update_and_click select_element
     sleep Utils.click_wait
     if option.instance_of? Selenium::WebDriver::Element

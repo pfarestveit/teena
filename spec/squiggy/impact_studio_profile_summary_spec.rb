@@ -3,9 +3,7 @@ require_relative '../../util/spec_helper'
 describe 'Impact Studio' do
 
   test = SquiggyTestConfig.new 'profile_summary'
-  test.course.sections = [Section.new(label: test.course.title)]
 
-  teacher = test.teachers[0]
   student_1 = test.students[0]
   student_2 = test.students[1]
   student_3 = test.students[2]
@@ -34,14 +32,9 @@ describe 'Impact Studio' do
 
     it('shows the user avatar') { expect(@impact_studio.avatar?).to be true }
 
-    it 'shows no sections section when there is no section' do
-      @impact_studio.select_user teacher
-      expect(@impact_studio.sections).to be_empty
-    end
-
     it 'shows the sections when there are sections' do
       @impact_studio.select_user student_3
-      expect(@impact_studio.sections).to eql(test.course.sections.first.label)
+      expect(@impact_studio.sections).to eql(student_3.sections.first.sis_id)
     end
 
     describe 'last activity' do
@@ -62,7 +55,7 @@ describe 'Impact Studio' do
 
         it 'shows the activity date' do
           @impact_studio.load_own_profile(test, student_1)
-          expect(@impact_studio.last_activity).to eql('Today')
+          expect(@impact_studio.last_activity).to eql('a few seconds ago')
         end
       end
     end
@@ -91,7 +84,6 @@ describe 'Impact Studio' do
       end
 
       it 'allows the user to include a hashtag in a description' do
-        @impact_studio.switch_to_canvas_iframe
         @impact_studio.edit_profile 'My personal description hashtag #BitterTogether'
         @impact_studio.wait_until(Utils.short_wait) { @impact_studio.profile_desc.include? 'My personal description hashtag' }
         @impact_studio.link_element(text: '#BitterTogether').click
@@ -124,6 +116,8 @@ describe 'Impact Studio' do
 
       before(:all) do
         @canvas.masquerade_as(student_1, test.course)
+        @engagement_index.load_page test
+        @engagement_index.share_score
         @impact_studio.load_own_profile(test, student_1)
       end
 
@@ -161,7 +155,11 @@ describe 'Impact Studio' do
 
         it('shows the right status on the Impact Studio') { @impact_studio.set_collaboration_true }
 
-        # TODO it 'shows the right status on the Engagement Index'
+        it 'shows the right status on the Engagement Index' do
+          @engagement_index.load_page test
+          @engagement_index.wait_for_scores
+          expect(@engagement_index.collaboration_button_element(student_1).exists?).to be true
+        end
       end
 
       context 'and another user views the user' do

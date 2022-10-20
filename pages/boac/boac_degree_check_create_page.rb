@@ -15,7 +15,7 @@ class BOACDegreeCheckCreatePage
   end
 
   def select_template(template)
-    wait_for_element_and_select_js(degree_template_select_element, template.name)
+    wait_for_element_and_select(degree_template_select_element, template.name)
   end
 
   def click_save_degree

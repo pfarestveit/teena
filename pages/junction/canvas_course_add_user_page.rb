@@ -97,7 +97,7 @@ module Page
       def search(text, option)
         logger.info "Searching for string '#{text}' by #{option}"
         search_type_element.when_visible Utils.medium_wait
-        wait_for_element_and_select_js(search_type_element, option)
+        wait_for_element_and_select(search_type_element, option)
         wait_for_element_and_type(search_term_element, text)
         wait_for_update_and_click search_button_element
       end
@@ -137,9 +137,9 @@ module Page
                    else
                      section
                    end
-          wait_for_element_and_select_js(course_section_element, option)
+          wait_for_element_and_select(course_section_element, option)
         end
-        wait_for_element_and_select_js(user_role_element, user.role)
+        wait_for_element_and_select(user_role_element, user.role)
         wait_for_update_and_click add_user_button_element
         success_msg_element.when_visible Utils.medium_wait
       end

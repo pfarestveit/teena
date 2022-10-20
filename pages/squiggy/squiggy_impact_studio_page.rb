@@ -111,7 +111,7 @@ class SquiggyImpactStudioPage
 
   def select_user(user)
     logger.info "Selecting #{user.full_name}"
-    wait_for_element_and_select_js(user_select_element, user.full_name)
+    wait_for_element_and_select(user_select_element, user.full_name)
     wait_for_update_and_click_js user_select_button_element
     wait_for_profile user
   end
@@ -395,15 +395,15 @@ class SquiggyImpactStudioPage
   end
 
   def assets_most_viewed(assets)
-    assets_visible_non_deleted(assets).reject { |a| a.count_views.zero? }.sort_by { |a| [a.count_views, a.id] }.reverse[0..3]
+    assets_visible_non_deleted(assets).sort_by { |a| [a.count_views, a.id] }.reverse[0..3]
   end
 
   def assets_most_liked(assets)
-    assets_visible_non_deleted(assets).reject { |a| a.count_likes.zero? }.sort_by { |a| [a.count_likes, a.id] }.reverse[0..3]
+    assets_visible_non_deleted(assets).sort_by { |a| [a.count_likes, a.id] }.reverse[0..3]
   end
 
   def assets_most_commented(assets)
-    assets_visible_non_deleted(assets).reject { |a| a.comments.length.zero? }.sort_by { |a| [a.comments.length, a.id] }.reverse[0..3]
+    assets_visible_non_deleted(assets).sort_by { |a| [a.comments.length, a.id] }.reverse[0..3]
   end
 
   # USER ASSETS
@@ -416,8 +416,8 @@ class SquiggyImpactStudioPage
 
   def sort_user_assets(option)
     logger.info "Sorting user assets by #{option}"
-    scroll_to_bottom
-    wait_for_element_and_select_js(sort_user_assets_select_element, option)
+    sleep 2
+    wait_for_element_and_select(sort_user_assets_select_element, option)
     wait_for_update_and_click_js sort_user_assets_apply_button_element
   end
 
@@ -441,8 +441,12 @@ class SquiggyImpactStudioPage
 
   def wait_for_user_asset_results(assets)
     sleep 1
-    expected = assets.map &:id
-    wait_until(Utils.short_wait, "Expected #{expected}, got #{user_asset_ids}") { user_asset_ids == expected }
+    if assets.any?
+      expected = assets.map &:id
+      wait_until(Utils.short_wait, "Expected #{expected}, got #{user_asset_ids}") { user_asset_ids == expected }
+    else
+      wait_for_no_user_asset_results
+    end
   end
 
   def wait_for_no_user_asset_results
@@ -460,8 +464,7 @@ class SquiggyImpactStudioPage
 
   def sort_everyone_assets(option)
     logger.info "Sorting everyone's assets by #{option}"
-    scroll_to_bottom
-    wait_for_element_and_select_js(sort_everyone_assets_select_element, option)
+    wait_for_element_and_select(sort_everyone_assets_select_element, option)
     wait_for_update_and_click_js sort_everyone_assets_apply_button_element
   end
 

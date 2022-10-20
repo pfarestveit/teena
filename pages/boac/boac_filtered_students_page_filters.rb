@@ -35,7 +35,7 @@ module BOACFilteredStudentsPageFilters
 
   def select_new_filter_option(filter_option)
     logger.info "Selecting filter '#{filter_option}'"
-    wait_for_element_and_select_js(new_filter_select_element, filter_option)
+    wait_for_element_and_select(new_filter_select_element, filter_option)
   end
 
   def filter_sub_option_identifier(filter_option, filter_sub_option)
@@ -69,7 +69,7 @@ module BOACFilteredStudentsPageFilters
 
     # All others require a selection
     else
-      wait_for_element_and_select_js(new_sub_filter_select_element, filter_sub_option)
+      wait_for_element_and_select(new_sub_filter_select_element, filter_sub_option)
     end
   end
 

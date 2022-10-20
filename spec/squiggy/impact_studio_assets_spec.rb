@@ -47,7 +47,7 @@ describe 'The Impact Studio' do
     @engagement_index.wait_for_new_user_sync(test, test.course.roster)
 
     [student_1, student_2].each do |student|
-      @canvas.masquerade_as student
+      @canvas.masquerade_as(student, test.course)
       @engagement_index.load_page test
       @engagement_index.share_score
     end
@@ -94,7 +94,7 @@ describe 'The Impact Studio' do
       asset_4.id = whiteboard.asset_exports.first.id
       @whiteboards.close_whiteboard
 
-      @canvas.masquerade_as teacher
+      @canvas.masquerade_as(teacher, test.course)
       @asset_library.load_page test
       @asset_library.add_link_asset asset_5
 
@@ -129,17 +129,17 @@ describe 'The Impact Studio' do
 
       it 'sorts user assets by most likes' do
         @impact_studio.sort_user_assets 'Most likes'
-        @impact_studio.wait_for_no_user_asset_results
+        @impact_studio.wait_for_user_asset_results @impact_studio.assets_most_liked(student_1_assets)
       end
 
       it 'sorts user assets by most views' do
         @impact_studio.sort_user_assets 'Most views'
-        @impact_studio.wait_for_no_user_asset_results
+        @impact_studio.wait_for_user_asset_results @impact_studio.assets_most_viewed(student_1_assets)
       end
 
       it 'sorts user assets by most comments' do
         @impact_studio.sort_user_assets 'Most comments'
-        @impact_studio.wait_for_no_user_asset_results
+        @impact_studio.wait_for_user_asset_results @impact_studio.assets_most_commented(student_1_assets)
       end
 
       it 'shows everyone most recent non-hidden assets under Community Assets' do
@@ -158,17 +158,17 @@ describe 'The Impact Studio' do
 
       it 'sorts everyone assets by most likes' do
         @impact_studio.sort_everyone_assets 'Most likes'
-        @impact_studio.wait_for_no_everyone_asset_results
+        @impact_studio.wait_for_everyone_asset_results @impact_studio.assets_most_liked(all_assets)
       end
 
       it 'sorts everyone assets by most views' do
         @impact_studio.sort_everyone_assets 'Most views'
-        @impact_studio.wait_for_no_everyone_asset_results
+        @impact_studio.wait_for_everyone_asset_results @impact_studio.assets_most_viewed(all_assets)
       end
 
       it 'sorts everyone assets by most comments' do
         @impact_studio.sort_everyone_assets 'Most comments'
-        @impact_studio.wait_for_no_everyone_asset_results
+        @impact_studio.wait_for_everyone_asset_results @impact_studio.assets_most_commented(all_assets)
       end
     end
 
@@ -185,17 +185,17 @@ describe 'The Impact Studio' do
 
       it 'sorts user assets by most likes' do
         @impact_studio.sort_user_assets 'Most likes'
-        @impact_studio.wait_for_no_user_asset_results
+        @impact_studio.wait_for_user_asset_results @impact_studio.assets_most_liked(student_2_assets)
       end
 
       it 'sorts user assets by most views' do
         @impact_studio.sort_user_assets 'Most views'
-        @impact_studio.wait_for_no_user_asset_results
+        @impact_studio.wait_for_user_asset_results @impact_studio.assets_most_viewed(student_2_assets)
       end
 
       it 'sorts user assets by most comments' do
         @impact_studio.sort_user_assets 'Most comments'
-        @impact_studio.wait_for_no_user_asset_results
+        @impact_studio.wait_for_user_asset_results @impact_studio.assets_most_commented(student_2_assets)
       end
 
       it 'shows no Everyone Assets UI' do
