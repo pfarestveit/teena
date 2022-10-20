@@ -163,7 +163,7 @@ class BOACDegreeTemplatePage
 
   def select_col_req_type(type)
     logger.info "Selecting column requirement type '#{type}'"
-    wait_for_element_and_select_js(col_req_type_select_element, type)
+    wait_for_element_and_select(col_req_type_select_element, type)
   end
 
   def enter_col_req_name(name)
@@ -184,9 +184,9 @@ class BOACDegreeTemplatePage
   def select_col_req_parent(parent = nil)
     if parent
       logger.info "Selecting column requirement parent '#{parent.name}'"
-      wait_for_element_and_select_js(col_req_parent_select_element, parent.name)
+      wait_for_element_and_select(col_req_parent_select_element, parent.name)
     else
-      wait_for_element_and_select_js(col_req_parent_select_element, col_req_parent_options.first)
+      wait_for_element_and_select(col_req_parent_select_element, col_req_parent_options.first)
     end
   end
 
@@ -208,7 +208,7 @@ class BOACDegreeTemplatePage
 
   def select_col_req_unit_req(unit_req)
     logger.info "Selecting column requirement unit fulfillment '#{unit_req}'"
-    wait_for_element_and_select_js(col_req_course_units_req_select_element, unit_req)
+    wait_for_element_and_select(col_req_course_units_req_select_element, unit_req)
   end
 
   def remove_col_req_unit_req(unit_req)

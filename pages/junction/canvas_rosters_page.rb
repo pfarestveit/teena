@@ -71,7 +71,7 @@ module Page
       # Selects a section and pauses for DOM update
       # @param section [Section]
       def filter_by_section(section)
-        wait_for_element_and_select_js(section_select_element, "#{section.course} #{section.label}")
+        wait_for_element_and_select(section_select_element, "#{section.course} #{section.label}")
         sleep 1
       end
 

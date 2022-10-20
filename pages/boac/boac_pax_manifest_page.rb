@@ -67,25 +67,25 @@ class BOACPaxManifestPage
 
   # Selects the Filter option
   def select_filter_mode
-    wait_for_element_and_select_js(filter_mode_select_element, 'Filter')
+    wait_for_element_and_select(filter_mode_select_element, 'Filter')
   end
 
   # Selects the All Departments option
   def select_all_depts
     logger.info 'Selecting All Departments'
-    wait_for_element_and_select_js(dept_select_element, 'All')
+    wait_for_element_and_select(dept_select_element, 'All')
   end
 
   # Selects a given department option
   # @param dept [BOACDepartments]
   def select_dept(dept)
     logger.info "Selecting department '#{dept.name}'"
-    wait_for_element_and_select_js(dept_select_element, dept.name)
+    wait_for_element_and_select(dept_select_element, dept.name)
   end
 
   # Selects the BOA Admin option
   def select_admin_mode
-    wait_for_element_and_select_js(filter_mode_select_element, 'BOA Admins')
+    wait_for_element_and_select(filter_mode_select_element, 'BOA Admins')
   end
 
   # Advisor list
@@ -280,7 +280,7 @@ class BOACPaxManifestPage
 
   def select_deg_prog_option(user)
     deg_prog_option = user.degree_progress_perm ? user.degree_progress_perm.desc : 'Select...'
-    wait_for_element_and_select_js(deg_prog_select_element, deg_prog_option)
+    wait_for_element_and_select(deg_prog_select_element, deg_prog_option)
   end
 
   def click_automate_deg_prog
@@ -293,9 +293,9 @@ class BOACPaxManifestPage
   def add_user_dept_roles(user)
     user.dept_memberships.each do |membership|
       logger.info "Adding UID #{user.uid} department role #{membership.inspect}"
-      wait_for_element_and_select_js(department_select_element, membership.dept.code)
-      wait_for_element_and_select_js(dept_role_select(membership.dept), 'Advisor') if membership.advisor_role == AdvisorRole::ADVISOR
-      wait_for_element_and_select_js(dept_role_select(membership.dept), 'Director') if membership.advisor_role == AdvisorRole::DIRECTOR
+      wait_for_element_and_select(department_select_element, membership.dept.code)
+      wait_for_element_and_select(dept_role_select(membership.dept), 'Advisor') if membership.advisor_role == AdvisorRole::ADVISOR
+      wait_for_element_and_select(dept_role_select(membership.dept), 'Director') if membership.advisor_role == AdvisorRole::DIRECTOR
       if (membership.is_automated && !is_automated_dept_cbx(membership.dept).selected?) || (!membership.is_automated && is_automated_dept_cbx(membership.dept).selected?)
         execute_script('arguments[0].click();', is_automated_dept_cbx(membership.dept))
         sleep Utils.click_wait

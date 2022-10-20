@@ -95,7 +95,7 @@ module Page
 
       def select_task(name)
         logger.info "Selecting the '#{name}' OEC task"
-        wait_for_element_and_select_js(oec_task_select_element, name)
+        wait_for_element_and_select(oec_task_select_element, name)
       end
 
       def visible_oec_task_options

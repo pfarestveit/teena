@@ -69,7 +69,7 @@ module Page
       def set_cutoff(cutoff)
         if cutoff
           logger.info "Setting P/NP cutoff to '#{cutoff}'"
-          wait_for_element_and_select_js(cutoff_select_element, cutoff)
+          wait_for_element_and_select(cutoff_select_element, cutoff)
         else
           logger.info 'Setting no P/NP cutoff'
           wait_for_update_and_click no_pnp_cutoff_radio_element
@@ -83,7 +83,7 @@ module Page
         label = section.label.include?('(') ? section.label.split(' (').first : section.label
         section_name = "#{section.course} #{label}"
         Utils.prepare_download_dir
-        wait_for_element_and_select_js(sections_select_element, section_name)
+        wait_for_element_and_select(sections_select_element, section_name)
       end
 
       # Waits for the E-Grades CSV to download and then parses it

@@ -99,7 +99,7 @@ module BOACPagesCreateNoteModal
     logger.info "Adding topics #{topics.map &:name} to note ID '#{note.id}'"
     topics.each do |topic|
       logger.debug "Adding topic '#{topic.name}'"
-      wait_for_element_and_select_js(add_topic_select_element, topic.name)
+      wait_for_element_and_select(add_topic_select_element, topic.name)
       if (note.instance_of?(Note) || note.instance_of?(NoteBatch)) && note.id
         topic_pill(note, topic).when_visible Utils.short_wait
       else
