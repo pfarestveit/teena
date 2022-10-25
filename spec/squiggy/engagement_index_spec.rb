@@ -1,6 +1,7 @@
 require_relative '../../util/spec_helper'
 
 test = SquiggyTestConfig.new 'engagement_index'
+test.course.site_id = nil
 teacher = test.teachers.first
 student_0 = test.students[0]
 student_1 = test.students[1]
@@ -19,8 +20,8 @@ describe 'The Engagement Index' do
 
     @canvas.log_in(@cal_net, test.admin.username, Utils.super_admin_password)
     @canvas.create_squiggy_course test
-    @canvas.disable_tool(test.course, SquiggyTool::IMPACT_STUDIO)
-    
+    @canvas.disable_tool(test.course, SquiggyTool::IMPACT_STUDIO) if test.course.impact_studio_url
+
     @asset = student_2.assets.find &:file_name
     @asset.title = "#{@asset.title} #{test.id}"
     
@@ -59,7 +60,7 @@ describe 'The Engagement Index' do
 
   [teacher, student_1, student_2, student_3].each do |user|
     it "offers no #{user.full_name} Impact Studio link for a course site with no Impact Studio" do
-      expect(@engagement_index.user_profile_link(user).exists?).to be false
+      expect(@engagement_index.user_profile_link(test, user).exists?).to be false
     end
   end
 
@@ -84,32 +85,32 @@ describe 'The Engagement Index' do
 
   it 'can be sorted by "Share" ascending' do
     @engagement_index.sort_by_share_asc
-    @engagement_index.wait_until(1) { @engagement_index.visible_sharing == @engagement_index.visible_sharing.sort }
+    @engagement_index.wait_until(1) { @engagement_index.visible_sharing(test) == @engagement_index.visible_sharing(test).sort }
   end
 
   it 'can be sorted by "Share" descending' do
     @engagement_index.sort_by_share_desc
-    @engagement_index.wait_until(1) { @engagement_index.visible_sharing == @engagement_index.visible_sharing.sort.reverse }
+    @engagement_index.wait_until(1) { @engagement_index.visible_sharing(test) == @engagement_index.visible_sharing(test).sort.reverse }
   end
 
   it 'can be sorted by "Points" ascending' do
     @engagement_index.sort_by_points_asc
-    @engagement_index.wait_until(1) { @engagement_index.visible_points == @engagement_index.visible_points.sort }
+    @engagement_index.wait_until(1) { @engagement_index.visible_points(test) == @engagement_index.visible_points(test).sort }
   end
 
   it 'can be sorted by "Points" descending' do
     @engagement_index.sort_by_points_desc
-    @engagement_index.wait_until(1) { @engagement_index.visible_points == @engagement_index.visible_points.sort.reverse }
+    @engagement_index.wait_until(1) { @engagement_index.visible_points(test) == @engagement_index.visible_points(test).sort.reverse }
   end
 
   it 'can be sorted by "Recent Activity" ascending' do
     @engagement_index.sort_by_activity_asc
-    @engagement_index.wait_until(1) { @engagement_index.visible_activity_dates == @engagement_index.visible_activity_dates.sort }
+    @engagement_index.wait_until(1) { @engagement_index.visible_activity_dates(test) == @engagement_index.visible_activity_dates(test).sort }
   end
 
   it 'can be sorted by "Recent Activity" descending' do
     @engagement_index.sort_by_activity_desc
-    @engagement_index.wait_until(1) { @engagement_index.visible_activity_dates == @engagement_index.visible_activity_dates.sort.reverse }
+    @engagement_index.wait_until(1) { @engagement_index.visible_activity_dates(test) == @engagement_index.visible_activity_dates(test).sort.reverse }
   end
 
   # TEACHERS
@@ -120,7 +121,7 @@ describe 'The Engagement Index' do
 
   it 'allows teachers to share their scores with students' do
     @engagement_index.share_score
-    @engagement_index.wait_until(Utils.short_wait) { @engagement_index.sharing_preference(teacher) == 'Yes' }
+    @engagement_index.wait_until(Utils.short_wait) { @engagement_index.sharing_preference(test, teacher) == 'Yes' }
     @canvas.masquerade_as(student_3, test.course)
     @engagement_index.load_scores test
     expect(@engagement_index.visible_names).to include(teacher.full_name)
@@ -131,7 +132,7 @@ describe 'The Engagement Index' do
     @engagement_index.load_scores test
     @engagement_index.un_share_score
     @engagement_index.wait_for_scores
-    @engagement_index.wait_until(Utils.short_wait) { @engagement_index.sharing_preference(teacher) == 'No' }
+    @engagement_index.wait_until(Utils.short_wait) { @engagement_index.sharing_preference(test, teacher) == 'No' }
     @canvas.masquerade_as(student_3, test.course)
     @engagement_index.load_scores test
     expect(@engagement_index.visible_names).not_to include(teacher.full_name)
@@ -221,7 +222,6 @@ describe 'The Engagement Index' do
   describe '"looking for collaborators"' do
 
     before(:all) do
-      @canvas.stop_masquerading
       @canvas.enable_tool(test.course, SquiggyTool::IMPACT_STUDIO)
       @canvas.click_tool_link SquiggyTool::IMPACT_STUDIO
     end
@@ -251,8 +251,7 @@ describe 'The Engagement Index' do
         end
 
         it 'shows no collaboration elements on the Engagement Index' do
-          @engagement_index.user_profile_link(student_1).when_visible Utils.short_wait
-          expect(@engagement_index.collaboration_status_element(student_1).exists?).to be false
+          @engagement_index.user_profile_link(test, student_1).when_visible Utils.short_wait
           expect(@engagement_index.collaboration_button_element(student_1).exists?).to be false
         end
       end
@@ -279,7 +278,7 @@ describe 'The Engagement Index' do
         end
 
         it 'shows a collaborate button on the Engagement Index' do
-          @engagement_index.user_profile_link(student_1).when_visible Utils.short_wait
+          @engagement_index.user_profile_link(test, student_1).when_visible Utils.short_wait
           expect(@engagement_index.collaboration_button_element(student_1).exists?).to be true
         end
       end

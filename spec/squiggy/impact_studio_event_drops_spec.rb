@@ -11,7 +11,6 @@ describe 'The Impact Studio' do
     @asset_1 = @student_1.assets.find &:url
     @asset_2 = @student_1.assets.select(&:file_name)[0]
     @asset_3 = @student_1.assets.select(&:file_name)[1]
-    @asset_4 = SquiggyAsset.new({})
     @asset_5 = @teacher.assets.find &:file_name
     @asset_6 = @student_2.assets.find &:file_name
     @asset_7 = @student_2.assets.find &:url
@@ -60,7 +59,7 @@ describe 'The Impact Studio' do
     context 'and a user views its own profile' do
       before(:all) do
         @canvas.masquerade_as @student_1
-        @impact_studio.load_page test
+        @impact_studio.load_page @test
       end
       it 'shows empty lanes under My Activity' do
         @impact_studio.no_activity_timeline_element.when_visible Utils.short_wait
@@ -69,8 +68,8 @@ describe 'The Impact Studio' do
 
     context 'and a user views another user\'s profile' do
       before(:all) do
-        @engagement_index.load_page test
-        @engagement_index.click_user_dashboard_link @student_2
+        @engagement_index.load_page @test
+        @engagement_index.click_user_dashboard_link(@test, @student_2)
       end
       it 'shows empty lanes under Activity' do
         @impact_studio.no_activity_timeline_element.when_visible Utils.short_wait
@@ -122,7 +121,7 @@ describe 'The Impact Studio' do
       before(:all) do
         @whiteboards.load_page @test
         @whiteboards.open_whiteboard @whiteboard
-        asset_4 = @whiteboards.export_to_asset_library @whiteboard
+        @whiteboards.export_to_asset_library @whiteboard
         @student_1_activities[:whiteboard_export][:count] += 1
         @student_2_activities[:whiteboard_export][:count] += 1
         @whiteboards.close_whiteboard
@@ -292,7 +291,7 @@ describe 'The Impact Studio' do
 
       before(:all) do
         @canvas.masquerade_as @teacher
-        @asset_library.load_asset_detail(@test, @asset_4)
+        @asset_library.load_asset_detail(@test, @whiteboard.asset_exports.first)
         @asset_library.remix @whiteboard.title
         @teacher_activities[:asset_view][:count] += 1
         @student_1_activities[:get_asset_view][:count] += 1
@@ -331,7 +330,7 @@ describe 'The Impact Studio' do
 
     context 'with "view" impact' do
       before(:all) do
-        @asset_library.load_asset_detail(@test, @asset_4)
+        @asset_library.load_asset_detail(@test, @whiteboard.asset_exports.first)
         @impact_studio.load_page @test
       end
       it('does not add My Contributions "Engagements" events') { @impact_studio.verify_event_drop_count @student_1_activities }
@@ -339,7 +338,7 @@ describe 'The Impact Studio' do
 
     context 'with "comment" impact' do
       before(:all) do
-        @asset_library.load_asset_detail(@test, @asset_4)
+        @asset_library.load_asset_detail(@test, @whiteboard.asset_exports.first)
         @asset_library.add_comment @asset_4_comment
         @impact_studio.load_page @test
       end
@@ -348,7 +347,7 @@ describe 'The Impact Studio' do
 
     context 'with "remix" impact' do
       before(:all) do
-        @asset_library.load_asset_detail(@test, @asset_4)
+        @asset_library.load_asset_detail(@test, @whiteboard.asset_exports.first)
         @asset_library.remix @whiteboard.title
         @impact_studio.load_page @test
       end
@@ -424,7 +423,7 @@ describe 'The Impact Studio' do
     context 'when they have impact' do
       before(:all) do
         @canvas.masquerade_as @teacher
-        [@asset_1, @asset_3, @asset_4, @asset_5, @asset_6].each do |asset|
+        [@asset_1, @asset_3, @whiteboard.asset_exports.first, @asset_5, @asset_6].each do |asset|
           @asset_library.load_asset_detail(@test, asset)
           @asset_library.delete_asset asset
         end

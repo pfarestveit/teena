@@ -3,6 +3,7 @@ class User
   attr_accessor :uid,
                 :sis_id,
                 :canvas_id,
+                :squiggy_id,
                 :role,
                 :sections,
                 :status,

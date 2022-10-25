@@ -360,7 +360,10 @@ class SquiggyImpactStudioPage
   div(:drop_popover_container, class: 'event-details-popover-container')
   link(:drop_asset_title, class: 'event-details-popover-title')
   paragraph(:drop_activity_type, class: 'event-details-popover-description')
-  link(:drop_activity_user, xpath: '//p[@class="event-details-popover-description"]/a')
+
+  def drop_activity_user_el(user)
+    link_element(xpath: "//a[contains(@href, '/impact_studio/profile/#{user.squiggy_id}')]")
+  end
 
   def verify_latest_event_drop(user, asset, activity, line_node)
     wait_for_event_drops_chart
@@ -376,34 +379,10 @@ class SquiggyImpactStudioPage
       wait_until(Utils.short_wait, "Expected '#{activity.activity_drop}' got '#{drop_activity_type}'") do
         drop_activity_type.include? activity.activity_drop
       end
-      wait_until(Utils.short_wait, "Expected '#{user.full_name}', got '#{drop_activity_user_element.text}'") do
-        drop_activity_user_element.text == user.full_name
-      end
+      drop_activity_user_el(user).when_present Utils.short_wait
     else
       fail('No activity timeline is present')
     end
-  end
-
-  # ASSETS
-
-  def assets_visible_non_deleted(assets)
-    assets.select(&:visible).reject(&:deleted)
-  end
-
-  def assets_most_recent(assets)
-    assets_visible_non_deleted(assets).sort_by(&:id).reverse[0..3]
-  end
-
-  def assets_most_viewed(assets)
-    assets_visible_non_deleted(assets).sort_by { |a| [a.count_views, a.id] }.reverse[0..3]
-  end
-
-  def assets_most_liked(assets)
-    assets_visible_non_deleted(assets).sort_by { |a| [a.count_likes, a.id] }.reverse[0..3]
-  end
-
-  def assets_most_commented(assets)
-    assets_visible_non_deleted(assets).sort_by { |a| [a.comments.length, a.id] }.reverse[0..3]
   end
 
   # USER ASSETS

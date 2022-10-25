@@ -1,7 +1,6 @@
 class SquiggyUser < User
 
-  attr_accessor :squiggy_id,
-                :score
+  attr_accessor :score
 
   def initialize(test_data)
     super

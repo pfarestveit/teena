@@ -109,4 +109,27 @@ module SquiggyPages
     switch_to_last_window
     wait_until(Utils.medium_wait) { title.include? whiteboard.title }
   end
+
+  # ASSETS
+
+  def assets_visible_non_deleted(assets)
+    assets.select(&:visible).reject(&:deleted)
+  end
+
+  def assets_most_recent(assets)
+    assets_visible_non_deleted(assets).sort_by(&:id).reverse[0..3]
+  end
+
+  def assets_most_viewed(assets)
+    assets_visible_non_deleted(assets).sort_by { |a| [a.count_views, a.id] }.reverse[0..3]
+  end
+
+  def assets_most_liked(assets)
+    assets_visible_non_deleted(assets).sort_by { |a| [a.count_likes, a.id] }.reverse[0..3]
+  end
+
+  def assets_most_commented(assets)
+    assets_visible_non_deleted(assets).sort_by { |a| [a.comments.length, a.id] }.reverse[0..3]
+  end
+
 end

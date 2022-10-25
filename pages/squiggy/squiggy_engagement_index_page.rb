@@ -23,7 +23,8 @@ class SquiggyEngagementIndexPage
     begin
       return yield
     end
-  rescue
+  rescue => e
+    logger.error e.message
     sleep Utils.short_wait
     (tries -= 1).zero? ? fail : retry
   end
@@ -66,32 +67,41 @@ class SquiggyEngagementIndexPage
     '//div[@id="leaderboard"]//tbody/tr'
   end
 
+  def shift_right_once
+    sort_by_section? ? 1 : 0
+  end
+
+  def shift_right_twice(test)
+    shift = test.course.impact_studio_url ? 1 : 0
+    shift_right_once + shift
+  end
+
   def section_els
     cell_elements(xpath: "#{users_table_row_xpath}/td[1]/div")
   end
 
   def rank_els
-    node = sort_by_section? ? '2' : '1'
+    node = 1 + shift_right_once
     cell_elements(xpath: "#{users_table_row_xpath}/td[#{node}]/div")
   end
 
   def collaboration_els
-    node = sort_by_section? ? '4' : '3'
+    node = 3 + shift_right_once
     cell_elements(xpath: "#{users_table_row_xpath}/td[#{node}]/div")
   end
 
-  def sharing_els
-    node = sort_by_section? ? '5' : '4'
+  def sharing_els(test)
+    node = 3 + shift_right_twice(test)
     cell_elements(xpath: "#{users_table_row_xpath}/td[#{node}]/div")
   end
 
-  def points_els
-    node = sort_by_section? ? '6' : '5'
+  def points_els(test)
+    node = 4 + shift_right_twice(test)
     cell_elements(xpath: "#{users_table_row_xpath}/td[#{node}]/div")
   end
 
-  def last_activity_els
-    node = sort_by_section? ? '7' : '6'
+  def last_activity_els(test)
+    node = 4 + shift_right_twice(test)
     cell_elements(xpath: "#{users_table_row_xpath}/td[#{node}]")
   end
 
@@ -136,17 +146,17 @@ class SquiggyEngagementIndexPage
   end
 
   def user_collaboration_el(user)
-    node = sort_by_section? ? '4' : '3'
+    node = 3 + shift_right_once
     div_element(xpath: "#{user_row_xpath user}/td[#{node}]/div")
   end
 
-  def user_score_el(user)
-    node = sort_by_section? ? '6' : '5'
+  def user_score_el(test, user)
+    node = 4 + shift_right_twice(test)
     div_element(xpath: "#{user_row_xpath user}/td[#{node}]/div")
   end
 
-  def user_sharing_el(user)
-    node = sort_by_section? ? '5' : '4'
+  def user_sharing_el(test, user)
+    node = 3 + shift_right_twice(test)
     div_element(xpath: "#{user_row_xpath user}/td[#{node}]/div")
   end
 
@@ -154,8 +164,8 @@ class SquiggyEngagementIndexPage
     load_scores test
     search_for_user user
     sleep 1
-    user_score_el(user).when_visible Utils.medium_wait
-    score = user_score_el(user).text.to_i
+    user_score_el(test, user).when_visible Utils.medium_wait
+    score = user_score_el(test, user).text.to_i
     logger.debug "#{user.full_name}'s score is currently '#{score}'"
     score
   end
@@ -188,16 +198,16 @@ class SquiggyEngagementIndexPage
     name_elements.map &:text
   end
 
-  def visible_sharing
-    sharing_els.map &:text
+  def visible_sharing(test)
+    sharing_els(test).map &:text
   end
 
-  def visible_points
-    points_els.map(&:text).map &:to_i
+  def visible_points(test)
+    points_els(test).map(&:text).map &:to_i
   end
 
-  def visible_activity_dates
-    last_activity_els.map { |date| Date.strptime(date.text, '%m/%d/%Y, %l:%M:%S %p') }
+  def visible_activity_dates(test)
+    last_activity_els(test).map { |date| Date.strptime(date.text, '%m/%d/%Y, %l:%M:%S %p') }
   end
 
   def sorted_asc?(el)
@@ -298,10 +308,10 @@ class SquiggyEngagementIndexPage
     continue_button if continue_button?
   end
 
-  def sharing_preference(user)
+  def sharing_preference(test, user)
     # Retry once to avoid collision with DOM update
     tries = 2
-    user_sharing_el(user).text
+    user_sharing_el(test, user).text
   rescue Selenium::WebDriver::Error::StaleElementReferenceError
     retry unless (tries -= 1).zero?
   end
@@ -449,26 +459,27 @@ class SquiggyEngagementIndexPage
 
   # IMPACT STUDIO
 
-  def user_profile_link(user)
-    link_element(xpath: "//a[contains(.,'#{user.full_name}')]")
+  def user_profile_link(test, user)
+    link_element(xpath: "//a[contains(.,'#{user.full_name}') and contains(., '#{test.course.impact_studio_url}')]")
   end
 
-  def click_user_dashboard_link(user)
+  def click_user_dashboard_link(test, user)
     logger.info "Clicking the Impact Studio link for UID #{user.uid}"
     wait_until(Utils.medium_wait) do
       scroll_to_bottom
       sleep 1
-      user_profile_link(user).exists?
+      user_profile_link(test, user).exists?
     end
-    scroll_to_element user_profile_link(user)
-    user_profile_link(user).click
+    scroll_to_element user_profile_link(test, user)
+    user_profile_link(test, user).click
     wait_until(Utils.medium_wait) { title == "#{SquiggyTool::IMPACT_STUDIO.name}" }
     hide_canvas_footer_and_popup
     switch_to_canvas_iframe
   end
 
   def collaboration_button_element(user)
-    button_element(xpath: "#{user_row_xpath user}/td[3]//button")
+    node = 3 + shift_right_once
+    button_element(xpath: "#{user_row_xpath user}/td[#{node}]//button")
   end
 
   def click_collaborate_button(user)

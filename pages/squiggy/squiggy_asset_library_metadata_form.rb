@@ -54,11 +54,11 @@ module SquiggyAssetLibraryMetadataForm
   end
 
   def click_save_link_button
-    wait_for_update_and_click_js save_link_button_element
+    wait_for_update_and_click save_link_button_element
   end
 
   def click_cancel_link_button
-    wait_for_update_and_click_js cancel_link_button_element
+    wait_for_update_and_click cancel_link_button_element
   end
 
   # FILES OR URL

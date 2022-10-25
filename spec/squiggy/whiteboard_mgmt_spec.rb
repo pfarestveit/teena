@@ -322,7 +322,7 @@ describe 'Whiteboard' do
 
     it 'offers a collaborator link that opens in a new window' do
       @whiteboards.click_export_owner_link @whiteboard.collaborators.first
-      @asset_library.wait_for_assets
+      @asset_library.wait_for_assets @test
       expect(@asset_library.asset_uploader_selected).to eql(@whiteboard.collaborators.first.full_name)
     end
 

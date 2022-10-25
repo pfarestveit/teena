@@ -72,7 +72,7 @@ describe 'The Impact Studio' do
 
       before(:all) do
         @engagement_index.load_scores test
-        @engagement_index.click_user_dashboard_link student_2
+        @engagement_index.click_user_dashboard_link(test, student_2)
       end
 
       it('shows a "no assets" message under Assets') { @impact_studio.wait_for_no_user_asset_results }
@@ -176,7 +176,7 @@ describe 'The Impact Studio' do
 
       before(:all) do
         @engagement_index.load_scores test
-        @engagement_index.click_user_dashboard_link student_2
+        @engagement_index.click_user_dashboard_link(test, student_2)
       end
 
       it 'shows the other user most recent assets' do

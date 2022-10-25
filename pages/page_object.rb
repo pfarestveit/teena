@@ -24,6 +24,10 @@ module PageObject
     @driver.get url
   end
 
+  def refresh_page
+    @driver.navigate.refresh
+  end
+
   def text
     @driver.page_source
   end
