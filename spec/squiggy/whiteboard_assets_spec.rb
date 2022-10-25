@@ -6,7 +6,7 @@ describe 'Whiteboard Add Asset' do
 
   before(:all) do
     @test = SquiggyTestConfig.new 'whiteboard_assets'
-    @test.course.site_id = ENV['COURSE_ID']
+    @test.course.site_id = nil
     @student_1 = @test.students[0]
     @student_2 = @test.students[1]
     @student_3 = @test.students[2]

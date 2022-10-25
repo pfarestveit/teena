@@ -43,13 +43,13 @@ describe 'New asset' do
             end
 
             unless asset_rejected
-              @assets_list.wait_for_assets
+              @assets_list.wait_for_assets @test
               visible_asset = @assets_list.visible_list_view_asset_data asset
 
               it("#{asset.title} belonging to #{student.full_name} has the right list view title") { expect(visible_asset[:title]).to eql(asset.title) }
               it("#{asset.title} belonging to #{student.full_name} has the right list view owner") { expect(visible_asset[:owner]).to eql(student.full_name) }
 
-              @assets_list.click_asset_link asset
+              @assets_list.click_asset_link(@test, asset)
               visible_detail = @asset_detail.visible_asset_metadata asset
               expected_desc = (asset.description && !asset.description.empty?) ? asset.description : '—'
               preview_generated = @asset_detail.preview_generated? asset

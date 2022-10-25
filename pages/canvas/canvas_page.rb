@@ -186,9 +186,13 @@ module Page
         test.course.code = course_code
       end
       logger.info "Course site ID is #{test.course.site_id}"
-      add_sections(test.course, test.course.sections) if test.course.sections&.any?
+      if test.course.sections&.any?
+        add_sections(test.course, test.course.sections) if test.course.sections&.any?
+        add_users_by_section(test.course, test.course.roster)
+      else
+        add_users(test.course, test.course.roster)
+      end
       publish_course_site test.course
-      add_users_by_section(test.course, test.course.roster)
       add_squiggy_tools test
     end
 

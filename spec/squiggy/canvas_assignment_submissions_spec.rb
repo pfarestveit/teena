@@ -75,7 +75,7 @@ describe 'Canvas assignment submissions' do
           expect(visible_asset[:owner]).to eql(asset.owner.full_name)
         end
 
-        @assets_list.click_asset_link asset
+        @assets_list.click_asset_link(@test, asset)
         visible_detail = @asset_detail.visible_asset_metadata asset
         source_shown = @asset_detail.source?
         category_shown = @asset_detail.category_el_by_id(asset.category).exists?

@@ -43,7 +43,6 @@ class SquiggyAssetLibraryListViewPage
     enter_asset_metadata asset
     click_save_link_button
     get_asset_id asset
-    SquiggyUtils.set_asset_id asset
   end
 
   # BIZMARKLET
@@ -148,7 +147,7 @@ class SquiggyAssetLibraryListViewPage
   def click_manage_assets_link
     manage_assets_button_element.when_visible Utils.short_wait
     sleep 1
-    manage_assets_button_element.click
+    wait_for_update_and_click manage_assets_button_element
   end
 
   # LIST VIEW ASSETS
@@ -160,9 +159,19 @@ class SquiggyAssetLibraryListViewPage
     switch_to_canvas_iframe
   end
 
-  def wait_for_assets
+  def wait_for_assets(test)
     start = Time.now
+    tries ||= 2
     wait_until(Utils.medium_wait) { asset_elements.any? }
+  rescue => e
+    logger.error e.message
+    if (tries -= 1).zero?
+      fail
+    else
+      load_page test
+      retry
+    end
+  ensure
     logger.warn "PERF - took #{Time.now - start} seconds for assets to appear"
     sleep Utils.click_wait
   end
@@ -173,7 +182,6 @@ class SquiggyAssetLibraryListViewPage
   end
 
   def get_asset_id(asset)
-    wait_for_assets
     wait_until(Utils.short_wait) { !SquiggyUtils.set_asset_id(asset).empty? }
   end
 
@@ -201,8 +209,20 @@ class SquiggyAssetLibraryListViewPage
 
   def visible_list_view_asset_data(asset)
     xpath = asset_xpath(asset)
-    start = Time.now
-    asset_el(asset).when_present Utils.short_wait
+    begin
+      tries ||= 2
+      start = Time.now
+      asset_el(asset).when_present Utils.short_wait
+    rescue => e
+      logger.error e.message
+      if (tries -= 1).zero?
+        fail
+      else
+        refresh_page
+        switch_to_canvas_iframe
+        retry
+      end
+    end
     logger.warn "PERF - took #{Time.now - start} seconds for asset element to become visible"
     sleep 1
     title_el = div_element(xpath: "#{xpath}//div[contains(@class, 'asset-metadata')]/div[1]")
@@ -221,8 +241,9 @@ class SquiggyAssetLibraryListViewPage
     }
   end
 
-  def click_asset_link(asset)
+  def click_asset_link(test, asset)
     logger.info "Clicking thumbnail for asset ID #{asset.id}"
+    wait_for_assets test
     wait_for_update_and_click asset_el(asset)
   end
 
@@ -251,6 +272,7 @@ class SquiggyAssetLibraryListViewPage
   # Advanced search
 
   button(:advanced_search_button, id: 'search-assets-btn')
+  button(:advanced_search_reset_button, id: 'reset-adv-search-btn')
   text_area(:keyword_search_input, id: 'adv-search-keywords-input')
   button(:keyword_clear_button, xpath: '//input[@id="adv-search-keywords-input"]/../following-sibling::div//button')
 
@@ -258,6 +280,7 @@ class SquiggyAssetLibraryListViewPage
     sleep Utils.click_wait
     if keyword_search_input_element.visible?
       logger.debug 'Advanced search input is already visible'
+      advanced_search_reset_button if advanced_search_reset_button?
     else
       wait_for_load_and_click advanced_search_button_element
     end

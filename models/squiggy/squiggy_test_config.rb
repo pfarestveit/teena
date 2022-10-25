@@ -13,9 +13,12 @@ class SquiggyTestConfig < TestConfig
 
     @course = SquiggyCourse.new title: "#{@id} #{test_name}", code: "#{@id} #{test_name}"
     @course.lti_tools = SquiggyTool::TOOLS
-    section_1 = Section.new label: "WBL 001 #{@id}", sis_id: "WBL 001 #{@id}"
-    section_2 = Section.new label: "WBL 002 #{@id}", sis_id: "WBL 002 #{@id}"
-    @course.sections = [section_1, section_2]
+    @course.site_id = ENV['COURSE_ID']
+    unless @course.site_id
+      section_1 = Section.new label: "WBL 001 #{@id}", sis_id: "WBL 001 #{@id}"
+      section_2 = Section.new label: "WBL 002 #{@id}", sis_id: "WBL 002 #{@id}"
+      @course.sections = [section_1, section_2]
+    end
 
     set_test_user_data File.join(Utils.config_dir, 'test-data-squiggy.json')
     @course.roster = set_test_users(test_name, SquiggyUser)
@@ -29,7 +32,9 @@ class SquiggyTestConfig < TestConfig
         end
         asset
       end
-      member.sections = i.odd? ? [section_1] : [section_2]
+      unless @course.site_id
+        member.sections = i.odd? ? [section_1] : [section_2]
+      end
     end
   end
 

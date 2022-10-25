@@ -4,7 +4,7 @@ describe 'An asset' do
 
   before(:all) do
     @test = SquiggyTestConfig.new 'asset_reactions'
-    @test.course.site_id = ENV['COURSE_ID']
+    @test.course.site_id = nil
     @driver = Utils.launch_browser
     @canvas = Page::CanvasPage.new @driver
     @cal_net= Page::CalNetPage.new @driver
@@ -41,7 +41,7 @@ describe 'An asset' do
 
     it 'is not incremented when viewed by the asset creator' do
       @assets_list.load_page @test
-      @assets_list.click_asset_link @asset
+      @assets_list.click_asset_link(@test, @asset)
       expect(@asset_detail.visible_asset_metadata(@asset)[:view_count]).to eql('0')
     end
 
@@ -54,7 +54,7 @@ describe 'An asset' do
     end
 
     it 'is incremented when viewed again by a user other than the asset creator' do
-      @assets_list.click_asset_link @asset
+      @assets_list.click_asset_link(@test, @asset)
       expect(@asset_detail.visible_asset_metadata(@asset)[:view_count]).to eql('2')
       @asset_detail.click_back_to_asset_library
       expect(@assets_list.visible_list_view_asset_data(@asset)[:view_count]).to eql('2')
@@ -66,7 +66,7 @@ describe 'An asset' do
     it 'cannot be added by the asset creator' do
       @canvas.masquerade_as(@student_1, @test.course)
       @assets_list.load_page @test
-      @assets_list.click_asset_link @asset
+      @assets_list.click_asset_link(@test, @asset)
       @asset_detail.wait_for_asset_detail
       expect(@asset_detail.like_button?).to be false
     end
@@ -118,7 +118,7 @@ describe 'An asset' do
       before(:all) do
         @canvas.masquerade_as(@student_2, @test.course)
         @assets_list.load_page @test
-        @assets_list.click_asset_link @asset
+        @assets_list.click_asset_link(@test, @asset)
         @asset_detail.click_like_button
       end
 
@@ -164,7 +164,7 @@ describe 'An asset' do
 
           @canvas.masquerade_as(@student_1, @test.course)
           @assets_list.load_page @test
-          @assets_list.click_asset_link @asset
+          @assets_list.click_asset_link(@test, @asset)
           @visible_comment = @asset_detail.add_comment @comment_1_by_uploader
         end
 
@@ -217,7 +217,7 @@ describe 'An asset' do
 
           @canvas.masquerade_as(@student_2, @test.course)
           @assets_list.load_page @test
-          @assets_list.click_asset_link @asset
+          @assets_list.click_asset_link(@test, @asset)
           @visible_comment = @asset_detail.add_comment @comment_2_by_viewer
         end
 
@@ -265,7 +265,7 @@ describe 'An asset' do
 
           @canvas.masquerade_as(@student_2, @test.course)
           @assets_list.load_page @test
-          @assets_list.click_asset_link @asset
+          @assets_list.click_asset_link(@test, @asset)
           @visible_comment = @asset_detail.reply_to_comment(@comment_2_by_viewer, @comment_2_reply_by_viewer)
         end
 
@@ -313,7 +313,7 @@ describe 'An asset' do
 
           @canvas.masquerade_as(@student_2, @test.course)
           @assets_list.load_page @test
-          @assets_list.click_asset_link @asset
+          @assets_list.click_asset_link(@test, @asset)
           @visible_comment = @asset_detail.reply_to_comment(@comment_1_by_uploader, @comment_1_reply_by_viewer)
         end
 
@@ -384,7 +384,7 @@ describe 'An asset' do
 
       it 'lets a user click a commenter name to view the asset gallery filtered by the commenter\'s submissions' do
         @asset_detail.click_commenter_link @comment_1_by_uploader
-        @assets_list.wait_for_assets
+        @assets_list.wait_for_assets @test
         expect(@assets_list.asset_uploader_selected).to eql(@student_1.full_name)
       end
     end
@@ -395,7 +395,7 @@ describe 'An asset' do
         @comment_1_by_uploader.body = "#{@comment_1_by_uploader.body} - EDITED"
         @canvas.masquerade_as(@student_1, @test.course)
         @assets_list.load_page @test
-        @assets_list.click_asset_link @asset
+        @assets_list.click_asset_link(@test, @asset)
         @asset_detail.edit_comment @comment_1_by_uploader
       end
 
@@ -407,7 +407,7 @@ describe 'An asset' do
         @comment_2_by_viewer.body = "#{@comment_2_by_viewer.body} - EDITED"
         @canvas.masquerade_as(@test.teachers.first, @test.course)
         @assets_list.load_page @test
-        @assets_list.click_asset_link @asset
+        @assets_list.click_asset_link(@test, @asset)
         @asset_detail.edit_comment @comment_2_by_viewer
       end
 
@@ -427,7 +427,7 @@ describe 'An asset' do
       it 'can be done by a student who created the comment' do
         @canvas.masquerade_as(@student_2, @test.course)
         @assets_list.load_page @test
-        @assets_list.click_asset_link @asset
+        @assets_list.click_asset_link(@test, @asset)
         @asset_detail.delete_comment @comment_1_reply_by_viewer
       end
 
@@ -464,7 +464,7 @@ describe 'An asset' do
 
       it 'can be done by a teacher if the comment has no replies' do
         @assets_list.load_page @test
-        @assets_list.click_asset_link @asset
+        @assets_list.click_asset_link(@test, @asset)
         @asset_detail.delete_comment @comment_3_by_viewer
       end
 

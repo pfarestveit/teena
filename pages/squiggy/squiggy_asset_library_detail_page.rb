@@ -205,7 +205,7 @@ class SquiggyAssetLibraryDetailPage < SquiggyAssetLibraryListViewPage
   end
 
   def comment_el_by_body(comment)
-    div_element(xpath: "//div[contains(text(), '#{comment.body.split.first}')]")
+    div_element(xpath: "//div[contains(., '#{comment.body.split.first}') and contains(@id, 'comment')][not(contains(@id, 'body'))]")
   end
 
   def comment_body_el(comment)

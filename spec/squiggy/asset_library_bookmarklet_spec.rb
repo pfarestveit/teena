@@ -84,7 +84,7 @@ describe 'The Asset Library bookmarklet' do
       @canvas.masquerade_as(@student, @test.course)
       @assets_list.load_page @test
       @assets_list.get_asset_id @link_asset
-      @assets_list.click_asset_link @link_asset
+      @assets_list.click_asset_link(@test, @link_asset)
       expect(@asset_detail.visible_asset_metadata(@link_asset)[:source_exists]).to be true
       expect(@asset_detail.download_button?).to be false
     end

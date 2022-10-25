@@ -11,6 +11,7 @@ describe 'Asset Library' do
     @cal_net = Page::CalNetPage.new @driver
     @assets_list = SquiggyAssetLibraryListViewPage.new @driver
     @asset_detail = SquiggyAssetLibraryDetailPage.new @driver
+    @engagement_index = SquiggyEngagementIndexPage.new @driver
     @manage_assets = SquiggyAssetLibraryManageAssetsPage.new @driver
 
     @student_1 = test.students[0]
@@ -25,6 +26,7 @@ describe 'Asset Library' do
 
     @canvas.log_in(@cal_net, test.admin.username, Utils.super_admin_password)
     @canvas.create_squiggy_course test
+    @engagement_index.wait_for_new_user_sync(test, test.course.roster)
   end
 
   after(:all) do
@@ -61,8 +63,7 @@ describe 'Asset Library' do
         @canvas.masquerade_as(@student_1, test.course)
         @assets_list.load_page test
         @assets_list.upload_file_asset @student_1_upload
-
-        @canvas.masquerade_as(test.teachers.first, test.course)
+        @canvas.masquerade_as test.teachers.first
       end
 
       it 'require a title' do
@@ -91,7 +92,7 @@ describe 'Asset Library' do
       it 'can be added to existing assets' do
         @student_1_upload.category = @cat_1
         @manage_assets.click_back_to_asset_library
-        @assets_list.click_asset_link @student_1_upload
+        @assets_list.click_asset_link(test, @student_1_upload)
         @asset_detail.edit_asset_details @student_1_upload
         expect(@asset_detail.visible_asset_metadata(@student_1_upload)[:category]).to eql(@cat_1.name)
       end
@@ -106,7 +107,7 @@ describe 'Asset Library' do
 
       it 'appear on the asset detail of associated assets as links to the asset library filtered for that category' do
         @assets_list.load_page test
-        @assets_list.click_asset_link @student_1_upload
+        @assets_list.click_asset_link(test, @student_1_upload)
         @asset_detail.click_category_link @cat_1
         @assets_list.selected_category_element.when_present Utils.short_wait
         @assets_list.wait_until(Utils.short_wait) { @assets_list.selected_category == @cat_1.name }
@@ -119,7 +120,7 @@ describe 'Asset Library' do
     context 'when edited' do
 
       before(:all) do
-        @assets_list.click_cancel_advanced_search if @assets_list.cancel_advanced_search?
+        @assets_list.load_page test
         @assets_list.click_manage_assets_link
       end
 
@@ -139,7 +140,7 @@ describe 'Asset Library' do
         @cat_1.name = "#{@cat_1.name} EDITED"
         @manage_assets.edit_category @cat_1
         @manage_assets.click_back_to_asset_library
-        @assets_list.click_asset_link @student_1_upload
+        @assets_list.click_asset_link(test, @student_1_upload)
         expect(@asset_detail.visible_asset_metadata(@student_1_upload)[:category]).to eql(@cat_1.name)
       end
     end
@@ -162,7 +163,7 @@ describe 'Asset Library' do
 
       it 'no longer appear on asset detail' do
         @assets_list.hit_escape
-        @assets_list.click_asset_link @student_1_upload
+        @assets_list.click_asset_link(test, @student_1_upload)
         expect(@asset_detail.visible_asset_metadata(@student_1_upload)[:category]).to be_nil
       end
     end
@@ -183,22 +184,25 @@ describe 'Asset Library' do
       @assets_list.load_page test
       @assets_list.add_link_asset @student_3_link
 
-      @assets_list.click_asset_link @student_2_upload
+      @assets_list.wait_for_assets test
+      @assets_list.click_asset_link(test, @student_2_upload)
       @asset_detail.add_comment SquiggyComment.new user: @student_3, body: '#BooBooKitty'
       @asset_detail.click_like_button
 
-      @canvas.masquerade_as(@student_2, test.course)
+      @canvas.masquerade_as @student_2
       @assets_list.load_page test
-      @assets_list.click_asset_link @student_3_link
+      @assets_list.click_asset_link(test, @student_3_link)
       @asset_detail.click_like_button
 
-      @canvas.masquerade_as(@student_1, test.course)
+      @canvas.masquerade_as @student_1
       @assets_list.load_page test
-      @assets_list.click_asset_link @student_3_link
+      @assets_list.click_asset_link(test, @student_3_link)
       @asset_detail.click_like_button
       @asset_detail.click_back_to_asset_library
-      @assets_list.click_asset_link @student_2_upload
+      @assets_list.click_asset_link(test, @student_2_upload)
       @asset_detail.click_back_to_asset_library
+
+      @assets = [@student_1_upload, @student_2_upload, @student_3_link]
     end
 
     it 'lets a user perform a simple search by a string in the title' do
@@ -247,8 +251,8 @@ describe 'Asset Library' do
     end
 
     it 'lets a user perform an advanced search by keyword and category, sorted by Most Recent' do
-      @assets_list.advanced_search('uploaded', @cat_2, nil, nil, nil,nil)
-      @assets_list.wait_for_asset_results [@student_2_upload]
+      @assets_list.advanced_search(test.id, @cat_2, nil, nil, nil,nil)
+      @assets_list.wait_for_asset_results [@student_3_link, @student_2_upload]
     end
 
     it 'lets a user perform an advanced search by keyword and uploader, sorted by Most Recent' do
@@ -267,7 +271,7 @@ describe 'Asset Library' do
     end
 
     it 'lets a user perform an advanced search by keyword, category, and type, sorted by Most Recent' do
-      @assets_list.advanced_search('Description', @cat_2, nil, 'File', nil, nil)
+      @assets_list.advanced_search(test.id, @cat_2, nil, 'File', nil, nil)
       @assets_list.wait_for_asset_results [@student_2_upload]
     end
 
@@ -277,18 +281,18 @@ describe 'Asset Library' do
     end
 
     it 'lets a user perform an advanced search by keyword, category, uploader, and type, sorted by Most Recent' do
-      @assets_list.advanced_search('for', @cat_2, @student_2, 'File', nil, nil)
+      @assets_list.advanced_search(test.id, @cat_2, @student_2, 'File', nil, nil)
       @assets_list.wait_for_asset_results [@student_2_upload]
     end
 
     it 'lets a user perform an advanced search by keyword, sorted by Most Likes' do
       @assets_list.advanced_search(test.id, nil, nil, nil, nil, 'Most likes')
-      @assets_list.wait_for_asset_results [@student_3_link, @student_2_upload]
+      @assets_list.wait_for_asset_results [@student_3_link, @student_2_upload, @student_1_upload]
     end
 
     it 'lets a user perform an advanced search by keyword, sorted by Most Comments' do
       @assets_list.advanced_search(test.id, nil, nil, nil, nil, 'Most comments')
-      @assets_list.wait_for_asset_results [@student_2_upload]
+      @assets_list.wait_for_asset_results [@student_2_upload, @student_3_link, @student_1_upload]
     end
 
     it 'lets a user perform an advanced search by keyword, sorted by Most Views' do
@@ -298,12 +302,12 @@ describe 'Asset Library' do
 
     it 'lets a user perform an advanced search by keyword and uploader, sorted by Most Likes' do
       @assets_list.advanced_search(test.id, nil, @student_1, nil, nil, 'Most likes')
-      @assets_list.wait_for_no_results
+      @assets_list.wait_for_asset_results [@student_1_upload]
     end
 
     it 'lets a user perform an advanced search by keyword and category, sorted by Most Comments' do
       @assets_list.advanced_search(test.id, @cat_2, nil, nil, nil, 'Most comments')
-      @assets_list.wait_for_asset_results [@student_2_upload]
+      @assets_list.wait_for_asset_results [@student_2_upload, @student_3_link]
     end
 
     it 'lets a user perform an advanced search by keyword and uploader, sorted by Most Views' do

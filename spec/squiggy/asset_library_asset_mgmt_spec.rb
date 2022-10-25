@@ -63,7 +63,7 @@ describe 'Asset' do
     end
 
     it 'is allowed if the user is a student who is the asset creator' do
-      @assets_list.click_asset_link @jamboard
+      @assets_list.click_asset_link(@test, @jamboard)
       @asset_detail.regenerate_preview_button_element.when_present Utils.short_wait
     end
 
