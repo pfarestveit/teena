@@ -17,10 +17,12 @@ describe 'The Engagement Index' do
     @assets_list = SquiggyAssetLibraryListViewPage.new @driver
     @asset_detail = SquiggyAssetLibraryDetailPage.new @driver
     @engagement_index = SquiggyEngagementIndexPage.new @driver
+    @impact_studio = SquiggyImpactStudioPage.new @driver
 
     @canvas.log_in(@cal_net, test.admin.username, Utils.super_admin_password)
     @canvas.create_squiggy_course test
     @canvas.disable_tool(test.course, SquiggyTool::IMPACT_STUDIO) if test.course.impact_studio_url
+    test.course.impact_studio_url = nil
 
     @asset = student_2.assets.find &:file_name
     @asset.title = "#{@asset.title} #{test.id}"
@@ -103,16 +105,6 @@ describe 'The Engagement Index' do
     @engagement_index.wait_until(1) { @engagement_index.visible_points(test) == @engagement_index.visible_points(test).sort.reverse }
   end
 
-  it 'can be sorted by "Recent Activity" ascending' do
-    @engagement_index.sort_by_activity_asc
-    @engagement_index.wait_until(1) { @engagement_index.visible_activity_dates(test) == @engagement_index.visible_activity_dates(test).sort }
-  end
-
-  it 'can be sorted by "Recent Activity" descending' do
-    @engagement_index.sort_by_activity_desc
-    @engagement_index.wait_until(1) { @engagement_index.visible_activity_dates(test) == @engagement_index.visible_activity_dates(test).sort.reverse }
-  end
-
   # TEACHERS
 
   it 'allows teachers to see all users\' scores regardless of sharing preferences' do
@@ -121,7 +113,9 @@ describe 'The Engagement Index' do
 
   it 'allows teachers to share their scores with students' do
     @engagement_index.share_score
-    @engagement_index.wait_until(Utils.short_wait) { @engagement_index.sharing_preference(test, teacher) == 'Yes' }
+    @engagement_index.wait_until(Utils.short_wait, "Expected Yes, got #{@engagement_index.sharing_preference(test, teacher)}") do
+      @engagement_index.sharing_preference(test, teacher) == 'Yes'
+    end
     @canvas.masquerade_as(student_3, test.course)
     @engagement_index.load_scores test
     expect(@engagement_index.visible_names).to include(teacher.full_name)
@@ -132,7 +126,9 @@ describe 'The Engagement Index' do
     @engagement_index.load_scores test
     @engagement_index.un_share_score
     @engagement_index.wait_for_scores
-    @engagement_index.wait_until(Utils.short_wait) { @engagement_index.sharing_preference(test, teacher) == 'No' }
+    @engagement_index.wait_until(Utils.short_wait, "Expected No, got #{@engagement_index.sharing_preference(test, teacher)}") do
+      @engagement_index.sharing_preference(test, teacher) == 'No'
+    end
     @canvas.masquerade_as(student_3, test.course)
     @engagement_index.load_scores test
     expect(@engagement_index.visible_names).not_to include(teacher.full_name)
@@ -184,17 +180,11 @@ describe 'The Engagement Index' do
       @canvas.remove_users_from_course(test.course, [teacher, student_3])
     end
 
-    [teacher, student_3].each do |user|
+    it 'removes users from the Engagement Index if they have been removed from the course site' do
+      @engagement_index.wait_for_removed_user_sync(test, [teacher, student_3])
+    end
 
-      it "removes #{user.role} UID #{user.uid} from the Engagement Index if the user has been removed from the course site" do
-        @canvas.load_homepage
-        @canvas.stop_masquerading if @canvas.stop_masquerading_link?
-        @engagement_index.wait_until(Utils.medium_wait) do
-          sleep 10
-          @engagement_index.load_scores test
-          !@engagement_index.visible_names.include? user.full_name
-        end
-      end
+    [teacher, student_3].each do |user|
 
       it "prevents #{user.role} UID #{user.uid} from reaching the Engagement Index if the user has been removed from the course site" do
         @canvas.masquerade_as(user, test.course)
@@ -223,7 +213,7 @@ describe 'The Engagement Index' do
 
     before(:all) do
       @canvas.enable_tool(test.course, SquiggyTool::IMPACT_STUDIO)
-      @canvas.click_tool_link SquiggyTool::IMPACT_STUDIO
+      test.course.impact_studio_url = @canvas.click_tool_link SquiggyTool::IMPACT_STUDIO
     end
 
     context 'when the user is not looking' do
@@ -232,14 +222,6 @@ describe 'The Engagement Index' do
         @canvas.masquerade_as(student_1, test.course)
         @engagement_index.load_page test
         @engagement_index.share_score
-      end
-
-      context 'and the user views itself' do
-
-        it 'shows the right status on the Engagement Index' do
-          @engagement_index.collaboration_status_element(student_1).when_visible Utils.short_wait
-          expect(@engagement_index.collaboration_status_element(student_1).text).to eql('Not looking')
-        end
       end
 
       context 'and another user views the user' do
@@ -261,13 +243,8 @@ describe 'The Engagement Index' do
 
       before(:all) do
         @canvas.masquerade_as(student_1, test.course)
-        @engagement_index.load_scores test
-      end
-
-      context 'and the user views itself' do
-
-        it('shows the right status on the Engagement Index') { @engagement_index.set_collaboration_true student_1 }
-
+        @impact_studio.load_page test
+        @impact_studio.set_collaboration_true
       end
 
       context 'and another user views the user' do
@@ -278,8 +255,7 @@ describe 'The Engagement Index' do
         end
 
         it 'shows a collaborate button on the Engagement Index' do
-          @engagement_index.user_profile_link(test, student_1).when_visible Utils.short_wait
-          expect(@engagement_index.collaboration_button_element(student_1).exists?).to be true
+          @engagement_index.collaboration_button_element(student_1).when_present Utils.short_wait
         end
       end
     end

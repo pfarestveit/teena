@@ -126,9 +126,8 @@ class SquiggyWhiteboardPage < SquiggyWhiteboardsPage
     click_export_button
     logger.debug 'Exporting whiteboard to asset library'
     wait_for_update_and_click export_to_library_button_element
-    wait_until(Utils.short_wait) { export_title_input == whiteboard.title }
     enter_squiggy_text(export_title_input_element, new_title) if new_title
-    wait_for_update_and_click_js save_button_element
+    wait_for_update_and_click save_button_element
     export_title_input_element.when_not_present Utils.medium_wait
     export_success_msg_element.when_visible Utils.short_wait
     asset = SquiggyAsset.new(

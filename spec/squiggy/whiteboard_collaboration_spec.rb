@@ -5,6 +5,7 @@ describe 'Whiteboard' do
   include Logging
 
   test = SquiggyTestConfig.new 'whiteboard_collaboration'
+  test.course.site_id = nil
   timeout = Utils.short_wait
   teacher = test.teachers[0]
   student_1 = test.students[0]

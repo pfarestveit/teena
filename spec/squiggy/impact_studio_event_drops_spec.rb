@@ -411,6 +411,7 @@ describe 'The Impact Studio' do
 
     context 'before they have impact' do
       before(:all) do
+        @canvas.masquerade_as @student_2
         @asset_library.load_page @test
         @asset_library.add_link_asset @asset_7
         @asset_library.load_asset_detail(@test, @asset_7)
@@ -451,7 +452,12 @@ describe 'The Impact Studio' do
 
   describe 'Canvas discussions' do
 
-    before(:all) { @discussion = Discussion.new 'Discussion topic' }
+    before(:all) do
+      @discussion = Discussion.new 'Discussion topic'
+      @teacher_activities = @impact_studio.init_user_activities
+      @student_1_activities = @impact_studio.init_user_activities
+      @student_2_activities = @impact_studio.init_user_activities
+    end
 
     context 'when a new topic is created' do
       before(:all) do
@@ -459,7 +465,7 @@ describe 'The Impact Studio' do
         @canvas.create_course_discussion(@test.course, @discussion)
         @teacher_activities[:discussion_topic][:count] += 1
       end
-      it('adds a My Contributions "Interactions" event') { @impact_studio.verify_event_drop_count @teacher_activities }
+      it('adds a My Contributions "Interactions" event') { @impact_studio.wait_for_canvas_event(@test, @teacher_activities) }
     end
 
     context 'when an entry is added' do
@@ -468,7 +474,7 @@ describe 'The Impact Studio' do
         @canvas.add_reply(@discussion, nil, 'Discussion entry')
         @student_1_activities[:discussion_entry][:count] += 1
       end
-      it('adds a My Contributions "Interactions" event') { @impact_studio.verify_event_drop_count @student_1_activities }
+      it('adds a My Contributions "Interactions" event') { @impact_studio.wait_for_canvas_event(@test, @student_1_activities) }
     end
 
     context 'when a reply is added' do
@@ -481,7 +487,7 @@ describe 'The Impact Studio' do
 
       context 'and the replier views its own profile' do
         before(:all) { @impact_studio.load_page @test }
-        it('adds a My Contributions "Interactions" event') { @impact_studio.verify_event_drop_count @student_2_activities }
+        it('adds a My Contributions "Interactions" event') { @impact_studio.wait_for_canvas_event(@test, @student_2_activities) }
       end
 
       context 'and the entry-creator views its own profile' do
@@ -489,7 +495,7 @@ describe 'The Impact Studio' do
           @canvas.masquerade_as @student_1
           @impact_studio.load_page @test
         end
-        it('adds a My Impact "Interactions" event') { @impact_studio.verify_event_drop_count @student_1_activities }
+        it('adds a My Impact "Interactions" event') { @impact_studio.wait_for_canvas_event(@test, @student_1_activities) }
       end
     end
   end

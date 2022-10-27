@@ -133,7 +133,7 @@ class SquiggyEngagementIndexPage
     tries ||= SquiggyUtils.poller_retries
     logger.info "Checking if #{user.full_name} has updated sections #{user.sections.map &:sis_id}"
     expected = ''
-    user.sections.each { |s| expected << s }
+    user.sections.each { |s| expected << s.sis_id }
     load_scores test
     wait_until(3) do
       user_sections_el(user).exists?
@@ -460,7 +460,7 @@ class SquiggyEngagementIndexPage
   # IMPACT STUDIO
 
   def user_profile_link(test, user)
-    link_element(xpath: "//a[contains(.,'#{user.full_name}') and contains(., '#{test.course.impact_studio_url}')]")
+    link_element(xpath: "//a[contains(text(),'#{user.full_name}') and contains(@href, '#{test.course.impact_studio_url}')]")
   end
 
   def click_user_dashboard_link(test, user)

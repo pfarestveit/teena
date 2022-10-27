@@ -172,10 +172,10 @@ module CanvasPeoplePage
     hide_canvas_footer_and_popup
     wait_for_users [user]
     click_edit_user user
-    wait_for_update_and_click_js link_element(xpath: "//tr[@id='user_#{user.canvas_id}']//a[@data-event='editSections']")
+    wait_for_update_and_click link_element(xpath: "//tr[@id='user_#{user.canvas_id}']//a[@data-event='editSections']")
     wait_for_update_and_click link_element(xpath: "//a[@title='Remove user from #{section.sis_id}']")
     wait_for_update_and_click button_element(xpath: '//button[contains(., "Update")]')
-    span_element(xpath: '//span[contains(text(), "Section enrollments successfully updated")]').when_visible Utils.short_wait
+    sleep 2
     user.sections.delete section
   end
 
