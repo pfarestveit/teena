@@ -571,8 +571,9 @@ module Page
 
     # MESSAGES
 
-    text_area(:message_addressee, name: 'recipients[]')
-    text_area(:message_input, name: 'body')
+    def msg_recipient_el(user)
+      span_element(xpath: "//span[text()='#{user.full_name}']")
+    end
 
     # FILES
 

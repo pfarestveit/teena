@@ -84,6 +84,7 @@ describe 'Impact Studio' do
       end
 
       it 'allows the user to include a hashtag in a description' do
+        @impact_studio.load_page test
         @impact_studio.edit_profile 'My personal description hashtag #BitterTogether'
         @impact_studio.wait_until(Utils.short_wait) { @impact_studio.profile_desc.include? 'My personal description hashtag' }
         @impact_studio.link_element(text: '#BitterTogether').click
@@ -103,9 +104,7 @@ describe 'Impact Studio' do
       it 'allows the user to remove a description' do
         @impact_studio.cancel_profile_edit
         @impact_studio.edit_profile ''
-        @impact_studio.wait_until(Utils.short_wait, "Expected nothing, got #{@impact_studio.profile_desc}") do
-          @impact_studio.profile_desc.empty?
-        end
+        @impact_studio.profile_desc_element.when_not_present Utils.short_wait
       end
     end
   end
@@ -155,10 +154,10 @@ describe 'Impact Studio' do
 
         it('shows the right status on the Impact Studio') { @impact_studio.set_collaboration_true }
 
-        it 'shows the right status on the Engagement Index' do
+        it 'shows no collaborate button on the Engagement Index' do
           @engagement_index.load_page test
           @engagement_index.wait_for_scores
-          expect(@engagement_index.collaboration_button_element(student_1).exists?).to be true
+          expect(@engagement_index.collaboration_button_element(student_1).exists?).to be false
         end
       end
 
@@ -179,8 +178,7 @@ describe 'Impact Studio' do
 
         it 'directs the user to the Canvas messaging feature' do
           @engagement_index.click_collaborate_button student_1
-          @canvas.message_input_element.when_visible Utils.short_wait
-          expect(@canvas.message_addressee_element.attribute('value')).to eql("#{student_1.canvas_id}")
+          @canvas.msg_recipient_el(user).when_present Utils.short_wait
         end
       end
     end

@@ -275,7 +275,7 @@ class SquiggyImpactStudioPage
   def wait_for_event_drops_chart
     sleep 2
     wait_until(Utils.short_wait) { event_drops_chart_el.exists? || no_activity_timeline_element.exists? }
-    sleep 1
+    scroll_to_element div_element(id: 'activity-timeline-chart') if event_drops_chart_el.exists?
   end
 
   def event_drop_activity_label_els
@@ -338,16 +338,18 @@ class SquiggyImpactStudioPage
     event_drop_counts
   end
 
-  def wait_for_canvas_event(test, expected_event_count)
+  def wait_for_canvas_event(test, expected)
+    expected_event_count = expected_event_drop_count expected
     logger.info "Waiting until the Canvas poller updates the activity event counts to #{expected_event_count}"
     tries ||= SquiggyUtils.poller_retries
     begin
-      load_page(test.course.impact_studio_url)
-      wait_until(3) { visible_event_drop_count == expected_event_count }
+      load_page test
+      wait_until(1) { visible_event_drop_count == expected_event_count }
     rescue
       if (tries -= 1).zero?
         fail
       else
+        logger.info 'Retrying'
         sleep Utils.short_wait
         retry
       end
@@ -396,6 +398,7 @@ class SquiggyImpactStudioPage
   def sort_user_assets(option)
     logger.info "Sorting user assets by #{option}"
     sleep 2
+    scroll_to_element div_element(id: 'user-assets')
     wait_for_element_and_select(sort_user_assets_select_element, option)
     wait_for_update_and_click_js sort_user_assets_apply_button_element
   end
@@ -443,6 +446,7 @@ class SquiggyImpactStudioPage
 
   def sort_everyone_assets(option)
     logger.info "Sorting everyone's assets by #{option}"
+    scroll_to_element div_element(id: 'everyones-assets')
     wait_for_element_and_select(sort_everyone_assets_select_element, option)
     wait_for_update_and_click_js sort_everyone_assets_apply_button_element
   end

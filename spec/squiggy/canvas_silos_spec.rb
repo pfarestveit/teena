@@ -6,6 +6,7 @@ describe 'Canvas section silo-ing' do
 
   before(:all) do
     @test = SquiggyTestConfig.new 'canvas_silos'
+    @test.course.site_id = nil
     @section_1 = Section.new label: "WBL 001 #{@test.id}", sis_id: "WBL 001 #{@test.id}"
     @section_2 = Section.new label: "WBL 002 #{@test.id}", sis_id: "WBL 002 #{@test.id}"
     @test.course.sections = [@section_1, @section_2]
@@ -234,6 +235,8 @@ describe 'Canvas section silo-ing' do
         end
 
         it 'offers all section assets for adding to a whiteboard' do
+          @whiteboards.close_whiteboard
+          @whiteboards.open_whiteboard @section_1_and_2_whiteboard
           @whiteboards.add_existing_assets [@student_3.assets[0]]
           @whiteboards.export_to_asset_library(@section_1_and_2_whiteboard, "#{@section_1_and_2_whiteboard.title} version 2")
           @section_1_assets << @section_1_and_2_whiteboard.asset_exports[1]
@@ -354,7 +357,7 @@ describe 'Canvas section silo-ing' do
         @whiteboards.close_whiteboard
 
         @comment = SquiggyComment.new asset: @section_1_and_2_whiteboard.asset_exports.first,
-                                      body: "#{@test.id} Student 3's comment on shared asset",
+                                      body: "#{@test.id} Student 3 comment on shared asset",
                                       user: @student_3
         @asset_library.load_asset_detail(@test, @section_1_and_2_whiteboard.asset_exports.first)
         @asset_library.add_comment @comment
@@ -370,7 +373,7 @@ describe 'Canvas section silo-ing' do
 
         before(:all) { @canvas.masquerade_as @student_3 }
 
-        it('can reach its own assets') { @asset_library.load_asset_detail(@test, @student_3.asset.first) }
+        it('can reach its own assets') { @asset_library.load_asset_detail(@test, @student_3.assets.first) }
 
         it 'can search for assets in the new silo only' do
           @asset_library.load_page @test

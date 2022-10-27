@@ -274,6 +274,11 @@ module Page
     end
   end
 
+  def scroll_to_top
+    sleep Utils.click_wait
+    execute_script('window.scrollTo(0, 0);')
+  end
+
   # Uses JavaScript to scroll to the bottom of a page. This is a workaround for a WebDriver bug where certain elements
   # are not scrolled into focus prior to an interaction.
   def scroll_to_bottom
@@ -318,7 +323,7 @@ module Page
   end
 
   def pause_for_poller
-    logger.info "Waiting for the Canvas poller for #{wait = SquiggyUtils.canvas_poller_wait} seconds"
+    logger.info "Waiting for the Canvas poller for #{wait = Utils.medium_wait} seconds"
     sleep wait
   end
 
