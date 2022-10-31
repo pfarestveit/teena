@@ -134,6 +134,17 @@ describe 'bCourses Find a Person to Add', order: :defined do
         expect(@canvas.external_link_valid?(@canvas.add_user_help_link_element, title)).to be true
       end
     end
+
+    it 'include CalNet guest account instructions for unrecognized accounts' do
+      if standalone
+        skip 'Skipping test since in standalone mode'
+      else
+        title = 'IT - How can I access bCourses without a CalNet Account?'
+        @canvas.hit_escape
+        @canvas.add_invalid_uid
+        expect(@canvas.external_link_valid?(@canvas.invalid_user_info_link_element, title)).to be true
+      end
+    end
   end
 
   describe 'search' do

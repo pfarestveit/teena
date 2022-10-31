@@ -87,7 +87,7 @@ describe 'bCourses Official Sections tool' do
 
           @canvas.load_course_sections site[:course]
           @canvas.expand_official_sections_notice
-          sections_help_page = 'IT - How do I add or delete a section roster from my course site?'
+          sections_help_page = 'IT - How do I add or remove a section roster from my course site?'
           official_sections_link = @canvas.external_link_valid?(@canvas.official_sections_help_link_element, sections_help_page)
           it "shows a link to the official sections help page on course site ID #{site[:course].site_id}" do
             expect(official_sections_link).to be true
