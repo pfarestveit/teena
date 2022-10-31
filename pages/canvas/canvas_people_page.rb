@@ -148,6 +148,15 @@ module CanvasPeoplePage
     end
   end
 
+  link(:invalid_user_info_link, xpath: '//a[contains(., "Accessing bCourses Without a Calnet Account")]')
+
+  def add_invalid_uid
+    wait_for_load_and_click add_people_button_element
+    wait_for_update_and_click add_user_by_uid_element
+    wait_for_element_and_type_js(user_list_element, '123456')
+    wait_for_update_and_click_js next_button_element
+  end
+
   def click_edit_user(user)
     wait_for_update_and_click link_element(xpath: "//tr[@id='user_#{user.canvas_id}']//a[contains(@class,'al-trigger')]")
   end

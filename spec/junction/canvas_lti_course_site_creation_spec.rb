@@ -18,6 +18,7 @@ describe 'bCourses course site creation' do
     @site_creation_page = Page::JunctionPages::CanvasSiteCreationPage.new @driver
     @create_course_site_page = Page::JunctionPages::CanvasCreateCourseSitePage.new @driver
     @canvas_page = Page::CanvasPage.new @driver
+    @canvas_assignments_page = Page::CanvasAssignmentsPage.new @driver
     @roster_photos_page = Page::JunctionPages::CanvasRostersPage.new @driver
     @course_captures_page = Page::JunctionPages::CanvasCourseCapturesPage.new @driver
 
@@ -329,9 +330,10 @@ describe 'bCourses course site creation' do
           grade_distribution_hidden = @canvas_page.grade_distribution_hidden? site[:course]
           it("hides grade distribution graphs from students for #{site[:course].term} #{site[:course].code} site ID #{site[:course].site_id}") { expect(grade_distribution_hidden).to be true }
 
-          # FILES - accessibility links
-
           if i.zero?
+
+            # FILES - accessibility links
+
             @canvas_page.click_files_tab
             @canvas_page.toggle_access_links
 
@@ -358,6 +360,16 @@ describe 'bCourses course site creation' do
             ally_link = @canvas_page.external_link_valid?(@canvas_page.access_ally_link_element, 'Ally in bCourses')
             it "shows an Ally in bCourses link for #{site[:course].term} #{site[:course].code} site ID #{site[:course].site_id}" do
               expect(ally_link).to be true
+            end
+
+            # ASSIGNMENTS - religious holiday info
+
+            @canvas_assignments_page.load_new_assignment_page site[:course]
+            @canvas_assignments_page.expand_religious_holidays
+            religious_title = 'Religious Holidays & Religious Creed Policy'
+            religious_link = @canvas_assignments_page.external_link_valid?(@canvas_assignments_page.religious_holiday_link_element, religious_title)
+            it "shows a religious holiday policy link for #{site[:course].term} #{site[:course].code} site ID #{site[:course].site_id}" do
+              expect(religious_link).to be true
             end
           end
 

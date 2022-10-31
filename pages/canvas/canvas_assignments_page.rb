@@ -27,13 +27,19 @@ module Page
     checkbox(:online_media_cbx, id: 'assignment_media_recording')
     button(:save_assignment_button, xpath: '//button[contains(.,"Save")]')
     h1(:assignment_title_heading, class: 'title')
+    button(:religious_holiday_button, xpath: '//button[contains(., "Religious Holidays Policy")]')
+    link(:religious_holiday_link, text: 'the Religious Holiday and Religious Creed Policy and list of religious and cultural holidays')
+
+    def load_new_assignment_page(course)
+      navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/assignments/new"
+      assignment_name_element.when_visible Utils.medium_wait
+    end
 
     # Begins creating a new assignment, entering title and scrolling to the submission types
     # @param course [Course]
     # @param assignment [Assignment]
     def enter_new_assignment_title(course, assignment)
-      navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/assignments/new"
-      assignment_name_element.when_visible Utils.medium_wait
+      load_new_assignment_page course
       assignment_name_element.send_keys assignment.title
       wait_for_element_and_type_js(assignment_due_date_element, assignment.due_date.strftime("%b %-d %Y")) unless assignment.due_date.nil?
       scroll_to_element assignment_type_element
@@ -79,6 +85,11 @@ module Page
       wait_for_element_and_type(assignment_name_element, (assignment.title = "#{assignment.title} - Edited"))
       wait_for_update_and_click_js save_assignment_button_element
       wait_until(Utils.short_wait) { assignment_title_heading_element.exists? && assignment_title_heading.include?(assignment.title) }
+    end
+
+    def expand_religious_holidays
+      logger.info 'Expanding religious holiday policy section'
+      wait_for_update_and_click religious_holiday_button_element
     end
 
     # ASSIGNMENT SUBMISSION
