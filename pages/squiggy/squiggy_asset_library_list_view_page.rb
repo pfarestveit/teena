@@ -347,6 +347,21 @@ class SquiggyAssetLibraryListViewPage
     span_elements(xpath: '//span[contains(@id, "adv-search-section-option")]').map &:text
   end
 
+  # Group
+
+  select_list(:group_select, id: 'adv-search-group-select')
+  div(:selected_group, id: 'adv-search-group-option-selected')
+  button(:group_clear_button, xpath: '//input[@id="adv-search-group-select"]/../following-sibling::div//button')
+
+  def click_group_select
+    group_select_element.when_present 2
+    js_click group_select_element
+  end
+
+  def group_options
+    span_elements(xpath: '//span[contains(@id, "adv-search-group-option")]').map &:text
+  end
+
   # Sort by
 
   select_list(:sort_by_select, id: 'adv-search-order-by-option-selected')
@@ -367,9 +382,9 @@ class SquiggyAssetLibraryListViewPage
   button(:cancel_advanced_search, id: 'cancel-adv-search-btn')
   span(:no_results_msg, xpath: '//span[text()="No matching assets found"]')
 
-  def advanced_search(keyword, category, user, asset_type, section, sort_by)
+  def advanced_search(keyword, category, user, asset_type, section, group, sort_by)
     logger.info "Searching keyword '#{keyword}', category '#{category.name if category}', user '#{user&.full_name}',
-                          asset type '#{asset_type}', section '#{section&.sis_id}', sort by '#{sort_by}'."
+                          asset type '#{asset_type}', section '#{section&.sis_id}', group '#{group&.title}' sort by '#{sort_by}'."
     open_advanced_search
     if keyword
       wait_for_textbox_and_type(keyword_search_input_element, keyword)
@@ -403,6 +418,13 @@ class SquiggyAssetLibraryListViewPage
       wait_for_update_and_click_js parameter_option(section.sis_id)
     elsif section_select?
       js_click(parameter_clear_button('Section')) if parameter_clear_button('Section').visible?
+    end
+
+    if group
+      click_group_select
+      wait_for_update_and_click_js parameter_option("#{group.group_set.title} - #{group.title}")
+    elsif group_select?
+      js_click(parameter_clear_button('Group')) if parameter_clear_button('Group').visible?
     end
 
     click_sort_by_select

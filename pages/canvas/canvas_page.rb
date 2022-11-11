@@ -472,7 +472,7 @@ module Page
       wait_for_update_and_click link_element(xpath: "//ul[@id='nav_disabled_list']/li[contains(.,'#{tool.name}')]//a")
       wait_for_update_and_click link_element(xpath: "//ul[@id='nav_disabled_list']/li[contains(.,'#{tool.name}')]//a[@title='Enable this item']")
       list_item_element(xpath: "//ul[@id='nav_enabled_list']/li[contains(.,'#{tool.name}')]").when_visible Utils.medium_wait
-      save_button
+      wait_for_update_and_click_js save_button_element
       tool_nav_link(tool).when_visible Utils.medium_wait
     end
 

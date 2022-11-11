@@ -1,9 +1,8 @@
-class Group
+class GroupSet
 
   attr_accessor :id,
                 :title,
-                :members,
-                :group_set,
+                :groups,
                 :site_id
 
   def initialize(test_data)
