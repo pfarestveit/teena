@@ -12,6 +12,7 @@ module SquiggyAssetLibrarySearchForm
   text_field(:adv_search_asset_types_input, id: 'adv-search-asset-types-select')
   text_field(:adv_search_asset_owners_input, id: 'adv-search-user-select')
   text_field(:adv_search_sections_input, id: 'adv-search-section-select')
+  text_field(:adv_search_groups_input, id: 'adv-search-group-select')
   text_field(:adv_search_sorting_input, id: 'adv-search-order-by-select')
   button(:adv_search_button, id: 'adv-search-btn')
   button(:adv_search_cancel_button, id: 'cancel-adv-search-btn')
@@ -28,6 +29,7 @@ module SquiggyAssetLibrarySearchForm
   def expand_adv_search
     logger.info 'Expanding advanced search form'
     wait_for_update_and_click expand_search_button_element
+    adv_search_asset_owners_input_element.when_present 2
   end
 
   def enter_adv_search_term(string)
@@ -63,6 +65,13 @@ module SquiggyAssetLibrarySearchForm
     logger.info "Selecting section '#{section.sis_id}'"
     wait_for_update_and_click_js adv_search_sections_input_element
     select_squiggy_option section.sis_id
+    sleep 1
+  end
+
+  def select_adv_search_group(group)
+    logger.info "Selecting group '#{group.group_set.title} #{group.title}'"
+    wait_for_update_and_click_js adv_search_groups_input_element
+    select_squiggy_option "#{group.group_set.title} #{group.title}"
     sleep 1
   end
 

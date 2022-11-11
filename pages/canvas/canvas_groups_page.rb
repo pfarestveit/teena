@@ -8,96 +8,176 @@ module Page
     include Logging
     include Page
 
-    link(:groups_link, text: 'Groups')
-    link(:student_groups_link, text: 'Student Groups')
-    text_area(:add_group_name_input, id: 'groupName')
-    link(:edit_group_link, id: 'edit_group')
-    text_area(:edit_group_name_input, id: 'group_name')
-    button(:save_button, xpath: '//button[contains(.,"Save")]')
-
     def load_course_grps(course)
       navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/groups"
     end
 
-    def student_create_grp(course, group)
+    def grp_link_el(group)
+      link_element(xpath: "//a[contains(.,'#{group.title}')]")
+    end
+
+    # INSTRUCTOR
+
+    # Group sets
+
+    button(:grp_set_add_button, id: 'add-group-set')
+    text_field(:grp_set_name_input, id: 'new-group-set-name')
+    checkbox(:grp_set_self_signup_cbx, xpath: '//input[@data-testid="checkbox-allow-self-signup"]')
+    button(:grp_set_save_button, xpath: '//button[@data-testid="group-set-save"]')
+    button(:grp_set_actions_button, xpath: '//button[@title="Add Group"]/following-sibling::span/a')
+    link(:grp_set_delete_link, xpath: '//a[contains(@class, "delete-category")]')
+    element(:grp_set_deleted_msg, xpath: '//*[contains(.,"Group set successfully removed")]')
+    link(:stud_grps_link, text: 'Student Groups')
+
+    def grp_set_link_el(group_set)
+      link_element(xpath: "//a[@title='#{group_set.title}']")
+    end
+
+    def instr_load_stud_grps(course)
       load_course_grps course
-      logger.info "Student is creating a student group called '#{group.title}' with #{group.members.length} additional members"
-      wait_for_update_and_click button_element(class: 'add_group_link')
-      wait_for_element_and_type(add_group_name_input_element, group.title)
+      wait_for_update_and_click stud_grps_link_element
+    end
+
+    def instr_load_grp_set(course, group_set)
+      load_course_grps course
+      wait_for_update_and_click grp_set_link_el(group_set)
+    end
+
+    def instr_create_grp_set(course, group_set)
+      logger.info "Creating new group set called '#{group_set.title}'"
+      load_course_grps course
+      wait_for_load_and_click grp_set_add_button_element
+      wait_for_element_and_type(grp_set_name_input_element, group_set.title)
+      js_click grp_set_self_signup_cbx_element
+      wait_for_update_and_click grp_set_save_button_element
+      grp_set_link_el(group_set).when_present Utils.short_wait
+    end
+
+    def instr_delete_grp_set(course, group_set)
+      logger.info "Deleting teacher group set '#{group_set}'"
+      instr_load_grp_set(course, group_set)
+      h2_element(xpath: '//h2[contains(text(), "Unassigned Students")]').when_visible Utils.short_wait
+      sleep 3
+      wait_for_update_and_click grp_set_actions_button_element
+      alert { wait_for_update_and_click grp_set_delete_link_element }
+      grp_set_deleted_msg_element.when_present Utils.short_wait
+    end
+
+    # Group
+
+    button(:instr_grp_add_button, xpath: '//button[@aria-label="Add Group"]')
+    text_field(:instr_grp_name_input, id: 'group_name')
+    button(:instr_grp_save_button, xpath: '//button[contains(., "Save")]')
+
+    def grp_actions_button_el(group)
+      link_element(xpath: "//a[contains(.,'#{group.title}')]/../following-sibling::div[contains(@class,'group-actions')]//a")
+    end
+
+    def assign_stud_link_el(student)
+      link_element(xpath: "//a[@aria-label='Assign #{student.full_name} to a group']")
+    end
+
+    def assign_grp_link_el(group)
+      link_element(xpath: "//a[@data-group-id='#{group.id}']")
+    end
+
+    def instr_create_grp(course, group)
+      logger.info "Creating new group called #{group.title} within #{group.group_set}"
+      instr_load_grp_set(course, group.group_set)
+      wait_for_update_and_click instr_grp_add_button_element
+      wait_for_element_and_type(instr_grp_name_input_element, group.title)
+      wait_for_update_and_click instr_grp_save_button_element
+      grp_link_el(group).when_present Utils.short_wait
+      grp_actions_button_el(group).when_present Utils.short_wait
+      group.id = grp_actions_button_el(group).attribute('id').split('-')[1]
+      logger.info "Group ID is #{group.id}"
+    end
+
+    def instr_add_grp_members(course, group)
+      instr_load_grp_set(course, group.group_set)
       group.members.each do |member|
-        scroll_to_bottom
-        (checkbox = checkbox_element(xpath: "//span[text()='#{member.full_name}']/preceding-sibling::input")).when_present Utils.short_wait
-        checkbox.check
+        logger.info "Assigning #{member.full_name} to #{group.title}"
+        wait_for_update_and_click assign_stud_link_el(member)
+        wait_for_update_and_click assign_grp_link_el(group)
       end
-      wait_for_update_and_click submit_button_element
-      (link = student_visit_grp_link(group)).when_present Utils.short_wait
-      logger.info "Group ID is '#{group.site_id = link.attribute('href').split('/').last}'"
     end
 
-    def student_visit_grp_link(group)
-      link_element(xpath: "//a[contains(@aria-label,'Visit group #{group.title}')]")
+    # STUDENT
+
+    button(:stud_grp_add_button, xpath: '//button[@data-test-id="add-group-button"]')
+    text_field(:stud_grp_add_name_input, id: 'group-name')
+    text_field(:stud_grp_add_member_input, id: 'invite-filter')
+    elements(:stud_grp_member_option, :span, xpath: '//span[@role="option"]')
+    button(:stud_grp_save_button, xpath: '//button[contains(., "Submit")]')
+    element(:stud_joined_grp_msg, xpath: '//*[contains(.,"Joined Group")]')
+    element(:stud_left_grp_msg, xpath: '//*[contains(.,"Left Group")]')
+    link(:edit_grp_link, id: 'edit_group')
+    text_field(:edit_grp_name_input, id: 'group_name')
+    button(:edit_grp_save_button, xpath: '//button[@type="submit"]')
+
+    def stud_visit_grp_link_el(group)
+      link_element(xpath: "//a[contains(@aria-label, \"Visit group #{group.title}\")]")
     end
 
-    def student_visit_grp(course, group)
+    def stud_join_grp_button_el(group)
+      button_element(xpath: "//button[contains(@aria-label, \"Join group #{group.title}\")]")
+    end
+
+    def stud_leave_grp_button_el(group)
+      button_element(xpath: "//button[contains(@aria-label, \"Leave group #{group.title}\")]")
+    end
+
+    def stud_switch_grp_button_el(group)
+      button_element(xpath: "//button[contains(@aria-label, \"Switch to group #{group.title}\")]")
+    end
+
+    def stud_create_grp(course, group)
+      logger.info "Student creating student group '#{group.title}'"
       load_course_grps course
-      logger.info "Visiting group '#{group.title}'"
-      wait_for_update_and_click student_visit_grp_link(group)
-      wait_until(Utils.short_wait) { recent_activity_heading.include? group.title }
+      wait_for_update_and_click stud_grp_add_button_element
+      wait_for_element_and_type(stud_grp_add_name_input_element, group.title)
+      wait_for_update_and_click stud_grp_save_button_element
+      stud_visit_grp_link_el(group).when_present Utils.short_wait
+      group.id = stud_visit_grp_link_el(group).attribute('href').split('/').last
+      logger.info "Group ID is #{group.id}"
     end
 
-    def student_join_grp(course, group)
-      load_course_grps course
-      logger.info "Joining group '#{group.title}'"
-      wait_for_update_and_click link_element(xpath: "//a[contains(@aria-label,'Join group #{group.title}')]")
-      list_item_element(xpath: '//li[contains(.,"Joined Group")]').when_present Utils.short_wait
-    end
-
-    def student_leave_grp(course, group)
-      load_course_grps course
-      logger.info "Leaving group '#{group.title}'"
-      wait_for_update_and_click link_element(xpath: "//a[contains(@aria-label,'Leave group #{group.title}')]")
-      list_item_element(xpath: '//li[contains(.,"Left Group")]').when_present Utils.short_wait
-    end
-
-    def student_edit_grp_name(course, group, new_name)
-      student_visit_grp(course, group)
+    def stud_edit_grp_name(course, group, new_name)
+      stud_visit_grp(course, group)
       logger.debug "Changing group title to '#{group.title = new_name}'"
-      wait_for_update_and_click edit_group_link_element
-      wait_for_element_and_type(edit_group_name_input_element, group.title)
-      wait_for_update_and_click save_button_element
+      wait_for_update_and_click edit_grp_link_element
+      wait_for_textbox_and_type(edit_grp_name_input_element, group.title)
+      wait_for_update_and_click edit_grp_save_button_element
+      wait_until(Utils.short_wait) { recent_activity_heading.include? group.title }
+      group.title = new_name
+    end
+
+    def stud_visit_grp(course, group)
+      logger.info "Visiting #{group.title}"
+      load_course_grps course
+      wait_for_update_and_click stud_visit_grp_link_el(group)
       wait_until(Utils.short_wait) { recent_activity_heading.include? group.title }
     end
 
-    def instructor_create_grp(course, group)
+    def stud_join_grp(course, group)
+      logger.info "Joining #{group.title}"
       load_course_grps course
-
-      # Create new group set
-      logger.info "Creating new group set called '#{group.group_set}'"
-      (button = button_element(xpath: '//button[@id="add-group-set"]')).when_present Utils.short_wait
-      js_click button
-      wait_for_element_and_type(text_area_element(id: 'new_category_name'), group.group_set)
-      checkbox_element(id: 'enable_self_signup').check
-      button_element(id: 'newGroupSubmitButton').click
-      link_element(xpath: "//a[@title='#{group.group_set}']").when_present Utils.short_wait
-
-      # Create new group within the group set
-      logger.info "Creating new group called '#{group.title}'"
-      js_click button_element(class: 'add-group')
-      wait_for_element_and_type(edit_group_name_input_element, group.title)
-      button_element(id: 'groupEditSaveButton').click
-      link_element(xpath: "//a[contains(.,'#{group.title}')]").when_present Utils.short_wait
-      (link = link_element(xpath: "//a[contains(.,'#{group.title}')]/../following-sibling::div[contains(@class,'group-actions')]//a")).when_present Utils.short_wait
-      logger.info "Group ID is '#{group.site_id = link.attribute('id').split('-')[1]}'"
+      wait_for_update_and_click stud_join_grp_button_el(group)
+      stud_joined_grp_msg_element.when_present Utils.short_wait
     end
 
-    def instructor_delete_grp_set(course, group)
+    def stud_switch_grps(course, new_group)
+      logger.info "Switching from to #{new_group.title}"
       load_course_grps course
-      logger.info "Deleting teacher group set '#{group.group_set}'"
-      wait_for_load_and_click link_element(xpath: "//a[@title='#{group.group_set}']")
-      wait_for_update_and_click link_element(xpath: '//button[@title="Add Group"]/following-sibling::span/a')
-      alert { wait_for_update_and_click link_element(class: 'delete-category') }
-      list_item_element(xpath: '//li[contains(.,"Group set successfully removed")]').when_present Utils.short_wait
+      wait_for_update_and_click stud_switch_grp_button_el(new_group)
+      stud_joined_grp_msg_element.when_present Utils.short_wait
     end
 
+    def stud_leave_grp(course, group)
+      logger.info "Leaving #{group.title}"
+      load_course_grps course
+      wait_for_update_and_click stud_leave_grp_button_el(group)
+      stud_left_grp_msg_element.when_present Utils.short_wait
+    end
   end
 end
