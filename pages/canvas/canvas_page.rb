@@ -169,7 +169,13 @@ module Page
     end
 
     def create_squiggy_course(test)
-      if test.course.site_id.nil?
+      if test.course.site_id
+        navigate_to "#{Utils.canvas_base_url}/courses/#{test.course.site_id}/settings"
+        course_details_link_element.when_visible Utils.medium_wait
+        test.course.title = course_title
+        test.course.code = course_code
+      else
+        SquiggyUtils.inactivate_all_courses
         logger.info "Creating a Squiggy course site named #{test.course.title}"
         load_sub_account Utils.canvas_qa_sub_account
         wait_for_load_and_click add_new_course_button_element
@@ -179,11 +185,6 @@ module Page
         wait_for_update_and_click create_course_button_element
         add_course_success_element.when_visible Utils.medium_wait
         test.course.site_id = search_for_course(test.course, Utils.canvas_qa_sub_account)
-      else
-        navigate_to "#{Utils.canvas_base_url}/courses/#{test.course.site_id}/settings"
-        course_details_link_element.when_visible Utils.medium_wait
-        test.course.title = course_title
-        test.course.code = course_code
       end
       logger.info "Course site ID is #{test.course.site_id}"
       if test.course.sections&.any?

@@ -21,6 +21,12 @@ module SquiggyPages
   def click_back_to_asset_library
     logger.debug 'Clicking Back to Asset Library button'
     wait_for_update_and_click back_to_asset_library_button_element
+    sleep 1
+  end
+
+  def visible_asset_ids
+    els = div_elements(xpath: '//div[contains(@class, "v-card")][contains(@id, "asset-")]')
+    els.map { |el| el.attribute('id').split('-').last }
   end
 
   def click_back_to_impact_studio
@@ -33,6 +39,7 @@ module SquiggyPages
     input_el.click
     sleep Utils.click_wait
     input_el.click
+    sleep Utils.click_wait
     255.times { hit_backspace; hit_delete }
   end
 
@@ -91,7 +98,8 @@ module SquiggyPages
   end
 
   def click_cancel_button
-    wait_for_update_and_click_js cancel_button_element
+    wait_for_update_and_click cancel_button_element
+    sleep 1
   end
 
   def click_close_modal_button

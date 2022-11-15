@@ -156,7 +156,7 @@ describe 'Asset Library' do
 
       it 'no longer appear in search options' do
         @manage_assets.click_back_to_asset_library
-        @assets_list.expand_adv_search
+        @assets_list.open_advanced_search
         @assets_list.click_category_search_select
         expect(@assets_list.parameter_option(@cat_1.name).exists?).to be false
       end

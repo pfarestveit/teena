@@ -84,7 +84,7 @@ describe 'Whiteboard Add Asset' do
       @whiteboards.open_whiteboard @whiteboard
     end
 
-    before(:each) { @whiteboards.click_cancel_button if @whiteboards.cancel_button? }
+    before(:each) { @whiteboards.click_cancel_button if @whiteboards.cancel_button_element.visible? }
 
     it 'allows the user to cancel adding assets' do
       @whiteboards.click_add_existing_asset
@@ -92,6 +92,49 @@ describe 'Whiteboard Add Asset' do
       expect(@whiteboards.save_button_element.attribute 'disabled').to eql('true')
       @whiteboards.click_cancel_button
       @whiteboards.wait_until(Utils.short_wait) { @whiteboards.asset_elements.empty? }
+    end
+
+    it 'allows the user to perform a simple search' do
+      @whiteboards.click_add_existing_asset
+      @whiteboards.simple_search @student_3_file.title
+      @whiteboards.wait_for_asset_results [@student_3_file]
+    end
+
+    it 'allows the user to perform an advanced search by a keyword, sorted by Most Recent' do
+      @whiteboards.click_add_existing_asset
+      @whiteboards.advanced_search(@student_2_url.title, nil, nil, nil, nil, nil, nil)
+      @whiteboards.wait_for_asset_results [@student_2_url]
+    end
+
+    it 'allows the user to perform an advanced search by category and uploader, sorted by Most Recent' do
+      @whiteboards.click_add_existing_asset
+      @whiteboards.advanced_search(nil, @category, @student_3, nil, nil, nil, nil)
+      @whiteboards.wait_for_asset_results [@student_3_file]
+    end
+
+    it 'allows the user to perform an advanced search by keyword and type, sorted by Most Recent' do
+      @whiteboards.click_add_existing_asset
+      @whiteboards.advanced_search(@test.id, nil, nil, 'File', nil, nil, nil)
+      @whiteboards.wait_for_asset_results [@student_3_file, @student_1_file]
+    end
+
+    it 'allows the user to perform an advanced search by keyword, category, uploader, and type, sorted by Most Recent' do
+      @whiteboards.click_add_existing_asset
+      @whiteboards.advanced_search(@test.id, @category, @student_2, 'File', nil, nil, nil)
+      @whiteboards.wait_for_no_results
+    end
+
+    it 'allows the user to perform an advanced search by keyword, sorted by Most Likes' do
+      @whiteboards.click_add_existing_asset
+      @whiteboards.advanced_search(@test.id, nil, nil, nil, nil, nil, 'Most likes')
+      @whiteboards.wait_for_asset_results [@student_3_file, @student_2_url, @student_1_file]
+    end
+
+    it 'allows the user to cancel an advanced search' do
+      @whiteboards.click_add_existing_asset
+      @whiteboards.open_advanced_search
+      @whiteboards.click_cancel_advanced_search
+      @whiteboards.category_select_element.when_not_present 2
     end
 
     it 'allows the user to add its own assets' do
@@ -203,7 +246,7 @@ describe 'Whiteboard Add Asset' do
 
       # Asset is not searchable
       @assets_list.load_page @test
-      @assets_list.advanced_search(@student_1_asset_hidden.title, nil, @student_1, 'File', nil, nil)
+      @assets_list.advanced_search(@student_1_asset_hidden.title, nil, @student_1, 'File', nil, nil, nil)
       @assets_list.no_results_msg_element.when_visible Utils.short_wait
     end
 
@@ -301,7 +344,7 @@ describe 'Whiteboard Add Asset' do
 
       # Asset is not searchable
       @assets_list.load_page @test
-      @assets_list.advanced_search(student_2_asset_hidden.title, nil, @student_2, 'Link', nil, nil)
+      @assets_list.advanced_search(student_2_asset_hidden.title, nil, @student_2, 'Link', nil, nil, nil)
       @assets_list.no_results_msg_element.when_visible Utils.short_wait
     end
 
