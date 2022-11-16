@@ -26,12 +26,16 @@ describe 'A SuiteC course' do
 
     @student_group_set = GroupSet.new title: 'Student Groups'
     @student_group = Group.new title: "Student group 2.1 #{@test.id}",
+                               group_set: @student_group_set,
                                members: [@student_1, @student_5]
     @group_options = [
       "#{@teacher_group_set.title} - #{@teacher_group_1.title}",
-      "#{@teacher_group_set.title} - #{@teacher_group_2.title}",
-      "#{@student_group_set.title} - #{@student_group.title}"
+      "#{@teacher_group_set.title} - #{@teacher_group_2.title}"
     ]
+
+    @group_1_whiteboard = SquiggyWhiteboard.new title: "Group 1.1 Whiteboard #{@test.id}",
+                                                  owner: @student_1,
+                                                  collaborators: [@student_3, @student_4]
 
     @driver = Utils.launch_browser
     @cal_net = Page::CalNetPage.new @driver
@@ -57,7 +61,7 @@ describe 'A SuiteC course' do
         @asset_library.load_page @test
       end
       it 'does not offer search filtering by group' do
-        @asset_library.expand_adv_search
+        @asset_library.open_advanced_search
         expect(@asset_library.group_select?).to be false
       end
     end
@@ -68,7 +72,7 @@ describe 'A SuiteC course' do
         @asset_library.load_page @test
       end
       it 'does not offer search filtering by group' do
-        @asset_library.expand_adv_search
+        @asset_library.open_advanced_search
         expect(@asset_library.group_select?).to be false
       end
     end
@@ -96,7 +100,7 @@ describe 'A SuiteC course' do
           @asset_library.load_page @test
         end
         it 'offers search filtering by all groups' do
-          @asset_library.expand_adv_search
+          @asset_library.open_advanced_search
           @asset_library.click_group_select
           expect(@asset_library.group_options.sort).to eql(@group_options.sort)
         end
@@ -108,7 +112,7 @@ describe 'A SuiteC course' do
           @asset_library.load_page @test
         end
         it 'offers search filtering by all groups' do
-          @asset_library.expand_adv_search
+          @asset_library.open_advanced_search
           @asset_library.click_group_select
           expect(@asset_library.group_options.sort).to eql(@group_options.sort)
         end
@@ -132,6 +136,12 @@ describe 'A SuiteC course' do
         @canvas.masquerade_as @student_5
         @canvas.stud_join_grp(@test.course, @student_group)
 
+        @group_options = [
+          "#{@teacher_group_set.title} - #{@teacher_group_1.title}",
+          "#{@teacher_group_set.title} - #{@teacher_group_2.title}",
+          "#{@student_group_set.title} - #{@student_group.title}"
+        ]
+
         # Add course member to ensure poller has reached course before proceeding with tests
         @canvas.stop_masquerading
         @canvas.add_users(@test.course, [@test.teachers[1]])
@@ -143,6 +153,12 @@ describe 'A SuiteC course' do
           @canvas.masquerade_as @student_1
           @canvas.stud_edit_grp_name(@test.course, @student_group, "#{@student_group.title} Edited")
 
+          @group_options = [
+            "#{@teacher_group_set.title} - #{@teacher_group_1.title}",
+            "#{@teacher_group_set.title} - #{@teacher_group_2.title}",
+            "#{@student_group_set.title} - #{@student_group.title}"
+          ]
+
           # Remove course member to ensure poller has reached course before proceeding with tests
           @canvas.stop_masquerading
           @canvas.remove_users_from_course(@test.course, [@test.teachers[1]])
@@ -152,7 +168,7 @@ describe 'A SuiteC course' do
         it 'offers search filtering by the updated group name' do
           @canvas.masquerade_as @student_1
           @asset_library.load_page @test
-          @asset_library.expand_adv_search
+          @asset_library.open_advanced_search
           @asset_library.click_group_select
           expect(@asset_library.group_options.sort).to eql(@group_options.sort)
         end
@@ -169,12 +185,9 @@ describe 'A SuiteC course' do
           asset.file_name ? @asset_library.upload_file_asset(asset) : @asset_library.add_link_asset(asset)
         end
 
-        @group_1_1_whiteboard = SquiggyWhiteboard.new title: "Group 1.1 Whiteboard #{@test.id}",
-                                                      owner: @student_1,
-                                                      collaborators: [@student_3, @student_4]
         @canvas.masquerade_as @student_1
         @whiteboards.load_page @test
-        @whiteboards.create_whiteboard @group_1_1_whiteboard
+        @whiteboards.create_whiteboard @group_1_whiteboard
       end
 
       it 'filters the Asset Library by group' do
@@ -190,15 +203,13 @@ describe 'A SuiteC course' do
         @asset_library.advanced_search(nil, nil, @student_3, nil, nil, @teacher_group_2, nil)
         @asset_library.wait_for_no_results
       end
-      it 'filters the Asset Library by group and section' do
-        @asset_library.advanced_search(nil, nil, nil, nil, @section_2, @student_group, nil)
-        @asset_library.wait_for_asset_results [@student_5.assets[0]]
+      it 'filters existing assets by group on a whiteboard' do
+        @whiteboards.load_page @test
+        @whiteboards.open_whiteboard @group_1_whiteboard
+        @whiteboards.click_add_existing_asset
+        @whiteboards.advanced_search(@test.id, nil, nil, 'File', nil, nil, nil)
+        @whiteboards.wait_for_asset_results [@student_3_file, @student_1_file]
       end
-
-      # TODO it 'filters existing assets by group on a whiteboard'
-      # TODO it 'filters existing assets by group and section on a whiteboard'
-      # TODO it 'filters existing assets by group and category on a whiteboard'
-      # TODO it 'filters existing assets by group and section on a whiteboard'
     end
 
     context 'with members who have switched groups' do
@@ -228,10 +239,6 @@ describe 'A SuiteC course' do
       it 'filters the Asset Library by group and asset owner' do
         @asset_library.advanced_search(nil, nil, @student_3, nil, nil, @teacher_group_1, nil)
         @asset_library.wait_for_no_results
-      end
-      it 'filters the Asset Library by group and section' do
-        @asset_library.advanced_search(nil, nil, nil, nil, @section_2, @teacher_group_2, nil)
-        @asset_library.wait_for_asset_results [@student_5.assets[0], @student_3.assets[0]]
       end
 
       # TODO it 'filters existing assets by group on a whiteboard'
@@ -267,10 +274,6 @@ describe 'A SuiteC course' do
         @asset_library.advanced_search(nil, nil, @student_1, nil, nil, @teacher_group_1, nil)
         @asset_library.wait_for_no_results
       end
-      it 'filters the Asset Library by group and section' do
-        @asset_library.advanced_search(nil, nil, nil, nil, @section_1, @teacher_group_1, nil)
-        @asset_library.wait_for_no_results
-      end
 
       # TODO it 'filters existing assets by group on a whiteboard'
       # TODO it 'filters existing assets by group and section on a whiteboard'
@@ -290,8 +293,8 @@ describe 'A SuiteC course' do
       it 'filters the Asset Library by group' do
         @canvas.masquerade_as @student_1
         @asset_library.load_page @test
-        @asset_library.advanced_search(nil, nil, nil, nil, nil, @teacher_group_1, nil)
-        @asset_library.wait_for_asset_results [@student_4.assets[0]]
+        @asset_library.advanced_search(nil, nil, nil, nil, nil, @teacher_group_2, nil)
+        @asset_library.wait_for_asset_results [@student_3.assets[0], @student_2.assets[0]]
       end
       it 'filters the Asset Library by group and keyword' do
         @asset_library.advanced_search(@student_1.assets[0].title.split[0], nil, nil, nil, nil, @teacher_group_1, nil)
@@ -302,7 +305,7 @@ describe 'A SuiteC course' do
         @asset_library.wait_for_no_results
       end
       it 'filters the Asset Library by group and section' do
-        @asset_library.advanced_search(nil, nil, nil, nil, @section_1, @student_group, nil)
+        @asset_library.advanced_search(nil, nil, nil, nil, nil, @student_group, nil)
         @asset_library.wait_for_asset_results [@student_1.assets[0]]
       end
 
@@ -328,7 +331,7 @@ describe 'A SuiteC course' do
     it 'removes the group filter option from the Asset Library' do
       @canvas.masquerade_as @student_1
       @asset_library.load_page @test
-      @asset_library.expand_adv_search
+      @asset_library.open_advanced_search
       @asset_library.click_group_select
       expect(@asset_library.group_options.sort).to eql(["#{@student_group_set.title} - #{@student_group.title}"])
     end

@@ -6,9 +6,9 @@ class SquiggyAssetLibraryDetailPage < SquiggyAssetLibraryListViewPage
   include SquiggyAssetLibraryMetadataForm
   include SquiggyWhiteboardEditForm
 
-  h2(:asset_title, id: 'asset-title')
+  h2(:asset_title, id: 'page-title')
   span(:uh_oh, xpath: '//span[text()=" Uh oh! "]')
-  div(:asset_preview, xpath: '//div[starts-with(@id, "asset-preview-image-")]')
+  div(:asset_preview, id: 'asset-preview')
   button(:like_button, id: 'like-asset-btn')
   span(:like_count, id: 'asset-like-count')
   span(:view_count, id: 'asset-view-count')
@@ -109,7 +109,7 @@ class SquiggyAssetLibraryDetailPage < SquiggyAssetLibraryListViewPage
       else
         logger.debug 'Preview spinner not present'
       end
-      preview_xpath = "//div[@class='assetlibrary-item-preview']"
+      preview_xpath = "//div[@class='preview']"
       (
         case asset.preview_type
         when 'image', 'non_embeddable_link'

@@ -134,7 +134,7 @@ describe 'Canvas section silo-ing' do
           end
 
           it 'shows results for all sections' do
-            @asset_library.advanced_search(@test.id, nil, nil, nil, nil, nil)
+            @asset_library.advanced_search(@test.id, nil, nil, nil, nil, nil, nil)
             @asset_library.wait_for_asset_results (@section_1_assets + @section_2_assets).uniq.sort_by(&:id).reverse
           end
 
@@ -146,19 +146,19 @@ describe 'Canvas section silo-ing' do
           it 'with single section citizenship shows results for a single section' do
             @canvas.masquerade_as(@student_1, @test.course)
             @asset_library.load_page @test
-            @asset_library.advanced_search(@test.id, nil, nil, nil, nil, nil)
+            @asset_library.advanced_search(@test.id, nil, nil, nil, nil, nil, nil)
             @asset_library.wait_for_asset_results (@section_1_assets).sort_by(&:id).reverse
 
             @canvas.masquerade_as(@student_5, @test.course)
             @asset_library.load_page @test
-            @asset_library.advanced_search(@test.id, nil, nil, nil, nil, nil)
+            @asset_library.advanced_search(@test.id, nil, nil, nil, nil, nil, nil)
             @asset_library.wait_for_asset_results (@section_2_assets).sort_by(&:id).reverse
           end
 
           it 'with dual section citizenship shows results for all their sections' do
             @canvas.masquerade_as(@student_3, @test.course)
             @asset_library.load_page @test
-            @asset_library.advanced_search(@test.id, nil, nil, nil, nil, nil)
+            @asset_library.advanced_search(@test.id, nil, nil, nil, nil, nil, nil)
             @asset_library.wait_for_asset_results (@section_1_assets + @section_2_assets).uniq.sort_by(&:id).reverse
           end
 
@@ -376,8 +376,8 @@ describe 'Canvas section silo-ing' do
         it('can reach its own assets') { @asset_library.load_asset_detail(@test, @student_3.assets.first) }
 
         it 'can search for assets in the new silo only' do
-          @asset_library.load_page @test
-          @asset_library.advanced_search(@test.id, nil, nil, nil, nil, nil)
+          @asset_library.click_back_to_asset_library
+          @asset_library.advanced_search(@test.id, nil, nil, nil, nil, nil, nil)
           @asset_library.wait_for_asset_results @section_2_assets.uniq.sort_by(&:id).reverse
         end
 
@@ -427,14 +427,14 @@ describe 'Canvas section silo-ing' do
 
         it 'can no longer search for the student\'s assets' do
           @asset_library.load_page @test
-          @asset_library.advanced_search(@test.id, nil, nil, nil, nil, nil)
+          @asset_library.advanced_search(@test.id, nil, nil, nil, nil, nil, nil)
           @asset_library.wait_for_asset_results @section_1_assets.uniq.sort_by(&:id).reverse
         end
 
         it 'can no longer view the student\'s assets via a link on an asset comment' do
           @asset_library.load_asset_detail(@test, @section_1_and_2_whiteboard.asset_exports.first)
-          @asset_library.comment_el_by_id(@comment).when_present Utils.short_wait
-          expect(@asset_library.commenter_link(@comment).exists?).to be false
+          @asset_library.click_commenter_link @comment
+          @asset_library.wait_for_asset_results @section_1_and_2_whiteboard.asset_exports
         end
 
         it 'can no longer see the student\'s EI score' do

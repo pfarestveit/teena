@@ -113,6 +113,7 @@ class SquiggyWhiteboardPage < SquiggyWhiteboardsPage
   div(:export_not_possible_msg, xpath: '//div[text()="Whiteboard cannot be exported yet, assets are still processing. Try again soon."]')
   div(:export_no_empty_board_msg, xpath: '//div[contains(text(), "When this whiteboard has one or more elements")]')
   text_field(:export_title_input, id: 'asset-title-input')
+  button(:export_save_button, xpath: '//button[contains(., " Export ")]')
   span(:export_success_msg, xpath: '//h2[contains(text(), "Congratulations!")]')
   button(:download_as_image_button, id: 'toolbar-download-as-image-btn')
   link(:exported_asset_link, id: 'link-to-asset')
@@ -127,7 +128,7 @@ class SquiggyWhiteboardPage < SquiggyWhiteboardsPage
     logger.debug 'Exporting whiteboard to asset library'
     wait_for_update_and_click export_to_library_button_element
     enter_squiggy_text(export_title_input_element, new_title) if new_title
-    wait_for_update_and_click save_button_element
+    wait_for_update_and_click_js export_save_button_element
     export_title_input_element.when_not_present Utils.medium_wait
     export_success_msg_element.when_visible Utils.short_wait
     asset = SquiggyAsset.new(
@@ -197,6 +198,11 @@ class SquiggyWhiteboardPage < SquiggyWhiteboardsPage
 
   def add_existing_assets(assets)
     click_add_existing_asset
+    select_existing_assets assets
+  end
+
+  def select_existing_assets(assets)
+    sleep 1
     assets.each { |asset| wait_for_update_and_click text_field_element(id: "asset-#{asset.id}") }
     wait_for_update_and_click_js save_button_element
     save_button_element.when_not_present Utils.short_wait

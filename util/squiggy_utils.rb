@@ -63,4 +63,10 @@ class SquiggyUtils < Utils
     assignment.squiggy_id = id.to_s
   end
 
+  def SquiggyUtils.inactivate_all_courses
+    logger.info 'Inactivating all existing courses'
+    sql = 'UPDATE courses SET active = FALSE'
+    Utils.query_pg_db(db_credentials, sql)
+  end
+
 end

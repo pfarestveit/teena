@@ -25,7 +25,7 @@ class SquiggyEngagementIndexPage
     end
   rescue => e
     logger.error e.message
-    sleep Utils.short_wait
+    sleep 5
     (tries -= 1).zero? ? fail : retry
   end
 

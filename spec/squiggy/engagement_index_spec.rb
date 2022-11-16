@@ -200,7 +200,7 @@ describe 'The Engagement Index' do
       it "removes #{user.role} UID #{user.uid} from the Asset Library if the user has been removed from the course site" do
         @canvas.stop_masquerading
         @assets_list.load_page test
-        @assets_list.expand_adv_search
+        @assets_list.open_advanced_search
         @assets_list.click_uploader_select
         expect(@assets_list.asset_uploader_options).not_to include(user.full_name)
       end
