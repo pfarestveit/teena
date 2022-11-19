@@ -178,7 +178,7 @@ describe 'Impact Studio' do
 
         it 'directs the user to the Canvas messaging feature' do
           @engagement_index.click_collaborate_button student_1
-          @canvas.msg_recipient_el(user).when_present Utils.short_wait
+          @canvas.msg_recipient_el(student_1).when_present Utils.short_wait
         end
       end
     end

@@ -35,6 +35,8 @@ describe 'New asset' do
                 it "#{asset.title} belonging to #{student.full_name} cannot be uploaded to the Asset Library because it is over 10MB" do
                   expect(asset_rejected).to be true
                 end
+              elsif asset.file_name.include? 'webp'
+                # verify the validation
               else
                 @assets_list.upload_file_asset asset
               end

@@ -143,11 +143,17 @@ class SquiggyAssetLibraryListViewPage
   # MANAGE ASSETS
 
   button(:manage_assets_button, id: 'manage-assets-btn')
+  h2(:manage_assets_heading, xpath: '//h2[text()="Manage Assets"]')
 
   def click_manage_assets_link
+    tries ||=2
     manage_assets_button_element.when_visible Utils.short_wait
     sleep 1
     wait_for_update_and_click manage_assets_button_element
+    manage_assets_heading_element.when_visible Utils.short_wait
+  rescue => e
+    logger.error e.message
+     (tries -= 1).zero? ? fail : retry
   end
 
   # LIST VIEW ASSETS
@@ -222,9 +228,9 @@ class SquiggyAssetLibraryListViewPage
     sleep 1
     title_el = div_element(xpath: "#{xpath}//div[contains(@class, 'asset-metadata')]//span[1]")
     owner_el = div_element(xpath: "#{xpath}//div[contains(@class, 'asset-metadata')]//span[2]")
-    view_count_el = div_element(xpath: "#{xpath}//*[@data-icon='eye']/..")
-    like_count_el = div_element(xpath: "#{xpath}//*[@data-icon='thumbs-up']/..")
-    comment_count_el = div_element(xpath: "#{xpath}//*[@data-icon='comment']/..")
+    view_count_el = div_element(xpath: "#{xpath}/following-sibling::div//*[@data-icon='eye']/..")
+    like_count_el = div_element(xpath: "#{xpath}/following-sibling::div//*[@data-icon='thumbs-up']/..")
+    comment_count_el = div_element(xpath: "#{xpath}/following-sibling::div//*[@data-icon='comment']/..")
     wait_for_element(title_el, Utils.short_wait)
     wait_for_element(owner_el, Utils.short_wait)
     {

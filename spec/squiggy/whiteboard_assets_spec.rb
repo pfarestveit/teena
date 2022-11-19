@@ -250,22 +250,21 @@ describe 'Whiteboard Add Asset' do
       @assets_list.no_results_msg_element.when_visible Utils.short_wait
     end
 
-    # TODO - uncomment when deep links work again
-    # it 'allows the asset owner to view a hidden asset deep link' do
-    #   @whiteboards.close_whiteboard
-    #   @asset_detail.load_asset_detail(@test, @student_1_asset_hidden)
-    # end
-    #
-    # it 'allows a whiteboard collaborator to view a hidden asset deep link' do
-    #   @canvas.masquerade_as(@student_2, @test.course)
-    #   @asset_detail.load_asset_detail(@test, @student_1_asset_hidden)
-    # end
-    #
-    # it 'does not allow a user who is not the owner or whiteboard collaborator to view a hidden asset deep link' do
-    #   @canvas.masquerade_as(@student_3, @test.course)
-    #   visible_to_other = @assets_list.verify_block { @asset_library.load_asset_detail(@test, @student_1_asset_hidden) }
-    #   expect(visible_to_other).to be false
-    # end
+    it 'allows the asset owner to view a hidden asset deep link' do
+      @whiteboards.close_whiteboard
+      @asset_detail.load_asset_detail(@test, @student_1_asset_hidden)
+    end
+
+    it 'allows a whiteboard collaborator to view a hidden asset deep link' do
+      @canvas.masquerade_as(@student_2, @test.course)
+      @asset_detail.load_asset_detail(@test, @student_1_asset_hidden)
+    end
+
+    it 'does not allow a user who is not the owner or whiteboard collaborator to view a hidden asset deep link' do
+      @canvas.masquerade_as(@student_3, @test.course)
+      visible_to_other = @assets_list.verify_block { @asset_library.load_asset_detail(@test, @student_1_asset_hidden) }
+      expect(visible_to_other).to be false
+    end
 
     it 'earns "Add a new asset to the Asset Library" points on the Engagement Index' do
       @canvas.stop_masquerading

@@ -89,7 +89,7 @@ class SquiggyWhiteboardsPage
   button(:adv_search_button, id: 'adv-search-btn')
   button(:cancel_adv_search_button, id: 'cancel-adv-search-btn')
   button(:reset_adv_search_button, id: 'reset-adv-search-btn')
-  span(:no_results_msg, xpath: '//span[text()="No matching whiteboards found"]')
+  span(:wb_no_results_msg, xpath: '//span[text()="No matching whiteboards found"]')
 
   def simple_search(string)
     logger.info "Performing simple search for '#{string}'"
@@ -99,7 +99,7 @@ class SquiggyWhiteboardsPage
     wait_for_update_and_click simple_search_button_element
   end
 
-  def advanced_search(string, user, inc_deleted)
+  def wb_advanced_search(string, user, inc_deleted)
     logger.info 'Performing advanced search'
     wait_until(Utils.short_wait) { simple_search_button? || open_adv_search_button? || adv_search_button? }
     open_adv_search_button unless adv_search_keyword_input_element.visible?

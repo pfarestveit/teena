@@ -15,6 +15,8 @@ class SquiggyAsset
                 :url,
                 :visible
 
+  NO_PREVIEW_EXTENSIONS = %w(heic webp)
+
   def initialize(asset_data)
     asset_data.each { |k, v| public_send("#{k}=", v) }
     @comments ||= []
