@@ -22,7 +22,6 @@ describe 'The Engagement Index' do
     @canvas.log_in(@cal_net, test.admin.username, Utils.super_admin_password)
     @canvas.create_squiggy_course test
     @canvas.disable_tool(test.course, SquiggyTool::IMPACT_STUDIO) if test.course.impact_studio_url
-    test.course.impact_studio_url = nil
 
     @asset = student_2.assets.find &:file_name
     @asset.title = "#{@asset.title} #{test.id}"
@@ -86,6 +85,7 @@ describe 'The Engagement Index' do
   end
 
   it 'can be sorted by "Share" ascending' do
+    test.course.impact_studio_url = nil
     @engagement_index.sort_by_share_asc
     @engagement_index.wait_until(1) { @engagement_index.visible_sharing(test) == @engagement_index.visible_sharing(test).sort }
   end

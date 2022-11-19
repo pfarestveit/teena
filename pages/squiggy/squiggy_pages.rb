@@ -40,7 +40,8 @@ module SquiggyPages
     sleep Utils.click_wait
     input_el.click
     sleep Utils.click_wait
-    255.times { hit_backspace; hit_delete }
+    255.times { hit_backspace }
+    255.times {hit_delete }
   end
 
   def enter_squiggy_text(el, str)

@@ -14,6 +14,7 @@ describe 'Whiteboard' do
     @cal_net = Page::CalNetPage.new @driver
     @asset_library = SquiggyAssetLibraryDetailPage.new @driver
     @engagement_index = SquiggyEngagementIndexPage.new @driver
+    @impact_studio = SquiggyImpactStudioPage.new @driver
     @whiteboards = SquiggyWhiteboardPage.new @driver
 
     @canvas.log_in(@cal_net, @test.admin.username, Utils.super_admin_password)
@@ -144,11 +145,11 @@ describe 'Whiteboard' do
     end
 
     it 'can be reversed by an instructor' do
-      @whiteboards.advanced_search(@whiteboard_delete_2.title, @student_1, true)
+      @whiteboards.wb_advanced_search(@whiteboard_delete_2.title, @student_1, true)
       @whiteboards.open_whiteboard @whiteboard_delete_2
       @whiteboards.restore_whiteboard
       @whiteboards.close_whiteboard
-      @whiteboards.advanced_search(@whiteboard_delete_2.title, @student_1, false)
+      @whiteboards.wb_advanced_search(@whiteboard_delete_2.title, @student_1, false)
       @whiteboards.wait_until(Utils.short_wait) { @whiteboards.visible_whiteboard_titles == [@whiteboard_delete_2.title] }
     end
 
@@ -198,7 +199,7 @@ describe 'Whiteboard' do
       @whiteboards.wait_until(Utils.short_wait) do
         @whiteboards.list_view_whiteboard_elements.length == 3
         @whiteboards.visible_whiteboard_titles.sort == [@whiteboard_1.title, @whiteboard_2.title, @whiteboard_3.title].sort
-        !@whiteboards.no_results_msg?
+        !@whiteboards.wb_no_results_msg?
       end
     end
 
@@ -206,54 +207,54 @@ describe 'Whiteboard' do
       @whiteboards.simple_search 'foo'
       @whiteboards.wait_until(Utils.short_wait) do
         @whiteboards.list_view_whiteboard_elements.empty?
-        @whiteboards.no_results_msg?
+        @whiteboards.wb_no_results_msg?
       end
     end
 
     it 'allows a teacher to perform an advanced search by title that returns results' do
-      @whiteboards.advanced_search("#{@search_test_id} Non-unique Title", nil, false)
+      @whiteboards.wb_advanced_search("#{@search_test_id} Non-unique Title", nil, false)
       @whiteboards.wait_until(Utils.short_wait) do
         @whiteboards.list_view_whiteboard_elements.length == 2
         @whiteboards.visible_whiteboard_titles.sort == [@whiteboard_2.title, @whiteboard_3.title].sort
-        !@whiteboards.no_results_msg?
+        !@whiteboards.wb_no_results_msg?
       end
     end
 
     it 'allows a teacher to perform an advanced search by title that returns no results' do
-      @whiteboards.advanced_search('bar', nil, false)
+      @whiteboards.wb_advanced_search('bar', nil, false)
       @whiteboards.wait_until(Utils.short_wait) { @whiteboards.list_view_whiteboard_elements.empty? }
-      @whiteboards.wait_until(Utils.short_wait) { @whiteboards.no_results_msg? }
+      @whiteboards.wait_until(Utils.short_wait) { @whiteboards.wb_no_results_msg? }
     end
 
     it 'allows a teacher to perform an advanced search by collaborator that returns results' do
-      @whiteboards.advanced_search(nil, @student_1, false)
+      @whiteboards.wb_advanced_search(nil, @student_1, false)
       # Search could return whiteboards from other test runs, so just verify that those from this run are present too
       @whiteboards.wait_until(Utils.short_wait) { @whiteboards.list_view_whiteboard_elements.length > 3 }
       @whiteboards.wait_until(Utils.short_wait) { (@whiteboards.visible_whiteboard_titles & [@whiteboard_1.title, @whiteboard_2.title, @whiteboard_3.title]).length == 2 }
-      expect(@whiteboards.no_results_msg?).to be false
+      expect(@whiteboards.wb_no_results_msg?).to be false
     end
 
     it 'allows a teacher to perform an advanced search by collaborator that returns no results' do
-      @whiteboards.advanced_search(nil, @student_3, false)
+      @whiteboards.wb_advanced_search(nil, @student_3, false)
       @whiteboards.wait_until(Utils.short_wait) do
         !@whiteboards.visible_whiteboard_titles.include?(@whiteboard_1.title || @whiteboard_2.title || @whiteboard_3.title)
       end
     end
 
     it 'allows a teacher to perform an advanced search by title and collaborator that returns results' do
-      @whiteboards.advanced_search("#{@search_test_id} Unique Title", @student_1, false)
+      @whiteboards.wb_advanced_search("#{@search_test_id} Unique Title", @student_1, false)
       @whiteboards.wait_until(Utils.short_wait) do
         @whiteboards.list_view_whiteboard_elements.length == 3
         @whiteboards.visible_whiteboard_titles.sort == [@whiteboard_1.title, @whiteboard_2.title, @whiteboard_3.title].sort
-        !@whiteboards.no_results_msg?
+        !@whiteboards.wb_no_results_msg?
       end
     end
 
     it 'allows a teacher to perform an advanced search by title and collaborator that returns no results' do
-      @whiteboards.advanced_search("#{@search_test_id} Non-unique Title", @student_3, false)
+      @whiteboards.wb_advanced_search("#{@search_test_id} Non-unique Title", @student_3, false)
       @whiteboards.wait_until(Utils.short_wait) do
         @whiteboards.list_view_whiteboard_elements.empty?
-        @whiteboards.no_results_msg?
+        @whiteboards.wb_no_results_msg?
       end
     end
   end
@@ -322,8 +323,7 @@ describe 'Whiteboard' do
 
     it 'offers a collaborator link that opens in a new window' do
       @whiteboards.click_export_owner_link @whiteboard.collaborators.first
-      @asset_library.wait_for_assets @test
-      expect(@asset_library.asset_uploader_selected).to eql(@whiteboard.collaborators.first.full_name)
+      @impact_studio.wait_for_profile @whiteboard.collaborators.first
     end
 
     it 'as a new asset earns "Export a whiteboard to the Asset Library" points' do

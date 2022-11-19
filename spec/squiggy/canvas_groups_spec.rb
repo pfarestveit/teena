@@ -207,8 +207,8 @@ describe 'A SuiteC course' do
         @whiteboards.load_page @test
         @whiteboards.open_whiteboard @group_1_whiteboard
         @whiteboards.click_add_existing_asset
-        @whiteboards.advanced_search(@test.id, nil, nil, 'File', nil, nil, nil)
-        @whiteboards.wait_for_asset_results [@student_3_file, @student_1_file]
+        @whiteboards.advanced_search(@test.id, nil, nil, 'File', nil, @teacher_group_1, nil)
+        @whiteboards.wait_for_asset_results [@student_4.assets[0], @student_1.assets[0]]
       end
     end
 
