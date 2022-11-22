@@ -28,17 +28,27 @@ describe 'New asset' do
             @asset_detail.click_back_to_asset_library if @asset_detail.back_to_asset_library_button?
 
             if asset.file_name
+              @assets_list.click_upload_file_button
+              @assets_list.enter_file_path_for_upload asset
               if asset.size.to_f / 1024000 > 10
-                @assets_list.click_upload_file_button
-                @assets_list.enter_file_path_for_upload asset
                 asset_rejected = @assets_list.verify_block { @assets_list.upload_error_element.when_visible Utils.short_wait }
                 it "#{asset.title} belonging to #{student.full_name} cannot be uploaded to the Asset Library because it is over 10MB" do
                   expect(asset_rejected).to be true
                 end
-              elsif asset.file_name.include? 'webp'
-                # verify the validation
               else
-                @assets_list.upload_file_asset asset
+                format_warning = @assets_list.verify_block { @assets_list.unsupported_format_element.when_visible 3 }
+                if SquiggyAsset::NO_PREVIEW_EXTENSIONS.include? asset.file_name.split('.').last
+                  it "#{asset.title} belonging to #{student.full_name} triggers a no-preview warning" do
+                    expect(format_warning).to be true
+                  end
+                else
+                  it "#{asset.title} belonging to #{student.full_name} triggers no no-preview warning" do
+                    expect(format_warning).to be false
+                  end
+                end
+                @assets_list.enter_asset_metadata asset
+                @assets_list.click_add_files_button
+                @assets_list.get_asset_id asset
               end
             else
               @assets_list.add_link_asset asset

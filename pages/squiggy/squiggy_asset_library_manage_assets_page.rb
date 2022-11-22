@@ -10,17 +10,12 @@ class SquiggyAssetLibraryManageAssetsPage < SquiggyAssetLibraryListViewPage
   # SILOS
 
   text_field(:silo_cbx, id: 'protect_assets_per_section_checkbox')
+  div(:silo_cbx_clickable, xpath: '//input[@id="protect_assets_per_section_checkbox"]/following-sibling::div')
 
   def silo_sections
     logger.info 'Yes to the silos!'
     silo_cbx_element.when_present Utils.short_wait
-    js_click silo_cbx_element unless silo_cbx_element.attribute('aria-checked') == 'true'
-  end
-
-  def un_silo_sections
-    logger.info 'No to the silos!'
-    silo_cbx_element.when_present Utils.short_wait
-    js_click silo_cbx_element if silo_cbx_element.attribute('aria-checked') == 'true'
+    silo_cbx_clickable_element.click
   end
 
   # CUSTOM CATEGORIES

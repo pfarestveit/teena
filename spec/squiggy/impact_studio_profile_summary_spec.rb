@@ -90,7 +90,7 @@ describe 'Impact Studio' do
         @impact_studio.link_element(text: '#BitterTogether').click
         @asset_library.wait_until(Utils.short_wait) { @asset_library.title == 'Asset Library' }
         @asset_library.switch_to_canvas_iframe
-        @asset_library.no_search_results_element.when_visible Utils.short_wait
+        @asset_library.no_results_msg_element.when_visible Utils.short_wait
       end
 
       it 'allows the user to add a maximum of X characters to a description' do
