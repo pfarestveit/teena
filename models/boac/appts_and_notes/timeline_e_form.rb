@@ -4,7 +4,9 @@ class TimelineEForm < TimelineRecord
                 :term,
                 :course,
                 :action,
-                :status
+                :status,
+                :units_taken,
+                :requested_units_taken
 
   def initialize(e_form_data)
     e_form_data.each { |k, v| public_send("#{k}=", v) }

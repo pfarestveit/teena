@@ -755,16 +755,17 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
                     primary_section = student_data[:api].course_primary_section(course)
                     primary_data = student_data[:api].sis_section_data(primary_section)
                     if primary_data[:incomplete_code] && !primary_data[:incomplete_code].empty?
+                      grade = student_data[:api].incomplete_grade_outcome course_sis_data[:grading_basis]
                       lapse_date = primary_data[:incomplete_lapse_date]
                       lapse_date = lapse_date && DateTime.strptime(lapse_date, "%Y- %m-%d %H:%M:%S").strftime("%b %-d, %Y")
                       if primary_data[:incomplete_frozen] == 'Y'
                         it "shows the incomplete grade alert for #{test_case}" do
-                          expect(expanded_course_data[:incomplete_alert]).to include('Frozen incomplete grade will not lapse into a failing grade')
+                          expect(expanded_course_data[:incomplete_alert]).to include("Frozen incomplete grade will not lapse into #{grade}")
                         end
                       elsif primary_data[:incomplete_frozen] == 'N'
                         if primary_data[:incomplete_code] == 'I'
                           it "shows the incomplete grade alert for #{test_case}" do
-                            expect(expanded_course_data[:incomplete_alert]).to include("Incomplete grade scheduled to become a failing grade on #{lapse_date}")
+                            expect(expanded_course_data[:incomplete_alert]).to include("Incomplete grade scheduled to become #{grade} on #{lapse_date}")
                           end
                         elsif primary_data[:incomplete_code] == 'L'
                           it "shows the incomplete grade alert for #{test_case}" do

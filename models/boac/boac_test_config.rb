@@ -160,7 +160,7 @@ class BOACTestConfig < TestConfig
                        @cohort_members[0..(config - 1)]
 
                      elsif !opts[:include_inactive]
-                       @students.select { |s| s.status == 'active' }[0..(config - 1)]
+                       @students.shuffle.select { |s| s.status == 'active' }[0..(config - 1)]
 
                      else
                        # Running tests against a random set of students, plus optional selected students
@@ -407,7 +407,7 @@ class BOACTestConfig < TestConfig
   # Config for advising note content testing
   def note_content
     set_base_configs BOACDepartments::L_AND_S
-    set_test_students(CONFIG['notes_max_users'], {with_notes: true})
+    set_test_students(CONFIG['notes_max_users'], {with_notes: true, include_inactive: true})
   end
 
   # Config for page navigation testing
@@ -464,7 +464,7 @@ class BOACTestConfig < TestConfig
   # Config for note search tests
   def search_notes
     set_base_configs
-    set_test_students(CONFIG['search_max_users'], {with_notes: true})
+    set_test_students(CONFIG['search_max_users'], {with_notes: true, include_inactive: true})
   end
 
   # Config for student search tests

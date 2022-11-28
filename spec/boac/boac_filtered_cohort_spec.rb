@@ -88,7 +88,14 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
         @cohort_page.load_cohort @cohort
       end
 
+      it 'shows the advisor a FERPA reminder when exporting a list of students in a cohort' do
+        @cohort_page.click_export_list
+        title = 'FERPA (Privacy Disclosure) - Office of the Registrar'
+        expect(@cohort_page.external_link_valid?(@cohort_page.ferpa_warning_link_element, title)).to be true
+      end
+
       it "allows the advisor to export a non-empty list of students in a cohort" do
+        @cohort_page.click_cancel_export_list
         parsed_csv = @cohort_page.export_student_list @cohort
         @cohort_page.verify_student_list_default_export(@cohort.members, parsed_csv)
       end

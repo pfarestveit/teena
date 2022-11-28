@@ -13,6 +13,7 @@ class BOACApiAdminPage
   end
 
   def refresh_cache
+    logger.info 'Refreshing BOA cache'
     navigate_to "#{BOACUtils.api_base_url}/api/admin/cachejob/refresh"
     parse_json
     wait_until(1) { @parsed['progress']['end'].nil? }
@@ -20,6 +21,7 @@ class BOACApiAdminPage
     begin
       sleep Utils.short_wait
       tries -= 1
+      logger.info 'Checking if refresh is done'
       load_cachejob
       parse_json
       wait_until(1) { !@parsed['progress']['end'].nil? }

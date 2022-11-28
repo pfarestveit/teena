@@ -194,7 +194,7 @@ module BOACStudentPageAdvisingNote
     updated_el = div_element(id: "expanded-note-#{e_form.id}-updated-at")
     term_el = e_form_data_el(e_form, 'Term')
     course_el = e_form_data_el(e_form, 'Course')
-    action_el = e_form_data_el(e_form, 'Late Action')
+    action_el = e_form_data_el(e_form, 'Action')
     form_id_el = e_form_data_el(e_form, 'Form ID')
     date_init_el = e_form_data_el(e_form, 'Date Initiated')
     status_el = e_form_data_el(e_form, 'Form Status ')
@@ -358,12 +358,12 @@ module BOACStudentPageAdvisingNote
   # Contact Type
 
   def contact_type_radio(note)
-    radio_button_element(xpath: "//input[@type='radio'][@value='#{note.type}']")
+    radio_button_element(xpath: "//input[@type='radio'][@value='#{note.type}']/..")
   end
 
   def select_contact_type(note)
     logger.debug "Selecting contact type '#{note.type}'"
-    js_click contact_type_radio(note)
+    contact_type_radio(note).click
   end
 
   # Set Date
@@ -373,7 +373,8 @@ module BOACStudentPageAdvisingNote
   def enter_set_date(note)
     logger.debug "Entering edited note set date '#{note.set_date}'"
     wait_for_update_and_click set_date_input_element
-    50.times { hit_backspace; hit_delete }
+    50.times { hit_backspace }
+    50.times { hit_delete }
     set_date_input_element.send_keys note.set_date.strftime('%m/%d/%Y') if note.set_date
     3.times { hit_tab }
   end

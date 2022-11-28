@@ -391,26 +391,39 @@ class NessieTimelineUtils < NessieUtils
                     eform_status,
                     requested_action,
                     grading_basis_description,
-                    requested_grading_basis_description
+                    requested_grading_basis_description,
+                    units_taken,
+                    requested_units_taken
     FROM sis_advising_notes.student_late_drop_eforms
     WHERE sid = '#{student.sis_id}'"
     results = query_pg_db(NessieUtils.nessie_pg_db_credentials, query)
     results.map do |r|
       req_action = r['requested_action']
-      action = if req_action == 'Late Grading Basis Change'
+      units = r['units_taken']
+      req_units = r['requested_units_taken']
+      action = case req_action
+               when 'Late Grading Basis Change'
                  "#{req_action} from #{r['grading_basis_description']} to #{r['requested_grading_basis_description']}"
+               when 'Unit Change'
+                 "#{req_action} from #{units} unit#{+ 's' unless units == '1.0'} to #{req_units} unit#{+ 's' unless req_units == '1.0'}"
                else
                  req_action
                end
+      status = r['eform_status']
+      subject = "eForm: #{req_action} — #{status}"
+
       TimelineEForm.new id: r['id'],
                         source: TimelineRecordSource::E_FORM,
                         term: sis_code_to_term_name(r['term_id']),
                         course: "#{r['section_id']} #{r['course_display_name']} - #{r['course_title']} #{r['section_num']}",
                         created_date: Time.parse(r['created_at'].to_s).utc.localtime,
                         updated_date: Time.parse(r['updated_at'].to_s).utc.localtime,
+                        subject: subject,
                         action: action,
                         form_id: r['eform_id'],
-                        status: r['eform_status']
+                        status: status,
+                        units_taken: r['units_taken'],
+                        requested_units_taken: r['requested_units_taken']
     end
   end
 

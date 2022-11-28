@@ -133,7 +133,8 @@ class NessieFilterUtils < NessieUtils
   end
 
   def self.minor_cond(filter, conditions_list)
-    conditions_list << "student.minors.minor IN (#{in_op filter.minor})" if filter.minor&.any?
+    conditions_list << "student.minors.minor IN (#{in_op filter.minor})
+                    AND student.student_profile_index.level != 'GR'" if filter.minor&.any?
   end
 
   def self.midpoint_deficient_cond(filter, conditions_list)

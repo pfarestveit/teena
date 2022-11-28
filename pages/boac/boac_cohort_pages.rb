@@ -7,6 +7,8 @@ module BOACCohortPages
 
   h1(:results, xpath: '//h1')
   button(:export_list_button, id: 'export-student-list-button')
+  link(:ferpa_warning_link, xpath: '//a[contains(text(), "Office of the Registrar\'s FERPA guide")]')
+  button(:export_list_cxl_button, id: 'export-list-cancel')
   button(:history_button, id: 'show-cohort-history-button')
 
   def cohort_heading(cohort)
@@ -17,6 +19,16 @@ module BOACCohortPages
     sleep 1
     results_element.when_visible Utils.short_wait
     results.split[0].to_i
+  end
+
+  def click_export_list
+    wait_for_element(export_list_button_element, Utils.medium_wait)
+    wait_until(3) { !export_list_button_element.disabled? }
+    wait_for_update_and_click export_list_button_element
+  end
+
+  def click_cancel_export_list
+    wait_for_update_and_click export_list_cxl_button_element
   end
 
   # SAVE/CREATE

@@ -20,9 +20,7 @@ module BOACCohortStudentPages
   def export_student_list(cohort)
     logger.info "Exporting student list with default columns for #{cohort.instance_of?(FilteredCohort) ? 'cohort' : 'group'} ID '#{cohort.id}'"
     Utils.prepare_download_dir
-    wait_for_element(export_list_button_element, Utils.medium_wait)
-    wait_until(3) { !export_list_button_element.disabled? }
-    wait_for_update_and_click export_list_button_element
+    click_export_list
     if (cohort.instance_of?(FilteredCohort) && !cohort.search_criteria.instance_of?(CohortAdmitFilter)) || cohort.instance_of?(CuratedGroup)
       wait_for_update_and_click confirm_export_list_button_element
     end
