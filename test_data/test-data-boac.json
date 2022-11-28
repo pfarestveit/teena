@@ -2,6 +2,13 @@
     "filters": {
         "students": [
             {
+                "minors": [
+                    {
+                        "minor": "Aerospace Engineering UG"
+                    }
+                ]
+            },
+            {
                 "graduate_plans": [
                     {
                         "graduate_plan": "History PhD"
@@ -17,13 +24,6 @@
                 "majors": [
                     {
                         "major": "Industrial Eng & Ops Rsch BS"
-                    }
-                ]
-            },
-            {
-                "minors": [
-                    {
-                        "minor": "History UG"
                     }
                 ]
             },

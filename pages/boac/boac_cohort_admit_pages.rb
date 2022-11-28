@@ -7,16 +7,26 @@ module BOACCohortAdmitPages
   include BOACListViewAdmitPages
   include BOACCohortPages
 
+  button(:export_ferpa_confirm_button, id: 'ferpa-reminder-confirm')
+  button(:export_ferpa_cancel_button, id: 'ferpa-reminder-cancel')
+
   def sort_by_cs_id
     sort_by 'cs_empl_id'
+  end
+
+  def click_export_ferpa_confirm
+    wait_for_update_and_click export_ferpa_confirm_button_element
+  end
+
+  def click_export_ferpa_cancel
+    wait_for_update_and_click export_ferpa_cancel_button_element
   end
 
   def export_admit_list(cohort)
     logger.info "Exporting admit list with default columns for #{cohort.instance_of?(FilteredCohort) ? 'cohort' : 'group'} ID '#{cohort.id}'"
     Utils.prepare_download_dir
-    wait_for_element(export_list_button_element, Utils.medium_wait)
-    wait_until(3) { !export_list_button_element.disabled? }
-    wait_for_update_and_click export_list_button_element
+    click_export_list
+    click_export_ferpa_confirm
     csv_file_path = "#{Utils.download_dir}/#{cohort.name + '-' if cohort.id}students-#{Time.now.strftime('%Y-%m-%d')}_*.csv"
     wait_until(20) { Dir[csv_file_path].any? }
     CSV.table Dir[csv_file_path].first

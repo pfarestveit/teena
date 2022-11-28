@@ -445,8 +445,13 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
     context 'when editing degree progress' do
 
       before(:all) do
-        @advisor = auth_users.find { |u| u.active && (u.depts.length == 1) && u.degree_progress_perm && u.degree_progress_automated }
-        @orig_perm = @advisor.degree_progress_perm
+        @advisor = auth_users.find do |u|
+          u.active &&
+            (u.depts.length == 1) &&
+            u.degree_progress_perm &&
+            u.degree_progress_automated
+        end
+        @orig_perm = DegreeProgressPerm::PERMS.find { |p| p == @advisor.degree_progress_perm }
         @homepage.log_out
         @homepage.dev_auth
         @pax_manifest_page.load_page

@@ -312,6 +312,19 @@ class BOACApiStudentPage
     }
   end
 
+  def incomplete_grade_outcome(grading_basis)
+    case grading_basis
+    when 'GRD', 'Letter'
+      'an F'
+    when 'NON', 'SUS'
+      'a U'
+    when 'FRZ'
+      'a failing grade'
+    else
+      'a NP'
+    end
+  end
+
   # Courses that are dropped don't display on the cohort page.
   def current_non_dropped_course_codes(term)
     courses = []

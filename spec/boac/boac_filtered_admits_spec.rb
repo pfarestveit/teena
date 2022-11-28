@@ -47,7 +47,14 @@ if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
           end
         end
 
+        it 'shows a FERPA reminder and link when the advisor exports a list of all admits' do
+          @cohort_page.click_export_list
+          title = 'FERPA (Privacy Disclosure) - Office of the Registrar'
+          expect(@cohort_page.external_link_valid?(@cohort_page.ferpa_warning_link_element, title)).to be true
+        end
+
         it 'allows the advisor to export a list of all admits' do
+          @cohort_page.click_export_ferpa_cancel
           @all_admits.export_csv = @cohort_page.export_admit_list @all_admits
           @cohort_page.verify_admits_present_in_export(all_admit_data, @all_admits.member_data, @all_admits.export_csv)
         end

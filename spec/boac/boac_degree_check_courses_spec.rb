@@ -14,7 +14,7 @@ unless ENV['DEPS']
 
       # TEST DATA
 
-      @student = ENV['UIDS'] ? (test.students.find { |s| s.uid == ENV['UIDS'] }) : test.cohort_members.shuffle.first
+      @student = ENV['UIDS'] ? (test.students.find { |s| s.uid == ENV['UIDS'] }) : test.cohort_members.first
       @degree_check = DegreeProgressChecklist.new(template, @student)
 
       @cats_with_courses = @degree_check.categories.select { |cat| cat.course_reqs.any? }

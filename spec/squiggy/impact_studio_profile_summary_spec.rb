@@ -26,6 +26,9 @@ describe 'Impact Studio' do
   describe 'profile summary' do
 
     before(:all) do
+      @asset = SquiggyAsset.new title: "Asset #{test.id}",
+                                url: 'www.google.com',
+                                description: 'BitterTogether'
       @canvas.masquerade_as(student_1, test.course)
       @impact_studio.load_own_profile(test, student_1)
     end
@@ -49,8 +52,7 @@ describe 'Impact Studio' do
 
         before(:all) do
           @asset_library.load_page test
-          @asset_library.add_link_asset SquiggyAsset.new title: "Asset #{test.id}",
-                                                         url: 'www.google.com'
+          @asset_library.add_link_asset @asset
         end
 
         it 'shows the activity date' do
@@ -90,7 +92,7 @@ describe 'Impact Studio' do
         @impact_studio.link_element(text: '#BitterTogether').click
         @asset_library.wait_until(Utils.short_wait) { @asset_library.title == 'Asset Library' }
         @asset_library.switch_to_canvas_iframe
-        @asset_library.no_results_msg_element.when_visible Utils.short_wait
+        @asset_library.wait_for_asset_results [@asset]
       end
 
       it 'allows the user to add a maximum of X characters to a description' do
