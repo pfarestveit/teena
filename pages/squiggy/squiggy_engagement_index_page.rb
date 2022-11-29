@@ -369,6 +369,7 @@ class SquiggyEngagementIndexPage
   elements(:disabled_activity_title, :cell, xpath: '//table[@id="disabled-activities-table"]//td[@class="activity-title"]')
 
   def click_points_config
+    sleep 1
     wait_for_update_and_click points_config_button_element
     wait_until(Utils.short_wait) { enabled_activity_title_elements.any? }
     sleep 1

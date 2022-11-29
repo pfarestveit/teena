@@ -18,7 +18,7 @@ class BOACFlightDataRecorderPage
   div(:notes_count_boa_with_attachments, id: 'notes-count-boa-with-attachments')
   div(:notes_count_boa_with_topics, id: 'notes-count-boa-with-topics')
   div(:notes_count_sis, id: 'notes-count-sis')
-  div(:notes_count_asc, xpath: '(//div[@id="notes-count-asc"])[2]')
+  div(:notes_count_asc, id: 'notes-count-asc')
   div(:notes_count_ei, id: 'notes-count-ei')
 
   # Returns the total BOA note count

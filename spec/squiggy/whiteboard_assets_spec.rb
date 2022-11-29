@@ -138,6 +138,7 @@ describe 'Whiteboard Add Asset' do
     end
 
     it 'allows the user to add its own assets' do
+      @whiteboards.hit_escape
       @whiteboards.add_existing_assets [@student_1_file]
       @whiteboards.wait_until(Utils.short_wait) do
         @whiteboards.open_original_asset_link_element.attribute('href').include? @student_1_file.id

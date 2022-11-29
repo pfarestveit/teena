@@ -180,7 +180,6 @@ class SquiggyWhiteboardPage < SquiggyWhiteboardsPage
   # ASSETS ON WHITEBOARD
 
   div(:whiteboard_container, id: 'whiteboard-viewport')
-  button(:add_asset_button, id: 'toolbar-add-asset')
   button(:use_existing_button, id: 'toolbar-add-existing-assets')
   button(:upload_new_button, id: 'toolbar-upload-new-asset')
   button(:add_link_button, id: 'toolbar-asset-add-link')
@@ -192,7 +191,6 @@ class SquiggyWhiteboardPage < SquiggyWhiteboardsPage
   button(:delete_asset_button, id: 'delete-btn')
 
   def click_add_existing_asset
-    wait_for_update_and_click add_asset_button_element unless use_existing_button_element.visible?
     wait_for_update_and_click_js use_existing_button_element
   end
 
@@ -203,7 +201,7 @@ class SquiggyWhiteboardPage < SquiggyWhiteboardsPage
 
   def select_existing_assets(assets)
     sleep 1
-    assets.each { |asset| wait_for_update_and_click text_field_element(id: "asset-#{asset.id}") }
+    assets.each { |asset| wait_for_load_and_click_js text_field_element(id: "asset-#{asset.id}") }
     wait_for_update_and_click_js save_button_element
     save_button_element.when_not_present Utils.short_wait
   end
@@ -215,11 +213,9 @@ class SquiggyWhiteboardPage < SquiggyWhiteboardsPage
   def click_add_new_asset(asset)
     hit_escape
     if asset.file_name
-      wait_for_update_and_click add_asset_button_element unless upload_new_button?
-      wait_for_update_and_click upload_new_button_element
+      wait_for_update_and_click_js upload_new_button_element
     else
-      wait_for_update_and_click add_asset_button_element unless add_link_button?
-      wait_for_update_and_click add_link_button_element
+      wait_for_update_and_click_js add_link_button_element
     end
   end
 
