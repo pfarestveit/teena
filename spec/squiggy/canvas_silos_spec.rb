@@ -262,8 +262,7 @@ describe 'Canvas section silo-ing' do
         end
 
         it 'offers assets from the student\'s section for adding to a whiteboard' do
-          @whiteboards.hit_escape
-          @whiteboards.click_cancel_button
+          @whiteboards.load_page @test
           @whiteboards.create_and_open_whiteboard @section_1_whiteboard
           @whiteboards.click_add_existing_asset
           @whiteboards.wait_until(Utils.short_wait) { @whiteboards.add_asset_cbx_elements.any? }
@@ -371,7 +370,7 @@ describe 'Canvas section silo-ing' do
 
       context 'the student' do
 
-        before(:all) { @canvas.masquerade_as @student_3 }
+        before(:all) { @canvas.masquerade_as(@student_3, @test.course) }
 
         it('can reach its own assets') { @asset_library.load_asset_detail(@test, @student_3.assets.first) }
 
@@ -434,7 +433,8 @@ describe 'Canvas section silo-ing' do
         it 'can no longer view the student\'s assets via a link on an asset comment' do
           @asset_library.load_asset_detail(@test, @section_1_and_2_whiteboard.asset_exports.first)
           @asset_library.click_commenter_link @comment
-          @asset_library.wait_for_asset_results @section_1_and_2_whiteboard.asset_exports
+          assets = (@section_1_and_2_whiteboard.asset_exports + @section_1_whiteboard.asset_exports).sort_by(&:id).reverse
+          @asset_library.wait_for_asset_results assets
         end
 
         it 'can no longer see the student\'s EI score' do

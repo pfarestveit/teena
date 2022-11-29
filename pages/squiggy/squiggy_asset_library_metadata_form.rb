@@ -83,6 +83,7 @@ module SquiggyAssetLibraryMetadataForm
 
   def enter_asset_metadata(asset)
     logger.info "Entering title '#{asset.title}', category '#{asset.category}', and description '#{asset.description}'"
+    sleep 1
     enter_squiggy_text(title_input_element, asset.title.to_s)
     enter_squiggy_text(description_input_element, asset.description.to_s)
     if asset.category
