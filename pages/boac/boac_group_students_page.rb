@@ -27,7 +27,7 @@ class BOACGroupStudentsPage
   # @param cohort [FilteredCohort]
   # @return [Element]
   def linked_cohort_el(cohort)
-    link_element(xpath: "//a[contains(@id, 'referencing-cohort-')][text()=\"#{cohort.name}\"]")
+    link_element(xpath: "//a[contains(@id, 'referencing-cohort-')][contains(., \"#{cohort.name}\")]")
   end
 
   # Returns the element containing the 'NO!' message when attempting to delete a group in use as a cohort filter
