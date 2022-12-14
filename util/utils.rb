@@ -363,7 +363,7 @@ class Utils
   def self.test_results(app_and_version)
     results_dir = File.join(output_dir, 'test-results')
     FileUtils.mkdir_p(results_dir) unless File.exist?(results_dir)
-    File.join(results_dir, "test-results-#{app_and_version}-#{Time.now.to_i}.log")
+    File.join(results_dir, "test-results-#{app_and_version}.log")
   end
 
   # TEST ACCOUNTS

@@ -180,7 +180,7 @@ module BOACCohortStudentPages
           activity: cell_element(xpath: "#{row_xpath}[#{i + 1}]/td[2]").text,
           mid_grade: cell_element(xpath: "#{row_xpath}[#{i + 1}]/td[3]").text,
           mid_flag: mid_flag_el.exists?,
-          final_grade: cell_element(xpath: "#{row_xpath}[#{i + 1}]/td[4]").text,
+          final_grade: cell_element(xpath: "#{row_xpath}[#{i + 1}]/td[4]/span").text,
           final_flag: final_flag_el.exists?
         }
       end
