@@ -441,51 +441,5 @@ if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
         end
       end
     end
-
-    context 'when editing degree progress' do
-
-      before(:all) do
-        @advisor = auth_users.find do |u|
-          u.active &&
-            (u.depts.length == 1) &&
-            u.degree_progress_perm &&
-            u.degree_progress_automated
-        end
-        @orig_perm = DegreeProgressPerm::PERMS.find { |p| p == @advisor.degree_progress_perm }
-        @homepage.log_out
-        @homepage.dev_auth
-        @pax_manifest_page.load_page
-        @pax_manifest_page.search_for_advisor @advisor
-        @pax_manifest_page.click_edit_user @advisor
-      end
-
-      after(:all) { @pax_manifest_page.click_cancel_button if @pax_manifest_page.cancel_user_button? }
-
-      it 'allows an admin to set automate-degree-progress-perms to true' do
-        @pax_manifest_page.select_deg_prog_option @advisor
-        @pax_manifest_page.click_automate_deg_prog
-        @pax_manifest_page.save_user
-        @api_admin_page.refresh_cache
-        @pax_manifest_page.load_page
-        @pax_manifest_page.search_for_advisor @advisor
-        @pax_manifest_page.click_edit_user @advisor
-        @pax_manifest_page.automate_deg_prog_cbx_element.when_present Utils.short_wait
-        expect(@pax_manifest_page.automate_deg_prog_cbx_element.selected?).to be true
-        expect(@pax_manifest_page.deg_prog_select).to eql(@orig_perm.desc)
-      end
-
-      it 'allows an admin to set automate-degree-progress-perms to false' do
-        @advisor.degree_progress_perm = DegreeProgressPerm::PERMS.find { |p| p != @orig_perm }
-        @pax_manifest_page.click_automate_deg_prog
-        @pax_manifest_page.save_user
-        @api_admin_page.refresh_cache
-        @pax_manifest_page.load_page
-        @pax_manifest_page.search_for_advisor @advisor
-        @pax_manifest_page.click_edit_user @advisor
-        @pax_manifest_page.automate_deg_prog_cbx_element.when_present Utils.short_wait
-        expect(@pax_manifest_page.automate_deg_prog_cbx_element.selected?).to be false
-        expect(@pax_manifest_page.deg_prog_select).to eql(@orig_perm.desc)
-      end
-    end
   end
 end

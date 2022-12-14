@@ -16,7 +16,7 @@ module BOACCohortPages
   end
 
   def results_count
-    sleep 1
+    sleep 2
     results_element.when_visible Utils.short_wait
     results.split[0].to_i
   end

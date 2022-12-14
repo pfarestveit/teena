@@ -14,7 +14,6 @@ echo "  For example,"
 echo "    export TEENA__TOOL=\"SuiteC\""
 echo "    export TEENA__TOOL_VERSION=\"3.4\""
 echo "    export TEENA__TEST_SUITE_KEYWORD=\"whiteboard\""
-echo "    export TEENA__LOG_FILENAME_SNIPPET=\"whiteboard_mgmt\""; echo
 echo "------------------------"; echo
 
 options=("BOA" "Junction" "SuiteC")
@@ -26,8 +25,6 @@ function set_tool_being_tested {
         "BOA")
             tool_being_tested='boac'
             friendly_tool_name=${options[0]}
-            test_dept=$(grep '^  test_dept' "${HOME}/.webdriver-config/settings.yml" | awk '{print $NF}')
-            echo; echo "Boa will be tested with test_dept: ${test_dept}"; echo
             ;;
         "Junction")
             tool_being_tested='junction'
@@ -47,7 +44,6 @@ function set_tool_being_tested {
 tool="${TEENA__TOOL}"
 version="${TEENA__TOOL_VERSION}"
 test_suite="${TEENA__TEST_SUITE_KEYWORD}"
-log_filename_snippet="${TEENA__LOG_FILENAME_SNIPPET}"
 
 # ----
 
@@ -87,17 +83,6 @@ fi
 
 # ----
 
-if [ -z "${log_filename_snippet}" ]
-then
-    echo; echo "Enter arbitrary keyword (e.g., 'COENG') to add to log file name. Hit return to skip."
-    echo; echo -n "    > "
-
-    read log_filename_snippet
-    echo; echo
-fi
-
-# ----
-
 echo
 echo "Enter your username. Hit return to skip."
 echo
@@ -118,7 +103,7 @@ read -s password
 
 DATE=$(date '+%Y-%m-%d-%H%M%S')
 
-[[ "${log_filename_snippet}" ]] && suffix="${log_filename_snippet}-${DATE}" || suffix="${DATE}"
+suffix="${DATE}"
 
 summary="${tool_being_tested}-v${version}-${test_suite:-'all'}-${suffix}"
 

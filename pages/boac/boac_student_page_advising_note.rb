@@ -386,7 +386,7 @@ module BOACStudentPageAdvisingNote
   # Clicks the save note edit button
   def click_save_note_edit
     logger.debug 'Clicking the edit note Save button'
-    wait_for_update_and_click edit_note_save_button_element
+    wait_for_update_and_click_js edit_note_save_button_element
   end
 
   # Cancel
