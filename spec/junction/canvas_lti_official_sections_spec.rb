@@ -425,7 +425,7 @@ describe 'bCourses Official Sections tool' do
 
       # Create and upload SIS import with a fake section name
       @canvas.set_course_sis_id site[:course]
-      section_id = "SEC:#{JunctionUtils.term_code}-#{section.id}"
+      section_id = "SEC:#{Utils.term_name_to_hyphenated_code site[:course].term}-#{section.id}"
       section_name = "#{site[:course].code} FAKE LABEL"
       csv = File.join(Utils.initialize_test_output_dir, "section-#{site[:course].code}.csv")
       CSV.open(csv, 'wb') { |heading| heading << %w(section_id course_id name status start_date end_date) }
@@ -436,7 +436,7 @@ describe 'bCourses Official Sections tool' do
       # Verify the tool warns of section name mismatch
       @canvas.masquerade_as site[:teacher]
       @official_sections_page.load_embedded_tool site[:course]
-      @official_sections_page.current_sections_table.when_visible Utils.long_wait
+      @official_sections_page.current_sections_table.when_visible Utils.medium_wait
       @official_sections_page.click_edit_sections
       update_msg_present = @official_sections_page.section_name_msg_element.when_visible(Utils.short_wait)
       it "shows a section name mismatch message for section #{section.id} on course site #{site[:course].site_id}" do

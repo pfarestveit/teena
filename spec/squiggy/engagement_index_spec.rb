@@ -13,7 +13,7 @@ describe 'The Engagement Index' do
   before(:all) do
     @driver = Utils.launch_browser
     @canvas = Page::CanvasPage.new @driver
-    @cal_net= Page::CalNetPage.new @driver
+    @cal_net = Page::CalNetPage.new @driver
     @assets_list = SquiggyAssetLibraryListViewPage.new @driver
     @asset_detail = SquiggyAssetLibraryDetailPage.new @driver
     @engagement_index = SquiggyEngagementIndexPage.new @driver
@@ -25,7 +25,7 @@ describe 'The Engagement Index' do
 
     @asset = student_2.assets.find &:file_name
     @asset.title = "#{@asset.title} #{test.id}"
-    
+
     # Add asset to library
     @canvas.masquerade_as(student_0, test.course)
     @engagement_index.load_page test
@@ -171,47 +171,12 @@ describe 'The Engagement Index' do
     expect(@engagement_index.user_info_boxplot?).to be false
   end
 
-  # TEACHERS AND STUDENTS
-
-  describe 'Canvas syncing' do
-
-    before(:all) do
-      @canvas.stop_masquerading
-      @canvas.remove_users_from_course(test.course, [teacher, student_3])
-    end
-
-    it 'removes users from the Engagement Index if they have been removed from the course site' do
-      @engagement_index.wait_for_removed_user_sync(test, [teacher, student_3])
-    end
-
-    [teacher, student_3].each do |user|
-
-      it "prevents #{user.role} UID #{user.uid} from reaching the Engagement Index if the user has been removed from the course site" do
-        @canvas.masquerade_as(user, test.course)
-        @engagement_index.navigate_to test.course.engagement_index_url
-        @canvas.access_denied_msg_element.when_visible Utils.short_wait
-      end
-
-      it "prevents #{user.role} UID #{user.uid} from reaching the Asset Library if the user has been removed from the course site" do
-        @assets_list.navigate_to test.course.asset_library_url
-        @canvas.access_denied_msg_element.when_visible Utils.short_wait
-      end
-
-      it "removes #{user.role} UID #{user.uid} from the Asset Library if the user has been removed from the course site" do
-        @canvas.stop_masquerading
-        @assets_list.load_page test
-        @assets_list.open_advanced_search
-        @assets_list.click_uploader_select
-        expect(@assets_list.asset_uploader_options).not_to include(user.full_name)
-      end
-    end
-  end
-
   # COLLABORATION
 
   describe '"looking for collaborators"' do
 
     before(:all) do
+      @canvas.stop_masquerading
       @canvas.enable_tool(test.course, SquiggyTool::IMPACT_STUDIO)
       test.course.impact_studio_url = @canvas.click_tool_link SquiggyTool::IMPACT_STUDIO
     end
@@ -257,6 +222,162 @@ describe 'The Engagement Index' do
         it 'shows a collaborate button on the Engagement Index' do
           @engagement_index.collaboration_button_element(student_1).when_present Utils.short_wait
         end
+      end
+    end
+  end
+
+  describe 'points configuration' do
+
+    before(:all) do
+      @canvas.masquerade_as student_3
+      @assets_list.load_page test
+      @assets_list.upload_file_asset student_3.assets.find(&:file_name)
+      @add_asset_activity = SquiggyActivity::ADD_ASSET_TO_LIBRARY
+
+      @canvas.masquerade_as teacher
+      @engagement_index.load_scores test
+      @engagement_index.click_points_config
+    end
+
+    SquiggyActivity::ACTIVITIES.each do |squigtivity|
+      it "by default shows '#{squigtivity.title}' worth default points" do
+        expect(@engagement_index.activity_points squigtivity).to eql(squigtivity.points)
+      end
+    end
+
+    it 'allows a teacher to cancel disabling an activity' do
+      @engagement_index.click_edit_points_config
+      @engagement_index.click_disable_activity @add_asset_activity
+      @engagement_index.click_cancel_config_edit
+      expect(@engagement_index.enabled_activity_titles).to include(@add_asset_activity.title)
+    end
+
+    it 'allows a teacher to disable an activity type' do
+      @engagement_index.disable_activity @add_asset_activity
+      @engagement_index.wait_until(3) { !@engagement_index.enabled_activity_titles.include? @add_asset_activity.title }
+      @engagement_index.wait_until(3) { @engagement_index.disabled_activity_titles.include? @add_asset_activity.title }
+    end
+
+    it 'subtracts points retroactively for a disabled activity' do
+      @engagement_index.click_back_to_index
+      expect(@engagement_index.user_score(test, student_3)).to eql(0)
+    end
+
+    it 'removes a disabled activity from the CSV export' do
+      csv = @engagement_index.download_csv test
+      activity = csv.find do |r|
+        r[:user_name] == student_3.full_name &&
+          r[:action] == @add_asset_activity.type &&
+          r[:score] == @add_asset_activity.points
+      end
+      expect(activity).to be_falsey
+    end
+
+    it 'disabled activities are not visible to a student' do
+      @canvas.masquerade_as(student_3, test.course)
+      @engagement_index.load_page test
+      @engagement_index.share_score
+      @engagement_index.click_points_config
+      expect(@engagement_index.enabled_activity_titles).not_to include(@add_asset_activity.title)
+      expect(@engagement_index.disabled_activity_titles).to be_empty
+    end
+
+    it 'allows a teacher to cancel re-enabling a disabled activity type' do
+      @canvas.masquerade_as(teacher, test.course)
+      @engagement_index.load_scores test
+      @engagement_index.click_points_config
+      @engagement_index.click_edit_points_config
+      @engagement_index.click_enable_activity @add_asset_activity
+      @engagement_index.click_cancel_config_edit
+      expect(@engagement_index.enabled_activity_titles).not_to include(@add_asset_activity.title)
+      expect(@engagement_index.disabled_activity_titles).to include(@add_asset_activity.title)
+    end
+
+    it 'allows a teacher to re-enable a disabled activity type' do
+      @engagement_index.enable_activity @add_asset_activity
+      expect(@engagement_index.enabled_activity_titles).to include(@add_asset_activity.title)
+    end
+
+    it 'adds points retroactively for a re-enabled activity' do
+      @engagement_index.click_back_to_index
+      expect(@engagement_index.user_score(test, student_3)).to eql(@add_asset_activity.points)
+    end
+
+    it 'adds a re-enabled activity to the CSV export' do
+      csv = @engagement_index.download_csv test
+      activity = csv.find { |r| r[:user_name] == student_3.full_name && r[:action] == @add_asset_activity.type && r[:score] == @add_asset_activity.points }
+      expect(activity).to be_truthy
+    end
+
+    it 'allows a teacher to change an activity type point value to a new integer' do
+      @engagement_index.load_page test
+      @engagement_index.click_points_config
+      @engagement_index.change_activity_points(@add_asset_activity, (@add_asset_activity.points + 10))
+      expect(@engagement_index.activity_points(@add_asset_activity)).to eql(@add_asset_activity.points)
+    end
+
+    it 'allows a teacher to recalculate points retroactively when changing activity type point values' do
+      @engagement_index.click_back_to_index
+      expect(@engagement_index.user_score(test, student_3)).to eql(@add_asset_activity.points)
+    end
+
+    it 'recalculates activity points on the CSV export when changing activity type point values' do
+      csv = @engagement_index.download_csv test
+      activity = csv.find { |r| r[:user_name] == student_3.full_name && r[:action] == @add_asset_activity.type && r[:score] == @add_asset_activity.points }
+      expect(activity).to be_truthy
+    end
+
+    it 'allows a student to view the Points Configuration whether or not they share their scores' do
+      @canvas.masquerade_as(student_3, test.course)
+      @engagement_index.load_page test
+      @engagement_index.points_config_button_element.when_visible Utils.short_wait
+      if @engagement_index.share_score_cbx_checked?
+        @engagement_index.un_share_score
+        @engagement_index.users_table_element.when_not_present 2
+      else
+        @engagement_index.share_score
+      end
+      expect(@engagement_index.points_config_button?).to be true
+    end
+
+    it 'shows a student no editing interface' do
+      @engagement_index.click_points_config
+      expect(@engagement_index.edit_points_config_button?).to be false
+    end
+  end
+
+  # TEACHERS AND STUDENTS
+
+  describe 'Canvas syncing' do
+
+    before(:all) do
+      @canvas.stop_masquerading
+      @canvas.remove_users_from_course(test.course, [teacher, student_3])
+    end
+
+    it 'removes users from the Engagement Index if they have been removed from the course site' do
+      @engagement_index.wait_for_removed_user_sync(test, [teacher, student_3])
+    end
+
+    [teacher, student_3].each do |user|
+
+      it "prevents #{user.role} UID #{user.uid} from reaching the Engagement Index if the user has been removed from the course site" do
+        @canvas.masquerade_as(user, test.course)
+        @engagement_index.navigate_to test.course.engagement_index_url
+        @canvas.access_denied_msg_element.when_visible Utils.short_wait
+      end
+
+      it "prevents #{user.role} UID #{user.uid} from reaching the Asset Library if the user has been removed from the course site" do
+        @assets_list.navigate_to test.course.asset_library_url
+        @canvas.access_denied_msg_element.when_visible Utils.short_wait
+      end
+
+      it "removes #{user.role} UID #{user.uid} from the Asset Library if the user has been removed from the course site" do
+        @canvas.stop_masquerading
+        @assets_list.load_page test
+        @assets_list.open_advanced_search
+        @assets_list.click_uploader_select
+        expect(@assets_list.asset_uploader_options).not_to include(user.full_name)
       end
     end
   end

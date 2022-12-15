@@ -506,6 +506,19 @@ class Utils
     "#{d1}#{d2_3}#{d4}"
   end
 
+  def self.term_name_to_hyphenated_code(term_name)
+    parts = term_name.split
+    semester = case parts[0]
+               when 'Spring'
+                 'B'
+               when 'Summer'
+                 'C'
+               else
+                 'D'
+               end
+    "#{parts[1]}-#{semester}"
+  end
+
   # SCREENSHOTS
 
   def self.save_screenshot(driver, unique_id)
