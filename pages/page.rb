@@ -106,7 +106,11 @@ module Page
     hide_boac_footer
     scroll_to_element element
     sleep Utils.click_wait
-    element.click
+    begin
+      element.click
+    rescue Selenium::WebDriver::Error::ElementClickInterceptedError
+      execute_script('arguments[0].click();', element)
+    end
   end
 
   def js_click(element)
