@@ -33,13 +33,13 @@ module SquiggyAssetLibrarySearchForm
   button(:keyword_clear_button, xpath: '//input[@id="adv-search-keywords-input"]/../following-sibling::div//button')
 
   def open_advanced_search
-    sleep Utils.click_wait
-    if uploader_select?
+    wait_until(Utils.short_wait) { keyword_search_input? || search_input? }
+    scroll_to_top
+    if keyword_search_input?
       logger.debug 'Advanced search input is already visible'
-      scroll_to_top
       advanced_search_reset_button if advanced_search_reset_button?
     else
-      scroll_to_top
+      logger.debug 'Opening advanced search'
       wait_for_load_and_click advanced_search_button_element
     end
   end

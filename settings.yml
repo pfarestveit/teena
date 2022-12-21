@@ -46,7 +46,6 @@ boac:
   db_user: secret
   db_password: secret
 
-  test_dept: UWASC
   test_default_cohort_major: [History BA]
   test_degree_progress_major: [Bioengineering BS]
   test_add_edit_uid: secret

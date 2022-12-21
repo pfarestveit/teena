@@ -108,7 +108,8 @@ module Page
     sleep Utils.click_wait
     begin
       element.click
-    rescue Selenium::WebDriver::Error::ElementClickInterceptedError
+    rescue Selenium::WebDriver::Error::ElementClickInterceptedError => e
+      logger.error e.message
       execute_script('arguments[0].click();', element)
     end
   end

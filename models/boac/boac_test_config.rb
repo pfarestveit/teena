@@ -18,13 +18,10 @@ class BOACTestConfig < TestConfig
                 :students,
                 :term
 
-  # If a test requires a specific dept, sets that one. Otherwise, sets the globally configured dept.
-  # @param dept [BOACDepartments]
   def set_dept(dept)
-    @dept = dept ? dept : (BOACDepartments::DEPARTMENTS.find { |d| d.code == CONFIG['test_dept'] })
+    @dept = dept || BOACDepartments::L_AND_S
   end
 
-  # Sets the advisor to use for the dept being tested
   def set_advisor(uid = nil)
     role = DeptMembership.new advisor_role: AdvisorRole::ADVISOR
     advisors = BOACUtils.get_dept_advisors(@dept, role)
@@ -406,7 +403,7 @@ class BOACTestConfig < TestConfig
 
   # Config for advising note content testing
   def note_content
-    set_base_configs BOACDepartments::L_AND_S
+    set_base_configs
     set_test_students(CONFIG['notes_max_users'], {with_notes: true, include_inactive: true})
   end
 
@@ -419,21 +416,21 @@ class BOACTestConfig < TestConfig
   # Config for note management testing (create, edit, delete)
   def note_management
     set_note_attachments
-    set_base_configs BOACDepartments::L_AND_S
+    set_base_configs
     BOACUtils.set_advisor_data @advisor
   end
 
   # Config for testing batch note creation
   def batch_note_management
     set_note_attachments
-    set_base_configs BOACDepartments::L_AND_S
+    set_base_configs
     set_default_cohort
     BOACUtils.set_advisor_data @advisor
   end
 
   # Config for testing note templates
   def note_templates
-    set_base_configs BOACDepartments::L_AND_S
+    set_base_configs
     set_default_cohort
     set_note_attachments
     BOACUtils.set_advisor_data @advisor
@@ -479,15 +476,8 @@ class BOACTestConfig < TestConfig
     set_test_students(CONFIG['sis_data_max_users'], {with_standing: true, include_inactive: true, incomplete_grades: true})
   end
 
-  # Config for SIS admit data testing
-  def sis_admit_data
-    set_base_configs
-    set_admits
-    set_test_admits CONFIG['sis_data_max_users']
-  end
-
   def topic_mgmt
-    set_base_configs BOACDepartments::L_AND_S
+    set_base_configs
   end
 
   # Config for user management tests on the admin page
