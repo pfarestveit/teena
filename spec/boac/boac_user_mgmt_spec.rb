@@ -1,6 +1,6 @@
 require_relative '../../util/spec_helper'
 
-if (ENV['DEPS'] || ENV['DEPS'].nil?) && !ENV['NO_DEPS']
+unless ENV['DEPS']
 
   describe 'The BOAC passenger manifest' do
 

@@ -1,6 +1,6 @@
 require_relative '../../util/spec_helper'
 
-if (ENV['NO_DEPS'] || ENV['NO_DEPS'].nil?) && !ENV['DEPS']
+unless ENV['DEPS']
 
   test = BOACTestConfig.new
   test.search_admits
