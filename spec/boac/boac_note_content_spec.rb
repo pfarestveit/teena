@@ -39,7 +39,6 @@ unless ENV['NO_DEPS']
           expected_notes = expected_sis_notes +
             expected_boa_notes +
             expected_asc_notes +
-            expected_e_forms +
             expected_ei_notes +
             expected_data_notes +
             expected_history_notes
@@ -89,7 +88,11 @@ unless ENV['NO_DEPS']
 
                 # COLLAPSED NOTE
 
-                @student_page.show_notes
+                if note.source == TimelineRecordSource::E_FORM
+                  @student_page.show_e_forms
+                else
+                  @student_page.show_notes
+                end
                 visible_collapsed_note_data = @student_page.visible_collapsed_note_data note
 
                 # Note updated date
@@ -112,6 +115,7 @@ unless ENV['NO_DEPS']
                   expected_updated_date = @student_page.expected_item_long_date_format note.updated_date
                   expected_initiated_date = note.created_date.strftime('%m/%d/%Y')
                   expected_final_date = note.updated_date.strftime('%m/%d/%Y %-l:%M:%S%P')
+                  e_forms_downloadable = @student_page.e_forms_download_link?
                   it("shows the subject on #{test_case}") { expect(visible_collapsed_note_data[:subject]).to eql(note.subject) }
                   it("shows the created date on #{test_case}") { expect(visible_e_form_data[:created_date]).to eql(expected_created_date) }
                   it("shows the updated date on #{test_case}") { expect(visible_e_form_data[:updated_date]).to eql(expected_updated_date) }
@@ -121,6 +125,7 @@ unless ENV['NO_DEPS']
                   it("shows the date initiated on #{test_case}") { expect(visible_e_form_data[:date_initiated]).to eql(expected_initiated_date) }
                   it("shows the form status on #{test_case}") { expect(visible_e_form_data[:status]).to eql(note.status) }
                   it("shows the final date on #{test_case}") { expect(visible_e_form_data[:date_finalized]).to eql(expected_final_date) }
+                  it("shows no download link on #{test_case}") { expect(e_forms_downloadable).to be false }
 
                 else
                   visible_expanded_note_data = @student_page.visible_expanded_note_data note

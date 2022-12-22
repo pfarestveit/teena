@@ -9,6 +9,18 @@ module BOACStudentPageAdvisingNote
   include BOACPagesCreateNoteModal
   include BOACStudentPageTimeline
 
+  #### E-FORMS ####
+
+  button(:e_forms_button, id: 'timeline-tab-eForm')
+  button(:show_hide_e_forms_button, id: 'toggle-expand-all-eForms')
+  link(:e_forms_download_link, id: 'download-notes-link')
+
+  def show_e_forms
+    logger.info 'Checking eForms tab'
+    wait_for_update_and_click e_forms_button_element
+    wait_for_update_and_click show_hide_e_forms_button_element if show_hide_e_forms_button? && show_hide_e_forms_button_element.text.include?('Show')
+  end
+
   #### EXISTING NOTES ####
 
   button(:notes_button, id: 'timeline-tab-note')
@@ -185,13 +197,13 @@ module BOACStudentPageAdvisingNote
   end
 
   def e_form_data_el(e_form, label)
-    div_element(xpath: "//tr[@id='permalink-note-#{e_form.id}']//dt[text()='#{label}']/following-sibling::dd")
+    div_element(xpath: "//tr[@id='permalink-eForm-#{e_form.id}']//dt[text()='#{label}']/following-sibling::dd")
   end
 
   def visible_expanded_e_form_data(e_form)
     sleep 1
-    created_el = div_element(id: "expanded-note-#{e_form.id}-created-at")
-    updated_el = div_element(id: "expanded-note-#{e_form.id}-updated-at")
+    created_el = div_element(id: "expanded-eForm-#{e_form.id}-created-at")
+    updated_el = div_element(id: "expanded-eForm-#{e_form.id}-updated-at")
     term_el = e_form_data_el(e_form, 'Term')
     course_el = e_form_data_el(e_form, 'Course')
     action_el = e_form_data_el(e_form, 'Action')
@@ -427,22 +439,22 @@ module BOACStudentPageAdvisingNote
     set_new_note_id note
   end
 
-  # Returns the expected file name of a note export zip
-  # @param student [BOACUser]
-  # @return [String]
   def notes_export_zip_file_name(student)
     "advising_notes_#{student.first_name.downcase}_#{student.last_name.downcase}_#{Time.now.strftime('%Y%m%d')}.zip"
   end
 
-  # Returns the expected file name of a note export csv
-  # @param student [BOACUser]
-  # @return [String]
+  def e_forms_export_zip_file_name(student)
+    "advising_eForms_#{student.first_name.downcase}_#{student.last_name.downcase}_#{Time.now.strftime('%Y%m%d')}.zip"
+  end
+
   def notes_export_csv_file_name(student)
     notes_export_zip_file_name(student).gsub('zip', 'csv')
   end
 
-  # Clicks the notes download link and waits for the expected zip file to appear in the configured download dir
-  # @param student [BOACUser]
+  def e_forms_export_csv_file_name(student)
+    e_forms_export_zip_file_name(student).gsub('zip', 'csv')
+  end
+
   def download_notes(student)
     logger.info "Downloading notes for UID #{student.uid}"
     Utils.prepare_download_dir
@@ -451,9 +463,14 @@ module BOACStudentPageAdvisingNote
     wait_until(Utils.medium_wait) { Dir["#{Utils.download_dir}/#{notes_export_zip_file_name student}"].any? }
   end
 
-  # Returns all the file names within a given zip file
-  # @param student [BOACUser]
-  # @return [Array<String>]
+  def download_e_forms(student)
+    logger.info "Downloading eForms for UID #{student.uid}"
+    Utils.prepare_download_dir
+    sleep Utils.click_wait
+    wait_for_update_and_click notes_download_link_element
+    wait_until(Utils.medium_wait) { Dir["#{Utils.download_dir}/#{e_forms_export_zip_file_name student}"].any? }
+  end
+
   def note_export_file_names(student)
     file_names = []
     Zip::File.open("#{Utils.download_dir}/#{notes_export_zip_file_name student}") do |zip_file|
@@ -462,10 +479,14 @@ module BOACStudentPageAdvisingNote
     file_names
   end
 
-  # Returns the file names that should be present in a note export zip file
-  # @param student [BOACUser]
-  # @param notes [Array<Notes>]
-  # @return [Array<String>]
+  def e_form_export_file_names(student)
+    file_names = []
+    Zip::File.open("#{Utils.download_dir}/#{e_forms_export_zip_file_name student}") do |zip_file|
+      zip_file.each { |entry| file_names << entry.name }
+    end
+    file_names
+  end
+
   def expected_note_export_file_names(student, notes, downloader)
     names = []
     names << notes_export_csv_file_name(student)
@@ -486,8 +507,10 @@ module BOACStudentPageAdvisingNote
     names
   end
 
-  # Converts a note export CSV file to a CSV table
-  # @param student [BOACUser]
+  def expected_e_form_export_file_names(student)
+    [e_forms_export_csv_file_name(student)]
+  end
+
   def parse_note_export_csv_to_table(student)
     Zip::File.open("#{Utils.download_dir}/#{notes_export_zip_file_name student}") do |zip_file|
       zipped_csv = zip_file.find_entry notes_export_csv_file_name(student)
@@ -499,10 +522,17 @@ module BOACStudentPageAdvisingNote
     end
   end
 
-  # Returns true if a parsed CSV contains a row with data matching a given note
-  # @param student [BOACUser]
-  # @param note [Note]
-  # @param csv_table [CSV::Table]
+  def parse_e_forms_export_csv_to_table(student)
+    Zip::File.open("#{Utils.download_dir}/#{e_forms_export_zip_file_name student}") do |zip_file|
+      zipped_csv = zip_file.find_entry e_forms_export_csv_file_name(student)
+      file = File.join(Utils.download_dir, e_forms_export_csv_file_name(student))
+      CSV.open(file, 'wb') do |csv|
+        CSV.parse(zipped_csv.get_input_stream.read).each { |row| csv << row }
+      end
+      CSV.table file
+    end
+  end
+
   def verify_note_in_export_csv(student, note, csv_table, downloader)
     wait_until(1, "Couldn't find note ID #{note.id}") do
       begin
@@ -510,36 +540,27 @@ module BOACStudentPageAdvisingNote
           r[:date_created] == note.created_date.strftime('%Y-%m-%d')
           r[:student_sid] == student.sis_id.to_i
           r[:student_name] == student.full_name
+          if note.advisor
+            (r[:author_uid] == note.advisor.uid.to_i) unless (note.advisor.uid == 'UCBCONVERSION')
+          end
 
-          if note.instance_of? TimelineEForm
-            r[:late_change_request_action] == note.action if note.action
-            r[:late_change_request_status] == note.status if note.status
-            r[:late_change_request_term] == note.term if note.term
-            r[:late_change_request_course] == note.course
+          r[:subject] == note.subject if note.subject
 
+          if !note.body || (note.is_private && !downloader.is_admin && !downloader.depts.include?(BOACDepartments::ZCEEE.code))
+            !r[:body]
+          end
+
+          if note.topics&.any?
+            expected_topics = note.topics.map { |t| t.instance_of?(Topic) ? t.name.downcase : t.downcase }.sort
+            ((r[:topics].split(';').map(&:strip).map(&:downcase).sort if r[:topics]) == expected_topics)
           else
-            if note.advisor
-              (r[:author_uid] == note.advisor.uid.to_i) unless (note.advisor.uid == 'UCBCONVERSION')
-            end
+            !r[:topics]
+          end
 
-            r[:subject] == note.subject if note.subject
-
-            if !note.body || (note.is_private && !downloader.is_admin && !downloader.depts.include?(BOACDepartments::ZCEEE.code))
-              !r[:body]
-            end
-
-            if note.topics&.any?
-              expected_topics = note.topics.map { |t| t.instance_of?(Topic) ? t.name.downcase : t.downcase }.sort
-              ((r[:topics].split(';').map(&:strip).map(&:downcase).sort if r[:topics]) == expected_topics)
-            else
-              !r[:topics]
-            end
-
-            if note.attachments&.empty? || (note.is_private && !downloader.is_admin && !downloader.depts.include?(BOACDepartments::ZCEEE.code))
-              !r[:attachments]
-            else
-              ((r[:attachments].split(';').map(&:strip).sort if r[:attachments]) == note.attachments.map(&:file_name).sort)
-            end
+          if note.attachments&.empty? || (note.is_private && !downloader.is_admin && !downloader.depts.include?(BOACDepartments::ZCEEE.code))
+            !r[:attachments]
+          else
+            ((r[:attachments].split(';').map(&:strip).sort if r[:attachments]) == note.attachments.map(&:file_name).sort)
           end
         end
       rescue => e
@@ -549,4 +570,22 @@ module BOACStudentPageAdvisingNote
     end
   end
 
+  def verify_e_form_in_export_csv(student, e_form, csv_table)
+    wait_until(1, "Couldn't find eForm ID #{e_form.id}") do
+      begin
+        csv_table.find do |r|
+          r[:date_created] == e_form.created_date.strftime('%Y-%m-%d')
+          r[:student_sid] == student.sis_id.to_i
+          r[:student_name] == student.full_name
+          r[:late_change_request_action] == e_form.action if e_form.action
+          r[:late_change_request_status] == e_form.status if e_form.status
+          r[:late_change_request_term] == e_form.term if e_form.term
+          r[:late_change_request_course] == e_form.course
+        end
+      rescue => e
+        logger.error "#{e.message}\n#{e.backtrace}"
+        fail
+      end
+    end
+  end
 end
