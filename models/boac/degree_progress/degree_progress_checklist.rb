@@ -10,7 +10,7 @@ class DegreeProgressChecklist < DegreeProgressTemplate
 
     def init_transfer_course(course_reqt)
       course = DegreeCompletedCourse.new(name: course_reqt.name,
-                                         grade: 'P',
+                                         grade: 'T',
                                          manual: true,
                                          transfer_course: true,
                                          units: course_reqt.units,

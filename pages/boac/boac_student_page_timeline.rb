@@ -10,7 +10,13 @@ module BOACStudentPageTimeline
   elements(:topic, :list_item, xpath: '//li[contains(@id, "topic")]')
 
   def item_type(item)
-    (item.instance_of?(Note) || item.instance_of?(NoteBatch) || item.instance_of?(TimelineEForm)) ? 'note' : 'appointment'
+    if item.instance_of?(Note) || item.instance_of?(NoteBatch)
+      'note'
+    elsif item.instance_of? TimelineEForm
+      'eForm'
+    else
+      'appointment'
+    end
   end
 
   # Returns the expected format for a collapsed item date

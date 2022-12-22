@@ -17,6 +17,7 @@ unless ENV['NO_DEPS']
       test_config.test_students.each do |student|
 
         begin
+          # NB YCBM appts are *not* searchable
           appt_searches = []
           expected_appts = NessieTimelineUtils.get_sis_appts student
           if expected_appts.any?
