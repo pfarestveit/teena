@@ -73,11 +73,15 @@ describe 'bCourses course site creation' do
           @splash_page.basic_auth uid
           @site_creation_page.load_standalone_tool
         else
-          @canvas_page.load_homepage
-          @canvas_page.create_site_link_element.when_present Utils.medium_wait
-          @canvas_page.stop_masquerading if @canvas_page.stop_masquerading_link?
-          @canvas_page.masquerade_as site[:teacher] unless %w(uid ccn).include?(site[:course].create_site_workflow)
-          @canvas_page.click_create_site
+          if %(uid ccn).include? site[:course].create_site_workflow
+            @canvas_page.load_homepage
+            sleep 3
+            @canvas_page.stop_masquerading if @canvas_page.stop_masquerading_link?
+            @canvas_page.click_create_site
+          else
+            @canvas_page.masquerade_as site[:teacher]
+            @site_creation_page.load_embedded_tool site[:teacher]
+          end
         end
 
         @site_creation_page.click_create_course_site

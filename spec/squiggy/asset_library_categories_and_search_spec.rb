@@ -185,7 +185,7 @@ describe 'Asset Library' do
       @assets_list.add_link_asset @student_3_link
 
       @assets_list.wait_for_assets test
-      @assets_list.click_asset_link(test, @student_2_upload)
+      @asset_detail.load_asset_detail(test, @student_2_upload)
       @asset_detail.add_comment SquiggyComment.new user: @student_3, body: '#BooBooKitty'
       @asset_detail.click_like_button
 
