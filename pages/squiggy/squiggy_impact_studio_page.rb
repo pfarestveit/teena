@@ -69,15 +69,15 @@ class SquiggyImpactStudioPage
   # LOOKING FOR COLLABORATORS
 
   button(:collaboration_button, id: 'toggle-looking-for-collaborators-btn')
-  div(:collaboration_status, id: 'profile-looking-for-collaborators')
+  div(:collaboration_status, xpath: '//input[@id="toggle-looking-for-collaborators-btn"]/../following-sibling::label')
 
   def set_collaboration_true
     logger.info 'Setting "Looking for collaborators" to true'
     collaboration_status_element.when_present Utils.short_wait
     if collaboration_status.include? 'Not'
-      wait_for_update_and_click collaboration_button_element
+      js_click collaboration_button_element
       sleep 1
-      wait_until(Utils.short_wait) { !collaboration_status.include? 'Not' }
+      wait_until(Utils.short_wait) { collaboration_status == 'Looking for collaborators' }
     end
   end
 
@@ -85,9 +85,9 @@ class SquiggyImpactStudioPage
     logger.info 'Setting "Looking for collaborators" to false'
     collaboration_status_element.when_present Utils.short_wait
     unless collaboration_status.include? 'Not'
-      wait_for_update_and_click collaboration_button_element
+      js_click collaboration_button_element
       sleep 1
-      wait_until(Utils.short_wait) { collaboration_status.include? 'Not' }
+      wait_until(Utils.short_wait) { collaboration_status == 'Not looking for collaborators' }
     end
   end
 

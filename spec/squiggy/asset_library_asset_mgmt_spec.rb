@@ -276,26 +276,26 @@ describe 'Asset' do
   describe 'preview regeneration' do
 
     before(:all) do
-      @jamboard = @student_2.assets.find { |a| a.url&.include? 'jamboard' }
+      @link = @student_2.assets.find &:url
       @canvas.masquerade_as(@student_2, @test.course)
       @assets_list.load_page @test
-      @assets_list.create_asset(@test, @jamboard)
+      @assets_list.create_asset(@test, @link)
     end
 
     it 'is allowed if the user is a student who is the asset creator' do
-      @assets_list.click_asset_link(@test, @jamboard)
+      @asset_detail.load_asset_detail(@test, @link)
       @asset_detail.regenerate_preview_button_element.when_present Utils.short_wait
     end
 
     it 'is allowed if the user is a teacher' do
       @canvas.masquerade_as(@teacher, @test.course)
-      @asset_detail.load_asset_detail(@test, @jamboard)
+      @asset_detail.load_asset_detail(@test, @link)
       @asset_detail.regenerate_preview_button_element.when_present Utils.short_wait
     end
 
     it 'is not allowed if the user is a student who is not the asset creator' do
       @canvas.masquerade_as(@student_1, @test.course)
-      @asset_detail.load_asset_detail(@test, @jamboard)
+      @asset_detail.load_asset_detail(@test, @link)
       @asset_detail.like_button_element.when_present Utils.short_wait
       expect(@asset_detail.regenerate_preview_button?).to be false
     end

@@ -6,8 +6,17 @@ module Page
   include Logging
 
   def parse_json
-    wait_until(Utils.long_wait) { browser.find_element(xpath: '//pre') }
-    @parsed = JSON.parse browser.find_element(xpath: '//pre').text
+    denied = nil
+    wait_until(Utils.long_wait) do
+      errors = Utils.get_js_errors @driver
+      denied = errors.find { |e| e.include? 'the server responded with a status of 403' }
+      browser.find_element(xpath: '//pre') || denied
+    end
+    if denied
+      fail('Access denied')
+    else
+      @parsed = JSON.parse browser.find_element(xpath: '//pre').text
+    end
   end
 
   iframe(:canvas_iframe, id: 'tool_content')
