@@ -577,7 +577,12 @@ module BOACStudentPageAdvisingNote
           r[:date_created] == e_form.created_date.strftime('%Y-%m-%d')
           r[:student_sid] == student.sis_id.to_i
           r[:student_name] == student.full_name
+          r[:eform_id] == e_form.form_id
           r[:late_change_request_action] == e_form.action if e_form.action
+          r[:grading_basis] == e_form.grading_basis if e_form.grading_basis
+          r[:requested_grading_basis] == e_form.requested_grading_basis
+          r[:units_taken] == e_form.units_taken if e_form.units_taken
+          r[:requested_units_taken] == e_form.requested_units_taken if e_form.requested_units_taken
           r[:late_change_request_status] == e_form.status if e_form.status
           r[:late_change_request_term] == e_form.term if e_form.term
           r[:late_change_request_course] == e_form.course

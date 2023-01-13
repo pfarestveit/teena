@@ -423,7 +423,9 @@ class NessieTimelineUtils < NessieUtils
                         form_id: r['eform_id'],
                         status: status,
                         units_taken: r['units_taken'],
-                        requested_units_taken: r['requested_units_taken']
+                        requested_units_taken: r['requested_units_taken'],
+                        grading_basis: r['grading_basis_description'],
+                        requested_grading_basis: r['requested_grading_basis_description']
     end
   end
 
