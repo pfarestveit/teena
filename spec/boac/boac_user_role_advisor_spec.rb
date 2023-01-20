@@ -170,7 +170,7 @@ unless ENV['NO_DEPS']
           if @admit
             api_page = BOACApiAdmitPage.new @driver
             api_page.hit_endpoint @admit
-            expect(api_page.message).to eql('Unauthorized')
+            api_page.unauth_msg_element.when_visible Utils.short_wait
           else
             skip
           end
@@ -366,7 +366,7 @@ unless ENV['NO_DEPS']
           if @admit
             api_page = BOACApiAdmitPage.new @driver
             api_page.hit_endpoint @admit
-            expect(api_page.message).to eql('Unauthorized')
+            api_page.unauth_msg_element.when_visible Utils.short_wait
           else
             skip
           end
@@ -563,7 +563,7 @@ unless ENV['NO_DEPS']
           if @admit
             api_page = BOACApiAdmitPage.new @driver
             api_page.hit_endpoint @admit
-            expect(api_page.message).to eql('Unauthorized')
+            api_page.unauth_msg_element.when_visible Utils.short_wait
           else
             skip
           end

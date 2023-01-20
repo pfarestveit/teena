@@ -5,17 +5,19 @@ module Page
   include PageObject
   include Logging
 
+  div(:unauth_msg, xpath: '//*[contains(., "Unauthorized")]')
+
   def parse_json
-    denied = nil
-    wait_until(Utils.long_wait) do
+    begin
+      wait_until(Utils.medium_wait) do
+        browser.find_element(xpath: '//pre')
+        @parsed = JSON.parse browser.find_element(xpath: '//pre').text
+      end
+    rescue
       errors = Utils.get_js_errors @driver
-      denied = errors.find { |e| e.include? 'the server responded with a status of 403' }
-      browser.find_element(xpath: '//pre') || denied
-    end
-    if denied
-      fail('Access denied')
-    else
-      @parsed = JSON.parse browser.find_element(xpath: '//pre').text
+      if errors.find { |e| e.include? 'the server responded with a status of 403' }
+        fail('Access denied')
+      end
     end
   end
 

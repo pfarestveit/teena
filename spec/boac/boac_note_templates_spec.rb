@@ -170,7 +170,7 @@ unless ENV['DEPS']
 
       before(:all) do
         # Get students to add one-by-one
-        @students = @test.students.first 2
+        @students = @test.students.select { |s| !s.uid.strip.empty? }.first 2
 
         # Create cohort to add
         @homepage.load_page
@@ -232,7 +232,7 @@ unless ENV['DEPS']
         it 'can be applied to a new note' do
           @homepage.click_cancel_template
           @homepage.click_save_new_note
-          batch_student = @homepage.unique_students_in_batch(@students, [@test.default_cohort], [@group]).first
+          batch_student = @students.first
           @student_page.set_new_note_id(@note_batch, batch_student)
           @student_page.load_page batch_student
           @student_page.verify_note(@note_batch, @test.advisor)
@@ -278,7 +278,7 @@ unless ENV['DEPS']
         it 'can be applied to a new note' do
           @homepage.click_save_new_note
           @homepage.apply_template(@template_2, @note_batch)
-          batch_student = @homepage.unique_students_in_batch(@students, [@test.default_cohort], [@group]).first
+          batch_student = @students.first
           @student_page.set_new_note_id(@note_batch, batch_student)
           @student_page.load_page batch_student
           @student_page.verify_note(@note_batch, @test.advisor)

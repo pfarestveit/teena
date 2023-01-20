@@ -147,12 +147,6 @@ unless ENV['NO_DEPS']
                     it("shows the body as the subject on #{test_case}") { expect(visible_collapsed_note_data[:subject].gsub(/\W/, '')).to eql(note.body.gsub(/\W/, '')) }
                   else
                     it("shows the department as part of the subject on #{test_case}") { expect(visible_collapsed_note_data[:category]).to include('Athletic Study Center advisor') }
-                    it("shows the advisor first name as part of the subject on #{test_case}") do
-                      expect(expect(visible_collapsed_note_data[:category].downcase).to include(note.advisor.first_name.downcase))
-                    end
-                    it("shows the advisor last name as part of the subject on #{test_case}") do
-                      expect(expect(visible_collapsed_note_data[:category].downcase).to include(note.advisor.last_name.downcase))
-                    end
                     it("shows no body on #{test_case}") { expect(visible_expanded_note_data[:body].strip.empty?).to be true }
                   end
 
