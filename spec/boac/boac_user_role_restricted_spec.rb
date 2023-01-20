@@ -89,7 +89,7 @@ unless ENV['DEPS']
 
         it 'is forbidden' do
           @api_section_page.get_data('2178', '13826')
-          expect(@api_section_page).to be_unauthorized
+          @api_section_page.unauth_msg_element.when_visible Utils.short_wait
         end
       end
 
@@ -292,7 +292,7 @@ unless ENV['DEPS']
 
         it 'is forbidden' do
           @api_section_page.get_data('2178', '13826')
-          expect(@api_section_page).to be_unauthorized
+          @api_section_page.unauth_msg_element.when_visible Utils.short_wait
         end
       end
 

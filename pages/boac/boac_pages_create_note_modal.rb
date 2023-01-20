@@ -562,8 +562,9 @@ module BOACPagesCreateNoteModal
   def rename_template(template)
     click_rename_template template
     wait_for_element_and_type(rename_template_input_element, template.title)
+    sleep 1
     wait_for_update_and_click save_template_rename_button_element
-    rename_template_input_element.when_not_present 1
+    rename_template_input_element.when_not_present 3
   end
 
   def click_cancel_template_rename

@@ -370,7 +370,11 @@ module BOACStudentPageAdvisingNote
   # Contact Type
 
   def contact_type_radio(note)
-    radio_button_element(xpath: "//input[@type='radio'][@value='#{note.type}']/..")
+    if note.type
+      radio_button_element(xpath: "//input[@type='radio'][@value='#{note.type}']/..")
+    else
+      radio_button_element(xpath: '//input[@id="contact-option-none-radio-button"]/..')
+    end
   end
 
   def select_contact_type(note)

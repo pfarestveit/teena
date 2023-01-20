@@ -6,7 +6,6 @@ class BOACApiNotesPage
   include Logging
   include Page
 
-  div(:unauth_msg, xpath: '//*[contains(.,"Unauthorized")]')
   div(:not_found_msg, xpath: '//*[contains(.,"Sorry, attachment not available.")]')
 
   def load_attachment_page(attachment_file)
