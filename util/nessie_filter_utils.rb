@@ -117,6 +117,13 @@ class NessieFilterUtils < NessieUtils
     end
   end
 
+  def self.incomplete_grade_cond(filter, conditions_list)
+    if filter.incomplete_grade
+      conditions_list << "student.student_enrollment_terms.incomplete_grade IS TRUE
+                          AND student.student_enrollment_terms.term_id > '2015'"
+    end
+  end
+
   def self.intended_major_cond(filter, conditions_list)
     conditions_list << "student.intended_majors.major IN (#{in_op filter.intended_major})" if filter.intended_major&.any?
   end
@@ -254,6 +261,7 @@ class NessieFilterUtils < NessieUtils
     gpa_cond(filter, conditions_list)
     gpa_last_term_cond(filter, conditions_list)
     grading_basis_epn_cond(filter, conditions_list)
+    incomplete_grade_cond(filter, conditions_list)
     intended_major_cond(filter, conditions_list)
     last_name_cond(filter, conditions_list)
     level_cond(filter, conditions_list)
@@ -294,7 +302,7 @@ class NessieFilterUtils < NessieUtils
     joins << degree_join if (filter.degrees_awarded&.any? || filter.degree_terms&.any?)
 
     epn_join = "LEFT JOIN student.student_enrollment_terms ON #{sid} = student.student_enrollment_terms.sid"
-    joins << epn_join if filter.grading_basis_epn&.any? && !filter.mid_point_deficient
+    joins << epn_join if (filter.grading_basis_epn&.any? && !filter.mid_point_deficient) || filter.incomplete_grade
 
     holds_join = "JOIN student.student_holds ON #{sid} = student.student_holds.sid"
     joins << holds_join if filter.holds

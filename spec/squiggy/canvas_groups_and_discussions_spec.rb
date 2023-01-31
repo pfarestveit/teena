@@ -349,6 +349,10 @@ describe 'A SuiteC course' do
     
     before(:all) do
       @canvas_discussions_page.masquerade_as @teacher_1
+      @asset_library.load_page @test
+      @asset_library.click_manage_assets_link
+      @manage_assets.silo_sections
+
       @teacher_1.score = @engagement_index.user_score(@test, @teacher_1)
       @teacher_2.score = @engagement_index.user_score(@test, @teacher_2)
 
