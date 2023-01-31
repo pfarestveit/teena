@@ -6,9 +6,6 @@ describe 'bCourses Find a Person to Add', order: :defined do
 
   include Logging
 
-  test = JunctionTestConfig.new
-  test.add_user
-
   # Load test course data
   test = JunctionTestConfig.new
   test.add_user

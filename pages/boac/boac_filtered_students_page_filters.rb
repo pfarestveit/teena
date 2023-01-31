@@ -82,7 +82,7 @@ module BOACFilteredStudentsPageFilters
     no_options = ['Midpoint Deficient Grade', 'Transfer Student', 'Underrepresented Minority', 'Inactive (ASC)', 'Intensive (ASC)',
                   'Inactive (COE)', 'Underrepresented Minority (COE)', 'Probation (COE)', 'Current SIR', 'Hispanic', 'UREM',
                   'First Generation College', 'Application Fee Waiver', 'Foster Care', 'Family Is Single Parent',
-                  'Student Is Single Parent', 'Re-entry Status', 'Last School LCFF+', 'Holds']
+                  'Student Is Single Parent', 'Re-entry Status', 'Last School LCFF+', 'Holds', 'Incomplete Grade']
     select_new_filter_sub_option(filter_option, filter_sub_option) unless no_options.include? filter_option
     wait_for_update_and_click unsaved_filter_add_button_element
     unsaved_filter_apply_button_element.when_present Utils.short_wait
@@ -147,6 +147,7 @@ module BOACFilteredStudentsPageFilters
     cohort.search_criteria.grading_basis_epn.each { |g| select_new_filter('EPN/CPN Grading Option', g.to_s) } if cohort.search_criteria.grading_basis_epn
     cohort.search_criteria.graduate_plans.each { |g| select_new_filter('Graduate Plan', g) } if cohort.search_criteria.graduate_plans
     select_new_filter 'Holds' if cohort.search_criteria.holds
+    select_new_filter 'Incomplete Grade' if cohort.search_criteria.incomplete_grade
     cohort.search_criteria.intended_major.each { |m| select_new_filter('Intended Major', m) } if cohort.search_criteria.intended_major
     cohort.search_criteria.level.each { |l| select_new_filter('Level', l) } if cohort.search_criteria.level
     cohort.search_criteria.units_completed.each { |u| select_new_filter('Units Completed', u) } if cohort.search_criteria.units_completed
@@ -267,7 +268,7 @@ module BOACFilteredStudentsPageFilters
     filter_option_xpath = "#{existing_filter_xpath filter_name}/following-sibling::div"
 
     if ['Inactive', 'Inactive (ASC)', 'Inactive (COE)', 'Intensive (ASC)', 'Probation (COE)', 'Transfer Student', 'Underrepresented Minority',
-        'Underrepresented Minority (COE)', 'Current SIR', 'Hispanic', 'UREM', 'First Generation College', 'Holds',
+        'Underrepresented Minority (COE)', 'Current SIR', 'Hispanic', 'UREM', 'First Generation College', 'Holds', 'Incomplete Grade',
         'Application Fee Waiver', 'Foster Care', 'Family Is Single Parent', 'Student Is Single Parent', 'Re-entry Status',
         'Last School LCFF+'].include? filter_name
       div_element(xpath: existing_filter_xpath(filter_name))
@@ -315,6 +316,8 @@ module BOACFilteredStudentsPageFilters
         filters.graduate_plans.each { |g| existing_filter_element('Graduate Plans', g).exists? } if filters.graduate_plans&.any?
         logger.debug 'Verifying Holds filter'
         existing_filter_element('Holds').exists? if filters.holds
+        logger.debug 'Verifying Incomplete Grade filter'
+        existing_filter_element('Incomplete Grade').exists? if filters.incomplete_grade
         logger.debug 'Verifying GPA (Last Term) filter'
         filters.gpa_last_term.each { |g| existing_filter_element('GPA (Last Term)', g).exists? } if filters.gpa_last_term&.any?
         logger.debug 'Verifying Grading Basis EPN filter'
