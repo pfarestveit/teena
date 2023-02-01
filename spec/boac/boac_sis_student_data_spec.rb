@@ -752,6 +752,16 @@ unless ENV['NO_DEPS']
                       expect(expanded_course_data[:title]).to eql(course_sis_data[:title])
                     end
 
+                    if course_sis_data[:reqts]
+                      it "shows the expanded course requirements for #{test_case}" do
+                        expect(expanded_course_data[:reqts]).to eql(course_sis_data[:reqts])
+                      end
+                    else
+                      it "shows no expanded course requirements for #{test_case}" do
+                        expect(expanded_course_data[:reqts]).to be_empty
+                      end
+                    end
+
                     primary_section = student_data[:api].course_primary_section(course)
                     primary_data = student_data[:api].sis_section_data(primary_section)
                     if primary_data[:incomplete_code] && !primary_data[:incomplete_code].empty?
