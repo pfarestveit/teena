@@ -303,16 +303,19 @@ class BOACStudentPage
   end
 
   def visible_expanded_course_data(term_id, i)
+    xpath = "//div[@id='term-#{term_id}-course-#{i}-details']"
     title_el = div_element(id: "term-#{term_id}-course-#{i}-title")
     title_el.when_visible 1
     code_el = div_element(id: "term-#{term_id}-course-#{i}-details-name")
-    section_els = span_elements(xpath: "//div[@id='term-#{term_id}-course-#{i}-details']/div[@class='student-course-sections']/span")
-    incomplete_grade_alert_el = div_element(xpath: "//div[@id='term-#{term_id}-course-#{i}-details']//div[contains(@id, 'has-incomplete-grade')]")
+    section_els = span_elements(xpath: "#{xpath}/div[@class='student-course-sections']/span")
+    incomplete_grade_alert_el = div_element(xpath: "#{xpath}//div[contains(@id, 'has-incomplete-grade')]")
+    reqts_els = div_elements(xpath: "#{xpath}//div[@class='student-course-requirements']")
     {
       code: (code_el.text if code_el.exists?),
       sections: (section_els.map { |el| el.text.split("\n").last.gsub(' |', '') } if section_els.any?),
       title: (title_el.text if title_el.exists?),
-      incomplete_alert: (incomplete_grade_alert_el.text if incomplete_grade_alert_el.exists?)
+      incomplete_alert: (incomplete_grade_alert_el.text if incomplete_grade_alert_el.exists?),
+      reqts: (reqts_els.map &:text)
     }
   end
 
