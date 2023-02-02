@@ -67,11 +67,11 @@ class Utils
         prefs = {'browser.enabled_labs_experiments': %w(same-site-by-default-cookies@1 cookies-without-same-site-must-be-secure@1)}
         options.add_option('localState', prefs)
 
-        options.headless! if headless?
+        options.add_argument('--headless=new') if headless?
         options.add_preference('download.prompt_for_download', false)
         options.add_preference('download.default_directory', Utils.download_dir)
         options.add_preference('profile.default_content_setting_values.automatic_downloads', 1)
-        Selenium::WebDriver.for :chrome, capabilities: options
+        Selenium::WebDriver.for :chrome, options: options
 
       when 'firefox'
         profile = Selenium::WebDriver::Firefox::Profile.new
@@ -86,7 +86,7 @@ class Utils
         options = Selenium::WebDriver::Firefox::Options.new
         options.profile = profile
         options.add_argument '-headless' if headless?
-        Selenium::WebDriver.for :firefox, capabilities: options
+        Selenium::WebDriver.for :firefox, options: options
 
       else
         logger.error 'Designated WebDriver is not supported'
@@ -132,7 +132,7 @@ class Utils
   end
 
   def self.get_js_errors(driver)
-    js_log = driver.manage.logs.get :browser
+    js_log = driver.logs.get :browser
     js_log.map &:message
   end
 

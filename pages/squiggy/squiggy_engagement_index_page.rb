@@ -341,6 +341,7 @@ class SquiggyEngagementIndexPage
       browser.close
     end
     browser.switch_to.window window
+    Utils.set_default_window_size browser
     csv
   end
 
