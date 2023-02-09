@@ -64,6 +64,32 @@ module CanvasPeoplePage
     modes.uniq
   end
 
+  def click_add_people
+    wait_for_load_and_click add_people_button_element
+    find_person_to_add_link_element.when_visible Utils.short_wait
+  end
+
+  def user_role_options
+    wait_for_update_and_click user_role_element
+    user_role_option_elements.map &:text
+  end
+
+  def click_add_by_email
+    wait_for_update_and_click add_user_by_email_element
+  end
+
+  def click_add_by_uid
+    wait_for_update_and_click add_user_by_uid_element
+  end
+
+  def click_add_by_sid
+    wait_for_update_and_click add_user_by_sid_element
+  end
+
+  def add_user_placeholder
+    user_list_element.attribute('placeholder')
+  end
+
   def add_users(course, test_users, section = nil)
     users_to_add = Array.new test_users
     logger.info "Users needed for the site are #{users_to_add.map { |u| u.uid }}"
@@ -262,8 +288,7 @@ module CanvasPeoplePage
   end
 
   # Clicks the Canvas Add People button followed by the Find a Person to Add button and switches to the LTI tool
-  # @param driver [Selenium::WebDriver]
-  def click_find_person_to_add(driver)
+  def click_find_person_to_add
     logger.debug 'Clicking Find a Person to Add button'
     add_people_button_element.when_present Utils.medium_wait
     js_click add_people_button_element

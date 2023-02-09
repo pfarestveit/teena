@@ -127,6 +127,11 @@ module Page
         checkbox_element(xpath: "//td[contains(.,'#{user.uid}')]/ancestor::tr//input[@name='selectedUser']")
       end
 
+      def visible_user_role_options
+        user_role_element.when_visible Utils.short_wait
+        user_role_options.map &:strip
+      end
+
       def add_user_by_uid(user, section = nil)
         logger.info "Adding UID #{user.uid} with role '#{user.role}'"
         user_checkbox(user).when_present Utils.medium_wait

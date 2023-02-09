@@ -6,38 +6,43 @@ describe 'bCourses Roster Photos' do
 
   include Logging
 
-  # Load test course data
-  test = JunctionTestConfig.new
+  test = RipleyTestConfig.new
   test.rosters
   course = test.courses.first
   sections = test.set_course_sections(course).select &:include_in_site
   teacher = test.set_sis_teacher course
-  non_teachers = [test.lead_ta, test.ta, test.designer, test.reader, test.observer, test.students.first, test.wait_list_student]
+  non_teachers = [
+    test.lead_ta,
+    test.ta,
+    test.designer,
+    test.reader,
+    test.observer,
+    test.students.first,
+    test.wait_list_student
+  ]
 
   before(:all) do
     @driver = Utils.launch_browser
     @cal_net = Page::CalNetPage.new @driver
     @canvas = Page::CanvasPage.new @driver
+    @splash_page = RipleySplashPage.new @driver
+    @create_course_site_page = RipleyCreateCourseSitePage.new @driver
+    @course_add_user_page = RipleyAddUserPage.new @driver
+    @roster_photos_page = RipleyRosterPhotosPage.new @driver
     @roster_api = ApiAcademicsRosterPage.new @driver
-    @splash_page = Page::JunctionPages::SplashPage.new @driver
-    @create_course_site_page = Page::JunctionPages::CanvasCreateCourseSitePage.new @driver
-    @course_add_user_page = Page::JunctionPages::CanvasCourseAddUserPage.new @driver
-    @roster_photos_page = Page::JunctionPages::CanvasRostersPage.new @driver
 
-    # Authenticate
     @splash_page.load_page
     @splash_page.basic_auth(teacher.uid, @cal_net)
     unless standalone
-      @canvas.log_in(@cal_net, Utils.super_admin_username, Utils.super_admin_password)
+      @canvas.log_in(@cal_net, test.admin.username, Utils.super_admin_password)
       @canvas.masquerade_as teacher
     end
 
-    # Create test course site
     @create_course_site_page.provision_course_site(course, teacher, sections, {standalone: standalone})
     @create_course_site_page.wait_for_standalone_site_id(course, teacher, @splash_page) if standalone
     @canvas.publish_course_site course unless standalone
 
-    # Get enrollment totals on site
+    # TODO - replace with data collection from Nessie
     @roster_api.get_feed course
     @expected_sids = @roster_api.student_ids(@roster_api.students).sort
 
@@ -48,7 +53,6 @@ describe 'bCourses Roster Photos' do
     logger.warn 'There are no students on this site' if @total_user_count.zero?
 
     unless standalone
-      # Add remaining user roles
       @canvas.load_users_page course
       @canvas.click_find_person_to_add
       non_teachers.each do |user|
@@ -72,8 +76,9 @@ describe 'bCourses Roster Photos' do
     end
 
     it "shows UID #{teacher.uid} all students and waitlisted students on #{course.code} course site ID #{course.site_id}" do
-      @roster_photos_page.wait_until(Utils.medium_wait, "Missing: #{@expected_sids - @roster_photos_page.all_sids.sort}. Unexpected: #{@roster_photos_page.all_sids.sort - @expected_sids}.
-      Expected #{@expected_sids} but got #{@roster_photos_page.all_sids.sort}") do
+      @roster_photos_page.wait_until(Utils.medium_wait, "Missing: #{@expected_sids - @roster_photos_page.all_sids.sort}.
+                                                             Unexpected: #{@roster_photos_page.all_sids.sort - @expected_sids}.
+                                                             Expected #{@expected_sids} but got #{@roster_photos_page.all_sids.sort}") do
         @roster_photos_page.all_sids.length == @total_user_count
         @roster_photos_page.all_sids.sort == @expected_sids
       end

@@ -151,7 +151,7 @@ describe 'bCourses Find a Person to Add', order: :defined do
         @course_add_user_page.load_standalone_tool course
       else
         @canvas.load_users_page course
-        @canvas.click_find_person_to_add @driver
+        @canvas.click_find_person_to_add
       end
     end
 
@@ -218,7 +218,7 @@ describe 'bCourses Find a Person to Add', order: :defined do
         @section_to_test = sections.first
         @canvas.masquerade_as(sis_teacher, course)
         @canvas.load_users_page course
-        @canvas.click_find_person_to_add @driver
+        @canvas.click_find_person_to_add
         users_to_add.each do |user|
           @course_add_user_page.search(user.uid, 'CalNet UID')
           @course_add_user_page.add_user_by_uid(user, @section_to_test)
@@ -254,7 +254,7 @@ describe 'bCourses Find a Person to Add', order: :defined do
         it "allows #{user.role} #{user.uid} access to the tool with limited roles" do
           @canvas.masquerade_as(user, course)
           @canvas.load_users_page course
-          @canvas.click_find_person_to_add @driver
+          @canvas.click_find_person_to_add
           @course_add_user_page.search('Oski', 'Last Name, First Name')
           @course_add_user_page.user_role_element.when_visible Utils.short_wait
           @course_add_user_page.wait_until(Utils.medium_wait, "Visible #{@course_add_user_page.user_role_options}") do

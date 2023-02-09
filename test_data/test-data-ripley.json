@@ -1,0 +1,1554 @@
+{
+    "courses": [
+        {
+            "code": "ECON 100B",
+            "title": "Economic Analysis--Macro",
+            "term": "Spring 2017",
+            "sections": [
+                {
+                    "course": "ECON 100B",
+                    "label": "LEC 001",
+                    "id": "14162",
+                    "include_in_site": true
+                },
+                {
+                    "course": "ECON 100B",
+                    "label": "DIS 101",
+                    "id": "14163",
+                    "include_in_site": true
+                },
+                {
+                    "course": "ECON 100B",
+                    "label": "DIS 102",
+                    "id": "14164",
+                    "include_in_site": true
+                },
+                {
+                    "course": "ECON 100B",
+                    "label": "DIS 103",
+                    "id": "14165",
+                    "include_in_site": true
+                },
+                {
+                    "course": "ECON 100B",
+                    "label": "DIS 104",
+                    "id": "14166",
+                    "include_in_site": true
+                },
+                {
+                    "course": "ECON 100B",
+                    "label": "DIS 105",
+                    "id": "14167",
+                    "include_in_site": true
+                },
+                {
+                    "course": "ECON 100B",
+                    "label": "DIS 106",
+                    "id": "14168",
+                    "include_in_site": true
+                },
+                {
+                    "course": "ECON 100B",
+                    "label": "DIS 107",
+                    "id": "14169",
+                    "include_in_site": true
+                },
+                {
+                    "course": "ECON 100B",
+                    "label": "DIS 108",
+                    "id": "14170",
+                    "include_in_site": true
+                },
+                {
+                    "course": "ECON 100B",
+                    "label": "DIS 109",
+                    "id": "14171",
+                    "include_in_site": true
+                },
+                {
+                    "course": "ECON 100B",
+                    "label": "DIS 110",
+                    "id": "14172",
+                    "include_in_site": true
+                },
+                {
+                    "course": "ECON 100B",
+                    "label": "DIS 111",
+                    "id": "14173",
+                    "include_in_site": true
+                },
+                {
+                    "course": "ECON 100B",
+                    "label": "DIS 112",
+                    "id": "14174",
+                    "include_in_site": true
+                },
+                {
+                    "course": "ECON 100B",
+                    "label": "DIS 113",
+                    "id": "14175",
+                    "include_in_site": true
+                },
+                {
+                    "course": "ECON 100B",
+                    "label": "DIS 114",
+                    "id": "14176",
+                    "include_in_site": true
+                },
+                {
+                    "course": "ECON 100B",
+                    "label": "DIS 115",
+                    "id": "14177",
+                    "include_in_site": true
+                },
+                {
+                    "course": "ECON 100B",
+                    "label": "DIS 116",
+                    "id": "33588",
+                    "include_in_site": true
+                },
+                {
+                    "course": "ECON 100B",
+                    "label": "DIS 117",
+                    "id": "33923",
+                    "include_in_site": false
+                }
+            ],
+            "teachers": [
+                {
+                    "uid": "12345",
+                    "canvas_id": "7654321"
+                }
+            ],
+            "site_id": "987654",
+            "tests": {
+                "e_grades_export": true
+            },
+            "create_site_workflow": null
+        },
+        {
+            "code": "HISTORY 7B",
+            "title": "Introduction to the History of the United States: The United States from Civil War to Present",
+            "term": "Summer 2017",
+            "sections": [
+                {
+                    "course": "HISTORY 7B",
+                    "label": "LEC 001",
+                    "id": "11776",
+                    "include_in_site": true
+                },
+                {
+                    "course": "HISTORY 7B",
+                    "label": "DIS 101",
+                    "id": "15579",
+                    "include_in_site": true
+                },
+                {
+                    "course": "HISTORY 7B",
+                    "label": "DIS 102",
+                    "id": "15580",
+                    "include_in_site": true
+                },
+                {
+                    "course": "HISTORY 7B",
+                    "label": "DIS 103",
+                    "id": "15581",
+                    "include_in_site": false
+                },
+                {
+                    "course": "HISTORY 7B",
+                    "label": "DIS 104",
+                    "id": "15582",
+                    "include_in_site": false
+                }
+            ],
+            "teachers": [
+                {
+                    "uid": "12345",
+                    "canvas_id": "7654321"
+                }
+            ],
+            "tests": {
+                "create_course_site": true,
+                "official_sections": true
+            },
+            "create_site_workflow": "uid"
+        },
+        {
+            "code": "ASTRON C10",
+            "title": "Introduction to General Astronomy",
+            "term": "Fall 2017",
+            "sections": [
+                {
+                    "course": "ASTRON C10",
+                    "label": "LEC 001",
+                    "id": "13007",
+                    "include_in_site": true
+                },
+                {
+                    "course": "ASTRON C10",
+                    "label": "DIS 101",
+                    "id": "13008",
+                    "include_in_site": true
+                },
+                {
+                    "course": "ASTRON C10",
+                    "label": "DIS 102",
+                    "id": "13009",
+                    "include_in_site": true
+                },
+                {
+                    "course": "ASTRON C10",
+                    "label": "DIS 103",
+                    "id": "13016",
+                    "include_in_site": true
+                },
+                {
+                    "course": "ASTRON C10",
+                    "label": "DIS 104",
+                    "id": "13017",
+                    "include_in_site": true
+                },
+                {
+                    "course": "ASTRON C10",
+                    "label": "DIS 105",
+                    "id": "13018",
+                    "include_in_site": true
+                },
+                {
+                    "course": "ASTRON C10",
+                    "label": "DIS 106",
+                    "id": "13019",
+                    "include_in_site": true
+                },
+                {
+                    "course": "ASTRON C10",
+                    "label": "DIS 107",
+                    "id": "13020",
+                    "include_in_site": true
+                },
+                {
+                    "course": "ASTRON C10",
+                    "label": "DIS 108",
+                    "id": "13021",
+                    "include_in_site": true
+                },
+                {
+                    "course": "ASTRON C10",
+                    "label": "DIS 109",
+                    "id": "13022",
+                    "include_in_site": true
+                },
+                {
+                    "course": "ASTRON C10",
+                    "label": "DIS 110",
+                    "id": "13023",
+                    "include_in_site": true
+                },
+                {
+                    "course": "ASTRON C10",
+                    "label": "DIS 111",
+                    "id": "12915",
+                    "include_in_site": true
+                },
+                {
+                    "course": "ASTRON C10",
+                    "label": "DIS 112",
+                    "id": "12916",
+                    "include_in_site": true
+                },
+                {
+                    "course": "ASTRON C10",
+                    "label": "DIS 113",
+                    "id": "12918",
+                    "include_in_site": true
+                },
+                {
+                    "course": "ASTRON C10",
+                    "label": "DIS 114",
+                    "id": "12919",
+                    "include_in_site": true
+                },
+                {
+                    "course": "ASTRON C10",
+                    "label": "DIS 115",
+                    "id": "12920",
+                    "include_in_site": true
+                },
+                {
+                    "course": "ASTRON C10",
+                    "label": "DIS 116",
+                    "id": "12921",
+                    "include_in_site": true
+                },
+                {
+                    "course": "ASTRON C10",
+                    "label": "DIS 117",
+                    "id": "12922",
+                    "include_in_site": true
+                },
+                {
+                    "course": "ASTRON C10",
+                    "label": "DIS 118",
+                    "id": "12923",
+                    "include_in_site": true
+                },
+                {
+                    "course": "ASTRON C10",
+                    "label": "DIS 119",
+                    "id": "12924",
+                    "include_in_site": true
+                },
+                {
+                    "course": "ASTRON C10",
+                    "label": "DIS 120",
+                    "id": "12932",
+                    "include_in_site": true
+                },
+                {
+                    "course": "ASTRON C10",
+                    "label": "DIS 121",
+                    "id": "12933",
+                    "include_in_site": true
+                },
+                {
+                    "course": "ASTRON C10",
+                    "label": "DIS 122",
+                    "id": "12934",
+                    "include_in_site": true
+                },
+                {
+                    "course": "ASTRON C10",
+                    "label": "DIS 123",
+                    "id": "12935",
+                    "include_in_site": true
+                },
+                {
+                    "course": "ASTRON C10",
+                    "label": "DIS 124",
+                    "id": "12936",
+                    "include_in_site": true
+                },
+                {
+                    "course": "ASTRON C10",
+                    "label": "DIS 125",
+                    "id": "12937",
+                    "include_in_site": true
+                },
+                {
+                    "course": "ASTRON C10",
+                    "label": "DIS 126",
+                    "id": "12938",
+                    "include_in_site": true
+                },
+                {
+                    "course": "L & S C70U",
+                    "label": "LEC 001",
+                    "id": "16007",
+                    "include_in_site": false
+                },
+                {
+                    "course": "L & S C70U",
+                    "label": "DIS 101",
+                    "id": "16012",
+                    "include_in_site": false
+                },
+                {
+                    "course": "L & S C70U",
+                    "label": "DIS 102",
+                    "id": "16013",
+                    "include_in_site": false
+                },
+                {
+                    "course": "L & S C70U",
+                    "label": "DIS 103",
+                    "id": "16014",
+                    "include_in_site": false
+                },
+                {
+                    "course": "L & S C70U",
+                    "label": "DIS 104",
+                    "id": "16000",
+                    "include_in_site": false
+                },
+                {
+                    "course": "L & S C70U",
+                    "label": "DIS 105",
+                    "id": "16001",
+                    "include_in_site": false
+                },
+                {
+                    "course": "L & S C70U",
+                    "label": "DIS 106",
+                    "id": "16002",
+                    "include_in_site": false
+                },
+                {
+                    "course": "L & S C70U",
+                    "label": "DIS 107",
+                    "id": "16003",
+                    "include_in_site": false
+                },
+                {
+                    "course": "L & S C70U",
+                    "label": "DIS 108",
+                    "id": "16004",
+                    "include_in_site": false
+                },
+                {
+                    "course": "L & S C70U",
+                    "label": "DIS 109",
+                    "id": "16005",
+                    "include_in_site": false
+                },
+                {
+                    "course": "L & S C70U",
+                    "label": "DIS 110",
+                    "id": "16047",
+                    "include_in_site": false
+                },
+                {
+                    "course": "L & S C70U",
+                    "label": "DIS 111",
+                    "id": "16048",
+                    "include_in_site": false
+                },
+                {
+                    "course": "L & S C70U",
+                    "label": "DIS 112",
+                    "id": "16049",
+                    "include_in_site": false
+                },
+                {
+                    "course": "L & S C70U",
+                    "label": "DIS 113",
+                    "id": "16050",
+                    "include_in_site": false
+                },
+                {
+                    "course": "L & S C70U",
+                    "label": "DIS 114",
+                    "id": "16055",
+                    "include_in_site": false
+                },
+                {
+                    "course": "L & S C70U",
+                    "label": "DIS 115",
+                    "id": "16034",
+                    "include_in_site": false
+                },
+                {
+                    "course": "L & S C70U",
+                    "label": "DIS 116",
+                    "id": "16035",
+                    "include_in_site": false
+                },
+                {
+                    "course": "L & S C70U",
+                    "label": "DIS 117",
+                    "id": "16036",
+                    "include_in_site": false
+                },
+                {
+                    "course": "L & S C70U",
+                    "label": "DIS 118",
+                    "id": "16037",
+                    "include_in_site": false
+                },
+                {
+                    "course": "L & S C70U",
+                    "label": "DIS 119",
+                    "id": "16038",
+                    "include_in_site": false
+                },
+                {
+                    "course": "L & S C70U",
+                    "label": "DIS 120",
+                    "id": "16039",
+                    "include_in_site": false
+                },
+                {
+                    "course": "L & S C70U",
+                    "label": "DIS 121",
+                    "id": "16040",
+                    "include_in_site": false
+                },
+                {
+                    "course": "L & S C70U",
+                    "label": "DIS 122",
+                    "id": "16041",
+                    "include_in_site": false
+                },
+                {
+                    "course": "L & S C70U",
+                    "label": "DIS 123",
+                    "id": "16042",
+                    "include_in_site": false
+                },
+                {
+                    "course": "L & S C70U",
+                    "label": "DIS 124",
+                    "id": "16043",
+                    "include_in_site": false
+                },
+                {
+                    "course": "L & S C70U",
+                    "label": "DIS 125",
+                    "id": "16044",
+                    "include_in_site": false
+                },
+                {
+                    "course": "L & S C70U",
+                    "label": "DIS 126",
+                    "id": "16045",
+                    "include_in_site": false
+                }
+            ],
+            "teachers": [
+                {
+                    "uid": "12345",
+                    "canvas_id": "7654321"
+                }
+            ],
+            "tests": {
+                "course_add_user": true,
+                "create_course_site": true,
+                "official_sections": true
+            },
+            "create_site_workflow": "self"
+        },
+        {
+            "code": "BIOLOGY 1A",
+            "title": "General Biology Lecture",
+            "term": "Fall 2017",
+            "sections": [
+                {
+                    "course": "BIOLOGY 1A",
+                    "label": "LEC 001",
+                    "id": "13210",
+                    "include_in_site": true
+                },
+                {
+                    "course": "BIOLOGY 1A",
+                    "label": "LEC 002",
+                    "id": "21808",
+                    "include_in_site": true
+                },
+                {
+                    "course": "BIOLOGY 1A",
+                    "label": "LEC 003",
+                    "id": "44224",
+                    "include_in_site": false
+                },
+                {
+                    "course": "BIOLOGY 1A",
+                    "label": "DIS 101",
+                    "id": "13211",
+                    "include_in_site": true
+                },
+                {
+                    "course": "BIOLOGY 1A",
+                    "label": "DIS 102",
+                    "id": "13212",
+                    "include_in_site": true
+                },
+                {
+                    "course": "BIOLOGY 1A",
+                    "label": "DIS 103",
+                    "id": "13213",
+                    "include_in_site": true
+                },
+                {
+                    "course": "BIOLOGY 1A",
+                    "label": "DIS 104",
+                    "id": "13214",
+                    "include_in_site": true
+                },
+                {
+                    "course": "BIOLOGY 1A",
+                    "label": "DIS 105",
+                    "id": "13215",
+                    "include_in_site": true
+                },
+                {
+                    "course": "BIOLOGY 1A",
+                    "label": "DIS 106",
+                    "id": "13108",
+                    "include_in_site": true
+                },
+                {
+                    "course": "BIOLOGY 1A",
+                    "label": "DIS 107",
+                    "id": "44594",
+                    "include_in_site": true
+                },
+                {
+                    "course": "BIOLOGY 1A",
+                    "label": "DIS 108",
+                    "id": "13109",
+                    "include_in_site": true
+                },
+                {
+                    "course": "BIOLOGY 1A",
+                    "label": "DIS 109",
+                    "id": "13110",
+                    "include_in_site": true
+                },
+                {
+                    "course": "BIOLOGY 1A",
+                    "label": "DIS 110",
+                    "id": "13111",
+                    "include_in_site": true
+                },
+                {
+                    "course": "BIOLOGY 1A",
+                    "label": "DIS 111",
+                    "id": "13112",
+                    "include_in_site": true
+                },
+                {
+                    "course": "BIOLOGY 1A",
+                    "label": "DIS 112",
+                    "id": "13113",
+                    "include_in_site": true
+                },
+                {
+                    "course": "BIOLOGY 1A",
+                    "label": "DIS 113",
+                    "id": "44609",
+                    "include_in_site": true
+                },
+                {
+                    "course": "BIOLOGY 1A",
+                    "label": "DIS 114",
+                    "id": "44610",
+                    "include_in_site": true
+                },
+                {
+                    "course": "BIOLOGY 1A",
+                    "label": "DIS 115",
+                    "id": "46714",
+                    "include_in_site": true
+                },
+                {
+                    "course": "BIOLOGY 1A",
+                    "label": "DIS 116",
+                    "id": "46715",
+                    "include_in_site": true
+                },
+                {
+                    "course": "BIOLOGY 1A",
+                    "label": "DIS 201",
+                    "id": "44595",
+                    "include_in_site": false
+                },
+                {
+                    "course": "BIOLOGY 1A",
+                    "label": "DIS 202",
+                    "id": "13116",
+                    "include_in_site": false
+                },
+                {
+                    "course": "BIOLOGY 1A",
+                    "label": "DIS 203",
+                    "id": "13117",
+                    "include_in_site": false
+                },
+                {
+                    "course": "BIOLOGY 1A",
+                    "label": "DIS 204",
+                    "id": "13122",
+                    "include_in_site": false
+                },
+                {
+                    "course": "BIOLOGY 1A",
+                    "label": "DIS 205",
+                    "id": "44611",
+                    "include_in_site": false
+                },
+                {
+                    "course": "BIOLOGY 1A",
+                    "label": "DIS 206",
+                    "id": "13123",
+                    "include_in_site": false
+                },
+                {
+                    "course": "BIOLOGY 1A",
+                    "label": "DIS 207",
+                    "id": "13124",
+                    "include_in_site": false
+                },
+                {
+                    "course": "BIOLOGY 1A",
+                    "label": "DIS 208",
+                    "id": "46716",
+                    "include_in_site": false
+                }
+            ],
+            "teachers": [
+                {
+                    "uid": "12345",
+                    "canvas_id": "7654321"
+                }
+            ],
+            "tests": {
+                "create_course_site": true,
+                "official_sections": true
+            },
+            "create_site_workflow": "ccn"
+        },
+        {
+            "code": "COMPSCI 61A",
+            "title": "The Structure and Interpretation of Computer Programs",
+            "term": "Fall 2017",
+            "sections": [
+                {
+                    "course": "COMPSCI 61A",
+                    "label": "LEC 001",
+                    "id": "38652",
+                    "include_in_site": true
+                },
+                {
+                    "course": "COMPSCI 61A",
+                    "label": "DIS 101B",
+                    "id": "38685",
+                    "include_in_site": false
+                },
+                {
+                    "course": "COMPSCI 61A",
+                    "label": "DIS 102B",
+                    "id": "38686",
+                    "include_in_site": false
+                },
+                {
+                    "course": "COMPSCI 61A",
+                    "label": "DIS 103B",
+                    "id": "38687",
+                    "include_in_site": false
+                },
+                {
+                    "course": "COMPSCI 61A",
+                    "label": "DIS 104B",
+                    "id": "38688",
+                    "include_in_site": false
+                },
+                {
+                    "course": "COMPSCI 61A",
+                    "label": "DIS 105B",
+                    "id": "38726",
+                    "include_in_site": false
+                },
+                {
+                    "course": "COMPSCI 61A",
+                    "label": "DIS 106B",
+                    "id": "38727",
+                    "include_in_site": false
+                },
+                {
+                    "course": "COMPSCI 61A",
+                    "label": "DIS 107B",
+                    "id": "38728",
+                    "include_in_site": false
+                },
+                {
+                    "course": "COMPSCI 61A",
+                    "label": "DIS 108B",
+                    "id": "38729",
+                    "include_in_site": false
+                },
+                {
+                    "course": "COMPSCI 61A",
+                    "label": "DIS 109B",
+                    "id": "38730",
+                    "include_in_site": false
+                },
+                {
+                    "course": "COMPSCI 61A",
+                    "label": "DIS 110B",
+                    "id": "38731",
+                    "include_in_site": false
+                },
+                {
+                    "course": "COMPSCI 61A",
+                    "label": "DIS 111B",
+                    "id": "38732",
+                    "include_in_site": false
+                },
+                {
+                    "course": "COMPSCI 61A",
+                    "label": "DIS 112B",
+                    "id": "38664",
+                    "include_in_site": false
+                },
+                {
+                    "course": "COMPSCI 61A",
+                    "label": "DIS 113B",
+                    "id": "38665",
+                    "include_in_site": false
+                },
+                {
+                    "course": "COMPSCI 61A",
+                    "label": "DIS 114B",
+                    "id": "38666",
+                    "include_in_site": false
+                },
+                {
+                    "course": "COMPSCI 61A",
+                    "label": "DIS 115B",
+                    "id": "38667",
+                    "include_in_site": false
+                },
+                {
+                    "course": "COMPSCI 61A",
+                    "label": "DIS 116B",
+                    "id": "38668",
+                    "include_in_site": false
+                },
+                {
+                    "course": "COMPSCI 61A",
+                    "label": "DIS 117B",
+                    "id": "38669",
+                    "include_in_site": false
+                },
+                {
+                    "course": "COMPSCI 61A",
+                    "label": "DIS 118B",
+                    "id": "38709",
+                    "include_in_site": false
+                },
+                {
+                    "course": "COMPSCI 61A",
+                    "label": "DIS 119B",
+                    "id": "38710",
+                    "include_in_site": false
+                },
+                {
+                    "course": "COMPSCI 61A",
+                    "label": "DIS 120B",
+                    "id": "38711",
+                    "include_in_site": false
+                },
+                {
+                    "course": "COMPSCI 61A",
+                    "label": "DIS 121B",
+                    "id": "38712",
+                    "include_in_site": false
+                },
+                {
+                    "course": "COMPSCI 61A",
+                    "label": "DIS 122B",
+                    "id": "38717",
+                    "include_in_site": false
+                },
+                {
+                    "course": "COMPSCI 61A",
+                    "label": "DIS 123B",
+                    "id": "38718",
+                    "include_in_site": false
+                },
+                {
+                    "course": "COMPSCI 61A",
+                    "label": "DIS 124B",
+                    "id": "38719",
+                    "include_in_site": false
+                },
+                {
+                    "course": "COMPSCI 61A",
+                    "label": "DIS 125B",
+                    "id": "38720",
+                    "include_in_site": false
+                },
+                {
+                    "course": "COMPSCI 61A",
+                    "label": "DIS 126B",
+                    "id": "38721",
+                    "include_in_site": false
+                },
+                {
+                    "course": "COMPSCI 61A",
+                    "label": "DIS 127B",
+                    "id": "38722",
+                    "include_in_site": false
+                },
+                {
+                    "course": "COMPSCI 61A",
+                    "label": "DIS 128B",
+                    "id": "38723",
+                    "include_in_site": false
+                },
+                {
+                    "course": "COMPSCI 61A",
+                    "label": "DIS 129B",
+                    "id": "38724",
+                    "include_in_site": false
+                },
+                {
+                    "course": "COMPSCI 61A",
+                    "label": "DIS 130B",
+                    "id": "38725",
+                    "include_in_site": false
+                },
+                {
+                    "course": "COMPSCI 61A",
+                    "label": "DIS 131B",
+                    "id": "41677",
+                    "include_in_site": false
+                },
+                {
+                    "course": "COMPSCI 61A",
+                    "label": "DIS 132B",
+                    "id": "41678",
+                    "include_in_site": false
+                },
+                {
+                    "course": "COMPSCI 61A",
+                    "label": "DIS 133B",
+                    "id": "41679",
+                    "include_in_site": false
+                },
+                {
+                    "course": "COMPSCI 61A",
+                    "label": "DIS 134B",
+                    "id": "41680",
+                    "include_in_site": false
+                },
+                {
+                    "course": "COMPSCI 61A",
+                    "label": "DIS 135B",
+                    "id": "41681",
+                    "include_in_site": false
+                },
+                {
+                    "course": "COMPSCI 61A",
+                    "label": "DIS 136B",
+                    "id": "41682",
+                    "include_in_site": false
+                },
+                {
+                    "course": "COMPSCI 61A",
+                    "label": "DIS 137B",
+                    "id": "41683",
+                    "include_in_site": false
+                },
+                {
+                    "course": "COMPSCI 61A",
+                    "label": "DIS 138B",
+                    "id": "41684",
+                    "include_in_site": false
+                },
+                {
+                    "course": "COMPSCI 61A",
+                    "label": "DIS 139B",
+                    "id": "41685",
+                    "include_in_site": false
+                },
+                {
+                    "course": "COMPSCI 61A",
+                    "label": "DIS 140B",
+                    "id": "41686",
+                    "include_in_site": false
+                },
+                {
+                    "course": "COMPSCI 61A",
+                    "label": "LAB 101C",
+                    "id": "38653",
+                    "include_in_site": false
+                },
+                {
+                    "course": "COMPSCI 61A",
+                    "label": "LAB 102C",
+                    "id": "38654",
+                    "include_in_site": false
+                },
+                {
+                    "course": "COMPSCI 61A",
+                    "label": "LAB 103C",
+                    "id": "38655",
+                    "include_in_site": false
+                },
+                {
+                    "course": "COMPSCI 61A",
+                    "label": "LAB 104C",
+                    "id": "38656",
+                    "include_in_site": false
+                },
+                {
+                    "course": "COMPSCI 61A",
+                    "label": "LAB 105C",
+                    "id": "38657",
+                    "include_in_site": false
+                },
+                {
+                    "course": "COMPSCI 61A",
+                    "label": "LAB 106C",
+                    "id": "38658",
+                    "include_in_site": false
+                },
+                {
+                    "course": "COMPSCI 61A",
+                    "label": "LAB 107C",
+                    "id": "38659",
+                    "include_in_site": false
+                },
+                {
+                    "course": "COMPSCI 61A",
+                    "label": "LAB 108C",
+                    "id": "38660",
+                    "include_in_site": false
+                },
+                {
+                    "course": "COMPSCI 61A",
+                    "label": "LAB 109C",
+                    "id": "38661",
+                    "include_in_site": false
+                },
+                {
+                    "course": "COMPSCI 61A",
+                    "label": "LAB 110C",
+                    "id": "38697",
+                    "include_in_site": false
+                },
+                {
+                    "course": "COMPSCI 61A",
+                    "label": "LAB 111C",
+                    "id": "38627",
+                    "include_in_site": false
+                },
+                {
+                    "course": "COMPSCI 61A",
+                    "label": "LAB 112C",
+                    "id": "38633",
+                    "include_in_site": false
+                },
+                {
+                    "course": "COMPSCI 61A",
+                    "label": "LAB 113C",
+                    "id": "38634",
+                    "include_in_site": false
+                },
+                {
+                    "course": "COMPSCI 61A",
+                    "label": "LAB 114C",
+                    "id": "38635",
+                    "include_in_site": false
+                },
+                {
+                    "course": "COMPSCI 61A",
+                    "label": "LAB 115C",
+                    "id": "38636",
+                    "include_in_site": false
+                },
+                {
+                    "course": "COMPSCI 61A",
+                    "label": "LAB 116C",
+                    "id": "38637",
+                    "include_in_site": false
+                },
+                {
+                    "course": "COMPSCI 61A",
+                    "label": "LAB 117C",
+                    "id": "38638",
+                    "include_in_site": false
+                },
+                {
+                    "course": "COMPSCI 61A",
+                    "label": "LAB 118C",
+                    "id": "38639",
+                    "include_in_site": false
+                },
+                {
+                    "course": "COMPSCI 61A",
+                    "label": "LAB 119C",
+                    "id": "38640",
+                    "include_in_site": false
+                },
+                {
+                    "course": "COMPSCI 61A",
+                    "label": "LAB 120C",
+                    "id": "38641",
+                    "include_in_site": false
+                },
+                {
+                    "course": "COMPSCI 61A",
+                    "label": "LAB 121C",
+                    "id": "38642",
+                    "include_in_site": false
+                },
+                {
+                    "course": "COMPSCI 61A",
+                    "label": "LAB 122C",
+                    "id": "38670",
+                    "include_in_site": false
+                },
+                {
+                    "course": "COMPSCI 61A",
+                    "label": "LAB 123C",
+                    "id": "38671",
+                    "include_in_site": false
+                },
+                {
+                    "course": "COMPSCI 61A",
+                    "label": "LAB 124C",
+                    "id": "38672",
+                    "include_in_site": false
+                },
+                {
+                    "course": "COMPSCI 61A",
+                    "label": "LAB 125C",
+                    "id": "38673",
+                    "include_in_site": false
+                },
+                {
+                    "course": "COMPSCI 61A",
+                    "label": "LAB 126C",
+                    "id": "38674",
+                    "include_in_site": false
+                },
+                {
+                    "course": "COMPSCI 61A",
+                    "label": "LAB 127C",
+                    "id": "38675",
+                    "include_in_site": false
+                },
+                {
+                    "course": "COMPSCI 61A",
+                    "label": "LAB 128C",
+                    "id": "38676",
+                    "include_in_site": false
+                },
+                {
+                    "course": "COMPSCI 61A",
+                    "label": "LAB 129C",
+                    "id": "38683",
+                    "include_in_site": false
+                },
+                {
+                    "course": "COMPSCI 61A",
+                    "label": "LAB 130C",
+                    "id": "38684",
+                    "include_in_site": false
+                },
+                {
+                    "course": "COMPSCI 61A",
+                    "label": "LAB 131C",
+                    "id": "41492",
+                    "include_in_site": false
+                },
+                {
+                    "course": "COMPSCI 61A",
+                    "label": "LAB 132C",
+                    "id": "41663",
+                    "include_in_site": false
+                },
+                {
+                    "course": "COMPSCI 61A",
+                    "label": "LAB 133C",
+                    "id": "41664",
+                    "include_in_site": false
+                },
+                {
+                    "course": "COMPSCI 61A",
+                    "label": "LAB 134C",
+                    "id": "41665",
+                    "include_in_site": false
+                },
+                {
+                    "course": "COMPSCI 61A",
+                    "label": "LAB 135C",
+                    "id": "41666",
+                    "include_in_site": false
+                },
+                {
+                    "course": "COMPSCI 61A",
+                    "label": "LAB 136C",
+                    "id": "41667",
+                    "include_in_site": false
+                },
+                {
+                    "course": "COMPSCI 61A",
+                    "label": "LAB 137C",
+                    "id": "41668",
+                    "include_in_site": false
+                },
+                {
+                    "course": "COMPSCI 61A",
+                    "label": "LAB 138C",
+                    "id": "41669",
+                    "include_in_site": false
+                },
+                {
+                    "course": "COMPSCI 61A",
+                    "label": "LAB 139C",
+                    "id": "41670",
+                    "include_in_site": false
+                },
+                {
+                    "course": "COMPSCI 61A",
+                    "label": "LAB 140C",
+                    "id": "41671",
+                    "include_in_site": false
+                }
+            ],
+            "teachers": [
+                {
+                    "uid": "12345",
+                    "canvas_id": "7654321"
+                }
+            ],
+            "tests": {
+                "create_course_site": true,
+                "official_sections": true
+            },
+            "create_site_workflow": "uid"
+        },
+        {
+            "code": "L & S C160V",
+            "title": "Human Happiness",
+            "term": "Fall 2017",
+            "sections": [
+                {
+                    "course": "L & S C160V",
+                    "label": "LEC 001",
+                    "id": "46183",
+                    "include_in_site": true
+                },
+                {
+                    "course": "L & S C160V",
+                    "label": "DIS 101",
+                    "id": "46184",
+                    "include_in_site": false
+                },
+                {
+                    "course": "L & S C160V",
+                    "label": "DIS 102",
+                    "id": "46187",
+                    "include_in_site": false
+                },
+                {
+                    "course": "L & S C160V",
+                    "label": "DIS 103",
+                    "id": "46343",
+                    "include_in_site": false
+                },
+                {
+                    "course": "L & S C160V",
+                    "label": "DIS 104",
+                    "id": "46344",
+                    "include_in_site": false
+                },
+                {
+                    "course": "L & S C160V",
+                    "label": "DIS 105",
+                    "id": "46345",
+                    "include_in_site": false
+                },
+                {
+                    "course": "L & S C160V",
+                    "label": "DIS 106",
+                    "id": "46346",
+                    "include_in_site": false
+                },
+                {
+                    "course": "L & S C160V",
+                    "label": "DIS 107",
+                    "id": "46347",
+                    "include_in_site": false
+                },
+                {
+                    "course": "L & S C160V",
+                    "label": "DIS 108",
+                    "id": "46348",
+                    "include_in_site": false
+                },
+                {
+                    "course": "L & S C160V",
+                    "label": "DIS 109",
+                    "id": "46349",
+                    "include_in_site": false
+                },
+                {
+                    "course": "L & S C160V",
+                    "label": "DIS 110",
+                    "id": "46350",
+                    "include_in_site": false
+                },
+                {
+                    "course": "L & S C160V",
+                    "label": "DIS 111",
+                    "id": "46351",
+                    "include_in_site": false
+                },
+                {
+                    "course": "L & S C160V",
+                    "label": "DIS 112",
+                    "id": "46352",
+                    "include_in_site": false
+                },
+                {
+                    "course": "PSYCH C162",
+                    "label": "LEC 001",
+                    "id": "44697",
+                    "include_in_site": true
+                },
+                {
+                    "course": "PSYCH C162",
+                    "label": "DIS 101",
+                    "id": "46075",
+                    "include_in_site": false
+                },
+                {
+                    "course": "PSYCH C162",
+                    "label": "DIS 102",
+                    "id": "46459",
+                    "include_in_site": false
+                },
+                {
+                    "course": "PSYCH C162",
+                    "label": "DIS 103",
+                    "id": "46460",
+                    "include_in_site": false
+                },
+                {
+                    "course": "PSYCH C162",
+                    "label": "DIS 104",
+                    "id": "46461",
+                    "include_in_site": false
+                },
+                {
+                    "course": "PSYCH C162",
+                    "label": "DIS 105",
+                    "id": "46462",
+                    "include_in_site": false
+                },
+                {
+                    "course": "PSYCH C162",
+                    "label": "DIS 106",
+                    "id": "46463",
+                    "include_in_site": false
+                },
+                {
+                    "course": "PSYCH C162",
+                    "label": "DIS 107",
+                    "id": "46464",
+                    "include_in_site": false
+                },
+                {
+                    "course": "PSYCH C162",
+                    "label": "DIS 108",
+                    "id": "46465",
+                    "include_in_site": false
+                },
+                {
+                    "course": "PSYCH C162",
+                    "label": "DIS 109",
+                    "id": "46466",
+                    "include_in_site": false
+                },
+                {
+                    "course": "PSYCH C162",
+                    "label": "DIS 110",
+                    "id": "46467",
+                    "include_in_site": false
+                },
+                {
+                    "course": "PSYCH C162",
+                    "label": "DIS 111",
+                    "id": "46468",
+                    "include_in_site": false
+                },
+                {
+                    "course": "PSYCH C162",
+                    "label": "DIS 112",
+                    "id": "46469",
+                    "include_in_site": false
+                }
+            ],
+            "teachers": [
+                {
+                    "uid": "12345",
+                    "canvas_id": "7654321"
+                }
+            ],
+            "tests": {
+                "create_course_site": true,
+                "official_sections": true,
+                "roster_photos": true
+            },
+            "create_site_workflow": "uid"
+        }
+    ],
+    "users": [
+        {
+            "uid": 12345,
+            "canvas_id": 7654321,
+            "tests": {
+                "course_capture": [
+                    {
+                        "site_id": "987654",
+                        "sections": [
+                            {
+                                "video_count": 38,
+                                "video_id": "some_youtube_id"
+                            }
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "uid": 12345,
+            "canvas_id": 7654321,
+            "role": "Teacher",
+            "tests": {
+                "course_add_user": true,
+                "course_capture": [
+                    {
+                        "site_id": "987654",
+                        "sections": [
+                            {
+                                "video_count": 26,
+                                "video_id": "some_youtube_id"
+                            }
+                        ]
+                    },
+                    {
+                        "site_id": "987654",
+                        "sections": [
+                            {
+                                "video_count": 26,
+                                "video_id": "some_youtube_id"
+                            }
+                        ]
+                    }
+                ],
+                "e_grades_export": true,
+                "create_project_site": true
+            }
+        },
+        {
+            "uid": 12345,
+            "canvas_id": 7654321,
+            "tests": {
+                "course_capture": [
+                    {
+                        "site_id": "987654",
+                        "sections": [
+                            {
+                                "code": "BIOLOGY 1A LEC 001",
+                                "video_count": 40,
+                                "video_id": "some_youtube_id"
+                            },
+                            {
+                                "code": "BIOLOGY 1A LEC 002",
+                                "video_count": 38,
+                                "video_id": "some_youtube_id"
+                            }
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "uid": 12345,
+            "canvas_id": 7654321,
+            "role": "Lead TA",
+            "tests": {
+                "course_add_user": true,
+                "e_grades_export": true,
+                "mailing_lists": true,
+                "official_sections": true,
+                "roster_photos": true
+            }
+        },
+        {
+            "uid": 12345,
+            "canvas_id": 7654321,
+            "role": "TA",
+            "tests": {
+                "course_add_user": true,
+                "create_project_site": true,
+                "e_grades_export": true,
+                "mailing_lists": true,
+                "official_sections": true,
+                "roster_photos": true
+            }
+        },
+        {
+            "uid": 12345,
+            "canvas_id": 7654321,
+            "role": "Designer",
+            "tests": {
+                "course_add_user": true,
+                "e_grades_export": true,
+                "mailing_lists": true,
+                "official_sections": true,
+                "roster_photos": true
+            }
+        },
+        {
+            "uid": 12345,
+            "canvas_id": 7654321,
+            "role": "Reader",
+            "tests": {
+                "course_add_user": true,
+                "e_grades_export": true,
+                "mailing_lists": true,
+                "official_sections": true,
+                "roster_photos": true
+            }
+        },
+        {
+            "uid": 12345,
+            "canvas_id": 7654321,
+            "role": "Observer",
+            "tests": {
+                "course_add_user": true,
+                "e_grades_export": true,
+                "mailing_lists": true,
+                "roster_photos": true,
+                "official_sections": true
+            }
+        },
+        {
+            "uid": 12345,
+            "canvas_id": 7654321,
+            "role": "Staff",
+            "tests": {
+                "create_project_site": true
+            }
+        },
+        {
+            "uid": 12345,
+            "canvas_id": 7654321,
+            "role": "Student",
+            "tests": {
+                "create_project_site": true,
+                "course_add_user": true,
+                "e_grades_export": true,
+                "mailing_lists": true,
+                "official_sections": true,
+                "roster_photos": true
+            }
+        },
+        {
+            "uid": 12345,
+            "canvas_id": 7654321,
+            "role": "Waitlist Student",
+            "tests": {
+                "course_add_user": true,
+                "e_grades_export": true,
+                "official_sections": true,
+                "roster_photos": true
+            }
+        },
+        {
+            "uid": 12345,
+            "canvas_id": 7654321,
+            "role": "Student",
+            "tests": {
+                "create_project_site": true,
+                "mailing_lists": true
+            }
+        }
+    ]
+}

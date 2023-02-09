@@ -127,6 +127,19 @@ oec:
   sis_id: secret
   email: secret
 
+ripley:
+  base_url: https://ripley-qa.ets.berkeley.edu
+  dev_auth_password: secret
+  admin_uid: secret
+  term_name: 'Spring 2023'
+  term: '2023-B'
+  sis_update_date: '2020-01-01'
+  db_host: secret
+  db_port: secret
+  db_name: secret
+  db_user: secret
+  db_password: secret
+
 squiggy:
   base_url: tbd
   password: secret
