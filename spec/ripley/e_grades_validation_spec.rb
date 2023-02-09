@@ -1,0 +1,194 @@
+unless ENV['STANDALONE']
+
+  require_relative '../../util/spec_helper'
+
+  include Logging
+
+  describe 'bCourses E-Grades Export' do
+
+    begin
+
+      test = RipleyTestConfig.new
+      test.e_grades_api
+      letter_grades = %w(A+ A A- B+ B B- C+ C C- D+ D D- F)
+
+      @driver = Utils.launch_browser
+      @cal_net = Page::CalNetPage.new @driver
+      @canvas = Page::CanvasGradesPage.new @driver
+      @splash_page = RipleySplashPage.new @driver
+      @e_grades_export_page = RipleyEGradesPage.new @driver
+
+      # TODO - replace with data collection from Nessie
+      @rosters_api = ApiAcademicsRosterPage.new @driver
+
+      @canvas.log_in(@cal_net, Utils.super_admin_username, Utils.super_admin_password)
+
+      test.courses.each_with_index do |course, i|
+
+        begin
+
+          # Get SIS roster
+          test.set_sis_teacher course
+          instructor = test.set_sis_teacher course
+          primary_section = test.set_course_sections(course).first
+
+          # TODO - replace with data collection from Nessie
+          @splash_page.load_page
+          @splash_page.dev_auth(instructor.uid, @cal_net)
+          rosters_api = ApiAcademicsRosterPage.new @driver
+          rosters_api.get_feed course
+
+          # Disable existing grading scheme in case it is not default, then set default scheme
+          @canvas.masquerade_as(instructor, course)
+
+          %w(letter letter-only pnp sus).each do |scheme|
+
+            @canvas.enable_grading_scheme course
+            @canvas.set_grading_scheme({scheme: scheme})
+
+            # Get grades in Canvas
+            students = @canvas.get_students(course, primary_section)
+            @canvas.load_gradebook course
+            grades_are_final = @canvas.grades_final?
+            logger.info "Grades are final is #{grades_are_final}"
+            @canvas.hit_escape
+            gradebook_grades = students.map do |stud|
+              stud.sis_id = rosters_api.sid_from_uid stud.uid
+              stud.full_name = rosters_api.name_from_uid stud.uid
+              @canvas.student_score stud if stud.sis_id
+            end
+            gradebook_grades.compact!
+            logger.debug "Gradebook grades: #{gradebook_grades}"
+
+            ### WITH A P/NP CUTOFF ###
+
+            # Get grades in export CSV
+            cutoff = i.even? ? 'C-' : 'A'
+            e_grades = grades_are_final ?
+                         @e_grades_export_page.download_final_grades(course, primary_section, cutoff) :
+                         @e_grades_export_page.download_current_grades(course, primary_section, cutoff)
+
+            if gradebook_grades.any?
+              # Match the grade for each student
+              gradebook_grades.each do |gradebook_row|
+                begin
+
+                  # If an error occurred fetching a grade, then the row might cause an error in the test
+                  e_grades_row = e_grades.find do |e_grade|
+                    e_grade[:id] == gradebook_row[:student].sis_id if gradebook_row.instance_of? Hash
+                  end
+                  if e_grades_row && gradebook_row[:grade]
+
+                    expected_grade = if %w(letter letter-only).include? scheme
+                                       if e_grades_row[:grading_basis] == 'GRD'
+                                         gradebook_row[:grade]
+                                       else
+                                         pass = letter_grades.index(gradebook_row[:grade]) <= letter_grades.index(cutoff)
+                                         if %w(ESU SUS).include? e_grades_row[:grading_basis]
+                                           pass ? 'S' : 'U'
+                                         else
+                                           pass ? 'P' : 'NP'
+                                         end
+                                       end
+                                     else
+                                       gradebook_row[:grade]
+                                     end
+
+
+                    it "shows the grade '#{expected_grade}' for UID #{gradebook_row[:student].uid} in #{course.term} #{course.code}
+                        site #{course.site_id} with grading scheme #{scheme} and a P/NP cutoff of #{cutoff}" do
+                      expect(e_grades_row[:grade]).to eql(expected_grade)
+                    end
+
+                    expected_comment = case e_grades_row[:grading_basis]
+                                       when 'CPN', 'DPN', 'EPN', 'PNP'
+                                         'P/NP grade'
+                                       when 'ESU', 'SUS'
+                                         'S/U grade'
+                                       when 'CNC'
+                                         'C/NC grade'
+                                       else
+                                         ''
+                                       end
+                    it "shows the comment '#{expected_comment}' for UID #{gradebook_row[:student].uid} in #{course.term} #{course.code}
+                        site #{course.site_id} with grading scheme #{scheme} and a P/NP cutoff of #{cutoff}" do
+                      expect(e_grades_row[:comments]).to eql(expected_comment)
+                    end
+                  end
+
+                rescue => e
+                  # Catch and report errors related to the user
+                  Utils.log_error e
+                  it("encountered an unexpected error with #{course.code} #{gradebook_row}") { fail }
+                end
+              end
+
+            else
+              it("found no Canvas grades for #{course.code}") { fail }
+            end
+
+            ### WITH NO P/NP CUTOFF
+
+            # Get grades in export CSV
+            cutoff = nil
+            e_grades = grades_are_final ?
+                         @e_grades_export_page.download_final_grades(course, primary_section, cutoff) :
+                         @e_grades_export_page.download_current_grades(course, primary_section, cutoff)
+
+            if gradebook_grades.any?
+              # Match the grade for each student
+              gradebook_grades.each do |gradebook_row|
+                begin
+
+                  # If an error occurred fetching a grade, then the row might cause an error in the test
+                  e_grades_row = e_grades.find do |e_grade|
+                    e_grade[:id] == gradebook_row[:student].sis_id if gradebook_row.instance_of? Hash
+                  end
+                  if e_grades_row && gradebook_row[:grade]
+
+                    expected_grade = gradebook_row[:grade]
+
+                    it "shows the grade '#{expected_grade}' for UID #{gradebook_row[:student].uid} in #{course.term} #{course.code}
+                        site #{course.site_id} with grading scheme #{scheme} and no P/NP cutoff" do
+                      expect(e_grades_row[:grade]).to eql(expected_grade)
+                    end
+
+                    expected_comment = case e_grades_row[:grading_basis]
+                                       when 'CPN', 'DPN', 'EPN', 'PNP'
+                                         'P/NP grade'
+                                       when 'ESU', 'SUS'
+                                         'S/U grade'
+                                       when 'CNC'
+                                         'C/NC grade'
+                                       else
+                                         ''
+                                       end
+                    it "shows the comment '#{expected_comment}' for UID #{gradebook_row[:student].uid} in #{course.term} #{course.code}
+                        site #{course.site_id} with grading scheme #{scheme} and no P/NP cutoff" do
+                      expect(e_grades_row[:comments]).to eql(expected_comment)
+                    end
+                  end
+
+                rescue => e
+                  # Catch and report errors related to the user
+                  Utils.log_error e
+                  it("encountered an unexpected error with #{course.code} #{gradebook_row}") { fail }
+                end
+              end
+            end
+          end
+        rescue => e
+          # Catch and report errors related to the course
+          Utils.log_error e
+          it("encountered an unexpected error with #{course.code}") { fail }
+        end
+      end
+    rescue => e
+      # Catch and report errors related to the whole test
+      Utils.log_error e
+      it('encountered an unexpected error') { fail }
+    ensure
+      Utils.quit_browser @driver
+    end
+  end
+end

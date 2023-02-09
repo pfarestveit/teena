@@ -440,6 +440,7 @@ module Page
     text_area(:key_input, xpath: '(//div[@class="ConfigurationFormUrl"]/div[2]//input)[1]')
     text_area(:secret_input, xpath: '(//div[@class="ConfigurationFormUrl"]/div[2]//input)[2]')
     text_area(:url_input, xpath: '//div[@class="ConfigurationFormUrl"]/div[3]//input')
+    button(:add_tool_button, id: 'continue-install')
     link(:app_placements_button, text: 'Placements')
     button(:activate_navigation_button, xpath: '//span[text()="Course Navigation"]/following-sibling::span//button')
     button(:close_placements_button, xpath: '//span[@aria-label="App Placements"]//button[contains(., "Close")]')
@@ -527,6 +528,7 @@ module Page
             wait_for_element_and_type(secret_input_element, creds[:secret])
             wait_for_element_and_type(url_input_element, "#{SquiggyUtils.base_url}#{tool.xml}")
             submit_button
+            wait_for_update_and_click add_tool_button_element
             link_element(xpath: "//td[@title='#{tool.name}']").when_present Utils.medium_wait
 
             # Enable tool placement in sidebar navigation
