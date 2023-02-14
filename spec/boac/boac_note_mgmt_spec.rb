@@ -295,12 +295,18 @@ unless ENV['NO_DEPS']
           end
 
           it 'can edit set date' do
-            note_4.set_date = Time.now - 604800
+            note_4.set_date = Date.today.to_time
             @student_page.expand_item note_4
             @student_page.click_edit_note_button note_4
             @student_page.enter_set_date note_4
             @student_page.save_note_edit note_4
             @student_page.verify_note(note_4, test.advisor)
+          end
+
+          it 'can view edited set date sorted correctly' do
+            @student_page.load_page test_student
+            @student_page.show_notes
+            expect(@student_page.visible_collapsed_note_ids).to eql(@student_page.expected_note_id_sort_order notes)
           end
 
           it 'can remove set date' do
