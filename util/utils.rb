@@ -89,12 +89,13 @@ class Utils
         nil
     end
     set_default_window_size driver
+    driver.manage.timeouts.page_load = 120
     Selenium::WebDriver.logger.level = :error
     driver
   end
 
   def self.set_default_window_size(driver)
-    headless? ? driver.manage.window.resize_to(1920, 1200) : driver.manage.window.maximize
+    driver.manage.window.maximize
   end
 
   def self.set_reduced_window_size(driver)

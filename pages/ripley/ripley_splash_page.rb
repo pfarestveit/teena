@@ -21,9 +21,9 @@ class RipleySplashPage
 
   # Dev Auth
 
-  text_field(:dev_auth_uid_input, id: 'TBD')
-  text_field(:dev_auth_password_input, id: 'TBD')
-  button(:dev_auth_log_in_button, id: 'TBD')
+  text_field(:dev_auth_uid_input, id: 'basic-auth-uid')
+  text_field(:dev_auth_password_input, id: 'basic-auth-password')
+  button(:dev_auth_log_in_button, id: 'basic-auth-submit-button')
 
   def dev_auth(uid, cal_net = nil)
     logger.info "Logging in as #{uid} using dev auth"

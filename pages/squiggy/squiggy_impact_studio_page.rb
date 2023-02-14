@@ -477,4 +477,9 @@ class SquiggyImpactStudioPage
   def wait_for_no_everyone_asset_results
     no_everyone_assets_msg_element.when_visible Utils.short_wait
   end
+
+  def click_view_all_assets
+    logger.info 'Clicking link to view all assets'
+    wait_for_update_and_click everyone_assets_show_more_link_element
+  end
 end

@@ -414,4 +414,13 @@ describe 'The Impact Studio' do
       end
     end
   end
+
+  context 'when there are more than 4 Everyone Assets' do
+
+    it 'a link to the Asset Library is shown' do
+      @impact_studio.click_view_all_assets
+      @asset_library.wait_until(Utils.short_wait) { @asset_library.title == 'Asset Library' }
+      @asset_library.wait_for_assets test
+    end
+  end
 end
