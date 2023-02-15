@@ -1381,71 +1381,11 @@
         {
             "uid": 12345,
             "canvas_id": 7654321,
-            "tests": {
-                "course_capture": [
-                    {
-                        "site_id": "987654",
-                        "sections": [
-                            {
-                                "video_count": 38,
-                                "video_id": "some_youtube_id"
-                            }
-                        ]
-                    }
-                ]
-            }
-        },
-        {
-            "uid": 12345,
-            "canvas_id": 7654321,
             "role": "Teacher",
             "tests": {
                 "course_add_user": true,
-                "course_capture": [
-                    {
-                        "site_id": "987654",
-                        "sections": [
-                            {
-                                "video_count": 26,
-                                "video_id": "some_youtube_id"
-                            }
-                        ]
-                    },
-                    {
-                        "site_id": "987654",
-                        "sections": [
-                            {
-                                "video_count": 26,
-                                "video_id": "some_youtube_id"
-                            }
-                        ]
-                    }
-                ],
                 "e_grades_export": true,
                 "create_project_site": true
-            }
-        },
-        {
-            "uid": 12345,
-            "canvas_id": 7654321,
-            "tests": {
-                "course_capture": [
-                    {
-                        "site_id": "987654",
-                        "sections": [
-                            {
-                                "code": "BIOLOGY 1A LEC 001",
-                                "video_count": 40,
-                                "video_id": "some_youtube_id"
-                            },
-                            {
-                                "code": "BIOLOGY 1A LEC 002",
-                                "video_count": 38,
-                                "video_id": "some_youtube_id"
-                            }
-                        ]
-                    }
-                ]
             }
         },
         {

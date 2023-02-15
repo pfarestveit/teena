@@ -18,11 +18,6 @@ class RipleyTestConfig < TestConfig
     @courses.each { |c| c.create_site_workflow = 'self' }
   end
 
-  def course_capture
-    set_global_configs
-    test_specific_user_data 'course_capture'
-  end
-
   def course_site_creation
     test = 'create_course_site'
     set_global_configs
