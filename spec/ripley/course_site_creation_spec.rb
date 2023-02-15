@@ -19,7 +19,6 @@ describe 'bCourses course site creation' do
     @canvas_page = Page::CanvasPage.new @driver
     @canvas_assignments_page = Page::CanvasAssignmentsPage.new @driver
     @roster_photos_page = RipleyRosterPhotosPage.new @driver
-    @course_captures_page = RipleyCourseCapturesPage.new @driver
 
     sites_created = []
     sites_to_create = []
@@ -357,14 +356,6 @@ describe 'bCourses course site creation' do
           actual_sections_on_site = @roster_photos_page.section_options
           it "shows the right section list on the Roster Photos tool for #{test_case}" do
             expect(actual_sections_on_site).to eql(expected_sections_on_site.sort)
-          end
-
-          # COURSE CAPTURE - check that course captures tool is not added automatically
-
-          @canvas_page.load_course_site site[:course]
-          has_course_captures_link = @course_captures_page.course_captures_link?
-          it "shows no Course Captures tool link in course site navigation for #{test_case}" do
-            expect(has_course_captures_link).to be false
           end
 
           # CONFERENCES TOOL - verify it's hidden

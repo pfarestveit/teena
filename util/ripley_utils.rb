@@ -73,10 +73,6 @@ class RipleyUtils < Utils
     Utils.config['canvas']['create_site_tool']
   end
 
-  def self.course_captures_tool_id
-    Utils.config['canvas']['course_captures_tool']
-  end
-
   def self.e_grades_export_tool_id
     Utils.config['canvas']['e_grades_export_tool']
   end
