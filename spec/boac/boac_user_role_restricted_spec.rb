@@ -83,8 +83,7 @@ unless ENV['DEPS']
 
         it 'sees an infinite spinner' do
           @class_page.hit_class_page_url('2178', '13826')
-          expected_error = 'Failed to load resource: the server responded with a status of 403 ()'
-          @class_page.wait_until(Utils.short_wait) { Utils.console_error_present?(@driver, expected_error) }
+          @class_page.unauth_class_page_msg_element.when_visible(Utils.short_wait)
         end
 
         it 'is forbidden' do
@@ -286,8 +285,8 @@ unless ENV['DEPS']
 
         it 'sees an infinite spinner' do
           @class_page.hit_class_page_url('2178', '13826')
-          expected_error = 'Failed to load resource: the server responded with a status of 403 ()'
-          @class_page.wait_until(Utils.short_wait) { Utils.console_error_present?(@driver, expected_error) }
+          @class_page.unauth_class_page_msg_element.when_visible(Utils.short_wait)
+
         end
 
         it 'is forbidden' do

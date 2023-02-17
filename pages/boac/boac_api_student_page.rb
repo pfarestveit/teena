@@ -309,7 +309,7 @@ class BOACApiStudentPage
       :midpoint => (course['midtermGrade'] && course['midtermGrade'].gsub('-','−')),
       :grade => (course['grade'] && course['grade'].gsub('-','−')),
       :grading_basis => course['gradingBasis'],
-      :reqts => course['courseRequirements']
+      :reqts => (course['courseRequirements'] && course['courseRequirements'].map { |r| r.gsub(/\s+/, ' ') })
     }
   end
 

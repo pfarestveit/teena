@@ -141,16 +141,18 @@ unless ENV['DEPS']
                                 end
 
                                 # Collect the student data relevant to the class page
+                                sis_profile_data = student_api.sis_profile_data
+                                sis_course_data = student_api.sis_course_data course
                                 student_class_page_data = {
                                   :sid => student.sis_id,
-                                  :level => (student_api.sis_profile_data[:level].nil? ? '' : student_api.sis_profile_data[:level]),
-                                  :majors => student_api.sis_profile_data[:majors],
+                                  :level => (sis_profile_data[:level].nil? ? '' : student_api.sis_profile_data[:level]),
+                                  :majors => sis_profile_data[:majors],
                                   :graduation => student_api.graduations,
-                                  :academic_career_status => student_api.sis_profile_data[:academic_career_status],
+                                  :academic_career_status => sis_profile_data[:academic_career_status],
                                   :sports => student_api.asc_teams,
-                                  :grading_basis => student_api.sis_course_data(course)[:grading_basis],
-                                  :final_grade => student_api.sis_course_data(course)[:grade],
-                                  :midpoint_grade => student_api.sis_course_data(course)[:midpoint],
+                                  :grading_basis => sis_course_data[:grading_basis],
+                                  :final_grade => sis_course_data[:grade],
+                                  :midpoint_grade => sis_course_data[:midpoint],
                                   :sites => (student_api.course_sites(course).map do |site|
                                     {
                                       :site_id => student_api.site_metadata(site)[:site_id],

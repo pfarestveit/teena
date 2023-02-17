@@ -329,8 +329,8 @@ class BOACStudentPage
     logger.info "Clicking link for term #{term_code} section #{ccn}"
     xpath = "//a[contains(@href, '/course/#{term_code}/#{ccn}')]/ancestor::div[@class='student-course']/div[1]"
     i = div_element(xpath: xpath).attribute('id').split('-').last
-    expand_academic_year(Utils.sis_code_to_term_name term_code)
-    expand_course_data(term_code, i)
+    expand_academic_year(Utils.sis_code_to_term_name term_code) unless class_page_link(term_code, ccn).visible?
+    expand_course_data(term_code, i) unless class_page_link(term_code, ccn).visible?
     start = Time.now
     wait_for_load_and_click class_page_link(term_code, ccn)
     wait_for_spinner

@@ -146,12 +146,11 @@ class BOACClassListViewPage
     score_xpath = "#{assigns_submit_xpath(student, node)}"
     logger.debug "Checking assignment submission score at XPath '#{score_xpath}#{boxplot_trigger_xpath}'"
     boxplot_xpath = "#{score_xpath}#{boxplot_trigger_xpath}"
-    has_boxplot = verify_block { mouseover(div_element(xpath: boxplot_xpath)) }
+    has_boxplot = div_element(xpath: boxplot_xpath).exists?
     logger.debug "Has-boxplot is #{has_boxplot}"
-    el = has_boxplot ?
-             div_element(xpath: '//div[@class="highcharts-tooltip-container"][last()]//div[contains(text(), "User Score")]/following-sibling::div') :
-             div_element(xpath: "#{score_xpath}//strong")
     if has_boxplot
+      el = div_element(xpath: '//div[@class="highcharts-tooltip-container"][last()]//div[contains(text(), "User Score")]/following-sibling::div')
+      mouseover div_element(xpath: boxplot_xpath)
       unless el.exists?
         logger.warn 'Slam it to the left!'
         mouseover(div_element(xpath: boxplot_xpath), -15)
@@ -160,6 +159,8 @@ class BOACClassListViewPage
         logger.warn 'Shake it to the right!'
         mouseover(div_element(xpath: boxplot_xpath), 15)
       end
+    else
+      el = div_element(xpath: "#{score_xpath}//strong")
     end
     el.text.split(' ').last if el.exists?
   end
@@ -187,10 +188,23 @@ class BOACClassListViewPage
   # @return [String]
   def assigns_grade_score(student, node)
     score_xpath = "#{assigns_grade_xpath(student, node)}"
-    has_boxplot = verify_block { mouseover(div_element(xpath: "#{score_xpath}#{boxplot_trigger_xpath}")) }
-    el = has_boxplot ?
-             div_element(xpath: "#{score_xpath}//div[contains(text(), \"User score\")]") :
-             div_element(xpath: "#{score_xpath}//strong")
+    boxplot_xpath = "#{score_xpath}#{boxplot_trigger_xpath}"
+    has_boxplot = div_element(xpath: boxplot_xpath).exists?
+    logger.debug "Has-boxplot is #{has_boxplot}"
+    if has_boxplot
+      el = div_element(xpath: "#{score_xpath}//div[contains(text(), \"User score\")]")
+      mouseover div_element(xpath: boxplot_xpath)
+      unless el.exists?
+        logger.warn 'Slam it to the left!'
+        mouseover(div_element(xpath: boxplot_xpath), -15)
+      end
+      unless el.exists?
+        logger.warn 'Shake it to the right!'
+        mouseover(div_element(xpath: boxplot_xpath), 15)
+      end
+    else
+      el = div_element(xpath: "#{score_xpath}//strong")
+    end
     el.text.split.last if el.exists?
   end
 
