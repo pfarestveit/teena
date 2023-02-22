@@ -580,4 +580,7 @@ module BOACPages
     enter_sid_list(el, students.map(&:sis_id).join(' '))
   end
 
+  div(:unauth_class_page_msg, xpath: '//div[text()="Unauthorized to view course data"]')
+
+
 end

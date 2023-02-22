@@ -346,8 +346,7 @@ unless ENV['DEPS']
           @pax_manifest_page.click_become_user_link_element @add_edit_user
           @homepage.wait_for_title 'Home'
           @class_page.hit_class_page_url('2198', '21595')
-          expected_error = 'Failed to load resource: the server responded with a status of 403 ()'
-          @class_page.wait_until(Utils.short_wait) { Utils.console_error_present?(@driver, expected_error) }
+          @class_page.unauth_class_page_msg_element.when_visible(Utils.short_wait)
         end
 
         it 'allows an admin to permit a user to view Canvas data' do

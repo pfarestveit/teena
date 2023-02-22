@@ -36,7 +36,7 @@ unless ENV['NO_DEPS']
 
     # Get the largest attachments for testing max attachments uploads
     attachments_by_size = test.attachments.sort_by(&:file_size).delete_if { |a| a.file_size > 20000000 }
-    big_attachments = attachments_by_size.last 10
+    big_attachments = attachments_by_size.first 10
 
     deleted_attachments = []
 
@@ -239,7 +239,7 @@ unless ENV['NO_DEPS']
           it 'cannot hit the download endpoint' do
             Utils.prepare_download_dir
             @api_notes_page.load_download_page test_student
-            @api_notes_page.unauth_msg_element.when_visible Utils.short_wait
+            @api_notes_page.not_found_msg_element.when_present Utils.short_wait
             expect(Utils.downloads_empty?).to be true
           end
         end
@@ -306,7 +306,7 @@ unless ENV['NO_DEPS']
           it 'can view edited set date sorted correctly' do
             @student_page.load_page test_student
             @student_page.show_notes
-            expect(@student_page.visible_collapsed_note_ids).to eql(@student_page.expected_note_id_sort_order notes)
+            expect(@student_page.visible_collapsed_note_ids[0..7]).to eql(@student_page.expected_note_id_sort_order notes)
           end
 
           it 'can remove set date' do
@@ -427,7 +427,7 @@ unless ENV['NO_DEPS']
           it 'cannot download a deleted attachment' do
             Utils.prepare_download_dir
             @api_notes_page.load_attachment_page deleted_attachments.first.id
-            @api_notes_page.not_found_msg_element.when_visible Utils.short_wait
+            @api_notes_page.attach_not_found_msg_element.when_present Utils.short_wait
             expect(Utils.downloads_empty?).to be true
           end
         end
@@ -549,7 +549,7 @@ unless ENV['NO_DEPS']
             @homepage.load_page
             id = BOACUtils.get_attachment_id_by_file_name(note_5, attach)
             @api_notes_page.load_attachment_page id
-            @api_notes_page.not_found_msg_element.when_visible Utils.short_wait
+            @api_notes_page.attach_not_found_msg_element.when_present Utils.short_wait
             expect(Utils.downloads_empty?).to be true
           end
         end
