@@ -119,9 +119,9 @@ unless ENV['DEPS']
       it 'is returned in search results for any notes that include the topic' do
         @student_page.load_page @student
         @student_page.create_note(@note, [@topic], nil)
-        @student_page.expand_search_options_notes_subpanel
+        @student_page.open_adv_search
         @student_page.select_note_topic @topic
-        @student_page.click_search_button
+        @student_page.click_adv_search_button
         expect(@search_results.note_in_search_result? @note).to be true
       end
 
@@ -163,9 +163,9 @@ unless ENV['DEPS']
 
       it 'is returned in search results for any notes that include the topic' do
         @homepage.load_page
-        @homepage.expand_search_options_notes_subpanel
+        @homepage.open_adv_search
         @homepage.select_note_topic @topic
-        @homepage.click_search_button
+        @homepage.click_adv_search_button
         expect(@search_results.note_in_search_result? @note).to be true
       end
 
@@ -214,9 +214,9 @@ unless ENV['DEPS']
 
       it 'is returned in search results for any notes that include the topic' do
         @homepage.load_page
-        @homepage.expand_search_options_notes_subpanel
+        @homepage.open_adv_search
         @homepage.select_note_topic @topic
-        @homepage.click_search_button
+        @homepage.click_adv_search_button
         expect(@search_results.note_in_search_result? @note).to be true
       end
     end
@@ -232,9 +232,9 @@ unless ENV['DEPS']
       end
 
       it 'is returned in search results for any notes that include the topic' do
-        @student_page.expand_search_options_notes_subpanel
+        @student_page.open_adv_search
         @student_page.select_note_topic @topic
-        @student_page.click_search_button
+        @student_page.click_adv_search_button
         expect(@search_results.note_in_search_result? @note).to be true
       end
     end

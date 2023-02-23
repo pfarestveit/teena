@@ -6,7 +6,7 @@ class BOACApiNotesPage
   include Logging
   include Page
 
-  div(:not_found_msg, xpath: '//span[text()="The requested resource could not be found."]')
+  div(:not_found_msg, xpath: '//*[contains(., "The requested resource could not be found.")]')
   div(:attach_not_found_msg, xpath: '//*[text()="Sorry, attachment not available."]')
 
   def load_attachment_page(attachment_file)

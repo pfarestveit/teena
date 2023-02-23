@@ -5,10 +5,12 @@ module BOACPages
   include PageObject
   include Logging
   include Page
+  include BOACSearchForm
 
   ### PAGE LOADS ###
 
   div(:spinner, id: 'spinner-when-loading')
+  image(:not_found, xpath: '//img[@alt="A silly boarding pass with the text, \'Error 404: Flight not found\'"]')
   div(:copyright_year_footer, xpath: '//div[contains(text(),"The Regents of the University of California")]')
   elements(:auto_suggest_option, :link, xpath: '//a[contains(@id, "suggestion")]')
 
@@ -18,6 +20,10 @@ module BOACPages
     start = Time.now
     wait_until(Utils.medium_wait, "Expected '#{page_title} | BOA', got '#{title}'") { title == "#{page_title} | BOA" }
     logger.debug "Page title updated in #{Time.now - start} seconds"
+  end
+
+  def wait_for_404
+    not_found_element.when_visible Utils.short_wait
   end
 
   # Waits for the spinner to vanish following a page load and returns the number of seconds it took the spinner to vanish if greater than 1
@@ -266,218 +272,6 @@ module BOACPages
     sleep 3
   end
 
-  ### SIDEBAR - SEARCH ###
-
-  button(:search_options_toggle_button, id: 'search-options-panel-toggle')
-  button(:search_options_note_filters_toggle_button, id: 'search-options-note-filters-toggle')
-  checkbox(:include_admits_cbx, id: 'search-include-admits-checkbox')
-  checkbox(:include_students_cbx, id: 'search-include-students-checkbox')
-  checkbox(:include_classes_cbx, id: 'search-include-courses-checkbox')
-  checkbox(:include_notes_cbx, id: 'search-include-notes-checkbox')
-  div(:search_options_note_filters_subpanel, id: 'search-options-note-filters-subpanel')
-  select_list(:note_topics_select, id: 'search-option-note-filters-topic')
-  radio_button(:notes_by_anyone_radio, id: 'search-options-note-filters-posted-by-anyone')
-  div(:notes_by_anyone_div, xpath: '//input[@id="search-options-note-filters-posted-by-anyone"]/..')
-  radio_button(:notes_by_you_radio, id: 'search-options-note-filters-posted-by-you')
-  div(:notes_by_you_div, xpath: '//input[@id="search-options-note-filters-posted-by-you"]/..')
-  text_area(:note_author, id: 'search-options-note-filters-author-input')
-  text_area(:note_student, id: 'search-options-note-filters-student-input')
-  elements(:author_suggest, :link, :xpath => "//a[contains(@id,'search-options-note-filters-author-suggestion')]")
-  text_area(:note_date_from, id: 'search-options-note-filters-last-updated-from')
-  text_area(:note_date_to, id: 'search-options-note-filters-last-updated-to')
-  text_area(:search_input, id: 'search-students-input')
-  elements(:search_history_item, :link, xpath: '//li[@class="autocomplete-result"]')
-  element(:fill_in_field_msg, xpath: '//span[contains(text(), "Search input is required")]')
-  button(:search_button, id: 'go-search')
-
-  def clear_input(element)
-    element.when_visible Utils.short_wait
-    hit_escape
-    element.click
-    sleep 1
-    clear_input_value element
-  end
-
-  # Clears the search input such that the full search history will appear
-  def clear_search_input
-    clear_input search_input_element
-    sleep Utils.click_wait
-  end
-
-  # Returns the strings in the visible search history list
-  # @return [Array<String>]
-  def visible_search_history
-    sleep 1
-    search_history_item_elements.map { |el| el.text.strip }
-  end
-
-  # Clicks an item in the search history list and waits for the resulting search to complete
-  # @param search_string [String]
-  def select_history_item(search_string)
-    sleep 1
-    search_history_item_elements.find { |el| el.text.strip == search_string }.click
-    wait_for_spinner
-  end
-
-  # Expands the sidebar advanced search
-  def expand_search_options
-    wait_for_update_and_click search_options_toggle_button_element unless include_students_cbx_element.visible?
-    include_students_cbx_element.when_visible 1
-  end
-
-  # Makes sure the Admitted Students checkbox is selected
-  def include_admits
-    wait_for_update_and_click include_admits_cbx_element unless include_admits_cbx_checked?
-  end
-
-  # Makes sure the Admitted Students checkbox is not selected
-  def exclude_admits
-    wait_for_update_and_click include_admits_cbx_element if include_admits_cbx_checked?
-  end
-
-  # Expands the sidebar advanced search notes subpanel
-  def expand_search_options_notes_subpanel
-    expand_search_options
-    wait_for_update_and_click banner_element
-    wait_for_update_and_click search_options_note_filters_toggle_button_element unless search_options_note_filters_subpanel_element.visible?
-    search_options_note_filters_subpanel_element.when_visible 1
-  end
-
-  # Collapses the sidebar advanced search notes subpanel
-  def collapse_search_options_notes_subpanel
-    expand_search_options
-    wait_for_update_and_click banner_element
-    hit_escape
-    wait_for_update_and_click search_options_note_filters_toggle_button_element if search_options_note_filters_subpanel_element.visible?
-    sleep Utils.click_wait
-  end
-
-  # Collapses and expands the options sub-panel in order to clear previous input
-  def reset_search_options_notes_subpanel
-    collapse_search_options_notes_subpanel
-    expand_search_options_notes_subpanel
-  end
-
-  # Selects the sidebar posted by "anyone" radio button
-  def select_notes_posted_by_anyone
-    expand_search_options_notes_subpanel
-    js_click notes_by_anyone_radio_element unless notes_by_anyone_div_element.attribute('ischecked') == 'true'
-  end
-
-  # Selects the sidebar posted by "you" radio button
-  def select_notes_posted_by_you
-    expand_search_options_notes_subpanel
-    js_click notes_by_you_radio_element unless notes_by_you_div_element.attribute('ischecked') == 'true'
-  end
-
-  # Sets text in a given element and waits for and clicks a matching auto-suggest result
-  # @param element [PageObject::Element]
-  # @param name [String]
-  def set_auto_suggest(element, name)
-    wait_for_element_and_type(element, name)
-    sleep Utils.click_wait
-    wait_until(Utils.short_wait) do
-      auto_suggest_option_elements.any?
-      auto_suggest_option_elements.find { |el| el.text.downcase.include? name.downcase }
-    end
-    el = auto_suggest_option_elements.find { |el| el.text.downcase.include? name.downcase }
-    el.click
-  end
-
-  # Sets the "Advisor" notes search option
-  # @param name [String]
-  def set_notes_author(name)
-    logger.info "Entering notes author name '#{name}'"
-    expand_search_options_notes_subpanel
-    set_auto_suggest(note_author_element, name)
-  end
-
-  # Sets the "Student" notes search option
-  # @param student [BOACUser]
-  def set_notes_student(student)
-    logger.info "Entering notes student '#{student.full_name} (#{student.sis_id})'"
-    expand_search_options_notes_subpanel
-    set_auto_suggest(note_student_element, "#{student.full_name} (#{student.sis_id})")
-  end
-
-  # Sets the "Last updated > From" notes search option
-  # @param date [Date]
-  def set_notes_date_from(date)
-    expand_search_options_notes_subpanel
-    from_date = date ? date.strftime('%m/%d/%Y') : ''
-    logger.debug "Entering note date from '#{from_date}'"
-    wait_for_update_and_click note_date_from_element
-    50.times { hit_backspace; hit_delete }
-    note_date_from_element.send_keys from_date
-    4.times { hit_tab }
-  end
-
-  # Sets the "Last updated > To" notes search option
-  # @param date [Date]
-  def set_notes_date_to(date)
-    expand_search_options_notes_subpanel
-    to_date = date ? date.strftime('%m/%d/%Y') : ''
-    logger.debug "Entering note date to '#{to_date}'"
-    wait_for_update_and_click note_date_to_element
-    50.times { hit_backspace; hit_delete }
-    note_date_to_element.send_keys to_date
-    4.times { hit_tab }
-  end
-
-  # Sets both "Last updated" notes search options
-  # @param from [Date]
-  # @param to [Date]
-  def set_notes_date_range(from, to)
-    set_notes_date_to to
-    set_notes_date_from from
-  end
-
-  # Selects a sidebar note topic
-  # @param topic [Topic]
-  def select_note_topic(topic)
-    expand_search_options_notes_subpanel
-    topic_name = topic ? topic.name : 'Any topic'
-    logger.debug "Selecting note topic '#{topic_name}'"
-    wait_for_element_and_select(note_topics_select_element, topic_name)
-  end
-
-  # Enters a sidebar search string
-  # @param string [String]
-  def enter_search_string(string)
-    logger.debug "Searching for '#{string}'"
-    sleep 1
-    clear_input search_input_element
-    (self.search_input = string) if string
-  end
-
-  # Enters a sidebar search string and hits enter to execute the search
-  # @param string [String]
-  def enter_string_and_hit_enter(string)
-    enter_search_string string
-    hit_enter
-    wait_for_spinner
-  end
-
-  # Clicks the sidebar search button
-  def click_search_button
-    logger.info 'Clicking search button'
-    wait_for_update_and_click_js search_button_element
-  end
-
-  # Searches for a string using the sidebar search input and logs the search string. Not to be used for note searches.
-  # @param string [String]
-  def type_non_note_string_and_enter(string)
-    logger.info "Searching for '#{string}'"
-    enter_string_and_hit_enter string
-  end
-
-  # Searches for a string using the sidebar search input without logging the search string.  To be used for note searches.
-  # @param string [String]
-  def type_note_appt_string_and_enter(string)
-    logger.info 'Searching for a string within a note or appointment'
-    enter_string_and_hit_enter string
-  end
-
   ### STUDENT ###
 
   # BOA route (URI, relative path) to student profile page
@@ -581,6 +375,5 @@ module BOACPages
   end
 
   div(:unauth_class_page_msg, xpath: '//div[text()="Unauthorized to view course data"]')
-
 
 end

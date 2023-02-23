@@ -14,7 +14,7 @@ module BOACGroupPages
 
   def hit_non_auth_group(group)
     navigate_to "#{BOACUtils.base_url}/curated/#{group.id}"
-    wait_for_title 'Page not found'
+    wait_for_404
   end
 
   def rename_grp(group, new_name)

@@ -160,7 +160,7 @@ unless ENV['NO_DEPS']
 
         it 'sees a 404' do
           @admit_page.hit_page_url @admit.sis_id
-          @admit_page.wait_for_title 'Page not found'
+          @admit_page.wait_for_404
         end
       end
 
@@ -240,15 +240,16 @@ unless ENV['NO_DEPS']
       context 'performing a search' do
 
         it 'sees no Admits option' do
-          @homepage.expand_search_options
+          @homepage.open_adv_search
           expect(@homepage.include_admits_cbx?).to be false
         end
 
         it 'sees no admit results' do
+          @homepage.click_adv_search_cxl_button
           if @admit.is_sir
             logger.warn 'Skipping admit search test since all admits have SIR'
           else
-            @homepage.enter_string_and_hit_enter @admit.sis_id
+            @homepage.enter_simple_search_and_hit_enter @admit.sis_id
             @search_results_page.no_results_msg.when_visible Utils.short_wait
           end
         end
@@ -356,7 +357,7 @@ unless ENV['NO_DEPS']
 
         it 'sees a 404' do
           @admit_page.hit_page_url @admit.sis_id
-          @admit_page.wait_for_title 'Page not found'
+          @admit_page.wait_for_404
         end
       end
 
@@ -422,15 +423,16 @@ unless ENV['NO_DEPS']
       context 'performing a search' do
 
         it 'sees no Admits option' do
-          @homepage.expand_search_options
+          @homepage.open_adv_search
           expect(@homepage.include_admits_cbx?).to be false
         end
 
         it 'sees no admit results' do
+          @homepage.click_adv_search_cxl_button
           if @admit.is_sir
             logger.warn 'Skipping admit search test since all admits have SIR'
           else
-            @homepage.enter_string_and_hit_enter @admit.sis_id
+            @homepage.enter_simple_search_and_hit_enter @admit.sis_id
             @search_results_page.no_results_msg.when_visible Utils.short_wait
           end
         end
@@ -553,7 +555,7 @@ unless ENV['NO_DEPS']
 
         it 'sees a 404' do
           @admit_page.hit_page_url @admit.sis_id
-          @admit_page.wait_for_title 'Page not found'
+          @admit_page.wait_for_404
         end
       end
 
@@ -615,15 +617,16 @@ unless ENV['NO_DEPS']
       context 'performing a search' do
 
         it 'sees no Admits option' do
-          @homepage.expand_search_options
+          @homepage.open_adv_search
           expect(@homepage.include_admits_cbx?).to be false
         end
 
         it 'sees no admit results' do
+          @homepage.click_adv_search_cxl_button
           if @admit.is_sir
             logger.warn 'Skipping admit search test since all admits have SIR'
           else
-            @homepage.enter_string_and_hit_enter @admit.sis_id
+            @homepage.enter_simple_search_and_hit_enter @admit.sis_id
             @search_results_page.no_results_msg.when_visible Utils.short_wait
           end
         end
@@ -959,20 +962,20 @@ unless ENV['NO_DEPS']
           end
 
           it 'cannot be searched by body' do
-            @homepage.type_non_note_string_and_enter @note_1.body
+            @homepage.type_non_note_simple_search_and_enter @note_1.body
             expect(@search_results_page.note_results_count).to be_zero
           end
 
           it 'cannot be searched by subject' do
-            @homepage.type_non_note_string_and_enter @note_1.subject
+            @homepage.type_non_note_simple_search_and_enter @note_1.subject
             expect(@search_results_page.note_results_count).to be_zero
           end
 
           it 'cannot be searched by date' do
-            @homepage.reset_search_options_notes_subpanel
+            @homepage.open_adv_search
             @homepage.set_notes_student @student
             @homepage.set_notes_date_from Date.today
-            @homepage.click_search_button
+            @homepage.click_adv_search_button
             expect(@search_results_page.note_in_search_result? @note_1).to be false
           end
         end
@@ -1040,20 +1043,20 @@ unless ENV['NO_DEPS']
         context 'and converted to private' do
 
           it 'cannot be searched by body' do
-            @homepage.type_non_note_string_and_enter @note_2.body
+            @homepage.type_non_note_simple_search_and_enter @note_2.body
             expect(@search_results_page.note_results_count).to be_zero
           end
 
           it 'cannot be searched by subject' do
-            @homepage.type_non_note_string_and_enter @note_2.subject
+            @homepage.type_non_note_simple_search_and_enter @note_2.subject
             expect(@search_results_page.note_results_count).to be_zero
           end
 
           it 'cannot be searched by date' do
-            @homepage.reset_search_options_notes_subpanel
+            @homepage.reopen_and_reset_adv_search
             @homepage.set_notes_student @student
             @homepage.set_notes_date_from Date.today
-            @homepage.click_search_button
+            @homepage.click_adv_search_button
             expect(@search_results_page.note_in_search_result? @note_2).to be false
           end
         end

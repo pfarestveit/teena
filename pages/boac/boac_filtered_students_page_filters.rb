@@ -462,7 +462,7 @@ module BOACFilteredStudentsPageFilters
     wait_for_update_and_click filter_edit_button(filter_option)
     select_new_filter_sub_option(filter_option, filter_sub_option)
     wait_for_update_and_click filter_edit_update_button(filter_option)
-    filter_edit_update_button(filter_option).when_not_present 2
+    filter_edit_update_button(filter_option).when_not_present Utils.short_wait
   end
 
   def remove_filter_of_type(filter_option)

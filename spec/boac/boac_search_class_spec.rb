@@ -46,15 +46,20 @@ unless ENV['DEPS']
                         course_code = api_section_page.course_code
                         subject_area, separator, catalog_id = course_code.rpartition(' ')
                         abbreviated_subject_area = subject_area[0..-3]
-                        strings = [course_code, "#{abbreviated_subject_area} #{catalog_id}", catalog_id]
+                        strings = [course_code, "#{abbreviated_subject_area} #{catalog_id}"]
+                        strings << catalog_id if catalog_id.length > 1
 
                         @homepage.load_page
                         strings.each do |string|
                           begin
 
-                            @homepage.type_non_note_string_and_enter string
+                            @homepage.type_non_note_simple_search_and_enter string
                             class_result = @search_results_page.class_in_search_result?(course_code, section_data[:number])
-                            it("allows the user to search for #{section_test_case} by string '#{string}'") { expect(class_result).to be true }
+                            if @search_results_page.partial_results_msg?
+                              logger.warn "Skipping search for '#{string}' because there are more than 50 results"
+                            else
+                              it("allows the user to search for #{section_test_case} by string '#{string}'") { expect(class_result).to be true }
+                            end
 
                             if @search_results_page.class_link(course_code, section_data[:number]).exists? && string == strings.first
                               @search_results_page.click_class_result(course_code, section_data[:number])

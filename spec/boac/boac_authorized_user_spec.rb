@@ -75,7 +75,7 @@ unless ENV['NO_DEPS']
       before { @driver.manage.delete_all_cookies }
 
       it 'forces login' do
-        @home_page.enter_search_string 'foo'
+        @home_page.enter_simple_search 'foo'
         @home_page.hit_enter
         @home_page.sign_in_element.when_visible Utils.short_wait
       end

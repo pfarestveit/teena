@@ -35,7 +35,7 @@ class BOACFilteredStudentsPage
   # @param cohort [FilteredCohort]
   def hit_non_auth_cohort(cohort)
     navigate_to filtered_cohort_base_url(cohort.id)
-    wait_for_title 'Page not found'
+    wait_for_404
   end
 
   # Loads the Everyone's Cohorts page
