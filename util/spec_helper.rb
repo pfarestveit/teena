@@ -107,6 +107,7 @@ require_relative '../pages/junction/canvas_e_grades_export_page'
 require_relative '../pages/junction/canvas_user_provisioning_page'
 
 require_relative '../models/boac/boac_test_config'
+require_relative '../pages/boac/boac_search_form'
 require_relative '../pages/boac/boac_pages'
 require_relative '../pages/boac/boac_pagination'
 require_relative '../pages/boac/boac_pages_create_note_modal'

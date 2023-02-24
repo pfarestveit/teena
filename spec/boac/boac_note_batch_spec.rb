@@ -179,7 +179,7 @@ unless ENV['NO_DEPS']
             student = @homepage.unique_students_in_batch(students, cohorts, curated_groups).last
             @homepage.set_new_note_id(batch_note_1, student)
             @homepage.set_notes_student student
-            @homepage.enter_string_and_hit_enter batch_note_1.subject
+            @homepage.enter_simple_search_and_hit_enter batch_note_1.subject
             expect(@search_results_page.note_in_search_result? batch_note_1).to be true
           end
         end

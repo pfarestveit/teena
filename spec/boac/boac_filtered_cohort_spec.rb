@@ -186,6 +186,12 @@ unless ENV['NO_DEPS']
         @cohort_page.compare_visible_sids_to_expected expected
       end
 
+      it 'sorts by Expected Grad Term' do
+        @cohort_page.sort_by_expected_grad
+        expected = NessieFilterUtils.cohort_by_expected_grad(test, @cohort.search_criteria)
+        @cohort_page.compare_visible_sids_to_expected expected
+      end
+
       it "sorts by Terms in Attendance ascending" do
         @cohort_page.sort_by_terms_in_attend
         expected = NessieFilterUtils.cohort_by_terms_in_attend_asc(test, @cohort.search_criteria)

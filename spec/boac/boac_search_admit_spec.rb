@@ -20,25 +20,27 @@ unless ENV['DEPS']
 
       advisor = auth_users.find { |u| !u.is_admin && !u.depts.include?(BOACDepartments::ZCEEE) }
       @homepage.dev_auth advisor
-      @homepage.expand_search_options
+      @homepage.open_adv_search
       non_ce3_cbx_visible = @homepage.include_admits_cbx?
       it('is not available to a non-CE3, non-admin user') { expect(non_ce3_cbx_visible).to be false }
+      @homepage.click_adv_search_cxl_button
+      @homepage.log_out
 
       admin = auth_users.find { |u| u.is_admin && !u.depts.include?(BOACDepartments::ZCEEE) }
-      @homepage.log_out
       @homepage.dev_auth admin
-      @homepage.expand_search_options
-      admin_cbx_visible = @homepage.verify_block { @homepage.include_admits_cbx_element.when_visible Utils.short_wait }
+      @homepage.open_adv_search
+      admin_cbx_visible = @homepage.verify_block { @homepage.include_admits_cbx_element.when_present Utils.short_wait }
       it('is available to an admin user') { expect(admin_cbx_visible).to be true }
-
+      @homepage.click_adv_search_cxl_button
       @homepage.log_out
+
       @homepage.dev_auth test.advisor
-      @homepage.expand_search_options
-      ce3_cbx_visible = @homepage.verify_block { @homepage.include_admits_cbx_element.when_visible Utils.short_wait }
+      @homepage.open_adv_search
+      ce3_cbx_visible = @homepage.verify_block { @homepage.include_admits_cbx_element.when_present Utils.short_wait }
       it('is available to a CE3 user') { expect(ce3_cbx_visible).to be true }
 
       @homepage.exclude_admits
-      @homepage.type_non_note_string_and_enter test.test_students.first.sis_id
+      @homepage.type_non_note_adv_search_and_enter test.test_students.first.sis_id
       @homepage.wait_for_spinner
       ce3_excluded = @search_results_page.verify_block do
         !@search_results_page.admit_results_count?
@@ -46,51 +48,61 @@ unless ENV['DEPS']
       end
       it('can be excluded from results') { expect(ce3_excluded).to be true }
 
-      @homepage.include_admits
       test.test_students.each do |admit|
 
         begin
           @homepage.load_page
+          @homepage.open_adv_search
+          @homepage.include_admits
 
           # SEARCHES
 
-          @homepage.type_non_note_string_and_enter admit.first_name
+          @homepage.type_non_note_adv_search_and_enter admit.first_name
           complete_first_results = @search_results_page.admit_in_search_result? admit
           it("finds CS ID #{admit.sis_id} with the complete first name") { expect(complete_first_results).to be true }
 
-          @homepage.type_non_note_string_and_enter admit.first_name[0..2]
+          @search_results_page.click_edit_search
+          @homepage.type_non_note_adv_search_and_enter admit.first_name[0..2]
           partial_first_results = @search_results_page.admit_in_search_result? admit
           it("finds CS ID #{admit.sis_id} with a partial first name") { expect(partial_first_results).to be true }
 
-          @homepage.type_non_note_string_and_enter admit.last_name
+          @search_results_page.click_edit_search
+          @homepage.type_non_note_adv_search_and_enter admit.last_name
           complete_last_results = @search_results_page.admit_in_search_result? admit
           it("finds CS ID #{admit.sis_id} with the complete last name") { expect(complete_last_results).to be true }
 
-          @homepage.type_non_note_string_and_enter admit.last_name[0..2]
+          @search_results_page.click_edit_search
+          @homepage.type_non_note_adv_search_and_enter admit.last_name[0..2]
           partial_last_results = @search_results_page.admit_in_search_result? admit
           it("finds CS ID #{admit.sis_id} with a partial last name") { expect(partial_last_results).to be true }
 
-          @homepage.type_non_note_string_and_enter "#{admit.first_name} #{admit.last_name}"
+          @search_results_page.click_edit_search
+          @homepage.type_non_note_adv_search_and_enter "#{admit.first_name} #{admit.last_name}"
           complete_first_last_results = @search_results_page.admit_in_search_result? admit
           it("finds CS ID #{admit.sis_id} with the complete first and last name") { expect(complete_first_last_results).to be true }
 
-          @homepage.type_non_note_string_and_enter "#{admit.last_name}, #{admit.first_name}"
+          @search_results_page.click_edit_search
+          @homepage.type_non_note_adv_search_and_enter "#{admit.last_name}, #{admit.first_name}"
           complete_last_first_results = @search_results_page.admit_in_search_result? admit
           it("finds CS ID #{admit.sis_id} with the complete last and first name") { expect(complete_last_first_results).to be true }
 
-          @homepage.type_non_note_string_and_enter "#{admit.first_name[0..2]} #{admit.last_name[0..2]}"
+          @search_results_page.click_edit_search
+          @homepage.type_non_note_adv_search_and_enter "#{admit.first_name[0..2]} #{admit.last_name[0..2]}"
           partial_first_last_results = @search_results_page.admit_in_search_result? admit
           it("finds CS ID #{admit.sis_id} with a partial first and last name") { expect(partial_first_last_results).to be true }
 
-          @homepage.type_non_note_string_and_enter "#{admit.last_name[0..2]}, #{admit.first_name[0..2]}"
+          @search_results_page.click_edit_search
+          @homepage.type_non_note_adv_search_and_enter "#{admit.last_name[0..2]}, #{admit.first_name[0..2]}"
           partial_last_first_results = @search_results_page.admit_in_search_result? admit
           it("finds CS ID #{admit.sis_id} with a partial last and first name") { expect(partial_last_first_results).to be true }
 
-          @homepage.type_non_note_string_and_enter admit.sis_id.to_s[0..4]
+          @search_results_page.click_edit_search
+          @homepage.type_non_note_adv_search_and_enter admit.sis_id.to_s[0..4]
           partial_sid_results = @search_results_page.admit_in_search_result? admit
           it("finds CS ID #{admit.sis_id} with a partial SID") { expect(partial_sid_results).to be true }
 
-          @homepage.type_non_note_string_and_enter admit.sis_id.to_s
+          @search_results_page.click_edit_search
+          @homepage.type_non_note_adv_search_and_enter admit.sis_id.to_s
           complete_sid_results = @search_results_page.admit_in_search_result? admit
           it("finds CS ID #{admit.sis_id} with the complete SID") { expect(complete_sid_results).to be true }
 
@@ -126,12 +138,12 @@ unless ENV['DEPS']
 
         rescue => e
           Utils.log_error e
-          it("test hit an error with admit CS ID #{admit.sis_id}") { fail }
+          it("test hit an error with admit CS ID #{admit.sis_id}") { fail e.message }
         end
       end
     rescue => e
       Utils.log_error e
-      it('test hit an error initializing') { fail }
+      it('test hit an error initializing') { fail e.message }
     ensure
       Utils.quit_browser @driver
     end

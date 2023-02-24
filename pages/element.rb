@@ -15,6 +15,10 @@ class Element
     @selenium_element.attribute name
   end
 
+  def dom_attribute(name)
+    @selenium_element.dom_attribute name
+  end
+
   def check
     click unless selected?
   end

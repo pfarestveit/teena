@@ -172,18 +172,18 @@ unless ENV['DEPS']
 
         before(:all) do
           @homepage.load_page
-          @homepage.expand_search_options
+          @homepage.open_adv_search
         end
 
-        it('sees a students search option') { expect(@homepage.include_students_cbx_element).to be_visible }
-        it('sees no admits search option') { expect(@homepage.include_admits_cbx_element).not_to be_visible }
-        it('sees no courses search option') { expect(@homepage.include_classes_cbx_element).not_to be_visible }
-        it('sees a notes/appointments search option') { expect(@homepage.include_notes_cbx_element).to be_visible }
+        it('sees a students search option') { expect(@homepage.include_students_cbx?).to be true }
+        it('sees no admits search option') { expect(@homepage.include_admits_cbx?).to be false }
+        it('sees no courses search option') { expect(@homepage.include_classes_cbx?).to be false }
+        it('sees a notes/appointments search option') { expect(@homepage.include_notes_cbx?).to be true }
 
         context 'with results' do
 
           before(:all) do
-            @homepage.type_non_note_string_and_enter 'Math'
+            @homepage.type_non_note_adv_search_and_enter 'Math'
           end
 
           it('sees student results') { expect(@search_results_page.student_search_results_count).to be_nonzero }
@@ -211,7 +211,7 @@ unless ENV['DEPS']
 
         it 'cannot reach the Passenger Manifest' do
           @pax_manifest_page.hit_page_url
-          @pax_manifest_page.wait_for_title 'Page not found'
+          @pax_manifest_page.wait_for_404
         end
 
         it 'cannot hit the cachejob page' do
@@ -373,20 +373,14 @@ unless ENV['DEPS']
 
       context 'performing a search' do
 
-        before(:all) do
-          @homepage.load_page
-          @homepage.expand_search_options
-        end
+        before(:all) { @homepage.load_page }
 
-        it('sees a students search option') { expect(@homepage.include_students_cbx_element).to be_visible }
-        it('sees no admits search option') { expect(@homepage.include_admits_cbx_element).not_to be_visible }
-        it('sees no courses search option') { expect(@homepage.include_classes_cbx_element).not_to be_visible }
-        it('sees no notes/appointments search option') { expect(@homepage.include_notes_cbx_element).not_to be_visible }
+        it('sees no advanced search button') { expect(@homepage.open_adv_search_button?).to be false }
 
         context 'with results' do
 
           before(:all) do
-            @homepage.type_non_note_string_and_enter 'Math'
+            @homepage.type_non_note_simple_search_and_enter 'Math'
           end
 
           it('sees student results') { expect(@search_results_page.student_search_results_count).to be_nonzero }
@@ -414,7 +408,7 @@ unless ENV['DEPS']
 
         it 'cannot reach the Passenger Manifest' do
           @pax_manifest_page.hit_page_url
-          @pax_manifest_page.wait_for_title 'Page not found'
+          @pax_manifest_page.wait_for_404
         end
 
         it 'cannot hit the cachejob page' do

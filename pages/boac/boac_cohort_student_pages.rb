@@ -232,6 +232,10 @@ module BOACCohortStudentPages
     sort_by 'entering_term'
   end
 
+  def sort_by_expected_grad
+    sort_by 'expected_grad_term'
+  end
+
   # Sorts cohort search results by terms in attendance ascending
   def sort_by_terms_in_attend
     sort_by 'terms_in_attendance'

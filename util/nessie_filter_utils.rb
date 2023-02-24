@@ -228,12 +228,13 @@ class NessieFilterUtils < NessieUtils
   end
 
   def self.coe_cond(filter, conditions_list)
-    conditions_list << "boac_advising_coe.students.advisor_ldap_uid IN (#{in_op filter.coe_advisor})" if filter.coe_advisor&.any?
-    conditions_list << "boac_advising_coe.students.ethnicity IN (#{in_op filter.coe_ethnicity})" if filter.coe_ethnicity&.any?
-    conditions_list << "boac_advising_coe.students.gender IN (#{in_op filter.coe_gender})" if filter.coe_gender&.any?
-    conditions_list << "boac_advising_coe.students.status IN ('D', 'P', 'U', 'W', 'X', 'Z')" if filter.coe_inactive
-    conditions_list << "boac_advising_coe.students.probation IS TRUE" if filter.coe_probation
-    conditions_list << "boac_advising_coe.students.minority IS TRUE" if filter.coe_underrepresented_minority
+    coe_conditions = []
+    coe_conditions << "boac_advising_coe.students.advisor_ldap_uid IN (#{in_op filter.coe_advisor})" if filter.coe_advisor&.any?
+    coe_conditions << "boac_advising_coe.students.ethnicity IN (#{in_op filter.coe_ethnicity})" if filter.coe_ethnicity&.any?
+    coe_conditions << "boac_advising_coe.students.gender IN (#{in_op filter.coe_gender})" if filter.coe_gender&.any?
+    coe_conditions << "boac_advising_coe.students.status IN ('D', 'P', 'U', 'W', 'X', 'Z')" if filter.coe_inactive
+    coe_conditions << "boac_advising_coe.students.probation IS TRUE" if filter.coe_probation
+    coe_conditions << "boac_advising_coe.students.minority IS TRUE" if filter.coe_underrepresented_minority
 
     prep_conditions = []
     prep_conditions << "boac_advising_coe.students.did_prep IS TRUE" if filter.coe_prep&.include? 'PREP'
@@ -241,7 +242,12 @@ class NessieFilterUtils < NessieUtils
     prep_conditions << "boac_advising_coe.students.did_tprep IS TRUE" if filter.coe_prep&.include? 'T-PREP'
     prep_conditions << "boac_advising_coe.students.tprep_eligible IS TRUE" if filter.coe_prep&.include? 'T-PREP eligible'
     prep_conditions = prep_conditions.join(" \nOR ")
-    conditions_list << "(#{prep_conditions})" unless prep_conditions.empty?
+    coe_conditions << "(#{prep_conditions})" unless prep_conditions.empty?
+
+    if coe_conditions.any? && !filter.coe_inactive
+      coe_conditions << "boac_advising_coe.students.status NOT IN ('D', 'P', 'U', 'W', 'X', 'Z')"
+    end
+    coe_conditions.each { |c| conditions_list << c }
   end
 
   def self.where(test, filter)
@@ -468,6 +474,16 @@ class NessieFilterUtils < NessieUtils
         col: 'entering_term',
         nulls: ' NULLS LAST',
         group_by: true
+    }
+    get_cohort_result(test, filter, sort)
+  end
+
+  def self.cohort_by_expected_grad(test, filter)
+    sort = {
+      table: 'student.student_profile_index',
+      col: 'expected_grad_term',
+      nulls: ' NULLS LAST',
+      group_by: true
     }
     get_cohort_result(test, filter, sort)
   end

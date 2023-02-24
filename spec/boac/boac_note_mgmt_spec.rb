@@ -11,7 +11,9 @@ unless ENV['NO_DEPS']
   director = BOACUtils.get_authorized_users.find do |a|
     a.dept_memberships.find { |m| m.advisor_role == AdvisorRole::DIRECTOR }
   end
-  other_advisor = BOACUtils.get_dept_advisors(test.dept).find { |a| a.uid != test.advisor.uid }
+  other_advisor = BOACUtils.get_dept_advisors(test.dept).find do |a|
+    a.can_access_advising_data && a.uid != test.advisor.uid
+  end
 
   if test.dept == BOACDepartments::ADMIN
 
@@ -165,43 +167,45 @@ unless ENV['NO_DEPS']
 
         context 'searching for a newly created note' do
 
-          before(:all) do
-            @student_page.expand_search_options
-            @student_page.uncheck_include_students_cbx
-            @student_page.uncheck_include_classes_cbx
-            sleep Utils.short_wait
-          end
-
           shared_examples 'searching for your own note' do
             it 'can find a note by subject' do
-              @student_page.type_note_appt_string_and_enter note_1.subject
+              @student_page.type_note_appt_adv_search_and_enter note_1.subject
               @search_results_page.wait_for_note_search_result_rows
               expect(@search_results_page.note_link(note_1).exists?).to be true
             end
 
             it 'can find a note by body' do
-              unless "#{@driver.browser}" == 'firefox'
-                @student_page.type_note_appt_string_and_enter note_2.body
-                @search_results_page.wait_for_note_search_result_rows
-                expect(@search_results_page.note_link(note_2).exists?).to be true
-              end
+              @search_results_page.click_edit_search
+              @student_page.type_note_appt_adv_search_and_enter note_2.body
+              @search_results_page.wait_for_note_search_result_rows
+              expect(@search_results_page.note_link(note_2).exists?).to be true
             end
 
             it 'can find a note with special characters' do
-              @student_page.type_note_appt_string_and_enter note_3.subject
+              @search_results_page.click_edit_search
+              @student_page.type_note_appt_adv_search_and_enter note_3.subject
               @search_results_page.wait_for_note_search_result_rows
               expect(@search_results_page.note_link(note_3).exists?).to be true
             end
           end
 
           describe 'when searching for "anyone"' do
-            before { @student_page.select_notes_posted_by_anyone }
+            before(:all) do
+              @student_page.reopen_and_reset_adv_search
+              @student_page.exclude_students
+              @student_page.exclude_classes
+              @student_page.select_notes_posted_by_anyone
+            end
             include_examples 'searching for your own note'
           end
 
           describe 'when searching for "only you"' do
-            before { @student_page.select_notes_posted_by_you }
-            after { @student_page.select_notes_posted_by_anyone }
+            before(:all) do
+              @student_page.reopen_and_reset_adv_search
+              @student_page.exclude_students
+              @student_page.exclude_classes
+              @student_page.select_notes_posted_by_you
+            end
             include_examples 'searching for your own note'
           end
         end
@@ -419,7 +423,7 @@ unless ENV['NO_DEPS']
         context 'searching for an edited note' do
 
           it 'can find a note by edited content' do
-            @student_page.type_note_appt_string_and_enter note_1.subject
+            @student_page.type_note_appt_simple_search_and_enter note_1.subject
             @search_results_page.wait_for_note_search_result_rows
             expect(@search_results_page.note_link(note_1).exists?).to be true
           end
@@ -441,27 +445,8 @@ unless ENV['NO_DEPS']
         end
 
         after(:all) do
-          @student_page.select_notes_posted_by_anyone
           @homepage.load_page
           @homepage.log_out
-        end
-
-        describe 'when searching for "anyone"' do
-          before { @student_page.select_notes_posted_by_anyone }
-          it 'can find the other user\'s note' do
-            @student_page.type_note_appt_string_and_enter note_1.subject
-            @search_results_page.wait_for_note_search_result_rows
-            expect(@search_results_page.note_link(note_1).exists?).to be true
-          end
-        end
-
-        describe 'when searching for "only you"' do
-          before { @student_page.select_notes_posted_by_you }
-          after { @student_page.select_notes_posted_by_anyone }
-          it 'cannot find the other user\'s note' do
-            @student_page.type_note_appt_string_and_enter note_1.subject
-            expect(@search_results_page.note_results_count).to be_zero
-          end
         end
 
         it 'cannot edit the other user\'s note' do
@@ -476,6 +461,29 @@ unless ENV['NO_DEPS']
 
         it 'can download non-deleted attachments' do
           note_5.attachments.reject(&:deleted_at).each { |attach| @student_page.download_attachment(note_5, attach) }
+        end
+
+        describe 'when searching for "anyone"' do
+          before do
+            @homepage.reopen_and_reset_adv_search
+            @student_page.select_notes_posted_by_anyone
+          end
+          it 'can find the other user\'s note' do
+            @student_page.type_note_appt_adv_search_and_enter note_1.subject
+            @search_results_page.wait_for_note_search_result_rows
+            expect(@search_results_page.note_link(note_1).exists?).to be true
+          end
+        end
+
+        describe 'when searching for "only you"' do
+          before do
+            @search_results_page.reopen_and_reset_adv_search
+            @student_page.select_notes_posted_by_you
+          end
+          it 'cannot find the other user\'s note' do
+            @student_page.type_note_appt_adv_search_and_enter note_1.subject
+            expect(@search_results_page.note_results_count).to be_zero
+          end
         end
       end
 
@@ -531,15 +539,14 @@ unless ENV['NO_DEPS']
 
         before(:all) do
           @homepage.dev_auth test.advisor
-          @student_page.expand_search_options
-          @student_page.uncheck_include_students_cbx
-          @student_page.uncheck_include_classes_cbx
+          @student_page.open_adv_search
+          @student_page.exclude_students
+          @student_page.exclude_classes
         end
 
         it 'cannot find a deleted note' do
           logger.info "Searching for deleted note ID #{note_5.id} by subject '#{note_5.subject}'"
-          @homepage.load_page
-          @student_page.type_note_appt_string_and_enter note_5.subject
+          @student_page.type_note_appt_adv_search_and_enter note_5.subject
           expect(@search_results_page.note_results_count).to be_zero
         end
 
