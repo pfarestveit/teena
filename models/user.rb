@@ -5,6 +5,7 @@ class User
                 :canvas_id,
                 :squiggy_id,
                 :role,
+                :role_code,
                 :sections,
                 :status,
                 :username,

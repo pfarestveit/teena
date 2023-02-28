@@ -12,7 +12,7 @@ class RipleyTestConfig < TestConfig
   def add_user
     test = 'course_add_user'
     set_global_configs
-    set_courses test
+    set_courses
     set_sis_teacher @courses.first
     set_manual_users test
     @courses.each { |c| c.create_site_workflow = 'self' }
@@ -21,20 +21,20 @@ class RipleyTestConfig < TestConfig
   def course_site_creation
     test = 'create_course_site'
     set_global_configs
-    set_courses test
+    set_courses
     set_manual_users test
   end
 
   def e_grades_export
     test = 'e_grades_export'
     set_global_configs
-    set_courses test
+    set_courses
     set_manual_users test
   end
 
   def e_grades_validation
     set_global_configs
-    set_courses 'e_grades_validation'
+    set_courses
   end
 
   def mailing_lists
@@ -47,7 +47,7 @@ class RipleyTestConfig < TestConfig
   def official_sections
     test = 'official_sections'
     set_global_configs
-    set_courses test
+    set_courses
     set_manual_users test
     course = @courses.first
     course.create_site_workflow = 'self'
@@ -63,7 +63,7 @@ class RipleyTestConfig < TestConfig
   def roster_photos
     test = 'roster_photos'
     set_global_configs
-    set_courses test
+    set_courses
     set_manual_users test
     @courses.each { |c| c.create_site_workflow = 'self' }
   end
@@ -76,19 +76,35 @@ class RipleyTestConfig < TestConfig
   def set_global_configs
     @base_url = CONFIG['base_url']
     @admin = User.new({uid: CONFIG['admin_uid']})
-    set_test_course_data RipleyUtils.test_data_file
     set_test_user_data junction_test_data_file
-  end
-
-  def test_data_file
-    File.join(Utils.config_dir, 'test-data-bcourses.json')
   end
 
   ### COURSES ###
 
-  def set_courses(test)
-    set_test_course_data test_data_file
-    @courses = @test_course_data.select { |d| d['tests'][test] }.map { |c| Course.new c }
+  def set_courses
+    prefixes = CONFIG['course_prefixes']
+    current_term = Utils.term_name_to_sis_code RipleyUtils.term_name
+    current_term_courses = prefixes.map { |p| RipleyUtils.get_test_course(current_term, p) }
+    next_term = RipleyUtils.next_term_code current_term
+    next_term_courses = prefixes.map { |p| RipleyUtils.get_test_course(next_term, p) }
+    @courses = current_term_courses + next_term_courses
+    @courses.compact!
+
+    ta_course = nil
+    @courses.find do |c|
+      secondaries = c.sections.reject &:primary
+      ta_section = secondaries.find { |s| s.instructors.any? && (c.teachers & s.instructors).empty? }
+      if ta_section
+        ta = ta_section.instructors.first
+        sections = secondaries.select { |s| s.instructors.include? ta }
+        ta_course = Course.new code: ta_section.course,
+                               title: c.title,
+                               term: c.term,
+                               sections: sections,
+                               teachers: [ta]
+      end
+    end
+    @courses << ta_course if ta_course
   end
 
   def set_course_sections(course)
