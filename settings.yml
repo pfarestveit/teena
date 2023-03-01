@@ -134,6 +134,7 @@ ripley:
   term_name: 'Spring 2023'
   term: '2023-B'
   sis_update_date: '2020-01-01'
+  course_prefixes: ['ECON C', 'CHEM 1A', 'LEGALST']
   db_host: secret
   db_port: secret
   db_name: secret
