@@ -84,6 +84,8 @@ module Page
     def instr_create_grp(course, group)
       logger.info "Creating new group called #{group.title} within #{group.group_set}"
       instr_load_grp_set(course, group.group_set)
+      instr_grp_add_button_element.when_present Utils.short_wait
+      sleep 1
       wait_for_update_and_click instr_grp_add_button_element
       wait_for_element_and_type(instr_grp_name_input_element, group.title)
       wait_for_update_and_click instr_grp_save_button_element

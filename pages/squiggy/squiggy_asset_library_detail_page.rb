@@ -270,6 +270,7 @@ class SquiggyAssetLibraryDetailPage < SquiggyAssetLibraryListViewPage
     logger.info "Replying '#{reply_comment.body}'"
     scroll_to_bottom
     click_reply_button comment
+    scroll_to_bottom
     enter_squiggy_text(reply_input_el(comment), reply_comment.body)
     wait_for_update_and_click_js reply_save_button
     comment_el_by_body(reply_comment).when_visible Utils.short_wait

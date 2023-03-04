@@ -511,9 +511,7 @@ module Page
           logger.debug "#{tool.name} is already installed and enabled, skipping"
         else
           if link_element(xpath: "//ul[@id='nav_disabled_list']/li[contains(.,'#{tool.name}')]//a").exists?
-            logger.debug "#{tool.name} is already installed but disabled, enabling"
-            enable_tool(test.course, tool)
-            pause_for_poller
+            fail "#{tool.name} is already installed but it shouldn't be"
           else
             logger.debug "#{tool.name} is not installed, installing and enabling"
 
