@@ -247,9 +247,10 @@ class SquiggyImpactStudioPage
       load_own_profile(test, user)
       visible_interactions = get_visible_network_interactions target_user
       wait_until(1, "Expected #{interactions}, but got #{visible_interactions}") { visible_interactions == interactions }
-    rescue
+    rescue => e
+      logger.error e.message
       if (tries -= 1).zero?
-        fail
+        fail e.message
       else
         logger.info 'Retrying'
         sleep Utils.short_wait
@@ -480,6 +481,7 @@ class SquiggyImpactStudioPage
 
   def click_view_all_assets
     logger.info 'Clicking link to view all assets'
+    scroll_to_bottom
     wait_for_update_and_click everyone_assets_show_more_link_element
   end
 end
