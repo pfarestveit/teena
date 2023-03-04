@@ -3,93 +3,116 @@ class RipleyTestConfig < TestConfig
   include Logging
 
   attr_accessor :base_url,
+                :course_sites,
                 :courses,
-                :sis_teacher,
-                :manual_teacher
+                :current_term,
+                :manual_teacher,
+                :next_term
 
   CONFIG = RipleyUtils.config
 
+  def initialize(test_name = nil)
+    super
+    @current_term = RipleyUtils.current_term
+    @next_term = RipleyUtils.next_term @current_term
+  end
+
   def add_user
-    test = 'course_add_user'
-    set_global_configs
-    set_courses
-    set_sis_teacher @courses.first
-    set_manual_users test
+    global_configs
+    get_single_test_site
+    # TODO set_manual_users
     @courses.each { |c| c.create_site_workflow = 'self' }
   end
 
   def course_site_creation
-    test = 'create_course_site'
-    set_global_configs
-    set_courses
-    set_manual_users test
+    global_configs
+    get_multiple_test_sites
+    # TODO set_manual_users
   end
 
   def e_grades_export
-    test = 'e_grades_export'
-    set_global_configs
-    set_courses
-    set_manual_users test
+    global_configs
+    get_e_grades_test_site
+    # TODO set_manual_users
   end
 
   def e_grades_validation
-    set_global_configs
-    set_courses
+    global_configs
+    get_e_grades_test_site
+    # TODO set_manual_users
   end
 
   def mailing_lists
-    test = 'mailing_lists'
-    set_global_configs
-    set_manual_users test
-    set_manual_teacher test
+    global_configs
+    # TODO set_manual_users
   end
 
   def official_sections
-    test = 'official_sections'
-    set_global_configs
-    set_courses
-    set_manual_users test
-    course = @courses.first
-    course.create_site_workflow = 'self'
-    course.sections = course.sections.map { |s| Section.new s }
-    set_sis_teacher course
+    global_configs
+    get_single_test_site
+    # TODO set_manual_users
   end
 
   def projects
-    set_global_configs
-    set_project_site_roles 'create_project_site'
+    global_configs
+    # TODO set_project_site_roles 'create_project_site'
   end
 
   def roster_photos
-    test = 'roster_photos'
-    set_global_configs
-    set_courses
-    set_manual_users test
-    @courses.each { |c| c.create_site_workflow = 'self' }
+    global_configs
+    get_single_test_site
+    # TODO set_manual_users
   end
 
   def user_provisioning
-    set_global_configs
-    set_manual_users 'user_prov'
+    global_configs
+    # TODO set_manual_users
   end
 
-  def set_global_configs
+  ### GLOBAL CONFIG ###
+
+  def global_configs
+    @admin = User.new uid: CONFIG['admin_uid']
     @base_url = CONFIG['base_url']
-    @admin = User.new({uid: CONFIG['admin_uid']})
-    set_test_user_data junction_test_data_file
   end
 
-  ### COURSES ###
+  # COURSE SITES
 
-  def set_courses
+  def get_multiple_test_sites
+    set_sis_courses
+    @course_sites = @courses.map do |c|
+      workflow = (c.sections.select(&:primary).length > 1) ? 'ccn' : 'uid'
+      CourseSite.new id: "#{@id} #{c.term.name} #{c.code}",
+                     abbreviation: "#{@id} #{c.term.name} #{c.code}",
+                     course: c,
+                     create_site_workflow: workflow,
+                     sections: c.sections
+    end
+  end
+
+  def get_single_test_site
+    get_multiple_test_sites
+    course_site = @course_sites.find { |site| site.course.sections(&:primary).length > 1 && (site.course.sections.select { |s| !s.primary }).any? }
+    primary = course_site.course.sections.find &:primary
+    course_site.course.sections.select { |s| s.course == primary.course }.each { |s| s.include_in_site = true }
+    course_site.create_site_workflow = 'self'
+    course_site
+  end
+
+  def get_e_grades_test_site
+    # TODO
+  end
+
+  # Courses
+
+  def set_sis_courses
     prefixes = CONFIG['course_prefixes']
-    current_term = Utils.term_name_to_sis_code RipleyUtils.term_name
-    current_term_courses = prefixes.map { |p| RipleyUtils.get_test_course(current_term, p) }
-    next_term = RipleyUtils.next_term_code current_term
-    next_term_courses = prefixes.map { |p| RipleyUtils.get_test_course(next_term, p) }
+    current_term_courses = prefixes.map { |p| RipleyUtils.get_test_course(@current_term, p) }
+    next_term_courses = prefixes.map { |p| RipleyUtils.get_test_course(@next_term, p) }
     @courses = current_term_courses + next_term_courses
     @courses.compact!
 
+    # Test site with only secondary sections
     ta_course = nil
     @courses.find do |c|
       secondaries = c.sections.reject &:primary
@@ -105,16 +128,27 @@ class RipleyTestConfig < TestConfig
       end
     end
     @courses << ta_course if ta_course
-  end
 
-  def set_course_sections(course)
-    course.sections = course.sections.map { |s| Section.new s }
+    @courses.each { |c| RipleyUtils.get_course_enrollment c }
+
+    # Test site with multiple courses
+    prim = @courses.select { |c| c.sections.any?(&:primary) && c.term == @current_term }
+    primaries = prim.map(&:sections).flatten.select(&:primary)
+    primaries.sort_by! { |p| p.enrollments.length }
+    logger.info "#{primaries.map &:course}"
+    instructors = (primaries[0].instructors + primaries[1].instructors).uniq
+    multi_course = Course.new code: primaries[0].course,
+                              title: primaries[0].course,
+                              term: @current_term,
+                              sections: primaries[0..1],
+                              teachers: instructors
+    @courses << multi_course
   end
 
   ### USERS ###
 
   def set_sis_teacher(course)
-    @sis_teacher = User.new course.teachers.first
+    @sis_teacher = course.teachers.first
   end
 
   def set_manual_teacher(test)

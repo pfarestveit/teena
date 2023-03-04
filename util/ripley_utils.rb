@@ -10,16 +10,33 @@ class RipleyUtils < Utils
     @config['base_url']
   end
 
-  def self.term_name
-    @config['term_name']
+  def self.current_term
+    Term.new code: @config['term_code'],
+             name: @config['term_name'],
+             sis_id: @config['term_sis_id']
   end
 
-  def self.term_code
-    @config['term']
+  def self.next_term(current_term)
+    term = Term.new sis_id: next_term_sis_id(current_term),
+             name: next_term_name(current_term)
+    term.code = Utils.term_name_to_hyphenated_code(term.name)
+    term
   end
 
-  def self.next_term_code(current_term_code)
-    (current_term_code.to_i + ([2, 5].include?(current_term_code.to_i % 10) ? 3 : 4)).to_s
+  def self.next_term_sis_id(current_term)
+    (current_term.sis_id.to_i + ([2, 5].include?(current_term.sis_id.to_i % 10) ? 3 : 4)).to_s
+  end
+
+  def self.next_term_name(current_term)
+    parts = current_term.name.split
+    case parts[0]
+    when 'Spring'
+      "Summer #{parts[1]}"
+    when 'Summer'
+      "Fall #{parts[1]}"
+    else
+      "Spring #{parts[1].to_i + 1}"
+    end
   end
 
   def self.mailing_list_suffix
@@ -103,10 +120,10 @@ class RipleyUtils < Utils
     Utils.query_pg_db(db_credentials, sql_2)
   end
 
-  def self.get_test_cs_course_id(term_id, catalog_id_prefix)
+  def self.get_test_cs_course_id(term, catalog_id_prefix)
     sql = "SELECT cs_course_id
              FROM sis_data.edo_sections
-            WHERE sis_term_id = '#{term_id}'
+            WHERE sis_term_id = '#{term.sis_id}'
               AND sis_course_name LIKE '#{catalog_id_prefix}%'
               AND is_primary IS FALSE
          GROUP BY cs_course_id
@@ -115,7 +132,7 @@ class RipleyUtils < Utils
     Utils.query_pg_db_field(NessieUtils.nessie_pg_db_credentials, sql, 'cs_course_id').first
   end
 
-  def self.get_test_course_section_data(term_id, cs_course_id)
+  def self.get_test_course_section_data(term, cs_course_id)
     sql = "  SELECT sis_section_id AS ccn,
                     is_primary,
                     sis_course_name AS code,
@@ -130,7 +147,7 @@ class RipleyUtils < Utils
                     meeting_start_time AS start_time,
                     meeting_end_time AS end_time
                FROM sis_data.edo_sections
-              WHERE sis_term_id = '#{term_id}'
+              WHERE sis_term_id = '#{term.sis_id}'
                 AND cs_course_id = '#{cs_course_id}'
            ORDER BY sis_course_name ASC,
                     sis_instruction_format DESC,
@@ -151,11 +168,11 @@ class RipleyUtils < Utils
     end
   end
 
-  def self.get_test_course_instructors(term_id, cs_course_id)
+  def self.get_test_course_instructors(term, cs_course_id)
     sql = "SELECT DISTINCT instructor_uid,
                   instructor_name
              FROM sis_data.edo_sections
-            WHERE sis_term_id = '#{term_id}'
+            WHERE sis_term_id = '#{term.sis_id}'
               AND cs_course_id = '#{cs_course_id}';"
     results = Utils.query_pg_db(NessieUtils.nessie_pg_db_credentials, sql)
     results.map do |r|
@@ -164,49 +181,92 @@ class RipleyUtils < Utils
     end
   end
 
-  def self.get_test_course(term_id, catalog_id_prefix)
-    id = get_test_cs_course_id(term_id, catalog_id_prefix)
-    if id
-      instr = get_test_course_instructors(term_id, id)
-      section_data = get_test_course_section_data(term_id, id)
-      grouped = section_data.group_by { |s| s[:ccn] }
-      sections = grouped.map do |k, v|
-        instructors = []
-        v.each do |u|
-          instructor = instr.find { |i| i.uid.to_s == u[:uid].to_s }
-          if instructor
-            instructor.role_code = u[:role_code]
-            instructors << instructor
-          end
+  def self.get_course(term, cs_course_id)
+    instr = get_test_course_instructors(term, cs_course_id)
+    section_data = get_test_course_section_data(term, cs_course_id)
+    grouped = section_data.group_by { |s| s[:ccn] }
+    sections = grouped.map do |k, v|
+      instructors = []
+      v.each do |u|
+        instructor = instr.find { |i| i.uid.to_s == u[:uid].to_s }
+        if instructor
+          instructor.role_code = u[:role_code]
+          instructors << instructor
         end
-        instructors.compact!
-        Section.new id: k,
-                    course: v[0][:code],
-                    instructors: instructors.uniq,
-                    label: v[0][:label],
-                    locations: (v.map { |l| l[:location] }).uniq,
-                    primary: v[0][:primary],
-                    schedules: (v.map {|s| s[:schedule] }).uniq
       end
-      teachers = sections.select(&:primary).map { |prim| prim.instructors }
-      teachers.flatten!
-      teachers.compact!
-      teachers.uniq!
-      codes = sections.map(&:course).uniq
-      codes.sort!
-      if teachers.any?
-        Course.new code: codes.first,
-                   title: (section_data[0][:title]),
-                   term: sis_code_to_term_name(term_id),
-                   sections: sections,
-                   teachers: teachers
+      instructors.compact!
+      Section.new id: k,
+                  course: v[0][:code],
+                  instructors: instructors.uniq,
+                  label: v[0][:label],
+                  locations: (v.map { |l| l[:location] }).uniq,
+                  primary: v[0][:primary],
+                  schedules: (v.map { |s| s[:schedule] }).uniq
+    end
+    teachers = sections.select(&:primary).map { |prim| prim.instructors }
+    teachers.flatten!
+    teachers.compact!
+    teachers.uniq!
+    codes = sections.map(&:course).uniq
+    codes.sort!
+    Course.new code: codes.first,
+               title: (section_data[0][:title]),
+               term: term,
+               sections: sections,
+               teachers: teachers
+  end
+
+  def self.get_test_course(term, catalog_id_prefix)
+    id = get_test_cs_course_id(term, catalog_id_prefix)
+    if id
+      course = get_course(term, id)
+      if course.teachers.any?
+        course
       else
-        logger.warn "Course code '#{catalog_id_prefix}' in term #{term_id} has no teachers"
+        logger.warn "Course code '#{catalog_id_prefix}' in term #{term.sis_id} has no teachers"
         nil
       end
     else
-      logger.warn "No test course found matching course code '#{catalog_id_prefix}' in term #{term_id}"
+      logger.warn "No test course found matching course code '#{catalog_id_prefix}' in term #{term.sis_id}"
       nil
+    end
+  end
+
+  def self.get_instructor_term_courses(instructor, term)
+    sql = "SELECT DISTINCT cs_course_id
+             FROM sis_data.edo_sections
+            WHERE sis_term_id = '#{term.sis_id}'
+              AND instructor_uid = '#{instructor.uid}'"
+    ids = Utils.query_pg_db(NessieUtils.nessie_pg_db_credentials, sql).map { |r| r['cs_course_id'] }
+    courses = ids.map { |id| get_course(term, id) }
+    courses.each do |course|
+      prims = course.sections.select(&:primary).map(&:instructors).map(&:uid).compact.uniq
+      unless prims.include? instructor.uid
+        course.sections.keep_if { |s| s.instructors.map(&:uid).include? instructor.uid }
+      end
+    end
+    courses
+  end
+
+  def self.get_course_enrollment(course)
+    sql = "SELECT sis_section_id,
+                  ldap_uid AS uid,
+                  sis_enrollment_status AS status,
+                  units,
+                  grading_basis
+             FROM sis_data.edo_enrollments
+            WHERE sis_term_id = '#{course.term.sis_id}'
+              AND sis_section_id IN (#{Utils.in_op(course.sections.map &:id)})"
+    results = Utils.query_pg_db(NessieUtils.nessie_pg_db_credentials, sql)
+    enrollments = results.map do |r|
+      SectionEnrollment.new uid: r['uid'],
+                            section_id: r['sis_section_id'],
+                            grading_basis: r['grading_basis'],
+                            status: r['status'],
+                            units: r['units']
+    end
+    course.sections.each do |section|
+      section.enrollments = enrollments.select { |e| e.section_id == section.id }
     end
   end
 end

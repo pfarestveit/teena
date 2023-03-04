@@ -6,7 +6,7 @@ include Logging
 
 test = RipleyTestConfig.new
 test.official_sections
-course = test.courses.first
+course = test.course_sites.first
 teacher = test.sis_teacher
 sections_for_site = course.sections.select &:include_in_site
 sections_to_add_delete = (course.sections - sections_for_site)
@@ -33,12 +33,12 @@ describe 'bCourses Official Sections tool', order: :defined do
 
     if standalone
       @splash_page.dev_auth teacher.uid
-      @create_course_site_page.provision_course_site(course, teacher, sections_for_site, { standalone: true })
-      @create_course_site_page.wait_for_standalone_site_id(course, teacher, @splash_page)
+      @create_course_site_page.provision_course_site(course, { standalone: true })
+      @create_course_site_page.wait_for_standalone_site_id(course, @splash_page)
     else
       @canvas.log_in(@cal_net, test.admin.username, Utils.super_admin_password)
       @canvas.masquerade_as teacher
-      @create_course_site_page.provision_course_site(course, teacher, sections_for_site)
+      @create_course_site_page.provision_course_site course
       @canvas.publish_course_site course
     end
   end

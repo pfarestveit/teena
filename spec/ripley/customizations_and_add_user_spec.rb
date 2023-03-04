@@ -8,7 +8,7 @@ describe 'bCourses' do
 
   test = RipleyTestConfig.new
   test.add_user
-  course = test.courses.first
+  course = test.course_sites.first
   sections = test.set_course_sections(course).select &:include_in_site
   sis_teacher = test.set_sis_teacher course
   users_to_add = [
@@ -37,9 +37,9 @@ describe 'bCourses' do
       @canvas.masquerade_as sis_teacher
     end
 
-    @create_course_site_page.provision_course_site(course, sis_teacher, sections, { standalone: standalone })
+    @create_course_site_page.provision_course_site(course, { standalone: standalone })
     if standalone
-      @create_course_site_page.wait_for_standalone_site_id(course, sis_teacher, @splash_page)
+      @create_course_site_page.wait_for_standalone_site_id(course, @splash_page)
     else
       @canvas.publish_course_site course
     end

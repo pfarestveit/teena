@@ -35,28 +35,28 @@ class RipleyCreateCourseSitePage < RipleySiteCreationPage
     wait_for_update_and_click button_element(id: "TBD #{course.term}")
   end
 
-  def search_for_course(course, instructor, sections=nil)
-    logger.debug "Searching for #{course.code} in #{course.term}"
-    if course.create_site_workflow == 'uid'
-      logger.debug "Searching by instructor UID #{instructor.uid}"
+  def search_for_course(site)
+    logger.debug "Searching for #{site.course.code} in #{site.course.term.name}"
+    if site.course.create_site_workflow == 'uid'
+      logger.debug "Searching by instructor UID #{site.sis_teacher.uid}"
       switch_mode unless switch_to_ccn?
-      wait_for_element_and_type(instructor_uid_element, instructor.uid)
+      wait_for_element_and_type(instructor_uid_element, site.sis_teacher.uid)
       wait_for_update_and_click as_instructor_button_element
-      choose_term course
+      choose_term site.course
 
-    elsif course.create_site_workflow == 'ccn'
+    elsif site.create_site_workflow == 'ccn'
       logger.debug 'Searching by CCN list'
       switch_mode unless switch_to_instructor?
-      choose_term course
+      choose_term site.course
       sleep 1
-      ccn_list = sections.map &:id
+      ccn_list = site.sections.map &:id
       logger.debug "CCN list is '#{ccn_list}'"
       wait_for_element_and_type(ccn_list_element, ccn_list.join(', '))
       wait_for_update_and_click review_ccns_button_element
 
     else
       logger.debug 'Searching as the instructor'
-      choose_term course
+      choose_term site.course
     end
   end
 
@@ -142,24 +142,23 @@ class RipleyCreateCourseSitePage < RipleySiteCreationPage
     RipleyUtils.set_ripley_test_course_id course
   end
 
-  def wait_for_standalone_site_id(course, user, splash_page)
+  def wait_for_standalone_site_id(site, splash_page)
     wait_for_progress_bar
-    course.create_site_workflow = 'self'
+    site.create_site_workflow = 'self'
     tries = Utils.short_wait
     begin
-      splash_page.clear_cache(@driver, splash_page)
-      splash_page.dev_auth user.uid
+      splash_page.clear_cache
+      splash_page.dev_auth site.sis_teacher.uid
       load_standalone_tool
       click_create_course_site
-      search_for_course(course, user)
-      expand_available_sections course.code
-      link = link_element(xpath: "TBD #{course.title}")
-      course.site_id = link.attribute('href').gsub("#{Utils.canvas_base_url}/courses/", '')
-      logger.info "Course site ID is #{course.site_id}"
-      RipleyUtils.set_ripley_test_course_id course
+      search_for_course site
+      expand_available_sections site.course.code
+      link = link_element(xpath: "TBD #{site.course.title}")
+      site.id = link.attribute('href').gsub("#{Utils.canvas_base_url}/courses/", '')
+      logger.info "Course site ID is #{site.id}"
     rescue => e
       Utils.log_error e
-      logger.warn "UID #{user.uid} is not yet associated with the site"
+      logger.warn "UID #{site.sis_teacher.uid} is not yet associated with the site"
       if (tries -= 1).zero?
         fail
       else
@@ -169,16 +168,16 @@ class RipleyCreateCourseSitePage < RipleySiteCreationPage
     end
   end
 
-  def provision_course_site(course, user, sections, opts={})
-    opts[:standalone] ? load_standalone_tool : load_embedded_tool(user)
+  def provision_course_site(site, opts={})
+    opts[:standalone] ? load_standalone_tool : load_embedded_tool(site.sis_teacher)
     click_create_course_site
-    course.create_site_workflow = 'ccn' if opts[:admin]
-    search_for_course(course, user, sections)
-    expand_available_sections course.code
-    select_sections sections
+    site.course.create_site_workflow = 'ccn' if opts[:admin]
+    search_for_course site
+    expand_available_sections site.course.code
+    select_sections site.sections
     click_next
-    course.title = enter_site_titles course
+    site.course.title = enter_site_titles site.course
     click_create_site
-    wait_for_site_id(course) unless opts[:standalone]
+    wait_for_site_id(site) unless opts[:standalone]
   end
 end

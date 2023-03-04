@@ -8,7 +8,7 @@ describe 'bCourses Roster Photos' do
 
   test = RipleyTestConfig.new
   test.rosters
-  course = test.courses.first
+  course = test.course_sites.first
   sections = test.set_course_sections(course).select &:include_in_site
   teacher = test.set_sis_teacher course
   non_teachers = [
@@ -38,8 +38,8 @@ describe 'bCourses Roster Photos' do
       @canvas.masquerade_as teacher
     end
 
-    @create_course_site_page.provision_course_site(course, teacher, sections, {standalone: standalone})
-    @create_course_site_page.wait_for_standalone_site_id(course, teacher, @splash_page) if standalone
+    @create_course_site_page.provision_course_site(course, {standalone: standalone})
+    @create_course_site_page.wait_for_standalone_site_id(course, @splash_page) if standalone
     @canvas.publish_course_site course unless standalone
 
     # TODO - replace with data collection from Nessie

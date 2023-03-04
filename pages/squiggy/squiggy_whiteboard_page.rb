@@ -124,9 +124,22 @@ class SquiggyWhiteboardPage < SquiggyWhiteboardsPage
   end
 
   def export_to_asset_library(whiteboard, new_title=nil)
-    click_export_button
-    logger.debug 'Exporting whiteboard to asset library'
-    wait_for_update_and_click export_to_library_button_element
+    tries ||= 2
+    begin
+      tries -= 1
+      sleep 1
+      click_export_button
+      logger.debug 'Exporting whiteboard to asset library'
+      wait_for_update_and_click export_to_library_button_element
+    rescue => e
+      logger.error e.message
+      if tries.zero?
+        fail 'Timed out waiting for board to be exportable'
+      else
+        export_button_element.click
+        retry
+      end
+    end
     enter_squiggy_text(export_title_input_element, new_title) if new_title
     wait_for_update_and_click_js export_save_button_element
     export_title_input_element.when_not_present Utils.medium_wait

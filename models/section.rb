@@ -2,6 +2,7 @@ class Section
 
   attr_accessor :id,
                 :course,
+                :enrollments,
                 :include_in_site,
                 :instructors,
                 :label,
