@@ -42,10 +42,6 @@ class NessieFilterUtils < NessieUtils
   ### WHERE ###
   #############
 
-  def self.in_op(arr)
-    arr.map {|i| "'#{i}'"}.join(', ')
-  end
-
   def self.academic_division_cond(filter, conditions_list)
     conditions_list << "student.student_majors.division IN(#{in_op filter.academic_divisions})" if filter.academic_divisions&.any?
   end

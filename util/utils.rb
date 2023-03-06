@@ -439,6 +439,10 @@ class Utils
     results.field_values(field)
   end
 
+  def self.in_op(arr)
+    arr.map {|i| "'#{i}'"}.join(', ')
+  end
+
   # Converts term name to the SIS code for the term
   # @param term_name [String]
   # @return [String]
@@ -475,7 +479,7 @@ class Utils
     "#{season} #{term_id[0]}0#{term_id[1..2]}"
   end
 
-  def self.next_term_code(term_id)
+  def self.next_term_sis_id(term_id)
     d1 = '2'
     d2_3 = (term_id[-1] == '8' ? (term_id[1..2].to_i + 1).to_s : term_id[1..2])
     d4 = case term_id[3]
