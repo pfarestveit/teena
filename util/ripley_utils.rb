@@ -47,6 +47,10 @@ class RipleyUtils < Utils
     @config['dev_auth_password']
   end
 
+  def self.e_grades_site_ids
+    @config['e_grades_site_ids']
+  end
+
   def self.test_data_file
     File.join(Utils.config_dir, 'test-data-ripley.json')
   end
@@ -120,7 +124,7 @@ class RipleyUtils < Utils
     Utils.query_pg_db(db_credentials, sql_2)
   end
 
-  def self.get_test_cs_course_id(term, catalog_id_prefix)
+  def self.get_test_cs_course_id_from_catalog_id(term, catalog_id_prefix)
     sql = "SELECT cs_course_id
              FROM sis_data.edo_sections
             WHERE sis_term_id = '#{term.sis_id}'
@@ -129,6 +133,14 @@ class RipleyUtils < Utils
          GROUP BY cs_course_id
            HAVING COUNT(*) > 1
             LIMIT 1;"
+    Utils.query_pg_db_field(NessieUtils.nessie_pg_db_credentials, sql, 'cs_course_id').first
+  end
+
+  def self.get_test_cs_course_id_from_ccn(term, ccn)
+    sql = "SELECT cs_course_id
+             FROM sis_data.edo_sections
+            WHERE sis_term_id = '#{term.sis_id}'
+              AND sis_section_id = '#{ccn}';"
     Utils.query_pg_db_field(NessieUtils.nessie_pg_db_credentials, sql, 'cs_course_id').first
   end
 
@@ -217,7 +229,7 @@ class RipleyUtils < Utils
   end
 
   def self.get_test_course(term, catalog_id_prefix)
-    id = get_test_cs_course_id(term, catalog_id_prefix)
+    id = get_test_cs_course_id_from_catalog_id(term, catalog_id_prefix)
     if id
       course = get_course(term, id)
       if course.teachers.any?

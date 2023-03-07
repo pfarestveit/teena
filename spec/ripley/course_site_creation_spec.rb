@@ -180,7 +180,7 @@ describe 'bCourses course site creation' do
           expect(site.course.site_id).not_to be_nil
         end
 
-        if site.id
+        if site.site_id
           sites_created << site
         else
           logger.error "Timed out before the #{site.course.term} #{site.course.code} course site was created, or another error occurred"
@@ -207,7 +207,7 @@ describe 'bCourses course site creation' do
       sites_created.each_with_index do |site, i|
 
         begin
-          test_case = "#{site.course.term.name} #{site.course.code} site ID #{site.id}"
+          test_case = "#{site.course.term.name} #{site.course.code} site ID #{site.site_id}"
 
           logger.info "Verifying content of #{test_case}"
 

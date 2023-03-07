@@ -9,12 +9,7 @@ unless ENV['STANDALONE']
     test = RipleyTestConfig.new
     test.e_grades_export
 
-    course = test.courses.first
-    sections = test.set_course_sections(course).select &:include_in_site
-    primary_section = sections.first
-    secondary_section = sections.last if sections.length > 1
-
-    teacher = test.set_sis_teacher course
+    site = test.course_sites.first
     non_teachers = [
       test.lead_ta,
       test.ta,
@@ -28,65 +23,52 @@ unless ENV['STANDALONE']
     before(:all) do
       @driver = Utils.launch_browser
       @cal_net = Page::CalNetPage.new @driver
+      @canvas_api = CanvasAPIPage.new @driver
       @canvas = Page::CanvasGradesPage.new @driver
       @canvas_assignments_page = Page::CanvasAssignmentsPage.new @driver
       @splash_page = RipleySplashPage.new @driver
       @e_grades_export_page = RipleyEGradesPage.new @driver
       @course_add_user_page = RipleyAddUserPage.new @driver
 
-      # TODO - replace the following with data collection from Nessie
-      # Get roster and section data for the site
-      @splash_page.load_page
-      @splash_page.basic_auth(teacher.uid, @cal_net)
-      @rosters_api = 'TBD'
-      @academics_api = 'TBD'
-      @rosters_api.get_feed course
-      @academics_api.get_feed
-      @prim_sec_sids = @rosters_api.student_ids(@rosters_api.section_students(primary_section.id))
-      if secondary_section
-        @sec_sec_sids = @rosters_api.student_ids(@rosters_api.section_students(secondary_section.id))
-      end
-      @current_semester = @academics_api.current_semester @academics_api.all_teaching_semesters
-      @current_semester_name = @academics_api.semester_name @current_semester if @current_semester
-
       @canvas.log_in(@cal_net, test.admin.username, Utils.super_admin_password)
-      @canvas.masquerade_as teacher
+      section_ids = @canvas_api.get_course_site_sis_section_ids site
+      test.set_e_grades_test_site_data(site, section_ids)
+      @primary_section = site.sections.find &:primary
+      @prim_sec_sids = @primary_section.enrollments.map &:sid
+      @secondary_section = site.sections.reject(&:primary).first
+      @sec_sec_sids = @secondary_section.enrollments.map(&:sid) if @secondary_section
 
       # Create an ungraded assignment to use for testing manual grading policy
+      teacher = test.set_sis_teacher site
+      @canvas.masquerade_as teacher
       @ungraded_assignment = Assignment.new title: test.id
-      @canvas.set_grade_policy_manual course
-      @canvas_assignments_page.create_assignment(course, @ungraded_assignment)
+      @canvas.set_grade_policy_manual site
+      @canvas_assignments_page.create_assignment(site, @ungraded_assignment)
     end
 
     after(:all) { Utils.quit_browser @driver }
 
     it 'offers an E-Grades Export button on the Gradebook' do
-      @canvas.load_gradebook course
+      @canvas.load_gradebook site
       @canvas.click_e_grades_export_button
       @e_grades_export_page.wait_until(Utils.medium_wait) { @e_grades_export_page.title == 'Download E-Grades' }
-      @e_grades_export_page.i_frame_form_element? RipleyUtils.base_url
+      expect(@e_grades_export_page.i_frame_form_element? test.base_url).to be true
     end
 
     context 'when no grading scheme is enabled and an assignment is un-posted' do
 
-      before(:all) { @canvas.disable_grading_scheme course }
+      before(:all) { @canvas.disable_grading_scheme site }
 
-      before(:each) { @e_grades_export_page.load_embedded_tool course }
+      before(:each) { @e_grades_export_page.load_embedded_tool site }
 
-      it 'offers a "Course Settings" link' do
-        @e_grades_export_page.click_course_settings_button
-        @canvas.wait_until(Utils.medium_wait) { @canvas.current_url.include? "#{Utils.canvas_base_url}/courses/#{course.site_id}/settings" }
-      end
+      it('offers a "Course Settings" link') { @e_grades_export_page.click_course_settings_button site }
 
       it 'offers a "How do I post grades for an assignment?" link' do
         title = 'How do I post grades for an assignment'
         expect(@e_grades_export_page.external_link_valid?(@e_grades_export_page.how_to_post_grades_link_element, title)).to be true
       end
 
-      it 'allows the user to Cancel' do
-        @e_grades_export_page.click_cancel
-        @canvas.wait_until(Utils.medium_wait) { @canvas.current_url == "#{Utils.canvas_base_url}/courses/#{course.site_id}/gradebook" }
-      end
+      it('allows the user to Cancel') { @e_grades_export_page.click_cancel site }
 
       it 'prevents the user continuing' do
         @e_grades_export_page.continue_button_element.when_visible Utils.medium_wait
@@ -98,22 +80,16 @@ unless ENV['STANDALONE']
 
       before(:all) { @canvas.enable_grading_scheme course }
 
-      before(:each) { @e_grades_export_page.load_embedded_tool course }
+      before(:each) { @e_grades_export_page.load_embedded_tool site }
 
-      it 'offers a "Course Settings" link' do
-        @e_grades_export_page.click_course_settings_button
-        @canvas.wait_until(Utils.medium_wait) { @canvas.current_url.include? "#{Utils.canvas_base_url}/courses/#{course.site_id}/settings" }
-      end
+      it('offers a "Course Settings" link') { @e_grades_export_page.click_course_settings_button site }
 
       it 'offers a "How do I post grades for an assignment?" link' do
         title = 'How do I post grades for an assignment'
         expect(@e_grades_export_page.external_link_valid?(@e_grades_export_page.how_to_post_grades_link_element, title)).to be true
       end
 
-      it 'allows the user to Cancel' do
-        @e_grades_export_page.click_cancel
-        @canvas.wait_until(Utils.medium_wait) { @canvas.current_url == "#{Utils.canvas_base_url}/courses/#{course.site_id}/gradebook" }
-      end
+      it('allows the user to Cancel') { @e_grades_export_page.click_cancel site }
 
       it 'allows the user to Continue' do
         @e_grades_export_page.click_continue
@@ -124,15 +100,13 @@ unless ENV['STANDALONE']
     context 'when no assignment is muted and a grading scheme is enabled' do
 
       before(:all) do
-        @e_grades_export_page.load_embedded_tool course
+        @e_grades_export_page.load_embedded_tool site
         @e_grades_export_page.click_continue
       end
 
       it 'allows the user the select any section on the course site' do
         # Parenthetical in section labels isn't shown on e-grades tool
-        expected_options = @rosters_api.section_names.map do |n|
-          n.include?('(') ? n.split(' (').first : n
-        end
+        expected_options = site.sections.map { |s| "#{s.course} #{s.label}" }
         visible_options = @e_grades_export_page.sections_select_options.map &:strip
         if expected_options.length > 1
           expect(visible_options.sort).to eql(expected_options.sort)
@@ -147,8 +121,8 @@ unless ENV['STANDALONE']
       shared_examples 'CSV downloads' do |cutoff|
 
         it 'allows the user to download current grades for a primary section' do
-          csv = @e_grades_export_page.download_current_grades(course, primary_section, cutoff)
-          if @current_semester && course.term == @current_semester_name
+          csv = @e_grades_export_page.download_current_grades(site, @primary_section, cutoff)
+          if site.course.term == test.current_term.name
             expect(csv.any?).to be true
           else
             expected_sids = @prim_sec_sids.sort
@@ -160,9 +134,9 @@ unless ENV['STANDALONE']
         end
 
         it 'allows the user to download current grades for a secondary section' do
-          if secondary_section
-            csv = @e_grades_export_page.download_current_grades(course, secondary_section, cutoff)
-            if @current_semester && course.term == @current_semester_name
+          if @secondary_section
+            csv = @e_grades_export_page.download_current_grades(site, @secondary_section, cutoff)
+            if site.course.term.name == test.current_term.name
               expect(csv.any?).to be true
             else
               expected_sids = @sec_sec_sids.sort
@@ -175,8 +149,8 @@ unless ENV['STANDALONE']
         end
 
         it 'allows the user to download final grades for a primary section' do
-          csv = @e_grades_export_page.download_final_grades(course, primary_section, cutoff)
-          if @current_semester && course.term == @current_semester_name
+          csv = @e_grades_export_page.download_final_grades(site, @primary_section, cutoff)
+          if site.course.term == test.current_term.name
             expect(csv.any?).to be true
           else
             expected_sids = @prim_sec_sids.sort
@@ -188,9 +162,9 @@ unless ENV['STANDALONE']
         end
 
         it 'allows the user to download final grades for a secondary section' do
-          if secondary_section
-            csv = @e_grades_export_page.download_final_grades(course, secondary_section, cutoff)
-            if @current_semester && course.term == @current_semester_name
+          if @secondary_section
+            csv = @e_grades_export_page.download_final_grades(site, @secondary_section, cutoff)
+            if site.course.term == test.current_term.name
               expect(csv.any?).to be true
             else
               expected_sids = @sec_sec_sids.sort
@@ -219,9 +193,9 @@ unless ENV['STANDALONE']
     describe 'CSV export' do
 
       before(:all) do
-        ccn = primary_section.id.to_s
-        @roster_students = @rosters_api.section_students ccn
-        @e_grades = @e_grades_export_page.download_final_grades(course, primary_section, 'C-')
+        ccn = @primary_section.id.to_s
+        @students = site.sections.enrollments
+        @e_grades = @e_grades_export_page.download_final_grades(site, @primary_section, 'C-')
       end
 
       it 'has the right column headers' do
@@ -232,7 +206,7 @@ unless ENV['STANDALONE']
       end
 
       it 'has the right SIDs' do
-        expected_sids = @rosters_api.student_ids(@roster_students).sort
+        expected_sids = '' # TODO
         actual_sids = @e_grades.map { |s| s[:id] }.sort
         logger.debug "Expecting #{expected_sids} and got #{actual_sids}"
         expect(actual_sids.any? &:empty?).to be false
@@ -243,7 +217,7 @@ unless ENV['STANDALONE']
 
       it 'has the right names' do
         # Compare last names only, since preferred names can cause mismatches
-        expected_names = @rosters_api.student_last_names(@roster_students).sort
+        expected_names = '' # TODO
         actual_names = @e_grades.map { |n| n[:name].split(',')[0].strip.downcase }.sort
         logger.debug "Expecting #{expected_names} and got #{actual_names}"
         expect(actual_names.any? &:empty?).to be false
@@ -272,17 +246,17 @@ unless ENV['STANDALONE']
     describe 'final grade' do
 
       before(:all) do
-        students = @canvas.get_students(course, primary_section)
-        @canvas.enable_grading_scheme course
-        @canvas.load_gradebook course
+        students = @canvas.get_students(site, @primary_section)
+        @canvas.enable_grading_scheme site
+        @canvas.load_gradebook site
         @grades_are_final = @canvas.grades_final?
         logger.info "Grades are final is #{@grades_are_final}"
         @canvas.hit_escape
 
         # Get actual grade data for one student
         gradebook_grade_data = students.map do |user|
-          user.sis_id = @rosters_api.sid_from_uid user.uid
-          user.full_name = @rosters_api.name_from_uid user.uid
+          user.sis_id = '' # TODO
+          user.full_name = '' # TODO
           user.sis_id.nil? ? nil : @canvas.student_score(user)
         end
         gradebook_grade_data.compact!
@@ -297,19 +271,19 @@ unless ENV['STANDALONE']
       context 'when override is enabled' do
 
         before(:all) do
-          @canvas.load_gradebook course
+          @canvas.load_gradebook site
           @canvas.allow_grade_override
-          @canvas.enter_override_grade(course, @test_student, @override_grade)
+          @canvas.enter_override_grade(site, @test_student, @override_grade)
         end
 
         it 'downloads the override grade rather than the calculated grade in current grades' do
-          e_grades = @e_grades_export_page.download_current_grades(course, primary_section)
+          e_grades = @e_grades_export_page.download_current_grades(site, @primary_section)
           e_grades_row = e_grades.find { |r| r[:id] == @test_student.sis_id }
           expect(e_grades_row[:grade]).to eql(@override_grade)
         end
 
         it 'downloads the override grade rather than the calculated grade in final grades' do
-          e_grades = @e_grades_export_page.download_final_grades(course, primary_section)
+          e_grades = @e_grades_export_page.download_final_grades(site, @primary_section)
           e_grades_row = e_grades.find { |r| r[:id] == @test_student.sis_id }
           expect(e_grades_row[:grade]).to eql(@override_grade)
         end
@@ -318,15 +292,15 @@ unless ENV['STANDALONE']
       context 'when override is disabled' do
 
         before(:all) do
-          @canvas.load_gradebook course
+          @canvas.load_gradebook site
           @canvas.disallow_grade_override
         end
 
         it 'downloads the calculated grade rather than the override grade' do
           e_grades = if @grades_are_final
-                       @e_grades_export_page.download_final_grades(course, primary_section)
+                       @e_grades_export_page.download_final_grades(site, @primary_section)
                      else
-                       @e_grades_export_page.download_current_grades(course, primary_section)
+                       @e_grades_export_page.download_current_grades(site, @primary_section)
                      end
 
           e_grades_row = e_grades.find { |r| r[:id] == @test_student.sis_id }
@@ -338,9 +312,9 @@ unless ENV['STANDALONE']
     describe 'user role restrictions' do
 
       before(:all) do
-        primary_sec_opt = @rosters_api.section_names.find { |n| n.include? primary_section.label }
+        primary_sec_opt = "#{@primary_section.course} #{@primary_section.label}"
         non_teachers.each do |user|
-          @course_add_user_page.load_embedded_tool course
+          @course_add_user_page.load_embedded_tool site
           @course_add_user_page.search(user.uid, 'CalNet UID')
           @course_add_user_page.add_user_by_uid(user, primary_sec_opt)
         end
@@ -348,8 +322,8 @@ unless ENV['STANDALONE']
 
       [test.lead_ta, test.ta, test.reader].each do |user|
         it "denies #{user.role} #{user.uid} access to the tool" do
-          @canvas.masquerade_as(user, course)
-          @canvas.load_gradebook course
+          @canvas.masquerade_as(user, site)
+          @canvas.load_gradebook site
           @canvas.click_e_grades_export_button
           @e_grades_export_page.switch_to_canvas_iframe
           @e_grades_export_page.not_auth_msg_element.when_visible Utils.medium_wait
@@ -357,15 +331,15 @@ unless ENV['STANDALONE']
       end
 
       it "denies #{test.designer.role} #{test.designer.uid} access to the tool" do
-        @canvas.masquerade_as(test.designer, course)
-        @e_grades_export_page.load_embedded_tool course
+        @canvas.masquerade_as(test.designer, site)
+        @e_grades_export_page.load_embedded_tool site
         @e_grades_export_page.not_auth_msg_element.when_visible Utils.medium_wait
       end
 
       [test.observer, test.students.first, test.wait_list_student].each do |user|
         it "denies #{user.role} #{user.uid} access to the tool" do
-          @canvas.masquerade_as(user, course)
-          @e_grades_export_page.hit_embedded_tool_url course
+          @canvas.masquerade_as(user, site)
+          @e_grades_export_page.hit_embedded_tool_url site
           @canvas.wait_for_error(@canvas.access_denied_msg_element, @e_grades_export_page.not_auth_msg_element)
         end
       end

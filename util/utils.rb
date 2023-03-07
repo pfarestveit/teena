@@ -520,6 +520,19 @@ class Utils
     "#{parts[1]}-#{semester}"
   end
 
+  def self.term_code_to_term_name(term_code)
+    parts = term_code.split('-')
+    season = case parts[1]
+             when 'B'
+               'Spring'
+             when 'C'
+               'Summer'
+             else
+               'Fall'
+             end
+    "#{season} #{parts[0]}"
+  end
+
   # SCREENSHOTS
 
   def self.save_screenshot(driver, unique_id)

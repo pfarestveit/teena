@@ -60,8 +60,9 @@ module RipleyPages
     wait_for_load_and_click_js continue_button_element
   end
 
-  def click_cancel
+  def click_cancel(course_site)
     logger.debug 'Clicking cancel'
     wait_for_load_and_click cancel_button_element
+    wait_until(Utils.medium_wait) { current_url == "#{Utils.canvas_base_url}/courses/#{course_site.site_id}/gradebook" }
   end
 end

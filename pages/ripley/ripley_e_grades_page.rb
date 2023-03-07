@@ -20,24 +20,25 @@ class RipleyEGradesPage
   button(:download_final_grades, id: 'TBD "Download Final Grades"')
   link(:bcourses_to_egrades_link, id: 'TBD "From bCourses to E-Grades"')
 
-  def embedded_tool_path(course)
-    "/courses/#{course.site_id}/external_tools/#{Utils.canvas_e_grades_export_tool}"
+  def embedded_tool_path(site)
+    "/courses/#{site.site_id}/external_tools/#{Utils.canvas_e_grades_export_tool}"
   end
 
-  def hit_embedded_tool_url(course)
-    navigate_to "#{Utils.canvas_base_url}#{embedded_tool_path course}"
+  def hit_embedded_tool_url(site)
+    navigate_to "#{Utils.canvas_base_url}#{embedded_tool_path site}"
   end
 
-  def load_embedded_tool(course)
-    load_tool_in_canvas embedded_tool_path(course)
+  def load_embedded_tool(site)
+    load_tool_in_canvas embedded_tool_path(site)
   end
 
-  def load_standalone_tool(course)
-    navigate_to "#{RipleyUtils.base_url} TBD #{course.site_id}"
+  def load_standalone_tool(site)
+    navigate_to "#{RipleyUtils.base_url} TBD #{site.site_id}"
   end
 
-  def click_course_settings_button
+  def click_course_settings_button(site)
     wait_for_load_and_click course_settings_button_element
+    wait_until(Utils.medium_wait) { current_url.include? "#{Utils.canvas_base_url}/courses/#{site.site_id}/settings" }
   end
 
   def set_cutoff(cutoff)
@@ -69,28 +70,28 @@ class RipleyEGradesPage
     csv.map { |r| r.to_hash }
   end
 
-  def download_current_grades(course, section, cutoff = nil)
-    logger.info "Downloading current grades for #{course.code} #{section.label}"
+  def download_current_grades(site, section, cutoff = nil)
+    logger.info "Downloading current grades for #{site.course.code} #{section.label}"
     Utils.prepare_download_dir
-    load_embedded_tool course
+    load_embedded_tool site
     click_continue
     set_cutoff cutoff
-    choose_section section if course.sections.length > 1
+    choose_section section if site.course.sections.length > 1
     wait_for_load_and_click download_current_grades_element
-    file_path = "#{Utils.download_dir}/egrades-current-#{section.id}-#{course.term.gsub(' ', '-')}-*.csv"
+    file_path = "#{Utils.download_dir}/egrades-current-#{section.id}-#{site.course.term.gsub(' ', '-')}-*.csv"
     csv = parse_grades_csv file_path
     csv.map { |r| r.to_hash }
   end
 
-  def download_final_grades(course, section, cutoff = nil)
-    logger.info "Downloading final grades for #{course.code} #{section.label}"
+  def download_final_grades(site, section, cutoff = nil)
+    logger.info "Downloading final grades for #{site.course.code} #{section.label}"
     Utils.prepare_download_dir
-    load_embedded_tool course
+    load_embedded_tool site
     click_continue
     set_cutoff cutoff
-    choose_section section if course.sections.length > 1
+    choose_section section if site.course.sections.length > 1
     wait_for_load_and_click download_final_grades_element
-    file_path = "#{Utils.download_dir}/egrades-final-#{section.id}-#{course.term.gsub(' ', '-')}-*.csv"
+    file_path = "#{Utils.download_dir}/egrades-final-#{section.id}-#{site.course.term.gsub(' ', '-')}-*.csv"
     csv = parse_grades_csv file_path
     csv.map { |r| r.to_hash }
   end
