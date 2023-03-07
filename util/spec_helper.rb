@@ -83,6 +83,7 @@ require_relative '../pages/page'
 require_relative '../pages/oec/blue_page'
 require_relative '../pages/cal_net_page'
 
+require_relative '../pages/canvas/canvas_api_page'
 require_relative '../pages/canvas/canvas_people_page'
 require_relative '../pages/canvas/canvas_page'
 require_relative '../pages/canvas/canvas_assignments_page'

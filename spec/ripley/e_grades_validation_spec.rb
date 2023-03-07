@@ -18,43 +18,36 @@ unless ENV['STANDALONE']
       @splash_page = RipleySplashPage.new @driver
       @e_grades_export_page = RipleyEGradesPage.new @driver
 
-      # TODO - replace with data collection from Nessie
-      @rosters_api = ApiAcademicsRosterPage.new @driver
-
       @canvas.log_in(@cal_net, Utils.super_admin_username, Utils.super_admin_password)
 
-      test.courses.each_with_index do |course, i|
+      test.course_sites.each_with_index do |site, i|
 
         begin
+          @canvas.log_in(@cal_net, test.admin.username, Utils.super_admin_password)
+          section_ids = @canvas_api.get_course_site_sis_section_ids site
+          test.set_e_grades_test_site_data(site, section_ids)
 
-          # Get SIS roster
-          test.set_sis_teacher course
-          instructor = test.set_sis_teacher course
-          primary_section = test.set_course_sections(course).first
-
-          # TODO - replace with data collection from Nessie
-          @splash_page.load_page
-          @splash_page.dev_auth(instructor.uid, @cal_net)
-          rosters_api = ApiAcademicsRosterPage.new @driver
-          rosters_api.get_feed course
+          instructor = test.set_sis_teacher site
+          primary_section = site.sections.find &:primary
+          test_case = "#{site.course.term} #{site.course.code} site #{site.site_id}"
 
           # Disable existing grading scheme in case it is not default, then set default scheme
-          @canvas.masquerade_as(instructor, course)
+          @canvas.masquerade_as(instructor, site)
 
           %w(letter letter-only pnp sus).each do |scheme|
 
-            @canvas.enable_grading_scheme course
+            @canvas.enable_grading_scheme site
             @canvas.set_grading_scheme({scheme: scheme})
 
             # Get grades in Canvas
-            students = @canvas.get_students(course, primary_section)
-            @canvas.load_gradebook course
+            students = @canvas.get_students(site, primary_section)
+            @canvas.load_gradebook site
             grades_are_final = @canvas.grades_final?
             logger.info "Grades are final is #{grades_are_final}"
             @canvas.hit_escape
             gradebook_grades = students.map do |stud|
-              stud.sis_id = rosters_api.sid_from_uid stud.uid
-              stud.full_name = rosters_api.name_from_uid stud.uid
+              stud.sis_id = '' # TODO
+              stud.full_name = '' # TODO
               @canvas.student_score stud if stud.sis_id
             end
             gradebook_grades.compact!
@@ -65,8 +58,8 @@ unless ENV['STANDALONE']
             # Get grades in export CSV
             cutoff = i.even? ? 'C-' : 'A'
             e_grades = grades_are_final ?
-                         @e_grades_export_page.download_final_grades(course, primary_section, cutoff) :
-                         @e_grades_export_page.download_current_grades(course, primary_section, cutoff)
+                         @e_grades_export_page.download_final_grades(site, primary_section, cutoff) :
+                         @e_grades_export_page.download_current_grades(site, primary_section, cutoff)
 
             if gradebook_grades.any?
               # Match the grade for each student
@@ -95,8 +88,8 @@ unless ENV['STANDALONE']
                                      end
 
 
-                    it "shows the grade '#{expected_grade}' for UID #{gradebook_row[:student].uid} in #{course.term} #{course.code}
-                        site #{course.site_id} with grading scheme #{scheme} and a P/NP cutoff of #{cutoff}" do
+                    it "shows the grade '#{expected_grade}' for UID #{gradebook_row[:student].uid} in #{test_case}
+                        with grading scheme #{scheme} and a P/NP cutoff of #{cutoff}" do
                       expect(e_grades_row[:grade]).to eql(expected_grade)
                     end
 
@@ -110,21 +103,20 @@ unless ENV['STANDALONE']
                                        else
                                          ''
                                        end
-                    it "shows the comment '#{expected_comment}' for UID #{gradebook_row[:student].uid} in #{course.term} #{course.code}
-                        site #{course.site_id} with grading scheme #{scheme} and a P/NP cutoff of #{cutoff}" do
+                    it "shows the comment '#{expected_comment}' for UID #{gradebook_row[:student].uid} in #{test_case}
+                        with grading scheme #{scheme} and a P/NP cutoff of #{cutoff}" do
                       expect(e_grades_row[:comments]).to eql(expected_comment)
                     end
                   end
 
                 rescue => e
-                  # Catch and report errors related to the user
                   Utils.log_error e
-                  it("encountered an unexpected error with #{course.code} #{gradebook_row}") { fail }
+                  it("encountered an unexpected error with #{site.course.code} #{gradebook_row}") { fail e.message }
                 end
               end
 
             else
-              it("found no Canvas grades for #{course.code}") { fail }
+              it("found no Canvas grades for #{site.course.code}") { fail }
             end
 
             ### WITH NO P/NP CUTOFF
@@ -132,8 +124,8 @@ unless ENV['STANDALONE']
             # Get grades in export CSV
             cutoff = nil
             e_grades = grades_are_final ?
-                         @e_grades_export_page.download_final_grades(course, primary_section, cutoff) :
-                         @e_grades_export_page.download_current_grades(course, primary_section, cutoff)
+                         @e_grades_export_page.download_final_grades(site, primary_section, cutoff) :
+                         @e_grades_export_page.download_current_grades(site, primary_section, cutoff)
 
             if gradebook_grades.any?
               # Match the grade for each student
@@ -148,8 +140,8 @@ unless ENV['STANDALONE']
 
                     expected_grade = gradebook_row[:grade]
 
-                    it "shows the grade '#{expected_grade}' for UID #{gradebook_row[:student].uid} in #{course.term} #{course.code}
-                        site #{course.site_id} with grading scheme #{scheme} and no P/NP cutoff" do
+                    it "shows the grade '#{expected_grade}' for UID #{gradebook_row[:student].uid} in #{test_case}
+                        with grading scheme #{scheme} and no P/NP cutoff" do
                       expect(e_grades_row[:grade]).to eql(expected_grade)
                     end
 
@@ -163,30 +155,27 @@ unless ENV['STANDALONE']
                                        else
                                          ''
                                        end
-                    it "shows the comment '#{expected_comment}' for UID #{gradebook_row[:student].uid} in #{course.term} #{course.code}
-                        site #{course.site_id} with grading scheme #{scheme} and no P/NP cutoff" do
+                    it "shows the comment '#{expected_comment}' for UID #{gradebook_row[:student].uid} #{test_case}
+                        with grading scheme #{scheme} and no P/NP cutoff" do
                       expect(e_grades_row[:comments]).to eql(expected_comment)
                     end
                   end
 
                 rescue => e
-                  # Catch and report errors related to the user
                   Utils.log_error e
-                  it("encountered an unexpected error with #{course.code} #{gradebook_row}") { fail }
+                  it("encountered an unexpected error with #{site.course.code} #{gradebook_row}") { fail e.message }
                 end
               end
             end
           end
         rescue => e
-          # Catch and report errors related to the course
           Utils.log_error e
-          it("encountered an unexpected error with #{course.code}") { fail }
+          it("encountered an unexpected error with #{site.course.code}") { fail e.message }
         end
       end
     rescue => e
-      # Catch and report errors related to the whole test
       Utils.log_error e
-      it('encountered an unexpected error') { fail }
+      it('encountered an unexpected error') { fail e.message }
     ensure
       Utils.quit_browser @driver
     end

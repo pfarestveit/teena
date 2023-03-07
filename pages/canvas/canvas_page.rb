@@ -62,6 +62,7 @@ module Page
     def log_in(cal_net, username, password, canvas_base_url = nil)
       load_homepage canvas_base_url
       cal_net.log_in(username, password)
+      profile_link.when_present Utils.short_wait
     end
 
     # Shifts to default content, logs out, and waits for CalNet logout confirmation

@@ -13,6 +13,7 @@ class RipleyTestConfig < TestConfig
 
   def initialize(test_name = nil)
     super
+    @base_url = RipleyUtils.base_url
     @current_term = RipleyUtils.current_term
     @next_term = RipleyUtils.next_term @current_term
   end
@@ -32,13 +33,13 @@ class RipleyTestConfig < TestConfig
 
   def e_grades_export
     global_configs
-    get_e_grades_test_site
+    get_e_grades_test_sites
     # TODO set_manual_users
   end
 
   def e_grades_validation
     global_configs
-    get_e_grades_test_site
+    get_e_grades_test_sites
     # TODO set_manual_users
   end
 
@@ -82,7 +83,7 @@ class RipleyTestConfig < TestConfig
     set_sis_courses
     @course_sites = @courses.map do |c|
       workflow = (c.sections.select(&:primary).length > 1) ? 'ccn' : 'uid'
-      CourseSite.new id: "#{@id} #{c.term.name} #{c.code}",
+      CourseSite.new site_id: "#{@id} #{c.term.name} #{c.code}",
                      abbreviation: "#{@id} #{c.term.name} #{c.code}",
                      course: c,
                      create_site_workflow: workflow,
@@ -99,8 +100,21 @@ class RipleyTestConfig < TestConfig
     course_site
   end
 
-  def get_e_grades_test_site
-    # TODO
+  def get_e_grades_test_sites
+    @course_sites = RipleyUtils.e_grades_site_ids.map { |id| CourseSite.new site_id: id }
+  end
+
+  def set_e_grades_test_site_data(site, sis_section_ids)
+    term_code = sis_section_ids.first.split('-')[0..1].join('-')
+    term_name = Utils.term_code_to_term_name term_code
+    term = Term.new code: term_code,
+                    name: term_name,
+                    sis_id: Utils.term_name_to_sis_code(term_name)
+    ccns = sis_section_ids.map { |s| s.split('-').last }
+    cs_course_id = Utils.get_test_cs_course_id_from_ccn(term, ccns.first)
+    site.course = RipleyUtils.get_course(term, cs_course_id)
+    RipleyUtils.get_course_enrollment site.course
+    site.sections = site.course.sections.select { |s| ccns.include? s.id }
   end
 
   # Courses
@@ -147,8 +161,8 @@ class RipleyTestConfig < TestConfig
 
   ### USERS ###
 
-  def set_sis_teacher(course)
-    @sis_teacher = course.teachers.first
+  def set_sis_teacher(site)
+    @sis_teacher = site.course.teachers.first
   end
 
   def set_manual_teacher(test)

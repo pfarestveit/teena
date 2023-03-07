@@ -154,8 +154,8 @@ class RipleyCreateCourseSitePage < RipleySiteCreationPage
       search_for_course site
       expand_available_sections site.course.code
       link = link_element(xpath: "TBD #{site.course.title}")
-      site.id = link.attribute('href').gsub("#{Utils.canvas_base_url}/courses/", '')
-      logger.info "Course site ID is #{site.id}"
+      site.site_id = link.attribute('href').gsub("#{Utils.canvas_base_url}/courses/", '')
+      logger.info "Course site ID is #{site.site_id}"
     rescue => e
       Utils.log_error e
       logger.warn "UID #{site.sis_teacher.uid} is not yet associated with the site"
