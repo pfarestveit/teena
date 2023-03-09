@@ -38,9 +38,10 @@ class RipleyCreateCourseSitePage < RipleySiteCreationPage
   def search_for_course(site)
     logger.debug "Searching for #{site.course.code} in #{site.course.term.name}"
     if site.course.create_site_workflow == 'uid'
-      logger.debug "Searching by instructor UID #{site.sis_teacher.uid}"
+      teacher = site.course.teachers.first
+      logger.debug "Searching by instructor UID #{teacher.uid}"
       switch_mode unless switch_to_ccn?
-      wait_for_element_and_type(instructor_uid_element, site.sis_teacher.uid)
+      wait_for_element_and_type(instructor_uid_element, teacher.uid)
       wait_for_update_and_click as_instructor_button_element
       choose_term site.course
 
@@ -137,18 +138,14 @@ class RipleyCreateCourseSitePage < RipleySiteCreationPage
     wait_for_update_and_click go_back_button_element
   end
 
-  def wait_for_site_id(course)
-    wait_for_site_id course
-    RipleyUtils.set_ripley_test_course_id course
-  end
-
   def wait_for_standalone_site_id(site, splash_page)
     wait_for_progress_bar
     site.create_site_workflow = 'self'
     tries = Utils.short_wait
+    teacher = site.course.teachers.first
     begin
       splash_page.clear_cache
-      splash_page.dev_auth site.sis_teacher.uid
+      splash_page.dev_auth teacher.uid
       load_standalone_tool
       click_create_course_site
       search_for_course site
@@ -158,7 +155,7 @@ class RipleyCreateCourseSitePage < RipleySiteCreationPage
       logger.info "Course site ID is #{site.site_id}"
     rescue => e
       Utils.log_error e
-      logger.warn "UID #{site.sis_teacher.uid} is not yet associated with the site"
+      logger.warn "UID #{teacher.uid} is not yet associated with the site"
       if (tries -= 1).zero?
         fail
       else
@@ -169,7 +166,7 @@ class RipleyCreateCourseSitePage < RipleySiteCreationPage
   end
 
   def provision_course_site(site, opts={})
-    opts[:standalone] ? load_standalone_tool : load_embedded_tool(site.sis_teacher)
+    opts[:standalone] ? load_standalone_tool : load_embedded_tool(site.course.teachers.first)
     click_create_course_site
     site.course.create_site_workflow = 'ccn' if opts[:admin]
     search_for_course site

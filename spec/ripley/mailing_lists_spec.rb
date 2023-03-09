@@ -8,28 +8,13 @@ unless ENV['STANDALONE']
 
     test = RipleyTestConfig.new
     test.mailing_lists
+    course_site_1 = test.course_sites[0]
+    course_site_2 = test.course_sites[1]
+    course_site_3 = test.course_sites[2]
+    users = course_site_1.manual_members
     timeout = Utils.short_wait
     # For good measure, wipe any old mailing list test data that's lying around
     RipleyUtils.drop_existing_mailing_lists
-
-    course_site_1 = Course.new title: "List 1 #{test.id}",
-                               code: "QA admin #{test.id}",
-                               term: RipleyUtils.term_name
-    course_site_2 = Course.new title: "List 2 #{test.id}",
-                               code: "QA admin #{test.id}",
-                               term: RipleyUtils.term_name
-    course_site_3 = Course.new title: "List 3 #{test.id}",
-                               code: "QA instructor #{test.id}"
-
-    users = [
-      test.manual_teacher,
-      test.designer,
-      test.lead_ta,
-      test.ta,
-      test.observer,
-      test.reader,
-      test.students
-    ].flatten
 
     before(:all) do
       @driver = Utils.launch_browser
@@ -43,17 +28,18 @@ unless ENV['STANDALONE']
 
       # Create three course sites in the Official Courses sub-account
       @canvas_page.log_in(@cal_net_page, test.admin.username, Utils.super_admin_password)
+      @canvas.set_canvas_ids users
+
       acct = Utils.canvas_official_courses_sub_account
-      @canvas_page.create_generic_course_site(acct, course_site_1, users, test.id)
-      @canvas_page.create_generic_course_site(acct, course_site_2, [test.manual_teacher], test.id)
-      @canvas_page.create_generic_course_site(acct, course_site_3, users, test.id)
+      @canvas_page.create_generic_course_site(acct, course_site_1.course, users, test.id)
+      @canvas_page.create_generic_course_site(acct, course_site_2.course, [test.manual_teacher], test.id)
+      @canvas_page.create_generic_course_site(acct, course_site_3.course, users, test.id)
     end
 
     after(:all) { Utils.quit_browser @driver }
 
     it 'is not added to site navigation by default' do
       @canvas_page.load_course_site course_site_1
-      @canvas_page.list_item_element(id: 'section-tabs').when_present Utils.medium_wait
       expect(@mailing_list_page.mailing_list_link?).to be false
     end
 
@@ -102,13 +88,13 @@ unless ENV['STANDALONE']
         end
 
         it 'shows the course site code, title, and ID' do
-          expect(@mailing_lists_page.site_name).to eql(course_site_1.title)
-          expect(@mailing_lists_page.site_code).to eql(("#{course_site_1.code}, #{course_site_1.term}").strip)
+          expect(@mailing_lists_page.site_name).to eql(course_site_1.course.title)
+          expect(@mailing_lists_page.site_code).to eql(("#{course_site_1.course.code}, #{course_site_1.course.term}").strip)
           expect(@mailing_lists_page.site_id).to eql("Site ID: #{course_site_1.site_id}")
         end
 
         it 'shows a link to the course site' do
-          expect(@mailing_lists_page.external_link_valid?(@mailing_lists_page.view_site_link_element, course_site_1.title)).to be true
+          expect(@mailing_lists_page.external_link_valid?(@mailing_lists_page.view_site_link_element, course_site_1.course.title)).to be true
         end
 
         it 'shows a default mailing list name' do
@@ -166,13 +152,13 @@ unless ENV['STANDALONE']
         end
 
         it 'shows a link to the course site' do
-          expect(@mailing_lists_page.external_link_valid?(@mailing_lists_page.list_site_link_element, course_site_1.title)).to be true
+          expect(@mailing_lists_page.external_link_valid?(@mailing_lists_page.list_site_link_element, course_site_1.course.title)).to be true
         end
 
         it 'shows the course site code, title, and ID' do
           @canvas_page.switch_to_canvas_iframe unless "#{@driver.browser}" == 'firefox'
           expect(@mailing_lists_page.site_name).to eql("#{@mailing_lists_page.default_list_name course_site_1}@bcourses-mail.berkeley.edu")
-          expect(@mailing_lists_page.site_code).to eql(("#{course_site_1.code}, #{course_site_1.term}").strip)
+          expect(@mailing_lists_page.site_code).to eql(("#{course_site_1.course.code}, #{course_site_1.course.term}").strip)
           expect(@mailing_lists_page.site_id).to eql("Site ID: #{course_site_1.site_id}")
         end
 
@@ -217,7 +203,7 @@ unless ENV['STANDALONE']
     describe 'instructor-facing tool' do
 
       before(:all) do
-        course_site_2.title = course_site_1.title
+        course_site_2.title = course_site_1.course.title
         @canvas_page.edit_course_name course_site_2
         @canvas_page.masquerade_as(test.manual_teacher, course_site_3)
         @mailing_list_page.load_embedded_tool course_site_3

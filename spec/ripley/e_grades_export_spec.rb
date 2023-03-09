@@ -7,9 +7,8 @@ unless ENV['STANDALONE']
     include Logging
 
     test = RipleyTestConfig.new
-    test.e_grades_export
-
-    site = test.course_sites.first
+    site = test.get_e_grades_export_site
+    teacher = site.course.teachers.first
     non_teachers = [
       test.lead_ta,
       test.ta,
@@ -37,9 +36,10 @@ unless ENV['STANDALONE']
       @prim_sec_sids = @primary_section.enrollments.map &:sid
       @secondary_section = site.sections.reject(&:primary).first
       @sec_sec_sids = @secondary_section.enrollments.map(&:sid) if @secondary_section
+      @canvas.set_canvas_ids([teacher] + site.manual_members)
 
       # Create an ungraded assignment to use for testing manual grading policy
-      teacher = test.set_sis_teacher site
+
       @canvas.masquerade_as teacher
       @ungraded_assignment = Assignment.new title: test.id
       @canvas.set_grade_policy_manual site

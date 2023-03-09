@@ -160,8 +160,8 @@ unless ENV['NO_DEPS']
       current_term = BOACUtils.term_code.to_s
       previous_term = Utils.previous_term_code current_term
       past_term = Utils.previous_term_code previous_term
-      next_term = Utils.next_term_code current_term
-      future_term = Utils.next_term_code next_term
+      next_term = Utils.next_term_sis_id current_term
+      future_term = Utils.next_term_sis_id next_term
 
       [current_term, past_term, previous_term, next_term, future_term].each do |term|
         begin

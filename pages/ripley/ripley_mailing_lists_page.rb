@@ -66,9 +66,9 @@ class RipleyMailingListsPage
     div_element(xpath: " 'No bCourses site with ID \"#{input}\" was found.'")
   end
 
-  def default_list_name(course)
-    part = course.title
-    course.term.nil? ? (part = "#{part} list") : (part = "#{part} #{course.term[0..1]}#{course.term[-2..-1]}")
+  def default_list_name(site)
+    part = site.course.title
+    site.course.term.nil? ? (part = "#{part} list") : (part = "#{part} #{site.course.term.name[0..1]}#{site.course.term.name[-2..-1]}")
     part.downcase.gsub(/[ :]/, '-')
   end
 
