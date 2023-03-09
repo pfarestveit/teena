@@ -5,17 +5,11 @@ standalone = ENV['STANDALONE']
 include Logging
 
 test = RipleyTestConfig.new
-test.official_sections
-course = test.course_sites.first
-teacher = test.sis_teacher
-sections_for_site = course.sections.select &:include_in_site
-sections_to_add_delete = (course.sections - sections_for_site)
-
-# TODO - replace with Nessie data collection
-semester_name = course.term
-academic_data = 'FOO'
-semester = academic_data.all_teaching_semesters.find { |semester| academic_data.semester_name(semester) == semester_name }
-semester_courses = academic_data.semester_courses semester
+site = test.get_single_test_site
+teacher = site.course.teachers.first
+sections_for_site = site.course.sections.select { |s| site.sections.include? s }
+sections_to_add_delete = (site.course.sections - sections_for_site)
+term_courses = RipleyUtils.get_instructor_term_courses(teacher, test.current_term)
 
 describe 'bCourses Official Sections tool', order: :defined do
 
@@ -29,17 +23,16 @@ describe 'bCourses Official Sections tool', order: :defined do
     @course_add_user_page = RipleyAddUserPage.new @driver
     @official_sections_page = RipleyOfficialSectionsPage.new @driver
 
-    # TODO - data collection from Nessie
-
     if standalone
       @splash_page.dev_auth teacher.uid
-      @create_course_site_page.provision_course_site(course, { standalone: true })
-      @create_course_site_page.wait_for_standalone_site_id(course, @splash_page)
+      @create_course_site_page.provision_course_site(site, { standalone: true })
+      @create_course_site_page.wait_for_standalone_site_id(site, @splash_page)
     else
       @canvas.log_in(@cal_net, test.admin.username, Utils.super_admin_password)
+      @canvas.set_canvas_ids([teacher] + site.manual_members)
       @canvas.masquerade_as teacher
-      @create_course_site_page.provision_course_site course
-      @canvas.publish_course_site course
+      @create_course_site_page.provision_course_site site
+      @canvas.publish_course_site site
     end
   end
 
@@ -47,7 +40,7 @@ describe 'bCourses Official Sections tool', order: :defined do
 
   unless standalone
     it 'shows a link to the official sections help page on the course site' do
-      @canvas.load_course_sections course
+      @canvas.load_course_sections site
       @canvas.expand_official_sections_notice
       title = 'IT - How do I add or remove a section roster from my course site?'
       expect(@canvas.external_link_valid?(@canvas.official_sections_help_link_element, title)).to be true
@@ -57,7 +50,7 @@ describe 'bCourses Official Sections tool', order: :defined do
   context 'when viewing sections' do
 
     before(:all) do
-      standalone ? @official_sections_page.load_standalone_tool course : @official_sections_page.load_embedded_tool course
+      standalone ? @official_sections_page.load_standalone_tool site : @official_sections_page.load_embedded_tool site
     end
 
     it 'shows all the sections currently on the course site' do
@@ -113,79 +106,76 @@ describe 'bCourses Official Sections tool', order: :defined do
     end
 
     it 'shows an expanded view of courses with sections already in the course site' do
-      expect(@official_sections_page.available_sections_table(course.code).exists?).to be true
+      expect(@official_sections_page.available_sections_table(site.code).exists?).to be true
     end
     it 'shows all the sections in the course' do
-      expect(@official_sections_page.available_sections_count course).to eql(course.sections.length)
+      expect(@official_sections_page.available_sections_count site).to eql(site.sections.length)
     end
     it 'shows a disabled save button when no changes have been made in the course site' do
       expect(@official_sections_page.save_changes_button_element.enabled?).to be false
     end
 
-    course.sections.each do |section|
+    site.course.sections.each do |section|
       it "shows section #{section.id} is available for the course site" do
-        expect(@official_sections_page.available_section_id_element(course.code, section.id).exists?).to be true
+        expect(@official_sections_page.available_section_id_element(site.code, section.id).exists?).to be true
       end
-      if sections_for_site.include? section
+      if sections_to_add_delete.include? section
         it "shows an Add button for section #{section.id}" do
-          expect(@official_sections_page.section_add_button(course, section).exists?).to be true
+          expect(@official_sections_page.section_add_button(site, section).exists?).to be true
         end
       else
         it "shows no Add button for section #{section.id}" do
-          expect(@official_sections_page.section_add_button(course, section).exists?).to be false
+          expect(@official_sections_page.section_add_button(site, section).exists?).to be false
         end
       end
     end
 
-    semester_courses.each do |course_data|
-      api_course_code = academic_data.course_code course_data
-      it "shows the right course title for #{academic_data.course_code course_data}" do
-        visible = @official_sections_page.available_sections_course_title academic_data.course_code(course_data)
-        expect(visible).to eql(academic_data.course_title course_data)
+    term_courses.each do |course|
+      it "shows the right course title for #{course.code}" do
+        visible = @official_sections_page.available_sections_course_title course.code
+        expect(visible).to eql(course.title)
       end
-      it("shows no blank course title for #{academic_data.course_code course_data}") do
-
-        expect(academic_data.course_title(course_data).empty?).to be false
+      it "shows no blank course title for #{course.code}" do
+        expect(course.title.empty?).to be false
       end
-      it("allows the user to to expand the available sections for #{academic_data.course_code course_data}") do
-        ui_sections_expanded = @official_sections_page.expand_available_sections academic_data.course_code(course_data)
+      it "allows the user to to expand the available sections for #{course.code}" do
+        ui_sections_expanded = @official_sections_page.expand_available_sections course.code
         expect(ui_sections_expanded).to be_truthy
       end
 
-      academic_data.course_sections(course_data).each do |section_data|
-        api_section_data = academic_data.section_data section_data
-        it "shows the right course code for #{api_course_code} section #{api_section_data[:id]}" do
-          visible = @official_sections_page.available_section_data(api_course_code, api_section_data[:id])[:code]
-          expect(visible).to eql(api_section_data[:code])
+      course.sections.each do |section|
+        it "shows the right course code for #{course.code} section #{section.id}" do
+          visible = @official_sections_page.available_section_data(course.code, section.id)[:code]
+          expect(visible).to eql(section.course)
         end
-        it "shows no blank course code for #{api_course_code} section #{api_section_data[:id]}" do
-          visible = @official_sections_page.available_section_data(api_course_code, api_section_data[:id])[:code]
+        it "shows no blank course code for #{course.code} section #{section.id}" do
+          visible = @official_sections_page.available_section_data(course.code, section.id)[:code]
           expect(visible.empty?).to be false
         end
-        it "shows the right section labels for #{api_course_code} section #{api_section_data[:id]}" do
-          visible = @official_sections_page.available_section_data(api_course_code, api_section_data[:id])[:label]
-          expect(visible).to eql(api_section_data[:label])
+        it "shows the right section labels for #{course.code} section #{section.id}" do
+          visible = @official_sections_page.available_section_data(course.code, section.id)[:label]
+          expect(visible).to eql(section.label)
         end
-        it "shows no blank section labels for #{api_course_code} section #{api_section_data[:id]}" do
-          visible = @official_sections_page.available_section_data(api_course_code, api_section_data[:id])[:label]
+        it "shows no blank section labels for #{course.code} section #{section.id}" do
+          visible = @official_sections_page.available_section_data(course.code, section.id)[:label]
           expect(visible.empty?).to be false
         end
-        it "shows the right section schedules for #{api_course_code} section #{api_section_data[:id]}" do
-          visible = @official_sections_page.available_section_data(api_course_code, api_section_data[:id])[:schedules]
-          expect(visible).to eql(api_section_data[:schedules])
+        it "shows the right section schedules for #{course.code} section #{section.id}" do
+          visible = @official_sections_page.available_section_data(course.code, section.id)[:schedules]
+          expect(visible).to eql(section.schedules)
         end
-        it "shows the right section locations for #{api_course_code} section #{api_section_data[:id]}" do
-          visible = @official_sections_page.available_section_data(api_course_code, api_section_data[:id])[:locations]
-          expect(visible).to eql(api_section_data[:locations])
+        it "shows the right section locations for #{course.code} section #{section.id}" do
+          visible = @official_sections_page.available_section_data(course.code, section.id)[:locations]
+          expect(visible).to eql(section.locations)
         end
-        it "shows an expected instruction mode for #{api_course_code} section #{api_section_data[:id]}" do
-          mode = @official_sections_page.available_section_data(api_course_code, api_section_data[:id])[:label].split('(').last.gsub(')', '')
+        it "shows an expected instruction mode for #{course.code} section #{section.id}" do
+          mode = @official_sections_page.available_section_data(course.code, section.id)[:label].split('(').last.gsub(')', '')
           expect(['In Person', 'Online', 'Hybrid', 'Flexible', 'Remote', 'Web-based']).to include(mode)
         end
       end
 
-      it "allows the user to collapse the available sections for #{api_course_code}" do
-        expect(@official_sections_page.collapse_available_sections api_course_code).to be_truthy
+      it "allows the user to collapse the available sections for #{course.code}" do
+        expect(@official_sections_page.collapse_available_sections course.code).to be_truthy
       end
     end
   end
@@ -193,19 +183,19 @@ describe 'bCourses Official Sections tool', order: :defined do
   context 'when staging a section for adding' do
 
     before(:all) do
-      @official_sections_page.expand_available_sections course.code
+      @official_sections_page.expand_available_sections site.course.code
       @section = sections_to_add_delete.last
-      @official_sections_page.click_add_section(course, @section)
+      @official_sections_page.click_add_section(site.course, @section)
     end
 
     it 'moves the section from available to current sections' do
       expect(@official_sections_page.current_section_id_element(@section).exists?).to be true
     end
     it 'hides the add button for the section' do
-      expect(@official_sections_page.section_add_button(course, @section).exists?).to be false
+      expect(@official_sections_page.section_add_button(site.course, @section).exists?).to be false
     end
     it 'shows an added message for the section' do
-      expect(@official_sections_page.section_added_element(course, @section).exists?).to be true
+      expect(@official_sections_page.section_added_element(site.course, @section).exists?).to be true
     end
   end
 
@@ -220,7 +210,7 @@ describe 'bCourses Official Sections tool', order: :defined do
       expect(@official_sections_page.current_section_id_element(@section).exists?).to be false
     end
     it 'reveals the add button for the section when un-staged for adding' do
-      expect(@official_sections_page.section_add_button(course, @section).exists?).to be true
+      expect(@official_sections_page.section_add_button(site, @section).exists?).to be true
     end
   end
 
@@ -235,7 +225,7 @@ describe 'bCourses Official Sections tool', order: :defined do
       expect(@official_sections_page.current_section_id_element(@section).exists?).to be false
     end
     it 'reveals the undo-delete button for the section' do
-      expect(@official_sections_page.section_undo_delete_button(course, @section).exists?).to be true
+      expect(@official_sections_page.section_undo_delete_button(site.course, @section).exists?).to be true
     end
   end
 
@@ -243,25 +233,25 @@ describe 'bCourses Official Sections tool', order: :defined do
 
     before(:all) do
       @section = sections_for_site.first
-      @official_sections_page.click_undo_delete_section(course, @section)
+      @official_sections_page.click_undo_delete_section(site.course, @section)
     end
 
     it 'restores the section to current sections' do
       expect(@official_sections_page.current_section_id_element(@section).exists?).to be true
     end
     it 'hides the undo-delete button for the section' do
-      expect(@official_sections_page.section_undo_delete_button(course, @section).exists?).to be false
+      expect(@official_sections_page.section_undo_delete_button(site.course, @section).exists?).to be false
     end
     it 'still shows the section among available sections' do
-      expect(@official_sections_page.available_section_id_element(course, @section).exists?).to be true
+      expect(@official_sections_page.available_section_id_element(site.course, @section).exists?).to be true
     end
   end
 
   context 'when sections have been added' do
     before(:all) do
-      standalone ? @official_sections_page.load_standalone_tool(course) : @official_sections_page.load_embedded_tool(course)
+      standalone ? @official_sections_page.load_standalone_tool(site) : @official_sections_page.load_embedded_tool(site)
       @official_sections_page.click_edit_sections
-      @official_sections_page.add_sections(course, sections_to_add_delete)
+      @official_sections_page.add_sections(site, sections_to_add_delete)
     end
 
     it 'shows an updating message when sections are being added to the course site' do
@@ -275,7 +265,7 @@ describe 'bCourses Official Sections tool', order: :defined do
       @official_sections_page.sections_updated_msg_element.when_not_visible Utils.short_wait
     end
     it 'shows the right number of current sections when sections have been added to the course site' do
-      expect(@official_sections_page.current_sections_count).to eql(course.sections.length)
+      expect(@official_sections_page.current_sections_count).to eql(site.sections.length)
     end
 
     sections_to_add_delete.each do |section|
@@ -287,12 +277,12 @@ describe 'bCourses Official Sections tool', order: :defined do
     context 'and a user views Find a Person to Add' do
 
       before(:all) do
-        standalone ? @course_add_user_page.load_standalone_tool(course) : @course_add_user_page.load_embedded_tool(course)
+        standalone ? @course_add_user_page.load_standalone_tool(site) : @course_add_user_page.load_embedded_tool(site)
         @course_add_user_page.search(Utils.oski_uid, 'CalNet UID')
       end
 
       it 'shows the right number of current sections on Find a Person to Add when sections have been added to the course site' do
-        @course_add_user_page.wait_until(Utils.medium_wait) { @course_add_user_page.course_section_options.length == site[:sections].length }
+        @course_add_user_page.wait_until(Utils.medium_wait) { @course_add_user_page.course_section_options.length == site.sections.length }
       end
     end
 
@@ -304,8 +294,8 @@ describe 'bCourses Official Sections tool', order: :defined do
           begin
             tries -= 1
             sleep Utils.short_wait
-            @canvas.load_users_page course
-            @canvas.load_all_students course
+            @canvas.load_users_page site
+            @canvas.load_all_students site
             visible_sections = @canvas.section_label_elements.map(&:text).uniq
             added_sections = sections_to_add_delete.map { |s| "#{s.course} #{s.label}" }
             @canvas.wait_until(1) { (visible_sections & added_sections).any? }
@@ -320,7 +310,7 @@ describe 'bCourses Official Sections tool', order: :defined do
   context 'when sections have been deleted' do
 
     before(:all) do
-      standalone ? @official_sections_page.load_standalone_tool(course) : @official_sections_page.load_embedded_tool(course)
+      standalone ? @official_sections_page.load_standalone_tool(site) : @official_sections_page.load_embedded_tool(site)
       @official_sections_page.click_edit_sections
       @official_sections_page.delete_sections sections_to_add_delete
     end
@@ -348,7 +338,7 @@ describe 'bCourses Official Sections tool', order: :defined do
     context 'and a user views Find a Person to Add' do
 
       before(:all) do
-        standalone ? @course_add_user_page.load_standalone_tool(course) : @course_add_user_page.load_embedded_tool(course)
+        standalone ? @course_add_user_page.load_standalone_tool(site) : @course_add_user_page.load_embedded_tool(site)
         @course_add_user_page.search(Utils.oski_uid, 'CalNet UID')
       end
 
@@ -365,8 +355,8 @@ describe 'bCourses Official Sections tool', order: :defined do
           begin
             tries -= 1
             sleep Utils.short_wait
-            @canvas.load_users_page course
-            @canvas.load_all_students course
+            @canvas.load_users_page site
+            @canvas.load_all_students site
             visible_sections = @canvas.section_label_elements.map(&:text).uniq
             deleted_sections = sections_to_add_delete.map { |s| "#{s.course} #{s.label}" }
             @canvas.wait_until(1) { (visible_sections & deleted_sections).empty? }
@@ -384,39 +374,39 @@ describe 'bCourses Official Sections tool', order: :defined do
       before(:all) do
         @canvas.stop_masquerading
         [test.lead_ta, test.ta, test.designer, test.reader, test.observer, test.students.first, test.wait_list_student].each do |user|
-          @course_add_user_page.load_embedded_tool course
+          @course_add_user_page.load_embedded_tool site
           @course_add_user_page.search(user.uid, 'CalNet UID')
           @course_add_user_page.add_user_by_uid(user, sections_for_site.first)
         end
       end
 
       it 'allow a Lead TA full access to the tool' do
-        @canvas.masquerade_as(test.lead_ta, course)
-        @official_sections_page.load_embedded_tool course
+        @canvas.masquerade_as(test.lead_ta, site)
+        @official_sections_page.load_embedded_tool site
         @official_sections_page.current_sections_table.when_visible Utils.medium_wait
         @official_sections_page.edit_sections_button_element.when_visible 1
       end
 
       [test.ta, test.designer].each do |user|
         it "allow a #{user.role} read only access to the tool" do
-          @canvas.masquerade_as(user, course)
-          @official_sections_page.load_embedded_tool course
+          @canvas.masquerade_as(user, site)
+          @official_sections_page.load_embedded_tool site
           @official_sections_page.current_sections_table.when_visible Utils.medium_wait
           @official_sections_page.edit_sections_button_element.when_not_visible 1
         end
       end
 
       it 'deny a Reader access to the tool' do
-        @canvas.masquerade_as(test.reader, course)
-        @official_sections_page.load_embedded_tool course
+        @canvas.masquerade_as(test.reader, site)
+        @official_sections_page.load_embedded_tool site
         @official_sections_page.unexpected_error_element.when_present Utils.medium_wait
         @official_sections_page.current_sections_table.when_not_visible 1
       end
 
       [test.observer, test.students.first, test.wait_list_student].each do |user|
         it "deny a #{user.role} access to the tool" do
-          @canvas.masquerade_as(user, site[:course])
-          @official_sections_page.hit_embedded_tool_url site[:course]
+          @canvas.masquerade_as(user, site)
+          @official_sections_page.hit_embedded_tool_url site
           @canvas.wait_for_error(@canvas.access_denied_msg_element, @official_sections_page.unexpected_error_element)
         end
       end
@@ -428,20 +418,20 @@ describe 'bCourses Official Sections tool', order: :defined do
 
       before(:all) do
         @canvas.stop_masquerading
-        @canvas.set_course_sis_id course
+        @canvas.set_course_sis_id site
         @section = sections_to_add_delete.first
-        section_id = "SEC:#{Utils.term_name_to_hyphenated_code course.term}-#{@section.id}"
-        section_name = "#{course.code} FAKE LABEL"
-        csv = File.join(Utils.initialize_test_output_dir, "section-#{course.code}.csv")
+        section_id = "SEC:#{Utils.term_name_to_hyphenated_code site.course.term}-#{@section.id}"
+        section_name = "#{site.code} FAKE LABEL"
+        csv = File.join(Utils.initialize_test_output_dir, "section-#{site.course.code}.csv")
         CSV.open(csv, 'wb') { |heading| heading << %w(section_id course_id name status start_date end_date) }
-        Utils.add_csv_row(csv, [section_id, course.sis_id, section_name, 'active', nil, nil])
+        Utils.add_csv_row(csv, [section_id, site.course.sis_id, section_name, 'active', nil, nil])
         @canvas.upload_sis_imports([csv])
         RipleyUtils.clear_cache
       end
 
       it 'shows a section name mismatch message when the section name has changed' do
         @canvas.masquerade_as teacher
-        @official_sections_page.load_embedded_tool course
+        @official_sections_page.load_embedded_tool site
         @official_sections_page.current_sections_table.when_visible Utils.medium_wait
         @official_sections_page.click_edit_sections
         @official_sections_page.section_name_msg_element.when_visible(Utils.short_wait)

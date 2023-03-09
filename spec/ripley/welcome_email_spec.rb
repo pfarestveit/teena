@@ -8,9 +8,7 @@ unless ENV['STANDALONE']
 
     before(:all) do
       @test = RipleyTestConfig.new
-      @test.mailing_lists
-      @course = Course.new title: "#{@test.id} Welcome",
-                           code: "#{@test.id} Welcome Email"
+      @site = @test.get_welcome_email_site
       @email = Email.new("Welcome Email #{@test.id}", "Teena welcomes you")
       @site_members = [@test.manual_teacher, @test.students.first]
 
@@ -20,6 +18,7 @@ unless ENV['STANDALONE']
       @cal_net1 = Page::CalNetPage.new @driver1
       @mailing_list = RipleyMailingListPage.new @driver1
       @canvas1.log_in(@cal_net1, @test.admin.username, Utils.super_admin_password)
+      @canvas1.set_canvas_ids @site.manual_members
 
       # Browser for admin
       @driver2 = Utils.launch_browser
@@ -29,9 +28,9 @@ unless ENV['STANDALONE']
       @mailing_lists = RipleyMailingListsPage.new @driver2
       @canvas2.log_in(@cal_net2, @test.admin.username, Utils.super_admin_password)
 
-      @canvas2.create_generic_course_site(Utils.canvas_official_courses_sub_account, @course, @site_members, @test.id)
-      @canvas1.masquerade_as(@test.students[0], @course)
-      @canvas1.masquerade_as(@test.manual_teacher, @course)
+      @canvas2.create_generic_course_site(Utils.canvas_official_courses_sub_account, @site, @site_members, @test.id)
+      @canvas1.masquerade_as(@test.students[0], @site)
+      @canvas1.masquerade_as(@test.manual_teacher, @site)
     end
 
     after(:all) { Utils.quit_browser @driver1; Utils.quit_browser @driver2 }
@@ -39,7 +38,7 @@ unless ENV['STANDALONE']
     context 'creation' do
 
       before(:all) do
-        @mailing_list.load_embedded_tool @course
+        @mailing_list.load_embedded_tool @site
         @mailing_list.create_list
       end
 
@@ -91,7 +90,7 @@ unless ENV['STANDALONE']
         @mailing_list.click_activation_toggle
         @mailing_list.email_activated_msg_element.when_visible 3
         @mailing_lists.load_embedded_tool
-        @mailing_lists.search_for_list @course.site_id
+        @mailing_lists.search_for_list @site.site_id
       end
 
       it 'is sent to existing members of the site' do
@@ -99,26 +98,26 @@ unless ENV['STANDALONE']
         @mailing_lists.click_update_memberships
 
         # Verify new emails triggered
-        @mailing_list.load_embedded_tool @course
+        @mailing_list.load_embedded_tool @site
         csv = @mailing_list.download_csv
         expect(csv[:email_address].sort).to eql(@site_members.map(&:email).sort)
       end
 
       it 'is sent to new members of the site' do
         # Add student, accept invite
-        @canvas2.add_users(@course, [@test.students[1]])
+        @canvas2.add_users(@site, [@test.students[1]])
         @site_members << @test.students[1]
-        @canvas2.masquerade_as(@test.students[1], @course)
+        @canvas2.masquerade_as(@test.students[1], @site)
         @canvas2.stop_masquerading
 
         # Update membership
         RipleyUtils.clear_cache # TODO @ripley2
         @mailing_lists.load_embedded_tool
-        @mailing_lists.search_for_list @course.site_id
+        @mailing_lists.search_for_list @site.site_id
         @mailing_lists.click_update_memberships
 
         # Verify new email triggered
-        @mailing_list.load_embedded_tool @course
+        @mailing_list.load_embedded_tool @site
         csv = @mailing_list.download_csv
         expect(csv[:email_address].sort).to eql(@site_members.map(&:email).sort)
       end
@@ -133,18 +132,18 @@ unless ENV['STANDALONE']
 
       it 'is not sent to new members of the site' do
         # Add student, accept invite
-        @canvas2.add_users(@course, [@test.students[2]])
-        @canvas2.masquerade_as(@test.students[2], @course)
+        @canvas2.add_users(@site, [@test.students[2]])
+        @canvas2.masquerade_as(@test.students[2], @site)
         @canvas2.stop_masquerading
 
         # Update membership
         RipleyUtils.clear_cache # TODO @ripley2
         @mailing_lists.load_embedded_tool
-        @mailing_lists.search_for_list @course.site_id
+        @mailing_lists.search_for_list @site.site_id
         @mailing_lists.click_update_memberships
 
         # Verify no new email triggered
-        @mailing_list.load_embedded_tool @course
+        @mailing_list.load_embedded_tool @site
         csv = @mailing_list.download_csv
         expect(csv[:email_address].sort).to eql(@site_members.map(&:email).sort)
       end

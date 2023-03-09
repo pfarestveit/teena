@@ -6,7 +6,6 @@ class CourseSite
                 :created_date,
                 :manual_members,
                 :sections,
-                :sis_teacher,
                 :site_id
 
   def initialize(site_data)
@@ -17,6 +16,7 @@ class CourseSite
     @sections.map(&:enrollments).select { |e| e.status == 'E' }.flatten.length
   end
 
+  # TODO account for students both confirmed and waitlisted
   def expected_wait_list_count
     @sections.map(&:enrollments).select { |e| e.status == 'W' }.flatten.length
   end

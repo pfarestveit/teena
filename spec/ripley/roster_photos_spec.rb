@@ -7,10 +7,8 @@ describe 'bCourses Roster Photos' do
   include Logging
 
   test = RipleyTestConfig.new
-  test.rosters
-  course = test.course_sites.first
-  sections = test.set_course_sections(course).select &:include_in_site
-  teacher = test.set_sis_teacher course
+  site = test.get_single_test_site
+  teacher = site.course.teachers.first
   non_teachers = [
     test.lead_ta,
     test.ta,
@@ -29,35 +27,33 @@ describe 'bCourses Roster Photos' do
     @create_course_site_page = RipleyCreateCourseSitePage.new @driver
     @course_add_user_page = RipleyAddUserPage.new @driver
     @roster_photos_page = RipleyRosterPhotosPage.new @driver
-    @roster_api = ApiAcademicsRosterPage.new @driver
 
     @splash_page.load_page
     @splash_page.basic_auth(teacher.uid, @cal_net)
     unless standalone
       @canvas.log_in(@cal_net, test.admin.username, Utils.super_admin_password)
+      @canvas.set_canvas_ids([teacher] + non_teachers)
       @canvas.masquerade_as teacher
     end
 
-    @create_course_site_page.provision_course_site(course, {standalone: standalone})
-    @create_course_site_page.wait_for_standalone_site_id(course, @splash_page) if standalone
-    @canvas.publish_course_site course unless standalone
+    @create_course_site_page.provision_course_site(site, {standalone: standalone})
+    @create_course_site_page.wait_for_standalone_site_id(site, @splash_page) if standalone
+    @canvas.publish_course_site site unless standalone
 
-    # TODO - replace with data collection from Nessie
-    @roster_api.get_feed course
-    @expected_sids = @roster_api.student_ids(@roster_api.students).sort
+    @expected_sids = '' # TODO
 
-    @student_count = @roster_api.enrolled_students.length
-    @waitlist_count = @roster_api.waitlist_only_students.length
+    @student_count = site.expected_student_count
+    @waitlist_count = site.expected_wait_list_count
     @total_user_count = @student_count + @waitlist_count
     logger.info "There are #{@student_count} enrolled students and #{@waitlist_count} waitlisted students, for a total of #{@total_user_count}"
     logger.warn 'There are no students on this site' if @total_user_count.zero?
 
     unless standalone
-      @canvas.load_users_page course
+      @canvas.load_users_page site
       @canvas.click_find_person_to_add
       non_teachers.each do |user|
         @course_add_user_page.search(user.uid, 'CalNet UID')
-        @course_add_user_page.add_user_by_uid(user, sections.first)
+        @course_add_user_page.add_user_by_uid(user, site.sections.first)
       end
     end
   end
@@ -68,14 +64,14 @@ describe 'bCourses Roster Photos' do
 
     before(:all) do
       if standalone
-        @roster_photos_page.load_standalone_tool course
+        @roster_photos_page.load_standalone_tool site
       else
-        @canvas.load_course_site course
+        @canvas.load_course_site site
         @roster_photos_page.click_roster_photos_link
       end
     end
 
-    it "shows UID #{teacher.uid} all students and waitlisted students on #{course.code} course site ID #{course.site_id}" do
+    it "shows UID #{teacher.uid} all students and waitlisted students on #{site.course.code} course site ID #{site.site_id}" do
       @roster_photos_page.wait_until(Utils.medium_wait, "Missing: #{@expected_sids - @roster_photos_page.all_sids.sort}.
                                                              Unexpected: #{@roster_photos_page.all_sids.sort - @expected_sids}.
                                                              Expected #{@expected_sids} but got #{@roster_photos_page.all_sids.sort}") do
@@ -84,26 +80,26 @@ describe 'bCourses Roster Photos' do
       end
     end
 
-    it "shows UID #{teacher.uid} actual photos for enrolled students on #{course.code} course site ID #{course.site_id}" do
+    it "shows UID #{teacher.uid} actual photos for enrolled students on #{site.course.code} course site ID #{site.site_id}" do
       @roster_photos_page.wait_until(Utils.medium_wait, "Expected photo count #{@roster_photos_page.roster_photo_elements.length} to be <= #{@student_count}") do
         @roster_photos_page.roster_photo_elements.length <= @student_count
       end
       expect(@roster_photos_page.roster_photo_elements.any?).to be true
     end
 
-    it "shows UID #{teacher.uid} placeholder photos for waitlisted students on #{course.code} course site ID #{course.site_id}" do
+    it "shows UID #{teacher.uid} placeholder photos for waitlisted students on #{site.course.code} course site ID #{site.site_id}" do
       @roster_photos_page.wait_until(Utils.medium_wait, "Expected placeholder count #{@roster_photos_page.roster_photo_placeholder_elements.length} to be >= #{@waitlist_count}") do
         @roster_photos_page.roster_photo_placeholder_elements.length >= @waitlist_count
       end
     end
 
-    it "shows UID #{teacher.uid} all sections by default on #{course.code} course site ID #{course.site_id}" do
+    it "shows UID #{teacher.uid} all sections by default on #{site.course.code} course site ID #{site.site_id}" do
       expected_section_codes = (sections.map { |section| "#{section.course} #{section.label}" }) << 'All sections'
       actual_section_codes = @roster_photos_page.section_select_options
       expect(actual_section_codes).to eql(expected_section_codes.sort)
     end
 
-    it "allows UID #{teacher.uid} to filter by string on #{course.code} course site ID #{course.site_id}" do
+    it "allows UID #{teacher.uid} to filter by string on #{site.course.code} course site ID #{site.site_id}" do
       if @student_count > 0 || @waitlist_count > 0
         sid = @roster_photos_page.roster_sid_elements.last.text.gsub('Student ID:', '').strip
         @roster_photos_page.filter_by_string sid
@@ -114,8 +110,8 @@ describe 'bCourses Roster Photos' do
       end
     end
 
-    sections.each do |section|
-      it "allows UID #{teacher.uid} to filter by section #{section.label} on #{course.code} course site ID #{course.site_id}" do
+    site.sections.each do |section|
+      it "allows UID #{teacher.uid} to filter by section #{section.label} on #{site.course.code} course site ID #{site.site_id}" do
         section_students = @roster_api.section_students(section.id)
         logger.debug "Expecting #{section_students.length} students in section #{section.label}"
         @roster_photos_page.filter_by_string ''
@@ -124,18 +120,18 @@ describe 'bCourses Roster Photos' do
       end
     end
 
-    it "allows UID #{teacher.uid} to download a CSV of the course site enrollment on #{course.code} course site ID #{course.site_id}" do
-      exported_user_sids = @roster_photos_page.export_roster course
+    it "allows UID #{teacher.uid} to download a CSV of the course site enrollment on #{site.course.code} course site ID #{site.site_id}" do
+      exported_user_sids = @roster_photos_page.export_roster site
       logger.info "Exported SIDs #{exported_user_sids}"
       expect(exported_user_sids.sort).to eql(@expected_sids)
     end
 
-    it "shows UID #{teacher.uid} a photo print button on #{course.code} course site ID #{course.site_id}" do
-      standalone ? @roster_photos_page.load_standalone_tool(course) : @roster_photos_page.load_embedded_tool(course)
+    it "shows UID #{teacher.uid} a photo print button on #{site.course.code} course site ID #{site.site_id}" do
+      standalone ? @roster_photos_page.load_standalone_tool(site) : @roster_photos_page.load_embedded_tool(site)
       @roster_photos_page.print_roster_link_element.when_visible Utils.medium_wait
     end
 
-    it "shows UID #{teacher.uid} a 'no students enrolled' message on #{course.code} course site ID #{course.site_id}" do
+    it "shows UID #{teacher.uid} a 'no students enrolled' message on #{site.course.code} course site ID #{site.site_id}" do
       expect(@roster_photos_page.no_students_msg?).to be true if @total_user_count.zero?
     end
   end
@@ -146,8 +142,8 @@ describe 'bCourses Roster Photos' do
 
       [test.lead_ta, test.ta].each do |user|
         it "permits #{user.role} #{user.uid} access to the tool" do
-          @canvas.masquerade_as(user, course)
-          @roster_photos_page.load_embedded_tool course
+          @canvas.masquerade_as(user, site)
+          @roster_photos_page.load_embedded_tool site
           if @total_user_count.zero?
             @roster_photos_page.no_students_msg_element.when_visible(Utils.short_wait)
           else
@@ -158,16 +154,16 @@ describe 'bCourses Roster Photos' do
 
       [test.reader, test.designer].each do |user|
         it "denies #{user.role} #{user.uid} access to the tool" do
-          @canvas.masquerade_as(user, course)
-          @roster_photos_page.load_embedded_tool course
+          @canvas.masquerade_as(user, site)
+          @roster_photos_page.load_embedded_tool site
           @roster_photos_page.no_access_msg_element.when_visible Utils.short_wait
         end
       end
 
       [test.observer, test.students.first, test.wait_list_student].each do |user|
         it "denies #{user.role} #{user.uid} access to the tool" do
-          @canvas.masquerade_as(user, course)
-          @roster_photos_page.hit_embedded_tool_url course
+          @canvas.masquerade_as(user, site)
+          @roster_photos_page.hit_embedded_tool_url site
           @canvas.wait_for_error(@canvas.access_denied_msg_element, @roster_photos_page.no_access_msg_element)
         end
       end

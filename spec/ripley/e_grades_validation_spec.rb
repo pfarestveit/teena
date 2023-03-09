@@ -27,9 +27,10 @@ unless ENV['STANDALONE']
           section_ids = @canvas_api.get_course_site_sis_section_ids site
           test.set_e_grades_test_site_data(site, section_ids)
 
-          instructor = test.set_sis_teacher site
+          instructor = site.course.teachers.first
           primary_section = site.sections.find &:primary
           test_case = "#{site.course.term} #{site.course.code} site #{site.site_id}"
+          @canvas.set_canvas_ids [instructor]
 
           # Disable existing grading scheme in case it is not default, then set default scheme
           @canvas.masquerade_as(instructor, site)

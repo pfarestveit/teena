@@ -8,7 +8,8 @@ describe 'bCourses project site', order: :defined do
 
   test = RipleyTestConfig.new
   test.projects
-  project = Course.new({})
+  project = test.get_project_site
+  test.set_manual_project_members project
 
   before(:all) do
     @driver = Utils.launch_browser
@@ -25,6 +26,7 @@ describe 'bCourses project site', order: :defined do
       @canvas.log_in(@cal_net, Utils.ets_qa_username, Utils.ets_qa_password)
     else
       @canvas.log_in(@cal_net, test.admin.username, Utils.super_admin_password)
+      @canvas.set_canvas_ids project.manual_members
       @canvas.masquerade_as test.manual_teacher
     end
   end
@@ -60,9 +62,9 @@ describe 'bCourses project site', order: :defined do
 
     it 'allows a user to create a project site' do
       project.title = "QA Project Site #{Time.now}"
-      @create_project_site_page.create_project_site project.title
+      @create_project_site_page.create_project_site project.course.title
       @create_project_site_page.wait_for_site_id project
-      expect(@canvas.course_site_heading).to eql("#{project.title}") unless standalone
+      expect(@canvas.course_site_heading).to eql("#{project.course.title}") unless standalone
     end
 
     unless standalone

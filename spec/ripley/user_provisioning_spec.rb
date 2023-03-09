@@ -1,7 +1,7 @@
 require_relative '../../util/spec_helper'
 
 test = RipleyTestConfig.new
-test.user_prov
+test.user_provisioning
 test_users = [
   test.manual_teacher,
   test.lead_ta,
@@ -27,6 +27,7 @@ describe 'User Provisioning' do
       @splash_page.basic_auth test.admin.uid
     else
       @canvas.log_in(@cal_net, test.admin.username, Utils.super_admin_password)
+      @canvas.set_canvas_ids test_users
     end
   end
 

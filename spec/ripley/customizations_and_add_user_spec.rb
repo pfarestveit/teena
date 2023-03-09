@@ -7,20 +7,8 @@ describe 'bCourses' do
   include Logging
 
   test = RipleyTestConfig.new
-  test.add_user
-  course = test.course_sites.first
-  sections = test.set_course_sections(course).select &:include_in_site
-  sis_teacher = test.set_sis_teacher course
-  users_to_add = [
-    test.manual_teacher,
-    test.lead_ta,
-    test.ta,
-    test.designer,
-    test.reader,
-    test.observer,
-    test.students.first,
-    test.wait_list_student
-  ]
+  site = test.get_single_test_site
+  teacher = site.course.teachers.first
 
   before(:all) do
     @driver = Utils.launch_browser
@@ -31,17 +19,18 @@ describe 'bCourses' do
     @course_add_user_page = RipleyAddUserPage.new @driver
 
     if standalone
-      @splash_page.dev_auth sis_teacher.uid
+      @splash_page.dev_auth teacher.uid
     else
       @canvas.log_in(@cal_net, test.admin.username, Utils.super_admin_password)
-      @canvas.masquerade_as sis_teacher
+      @canvas.set_canvas_ids([teacher] + site.manual_members)
+      @canvas.masquerade_as teacher
     end
 
-    @create_course_site_page.provision_course_site(course, { standalone: standalone })
+    @create_course_site_page.provision_course_site(site, { standalone: standalone })
     if standalone
-      @create_course_site_page.wait_for_standalone_site_id(course, @splash_page)
+      @create_course_site_page.wait_for_standalone_site_id(site, @splash_page)
     else
-      @canvas.publish_course_site course
+      @canvas.publish_course_site site
     end
   end
 
@@ -52,7 +41,7 @@ describe 'bCourses' do
 
       context 'in the footer' do
 
-        before(:all) { @canvas.load_users_page course }
+        before(:all) { @canvas.load_users_page site }
 
         it 'include an "About" link' do
           @canvas.scroll_to_bottom
@@ -137,9 +126,9 @@ describe 'bCourses' do
 
     before(:all) do
       if standalone
-        @course_add_user_page.load_standalone_tool course
+        @course_add_user_page.load_standalone_tool site
       else
-        @canvas.load_users_page course
+        @canvas.load_users_page site
         @canvas.click_find_person_to_add
       end
     end
@@ -189,7 +178,7 @@ describe 'bCourses' do
     it 'offers the right course site sections' do
       @course_add_user_page.search('Bear', 'Last Name, First Name')
       @course_add_user_page.wait_until(Utils.medium_wait) { @course_add_user_page.uid_results.include? "#{Utils.oski_uid}" }
-      expect(@course_add_user_page.course_section_options.length).to eql(sections.length)
+      expect(@course_add_user_page.course_section_options.length).to eql(site.sections.length)
     end
   end
 
@@ -198,19 +187,19 @@ describe 'bCourses' do
     describe 'import users to course site' do
 
       before(:all) do
-        @section_to_test = sections.first
-        @canvas.masquerade_as(sis_teacher, course)
-        @canvas.load_users_page course
+        @section_to_test = site.sections.first
+        @canvas.masquerade_as(teacher, site)
+        @canvas.load_users_page site
         @canvas.click_find_person_to_add
-        users_to_add.each do |user|
+        site.manual_members.each do |user|
           @course_add_user_page.search(user.uid, 'CalNet UID')
           @course_add_user_page.add_user_by_uid(user, @section_to_test)
         end
-        @canvas.load_users_page course
-        @canvas.load_all_students course
+        @canvas.load_users_page site
+        @canvas.load_all_students site
       end
 
-      users_to_add.each do |user|
+      site.manual_members.each do |user|
         it "shows an added #{user.role} user in the course site roster" do
           @canvas.search_user_by_canvas_id user
           @canvas.wait_until(Utils.medium_wait) { @canvas.roster_user? user.canvas_id }
@@ -229,16 +218,16 @@ describe 'bCourses' do
       before(:all) do
         @policies_heading = 'Academic Accommodations Hub | Executive Vice Chancellor and Provost'
         @mental_health_heading = 'Mental Health | University Health Services'
-        @canvas.masquerade_as(sis_teacher, course)
-        @canvas.publish_course_site course
+        @canvas.masquerade_as(teacher, site)
+        @canvas.publish_course_site site
       end
 
       # Check each user role's access to the tool
 
       [test.lead_ta, test.ta].each do |user|
         it "allows #{user.role} #{user.uid} access to the Find a Person to Add tool with limited roles" do
-          @canvas.masquerade_as(user, course)
-          @canvas.load_users_page course
+          @canvas.masquerade_as(user, site)
+          @canvas.load_users_page site
           @canvas.click_find_person_to_add
           @course_add_user_page.search('Oski', 'Last Name, First Name')
           opts = if user == test.lead_ta
@@ -256,8 +245,8 @@ describe 'bCourses' do
 
         [test.designer, test.reader].each do |user|
           it "denies #{user.role} #{user.uid} access to the Find a Person to Add tool" do
-            @canvas.masquerade_as(user, course)
-            @course_add_user_page.load_embedded_tool course
+            @canvas.masquerade_as(user, site)
+            @course_add_user_page.load_embedded_tool site
             @course_add_user_page.no_access_msg_element.when_visible Utils.medium_wait
           end
 
@@ -270,8 +259,8 @@ describe 'bCourses' do
         [test.observer, test.students.first, test.wait_list_student].each do |user|
           it "denies #{user.role} #{user.uid} access to the Find a Person to Add tool" do
             Utils.set_default_window_size @driver
-            @canvas.masquerade_as(user, course)
-            @course_add_user_page.hit_embedded_tool_url course
+            @canvas.masquerade_as(user, site)
+            @course_add_user_page.hit_embedded_tool_url site
             @canvas.wait_for_error(@canvas.access_denied_msg_element, @course_add_user_page.no_access_msg_element)
           end
 

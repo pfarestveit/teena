@@ -21,7 +21,6 @@ describe 'bCourses course site creation' do
     @roster_photos_page = RipleyRosterPhotosPage.new @driver
 
     sites_created = []
-    sites_to_create = []
 
     # CREATE SITES
 
@@ -35,28 +34,30 @@ describe 'bCourses course site creation' do
       begin
 
         logger.info "Creating a course site for #{site.course.code} in #{site.course.term} using the '#{site.create_site_workflow}' workflow"
+        teacher = site.course.teachers.first
 
         if standalone
           @splash_page.load_page
-          uid = %w(uid ccn).include?(site.course.create_site_workflow) ? Utils.super_admin_uid : site.sis_teacher.uid
+          uid = %w(uid ccn).include?(site.course.create_site_workflow) ? Utils.super_admin_uid : teacher.uid
           @splash_page.basic_auth uid
           @site_creation_page.load_standalone_tool
         else
+          @canvas_page.set_canvas_ids [teacher]
           if %(uid ccn).include? site.create_site_workflow
             @canvas_page.load_homepage
             sleep 3
             @canvas_page.stop_masquerading if @canvas_page.stop_masquerading_link?
             @canvas_page.click_create_site
           else
-            @canvas_page.masquerade_as site.sis_teacher
-            @site_creation_page.load_embedded_tool site.sis_teacher
+            @canvas_page.masquerade_as teacher
+            @site_creation_page.load_embedded_tool teacher
           end
         end
 
         @site_creation_page.click_create_course_site
 
         if site.create_site_workflow == 'self'
-          @create_course_site_page.click_cancel
+          @create_course_site_page.click_cancel site
           cancel_works = @site_creation_page.verify_block { @site_creation_page.click_create_course_site }
           it('allows a user to cancel course site creation') { expect(cancel_works).to be true }
         end
@@ -106,7 +107,7 @@ describe 'bCourses course site creation' do
 
         unless site.create_site_workflow == 'ccn'
 
-          term_courses = RipleyUtils.get_instructor_term_courses(site.sis_teacher, site.course.term)
+          term_courses = RipleyUtils.get_instructor_term_courses(teacher, site.course.term)
           term_courses.each do |course|
             ui_course_title = @create_course_site_page.available_sections_course_title course.code
             ui_sections_expanded = @create_course_site_page.expand_available_sections course.code
@@ -171,7 +172,7 @@ describe 'bCourses course site creation' do
 
         @create_course_site_page.click_create_site
         if standalone
-          @create_course_site_page.wait_for_standalone_site_id(site.course, site.sis_teacher, @splash_page)
+          @create_course_site_page.wait_for_standalone_site_id(site, @splash_page)
         else
           @create_course_site_page.wait_for_site_id site.course
         end
@@ -207,11 +208,12 @@ describe 'bCourses course site creation' do
       sites_created.each_with_index do |site, i|
 
         begin
+          teacher = site.course.teachers.first
           test_case = "#{site.course.term.name} #{site.course.code} site ID #{site.site_id}"
 
           logger.info "Verifying content of #{test_case}"
 
-          @canvas_page.masquerade_as(site.sis_teacher, site.course)
+          @canvas_page.masquerade_as(teacher, site.course)
           @canvas_page.publish_course_site site.course
 
           # MEMBERSHIP - check that course site user count matches expectations for each role

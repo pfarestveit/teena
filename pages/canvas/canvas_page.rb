@@ -160,6 +160,7 @@ module Page
     link(:course_details_link, text: 'Course Details')
     text_area(:course_title, id: 'course_name')
     text_area(:course_code, id: 'course_course_code')
+    list_item(:course_site_sidebar_tab, id: 'section-tabs')
 
     def click_create_site_settings_link
       wait_for_update_and_click_js profile_link_element
@@ -249,6 +250,7 @@ module Page
     def load_course_site(course)
       navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}"
       wait_until(Utils.medium_wait) { current_url.include? "#{course.site_id}" }
+      course_site_sidebar_tab_element.when_present Utils.short_wait
       if updated_terms_heading?
         logger.info 'Accepting terms and conditions'
         terms_cbx_element.when_visible Utils.short_wait
@@ -594,6 +596,23 @@ module Page
 
     def toggle_access_links
       wait_for_update_and_click access_toggle_element
+    end
+
+    # USER ACCOUNTS
+
+    text_field(:user_search_input, xpath: '//input[@placeholder="Search people..."]')
+
+    def user_result_link(user)
+      link_element(xpath: "//td[text()=\"#{user.email}\"]/preceding-sibling::th/a")
+    end
+
+    def set_canvas_ids(users)
+      navigate_to "#{Utils.canvas_base_url}/accounts/#{Utils.canvas_uc_berkeley_sub_account}/users"
+      users.each do |user|
+        wait_for_textbox_and_type(user_search_input_element, user.email)
+        user_result_link(user).when_present Utils.medium_wait
+        user.canvas_id = user_result_link(user).attribute('href').split('/').last
+      end
     end
 
   end

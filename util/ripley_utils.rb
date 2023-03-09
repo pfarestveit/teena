@@ -281,4 +281,25 @@ class RipleyUtils < Utils
       section.enrollments = enrollments.select { |e| e.section_id == section.id }
     end
   end
+
+  def self.get_users_of_affiliations(affiliations, count)
+    sql = "SELECT ldap_uid AS uid,
+                  sid,
+                  first_name,
+                  last_name,
+                  email_address AS email
+             FROM sis_data.basic_attributes
+            WHERE affiliations = '#{affiliations}'
+              AND email_address IS NOT NULL
+         ORDER BY first_name
+            LIMIT #{count};"
+    results = Utils.query_pg_db(NessieUtils.nessie_pg_db_credentials, sql)
+    results.map do |r|
+      User.new uid: r['uid'],
+               sis_id: r['sid'],
+               first_name: r['first_name'],
+               last_name: r['last_name'],
+               email: r['email']
+    end
+  end
 end
