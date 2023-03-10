@@ -34,20 +34,20 @@ module SquiggyPages
     wait_until(Utils.medium_wait) { title == SquiggyTool::IMPACT_STUDIO.name }
   end
 
-  def clear_input(input_el)
-    sleep Utils.click_wait
+  def clear_input(input_el, click_wait=nil)
+    sleep(click_wait || Utils.click_wait)
     input_el.click
-    sleep Utils.click_wait
+    sleep(click_wait || Utils.click_wait)
     input_el.click
-    sleep Utils.click_wait
+    sleep(click_wait || Utils.click_wait)
     255.times { hit_backspace }
     255.times {hit_delete }
   end
 
-  def enter_squiggy_text(el, str)
+  def enter_squiggy_text(el, str, click_wait=nil)
     logger.info "Entering '#{str}'"
     wait_for_element(el, Utils.short_wait)
-    clear_input el
+    clear_input(el, click_wait)
     el.send_keys str
   end
 
@@ -141,4 +141,24 @@ module SquiggyPages
     assets_visible_non_deleted(assets).sort_by { |a| [a.comments.length, a.id] }.reverse[0..3]
   end
 
+  # STANDALONE SQUIGGY
+
+  text_field(:dev_auth_user, id: 'user-id-input')
+  text_field(:dev_auth_password, id: 'password-input')
+  button(:dev_auth_button, id: 'btn-dev-auth-login')
+  button(:whiteboards_button, id: 'go-whiteboards-btn')
+
+  def dev_auth(user_id, password)
+    logger.info "Authenticating in standalone Squiggy as user #{user_id}"
+    navigate_to "#{SquiggyUtils.base_url}/squiggy"
+    wait_for_element_and_type(dev_auth_user_element, user_id)
+    wait_for_element_and_type(dev_auth_password_element, password)
+    wait_for_update_and_click dev_auth_button_element
+    whiteboards_button_element.when_visible Utils.short_wait
+  end
+
+  def click_whiteboards_button
+    logger.info 'Clicking whiteboards button'
+    wait_for_update_and_click whiteboards_button_element
+  end
 end

@@ -164,10 +164,6 @@ class Utils
     @config['timeouts']['click_wait']
   end
 
-  def self.event_wait
-    @config['timeouts']['event_wait']
-  end
-
   # Short timeout intended for things like page DOM updates
   def self.short_wait
     @config['timeouts']['short']
