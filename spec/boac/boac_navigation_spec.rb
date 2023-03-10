@@ -122,29 +122,29 @@ unless ENV['DEPS']
                       end
                     rescue => e
                       BOACUtils.log_error e
-                      it("caused an error with UID #{student.uid} #{class_test_case}") { fail }
+                      it("caused an error with UID #{student.uid} #{class_test_case}") { fail e.message }
                     end
                   end
                 rescue => e
                   BOACUtils.log_error e
-                  it("caused an error with UID #{student.uid} term #{term_id} course #{course_sis_data[:code]}") { fail }
+                  it("caused an error with UID #{student.uid} term #{term_id} course #{course_sis_data[:code]}") { fail e.message }
                 end
               end
             rescue => e
               BOACUtils.log_error e
-              it("caused an error with UID #{student.uid} term #{term_id}") { fail }
+              it("caused an error with UID #{student.uid} term #{term_id}") { fail e.message }
             end
           end
         rescue => e
           BOACUtils.log_error e
-          it("caused an error with UID #{student.uid}") { fail }
+          it("caused an error with UID #{student.uid}") { fail e.message }
         end
       end
 
     rescue => e
       BOACUtils.log_error e
       it('has at least one testable matrix bubble') { expect(bubbles_tested).not_to be_empty }
-      it('threw an error') { fail }
+      it('threw an error') { fail e.message }
     ensure
       Utils.quit_browser @driver
     end

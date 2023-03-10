@@ -82,6 +82,7 @@ class BOACApiStudentPage
       :expected_grad_term_id => (sis_profile && sis_profile['expectedGraduationTerm'] && sis_profile['expectedGraduationTerm']['id']),
       :expected_grad_term_name => (sis_profile && sis_profile['expectedGraduationTerm'] && sis_profile['expectedGraduationTerm']['name']),
       :withdrawal => (sis_profile && withdrawal),
+      :academic_standing => (sis_profile && sis_profile['academicStanding']),
       :academic_career => (sis_profile && sis_profile['academicCareer']),
       :academic_career_status => (sis_profile && sis_profile['academicCareerStatus']),
       :reqt_writing => (sis_profile && degree_progress && degree_progress[:writing]),
@@ -167,6 +168,16 @@ class BOACApiStudentPage
       :reason => withdrawal['reason'],
       :date => Time.parse(withdrawal['date']).strftime('%b %d, %Y')
     }
+  end
+
+  def academic_standing_profile
+    standing = sis_profile_data[:academic_standing]
+    if standing && !standing.empty?
+      {
+        status: (AcademicStanding::STATUSES.find {|s| s.code == standing['status']}.descrip),
+        term_name: standing['termName']
+      }
+    end
   end
 
   def academic_standing

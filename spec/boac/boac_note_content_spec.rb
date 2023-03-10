@@ -239,7 +239,7 @@ unless ENV['NO_DEPS']
                           end
                         rescue => e
                           Utils.log_error e
-                          it("encountered an error downloading attachment ID #{attach.id} from #{test_case}") { fail }
+                          it("encountered an error downloading attachment ID #{attach.id} from #{test_case}") { fail e.message }
 
                           # If the note download fails, the browser might no longer be on the student page so reload it.
                           @student_page.load_page student
@@ -286,13 +286,13 @@ unless ENV['NO_DEPS']
               end
             rescue => e
               Utils.log_error e
-              it("hit an error with #{test_case}") { fail }
+              it("hit an error with #{test_case}") { fail e.message }
             end
           end
 
         rescue => e
           Utils.log_error e
-          it("hit an error with UID #{student.uid}") { fail }
+          it("hit an error with UID #{student.uid}") { fail e.message }
         ensure
           # Make sure no attachment is left on the test machine
           Utils.prepare_download_dir
@@ -316,12 +316,12 @@ unless ENV['NO_DEPS']
           it("delivers no file to an anonymous user when hitting the attachment download endpoint for #{identifier}") { expect(no_file).to be true }
         end
       else
-        it('found no downloadable attachments') { fail }
+        it('found no downloadable attachments') { fail e.message }
       end
 
     rescue => e
       Utils.log_error e
-      it('hit an error initializing') { fail }
+      it('hit an error initializing') { fail e.message }
     ensure
       Utils.quit_browser @driver
     end

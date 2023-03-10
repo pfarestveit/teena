@@ -86,13 +86,13 @@ unless ENV['DEPS']
 
         rescue => e
           Utils.log_error e
-          it("hit an error performing user searches for UID #{student.uid}") { fail }
+          it("hit an error performing user searches for UID #{student.uid}") { fail e.message }
         end
       end
 
     rescue => e
       Utils.log_error e
-      it('test hit an error initializing') { fail }
+      it('test hit an error initializing') { fail e.message }
     ensure
       Utils.quit_browser @driver
     end

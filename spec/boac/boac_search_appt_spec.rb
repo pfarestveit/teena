@@ -38,6 +38,11 @@ unless ENV['NO_DEPS']
       @driver = Utils.launch_browser test_config.chrome_profile
       @homepage = BOACHomePage.new @driver
       @search_results_page = BOACSearchResultsPage.new @driver
+      @api_admin_page = BOACApiAdminPage.new @driver
+      @homepage.dev_auth
+      @api_admin_page.reindex_appts
+      @homepage.load_page
+      @homepage.log_out
       @homepage.dev_auth test_config.advisor
       @homepage.load_page
 

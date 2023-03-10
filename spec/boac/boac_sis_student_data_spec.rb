@@ -57,6 +57,7 @@ unless ENV['NO_DEPS']
 
           test_case = "UID #{student_data[:student].uid} on the #{test.default_cohort.name} page"
           api_sis_profile_data = student_data[:api].sis_profile_data
+          academic_standing_profile = student_data[:api].academic_standing_profile
           academic_standing = student_data[:api].academic_standing
 
           # COHORT PAGE SIS DATA
@@ -108,7 +109,11 @@ unless ENV['NO_DEPS']
             end
           end
 
-          if academic_standing&.any?
+          if academic_standing_profile && academic_standing_profile[:status] != 'Good Standing'
+            it "shows the academic standing '#{academic_standing_profile[:status]}' for #{test_case}" do
+              expect(cohort_page_sis_data[:academic_standing]).to eql("#{academic_standing_profile[:status]} (#{academic_standing_profile[:term_name]})")
+            end
+          elsif academic_standing&.any?
             latest_standing = academic_standing.find &:descrip
             if latest_standing && !latest_standing.code.empty?
               if latest_standing.code == 'GST'
@@ -284,7 +289,7 @@ unless ENV['NO_DEPS']
 
                     rescue => e
                       BOACUtils.log_error_and_screenshot(@driver, e, "#{student_data[:student].uid}-#{term_name}-#{course_code}")
-                      it("encountered an error for #{test_case}") { fail }
+                      it("encountered an error for #{test_case}") { fail e.message }
                     end
                   end
                 else
@@ -318,6 +323,7 @@ unless ENV['NO_DEPS']
         @boac_student_page.expand_personal_details
 
         api_sis_profile_data = student_data[:api].sis_profile_data
+        academic_standing_profile = student_data[:api].academic_standing_profile
         academic_standing = student_data[:api].academic_standing
         api_advisors = student_data[:api].advisors
         api_demographics = student_data[:api].demographics
@@ -491,7 +497,11 @@ unless ENV['NO_DEPS']
           it("does not show inactive for #{test_case}") { expect(student_page_sis_data[:inactive]).to be false }
         end
 
-        if academic_standing&.any?
+        if academic_standing_profile && academic_standing_profile[:status] != 'Good Standing'
+          it "shows the academic standing '#{academic_standing_profile[:status]}' for #{test_case}" do
+            expect(student_page_sis_data[:academic_standing]).to eql("#{academic_standing_profile[:status]} (#{academic_standing_profile[:term_name]})")
+          end
+        elsif academic_standing&.any?
           latest_standing = academic_standing.find &:descrip
           if latest_standing && !latest_standing.code.empty?
             if latest_standing.code == 'GST'
@@ -566,7 +576,11 @@ unless ENV['NO_DEPS']
         end
 
         visible_alert_text = visible_alerts.map { |a| a[:text] }
-        if latest_standing&.term_id == BOACUtils.term_code.to_s
+        if academic_standing_profile && academic_standing_profile[:status] != 'Good Standing'
+          it "shows the academic standing '#{academic_standing_profile[:status]}' for #{test_case}" do
+            expect(student_page_sis_data[:academic_standing]).to eql("#{academic_standing_profile[:status]} (#{academic_standing_profile[:term_name]})")
+          end
+        elsif latest_standing&.term_id == BOACUtils.term_code.to_s
           if latest_standing.code == 'GST' || latest_standing.code&.empty?
             it "shows no academic standing alert for #{test_case}" do
               expect(visible_alert_text).not_to include("Student's academic standing is '#{latest_standing.descrip}'.")
@@ -668,7 +682,11 @@ unless ENV['NO_DEPS']
 
               # ACADEMIC STANDING
 
-              if academic_standing&.any?
+              if academic_standing_profile && academic_standing_profile[:term_name] == Utils.sis_code_to_term_name(term_id) && academic_standing_profile[:status] != 'Good Standing'
+                it "shows the academic standing '#{academic_standing_profile[:status]}' for #{test_case}" do
+                  expect(student_page_sis_data[:academic_standing]).to eql("#{academic_standing_profile[:status]} (#{academic_standing_profile[:term_name]})")
+                end
+              elsif academic_standing&.any?
                 term_standing = academic_standing.find { |s| s.term_id.to_s == term_id.to_s }
                 if term_standing&.code
                   if term_standing.code == 'GST' || term_standing.code&.empty?
@@ -807,7 +825,7 @@ unless ENV['NO_DEPS']
 
                       rescue => e
                         BOACUtils.log_error_and_screenshot(@driver, e, "#{student_data[:student].uid}-#{term_name}-#{course_code}-#{section_sis_data[:ccn]}")
-                        it("encountered an error for #{test_case}") { fail }
+                        it("encountered an error for #{test_case}") { fail e.message }
                       ensure
                         row = [
                           student_data[:student].uid,
@@ -837,7 +855,7 @@ unless ENV['NO_DEPS']
 
                   rescue => e
                     BOACUtils.log_error_and_screenshot(@driver, e, "#{student_data[:student].uid}-#{term_name}-#{course_code}")
-                    it("encountered an error for #{test_case}") { fail }
+                    it("encountered an error for #{test_case}") { fail e.message }
                   end
                 end
 

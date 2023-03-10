@@ -69,13 +69,13 @@ unless ENV['DEPS']
 
                           rescue => e
                             Utils.log_error e
-                            it("hit an error with a search for #{section_test_case} by string '#{string}'") { fail }
+                            it("hit an error with a search for #{section_test_case} by string '#{string}'") { fail e.message }
                           end
                         end
 
                       rescue => e
                         Utils.log_error e
-                        it("hit an error performing a class search for #{section_test_case}") { fail }
+                        it("hit an error performing a class search for #{section_test_case}") { fail e.message }
                       end
                     end
                   end
@@ -83,7 +83,7 @@ unless ENV['DEPS']
 
               rescue => e
                 Utils.log_error e
-                it("hit an error with class search tests for UID #{student.uid} course #{course['displayName']}") { fail }
+                it("hit an error with class search tests for UID #{student.uid} course #{course['displayName']}") { fail e.message }
               end
             end
           else
@@ -92,7 +92,7 @@ unless ENV['DEPS']
 
         rescue => e
           Utils.log_error e
-          it("hit an error with UID #{student.uid}") { fail }
+          it("hit an error with UID #{student.uid}") { fail e.message }
         end
       end
     end
