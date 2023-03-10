@@ -48,6 +48,10 @@ module Page
     @driver.switch_to.window @driver.window_handles.last
   end
 
+  def switch_to_window_handle(handle)
+    @driver.switch_to.window handle
+  end
+
   def window_count
     @driver.window_handles.length
   end
@@ -104,23 +108,22 @@ module Page
   def wait_for_element(element, timeout)
     element.when_present timeout
     element.when_visible timeout
-    sleep Utils.event_wait
     Utils.log_js_errors @driver
   end
 
   # Awaits an element for a given timeout then clicks it using WebDriver click method.
   # @param element [PageObject::Elements::Element]
   # @param timeout [Fixnum]
-  def click_element(element, timeout)
+  def click_element(element, timeout, click_wait=nil)
     wait_for_element(element, timeout)
     hide_canvas_footer_and_popup
     hide_boac_footer
     scroll_to_element element
-    sleep Utils.click_wait
+    sleep(click_wait || Utils.click_wait)
     begin
       element.click
     rescue Selenium::WebDriver::Error::ElementClickInterceptedError => e
-      logger.error e.message
+      logger.warn e.message
       execute_script('arguments[0].click();', element)
     end
   end
@@ -145,7 +148,6 @@ module Page
   # @param timeout [Fixnum]
   def click_element_js(element, timeout)
     element.when_present timeout
-    sleep Utils.event_wait
     Utils.log_js_errors @driver
     js_click element
   end
@@ -154,10 +156,10 @@ module Page
 
   # Awaits an element for a short time then clicks it using WebDriver. Intended for DOM updates rather than page loads.
   # @param element [PageObject::Elements::Element]
-  def wait_for_update_and_click(element)
+  def wait_for_update_and_click(element, click_wait=nil)
     # When clicking Canvas elements, the footer might be in the way. Hide it if it exists.
     execute_script('arguments[0].style.hidden="hidden";', canvas_footer_element) if canvas_footer?
-    click_element(element, Utils.short_wait)
+    click_element(element, Utils.short_wait, click_wait)
   end
 
   # Awaits an element for a short time then clicks it using JavaScript. Intended for DOM updates rather than page loads.
@@ -168,8 +170,8 @@ module Page
 
   # Awaits an element for a moderate time then clicks it using WebDriver. Intended for page loads rather than DOM updates.
   # @param element [PageObject::Elements::Element]
-  def wait_for_load_and_click(element)
-    click_element(element, Utils.medium_wait)
+  def wait_for_load_and_click(element, click_wait=nil)
+    click_element(element, Utils.medium_wait, click_wait)
   end
 
   # Awaits an element for a moderate time then clicks it using JavaScript. Intended for page loads rather than DOM updates.
@@ -182,9 +184,9 @@ module Page
   # in input or textarea elements.
   # @param element [PageObject::Elements::Element]
   # @param text [String]
-  def wait_for_element_and_type(element, text)
-    wait_for_update_and_click element
-    sleep Utils.click_wait
+  def wait_for_element_and_type(element, text, click_wait=nil)
+    wait_for_update_and_click(element, click_wait)
+    sleep(click_wait || Utils.click_wait)
     element.clear
     element.send_keys text unless text.to_s.empty?
   end
@@ -332,6 +334,11 @@ module Page
     sleep 1
     browser.action.release.perform
     sleep 1
+  end
+
+  def drag_and_drop_by(element, horizontal_offset, vertical_offset)
+    logger.info "Dragging and dropping #{element.locator} to the right #{horizontal_offset} and down #{vertical_offset}"
+    browser.action.drag_and_drop_by(element.selenium_element, horizontal_offset, vertical_offset).perform
   end
 
   def active_element

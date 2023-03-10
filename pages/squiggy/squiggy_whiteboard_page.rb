@@ -11,7 +11,7 @@ class SquiggyWhiteboardPage < SquiggyWhiteboardsPage
   div(:page_not_found, id: 'page-not-found')
 
   def hit_whiteboard_url(whiteboard)
-    url = "#{SquiggyUtils.base_url}/whiteboards/#{whiteboard.id}"
+    url = "#{SquiggyUtils.base_url}/whiteboard/#{whiteboard.id}"
     logger.debug "Hitting URL '#{url}'"
     navigate_to url
   end
@@ -172,11 +172,15 @@ class SquiggyWhiteboardPage < SquiggyWhiteboardsPage
     switch_to_canvas_iframe
   end
 
+  def click_download_as_image_button
+    wait_for_update_and_click_js download_as_image_button_element
+  end
+
   def download_as_image
     Utils.prepare_download_dir
     click_export_button
     logger.debug 'Downloading whiteboard as an image'
-    wait_for_update_and_click_js download_as_image_button_element
+    click_download_as_image_button
   end
 
   def verify_image_download(whiteboard)
@@ -305,5 +309,33 @@ class SquiggyWhiteboardPage < SquiggyWhiteboardsPage
 
   def collaborator_online?(user)
     collaborator(user).attribute('innerText').include? 'is online'
+  end
+
+  # WHITEBOARD INTERACTIONS
+
+  button(:toolbar_move_button, id: 'toolbar-move-btn')
+  button(:toolbar_squiggle_button, id: 'toolbar-draw-btn')
+  button(:toolbar_shape_button, id: 'toolbar-shapes')
+  element(:canvas, class: 'upper-canvas')
+
+  def add_url_and_drag(url, right, down)
+    wait_for_update_and_click(add_link_button_element, 0)
+    wait_for_element_and_type(url_input_element, url, 0)
+    enter_squiggy_text(title_input_element, "#{Time.now.to_i}", 0)
+    save_button_element.click
+    open_original_asset_link_element.when_visible Utils.medium_wait
+    drag_and_drop_by(canvas_element, right, down)
+  end
+
+  def add_squiggle(right, down)
+    logger.info 'Drawing a squiggle'
+    wait_for_update_and_click(toolbar_squiggle_button_element, 0)
+    drag_and_drop_by(canvas_element, right, down)
+  end
+
+  def add_shape(right, down)
+    logger.info 'Adding a shape'
+    wait_for_update_and_click(toolbar_shape_button_element, 0)
+    drag_and_drop_by(canvas_element, right, down)
   end
 end

@@ -62,7 +62,7 @@ module Page
     def log_in(cal_net, username, password, canvas_base_url = nil)
       load_homepage canvas_base_url
       cal_net.log_in(username, password)
-      profile_link.when_present Utils.short_wait
+      profile_link_element.when_present Utils.short_wait
     end
 
     # Shifts to default content, logs out, and waits for CalNet logout confirmation
@@ -529,7 +529,8 @@ module Page
             wait_for_element_and_type(secret_input_element, creds[:secret])
             wait_for_element_and_type(url_input_element, "#{SquiggyUtils.base_url}#{tool.xml}")
             submit_button
-            wait_for_update_and_click add_tool_button_element
+            sleep 3
+            add_tool_button if add_tool_button?
             link_element(xpath: "//td[@title='#{tool.name}']").when_present Utils.medium_wait
 
             # Enable tool placement in sidebar navigation

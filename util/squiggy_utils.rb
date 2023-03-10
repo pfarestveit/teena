@@ -16,6 +16,22 @@ class SquiggyUtils < Utils
     squiggy_config['password']
   end
 
+  def SquiggyUtils.dev_auth_user_id
+    squiggy_config['dev_auth_user_id']
+  end
+
+  def SquiggyUtils.dev_auth_password
+    squiggy_config['dev_auth_password']
+  end
+
+  def SquiggyUtils.load_test_reps
+    squiggy_config['load_test_reps']
+  end
+
+  def SquiggyUtils.whiteboards
+    squiggy_config['whiteboards']
+  end
+
   def SquiggyUtils.db_credentials
     {
       host: squiggy_config['db_host'],

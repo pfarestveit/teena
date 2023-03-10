@@ -10,7 +10,6 @@ webdriver:
 
 timeouts:
   click_wait: 0.5
-  event_wait: 0
   short: 8
   medium: 30
   long: 120
@@ -146,6 +145,8 @@ ripley:
 squiggy:
   base_url: tbd
   password: secret
+  dev_auth_user_id: secret
+  dev_auth_password: secret
   lti_key: secret
   lti_secret: secret
   db_host: secret
@@ -154,3 +155,5 @@ squiggy:
   db_user: secret
   db_password: secret
   poller_retries: 10
+  load_test_reps: 10
+  whiteboards: [123, 456, 789]
