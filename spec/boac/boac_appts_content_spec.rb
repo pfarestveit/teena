@@ -205,7 +205,7 @@ unless ENV['DEPS']
                       end
                     rescue => e
                       Utils.log_error e
-                      it("encountered an error downloading attachment ID #{attach.id} from #{test_case}") { fail }
+                      it("encountered an error downloading attachment ID #{attach.id} from #{test_case}") { fail e.message }
 
                       # If the download fails, the browser might no longer be on the student page so reload it.
                       @student_page.load_page student
@@ -240,7 +240,7 @@ unless ENV['DEPS']
               end
             rescue => e
               Utils.log_error e
-              it("hit an error with #{test_case}") { fail }
+              it("hit an error with #{test_case}") { fail e.message }
             ensure
               row = [student.uid, student.sis_id, appt.id, appt.created_date, appt.updated_date, appt.advisor.uid,
                      (visible_expanded_appt_data[:advisor] if visible_expanded_appt_data),
@@ -253,7 +253,7 @@ unless ENV['DEPS']
 
         rescue => e
           Utils.log_error e
-          it("hit an error with UID #{student.uid}") { fail }
+          it("hit an error with UID #{student.uid}") { fail e.message }
         ensure
           # Make sure no attachment is left on the test machine
           Utils.prepare_download_dir
@@ -283,7 +283,7 @@ unless ENV['DEPS']
 
     rescue => e
       Utils.log_error e
-      it('hit an error initializing') { fail }
+      it('hit an error initializing') { fail e.message }
     ensure
       Utils.quit_browser @driver
     end

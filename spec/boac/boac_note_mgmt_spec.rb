@@ -51,6 +51,7 @@ unless ENV['NO_DEPS']
         @homepage = BOACHomePage.new @driver
         @student_page = BOACStudentPage.new @driver
         @search_results_page = BOACSearchResultsPage.new @driver
+        @api_admin_page = BOACApiAdminPage.new @driver
         @api_notes_page = BOACApiNotesPage.new @driver
       end
 
@@ -166,6 +167,15 @@ unless ENV['NO_DEPS']
         end
 
         context 'searching for a newly created note' do
+
+          before(:all) do
+            @student_page.log_out
+            @homepage.dev_auth
+            @api_admin_page.reindex_notes
+            @homepage.load_page
+            @homepage.log_out
+            @homepage.dev_auth test.advisor
+          end
 
           shared_examples 'searching for your own note' do
             it 'can find a note by subject' do
@@ -422,6 +432,15 @@ unless ENV['NO_DEPS']
 
         context 'searching for an edited note' do
 
+          before(:all) do
+            @student_page.log_out
+            @homepage.dev_auth
+            @api_admin_page.reindex_notes
+            @homepage.load_page
+            @homepage.log_out
+            @homepage.dev_auth test.advisor
+          end
+
           it 'can find a note by edited content' do
             @student_page.type_note_appt_simple_search_and_enter note_1.subject
             @search_results_page.wait_for_note_search_result_rows
@@ -538,6 +557,11 @@ unless ENV['NO_DEPS']
       describe 'advisor' do
 
         before(:all) do
+          @homepage.dev_auth
+          @api_admin_page.reindex_notes
+          @homepage.load_page
+          @homepage.log_out
+
           @homepage.dev_auth test.advisor
           @student_page.open_adv_search
           @student_page.exclude_students

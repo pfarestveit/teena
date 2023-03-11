@@ -225,12 +225,12 @@ unless ENV['DEPS']
 
         rescue => e
           Utils.log_error e
-          it("tests hit an error with admit CS ID #{admit[:cs_empl_id]}") { fail }
+          it("tests hit an error with admit CS ID #{admit[:cs_empl_id]}") { fail e.message }
         end
       end
     rescue => e
       Utils.log_error e
-      it('tests hit an error initializing') { fail }
+      it('tests hit an error initializing') { fail e.message }
     ensure
       Utils.quit_browser @driver
     end

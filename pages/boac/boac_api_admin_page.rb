@@ -30,4 +30,13 @@ class BOACApiAdminPage
     end
   end
 
+  def reindex_notes
+    navigate_to "#{BOACUtils.api_base_url}/api/admin/reindex/notes"
+    sleep Utils.short_wait
+  end
+
+  def reindex_appts
+    navigate_to "#{BOACUtils.api_base_url}/api/admin/reindex/appointments"
+    sleep Utils.short_wait
+  end
 end

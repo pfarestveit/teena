@@ -286,33 +286,33 @@ unless ENV['DEPS']
 
                         rescue => e
                           BOACUtils.log_error_and_screenshot(@driver, e, "#{student.uid}-#{term_name}-#{course_sis_data[:code]}")
-                          it("test hit an error with UID #{student.uid} term #{term_name} course #{course_sis_data[:code]}") { fail }
+                          it("test hit an error with UID #{student.uid} term #{term_name} course #{course_sis_data[:code]}") { fail e.message }
                         end
                       end
                     end
 
                   rescue => e
                     BOACUtils.log_error_and_screenshot(@driver, e, "#{student.uid}-#{term_name}-#{course_sis_data[:code]}")
-                    it("test hit an error with UID #{student.uid} term #{term_name} course #{course_sis_data[:code]}") { fail }
+                    it("test hit an error with UID #{student.uid} term #{term_name} course #{course_sis_data[:code]}") { fail e.message }
                   end
                 end
 
               rescue => e
                 BOACUtils.log_error_and_screenshot(@driver, e, "#{student.uid}-#{term_name}")
-                it("test hit an error with UID #{student.uid} term #{term_name}") { fail }
+                it("test hit an error with UID #{student.uid} term #{term_name}") { fail e.message }
               end
             end
           end
 
         rescue => e
           BOACUtils.log_error_and_screenshot(@driver, e, "#{student.uid}")
-          it("test hit an error with UID #{student.uid}") { fail }
+          it("test hit an error with UID #{student.uid}") { fail e.message }
         end
       end
 
     rescue => e
       Utils.log_error e
-      it('test hit an error') { fail }
+      it('test hit an error') { fail e.message }
     ensure
       Utils.quit_browser @driver
     end
