@@ -4,8 +4,8 @@ begin
 
   include Logging
 
-  csv_1_path = File.join(Utils.output_dir, "test-output/boac-#{ENV['CSV_1']}.csv")
-  csv_2_path = File.join(Utils.output_dir, "test-output/boac-#{ENV['CSV_2']}.csv")
+  csv_1_path = File.join(Utils.output_dir, "test-output/#{ENV['CSV_1']}.csv")
+  csv_2_path = File.join(Utils.output_dir, "test-output/#{ENV['CSV_2']}.csv")
 
   csv_1 = CSV.read(csv_1_path).each.to_a
   csv_2 = CSV.read(csv_2_path).each.to_a

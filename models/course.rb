@@ -7,7 +7,9 @@ class Course
                 :sis_id,
                 :site_id,
                 :sections,
-                :teachers
+                :site_created_date,
+                :teachers,
+                :tests
 
   def initialize(test_data)
     test_data.each { |k, v| public_send("#{k}=", v) }
