@@ -2,6 +2,51 @@
     "filters": {
         "students": [
             {
+                "incomplete_sched_grades": [
+                    {
+                        "min": "2023-03-17",
+                        "max": "2023-09-28"
+                    }
+                ]
+            },
+            {
+                "colleges": [
+                    {
+                        "college": "Undergrad Engineering"
+                    },
+                    {
+                        "college": "Undergrad Letters & Science"
+                    }
+                ],
+                "visa_types": [
+                    {
+                        "visa_type": "F1"
+                    },
+                    {
+                        "visa_type": "J1"
+                    }
+                ],
+                "ethnicities": [
+                    {
+                        "ethnicity": "Other Spanish-American / Latino"
+                    }
+                ],
+                "incomplete_grades": [
+                    {
+                        "grade": "Frozen"
+                    },
+                    {
+                        "grade": "Failing grade, formerly an incomplete"
+                    },
+                    {
+                        "grade": "Passing grade, formerly an incomplete"
+                    },
+                    {
+                        "grade": "Scheduled to become an F/NP"
+                    }
+                ]
+            },
+            {
                 "minors": [
                     {
                         "minor": "Aerospace Engineering UG"
@@ -45,29 +90,6 @@
                 ]
             },
             {
-                "colleges": [
-                    {
-                        "college": "Undergrad Engineering"
-                    },
-                    {
-                        "college": "Undergrad Letters & Science"
-                    }
-                ],
-                "visa_types": [
-                    {
-                        "visa_type": "F1"
-                    },
-                    {
-                        "visa_type": "J1"
-                    }
-                ],
-                "ethnicities": [
-                    {
-                        "ethnicity": "Other Spanish-American / Latino"
-                    }
-                ]
-            },
-            {
                 "visa_types": [
                     {
                         "visa_type": "All types"
@@ -98,8 +120,7 @@
                         "entering_term": "2208"
                     }
                 ],
-                "holds": true,
-                "incomplete_grade": true
+                "holds": true
             },
             {
                 "asc_inactive": true,
