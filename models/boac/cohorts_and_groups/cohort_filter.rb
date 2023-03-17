@@ -30,6 +30,7 @@ class CohortFilter
                 :graduate_plans,
                 :holds,
                 :incomplete_grade,
+                :incomplete_sched_grade,
                 :intended_major,
                 :last_name,
                 :level,
@@ -60,7 +61,10 @@ class CohortFilter
     @grading_basis_epn = (test_data['grading_basis_epn'] && test_data['grading_basis_epn'].map { |b| b['term'] })
     @graduate_plans = (test_data['graduate_plans']&.map { |p| p['graduate_plan'] })
     @holds = test_data['holds']
-    @incomplete_grade = test_data['incomplete_grade']
+    @incomplete_grade = (test_data['incomplete_grades'] && test_data['incomplete_grades'].map { |i| i['grade'] })
+    @incomplete_sched_grade = if test_data['incomplete_sched_grades']&.any?
+                                [{"min" => Date.today.strftime('%Y-%m-%d'), "max" => (Date.today + 120).strftime('%Y-%m-%d')}]
+                              end
     @intended_major = (test_data['intended_major'] && test_data['intended_major'].map { |m| m['major'] })
     @level = (test_data['levels'] && test_data['levels'].map { |l| l['level'] })
     @major = (test_data['majors'] && test_data['majors'].map { |t| t['major'] })

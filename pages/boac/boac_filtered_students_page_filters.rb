@@ -63,7 +63,10 @@ module BOACFilteredStudentsPageFilters
     filter_sub_option = filter_sub_option_identifier(filter_option, filter_sub_option)
     logger.info "Selecting sub-option '#{filter_sub_option}'"
     # GPA and Last Name require input
-    if ['GPA (Cumulative)', 'GPA (Last Term)', 'Last Name', 'Family Dependents', 'Student Dependents'].include? filter_option
+    if [
+      'GPA (Cumulative)', 'GPA (Last Term)', 'Last Name', 'Family Dependents', 'Student Dependents', 'Incomplete Scheduled Grades'
+    ].include? filter_option
+      logger.info "Filter sub-option is #{filter_sub_option}"
       wait_for_element_and_type(filter_range_min_input_element, filter_sub_option['min'])
       wait_for_element_and_type(filter_range_max_input_element, filter_sub_option['max'])
 
@@ -82,7 +85,7 @@ module BOACFilteredStudentsPageFilters
     no_options = ['Midpoint Deficient Grade', 'Transfer Student', 'Underrepresented Minority', 'Inactive (ASC)', 'Intensive (ASC)',
                   'Inactive (COE)', 'Underrepresented Minority (COE)', 'Probation (COE)', 'Current SIR', 'Hispanic', 'UREM',
                   'First Generation College', 'Application Fee Waiver', 'Foster Care', 'Family Is Single Parent',
-                  'Student Is Single Parent', 'Re-entry Status', 'Last School LCFF+', 'Holds', 'Incomplete Grade']
+                  'Student Is Single Parent', 'Re-entry Status', 'Last School LCFF+', 'Holds']
     select_new_filter_sub_option(filter_option, filter_sub_option) unless no_options.include? filter_option
     wait_for_update_and_click unsaved_filter_add_button_element
     unsaved_filter_apply_button_element.when_present Utils.short_wait
@@ -147,7 +150,8 @@ module BOACFilteredStudentsPageFilters
     cohort.search_criteria.grading_basis_epn.each { |g| select_new_filter('EPN/CPN Grading Option', g.to_s) } if cohort.search_criteria.grading_basis_epn
     cohort.search_criteria.graduate_plans.each { |g| select_new_filter('Graduate Plan', g) } if cohort.search_criteria.graduate_plans
     select_new_filter 'Holds' if cohort.search_criteria.holds
-    select_new_filter 'Incomplete Grade' if cohort.search_criteria.incomplete_grade
+    cohort.search_criteria.incomplete_grade&.each { |i| select_new_filter('Incomplete Grade', i) }
+    cohort.search_criteria.incomplete_sched_grade&.each { |i| select_new_filter('Incomplete Scheduled Grades', i) }
     cohort.search_criteria.intended_major.each { |m| select_new_filter('Intended Major', m) } if cohort.search_criteria.intended_major
     cohort.search_criteria.level.each { |l| select_new_filter('Level', l) } if cohort.search_criteria.level
     cohort.search_criteria.units_completed.each { |u| select_new_filter('Units Completed', u) } if cohort.search_criteria.units_completed
@@ -317,7 +321,9 @@ module BOACFilteredStudentsPageFilters
         logger.debug 'Verifying Holds filter'
         existing_filter_element('Holds').exists? if filters.holds
         logger.debug 'Verifying Incomplete Grade filter'
-        existing_filter_element('Incomplete Grade').exists? if filters.incomplete_grade
+        filters.incomplete_grade.each { |g| existing_filter_element('Incomplete Grade', g).exists? } if filters.incomplete_grade&.any?
+        logger.debug 'Verifying Incomplete Scheduled Grades filter'
+        filters.incomplete_sched_grade.each { |g| existing_filter_element('Incomplete Scheduled Grades', g).exists? } if filters.incomplete_sched_grade&.any?
         logger.debug 'Verifying GPA (Last Term) filter'
         filters.gpa_last_term.each { |g| existing_filter_element('GPA (Last Term)', g).exists? } if filters.gpa_last_term&.any?
         logger.debug 'Verifying Grading Basis EPN filter'

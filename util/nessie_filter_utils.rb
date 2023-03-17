@@ -114,10 +114,33 @@ class NessieFilterUtils < NessieUtils
   end
 
   def self.incomplete_grade_cond(filter, conditions_list)
-    if filter.incomplete_grade
-      conditions_list << "student.student_enrollment_terms.incomplete_grade IS TRUE
-                          AND student.student_enrollment_terms.term_id > '2015'"
+    if filter.incomplete_grade&.any?
+      conditions_list << "student.student_incompletes.term_id > '2015'"
+      options = []
+      filter.incomplete_grade.each do |grade|
+        options << case grade
+                   when 'Frozen'
+                     'student.student_incompletes.frozen IS TRUE'
+                   when 'Failing grade, formerly an incomplete'
+                     "student.student_incompletes.grade IN ('F', 'NP')"
+                   when 'Passing grade, formerly an incomplete'
+                     "(student.student_incompletes.status IN ('L', 'R') AND student.student_incompletes.grade NOT IN ('I', 'F', 'NP'))"
+                   else
+                     "(student.student_incompletes.status = 'I' AND student.student_incompletes.frozen IS FALSE)"
+                   end
+      end
+      conditions_list << "(#{options.join(' OR ')})" if options.any?
     end
+  end
+
+  def self.incomplete_sched_cond(filter, conditions_list)
+    ranges = filter.incomplete_sched_grade&.map do |f|
+      "(student.student_incompletes.frozen IS FALSE
+       AND student.student_incompletes.status = 'I'
+       AND student.student_incompletes.lapse_date BETWEEN '#{f['min']}' AND '#{f['max']}'
+       AND student.student_incompletes.term_id > '2015')"
+    end
+    conditions_list << "(#{ranges.join(' OR ')})" if ranges&.any?
   end
 
   def self.intended_major_cond(filter, conditions_list)
@@ -264,6 +287,7 @@ class NessieFilterUtils < NessieUtils
     gpa_last_term_cond(filter, conditions_list)
     grading_basis_epn_cond(filter, conditions_list)
     incomplete_grade_cond(filter, conditions_list)
+    incomplete_sched_cond(filter, conditions_list)
     intended_major_cond(filter, conditions_list)
     last_name_cond(filter, conditions_list)
     level_cond(filter, conditions_list)
@@ -311,6 +335,9 @@ class NessieFilterUtils < NessieUtils
 
     major_join = "LEFT JOIN student.student_majors ON #{sid} = student.student_majors.sid"
     joins << major_join if (filter.college&.any? || filter.major&.any? || filter.academic_divisions&.any? || filter.graduate_plans&.any?)
+
+    incomplete_join = "JOIN student.student_incompletes ON #{sid} = student.student_incompletes.sid"
+    joins << incomplete_join if filter.incomplete_grade&.any? || filter.incomplete_sched_grade
 
     intended_major_join = "LEFT JOIN student.intended_majors ON #{sid} = student.intended_majors.sid"
     joins << intended_major_join if filter.intended_major&.any?
