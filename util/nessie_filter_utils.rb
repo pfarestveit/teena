@@ -134,13 +134,16 @@ class NessieFilterUtils < NessieUtils
   end
 
   def self.incomplete_sched_cond(filter, conditions_list)
-    ranges = filter.incomplete_sched_grade&.map do |f|
-      "(student.student_incompletes.frozen IS FALSE
-       AND student.student_incompletes.status = 'I'
-       AND student.student_incompletes.lapse_date BETWEEN '#{f['min']}' AND '#{f['max']}'
-       AND student.student_incompletes.term_id > '2015')"
+    if filter.incomplete_sched_grade&.any?
+      ranges = filter.incomplete_sched_grade.map do |r|
+        "(student.student_incompletes.lapse_date BETWEEN '#{r['min']}' AND '#{r['max']}')"
+      end
+      cond = "student.student_incompletes.frozen IS FALSE
+          AND student.student_incompletes.status = 'I'
+          AND student.student_incompletes.term_id > '2015'
+          AND (#{ranges.join(' OR ')})"
+      conditions_list << cond
     end
-    conditions_list << "(#{ranges.join(' OR ')})" if ranges&.any?
   end
 
   def self.intended_major_cond(filter, conditions_list)
