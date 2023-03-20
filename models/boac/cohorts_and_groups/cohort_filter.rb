@@ -63,7 +63,10 @@ class CohortFilter
     @holds = test_data['holds']
     @incomplete_grade = (test_data['incomplete_grades'] && test_data['incomplete_grades'].map { |i| i['grade'] })
     @incomplete_sched_grade = if test_data['incomplete_sched_grades']&.any?
-                                [{"min" => Date.today.strftime('%Y-%m-%d'), "max" => (Date.today + 120).strftime('%Y-%m-%d')}]
+                                [
+                                  {"min" => Date.today.strftime('%Y-%m-%d'), "max" => (Date.today + 30).strftime('%Y-%m-%d')},
+                                  {"min" => (Date.today + 90).strftime('%Y-%m-%d'), "max" => (Date.today + 120).strftime('%Y-%m-%d')}
+                                ]
                               end
     @intended_major = (test_data['intended_major'] && test_data['intended_major'].map { |m| m['major'] })
     @level = (test_data['levels'] && test_data['levels'].map { |l| l['level'] })
