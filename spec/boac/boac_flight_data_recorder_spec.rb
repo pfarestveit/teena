@@ -195,7 +195,7 @@ unless ENV['NO_DEPS']
       it 'prevents the user from reaching an unauthorized department\'s data' do
         dept = (depts - director_depts).first
         @flight_data_recorder.load_page dept
-        @flight_data_recorder.wait_for_title 'Page not found'
+        @flight_data_recorder.wait_for_404
       end
     end
 
@@ -210,7 +210,7 @@ unless ENV['NO_DEPS']
 
       it 'prevents the user hitting the page' do
         @flight_data_recorder.load_page advisor.depts.first
-        @flight_data_recorder.wait_for_title 'Page not found'
+        @flight_data_recorder.wait_for_404
       end
 
       it 'offers no link in the header' do

@@ -958,6 +958,10 @@ unless ENV['NO_DEPS']
 
           before(:all) do
             @homepage.log_out
+            @homepage.dev_auth
+            @api_admin_page.reindex_notes
+            @homepage.load_page
+            @homepage.log_out
             @homepage.dev_auth @ce3_advisor
           end
 
@@ -1041,6 +1045,15 @@ unless ENV['NO_DEPS']
         end
 
         context 'and converted to private' do
+
+          before(:all) do
+            @student_page.log_out
+            @homepage.dev_auth
+            @api_admin_page.reindex_notes
+            @homepage.load_page
+            @homepage.log_out
+            @homepage.dev_auth @ce3_advisor
+          end
 
           it 'cannot be searched by body' do
             @homepage.type_non_note_simple_search_and_enter @note_2.body

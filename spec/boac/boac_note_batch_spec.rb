@@ -38,6 +38,7 @@ unless ENV['NO_DEPS']
         @curated_group_page = BOACGroupStudentsPage.new @driver
         @student_page = BOACStudentPage.new @driver
         @search_results_page = BOACSearchResultsPage.new @driver
+        @api_admin_page = BOACApiAdminPage.new @driver
 
         @homepage.dev_auth test.advisor
       end
@@ -175,11 +176,21 @@ unless ENV['NO_DEPS']
 
         context 'searching for newly created batch notes' do
 
+          before(:all) do
+            @student_page.log_out
+            @homepage.dev_auth
+            @api_admin_page.reindex_notes
+            @homepage.load_page
+            @homepage.log_out
+            @homepage.dev_auth test.advisor
+          end
+
           it 'can find them by student and subject' do
             student = @homepage.unique_students_in_batch(students, cohorts, curated_groups).last
             @homepage.set_new_note_id(batch_note_1, student)
+            @homepage.reopen_and_reset_adv_search
             @homepage.set_notes_student student
-            @homepage.enter_simple_search_and_hit_enter batch_note_1.subject
+            @homepage.enter_adv_search_and_hit_enter batch_note_1.subject
             expect(@search_results_page.note_in_search_result? batch_note_1).to be true
           end
         end

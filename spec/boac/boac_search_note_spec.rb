@@ -102,17 +102,17 @@ unless ENV['NO_DEPS']
               @homepage.type_note_appt_simple_search_and_enter note_search[:string]
 
               string_results_count = @search_results_page.note_results_count
-              it "returns results when searching with the first #{word_count} words in #{note_search[:test_case]}" do
+              it "returns results when searching with the last #{word_count} words in #{note_search[:test_case]}" do
                 expect(string_results_count).to be > 0
               end
-              it "shows no more than 20 results when searching with the first #{word_count} words in #{note_search[:test_case]}" do
+              it "shows no more than 20 results when searching with the last #{word_count} words in #{note_search[:test_case]}" do
                 expect(string_results_count).to be <= 20
               end
 
               if string_results_count > 0 && string_results_count < 20
                 @search_results_page.wait_for_note_search_result_rows
                 student_result_returned = @search_results_page.note_in_search_result?(note_search[:note])
-                it "returns a result when searching with the first #{word_count} words in #{note_search[:test_case]}" do
+                it "returns a result when searching with the last #{word_count} words in #{note_search[:test_case]}" do
                   expect(student_result_returned).to be true
                 end
 
@@ -159,7 +159,7 @@ unless ENV['NO_DEPS']
 
                   if topic_results_count < 20
                     topic_match = @search_results_page.note_in_search_result?(note_search[:note])
-                    it "returns a result when searching with the first #{word_count} words in note ID #{note_search[:note].id} and matching topic #{topic.name}" do
+                    it "returns a result when searching with the last #{word_count} words in note ID #{note_search[:note].id} and matching topic #{topic.name}" do
                       expect(topic_match).to be true
                     end
 
@@ -168,7 +168,7 @@ unless ENV['NO_DEPS']
                     @homepage.enter_adv_search note_search[:string]
                     @homepage.click_adv_search_button
                     topic_no_match = @search_results_page.note_in_search_result?(note_search[:note])
-                    it "returns no result when searching with the first #{word_count} words in note ID #{note_search[:note].id} and non-matching topic #{topic.name}" do
+                    it "returns no result when searching with the last #{word_count} words in note ID #{note_search[:note].id} and non-matching topic #{topic.name}" do
                       expect(topic_no_match).to be false
                     end
                   else
@@ -195,7 +195,7 @@ unless ENV['NO_DEPS']
 
                   if you_posted_results_count < 20
                     you_posted_match = @search_results_page.note_in_search_result?(note_search[:note])
-                    it "returns a result when searching with the first #{word_count} words in #{note_search[:test_case]} and posted by #{test_config.advisor.uid}" do
+                    it "returns a result when searching with the last #{word_count} words in #{note_search[:test_case]} and posted by #{test_config.advisor.uid}" do
                       expect(you_posted_match).to be true
                     end
                   else
@@ -210,7 +210,7 @@ unless ENV['NO_DEPS']
 
                   if anyone_posted_results_count < 20
                     anyone_posted_match = @search_results_page.note_in_search_result?(note_search[:note])
-                    it "returns a result when searching with the first #{word_count} words in #{note_search[:test_case]} and posted by anyone" do
+                    it "returns a result when searching with the last #{word_count} words in #{note_search[:test_case]} and posted by anyone" do
                       expect(anyone_posted_match).to be true
                     end
                   else
@@ -233,7 +233,7 @@ unless ENV['NO_DEPS']
 
                     if you_posted_results_count < 20
                       you_posted_match = @search_results_page.note_in_search_result?(note_search[:note])
-                      it "returns no result when searching with the first #{word_count} words in #{note_search[:test_case]} and posted by #{test_config.advisor.uid}" do
+                      it "returns no result when searching with the last #{word_count} words in #{note_search[:test_case]} and posted by #{test_config.advisor.uid}" do
                         expect(you_posted_match).to be_falsey
                       end
                     else
@@ -256,7 +256,7 @@ unless ENV['NO_DEPS']
 
                       if anyone_posted_results_count < 20
                         anyone_posted_match = @search_results_page.note_in_search_result?(note_search[:note])
-                        it "returns a result when searching with the first #{word_count} words in #{note_search[:test_case]} and posted by anyone" do
+                        it "returns a result when searching with the last #{word_count} words in #{note_search[:test_case]} and posted by anyone" do
                           expect(anyone_posted_match).to be true
                         end
                       else
@@ -281,7 +281,7 @@ unless ENV['NO_DEPS']
 
                       if author_results_count < 20
                         author_match = @search_results_page.note_in_search_result?(note_search[:note])
-                        it "returns a result when searching with the first #{word_count} words in note ID #{note_search[:note].id} and author name #{author_name}" do
+                        it "returns a result when searching with the last #{word_count} words in note ID #{note_search[:note].id} and author name #{author_name}" do
                           expect(author_match).to be true
                         end
                       else
@@ -301,7 +301,7 @@ unless ENV['NO_DEPS']
 
                       if other_author_results_count < 20
                         other_author_match = @search_results_page.note_in_search_result?(note_search[:note])
-                        it "returns no result when searching with the first #{word_count} words in note ID #{note_search[:note].id} and non-matching author name #{other_author_name}" do
+                        it "returns no result when searching with the last #{word_count} words in note ID #{note_search[:note].id} and non-matching author name #{other_author_name}" do
                           expect(other_author_match).to be false
                         end
                       else
@@ -327,7 +327,7 @@ unless ENV['NO_DEPS']
               student_results_count = @search_results_page.note_results_count
               if student_results_count < 20
                 student_match = @search_results_page.note_in_search_result?(note_search[:note])
-                it("returns a result when searching with the first #{word_count} words in note ID #{note_search[:note].id} and student #{search[:student].sis_id}") do
+                it("returns a result when searching with the last #{word_count} words in note ID #{note_search[:note].id} and student #{search[:student].sis_id}") do
                   expect(student_match).to be true
                 end
               else
@@ -350,7 +350,7 @@ unless ENV['NO_DEPS']
 
               if range_start_results_count < 20
                 range_start_match = @search_results_page.note_in_search_result?(note_search[:note])
-                it "returns a result when searching the first #{word_count} words in note ID #{note_search[:note].id} in a range starting with last updated date" do
+                it "returns a result when searching the last #{word_count} words in note ID #{note_search[:note].id} in a range starting with last updated date" do
                   expect(range_start_match).to be true
                 end
               else
@@ -364,7 +364,7 @@ unless ENV['NO_DEPS']
 
               if range_end_results_count < 20
                 range_end_match = @search_results_page.note_in_search_result?(note_search[:note])
-                it "returns a result when searching the first #{word_count} words in note ID #{note_search[:note].id} in a range ending with last updated date" do
+                it "returns a result when searching the last #{word_count} words in note ID #{note_search[:note].id} in a range ending with last updated date" do
                   expect(range_end_match).to be true
                 end
               else
@@ -378,7 +378,7 @@ unless ENV['NO_DEPS']
 
               if range_before_results_count < 20
                 range_before_match = @search_results_page.note_in_search_result?(note_search[:note])
-                it "returns no result when searching the first #{word_count} words in note ID #{note_search[:note].id} in a range before last updated date" do
+                it "returns no result when searching the last #{word_count} words in note ID #{note_search[:note].id} in a range before last updated date" do
                   expect(range_before_match).to be false
                 end
               else
@@ -392,7 +392,7 @@ unless ENV['NO_DEPS']
 
               if range_after_results_count < 20
                 range_after_match = @search_results_page.note_in_search_result?(note_search[:note])
-                it "returns no result when searching the first #{word_count} words in note ID #{note_search[:note].id} in a range after last updated date" do
+                it "returns no result when searching the last #{word_count} words in note ID #{note_search[:note].id} in a range after last updated date" do
                   expect(range_after_match).to be false
                 end
               else
