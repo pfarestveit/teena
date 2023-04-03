@@ -104,7 +104,7 @@ class BOACUtils < Utils
   def self.generate_note_search_query(student, note, opts={})
     note_test_case = "UID #{student.uid} note ID #{note.id}"
 
-    if note.source_body_empty || !note.body || note.body.empty?
+    if note.source_body_empty || !note.body || note.body.empty? || note.body.include?('http')
       if !note.subject || note.subject.empty?
         logger.warn "Skipping search test for #{note_test_case} because the note has no body or subject."
         return nil
@@ -118,7 +118,9 @@ class BOACUtils < Utils
       note_text = Nokogiri::HTML(note.body).text
     end
 
-    search_string = note_text.split[0..(search_word_count-1)].join(' ')
+    search_words = note_text.split
+    range = (search_words.length >= search_word_count) ? search_word_count : search_words.length
+    search_string = search_words[(0 - range)..-1].join(' ')
     {
       :note => note,
       :test_case => note_test_case,
@@ -655,6 +657,7 @@ class BOACUtils < Utils
             :created_date => Time.parse(r['created_at'].to_s).utc.localtime,
             :updated_date => Time.parse(r['updated_at'].to_s).utc.localtime,
             :deleted_date => (Time.parse(r['deleted_at'].to_s) if r['deleted_at']),
+            :set_date => (Time.parse(r['set_date'].to_s).utc.localtime if r['set_date']),
             :is_private => (r['is_private'] == 't')
         }
 

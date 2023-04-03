@@ -52,7 +52,7 @@ class BOACPaxManifestPage
   def set_first_auto_suggest(element, name)
     wait_for_textbox_and_type(element, name)
     sleep Utils.click_wait
-    wait_until(Utils.short_wait) { auto_suggest_option_elements.any? }
+    wait_until(Utils.medium_wait) { auto_suggest_option_elements.any? }
     sleep 2
     auto_suggest_option_elements.first.click
   end

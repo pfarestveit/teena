@@ -9,17 +9,17 @@ class RipleyRosterPhotosPage
 
   link(:roster_photos_link, text: 'Roster Photos')
 
-  text_area(:search_input, id: 'TBD')
-  select_list(:section_select, id: 'TBD')
-  button(:export_roster_link, id: 'TBD')
-  link(:print_roster_link, id: 'TBD')
+  text_field(:search_input, id: 'roster-search')
+  select_list(:section_select, id: 'section-select')
+  button(:export_roster_link, id: 'download-csv')
+  link(:print_roster_link, id: 'print-roster')
 
   div(:no_access_msg, id: 'TBD "You must be a teacher in this bCourses course to view official student rosters."')
   div(:no_students_msg, id: 'TBD "Students have not yet signed up for this class."')
 
-  elements(:roster_photo, :image, id: 'TBD')
-  elements(:roster_photo_placeholder, :image, id: 'TBD')
-  elements(:roster_sid, :span, id: 'TBD')
+  elements(:roster_photo, :image, xpath: '//img[contains(@src, "/cal1card-data/photos/")]')
+  elements(:roster_photo_placeholder, :image, xpath: '//img[contains(@src, "photo_unavailable")]')
+  elements(:roster_sid, :span, xpath: '//div[contains(@id, "student-id-")]')
 
   def embedded_tool_path(course)
     "/courses/#{course.site_id}/external_tools/#{Utils.canvas_rosters_tool}"
@@ -36,7 +36,7 @@ class RipleyRosterPhotosPage
 
   def load_standalone_tool(course)
     logger.info 'Loading standalone version of Roster Photos tool'
-    navigate_to "#{RipleyUtils.base_url}/canvas/rosters/#{course.site_id}"
+    navigate_to "#{RipleyUtils.base_url}/roster/#{course.site_id}"
   end
 
   def click_roster_photos_link
@@ -60,6 +60,12 @@ class RipleyRosterPhotosPage
     sleep 1
   end
 
+  def click_student_profile_link(course, student)
+    el = link_element(xpath: "//a[contains(@href, '#{course.site.id}/profile/#{student.canvas_id}')]")
+    wait_for_update_and_click el
+    wait_until(Utils.short_wait) { h1_element(xpath: "//h1[contains(text(), \"#{student.full_name}\")]") }
+  end
+
   def export_roster(course)
     logger.info "Downloading roster CSV for course ID #{course.site_id}"
     Utils.prepare_download_dir
@@ -73,6 +79,6 @@ class RipleyRosterPhotosPage
   end
 
   def all_sids
-    roster_sid_elements.map { |el| 'TBD' }
+    roster_sid_elements.map { |el| el.text.gsub('Student ID:', '').strip }
   end
 end

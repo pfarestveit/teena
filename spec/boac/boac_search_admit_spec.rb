@@ -61,47 +61,47 @@ unless ENV['DEPS']
           complete_first_results = @search_results_page.admit_in_search_result? admit
           it("finds CS ID #{admit.sis_id} with the complete first name") { expect(complete_first_results).to be true }
 
-          @search_results_page.click_edit_search
+          @search_results_page.open_adv_search
           @homepage.type_non_note_adv_search_and_enter admit.first_name[0..2]
           partial_first_results = @search_results_page.admit_in_search_result? admit
           it("finds CS ID #{admit.sis_id} with a partial first name") { expect(partial_first_results).to be true }
 
-          @search_results_page.click_edit_search
+          @search_results_page.open_adv_search
           @homepage.type_non_note_adv_search_and_enter admit.last_name
           complete_last_results = @search_results_page.admit_in_search_result? admit
           it("finds CS ID #{admit.sis_id} with the complete last name") { expect(complete_last_results).to be true }
 
-          @search_results_page.click_edit_search
+          @search_results_page.open_adv_search
           @homepage.type_non_note_adv_search_and_enter admit.last_name[0..2]
           partial_last_results = @search_results_page.admit_in_search_result? admit
           it("finds CS ID #{admit.sis_id} with a partial last name") { expect(partial_last_results).to be true }
 
-          @search_results_page.click_edit_search
+          @search_results_page.open_adv_search
           @homepage.type_non_note_adv_search_and_enter "#{admit.first_name} #{admit.last_name}"
           complete_first_last_results = @search_results_page.admit_in_search_result? admit
           it("finds CS ID #{admit.sis_id} with the complete first and last name") { expect(complete_first_last_results).to be true }
 
-          @search_results_page.click_edit_search
+          @search_results_page.open_adv_search
           @homepage.type_non_note_adv_search_and_enter "#{admit.last_name}, #{admit.first_name}"
           complete_last_first_results = @search_results_page.admit_in_search_result? admit
           it("finds CS ID #{admit.sis_id} with the complete last and first name") { expect(complete_last_first_results).to be true }
 
-          @search_results_page.click_edit_search
+          @search_results_page.open_adv_search
           @homepage.type_non_note_adv_search_and_enter "#{admit.first_name[0..2]} #{admit.last_name[0..2]}"
           partial_first_last_results = @search_results_page.admit_in_search_result? admit
           it("finds CS ID #{admit.sis_id} with a partial first and last name") { expect(partial_first_last_results).to be true }
 
-          @search_results_page.click_edit_search
+          @search_results_page.open_adv_search
           @homepage.type_non_note_adv_search_and_enter "#{admit.last_name[0..2]}, #{admit.first_name[0..2]}"
           partial_last_first_results = @search_results_page.admit_in_search_result? admit
           it("finds CS ID #{admit.sis_id} with a partial last and first name") { expect(partial_last_first_results).to be true }
 
-          @search_results_page.click_edit_search
+          @search_results_page.open_adv_search
           @homepage.type_non_note_adv_search_and_enter admit.sis_id.to_s[0..4]
           partial_sid_results = @search_results_page.admit_in_search_result? admit
           it("finds CS ID #{admit.sis_id} with a partial SID") { expect(partial_sid_results).to be true }
 
-          @search_results_page.click_edit_search
+          @search_results_page.open_adv_search
           @homepage.type_non_note_adv_search_and_enter admit.sis_id.to_s
           complete_sid_results = @search_results_page.admit_in_search_result? admit
           it("finds CS ID #{admit.sis_id} with the complete SID") { expect(complete_sid_results).to be true }

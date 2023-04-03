@@ -337,7 +337,7 @@ unless ENV['DEPS']
           @pax_manifest_page.click_become_user_link_element @add_edit_user
           @homepage.wait_for_title 'Home'
           @pax_manifest_page.hit_page_url
-          @pax_manifest_page.wait_for_title 'Page not found'
+          @pax_manifest_page.wait_for_404
         end
 
         it 'allows an admin to prevent a user from viewing Canvas data' do

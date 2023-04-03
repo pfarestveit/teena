@@ -8,33 +8,32 @@ class RipleyMailingListsPage
   include RipleyPages
 
   # Search
-  text_area(:site_id_input, id: 'TBD')
-  button(:get_list_button, id: 'TBD')
-  div(:bad_input_msg, id: 'TBD "Canvas site ID must be a numeric string."')
-  div(:not_found_msg, id: 'TBD "No bCourses site with ID"')
+  text_area(:site_id_input, id: 'page-site-mailing-list-site-id')
+  button(:get_list_button, id: 'btn-get-mailing-list')
+  div(:not_found_msg, xpath: '//div[contains(., "No bCourses site with ID")]')
 
   # Create list
-  span(:site_name, id: 'TBD')
-  div(:site_code, id: 'TBD')
-  div(:site_id, id: 'TBD')
-  link(:view_site_link, id: 'TBD "View course site"')
-  text_area(:list_name_input, id: 'TBD')
-  button(:register_list_button, id: 'TBD')
+  link(:site_name, id: 'mailing-list-course-site-name')
+  div(:site_code, id: '//div[text()=" Description: "]/../following-sibling::div')
+  div(:site_id, xpath: '//div[text()=" ID: "]/../following-sibling::div')
+  link(:view_site_link, id: 'mailing-list-course-site-name')
+  text_area(:list_name_input, id: 'mailing-list-name-input')
+  button(:register_list_button, id: 'btn-create-mailing-list')
   div(:list_name_error_msg, id: 'TBD "List name may contain only lowercase, numeric, underscore and hyphen characters."')
   div(:list_creation_error_msg, id: 'TBD "A Mailing List cannot be created for the site"')
   div(:list_name_taken_error_msg, id: 'TBD "is already in use by another Mailing List."')
 
   # View list
-  span(:list_address, id: 'TBD')
-  div(:list_membership_count, id: 'TBD')
-  div(:list_update_time, id: 'TBD')
-  link(:list_site_link, id: 'TBD')
+  span(:list_address, xpath: '(//div[text()=" Name: "]/../following-sibling::div)[2]')
+  div(:list_membership_count, id: 'mailing-list-member-count')
+  div(:list_update_time, id: 'mailing-list-membership-last-updated')
+  link(:list_site_link, id: 'mailing-list-court-site-name')
 
   # Update membership
-  button(:cancel_button, id: 'TBD')
-  button(:update_membership_button, id: 'TBD')
+  button(:cancel_button, id: 'btn-cancel')
+  button(:update_membership_button, id: 'btn-populate-mailing-list')
   div(:membership_updated_msg, id: 'TBD "Memberships were successfully updated."')
-  div(:no_membership_change_msg, id: 'TBD "No changes in membership were found."')
+  div(:no_membership_change_msg, xpath: '//div[text()="No changes made because no changes needed."]')
   div(:member_removed_msg, id: 'TBD')
   div(:member_added_msg, id: 'TBD')
 
@@ -53,17 +52,17 @@ class RipleyMailingListsPage
 
   def load_standalone_tool
     logger.info 'Loading standalone admin Mailing Lists tool'
-    navigate_to "#{RipleyUtils.base_url} TBD"
+    navigate_to "#{RipleyUtils.base_url}/mailing_list/select_course"
   end
 
   def search_for_list(search_term)
     logger.info "Searching for mailing list for course site ID #{search_term}"
     wait_for_element_and_type(site_id_input_element, search_term)
-    wait_for_update_and_click_js get_list_button_element
+    wait_for_update_and_click get_list_button_element
   end
 
   def site_not_found_msg(input)
-    div_element(xpath: " 'No bCourses site with ID \"#{input}\" was found.'")
+    div_element(xpath: "//div[contains(., 'No bCourses site with ID \"#{input}\" was found.')]")
   end
 
   def default_list_name(site)

@@ -847,7 +847,7 @@ unless ENV['NO_DEPS']
 
       it 'shows a Not Found page' do
         @cohort_page.navigate_to "#{BOACUtils.base_url}/cohort/#{test.searches.first.id}"
-        @cohort_page.wait_for_title 'Page not found'
+        @cohort_page.wait_for_404
       end
     end
 
