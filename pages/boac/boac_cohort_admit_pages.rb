@@ -28,7 +28,7 @@ module BOACCohortAdmitPages
     click_export_list
     click_export_ferpa_confirm
     csv_file_path = "#{Utils.download_dir}/#{cohort.name + '-' if cohort.id}students-#{Time.now.strftime('%Y-%m-%d')}_*.csv"
-    wait_until(20) { Dir[csv_file_path].any? }
+    wait_until(Utils.medium_wait) { Dir[csv_file_path].any? }
     CSV.table Dir[csv_file_path].first
   end
 

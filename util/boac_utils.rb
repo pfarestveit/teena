@@ -131,7 +131,7 @@ class BOACUtils < Utils
   def self.generate_appt_search_query(student, appt)
     test_case = "UID #{student.uid} appointment ID #{appt.id}"
     # If the detail is too short, then searches are useless
-    search_string = Nokogiri::HTML(appt.detail).text.split[0..(search_word_count - 1)].join(' ') if appt.detail.length >= 3
+    search_string = Nokogiri::HTML(appt.detail).text.split[0..2].join(' ') if appt.detail.length >= 3
     {
       :appt => appt,
       :test_case => test_case,
