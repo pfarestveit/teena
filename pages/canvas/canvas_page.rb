@@ -132,7 +132,7 @@ module Page
         (switch_to_canvas_iframe; junction_msg_el.exists?) || (switch_to_main_content; canvas_msg_el.exists?)
       end
     rescue
-      if tries -= 1.zero?
+      if (tries -= 1).zero?
         fail("Found neither Canvas nor Junction error")
       else
         retry

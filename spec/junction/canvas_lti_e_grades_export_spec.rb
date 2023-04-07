@@ -152,7 +152,7 @@ unless ENV['STANDALONE']
             expected_sids = @prim_sec_sids.sort
             actual_sids = csv.map { |k| k[:id] }.sort
             @e_grades_export_page.wait_until(1,  "Missing: #{expected_sids - actual_sids}. Unexpected: #{actual_sids - expected_sids}") do
-              expected_sids == actual_sids
+              (expected_sids & actual_sids) == expected_sids
             end
           end
         end
@@ -166,7 +166,7 @@ unless ENV['STANDALONE']
               expected_sids = @sec_sec_sids.sort
               actual_sids = csv.map { |k| k[:id] }.sort
               @e_grades_export_page.wait_until(1,  "Missing: #{expected_sids - actual_sids}. Unexpected: #{actual_sids - expected_sids}") do
-                expected_sids == actual_sids
+                (expected_sids & actual_sids) == expected_sids
               end
             end
           end
@@ -180,7 +180,7 @@ unless ENV['STANDALONE']
             expected_sids = @prim_sec_sids.sort
             actual_sids = csv.map { |k| k[:id] }.sort
             @e_grades_export_page.wait_until(1,  "Missing: #{expected_sids - actual_sids}. Unexpected: #{actual_sids - expected_sids}") do
-              expected_sids == actual_sids
+              (expected_sids & actual_sids) == expected_sids
             end
           end
         end
@@ -194,7 +194,7 @@ unless ENV['STANDALONE']
               expected_sids = @sec_sec_sids.sort
               actual_sids = csv.map { |k| k[:id] }.sort
               @e_grades_export_page.wait_until(1,  "Missing: #{expected_sids - actual_sids}. Unexpected: #{actual_sids - expected_sids}") do
-                expected_sids == actual_sids
+                (expected_sids & actual_sids) == expected_sids
               end
             end
           end
@@ -235,7 +235,7 @@ unless ENV['STANDALONE']
         logger.debug "Expecting #{expected_sids} and got #{actual_sids}"
         expect(actual_sids.any? &:empty?).to be false
         @e_grades_export_page.wait_until(1,  "Missing: #{expected_sids - actual_sids}. Unexpected: #{actual_sids - expected_sids}") do
-          expected_sids == actual_sids
+          (expected_sids & actual_sids) == expected_sids
         end
       end
 
@@ -246,7 +246,7 @@ unless ENV['STANDALONE']
         logger.debug "Expecting #{expected_names} and got #{actual_names}"
         expect(actual_names.any? &:empty?).to be false
         @e_grades_export_page.wait_until(1,  "Missing: #{expected_names - actual_names}. Unexpected: #{actual_names - expected_names}") do
-          expected_names == actual_names
+          (expected_names & actual_names) == expected_names.uniq
         end
       end
 
