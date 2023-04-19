@@ -84,6 +84,7 @@ module SquiggyPages
   # ERROR
 
   span(:lenny_and_squiggy, id: 'unauthorized-message')
+  span(:color_bars, id: 'error-message')
 
   # WHITEBOARDS
 

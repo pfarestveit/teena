@@ -7,7 +7,7 @@ unless ENV['NO_DEPS']
 
   test_cases = test.test_students.map do |student|
     asc_notes = NessieTimelineUtils.get_asc_notes student
-    boa_notes = BOACUtils.get_student_notes student
+    boa_notes = BOACUtils.get_student_notes(student).delete_if { |n| n.is_draft && n.advisor.uid != test.advisor.uid }
     data_sci_notes = NessieTimelineUtils.get_data_sci_notes student
     e_form_notes = NessieTimelineUtils.get_e_form_notes student
     ei_notes = NessieTimelineUtils.get_e_and_i_notes student

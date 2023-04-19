@@ -38,7 +38,7 @@ unless ENV['NO_DEPS']
 
       # Get enrollment data for test student for class page tests
       @homepage.dev_auth test.advisor
-      @analytics_page.get_data(@driver, test_student)
+      @analytics_page.get_data test_student
       @term = @analytics_page.terms.first
       @course = @analytics_page.courses(@term).first
 
@@ -218,7 +218,7 @@ unless ENV['NO_DEPS']
           missing_sids.each do |missing_sid|
             logger.info "Checking data for missing SID '#{missing_sid}'"
             student = group_4.members.find { |s| s.sis_id == missing_sid }
-            api_data = @analytics_page.get_data(@driver, student)
+            api_data = @analytics_page.get_data student
             unless api_data
               logger.info "Removing SID #{missing_sid} from the group since the student does not appear in Boa"
               missing_sids.delete missing_sid
@@ -366,7 +366,7 @@ unless ENV['NO_DEPS']
           missing_sids.each do |missing_sid|
             logger.info "Checking data for missing SID '#{missing_sid}'"
             student = group_4.members.find { |s| s.sis_id == missing_sid }
-            api_data = @analytics_page.get_data(@driver, student)
+            api_data = @analytics_page.get_data student
             unless api_data
               logger.info "Removing SID #{missing_sid} from the group since the student does not appear in Boa"
               missing_sids.delete missing_sid

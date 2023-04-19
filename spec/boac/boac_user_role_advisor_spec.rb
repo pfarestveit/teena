@@ -40,7 +40,7 @@ unless ENV['NO_DEPS']
       @asc_test_student = @test.students.find { |s| s.sis_id == asc_sids.first }
       @homepage.dev_auth @test_asc.advisor
       api_page = BOACApiStudentPage.new @driver
-      api_page.get_data(@driver, @asc_test_student)
+      api_page.get_data @asc_test_student
       @asc_test_student_sports = api_page.asc_teams
       @homepage.load_page
       @homepage.log_out
@@ -151,7 +151,7 @@ unless ENV['NO_DEPS']
 
         it 'cannot see COE profile data' do
           api_page = BOACApiStudentPage.new @driver
-          api_page.get_data(@driver, @coe_test_student)
+          api_page.get_data @coe_test_student
           api_page.coe_profile.each_value { |v| expect(v).to be_nil }
         end
       end
@@ -546,7 +546,7 @@ unless ENV['NO_DEPS']
 
         it 'cannot see COE profile data on the student API page' do
           api_page = BOACApiStudentPage.new @driver
-          api_page.get_data(@driver, @coe_test_student)
+          api_page.get_data @coe_test_student
           api_page.coe_profile.each_value { |v| expect(v).to be_nil }
         end
       end
@@ -938,14 +938,14 @@ unless ENV['NO_DEPS']
           it('shows the partial note excluding private data') { @student_page.verify_note(@note_1, @test_l_and_s.advisor) }
 
           it 'blocks API access to note body and attachment file names' do
-            @api_student_page.get_data(@driver, @student)
+            @api_student_page.get_data @student
             note = @api_student_page.notes.find { |n| n.id == @note_1.id }
             expect(note.body).to be_empty
             expect(note.attachments).to be_empty
           end
 
           it 'blocks API access to note attachment downloads' do
-            notes = BOACUtils.get_student_notes @student
+            notes = BOACUtils.get_student_notes(@student).delete_if { |n| n.is_draft && n.advisor.uid != @test_l_and_s.advisor.uid }
             note = notes.find { |n| n.id == @note_1.id }
             Utils.prepare_download_dir
             @api_notes_page.load_attachment_page note.attachments.first.id

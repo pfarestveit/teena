@@ -573,14 +573,14 @@ class BOACUtils < Utils
   # Returns the number of non-deleted notes
   # @return [String]
   def self.get_total_note_count
-    query = 'SELECT COUNT(*) FROM notes WHERE deleted_at IS NULL;'
+    query = 'SELECT COUNT(*) FROM notes WHERE deleted_at IS NULL AND is_draft IS FALSE;'
     Utils.query_pg_db_field(boac_db_credentials, query, 'count').first
   end
 
   # Returns the number of distinct non-deleted note authors
   # @return [String]
   def self.get_distinct_note_author_count
-    query = 'SELECT COUNT(DISTINCT author_uid) FROM notes WHERE deleted_at IS NULL;'
+    query = 'SELECT COUNT(DISTINCT author_uid) FROM notes WHERE deleted_at IS NULL AND is_draft IS FALSE;'
     Utils.query_pg_db_field(boac_db_credentials, query, 'count').first
   end
 
@@ -591,7 +591,8 @@ class BOACUtils < Utils
              FROM note_attachments
              JOIN notes ON notes.id = note_attachments.note_id
              WHERE note_attachments.deleted_at IS NULL
-               AND notes.deleted_at IS NULL;'
+               AND notes.deleted_at IS NULL
+               AND notes.is_draft IS FALSE;'
     Utils.query_pg_db_field(boac_db_credentials, query, 'count').first
   end
 
@@ -610,91 +611,41 @@ class BOACUtils < Utils
              FROM note_topics
              JOIN notes ON notes.id = note_topics.note_id
              WHERE note_topics.deleted_at IS NULL
-               AND notes.deleted_at IS NULL;'
+               AND notes.deleted_at IS NULL
+               AND notes.is_draft IS FALSE;'
     Utils.query_pg_db_field(boac_db_credentials, query, 'count').first
   end
 
-  def self.get_sids_with_notes_of_src_boa
+  def self.get_sids_with_notes_of_src_boa(drafts=false)
     query = "SELECT DISTINCT sid
              FROM notes
              WHERE body NOT LIKE '%QA Test%'
                AND deleted_at IS NULL
-               AND is_private IS FALSE"
+               AND is_private IS FALSE
+               AND is_draft IS #{+ drafts ? 'TRUE' : 'FALSE'}"
     results = Utils.query_pg_db(boac_db_credentials, query)
     results.map { |r| r['sid'] }
   end
 
-  # Returns a student's advising notes
-  # @param student [BOACUser]
-  # @return [Array<Note>]
   def self.get_student_notes(student)
     query = "SELECT * FROM notes WHERE sid = '#{student.sis_id}';"
-    results = Utils.query_pg_db(boac_db_credentials, query)
-    result_ids = results.map { |r| r['id'] }
-    notes_data = []
-
-    if result_ids.any?
-      attach_query = "SELECT * FROM note_attachments WHERE note_id IN (#{result_ids.join(',')});"
-      attach_results = Utils.query_pg_db(boac_db_credentials, attach_query)
-
-      topic_query = "SELECT note_id, topic FROM note_topics WHERE note_id IN (#{result_ids.join(',')});"
-      topic_results = Utils.query_pg_db(boac_db_credentials, topic_query)
-
-      notes_data = results.map do |r|
-        depts = BOACDepartments::DEPARTMENTS.select { |d| r['author_dept_codes'].include? d.code  }
-        advisor_data = {
-            :uid => r['author_uid'],
-            :full_name => r['author_name'],
-            :role => r['author_role'],
-            :depts => depts.map(&:name)
-        }
-
-        note_data = {
-            :id => r['id'],
-            :subject => r['subject'],
-            :body => (r['body'] && Nokogiri::HTML(r['body']).text).to_s.strip,
-            :advisor => BOACUser.new(advisor_data),
-            :created_date => Time.parse(r['created_at'].to_s).utc.localtime,
-            :updated_date => Time.parse(r['updated_at'].to_s).utc.localtime,
-            :deleted_date => (Time.parse(r['deleted_at'].to_s) if r['deleted_at']),
-            :set_date => (Time.parse(r['set_date'].to_s).utc.localtime if r['set_date']),
-            :is_private => (r['is_private'] == 't')
-        }
-
-        attachments = attach_results.select { |a| a['note_id'] == note_data[:id] }.map do |a|
-          file_name = a['path_to_attachment'].split('/').last
-          # Boa attachment file names should be prefixed with a timestamp, but some older test file names are not
-          visible_file_name = file_name[0..15].gsub(/(20)\d{6}(_)\d{6}(_)/, '').empty? ? file_name[16..-1] : file_name
-          Attachment.new({:id => a['id'], :file_name => visible_file_name, :deleted_at => a['deleted_at']})
-        end
-        note_data.merge!(:attachments => attachments)
-
-        topics = topic_results.select { |t| t['note_id'] == note_data[:id] }.map { |t| t['topic'] }
-        note_data.merge!(:topics => topics)
-      end
-    end
-
-    notes_data.map { |d| Note.new d }
-  end
-
-  def self.get_note_count_by_subject(note)
-    query = "SELECT COUNT(*) FROM notes WHERE subject = '#{note.subject}';"
     result = Utils.query_pg_db(boac_db_credentials, query)
-    res = result.getvalue(0, 0).to_i
-    logger.info "Note count is '#{res}'"
-    res
+    get_notes_from_pg_db_result result
   end
 
-  # Given a note subject, sets and returns the first matching note ID. The subject must be unique for this to be useful.
-  # @param note_subject [String]
-  # @return [Array<Integer>]
+  def self.get_notes_by_ids(ids)
+    query = "SELECT * FROM notes WHERE id IN (#{ids.join(',')})"
+    result = Utils.query_pg_db(boac_db_credentials, query)
+    get_notes_from_pg_db_result result
+  end
+
   def self.get_note_ids_by_subject(note_subject, student=nil)
     query = "SELECT id FROM notes WHERE subject = '#{note_subject}'#{+ ' AND sid = \'' + student.sis_id + '\'' if student};"
     Utils.query_pg_db_field(boac_db_credentials, query, 'id')
   end
 
   def self.get_note_sids_by_subject(note)
-    query = "SELECT sid FROM notes WHERE subject = '#{note.subject}' ORDER BY sid ASC;"
+    query = "SELECT sid FROM notes WHERE subject = '#{note.subject}' AND deleted_at IS NULL ORDER BY sid ASC;"
     sids = Utils.query_pg_db_field(boac_db_credentials, query, 'sid')
     logger.debug "Note SIDs are #{sids}"
     sids
@@ -833,4 +784,56 @@ class BOACUtils < Utils
     query_pg_db(boac_db_credentials, statement)
   end
 
+  private
+
+  def self.get_notes_from_pg_db_result(pg_result)
+    notes_data = []
+    result_ids = pg_result.map { |r| r['id'] }
+    if result_ids.any?
+      attach_query = "SELECT * FROM note_attachments WHERE note_id IN (#{result_ids.join(',')}) AND deleted_at IS NULL;"
+      attach_results = Utils.query_pg_db(boac_db_credentials, attach_query)
+
+      topic_query = "SELECT note_id, topic FROM note_topics WHERE note_id IN (#{result_ids.join(',')}) AND deleted_at IS NULL;"
+      topic_results = Utils.query_pg_db(boac_db_credentials, topic_query)
+
+      notes_data = pg_result.map do |r|
+        depts = BOACDepartments::DEPARTMENTS.select { |d| r['author_dept_codes'].include? d.code }
+        advisor_data = {
+          uid: r['author_uid'],
+          full_name: r['author_name'],
+          role: r['author_role'],
+          depts: depts.map(&:name)
+        }
+
+        note_data = {
+          id: r['id'],
+          subject: r['subject'],
+          body: (r['body'] && Nokogiri::HTML(r['body']).text).to_s.strip,
+          advisor: BOACUser.new(advisor_data),
+          created_date: Time.parse(r['created_at'].to_s).utc.localtime,
+          updated_date: Time.parse(r['updated_at'].to_s).utc.localtime,
+          deleted_date: (Time.parse(r['deleted_at'].to_s) if r['deleted_at']),
+          set_date: (Time.parse(r['set_date'].to_s).utc.localtime if r['set_date']),
+          is_draft: (r['is_draft'] == 't'),
+          is_private: (r['is_private'] == 't'),
+          student: (BOACUser.new(sis_id: r['sid']) if r['sid'])
+        }
+
+        attachments = attach_results.select { |a| a['note_id'] == note_data[:id] }.map do |a|
+          file_name = a['path_to_attachment'].split('/').last
+          # Boa attachment file names should be prefixed with a timestamp, but some older test file names are not
+          visible_file_name = file_name[0..15].gsub(/(20)\d{6}(_)\d{6}(_)/, '').empty? ? file_name[16..-1] : file_name
+          Attachment.new id: a['id'],
+                         file_name: visible_file_name,
+                         deleted_at: a['deleted_at']
+        end
+        note_data.merge! attachments: attachments
+
+        topics = topic_results.select { |t| t['note_id'] == note_data[:id] }.map { |t| t['topic'] }
+        note_data.merge! topics: topics
+      end
+    end
+
+    notes_data.map { |d| NoteBatch.new d }
+  end
 end

@@ -55,7 +55,7 @@ unless ENV['DEPS']
       @req_course_3 = @sub_cat_3.course_reqs[0]
 
       # Find student course data
-      @student_api_page.get_data(@driver, @student)
+      @student_api_page.get_data @student
       @unassigned_courses = @student_api_page.degree_progress_courses @degree_check
       logger.info "Completed courses: #{@unassigned_courses[0..4].map &:name}"
       @course = @unassigned_courses[0]

@@ -101,6 +101,15 @@ Load test data.
 """
 
 
+def _row_to_note_draft(row):
+    return {
+        'id': row['note_id'],
+        'subject': row['subject'],
+        'body': row['body'],
+        'sid': row['sid'],
+    }
+
+
 def _row_to_cohort(row):
     return {
         'id': row['cohort_id'],
@@ -121,20 +130,43 @@ class TestData:
     search_phrases = ['meet', 'Angh', 'Sandeep', 'June', 'Math', 'Appointment', 'PUB', ',', 'History']
 
     users = []
-    user_cohort_results = BoaRds.fetch("""
+    user_draft_note_results = BoaRds.fetch("""
+        SELECT au.uid AS uid, notes.id AS note_id, notes.body, notes.subject, notes.sid
+        FROM authorized_users au
+        JOIN notes on notes.author_uid = au.uid
+        WHERE au.deleted_at IS NULL
+        AND au.can_access_canvas_data IS TRUE
+        AND notes.is_draft IS TRUE
+        AND notes.deleted_at IS NULL"""
+    )
+    for uid, rows in groupby(user_draft_note_results, lambda x: x['uid']):
+        users.append({
+            'uid': uid,
+            'note_drafts': [_row_to_note_draft(r) for r in rows],
+        })
+
+    cohort_users = []
+    uids = ''
+    for i in [u['uid'] for u in users]:
+        uids += f'\'{i}\', '
+    user_cohort_results = BoaRds.fetch(f"""
         SELECT au.uid AS uid, cf.id AS cohort_id, cf.student_count, cf.filter_criteria
         FROM authorized_users au
         JOIN cohort_filters cf on cf.owner_id = au.id
         WHERE au.deleted_at IS NULL
-        AND au.is_admin IS TRUE
+        AND au.uid IN ({uids[:-2]})
         ORDER BY uid"""
     )
-
     for uid, rows in groupby(user_cohort_results, lambda x: x['uid']):
-        users.append({
+        cohort_users.append({
             'uid': uid,
             'cohorts': [_row_to_cohort(r) for r in rows],
         })
+
+    for u in users:
+        for c in cohort_users:
+            if u['uid'] == c['uid']:
+                u.update(c)
 
 
 """
@@ -164,6 +196,7 @@ class BoaTaskSet(TaskSet):
     def login(self, uid=None):
         if uid is None:
             uid = self.locust.user['uid']
+        print(f"Test UID {uid}")
         self.client.post(
             '/api/auth/dev_auth_login',
             json={
@@ -182,6 +215,7 @@ class BoaTaskSet(TaskSet):
         self.client.get('/api/service_announcement')
         self.client.get('/api/note_templates/my')
         self.client.get('/api/topics/all?includeDeleted=false')
+        self.client.get('/api/notes/my_drafts')
 
     @task(2)
     def search(self):
@@ -197,10 +231,12 @@ class BoaTaskSet(TaskSet):
 
     @task(3)
     def load_cohort_page(self):
-        cohort = sample(self.locust.user['cohorts'])
-        self.client.get(f"/api/cohort/{cohort['id']}", name='/api/cohort/[id]')
-        self.client.post('/api/cohort/filter_options/me', json={'existingFilters': []})
-        self.client.post('/api/cohort/translate_to_filter_options/me', json={'filterCriteria': cohort['filter_criteria']})
+        try:
+            cohort = sample(self.locust.user['cohorts'])
+            self.client.get(f"/api/cohort/{cohort['id']}", name='/api/cohort/[id]')
+            self.client.post('/api/cohort/filter_options/me', json={'existingFilters': []})
+            self.client.post('/api/cohort/translate_to_filter_options/me', json={'filterCriteria': cohort['filter_criteria']})
+        except: KeyError
 
     @task(4)
     def load_student_page(self):
@@ -208,8 +244,22 @@ class BoaTaskSet(TaskSet):
         self.client.get(f"/api/student/by_uid/{student['uid']}", name='/api/student/by_uid/[uid]')
 
     @task(5)
-    def poll_drop_in_waitlist(self):
-        self.client.get('/api/appointments/waitlist/QCADV')
+    def update_drafts(self):
+        note = sample(self.locust.user['note_drafts'])
+        self.client.post(
+            '/api/notes/update',
+            data={
+                'id': str(note['id']),
+                'body': (note['body'] or ''),
+                'cohortIds': [],
+                'curatedGroupIds': [],
+                'isDraft': 'True',
+                'isPrivate': 'False',
+                'sids': (note['sid'] or ''),
+                'subject': (note['subject'] or ''),
+            },
+            files={},
+        )
 
 
 """

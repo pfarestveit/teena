@@ -20,9 +20,9 @@ begin
   whiteboards.each do |whiteboard|
     @whiteboards.switch_to_window_handle whiteboard.window_handle
     SquiggyUtils.load_test_reps.times do |i|
-      @whiteboards.add_squiggle(10*i, 10*i)
-      @whiteboards.add_shape(20*i, 20*i)
-      @whiteboards.add_url_and_drag('https://news.google.com', 30*i, 30*i)
+      @whiteboards.add_squiggle(1*i, 1*i)
+      @whiteboards.add_shape(2*i, 2*i)
+      @whiteboards.add_url_and_drag('https://news.google.com', 3*i, 3*i)
     end
     @whiteboards.click_export_button
     @whiteboards.click_download_as_image_button

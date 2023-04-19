@@ -67,7 +67,7 @@ unless ENV['DEPS']
       @degree_check_create_page.create_new_degree_check(@degree_check)
 
       # Find student course data
-      @student_api_page.get_data(@driver, @student)
+      @student_api_page.get_data @student
       @in_progress_courses = @student_api_page.degree_progress_in_prog_courses @degree_check
       @unassigned_courses = @student_api_page.degree_progress_courses @degree_check
       @completed_course_0 = @unassigned_courses[0]

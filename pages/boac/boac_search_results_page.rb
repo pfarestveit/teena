@@ -37,6 +37,10 @@ class BOACSearchResultsPage
     div_element(id: 'page-header-no-results')
   end
 
+  def wait_for_no_results
+    no_results_msg.when_visible Utils.short_wait
+  end
+
   def click_edit_search
     logger.info 'Clicking edit search button'
     hit_escape

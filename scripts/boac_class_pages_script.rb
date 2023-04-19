@@ -39,7 +39,7 @@ begin
 
       sleep 3 unless BOACUtils.base_url.include? 'boa-'
       api_user_page = BOACApiStudentPage.new @driver
-      api_user_page.get_data(@driver, student)
+      api_user_page.get_data student
 
       terms = api_user_page.terms
       if terms.any?
@@ -111,7 +111,7 @@ begin
                             # Load the student's data and find the matching course
                             sleep 3 unless BOACUtils.base_url.include? 'boa-'
                             student_api = BOACApiStudentPage.new @driver
-                            student_api.get_data(@driver, student)
+                            student_api.get_data student
                             term = student_api.terms.find { |t| student_api.term_name(t) == term_name }
                             course = student_api.courses(term).find { |c| student_api.course_display_name(c) == api_course[:code] }
                             if course

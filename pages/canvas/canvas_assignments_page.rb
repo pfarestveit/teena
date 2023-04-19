@@ -28,7 +28,7 @@ module Page
     button(:save_assignment_button, xpath: '//button[contains(.,"Save")]')
     h1(:assignment_title_heading, class: 'title')
     button(:religious_holiday_button, xpath: '//button[contains(., "Religious Holidays Policy")]')
-    link(:religious_holiday_link, text: 'the Religious Holiday and Religious Creed Policy and list of religious and cultural holidays')
+    link(:religious_holiday_link, xpath: '//a[contains(., "Religious Holiday and Religious Creed Policy")]')
 
     def load_new_assignment_page(course)
       navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/assignments/new"

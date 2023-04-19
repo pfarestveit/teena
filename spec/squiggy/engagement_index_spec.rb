@@ -362,7 +362,7 @@ describe 'The Engagement Index' do
     [teacher, student_3].each do |user|
 
       it "prevents #{user.role} UID #{user.uid} from reaching the Engagement Index if the user has been removed from the course site" do
-        @canvas.masquerade_as(user, test.course)
+        @canvas.masquerade_as user
         @engagement_index.navigate_to test.course.engagement_index_url
         @canvas.access_denied_msg_element.when_visible Utils.short_wait
       end

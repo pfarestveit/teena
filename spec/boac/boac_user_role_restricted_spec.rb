@@ -44,7 +44,7 @@ unless ENV['DEPS']
       context 'visiting a student page' do
 
         before(:all) do
-          @api_student_page.get_data(@driver, @test_student)
+          @api_student_page.get_data @test_student
           @student_page.load_page @test_student
         end
 
@@ -70,7 +70,7 @@ unless ENV['DEPS']
         end
 
         it 'cannot see bCourses data in the API response' do
-          @api_student_page.get_data(@driver, @test_student)
+          @api_student_page.get_data @test_student
           @api_student_page.terms.each do |term|
             term['enrollments'].each do |course|
               expect(course['canvasSites']).to be_empty
@@ -239,7 +239,7 @@ unless ENV['DEPS']
       context 'visiting a student page' do
 
         before(:all) do
-          @api_student_page.get_data(@driver, @test_student)
+          @api_student_page.get_data @test_student
           @student_page.load_page @test_student
         end
 
@@ -264,7 +264,7 @@ unless ENV['DEPS']
         end
 
         it 'cannot see bCourses data in the API response' do
-          @api_student_page.get_data(@driver, @test_student)
+          @api_student_page.get_data @test_student
           @api_student_page.terms.each do |term|
             term['enrollments'].each do |course|
               expect(course['canvasSites']).to be_empty

@@ -6,7 +6,7 @@ class BOACApiStudentPage
   include Logging
   include Page
 
-  def get_data(driver, user)
+  def get_data(user)
     logger.info "Getting data for UID #{user.uid}"
     navigate_to "#{BOACUtils.api_base_url}/api/student/by_uid/#{user.uid}"
     parse_json

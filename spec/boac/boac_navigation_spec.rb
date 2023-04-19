@@ -24,7 +24,7 @@ unless ENV['DEPS']
         begin
 
           api_user_page = BOACApiStudentPage.new @driver
-          api_user_page.get_data(@driver, student)
+          api_user_page.get_data student
 
           terms = api_user_page.terms
           if terms.any?

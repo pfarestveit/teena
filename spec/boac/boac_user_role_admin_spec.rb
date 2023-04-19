@@ -142,7 +142,7 @@ unless ENV['NO_DEPS']
         filter.set_custom_filters asc_team: [Squad::WSF]
         asc_sids = NessieFilterUtils.get_cohort_result(test, filter)
         asc_student = test.students.find { |s| s.sis_id == asc_sids.first }
-        @api_student_page.get_data(@driver, asc_student)
+        @api_student_page.get_data asc_student
         expect(@api_student_page.asc_profile).not_to be_nil
       end
 
@@ -151,7 +151,7 @@ unless ENV['NO_DEPS']
         filter.set_custom_filters coe_gender: ['F']
         coe_sids = NessieFilterUtils.get_cohort_result(test, filter)
         coe_student = test.students.find { |s| s.sis_id == coe_sids.first }
-        @api_student_page.get_data(@driver, coe_student)
+        @api_student_page.get_data coe_student
         expect(@api_student_page.coe_profile).not_to be_nil
       end
     end
