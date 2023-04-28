@@ -272,6 +272,77 @@ module BOACPages
     sleep 3
   end
 
+  ### SIDEBAR - DRAFT NOTES ###
+
+  link(:draft_notes_link, id: 'link-to-draft-notes')
+
+  def draft_note_count
+    span_element(id: 'draft-note-count').text
+  end
+
+  def click_draft_notes
+    logger.info 'Clicking link to Draft Notes page'
+    wait_for_update_and_click_js draft_notes_link_element
+  end
+
+  def wait_for_draft_note(note, manual_update=false)
+    hit_tab
+    begin
+      tries ||= (manual_update ? 1 : 3)
+      note.id ||= BOACUtils.get_note_ids_by_subject(note.subject).first
+      wait_until(1) { note.id }
+      saved = BOACUtils.get_notes_by_ids([note.id]).first
+      note.created_date = saved.created_date
+      saved
+    rescue => e
+      tries -= 1
+      if tries.zero?
+        logger.error e.message
+        fail
+      else
+        sleep 5
+        retry
+      end
+    end
+  end
+
+  def wait_for_draft_note_update(note, manual_update=false)
+    tries ||= (manual_update ? 2 : 8)
+    saved_note = BOACUtils.get_notes_by_ids([note.id]).first
+    note.subject ||= '[DRAFT NOTE]'
+    wait_until(1, "Tries #{tries}, expected subject #{note.subject}, got #{saved_note.subject}.") { saved_note.subject == note.subject }
+    wait_until(1, "Tries #{tries}, expected body #{note.body}, got #{saved_note.body}.") { saved_note.body.to_s == note.body.to_s }
+    wait_until(1, "Tries #{tries}, expected UID #{note.advisor.uid}, got #{saved_note.advisor.uid}") { saved_note.advisor.uid == note.advisor.uid }
+    wait_until(1, "Tries #{tries}, expected draft #{note.is_draft}, got #{saved_note.is_draft}") { saved_note.is_draft == note.is_draft }
+    wait_until(1, "Tries #{tries}, expected private #{note.is_private}, got #{saved_note.is_private}") { saved_note.is_private == note.is_private }
+    wait_until(1, "Tries #{tries}, expected created #{note.created_date&.strftime('%Y/%m/%d')}, got #{saved_note.created_date&.strftime('%Y/%m/%d')}") do
+      saved_note.created_date&.strftime('%Y/%m/%d') == note.created_date&.strftime('%Y/%m/%d')
+    end
+    wait_until(1, "Tries #{tries}, expected set #{note.set_date&.strftime('%Y/%m/%d')}, got #{saved_note.set_date&.strftime('%Y/%m/%d')}") do
+      saved_note.set_date&.strftime('%Y/%m/%d') == note.set_date&.strftime('%Y/%m/%d')
+    end
+    wait_until(1, "Tries #{tries}, expected attachments #{note.attachments.map(&:file_name).sort}, got #{saved_note.attachments.map(&:file_name).sort}") do
+      saved_note.attachments.map(&:file_name).sort == note.attachments.map(&:file_name).sort
+    end
+    wait_until(1, "Tries #{tries}, expected topics #{note.topics.map(&:name).sort}, got #{saved_note.topics.sort}") do
+      saved_note.topics.sort == note.topics.map(&:name).sort
+    end
+    if note.instance_of? NoteBatch
+      wait_until(1, "Tries #{tries}, expected SID #{note.students.first&.sis_id}, got #{saved_note.student&.sis_id}") do
+        saved_note.student&.sis_id == note.students.first&.sis_id
+      end
+    end
+  rescue => e
+    tries -= 1
+    if tries.zero?
+      logger.error e.message
+      fail e.message
+    else
+      sleep 5
+      retry
+    end
+  end
+
   ### STUDENT ###
 
   # BOA route (URI, relative path) to student profile page

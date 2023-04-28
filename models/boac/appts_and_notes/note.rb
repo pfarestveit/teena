@@ -1,6 +1,7 @@
 class Note < NoteTemplate
 
-  attr_accessor :source_body_empty,
+  attr_accessor :is_draft,
+                :source_body_empty,
                 :set_date
 
   def initialize(note_data)

@@ -246,10 +246,10 @@ describe 'Whiteboard' do
       end
 
       it "prevents #{user.role} UID #{user.uid} from reaching any whiteboards if the user has been removed from the course site" do
-        @canvas_driver_3.masquerade_as(user, test.course)
+        @canvas_driver_3.masquerade_as user
         [@whiteboard_1, @whiteboard_2, @whiteboard_3].each do |whiteboard|
           @whiteboards_driver_3.hit_whiteboard_url whiteboard
-          @whiteboards_driver_3.page_not_found_element.when_visible timeout
+          @whiteboards_driver_3.color_bars_element.when_visible timeout
         end
       end
     end

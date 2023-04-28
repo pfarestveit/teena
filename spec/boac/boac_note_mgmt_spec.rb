@@ -80,6 +80,7 @@ unless ENV['NO_DEPS']
           it 'can cancel an unsaved new note' do
             @student_page.click_cancel_new_note
             @student_page.click_create_new_note
+            @student_page.wait_for_note_body_editor
             @student_page.wait_for_element_and_type(@student_page.note_body_text_area_elements[1], 'An edit to forget')
             @student_page.click_cancel_new_note
             @student_page.confirm_delete_or_discard

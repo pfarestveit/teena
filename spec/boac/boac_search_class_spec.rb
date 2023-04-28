@@ -22,7 +22,7 @@ unless ENV['DEPS']
 
         begin
           api_student_page = BOACApiStudentPage.new @driver
-          api_student_page.get_data(@driver, student)
+          api_student_page.get_data student
           term = api_student_page.terms.find { |t| api_student_page.term_name(t) == BOACUtils.term }
 
           if term

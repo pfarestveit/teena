@@ -420,6 +420,13 @@ class BOACTestConfig < TestConfig
     BOACUtils.set_advisor_data @advisor
   end
 
+  def note_drafts
+    set_note_attachments
+    set_base_configs(dept=BOACDepartments::ZCEEE)
+    set_default_cohort
+    BOACUtils.set_advisor_data @advisor
+  end
+
   # Config for testing batch note creation
   def batch_note_management
     set_note_attachments

@@ -84,7 +84,7 @@ begin
     begin
       sleep 3 unless BOACUtils.base_url.include? 'boa-'
       api_student_data = BOACApiStudentPage.new @driver
-      api_student_data.get_data(@driver, student)
+      api_student_data.get_data student
 
       api_sis_profile_data = api_student_data.sis_profile_data
       graduations = api_student_data.graduations

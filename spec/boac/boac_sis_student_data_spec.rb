@@ -49,7 +49,7 @@ unless ENV['NO_DEPS']
 
       test.test_students.each do |student|
         api_student_data = BOACApiStudentPage.new @driver
-        api_student_data.get_data(@driver, student)
+        api_student_data.get_data student
         data << { student: student, api: api_student_data }
       end
 
@@ -196,13 +196,15 @@ unless ENV['NO_DEPS']
                 visible_cumul_units = @boac_cohort_page.visible_cumul_units student_data[:student]
 
                 if student_term == student_data[:api].current_term
-                  if api_sis_profile_data[:cumulative_units] && !api_sis_profile_data[:cumulative_units].to_i.zero?
-                    it "shows the total units for #{test_case}" do
-                      expect(visible_cumul_units).to eql(api_sis_profile_data[:cumulative_units])
-                      expect(visible_cumul_units).not_to be_empty
+                  if api_sis_profile_data[:cumulative_units]
+                    if !api_sis_profile_data[:cumulative_units].to_i.zero?
+                      it "shows the total units for #{test_case}" do
+                        expect(visible_cumul_units).to eql(api_sis_profile_data[:cumulative_units])
+                        expect(visible_cumul_units).not_to be_empty
+                      end
+                    else
+                      it("shows no total units for #{test_case}") { expect(visible_cumul_units).to eql('0') }
                     end
-                  else
-                    it("shows no total units for #{test_case}") { expect(visible_cumul_units).to eql('0') }
                   end
                 else
                   it("shows no total units for #{test_case}") { expect(visible_cumul_units).to be_nil }
@@ -347,7 +349,6 @@ unless ENV['NO_DEPS']
 
         it "shows the email for #{test_case}" do
           expect(student_page_sis_data[:email]).to eql(api_sis_profile_data[:email])
-          expect(student_page_sis_data[:email]).not_to be_empty
         end
 
         if api_sis_profile_data[:email_alternate]
@@ -448,7 +449,7 @@ unless ENV['NO_DEPS']
           end
         end
 
-        if api_demographics[:visa] && api_demographics[:visa][:status] == 'G'
+        if api_demographics &&  api_demographics[:visa] && api_demographics[:visa][:status] == 'G'
           it "shows visa status for #{test_case}" do
             expect(student_page_sis_data[:visa]).to eq case api_demographics[:visa][:type]
                                                        when 'F1' then

@@ -53,7 +53,7 @@ unless ENV['DEPS']
 
       # Find student course data
       @homepage.dev_auth test.advisor
-      @student_api_page.get_data(@driver, @student)
+      @student_api_page.get_data @student
 
       @homepage.load_page
       @homepage.click_degree_checks_link

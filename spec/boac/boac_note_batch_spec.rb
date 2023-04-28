@@ -134,7 +134,7 @@ unless ENV['NO_DEPS']
             expected_student_count = @batch_1_expected_students.length
             @homepage.batch_note_student_count_alert_element.when_present Utils.short_wait
             @homepage.wait_until(Utils.short_wait, "Expected #{expected_student_count} notes, got #{@homepage.batch_note_student_count_alert}") do
-              @homepage.batch_note_student_count_alert.include? "Note will be added to #{expected_student_count}"
+              @homepage.batch_note_student_count_alert.include? "This note will be attached to #{expected_student_count}"
             end
           end
 

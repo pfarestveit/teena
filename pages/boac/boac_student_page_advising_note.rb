@@ -30,6 +30,7 @@ module BOACStudentPageAdvisingNote
   span(:notes_collapsed_msg, xpath: '//span[text()="Expand all notes"]')
   link(:notes_download_link, id: 'download-notes-link')
   elements(:note_msg_row, :div, xpath: '//div[contains(@id,"timeline-tab-note-message")]')
+  span(:draft_note_flag, xpath: '//span[text()="Draft"]')
 
   # Clicks the Notes tab and expands the list of notes
   def show_notes
@@ -91,55 +92,6 @@ module BOACStudentPageAdvisingNote
     link_element(id: "note-#{note.id}-author-name")
   end
 
-  # Attachments
-
-  element(:sorry_no_attachment_msg, xpath: '//body[text()="Sorry, attachment not available."]')
-
-  # Returns the file input for adding an an attachment to an existing note
-  # @param note [Note]
-  # @return [Element]
-  def existing_note_attachment_input(note)
-    text_area_element(xpath: "//div[@id='note-#{note.id}-attachment-dropzone']/input")
-  end
-
-  # Returns the delete button for an attachment on an existing note
-  # @param note [Note]
-  # @param attachment [Attachment]
-  # @return [Element]
-  def existing_note_attachment_delete_button(note, attachment)
-    list_item_element(xpath: "//div[@id=\"note-#{note.id}-outer\"]//li[contains(., \"#{attachment.file_name}\")]//button")
-  end
-
-  # Adds a attachments to an existing note
-  # @param note [Note]
-  # @param attachments [Array<Attachment>]
-  def add_attachments_to_existing_note(note, attachments)
-    attachments.each do |attach|
-      logger.debug "Adding attachment '#{attach.file_name}' to note ID #{note.id}"
-      existing_note_attachment_input(note).when_present 1
-      existing_note_attachment_input(note).send_keys Utils.asset_file_path(attach.file_name)
-      existing_note_attachment_delete_button(note, attach).when_present Utils.short_wait
-      sleep Utils.click_wait
-      note.updated_date = Time.now
-      note.attachments << attach
-    end
-  end
-
-  # Removes attachments from an existing note
-  # @param note [Note]
-  # @param attachments [Array<Attachment>]
-  def remove_attachments_from_existing_note(note, attachments)
-    attachments.each do |attach|
-      logger.info "Removing attachment '#{attach.file_name}' from note ID #{note.id}"
-      wait_for_update_and_click existing_note_attachment_delete_button(note, attach)
-      confirm_delete_or_discard
-      existing_note_attachment_delete_button(note, attach).when_not_visible Utils.short_wait
-      note.attachments.delete attach
-      attach.deleted_at = Time.now
-      note.updated_date = Time.now
-    end
-  end
-
   # Metadata
 
   # Returns the data visible when a note is collapsed
@@ -149,10 +101,12 @@ module BOACStudentPageAdvisingNote
     subject_el = span_element(id: "note-#{note.id}-subject")
     category_el = span_element(id: "note-#{note.id}-category-closed")
     date_el = div_element(id: "collapsed-note-#{note.id}-created-at")
+    draft_el = span_element(id: "note-#{note.id}-is-draft")
     {
       subject: (subject_el.attribute('innerText') if subject_el.exists?),
       category: (category_el.text if category_el.exists?),
-      created_date: (date_el.text.gsub('Last updated on', '').strip if date_el.exists?)
+      created_date: (date_el.text.gsub('Last updated on', '').strip if date_el.exists?),
+      is_draft: draft_el.exists?
     }
   end
 
@@ -307,6 +261,8 @@ module BOACStudentPageAdvisingNote
 
   #### EDIT / DELETE ####
 
+  div(:draft_note_warning, xpath: '//div[text()=" You are editing a draft note. "]')
+
   # Returns the edit note button element for a given note
   # @param note [Note]
   # @return [Element]
@@ -353,46 +309,6 @@ module BOACStudentPageAdvisingNote
     wait_for_update_and_click delete_note_button(note)
     confirm_delete_or_discard
     note.deleted_date = Time.now
-  end
-
-  # Subject
-
-  text_area(:edit_note_subject_input, id: 'edit-note-subject')
-  span(:subj_required_msg, xpath: '//span[text()="Subject is required"]')
-
-  # Enters the subject text for an edit to an existing note
-  # @param note [Note]
-  def enter_edit_note_subject(note)
-    logger.debug "Entering edited note subject '#{note.subject}'"
-    wait_for_element_and_type(edit_note_subject_input_element, note.subject)
-  end
-
-  # Contact Type
-
-  def contact_type_radio(note)
-    if note.type
-      radio_button_element(xpath: "//input[@type='radio'][@value='#{note.type}']/..")
-    else
-      radio_button_element(xpath: '//input[@id="contact-option-none-radio-button"]/..')
-    end
-  end
-
-  def select_contact_type(note)
-    logger.debug "Selecting contact type '#{note.type}'"
-    contact_type_radio(note).click
-  end
-
-  # Set Date
-
-  text_field(:set_date_input, id: 'manually-set-date-input')
-
-  def enter_set_date(note)
-    logger.debug "Entering edited note set date '#{note.set_date}'"
-    wait_for_update_and_click set_date_input_element
-    50.times { hit_backspace }
-    50.times { hit_delete }
-    set_date_input_element.send_keys note.set_date.strftime('%m/%d/%Y') if note.set_date
-    3.times { hit_tab }
   end
 
   # Save
