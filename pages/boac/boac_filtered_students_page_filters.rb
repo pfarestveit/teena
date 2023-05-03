@@ -67,8 +67,15 @@ module BOACFilteredStudentsPageFilters
       'GPA (Cumulative)', 'GPA (Last Term)', 'Last Name', 'Family Dependents', 'Student Dependents', 'Incomplete Scheduled Grades'
     ].include? filter_option
       logger.info "Filter sub-option is #{filter_sub_option}"
-      wait_for_element_and_type(filter_range_min_input_element, filter_sub_option['min'])
-      wait_for_element_and_type(filter_range_max_input_element, filter_sub_option['max'])
+      if filter_option == 'Incomplete Scheduled Grades'
+        min = Date.parse(filter_sub_option['min']).strftime('%m/%d/%Y')
+        max = Date.parse(filter_sub_option['max']).strftime('%m/%d/%Y')
+      else
+        min = filter_sub_option['min']
+        max = filter_sub_option['max']
+      end
+      wait_for_element_and_type(filter_range_min_input_element, min)
+      wait_for_element_and_type(filter_range_max_input_element, max)
 
     # All others require a selection
     else

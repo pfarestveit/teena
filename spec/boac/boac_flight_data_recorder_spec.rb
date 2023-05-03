@@ -85,7 +85,7 @@ unless ENV['NO_DEPS']
         end
       end
 
-      depts.each do |dept|
+      depts.reject { |d| d.name == 'Other' }.each do |dept|
 
         it "allows the user to filter users by #{dept.name}" do
           @flight_data_recorder.select_dept_report dept

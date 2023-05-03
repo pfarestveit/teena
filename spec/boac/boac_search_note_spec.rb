@@ -35,7 +35,9 @@ unless ENV['NO_DEPS']
           note_searches = []
           expected_asc_notes = NessieTimelineUtils.get_asc_notes student
           expected_boa_notes = BOACUtils.get_student_notes student
-          expected_boa_notes.delete_if { |n| n.is_draft && n.advisor.uid != test_config.advisor.uid }
+          expected_boa_notes.delete_if do |n|
+            (n.is_draft && n.advisor.uid != test_config.advisor.uid) || n.is_private
+          end
           expected_data_notes = NessieTimelineUtils.get_data_sci_notes student
           expected_ei_notes = NessieTimelineUtils.get_e_and_i_notes student
           expected_history_notes = NessieTimelineUtils.get_history_notes student

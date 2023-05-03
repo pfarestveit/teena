@@ -69,7 +69,7 @@ module BOACStudentPageAdvisingNote
   # @param notes [Array<Note>]
   # @return [Array<String>]
   def expected_note_id_sort_order(notes)
-    notes.sort_by { |n| [((n.set_date if n.instance_of? Note) || n.created_date), n.id] }.reverse.map &:id
+    notes.sort_by { |n| [((n.set_date if (n.instance_of?(Note) || n.instance_of?(NoteBatch))) || n.created_date), n.id] }.reverse.map &:id
   end
 
   # Returns the visible sequence of note ids

@@ -104,7 +104,7 @@ class BOACUtils < Utils
   def self.generate_note_search_query(student, note, opts={})
     note_test_case = "UID #{student.uid} note ID #{note.id}"
 
-    if note.source_body_empty || !note.body || note.body.empty? || note.body.include?('http')
+    if note.source_body_empty || !note.body || note.body.to_s.empty? || note.body.include?('http')
       if !note.subject || note.subject.empty?
         logger.warn "Skipping search test for #{note_test_case} because the note has no body or subject."
         return nil
@@ -174,6 +174,7 @@ class BOACUtils < Utils
 	           LEFT JOIN notes ON authorized_users.uid = notes.author_uid
 	           LEFT JOIN user_logins ON authorized_users.uid = user_logins.uid
              WHERE notes.deleted_at IS NULL
+               AND notes.is_draft IS FALSE
 	           GROUP BY authorized_users.uid;'
     results = query_pg_db(boac_db_credentials, query)
     results.map do |r|
@@ -622,7 +623,7 @@ class BOACUtils < Utils
              WHERE body NOT LIKE '%QA Test%'
                AND deleted_at IS NULL
                AND is_private IS FALSE
-               AND is_draft IS #{+ drafts ? 'TRUE' : 'FALSE'}"
+               AND is_draft IS #{drafts ? 'TRUE' : 'FALSE'}"
     results = Utils.query_pg_db(boac_db_credentials, query)
     results.map { |r| r['sid'] }
   end
