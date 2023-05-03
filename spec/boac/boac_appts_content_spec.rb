@@ -30,6 +30,7 @@ unless ENV['DEPS']
         begin
           @student_page.load_page student
           expected_sis_appts = NessieTimelineUtils.get_sis_appts student
+          expected_sis_appts.delete_if { |a| a.detail&.include? '504GatewayTimeout' }
           expected_ycbm_appts = NessieTimelineUtils.get_ycbm_appts student
           logger.warn "UID #{student.uid} has #{expected_sis_appts.length} SIS appts and #{expected_ycbm_appts.length} YCBM appts"
 

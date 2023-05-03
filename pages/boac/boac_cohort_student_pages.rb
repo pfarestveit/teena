@@ -168,22 +168,21 @@ module BOACCohortStudentPages
 
   def visible_courses_data(student)
     wait_until(Utils.medium_wait) { player_link_elements.any? }
-    row_xpath = "#{student_row_xpath student}//table[@class=\"cohort-course-activity-table\"]/tr"
+    row_xpath = "#{student_row_xpath student}//tbody/tr"
     row_els = row_elements(xpath: row_xpath)
     rows_data = []
     row_els.each_with_index do |_, i|
-      unless i.zero?
-        mid_flag_el = div_element(xpath: "#{row_xpath}[#{i + 1}]/td[3]/*[name()=\"svg\"][@data-icon=\"exclamation-triangle\"]")
-        final_flag_el = div_element(xpath: "#{row_xpath}[#{i + 1}]/td[4]/*[name()=\"svg\"][@data-icon=\"exclamation-triangle\"]")
-        rows_data << {
-          course_code: cell_element(xpath: "#{row_xpath}[#{i + 1}]/td[1]").text,
-          activity: cell_element(xpath: "#{row_xpath}[#{i + 1}]/td[2]").text,
-          mid_grade: cell_element(xpath: "#{row_xpath}[#{i + 1}]/td[3]").text,
-          mid_flag: mid_flag_el.exists?,
-          final_grade: cell_element(xpath: "#{row_xpath}[#{i + 1}]/td[4]/span").text,
-          final_flag: final_flag_el.exists?
-        }
-      end
+      mid_flag_el = div_element(xpath: "#{row_xpath}[#{i + 1}]/td[4]/*[name()=\"svg\"][@data-icon=\"exclamation-triangle\"]")
+      final_flag_el = div_element(xpath: "#{row_xpath}[#{i + 1}]/td[5]/*[name()=\"svg\"][@data-icon=\"exclamation-triangle\"]")
+      rows_data << {
+        course_code: cell_element(xpath: "#{row_xpath}[#{i + 1}]/td[1]").text,
+        units: cell_element(xpath: "#{row_xpath}[#{i + 1}]/td[2]").text,
+        activity: cell_element(xpath: "#{row_xpath}[#{i + 1}]/td[3]").text,
+        mid_grade: cell_element(xpath: "#{row_xpath}[#{i + 1}]/td[4]").text,
+        mid_flag: mid_flag_el.exists?,
+        final_grade: cell_element(xpath: "#{row_xpath}[#{i + 1}]/td[5]/span").text,
+        final_flag: final_flag_el.exists?
+      }
     end
     rows_data
   end

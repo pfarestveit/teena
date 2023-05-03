@@ -253,6 +253,7 @@ unless ENV['NO_DEPS']
                       logger.info "Checking course #{course_code}"
 
                       it("shows the course code for #{test_case}") { expect(visible_course_data[i][:course_code]).to include(course_code) }
+                      it("shows the course units for #{test_case}") { expect(visible_course_data[i][:units]).to include(course_sis_data[:units_completed]) }
 
                       if course_sis_data[:grade].empty?
                         if course_sis_data[:grading_basis] == 'NON'
@@ -262,7 +263,7 @@ unless ENV['NO_DEPS']
                         end
                       else
                         it("shows the grade for #{test_case}") { expect(visible_course_data[i][:final_grade]).to eql(course_sis_data[:grade]) }
-                        if %w(D+ D D- F NP RD I).include? course_sis_data[:grade]
+                        if %w(D+ D D- F NP RD I IP).include? course_sis_data[:grade]
                           it("shows a grade alert for #{test_case}") { expect(visible_course_data[i][:final_flag]).to be true }
                         else
                           it("shows no grade alert for #{test_case}") { expect(visible_course_data[i][:final_flag]).to be false }

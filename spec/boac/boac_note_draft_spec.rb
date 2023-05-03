@@ -743,6 +743,7 @@ describe 'BOA draft note' do
       it 'saves the new note' do
         @student_page.click_edit_note_button @note_4
         @student_page.click_save_note_edit
+        @note_4.is_draft = false
         @student_page.verify_note(@note_4, @test.advisor)
       end
 
@@ -762,6 +763,7 @@ describe 'BOA draft note' do
         @drafts_page.add_cohorts_to_batch(@note_5, [@cohort])
         @drafts_page.add_curated_groups_to_batch(@note_5, [@curated_group])
         @drafts_page.click_save_new_note
+        @note_5.is_draft = false
         @batch_students = @drafts_page.unique_students_in_batch([@test_student], [@cohort], [@curated_group])
       end
 

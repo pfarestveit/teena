@@ -124,7 +124,7 @@ unless ENV['NO_DEPS']
                   it("shows the created date on #{test_case}") { expect(visible_e_form_data[:created_date]).to eql(expected_created_date) }
                   it("shows the updated date on #{test_case}") { expect(visible_e_form_data[:updated_date]).to eql(expected_updated_date) }
                   it("shows the term on #{test_case}") { expect(visible_e_form_data[:term]).to eql(note.term) }
-                  it("shows the course on #{test_case}") { expect(visible_e_form_data[:course]).to eql(note.course) }
+                  it("shows the course on #{test_case}") { expect(visible_e_form_data[:course]).to eql(note.course&.gsub(/\s+/, ' ')) }
                   it("shows the form ID on #{test_case}") { expect(visible_e_form_data[:form_id]).to eql(note.form_id) }
                   it("shows the date initiated on #{test_case}") { expect(visible_e_form_data[:date_initiated]).to eql(expected_initiated_date) }
                   it("shows the form status on #{test_case}") { expect(visible_e_form_data[:status]).to eql(note.status) }
@@ -140,17 +140,19 @@ unless ENV['NO_DEPS']
                   if note.subject
                     it("shows the subject on #{test_case}") { expect(visible_collapsed_note_data[:subject] == note.subject.strip).to be true }
                     if note.body && !note.body.empty?
-                      it("shows the body on #{test_case}") { expect(visible_expanded_note_data[:body]).not_to be_empty }
+                      it("shows the body on #{test_case}") { expect(visible_expanded_note_data[:body].to_s).to eql(note.body.to_s) }
                     end
                   elsif expected_sis_notes.include?(note) || expected_history_notes.include?(note)
-                    it("shows the body as the subject on #{test_case}") { expect(visible_collapsed_note_data[:subject]).not_to be_empty }
+                    unless note.body.to_s.empty?
+                      it("shows the body as the subject on #{test_case}") { expect(visible_collapsed_note_data[:subject]).not_to be_empty }
+                    end
                     it("shows no body on #{test_case}") { expect(visible_expanded_note_data[:body].strip.empty?).to be true }
                   elsif expected_data_notes.include?(note)
                     if note.body && !note.body.empty?
-                      it("shows the body as the subject on #{test_case}") { expect(visible_collapsed_note_data[:subject]).not_to be_empty }
+                      it("shows the body as the subject on #{test_case}") { expect(visible_collapsed_note_data[:subject].to_s).not_to be_empty }
                     end
                   elsif expected_asc_notes.include?(note) && note.body
-                    it("shows the body as the subject on #{test_case}") { expect(visible_collapsed_note_data[:subject]).not_to be_empty }
+                    it("shows the body as the subject on #{test_case}") { expect(visible_collapsed_note_data[:subject].to_s).not_to be_empty }
                   else
                     it("shows the department as part of the subject on #{test_case}") { expect(visible_collapsed_note_data[:category]).to include('Athletic Study Center advisor') }
                     it("shows no body on #{test_case}") { expect(visible_expanded_note_data[:body].strip.empty?).to be true }
