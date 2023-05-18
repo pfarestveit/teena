@@ -104,6 +104,42 @@ class NessieTimelineUtils < NessieUtils
     notes_data.map { |d| Note.new d }
   end
 
+  def self.get_eop_notes(student)
+    sql = "SELECT boac_advising_eop.advising_notes.id AS id,
+                  boac_advising_eop.advising_notes.advisor_uid AS advisor_uid,
+                  boac_advising_eop.advising_notes.advisor_first_name AS advisor_first_name,
+                  boac_advising_eop.advising_notes.advisor_last_name AS advisor_last_name,
+                  boac_advising_eop.advising_notes.overview AS subject,
+                  boac_advising_eop.advising_notes.note AS body,
+                  boac_advising_eop.advising_notes.privacy_permissions AS privacy,
+                  boac_advising_eop.advising_notes.created_at AS created_date,
+                  boac_advising_eop.advising_note_topics.topic AS topic,
+                  boac_advising_eop.advising_notes.attachment AS file_name
+             FROM boac_advising_eop.advising_notes
+        LEFT JOIN boac_advising_eop.advising_note_topics
+               ON boac_advising_eop.advising_notes.id = boac_advising_eop.advising_note_topics.id
+            WHERE boac_advising_eop.advising_notes.sid = '#{student.sis_id}'"
+    results = query_pg_db(NessieUtils.nessie_pg_db_credentials, sql)
+    notes_data = results.group_by { |h1| h1['id'] }.map do |k, v|
+      advisor = BOACUser.new uid: v[0]['advisor_uid'],
+                             first_name: v[0]['advisor_first_name'],
+                             last_name: v[0]['advisor_last_name']
+      attachment = Attachment.new(file_name: v[0]['file_name']) if v[0]['file_name']
+      {
+        id: v[0]['id'],
+        source: TimelineRecordSource::EOP,
+        advisor: advisor,
+        subject: v[0]['subject'],
+        body: v[0]['body']&.strip,
+        is_private: (v[0]['privacy'] == 'Note available only to CE3'),
+        topics: (v.map { |t| t['topic'].upcase if t['topic'] }).compact.sort,
+        attachments: ([attachment] || []),
+        created_date: Time.parse(v[0]['created_date']).localtime
+      }
+    end
+    notes_data.compact.map { |d| Note.new d }
+  end
+
   def self.get_history_notes(student)
     sql = "SELECT boac_advising_history_dept.advising_notes.id AS id,
                   boac_advising_history_dept.advising_notes.advisor_uid AS advisor_uid,
@@ -187,9 +223,10 @@ class NessieTimelineUtils < NessieUtils
   # Returns all SIDs represented in a given advising note source
   # @param src [TimelineRecordSource]
   # @return [Array<String>]
-  def self.get_sids_with_notes_of_src(src)
+  def self.get_sids_with_notes_of_src(src, eop_private=false)
     query = "SELECT DISTINCT #{src.note_schema}.advising_notes.sid
              FROM #{src.note_schema}.advising_notes
+             #{+' WHERE privacy_permissions = \'Note available only to CE3\' AND note IS NOT NULL AND attachment IS NOT NULL' if src == TimelineRecordSource::EOP && eop_private}
              #{+' WHERE advisor_first_name != \'Reception\' AND advisor_last_name != \'Front Desk\'' if src == TimelineRecordSource::E_AND_I}
     #{+' INNER JOIN ' + src.note_schema + '.advising_note_attachments
                     ON ' + src.note_schema + '.advising_notes.sid = ' + src.note_schema + '.advising_note_attachments.sid' if src == TimelineRecordSource::SIS}

@@ -740,13 +740,79 @@ unless ENV['NO_DEPS']
                            advisor: @test_l_and_s.advisor,
                            subject: "Note 3 #{@test.id}",
                            body: "Note 3 body #{@test.id}"
+
+        eop_sids = NessieTimelineUtils.get_sids_with_notes_of_src(TimelineRecordSource::EOP, eop_private=true)
+        @eop_student = @test.students.select { |s| eop_sids.include? s.sis_id }.first
+        @eop_note = NessieTimelineUtils.get_eop_notes(@eop_student).find { |n| n.is_private && n.attachments.any? }
+      end
+
+      context 'when an imported private EOP note' do
+
+        context 'and viewed by a CE3 advisor' do
+
+          before(:all) do
+            @homepage.log_out
+            @homepage.dev_auth @ce3_advisor
+            @student_page.load_page @eop_student
+          end
+
+          it('shows the complete note including private data') { @student_page.verify_note(@eop_note, @ce3_advisor) }
+
+          it 'allows the advisor to download the note attachments' do
+            @eop_note.attachments.each { |attach| @student_page.download_attachment(@eop_note, attach) }
+          end
+        end
+
+        context 'and viewed by a non-CE3 advisor' do
+
+          before(:all) do
+            @homepage.log_out
+            @homepage.dev_auth @test_l_and_s.advisor
+            @student_page.load_page @eop_student
+          end
+
+          it('shows the partial note excluding private data') { @student_page.verify_note(@eop_note, @test_l_and_s.advisor) }
+
+          it 'blocks API access to note body and attachment file names' do
+            @api_student_page.get_data @eop_student
+            note = @api_student_page.notes.find { |n| n.id == @eop_note.id }
+            expect(note.body).to be_empty
+            expect(note.attachments).to be_empty
+          end
+
+          it 'blocks API access to note attachment downloads' do
+            notes = BOACUtils.get_student_notes(@eop_student).delete_if { |n| n.is_draft && n.advisor.uid != @test_l_and_s.advisor.uid }
+            note = notes.find { |n| n.id == @eop_note.id }
+            Utils.prepare_download_dir
+            @api_notes_page.load_attachment_page note.attachments.first.id
+            @api_notes_page.unauth_msg_element.when_visible Utils.short_wait
+            expect(Utils.downloads_empty?).to be true
+          end
+        end
+
+        context 'and searched' do
+
+          before(:all) do
+            @homepage.load_page
+            @homepage.log_out
+            @homepage.dev_auth @ce3_advisor
+          end
+
+          it 'cannot be searched by body' do
+            @homepage.type_non_note_simple_search_and_enter @eop_note.body
+            expect(@search_results_page.note_results_count).to be_zero
+          end
+
+          it 'cannot be searched by subject' do
+            @homepage.type_non_note_simple_search_and_enter @eop_note.subject
+            expect(@search_results_page.note_results_count).to be_zero
+          end
+        end
       end
 
       context 'when created by a CE3 advisor' do
 
         before(:all) do
-          @homepage.log_out
-          @homepage.dev_auth @ce3_advisor
           @student_page.load_page @student
         end
 
