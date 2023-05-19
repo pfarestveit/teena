@@ -32,17 +32,19 @@ unless ENV['NO_DEPS']
           expected_data_notes = NessieTimelineUtils.get_data_sci_notes student
           expected_e_forms = NessieTimelineUtils.get_e_form_notes student
           expected_ei_notes = NessieTimelineUtils.get_e_and_i_notes student
+          expected_eop_notes = NessieTimelineUtils.get_eop_notes student
           expected_history_notes = NessieTimelineUtils.get_history_notes student
           expected_sis_notes = NessieTimelineUtils.get_sis_notes student
           logger.warn "UID #{student.uid} has #{expected_sis_notes.length} SIS notes, #{expected_asc_notes.length} ASC notes,
                               #{expected_ei_notes.length} E&I notes, #{expected_boa_notes.length} BOA notes,
                               #{expected_e_forms.length} eForms, #{expected_data_notes.length} Data Science notes,
-                              and #{expected_history_notes.length} History notes."
+                              #{expected_eop_notes.length} EOP notes, and #{expected_history_notes.length} History notes."
 
           expected_notes = expected_sis_notes +
             expected_boa_notes +
             expected_asc_notes +
             expected_ei_notes +
+            expected_eop_notes +
             expected_data_notes +
             expected_history_notes
 
@@ -74,6 +76,7 @@ unless ENV['NO_DEPS']
             expected_data_notes.shuffle[0..max_note_count_per_src] +
             expected_e_forms.shuffle[0..max_note_count_per_src] +
             expected_ei_notes.shuffle[0..max_note_count_per_src] +
+            expected_eop_notes.shuffle[0..max_note_count_per_src] +
             expected_history_notes.shuffle[0..max_note_count_per_src]
 
           logger.info "Test notes are #{test_notes.map { |n| n.id + ' of source ' +  (n.source ? n.source.name : 'BOA') }}"
@@ -139,7 +142,7 @@ unless ENV['NO_DEPS']
 
                   if note.subject
                     it("shows the subject on #{test_case}") { expect(visible_collapsed_note_data[:subject] == note.subject.strip).to be true }
-                    if note.body && !note.body.empty?
+                    if note.body && !note.body.empty? && !note.is_private
                       it("shows the body on #{test_case}") { expect(visible_expanded_note_data[:body].to_s).to eql(note.body.to_s) }
                     end
                   elsif expected_sis_notes.include?(note) || expected_history_notes.include?(note)
@@ -154,11 +157,13 @@ unless ENV['NO_DEPS']
                   elsif expected_asc_notes.include?(note) && note.body
                     it("shows the body as the subject on #{test_case}") { expect(visible_collapsed_note_data[:subject].to_s).not_to be_empty }
                   else
-                    it("shows the department as part of the subject on #{test_case}") { expect(visible_collapsed_note_data[:category]).to include('Athletic Study Center advisor') }
+                    if note.source == TimelineRecordSource::ASC
+                      it("shows the department as part of the subject on #{test_case}") { expect(visible_collapsed_note_data[:category]).to include('Athletic Study Center advisor') }
+                    end
                     it("shows no body on #{test_case}") { expect(visible_expanded_note_data[:body].strip.empty?).to be true }
                   end
 
-                  if expected_ei_notes.include? note
+                  if expected_ei_notes.include?(note) || note.is_private
                     it("shows no body on #{test_case}") { expect(visible_expanded_note_data[:body].strip.empty?).to be true }
                   end
 
@@ -226,39 +231,41 @@ unless ENV['NO_DEPS']
                   # Note attachments
 
                   if note.attachments.any?
-                    non_deleted_attachments = note.attachments.reject &:deleted_at
-                    attachment_file_names = non_deleted_attachments.map { |f| f.file_name.gsub(/\s+/, ' ') }
-                    it("shows the right attachment file names on #{test_case}") { expect(visible_expanded_note_data[:attachments].sort).to eql(attachment_file_names.sort) }
+                    if note.is_private
+                      it("shows no attachment file names on #{test_case}") { expect(visible_expanded_note_data[:attachments]).to be_empty }
+                    else
+                      non_deleted_attachments = note.attachments.reject &:deleted_at
+                      attachment_file_names = non_deleted_attachments.map { |f| f.file_name.gsub(/\s+/, ' ') }
+                      it("shows the right attachment file names on #{test_case}") { expect(visible_expanded_note_data[:attachments].sort).to eql(attachment_file_names.sort) }
 
-                    non_deleted_attachments.each do |attach|
-                      if attach.sis_file_name
-                        has_delete_button = @student_page.delete_note_button(note).exists?
-                        it("shows no delete button for imported #{test_case}") { expect(has_delete_button).to be false }
-                      end
-
-                      # TODO - get downloads working on Firefox, since the profile prefs aren't having the desired effect
-                      if @student_page.item_attachment_el(note, attach.file_name)&.tag_name == 'a' && "#{@driver.browser}" != 'firefox'
-                        begin
-                          file_size = @student_page.download_attachment(note, attach, student)
-                          if file_size
-                            attachment_downloads = file_size > 0
-                            downloadable_attachments << attach
-                            it("allows attachment ID #{attach.id} to be downloaded from #{test_case}") { expect(attachment_downloads).to be true }
-                          end
-                        rescue => e
-                          Utils.log_error e
-                          it("encountered an error downloading attachment ID #{attach.id} from #{test_case}") { fail e.message }
-
-                          # If the note download fails, the browser might no longer be on the student page so reload it.
-                          @student_page.load_page student
-                          @student_page.show_notes
+                      non_deleted_attachments.each do |attach|
+                        if attach.sis_file_name
+                          has_delete_button = @student_page.delete_note_button(note).exists?
+                          it("shows no delete button for imported #{test_case}") { expect(has_delete_button).to be false }
                         end
 
-                      else
-                        logger.warn "Skipping download test for note ID #{note.id} attachment ID #{attach.id} since it cannot be downloaded"
+                        # TODO - get downloads working on Firefox, since the profile prefs aren't having the desired effect
+                        if @student_page.item_attachment_el(note, attach.file_name)&.tag_name == 'a' && "#{@driver.browser}" != 'firefox'
+                          begin
+                            file_size = @student_page.download_attachment(note, attach, student)
+                            if file_size
+                              attachment_downloads = file_size > 0
+                              downloadable_attachments << attach
+                              it("allows attachment ID #{attach.id} to be downloaded from #{test_case}") { expect(attachment_downloads).to be true }
+                            end
+                          rescue => e
+                            Utils.log_error e
+                            it("encountered an error downloading attachment ID #{attach.id} from #{test_case}") { fail e.message }
+
+                            # If the note download fails, the browser might no longer be on the student page so reload it.
+                            @student_page.load_page student
+                            @student_page.show_notes
+                          end
+                        else
+                          logger.warn "Skipping download test for note ID #{note.id} attachment ID #{attach.id} since it cannot be downloaded"
+                        end
                       end
                     end
-
                   else
                     it("shows no attachment file names on #{test_case}") { expect(visible_expanded_note_data[:attachments]).to be_empty }
                   end

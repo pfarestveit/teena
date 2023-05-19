@@ -114,6 +114,9 @@ class BOACUtils < Utils
       else
         note_text = note.subject
       end
+    elsif note.is_private
+      logger.warn "Skipping search test for #{note_test_case} because the note is private."
+      return nil
     else
       note_text = Nokogiri::HTML(note.body).text
     end

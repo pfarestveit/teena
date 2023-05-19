@@ -121,11 +121,13 @@ class BOACTestConfig < TestConfig
                        logger.info "There are #{e_and_i_note_sids.length} students with E&I notes"
                        e_form_sids = boa_sids & NessieTimelineUtils.get_sids_with_e_forms
                        logger.info "There are #{e_form_sids.length} students with eForms"
+                       eop_sids = boa_sids & NessieTimelineUtils.get_sids_with_notes_of_src(TimelineRecordSource::EOP)
+                       logger.info "There are #{eop_sids.length} students with EOP notes"
                        history_sids = boa_sids & NessieTimelineUtils.get_sids_with_notes_of_src(TimelineRecordSource::HISTORY)
                        logger.info "There are #{history_sids.length} students with History notes"
                        sis_note_sids = boa_sids & NessieTimelineUtils.get_sids_with_notes_of_src(TimelineRecordSource::SIS)
                        logger.info "There are #{sis_note_sids.length} students with SIS notes that have attachments"
-                       [asc_note_sids, boa_note_sids, data_note_sids, e_and_i_note_sids, history_sids, sis_note_sids].each &:shuffle!
+                       [asc_note_sids, boa_note_sids, data_note_sids, e_and_i_note_sids, eop_sids, history_sids, sis_note_sids].each &:shuffle!
                        range = 0..(config - 1)
                        test_sids = (
                          asc_note_sids[range] +
@@ -133,6 +135,7 @@ class BOACTestConfig < TestConfig
                          data_note_sids[range] +
                          e_and_i_note_sids[range] +
                          e_form_sids[range] +
+                         eop_sids[range] +
                          history_sids[range] +
                          sis_note_sids[range]
                        ).uniq
