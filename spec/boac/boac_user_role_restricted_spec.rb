@@ -183,7 +183,7 @@ unless ENV['DEPS']
         context 'with results' do
 
           before(:all) do
-            @homepage.type_non_note_adv_search_and_enter 'Math'
+            @homepage.enter_adv_search_and_hit_enter 'Math'
           end
 
           it('sees student results') { expect(@search_results_page.student_search_results_count).to be_nonzero }
@@ -380,7 +380,7 @@ unless ENV['DEPS']
         context 'with results' do
 
           before(:all) do
-            @homepage.type_non_note_simple_search_and_enter 'Math'
+            @homepage.enter_simple_search_and_hit_enter 'Math'
           end
 
           it('sees student results') { expect(@search_results_page.student_search_results_count).to be_nonzero }

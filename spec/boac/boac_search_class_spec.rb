@@ -53,7 +53,7 @@ unless ENV['DEPS']
                         strings.each do |string|
                           begin
 
-                            @homepage.type_non_note_simple_search_and_enter string
+                            @homepage.enter_simple_search_and_hit_enter string
                             class_result = @search_results_page.class_in_search_result?(course_code, section_data[:number])
                             if @search_results_page.partial_results_msg?
                               logger.warn "Skipping search for '#{string}' because there are more than 50 results"

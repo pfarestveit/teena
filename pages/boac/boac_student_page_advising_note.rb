@@ -205,11 +205,13 @@ module BOACStudentPageAdvisingNote
     else
       wait_until(1, 'Expected non-blank advisor name') { !visible_data[:advisor].empty? }
     end
-    wait_until(1, 'Expected non-blank advisor role') { !visible_data[:advisor_role].empty? }
+    unless note.source == TimelineRecordSource::EOP
+      wait_until(1, 'Expected non-blank advisor role') { !visible_data[:advisor_role].empty? }
+    end
     wait_until(1) { !visible_data[:advisor_depts].any?(&:empty?) }
 
     # Topics
-    note_topics = (note.topics.map { |t| t.name.upcase }).sort
+    note_topics = (note.topics.map { |t| t.instance_of?(Topic) ? t.name.upcase : t.upcase }).sort
     wait_until(1, "Expected '#{note_topics}', got #{visible_data[:topics]}") { visible_data[:topics] == note_topics }
     wait_until(1, "Expected no remove-topic buttons, got #{visible_data[:remove_topics_btns].length}") { visible_data[:remove_topics_btns].length.zero? }
 
@@ -238,7 +240,7 @@ module BOACStudentPageAdvisingNote
 
     # Body and attachments - private versus non-private
 
-    if note.is_private && !viewer.is_admin && !viewer.depts.include?(BOACDepartments::ZCEEE.code)
+    if note.is_private && !viewer.is_admin && !viewer.depts.include?(BOACDepartments::ZCEEE)
       # Body should be hidden
       wait_until(1, "Expected no body, got '#{visible_data[:body]}'") { visible_data[:body].empty? }
       # Attachments should be hidden
@@ -318,7 +320,7 @@ module BOACStudentPageAdvisingNote
   # Clicks the save note edit button
   def click_save_note_edit
     logger.debug 'Clicking the edit note Save button'
-    wait_for_update_and_click_js edit_note_save_button_element
+    wait_for_update_and_click edit_note_save_button_element
   end
 
   # Cancel

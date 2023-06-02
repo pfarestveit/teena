@@ -11,11 +11,12 @@ unless ENV['NO_DEPS']
     data_sci_notes = NessieTimelineUtils.get_data_sci_notes student
     e_form_notes = NessieTimelineUtils.get_e_form_notes student
     ei_notes = NessieTimelineUtils.get_e_and_i_notes student
+    eop_notes = NessieTimelineUtils.get_eop_notes student
     history_notes = NessieTimelineUtils.get_history_notes student
     sis_notes = NessieTimelineUtils.get_sis_notes student
     {
       student: student,
-      notes: (asc_notes + boa_notes + data_sci_notes + ei_notes + history_notes + sis_notes),
+      notes: (asc_notes + boa_notes + data_sci_notes + ei_notes + eop_notes + history_notes + sis_notes),
       e_forms: e_form_notes
     }
   end

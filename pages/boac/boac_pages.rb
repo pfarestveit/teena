@@ -383,7 +383,7 @@ module BOACPages
   # @return [Integer]
   def set_new_note_id(note, student=nil)
     start_time = Time.now
-    wait_until(Utils.long_wait) { note.id = BOACUtils.get_note_ids_by_subject(note.subject, student).first }
+    wait_until(Utils.short_wait) { note.id = BOACUtils.get_note_ids_by_subject(note.subject, student).first }
     logger.debug "Note ID is #{note.id}"
     logger.warn "Note was created in #{Time.now - start_time} seconds"
     start_time = Time.now

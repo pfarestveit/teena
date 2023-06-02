@@ -59,6 +59,14 @@ module BOACFilteredStudentsPageFilters
     end
   end
 
+  def enter_filter_range_min(min)
+    wait_for_textbox_and_type(filter_range_min_input_element, min)
+  end
+
+  def enter_filter_range_max(max)
+    wait_for_textbox_and_type(filter_range_max_input_element, max)
+  end
+
   def select_new_filter_sub_option(filter_option, filter_sub_option)
     filter_sub_option = filter_sub_option_identifier(filter_option, filter_sub_option)
     logger.info "Selecting sub-option '#{filter_sub_option}'"
@@ -74,8 +82,8 @@ module BOACFilteredStudentsPageFilters
         min = filter_sub_option['min']
         max = filter_sub_option['max']
       end
-      wait_for_element_and_type(filter_range_min_input_element, min)
-      wait_for_element_and_type(filter_range_max_input_element, max)
+      enter_filter_range_min min
+      enter_filter_range_max max
 
     # All others require a selection
     else

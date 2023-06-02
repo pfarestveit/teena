@@ -2,6 +2,8 @@ require_relative '../../util/spec_helper'
 
 # TODO - force a browser session timeout
 
+include Logging
+
 describe 'BOA draft note' do
 
   before(:all) do
@@ -15,9 +17,12 @@ describe 'BOA draft note' do
     @other_advisor = BOACUtils.get_dept_advisors(@test.dept).find do |a|
       a.can_access_advising_data && a.uid != @test.advisor.uid
     end
+    logger.info "Advisor UID #{@test.advisor.uid}"
+    logger.info "Director UID #{@director.uid}"
+    logger.info "Other advisor UID #{@other_advisor.uid}"
 
-    @test.students.shuffle!
-    @test_student = @test.students.last
+    @test.test_students.shuffle!
+    @test_student = @test.test_students.first
     @notes = []
     @notes << (@note_0 = Note.new advisor: @test.advisor, is_draft: true)
     @notes << (@note_1 = Note.new advisor: @test.advisor, is_draft: true)
@@ -82,13 +87,12 @@ describe 'BOA draft note' do
 
         @homepage.click_draft_notes
         @drafts_page.delete_all_drafts
-
-        @student_page.load_page @test_student
-        @student_page.click_create_new_note
       end
 
       it 'deletes the draft' do
-        @note_0.subject = "Note 0 #{@test.id} subject"
+        @student_page.load_page @test_student
+        @student_page.click_create_new_note
+        @note_0.subject = "Draft note 0 #{@test.id} subject"
         @student_page.enter_new_note_subject @note_0
         saved_note = @student_page.wait_for_draft_note @note_0
         expect(saved_note).to be_truthy
@@ -105,7 +109,7 @@ describe 'BOA draft note' do
       end
 
       it 'saves the subject and creation date' do
-        @note_1.subject = "Note 1 #{@test.id} subject"
+        @note_1.subject = "Draft note 1 #{@test.id} subject"
         @student_page.enter_new_note_subject @note_1
         saved_note = @student_page.wait_for_draft_note @note_1
         expect(saved_note).to be_truthy
@@ -118,30 +122,38 @@ describe 'BOA draft note' do
       end
 
       it 'saves the body' do
-        @note_1.body = "Note 1 #{@test.id} body"
+        @note_1.subject = "Draft note 1 #{@test.id} subject"
+        @note_1.body = "Draft note 1 #{@test.id} body"
+        @student_page.enter_new_note_subject @note_1
         @student_page.enter_note_body @note_1
-        @student_page.wait_for_draft_note_update @note_1
+        @student_page.click_save_as_draft
+        @student_page.wait_for_draft_note_update(@note_1, manual_update=true)
       end
 
       it 'removes the body' do
         @note_1.body = nil
+        @student_page.expand_item @note_1
+        @student_page.click_edit_note_button @note_1
         @student_page.enter_note_body @note_1
-        @student_page.wait_for_draft_note_update @note_1
+        @student_page.click_update_note_draft
+        @student_page.wait_for_draft_note_update(@note_1, manual_update=true)
       end
 
       it 'saves attachments' do
-        @student_page.add_attachments_to_new_note(@note_1, @attachments[0..1])
+        @student_page.add_attachments_to_existing_note(@note_1, @attachments[0..1])
         @student_page.wait_for_draft_note_update @note_1
       end
 
       it 'removes attachments' do
-        @student_page.remove_attachments_from_new_note(@note_1, [@note_1.attachments.last])
+        @student_page.remove_attachments_from_existing_note(@note_1, [@note_1.attachments.last])
         @student_page.wait_for_draft_note_update @note_1
       end
 
       it 'saves topics' do
+        @student_page.expand_item @note_1
+        @student_page.click_edit_note_button @note_1
         @student_page.add_topics(@note_1, @topics)
-        @student_page.click_save_as_draft
+        @student_page.click_update_note_draft
         @student_page.wait_for_draft_note_update(@note_1, manual_update=true)
       end
 
@@ -194,7 +206,7 @@ describe 'BOA draft note' do
       end
 
       it 'saves the subject' do
-        @note_2.subject = "Note 2 #{@test.id} subject"
+        @note_2.subject = "Draft note 2 #{@test.id} subject"
         @homepage.enter_new_note_subject @note_2
         saved_note = @homepage.wait_for_draft_note @note_2
         expect(saved_note).to be_truthy
@@ -215,7 +227,9 @@ describe 'BOA draft note' do
       end
 
       it 'saves the body' do
-        @note_2.body = "Note 2 #{@test.id} body"
+        @note_2.subject = "Draft note 2 #{@test.id} subject"
+        @note_2.body = "Draft note 2 #{@test.id} body"
+        @homepage.enter_new_note_subject @note_2
         @drafts_page.enter_note_body @note_2
         @drafts_page.wait_for_draft_note_update @note_2
       end
@@ -228,19 +242,19 @@ describe 'BOA draft note' do
 
       it 'removes attachments' do
         @drafts_page.click_subject @note_2
-        @drafts_page.remove_attachments_from_existing_note(@note_2, [@note_2.attachments.last])
+        @drafts_page.remove_attachments_from_new_note(@note_2, [@note_2.attachments.last])
         @drafts_page.wait_for_draft_note_update @note_2
       end
 
       it 'adds topics' do
         @drafts_page.add_topics(@note_2, @topics)
-        @drafts_page.click_update_note_draft
+        @drafts_page.click_save_as_draft
         @drafts_page.wait_for_draft_note_update(@note_2, manual_update = true)
       end
 
       it 'removes topics' do
         @drafts_page.click_subject @note_2
-        @drafts_page.remove_topics(@note_2, @topics)
+        @drafts_page.remove_topics(@note_2, [@topics[0]])
         @drafts_page.wait_for_draft_note_update @note_2
       end
 
@@ -248,7 +262,7 @@ describe 'BOA draft note' do
         @note_2.set_date = Time.now - 86400
         @drafts_page.click_subject @note_2
         @drafts_page.enter_set_date @note_2
-        @drafts_page.click_update_note_draft
+        @drafts_page.click_save_as_draft
         @drafts_page.wait_for_draft_note_update(@note_2, manual_update = true)
       end
 
@@ -268,7 +282,7 @@ describe 'BOA draft note' do
       it 'removes the contact method' do
         @note_2.type = nil
         @drafts_page.select_contact_type @note_2
-        @drafts_page.click_update_note_draft
+        @drafts_page.click_save_as_draft
         @drafts_page.wait_for_draft_note_update(@note_2, manual_update = true)
       end
 
@@ -276,7 +290,7 @@ describe 'BOA draft note' do
         @note_2.is_private = true
         @drafts_page.click_subject @note_2
         @drafts_page.set_note_privacy @note_2
-        @drafts_page.click_update_note_draft
+        @drafts_page.click_save_as_draft
         @drafts_page.wait_for_draft_note_update(@note_2, manual_update = true)
       end
 
@@ -289,7 +303,7 @@ describe 'BOA draft note' do
 
       it 'removes a single student' do
         @drafts_page.remove_students_from_batch(@note_2, [@test_student])
-        @drafts_page.click_update_note_draft
+        @drafts_page.click_save_as_draft
         @drafts_page.wait_for_draft_note_update(@note_2, manual_update = true)
       end
 
@@ -299,7 +313,7 @@ describe 'BOA draft note' do
         @drafts_page.add_students_to_batch(@note_2, students)
         @drafts_page.batch_note_draft_student_warning_element.when_visible Utils.short_wait
         @drafts_page.remove_students_from_batch(@note_2, students)
-        @drafts_page.click_update_note_draft
+        @drafts_page.click_save_as_draft
         @drafts_page.wait_for_draft_note_update(@note_2, manual_update = true)
       end
     end
@@ -354,8 +368,9 @@ describe 'BOA draft note' do
       end
 
       it 'is denied on the attachment download endpoint' do
-        @api_notes_page.load_attachment_page @note_1.attachments.first.id
-        @api_notes_page.unauth_msg_element.when_visible Utils.short_wait
+        id = BOACUtils.get_attachment_id_by_file_name(@note_1, @note_1.attachments.first)
+        @api_notes_page.load_attachment_page id
+        @api_notes_page.attach_not_found_msg_element.when_visible Utils.short_wait
       end
     end
 
@@ -386,8 +401,8 @@ describe 'BOA draft note' do
   describe 'search' do
 
     before(:all) do
-      @note_3.subject = "Note 3 #{@test.id} subject"
-      @note_3.body = "Note 3 #{@test.id} body"
+      @note_3.subject = "Draft note 3 #{@test.id} subject"
+      @note_3.body = "Draft note 3 #{@test.id} body"
       @student_page.load_page @test_student
       @student_page.click_create_new_note
       @student_page.enter_new_note_subject @note_3
@@ -405,19 +420,19 @@ describe 'BOA draft note' do
 
     it 'by subject yields no result' do
       @homepage.close_adv_search_if_open
-      @homepage.type_note_appt_simple_search_and_enter @note_3.subject
+      @homepage.enter_simple_search_and_hit_enter @note_3.subject
       @search_results_page.wait_for_no_results
     end
 
     it 'by body yields no result' do
-      @search_results_page.type_note_appt_simple_search_and_enter @note_3.body
+      @search_results_page.enter_simple_search_and_hit_enter @note_3.body
       @search_results_page.wait_for_no_results
     end
 
     it 'by topic yields no result' do
       @homepage.reopen_and_reset_adv_search
       @homepage.select_note_topic @note_3.topics.first
-      @homepage.type_note_appt_adv_search_and_enter @note_3.subject
+      @homepage.enter_adv_search_and_hit_enter @note_3.subject
       @search_results_page.wait_for_no_results
     end
 
@@ -425,21 +440,21 @@ describe 'BOA draft note' do
       date = Date.parse @note_3.created_date.to_s
       @homepage.reopen_and_reset_adv_search
       @homepage.set_notes_date_range(date - 1, date)
-      @homepage.type_note_appt_adv_search_and_enter @note_3.subject
+      @homepage.enter_adv_search_and_hit_enter @note_3.subject
       @search_results_page.wait_for_no_results
     end
 
     it 'by author yields no result' do
       @homepage.reopen_and_reset_adv_search
       @homepage.set_notes_author @test.advisor.full_name
-      @homepage.type_note_appt_adv_search_and_enter @note_3.subject
+      @homepage.enter_adv_search_and_hit_enter @note_3.subject
       @search_results_page.wait_for_no_results
     end
 
     it 'by student yields no result' do
       @homepage.reopen_and_reset_adv_search
       @homepage.set_notes_student @test_student
-      @homepage.type_note_appt_adv_search_and_enter @note_3.subject
+      @homepage.enter_adv_search_and_hit_enter @note_3.subject
       @search_results_page.wait_for_no_results
     end
   end
@@ -448,14 +463,14 @@ describe 'BOA draft note' do
 
     before(:all) do
       @search_results_page.click_create_note_batch
-      @note_4.subject = "Note 4 #{@test.id} subject"
+      @note_4.subject = "Draft note 4 #{@test.id} subject"
       @homepage.enter_new_note_subject @note_4
       @homepage.click_save_as_draft
       @homepage.wait_for_draft_note(@note_4, manual_update = true)
 
       @homepage.click_create_note_batch
-      @note_5.subject = "Note 5 #{@test.id} subject"
-      @note_5.body = "Note 5 #{@test.id} body"
+      @note_5.subject = "Draft note 5 #{@test.id} subject"
+      @note_5.body = "Draft note 5 #{@test.id} body"
       @note_5.set_date = Time.now - 86400
       @homepage.enter_new_note_subject @note_5
       @homepage.enter_note_body @note_5
@@ -467,11 +482,11 @@ describe 'BOA draft note' do
       @drafts_page.click_subject @note_5
       @note_5.subject = nil
       @drafts_page.enter_new_note_subject @note_5
-      @drafts_page.click_update_note_draft
+      @drafts_page.click_save_as_draft
       @drafts_page.wait_for_draft_note_update(@note_5, manual_update = true)
 
       @homepage.click_create_note_batch
-      @note_6.subject = "Note 6 #{@test.id} subject"
+      @note_6.subject = "Draft note 6 #{@test.id} subject"
       @homepage.enter_new_note_subject @note_6
       @homepage.add_students_to_batch(@note_6, [@test_student])
       @homepage.add_attachments_to_new_note(@note_6, @attachments[1..2])
@@ -482,6 +497,7 @@ describe 'BOA draft note' do
     context 'when an advisor' do
 
       before(:all) do
+        @my_drafts = BOACUtils.get_advisor_note_drafts @test.advisor
         @homepage.click_draft_notes
         @visible_ids = @drafts_page.visible_draft_note_ids
         @visible_note_4 = @drafts_page.draft_note_row_data @note_4
@@ -499,7 +515,7 @@ describe 'BOA draft note' do
       end
 
       it 'shows the drafts in the right order' do
-        expect(@visible_ids).to eql([@note_6.id, @note_4.id, @note_3.id, @note_1.id, @note_5.id])
+        expect(@visible_ids).to eql(@my_drafts.sort_by(&:updated_date).reverse.map(&:id))
       end
 
       it 'shows the name of the student or a placeholder' do
@@ -517,12 +533,12 @@ describe 'BOA draft note' do
       it 'shows the subject snippet or a placeholder' do
         expect(@visible_note_4[:subject]).to eql(@note_4.subject)
         expect(@visible_note_5[:subject]).to eql('[DRAFT NOTE]')
-        expect(@visible_note_6[:subject]).to eql(@note_6.subject)
+        expect(@visible_note_6[:subject]).to include(@note_6.subject)
       end
 
-      it 'shows the draft date (set, updated, created)' do
+      it 'shows the draft updated date' do
         expect(@visible_note_4[:date]).to include(Date.today.strftime('%b %-d'))
-        expect(@visible_note_5[:date]).to include((Date.today - 1).strftime('%b %-d'))
+        expect(@visible_note_5[:date]).to include(Date.today.strftime('%b %-d'))
         expect(@visible_note_6[:date]).to include(Date.today.strftime('%b %-d'))
       end
 
@@ -537,14 +553,14 @@ describe 'BOA draft note' do
         @drafts_page.wait_for_draft_note_row @note_4
         @drafts_page.click_subject @note_4
         @drafts_page.edit_draft_heading_element.when_visible 3
-        @drafts_page.click_cancel_new_note
-        @drafts_page.confirm_delete_or_discard
+        @drafts_page.click_save_as_draft
       end
     end
 
     context 'when an admin' do
 
       before(:all) do
+        @all_drafts = BOACUtils.get_advisor_note_drafts
         @homepage.log_out
         @homepage.dev_auth
         @homepage.click_draft_notes
@@ -569,7 +585,7 @@ describe 'BOA draft note' do
       end
 
       it 'shows the drafts in the right order (newest first)' do
-        expect(@visible_ids).to eql([@note_6.id, @note_4.id, @note_3.id, @note_2.id, @note_1.id, @note_5.id])
+        expect(@visible_ids).to eql(@all_drafts.sort_by(&:updated_date).reverse.map(&:id))
       end
 
       it 'shows the name of the student or a placeholder' do
@@ -594,7 +610,7 @@ describe 'BOA draft note' do
       it 'shows the subject snippet or a placeholder' do
         expect(@visible_note_4[:subject]).to eql(@note_4.subject)
         expect(@visible_note_5[:subject]).to eql('[DRAFT NOTE]')
-        expect(@visible_note_6[:subject]).to eql(@note_6.subject)
+        expect(@visible_note_6[:subject]).to include(@note_6.subject)
       end
 
       it 'shows no link to open the note editing modal on the list view page' do
@@ -603,7 +619,7 @@ describe 'BOA draft note' do
 
       it 'shows the draft date (set, updated, created)' do
         expect(@visible_note_4[:date]).to include(Date.today.strftime('%b %-d'))
-        expect(@visible_note_5[:date]).to include((Date.today - 1).strftime('%b %-d'))
+        expect(@visible_note_5[:date]).to include(Date.today.strftime('%b %-d'))
         expect(@visible_note_6[:date]).to include(Date.today.strftime('%b %-d'))
       end
     end
@@ -623,6 +639,17 @@ describe 'BOA draft note' do
       @homepage.log_out
     end
 
+    after(:all) do
+      @other_advisor.dept_memberships = [
+        (DeptMembership.new dept: BOACDepartments::ZCEEE,
+                            advisor_role: AdvisorRole::ADVISOR,
+                            is_automated: true)
+      ]
+      @pax_manifest_page.load_page
+      @pax_manifest_page.search_for_advisor @other_advisor
+      @pax_manifest_page.edit_user @other_advisor
+    end
+
     it 'do not allow a director to see drafts' do
       @homepage.dev_auth @other_advisor
       @student_page.load_page @test_student
@@ -634,27 +661,27 @@ describe 'BOA draft note' do
     it 'do not allow a director to download drafts' do
       @student_page.download_notes @test_student
       csv = @student_page.parse_note_export_csv_to_table @test_student
-      expect(@student_page.verify_block { @student_page.verify_note_in_export_csv(@test_student, @note_5, csv, @test.advisor) }).to be false
-      expect(@student_page.verify_block { @student_page.verify_note_in_export_csv(@test_student, @note_6, csv, @test.advisor) }).to be false
-      expect(@student_page.note_export_file_names(@note_6) & @note_6.attachments.map(&:file_name)).to be_empty
+      expect(csv.find { |r| r[:subject] == @note_5.subject }).to be_nil
+      expect(csv.find { |r| r[:subject] == @note_6.subject }).to be_nil
     end
 
-    it 'do not allow a director to download drafts' do
+    it 'do not allow an admin to download drafts' do
       @student_page.log_out
       @homepage.dev_auth
       @student_page.load_page @test_student
       @student_page.show_notes
       @student_page.download_notes @test_student
       csv = @student_page.parse_note_export_csv_to_table @test_student
-      expect(@student_page.verify_block { @student_page.verify_note_in_export_csv(@test_student, @note_5, csv, @test.advisor) }).to be false
-      expect(@student_page.verify_block { @student_page.verify_note_in_export_csv(@test_student, @note_6, csv, @test.advisor) }).to be false
-      expect(@student_page.note_export_file_names(@note_6) & @note_6.attachments.map(&:file_name)).to be_empty
+      expect(csv.find { |r| r[:subject] == @note_5.subject }).to be_nil
+      expect(csv.find { |r| r[:subject] == @note_6.subject }).to be_nil
     end
   end
 
   describe 'editing' do
 
     it 'cannot be done by an admin user' do
+      @student_page.load_page @test_student
+      @student_page.show_notes
       @student_page.expand_item @note_5
       expect(@student_page.edit_note_button(@note_5).exists?).to be false
     end
@@ -680,9 +707,9 @@ describe 'BOA draft note' do
         @student_page.enter_set_date @note_5
         @student_page.select_contact_type @note_5
         @student_page.set_note_privacy @note_5
-        @student_page.add_attachments_to_existing_note(@note_5, [@attachments[0]])
         @student_page.add_topics(@note_5, [Topic::ACADEMIC_PROGRESS])
         @student_page.click_update_note_draft
+        @student_page.add_attachments_to_existing_note(@note_5, [@attachments[0]])
         @visible_expanded = @student_page.visible_expanded_note_data @note_5
         @student_page.collapse_item @note_5
         @visible_collapsed = @student_page.visible_collapsed_note_data @note_5
@@ -704,7 +731,7 @@ describe 'BOA draft note' do
         @drafts_page.click_subject @note_4
 
         @note_4.subject = "#{@note_4.subject} EDITED"
-        @note_4.body = "Note 4 #{@test.id} body"
+        @note_4.body = "Draft note 4 #{@test.id} body"
         @note_4.set_date = Time.now - 172800
         @note_4.type = 'Admin'
         @note_4.is_private = true
@@ -716,8 +743,8 @@ describe 'BOA draft note' do
         @drafts_page.select_contact_type @note_4
         @drafts_page.set_note_privacy @note_4
         @drafts_page.add_topics(@note_4, [Topic::CHANGE_OF_COLLEGE])
-        @drafts_page.add_attachments_to_new_note(@note_4, [@attachments[1]])
-        @drafts_page.click_update_note_draft
+        @drafts_page.add_attachments_to_new_note(@note_4, [@attachments[0]])
+        @drafts_page.click_save_as_draft
         @drafts_page.wait_for_draft_note_row @note_4
         @drafts_page.click_student_link @note_4
         @student_page.show_notes
@@ -758,7 +785,7 @@ describe 'BOA draft note' do
 
       before(:all) do
         @drafts_page.click_subject @note_5
-        @note_5.subject = "Note 5 #{@test.id} subject"
+        @note_5.subject = "Draft note 5 #{@test.id} subject"
         @drafts_page.enter_new_note_subject @note_5
         @drafts_page.add_cohorts_to_batch(@note_5, [@cohort])
         @drafts_page.add_curated_groups_to_batch(@note_5, [@curated_group])

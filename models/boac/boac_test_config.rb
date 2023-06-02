@@ -24,7 +24,7 @@ class BOACTestConfig < TestConfig
 
   def set_advisor(uid = nil)
     role = DeptMembership.new advisor_role: AdvisorRole::ADVISOR
-    advisors = BOACUtils.get_dept_advisors(@dept, role)
+    advisors = BOACUtils.get_dept_advisors(@dept, role).reverse
     case @dept
       when BOACDepartments::ADMIN
         @advisor = BOACUser.new({:uid => Utils.super_admin_uid})
@@ -32,13 +32,13 @@ class BOACTestConfig < TestConfig
         @advisor = if uid
                      (advisors.find { |a| (a.uid.to_i == uid) && NessieTimelineUtils.get_advising_note_author(a.uid)})
                    else
-                     advisors.find { |a| (a.depts == [@dept.code]) && NessieTimelineUtils.get_advising_note_author(a.uid) }
+                     advisors.find { |a| (a.depts == [@dept]) && NessieTimelineUtils.get_advising_note_author(a.uid) }
                    end
       else
         if block_given?
           @advisor = advisors.find { |a| yield a }
         else
-          @advisor = advisors.reverse.find { |a| a.depts == [@dept.code] }
+          @advisor = advisors.reverse.find { |a| a.depts == [@dept] }
         end
     end
     if uid && (user_data = NessieTimelineUtils.get_advising_note_author(uid))
@@ -121,7 +121,7 @@ class BOACTestConfig < TestConfig
                        logger.info "There are #{e_and_i_note_sids.length} students with E&I notes"
                        e_form_sids = boa_sids & NessieTimelineUtils.get_sids_with_e_forms
                        logger.info "There are #{e_form_sids.length} students with eForms"
-                       eop_sids = boa_sids & NessieTimelineUtils.get_sids_with_notes_of_src(TimelineRecordSource::EOP)
+                       eop_sids = boa_sids & NessieTimelineUtils.get_sids_with_notes_of_src(TimelineRecordSource::EOP, eop_private=true)
                        logger.info "There are #{eop_sids.length} students with EOP notes"
                        history_sids = boa_sids & NessieTimelineUtils.get_sids_with_notes_of_src(TimelineRecordSource::HISTORY)
                        logger.info "There are #{history_sids.length} students with History notes"
@@ -426,6 +426,9 @@ class BOACTestConfig < TestConfig
   def note_drafts
     set_note_attachments
     set_base_configs(dept=BOACDepartments::ZCEEE)
+    set_test_students(100, {with_notes: true})
+    boa_notes_sids = BOACUtils.get_sids_with_notes_of_src_boa
+    @test_students.keep_if { |s| boa_notes_sids.include? s.sis_id }
     set_default_cohort
     BOACUtils.set_advisor_data @advisor
   end
@@ -513,7 +516,18 @@ class BOACTestConfig < TestConfig
   # @param user_role_config [BOACTestConfig]
   def user_role_asc(user_role_config)
     set_dept BOACDepartments::ASC
-    set_advisor
+    @advisor = BOACUser.new(
+      uid: BOACUtils.config['test_add_edit_uid'],
+      active: true,
+      can_access_canvas_data: true,
+      dept_memberships: [
+        DeptMembership.new(
+          dept: BOACDepartments::ASC,
+          advisor_role: AdvisorRole::ADVISOR,
+          is_automated: true
+        )
+      ]
+    )
     set_students user_role_config.students
   end
 

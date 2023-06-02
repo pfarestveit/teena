@@ -59,7 +59,7 @@ unless ENV['NO_DEPS']
             if appt_search[:string]
 
               @homepage.close_adv_search_if_open
-              @homepage.type_note_appt_simple_search_and_enter appt_search[:string]
+              @homepage.enter_simple_search_and_hit_enter appt_search[:string]
 
               string_results_count = @search_results_page.appt_results_count
               it "returns results when searching with the first #{word_count} words in #{appt_search[:test_case]}" do
@@ -112,7 +112,7 @@ unless ENV['NO_DEPS']
               if appt_search[:string].to_s.empty?
                 @homepage.click_adv_search_button
               else
-                @homepage.type_note_appt_adv_search_and_enter appt_search[:string]
+                @homepage.enter_adv_search_and_hit_enter appt_search[:string]
               end
               topic_results_count = @search_results_page.appt_results_count
 
@@ -237,7 +237,7 @@ unless ENV['NO_DEPS']
                 if appt_search[:string].to_s.empty?
                   @homepage.click_adv_search_button
                 else
-                  @homepage.type_note_appt_adv_search_and_enter appt_search[:string]
+                  @homepage.enter_adv_search_and_hit_enter appt_search[:string]
                 end
                 author_results_count = @search_results_page.appt_results_count
 
@@ -284,7 +284,7 @@ unless ENV['NO_DEPS']
             if appt_search[:string].to_s.empty?
               @homepage.click_adv_search_button
             else
-              @homepage.type_note_appt_adv_search_and_enter appt_search[:string]
+              @homepage.enter_adv_search_and_hit_enter appt_search[:string]
             end
             student_results_count = @search_results_page.appt_results_count
             if student_results_count < 20
@@ -306,7 +306,7 @@ unless ENV['NO_DEPS']
             if appt_search[:string].to_s.empty?
               @homepage.click_adv_search_button
             else
-              @homepage.type_note_appt_adv_search_and_enter appt_search[:string]
+              @homepage.enter_adv_search_and_hit_enter appt_search[:string]
             end
             range_start_results_count = @search_results_page.appt_results_count
 

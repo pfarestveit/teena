@@ -47,8 +47,8 @@ unless ENV['NO_DEPS']
       before(:all) { @homepage.load_page }
 
       it 'sees all default filtered cohorts' do
-        expected_cohort_names = everyone_cohorts.map(&:name).sort
-        visible_cohort_names = (@filtered_cohort_page.visible_everyone_cohorts.map &:name).sort
+        expected_cohort_names = everyone_cohorts.map { |c| c.name.gsub(/\W/, '') }.sort
+        visible_cohort_names = @filtered_cohort_page.visible_everyone_cohorts.map { |c| c.name.gsub(/\W/, '') }.sort
         @filtered_cohort_page.wait_until(1, "Expected #{expected_cohort_names}, but got #{visible_cohort_names}") do
           visible_cohort_names == expected_cohort_names
         end
@@ -63,8 +63,8 @@ unless ENV['NO_DEPS']
       end
 
       it 'sees all curated groups' do
-        expected_group_names = everyone_groups.map(&:name).sort
-        visible_group_names = (@curated_group_page.visible_everyone_groups.map &:name).sort
+        expected_group_names = everyone_groups.map { |c| c.name.gsub(/\W/, '') }.sort
+        visible_group_names = @curated_group_page.visible_everyone_groups.map { |c| c.name.gsub(/\W/, '') }.sort
         @curated_group_page.wait_until(1, "Expected #{expected_group_names}, but got #{visible_group_names}") { visible_group_names == expected_group_names }
       end
     end

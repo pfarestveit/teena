@@ -11,7 +11,7 @@ unless ENV['NO_DEPS']
   director = BOACUtils.get_authorized_users.find do |a|
     a.dept_memberships.find { |m| m.advisor_role == AdvisorRole::DIRECTOR }
   end
-  other_advisor = BOACUtils.get_dept_advisors(test.dept).find do |a|
+  other_advisor = BOACUtils.get_dept_advisors(test.dept).reverse.find do |a|
     a.can_access_advising_data && a.uid != test.advisor.uid
   end
 
@@ -25,6 +25,7 @@ unless ENV['NO_DEPS']
 
   else
 
+    logger.info "Advisor UID #{test.advisor.uid}, director UID #{director&.uid}, other advisor UID #{other_advisor.uid}"
     test_student = test.students.shuffle.first
     notes = []
     notes << (note_1 = Note.new({:advisor => test.advisor}))
@@ -72,8 +73,10 @@ unless ENV['NO_DEPS']
         context 'creating a new note' do
 
           it 'cannot create a note without a subject' do
+            note_1.subject = ''
             @student_page.click_create_new_note
-            @student_page.new_note_save_button_element.when_present 1
+            @student_page.new_note_save_button_element.when_present 2
+            @student_page.enter_new_note_subject note_1
             expect(@student_page.new_note_save_button_element.disabled?).to be true
           end
 
@@ -81,10 +84,11 @@ unless ENV['NO_DEPS']
             @student_page.click_cancel_new_note
             @student_page.click_create_new_note
             @student_page.wait_for_note_body_editor
-            @student_page.wait_for_element_and_type(@student_page.note_body_text_area_elements[1], 'An edit to forget')
+            Utils.save_screenshot(@driver, 'Modal-click-interception')
+            @student_page.wait_for_textbox_and_type(@student_page.note_body_text_area_elements[1], 'An edit to forget')
             @student_page.click_cancel_new_note
             @student_page.confirm_delete_or_discard
-            @student_page.wait_until(1) { @student_page.note_body_text_area_elements.empty? }
+            @student_page.wait_until(Utils.short_wait) { @student_page.note_body_text_area_elements.empty? }
           end
 
           it 'can create a note with a subject' do
@@ -141,7 +145,7 @@ unless ENV['NO_DEPS']
           it 'cannot create a note with an individual attachment larger than 20MB' do
             too_big_attachment = test.attachments.find { |a| a.file_size > 20000000 }
             @student_page.click_create_new_note
-            @student_page.new_note_attach_input_element.when_present 1
+            @student_page.new_note_attach_input_element.when_present Utils.short_wait
             @student_page.new_note_attach_input_element.send_keys Utils.asset_file_path(too_big_attachment.file_name)
             @student_page.note_attachment_size_msg_element.when_visible Utils.short_wait
           end
@@ -149,6 +153,8 @@ unless ENV['NO_DEPS']
           it 'can add and remove topics before saving' do
             note_7.subject = "Note 7 subject #{Utils.get_test_id}"
             note_topics = [Topic::COURSE_ADD, Topic::COURSE_DROP]
+            @student_page.click_cancel_new_note
+            @student_page.confirm_delete_or_discard
             @student_page.load_page test_student
             @student_page.click_create_new_note
             @student_page.enter_new_note_subject note_7
@@ -180,21 +186,21 @@ unless ENV['NO_DEPS']
 
           shared_examples 'searching for your own note' do
             it 'can find a note by subject' do
-              @student_page.type_note_appt_adv_search_and_enter note_1.subject
+              @student_page.enter_adv_search_and_hit_enter note_1.subject
               @search_results_page.wait_for_note_search_result_rows
               expect(@search_results_page.note_link(note_1).exists?).to be true
             end
 
             it 'can find a note by body' do
               @search_results_page.click_edit_search
-              @student_page.type_note_appt_adv_search_and_enter note_2.body
+              @student_page.enter_adv_search_and_hit_enter note_2.body
               @search_results_page.wait_for_note_search_result_rows
               expect(@search_results_page.note_link(note_2).exists?).to be true
             end
 
             it 'can find a note with special characters' do
               @search_results_page.click_edit_search
-              @student_page.type_note_appt_adv_search_and_enter note_3.subject
+              @student_page.enter_adv_search_and_hit_enter note_3.subject
               @search_results_page.wait_for_note_search_result_rows
               expect(@search_results_page.note_link(note_3).exists?).to be true
             end
@@ -245,7 +251,8 @@ unless ENV['NO_DEPS']
             @student_page.load_page test_student
             @student_page.show_notes
             new_note_ids = notes.map &:id
-            visible_new_note_ids = @student_page.visible_collapsed_note_ids.keep_if { |id| new_note_ids.include? id }
+            visible_new_note_ids = @student_page.visible_collapsed_note_ids
+            visible_new_note_ids.keep_if { |id| new_note_ids.include? id }
             expect(visible_new_note_ids).to eql(@student_page.expected_note_id_sort_order notes)
           end
 
@@ -321,7 +328,8 @@ unless ENV['NO_DEPS']
           it 'can view edited set date sorted correctly' do
             @student_page.load_page test_student
             @student_page.show_notes
-            expect(@student_page.visible_collapsed_note_ids[0..7]).to eql(@student_page.expected_note_id_sort_order notes)
+            visible_ids = @student_page.visible_collapsed_note_ids.keep_if { |i| notes.map(&:id).include? i }
+            expect(visible_ids).to eql(@student_page.expected_note_id_sort_order notes)
           end
 
           it 'can remove set date' do
@@ -443,7 +451,7 @@ unless ENV['NO_DEPS']
           end
 
           it 'can find a note by edited content' do
-            @student_page.type_note_appt_simple_search_and_enter note_1.subject
+            @student_page.enter_simple_search_and_hit_enter note_1.subject
             @search_results_page.wait_for_note_search_result_rows
             expect(@search_results_page.note_link(note_1).exists?).to be true
           end
@@ -451,7 +459,7 @@ unless ENV['NO_DEPS']
           it 'cannot download a deleted attachment' do
             Utils.prepare_download_dir
             @api_notes_page.load_attachment_page deleted_attachments.first.id
-            @api_notes_page.attach_not_found_msg_element.when_present Utils.short_wait
+            @api_notes_page.note_not_found_msg_element.when_present Utils.short_wait
             expect(Utils.downloads_empty?).to be true
           end
         end
@@ -489,7 +497,7 @@ unless ENV['NO_DEPS']
             @student_page.select_notes_posted_by_anyone
           end
           it 'can find the other user\'s note' do
-            @student_page.type_note_appt_adv_search_and_enter note_1.subject
+            @student_page.enter_adv_search_and_hit_enter note_1.subject
             @search_results_page.wait_for_note_search_result_rows
             expect(@search_results_page.note_link(note_1).exists?).to be true
           end
@@ -501,7 +509,7 @@ unless ENV['NO_DEPS']
             @student_page.select_notes_posted_by_you
           end
           it 'cannot find the other user\'s note' do
-            @student_page.type_note_appt_adv_search_and_enter note_1.subject
+            @student_page.enter_adv_search_and_hit_enter note_1.subject
             expect(@search_results_page.note_results_count).to be_zero
           end
         end
@@ -571,7 +579,7 @@ unless ENV['NO_DEPS']
 
         it 'cannot find a deleted note' do
           logger.info "Searching for deleted note ID #{note_5.id} by subject '#{note_5.subject}'"
-          @student_page.type_note_appt_adv_search_and_enter note_5.subject
+          @student_page.enter_adv_search_and_hit_enter note_5.subject
           expect(@search_results_page.note_results_count).to be_zero
         end
 
@@ -581,7 +589,7 @@ unless ENV['NO_DEPS']
             @homepage.load_page
             id = BOACUtils.get_attachment_id_by_file_name(note_5, attach)
             @api_notes_page.load_attachment_page id
-            @api_notes_page.attach_not_found_msg_element.when_present Utils.short_wait
+            @api_notes_page.note_not_found_msg_element.when_present Utils.short_wait
             expect(Utils.downloads_empty?).to be true
           end
         end

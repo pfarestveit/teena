@@ -8,6 +8,7 @@ class BOACApiNotesPage
 
   div(:not_found_msg, xpath: '//*[contains(., "The requested resource could not be found.")]')
   div(:attach_not_found_msg, xpath: '//*[text()="Sorry, attachment not available."]')
+  div(:note_not_found_msg, xpath: '//*[contains(., "Note not found")]')
 
   def load_attachment_page(attachment_file)
     logger.info "Hitting download endpoint for attachment '#{attachment_file}'"

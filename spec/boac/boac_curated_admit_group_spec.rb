@@ -59,7 +59,7 @@ unless ENV['NO_DEPS']
       end
 
       it 'can be done using the admit search results group selector' do
-        @homepage.type_non_note_simple_search_and_enter @admit.sis_id
+        @homepage.enter_simple_search_and_hit_enter @admit.sis_id
         group = CuratedGroup.new name: "CE3 group from search #{test.id}", ce3: true
         @search_page.select_and_add_admits_to_new_ce3_grp([@admit], group)
       end
@@ -152,7 +152,7 @@ unless ENV['NO_DEPS']
       end
 
       it 'can be added on admit search results using select-all' do
-        @homepage.type_non_note_simple_search_and_enter @admit.sis_id
+        @homepage.enter_simple_search_and_hit_enter @admit.sis_id
         admits_to_add = @search_page.admits_available_to_add_to_grp(test, group_5)
         @search_page.select_and_add_all_admits_to_ce3_grp(admits_to_add, group_5)
         @group_page.load_page group_5
@@ -160,7 +160,7 @@ unless ENV['NO_DEPS']
       end
 
       it 'can be added on admit search results using individual selections' do
-        @homepage.type_non_note_simple_search_and_enter @admit.sis_id
+        @homepage.enter_simple_search_and_hit_enter @admit.sis_id
         @search_page.select_and_add_admits_to_ce3_grp([@admit], group_6)
         @group_page.load_page group_6
         expect(@group_page.list_view_admit_sids(group_6).sort).to eql(group_6.members.map(&:sis_id).sort)

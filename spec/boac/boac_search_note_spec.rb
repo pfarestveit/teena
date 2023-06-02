@@ -46,7 +46,7 @@ unless ENV['NO_DEPS']
           expected_sis_notes = NessieTimelineUtils.get_sis_notes student
           logger.warn "UID #{student.uid} has #{expected_sis_notes.length} SIS notes, #{expected_asc_notes.length} ASC notes,
                               #{expected_ei_notes.length} E&I notes, #{expected_data_notes.length} Data Science notes,
-                              #{expected_history_notes.length} History notes, #{expected_eop_notes} EOP notes,
+                              #{expected_history_notes.length} History notes, #{expected_eop_notes.length} EOP notes,
                               and #{expected_boa_notes.length} testable BOA notes"
 
           # Test a representative subset of the total notes
@@ -106,7 +106,7 @@ unless ENV['NO_DEPS']
               # Search string
 
               @homepage.close_adv_search_if_open
-              @homepage.type_note_appt_simple_search_and_enter note_search[:string]
+              @homepage.enter_simple_search_and_hit_enter note_search[:string]
 
               string_results_count = @search_results_page.note_results_count
               it "returns results when searching with the last #{word_count} words in #{note_search[:test_case]}" do
@@ -161,7 +161,7 @@ unless ENV['NO_DEPS']
                 note_topics.each do |note_topic|
                   topic = Topic::TOPICS.find { |t| t.name == note_topic }
                   @homepage.select_note_topic topic
-                  @homepage.type_note_appt_adv_search_and_enter note_search[:string]
+                  @homepage.enter_adv_search_and_hit_enter note_search[:string]
                   topic_results_count = @search_results_page.note_results_count
 
                   if topic_results_count < 20
@@ -282,7 +282,7 @@ unless ENV['NO_DEPS']
                       if note_search[:string].to_s.empty?
                         @homepage.click_adv_search_button
                       else
-                        @homepage.type_note_appt_adv_search_and_enter note_search[:string]
+                        @homepage.enter_adv_search_and_hit_enter note_search[:string]
                       end
                       author_results_count = @search_results_page.note_results_count
 
@@ -329,7 +329,7 @@ unless ENV['NO_DEPS']
               if note_search[:string].to_s.empty?
                 @homepage.click_adv_search_button
               else
-                @homepage.type_note_appt_adv_search_and_enter note_search[:string]
+                @homepage.enter_adv_search_and_hit_enter note_search[:string]
               end
               student_results_count = @search_results_page.note_results_count
               if student_results_count < 20
@@ -351,7 +351,7 @@ unless ENV['NO_DEPS']
               if note_search[:string].to_s.empty?
                 @homepage.click_adv_search_button
               else
-                @homepage.type_note_appt_adv_search_and_enter note_search[:string]
+                @homepage.enter_adv_search_and_hit_enter note_search[:string]
               end
               range_start_results_count = @search_results_page.note_results_count
 

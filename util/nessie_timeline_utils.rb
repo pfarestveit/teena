@@ -112,6 +112,7 @@ class NessieTimelineUtils < NessieUtils
                   boac_advising_eop.advising_notes.overview AS subject,
                   boac_advising_eop.advising_notes.note AS body,
                   boac_advising_eop.advising_notes.privacy_permissions AS privacy,
+                  boac_advising_eop.advising_notes.contact_method AS type,
                   boac_advising_eop.advising_notes.created_at AS created_date,
                   boac_advising_eop.advising_note_topics.topic AS topic,
                   boac_advising_eop.advising_notes.attachment AS file_name
@@ -124,17 +125,19 @@ class NessieTimelineUtils < NessieUtils
       advisor = BOACUser.new uid: v[0]['advisor_uid'],
                              first_name: v[0]['advisor_first_name'],
                              last_name: v[0]['advisor_last_name']
-      attachment = Attachment.new(file_name: v[0]['file_name']) if v[0]['file_name']
+      attachment = Attachment.new(file_name: v[0]['file_name'], id: v[0]['id']) if v[0]['file_name']
       {
         id: v[0]['id'],
         source: TimelineRecordSource::EOP,
         advisor: advisor,
         subject: v[0]['subject'],
-        body: v[0]['body']&.strip,
+        body: Nokogiri::HTML(v[0]['body']).text&.strip,
         is_private: (v[0]['privacy'] == 'Note available only to CE3'),
+        type: v[0]['type'],
         topics: (v.map { |t| t['topic'].upcase if t['topic'] }).compact.sort,
-        attachments: ([attachment] || []),
-        created_date: Time.parse(v[0]['created_date']).localtime
+        attachments: ([attachment].compact),
+        created_date: Time.parse(v[0]['created_date']).localtime,
+        updated_date: Time.parse(v[0]['created_date']).localtime
       }
     end
     notes_data.compact.map { |d| Note.new d }
