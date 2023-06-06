@@ -63,6 +63,7 @@ class BOACPaxManifestPage
     logger.info "Searching for advisor UID #{advisor.uid}"
     wait_for_element(user_search_input_element, Utils.medium_wait)
     set_first_auto_suggest(user_search_input_element, advisor.uid)
+    advisor
   end
 
   # Selects the Filter option

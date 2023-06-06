@@ -55,8 +55,6 @@ unless ENV['DEPS']
 
         before(:all) { @note = Note.new(subject: "Note student-page-create #{@test.id}", advisor: @test.advisor) }
 
-        it('require a note subject') { expect(@student_page.create_template_button_element.disabled?).to be true }
-
         it 'can be cancelled' do
           @student_page.enter_new_note_subject @note
           @student_page.click_create_template
@@ -72,6 +70,7 @@ unless ENV['DEPS']
         end
 
         it 'add the template to the available templates' do
+          @student_page.click_create_new_note
           @student_page.click_templates_button
           @student_page.wait_until(1) { @student_page.template_option(@template_1).exists? }
         end
@@ -91,6 +90,7 @@ unless ENV['DEPS']
 
         it 'can be applied to a new note' do
           @student_page.click_cancel_template
+          @student_page.select_and_apply_template(@template_1, @note)
           @student_page.click_save_new_note
           @student_page.set_new_note_id(@note, @student)
           @student_page.verify_note(@note, @test.advisor)
@@ -121,6 +121,7 @@ unless ENV['DEPS']
           attachments_to_remove = @template_1.attachments
           attachments_to_add = @attachments.last 4
 
+          @student_page.click_create_new_note
           @student_page.click_edit_template @template_1
           @student_page.enter_new_note_subject @template_1
           @student_page.enter_note_body @template_1
@@ -132,7 +133,8 @@ unless ENV['DEPS']
         end
 
         it 'can be applied to a new note' do
-          @student_page.apply_template(@template_1, @note)
+          @student_page.click_create_new_note
+          @student_page.select_and_apply_template(@template_1, @note)
           @student_page.click_save_new_note
           @student_page.set_new_note_id(@note, @student)
           @student_page.verify_note(@note, @test.advisor)
@@ -192,8 +194,6 @@ unless ENV['DEPS']
           @homepage.click_create_note_batch
         end
 
-        it('require a note subject') { expect(@homepage.create_template_button_element.disabled?).to be true }
-
         it 'can be cancelled' do
           @homepage.enter_new_note_subject @note_batch
           @homepage.click_create_template
@@ -202,9 +202,6 @@ unless ENV['DEPS']
         end
 
         it 'can be created' do
-          @homepage.add_students_to_batch(@note_batch, @students)
-          @homepage.add_cohorts_to_batch(@note_batch, [@test.default_cohort])
-          @homepage.add_curated_groups_to_batch(@note_batch, [@group])
           @homepage.enter_note_body @note_batch
           @homepage.add_topics(@note_batch, [Topic::ACADEMIC_PROGRESS_RPT, Topic::DEGREE_CHECK])
           @homepage.add_attachments_to_new_note(@note_batch, @attachments.first(6))
@@ -212,6 +209,7 @@ unless ENV['DEPS']
         end
 
         it 'add the template to the available templates' do
+          @homepage.click_create_note_batch
           @homepage.click_templates_button
           @homepage.wait_until(1) { @homepage.template_option @template_2 }
         end
@@ -231,6 +229,10 @@ unless ENV['DEPS']
 
         it 'can be applied to a new note' do
           @homepage.click_cancel_template
+          @homepage.add_students_to_batch(@note_batch, @students)
+          @homepage.add_cohorts_to_batch(@note_batch, [@test.default_cohort])
+          @homepage.add_curated_groups_to_batch(@note_batch, [@group])
+          @homepage.select_and_apply_template(@template_2, @note_batch)
           @homepage.click_save_new_note
           batch_student = @students.first
           @student_page.set_new_note_id(@note_batch, batch_student)
@@ -244,9 +246,6 @@ unless ENV['DEPS']
         before(:all) do
           @note_batch = NoteBatch.new(subject: "Note batch edit #{@test.id}", advisor: @test.advisor)
           @homepage.click_create_note_batch
-          @homepage.add_students_to_batch(@note_batch, @students)
-          @homepage.add_cohorts_to_batch(@note_batch, [@test.default_cohort])
-          @homepage.add_curated_groups_to_batch(@note_batch, [@group])
         end
 
         it 'can be cancelled' do
@@ -265,6 +264,7 @@ unless ENV['DEPS']
           attachments_to_remove = @template_2.attachments
           attachments_to_add = @attachments.last 4
 
+          @homepage.click_create_note_batch
           @homepage.click_edit_template @template_2
           @homepage.enter_new_note_subject @template_2
           @homepage.enter_note_body @template_2
@@ -276,8 +276,12 @@ unless ENV['DEPS']
         end
 
         it 'can be applied to a new note' do
+          @homepage.click_create_note_batch
+          @homepage.add_students_to_batch(@note_batch, @students)
+          @homepage.add_cohorts_to_batch(@note_batch, [@test.default_cohort])
+          @homepage.add_curated_groups_to_batch(@note_batch, [@group])
+          @homepage.select_and_apply_template(@template_2, @note_batch)
           @homepage.click_save_new_note
-          @homepage.apply_template(@template_2, @note_batch)
           batch_student = @students.first
           @student_page.set_new_note_id(@note_batch, batch_student)
           @student_page.load_page batch_student

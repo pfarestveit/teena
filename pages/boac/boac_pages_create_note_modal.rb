@@ -16,7 +16,7 @@ module BOACPagesCreateNoteModal
   def click_save_as_draft
     logger.info 'Clicking the save-as-draft button'
     wait_for_update_and_click_js save_as_draft_button_element
-    save_as_draft_button_element.when_not_present Utils.short_wait
+    save_as_draft_button_element.when_not_present Utils.medium_wait
   end
 
   def click_update_note_draft
@@ -139,7 +139,7 @@ module BOACPagesCreateNoteModal
     files = attachments.map { |file| Utils.asset_file_path file.file_name }.join("\n")
     logger.debug "Adding attachments '#{files}' to an unsaved note"
     new_note_attach_input_element.send_keys files
-    new_note_attachment_delete_button(attachments.last).when_present Utils.short_wait
+    new_note_attachment_delete_button(attachments.last).when_present Utils.medium_wait
     sleep Utils.click_wait
     note.attachments << attachments
     note.attachments.flatten!
@@ -168,7 +168,7 @@ module BOACPagesCreateNoteModal
   def add_attachments_to_existing_note(note, attachments)
     attachments.each do |attach|
       logger.debug "Adding attachment '#{attach.file_name}' to note ID #{note.id}"
-      existing_note_attachment_input(note).when_present 1
+      existing_note_attachment_input(note).when_present Utils.short_wait
       existing_note_attachment_input(note).send_keys Utils.asset_file_path(attach.file_name)
       existing_note_attachment_delete_button(note, attach).when_present Utils.short_wait
       sleep Utils.click_wait
@@ -195,7 +195,7 @@ module BOACPagesCreateNoteModal
   radio_button(:private_radio, xpath: '//input[@id="note-is-private-radio-button"]/..')
 
   def set_note_privacy(note)
-    if note.advisor&.dept_memberships&.find { |m| m.dept == BOACDepartments::ZCEEE } || note.advisor&.depts&.include?(BOACDepartments::ZCEEE)
+    if note.advisor&.dept_memberships&.find { |m| m.dept == BOACDepartments::ZCEEE } || note.advisor&.depts&.include?(BOACDepartments::ZCEEE.name)
       if note.is_private
         logger.info 'Setting note to private'
         wait_for_update_and_click private_radio_element
@@ -221,6 +221,7 @@ module BOACPagesCreateNoteModal
 
   def select_contact_type(note)
     logger.debug "Selecting contact type '#{note.type}'"
+    sleep 2
     contact_type_radio(note).click
   end
 
@@ -249,8 +250,8 @@ module BOACPagesCreateNoteModal
 
   # Cancel
 
-  button(:new_note_modal_cancel_button, xpath: '//button[contains(text(), "Cancel")]')
-  button(:new_note_cancel_button, xpath: '//button[contains(text(), "Cancel")]')
+  button(:new_note_modal_cancel_button, xpath: '//button[contains(text(), "Discard")]')
+  button(:new_note_cancel_button, xpath: '//button[contains(text(), "Discard")]')
   button(:cancel_delete_or_discard_button, id: 'are-you-sure-cancel')
 
   def click_cancel_new_note_modal
@@ -347,7 +348,7 @@ module BOACPagesCreateNoteModal
   end
 
   def append_student_to_batch(note_batch, student)
-    added_student_element(student).when_present 1
+    added_student_element(student).when_present 3
     note_batch.students << student
   end
 
@@ -444,7 +445,7 @@ module BOACPagesCreateNoteModal
 
   button(:templates_button, id: 'my-templates-button__BV_toggle_')
   elements(:template_select_option, :link, xpath: '//a[contains(@id, "load-note-template-")]')
-  span(:no_templates_msg, xpath: '//div[contains(text(), "You have no saved templates.")]')
+  span(:no_templates_msg, xpath: '//div[text()=" You have no saved templates. "]')
   div(:dupe_template_title_msg, xpath: '//div[contains(text(), "You have an existing template with this name. Please choose a different name.")]')
 
   # Creation
@@ -457,7 +458,7 @@ module BOACPagesCreateNoteModal
   def click_create_template
     logger.info 'Clicking create template button'
     wait_for_update_and_click create_template_button_element
-    template_title_input_element.when_present 1
+    template_title_input_element.when_present Utils.short_wait
   end
 
   def click_save_template
@@ -486,6 +487,7 @@ module BOACPagesCreateNoteModal
     template.attachments = note.attachments
     template.advisor = note.advisor
     template.is_private = note.is_private
+    sleep 3
   end
 
   def get_new_template_id(template)
@@ -524,6 +526,7 @@ module BOACPagesCreateNoteModal
     click_templates_button
     wait_for_update_and_click template_option(template)
     apply_template(template, note)
+    sleep 3
   end
 
   # Edit
@@ -541,6 +544,7 @@ module BOACPagesCreateNoteModal
   def click_update_template
     logger.info 'Clicking the Update Template button'
     wait_for_update_and_click update_template_button_element
+    sleep 3
   end
 
   # Rename

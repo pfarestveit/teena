@@ -100,7 +100,10 @@ unless ENV['NO_DEPS']
             expect(@homepage.new_note_save_button_element.disabled?).to be true
           end
 
-          it('can cancel an unsaved batch of notes') { @homepage.click_cancel_new_note }
+          it 'can cancel an unsaved batch of notes' do
+            @homepage.click_cancel_new_note
+            @homepage.confirm_delete_or_discard
+          end
 
           it 'can add a batch of comma-separated student SIDs' do
             @homepage.click_create_note_batch
@@ -111,6 +114,7 @@ unless ENV['NO_DEPS']
 
           it 'can add cohorts' do
             @homepage.click_cancel_new_note
+            @homepage.confirm_delete_or_discard
             @homepage.click_create_note_batch
             @homepage.add_cohorts_to_batch(batch_note_1, cohorts)
           end
@@ -138,10 +142,12 @@ unless ENV['NO_DEPS']
             end
           end
 
-          it 'can save a new note' do
+          it 'can delete a batch draft' do
             @homepage.click_cancel_new_note
             @homepage.confirm_delete_or_discard
-            @homepage.wait_until(1) { @homepage.note_body_text_area_elements.empty? }
+          end
+
+          it 'can save a new note' do
             @homepage.create_batch_of_notes(batch_note_1, [Topic::PROBATION, Topic::ACADEMIC_PROGRESS], test.attachments[0..1], students, cohorts, curated_groups)
           end
 

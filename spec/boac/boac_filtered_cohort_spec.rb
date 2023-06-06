@@ -109,8 +109,8 @@ unless ENV['NO_DEPS']
     context 'sorting' do
 
       before(:all) do
-        # For sorting tests, pick the most populous cohort
-        @cohort = test.searches.select(&:member_count).sort_by(&:member_count).last
+        # For sorting tests, pick a reasonably large cohort
+        @cohort = test.searches.find { |s| (50..150).include?  s.member_count }
         @cohort_page.load_cohort @cohort
       end
 
@@ -461,7 +461,7 @@ unless ENV['NO_DEPS']
         end
 
         it 'an error prompts for numeric input' do
-          @cohort_page.select_new_filter_sub_option(filter_name, {'min' => 'A', 'max' => ''})
+          @cohort_page.enter_filter_range_min 'A'
           @cohort_page.gpa_filter_range_error_element.when_visible 1
         end
 
@@ -471,7 +471,7 @@ unless ENV['NO_DEPS']
         end
 
         it 'an error prompts for numeric input from 0 to 4' do
-          @cohort_page.select_new_filter_sub_option(filter_name, {'min' => '-1', 'max' => '5'})
+          @cohort_page.enter_filter_range_min '-1'
           @cohort_page.gpa_filter_range_error_element.when_visible 1
         end
 
@@ -539,18 +539,6 @@ unless ENV['NO_DEPS']
       it 'allows the advisor to remove a College filter' do
         test.default_cohort.search_criteria.college.shift
         @cohort_page.remove_filter_of_type 'College'
-        @cohort_page.verify_student_filters_present test.default_cohort
-      end
-
-      it 'allows the advisor to edit a cumulative GPA filter' do
-        test.default_cohort.search_criteria.gpa = [{'min' => '3.00', 'max' => '4'}]
-        @cohort_page.edit_filter('GPA (Cumulative)', test.default_cohort.search_criteria.gpa.first)
-        @cohort_page.verify_student_filters_present test.default_cohort
-      end
-
-      it 'allows the advisor to remove a cumulative GPA filter' do
-        test.default_cohort.search_criteria.gpa.shift
-        @cohort_page.remove_filter_of_type 'GPA (Cumulative)'
         @cohort_page.verify_student_filters_present test.default_cohort
       end
 

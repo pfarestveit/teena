@@ -205,6 +205,7 @@ module Page
     clear_input_value element
     element.click
     element.send_keys text
+    sleep 1
   end
 
   # Awaits an element for a short time, clicks it using JavaScript, removes existing text, and sends new text. Intended for placing text

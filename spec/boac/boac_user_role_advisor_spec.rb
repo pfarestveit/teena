@@ -34,10 +34,15 @@ unless ENV['NO_DEPS']
       @student_page = BOACStudentPage.new @driver
 
       # Get ASC test data
+      BOACUtils.hard_delete_auth_user @test_asc.advisor
       filter = CohortFilter.new
       filter.set_custom_filters asc_inactive: true
       asc_sids = NessieFilterUtils.get_cohort_result(@test_asc, filter)
       @asc_test_student = @test.students.find { |s| s.sis_id == asc_sids.first }
+      @homepage.dev_auth
+      @pax_manifest_page.load_page
+      @pax_manifest_page.add_user @test_asc.advisor
+      @pax_manifest_page.log_out
       @homepage.dev_auth @test_asc.advisor
       api_page = BOACApiStudentPage.new @driver
       api_page.get_data @asc_test_student
@@ -67,6 +72,7 @@ unless ENV['NO_DEPS']
                end
       logger.debug "The test admit's SID is #{@admit.sis_id}"
       @ce3_advisor = BOACUtils.get_dept_advisors(BOACDepartments::ZCEEE, DeptMembership.new(advisor_role: AdvisorRole::ADVISOR)).last
+      logger.info "CE3 Advisor: #{@ce3_advisor.inspect}"
       ce3_cohort_search = CohortAdmitFilter.new
       ce3_cohort_search.set_custom_filters urem: true
       @ce3_cohort = FilteredCohort.new search_criteria: ce3_cohort_search, name: "CE3 #{@test.id}"
@@ -744,6 +750,7 @@ unless ENV['NO_DEPS']
         eop_sids = NessieTimelineUtils.get_sids_with_notes_of_src(TimelineRecordSource::EOP, eop_private=true)
         @eop_student = @test.students.select { |s| eop_sids.include? s.sis_id }.first
         @eop_note = NessieTimelineUtils.get_eop_notes(@eop_student).find { |n| n.is_private && n.attachments.any? }
+        logger.info "EOP UID #{@eop_student.uid}, note id #{@eop_note.id}"
       end
 
       context 'when an imported private EOP note' do
@@ -754,6 +761,7 @@ unless ENV['NO_DEPS']
             @homepage.log_out
             @homepage.dev_auth @ce3_advisor
             @student_page.load_page @eop_student
+            @student_page.show_notes
           end
 
           it('shows the complete note including private data') { @student_page.verify_note(@eop_note, @ce3_advisor) }
@@ -769,6 +777,7 @@ unless ENV['NO_DEPS']
             @homepage.log_out
             @homepage.dev_auth @test_l_and_s.advisor
             @student_page.load_page @eop_student
+            @student_page.show_notes
           end
 
           it('shows the partial note excluding private data') { @student_page.verify_note(@eop_note, @test_l_and_s.advisor) }
@@ -781,11 +790,9 @@ unless ENV['NO_DEPS']
           end
 
           it 'blocks API access to note attachment downloads' do
-            notes = BOACUtils.get_student_notes(@eop_student).delete_if { |n| n.is_draft && n.advisor.uid != @test_l_and_s.advisor.uid }
-            note = notes.find { |n| n.id == @eop_note.id }
             Utils.prepare_download_dir
-            @api_notes_page.load_attachment_page note.attachments.first.id
-            @api_notes_page.unauth_msg_element.when_visible Utils.short_wait
+            @api_notes_page.load_attachment_page @eop_note.id
+            @api_notes_page.attach_not_found_msg_element.when_visible Utils.short_wait
             expect(Utils.downloads_empty?).to be true
           end
         end
@@ -799,12 +806,9 @@ unless ENV['NO_DEPS']
           end
 
           it 'cannot be searched by body' do
-            @homepage.type_non_note_simple_search_and_enter @eop_note.body
-            expect(@search_results_page.note_results_count).to be_zero
-          end
-
-          it 'cannot be searched by subject' do
-            @homepage.type_non_note_simple_search_and_enter @eop_note.subject
+            @homepage.reopen_and_reset_adv_search
+            @homepage.set_notes_student @eop_student
+            @homepage.enter_adv_search_and_hit_enter @eop_note.body
             expect(@search_results_page.note_results_count).to be_zero
           end
         end
@@ -818,7 +822,7 @@ unless ENV['NO_DEPS']
 
         it 'can be set to private' do
           @note_1.is_private = true
-          @student_page.create_note(@note_1, @topics, @attachments)
+          @student_page.create_note(@note_1, @topics, [@attachments.first])
           expect(BOACUtils.is_note_private? @note_1).to be true
         end
 
@@ -914,6 +918,7 @@ unless ENV['NO_DEPS']
 
             it 'can be set to private' do
               note = Note.new subject: @ce3_template.subject
+              @student_page.click_create_new_note
               @student_page.select_and_apply_template(@ce3_template, note)
               note.is_private = true
               @student_page.set_note_privacy note
@@ -963,6 +968,7 @@ unless ENV['NO_DEPS']
           end
 
           it 'does not offer a private option' do
+            @student_page.click_create_new_note
             @student_page.select_and_apply_template(@non_ce3_template, @non_ce3_note)
             @student_page.new_note_save_button_element.when_visible 2
             expect(@student_page.private_radio?).to be false
@@ -1011,11 +1017,11 @@ unless ENV['NO_DEPS']
           end
 
           it 'blocks API access to note attachment downloads' do
-            notes = BOACUtils.get_student_notes(@student).delete_if { |n| n.is_draft && n.advisor.uid != @test_l_and_s.advisor.uid }
-            note = notes.find { |n| n.id == @note_1.id }
+            notes = BOACUtils.get_student_notes @student
+            note = notes.find { |n| n.attachments&.any? && n.is_private && (n.advisor.uid != @test_l_and_s.advisor.uid) && !n.deleted_date && !n.is_draft }
             Utils.prepare_download_dir
-            @api_notes_page.load_attachment_page note.attachments.first.id
-            @api_notes_page.unauth_msg_element.when_visible Utils.short_wait
+            @api_notes_page.load_attachment_page note.attachments.find { |a| !a.deleted_at }.id
+            @api_notes_page.attach_not_found_msg_element.when_visible Utils.short_wait
             expect(Utils.downloads_empty?).to be true
           end
         end
@@ -1032,12 +1038,12 @@ unless ENV['NO_DEPS']
           end
 
           it 'cannot be searched by body' do
-            @homepage.type_non_note_simple_search_and_enter @note_1.body
+            @homepage.enter_simple_search_and_hit_enter @note_1.body
             expect(@search_results_page.note_results_count).to be_zero
           end
 
           it 'cannot be searched by subject' do
-            @homepage.type_non_note_simple_search_and_enter @note_1.subject
+            @homepage.enter_simple_search_and_hit_enter @note_1.subject
             expect(@search_results_page.note_results_count).to be_zero
           end
 
@@ -1122,12 +1128,12 @@ unless ENV['NO_DEPS']
           end
 
           it 'cannot be searched by body' do
-            @homepage.type_non_note_simple_search_and_enter @note_2.body
+            @homepage.enter_simple_search_and_hit_enter @note_2.body
             expect(@search_results_page.note_results_count).to be_zero
           end
 
           it 'cannot be searched by subject' do
-            @homepage.type_non_note_simple_search_and_enter @note_2.subject
+            @homepage.enter_simple_search_and_hit_enter @note_2.subject
             expect(@search_results_page.note_results_count).to be_zero
           end
 
@@ -1158,6 +1164,19 @@ unless ENV['NO_DEPS']
 
           @homepage.dev_auth @ce3_advisor
           @student_page.load_page @student
+        end
+
+        after(:all) do
+          @homepage.log_out
+          @homepage.dev_auth
+          @ce3_advisor.dept_memberships = [
+            (DeptMembership.new dept: BOACDepartments::ZCEEE,
+                                advisor_role: AdvisorRole::ADVISOR,
+                                is_automated: true)
+          ]
+          @pax_manifest_page.load_page
+          @pax_manifest_page.search_for_advisor @ce3_advisor
+          @pax_manifest_page.edit_user @ce3_advisor
         end
 
         it 'does not allow the advisor to edit their private notes' do

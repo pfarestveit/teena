@@ -347,13 +347,14 @@ class BOACUtils < Utils
                              when 'read_write' then DegreeProgressPerm::WRITE
                              else nil
                              end
+      depts = r['depts'].split(',').map { |code| BOACDepartments::DEPARTMENTS.find { |d| d.code == code } }
       BOACUser.new(
           uid: r['uid'],
           active: true,
           can_access_advising_data: (r['can_access_advising_data'] == 't'),
           can_access_canvas_data: (r['can_access_canvas_data'] == 't'),
           degree_progress_perm: degree_progress_perm,
-          depts: r['depts'].split(','),
+          depts: depts,
           dept_memberships: dept_memberships
       )
     end
@@ -644,7 +645,7 @@ class BOACUtils < Utils
   end
 
   def self.get_note_ids_by_subject(note_subject, student=nil)
-    query = "SELECT id FROM notes WHERE subject = '#{note_subject}'#{+ ' AND sid = \'' + student.sis_id + '\'' if student};"
+    query = "SELECT id FROM notes WHERE subject = '#{note_subject}'#{+ ' AND sid = \'' + student.sis_id + '\'' if student} AND deleted_at IS NULL;"
     Utils.query_pg_db_field(boac_db_credentials, query, 'id')
   end
 
@@ -662,6 +663,12 @@ class BOACUtils < Utils
     note.deleted_date = Utils.query_pg_db_field(boac_db_credentials, query, 'deleted_at').first
     logger.debug "Deleted at is #{note.deleted_date}"
     note.deleted_date
+  end
+
+  def self.get_advisor_note_drafts(advisor=nil)
+    query = "SELECT * FROM notes WHERE is_draft IS TRUE AND deleted_at IS NULL#{' AND author_uid = \'' + advisor.uid + '\'' if advisor};"
+    result = Utils.query_pg_db(boac_db_credentials, query)
+    get_notes_from_pg_db_result result
   end
 
   # Sets and returns an attachment ID

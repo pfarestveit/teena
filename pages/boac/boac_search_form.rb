@@ -35,16 +35,6 @@ module BOACSearchForm
     wait_for_spinner
   end
 
-  def type_non_note_simple_search_and_enter(string)
-    logger.info "Searching for '#{string}'"
-    enter_simple_search_and_hit_enter string
-  end
-
-  def type_note_appt_simple_search_and_enter(string)
-    logger.info 'Searching for a string within a note or appointment'
-    enter_simple_search_and_hit_enter string
-  end
-
   def click_simple_search_button
     logger.info 'Clicking search button'
     wait_for_update_and_click_js search_button_element
@@ -93,16 +83,6 @@ module BOACSearchForm
     enter_adv_search string
     hit_enter
     wait_for_spinner
-  end
-
-  def type_non_note_adv_search_and_enter(string)
-    logger.info "Searching for '#{string}'"
-    enter_adv_search_and_hit_enter string
-  end
-
-  def type_note_appt_adv_search_and_enter(string)
-    logger.info 'Searching for a string within a note or appointment'
-    enter_adv_search_and_hit_enter string
   end
 
   # Search types

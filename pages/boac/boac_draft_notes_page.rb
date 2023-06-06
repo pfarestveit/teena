@@ -10,6 +10,7 @@ class BOACDraftNotesPage
   elements(:draft_note_row, :row, xpath: '//tbody/tr')
 
   def visible_draft_note_ids
+    h1_element(xpath: '//h1[contains(text(), "Draft Notes")]').when_visible Utils.short_wait
     wait_until(Utils.short_wait) { draft_note_row_elements.any? } unless no_drafts_msg?
     draft_note_row_elements.map { |el| el.attribute('id').split('-').last }
   end

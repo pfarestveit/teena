@@ -82,7 +82,7 @@ unless ENV['NO_DEPS']
       end
 
       it 'can be done using the user search results group selector' do
-        @homepage.type_non_note_simple_search_and_enter test_student.sis_id
+        @homepage.enter_simple_search_and_hit_enter test_student.sis_id
         group_created_from_search = CuratedGroup.new({:name => "Group created from search results #{test.id}"})
         @search_page.select_and_add_students_to_new_grp([test_student], group_created_from_search)
       end
@@ -246,14 +246,14 @@ unless ENV['NO_DEPS']
       end
 
       it 'can be added on user search results using select-all' do
-        @homepage.type_non_note_simple_search_and_enter test_student.sis_id
+        @homepage.enter_simple_search_and_hit_enter test_student.sis_id
         @search_page.select_and_add_all_students_to_grp(test.students, group_7)
         @group_page.load_page group_7
         expect(@group_page.visible_sids.sort).to eql(group_7.members.map(&:sis_id).sort)
       end
 
       it 'can be added on user search results using individual selections' do
-        @homepage.type_non_note_simple_search_and_enter test_student.sis_id
+        @homepage.enter_simple_search_and_hit_enter test_student.sis_id
         @search_page.select_and_add_students_to_grp([test_student], group_8)
         @group_page.load_page group_8
         expect(@group_page.visible_sids.sort).to eql(group_8.members.map(&:sis_id).sort)
