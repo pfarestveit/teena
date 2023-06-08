@@ -164,7 +164,7 @@ class SquiggyEngagementIndexPage
     load_scores test
     search_for_user user
     sleep 1
-    user_score_el(test, user).when_visible Utils.medium_wait
+    user_score_el(test, user).when_present Utils.medium_wait
     score = user_score_el(test, user).text.to_i
     logger.debug "#{user.full_name}'s score is currently '#{score}'"
     score

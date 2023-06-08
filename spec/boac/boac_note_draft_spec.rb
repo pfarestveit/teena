@@ -9,7 +9,6 @@ describe 'BOA draft note' do
   before(:all) do
     @test = BOACTestConfig.new
     @test.note_drafts
-    @test.advisor.depts = [@test.dept.name]
 
     @director = BOACUtils.get_authorized_users.find do |a|
       a.dept_memberships.find { |m| m.advisor_role == AdvisorRole::DIRECTOR }

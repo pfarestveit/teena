@@ -328,11 +328,11 @@ module Page
       wait_for_element_and_type(section_name_element, section.sis_id)
       wait_for_update_and_click add_section_button_element
       # Add SIS id to section
-      wait_for_update_and_click link_element(text: section.sis_id)
-      wait_for_update_and_click edit_section_link_element
+      wait_for_load_and_click link_element(text: section.sis_id)
+      wait_for_load_and_click edit_section_link_element
       wait_for_element_and_type(section_sis_id_element, section.sis_id)
       wait_for_update_and_click update_section_button_element
-      update_section_button_element.when_not_visible Utils.short_wait
+      update_section_button_element.when_not_visible Utils.medium_wait
     end
 
     def add_sections(course, sections)

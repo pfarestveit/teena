@@ -221,6 +221,7 @@ describe 'A SuiteC course' do
     context 'with members who have switched groups' do
 
       before(:all) do
+        @whiteboards.close_whiteboard
         @canvas_groups_page.masquerade_as @student_3
         @canvas_groups_page.stud_switch_grps(@test.course, @teacher_group_2)
         @teacher_group_1.members.delete @student_3

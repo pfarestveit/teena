@@ -144,13 +144,14 @@ class Utils
     if "#{driver.browser}" == 'chrome'
       messages = get_js_errors driver
       messages.each do |msg|
-        unless msg.include?('chrome-search://thumb/') ||
+        unless msg.include?('cal1card-data/photos') ||
+          msg.include?('chrome-search://thumb/') ||
+          msg.include?('cloudfront.net') ||
+          msg.include?('duosecurity.com') ||
+          msg.include?('Highcharts') ||
           msg.include?('instructure.com') ||
           msg.include?('loadAllyCustomizations') ||
-          msg.include?('cal1card-data/photos') ||
-          msg.include?('prod.ally') ||
-          msg.include?('cloudfront.net') ||
-          msg.include?('Highcharts')
+          msg.include?('prod.ally')
           logger.error "Possible JS error: #{msg}"
         end
       end
