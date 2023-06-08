@@ -23,6 +23,7 @@ describe 'Asset Library' do
 
     @cat_1 = SquiggyCategory.new "Category 1 #{test.id}"
     @cat_2 = SquiggyCategory.new "Category 2 #{test.id}"
+    @cat_3 = SquiggyCategory.new "Category 3 #{test.id}"
 
     @canvas.log_in(@cal_net, test.admin.username, Utils.super_admin_password)
     @canvas.create_squiggy_course test
@@ -172,13 +173,18 @@ describe 'Asset Library' do
   describe 'search' do
 
     before(:all) do
-      @student_2_upload.category = @cat_2
+      @assets_list.load_page test
+      @assets_list.click_manage_assets_link
+      @manage_assets.create_new_category @cat_3
+      @manage_assets.category_row(@cat_3).when_visible 1
+
+      @student_2_upload.category = @cat_3
       @student_2_upload.description = "Description for uploaded file #{test.id}"
       @canvas.masquerade_as(@student_2, test.course)
       @assets_list.load_page test
       @assets_list.upload_file_asset @student_2_upload
 
-      @student_3_link.category = @cat_2
+      @student_3_link.category = @cat_3
       @student_3_link.description = "Link #MakeOurDreamsComeTrue#{test.id}"
       @canvas.masquerade_as(@student_3, test.course)
       @assets_list.load_page test
@@ -236,22 +242,22 @@ describe 'Asset Library' do
     end
 
     it 'lets a user perform an advanced search by category, sorted by Most Recent' do
-      @assets_list.advanced_search(nil, @cat_2, nil, nil, nil, nil, nil)
+      @assets_list.advanced_search(nil, @cat_3, nil, nil, nil, nil, nil)
       @assets_list.wait_for_asset_results [@student_3_link, @student_2_upload]
     end
 
     it 'lets a user perform an advanced search by category and uploader, sorted by Most Recent' do
-      @assets_list.advanced_search(nil, @cat_2, @student_3, nil, nil, nil, nil)
+      @assets_list.advanced_search(nil, @cat_3, @student_3, nil, nil, nil, nil)
       @assets_list.wait_for_asset_results [@student_3_link]
     end
 
     it 'lets a user perform an advanced search by category and type, sorted by Most Recent' do
-      @assets_list.advanced_search(nil, @cat_2, nil, 'Link', nil, nil, nil)
+      @assets_list.advanced_search(nil, @cat_3, nil, 'Link', nil, nil, nil)
       @assets_list.wait_for_asset_results [@student_3_link]
     end
 
     it 'lets a user perform an advanced search by keyword and category, sorted by Most Recent' do
-      @assets_list.advanced_search(test.id, @cat_2, nil, nil, nil,nil, nil)
+      @assets_list.advanced_search(test.id, @cat_3, nil, nil, nil,nil, nil)
       @assets_list.wait_for_asset_results [@student_3_link, @student_2_upload]
     end
 
@@ -271,7 +277,7 @@ describe 'Asset Library' do
     end
 
     it 'lets a user perform an advanced search by keyword, category, and type, sorted by Most Recent' do
-      @assets_list.advanced_search(test.id, @cat_2, nil, 'File', nil, nil, nil)
+      @assets_list.advanced_search(test.id, @cat_3, nil, 'File', nil, nil, nil)
       @assets_list.wait_for_asset_results [@student_2_upload]
     end
 
@@ -281,7 +287,7 @@ describe 'Asset Library' do
     end
 
     it 'lets a user perform an advanced search by keyword, category, uploader, and type, sorted by Most Recent' do
-      @assets_list.advanced_search(test.id, @cat_2, @student_2, 'File', nil, nil, nil)
+      @assets_list.advanced_search(test.id, @cat_3, @student_2, 'File', nil, nil, nil)
       @assets_list.wait_for_asset_results [@student_2_upload]
     end
 
@@ -306,7 +312,7 @@ describe 'Asset Library' do
     end
 
     it 'lets a user perform an advanced search by keyword and category, sorted by Most Comments' do
-      @assets_list.advanced_search(test.id, @cat_2, nil, nil, nil, nil, 'Most comments')
+      @assets_list.advanced_search(test.id, @cat_3, nil, nil, nil, nil, 'Most comments')
       @assets_list.wait_for_asset_results [@student_2_upload, @student_3_link]
     end
 

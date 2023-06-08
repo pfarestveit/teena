@@ -246,13 +246,13 @@ describe 'Whiteboard Add Asset' do
       expect(@student_1_asset_hidden.id).not_to be_nil
 
       # Asset is not searchable
+      @whiteboards.close_whiteboard
       @assets_list.load_page @test
       @assets_list.advanced_search(@student_1_asset_hidden.title, nil, @student_1, 'File', nil, nil, nil)
       @assets_list.no_results_msg_element.when_visible Utils.short_wait
     end
 
     it 'allows the asset owner to view a hidden asset deep link' do
-      @whiteboards.close_whiteboard
       @asset_detail.load_asset_detail(@test, @student_1_asset_hidden)
     end
 

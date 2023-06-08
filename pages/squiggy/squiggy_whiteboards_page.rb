@@ -102,8 +102,8 @@ class SquiggyWhiteboardsPage
   def wb_advanced_search(string, user, inc_deleted)
     logger.info 'Performing advanced search'
     wait_until(Utils.short_wait) { simple_search_button? || open_adv_search_button? || adv_search_button? }
-    open_adv_search_button unless adv_search_keyword_input_element.visible?
-    reset_adv_search_button if reset_adv_search_button?
+    wait_for_update_and_click open_adv_search_button_element unless adv_search_keyword_input_element.visible?
+    wait_for_update_and_click reset_adv_search_button_element if reset_adv_search_button?
 
     if string
       enter_squiggy_text(adv_search_keyword_input_element, string)
@@ -116,6 +116,6 @@ class SquiggyWhiteboardsPage
 
     include_deleted_cbx_element.click if inc_deleted
     wait_for_update_and_click adv_search_button_element
-    Utils.save_screenshot(@driver, "#{Time.now}")
+    Utils.save_screenshot(@driver, "#{Time.now}") unless "#{@driver.browser}" == 'firefox'
   end
 end

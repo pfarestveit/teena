@@ -123,7 +123,7 @@ module Page
         reply_prompt_dismiss_button_element.click if reply_prompt_dismiss_button_element.exists?
         wait_for_load_and_click_js secondary_post_reply_button_elements[index]
       end
-      wait_until(Utils.short_wait) { discussion_reply_elements.length == replies + 1 }
+      wait_until(Utils.medium_wait) { discussion_reply_elements.length == replies + 1 }
     end
 
     # Waits for a discussion thread to load and returns an array of elements containing the discussion entry authors

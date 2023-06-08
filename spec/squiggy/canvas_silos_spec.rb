@@ -282,6 +282,7 @@ describe 'Canvas section silo-ing' do
       context 'viewed by an instructor' do
 
         before(:all) do
+          @whiteboards.close_whiteboard
           @canvas.masquerade_as(@teacher, @test.course)
           @impact_studio.load_page @test
         end

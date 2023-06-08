@@ -37,7 +37,7 @@ module SquiggyAssetLibrarySearchForm
     scroll_to_top
     if keyword_search_input?
       logger.debug 'Advanced search input is already visible'
-      advanced_search_reset_button if advanced_search_reset_button?
+      wait_for_update_and_click advanced_search_reset_button_element if advanced_search_reset_button?
     else
       logger.debug 'Opening advanced search'
       wait_for_load_and_click advanced_search_button_element
@@ -115,7 +115,7 @@ module SquiggyAssetLibrarySearchForm
   button(:group_clear_button, xpath: '//input[@id="adv-search-group-set-select"]/../following-sibling::div//button')
 
   def click_group_select
-    group_select_element.when_present 2
+    group_select_element.when_present Utils.short_wait
     js_click group_select_element
     sleep Utils.click_wait
   end
@@ -200,9 +200,9 @@ module SquiggyAssetLibrarySearchForm
   end
 
   def wait_for_asset_results(assets)
-    sleep 1
+    sleep 2
     expected = assets.map &:id
-    wait_until(3, "Expected #{expected}, got #{visible_asset_ids}") { visible_asset_ids == expected }
+    wait_until(Utils.short_wait, "Expected #{expected}, got #{visible_asset_ids}") { visible_asset_ids == expected }
   end
 
   def wait_for_no_results
