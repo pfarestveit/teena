@@ -28,6 +28,10 @@ class SquiggyUtils < Utils
     squiggy_config['load_test_reps']
   end
 
+  def SquiggyUtils.template_course_id
+    squiggy_config['template_course_id']
+  end
+
   def SquiggyUtils.whiteboards
     squiggy_config['whiteboards']
   end

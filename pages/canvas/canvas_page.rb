@@ -162,6 +162,10 @@ module Page
     text_area(:course_code, id: 'course_course_code')
     list_item(:course_site_sidebar_tab, id: 'section-tabs')
 
+    link(:copy_course_link, xpath: '//a[contains(@class, "copy_course_link")]')
+    button(:copy_course_create_button, xpath: '//button[text()="Create Course"]')
+    span(:copy_course_success_msg, xpath: '//span[text()="Completed"]')
+
     def click_create_site_settings_link
       wait_for_update_and_click_js profile_link_element
       sleep 1
@@ -179,24 +183,36 @@ module Page
       else
         SquiggyUtils.inactivate_all_courses
         logger.info "Creating a Squiggy course site named #{test.course.title}"
-        load_sub_account Utils.canvas_qa_sub_account
-        wait_for_load_and_click add_new_course_button_element
-        course_name_input_element.when_visible Utils.short_wait
-        wait_for_element_and_type(course_name_input_element, "#{test.course.title}")
-        wait_for_element_and_type(ref_code_input_element, "#{test.course.code}")
-        wait_for_update_and_click create_course_button_element
-        add_course_success_element.when_visible Utils.medium_wait
+        if SquiggyUtils.template_course_id
+          template_course = SquiggyCourse.new site_id: SquiggyUtils.template_course_id
+          load_course_settings template_course
+          wait_for_load_and_click copy_course_link_element
+          wait_for_element_and_type(course_title_element, test.course.title)
+          wait_for_element_and_type(course_code_element, test.course.code)
+          wait_for_update_and_click copy_course_create_button_element
+          copy_course_success_msg_element.when_present Utils.medium_wait
+          test.course.is_copy = true
+        else
+          load_sub_account Utils.canvas_qa_sub_account
+          wait_for_load_and_click add_new_course_button_element
+          course_name_input_element.when_visible Utils.short_wait
+          wait_for_element_and_type(course_name_input_element, "#{test.course.title}")
+          wait_for_element_and_type(ref_code_input_element, "#{test.course.code}")
+          wait_for_update_and_click create_course_button_element
+          add_course_success_element.when_visible Utils.medium_wait
+        end
         test.course.site_id = search_for_course(test.course, Utils.canvas_qa_sub_account)
+        logger.info "Course site ID is #{test.course.site_id}"
+        if test.course.sections&.any?
+          add_sections(test.course, test.course.sections) if test.course.sections&.any?
+          add_users_by_section(test.course, test.course.roster)
+        else
+          add_users(test.course, test.course.roster)
+        end
+        remove_users_from_course(test.course, [test.admin])
+        publish_course_site test.course
+        add_squiggy_tools test
       end
-      logger.info "Course site ID is #{test.course.site_id}"
-      if test.course.sections&.any?
-        add_sections(test.course, test.course.sections) if test.course.sections&.any?
-        add_users_by_section(test.course, test.course.roster)
-      else
-        add_users(test.course, test.course.roster)
-      end
-      publish_course_site test.course
-      add_squiggy_tools test
     end
 
     def create_generic_course_site(sub_account, course, test_users, test_id)
@@ -372,7 +388,7 @@ module Page
       else
         logger.debug 'The site is unpublished, publishing'
         js_click publish_button_element
-        unless course.create_site_workflow
+        unless course.create_site_workflow || course.is_copy
           wait_for_update_and_click activity_stream_radio_element
           wait_for_update_and_click choose_and_publish_button_element
         end
@@ -504,41 +520,43 @@ module Page
     end
 
     def add_squiggy_tools(test)
-      creds = SquiggyUtils.lti_credentials
-      test.course.lti_tools.each do |tool|
-        logger.info "Adding and/or enabling #{tool.name}"
-        load_tools_config_page test.course
-        wait_for_update_and_click navigation_link_element
-        hide_canvas_footer_and_popup
-        if verify_block { link_element(xpath: "//ul[@id='nav_enabled_list']/li[contains(.,'#{tool.name}')]//a").when_present 2 }
-          logger.debug "#{tool.name} is already installed and enabled, skipping"
-        else
-          if link_element(xpath: "//ul[@id='nav_disabled_list']/li[contains(.,'#{tool.name}')]//a").exists?
-            fail "#{tool.name} is already installed but it shouldn't be"
+      unless test.course.is_copy
+        creds = SquiggyUtils.lti_credentials
+        test.course.lti_tools.each do |tool|
+          logger.info "Adding and/or enabling #{tool.name}"
+          load_tools_config_page test.course
+          wait_for_update_and_click navigation_link_element
+          hide_canvas_footer_and_popup
+          if verify_block { link_element(xpath: "//ul[@id='nav_enabled_list']/li[contains(.,'#{tool.name}')]//a").when_present 2 }
+            logger.debug "#{tool.name} is already installed and enabled, skipping"
           else
-            logger.debug "#{tool.name} is not installed, installing and enabling"
+            if link_element(xpath: "//ul[@id='nav_disabled_list']/li[contains(.,'#{tool.name}')]//a").exists?
+              fail "#{tool.name} is already installed but it shouldn't be"
+            else
+              logger.debug "#{tool.name} is not installed, installing and enabling"
 
-            # Configure tool
-            load_tools_adding_page test.course
-            wait_for_update_and_click apps_link_element
-            wait_for_update_and_click add_app_link_element
-            wait_for_element_and_select(config_type_element, 'By URL')
-            sleep 1
-            wait_for_element_and_type(app_name_input_element, "#{tool.name}")
-            wait_for_element_and_type(key_input_element, creds[:key])
-            wait_for_element_and_type(secret_input_element, creds[:secret])
-            wait_for_element_and_type(url_input_element, "#{SquiggyUtils.base_url}#{tool.xml}")
-            wait_for_update_and_click submit_button_element
-            wait_for_update_and_click add_tool_button_element
-            link_element(xpath: "//td[@title='#{tool.name}']").when_present Utils.medium_wait
+              # Configure tool
+              load_tools_adding_page test.course
+              wait_for_update_and_click apps_link_element
+              wait_for_update_and_click add_app_link_element
+              wait_for_element_and_select(config_type_element, 'By URL')
+              sleep 1
+              wait_for_element_and_type(app_name_input_element, "#{tool.name}")
+              wait_for_element_and_type(key_input_element, creds[:key])
+              wait_for_element_and_type(secret_input_element, creds[:secret])
+              wait_for_element_and_type(url_input_element, "#{SquiggyUtils.base_url}#{tool.xml}")
+              wait_for_update_and_click submit_button_element
+              wait_for_update_and_click add_tool_button_element
+              link_element(xpath: "//td[@title='#{tool.name}']").when_present Utils.medium_wait
 
-            # Enable tool placement in sidebar navigation
-            wait_for_update_and_click_js button_element(xpath: "//tr[contains(., '#{tool.name}')]//button")
-            wait_for_update_and_click_js app_placements_button_element
-            wait_for_update_and_click_js activate_navigation_button_element
-            wait_for_update_and_click_js close_placements_button_element
-            sleep 1
-            enable_tool(test.course, tool)
+              # Enable tool placement in sidebar navigation
+              wait_for_update_and_click_js button_element(xpath: "//tr[contains(., '#{tool.name}')]//button")
+              wait_for_update_and_click_js app_placements_button_element
+              wait_for_update_and_click_js activate_navigation_button_element
+              wait_for_update_and_click_js close_placements_button_element
+              sleep 1
+              enable_tool(test.course, tool)
+            end
           end
         end
       end

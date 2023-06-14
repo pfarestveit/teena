@@ -17,7 +17,9 @@ class TestConfig
   # Sets a unique ID (the epoch) for a test run
   def initialize(test_name = nil)
     @id = "QA Test #{Time.now.to_i}"
-    @admin = User.new uid: Utils.super_admin_uid, username: Utils.super_admin_username
+    @admin = User.new uid: Utils.super_admin_uid,
+                      username: Utils.super_admin_username,
+                      canvas_id: Utils.super_admin_canvas_id
   end
 
   # Parses a JSON file containing test data
