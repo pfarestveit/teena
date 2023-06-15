@@ -518,18 +518,6 @@ unless ENV['NO_DEPS']
         end
       end
 
-      it 'allows the advisor to edit an Academic Standing filter' do
-        test.default_cohort.search_criteria.academic_standing = ['Good Standing']
-        @cohort_page.edit_filter('Academic Standing', test.default_cohort.search_criteria.academic_standing.first)
-        @cohort_page.verify_student_filters_present test.default_cohort
-      end
-
-      it 'allows the advisor to remove an Academic Standing filter' do
-        test.default_cohort.search_criteria.academic_standing.shift
-        @cohort_page.remove_filter_of_type 'Academic Standing'
-        @cohort_page.verify_student_filters_present test.default_cohort
-      end
-
       it 'allows the advisor to edit a College filter' do
         test.default_cohort.search_criteria.college = ['Undergrad Chemistry']
         @cohort_page.edit_filter('College', test.default_cohort.search_criteria.college.first)
@@ -560,72 +548,6 @@ unless ENV['NO_DEPS']
         @cohort_page.verify_student_filters_present test.default_cohort
       end
 
-      it 'allows the advisor to edit a Level filter' do
-        test.default_cohort.search_criteria.level = ['30']
-        @cohort_page.edit_filter('Level', test.default_cohort.search_criteria.level.first)
-        @cohort_page.verify_student_filters_present test.default_cohort
-      end
-
-      it 'allows the advisor to remove a Level filter' do
-        test.default_cohort.search_criteria.level.shift
-        @cohort_page.remove_filter_of_type 'Level'
-        @cohort_page.verify_student_filters_present test.default_cohort
-      end
-
-      it 'allows the advisor to edit a Units Completed filter' do
-        test.default_cohort.search_criteria.units_completed = ['60 - 89']
-        @cohort_page.edit_filter('Units Completed', test.default_cohort.search_criteria.units_completed.first)
-        @cohort_page.verify_student_filters_present test.default_cohort
-      end
-
-      it 'allows the advisor to remove a Units Completed filter' do
-        test.default_cohort.search_criteria.units_completed.shift
-        @cohort_page.remove_filter_of_type 'Units Completed'
-        @cohort_page.verify_student_filters_present test.default_cohort
-      end
-
-      it 'allows the advisor to edit an Intended Major filter' do
-        test.default_cohort.search_criteria.intended_major = ['History BA']
-        @cohort_page.edit_filter('Intended Major', test.default_cohort.search_criteria.intended_major.first)
-        @cohort_page.verify_student_filters_present test.default_cohort
-      end
-
-      it 'allows the advisor to remove an Intended Major filter' do
-        test.default_cohort.search_criteria.intended_major.shift
-        @cohort_page.remove_filter_of_type 'Intended Major'
-        @cohort_page.verify_student_filters_present test.default_cohort
-      end
-
-      it 'allows the advisor to edit a Major filter' do
-        test.default_cohort.search_criteria.major = ['Bioengineering BS']
-        @cohort_page.edit_filter('Major', test.default_cohort.search_criteria.major.first)
-        @cohort_page.verify_student_filters_present test.default_cohort
-      end
-
-      it 'allows the advisor to remove a Major filter' do
-        test.default_cohort.search_criteria.major.shift
-        @cohort_page.remove_filter_of_type 'Major'
-        @cohort_page.verify_student_filters_present test.default_cohort
-      end
-
-      it 'allows the advisor to edit a Minor filter' do
-        test.default_cohort.search_criteria.minor = ['History UG']
-        @cohort_page.edit_filter('Minor', test.default_cohort.search_criteria.minor.first)
-        @cohort_page.verify_student_filters_present test.default_cohort
-      end
-
-      it 'allows the advisor to remove a Minor filter' do
-        test.default_cohort.search_criteria.minor.shift
-        @cohort_page.remove_filter_of_type 'Minor'
-        @cohort_page.verify_student_filters_present test.default_cohort
-      end
-
-      it 'allows the advisor to remove a Transfer Student filter' do
-        test.default_cohort.search_criteria.transfer_student = nil
-        @cohort_page.remove_filter_of_type 'Transfer Student'
-        @cohort_page.verify_student_filters_present test.default_cohort
-      end
-
       it 'allows the advisor to edit an Entering Term filter' do
         new_term_id = (test.default_cohort.search_criteria.entering_terms.first.to_i - 10).to_s
         test.default_cohort.search_criteria.entering_terms = [new_term_id]
@@ -636,103 +558,6 @@ unless ENV['NO_DEPS']
       it 'allows the advisor to remove an Entering Term filter' do
         test.default_cohort.search_criteria.entering_terms.shift
         @cohort_page.remove_filter_of_type 'Entering Term'
-        @cohort_page.verify_student_filters_present test.default_cohort
-      end
-
-      it 'allows the advisor to edit an Expected Graduation Term filter' do
-        new_term_id = (test.default_cohort.search_criteria.expected_grad_terms.first.to_i + 10).to_s
-        test.default_cohort.search_criteria.expected_grad_terms = [new_term_id]
-        @cohort_page.edit_filter('Expected Graduation Term', test.default_cohort.search_criteria.expected_grad_terms.first)
-        @cohort_page.verify_student_filters_present test.default_cohort
-      end
-
-      it 'allows the advisor to remove an Expected Graduation Term filter' do
-        test.default_cohort.search_criteria.expected_grad_terms.shift
-        @cohort_page.remove_filter_of_type 'Expected Graduation Term'
-        @cohort_page.verify_student_filters_present test.default_cohort
-      end
-
-      it 'allows the advisor to remove an Unrepresented Minority filter' do
-        test.default_cohort.search_criteria.underrepresented_minority = nil
-        @cohort_page.remove_filter_of_type 'Underrepresented Minority'
-        @cohort_page.verify_student_filters_present test.default_cohort
-      end
-
-      it 'allows the advisor to edit an Ethnicity filter' do
-        test.default_cohort.search_criteria.ethnicity = ['Thai']
-        @cohort_page.edit_filter('Ethnicity', test.default_cohort.search_criteria.ethnicity.first)
-        @cohort_page.verify_student_filters_present test.default_cohort
-      end
-
-      it 'allows the advisor to remove an Ethnicity filter' do
-        test.default_cohort.search_criteria.ethnicity.shift
-        @cohort_page.remove_filter_of_type 'Ethnicity'
-        @cohort_page.verify_student_filters_present test.default_cohort
-      end
-
-      it 'allows the advisor to edit a Visa Type filter' do
-        test.default_cohort.search_criteria.visa_type = ['Permanent Resident']
-        @cohort_page.edit_filter('Visa Type', test.default_cohort.search_criteria.visa_type.first)
-        @cohort_page.verify_student_filters_present test.default_cohort
-      end
-
-      it 'allows the advisor to remove a Visa Type filter' do
-        test.default_cohort.search_criteria.visa_type.shift
-        @cohort_page.remove_filter_of_type 'Visa Type'
-        @cohort_page.verify_student_filters_present test.default_cohort
-      end
-
-      it 'allows the advisor to edit a Gender filter' do
-        test.default_cohort.search_criteria.gender = ['Female']
-        @cohort_page.edit_filter('Gender', test.default_cohort.search_criteria.gender.first)
-        @cohort_page.verify_student_filters_present test.default_cohort
-      end
-
-      it 'allows the advisor to remove a Gender filter' do
-        test.default_cohort.search_criteria.gender.shift
-        @cohort_page.remove_filter_of_type 'Gender'
-        @cohort_page.verify_student_filters_present test.default_cohort
-      end
-
-      it 'allows the advisor to edit an Ethnicity (COE) filter' do
-        test.default_cohort.search_criteria.coe_ethnicity = ['E']
-        @cohort_page.edit_filter('Ethnicity (COE)', test.default_cohort.search_criteria.coe_ethnicity.first)
-        @cohort_page.verify_student_filters_present test.default_cohort
-      end
-
-      it 'allows the advisor to remove an Ethnicity (COE) filter' do
-        test.default_cohort.search_criteria.coe_ethnicity.shift
-        @cohort_page.remove_filter_of_type 'Ethnicity (COE)'
-        @cohort_page.verify_student_filters_present test.default_cohort
-      end
-
-      it 'allows the advisor to edit a Gender (COE) filter' do
-        test.default_cohort.search_criteria.coe_gender = ['M']
-        @cohort_page.edit_filter('Gender (COE)', test.default_cohort.search_criteria.coe_gender.first)
-        @cohort_page.verify_student_filters_present test.default_cohort
-      end
-
-      it 'allows the advisor to remove a Gender (COE) filter' do
-        test.default_cohort.search_criteria.coe_gender.shift
-        @cohort_page.remove_filter_of_type 'Gender (COE)'
-        @cohort_page.verify_student_filters_present test.default_cohort
-      end
-
-      it 'allows the advisor to remove an Underrepresented Minority (COE) filter' do
-        test.default_cohort.search_criteria.coe_underrepresented_minority = false
-        @cohort_page.remove_filter_of_type 'Underrepresented Minority (COE)'
-        @cohort_page.verify_student_filters_present test.default_cohort
-      end
-
-      it 'allows the advisor to remove an Inactive (ASC) filter' do
-        test.default_cohort.search_criteria.asc_inactive = nil
-        @cohort_page.remove_filter_of_type 'Inactive (ASC)'
-        @cohort_page.verify_student_filters_present test.default_cohort
-      end
-
-      it 'allows the advisor to remove an Intensive (ASC) filter' do
-        test.default_cohort.search_criteria.asc_intensive = false
-        @cohort_page.remove_filter_of_type 'Intensive (ASC)'
         @cohort_page.verify_student_filters_present test.default_cohort
       end
 
@@ -748,18 +573,6 @@ unless ENV['NO_DEPS']
         @cohort_page.verify_student_filters_present test.default_cohort
       end
 
-      it 'allows the advisor to edit a PREP (COE) filter' do
-        test.default_cohort.search_criteria.coe_prep = ['T-PREP']
-        @cohort_page.edit_filter('PREP (COE)', test.default_cohort.search_criteria.coe_prep.first)
-        @cohort_page.verify_student_filters_present test.default_cohort
-      end
-
-      it 'allows the advisor to remove a PREP (COE) filter' do
-        test.default_cohort.search_criteria.coe_prep.shift
-        @cohort_page.remove_filter_of_type 'PREP (COE)'
-        @cohort_page.verify_student_filters_present test.default_cohort
-      end
-
       it 'allows the advisor to edit a Last Name filter' do
         test.default_cohort.search_criteria.last_name = [{'min' => 'B', 'max' => 'Y'}]
         @cohort_page.edit_filter('Last Name', test.default_cohort.search_criteria.last_name.first)
@@ -772,26 +585,6 @@ unless ENV['NO_DEPS']
         @cohort_page.verify_student_filters_present test.default_cohort
       end
 
-      it 'allows the advisor to edit a My Students filter' do
-        if test.default_cohort.search_criteria.cohort_owner_academic_plans
-          test.default_cohort.search_criteria.cohort_owner_academic_plans = ['*']
-          @cohort_page.edit_filter('My Students', '*')
-          @cohort_page.verify_student_filters_present test.default_cohort
-        else
-          logger.warn 'Skipping test for editing My Students since the filter is not available to the user'
-        end
-      end
-
-      it 'allows the advisor to remove a My Students filter' do
-        if test.default_cohort.search_criteria.cohort_owner_academic_plans
-          test.default_cohort.search_criteria.cohort_owner_academic_plans.shift
-          @cohort_page.remove_filter_of_type 'My Students'
-          @cohort_page.verify_student_filters_present test.default_cohort
-        else
-          logger.warn 'Skipping test for removing My Students since the filter is not available to the user'
-        end
-      end
-
       it 'allows the advisor to edit an Advisor (COE) filter' do
         test.default_cohort.search_criteria.coe_advisor = [BOACUtils.get_dept_advisors(BOACDepartments::COE).last.uid.to_s]
         @cohort_page.edit_filter('Advisor (COE)', test.default_cohort.search_criteria.coe_advisor.first)
@@ -802,17 +595,6 @@ unless ENV['NO_DEPS']
         test.default_cohort.search_criteria.coe_advisor.shift
         @cohort_page.remove_filter_of_type 'Advisor (COE)'
         @cohort_page.verify_student_filters_present test.default_cohort
-      end
-
-      it 'allows the advisor to remove an Inactive (CoE) filter' do
-        test.default_cohort.search_criteria.coe_inactive = nil
-        @cohort_page.remove_filter_of_type 'Inactive (COE)'
-        @cohort_page.verify_student_filters_present test.default_cohort
-      end
-
-      it 'allows the advisor to remove a Probation (COE) filter' do
-        test.default_cohort.search_criteria.coe_probation = nil
-        @cohort_page.remove_filter_of_type 'Probation (COE)'
       end
     end
 

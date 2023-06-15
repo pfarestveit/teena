@@ -163,7 +163,8 @@ class NessieFilterUtils < NessieUtils
 
   def self.minor_cond(filter, conditions_list)
     conditions_list << "student.minors.minor IN (#{in_op filter.minor})
-                    AND student.student_profile_index.level != 'GR'" if filter.minor&.any?
+                    AND student.student_profile_index.level != 'GR'
+                    AND student.student_majors.college NOT LIKE 'Graduate%'" if filter.minor&.any?
   end
 
   def self.midpoint_deficient_cond(filter, conditions_list)
@@ -336,8 +337,10 @@ class NessieFilterUtils < NessieUtils
     holds_join = "JOIN student.student_holds ON #{sid} = student.student_holds.sid"
     joins << holds_join if filter.holds
 
-    major_join = "LEFT JOIN student.student_majors ON #{sid} = student.student_majors.sid"
-    joins << major_join if (filter.college&.any? || filter.major&.any? || filter.academic_divisions&.any? || filter.graduate_plans&.any?)
+    if filter.college&.any? || filter.major&.any? || filter.academic_divisions&.any? || filter.graduate_plans&.any? || filter.minor&.any?
+      major_join = "LEFT JOIN student.student_majors ON #{sid} = student.student_majors.sid"
+      joins << major_join
+    end
 
     incomplete_join = "JOIN student.student_incompletes ON #{sid} = student.student_incompletes.sid"
     joins << incomplete_join if filter.incomplete_grade&.any? || filter.incomplete_sched_grade
