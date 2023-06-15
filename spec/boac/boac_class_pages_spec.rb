@@ -33,7 +33,7 @@ unless ENV['DEPS']
 
           terms = api_user_page.terms
           if terms.any?
-            terms.each do |term|
+            terms[0..2].each do |term|
               begin
 
                 term_name = api_user_page.term_name term

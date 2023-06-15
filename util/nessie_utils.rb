@@ -215,6 +215,15 @@ class NessieUtils < Utils
     sids
   end
 
+  def self.get_sids_with_enrollments(term_id)
+    sql = "SELECT sid
+             FROM student.student_enrollment_terms
+            WHERE enrolled_units > 0
+              AND term_id = '#{term_id}'"
+    results = Utils.query_pg_db(nessie_pg_db_credentials, sql)
+    results.map { |r| r['sid'] }
+  end
+
   ### ADVISORS ###
 
   def self.get_my_students_test_advisor(academic_plan_code)

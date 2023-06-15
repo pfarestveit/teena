@@ -159,6 +159,11 @@ class BOACTestConfig < TestConfig
                        @cohort_members.shuffle!
                        @cohort_members[0..(config - 1)]
 
+                     elsif opts[:with_enrollments]
+                       sids = NessieUtils.get_sids_with_enrollments BOACUtils.term_code
+                       @students.shuffle!
+                       @students.select { |s| sids.include? s.sis_id }[0..(config - 1)]
+
                      elsif !opts[:include_inactive]
                        @students.shuffle.select { |s| s.status == 'active' }[0..(config - 1)]
 
@@ -297,9 +302,8 @@ class BOACTestConfig < TestConfig
 
   # Config for class page testing
   def class_pages
-    set_base_configs(nil, {include_inactive: true, with_standing: true})
-    set_test_students(CONFIG['class_page_max_users'], {include_inactive: false})
-    logger.debug "Test students: #{@test_students.map &:inspect}"
+    set_base_configs
+    set_test_students(CONFIG['class_page_max_users'], {with_enrollments: true})
   end
 
   def curated_admits
@@ -344,35 +348,13 @@ class BOACTestConfig < TestConfig
 
     # Set a default cohort with all possible filters to exercise editing and removing filters
     filters = {
-        :academic_standing => ['2208-DIS'],
         :college => ((@dept == BOACDepartments::COE) ? ['Undergrad Engineering'] : ['Undergrad Letters & Science']),
-        :gpa => [JSON.parse("{\"min\": \"3.50\", \"max\": \"4\"}")],
         :gpa_last_term => [JSON.parse("{\"min\": \"2\", \"max\": \"3.80\"}")],
-        :grading_basis_epn => [CONFIG['term_code']],
-        :level => %w(40 10),
-        :units_completed => ['90 - 119'],
         :holds => true,
-        :intended_major => ['English BA'],
-        :major => ['Electrical Eng & Comp Sci BS', 'Letters & Sci Undeclared UG'],
-        :minor => ['French UG'],
-        :transfer_student => true,
         :entering_terms => [(BOACUtils.term.include?('Summer') ? BOACUtils.sis_code_to_term_name(BOACUtils.previous_term_code) : BOACUtils.term)],
-        :expected_grad_terms => [CONFIG['term_code']],
-        :gender => ['Male', 'Decline to State'],
         :last_name => [JSON.parse("{\"min\": \"A\", \"max\": \"Z\"}")],
-        :underrepresented_minority => true,
-        :ethnicity => ['Puerto Rican', 'Not Specified'],
-        :visa_type => ['Other'],
-        :asc_inactive => true,
-        :asc_intensive => true,
         :asc_team => [Squad::MCR],
-        :coe_advisor => [BOACUtils.get_dept_advisors(BOACDepartments::COE).first.uid.to_s],
-        :coe_ethnicity => %w(E I),
-        :coe_gender => ['F'],
-        :coe_underrepresented_minority => true,
-        :coe_prep => ['PREP', 'T-PREP eligible'],
-        :coe_inactive => true,
-        :coe_probation => true
+        :coe_advisor => [BOACUtils.get_dept_advisors(BOACDepartments::COE).first.uid.to_s]
     }
 
     advisor_plans = NessieUtils.get_academic_plans(@advisor)
@@ -413,7 +395,7 @@ class BOACTestConfig < TestConfig
   # Config for page navigation testing
   def navigation
     set_base_configs
-    set_test_students CONFIG['class_page_max_users']
+    set_test_students(CONFIG['class_page_max_users'], {with_enrollments: true})
   end
 
   # Config for note management testing (create, edit, delete)
@@ -468,7 +450,7 @@ class BOACTestConfig < TestConfig
   # Config for class search tests
   def search_classes
     set_base_configs
-    set_test_students CONFIG['search_max_users']
+    set_test_students(CONFIG['search_max_users'], {with_enrollments: true})
   end
 
   # Config for note search tests

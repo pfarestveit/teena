@@ -72,10 +72,10 @@ module BOACFilteredStudentsPageFilters
     logger.info "Selecting sub-option '#{filter_sub_option}'"
     # GPA and Last Name require input
     if [
-      'GPA (Cumulative)', 'GPA (Last Term)', 'Last Name', 'Family Dependents', 'Student Dependents', 'Incomplete Scheduled Grades'
+      'GPA (Cumulative)', 'GPA (Last Term)', 'Last Name', 'Family Dependents', 'Student Dependents', 'Incomplete Pending Grades'
     ].include? filter_option
       logger.info "Filter sub-option is #{filter_sub_option}"
-      if filter_option == 'Incomplete Scheduled Grades'
+      if filter_option == 'Incomplete Pending Grades'
         min = Date.parse(filter_sub_option['min']).strftime('%m/%d/%Y')
         max = Date.parse(filter_sub_option['max']).strftime('%m/%d/%Y')
       else
@@ -166,7 +166,7 @@ module BOACFilteredStudentsPageFilters
     cohort.search_criteria.graduate_plans.each { |g| select_new_filter('Graduate Plan', g) } if cohort.search_criteria.graduate_plans
     select_new_filter 'Holds' if cohort.search_criteria.holds
     cohort.search_criteria.incomplete_grade&.each { |i| select_new_filter('Incomplete Grade', i) }
-    cohort.search_criteria.incomplete_sched_grade&.each { |i| select_new_filter('Incomplete Scheduled Grades', i) }
+    cohort.search_criteria.incomplete_sched_grade&.each { |i| select_new_filter('Incomplete Pending Grades', i) }
     cohort.search_criteria.intended_major.each { |m| select_new_filter('Intended Major', m) } if cohort.search_criteria.intended_major
     cohort.search_criteria.level.each { |l| select_new_filter('Level', l) } if cohort.search_criteria.level
     cohort.search_criteria.units_completed.each { |u| select_new_filter('Units Completed', u) } if cohort.search_criteria.units_completed
@@ -337,8 +337,8 @@ module BOACFilteredStudentsPageFilters
         existing_filter_element('Holds').exists? if filters.holds
         logger.debug 'Verifying Incomplete Grade filter'
         filters.incomplete_grade.each { |g| existing_filter_element('Incomplete Grade', g).exists? } if filters.incomplete_grade&.any?
-        logger.debug 'Verifying Incomplete Scheduled Grades filter'
-        filters.incomplete_sched_grade.each { |g| existing_filter_element('Incomplete Scheduled Grades', g).exists? } if filters.incomplete_sched_grade&.any?
+        logger.debug 'Verifying Incomplete Pending Grades filter'
+        filters.incomplete_sched_grade.each { |g| existing_filter_element('Incomplete Pending Grades', g).exists? } if filters.incomplete_sched_grade&.any?
         logger.debug 'Verifying GPA (Last Term) filter'
         filters.gpa_last_term.each { |g| existing_filter_element('GPA (Last Term)', g).exists? } if filters.gpa_last_term&.any?
         logger.debug 'Verifying Grading Basis EPN filter'
