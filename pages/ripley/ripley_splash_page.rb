@@ -7,16 +7,25 @@ class RipleySplashPage
   include Page
   include RipleyPages
 
+  button(:header_button, xpath: '//header//button')
+
   def load_page
     navigate_to RipleyUtils.base_url
   end
 
   # Log in
 
-  button(:sign_in, id: 'TBD')
+  button(:cal_net_login_button, id: 'cas-auth-submit-button')
 
-  def click_sign_in_button
-    wait_for_load_and_click sign_in_element
+  def click_cal_net_login_button
+    wait_for_load_and_click cal_net_login_button_element
+  end
+
+  def log_in_via_cal_net(cal_net_page, username, password)
+    logger.info "Logging in #{username} via CalNet"
+    click_cal_net_login_button
+    cal_net_page.enter_credentials(username, password)
+    header_button_element.when_present Utils.short_wait
   end
 
   # Dev Auth
@@ -68,4 +77,12 @@ class RipleySplashPage
       end
     end
   end
+
+  link(:jobs_link, text: 'Jobs')
+
+  def click_jobs_link
+    logger.info 'Clicking Jobs link'
+    wait_for_load_and_click jobs_link_element
+  end
+
 end
