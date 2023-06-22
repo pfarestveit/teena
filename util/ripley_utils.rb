@@ -18,7 +18,7 @@ class RipleyUtils < Utils
 
   def self.next_term(current_term)
     term = Term.new sis_id: next_term_sis_id(current_term),
-             name: next_term_name(current_term)
+                    name: next_term_name(current_term)
     term.code = Utils.term_name_to_hyphenated_code(term.name)
     term
   end
@@ -261,24 +261,32 @@ class RipleyUtils < Utils
   end
 
   def self.get_course_enrollment(course)
-    sql = "SELECT sis_section_id,
-                  ldap_uid AS uid,
-                  sis_enrollment_status AS status,
-                  units,
-                  grading_basis
+    sql = "SELECT DISTINCT sis_data.edo_enrollments.sis_section_id,
+                  sis_data.edo_enrollments.ldap_uid AS uid,
+                  sis_data.edo_enrollments.sis_enrollment_status AS status,
+                  sis_data.edo_enrollments.units,
+                  sis_data.edo_enrollments.grading_basis,
+                  student.student_profile_index.sid,
+                  student.student_profile_index.email_address
              FROM sis_data.edo_enrollments
+             JOIN student.student_profile_index
+               ON student.student_profile_index.uid = sis_data.edo_enrollments.ldap_uid
             WHERE sis_term_id = '#{course.term.sis_id}'
               AND sis_section_id IN (#{Utils.in_op(course.sections.map &:id)})"
     results = Utils.query_pg_db(NessieUtils.nessie_pg_db_credentials, sql)
     enrollments = results.map do |r|
       SectionEnrollment.new uid: r['uid'],
+                            sid: r['sid'],
+                            email: r['email_address'],
                             section_id: r['sis_section_id'],
                             grading_basis: r['grading_basis'],
                             status: r['status'],
                             units: r['units']
     end
+    enrollments.uniq!
+    enrollments.each { |e| logger.info "Enrollment #{e.inspect}" }
     course.sections.each do |section|
-      section.enrollments = enrollments.select { |e| e.section_id == section.id }
+      section.enrollments = enrollments.select { |e| e.section_id.to_s == section.id.to_s }
     end
   end
 

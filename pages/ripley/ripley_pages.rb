@@ -6,6 +6,23 @@ module RipleyPages
   include PageObject
   include Page
 
+  element(:header, xpath: '//header')
+
+  def hide_header
+    header_element.when_present Utils.medium_wait
+    execute_script(
+      'const header = document.evaluate(
+        "//header",
+        document,
+        null,
+        XPathResult.FIRST_ORDERED_NODE_TYPE,
+        null,
+        ).singleNodeValue;
+
+        header.style.display="none";'
+    )
+  end
+
   button(:log_out_link, id: 'TBD')
 
   def log_out

@@ -32,9 +32,10 @@ class RipleySplashPage
 
   text_field(:dev_auth_uid_input, id: 'basic-auth-uid')
   text_field(:dev_auth_password_input, id: 'basic-auth-password')
+  text_field(:dev_auth_course_input, id: 'basic-auth-canvas-course-id')
   button(:dev_auth_log_in_button, id: 'basic-auth-submit-button')
 
-  def dev_auth(uid, cal_net = nil)
+  def dev_auth(uid, course = nil, cal_net = nil)
     logger.info "Logging in as #{uid} using dev auth"
     load_page
     begin
@@ -46,8 +47,10 @@ class RipleySplashPage
       wait_until(Utils.short_wait) { text.include? 'redirectUrl' }
       load_page
     end
-    wait_for_element_and_type(dev_auth_uid_input_element, uid)
-    wait_for_element_and_type(dev_auth_password_input_element, RipleyUtils.dev_auth_password)
+    dev_auth_uid_input_element.when_present Utils.medium_wait
+    dev_auth_uid_input_element.send_keys uid
+    dev_auth_password_input_element.send_keys RipleyUtils.dev_auth_password
+    dev_auth_course_input_element.send_keys course.site_id if course
     wait_for_update_and_click dev_auth_log_in_button_element
     sleep 1
   end
@@ -83,6 +86,7 @@ class RipleySplashPage
   def click_jobs_link
     logger.info 'Clicking Jobs link'
     wait_for_load_and_click jobs_link_element
+    hide_header
   end
 
 end

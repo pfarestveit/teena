@@ -86,16 +86,6 @@ module Page
         wait_for_element_and_select(sections_select_element, section_name)
       end
 
-      # Waits for the E-Grades CSV to download and then parses it
-      # @param file_path [String]
-      # @return [Array<Array>]
-      def parse_grades_csv(file_path)
-        wait_until(Utils.long_wait) { Dir[file_path].any? }
-        file = Dir[file_path].first
-        sleep 2
-        CSV.read(file, headers: true, header_converters: :symbol)
-      end
-
       # Converts a parsed CSV to an array of hashes
       # @param [Array<Array>]
       # @return [Array<Hash>]
@@ -110,15 +100,12 @@ module Page
       # @return [Array<Hash>]
       def download_current_grades(course, section, cutoff = nil)
         logger.info "Downloading current grades for #{course.code} #{section.label}"
-        Utils.prepare_download_dir
         load_embedded_tool course
         click_continue
         set_cutoff cutoff
         choose_section section if course.sections.length > 1
-        wait_for_load_and_click download_current_grades_element
-        file_path = "#{Utils.download_dir}/egrades-current-#{section.id}-#{course.term.gsub(' ', '-')}-*.csv"
-        csv = parse_grades_csv file_path
-        csv.map { |r| r.to_hash }
+        file_name = "egrades-current-#{section.id}-#{course.term.gsub(' ', '-')}-*.csv"
+        parse_downloaded_csv(download_current_grades_element, file_name)
       end
 
       # Downloads final grades for a given section
@@ -128,15 +115,12 @@ module Page
       # @return [Array<Hash>]
       def download_final_grades(course, section, cutoff = nil)
         logger.info "Downloading final grades for #{course.code} #{section.label}"
-        Utils.prepare_download_dir
         load_embedded_tool course
         click_continue
         set_cutoff cutoff
         choose_section section if course.sections.length > 1
-        wait_for_load_and_click download_final_grades_element
-        file_path = "#{Utils.download_dir}/egrades-final-#{section.id}-#{course.term.gsub(' ', '-')}-*.csv"
-        csv = parse_grades_csv file_path
-        csv.map { |r| r.to_hash }
+        file_name = "egrades-final-#{section.id}-#{course.term.gsub(' ', '-')}-*.csv"
+        parse_downloaded_csv(download_final_grades_element, file_name)
       end
 
     end

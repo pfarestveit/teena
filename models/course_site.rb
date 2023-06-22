@@ -13,17 +13,19 @@ class CourseSite
   end
 
   def expected_student_count
-    @sections.map(&:enrollments).select { |e| e.status == 'E' }.flatten.length
+    enrolled = @sections.map(&:enrollments).flatten.select { |e| e.status == 'E' }
+    enrolled.map(&:sid).uniq.length
   end
 
   # TODO account for students both confirmed and waitlisted
   def expected_wait_list_count
-    @sections.map(&:enrollments).select { |e| e.status == 'W' }.flatten.length
+    wait_listed = @sections.map(&:enrollments).flatten.select { |e| e.status == 'W' }
+    wait_listed.map(&:sid).uniq.length
   end
 
   def expected_teacher_count
     if @sections.map(&:primary).any?
-      @sections.map(&:instructors).select { |e| %w(PI ICNT).include? e.role_code }.flatten.uniq.length
+      @sections.map(&:instructors).flatten.select { |e| %w(PI ICNT).include? e.role_code }.uniq.length
     else
       @sections.map(&:instructors).flatten.uniq.length
     end
@@ -31,7 +33,7 @@ class CourseSite
 
   def expected_lead_ta_count
     if @sections.map(&:primary).any?
-      @sections.map(&:instructors).select { |e| e.role_code == 'APRX' }.flatten.uniq.length
+      @sections.map(&:instructors).flatten.select { |e| e.role_code == 'APRX' }.uniq.length
     else
       0
     end
@@ -39,7 +41,7 @@ class CourseSite
 
   def expected_ta_count
     if @sections.map(&:primary).any?
-      @sections.map(&:instructors).select { |e| e.role_code == 'TNIC' }.flatten.uniq.length
+      @sections.map(&:instructors).flatten.select { |e| e.role_code == 'TNIC' }.uniq.length
     else
       0
     end

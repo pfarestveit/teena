@@ -59,40 +59,23 @@ class RipleyEGradesPage
     wait_for_element_and_select(sections_select_element, section_name)
   end
 
-  def parse_grades_csv(file_path)
-    wait_until(Utils.long_wait) { Dir[file_path].any? }
-    file = Dir[file_path].first
-    sleep 2
-    CSV.read(file, headers: true, header_converters: :symbol)
-  end
-
-  def grades_to_hash(csv)
-    csv.map { |r| r.to_hash }
-  end
-
   def download_current_grades(site, section, cutoff = nil)
     logger.info "Downloading current grades for #{site.course.code} #{section.label}"
-    Utils.prepare_download_dir
-    load_embedded_tool site
-    click_continue
-    set_cutoff cutoff
-    choose_section section if site.course.sections.length > 1
-    wait_for_load_and_click download_current_grades_element
-    file_path = "#{Utils.download_dir}/egrades-current-#{section.id}-#{site.course.term.gsub(' ', '-')}-*.csv"
-    csv = parse_grades_csv file_path
-    csv.map { |r| r.to_hash }
+    file_name = "egrades-current-#{section.id}-#{site.course.term.gsub(' ', '-')}-*.csv"
+    download_grades(site, section, download_current_grades_element, file_name, cutoff)
   end
 
   def download_final_grades(site, section, cutoff = nil)
     logger.info "Downloading final grades for #{site.course.code} #{section.label}"
-    Utils.prepare_download_dir
+    file_name = "egrades-final-#{section.id}-#{site.course.term.gsub(' ', '-')}-*.csv"
+    download_grades(site, section, download_final_grades_element, file_name, cutoff)
+  end
+
+  def download_grades(site, section, button_el, file_name, cutoff=nil)
     load_embedded_tool site
     click_continue
     set_cutoff cutoff
     choose_section section if site.course.sections.length > 1
-    wait_for_load_and_click download_final_grades_element
-    file_path = "#{Utils.download_dir}/egrades-final-#{section.id}-#{site.course.term.gsub(' ', '-')}-*.csv"
-    csv = parse_grades_csv file_path
-    csv.map { |r| r.to_hash }
+    parse_downloaded_csv(button_el, file_name)
   end
 end
