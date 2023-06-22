@@ -50,10 +50,26 @@ class RipleyTestConfig < TestConfig
   end
 
   def get_single_test_site
-    get_multiple_test_sites
-    course_site = @course_sites.find { |site| site.course.sections.select(&:primary).length > 1 && (site.course.sections.select { |s| !s.primary }).any? }
-    primary = course_site.course.sections.find &:primary
-    course_site.course.sections.select { |s| s.course == primary.course }.each { |s| s.include_in_site = true }
+    course_site = if ENV['SITE']
+                    test_data = JSON.parse(File.read(File.join(Utils.config_dir, 'test-data-bcourses.json')))['courses']
+                    course = Course.new(test_data.find { |d| d['site_id'] == ENV['SITE'] })
+                    course.sections = course.sections.map { |s| Section.new s }
+                    course.teachers = course.teachers.map { |u| User.new u }
+                    course.term = Term.new code: Utils.term_name_to_hyphenated_code(course.term),
+                                           name: course.term,
+                                           sis_id: Utils.term_name_to_sis_code(course.term)
+                    RipleyUtils.get_course_enrollment course
+                    CourseSite.new site_id: ENV['SITE'],
+                                   abbreviation: "#{@id} #{course.term} #{course.code}",
+                                   course: course,
+                                   sections: course.sections
+                  else
+                    get_multiple_test_sites
+                    @course_sites.find do |site|
+                      site.course.sections.select(&:primary).length > 1 && (site.course.sections.select { |s| !s.primary }).any?
+                    end
+                  end
+    course_site.course.sections.select(&:primary).each { |s| s.include_in_site = true }
     course_site.create_site_workflow = 'self'
     set_manual_members course_site
     course_site

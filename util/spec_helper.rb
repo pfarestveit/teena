@@ -160,6 +160,7 @@ require_relative '../pages/boac/boac_api_student_page'
 
 require_relative '../models/ripley/ripley_job'
 require_relative '../models/ripley/ripley_test_config'
+require_relative '../models/ripley/ripley_tool'
 require_relative '../pages/ripley/ripley_pages'
 require_relative '../pages/ripley/ripley_course_sections_module'
 require_relative '../pages/ripley/ripley_splash_page'

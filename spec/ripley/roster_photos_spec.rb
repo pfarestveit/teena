@@ -28,19 +28,27 @@ describe 'bCourses Roster Photos' do
     @course_add_user_page = RipleyAddUserPage.new @driver
     @roster_photos_page = RipleyRosterPhotosPage.new @driver
 
-    @splash_page.load_page
-    @splash_page.basic_auth(teacher.uid, @cal_net)
-    unless standalone
+    if standalone
+      @splash_page.load_page
+      @splash_page.dev_auth(test.admin.uid, site, @cal_net)
+    else
       @canvas.log_in(@cal_net, test.admin.username, Utils.super_admin_password)
+      RipleyTool::TOOLS.each { |t| @canvas.add_ripley_tool t }
       @canvas.set_canvas_ids([teacher] + non_teachers)
       @canvas.masquerade_as teacher
     end
 
-    @create_course_site_page.provision_course_site(site, {standalone: standalone})
-    @create_course_site_page.wait_for_standalone_site_id(site, @splash_page) if standalone
-    @canvas.publish_course_site site unless standalone
+    unless standalone
+      if site.site_id
+        @canvas.load_course_site site
+      else
+        @create_course_site_page.provision_course_site(site, {standalone: standalone})
+        @create_course_site_page.wait_for_standalone_site_id(site, @splash_page) if standalone
+      end
+      @canvas.publish_course_site site
+    end
 
-    @expected_sids = '' # TODO
+    @expected_sids = site.sections.map { |s| s.enrollments.map &:sid }.flatten.uniq.sort
 
     @student_count = site.expected_student_count
     @waitlist_count = site.expected_wait_list_count
@@ -73,18 +81,17 @@ describe 'bCourses Roster Photos' do
 
     it "shows UID #{teacher.uid} all students and waitlisted students on #{site.course.code} course site ID #{site.site_id}" do
       @roster_photos_page.wait_until(Utils.medium_wait, "Missing: #{@expected_sids - @roster_photos_page.all_sids.sort}.
-                                                             Unexpected: #{@roster_photos_page.all_sids.sort - @expected_sids}.
-                                                             Expected #{@expected_sids} but got #{@roster_photos_page.all_sids.sort}") do
+                                                             Unexpected: #{@roster_photos_page.all_sids.sort - @expected_sids}") do
         @roster_photos_page.all_sids.length == @total_user_count
         @roster_photos_page.all_sids.sort == @expected_sids
       end
     end
 
     it "shows UID #{teacher.uid} actual photos for enrolled students on #{site.course.code} course site ID #{site.site_id}" do
+      @roster_photos_page.wait_for_photos_to_load
       @roster_photos_page.wait_until(Utils.medium_wait, "Expected photo count #{@roster_photos_page.roster_photo_elements.length} to be <= #{@student_count}") do
         @roster_photos_page.roster_photo_elements.length <= @student_count
       end
-      expect(@roster_photos_page.roster_photo_elements.any?).to be true
     end
 
     it "shows UID #{teacher.uid} placeholder photos for waitlisted students on #{site.course.code} course site ID #{site.site_id}" do
@@ -94,8 +101,8 @@ describe 'bCourses Roster Photos' do
     end
 
     it "shows UID #{teacher.uid} all sections by default on #{site.course.code} course site ID #{site.site_id}" do
-      expected_section_codes = (sections.map { |section| "#{section.course} #{section.label}" }) << 'All sections'
-      actual_section_codes = @roster_photos_page.section_select_options
+      expected_section_codes = (site.sections.map { |section| "#{section.course} #{section.label}" }) << 'All sections'
+      actual_section_codes = @roster_photos_page.section_options
       expect(actual_section_codes).to eql(expected_section_codes.sort)
     end
 
@@ -112,18 +119,20 @@ describe 'bCourses Roster Photos' do
 
     site.sections.each do |section|
       it "allows UID #{teacher.uid} to filter by section #{section.label} on #{site.course.code} course site ID #{site.site_id}" do
-        section_students = @roster_api.section_students(section.id)
+        section_students = section.enrollments
         logger.debug "Expecting #{section_students.length} students in section #{section.label}"
         @roster_photos_page.filter_by_string ''
         @roster_photos_page.filter_by_section section
-        @roster_photos_page.wait_until(Utils.short_wait) { @roster_photos_page.all_sids.sort == @roster_api.student_ids(section_students).sort }
+        @roster_photos_page.wait_until(Utils.short_wait, "Expected #{section_students.map(&:sid).sort}, got #{@roster_photos_page.all_sids.sort}") do
+          @roster_photos_page.all_sids.sort == section_students.map(&:sid).sort
+        end
       end
     end
 
     it "allows UID #{teacher.uid} to download a CSV of the course site enrollment on #{site.course.code} course site ID #{site.site_id}" do
       exported_user_sids = @roster_photos_page.export_roster site
       logger.info "Exported SIDs #{exported_user_sids}"
-      expect(exported_user_sids.sort).to eql(@expected_sids)
+      expect(exported_user_sids.sort).to eql(@expected_sids.sort)
     end
 
     it "shows UID #{teacher.uid} a photo print button on #{site.course.code} course site ID #{site.site_id}" do

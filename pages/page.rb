@@ -400,4 +400,14 @@ module Page
     @driver.navigate.back
   end
 
+  def parse_downloaded_csv(link_el, file_name)
+    Utils.prepare_download_dir
+    wait_for_load_and_click link_el
+    file_path = "#{Utils.download_dir}/#{file_name}"
+    wait_until(Utils.long_wait) { Dir[file_path].any? }
+    file = Dir[file_path].first
+    sleep 2
+    csv = CSV.read(file, headers: true, header_converters: :symbol)
+    csv.map { |r| r.to_hash }
+  end
 end

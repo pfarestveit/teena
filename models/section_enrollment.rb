@@ -1,6 +1,8 @@
 class SectionEnrollment
 
   attr_accessor :uid,
+                :sid,
+                :email,
                 :section_id,
                 :grading_basis,
                 :status,

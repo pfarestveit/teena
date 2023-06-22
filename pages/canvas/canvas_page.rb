@@ -459,6 +459,7 @@ module Page
     text_area(:key_input, xpath: '(//div[@class="ConfigurationFormUrl"]/div[2]//input)[1]')
     text_area(:secret_input, xpath: '(//div[@class="ConfigurationFormUrl"]/div[2]//input)[2]')
     text_area(:url_input, xpath: '//div[@class="ConfigurationFormUrl"]/div[3]//input')
+    text_area(:client_id_input, name: 'client_id')
     button(:add_tool_button, id: 'continue-install')
     link(:app_placements_button, text: 'Placements')
     button(:activate_navigation_button, xpath: '//span[text()="Course Navigation"]/following-sibling::span//button')
@@ -568,6 +569,41 @@ module Page
       canvas_assigns_page = CanvasAssignmentsPage.new @driver
       switch_to_canvas_iframe
       asset_library.ensure_canvas_sync(test, canvas_assigns_page)
+    end
+
+    def load_account_apps(account)
+      navigate_to "#{Utils.canvas_base_url}/accounts/#{account}/settings/configurations#tab-tools"
+      wait_until(Utils.medium_wait) { row_elements(xpath: '//tr[contains(@class, "ExternalToolsTableRow")]').any? }
+      hide_canvas_footer_and_popup
+    end
+
+    def ripley_tool_installed?(tool)
+      logger.info "Checking if Ripley's #{tool.name} is installed"
+      load_account_apps tool.account
+      cell_element(xpath: "//td[text()='#{tool.name}']").exists?
+    end
+
+    def get_ripley_tool_dev_key(tool)
+      navigate_to "#{Utils.canvas_base_url}/accounts/#{Utils.canvas_uc_berkeley_sub_account}/developer_keys"
+      el = div_element(xpath: "//td[contains(., '#{tool.name}')]/following-sibling::td[2]/div/div")
+      el.when_present Utils.medium_wait
+      tool.dev_key = el.text
+    end
+
+    def add_ripley_tool(tool)
+      if ripley_tool_installed? tool
+        logger.info "Tool #{tool.name} is already installed"
+      else
+        logger.info "Tool #{tool.name} is not installed, installing"
+        get_ripley_tool_dev_key tool
+        load_account_apps tool.account
+        wait_for_update_and_click add_app_link_element
+        wait_for_element_and_select(config_type_element, 'By Client ID')
+        wait_for_element_and_type(client_id_input_element, tool.dev_key)
+        wait_for_update_and_click submit_button_element
+        wait_for_update_and_click button_element(xpath: '//button[contains(., "Install")]')
+        wait_for_update_and_click add_tool_button_element rescue Selenium::WebDriver::Error::TimeoutError
+      end
     end
 
     def click_tool_link(tool)
