@@ -6,7 +6,7 @@ describe 'Canvas assignment sync' do
 
   before(:all) do
     @test = SquiggyTestConfig.new 'canvas_sync'
-    @test.course.site_id = nil
+    @test.course_site.site_id = nil
     @driver = Utils.launch_browser
     @canvas = Page::CanvasAssignmentsPage.new @driver
     @cal_net= Page::CalNetPage.new @driver
@@ -15,7 +15,7 @@ describe 'Canvas assignment sync' do
     @engagement_index = SquiggyEngagementIndexPage.new @driver
 
     @canvas.log_in(@cal_net, @test.admin.username, Utils.super_admin_password)
-    @canvas.create_squiggy_course @test
+    @canvas.create_squiggy_course_site @test
 
     @assignment_1 = Assignment.new title: "Submission Assignment 1 #{@test.id}"
     @category_1 = SquiggyCategory.new @assignment_1.title
@@ -34,11 +34,11 @@ describe 'Canvas assignment sync' do
     @asset_2.category = @assignment_2.title
 
     # Teacher creates on non-sync-able assignment and two sync-able assignments and waits for the latter
-    @canvas.masquerade_as(@test.teachers.first, @test.course)
-    @canvas.load_course_site @test.course
-    @canvas.create_unsyncable_assignment(@test.course, @unsinkable_assignment)
-    @canvas.create_assignment(@test.course, @assignment_1)
-    @canvas.create_assignment(@test.course, @assignment_2)
+    @canvas.masquerade_as(@test.teachers.first, @test.course_site)
+    @canvas.load_course_site @test.course_site
+    @canvas.create_unsyncable_assignment(@test.course_site, @unsinkable_assignment)
+    @canvas.create_assignment(@test.course_site, @assignment_1)
+    @canvas.create_assignment(@test.course_site, @assignment_2)
     @manage_assets.wait_for_canvas_category(@test, @assignment_1)
 
     # Get score before submission
@@ -65,14 +65,14 @@ describe 'Canvas assignment sync' do
       @asset_library.click_manage_assets_link
       @manage_assets.enable_assignment_sync @assignment_1
       poller_assignment = Assignment.new({title: "Throwaway Assignment 1 #{@test.id}"})
-      @canvas.create_assignment(@test.course, poller_assignment)
+      @canvas.create_assignment(@test.course_site, poller_assignment)
       @manage_assets.wait_for_canvas_category(@test, poller_assignment)
 
       # Student submits both assignments
-      @canvas.masquerade_as(@student, @test.course)
+      @canvas.masquerade_as(@student, @test.course_site)
       @canvas.submit_assignment(@assignment_1, @student, @asset_1)
       @canvas.submit_assignment(@assignment_2, @student, @asset_2)
-      @canvas.masquerade_as(@test.teachers.first, @test.course)
+      @canvas.masquerade_as(@test.teachers.first, @test.course_site)
     end
 
     it 'adds assignment submission points to the Engagement Index score for both submissions' do
@@ -123,7 +123,7 @@ describe 'Canvas assignment sync' do
       @manage_assets.disable_assignment_sync @assignment_1
       @manage_assets.enable_assignment_sync @assignment_2
       poller_assignment = Assignment.new({title: "Throwaway Assignment 2 #{@test.id}"})
-      @canvas.create_assignment(@test.course, poller_assignment)
+      @canvas.create_assignment(@test.course_site, poller_assignment)
       @manage_assets.wait_for_canvas_category(@test, poller_assignment)
     end
 

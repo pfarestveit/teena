@@ -7,7 +7,7 @@ class RipleyMailingListPage
   include Page
   include RipleyPages
 
-  link(:mailing_list_link, text: 'Mailing List')
+  link(:mailing_list_link, text: RipleyTool::MAILING_LIST.name)
   div(:no_list_msg, id: 'TBD "No Mailing List has yet been created for this site."')
   button(:create_list_button, id: 'TBD')
   div(:list_created_msg, id: 'TBD "A Mailing List has been created"')
@@ -16,7 +16,7 @@ class RipleyMailingListPage
   div(:list_dupe_email_msg, id: 'TBD "is already in use by another Mailing List."')
 
   def embedded_tool_path(course)
-    "/courses/#{course.site_id}/external_tools/#{Utils.canvas_mailing_list_tool}"
+    "/courses/#{course.site_id}/external_tools/#{RipleyUtils.mailing_list_tool_id}"
   end
 
   def hit_embedded_tool_url(course)

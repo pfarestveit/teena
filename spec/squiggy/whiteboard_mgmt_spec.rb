@@ -18,7 +18,7 @@ describe 'Whiteboard' do
     @whiteboards = SquiggyWhiteboardPage.new @driver
 
     @canvas.log_in(@cal_net, @test.admin.username, Utils.super_admin_password)
-    @canvas.create_squiggy_course @test
+    @canvas.create_squiggy_course_site @test
 
     # Set "whiteboard remix" points to non-zero value
     @engagement_index.load_scores @test
@@ -37,7 +37,7 @@ describe 'Whiteboard' do
         title: "Whiteboard Creation #{@test.id}",
         collaborators: []
       )
-      @canvas.masquerade_as(@student_1, @test.course)
+      @canvas.masquerade_as(@student_1, @test.course_site)
       @whiteboards.load_page @test
     end
 
@@ -117,14 +117,14 @@ describe 'Whiteboard' do
         collaborators: []
       )
 
-      @canvas.masquerade_as(@student_1, @test.course)
+      @canvas.masquerade_as(@student_1, @test.course_site)
       @whiteboards.load_page @test
       @whiteboards.create_whiteboard @whiteboard_delete_1
       @whiteboards.create_whiteboard @whiteboard_delete_2
     end
 
     it 'can be done by a student who is a collaborator on the whiteboard' do
-      @canvas.masquerade_as(@student_2, @test.course)
+      @canvas.masquerade_as(@student_2, @test.course_site)
       @whiteboards.load_page @test
       @whiteboards.open_whiteboard @whiteboard_delete_1
       @whiteboards.delete_whiteboard_with_tab_close
@@ -134,7 +134,7 @@ describe 'Whiteboard' do
     end
 
     it 'can be done by an instructor who is not a collaborator on the whiteboard' do
-      @canvas.masquerade_as(@teacher, @test.course)
+      @canvas.masquerade_as(@teacher, @test.course_site)
       @whiteboards.load_page @test
       @whiteboards.open_whiteboard @whiteboard_delete_2
       @whiteboards.delete_whiteboard
@@ -155,7 +155,7 @@ describe 'Whiteboard' do
 
     it 'makes the whiteboard visible to students again when the delete is reversed' do
       # Student can now see board again
-      @canvas.masquerade_as(@student_1, @test.course)
+      @canvas.masquerade_as(@student_1, @test.course_site)
       @whiteboards.load_page @test
       @whiteboards.wait_until(Utils.short_wait) { @whiteboards.visible_whiteboard_titles.include? @whiteboard_delete_2.title }
     end
@@ -189,7 +189,7 @@ describe 'Whiteboard' do
     it('is not available to a student') { expect(@whiteboards.simple_search_input?).to be false }
 
     it 'is available to a teacher' do
-      @canvas.masquerade_as(@teacher, @test.course)
+      @canvas.masquerade_as(@teacher, @test.course_site)
       @whiteboards.load_page @test
       @whiteboards.simple_search_input_element.when_visible Utils.short_wait
     end
@@ -269,14 +269,14 @@ describe 'Whiteboard' do
       )
 
       # Upload assets to be used on whiteboard
-      @canvas.masquerade_as(@student_1, @test.course)
+      @canvas.masquerade_as(@student_1, @test.course_site)
       @asset_library.load_page @test
       @student_1.assets.each do |asset|
         asset.file_name ? @asset_library.upload_file_asset(asset) : @asset_library.add_link_asset(asset)
       end
 
       # Get current score
-      @canvas.masquerade_as(@teacher, @test.course)
+      @canvas.masquerade_as(@teacher, @test.course_site)
       @initial_score_1 = @engagement_index.user_score(@test, @student_1)
       @initial_score_2 = @engagement_index.user_score(@test, @student_2)
       @initial_score_3 = @engagement_index.user_score(@test, @student_3)
@@ -288,7 +288,7 @@ describe 'Whiteboard' do
       @score_2_after_export = @initial_score_2 + @export_board_points
 
       # Create a whiteboard for tests
-      @canvas.masquerade_as(@student_1, @test.course)
+      @canvas.masquerade_as(@student_1, @test.course_site)
       @whiteboards.load_page @test
       @whiteboards.create_and_open_whiteboard @whiteboard
     end
@@ -329,7 +329,7 @@ describe 'Whiteboard' do
     it 'as a new asset earns "Export a whiteboard to the Asset Library" points' do
       @whiteboards.close_current_window
       @whiteboards.switch_to_first_window
-      @canvas.masquerade_as(@teacher, @test.course)
+      @canvas.masquerade_as(@teacher, @test.course_site)
       expect(@engagement_index.user_score(@test, @student_1)).to eql(@score_1_after_export)
       expect(@engagement_index.user_score(@test, @student_2)).to eql(@score_2_after_export)
     end
@@ -353,7 +353,7 @@ describe 'Whiteboard' do
     end
 
     it 'as a PNG download is possible if the whiteboard has assets' do
-      @canvas.masquerade_as(@student_1, @test.course)
+      @canvas.masquerade_as(@student_1, @test.course_site)
       @whiteboards.load_page @test
       @whiteboards.open_whiteboard @whiteboard
       @whiteboards.download_as_image
@@ -362,7 +362,7 @@ describe 'Whiteboard' do
 
     it 'as a PNG download earns no "Export a whiteboard to the Asset Library" points' do
       @whiteboards.close_whiteboard
-      @canvas.masquerade_as(@teacher, @test.course)
+      @canvas.masquerade_as(@teacher, @test.course_site)
       expect(@engagement_index.user_score(@test, @student_1)).to eql(@score_1_after_export)
       expect(@engagement_index.user_score(@test, @student_2)).to eql(@score_2_after_export)
     end
@@ -370,7 +370,7 @@ describe 'Whiteboard' do
     context 'when remixed' do
 
       before(:all) do
-        @canvas.masquerade_as(@student_3, @test.course)
+        @canvas.masquerade_as(@student_3, @test.course_site)
         @asset_library.load_asset_detail(@test, @whiteboard.asset_exports.first)
 
         remix_pts = SquiggyActivity::REMIX_WHITEBOARD.points
@@ -389,7 +389,7 @@ describe 'Whiteboard' do
 
       it 'earns "Remix Whiteboard" points' do
         @whiteboards.close_whiteboard
-        @canvas.masquerade_as(@teacher, @test.course)
+        @canvas.masquerade_as(@teacher, @test.course_site)
         expect(@engagement_index.user_score(@test, @student_1)).to eql(@score_1_after_remix)
         expect(@engagement_index.user_score(@test, @student_2)).to eql(@score_2_after_remix)
         expect(@engagement_index.user_score(@test, @student_3)).to eql(@score_3_after_remix)

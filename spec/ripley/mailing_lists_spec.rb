@@ -28,12 +28,12 @@ unless ENV['STANDALONE']
 
       # Create three course sites in the Official Courses sub-account
       @canvas_page.log_in(@cal_net_page, test.admin.username, Utils.super_admin_password)
-      @canvas.set_canvas_ids users
+      @canvas_page.set_canvas_ids users
 
       acct = Utils.canvas_official_courses_sub_account
-      @canvas_page.create_generic_course_site(acct, course_site_1.course, users, test.id)
-      @canvas_page.create_generic_course_site(acct, course_site_2.course, [test.manual_teacher], test.id)
-      @canvas_page.create_generic_course_site(acct, course_site_3.course, users, test.id)
+      @canvas_page.create_ripley_mailing_list_site course_site_1
+      @canvas_page.create_ripley_mailing_list_site course_site_2
+      @canvas_page.create_ripley_mailing_list_site course_site_3
     end
 
     after(:all) { Utils.quit_browser @driver }
@@ -44,7 +44,7 @@ unless ENV['STANDALONE']
     end
 
     users.each do |user|
-      if [test.manual_teacher, test.lead_ta, test.ta, test.reader].include? user
+      if [course_site_1.teachers.first, course_site_1.lead_ta, course_site_1.ta, course_site_1.reader].include? user
         it "can be managed by a course #{user.role}" do
           @canvas_page.masquerade_as(user, course_site_1)
           @mailing_list_page.hit_embedded_tool_url course_site_1
@@ -205,7 +205,7 @@ unless ENV['STANDALONE']
       before(:all) do
         course_site_2.title = course_site_1.course.title
         @canvas_page.edit_course_name course_site_2
-        @canvas_page.masquerade_as(test.manual_teacher, course_site_3)
+        @canvas_page.masquerade_as(test.teachers.first, course_site_3)
         @mailing_list_page.load_embedded_tool course_site_3
       end
 

@@ -2,6 +2,7 @@ class Course
 
   attr_accessor :code,
                 :create_site_workflow,
+                :roster,
                 :title,
                 :term,
                 :sis_id,

@@ -20,8 +20,8 @@ class SquiggyAssetLibraryDetailPage < SquiggyAssetLibraryListViewPage
     navigate_to 'https://www.google.com'
     text_area_element(name: 'q').when_present Utils.short_wait
     sleep 2
-    logger.info "Hitting asset detail at '#{test.course.asset_library_url}#suitec_assetId=#{asset.id}'"
-    navigate_to "#{test.course.asset_library_url}#suitec_assetId=#{asset.id}"
+    logger.info "Hitting asset detail at '#{test.course_site.asset_library_url}#suitec_assetId=#{asset.id}'"
+    navigate_to "#{test.course_site.asset_library_url}#suitec_assetId=#{asset.id}"
     switch_to_canvas_iframe
   end
 

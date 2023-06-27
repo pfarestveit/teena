@@ -5,7 +5,7 @@ describe 'Whiteboard' do
   include Logging
 
   test = SquiggyTestConfig.new 'whiteboard_collaboration'
-  test.course.site_id = nil
+  test.course_site.site_id = nil
   timeout = Utils.short_wait
   teacher = test.teachers[0]
   student_1 = test.students[0]
@@ -21,7 +21,7 @@ describe 'Whiteboard' do
     @engagement_index_driver_1 = SquiggyEngagementIndexPage.new @driver_1
 
     @canvas_driver_1.log_in(@cal_net_driver_1, test.admin.username, Utils.super_admin_password)
-    @canvas_driver_1.create_squiggy_course test
+    @canvas_driver_1.create_squiggy_course_site test
     @engagement_index_driver_1.wait_for_new_user_sync(test, test.students)
 
     @whiteboard_1 = SquiggyWhiteboard.new(
@@ -41,7 +41,7 @@ describe 'Whiteboard' do
     )
     @whiteboards = [@whiteboard_1, @whiteboard_2, @whiteboard_3]
     @whiteboards.each do |board|
-      @canvas_driver_1.masquerade_as(board.owner, test.course)
+      @canvas_driver_1.masquerade_as(board.owner, test.course_site)
       @whiteboards_driver_1.load_page test
       @whiteboards_driver_1.create_whiteboard board
     end
@@ -55,7 +55,7 @@ describe 'Whiteboard' do
 
       it "allows a course #{user.role} to search for whiteboards" do
         @whiteboards_driver_1.close_whiteboard
-        @canvas_driver_1.masquerade_as(user, test.course)
+        @canvas_driver_1.masquerade_as(user, test.course_site)
         @whiteboards_driver_1.load_page test
         @whiteboards_driver_1.simple_search test.id
         @whiteboards_driver_1.wait_until(timeout) { @whiteboards_driver_1.list_view_whiteboard_elements.length == 3 }
@@ -75,7 +75,7 @@ describe 'Whiteboard' do
 
       it "does not allow a course #{user.role} to search for whiteboards" do
         @whiteboards_driver_1.close_whiteboard
-        @canvas_driver_1.masquerade_as(user, test.course)
+        @canvas_driver_1.masquerade_as(user, test.course_site)
         @whiteboards_driver_1.load_page test
         has_access = @whiteboards_driver_1.verify_block { @whiteboards_driver_1.simple_search_input_element.when_visible 2 }
         expect(has_access).to be false
@@ -93,7 +93,7 @@ describe 'Whiteboard' do
       after(:all) { @whiteboards_driver_1.close_whiteboard }
 
       it 'the user can see its whiteboards' do
-        @canvas_driver_1.masquerade_as(student_1, test.course)
+        @canvas_driver_1.masquerade_as(student_1, test.course_site)
         @whiteboards_driver_1.load_page test
         @whiteboards_driver_1.wait_until(timeout) do
           @whiteboards_driver_1.list_view_whiteboard_title_elements.any?
@@ -123,8 +123,8 @@ describe 'Whiteboard' do
       @whiteboards_driver_2 = SquiggyWhiteboardPage.new @driver_2
       @canvas_driver_2.log_in(@cal_net_driver_2, test.admin.username, Utils.super_admin_password)
 
-      @canvas_driver_1.masquerade_as(student_1, test.course)
-      @canvas_driver_2.masquerade_as(student_3, test.course)
+      @canvas_driver_1.masquerade_as(student_1, test.course_site)
+      @canvas_driver_2.masquerade_as(student_3, test.course_site)
       @whiteboards_driver_2.load_page test
     end
 
@@ -165,7 +165,7 @@ describe 'Whiteboard' do
     end
 
     it "does not allow #{student_1.full_name} to see if a non-member teacher has just come online" do
-      @canvas_driver_2.masquerade_as(teacher, test.course)
+      @canvas_driver_2.masquerade_as(teacher, test.course_site)
       @whiteboards_driver_2.load_page test
       @whiteboards_driver_2.open_whiteboard @whiteboard_1
       teacher_visible = @whiteboards_driver_1.verify_block { @whiteboards_driver_1.collaborator(teacher).when_present timeout }
@@ -219,7 +219,7 @@ describe 'Whiteboard' do
 
     before(:all) do
       @canvas_driver_1.stop_masquerading
-      @canvas_driver_1.remove_users_from_course(test.course, [teacher, student_1])
+      @canvas_driver_1.remove_users_from_course(test.course_site, [teacher, student_1])
       @engagement_index_driver_1.wait_for_removed_user_sync(test, [teacher, student_1])
 
       # Access to whiteboards is based on session cookie, so launch another browser to check cookie-less access

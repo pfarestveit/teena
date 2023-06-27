@@ -8,7 +8,7 @@ class SquiggyWhiteboardsPage
   include SquiggyWhiteboardEditForm
 
   def load_page(test)
-    navigate_to test.course.whiteboards_url
+    navigate_to test.course_site.whiteboards_url
     wait_until(Utils.medium_wait) { title == "#{SquiggyTool::WHITEBOARDS.name}" }
     hide_canvas_footer_and_popup
     switch_to_canvas_iframe

@@ -4,7 +4,7 @@ describe 'Asset' do
 
   before(:all) do
     @test = SquiggyTestConfig.new 'asset_mgmt'
-    @test.course.site_id = ENV['COURSE_ID']
+    @test.course_site.site_id = ENV['COURSE_ID']
     @driver = Utils.launch_browser
     @canvas = Page::CanvasPage.new @driver
     @cal_net= Page::CalNetPage.new @driver
@@ -14,7 +14,7 @@ describe 'Asset' do
     @engagement_index = SquiggyEngagementIndexPage.new @driver
 
     @canvas.log_in(@cal_net, @test.admin.username, Utils.super_admin_password)
-    @canvas.create_squiggy_course @test
+    @canvas.create_squiggy_course_site @test
 
     @cat_0 = SquiggyCategory.new "Category 1 #{@test.id}"
     @cat_1 = SquiggyCategory.new "Category 2 #{@test.id}"
@@ -23,7 +23,7 @@ describe 'Asset' do
     @student_1 = @test.students[0]
     @student_2 = @test.students[1]
 
-    @canvas.masquerade_as(@teacher, @test.course)
+    @canvas.masquerade_as(@teacher, @test.course_site)
     @assets_list.load_page @test
     @assets_list.click_manage_assets_link
     @manage_assets.create_new_category @cat_0
@@ -245,19 +245,19 @@ describe 'Asset' do
 
     before(:all) do
       @asset = @student_1.assets[0]
-      @canvas.masquerade_as(@student_1, @test.course)
+      @canvas.masquerade_as(@student_1, @test.course_site)
       @assets_list.load_page @test
       @assets_list.create_asset(@test, @asset)
     end
     
     it 'are not allowed if the user is a student who is not the asset creator' do
-      @canvas.masquerade_as(@student_2, @test.course)
+      @canvas.masquerade_as(@student_2, @test.course_site)
       @asset_detail.load_asset_detail(@test, @asset)
       expect(@asset_detail.edit_details_button?).to be false
     end
 
     it 'are allowed if the user is a teacher' do
-      @canvas.masquerade_as(@teacher, @test.course)
+      @canvas.masquerade_as(@teacher, @test.course_site)
       @asset_detail.load_asset_detail(@test, @asset)
       @asset.title = "#{@asset.title} EDITED"
       @asset_detail.edit_asset_details @asset
@@ -265,7 +265,7 @@ describe 'Asset' do
     end
 
     it 'are allowed if the user is a student who is the asset creator' do
-      @canvas.masquerade_as(@student_1, @test.course)
+      @canvas.masquerade_as(@student_1, @test.course_site)
       @asset_detail.load_asset_detail(@test, @asset)
       @asset.description = 'New description'
       @asset_detail.edit_asset_details @asset
@@ -277,7 +277,7 @@ describe 'Asset' do
 
     before(:all) do
       @link = @student_2.assets.find &:url
-      @canvas.masquerade_as(@student_2, @test.course)
+      @canvas.masquerade_as(@student_2, @test.course_site)
       @assets_list.load_page @test
       @assets_list.create_asset(@test, @link)
     end
@@ -288,13 +288,13 @@ describe 'Asset' do
     end
 
     it 'is allowed if the user is a teacher' do
-      @canvas.masquerade_as(@teacher, @test.course)
+      @canvas.masquerade_as(@teacher, @test.course_site)
       @asset_detail.load_asset_detail(@test, @link)
       @asset_detail.regenerate_preview_button_element.when_present Utils.short_wait
     end
 
     it 'is not allowed if the user is a student who is not the asset creator' do
-      @canvas.masquerade_as(@student_1, @test.course)
+      @canvas.masquerade_as(@student_1, @test.course_site)
       @asset_detail.load_asset_detail(@test, @link)
       @asset_detail.like_button_element.when_present Utils.short_wait
       expect(@asset_detail.regenerate_preview_button?).to be false
@@ -315,19 +315,19 @@ describe 'Asset' do
       end
 
       it 'cannot be done by a student who did not create the asset' do
-        @canvas.masquerade_as(@student_2, @test.course)
+        @canvas.masquerade_as(@student_2, @test.course_site)
         @asset_detail.load_asset_detail(@test, @asset_1)
         expect(@asset_detail.delete_button?).to be false
       end
 
       it 'can be done by the student who created the asset' do
-        @canvas.masquerade_as(@student_1, @test.course)
+        @canvas.masquerade_as(@student_1, @test.course_site)
         @asset_detail.load_asset_detail(@test, @asset_1)
         @asset_detail.delete_asset @asset_1
       end
 
       it 'can be done by a teacher' do
-        @canvas.masquerade_as(@teacher, @test.course)
+        @canvas.masquerade_as(@teacher, @test.course_site)
         @asset_detail.load_asset_detail(@test, @asset_2)
         @asset_detail.delete_asset @asset_2
       end
@@ -342,10 +342,10 @@ describe 'Asset' do
 
       before(:all) do
         @asset = @student_1.assets[3]
-        @canvas.masquerade_as(@student_1, @test.course)
+        @canvas.masquerade_as(@student_1, @test.course_site)
         @assets_list.create_asset(@test, @asset)
 
-        @canvas.masquerade_as(@student_2, @test.course)
+        @canvas.masquerade_as(@student_2, @test.course_site)
         @asset_detail.load_asset_detail(@test, @asset)
         @asset_detail.add_comment(SquiggyComment.new(body: 'Nemo me impune lacessit'))
 
@@ -355,13 +355,13 @@ describe 'Asset' do
       end
 
       it 'cannot be done by the student who created the asset' do
-        @canvas.masquerade_as(@student_1, @test.course)
+        @canvas.masquerade_as(@student_1, @test.course_site)
         @asset_detail.load_asset_detail(@test, @asset)
         expect(@asset_detail.delete_button?).to be false
       end
 
       it 'can be done by a teacher' do
-        @canvas.masquerade_as(@teacher, @test.course)
+        @canvas.masquerade_as(@teacher, @test.course_site)
         @asset_detail.load_asset_detail(@test, @asset)
         @asset_detail.delete_asset @asset
       end
@@ -376,10 +376,10 @@ describe 'Asset' do
     context 'when there are likes on the asset' do
       before(:all) do
         @asset = @student_1.assets[4]
-        @canvas.masquerade_as(@student_1, @test.course)
+        @canvas.masquerade_as(@student_1, @test.course_site)
         @assets_list.create_asset(@test, @asset)
 
-        @canvas.masquerade_as(@student_2, @test.course)
+        @canvas.masquerade_as(@student_2, @test.course_site)
         @asset_detail.load_asset_detail(@test, @asset)
         @asset_detail.click_like_button
 
@@ -389,13 +389,13 @@ describe 'Asset' do
       end
 
       it 'cannot be done by the student who created the asset' do
-        @canvas.masquerade_as(@student_1, @test.course)
+        @canvas.masquerade_as(@student_1, @test.course_site)
         @asset_detail.load_asset_detail(@test, @asset)
         expect(@asset_detail.delete_button?).to be false
       end
 
       it 'can be done by a teacher' do
-        @canvas.masquerade_as(@teacher, @test.course)
+        @canvas.masquerade_as(@teacher, @test.course_site)
         @asset_detail.load_asset_detail(@test, @asset)
         @asset_detail.delete_asset @asset
       end

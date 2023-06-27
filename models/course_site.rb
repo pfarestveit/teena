@@ -1,12 +1,14 @@
 class CourseSite
 
   attr_accessor :abbreviation,
-                :course,
                 :create_site_workflow,
                 :created_date,
+                :is_copy,
                 :manual_members,
                 :sections,
-                :site_id
+                :site_id,
+                :term,
+                :title
 
   def initialize(site_data)
     site_data.each { |k, v| public_send("#{k}=", v) }

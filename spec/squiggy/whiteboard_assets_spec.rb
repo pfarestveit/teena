@@ -6,7 +6,7 @@ describe 'Whiteboard Add Asset' do
 
   before(:all) do
     @test = SquiggyTestConfig.new 'whiteboard_assets'
-    @test.course.site_id = nil
+    @test.course_site.site_id = nil
     @student_1 = @test.students[0]
     @student_2 = @test.students[1]
     @student_3 = @test.students[2]
@@ -21,7 +21,7 @@ describe 'Whiteboard Add Asset' do
     @whiteboards = SquiggyWhiteboardPage.new @driver
 
     @canvas.log_in(@cal_net, @test.admin.username, Utils.super_admin_password)
-    @canvas.create_squiggy_course @test
+    @canvas.create_squiggy_course_site @test
 
     @category = SquiggyCategory.new "Category #{@test.id}"
     @assets_list.load_page @test
@@ -53,7 +53,7 @@ describe 'Whiteboard Add Asset' do
       @student_1_file = @student_1.assets.find &:file_name
       @student_1_file.title = "#{@student_1.full_name} file #{@test.id}"
       @student_1_file.category = @category
-      @canvas.masquerade_as(@student_1, @test.course)
+      @canvas.masquerade_as(@student_1, @test.course_site)
       @assets_list.load_page @test
       @assets_list.upload_file_asset @student_1_file
 
@@ -61,7 +61,7 @@ describe 'Whiteboard Add Asset' do
       @student_2_url = @student_2.assets.find &:url
       @student_2_url.title = "#{@student_2.full_name} link #{@test.id}"
       @student_2_url.category = @category
-      @canvas.masquerade_as(@student_2, @test.course)
+      @canvas.masquerade_as(@student_2, @test.course_site)
       @assets_list.load_page @test
       @assets_list.add_link_asset @student_2_url
 
@@ -69,7 +69,7 @@ describe 'Whiteboard Add Asset' do
       @student_3_file = @student_3.assets.find &:file_name
       @student_3_file.title = "#{@student_3.full_name} file #{@test.id}"
       @student_3_file.category = @category
-      @canvas.masquerade_as(@student_3, @test.course)
+      @canvas.masquerade_as(@student_3, @test.course_site)
       @assets_list.load_page @test
       @assets_list.upload_file_asset @student_3_file
 
@@ -192,7 +192,7 @@ describe 'Whiteboard Add Asset' do
       @student_1_asset_long_title = @student_1_assets[1]
       @student_1_asset_visible = @student_1_assets[2]
       @student_1_asset_hidden = @student_1_assets[3]
-      @canvas.masquerade_as(@student_1, @test.course)
+      @canvas.masquerade_as(@student_1, @test.course_site)
     end
 
     before(:each) { @whiteboards.close_whiteboard }
@@ -257,12 +257,12 @@ describe 'Whiteboard Add Asset' do
     end
 
     it 'allows a whiteboard collaborator to view a hidden asset deep link' do
-      @canvas.masquerade_as(@student_2, @test.course)
+      @canvas.masquerade_as(@student_2, @test.course_site)
       @asset_detail.load_asset_detail(@test, @student_1_asset_hidden)
     end
 
     it 'does not allow a user who is not the owner or whiteboard collaborator to view a hidden asset deep link' do
-      @canvas.masquerade_as(@student_3, @test.course)
+      @canvas.masquerade_as(@student_3, @test.course_site)
       visible_to_other = @assets_list.verify_block { @asset_library.load_asset_detail(@test, @student_1_asset_hidden) }
       expect(visible_to_other).to be false
     end
@@ -282,7 +282,7 @@ describe 'Whiteboard Add Asset' do
 
     before(:all) do
       @initial_score = @engagement_index.user_score(@test, @student_2)
-      @canvas.masquerade_as(@student_2, @test.course)
+      @canvas.masquerade_as(@student_2, @test.course_site)
     end
 
     before(:each) { @whiteboards.close_whiteboard }
@@ -362,7 +362,7 @@ describe 'Whiteboard Add Asset' do
   context 'when the asset is hidden from the asset library' do
 
     before(:all) do
-      @canvas.masquerade_as(@student_1, @test.course)
+      @canvas.masquerade_as(@student_1, @test.course_site)
       @whiteboards.load_page @test
       @whiteboards.open_whiteboard @whiteboard
       @whiteboards.add_collaborator @student_3
@@ -372,7 +372,7 @@ describe 'Whiteboard Add Asset' do
       @student_3_asset_hidden = @student_3.assets.find &:file_name
       @student_3_asset_hidden.title = "#{@test.id} Student 3 file not added to library"
 
-      @canvas.masquerade_as(@student_3, @test.course)
+      @canvas.masquerade_as(@student_3, @test.course_site)
       @whiteboards.load_page @test
       @whiteboards.open_whiteboard @whiteboard
       @whiteboards.add_asset_exclude_from_library @student_3_asset_hidden

@@ -38,7 +38,7 @@ class RipleyMailingListsPage
   div(:member_added_msg, id: 'TBD')
 
   def embedded_tool_path
-    "/accounts/#{Utils.canvas_admin_sub_account}/external_tools/#{Utils.canvas_mailing_lists_tool}"
+    "/accounts/#{Utils.canvas_admin_sub_account}/external_tools/#{RipleyUtils.mailing_lists_tool_id}"
   end
 
   def hit_embedded_tool_url

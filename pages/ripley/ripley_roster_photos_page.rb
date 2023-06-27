@@ -24,7 +24,7 @@ class RipleyRosterPhotosPage
   elements(:roster_sid, :span, xpath: '//div[contains(@id, "student-id-")]')
 
   def embedded_tool_path(course)
-    "/courses/#{course.site_id}/external_tools/#{Utils.canvas_rosters_tool}"
+    "/courses/#{course.site_id}/external_tools/#{RipleyUtils.roster_photos_tool_id}"
   end
 
   def hit_embedded_tool_url(course)

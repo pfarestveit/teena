@@ -159,7 +159,7 @@ class SquiggyAssetLibraryListViewPage
   # LIST VIEW ASSETS
 
   def load_page(test)
-    navigate_to test.course.asset_library_url
+    navigate_to test.course_site.asset_library_url
     wait_until(Utils.medium_wait) { title == SquiggyTool::ASSET_LIBRARY.name }
     hide_canvas_footer_and_popup
     switch_to_canvas_iframe
@@ -257,8 +257,8 @@ class SquiggyAssetLibraryListViewPage
     add_link_button_element.when_visible Utils.short_wait
     if resume_sync_button?
       assign = Assignment.new title: 'resume sync'
-      canvas_assign_page.load_page test.course
-      canvas_assign_page.create_assignment(test.course, assign)
+      canvas_assign_page.load_page test.course_site
+      canvas_assign_page.create_assignment(test.course_site, assign)
       load_page test
       logger.info 'Resuming syncing for the course'
       wait_for_update_and_click resume_sync_button_element

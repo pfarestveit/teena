@@ -76,9 +76,6 @@ module Page
       cal_net.username_element.when_visible Utils.short_wait
     end
 
-    # Masquerades as a user and then loads a course site
-    # @param user [User]
-    # @param course [Course]
     def masquerade_as(user, course = nil)
       load_homepage
       sleep 2
@@ -174,43 +171,47 @@ module Page
       switch_to_canvas_iframe
     end
 
-    def create_squiggy_course(test)
-      if test.course.site_id
-        navigate_to "#{Utils.canvas_base_url}/courses/#{test.course.site_id}/settings"
+    def create_site(site)
+      wait_for_load_and_click add_new_course_button_element
+      course_name_input_element.when_visible Utils.short_wait
+      wait_for_element_and_type(course_name_input_element, "#{site.title}")
+      wait_for_element_and_type(ref_code_input_element, "#{site.abbreviation}")
+      wait_for_update_and_click create_course_button_element
+      add_course_success_element.when_visible Utils.medium_wait
+    end
+
+    def create_squiggy_course_site(test)
+      if test.course_site.site_id
+        navigate_to "#{Utils.canvas_base_url}/courses/#{test.course_site.site_id}/settings"
         course_details_link_element.when_visible Utils.medium_wait
-        test.course.title = course_title
-        test.course.code = course_code
+        test.course_site.title = course_title
+        test.course_site.abbreviation = course_code
       else
         SquiggyUtils.inactivate_all_courses
-        logger.info "Creating a Squiggy course site named #{test.course.title}"
+        logger.info "Creating a Squiggy course site named #{test.course_site.title}"
         if SquiggyUtils.template_course_id
-          template_course = SquiggyCourse.new site_id: SquiggyUtils.template_course_id
-          load_course_settings template_course
+          template_site = SquiggySite.new site_id: SquiggyUtils.template_course_id
+          load_course_settings template_site
           wait_for_load_and_click copy_course_link_element
-          wait_for_element_and_type(course_title_element, test.course.title)
-          wait_for_element_and_type(course_code_element, test.course.code)
+          wait_for_element_and_type(course_title_element, test.course_site.title)
+          wait_for_element_and_type(course_code_element, test.course_site.abbreviation)
           wait_for_update_and_click copy_course_create_button_element
           copy_course_success_msg_element.when_present Utils.medium_wait
-          test.course.is_copy = true
+          test.course_site.is_copy = true
         else
           load_sub_account Utils.canvas_qa_sub_account
-          wait_for_load_and_click add_new_course_button_element
-          course_name_input_element.when_visible Utils.short_wait
-          wait_for_element_and_type(course_name_input_element, "#{test.course.title}")
-          wait_for_element_and_type(ref_code_input_element, "#{test.course.code}")
-          wait_for_update_and_click create_course_button_element
-          add_course_success_element.when_visible Utils.medium_wait
+          create_site test.course_site
         end
-        test.course.site_id = search_for_course(test.course, Utils.canvas_qa_sub_account)
-        logger.info "Course site ID is #{test.course.site_id}"
-        if test.course.sections&.any?
-          add_sections(test.course, test.course.sections) if test.course.sections&.any?
-          add_users_by_section(test.course, test.course.roster)
+        test.course_site.site_id = search_for_site(test.course_site, Utils.canvas_qa_sub_account)
+        logger.info "Course site ID is #{test.course_site.site_id}"
+        if test.course_site.sections&.any?
+          add_sections(test.course_site, test.course_site.sections)
+          add_users_by_section(test.course_site, test.course_site.manual_members)
         else
-          add_users(test.course, test.course.roster)
+          add_users(test.course_site, test.course_site.manual_members)
         end
-        remove_users_from_course(test.course, [test.admin])
-        publish_course_site test.course
+        remove_users_from_course(test.course_site, [test.admin])
+        publish_course_site test.course_site
         add_squiggy_tools test
       end
     end
@@ -227,7 +228,7 @@ module Page
         logger.info "Creating a course site named #{course.title} in #{course.term} semester"
         wait_for_update_and_click create_course_button_element
         add_course_success_element.when_visible Utils.medium_wait
-        course.site_id = search_for_course(course, sub_account)
+        course.site_id = search_for_site(course, sub_account)
         unless course.term.nil?
           navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/settings"
           wait_for_element_and_select(term_element, course.term)
@@ -243,6 +244,29 @@ module Page
       publish_course_site course
       logger.info "Course ID is #{course.site_id}"
       add_users(course, test_users)
+    end
+
+    def create_ripley_mailing_list_site(site)
+      if site.site_id
+        navigate_to "#{Utils.canvas_base_url}/courses/#{site.site_id}/settings"
+        course_details_link_element.when_visible Utils.medium_wait
+        site.course.title = course_title
+        site.course.code = course_code
+      else
+        load_sub_account RipleyTool::MAILING_LIST.account
+        logger.info "Creating a course site named #{site.title}#{' in ' + site.term.name if site.term}"
+        create_site site
+        site.site_id = search_for_site(site, RipleyTool::MAILING_LIST.account)
+        if site.term
+          navigate_to "#{Utils.canvas_base_url}/courses/#{site.site_id}/settings"
+          wait_for_element_and_select(term_element, site.term.name)
+          wait_for_update_and_click_js update_course_button_element
+          update_course_success_element.when_visible Utils.medium_wait
+        end
+      end
+      publish_course_site site
+      logger.info "Course ID is #{site.site_id}"
+      add_users(site, site.manual_members)
     end
 
     def click_create_site
@@ -282,18 +306,14 @@ module Page
       end
     end
 
-    # Searches a sub-account for a course site using a unique identifier
-    # @param course [Course]
-    # @param sub_account [String]
-    # @return [String]
-    def search_for_course(course, sub_account)
+    def search_for_site(site, sub_account)
       tries ||= 6
-      logger.info "Searching for '#{course.title}'"
+      logger.info "Searching for '#{site.title}'"
       load_sub_account sub_account
-      wait_for_element_and_type(search_course_input_element, "#{course.title}")
+      wait_for_element_and_type(search_course_input_element, "#{site.title}")
       sleep 1
-      wait_for_update_and_click link_element(text: "#{course.title}")
-      wait_until(Utils.short_wait) { course_site_heading.include? "#{course.code}" }
+      wait_for_update_and_click link_element(text: "#{site.title}")
+      wait_until(Utils.short_wait) { course_site_heading.include? "#{site.abbreviation}" }
       current_url.sub("#{Utils.canvas_base_url}/courses/", '')
     rescue
       logger.error('Course site not found, retrying')
@@ -337,9 +357,9 @@ module Page
       end
     end
 
-    def add_section(course, section)
+    def add_section(site, section)
       logger.info "Adding section #{section.sis_id}"
-      load_course_settings course
+      load_course_settings site
       wait_for_update_and_click_js sections_tab_element
       wait_for_element_and_type(section_name_element, section.sis_id)
       wait_for_update_and_click add_section_button_element
@@ -351,8 +371,8 @@ module Page
       update_section_button_element.when_not_visible Utils.medium_wait
     end
 
-    def add_sections(course, sections)
-      sections.each { |s| add_section(course, s) }
+    def add_sections(site, sections)
+      sections.each { |s| add_section(site, s) }
     end
 
     # Adds a section to a course site and assigns SIS IDs to both the course and the section
@@ -487,10 +507,8 @@ module Page
       hide_canvas_footer_and_popup
     end
 
-    # Enables an LTI tool that is already installed
-    # @param course [Course]
-    def enable_tool(course, tool)
-      load_navigation_page course
+    def enable_tool(tool, site=nil)
+      site ? load_navigation_page(site) : load_sub_account(tool.account)
       wait_for_update_and_click link_element(xpath: "//ul[@id='nav_disabled_list']/li[contains(.,'#{tool.name}')]//a")
       wait_for_update_and_click link_element(xpath: "//ul[@id='nav_disabled_list']/li[contains(.,'#{tool.name}')]//a[@title='Enable this item']")
       list_item_element(xpath: "//ul[@id='nav_enabled_list']/li[contains(.,'#{tool.name}')]").when_visible Utils.medium_wait
@@ -521,11 +539,11 @@ module Page
     end
 
     def add_squiggy_tools(test)
-      unless test.course.is_copy
+      unless test.course_site.is_copy
         creds = SquiggyUtils.lti_credentials
-        test.course.lti_tools.each do |tool|
+        test.course_site.lti_tools.each do |tool|
           logger.info "Adding and/or enabling #{tool.name}"
-          load_tools_config_page test.course
+          load_tools_config_page test.course_site
           wait_for_update_and_click navigation_link_element
           hide_canvas_footer_and_popup
           if verify_block { link_element(xpath: "//ul[@id='nav_enabled_list']/li[contains(.,'#{tool.name}')]//a").when_present 2 }
@@ -537,7 +555,7 @@ module Page
               logger.debug "#{tool.name} is not installed, installing and enabling"
 
               # Configure tool
-              load_tools_adding_page test.course
+              load_tools_adding_page test.course_site
               wait_for_update_and_click apps_link_element
               wait_for_update_and_click add_app_link_element
               wait_for_element_and_select(config_type_element, 'By URL')
@@ -556,15 +574,15 @@ module Page
               wait_for_update_and_click_js activate_navigation_button_element
               wait_for_update_and_click_js close_placements_button_element
               sleep 1
-              enable_tool(test.course, tool)
+              enable_tool(tool, test.course_site)
             end
           end
         end
       end
-      test.course.engagement_index_url = click_tool_link SquiggyTool::ENGAGEMENT_INDEX
-      test.course.impact_studio_url = click_tool_link SquiggyTool::IMPACT_STUDIO
-      test.course.whiteboards_url = click_tool_link SquiggyTool::WHITEBOARDS
-      test.course.asset_library_url = click_tool_link SquiggyTool::ASSET_LIBRARY
+      test.course_site.engagement_index_url = click_tool_link SquiggyTool::ENGAGEMENT_INDEX
+      test.course_site.impact_studio_url = click_tool_link SquiggyTool::IMPACT_STUDIO
+      test.course_site.whiteboards_url = click_tool_link SquiggyTool::WHITEBOARDS
+      test.course_site.asset_library_url = click_tool_link SquiggyTool::ASSET_LIBRARY
       asset_library = SquiggyAssetLibraryListViewPage.new @driver
       canvas_assigns_page = CanvasAssignmentsPage.new @driver
       switch_to_canvas_iframe
@@ -580,17 +598,18 @@ module Page
     def ripley_tool_installed?(tool)
       logger.info "Checking if Ripley's #{tool.name} is installed"
       load_account_apps tool.account
-      cell_element(xpath: "//td[text()='#{tool.name}']").exists?
+      verify_block { cell_element(xpath: "//td[text()='#{tool.name}']").when_present Utils.short_wait }
     end
 
     def get_ripley_tool_dev_key(tool)
       navigate_to "#{Utils.canvas_base_url}/accounts/#{Utils.canvas_uc_berkeley_sub_account}/developer_keys"
+      wait_for_load_and_click button_element(xpath: '//button[contains(., "Show All Keys")]')
       el = div_element(xpath: "//td[contains(., '#{tool.name}')]/following-sibling::td[2]/div/div")
       el.when_present Utils.medium_wait
       tool.dev_key = el.text
     end
 
-    def add_ripley_tool(tool)
+    def add_ripley_tool(site, tool)
       if ripley_tool_installed? tool
         logger.info "Tool #{tool.name} is already installed"
       else
@@ -663,9 +682,11 @@ module Page
     def set_canvas_ids(users)
       navigate_to "#{Utils.canvas_base_url}/accounts/#{Utils.canvas_uc_berkeley_sub_account}/users"
       users.each do |user|
-        wait_for_textbox_and_type(user_search_input_element, user.email)
-        user_result_link(user).when_present Utils.medium_wait
-        user.canvas_id = user_result_link(user).attribute('href').split('/').last
+        unless user.canvas_id
+          wait_for_textbox_and_type(user_search_input_element, user.email)
+          user_result_link(user).when_present Utils.medium_wait
+          user.canvas_id = user_result_link(user).attribute('href').split('/').last
+        end
       end
     end
 

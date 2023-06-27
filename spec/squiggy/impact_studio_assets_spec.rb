@@ -43,11 +43,11 @@ describe 'The Impact Studio' do
     @whiteboards = SquiggyWhiteboardPage.new @driver
 
     @canvas.log_in(@cal_net, test.admin.username, Utils.super_admin_password)
-    @canvas.create_squiggy_course test
-    @engagement_index.wait_for_new_user_sync(test, test.course.roster)
+    @canvas.create_squiggy_course_site test
+    @engagement_index.wait_for_new_user_sync(test, test.course_site.roster)
 
     [student_1, student_2].each do |student|
-      @canvas.masquerade_as(student, test.course)
+      @canvas.masquerade_as(student, test.course_site)
       @engagement_index.load_page test
       @engagement_index.share_score
     end
@@ -94,7 +94,7 @@ describe 'The Impact Studio' do
       asset_4.id = whiteboard.asset_exports.first.id
       @whiteboards.close_whiteboard
 
-      @canvas.masquerade_as(teacher, test.course)
+      @canvas.masquerade_as(teacher, test.course_site)
       @asset_library.load_page test
       @asset_library.add_link_asset asset_5
 

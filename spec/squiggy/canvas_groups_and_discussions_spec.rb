@@ -8,10 +8,10 @@ describe 'A SuiteC course' do
 
   before(:all) do
     @test = SquiggyTestConfig.new 'canvas_groups'
-    @test.course.site_id = nil
+    @test.course_site.site_id = nil
     @section_1 = Section.new label: "WBL 001 #{@test.id}", sis_id: "WBL 001 #{@test.id}"
     @section_2 = Section.new label: "WBL 002 #{@test.id}", sis_id: "WBL 002 #{@test.id}"
-    @test.course.sections = [@section_1, @section_2]
+    @test.course_site.sections = [@section_1, @section_2]
     (@teacher_1 = @test.teachers[0]).sections = [@section_2]
     (@student_1 = @test.students[0]).sections = [@section_1]
     (@student_2 = @test.students[1]).sections = [@section_1]
@@ -53,8 +53,8 @@ describe 'A SuiteC course' do
     @engagement_index = SquiggyEngagementIndexPage.new @driver
 
     @canvas_groups_page.log_in(@cal_net, @test.admin.username, Utils.super_admin_password)
-    @canvas_groups_page.create_squiggy_course @test
-    @engagement_index.wait_for_new_user_sync(@test, @test.course.roster)
+    @canvas_groups_page.create_squiggy_course_site @test
+    @engagement_index.wait_for_new_user_sync(@test, @test.course_site.roster)
   end
 
   after(:all) { Utils.quit_browser @driver }
@@ -63,7 +63,7 @@ describe 'A SuiteC course' do
 
     context 'and a student searches the asset library' do
       before(:all)  do
-        @canvas_groups_page.masquerade_as(@student_1, @test.course)
+        @canvas_groups_page.masquerade_as(@student_1, @test.course_site)
         @asset_library.load_page @test
       end
       it 'does not offer search filtering by group' do
@@ -74,7 +74,7 @@ describe 'A SuiteC course' do
 
     context 'and a teacher searches the asset library' do
       before(:all)  do
-        @canvas_groups_page.masquerade_as(@teacher_1, @test.course)
+        @canvas_groups_page.masquerade_as(@teacher_1, @test.course_site)
         @asset_library.load_page @test
       end
       it 'does not offer search filtering by group' do
@@ -88,13 +88,13 @@ describe 'A SuiteC course' do
 
     before(:all) do
       @canvas_groups_page.masquerade_as(@teacher_1, @course)
-      @canvas_groups_page.instr_create_grp_set(@test.course, @teacher_group_set)
-      @canvas_groups_page.instr_create_grp(@test.course, @teacher_group_1)
-      @canvas_groups_page.instr_create_grp(@test.course, @teacher_group_2)
+      @canvas_groups_page.instr_create_grp_set(@test.course_site, @teacher_group_set)
+      @canvas_groups_page.instr_create_grp(@test.course_site, @teacher_group_1)
+      @canvas_groups_page.instr_create_grp(@test.course_site, @teacher_group_2)
 
       # Remove course member to ensure poller has reached course before proceeding with tests
       @canvas_groups_page.stop_masquerading
-      @canvas_groups_page.remove_users_from_course(@test.course, [@teacher_2])
+      @canvas_groups_page.remove_users_from_course(@test.course_site, [@teacher_2])
       @engagement_index.wait_for_removed_user_sync(@test, [@teacher_2])
     end
 
@@ -129,18 +129,18 @@ describe 'A SuiteC course' do
 
       before(:all) do
         @teacher_group_1.members.each do |s|
-          @canvas_groups_page.masquerade_as(s, @test.course)
-          @canvas_groups_page.stud_join_grp(@test.course, @teacher_group_1)
+          @canvas_groups_page.masquerade_as(s, @test.course_site)
+          @canvas_groups_page.stud_join_grp(@test.course_site, @teacher_group_1)
         end
         @teacher_group_2.members.each do|s|
-          @canvas_groups_page.masquerade_as(s, @test.course)
-          @canvas_groups_page.stud_join_grp(@test.course, @teacher_group_2)
+          @canvas_groups_page.masquerade_as(s, @test.course_site)
+          @canvas_groups_page.stud_join_grp(@test.course_site, @teacher_group_2)
         end
 
         @canvas_groups_page.masquerade_as @student_1
-        @canvas_groups_page.stud_create_grp(@test.course, @student_group)
+        @canvas_groups_page.stud_create_grp(@test.course_site, @student_group)
         @canvas_groups_page.masquerade_as @student_5
-        @canvas_groups_page.stud_join_grp(@test.course, @student_group)
+        @canvas_groups_page.stud_join_grp(@test.course_site, @student_group)
 
         @group_options = [
           "#{@teacher_group_set.title} - #{@teacher_group_1.title}",
@@ -150,14 +150,14 @@ describe 'A SuiteC course' do
 
         # Add course member to ensure poller has reached course before proceeding with tests
         @canvas_groups_page.stop_masquerading
-        @canvas_groups_page.add_users(@test.course, [@teacher_2])
+        @canvas_groups_page.add_users(@test.course_site, [@teacher_2])
         @engagement_index.wait_for_new_user_sync(@test, [@teacher_2])
       end
 
       context 'and the group name changes' do
         before(:all) do
           @canvas_groups_page.masquerade_as @student_1
-          @canvas_groups_page.stud_edit_grp_name(@test.course, @student_group, "#{@student_group.title} Edited")
+          @canvas_groups_page.stud_edit_grp_name(@test.course_site, @student_group, "#{@student_group.title} Edited")
 
           @group_options = [
             "#{@teacher_group_set.title} - #{@teacher_group_1.title}",
@@ -167,7 +167,7 @@ describe 'A SuiteC course' do
 
           # Remove course member to ensure poller has reached course before proceeding with tests
           @canvas_groups_page.stop_masquerading
-          @canvas_groups_page.remove_users_from_course(@test.course, [@teacher_2])
+          @canvas_groups_page.remove_users_from_course(@test.course_site, [@teacher_2])
           @engagement_index.wait_for_removed_user_sync(@test, [@teacher_2])
         end
 
@@ -185,7 +185,7 @@ describe 'A SuiteC course' do
 
       before(:all) do
         @test.students.each do |s|
-          @canvas_groups_page.masquerade_as(s, @test.course)
+          @canvas_groups_page.masquerade_as(s, @test.course_site)
           @asset_library.load_page @test
           asset = s.assets.first
           asset.file_name ? @asset_library.upload_file_asset(asset) : @asset_library.add_link_asset(asset)
@@ -223,13 +223,13 @@ describe 'A SuiteC course' do
       before(:all) do
         @whiteboards.close_whiteboard
         @canvas_groups_page.masquerade_as @student_3
-        @canvas_groups_page.stud_switch_grps(@test.course, @teacher_group_2)
+        @canvas_groups_page.stud_switch_grps(@test.course_site, @teacher_group_2)
         @teacher_group_1.members.delete @student_3
         @teacher_group_2.members << @student_3
 
         # Add course member to ensure poller has reached course before proceeding with tests
         @canvas_groups_page.stop_masquerading
-        @canvas_groups_page.add_users(@test.course, [@teacher_2])
+        @canvas_groups_page.add_users(@test.course_site, [@teacher_2])
         @engagement_index.wait_for_new_user_sync(@test, [@teacher_2])
       end
 
@@ -258,12 +258,12 @@ describe 'A SuiteC course' do
 
       before(:all) do
         @canvas_groups_page.masquerade_as @student_1
-        @canvas_groups_page.stud_leave_grp(@test.course, @teacher_group_1)
+        @canvas_groups_page.stud_leave_grp(@test.course_site, @teacher_group_1)
         @teacher_group_1.members.delete @student_1
 
         # Remove course member to ensure poller has reached course before proceeding with tests
         @canvas_groups_page.stop_masquerading
-        @canvas_groups_page.remove_users_from_course(@test.course, [@teacher_2])
+        @canvas_groups_page.remove_users_from_course(@test.course_site, [@teacher_2])
         @engagement_index.wait_for_removed_user_sync(@test, [@teacher_2])
       end
 
@@ -327,11 +327,11 @@ describe 'A SuiteC course' do
 
     before(:all) do
       @canvas_groups_page.masquerade_as @teacher_1
-      @canvas_groups_page.instr_delete_grp_set(@test.course, @teacher_group_set)
+      @canvas_groups_page.instr_delete_grp_set(@test.course_site, @teacher_group_set)
 
       # Add course member to ensure poller has reached course before proceeding with tests
       @canvas_groups_page.stop_masquerading
-      @canvas_groups_page.add_users(@test.course, [@teacher_2])
+      @canvas_groups_page.add_users(@test.course_site, [@teacher_2])
       @engagement_index.wait_for_new_user_sync(@test, [@teacher_2])
     end
 
@@ -357,8 +357,8 @@ describe 'A SuiteC course' do
       @teacher_1.score = @engagement_index.user_score(@test, @teacher_1)
       @teacher_2.score = @engagement_index.user_score(@test, @teacher_2)
 
-      @discussion = Discussion.new "#{@test.course.title} Discussion"
-      @canvas_discussions_page.create_course_discussion(@test.course, @discussion)
+      @discussion = Discussion.new "#{@test.course_site.title} Discussion"
+      @canvas_discussions_page.create_course_discussion(@test.course_site, @discussion)
       @teacher_1_expected_score = @teacher_1.score + add_topic.points
     end
     it 'earns Discussion Topic Engagement Index points for the discussion creator' do
@@ -384,7 +384,7 @@ describe 'A SuiteC course' do
           @canvas_discussions_page.add_reply(@discussion, nil, 'Discussion entry by the discussion topic creator')
 
           # User 1 creates an entry on the topic, which should earn points for User 1 only
-          @canvas_discussions_page.masquerade_as(@teacher_2, @test.course)
+          @canvas_discussions_page.masquerade_as(@teacher_2, @test.course_site)
           @canvas_discussions_page.add_reply(@discussion, nil, 'Discussion entry by someone other than the discussion topic creator')
           @teacher_2_expected_score = @teacher_2.score + add_entry.points
         end

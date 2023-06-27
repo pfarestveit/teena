@@ -6,7 +6,7 @@ describe 'The Asset Library bookmarklet' do
 
   before(:all) do
     @test = SquiggyTestConfig.new 'bizmarklet'
-    @test.course.site_id = ENV['COURSE_ID']
+    @test.course_site.site_id = ENV['COURSE_ID']
     @driver = Utils.launch_browser
     @canvas = Page::CanvasPage.new @driver
     @cal_net = Page::CalNetPage.new @driver
@@ -16,18 +16,18 @@ describe 'The Asset Library bookmarklet' do
     @engagement_index = SquiggyEngagementIndexPage.new @driver
 
     @canvas.log_in(@cal_net, @test.admin.username, Utils.super_admin_password)
-    @canvas.create_squiggy_course @test
+    @canvas.create_squiggy_course_site @test
 
     @teacher = @test.teachers.first
     @student = @test.students[0]
     @cat_0 = SquiggyCategory.new "Category 1 #{@test.id}"
 
-    @canvas.masquerade_as(@teacher, @test.course)
+    @canvas.masquerade_as(@teacher, @test.course_site)
     @assets_list.load_page @test
     @assets_list.click_manage_assets_link
     @manage_assets.create_new_category @cat_0
 
-    @canvas.masquerade_as(@student, @test.course)
+    @canvas.masquerade_as(@student, @test.course_site)
     @assets_list.load_page @test
     @bizmarklet = @assets_list.get_bizmarklet
   end
@@ -81,7 +81,7 @@ describe 'The Asset Library bookmarklet' do
 
     it 'results in a link type asset' do
       @canvas.log_in(@cal_net, @test.admin.username, Utils.super_admin_password)
-      @canvas.masquerade_as(@student, @test.course)
+      @canvas.masquerade_as(@student, @test.course_site)
       @assets_list.load_page @test
       @assets_list.get_asset_id @link_asset
       @assets_list.click_asset_link(@test, @link_asset)
@@ -126,7 +126,7 @@ describe 'The Asset Library bookmarklet' do
 
     it 'results in a file type asset' do
       @canvas.log_in(@cal_net, @test.admin.username, Utils.super_admin_password)
-      @canvas.masquerade_as(@student, @test.course)
+      @canvas.masquerade_as(@student, @test.course_site)
       @assets_list.load_page @test
       @assets.each do |a|
         @assets_list.get_asset_id a
@@ -156,7 +156,7 @@ describe 'The Asset Library bookmarklet' do
 
     before(:all) do
       @canvas.log_in(@cal_net, @test.admin.username, Utils.super_admin_password)
-      @canvas.remove_users_from_course(@test.course, [@student])
+      @canvas.remove_users_from_course(@test.course_site, [@student])
       @engagement_index.wait_until(Utils.long_wait) do
         sleep 10
         @engagement_index.load_scores @test
