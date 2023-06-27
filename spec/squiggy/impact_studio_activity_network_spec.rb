@@ -19,8 +19,8 @@ describe 'Impact Studio Activity Network' do
     @student_3 = @test.students[2]
 
     @canvas.log_in(@cal_net, @test.admin.username, Utils.super_admin_password)
-    @canvas.create_squiggy_course @test
-    @engagement_index_page.wait_for_new_user_sync(@test, @test.course.roster)
+    @canvas.create_squiggy_course_site @test
+    @engagement_index_page.wait_for_new_user_sync(@test, @test.course_site.roster)
 
     @student1_student2_expected = @impact_studio_page.init_user_interactions
     @student1_student3_expected = @impact_studio_page.init_user_interactions
@@ -29,12 +29,12 @@ describe 'Impact Studio Activity Network' do
     @student3_student1_expected = @impact_studio_page.init_user_interactions
     @student3_student2_expected = @impact_studio_page.init_user_interactions
 
-    @canvas.masquerade_as(@student_1, @test.course)
+    @canvas.masquerade_as(@student_1, @test.course_site)
     @asset_library_page.load_page @test
     @asset = @student_1.assets.first
     @asset.file_name ? @asset_library_page.upload_file_asset(@asset) : @asset_library_page.add_link_asset(@asset)
 
-    @canvas.masquerade_as(@student_3, @test.course)
+    @canvas.masquerade_as(@student_3, @test.course_site)
     @whiteboards_page.load_page @test
     @whiteboard = SquiggyWhiteboard.new owner: @student_3,
                                         title: "Whiteboard #{@test.id}",
@@ -78,7 +78,7 @@ describe 'Impact Studio Activity Network' do
   context 'when a whiteboard is exported to the asset library' do
 
     before(:all) do
-      @canvas.masquerade_as(@student_2, @test.course)
+      @canvas.masquerade_as(@student_2, @test.course_site)
       @whiteboards_page.load_page @test
       @whiteboards_page.open_whiteboard @whiteboard
       @whiteboards_page.export_to_asset_library @whiteboard
@@ -102,7 +102,7 @@ describe 'Impact Studio Activity Network' do
     context 'and then remixed' do
 
       before(:all) do
-        @canvas.masquerade_as(@student_1, @test.course)
+        @canvas.masquerade_as(@student_1, @test.course_site)
         @asset_library_page.load_asset_detail(@test, @whiteboard.asset_exports[0])
         @student1_student2_expected[:views][:exports] += 1
         @student1_student3_expected[:views][:exports] += 1
@@ -131,7 +131,7 @@ describe 'Impact Studio Activity Network' do
   context 'when an asset is liked' do
 
     before(:all) do
-      @canvas.masquerade_as(@student_2, @test.course)
+      @canvas.masquerade_as(@student_2, @test.course_site)
       @asset_library_page.load_asset_detail(@test, @asset)
       @student2_student1_expected[:views][:exports] += 1
       @student1_student2_expected[:views][:imports] += 1
@@ -155,7 +155,7 @@ describe 'Impact Studio Activity Network' do
   context 'when an asset is unliked' do
 
     before(:all) do
-      @canvas.masquerade_as(@student_2, @test.course)
+      @canvas.masquerade_as(@student_2, @test.course_site)
       @asset_library_page.load_asset_detail(@test, @asset)
       @student2_student1_expected[:views][:exports] += 1
       @student1_student2_expected[:views][:imports] += 1
@@ -202,7 +202,7 @@ describe 'Impact Studio Activity Network' do
   context 'when an asset comment receives a reply' do
 
     before(:all) do
-      @canvas.masquerade_as(@student_3, @test.course)
+      @canvas.masquerade_as(@student_3, @test.course_site)
       @asset_library_page.load_asset_detail(@test, @asset)
       @student3_student1_expected[:views][:exports] += 1
       @student1_student3_expected[:views][:imports] += 1
@@ -271,7 +271,7 @@ describe 'Impact Studio Activity Network' do
   context 'when an asset is deleted' do
 
     before(:all) do
-      @canvas.masquerade_as(@teacher, @test.course)
+      @canvas.masquerade_as(@teacher, @test.course_site)
       @asset_library_page.load_asset_detail(@test, @asset)
       @asset_library_page.delete_asset @asset
       @student3_student1_expected[:use_assets][:exports] -= 1
@@ -306,11 +306,11 @@ describe 'Impact Studio Activity Network' do
 
     before(:all) do
       @discussion = Discussion.new "Discussion #{@test.id}"
-      @canvas.masquerade_as(@student_3, @test.course)
-      @canvas.create_course_discussion(@test.course, @discussion)
-      @canvas.masquerade_as(@student_1, @test.course)
+      @canvas.masquerade_as(@student_3, @test.course_site)
+      @canvas.create_course_discussion(@test.course_site, @discussion)
+      @canvas.masquerade_as(@student_1, @test.course_site)
       @canvas.add_reply(@discussion, nil, "Discussion entry #{@test.id}")
-      @canvas.masquerade_as(@student_2, @test.course)
+      @canvas.masquerade_as(@student_2, @test.course_site)
       @canvas.add_reply(@discussion, 0, "Discussion reply #{@test.id}")
       @student2_student1_expected[:posts][:exports] += 1
       @student1_student2_expected[:posts][:imports] += 1

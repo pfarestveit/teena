@@ -19,7 +19,7 @@ class RipleyOfficialSectionsPage
   button(:update_msg_close_button, id: 'TBD')
 
   def embedded_tool_path(course)
-    "/courses/#{course.site_id}/external_tools/#{Utils.canvas_official_sections_tool}"
+    "/courses/#{course.site_id}/external_tools/#{RipleyUtils.official_sections_tool_id}"
   end
 
   def hit_embedded_tool_url(course)

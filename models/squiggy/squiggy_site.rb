@@ -1,11 +1,9 @@
-class SquiggyCourse < Course
+class SquiggySite < CourseSite
 
   attr_accessor :asset_library_url,
-                :is_copy,
                 :engagement_index_url,
                 :impact_studio_url,
                 :lti_tools,
-                :roster,
                 :squiggy_id,
                 :whiteboards_url
 

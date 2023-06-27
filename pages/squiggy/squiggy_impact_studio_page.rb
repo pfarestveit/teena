@@ -6,7 +6,7 @@ class SquiggyImpactStudioPage
   include SquiggyPages
 
   def load_page(test)
-    navigate_to test.course.impact_studio_url
+    navigate_to test.course_site.impact_studio_url
     wait_until(Utils.medium_wait) { title == "#{SquiggyTool::IMPACT_STUDIO.name}" }
     hide_canvas_footer_and_popup
     switch_to_canvas_iframe

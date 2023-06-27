@@ -6,10 +6,10 @@ describe 'Canvas section silo-ing' do
 
   before(:all) do
     @test = SquiggyTestConfig.new 'canvas_silos'
-    @test.course.site_id = nil
+    @test.course_site.site_id = nil
     @section_1 = Section.new label: "WBL 001 #{@test.id}", sis_id: "WBL 001 #{@test.id}"
     @section_2 = Section.new label: "WBL 002 #{@test.id}", sis_id: "WBL 002 #{@test.id}"
-    @test.course.sections = [@section_1, @section_2]
+    @test.course_site.sections = [@section_1, @section_2]
     (@teacher = @test.teachers.first).sections = [@section_2]
     (@student_1 = @test.students[0]).sections = [@section_1]
     (@student_2 = @test.students[1]).sections = [@section_1]
@@ -38,8 +38,8 @@ describe 'Canvas section silo-ing' do
     @engagement_index = SquiggyEngagementIndexPage.new @driver
 
     @canvas.log_in(@cal_net, @test.admin.username, Utils.super_admin_password)
-    @canvas.create_squiggy_course @test
-    @engagement_index.wait_for_new_user_sync(@test, @test.course.roster)
+    @canvas.create_squiggy_course_site @test
+    @engagement_index.wait_for_new_user_sync(@test, @test.course_site.roster)
   end
 
   after(:all) { Utils.quit_browser @driver }
@@ -47,7 +47,7 @@ describe 'Canvas section silo-ing' do
   context 'when enabled' do
 
     before(:all) do
-      @canvas.masquerade_as(@teacher, @test.course)
+      @canvas.masquerade_as(@teacher, @test.course_site)
       @asset_library.load_page @test
       @asset_library.click_manage_assets_link
       @manage_assets.silo_sections
@@ -58,7 +58,7 @@ describe 'Canvas section silo-ing' do
       before(:all) do
         @test.students.each do |student|
           asset = student.assets.first
-          @canvas.masquerade_as(student, @test.course)
+          @canvas.masquerade_as(student, @test.course_site)
           @asset_library.load_page @test
           asset.file_name ? @asset_library.upload_file_asset(asset) : @asset_library.add_link_asset(asset)
         end
@@ -66,7 +66,7 @@ describe 'Canvas section silo-ing' do
 
       context 'viewed by an instructor' do
 
-        before(:all) { @canvas.masquerade_as(@teacher, @test.course) }
+        before(:all) { @canvas.masquerade_as(@teacher, @test.course_site) }
 
         it 'allows access to all assets' do
           (@section_1_assets + @section_2_assets).uniq.each { |asset| @asset_library.load_asset_detail(@test, asset) }
@@ -75,7 +75,7 @@ describe 'Canvas section silo-ing' do
 
       context 'viewed by a student' do
 
-        before(:all) { @canvas.masquerade_as(@student_1, @test.course) }
+        before(:all) { @canvas.masquerade_as(@student_1, @test.course_site) }
 
         it 'allows access to assets belonging to the same section as the student' do
           @section_1_assets.each { |asset| @asset_library.load_asset_detail(@test, asset) }
@@ -91,7 +91,7 @@ describe 'Canvas section silo-ing' do
         context 'viewed by an instructor' do
 
           before(:all) do
-            @canvas.masquerade_as(@teacher, @test.course)
+            @canvas.masquerade_as(@teacher, @test.course_site)
             @asset_library.load_page @test
           end
 
@@ -104,19 +104,19 @@ describe 'Canvas section silo-ing' do
         context 'viewed by a student' do
 
           it 'with single section citizenship shows results for a single section' do
-            @canvas.masquerade_as(@student_1, @test.course)
+            @canvas.masquerade_as(@student_1, @test.course_site)
             @asset_library.load_page @test
             @asset_library.simple_search @test.id
             @asset_library.wait_for_asset_results (@section_1_assets).sort_by(&:id).reverse
 
-            @canvas.masquerade_as(@student_5, @test.course)
+            @canvas.masquerade_as(@student_5, @test.course_site)
             @asset_library.load_page @test
             @asset_library.simple_search @test.id
             @asset_library.wait_for_asset_results (@section_2_assets).sort_by(&:id).reverse
           end
 
           it 'with dual section citizenship shows results for multiple sections' do
-            @canvas.masquerade_as(@student_3, @test.course)
+            @canvas.masquerade_as(@student_3, @test.course_site)
             @asset_library.load_page @test
             @asset_library.simple_search @test.id
             @asset_library.wait_for_asset_results (@section_1_assets + @section_2_assets).uniq.sort_by(&:id).reverse
@@ -129,7 +129,7 @@ describe 'Canvas section silo-ing' do
         context 'viewed by an instructor' do
 
           before(:all) do
-            @canvas.masquerade_as(@teacher, @test.course)
+            @canvas.masquerade_as(@teacher, @test.course_site)
             @asset_library.load_page @test
           end
 
@@ -144,19 +144,19 @@ describe 'Canvas section silo-ing' do
         context 'viewed by a student' do
 
           it 'with single section citizenship shows results for a single section' do
-            @canvas.masquerade_as(@student_1, @test.course)
+            @canvas.masquerade_as(@student_1, @test.course_site)
             @asset_library.load_page @test
             @asset_library.advanced_search(@test.id, nil, nil, nil, nil, nil, nil)
             @asset_library.wait_for_asset_results (@section_1_assets).sort_by(&:id).reverse
 
-            @canvas.masquerade_as(@student_5, @test.course)
+            @canvas.masquerade_as(@student_5, @test.course_site)
             @asset_library.load_page @test
             @asset_library.advanced_search(@test.id, nil, nil, nil, nil, nil, nil)
             @asset_library.wait_for_asset_results (@section_2_assets).sort_by(&:id).reverse
           end
 
           it 'with dual section citizenship shows results for all their sections' do
-            @canvas.masquerade_as(@student_3, @test.course)
+            @canvas.masquerade_as(@student_3, @test.course_site)
             @asset_library.load_page @test
             @asset_library.advanced_search(@test.id, nil, nil, nil, nil, nil, nil)
             @asset_library.wait_for_asset_results (@section_1_assets + @section_2_assets).uniq.sort_by(&:id).reverse
@@ -171,7 +171,7 @@ describe 'Canvas section silo-ing' do
 
       before(:all) do
         @test.students.each do | student|
-          @canvas.masquerade_as(student, @test.course)
+          @canvas.masquerade_as(student, @test.course_site)
           @engagement_index.load_page @test
           @engagement_index.share_score
         end
@@ -180,14 +180,14 @@ describe 'Canvas section silo-ing' do
       context 'viewed by an instructor' do
 
         before(:all) do
-          @canvas.masquerade_as(@teacher, @test.course)
+          @canvas.masquerade_as(@teacher, @test.course_site)
           @engagement_index.load_page @test
           @engagement_index.wait_for_scores
         end
 
         it 'shows all students and their sections' do
-          expect(@engagement_index.visible_names.sort).to eql(@test.course.roster.map(&:full_name).sort)
-          expect(@engagement_index.visible_sections.sort).to eql(@test.course.sections.map(&:sis_id).sort)
+          expect(@engagement_index.visible_names.sort).to eql(@test.course_site.roster.map(&:full_name).sort)
+          expect(@engagement_index.visible_sections.sort).to eql(@test.course_site.sections.map(&:sis_id).sort)
         end
 
         it 'includes student sections in the CSV export' do
@@ -200,14 +200,14 @@ describe 'Canvas section silo-ing' do
       context 'viewed by a student' do
 
         it 'with single section citizenship shows students in their own section only' do
-          @canvas.masquerade_as(@student_1, @test.course)
+          @canvas.masquerade_as(@student_1, @test.course_site)
           @engagement_index.load_page @test
           @engagement_index.wait_for_scores
           expect(@engagement_index.visible_names.sort).to eql([@student_1, @student_2, @student_3].map(&:full_name).sort)
         end
 
         it 'with dual section citizenship shows students in all their sections' do
-          @canvas.masquerade_as(@student_3, @test.course)
+          @canvas.masquerade_as(@student_3, @test.course_site)
           @engagement_index.load_page @test
           @engagement_index.wait_for_scores
           expect(@engagement_index.visible_names.sort).to eql(@test.students.map(&:full_name).sort)
@@ -222,7 +222,7 @@ describe 'Canvas section silo-ing' do
       context 'viewed by an instructor' do
 
         before(:all) do
-          @canvas.masquerade_as(@teacher, @test.course)
+          @canvas.masquerade_as(@teacher, @test.course_site)
           @whiteboards.load_page @test
         end
 
@@ -248,7 +248,7 @@ describe 'Canvas section silo-ing' do
 
         before(:all) do
           @whiteboards.close_whiteboard
-          @canvas.masquerade_as(@student_1, @test.course)
+          @canvas.masquerade_as(@student_1, @test.course_site)
           @whiteboards.load_page @test
         end
 
@@ -283,7 +283,7 @@ describe 'Canvas section silo-ing' do
 
         before(:all) do
           @whiteboards.close_whiteboard
-          @canvas.masquerade_as(@teacher, @test.course)
+          @canvas.masquerade_as(@teacher, @test.course_site)
           @impact_studio.load_page @test
         end
 
@@ -293,14 +293,14 @@ describe 'Canvas section silo-ing' do
         end
 
         it 'offers profile options for all students and instructors' do
-          expect(@impact_studio.visible_user_select_options.sort).to eql(@test.course.roster.map(&:full_name).sort)
+          expect(@impact_studio.visible_user_select_options.sort).to eql(@test.course_site.roster.map(&:full_name).sort)
         end
 
         it 'offers profile browsing for all students and instructors' do
-          @test.course.roster.sort_by! { |u| u.full_name }
-          index_of_current_user = @test.course.roster.index @teacher
-          @test.course.roster.rotate!(index_of_current_user + 1)
-          @test.course.roster.each { |user| @impact_studio.browse_next_user user }
+          @test.course_site.roster.sort_by! { |u| u.full_name }
+          index_of_current_user = @test.course_site.roster.index @teacher
+          @test.course_site.roster.rotate!(index_of_current_user + 1)
+          @test.course_site.roster.each { |user| @impact_studio.browse_next_user user }
         end
 
         it 'shows the activity network for all students' do
@@ -317,7 +317,7 @@ describe 'Canvas section silo-ing' do
       context 'viewed by a student' do
 
         before(:all) do
-          @canvas.masquerade_as(@student_1, @test.course)
+          @canvas.masquerade_as(@student_1, @test.course_site)
           @impact_studio.load_page @test
         end
 
@@ -363,7 +363,7 @@ describe 'Canvas section silo-ing' do
         @asset_library.add_comment @comment
         @canvas.stop_masquerading
 
-        @canvas.remove_user_section(@test.course, @student_3, @section_1)
+        @canvas.remove_user_section(@test.course_site, @student_3, @section_1)
         @engagement_index.wait_for_user_sections(@test, @student_3)
         @section_1_assets.delete_if { |a| a.owner == @student_3 }
         @section_1_whiteboard.collaborators.delete @student_1
@@ -371,7 +371,7 @@ describe 'Canvas section silo-ing' do
 
       context 'the student' do
 
-        before(:all) { @canvas.masquerade_as(@student_3, @test.course) }
+        before(:all) { @canvas.masquerade_as(@student_3, @test.course_site) }
 
         it('can reach its own assets') { @asset_library.load_asset_detail(@test, @student_3.assets.first) }
 
@@ -421,7 +421,7 @@ describe 'Canvas section silo-ing' do
 
       context 'the student\'s former silo mates' do
 
-        before(:all) { @canvas.masquerade_as(@student_1, @test.course) }
+        before(:all) { @canvas.masquerade_as(@student_1, @test.course_site) }
 
         it('can no longer reach the student\'s assets') { @asset_library.hit_unavailable_asset(@test, @student_3.assets.first) }
 

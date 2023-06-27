@@ -8,7 +8,7 @@ describe 'Impact Studio' do
   student_2 = test.students[1]
   student_3 = test.students[2]
   students = [student_1, student_2, student_3]
-  test.course.roster -= students
+  test.course_site.roster -= students
 
   before(:all) do
     @driver = Utils.launch_browser
@@ -19,7 +19,7 @@ describe 'Impact Studio' do
     @engagement_index = SquiggyEngagementIndexPage.new @driver
 
     @canvas.log_in(@cal_net, test.admin.username, Utils.super_admin_password)
-    @canvas.create_squiggy_course test
+    @canvas.create_squiggy_course_site test
   end
 
   after(:all) { Utils.quit_browser @driver }
@@ -29,7 +29,7 @@ describe 'Impact Studio' do
     context 'and the course site member views its profile' do
 
       before(:all) do
-        @canvas.masquerade_as(teacher, test.course)
+        @canvas.masquerade_as(teacher, test.course_site)
         @impact_studio.load_own_profile(test, teacher)
       end
 
@@ -48,13 +48,13 @@ describe 'Impact Studio' do
 
     before(:all) do
       @canvas.stop_masquerading
-      @canvas.add_users_by_section(test.course, [student_1])
+      @canvas.add_users_by_section(test.course_site, [student_1])
     end
 
     context 'and a course site member views its profile' do
 
       before(:all) do
-        @canvas.masquerade_as(student_1, test.course)
+        @canvas.masquerade_as(student_1, test.course_site)
         @impact_studio.load_own_profile(test, student_1)
       end
 
@@ -73,13 +73,13 @@ describe 'Impact Studio' do
 
     before(:all) do
       @canvas.stop_masquerading
-      @canvas.add_users_by_section(test.course, [student_2])
+      @canvas.add_users_by_section(test.course_site, [student_2])
     end
 
     context 'and a course site member views its profile' do
 
       before(:all) do
-        @canvas.masquerade_as(student_2, test.course)
+        @canvas.masquerade_as(student_2, test.course_site)
         @impact_studio.load_own_profile(test, student_2)
       end
 
@@ -97,7 +97,7 @@ describe 'Impact Studio' do
   describe 'search' do
 
     before(:all) do
-      @canvas.masquerade_as(teacher, test.course)
+      @canvas.masquerade_as(teacher, test.course_site)
       @impact_studio.load_own_profile(test, teacher)
     end
 
@@ -136,13 +136,13 @@ describe 'Impact Studio' do
 
     before(:all) do
       @canvas.stop_masquerading
-      @canvas.add_users_by_section(test.course, [student_3])
+      @canvas.add_users_by_section(test.course_site, [student_3])
       @engagement_index.wait_for_new_user_sync(test, [student_3])
 
       @asset = SquiggyAsset.new title: "Asset #{test.id}",
                                 url: 'www.google.com',
                                 description: 'BitterTogether'
-      @canvas.masquerade_as(student_1, test.course)
+      @canvas.masquerade_as(student_1, test.course_site)
       @impact_studio.load_own_profile(test, student_1)
     end
 
@@ -229,7 +229,7 @@ describe 'Impact Studio' do
     context 'when the user is not looking' do
 
       before(:all) do
-        @canvas.masquerade_as(student_1, test.course)
+        @canvas.masquerade_as(student_1, test.course_site)
         @engagement_index.load_page test
         @engagement_index.share_score
         @impact_studio.load_own_profile(test, student_1)
@@ -243,7 +243,7 @@ describe 'Impact Studio' do
       context 'and another user views the user' do
 
         before(:all) do
-          @canvas.masquerade_as(student_2, test.course)
+          @canvas.masquerade_as(student_2, test.course_site)
           @impact_studio.load_page test
           @impact_studio.select_user student_1
         end
@@ -261,7 +261,7 @@ describe 'Impact Studio' do
     context 'when the user is looking' do
 
       before(:all) do
-        @canvas.masquerade_as(student_1, test.course)
+        @canvas.masquerade_as(student_1, test.course_site)
         @impact_studio.load_own_profile(test, student_1)
       end
 
@@ -279,7 +279,7 @@ describe 'Impact Studio' do
       context 'and another user views the user' do
 
         before(:all) do
-          @canvas.masquerade_as(student_2, test.course)
+          @canvas.masquerade_as(student_2, test.course_site)
           @impact_studio.load_page test
           @impact_studio.select_user student_1
         end

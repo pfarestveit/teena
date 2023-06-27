@@ -65,7 +65,7 @@ require_relative '../models/squiggy/squiggy_category'
 require_relative '../models/squiggy/squiggy_comment'
 require_relative '../models/squiggy/squiggy_tool'
 require_relative '../models/squiggy/squiggy_user'
-require_relative '../models/squiggy/squiggy_course'
+require_relative '../models/squiggy/squiggy_site'
 require_relative '../models/squiggy/squiggy_whiteboard'
 
 require_relative 'utils'

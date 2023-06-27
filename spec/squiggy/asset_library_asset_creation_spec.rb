@@ -6,7 +6,7 @@ describe 'New asset' do
 
   begin
     @test = SquiggyTestConfig.new 'asset_creation'
-    @test.course.site_id = ENV['COURSE_ID']
+    @test.course_site.site_id = ENV['COURSE_ID']
     @driver = Utils.launch_browser
     @canvas = Page::CanvasPage.new @driver
     @cal_net = Page::CalNetPage.new @driver
@@ -15,11 +15,11 @@ describe 'New asset' do
     @manage_assets = SquiggyAssetLibraryManageAssetsPage.new @driver
 
     @canvas.log_in(@cal_net, @test.admin.username, Utils.super_admin_password)
-    @canvas.create_squiggy_course @test
+    @canvas.create_squiggy_course_site @test
 
     @test.students.each do |student|
       begin
-        @canvas.masquerade_as(student, @test.course)
+        @canvas.masquerade_as(student, @test.course_site)
         @assets_list.load_page @test
 
         student.assets.each do |asset|

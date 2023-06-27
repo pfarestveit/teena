@@ -33,7 +33,7 @@ describe 'bCourses Roster Photos' do
       @splash_page.dev_auth(test.admin.uid, site, @cal_net)
     else
       @canvas.log_in(@cal_net, test.admin.username, Utils.super_admin_password)
-      RipleyTool::TOOLS.each { |t| @canvas.add_ripley_tool t }
+      RipleyTool::TOOLS.each { |t| @canvas.add_ripley_tool(site, t) }
       @canvas.set_canvas_ids([teacher] + non_teachers)
       @canvas.masquerade_as teacher
     end
@@ -44,8 +44,8 @@ describe 'bCourses Roster Photos' do
       else
         @create_course_site_page.provision_course_site(site, {standalone: standalone})
         @create_course_site_page.wait_for_standalone_site_id(site, @splash_page) if standalone
+        @canvas.publish_course_site site
       end
-      @canvas.publish_course_site site
     end
 
     @expected_sids = site.sections.map { |s| s.enrollments.map &:sid }.flatten.uniq.sort
@@ -58,7 +58,7 @@ describe 'bCourses Roster Photos' do
 
     unless standalone
       @canvas.load_users_page site
-      @canvas.click_find_person_to_add
+      @canvas.click_find_person_to_add RipleyUtils.base_url
       non_teachers.each do |user|
         @course_add_user_page.search(user.uid, 'CalNet UID')
         @course_add_user_page.add_user_by_uid(user, site.sections.first)

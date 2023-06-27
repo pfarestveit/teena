@@ -11,7 +11,7 @@ class RipleySiteCreationPage
 
   def load_embedded_tool(user)
     logger.info 'Loading embedded version of Create Course Site tool'
-    load_tool_in_canvas"/users/#{user.canvas_id}/external_tools/#{Utils.canvas_create_site_tool}"
+    load_tool_in_canvas"/users/#{user.canvas_id}/external_tools/#{RipleyUtils.create_site_tool_id}"
   end
 
   def load_standalone_tool

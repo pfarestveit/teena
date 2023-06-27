@@ -3,7 +3,7 @@ require_relative '../../util/spec_helper'
 describe 'Asset Library' do
 
   test = SquiggyTestConfig.new 'asset_search'
-  test.course.site_id = ENV['COURSE_ID']
+  test.course_site.site_id = ENV['COURSE_ID']
 
   before(:all) do
     @driver = Utils.launch_browser
@@ -26,8 +26,8 @@ describe 'Asset Library' do
     @cat_3 = SquiggyCategory.new "Category 3 #{test.id}"
 
     @canvas.log_in(@cal_net, test.admin.username, Utils.super_admin_password)
-    @canvas.create_squiggy_course test
-    @engagement_index.wait_for_new_user_sync(test, test.course.roster)
+    @canvas.create_squiggy_course_site test
+    @engagement_index.wait_for_new_user_sync(test, test.course_site.roster)
   end
 
   after(:all) do
@@ -43,7 +43,7 @@ describe 'Asset Library' do
 
     [test.teachers.first, test.ta, test.lead_ta, test.designer, test.reader].each do |user|
       it "can be managed by a course #{user.role}" do
-        @canvas.masquerade_as(user, test.course)
+        @canvas.masquerade_as(user, test.course_site)
         @assets_list.load_page test
         @assets_list.manage_assets_button_element.when_visible Utils.short_wait
       end
@@ -51,7 +51,7 @@ describe 'Asset Library' do
 
     [test.students.first, test.observer].each do |user|
       it "cannot be managed by a course #{user.role}" do
-        @canvas.masquerade_as(user, test.course)
+        @canvas.masquerade_as(user, test.course_site)
         @assets_list.load_page test
         @assets_list.upload_button_element.when_visible Utils.short_wait
         expect(@assets_list.manage_assets_button?).to be false
@@ -61,7 +61,7 @@ describe 'Asset Library' do
     context 'when created' do
 
       before(:all) do
-        @canvas.masquerade_as(@student_1, test.course)
+        @canvas.masquerade_as(@student_1, test.course_site)
         @assets_list.load_page test
         @assets_list.upload_file_asset @student_1_upload
         @canvas.masquerade_as test.teachers.first
@@ -180,13 +180,13 @@ describe 'Asset Library' do
 
       @student_2_upload.category = @cat_3
       @student_2_upload.description = "Description for uploaded file #{test.id}"
-      @canvas.masquerade_as(@student_2, test.course)
+      @canvas.masquerade_as(@student_2, test.course_site)
       @assets_list.load_page test
       @assets_list.upload_file_asset @student_2_upload
 
       @student_3_link.category = @cat_3
       @student_3_link.description = "Link #MakeOurDreamsComeTrue#{test.id}"
-      @canvas.masquerade_as(@student_3, test.course)
+      @canvas.masquerade_as(@student_3, test.course_site)
       @assets_list.load_page test
       @assets_list.add_link_asset @student_3_link
 

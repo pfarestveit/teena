@@ -35,13 +35,17 @@ class RipleyTestConfig < TestConfig
 
   ### GLOBAL CONFIG ###
 
+  def ripley_test_data_file
+    File.join(Utils.config_dir, 'test-data-bcourses.json')
+  end
+
   # COURSE SITES
 
   def get_multiple_test_sites
     courses = set_sis_courses
     @course_sites = courses.map do |c|
       workflow = (c.sections.select(&:primary).length > 1) ? 'ccn' : 'uid'
-      CourseSite.new site_id: "#{@id} #{c.term.name} #{c.code}",
+      CourseSite.new title: "#{@id} #{c.term.name} #{c.code}",
                      abbreviation: "#{@id} #{c.term.name} #{c.code}",
                      course: c,
                      create_site_workflow: workflow,
@@ -101,33 +105,34 @@ class RipleyTestConfig < TestConfig
   def get_mailing_list_sites
     @course_sites = [
       (
-        CourseSite.new course: (Course.new title: "List 1 #{@id}",
-                                           code: "QA admin #{@id}",
-                                           term: @current_term)
-
+        CourseSite.new title: "List 1 #{@id}",
+                       abbreviation: "Admin #{@id}",
+                       term: @current_term
       ),
       (
-        CourseSite.new course: (Course.new title: "List 2 #{@id}",
-                                           code: "QA admin #{@id}",
-                                           term: @current_term)
+        CourseSite.new title: "List 2 #{@id}",
+                       abbreviation: "Admin #{@id}",
+                       term: @current_term
       ),
       (
-        CourseSite.new course: (Course.new title: "List 3 #{@id}",
-                                           code: "QA instructor #{@id}")
+        CourseSite.new title: "List 3 #{@id}",
+                       abbreviation: "Instructor #{@id}"
       )
     ]
-    @course_sites.each { |s| set_manual_members s }
+    set_test_user_data ripley_test_data_file
+    @course_sites.each { |s| set_manual_mailing_list_members s }
+    @course_sites[1].manual_members = [@teachers.first]
   end
 
   def get_project_site
-    site = CourseSite.new course: (Course.new title: "Project #{@id}")
+    site = CourseSite.new title: "Project #{@id}"
     set_manual_members site
     site
   end
 
   def get_welcome_email_site
-    site = CourseSite.new course: (Course.new title: "#{@id} Welcome",
-                                              code: "#{@id} Welcome Email")
+    site = CourseSite.new title: "#{@id} Welcome",
+                          code: "#{@id} Welcome Email"
     set_manual_members site
     site
   end
@@ -201,6 +206,10 @@ class RipleyTestConfig < TestConfig
     @wait_list_student.role = 'Waitlist Student'
 
     site.manual_members = (teachers + tas + staff + students) if site
+  end
+
+  def set_manual_mailing_list_members(site)
+    site.manual_members = set_test_users 'mailing_lists'
   end
 
   def set_manual_project_members(site = nil)

@@ -1,7 +1,7 @@
 require_relative '../../util/spec_helper'
 
 test = SquiggyTestConfig.new 'engagement_index'
-test.course.site_id = nil
+test.course_site.site_id = nil
 teacher = test.teachers.first
 student_0 = test.students[0]
 student_1 = test.students[1]
@@ -20,14 +20,14 @@ describe 'The Engagement Index' do
     @impact_studio = SquiggyImpactStudioPage.new @driver
 
     @canvas.log_in(@cal_net, test.admin.username, Utils.super_admin_password)
-    @canvas.create_squiggy_course test
-    @canvas.disable_tool(test.course, SquiggyTool::IMPACT_STUDIO) if test.course.impact_studio_url
+    @canvas.create_squiggy_course_site test
+    @canvas.disable_tool(test.course_site, SquiggyTool::IMPACT_STUDIO) if test.course_site.impact_studio_url
 
     @asset = student_2.assets.find &:file_name
     @asset.title = "#{@asset.title} #{test.id}"
 
     # Add asset to library
-    @canvas.masquerade_as(student_0, test.course)
+    @canvas.masquerade_as(student_0, test.course_site)
     @engagement_index.load_page test
     @engagement_index.share_score
     @assets_list.load_page test
@@ -35,7 +35,7 @@ describe 'The Engagement Index' do
 
     # Comment on the asset
     comment = SquiggyComment.new asset: @asset, user: student_1, body: 'Testing Testing'
-    @canvas.masquerade_as(student_1, test.course)
+    @canvas.masquerade_as(student_1, test.course_site)
     @engagement_index.load_page test
     @engagement_index.un_share_score
     @engagement_index.users_table_element.when_not_present 2
@@ -43,17 +43,17 @@ describe 'The Engagement Index' do
     @asset_detail.add_comment comment
 
     # View the asset detail
-    @canvas.masquerade_as(student_2, test.course)
+    @canvas.masquerade_as(student_2, test.course_site)
     @engagement_index.load_page test
     @engagement_index.un_share_score
     @engagement_index.users_table_element.when_not_present 2
     @asset_detail.load_asset_detail(test, @asset)
 
-    @canvas.masquerade_as(student_3, test.course)
+    @canvas.masquerade_as(student_3, test.course_site)
     @engagement_index.load_page test
     @engagement_index.share_score
 
-    @canvas.masquerade_as(teacher, test.course)
+    @canvas.masquerade_as(teacher, test.course_site)
     @engagement_index.load_scores test
   end
 
@@ -85,7 +85,7 @@ describe 'The Engagement Index' do
   end
 
   it 'can be sorted by "Share" ascending' do
-    test.course.impact_studio_url = nil
+    test.course_site.impact_studio_url = nil
     @engagement_index.sort_by_share_asc
     @engagement_index.wait_until(1) { @engagement_index.visible_sharing(test) == @engagement_index.visible_sharing(test).sort }
   end
@@ -108,7 +108,7 @@ describe 'The Engagement Index' do
   # TEACHERS
 
   it 'allows teachers to see all users\' scores regardless of sharing preferences' do
-    expect(@engagement_index.visible_names.sort).to eql(test.course.roster.map(&:full_name).sort)
+    expect(@engagement_index.visible_names.sort).to eql(test.course_site.roster.map(&:full_name).sort)
   end
 
   it 'allows teachers to share their scores with students' do
@@ -116,20 +116,20 @@ describe 'The Engagement Index' do
     @engagement_index.wait_until(Utils.short_wait, "Expected Yes, got #{@engagement_index.sharing_preference(test, teacher)}") do
       @engagement_index.sharing_preference(test, teacher) == 'Yes'
     end
-    @canvas.masquerade_as(student_3, test.course)
+    @canvas.masquerade_as(student_3, test.course_site)
     @engagement_index.load_scores test
     expect(@engagement_index.visible_names).to include(teacher.full_name)
   end
 
   it 'allows teachers to hide their scores from students' do
-    @canvas.masquerade_as(teacher, test.course)
+    @canvas.masquerade_as(teacher, test.course_site)
     @engagement_index.load_scores test
     @engagement_index.un_share_score
     @engagement_index.wait_for_scores
     @engagement_index.wait_until(Utils.short_wait, "Expected No, got #{@engagement_index.sharing_preference(test, teacher)}") do
       @engagement_index.sharing_preference(test, teacher) == 'No'
     end
-    @canvas.masquerade_as(student_3, test.course)
+    @canvas.masquerade_as(student_3, test.course_site)
     @engagement_index.load_scores test
     expect(@engagement_index.visible_names).not_to include(teacher.full_name)
   end
@@ -137,7 +137,7 @@ describe 'The Engagement Index' do
   # STUDENTS
 
   it 'allows students to share their scores with other students' do
-    @canvas.masquerade_as(student_0, test.course)
+    @canvas.masquerade_as(student_0, test.course_site)
     @engagement_index.load_page test
     @engagement_index.share_score
   end
@@ -177,14 +177,14 @@ describe 'The Engagement Index' do
 
     before(:all) do
       @canvas.stop_masquerading
-      @canvas.enable_tool(test.course, SquiggyTool::IMPACT_STUDIO)
-      test.course.impact_studio_url = @canvas.click_tool_link SquiggyTool::IMPACT_STUDIO
+      @canvas.enable_tool(SquiggyTool::IMPACT_STUDIO, test.course_site)
+      test.course_site.impact_studio_url = @canvas.click_tool_link SquiggyTool::IMPACT_STUDIO
     end
 
     context 'when the user is not looking' do
 
       before(:all) do
-        @canvas.masquerade_as(student_1, test.course)
+        @canvas.masquerade_as(student_1, test.course_site)
         @engagement_index.load_page test
         @engagement_index.share_score
       end
@@ -192,7 +192,7 @@ describe 'The Engagement Index' do
       context 'and another user views the user' do
 
         before(:all) do
-          @canvas.masquerade_as(student_2, test.course)
+          @canvas.masquerade_as(student_2, test.course_site)
           @engagement_index.load_page test
           @engagement_index.share_score
         end
@@ -207,7 +207,7 @@ describe 'The Engagement Index' do
     context 'when the user is looking' do
 
       before(:all) do
-        @canvas.masquerade_as(student_1, test.course)
+        @canvas.masquerade_as(student_1, test.course_site)
         @impact_studio.load_page test
         @impact_studio.set_collaboration_true
       end
@@ -215,7 +215,7 @@ describe 'The Engagement Index' do
       context 'and another user views the user' do
 
         before(:all) do
-          @canvas.masquerade_as(student_2, test.course)
+          @canvas.masquerade_as(student_2, test.course_site)
           @engagement_index.load_scores test
         end
 
@@ -274,7 +274,7 @@ describe 'The Engagement Index' do
     end
 
     it 'disabled activities are not visible to a student' do
-      @canvas.masquerade_as(student_3, test.course)
+      @canvas.masquerade_as(student_3, test.course_site)
       @engagement_index.load_page test
       @engagement_index.share_score
       @engagement_index.click_points_config
@@ -283,7 +283,7 @@ describe 'The Engagement Index' do
     end
 
     it 'allows a teacher to cancel re-enabling a disabled activity type' do
-      @canvas.masquerade_as(teacher, test.course)
+      @canvas.masquerade_as(teacher, test.course_site)
       @engagement_index.load_scores test
       @engagement_index.click_points_config
       @engagement_index.click_edit_points_config
@@ -328,7 +328,7 @@ describe 'The Engagement Index' do
     end
 
     it 'allows a student to view the Points Configuration whether or not they share their scores' do
-      @canvas.masquerade_as(student_3, test.course)
+      @canvas.masquerade_as(student_3, test.course_site)
       @engagement_index.load_page test
       @engagement_index.points_config_button_element.when_visible Utils.short_wait
       if @engagement_index.share_score_cbx_checked?
@@ -352,7 +352,7 @@ describe 'The Engagement Index' do
 
     before(:all) do
       @canvas.stop_masquerading
-      @canvas.remove_users_from_course(test.course, [teacher, student_3])
+      @canvas.remove_users_from_course(test.course_site, [teacher, student_3])
     end
 
     it 'removes users from the Engagement Index if they have been removed from the course site' do
@@ -363,12 +363,12 @@ describe 'The Engagement Index' do
 
       it "prevents #{user.role} UID #{user.uid} from reaching the Engagement Index if the user has been removed from the course site" do
         @canvas.masquerade_as user
-        @engagement_index.navigate_to test.course.engagement_index_url
+        @engagement_index.navigate_to test.course_site.engagement_index_url
         @canvas.access_denied_msg_element.when_visible Utils.short_wait
       end
 
       it "prevents #{user.role} UID #{user.uid} from reaching the Asset Library if the user has been removed from the course site" do
-        @assets_list.navigate_to test.course.asset_library_url
+        @assets_list.navigate_to test.course_site.asset_library_url
         @canvas.access_denied_msg_element.when_visible Utils.short_wait
       end
 

@@ -63,7 +63,7 @@ module Page
     hide_canvas_footer_and_popup
     canvas_iframe_element.when_present Utils.medium_wait
     if url
-      wait_until(1, "'#{url}' is not present") { i_frame_form_element? url }
+      wait_until(Utils.short_wait, "'#{url}' is not present") { i_frame_form_element? url }
       logger.warn "Found expected iframe base URL #{url}"
     end
     switch_to_frame 'tool_content'
@@ -73,6 +73,7 @@ module Page
   # @param url [String]
   # @return [boolean]
   def i_frame_form_element?(url)
+    logger.info "Looking for //form[contains(@action, '#{url}')]"
     form_element(xpath: "//form[contains(@action, '#{url}')]").exists?
   end
 

@@ -4,7 +4,7 @@ describe 'An asset' do
 
   before(:all) do
     @test = SquiggyTestConfig.new 'asset_reactions'
-    @test.course.site_id = nil
+    @test.course_site.site_id = nil
     @driver = Utils.launch_browser
     @canvas = Page::CanvasPage.new @driver
     @cal_net= Page::CalNetPage.new @driver
@@ -13,7 +13,7 @@ describe 'An asset' do
     @engagement_index = SquiggyEngagementIndexPage.new @driver
 
     @canvas.log_in(@cal_net, @test.admin.username, Utils.super_admin_password)
-    @canvas.create_squiggy_course @test
+    @canvas.create_squiggy_course_site @test
 
     @teacher = @test.teachers.first
     @student_1 = @test.students[0]
@@ -30,7 +30,7 @@ describe 'An asset' do
     @date = Date.today.strftime('%B %-d, %Y')
 
     # Upload a new asset for the test
-    @canvas.masquerade_as(@student_1, @test.course)
+    @canvas.masquerade_as(@student_1, @test.course_site)
     @assets_list.load_page @test
     @assets_list.upload_file_asset @asset
   end
@@ -46,7 +46,7 @@ describe 'An asset' do
     end
 
     it 'is incremented when viewed by a user other than the asset creator' do
-      @canvas.masquerade_as(@student_2, @test.course)
+      @canvas.masquerade_as(@student_2, @test.course_site)
       @asset_detail.load_asset_detail(@test, @asset)
       expect(@asset_detail.visible_asset_metadata(@asset)[:view_count]).to eql('1')
       @asset_detail.click_back_to_asset_library
@@ -64,7 +64,7 @@ describe 'An asset' do
   describe 'like' do
 
     it 'cannot be added by the asset creator' do
-      @canvas.masquerade_as(@student_1, @test.course)
+      @canvas.masquerade_as(@student_1, @test.course_site)
       @assets_list.load_page @test
       @assets_list.click_asset_link(@test, @asset)
       @asset_detail.wait_for_asset_detail
@@ -78,7 +78,7 @@ describe 'An asset' do
         @student_1.score = @engagement_index.user_score(@test, @student_1)
         @student_2.score = @engagement_index.user_score(@test, @student_2)
 
-        @canvas.masquerade_as(@student_2, @test.course)
+        @canvas.masquerade_as(@student_2, @test.course_site)
         @asset_detail.load_asset_detail(@test, @asset)
         @asset_detail.click_like_button
       end
@@ -116,7 +116,7 @@ describe 'An asset' do
     context 'when removed' do
 
       before(:all) do
-        @canvas.masquerade_as(@student_2, @test.course)
+        @canvas.masquerade_as(@student_2, @test.course_site)
         @assets_list.load_page @test
         @assets_list.click_asset_link(@test, @asset)
         @asset_detail.click_like_button
@@ -162,7 +162,7 @@ describe 'An asset' do
         before(:all) do
           @student_1.score = @engagement_index.user_score(@test, @student_1)
 
-          @canvas.masquerade_as(@student_1, @test.course)
+          @canvas.masquerade_as(@student_1, @test.course_site)
           @assets_list.load_page @test
           @assets_list.click_asset_link(@test, @asset)
           @visible_comment = @asset_detail.add_comment @comment_1_by_uploader
@@ -187,7 +187,7 @@ describe 'An asset' do
         before(:all) do
           @student_1.score = @engagement_index.user_score(@test, @student_1)
 
-          @canvas.masquerade_as(@student_1, @test.course)
+          @canvas.masquerade_as(@student_1, @test.course_site)
           @asset_detail.load_asset_detail(@test, @asset)
           @visible_comment = @asset_detail.reply_to_comment(@comment_1_by_uploader, @comment_1_reply_by_uploader)
         end
@@ -215,7 +215,7 @@ describe 'An asset' do
           @student_1.score = @engagement_index.user_score(@test, @student_1)
           @student_2.score = @engagement_index.user_score(@test, @student_2)
 
-          @canvas.masquerade_as(@student_2, @test.course)
+          @canvas.masquerade_as(@student_2, @test.course_site)
           @assets_list.load_page @test
           @assets_list.click_asset_link(@test, @asset)
           @visible_comment = @asset_detail.add_comment @comment_2_by_viewer
@@ -263,7 +263,7 @@ describe 'An asset' do
           @student_1.score = @engagement_index.user_score(@test, @student_1)
           @student_2.score = @engagement_index.user_score(@test, @student_2)
 
-          @canvas.masquerade_as(@student_2, @test.course)
+          @canvas.masquerade_as(@student_2, @test.course_site)
           @assets_list.load_page @test
           @assets_list.click_asset_link(@test, @asset)
           @visible_comment = @asset_detail.reply_to_comment(@comment_2_by_viewer, @comment_2_reply_by_viewer)
@@ -311,7 +311,7 @@ describe 'An asset' do
           @student_1.score = @engagement_index.user_score(@test, @student_1)
           @student_2.score = @engagement_index.user_score(@test, @student_2)
 
-          @canvas.masquerade_as(@student_2, @test.course)
+          @canvas.masquerade_as(@student_2, @test.course_site)
           @assets_list.load_page @test
           @assets_list.click_asset_link(@test, @asset)
           @visible_comment = @asset_detail.reply_to_comment(@comment_1_by_uploader, @comment_1_reply_by_viewer)
@@ -364,7 +364,7 @@ describe 'An asset' do
 
     describe 'adding by any user' do
 
-      before(:all) { @canvas.masquerade_as(@student_2, @test.course) }
+      before(:all) { @canvas.masquerade_as(@student_2, @test.course_site) }
 
       it 'can include a link that opens in a new browser window' do
         @asset_detail.load_asset_detail(@test, @asset)
@@ -393,7 +393,7 @@ describe 'An asset' do
 
       it 'can be done by the user who created the comment' do
         @comment_1_by_uploader.body = "#{@comment_1_by_uploader.body} - EDITED"
-        @canvas.masquerade_as(@student_1, @test.course)
+        @canvas.masquerade_as(@student_1, @test.course_site)
         @assets_list.load_page @test
         @assets_list.click_asset_link(@test, @asset)
         @asset_detail.edit_comment @comment_1_by_uploader
@@ -405,7 +405,7 @@ describe 'An asset' do
 
       it 'can be done to any comment when the user is a teacher' do
         @comment_2_by_viewer.body = "#{@comment_2_by_viewer.body} - EDITED"
-        @canvas.masquerade_as(@test.teachers.first, @test.course)
+        @canvas.masquerade_as(@test.teachers.first, @test.course_site)
         @assets_list.load_page @test
         @assets_list.click_asset_link(@test, @asset)
         @asset_detail.edit_comment @comment_2_by_viewer
@@ -425,7 +425,7 @@ describe 'An asset' do
       end
 
       it 'can be done by a student who created the comment' do
-        @canvas.masquerade_as(@student_2, @test.course)
+        @canvas.masquerade_as(@student_2, @test.course_site)
         @assets_list.load_page @test
         @assets_list.click_asset_link(@test, @asset)
         @asset_detail.delete_comment @comment_1_reply_by_viewer
@@ -436,7 +436,7 @@ describe 'An asset' do
       end
 
       it 'removes engagement index points earned for the comment' do
-        @canvas.masquerade_as(@test.teachers.first, @test.course)
+        @canvas.masquerade_as(@test.teachers.first, @test.course_site)
         expect(@engagement_index.user_score(@test, @student_2)).to eql(@student_2.score - SquiggyActivity::COMMENT.points)
       end
 

@@ -42,11 +42,11 @@ describe 'The Impact Studio' do
     @teacher_activities = @impact_studio.init_user_activities
 
     @canvas.log_in(@cal_net, @test.admin.username, Utils.super_admin_password)
-    @canvas.create_squiggy_course @test
-    @engagement_index.wait_for_new_user_sync(@test, @test.course.roster)
+    @canvas.create_squiggy_course_site @test
+    @engagement_index.wait_for_new_user_sync(@test, @test.course_site.roster)
 
     [@student_1, @student_2].each do |student|
-      @canvas.masquerade_as(student, @test.course)
+      @canvas.masquerade_as(student, @test.course_site)
       @engagement_index.load_page @test
       @engagement_index.share_score
     end
@@ -132,7 +132,7 @@ describe 'The Impact Studio' do
 
     context 'via asset library "upload"' do
       before(:all) do
-        @canvas.masquerade_as(@teacher, @test.course)
+        @canvas.masquerade_as(@teacher, @test.course_site)
         @asset_library.load_page @test
         @asset_library.upload_file_asset @asset_5
         @teacher_activities[:asset_add][:count] += 1
@@ -462,7 +462,7 @@ describe 'The Impact Studio' do
     context 'when a new topic is created' do
       before(:all) do
         @canvas.masquerade_as @teacher
-        @canvas.create_course_discussion(@test.course, @discussion)
+        @canvas.create_course_discussion(@test.course_site, @discussion)
         @teacher_activities[:discussion_topic][:count] += 1
       end
       it('adds a My Contributions "Interactions" event') { @impact_studio.wait_for_canvas_event(@test, @teacher_activities) }

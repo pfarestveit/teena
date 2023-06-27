@@ -16,11 +16,11 @@ describe 'Canvas assignment submissions' do
     @engagement_index = SquiggyEngagementIndexPage.new @driver
 
     @canvas.log_in(@cal_net, @test.admin.username, Utils.super_admin_password)
-    @canvas.create_squiggy_course @test
+    @canvas.create_squiggy_course_site @test
 
-    @assignment = Assignment.new title: "#{@test.course.title} Assignment #{@test.id}"
-    @canvas.masquerade_as(@test.teachers.first, @test.course)
-    @canvas.create_assignment(@test.course, @assignment)
+    @assignment = Assignment.new title: "#{@test.course_site.title} Assignment #{@test.id}"
+    @canvas.masquerade_as(@test.teachers.first, @test.course_site)
+    @canvas.create_assignment(@test.course_site, @assignment)
 
     # Enable Canvas assignment sync
     @manage_assets.wait_for_canvas_category(@test, @assignment)
@@ -37,7 +37,7 @@ describe 'Canvas assignment submissions' do
         asset.owner = student
         student.score = @engagement_index.user_score(@test, student)
 
-        @canvas.masquerade_as(student, @test.course)
+        @canvas.masquerade_as(student, @test.course_site)
         @canvas.submit_assignment(@assignment, student, asset)
         @canvas.stop_masquerading
         submissions << asset

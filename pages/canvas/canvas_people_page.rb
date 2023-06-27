@@ -288,12 +288,12 @@ module CanvasPeoplePage
   end
 
   # Clicks the Canvas Add People button followed by the Find a Person to Add button and switches to the LTI tool
-  def click_find_person_to_add
+  def click_find_person_to_add(url=JunctionUtils.junction_base_url)
     logger.debug 'Clicking Find a Person to Add button'
     add_people_button_element.when_present Utils.medium_wait
     js_click add_people_button_element
     wait_for_load_and_click find_person_to_add_link_element
-    switch_to_canvas_iframe JunctionUtils.junction_base_url
+    switch_to_canvas_iframe url
   end
 
   # Returns the number of users in a course site with a given set of roles, optionally using a non-default Canvas base URL

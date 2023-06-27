@@ -6,7 +6,7 @@ class SquiggyEngagementIndexPage
   include Logging
 
   def load_page(test)
-    navigate_to test.course.engagement_index_url
+    navigate_to test.course_site.engagement_index_url
     wait_until(Utils.medium_wait) { title == "#{SquiggyTool::ENGAGEMENT_INDEX.name}" }
     hide_canvas_footer_and_popup
     switch_to_canvas_iframe
@@ -35,7 +35,7 @@ class SquiggyEngagementIndexPage
       users.each do |u|
         logger.debug "Checking if #{u.full_name} has been added to the course"
         wait_until(1) { visible_names.include? u.full_name }
-        SquiggyUtils.set_user_id(u, test.course)
+        SquiggyUtils.set_user_id(u, test.course_site)
       end
     end
   end
@@ -72,7 +72,7 @@ class SquiggyEngagementIndexPage
   end
 
   def shift_right_twice(test)
-    shift = test.course.impact_studio_url ? 1 : 0
+    shift = test.course_site.impact_studio_url ? 1 : 0
     shift_right_once + shift
   end
 
@@ -330,7 +330,7 @@ class SquiggyEngagementIndexPage
     window_count = browser.window_handles.length
     wait_for_update_and_click download_csv_link_element
 
-    csv_file_path = "#{Utils.download_dir}/engagement_index_activities_#{test.course.site_id}_#{Time.now.strftime('%Y-%m-%d')}_*.csv"
+    csv_file_path = "#{Utils.download_dir}/engagement_index_activities_#{test.course_site.site_id}_#{Time.now.strftime('%Y-%m-%d')}_*.csv"
     wait_until(Utils.medium_wait) { Dir[csv_file_path].any? }
     csv_file = Dir[csv_file_path].first
     csv = CSV.table csv_file
@@ -462,7 +462,7 @@ class SquiggyEngagementIndexPage
   # IMPACT STUDIO
 
   def user_profile_link(test, user)
-    link_element(xpath: "//a[contains(text(),'#{user.full_name}') and contains(@href, '#{test.course.impact_studio_url}')]")
+    link_element(xpath: "//a[contains(text(),'#{user.full_name}') and contains(@href, '#{test.course_site.impact_studio_url}')]")
   end
 
   def click_user_dashboard_link(test, user)
