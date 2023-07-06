@@ -190,14 +190,20 @@ module Page
         SquiggyUtils.inactivate_all_courses
         logger.info "Creating a Squiggy course site named #{test.course_site.title}"
         if SquiggyUtils.template_course_id
-          template_site = SquiggySite.new site_id: SquiggyUtils.template_course_id
-          load_course_settings template_site
-          wait_for_load_and_click copy_course_link_element
-          wait_for_element_and_type(course_title_element, test.course_site.title)
-          wait_for_element_and_type(course_code_element, test.course_site.abbreviation)
-          wait_for_update_and_click copy_course_create_button_element
-          copy_course_success_msg_element.when_present Utils.medium_wait
-          test.course_site.is_copy = true
+          begin
+            template_site = SquiggySite.new site_id: SquiggyUtils.template_course_id
+            load_course_settings template_site
+            wait_for_load_and_click copy_course_link_element
+            wait_for_element_and_type(course_title_element, test.course_site.title)
+            wait_for_element_and_type(course_code_element, test.course_site.abbreviation)
+            wait_for_update_and_click copy_course_create_button_element
+            copy_course_success_msg_element.when_present Utils.medium_wait
+            test.course_site.is_copy = true
+          rescue => e
+            logger.error e.message
+            load_sub_account Utils.canvas_qa_sub_account
+            create_site test.course_site
+          end
         else
           load_sub_account Utils.canvas_qa_sub_account
           create_site test.course_site

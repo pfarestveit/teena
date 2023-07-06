@@ -14,6 +14,7 @@ unless ENV['NO_DEPS']
       image_nows = []
       calcentrals = []
       dropses = []
+      reqts = []
 
       # Create files for test output
       user_profile_data_heading = %w(UID Name PreferredName Email EmailAlt Phone Units GPA Level Transfer Colleges Majors
@@ -776,6 +777,7 @@ unless ENV['NO_DEPS']
                     if course_sis_data[:reqts]
                       it "shows the expanded course requirements for #{test_case}" do
                         expect(expanded_course_data[:reqts]).to eql(course_sis_data[:reqts])
+                        reqts << student_data[:student]
                       end
                     else
                       it "shows no expanded course requirements for #{test_case}" do
@@ -950,6 +952,7 @@ unless ENV['NO_DEPS']
     it('has at least one student with an Image Now link') { expect(image_nows).not_to be_empty }
     it('has at least one student with a CalCentral link') { expect(calcentrals).not_to be_empty }
     it('has at least one student with dropped sections') { expect(dropses).not_to be_empty }
+    it('has at least one student with satisfied requirements') { expect(reqts).not_to be_empty }
 
   rescue => e
     Utils.log_error e

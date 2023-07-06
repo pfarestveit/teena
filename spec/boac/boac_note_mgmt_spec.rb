@@ -266,6 +266,35 @@ unless ENV['NO_DEPS']
           end
         end
 
+        context 'viewing all of a student\'s notes' do
+
+          before(:all) do
+            @student_notes = []
+            @student_notes << NessieTimelineUtils.get_asc_notes(test_student)
+            expected_boa_notes = BOACUtils.get_student_notes test_student
+            expected_boa_notes.delete_if { |n| n.is_draft && n.advisor.uid != test.advisor.uid }
+            @student_notes << expected_boa_notes
+            @student_notes << NessieTimelineUtils.get_data_sci_notes(test_student)
+            @student_notes << NessieTimelineUtils.get_e_form_notes(test_student)
+            @student_notes << NessieTimelineUtils.get_e_and_i_notes(test_student)
+            @student_notes << NessieTimelineUtils.get_eop_notes(test_student)
+            @student_notes << NessieTimelineUtils.get_history_notes(test_student)
+            @student_notes << NessieTimelineUtils.get_sis_notes(test_student)
+            @student_page.load_page test_student
+            @student_page.show_notes
+          end
+
+          it 'allows the advisor to view all notes' do
+            expect(@student_page.visible_collapsed_note_ids.sort).to eql(@student_notes.map(&:id).sort)
+          end
+
+          it 'allows the advisor to filter for those authored by the advisor' do
+            @student_page.toggle_my_notes
+            advisor_notes = @student_notes.select { |n| n.advisor&.uid == test.advisor.uid }
+            expect(@student_page.visible_collapsed_note_ids.sort).to eql(advisor_notes.map(&:id).sort)
+          end
+        end
+
         context 'editing an existing note' do
 
           before(:each) do
@@ -511,6 +540,35 @@ unless ENV['NO_DEPS']
           it 'cannot find the other user\'s note' do
             @student_page.enter_adv_search_and_hit_enter note_1.subject
             expect(@search_results_page.note_results_count).to be_zero
+          end
+        end
+
+        context 'viewing all of a student\'s notes' do
+
+          before(:all) do
+            @student_notes = []
+            @student_notes << NessieTimelineUtils.get_asc_notes(test_student)
+            expected_boa_notes = BOACUtils.get_student_notes test_student
+            expected_boa_notes.delete_if { |n| n.is_draft && n.advisor.uid != other_advisor.uid }
+            @student_notes << expected_boa_notes
+            @student_notes << NessieTimelineUtils.get_data_sci_notes(test_student)
+            @student_notes << NessieTimelineUtils.get_e_form_notes(test_student)
+            @student_notes << NessieTimelineUtils.get_e_and_i_notes(test_student)
+            @student_notes << NessieTimelineUtils.get_eop_notes(test_student)
+            @student_notes << NessieTimelineUtils.get_history_notes(test_student)
+            @student_notes << NessieTimelineUtils.get_sis_notes(test_student)
+            @student_page.load_page test_student
+            @student_page.show_notes
+          end
+
+          it 'allows the advisor to view all notes' do
+            expect(@student_page.visible_collapsed_note_ids.sort).to eql(@student_notes.map(&:id).sort)
+          end
+
+          it 'allows the advisor to filter for those authored by the advisor' do
+            @student_page.toggle_my_notes
+            advisor_notes = @student_notes.select { |n| n.advisor&.uid == other_advisor.uid }
+            expect(@student_page.visible_collapsed_note_ids.sort).to eql(advisor_notes.map(&:id).sort)
           end
         end
       end

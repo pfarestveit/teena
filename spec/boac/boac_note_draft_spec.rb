@@ -114,7 +114,7 @@ describe 'BOA draft note' do
         expect(saved_note).to be_truthy
       end
 
-      it 'deletes the subject and substitutes a placeholder' do
+      it 'removes the subject' do
         @note_1.subject = nil
         @student_page.enter_new_note_subject @note_1
         @student_page.wait_for_draft_note_update @note_1
@@ -217,7 +217,7 @@ describe 'BOA draft note' do
         @homepage.wait_for_draft_note_update(@note_2, manual_update = true)
       end
 
-      it 'removes the subject and substitutes a placeholder' do
+      it 'removes the subject' do
         @note_2.subject = nil
         @homepage.click_draft_notes
         @drafts_page.click_subject @note_2
@@ -331,13 +331,17 @@ describe 'BOA draft note' do
         @homepage.click_draft_notes
         @drafts_page.wait_for_draft_note_row @note_1
         @drafts_page.wait_for_draft_note_row @note_2
+        visible_note_1 = @drafts_page.draft_note_row_data @note_1
+        expect(visible_note_1[:subject]).to include(@drafts_page.expected_draft_note_subject @note_1)
+        visible_note_2 = @drafts_page.draft_note_row_data @note_2
+        expect(visible_note_2[:subject]).to include(@drafts_page.expected_draft_note_subject @note_2)
       end
 
       it 'is permitted on the student page' do
         @drafts_page.click_student_link @note_1
         @student_page.collapsed_item_el(@note_1).when_visible Utils.short_wait
         visible = @student_page.visible_collapsed_note_data @note_1
-        expect(visible[:subject]).to eql(@note_1.subject)
+        expect(visible[:subject]).to eql(@student_page.expected_draft_note_subject @note_1)
         expect(visible[:is_draft]).to be true
       end
     end
@@ -385,13 +389,15 @@ describe 'BOA draft note' do
         @homepage.click_draft_notes
         @drafts_page.wait_for_draft_note_row @note_1
         expect(@drafts_page.draft_note_row(@note_2).exists?).to be false
+        visible = @drafts_page.draft_note_row_data @note_1
+        expect(visible[:subject]).to include(@drafts_page.expected_draft_note_subject @note_1)
       end
 
       it 'is permitted on the student page' do
         @drafts_page.click_student_link @note_1
         @student_page.collapsed_item_el(@note_1).when_visible Utils.short_wait
         visible = @student_page.visible_collapsed_note_data @note_1
-        expect(visible[:subject]).to eql(@note_1.subject)
+        expect(visible[:subject]).to eql(@student_page.expected_draft_note_subject @note_1)
         expect(visible[:is_draft]).to be true
       end
     end
@@ -445,7 +451,7 @@ describe 'BOA draft note' do
 
     it 'by author yields no result' do
       @homepage.reopen_and_reset_adv_search
-      @homepage.set_notes_author @test.advisor.full_name
+      @homepage.set_notes_author(@test.advisor.full_name, @test.advisor.alt_names)
       @homepage.enter_adv_search_and_hit_enter @note_3.subject
       @search_results_page.wait_for_no_results
     end
@@ -715,7 +721,7 @@ describe 'BOA draft note' do
       end
 
       it('saves as a draft') { expect(@visible_collapsed[:is_draft]).to be true }
-      it('saves the subject') { expect(@visible_collapsed[:subject]).to eql(@note_5.subject) }
+      it('saves the subject') { expect(@visible_collapsed[:subject]).to eql(@note_5.subject.strip) }
       it('saves the body') { expect(@visible_expanded[:body]).to eql(@note_5.body) }
       it('saves attachments') { expect(@visible_expanded[:attachments]).to eql(@note_5.attachments.map &:file_name) }
       it('saves topics') { expect(@visible_expanded[:topics]).to eql(@note_5.topics.map { |t| t.name.upcase }) }

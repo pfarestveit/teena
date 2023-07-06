@@ -27,7 +27,7 @@ describe 'Asset Library' do
 
     @canvas.log_in(@cal_net, test.admin.username, Utils.super_admin_password)
     @canvas.create_squiggy_course_site test
-    @engagement_index.wait_for_new_user_sync(test, test.course_site.roster)
+    @engagement_index.wait_for_new_user_sync(test, test.course_site.manual_members)
   end
 
   after(:all) do

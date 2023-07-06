@@ -24,6 +24,7 @@ module BOACStudentPageAdvisingNote
   #### EXISTING NOTES ####
 
   button(:notes_button, id: 'timeline-tab-note')
+  button(:filter_notes_button, id: 'toggle-my-notes-button')
   button(:show_hide_notes_button, id: 'timeline-tab-note-previous-messages')
   button(:toggle_all_notes_button, id: 'toggle-expand-all-notes')
   span(:notes_expanded_msg, xpath: '//span[text()="Collapse all notes"]')
@@ -37,6 +38,10 @@ module BOACStudentPageAdvisingNote
     logger.info 'Checking notes tab'
     wait_for_update_and_click notes_button_element
     wait_for_update_and_click show_hide_notes_button_element if show_hide_notes_button? && show_hide_notes_button_element.text.include?('Show')
+  end
+
+  def toggle_my_notes
+    wait_for_update_and_click filter_notes_button_element
   end
 
   def expand_all_notes

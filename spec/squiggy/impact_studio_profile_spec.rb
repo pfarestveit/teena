@@ -8,7 +8,7 @@ describe 'Impact Studio' do
   student_2 = test.students[1]
   student_3 = test.students[2]
   students = [student_1, student_2, student_3]
-  test.course_site.roster -= students
+  test.course_site.manual_members -= students
 
   before(:all) do
     @driver = Utils.launch_browser

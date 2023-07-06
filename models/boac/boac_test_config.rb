@@ -46,7 +46,8 @@ class BOACTestConfig < TestConfig
       @advisor.first_name = user_data[:first_name]
       @advisor.last_name = user_data[:last_name]
     end
-    logger.warn "Advisor is UID #{@advisor.uid}"
+    BOACUtils.get_advisor_names @advisor
+    logger.info "Advisor: #{@advisor.inspect}"
   end
 
   def set_read_only_advisor
@@ -402,7 +403,6 @@ class BOACTestConfig < TestConfig
   def note_management
     set_note_attachments
     set_base_configs
-    BOACUtils.set_advisor_data @advisor
   end
 
   def note_drafts
@@ -412,7 +412,6 @@ class BOACTestConfig < TestConfig
     boa_notes_sids = BOACUtils.get_sids_with_notes_of_src_boa
     @test_students.keep_if { |s| boa_notes_sids.include? s.sis_id }
     set_default_cohort
-    BOACUtils.set_advisor_data @advisor
   end
 
   # Config for testing batch note creation
@@ -420,7 +419,6 @@ class BOACTestConfig < TestConfig
     set_note_attachments
     set_base_configs
     set_default_cohort
-    BOACUtils.set_advisor_data @advisor
   end
 
   # Config for testing note templates
@@ -428,7 +426,6 @@ class BOACTestConfig < TestConfig
     set_base_configs
     set_default_cohort
     set_note_attachments
-    BOACUtils.set_advisor_data @advisor
   end
 
   # Config for admit search tests

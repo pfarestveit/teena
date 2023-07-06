@@ -147,20 +147,26 @@ module BOACSearchForm
   text_area(:note_student, id: 'search-options-note-filters-student-input')
   elements(:author_suggest, :link, :xpath => "//a[contains(@id,'search-options-note-filters-author-suggestion')]")
 
-  def set_auto_suggest(element, name)
+  def set_auto_suggest(element, name, alt_names=[])
     wait_for_element_and_type(element, name)
     sleep Utils.click_wait
     wait_until(Utils.short_wait) do
       auto_suggest_option_elements.any?
-      auto_suggest_option_elements.find { |el| el.text.downcase.include? name.downcase }
+      auto_suggest_option_elements.find do |el|
+        el.text.downcase.include?(name.downcase) ||
+          (alt_names.find { |n| el.text.downcase.include? n.downcase } if alt_names.any?)
+      end
     end
-    el = auto_suggest_option_elements.find { |el| el.text.downcase.include? name.downcase }
+    el = auto_suggest_option_elements.find do |el|
+      el.text.downcase.include?(name.downcase) ||
+        (alt_names.find { |n| el.text.downcase.include? n.downcase } if alt_names.any?)
+    end
     el.click
   end
 
-  def set_notes_author(name)
+  def set_notes_author(name, alt_names=[])
     logger.info "Entering notes author name '#{name}'"
-    set_auto_suggest(note_author_element, name)
+    set_auto_suggest(note_author_element, name, alt_names)
   end
 
   def set_notes_student(student)

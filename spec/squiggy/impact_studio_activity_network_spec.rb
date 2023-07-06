@@ -20,7 +20,7 @@ describe 'Impact Studio Activity Network' do
 
     @canvas.log_in(@cal_net, @test.admin.username, Utils.super_admin_password)
     @canvas.create_squiggy_course_site @test
-    @engagement_index_page.wait_for_new_user_sync(@test, @test.course_site.roster)
+    @engagement_index_page.wait_for_new_user_sync(@test, @test.course_site.manual_members)
 
     @student1_student2_expected = @impact_studio_page.init_user_interactions
     @student1_student3_expected = @impact_studio_page.init_user_interactions

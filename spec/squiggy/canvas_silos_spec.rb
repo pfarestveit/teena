@@ -39,7 +39,7 @@ describe 'Canvas section silo-ing' do
 
     @canvas.log_in(@cal_net, @test.admin.username, Utils.super_admin_password)
     @canvas.create_squiggy_course_site @test
-    @engagement_index.wait_for_new_user_sync(@test, @test.course_site.roster)
+    @engagement_index.wait_for_new_user_sync(@test, @test.course_site.manual_members)
   end
 
   after(:all) { Utils.quit_browser @driver }
@@ -186,7 +186,7 @@ describe 'Canvas section silo-ing' do
         end
 
         it 'shows all students and their sections' do
-          expect(@engagement_index.visible_names.sort).to eql(@test.course_site.roster.map(&:full_name).sort)
+          expect(@engagement_index.visible_names.sort).to eql(@test.course_site.manual_members.map(&:full_name).sort)
           expect(@engagement_index.visible_sections.sort).to eql(@test.course_site.sections.map(&:sis_id).sort)
         end
 
@@ -293,14 +293,14 @@ describe 'Canvas section silo-ing' do
         end
 
         it 'offers profile options for all students and instructors' do
-          expect(@impact_studio.visible_user_select_options.sort).to eql(@test.course_site.roster.map(&:full_name).sort)
+          expect(@impact_studio.visible_user_select_options.sort).to eql(@test.course_site.manual_members.map(&:full_name).sort)
         end
 
         it 'offers profile browsing for all students and instructors' do
-          @test.course_site.roster.sort_by! { |u| u.full_name }
-          index_of_current_user = @test.course_site.roster.index @teacher
-          @test.course_site.roster.rotate!(index_of_current_user + 1)
-          @test.course_site.roster.each { |user| @impact_studio.browse_next_user user }
+          @test.course_site.manual_members.sort_by! { |u| u.full_name }
+          index_of_current_user = @test.course_site.manual_members.index @teacher
+          @test.course_site.manual_members.rotate!(index_of_current_user + 1)
+          @test.course_site.manual_members.each { |user| @impact_studio.browse_next_user user }
         end
 
         it 'shows the activity network for all students' do
