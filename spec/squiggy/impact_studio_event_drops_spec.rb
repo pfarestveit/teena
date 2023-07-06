@@ -43,7 +43,7 @@ describe 'The Impact Studio' do
 
     @canvas.log_in(@cal_net, @test.admin.username, Utils.super_admin_password)
     @canvas.create_squiggy_course_site @test
-    @engagement_index.wait_for_new_user_sync(@test, @test.course_site.roster)
+    @engagement_index.wait_for_new_user_sync(@test, @test.course_site.manual_members)
 
     [@student_1, @student_2].each do |student|
       @canvas.masquerade_as(student, @test.course_site)

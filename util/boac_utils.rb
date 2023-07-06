@@ -360,14 +360,17 @@ class BOACUtils < Utils
     end
   end
 
-  def self.set_advisor_data(advisor)
-    query = "SELECT sid, author_name
-              FROM notes
-              WHERE author_uid = '#{advisor.uid}';"
+  def self.get_advisor_names(advisor)
+    query = "SELECT author_name, created_at
+               FROM notes
+              WHERE author_uid = '#{advisor.uid}'
+           ORDER BY created_at DESC;"
     results = Utils.query_pg_db(boac_db_credentials, query)
-    if results.any?
-      advisor.sis_id = results[0]['sid']
-      advisor.full_name = results[0]['author_name']
+    names = results.map { |row| row['author_name'] }
+    names.uniq!
+    if names.any?
+      advisor.full_name = names.first
+      advisor.alt_names = names[1..-1]
     end
   end
 

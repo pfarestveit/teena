@@ -309,7 +309,7 @@ module BOACPages
   def wait_for_draft_note_update(note, manual_update=false)
     tries ||= (manual_update ? 2 : 8)
     saved_note = BOACUtils.get_notes_by_ids([note.id]).first
-    note.subject ||= '[DRAFT NOTE]'
+    note.subject ||= ''
     wait_until(1, "Tries #{tries}, expected subject #{note.subject}, got #{saved_note.subject}.") { saved_note.subject == note.subject }
     wait_until(1, "Tries #{tries}, expected body #{note.body}, got #{saved_note.body}.") { saved_note.body.to_s == note.body.to_s }
     wait_until(1, "Tries #{tries}, expected UID #{note.advisor.uid}, got #{saved_note.advisor.uid}") { saved_note.advisor.uid == note.advisor.uid }
@@ -341,6 +341,10 @@ module BOACPages
       sleep 5
       retry
     end
+  end
+
+  def expected_draft_note_subject(note)
+    note.subject == '' ? '[DRAFT NOTE]' : note.subject.strip
   end
 
   ### STUDENT ###

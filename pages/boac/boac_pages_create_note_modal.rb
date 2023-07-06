@@ -170,7 +170,7 @@ module BOACPagesCreateNoteModal
       logger.debug "Adding attachment '#{attach.file_name}' to note ID #{note.id}"
       existing_note_attachment_input(note).when_present Utils.short_wait
       existing_note_attachment_input(note).send_keys Utils.asset_file_path(attach.file_name)
-      existing_note_attachment_delete_button(note, attach).when_present Utils.short_wait
+      existing_note_attachment_delete_button(note, attach).when_present Utils.medium_wait
       sleep Utils.click_wait
       note.updated_date = Time.now
       note.attachments << attach
