@@ -6,7 +6,7 @@ class BOACDraftNotesPage
   include BOACPages
   include BOACPagesCreateNoteModal
 
-  div(:no_drafts_msg, xpath: '//div[text()=" You have no saved drafts. "]')
+  div(:no_drafts_msg, xpath: '//div[contains(text(), "You have no saved drafts")]')
   elements(:draft_note_row, :row, xpath: '//tbody/tr')
 
   def visible_draft_note_ids

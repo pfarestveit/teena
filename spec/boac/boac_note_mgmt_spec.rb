@@ -82,6 +82,7 @@ unless ENV['NO_DEPS']
 
           it 'can cancel an unsaved new note' do
             @student_page.click_cancel_new_note
+            @student_page.confirm_delete_or_discard
             @student_page.click_create_new_note
             @student_page.wait_for_note_body_editor
             Utils.save_screenshot(@driver, 'Modal-click-interception')
@@ -272,14 +273,14 @@ unless ENV['NO_DEPS']
             @student_notes = []
             @student_notes << NessieTimelineUtils.get_asc_notes(test_student)
             expected_boa_notes = BOACUtils.get_student_notes test_student
-            expected_boa_notes.delete_if { |n| n.is_draft && n.advisor.uid != test.advisor.uid }
+            expected_boa_notes.delete_if { |n| (n.is_draft && n.advisor.uid != test.advisor.uid) || n.deleted_date }
             @student_notes << expected_boa_notes
             @student_notes << NessieTimelineUtils.get_data_sci_notes(test_student)
-            @student_notes << NessieTimelineUtils.get_e_form_notes(test_student)
             @student_notes << NessieTimelineUtils.get_e_and_i_notes(test_student)
             @student_notes << NessieTimelineUtils.get_eop_notes(test_student)
             @student_notes << NessieTimelineUtils.get_history_notes(test_student)
             @student_notes << NessieTimelineUtils.get_sis_notes(test_student)
+            @student_notes.flatten!
             @student_page.load_page test_student
             @student_page.show_notes
           end
@@ -427,8 +428,7 @@ unless ENV['NO_DEPS']
             @student_page.expand_item note_2
             @student_page.click_edit_note_button note_2
             @student_page.wait_for_element_and_type(@student_page.edit_note_subject_input_element, ' ')
-            @student_page.click_save_note_edit
-            @student_page.subj_required_msg_element.when_visible 1
+            expect(@student_page.edit_note_save_button_element.disabled?).to be true
             @student_page.click_cancel_note_edit
             @student_page.wait_for_update_and_click @student_page.confirm_delete_or_discard_button_element
           end
@@ -549,14 +549,14 @@ unless ENV['NO_DEPS']
             @student_notes = []
             @student_notes << NessieTimelineUtils.get_asc_notes(test_student)
             expected_boa_notes = BOACUtils.get_student_notes test_student
-            expected_boa_notes.delete_if { |n| n.is_draft && n.advisor.uid != other_advisor.uid }
+            expected_boa_notes.delete_if { |n| (n.is_draft && n.advisor.uid != other_advisor.uid) || n.deleted_date }
             @student_notes << expected_boa_notes
             @student_notes << NessieTimelineUtils.get_data_sci_notes(test_student)
-            @student_notes << NessieTimelineUtils.get_e_form_notes(test_student)
             @student_notes << NessieTimelineUtils.get_e_and_i_notes(test_student)
             @student_notes << NessieTimelineUtils.get_eop_notes(test_student)
             @student_notes << NessieTimelineUtils.get_history_notes(test_student)
             @student_notes << NessieTimelineUtils.get_sis_notes(test_student)
+            @student_notes.flatten!
             @student_page.load_page test_student
             @student_page.show_notes
           end

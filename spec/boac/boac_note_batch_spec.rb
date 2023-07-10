@@ -100,10 +100,7 @@ unless ENV['NO_DEPS']
             expect(@homepage.new_note_save_button_element.disabled?).to be true
           end
 
-          it 'can cancel an unsaved batch of notes' do
-            @homepage.click_cancel_new_note
-            @homepage.confirm_delete_or_discard
-          end
+          it('can cancel an unsaved batch of notes') { @homepage.click_cancel_new_note }
 
           it 'can add a batch of comma-separated student SIDs' do
             @homepage.click_create_note_batch
