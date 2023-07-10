@@ -76,12 +76,14 @@ unless ENV['DEPS']
         end
 
         it 'require a title' do
+          @student_page.enter_new_note_subject @note
           @student_page.click_create_template
           expect(@student_page.create_template_confirm_button_element.disabled?).to be true
         end
 
         it 'require a unique title' do
           @student_page.click_cancel_template
+          @student_page.enter_new_note_subject @note
           @student_page.click_create_template
           @student_page.enter_template_title @template_1
           @student_page.click_save_template
@@ -215,6 +217,7 @@ unless ENV['DEPS']
         end
 
         it 'require a title' do
+          @homepage.enter_new_note_subject @note_batch
           @homepage.click_create_template
           expect(@homepage.create_template_confirm_button_element.disabled?).to be true
         end
