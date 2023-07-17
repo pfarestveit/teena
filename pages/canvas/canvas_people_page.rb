@@ -390,7 +390,7 @@ module CanvasPeoplePage
                  logger.error "Unrecognized role '#{role_str}'"
                  nil
                end
-        logger.debug "Canvas ID #{canvas_id}, UID #{uid}, role #{role}, section #{section.inspect}"
+        logger.debug "Canvas ID #{canvas_id}, UID #{uid}, role #{role}, section #{section.label}"
         {
             user: User.new(uid: uid, sis_id: sid, canvas_id: canvas_id, role: role),
             section: section

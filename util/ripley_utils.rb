@@ -145,37 +145,39 @@ class RipleyUtils < Utils
   end
 
   def self.get_test_course_section_data(term, cs_course_id)
-    sql = "  SELECT sis_section_id AS ccn,
-                    is_primary,
-                    sis_course_name AS code,
-                    sis_course_title AS title,
-                    sis_instruction_format AS format,
-                    sis_section_num AS number,
-                    instructor_uid AS uid,
-                    instructor_name AS full_name,
-                    instructor_role_code AS role_code,
-                    meeting_location AS location,
-                    meeting_days AS days,
-                    meeting_start_time AS start_time,
-                    meeting_end_time AS end_time
-               FROM sis_data.edo_sections
-              WHERE sis_term_id = '#{term.sis_id}'
-                AND cs_course_id = '#{cs_course_id}'
-           ORDER BY sis_course_name ASC,
-                    sis_instruction_format DESC,
-                    sis_section_num ASC;"
+    sql = "SELECT sis_section_id AS id,
+                  is_primary,
+                  sis_course_name AS code,
+                  sis_course_title AS title,
+                  sis_instruction_format AS format,
+                  sis_section_num AS number,
+                  instructor_uid,
+                  instructor_role_code,
+                  instruction_mode AS mode,
+                  meeting_location AS location,
+                  meeting_days AS days,
+                  meeting_end_date AS end_date,
+                  meeting_end_time AS end_time
+             FROM sis_data.edo_sections
+            WHERE sis_term_id = '#{term.sis_id}'
+              AND cs_course_id = '#{cs_course_id}'
+         ORDER BY sis_course_name ASC,
+                  sis_instruction_format DESC,
+                  sis_section_num ASC;"
     results = Utils.query_pg_db(NessieUtils.nessie_pg_db_credentials, sql)
     results.map do |r|
       {
-        ccn: r['ccn'],
-        primary: (r['is_primary'] == 't'),
+        id: r['id'],
         code: r['code'],
-        title: r['title'],
+        cs_course_id: cs_course_id,
+        instruction_mode: r['mode'],
+        instructor_uid: r['instructor_uid'],
+        instructor_role_code: r['instructor_role_code'],
         label: "#{r['format']} #{r['number']}",
         location: r['location'],
-        role_code: r['role_code'],
+        primary: (r['is_primary'] == 't'),
         schedule: "#{r['days']} #{r['start_time']} #{r['end_time']}",
-        uid: r['uid']
+        title: r['title']
       }
     end
   end
@@ -196,25 +198,28 @@ class RipleyUtils < Utils
   def self.get_course(term, cs_course_id)
     instr = get_test_course_instructors(term, cs_course_id)
     section_data = get_test_course_section_data(term, cs_course_id)
-    grouped = section_data.group_by { |s| s[:ccn] }
+    grouped = section_data.group_by { |s| s[:id] }
     sections = grouped.map do |k, v|
       instructors = []
       v.each do |u|
-        instructor = instr.find { |i| i.uid.to_s == u[:uid].to_s }
+        instructor = instr.find { |i| i.uid.to_s == u[:instructor_uid].to_s }
         if instructor
-          instructor.role_code = u[:role_code]
+          instructor.role_code = u[:instructor_role_code]
           instructors << instructor
         end
       end
       instructors.compact!
       Section.new id: k,
                   course: v[0][:code],
+                  cs_course_id: v[0][:cs_course_id],
+                  instruction_mode: v[0][:instruction_mode],
                   instructors: instructors.uniq,
                   label: v[0][:label],
                   locations: (v.map { |l| l[:location] }).uniq,
                   primary: v[0][:primary],
                   schedules: (v.map { |s| s[:schedule] }).uniq
     end
+    sections.each { |s| logger.info "Section: #{s.inspect}" }
     teachers = sections.select(&:primary).map { |prim| prim.instructors }
     teachers.flatten!
     teachers.compact!
@@ -264,7 +269,6 @@ class RipleyUtils < Utils
     sql = "SELECT DISTINCT sis_data.edo_enrollments.sis_section_id,
                   sis_data.edo_enrollments.ldap_uid AS uid,
                   sis_data.edo_enrollments.sis_enrollment_status AS status,
-                  sis_data.edo_enrollments.units,
                   sis_data.edo_enrollments.grading_basis,
                   student.student_profile_index.sid,
                   student.student_profile_index.email_address
@@ -275,22 +279,21 @@ class RipleyUtils < Utils
               AND sis_section_id IN (#{Utils.in_op(course.sections.map &:id)})"
     results = Utils.query_pg_db(NessieUtils.nessie_pg_db_credentials, sql)
     enrollments = results.map do |r|
-      SectionEnrollment.new uid: r['uid'],
-                            sid: r['sid'],
-                            email: r['email_address'],
+      student = User.new uid: r['uid'],
+                         sis_id: r['sid'],
+                         email: r['email_address']
+      SectionEnrollment.new user: student,
                             section_id: r['sis_section_id'],
                             grading_basis: r['grading_basis'],
-                            status: r['status'],
-                            units: r['units']
+                            status: r['status']
     end
     enrollments.uniq!
-    enrollments.each { |e| logger.info "Enrollment #{e.inspect}" }
     course.sections.each do |section|
       section.enrollments = enrollments.select { |e| e.section_id.to_s == section.id.to_s }
     end
   end
 
-  def self.get_users_of_affiliations(affiliations, count)
+  def self.get_users_of_affiliations(affiliations, count=nil)
     sql = "SELECT ldap_uid AS uid,
                   sid,
                   first_name,
@@ -300,7 +303,7 @@ class RipleyUtils < Utils
             WHERE affiliations = '#{affiliations}'
               AND email_address IS NOT NULL
          ORDER BY first_name
-            LIMIT #{count};"
+         #{'LIMIT ' + count.to_s if count}"
     results = Utils.query_pg_db(NessieUtils.nessie_pg_db_credentials, sql)
     results.map do |r|
       User.new uid: r['uid'],
@@ -309,5 +312,39 @@ class RipleyUtils < Utils
                last_name: r['last_name'],
                email: r['email']
     end
+  end
+
+  def self.get_instructor_update_uids(term, section_ids)
+    sql = "SELECT DISTINCT sis_section_id, ldap_uid
+                      FROM sis_data.edo_instructor_updates
+                     WHERE sis_term_id = '#{term.sis_id}'
+                       AND sis_section_id IN (#{in_op section_ids});"
+    query_pg_db(NessieUtils.nessie_pg_db_credentials, sql).map { |r| r['ldap_uid'] }
+  end
+
+  def self.insert_instructor_update(course, section, instructor, role_code)
+    sql = "INSERT INTO sis_data.edo_instructor_updates (sis_term_id, sis_course_id, sis_section_id, ldap_uid, sis_id,
+                                                        role_code, is_primary, last_updated)
+                SELECT '#{course.term.sis_id}', '#{section.cs_course_id}', '#{section.id}', '#{instructor.uid}',
+                       '#{instructor.sis_id}', '#{role_code}', #{section.primary ? 'TRUE' : 'FALSE'}, NOW();"
+    result = query_pg_db(NessieUtils.nessie_pg_db_credentials, sql)
+    logger.warn "Command status: #{result.cmd_status}. Result status: #{result.result_status}"
+  end
+
+  def self.get_student_update_uids(term, section_ids)
+    sql = "SELECT DISTINCT sis_section_id, ldap_uid
+                      FROM sis_data.edo_enrollment_updates
+                     WHERE sis_term_id = '#{term.sis_id}'
+                       AND sis_section_id IN (#{in_op section_ids})"
+    query_pg_db(NessieUtils.nessie_pg_db_credentials, sql).map { |r| r['ldap_uid'] }
+  end
+
+  def self.insert_enrollment_update(section_enrollment)
+    sql = "INSERT INTO sis_data.edo_enrollment_updates (sis_term_id, sis_section_id, ldap_uid, sis_id,
+                                                        sis_enrollment_status, course_career, last_updated)
+                SELECT '#{section_enrollment.term.sis_id}', '#{section_enrollment.section_id}', #{section_enrollment.user.uid},
+                       '#{section_enrollment.user.sis_id}', '#{section_enrollment.status}', 'UGRD', NOW();"
+    result = query_pg_db(NessieUtils.nessie_pg_db_credentials, sql)
+    logger.warn "Command status: #{result.cmd_status}. Result status: #{result.result_status}"
   end
 end

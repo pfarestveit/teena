@@ -1,12 +1,10 @@
 class SectionEnrollment
 
-  attr_accessor :uid,
-                :sid,
-                :email,
+  attr_accessor :user,
+                :term,
                 :section_id,
                 :grading_basis,
-                :status,
-                :units
+                :status
 
   def initialize(test_data)
     test_data.each { |k, v| public_send("#{k}=", v) }

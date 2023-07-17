@@ -9,7 +9,7 @@ unless ENV['STANDALONE']
     before(:all) do
       @test = JunctionTestConfig.new
       @test.mailing_lists
-      @course = Course.new title: "#{@test.id} Welcome", code: "#{@test.id} Welcome Email"
+      @course = CourseSite.new title: "#{@test.id} Welcome", abbreviation: "#{@test.id} Welcome Email"
       @email = Email.new("Welcome Email #{@test.id}", "Teena welcomes you")
       @site_members = [@test.manual_teacher, @test.students.first]
 

@@ -21,6 +21,12 @@ class RipleyJobsPage
     image_element(xpath: "#{job_most_recent_locator job}//i[contains(@class, 'error')]").exists?
   end
 
+  def run_job(job)
+    logger.info "Running #{job.name}"
+    wait_for_update_and_click run_job_button(job)
+    wait_for_job_to_finish job
+  end
+
   def wait_for_job_to_finish(job, retries=nil)
     tries ||= (retries || Utils.long_wait)
     logger.info "Waiting for #{job.name} to finish"

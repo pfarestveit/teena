@@ -10,6 +10,10 @@ begin
   csv_1 = CSV.read(csv_1_path).each.to_a
   csv_2 = CSV.read(csv_2_path).each.to_a
 
+  [csv_1, csv_2].each do |c|
+    c.each { |r| r.map! { |i| i.to_s }}
+  end
+
   unique_to_1 = csv_1 - csv_2
   unique_to_2 = csv_2 - csv_1
   logger.warn "There are #{unique_to_1.length} rows in CSV_1 that are not in CSV_2"
