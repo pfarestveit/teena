@@ -57,8 +57,8 @@ class RipleyTestConfig < TestConfig
     course_site = if ENV['SITE']
                     test_data = JSON.parse(File.read(File.join(Utils.config_dir, 'test-data-bcourses.json')))['courses']
                     course = Course.new(test_data.find { |d| d['site_id'] == ENV['SITE'] })
-                    course.sections = course.sections.map { |s| Section.new s }
-                    course.teachers = course.teachers.map { |u| User.new u }
+                    course.sections.map! { |s| Section.new s }
+                    course.teachers.map! { |u| User.new u }
                     course.term = Term.new code: Utils.term_name_to_hyphenated_code(course.term),
                                            name: course.term,
                                            sis_id: Utils.term_name_to_sis_code(course.term)
@@ -178,6 +178,22 @@ class RipleyTestConfig < TestConfig
                               teachers: instructors
     courses << multi_course
     courses
+  end
+
+  def set_incremental_refresh_users(site)
+    teachers = RipleyUtils.get_users_of_affiliations 'EMPLOYEE-TYPE-ACADEMIC'
+    used_teacher_uids = RipleyUtils.get_instructor_update_uids(site.course.term, site.sections.map(&:id))
+    site_teacher_uids = site.course.teachers.map &:uid
+    @teachers = teachers.reject do |t|
+      (used_teacher_uids + site_teacher_uids).include?(t.uid) || t.first_name.count('a-zA-Z').zero?
+    end.shuffle[0..4]
+
+    students = RipleyUtils.get_users_of_affiliations 'STUDENT-TYPE-REGISTERED'
+    used_student_uids = RipleyUtils.get_student_update_uids(site.course.term, site.sections.map(&:id))
+    site_student_uids = site.sections.map { |s| s.enrollments.map { |e| e.user.uid } }.flatten.uniq
+    @students = students.reject do |s|
+      (used_student_uids + site_student_uids).include? s.uid || s.first_name.count('a-zA-Z').zero?
+    end.shuffle[0..1]
   end
 
   def set_manual_members(site = nil)

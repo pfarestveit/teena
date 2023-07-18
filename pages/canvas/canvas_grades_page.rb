@@ -11,6 +11,7 @@ module Page
     # COURSE LEVEL GRADEBOOK-RELATED SETTINGS
 
     link(:view_grading_scheme_link, text: 'view grading scheme')
+    select_list(:grading_scheme_select, xpath: '//div[@id="grading_scheme_selector"]//select')
     link(:select_another_scheme_link, xpath: '//a[@title="Find an Existing Grading Scheme"]')
     button(:done_button, xpath: '//button[text()="Done"]')
 
@@ -36,24 +37,21 @@ module Page
     # @param opts [Hash] - :scheme
     def set_grading_scheme(opts)
       logger.info "Setting grading scheme to #{opts[:scheme]}"
-      wait_for_update_and_click view_grading_scheme_link_element
-      wait_for_update_and_click select_another_scheme_link_element
-      link_text = case opts[:scheme]
-                    when 'letter-only'
-                      'Letter Grade Scale'
-                    when 'letter'
-                      'Letter Grades with +/-'
-                    when 'pnp'
-                      'Pass/No Pass'
-                    when 'sus'
-                      'Satisfactory/Unsatisfactory'
-                    else
-                      logger.error "Unrecognized grading scheme '#{opts[:scheme]}'"
-                      fail
+      option = case opts[:scheme]
+                  when 'letter-only'
+                    'Letter Grade Scale'
+                  when 'letter'
+                    'Letter Grades with +/-'
+                  when 'pnp'
+                    'Pass/No Pass'
+                  when 'sus'
+                    'Satisfactory/Unsatisfactory'
+                  else
+                    logger.error "Unrecognized grading scheme '#{opts[:scheme]}'"
+                    fail
                   end
-      wait_for_update_and_click link_element(xpath: "//a[contains(., '#{link_text}')]")
-      wait_for_update_and_click link_element(xpath: "//a[@class='select_grading_standard_link'][contains(., '#{link_text}')]")
-      wait_for_update_and_click_js done_button_element
+      wait_for_element_and_select(grading_scheme_select_element, option)
+      update_course_settings
     end
 
     # Clicks the update button and waits for confirmation

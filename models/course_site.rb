@@ -1,6 +1,7 @@
 class CourseSite
 
   attr_accessor :abbreviation,
+                :course,
                 :create_site_workflow,
                 :created_date,
                 :is_copy,

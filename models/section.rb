@@ -2,11 +2,14 @@ class Section
 
   attr_accessor :id,
                 :course,
+                :cs_course_id,
                 :enrollments,
                 :include_in_site,
+                :instruction_mode,
                 :instructors,
                 :label,
                 :locations,
+                :number,
                 :primary,
                 :schedules,
                 :sis_id

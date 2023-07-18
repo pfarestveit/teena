@@ -228,9 +228,9 @@ module Page
         wait_for_load_and_click add_new_course_button_element
         course_name_input_element.when_visible Utils.short_wait
         course.title = "QA Test - #{Time.at test_id.to_i}" if course.title.nil?
-        course.code = "QA #{Time.at test_id.to_i} LEC001" if course.code.nil?
+        course.abbreviation = "QA #{Time.at test_id.to_i} LEC001" if course.abbreviation.nil?
         wait_for_element_and_type(course_name_input_element, "#{course.title}")
-        wait_for_element_and_type(ref_code_input_element, "#{course.code}")
+        wait_for_element_and_type(ref_code_input_element, "#{course.abbreviation}")
         logger.info "Creating a course site named #{course.title} in #{course.term} semester"
         wait_for_update_and_click create_course_button_element
         add_course_success_element.when_visible Utils.medium_wait
@@ -245,7 +245,7 @@ module Page
         navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/settings"
         course_details_link_element.when_visible Utils.medium_wait
         course.title = course_title
-        course.code = course_code
+        course.abbreviation = course_code
       end
       publish_course_site course
       logger.info "Course ID is #{course.site_id}"
@@ -319,7 +319,7 @@ module Page
       wait_for_element_and_type(search_course_input_element, "#{site.title}")
       sleep 1
       wait_for_update_and_click link_element(text: "#{site.title}")
-      wait_until(Utils.short_wait) { course_site_heading.include? "#{site.abbreviation}" }
+      publish_button_element.when_present Utils.short_wait
       current_url.sub("#{Utils.canvas_base_url}/courses/", '')
     rescue
       logger.error('Course site not found, retrying')
