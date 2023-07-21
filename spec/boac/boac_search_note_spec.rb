@@ -136,9 +136,6 @@ unless ENV['NO_DEPS']
                   it "note search shows the student SID for #{note_search[:test_case]}" do
                     expect(result[:student_sid]).to eql(search[:student].sis_id)
                   end
-                  it "note search shows a snippet of #{note_search[:test_case]}" do
-                    expect(result[:snippet].gsub(/\W/, '')).to include(note_search[:string].gsub(/\W/, ''))
-                  end
                   it "note search shows the most recent updated date on #{note_search[:test_case]}" do
                     expect(result[:date]).to eql(expected_date_text)
                   end

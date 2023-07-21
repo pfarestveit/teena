@@ -225,7 +225,7 @@ unless ENV['DEPS']
 
       before(:all) do
         @test.set_advisor do |advisor|
-          advisor.depts.include?(BOACDepartments::OTHER.code) &&
+          advisor.depts.include?(BOACDepartments::OTHER) &&
               advisor.depts.length == 1 &&
               !advisor.can_access_canvas_data &&
               !advisor.can_access_advising_data

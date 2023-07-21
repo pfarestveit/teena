@@ -17,13 +17,13 @@ class CourseSite
 
   def expected_student_count
     enrolled = @sections.map(&:enrollments).flatten.select { |e| e.status == 'E' }
-    enrolled.map(&:sid).uniq.length
+    enrolled.map { |e| e.user.sis_id }.uniq.length
   end
 
   # TODO account for students both confirmed and waitlisted
   def expected_wait_list_count
     wait_listed = @sections.map(&:enrollments).flatten.select { |e| e.status == 'W' }
-    wait_listed.map(&:sid).uniq.length
+    wait_listed.map { |w| w.user.sis_id }.uniq.length
   end
 
   def expected_teacher_count

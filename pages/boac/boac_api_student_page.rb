@@ -483,14 +483,16 @@ class BOACApiStudentPage
     term_id = BOACUtils.term_code
     courses(current_term).each do |course|
       data = sis_course_data course
-      primary_section = sis_section_data course_primary_section(course)
-      courses << DegreeCompletedCourse.new(ccn: primary_section[:ccn],
-                                           degree_check: degree_check,
-                                           term_id: term_id,
-                                           name: data[:code],
-                                           units: data[:units_completed],
-                                           units_orig: data[:units_completed],
-                                           waitlisted: (primary_section[:status] == 'W'))
+      unless data[:grade]
+        primary_section = sis_section_data course_primary_section(course)
+        courses << DegreeCompletedCourse.new(ccn: primary_section[:ccn],
+                                             degree_check: degree_check,
+                                             term_id: term_id,
+                                             name: data[:code],
+                                             units: data[:units_completed],
+                                             units_orig: data[:units_completed],
+                                             waitlisted: (primary_section[:status] == 'W'))
+      end
     end
     courses.sort_by &:name
   end

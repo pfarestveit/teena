@@ -266,17 +266,29 @@ class RipleyUtils < Utils
   end
 
   def self.get_course_enrollment(course)
-    sql = "SELECT DISTINCT sis_data.edo_enrollments.sis_section_id,
-                  sis_data.edo_enrollments.ldap_uid AS uid,
-                  sis_data.edo_enrollments.sis_enrollment_status AS status,
-                  sis_data.edo_enrollments.grading_basis,
-                  student.student_profile_index.sid,
-                  student.student_profile_index.email_address
-             FROM sis_data.edo_enrollments
-             JOIN student.student_profile_index
-               ON student.student_profile_index.uid = sis_data.edo_enrollments.ldap_uid
-            WHERE sis_term_id = '#{course.term.sis_id}'
-              AND sis_section_id IN (#{Utils.in_op(course.sections.map &:id)})"
+    sql = "SELECT enrollment.sis_section_id,
+                  enrollment.ldap_uid AS uid,
+                  sis_data.basic_attributes.sid,
+                  sis_data.basic_attributes.first_name,
+                  sis_data.basic_attributes.last_name,
+                  enrollment.sis_enrollment_status AS status,
+                  sis_data.basic_attributes.email_address
+             FROM sis_data.edo_enrollments enrollment
+             JOIN sis_data.basic_attributes
+               ON sis_data.basic_attributes.ldap_uid = enrollment.ldap_uid
+            WHERE enrollment.sis_term_id = '#{course.term.sis_id}'
+              AND enrollment.sis_section_id IN (#{Utils.in_op(course.sections.map &:id)})
+              AND enrollment.sis_enrollment_status IN ('E', 'W')
+              AND (SELECT DISTINCT(primary_enrollment.grade)
+                     FROM sis_data.edo_enrollments primary_enrollment
+                     JOIN sis_data.edo_sections
+                       ON primary_enrollment.ldap_uid = enrollment.ldap_uid
+                      AND primary_enrollment.sis_term_id = enrollment.sis_term_id
+                      AND primary_enrollment.sis_section_id = sis_data.edo_sections.primary_associated_section_id
+                    WHERE sis_data.edo_sections.sis_term_id = enrollment.sis_term_id
+                      AND sis_data.edo_sections.sis_section_id = enrollment.sis_section_id
+                   ) != 'W';"
+
     results = Utils.query_pg_db(NessieUtils.nessie_pg_db_credentials, sql)
     enrollments = results.map do |r|
       student = User.new uid: r['uid'],
@@ -302,7 +314,7 @@ class RipleyUtils < Utils
              FROM sis_data.basic_attributes
             WHERE affiliations = '#{affiliations}'
               AND email_address IS NOT NULL
-         ORDER BY first_name
+         ORDER BY RANDOM()
          #{'LIMIT ' + count.to_s if count}"
     results = Utils.query_pg_db(NessieUtils.nessie_pg_db_credentials, sql)
     results.map do |r|

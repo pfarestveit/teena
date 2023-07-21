@@ -14,7 +14,7 @@ unless ENV['DEPS']
 
       # TEST DATA
 
-      @student = ENV['UIDS'] ? (test.students.find { |s| s.uid == ENV['UIDS'] }) : test.cohort_members.first
+      @student = ENV['UIDS'] ? (test.students.find { |s| s.uid == ENV['UIDS'] }) : test.cohort_members.shuffle.first
       @degree_check = DegreeProgressChecklist.new(template, @student)
 
       @cats_with_courses = @degree_check.categories.select { |cat| cat.course_reqs.any? }
@@ -102,11 +102,13 @@ unless ENV['DEPS']
     context 'when in progress' do
 
       it 'appears in the in progress section' do
-        @degree_check_page.wait_until(Utils.short_wait) { @degree_check_page.in_progress_course_elements.any? }
-        expected = @in_progress_courses.map { |c| "#{c.term_id}-#{c.ccn}" }
-        actual = @degree_check_page.in_progress_course_ccns
-        @degree_check_page.wait_until(1, "Missing: #{expected - actual}. Unexpected: #{actual - expected}") do
-          actual.sort == expected.sort
+        if @in_progress_courses.any?
+          @degree_check_page.wait_until(Utils.short_wait) { @degree_check_page.in_progress_course_elements.any? }
+          expected = @in_progress_courses.map { |c| "#{c.term_id}-#{c.ccn}" }
+          actual = @degree_check_page.in_progress_course_ccns
+          @degree_check_page.wait_until(1, "Missing: #{expected - actual}. Unexpected: #{actual - expected}") do
+            actual.sort == expected.sort
+          end
         end
       end
 

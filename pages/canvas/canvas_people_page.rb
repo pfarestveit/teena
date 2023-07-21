@@ -57,6 +57,16 @@ module CanvasPeoplePage
     end
   end
 
+  def wait_for_added_user(user)
+    retries ||= 10
+    begin
+      scroll_to_bottom
+      wait_until(4) { cell_element(xpath: "//tr[contains(@id,'#{user.canvas_id}')]").exists? }
+    rescue => e
+      (retries -= 1).zero? ? fail(e.message) : retry
+    end
+  end
+
   # Returns all the visible instruction modes in section labels
   # @return [Array<String>]
   def visible_instruction_modes
@@ -90,9 +100,8 @@ module CanvasPeoplePage
     user_list_element.attribute('placeholder')
   end
 
-  def add_users(course, test_users, section = nil)
-    users_to_add = Array.new test_users
-    logger.info "Users needed for the site are #{users_to_add.map { |u| u.uid }}"
+  def add_users(course, users_to_add, section = nil)
+    logger.info "Users needed for the site are #{users_to_add.map &:uid}"
 
     # Users already on the site with the right role do not need to be added again
     users_missing = []
@@ -102,16 +111,16 @@ module CanvasPeoplePage
       users_missing = users_to_add
     else
       users_to_add.each do |user|
-        user == users_to_add.first ? tries ||= 10 : tries ||= 1
+        user == users_to_add.first ? tries ||= 20 : tries ||= 1
         begin
           scroll_to_bottom
-          wait_until(1) { cell_element(xpath: "//tr[contains(@id,'#{user.canvas_id}')]//td[contains(.,'#{user.role}')]").exists? }
+          wait_until(2) { cell_element(xpath: "//tr[contains(@id,'#{user.canvas_id}')]//td[contains(.,'#{user.role}')]").exists? }
         rescue
           (tries -= 1).zero? ? (users_missing << user) : retry
         end
       end
     end
-    logger.info "Users who need to be added are #{users_missing.map { |u| u.uid }}"
+    logger.info "Users who need to be added are #{users_missing.map &:uid}"
 
     # Reactivate inactivated test users and make sure all test users' emails match addresses in test data
     activate_user_and_reset_email users_missing
@@ -137,7 +146,7 @@ module CanvasPeoplePage
           users_ready_to_add_msg_element.when_visible Utils.medium_wait
           hide_canvas_footer_and_popup
           wait_for_update_and_click_js next_button_element
-          wait_for_users users_with_role
+          users_with_role.each { |u| wait_for_added_user u }
         rescue => e
           logger.error "#{e.message}\n#{e.backtrace}"
           logger.warn 'Add User failed, retrying'
@@ -229,9 +238,9 @@ module CanvasPeoplePage
       navigate_to "#{Utils.canvas_base_url}/users/#{user.canvas_id}"
       default_email_element.when_present Utils.short_wait
       if default_email == user.email
-        logger.debug "Test user '#{user.full_name}' already has an updated default email"
+        logger.debug "Test user '#{user.uid}' already has an updated default email"
       else
-        logger.debug "Resetting test user #{user.full_name}'s email to #{user.email}"
+        logger.debug "Resetting test user #{user.uid}'s email to #{user.email}"
         wait_for_load_and_click_js edit_user_link_element
         wait_for_element_and_type_js(user_email_element, user.email)
         wait_for_update_and_click_js update_details_button_element

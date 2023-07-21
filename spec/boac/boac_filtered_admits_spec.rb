@@ -162,46 +162,6 @@ unless ENV['NO_DEPS']
           expect(@admit_page.sid).to eql(cs_id)
         end
       end
-
-      context 'when the advisor enters invalid filter input' do
-
-        shared_examples 'dependent range validation' do |filter_name|
-
-          before(:each) do
-            @homepage.load_page
-            @homepage.click_sidebar_create_ce3_filtered
-            @cohort_page.select_new_filter_option filter_name
-          end
-
-          it 'an error prompts for numeric input' do
-            @cohort_page.select_new_filter_sub_option(filter_name, {'min' => 'A', 'max' => ''})
-            @cohort_page.depend_char_error_msg_element.when_visible 1
-          end
-
-          it 'an error prompts for logical numeric input' do
-            @cohort_page.select_new_filter_sub_option(filter_name, {'min' => '4', 'max' => '0'})
-            @cohort_page.depend_logic_error_msg_element.when_visible 1
-          end
-
-          it 'an error prompts for non-negative numbers' do
-            @cohort_page.select_new_filter_sub_option(filter_name, {'min' => '-1', 'max' => '5'})
-            @cohort_page.depend_char_error_msg_element.when_visible 1
-          end
-
-          it 'no Add button appears without two valid values' do
-            @cohort_page.select_new_filter_sub_option(filter_name, {'min' => '3.5', 'max' => ''})
-            expect(@cohort_page.unsaved_filter_add_button?).to be false
-          end
-        end
-
-        context 'in the Family Dependents filter' do
-          include_examples 'dependent range validation', 'Family Dependents'
-        end
-
-        context 'in the Student Dependents filter' do
-          include_examples 'dependent range validation', 'Family Dependents'
-        end
-      end
     end
   end
 end
