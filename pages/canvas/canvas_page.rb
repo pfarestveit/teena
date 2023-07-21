@@ -126,7 +126,7 @@ module Page
     def wait_for_error(canvas_msg_el, junction_msg_el)
       tries ||= Utils.short_wait
       wait_until(2) do
-        (switch_to_canvas_iframe; junction_msg_el.exists?) || (switch_to_main_content; canvas_msg_el.exists?)
+        (switch_to_main_content; canvas_msg_el.exists?) || (switch_to_canvas_iframe; junction_msg_el.exists?)
       end
     rescue
       if (tries -= 1).zero?

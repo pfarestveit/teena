@@ -38,18 +38,15 @@ describe 'bCourses Roster Photos' do
       @canvas.masquerade_as teacher
     end
 
-    unless standalone
-      if site.site_id
-        @canvas.load_course_site site
-      else
-        @create_course_site_page.provision_course_site(site, {standalone: standalone})
-        @create_course_site_page.wait_for_standalone_site_id(site, @splash_page) if standalone
-        @canvas.publish_course_site site
-      end
+    if site.site_id && !standalone
+      @canvas.load_course_site site
+    else
+      @create_course_site_page.provision_course_site(site, {standalone: standalone})
+      @create_course_site_page.wait_for_standalone_site_id(site, @splash_page) if standalone
     end
+    @canvas.publish_course_site site unless standalone
 
-    @expected_sids = site.sections.map { |s| s.enrollments.map &:sid }.flatten.uniq.sort
-
+    @expected_sids = site.sections.map { |s| s.enrollments.map { |e| e.user.sis_id } }.flatten.uniq.sort
     @student_count = site.expected_student_count
     @waitlist_count = site.expected_wait_list_count
     @total_user_count = @student_count + @waitlist_count
@@ -57,12 +54,15 @@ describe 'bCourses Roster Photos' do
     logger.warn 'There are no students on this site' if @total_user_count.zero?
 
     unless standalone
-      @canvas.load_users_page site
-      @canvas.click_find_person_to_add RipleyUtils.base_url
-      non_teachers.each do |user|
-        @course_add_user_page.search(user.uid, 'CalNet UID')
-        @course_add_user_page.add_user_by_uid(user, site.sections.first)
-      end
+      @canvas.stop_masquerading
+      @canvas.add_users(site, non_teachers)
+      # TODO - restore the following when Add User tool exists
+      # @canvas.load_users_page site
+      # @canvas.click_find_person_to_add RipleyUtils.base_url
+      # non_teachers.each do |user|
+      #   @course_add_user_page.search(user.uid, 'CalNet UID')
+      #   @course_add_user_page.add_user_by_uid(user, site.sections.first)
+      # end
     end
   end
 
@@ -74,7 +74,7 @@ describe 'bCourses Roster Photos' do
       if standalone
         @roster_photos_page.load_standalone_tool site
       else
-        @canvas.load_course_site site
+        @canvas.masquerade_as(teacher, site)
         @roster_photos_page.click_roster_photos_link
       end
     end
@@ -119,12 +119,11 @@ describe 'bCourses Roster Photos' do
 
     site.sections.each do |section|
       it "allows UID #{teacher.uid} to filter by section #{section.label} on #{site.course.code} course site ID #{site.site_id}" do
-        section_students = section.enrollments
-        logger.debug "Expecting #{section_students.length} students in section #{section.label}"
+        section_sids = section.enrollments.map { |e| e.user }.map(&:sis_id).sort
         @roster_photos_page.filter_by_string ''
         @roster_photos_page.filter_by_section section
-        @roster_photos_page.wait_until(Utils.short_wait, "Expected #{section_students.map(&:sid).sort}, got #{@roster_photos_page.all_sids.sort}") do
-          @roster_photos_page.all_sids.sort == section_students.map(&:sid).sort
+        @roster_photos_page.wait_until(Utils.short_wait, "Expected #{section_sids}, got #{@roster_photos_page.all_sids.sort}") do
+          @roster_photos_page.all_sids.sort == section_sids
         end
       end
     end
@@ -150,7 +149,7 @@ describe 'bCourses Roster Photos' do
     context 'when not a Teacher' do
 
       [test.lead_ta, test.ta].each do |user|
-        it "permits #{user.role} #{user.uid} access to the tool" do
+        it "permits #{user.role} #{user.uid}, #{user.canvas_id} access to the tool" do
           @canvas.masquerade_as(user, site)
           @roster_photos_page.load_embedded_tool site
           if @total_user_count.zero?
@@ -161,17 +160,17 @@ describe 'bCourses Roster Photos' do
         end
       end
 
-      [test.reader, test.designer].each do |user|
-        it "denies #{user.role} #{user.uid} access to the tool" do
+      [test.reader, test.designer, test.observer].each do |user|
+        it "denies #{user.role} #{user.uid}, #{user.canvas_id} access to the tool" do
           @canvas.masquerade_as(user, site)
           @roster_photos_page.load_embedded_tool site
           @roster_photos_page.no_access_msg_element.when_visible Utils.short_wait
         end
       end
 
-      [test.observer, test.students.first, test.wait_list_student].each do |user|
-        it "denies #{user.role} #{user.uid} access to the tool" do
-          @canvas.masquerade_as(user, site)
+      [test.students.first, test.wait_list_student].each do |user|
+        it "denies #{user.role} #{user.uid}, #{user.canvas_id} access to the tool" do
+          @canvas.masquerade_as user
           @roster_photos_page.hit_embedded_tool_url site
           @canvas.wait_for_error(@canvas.access_denied_msg_element, @roster_photos_page.no_access_msg_element)
         end

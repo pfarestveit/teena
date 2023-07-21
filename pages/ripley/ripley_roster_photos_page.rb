@@ -7,7 +7,7 @@ class RipleyRosterPhotosPage
   include Page
   include RipleyPages
 
-  link(:roster_photos_link, xpath: '(//a[text()="Roster Photos"])[last()]')
+  link(:roster_photos_link, text: RipleyTool::ROSTER_PHOTOS.name)
 
   text_field(:search_input, id: 'roster-search')
   div(:section_select, xpath: '//input[@id="section-select"]/..')
@@ -16,7 +16,7 @@ class RipleyRosterPhotosPage
   link(:print_roster_link, id: 'print-roster')
   element(:wait_for_load_msg, xpath: '//*[text()="You can print when student images have loaded."]')
 
-  div(:no_access_msg, id: 'TBD "You must be a teacher in this bCourses course to view official student rosters."')
+  div(:no_access_msg, xpath: '//div[text()="You must be a teacher in this bCourses course to view official student rosters."]')
   div(:no_students_msg, id: 'TBD "Students have not yet signed up for this class."')
 
   elements(:roster_photo, :image, xpath: '//img[contains(@src, "/cal1card-data/photos/")]')

@@ -205,7 +205,7 @@ module BOACStudentPageAdvisingNote
     visible_data.merge!(visible_expanded_note_data note)
     if note.advisor.full_name
       wait_until(1, "Expected '#{note.advisor.full_name.downcase}', got '#{visible_data[:advisor].downcase}'") do
-        visible_data[:advisor].downcase == note.advisor.full_name.downcase
+        note.advisor.alt_names.map(&:downcase).push(note.advisor.full_name.downcase).include? visible_data[:advisor].downcase
       end
     else
       wait_until(1, 'Expected non-blank advisor name') { !visible_data[:advisor].empty? }
