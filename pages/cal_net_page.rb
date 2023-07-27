@@ -52,8 +52,8 @@ module Page
       wait_for_element_and_type(username_element, msg)
     end
 
-    def wait_for_manual_login
-      wait_until(Utils.long_wait) do
+    def wait_for_manual_login(custom_wait=nil)
+      wait_until(custom_wait || Utils.long_wait) do
         # If login is to resolve a Junction session conflict, then logout should occur. Otherwise, expect successful login.
         logout_conf_heading_element.visible? ||
           (!title.include?('Central Authentication Service') && !current_url.include?('duosecurity'))

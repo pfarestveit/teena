@@ -132,7 +132,7 @@ ripley:
   term_name: 'Spring 2023'
   term_code: '2023-B'
   term_sis_id: '2232'
-  sis_update_date: '2020-01-01'
+  recent_refresh_days_past: 180
   course_prefixes: ['ECON C', 'CHEM 1A', 'LEGALST']
   e_grades_site_ids: ['123', '456', '789']
   db_host: secret
