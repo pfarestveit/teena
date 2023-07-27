@@ -31,7 +31,7 @@ unless ENV['STANDALONE']
 
       @canvas.log_in(@cal_net, test.admin.username, Utils.super_admin_password)
       section_ids = @canvas_api.get_course_site_sis_section_ids site
-      test.set_e_grades_test_site_data(site, section_ids)
+      test.get_existing_site_data(site, section_ids)
       @primary_section = site.sections.find &:primary
       @prim_sec_sids = @primary_section.enrollments.map &:sid
       @secondary_section = site.sections.reject(&:primary).first

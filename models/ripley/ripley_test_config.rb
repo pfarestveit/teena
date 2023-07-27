@@ -29,6 +29,10 @@ class RipleyTestConfig < TestConfig
     get_mailing_list_sites
   end
 
+  def refresh_canvas_recent
+    get_refresh_recent_sites
+  end
+
   def user_provisioning
     set_manual_members
   end
@@ -79,6 +83,19 @@ class RipleyTestConfig < TestConfig
     course_site
   end
 
+  def get_existing_site_data(site, sis_section_ids)
+    term_code = sis_section_ids.first.split('-')[0..1].join('-')
+    term_name = Utils.term_code_to_term_name term_code
+    term = Term.new code: term_code,
+                    name: term_name,
+                    sis_id: Utils.term_name_to_sis_code(term_name)
+    ccns = sis_section_ids.map { |s| s.split('-').last }
+    cs_course_id = RipleyUtils.get_test_cs_course_id_from_ccn(term, ccns.first)
+    site.course = RipleyUtils.get_course(term, cs_course_id)
+    RipleyUtils.get_course_enrollment site.course
+    site.sections = site.course.sections.select { |s| ccns.include? s.id }
+  end
+
   def get_e_grades_test_sites
     @course_sites = RipleyUtils.e_grades_site_ids.map { |id| CourseSite.new site_id: id }
     @course_sites.each { |s| set_manual_members s }
@@ -87,19 +104,6 @@ class RipleyTestConfig < TestConfig
   def get_e_grades_export_site
     get_e_grades_test_sites
     @course_sites.first
-  end
-
-  def set_e_grades_test_site_data(site, sis_section_ids)
-    term_code = sis_section_ids.first.split('-')[0..1].join('-')
-    term_name = Utils.term_code_to_term_name term_code
-    term = Term.new code: term_code,
-                    name: term_name,
-                    sis_id: Utils.term_name_to_sis_code(term_name)
-    ccns = sis_section_ids.map { |s| s.split('-').last }
-    cs_course_id = Utils.get_test_cs_course_id_from_ccn(term, ccns.first)
-    site.course = RipleyUtils.get_course(term, cs_course_id)
-    RipleyUtils.get_course_enrollment site.course
-    site.sections = site.course.sections.select { |s| ccns.include? s.id }
   end
 
   def get_mailing_list_sites
@@ -128,6 +132,26 @@ class RipleyTestConfig < TestConfig
     site = CourseSite.new title: "Project #{@id}"
     set_manual_members site
     site
+  end
+
+  def get_refresh_recent_sites
+    # TODO - replace the info from the test data file with Nessie + newly created course site data
+    test_data = JSON.parse(File.read(File.join(Utils.config_dir, 'test-data-bcourses.json')))['courses']
+    test_data.keep_if { |d| d['tests']['refresh_recent'] }
+    @course_sites = test_data.map do |d|
+      course = Course.new d
+      course.sections.map! { |s| Section.new s }
+      course.teachers.map! { |u| User.new u }
+      course.term = Term.new code: Utils.term_name_to_hyphenated_code(course.term),
+                             name: course.term,
+                             sis_id: Utils.term_name_to_sis_code(course.term)
+      site = CourseSite.new site_id: d['site_id'],
+                            course: course,
+                            sections: course.sections
+      set_manual_members site
+      logger.info "Course site: #{site.inspect}"
+      site
+    end
   end
 
   def get_welcome_email_site

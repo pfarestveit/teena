@@ -14,7 +14,7 @@ unless ENV['STANDALONE']
     users = course_site_1.manual_members
     timeout = Utils.short_wait
     # For good measure, wipe any old mailing list test data that's lying around
-    RipleyUtils.drop_existing_mailing_lists
+    # TODO RipleyUtils.drop_existing_mailing_lists
 
     before(:all) do
       @driver = Utils.launch_browser

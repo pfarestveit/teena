@@ -59,8 +59,8 @@ class RipleyUtils < Utils
     @config['background_job_attempts']
   end
 
-  def self.sis_update_date
-    Time.parse @config['sis_update_date']
+  def self.recent_refresh_days_past
+    @config['recent_refresh_days_past']
   end
 
   def self.clear_cache
@@ -124,6 +124,13 @@ class RipleyUtils < Utils
     Utils.query_pg_db(db_credentials, sql_2)
   end
 
+  def self.set_last_sync_timestamps
+    sql = "UPDATE canvas_synchronization
+              SET last_enrollment_sync = NOW() - INTERVAL '#{recent_refresh_days_past} DAY',
+                  last_instructor_sync = NOW() - INTERVAL '#{recent_refresh_days_past} DAY';"
+    Utils.query_pg_db(db_credentials, sql)
+  end
+
   def self.get_test_cs_course_id_from_catalog_id(term, catalog_id_prefix)
     sql = "SELECT cs_course_id
              FROM sis_data.edo_sections
@@ -166,14 +173,30 @@ class RipleyUtils < Utils
                   sis_section_num ASC;"
     results = Utils.query_pg_db(NessieUtils.nessie_pg_db_credentials, sql)
     results.map do |r|
+      mode = case r['mode']
+             when 'EF'
+               '(Flexible)'
+             when 'EH'
+               '(Hybrid)'
+             when 'ER'
+               '(Remote)'
+             when 'O'
+               '(Online)'
+             when 'P'
+               '(In Person)'
+             when 'W'
+               '(Web-based)'
+             else
+               "(#{r['mode']})"
+             end
       {
         id: r['id'],
         code: r['code'],
         cs_course_id: cs_course_id,
-        instruction_mode: r['mode'],
+        instruction_mode: mode,
         instructor_uid: r['instructor_uid'],
         instructor_role_code: r['instructor_role_code'],
-        label: "#{r['format']} #{r['number']}",
+        label: "#{r['format']} #{r['number']} #{mode}",
         location: r['location'],
         primary: (r['is_primary'] == 't'),
         schedule: "#{r['days']} #{r['start_time']} #{r['end_time']}",
