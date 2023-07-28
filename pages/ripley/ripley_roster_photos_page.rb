@@ -10,8 +10,7 @@ class RipleyRosterPhotosPage
   link(:roster_photos_link, text: RipleyTool::ROSTER_PHOTOS.name)
 
   text_field(:search_input, id: 'roster-search')
-  div(:section_select, xpath: '//input[@id="section-select"]/..')
-  elements(:section_option, :div, xpath: '//div[@class="v-list-item-title"]')
+  select_list(:section_select, id: 'section-select')
   button(:export_roster_link, id: 'download-csv')
   link(:print_roster_link, id: 'print-roster')
   element(:wait_for_load_msg, xpath: '//*[text()="You can print when student images have loaded."]')
@@ -53,18 +52,8 @@ class RipleyRosterPhotosPage
     wait_until(Utils.short_wait) { roster_photo_elements.any? }
   end
 
-  def expand_section_options
-    wait_for_update_and_click section_select_element unless section_option_elements.any?
-    sleep 1
-  end
-
   def section_options
-    expand_section_options
-    section_option_elements.map { |el| el.attribute('innerText') }
-  end
-
-  def section_option(section)
-    section_option_elements.find { |el| el.attribute('innerText') == "#{section.course} #{section.label}" }
+    section_select_options
   end
 
   def filter_by_string(string)
@@ -74,9 +63,8 @@ class RipleyRosterPhotosPage
   end
 
   def filter_by_section(section)
-    logger.info "Filtering roster by section #{section.course} #{section.label}"
-    expand_section_options
-    wait_for_update_and_click section_option(section)
+    logger.info "Filtering roster by section "#{section.course} #{section.label}""
+    wait_for_element_and_select(section_select_element, "#{section.course} #{section.label}")
     sleep 1
   end
 
