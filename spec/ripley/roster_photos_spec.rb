@@ -101,7 +101,7 @@ describe 'bCourses Roster Photos' do
     end
 
     it "shows UID #{teacher.uid} all sections by default on #{site.course.code} course site ID #{site.site_id}" do
-      expected_section_codes = (site.sections.map { |section| "#{section.course} #{section.label}" }) << 'All sections'
+      expected_section_codes = (site.sections.map { |section| "#{section.course} #{section.label}" }) << 'All Sections'
       actual_section_codes = @roster_photos_page.section_options
       expect(actual_section_codes).to eql(expected_section_codes.sort)
     end
@@ -160,11 +160,19 @@ describe 'bCourses Roster Photos' do
         end
       end
 
-      [test.reader, test.designer, test.observer].each do |user|
+      [test.designer, test.observer].each do |user|
         it "denies #{user.role} #{user.uid}, #{user.canvas_id} access to the tool" do
           @canvas.masquerade_as(user, site)
           @roster_photos_page.load_embedded_tool site
           @roster_photos_page.no_access_msg_element.when_visible Utils.short_wait
+        end
+      end
+
+      [test.reader].each do |user|
+        it "denies #{user.role} #{user.uid}, #{user.canvas_id} access to the tool" do
+          @canvas.masquerade_as(user, site)
+          @roster_photos_page.load_embedded_tool site
+          @roster_photos_page.unauthorized_msg_element.when_visible Utils.short_wait
         end
       end
 
