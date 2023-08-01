@@ -53,6 +53,7 @@ module CanvasPeoplePage
   def wait_for_users(users)
     scroll_to_bottom
     users.each do |user|
+      logger.debug "Waiting for user row with Canvas ID #{user.canvas_id}"
       wait_until(Utils.short_wait) { cell_element(xpath: "//tr[contains(@id,'#{user.canvas_id}')]").exists? }
     end
   end

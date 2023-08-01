@@ -8,8 +8,8 @@ class RipleyMailingListPage
   include RipleyPages
 
   link(:mailing_list_link, text: RipleyTool::MAILING_LIST.name)
-  div(:no_list_msg, id: 'TBD "No Mailing List has yet been created for this site."')
-  button(:create_list_button, id: 'TBD')
+  div(:no_list_msg, xpath: '//div[text()=" No Mailing List has been created for this site. "]')
+  button(:create_list_button, id: 'btn-create-mailing-list')
   div(:list_created_msg, id: 'TBD "A Mailing List has been created"')
   div(:list_address, id: 'TBD')
   div(:list_dupe_error_msg, id: 'TBD "A Mailing List cannot be created for the site"')

@@ -123,9 +123,8 @@ class RipleyTestConfig < TestConfig
                        abbreviation: "Instructor #{@id}"
       )
     ]
-    set_test_user_data ripley_test_data_file
-    @course_sites.each { |s| set_manual_mailing_list_members s }
-    @course_sites[1].manual_members = [@teachers.first]
+    @course_sites.each { |s| set_manual_members s }
+    @course_sites[1].manual_members = [@manual_teacher]
   end
 
   def get_project_site
@@ -246,10 +245,6 @@ class RipleyTestConfig < TestConfig
     @wait_list_student.role = 'Waitlist Student'
 
     site.manual_members = (teachers + tas + staff + students) if site
-  end
-
-  def set_manual_mailing_list_members(site)
-    site.manual_members = set_test_users 'mailing_lists'
   end
 
   def set_manual_project_members(site = nil)

@@ -63,10 +63,6 @@ class RipleyUtils < Utils
     @config['recent_refresh_days_past']
   end
 
-  def self.clear_cache
-    # TODO
-  end
-
   def self.initialize_test_output(spec, column_headers)
     output_file = "#{Utils.get_test_script_name spec}.csv"
     logger.info "Initializing test output CSV named #{output_file}"
@@ -118,10 +114,7 @@ class RipleyUtils < Utils
   end
 
   def self.drop_existing_mailing_lists
-    sql_1 = 'DELETE FROM canvas_site_mailing_lists'
-    sql_2 = 'DELETE FROM canvas_site_mailing_list_members'
-    Utils.query_pg_db(db_credentials, sql_1)
-    Utils.query_pg_db(db_credentials, sql_2)
+    Utils.query_pg_db(db_credentials, 'DELETE FROM canvas_site_mailing_lists')
   end
 
   def self.set_last_sync_timestamps
