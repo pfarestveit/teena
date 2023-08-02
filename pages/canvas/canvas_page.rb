@@ -216,7 +216,6 @@ module Page
         else
           add_users(test.course_site, test.course_site.manual_members)
         end
-        remove_users_from_course(test.course_site, [test.admin])
         publish_course_site test.course_site
         add_squiggy_tools test
       end

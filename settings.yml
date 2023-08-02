@@ -155,5 +155,5 @@ squiggy:
   db_password: secret
   poller_retries: 10
   load_test_reps: 10
-  template_course_id: 1234567
+  template_course_id: null
   whiteboards: [123, 456, 789]

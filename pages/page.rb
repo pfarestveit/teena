@@ -123,7 +123,7 @@ module Page
     sleep(click_wait || Utils.click_wait)
     begin
       element.click
-    rescue Selenium::WebDriver::Error::ElementClickInterceptedError => e
+    rescue => e
       logger.warn e.message
       execute_script('arguments[0].click();', element)
     end
@@ -215,7 +215,7 @@ module Page
   # @param text [String]
   def wait_for_element_and_type_js(element, text)
     wait_for_update_and_click_js element
-    element.clear
+    clear_input_value element
     element.send_keys text
   end
 
