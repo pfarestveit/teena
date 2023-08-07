@@ -11,6 +11,7 @@ class RipleyMailingListsPage
   text_area(:site_id_input, id: 'page-site-mailing-list-site-id')
   button(:get_list_button, id: 'btn-get-mailing-list')
   div(:not_found_msg, xpath: '//div[contains(., "bCourses site 99999999 was not found.")]')
+  div(:auth_failed_msg, xpath: '//pre[contains(text(), "failed to authenticate")]')
 
   # Create list
   link(:site_name_link, id: 'course-site-href')
@@ -21,7 +22,7 @@ class RipleyMailingListsPage
   button(:register_list_button, id: 'btn-create-mailing-list')
   div(:list_name_error_msg, xpath: '//div[text()=" Only lowercase alphanumeric, underscore and hyphen characters allowed. "]')
   div(:list_creation_error_msg, id: 'TBD "A Mailing List cannot be created for the site"')
-  div(:list_name_taken_error_msg, xpath: '//div[contains(., "List with name") and contains(., "already exists")]')
+  div(:list_name_taken_error_msg, xpath: '//div[contains(., "is used by another Canvas site and is not available")]')
 
   # View list
   link(:list_site_link, id: 'mailing-list-course-site-name')
@@ -35,8 +36,12 @@ class RipleyMailingListsPage
   button(:cancel_button, id: 'btn-cancel')
   button(:update_membership_button, id: 'btn-populate-mailing-list')
   div(:no_membership_change_msg, xpath: '//*[text()="Everything is up-to-date. No changes necessary."]')
-  div(:member_removed_msg, xpath: '//span[contains(text(), "Removed")]')
+  button(:show_added_users_button, xpath: '//button[contains(., "Added")]')
   div(:member_added_msg, xpath: '//span[contains(text(), "Added")]')
+  button(:show_removed_users_button, xpath: '//button[contains(., "Removed")]')
+  div(:member_removed_msg, xpath: '//span[contains(text(), "Removed")]')
+  button(:show_restored_users_button, xpath: '//button[contains(., "Restored")]')
+  div(:member_restored_msg, xpath: '//span[contains(text(), "Restored")]')
 
   def embedded_tool_path
     "/accounts/#{Utils.canvas_admin_sub_account}/external_tools/#{RipleyUtils.mailing_lists_tool_id}"
@@ -81,6 +86,37 @@ class RipleyMailingListsPage
   def click_update_memberships
     logger.info 'Clicking update membership button'
     wait_for_update_and_click update_membership_button_element
+  end
+
+  def expand_added_users
+    logger.info 'Expanding list of added users'
+    wait_for_update_and_click show_added_users_button_element
+  end
+
+  def user_added?(user)
+    user_updated?(user, 'Added')
+  end
+
+  def expand_removed_users
+    logger.info 'Expanding list of removed users'
+    wait_for_update_and_click show_removed_users_button_element
+  end
+
+  def user_removed?(user)
+    user_updated?(user, 'Removed')
+  end
+
+  def expand_restored_users
+    logger.info 'Expanding list of restored users'
+    wait_for_update_and_click show_restored_users_button_element
+  end
+
+  def user_restored?(user)
+    user_updated?(user, 'Restored')
+  end
+
+  def user_updated?(user, status)
+    div_element(xpath: "//button[contains(., '#{status}')]/following-sibling::div//div[text()='#{user.username}@berkeley.edu']").exists?
   end
 
   def click_cancel_list

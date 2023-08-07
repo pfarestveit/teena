@@ -10,10 +10,10 @@ class RipleyMailingListPage
   link(:mailing_list_link, text: RipleyTool::MAILING_LIST.name)
   div(:no_list_msg, xpath: '//div[text()=" No Mailing List has been created for this site. "]')
   button(:create_list_button, id: 'btn-create-mailing-list')
-  div(:list_created_msg, id: 'TBD "A Mailing List has been created"')
-  div(:list_address, id: 'TBD')
+  div(:list_created_msg, xpath: '//div[contains(., "A Mailing List has been created")]')
+  div(:list_address, xpath: '//div[@role="alert"]//strong')
   div(:list_dupe_error_msg, id: 'TBD "A Mailing List cannot be created for the site"')
-  div(:list_dupe_email_msg, id: 'TBD "is already in use by another Mailing List."')
+  div(:list_dupe_email_msg, id: '//div[contains(., "is used by another bCourses site and is not available")]')
 
   def embedded_tool_path(course)
     "/courses/#{course.site_id}/external_tools/#{RipleyUtils.mailing_list_tool_id}"

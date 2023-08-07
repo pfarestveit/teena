@@ -101,9 +101,10 @@ describe 'bCourses Roster Photos' do
     end
 
     it "shows UID #{teacher.uid} all sections by default on #{site.course.code} course site ID #{site.site_id}" do
-      expected_section_codes = (site.sections.map { |section| "#{section.course} #{section.label}" }) << 'All Sections'
+      expected_section_codes = site.sections.map { |section| "#{section.course} #{section.label}" }.sort
+      expected_section_codes.prepend('All Sections')
       actual_section_codes = @roster_photos_page.section_options
-      expect(actual_section_codes).to eql(expected_section_codes.sort)
+      expect(actual_section_codes).to eql(expected_section_codes)
     end
 
     it "allows UID #{teacher.uid} to filter by string on #{site.course.code} course site ID #{site.site_id}" do

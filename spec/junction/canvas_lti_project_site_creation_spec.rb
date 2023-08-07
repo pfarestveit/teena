@@ -66,11 +66,12 @@ describe 'bCourses project site', order: :defined do
       @canvas.wait_until(Utils.medium_wait) { @canvas.current_url.include? "#{Utils.canvas_base_url}/courses" }
       project.site_id = @canvas.current_url.delete "#{Utils.canvas_base_url}/courses/"
       logger.info "Project site ID is #{project.site_id}"
+      @canvas.switch_to_main_content
       expect(@canvas.course_site_heading).to eql("#{project.title}") unless standalone
     end
 
     unless standalone
-      it('redirects to a custom project homepage') { @canvas.project_site_heading_element.when_visible Utils.short_wait }
+      it('redirects to a custom project homepage') { @canvas.project_site_heading_element.when_present Utils.short_wait }
       it('does not add the Roster Photos tool') { expect(@roster_photos_page.roster_photos_link?).to be false }
       it('does not add the Official Sections tool') { expect(@official_sections_page.official_sections_link?).to be false }
     end

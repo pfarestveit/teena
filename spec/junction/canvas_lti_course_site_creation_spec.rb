@@ -109,7 +109,7 @@ describe 'bCourses course site creation' do
           bcourses_link_works = @create_course_site_page.external_link_valid?(@create_course_site_page.bcourses_service_element, 'bCourses | Research, Teaching, and Learning')
           it('shows a link to the bCourses service page') { expect(bcourses_link_works).to be true }
 
-          @canvas_page.switch_to_canvas_iframe unless standalone || "#{@driver.browser}" == 'firefox'
+          @canvas_page.switch_to_canvas_iframe unless standalone
           @create_course_site_page.click_need_help
 
           help_text = @create_course_site_page.help
@@ -118,7 +118,7 @@ describe 'bCourses course site creation' do
           mode_link_works = @create_course_site_page.external_link_valid?(@create_course_site_page.instr_mode_link_element, 'IT - How do I create a Course Site?')
           it('shows an instruction mode link') { expect(mode_link_works).to be true }
 
-          @canvas_page.switch_to_canvas_iframe unless standalone || "#{@driver.browser}" == 'firefox'
+          @canvas_page.switch_to_canvas_iframe unless standalone
 
           links_tested = true
 
@@ -241,9 +241,7 @@ describe 'bCourses course site creation' do
           site[:roster_data].get_feed(site[:course])
         rescue => e
           logger.error e.message
-          errors = Utils.get_js_errors @driver
-          denied = errors.find { |e| e.include? 'the server responded with a status of 403' }
-          if (@splash_page.denied_msg? || denied) && !tries.zero?
+          unless tries.zero?
             logger.warn 'User not able to access feed, retrying'
             JunctionUtils.clear_cache(@driver, @splash_page)
             retry

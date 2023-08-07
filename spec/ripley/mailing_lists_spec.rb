@@ -12,7 +12,6 @@ unless ENV['STANDALONE']
     course_site_1 = test.course_sites[0]
     course_site_2 = test.course_sites[1]
     course_site_3 = test.course_sites[2]
-    users = course_site_1.manual_members + course_site_2.manual_members + course_site_3.manual_members
     RipleyUtils.drop_existing_mailing_lists
 
     before(:all) do
@@ -26,7 +25,6 @@ unless ENV['STANDALONE']
       @create_project_site_page = RipleyCreateProjectSitePage.new @driver
 
       @canvas_page.log_in(@cal_net_page, test.admin.username, Utils.super_admin_password)
-      @canvas_page.set_canvas_ids users
       @canvas_page.create_ripley_mailing_list_site course_site_1
       @canvas_page.create_ripley_mailing_list_site course_site_2
       @canvas_page.create_ripley_mailing_list_site course_site_3
@@ -49,13 +47,13 @@ unless ENV['STANDALONE']
       elsif %w[Designer Observer Student].include? user.role
         it "cannot be managed by a course #{user.role}" do
           @canvas_page.masquerade_as(user, course_site_1)
-          @mailing_list_page.hit_embedded_tool_url course_site_1
-          @canvas_page.wait_for_error(@canvas_page.access_denied_msg_element, @mailing_list_page.unexpected_error_element)
+          @mailing_list_page.load_embedded_tool course_site_1
+          @mailing_list_page.unauthorized_msg_element.when_present Utils.medium_wait
         end
       end
       it "cannot be managed by a course #{user.role} via the admin tool" do
-        @mailing_lists_page.hit_embedded_tool_url
-        @canvas_page.wait_for_error(@canvas_page.access_denied_msg_element, @mailing_list_page.unexpected_error_element)
+        @mailing_lists_page.load_embedded_tool
+        @mailing_lists_page.auth_failed_msg_element.when_present Utils.medium_wait
       end
     end
 
@@ -79,11 +77,9 @@ unless ENV['STANDALONE']
           @mailing_lists_page.register_list_button_element.when_visible timeout
         end
 
-        it 'shows the course site code, title, and ID' do
-          expect(@mailing_lists_page.site_name_link_element.text).to include(course_site_1.title)
-          expect(@mailing_lists_page.site_term).to eql(course_site_1.term.name)
-          expect(@mailing_lists_page.site_id).to eql("Site ID: #{course_site_1.site_id}")
-        end
+        it('shows the course site code') { expect(@mailing_lists_page.site_name_link_element.text).to include(course_site_1.title) }
+        it('shows the course site term') { expect(@mailing_lists_page.site_term).to eql(course_site_1.term.name) }
+        it('shows the course site ID') { expect(@mailing_lists_page.site_id).to eql("Site ID: #{course_site_1.site_id}") }
 
         it 'shows a link to the course site' do
           expect(@mailing_lists_page.external_link_valid?(@mailing_lists_page.site_name_link_element, course_site_1.title)).to be true
@@ -135,29 +131,28 @@ unless ENV['STANDALONE']
           end
         end
 
-        it 'shows the membership count' do
-          expect(@mailing_lists_page.list_membership_count).to eql('No members')
-        end
+        it('shows the membership count') { expect(@mailing_lists_page.list_membership_count).to eql('No members') }
+        it('shows the most recent membership update') { expect(@mailing_lists_page.list_update_time).to eql('Never.') }
+        it('shows the course site code') { expect(@mailing_lists_page.list_site_link_element.text).to eql(course_site_1.title) }
+        it('shows the course site title and term') { expect(@mailing_lists_page.list_site_desc).to eql("#{course_site_1.abbreviation}, #{course_site_1.term.name}") }
+        it('shows the course site ID') { expect(@mailing_lists_page.list_site_id).to eql(course_site_1.site_id) }
+        it('shows a link to the course site') { expect(@mailing_lists_page.external_link_valid?(@mailing_lists_page.list_site_link_element, course_site_1.title)).to be true }
 
-        it 'shows the most recent membership update' do
-          expect(@mailing_lists_page.list_update_time).to eql('Never.')
-        end
-
-        it 'shows a link to the course site' do
-          expect(@mailing_lists_page.external_link_valid?(@mailing_lists_page.list_site_link_element, course_site_1.title)).to be true
-        end
-
-        it 'shows the course site code, title, and ID' do
+        it 'creates mailing list memberships for users who are confirmed members of the site' do
           @canvas_page.switch_to_canvas_iframe
-          expect(@mailing_lists_page.list_site_link_element.text).to eql(course_site_1.title)
-          expect(@mailing_lists_page.list_site_desc).to eql("#{course_site_1.abbreviation}, #{course_site_1.term.name}")
-          expect(@mailing_lists_page.site_id).to eql("Site ID: #{course_site_1.site_id}")
+          @mailing_lists_page.click_update_memberships
+          @mailing_lists_page.wait_until(timeout, "Expected #{course_site_1.manual_members.length}, got #{@mailing_lists_page.list_membership_count}") do
+            @mailing_lists_page.list_membership_count == "#{course_site_1.manual_members.length} members"
+          end
+          expect(@mailing_lists_page.list_update_time).to include(Time.now.strftime '%b %-d, %Y')
         end
 
-        it 'creates mailing list memberships for users who are members of the site' do
-          @mailing_lists_page.click_update_memberships
-          @mailing_lists_page.wait_until(timeout) { @mailing_lists_page.list_membership_count.include? "#{users.length}" }
-          expect(@mailing_lists_page.list_update_time).to include(Time.now.strftime '%b %-d, %Y')
+        it 'shows a list of members who have been added to the mailing list' do
+          @mailing_lists_page.expand_added_users
+          course_site_1.manual_members.each do |user|
+            logger.info "Checking if #{user.username} has been added"
+            expect(@mailing_lists_page.user_added?(user)).to be true
+          end
         end
 
         it 'deletes mailing list memberships for users who have been removed from the site' do
@@ -165,8 +160,15 @@ unless ENV['STANDALONE']
           @mailing_lists_page.load_embedded_tool
           @mailing_lists_page.search_for_list course_site_1.site_id
           @mailing_lists_page.click_update_memberships
-          @mailing_lists_page.wait_until(timeout) { @mailing_lists_page.list_membership_count == "#{users.length - 1} members" }
-          @mailing_lists_page.member_removed_msg_element.when_visible Utils.short_wait
+          @mailing_lists_page.wait_until(timeout, "Expected #{course_site_1.manual_members.length}, got #{@mailing_lists_page.list_membership_count}") do
+            @mailing_lists_page.list_membership_count == "#{course_site_1.manual_members.length - 1} members"
+          end
+        end
+
+        it 'shows a list of members who have been removed from the mailing list' do
+          @mailing_lists_page.expand_removed_users
+          logger.info "Checking if #{test.students[0].username} has been removed"
+          expect(@mailing_lists_page.user_removed?(test.students[0])).to be true
         end
 
         it 'creates mailing list memberships for users who have been restored to the site' do
@@ -176,8 +178,15 @@ unless ENV['STANDALONE']
           @mailing_lists_page.load_embedded_tool
           @mailing_lists_page.search_for_list course_site_1.site_id
           @mailing_lists_page.click_update_memberships
-          @mailing_lists_page.wait_until(timeout) { @mailing_lists_page.list_membership_count == "#{users.length} members" }
-          @mailing_lists_page.member_added_msg_element.when_visible Utils.short_wait
+          @mailing_lists_page.wait_until(timeout, "Expected #{course_site_1.manual_members.length}, got #{@mailing_lists_page.list_membership_count}") do
+            @mailing_lists_page.list_membership_count == "#{course_site_1.manual_members.length} members"
+          end
+        end
+
+        it 'shows a list of members who have been restored to the mailing list' do
+          @mailing_lists_page.expand_restored_users
+          logger.info "Checking if #{test.students[0].username} has been restored"
+          expect(@mailing_lists_page.user_restored?(test.students[0])).to be true
         end
 
         it 'does not create mailing list memberships for site members with the same email addresses as existing mailing list members' do
@@ -186,7 +195,9 @@ unless ENV['STANDALONE']
           @mailing_lists_page.load_embedded_tool
           @mailing_lists_page.search_for_list course_site_1.site_id
           @mailing_lists_page.click_update_memberships
-          @mailing_lists_page.wait_until(timeout) { @mailing_lists_page.list_membership_count == "#{users.length - 1} members" }
+          @mailing_lists_page.wait_until(timeout, "Expected #{course_site_1.manual_members.length}, got #{@mailing_lists_page.list_membership_count}") do
+            @mailing_lists_page.list_membership_count == "#{course_site_1.manual_members.length - 1} members"
+          end
         end
       end
     end
@@ -227,6 +238,8 @@ unless ENV['STANDALONE']
           expect(@mailing_list_page.list_address).to include("#{@mailing_lists_page.default_list_name course_site_3}@bcourses-mail.berkeley.edu")
         end
       end
+
+      # TODO - add tests for Ripley mailing list membership job
     end
   end
 end

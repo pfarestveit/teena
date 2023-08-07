@@ -103,7 +103,7 @@ unless ENV['STANDALONE']
         it('shows a link to the course site') { expect(@mailing_lists_page.external_link_valid?(@mailing_lists_page.view_site_link_element, course_site_1.title)).to be true }
 
         it('shows a default mailing list name') do
-          @mailing_lists_page.switch_to_canvas_iframe unless "#{@driver.browser}" == 'firefox'
+          @mailing_lists_page.switch_to_canvas_iframe
           @mailing_lists_page.wait_until(Utils.short_wait) { @mailing_lists_page.list_name_input_element.value == @mailing_lists_page.default_list_name(course_site_1) }
         end
 
@@ -147,7 +147,7 @@ unless ENV['STANDALONE']
         it('shows a link to the course site') { expect(@mailing_lists_page.external_link_valid?(@mailing_lists_page.list_site_link_element, course_site_1.title)).to be true }
 
         it 'shows the course site code, title, and ID' do
-          @canvas_page.switch_to_canvas_iframe unless "#{@driver.browser}" == 'firefox'
+          @canvas_page.switch_to_canvas_iframe
           expect(@mailing_lists_page.site_name).to eql("#{@mailing_lists_page.default_list_name course_site_1}@bcourses-mail.berkeley.edu")
           expect(@mailing_lists_page.site_code).to eql(("#{course_site_1.abbreviation}, #{course_site_1.term}").strip)
           expect(@mailing_lists_page.site_id).to eql("Site ID: #{course_site_1.site_id}")

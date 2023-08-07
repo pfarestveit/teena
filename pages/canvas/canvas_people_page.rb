@@ -242,9 +242,9 @@ module CanvasPeoplePage
         logger.debug "Test user '#{user.uid}' already has an updated default email"
       else
         logger.debug "Resetting test user #{user.uid}'s email to #{user.email}"
-        wait_for_load_and_click_js edit_user_link_element
-        wait_for_element_and_type_js(user_email_element, user.email)
-        wait_for_update_and_click_js update_details_button_element
+        wait_for_load_and_click edit_user_link_element
+        wait_for_element_and_type(user_email_element, user.email)
+        wait_for_update_and_click update_details_button_element
         default_email_element.when_present Utils.short_wait
       end
       user_login_element.when_visible Utils.short_wait
