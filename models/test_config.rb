@@ -89,7 +89,7 @@ class TestConfig
     @wait_list_student = set_user_of_role(test, 'Waitlist Student', user_klass)
   end
 
-  def set_test_users(test, user_klass = nil)
+  def set_fake_test_users(test, user_klass = nil)
     roster = []
     roster << set_designer(test, user_klass)
     roster << set_lead_ta(test, user_klass)

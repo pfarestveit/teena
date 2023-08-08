@@ -4,11 +4,29 @@ begin
 
   include Logging
 
+  inactivate = ENV['INACTIVATE']
   csv_1_path = File.join(Utils.output_dir, "test-output/#{ENV['CSV_1']}.csv")
   csv_2_path = File.join(Utils.output_dir, "test-output/#{ENV['CSV_2']}.csv")
 
-  csv_1 = CSV.read(csv_1_path).each.to_a
-  csv_2 = CSV.read(csv_2_path).each.to_a
+  if inactivate
+    csv_1 = CSV.read(csv_1_path, headers: true, header_converters: :symbol)
+    csv_1.map { |r| r.to_hash }
+    csv_2 = CSV.read(csv_2_path, headers: true, header_converters: :symbol)
+    csv_2.map { |r| r.to_hash }
+
+    [csv_1, csv_2].each do |c|
+      c.each do |r|
+        r[:login_id] = "inactive-#{r[:login_id]}" if r[:status] == 'suspended'
+        r[:status] = 'suspended' if r[:login_id][0..8] == 'inactive-'
+      end
+    end
+
+    csv_1 = csv_1.to_a
+    csv_2 = csv_2.to_a
+  else
+    csv_1 = CSV.read(csv_1_path).each.to_a
+    csv_2 = CSV.read(csv_2_path).each.to_a
+  end
 
   [csv_1, csv_2].each do |c|
     c.each { |r| r.map! { |i| i.to_s }}
@@ -28,5 +46,4 @@ begin
     csv << csv_2.first
     unique_to_2.each { |row| csv << row }
   end
-
 end

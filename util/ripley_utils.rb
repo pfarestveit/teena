@@ -273,8 +273,8 @@ class RipleyUtils < Utils
     ids = Utils.query_pg_db(NessieUtils.nessie_pg_db_credentials, sql).map { |r| r['cs_course_id'] }
     courses = ids.map { |id| get_course(term, id) }
     courses.each do |course|
-      prims = course.sections.select(&:primary).map(&:instructors).map(&:uid).compact.uniq
-      unless prims.include? instructor.uid
+      prim_instructors = course.sections.select(&:primary).map { |s| s.instructors }.flatten.compact.uniq
+      unless prim_instructors.map(&:uid).include? instructor.uid
         course.sections.keep_if { |s| s.instructors.map(&:uid).include? instructor.uid }
       end
     end
@@ -284,14 +284,14 @@ class RipleyUtils < Utils
   def self.get_course_enrollment(course)
     sql = "SELECT enrollment.sis_section_id,
                   enrollment.ldap_uid AS uid,
-                  sis_data.basic_attributes.sid,
-                  sis_data.basic_attributes.first_name,
-                  sis_data.basic_attributes.last_name,
+                  sis_data.edo_basic_attributes.sid,
+                  sis_data.edo_basic_attributes.first_name,
+                  sis_data.edo_basic_attributes.last_name,
                   enrollment.sis_enrollment_status AS status,
-                  sis_data.basic_attributes.email_address
+                  sis_data.edo_basic_attributes.email_address
              FROM sis_data.edo_enrollments enrollment
-             JOIN sis_data.basic_attributes
-               ON sis_data.basic_attributes.ldap_uid = enrollment.ldap_uid
+             JOIN sis_data.edo_basic_attributes
+               ON sis_data.edo_basic_attributes.ldap_uid = enrollment.ldap_uid
             WHERE enrollment.sis_term_id = '#{course.term.sis_id}'
               AND enrollment.sis_section_id IN (#{Utils.in_op(course.sections.map &:id)})
               AND enrollment.sis_enrollment_status IN ('E', 'W')
@@ -327,7 +327,7 @@ class RipleyUtils < Utils
                   first_name,
                   last_name,
                   email_address AS email
-             FROM sis_data.basic_attributes
+             FROM sis_data.edo_basic_attributes
             WHERE affiliations = '#{affiliations}'
               AND email_address IS NOT NULL
          ORDER BY RANDOM()

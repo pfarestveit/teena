@@ -8,15 +8,16 @@ class RipleyOfficialSectionsPage
   include RipleyPages
 
   link(:official_sections_link, text: 'Official Sections')
-  button(:edit_sections_button, id: 'TBD "Edit Sections"')
+  button(:edit_sections_button, id: 'official-sections-edit-btn')
 
-  elements(:current_sections_table_row, :row, id: 'TBD')
+  elements(:current_sections_table_row, :row, xpath: '//h3[text()=" Sections in this Course Site "]/../following-sibling::div//tbody/tr')
   div(:section_name_msg, id: 'TBD "The section name in bCourses no longer matches the Student Information System."')
-  button(:save_changes_button, id: 'TBD "Save Changes"')
+  button(:cancel_button, id: 'official-sections-cancel-btn')
+  button(:save_changes_button, id: 'official-sections-save-btn')
 
-  h2(:updating_sections_msg, id: 'TBD "Updating Official Sections in Course Site"')
-  div(:sections_updated_msg, id: 'TBD "The sections in this course site have been updated successfully."')
-  button(:update_msg_close_button, id: 'TBD')
+  h2(:updating_sections_msg, xpath: '//*[contains(., "Updating Official Sections in Course Site")]')
+  div(:sections_updated_msg, xpath: '//div[text()="The sections in this course site have been updated successfully."]')
+  button(:update_msg_close_button, xpath: '//button[@aria-label="Hide notice"]')
 
   def embedded_tool_path(course)
     "/courses/#{course.site_id}/external_tools/#{RipleyUtils.official_sections_tool_id}"
@@ -36,13 +37,13 @@ class RipleyOfficialSectionsPage
 
   def click_edit_sections
     logger.debug 'Clicking edit sections button'
-    wait_for_load_and_click_js edit_sections_button_element
+    wait_for_load_and_click edit_sections_button_element
     save_changes_button_element.when_visible Utils.short_wait
   end
 
   def click_save_changes
     logger.debug 'Clicking save changes button'
-    wait_for_update_and_click_js save_changes_button_element
+    wait_for_update_and_click save_changes_button_element
   end
 
   def save_changes_and_wait_for_success
@@ -53,17 +54,25 @@ class RipleyOfficialSectionsPage
 
   def close_section_update_success
     logger.debug 'Closing the section update success message'
-    wait_for_update_and_click_js update_msg_close_button_element
+    wait_for_update_and_click update_msg_close_button_element
   end
 
-  # CURRENT SECTIONS
+  # EDIT MODE - CURRENT SECTIONS
 
   def current_sections_table_xpath
-    'TBD "Sections in this Course Site"'
+    "//h3[text()=\" Sections in this Course Site \"]/../../following-sibling::div//table"
+  end
+
+  def current_section_row(section)
+    row_element(id: "template-sections-table-row-currentstaging-#{section.id}")
+  end
+
+  def current_section_row_xpath(section)
+    "//tr[@id='template-sections-table-row-currentstaging-#{section.id}']"
   end
 
   def current_section_id_cell_xpath(section)
-    "#{current_sections_table_xpath} TBD #{section.id}"
+    "#{current_section_row_xpath section}//td[contains(@class, \"section-ccn\")]"
   end
 
   def current_sections_table
@@ -81,30 +90,30 @@ class RipleyOfficialSectionsPage
   end
 
   def current_section_course(section)
-    cell_element(xpath: "#{current_section_id_cell_xpath(section)} TBD").text
+    cell_element(xpath: "#{current_section_row_xpath(section)}//td[contains(@class,'course-code')]").text
   end
 
   def current_section_label(section)
-    cell_element(xpath: "#{current_section_id_cell_xpath(section)} TBD").text
+    cell_element(xpath: "#{current_section_row_xpath(section)}//td[contains(@class,'section-label')]").text
   end
 
   def section_update_button(section)
-    button_element(xpath: "#{current_section_id_cell_xpath(section)} TBD 'Update'")
+    button_element(id: "section-#{section.id}-update-btn")
   end
 
   def click_update_section(section)
     logger.debug "Clicking update button for section #{section.id}"
-    wait_for_update_and_click_js section_update_button(section)
+    wait_for_update_and_click section_update_button(section)
     sleep 1
   end
 
   def section_delete_button(section)
-    button_element(xpath: "#{current_section_id_cell_xpath(section)} TBD 'Unlink'")
+    button_element(id: "section-#{section.id}-unlink-btn")
   end
 
   def click_delete_section(section)
     logger.debug "Clicking delete button for section #{section.id}"
-    wait_for_update_and_click_js section_delete_button(section)
+    wait_for_update_and_click section_delete_button(section)
     sleep 1
   end
 
@@ -114,7 +123,7 @@ class RipleyOfficialSectionsPage
   end
 
   def section_undo_add_button(section)
-    button_element(xpath: "#{current_section_id_cell_xpath(section)} TBD 'Undo Link'")
+    button_element(id: "section-#{section.id}-undo-link-btn")
   end
 
   def click_undo_add_section(section)
@@ -123,18 +132,18 @@ class RipleyOfficialSectionsPage
     sleep 1
   end
 
-  # AVAILABLE SECTIONS
+  # EDIT MODE - AVAILABLE SECTIONS
 
   def available_sections_table_xpath(course_code)
-    "TBD #{course_code}')]"
+    "//button[contains(@class,'sections-form-course-button')][contains(.,'#{course_code}')]//following-sibling::div//table"
   end
 
   def available_section_cell_xpath(course_code, section_id)
-    "#{available_sections_table_xpath(course_code)} TBD #{section_id}"
+    "#{available_sections_table_xpath(course_code)}//td[contains(.,'#{section_id}')]"
   end
 
   def available_sections_count(course)
-    div_elements(xpath: "#{available_sections_table_xpath(course.code)} TBD").length
+    div_elements(xpath: "#{available_sections_table_xpath(course.code)}/tbody").length
   end
 
   def available_section_data(course_code, section_id)
@@ -148,31 +157,31 @@ class RipleyOfficialSectionsPage
   end
 
   def available_section_id_element(course_code, section_id)
-    cell_element(xpath: "#{available_sections_table_xpath(course_code)} TBD #{section_id}")
+    cell_element(xpath: "#{available_sections_table_xpath(course_code)}//td[contains(.,'#{section_id}')]")
   end
 
   def available_section_course(course_code, section_id)
-    cell_element(xpath: "#{available_section_cell_xpath(course_code, section_id)} TBD").text
+    cell_element(xpath: "#{available_section_cell_xpath(course_code, section_id)}/preceding-sibling::td[contains(@class,'course-code')]").text
   end
 
   def available_section_label(course_code, section_id)
-    cell_element(xpath: "#{available_section_cell_xpath(course_code, section_id)} TBD").text
+    cell_element(xpath: "#{available_section_cell_xpath(course_code, section_id)}/preceding-sibling::td[contains(@class,'section-label')]").text
   end
 
   def available_section_schedules(course_code, section_id)
-    cell_element(xpath: "#{available_section_cell_xpath(course_code, section_id)} TBD").text
+    cell_element(xpath: "#{available_section_cell_xpath(course_code, section_id)}/following-sibling::td[contains(@class,'section-timestamps')]").text
   end
 
   def available_section_locations(course_code, section_id)
-    cell_element(xpath: "#{available_section_cell_xpath(course_code, section_id)} TBD").text
+    cell_element(xpath: "#{available_section_cell_xpath(course_code, section_id)}/following-sibling::td[contains(@class,'section-locations')]").text
   end
 
   def available_section_instructors(course_code, section_id)
-    cell_element(xpath: "#{available_section_cell_xpath(course_code, section_id)} TBD").text
+    cell_element(xpath: "#{available_section_cell_xpath(course_code, section_id)}/following-sibling::td[contains(@class,'section-instructors')]").text
   end
 
-  def section_add_button(course, section)
-    button_element(xpath: "#{available_section_cell_xpath(course.code, section.id)} TBD")
+  def section_add_button(section)
+    button_element(id: "section-#{section.id}-link-btn")
   end
 
   def click_add_section(course, section)
@@ -187,11 +196,11 @@ class RipleyOfficialSectionsPage
   end
 
   def section_added_element(course, section)
-    div_element(xpath: "#{available_section_cell_xpath(course.code, section.id)} TBD")
+    div_element(xpath: "#{available_section_cell_xpath(course.code, section.id)}/following-sibling::td[contains(@class,'section-action-option')]//div[contains(.,'Linked')]")
   end
 
   def section_undo_delete_button(course, section)
-    button_element(xpath: "#{available_section_cell_xpath(course.code, section.id)} TBD")
+    button_element(id: "section-#{section.id}-undo-unlink-btn")
   end
 
   def click_undo_delete_section(course, section)

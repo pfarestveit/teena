@@ -92,7 +92,7 @@ describe 'bCourses course site creation' do
           mode_link_works = @create_course_site_page.external_link_valid?(@create_course_site_page.instr_mode_link_element, mode_title)
           it('shows an instruction mode link') { expect(mode_link_works).to be true }
 
-          @canvas_page.switch_to_canvas_iframe unless standalone || "#{@driver.browser}" == 'firefox'
+          @canvas_page.switch_to_canvas_iframe unless standalone
         end
 
         # Unless admin creates site by CCN list, all sections in the test course and all other semester courses should be shown

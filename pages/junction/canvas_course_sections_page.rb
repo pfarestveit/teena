@@ -45,8 +45,7 @@ module Page
         if available_sections_table(course_code).exists? && available_sections_table(course_code).visible?
           logger.debug "The sections table is already expanded for #{course_code}"
         else
-          wait_for_update_and_click_js available_sections_form_button(course_code)
-          available_sections_table(course_code).when_visible Utils.short_wait
+          available_sections_form_button(course_code).click
           sleep Utils.click_wait
         end
       end
@@ -55,7 +54,7 @@ module Page
       # @param course_code [String]
       def collapse_available_sections(course_code)
         if available_sections_table(course_code).exists? && available_sections_table(course_code).visible?
-          wait_for_update_and_click_js available_sections_form_button(course_code)
+          available_sections_form_button(course_code).click
           available_sections_table(course_code).when_not_visible Utils.short_wait
         else
           logger.debug "The sections table is already collapsed for #{course_code}"

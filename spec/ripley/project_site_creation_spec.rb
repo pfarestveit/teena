@@ -7,9 +7,7 @@ describe 'bCourses project site', order: :defined do
   include Logging
 
   test = RipleyTestConfig.new
-  test.projects
-  project = test.get_project_site
-  test.set_manual_project_members project
+  project = test.projects
 
   before(:all) do
     @driver = Utils.launch_browser

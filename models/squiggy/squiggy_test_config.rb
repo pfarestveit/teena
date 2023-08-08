@@ -22,7 +22,7 @@ class SquiggyTestConfig < TestConfig
     end
 
     set_test_user_data File.join(Utils.config_dir, 'test-data-squiggy.json')
-    @course_site.manual_members = set_test_users(test_name, SquiggyUser)
+    @course_site.manual_members = set_fake_test_users(test_name, SquiggyUser)
     @course_site.manual_members.each_with_index do |member, i|
       member.assets = member.assets&.map do |a|
         asset = SquiggyAsset.new a

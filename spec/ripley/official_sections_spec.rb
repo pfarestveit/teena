@@ -24,16 +24,22 @@ describe 'bCourses Official Sections tool', order: :defined do
     @official_sections_page = RipleyOfficialSectionsPage.new @driver
 
     if standalone
-      @splash_page.dev_auth teacher.uid
-      @create_course_site_page.provision_course_site(site, { standalone: true })
-      @create_course_site_page.wait_for_standalone_site_id(site, @splash_page)
+      @splash_page.load_page
+      @splash_page.dev_auth(test.admin.uid, site, @cal_net)
     else
       @canvas.log_in(@cal_net, test.admin.username, Utils.super_admin_password)
+      RipleyTool::TOOLS.each { |t| @canvas.add_ripley_tool(site, t) }
       @canvas.set_canvas_ids([teacher] + site.manual_members)
       @canvas.masquerade_as teacher
-      @create_course_site_page.provision_course_site site
-      @canvas.publish_course_site site
     end
+
+    if site.site_id && !standalone
+      @canvas.load_course_site site
+    else
+      @create_course_site_page.provision_course_site(site, {standalone: standalone})
+      @create_course_site_page.wait_for_standalone_site_id(site, @splash_page) if standalone
+    end
+    @canvas.publish_course_site site unless standalone
   end
 
   after(:all) { Utils.quit_browser @driver }
@@ -50,7 +56,7 @@ describe 'bCourses Official Sections tool', order: :defined do
   context 'when viewing sections' do
 
     before(:all) do
-      standalone ? @official_sections_page.load_standalone_tool site : @official_sections_page.load_embedded_tool site
+      standalone ? @official_sections_page.load_standalone_tool(site) : @official_sections_page.load_embedded_tool(site)
     end
 
     it 'shows all the sections currently on the course site' do

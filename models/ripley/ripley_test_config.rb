@@ -29,12 +29,18 @@ class RipleyTestConfig < TestConfig
     get_mailing_list_sites
   end
 
+  def projects
+    site = CourseSite.new title: "Project #{@id}"
+    set_real_test_project_users site
+    site
+  end
+
   def refresh_canvas_recent
     get_refresh_recent_sites
   end
 
   def user_provisioning
-    set_manual_members
+    set_real_test_course_users
   end
 
   ### GLOBAL CONFIG ###
@@ -79,7 +85,7 @@ class RipleyTestConfig < TestConfig
                   end
     course_site.course.sections.select(&:primary).each { |s| s.include_in_site = true }
     course_site.create_site_workflow = 'self'
-    set_manual_members course_site
+    set_real_test_course_users course_site
     course_site
   end
 
@@ -98,7 +104,7 @@ class RipleyTestConfig < TestConfig
 
   def get_e_grades_test_sites
     @course_sites = RipleyUtils.e_grades_site_ids.map { |id| CourseSite.new site_id: id }
-    @course_sites.each { |s| set_manual_members s }
+    @course_sites.each { |s| set_real_test_course_users s }
   end
 
   def get_e_grades_export_site
@@ -123,14 +129,9 @@ class RipleyTestConfig < TestConfig
                        abbreviation: "Instructor #{@id}"
       )
     ]
-    @course_sites.each { |s| set_manual_members s }
-    @course_sites[1].manual_members = [@manual_teacher]
-  end
-
-  def get_project_site
-    site = CourseSite.new title: "Project #{@id}"
-    set_manual_members site
-    site
+    set_test_user_data ripley_test_data_file
+    @course_sites.each { |s| s.manual_members = set_fake_test_users 'mailing_lists' }
+    @course_sites[1].manual_members = [@course_sites[1].manual_members.find { |m| m.role == 'Teacher' }]
   end
 
   def get_refresh_recent_sites
@@ -147,7 +148,7 @@ class RipleyTestConfig < TestConfig
       site = CourseSite.new site_id: d['site_id'],
                             course: course,
                             sections: course.sections
-      set_manual_members site
+      set_real_test_course_users site
       logger.info "Course site: #{site.inspect}"
       site
     end
@@ -156,7 +157,7 @@ class RipleyTestConfig < TestConfig
   def get_welcome_email_site
     site = CourseSite.new title: "#{@id} Welcome",
                           code: "#{@id} Welcome Email"
-    set_manual_members site
+    set_real_test_course_users site
     site
   end
 
@@ -219,12 +220,12 @@ class RipleyTestConfig < TestConfig
     end.shuffle[0..1]
   end
 
-  def set_manual_members(site = nil)
+  def set_real_test_course_users(site = nil)
     teachers = RipleyUtils.get_users_of_affiliations('EMPLOYEE-TYPE-ACADEMIC', 1)
     @manual_teacher = teachers[0]
     @manual_teacher.role = 'Teacher'
 
-    tas = RipleyUtils.get_users_of_affiliations('EMPLOYEE-TYPE-ACADEMIC, STUDENT-TYPE-REGISTERED', 2)
+    tas = RipleyUtils.get_users_of_affiliations('EMPLOYEE-TYPE-ACADEMIC,STUDENT-TYPE-REGISTERED', 2)
     @lead_ta = tas[0]
     @lead_ta.role = 'Lead TA'
     @ta = tas[1]
@@ -247,7 +248,7 @@ class RipleyTestConfig < TestConfig
     site.manual_members = (teachers + tas + staff + students) if site
   end
 
-  def set_manual_project_members(site = nil)
+  def set_real_test_project_users(site = nil)
     @manual_teacher = RipleyUtils.get_users_of_affiliations('EMPLOYEE-TYPE-ACADEMIC', 1)[0]
     @manual_teacher.role = 'Teacher'
     @staff = RipleyUtils.get_users_of_affiliations('EMPLOYEE-TYPE-STAFF', 1)[0]

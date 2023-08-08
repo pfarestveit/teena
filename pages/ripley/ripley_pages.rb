@@ -53,10 +53,10 @@ module RipleyPages
 
   # Daily maintenance notice
 
-  button(:maintenance_notice_button, id: 'TBD')
-  span(:maintenance_notice, id: 'TBD')
-  paragraph(:maintenance_detail, id: 'TBD')
-  link(:bcourses_service_link, id: 'TBD')
+  button(:maintenance_notice_button, id: 'maintenance-notice-button')
+  span(:maintenance_notice, xpath: '//span[text()=" From 8 - 9 AM, you may experience delays of up to 10 minutes before your site is updated. "]')
+  paragraph(:maintenance_detail, id: 'maintenance-details')
+  link(:bcourses_service_link, id: 'link-to-httpsrtlberkeleyeduservicesprogramsbcourses')
 
   def expand_maintenance_notice
     wait_for_load_and_click maintenance_button_element

@@ -69,10 +69,10 @@ module Page
     # @param cal_net [Page::CalNetPage]
     def log_out(cal_net)
       @driver.switch_to.default_content
-      wait_for_load_and_click_js profile_link_element
+      wait_for_load_and_click profile_link_element
       sleep 1
-      wait_for_update_and_click_js profile_form_element
-      wait_for_update_and_click_js logout_link_element if logout_link_element.exists?
+      wait_for_update_and_click profile_form_element unless logout_link_element.exists?
+      wait_for_update_and_click logout_link_element if logout_link_element.exists?
       cal_net.username_element.when_visible Utils.short_wait
     end
 

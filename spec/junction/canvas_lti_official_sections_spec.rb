@@ -130,7 +130,7 @@ describe 'bCourses Official Sections tool' do
 
         title = 'bCourses | Research, Teaching, and Learning'
         has_bcourses_service_link = @official_sections_page.external_link_valid?(@official_sections_page.bcourses_service_link_element, title)
-        @official_sections_page.switch_to_canvas_iframe unless standalone || @driver.browser.to_s == 'firefox'
+        @official_sections_page.switch_to_canvas_iframe unless standalone
 
         it("shows a collapsed maintenance notice on course site ID #{site[:course].site_id}") { expect(has_maintenance_notice).to be true }
         it("allows the user to reveal an expanded maintenance notice #{site[:course].site_id}") { expect(has_maintenance_detail).to be true }
