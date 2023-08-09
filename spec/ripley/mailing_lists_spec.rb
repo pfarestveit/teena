@@ -141,9 +141,9 @@ unless ENV['STANDALONE']
         it 'creates mailing list memberships for users who are confirmed members of the site' do
           @canvas_page.switch_to_canvas_iframe
           @mailing_lists_page.click_update_memberships
-          @mailing_lists_page.wait_until(timeout, "Expected #{course_site_1.manual_members.length}, got #{@mailing_lists_page.list_membership_count}") do
-            @mailing_lists_page.list_membership_count == "#{course_site_1.manual_members.length} members"
-          end
+          @mailing_lists_page.update_membership_again_button_element.when_present Utils.short_wait
+          sleep 1
+          expect(@mailing_lists_page.list_membership_count).to eql("#{course_site_1.manual_members.length} members")
           expect(@mailing_lists_page.list_update_time).to include(Time.now.strftime '%b %-d, %Y')
         end
 
@@ -160,9 +160,9 @@ unless ENV['STANDALONE']
           @mailing_lists_page.load_embedded_tool
           @mailing_lists_page.search_for_list course_site_1.site_id
           @mailing_lists_page.click_update_memberships
-          @mailing_lists_page.wait_until(timeout, "Expected #{course_site_1.manual_members.length}, got #{@mailing_lists_page.list_membership_count}") do
-            @mailing_lists_page.list_membership_count == "#{course_site_1.manual_members.length - 1} members"
-          end
+          @mailing_lists_page.update_membership_again_button_element.when_present Utils.short_wait
+          sleep 1
+          expect(@mailing_lists_page.list_membership_count).to eql("#{course_site_1.manual_members.length - 1} members")
         end
 
         it 'shows a list of members who have been removed from the mailing list' do
@@ -178,9 +178,9 @@ unless ENV['STANDALONE']
           @mailing_lists_page.load_embedded_tool
           @mailing_lists_page.search_for_list course_site_1.site_id
           @mailing_lists_page.click_update_memberships
-          @mailing_lists_page.wait_until(timeout, "Expected #{course_site_1.manual_members.length}, got #{@mailing_lists_page.list_membership_count}") do
-            @mailing_lists_page.list_membership_count == "#{course_site_1.manual_members.length} members"
-          end
+          @mailing_lists_page.update_membership_again_button_element.when_present Utils.short_wait
+          sleep 1
+          expect(@mailing_lists_page.list_membership_count).to eql("#{course_site_1.manual_members.length} members")
         end
 
         it 'shows a list of members who have been restored to the mailing list' do
@@ -195,9 +195,41 @@ unless ENV['STANDALONE']
           @mailing_lists_page.load_embedded_tool
           @mailing_lists_page.search_for_list course_site_1.site_id
           @mailing_lists_page.click_update_memberships
-          @mailing_lists_page.wait_until(timeout, "Expected #{course_site_1.manual_members.length}, got #{@mailing_lists_page.list_membership_count}") do
-            @mailing_lists_page.list_membership_count == "#{course_site_1.manual_members.length - 1} members"
-          end
+          @mailing_lists_page.update_membership_again_button_element.when_present Utils.short_wait
+          sleep 1
+          expect(@mailing_lists_page.list_membership_count).to eql("#{course_site_1.manual_members.length - 1} members")
+        end
+      end
+
+      context 'when updating a list via Ripley Jobs' do
+
+        before(:all) do
+          @splash_page.load_page
+          @splash_page.dev_auth @test.admin.uid
+        end
+
+        it 'deletes mailing list memberships for users who have been removed from the site' do
+          @canvas_page.remove_users_from_course(course_site_1, [test.students[0]])
+          @splash_page.load_page
+          @splash_page.click_jobs_link
+          @jobs_page.run_job RipleyJob::REFRESH_MAILING_LIST
+          @mailing_lists_page.load_embedded_tool
+          @mailing_lists_page.search_for_list course_site_1.site_id
+          @mailing_lists_page.list_membership_count_element.when_present Utils.short_wait
+          expect(@mailing_lists_page.list_membership_count).to eql("#{course_site_1.manual_members.length - 1} members")
+        end
+
+        it 'creates mailing list memberships for users who have been restored to the site' do
+          @canvas_page.add_users(course_site_1, [test.students[0]])
+          @canvas_page.masquerade_as(test.students[0], course_site_1)
+          @canvas_page.stop_masquerading
+          @splash_page.load_page
+          @splash_page.click_jobs_link
+          @jobs_page.run_job RipleyJob::REFRESH_MAILING_LIST
+          @mailing_lists_page.load_embedded_tool
+          @mailing_lists_page.search_for_list course_site_1.site_id
+          @mailing_lists_page.list_membership_count_element.when_present Utils.short_wait
+          expect(@mailing_lists_page.list_membership_count).to eql("#{course_site_1.manual_members.length} members")
         end
       end
     end

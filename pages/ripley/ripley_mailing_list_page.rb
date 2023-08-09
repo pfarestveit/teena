@@ -41,17 +41,17 @@ class RipleyMailingListPage
 
   # WELCOME EMAIL
 
-  link(:welcome_email_link, id: 'TBD')
-  text_field(:email_subject_input, id: 'TBD')
-  elements(:email_body_text_area, :text_area, id: 'TBD')
-  button(:email_save_button, id: 'TBD')
-  button(:email_activation_toggle, id: 'TBD')
-  div(:email_paused_msg, id: 'TBD "Sending welcome emails is paused until activation."')
-  div(:email_activated_msg, id: 'TBD "Welcome email activated."')
-  div(:email_subject, id: 'TBD')
-  div(:email_body, id: 'TBD')
-  button(:email_edit_button, id: 'TBD')
-  button(:email_edit_cancel_button, id: 'TBD')
+  link(:welcome_email_link, id: 'link-to-httpsberkeleyservicenowcomkb_viewdosysparm_articleKB0013900')
+  text_field(:email_subject_input, id: 'input-subject')
+  elements(:email_body_text_area, :text_area, xpath: '//div[@role="textbox"]')
+  button(:email_save_button, id: 'btn-save-welcome-email')
+  button(:email_activation_toggle, class: 'v-selection-control__input')
+  span(:email_paused_msg, xpath: '//span[text()="Sending welcome emails is paused."]')
+  div(:email_activated_msg, span: '//span[text()="Welcome email  activated."]')
+  div(:email_subject, id: 'page-site-mailing-list-subject')
+  div(:email_body, id: 'page-site-mailing-list-body')
+  button(:email_edit_button, id: 'btn-edit-welcome-email')
+  button(:email_edit_cancel_button, id: 'btn-cancel-welcome-email-edit')
   button(:email_log_download_button, id: 'TBD')
 
   def enter_email_subject(subject)
