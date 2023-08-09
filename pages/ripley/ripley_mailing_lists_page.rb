@@ -22,7 +22,7 @@ class RipleyMailingListsPage
   button(:register_list_button, id: 'btn-create-mailing-list')
   div(:list_name_error_msg, xpath: '//div[text()=" Only lowercase alphanumeric, underscore and hyphen characters allowed. "]')
   div(:list_creation_error_msg, id: 'TBD "A Mailing List cannot be created for the site"')
-  div(:list_name_taken_error_msg, xpath: '//div[contains(., "is used by another Canvas site and is not available")]')
+  div(:list_name_taken_error_msg, xpath: '//div[contains(., "is used by another bCourses site and is not available")]')
 
   # View list
   link(:list_site_link, id: 'mailing-list-course-site-name')
@@ -35,6 +35,7 @@ class RipleyMailingListsPage
   # Update membership
   button(:cancel_button, id: 'btn-cancel')
   button(:update_membership_button, id: 'btn-populate-mailing-list')
+  button(:update_membership_again_button, xpath: '//button[contains(., "Update Memberships Again")]')
   div(:no_membership_change_msg, xpath: '//*[text()="Everything is up-to-date. No changes necessary."]')
   button(:show_added_users_button, xpath: '//button[contains(., "Added")]')
   div(:member_added_msg, xpath: '//span[contains(text(), "Added")]')
@@ -116,7 +117,7 @@ class RipleyMailingListsPage
   end
 
   def user_updated?(user, status)
-    div_element(xpath: "//button[contains(., '#{status}')]/following-sibling::div//div[text()='#{user.username}@berkeley.edu']").exists?
+    div_element(xpath: "//button[contains(., '#{status}')]/following-sibling::div//div[contains(., '#{user.username}')]").exists?
   end
 
   def click_cancel_list
