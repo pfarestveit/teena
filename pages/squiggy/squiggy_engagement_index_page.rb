@@ -107,6 +107,7 @@ class SquiggyEngagementIndexPage
 
   def wait_for_scores
     users_table_element.when_visible Utils.medium_wait
+    sleep 2
   end
 
   def load_scores(test)
@@ -414,13 +415,13 @@ class SquiggyEngagementIndexPage
 
   def click_disable_activity(activity)
     logger.info "Disabling activity type '#{activity.type}'"
-    wait_for_update_and_click_js disable_activity_button(activity)
+    wait_for_update_and_click disable_activity_button(activity)
     enable_activity_button(activity).when_visible 2
   end
 
   def click_enable_activity(activity)
     logger.info "Enabling activity type '#{activity.type}'"
-    wait_for_update_and_click_js enable_activity_button(activity)
+    wait_for_update_and_click enable_activity_button(activity)
     disable_activity_button(activity).when_visible 2
   end
 

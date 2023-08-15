@@ -65,7 +65,7 @@ module Page
       def search_for_list(search_term)
         logger.info "Searching for mailing list for course site ID #{search_term}"
         wait_for_element_and_type(site_id_input_element, search_term)
-        wait_for_update_and_click_js get_list_button_element
+        wait_for_update_and_click get_list_button_element
       end
 
       # Returns the element containing the 'no results' message for an unsuccessful mailing list search

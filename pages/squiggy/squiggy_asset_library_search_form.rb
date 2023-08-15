@@ -157,44 +157,44 @@ module SquiggyAssetLibrarySearchForm
 
     if category
       click_category_search_select
-      wait_for_update_and_click_js parameter_option(category.name)
+      wait_for_update_and_click parameter_option(category.name)
     else
       js_click(parameter_clear_button('Category')) if parameter_clear_button('Category').visible?
     end
 
     if user
       click_uploader_select
-      wait_for_update_and_click_js parameter_option(user.full_name)
+      wait_for_update_and_click parameter_option(user.full_name)
     else
       js_click(parameter_clear_button('User')) if parameter_clear_button('User').visible?
     end
 
     if asset_type
       click_asset_type_select
-      wait_for_update_and_click_js parameter_option(asset_type)
+      wait_for_update_and_click parameter_option(asset_type)
     else
       js_click(parameter_clear_button('Asset type')) if parameter_clear_button('Asset type').visible?
     end
 
     if section
       click_section_select
-      wait_for_update_and_click_js parameter_option(section.sis_id)
+      wait_for_update_and_click parameter_option(section.sis_id)
     elsif section_select?
       js_click(parameter_clear_button('Section')) if parameter_clear_button('Section').visible?
     end
 
     if group
       click_group_select
-      wait_for_update_and_click_js parameter_option("#{group.group_set.title} - #{group.title}")
+      wait_for_update_and_click parameter_option("#{group.group_set.title} - #{group.title}")
     elsif group_select?
       js_click(parameter_clear_button('Group')) if parameter_clear_button('Group').visible?
     end
 
     click_sort_by_select
     if sort_by
-      wait_for_update_and_click_js parameter_option(sort_by)
+      wait_for_update_and_click parameter_option(sort_by)
     else
-      wait_for_update_and_click_js parameter_option('Most recent')
+      wait_for_update_and_click parameter_option('Most recent')
     end
     wait_for_update_and_click advanced_search_submit_element
   end

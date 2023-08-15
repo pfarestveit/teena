@@ -163,22 +163,10 @@ module Page
     click_element(element, Utils.short_wait, click_wait)
   end
 
-  # Awaits an element for a short time then clicks it using JavaScript. Intended for DOM updates rather than page loads.
-  # @param element [PageObject::Elements::Element]
-  def wait_for_update_and_click_js(element)
-    click_element_js(element, Utils.short_wait)
-  end
-
   # Awaits an element for a moderate time then clicks it using WebDriver. Intended for page loads rather than DOM updates.
   # @param element [PageObject::Elements::Element]
   def wait_for_load_and_click(element, click_wait=nil)
     click_element(element, Utils.medium_wait, click_wait)
-  end
-
-  # Awaits an element for a moderate time then clicks it using JavaScript. Intended for page loads rather than DOM updates.
-  # @param element [PageObject::Elements::Element]
-  def wait_for_load_and_click_js(element)
-    click_element_js(element, Utils.medium_wait)
   end
 
   # Awaits an element for a short time, clicks it using WebDriver, removes existing text, and sends new text. Intended for placing text
@@ -214,7 +202,7 @@ module Page
   # @param element [PageObject::Elements::Element]
   # @param text [String]
   def wait_for_element_and_type_js(element, text)
-    wait_for_update_and_click_js element
+    wait_for_update_and_click element
     clear_input_value element
     element.send_keys text
   end

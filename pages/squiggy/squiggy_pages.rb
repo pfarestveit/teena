@@ -105,7 +105,7 @@ module SquiggyPages
   end
 
   def click_close_modal_button
-    wait_for_update_and_click_js close_modal_button_element
+    wait_for_update_and_click close_modal_button_element
   end
 
   def get_whiteboard_id(link_element)

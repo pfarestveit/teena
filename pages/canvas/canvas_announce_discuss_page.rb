@@ -48,7 +48,7 @@ module Page
       discussion_title_element.send_keys announcement.title
       html_editor_link if html_editor_link_element.visible?
       wait_for_element_and_type_js(announcement_msg_element, announcement.body)
-      wait_for_update_and_click_js save_button_element
+      wait_for_update_and_click save_button_element
       announcement_title_heading_element.when_visible Utils.medium_wait
       announcement.url = current_url
       logger.info "Announcement URL is #{announcement.url}"
@@ -103,25 +103,25 @@ module Page
       hide_canvas_footer_and_popup
       if index.nil?
         logger.info "Creating new discussion entry with body '#{reply_body}'"
-        wait_for_load_and_click_js primary_reply_link_element
+        wait_for_load_and_click primary_reply_link_element
         primary_reply_iframe_element.when_present Utils.short_wait
         replies = discussion_reply_elements.length
         switch_to_frame primary_reply_iframe_element.attribute('id')
         wait_for_element_and_type_js(paragraph_element(xpath: '//p'), reply_body)
         switch_to_main_content
         reply_prompt_dismiss_button_element.click if reply_prompt_dismiss_button_element.exists?
-        wait_for_load_and_click_js primary_post_reply_button_element
+        wait_for_load_and_click primary_post_reply_button_element
       else
         logger.info "Replying to a discussion entry at index #{index} with body '#{reply_body}'"
         wait_until(Utils.short_wait) { secondary_reply_link_elements.any? }
         replies = discussion_reply_elements.length
-        wait_for_load_and_click_js secondary_reply_link_elements[index]
+        wait_for_load_and_click secondary_reply_link_elements[index]
         secondary_reply_iframe_element.when_present Utils.short_wait
         switch_to_frame secondary_reply_iframe_element.attribute('id')
         wait_for_element_and_type_js(paragraph_element(xpath: '//p'), reply_body)
         switch_to_main_content
         reply_prompt_dismiss_button_element.click if reply_prompt_dismiss_button_element.exists?
-        wait_for_load_and_click_js secondary_post_reply_button_elements[index]
+        wait_for_load_and_click secondary_post_reply_button_elements[index]
       end
       wait_until(Utils.medium_wait) { discussion_reply_elements.length == replies + 1 }
     end
@@ -160,7 +160,7 @@ module Page
       pages = (discussion_page_link_elements.map &:text).uniq if discussion_page_link_elements.any?
       if pages&.any?
         pages.each do |page|
-          wait_for_update_and_click_js(discussion_page_link_elements.find { |el| el.text == page })
+          wait_for_update_and_click(discussion_page_link_elements.find { |el| el.text == page })
           author_els = wait_for_discussion
           replies << get_page_discussion_entries(author_els)
         end

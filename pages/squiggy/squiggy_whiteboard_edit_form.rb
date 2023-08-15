@@ -29,7 +29,7 @@ module SquiggyWhiteboardEditForm
   end
 
   def click_collaborators_input
-    wait_for_update_and_click_js collaborators_input_element
+    wait_for_update_and_click collaborators_input_element
   end
 
   def enter_whiteboard_collaborator(user)
@@ -39,7 +39,7 @@ module SquiggyWhiteboardEditForm
   end
 
   def save_whiteboard
-    wait_for_update_and_click_js save_button_element
+    wait_for_update_and_click save_button_element
   end
 
   def click_remove_collaborator(user)

@@ -890,7 +890,7 @@ class BOACDegreeCheckPage < BOACDegreeTemplatePage
   text_area(:recommended_note_textarea, id: 'recommendation-note-textarea')
 
   def click_ignore_reqt
-    wait_for_update_and_click_js ignore_reqt_cbx_element
+    wait_for_update_and_click ignore_reqt_cbx_element
   end
 
   def enter_reqt_grade(grade)

@@ -149,7 +149,7 @@ module BOACPages
   # Clicks link to create new curated group
   def click_sidebar_create_student_group
     logger.debug 'Clicking sidebar button to create a curated group'
-    wait_for_load_and_click_js create_curated_group_link_element
+    wait_for_load_and_click create_curated_group_link_element
     sleep 2
   end
 
@@ -282,7 +282,7 @@ module BOACPages
 
   def click_draft_notes
     logger.info 'Clicking link to Draft Notes page'
-    wait_for_update_and_click_js draft_notes_link_element
+    wait_for_update_and_click draft_notes_link_element
   end
 
   def wait_for_draft_note(note, manual_update=false)

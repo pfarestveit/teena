@@ -115,7 +115,7 @@ module BOACListViewStudentPages
   # @param student [BOACUser]
   def click_student_link(student)
     logger.info "Clicking the link for UID #{student.uid}"
-    wait_for_load_and_click_js link_element(id: "link-to-student-#{student.uid}")
+    wait_for_load_and_click link_element(id: "link-to-student-#{student.uid}")
     student_name_heading_element.when_visible Utils.medium_wait
   end
 

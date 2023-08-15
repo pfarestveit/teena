@@ -23,7 +23,7 @@ module SquiggyAssetLibraryMetadataForm
 
   def click_add_files_button
     logger.info 'Confirming new file uploads'
-    wait_for_update_and_click_js save_file_button_element
+    wait_for_update_and_click save_file_button_element
   end
 
   def enter_and_upload_file(asset)

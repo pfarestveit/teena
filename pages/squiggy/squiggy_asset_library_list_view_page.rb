@@ -17,7 +17,7 @@ class SquiggyAssetLibraryListViewPage
   button(:upload_button, id: 'go-upload-asset-btn')
 
   def click_upload_file_button
-    wait_for_update_and_click_js upload_button_element
+    wait_for_update_and_click upload_button_element
   end
 
   def upload_file_asset(asset)
@@ -33,7 +33,7 @@ class SquiggyAssetLibraryListViewPage
   span(:bad_jam_error_msg, xpath: "//span[text()='In order to add a Google Jamboard to the Asset Library, sharing must be set to \"Anyone with the link.\"']")
 
   def click_add_url_button
-    wait_for_update_and_click_js add_link_button_element
+    wait_for_update_and_click add_link_button_element
   end
 
   def add_link_asset(asset)

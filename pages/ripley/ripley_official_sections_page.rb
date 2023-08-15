@@ -128,7 +128,7 @@ class RipleyOfficialSectionsPage
 
   def click_undo_add_section(section)
     logger.debug "Clicking undo add button for section #{section.id}"
-    wait_for_update_and_click_js section_undo_add_button(section)
+    wait_for_update_and_click section_undo_add_button(section)
     sleep 1
   end
 
@@ -186,7 +186,7 @@ class RipleyOfficialSectionsPage
 
   def click_add_section(course, section)
     logger.debug "Clicking add button for section #{section.id}"
-    wait_for_update_and_click_js section_add_button(course, section)
+    wait_for_update_and_click section_add_button(course, section)
     sleep 1
   end
 
@@ -205,7 +205,7 @@ class RipleyOfficialSectionsPage
 
   def click_undo_delete_section(course, section)
     logger.debug "Clicking undo delete button section #{section.id}"
-    wait_for_update_and_click_js section_undo_delete_button(course, section)
+    wait_for_update_and_click section_undo_delete_button(course, section)
     sleep 1
   end
 end

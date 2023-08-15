@@ -50,14 +50,14 @@ module Page
       # Clicks the Edit Sections button and waits for the available sections table to appear
       def click_edit_sections
         logger.debug 'Clicking edit sections button'
-        wait_for_load_and_click_js edit_sections_button_element
+        wait_for_load_and_click edit_sections_button_element
         save_changes_button_element.when_visible Utils.short_wait
       end
 
       # Clicks the Save Changes button on the editing interface
       def click_save_changes
         logger.debug 'Clicking save changes button'
-        wait_for_update_and_click_js save_changes_button_element
+        wait_for_update_and_click save_changes_button_element
       end
 
       def save_changes_and_wait_for_success
@@ -69,7 +69,7 @@ module Page
       # Closes the 'success' message after sections are updated
       def close_section_update_success
         logger.debug 'Closing the section update success message'
-        wait_for_update_and_click_js update_msg_close_button_element
+        wait_for_update_and_click update_msg_close_button_element
       end
 
       # CURRENT SECTIONS
@@ -127,7 +127,7 @@ module Page
       # @param section [Section]
       def click_update_section(section)
         logger.debug "Clicking update button for section #{section.id}"
-        wait_for_update_and_click_js section_update_button(section)
+        wait_for_update_and_click section_update_button(section)
         sleep 1
       end
 
@@ -142,7 +142,7 @@ module Page
       # @param section [Section]
       def click_delete_section(section)
         logger.debug "Clicking delete button for section #{section.id}"
-        wait_for_update_and_click_js section_delete_button(section)
+        wait_for_update_and_click section_delete_button(section)
         sleep 1
       end
 
@@ -164,7 +164,7 @@ module Page
       # @param section [Section]
       def click_undo_add_section(section)
         logger.debug "Clicking undo add button for section #{section.id}"
-        wait_for_update_and_click_js section_undo_add_button(section)
+        wait_for_update_and_click section_undo_add_button(section)
         sleep 1
       end
 
@@ -259,7 +259,7 @@ module Page
       # @param section [Section]
       def click_add_section(course, section)
         logger.debug "Clicking add button for section #{section.id}"
-        wait_for_update_and_click_js section_add_button(course, section)
+        wait_for_update_and_click section_add_button(course, section)
         sleep 1
       end
 
@@ -292,7 +292,7 @@ module Page
       # @param section [Section]
       def click_undo_delete_section(course, section)
         logger.debug "Clicking undo delete button section #{section.id}"
-        wait_for_update_and_click_js section_undo_delete_button(course, section)
+        wait_for_update_and_click section_undo_delete_button(course, section)
         sleep 1
       end
 
