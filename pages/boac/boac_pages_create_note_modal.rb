@@ -15,13 +15,13 @@ module BOACPagesCreateNoteModal
 
   def click_save_as_draft
     logger.info 'Clicking the save-as-draft button'
-    wait_for_update_and_click_js save_as_draft_button_element
+    wait_for_update_and_click save_as_draft_button_element
     save_as_draft_button_element.when_not_present Utils.medium_wait
   end
 
   def click_update_note_draft
     logger.info 'Clicking the update draft button'
-    wait_for_update_and_click_js update_draft_button_element
+    wait_for_update_and_click update_draft_button_element
   end
 
   #### CREATE NOTE, SHARED ELEMENTS ####
@@ -148,7 +148,7 @@ module BOACPagesCreateNoteModal
   def remove_attachments_from_new_note(note, attachments)
     attachments.each do |attach|
       logger.info "Removing attachment '#{attach.file_name}' from an unsaved note"
-      wait_for_update_and_click_js new_note_attachment_delete_button(attach)
+      wait_for_update_and_click new_note_attachment_delete_button(attach)
       new_note_attachment_delete_button(attach).when_not_visible Utils.short_wait
       note.attachments.delete attach
       note.updated_date = Time.now

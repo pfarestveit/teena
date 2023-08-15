@@ -42,7 +42,7 @@ module Page
         wait_for_element_and_type_js(basic_auth_password_input_element, JunctionUtils.junction_basic_auth_password)
         # The log in button element will disappear and reappear
         button = basic_auth_log_in_button_element
-        button.click
+        wait_for_update_and_click button
         button.when_not_present timeout=Utils.medium_wait
         sleep 1
       end

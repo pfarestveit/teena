@@ -82,7 +82,7 @@ module Page
 
       # Clicks the 'need help' button
       def click_need_help
-        button_element(xpath: '//button[contains(.,"Need help deciding which official sections to select")]').click
+        wait_for_update_and_click button_element(xpath: '//button[contains(.,"Need help deciding which official sections to select")]')
       end
 
       # Given a section ID, returns a hash of section data displayed on that row
@@ -176,13 +176,13 @@ module Page
       # Clicks the 'next' button once it is enabled
       def click_next
         wait_until(Utils.short_wait) { !next_button_element.attribute('disabled') }
-        wait_for_update_and_click_js next_button_element
+        wait_for_update_and_click next_button_element
         site_name_input_element.when_visible Utils.medium_wait
       end
 
       def click_cancel
         logger.debug 'Clicking cancel button'
-        wait_for_update_and_click_js cancel_button_element
+        wait_for_update_and_click cancel_button_element
       end
 
       # Enters a unique course site name and abbreviation and returns the abbreviation

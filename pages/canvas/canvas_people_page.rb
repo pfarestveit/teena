@@ -11,7 +11,7 @@ module CanvasPeoplePage
   select_list(:enrollment_roles, name: 'enrollment_role_id')
   elements(:section_label, :div, xpath: '//div[@class="section"]')
   link(:add_people_button, id: 'addUsers')
-  link(:find_person_to_add_link, xpath: '//a[contains(.,"Find a Person to Add")]')
+  link(:find_person_to_add_link, xpath: '//a[text()="    Find a Person to Add  "]')
   div(:add_user_by_email, xpath: '//input[@id="peoplesearch_radio_cc_path"]/..')
   element(:add_user_by_email_label, xpath: '//label[@for="peoplesearch_radio_cc_path"]')
   div(:add_user_by_uid, xpath: '//input[@id="peoplesearch_radio_unique_id"]/..')
@@ -143,10 +143,10 @@ module CanvasPeoplePage
           wait_for_update_and_click user_role_element
           wait_for_update_and_click(user_role_option_elements.find { |el| el.text == user_role })
           wait_for_element_and_select(user_section_element, section.sis_id) if section
-          wait_for_update_and_click_js next_button_element
+          wait_for_update_and_click next_button_element
           users_ready_to_add_msg_element.when_visible Utils.medium_wait
           hide_canvas_footer_and_popup
-          wait_for_update_and_click_js next_button_element
+          wait_for_update_and_click next_button_element
           users_with_role.each { |u| wait_for_added_user u }
         rescue => e
           logger.error "#{e.message}\n#{e.backtrace}"
@@ -164,16 +164,16 @@ module CanvasPeoplePage
         begin
           tries ||= 3
           logger.info "Adding UID #{user.uid} to section #{section.sis_id}"
-          wait_for_load_and_click_js add_people_button_element
+          wait_for_load_and_click add_people_button_element
           wait_for_update_and_click add_user_by_uid_element
           wait_for_element_and_type_js(user_list_element, user.uid)
           wait_for_update_and_click user_role_element
           wait_for_update_and_click(user_role_option_elements.find { |el| el.text == user.role })
           wait_for_update_and_click user_section_element
           wait_for_update_and_click(user_role_option_elements.find { |el| el.text == section.sis_id })
-          wait_for_update_and_click_js next_button_element
+          wait_for_update_and_click next_button_element
           users_ready_to_add_msg_element.when_visible Utils.medium_wait
-          wait_for_update_and_click_js next_button_element
+          wait_for_update_and_click next_button_element
           wait_for_users [user]
         rescue => e
           logger.error "#{e.message}"
@@ -190,7 +190,7 @@ module CanvasPeoplePage
     wait_for_load_and_click add_people_button_element
     wait_for_update_and_click add_user_by_uid_element
     wait_for_element_and_type_js(user_list_element, '123456')
-    wait_for_update_and_click_js next_button_element
+    wait_for_update_and_click next_button_element
   end
 
   def click_edit_user(user)
@@ -207,7 +207,7 @@ module CanvasPeoplePage
     users.each do |user|
       logger.info "Removing #{user.role} UID #{user.uid} from course site ID #{course.site_id}"
       click_edit_user user
-      alert { wait_for_update_and_click_js link_element(xpath: "//tr[@id='user_#{user.canvas_id}']//a[@data-event='removeFromCourse']") }
+      alert { wait_for_update_and_click link_element(xpath: "//tr[@id='user_#{user.canvas_id}']//a[@data-event='removeFromCourse']") }
       remove_user_success_element.when_present Utils.short_wait
     end
   end
@@ -300,8 +300,7 @@ module CanvasPeoplePage
   # Clicks the Canvas Add People button followed by the Find a Person to Add button and switches to the LTI tool
   def click_find_person_to_add(url=JunctionUtils.junction_base_url)
     logger.debug 'Clicking Find a Person to Add button'
-    add_people_button_element.when_present Utils.medium_wait
-    js_click add_people_button_element
+    wait_for_update_and_click add_people_button_element
     wait_for_load_and_click find_person_to_add_link_element
     switch_to_canvas_iframe url
   end

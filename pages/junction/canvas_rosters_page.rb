@@ -50,7 +50,7 @@ module Page
       # Clicks the sidebar Roster Photos link and shifts focus to the tool
       def click_roster_photos_link
         logger.info 'Clicking Roster Photos link'
-        wait_for_load_and_click_js roster_photos_link_element
+        wait_for_load_and_click roster_photos_link_element
         switch_to_canvas_iframe JunctionUtils.junction_base_url
       end
 

@@ -51,7 +51,7 @@ class SquiggyWhiteboardPage < SquiggyWhiteboardsPage
   end
 
   def click_settings_button
-    wait_for_update_and_click_js settings_button_element
+    wait_for_update_and_click settings_button_element
   end
 
   def edit_whiteboard_title(whiteboard)
@@ -141,7 +141,7 @@ class SquiggyWhiteboardPage < SquiggyWhiteboardsPage
       end
     end
     enter_squiggy_text(export_title_input_element, new_title) if new_title
-    wait_for_update_and_click_js export_save_button_element
+    wait_for_update_and_click export_save_button_element
     export_title_input_element.when_not_present Utils.medium_wait
     export_success_msg_element.when_visible Utils.short_wait
     asset = SquiggyAsset.new(
@@ -173,7 +173,7 @@ class SquiggyWhiteboardPage < SquiggyWhiteboardsPage
   end
 
   def click_download_as_image_button
-    wait_for_update_and_click_js download_as_image_button_element
+    wait_for_update_and_click download_as_image_button_element
   end
 
   def download_as_image
@@ -208,7 +208,7 @@ class SquiggyWhiteboardPage < SquiggyWhiteboardsPage
   button(:delete_asset_button, id: 'delete-btn')
 
   def click_add_existing_asset
-    wait_for_update_and_click_js use_existing_button_element
+    wait_for_update_and_click use_existing_button_element
   end
 
   def add_existing_assets(assets)
@@ -218,8 +218,8 @@ class SquiggyWhiteboardPage < SquiggyWhiteboardsPage
 
   def select_existing_assets(assets)
     sleep 1
-    assets.each { |asset| wait_for_load_and_click_js text_field_element(id: "asset-#{asset.id}") }
-    wait_for_update_and_click_js save_button_element
+    assets.each { |asset| wait_for_load_and_click text_field_element(id: "asset-#{asset.id}") }
+    wait_for_update_and_click save_button_element
     save_button_element.when_not_present Utils.short_wait
   end
 
@@ -230,9 +230,9 @@ class SquiggyWhiteboardPage < SquiggyWhiteboardsPage
   def click_add_new_asset(asset)
     hit_escape
     if asset.file_name
-      wait_for_update_and_click_js upload_new_button_element
+      wait_for_update_and_click upload_new_button_element
     else
-      wait_for_update_and_click_js add_link_button_element
+      wait_for_update_and_click add_link_button_element
     end
   end
 

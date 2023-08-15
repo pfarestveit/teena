@@ -99,8 +99,8 @@ module BOACCohortStudentPages
 
   def select_term(term_id)
     logger.info "Selecting term ID #{term_id}"
-    wait_for_update_and_click_js term_select_button_element
-    wait_for_update_and_click_js button_element(id: "term-select-option-#{term_id}")
+    wait_for_update_and_click term_select_button_element
+    wait_for_update_and_click button_element(id: "term-select-option-#{term_id}")
   end
 
   # Returns the XPath to the div containing data for a single student

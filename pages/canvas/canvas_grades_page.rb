@@ -56,7 +56,7 @@ module Page
 
     # Clicks the update button and waits for confirmation
     def update_course_settings
-      wait_for_update_and_click_js update_course_button_element
+      wait_for_update_and_click update_course_button_element
       sleep 2
       update_course_success_element.when_visible Utils.medium_wait
     end
@@ -113,7 +113,7 @@ module Page
         hit_escape
       else
         wait_for_update_and_click gradebook_manual_posting_input_element
-        wait_for_update_and_click_js gradebook_settings_update_button_element
+        wait_for_update_and_click gradebook_settings_update_button_element
         wait_for_flash_msg('Gradebook Settings updated', Utils.medium_wait)
       end
     end
@@ -147,18 +147,18 @@ module Page
     # @param course [Course]
     def load_gradebook(course)
       navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/gradebook"
-      e_grades_export_link_element.when_visible Utils.short_wait
+      e_grades_export_link_element.when_present Utils.short_wait
     rescue
       if title.include? 'Individual View'
         logger.error 'Individual view is present, switching to gradebook view.'
         wait_for_update_and_click individual_view_input_element
         arrow_down
         hit_enter
-        e_grades_export_link_element.when_visible Utils.medium_wait
+        e_grades_export_link_element.when_present Utils.medium_wait
       else
         logger.error 'E-Grades export button has not appeared, hard-refreshing the page'
         browser.execute_script('location.reload(true);')
-        e_grades_export_link_element.when_visible Utils.medium_wait
+        e_grades_export_link_element.when_present Utils.medium_wait
       end
     end
 
@@ -320,7 +320,7 @@ module Page
     # Clicks the allow-override checkbox and saves
     def toggle_allow_grade_override
       js_click allow_grade_override_cbx_element
-      wait_for_update_and_click_js update_gradebook_settings_element
+      wait_for_update_and_click update_gradebook_settings_element
       flash_msg_element.when_visible Utils.short_wait
       wait_until(1) { flash_msg_element.text.include? 'Gradebook Settings updated' }
     end

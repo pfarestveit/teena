@@ -118,7 +118,7 @@ class RipleyCreateCourseSitePage < RipleySiteCreationPage
 
   def click_next
     wait_until(Utils.short_wait) { !next_button_element.attribute('disabled') }
-    wait_for_update_and_click_js next_button_element
+    wait_for_update_and_click next_button_element
     site_name_input_element.when_visible Utils.medium_wait
   end
 

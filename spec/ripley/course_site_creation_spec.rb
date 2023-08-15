@@ -272,7 +272,7 @@ describe 'bCourses course site creation' do
           end
 
           @roster_photos_page.load_embedded_tool site.course
-          @roster_photos_page.wait_for_load_and_click_js @roster_photos_page.section_select_element
+          @roster_photos_page.wait_for_load_and_click @roster_photos_page.section_select_element
 
           expected_sections_on_site = (site.sections.map { |section| "#{section.course} #{section.label}" })
           actual_sections_on_site = @roster_photos_page.section_options

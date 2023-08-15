@@ -103,7 +103,7 @@ module Page
 
     def expand_mobile_menu
       logger.info 'Clicking the hamburger to reveal the menu'
-      wait_for_update_and_click_js hamburger_button_element
+      wait_for_update_and_click hamburger_button_element
     end
 
     def click_user_prov
@@ -115,7 +115,7 @@ module Page
     # Clicks the 'save and publish' button using JavaScript rather than WebDriver
     def click_save_and_publish
       scroll_to_bottom
-      wait_for_update_and_click_js save_and_publish_button_element
+      wait_for_update_and_click save_and_publish_button_element
     end
 
     def wait_for_flash_msg(text, wait)
@@ -164,9 +164,9 @@ module Page
     span(:copy_course_success_msg, xpath: '//span[text()="Completed"]')
 
     def click_create_site_settings_link
-      wait_for_update_and_click_js profile_link_element
+      wait_for_update_and_click profile_link_element
       sleep 1
-      wait_for_update_and_click_js profile_form_element
+      wait_for_update_and_click profile_form_element
       wait_for_update_and_click create_site_settings_link_element
       switch_to_canvas_iframe
     end
@@ -237,7 +237,7 @@ module Page
         unless course.term.nil?
           navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/settings"
           wait_for_element_and_select(term_element, course.term)
-          wait_for_update_and_click_js update_course_button_element
+          wait_for_update_and_click update_course_button_element
           update_course_success_element.when_visible Utils.medium_wait
         end
       else
@@ -265,7 +265,7 @@ module Page
         if site.term
           navigate_to "#{Utils.canvas_base_url}/courses/#{site.site_id}/settings"
           wait_for_element_and_select(term_element, site.term.name)
-          wait_for_update_and_click_js update_course_button_element
+          wait_for_update_and_click update_course_button_element
           update_course_success_element.when_visible Utils.medium_wait
         end
       end
@@ -365,7 +365,7 @@ module Page
     def add_section(site, section)
       logger.info "Adding section #{section.sis_id}"
       load_course_settings site
-      wait_for_update_and_click_js sections_tab_element
+      wait_for_update_and_click sections_tab_element
       wait_for_element_and_type(section_name_element, section.sis_id)
       wait_for_update_and_click add_section_button_element
       # Add SIS id to section
@@ -517,7 +517,7 @@ module Page
       wait_for_update_and_click link_element(xpath: "//ul[@id='nav_disabled_list']/li[contains(.,'#{tool.name}')]//a")
       wait_for_update_and_click link_element(xpath: "//ul[@id='nav_disabled_list']/li[contains(.,'#{tool.name}')]//a[@title='Enable this item']")
       list_item_element(xpath: "//ul[@id='nav_enabled_list']/li[contains(.,'#{tool.name}')]").when_visible Utils.medium_wait
-      wait_for_update_and_click_js save_button_element
+      wait_for_update_and_click save_button_element
       tool_nav_link(tool).when_visible Utils.medium_wait
     end
 
@@ -574,10 +574,10 @@ module Page
               link_element(xpath: "//td[@title='#{tool.name}']").when_present Utils.medium_wait
 
               # Enable tool placement in sidebar navigation
-              wait_for_update_and_click_js button_element(xpath: "//tr[contains(., '#{tool.name}')]//button")
-              wait_for_update_and_click_js app_placements_button_element
-              wait_for_update_and_click_js activate_navigation_button_element
-              wait_for_update_and_click_js close_placements_button_element
+              wait_for_update_and_click button_element(xpath: "//tr[contains(., '#{tool.name}')]//button")
+              wait_for_update_and_click app_placements_button_element
+              wait_for_update_and_click activate_navigation_button_element
+              wait_for_update_and_click close_placements_button_element
               sleep 1
               enable_tool(tool, test.course_site)
             end
@@ -614,7 +614,7 @@ module Page
       tool.dev_key = el.text
     end
 
-    def add_ripley_tool(site, tool)
+    def add_ripley_tool(tool)
       if ripley_tool_installed? tool
         logger.info "Tool #{tool.name} is already installed"
       else
@@ -633,7 +633,7 @@ module Page
     def click_tool_link(tool)
       switch_to_main_content
       hide_canvas_footer_and_popup
-      wait_for_update_and_click_js tool_nav_link(tool)
+      wait_for_update_and_click tool_nav_link(tool)
       wait_until(Utils.medium_wait) { title == "#{tool.name}" }
       logger.info "#{tool.name} URL is #{url = current_url}"
       url.delete '#'

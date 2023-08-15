@@ -89,7 +89,7 @@ describe 'bCourses Find a Person to Add', order: :defined do
       if standalone
         skip 'Skipping test since in standalone mode'
       else
-        @canvas.wait_for_load_and_click_js @canvas.add_people_button_element
+        @canvas.wait_for_load_and_click @canvas.add_people_button_element
         @canvas.find_person_to_add_link_element.when_visible Utils.short_wait
         expect(@canvas.add_user_by_email_label_element.text).to eql('Email Address')
         @canvas.wait_for_update_and_click @canvas.add_user_by_email_element

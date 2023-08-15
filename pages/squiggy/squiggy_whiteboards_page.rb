@@ -110,7 +110,7 @@ class SquiggyWhiteboardsPage
     end
 
     if user
-      wait_for_update_and_click_js adv_search_user_input_element
+      wait_for_update_and_click adv_search_user_input_element
       select_squiggy_option user.full_name
     end
 

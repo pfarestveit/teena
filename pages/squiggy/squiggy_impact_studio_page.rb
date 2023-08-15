@@ -112,7 +112,7 @@ class SquiggyImpactStudioPage
   def select_user(user)
     logger.info "Selecting #{user.full_name}"
     wait_for_element_and_select(user_select_element, user.full_name)
-    wait_for_update_and_click_js user_select_button_element
+    wait_for_update_and_click user_select_button_element
     wait_for_profile user
   end
 
@@ -401,7 +401,7 @@ class SquiggyImpactStudioPage
     sleep 2
     scroll_to_element div_element(id: 'user-assets')
     wait_for_element_and_select(sort_user_assets_select_element, option)
-    wait_for_update_and_click_js sort_user_assets_apply_button_element
+    wait_for_update_and_click sort_user_assets_apply_button_element
   end
 
   def user_asset_xpath(asset)
@@ -449,7 +449,7 @@ class SquiggyImpactStudioPage
     logger.info "Sorting everyone's assets by #{option}"
     scroll_to_element div_element(id: 'everyones-assets')
     wait_for_element_and_select(sort_everyone_assets_select_element, option)
-    wait_for_update_and_click_js sort_everyone_assets_apply_button_element
+    wait_for_update_and_click sort_everyone_assets_apply_button_element
   end
 
   def everyone_asset_xpath(asset)

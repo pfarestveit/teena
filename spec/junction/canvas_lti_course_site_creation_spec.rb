@@ -186,10 +186,10 @@ describe 'bCourses course site creation' do
         it("shows the default site abbreviation #{site[:course].code}") { expect(default_abbreviation).to include(expected_abbreviation) }
 
         requires_name_and_abbreviation = @create_course_site_page.verify_block do
-          @create_course_site_page.site_name_input_element.clear
+          @create_course_site_page.clear_input_value site_name_input_element
           @create_course_site_page.site_name_error_element.when_present 1
           @create_course_site_page.wait_until(1) { @create_course_site_page.create_site_button_element.attribute('disabled') }
-          @create_course_site_page.site_abbreviation_element.clear
+          @create_course_site_page.clear_input_value site_abbreviation_element
           @create_course_site_page.site_abbreviation_error_element.when_present 1
         end
 
@@ -202,6 +202,7 @@ describe 'bCourses course site creation' do
         if standalone
           @create_course_site_page.wait_for_standalone_site_id(site[:course], site[:teacher], @splash_page)
         else
+          Utils.save_screenshot(@driver, site[:course].code)
           @create_course_site_page.wait_for_site_id site[:course]
         end
 
@@ -308,7 +309,7 @@ describe 'bCourses course site creation' do
           it("shows a Roster Photos tool link in course site navigation for #{site[:course].term} #{site[:course].code} site ID #{site[:course].site_id}") { expect(has_roster_photos_link).to be true }
 
           @roster_photos_page.load_embedded_tool site[:course]
-          @roster_photos_page.wait_for_load_and_click_js @roster_photos_page.section_select_element
+          @roster_photos_page.wait_for_load_and_click @roster_photos_page.section_select_element
 
           expected_sections_on_site = (site[:sections_for_site].map { |section| "#{section.course} #{section.label}" })
           actual_sections_on_site = @roster_photos_page.section_options

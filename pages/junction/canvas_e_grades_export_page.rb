@@ -62,7 +62,7 @@ module Page
       # Clicks the Continue button
       def click_continue
         logger.debug 'Clicking continue'
-        wait_for_load_and_click_js continue_button_element
+        wait_for_load_and_click continue_button_element
       end
 
       # Selects a given P/NP grade cutoff

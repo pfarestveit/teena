@@ -191,7 +191,7 @@ class BOACDegreeTemplatePage
   end
 
   def click_transfer_course
-    wait_for_update_and_click_js col_req_transfer_course_cbx_element
+    wait_for_update_and_click col_req_transfer_course_cbx_element
   end
 
   def col_req_unit_req_pill_xpath(unit_req)

@@ -65,7 +65,7 @@ class SquiggyAssetLibraryDetailPage < SquiggyAssetLibraryListViewPage
   def click_category_link(category)
     logger.info "Clicking link to category '#{category.name}'"
     scroll_to_bottom
-    wait_for_update_and_click_js category_el_by_id(category)
+    wait_for_update_and_click category_el_by_id(category)
   end
 
   def no_category_el
@@ -191,7 +191,7 @@ class SquiggyAssetLibraryDetailPage < SquiggyAssetLibraryListViewPage
   def click_like_button
     logger.info 'Clicking the like button'
     scroll_to_bottom
-    wait_for_update_and_click_js like_button_element
+    wait_for_update_and_click like_button_element
     sleep Utils.click_wait
   end
 
@@ -251,7 +251,7 @@ class SquiggyAssetLibraryDetailPage < SquiggyAssetLibraryListViewPage
   end
 
   def click_reply_button(comment)
-    wait_for_update_and_click_js reply_button_el(comment)
+    wait_for_update_and_click reply_button_el(comment)
   end
 
   def reply_input_el(comment)
@@ -272,7 +272,7 @@ class SquiggyAssetLibraryDetailPage < SquiggyAssetLibraryListViewPage
     click_reply_button comment
     scroll_to_bottom
     enter_squiggy_text(reply_input_el(comment), reply_comment.body)
-    wait_for_update_and_click_js reply_save_button
+    wait_for_update_and_click reply_save_button
     comment_el_by_body(reply_comment).when_visible Utils.short_wait
     reply_comment.set_comment_id
     visible_comment reply_comment
@@ -299,7 +299,7 @@ class SquiggyAssetLibraryDetailPage < SquiggyAssetLibraryListViewPage
   end
 
   def click_edit_button(comment)
-    wait_for_update_and_click_js edit_button(comment)
+    wait_for_update_and_click edit_button(comment)
   end
 
   def edit_comment_text_area(comment)
@@ -329,7 +329,7 @@ class SquiggyAssetLibraryDetailPage < SquiggyAssetLibraryListViewPage
 
   def delete_comment(comment)
     scroll_to_bottom
-    wait_for_update_and_click_js delete_comment_button(comment)
+    wait_for_update_and_click delete_comment_button(comment)
     wait_for_update_and_click confirm_delete_button_element
     comment_el_by_id(comment).when_not_present Utils.short_wait
   end

@@ -37,7 +37,7 @@ module BOACSearchForm
 
   def click_simple_search_button
     logger.info 'Clicking search button'
-    wait_for_update_and_click_js search_button_element
+    wait_for_update_and_click search_button_element
   end
 
   # Search history
