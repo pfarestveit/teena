@@ -28,17 +28,15 @@ class RipleyJobsPage
   end
 
   def wait_for_job_to_finish(job, retries=nil)
-    tries ||= (retries || Utils.long_wait)
+    tries ||= (retries || Utils.medium_wait)
     logger.info "Waiting for #{job.name} to finish"
-    wait_until(1) { job_succeeded?(job) || job_failed?(job) }
-    if job_succeeded? job
-      logger.info 'Job succeeded'
-    elsif job_failed? job
-      fail 'Job failed!'
-    end
+    wait_until(3) { job_succeeded? job }
   rescue => e
     if (tries -= 1).zero?
       fail e.message
+    elsif job_failed? job
+      logger.error 'Job failed!'
+      fail "#{job.name} failed"
     else
       logger.debug 'Job still running'
       sleep Utils.short_wait
