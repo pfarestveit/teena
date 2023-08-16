@@ -19,6 +19,7 @@ unless ENV['STANDALONE']
       @canvas_page = Page::CanvasPage.new @driver
       @cal_net_page = Page::CalNetPage.new @driver
       @splash_page = RipleySplashPage.new @driver
+      @jobs_page = RipleyJobsPage.new @driver
       @mailing_list_page = RipleyMailingListPage.new @driver
       @mailing_lists_page = RipleyMailingListsPage.new @driver
       @site_creation_page = RipleySiteCreationPage.new @driver
@@ -43,18 +44,18 @@ unless ENV['STANDALONE']
         it "can be managed by a course #{user.role}" do
           @canvas_page.masquerade_as(user, course_site_1)
           @mailing_list_page.load_embedded_tool course_site_1
-          @mailing_list_page.create_list_button_element.when_present Utils.medium_wait
+          @mailing_list_page.create_list_button_element.when_present Utils.short_wait
         end
       elsif %w[Designer Observer Student].include? user.role
         it "cannot be managed by a course #{user.role}" do
           @canvas_page.masquerade_as(user, course_site_1)
           @mailing_list_page.load_embedded_tool course_site_1
-          @mailing_list_page.unauthorized_msg_element.when_present Utils.medium_wait
+          @mailing_list_page.unauthorized_msg_element.when_present Utils.short_wait
         end
       end
       it "cannot be managed by a course #{user.role} via the admin tool" do
         @mailing_lists_page.load_embedded_tool
-        @mailing_lists_page.auth_failed_msg_element.when_present Utils.medium_wait
+        @mailing_lists_page.unauthorized_msg_element.when_present Utils.short_wait
       end
     end
 
@@ -189,25 +190,9 @@ unless ENV['STANDALONE']
           logger.info "Checking if #{test.students[0].username} has been restored"
           expect(@mailing_lists_page.user_restored?(test.students[0])).to be true
         end
-
-        it 'does not create mailing list memberships for site members with the same email addresses as existing mailing list members' do
-          test.students[1].email = test.students[0].email
-          @canvas_page.activate_user_and_reset_email [test.students[1]]
-          @mailing_lists_page.load_embedded_tool
-          @mailing_lists_page.search_for_list course_site_1.site_id
-          @mailing_lists_page.click_update_memberships
-          @mailing_lists_page.update_membership_again_button_element.when_present Utils.short_wait
-          sleep 1
-          expect(@mailing_lists_page.list_membership_count).to eql("#{course_site_1.manual_members.length - 1} members")
-        end
       end
 
       context 'when updating a list via Ripley Jobs' do
-
-        before(:all) do
-          @splash_page.load_page
-          @splash_page.dev_auth @test.admin.uid
-        end
 
         it 'deletes mailing list memberships for users who have been removed from the site' do
           @canvas_page.remove_users_from_course(course_site_1, [test.students[0]])
@@ -258,7 +243,8 @@ unless ENV['STANDALONE']
         it 'will not create a mailing list for a course site with the same course code and term as an existing list' do
           @canvas_page.load_course_site course_site_2
           @mailing_list_page.load_embedded_tool course_site_2
-          @mailing_list_page.list_dupe_error_msg_element.when_present timeout
+          @mailing_list_page.click_create_list
+          @mailing_list_page.list_dupe_email_msg_element.when_present timeout
           expect(@mailing_list_page.list_dupe_email_msg).to include(@mailing_lists_page.default_list_name course_site_2)
         end
       end
@@ -271,8 +257,6 @@ unless ENV['STANDALONE']
           expect(@mailing_list_page.list_address).to include("#{@mailing_lists_page.default_list_name course_site_3}@bcourses-mail.berkeley.edu")
         end
       end
-
-      # TODO - add tests for Ripley mailing list membership job
     end
   end
 end

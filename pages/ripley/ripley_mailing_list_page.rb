@@ -13,7 +13,7 @@ class RipleyMailingListPage
   div(:list_created_msg, xpath: '//div[contains(., "A Mailing List has been created")]')
   div(:list_address, xpath: '//div[@role="alert"]//strong')
   div(:list_dupe_error_msg, id: 'TBD "A Mailing List cannot be created for the site"')
-  div(:list_dupe_email_msg, id: '//div[contains(., "is used by another bCourses site and is not available")]')
+  div(:list_dupe_email_msg, xpath: '//div[contains(., "is used by another bCourses site and is not available")]')
 
   def embedded_tool_path(course)
     "/courses/#{course.site_id}/external_tools/#{RipleyUtils.mailing_list_tool_id}"
@@ -33,9 +33,13 @@ class RipleyMailingListPage
     navigate_to "#{RipleyUtils.base_url} TBD #{course.site_id}"
   end
 
+  def click_create_list
+    wait_for_update_and_click create_list_button_element
+  end
+
   def create_list
     logger.info 'Clicking create-list button'
-    wait_for_update_and_click create_list_button_element
+    click_create_list
     list_created_msg_element.when_present Utils.short_wait
   end
 

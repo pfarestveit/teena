@@ -628,6 +628,8 @@ module Page
         wait_for_update_and_click button_element(xpath: '//button[contains(., "Install")]')
         wait_for_update_and_click add_tool_button_element rescue Selenium::WebDriver::Error::TimeoutError
       end
+      api = CanvasAPIPage.new @driver
+      api.get_tool_id tool
     end
 
     def click_tool_link(tool)
