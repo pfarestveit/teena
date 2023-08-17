@@ -11,6 +11,7 @@ class Section
                 :locations,
                 :number,
                 :primary,
+                :primary_assoc_id,
                 :schedules,
                 :sis_id
 

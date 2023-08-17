@@ -190,6 +190,9 @@ unless ENV['STANDALONE']
           logger.info "Checking if #{test.students[0].username} has been restored"
           expect(@mailing_lists_page.user_restored?(test.students[0])).to be true
         end
+
+        # TODO it 'updates a mailing list member\'s email address'
+        # TODO it 'will not add a new member whose email address matches an existing member\'s'
       end
 
       context 'when updating a list via Ripley Jobs' do
@@ -217,6 +220,9 @@ unless ENV['STANDALONE']
           @mailing_lists_page.list_membership_count_element.when_present Utils.short_wait
           expect(@mailing_lists_page.list_membership_count).to eql("#{course_site_1.manual_members.length} members")
         end
+
+        # TODO it 'updates a mailing list member\'s email address'
+        # TODO it 'will not add a new member whose email address matches an existing member\'s'
       end
     end
 
