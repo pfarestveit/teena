@@ -682,17 +682,30 @@ module Page
 
     text_field(:user_search_input, xpath: '//input[@placeholder="Search people..."]')
 
-    def user_result_link(user)
+    def user_result_link_by_email(user)
       link_element(xpath: "//td[text()=\"#{user.email}\"]/preceding-sibling::th/a")
+    end
+
+    def user_result_link_by_uid(user)
+      link_element(xpath: "//td[text()=\"#{user.sis_id}\" or text()=\"UID:#{user.uid}\"]/preceding-sibling::th/a")
     end
 
     def set_canvas_ids(users)
       navigate_to "#{Utils.canvas_base_url}/accounts/#{Utils.canvas_uc_berkeley_sub_account}/users"
       users.each do |user|
         unless user.canvas_id
-          wait_for_textbox_and_type(user_search_input_element, user.email)
-          user_result_link(user).when_present Utils.medium_wait
-          user.canvas_id = user_result_link(user).attribute('href').split('/').last
+          logger.info "Getting Canvas ID for #{user.uid}"
+          begin
+            wait_for_textbox_and_type(user_search_input_element, user.email)
+            user_result_link_by_email(user).when_present Utils.short_wait
+            user.canvas_id = user_result_link_by_email(user).attribute('href').split('/').last
+          rescue => e
+            logger.error e.message
+            string = user.sis_id || user.uid
+            wait_for_textbox_and_type(user_search_input_element, string)
+            user_result_link_by_uid(user).when_present Utils.short_wait
+            user.canvas_id = user_result_link_by_uid(user).attribute('href').split('/').last
+          end
         end
       end
     end

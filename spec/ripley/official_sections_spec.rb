@@ -28,7 +28,7 @@ describe 'bCourses Official Sections tool', order: :defined do
       @splash_page.dev_auth(test.admin.uid, site, @cal_net)
     else
       @canvas.log_in(@cal_net, test.admin.username, Utils.super_admin_password)
-      RipleyTool::TOOLS.each { |t| @canvas.add_ripley_tool(site, t) }
+      RipleyTool::TOOLS.each { |t| @canvas.add_ripley_tool t }
       @canvas.set_canvas_ids([teacher] + site.manual_members)
       @canvas.masquerade_as teacher
     end
@@ -65,10 +65,10 @@ describe 'bCourses Official Sections tool', order: :defined do
 
     sections_for_site.each do |section|
       it "shows the course code for section #{section.id}" do
-        expect(@official_sections_page.current_section_course section).to eql(section.course)
+        expect(@official_sections_page.list_section_course section).to eql(section.course)
       end
       it "shows the section label for section #{section.id}" do
-        expect(@official_sections_page.current_section_label section).to eql(section.label)
+        expect(@official_sections_page.list_section_label section).to eql(section.label)
       end
       it "shows no Delete button for section #{section.id}" do
         expect(@official_sections_page.section_delete_button(section).exists?).to be false
@@ -93,13 +93,13 @@ describe 'bCourses Official Sections tool', order: :defined do
     unless standalone
       it 'offers a link to the bCourses service page in the expanded maintenance notice' do
         title = 'bCourses | Research, Teaching, and Learning'
-        expect(@official_sections_page.external_link_valid?(@official_sections_page.bcourses_service_link_element, title).to be true)
+        expect(@official_sections_page.external_link_valid?(@official_sections_page.bcourses_service_link_element, title)).to be true
       end
     end
 
     it 'shows all the sections currently on the course site' do
       @official_sections_page.switch_to_canvas_iframe unless standalone
-      expect(@official_sections_page.current_sections_count).to eql(site[:sections_for_site].length)
+      expect(@official_sections_page.current_sections_count).to eql(sections_for_site.length)
     end
 
     sections_for_site.each do |section|
@@ -112,10 +112,10 @@ describe 'bCourses Official Sections tool', order: :defined do
     end
 
     it 'shows an expanded view of courses with sections already in the course site' do
-      expect(@official_sections_page.available_sections_table(site.code).exists?).to be true
+      expect(@official_sections_page.available_sections_table(site.course, site.sections.first).exists?).to be true
     end
     it 'shows all the sections in the course' do
-      expect(@official_sections_page.available_sections_count site).to eql(site.sections.length)
+      expect(@official_sections_page.available_sections_count(site.course, site.sections.first)).to eql(site.course.sections.length)
     end
     it 'shows a disabled save button when no changes have been made in the course site' do
       expect(@official_sections_page.save_changes_button_element.enabled?).to be false
@@ -123,65 +123,65 @@ describe 'bCourses Official Sections tool', order: :defined do
 
     site.course.sections.each do |section|
       it "shows section #{section.id} is available for the course site" do
-        expect(@official_sections_page.available_section_id_element(site.code, section.id).exists?).to be true
+        expect(@official_sections_page.available_section_id_element(site.course, section).exists?).to be true
       end
       if sections_to_add_delete.include? section
         it "shows an Add button for section #{section.id}" do
-          expect(@official_sections_page.section_add_button(site, section).exists?).to be true
+          expect(@official_sections_page.section_add_button(section).exists?).to be true
         end
       else
         it "shows no Add button for section #{section.id}" do
-          expect(@official_sections_page.section_add_button(site, section).exists?).to be false
+          expect(@official_sections_page.section_add_button(section).exists?).to be false
         end
       end
     end
 
     term_courses.each do |course|
       it "shows the right course title for #{course.code}" do
-        visible = @official_sections_page.available_sections_course_title course.code
-        expect(visible).to eql(course.title)
+        visible = @official_sections_page.available_sections_course_title course
+        expect(visible).to include(course.title)
       end
       it "shows no blank course title for #{course.code}" do
         expect(course.title.empty?).to be false
       end
       it "allows the user to to expand the available sections for #{course.code}" do
-        ui_sections_expanded = @official_sections_page.expand_available_sections course.code
+        ui_sections_expanded = @official_sections_page.expand_available_sections(course, course.sections.first)
         expect(ui_sections_expanded).to be_truthy
       end
 
       course.sections.each do |section|
         it "shows the right course code for #{course.code} section #{section.id}" do
-          visible = @official_sections_page.available_section_data(course.code, section.id)[:code]
+          visible = @official_sections_page.available_section_data(course, section)[:code]
           expect(visible).to eql(section.course)
         end
         it "shows no blank course code for #{course.code} section #{section.id}" do
-          visible = @official_sections_page.available_section_data(course.code, section.id)[:code]
+          visible = @official_sections_page.available_section_data(course, section)[:code]
           expect(visible.empty?).to be false
         end
         it "shows the right section labels for #{course.code} section #{section.id}" do
-          visible = @official_sections_page.available_section_data(course.code, section.id)[:label]
+          visible = @official_sections_page.available_section_data(course, section)[:label]
           expect(visible).to eql(section.label)
         end
         it "shows no blank section labels for #{course.code} section #{section.id}" do
-          visible = @official_sections_page.available_section_data(course.code, section.id)[:label]
+          visible = @official_sections_page.available_section_data(course, section)[:label]
           expect(visible.empty?).to be false
         end
         it "shows the right section schedules for #{course.code} section #{section.id}" do
-          visible = @official_sections_page.available_section_data(course.code, section.id)[:schedules]
+          visible = @official_sections_page.available_section_data(course, section)[:schedules]
           expect(visible).to eql(section.schedules)
         end
         it "shows the right section locations for #{course.code} section #{section.id}" do
-          visible = @official_sections_page.available_section_data(course.code, section.id)[:locations]
+          visible = @official_sections_page.available_section_data(course, section)[:locations]
           expect(visible).to eql(section.locations)
         end
         it "shows an expected instruction mode for #{course.code} section #{section.id}" do
-          mode = @official_sections_page.available_section_data(course.code, section.id)[:label].split('(').last.gsub(')', '')
+          mode = @official_sections_page.available_section_data(course, section)[:label].split('(').last.gsub(')', '')
           expect(['In Person', 'Online', 'Hybrid', 'Flexible', 'Remote', 'Web-based']).to include(mode)
         end
       end
 
       it "allows the user to collapse the available sections for #{course.code}" do
-        expect(@official_sections_page.collapse_available_sections course.code).to be_truthy
+        expect(@official_sections_page.collapse_available_sections(course, course.sections.first)).to be_truthy
       end
     end
   end
@@ -189,7 +189,7 @@ describe 'bCourses Official Sections tool', order: :defined do
   context 'when staging a section for adding' do
 
     before(:all) do
-      @official_sections_page.expand_available_sections site.course.code
+      @official_sections_page.expand_available_sections(site.course, site.course.sections.first)
       @section = sections_to_add_delete.last
       @official_sections_page.click_add_section(site.course, @section)
     end
@@ -198,7 +198,7 @@ describe 'bCourses Official Sections tool', order: :defined do
       expect(@official_sections_page.current_section_id_element(@section).exists?).to be true
     end
     it 'hides the add button for the section' do
-      expect(@official_sections_page.section_add_button(site.course, @section).exists?).to be false
+      expect(@official_sections_page.section_add_button(@section).exists?).to be false
     end
     it 'shows an added message for the section' do
       expect(@official_sections_page.section_added_element(site.course, @section).exists?).to be true
@@ -216,7 +216,7 @@ describe 'bCourses Official Sections tool', order: :defined do
       expect(@official_sections_page.current_section_id_element(@section).exists?).to be false
     end
     it 'reveals the add button for the section when un-staged for adding' do
-      expect(@official_sections_page.section_add_button(site, @section).exists?).to be true
+      expect(@official_sections_page.section_add_button(@section).exists?).to be true
     end
   end
 
@@ -231,7 +231,7 @@ describe 'bCourses Official Sections tool', order: :defined do
       expect(@official_sections_page.current_section_id_element(@section).exists?).to be false
     end
     it 'reveals the undo-delete button for the section' do
-      expect(@official_sections_page.section_undo_delete_button(site.course, @section).exists?).to be true
+      expect(@official_sections_page.section_undo_delete_button(@section).exists?).to be true
     end
   end
 
@@ -239,14 +239,14 @@ describe 'bCourses Official Sections tool', order: :defined do
 
     before(:all) do
       @section = sections_for_site.first
-      @official_sections_page.click_undo_delete_section(site.course, @section)
+      @official_sections_page.click_undo_delete_section(@section)
     end
 
     it 'restores the section to current sections' do
       expect(@official_sections_page.current_section_id_element(@section).exists?).to be true
     end
     it 'hides the undo-delete button for the section' do
-      expect(@official_sections_page.section_undo_delete_button(site.course, @section).exists?).to be false
+      expect(@official_sections_page.section_undo_delete_button(@section).exists?).to be false
     end
     it 'still shows the section among available sections' do
       expect(@official_sections_page.available_section_id_element(site.course, @section).exists?).to be true

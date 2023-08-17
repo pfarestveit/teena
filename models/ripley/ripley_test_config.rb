@@ -76,7 +76,7 @@ class RipleyTestConfig < TestConfig
                     CourseSite.new site_id: ENV['SITE'],
                                    abbreviation: "#{@id} #{course.term} #{course.code}",
                                    course: course,
-                                   sections: course.sections
+                                   sections: course.sections.select(&:include_in_site)
                   else
                     get_multiple_test_sites
                     @course_sites.find do |site|

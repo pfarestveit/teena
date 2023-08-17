@@ -147,6 +147,7 @@ class RipleyUtils < Utils
   def self.get_test_course_section_data(term, cs_course_id)
     sql = "SELECT sis_section_id AS id,
                   is_primary,
+                  primary_associated_section_id,
                   sis_course_name AS code,
                   sis_course_title AS title,
                   sis_instruction_format AS format,
@@ -157,6 +158,7 @@ class RipleyUtils < Utils
                   meeting_location AS location,
                   meeting_days AS days,
                   meeting_end_date AS end_date,
+                  meeting_start_time AS start_time,
                   meeting_end_time AS end_time
              FROM sis_data.edo_sections
             WHERE sis_term_id = '#{term.sis_id}'
@@ -182,6 +184,10 @@ class RipleyUtils < Utils
              else
                "(#{r['mode']})"
              end
+      days = r['days'] ? (r['days'].gsub('MO', 'M').gsub('WE', 'W').gsub('FR', 'F').strip) : ''
+      start = (r['start_time'] == '00:00' || !r['start_time']) ? '' : "#{DateTime.strptime(r['start_time'], "%H:%M").strftime("%l:%M%p")[0..-2]}-"
+      finish = (r['end_time'] == '00:00' || !r['end_time']) ? '' : DateTime.strptime(r['end_time'], "%H:%M").strftime("%l:%M%p")[0..-2]
+      schedule = "#{days} #{start.strip}#{finish.strip}"
       {
         id: r['id'],
         code: r['code'],
@@ -192,22 +198,29 @@ class RipleyUtils < Utils
         label: "#{r['format']} #{r['number']} #{mode}",
         location: r['location'],
         primary: (r['is_primary'] == 't'),
-        schedule: "#{r['days']} #{r['start_time']} #{r['end_time']}",
+        primary_assoc_id: r['primary_associated_section_id'],
+        schedule: schedule,
         title: r['title']
       }
     end
   end
 
   def self.get_test_course_instructors(term, cs_course_id)
-    sql = "SELECT DISTINCT instructor_uid,
-                  instructor_name
+    sql = "SELECT DISTINCT sis_data.edo_sections.instructor_uid,
+                  sis_data.edo_sections.instructor_name,
+                  sis_data.edo_basic_attributes.email_address,
+                  sis_data.edo_basic_attributes.sid
              FROM sis_data.edo_sections
-            WHERE sis_term_id = '#{term.sis_id}'
-              AND cs_course_id = '#{cs_course_id}';"
+             JOIN sis_data.edo_basic_attributes
+               ON sis_data.edo_basic_attributes.ldap_uid = sis_data.edo_sections.instructor_uid
+            WHERE sis_data.edo_sections.sis_term_id = '#{term.sis_id}'
+              AND sis_data.edo_sections.cs_course_id = '#{cs_course_id}';"
     results = Utils.query_pg_db(NessieUtils.nessie_pg_db_credentials, sql)
     results.map do |r|
       User.new full_name: r['instructor_name'],
-               uid: r['instructor_uid']
+               uid: r['instructor_uid'],
+               sis_id: r['sid'],
+               email: r['email_address']
     end
   end
 
@@ -231,8 +244,9 @@ class RipleyUtils < Utils
                   instruction_mode: v[0][:instruction_mode],
                   instructors: instructors.uniq,
                   label: v[0][:label],
-                  locations: (v.map { |l| l[:location] }).uniq,
+                  locations: (v.map { |l| l[:location] }).compact.uniq,
                   primary: v[0][:primary],
+                  primary_assoc_id: v[0][:primary_assoc_id],
                   schedules: (v.map { |s| s[:schedule] }).uniq
     end
     sections.each { |s| logger.info "Section: #{s.inspect}" }
@@ -273,10 +287,9 @@ class RipleyUtils < Utils
     ids = Utils.query_pg_db(NessieUtils.nessie_pg_db_credentials, sql).map { |r| r['cs_course_id'] }
     courses = ids.map { |id| get_course(term, id) }
     courses.each do |course|
-      prim_instructors = course.sections.select(&:primary).map { |s| s.instructors }.flatten.compact.uniq
-      unless prim_instructors.map(&:uid).include? instructor.uid
-        course.sections.keep_if { |s| s.instructors.map(&:uid).include? instructor.uid }
-      end
+      primary_ids = course.sections.select { |section| section.primary && section.instructors.map(&:uid).include?(instructor.uid) }.map &:id
+      secondary_ids = course.sections.select { |section| !section.primary && primary_ids.include?(section.primary_assoc_id) }.map &:id
+      course.sections.keep_if { |section| (primary_ids + secondary_ids).include? section.id }
     end
     courses
   end

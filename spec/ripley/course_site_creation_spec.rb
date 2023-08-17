@@ -112,7 +112,7 @@ describe 'bCourses course site creation' do
             ui_course_title = @create_course_site_page.available_sections_course_title course.code
             ui_sections_expanded = @create_course_site_page.expand_available_sections course.code
 
-            it("shows the right course title for #{course.code}") { expect(ui_course_title).to eql(course.title) }
+            it("shows the right course title for #{course.code}") { expect(ui_course_title).to include(course.title) }
             it("shows no blank course title for #{course.code}") { expect(ui_course_title.empty?).to be false }
             it("allows the available sections to be expanded for #{course.code}") { expect(ui_sections_expanded).to be_truthy }
 
