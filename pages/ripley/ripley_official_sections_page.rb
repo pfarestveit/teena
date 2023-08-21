@@ -21,7 +21,7 @@ class RipleyOfficialSectionsPage
   button(:update_msg_close_button, xpath: '//button[@aria-label="Hide notice"]')
 
   def embedded_tool_path(course)
-    "/courses/#{course.site_id}/external_tools/#{RipleyUtils.official_sections_tool_id}"
+    "/courses/#{course.site_id}/external_tools/#{RipleyTool::OFFICIAL_SECTIONS.tool_id}"
   end
 
   def hit_embedded_tool_url(course)

@@ -31,6 +31,7 @@ module RipleyPages
   end
 
   def load_tool_in_canvas(path)
+    logger.info "Loading #{Utils.canvas_base_url}#{path}"
     navigate_to "#{Utils.canvas_base_url}#{path}"
     switch_to_canvas_iframe RipleyUtils.base_url
   end

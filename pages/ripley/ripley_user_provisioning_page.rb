@@ -16,7 +16,7 @@ class RipleyUserProvisioningPage
 
   def load_embedded_tool
     logger.info 'Loading embedded version of the User Provisioning tool'
-    load_tool_in_canvas "/accounts/#{Utils.canvas_uc_berkeley_sub_account}/external_tools/#{RipleyUtils.user_prov_tool_id}"
+    load_tool_in_canvas "/accounts/#{Utils.canvas_uc_berkeley_sub_account}/external_tools/#{RipleyTool.USER_PROVISIONING.tool_id}"
   end
 
   def load_standalone_tool

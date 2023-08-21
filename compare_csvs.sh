@@ -47,7 +47,7 @@ if [ -z "${csv_2}" ]
 then
     echo
     echo "Enter the file path to CSV 2. If the file is in the webdriver-output/test-output dir, simply enter the file name"
-    echo -n "    > "
+    echo; echo -n "    > "
 
     read csv_2
 fi

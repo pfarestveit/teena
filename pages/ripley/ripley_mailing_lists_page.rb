@@ -45,7 +45,7 @@ class RipleyMailingListsPage
   div(:member_restored_msg, xpath: '//span[contains(text(), "Restored")]')
 
   def embedded_tool_path
-    "/accounts/#{Utils.canvas_admin_sub_account}/external_tools/#{RipleyUtils.mailing_lists_tool_id}"
+    "/accounts/#{Utils.canvas_admin_sub_account}/external_tools/#{RipleyTool::MAILING_LISTS.tool_id}"
   end
 
   def hit_embedded_tool_url
