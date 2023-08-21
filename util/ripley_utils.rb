@@ -249,7 +249,6 @@ class RipleyUtils < Utils
                   primary_assoc_id: v[0][:primary_assoc_id],
                   schedules: (v.map { |s| s[:schedule] }).uniq
     end
-    sections.each { |s| logger.info "Section: #{s.inspect}" }
     teachers = sections.select(&:primary).map { |prim| prim.instructors }
     teachers.flatten!
     teachers.compact!

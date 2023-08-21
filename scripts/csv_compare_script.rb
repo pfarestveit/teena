@@ -5,8 +5,18 @@ begin
   include Logging
 
   inactivate = ENV['INACTIVATE']
-  csv_1_path = File.join(Utils.output_dir, "test-output/#{ENV['CSV_1']}.csv")
-  csv_2_path = File.join(Utils.output_dir, "test-output/#{ENV['CSV_2']}.csv")
+  csv_1_path = if ENV['CSV_1'].include? '/'
+                 "#{ENV['CSV_1']}"
+               else
+                 File.join(Utils.output_dir, "test-output/#{ENV['CSV_1']}")
+               end
+  csv_1_path += '.csv' unless csv_1_path.include? '.csv'
+  csv_2_path = if ENV['CSV_2'].include? '/'
+                 "#{ENV['CSV_2']}.csv"
+               else
+                 File.join(Utils.output_dir, "test-output/#{ENV['CSV_2']}.csv")
+               end
+  csv_2_path += '.csv' unless csv_1_path.include? '.csv'
 
   if inactivate
     csv_1 = CSV.read(csv_1_path, headers: true, header_converters: :symbol)
@@ -14,13 +24,14 @@ begin
     csv_2 = CSV.read(csv_2_path, headers: true, header_converters: :symbol)
     csv_2.map { |r| r.to_hash }
 
-    [csv_1, csv_2].each do |c|
-      c.each do |r|
-        r[:login_id] = "inactive-#{r[:login_id]}" if r[:status] == 'suspended'
-        r[:status] = 'suspended' if r[:login_id][0..8] == 'inactive-'
+    if csv_1_path =~ /users-accounts|user-sis-import/
+      [csv_1, csv_2].each do |c|
+        c.each do |r|
+          r[:login_id] = "inactive-#{r[:login_id]}" if r[:status] == 'suspended'
+          r[:status] = 'suspended' if r[:login_id][0..8] == 'inactive-'
+        end
       end
     end
-
     csv_1 = csv_1.to_a
     csv_2 = csv_2.to_a
   else
@@ -29,7 +40,7 @@ begin
   end
 
   [csv_1, csv_2].each do |c|
-    c.each { |r| r.map! { |i| i.to_s }}
+    c.each { |r| r.map! { |i| i.to_s } }
   end
 
   unique_to_1 = csv_1 - csv_2
