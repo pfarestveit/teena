@@ -21,7 +21,7 @@ class RipleyEGradesPage
   link(:bcourses_to_egrades_link, id: 'TBD "From bCourses to E-Grades"')
 
   def embedded_tool_path(site)
-    "/courses/#{site.site_id}/external_tools/#{RipleyUtils.e_grades_export_tool_id}"
+    "/courses/#{site.site_id}/external_tools/#{RipleyTool::E_GRADES.tool_id}"
   end
 
   def hit_embedded_tool_url(site)

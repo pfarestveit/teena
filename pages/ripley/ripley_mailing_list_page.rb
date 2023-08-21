@@ -16,7 +16,7 @@ class RipleyMailingListPage
   div(:list_dupe_email_msg, xpath: '//div[contains(., "is used by another bCourses site and is not available")]')
 
   def embedded_tool_path(course)
-    "/courses/#{course.site_id}/external_tools/#{RipleyUtils.mailing_list_tool_id}"
+    "/courses/#{course.site_id}/external_tools/#{RipleyTool::MAILING_LIST.tool_id}"
   end
 
   def hit_embedded_tool_url(course)

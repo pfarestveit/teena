@@ -12,11 +12,16 @@ class CanvasAPIPage
   end
 
   def get_tool_id(tool)
+    tries ||= Utils.short_wait
     logger.info "Getting #{tool.name} id from #{Utils.canvas_base_url}/api/v1/accounts/#{tool.account}/external_tools"
     navigate_to "#{Utils.canvas_base_url}/api/v1/accounts/#{tool.account}/external_tools?per_page=50"
     parse_json
     tool.tool_id = (@parsed.find { |i| i['name'] == tool.name })['id']
     logger.info "Tool id is #{tool.tool_id}"
+  rescue => e
+    logger.error e.message
+    sleep 5
+    (tries -= 1).zero? ? fail(e.message) : retry
   end
 
 end

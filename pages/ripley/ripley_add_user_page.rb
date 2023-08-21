@@ -36,7 +36,7 @@ class RipleyAddUserPage
   button(:start_over_button, id: 'TBD "Start Over"')
 
   def embedded_tool_path(course)
-    "/courses/#{course.site_id}/external_tools/#{RipleyUtils.add_user_tool_id}"
+    "/courses/#{course.site_id}/external_tools/#{RipleyTool::ADD_USER.tool_id}"
   end
 
   def hit_embedded_tool_url(course)

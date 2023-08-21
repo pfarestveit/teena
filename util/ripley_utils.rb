@@ -71,38 +71,6 @@ class RipleyUtils < Utils
     test_output
   end
 
-  def self.add_user_tool_id
-    Utils.config['canvas']['course_add_user_tool']
-  end
-
-  def self.create_site_tool_id
-    Utils.config['canvas']['create_site_tool']
-  end
-
-  def self.e_grades_export_tool_id
-    Utils.config['canvas']['e_grades_export_tool']
-  end
-
-  def self.mailing_list_tool_id
-    Utils.config['canvas']['mailing_list_tool']
-  end
-
-  def self.mailing_lists_tool_id
-    Utils.config['canvas']['mailing_lists_tool']
-  end
-
-  def self.official_sections_tool_id
-    Utils.config['canvas']['official_sections_tool']
-  end
-
-  def self.roster_photos_tool_id
-    Utils.config['canvas']['rosters_tool']
-  end
-
-  def self.user_prov_tool_id
-    Utils.config['canvas']['user_prov_tool']
-  end
-
   def self.db_credentials
     {
       host: @config['db_host'],
