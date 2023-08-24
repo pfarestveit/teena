@@ -121,7 +121,7 @@ module Page
 
     # GRADEBOOK UI
 
-    text_area(:user_search_input, xpath: '//input[@placeholder="Search Students"]')
+    text_area(:student_search_input, xpath: '//input[@placeholder="Search Students"]')
     link(:e_grades_export_link, xpath: '//a[contains(.,"E-Grades")]')
     button(:actions_button, xpath: '//button[contains(., "Actions")]')
     span(:grades_export_button, xpath: '//span[@data-menu-id="export"]')
@@ -245,10 +245,10 @@ module Page
       tries ||= 5
       begin
         tries -= 1
-        wait_for_element(user_search_input_element, Utils.medium_wait)
+        wait_for_element(student_search_input_element, Utils.medium_wait)
         remove_button = button_element(xpath: '//button[contains(@title, "Remove ")]')
         remove_button.click if remove_button.exists?
-        wait_for_textbox_and_type(user_search_input_element, user.full_name)
+        wait_for_textbox_and_type(student_search_input_element, user.full_name)
         hit_enter
         wait_until(2) { gradebook_student_link_elements.first.attribute('data-student_id') == "#{user.canvas_id}" }
       rescue => e
@@ -265,7 +265,7 @@ module Page
     def student_score(user)
       begin
         logger.debug "Searching for score for UID #{user.uid}"
-        user_search_input_element.when_visible Utils.medium_wait
+        student_search_input_element.when_visible Utils.medium_wait
         wait_until(Utils.short_wait) { gradebook_total_elements.any? } rescue logger.error('Timed out waiting for gradebook totals')
         unless gradebook_total_elements.any?
           begin
@@ -330,6 +330,7 @@ module Page
       open_gradebook_adv_settings
       if allow_grade_override_cbx_checked?
         logger.info 'Final grade override is already allowed'
+        sleep 1
         hit_escape
         allow_grade_override_cbx_element.when_not_present 1
       else
@@ -346,6 +347,7 @@ module Page
         toggle_allow_grade_override
       else
         logger.info 'Final grade override is already disallowed'
+        sleep 1
         hit_escape
         allow_grade_override_cbx_element.when_not_present 1
       end

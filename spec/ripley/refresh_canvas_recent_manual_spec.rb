@@ -27,7 +27,7 @@ unless ENV['STANDALONE']
 
       @test.course_sites.each do |site|
         begin
-          section_ids = @canvas_api.get_course_site_sis_section_ids site
+          section_ids = @canvas_api.get_course_site_sis_section_ids site.site_id
           @test.get_existing_site_data(site, section_ids)
           course = site.course
           course.site_id = site.site_id

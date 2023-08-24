@@ -44,7 +44,7 @@ module RipleyPages
   div(:no_access_msg, id: 'TBD "This feature is only available to faculty and staff."')
   div(:unauthorized_msg, xpath: '//div[text()="Unauthorized"]')
 
-  div(:progress_bar, is: 'TBD')
+  div(:progress_bar, id: 'TBD')
 
   def wait_for_progress_bar
     logger.info 'Waiting for progress bar'
@@ -71,8 +71,8 @@ module RipleyPages
 
   # Buttons
 
-  button(:continue_button, id: 'TBD')
-  button(:cancel_button, id: 'TBD')
+  button(:continue_button, id: 'continue-button')
+  button(:cancel_button, id: 'cancel-button')
 
   def click_continue
     logger.debug 'Clicking continue'

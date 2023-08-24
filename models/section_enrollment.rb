@@ -3,6 +3,7 @@ class SectionEnrollment
   attr_accessor :user,
                 :term,
                 :section_id,
+                :grade,
                 :grading_basis,
                 :status
 
