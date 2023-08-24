@@ -449,7 +449,7 @@ module Page
 
     # SETTINGS
 
-    checkbox(:set_grading_scheme_cbx, id: 'course_grading_standard_enabled')
+    checkbox(:set_grading_scheme_cbx, id: 'course_course_grading_standard_enabled')
 
     # Loads the course settings page
     # @param course [Course]

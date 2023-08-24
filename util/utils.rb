@@ -151,7 +151,8 @@ class Utils
           msg.include?('Highcharts') ||
           msg.include?('instructure.com') ||
           msg.include?('loadAllyCustomizations') ||
-          msg.include?('prod.ally')
+          msg.include?('prod.ally') ||
+          msg.include?('.sentry.')
           logger.error "Possible JS error: #{msg}"
         end
       end

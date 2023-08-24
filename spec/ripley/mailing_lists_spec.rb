@@ -1,5 +1,7 @@
 unless ENV['STANDALONE']
 
+  # TODO - set all list member emails to test accounts prior to Mailgun testing
+
   require_relative '../../util/spec_helper'
 
   describe 'bCourses Mailgun mailing lists', order: :defined do
@@ -191,8 +193,17 @@ unless ENV['STANDALONE']
           expect(@mailing_lists_page.user_restored?(test.students[0])).to be true
         end
 
-        # TODO it 'updates a mailing list member\'s email address'
-        # TODO it 'will not add a new member whose email address matches an existing member\'s'
+        it 'updates a mailing list member\'s email address' do
+          RipleyUtils.set_mailing_list_member_email(test.students[0], 'foo@bar.com')
+          @mailing_lists_page.load_embedded_tool
+          @mailing_lists_page.search_for_list course_site_1.site_id
+          @mailing_lists_page.click_update_memberships
+          @mailing_lists_page.update_membership_again_button_element.when_present Utils.short_wait
+          sleep 1
+          @mailing_lists_page.expand_added_users
+          expect(@mailing_lists_page.user_added?(test.students[0])).to be true
+          @mailing_lists_page.expand_removed_users
+        end
       end
 
       context 'when updating a list via Ripley Jobs' do
@@ -221,8 +232,14 @@ unless ENV['STANDALONE']
           expect(@mailing_lists_page.list_membership_count).to eql("#{course_site_1.manual_members.length} members")
         end
 
-        # TODO it 'updates a mailing list member\'s email address'
-        # TODO it 'will not add a new member whose email address matches an existing member\'s'
+        it 'updates a mailing list member\'s email address' do
+          RipleyUtils.set_mailing_list_member_email(test.students[0], 'foo@bar.com')
+          @splash_page.load_page
+          @splash_page.click_jobs_link
+          @jobs_page.run_job RipleyJob::REFRESH_MAILING_LIST
+          updated = RipleyUtils.get_mailing_list_member_email test.students[0]
+          expect(updated).not_to eql('foo@bar.com')
+        end
       end
     end
 

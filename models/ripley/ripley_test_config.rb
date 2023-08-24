@@ -39,6 +39,10 @@ class RipleyTestConfig < TestConfig
     get_refresh_recent_sites
   end
 
+  def rosters
+    set_real_test_course_users
+  end
+
   def user_provisioning
     set_real_test_course_users
   end
@@ -63,29 +67,18 @@ class RipleyTestConfig < TestConfig
     end
   end
 
-  def get_single_test_site
-    course_site = if ENV['SITE']
-                    test_data = JSON.parse(File.read(File.join(Utils.config_dir, 'test-data-bcourses.json')))['courses']
-                    course = Course.new(test_data.find { |d| d['site_id'] == ENV['SITE'] })
-                    course.sections.map! { |s| Section.new s }
-                    course.teachers.map! { |u| User.new u }
-                    course.term = Term.new code: Utils.term_name_to_hyphenated_code(course.term),
-                                           name: course.term,
-                                           sis_id: Utils.term_name_to_sis_code(course.term)
-                    RipleyUtils.get_course_enrollment course
-                    CourseSite.new site_id: ENV['SITE'],
-                                   abbreviation: "#{@id} #{course.term} #{course.code}",
-                                   course: course,
-                                   sections: course.sections.select(&:include_in_site)
+  def get_single_test_site(section_ids = nil)
+    course_site = if ENV['SITE'] && !ENV['STANDALONE']
+                    CourseSite.new site_id: ENV['SITE'].to_s
                   else
                     get_multiple_test_sites
                     @course_sites.find do |site|
                       site.course.sections.select(&:primary).length > 1 && (site.course.sections.select { |s| !s.primary }).any?
                     end
                   end
+    get_existing_site_data(course_site, section_ids) if section_ids
     course_site.course.sections.select(&:primary).each { |s| s.include_in_site = true }
     course_site.create_site_workflow = 'self'
-    set_real_test_course_users course_site
     course_site
   end
 
@@ -95,11 +88,18 @@ class RipleyTestConfig < TestConfig
     term = Term.new code: term_code,
                     name: term_name,
                     sis_id: Utils.term_name_to_sis_code(term_name)
-    ccns = sis_section_ids.map { |s| s.split('-').last }
+
+    ccns = sis_section_ids.map { |s| s.split('-')[2] }
     cs_course_id = RipleyUtils.get_test_cs_course_id_from_ccn(term, ccns.first)
+
+    site.term = term
     site.course = RipleyUtils.get_course(term, cs_course_id)
-    RipleyUtils.get_course_enrollment site.course
     site.sections = site.course.sections.select { |s| ccns.include? s.id }
+    if term.sis_id.to_i < @current_term.sis_id.to_i
+      RipleyUtils.get_completed_enrollments site.course
+    else
+      RipleyUtils.get_course_enrollment site.course
+    end
   end
 
   def get_e_grades_test_sites

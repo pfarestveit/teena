@@ -8,7 +8,6 @@ unless ENV['STANDALONE']
 
     test = RipleyTestConfig.new
     site = test.get_e_grades_export_site
-    teacher = site.course.teachers.first
     non_teachers = [
       test.lead_ta,
       test.ta,
@@ -30,17 +29,18 @@ unless ENV['STANDALONE']
       @course_add_user_page = RipleyAddUserPage.new @driver
 
       @canvas.log_in(@cal_net, test.admin.username, Utils.super_admin_password)
-      section_ids = @canvas_api.get_course_site_sis_section_ids site
+      RipleyTool::TOOLS.each { |t| @canvas.add_ripley_tool t }
+      section_ids = @canvas_api.get_course_site_sis_section_ids site.site_id
       test.get_existing_site_data(site, section_ids)
+      @teacher = site.course.teachers.find { |t| t.role_code == 'PI' }
+      @canvas.set_canvas_ids([@teacher] + site.manual_members)
+
+      @primary_enrollments = site.course.sections.select(&:primary).map(&:enrollments).flatten
       @primary_section = site.sections.find &:primary
-      @prim_sec_sids = @primary_section.enrollments.map &:sid
       @secondary_section = site.sections.reject(&:primary).first
-      @sec_sec_sids = @secondary_section.enrollments.map(&:sid) if @secondary_section
-      @canvas.set_canvas_ids([teacher] + site.manual_members)
 
       # Create an ungraded assignment to use for testing manual grading policy
-
-      @canvas.masquerade_as teacher
+      @canvas.masquerade_as @teacher
       @ungraded_assignment = Assignment.new title: test.id
       @canvas.set_grade_policy_manual site
       @canvas_assignments_page.create_assignment(site, @ungraded_assignment)
@@ -78,7 +78,7 @@ unless ENV['STANDALONE']
 
     context 'when a grading scheme is enabled and an assignment is un-posted' do
 
-      before(:all) { @canvas.enable_grading_scheme course }
+      before(:all) { @canvas.enable_grading_scheme site }
 
       before(:each) { @e_grades_export_page.load_embedded_tool site }
 
@@ -100,13 +100,16 @@ unless ENV['STANDALONE']
     context 'when no assignment is muted and a grading scheme is enabled' do
 
       before(:all) do
+        @prim_sec_sids = @primary_section.enrollments.map { |e| e.user.sis_id }
+        @sec_sec_sids = @secondary_section.enrollments.map { |e| e.user.sis_id } if @secondary_section
+
         @e_grades_export_page.load_embedded_tool site
         @e_grades_export_page.click_continue
       end
 
       it 'allows the user the select any section on the course site' do
-        # Parenthetical in section labels isn't shown on e-grades tool
         expected_options = site.sections.map { |s| "#{s.course} #{s.label}" }
+        expected_options << 'Choose...'
         visible_options = @e_grades_export_page.sections_select_options.map &:strip
         if expected_options.length > 1
           expect(visible_options.sort).to eql(expected_options.sort)
@@ -193,8 +196,6 @@ unless ENV['STANDALONE']
     describe 'CSV export' do
 
       before(:all) do
-        ccn = @primary_section.id.to_s
-        @students = site.sections.enrollments
         @e_grades = @e_grades_export_page.download_final_grades(site, @primary_section, 'C-')
       end
 
@@ -206,7 +207,7 @@ unless ENV['STANDALONE']
       end
 
       it 'has the right SIDs' do
-        expected_sids = '' # TODO
+        expected_sids = @primary_enrollments.map(&:user).map(&:sis_id).sort
         actual_sids = @e_grades.map { |s| s[:id] }.sort
         logger.debug "Expecting #{expected_sids} and got #{actual_sids}"
         expect(actual_sids.any? &:empty?).to be false
@@ -217,7 +218,7 @@ unless ENV['STANDALONE']
 
       it 'has the right names' do
         # Compare last names only, since preferred names can cause mismatches
-        expected_names = '' # TODO
+        expected_names = @primary_enrollments.map(&:user).map { |u| u.last_name.strip.downcase }.sort
         actual_names = @e_grades.map { |n| n[:name].split(',')[0].strip.downcase }.sort
         logger.debug "Expecting #{expected_names} and got #{actual_names}"
         expect(actual_names.any? &:empty?).to be false
@@ -255,9 +256,13 @@ unless ENV['STANDALONE']
 
         # Get actual grade data for one student
         gradebook_grade_data = students.map do |user|
-          user.sis_id = '' # TODO
-          user.full_name = '' # TODO
-          user.sis_id.nil? ? nil : @canvas.student_score(user)
+          sis_enrollment = @primary_enrollments.find { |e| e.user.uid == user.uid }
+          if sis_enrollment
+            sis_student = sis_enrollment.user
+            user.sis_id = sis_student.sis_id
+            user.full_name = "#{sis_student.first_name} #{sis_student.last_name}"
+            user.sis_id.nil? ? nil : @canvas.student_score(user)
+          end
         end
         gradebook_grade_data.compact!
         test_data = gradebook_grade_data.find { |d| d.instance_of? Hash }
