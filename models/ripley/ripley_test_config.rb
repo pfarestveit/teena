@@ -29,6 +29,10 @@ class RipleyTestConfig < TestConfig
     get_mailing_list_sites
   end
 
+  def official_sections
+    set_real_test_course_users
+  end
+
   def projects
     site = CourseSite.new title: "Project #{@id}"
     set_real_test_project_users site
