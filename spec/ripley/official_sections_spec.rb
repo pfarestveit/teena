@@ -31,6 +31,7 @@ describe 'bCourses Official Sections tool' do
     section_ids = @canvas_api.get_course_site_sis_section_ids ENV['SITE'] if ENV['SITE']
     site = test.get_single_test_site section_ids
     teacher = site.course.teachers.first
+    roles = ['Teacher', 'Lead TA', 'TA', 'Student', 'Waitlist Student']
     @canvas.set_canvas_ids([teacher] + non_teachers)
     @canvas.masquerade_as teacher
 
@@ -224,17 +225,18 @@ describe 'bCourses Official Sections tool' do
     add_user_sec_count = @add_user.course_section_options.length
     it('shows the added sections on Find a Person to Add') { expect(add_user_sec_count).to eql(site.sections.length) }
 
-    tries = 5
+    @canvas.wait_for_enrollment_import(site, roles)
+    visible_users_post_add = @canvas.visible_user_section_data site
+    expected_instructors_post_add = RipleyUtils.expected_instr_section_data site
+    expected_students_post_add = RipleyUtils.expected_student_section_data site
+    expected_users_post_add = expected_instructors_post_add + expected_students_post_add
+    it('adds no unexpected users to the site') { expect(visible_users_post_add - expected_users_post_add).to be_empty }
+    it('neglects no expected users on the site') { expect(expected_users_post_add - visible_users_post_add).to be_empty }
+
+    visible_sections = @canvas.section_label_elements.map(&:text).uniq
+    added_sections = sections_to_add_delete.map { |s| "#{s.course} #{s.label}" }
     site_sections_added = @canvas.verify_block do
-      tries -= 1
-      sleep Utils.short_wait
-      @canvas.load_users_page site
-      @canvas.load_all_students site
-      visible_sections = @canvas.section_label_elements.map(&:text).uniq
-      added_sections = sections_to_add_delete.map { |s| "#{s.course} #{s.label}" }
       @canvas.wait_until(1) { (visible_sections & added_sections).any? }
-    rescue
-      tries.zero? ? fail : retry
     end
     it('adds all the sections to the site') { expect(site_sections_added).to be true }
 
@@ -270,17 +272,18 @@ describe 'bCourses Official Sections tool' do
     add_user_sec_count_del = @add_user.course_section_options.length
     it('shows no deleted sections on Find a Person to Add') { expect(add_user_sec_count_del).to eql(site.sections.length) }
 
-    tries = 5
+    @canvas.wait_for_enrollment_import(site, roles)
+    visible_users_post_del = @canvas.visible_user_section_data site
+    expected_instructors_post_del = RipleyUtils.expected_instr_section_data site
+    expected_students_post_del = RipleyUtils.expected_student_section_data site
+    expected_users_post_del = expected_instructors_post_del + expected_students_post_del
+    it('leaves no unexpected users on the site') { expect(visible_users_post_del - expected_users_post_del).to be_empty }
+    it('removes no expected users from the site') { expect(expected_users_post_del - visible_users_post_del).to be_empty }
+
+    visible_sections = @canvas.section_label_elements.map(&:text).uniq
+    deleted_sections = sections_to_add_delete.map { |s| "#{s.course} #{s.label}" }
     site_sections_removed = @canvas.verify_block do
-      tries -= 1
-      sleep Utils.short_wait
-      @canvas.load_users_page site
-      @canvas.load_all_students site
-      visible_sections = @canvas.section_label_elements.map(&:text).uniq
-      deleted_sections = sections_to_add_delete.map { |s| "#{s.course} #{s.label}" }
       @canvas.wait_until(1) { (visible_sections & deleted_sections).empty? }
-    rescue
-      tries.zero? ? fail : retry
     end
     it('removes the sections from the site') { expect(site_sections_removed).to be true }
 

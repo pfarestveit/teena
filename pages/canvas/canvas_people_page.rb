@@ -409,6 +409,18 @@ module CanvasPeoplePage
     users_with_sections.flatten
   end
 
+  def visible_user_section_data(site)
+    users_with_sections = get_users_with_sections site
+    user_data = users_with_sections.map do |h|
+      {
+        uid: h[:user].uid,
+        section_id: h[:section].id,
+        role: h[:user].role&.downcase
+      }
+    end
+    user_data.compact.sort_by { |h| [h[:uid], h[:section_id]] }
+  end
+
   # Returns all the users on a course site or course site section with a Student or Waitlist Student role. Optionally
   # accepts a Canvas base URL to support BOAC last activity testing in Prod.
   # @param course [Course]

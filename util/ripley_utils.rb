@@ -199,7 +199,7 @@ class RipleyUtils < Utils
     sections = grouped.map do |k, v|
       instructors = []
       v.each do |u|
-        instructor = instr.find { |i| i.uid.to_s == u[:instructor_uid].to_s }
+        instructor = instr.find { |i| i.uid.to_s == u[:instructor_uid].to_s }&.dup
         if instructor
           instructor.role_code = u[:instructor_role_code]
           instructors << instructor
@@ -326,6 +326,52 @@ class RipleyUtils < Utils
     course.sections.each do |section|
       section.enrollments = enrollments.select { |e| e.section_id.to_s == section.id.to_s }
     end
+  end
+
+  def self.expected_instr_section_data(site, sections=nil)
+    instructor_data = []
+    site_has_primaries = site.sections.select(&:primary).any?
+    secs = sections || site.sections
+    secs.each do |section|
+      section.instructors.each do |instr|
+        instr.role = if section.primary
+                       if %w(PI ICNT INVT).include? instr.role_code
+                         'Teacher'
+                       elsif instr.role_code == 'APRX'
+                         'Lead TA'
+                       else
+                         nil
+                       end
+                     else
+                       if %w(PI TNIC).include? instr.role_code
+                         site_has_primaries ? 'TA' : 'Teacher'
+                       else
+                         nil
+                       end
+                     end
+        instructor_data << {
+          uid: instr.uid,
+          section_id: section.id,
+          role: instr.role&.downcase
+        }
+      end
+    end
+    instructor_data.sort_by { |h| [h[:uid], h[:section_id]] }
+  end
+
+  def self.expected_student_section_data(site, sections=nil)
+    student_data = []
+    secs = sections || site.sections
+    secs.each do |section|
+      section.enrollments.each do |enroll|
+        student_data << {
+          uid: enroll.user.uid,
+          section_id: enroll.section_id,
+          role: (enroll.status == 'E' ? 'student' : 'waitlist student')
+        }
+      end
+    end
+    student_data.sort_by { |h| [h[:uid], h[:section_id]] }
   end
 
   def self.get_users_of_affiliations(affiliations, count=nil)
