@@ -336,15 +336,18 @@ module Page
     text_area(:section_sis_id, id: 'course_section_sis_source_id')
     button(:update_section_button, xpath: '//button[contains(.,"Update Section")]')
 
-    # Obtains the Canvas SIS ID for the course site
-    # @param course [Course]
-    # @return [String]
-    def set_course_sis_id(course)
-      load_course_settings course
+    def set_course_sis_id(site)
+      load_course_settings site
       course_sis_id_element.when_visible Utils.short_wait
-      course.sis_id = course_sis_id_element.attribute('value')
-      logger.debug "Course SIS ID is #{course.sis_id}"
-      course.sis_id
+      if site.instance_of? CourseSite
+        site.course.sis_id = course_sis_id_element.attribute('value')
+        logger.debug "Course SIS ID is #{site.course.sis_id}"
+        site.course.sis_id
+      else
+        site.sis_id = course_sis_id_element.attribute('value')
+        logger.debug "Course SIS ID is #{site.sis_id}"
+        site.sis_id
+      end
     end
 
     # Obtains the Canvas SIS IDs for the sections on the course site

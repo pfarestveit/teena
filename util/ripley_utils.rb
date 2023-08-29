@@ -155,7 +155,7 @@ class RipleyUtils < Utils
       days = r['days'] ? (r['days'].gsub('MO', 'M').gsub('WE', 'W').gsub('FR', 'F').strip) : ''
       start = (r['start_time'] == '00:00' || !r['start_time']) ? '' : "#{DateTime.strptime(r['start_time'], "%H:%M").strftime("%l:%M%p")[0..-2]}-"
       finish = (r['end_time'] == '00:00' || !r['end_time']) ? '' : DateTime.strptime(r['end_time'], "%H:%M").strftime("%l:%M%p")[0..-2]
-      schedule = "#{days} #{start.strip}#{finish.strip}"
+      schedule = "#{days} #{start.strip}#{finish.strip}".strip
       {
         id: r['id'],
         code: r['code'],
@@ -387,7 +387,7 @@ class RipleyUtils < Utils
     sql = "UPDATE canvas_site_mailing_list_members
               SET email_address = '#{email_address}'
             WHERE CONCAT(first_name, ' ', last_name) = '#{member.full_name}';"
-    result = query_pg_db(NessieUtils.nessie_pg_db_credentials, sql)
+    result = query_pg_db(db_credentials, sql)
     logger.warn "Command status: #{result.cmd_status}. Result status: #{result.result_status}"
   end
 
@@ -395,6 +395,6 @@ class RipleyUtils < Utils
     sql = "SELECT email_address
              FROM canvas_site_mailing_list_members
             WHERE CONCAT(first_name, ' ', last_name) = '#{member.full_name}';"
-    query_pg_db_field(NessieUtils.nessie_pg_db_credentials, sql, 'email_address').first
+    query_pg_db_field(db_credentials, sql, 'email_address').first
   end
 end

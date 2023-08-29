@@ -12,7 +12,7 @@ class RipleyOfficialSectionsPage
   button(:edit_sections_button, id: 'official-sections-edit-btn')
 
   elements(:current_sections_table_row, :row, xpath: '//h3[text()=" Sections in this Course Site "]/../following-sibling::div//tbody/tr')
-  div(:section_name_msg, id: 'TBD "The section name in bCourses no longer matches the Student Information System."')
+  div(:section_name_msg, xpath: '//div[contains(., "The section name in bCourses no longer matches the Student Information System.")]')
   button(:cancel_button, id: 'official-sections-cancel-btn')
   button(:save_changes_button, id: 'official-sections-save-btn')
 
@@ -143,7 +143,7 @@ class RipleyOfficialSectionsPage
   end
 
   def section_undo_add_button(section)
-    button_element(id: "section-#{section.id}-undo-link-btn")
+    button_element(id: "section-#{section.id}-undo-unlink-btn")
   end
 
   def click_undo_add_section(section)
@@ -185,11 +185,15 @@ class RipleyOfficialSectionsPage
   end
 
   def available_section_schedules(course, section)
-    cell_element(xpath: "#{available_section_cell_xpath(course, section)}/following-sibling::td[contains(@class,\"section-timestamps\")]").text.to_s.upcase.split("\n")
+    sched = cell_element(xpath: "#{available_section_cell_xpath(course, section)}/following-sibling::td[contains(@class,\"section-timestamps\")]").text.to_s
+    sched = sched.upcase.split("\n") unless sched.empty?
+    sched
   end
 
   def available_section_locations(course, section)
-    cell_element(xpath: "#{available_section_cell_xpath(course, section)}/following-sibling::td[contains(@class,\"section-locations\")]").text.split("\n")
+    loc = cell_element(xpath: "#{available_section_cell_xpath(course, section)}/following-sibling::td[contains(@class,\"section-locations\")]").text.to_s
+    loc = loc.split("\n") unless loc.empty?
+    loc
   end
 
   def available_section_instructors(course, section)

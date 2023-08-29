@@ -1,454 +1,367 @@
 require_relative '../../util/spec_helper'
 
-standalone = ENV['STANDALONE']
-
 include Logging
 
-test = RipleyTestConfig.new
-site = test.get_single_test_site
-teacher = site.course.teachers.first
-sections_for_site = site.course.sections.select { |s| site.sections.include? s }
-sections_to_add_delete = (site.course.sections - sections_for_site)
-term_courses = RipleyUtils.get_instructor_term_courses(teacher, test.current_term)
+describe 'bCourses Official Sections tool' do
 
-describe 'bCourses Official Sections tool', order: :defined do
+  begin
+    test = RipleyTestConfig.new
+    test.official_sections
+    non_teachers = [
+      test.lead_ta,
+      test.ta,
+      test.designer,
+      test.reader,
+      test.observer,
+      test.students.first,
+      test.wait_list_student
+    ]
 
-  before(:all) do
     @driver = Utils.launch_browser
     @cal_net = Page::CalNetPage.new @driver
     @canvas = Page::CanvasPage.new @driver
+    @canvas_api = CanvasAPIPage.new @driver
     @splash_page = RipleySplashPage.new @driver
-    @site_creation_page = RipleySiteCreationPage.new @driver
-    @create_course_site_page = RipleyCreateCourseSitePage.new @driver
-    @course_add_user_page = RipleyAddUserPage.new @driver
-    @official_sections_page = RipleyOfficialSectionsPage.new @driver
+    @create_course_site = RipleyCreateCourseSitePage.new @driver
+    @add_user = RipleyAddUserPage.new @driver
+    @official_sections = RipleyOfficialSectionsPage.new @driver
 
-    if standalone
-      @splash_page.load_page
-      @splash_page.dev_auth(test.admin.uid, site, @cal_net)
+    @canvas.log_in(@cal_net, test.admin.username, Utils.super_admin_password)
+    RipleyTool::TOOLS.each { |t| @canvas.add_ripley_tool t }
+    section_ids = @canvas_api.get_course_site_sis_section_ids ENV['SITE'] if ENV['SITE']
+    site = test.get_single_test_site section_ids
+    teacher = site.course.teachers.first
+    @canvas.set_canvas_ids([teacher] + non_teachers)
+    @canvas.masquerade_as teacher
+
+    term_courses = RipleyUtils.get_instructor_term_courses(teacher, test.current_term)
+    if site.course.sections == site.sections
+      sections_to_add_delete = if site.sections.all?(&:primary) || site.sections.none?(&:primary)
+                                 site.sections[1..-1]
+                               else 
+                                 site.sections.select { |s| !s.primary }
+                               end
     else
-      @canvas.log_in(@cal_net, test.admin.username, Utils.super_admin_password)
-      RipleyTool::TOOLS.each { |t| @canvas.add_ripley_tool t }
-      @canvas.set_canvas_ids([teacher] + site.manual_members)
-      @canvas.masquerade_as teacher
+      sections_to_add_delete = site.course.sections - site.sections
     end
 
-    if site.site_id && !standalone
-      @canvas.load_course_site site
-    else
-      @create_course_site_page.provision_course_site(site, {standalone: standalone})
-      @create_course_site_page.wait_for_standalone_site_id(site, @splash_page) if standalone
-    end
-    @canvas.publish_course_site site unless standalone
-  end
+    logger.info "Sections to add/delete are #{sections_to_add_delete.map &:id}"
 
-  after(:all) { Utils.quit_browser @driver }
+    site.site_id ? @canvas.load_course_site(site) : @create_course_site.provision_course_site(site)
+    @canvas.publish_course_site site
 
-  unless standalone
-    it 'shows a link to the official sections help page on the course site' do
-      @canvas.load_course_sections site
-      @canvas.expand_official_sections_notice
-      title = 'IT - How do I add or remove a section roster from my course site?'
-      expect(@canvas.external_link_valid?(@canvas.official_sections_help_link_element, title)).to be true
-    end
-  end
+    @canvas.load_course_sections site
+    @canvas.expand_official_sections_notice
+    title = 'IT - How do I add or remove a section roster from my course site?'
+    official_sections_link = @canvas.external_link_valid?(@canvas.official_sections_help_link_element, title)
+    it('shows a link to the official sections help page on the course site') { expect(official_sections_link).to be true }
 
-  context 'when viewing sections' do
+    # STATIC VIEW
 
-    before(:all) do
-      standalone ? @official_sections_page.load_standalone_tool(site) : @official_sections_page.load_embedded_tool(site)
-    end
+    @official_sections.load_embedded_tool site
 
-    it 'shows all the sections currently on the course site' do
-      expect(@official_sections_page.current_sections_count).to eql(sections_for_site.length)
-    end
+    current_count = @official_sections.current_sections_count
+    it('shows all the sections currently on the course site') { expect(current_count).to eql(site.sections.length) }
 
-    sections_for_site.each do |section|
-      it "shows the course code for section #{section.id}" do
-        expect(@official_sections_page.list_section_course section).to eql(section.course)
-      end
-      it "shows the section label for section #{section.id}" do
-        expect(@official_sections_page.list_section_label section).to eql(section.label)
-      end
-      it "shows no Delete button for section #{section.id}" do
-        expect(@official_sections_page.section_delete_button(section).exists?).to be false
-      end
-    end
-  end
-
-  context 'when editing sections' do
-
-    before(:all) { @official_sections_page.click_edit_sections }
-
-    it 'shows a collapsed maintenance notice' do
-      @official_sections_page.maintenance_notice_button_element.when_present Utils.short_wait
-      expect(@official_sections_page.maintenance_detail_element.visible?).to be false
+    site.sections.each do |section|
+      visible_course_code = @official_sections.list_section_course section
+      visible_section_label = @official_sections.list_section_label section
+      delete_button_exists = @official_sections.section_delete_button(section).exists?
+      it("shows the course code for section #{section.id}") { expect(visible_course_code).to eql(section.course) }
+      it("shows the section label for section #{section.id}") { expect(visible_section_label).to eql(section.label) }
+      it("shows no Delete button for section #{section.id}") { expect(delete_button_exists).to be false }
+    rescue => e
+      Utils.log_error e
+      it("hit an error verifying site #{site.site_id} section #{section.id}") { fail e.message }
     end
 
-    it 'allows the user to reveal an expanded maintenance notice' do
-      @official_sections_page.maintenance_notice_button
-      @official_sections_page.maintenance_detail_element.when_visible Utils.short_wait
+    # EDIT VIEW
+
+    @official_sections.click_edit_sections
+    @official_sections.maintenance_notice_button_element.when_present Utils.short_wait
+    collapsed_notice_exists = @official_sections.maintenance_detail_element.visible?
+    @official_sections.maintenance_notice_button
+    expanded_notice_exists = @official_sections.verify_block { @official_sections.maintenance_detail_element.when_visible 2 }
+    it('shows a collapsed maintenance notice') { expect(collapsed_notice_exists).to be false }
+    it('allows the user to reveal an expanded maintenance notice') { expect(expanded_notice_exists).to be true }
+
+    title = 'bCourses | Research, Teaching, and Learning'
+    service_link_works = @official_sections.verify_block do
+      @official_sections.external_link_valid?(@official_sections.bcourses_service_link_element, title)
+    end
+    it('offers a link to the bCourses service page in the expanded maintenance notice') { expect(service_link_works).to be true }
+
+    @official_sections.switch_to_canvas_iframe
+    visible_sections_count = @official_sections.current_sections_count
+    it('shows all the sections currently on the course site') { expect(visible_sections_count).to eql(site.sections.length) }
+
+    site.sections.each do |section|
+      section_already_on_site = @official_sections.current_section_id_element(section).exists?
+      section_delete_button_exists = @official_sections.section_delete_button(section).exists?
+      it("shows section #{section.id} is already in the course site") { expect(section_already_on_site).to be true }
+      it("shows a Delete button for section #{section.id}") { expect(section_delete_button_exists).to be true }
     end
 
-    unless standalone
-      it 'offers a link to the bCourses service page in the expanded maintenance notice' do
-        title = 'bCourses | Research, Teaching, and Learning'
-        expect(@official_sections_page.external_link_valid?(@official_sections_page.bcourses_service_link_element, title)).to be true
-      end
-    end
-
-    it 'shows all the sections currently on the course site' do
-      @official_sections_page.switch_to_canvas_iframe unless standalone
-      expect(@official_sections_page.current_sections_count).to eql(sections_for_site.length)
-    end
-
-    sections_for_site.each do |section|
-      it "shows section #{section.id} is already in the course site" do
-        expect(@official_sections_page.current_section_id_element(section).exists?).to be true
-      end
-      it "shows a Delete button for section #{section.id}" do
-        expect(@official_sections_page.section_delete_button(section).exists?).to be true
-      end
-    end
-
-    it 'shows an expanded view of courses with sections already in the course site' do
-      expect(@official_sections_page.available_sections_table(site.course, site.sections.first).exists?).to be true
-    end
-    it 'shows all the sections in the course' do
-      expect(@official_sections_page.available_sections_count(site.course, site.sections.first)).to eql(site.course.sections.length)
-    end
-    it 'shows a disabled save button when no changes have been made in the course site' do
-      expect(@official_sections_page.save_changes_button_element.enabled?).to be false
-    end
+    course_expanded = @official_sections.available_sections_table(site.course, site.sections.first).exists?
+    existing_sections_count = @official_sections.available_sections_count(site.course, site.sections.first)
+    save_button_enabled = @official_sections.save_changes_button_element.enabled?
+    it('shows an expanded view of courses with sections already in the course site') { expect(course_expanded).to be true }
+    it('shows all the sections in the course') { expect(existing_sections_count).to eql(site.course.sections.length) }
+    it('shows a disabled save button when no changes have been made in the course site') { expect(save_button_enabled).to be false }
 
     site.course.sections.each do |section|
-      it "shows section #{section.id} is available for the course site" do
-        expect(@official_sections_page.available_section_id_element(site.course, section).exists?).to be true
-      end
+      avail_section_present = @official_sections.available_section_id_element(site.course, section).exists?
+      avail_section_button_exists = @official_sections.section_add_button(section).exists?
+      it("shows section #{section.id} is available for the course site") { expect(avail_section_present).to be true }
       if sections_to_add_delete.include? section
-        it "shows an Add button for section #{section.id}" do
-          expect(@official_sections_page.section_add_button(section).exists?).to be true
-        end
+        it("shows an Add button for section #{section.id}") { expect(avail_section_button_exists).to be true }
       else
-        it "shows no Add button for section #{section.id}" do
-          expect(@official_sections_page.section_add_button(section).exists?).to be false
-        end
+        it("shows no Add button for section #{section.id}") { expect(avail_section_button_exists).to be false }
       end
     end
 
     term_courses.each do |course|
-      it "shows the right course title for #{course.code}" do
-        visible = @official_sections_page.available_sections_course_title course
-        expect(visible).to include(course.title)
-      end
-      it "shows no blank course title for #{course.code}" do
-        expect(course.title.empty?).to be false
-      end
-      it "allows the user to to expand the available sections for #{course.code}" do
-        ui_sections_expanded = @official_sections_page.expand_available_sections(course, course.sections.first)
-        expect(ui_sections_expanded).to be_truthy
-      end
+      visible_course_title = @official_sections.available_sections_course_title course
+      visible_sections_expanded = @official_sections.expand_available_sections(course, course.sections.first)
+      it("shows the right course title for #{course.code}") { expect(visible_course_title).to include(course.title) }
+      it("shows no blank course title for #{course.code}") { expect(visible_course_title.empty?).to be false }
+      it("allows the user to to expand the available sections for #{course.code}") { expect(visible_sections_expanded).to be_truthy }
 
       course.sections.each do |section|
-        it "shows the right course code for #{course.code} section #{section.id}" do
-          visible = @official_sections_page.available_section_data(course, section)[:code]
-          expect(visible).to eql(section.course)
+        visible_section_code = @official_sections.available_section_data(course, section)[:code]
+        visible_section_course_code = @official_sections.available_section_data(course, section)[:code]
+        visible_section_label = @official_sections.available_section_data(course, section)[:label]
+        visible_section_schedule = @official_sections.available_section_data(course, section)[:schedules]
+        visible_section_locations = @official_sections.available_section_data(course, section)[:locations]
+        visible_section_mode = @official_sections.available_section_data(course, section)[:label].split('(').last.gsub(')', '')
+        it("shows the right course code for #{course.code} section #{section.id}") { expect(visible_section_code).to eql(section.course) }
+        it("shows no blank course code for #{course.code} section #{section.id}") { expect(visible_section_course_code.empty?).to be false }
+        it("shows the right section labels for #{course.code} section #{section.id}") { expect(visible_section_label).to eql(section.label) }
+        it("shows no blank section labels for #{course.code} section #{section.id}") { expect(visible_section_label.empty?).to be false }
+        it("shows the right section schedules for #{course.code} section #{section.id}") { expect(visible_section_schedule).to eql(section.schedules) }
+        it("shows the right section locations for #{course.code} section #{section.id}") { expect(visible_section_locations).to eql(section.locations) }
+        it "shows a valid instruction mode for #{course.code} section #{section.id}" do
+          expect(['In Person', 'Online', 'Hybrid', 'Flexible', 'Remote', 'Web-based']).to include(visible_section_mode)
         end
-        it "shows no blank course code for #{course.code} section #{section.id}" do
-          visible = @official_sections_page.available_section_data(course, section)[:code]
-          expect(visible.empty?).to be false
-        end
-        it "shows the right section labels for #{course.code} section #{section.id}" do
-          visible = @official_sections_page.available_section_data(course, section)[:label]
-          expect(visible).to eql(section.label)
-        end
-        it "shows no blank section labels for #{course.code} section #{section.id}" do
-          visible = @official_sections_page.available_section_data(course, section)[:label]
-          expect(visible.empty?).to be false
-        end
-        it "shows the right section schedules for #{course.code} section #{section.id}" do
-          visible = @official_sections_page.available_section_data(course, section)[:schedules]
-          expect(visible).to eql(section.schedules)
-        end
-        it "shows the right section locations for #{course.code} section #{section.id}" do
-          visible = @official_sections_page.available_section_data(course, section)[:locations]
-          expect(visible).to eql(section.locations)
-        end
-        it "shows an expected instruction mode for #{course.code} section #{section.id}" do
-          mode = @official_sections_page.available_section_data(course, section)[:label].split('(').last.gsub(')', '')
-          expect(['In Person', 'Online', 'Hybrid', 'Flexible', 'Remote', 'Web-based']).to include(mode)
-        end
+      rescue => e
+        Utils.log_error e
+        it("hit an error verifying course #{course.code} section #{section.id}") { fail e.message }
       end
 
-      it "allows the user to collapse the available sections for #{course.code}" do
-        expect(@official_sections_page.collapse_available_sections(course, course.sections.first)).to be_truthy
-      end
-    end
-  end
-
-  context 'when staging a section for adding' do
-
-    before(:all) do
-      @official_sections_page.expand_available_sections(site.course, site.course.sections.first)
-      @section = sections_to_add_delete.last
-      @official_sections_page.click_add_section(site.course, @section)
+      collapsed_sections = @official_sections.collapse_available_sections(course, course.sections.first)
+      it("allows the user to collapse the available sections for #{course.code}") { expect(collapsed_sections).to be_truthy }
+    rescue => e
+      Utils.log_error e
+      it("hit an error verifying course #{course.code}") { fail e.message }
     end
 
-    it 'moves the section from available to current sections' do
-      expect(@official_sections_page.current_section_id_element(@section).exists?).to be true
-    end
-    it 'hides the add button for the section' do
-      expect(@official_sections_page.section_add_button(@section).exists?).to be false
-    end
-    it 'shows an added message for the section' do
-      expect(@official_sections_page.section_added_element(site.course, @section).exists?).to be true
-    end
-  end
+    # ADDING - Staging, Un-staging
 
-  context 'when un-staging a section for adding' do
+    @official_sections.expand_available_sections(site.course, site.course.sections.first)
+    @section = sections_to_add_delete.last
+    @official_sections.click_add_section(site.course, @section)
+    staged_link_sec = @official_sections.current_section_id_element(@section).exists?
+    staged_link_sec_add_button = @official_sections.section_add_button(@section).exists?
+    staged_link_sec_msg = @official_sections.section_added_element(site.course, @section).exists?
+    it('moves the section from available to current sections') { expect(staged_link_sec).to be true }
+    it('hides the add button for the section') { expect(staged_link_sec_add_button).to be false }
+    it('shows an added message for the section') { expect(staged_link_sec_msg).to be true }
 
-    before(:all) do
-      @section = sections_to_add_delete.last
-      @official_sections_page.click_undo_add_section section
-    end
+    @section = sections_to_add_delete.last
+    @official_sections.click_undo_add_section @section
+    un_staged_link_sec = @official_sections.current_section_id_element(@section).exists?
+    un_staged_link_sec_add_button = @official_sections.section_add_button(@section).exists?
+    it('undo-add button removes the section from current sections') { expect(un_staged_link_sec).to be false }
+    it('reveals the add button for the section when un-staged for adding') { expect(un_staged_link_sec_add_button).to be true }
 
-    it 'undo-add button removes the section from current sections' do
-      expect(@official_sections_page.current_section_id_element(@section).exists?).to be false
-    end
-    it 'reveals the add button for the section when un-staged for adding' do
-      expect(@official_sections_page.section_add_button(@section).exists?).to be true
-    end
-  end
+    # DELETING - Staging, Un-staging
 
-  context 'when staging a section for deleting' do
+    @section = site.sections.first
+    @official_sections.click_delete_section @section
+    staged_unlink_sec = @official_sections.current_section_id_element(@section).exists?
+    staged_unlink_sec_undo_button = @official_sections.section_undo_delete_button(@section).exists?
+    it('removes the section from current sections') { expect(staged_unlink_sec).to be false }
+    it('reveals the undo-delete button for the section') { expect(staged_unlink_sec_undo_button).to be true }
 
-    before(:all) do
-      @section = sections_for_site.first
-      @official_sections_page.click_delete_section @section
-    end
+    @section = site.sections.first
+    @official_sections.click_undo_delete_section(@section)
+    un_staged_unlink_sec = @official_sections.current_section_id_element(@section).exists?
+    un_staged_unlink_sec_undo_button = @official_sections.section_undo_delete_button(@section).exists?
+    un_staged_unlink_sec_available = @official_sections.available_section_id_element(site.course, @section).exists?
+    it('restores the section to current sections') { expect(un_staged_unlink_sec).to be true }
+    it('hides the undo-delete button for the section') { expect(un_staged_unlink_sec_undo_button).to be false }
+    it('still shows the section among available sections') { expect(un_staged_unlink_sec_available).to be true }
 
-    it 'removes the section from current sections' do
-      expect(@official_sections_page.current_section_id_element(@section).exists?).to be false
-    end
-    it 'reveals the undo-delete button for the section' do
-      expect(@official_sections_page.section_undo_delete_button(@section).exists?).to be true
-    end
-  end
+    # ADDING - SIS import
 
-  context 'when un-staging a section for deleting' do
-
-    before(:all) do
-      @section = sections_for_site.first
-      @official_sections_page.click_undo_delete_section(@section)
+    @official_sections.load_embedded_tool site
+    @official_sections.click_edit_sections
+    @official_sections.add_sections(site, sections_to_add_delete)
+    site.sections += sections_to_add_delete
+    updated_add_count = site.sections.length
+    updating_add_msg = @official_sections.verify_block { @official_sections.updating_sections_msg_element.when_visible Utils.medium_wait }
+    updated_add_msg = @official_sections.verify_block { @official_sections.sections_updated_msg_element.when_visible Utils.long_wait }
+    updated_add_msg_closed = @official_sections.verify_block do
+      @official_sections.close_section_update_success
+      @official_sections.sections_updated_msg_element.when_not_visible Utils.short_wait
     end
-
-    it 'restores the section to current sections' do
-      expect(@official_sections_page.current_section_id_element(@section).exists?).to be true
-    end
-    it 'hides the undo-delete button for the section' do
-      expect(@official_sections_page.section_undo_delete_button(@section).exists?).to be false
-    end
-    it 'still shows the section among available sections' do
-      expect(@official_sections_page.available_section_id_element(site.course, @section).exists?).to be true
-    end
-  end
-
-  context 'when sections have been added' do
-    before(:all) do
-      standalone ? @official_sections_page.load_standalone_tool(site) : @official_sections_page.load_embedded_tool(site)
-      @official_sections_page.click_edit_sections
-      @official_sections_page.add_sections(site, sections_to_add_delete)
-    end
-
-    it 'shows an updating message when sections are being added to the course site' do
-      @official_sections_page.updating_sections_msg_element.when_visible Utils.medium_wait
-    end
-    it 'shows an updated message when sections have been added to the course site' do
-      @official_sections_page.sections_updated_msg_element.when_visible Utils.long_wait
-    end
-    it 'allows the user to close an update success message when sections have been added to the course site' do
-      @official_sections_page.close_section_update_success
-      @official_sections_page.sections_updated_msg_element.when_not_visible Utils.short_wait
-    end
-    it 'shows the right number of current sections when sections have been added to the course site' do
-      expect(@official_sections_page.current_sections_count).to eql(site.sections.length)
-    end
+    updated_added_sections_count = @official_sections.current_sections_count
+    it('shows an updating message when sections are being added to the course site') { expect(updating_add_msg).to be true }
+    it('shows an updated message when sections have been added to the course site') { expect(updated_add_msg).to be true }
+    it('allows the user to close an update success message after adding sections') { expect(updated_add_msg_closed).to be true }
+    it('shows the right number of current sections after adding sections') { expect(updated_added_sections_count).to eql(updated_add_count) }
 
     sections_to_add_delete.each do |section|
-      it "shows added section #{section.id} among current sections on the course site" do
-        expect(@official_sections_page.current_section_id_element(section).exists?).to be true
-      end
+      section_added = @official_sections.list_section_row(section).exists?
+      it("shows added section #{section.id} among current sections on the course site") { expect(section_added).to be true }
     end
 
-    context 'and a user views Find a Person to Add' do
+    # FIND A PERSON TO ADD
 
-      before(:all) do
-        standalone ? @course_add_user_page.load_standalone_tool(site) : @course_add_user_page.load_embedded_tool(site)
-        @course_add_user_page.search(Utils.oski_uid, 'CalNet UID')
-      end
+    @add_user.load_embedded_tool site
+    @add_user.search(Utils.oski_uid, 'CalNet UID')
+    @add_user.wait_until(Utils.medium_wait) { @add_user.course_section_options&.any? }
+    add_user_sec_count = @add_user.course_section_options.length
+    it('shows the added sections on Find a Person to Add') { expect(add_user_sec_count).to eql(site.sections.length) }
 
-      it 'shows the right number of current sections on Find a Person to Add when sections have been added to the course site' do
-        @course_add_user_page.wait_until(Utils.medium_wait) { @course_add_user_page.course_section_options.length == site.sections.length }
-      end
+    tries = 5
+    site_sections_added = @canvas.verify_block do
+      tries -= 1
+      sleep Utils.short_wait
+      @canvas.load_users_page site
+      @canvas.load_all_students site
+      visible_sections = @canvas.section_label_elements.map(&:text).uniq
+      added_sections = sections_to_add_delete.map { |s| "#{s.course} #{s.label}" }
+      @canvas.wait_until(1) { (visible_sections & added_sections).any? }
+    rescue
+      tries.zero? ? fail : retry
     end
+    it('adds all the sections to the site') { expect(site_sections_added).to be true }
 
-    unless standalone
-      context 'and a user views the course site enrollment' do
+    # DELETING - SIS import
 
-        it 'adds all the sections to the site' do
-          tries = 5
-          begin
-            tries -= 1
-            sleep Utils.short_wait
-            @canvas.load_users_page site
-            @canvas.load_all_students site
-            visible_sections = @canvas.section_label_elements.map(&:text).uniq
-            added_sections = sections_to_add_delete.map { |s| "#{s.course} #{s.label}" }
-            @canvas.wait_until(1) { (visible_sections & added_sections).any? }
-          rescue
-            tries.zero? ? fail : retry
-          end
-        end
-      end
+    @official_sections.load_embedded_tool site
+    @official_sections.click_edit_sections
+    @official_sections.delete_sections sections_to_add_delete
+    site.sections -= sections_to_add_delete
+    updated_delete_count = site.sections.length
+    updating_delete_msg = @official_sections.verify_block { @official_sections.updating_sections_msg_element.when_visible Utils.short_wait }
+    updated_delete_msg = @official_sections.verify_block { @official_sections.sections_updated_msg_element.when_visible Utils.long_wait }
+    updated_delete_msg_closed = @official_sections.verify_block do
+      @official_sections.close_section_update_success
+      @official_sections.sections_updated_msg_element.when_not_visible Utils.short_wait
     end
-  end
-
-  context 'when sections have been deleted' do
-
-    before(:all) do
-      standalone ? @official_sections_page.load_standalone_tool(site) : @official_sections_page.load_embedded_tool(site)
-      @official_sections_page.click_edit_sections
-      @official_sections_page.delete_sections sections_to_add_delete
-    end
-
-    it 'shows an updating message when sections are being added to the course site' do
-      @official_sections_page.updating_sections_msg_element.when_visible Utils.short_wait
-    end
-    it 'shows an updated message when sections have been added to the course site' do
-      @official_sections_page.sections_updated_msg_element.when_visible Utils.long_wait
-    end
-    it 'allows the user to close an update success message when sections have been added to the course site' do
-      @official_sections_page.close_section_update_success
-      @official_sections_page.sections_updated_msg_element.when_not_visible Utils.short_wait
-    end
-    it 'shows the right number of current sections when sections have been added to the course site' do
-      expect(@official_sections_page.current_sections_count).to eql(sections_for_site.length)
-    end
+    updated_deleted_sections_count = @official_sections.current_sections_count
+    it('shows an updating message when sections are being deleted') { expect(updating_delete_msg).to be true }
+    it('shows an updated message when sections have been deleted') { expect(updated_delete_msg).to be true }
+    it('allows the user to close an update success message when sections have been deleted') { expect(updated_delete_msg_closed).to be true }
+    it('shows the right number of current sections when sections have been deleted') { expect(updated_deleted_sections_count).to eql(updated_delete_count) }
 
     sections_to_add_delete.each do |section|
-      it "shows added section #{section.id} among current sections on the course site" do
-        expect(@official_sections_page.current_section_id_element(section).exists?).to be false
-      end
+      section_present = @official_sections.list_section_row(section).exists?
+      it("shows added section #{section.id} among current sections on the course site") { expect(section_present).to be false }
     end
 
-    context 'and a user views Find a Person to Add' do
+    # FIND A PERSON TO ADD
 
-      before(:all) do
-        standalone ? @course_add_user_page.load_standalone_tool(site) : @course_add_user_page.load_embedded_tool(site)
-        @course_add_user_page.search(Utils.oski_uid, 'CalNet UID')
-      end
+    @add_user.load_embedded_tool site
+    @add_user.search(Utils.oski_uid, 'CalNet UID')
+    @add_user.wait_until(Utils.medium_wait) { @add_user.course_section_options&.any? }
+    add_user_sec_count_del = @add_user.course_section_options.length
+    it('shows no deleted sections on Find a Person to Add') { expect(add_user_sec_count_del).to eql(site.sections.length) }
 
-      it 'shows the right number of current sections on Find a Person to Add when sections have been removed from the course site' do
-        @course_add_user_page.wait_until(Utils.medium_wait) { @course_add_user_page.course_section_options.length == sections_for_site.length }
-      end
+    tries = 5
+    site_sections_removed = @canvas.verify_block do
+      tries -= 1
+      sleep Utils.short_wait
+      @canvas.load_users_page site
+      @canvas.load_all_students site
+      visible_sections = @canvas.section_label_elements.map(&:text).uniq
+      deleted_sections = sections_to_add_delete.map { |s| "#{s.course} #{s.label}" }
+      @canvas.wait_until(1) { (visible_sections & deleted_sections).empty? }
+    rescue
+      tries.zero? ? fail : retry
+    end
+    it('removes the sections from the site') { expect(site_sections_removed).to be true }
+
+    non_teachers.each do |u|
+      logger.info "Test user to add: #{u.inspect}"
     end
 
-    unless standalone
-      context 'and a user views the course site enrollment' do
-
-        it 'removes the sections from the site' do
-          tries = Utils.short_wait
-          begin
-            tries -= 1
-            sleep Utils.short_wait
-            @canvas.load_users_page site
-            @canvas.load_all_students site
-            visible_sections = @canvas.section_label_elements.map(&:text).uniq
-            deleted_sections = sections_to_add_delete.map { |s| "#{s.course} #{s.label}" }
-            @canvas.wait_until(1) { (visible_sections & deleted_sections).empty? }
-          rescue
-            tries.zero? ? fail : retry
-          end
-        end
-      end
+    @canvas.stop_masquerading
+    [test.lead_ta, test.ta, test.designer, test.reader, test.observer, test.students.first, test.wait_list_student].each do |user|
+      @add_user.load_embedded_tool site
+      @add_user.search(user.uid, 'CalNet UID')
+      @add_user.add_user_by_uid(user, site.sections.first)
     end
-  end
 
-  unless standalone
-    context 'user permissions' do
-
-      before(:all) do
-        @canvas.stop_masquerading
-        [test.lead_ta, test.ta, test.designer, test.reader, test.observer, test.students.first, test.wait_list_student].each do |user|
-          @course_add_user_page.load_embedded_tool site
-          @course_add_user_page.search(user.uid, 'CalNet UID')
-          @course_add_user_page.add_user_by_uid(user, sections_for_site.first)
-        end
-      end
-
-      it 'allow a Lead TA full access to the tool' do
-        @canvas.masquerade_as(test.lead_ta, site)
-        @official_sections_page.load_embedded_tool site
-        @official_sections_page.current_sections_table.when_visible Utils.medium_wait
-        @official_sections_page.edit_sections_button_element.when_visible 1
-      end
-
-      [test.ta, test.designer].each do |user|
-        it "allow a #{user.role} read only access to the tool" do
-          @canvas.masquerade_as(user, site)
-          @official_sections_page.load_embedded_tool site
-          @official_sections_page.current_sections_table.when_visible Utils.medium_wait
-          @official_sections_page.edit_sections_button_element.when_not_visible 1
-        end
-      end
-
-      it 'deny a Reader access to the tool' do
-        @canvas.masquerade_as(test.reader, site)
-        @official_sections_page.load_embedded_tool site
-        @official_sections_page.unexpected_error_element.when_present Utils.medium_wait
-        @official_sections_page.current_sections_table.when_not_visible 1
-      end
-
-      [test.observer, test.students.first, test.wait_list_student].each do |user|
-        it "deny a #{user.role} access to the tool" do
-          @canvas.masquerade_as(user, site)
-          @official_sections_page.hit_embedded_tool_url site
-          @canvas.wait_for_error(@canvas.access_denied_msg_element, @official_sections_page.unexpected_error_element)
-        end
-      end
+    lead_ta_edit_access = @canvas.verify_block do
+      @canvas.masquerade_as(test.lead_ta, site)
+      @official_sections.load_embedded_tool site
+      @official_sections.current_sections_table.when_visible Utils.medium_wait
+      @official_sections.edit_sections_button_element.when_visible 1
     end
-  end
+    it('allow a Lead TA full access to the tool') { expect(lead_ta_edit_access).to be true }
 
-  unless standalone
-    context 'section name updates' do
-
-      before(:all) do
-        @canvas.stop_masquerading
-        @canvas.set_course_sis_id site
-        @section = sections_to_add_delete.first
-        section_id = "SEC:#{Utils.term_name_to_hyphenated_code site.course.term}-#{@section.id}"
-        section_name = "#{site.code} FAKE LABEL"
-        csv = File.join(Utils.initialize_test_output_dir, "section-#{site.course.code}.csv")
-        CSV.open(csv, 'wb') { |heading| heading << %w(section_id course_id name status start_date end_date) }
-        Utils.add_csv_row(csv, [section_id, site.course.sis_id, section_name, 'active', nil, nil])
-        @canvas.upload_sis_imports([csv])
-        RipleyUtils.clear_cache
+    [test.ta, test.designer].each do |user|
+      no_edit_access = @canvas.verify_block do
+        @canvas.masquerade_as(user, site)
+        @official_sections.load_embedded_tool site
+        @official_sections.current_sections_table.when_visible Utils.medium_wait
+        @official_sections.edit_sections_button_element.when_not_visible 1
       end
-
-      it 'shows a section name mismatch message when the section name has changed' do
-        @canvas.masquerade_as teacher
-        @official_sections_page.load_embedded_tool site
-        @official_sections_page.current_sections_table.when_visible Utils.medium_wait
-        @official_sections_page.click_edit_sections
-        @official_sections_page.section_name_msg_element.when_visible(Utils.short_wait)
-      end
-
-      it 'shows no section name mismatch when the section has been updated' do
-        @official_sections_page.click_update_section @section
-        @official_sections_page.save_changes_and_wait_for_success
-        @official_sections_page.click_edit_sections
-        expect(@official_sections_page.section_name_msg?).to be false
-      end
+      it("allow a #{user.role} read only access to the tool") { expect(no_edit_access).to be true }
     end
+
+    reader_no_access = @canvas.verify_block do
+      @canvas.masquerade_as(test.reader, site)
+      @official_sections.load_embedded_tool site
+      @official_sections.unexpected_error_element.when_present Utils.medium_wait
+      @official_sections.current_sections_table.when_not_visible 1
+    end
+    it('deny a Reader access to the tool') { expect(reader_no_access).to be true }
+
+    [test.observer, test.students.first, test.wait_list_student].each do |user|
+      no_access = @canvas.verify_block do
+        @canvas.masquerade_as(user, site)
+        @official_sections.hit_embedded_tool_url site
+        @canvas.wait_for_error(@canvas.access_denied_msg_element, @official_sections.unexpected_error_element)
+      end
+      it("deny a #{user.role} access to the tool") { expect(no_access).to be true }
+    end
+
+    # SECTION NAME UPDATES
+
+    @canvas.stop_masquerading
+    @canvas.set_course_sis_id site
+    @section = sections_to_add_delete.first
+    section_id = "SEC:#{site.course.term.code}-#{@section.id}"
+    section_name = "#{site.course.code} FAKE LABEL"
+    csv = Utils.create_test_output_csv("section-#{site.course.code}.csv", %w(section_id course_id name status start_date end_date))
+    Utils.add_csv_row(csv, [section_id, site.course.sis_id, section_name, 'active', nil, nil])
+    @canvas.upload_sis_imports([csv])
+
+    section_name_mismatch_msg = @canvas.verify_block do
+      @canvas.masquerade_as teacher
+      @official_sections.load_embedded_tool site
+      @official_sections.current_sections_table.when_visible Utils.medium_wait
+      @official_sections.click_edit_sections
+      @official_sections.section_name_msg_element.when_visible(Utils.short_wait)
+    end
+    it('shows a section name mismatch message when the section name has changed') { expect(section_name_mismatch_msg).to be true }
+
+    section_name_mismatch = @official_sections.verify_block do
+      @official_sections.click_update_section @section
+      @official_sections.save_changes_and_wait_for_success
+      @official_sections.click_edit_sections
+      @official_sections.section_name_msg_element.when_present 2
+    end
+    it('shows no section name mismatch when the section has been updated') { expect(section_name_mismatch).to be false }
+
+  rescue => e
+    Utils.log_error e
+    it('hit an error initializing') { fail e.message }
+  ensure
+    Utils.quit_browser @driver
   end
 end
