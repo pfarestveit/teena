@@ -146,8 +146,14 @@ class CohortFilter
         'Junior (60-89 Units)'
       when '40'
         'Senior (90+ Units)'
-      when 'GR'
-        'Graduate'
+      when '5'
+        'Masters and/or Professional'
+      when  '6'
+        'Doctoral Students Not Advance to Candidacy'
+      when '7'
+        'Doctoral Advanced to Candidacy <= 6 Terms'
+      when '8'
+        'Doctoral Advanced to Candidacy > 6 Terms'
       else
         logger.error "Unknown level code '#{code}'"
         nil

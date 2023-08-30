@@ -37,16 +37,23 @@ unless ENV['NO_DEPS']
       BOACUtils.hard_delete_auth_user @test_asc.advisor
       filter = CohortFilter.new
       filter.set_custom_filters asc_inactive: true
-      asc_sids = NessieFilterUtils.get_cohort_result(@test_asc, filter)
-      @asc_test_student = @test.students.find { |s| s.sis_id == asc_sids.first }
+      asc_inactive_sids = NessieFilterUtils.get_cohort_result(@test_asc, filter)
+      @asc_inactive_test_student = @test.students.find { |s| s.sis_id == asc_inactive_sids.first }
+      filter = CohortFilter.new
+      filter.set_custom_filters asc_inactive: false, asc_team: [Squad::MTE]
+      asc_active_sids = NessieFilterUtils.get_cohort_result(@test_asc, filter)
+      @asc_active_test_student = @test.students.find { |s| s.sis_id == asc_active_sids.first }
       @homepage.dev_auth
       @pax_manifest_page.load_page
       @pax_manifest_page.add_user @test_asc.advisor
       @pax_manifest_page.log_out
       @homepage.dev_auth @test_asc.advisor
-      api_page = BOACApiStudentPage.new @driver
-      api_page.get_data @asc_test_student
-      @asc_test_student_sports = api_page.asc_teams
+      api_page_active = BOACApiStudentPage.new @driver
+      api_page_active.get_data @asc_active_test_student
+      @asc_test_active_student_sports = api_page_active.asc_teams
+      api_page_inactive = BOACApiStudentPage.new @driver
+      api_page_inactive.get_data @asc_inactive_test_student
+      @asc_test_inactive_student_sports = api_page_inactive.asc_teams
       @homepage.load_page
       @homepage.log_out
 
@@ -140,17 +147,26 @@ unless ENV['NO_DEPS']
 
       context 'visiting a student page' do
 
-        it 'sees team information' do
-          @student_page.load_page @asc_test_student
-          expect(@student_page.sports.sort).to eql(@asc_test_student_sports.sort)
-        end
-
-        it('sees ASC Inactive information') { expect(@student_page.inactive_asc_flag?).to be true }
-
         it 'sees no COE Inactive information' do
           @student_page.load_page @coe_test_student
           expect(@student_page.inactive_coe_flag?).to be false
         end
+      end
+
+      context 'visiting an inactive ASC student page' do
+
+        before(:all) { @student_page.load_page @asc_inactive_test_student }
+
+        it('sees team information') { expect(@student_page.sports).to eql(@asc_test_inactive_student_sports.sort) }
+        it('sees ASC Inactive information') { expect(@student_page.inactive_asc_flag?).to be true }
+      end
+
+      context 'visiting an active ASC student page' do
+
+        before(:all) { @student_page.load_page @asc_active_test_student }
+
+        it('sees team information') { expect(@student_page.sports.sort).to eql(@asc_test_active_student_sports.sort) }
+        it('sees no ASC Inactive information') { expect(@student_page.inactive_asc_flag?).to be false }
       end
 
       context 'visiting a student API page' do
@@ -236,10 +252,10 @@ unless ENV['NO_DEPS']
           end
 
           it('sees team information') do
-            visible_sports = @cohort_page.student_sports(@asc_test_student).sort
-            expect(visible_sports).to eql(@asc_test_student_sports.sort)
+            visible_sports = @cohort_page.student_sports(@asc_inactive_test_student).sort
+            expect(visible_sports).to eql(@asc_test_inactive_student_sports.sort)
           end
-          it('sees ASC Inactive information') { expect(@cohort_page.student_inactive_asc_flag? @asc_test_student).to be true }
+          it('sees ASC Inactive information') { expect(@cohort_page.student_inactive_asc_flag? @asc_inactive_test_student).to be true }
         end
       end
 
@@ -351,11 +367,19 @@ unless ENV['NO_DEPS']
         it('sees COE Inactive information') { expect(@student_page.inactive_coe_flag?).to be true }
       end
 
-      context 'visiting an ASC student page' do
+      context 'visiting an inactive ASC student page' do
 
-        before(:all) { @student_page.load_page @asc_test_student }
+        before(:all) { @student_page.load_page @asc_inactive_test_student }
 
-        it('sees team information') { expect(@student_page.sports.sort).to eql(@asc_test_student_sports.sort) }
+        it('sees no team information') { expect(@student_page.sports).to be_empty }
+        it('sees no ASC Inactive information') { expect(@student_page.inactive_asc_flag?).to be false }
+      end
+
+      context 'visiting an active ASC student page' do
+
+        before(:all) { @student_page.load_page @asc_active_test_student }
+
+        it('sees team information') { expect(@student_page.sports.sort).to eql(@asc_test_active_student_sports.sort) }
         it('sees no ASC Inactive information') { expect(@student_page.inactive_asc_flag?).to be false }
       end
 
@@ -533,11 +557,19 @@ unless ENV['NO_DEPS']
         it('cannot delete the cohort') { expect(@group_page.delete_cohort_button?).to be false }
       end
 
-      context 'visiting an ASC student page' do
+      context 'visiting an inactive ASC student page' do
 
-        before(:all) { @student_page.load_page @asc_test_student }
+        before(:all) { @student_page.load_page @asc_inactive_test_student }
 
-        it('sees team information') { expect(@student_page.sports.sort).to eql(@asc_test_student_sports.sort) }
+        it('sees no team information') { expect(@student_page.sports).to be_empty }
+        it('sees no ASC Inactive information') { expect(@student_page.inactive_asc_flag?).to be false }
+      end
+
+      context 'visiting an active ASC student page' do
+
+        before(:all) { @student_page.load_page @asc_active_test_student }
+
+        it('sees team information') { expect(@student_page.sports.sort).to eql(@asc_test_active_student_sports.sort) }
         it('sees no ASC Inactive information') { expect(@student_page.inactive_asc_flag?).to be false }
       end
 

@@ -2,6 +2,29 @@
     "filters": {
         "students": [
             {
+                "levels": [
+                    {
+                        "level": "30"
+                    },
+                    {
+                        "level": "40"
+                    },
+                    {
+                        "level": "5"
+                    }
+                ],
+                "ethnicities": [
+                    {
+                        "ethnicity": "Puerto Rican"
+                    }
+                ],
+                "genders": [
+                    {
+                        "gender": "Male"
+                    }
+                ]
+            },
+            {
                 "incomplete_sched_grades": [
                     {
                         "min": "2023-03-17",
@@ -171,26 +194,6 @@
                 ],
                 "coe_probation": true,
                 "coe_underrepresented_minority": true
-            },
-            {
-                "levels": [
-                    {
-                        "level": "30"
-                    },
-                    {
-                        "level": "40"
-                    }
-                ],
-                "ethnicities": [
-                    {
-                        "ethnicity": "Puerto Rican"
-                    }
-                ],
-                "genders": [
-                    {
-                        "gender": "Male"
-                    }
-                ]
             },
             {
                 "expected_grad_terms": true,
