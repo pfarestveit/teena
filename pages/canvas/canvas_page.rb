@@ -27,7 +27,7 @@ module Page
     link(:data_use_link, text: 'Data Use & Analytics')
     link(:honor_code_link, text: 'UC Berkeley Honor Code')
     link(:student_resources_link, text: 'Student Resources')
-    link(:user_prov_link, text: 'User Provisioning')
+    link(:user_prov_link, text: RipleyTool::USER_PROVISIONING.name)
     link(:conf_tool_link, text: 'BigBlueButton')
 
     button(:submit_button, xpath: '//button[contains(.,"Submit")]')

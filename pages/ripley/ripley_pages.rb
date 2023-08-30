@@ -42,7 +42,7 @@ module RipleyPages
   h1(:denied_msg, id: 'TBD')
   div(:auth_check_failed_msg, id: 'TBD "Authorization check failed."')
   div(:no_access_msg, id: 'TBD "This feature is only available to faculty and staff."')
-  div(:unauthorized_msg, xpath: '//div[text()="Unauthorized"]')
+  div(:unauthorized_msg, xpath: '//div[contains(., "Unauthorized")]')
 
   div(:progress_bar, id: 'TBD')
 

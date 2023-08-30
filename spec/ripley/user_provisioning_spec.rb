@@ -27,6 +27,7 @@ describe 'User Provisioning' do
       @splash_page.basic_auth test.admin.uid
     else
       @canvas.log_in(@cal_net, test.admin.username, Utils.super_admin_password)
+      RipleyTool::TOOLS.each { |t| @canvas.add_ripley_tool t }
       @canvas.set_canvas_ids test_users
     end
   end
@@ -86,8 +87,7 @@ describe 'User Provisioning' do
         it "prevents the #{user.role} from reaching the tool" do
           @canvas.masquerade_as user
           @user_prov_tool.load_embedded_tool
-          @user_prov_tool.enter_uids_and_submit Utils.oski_uid
-          @user_prov_tool.error_msg_element.when_visible Utils.short_wait
+          @user_prov_tool.unauthorized_msg_element.when_visible Utils.short_wait
         end
       end
     end
