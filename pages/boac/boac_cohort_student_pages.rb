@@ -168,12 +168,13 @@ module BOACCohortStudentPages
 
   def visible_courses_data(student)
     wait_until(Utils.medium_wait) { player_link_elements.any? }
+    sleep 1
     row_xpath = "#{student_row_xpath student}//tbody/tr"
     row_els = row_elements(xpath: row_xpath)
     rows_data = []
     row_els.each_with_index do |_, i|
-      mid_flag_el = div_element(xpath: "#{row_xpath}[#{i + 1}]/td[4]/*[name()=\"svg\"][@data-icon=\"exclamation-triangle\"]")
-      final_flag_el = div_element(xpath: "#{row_xpath}[#{i + 1}]/td[5]/*[name()=\"svg\"][@data-icon=\"exclamation-triangle\"]")
+      mid_flag_el = div_element(xpath: "#{row_xpath}[#{i + 1}]/td[4]/*[name()=\"svg\"][@data-icon=\"triangle-exclamation\"]")
+      final_flag_el = div_element(xpath: "#{row_xpath}[#{i + 1}]/td[5]/*[name()=\"svg\"][@data-icon=\"triangle-exclamation\"]")
       rows_data << {
         course_code: cell_element(xpath: "#{row_xpath}[#{i + 1}]/td[1]").text,
         units: cell_element(xpath: "#{row_xpath}[#{i + 1}]/td[2]").text,

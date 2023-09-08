@@ -799,7 +799,7 @@ unless ENV['NO_DEPS']
           it('shows the complete note including private data') { @student_page.verify_note(@eop_note, @ce3_advisor) }
 
           it 'allows the advisor to download the note attachments' do
-            @eop_note.attachments.each { |attach| @student_page.download_attachment(@eop_note, attach) }
+            @eop_note.attachments.each { |attach| @student_page.download_attachment(@eop_note, attach, @eop_student) }
           end
         end
 

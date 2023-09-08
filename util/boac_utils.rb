@@ -118,27 +118,27 @@ class BOACUtils < Utils
       logger.warn "Skipping search test for #{note_test_case} because the note is private."
       return nil
     else
-      note_text = Nokogiri::HTML(note.body).text
+      note_text = note.body
     end
 
-    search_words = note_text.split
-    range = (search_words.length >= search_word_count) ? search_word_count : search_words.length
-    search_string = search_words[(0 - range)..-1].join(' ')
+    search_phrases = note_text.split(/(<\w+>|<\/\w+>)/)
+    search_string = search_phrases.find { |p| p.length > 24 }
     {
       :note => note,
       :test_case => note_test_case,
-      :string => search_string
+      :string => (search_string[0..23].strip if search_string)
     }
   end
 
   def self.generate_appt_search_query(student, appt)
     test_case = "UID #{student.uid} appointment ID #{appt.id}"
-    # If the detail is too short, then searches are useless
-    search_string = Nokogiri::HTML(appt.detail).text.split[0..2].join(' ') if appt.detail.length >= 3
+    return nil unless appt.detail
+    search_phrases = appt.detail.split(/(<\w+>|<\/\w+>)/)
+    search_string = search_phrases.find { |p| p.length > 24 }
     {
       :appt => appt,
       :test_case => test_case,
-      :string => search_string
+      :string => (search_string[0..23].strip if search_string)
     }
   end
 

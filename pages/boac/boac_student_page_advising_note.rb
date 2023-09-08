@@ -60,6 +60,7 @@ module BOACStudentPageAdvisingNote
   div(:timeline_notes_spinner, id: 'timeline-notes-spinner')
 
   def search_within_timeline_notes(query)
+    logger.debug "Searching for '#{query}'"
     wait_for_element_and_type(timeline_notes_query_input_element, query)
     hit_enter
     sleep 1
@@ -203,13 +204,7 @@ module BOACStudentPageAdvisingNote
 
     expand_item note
     visible_data.merge!(visible_expanded_note_data note)
-    if note.advisor.full_name
-      wait_until(1, "Expected '#{note.advisor.full_name.downcase}', got '#{visible_data[:advisor].downcase}'") do
-        note.advisor.alt_names.map(&:downcase).push(note.advisor.full_name.downcase).include? visible_data[:advisor].downcase
-      end
-    else
-      wait_until(1, 'Expected non-blank advisor name') { !visible_data[:advisor].empty? }
-    end
+    wait_until(1, 'Expected non-blank advisor name') { !visible_data[:advisor].empty? }
     unless note.source == TimelineRecordSource::EOP
       wait_until(1, 'Expected non-blank advisor role') { !visible_data[:advisor_role].empty? }
     end

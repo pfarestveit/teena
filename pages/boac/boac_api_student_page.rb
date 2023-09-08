@@ -38,7 +38,9 @@ class BOACApiStudentPage
   end
 
   def asc_teams
-    asc_profile && asc_profile['athletics'].map { |a| a['groupName'] }
+    asc_profile && asc_profile['athletics'].map do |a|
+      "#{a['groupName']}#{' (Inactive)' unless asc_profile['isActiveAsc']}"
+    end
   end
 
   # CoE Profile

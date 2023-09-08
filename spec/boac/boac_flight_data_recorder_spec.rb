@@ -53,6 +53,7 @@ unless ENV['NO_DEPS']
       end
 
       it 'shows the total number of notes imported from the SIS' do
+        sleep 1
         expect(@flight_data_recorder.notes_count_sis).to eql(Utils.int_to_s_with_commas NessieTimelineUtils.get_external_note_count('sis_advising_notes'))
       end
 
