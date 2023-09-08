@@ -128,7 +128,7 @@ unless ENV['DEPS']
                               all_student_data = []
 
                               # Limit the detailed tests to a configurable number of students in the class
-                              expected_students = expected_students[0..BOACUtils.config['class_page_max_classmates']]
+                              expected_students = expected_students.select { |s| s.status == 'active' }[0..BOACUtils.config['class_page_max_classmates']]
                               expected_students.each do |student|
 
                                 # Load the student's data and find the matching course

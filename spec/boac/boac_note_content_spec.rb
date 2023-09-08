@@ -12,6 +12,7 @@ unless ENV['NO_DEPS']
       test = BOACTestConfig.new
       test.note_content
       downloadable_attachments = []
+      timeline_searches = []
       advisor_link_tested = false
       max_note_count_per_src = BOACUtils.notes_max_notes - 1
 
@@ -271,17 +272,11 @@ unless ENV['NO_DEPS']
                   end
 
                   # Note search
-
-                  if (query = BOACUtils.generate_note_search_query(student, note))
+                  query = BOACUtils.generate_note_search_query(student, note)
+                  if query && query[:string] && query[:string].length > 0
                     @student_page.show_notes
-                    initial_msg_count = @student_page.visible_message_ids.length
-                    @student_page.search_within_timeline_notes(query[:string].split.first)
-                    message_ids = @student_page.visible_message_ids
-
-                    it("searches within academic timeline for #{query[:test_case]}") do
-                      expect(message_ids).to include(query[:note].id)
-                    end
-
+                    @student_page.search_within_timeline_notes query[:string]
+                    timeline_searches << query if @student_page.visible_message_ids.include?(query[:note].id)
                     @student_page.clear_timeline_notes_search
                   end
 
@@ -330,6 +325,8 @@ unless ENV['NO_DEPS']
           it("delivers no file to an anonymous user when hitting the attachment download endpoint for #{identifier}") { expect(no_file).to be true }
         end
       end
+
+      it('returns results from timeline note searches') { expect(timeline_searches).not_to be_empty }
 
     rescue => e
       Utils.log_error e

@@ -64,6 +64,7 @@ class BOACStudentPage
       wait_for_update_and_click toggle_personal_details_element
       wait_for_element(additional_information_outer_element, Utils.medium_wait)
     end
+    sleep 1
   end
 
   def personal_details_expanded?
@@ -104,15 +105,16 @@ class BOACStudentPage
   end
 
   def visible_degree(field)
+    sleep 1
     xpath = "//h3[contains(text(), \"Degree\")]/following-sibling::div[contains(., \"#{field}\")]"
     deg_type_el = div_element(xpath: "#{xpath}/div[1]")
     deg_date_el = div_element(xpath: "#{xpath}/div[2]")
     deg_college_el_1 = div_element(xpath: "#{xpath}/div[4]")
     deg_college_el_2 = div_element(xpath: "#{xpath}/div[3]")
     college = if deg_college_el_1.exists?
-                deg_college_el_1.text
+                deg_college_el_1.attribute('innerText')
               elsif deg_college_el_2.exists?
-                deg_college_el_2.text
+                deg_college_el_2.attribute('innerText')
               end
     {
       deg_type: (deg_type_el.text.strip if deg_type_el.exists?),
@@ -144,12 +146,13 @@ class BOACStudentPage
 
   # TEAMS
 
-  elements(:squad, :div, id: 'student-bio-athletics')
+  elements(:squad, :div, xpath: '//div[@id="student-bio-athletics"]/div')
 
   # Returns the visible team information
   # @return [Array<String>]
   def sports
-    squad_elements.map { |el| el.text.strip }
+    sleep 1
+    squad_elements.map { |el| el.attribute('innerText').strip }
   end
 
   # TIMELINE
@@ -266,15 +269,16 @@ class BOACStudentPage
     term_units_max_el = div_element(id: "term-#{term_id}-max-units")
     term_academic_standing_el = span_element(id: "academic-standing-term-#{term_id}")
     {
-      term_units: (term_units_el.text.split.last if term_units_el.exists?),
+      term_units: (term_units_el.attribute('innerText').split.last if term_units_el.exists?),
       term_gpa: (term_gpa_el.text.split.last if term_gpa_el.exists?),
-      term_units_min: (term_units_min_el.text.split.last if term_units_min_el.exists?),
-      term_units_max: (term_units_max_el.text.split.last if term_units_max_el.exists?),
+      term_units_min: (term_units_min_el.attribute('innerText').split.last if term_units_min_el.exists?),
+      term_units_max: (term_units_max_el.attribute('innerText').split.last if term_units_max_el.exists?),
       academic_standing: (term_academic_standing_el.text.strip if term_academic_standing_el.exists?)
     }
   end
 
   def visible_collapsed_course_data(term_id, i)
+    sleep 1
     code_el = span_element(id: "term-#{term_id}-course-#{i}-name")
     wait_list_el = div_element(xpath: "//button[@id='term-#{term_id}-course-#{i}-toggle']/following-sibling::div[contains(@id, 'waitlisted-for')]")
     mid_point_grade_el = span_element(id: "term-#{term_id}-course-#{i}-midterm-grade")
@@ -312,10 +316,10 @@ class BOACStudentPage
     reqts_els = div_elements(xpath: "#{xpath}//div[@class='student-course-requirements']")
     {
       code: (code_el.text if code_el.exists?),
-      sections: (section_els.map { |el| el.text.split("\n").last.gsub(' |', '') } if section_els.any?),
-      title: (title_el.text if title_el.exists?),
-      incomplete_alert: (incomplete_grade_alert_el.text if incomplete_grade_alert_el.exists?),
-      reqts: (reqts_els.map &:text)
+      sections: (section_els.map { |el| el.attribute('innerText').split("\n").last.gsub(' |', '').strip } if section_els.any?),
+      title: (title_el.attribute('innerText') if title_el.exists?),
+      incomplete_alert: (incomplete_grade_alert_el.attribute('innerText').strip if incomplete_grade_alert_el.exists?),
+      reqts: (reqts_els.map { |el| el.attribute('innerText').strip })
     }
   end
 
@@ -340,7 +344,7 @@ class BOACStudentPage
 
   def visible_dropped_section_data(term_id, course_code, component, number)
     drop_el = div_element(:xpath => "//div[contains(@id, 'term-#{term_id}-dropped-course')][contains(.,\"#{course_code} - #{component} #{number}\")]")
-    drop_el.text if drop_el.exists?
+    drop_el.attribute('innerText') if drop_el.exists?
   end
 
   # COURSE SITES

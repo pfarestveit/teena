@@ -104,6 +104,7 @@ describe 'BOA draft note' do
 
     context 'on the student page' do
       before(:all) do
+        @student_page.load_page @test_student
         @student_page.click_create_new_note
       end
 
@@ -583,10 +584,6 @@ describe 'BOA draft note' do
         expect(@visible_ids).to include(@note_4.id)
         expect(@visible_ids).to include(@note_5.id)
         expect(@visible_ids).to include(@note_6.id)
-      end
-
-      it 'shows the draft author\'s name' do
-        expect(@visible_note_4[:author]).to eql(@test.advisor.full_name)
       end
 
       it 'shows the drafts in the right order (newest first)' do

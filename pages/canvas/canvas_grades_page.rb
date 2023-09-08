@@ -71,7 +71,7 @@ module Page
       update_course_settings
     end
 
-    button(:gradebook_settings_button, xpath: '//button[@data-test-id="gradebook-settings-button"]')
+    button(:gradebook_settings_button, xpath: '//button[@data-testid="gradebook-settings-button"]')
     div(:grade_posting_policy_tab, id: 'tab-tab-panel-post')
     checkbox(:gradebook_include_ungraded, xpath: '//span[text()="Automatically apply grade for missing submissions"]/ancestor::label/preceding-sibling::input')
     paragraph(:gradebook_manual_posting_msg, xpath: '//p[contains(text(), "While the grades for an assignment are set to manual")]')

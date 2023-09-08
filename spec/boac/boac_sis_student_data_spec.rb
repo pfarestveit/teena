@@ -534,7 +534,7 @@ unless ENV['NO_DEPS']
           it("shows no Transfer for #{test_case}") { expect(student_page_sis_data[:transfer]).to be_nil }
         end
 
-        if api_sis_profile_data[:level] == 'Graduate'
+        if %w(Graduate Masters/Professional).include? api_sis_profile_data[:level]
           it "shows no expected graduation date for #{test_case}" do
             expect(student_page_sis_data[:expected_graduation]).to be nil
           end

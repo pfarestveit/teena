@@ -303,7 +303,7 @@ class BOACTestConfig < TestConfig
 
   # Config for class page testing
   def class_pages
-    set_base_configs
+    set_base_configs(nil, {include_inactive: true})
     set_test_students(CONFIG['class_page_max_users'], {with_enrollments: true})
   end
 
@@ -389,7 +389,7 @@ class BOACTestConfig < TestConfig
 
   # Config for advising note content testing
   def note_content
-    set_base_configs
+    set_base_configs(nil, {include_inactive: true})
     set_test_students(CONFIG['notes_max_users'], {with_notes: true, include_inactive: true})
   end
 

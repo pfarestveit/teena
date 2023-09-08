@@ -101,6 +101,9 @@ unless ENV['NO_DEPS']
             if note_search[:note].source_body_empty || !note_search[:note].body || note_search[:note].body.empty?
               logger.warn "Skipping search test for #{note_search[:test_case]} because the source note body was empty and too many results will be returned."
 
+            elsif !note_search[:string]
+              logger.warn "Skipping search test for #{note_search[:test_case]} because Teena couldn't find a legit search string"
+
             else
 
               # Search string

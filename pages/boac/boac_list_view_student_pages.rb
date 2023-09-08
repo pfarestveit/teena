@@ -59,8 +59,8 @@ module BOACListViewStudentPages
   # @param student [BOACUser]
   # @return [Array<String>]
   def student_sports(student)
-    els = span_elements(xpath: "//div[@id='student-#{student.uid}']//span[contains(@id,\"student-team\")]")
-    els && els.map(&:text)
+    els = span_elements(xpath: "//div[@id='student-#{student.uid}']//span[contains(@id,\"student-team\")]/..")
+    els && els.map { |el| el.attribute('innerText') }
   end
 
   # Returns all the UIDs shown on list view
