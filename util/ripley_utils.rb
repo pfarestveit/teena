@@ -315,6 +315,7 @@ class RipleyUtils < Utils
                          sis_id: r['sid'],
                          first_name: r['first_name'],
                          last_name: r['last_name'],
+                         full_name: "#{r['first_name']} #{r['last_name']}",
                          email: r['email_address']
       SectionEnrollment.new user: student,
                             section_id: r['sis_section_id'],

@@ -93,6 +93,10 @@ module Page
         (tries -= 1).zero? ? fail : (sleep 2; retry)
       end
     end
+    if (new_user_panel = button_element(id: 'new_user_tutorial_toggle')).exists?
+      js_click new_user_panel
+      sleep 1
+    end
   end
 
   # Hides the BOA footer element in order to interact with elements hidden beneath it.

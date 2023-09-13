@@ -7,31 +7,47 @@ describe 'bCourses' do
   include Logging
 
   test = RipleyTestConfig.new
-  site = test.get_single_test_site
-  teacher = site.course.teachers.first
+  test.add_user
+  non_teachers = [
+    test.lead_ta,
+    test.ta,
+    test.designer,
+    test.reader,
+    test.observer,
+    test.students.first
+  # TODO - uncomment when waitlist student can be added via tool
+  # test.wait_list_student
+  ]
 
   before(:all) do
     @driver = Utils.launch_browser
     @cal_net = Page::CalNetPage.new @driver
     @canvas = Page::CanvasPage.new @driver
+    @canvas_api = CanvasAPIPage.new @driver
     @splash_page = RipleySplashPage.new @driver
     @create_course_site_page = RipleyCreateCourseSitePage.new @driver
     @course_add_user_page = RipleyAddUserPage.new @driver
 
     if standalone
-      @splash_page.dev_auth teacher.uid
+      @site = test.get_single_test_site
+      @splash_page.load_page
+      @splash_page.dev_auth(test.admin.uid, @site, @cal_net)
     else
       @canvas.log_in(@cal_net, test.admin.username, Utils.super_admin_password)
-      @canvas.set_canvas_ids([teacher] + site.manual_members)
-      @canvas.masquerade_as teacher
+      RipleyTool::TOOLS.each { |t| @canvas.add_ripley_tool t }
+      section_ids = @canvas_api.get_course_site_sis_section_ids ENV['SITE'] if ENV['SITE']
+      @site = test.get_single_test_site section_ids
+      @teacher = @site.course.teachers.find { |t| t.role_code == 'PI' } || @site.course.teachers.first
+      @canvas.set_canvas_ids([@teacher] + non_teachers)
     end
 
-    @create_course_site_page.provision_course_site(site, { standalone: standalone })
-    if standalone
-      @create_course_site_page.wait_for_standalone_site_id(site, @splash_page)
+    if @site.site_id && !standalone
+      @canvas.load_course_site @site
     else
-      @canvas.publish_course_site site
+      @create_course_site_page.provision_course_site(@site, {standalone: standalone})
+      @create_course_site_page.wait_for_standalone_site_id(@site, @splash_page) if standalone
     end
+    @canvas.publish_course_site @site unless standalone
   end
 
   after(:all) { Utils.quit_browser @driver }
@@ -41,7 +57,7 @@ describe 'bCourses' do
 
       context 'in the footer' do
 
-        before(:all) { @canvas.load_users_page site }
+        before(:all) { @canvas.masquerade_as @teacher }
 
         it 'include an "About" link' do
           @canvas.scroll_to_bottom
@@ -87,7 +103,10 @@ describe 'bCourses' do
 
       context 'in Add People' do
 
-        before(:all) { @canvas.click_add_people }
+        before(:all) do
+          @canvas.load_users_page @site
+          @canvas.click_add_people
+        end
 
         it 'include a search by Email Address option' do
           expect(@canvas.add_user_by_email_label).to eql('Email Address')
@@ -128,9 +147,16 @@ describe 'bCourses' do
       if standalone
         @course_add_user_page.load_standalone_tool site
       else
-        @canvas.load_users_page site
-        @canvas.click_find_person_to_add
+        # TODO - uncomment when link is present
+        # @canvas.load_users_page @site
+        # @canvas.click_find_person_to_add
+        @course_add_user_page.load_embedded_tool @site
       end
+    end
+
+    it 'requires that a search term be entered' do
+      @course_add_user_page.search_button_element.when_present Utils.short_wait
+      expect(@course_add_user_page.search_button_element.enabled?).to be false
     end
 
     it 'allows the user to search by name' do
@@ -170,15 +196,10 @@ describe 'bCourses' do
       @course_add_user_page.no_results_msg_element.when_visible Utils.medium_wait
     end
 
-    it 'requires that a search term be entered' do
-      @course_add_user_page.search(' ', 'Last Name, First Name')
-      @course_add_user_page.blank_search_msg_element.when_visible Utils.medium_wait
-    end
-
     it 'offers the right course site sections' do
       @course_add_user_page.search('Bear', 'Last Name, First Name')
       @course_add_user_page.wait_until(Utils.medium_wait) { @course_add_user_page.uid_results.include? "#{Utils.oski_uid}" }
-      expect(@course_add_user_page.course_section_options.length).to eql(site.sections.length)
+      expect(@course_add_user_page.course_section_options.length).to eql(@site.sections.length)
     end
   end
 
@@ -187,19 +208,20 @@ describe 'bCourses' do
     describe 'import users to course site' do
 
       before(:all) do
-        @section_to_test = site.sections.first
-        @canvas.masquerade_as(teacher, site)
-        @canvas.load_users_page site
-        @canvas.click_find_person_to_add
-        site.manual_members.each do |user|
+        @section_to_test = @site.sections.first
+        # TODO - uncomment when the link is present
+        # @canvas.load_users_page @site
+        # @canvas.click_find_person_to_add
+        @course_add_user_page.load_embedded_tool @site
+        non_teachers.each do |user|
           @course_add_user_page.search(user.uid, 'CalNet UID')
           @course_add_user_page.add_user_by_uid(user, @section_to_test)
         end
-        @canvas.load_users_page site
-        @canvas.load_all_students site
+        @canvas.load_users_page @site
+        @canvas.load_all_students @site
       end
 
-      site.manual_members.each do |user|
+      non_teachers.each do |user|
         it "shows an added #{user.role} user in the course site roster" do
           @canvas.search_user_by_canvas_id user
           @canvas.wait_until(Utils.medium_wait) { @canvas.roster_user? user.canvas_id }
@@ -218,17 +240,15 @@ describe 'bCourses' do
       before(:all) do
         @policies_heading = 'Academic Accommodations Hub | Executive Vice Chancellor and Provost'
         @mental_health_heading = 'Mental Health | University Health Services'
-        @canvas.masquerade_as(teacher, site)
-        @canvas.publish_course_site site
       end
-
-      # Check each user role's access to the tool
 
       [test.lead_ta, test.ta].each do |user|
         it "allows #{user.role} #{user.uid} access to the Find a Person to Add tool with limited roles" do
-          @canvas.masquerade_as(user, site)
-          @canvas.load_users_page site
-          @canvas.click_find_person_to_add
+          @canvas.masquerade_as(user, @site)
+          # TODO - uncomment when link is present
+          # @canvas.load_users_page @site
+          # @canvas.click_find_person_to_add
+          @course_add_user_page.load_embedded_tool @site
           @course_add_user_page.search('Oski', 'Last Name, First Name')
           opts = if user == test.lead_ta
                    ['Student', 'Waitlist Student', 'TA', 'Lead TA', 'Reader', 'Observer']
@@ -236,52 +256,66 @@ describe 'bCourses' do
                    ['Student', 'Waitlist Student', 'Observer']
                  end
           expect(@course_add_user_page.visible_user_role_options).to eql(opts)
-
-          it "offers #{user.role} an Academic Policies link" do
-            @canvas.switch_to_main_content
-            expect(@canvas.external_link_valid?(@canvas.policies_link_element, @policies_heading)).to be true
-          end
         end
 
-        [test.designer, test.reader].each do |user|
-          it "denies #{user.role} #{user.uid} access to the Find a Person to Add tool" do
-            @canvas.masquerade_as(user, site)
-            @course_add_user_page.load_embedded_tool site
-            @course_add_user_page.no_access_msg_element.when_visible Utils.medium_wait
-          end
-
-          it "offers #{user.role} an Academic Policies link" do
-            @canvas.switch_to_main_content
-            expect(@canvas.external_link_valid?(@canvas.policies_link_element, @policies_heading)).to be true
-          end
+        it "offers no link to the tool in course navigation" do
+          @canvas.switch_to_main_content
+          expect(@canvas.tool_nav_link(RipleyTool::ADD_USER).exists?).to be false
         end
 
-        [test.observer, test.students.first, test.wait_list_student].each do |user|
-          it "denies #{user.role} #{user.uid} access to the Find a Person to Add tool" do
-            Utils.set_default_window_size @driver
-            @canvas.masquerade_as(user, site)
-            @course_add_user_page.hit_embedded_tool_url site
-            @canvas.wait_for_error(@canvas.access_denied_msg_element, @course_add_user_page.no_access_msg_element)
-          end
+        it "offers #{user.role} an Academic Policies link" do
+          expect(@canvas.external_link_valid?(@canvas.policies_link_element, @policies_heading)).to be true
+        end
+      end
 
-          it "offers #{user.role} an Academic Policies link" do
-            @canvas.switch_to_main_content
-            expect(@canvas.external_link_valid?(@canvas.policies_link_element, @policies_heading)).to be true
-          end
+      [test.designer, test.reader].each do |user|
+        it "denies #{user.role} #{user.uid} access to the Find a Person to Add tool" do
+          @canvas.masquerade_as(user, @site)
+          @course_add_user_page.load_embedded_tool @site
+          @course_add_user_page.auth_check_failed_msg_element.when_visible Utils.medium_wait
+        end
 
-          it "offers #{user.role} a Mental Health Resources link" do
-            expect(@canvas.external_link_valid?(@canvas.mental_health_link_element, @mental_health_heading)).to be true
-          end
+        it "offers no link to the tool in course navigation" do
+          @canvas.switch_to_main_content
+          expect(@canvas.tool_nav_link(RipleyTool::ADD_USER).exists?).to be false
+        end
 
-          it "offers #{user.role} an Academic Policies link in reduced viewport" do
-            Utils.set_reduced_window_size @driver
-            @canvas.expand_mobile_menu
-            expect(@canvas.external_link_valid?(@canvas.policies_responsive_link_element, @policies_heading)).to be true
-          end
+        it "offers #{user.role} an Academic Policies link" do
+          expect(@canvas.external_link_valid?(@canvas.policies_link_element, @policies_heading)).to be true
+        end
+      end
 
-          it "offers #{user.role} a Mental Health Resources link in reduced viewport" do
-            expect(@canvas.external_link_valid?(@canvas.mental_health_responsive_link_element, @mental_health_heading)).to be true
-          end
+      # TODO - reinstate test.wait_list_student
+      [test.observer, test.students.first].each do |user|
+        it "denies #{user.role} #{user.uid} access to the Find a Person to Add tool" do
+          Utils.set_default_window_size @driver
+          @canvas.masquerade_as(user, @site)
+          @course_add_user_page.load_embedded_tool @site
+          @course_add_user_page.auth_check_failed_msg_element.when_visible Utils.medium_wait
+        end
+
+        it "offers no link to the tool in course navigation" do
+          @canvas.switch_to_main_content
+          expect(@canvas.tool_nav_link(RipleyTool::ADD_USER).exists?).to be false
+        end
+
+        it "offers #{user.role} an Academic Policies link" do
+          @canvas.switch_to_main_content
+          expect(@canvas.external_link_valid?(@canvas.policies_link_element, @policies_heading)).to be true
+        end
+
+        it "offers #{user.role} a Mental Health Resources link" do
+          expect(@canvas.external_link_valid?(@canvas.mental_health_link_element, @mental_health_heading)).to be true
+        end
+
+        it "offers #{user.role} an Academic Policies link in reduced viewport" do
+          Utils.set_reduced_window_size @driver
+          @canvas.expand_mobile_menu
+          expect(@canvas.external_link_valid?(@canvas.policies_responsive_link_element, @policies_heading)).to be true
+        end
+
+        it "offers #{user.role} a Mental Health Resources link in reduced viewport" do
+          expect(@canvas.external_link_valid?(@canvas.mental_health_responsive_link_element, @mental_health_heading)).to be true
         end
       end
     end

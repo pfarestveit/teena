@@ -428,6 +428,9 @@ module CanvasPeoplePage
   # @param canvas_base_url [String]
   # @return [Array<User>]
   def get_students(course, section = nil, canvas_base_url = nil)
+    enrollments = course.sections.map(&:enrollments).flatten
+    course_students = enrollments.map(&:user).flatten if enrollments.any?
+
     load_all_students(course, canvas_base_url)
     els = student_enrollment_row_elements + waitlist_enrollment_row_elements
 
@@ -439,7 +442,14 @@ module CanvasPeoplePage
       canvas_id = row.attribute('id').delete('user_')
       uid = cell_element(xpath: "//table[contains(@class, 'roster')]//tr[contains(@id,'user_#{canvas_id}')]//td[3]").text.gsub('inactive-', '').strip
       logger.debug "Canvas ID #{canvas_id}, UID #{uid}"
-      User.new({uid: uid, canvas_id: canvas_id})
+      student = if course_students
+                  course_students.find { |s| s.uid == uid }
+                else
+                  User.new uid: uid
+                end
+      student.canvas_id = canvas_id if student
+      logger.info "#{student.inspect}"
+      student
     end
     students.compact
   end

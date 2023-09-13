@@ -242,7 +242,7 @@ module Page
 
     def search_for_gradebook_student(user)
       # Try to find the user row a few times since stale element reference errors may occur
-      tries ||= 5
+      tries ||= 2
       begin
         tries -= 1
         wait_for_element(student_search_input_element, Utils.medium_wait)

@@ -37,7 +37,7 @@ describe 'bCourses Roster Photos' do
       RipleyTool::TOOLS.each { |t| @canvas.add_ripley_tool t }
       section_ids = @canvas_api.get_course_site_sis_section_ids ENV['SITE'] if ENV['SITE']
       @site = test.get_single_test_site section_ids
-      @teacher = @site.course.teachers.first
+      @teacher = @site.course.teachers.find { |t| t.role_code == 'PI' } || @site.course.teachers.first
       @canvas.set_canvas_ids([@teacher] + non_teachers)
       @canvas.masquerade_as @teacher
     end
