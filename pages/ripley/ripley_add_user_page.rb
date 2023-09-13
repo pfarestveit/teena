@@ -7,33 +7,32 @@ class RipleyAddUserPage
   include Page
   include RipleyPages
 
-  h1(:page_heading, id: 'TBD "Find a Person to Add"')
+  h1(:page_heading, xpath: '//h1[text()="Find a Person to Add"]')
 
   span(:no_sections_msg, id: 'TBD')
-  div(:no_results_msg, id: 'TBD "Your search did not match any users with a CalNet ID."')
-  div(:too_many_results_msg, id: 'TBD "Please refine your search to limit the number of results."')
-  div(:blank_search_msg, id: 'TBD "You did not enter any search terms.  Please try again."')
-  div(:success_msg, id: 'TBD')
+  div(:no_results_msg, xpath: '//div[contains(text(), "Your search did not match any users with a CalNet ID.")]')
+  div(:too_many_results_msg, xpath: '//div[contains(text(), "Please refine your search to limit the number of results.")]')
+  div(:success_msg, id: 'success-message')
 
-  text_area(:search_term, id: 'TBD')
-  select_list(:search_type, id: 'TBD')
-  button(:search_button, id: 'TBD')
+  text_area(:search_term, id: 'search-text')
+  select_list(:search_type, id: 'search-type')
+  button(:search_button, id: 'add-user-submit-search-btn')
 
-  button(:need_help_button, id: 'TBD "Need help finding someone?"')
+  button(:need_help_button, id: 'add-user-help-btn')
   div(:help_notice, id: 'TBD')
-  link(:cal_net_dir_link, id: 'TBD "CalNet Directory"')
-  link(:cal_net_guest_acct_link, id: 'TBD "CalNet Guest Account"')
-  link(:bcourses_help_link, id: 'TBD "bCourses help page"')
+  link(:cal_net_dir_link, id: 'link-to-httpdirectoryberkeleyedu')
+  link(:cal_net_guest_acct_link, id: 'link-to-httpsidcberkeleyeduguests')
+  link(:bcourses_help_link, id: 'link-to-httpsberkeleyservicenowcomkb_viewdosysparm_articleKB0010842')
 
-  table(:results_table, id: 'TBD "User Search Results"')
-  elements(:result_name, :span, id: 'TBD')
-  elements(:result_uid, :span, id: 'TBD')
-  elements(:result_email, :span, id: 'TBD')
+  table(:results_table, xpath: '//h2[text()="User Search Results"]/following-sibling::div//table')
+  elements(:result_name, :span, xpath: '//td[contains(@id, "user-search-result-row-name")]')
+  elements(:result_uid, :span, xpath: '//td[contains(@id, "user-search-result-row-ldap-uid")]')
+  elements(:result_email, :span, xpath: '//td[contains(@id, "user-search-result-row-email")]')
 
-  select_list(:user_role, id: 'TBD')
-  select_list(:course_section, id: 'TBD')
-  button(:add_user_button, id: 'TBD "Add User"')
-  button(:start_over_button, id: 'TBD "Start Over"')
+  select_list(:user_role, id: 'user-role')
+  select_list(:course_section, id: 'course-section')
+  button(:add_user_button, id: 'add-user-btn')
+  button(:start_over_button, id: 'start-over-btn')
 
   def embedded_tool_path(course)
     "/courses/#{course.site_id}/external_tools/#{RipleyTool::ADD_USER.tool_id}"
@@ -84,7 +83,12 @@ class RipleyAddUserPage
   end
 
   def user_checkbox(user)
-    checkbox_element(id: "TBD #{user}")
+    checkbox_element(xpath: "//td[contains(.,'#{user.uid}')]/ancestor::tr//input[@name='selectedUser']")
+  end
+
+  def visible_user_role_options
+    user_role_element.when_visible Utils.short_wait
+    user_role_options.map &:strip
   end
 
   def add_user_by_uid(user, section = nil)

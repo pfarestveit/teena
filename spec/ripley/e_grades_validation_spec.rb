@@ -9,25 +9,26 @@ unless ENV['STANDALONE']
     begin
 
       test = RipleyTestConfig.new
-      test.e_grades_api
+      test.get_e_grades_test_sites
       letter_grades = %w(A+ A A- B+ B B- C+ C C- D+ D D- F)
 
       @driver = Utils.launch_browser
       @cal_net = Page::CalNetPage.new @driver
       @canvas = Page::CanvasGradesPage.new @driver
+      @canvas_api = CanvasAPIPage.new @driver
       @splash_page = RipleySplashPage.new @driver
       @e_grades_export_page = RipleyEGradesPage.new @driver
 
-      @canvas.log_in(@cal_net, Utils.super_admin_username, Utils.super_admin_password)
+      @canvas.log_in(@cal_net, test.admin.username, Utils.super_admin_password)
+      RipleyTool::TOOLS.each { |t| @canvas.add_ripley_tool t }
 
       test.course_sites.each_with_index do |site, i|
 
         begin
-          @canvas.log_in(@cal_net, test.admin.username, Utils.super_admin_password)
           section_ids = @canvas_api.get_course_site_sis_section_ids site.site_id
           test.get_existing_site_data(site, section_ids)
 
-          instructor = site.course.teachers.first
+          instructor = site.course.teachers.find { |t| t.role_code == 'PI' } || site.course.teachers.first
           primary_section = site.sections.find &:primary
           test_case = "#{site.course.term} #{site.course.code} site #{site.site_id}"
           @canvas.set_canvas_ids [instructor]
@@ -46,11 +47,7 @@ unless ENV['STANDALONE']
             grades_are_final = @canvas.grades_final?
             logger.info "Grades are final is #{grades_are_final}"
             @canvas.hit_escape
-            gradebook_grades = students.map do |stud|
-              stud.sis_id = '' # TODO
-              stud.full_name = '' # TODO
-              @canvas.student_score stud if stud.sis_id
-            end
+            gradebook_grades = students.map { |stud| @canvas.student_score stud if stud.sis_id }
             gradebook_grades.compact!
             logger.debug "Gradebook grades: #{gradebook_grades}"
 

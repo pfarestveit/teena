@@ -32,7 +32,7 @@ unless ENV['STANDALONE']
       RipleyTool::TOOLS.each { |t| @canvas.add_ripley_tool t }
       section_ids = @canvas_api.get_course_site_sis_section_ids site.site_id
       test.get_existing_site_data(site, section_ids)
-      @teacher = site.course.teachers.find { |t| t.role_code == 'PI' }
+      @teacher = site.course.teachers.find { |t| t.role_code == 'PI' } || site.course.teachers.first
       @canvas.set_canvas_ids([@teacher] + site.manual_members)
 
       @primary_enrollments = site.course.sections.select(&:primary).map(&:enrollments).flatten
@@ -51,7 +51,7 @@ unless ENV['STANDALONE']
     it 'offers an E-Grades Export button on the Gradebook' do
       @canvas.load_gradebook site
       @canvas.click_e_grades_export_button
-      @e_grades_export_page.wait_until(Utils.medium_wait) { @e_grades_export_page.title == 'Download E-Grades' }
+      @e_grades_export_page.wait_until(Utils.medium_wait) { @e_grades_export_page.title == RipleyTool::E_GRADES.name }
       expect(@e_grades_export_page.i_frame_form_element? test.base_url).to be true
     end
 

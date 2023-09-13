@@ -17,6 +17,10 @@ class RipleyTestConfig < TestConfig
     @next_term = RipleyUtils.next_term @current_term
   end
 
+  def add_user
+    set_real_test_course_users
+  end
+
   def course_site_creation
     get_multiple_test_sites
   end
