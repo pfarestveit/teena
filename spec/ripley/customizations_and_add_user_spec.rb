@@ -14,9 +14,8 @@ describe 'bCourses' do
     test.designer,
     test.reader,
     test.observer,
-    test.students.first
-  # TODO - uncomment when waitlist student can be added via tool
-  # test.wait_list_student
+    test.students.first,
+    test.wait_list_student
   ]
 
   before(:all) do
@@ -47,7 +46,7 @@ describe 'bCourses' do
       @create_course_site_page.provision_course_site(@site, {standalone: standalone})
       @create_course_site_page.wait_for_standalone_site_id(@site, @splash_page) if standalone
     end
-    @canvas.publish_course_site @site unless standalone
+    @canvas.publish_course_site @site unless @site.site_id || standalone
   end
 
   after(:all) { Utils.quit_browser @driver }
@@ -285,8 +284,7 @@ describe 'bCourses' do
         end
       end
 
-      # TODO - reinstate test.wait_list_student
-      [test.observer, test.students.first].each do |user|
+      [test.observer, test.students.first, test.wait_list_student].each do |user|
         it "denies #{user.role} #{user.uid} access to the Find a Person to Add tool" do
           Utils.set_default_window_size @driver
           @canvas.masquerade_as(user, @site)

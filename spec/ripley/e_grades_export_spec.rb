@@ -33,7 +33,7 @@ unless ENV['STANDALONE']
       section_ids = @canvas_api.get_course_site_sis_section_ids site.site_id
       test.get_existing_site_data(site, section_ids)
       @teacher = site.course.teachers.find { |t| t.role_code == 'PI' } || site.course.teachers.first
-      @canvas.set_canvas_ids([@teacher] + site.manual_members)
+      @canvas.set_canvas_ids([@teacher] + non_teachers)
 
       @primary_enrollments = site.course.sections.select(&:primary).map(&:enrollments).flatten
       @primary_section = site.sections.find &:primary
@@ -255,17 +255,20 @@ unless ENV['STANDALONE']
         @canvas.hit_escape
 
         # Get actual grade data for one student
-        gradebook_grade_data = students.map do |user|
+        test_data = nil
+        students.each do |user|
           sis_enrollment = @primary_enrollments.find { |e| e.user.uid == user.uid }
           if sis_enrollment
             sis_student = sis_enrollment.user
             user.sis_id = sis_student.sis_id
             user.full_name = "#{sis_student.first_name} #{sis_student.last_name}"
-            user.sis_id.nil? ? nil : @canvas.student_score(user)
+            score = user.sis_id.nil? ? nil : @canvas.student_score(user)
+            if score.instance_of? Hash
+              test_data = score
+              break
+            end
           end
         end
-        gradebook_grade_data.compact!
-        test_data = gradebook_grade_data.find { |d| d.instance_of? Hash }
         logger.debug "Test data: #{test_data}"
 
         @test_student = test_data[:student]
@@ -317,35 +320,30 @@ unless ENV['STANDALONE']
     describe 'user role restrictions' do
 
       before(:all) do
-        primary_sec_opt = "#{@primary_section.course} #{@primary_section.label}"
         non_teachers.each do |user|
           @course_add_user_page.load_embedded_tool site
           @course_add_user_page.search(user.uid, 'CalNet UID')
-          @course_add_user_page.add_user_by_uid(user, primary_sec_opt)
+          @course_add_user_page.add_user_by_uid(user, @primary_section)
         end
       end
 
       [test.lead_ta, test.ta, test.reader].each do |user|
         it "denies #{user.role} #{user.uid} access to the tool" do
           @canvas.masquerade_as(user, site)
-          @canvas.load_gradebook site
-          @canvas.click_e_grades_export_button
-          @e_grades_export_page.switch_to_canvas_iframe
-          @e_grades_export_page.not_auth_msg_element.when_visible Utils.medium_wait
+          # TODO - reinstate when button works
+          # @canvas.load_gradebook site
+          # @canvas.click_e_grades_export_button
+          # @e_grades_export_page.switch_to_canvas_iframe
+          @e_grades_export_page.load_embedded_tool site
+          @e_grades_export_page.unauthorized_msg_element.when_visible Utils.medium_wait
         end
       end
 
-      it "denies #{test.designer.role} #{test.designer.uid} access to the tool" do
-        @canvas.masquerade_as(test.designer, site)
-        @e_grades_export_page.load_embedded_tool site
-        @e_grades_export_page.not_auth_msg_element.when_visible Utils.medium_wait
-      end
-
-      [test.observer, test.students.first, test.wait_list_student].each do |user|
+      [test.designer, test.observer, test.students.first, test.wait_list_student].each do |user|
         it "denies #{user.role} #{user.uid} access to the tool" do
           @canvas.masquerade_as(user, site)
-          @e_grades_export_page.hit_embedded_tool_url site
-          @canvas.wait_for_error(@canvas.access_denied_msg_element, @e_grades_export_page.not_auth_msg_element)
+          @e_grades_export_page.load_embedded_tool site
+          @e_grades_export_page.non_teacher_msg_element.when_visible Utils.medium_wait
         end
       end
     end

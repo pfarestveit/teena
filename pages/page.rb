@@ -93,9 +93,13 @@ module Page
         (tries -= 1).zero? ? fail : (sleep 2; retry)
       end
     end
-    if (new_user_panel = button_element(id: 'new_user_tutorial_toggle')).exists?
+    if (new_user_panel = button_element(xpath: '//button[contains(., "Don\'t Show Again")]')).exists?
+      logger.debug 'Dismissing annoying tutorial'
       js_click new_user_panel
       sleep 1
+      if (confirm = button_element(xpath: '//button[contains(., "Okay")]')).exists?
+        confirm.click
+      end
     end
   end
 

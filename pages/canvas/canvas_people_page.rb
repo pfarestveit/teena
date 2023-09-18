@@ -448,7 +448,6 @@ module CanvasPeoplePage
                   User.new uid: uid
                 end
       student.canvas_id = canvas_id if student
-      logger.info "#{student.inspect}"
       student
     end
     students.compact

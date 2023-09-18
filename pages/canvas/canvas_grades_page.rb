@@ -124,12 +124,8 @@ module Page
     text_area(:student_search_input, xpath: '//input[@placeholder="Search Students"]')
     link(:e_grades_export_link, xpath: '//a[contains(.,"E-Grades")]')
     button(:actions_button, xpath: '//button[contains(., "Actions")]')
-    span(:grades_export_button, xpath: '//span[@data-menu-id="export"]')
     text_field(:individual_view_input, xpath: '//input[@value="Individual View"]')
 
-    span(:assignment_hide_grades, xpath: '//span[text()="Hide grades"]')
-    span(:assignment_grades_hidden, xpath: '//span[text()="All grades hidden"]')
-    button(:assignment_hide_grades_hide_button, xpath: '//button[contains(., "Hide")]')
     span(:assignment_posting_policy, xpath: '//span[text()="Grade Posting Policy"]')
     text_field(:assignment_manual_posting_input, xpath: '//input[@name="postPolicy"][@value="manual"]')
     span(:assignment_manual_posting_radio, xpath: '//input[@name="postPolicy"][@value="manual"]/following-sibling::label/span')
@@ -192,46 +188,6 @@ module Page
         wait_for_update_and_click assignment_posting_policy_save_element
         wait_for_flash_msg('Success!', Utils.short_wait)
       end
-    end
-
-    # Hides the grades for a given assignment
-    # @param assignment [Assignment]
-    def hide_assignment_grades(assignment)
-      logger.info "Hiding posted grades on assignment #{assignment.id}"
-      mouseover_assignment_header assignment
-      wait_for_load_and_click assignment_settings_button(assignment)
-      wait_until(Utils.medium_wait, 'Found neither the "hide" element nor the "hidden" element') do
-        assignment_hide_grades? || assignment_grades_hidden?
-      end
-      if assignment_grades_hidden?
-        logger.debug 'Grades are already hidden'
-        hit_escape
-      else
-        wait_for_update_and_click assignment_hide_grades_element
-        sleep Utils.click_wait
-        wait_for_update_and_click assignment_hide_grades_hide_button_element
-        wait_for_flash_msg('Success!', Utils.medium_wait)
-      end
-    end
-
-    # Downloads the grades export CSV and returns an array of hashes of UIDs and current scores
-    # @param course [Course]
-    # @return [Array<Hash>]
-    def export_grades(course)
-      Utils.prepare_download_dir
-      navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/gradebook"
-      sleep 2
-      wait_for_load_and_click actions_button_element
-      wait_for_update_and_click grades_export_button_element
-      file_path = "#{Utils.download_dir}/*.csv"
-      wait_until(Utils.long_wait, "Timed out waiting for Canvas to export grades for site ID #{course.site_id}") { Dir[file_path].any? }
-      sleep Utils.short_wait
-      file = Dir[file_path].first
-      table = CSV.table file
-      table.delete_if { |row| row[:sis_user_id].nil? || row[:sis_login_id].nil? || row[:sis_login_id].to_s.include?('inactive') }
-      scores = []
-      table.each { |row| scores << {:uid => row[:sis_login_id].to_s, :score => row[:current_score].to_i} }
-      scores.sort_by { |s| s[:score] }
     end
 
     # Clicks the E-Grades export button
@@ -365,7 +321,7 @@ module Page
       end
       sleep 1
       wait_for_update_and_click grade_override_cell_element
-      wait_for_element_and_type(grade_override_input_element, grade)
+      wait_for_textbox_and_type(grade_override_input_element, grade)
       sleep Utils.click_wait
       hit_enter
       sleep Utils.click_wait

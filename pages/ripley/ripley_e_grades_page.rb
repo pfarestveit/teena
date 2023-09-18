@@ -8,9 +8,8 @@ class RipleyEGradesPage
   include RipleyPages
 
   link(:back_to_gradebook_link, text: 'Back to Gradebook')
-  paragraph(:not_auth_msg, id: 'TBD "You must be a teacher in this bCourses course to export to E-Grades CSV."')
   link(:how_to_post_grades_link, id: 'link-to-httpscommunitycanvaslmscomdocsDOC1733041521116619')
-  link(:course_settings_button, text: 'Course Settings')
+  link(:course_settings_button, id: 'canvas-course-settings-href')
 
   radio_button(:pnp_cutoff_radio, id: 'input-enable-pnp-conversion-true')
   radio_button(:no_pnp_cutoff_radio, id: 'input-enable-pnp-conversion-false')
@@ -19,6 +18,8 @@ class RipleyEGradesPage
   button(:download_current_grades, id: 'download-current-grades-button')
   button(:download_final_grades, id: 'download-final-grades-button')
   link(:bcourses_to_egrades_link, id: 'link-to-httpsberkeleyservicenowcomkbidkb_article_viewsysparm_articleKB0010659sys_kb_id8b7818e11b1837ccbc27feeccd4bcbbe')
+
+  div(:non_teacher_msg, xpath: '//div[text()="You must be a teacher in this bCourses course to export to E-Grades CSV."]')
 
   def embedded_tool_path(site)
     "/courses/#{site.site_id}/external_tools/#{RipleyTool::E_GRADES.tool_id}"

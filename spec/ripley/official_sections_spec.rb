@@ -48,8 +48,12 @@ describe 'bCourses Official Sections tool' do
 
     logger.info "Sections to add/delete are #{sections_to_add_delete.map &:id}"
 
-    site.site_id ? @canvas.load_course_site(site) : @create_course_site.provision_course_site(site)
-    @canvas.publish_course_site site
+    if site.site_id
+      @canvas.load_course_site site
+    else
+      @create_course_site.provision_course_site site
+      @canvas.publish_course_site site
+    end
 
     @canvas.load_course_sections site
     @canvas.expand_official_sections_notice

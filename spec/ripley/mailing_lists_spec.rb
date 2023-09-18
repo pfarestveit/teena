@@ -233,7 +233,7 @@ unless ENV['STANDALONE']
         end
 
         it 'updates a mailing list member\'s email address' do
-          RipleyUtils.set_mailing_list_member_email(test.students[0], 'foo@bar.com')
+          RipleyUtils.set_mailing_list_member_email(test.students[0], 'bar@foo.com')
           @splash_page.load_page
           @splash_page.click_jobs_link
           @jobs_page.run_job RipleyJob::REFRESH_MAILING_LIST
