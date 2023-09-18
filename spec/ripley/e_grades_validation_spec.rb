@@ -25,6 +25,7 @@ unless ENV['STANDALONE']
       test.course_sites.each_with_index do |site, i|
 
         begin
+          @canvas.stop_masquerading
           section_ids = @canvas_api.get_course_site_sis_section_ids site.site_id
           test.get_existing_site_data(site, section_ids)
 
@@ -35,6 +36,7 @@ unless ENV['STANDALONE']
 
           # Disable existing grading scheme in case it is not default, then set default scheme
           @canvas.masquerade_as(instructor, site)
+          students = @canvas.get_students(site, primary_section)
 
           %w(letter letter-only pnp sus).each do |scheme|
 
@@ -42,14 +44,14 @@ unless ENV['STANDALONE']
             @canvas.set_grading_scheme({scheme: scheme})
 
             # Get grades in Canvas
-            students = @canvas.get_students(site, primary_section)
             @canvas.load_gradebook site
             grades_are_final = @canvas.grades_final?
             logger.info "Grades are final is #{grades_are_final}"
             @canvas.hit_escape
-            gradebook_grades = students.map { |stud| @canvas.student_score stud if stud.sis_id }
+            gradebook_grades = students.first(RipleyUtils.e_grades_student_count).map do |stud|
+              @canvas.student_score stud if stud.sis_id
+            end
             gradebook_grades.compact!
-            logger.debug "Gradebook grades: #{gradebook_grades}"
 
             ### WITH A P/NP CUTOFF ###
 
@@ -99,7 +101,7 @@ unless ENV['STANDALONE']
                                        when 'CNC'
                                          'C/NC grade'
                                        else
-                                         ''
+                                         nil
                                        end
                     it "shows the comment '#{expected_comment}' for UID #{gradebook_row[:student].uid} in #{test_case}
                         with grading scheme #{scheme} and a P/NP cutoff of #{cutoff}" do
@@ -151,7 +153,7 @@ unless ENV['STANDALONE']
                                        when 'CNC'
                                          'C/NC grade'
                                        else
-                                         ''
+                                         nil
                                        end
                     it "shows the comment '#{expected_comment}' for UID #{gradebook_row[:student].uid} #{test_case}
                         with grading scheme #{scheme} and no P/NP cutoff" do

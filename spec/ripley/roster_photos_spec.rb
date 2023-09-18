@@ -48,7 +48,7 @@ describe 'bCourses Roster Photos' do
       @create_course_site_page.provision_course_site(@site, {standalone: standalone})
       @create_course_site_page.wait_for_standalone_site_id(@site, @splash_page) if standalone
     end
-    @canvas.publish_course_site @site unless standalone
+    @canvas.publish_course_site @site unless @site.site_id || standalone
 
     @expected_sids = @site.sections.map { |s| s.enrollments.map { |e| e.user.sis_id } }.flatten.uniq.sort
     @student_count = @site.expected_student_count
@@ -60,13 +60,14 @@ describe 'bCourses Roster Photos' do
     unless standalone
       @canvas.stop_masquerading
       @canvas.add_users(@site, non_teachers)
-      # TODO - restore the following when Add User tool exists
+      # TODO - restore the following when Add User button works
       # @canvas.load_users_page @site
       # @canvas.click_find_person_to_add RipleyUtils.base_url
-      # non_teachers.each do |user|
-      #   @course_add_user_page.search(user.uid, 'CalNet UID')
-      #   @course_add_user_page.add_user_by_uid(user, @site.sections.first)
-      # end
+      @course_add_user_page.load_embedded_tool @site
+      non_teachers.each do |user|
+        @course_add_user_page.search(user.uid, 'CalNet UID')
+        @course_add_user_page.add_user_by_uid(user, @site.sections.first)
+      end
     end
   end
 
@@ -163,6 +164,11 @@ describe 'bCourses Roster Photos' do
             @roster_photos_page.wait_until(Utils.short_wait) { @roster_photos_page.roster_sid_elements.any? }
           end
         end
+
+        it "offers #{user.role} #{user.uid} #{user.canvas_id} a link to the tool in course navigation" do
+          @canvas.switch_to_main_content
+          expect(@canvas.tool_nav_link(RipleyTool::ROSTER_PHOTOS).exists?).to be true
+        end
       end
 
       [test.designer, test.observer].each do |user|
@@ -171,21 +177,36 @@ describe 'bCourses Roster Photos' do
           @roster_photos_page.load_embedded_tool @site
           @roster_photos_page.no_access_msg_element.when_visible Utils.short_wait
         end
+
+        it "offers #{user.role} #{user.uid} #{user.canvas_id} no link to the tool in course navigation" do
+          @canvas.switch_to_main_content
+          expect(@canvas.tool_nav_link(RipleyTool::ROSTER_PHOTOS).exists?).to be true
+        end
       end
 
       [test.reader].each do |user|
-        it "denies #{user.role} #{user.uid}, #{user.canvas_id} access to the tool" do
+        it "denies #{user.role} #{user.uid} #{user.canvas_id} access to the tool" do
           @canvas.masquerade_as(user, @site)
           @roster_photos_page.load_embedded_tool @site
           @roster_photos_page.unauthorized_msg_element.when_visible Utils.short_wait
         end
+
+        it "offers #{user.role} #{user.uid}, #{user.canvas_id} no link to the tool in course navigation" do
+          @canvas.switch_to_main_content
+          expect(@canvas.tool_nav_link(RipleyTool::ROSTER_PHOTOS).exists?).to be false
+        end
       end
 
       [test.students.first, test.wait_list_student].each do |user|
-        it "denies #{user.role} #{user.uid}, #{user.canvas_id} access to the tool" do
+        it "denies #{user.role} #{user.uid} #{user.canvas_id} access to the tool" do
           @canvas.masquerade_as user
           @roster_photos_page.hit_embedded_tool_url @site
           @canvas.wait_for_error(@canvas.access_denied_msg_element, @roster_photos_page.no_access_msg_element)
+        end
+
+        it "offers #{user.role} #{user.uid} #{user.canvas_id} no link to the tool in course navigation" do
+          @canvas.switch_to_main_content
+          expect(@canvas.tool_nav_link(RipleyTool::ROSTER_PHOTOS).exists?).to be false
         end
       end
     end

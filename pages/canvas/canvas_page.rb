@@ -91,8 +91,10 @@ module Page
     def stop_masquerading
       logger.debug 'Ending masquerade'
       load_homepage unless stop_masquerading_link?
-      wait_for_load_and_click stop_masquerading_link_element
+      wait_for_update_and_click stop_masquerading_link_element
       stop_masquerading_link_element.when_not_visible(Utils.medium_wait) rescue Selenium::WebDriver::Error::StaleElementReferenceError
+    rescue Selenium::WebDriver::Error::NoSuchElementError, Selenium::WebDriver::Error::TimeoutError
+      logger.warn 'Not in masquerade mode'
     end
 
     # Loads a given sub-account page

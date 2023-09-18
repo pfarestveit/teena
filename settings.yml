@@ -135,6 +135,7 @@ ripley:
   recent_refresh_days_past: 180
   course_prefixes: ['ECON C', 'CHEM 1A', 'LEGALST']
   e_grades_site_ids: ['123', '456', '789']
+  e_grades_student_count: 10
   db_host: secret
   db_port: secret
   db_name: secret
