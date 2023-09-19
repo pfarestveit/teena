@@ -23,6 +23,7 @@ class RipleyTestConfig < TestConfig
 
   def course_site_creation
     get_multiple_test_sites
+    set_real_test_course_users
   end
 
   def e_grades_validation

@@ -7,7 +7,7 @@ class RipleySiteCreationPage
   include Page
   include RipleyPages
 
-  h1(:page_heading, id: 'TBD "Create a Site"')
+  h1(:page_heading, xpath: '//h1[text()="Create a Site"]')
 
   def load_embedded_tool(user)
     logger.info 'Loading embedded version of Create Course Site tool'
@@ -26,8 +26,8 @@ class RipleySiteCreationPage
 
   # Course site
 
-  link(:create_course_site_link, id: 'TBD')
-  paragraph(:course_sites_msg, id: 'TBD "Set up course sites to communicate with and manage the work of students enrolled in your classes."')
+  link(:create_course_site_link, id: 'create-course-site')
+  paragraph(:course_sites_msg, xpath: '//div[text()=" Set up course sites to communicate with and manage the work of students enrolled in your classes. "]')
   paragraph(:no_course_sites_msg, id: 'TBD "It appears that you do not have permissions to create a Course Site in the current or upcoming terms."')
   link(:bcourses_support_link, id: 'TBD "bCourses support"')
 
@@ -37,9 +37,9 @@ class RipleySiteCreationPage
 
   # Project site
 
-  link(:create_project_site_link, id: 'TBD')
-  link(:project_help_link, id: 'TBD')
-  link(:projects_learn_more_link, id: 'TBD')
+  link(:create_project_site_link, id: 'create-project-site')
+  link(:project_help_link, id: 'bcourses-project-sites-service-page')
+  link(:projects_learn_more_link, id: 'berkeley-collaboration-services-information')
 
   def click_create_project_site
     wait_for_update_and_click create_project_site_link_element
