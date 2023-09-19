@@ -8,38 +8,39 @@ class RipleyCreateCourseSitePage < RipleySiteCreationPage
   include RipleyPages
   include RipleyCourseSectionsModule
 
-  button(:need_help, id: 'TBD "Need help deciding which official sections to select"')
-  div(:help, id: 'TBD')
-  link(:instr_mode_link, id: 'TBD "Learn more about instruction modes in bCourses."')
+  button(:need_help, xpath: '//button[contains(., "Need help deciding which official sections to select?")]')
+  div(:help, id: 'section-selection-help')
+  link(:instr_mode_link, id: 'link-to-httpsberkeleyservicenowcomkb_viewdosysparm_articleKB0010732instructionmode')
 
-  button(:switch_mode, id: 'TBD')
-  button(:switch_to_instructor, id: 'TBD "Switch to acting as instructor"')
-  button(:as_instructor_button, id: 'TBD')
-  text_area(:instructor_uid, id: 'TBD')
-  button(:switch_to_ccn, id: 'TBD "Switch to CCN input"')
-  button(:review_ccns_button, id: 'TBD "Review matching CCNs"')
-  text_area(:ccn_list, id: 'TBD')
+  button(:switch_mode, id: 'toggle-admin-mode-button')
+  button(:switch_to_instructor, xpath: '//button[contains(., "Switch to acting as instructor")]')
+  button(:as_instructor_button, id: 'sections-by-uid-button')
+  text_area(:instructor_uid, id: 'instructor-uid')
+  button(:switch_to_ccn, xpath: '//button[contains(., "Switch to Section ID input")]')
+  button(:review_ccns_button, id: 'sections-by-ids-button')
+  text_area(:ccn_list, id: 'page-create-course-site-section-id-list')
 
-  button(:next_button, id: 'TBD "Next"')
+  button(:next_button, id: 'page-create-course-site-continue')
+  button(:cancel_button, id: 'page-create-course-site-cancel')
 
-  text_field(:site_name_input, id: 'TBD')
-  text_field(:site_abbreviation, id: 'TBD')
-  div(:site_name_error, id: 'TBD "Please fill out a site name."')
-  div(:site_abbreviation_error, id: 'TBD "Please fill out a site abbreviation."')
+  text_field(:site_name_input, id: 'siteName')
+  text_field(:site_abbreviation, id: 'siteAbbreviation')
+  div(:site_name_error, xpath: '//div[contains(., "Please fill out a site name.")]')
+  div(:site_abbreviation_error, xpath: '//div[contains(., "Please fill out a site abbreviation.")]')
 
-  button(:create_site_button, id: 'TBD "Create Course Site"')
-  button(:go_back_button, id: 'TBD "Go Back"')
+  button(:create_site_button, id: 'create-course-site-button')
+  button(:go_back_button, id: 'go-back-button')
 
   def choose_term(course)
-    button_element(id: "TBD #{course.term}").when_visible Utils.long_wait
-    wait_for_update_and_click button_element(id: "TBD #{course.term}")
+    wait_for_update_and_click button_element(xpath: "//button[contains(., '#{course.term.name}')]")
   end
 
   def search_for_course(site)
     logger.debug "Searching for #{site.course.code} in #{site.course.term.name}"
-    if site.course.create_site_workflow == 'uid'
+    if site.create_site_workflow == 'uid'
       teacher = site.course.teachers.first
       logger.debug "Searching by instructor UID #{teacher.uid}"
+      switch_mode_element.when_present Utils.short_wait
       switch_mode unless switch_to_ccn?
       wait_for_element_and_type(instructor_uid_element, teacher.uid)
       wait_for_update_and_click as_instructor_button_element
@@ -47,6 +48,7 @@ class RipleyCreateCourseSitePage < RipleySiteCreationPage
 
     elsif site.create_site_workflow == 'ccn'
       logger.debug 'Searching by CCN list'
+      switch_mode_element.when_present Utils.short_wait
       switch_mode unless switch_to_instructor?
       choose_term site.course
       sleep 1
@@ -85,7 +87,7 @@ class RipleyCreateCourseSitePage < RipleySiteCreationPage
   end
 
   def section_cbx_xpath(section_id)
-    "TBD #{section_id}"
+    "//input[@id='template-canvas-manage-sections-checkbox-#{section_id}']"
   end
 
   def section_checkbox(section_id)
@@ -93,27 +95,28 @@ class RipleyCreateCourseSitePage < RipleySiteCreationPage
   end
 
   def section_course_code(section_id)
-    div_element(xpath: "#{section_cbx_xpath(section_id)}/ TBD").text.strip
+    cell_element(xpath: "#{section_cbx_xpath(section_id)}/ancestor::tbody//td[contains(@class, 'course-code')]").text.strip
   end
 
   def section_label(section_id)
-    label_element(xpath: "#{section_cbx_xpath(section_id)}/ TBD").text.strip
+    cell_element(xpath: "#{section_cbx_xpath(section_id)}/ancestor::tbody//td[contains(@class, 'section-label']").text.strip
   end
 
   def section_schedules(section_id)
-    (el = div_element(xpath: "#{section_cbx_xpath(section_id)} TBD")).exists? ? el.text : ''
+    cell_element(xpath: "#{section_cbx_xpath(section_id)}/ancestor::tbody//td[contains(@class, 'section-timestamps')]").text.strip
   end
 
   def section_locations(section_id)
-    (el = div_element(xpath: "#{section_cbx_xpath(section_id)} TBD")).exists? ? el.text : ''
+    cell_element(xpath: "#{section_cbx_xpath(section_id)}/ancestor::tbody//td[contains(@class, 'section-locations')]").text.strip
   end
 
   def section_instructors(section_id)
-    (el = div_element(xpath: "#{section_cbx_xpath(section_id)} TBD")).exists? ? el.text : ''
+    cell_element(xpath: "#{section_cbx_xpath(section_id)}/ancestor::tbody//td[contains(@class, 'section-instructors')]").text.strip
   end
 
   def course_section_ids(course)
-    cell_elements(xpath: "TBD #{course.code}: #{course.title}").map &:text
+    identifier = "#{course.code.downcase.split.join('-')}-#{course.term.code}"
+    cell_elements(xpath: "//div[@id='sections-course-#{identifier}']//td[@class='template-sections-table-cell-section-id']").map &:text
   end
 
   def click_next
