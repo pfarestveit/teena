@@ -262,10 +262,10 @@ class RipleyTestConfig < TestConfig
     @manual_teacher.role = 'Teacher'
     @staff = RipleyUtils.get_users_of_affiliations('EMPLOYEE-TYPE-STAFF', 1)[0]
     @staff.role = 'Staff'
-    @ta = RipleyUtils.get_users_of_affiliations('EMPLOYEE-TYPE-ACADEMIC, STUDENT-TYPE-REGISTERED', 1)[0]
+    @ta = RipleyUtils.get_users_of_affiliations('EMPLOYEE-TYPE-ACADEMIC,STUDENT-TYPE-REGISTERED', 1)[0]
     @ta.role = 'TA'
     @students = RipleyUtils.get_users_of_affiliations('STUDENT-TYPE-REGISTERED', 1)
     @students.each { |s| s.role = 'Student' }
-    site.manual_members = ([@staff, @ta] + @students) if site
+    site.manual_members = ([@manual_teacher, @staff, @ta] + @students) if site
   end
 end
