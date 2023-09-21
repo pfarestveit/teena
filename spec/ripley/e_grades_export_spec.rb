@@ -247,7 +247,7 @@ unless ENV['STANDALONE']
     describe 'final grade' do
 
       before(:all) do
-        students = @canvas.get_students(site, @primary_section)
+        students = @canvas.get_students(site, @primary_section, nil, {enrollments: true})
         @canvas.enable_grading_scheme site
         @canvas.load_gradebook site
         @grades_are_final = @canvas.grades_final?

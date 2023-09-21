@@ -18,10 +18,10 @@ class RipleySiteCreationPage
     navigate_to "#{RipleyUtils.base_url} TBD"
   end
 
-  def wait_for_site_id(course)
+  def wait_for_site_id(site)
     wait_until(Utils.long_wait) { current_url.include? "#{Utils.canvas_base_url}/courses" }
-    course.site_id = current_url.delete "#{Utils.canvas_base_url}/courses/"
-    logger.info "Site ID is #{course.site_id}"
+    site.site_id = current_url.delete "#{Utils.canvas_base_url}/courses/"
+    logger.info "Site ID is #{site.site_id}"
   end
 
   # Course site

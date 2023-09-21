@@ -76,6 +76,7 @@ module CanvasPeoplePage
   end
 
   def click_add_people
+    sleep 2
     wait_for_load_and_click add_people_button_element
     find_person_to_add_link_element.when_visible Utils.short_wait
   end
@@ -427,9 +428,11 @@ module CanvasPeoplePage
   # @param section [Section]
   # @param canvas_base_url [String]
   # @return [Array<User>]
-  def get_students(course, section = nil, canvas_base_url = nil)
-    enrollments = course.sections.map(&:enrollments).flatten
-    course_students = enrollments.map(&:user).flatten if enrollments.any?
+  def get_students(course, section = nil, canvas_base_url = nil, opts = {})
+    if opts[:enrollments]
+      enrollments = course.sections.map(&:enrollments).flatten
+      course_students = enrollments.map(&:user).flatten if enrollments.any?
+    end
 
     load_all_students(course, canvas_base_url)
     els = student_enrollment_row_elements + waitlist_enrollment_row_elements

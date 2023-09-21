@@ -74,6 +74,8 @@ class RipleyTestConfig < TestConfig
                      create_site_workflow: workflow,
                      sections: c.sections
     end
+    instructor_based = @course_sites.reject { |s| s.create_site_workflow == 'ccn' }
+    instructor_based.each_with_index { |s, i| s.create_site_workflow = 'self' if i.odd? }
   end
 
   def get_single_test_site(section_ids = nil)
@@ -210,6 +212,9 @@ class RipleyTestConfig < TestConfig
                               sections: primaries[0..1],
                               teachers: instructors
     courses << multi_course
+    courses.each do |c|
+      logger.info "Course #{c.code} in #{c.term.name} sections are #{c.sections.map &:id}"
+    end
     courses
   end
 

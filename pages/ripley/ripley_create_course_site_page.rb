@@ -8,15 +8,13 @@ class RipleyCreateCourseSitePage < RipleySiteCreationPage
   include RipleyPages
   include RipleyCourseSectionsModule
 
-  button(:need_help, xpath: '//button[contains(., "Need help deciding which official sections to select?")]')
-  div(:help, id: 'section-selection-help')
+  div(:need_help, xpath: '//div[contains(text(), "Need help deciding which official sections to select?")]')
   link(:instr_mode_link, id: 'link-to-httpsberkeleyservicenowcomkb_viewdosysparm_articleKB0010732instructionmode')
 
-  button(:switch_mode, id: 'toggle-admin-mode-button')
-  button(:switch_to_instructor, xpath: '//button[contains(., "Switch to acting as instructor")]')
+  radio_button(:switch_to_instructor, id: 'radio-btn-mode-act-as')
   button(:as_instructor_button, id: 'sections-by-uid-button')
   text_area(:instructor_uid, id: 'instructor-uid')
-  button(:switch_to_ccn, xpath: '//button[contains(., "Switch to Section ID input")]')
+  radio_button(:switch_to_ccn, id: 'radio-btn-mode-section-id')
   button(:review_ccns_button, id: 'sections-by-ids-button')
   text_area(:ccn_list, id: 'page-create-course-site-section-id-list')
 
@@ -40,16 +38,16 @@ class RipleyCreateCourseSitePage < RipleySiteCreationPage
     if site.create_site_workflow == 'uid'
       teacher = site.course.teachers.first
       logger.debug "Searching by instructor UID #{teacher.uid}"
-      switch_mode_element.when_present Utils.short_wait
-      switch_mode unless switch_to_ccn?
+      switch_to_instructor_element.when_present Utils.short_wait
+      select_switch_to_instructor
       wait_for_element_and_type(instructor_uid_element, teacher.uid)
       wait_for_update_and_click as_instructor_button_element
       choose_term site.course
 
     elsif site.create_site_workflow == 'ccn'
       logger.debug 'Searching by CCN list'
-      switch_mode_element.when_present Utils.short_wait
-      switch_mode unless switch_to_instructor?
+      switch_to_ccn_element.when_present Utils.short_wait
+      select_switch_to_ccn
       choose_term site.course
       sleep 1
       ccn_list = site.sections.map &:id
@@ -95,23 +93,42 @@ class RipleyCreateCourseSitePage < RipleySiteCreationPage
   end
 
   def section_course_code(section_id)
-    cell_element(xpath: "#{section_cbx_xpath(section_id)}/ancestor::tbody//td[contains(@class, 'course-code')]").text.strip
+    el = cell_element(xpath: "#{section_cbx_xpath(section_id)}/ancestor::tbody//td[contains(@class, 'course-code')]")
+    el.when_present Utils.short_wait
+    el.text.strip
   end
 
   def section_label(section_id)
-    cell_element(xpath: "#{section_cbx_xpath(section_id)}/ancestor::tbody//td[contains(@class, 'section-label']").text.strip
+    el = cell_element(xpath: "#{section_cbx_xpath(section_id)}/ancestor::tbody//td[contains(@class, 'section-label')]")
+    el.when_present Utils.short_wait
+    el.text.strip
   end
 
   def section_schedules(section_id)
-    cell_element(xpath: "#{section_cbx_xpath(section_id)}/ancestor::tbody//td[contains(@class, 'section-timestamps')]").text.strip
+    els = div_elements(xpath: "#{section_cbx_xpath(section_id)}/ancestor::tbody//td[contains(@class, 'section-timestamps')]/*")
+    wait_until(Utils.short_wait) { els.any? }
+    els.map { |el| el.text.strip.upcase }
   end
 
   def section_locations(section_id)
-    cell_element(xpath: "#{section_cbx_xpath(section_id)}/ancestor::tbody//td[contains(@class, 'section-locations')]").text.strip
+    els = div_elements(xpath: "#{section_cbx_xpath(section_id)}/ancestor::tbody//td[contains(@class, 'section-locations')]/*")
+    wait_until(Utils.short_wait) { els.any? }
+    els.map { |el| el.text.strip }
   end
 
   def section_instructors(section_id)
-    cell_element(xpath: "#{section_cbx_xpath(section_id)}/ancestor::tbody//td[contains(@class, 'section-instructors')]").text.strip
+    els = div_elements(xpath: "#{section_cbx_xpath(section_id)}/ancestor::tbody//td[contains(@class, 'section-instructors')]/*")
+    wait_until(Utils.short_wait) { els.any? }
+    els.map { |el| el.text.strip }
+  end
+
+  elements(:section_id, :cell, xpath: '//td[@class="template-sections-table-cell-section-id"]')
+
+  def all_section_ids
+    wait_until(3) { section_id_elements.any? }
+    sleep 1
+    logger.debug "There are #{section_id_elements.length} section IDs"
+    section_id_elements.map &:text
   end
 
   def course_section_ids(course)
@@ -125,10 +142,18 @@ class RipleyCreateCourseSitePage < RipleySiteCreationPage
     site_name_input_element.when_visible Utils.medium_wait
   end
 
+  def enter_site_name(string)
+    wait_for_textbox_and_type(site_name_input_element, string)
+  end
+
+  def enter_site_abbreviation(string)
+    wait_for_textbox_and_type(site_abbreviation_element, string)
+  end
+
   def enter_site_titles(course)
     site_abbreviation = "QA bCourses Test #{Utils.get_test_id}"
-    wait_for_element_and_type(site_name_input_element, "#{site_abbreviation} - #{course.code}")
-    wait_for_element_and_type(site_abbreviation_element, site_abbreviation)
+    enter_site_name "#{site_abbreviation} - #{course.code}"
+    enter_site_abbreviation site_abbreviation
     site_abbreviation
   end
 
@@ -152,7 +177,7 @@ class RipleyCreateCourseSitePage < RipleySiteCreationPage
       load_standalone_tool
       click_create_course_site
       search_for_course site
-      expand_available_sections site.course.code
+      expand_available_course_sections(site.course.code, site.sections.first)
       link = link_element(xpath: "TBD #{site.course.title}")
       site.site_id = link.attribute('href').gsub("#{Utils.canvas_base_url}/courses/", '')
       logger.info "Course site ID is #{site.site_id}"
@@ -173,7 +198,7 @@ class RipleyCreateCourseSitePage < RipleySiteCreationPage
     click_create_course_site
     site.course.create_site_workflow = 'ccn' if opts[:admin]
     search_for_course site
-    expand_available_sections site.course.code
+    expand_available_course_sections(site.course.code, site.sections.first)
     select_sections site.sections
     click_next
     site.course.title = enter_site_titles site.course

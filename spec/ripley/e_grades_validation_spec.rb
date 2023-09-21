@@ -36,7 +36,7 @@ unless ENV['STANDALONE']
 
           # Disable existing grading scheme in case it is not default, then set default scheme
           @canvas.masquerade_as(instructor, site)
-          students = @canvas.get_students(site, primary_section)
+          students = @canvas.get_students(site, primary_section, nil, {enrollments: true})
 
           %w(letter letter-only pnp sus).each do |scheme|
 
