@@ -42,6 +42,7 @@ module RipleyPages
   h1(:denied_msg, id: 'TBD')
   div(:auth_check_failed_msg, xpath: '//div[contains(text(), "Authorization check failed.")]')
   div(:no_access_msg, id: 'TBD "This feature is only available to faculty and staff."')
+  div(:error_message, id: 'error-message')
   div(:unauthorized_msg, xpath: '//div[contains(., "Unauthorized")]')
 
   div(:progress_bar, id: 'TBD')
@@ -54,18 +55,17 @@ module RipleyPages
 
   # Daily maintenance notice
 
-  button(:maintenance_notice_button, id: 'maintenance-notice-button')
-  span(:maintenance_notice, xpath: '//span[text()=" From 8 - 9 AM, you may experience delays of up to 10 minutes before your site is updated. "]')
-  paragraph(:maintenance_detail, id: 'maintenance-details')
+  span(:maintenance_notice, xpath: '//div[contains(text(), "From 8 - 9 AM, you may experience delays of up to 10 minutes")]')
+  div(:maintenance_detail, xpath: '//div[contains(., "bCourses performs scheduled maintenance every day between 8 - 9AM")]')
   link(:bcourses_service_link, id: 'link-to-httpsrtlberkeleyeduservicesprogramsbcourses')
 
   def expand_maintenance_notice
-    wait_for_load_and_click maintenance_button_element
+    wait_for_load_and_click maintenance_notice_button_element
     maintenance_detail_element.when_visible Utils.short_wait
   end
 
   def hide_maintenance_notice
-    wait_for_load_and_click maintenance_button_element
+    wait_for_load_and_click maintenance_notice_button_element
     maintenance_detail_element.when_not_visible Utils.short_wait
   end
 

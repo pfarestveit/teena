@@ -360,6 +360,10 @@ class Utils
     logger.error "#{e.message + "\n"} #{e.backtrace.join("\n ")}"
   end
 
+  def self.error(e)
+    "#{e.message + "\n"} #{e.backtrace.join("\n ")}"
+  end
+
   # The file to be used to write rake task test results
   # @param app_and_version [String] - e.g., 'junction-91' or 'suitec-2.2'
   def self.test_results(app_and_version)

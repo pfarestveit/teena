@@ -2,8 +2,6 @@ require_relative '../../util/spec_helper'
 
 describe 'bCourses course site creation' do
 
-  standalone = ENV['STANDALONE']
-
   include Logging
 
   test = RipleyTestConfig.new
@@ -39,14 +37,9 @@ describe 'bCourses course site creation' do
       begin
         logger.info "Creating a course site for #{site.course.code} in #{site.course.term.name} using the '#{site.create_site_workflow}' workflow"
         teacher = site.course.teachers.first
-        term_courses = RipleyUtils.get_instructor_term_courses(teacher, test.current_term)
+        @canvas.stop_masquerading
         @canvas.set_canvas_ids [teacher]
-
-        if %(uid ccn).include? site.create_site_workflow
-          @canvas.stop_masquerading
-        else
-          @canvas.masquerade_as teacher
-        end
+        @canvas.masquerade_as teacher if site.create_site_workflow == 'self'
         # TODO - reinstate when button points to Ripley
         # @canvas.click_create_site
         @site_creation.load_embedded_tool teacher
@@ -64,50 +57,42 @@ describe 'bCourses course site creation' do
         # Verify page content and external links for one of the courses
         if site == test.course_sites.first
 
-          @create_course_site.maintenance_notice_button_element.when_visible Utils.medium_wait
-          short_notice = 'From 8 - 9 AM, you may experience delays of up to 10 minutes'
-          short_maintenance_notice = @create_course_site.maintenance_notice_button_element.text
-          it('shows a collapsed maintenance notice') { expect(short_maintenance_notice).to include(short_notice) }
-
-          @create_course_site.maintenance_notice_button
-          long_notice = 'bCourses performs scheduled maintenance every day between 8-9AM'
-          long_maintenance_notice = @create_course_site.maintenance_notice
-          it('shows an expanded maintenance notice') { expect(long_maintenance_notice).to include(long_notice) }
-
+          maintenance_notice = @create_course_site.maintenance_notice?
+          maintenance_detail = @create_course_site.maintenance_detail?
           bcourses_title = 'bCourses | Research, Teaching, and Learning'
-          bcourses_link_works = @create_course_site.external_link_valid?(@create_course_site.bcourses_service_element, bcourses_title)
+          bcourses_link_works = @create_course_site.external_link_valid?(@create_course_site.bcourses_service_link_element, bcourses_title)
+          it('shows a maintenance notice') { expect(maintenance_notice).to be true }
+          it('shows maintenance detail') { expect(maintenance_detail).to be true }
           it('shows a link to the bCourses service page') { expect(bcourses_link_works).to be true }
+          @canvas.switch_to_canvas_iframe
 
-          @canvas.switch_to_canvas_iframe unless standalone
-          @create_course_site.click_need_help
-
-          help = 'If you have a course with multiple sections, you will need to decide'
-          help_text = @create_course_site.help
-          it('shows suggestions for creating sites for courses with multiple sections') { expect(help_text).to include(help) }
+          help = @create_course_site.need_help?
+          it('shows suggestions for creating sites for courses with multiple sections') { expect(help).to be true }
 
           mode_title = 'IT - How do I create a Course Site?'
           mode_link_works = @create_course_site.external_link_valid?(@create_course_site.instr_mode_link_element, mode_title)
           it('shows an instruction mode link') { expect(mode_link_works).to be true }
-
-          @canvas.switch_to_canvas_iframe unless standalone
+          @canvas.switch_to_canvas_iframe
         end
 
-        # Unless admin creates site by CCN list, all sections in the test course and all other semester courses should be shown
-
-        # Check the test course against expectations in the test data file
-        @create_course_site.expand_available_sections(site.course, site.course.sections.first)
-        expected_section_ids = site.sections.map &:id
-        visible_section_ids = @create_course_site.course_section_ids site.course
-        it "offers all the expected sections for #{site.course.term.name} #{site.course.code}" do
+        if site.create_site_workflow == 'ccn'
+          @create_course_site.expand_all_available_sections
+          expected_section_ids = site.sections.map &:id
+          visible_section_ids = @create_course_site.all_section_ids
+        else
+          @create_course_site.expand_available_course_sections(site.course, site.course.sections.first)
+          expected_section_ids = site.course.sections.map &:id
+          visible_section_ids = @create_course_site.course_section_ids site.course
+        end
+        it "offers all the expected sections for #{site.course.term.name} #{site.course.code} with the '#{site.create_site_workflow}' workflow" do
           expect(visible_section_ids.sort!).to eql(expected_section_ids.sort!)
         end
 
         unless site.create_site_workflow == 'ccn'
-
           term_courses = RipleyUtils.get_instructor_term_courses(teacher, site.course.term)
           term_courses.each do |course|
             ui_course_title = @create_course_site.available_sections_course_title course
-            ui_sections_expanded = @create_course_site.expand_available_sections(course, course.sections.first)
+            ui_sections_expanded = @create_course_site.expand_available_course_sections(course, course.sections.first)
 
             it("shows the right course title for #{course.code}") { expect(ui_course_title).to include(course.title) }
             it("shows no blank course title for #{course.code}") { expect(ui_course_title.empty?).to be false }
@@ -130,48 +115,48 @@ describe 'bCourses course site creation' do
               end
             end
 
-            ui_sections_collapsed = @create_course_site.collapse_available_sections course.code
+            ui_sections_collapsed = @create_course_site.collapse_available_sections(course, course.sections.first)
             it("allows the available sections to be collapsed for #{course.code}") { expect(ui_sections_collapsed).to be_truthy }
           end
         end
 
         # Choose sections and create site
-        @create_course_site.expand_available_sections(site.course, site.sections.first)
+        if site.create_site_workflow == 'ccn'
+          @create_course_site.expand_all_available_sections
+        else
+          @create_course_site.expand_available_course_sections(site.course, site.sections.first)
+        end
         @create_course_site.select_sections site.sections
         @create_course_site.click_next
 
+        default_name = @create_course_site.site_name_input_element.value
+        expected_name = "#{site.course.title} (#{site.course.term.name})"
+        it("shows the default site name #{site.course.title}") { expect(default_name).to eql(expected_name) }
+        default_abbreviation = @create_course_site.site_abbreviation_element.value
+        expected_abbreviation = site.course.code
+        it("shows the default site abbreviation #{site.course.code}") { expect(default_abbreviation).to include(expected_abbreviation) }
+
         if site == test.course_sites.first
+          requires_name_and_abbreviation = @create_course_site.verify_block do
+            @create_course_site.enter_site_name ''
+            @create_course_site.site_name_error_element.when_present 1
+            @create_course_site.wait_until(1) { @create_course_site.create_site_button_element.disabled? }
+            @create_course_site.enter_site_abbreviation ''
+            @create_course_site.site_abbreviation_error_element.when_present 1
+          end
+          it("requires a site name and abbreviation for #{site.course.code}") { expect(requires_name_and_abbreviation).to be true }
+
           @create_course_site.click_go_back
           go_back_works = @create_course_site.verify_block { @create_course_site.click_next }
           it('allows the user to go back to the initial course site creation page') { expect(go_back_works).to be true }
         end
 
-        default_name = @create_course_site.site_name_input_element.value
-        expected_name = "#{site.course.title} (#{site.course.term})"
-        it("shows the default site name #{site.course.title}") { expect(default_name).to eql(expected_name) }
-
-        default_abbreviation = @create_course_site.site_abbreviation_element.value
-        expected_abbreviation = site.course.code
-        it("shows the default site abbreviation #{site.course.code}") { expect(default_abbreviation).to include(expected_abbreviation) }
-
-        requires_name_and_abbreviation = @create_course_site.verify_block do
-          @create_course_site.site_name_input_element.clear
-          @create_course_site.site_name_error_element.when_present 1
-          @create_course_site.wait_until(1) { @create_course_site.create_site_button_element.attribute('disabled') }
-          @create_course_site.site_abbreviation_element.clear
-          @create_course_site.site_abbreviation_error_element.when_present 1
-        end
-
-        it("requires a site name and abbreviation for #{site.course.code}") { expect(requires_name_and_abbreviation).to be true }
-
         site.course.title = @create_course_site.enter_site_titles site.course
         logger.info "Course site abbreviation will be #{site.course.title}"
-
         @create_course_site.click_create_site
-        @create_course_site.wait_for_site_id site.course
-
+        @create_course_site.wait_for_site_id site
         it "redirects to the #{site.course.term.name} #{site.course.code} course site in Canvas when finished" do
-          expect(site.course.site_id).not_to be_nil
+          expect(site.site_id).not_to be_nil
         end
 
         if site.site_id
@@ -181,16 +166,12 @@ describe 'bCourses course site creation' do
         end
 
       rescue => e
-        it("encountered an error creating the course site for #{site.course.code}") { fail "#{e.message}\n#{e.backtrace}" }
+        it("encountered an error creating the course site for #{site.course.code}") { fail Utils.error(e) }
         Utils.log_error e
       end
     end
 
     # CHECK COURSE SITE CONTENT - MEMBERSHIP, ROSTER PHOTOS
-
-    @canvas.log_out @cal_net
-    @canvas.load_homepage
-    @canvas.log_in(@cal_net, test.admin.username, Utils.super_admin_password) if @cal_net.username?
 
     sites_created.each_with_index do |site, i|
 
@@ -200,8 +181,8 @@ describe 'bCourses course site creation' do
 
         logger.info "Verifying content of #{test_case}"
 
-        @canvas.masquerade_as(teacher, site.course)
-        @canvas.publish_course_site site.course
+        @canvas.masquerade_as teacher
+        @canvas.publish_course_site site
 
         # MEMBERSHIP - check that course site user count matches expectations for each role
 
@@ -228,10 +209,10 @@ describe 'bCourses course site creation' do
           }
         ]
         roles = ['Student', 'Waitlist Student', 'Teacher', 'Lead TA', 'TA']
-        actual_enrollment_counts = @canvas.wait_for_enrollment_import(site.course, roles)
+        actual_enrollment_counts = @canvas.wait_for_enrollment_import(site, roles)
 
-        actual_student_uids = @canvas.get_students(site.course).map(&:uid).sort
-        expected_student_uids = site.sections.map(&:enrollments).map(&:uid).flatten.uniq
+        actual_student_uids = @canvas.get_students(site, nil, nil, {enrollments: true}).map(&:uid).sort
+        expected_student_uids = site.sections.map { |s| s.enrollments.map { |e| e.user.uid } }.flatten.uniq
         logger.warn "Student UIDs expected but not present: #{expected_student_uids - actual_student_uids}"
         logger.warn "Student UIDs present but not expected: #{actual_student_uids - expected_student_uids}"
 
@@ -258,25 +239,26 @@ describe 'bCourses course site creation' do
           expect(has_roster_photos_link).to be true
         end
 
-        @roster_photos.load_embedded_tool site.course
+        @roster_photos.load_embedded_tool site
         @roster_photos.wait_for_load_and_click @roster_photos.section_select_element
 
         expected_sections_on_site = (site.sections.map { |section| "#{section.course} #{section.label}" })
         actual_sections_on_site = @roster_photos.section_options
+        actual_sections_on_site.delete 'All Sections'
         it "shows the right section list on the Roster Photos tool for #{test_case}" do
           expect(actual_sections_on_site).to eql(expected_sections_on_site.sort)
         end
 
         # CONFERENCES TOOL - verify it's hidden
 
-        conf_nav_hidden = @canvas.conf_tool_link_element.attribute('title') == 'Disabled. Not visible to students'
+        conf_nav_present = @canvas.conf_tool_link?
         it "shows no Conferences tool link in course site navigation for #{test_case}" do
-          expect(conf_nav_hidden).to be true
+          expect(conf_nav_present).to be false
         end
 
         # GRADES - check that grade distribution is hidden by default
 
-        grade_distribution_hidden = @canvas.grade_distribution_hidden? site.course
+        grade_distribution_hidden = @canvas.grade_distribution_hidden? site
         it "hides grade distribution graphs from students for #{test_case}" do
           expect(grade_distribution_hidden).to be true
         end
@@ -320,7 +302,7 @@ describe 'bCourses course site creation' do
 
           # ASSIGNMENTS - religious holiday info
 
-          @canvas_assignments.load_new_assignment_page site.course
+          @canvas_assignments.load_new_assignment_page site
           @canvas_assignments.expand_religious_holidays
           religious_title = 'Religious Holidays & Religious Creed Policy'
           religious_link = @canvas_assignments.external_link_valid?(@canvas_assignments.religious_holiday_link_element, religious_title)
@@ -331,7 +313,7 @@ describe 'bCourses course site creation' do
 
         @canvas.stop_masquerading
       rescue => e
-        it("encountered an error verifying the course site for #{site.course.code}") { fail "#{e.message}\n#{e.backtrace}" }
+        it("encountered an error verifying course site #{site.site_id} for #{site.course.term.name} #{site.course.code}") { fail Utils.error(e) }
         Utils.log_error e
       end
     end
@@ -340,7 +322,7 @@ describe 'bCourses course site creation' do
 
     @canvas.masquerade_as test.students.first
     student_has_button = @canvas.verify_block { @canvas.create_site_link_element.when_visible Utils.short_wait }
-    @canvas.click_create_site_settings_link
+    @canvas.click_ripley_create_site_settings_link
     student_access_blocked = @create_course_site.verify_block do
       @create_course_site.create_course_site_link_element.when_present Utils.short_wait
       @create_course_site.wait_until(1) do
@@ -352,7 +334,7 @@ describe 'bCourses course site creation' do
 
     @canvas.masquerade_as test.ta
     ta_has_button = @canvas.verify_block { @canvas.create_site_link_element.when_visible Utils.short_wait }
-    @canvas.click_create_site_settings_link
+    @canvas.click_ripley_create_site_settings_link
     ta_access_permitted = @create_course_site.verify_block do
       @create_course_site.create_course_site_link_element.when_visible Utils.short_wait
     end
@@ -360,7 +342,7 @@ describe 'bCourses course site creation' do
     it('permits a TA access to the tool') { expect(ta_access_permitted).to be true }
 
   rescue => e
-    it('encountered an error') { fail "#{e.message}\n#{e.backtrace}" }
+    it('encountered an error') { fail Utils.error(e) }
     Utils.log_error e
   ensure
     Utils.quit_browser @driver

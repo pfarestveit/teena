@@ -34,7 +34,6 @@ module Page
     button(:save_button, xpath: '//button[text()="Save"]')
     button(:update_course_button, xpath: '//button[contains(.,"Update Course Details")]')
     li(:update_course_success, xpath: '//*[contains(.,"successfully updated")]')
-    form(:profile_form, xpath: '//form[@action="/logout"]')
     link(:profile_link, id: 'global_nav_profile_link')
     button(:logout_link, xpath: '//button[contains(.,"Logout")]')
     link(:policies_link, id: 'global_nav_academic_policies_link')
@@ -144,6 +143,7 @@ module Page
 
     link(:create_site_link, xpath: '//a[contains(text(),"Create a Site")]')
     link(:create_site_settings_link, xpath: '//div[contains(@class, "profile-tray")]//a[contains(text(),"Create a Site")]')
+    link(:ripley_create_site_settings_link, xpath: "//div[contains(@class, 'profile-tray')]//a[contains(text(), '#{RipleyTool::CREATE_SITE.name}')]")
 
     button(:add_new_course_button, xpath: '//button[@aria-label="Create new course"]')
     text_area(:course_name_input, xpath: '(//form[@aria-label="Add a New Course"]//input)[1]')
@@ -168,8 +168,15 @@ module Page
     def click_create_site_settings_link
       wait_for_update_and_click profile_link_element
       sleep 1
-      wait_for_update_and_click profile_form_element
       wait_for_update_and_click create_site_settings_link_element
+      switch_to_canvas_iframe
+    end
+
+    def click_ripley_create_site_settings_link
+      wait_for_update_and_click profile_link_element
+      sleep 1
+      wait_for_update_and_click profile_form_element
+      wait_for_update_and_click ripley_create_site_settings_link_element
       switch_to_canvas_iframe
     end
 

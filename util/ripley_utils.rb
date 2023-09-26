@@ -156,10 +156,11 @@ class RipleyUtils < Utils
              else
                "(#{r['mode']})"
              end
-      days = r['days'] ? (r['days'].gsub('MO', 'M').gsub('WE', 'W').gsub('FR', 'F').strip) : ''
-      start = (r['start_time'] == '00:00' || !r['start_time']) ? '' : "#{DateTime.strptime(r['start_time'], "%H:%M").strftime("%l:%M%p")[0..-2]}-"
-      finish = (r['end_time'] == '00:00' || !r['end_time']) ? '' : DateTime.strptime(r['end_time'], "%H:%M").strftime("%l:%M%p")[0..-2]
-      schedule = "#{days} #{start.strip}#{finish.strip}".strip
+      days = r['days'] ? (r['days'].gsub('MO', 'M').gsub('WE', 'W').gsub('FR', 'F').strip) : '—'
+      start = (r['start_time'] == '00:00' || !r['start_time']) ? '—' : "#{DateTime.strptime(r['start_time'], "%H:%M").strftime("%l:%M%p")[0..-2]}-"
+      finish = (r['end_time'] == '00:00' || !r['end_time']) ? '—' : DateTime.strptime(r['end_time'], "%H:%M").strftime("%l:%M%p")[0..-2]
+      schedule = (days == '—') ? '—' : "#{days} #{start.strip}#{finish.strip}".strip
+      location = r['location'] || '—'
       {
         id: r['id'],
         code: r['code'],
@@ -168,7 +169,7 @@ class RipleyUtils < Utils
         instructor_uid: r['instructor_uid'],
         instructor_role_code: r['instructor_role_code'],
         label: "#{r['format']} #{r['number']} #{mode}",
-        location: r['location'],
+        location: location,
         primary: (r['is_primary'] == 't'),
         primary_assoc_id: r['primary_associated_section_id'],
         schedule: schedule,
@@ -203,12 +204,13 @@ class RipleyUtils < Utils
     sections = grouped.map do |k, v|
       instructors = []
       v.each do |u|
-        instructor = instr.find { |i| i.uid.to_s == u[:instructor_uid].to_s }&.dup
+        instructor = instr.find { |i| i.uid.to_s == u[:instructor_uid].to_s }
         if instructor
           instructor.role_code = u[:instructor_role_code]
           instructors << instructor
         end
       end
+      instructors.uniq!
       instructors.compact!
       Section.new id: k,
                   course: v[0][:code],
@@ -258,9 +260,21 @@ class RipleyUtils < Utils
     ids = Utils.query_pg_db(NessieUtils.nessie_pg_db_credentials, sql).map { |r| r['cs_course_id'] }
     courses = ids.map { |id| get_course(term, id) }
     courses.each do |course|
-      primary_ids = course.sections.select { |section| section.primary && section.instructors.map(&:uid).include?(instructor.uid) }.map &:id
-      secondary_ids = course.sections.select { |section| !section.primary && primary_ids.include?(section.primary_assoc_id) }.map &:id
-      course.sections.keep_if { |section| (primary_ids + secondary_ids).include? section.id }
+      if instructor.role == 'TNIC'
+        course.sections.keep_if do |s|
+          s.instructors.map(&:uid).include? instructor.uid
+        end
+
+      else
+        primary_ids = course.sections.select do |section|
+          section.primary && section.instructors.map(&:uid).include?(instructor.uid)
+        end.map &:id
+        secondary_ids = course.sections.select do |section|
+          !section.primary && primary_ids.include?(section.primary_assoc_id)
+        end.map &:id
+        course.sections.keep_if { |section| (primary_ids + secondary_ids).include? section.id }
+      end
+      logger.info "Term course #{course.code}, sections #{course.sections.map &:id}"
     end
     courses
   end
