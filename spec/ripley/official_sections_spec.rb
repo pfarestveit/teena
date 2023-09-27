@@ -27,18 +27,14 @@ describe 'bCourses Official Sections tool' do
     @official_sections = RipleyOfficialSectionsPage.new @driver
 
     @canvas.log_in(@cal_net, test.admin.username, Utils.super_admin_password)
-    RipleyTool::TOOLS.each { |t| @canvas.add_ripley_tool t }
     section_ids = @canvas_api.get_course_site_sis_section_ids ENV['SITE'] if ENV['SITE']
     site = test.get_single_test_site section_ids
-    teacher = site.course.teachers.find { |t| t.role_code == 'PI' }
-    roles = ['Teacher', 'Lead TA', 'TA', 'Student', 'Waitlist Student']
-    @canvas.set_canvas_ids([teacher] + non_teachers)
-    @canvas.masquerade_as teacher
 
-    if site.course.sections == site.sections
+    if ENV['SITE'] && site.course.sections == site.sections
       it('cannot be tested using the given course site, since it already has all sections') { fail }
-
     else
+      RipleyTool::TOOLS.each { |t| @canvas.add_ripley_tool t }
+      teacher = site.course.teachers.find { |t| t.role_code == 'PI' }
       term_courses = RipleyUtils.get_instructor_term_courses(teacher, test.current_term)
       if site.course.sections == site.sections
         sections_to_add_delete = if site.sections.all?(&:primary) || site.sections.none?(&:primary)
@@ -46,9 +42,17 @@ describe 'bCourses Official Sections tool' do
                                  else
                                    site.sections.select { |s| !s.primary }
                                  end
+        site.sections.delete_if { |s| sections_to_add_delete.include? s }
       else
         sections_to_add_delete = site.course.sections - site.sections
       end
+
+      unless ENV['SITE']
+        site.sections.keep_if &:primary
+      end
+      roles = ['Teacher', 'Lead TA', 'TA', 'Student', 'Waitlist Student']
+      @canvas.set_canvas_ids([teacher] + non_teachers)
+      @canvas.masquerade_as teacher
 
       logger.info "Sections to add/delete are #{sections_to_add_delete.map &:id}"
 
@@ -252,8 +256,9 @@ describe 'bCourses Official Sections tool' do
 
       # CANVAS SECTIONS
 
-      section_ids_post_add = @canvas_api.get_course_site_sis_section_ids site.site_id
-      it('shows all the right added sections in the Canvas API') { expect(section_ids_post_add.sort).to eql(site.sections.map(&:id).sort) }
+      updated_sections_post_add = site.sections.map &:id
+      section_ids_post_add = @canvas_api.get_course_site_section_ccns site.site_id
+      it('shows all the right added sections in the Canvas API') { expect(section_ids_post_add.sort).to eql(updated_sections_post_add.sort) }
 
       # DELETING - SIS import
 
@@ -303,8 +308,9 @@ describe 'bCourses Official Sections tool' do
 
       # CANVAS SECTIONS
 
-      section_ids_post_delete = @canvas_api.get_course_site_sis_section_ids site.site_id
-      it('shows all the right added sections in the Canvas API') { expect(section_ids_post_delete.sort).to eql(site.sections.map(&:id).sort) }
+      updated_sections_post_delete = site.sections.map &:id
+      section_ids_post_delete = @canvas_api.get_course_site_section_ccns site.site_id
+      it('shows all the right added sections in the Canvas API') { expect(section_ids_post_delete.sort).to eql(updated_sections_post_delete.sort) }
 
       non_teachers.each do |u|
         logger.info "Test user to add: #{u.inspect}"

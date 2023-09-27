@@ -12,6 +12,11 @@ class CanvasAPIPage
     @parsed.map { |s| s['sis_section_id'].gsub('SEC:', '') }
   end
 
+  def get_course_site_section_ccns(site_id)
+    ids = get_course_site_sis_section_ids site_id
+    ids.map { |i| i.split('-')[2] }
+  end
+
   def get_tool_id(tool)
     tries ||= Utils.short_wait
     logger.info "Getting #{tool.name} id from #{Utils.canvas_base_url}/api/v1/accounts/#{tool.account}/external_tools"

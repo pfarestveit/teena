@@ -451,7 +451,8 @@ class RipleyUtils < Utils
   def self.set_mailing_list_member_email(member, email_address)
     sql = "UPDATE canvas_site_mailing_list_members
               SET email_address = '#{email_address}'
-            WHERE CONCAT(first_name, ' ', last_name) = '#{member.full_name}';"
+            WHERE CONCAT(first_name, ' ', last_name) = '#{member.full_name}'
+              AND deleted_at IS NULL;"
     result = query_pg_db(db_credentials, sql)
     logger.warn "Command status: #{result.cmd_status}. Result status: #{result.result_status}"
   end
@@ -459,7 +460,8 @@ class RipleyUtils < Utils
   def self.get_mailing_list_member_email(member)
     sql = "SELECT email_address
              FROM canvas_site_mailing_list_members
-            WHERE CONCAT(first_name, ' ', last_name) = '#{member.full_name}';"
+            WHERE CONCAT(first_name, ' ', last_name) = '#{member.full_name}'
+              AND deleted_at IS NULL;"
     query_pg_db_field(db_credentials, sql, 'email_address').first
   end
 end

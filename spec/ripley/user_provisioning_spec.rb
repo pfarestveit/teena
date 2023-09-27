@@ -23,30 +23,24 @@ describe 'User Provisioning' do
     @canvas = Page::CanvasPage.new @driver
     @user_prov_tool = RipleyUserProvisioningPage.new @driver
 
-    if standalone
-      @splash_page.basic_auth test.admin.uid
-    else
-      @canvas.log_in(@cal_net, test.admin.username, Utils.super_admin_password)
-      RipleyTool::TOOLS.each { |t| @canvas.add_ripley_tool t }
-      @canvas.set_canvas_ids test_users
-    end
+    @canvas.log_in(@cal_net, test.admin.username, Utils.super_admin_password)
+    RipleyTool::TOOLS.each { |t| @canvas.add_ripley_tool t }
+    @canvas.set_canvas_ids test_users
   end
 
   after(:all) { Utils.quit_browser @driver }
 
-  unless standalone
-    context 'when the user is an authorized user' do
+  context 'when the user is an authorized user' do
 
-      it 'can be reached from a navigation link' do
-        @canvas.load_sub_account Utils.canvas_uc_berkeley_sub_account
-        @canvas.click_user_prov
-      end
+    it 'can be reached from a navigation link' do
+      @canvas.load_sub_account Utils.canvas_uc_berkeley_sub_account
+      @canvas.click_user_prov
     end
   end
 
   context 'when the user is an authorized user' do
 
-    before(:each) { standalone ? @user_prov_tool.load_standalone_tool : @user_prov_tool.load_embedded_tool }
+    before(:each) { @user_prov_tool.load_embedded_tool }
 
     it 'provisions users via line break separated UIDs' do
       uids = test_users.map(&:uid).join("\n")
@@ -80,15 +74,13 @@ describe 'User Provisioning' do
     end
   end
 
-  unless standalone
-    context 'when the user is not an authorized user' do
+  context 'when the user is not an authorized user' do
 
-      test_users.each do |user|
-        it "prevents the #{user.role} from reaching the tool" do
-          @canvas.masquerade_as user
-          @user_prov_tool.load_embedded_tool
-          @user_prov_tool.unauthorized_msg_element.when_visible Utils.short_wait
-        end
+    test_users.each do |user|
+      it "prevents the #{user.role} from reaching the tool" do
+        @canvas.masquerade_as user
+        @user_prov_tool.load_embedded_tool
+        @user_prov_tool.unauthorized_msg_element.when_visible Utils.short_wait
       end
     end
   end
