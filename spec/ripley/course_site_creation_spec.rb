@@ -249,6 +249,8 @@ describe 'bCourses course site creation' do
           expect(actual_sections_on_site).to eql(expected_sections_on_site.sort)
         end
 
+        # TODO - Verify TA has edit access to official sections if only secondary sections on course site
+
         # CONFERENCES TOOL - verify it's hidden
 
         conf_nav_present = @canvas.conf_tool_link?

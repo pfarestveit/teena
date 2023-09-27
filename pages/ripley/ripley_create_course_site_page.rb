@@ -31,6 +31,12 @@ class RipleyCreateCourseSitePage < RipleySiteCreationPage
 
   def choose_term(course)
     wait_for_update_and_click button_element(xpath: "//button[contains(., '#{course.term.name}')]")
+  rescue => e
+    if h2_element(xpath: "//h2[text()='#{course.term.name} Official Sections']").exists?
+      logger.warn 'Only one term exists'
+    else
+      fail Utils.error e
+    end
   end
 
   def search_for_course(site)
@@ -194,15 +200,15 @@ class RipleyCreateCourseSitePage < RipleySiteCreationPage
   end
 
   def provision_course_site(site, opts={})
-    opts[:standalone] ? load_standalone_tool : load_embedded_tool(site.course.teachers.first)
+    load_embedded_tool site.course.teachers.first
     click_create_course_site
     site.course.create_site_workflow = 'ccn' if opts[:admin]
     search_for_course site
-    expand_available_course_sections(site.course.code, site.sections.first)
+    expand_available_course_sections(site.course, site.sections.first)
     select_sections site.sections
     click_next
     site.course.title = enter_site_titles site.course
     click_create_site
-    wait_for_site_id(site) unless opts[:standalone]
+    wait_for_site_id site
   end
 end
