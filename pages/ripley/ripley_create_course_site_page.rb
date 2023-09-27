@@ -23,8 +23,8 @@ class RipleyCreateCourseSitePage < RipleySiteCreationPage
   button(:next_button, id: 'page-create-course-site-continue')
   button(:cancel_button, id: 'page-create-course-site-cancel')
 
-  text_field(:site_name_input, id: 'siteName')
-  text_field(:site_abbreviation, id: 'siteAbbreviation')
+  text_field(:site_name_input, id: 'course-site-name')
+  text_field(:site_abbreviation, id: 'course-site-abbreviation')
   div(:site_name_error, xpath: '//div[contains(., "Please fill out a site name.")]')
   div(:site_abbreviation_error, xpath: '//div[contains(., "Please fill out a site abbreviation.")]')
 
