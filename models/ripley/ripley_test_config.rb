@@ -187,8 +187,8 @@ class RipleyTestConfig < TestConfig
       secondaries = c.sections.reject &:primary
       ta_section = secondaries.find { |s| s.instructors.any? && (c.teachers & s.instructors).empty? }
       if ta_section
-        ta = ta_section.instructors.first
-        sections = secondaries.select { |s| s.instructors.include? ta }
+        ta = ta_section.instructors.first.user
+        sections = secondaries.select { |s| s.instructors.map(&:user).include? ta }
         ta_course = Course.new code: ta_section.course,
                                title: c.title,
                                term: c.term,
@@ -210,7 +210,7 @@ class RipleyTestConfig < TestConfig
                               title: primaries[0].course,
                               term: @current_term,
                               sections: primaries[0..1],
-                              teachers: instructors
+                              teachers: instructors.map(&:user)
     courses << multi_course
     courses.each do |c|
       logger.info "Course #{c.code} in #{c.term.name} sections are #{c.sections.map &:id}"

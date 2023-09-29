@@ -55,7 +55,7 @@ describe 'bCourses course site creation' do
         @create_course_site.search_for_course site
 
         # Verify page content and external links for one of the courses
-        if site == test.course_sites.first
+        if site == test.course_sites.find { |s| %w(self uid).include? s.create_site_workflow }
 
           maintenance_notice = @create_course_site.maintenance_notice?
           maintenance_detail = @create_course_site.maintenance_detail?

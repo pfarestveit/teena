@@ -19,14 +19,25 @@ class RipleySiteCreationPage
   end
 
   def wait_for_site_id(site)
-    wait_until(Utils.long_wait) { current_url.include? "#{Utils.canvas_base_url}/courses" }
+    begin
+      tries ||= Utils.long_wait
+      wait_until(1) { current_url.include?("#{Utils.canvas_base_url}/courses") }
+    rescue Selenium::WebDriver::Error::TimeoutError
+      if sis_import_error?
+        fail 'Site provisioning failed'
+      elsif (tries -= 1).zero?
+        fail 'Timed out waiting for site provisioning'
+      else
+        retry
+      end
+    end
     site.site_id = current_url.delete "#{Utils.canvas_base_url}/courses/"
     logger.info "Site ID is #{site.site_id}"
   end
 
   # Course site
 
-  link(:create_course_site_link, id: 'create-course-site')
+  radio_button(:create_course_site_link, id: 'create-course-site')
   paragraph(:course_sites_msg, xpath: '//div[text()=" Set up course sites to communicate with and manage the work of students enrolled in your classes. "]')
   paragraph(:no_course_sites_msg, id: 'TBD "It appears that you do not have permissions to create a Course Site in the current or upcoming terms."')
   link(:bcourses_support_link, id: 'TBD "bCourses support"')

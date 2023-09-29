@@ -27,16 +27,17 @@ class CourseSite
   end
 
   def expected_teacher_count
+    instructors = @sections.map(&:instructors).flatten
     if @sections.map(&:primary).any?
-      @sections.map(&:instructors).flatten.select { |e| %w(PI ICNT).include? e.role_code }.uniq.length
+      instructors.select { |i| %w(PI ICNT).include? i.role_code }.uniq { |i| i.user.uid }.length
     else
-      @sections.map(&:instructors).flatten.uniq.length
+      instructors.uniq { |i| i.user.uid }.length
     end
   end
 
   def expected_lead_ta_count
     if @sections.map(&:primary).any?
-      @sections.map(&:instructors).flatten.select { |e| e.role_code == 'APRX' }.uniq.length
+      @sections.map(&:instructors).flatten.select { |i| i.role_code == 'APRX' }.uniq { |i| i.user.uid }.length
     else
       0
     end
@@ -44,7 +45,7 @@ class CourseSite
 
   def expected_ta_count
     if @sections.map(&:primary).any?
-      @sections.map(&:instructors).flatten.select { |e| e.role_code == 'TNIC' }.uniq.length
+      @sections.map(&:instructors).flatten.select { |i| i.role_code == 'TNIC' }.uniq { |i| i.user.uid }.length
     else
       0
     end

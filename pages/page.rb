@@ -129,11 +129,12 @@ module Page
     hide_boac_footer
     scroll_to_element element
     sleep(click_wait || Utils.click_wait)
+    el = element_element(element.locator)
     begin
-      element.click
+      el.click
     rescue => e
       logger.warn e.message
-      execute_script('arguments[0].click();', element)
+      execute_script('arguments[0].click();', el)
     end
   end
 

@@ -27,7 +27,7 @@ describe 'bCourses E-Grades Export' do
         section_ids = @canvas_api.get_course_site_sis_section_ids site.site_id
         test.get_existing_site_data(site, section_ids)
 
-        instructor = site.course.teachers.find { |t| t.role_code == 'PI' } || site.course.teachers.first
+        instructor = RipleyUtils.get_primary_instructor(site) || site.course.teachers.first
         primary_section = site.sections.find &:primary
         test_case = "#{site.course.term} #{site.course.code} site #{site.site_id}"
         @canvas.set_canvas_ids [instructor]
@@ -108,7 +108,7 @@ describe 'bCourses E-Grades Export' do
 
               rescue => e
                 Utils.log_error e
-                it("encountered an unexpected error with #{site.course.code} #{gradebook_row}") { fail e.message }
+                it("encountered an unexpected error with #{site.course.code} #{gradebook_row}") { fail Utils.error(e) }
               end
             end
 
@@ -160,19 +160,19 @@ describe 'bCourses E-Grades Export' do
 
               rescue => e
                 Utils.log_error e
-                it("encountered an unexpected error with #{site.course.code} #{gradebook_row}") { fail e.message }
+                it("encountered an unexpected error with #{site.course.code} #{gradebook_row}") { fail Utils.error(e) }
               end
             end
           end
         end
       rescue => e
         Utils.log_error e
-        it("encountered an unexpected error with #{site.course.code}") { fail e.message }
+        it("encountered an unexpected error with #{site.course.code}") { fail Utils.error(e) }
       end
     end
   rescue => e
     Utils.log_error e
-    it('encountered an unexpected error') { fail e.message }
+    it('encountered an unexpected error') { fail Utils.error(e) }
   ensure
     Utils.quit_browser @driver
   end
