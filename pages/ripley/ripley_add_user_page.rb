@@ -10,8 +10,9 @@ class RipleyAddUserPage
   h1(:page_heading, xpath: '//h1[text()="Find a Person to Add"]')
 
   span(:no_sections_msg, id: 'TBD')
-  div(:no_results_msg, xpath: '//div[contains(text(), "Your search did not match any users with a CalNet ID.")]')
+  div(:no_results_msg, xpath: '//div[text()="Your search did not match anyone with a CalNet ID.  Please try again. "]')
   div(:too_many_results_msg, xpath: '//div[contains(text(), "Please refine your search to limit the number of results.")]')
+  div(:no_uid_results_msg, xpath: '//div[text()="Your search did not match anyone with a CalNet ID. CalNet UIDs must be an exact match.  Please try again. "]')
   div(:success_msg, id: 'success-message')
 
   text_area(:search_term, id: 'search-text')

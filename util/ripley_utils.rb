@@ -206,29 +206,30 @@ class RipleyUtils < Utils
       v.each do |u|
         instructor = instr.find { |i| i.uid.to_s == u[:instructor_uid].to_s }
         if instructor
-          instructor.role_code = u[:instructor_role_code]
-          instructors << instructor
+          instructor_role = InstructorRole.new(instructor, u[:instructor_role_code])
+          instructors << instructor_role
         end
       end
-      instructors.uniq!
+      instructors.uniq! { |i| [i.user, i.role_code] }
       instructors.compact!
       Section.new id: k,
                   course: v[0][:code],
                   cs_course_id: v[0][:cs_course_id],
                   instruction_mode: v[0][:instruction_mode],
-                  instructors: instructors.uniq,
+                  instructors: instructors,
                   label: v[0][:label],
                   locations: (v.map { |l| l[:location] }).compact.uniq,
                   primary: v[0][:primary],
                   primary_assoc_id: v[0][:primary_assoc_id],
                   schedules: (v.map { |s| s[:schedule] }).uniq
     end
-    teachers = sections.select(&:primary).map { |prim| prim.instructors }
+    teachers = sections.select(&:primary).map { |prim| prim.instructors.map &:user }
     teachers.flatten!
     teachers.compact!
     teachers.uniq!
     codes = sections.map(&:course).uniq
     codes.sort!
+    logger.debug "Course #{codes.first} in #{term.name} has #{sections.length} sections"
     Course.new code: codes.first,
                title: (section_data[0][:title]),
                term: term,
@@ -252,6 +253,25 @@ class RipleyUtils < Utils
     end
   end
 
+  def self.get_course_instructor_sections(course, instructor)
+    course.sections.select do |section|
+      section.instructors.find { |i| i.user.uid == instructor.uid }
+    end
+  end
+
+  def self.get_course_instructor_roles(course, instructor)
+    instr_sections = get_course_instructor_sections(course, instructor)
+    instr_roles = instr_sections.map do |section|
+      section.instructors.find { |i| i.user.uid == instructor.uid }.role_code
+    end
+    instr_roles.uniq
+  end
+
+  def self.get_primary_instructor(site)
+    pi_role = site.sections.map(&:instructors).flatten.find { |t| t.role_code == 'PI' }
+    pi_role&.user
+  end
+
   def self.get_instructor_term_courses(instructor, term)
     sql = "SELECT DISTINCT cs_course_id
              FROM sis_data.edo_sections
@@ -260,19 +280,19 @@ class RipleyUtils < Utils
     ids = Utils.query_pg_db(NessieUtils.nessie_pg_db_credentials, sql).map { |r| r['cs_course_id'] }
     courses = ids.map { |id| get_course(term, id) }
     courses.each do |course|
-      if instructor.role == 'TNIC'
-        course.sections.keep_if do |s|
-          s.instructors.map(&:uid).include? instructor.uid
-        end
-
-      else
+      roles = get_course_instructor_roles(course, instructor)
+      if (roles & %w(PI APRX)).any?
         primary_ids = course.sections.select do |section|
-          section.primary && section.instructors.map(&:uid).include?(instructor.uid)
+          section.primary && (section.instructors.map { |i| i.user.uid }.include?(instructor.uid))
         end.map &:id
         secondary_ids = course.sections.select do |section|
           !section.primary && primary_ids.include?(section.primary_assoc_id)
         end.map &:id
         course.sections.keep_if { |section| (primary_ids + secondary_ids).include? section.id }
+      else
+        course.sections.keep_if do |section|
+          section.instructors.map { |i| i.user.uid }.include? instructor.uid
+        end
       end
       logger.info "Term course #{course.code}, sections #{course.sections.map &:id}"
     end
@@ -347,38 +367,38 @@ class RipleyUtils < Utils
     end
   end
 
-  def self.expected_instr_section_data(site, sections=nil)
+  def self.expected_instr_section_data(site, sections = nil)
     instructor_data = []
     site_has_primaries = site.sections.select(&:primary).any?
     secs = sections || site.sections
     secs.each do |section|
       section.instructors.each do |instr|
-        instr.role = if section.primary
-                       if %w(PI ICNT INVT).include? instr.role_code
-                         'Teacher'
-                       elsif instr.role_code == 'APRX'
-                         'Lead TA'
-                       else
-                         nil
-                       end
-                     else
-                       if %w(PI TNIC).include? instr.role_code
-                         site_has_primaries ? 'TA' : 'Teacher'
-                       else
-                         nil
-                       end
-                     end
+        instr.user.role = if section.primary
+                            if %w(PI ICNT INVT).include? instr.role_code
+                              'Teacher'
+                            elsif instr.role_code == 'APRX'
+                              'Lead TA'
+                            else
+                              nil
+                            end
+                          else
+                            if %w(PI TNIC).include? instr.role_code
+                              site_has_primaries ? 'TA' : 'Teacher'
+                            else
+                              nil
+                            end
+                          end
         instructor_data << {
-          uid: instr.uid,
+          uid: instr.user.uid,
           section_id: section.id,
-          role: instr.role&.downcase
+          role: instr.user.role&.downcase
         }
       end
     end
     instructor_data.sort_by { |h| [h[:uid], h[:section_id]] }
   end
 
-  def self.expected_student_section_data(site, sections=nil)
+  def self.expected_student_section_data(site, sections = nil)
     student_data = []
     secs = sections || site.sections
     secs.each do |section|
@@ -393,7 +413,7 @@ class RipleyUtils < Utils
     student_data.sort_by { |h| [h[:uid], h[:section_id]] }
   end
 
-  def self.get_users_of_affiliations(affiliations, count=nil)
+  def self.get_users_of_affiliations(affiliations, count = nil)
     sql = "SELECT ldap_uid AS uid,
                   sid,
                   first_name,

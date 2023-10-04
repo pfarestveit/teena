@@ -155,11 +155,11 @@ class RipleyOfficialSectionsPage
   # EDIT MODE - AVAILABLE SECTIONS
 
   def available_section_cell_xpath(course, section)
-    "#{available_sections_os_table_xpath(course, section)}//td[contains(.,\"#{section.id}\")]"
+    "#{available_sections_table_xpath(course, section)}//td[contains(.,\"#{section.id}\")]"
   end
 
   def available_sections_count(course, section)
-    div_elements(xpath: "#{available_sections_os_table_xpath(course, section)}/tbody").length
+    div_elements(xpath: "#{available_sections_table_xpath(course, section)}/tbody").length
   end
 
   def available_section_data(course, section)
@@ -173,7 +173,7 @@ class RipleyOfficialSectionsPage
   end
 
   def available_section_id_element(course, section)
-    cell_element(xpath: "#{available_sections_os_table_xpath(course, section)}//td[contains(.,\"#{section.id}\")]")
+    cell_element(xpath: "#{available_sections_table_xpath(course, section)}//td[contains(.,\"#{section.id}\")]")
   end
 
   def available_section_course(course, section)

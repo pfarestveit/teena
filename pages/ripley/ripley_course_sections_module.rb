@@ -8,31 +8,15 @@ module RipleyCourseSectionsModule
   include RipleyPages
 
   def available_course_heading_xpath(course)
-    "//h3[contains(., \"#{course.code} \")]"
-  end
-
-  def available_course_heading_os_xpath(course)
-    "//h4[contains(., \"#{course.code} \")]"
+    "//*[starts-with(text(), \"#{course.code}\")]"
   end
 
   def available_sections_form_button(course)
-    button_element(xpath: "#{available_course_heading_xpath(course)}/..")
-  end
-
-  def available_sections_os_form_button(course)
-    button_element(xpath: "#{available_course_heading_os_xpath(course)}/..")
+    button_element(xpath: "#{available_course_heading_xpath(course)}/ancestor::button")
   end
 
   def available_sections_course_title(course)
-    el = div_element(xpath: "#{available_course_heading_xpath(course)}/span")
-    el.when_visible Utils.short_wait
-    el.text.gsub(':', '').strip
-  rescue
-    ''
-  end
-
-  def available_sections_os_course_title(course)
-    el = div_element(xpath: "#{available_course_heading_os_xpath(course)}/span")
+    el = div_element(xpath: "#{available_course_heading_xpath(course)}/descendant::span[starts-with(text(), \": \")]")
     el.when_visible Utils.short_wait
     el.text.gsub(':', '').strip
   rescue
@@ -40,19 +24,11 @@ module RipleyCourseSectionsModule
   end
 
   def available_sections_table_xpath(course, section)
-    "#{available_course_heading_xpath(course)}/../following-sibling::div//table[contains(., \"#{section.id}\")]"
-  end
-
-  def available_sections_os_table_xpath(course, section)
-    "#{available_course_heading_os_xpath(course)}/../following-sibling::div//table[contains(., \"#{section.id}\")]"
+    "#{available_course_heading_xpath(course)}/ancestor::button/following-sibling::div//table[contains(., \"#{section.id}\")]"
   end
 
   def available_sections_table(course, section)
     table_element(xpath: available_sections_table_xpath(course, section))
-  end
-
-  def available_sections_os_table(course, section)
-    table_element(xpath: available_sections_os_table_xpath(course, section))
   end
 
   elements(:section_panel, :div, xpath: '//div[contains(@id, "sections-course-")]')
@@ -86,33 +62,11 @@ module RipleyCourseSectionsModule
     end
   end
 
-  def expand_available_os_course_sections(course, section)
-    wait_until(Utils.short_wait) { section_panel_elements.any? }
-    if available_sections_os_table(course, section).visible?
-      logger.debug "The available sections table is already expanded for #{course.code}"
-    else
-      logger.debug "Expanding available sections table for #{course.code}"
-      wait_for_update_and_click available_sections_os_form_button(course)
-      available_sections_os_table(course, section).when_visible Utils.short_wait
-      sleep Utils.click_wait
-    end
-  end
-
   def collapse_available_sections(course, section)
     if available_sections_table(course, section).visible?
       logger.debug "Collapsing the sections table for #{course.code}"
       wait_for_update_and_click available_sections_form_button(course)
       available_sections_table(course, section).when_not_visible Utils.short_wait
-    else
-      logger.debug "The sections table is already collapsed for #{course.code}"
-    end
-  end
-
-  def collapse_available_os_sections(course, section)
-    if available_sections_os_table(course, section).visible?
-      logger.debug "Collapsing the sections table for #{course.code}"
-      wait_for_update_and_click available_sections_os_form_button(course)
-      available_sections_os_table(course, section).when_not_visible Utils.short_wait
     else
       logger.debug "The sections table is already collapsed for #{course.code}"
     end

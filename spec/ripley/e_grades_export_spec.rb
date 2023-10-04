@@ -30,7 +30,7 @@ describe 'bCourses E-Grades Export' do
     RipleyTool::TOOLS.each { |t| @canvas.add_ripley_tool t }
     section_ids = @canvas_api.get_course_site_sis_section_ids site.site_id
     test.get_existing_site_data(site, section_ids)
-    @teacher = site.course.teachers.find { |t| t.role_code == 'PI' } || site.course.teachers.first
+    @teacher = RipleyUtils.get_primary_instructor(site) || site.course.teachers.first
     @canvas.set_canvas_ids([@teacher] + non_teachers)
 
     @primary_enrollments = site.course.sections.select(&:primary).map(&:enrollments).flatten

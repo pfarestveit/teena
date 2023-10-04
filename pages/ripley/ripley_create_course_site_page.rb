@@ -23,14 +23,22 @@ class RipleyCreateCourseSitePage < RipleySiteCreationPage
 
   text_field(:site_name_input, id: 'course-site-name')
   text_field(:site_abbreviation, id: 'course-site-abbreviation')
-  div(:site_name_error, xpath: '//div[contains(., "Please fill out a site name.")]')
-  div(:site_abbreviation_error, xpath: '//div[contains(., "Please fill out a site abbreviation.")]')
+  div(:site_name_error, xpath: '//div[text()="Please provide site name."]')
+  div(:site_abbreviation_error, xpath: '//div[text()="Please provide site abbreviation."]')
 
   button(:create_site_button, id: 'create-course-site-button')
   button(:go_back_button, id: 'go-back-button')
 
+  def term_button(term)
+    button_element(xpath: "//button[contains(., '#{term.name}')]")
+  end
+
   def choose_term(course)
-    wait_for_update_and_click button_element(xpath: "//button[contains(., '#{course.term.name}')]")
+    if term_button(course.term).exists? && term_button(course.term).attribute('class').include?('v-btn--active')
+      logger.debug "Term #{course.term.name} is already selected"
+    else
+      wait_for_update_and_click term_button(course.term)
+    end
   rescue => e
     if h2_element(xpath: "//h2[text()='#{course.term.name} Official Sections']").exists?
       logger.warn 'Only one term exists'
@@ -46,7 +54,7 @@ class RipleyCreateCourseSitePage < RipleySiteCreationPage
       logger.debug "Searching by instructor UID #{teacher.uid}"
       switch_to_instructor_element.when_present Utils.short_wait
       select_switch_to_instructor
-      wait_for_element_and_type(instructor_uid_element, teacher.uid)
+      wait_for_textbox_and_type(instructor_uid_element, teacher.uid)
       wait_for_update_and_click as_instructor_button_element
       choose_term site.course
 
@@ -58,7 +66,7 @@ class RipleyCreateCourseSitePage < RipleySiteCreationPage
       sleep 1
       ccn_list = site.sections.map &:id
       logger.debug "CCN list is '#{ccn_list}'"
-      wait_for_element_and_type(ccn_list_element, ccn_list.join(', '))
+      wait_for_textbox_and_type(ccn_list_element, ccn_list.join(', '))
       wait_for_update_and_click review_ccns_button_element
 
     else
@@ -84,9 +92,12 @@ class RipleyCreateCourseSitePage < RipleySiteCreationPage
 
   def select_sections(sections)
     sections.each do |section|
-      logger.debug "Selecting section ID #{section.id}"
-      section_checkbox(section.id).when_present Utils.short_wait
-      js_click section_checkbox(section.id) unless section_checkbox(section.id).selected?
+      if section_checkbox(section.id).selected?
+        logger.debug "Section ID #{section.id} is already selected"
+      else
+        logger.debug "Selecting section ID #{section.id}"
+        wait_for_update_and_click section_checkbox(section.id)
+      end
     end
   end
 
@@ -128,7 +139,7 @@ class RipleyCreateCourseSitePage < RipleySiteCreationPage
     els.map { |el| el.text.strip }
   end
 
-  elements(:section_id, :cell, xpath: '//td[@class="template-sections-table-cell-section-id"]')
+  elements(:section_id, :cell, xpath: '//td[@class="cell-section-id"]')
 
   def all_section_ids
     wait_until(3) { section_id_elements.any? }
@@ -139,7 +150,7 @@ class RipleyCreateCourseSitePage < RipleySiteCreationPage
 
   def course_section_ids(course)
     identifier = "#{course.code.downcase.split.join('-')}-#{course.term.code}"
-    cell_elements(xpath: "//div[@id='sections-course-#{identifier}']//td[@class='template-sections-table-cell-section-id']").map &:text
+    cell_elements(xpath: "//div[@id='sections-course-#{identifier}']//td[@class='cell-section-id']").map &:text
   end
 
   def click_next

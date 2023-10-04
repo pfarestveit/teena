@@ -16,7 +16,7 @@ class RipleyMailingListsPage
   # Create list
   link(:site_name_link, id: 'course-site-href')
   div(:site_term, xpath: '//div[@class="text-subtitle-1"]')
-  div(:site_id, xpath: '//div[contains(text(), "Site ID:")]')
+  div(:site_id, xpath: '//div[contains(text(), "Site ID")]')
   link(:view_site_link, id: 'mailing-list-course-site-name')
   text_area(:list_name_input, id: 'mailing-list-name-input')
   button(:register_list_button, id: 'btn-create-mailing-list')

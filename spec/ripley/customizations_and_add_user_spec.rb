@@ -29,11 +29,14 @@ describe 'bCourses' do
     RipleyTool::TOOLS.each { |t| @canvas.add_ripley_tool t }
     section_ids = @canvas_api.get_course_site_sis_section_ids ENV['SITE'] if ENV['SITE']
     @site = test.get_single_test_site section_ids
-    @teacher = @site.course.teachers.find { |t| t.role_code == 'PI' } || @site.course.teachers.first
+    @teacher = RipleyUtils.get_primary_instructor(@site) || @site.course.teachers.first
     @canvas.set_canvas_ids([@teacher] + non_teachers)
+    @canvas.masquerade_as @teacher
 
-    @create_course_site_page.provision_course_site @site
-    @canvas.publish_course_site @site unless @site.site_id
+    unless @site.site_id
+      @create_course_site_page.provision_course_site @site unless @site.site_id
+    end
+    @canvas.publish_course_site @site
   end
 
   after(:all) { Utils.quit_browser @driver }
@@ -42,7 +45,7 @@ describe 'bCourses' do
 
     context 'in the footer' do
 
-      before(:all) { @canvas.masquerade_as @teacher }
+      before(:all) { @canvas.load_homepage }
 
       it 'include an "About" link' do
         @canvas.scroll_to_bottom
@@ -173,7 +176,7 @@ describe 'bCourses' do
 
     it 'notifies the user if a UID search produces no result' do
       @course_add_user_page.search('12324', 'CalNet UID')
-      @course_add_user_page.no_results_msg_element.when_visible Utils.medium_wait
+      @course_add_user_page.no_uid_results_msg_element.when_visible Utils.medium_wait
     end
 
     it 'offers the right course site sections' do

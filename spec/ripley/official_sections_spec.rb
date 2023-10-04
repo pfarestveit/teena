@@ -36,7 +36,8 @@ describe 'bCourses Official Sections tool' do
       RipleyTool::TOOLS.each { |t| @canvas.add_ripley_tool t }
       teacher = site.course.teachers.find { |t| t.role_code == 'PI' }
       term_courses = RipleyUtils.get_instructor_term_courses(teacher, test.current_term)
-      if site.course.sections == site.sections
+      site.sections.keep_if &:primary unless ENV['SITE']
+      if site.sections == site.course.sections
         sections_to_add_delete = if site.sections.all?(&:primary) || site.sections.none?(&:primary)
                                    site.sections[1..-1]
                                  else
@@ -47,9 +48,6 @@ describe 'bCourses Official Sections tool' do
         sections_to_add_delete = site.course.sections - site.sections
       end
 
-      unless ENV['SITE']
-        site.sections.keep_if &:primary
-      end
       roles = ['Teacher', 'Lead TA', 'TA', 'Student', 'Waitlist Student']
       @canvas.set_canvas_ids([teacher] + non_teachers)
       @canvas.masquerade_as teacher
@@ -111,7 +109,7 @@ describe 'bCourses Official Sections tool' do
         it("shows a Delete button for section #{section.id}") { expect(section_delete_button_exists).to be true }
       end
 
-      course_expanded = @official_sections.available_sections_os_table(site.course, site.sections.first).exists?
+      course_expanded = @official_sections.available_sections_table(site.course, site.sections.first).exists?
       existing_sections_count = @official_sections.available_sections_count(site.course, site.sections.first)
       save_button_enabled = @official_sections.save_changes_button_element.enabled?
       it('shows an expanded view of courses with sections already in the course site') { expect(course_expanded).to be true }
@@ -132,8 +130,8 @@ describe 'bCourses Official Sections tool' do
       term_courses.each do |course|
         logger.info "Checking visible data for #{course.term.name} #{course.code}"
 
-        visible_course_title = @official_sections.available_sections_os_course_title course
-        visible_sections_expanded = @official_sections.expand_available_os_course_sections(course, course.sections.first)
+        visible_course_title = @official_sections.available_sections_course_title course
+        visible_sections_expanded = @official_sections.expand_available_course_sections(course, course.sections.first)
         it("shows the right course title for #{course.code}") { expect(visible_course_title).to include(course.title.gsub(':', '')) }
         it("shows no blank course title for #{course.code}") { expect(visible_course_title.empty?).to be false }
         it("allows the user to to expand the available sections for #{course.code}") { expect(visible_sections_expanded).to be_truthy }
@@ -159,7 +157,7 @@ describe 'bCourses Official Sections tool' do
           it("hit an error verifying course #{course.code} section #{section.id}") { fail Utils.error(e) }
         end
 
-        collapsed_sections = @official_sections.collapse_available_os_sections(course, course.sections.first)
+        collapsed_sections = @official_sections.collapse_available_sections(course, course.sections.first)
         it("allows the user to collapse the available sections for #{course.code}") { expect(collapsed_sections).to be_truthy }
       rescue => e
         Utils.log_error e
@@ -168,7 +166,7 @@ describe 'bCourses Official Sections tool' do
 
       # ADDING - Staging, Un-staging
 
-      @official_sections.expand_available_os_course_sections(site.course, site.course.sections.first)
+      @official_sections.expand_available_course_sections(site.course, site.course.sections.first)
       @section = sections_to_add_delete.last
       @official_sections.click_add_section(site.course, @section)
       staged_link_sec = @official_sections.current_section_id_element(@section).exists?

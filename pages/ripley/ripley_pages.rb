@@ -44,6 +44,7 @@ module RipleyPages
   div(:no_access_msg, id: 'TBD "This feature is only available to faculty and staff."')
   div(:error_message, id: 'error-message')
   div(:unauthorized_msg, xpath: '//div[contains(., "Unauthorized")]')
+  div(:sis_import_error, xpath: '//div[text()="An error has occurred with your request. Please try again or contact bCourses support."]')
 
   div(:progress_bar, id: 'TBD')
 

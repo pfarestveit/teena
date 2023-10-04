@@ -107,10 +107,10 @@ class BOACStudentPage
   def visible_degree(field)
     sleep 1
     xpath = "//h3[contains(text(), \"Degree\")]/following-sibling::div[contains(., \"#{field}\")]"
-    deg_type_el = div_element(xpath: "#{xpath}/div[1]")
-    deg_date_el = div_element(xpath: "#{xpath}/div[2]")
-    deg_college_el_1 = div_element(xpath: "#{xpath}/div[4]")
-    deg_college_el_2 = div_element(xpath: "#{xpath}/div[3]")
+    deg_type_el = div_element(xpath: "#{xpath}/div[contains(@id, \"student-bio-degree-type\")]")
+    deg_date_el = div_element(xpath: "#{xpath}/div[contains(@id, \"student-bio-degree-date\")]")
+    deg_college_el_1 = div_element(xpath: "#{xpath}/div[@class=\"student-text\"][1]")
+    deg_college_el_2 = div_element(xpath: "#{xpath}/div[@class=\"student-text\"][2]")
     college = if deg_college_el_1.exists?
                 deg_college_el_1.attribute('innerText')
               elsif deg_college_el_2.exists?

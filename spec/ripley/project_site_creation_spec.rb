@@ -126,8 +126,10 @@ describe 'bCourses project site', order: :defined do
           expect(@create_project_site_page.site_name_input_element.when_present Utils.short_wait).to be_truthy
         else
           logger.debug "Verifying that #{user.role} UID #{user.uid} has access to neither the course nor the project site UIs"
-          @site_creation_page.create_course_site_link_element.when_present Utils.short_wait
-          expect(@site_creation_page.create_project_site_link_element.disabled?).to be true
+          student_can_create_site = @site_creation_page.verify_block do
+            @site_creation_page.create_course_site_link_element.when_present Utils.short_wait
+          end
+          expect(student_can_create_site).to be false
         end
       end
     end

@@ -142,7 +142,7 @@ module CanvasPeoplePage
           wait_for_update_and_click add_user_by_uid_element
           wait_for_element_and_type_js(user_list_element, users)
           wait_for_update_and_click user_role_element
-          wait_for_update_and_click(user_role_option_elements.find { |el| el.text == user_role })
+          js_click(user_role_option_elements.find { |el| el.text == user_role })
           wait_for_element_and_select(user_section_element, section.sis_id) if section
           wait_for_update_and_click next_button_element
           users_ready_to_add_msg_element.when_visible Utils.medium_wait
@@ -353,7 +353,7 @@ module CanvasPeoplePage
       logger.debug 'All users are currently visible'
     else
       begin
-        tries ||= Utils.canvas_enrollment_retries
+        tries ||= total_count.to_i / 45
         new_count = user_row_elements.length
         logger.debug "There are now #{new_count} user rows"
         scroll_to_bottom
