@@ -33,7 +33,7 @@ class RipleyOfficialSectionsPage
   end
 
   def load_standalone_tool(course)
-    navigate_to "#{RipleyUtils.base_url}/canvas/course_manage_official_sections/#{course.site_id}"
+    navigate_to "#{RipleyUtils.base_url}/official_sections/#{course.site_id}"
   end
 
   def click_edit_sections
