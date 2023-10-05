@@ -39,7 +39,7 @@ echo
 
 # ----
 
-options=("BOA" "Junction" "SuiteC")
+options=("BOA" "Junction" "Ripley" "SuiteC")
 
 tool_being_tested=''
 
@@ -53,9 +53,13 @@ function set_tool_being_tested {
             tool_being_tested='junction'
             friendly_tool_name=${options[1]}
             ;;
+        "Ripley")
+            tool_being_tested='ripley'
+            friendly_tool_name=${options[2]}
+            ;;
         "SuiteC")
             tool_being_tested='squiggy'
-            friendly_tool_name=${options[2]}
+            friendly_tool_name=${options[3]}
             ;;
         *)
             echo "[ERROR] Invalid option: ${REPLY}"
