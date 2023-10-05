@@ -25,8 +25,8 @@ begin
     t.rspec_opts = opts
   end
 
-  task default: :oec
-  RSpec::Core::RakeTask.new(:oec) { |t| run_specs(t, 'oec', opts) }
+  task default: :ripley
+  RSpec::Core::RakeTask.new(:ripley) { |t| run_specs(t, 'ripley', opts) }
 
   task default: :squiggy
   RSpec::Core::RakeTask.new(:squiggy) { |t| run_specs(t, 'squiggy', opts) }
