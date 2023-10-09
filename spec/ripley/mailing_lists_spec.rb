@@ -83,7 +83,7 @@ unless ENV['STANDALONE']
 
         it('shows the course site code') { expect(@mailing_lists_page.site_name_link_element.text).to include(course_site_1.title) }
         it('shows the course site term') { expect(@mailing_lists_page.site_term).to eql(course_site_1.term.name) }
-        it('shows the course site ID') { expect(@mailing_lists_page.site_id).to eql("Site ID: #{course_site_1.site_id}") }
+        it('shows the course site ID') { expect(@mailing_lists_page.site_id).to eql("Site ID #{course_site_1.site_id}") }
 
         it 'shows a link to the course site' do
           expect(@mailing_lists_page.external_link_valid?(@mailing_lists_page.site_name_link_element, course_site_1.title)).to be true

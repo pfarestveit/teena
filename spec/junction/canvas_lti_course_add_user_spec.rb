@@ -62,7 +62,7 @@ describe 'bCourses Find a Person to Add', order: :defined do
       end
 
       it 'include an "Accessibility" link' do
-        title = 'UC Berkeley Web Accessibility | Disability Access & Compliance'
+        title = 'bCourses Accessibility | Research, Teaching, and Learning'
         expect(@canvas.external_link_valid?(@canvas.accessibility_link_element, title)).to be true
       end
 

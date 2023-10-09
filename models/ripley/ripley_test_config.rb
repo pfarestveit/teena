@@ -67,15 +67,43 @@ class RipleyTestConfig < TestConfig
   def get_multiple_test_sites
     courses = set_sis_courses
     @course_sites = courses.map do |c|
-      workflow = (c.sections.select(&:primary).length > 1) ? 'ccn' : 'uid'
+      primaries = c.sections.select &:primary
+      workflow = if (primaries.length > 1 || primaries.empty?) && !c.multi_course
+                   'uid'
+                 else
+                   'ccn'
+                 end
       CourseSite.new title: "#{@id} #{c.term.name} #{c.code}",
                      abbreviation: "#{@id} #{c.term.name} #{c.code}",
                      course: c,
                      create_site_workflow: workflow,
                      sections: c.sections
     end
-    instructor_based = @course_sites.reject { |s| s.create_site_workflow == 'ccn' }
-    instructor_based.each_with_index { |s, i| s.create_site_workflow = 'self' if i.odd? }
+    instructor_workflow_sites = @course_sites.select { |s| s.create_site_workflow == 'uid' }
+    instructor_workflow_sites.each_with_index { |s, i| s.create_site_workflow = 'self' if i.odd? }
+    @course_sites.each do |site|
+      # Only use a primary section instructor if testing primary sections
+      site.test_teacher = if instructor_workflow_sites.include?(site) && site.sections.find(&:primary)
+                           RipleyUtils.get_primary_instructor site
+                         else
+                           site.course.teachers.first
+                         end
+      # Ditch sections not associated with the instructor since they shouldn't appear
+      if instructor_workflow_sites.include?(site) && site.sections.find(&:primary)
+        primary_ids = site.course.sections.select do |s|
+          s.primary && s.instructors.map(&:user).include?(site.test_teacher)
+        end.map &:id
+        site.course.sections.keep_if do |s|
+          primary_ids.include?(s.id) || primary_ids.include?(s.primary_assoc_id)
+        end
+      end
+    end
+
+    @course_sites.each do |site|
+      logger.info "#{site.course.term.name} #{site.course.code} workflow #{site.create_site_workflow}, instructor UID #{site.test_teacher.uid}"
+      logger.info "Course sections: #{site.course.sections.map &:id}"
+      logger.info "Site sections: #{site.sections.map &:id}"
+    end
   end
 
   def get_single_test_site(section_ids = nil)
@@ -205,16 +233,14 @@ class RipleyTestConfig < TestConfig
     primaries = prim.map(&:sections).flatten.select(&:primary)
     primaries.sort_by! { |p| p.enrollments.length }
     logger.info "#{primaries.map &:course}"
-    instructors = (primaries[0].instructors + primaries[1].instructors).uniq
+    instructors = (primaries[0].instructors.map(&:user) + primaries[1].instructors.map(&:user)).uniq
     multi_course = Course.new code: primaries[0].course,
+                              multi_course: true,
                               title: primaries[0].course,
                               term: @current_term,
                               sections: primaries[0..1],
-                              teachers: instructors.map(&:user)
+                              teachers: instructors
     courses << multi_course
-    courses.each do |c|
-      logger.info "Course #{c.code} in #{c.term.name} sections are #{c.sections.map &:id}"
-    end
     courses
   end
 

@@ -137,6 +137,7 @@ class ApiAcademicsCourseProvisionPage
     primaries = sections.select { |s| s['is_primary_section'] }
     if primaries.any?
       tas = (sections - primaries).map { |s| s['instructors'] }
+      logger.info "Expected TAs: #{tas.flatten.uniq.compact}"
       tas.flatten.uniq.compact
     else
       []

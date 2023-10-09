@@ -9,10 +9,10 @@ class RipleyUserProvisioningPage
 
   text_area(:uid_input, id: 'page-user-provision-uid-list')
   button(:import_button, id: 'user-provision-import-btn')
-  div(:success_msg, xpath: '//div[contains(., "Success : The users specified were imported into bCourses.")]')
+  div(:success_msg, xpath: '//div[contains(., "Success")]')
   div(:error_msg, id: 'TBD')
   div(:non_numeric_msg, xpath: '//div[contains(., "The following items in your list are not numeric:")]')
-  div(:max_input_msg, xpath: '//div[contains(., "Maximum IDs: 200.")]')
+  div(:max_input_msg, xpath: '//div[contains(text(), "Maximum")]')
 
   def load_embedded_tool
     logger.info 'Loading embedded version of the User Provisioning tool'

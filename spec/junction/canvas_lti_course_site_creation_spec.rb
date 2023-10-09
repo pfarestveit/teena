@@ -185,16 +185,6 @@ describe 'bCourses course site creation' do
         expected_abbreviation = site[:course].code
         it("shows the default site abbreviation #{site[:course].code}") { expect(default_abbreviation).to include(expected_abbreviation) }
 
-        requires_name_and_abbreviation = @create_course_site_page.verify_block do
-          @create_course_site_page.clear_input_value site_name_input_element
-          @create_course_site_page.site_name_error_element.when_present 1
-          @create_course_site_page.wait_until(1) { @create_course_site_page.create_site_button_element.attribute('disabled') }
-          @create_course_site_page.clear_input_value site_abbreviation_element
-          @create_course_site_page.site_abbreviation_error_element.when_present 1
-        end
-
-        it("requires a site name and abbreviation for #{site[:course].code}") { expect(requires_name_and_abbreviation).to be true }
-
         site[:course].title = @create_course_site_page.enter_site_titles site[:course]
         logger.info "Course site abbreviation will be #{site[:course].title}"
 

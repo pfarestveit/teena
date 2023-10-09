@@ -16,9 +16,9 @@ module RipleyCourseSectionsModule
   end
 
   def available_sections_course_title(course)
-    el = div_element(xpath: "#{available_course_heading_xpath(course)}/descendant::span[starts-with(text(), \": \")]")
+    el = div_element(xpath: "#{available_course_heading_xpath(course)}/descendant::span[starts-with(text(), \" — \")]")
     el.when_visible Utils.short_wait
-    el.text.gsub(':', '').strip
+    el.text.gsub('—', '').strip
   rescue
     ''
   end
@@ -35,7 +35,7 @@ module RipleyCourseSectionsModule
 
   def expand_all_available_sections
     logger.debug 'Expanding all available sections'
-    wait_until(Utils.short_wait) { section_panel_elements.any? }
+    wait_until(Utils.medium_wait) { section_panel_elements.any? }
     logger.debug "There are #{section_panel_elements.length} sets of sections to expand"
     section_panel_elements.each_with_index do |_, i|
       btn = button_element(xpath: "(//button[contains(@class, 'v-expansion-panel-title')])[#{i + 1}]")
@@ -52,6 +52,7 @@ module RipleyCourseSectionsModule
 
   def expand_available_course_sections(course, section)
     wait_until(Utils.short_wait) { section_panel_elements.any? }
+    scroll_to_top
     if available_sections_table(course, section).visible?
       logger.debug "The available sections table is already expanded for #{course.code}"
     else

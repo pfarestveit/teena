@@ -32,11 +32,11 @@ describe 'bCourses course site creation' do
     RipleyTool::TOOLS.each { |t| @canvas.add_ripley_tool t }
     @canvas.set_canvas_ids non_teachers
 
-    test.course_sites.each do |site|
+    test.course_sites.reverse.each do |site|
 
       begin
         logger.info "Creating a course site for #{site.course.code} in #{site.course.term.name} using the '#{site.create_site_workflow}' workflow"
-        teacher = site.course.teachers.first
+        teacher = site.test_teacher
         @canvas.stop_masquerading
         @canvas.set_canvas_ids [teacher]
         @canvas.masquerade_as teacher if site.create_site_workflow == 'self'
@@ -84,8 +84,13 @@ describe 'bCourses course site creation' do
           expected_section_ids = site.course.sections.map &:id
           visible_section_ids = @create_course_site.course_section_ids site.course
         end
-        it "offers all the expected sections for #{site.course.term.name} #{site.course.code} with the '#{site.create_site_workflow}' workflow" do
-          expect(visible_section_ids.sort!).to eql(expected_section_ids.sort!)
+        logger.warn "Unexpected sections: #{visible_section_ids - expected_section_ids}"
+        logger.warn "Missing sections: #{expected_section_ids - visible_section_ids}"
+        it "offers no unexpected sections for #{site.course.term.name} #{site.course.code} with the '#{site.create_site_workflow}' workflow" do
+          expect(visible_section_ids - expected_section_ids).to be_empty
+        end
+        it "offers no missing sections for #{site.course.term.name} #{site.course.code} with the '#{site.create_site_workflow}' workflow" do
+          expect(expected_section_ids - visible_section_ids).to be_empty
         end
 
         unless site.create_site_workflow == 'ccn'
@@ -94,29 +99,29 @@ describe 'bCourses course site creation' do
             ui_course_title = @create_course_site.available_sections_course_title course
             ui_sections_expanded = @create_course_site.expand_available_course_sections(course, course.sections.first)
 
-            it("shows the right course title for #{course.code}") { expect(ui_course_title).to include(course.title) }
-            it("shows no blank course title for #{course.code}") { expect(ui_course_title.empty?).to be false }
-            it("allows the available sections to be expanded for #{course.code}") { expect(ui_sections_expanded).to be_truthy }
+            it("shows the right course title for #{site.course.term.name} #{course.code}") { expect(ui_course_title).to include(course.title) }
+            it("shows no blank course title for #{site.course.term.name} #{course.code}") { expect(ui_course_title.empty?).to be false }
+            it("allows the available sections to be expanded for #{site.course.term.name} #{course.code}") { expect(ui_sections_expanded).to be_truthy }
 
             course.sections.each do |section|
               ui_section_data = @create_course_site.section_data section.id
 
-              it "shows the right section labels for #{course.code} section #{section.id}" do
+              it "shows the right section labels for #{site.course.term.name} #{course.code} section #{section.id}" do
                 expect(ui_section_data[:label]).to eql(section.label)
               end
-              it "shows no blank section labels for #{course.code} section #{section.id}" do
+              it "shows no blank section labels for #{site.course.term.name} #{course.code} section #{section.id}" do
                 expect(ui_section_data[:label].empty?).to be false
               end
-              it "shows the right section schedules for #{course.code} section #{section.id}" do
+              it "shows the right section schedules for #{site.course.term.name} #{course.code} section #{section.id}" do
                 expect(ui_section_data[:schedules]).to eql(section.schedules)
               end
-              it "shows the right section locations for #{course.code} section #{section.id}" do
+              it "shows the right section locations for #{site.course.term.name} #{course.code} section #{section.id}" do
                 expect(ui_section_data[:locations]).to eql(section.locations)
               end
             end
 
             ui_sections_collapsed = @create_course_site.collapse_available_sections(course, course.sections.first)
-            it("allows the available sections to be collapsed for #{course.code}") { expect(ui_sections_collapsed).to be_truthy }
+            it("allows the available sections to be collapsed for #{site.course.term.name} #{course.code}") { expect(ui_sections_collapsed).to be_truthy }
           end
         end
 
@@ -166,7 +171,7 @@ describe 'bCourses course site creation' do
         end
 
       rescue => e
-        it("encountered an error creating the course site for #{site.course.code}") { fail Utils.error(e) }
+        it("encountered an error creating the course site for #{site.course.term.name} #{site.course.code}") { fail Utils.error(e) }
         Utils.log_error e
       end
     end

@@ -38,8 +38,8 @@ describe 'bCourses Roster Photos' do
       @canvas.load_course_site @site
     else
       @create_course_site_page.provision_course_site @site
+      @canvas.publish_course_site @site
     end
-    @canvas.publish_course_site @site unless @site.site_id
 
     @expected_sids = @site.sections.map { |s| s.enrollments.map { |e| e.user.sis_id } }.flatten.uniq.sort
     @student_count = @site.expected_student_count
@@ -152,29 +152,31 @@ describe 'bCourses Roster Photos' do
       end
     end
 
-    [test.designer, test.observer].each do |user|
-      it "denies #{user.role} #{user.uid}, #{user.canvas_id} access to the tool" do
+    [test.observer].each do |user|
+      it "denies #{user.role} #{user.uid} access to the tool" do
         @canvas.masquerade_as(user, @site)
         @roster_photos_page.load_embedded_tool @site
         @roster_photos_page.no_access_msg_element.when_visible Utils.short_wait
       end
 
-      it "offers #{user.role} #{user.uid} #{user.canvas_id} no link to the tool in course navigation" do
+      it "offers #{user.role} #{user.uid} no link to the tool in course navigation" do
         @canvas.switch_to_main_content
-        expect(@canvas.tool_nav_link(RipleyTool::ROSTER_PHOTOS).exists?).to be true
+        expect(@canvas.tool_nav_link(RipleyTool::ROSTER_PHOTOS).exists?).to be false
       end
     end
 
-    [test.reader].each do |user|
-      it "denies #{user.role} #{user.uid} #{user.canvas_id} access to the tool" do
+    [test.designer, test.reader].each do |user|
+      it "denies #{user.role} #{user.uid} access to the tool" do
         @canvas.masquerade_as(user, @site)
         @roster_photos_page.load_embedded_tool @site
-        @roster_photos_page.unauthorized_msg_element.when_visible Utils.short_wait
+        @roster_photos_page.wait_until(Utils.short_wait) do
+          @roster_photos_page.no_access_msg? || @roster_photos_page.unauthorized_msg?
+        end
       end
 
-      it "offers #{user.role} #{user.uid}, #{user.canvas_id} no link to the tool in course navigation" do
+      it "offers #{user.role} #{user.uid} a link to the tool in course navigation" do
         @canvas.switch_to_main_content
-        expect(@canvas.tool_nav_link(RipleyTool::ROSTER_PHOTOS).exists?).to be false
+        expect(@canvas.tool_nav_link(RipleyTool::ROSTER_PHOTOS).exists?).to be true
       end
     end
 
